@@ -1,9 +1,9 @@
 # UnityDecompiled
-## An unofficial repo of decompiled Unity dll files
+#### An unofficial repo of decompiled Unity dll files
 
-Currently this is made from decompiling UnityEditor.dll and UnityEngine.dll using ILSpy
+This was made by decompiling UnityEditor.dll and UnityEngine.dll using [ILSpy](http://ilspy.net)
 
-This version: *4.6.3f1*
+Current version: *4.6.3f1*
 
 Feel free to either browse the code directly or [download it](https://github.com/MattRix/UnityDecompiled/archive/master.zip)
 
