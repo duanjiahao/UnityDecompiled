@@ -1,7 +1,7 @@
 # UnityDecompiled
 An unofficial repo of decompiled Unity dll files
 
-This version: 4.6.3f1 (other versions will be put in tags)
+This version: 4.6.3f1
 
 Feel free to either browse the code directly or [download it](https://github.com/MattRix/UnityDecompiled/archive/master.zip)
 
