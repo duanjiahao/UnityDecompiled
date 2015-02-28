@@ -3,7 +3,7 @@
 
 This was made by decompiling UnityEditor.dll and UnityEngine.dll using [ILSpy](http://ilspy.net)
 
-Current version: *4.6.3f1*
+Current version: *4.6.3f1* - other versions can be [found in the tags](https://github.com/MattRix/UnityDecompiled/tags)
 
 Feel free to either browse the code directly or [download it](https://github.com/MattRix/UnityDecompiled/archive/master.zip)
 
