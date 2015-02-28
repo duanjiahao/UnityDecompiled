@@ -60,6 +60,15 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		public extern bool alphaSorted
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public extern bool isValid
 		{
 			[WrapperlessIcall]
@@ -140,11 +149,11 @@ namespace UnityEditor
 		}
 		internal void SetSearchFilter(SearchFilter filter)
 		{
-			this.SetSearchFilterINTERNAL(filter.SplitNameFilter(), filter.classNames, filter.assetLabels, filter.referencingInstanceIDs, filter.showAllHits);
+			this.SetSearchFilterINTERNAL(filter.SplitNameFilter(), filter.classNames, filter.assetLabels, filter.assetBundleNames, filter.referencingInstanceIDs, filter.showAllHits);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetSearchFilterINTERNAL(string[] nameFilters, string[] classNames, string[] assetLabels, int[] referencingInstanceIDs, bool showAllHits);
+		private extern void SetSearchFilterINTERNAL(string[] nameFilters, string[] classNames, string[] assetLabels, string[] assetBundleNames, int[] referencingInstanceIDs, bool showAllHits);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int[] FindAllAncestors(int[] instanceIDs);

@@ -363,6 +363,7 @@ namespace UnityEditor
 			{
 				return;
 			}
+			this.m_Parent.SetTitle(base.GetType().FullName);
 			this.m_Parent.autoRepaintOnSceneChange = this.m_AutoRepaintOnSceneChange;
 			bool flag = this.m_Parent.antiAlias != this.m_AntiAlias || this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
 			this.m_Parent.antiAlias = this.m_AntiAlias;
@@ -743,7 +744,7 @@ namespace UnityEditor
 		internal void SetInternalGameViewRect(Rect rect)
 		{
 			this.m_GameViewRect = rect;
-			this.MakeParentsSettingsMatchMe();
+			this.m_Parent.SetInternalGameViewRect(this.m_GameViewRect);
 		}
 		public bool SendEvent(Event e)
 		{
@@ -764,6 +765,7 @@ namespace UnityEditor
 			Rect position = window.m_Parent.borderSize.Add(new Rect(screenPosition.x, screenPosition.y, window.position.width, window.position.height));
 			containerWindow.position = position;
 			splitView.position = new Rect(0f, 0f, position.width, position.height);
+			window.MakeParentsSettingsMatchMe();
 			containerWindow.Show(ShowMode.NormalWindow, loadPosition, showImmediately);
 			containerWindow.OnResize();
 		}

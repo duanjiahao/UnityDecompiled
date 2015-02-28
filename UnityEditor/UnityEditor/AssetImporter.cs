@@ -26,8 +26,30 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern string assetBundleName
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern string assetBundleVariant
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AssetImporter GetAtPath(string path);
+		public void SaveAndReimport()
+		{
+			AssetDatabase.ImportAsset(this.assetPath);
+		}
 	}
 }

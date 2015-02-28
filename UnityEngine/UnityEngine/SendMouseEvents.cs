@@ -41,12 +41,7 @@ namespace UnityEngine
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo)
 		};
-		private static readonly RaycastHit2D[] m_MouseRayHits2D = new RaycastHit2D[]
-		{
-			default(RaycastHit2D)
-		};
 		private static Camera[] m_Cameras;
-		[NotRenamed]
 		private static void DoSendMouseEvents(int mouseUsed, int skipRTCameras)
 		{
 			Vector3 mousePosition = Input.mousePosition;
@@ -55,16 +50,17 @@ namespace UnityEngine
 			{
 				SendMouseEvents.m_Cameras = new Camera[allCamerasCount];
 			}
-			int allCameras = Camera.GetAllCameras(SendMouseEvents.m_Cameras);
+			Camera.GetAllCameras(SendMouseEvents.m_Cameras);
 			for (int i = 0; i < SendMouseEvents.m_CurrentHit.Length; i++)
 			{
 				SendMouseEvents.m_CurrentHit[i] = default(SendMouseEvents.HitInfo);
 			}
 			if (mouseUsed == 0)
 			{
-				for (int j = 0; j < allCameras; j++)
+				Camera[] cameras = SendMouseEvents.m_Cameras;
+				for (int j = 0; j < cameras.Length; j++)
 				{
-					Camera camera = SendMouseEvents.m_Cameras[j];
+					Camera camera = cameras[j];
 					if (!(camera == null) && (skipRTCameras == 0 || !(camera.targetTexture != null)))
 					{
 						if (camera.pixelRect.Contains(mousePosition))
@@ -88,12 +84,12 @@ namespace UnityEngine
 							{
 								Ray ray = camera.ScreenPointToRay(mousePosition);
 								float z = ray.direction.z;
-								float num = (!Mathf.Approximately(0f, z)) ? Mathf.Abs((camera.farClipPlane - camera.nearClipPlane) / z) : float.PositiveInfinity;
-								RaycastHit raycastHit;
-								if (Physics.Raycast(ray, out raycastHit, num + 1f, camera.cullingMask & camera.eventMask & -5))
+								float distance = (!Mathf.Approximately(0f, z)) ? Mathf.Abs((camera.farClipPlane - camera.nearClipPlane) / z) : float.PositiveInfinity;
+								GameObject gameObject = camera.RaycastTry(ray, distance, camera.cullingMask & camera.eventMask);
+								if (gameObject != null)
 								{
+									SendMouseEvents.m_CurrentHit[1].target = gameObject;
 									SendMouseEvents.m_CurrentHit[1].camera = camera;
-									SendMouseEvents.m_CurrentHit[1].target = ((!raycastHit.rigidbody) ? raycastHit.collider.gameObject : raycastHit.rigidbody.gameObject);
 								}
 								else
 								{
@@ -103,10 +99,11 @@ namespace UnityEngine
 										SendMouseEvents.m_CurrentHit[1].camera = null;
 									}
 								}
-								if (Physics2D.GetRayIntersectionNonAlloc(ray, SendMouseEvents.m_MouseRayHits2D, num, camera.cullingMask & camera.eventMask & -5) == 1)
+								GameObject gameObject2 = camera.RaycastTry2D(ray, distance, camera.cullingMask & camera.eventMask);
+								if (gameObject2 != null)
 								{
+									SendMouseEvents.m_CurrentHit[2].target = gameObject2;
 									SendMouseEvents.m_CurrentHit[2].camera = camera;
-									SendMouseEvents.m_CurrentHit[2].target = ((!SendMouseEvents.m_MouseRayHits2D[0].rigidbody) ? SendMouseEvents.m_MouseRayHits2D[0].collider.gameObject : SendMouseEvents.m_MouseRayHits2D[0].rigidbody.gameObject);
 								}
 								else
 								{

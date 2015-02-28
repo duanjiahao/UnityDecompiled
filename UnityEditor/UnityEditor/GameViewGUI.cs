@@ -13,6 +13,7 @@ namespace UnityEditor
 		private static float m_RenderFrameTime;
 		private static float m_MaxFrameTime;
 		private static GUIStyle s_SectionHeaderStyle;
+		private static GUIStyle s_LabelStyle;
 		private static GUIStyle sectionHeaderStyle
 		{
 			get
@@ -22,6 +23,18 @@ namespace UnityEditor
 					GameViewGUI.s_SectionHeaderStyle = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).GetStyle("BoldLabel");
 				}
 				return GameViewGUI.s_SectionHeaderStyle;
+			}
+		}
+		private static GUIStyle labelStyle
+		{
+			get
+			{
+				if (GameViewGUI.s_LabelStyle == null)
+				{
+					GameViewGUI.s_LabelStyle = new GUIStyle(EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).label);
+					GameViewGUI.s_LabelStyle.richText = true;
+				}
+				return GameViewGUI.s_LabelStyle;
 			}
 		}
 		private static string FormatNumber(int num)
@@ -64,40 +77,56 @@ namespace UnityEditor
 				GameViewGUI.m_FrameCounter = 0;
 			}
 		}
+		private static string FormatDb(float vol)
+		{
+			if (vol == 0f)
+			{
+				return "-∞ dB";
+			}
+			return string.Format("{0:F1} dB", 20f * Mathf.Log10(vol));
+		}
 		public static void GameViewStatsGUI()
 		{
 			GUI.skin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene);
 			GUI.color = new Color(1f, 1f, 1f, 0.75f);
 			float num = 300f;
-			float num2 = 200f;
+			float num2 = 204f;
 			int num3 = Network.connections.Length;
 			if (num3 != 0)
 			{
 				num2 += 220f;
 			}
 			GUILayout.BeginArea(new Rect((float)Screen.width - num - 10f, 27f, num, num2), "Statistics", GUI.skin.window);
+			GUILayout.Label("Audio:", GameViewGUI.sectionHeaderStyle, new GUILayoutOption[0]);
+			StringBuilder stringBuilder = new StringBuilder(400);
+			float audioLevel = UnityStats.audioLevel;
+			stringBuilder.Append("  Level: " + GameViewGUI.FormatDb(audioLevel) + ((!EditorUtility.audioMasterMute) ? "\n" : " (MUTED)\n"));
+			stringBuilder.Append(string.Format("  Clipping: {0:F1}%", 100f * UnityStats.audioClippingAmount));
+			GUILayout.Label(stringBuilder.ToString(), new GUILayoutOption[0]);
+			GUI.Label(new Rect(170f, 40f, 120f, 20f), string.Format("DSP load: {0:F1}%", 100f * UnityStats.audioDSPLoad));
+			GUI.Label(new Rect(170f, 53f, 120f, 20f), string.Format("Stream load: {0:F1}%", 100f * UnityStats.audioStreamLoad));
 			GUILayout.Label("Graphics:", GameViewGUI.sectionHeaderStyle, new GUILayoutOption[0]);
 			GameViewGUI.UpdateFrameTime();
 			string text = string.Format("{0:F1} FPS ({1:F1}ms)", 1f / Mathf.Max(GameViewGUI.m_MaxFrameTime, 1E-05f), GameViewGUI.m_MaxFrameTime * 1000f);
-			GUI.Label(new Rect(170f, 19f, 120f, 20f), text);
-			int usedTextureMemorySize = UnityStats.usedTextureMemorySize;
-			int renderTextureBytes = UnityStats.renderTextureBytes;
+			GUI.Label(new Rect(170f, 75f, 120f, 20f), text);
 			int screenBytes = UnityStats.screenBytes;
-			int vboTotalBytes = UnityStats.vboTotalBytes;
-			int bytes = screenBytes + renderTextureBytes;
-			int bytes2 = screenBytes + Mathf.Max(usedTextureMemorySize, renderTextureBytes) + vboTotalBytes;
-			StringBuilder stringBuilder = new StringBuilder(400);
-			stringBuilder.Append(string.Format("  Main Thread: {0:F1}ms  Renderer: {1:F1}ms\n", GameViewGUI.m_ClientFrameTime * 1000f, GameViewGUI.m_RenderFrameTime * 1000f));
-			stringBuilder.Append(string.Format("  Draw Calls: {0} \tSaved by batching: {1} \n", UnityStats.drawCalls, UnityStats.batchedDrawCalls - UnityStats.batches));
-			stringBuilder.Append(string.Format("  Tris: {0} \tVerts: {1} \n", GameViewGUI.FormatNumber(UnityStats.triangles), GameViewGUI.FormatNumber(UnityStats.vertices)));
-			stringBuilder.Append(string.Format("  Used Textures: {0} - {1}\n", UnityStats.usedTextureCount, EditorUtility.FormatBytes(usedTextureMemorySize)));
-			stringBuilder.Append(string.Format("  Render Textures: {0} - {1} \tswitches: {2}\n", UnityStats.renderTextureCount, EditorUtility.FormatBytes(renderTextureBytes), UnityStats.renderTextureChanges));
-			stringBuilder.Append(string.Format("  Screen: {0} - {1}\n", UnityStats.screenRes, EditorUtility.FormatBytes(screenBytes)));
-			stringBuilder.Append(string.Format("  VRAM usage: {0} to {1} (of {2})\n", EditorUtility.FormatBytes(bytes), EditorUtility.FormatBytes(bytes2), EditorUtility.FormatBytes(SystemInfo.graphicsMemorySize * 1024 * 1024)));
-			stringBuilder.Append(string.Format("  VBO Total: {0} - {1}\n", UnityStats.vboTotal, EditorUtility.FormatBytes(vboTotalBytes)));
-			stringBuilder.Append(string.Format("  Shadow Casters: {0} \n", UnityStats.shadowCasters));
-			stringBuilder.Append(string.Format("  Visible Skinned Meshes: {0} \t Animations: {1}", UnityStats.visibleSkinnedMeshes, UnityStats.visibleAnimations));
-			GUILayout.Label(stringBuilder.ToString(), new GUILayoutOption[0]);
+			int num4 = UnityStats.dynamicBatchedDrawCalls - UnityStats.dynamicBatches;
+			int num5 = UnityStats.staticBatchedDrawCalls - UnityStats.staticBatches;
+			StringBuilder stringBuilder2 = new StringBuilder(400);
+			if (GameViewGUI.m_ClientFrameTime > GameViewGUI.m_RenderFrameTime)
+			{
+				stringBuilder2.Append(string.Format("  CPU: main <b>{0:F1}</b>ms  render thread {1:F1}ms\n", GameViewGUI.m_ClientFrameTime * 1000f, GameViewGUI.m_RenderFrameTime * 1000f));
+			}
+			else
+			{
+				stringBuilder2.Append(string.Format("  CPU: main {0:F1}ms  render thread <b>{1:F1}</b>ms\n", GameViewGUI.m_ClientFrameTime * 1000f, GameViewGUI.m_RenderFrameTime * 1000f));
+			}
+			stringBuilder2.Append(string.Format("  Batches: <b>{0}</b> \tSaved by batching: {1}\n", UnityStats.batches, num4 + num5));
+			stringBuilder2.Append(string.Format("  Tris: {0} \tVerts: {1} \n", GameViewGUI.FormatNumber(UnityStats.triangles), GameViewGUI.FormatNumber(UnityStats.vertices)));
+			stringBuilder2.Append(string.Format("  Screen: {0} - {1}\n", UnityStats.screenRes, EditorUtility.FormatBytes(screenBytes)));
+			stringBuilder2.Append(string.Format("  SetPass calls: {0} \tShadow casters: {1} \n", UnityStats.setPassCalls, UnityStats.shadowCasters));
+			stringBuilder2.Append(string.Format("  Visible skinned meshes: {0}  Animations: {1}", UnityStats.visibleSkinnedMeshes, UnityStats.visibleAnimations));
+			GUILayout.Label(stringBuilder2.ToString(), GameViewGUI.labelStyle, new GUILayoutOption[0]);
 			if (num3 != 0)
 			{
 				GUILayout.Label("Network:", GameViewGUI.sectionHeaderStyle, new GUILayoutOption[0]);

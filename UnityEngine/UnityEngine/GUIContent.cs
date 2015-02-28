@@ -102,6 +102,13 @@ namespace UnityEngine
 		internal static GUIContent Temp(string t)
 		{
 			GUIContent.s_Text.m_Text = t;
+			GUIContent.s_Text.m_Tooltip = string.Empty;
+			return GUIContent.s_Text;
+		}
+		internal static GUIContent Temp(string t, string tooltip)
+		{
+			GUIContent.s_Text.m_Text = t;
+			GUIContent.s_Text.m_Tooltip = tooltip;
 			return GUIContent.s_Text;
 		}
 		internal static GUIContent Temp(Texture i)

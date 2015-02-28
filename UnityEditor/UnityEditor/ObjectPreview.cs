@@ -96,6 +96,9 @@ namespace UnityEditor
 		{
 			ObjectPreview.DrawPreview(this, previewArea, this.m_Targets);
 		}
+		public virtual void ReloadPreviewInstances()
+		{
+		}
 		internal static void DrawPreview(IPreviewable defaultPreview, Rect previewArea, UnityEngine.Object[] targets)
 		{
 			if (ObjectPreview.s_Styles == null)

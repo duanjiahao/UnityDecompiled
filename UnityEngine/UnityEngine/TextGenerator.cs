@@ -22,42 +22,6 @@ namespace UnityEngine
 		private static int s_NextId = 0;
 		private int m_Id;
 		private static readonly Dictionary<int, WeakReference> s_Instances = new Dictionary<int, WeakReference>();
-		public IList<UIVertex> verts
-		{
-			get
-			{
-				if (!this.m_CachedVerts)
-				{
-					this.GetVertices(this.m_Verts);
-					this.m_CachedVerts = true;
-				}
-				return this.m_Verts;
-			}
-		}
-		public IList<UICharInfo> characters
-		{
-			get
-			{
-				if (!this.m_CachedCharacters)
-				{
-					this.GetCharacters(this.m_Characters);
-					this.m_CachedCharacters = true;
-				}
-				return this.m_Characters;
-			}
-		}
-		public IList<UILineInfo> lines
-		{
-			get
-			{
-				if (!this.m_CachedLines)
-				{
-					this.GetLines(this.m_Lines);
-					this.m_CachedLines = true;
-				}
-				return this.m_Lines;
-			}
-		}
 		public extern Rect rectExtents
 		{
 			[WrapperlessIcall]
@@ -95,6 +59,42 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		public IList<UIVertex> verts
+		{
+			get
+			{
+				if (!this.m_CachedVerts)
+				{
+					this.GetVertices(this.m_Verts);
+					this.m_CachedVerts = true;
+				}
+				return this.m_Verts;
+			}
+		}
+		public IList<UICharInfo> characters
+		{
+			get
+			{
+				if (!this.m_CachedCharacters)
+				{
+					this.GetCharacters(this.m_Characters);
+					this.m_CachedCharacters = true;
+				}
+				return this.m_Characters;
+			}
+		}
+		public IList<UILineInfo> lines
+		{
+			get
+			{
+				if (!this.m_CachedLines)
+				{
+					this.GetLines(this.m_Lines);
+					this.m_CachedLines = true;
+				}
+				return this.m_Lines;
+			}
+		}
 		public TextGenerator() : this(50)
 		{
 		}
@@ -130,6 +130,41 @@ namespace UnityEngine
 			}
 			this.Dispose_cpp();
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Init();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Dispose_cpp();
+		internal bool Populate_Internal(string str, Font font, Color color, int fontSize, float lineSpacing, FontStyle style, bool richText, bool resizeTextForBestFit, int resizeTextMinSize, int resizeTextMaxSize, VerticalWrapMode verticalOverFlow, HorizontalWrapMode horizontalOverflow, bool updateBounds, TextAnchor anchor, Vector2 extents, Vector2 pivot, bool generateOutOfBounds)
+		{
+			return this.Populate_Internal_cpp(str, font, color, fontSize, lineSpacing, style, richText, resizeTextForBestFit, resizeTextMinSize, resizeTextMaxSize, (int)verticalOverFlow, (int)horizontalOverflow, updateBounds, anchor, extents.x, extents.y, pivot.x, pivot.y, generateOutOfBounds);
+		}
+		internal bool Populate_Internal_cpp(string str, Font font, Color color, int fontSize, float lineSpacing, FontStyle style, bool richText, bool resizeTextForBestFit, int resizeTextMinSize, int resizeTextMaxSize, int verticalOverFlow, int horizontalOverflow, bool updateBounds, TextAnchor anchor, float extentsX, float extentsY, float pivotX, float pivotY, bool generateOutOfBounds)
+		{
+			return TextGenerator.INTERNAL_CALL_Populate_Internal_cpp(this, str, font, ref color, fontSize, lineSpacing, style, richText, resizeTextForBestFit, resizeTextMinSize, resizeTextMaxSize, verticalOverFlow, horizontalOverflow, updateBounds, anchor, extentsX, extentsY, pivotX, pivotY, generateOutOfBounds);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool INTERNAL_CALL_Populate_Internal_cpp(TextGenerator self, string str, Font font, ref Color color, int fontSize, float lineSpacing, FontStyle style, bool richText, bool resizeTextForBestFit, int resizeTextMinSize, int resizeTextMaxSize, int verticalOverFlow, int horizontalOverflow, bool updateBounds, TextAnchor anchor, float extentsX, float extentsY, float pivotX, float pivotY, bool generateOutOfBounds);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetVerticesInternal(object vertices);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern UIVertex[] GetVerticesArray();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetCharactersInternal(object characters);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern UICharInfo[] GetCharactersArray();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetLinesInternal(object lines);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern UILineInfo[] GetLinesArray();
 		~TextGenerator()
 		{
 			((IDisposable)this).Dispose();
@@ -224,40 +259,5 @@ namespace UnityEngine
 			this.m_LastValid = this.Populate_Internal(str, textGenerationSettings.font, textGenerationSettings.color, textGenerationSettings.fontSize, textGenerationSettings.lineSpacing, textGenerationSettings.fontStyle, textGenerationSettings.richText, textGenerationSettings.resizeTextForBestFit, textGenerationSettings.resizeTextMinSize, textGenerationSettings.resizeTextMaxSize, textGenerationSettings.verticalOverflow, textGenerationSettings.horizontalOverflow, textGenerationSettings.updateBounds, textGenerationSettings.textAnchor, textGenerationSettings.generationExtents, textGenerationSettings.pivot, textGenerationSettings.generateOutOfBounds);
 			return this.m_LastValid;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Init();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Dispose_cpp();
-		internal bool Populate_Internal(string str, Font font, Color color, int fontSize, float lineSpacing, FontStyle style, bool richText, bool resizeTextForBestFit, int resizeTextMinSize, int resizeTextMaxSize, VerticalWrapMode verticalOverFlow, HorizontalWrapMode horizontalOverflow, bool updateBounds, TextAnchor anchor, Vector2 extents, Vector2 pivot, bool generateOutOfBounds)
-		{
-			return this.Populate_Internal_cpp(str, font, color, fontSize, lineSpacing, style, richText, resizeTextForBestFit, resizeTextMinSize, resizeTextMaxSize, (int)verticalOverFlow, (int)horizontalOverflow, updateBounds, anchor, extents.x, extents.y, pivot.x, pivot.y, generateOutOfBounds);
-		}
-		internal bool Populate_Internal_cpp(string str, Font font, Color color, int fontSize, float lineSpacing, FontStyle style, bool richText, bool resizeTextForBestFit, int resizeTextMinSize, int resizeTextMaxSize, int verticalOverFlow, int horizontalOverflow, bool updateBounds, TextAnchor anchor, float extentsX, float extentsY, float pivotX, float pivotY, bool generateOutOfBounds)
-		{
-			return TextGenerator.INTERNAL_CALL_Populate_Internal_cpp(this, str, font, ref color, fontSize, lineSpacing, style, richText, resizeTextForBestFit, resizeTextMinSize, resizeTextMaxSize, verticalOverFlow, horizontalOverflow, updateBounds, anchor, extentsX, extentsY, pivotX, pivotY, generateOutOfBounds);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_Populate_Internal_cpp(TextGenerator self, string str, Font font, ref Color color, int fontSize, float lineSpacing, FontStyle style, bool richText, bool resizeTextForBestFit, int resizeTextMinSize, int resizeTextMaxSize, int verticalOverFlow, int horizontalOverflow, bool updateBounds, TextAnchor anchor, float extentsX, float extentsY, float pivotX, float pivotY, bool generateOutOfBounds);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void GetVerticesInternal(object vertices);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern UIVertex[] GetVerticesArray();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void GetCharactersInternal(object characters);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern UICharInfo[] GetCharactersArray();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void GetLinesInternal(object lines);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern UILineInfo[] GetLinesArray();
 	}
 }

@@ -11,5 +11,8 @@ namespace UnityEditor.Modules
 		void ConfigurationSectionGUI();
 		bool SupportsOrientation();
 		void SplashSectionGUI();
+		void IconSectionGUI();
+		bool HasResolutionSection();
+		void ResolutionSectionGUI(float h, float midWidth, float maxWidth);
 	}
 }

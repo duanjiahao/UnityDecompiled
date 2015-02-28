@@ -5,6 +5,14 @@ namespace UnityEngine
 	{
 		public Vector3[] vertices;
 		public int[] indices;
-		public int[] layers;
+		public int[] areas;
+		[Obsolete("Use areas instead.")]
+		public int[] layers
+		{
+			get
+			{
+				return this.areas;
+			}
+		}
 	}
 }

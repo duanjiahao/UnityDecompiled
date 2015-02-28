@@ -64,10 +64,6 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
-		private void Awake()
-		{
-			this.SetDefaultComputationParameters();
-		}
 		private void OnEnable()
 		{
 			OcclusionCullingWindow.ms_OcclusionCullingWindow = this;
@@ -107,7 +103,7 @@ namespace UnityEditor
 		[MenuItem("Window/Occlusion Culling", true, 2099)]
 		public static bool SetupWindowValidate()
 		{
-			return InternalEditorUtility.HasPro();
+			return InternalEditorUtility.HasProFeaturesEnabled();
 		}
 		private void SummaryGUI()
 		{
@@ -216,11 +212,6 @@ namespace UnityEditor
 				GUILayout.Label(OcclusionCullingWindow.s_Styles.emptyCameraSelection, EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 		}
-		private void SetDefaultComputationParameters()
-		{
-			GUIUtility.keyboardControl = 0;
-			StaticOcclusionCulling.SetDefaultOcclusionBakeSettings();
-		}
 		private void BakeSettings()
 		{
 			float width = 150f;
@@ -229,7 +220,8 @@ namespace UnityEditor
 				GUILayout.Width(width)
 			}))
 			{
-				this.SetDefaultComputationParameters();
+				GUIUtility.keyboardControl = 0;
+				StaticOcclusionCulling.SetDefaultOcclusionBakeSettings();
 			}
 			GUILayout.Label(OcclusionCullingWindow.s_Styles.defaultParameterText.tooltip, EditorStyles.helpBox, new GUILayoutOption[0]);
 			EditorGUI.BeginChangeCheck();

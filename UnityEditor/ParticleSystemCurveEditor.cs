@@ -453,7 +453,7 @@ internal class ParticleSystemCurveEditor
 	}
 	private void PresetDropDown(Rect rect)
 	{
-		if (EditorGUI.ButtonMouseDown(rect, EditorGUI.s_TitleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText))
+		if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText))
 		{
 			DoubleCurve doubleCurve = this.CreateDoubleCurveFromTopMostCurve();
 			if (doubleCurve != null)
@@ -526,6 +526,7 @@ internal class ParticleSystemCurveEditor
 				if (doubleCurve != null)
 				{
 					this.SetTopMostCurve(doubleCurve);
+					this.m_CurveEditor.ClearSelection();
 				}
 			}
 			if (Event.current.type == EventType.Repaint)

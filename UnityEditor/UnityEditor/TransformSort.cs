@@ -4,8 +4,7 @@ namespace UnityEditor
 {
 	public class TransformSort : BaseHierarchySort
 	{
-		private const string kDefaultSorting = "DefaultSorting";
-		private GUIContent m_Content = new GUIContent(EditorGUIUtility.FindTexture("DefaultSorting"), "Transform child order");
+		private readonly GUIContent m_Content = new GUIContent(EditorGUIUtility.FindTexture("DefaultSorting"), "Transform Child Order");
 		public override GUIContent content
 		{
 			get

@@ -48,7 +48,6 @@ namespace UnityEditor
 		private const float kIconSize = 24f;
 		private const float kLeft = 52f;
 		private const float kToggleSize = 14f;
-		private const int kPreviewLayer = 31;
 		private SerializedProperty m_Name;
 		private SerializedProperty m_IsActive;
 		private SerializedProperty m_Layer;
@@ -375,15 +374,6 @@ namespace UnityEditor
 				gameObject.layer = layer;
 			}
 		}
-		public static void InitInstantiatedPreviewRecursive(GameObject go)
-		{
-			go.hideFlags = HideFlags.HideAndDontSave;
-			go.layer = 31;
-			foreach (Transform transform in go.transform)
-			{
-				GameObjectInspector.InitInstantiatedPreviewRecursive(transform.gameObject);
-			}
-		}
 		public static void SetEnabledRecursive(GameObject go, bool enabled)
 		{
 			Renderer[] componentsInChildren = go.GetComponentsInChildren<Renderer>();
@@ -392,6 +382,10 @@ namespace UnityEditor
 				Renderer renderer = componentsInChildren[i];
 				renderer.enabled = enabled;
 			}
+		}
+		public override void ReloadPreviewInstances()
+		{
+			this.CreatePreviewInstances();
 		}
 		private void CreatePreviewInstances()
 		{
@@ -402,16 +396,7 @@ namespace UnityEditor
 			}
 			for (int i = 0; i < base.targets.Length; i++)
 			{
-				GameObject gameObject = EditorUtility.InstantiateRemoveAllNonAnimationComponents(base.targets[i], Vector3.zero, Quaternion.identity) as GameObject;
-				GameObjectInspector.InitInstantiatedPreviewRecursive(gameObject);
-				Animator animator = gameObject.GetComponent(typeof(Animator)) as Animator;
-				if (animator)
-				{
-					animator.enabled = false;
-					animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-					animator.logWarnings = false;
-					animator.fireEvents = false;
-				}
+				GameObject gameObject = EditorUtility.InstantiateForAnimatorPreview(base.targets[i]);
 				GameObjectInspector.SetEnabledRecursive(gameObject, false);
 				this.m_PreviewInstances.Add(gameObject);
 			}
@@ -434,7 +419,7 @@ namespace UnityEditor
 			{
 				this.m_PreviewUtility = new PreviewRenderUtility(true);
 				this.m_PreviewUtility.m_CameraFieldOfView = 30f;
-				this.m_PreviewUtility.m_Camera.cullingMask = -2147483648;
+				this.m_PreviewUtility.m_Camera.cullingMask = 1 << Camera.PreviewCullingLayer;
 				this.CreatePreviewInstances();
 			}
 		}
@@ -701,6 +686,7 @@ namespace UnityEditor
 				}
 				else
 				{
+					string uniqueNameForSibling = GameObjectUtility.GetUniqueNameForSibling(null, GameObjectInspector.dragObject.name);
 					GameObjectInspector.dragObject.hideFlags = HideFlags.None;
 					Undo.RegisterCreatedObjectUndo(GameObjectInspector.dragObject, "Place " + GameObjectInspector.dragObject.name);
 					EditorUtility.SetDirty(GameObjectInspector.dragObject);
@@ -708,6 +694,7 @@ namespace UnityEditor
 					Selection.activeObject = GameObjectInspector.dragObject;
 					HandleUtility.ignoreRaySnapObjects = null;
 					EditorWindow.mouseOverWindow.Focus();
+					GameObjectInspector.dragObject.name = uniqueNameForSibling;
 					GameObjectInspector.dragObject = null;
 					current.Use();
 				}

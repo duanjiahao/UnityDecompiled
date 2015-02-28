@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 namespace UnityEditor
 {
 	public class PreviewRenderUtility
@@ -20,7 +21,7 @@ namespace UnityEditor
 			{
 				typeof(Camera)
 			});
-			this.m_Camera = gameObject.camera;
+			this.m_Camera = gameObject.GetComponent<Camera>();
 			this.m_Camera.fieldOfView = this.m_CameraFieldOfView;
 			this.m_Camera.enabled = false;
 			this.m_Camera.clearFlags = CameraClearFlags.Depth;
@@ -39,9 +40,9 @@ namespace UnityEditor
 				{
 					typeof(Light)
 				});
-				this.m_Light[i] = gameObject2.light;
+				this.m_Light[i] = gameObject2.GetComponent<Light>();
 				this.m_Light[i].type = LightType.Directional;
-				this.m_Light[i].intensity = 0.5f;
+				this.m_Light[i].intensity = 1f;
 				this.m_Light[i].enabled = false;
 			}
 			this.m_Light[0].color = SceneView.kSceneViewFrontLight;
@@ -92,18 +93,16 @@ namespace UnityEditor
 					UnityEngine.Object.DestroyImmediate(this.m_RenderTextureGammaCorrect);
 					this.m_RenderTextureGammaCorrect = null;
 				}
-				float a = (float)(Mathf.Max(Mathf.Min(num * 2, 1024), num) / num);
-				float b = (float)(Mathf.Max(Mathf.Min(num2 * 2, 1024), num2) / num2);
-				float num3 = Mathf.Min(a, b);
+				float scaleFactor = this.GetScaleFactor((float)num, (float)num2);
 				bool flag = QualitySettings.activeColorSpace == ColorSpace.Linear;
-				this.m_RenderTexture = new RenderTexture((int)((float)num * num3), (int)((float)num2 * num3), 16, RenderTextureFormat.ARGB32, (!flag) ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB);
+				this.m_RenderTexture = new RenderTexture((int)((float)num * scaleFactor), (int)((float)num2 * scaleFactor), 16, RenderTextureFormat.ARGB32, (!flag) ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB);
 				this.m_RenderTexture.hideFlags = HideFlags.HideAndDontSave;
-				this.m_RenderTextureGammaCorrect = new RenderTexture((int)((float)num * num3), (int)((float)num2 * num3), 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+				this.m_RenderTextureGammaCorrect = new RenderTexture((int)((float)num * scaleFactor), (int)((float)num2 * scaleFactor), 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
 				this.m_RenderTextureGammaCorrect.hideFlags = HideFlags.HideAndDontSave;
 				this.m_Camera.targetTexture = this.m_RenderTexture;
 			}
-			float num4 = (this.m_RenderTexture.width > 0) ? Mathf.Max(1f, (float)this.m_RenderTexture.height / (float)this.m_RenderTexture.width) : 1f;
-			this.m_Camera.fieldOfView = Mathf.Atan(num4 * Mathf.Tan(this.m_CameraFieldOfView * 0.5f * 0.0174532924f)) * 57.29578f * 2f;
+			float num3 = (this.m_RenderTexture.width > 0) ? Mathf.Max(1f, (float)this.m_RenderTexture.height / (float)this.m_RenderTexture.width) : 1f;
+			this.m_Camera.fieldOfView = Mathf.Atan(num3 * Mathf.Tan(this.m_CameraFieldOfView * 0.5f * 0.0174532924f)) * 57.29578f * 2f;
 			this.m_SavedState = new SavedRenderTargetState();
 			EditorGUIUtility.SetRenderTextureNoViewport(this.m_RenderTexture);
 			GL.LoadOrtho();
@@ -111,6 +110,12 @@ namespace UnityEditor
 			ShaderUtil.rawViewportRect = new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height);
 			ShaderUtil.rawScissorRect = new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height);
 			GL.Clear(true, true, new Color(0f, 0f, 0f, 0f));
+		}
+		public float GetScaleFactor(float width, float height)
+		{
+			float a = Mathf.Max(Mathf.Min(width * 2f, 1024f), width) / width;
+			float b = Mathf.Max(Mathf.Min(height * 2f, 1024f), height) / height;
+			return Mathf.Min(a, b);
 		}
 		public void BeginStaticPreview(Rect r)
 		{
@@ -171,15 +176,40 @@ namespace UnityEditor
 		}
 		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex)
 		{
-			Graphics.DrawMesh(mesh, pos, rot, mat, 1, this.m_Camera, subMeshIndex);
+			this.DrawMesh(mesh, pos, rot, mat, subMeshIndex, null);
 		}
 		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material mat, int subMeshIndex)
 		{
-			Graphics.DrawMesh(mesh, matrix, mat, 1, this.m_Camera, subMeshIndex);
+			this.DrawMesh(mesh, matrix, mat, subMeshIndex, null);
+		}
+		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties)
+		{
+			Graphics.DrawMesh(mesh, pos, rot, mat, 1, this.m_Camera, subMeshIndex, customProperties);
+		}
+		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties, Transform probeAnchor)
+		{
+			Graphics.DrawMesh(mesh, pos, rot, mat, 1, this.m_Camera, subMeshIndex, customProperties, ShadowCastingMode.Off, false, probeAnchor);
+		}
+		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties)
+		{
+			Graphics.DrawMesh(mesh, matrix, mat, 1, this.m_Camera, subMeshIndex, customProperties);
 		}
 		public void DrawSprite(Sprite frame, Matrix4x4 matrix, Material mat, Color color)
 		{
 			Graphics.DrawSprite(frame, matrix, mat, 1, this.m_Camera, color, null);
+		}
+		internal static Mesh GetPreviewSphere()
+		{
+			GameObject gameObject = (GameObject)EditorGUIUtility.LoadRequired("Previews/PreviewMaterials.fbx");
+			gameObject.SetActive(false);
+			foreach (Transform transform in gameObject.transform)
+			{
+				if (transform.name == "sphere")
+				{
+					return transform.GetComponent<MeshFilter>().sharedMesh;
+				}
+			}
+			return null;
 		}
 	}
 }

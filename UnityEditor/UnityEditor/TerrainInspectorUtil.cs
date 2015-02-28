@@ -23,7 +23,7 @@ namespace UnityEditor
 		public static extern int GetPrototypeCount(TerrainData terrainData);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool PrototypeHasMaterials(TerrainData terrainData, int prototypeIndex);
+		public static extern bool PrototypeIsRenderable(TerrainData terrainData, int prototypeIndex);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RefreshPhysicsInEditMode();

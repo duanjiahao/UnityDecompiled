@@ -19,12 +19,25 @@ namespace UnityEditor
 		private bool m_Stats;
 		[SerializeField]
 		private int[] m_SelectedSizes = new int[0];
+		[SerializeField]
+		private int m_TargetDisplay;
 		private int m_SizeChangeID = -2147483648;
 		private GUIContent gizmosContent = new GUIContent("Gizmos");
 		private static GUIStyle s_GizmoButtonStyle;
 		private static GUIStyle s_ResolutionWarningStyle;
 		private static List<GameView> s_GameViews = new List<GameView>();
 		private static GameView s_LastFocusedGameView = null;
+		private static string[] s_GameDisplays = new string[]
+		{
+			"Display 1",
+			"Display 2",
+			"Display 3",
+			"Display 4",
+			"Display 5",
+			"Display 6",
+			"Display 7",
+			"Display 8"
+		};
 		private static Rect s_MainGameViewRect = new Rect(0f, 0f, 640f, 480f);
 		private Vector2 m_ShownResolution = Vector2.zero;
 		private AnimBool m_ResolutionTooLargeWarning = new AnimBool(false);
@@ -76,6 +89,7 @@ namespace UnityEditor
 			base.depthBufferBits = 32;
 			base.antiAlias = -1;
 			base.autoRepaintOnSceneChange = true;
+			this.m_TargetDisplay = 0;
 		}
 		public void OnValidate()
 		{
@@ -234,12 +248,32 @@ namespace UnityEditor
 				this.m_SizeChangeID = ScriptableSingleton<GameViewSizes>.instance.GetChangeID();
 			}
 			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
+			if (Display.MultiDisplayLicense())
+			{
+				this.m_TargetDisplay = EditorGUILayout.Popup(this.m_TargetDisplay, GameView.s_GameDisplays, EditorStyles.toolbarPopup, new GUILayoutOption[]
+				{
+					GUILayout.Width(80f)
+				});
+			}
 			EditorGUILayout.GameViewSizePopup(GameView.currentSizeGroupType, this.selectedSizeIndex, new Action<int, object>(this.SelectionCallback), EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{
 				GUILayout.Width(160f)
 			});
+			if (FrameDebuggerUtility.enabled)
+			{
+				GUILayout.FlexibleSpace();
+				Color color = GUI.color;
+				GUI.color *= AnimationMode.animatedPropertyColor;
+				GUILayout.Label("Frame Debugger on", EditorStyles.miniLabel, new GUILayoutOption[0]);
+				GUI.color = color;
+				if (Event.current.type == EventType.Repaint)
+				{
+					FrameDebuggerWindow.RepaintAll();
+				}
+			}
 			GUILayout.FlexibleSpace();
 			this.m_MaximizeOnPlay = GUILayout.Toggle(this.m_MaximizeOnPlay, "Maximize on Play", EditorStyles.toolbarButton, new GUILayoutOption[0]);
+			EditorUtility.audioMasterMute = GUILayout.Toggle(EditorUtility.audioMasterMute, "Mute audio", EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			this.m_Stats = GUILayout.Toggle(this.m_Stats, "Stats", EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			Rect rect = GUILayoutUtility.GetRect(this.gizmosContent, GameView.s_GizmoButtonStyle);
 			Rect position = new Rect(rect.xMax - (float)GameView.s_GizmoButtonStyle.border.right, rect.y, (float)GameView.s_GizmoButtonStyle.border.right, rect.height);
@@ -292,7 +326,14 @@ namespace UnityEditor
 				Vector2 s_EditorScreenPointOffset = GUIUtility.s_EditorScreenPointOffset;
 				GUIUtility.s_EditorScreenPointOffset = Vector2.zero;
 				SavedGUIState savedGUIState = SavedGUIState.Create();
-				EditorGUIUtility.RenderGameViewCameras(rect, this.m_Gizmos, true);
+				if (Display.MultiDisplayLicense())
+				{
+					EditorGUIUtility.RenderGameViewCameras(rect, this.m_TargetDisplay, this.m_Gizmos, true);
+				}
+				else
+				{
+					EditorGUIUtility.RenderGameViewCameras(rect, 0, this.m_Gizmos, true);
+				}
 				savedGUIState.ApplyAndForget();
 				GUIUtility.s_EditorScreenPointOffset = s_EditorScreenPointOffset;
 			}

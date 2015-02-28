@@ -1,42 +1,9 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 namespace UnityEditor
 {
 	internal class TerrainEditorUtility
 	{
-		private static void Extract(uint staticFlag, ref TerrainData[] datas, ref Vector3[] positions, ref int[] castShadows, ref Material[] materials, ref int[] lightmapSizes, ref int[] lightmapIndices, ref bool[] selection)
-		{
-			List<TerrainData> list = new List<TerrainData>();
-			List<Vector3> list2 = new List<Vector3>();
-			List<int> list3 = new List<int>();
-			List<Material> list4 = new List<Material>();
-			List<int> list5 = new List<int>();
-			List<int> list6 = new List<int>();
-			List<bool> list7 = new List<bool>();
-			int num = Terrain.activeTerrains.Length;
-			for (int i = 0; i < num; i++)
-			{
-				Terrain terrain = Terrain.activeTerrains[i];
-				if (GameObjectUtility.AreStaticEditorFlagsSet(terrain.gameObject, (StaticEditorFlags)staticFlag) && terrain.terrainData)
-				{
-					list.Add(terrain.terrainData);
-					list2.Add(terrain.GetPosition());
-					list3.Add((!terrain.castShadows) ? 0 : 1);
-					list4.Add(terrain.materialTemplate);
-					list5.Add(terrain.lightmapSize);
-					list6.Add(terrain.lightmapIndex);
-					list7.Add(Selection.Contains(terrain.gameObject));
-				}
-			}
-			datas = list.ToArray();
-			positions = list2.ToArray();
-			castShadows = list3.ToArray();
-			materials = list4.ToArray();
-			lightmapSizes = list5.ToArray();
-			lightmapIndices = list6.ToArray();
-			selection = list7.ToArray();
-		}
 		internal static void RemoveSplatTexture(TerrainData terrainData, int index)
 		{
 			Undo.RegisterCompleteObjectUndo(terrainData, "Remove texture");

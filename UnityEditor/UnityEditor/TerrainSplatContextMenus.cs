@@ -12,7 +12,24 @@ namespace UnityEditor
 		[MenuItem("CONTEXT/TerrainEngineSplats/Edit Texture...")]
 		internal static void EditSplat(MenuCommand item)
 		{
-			TerrainSplatEditor.ShowTerrainSplatEditor("Edit Terrain Texture", "Apply", (Terrain)item.context, item.userData);
+			Terrain terrain = (Terrain)item.context;
+			string text = "Edit Terrain Texture";
+			switch (terrain.materialType)
+			{
+			case Terrain.MaterialType.BuiltInStandard:
+				text += " (Standard)";
+				break;
+			case Terrain.MaterialType.BuiltInLegacyDiffuse:
+				text += " (Diffuse)";
+				break;
+			case Terrain.MaterialType.BuiltInLegacySpecular:
+				text += " (Specular)";
+				break;
+			case Terrain.MaterialType.Custom:
+				text += " (Custom)";
+				break;
+			}
+			TerrainSplatEditor.ShowTerrainSplatEditor(text, "Apply", (Terrain)item.context, item.userData);
 		}
 		[MenuItem("CONTEXT/TerrainEngineSplats/Edit Texture...", true)]
 		internal static bool EditSplatCheck(MenuCommand item)

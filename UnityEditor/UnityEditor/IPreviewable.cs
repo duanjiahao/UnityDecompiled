@@ -18,5 +18,6 @@ namespace UnityEditor
 		void OnInteractivePreviewGUI(Rect r, GUIStyle background);
 		void OnPreviewSettings();
 		string GetInfoString();
+		void ReloadPreviewInstances();
 	}
 }

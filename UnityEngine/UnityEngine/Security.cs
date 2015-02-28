@@ -14,6 +14,37 @@ namespace UnityEngine
 		private const string publicVerificationKey = "<RSAKeyValue><Modulus>uP7lsvrE6fNoQWhUIdJnQrgKoGXBkgWgs5l1xmS9gfyNkFSXgugIpfmN/0YrtL57PezYFXN0CogAnOpOtcUmpcIrh524VL/7bIh+jDUaOCG292PIx92dtzqCTvbUdCYUmaag9VlrdAw05FxYQJi2iZ/X6EiuO1TnqpVNFCDb6pXPAssoO4Uxn9JXBzL0muNRdcmFGRiLp7JQOL7a2aeU9mF9qjMprnww0k8COa6tHdnNWJqaxdFO+Etk3os0ns/gQ2FWrztKemM1Wfu7lk/B1F+V2g0adwlTiuyNHw6to+5VQXWK775RXB9wAGr8KhsVD5IJvmxrdBT8KVEWve+OXQ==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>";
 		private static List<Assembly> _verifiedAssemblies = new List<Assembly>();
 		private static readonly string kSignatureExtension = ".signature";
+		[ExcludeFromDocs]
+		public static bool PrefetchSocketPolicy(string ip, int atPort)
+		{
+			int timeout = 3000;
+			return Security.PrefetchSocketPolicy(ip, atPort, timeout);
+		}
+		public static bool PrefetchSocketPolicy(string ip, int atPort, [DefaultValue("3000")] int timeout)
+		{
+			MethodInfo unityCrossDomainHelperMethod = Security.GetUnityCrossDomainHelperMethod("PrefetchSocketPolicy");
+			object obj = unityCrossDomainHelperMethod.Invoke(null, new object[]
+			{
+				ip,
+				atPort,
+				timeout
+			});
+			return (bool)obj;
+		}
+		[SecuritySafeCritical]
+		public static string GetChainOfTrustValue(string name)
+		{
+			Assembly callingAssembly = Assembly.GetCallingAssembly();
+			if (!Security._verifiedAssemblies.Contains(callingAssembly))
+			{
+				throw new ArgumentException("Calling assembly needs to be verified by Security.LoadAndVerifyAssembly");
+			}
+			byte[] publicKeyToken = callingAssembly.GetName().GetPublicKeyToken();
+			return Security.GetChainOfTrustValueInternal(name, Security.TokenToHex(publicKeyToken));
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern string GetChainOfTrustValueInternal(string name, string publicKeyToken);
 		private static MethodInfo GetUnityCrossDomainHelperMethod(string methodname)
 		{
 			Type type = Types.GetType("UnityEngine.UnityCrossDomainHelper", "CrossDomainPolicyParser, Version=1.0.0.0, Culture=neutral");
@@ -137,36 +168,5 @@ namespace UnityEngine
 			}
 			return false;
 		}
-		[ExcludeFromDocs]
-		public static bool PrefetchSocketPolicy(string ip, int atPort)
-		{
-			int timeout = 3000;
-			return Security.PrefetchSocketPolicy(ip, atPort, timeout);
-		}
-		public static bool PrefetchSocketPolicy(string ip, int atPort, [DefaultValue("3000")] int timeout)
-		{
-			MethodInfo unityCrossDomainHelperMethod = Security.GetUnityCrossDomainHelperMethod("PrefetchSocketPolicy");
-			object obj = unityCrossDomainHelperMethod.Invoke(null, new object[]
-			{
-				ip,
-				atPort,
-				timeout
-			});
-			return (bool)obj;
-		}
-		[SecuritySafeCritical]
-		public static string GetChainOfTrustValue(string name)
-		{
-			Assembly callingAssembly = Assembly.GetCallingAssembly();
-			if (!Security._verifiedAssemblies.Contains(callingAssembly))
-			{
-				throw new ArgumentException("Calling assembly needs to be verified by Security.LoadAndVerifyAssembly");
-			}
-			byte[] publicKeyToken = callingAssembly.GetName().GetPublicKeyToken();
-			return Security.GetChainOfTrustValueInternal(name, Security.TokenToHex(publicKeyToken));
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern string GetChainOfTrustValueInternal(string name, string publicKeyToken);
 	}
 }

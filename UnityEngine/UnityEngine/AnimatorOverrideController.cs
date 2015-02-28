@@ -43,18 +43,15 @@ namespace UnityEngine
 			get
 			{
 				AnimationClip[] array = this.GetOriginalClips();
-				if (this.ShouldHideDuplicateOriginalClips())
+				Dictionary<AnimationClip, bool> dictionary = new Dictionary<AnimationClip, bool>(array.Length);
+				AnimationClip[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
 				{
-					Dictionary<AnimationClip, bool> dictionary = new Dictionary<AnimationClip, bool>(array.Length);
-					AnimationClip[] array2 = array;
-					for (int i = 0; i < array2.Length; i++)
-					{
-						AnimationClip key = array2[i];
-						dictionary[key] = true;
-					}
-					array = new AnimationClip[dictionary.Count];
-					dictionary.Keys.CopyTo(array, 0);
+					AnimationClip key = array2[i];
+					dictionary[key] = true;
 				}
+				array = new AnimationClip[dictionary.Count];
+				dictionary.Keys.CopyTo(array, 0);
 				AnimationClipPair[] array3 = new AnimationClipPair[array.Length];
 				for (int j = 0; j < array.Length; j++)
 				{
@@ -100,15 +97,12 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern bool ShouldHideDuplicateOriginalClips();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AnimationClip[] GetOriginalClips();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AnimationClip[] GetOverrideClips();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void PerformOverrideClipListCleanup();
+		internal extern void PerformOverrideClipListCleanup();
 	}
 }

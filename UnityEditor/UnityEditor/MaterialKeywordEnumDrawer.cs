@@ -4,7 +4,7 @@ namespace UnityEditor
 {
 	internal class MaterialKeywordEnumDrawer : MaterialPropertyDrawer
 	{
-		public readonly string[] keywords;
+		private readonly string[] keywords;
 		public MaterialKeywordEnumDrawer(string kw1) : this(new string[]
 		{
 			kw1

@@ -8,7 +8,6 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class GUIStyle
 	{
-		[NotRenamed]
 		[NonSerialized]
 		internal IntPtr m_Ptr;
 		[NonSerialized]
@@ -414,17 +413,17 @@ namespace UnityEngine
 		{
 			this.Cleanup();
 		}
-		internal void CreateObjectReferences()
+		internal void InternalOnAfterDeserialize()
 		{
 			this.m_FontInternal = this.GetFontInternal();
-			this.normal.RefreshAssetReference();
-			this.hover.RefreshAssetReference();
-			this.active.RefreshAssetReference();
-			this.focused.RefreshAssetReference();
-			this.onNormal.RefreshAssetReference();
-			this.onHover.RefreshAssetReference();
-			this.onActive.RefreshAssetReference();
-			this.onFocused.RefreshAssetReference();
+			this.m_Normal = new GUIStyleState(this, this.GetStyleStatePtr(0));
+			this.m_Hover = new GUIStyleState(this, this.GetStyleStatePtr(1));
+			this.m_Active = new GUIStyleState(this, this.GetStyleStatePtr(2));
+			this.m_Focused = new GUIStyleState(this, this.GetStyleStatePtr(3));
+			this.m_OnNormal = new GUIStyleState(this, this.GetStyleStatePtr(4));
+			this.m_OnHover = new GUIStyleState(this, this.GetStyleStatePtr(5));
+			this.m_OnActive = new GUIStyleState(this, this.GetStyleStatePtr(6));
+			this.m_OnFocused = new GUIStyleState(this, this.GetStyleStatePtr(7));
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

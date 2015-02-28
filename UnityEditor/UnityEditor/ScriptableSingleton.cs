@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.IO;
 using UnityEditorInternal;
@@ -28,12 +27,10 @@ namespace UnityEditor
 			else
 			{
 				ScriptableSingleton<T>.s_Instance = (this as T);
-				Assert.That(ScriptableSingleton<T>.s_Instance != null);
 			}
 		}
 		private static void CreateAndLoad()
 		{
-			Assert.That(ScriptableSingleton<T>.s_Instance == null);
 			string filePath = ScriptableSingleton<T>.GetFilePath();
 			if (!string.IsNullOrEmpty(filePath))
 			{
@@ -44,7 +41,6 @@ namespace UnityEditor
 				T t = ScriptableObject.CreateInstance<T>();
 				t.hideFlags = HideFlags.HideAndDontSave;
 			}
-			Assert.That(ScriptableSingleton<T>.s_Instance != null);
 		}
 		protected virtual void Save(bool saveAsText)
 		{

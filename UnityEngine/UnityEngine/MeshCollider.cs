@@ -4,18 +4,6 @@ namespace UnityEngine
 {
 	public sealed class MeshCollider : Collider
 	{
-		[Obsolete("mesh has been replaced with sharedMesh and will be deprecated")]
-		public Mesh mesh
-		{
-			get
-			{
-				return this.sharedMesh;
-			}
-			set
-			{
-				this.sharedMesh = value;
-			}
-		}
 		public extern Mesh sharedMesh
 		{
 			[WrapperlessIcall]
@@ -34,14 +22,16 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern bool smoothSphereCollisions
+		[Obsolete("Configuring smooth sphere collisions is no longer needed. PhysX3 has a better behaviour in place.")]
+		public bool smoothSphereCollisions
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return true;
+			}
+			set
+			{
+			}
 		}
 	}
 }

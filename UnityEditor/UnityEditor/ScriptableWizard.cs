@@ -92,18 +92,9 @@ namespace UnityEditor
 			{
 				GUILayout.ExpandHeight(true)
 			});
-			if (this.m_Inspector == null)
-			{
-				this.m_Inspector = ScriptableObject.CreateInstance<GenericInspector>();
-				this.m_Inspector.hideFlags = HideFlags.HideAndDontSave;
-				this.m_Inspector.InternalSetTargets(new UnityEngine.Object[]
-				{
-					this
-				});
-			}
 			this.m_ScrollPosition = EditorGUILayout.BeginVerticalScrollView(this.m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box", new GUILayoutOption[0]);
 			GUIUtility.GetControlID(645789, FocusType.Passive);
-			bool flag = this.m_Inspector.DrawDefaultInspector();
+			bool flag = this.DrawWizardGUI();
 			EditorGUILayout.EndScrollView();
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			if (this.m_ErrorString != string.Empty)
@@ -164,6 +155,19 @@ namespace UnityEditor
 			{
 				this.InvokeWizardUpdate();
 			}
+		}
+		protected virtual bool DrawWizardGUI()
+		{
+			if (this.m_Inspector == null)
+			{
+				this.m_Inspector = ScriptableObject.CreateInstance<GenericInspector>();
+				this.m_Inspector.hideFlags = HideFlags.HideAndDontSave;
+				this.m_Inspector.InternalSetTargets(new UnityEngine.Object[]
+				{
+					this
+				});
+			}
+			return this.m_Inspector.DrawDefaultInspector();
 		}
 		public static T DisplayWizard<T>(string title) where T : ScriptableWizard
 		{

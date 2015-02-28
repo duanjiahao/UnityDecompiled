@@ -1,13 +1,14 @@
 using System;
 namespace UnityEditor
 {
-	public enum TextureUsageMode
+	internal enum TextureUsageMode
 	{
 		Default,
 		LightmapDoubleLDR,
 		LightmapRGBM,
 		NormalmapDXT5nm,
 		NormalmapPlain,
-		AlwaysPadded = 6
+		RGBMEncoded,
+		AlwaysPadded
 	}
 }

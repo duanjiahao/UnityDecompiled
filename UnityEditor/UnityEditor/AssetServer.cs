@@ -119,36 +119,7 @@ namespace UnityEditor
 		public static extern string UnityGUID(int a, int b, int c, int d);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string[] BuildExportPackageAssetListGUIDs(string[] guids, bool dependencies, [DefaultValue("true")] bool includeUnmodified, [DefaultValue("false")] bool includeNameConflicts);
-		[ExcludeFromDocs]
-		public static string[] BuildExportPackageAssetListGUIDs(string[] guids, bool dependencies, bool includeUnmodified)
-		{
-			bool includeNameConflicts = false;
-			return AssetServer.BuildExportPackageAssetListGUIDs(guids, dependencies, includeUnmodified, includeNameConflicts);
-		}
-		[ExcludeFromDocs]
-		public static string[] BuildExportPackageAssetListGUIDs(string[] guids, bool dependencies)
-		{
-			bool includeNameConflicts = false;
-			bool includeUnmodified = true;
-			return AssetServer.BuildExportPackageAssetListGUIDs(guids, dependencies, includeUnmodified, includeNameConflicts);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern AssetsItem[] BuildExportPackageAssetListAssetsItems(string[] guids, bool dependencies, [DefaultValue("true")] bool includeUnmodified, [DefaultValue("false")] bool includeNameConflicts);
-		[ExcludeFromDocs]
-		public static AssetsItem[] BuildExportPackageAssetListAssetsItems(string[] guids, bool dependencies, bool includeUnmodified)
-		{
-			bool includeNameConflicts = false;
-			return AssetServer.BuildExportPackageAssetListAssetsItems(guids, dependencies, includeUnmodified, includeNameConflicts);
-		}
-		[ExcludeFromDocs]
-		public static AssetsItem[] BuildExportPackageAssetListAssetsItems(string[] guids, bool dependencies)
-		{
-			bool includeNameConflicts = false;
-			bool includeUnmodified = true;
-			return AssetServer.BuildExportPackageAssetListAssetsItems(guids, dependencies, includeUnmodified, includeNameConflicts);
-		}
+		public static extern AssetsItem[] BuildExportPackageAssetListAssetsItems(string[] guids, bool dependencies);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AssetsItem[] BuildAllExportPackageAssetListAssetsItems();

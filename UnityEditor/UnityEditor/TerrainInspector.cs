@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
+using UnityEditor.AnimatedValues;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Rendering;
 namespace UnityEditor
 {
 	[CustomEditor(typeof(Terrain))]
@@ -47,11 +49,16 @@ namespace UnityEditor
 			public GUIContent noTrees = EditorGUIUtility.TextContent("TerrainInspector.Trees.NoTrees");
 			public GUIContent editTrees = EditorGUIUtility.TextContent("TerrainInspector.Trees.EditTrees");
 			public GUIContent treeDensity = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeDensity");
-			public GUIContent treeColorVar = EditorGUIUtility.TextContent("TerrainInspector.Trees.ColorVar");
 			public GUIContent treeHeight = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeHeight");
-			public GUIContent treeHeightVar = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeHeightVar");
+			public GUIContent treeHeightRandomLabel = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeHeightRandomLabel");
+			public GUIContent treeHeightRandomToggle = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeHeightRandomToggle");
+			public GUIContent lockWidth = EditorGUIUtility.TextContent("TerrainInspector.Trees.LockWidth");
 			public GUIContent treeWidth = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeWidth");
-			public GUIContent treeWidthVar = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeWidthVar");
+			public GUIContent treeWidthRandomLabel = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeWidthRandomLabel");
+			public GUIContent treeWidthRandomToggle = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeWidthRandomToggle");
+			public GUIContent treeColorVar = EditorGUIUtility.TextContent("TerrainInspector.Trees.ColorVar");
+			public GUIContent treeRotation = EditorGUIUtility.TextContent("TerrainInspector.Trees.TreeRotation");
+			public GUIContent massPlaceTrees = EditorGUIUtility.TextContent("TerrainInspector.Trees.MassPlaceTrees");
 			public GUIContent details = EditorGUIUtility.TextContent("TerrainInspector.Details.Details");
 			public GUIContent editDetails = EditorGUIUtility.TextContent("TerrainInspector.Details.Edit");
 			public GUIContent detailTargetStrength = EditorGUIUtility.TextContent("TerrainInspector.Details.TargetStrength");
@@ -59,9 +66,10 @@ namespace UnityEditor
 			public GUIContent importRaw = EditorGUIUtility.TextContent("TerrainInspector.Heightmaps.ImportRaw");
 			public GUIContent exportRaw = EditorGUIUtility.TextContent("TerrainInspector.Heightmaps.ExportRaw");
 			public GUIContent flatten = EditorGUIUtility.TextContent("TerrainInspector.Heightmaps.Flatten");
+			public GUIContent overrideSmoothness = EditorGUIUtility.TextContent("TerrainInspector.OverrideSmoothness");
+			public GUIContent bakeLightProbesForTrees = EditorGUIUtility.TextContent("TerrainInspector.BakeLightProbes");
 			public GUIContent resolution = EditorGUIUtility.TextContent("TerrainInspector.Resolution");
 			public GUIContent refresh = EditorGUIUtility.TextContent("TerrainInspector.Refresh");
-			public GUIContent massPlaceTrees = EditorGUIUtility.TextContent("TerrainInspector.MassPlaceTrees");
 		}
 		private const float kHeightmapBrushScale = 0.01f;
 		private const float kMinBrushStrength = 0.00167849252f;
@@ -80,6 +88,7 @@ namespace UnityEditor
 		internal static PrefKey s_PrevTexture = new PrefKey("Terrain/Previous Detail", "#,");
 		internal static PrefKey s_NextTexture = new PrefKey("Terrain/Next Detail", "#.");
 		private Terrain m_Terrain;
+		private Texture2D[] m_SplatIcons;
 		private GUIContent[] m_TreeContents;
 		private GUIContent[] m_DetailContents;
 		private SavedFloat m_TargetHeight = new SavedFloat("TerrainBrushTargetHeight", 0.2f);
@@ -94,6 +103,11 @@ namespace UnityEditor
 		private int m_SelectedSplat;
 		private int m_SelectedDetail;
 		private static int s_TerrainEditorHash = "TerrainEditor".GetHashCode();
+		private List<ReflectionProbeBlendInfo> m_BlendInfoList = new List<ReflectionProbeBlendInfo>();
+		private AnimBool m_ShowBuiltinSpecularSettings = new AnimBool();
+		private AnimBool m_ShowBuiltinStandardSettings = new AnimBool();
+		private AnimBool m_ShowCustomMaterialSettings = new AnimBool();
+		private AnimBool m_ShowReflectionProbesGUI = new AnimBool();
 		private SavedInt m_SelectedTool = new SavedInt("TerrainSelectedTool", 0);
 		private TerrainTool selectedTool
 		{
@@ -234,8 +248,27 @@ namespace UnityEditor
 				this.LoadBrushIcons();
 			}
 		}
+		public void OnEnable()
+		{
+			this.m_ShowBuiltinSpecularSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ShowBuiltinStandardSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ShowCustomMaterialSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ShowReflectionProbesGUI.valueChanged.AddListener(new UnityAction(base.Repaint));
+			Terrain terrain = this.target as Terrain;
+			if (terrain != null)
+			{
+				this.m_ShowBuiltinSpecularSettings.value = (terrain.materialType == Terrain.MaterialType.BuiltInLegacySpecular);
+				this.m_ShowBuiltinStandardSettings.value = (terrain.materialType == Terrain.MaterialType.BuiltInStandard);
+				this.m_ShowCustomMaterialSettings.value = (terrain.materialType == Terrain.MaterialType.Custom);
+				this.m_ShowReflectionProbesGUI.value = (terrain.materialType == Terrain.MaterialType.BuiltInStandard || terrain.materialType == Terrain.MaterialType.Custom);
+			}
+		}
 		public void OnDisable()
 		{
+			this.m_ShowReflectionProbesGUI.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+			this.m_ShowCustomMaterialSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+			this.m_ShowBuiltinStandardSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+			this.m_ShowBuiltinSpecularSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			if (this.m_CachedBrush != null)
 			{
 				this.m_CachedBrush.Dispose();
@@ -321,6 +354,15 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 			return result;
+		}
+		private void LoadSplatIcons()
+		{
+			SplatPrototype[] splatPrototypes = this.m_Terrain.terrainData.splatPrototypes;
+			this.m_SplatIcons = new Texture2D[splatPrototypes.Length];
+			for (int i = 0; i < this.m_SplatIcons.Length; i++)
+			{
+				this.m_SplatIcons[i] = (AssetPreview.GetAssetPreview(splatPrototypes[i].texture) ?? splatPrototypes[i].texture);
+			}
 		}
 		private void LoadTreeIcons()
 		{
@@ -412,14 +454,83 @@ namespace UnityEditor
 				TreePainter.spacing = (1.1f - num2) * 3f;
 			}
 			GUILayout.Space(5f);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Label(TerrainInspector.styles.treeHeight, new GUILayoutOption[]
+			{
+				GUILayout.Width(EditorGUIUtility.labelWidth - 6f)
+			});
+			GUILayout.Label(TerrainInspector.styles.treeHeightRandomLabel, new GUILayoutOption[]
+			{
+				GUILayout.ExpandWidth(false)
+			});
+			TreePainter.allowHeightVar = GUILayout.Toggle(TreePainter.allowHeightVar, TerrainInspector.styles.treeHeightRandomToggle, new GUILayoutOption[]
+			{
+				GUILayout.ExpandWidth(false)
+			});
+			if (TreePainter.allowHeightVar)
+			{
+				EditorGUI.BeginChangeCheck();
+				float num3 = TreePainter.treeHeight * (1f - TreePainter.treeHeightVariation);
+				float num4 = TreePainter.treeHeight * (1f + TreePainter.treeHeightVariation);
+				EditorGUILayout.MinMaxSlider(ref num3, ref num4, 0.01f, 2f, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
+				{
+					TreePainter.treeHeight = (num3 + num4) * 0.5f;
+					TreePainter.treeHeightVariation = (num4 - num3) / (num3 + num4);
+				}
+			}
+			else
+			{
+				TreePainter.treeHeight = EditorGUILayout.Slider(TreePainter.treeHeight, 0.01f, 2f, new GUILayoutOption[0]);
+				TreePainter.treeHeightVariation = 0f;
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.Space(5f);
+			TreePainter.lockWidthToHeight = EditorGUILayout.Toggle(TerrainInspector.styles.lockWidth, TreePainter.lockWidthToHeight, new GUILayoutOption[0]);
+			if (TreePainter.lockWidthToHeight)
+			{
+				TreePainter.treeWidth = TreePainter.treeHeight;
+				TreePainter.treeWidthVariation = TreePainter.treeHeightVariation;
+				TreePainter.allowWidthVar = TreePainter.allowHeightVar;
+			}
+			GUILayout.Space(5f);
+			EditorGUI.BeginDisabledGroup(TreePainter.lockWidthToHeight);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Label(TerrainInspector.styles.treeWidth, new GUILayoutOption[]
+			{
+				GUILayout.Width(EditorGUIUtility.labelWidth - 6f)
+			});
+			GUILayout.Label(TerrainInspector.styles.treeWidthRandomLabel, new GUILayoutOption[]
+			{
+				GUILayout.ExpandWidth(false)
+			});
+			TreePainter.allowWidthVar = GUILayout.Toggle(TreePainter.allowWidthVar, TerrainInspector.styles.treeWidthRandomToggle, new GUILayoutOption[]
+			{
+				GUILayout.ExpandWidth(false)
+			});
+			if (TreePainter.allowWidthVar)
+			{
+				EditorGUI.BeginChangeCheck();
+				float num5 = TreePainter.treeWidth * (1f - TreePainter.treeWidthVariation);
+				float num6 = TreePainter.treeWidth * (1f + TreePainter.treeWidthVariation);
+				EditorGUILayout.MinMaxSlider(ref num5, ref num6, 0.01f, 2f, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
+				{
+					TreePainter.treeWidth = (num5 + num6) * 0.5f;
+					TreePainter.treeWidthVariation = (num6 - num5) / (num5 + num6);
+				}
+			}
+			else
+			{
+				TreePainter.treeWidth = EditorGUILayout.Slider(TreePainter.treeWidth, 0.01f, 2f, new GUILayoutOption[0]);
+				TreePainter.treeWidthVariation = 0f;
+			}
+			GUILayout.EndHorizontal();
+			EditorGUI.EndDisabledGroup();
+			GUILayout.Space(5f);
 			TreePainter.treeColorAdjustment = EditorGUILayout.Slider(TerrainInspector.styles.treeColorVar, TreePainter.treeColorAdjustment, 0f, 1f, new GUILayoutOption[0]);
 			GUILayout.Space(5f);
-			TreePainter.treeHeight = TerrainInspector.PercentSlider(TerrainInspector.styles.treeHeight, TreePainter.treeHeight, 0.5f, 2f);
-			TreePainter.treeHeightVariation = TerrainInspector.PercentSlider(TerrainInspector.styles.treeHeightVar, TreePainter.treeHeightVariation, 0f, 0.3f);
-			GUILayout.Space(5f);
-			TreePainter.treeWidth = TerrainInspector.PercentSlider(TerrainInspector.styles.treeWidth, TreePainter.treeWidth, 0.5f, 2f);
-			TreePainter.treeWidthVariation = TerrainInspector.PercentSlider(TerrainInspector.styles.treeWidthVar, TreePainter.treeWidthVariation, 0f, 0.3f);
-			GUILayout.Space(5f);
+			TreePainter.randomRotation = EditorGUILayout.Toggle(TerrainInspector.styles.treeRotation, TreePainter.randomRotation, new GUILayoutOption[0]);
 		}
 		public void ShowDetails()
 		{
@@ -450,29 +561,71 @@ namespace UnityEditor
 			TerrainData terrainData = this.m_Terrain.terrainData;
 			EditorGUI.BeginChangeCheck();
 			GUILayout.Label("Base Terrain", EditorStyles.boldLabel, new GUILayoutOption[0]);
+			this.m_Terrain.drawHeightmap = EditorGUILayout.Toggle("Draw", this.m_Terrain.drawHeightmap, new GUILayoutOption[0]);
 			this.m_Terrain.heightmapPixelError = EditorGUILayout.Slider("Pixel Error", this.m_Terrain.heightmapPixelError, 1f, 200f, new GUILayoutOption[0]);
 			this.m_Terrain.basemapDistance = EditorGUILayout.Slider("Base Map Dist.", this.m_Terrain.basemapDistance, 0f, 2000f, new GUILayoutOption[0]);
-			this.m_Terrain.castShadows = EditorGUILayout.Toggle("Cast shadows", this.m_Terrain.castShadows, new GUILayoutOption[0]);
-			this.m_Terrain.materialTemplate = (EditorGUILayout.ObjectField("Material", this.m_Terrain.materialTemplate, typeof(Material), false, new GUILayoutOption[0]) as Material);
-			if (this.m_Terrain.materialTemplate != null)
+			this.m_Terrain.castShadows = EditorGUILayout.Toggle("Cast Shadows", this.m_Terrain.castShadows, new GUILayoutOption[0]);
+			this.m_Terrain.materialType = (Terrain.MaterialType)EditorGUILayout.EnumPopup("Material", this.m_Terrain.materialType, new GUILayoutOption[0]);
+			if (this.m_Terrain.materialType != Terrain.MaterialType.Custom)
 			{
-				Shader shader = this.m_Terrain.materialTemplate.shader;
-				if (ShaderUtil.HasTangentChannel(shader))
+				this.m_Terrain.materialTemplate = null;
+			}
+			this.m_ShowBuiltinSpecularSettings.target = (this.m_Terrain.materialType == Terrain.MaterialType.BuiltInLegacySpecular);
+			this.m_ShowBuiltinStandardSettings.target = (this.m_Terrain.materialType == Terrain.MaterialType.BuiltInStandard);
+			this.m_ShowCustomMaterialSettings.target = (this.m_Terrain.materialType == Terrain.MaterialType.Custom);
+			this.m_ShowReflectionProbesGUI.target = (this.m_Terrain.materialType == Terrain.MaterialType.BuiltInStandard || this.m_Terrain.materialType == Terrain.MaterialType.Custom);
+			if (EditorGUILayout.BeginFadeGroup(this.m_ShowBuiltinSpecularSettings.faded))
+			{
+				EditorGUI.indentLevel++;
+				this.m_Terrain.legacySpecular = EditorGUILayout.ColorField("Specular Color", this.m_Terrain.legacySpecular, new GUILayoutOption[0]);
+				this.m_Terrain.legacyShininess = EditorGUILayout.Slider("Shininess", this.m_Terrain.legacyShininess, 0.03f, 1f, new GUILayoutOption[0]);
+				EditorGUI.indentLevel--;
+			}
+			EditorGUILayout.EndFadeGroup();
+			if (EditorGUILayout.BeginFadeGroup(this.m_ShowBuiltinStandardSettings.faded))
+			{
+				EditorGUI.indentLevel++;
+				this.m_Terrain.useDefaultSmoothness = EditorGUILayout.Toggle(TerrainInspector.styles.overrideSmoothness, this.m_Terrain.useDefaultSmoothness, new GUILayoutOption[0]);
+				EditorGUI.BeginDisabledGroup(!this.m_Terrain.useDefaultSmoothness);
+				this.m_Terrain.defaultSmoothness = EditorGUILayout.Slider("Smoothness", this.m_Terrain.defaultSmoothness, 0f, 1f, new GUILayoutOption[0]);
+				EditorGUI.EndDisabledGroup();
+				EditorGUI.indentLevel--;
+			}
+			EditorGUILayout.EndFadeGroup();
+			if (EditorGUILayout.BeginFadeGroup(this.m_ShowCustomMaterialSettings.faded))
+			{
+				EditorGUI.indentLevel++;
+				this.m_Terrain.materialTemplate = (EditorGUILayout.ObjectField("Custom Material", this.m_Terrain.materialTemplate, typeof(Material), false, new GUILayoutOption[0]) as Material);
+				if (this.m_Terrain.materialTemplate != null)
 				{
-					GUIContent gUIContent = EditorGUIUtility.TextContent("TerrainInspector.ShaderWarning");
-					EditorGUILayout.HelpBox(gUIContent.text, MessageType.Warning, false);
+					Shader shader = this.m_Terrain.materialTemplate.shader;
+					if (ShaderUtil.HasTangentChannel(shader))
+					{
+						GUIContent gUIContent = EditorGUIUtility.TextContent("TerrainInspector.ShaderWarning");
+						EditorGUILayout.HelpBox(gUIContent.text, MessageType.Warning, false);
+					}
+				}
+				EditorGUI.indentLevel--;
+			}
+			EditorGUILayout.EndFadeGroup();
+			if (EditorGUILayout.BeginFadeGroup(this.m_ShowReflectionProbesGUI.faded))
+			{
+				this.m_Terrain.reflectionProbeUsage = (ReflectionProbeUsage)EditorGUILayout.EnumPopup("Reflection Probes", this.m_Terrain.reflectionProbeUsage, new GUILayoutOption[0]);
+				if (this.m_Terrain.reflectionProbeUsage != ReflectionProbeUsage.Off)
+				{
+					EditorGUI.indentLevel++;
+					this.m_Terrain.GetClosestReflectionProbes(this.m_BlendInfoList);
+					RendererEditorBase.Probes.ShowClosestReflectionProbes(this.m_BlendInfoList);
+					EditorGUI.indentLevel--;
 				}
 			}
-			EditorGUI.BeginChangeCheck();
-			PhysicMaterial physicMaterial = EditorGUILayout.ObjectField("Physics Material", terrainData.physicMaterial, typeof(PhysicMaterial), false, new GUILayoutOption[0]) as PhysicMaterial;
-			if (EditorGUI.EndChangeCheck())
-			{
-				terrainData.physicMaterial = physicMaterial;
-			}
+			EditorGUILayout.EndFadeGroup();
+			terrainData.thickness = EditorGUILayout.FloatField("Thickness", terrainData.thickness, new GUILayoutOption[0]);
 			GUILayout.Label("Tree & Detail Objects", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			this.m_Terrain.drawTreesAndFoliage = EditorGUILayout.Toggle("Draw", this.m_Terrain.drawTreesAndFoliage, new GUILayoutOption[0]);
-			this.m_Terrain.collectDetailPatches = EditorGUILayout.Toggle("Collect Detail Patches", this.m_Terrain.collectDetailPatches, new GUILayoutOption[0]);
+			this.m_Terrain.bakeLightProbesForTrees = EditorGUILayout.Toggle(TerrainInspector.styles.bakeLightProbesForTrees, this.m_Terrain.bakeLightProbesForTrees, new GUILayoutOption[0]);
 			this.m_Terrain.detailObjectDistance = EditorGUILayout.Slider("Detail Distance", this.m_Terrain.detailObjectDistance, 0f, 250f, new GUILayoutOption[0]);
+			this.m_Terrain.collectDetailPatches = EditorGUILayout.Toggle("Collect Detail Patches", this.m_Terrain.collectDetailPatches, new GUILayoutOption[0]);
 			this.m_Terrain.detailObjectDensity = EditorGUILayout.Slider("Detail Density", this.m_Terrain.detailObjectDensity, 0f, 1f, new GUILayoutOption[0]);
 			this.m_Terrain.treeDistance = EditorGUILayout.Slider("Tree Distance", this.m_Terrain.treeDistance, 0f, 2000f, new GUILayoutOption[0]);
 			this.m_Terrain.treeBillboardDistance = EditorGUILayout.Slider("Billboard Start", this.m_Terrain.treeBillboardDistance, 5f, 2000f, new GUILayoutOption[0]);
@@ -513,17 +666,12 @@ namespace UnityEditor
 		}
 		public void ShowTextures()
 		{
+			this.LoadSplatIcons();
 			this.ShowBrushes();
 			GUILayout.Label(TerrainInspector.styles.textures, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			SplatPrototype[] splatPrototypes = this.m_Terrain.terrainData.splatPrototypes;
-			Texture2D[] array = new Texture2D[splatPrototypes.Length];
-			for (int i = 0; i < splatPrototypes.Length; i++)
-			{
-				array[i] = splatPrototypes[i].texture;
-			}
 			GUI.changed = false;
 			bool flag;
-			this.m_SelectedSplat = TerrainInspector.AspectSelectionGrid(this.m_SelectedSplat, array, 64, TerrainInspector.styles.gridList, "No terrain textures defined.", out flag);
+			this.m_SelectedSplat = TerrainInspector.AspectSelectionGrid(this.m_SelectedSplat, this.m_SplatIcons, 64, TerrainInspector.styles.gridList, "No terrain textures defined.", out flag);
 			if (flag)
 			{
 				TerrainSplatContextMenus.EditSplat(new MenuCommand(this.m_Terrain, this.m_SelectedSplat));
@@ -570,31 +718,43 @@ namespace UnityEditor
 			int num7 = this.m_Terrain.terrainData.alphamapResolution;
 			int num8 = this.m_Terrain.terrainData.baseMapResolution;
 			EditorGUI.BeginChangeCheck();
-			num = this.DelayedFloatField("Terrain Width", num);
+			num = EditorGUI.DelayedFloatField(EditorGUIUtility.TempContent("Terrain Width"), num);
 			if (num <= 0f)
 			{
 				num = 1f;
 			}
-			num3 = this.DelayedFloatField("Terrain Length", num3);
+			if (num > 100000f)
+			{
+				num = 100000f;
+			}
+			num3 = EditorGUI.DelayedFloatField(EditorGUIUtility.TempContent("Terrain Length"), num3);
 			if (num3 <= 0f)
 			{
 				num3 = 1f;
 			}
-			num2 = this.DelayedFloatField("Terrain Height", num2);
+			if (num3 > 100000f)
+			{
+				num3 = 100000f;
+			}
+			num2 = EditorGUI.DelayedFloatField(EditorGUIUtility.TempContent("Terrain Height"), num2);
 			if (num2 <= 0f)
 			{
 				num2 = 1f;
 			}
-			num4 = this.DelayedIntField("Heightmap Resolution", num4);
+			if (num2 > 10000f)
+			{
+				num2 = 10000f;
+			}
+			num4 = EditorGUI.DelayedIntField(EditorGUIUtility.TempContent("Heightmap Resolution"), num4);
 			num4 = Mathf.Clamp(num4, 33, 4097);
 			num4 = this.m_Terrain.terrainData.GetAdjustedSize(num4);
-			num5 = this.DelayedIntField("Detail Resolution", num5);
+			num5 = EditorGUI.DelayedIntField(EditorGUIUtility.TempContent("Detail Resolution"), num5);
 			num5 = Mathf.Clamp(num5, 0, 4048);
-			num6 = this.DelayedIntField("Detail Resolution Per Patch", num6);
+			num6 = EditorGUI.DelayedIntField(EditorGUIUtility.TempContent("Detail Resolution Per Patch"), num6);
 			num6 = Mathf.Clamp(num6, 8, 128);
-			num7 = this.DelayedIntField("Control Texture Resolution", num7);
+			num7 = EditorGUI.DelayedIntField(EditorGUIUtility.TempContent("Control Texture Resolution"), num7);
 			num7 = Mathf.Clamp(Mathf.ClosestPowerOfTwo(num7), 16, 2048);
-			num8 = this.DelayedIntField("Base Texture Resolution", num8);
+			num8 = EditorGUI.DelayedIntField(EditorGUIUtility.TempContent("Base Texture Resolution"), num8);
 			num8 = Mathf.Clamp(Mathf.ClosestPowerOfTwo(num8), 16, 2048);
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -642,36 +802,6 @@ namespace UnityEditor
 			{
 				terrainData.SetDetailResolution(resolution, resolutionPerPatch);
 			}
-		}
-		internal float DelayedFloatField(string label, float value)
-		{
-			float num = value;
-			float num2 = num;
-			Rect rect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
-			rect = EditorGUI.PrefixLabel(rect, EditorGUIUtility.TempContent(label));
-			EditorGUI.BeginChangeCheck();
-			string s = EditorGUI.DelayedTextField(rect, num.ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.numberField);
-			if (EditorGUI.EndChangeCheck() && float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out num2) && num2 != num)
-			{
-				value = num2;
-				GUI.changed = true;
-			}
-			return num2;
-		}
-		internal int DelayedIntField(string label, int value)
-		{
-			int num = value;
-			int num2 = num;
-			Rect rect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
-			rect = EditorGUI.PrefixLabel(rect, EditorGUIUtility.TempContent(label));
-			EditorGUI.BeginChangeCheck();
-			string s = EditorGUI.DelayedTextField(rect, num.ToString(), "0123456789-", EditorStyles.numberField);
-			if (EditorGUI.EndChangeCheck() && int.TryParse(s, out num2) && num2 != num)
-			{
-				value = num2;
-				GUI.changed = true;
-			}
-			return num2;
 		}
 		public void ShowRefreshPrototypes()
 		{
@@ -814,7 +944,7 @@ namespace UnityEditor
 		{
 			Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 			RaycastHit raycastHit;
-			if (this.m_Terrain.collider.Raycast(ray, out raycastHit, float.PositiveInfinity))
+			if (this.m_Terrain.GetComponent<Collider>().Raycast(ray, out raycastHit, float.PositiveInfinity))
 			{
 				uv = raycastHit.textureCoord;
 				pos = raycastHit.point;
@@ -1030,14 +1160,13 @@ namespace UnityEditor
 							{
 								Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Place Tree");
 							}
-							TreePainter.terrain = this.m_Terrain;
 							if (!Event.current.shift && !Event.current.control)
 							{
-								TreePainter.PlaceTrees(vector.x, vector.y);
+								TreePainter.PlaceTrees(this.m_Terrain, vector.x, vector.y);
 							}
 							else
 							{
-								TreePainter.RemoveTrees(vector.x, vector.y, Event.current.control);
+								TreePainter.RemoveTrees(this.m_Terrain, vector.x, vector.y, Event.current.control);
 							}
 						}
 						else

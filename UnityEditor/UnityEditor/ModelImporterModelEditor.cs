@@ -9,6 +9,7 @@ namespace UnityEditor
 			public GUIContent Meshes = EditorGUIUtility.TextContent("ModelImporter.Meshes");
 			public GUIContent ScaleFactor = EditorGUIUtility.TextContent("ModelImporter.ScaleFactor");
 			public GUIContent UseFileUnits = EditorGUIUtility.TextContent("ModelImporter.UseFileUnits");
+			public GUIContent FileScaleFactor = EditorGUIUtility.TextContent("ModelImporter.FileScaleFactor");
 			public GUIContent ImportBlendShapes = EditorGUIUtility.TextContent("ModelImporter.ImportBlendShapes");
 			public GUIContent GenerateColliders = EditorGUIUtility.TextContent("ModelImporter.GenerateColliders");
 			public GUIContent SwapUVChannels = EditorGUIUtility.TextContent("ModelImporter.SwapUVChannels");
@@ -42,6 +43,7 @@ namespace UnityEditor
 				new GUIContent("High")
 			};
 			public GUIContent OptimizeMeshForGPU = EditorGUIUtility.TextContent("ModelImporterOptimizeMesh");
+			public GUIContent KeepQuads = EditorGUIUtility.TextContent("ModelImporterKeepQuads");
 			public GUIContent IsReadable = EditorGUIUtility.TextContent("ModelImporterIsReadable");
 			public GUIContent Materials = EditorGUIUtility.TextContent("ModelImporterMaterials");
 			public GUIContent ImportMaterials = EditorGUIUtility.TextContent("ModelImporterMatImportMaterials");
@@ -124,12 +126,12 @@ namespace UnityEditor
 		private SerializedProperty m_MaterialName;
 		private SerializedProperty m_MaterialSearch;
 		private SerializedProperty m_GlobalScale;
+		private SerializedProperty m_FileScale;
 		private SerializedProperty m_MeshCompression;
 		private SerializedProperty m_ImportBlendShapes;
 		private SerializedProperty m_AddColliders;
 		private SerializedProperty m_SwapUVChannels;
 		private SerializedProperty m_GenerateSecondaryUV;
-		private SerializedProperty m_UseFileUnits;
 		private SerializedProperty m_SecondaryUVAngleDistortion;
 		private SerializedProperty m_SecondaryUVAreaDistortion;
 		private SerializedProperty m_SecondaryUVHardAngle;
@@ -140,24 +142,25 @@ namespace UnityEditor
 		private SerializedProperty m_TangentImportMode;
 		private SerializedProperty m_OptimizeMeshForGPU;
 		private SerializedProperty m_IsReadable;
+		private SerializedProperty m_KeepQuads;
 		private static ModelImporterModelEditor.Styles styles;
 		private void UpdateShowAllMaterialNameOptions()
 		{
 			this.m_MaterialName = base.serializedObject.FindProperty("m_MaterialName");
 			this.m_ShowAllMaterialNameOptions = (this.m_MaterialName.intValue == 3);
 		}
-		private void OnEnable()
+		internal virtual void OnEnable()
 		{
 			this.m_ImportMaterials = base.serializedObject.FindProperty("m_ImportMaterials");
 			this.m_MaterialName = base.serializedObject.FindProperty("m_MaterialName");
 			this.m_MaterialSearch = base.serializedObject.FindProperty("m_MaterialSearch");
 			this.m_GlobalScale = base.serializedObject.FindProperty("m_GlobalScale");
+			this.m_FileScale = base.serializedObject.FindProperty("m_FileScale");
 			this.m_MeshCompression = base.serializedObject.FindProperty("m_MeshCompression");
 			this.m_ImportBlendShapes = base.serializedObject.FindProperty("m_ImportBlendShapes");
 			this.m_AddColliders = base.serializedObject.FindProperty("m_AddColliders");
 			this.m_SwapUVChannels = base.serializedObject.FindProperty("swapUVChannels");
 			this.m_GenerateSecondaryUV = base.serializedObject.FindProperty("generateSecondaryUV");
-			this.m_UseFileUnits = base.serializedObject.FindProperty("m_UseFileUnits");
 			this.m_SecondaryUVAngleDistortion = base.serializedObject.FindProperty("secondaryUVAngleDistortion");
 			this.m_SecondaryUVAreaDistortion = base.serializedObject.FindProperty("secondaryUVAreaDistortion");
 			this.m_SecondaryUVHardAngle = base.serializedObject.FindProperty("secondaryUVHardAngle");
@@ -168,6 +171,7 @@ namespace UnityEditor
 			this.m_TangentImportMode = base.serializedObject.FindProperty("tangentImportMode");
 			this.m_OptimizeMeshForGPU = base.serializedObject.FindProperty("optimizeMeshForGPU");
 			this.m_IsReadable = base.serializedObject.FindProperty("m_IsReadable");
+			this.m_KeepQuads = base.serializedObject.FindProperty("keepQuads");
 			this.UpdateShowAllMaterialNameOptions();
 		}
 		internal override void ResetValues()
@@ -189,20 +193,7 @@ namespace UnityEditor
 			}
 			GUILayout.Label(ModelImporterModelEditor.styles.Meshes, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_GlobalScale, ModelImporterModelEditor.styles.ScaleFactor, new GUILayoutOption[0]);
-			bool flag = true;
-			UnityEngine.Object[] targets = base.targets;
-			for (int i = 0; i < targets.Length; i++)
-			{
-				ModelImporter modelImporter = (ModelImporter)targets[i];
-				if (!modelImporter.isUseFileUnitsSupported)
-				{
-					flag = false;
-				}
-			}
-			if (flag)
-			{
-				EditorGUILayout.PropertyField(this.m_UseFileUnits, ModelImporterModelEditor.styles.UseFileUnits, new GUILayoutOption[0]);
-			}
+			EditorGUILayout.PropertyField(this.m_FileScale, ModelImporterModelEditor.styles.FileScaleFactor, new GUILayoutOption[0]);
 			EditorGUILayout.Popup(this.m_MeshCompression, ModelImporterModelEditor.styles.MeshCompressionOpt, ModelImporterModelEditor.styles.MeshCompressionLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_IsReadable, ModelImporterModelEditor.styles.IsReadable, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_OptimizeMeshForGPU, ModelImporterModelEditor.styles.OptimizeMeshForGPU, new GUILayoutOption[0]);
@@ -232,14 +223,14 @@ namespace UnityEditor
 				EditorGUI.indentLevel--;
 			}
 			GUILayout.Label(ModelImporterModelEditor.styles.TangentSpace, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			bool flag2 = true;
-			UnityEngine.Object[] targets2 = base.targets;
-			for (int j = 0; j < targets2.Length; j++)
+			bool flag = true;
+			UnityEngine.Object[] targets = base.targets;
+			for (int i = 0; i < targets.Length; i++)
 			{
-				ModelImporter modelImporter2 = (ModelImporter)targets2[j];
-				if (!modelImporter2.isTangentImportSupported)
+				ModelImporter modelImporter = (ModelImporter)targets[i];
+				if (!modelImporter.isTangentImportSupported)
 				{
-					flag2 = false;
+					flag = false;
 				}
 			}
 			EditorGUI.BeginChangeCheck();
@@ -247,14 +238,14 @@ namespace UnityEditor
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.m_TangentImportMode.intValue = this.m_NormalImportMode.intValue;
-				if (!flag2 && this.m_TangentImportMode.intValue == 0)
+				if (!flag && this.m_TangentImportMode.intValue == 0)
 				{
 					this.m_TangentImportMode.intValue = 1;
 				}
 			}
 			GUIContent[] displayedOptions = ModelImporterModelEditor.styles.TangentSpaceModeOptLabelsAll;
 			ModelImporterTangentSpaceMode[] array = ModelImporterModelEditor.styles.TangentSpaceModeOptEnumsAll;
-			if (this.m_NormalImportMode.intValue == 1 || !flag2)
+			if (this.m_NormalImportMode.intValue == 1 || !flag)
 			{
 				displayedOptions = ModelImporterModelEditor.styles.TangentSpaceModeOptLabelsCalculate;
 				array = ModelImporterModelEditor.styles.TangentSpaceModeOptEnumsCalculate;
@@ -287,6 +278,7 @@ namespace UnityEditor
 			EditorGUI.BeginDisabledGroup(this.m_TangentImportMode.intValue != 1);
 			EditorGUILayout.PropertyField(this.m_SplitTangentsAcrossSeams, ModelImporterModelEditor.styles.SplitTangents, new GUILayoutOption[0]);
 			EditorGUI.EndDisabledGroup();
+			EditorGUILayout.PropertyField(this.m_KeepQuads, ModelImporterModelEditor.styles.KeepQuads, new GUILayoutOption[0]);
 			GUILayout.Label(ModelImporterModelEditor.styles.Materials, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_ImportMaterials, ModelImporterModelEditor.styles.ImportMaterials, new GUILayoutOption[0]);
 			string text;

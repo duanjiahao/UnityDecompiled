@@ -8,6 +8,7 @@ namespace UnityEditor
 		GUI,
 		Sprite = 8,
 		Cursor = 7,
+		Cubemap = 3,
 		Reflection = 3,
 		Cookie,
 		Lightmap = 6,

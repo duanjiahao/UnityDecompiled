@@ -404,12 +404,24 @@ namespace UnityEditor
 			this.marginsForGrid = new RectOffset(5, 5, 5, 5);
 			this.m_PresetLibraryFileLocation = PresetLibraryLocations.GetFileLocationFromPath(this.currentLibraryWithoutExtension);
 		}
+		public void InitializeGrid(float availableWidth)
+		{
+			T currentLib = this.GetCurrentLib();
+			if (currentLib != null)
+			{
+				if (availableWidth > 0f)
+				{
+					this.SetupGrid(availableWidth, currentLib.Count());
+				}
+			}
+			else
+			{
+				Debug.LogError("Could not load preset library " + this.currentLibraryWithoutExtension);
+			}
+		}
 		private void Repaint()
 		{
 			HandleUtility.Repaint();
-		}
-		private void InitIfNeeded()
-		{
 		}
 		private void ValidateNoExtension(string value)
 		{
@@ -505,7 +517,6 @@ namespace UnityEditor
 			{
 				PresetLibraryEditor<T>.s_Styles = new PresetLibraryEditor<T>.Styles();
 			}
-			this.InitIfNeeded();
 			Rect rect2 = new Rect(rect.x, rect.y, rect.width, this.topAreaHeight);
 			Rect rect3 = new Rect(rect.x, rect2.yMax, rect.width, rect.height - this.topAreaHeight);
 			this.TopArea(rect2);

@@ -38,6 +38,7 @@ namespace UnityEditor
 		{
 			ScriptAttributeUtility.s_BuiltinAttributes = new Dictionary<string, List<PropertyAttribute>>();
 			ScriptAttributeUtility.AddBuiltinAttribute("GUIText", "m_Text", new MultilineAttribute());
+			ScriptAttributeUtility.AddBuiltinAttribute("TextMesh", "m_Text", new MultilineAttribute());
 		}
 		private static void AddBuiltinAttribute(string componentTypeName, string propertyPath, PropertyAttribute attr)
 		{

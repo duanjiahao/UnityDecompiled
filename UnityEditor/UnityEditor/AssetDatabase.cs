@@ -14,67 +14,6 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static string[] FindAssets(string filter)
-		{
-			return AssetDatabase.FindAssets(filter, null);
-		}
-		public static string[] FindAssets(string filter, string[] searchInFolders)
-		{
-			SearchFilter searchFilter = new SearchFilter();
-			SearchUtility.ParseSearchString(filter, searchFilter);
-			if (searchInFolders != null)
-			{
-				searchFilter.folders = searchInFolders;
-			}
-			return AssetDatabase.FindAssets(searchFilter);
-		}
-		private static string[] FindAssets(SearchFilter searchFilter)
-		{
-			if (searchFilter.folders != null && searchFilter.folders.Length > 0)
-			{
-				return AssetDatabase.SearchInFolders(searchFilter);
-			}
-			return AssetDatabase.SearchAllAssets(searchFilter);
-		}
-		private static string[] SearchAllAssets(SearchFilter searchFilter)
-		{
-			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			hierarchyProperty.SetSearchFilter(searchFilter);
-			hierarchyProperty.Reset();
-			List<string> list = new List<string>();
-			while (hierarchyProperty.Next(null))
-			{
-				list.Add(hierarchyProperty.guid);
-			}
-			return list.ToArray();
-		}
-		private static string[] SearchInFolders(SearchFilter searchFilter)
-		{
-			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			List<string> list = new List<string>();
-			string[] folders = searchFilter.folders;
-			for (int i = 0; i < folders.Length; i++)
-			{
-				string text = folders[i];
-				hierarchyProperty.SetSearchFilter(new SearchFilter());
-				int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(text);
-				if (hierarchyProperty.Find(mainAssetInstanceID, null))
-				{
-					hierarchyProperty.SetSearchFilter(searchFilter);
-					int depth = hierarchyProperty.depth;
-					int[] expanded = null;
-					while (hierarchyProperty.NextWithDepthCheck(expanded, depth + 1))
-					{
-						list.Add(hierarchyProperty.guid);
-					}
-				}
-				else
-				{
-					Debug.LogWarning("AssetDatabase.FindAssets: Folder not found: '" + text + "'");
-				}
-			}
-			return list.ToArray();
-		}
 		public static bool Contains(UnityEngine.Object obj)
 		{
 			return AssetDatabase.Contains(obj.GetInstanceID());
@@ -140,14 +79,26 @@ namespace UnityEditor
 		public static extern bool WriteImportSettingsIfDirty(string path);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetSubFolders(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsValidFolder(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CreateAsset(UnityEngine.Object asset, string path);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void AddObjectToAsset(UnityEngine.Object objectToAdd, string assetPath);
+		internal static extern void CreateAssetFromObjects(UnityEngine.Object[] assets, string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void AddObjectToAsset(UnityEngine.Object objectToAdd, string path);
 		public static void AddObjectToAsset(UnityEngine.Object objectToAdd, UnityEngine.Object assetObject)
 		{
 			AssetDatabase.AddObjectToAsset_OBJ_Internal(objectToAdd, assetObject);
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void AddInstanceIDToAssetWithRandomFileId(int instanceIDToAdd, UnityEngine.Object assetObject, bool hide);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AddObjectToAsset_OBJ_Internal(UnityEngine.Object newAsset, UnityEngine.Object sameAssetFile);
@@ -167,9 +118,14 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetOrScenePath(UnityEngine.Object assetObject);
+		[Obsolete("GetTextMetaDataPathFromAssetPath has been renamed to GetTextMetaFilePathFromAssetPath (UnityUpgradable).", true)]
+		public static string GetTextMetaDataPathFromAssetPath(string path)
+		{
+			return null;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string GetTextMetaDataPathFromAssetPath(string path);
+		public static extern string GetTextMetaFilePathFromAssetPath(string path);
 		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object LoadAssetAtPath(string assetPath, Type type);
@@ -279,6 +235,35 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] MatchLabelsPartial(UnityEngine.Object obj, string partial);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetAllAssetBundleNames();
+		[Obsolete("Method GetAssetBundleNames has been deprecated. Use GetAllAssetBundleNames instead.")]
+		public string[] GetAssetBundleNames()
+		{
+			return AssetDatabase.GetAllAssetBundleNames();
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string[] GetAllAssetBundleNamesWithoutVariant();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string[] GetAllAssetBundleVariants();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetUnusedAssetBundleNames();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool RemoveAssetBundleName(string assetBundleName, bool forceRemove);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void RemoveUnusedAssetBundleNames();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetAssetPathsFromAssetBundle(string assetBundleName);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetAssetPathsFromAssetBundleAndAssetName(string assetBundleName, string assetName);
 		private static string[] GetDependencies(string pathName)
 		{
 			return AssetDatabase.GetDependencies(new string[]
@@ -357,6 +342,67 @@ namespace UnityEditor
 		public static T GetBuiltinExtraResource<T>(string path) where T : UnityEngine.Object
 		{
 			return (T)((object)AssetDatabase.GetBuiltinExtraResource(typeof(T), path));
+		}
+		public static string[] FindAssets(string filter)
+		{
+			return AssetDatabase.FindAssets(filter, null);
+		}
+		public static string[] FindAssets(string filter, string[] searchInFolders)
+		{
+			SearchFilter searchFilter = new SearchFilter();
+			SearchUtility.ParseSearchString(filter, searchFilter);
+			if (searchInFolders != null)
+			{
+				searchFilter.folders = searchInFolders;
+			}
+			return AssetDatabase.FindAssets(searchFilter);
+		}
+		private static string[] FindAssets(SearchFilter searchFilter)
+		{
+			if (searchFilter.folders != null && searchFilter.folders.Length > 0)
+			{
+				return AssetDatabase.SearchInFolders(searchFilter);
+			}
+			return AssetDatabase.SearchAllAssets(searchFilter);
+		}
+		private static string[] SearchAllAssets(SearchFilter searchFilter)
+		{
+			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
+			hierarchyProperty.SetSearchFilter(searchFilter);
+			hierarchyProperty.Reset();
+			List<string> list = new List<string>();
+			while (hierarchyProperty.Next(null))
+			{
+				list.Add(hierarchyProperty.guid);
+			}
+			return list.ToArray();
+		}
+		private static string[] SearchInFolders(SearchFilter searchFilter)
+		{
+			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
+			List<string> list = new List<string>();
+			string[] folders = searchFilter.folders;
+			for (int i = 0; i < folders.Length; i++)
+			{
+				string text = folders[i];
+				hierarchyProperty.SetSearchFilter(new SearchFilter());
+				int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(text);
+				if (hierarchyProperty.Find(mainAssetInstanceID, null))
+				{
+					hierarchyProperty.SetSearchFilter(searchFilter);
+					int depth = hierarchyProperty.depth;
+					int[] expanded = null;
+					while (hierarchyProperty.NextWithDepthCheck(expanded, depth + 1))
+					{
+						list.Add(hierarchyProperty.guid);
+					}
+				}
+				else
+				{
+					Debug.LogWarning("AssetDatabase.FindAssets: Folder not found: '" + text + "'");
+				}
+			}
+			return list.ToArray();
 		}
 	}
 }

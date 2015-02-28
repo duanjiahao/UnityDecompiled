@@ -41,6 +41,7 @@ namespace UnityEditor
 		private const int kSlidersHeight = 82;
 		private const int kColorBoxHeight = 162;
 		private const int kPresetsHeight = 300;
+		private const float kFixedWindowWidth = 193f;
 		private static ColorPicker s_SharedColorPicker;
 		[SerializeField]
 		private Color m_Color = Color.black;
@@ -435,6 +436,17 @@ namespace UnityEditor
 				colors[i] = color2;
 			}
 		}
+		private static void LinearToGammaArray(Color[] colors)
+		{
+			int num = colors.Length;
+			for (int i = 0; i < num; i++)
+			{
+				Color color = colors[i];
+				Color gamma = color.gamma;
+				gamma.a = color.a;
+				colors[i] = gamma;
+			}
+		}
 		private void DrawColorSlider(Rect colorSliderRect, Vector2 constantValues)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -491,6 +503,10 @@ namespace UnityEditor
 					ColorPicker.FillArea(width, height, pixels, new Color(this.m_R, this.m_G, 0f, 1f), new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 1f, 0f));
 					break;
 				}
+				if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+				{
+					ColorPicker.LinearToGammaArray(pixels);
+				}
 				this.m_ColorSlider.SetPixels(pixels, 0);
 				this.m_ColorSlider.Apply(true);
 			}
@@ -502,7 +518,7 @@ namespace UnityEditor
 			{
 				hideFlags = HideFlags.HideAndDontSave,
 				wrapMode = TextureWrapMode.Clamp,
-				hideFlags = HideFlags.DontSave
+				hideFlags = HideFlags.HideAndDontSave
 			};
 		}
 		private void DrawColorSpaceBox(Rect colorBoxRect, float constantValue)
@@ -561,6 +577,10 @@ namespace UnityEditor
 					ColorPicker.FillArea(width, height, this.m_Colors, new Color(0f, 0f, this.m_B, 1f), new Color(1f, 0f, 0f, 0f), new Color(0f, 1f, 0f, 0f));
 					break;
 				}
+				if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+				{
+					ColorPicker.LinearToGammaArray(this.m_Colors);
+				}
 				this.m_ColorBox.SetPixels(this.m_Colors, 0);
 				this.m_ColorBox.Apply(true);
 				this.m_LastConstant = constantValue;
@@ -590,6 +610,7 @@ namespace UnityEditor
 				this.m_ColorLibraryEditor.alwaysShowScrollAreaHorizontalLines = false;
 				this.m_ColorLibraryEditor.marginsForGrid = new RectOffset(0, 0, 0, 0);
 				this.m_ColorLibraryEditor.marginsForList = new RectOffset(0, 5, 2, 2);
+				this.m_ColorLibraryEditor.InitializeGrid(193f - (float)(ColorPicker.styles.background.padding.left + ColorPicker.styles.background.padding.right));
 			}
 		}
 		private void PresetClickedCallback(int clickCount, object presetObject)
@@ -934,10 +955,10 @@ namespace UnityEditor
 			{
 				ColorPicker get = ColorPicker.get;
 				get.title = "Color";
-				float x = (float)EditorPrefs.GetInt("CPickerWidth", (int)get.position.width);
 				float y = (float)EditorPrefs.GetInt("CPickerHeight", (int)get.position.height);
-				get.minSize = new Vector2(x, y);
-				get.maxSize = new Vector2(x, y);
+				get.minSize = new Vector2(193f, y);
+				get.maxSize = new Vector2(193f, y);
+				get.InitIfNeeded();
 				get.ShowAuxWindow();
 			}
 		}
@@ -1013,7 +1034,6 @@ namespace UnityEditor
 			{
 				this.m_ColorLibraryEditor.UnloadUsedLibraries();
 			}
-			EditorPrefs.SetInt("CPickerWidth", (int)base.position.width);
 			EditorPrefs.SetInt("CPickerHeight", (int)base.position.height);
 		}
 	}

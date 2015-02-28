@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -62,12 +61,11 @@ namespace UnityEditor
 			ParticleSystemRenderer particleSystemRenderer = this.GetParticleSystemRenderer();
 			if (particleSystemRenderer == null)
 			{
-				this.m_ParticleSystem.gameObject.AddComponent("ParticleSystemRenderer");
+				this.m_ParticleSystem.gameObject.AddComponent<ParticleSystemRenderer>();
 			}
 			particleSystemRenderer = this.GetParticleSystemRenderer();
 			if (particleSystemRenderer != null)
 			{
-				Assert.That(this.m_Modules[this.m_Modules.Length - 1] == null);
 				this.m_RendererSerializedObject = new SerializedObject(particleSystemRenderer);
 				this.m_Modules[this.m_Modules.Length - 1] = new RendererModuleUI(this, this.m_RendererSerializedObject, ParticleSystemUI.s_ModuleNames[ParticleSystemUI.s_ModuleNames.Length - 1]);
 				EditorUtility.SetSelectedWireframeHidden(particleSystemRenderer, !ParticleEffectUI.m_ShowWireframe);
@@ -527,9 +525,6 @@ namespace UnityEditor
 				break;
 			case 2:
 				EditorGUIUtility.PingObject(this.m_ParticleSystem);
-				break;
-			default:
-				Assert.That("Enum not handled!".Length == 0);
 				break;
 			}
 		}

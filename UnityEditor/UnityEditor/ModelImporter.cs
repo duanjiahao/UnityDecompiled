@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
-	public sealed class ModelImporter : AssetImporter
+	public class ModelImporter : AssetImporter
 	{
 		[Obsolete("Use importMaterials, materialName and materialSearch instead")]
 		public extern ModelImporterGenerateMaterials generateMaterials
@@ -66,6 +66,18 @@ namespace UnityEditor
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		public extern float fileScale
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern bool isFileScaleUsed
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		public extern bool importBlendShapes
 		{
@@ -166,7 +178,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		internal extern TakeInfo[] importedTakeInfos
+		public extern TakeInfo[] importedTakeInfos
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -342,6 +354,62 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern string motionNodeName
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public Avatar sourceAvatar
+		{
+			get
+			{
+				return this.sourceAvatarInternal;
+			}
+			set
+			{
+				Avatar sourceAvatarInternal = value;
+				if (value != null)
+				{
+					ModelImporter modelImporter = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(value)) as ModelImporter;
+					if (modelImporter != null)
+					{
+						this.humanDescription = modelImporter.humanDescription;
+					}
+					else
+					{
+						Debug.LogError("Avatar must be from a ModelImporter, otherwise use ModelImporter.humanDescription");
+						sourceAvatarInternal = null;
+					}
+				}
+				this.sourceAvatarInternal = sourceAvatarInternal;
+			}
+		}
+		internal extern Avatar sourceAvatarInternal
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public HumanDescription humanDescription
+		{
+			get
+			{
+				HumanDescription result;
+				this.INTERNAL_get_humanDescription(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_humanDescription(ref value);
+			}
+		}
 		[Obsolete("splitAnimations has been deprecated please use clipAnimations instead.", true)]
 		public bool splitAnimations
 		{
@@ -362,12 +430,24 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern ModelImporterClipAnimation[] defaultClipAnimations
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		internal extern bool isAssetOlderOr42
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_humanDescription(out HumanDescription value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_humanDescription(ref HumanDescription value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateSkeletonPose(SkeletonBone[] skeletonBones, SerializedProperty serializedProperty);

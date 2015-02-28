@@ -6,7 +6,7 @@ namespace UnityEditor
 {
 	internal abstract class TreeViewDragging : ITreeViewDragging
 	{
-		private class DropData
+		protected class DropData
 		{
 			public int[] expandedArrayBeforeDrag;
 			public int lastControlID;
@@ -23,7 +23,7 @@ namespace UnityEditor
 		}
 		private const double k_DropExpandTimeout = 0.7;
 		protected TreeView m_TreeView;
-		private TreeViewDragging.DropData m_DropData = new TreeViewDragging.DropData();
+		protected TreeViewDragging.DropData m_DropData = new TreeViewDragging.DropData();
 		public bool drawRowMarkerAbove
 		{
 			get;
@@ -42,23 +42,28 @@ namespace UnityEditor
 			return this.m_DropData.rowMarkerControlID;
 		}
 		public abstract void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs);
-		public abstract DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dragPos);
+		public abstract DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPosition);
 		public virtual bool DragElement(TreeViewItem targetItem, Rect targetItemRect, bool firstItem)
 		{
 			if (targetItem == null)
 			{
-				DragAndDrop.visualMode = DragAndDropVisualMode.None;
 				if (this.m_DropData != null)
 				{
 					this.m_DropData.dropTargetControlID = 0;
 					this.m_DropData.rowMarkerControlID = 0;
 				}
+				bool flag = Event.current.type == EventType.DragPerform;
+				DragAndDrop.visualMode = this.DoDrag(null, null, flag, TreeViewDragging.DropPosition.Below);
+				if (DragAndDrop.visualMode != DragAndDropVisualMode.None && flag)
+				{
+					this.FinalizeDragPerformed(true);
+				}
 				return false;
 			}
 			Vector2 mousePosition = Event.current.mousePosition;
-			bool flag = this.m_TreeView.data.CanBeParent(targetItem);
+			bool flag2 = this.m_TreeView.data.CanBeParent(targetItem);
 			Rect rect = targetItemRect;
-			float num = (!flag) ? (targetItemRect.height * 0.5f) : this.m_TreeView.gui.halfDropBetweenHeight;
+			float num = (!flag2) ? (targetItemRect.height * 0.5f) : this.m_TreeView.gui.halfDropBetweenHeight;
 			if (firstItem)
 			{
 				rect.yMin -= num;
@@ -69,13 +74,13 @@ namespace UnityEditor
 				return false;
 			}
 			TreeViewDragging.DropPosition dropPosition;
-			if (!flag || mousePosition.y >= targetItemRect.yMax - num)
+			if (!flag2 || mousePosition.y >= targetItemRect.yMax - num)
 			{
 				dropPosition = TreeViewDragging.DropPosition.Below;
 			}
 			else
 			{
-				if (!flag || (firstItem && mousePosition.y <= targetItemRect.yMin + num))
+				if (!flag2 || (firstItem && mousePosition.y <= targetItemRect.yMin + num))
 				{
 					dropPosition = TreeViewDragging.DropPosition.Above;
 				}
@@ -106,23 +111,7 @@ namespace UnityEditor
 				}
 				if (dragAndDropVisualMode != DragAndDropVisualMode.None)
 				{
-					DragAndDrop.AcceptDrag();
-					this.DragCleanup(false);
-					List<UnityEngine.Object> list = new List<UnityEngine.Object>(DragAndDrop.objectReferences);
-					bool draggedItemsFromOwnTreeView = true;
-					if (list.Count > 0 && TreeViewUtility.FindItemInList(list[0].GetInstanceID(), this.m_TreeView.data.GetVisibleRows()) == null)
-					{
-						draggedItemsFromOwnTreeView = false;
-					}
-					int[] array = new int[list.Count];
-					for (int i = 0; i < list.Count; i++)
-					{
-						if (!(list[i] == null))
-						{
-							array[i] = list[i].GetInstanceID();
-						}
-					}
-					this.m_TreeView.NotifyListenersThatDragEnded(array, draggedItemsFromOwnTreeView);
+					this.FinalizeDragPerformed(false);
 				}
 				else
 				{
@@ -166,6 +155,26 @@ namespace UnityEditor
 			}
 			Event.current.Use();
 			return true;
+		}
+		private void FinalizeDragPerformed(bool revertExpanded)
+		{
+			this.DragCleanup(revertExpanded);
+			DragAndDrop.AcceptDrag();
+			List<UnityEngine.Object> list = new List<UnityEngine.Object>(DragAndDrop.objectReferences);
+			bool draggedItemsFromOwnTreeView = true;
+			if (list.Count > 0 && list[0] != null && TreeViewUtility.FindItemInList<TreeViewItem>(list[0].GetInstanceID(), this.m_TreeView.data.GetVisibleRows()) == null)
+			{
+				draggedItemsFromOwnTreeView = false;
+			}
+			int[] array = new int[list.Count];
+			for (int i = 0; i < list.Count; i++)
+			{
+				if (!(list[i] == null))
+				{
+					array[i] = list[i].GetInstanceID();
+				}
+			}
+			this.m_TreeView.NotifyListenersThatDragEnded(array, draggedItemsFromOwnTreeView);
 		}
 		protected virtual void HandleAutoExpansion(int itemControlID, TreeViewItem targetItem, Rect targetItemRect, float betweenHalfHeight, Vector2 currentMousePos)
 		{

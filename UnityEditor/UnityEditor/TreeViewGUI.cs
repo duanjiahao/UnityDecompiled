@@ -38,6 +38,7 @@ namespace UnityEditor
 		protected float k_IconWidth = 16f;
 		protected float k_SpaceBetweenIconAndText = 2f;
 		protected float k_TopRowMargin;
+		protected float k_BottomRowMargin;
 		protected float k_HalfDropBetweenHeight = 4f;
 		protected static TreeViewGUI.Styles s_Styles;
 		public float iconLeftPadding
@@ -83,6 +84,13 @@ namespace UnityEditor
 				return this.k_TopRowMargin;
 			}
 		}
+		public virtual float bottomRowMargin
+		{
+			get
+			{
+				return this.k_BottomRowMargin;
+			}
+		}
 		public TreeViewGUI(TreeView treeView)
 		{
 			this.m_TreeView = treeView;
@@ -108,10 +116,11 @@ namespace UnityEditor
 			{
 				x = this.GetMaxWidth(rows);
 			}
-			return new Vector2(x, (float)rows.Count * this.k_LineHeight);
+			return new Vector2(x, (float)rows.Count * this.k_LineHeight + this.topRowMargin + this.bottomRowMargin);
 		}
 		protected float GetMaxWidth(List<TreeViewItem> rows)
 		{
+			this.InitStyles();
 			float num = 1f;
 			foreach (TreeViewItem current in rows)
 			{
@@ -200,7 +209,7 @@ namespace UnityEditor
 			}
 			bool flag2 = this.IsRenaming(item.id);
 			bool flag3 = this.m_TreeView.data.IsExpandable(item);
-			if (flag2 && rect.width > 1f)
+			if (flag2 && Event.current.type == EventType.Repaint)
 			{
 				float num = foldoutIndent + this.k_FoldoutWidth + this.k_IconWidth + this.iconTotalPadding - 1f;
 				this.GetRenameOverlay().editFieldRect = new Rect(rect.x + num, rect.y, rect.width - num, rect.height);
@@ -351,11 +360,15 @@ namespace UnityEditor
 		}
 		public virtual float GetFoldoutIndent(TreeViewItem item)
 		{
+			if (this.m_TreeView.isSearching)
+			{
+				return this.k_BaseIndent;
+			}
 			return this.k_BaseIndent + (float)item.depth * this.indentWidth;
 		}
 		public virtual float GetContentIndent(TreeViewItem item)
 		{
-			return this.k_BaseIndent + (float)item.depth * this.indentWidth + this.k_FoldoutWidth;
+			return this.GetFoldoutIndent(item) + this.k_FoldoutWidth;
 		}
 	}
 }

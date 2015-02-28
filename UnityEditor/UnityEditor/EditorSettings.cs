@@ -14,6 +14,24 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public static extern string unityRemoteCompression
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern string unityRemoteResolution
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public static extern string externalVersionControl
 		{
 			[WrapperlessIcall]

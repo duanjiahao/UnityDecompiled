@@ -64,6 +64,31 @@ namespace UnityEditorInternal
 			}
 			return false;
 		}
+		public static bool IsNodeAmbiguous(AnimationWindowHierarchyNode node, GameObject rootGameObject)
+		{
+			if (rootGameObject == null)
+			{
+				return false;
+			}
+			EditorCurveBinding? binding = node.binding;
+			if (binding.HasValue)
+			{
+				return AnimationUtility.AmbiguousBinding(node.binding.Value.path, node.binding.Value.m_ClassID, rootGameObject.transform);
+			}
+			if (node.hasChildren)
+			{
+				using (List<TreeViewItem>.Enumerator enumerator = node.children.GetEnumerator())
+				{
+					if (enumerator.MoveNext())
+					{
+						TreeViewItem current = enumerator.Current;
+						return AnimationWindowUtility.IsNodeAmbiguous(current as AnimationWindowHierarchyNode, rootGameObject);
+					}
+				}
+				return false;
+			}
+			return false;
+		}
 		public static void AddSelectedKeyframes(AnimationWindowState state, AnimationKeyTime time)
 		{
 			foreach (AnimationWindowCurve current in state.activeCurves)
@@ -126,7 +151,7 @@ namespace UnityEditorInternal
 			}
 			return animationWindowKeyframe2;
 		}
-		public static AnimationWindowCurve[] FilterCurves(AnimationWindowCurve[] curves, string path, bool entireHierarchy)
+		public static List<AnimationWindowCurve> FilterCurves(AnimationWindowCurve[] curves, string path, bool entireHierarchy)
 		{
 			List<AnimationWindowCurve> list = new List<AnimationWindowCurve>();
 			for (int i = 0; i < curves.Length; i++)
@@ -137,9 +162,9 @@ namespace UnityEditorInternal
 					list.Add(animationWindowCurve);
 				}
 			}
-			return list.ToArray();
+			return list;
 		}
-		public static AnimationWindowCurve[] FilterCurves(AnimationWindowCurve[] curves, string path, Type animatableObjectType)
+		public static List<AnimationWindowCurve> FilterCurves(AnimationWindowCurve[] curves, string path, Type animatableObjectType)
 		{
 			List<AnimationWindowCurve> list = new List<AnimationWindowCurve>();
 			for (int i = 0; i < curves.Length; i++)
@@ -150,7 +175,7 @@ namespace UnityEditorInternal
 					list.Add(animationWindowCurve);
 				}
 			}
-			return list.ToArray();
+			return list;
 		}
 		public static bool IsCurveCreated(AnimationClip clip, EditorCurveBinding binding)
 		{
@@ -183,18 +208,21 @@ namespace UnityEditorInternal
 			}
 			return false;
 		}
-		public static AnimationWindowCurve[] FilterCurves(AnimationWindowCurve[] curves, string path, Type animatableObjectType, string propertyName)
+		public static List<AnimationWindowCurve> FilterCurves(AnimationWindowCurve[] curves, string path, Type animatableObjectType, string propertyName)
 		{
 			List<AnimationWindowCurve> list = new List<AnimationWindowCurve>();
+			string propertyGroupName = AnimationWindowUtility.GetPropertyGroupName(propertyName);
+			bool flag = propertyGroupName == propertyName;
 			for (int i = 0; i < curves.Length; i++)
 			{
 				AnimationWindowCurve animationWindowCurve = curves[i];
-				if (animationWindowCurve.path.Equals(path) && animationWindowCurve.type == animatableObjectType && (animationWindowCurve.propertyName.Equals(propertyName) || animationWindowCurve.propertyName.Contains(propertyName)))
+				bool flag2 = (!flag) ? animationWindowCurve.propertyName.Equals(propertyName) : AnimationWindowUtility.GetPropertyGroupName(animationWindowCurve.propertyName).Equals(propertyGroupName);
+				if (animationWindowCurve.path.Equals(path) && animationWindowCurve.type == animatableObjectType && flag2)
 				{
 					list.Add(animationWindowCurve);
 				}
 			}
-			return list.ToArray();
+			return list;
 		}
 		public static object GetCurrentValue(GameObject rootGameObject, EditorCurveBinding curveBinding)
 		{
@@ -208,7 +236,7 @@ namespace UnityEditorInternal
 			AnimationUtility.GetFloatValue(rootGameObject, curveBinding, out num);
 			return num;
 		}
-		public static EditorCurveBinding[] GetAnimatableProperties(GameObject root, GameObject gameObject, Type valueType)
+		public static List<EditorCurveBinding> GetAnimatableProperties(GameObject root, GameObject gameObject, Type valueType)
 		{
 			EditorCurveBinding[] animatableBindings = AnimationUtility.GetAnimatableBindings(root, gameObject);
 			List<EditorCurveBinding> list = new List<EditorCurveBinding>();
@@ -221,9 +249,9 @@ namespace UnityEditorInternal
 					list.Add(editorCurveBinding);
 				}
 			}
-			return list.ToArray();
+			return list;
 		}
-		public static EditorCurveBinding[] GetAnimatableProperties(GameObject root, GameObject gameObject, Type objectType, Type valueType)
+		public static List<EditorCurveBinding> GetAnimatableProperties(GameObject root, GameObject gameObject, Type objectType, Type valueType)
 		{
 			EditorCurveBinding[] animatableBindings = AnimationUtility.GetAnimatableBindings(root, gameObject);
 			List<EditorCurveBinding> list = new List<EditorCurveBinding>();
@@ -236,7 +264,7 @@ namespace UnityEditorInternal
 					list.Add(editorCurveBinding);
 				}
 			}
-			return list.ToArray();
+			return list;
 		}
 		public static bool CurveExists(EditorCurveBinding binding, AnimationWindowCurve[] curves)
 		{
@@ -402,7 +430,7 @@ namespace UnityEditorInternal
 		}
 		public static Transform GetClosestAnimationComponentInParents(Transform tr)
 		{
-			while (!tr.animation && !tr.GetComponent<Animator>())
+			while (!tr.GetComponent<Animation>() && !tr.GetComponent<Animator>())
 			{
 				if (tr == tr.root)
 				{

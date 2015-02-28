@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 namespace UnityEngine
@@ -53,6 +54,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property Mesh.uv1 has been deprecated. Use Mesh.uv2 instead (UnityUpgradable).", true)]
+		public Vector2[] uv1
+		{
+			get
+			{
+				return null;
+			}
+			set
+			{
+			}
+		}
 		public extern Vector2[] uv2
 		{
 			[WrapperlessIcall]
@@ -62,16 +74,23 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public Vector2[] uv1
+		public extern Vector2[] uv3
 		{
-			get
-			{
-				return this.uv2;
-			}
-			set
-			{
-				this.uv2 = value;
-			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern Vector2[] uv4
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 		public Bounds bounds
 		{
@@ -161,7 +180,7 @@ namespace UnityEngine
 		private static extern void Internal_Create([Writable] Mesh mono);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Clear([DefaultValue("true")] bool keepVertexLayout);
+		public extern void Clear([UnityEngine.Internal.DefaultValue("true")] bool keepVertexLayout);
 		[ExcludeFromDocs]
 		public void Clear()
 		{
@@ -198,15 +217,9 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern MeshTopology GetTopology(int submesh);
-		[Obsolete("Use SetTriangles instead. Internally this function will convert the triangle strip to a list of triangles anyway."), WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetTriangleStrip(int[] triangles, int submesh);
-		[Obsolete("Use GetTriangles instead. Internally this function converts a list of triangles to a strip, so it might be slow, it might be a mess."), WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern int[] GetTriangleStrip(int submesh);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void CombineMeshes(CombineInstance[] combine, [DefaultValue("true")] bool mergeSubMeshes, [DefaultValue("true")] bool useMatrices);
+		public extern void CombineMeshes(CombineInstance[] combine, [UnityEngine.Internal.DefaultValue("true")] bool mergeSubMeshes, [UnityEngine.Internal.DefaultValue("true")] bool useMatrices);
 		[ExcludeFromDocs]
 		public void CombineMeshes(CombineInstance[] combine, bool mergeSubMeshes)
 		{

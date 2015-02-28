@@ -71,6 +71,45 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public SoftJointLimitSpring linearLimitSpring
+		{
+			get
+			{
+				SoftJointLimitSpring result;
+				this.INTERNAL_get_linearLimitSpring(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_linearLimitSpring(ref value);
+			}
+		}
+		public SoftJointLimitSpring angularXLimitSpring
+		{
+			get
+			{
+				SoftJointLimitSpring result;
+				this.INTERNAL_get_angularXLimitSpring(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_angularXLimitSpring(ref value);
+			}
+		}
+		public SoftJointLimitSpring angularYZLimitSpring
+		{
+			get
+			{
+				SoftJointLimitSpring result;
+				this.INTERNAL_get_angularYZLimitSpring(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_angularYZLimitSpring(ref value);
+			}
+		}
 		public SoftJointLimit linearLimit
 		{
 			get
@@ -326,6 +365,24 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_secondaryAxis(ref Vector3 value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_linearLimitSpring(out SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_linearLimitSpring(ref SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_angularXLimitSpring(out SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_angularXLimitSpring(ref SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_angularYZLimitSpring(out SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_angularYZLimitSpring(ref SoftJointLimitSpring value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_linearLimit(out SoftJointLimit value);

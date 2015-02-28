@@ -4,7 +4,7 @@ namespace UnityEditor
 {
 	internal class AudioFilterGUI
 	{
-		private EditorGUI.VUMeterData[] dataOut;
+		private EditorGUI.VUMeter.SmoothingData[] dataOut;
 		public void DrawAudioFilterGUI(MonoBehaviour behaviour)
 		{
 			int customFilterChannelCount = AudioUtil.GetCustomFilterChannelCount(behaviour);
@@ -12,7 +12,7 @@ namespace UnityEditor
 			{
 				if (this.dataOut == null)
 				{
-					this.dataOut = new EditorGUI.VUMeterData[customFilterChannelCount];
+					this.dataOut = new EditorGUI.VUMeter.SmoothingData[customFilterChannelCount];
 				}
 				double num = (double)AudioUtil.GetCustomFilterProcessTime(behaviour) / 1000000.0;
 				float num2 = (float)num / ((float)AudioSettings.outputSampleRate / 1024f / (float)customFilterChannelCount);

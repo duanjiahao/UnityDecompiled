@@ -140,6 +140,15 @@ namespace UnityEditor
 			if (selectedMaterial)
 			{
 				this.m_MaterialInspector = Editor.CreateEditor(selectedMaterial);
+				if (!(this.m_MaterialInspector is ProceduralMaterialInspector) && this.m_MaterialInspector != null)
+				{
+					if (selectedMaterial.shader != null)
+					{
+						Debug.LogError("The shader: '" + selectedMaterial.shader.name + "' is using a custom editor deriving from MaterialEditor, please derive from ShaderGUI instead. Only the ShaderGUI approach works with Procedural Materials. Search the docs for 'ShaderGUI'");
+					}
+					UnityEngine.Object.DestroyImmediate(this.m_MaterialInspector);
+					this.m_MaterialInspector = Editor.CreateEditor(selectedMaterial, typeof(ProceduralMaterialInspector));
+				}
 				ProceduralMaterialInspector proceduralMaterialInspector = (ProceduralMaterialInspector)this.m_MaterialInspector;
 				proceduralMaterialInspector.DisableReimportOnDisable();
 			}
@@ -367,20 +376,21 @@ namespace UnityEditor
 				gameObject.SetActive(false);
 				foreach (Transform transform in gameObject.transform)
 				{
+					MeshFilter component = transform.GetComponent<MeshFilter>();
 					string name = transform.name;
 					switch (name)
 					{
 					case "sphere":
-						SubstanceImporterInspector.s_Meshes[0] = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
+						SubstanceImporterInspector.s_Meshes[0] = component.sharedMesh;
 						continue;
 					case "cube":
-						SubstanceImporterInspector.s_Meshes[1] = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
+						SubstanceImporterInspector.s_Meshes[1] = component.sharedMesh;
 						continue;
 					case "cylinder":
-						SubstanceImporterInspector.s_Meshes[2] = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
+						SubstanceImporterInspector.s_Meshes[2] = component.sharedMesh;
 						continue;
 					case "torus":
-						SubstanceImporterInspector.s_Meshes[3] = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
+						SubstanceImporterInspector.s_Meshes[3] = component.sharedMesh;
 						continue;
 					}
 					Debug.Log("Something is wrong, weird object found: " + transform.name);
@@ -432,16 +442,16 @@ namespace UnityEditor
 			Color ambient;
 			if (this.lightMode == 0)
 			{
-				this.m_PreviewUtility.m_Light[0].intensity = 0.5f;
+				this.m_PreviewUtility.m_Light[0].intensity = 1f;
 				this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(30f, 30f, 0f);
 				this.m_PreviewUtility.m_Light[1].intensity = 0f;
 				ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
 			}
 			else
 			{
-				this.m_PreviewUtility.m_Light[0].intensity = 0.5f;
+				this.m_PreviewUtility.m_Light[0].intensity = 1f;
 				this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
-				this.m_PreviewUtility.m_Light[1].intensity = 0.5f;
+				this.m_PreviewUtility.m_Light[1].intensity = 1f;
 				ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
 			}
 			InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);

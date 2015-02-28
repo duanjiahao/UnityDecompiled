@@ -6,6 +6,13 @@ namespace UnityEditor
 	{
 		protected string m_ModuleName;
 		private SerializedObject m_Object;
+		internal SerializedObject serializedObject
+		{
+			get
+			{
+				return this.m_Object;
+			}
+		}
 		public SerializedModule(SerializedObject o, string name)
 		{
 			this.m_Object = o;

@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using UnityEngine.Rendering;
 namespace UnityEngine
 {
 	public class Renderer : Component
@@ -52,6 +55,16 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern ShadowCastingMode shadowCastingMode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property castShadows has been deprecated. Use shadowCastingMode instead.")]
 		public extern bool castShadows
 		{
 			[WrapperlessIcall]
@@ -88,7 +101,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern Material[] sharedMaterials
+		public extern Material[] materials
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -97,7 +110,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern Material[] materials
+		public extern Material[] sharedMaterials
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -121,17 +134,47 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern int realtimeLightmapIndex
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property lightmapTilingOffset has been deprecated. Use lightmapScaleOffset (UnityUpgradable).", true)]
 		public Vector4 lightmapTilingOffset
 		{
 			get
 			{
+				return Vector4.zero;
+			}
+			set
+			{
+			}
+		}
+		public Vector4 lightmapScaleOffset
+		{
+			get
+			{
 				Vector4 result;
-				this.INTERNAL_get_lightmapTilingOffset(out result);
+				this.INTERNAL_get_lightmapScaleOffset(out result);
 				return result;
 			}
 			set
 			{
-				this.INTERNAL_set_lightmapTilingOffset(ref value);
+				this.INTERNAL_set_lightmapScaleOffset(ref value);
+			}
+		}
+		public Vector4 realtimeLightmapScaleOffset
+		{
+			get
+			{
+				Vector4 result;
+				this.INTERNAL_get_realtimeLightmapScaleOffset(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_realtimeLightmapScaleOffset(ref value);
 			}
 		}
 		public extern bool isVisible
@@ -149,7 +192,26 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[Obsolete("Use probeAnchor instead (UnityUpgradable).", true)]
 		public extern Transform lightProbeAnchor
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern Transform probeAnchor
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern ReflectionProbeUsage reflectionProbeUsage
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -196,10 +258,16 @@ namespace UnityEngine
 		private extern void INTERNAL_get_localToWorldMatrix(out Matrix4x4 value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_lightmapTilingOffset(out Vector4 value);
+		private extern void INTERNAL_get_lightmapScaleOffset(out Vector4 value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_lightmapTilingOffset(ref Vector4 value);
+		private extern void INTERNAL_set_lightmapScaleOffset(ref Vector4 value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_realtimeLightmapScaleOffset(out Vector4 value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_realtimeLightmapScaleOffset(ref Vector4 value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPropertyBlock(MaterialPropertyBlock properties);
@@ -208,6 +276,13 @@ namespace UnityEngine
 		public extern void GetPropertyBlock(MaterialPropertyBlock dest);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Render(int material);
+		internal extern void RenderNow(int material);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetClosestReflectionProbesInternal(object result);
+		public void GetClosestReflectionProbes(List<ReflectionProbeBlendInfo> result)
+		{
+			this.GetClosestReflectionProbesInternal(result);
+		}
 	}
 }

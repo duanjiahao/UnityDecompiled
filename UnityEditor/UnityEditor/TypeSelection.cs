@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using UnityEngine;
 namespace UnityEditor
@@ -9,7 +8,6 @@ namespace UnityEditor
 		public UnityEngine.Object[] objects;
 		public TypeSelection(string typeName, UnityEngine.Object[] objects)
 		{
-			Assert.That(objects != null || objects.Length >= 1);
 			this.objects = objects;
 			this.label = new GUIContent(string.Concat(new object[]
 			{

@@ -65,6 +65,156 @@ namespace UnityEditor.VersionControl
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern Rect GetAtlasRectForState(int state);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Plugin GetActivePlugin();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern ConfigField[] GetActiveConfigFields();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsCustomCommandEnabled(string name);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Asset Internal_CacheStatus(string assetPath);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Status(Asset[] assets, bool recursively);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_StatusStrings(string[] assetsProjectPaths, bool recursively);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_StatusAbsolutePath(string assetPath);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_CheckoutIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Checkout(Asset[] assets, CheckoutMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_CheckoutStrings(string[] assets, CheckoutMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_PromptAndCheckoutIfNeeded(string[] assets, string promptIfCheckoutIsNeeded);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Delete(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_DeleteAtProjectPath(string assetProjectPath);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_MoveAsStrings(string from, string to);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_AddIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Add(Asset[] assets, bool recursive);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_DeleteChangeSetsIsValid(ChangeSet[] changes);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_DeleteChangeSets(ChangeSet[] changesets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_RevertChangeSets(ChangeSet[] changesets, RevertMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_SubmitIsValid(ChangeSet changeset, Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Submit(ChangeSet changeset, Asset[] assets, string description, bool saveOnly);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_DiffIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_DiffHead(Asset[] assets, bool includingMetaFiles);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_ResolveIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Resolve(Asset[] assets, ResolveMethod resolveMethod);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Merge(Asset[] assets, MergeMethod method);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_LockIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_UnlockIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Lock(Asset[] assets, bool locked);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_RevertIsValid(Asset[] assets, RevertMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_Revert(Asset[] assets, RevertMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool Internal_GetLatestIsValid(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_GetLatest(Asset[] assets);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_SetFileMode(Asset[] assets, FileMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_SetFileModeStrings(string[] assets, FileMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_ChangeSetDescription(ChangeSet changeset);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_ChangeSetStatus(ChangeSet changeset);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Task ChangeSets();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_ChangeSetMove(Asset[] assets, ChangeSet target);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Task Incoming();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Task Internal_IncomingChangeSetAssets(ChangeSet changeset);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsOpenForEdit(Asset asset);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Task UpdateSettings();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Asset GetAssetByPath(string unityPath);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Asset GetAssetByGUID(string guid);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Asset[] Internal_GetAssetArrayFromSelection();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int GenerateID();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ClearCache();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void InvalidateCache();
 		internal static Asset CacheStatus(string assetPath)
 		{
 			return Provider.Internal_CacheStatus(assetPath);
@@ -390,155 +540,5 @@ namespace UnityEditor.VersionControl
 			}
 			return assetList;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Rect GetAtlasRectForState(int state);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Plugin GetActivePlugin();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern ConfigField[] GetActiveConfigFields();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern bool IsCustomCommandEnabled(string name);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Asset Internal_CacheStatus(string assetPath);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Status(Asset[] assets, bool recursively);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_StatusStrings(string[] assetsProjectPaths, bool recursively);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_StatusAbsolutePath(string assetPath);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_CheckoutIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Checkout(Asset[] assets, CheckoutMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_CheckoutStrings(string[] assets, CheckoutMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_PromptAndCheckoutIfNeeded(string[] assets, string promptIfCheckoutIsNeeded);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Delete(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_DeleteAtProjectPath(string assetProjectPath);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_MoveAsStrings(string from, string to);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_AddIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Add(Asset[] assets, bool recursive);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_DeleteChangeSetsIsValid(ChangeSet[] changes);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_DeleteChangeSets(ChangeSet[] changesets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_RevertChangeSets(ChangeSet[] changesets, RevertMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_SubmitIsValid(ChangeSet changeset, Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Submit(ChangeSet changeset, Asset[] assets, string description, bool saveOnly);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_DiffIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_DiffHead(Asset[] assets, bool includingMetaFiles);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_ResolveIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Resolve(Asset[] assets, ResolveMethod resolveMethod);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Merge(Asset[] assets, MergeMethod method);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_LockIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_UnlockIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Lock(Asset[] assets, bool locked);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_RevertIsValid(Asset[] assets, RevertMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_Revert(Asset[] assets, RevertMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_GetLatestIsValid(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_GetLatest(Asset[] assets);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_SetFileMode(Asset[] assets, FileMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_SetFileModeStrings(string[] assets, FileMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_ChangeSetDescription(ChangeSet changeset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_ChangeSetStatus(ChangeSet changeset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Task ChangeSets();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_ChangeSetMove(Asset[] assets, ChangeSet target);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Task Incoming();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Task Internal_IncomingChangeSetAssets(ChangeSet changeset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsOpenForEdit(Asset asset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Task UpdateSettings();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Asset GetAssetByPath(string unityPath);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Asset GetAssetByGUID(string guid);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Asset[] Internal_GetAssetArrayFromSelection();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GenerateID();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void ClearCache();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void InvalidateCache();
 	}
 }

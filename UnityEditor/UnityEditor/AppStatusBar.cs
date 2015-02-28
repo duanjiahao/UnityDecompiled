@@ -94,8 +94,8 @@ namespace UnityEditor
 				float num = base.position.width - 24f;
 				if (AsyncProgressBar.isShowing)
 				{
-					num -= 143f;
-					EditorGUI.ProgressBar(new Rect(num, 0f, 140f, 19f), AsyncProgressBar.progress, AsyncProgressBar.progressInfo);
+					num -= 188f;
+					EditorGUI.ProgressBar(new Rect(num, 0f, 185f, 19f), AsyncProgressBar.progress, AsyncProgressBar.progressInfo);
 				}
 				if (isCompiling)
 				{

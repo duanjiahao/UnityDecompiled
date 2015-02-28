@@ -21,6 +21,7 @@ namespace UnityEditor
 		ConnectToHost = 4096,
 		DeployOnline = 8192,
 		EnableHeadlessMode = 16384,
+		BuildScriptsOnly = 32768,
 		Il2CPP = 65536
 	}
 }

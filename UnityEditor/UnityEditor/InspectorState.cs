@@ -58,5 +58,14 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void EraseVector3(string key);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetIntArray(string key, int[] value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int[] GetIntArray(string key, int[] defaultValue);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void EraseIntArray(string key);
 	}
 }

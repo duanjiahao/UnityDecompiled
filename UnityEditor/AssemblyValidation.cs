@@ -55,10 +55,10 @@ internal class AssemblyValidation
 	[DebuggerHidden]
 	private static IEnumerable<Type> ValidationRuleTypesFor(RuntimePlatform platform)
 	{
-		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator2 <ValidationRuleTypesFor>c__Iterator = new AssemblyValidation.<ValidationRuleTypesFor>c__Iterator2();
+		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator3 <ValidationRuleTypesFor>c__Iterator = new AssemblyValidation.<ValidationRuleTypesFor>c__Iterator3();
 		<ValidationRuleTypesFor>c__Iterator.platform = platform;
 		<ValidationRuleTypesFor>c__Iterator.<$>platform = platform;
-		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator2 expr_15 = <ValidationRuleTypesFor>c__Iterator;
+		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator3 expr_15 = <ValidationRuleTypesFor>c__Iterator;
 		expr_15.$PC = -2;
 		return expr_15;
 	}

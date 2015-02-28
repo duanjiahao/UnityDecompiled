@@ -13,7 +13,7 @@ namespace UnityEditor.Scripting.Compilers
 			result.type = CompilerMessageType.Error;
 			result.line = 0;
 			result.column = 0;
-			result.message = "Internal compiler error. See the console log for more information. output was:" + result.message;
+			result.normalizedStatus = default(NormalizedCompilerStatus);
 			return result;
 		}
 		protected internal static CompilerMessage CreateCompilerMessageFromMatchedRegex(string line, Match m, string erroridentifier)
@@ -24,6 +24,7 @@ namespace UnityEditor.Scripting.Compilers
 			result.line = int.Parse(m.Groups["line"].Value);
 			result.column = int.Parse(m.Groups["column"].Value);
 			result.type = ((!(m.Groups["type"].Value == erroridentifier)) ? CompilerMessageType.Warning : CompilerMessageType.Error);
+			result.normalizedStatus = default(NormalizedCompilerStatus);
 			return result;
 		}
 		public virtual IEnumerable<CompilerMessage> Parse(string[] errorOutput, bool compilationHadFailure)
@@ -43,6 +44,7 @@ namespace UnityEditor.Scripting.Compilers
 				if (match.Success)
 				{
 					CompilerMessage item = CompilerOutputParserBase.CreateCompilerMessageFromMatchedRegex(text, match, this.GetErrorIdentifier());
+					item.normalizedStatus = this.NormalizedStatusFor(match);
 					if (item.type == CompilerMessageType.Error)
 					{
 						flag = true;
@@ -56,7 +58,24 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			return list;
 		}
+		protected virtual NormalizedCompilerStatus NormalizedStatusFor(Match match)
+		{
+			return default(NormalizedCompilerStatus);
+		}
 		protected abstract string GetErrorIdentifier();
 		protected abstract Regex GetOutputRegex();
+		protected static NormalizedCompilerStatus TryNormalizeCompilerStatus(Match match, string memberNotFoundError, Regex missingMemberRegex)
+		{
+			string value = match.Groups["id"].Value;
+			NormalizedCompilerStatus result = default(NormalizedCompilerStatus);
+			if (value != memberNotFoundError)
+			{
+				return result;
+			}
+			result.code = NormalizedCompilerStatusCode.MemberNotFound;
+			Match match2 = missingMemberRegex.Match(match.Groups["message"].Value);
+			result.details = match2.Groups["type_name"].Value + "%" + match2.Groups["member_name"].Value;
+			return result;
+		}
 	}
 }

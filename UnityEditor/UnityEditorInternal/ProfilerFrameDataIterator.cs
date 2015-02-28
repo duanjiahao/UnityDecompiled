@@ -36,6 +36,12 @@ namespace UnityEditorInternal
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		public extern int instanceId
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public extern float frameTimeMS
 		{
 			[WrapperlessIcall]

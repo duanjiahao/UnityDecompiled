@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using UnityEditor.Utils;
 using UnityEngine;
 namespace UnityEditor
@@ -151,32 +150,41 @@ namespace UnityEditor
 				ProcessStartInfo expr_110 = process.StartInfo;
 				expr_110.Arguments = expr_110.Arguments + " -x \"" + text5 + "\"";
 			}
+			string text6 = Path.Combine(Path.GetDirectoryName(text2), "native_link.xml");
+			if (File.Exists(text6))
+			{
+				ProcessStartInfo expr_151 = process.StartInfo;
+				expr_151.Arguments = expr_151.Arguments + " -x \"" + text6 + "\"";
+			}
 			string[] files = Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "Assets"), "link.xml", SearchOption.AllDirectories);
 			string[] array = files;
 			for (int j = 0; j < array.Length; j++)
 			{
 				string str2 = array[j];
-				ProcessStartInfo expr_161 = process.StartInfo;
-				expr_161.Arguments = expr_161.Arguments + " -x \"" + str2 + "\"";
+				ProcessStartInfo expr_1A2 = process.StartInfo;
+				expr_1A2.Arguments = expr_1A2.Arguments + " -x \"" + str2 + "\"";
 			}
 			if (usedClasses != null)
 			{
 				text = MonoAssemblyStripping.GenerateBlackList(managedLibrariesDirectory, usedClasses, allAssemblies);
-				ProcessStartInfo expr_1A5 = process.StartInfo;
-				expr_1A5.Arguments = expr_1A5.Arguments + " -x \"" + text + "\"";
+				ProcessStartInfo expr_1E6 = process.StartInfo;
+				expr_1E6.Arguments = expr_1E6.Arguments + " -x \"" + text + "\"";
 			}
 			MonoProcessUtility.RunMonoProcess(process, "assemblies stripper", Path.Combine(text4, "mscorlib.dll"));
-			if (buildTarget == BuildTarget.FlashPlayer)
+			MonoAssemblyStripping.DeleteAllDllsFrom(managedLibrariesDirectory);
+			MonoAssemblyStripping.CopyAllDlls(managedLibrariesDirectory, text4);
+			string[] files2 = Directory.GetFiles(managedLibrariesDirectory);
+			for (int k = 0; k < files2.Length; k++)
 			{
-				IEnumerable<string> files2 = 
-					from _ in input
-					select Path.GetFileName(_);
-				MonoAssemblyStripping.CopyFiles(files2, text4, managedLibrariesDirectory);
-			}
-			else
-			{
-				MonoAssemblyStripping.DeleteAllDllsFrom(managedLibrariesDirectory);
-				MonoAssemblyStripping.CopyAllDlls(managedLibrariesDirectory, text4);
+				string text7 = files2[k];
+				if (text7.Contains(".mdb"))
+				{
+					string path = text7.Replace(".mdb", string.Empty);
+					if (!File.Exists(path))
+					{
+						FileUtil.DeleteFileOrDirectory(text7);
+					}
+				}
 			}
 			if (text != null)
 			{

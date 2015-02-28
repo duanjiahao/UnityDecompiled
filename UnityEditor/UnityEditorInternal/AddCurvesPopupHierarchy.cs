@@ -32,7 +32,7 @@ namespace UnityEditorInternal
 				this.m_TreeView.deselectOnUnhandledMouseDown = true;
 				this.m_TreeViewDataSource = new AddCurvesPopupHierarchyDataSource(this.m_TreeView, this.state);
 				TreeViewGUI gui = new AddCurvesPopupHierarchyGUI(this.m_TreeView, this.state, owner);
-				this.m_TreeView.Init(rect, this.m_TreeViewDataSource, gui, new AssetOrGameObjectTreeViewDragging(this.m_TreeView, HierarchyType.GameObjects));
+				this.m_TreeView.Init(rect, this.m_TreeViewDataSource, gui, new GameObjectsTreeViewDragging(this.m_TreeView));
 				this.m_TreeViewDataSource.UpdateData();
 				return;
 			}

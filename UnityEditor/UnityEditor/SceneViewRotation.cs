@@ -22,7 +22,6 @@ namespace UnityEditor
 			}
 		}
 		private const int kRotationSize = 100;
-		private const int kRotationTop = 14;
 		private const int kRotationMenuInset = 22;
 		private static Quaternion[] kDirectionRotations = new Quaternion[]
 		{
@@ -60,9 +59,9 @@ namespace UnityEditor
 		private int currentDir = 7;
 		private AnimBool[] dirVisible = new AnimBool[]
 		{
-			new AnimBool(),
-			new AnimBool(),
-			new AnimBool()
+			new AnimBool(true),
+			new AnimBool(true),
+			new AnimBool(true)
 		};
 		private AnimBool[] dirNameVisible = new AnimBool[]
 		{
@@ -189,12 +188,12 @@ namespace UnityEditor
 				Event current = Event.current;
 				if (current.type == EventType.MouseDown && current.button == 1)
 				{
-					int num = Mathf.Min(Screen.width, Screen.height - 14);
+					int num = Mathf.Min(Screen.width, Screen.height);
 					if (num < 100)
 					{
 						return;
 					}
-					Rect rect = new Rect((float)(Screen.width - 100 + 22), 20f, 56f, 56f);
+					Rect rect = new Rect((float)(Screen.width - 100 + 22), 22f, 56f, 56f);
 					if (rect.Contains(current.mousePosition))
 					{
 						this.DisplayContextMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), view);
@@ -238,6 +237,27 @@ namespace UnityEditor
 					{
 						this.ViewSetOrtho(sceneView, !sceneView.orthographic);
 					}
+					else
+					{
+						if (selected == 10)
+						{
+							sceneView.LookAt(sceneView.pivot, Quaternion.LookRotation(new Vector3(-1f, -0.7f, -1f)), sceneView.size, sceneView.orthographic);
+						}
+						else
+						{
+							if (selected == 11)
+							{
+								sceneView.LookAt(sceneView.pivot, Quaternion.LookRotation(new Vector3(1f, -0.7f, -1f)), sceneView.size, sceneView.orthographic);
+							}
+							else
+							{
+								if (selected == 12)
+								{
+									sceneView.LookAt(sceneView.pivot, Quaternion.LookRotation(new Vector3(1f, -0.7f, 1f)), sceneView.size, sceneView.orthographic);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -266,10 +286,14 @@ namespace UnityEditor
 		}
 		internal void OnGUI(SceneView view)
 		{
-			int num = Mathf.Min(Screen.width, Screen.height - 14);
+			int num = Mathf.Min(Screen.width, Screen.height);
 			if (num < 100)
 			{
 				return;
+			}
+			if (Event.current.type == EventType.Repaint)
+			{
+				Profiler.BeginSample("SceneView.AxisSelector");
 			}
 			Camera camera = view.camera;
 			HandleUtility.PushCamera(camera);
@@ -283,10 +307,10 @@ namespace UnityEditor
 			camera.nearClipPlane = 0.1f;
 			camera.farClipPlane = 10f;
 			camera.fieldOfView = view.m_Ortho.Fade(70f, 0f);
-			SceneView.AddCursorRect(new Rect((float)(Screen.width - 100), -14f, 100f, 148f), MouseCursor.Arrow);
-			Handles.SetCamera(new Rect((float)(Screen.width - 100), -14f, 100f, 128f), camera);
+			SceneView.AddCursorRect(new Rect((float)(Screen.width - 100 + 22), 22f, 56f, 102f), MouseCursor.Arrow);
+			Handles.SetCamera(new Rect((float)(Screen.width - 100), 0f, 100f, 100f), camera);
 			Handles.BeginGUI();
-			Rect rect = new Rect((float)(Screen.width - 100 + 17), 88f, 66f, 16f);
+			Rect rect = new Rect((float)(Screen.width - 100 + 17), 92f, 66f, 16f);
 			if (!view.in2DMode && GUI.Button(rect, string.Empty, SceneViewRotation.styles.viewLabelStyleLeftAligned))
 			{
 				if (Event.current.button == 1)
@@ -326,15 +350,21 @@ namespace UnityEditor
 				{
 					Color centerColor = Handles.centerColor;
 					centerColor.a *= this.dirNameVisible[num5].faded;
-					GUI.color = centerColor;
-					GUI.Label(position, SceneViewRotation.kDirNames[num5], SceneViewRotation.styles.viewLabelStyleLeftAligned);
+					if (centerColor.a > 0f)
+					{
+						GUI.color = centerColor;
+						GUI.Label(position, SceneViewRotation.kDirNames[num5], SceneViewRotation.styles.viewLabelStyleLeftAligned);
+					}
 				}
 				num5++;
 			}
 			Color centerColor2 = Handles.centerColor;
 			centerColor2.a *= this.faded2Dgray * this.m_Visible.faded;
-			GUI.color = centerColor2;
-			GUI.Label(rect, SceneViewRotation.kDirNames[num2], SceneViewRotation.styles.viewLabelStyleCentered);
+			if (centerColor2.a > 0f)
+			{
+				GUI.color = centerColor2;
+				GUI.Label(rect, SceneViewRotation.kDirNames[num2], SceneViewRotation.styles.viewLabelStyleCentered);
+			}
 			if (this.faded2Dgray < 1f)
 			{
 				this.DrawIsoStatusSymbol(new Vector3(position.x - 8f, position.y + 8.5f, 0f), view, 1f - this.faded2Dgray);
@@ -419,15 +449,19 @@ namespace UnityEditor
 			}
 			HandleUtility.PopCamera(camera);
 			Handles.SetCamera(camera);
+			if (Event.current.type == EventType.Repaint)
+			{
+				Profiler.EndSample();
+			}
 		}
 		private void ViewAxisDirection(SceneView view, int dir)
 		{
-			bool orthographic = view.orthographic;
+			bool ortho = view.orthographic;
 			if (Event.current != null && (Event.current.shift || Event.current.button == 2))
 			{
-				orthographic = true;
+				ortho = true;
 			}
-			view.LookAt(view.pivot, SceneViewRotation.kDirectionRotations[dir], view.size, orthographic);
+			view.LookAt(view.pivot, SceneViewRotation.kDirectionRotations[dir], view.size, ortho);
 			this.SwitchDirNameVisible(dir);
 		}
 		private void ViewSetOrtho(SceneView view, bool ortho)

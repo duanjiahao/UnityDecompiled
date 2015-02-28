@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using UnityEditor.Modules;
 using UnityEditor.Utils;
-using UnityEditorInternal;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -237,36 +236,28 @@ namespace UnityEditor
 				FileUtil.CopyDirectoryRecursiveForPostprocess("Assets/StreamingAssets", Path.Combine(stagingAreaDataPath, "StreamingAssets"), true);
 			}
 		}
-		public static string GetExtensionForBuildTarget(BuildTarget target)
+		public static string GetScriptLayoutFileFromBuild(BuildOptions options, BuildTarget target, string installPath, string fileName)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
 			if (buildPostProcessor != null)
 			{
-				return buildPostProcessor.GetExtension();
-			}
-			switch (target)
-			{
-			case BuildTarget.StandaloneOSXUniversal:
-			case BuildTarget.StandaloneOSXIntel:
-			case BuildTarget.StandaloneOSXIntel64:
-				return "app";
-			case BuildTarget.StandaloneWindows:
-			case BuildTarget.StandaloneGLESEmu:
-			case BuildTarget.StandaloneWindows64:
-				return "exe";
-			case BuildTarget.WebPlayer:
-			case BuildTarget.WebPlayerStreamed:
-				return string.Empty;
-			case BuildTarget.StandaloneLinux:
-			case BuildTarget.StandaloneLinux64:
-			case BuildTarget.StandaloneLinuxUniversal:
-				return PostprocessBuildPlayer.GetArchitectureForTarget(target);
-			case BuildTarget.FlashPlayer:
-				return "swf";
-			case BuildTarget.MetroPlayer:
-				return (EditorUserBuildSettings.metroBuildType != MetroBuildType.AppX) ? string.Empty : "appx";
+				return buildPostProcessor.GetScriptLayoutFileFromBuild(options, installPath, fileName);
 			}
 			return string.Empty;
+		}
+		public static bool SupportsScriptsOnlyBuild(BuildTarget target)
+		{
+			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			return buildPostProcessor != null && buildPostProcessor.SupportsScriptsOnlyBuild();
+		}
+		public static string GetExtensionForBuildTarget(BuildTarget target, BuildOptions options)
+		{
+			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			if (buildPostProcessor == null)
+			{
+				return string.Empty;
+			}
+			return buildPostProcessor.GetExtension(target, options);
 		}
 		public static bool SupportsInstallInBuildFolder(BuildTarget target)
 		{
@@ -277,45 +268,28 @@ namespace UnityEditor
 			}
 			switch (target)
 			{
-			case BuildTarget.WP8Player:
-			case BuildTarget.StandaloneOSXIntel64:
-			case BuildTarget.PSP2:
-			case BuildTarget.PSM:
+			case BuildTarget.PS3:
+			case BuildTarget.Android:
 				return true;
-			case BuildTarget.BB10:
-			case BuildTarget.Tizen:
-			case BuildTarget.PS4:
-				IL_3B:
+			case BuildTarget.XBOX360:
+			case (BuildTarget)12:
+				IL_2F:
 				switch (target)
 				{
-				case BuildTarget.PS3:
-				case BuildTarget.Android:
-				case BuildTarget.StandaloneGLESEmu:
+				case BuildTarget.PSP2:
+				case BuildTarget.PSM:
 					return true;
-				case BuildTarget.XBOX360:
-				case (BuildTarget)12:
-					IL_58:
-					switch (target)
+				case BuildTarget.PS4:
+					IL_44:
+					if (target != BuildTarget.MetroPlayer && target != BuildTarget.WP8Player)
 					{
-					case BuildTarget.StandaloneOSXUniversal:
-					case BuildTarget.StandaloneOSXIntel:
-					case BuildTarget.StandaloneWindows:
-						return true;
-					case (BuildTarget)3:
-						IL_70:
-						switch (target)
-						{
-						case BuildTarget.StandaloneWindows64:
-						case BuildTarget.MetroPlayer:
-							return true;
-						}
 						return false;
 					}
-					goto IL_70;
+					return true;
 				}
-				goto IL_58;
+				goto IL_44;
 			}
-			goto IL_3B;
+			goto IL_2F;
 		}
 		public static void Launch(BuildTarget target, string path, string productName, BuildOptions options)
 		{
@@ -329,15 +303,9 @@ namespace UnityEditor
 				args.productName = productName;
 				args.options = options;
 				buildPostProcessor.LaunchPlayer(args);
+				return;
 			}
-			else
-			{
-				if (target != BuildTarget.NaCl)
-				{
-					throw new UnityException(string.Format("Launching {0} build target via mono is not supported", target));
-				}
-				PostProcessNaclPlayer.Launch(target, path);
-			}
+			throw new UnityException(string.Format("Launching {0} build target via mono is not supported", target));
 		}
 		public static void Postprocess(BuildTarget target, string installPath, string companyName, string productName, int width, int height, string downloadWebplayerUrl, string manualDownloadWebplayerUrl, BuildOptions options, RuntimeClassRegistry usedClassRegistry)
 		{
@@ -350,69 +318,29 @@ namespace UnityEditor
 			{
 				throw new Exception(installPath + " must not be an empty string");
 			}
-			BuildPostProcessArgs buildPostProcessArgs = new BuildPostProcessArgs
-			{
-				target = target,
-				stagingAreaData = stagingAreaData,
-				stagingArea = stagingArea,
-				stagingAreaDataManaged = stagingAreaDataManaged,
-				playerPackage = playbackEngineDirectory,
-				installPath = installPath,
-				companyName = companyName,
-				productName = productName,
-				productGUID = PlayerSettings.productGUID,
-				options = options,
-				usedClassRegistry = usedClassRegistry
-			};
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
 			if (buildPostProcessor != null)
 			{
-				buildPostProcessor.PostProcess(buildPostProcessArgs);
+				BuildPostProcessArgs args;
+				args.target = target;
+				args.stagingAreaData = stagingAreaData;
+				args.stagingArea = stagingArea;
+				args.stagingAreaDataManaged = stagingAreaDataManaged;
+				args.playerPackage = playbackEngineDirectory;
+				args.installPath = installPath;
+				args.companyName = companyName;
+				args.productName = productName;
+				args.productGUID = PlayerSettings.productGUID;
+				args.options = options;
+				args.usedClassRegistry = usedClassRegistry;
+				buildPostProcessor.PostProcess(args);
 				return;
 			}
-			switch (target)
+			if (target != BuildTarget.WebPlayer && target != BuildTarget.WebPlayerStreamed)
 			{
-			case BuildTarget.StandaloneOSXUniversal:
-			case BuildTarget.StandaloneOSXIntel:
-			case BuildTarget.StandaloneOSXIntel64:
-				new OSXDesktopStandalonePostProcessor(buildPostProcessArgs).PostProcess();
-				return;
-			case BuildTarget.StandaloneWindows:
-			case BuildTarget.StandaloneGLESEmu:
-			case BuildTarget.StandaloneWindows64:
-				new WindowsDesktopStandalonePostProcessor(buildPostProcessArgs).PostProcess();
-				return;
-			case BuildTarget.WebPlayer:
-			case BuildTarget.WebPlayerStreamed:
-				PostProcessWebPlayer.PostProcess(options, installPath, downloadWebplayerUrl, width, height);
-				return;
-			case BuildTarget.NaCl:
-				PostProcessNaclPlayer.PostProcess(options, installPath, downloadWebplayerUrl, width, height);
-				return;
-			case BuildTarget.StandaloneLinux:
-			case BuildTarget.StandaloneLinux64:
-			case BuildTarget.StandaloneLinuxUniversal:
-				new LinuxDesktopStandalonePostProcessor(buildPostProcessArgs).PostProcess();
-				return;
-			case BuildTarget.FlashPlayer:
-				PostProcessFlashPlayer.PostProcess(new PostProcessFlashPlayerOptions
-				{
-					Target = target,
-					StagingAreaData = stagingAreaData,
-					StagingArea = stagingArea,
-					StagingAreaDataManaged = stagingAreaDataManaged,
-					PlayerPackage = playbackEngineDirectory,
-					InstallPath = installPath,
-					CompanyName = companyName,
-					ProductName = productName,
-					Options = options,
-					UsedClassRegistry = usedClassRegistry,
-					Width = width,
-					Height = height
-				});
-				return;
+				throw new UnityException(string.Format("Build target '{0}' not supported", target));
 			}
-			throw new UnityException(string.Format("Build target '{0}' not supported", target));
+			PostProcessWebPlayer.PostProcess(options, installPath, downloadWebplayerUrl, width, height);
 		}
 		internal static string ExecuteSystemProcess(string command, string args, string workingdir)
 		{
@@ -438,7 +366,7 @@ namespace UnityEditor
 			{
 			case BuildTarget.StandaloneLinux:
 				goto IL_40;
-			case BuildTarget.FlashPlayer:
+			case (BuildTarget)18:
 				IL_17:
 				if (target == BuildTarget.StandaloneOSXIntel || target == BuildTarget.StandaloneWindows)
 				{

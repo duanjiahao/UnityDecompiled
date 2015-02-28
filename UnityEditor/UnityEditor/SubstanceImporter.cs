@@ -102,10 +102,10 @@ namespace UnityEditor
 		private extern void SetMaterialInformation(ProceduralMaterial material, ProceduralMaterialInformation information);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string ProceduralOutputTypeToUnityShaderPropertyName(ProceduralOutputType substanceType);
+		internal static extern bool CanShaderPropertyHostProceduralOutput(string name, ProceduralOutputType substanceType);
 		internal static bool IsProceduralTextureSlot(Material material, Texture tex, string name)
 		{
-			return material is ProceduralMaterial && tex is ProceduralTexture && SubstanceImporter.ProceduralOutputTypeToUnityShaderPropertyName((tex as ProceduralTexture).GetProceduralOutputType()) == name && SubstanceImporter.IsSubstanceParented(tex as ProceduralTexture, material as ProceduralMaterial);
+			return material is ProceduralMaterial && tex is ProceduralTexture && SubstanceImporter.CanShaderPropertyHostProceduralOutput(name, (tex as ProceduralTexture).GetProceduralOutputType()) && SubstanceImporter.IsSubstanceParented(tex as ProceduralTexture, material as ProceduralMaterial);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

@@ -45,6 +45,8 @@ namespace UnityEditor
 		[SerializeField]
 		private int m_LinearTexture;
 		[SerializeField]
+		private int m_RGBM;
+		[SerializeField]
 		private int m_CompressionQuality;
 		[SerializeField]
 		private int m_SpriteMode;
@@ -62,6 +64,12 @@ namespace UnityEditor
 		private Vector4 m_SpriteBorder;
 		[SerializeField]
 		private int m_GenerateCubemap;
+		[SerializeField]
+		private int m_CubemapConvolution;
+		[SerializeField]
+		private int m_CubemapConvolutionSteps;
+		[SerializeField]
+		private float m_CubemapConvolutionExponent;
 		[SerializeField]
 		private int m_SeamlessCubemap;
 		[SerializeField]
@@ -272,6 +280,17 @@ namespace UnityEditor
 				this.m_Lightmap = ((!value) ? 0 : 1);
 			}
 		}
+		public TextureImporterRGBMMode rgbm
+		{
+			get
+			{
+				return (TextureImporterRGBMMode)this.m_RGBM;
+			}
+			set
+			{
+				this.m_RGBM = (int)value;
+			}
+		}
 		public TextureImporterGenerateCubemap generateCubemap
 		{
 			get
@@ -281,6 +300,39 @@ namespace UnityEditor
 			set
 			{
 				this.m_GenerateCubemap = (int)value;
+			}
+		}
+		public TextureImporterCubemapConvolution cubemapConvolution
+		{
+			get
+			{
+				return (TextureImporterCubemapConvolution)this.m_CubemapConvolution;
+			}
+			set
+			{
+				this.m_CubemapConvolution = (int)value;
+			}
+		}
+		public int cubemapConvolutionSteps
+		{
+			get
+			{
+				return this.m_CubemapConvolutionSteps;
+			}
+			set
+			{
+				this.m_CubemapConvolutionSteps = value;
+			}
+		}
+		public float cubemapConvolutionExponent
+		{
+			get
+			{
+				return this.m_CubemapConvolutionExponent;
+			}
+			set
+			{
+				this.m_CubemapConvolutionExponent = value;
 			}
 		}
 		public bool seamlessCubemap

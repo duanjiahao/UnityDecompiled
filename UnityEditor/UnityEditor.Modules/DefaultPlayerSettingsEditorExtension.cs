@@ -30,5 +30,15 @@ namespace UnityEditor.Modules
 		public virtual void SplashSectionGUI()
 		{
 		}
+		public virtual void IconSectionGUI()
+		{
+		}
+		public virtual bool HasResolutionSection()
+		{
+			return false;
+		}
+		public virtual void ResolutionSectionGUI(float h, float midWidth, float maxWidth)
+		{
+		}
 	}
 }

@@ -14,7 +14,6 @@ namespace UnityEditor.VersionControl
 		private const float k_MinIncomingAreaHeight = 50f;
 		private const float k_BottomBarHeight = 17f;
 		private static WindowPending.Styles s_Styles;
-		private static Texture2D submittedIcon;
 		private static Texture2D changeIcon;
 		private Texture2D syncIcon;
 		private Texture2D refreshIcon;
@@ -221,7 +220,7 @@ namespace UnityEditor.VersionControl
 		private void OnIncoming(Task task)
 		{
 			this.CreateStaticResources();
-			this.PopulateListControl(this.incomingList, task, WindowPending.submittedIcon);
+			this.PopulateListControl(this.incomingList, task, this.syncIcon);
 		}
 		private void OnChangeSets(Task task)
 		{
@@ -465,9 +464,6 @@ namespace UnityEditor.VersionControl
 				this.refreshIcon.hideFlags = HideFlags.HideAndDontSave;
 				this.refreshIcon.name = "RefreshIcon";
 			}
-			if (WindowPending.submittedIcon == null)
-			{
-			}
 			if (this.header == null)
 			{
 				this.header = "OL Title";
@@ -485,7 +481,7 @@ namespace UnityEditor.VersionControl
 		{
 			if (this.syncIcon == null)
 			{
-				this.syncIcon = EditorGUIUtility.LoadIcon("vcs_sync");
+				this.syncIcon = EditorGUIUtility.LoadIcon("vcs_incoming");
 				this.syncIcon.hideFlags = HideFlags.HideAndDontSave;
 				this.syncIcon.name = "SyncIcon";
 			}

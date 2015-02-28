@@ -27,6 +27,7 @@ namespace UnityEditor
 		private GUIStyle m_Popup;
 		private GUIStyle m_ObjectField;
 		private GUIStyle m_ObjectFieldThumb;
+		private GUIStyle m_ObjectFieldMiniThumb;
 		private GUIStyle m_ColorField;
 		private GUIStyle m_LayerMaskField;
 		private GUIStyle m_Toggle;
@@ -34,6 +35,8 @@ namespace UnityEditor
 		private GUIStyle m_Foldout;
 		private GUIStyle m_FoldoutPreDrop;
 		private GUIStyle m_ToggleGroup;
+		private GUIStyle m_TextFieldDropDown;
+		private GUIStyle m_TextFieldDropDownText;
 		internal Font m_StandardFont;
 		internal Font m_BoldFont;
 		internal Font m_MiniFont;
@@ -45,6 +48,7 @@ namespace UnityEditor
 		private GUIStyle m_ToolbarTextField;
 		private GUIStyle m_InspectorDefaultMargins;
 		private GUIStyle m_InspectorFullWidthMargins;
+		private GUIStyle m_HelpBox;
 		private GUIStyle m_ToolbarSearchField;
 		private GUIStyle m_ToolbarSearchFieldPopup;
 		private GUIStyle m_ToolbarSearchFieldCancelButton;
@@ -54,9 +58,9 @@ namespace UnityEditor
 		private GUIStyle m_InspectorTitlebar;
 		private GUIStyle m_InspectorTitlebarText;
 		private GUIStyle m_FoldoutSelected;
+		private GUIStyle m_Tooltip;
 		private GUIStyle m_NotificationText;
 		private GUIStyle m_NotificationBackground;
-		private GUIStyle m_HelpBox;
 		private GUIStyle m_AssetLabel;
 		private GUIStyle m_AssetLabelPartial;
 		private GUIStyle m_AssetLabelIcon;
@@ -65,9 +69,12 @@ namespace UnityEditor
 		private GUIStyle m_SearchFieldCancelButtonEmpty;
 		private GUIStyle m_SelectionRect;
 		private GUIStyle m_MinMaxHorizontalSliderThumb;
+		private GUIStyle m_DropDownList;
 		private GUIStyle m_ProgressBarBar;
 		private GUIStyle m_ProgressBarText;
 		private GUIStyle m_ProgressBarBack;
+		private Vector2 m_KnobSize = new Vector2(40f, 40f);
+		private Vector2 m_MiniKnobSize = new Vector2(29f, 29f);
 		internal static EditorStyles s_Current;
 		private static EditorStyles[] s_CachedStyles = new EditorStyles[2];
 		public static GUIStyle label
@@ -239,6 +246,13 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ObjectFieldThumb;
 			}
 		}
+		public static GUIStyle objectFieldMiniThumb
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_ObjectFieldMiniThumb;
+			}
+		}
 		public static GUIStyle colorField
 		{
 			get
@@ -286,6 +300,20 @@ namespace UnityEditor
 			get
 			{
 				return EditorStyles.s_Current.m_ToggleGroup;
+			}
+		}
+		internal static GUIStyle textFieldDropDown
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_TextFieldDropDown;
+			}
+		}
+		internal static GUIStyle textFieldDropDownText
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_TextFieldDropDownText;
 			}
 		}
 		public static Font standardFont
@@ -365,6 +393,13 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_InspectorFullWidthMargins;
 			}
 		}
+		public static GUIStyle helpBox
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_HelpBox;
+			}
+		}
 		internal static GUIStyle toolbarSearchField
 		{
 			get
@@ -428,6 +463,13 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_FoldoutSelected;
 			}
 		}
+		internal static GUIStyle tooltip
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_Tooltip;
+			}
+		}
 		internal static GUIStyle notificationText
 		{
 			get
@@ -440,13 +482,6 @@ namespace UnityEditor
 			get
 			{
 				return EditorStyles.s_Current.m_NotificationBackground;
-			}
-		}
-		internal static GUIStyle helpBox
-		{
-			get
-			{
-				return EditorStyles.s_Current.m_HelpBox;
 			}
 		}
 		internal static GUIStyle assetLabel
@@ -505,6 +540,13 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MinMaxHorizontalSliderThumb;
 			}
 		}
+		internal static GUIStyle dropDownList
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_DropDownList;
+			}
+		}
 		internal static GUIStyle progressBarBack
 		{
 			get
@@ -524,6 +566,20 @@ namespace UnityEditor
 			get
 			{
 				return EditorStyles.s_Current.m_ProgressBarText;
+			}
+		}
+		internal static Vector2 knobSize
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_KnobSize;
+			}
+		}
+		internal static Vector2 miniKnobSize
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_MiniKnobSize;
 			}
 		}
 		internal static void UpdateSkinCache()
@@ -583,6 +639,7 @@ namespace UnityEditor
 			this.m_AssetLabelIcon = this.GetStyle("AssetLabel Icon");
 			this.m_SelectionRect = this.GetStyle("selectionRect");
 			this.m_MinMaxHorizontalSliderThumb = this.GetStyle("MinMaxHorizontalSliderThumb");
+			this.m_DropDownList = this.GetStyle("DropDownButton");
 			this.m_BoldFont = this.GetStyle("BoldLabel").font;
 			this.m_StandardFont = this.GetStyle("Label").font;
 			this.m_MiniFont = this.GetStyle("MiniLabel").font;
@@ -594,6 +651,7 @@ namespace UnityEditor
 			this.m_InspectorTitlebar = this.GetStyle("IN Title");
 			this.m_InspectorTitlebarText = this.GetStyle("IN TitleText");
 			this.m_ToggleGroup = this.GetStyle("BoldToggle");
+			this.m_Tooltip = this.GetStyle("Tooltip");
 			this.m_NotificationText = this.GetStyle("NotificationText");
 			this.m_NotificationBackground = this.GetStyle("NotificationBackground");
 			this.m_Popup = (this.m_LayerMaskField = this.GetStyle("MiniPopup"));
@@ -601,11 +659,14 @@ namespace UnityEditor
 			this.m_Label = this.GetStyle("ControlLabel");
 			this.m_ObjectField = this.GetStyle("ObjectField");
 			this.m_ObjectFieldThumb = this.GetStyle("ObjectFieldThumb");
+			this.m_ObjectFieldMiniThumb = this.GetStyle("ObjectFieldMiniThumb");
 			this.m_Toggle = this.GetStyle("Toggle");
 			this.m_ToggleMixed = this.GetStyle("ToggleMixed");
 			this.m_ColorField = this.GetStyle("ColorField");
 			this.m_Foldout = this.GetStyle("Foldout");
 			this.m_FoldoutSelected = GUIStyle.none;
+			this.m_TextFieldDropDown = this.GetStyle("TextFieldDropDown");
+			this.m_TextFieldDropDownText = this.GetStyle("TextFieldDropDownText");
 			this.m_TextArea = new GUIStyle(this.m_TextField);
 			this.m_TextArea.wordWrap = true;
 			this.m_InspectorDefaultMargins = new GUIStyle();

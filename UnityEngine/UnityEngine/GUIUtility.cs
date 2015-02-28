@@ -4,9 +4,7 @@ namespace UnityEngine
 {
 	public class GUIUtility
 	{
-		[NotRenamed]
 		internal static int s_SkinMode;
-		[NotRenamed]
 		internal static int s_OriginalID;
 		internal static Vector2 s_EditorScreenPointOffset = Vector2.zero;
 		internal static bool s_HasKeyboardFocus = false;

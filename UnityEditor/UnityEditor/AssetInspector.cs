@@ -22,7 +22,7 @@ namespace UnityEditor
 		}
 		internal static bool IsAssetServerSetUp()
 		{
-			return InternalEditorUtility.HasMaint() && ASEditorBackend.SettingsAreValid();
+			return InternalEditorUtility.HasPro() && ASEditorBackend.SettingsAreValid();
 		}
 		private bool HasFlag(ChangeFlags flags, ChangeFlags flagToCheck)
 		{

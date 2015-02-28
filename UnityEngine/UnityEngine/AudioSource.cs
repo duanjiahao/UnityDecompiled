@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using UnityEngine.Audio;
 using UnityEngine.Internal;
 namespace UnityEngine
 {
@@ -42,6 +44,15 @@ namespace UnityEngine
 			set;
 		}
 		public extern AudioClip clip
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern AudioMixerGroup outputAudioMixerGroup
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -101,7 +112,45 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern float panStereo
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern float spatialBlend
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern float reverbZoneMix
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("UnityEditor.panLevel has been deprecated. Use AudioSource.spatialBlend instead (UnityUpgradable).", true)]
 		public extern float panLevel
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("UnityEditor.pan has been deprecated. Use AudioSource.panStereo instead (UnityUpgradable).", true)]
+		public extern float pan
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -191,15 +240,6 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern float pan
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
 		public extern AudioRolloffMode rolloffMode
 		{
 			[WrapperlessIcall]
@@ -241,7 +281,7 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Play([DefaultValue("0")] ulong delay);
+		public extern void Play([UnityEngine.Internal.DefaultValue("0")] ulong delay);
 		[ExcludeFromDocs]
 		public void Play()
 		{
@@ -270,9 +310,16 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Pause(AudioSource self);
+		public void UnPause()
+		{
+			AudioSource.INTERNAL_CALL_UnPause(this);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void PlayOneShot(AudioClip clip, [DefaultValue("1.0F")] float volumeScale);
+		private static extern void INTERNAL_CALL_UnPause(AudioSource self);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void PlayOneShot(AudioClip clip, [UnityEngine.Internal.DefaultValue("1.0F")] float volumeScale);
 		[ExcludeFromDocs]
 		public void PlayOneShot(AudioClip clip)
 		{
@@ -285,7 +332,7 @@ namespace UnityEngine
 			float volume = 1f;
 			AudioSource.PlayClipAtPoint(clip, position, volume);
 		}
-		public static void PlayClipAtPoint(AudioClip clip, Vector3 position, [DefaultValue("1.0F")] float volume)
+		public static void PlayClipAtPoint(AudioClip clip, Vector3 position, [UnityEngine.Internal.DefaultValue("1.0F")] float volume)
 		{
 			GameObject gameObject = new GameObject("One shot audio");
 			gameObject.transform.position = position;

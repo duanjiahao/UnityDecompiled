@@ -41,6 +41,16 @@ namespace UnityEditor
 			get;
 			set;
 		}
+		public Action expandedStateChanged
+		{
+			get;
+			set;
+		}
+		public Action<string> searchChanged
+		{
+			get;
+			set;
+		}
 		public Action<int, Rect> onGUIRowCallback
 		{
 			get;
@@ -70,6 +80,29 @@ namespace UnityEditor
 		{
 			get;
 			set;
+		}
+		public bool isSearching
+		{
+			get
+			{
+				return !string.IsNullOrEmpty(this.state.searchString);
+			}
+		}
+		public string searchString
+		{
+			get
+			{
+				return this.state.searchString;
+			}
+			set
+			{
+				this.state.searchString = value;
+				this.data.OnSearchChanged();
+				if (this.searchChanged != null)
+				{
+					this.searchChanged(this.state.searchString);
+				}
+			}
 		}
 		public TreeView(EditorWindow editorWindow, TreeViewState treeViewState)
 		{
@@ -330,7 +363,7 @@ namespace UnityEditor
 			}
 			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
 			Vector2 totalSize = this.gui.GetTotalSize(visibleRows);
-			Rect viewRect = new Rect(0f, 0f, totalSize.x, totalSize.y + this.gui.halfDropBetweenHeight * 2f);
+			Rect viewRect = new Rect(0f, 0f, totalSize.x, totalSize.y);
 			if (this.m_UseScrollView)
 			{
 				this.state.scrollPos = GUI.BeginScrollView(this.m_TotalRect, this.state.scrollPos, viewRect);
@@ -367,18 +400,20 @@ namespace UnityEditor
 			switch (type)
 			{
 			case EventType.DragUpdated:
-				if (this.dragging != null)
+				if (this.dragging != null && this.m_TotalRect.Contains(Event.current.mousePosition))
 				{
 					this.dragging.DragElement(null, default(Rect), false);
 					this.Repaint();
+					Event.current.Use();
 				}
 				return;
 			case EventType.DragPerform:
-				if (this.dragging != null)
+				if (this.dragging != null && this.m_TotalRect.Contains(Event.current.mousePosition))
 				{
 					this.m_DragSelection.Clear();
 					this.dragging.DragElement(null, default(Rect), false);
 					this.Repaint();
+					Event.current.Use();
 				}
 				return;
 			case EventType.Ignore:
@@ -606,11 +641,11 @@ namespace UnityEditor
 			{
 				return;
 			}
+			Event.current.Use();
 			int indexOfID = TreeView.GetIndexOfID(visibleRows, this.state.lastClickedID);
 			int num = Mathf.Clamp(indexOfID + offset, 0, visibleRows.Count - 1);
-			this.SelectionByKey(visibleRows[num]);
 			this.EnsureRowIsVisible(num, visibleRows);
-			Event.current.Use();
+			this.SelectionByKey(visibleRows[num]);
 		}
 		private bool GetFirstAndLastSelected(List<TreeViewItem> items, out int firstIndex, out int lastIndex)
 		{

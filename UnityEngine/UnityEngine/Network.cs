@@ -310,10 +310,10 @@ namespace UnityEngine
 		{
 			if (gameObject != null)
 			{
-				NetworkView networkView = gameObject.networkView;
-				if (networkView != null)
+				NetworkView component = gameObject.GetComponent<NetworkView>();
+				if (component != null)
 				{
-					Network.Destroy(networkView.viewID);
+					Network.Destroy(component.viewID);
 				}
 				else
 				{

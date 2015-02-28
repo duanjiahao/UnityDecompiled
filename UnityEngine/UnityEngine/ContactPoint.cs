@@ -1,12 +1,13 @@
 using System;
+using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
 	public struct ContactPoint
 	{
 		internal Vector3 m_Point;
 		internal Vector3 m_Normal;
-		internal Collider m_ThisCollider;
-		internal Collider m_OtherCollider;
+		internal int m_ThisColliderInstanceID;
+		internal int m_OtherColliderInstanceID;
 		public Vector3 point
 		{
 			get
@@ -25,15 +26,18 @@ namespace UnityEngine
 		{
 			get
 			{
-				return this.m_ThisCollider;
+				return ContactPoint.ColliderFromInstanceId(this.m_ThisColliderInstanceID);
 			}
 		}
 		public Collider otherCollider
 		{
 			get
 			{
-				return this.m_OtherCollider;
+				return ContactPoint.ColliderFromInstanceId(this.m_OtherColliderInstanceID);
 			}
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Collider ColliderFromInstanceId(int instanceID);
 	}
 }

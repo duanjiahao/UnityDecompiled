@@ -22,10 +22,10 @@ namespace UnityEditor
 			ABORTED,
 			TIMEOUT
 		}
-		public delegate void DoneCallback(AsyncHTTPClient client);
-		public delegate void StatusCallback(AsyncHTTPClient.State status, int bytesDone, int bytesTotal);
 		private delegate void RequestProgressCallback(AsyncHTTPClient.State status, int downloaded, int totalSize);
 		private delegate void RequestDoneCallback(AsyncHTTPClient.State status, int httpStatus);
+		public delegate void DoneCallback(AsyncHTTPClient client);
+		public delegate void StatusCallback(AsyncHTTPClient.State status, int bytesDone, int bytesTotal);
 		private IntPtr m_Handle;
 		public AsyncHTTPClient.StatusCallback statusCallback;
 		public AsyncHTTPClient.DoneCallback doneCallback;
@@ -128,6 +128,30 @@ namespace UnityEditor
 			this.tag = string.Empty;
 			this.statusCallback = null;
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern IntPtr SubmitClientRequest(string tag, string url, string[] headers, string method, string data, AsyncHTTPClient.RequestDoneCallback doneDelegate, [DefaultValue("null")] AsyncHTTPClient.RequestProgressCallback progressDelegate);
+		[ExcludeFromDocs]
+		private static IntPtr SubmitClientRequest(string tag, string url, string[] headers, string method, string data, AsyncHTTPClient.RequestDoneCallback doneDelegate)
+		{
+			AsyncHTTPClient.RequestProgressCallback progressDelegate = null;
+			return AsyncHTTPClient.SubmitClientRequest(tag, url, headers, method, data, doneDelegate, progressDelegate);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern byte[] GetBytesByHandle(IntPtr handle);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Texture2D GetTextureByHandle(IntPtr handle);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void AbortByTag(string tag);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void AbortByHandle(IntPtr handle);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void CurlRequestCheck();
 		public void Abort()
 		{
 			this.state = AsyncHTTPClient.State.ABORTED;
@@ -205,29 +229,5 @@ namespace UnityEditor
 			}
 			return stringBuilder.ToString();
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern IntPtr SubmitClientRequest(string tag, string url, string[] headers, string method, string data, AsyncHTTPClient.RequestDoneCallback doneDelegate, [DefaultValue("null")] AsyncHTTPClient.RequestProgressCallback progressDelegate);
-		[ExcludeFromDocs]
-		private static IntPtr SubmitClientRequest(string tag, string url, string[] headers, string method, string data, AsyncHTTPClient.RequestDoneCallback doneDelegate)
-		{
-			AsyncHTTPClient.RequestProgressCallback progressDelegate = null;
-			return AsyncHTTPClient.SubmitClientRequest(tag, url, headers, method, data, doneDelegate, progressDelegate);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern byte[] GetBytesByHandle(IntPtr handle);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Texture2D GetTextureByHandle(IntPtr handle);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void AbortByTag(string tag);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void AbortByHandle(IntPtr handle);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CurlRequestCheck();
 	}
 }

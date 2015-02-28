@@ -41,6 +41,17 @@ namespace UnityEditor
 				GameObjectTreeViewGUI.s_GOStyles = new GameObjectTreeViewGUI.GameObjectStyles();
 			}
 		}
+		public override bool BeginRename(TreeViewItem item, float delay)
+		{
+			GameObjectTreeViewItem gameObjectTreeViewItem = item as GameObjectTreeViewItem;
+			UnityEngine.Object objectPPTR = gameObjectTreeViewItem.objectPPTR;
+			if ((objectPPTR.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+			{
+				Debug.LogWarning("Unable to rename a GameObject with HideFlags.NotEditable.");
+				return false;
+			}
+			return base.BeginRename(item, delay);
+		}
 		protected override void RenameEnded()
 		{
 			string text = (!string.IsNullOrEmpty(base.GetRenameOverlay().name)) ? base.GetRenameOverlay().name : base.GetRenameOverlay().originalName;
@@ -54,6 +65,7 @@ namespace UnityEditor
 				{
 					treeViewItem.displayName = text;
 				}
+				EditorApplication.RepaintAnimationWindow();
 			}
 		}
 		protected override void DrawIconAndLabel(Rect rect, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
@@ -76,6 +88,7 @@ namespace UnityEditor
 				{
 					gameObjectTreeViewItem.displayName = "deleted gameobject";
 				}
+				label = gameObjectTreeViewItem.displayName;
 			}
 			GUIStyle gUIStyle = TreeViewGUI.s_Styles.lineStyle;
 			if (!gameObjectTreeViewItem.shouldDisplay)
@@ -104,7 +117,7 @@ namespace UnityEditor
 				}
 			}
 			gUIStyle.padding.left = (int)this.k_SpaceBetweenIconAndText;
-			gUIStyle.Draw(rect, gameObjectTreeViewItem.displayName, false, false, selected, focused);
+			gUIStyle.Draw(rect, label, false, false, selected, focused);
 		}
 		protected override Texture GetIconForNode(TreeViewItem item)
 		{

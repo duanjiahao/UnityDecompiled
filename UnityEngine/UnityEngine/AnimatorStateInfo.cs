@@ -5,15 +5,31 @@ namespace UnityEngine
 	{
 		private int m_Name;
 		private int m_Path;
+		private int m_FullPath;
 		private float m_NormalizedTime;
 		private float m_Length;
 		private int m_Tag;
 		private int m_Loop;
+		public int fullPathHash
+		{
+			get
+			{
+				return this.m_FullPath;
+			}
+		}
+		[Obsolete("Use AnimatorStateInfo.fullPathHash instead.")]
 		public int nameHash
 		{
 			get
 			{
 				return this.m_Path;
+			}
+		}
+		public int shortNameHash
+		{
+			get
+			{
+				return this.m_Name;
 			}
 		}
 		public float normalizedTime
@@ -47,7 +63,7 @@ namespace UnityEngine
 		public bool IsName(string name)
 		{
 			int num = Animator.StringToHash(name);
-			return num == this.m_Name || num == this.m_Path;
+			return num == this.m_FullPath || num == this.m_Name || num == this.m_Path;
 		}
 		public bool IsTag(string tag)
 		{

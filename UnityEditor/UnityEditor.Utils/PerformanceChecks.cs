@@ -4,7 +4,7 @@ namespace UnityEditor.Utils
 {
 	internal class PerformanceChecks
 	{
-		private static string[] kShadersWithMobileVariants = new string[]
+		private static readonly string[] kShadersWithMobileVariants = new string[]
 		{
 			"VertexLit",
 			"Diffuse",
@@ -18,9 +18,9 @@ namespace UnityEditor.Utils
 		};
 		private static bool IsMobileBuildTarget(BuildTarget target)
 		{
-			return target == BuildTarget.iPhone || target == BuildTarget.Android || target == BuildTarget.Tizen;
+			return target == BuildTarget.iOS || target == BuildTarget.Android || target == BuildTarget.Tizen;
 		}
-		private static string FormattedTextContent(string localeString, params string[] args)
+		private static string FormattedTextContent(string localeString, params object[] args)
 		{
 			GUIContent gUIContent = EditorGUIUtility.TextContent(localeString);
 			return string.Format(gUIContent.text, args);
@@ -37,47 +37,50 @@ namespace UnityEditor.Utils
 			bool flag2 = PerformanceChecks.IsMobileBuildTarget(buildTarget);
 			if (buildTarget == BuildTarget.Android && ShaderUtil.HasClip(mat.shader))
 			{
-				return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderWithClipAndroid", new string[0]);
+				return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderWithClipAndroid", new object[0]);
 			}
-			if (flag)
+			if (!(mat.GetTag("PerformanceChecks", true).ToLower() == "false"))
 			{
-				if (flag2 && mat.HasProperty("_Color") && mat.GetColor("_Color") == new Color(1f, 1f, 1f, 1f))
+				if (flag)
 				{
-					return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderUsesWhiteColor", new string[]
+					if (flag2 && mat.HasProperty("_Color") && mat.GetColor("_Color") == new Color(1f, 1f, 1f, 1f))
 					{
-						"Mobile/" + shaderName
-					});
-				}
-				if (flag2 && shaderName.StartsWith("Particles/"))
-				{
-					return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderHasMobileVariant", new string[]
+						return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderUsesWhiteColor", new object[]
+						{
+							"Mobile/" + shaderName
+						});
+					}
+					if (flag2 && shaderName.StartsWith("Particles/"))
 					{
-						"Mobile/" + shaderName
-					});
-				}
-				if (shaderName == "RenderFX/Skybox" && mat.HasProperty("_Tint") && mat.GetColor("_Tint") == new Color(0.5f, 0.5f, 0.5f, 0.5f))
-				{
-					return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderMobileSkybox", new string[]
+						return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderHasMobileVariant", new object[]
+						{
+							"Mobile/" + shaderName
+						});
+					}
+					if (shaderName == "RenderFX/Skybox" && mat.HasProperty("_Tint") && mat.GetColor("_Tint") == new Color(0.5f, 0.5f, 0.5f, 0.5f))
 					{
-						"Mobile/Skybox"
-					});
+						return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderMobileSkybox", new object[]
+						{
+							"Mobile/Skybox"
+						});
+					}
 				}
-			}
-			if (lOD >= 300 && flag2 && !shaderName.StartsWith("Mobile/"))
-			{
-				return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderExpensive", new string[0]);
-			}
-			if (shaderName.Contains("VertexLit") && mat.HasProperty("_Emission"))
-			{
-				Color color = mat.GetColor("_Emission");
-				if (color.r >= 0.5f && color.g >= 0.5f && color.b >= 0.5f)
+				if (lOD >= 300 && flag2 && !shaderName.StartsWith("Mobile/"))
 				{
-					return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderUseUnlit", new string[0]);
+					return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderExpensive", new object[0]);
 				}
-			}
-			if (mat.HasProperty("_BumpMap") && mat.GetTexture("_BumpMap") == null)
-			{
-				return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderNoNormalMap", new string[0]);
+				if (shaderName.Contains("VertexLit") && mat.HasProperty("_Emission"))
+				{
+					Color color = mat.GetColor("_Emission");
+					if (color.r >= 0.5f && color.g >= 0.5f && color.b >= 0.5f)
+					{
+						return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderUseUnlit", new object[0]);
+					}
+				}
+				if (mat.HasProperty("_BumpMap") && mat.GetTexture("_BumpMap") == null)
+				{
+					return PerformanceChecks.FormattedTextContent("PerformanceChecks.ShaderNoNormalMap", new object[0]);
+				}
 			}
 			return null;
 		}

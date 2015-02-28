@@ -15,6 +15,21 @@ namespace UnityEditor
 				return this.m_ActiveEditor;
 			}
 		}
+		internal override Editor assetEditor
+		{
+			get
+			{
+				return base.assetEditor;
+			}
+			set
+			{
+				base.assetEditor = value;
+				if (this.activeEditor)
+				{
+					this.activeEditor.assetEditor = this.assetEditor;
+				}
+			}
+		}
 		internal virtual void OnEnable()
 		{
 			this.m_ActiveEditorIndex = EditorPrefs.GetInt(base.GetType().Name + "ActiveEditorIndex", 0);
@@ -34,10 +49,6 @@ namespace UnityEditor
 		}
 		public override void OnInspectorGUI()
 		{
-			if (this.m_ActiveEditor.m_AssetEditor == null)
-			{
-				this.m_ActiveEditor.m_AssetEditor = base.assetEditor;
-			}
 			EditorGUI.BeginDisabledGroup(false);
 			GUI.enabled = true;
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -51,7 +62,7 @@ namespace UnityEditor
 				this.m_ActiveEditor = null;
 				UnityEngine.Object.DestroyImmediate(activeEditor);
 				this.m_ActiveEditor = (Editor.CreateEditor(base.targets, this.m_SubEditorTypes[this.m_ActiveEditorIndex]) as AssetImporterInspector);
-				this.m_ActiveEditor.m_AssetEditor = base.assetEditor;
+				this.m_ActiveEditor.assetEditor = this.assetEditor;
 			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();

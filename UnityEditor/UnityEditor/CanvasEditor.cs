@@ -29,8 +29,8 @@ namespace UnityEditor
 		private GUIContent renderCamera = new GUIContent("Render Camera", "The Camera which will render the canvas. This is also the camera used to send events.");
 		private GUIContent sortingOrder = new GUIContent("Sort Order", "The order in which Screen Space - Overlay canvas will render");
 		private static string s_RootAndNestedMessage = "Cannot multi-edit root Canvas together with nested Canvas.";
-		private GUIContent m_SortingLayerStyle = EditorGUIUtility.TextContent("SpriteRenderer.SortingLayer");
-		private GUIContent m_SortingOrderStyle = EditorGUIUtility.TextContent("SpriteRenderer.SortingOrder");
+		private GUIContent m_SortingLayerStyle = EditorGUIUtility.TextContent("Renderer.SortingLayer");
+		private GUIContent m_SortingOrderStyle = EditorGUIUtility.TextContent("Renderer.SortingOrder");
 		private bool m_AllNested;
 		private bool m_AllRoot;
 		private bool m_AllOverlay;
@@ -123,7 +123,7 @@ namespace UnityEditor
 					EditorGUILayout.PropertyField(this.m_Camera, this.renderCamera, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_PlaneDistance, new GUILayoutOption[0]);
 					EditorGUILayout.Space();
-					EditorGUILayout.SortingLayerField(this.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup);
+					EditorGUILayout.SortingLayerField(this.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup, EditorStyles.label);
 					EditorGUILayout.PropertyField(this.m_SortingOrder, this.m_SortingOrderStyle, new GUILayoutOption[0]);
 				}
 				EditorGUILayout.EndFadeGroup();

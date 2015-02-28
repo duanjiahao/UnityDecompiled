@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Internal;
 using UnityEngineInternal;
 namespace UnityEditor
@@ -14,6 +15,7 @@ namespace UnityEditor
 		private static Texture2D s_InfoIcon;
 		private static Texture2D s_WarningIcon;
 		private static Texture2D s_ErrorIcon;
+		internal static SliderLabels sliderLabels;
 		internal static Color kDarkViewBackground;
 		private static GUIContent s_ObjectContent;
 		private static GUIContent s_Text;
@@ -238,6 +240,7 @@ namespace UnityEditor
 		static EditorGUIUtility()
 		{
 			EditorGUIUtility.s_FontIsBold = -1;
+			EditorGUIUtility.sliderLabels = default(SliderLabels);
 			EditorGUIUtility.kDarkViewBackground = new Color(0.22f, 0.22f, 0.22f, 0f);
 			EditorGUIUtility.s_ObjectContent = new GUIContent();
 			EditorGUIUtility.s_Text = new GUIContent();
@@ -401,7 +404,21 @@ namespace UnityEditor
 		{
 			if (obj)
 			{
-				EditorGUIUtility.s_ObjectContent.text = obj.name;
+				if (obj is AudioMixerGroup)
+				{
+					EditorGUIUtility.s_ObjectContent.text = obj.name + " (" + ((AudioMixerGroup)obj).audioMixer.name + ")";
+				}
+				else
+				{
+					if (obj is AudioMixerSnapshot)
+					{
+						EditorGUIUtility.s_ObjectContent.text = obj.name + " (" + ((AudioMixerSnapshot)obj).audioMixer.name + ")";
+					}
+					else
+					{
+						EditorGUIUtility.s_ObjectContent.text = obj.name;
+					}
+				}
 				EditorGUIUtility.s_ObjectContent.image = AssetPreview.GetMiniThumbnail(obj);
 			}
 			else
@@ -573,7 +590,7 @@ namespace UnityEditor
 			{
 				return @object;
 			}
-			return EditorGUIUtility.GetEditorAssetBundle().Load(filename, type);
+			return EditorGUIUtility.GetEditorAssetBundle().LoadAsset(filename, type);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -671,17 +688,21 @@ namespace UnityEditor
 			EditorGUIUtility.wideMode = false;
 			ScriptAttributeUtility.propertyHandlerCache = null;
 		}
-		public static void RenderGameViewCameras(Rect cameraRect, bool gizmos, bool gui)
+		public static void RenderGameViewCameras(Rect cameraRect, int targetDisplay, bool gizmos, bool gui)
 		{
-			EditorGUIUtility.INTERNAL_CALL_RenderGameViewCameras(ref cameraRect, gizmos, gui);
+			EditorGUIUtility.INTERNAL_CALL_RenderGameViewCameras(ref cameraRect, targetDisplay, gizmos, gui);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_RenderGameViewCameras(ref Rect cameraRect, bool gizmos, bool gui);
+		private static extern void INTERNAL_CALL_RenderGameViewCameras(ref Rect cameraRect, int targetDisplay, bool gizmos, bool gui);
+		public static void RenderGameViewCameras(Rect cameraRect, bool gizmos, bool gui)
+		{
+			EditorGUIUtility.RenderGameViewCameras(cameraRect, 0, gizmos, gui);
+		}
 		[Obsolete("Use version without the statsRect (it is not used anymore)")]
 		public static void RenderGameViewCameras(Rect cameraRect, Rect statsRect, bool gizmos, bool gui)
 		{
-			EditorGUIUtility.RenderGameViewCameras(cameraRect, gizmos, gui);
+			EditorGUIUtility.RenderGameViewCameras(cameraRect, 0, gizmos, gui);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1048,6 +1069,42 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_AddCursorRect(ref Rect r, MouseCursor m, int controlID);
+		internal static Rect HandleHorizontalSplitter(Rect dragRect, float width, float minLeftSide, float minRightSide)
+		{
+			if (Event.current.type == EventType.Repaint)
+			{
+				EditorGUIUtility.AddCursorRect(dragRect, MouseCursor.SplitResizeLeftRight);
+			}
+			float num = 0f;
+			float x = EditorGUI.MouseDeltaReader(dragRect, true).x;
+			if (x != 0f)
+			{
+				dragRect.x += x;
+				num = Mathf.Clamp(dragRect.x, minLeftSide, width - minRightSide);
+			}
+			if (dragRect.x > width - minRightSide)
+			{
+				num = width - minRightSide;
+			}
+			if (num > 0f)
+			{
+				dragRect.x = num;
+			}
+			return dragRect;
+		}
+		internal static void DrawHorizontalSplitter(Rect dragRect)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Color color = GUI.color;
+			Color b = (!EditorGUIUtility.isProSkin) ? new Color(0.6f, 0.6f, 0.6f, 1.333f) : new Color(0.12f, 0.12f, 0.12f, 1.333f);
+			GUI.color *= b;
+			Rect position = new Rect(dragRect.x - 1f, dragRect.y, 1f, dragRect.height);
+			GUI.DrawTexture(position, EditorGUIUtility.whiteTexture);
+			GUI.color = color;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CleanCache(string text);

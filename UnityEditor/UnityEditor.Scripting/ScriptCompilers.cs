@@ -47,7 +47,7 @@ namespace UnityEditor.Scripting
 			}
 			throw new ApplicationException("Unable to find a suitable compiler");
 		}
-		internal static ScriptCompilerBase CreateCompilerInstance(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform)
+		internal static ScriptCompilerBase CreateCompilerInstance(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
 			if (island._files.Length == 0)
 			{
@@ -57,10 +57,10 @@ namespace UnityEditor.Scripting
 			{
 				if (current.GetExtensionICanCompile() == island.GetExtensionOfSourceFiles())
 				{
-					return current.CreateCompiler(island, buildingForEditor, targetPlatform);
+					return current.CreateCompiler(island, buildingForEditor, targetPlatform, runUpdater);
 				}
 			}
-			throw new ApplicationException("Unable to find a suitable compiler");
+			throw new ApplicationException(string.Format("Unable to find a suitable compiler for sources with extension '{0}' (Output assembly: {1})", island.GetExtensionOfSourceFiles(), island._output));
 		}
 		public static string GetExtensionOfSourceFile(string file)
 		{

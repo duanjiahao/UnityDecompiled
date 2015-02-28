@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -144,6 +144,10 @@ namespace UnityEditor
 		}
 		private void OnDisable()
 		{
+			if (this.m_EditMode == AvatarEditor.EditMode.Editing)
+			{
+				this.editor.Disable();
+			}
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
 			if (this.m_SerializedObject != null)
 			{
@@ -158,7 +162,7 @@ namespace UnityEditor
 				this.SwitchToAssetMode();
 			}
 		}
-		private void ShowOriginalObject()
+		private void SelectAsset()
 		{
 			UnityEngine.Object activeObject;
 			if (this.m_CameFromImportSettings)
@@ -279,7 +283,7 @@ namespace UnityEditor
 			this.ChangeInspectorLock(true);
 			this.m_UserFileName = EditorApplication.currentScene;
 			EditorApplication.NewScene();
-			this.m_GameObject = (UnityEngine.Object.Instantiate(this.prefab) as GameObject);
+			this.m_GameObject = UnityEngine.Object.Instantiate<GameObject>(this.prefab);
 			if (base.serializedObject.FindProperty("m_OptimizeGameObjects").boolValue)
 			{
 				AnimatorUtility.DeoptimizeTransformHierarchy(this.m_GameObject);
@@ -333,6 +337,7 @@ namespace UnityEditor
 			}
 			this.m_EditMode = AvatarEditor.EditMode.Stopping;
 			this.DestroyEditor();
+			this.ChangeInspectorLock(this.m_InspectorLocked);
 			if (!EditorApplication.isUpdating && !Unsupported.IsDestroyScriptableObject(this))
 			{
 				string currentScene = EditorApplication.currentScene;
@@ -373,10 +378,9 @@ namespace UnityEditor
 					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, CleanUpSceneOnDestroy);
 				}
 			}
-			this.ChangeInspectorLock(this.m_InspectorLocked);
 			this.m_GameObject = null;
 			this.m_ModelBones = null;
-			this.ShowOriginalObject();
+			this.SelectAsset();
 			if (!this.m_CameFromImportSettings)
 			{
 				this.m_EditMode = AvatarEditor.EditMode.NotEditing;
@@ -407,7 +411,7 @@ namespace UnityEditor
 			{
 				this.m_SwitchToEditMode = false;
 				this.SwitchToEditMode();
-				EditorApplication.RequestRepaintAllViews();
+				base.Repaint();
 			}
 			if (this.m_EditMode == AvatarEditor.EditMode.Editing)
 			{

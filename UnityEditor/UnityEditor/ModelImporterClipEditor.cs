@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEditorInternal;
 using UnityEngine;
 namespace UnityEditor
@@ -62,7 +63,7 @@ namespace UnityEditor
 		private SerializedProperty m_LegacyGenerateAnimations;
 		private SerializedProperty m_MotionNodeName;
 		private GUIContent[] m_MotionNodeList;
-		private bool motionNodeFoldout;
+		private static bool motionNodeFoldout;
 		private ReorderableList m_ClipList;
 		private static ModelImporterClipEditor.Styles styles;
 		private ModelImporter singleImporter
@@ -130,26 +131,32 @@ namespace UnityEditor
 			{
 				this.SetupDefaultClips();
 			}
+			this.selectedClipIndex = EditorPrefs.GetInt("ModelImporterClipEditor.ActiveClipIndex", 0);
 			this.ValidateClipSelectionIndex();
+			EditorPrefs.SetInt("ModelImporterClipEditor.ActiveClipIndex", this.selectedClipIndex);
 			if (this.m_AnimationClipEditor != null && this.selectedClipIndex >= 0)
 			{
 				this.SyncClipEditor();
 			}
-			if (this.selectedClipIndex == -1 && this.m_ClipAnimations.arraySize != 0)
+			if (this.m_ClipAnimations.arraySize != 0)
 			{
-				this.SelectClip(0);
+				this.SelectClip(this.selectedClipIndex);
 			}
-			this.m_MotionNodeName = base.serializedObject.FindProperty("m_MotionNodeName");
 			string[] transformPaths = this.singleImporter.transformPaths;
-			this.m_MotionNodeList = new GUIContent[transformPaths.Length];
+			this.m_MotionNodeList = new GUIContent[transformPaths.Length + 1];
+			this.m_MotionNodeList[0] = new GUIContent("<None>");
 			for (int i = 0; i < transformPaths.Length; i++)
 			{
-				this.m_MotionNodeList[i] = new GUIContent(transformPaths[i]);
+				if (i == 0)
+				{
+					this.m_MotionNodeList[1] = new GUIContent("<Root Transform>");
+				}
+				else
+				{
+					this.m_MotionNodeList[i + 1] = new GUIContent(transformPaths[i]);
+				}
 			}
-			if (this.m_MotionNodeList.Length > 0)
-			{
-				this.m_MotionNodeList[0] = new GUIContent("None");
-			}
+			this.m_MotionNodeName = base.serializedObject.FindProperty("m_MotionNodeName");
 			this.motionNodeIndex = ArrayUtility.FindIndex<GUIContent>(this.m_MotionNodeList, (GUIContent content) => content.text == this.m_MotionNodeName.stringValue);
 			this.motionNodeIndex = ((this.motionNodeIndex >= 1) ? this.motionNodeIndex : 0);
 		}
@@ -204,7 +211,7 @@ namespace UnityEditor
 		{
 			if (this.selectedClipIndex > this.m_ClipAnimations.arraySize - 1)
 			{
-				this.selectedClipIndex = -1;
+				this.selectedClipIndex = 0;
 			}
 		}
 		public void OnDestroy()
@@ -239,7 +246,7 @@ namespace UnityEditor
 				GUILayout.Label(ModelImporterClipEditor.styles.clipMultiEditInfo, EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 			Profiler.EndSample();
-			if (InternalEditorUtility.HasPro())
+			if (InternalEditorUtility.HasProFeaturesEnabled())
 			{
 				this.RootMotionNodeSettings();
 			}
@@ -347,10 +354,10 @@ namespace UnityEditor
 		}
 		private void RootMotionNodeSettings()
 		{
-			if (this.animationType == ModelImporterAnimationType.Human)
+			if (this.animationType == ModelImporterAnimationType.Human || this.animationType == ModelImporterAnimationType.Generic)
 			{
-				this.motionNodeFoldout = EditorGUILayout.Foldout(this.motionNodeFoldout, ModelImporterClipEditor.styles.MotionSetting);
-				if (this.motionNodeFoldout)
+				ModelImporterClipEditor.motionNodeFoldout = EditorGUILayout.Foldout(ModelImporterClipEditor.motionNodeFoldout, ModelImporterClipEditor.styles.MotionSetting);
+				if (ModelImporterClipEditor.motionNodeFoldout)
 				{
 					EditorGUI.BeginChangeCheck();
 					this.motionNodeIndex = EditorGUILayout.Popup(ModelImporterClipEditor.styles.MotionNode, this.motionNodeIndex, this.m_MotionNodeList, new GUILayoutOption[0]);
@@ -426,14 +433,14 @@ namespace UnityEditor
 		}
 		private void DrawClipElement(Rect rect, int index, bool selected, bool focused)
 		{
-			AnimationClipInfoProperties animationClipInfoAtIndex = this.GetAnimationClipInfoAtIndex(index);
+			AnimationClipInfoProperties animationClipInfoProperties = this.m_ClipList.list[index] as AnimationClipInfoProperties;
 			rect.xMax -= 90f;
-			GUI.Label(rect, animationClipInfoAtIndex.name, EditorStyles.label);
+			GUI.Label(rect, animationClipInfoProperties.name, EditorStyles.label);
 			rect.x = rect.xMax;
 			rect.width = 45f;
-			GUI.Label(rect, animationClipInfoAtIndex.firstFrame.ToString("0.0"), ModelImporterClipEditor.styles.numberStyle);
+			GUI.Label(rect, animationClipInfoProperties.firstFrame.ToString("0.0"), ModelImporterClipEditor.styles.numberStyle);
 			rect.x = rect.xMax;
-			GUI.Label(rect, animationClipInfoAtIndex.lastFrame.ToString("0.0"), ModelImporterClipEditor.styles.numberStyle);
+			GUI.Label(rect, animationClipInfoProperties.lastFrame.ToString("0.0"), ModelImporterClipEditor.styles.numberStyle);
 		}
 		private void DrawClipHeader(Rect rect)
 		{
@@ -470,7 +477,7 @@ namespace UnityEditor
 			{
 				GUILayout.Space(5f);
 				AnimationClip animationClip = this.m_AnimationClipEditor.target as AnimationClip;
-				if (animationClip.isAnimatorMotion)
+				if (!animationClip.legacy)
 				{
 					this.GetSelectedClipInfo().AssignToPreviewClip(animationClip);
 				}
@@ -504,7 +511,7 @@ namespace UnityEditor
 					}
 				}
 				this.m_AnimationClipEditor.OnInspectorGUI();
-				if (animationClip.isAnimatorMotion)
+				if (!animationClip.legacy)
 				{
 					this.GetSelectedClipInfo().ExtractFromPreviewClip(animationClip);
 				}

@@ -40,7 +40,7 @@ namespace UnityEditor
 		private FlexibleMenuModifyItemUI m_ModifyItemUI;
 		private readonly Action<int, object> m_ItemClickedCallback;
 		private Vector2 m_ScrollPosition = Vector2.zero;
-		private bool m_ShowAddNewPresetItem = true;
+		private bool m_ShowAddNewPresetItem;
 		private int m_ShowEditWindowForIndex = -1;
 		private int m_HoverIndex;
 		private int[] m_SeperatorIndices;
@@ -64,6 +64,7 @@ namespace UnityEditor
 			this.m_ItemClickedCallback = itemClickedCallback;
 			this.m_SeperatorIndices = this.m_ItemProvider.GetSeperatorIndices();
 			this.selectedIndex = selectionIndex;
+			this.m_ShowAddNewPresetItem = (this.m_ModifyItemUI != null);
 		}
 		public override Vector2 GetWindowSize()
 		{
@@ -118,7 +119,7 @@ namespace UnityEditor
 								current.Use();
 							}
 						}
-						goto IL_373;
+						goto IL_389;
 					case EventType.MouseUp:
 						if (GUIUtility.hotControl == num2)
 						{
@@ -129,7 +130,7 @@ namespace UnityEditor
 								current.Use();
 							}
 						}
-						goto IL_373;
+						goto IL_389;
 					case EventType.MouseMove:
 						if (rect2.Contains(current.mousePosition))
 						{
@@ -147,7 +148,7 @@ namespace UnityEditor
 								this.Repaint();
 							}
 						}
-						goto IL_373;
+						goto IL_389;
 					case EventType.MouseDrag:
 					case EventType.KeyDown:
 					case EventType.KeyUp:
@@ -155,17 +156,17 @@ namespace UnityEditor
 						IL_109:
 						if (type != EventType.ContextClick)
 						{
-							goto IL_373;
+							goto IL_389;
 						}
 						if (rect2.Contains(current.mousePosition))
 						{
 							current.Use();
-							if (this.m_ItemProvider.IsModificationAllowed(i))
+							if (this.m_ModifyItemUI != null && this.m_ItemProvider.IsModificationAllowed(i))
 							{
 								FlexibleMenu.ItemContextMenu.Show(i, this);
 							}
 						}
-						goto IL_373;
+						goto IL_389;
 					case EventType.Repaint:
 					{
 						bool isHover = false;
@@ -180,7 +181,7 @@ namespace UnityEditor
 								this.m_HoverIndex = -1;
 							}
 						}
-						if (this.m_ModifyItemUI.IsShowing())
+						if (this.m_ModifyItemUI != null && this.m_ModifyItemUI.IsShowing())
 						{
 							isHover = (this.m_ItemProvider.GetItem(i) == this.m_ModifyItemUI.m_Object);
 						}
@@ -194,11 +195,11 @@ namespace UnityEditor
 						{
 							EditorGUIUtility.AddCursorRect(rect2, MouseCursor.ArrowMinus);
 						}
-						goto IL_373;
+						goto IL_389;
 					}
 					}
 					goto IL_109;
-					IL_373:
+					IL_389:
 					num += 18f;
 					if (flag)
 					{
@@ -249,6 +250,10 @@ namespace UnityEditor
 		}
 		private void CreateNewItemButton(Rect itemRect)
 		{
+			if (this.m_ModifyItemUI == null)
+			{
+				return;
+			}
 			Rect rect = new Rect(itemRect.x + 25f, itemRect.y, 15f, 15f);
 			if (GUI.Button(rect, FlexibleMenu.s_Styles.plusButtonText, "OL Plus"))
 			{
@@ -265,6 +270,10 @@ namespace UnityEditor
 		}
 		private void EditExistingItem(Rect itemRect, int index)
 		{
+			if (this.m_ModifyItemUI == null)
+			{
+				return;
+			}
 			itemRect.y -= itemRect.height;
 			itemRect.x += itemRect.width;
 			this.m_ModifyItemUI.Init(FlexibleMenuModifyItemUI.MenuType.Edit, this.m_ItemProvider.GetItem(index), delegate(object obj)

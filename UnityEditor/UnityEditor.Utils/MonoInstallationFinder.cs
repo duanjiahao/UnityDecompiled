@@ -7,20 +7,21 @@ namespace UnityEditor.Utils
 	{
 		public static string GetFrameWorksFolder()
 		{
+			string text = FileUtil.NiceWinPath(EditorApplication.applicationPath);
 			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
-				return Path.GetDirectoryName(EditorApplication.applicationPath) + "/Data/";
+				return Path.Combine(Path.GetDirectoryName(text), "Data");
 			}
 			if (Application.platform == RuntimePlatform.OSXEditor)
 			{
-				return EditorApplication.applicationPath + "/Contents/Frameworks/";
+				return Path.Combine(text, Path.Combine("Contents", "Frameworks"));
 			}
-			return Path.GetDirectoryName(EditorApplication.applicationPath) + "/Data/";
+			return Path.Combine(Path.GetDirectoryName(text), "Data");
 		}
 		public static string GetProfileDirectory(BuildTarget target, string profile)
 		{
 			string monoInstallation = MonoInstallationFinder.GetMonoInstallation();
-			return Path.Combine(monoInstallation, "lib/mono/" + profile);
+			return Path.Combine(monoInstallation, Path.Combine("lib", Path.Combine("mono", profile)));
 		}
 		public static string GetMonoInstallation()
 		{

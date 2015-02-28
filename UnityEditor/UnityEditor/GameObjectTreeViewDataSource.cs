@@ -6,10 +6,32 @@ namespace UnityEditor
 {
 	internal class GameObjectTreeViewDataSource : LazyTreeViewDataSource
 	{
-		public class ComparerData
+		public class SortingState
 		{
-			public BaseHierarchySort comparerImpl;
-			public bool comparerImplementsCompare = true;
+			private BaseHierarchySort m_HierarchySort;
+			private bool m_ImplementsCompare;
+			public BaseHierarchySort sortingObject
+			{
+				get
+				{
+					return this.m_HierarchySort;
+				}
+				set
+				{
+					this.m_HierarchySort = value;
+					if (this.m_HierarchySort != null)
+					{
+						this.m_ImplementsCompare = (this.m_HierarchySort.GetType().GetMethod("Compare").DeclaringType != typeof(BaseHierarchySort));
+					}
+				}
+			}
+			public bool implementsCompare
+			{
+				get
+				{
+					return this.m_ImplementsCompare;
+				}
+			}
 		}
 		private const double k_LongFetchTime = 0.05;
 		private const double k_FetchDelta = 0.1;
@@ -20,7 +42,8 @@ namespace UnityEditor
 		private int m_SearchMode;
 		private double m_LastFetchTime;
 		private int m_DelayedFetches;
-		public GameObjectTreeViewDataSource.ComparerData compareData = new GameObjectTreeViewDataSource.ComparerData();
+		private bool m_NeedsChildParentReferenceSetup;
+		public GameObjectTreeViewDataSource.SortingState sortingState = new GameObjectTreeViewDataSource.SortingState();
 		public string searchString
 		{
 			get
@@ -56,28 +79,28 @@ namespace UnityEditor
 			this.showRootNode = showRootNode;
 			base.rootIsCollapsable = rootNodeIsCollapsable;
 		}
-		public int GetLastRootItemID()
+		internal void SetupChildParentReferencesIfNeeded()
 		{
-			TreeViewItem treeViewItem = this.m_VisibleRows[this.m_VisibleRows.Count - 1];
-			if (treeViewItem != null)
+			if (this.m_NeedsChildParentReferenceSetup)
 			{
-				while (treeViewItem.parent != null)
-				{
-					if (!base.showRootNode && treeViewItem.parent.id == this.m_RootInstanceID)
-					{
-						break;
-					}
-					treeViewItem = treeViewItem.parent;
-				}
+				this.m_NeedsChildParentReferenceSetup = false;
+				TreeViewUtility.SetChildParentReferences(this.GetVisibleRows(), this.m_RootItem);
 			}
-			return treeViewItem.id;
+		}
+		public override TreeViewItem FindItem(int id)
+		{
+			this.RevealItem(id);
+			this.SetupChildParentReferencesIfNeeded();
+			return base.FindItem(id);
 		}
 		public override void FetchData()
 		{
+			Profiler.BeginSample("SceneHierarchyWindow.FetchData");
 			int depth = 0;
 			double timeSinceStartup = EditorApplication.timeSinceStartup;
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
 			hierarchyProperty.Reset();
+			hierarchyProperty.alphaSorted = this.IsUsingAlphaSort();
 			if (this.m_RootInstanceID != 0)
 			{
 				bool flag = hierarchyProperty.Find(this.m_RootInstanceID, null);
@@ -102,8 +125,9 @@ namespace UnityEditor
 				hierarchyProperty.SetSearchFilter(this.m_SearchString, this.m_SearchMode);
 			}
 			this.m_VisibleRows = this.CalcVisibleItems(hierarchyProperty, flag2);
-			TreeViewUtility.SetChildParentReferences(this.m_VisibleRows, this.m_RootItem);
-			if (this.compareData.comparerImpl != null && this.compareData.comparerImplementsCompare)
+			this.m_NeedsChildParentReferenceSetup = true;
+			this.m_NeedRefreshVisibleFolders = false;
+			if (this.sortingState.sortingObject != null && this.sortingState.implementsCompare)
 			{
 				this.SortVisibleRows();
 			}
@@ -119,8 +143,22 @@ namespace UnityEditor
 				this.m_DelayedFetches = 0;
 			}
 			this.m_LastFetchTime = timeSinceStartup;
-			this.m_NeedRefreshVisibleFolders = false;
 			this.m_TreeView.SetSelection(Selection.instanceIDs, false);
+			if (SceneHierarchyWindow.s_Debug)
+			{
+				Debug.Log(string.Concat(new object[]
+				{
+					"Fetch time: ",
+					num * 1000.0,
+					" ms, alphaSort = ",
+					this.IsUsingAlphaSort()
+				}));
+			}
+			Profiler.EndSample();
+		}
+		private bool IsUsingAlphaSort()
+		{
+			return this.sortingState.sortingObject.GetType() == typeof(AlphabeticalSort);
 		}
 		private List<TreeViewItem> CalcVisibleItems(HierarchyProperty property, bool hasSearchString)
 		{
@@ -137,13 +175,13 @@ namespace UnityEditor
 		}
 		private GameObjectTreeViewItem CreateTreeViewItem(HierarchyProperty property, bool hasSearchString, int depth, bool shouldDisplay)
 		{
-			GameObjectTreeViewItem gameObjectTreeViewItem = new GameObjectTreeViewItem(property.instanceID, depth, null, property.name);
+			GameObjectTreeViewItem gameObjectTreeViewItem = new GameObjectTreeViewItem(property.instanceID, depth, null, string.Empty);
 			gameObjectTreeViewItem.colorCode = property.colorCode;
 			gameObjectTreeViewItem.objectPPTR = property.pptrValue;
 			gameObjectTreeViewItem.shouldDisplay = shouldDisplay;
 			if (!hasSearchString && property.hasChildren)
 			{
-				gameObjectTreeViewItem.AddChild(null);
+				gameObjectTreeViewItem.children = LazyTreeViewDataSource.CreateChildListForCollapsedParent();
 			}
 			return gameObjectTreeViewItem;
 		}
@@ -184,7 +222,8 @@ namespace UnityEditor
 		}
 		private void SortVisibleRows()
 		{
-			this.SortChildrenRecursively(this.m_RootItem, this.compareData.comparerImpl);
+			this.SetupChildParentReferencesIfNeeded();
+			this.SortChildrenRecursively(this.m_RootItem, this.sortingState.sortingObject);
 			this.m_VisibleRows.Clear();
 			this.RebuildVisibilityTree(this.m_RootItem, this.m_VisibleRows);
 		}

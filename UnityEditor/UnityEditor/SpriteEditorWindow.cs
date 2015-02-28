@@ -36,21 +36,6 @@ namespace UnityEditor
 		private SpriteEditorWindow.GizmoMode m_GizmoMode;
 		[SerializeField]
 		private SpriteRect m_Selected;
-		public readonly GUIContent[] spriteAlignmentOptions = new GUIContent[]
-		{
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Center"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.TopLeft"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Top"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.TopRight"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Left"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Right"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.BottomLeft"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Bottom"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.BottomRight"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Custom")
-		};
-		public static GUIContent s_PivotLabel = EditorGUIUtility.TextContent("Pivot");
-		public static GUIContent s_NoSelectionWarning = EditorGUIUtility.TextContent("SpriteEditor.NoTextureOrSpriteSelected");
 		public Texture2D originalTexture
 		{
 			get
@@ -252,10 +237,6 @@ namespace UnityEditor
 				UnityEngine.Object.DestroyImmediate(this.m_RectsCache);
 			}
 			this.m_RectsCache = ScriptableObject.CreateInstance<SpriteRectCache>();
-			if (this.m_TextureImporter.spriteImportMode == SpriteImportMode.None)
-			{
-				return;
-			}
 			if (this.multipleSprites)
 			{
 				for (int i = 0; i < this.m_TextureImporterSprites.arraySize; i++)
@@ -295,7 +276,7 @@ namespace UnityEditor
 			if (!this.activeTextureSelected)
 			{
 				EditorGUI.BeginDisabledGroup(true);
-				GUILayout.Label(SpriteEditorWindow.s_NoSelectionWarning, new GUILayoutOption[0]);
+				GUILayout.Label(SpriteUtilityWindow.Styles.s_NoSelectionWarning, new GUILayoutOption[0]);
 				EditorGUI.EndDisabledGroup();
 				return;
 			}
@@ -312,7 +293,6 @@ namespace UnityEditor
 			base.DoTextureGUI();
 			EditorGUILayout.EndHorizontal();
 			this.DoSelectedFrameInspector();
-			this.DoHotkeys();
 			Handles.matrix = matrix;
 		}
 		protected override void DoTextureGUIExtras()
@@ -371,9 +351,12 @@ namespace UnityEditor
 				}
 			}
 			EditorGUI.BeginDisabledGroup(this.selected == null);
-			if (GUILayout.Button(new GUIContent("Trim", "Trims selected rectangle (T)"), EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			if (GUILayout.Button(new GUIContent("Trim", "Trims selected rectangle (T)"), EditorStyles.toolbarButton, new GUILayoutOption[0]) || SpriteEditorWindow.k_SpriteEditorTrim.activated)
 			{
-				this.TrimSelectedSprite();
+				Rect rect = this.TrimAlpha(this.selected.m_Rect);
+				rect = this.ClampSpriteRect(rect);
+				this.selected.m_Rect = rect;
+				base.Repaint();
 			}
 			EditorGUI.EndDisabledGroup();
 			EditorGUI.EndDisabledGroup();
@@ -389,86 +372,107 @@ namespace UnityEditor
 				GUILayout.BeginArea(this.inspectorRect);
 				GUILayout.BeginVertical(new GUIContent("Sprite"), GUI.skin.window, new GUILayoutOption[0]);
 				EditorGUI.BeginDisabledGroup(!this.multipleSprites);
-				EditorGUI.BeginChangeCheck();
-				string name = this.selected.m_Name;
-				string text = EditorGUILayout.TextField("Name", name, new GUILayoutOption[0]);
-				Rect rect = this.selected.m_Rect;
-				Rect rect2 = EditorGUILayout.RectField("Position", this.FlipNegativeRect(rect), new GUILayoutOption[0]);
+				this.DoNameField();
+				this.DoPositionField();
 				EditorGUI.EndDisabledGroup();
-				Rect rect3 = GUILayoutUtility.GetRect(322f, 322f, 32f, 32f);
-				Vector4 vector = this.ClampSpriteBorder(this.selected.m_Border);
-				Vector4 border = vector;
-				Rect position = rect3;
-				position.width = EditorGUIUtility.labelWidth;
-				position.height = 16f;
-				GUI.Label(position, "Border");
-				Rect position2 = rect3;
-				position2.width -= EditorGUIUtility.labelWidth;
-				position2.height = 16f;
-				position2.x += EditorGUIUtility.labelWidth;
-				position2.width /= 2f;
-				position2.width -= 2f;
-				EditorGUIUtility.labelWidth = 12f;
-				border.x = (float)EditorGUI.IntField(position2, "L", Mathf.RoundToInt(border.x));
-				position2.x += position2.width + 3f;
-				border.y = (float)EditorGUI.IntField(position2, "B", Mathf.RoundToInt(border.y));
-				position2.y += 16f;
-				position2.x -= position2.width + 3f;
-				border.z = (float)EditorGUI.IntField(position2, "R", Mathf.RoundToInt(border.z));
-				position2.x += position2.width + 3f;
-				border.w = (float)EditorGUI.IntField(position2, "T", Mathf.RoundToInt(border.w));
-				EditorGUIUtility.labelWidth = 135f;
-				this.selected.m_Alignment = (SpriteAlignment)EditorGUILayout.Popup(SpriteEditorWindow.s_PivotLabel, (int)this.selected.m_Alignment, this.spriteAlignmentOptions, new GUILayoutOption[0]);
-				Vector2 pivot = this.selected.m_Pivot;
-				Vector2 customOffset = pivot;
-				EditorGUI.BeginDisabledGroup(this.selected.m_Alignment != SpriteAlignment.Custom);
-				position2.x = 5f;
-				position2.y += 36f;
-				position2.width = 414f;
-				customOffset = EditorGUI.Vector2Field(position2, "Custom Pivot", pivot);
-				EditorGUI.EndDisabledGroup();
-				if (EditorGUI.EndChangeCheck())
-				{
-					Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Modify sprite");
-					if (this.multipleSprites)
-					{
-						text = InternalEditorUtility.RemoveInvalidCharsFromFileName(text, true);
-						if (string.IsNullOrEmpty(this.selected.m_OriginalName) && text != name)
-						{
-							this.selected.m_OriginalName = name;
-						}
-						if (string.IsNullOrEmpty(text))
-						{
-							text = name;
-						}
-						foreach (SpriteRect current in this.m_RectsCache.m_Rects)
-						{
-							if (current.m_Name == text)
-							{
-								text = this.selected.m_OriginalName;
-								break;
-							}
-						}
-						this.selected.m_Name = text;
-						this.selected.m_Rect = this.ClampSpriteRect(rect2);
-						this.selected.m_Border = this.ClampSpriteBorder(border);
-					}
-					this.selected.m_Border = this.ClampSpriteBorder(border);
-					this.selected.m_Pivot = SpriteEditorUtility.GetPivotValue(this.selected.m_Alignment, customOffset);
-					this.textureIsDirty = true;
-				}
+				Rect fieldLocation;
+				this.DoBorderFields(out fieldLocation);
+				this.DoPivotFields(fieldLocation);
 				GUILayout.EndVertical();
 				GUILayout.EndArea();
 				EditorGUIUtility.labelWidth = labelWidth;
 			}
 		}
-		private void DoHotkeys()
+		private void DoPivotFields(Rect fieldLocation)
 		{
-			Event current = Event.current;
-			if (SpriteEditorWindow.k_SpriteEditorTrim.activated && current.type == EventType.KeyDown)
+			EditorGUI.BeginChangeCheck();
+			this.selected.m_Alignment = (SpriteAlignment)EditorGUILayout.Popup(SpriteUtilityWindow.Styles.s_PivotLabel, (int)this.selected.m_Alignment, SpriteUtilityWindow.Styles.spriteAlignmentOptions, new GUILayoutOption[0]);
+			Vector2 pivot = this.selected.m_Pivot;
+			EditorGUI.BeginDisabledGroup(this.selected.m_Alignment != SpriteAlignment.Custom);
+			fieldLocation.x = 5f;
+			fieldLocation.y += 36f;
+			fieldLocation.width = 414f;
+			Vector2 customOffset = EditorGUI.Vector2Field(fieldLocation, "Custom Pivot", pivot);
+			EditorGUI.EndDisabledGroup();
+			if (EditorGUI.EndChangeCheck())
 			{
-				this.TrimSelectedSprite();
-				current.Use();
+				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Pivot");
+				this.textureIsDirty = true;
+				this.selected.m_Pivot = SpriteEditorUtility.GetPivotValue(this.selected.m_Alignment, customOffset);
+			}
+		}
+		private void DoBorderFields(out Rect fieldLocation)
+		{
+			EditorGUI.BeginChangeCheck();
+			Rect rect = GUILayoutUtility.GetRect(322f, 322f, 32f, 32f);
+			Vector4 vector = this.ClampSpriteBorder(this.selected.m_Border);
+			Vector4 border = vector;
+			Rect position = rect;
+			position.width = EditorGUIUtility.labelWidth;
+			position.height = 16f;
+			GUI.Label(position, "Border");
+			fieldLocation = rect;
+			fieldLocation.width -= EditorGUIUtility.labelWidth;
+			fieldLocation.height = 16f;
+			fieldLocation.x += EditorGUIUtility.labelWidth;
+			fieldLocation.width /= 2f;
+			fieldLocation.width -= 2f;
+			EditorGUIUtility.labelWidth = 12f;
+			border.x = (float)EditorGUI.IntField(fieldLocation, "L", Mathf.RoundToInt(border.x));
+			fieldLocation.x += fieldLocation.width + 3f;
+			border.w = (float)EditorGUI.IntField(fieldLocation, "T", Mathf.RoundToInt(border.w));
+			fieldLocation.y += 16f;
+			fieldLocation.x -= fieldLocation.width + 3f;
+			border.z = (float)EditorGUI.IntField(fieldLocation, "R", Mathf.RoundToInt(border.z));
+			fieldLocation.x += fieldLocation.width + 3f;
+			border.y = (float)EditorGUI.IntField(fieldLocation, "B", Mathf.RoundToInt(border.y));
+			EditorGUIUtility.labelWidth = 135f;
+			if (EditorGUI.EndChangeCheck())
+			{
+				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Border");
+				this.textureIsDirty = true;
+				this.selected.m_Border = this.ClampSpriteBorder(border);
+			}
+		}
+		private void DoPositionField()
+		{
+			EditorGUI.BeginChangeCheck();
+			Rect rect = this.selected.m_Rect;
+			Rect rect2 = EditorGUILayout.RectField("Position", this.FlipNegativeRect(rect), new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Position");
+				this.textureIsDirty = true;
+				this.selected.m_Rect = this.ClampSpriteRect(rect2);
+			}
+		}
+		private void DoNameField()
+		{
+			EditorGUI.BeginChangeCheck();
+			string name = this.selected.m_Name;
+			string text = EditorGUILayout.TextField("Name", name, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Name");
+				this.textureIsDirty = true;
+				text = InternalEditorUtility.RemoveInvalidCharsFromFileName(text, true);
+				if (string.IsNullOrEmpty(this.selected.m_OriginalName) && text != name)
+				{
+					this.selected.m_OriginalName = name;
+				}
+				if (string.IsNullOrEmpty(text))
+				{
+					text = name;
+				}
+				foreach (SpriteRect current in this.m_RectsCache.m_Rects)
+				{
+					if (current.m_Name == text)
+					{
+						text = this.selected.m_OriginalName;
+						break;
+					}
+				}
+				this.selected.m_Name = text;
 			}
 		}
 		private void DoApplyRevertGUI()
@@ -494,6 +498,10 @@ namespace UnityEditor
 				for (int i = 0; i < this.m_RectsCache.Count; i++)
 				{
 					SpriteRect spriteRect = this.m_RectsCache.RectAt(i);
+					if (string.IsNullOrEmpty(spriteRect.m_Name))
+					{
+						spriteRect.m_Name = "Empty";
+					}
 					if (!string.IsNullOrEmpty(spriteRect.m_OriginalName))
 					{
 						list.Add(spriteRect.m_OriginalName);
@@ -556,6 +564,7 @@ namespace UnityEditor
 				{
 					Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Create sprite");
 					this.selected = this.AddSprite(rect, 0, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
+					GUIUtility.keyboardControl = 0;
 				}
 			}
 		}
@@ -629,13 +638,6 @@ namespace UnityEditor
 					this.textureIsDirty = true;
 				}
 			}
-		}
-		private void TrimSelectedSprite()
-		{
-			Rect rect = this.TrimAlpha(this.selected.m_Rect);
-			rect = this.ClampSpriteRect(rect);
-			this.selected.m_Rect = rect;
-			base.Repaint();
 		}
 		private Rect ClampSpriteRect(Rect rect)
 		{
@@ -763,13 +765,13 @@ namespace UnityEditor
 			{
 				if (Selection.activeObject is Sprite)
 				{
-					texture2D = DataUtility.GetSpriteTexture(Selection.activeObject as Sprite, false);
+					texture2D = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(Selection.activeObject as Sprite, false);
 				}
 				else
 				{
 					if (Selection.activeGameObject && Selection.activeGameObject.GetComponent<SpriteRenderer>() && Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite)
 					{
-						texture2D = DataUtility.GetSpriteTexture(Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite, false);
+						texture2D = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite, false);
 					}
 				}
 			}

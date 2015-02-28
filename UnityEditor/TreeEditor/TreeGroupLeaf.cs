@@ -195,9 +195,9 @@ namespace TreeEditor
 							}
 						}
 					}
-					if (this.instanceMesh.renderer != null)
+					if (this.instanceMesh.GetComponent<Renderer>() != null)
 					{
-						Material[] sharedMaterials = this.instanceMesh.renderer.sharedMaterials;
+						Material[] sharedMaterials = this.instanceMesh.GetComponent<Renderer>().sharedMaterials;
 						for (int j = 0; j < sharedMaterials.Length; j++)
 						{
 							TreeGroup.GetMaterialIndex(sharedMaterials[j], materials, false);
@@ -323,9 +323,9 @@ namespace TreeEditor
 				{
 					int[] triangles = TreeGroupLeaf.cloneMesh.GetTriangles(j);
 					int materialIndex;
-					if (this.instanceMesh.renderer != null && j < this.instanceMesh.renderer.sharedMaterials.Length)
+					if (this.instanceMesh.GetComponent<Renderer>() != null && j < this.instanceMesh.GetComponent<Renderer>().sharedMaterials.Length)
 					{
-						materialIndex = TreeGroup.GetMaterialIndex(this.instanceMesh.renderer.sharedMaterials[j], materials, false);
+						materialIndex = TreeGroup.GetMaterialIndex(this.instanceMesh.GetComponent<Renderer>().sharedMaterials[j], materials, false);
 					}
 					else
 					{

@@ -31,12 +31,6 @@ namespace UnityEditor
 		public static extern void MergeAllPrefabInstances(UnityEngine.Object targetObject);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool IsPrefabExploded(UnityEngine.Object targetObject);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetIsPrefabExploded(UnityEngine.Object targetObject, bool exploded);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DisconnectPrefabInstance(UnityEngine.Object targetObject);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

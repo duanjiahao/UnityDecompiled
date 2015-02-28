@@ -154,15 +154,18 @@ namespace UnityEditorInternal
 			{
 				EditorGUI.LabelField(headerRect, EditorGUIUtility.TempContent((element == null) ? "IList" : "Serialized Property"));
 			}
-			public void DrawElementBackground(Rect rect, bool selected, bool focused, bool draggable)
+			public void DrawElementBackground(Rect rect, int index, bool selected, bool focused, bool draggable)
 			{
 				if (Event.current.type == EventType.Repaint)
 				{
 					this.elementBackground.Draw(rect, false, selected, selected, focused);
-					if (draggable)
-					{
-						this.draggingHandle.Draw(new Rect(rect.x + 5f, rect.y + 7f, 10f, rect.height - (rect.height - 7f)), false, false, false, false);
-					}
+				}
+			}
+			public void DrawElementDraggingHandle(Rect rect, int index, bool selected, bool focused, bool draggable)
+			{
+				if (Event.current.type == EventType.Repaint && draggable)
+				{
+					this.draggingHandle.Draw(new Rect(rect.x + 5f, rect.y + 7f, 10f, rect.height - (rect.height - 7f)), false, false, false, false);
 				}
 			}
 			public void DrawElement(Rect rect, SerializedProperty element, object listItem, bool selected, bool focused, bool draggable)
@@ -175,6 +178,7 @@ namespace UnityEditorInternal
 			}
 		}
 		public delegate void HeaderCallbackDelegate(Rect rect);
+		public delegate void FooterCallbackDelegate(Rect rect);
 		public delegate void ElementCallbackDelegate(Rect rect, int index, bool isActive, bool isFocused);
 		public delegate void ReorderCallbackDelegate(ReorderableList list);
 		public delegate void SelectCallbackDelegate(ReorderableList list);
@@ -184,12 +188,15 @@ namespace UnityEditorInternal
 		public delegate void ChangedCallbackDelegate(ReorderableList list);
 		public delegate bool CanRemoveCallbackDelegate(ReorderableList list);
 		public ReorderableList.HeaderCallbackDelegate drawHeaderCallback;
+		public ReorderableList.FooterCallbackDelegate drawFooterCallback;
 		public ReorderableList.ElementCallbackDelegate drawElementCallback;
+		public ReorderableList.ElementCallbackDelegate drawElementBackgroundCallback;
 		public ReorderableList.ReorderCallbackDelegate onReorderCallback;
 		public ReorderableList.SelectCallbackDelegate onSelectCallback;
 		public ReorderableList.AddCallbackDelegate onAddCallback;
 		public ReorderableList.AddDropdownCallbackDelegate onAddDropdownCallback;
 		public ReorderableList.RemoveCallbackDelegate onRemoveCallback;
+		public ReorderableList.SelectCallbackDelegate onMouseUpCallback;
 		public ReorderableList.CanRemoveCallbackDelegate onCanRemoveCallback;
 		public ReorderableList.ChangedCallbackDelegate onChangedCallback;
 		private int m_ActiveElement = -1;
@@ -210,6 +217,7 @@ namespace UnityEditorInternal
 		public float elementHeight = 21f;
 		public float headerHeight = 18f;
 		public float footerHeight = 13f;
+		public bool showDefaultBackground = true;
 		public static ReorderableList.Defaults defaultBehaviours
 		{
 			get
@@ -336,6 +344,10 @@ namespace UnityEditorInternal
 			result.xMax -= 6f;
 			return result;
 		}
+		private Rect GetRowRect(int index, Rect listRect)
+		{
+			return new Rect(listRect.x, listRect.y + (float)index * this.elementHeight, listRect.width, this.elementHeight);
+		}
 		public void DoLayoutList()
 		{
 			if (ReorderableList.s_Defaults == null)
@@ -390,12 +402,12 @@ namespace UnityEditorInternal
 		private void DoListElements(Rect listRect)
 		{
 			int count = this.count;
-			if (Event.current.type == EventType.Repaint)
+			if (this.showDefaultBackground && Event.current.type == EventType.Repaint)
 			{
 				ReorderableList.s_Defaults.boxBackground.Draw(listRect, false, false, false, false);
 			}
 			listRect.yMin += 2f;
-			listRect.yMax -= 3f;
+			listRect.yMax -= 5f;
 			Rect rect = listRect;
 			rect.height = this.elementHeight;
 			Rect rect2 = rect;
@@ -419,7 +431,15 @@ namespace UnityEditorInternal
 						{
 							rect.y = listRect.y + (float)j * this.elementHeight;
 							rect = this.m_SlideGroup.GetRect(this.m_NonDragTargetIndices[j], rect);
-							ReorderableList.s_Defaults.DrawElementBackground(rect, false, false, this.m_Draggable);
+							if (this.drawElementBackgroundCallback == null)
+							{
+								ReorderableList.s_Defaults.DrawElementBackground(rect, j, false, false, this.m_Draggable);
+							}
+							else
+							{
+								this.drawElementBackgroundCallback(rect, j, false, false);
+							}
+							ReorderableList.s_Defaults.DrawElementDraggingHandle(rect, j, false, false, this.m_Draggable);
 							rect2 = this.GetContentRect(rect);
 							if (this.drawElementCallback == null)
 							{
@@ -439,7 +459,15 @@ namespace UnityEditorInternal
 						}
 					}
 					rect.y = this.m_DraggedY - this.m_DragOffset + listRect.y;
-					ReorderableList.s_Defaults.DrawElementBackground(rect, true, true, this.m_Draggable);
+					if (this.drawElementBackgroundCallback == null)
+					{
+						ReorderableList.s_Defaults.DrawElementBackground(rect, this.m_ActiveElement, true, true, this.m_Draggable);
+					}
+					else
+					{
+						this.drawElementBackgroundCallback(rect, this.m_ActiveElement, true, true);
+					}
+					ReorderableList.s_Defaults.DrawElementDraggingHandle(rect, this.m_ActiveElement, true, true, this.m_Draggable);
 					rect2 = this.GetContentRect(rect);
 					if (this.drawElementCallback == null)
 					{
@@ -462,9 +490,17 @@ namespace UnityEditorInternal
 					for (int k = 0; k < count; k++)
 					{
 						bool flag = k == this.m_ActiveElement;
-						bool flag2 = k == this.m_ActiveElement && GUIUtility.keyboardControl == this.id;
+						bool flag2 = k == this.m_ActiveElement && this.HasKeyboardControl();
 						rect.y = listRect.y + (float)k * this.elementHeight;
-						ReorderableList.s_Defaults.DrawElementBackground(rect, flag, flag2, this.m_Draggable);
+						if (this.drawElementBackgroundCallback == null)
+						{
+							ReorderableList.s_Defaults.DrawElementBackground(rect, k, flag, flag2, this.m_Draggable);
+						}
+						else
+						{
+							this.drawElementBackgroundCallback(rect, k, flag, flag2);
+						}
+						ReorderableList.s_Defaults.DrawElementDraggingHandle(rect, k, flag, flag2, this.m_Draggable);
 						rect2 = this.GetContentRect(rect);
 						if (this.drawElementCallback == null)
 						{
@@ -488,7 +524,15 @@ namespace UnityEditorInternal
 			else
 			{
 				rect.y = listRect.y;
-				ReorderableList.s_Defaults.DrawElementBackground(rect, false, false, false);
+				if (this.drawElementBackgroundCallback == null)
+				{
+					ReorderableList.s_Defaults.DrawElementBackground(rect, -1, false, false, false);
+				}
+				else
+				{
+					this.drawElementBackgroundCallback(rect, -1, false, false);
+				}
+				ReorderableList.s_Defaults.DrawElementDraggingHandle(rect, -1, false, false, false);
 				rect2 = rect;
 				rect2.xMin += 6f;
 				rect2.xMax -= 6f;
@@ -497,7 +541,7 @@ namespace UnityEditorInternal
 		}
 		private void DoListHeader(Rect headerRect)
 		{
-			if (Event.current.type == EventType.Repaint)
+			if (this.showDefaultBackground && Event.current.type == EventType.Repaint)
 			{
 				ReorderableList.s_Defaults.DrawHeaderBackground(headerRect);
 			}
@@ -505,33 +549,41 @@ namespace UnityEditorInternal
 			headerRect.xMax -= 6f;
 			headerRect.height -= 2f;
 			headerRect.y += 1f;
-			if (this.drawHeaderCallback == null && this.m_DisplayHeader)
+			if (this.drawHeaderCallback != null)
 			{
-				ReorderableList.s_Defaults.DrawHeader(headerRect, this.m_SerializedObject, this.m_Elements, this.m_ElementList);
+				this.drawHeaderCallback(headerRect);
 			}
 			else
 			{
-				if (this.drawHeaderCallback != null)
+				if (this.m_DisplayHeader)
 				{
-					this.drawHeaderCallback(headerRect);
+					ReorderableList.s_Defaults.DrawHeader(headerRect, this.m_SerializedObject, this.m_Elements, this.m_ElementList);
 				}
 			}
 		}
 		private void DoListFooter(Rect footerRect)
 		{
-			if (this.displayAdd || this.displayRemove)
+			if (this.drawFooterCallback != null)
 			{
-				ReorderableList.s_Defaults.DrawFooter(footerRect, this);
+				this.drawFooterCallback(footerRect);
+			}
+			else
+			{
+				if (this.displayAdd || this.displayRemove)
+				{
+					ReorderableList.s_Defaults.DrawFooter(footerRect, this);
+				}
 			}
 		}
 		private void DoDraggingAndSelection(Rect listRect)
 		{
 			Event current = Event.current;
 			int activeElement = this.m_ActiveElement;
+			bool flag = false;
 			switch (current.GetTypeForControl(this.id))
 			{
 			case EventType.MouseDown:
-				if (listRect.Contains(Event.current.mousePosition))
+				if (listRect.Contains(Event.current.mousePosition) && Event.current.button == 0)
 				{
 					EditorGUI.EndEditingActiveTextField();
 					this.m_ActiveElement = Mathf.FloorToInt((Event.current.mousePosition.y - listRect.y) / this.elementHeight);
@@ -540,67 +592,85 @@ namespace UnityEditorInternal
 						this.m_DragOffset = Event.current.mousePosition.y - listRect.y - (float)this.m_ActiveElement * this.elementHeight;
 						this.UpdateDraggedY(listRect);
 						GUIUtility.hotControl = this.id;
-						this.m_Dragging = true;
 						this.m_SlideGroup.Reset();
 						this.m_NonDragTargetIndices = new List<int>();
 					}
-					GUIUtility.keyboardControl = this.id;
+					this.GrabKeyboardFocus();
 					current.Use();
+					flag = true;
 				}
 				break;
 			case EventType.MouseUp:
-				if (this.m_Draggable && GUIUtility.hotControl == this.id)
+				if (!this.m_Draggable)
 				{
-					current.Use();
-					this.m_Dragging = false;
-					int num = this.CalculateRowIndex();
-					if (this.m_ActiveElement != num)
+					if (this.onMouseUpCallback != null && this.IsMouseInsideActiveElement(listRect))
 					{
-						if (this.m_SerializedObject != null && this.m_Elements != null)
+						this.onMouseUpCallback(this);
+					}
+				}
+				else
+				{
+					if (GUIUtility.hotControl == this.id)
+					{
+						current.Use();
+						this.m_Dragging = false;
+						int num = this.CalculateRowIndex();
+						if (this.m_ActiveElement != num)
 						{
-							this.m_Elements.MoveArrayElement(this.m_ActiveElement, num);
-							this.m_SerializedObject.ApplyModifiedProperties();
-							this.m_SerializedObject.Update();
+							if (this.m_SerializedObject != null && this.m_Elements != null)
+							{
+								this.m_Elements.MoveArrayElement(this.m_ActiveElement, num);
+								this.m_SerializedObject.ApplyModifiedProperties();
+								this.m_SerializedObject.Update();
+							}
+							else
+							{
+								if (this.m_ElementList != null)
+								{
+									object value = this.m_ElementList[this.m_ActiveElement];
+									for (int i = 0; i < this.m_ElementList.Count - 1; i++)
+									{
+										if (i >= this.m_ActiveElement)
+										{
+											this.m_ElementList[i] = this.m_ElementList[i + 1];
+										}
+									}
+									for (int j = this.m_ElementList.Count - 1; j > 0; j--)
+									{
+										if (j > num)
+										{
+											this.m_ElementList[j] = this.m_ElementList[j - 1];
+										}
+									}
+									this.m_ElementList[num] = value;
+								}
+							}
+							this.m_ActiveElement = num;
+							if (this.onReorderCallback != null)
+							{
+								this.onReorderCallback(this);
+							}
+							if (this.onChangedCallback != null)
+							{
+								this.onChangedCallback(this);
+							}
 						}
 						else
 						{
-							if (this.m_ElementList != null)
+							if (this.onMouseUpCallback != null)
 							{
-								object value = this.m_ElementList[this.m_ActiveElement];
-								for (int i = 0; i < this.m_ElementList.Count - 1; i++)
-								{
-									if (i >= this.m_ActiveElement)
-									{
-										this.m_ElementList[i] = this.m_ElementList[i + 1];
-									}
-								}
-								for (int j = this.m_ElementList.Count - 1; j > 0; j--)
-								{
-									if (j > num)
-									{
-										this.m_ElementList[j] = this.m_ElementList[j - 1];
-									}
-								}
-								this.m_ElementList[num] = value;
+								this.onMouseUpCallback(this);
 							}
 						}
-						this.m_ActiveElement = num;
-						if (this.onReorderCallback != null)
-						{
-							this.onReorderCallback(this);
-						}
-						if (this.onChangedCallback != null)
-						{
-							this.onChangedCallback(this);
-						}
+						GUIUtility.hotControl = 0;
+						this.m_NonDragTargetIndices = null;
 					}
-					GUIUtility.hotControl = 0;
-					this.m_NonDragTargetIndices = null;
 				}
 				break;
 			case EventType.MouseDrag:
 				if (this.m_Draggable && GUIUtility.hotControl == this.id)
 				{
+					this.m_Dragging = true;
 					this.UpdateDraggedY(listRect);
 					current.Use();
 				}
@@ -629,10 +699,15 @@ namespace UnityEditorInternal
 				this.m_ActiveElement = Mathf.Clamp(this.m_ActiveElement, 0, (this.m_Elements == null) ? (this.m_ElementList.Count - 1) : (this.m_Elements.arraySize - 1));
 				break;
 			}
-			if (this.m_ActiveElement != activeElement && this.onSelectCallback != null)
+			if ((this.m_ActiveElement != activeElement || flag) && this.onSelectCallback != null)
 			{
 				this.onSelectCallback(this);
 			}
+		}
+		private bool IsMouseInsideActiveElement(Rect listRect)
+		{
+			int rowIndex = this.GetRowIndex(Event.current.mousePosition.y - listRect.y);
+			return rowIndex == this.m_ActiveElement && this.GetRowRect(rowIndex, listRect).Contains(Event.current.mousePosition);
 		}
 		private void UpdateDraggedY(Rect listRect)
 		{
@@ -640,12 +715,30 @@ namespace UnityEditorInternal
 		}
 		private int CalculateRowIndex()
 		{
-			int num = (this.m_Elements == null) ? this.m_ElementList.Count : this.m_Elements.arraySize;
-			return Mathf.Clamp(Mathf.FloorToInt(this.m_DraggedY / this.elementHeight), 0, num - 1);
+			return this.GetRowIndex(this.m_DraggedY);
+		}
+		private int GetRowIndex(float localY)
+		{
+			return Mathf.Clamp(Mathf.FloorToInt(localY / this.elementHeight), 0, this.count - 1);
 		}
 		private bool IsDragging()
 		{
 			return this.m_Dragging;
+		}
+		public void GrabKeyboardFocus()
+		{
+			GUIUtility.keyboardControl = this.id;
+		}
+		public void ReleaseKeyboardFocus()
+		{
+			if (GUIUtility.keyboardControl == this.id)
+			{
+				GUIUtility.keyboardControl = 0;
+			}
+		}
+		public bool HasKeyboardControl()
+		{
+			return GUIUtility.keyboardControl == this.id;
 		}
 	}
 }

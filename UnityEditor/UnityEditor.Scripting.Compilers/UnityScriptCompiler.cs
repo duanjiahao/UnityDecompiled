@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor.Utils;
 using UnityEngineInternal;
@@ -9,7 +10,7 @@ namespace UnityEditor.Scripting.Compilers
 	internal class UnityScriptCompiler : MonoScriptCompilerBase
 	{
 		private static readonly Regex UnityEditorPattern = new Regex("UnityEditor\\.dll$", RegexOptions.ExplicitCapture);
-		public UnityScriptCompiler(MonoIsland island) : base(island)
+		public UnityScriptCompiler(MonoIsland island, bool runUpdater) : base(island, runUpdater)
 		{
 		}
 		protected override CompilerOutputParserBase CreateOutputParser()
@@ -35,16 +36,14 @@ namespace UnityEditor.Scripting.Compilers
 			{
 				list.Add("-pragmas:strict,downcast");
 			}
-			string[] defines = this._island._defines;
-			for (int i = 0; i < defines.Length; i++)
+			foreach (string current in this._island._defines.Distinct<string>())
 			{
-				string str = defines[i];
-				list.Add("-define:" + str);
+				list.Add("-define:" + current);
 			}
 			string[] references = this._island._references;
-			for (int j = 0; j < references.Length; j++)
+			for (int i = 0; i < references.Length; i++)
 			{
-				string fileName = references[j];
+				string fileName = references[i];
 				list.Add("-r:" + ScriptCompilerBase.PrepareFileName(fileName));
 			}
 			bool flag = Array.Exists<string>(this._island._references, new Predicate<string>(UnityScriptCompiler.UnityEditorPattern.IsMatch));
@@ -60,9 +59,9 @@ namespace UnityEditor.Scripting.Compilers
 				}
 			}
 			string[] files = this._island._files;
-			for (int k = 0; k < files.Length; k++)
+			for (int j = 0; j < files.Length; j++)
 			{
-				string fileName2 = files[k];
+				string fileName2 = files[j];
 				list.Add(ScriptCompilerBase.PrepareFileName(fileName2));
 			}
 			string compiler = Path.Combine(base.GetProfileDirectory(), "us.exe");

@@ -39,6 +39,7 @@ namespace UnityEditor
 			Editor.m_AllowMultiObjectAccess = true;
 			this.CreateTracker();
 			this.CreatePreviewables();
+			base.AssignAssetEditor(this.m_Tracker.activeEditors);
 			IPreviewable[] editorsWithPreviews = base.GetEditorsWithPreviews(this.m_Tracker.activeEditors);
 			IPreviewable editorThatControlsPreview = base.GetEditorThatControlsPreview(editorsWithPreviews);
 			bool flag = editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI();

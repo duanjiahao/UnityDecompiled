@@ -196,15 +196,15 @@ namespace UnityEditor
 		}
 		private static void RequireTeamLicense()
 		{
-			if (!InternalEditorUtility.HasMaint())
+			if (!InternalEditorUtility.HasPro())
 			{
-				throw new MethodAccessException("Requires team license");
+				throw new MethodAccessException("Requires Pro license");
 			}
 		}
 		private static AssetMoveResult OnWillMoveAsset(string fromPath, string toPath, string[] newPaths, string[] NewMetaPaths)
 		{
 			AssetMoveResult assetMoveResult = AssetMoveResult.DidNotMove;
-			if (!InternalEditorUtility.HasMaint())
+			if (!InternalEditorUtility.HasPro())
 			{
 				return assetMoveResult;
 			}
@@ -231,7 +231,7 @@ namespace UnityEditor
 		private static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options)
 		{
 			AssetDeleteResult assetDeleteResult = AssetDeleteResult.DidNotDelete;
-			if (!InternalEditorUtility.HasMaint())
+			if (!InternalEditorUtility.HasPro())
 			{
 				return assetDeleteResult;
 			}
@@ -294,8 +294,7 @@ namespace UnityEditor
 			{
 				return true;
 			}
-			bool flag = true;
-			flag &= AssetModificationHook.IsOpenForEdit(assetPath, out message);
+			bool result = AssetModificationHook.IsOpenForEdit(assetPath, out message);
 			MethodInfo[] array = AssetModificationProcessorInternal.GetIsOpenForEditMethods();
 			for (int i = 0; i < array.Length; i++)
 			{
@@ -311,7 +310,7 @@ namespace UnityEditor
 					return false;
 				}
 			}
-			return flag;
+			return result;
 		}
 		internal static void OnStatusUpdated()
 		{

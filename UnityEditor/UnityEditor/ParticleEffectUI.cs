@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +66,6 @@ namespace UnityEditor
 		public ParticleEffectUI(ParticleEffectUIOwner owner)
 		{
 			this.m_Owner = owner;
-			Assert.That(this.m_Owner is ParticleSystemInspector || this.m_Owner is ParticleSystemWindow);
 		}
 		private bool ShouldManagePlaybackState(ParticleSystem root)
 		{
@@ -274,7 +272,6 @@ namespace UnityEditor
 			{
 				ParticleSystemUI particleSystemUI = emitters[i];
 				InitialModuleUI initialModuleUI = particleSystemUI.m_Modules[0] as InitialModuleUI;
-				Assert.That(initialModuleUI != null);
 				initialModuleUI.m_PlayOnAwake.boolValue = newPlayOnAwake;
 				particleSystemUI.ApplyProperties();
 			}
@@ -694,7 +691,6 @@ namespace UnityEditor
 			else
 			{
 				EditorWindow editorWindow = (EditorWindow)this.m_Owner;
-				Assert.That(editorWindow != null);
 				rect = GUILayoutUtility.GetRect(editorWindow.position.width - this.m_EmitterAreaWidth, editorWindow.position.height - 17f);
 			}
 			this.ResizeHandling(verticalLayout);

@@ -6,7 +6,6 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class Event
 	{
-		[NotRenamed]
 		[NonSerialized]
 		internal IntPtr m_Ptr;
 		private static Event s_Current;
@@ -657,13 +656,13 @@ namespace UnityEngine
 				return false;
 			}
 			Event @event = (Event)obj;
-			if (this.type != @event.type || this.modifiers != @event.modifiers)
+			if (this.type != @event.type || (this.modifiers & ~EventModifiers.CapsLock) != (@event.modifiers & ~EventModifiers.CapsLock))
 			{
 				return false;
 			}
 			if (this.isKey)
 			{
-				return this.keyCode == @event.keyCode && this.modifiers == @event.modifiers;
+				return this.keyCode == @event.keyCode;
 			}
 			return this.isMouse && this.mousePosition == @event.mousePosition;
 		}

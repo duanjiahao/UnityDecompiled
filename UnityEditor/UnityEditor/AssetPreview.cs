@@ -42,7 +42,7 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasAnyNewPreviewTexturesAvailable(int clientID);
-		internal static void SetPreviewTextureCacheSize(int size)
+		public static void SetPreviewTextureCacheSize(int size)
 		{
 			AssetPreview.SetPreviewTextureCacheSize(size, 0);
 		}

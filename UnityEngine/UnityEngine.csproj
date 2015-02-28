@@ -1,14 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{731BEF47-7B99-4BB3-86B7-595906204083}</ProjectGuid>
+    <ProjectGuid>{B138D295-6267-41DD-8863-2B8580406018}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
     <AssemblyName>UnityEngine</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <WarningLevel>4</WarningLevel>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -26,12 +25,36 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
     <Reference Include="Mono.Security" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AOT\MonoPInvokeCallbackAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\AssertionMethodAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\BaseTypeRequiredAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\CanBeNullAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\CannotApplyEqualityOperatorAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\ContractAnnotationAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\ImplicitUseKindFlags.cs" />
+    <Compile Include="JetBrains.Annotations\ImplicitUseTargetFlags.cs" />
+    <Compile Include="JetBrains.Annotations\InstantHandleAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\InvokerParameterNameAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\LinqTunnelAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\LocalizationRequiredAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\MeansImplicitUseAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\NoEnumerationAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\NotifyPropertyChangedInvocatorAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\NotNullAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\PathReferenceAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\PublicAPIAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\PureAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\StringFormatMethodAttribute.cs" />
+    <Compile Include="JetBrains.Annotations\UsedImplicitlyAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine.Audio\AudioMixer.cs" />
+    <Compile Include="UnityEngine.Audio\AudioMixerGroup.cs" />
+    <Compile Include="UnityEngine.Audio\AudioMixerSnapshot.cs" />
     <Compile Include="UnityEngine.Events\ArgumentCache.cs" />
     <Compile Include="UnityEngine.Events\BaseInvokableCall.cs" />
     <Compile Include="UnityEngine.Events\CachedInvokableCall.cs" />
@@ -44,20 +67,46 @@
     <Compile Include="UnityEngine.Events\UnityEvent.cs" />
     <Compile Include="UnityEngine.Events\UnityEventBase.cs" />
     <Compile Include="UnityEngine.Events\UnityEventCallState.cs" />
-    <Compile Include="UnityEngine.Flash\ActionScript.cs" />
-    <Compile Include="UnityEngine.Flash\FlashPlayer.cs" />
     <Compile Include="UnityEngine.Internal\DefaultValueAttribute.cs" />
     <Compile Include="UnityEngine.Internal\ExcludeFromDocsAttribute.cs" />
+    <Compile Include="UnityEngine.iOS\ActivityIndicatorStyle.cs" />
+    <Compile Include="UnityEngine.iOS\ADBannerView.cs" />
+    <Compile Include="UnityEngine.iOS\ADInterstitialAd.cs" />
+    <Compile Include="UnityEngine.iOS\CalendarIdentifier.cs" />
+    <Compile Include="UnityEngine.iOS\CalendarUnit.cs" />
+    <Compile Include="UnityEngine.iOS\Device.cs" />
+    <Compile Include="UnityEngine.iOS\DeviceGeneration.cs" />
+    <Compile Include="UnityEngine.iOS\LocalNotification.cs" />
+    <Compile Include="UnityEngine.iOS\NotificationServices.cs" />
+    <Compile Include="UnityEngine.iOS\NotificationType.cs" />
+    <Compile Include="UnityEngine.iOS\RemoteNotification.cs" />
+    <Compile Include="UnityEngine.Rendering\AmbientMode.cs" />
     <Compile Include="UnityEngine.Rendering\BlendMode.cs" />
     <Compile Include="UnityEngine.Rendering\BlendOp.cs" />
+    <Compile Include="UnityEngine.Rendering\BuiltinRenderTextureType.cs" />
+    <Compile Include="UnityEngine.Rendering\CameraEvent.cs" />
     <Compile Include="UnityEngine.Rendering\ColorWriteMask.cs" />
+    <Compile Include="UnityEngine.Rendering\CommandBuffer.cs" />
     <Compile Include="UnityEngine.Rendering\CompareFunction.cs" />
     <Compile Include="UnityEngine.Rendering\CullMode.cs" />
+    <Compile Include="UnityEngine.Rendering\DefaultReflectionMode.cs" />
+    <Compile Include="UnityEngine.Rendering\PassType.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeBlendInfo.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeClearFlags.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeMode.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeRefreshMode.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeTimeSlicingMode.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeType.cs" />
+    <Compile Include="UnityEngine.Rendering\ReflectionProbeUsage.cs" />
+    <Compile Include="UnityEngine.Rendering\RenderBufferLoadAction.cs" />
+    <Compile Include="UnityEngine.Rendering\RenderBufferStoreAction.cs" />
+    <Compile Include="UnityEngine.Rendering\RenderTargetIdentifier.cs" />
+    <Compile Include="UnityEngine.Rendering\ShadowCastingMode.cs" />
+    <Compile Include="UnityEngine.Rendering\SphericalHarmonicsL2.cs" />
     <Compile Include="UnityEngine.Rendering\StencilOp.cs" />
     <Compile Include="UnityEngine.Serialization\DictionarySerializationSurrogate.cs" />
     <Compile Include="UnityEngine.Serialization\FormerlySerializedAsAttribute.cs" />
     <Compile Include="UnityEngine.Serialization\ListSerializationSurrogate.cs" />
-    <Compile Include="UnityEngine.Serialization\SerializationHelper.cs" />
     <Compile Include="UnityEngine.Serialization\UnitySurrogateSelector.cs" />
     <Compile Include="UnityEngine.SocialPlatforms.GameCenter\GameCenterPlatform.cs" />
     <Compile Include="UnityEngine.SocialPlatforms.Impl\Achievement.cs" />
@@ -80,9 +129,14 @@
     <Compile Include="UnityEngine.SocialPlatforms\UserScope.cs" />
     <Compile Include="UnityEngine.SocialPlatforms\UserState.cs" />
     <Compile Include="UnityEngine.Sprites\DataUtility.cs" />
+    <Compile Include="UnityEngineInternal\APIUpdaterRuntimeServices.cs" />
     <Compile Include="UnityEngineInternal\FastCallExceptionHandler.cs" />
     <Compile Include="UnityEngineInternal\GenericStack.cs" />
     <Compile Include="UnityEngineInternal\GetMethodDelegate.cs" />
+    <Compile Include="UnityEngineInternal\GIDebugVisualisation.cs" />
+    <Compile Include="UnityEngineInternal\GITextureType.cs" />
+    <Compile Include="UnityEngineInternal\LightmapType.cs" />
+    <Compile Include="UnityEngineInternal\MathfInternal.cs" />
     <Compile Include="UnityEngineInternal\Reproduction.cs" />
     <Compile Include="UnityEngineInternal\TypeInferenceRuleAttribute.cs" />
     <Compile Include="UnityEngineInternal\TypeInferenceRules.cs" />
@@ -110,27 +164,40 @@
     <Compile Include="UnityEngine\AnimationCullingType.cs" />
     <Compile Include="UnityEngine\AnimationCurve.cs" />
     <Compile Include="UnityEngine\AnimationEvent.cs" />
+    <Compile Include="UnityEngine\AnimationEventSource.cs" />
     <Compile Include="UnityEngine\AnimationInfo.cs" />
     <Compile Include="UnityEngine\AnimationPlayMode.cs" />
     <Compile Include="UnityEngine\AnimationState.cs" />
     <Compile Include="UnityEngine\Animator.cs" />
+    <Compile Include="UnityEngine\AnimatorClipInfo.cs" />
+    <Compile Include="UnityEngine\AnimatorControllerParameter.cs" />
+    <Compile Include="UnityEngine\AnimatorControllerParameterType.cs" />
     <Compile Include="UnityEngine\AnimatorCullingMode.cs" />
     <Compile Include="UnityEngine\AnimatorOverrideController.cs" />
+    <Compile Include="UnityEngine\AnimatorRecorderMode.cs" />
     <Compile Include="UnityEngine\AnimatorStateInfo.cs" />
     <Compile Include="UnityEngine\AnimatorTransitionInfo.cs" />
     <Compile Include="UnityEngine\AnimatorUpdateMode.cs" />
     <Compile Include="UnityEngine\AnimatorUtility.cs" />
     <Compile Include="UnityEngine\AnisotropicFiltering.cs" />
     <Compile Include="UnityEngine\Application.cs" />
+    <Compile Include="UnityEngine\ApplicationInstallMode.cs" />
+    <Compile Include="UnityEngine\ApplicationSandboxType.cs" />
+    <Compile Include="UnityEngine\AreaEffector2D.cs" />
     <Compile Include="UnityEngine\ArmDoF.cs" />
     <Compile Include="UnityEngine\AssemblyIsEditorAssembly.cs" />
     <Compile Include="UnityEngine\AssetBundle.cs" />
     <Compile Include="UnityEngine\AssetBundleCreateRequest.cs" />
+    <Compile Include="UnityEngine\AssetBundleManifest.cs" />
     <Compile Include="UnityEngine\AssetBundleRequest.cs" />
     <Compile Include="UnityEngine\AsyncOperation.cs" />
     <Compile Include="UnityEngine\AttributeHelperEngine.cs" />
     <Compile Include="UnityEngine\AudioChorusFilter.cs" />
     <Compile Include="UnityEngine\AudioClip.cs" />
+    <Compile Include="UnityEngine\AudioClipLoadType.cs" />
+    <Compile Include="UnityEngine\AudioCompressionFormat.cs" />
+    <Compile Include="UnityEngine\AudioConfiguration.cs" />
+    <Compile Include="UnityEngine\AudioDataLoadState.cs" />
     <Compile Include="UnityEngine\AudioDistortionFilter.cs" />
     <Compile Include="UnityEngine\AudioEchoFilter.cs" />
     <Compile Include="UnityEngine\AudioHighPassFilter.cs" />
@@ -148,8 +215,11 @@
     <Compile Include="UnityEngine\Avatar.cs" />
     <Compile Include="UnityEngine\AvatarBuilder.cs" />
     <Compile Include="UnityEngine\AvatarIKGoal.cs" />
+    <Compile Include="UnityEngine\AvatarIKHint.cs" />
     <Compile Include="UnityEngine\AvatarTarget.cs" />
     <Compile Include="UnityEngine\Behaviour.cs" />
+    <Compile Include="UnityEngine\BillboardAsset.cs" />
+    <Compile Include="UnityEngine\BillboardRenderer.cs" />
     <Compile Include="UnityEngine\BitStream.cs" />
     <Compile Include="UnityEngine\BlendWeights.cs" />
     <Compile Include="UnityEngine\BodyDoF.cs" />
@@ -163,19 +233,19 @@
     <Compile Include="UnityEngine\CalendarUnit.cs" />
     <Compile Include="UnityEngine\Camera.cs" />
     <Compile Include="UnityEngine\CameraClearFlags.cs" />
-    <Compile Include="UnityEngine\CanConvertToFlashAttribute.cs" />
     <Compile Include="UnityEngine\Canvas.cs" />
     <Compile Include="UnityEngine\CanvasGroup.cs" />
     <Compile Include="UnityEngine\CanvasRenderer.cs" />
     <Compile Include="UnityEngine\CapsuleCollider.cs" />
+    <Compile Include="UnityEngine\CastHelper.cs" />
     <Compile Include="UnityEngine\CharacterController.cs" />
     <Compile Include="UnityEngine\CharacterInfo.cs" />
     <Compile Include="UnityEngine\CharacterJoint.cs" />
     <Compile Include="UnityEngine\CircleCollider2D.cs" />
     <Compile Include="UnityEngine\ClassLibraryInitializer.cs" />
     <Compile Include="UnityEngine\Cloth.cs" />
-    <Compile Include="UnityEngine\ClothRenderer.cs" />
     <Compile Include="UnityEngine\ClothSkinningCoefficient.cs" />
+    <Compile Include="UnityEngine\ClothSphereColliderPair.cs" />
     <Compile Include="UnityEngine\Collider.cs" />
     <Compile Include="UnityEngine\Collider2D.cs" />
     <Compile Include="UnityEngine\ColliderErrorState2D.cs" />
@@ -197,6 +267,7 @@
     <Compile Include="UnityEngine\ConfigurableJointMotion.cs" />
     <Compile Include="UnityEngine\ConnectionTesterStatus.cs" />
     <Compile Include="UnityEngine\ConstantForce.cs" />
+    <Compile Include="UnityEngine\ConstantForce2D.cs" />
     <Compile Include="UnityEngine\ConstructorSafeAttribute.cs" />
     <Compile Include="UnityEngine\ContactPoint.cs" />
     <Compile Include="UnityEngine\ContactPoint2D.cs" />
@@ -214,6 +285,7 @@
     <Compile Include="UnityEngine\Cubemap.cs" />
     <Compile Include="UnityEngine\CubemapFace.cs" />
     <Compile Include="UnityEngine\Cursor.cs" />
+    <Compile Include="UnityEngine\CursorLockMode.cs" />
     <Compile Include="UnityEngine\CursorMode.cs" />
     <Compile Include="UnityEngine\Debug.cs" />
     <Compile Include="UnityEngine\DepthTextureMode.cs" />
@@ -221,13 +293,19 @@
     <Compile Include="UnityEngine\DetailRenderMode.cs" />
     <Compile Include="UnityEngine\DeviceOrientation.cs" />
     <Compile Include="UnityEngine\DeviceType.cs" />
+    <Compile Include="UnityEngine\DisableBatchingType.cs" />
     <Compile Include="UnityEngine\DisallowMultipleComponent.cs" />
     <Compile Include="UnityEngine\Display.cs" />
     <Compile Include="UnityEngine\DistanceJoint2D.cs" />
     <Compile Include="UnityEngine\DoF.cs" />
     <Compile Include="UnityEngine\DrivenRectTransformTracker.cs" />
     <Compile Include="UnityEngine\DrivenTransformProperties.cs" />
+    <Compile Include="UnityEngine\DynamicGI.cs" />
     <Compile Include="UnityEngine\EdgeCollider2D.cs" />
+    <Compile Include="UnityEngine\Effector2D.cs" />
+    <Compile Include="UnityEngine\EffectorForceMode2D.cs" />
+    <Compile Include="UnityEngine\EffectorSelection2D.cs" />
+    <Compile Include="UnityEngine\EllipsoidParticleEmitter.cs" />
     <Compile Include="UnityEngine\Event.cs" />
     <Compile Include="UnityEngine\EventModifiers.cs" />
     <Compile Include="UnityEngine\EventType.cs" />
@@ -238,6 +316,7 @@
     <Compile Include="UnityEngine\FingerDoF.cs" />
     <Compile Include="UnityEngine\FixedJoint.cs" />
     <Compile Include="UnityEngine\Flare.cs" />
+    <Compile Include="UnityEngine\FlareLayer.cs" />
     <Compile Include="UnityEngine\FocusType.cs" />
     <Compile Include="UnityEngine\FogMode.cs" />
     <Compile Include="UnityEngine\Font.cs" />
@@ -278,6 +357,7 @@
     <Compile Include="UnityEngine\GUIWordWrapSizer.cs" />
     <Compile Include="UnityEngine\Gyroscope.cs" />
     <Compile Include="UnityEngine\Handheld.cs" />
+    <Compile Include="UnityEngine\Hash128.cs" />
     <Compile Include="UnityEngine\HeadDoF.cs" />
     <Compile Include="UnityEngine\HeaderAttribute.cs" />
     <Compile Include="UnityEngine\HideFlags.cs" />
@@ -300,7 +380,6 @@
     <Compile Include="UnityEngine\IMECompositionMode.cs" />
     <Compile Include="UnityEngine\ImplementedInActionScriptAttribute.cs" />
     <Compile Include="UnityEngine\Input.cs" />
-    <Compile Include="UnityEngine\InteractiveCloth.cs" />
     <Compile Include="UnityEngine\InternalDrawTextureArguments.cs" />
     <Compile Include="UnityEngine\InternalEmitParticleArguments.cs" />
     <Compile Include="UnityEngine\InternalStaticBatchingUtility.cs" />
@@ -315,7 +394,6 @@
     <Compile Include="UnityEngine\iPhoneInput.cs" />
     <Compile Include="UnityEngine\iPhoneKeyboard.cs" />
     <Compile Include="UnityEngine\iPhoneKeyboardType.cs" />
-    <Compile Include="UnityEngine\iPhoneKeyboard_InternalConstructorHelperArguments.cs" />
     <Compile Include="UnityEngine\iPhoneMovieControlMode.cs" />
     <Compile Include="UnityEngine\iPhoneMovieScalingMode.cs" />
     <Compile Include="UnityEngine\iPhoneNetworkReachability.cs" />
@@ -349,6 +427,7 @@
     <Compile Include="UnityEngine\LightmapData.cs" />
     <Compile Include="UnityEngine\LightmapSettings.cs" />
     <Compile Include="UnityEngine\LightmapsMode.cs" />
+    <Compile Include="UnityEngine\LightmapsModeLegacy.cs" />
     <Compile Include="UnityEngine\LightProbeGroup.cs" />
     <Compile Include="UnityEngine\LightProbes.cs" />
     <Compile Include="UnityEngine\LightRenderMode.cs" />
@@ -356,7 +435,6 @@
     <Compile Include="UnityEngine\LightType.cs" />
     <Compile Include="UnityEngine\LineRenderer.cs" />
     <Compile Include="UnityEngine\LocalNotification.cs" />
-    <Compile Include="UnityEngine\LocalNotificationType.cs" />
     <Compile Include="UnityEngine\LocationInfo.cs" />
     <Compile Include="UnityEngine\LocationService.cs" />
     <Compile Include="UnityEngine\LocationServiceStatus.cs" />
@@ -368,12 +446,14 @@
     <Compile Include="UnityEngine\MasterServerEvent.cs" />
     <Compile Include="UnityEngine\MatchTargetWeightMask.cs" />
     <Compile Include="UnityEngine\Material.cs" />
+    <Compile Include="UnityEngine\MaterialGlobalIlluminationFlags.cs" />
     <Compile Include="UnityEngine\MaterialPropertyBlock.cs" />
     <Compile Include="UnityEngine\Mathf.cs" />
     <Compile Include="UnityEngine\Matrix4x4.cs" />
     <Compile Include="UnityEngine\Mesh.cs" />
     <Compile Include="UnityEngine\MeshCollider.cs" />
     <Compile Include="UnityEngine\MeshFilter.cs" />
+    <Compile Include="UnityEngine\MeshParticleEmitter.cs" />
     <Compile Include="UnityEngine\MeshRenderer.cs" />
     <Compile Include="UnityEngine\MeshSubsetCombineUtility.cs" />
     <Compile Include="UnityEngine\MeshTopology.cs" />
@@ -388,6 +468,7 @@
     <Compile Include="UnityEngine\NavMeshAgent.cs" />
     <Compile Include="UnityEngine\NavMeshHit.cs" />
     <Compile Include="UnityEngine\NavMeshObstacle.cs" />
+    <Compile Include="UnityEngine\NavMeshObstacleShape.cs" />
     <Compile Include="UnityEngine\NavMeshPath.cs" />
     <Compile Include="UnityEngine\NavMeshPathStatus.cs" />
     <Compile Include="UnityEngine\NavMeshTriangulation.cs" />
@@ -416,10 +497,13 @@
     <Compile Include="UnityEngine\OffMeshLinkType.cs" />
     <Compile Include="UnityEngine\Particle.cs" />
     <Compile Include="UnityEngine\ParticleAnimator.cs" />
+    <Compile Include="UnityEngine\ParticleCollisionEvent.cs" />
     <Compile Include="UnityEngine\ParticleEmitter.cs" />
+    <Compile Include="UnityEngine\ParticlePhysicsExtensions.cs" />
     <Compile Include="UnityEngine\ParticleRenderer.cs" />
     <Compile Include="UnityEngine\ParticleRenderMode.cs" />
     <Compile Include="UnityEngine\ParticleSystem.cs" />
+    <Compile Include="UnityEngine\ParticleSystemExtensionsImpl.cs" />
     <Compile Include="UnityEngine\ParticleSystemRenderer.cs" />
     <Compile Include="UnityEngine\ParticleSystemRenderMode.cs" />
     <Compile Include="UnityEngine\ParticleSystemSimulationSpace.cs" />
@@ -428,12 +512,15 @@
     <Compile Include="UnityEngine\Physics.cs" />
     <Compile Include="UnityEngine\Physics2D.cs" />
     <Compile Include="UnityEngine\PhysicsMaterial2D.cs" />
+    <Compile Include="UnityEngine\PhysicsUpdateBehaviour2D.cs" />
     <Compile Include="UnityEngine\Ping.cs" />
     <Compile Include="UnityEngine\Plane.cs" />
+    <Compile Include="UnityEngine\PlatformEffector2D.cs" />
     <Compile Include="UnityEngine\PlatformSelection.cs" />
     <Compile Include="UnityEngine\PlayerPrefs.cs" />
     <Compile Include="UnityEngine\PlayerPrefsException.cs" />
     <Compile Include="UnityEngine\PlayMode.cs" />
+    <Compile Include="UnityEngine\PointEffector2D.cs" />
     <Compile Include="UnityEngine\PolygonCollider2D.cs" />
     <Compile Include="UnityEngine\PrimitiveType.cs" />
     <Compile Include="UnityEngine\ProceduralCacheSize.cs" />
@@ -455,21 +542,22 @@
     <Compile Include="UnityEngine\RangeAttribute.cs" />
     <Compile Include="UnityEngine\Ray.cs" />
     <Compile Include="UnityEngine\Ray2D.cs" />
-    <Compile Include="UnityEngine\RaycastCollider.cs" />
     <Compile Include="UnityEngine\RaycastHit.cs" />
     <Compile Include="UnityEngine\RaycastHit2D.cs" />
     <Compile Include="UnityEngine\Rect.cs" />
     <Compile Include="UnityEngine\RectOffset.cs" />
     <Compile Include="UnityEngine\RectTransform.cs" />
     <Compile Include="UnityEngine\RectTransformUtility.cs" />
-    <Compile Include="UnityEngine\ReferenceData.cs" />
+    <Compile Include="UnityEngine\ReflectionProbe.cs" />
     <Compile Include="UnityEngine\RemoteNotification.cs" />
     <Compile Include="UnityEngine\RemoteNotificationType.cs" />
     <Compile Include="UnityEngine\RenderBuffer.cs" />
+    <Compile Include="UnityEngine\RenderBufferHelper.cs" />
     <Compile Include="UnityEngine\Renderer.cs" />
     <Compile Include="UnityEngine\RenderingPath.cs" />
     <Compile Include="UnityEngine\RenderMode.cs" />
     <Compile Include="UnityEngine\RenderSettings.cs" />
+    <Compile Include="UnityEngine\RenderTargetSetup.cs" />
     <Compile Include="UnityEngine\RenderTexture.cs" />
     <Compile Include="UnityEngine\RenderTextureFormat.cs" />
     <Compile Include="UnityEngine\RenderTextureReadWrite.cs" />
@@ -487,9 +575,9 @@
     <Compile Include="UnityEngine\RPC.cs" />
     <Compile Include="UnityEngine\RPCMode.cs" />
     <Compile Include="UnityEngine\RuntimeAnimatorController.cs" />
+    <Compile Include="UnityEngine\RuntimeInitializeOnLoadMethodAttribute.cs" />
     <Compile Include="UnityEngine\RuntimePlatform.cs" />
     <Compile Include="UnityEngine\RuntimeUndo.cs" />
-    <Compile Include="UnityEngine\SamsungTV.cs" />
     <Compile Include="UnityEngine\ScaleMode.cs" />
     <Compile Include="UnityEngine\Screen.cs" />
     <Compile Include="UnityEngine\ScreenOrientation.cs" />
@@ -503,9 +591,10 @@
     <Compile Include="UnityEngine\SerializePrivateVariables.cs" />
     <Compile Include="UnityEngine\SetupCoroutine.cs" />
     <Compile Include="UnityEngine\Shader.cs" />
+    <Compile Include="UnityEngine\ShaderVariantCollection.cs" />
     <Compile Include="UnityEngine\ShadowProjection.cs" />
+    <Compile Include="UnityEngine\SharedBetweenAnimatorsAttribute.cs" />
     <Compile Include="UnityEngine\SkeletonBone.cs" />
-    <Compile Include="UnityEngine\SkinnedCloth.cs" />
     <Compile Include="UnityEngine\SkinnedMeshRenderer.cs" />
     <Compile Include="UnityEngine\SkinQuality.cs" />
     <Compile Include="UnityEngine\Skybox.cs" />
@@ -515,6 +604,7 @@
     <Compile Include="UnityEngine\SliderState.cs" />
     <Compile Include="UnityEngine\Social.cs" />
     <Compile Include="UnityEngine\SoftJointLimit.cs" />
+    <Compile Include="UnityEngine\SoftJointLimitSpring.cs" />
     <Compile Include="UnityEngine\Space.cs" />
     <Compile Include="UnityEngine\SpaceAttribute.cs" />
     <Compile Include="UnityEngine\SparseTexture.cs" />
@@ -529,7 +619,9 @@
     <Compile Include="UnityEngine\SpritePackingRotation.cs" />
     <Compile Include="UnityEngine\SpriteRenderer.cs" />
     <Compile Include="UnityEngine\StackTraceUtility.cs" />
+    <Compile Include="UnityEngine\StateMachineBehaviour.cs" />
     <Compile Include="UnityEngine\StaticBatchingUtility.cs" />
+    <Compile Include="UnityEngine\SurfaceEffector2D.cs" />
     <Compile Include="UnityEngine\SystemClock.cs" />
     <Compile Include="UnityEngine\SystemInfo.cs" />
     <Compile Include="UnityEngine\SystemLanguage.cs" />
@@ -566,6 +658,7 @@
     <Compile Include="UnityEngine\TrackedReference.cs" />
     <Compile Include="UnityEngine\TrailRenderer.cs" />
     <Compile Include="UnityEngine\Transform.cs" />
+    <Compile Include="UnityEngine\TransitionType.cs" />
     <Compile Include="UnityEngine\TransparencySortMode.cs" />
     <Compile Include="UnityEngine\Tree.cs" />
     <Compile Include="UnityEngine\TreeInstance.cs" />
@@ -576,6 +669,8 @@
     <Compile Include="UnityEngine\UIVertex.cs" />
     <Compile Include="UnityEngine\UnassignedReferenceException.cs" />
     <Compile Include="UnityEngine\UnhandledExceptionHandler.cs" />
+    <Compile Include="UnityEngine\UnityAPICompatibilityVersionAttribute.cs" />
+    <Compile Include="UnityEngine\UnityEventQueueSystem.cs" />
     <Compile Include="UnityEngine\UnityException.cs" />
     <Compile Include="UnityEngine\UnityLogWriter.cs" />
     <Compile Include="UnityEngine\UnityString.cs" />

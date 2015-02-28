@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -9,6 +10,7 @@ namespace UnityEngine
 {
 	public sealed class WWW : IDisposable
 	{
+		internal IntPtr m_Ptr;
 		private static readonly char[] forbiddenCharacters = new char[]
 		{
 			'\0',
@@ -74,7 +76,6 @@ namespace UnityEngine
 			"Via",
 			"X-Unity-Version"
 		};
-		internal IntPtr m_Ptr;
 		public Dictionary<string, string> responseHeaders
 		{
 			get
@@ -100,7 +101,8 @@ namespace UnityEngine
 				{
 					throw new UnityException("WWW is not ready downloading yet");
 				}
-				return this.GetTextEncoder().GetString(this.bytes, 0, this.bytes.Length);
+				byte[] bytes = this.bytes;
+				return this.GetTextEncoder().GetString(bytes, 0, bytes.Length);
 			}
 		}
 		internal static Encoding DefaultEncoding
@@ -187,12 +189,13 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[Obsolete(".oggVorbis accessor is deprecated, use .audioClip or GetAudioClip() instead.")]
-		public extern AudioClip oggVorbis
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property WWW.oggVorbis has been deprecated. Use WWW.audioClip instead (UnityUpgradable).", true)]
+		public AudioClip oggVorbis
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return null;
+			}
 		}
 		public extern string url
 		{
@@ -232,15 +235,10 @@ namespace UnityEngine
 		{
 			this.InitWWW(url, postData, null);
 		}
-		[Obsolete("This overload is deprecated. Use the one with Dictionary argument.")]
+		[Obsolete("This overload is deprecated. Use the one with Dictionary argument.", true)]
 		public WWW(string url, byte[] postData, Hashtable headers)
 		{
-			string[] array = WWW.FlattenedHeadersFrom(headers);
-			if (this.enforceWebSecurityRestrictions())
-			{
-				WWW.CheckSecurityOnHeaders(array);
-			}
-			this.InitWWW(url, postData, array);
+			Debug.LogError("This overload is deprecated. Use the one with Dictionary argument.");
 		}
 		public WWW(string url, byte[] postData, Dictionary<string, string> headers)
 		{
@@ -251,107 +249,9 @@ namespace UnityEngine
 			}
 			this.InitWWW(url, postData, array);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern WWW(string url, int version, uint crc);
-		private static void CheckSecurityOnHeaders(string[] headers)
+		internal WWW(string url, Hash128 hash, uint crc)
 		{
-			bool flag = Application.GetBuildUnityVersion() >= Application.GetNumericUnityVersion("4.3.0b1");
-			for (int i = 0; i < headers.Length; i += 2)
-			{
-				string[] array = WWW.forbiddenHeaderKeys;
-				for (int j = 0; j < array.Length; j++)
-				{
-					string b = array[j];
-					if (string.Equals(headers[i], b, StringComparison.CurrentCultureIgnoreCase))
-					{
-						if (flag)
-						{
-							throw new ArgumentException("Cannot overwrite header: " + headers[i]);
-						}
-						Debug.LogError("Illegal header overwrite, this will fail in 4.3 and above: " + headers[i]);
-					}
-				}
-				if (headers[i].StartsWith("Sec-") || headers[i].StartsWith("Proxy-"))
-				{
-					if (flag)
-					{
-						throw new ArgumentException("Cannot overwrite header: " + headers[i]);
-					}
-					Debug.LogError("Illegal header overwrite, this will fail in 4.3 and above: " + headers[i]);
-				}
-				if (headers[i].IndexOfAny(WWW.forbiddenCharacters) > -1 || headers[i].IndexOfAny(WWW.forbiddenCharactersForNames) > -1 || headers[i + 1].IndexOfAny(WWW.forbiddenCharacters) > -1)
-				{
-					if (flag)
-					{
-						throw new ArgumentException("Cannot include control characters in a HTTP header, either as key or value.");
-					}
-					Debug.LogError("Illegal control characters in header, this will fail in 4.3 and above");
-				}
-			}
-		}
-		private static string[] FlattenedHeadersFrom(Hashtable headers)
-		{
-			if (headers == null)
-			{
-				return null;
-			}
-			string[] array = new string[headers.Count * 2];
-			int num = 0;
-			foreach (DictionaryEntry dictionaryEntry in headers)
-			{
-				array[num++] = dictionaryEntry.Key.ToString();
-				array[num++] = dictionaryEntry.Value.ToString();
-			}
-			return array;
-		}
-		private static string[] FlattenedHeadersFrom(Dictionary<string, string> headers)
-		{
-			if (headers == null)
-			{
-				return null;
-			}
-			string[] array = new string[headers.Count * 2];
-			int num = 0;
-			foreach (KeyValuePair<string, string> current in headers)
-			{
-				array[num++] = current.Key.ToString();
-				array[num++] = current.Value.ToString();
-			}
-			return array;
-		}
-		internal static Dictionary<string, string> ParseHTTPHeaderString(string input)
-		{
-			if (input == null)
-			{
-				throw new ArgumentException("input was null to ParseHTTPHeaderString");
-			}
-			Dictionary<string, string> dictionary = new Dictionary<string, string>();
-			StringReader stringReader = new StringReader(input);
-			int num = 0;
-			while (true)
-			{
-				string text = stringReader.ReadLine();
-				if (text == null)
-				{
-					break;
-				}
-				if (num++ == 0 && text.StartsWith("HTTP"))
-				{
-					dictionary["STATUS"] = text;
-				}
-				else
-				{
-					int num2 = text.IndexOf(": ");
-					if (num2 != -1)
-					{
-						string key = text.Substring(0, num2).ToUpper();
-						string value = text.Substring(num2 + 2);
-						dictionary[key] = value;
-					}
-				}
-			}
-			return dictionary;
+			WWW.INTERNAL_CALL_WWW(this, url, ref hash, crc);
 		}
 		public void Dispose()
 		{
@@ -376,7 +276,7 @@ namespace UnityEngine
 			Encoding uTF = Encoding.UTF8;
 			return WWW.EscapeURL(s, uTF);
 		}
-		public static string EscapeURL(string s, [DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
+		public static string EscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
 		{
 			if (s == null)
 			{
@@ -398,7 +298,7 @@ namespace UnityEngine
 			Encoding uTF = Encoding.UTF8;
 			return WWW.UnEscapeURL(s, uTF);
 		}
-		public static string UnEscapeURL(string s, [DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
+		public static string UnEscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
 		{
 			if (s == null)
 			{
@@ -485,18 +385,117 @@ namespace UnityEngine
 		{
 			return new WWW(url).texture;
 		}
+		[Obsolete("LoadUnityWeb is no longer supported. Please use javascript to reload the web player on a different url instead", true)]
+		public void LoadUnityWeb()
+		{
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void LoadUnityWeb();
+		private static extern void INTERNAL_CALL_WWW(WWW self, string url, ref Hash128 hash, uint crc);
 		[ExcludeFromDocs]
 		public static WWW LoadFromCacheOrDownload(string url, int version)
 		{
 			uint crc = 0u;
 			return WWW.LoadFromCacheOrDownload(url, version, crc);
 		}
-		public static WWW LoadFromCacheOrDownload(string url, int version, [DefaultValue("0")] uint crc)
+		public static WWW LoadFromCacheOrDownload(string url, int version, [UnityEngine.Internal.DefaultValue("0")] uint crc)
 		{
-			return new WWW(url, version, crc);
+			Hash128 hash = new Hash128(0u, 0u, 0u, (uint)version);
+			return WWW.LoadFromCacheOrDownload(url, hash, crc);
+		}
+		[ExcludeFromDocs]
+		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash)
+		{
+			uint crc = 0u;
+			return WWW.LoadFromCacheOrDownload(url, hash, crc);
+		}
+		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash, [UnityEngine.Internal.DefaultValue("0")] uint crc)
+		{
+			return new WWW(url, hash, crc);
+		}
+		private static void CheckSecurityOnHeaders(string[] headers)
+		{
+			bool flag = Application.GetBuildUnityVersion() >= Application.GetNumericUnityVersion("4.3.0b1");
+			for (int i = 0; i < headers.Length; i += 2)
+			{
+				string[] array = WWW.forbiddenHeaderKeys;
+				for (int j = 0; j < array.Length; j++)
+				{
+					string b = array[j];
+					if (string.Equals(headers[i], b, StringComparison.CurrentCultureIgnoreCase))
+					{
+						if (flag)
+						{
+							throw new ArgumentException("Cannot overwrite header: " + headers[i]);
+						}
+						Debug.LogError("Illegal header overwrite, this will fail in 4.3 and above: " + headers[i]);
+					}
+				}
+				if (headers[i].StartsWith("Sec-") || headers[i].StartsWith("Proxy-"))
+				{
+					if (flag)
+					{
+						throw new ArgumentException("Cannot overwrite header: " + headers[i]);
+					}
+					Debug.LogError("Illegal header overwrite, this will fail in 4.3 and above: " + headers[i]);
+				}
+				if (headers[i].IndexOfAny(WWW.forbiddenCharacters) > -1 || headers[i].IndexOfAny(WWW.forbiddenCharactersForNames) > -1 || headers[i + 1].IndexOfAny(WWW.forbiddenCharacters) > -1)
+				{
+					if (flag)
+					{
+						throw new ArgumentException("Cannot include control characters in a HTTP header, either as key or value.");
+					}
+					Debug.LogError("Illegal control characters in header, this will fail in 4.3 and above");
+				}
+			}
+		}
+		private static string[] FlattenedHeadersFrom(Dictionary<string, string> headers)
+		{
+			if (headers == null)
+			{
+				return null;
+			}
+			string[] array = new string[headers.Count * 2];
+			int num = 0;
+			foreach (KeyValuePair<string, string> current in headers)
+			{
+				array[num++] = current.Key.ToString();
+				array[num++] = current.Value.ToString();
+			}
+			return array;
+		}
+		internal static Dictionary<string, string> ParseHTTPHeaderString(string input)
+		{
+			if (input == null)
+			{
+				throw new ArgumentException("input was null to ParseHTTPHeaderString");
+			}
+			Dictionary<string, string> dictionary = new Dictionary<string, string>();
+			StringReader stringReader = new StringReader(input);
+			int num = 0;
+			while (true)
+			{
+				string text = stringReader.ReadLine();
+				if (text == null)
+				{
+					break;
+				}
+				if (num++ == 0 && text.StartsWith("HTTP"))
+				{
+					dictionary["STATUS"] = text;
+				}
+				else
+				{
+					int num2 = text.IndexOf(": ");
+					if (num2 != -1)
+					{
+						string key = text.Substring(0, num2).ToUpper();
+						string value = text.Substring(num2 + 2);
+						dictionary[key] = value;
+					}
+				}
+			}
+			return dictionary;
 		}
 	}
 }

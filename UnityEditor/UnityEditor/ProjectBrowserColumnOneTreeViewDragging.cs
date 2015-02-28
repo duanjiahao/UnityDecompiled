@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace UnityEditor
 {
-	internal class ProjectBrowserColumnOneTreeViewDragging : AssetOrGameObjectTreeViewDragging
+	internal class ProjectBrowserColumnOneTreeViewDragging : AssetsTreeViewDragging
 	{
-		public ProjectBrowserColumnOneTreeViewDragging(TreeView treeView) : base(treeView, HierarchyType.Assets)
+		public ProjectBrowserColumnOneTreeViewDragging(TreeView treeView) : base(treeView)
 		{
 		}
 		public override void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs)

@@ -308,7 +308,7 @@ namespace UnityEngine
 		public static Vector3 Project(Vector3 vector, Vector3 onNormal)
 		{
 			float num = Vector3.Dot(onNormal, onNormal);
-			if (num < 1.401298E-45f)
+			if (num < Mathf.Epsilon)
 			{
 				return Vector3.zero;
 			}

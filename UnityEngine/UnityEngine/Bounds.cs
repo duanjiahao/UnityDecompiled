@@ -144,6 +144,17 @@ namespace UnityEngine
 		{
 			return Bounds.Internal_IntersectRay(ref ray, ref this, out distance);
 		}
+		private static Vector3 Internal_GetClosestPoint(ref Bounds bounds, ref Vector3 point)
+		{
+			return Bounds.INTERNAL_CALL_Internal_GetClosestPoint(ref bounds, ref point);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Vector3 INTERNAL_CALL_Internal_GetClosestPoint(ref Bounds bounds, ref Vector3 point);
+		public Vector3 ClosestPoint(Vector3 point)
+		{
+			return Bounds.Internal_GetClosestPoint(ref this, ref point);
+		}
 		public override string ToString()
 		{
 			return UnityString.Format("Center: {0}, Extents: {1}", new object[]

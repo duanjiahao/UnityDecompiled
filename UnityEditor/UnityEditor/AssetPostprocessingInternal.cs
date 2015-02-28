@@ -24,7 +24,10 @@ namespace UnityEditor
 		private static ArrayList m_ImportProcessors;
 		private static void LogPostProcessorMissingDefaultConstructor(Type type)
 		{
-			Debug.LogError(string.Format("{0} requires a default constructor to be used as an asset post processor", type.ToString()));
+			Debug.LogErrorFormat("{0} requires a default constructor to be used as an asset post processor", new object[]
+			{
+				type
+			});
 		}
 		private static void PostprocessAllAssets(string[] importedAssets, string[] addedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromPathAssets)
 		{
@@ -44,6 +47,16 @@ namespace UnityEditor
 				}
 			}
 			SyncVS.PostprocessSyncProject(importedAssets, addedAssets, deletedAssets, movedAssets, movedFromPathAssets);
+		}
+		private static void PreprocessAssembly(string pathName)
+		{
+			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			{
+				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAssembly", new string[]
+				{
+					pathName
+				});
+			}
 		}
 		internal static void CallOnGeneratedCSProjectFiles()
 		{
@@ -134,6 +147,20 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessModel", null);
 			}
 		}
+		private static void PreprocessSpeedTree(string pathName)
+		{
+			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			{
+				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessSpeedTree", null);
+			}
+		}
+		private static void PreprocessAnimation(string pathName)
+		{
+			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			{
+				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAnimation", null);
+			}
+		}
 		private static Material ProcessMeshAssignMaterial(Renderer renderer, Material material)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -171,6 +198,17 @@ namespace UnityEditor
 					gameObject
 				};
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessModel", args);
+			}
+		}
+		private static void PostprocessSpeedTree(GameObject gameObject)
+		{
+			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			{
+				object[] args = new object[]
+				{
+					gameObject
+				};
+				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSpeedTree", args);
 			}
 		}
 		private static void PostprocessGameObjectWithUserProperties(GameObject go, string[] prop_names, object[] prop_values)
@@ -232,6 +270,18 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessTexture", args);
 			}
 		}
+		private static void PostprocessSprites(Texture2D tex, string pathName, Sprite[] sprites)
+		{
+			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			{
+				object[] args = new object[]
+				{
+					tex,
+					sprites
+				};
+				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSprites", args);
+			}
+		}
 		private static uint[] GetAudioProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -276,6 +326,20 @@ namespace UnityEditor
 					tex
 				};
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessAudio", args);
+			}
+		}
+		private static void PostprocessAssetbundleNameChanged(string assetPAth, string prevoiusAssetBundleName, string newAssetBundleName)
+		{
+			object[] args = new object[]
+			{
+				assetPAth,
+				prevoiusAssetBundleName,
+				newAssetBundleName
+			};
+			foreach (Type current in EditorAssemblies.SubclassesOf(typeof(AssetPostprocessor)))
+			{
+				AssetPostprocessor target = Activator.CreateInstance(current) as AssetPostprocessor;
+				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessAssetbundleNameChanged", args);
 			}
 		}
 	}

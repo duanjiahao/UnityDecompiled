@@ -98,6 +98,8 @@ internal class GenerateIconsWithMipLevels
 	}
 	private static void GenerateIcon(GenerateIconsWithMipLevels.InputData inputData, string baseName, List<string> assetPathsOfAllIcons)
 	{
+		string text = inputData.targetFolder + "/" + baseName + " Icon.asset";
+		GenerateIconsWithMipLevels.EnsureFolderIsCreatedRecursively(Path.GetDirectoryName(text));
 		Texture2D texture2D = GenerateIconsWithMipLevels.CreateIconWithMipLevels(inputData, baseName, assetPathsOfAllIcons);
 		if (texture2D == null)
 		{
@@ -105,8 +107,6 @@ internal class GenerateIconsWithMipLevels
 			return;
 		}
 		texture2D.name = baseName + " Icon.png";
-		string text = inputData.targetFolder + "/" + baseName + " Icon.asset";
-		GenerateIconsWithMipLevels.EnsureFolderIsCreatedRecursively(Path.GetDirectoryName(text));
 		AssetDatabase.CreateAsset(texture2D, text);
 		inputData.generatedFileNames.Add(text);
 	}

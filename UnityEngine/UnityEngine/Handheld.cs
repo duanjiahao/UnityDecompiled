@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.iOS;
 namespace UnityEngine
 {
 	public sealed class Handheld
@@ -48,7 +49,7 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetActivityIndicatorStyleImpl(int style);
-		public static void SetActivityIndicatorStyle(iOSActivityIndicatorStyle style)
+		public static void SetActivityIndicatorStyle(ActivityIndicatorStyle style)
 		{
 			Handheld.SetActivityIndicatorStyleImpl((int)style);
 		}

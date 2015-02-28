@@ -84,6 +84,16 @@ namespace UnityEditor
 				}.ToArray();
 				result = true;
 			}
+			num = searchString.IndexOf("b:");
+			if (num >= 0)
+			{
+				string item3 = searchString.Substring(num + 2);
+				filter.assetBundleNames = new List<string>(filter.assetBundleNames)
+				{
+					item3
+				}.ToArray();
+				result = true;
+			}
 			num = searchString.IndexOf("ref:");
 			if (num >= 0)
 			{

@@ -116,7 +116,7 @@ namespace UnityEditorInternal
 		}
 		public static void BeginLines(Color color)
 		{
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.PushMatrix();
 			GL.MultMatrix(Handles.matrix);
 			GL.Begin(1);

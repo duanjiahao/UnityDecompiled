@@ -1,10 +1,16 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Rendering;
 namespace UnityEngine
 {
 	public sealed class Camera : Behaviour
 	{
+		public delegate void CameraCallback(Camera cam);
+		public static Camera.CameraCallback onPreCull;
+		public static Camera.CameraCallback onPreRender;
+		public static Camera.CameraCallback onPostRender;
 		[Obsolete("use Camera.fieldOfView instead.")]
 		public float fov
 		{
@@ -101,6 +107,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property isOrthoGraphic has been deprecated. Use orthographic (UnityUpgradable).", true)]
+		public bool isOrthoGraphic
+		{
+			get
+			{
+				return false;
+			}
+			set
+			{
+			}
+		}
 		public extern bool orthographic
 		{
 			[WrapperlessIcall]
@@ -118,17 +135,6 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
-		}
-		public bool isOrthoGraphic
-		{
-			get
-			{
-				return this.orthographic;
-			}
-			set
-			{
-				this.orthographic = value;
-			}
 		}
 		public extern float depth
 		{
@@ -156,6 +162,12 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		internal static extern int PreviewCullingLayer
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		public extern int eventMask
 		{
@@ -214,13 +226,13 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern float pixelWidth
+		public extern int pixelWidth
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public extern float pixelHeight
+		public extern int pixelHeight
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -303,6 +315,15 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern int targetDisplay
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public static extern Camera main
 		{
 			[WrapperlessIcall]
@@ -327,12 +348,12 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[Obsolete("use Camera.main instead.")]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property mainCamera has been deprecated. Use Camera.main instead (UnityUpgradable).", true)]
 		public static Camera mainCamera
 		{
 			get
 			{
-				return Camera.main;
+				return null;
 			}
 		}
 		public extern bool useOcclusionCulling
@@ -379,6 +400,12 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		public extern int commandBufferCount
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -510,15 +537,36 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetAllCameras(Camera[] cameras);
-		[Obsolete("use Screen.width instead."), WrapperlessIcall]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property GetScreenWidth() has been deprecated. Use Screen.width instead (UnityUpgradable).", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetScreenWidth();
-		[Obsolete("use Screen.height instead."), WrapperlessIcall]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property GetScreenHeight() has been deprecated. Use Screen.height instead (UnityUpgradable).", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetScreenHeight();
-		[Obsolete("Camera.DoClear is deprecated and may be removed in the future."), WrapperlessIcall]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Camera.DoClear has been deprecated (UnityUpgradable).", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DoClear();
+		private static void FireOnPreCull(Camera cam)
+		{
+			if (Camera.onPreCull != null)
+			{
+				Camera.onPreCull(cam);
+			}
+		}
+		private static void FireOnPreRender(Camera cam)
+		{
+			if (Camera.onPreRender != null)
+			{
+				Camera.onPreRender(cam);
+			}
+		}
+		private static void FireOnPostRender(Camera cam)
+		{
+			if (Camera.onPostRender != null)
+			{
+				Camera.onPostRender(cam);
+			}
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Render();
@@ -547,7 +595,7 @@ namespace UnityEngine
 			int faceMask = 63;
 			return this.RenderToCubemap(cubemap, faceMask);
 		}
-		public bool RenderToCubemap(Cubemap cubemap, [DefaultValue("63")] int faceMask)
+		public bool RenderToCubemap(Cubemap cubemap, [UnityEngine.Internal.DefaultValue("63")] int faceMask)
 		{
 			return this.Internal_RenderToCubemapTexture(cubemap, faceMask);
 		}
@@ -557,7 +605,7 @@ namespace UnityEngine
 			int faceMask = 63;
 			return this.RenderToCubemap(cubemap, faceMask);
 		}
-		public bool RenderToCubemap(RenderTexture cubemap, [DefaultValue("63")] int faceMask)
+		public bool RenderToCubemap(RenderTexture cubemap, [UnityEngine.Internal.DefaultValue("63")] int faceMask)
 		{
 			return this.Internal_RenderToCubemapRT(cubemap, faceMask);
 		}
@@ -573,6 +621,35 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool IsFiltered(GameObject go);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void AddCommandBuffer(CameraEvent evt, CommandBuffer buffer);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void RemoveCommandBuffer(CameraEvent evt, CommandBuffer buffer);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void RemoveCommandBuffers(CameraEvent evt);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void RemoveAllCommandBuffers();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern CommandBuffer[] GetCommandBuffers(CameraEvent evt);
+		internal GameObject RaycastTry(Ray ray, float distance, int layerMask)
+		{
+			return Camera.INTERNAL_CALL_RaycastTry(this, ref ray, distance, layerMask);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern GameObject INTERNAL_CALL_RaycastTry(Camera self, ref Ray ray, float distance, int layerMask);
+		internal GameObject RaycastTry2D(Ray ray, float distance, int layerMask)
+		{
+			return Camera.INTERNAL_CALL_RaycastTry2D(this, ref ray, distance, layerMask);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern GameObject INTERNAL_CALL_RaycastTry2D(Camera self, ref Ray ray, float distance, int layerMask);
 		public Matrix4x4 CalculateObliqueMatrix(Vector4 clipPlane)
 		{
 			return Camera.INTERNAL_CALL_CalculateObliqueMatrix(this, ref clipPlane);
@@ -580,5 +657,11 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Matrix4x4 INTERNAL_CALL_CalculateObliqueMatrix(Camera self, ref Vector4 clipPlane);
+		internal void OnlyUsedForTesting1()
+		{
+		}
+		internal void OnlyUsedForTesting2()
+		{
+		}
 	}
 }

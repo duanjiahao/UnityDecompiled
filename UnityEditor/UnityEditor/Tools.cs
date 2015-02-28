@@ -5,8 +5,9 @@ namespace UnityEditor
 {
 	public sealed class Tools : ScriptableObject
 	{
+		internal delegate void OnToolChangedFunc(Tool from, Tool to);
 		private static Tools s_Get;
-		internal static Tool s_LockedTool = Tool.None;
+		internal static Tools.OnToolChangedFunc onToolChanged;
 		internal static ViewTool s_LockedViewTool = ViewTool.None;
 		internal static int s_ButtonDown = -1;
 		private PivotMode m_PivotMode;
@@ -49,13 +50,18 @@ namespace UnityEditor
 		{
 			get
 			{
-				return (Tools.s_LockedTool != Tool.None) ? Tools.s_LockedTool : Tools.get.currentTool;
+				return Tools.get.currentTool;
 			}
 			set
 			{
 				if (Tools.get.currentTool != value)
 				{
+					Tool from = Tools.get.currentTool;
 					Tools.get.currentTool = value;
+					if (Tools.onToolChanged != null)
+					{
+						Tools.onToolChanged(from, value);
+					}
 					Tools.RepaintAllToolViews();
 				}
 			}
@@ -65,7 +71,7 @@ namespace UnityEditor
 			get
 			{
 				Event current = Event.current;
-				if (Tools.viewToolActive)
+				if (current != null && Tools.viewToolActive)
 				{
 					if (Tools.s_LockedViewTool == ViewTool.None)
 					{
@@ -305,7 +311,7 @@ namespace UnityEditor
 				{
 					return Tools.handleRotation * InternalEditorUtility.CalculateSelectionBoundsInSpace(Vector3.zero, Tools.handleRotation, Tools.rectBlueprintMode).center + b;
 				}
-				return InternalEditorUtility.CalculateSelectionBounds(true).center + b;
+				return InternalEditorUtility.CalculateSelectionBounds(true, false).center + b;
 			}
 		}
 		private static int GetRectAxisForViewDir(Bounds bounds, Quaternion rotation, Vector3 viewDir)

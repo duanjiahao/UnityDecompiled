@@ -28,6 +28,8 @@ namespace UnityEditor
 		[SerializeField]
 		private string[] m_AssetLabels = new string[0];
 		[SerializeField]
+		private string[] m_AssetBundleNames = new string[0];
+		[SerializeField]
 		private int[] m_ReferencingInstanceIDs = new int[0];
 		[SerializeField]
 		private bool m_ShowAllHits;
@@ -66,6 +68,17 @@ namespace UnityEditor
 			set
 			{
 				this.m_AssetLabels = value;
+			}
+		}
+		public string[] assetBundleNames
+		{
+			get
+			{
+				return this.m_AssetBundleNames;
+			}
+			set
+			{
+				this.m_AssetBundleNames = value;
 			}
 		}
 		public int[] referencingInstanceIDs
@@ -117,6 +130,7 @@ namespace UnityEditor
 			this.m_NameFilter = string.Empty;
 			this.m_ClassNames = new string[0];
 			this.m_AssetLabels = new string[0];
+			this.m_AssetBundleNames = new string[0];
 			this.m_ReferencingInstanceIDs = new int[0];
 			this.m_ShowAllHits = false;
 		}
@@ -126,7 +140,7 @@ namespace UnityEditor
 		}
 		public SearchFilter.State GetState()
 		{
-			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmtpy<string>(this.m_AssetLabels) || !this.IsNullOrEmtpy<string>(this.m_ClassNames) || !this.IsNullOrEmtpy<int>(this.m_ReferencingInstanceIDs);
+			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmtpy<string>(this.m_AssetLabels) || !this.IsNullOrEmtpy<string>(this.m_ClassNames) || !this.IsNullOrEmtpy<string>(this.m_AssetBundleNames) || !this.IsNullOrEmtpy<int>(this.m_ReferencingInstanceIDs);
 			bool flag2 = !this.IsNullOrEmtpy<string>(this.m_Folders);
 			if (flag)
 			{
@@ -177,6 +191,11 @@ namespace UnityEditor
 				this.m_AssetLabels = newFilter.m_AssetLabels;
 				result = true;
 			}
+			if (newFilter.m_AssetBundleNames != this.m_AssetBundleNames)
+			{
+				this.m_AssetBundleNames = newFilter.m_AssetBundleNames;
+				result = true;
+			}
 			if (newFilter.m_ReferencingInstanceIDs != this.m_ReferencingInstanceIDs)
 			{
 				this.m_ReferencingInstanceIDs = newFilter.m_ReferencingInstanceIDs;
@@ -201,6 +220,10 @@ namespace UnityEditor
 			if (this.m_AssetLabels != null && this.m_AssetLabels.Length > 0)
 			{
 				text = text + "[Labels: " + this.m_AssetLabels[0] + "]";
+			}
+			if (this.m_AssetBundleNames != null && this.m_AssetBundleNames.Length > 0)
+			{
+				text = text + "[AssetBundleNames: " + this.m_AssetBundleNames[0] + "]";
 			}
 			string text2;
 			if (this.m_ClassNames != null && this.m_ClassNames.Length > 0)
@@ -249,6 +272,7 @@ namespace UnityEditor
 			}
 			this.AddToString<string>("t:", this.m_ClassNames, ref text);
 			this.AddToString<string>("l:", this.m_AssetLabels, ref text);
+			this.AddToString<string>("b:", this.m_AssetBundleNames, ref text);
 			return text;
 		}
 		private void AddToString<T>(string prefix, T[] list, ref string result)

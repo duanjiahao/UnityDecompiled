@@ -167,15 +167,15 @@ namespace UnityEditor
 			}
 			public PopupList.ListElement NewOrMatchingElement(string label)
 			{
-				PopupList.ListElement listElement = (
-					from element in this.m_ListElements
-					where element.text.Equals(label, StringComparison.OrdinalIgnoreCase)
-					select element).DefaultIfEmpty(null).FirstOrDefault<PopupList.ListElement>();
-				if (listElement == null)
+				foreach (PopupList.ListElement current in this.m_ListElements)
 				{
-					listElement = new PopupList.ListElement(label, false, -1f);
-					this.m_ListElements.Add(listElement);
+					if (current.text.Equals(label, StringComparison.OrdinalIgnoreCase))
+					{
+						return current;
+					}
 				}
+				PopupList.ListElement listElement = new PopupList.ListElement(label, false, -1f);
+				this.m_ListElements.Add(listElement);
 				return listElement;
 			}
 		}

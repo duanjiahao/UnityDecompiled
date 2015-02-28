@@ -32,6 +32,15 @@ namespace UnityEditorInternal
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public static extern bool profileGPU
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public static extern bool profileEditor
 		{
 			[WrapperlessIcall]
@@ -49,6 +58,12 @@ namespace UnityEditorInternal
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		public static extern string directConnectionUrl
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		public static extern int connectedProfiler
 		{
@@ -101,6 +116,9 @@ namespace UnityEditorInternal
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void EndFrame();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ResetHistory();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetNextFrameIndex(int frame);

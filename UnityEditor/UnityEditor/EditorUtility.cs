@@ -8,12 +8,30 @@ namespace UnityEditor
 	public sealed class EditorUtility
 	{
 		public delegate void SelectMenuItemFunction(object userData, string[] options, int selected);
+		public static extern bool audioMasterMute
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		internal static extern bool audioProfilingEnabled
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevealInFinder(string path);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetDirty(UnityEngine.Object target);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void LoadPlatformSupportModuleNativeDllInternal(string target);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetDirtyIndex(int instanceID);
@@ -48,7 +66,7 @@ namespace UnityEditor
 		public static extern string SaveFilePanel(string title, string directory, string defaultName, string extension);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string SaveBuildPanel(BuildTarget target, string title, string directory, string defaultName, string extension);
+		internal static extern string SaveBuildPanel(BuildTarget target, string title, string directory, string defaultName, string extension, out bool updateExistingBuild);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int NaturalCompare(string a, string b);
@@ -109,6 +127,33 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] CollectDeepHierarchy(UnityEngine.Object[] roots);
+		internal static void InitInstantiatedPreviewRecursive(GameObject go)
+		{
+			go.hideFlags = HideFlags.HideAndDontSave;
+			go.layer = Camera.PreviewCullingLayer;
+			foreach (Transform transform in go.transform)
+			{
+				EditorUtility.InitInstantiatedPreviewRecursive(transform.gameObject);
+			}
+		}
+		internal static GameObject InstantiateForAnimatorPreview(UnityEngine.Object original)
+		{
+			if (original == null)
+			{
+				throw new ArgumentException("The prefab you want to instantiate is null.");
+			}
+			GameObject gameObject = EditorUtility.InstantiateRemoveAllNonAnimationComponents(original, Vector3.zero, Quaternion.identity) as GameObject;
+			EditorUtility.InitInstantiatedPreviewRecursive(gameObject);
+			Animator component = gameObject.GetComponent<Animator>();
+			if (component)
+			{
+				component.enabled = false;
+				component.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+				component.logWarnings = false;
+				component.fireEvents = false;
+			}
+			return gameObject;
+		}
 		internal static UnityEngine.Object InstantiateRemoveAllNonAnimationComponents(UnityEngine.Object original, Vector3 position, Quaternion rotation)
 		{
 			if (original == null)
@@ -124,12 +169,23 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern UnityEngine.Object INTERNAL_CALL_Internal_InstantiateRemoveAllNonAnimationComponentsSingle(UnityEngine.Object data, ref Vector3 pos, ref Quaternion rot);
-		[WrapperlessIcall]
+		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead"), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadUnusedAssets();
-		[WrapperlessIcall]
+		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead"), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadUnusedAssetsIgnoreManagedReferences();
+		public static void UnloadUnusedAssetsImmediate()
+		{
+			EditorUtility.UnloadUnusedAssetsImmediateInternal(true);
+		}
+		public static void UnloadUnusedAssetsImmediate(bool ignoreReferencesFromScript)
+		{
+			EditorUtility.UnloadUnusedAssetsImmediateInternal(ignoreReferencesFromScript);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void UnloadUnusedAssetsImmediateInternal(bool ignoreReferencesFromScript);
 		[Obsolete("Use BuildPipeline.BuildAssetBundle instead")]
 		public static bool BuildResourceFile(UnityEngine.Object[] selection, string pathName)
 		{
@@ -204,37 +260,51 @@ namespace UnityEditor
 		}
 		internal static void DisplayCustomMenu(Rect position, string[] options, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData)
 		{
+			bool[] separator = new bool[options.Length];
+			EditorUtility.DisplayCustomMenuWithSeparators(position, options, separator, selected, callback, userData);
+		}
+		internal static void DisplayCustomMenuWithSeparators(Rect position, string[] options, bool[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData)
+		{
 			Vector2 vector = GUIUtility.GUIToScreenPoint(new Vector2(position.x, position.y));
 			position.x = vector.x;
 			position.y = vector.y;
 			int[] array = new int[options.Length];
+			int[] array2 = new int[options.Length];
 			for (int i = 0; i < options.Length; i++)
 			{
 				array[i] = 1;
+				array2[i] = 0;
 			}
-			EditorUtility.Internal_DisplayCustomMenu(position, options, array, selected, callback, userData);
+			EditorUtility.Internal_DisplayCustomMenu(position, options, array, array2, selected, callback, userData);
 			EditorUtility.ResetMouseDown();
 		}
 		internal static void DisplayCustomMenu(Rect position, string[] options, bool[] enabled, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData)
 		{
+			bool[] separator = new bool[options.Length];
+			EditorUtility.DisplayCustomMenuWithSeparators(position, options, enabled, separator, selected, callback, userData);
+		}
+		internal static void DisplayCustomMenuWithSeparators(Rect position, string[] options, bool[] enabled, bool[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData)
+		{
 			Vector2 vector = GUIUtility.GUIToScreenPoint(new Vector2(position.x, position.y));
 			position.x = vector.x;
 			position.y = vector.y;
 			int[] array = new int[options.Length];
+			int[] array2 = new int[options.Length];
 			for (int i = 0; i < options.Length; i++)
 			{
 				array[i] = ((!enabled[i]) ? 0 : 1);
+				array2[i] = ((!separator[i]) ? 0 : 1);
 			}
-			EditorUtility.Internal_DisplayCustomMenu(position, options, array, selected, callback, userData);
+			EditorUtility.Internal_DisplayCustomMenu(position, options, array, array2, selected, callback, userData);
 			EditorUtility.ResetMouseDown();
 		}
-		private static void Internal_DisplayCustomMenu(Rect screenPosition, string[] options, int[] enabled, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData)
+		private static void Internal_DisplayCustomMenu(Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData)
 		{
-			EditorUtility.INTERNAL_CALL_Internal_DisplayCustomMenu(ref screenPosition, options, enabled, selected, callback, userData);
+			EditorUtility.INTERNAL_CALL_Internal_DisplayCustomMenu(ref screenPosition, options, enabled, separator, selected, callback, userData);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DisplayCustomMenu(ref Rect screenPosition, string[] options, int[] enabled, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData);
+		private static extern void INTERNAL_CALL_Internal_DisplayCustomMenu(ref Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData);
 		internal static void ResetMouseDown()
 		{
 			Tools.s_ButtonDown = -1;
@@ -246,9 +316,13 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FocusProjectWindow();
+		public static string FormatBytes(int bytes)
+		{
+			return EditorUtility.FormatBytes((long)bytes);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string FormatBytes(int bytes);
+		public static extern string FormatBytes(long bytes);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DisplayProgressBar(string title, string info, float progress);
@@ -299,7 +373,7 @@ namespace UnityEditor
 		public static extern void OpenWithDefaultApp(string fileName);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern bool MetroCreateTestCertificate(string path, string publisher, string password, bool overwrite);
+		internal static extern bool WSACreateTestCertificate(string path, string publisher, string password, bool overwrite);
 		[Obsolete("Use PrefabUtility.InstantiatePrefab")]
 		public static UnityEngine.Object InstantiatePrefab(UnityEngine.Object target)
 		{
@@ -351,5 +425,8 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetInvalidFilenameChars();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetActiveNativePlatformSupportModuleName();
 	}
 }

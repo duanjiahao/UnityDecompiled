@@ -39,6 +39,142 @@ namespace UnityEngine
 				this.func(windowID);
 			}
 		}
+		public class HorizontalScope : GUI.Scope
+		{
+			public HorizontalScope(params GUILayoutOption[] options)
+			{
+				GUILayout.BeginHorizontal(options);
+			}
+			public HorizontalScope(GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginHorizontal(style, options);
+			}
+			public HorizontalScope(string text, GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginHorizontal(text, style, options);
+			}
+			public HorizontalScope(Texture image, GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginHorizontal(image, style, options);
+			}
+			public HorizontalScope(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginHorizontal(content, style, options);
+			}
+			protected override void CloseScope()
+			{
+				GUILayout.EndHorizontal();
+			}
+		}
+		public class VerticalScope : GUI.Scope
+		{
+			public VerticalScope(params GUILayoutOption[] options)
+			{
+				GUILayout.BeginVertical(options);
+			}
+			public VerticalScope(GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginVertical(style, options);
+			}
+			public VerticalScope(string text, GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginVertical(text, style, options);
+			}
+			public VerticalScope(Texture image, GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginVertical(image, style, options);
+			}
+			public VerticalScope(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
+			{
+				GUILayout.BeginVertical(content, style, options);
+			}
+			protected override void CloseScope()
+			{
+				GUILayout.EndVertical();
+			}
+		}
+		public class AreaScope : GUI.Scope
+		{
+			public AreaScope(Rect screenRect)
+			{
+				GUILayout.BeginArea(screenRect);
+			}
+			public AreaScope(Rect screenRect, string text)
+			{
+				GUILayout.BeginArea(screenRect, text);
+			}
+			public AreaScope(Rect screenRect, Texture image)
+			{
+				GUILayout.BeginArea(screenRect, image);
+			}
+			public AreaScope(Rect screenRect, GUIContent content)
+			{
+				GUILayout.BeginArea(screenRect, content);
+			}
+			public AreaScope(Rect screenRect, string text, GUIStyle style)
+			{
+				GUILayout.BeginArea(screenRect, text, style);
+			}
+			public AreaScope(Rect screenRect, Texture image, GUIStyle style)
+			{
+				GUILayout.BeginArea(screenRect, image, style);
+			}
+			public AreaScope(Rect screenRect, GUIContent content, GUIStyle style)
+			{
+				GUILayout.BeginArea(screenRect, content, style);
+			}
+			protected override void CloseScope()
+			{
+				GUILayout.EndArea();
+			}
+		}
+		public class ScrollViewScope : GUI.Scope
+		{
+			public Vector2 scrollPosition
+			{
+				get;
+				private set;
+			}
+			public bool handleScrollWheel
+			{
+				get;
+				set;
+			}
+			public ScrollViewScope(Vector2 scrollPosition, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, horizontalScrollbar, verticalScrollbar, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, GUIStyle style, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, style, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar, background, options);
+			}
+			protected override void CloseScope()
+			{
+				GUILayout.EndScrollView(this.handleScrollWheel);
+			}
+		}
 		public static void Label(Texture image, params GUILayoutOption[] options)
 		{
 			GUILayout.DoLabel(GUIContent.Temp(image), GUI.skin.label, options);

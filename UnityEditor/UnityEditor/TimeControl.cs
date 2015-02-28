@@ -132,6 +132,17 @@ namespace UnityEditor
 					this.m_MouseDrag += current.delta.x * this.playbackSpeed;
 					if (this.loop && ((this.m_MouseDrag < 0f && this.m_WrapForwardDrag) || this.m_MouseDrag > rect3.width))
 					{
+						if (this.m_MouseDrag > rect3.width)
+						{
+							this.currentTime -= this.stopTime - this.startTime;
+						}
+						else
+						{
+							if (this.m_MouseDrag < 0f)
+							{
+								this.currentTime += this.stopTime - this.startTime;
+							}
+						}
 						this.m_WrapForwardDrag = true;
 						this.m_MouseDrag = Mathf.Repeat(this.m_MouseDrag, rect3.width);
 					}

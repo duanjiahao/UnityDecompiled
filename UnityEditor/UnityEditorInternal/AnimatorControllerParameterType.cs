@@ -1,11 +1,9 @@
 using System;
 namespace UnityEditorInternal
 {
+	[Obsolete("AnimatorControllerParameterType is obsolete. Use UnityEngine.AnimatorControllerParameterType instead (UnityUpgradable).", true)]
 	public enum AnimatorControllerParameterType
 	{
-		Float = 1,
-		Int = 3,
-		Bool,
-		Trigger = 9
+
 	}
 }

@@ -62,10 +62,10 @@ namespace UnityEditor
 			{
 				this.m_LastWantedSize = windowSize;
 				Rect dropDownRect = this.m_Parent.window.GetDropDownRect(this.m_ActivatorRect, windowSize, windowSize);
-				this.m_Pos = dropDownRect;
 				Vector2 vector = new Vector2(dropDownRect.width, dropDownRect.height);
 				base.maxSize = vector;
 				base.minSize = vector;
+				base.position = dropDownRect;
 			}
 		}
 		private void OnDisable()

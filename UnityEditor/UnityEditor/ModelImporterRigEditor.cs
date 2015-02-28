@@ -558,7 +558,7 @@ namespace UnityEditor
 					bool flag = component && !component.hasTransformHierarchy;
 					if (flag)
 					{
-						gameObject = (UnityEngine.Object.Instantiate(gameObject) as GameObject);
+						gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject);
 						AnimatorUtility.DeoptimizeTransformHierarchy(gameObject);
 					}
 					AvatarSetupTool.AutoSetupOnInstance(gameObject, serializedObject3);

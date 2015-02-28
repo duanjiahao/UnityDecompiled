@@ -104,6 +104,9 @@ namespace UnityEditor
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetTitle(string title);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_Init(int depthBits, int antiAlias);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

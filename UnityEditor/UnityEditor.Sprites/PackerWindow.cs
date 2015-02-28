@@ -111,9 +111,13 @@ namespace UnityEditor.Sprites
 		{
 			if (EditorSettings.spritePackerMode == SpritePackerMode.Disabled)
 			{
-				EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				GUILayout.Label("Sprite packing is disabled. Enable it in Project EditorSettings.", new GUILayoutOption[0]);
-				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
+				GUILayout.Label("Sprite packing is disabled. Enable it in Edit > Project Settings > Editor.", new GUILayoutOption[0]);
+				if (GUILayout.Button("Open Project Editor Settings", new GUILayoutOption[0]))
+				{
+					EditorApplication.ExecuteMenuItem("Edit/Project Settings/Editor");
+				}
+				EditorGUILayout.EndVertical();
 				return false;
 			}
 			return true;
@@ -291,9 +295,9 @@ namespace UnityEditor.Sprites
 		{
 			if (this.m_SelectedSprite != null && this.m_Texture != null)
 			{
-				Vector2[] spriteUVs = DataUtility.GetSpriteUVs(this.m_SelectedSprite, true);
-				ushort[] spriteIndices = DataUtility.GetSpriteIndices(this.m_SelectedSprite, true);
-				PackerWindow.Edge[] array = this.FindUniqueEdges(spriteIndices);
+				Vector2[] spriteUVs = SpriteUtility.GetSpriteUVs(this.m_SelectedSprite, true);
+				ushort[] triangles = this.m_SelectedSprite.triangles;
+				PackerWindow.Edge[] array = this.FindUniqueEdges(triangles);
 				SpriteEditorUtility.BeginLines(new Color(0.3921f, 0.5843f, 0.9294f, 0.75f));
 				PackerWindow.Edge[] array2 = array;
 				for (int i = 0; i < array2.Length; i++)

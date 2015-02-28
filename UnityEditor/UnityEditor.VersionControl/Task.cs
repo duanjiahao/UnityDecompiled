@@ -6,36 +6,6 @@ namespace UnityEditor.VersionControl
 	public sealed class Task
 	{
 		private IntPtr m_thisDummy;
-		public AssetList assetList
-		{
-			get
-			{
-				AssetList assetList = new AssetList();
-				Asset[] array = this.Internal_GetAssetList();
-				Asset[] array2 = array;
-				for (int i = 0; i < array2.Length; i++)
-				{
-					Asset item = array2[i];
-					assetList.Add(item);
-				}
-				return assetList;
-			}
-		}
-		public ChangeSets changeSets
-		{
-			get
-			{
-				ChangeSets changeSets = new ChangeSets();
-				ChangeSet[] array = this.Internal_GetChangeSets();
-				ChangeSet[] array2 = array;
-				for (int i = 0; i < array2.Length; i++)
-				{
-					ChangeSet item = array2[i];
-					changeSets.Add(item);
-				}
-				return changeSets;
-			}
-		}
 		public extern int userIdentifier
 		{
 			[WrapperlessIcall]
@@ -92,6 +62,36 @@ namespace UnityEditor.VersionControl
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+		}
+		public AssetList assetList
+		{
+			get
+			{
+				AssetList assetList = new AssetList();
+				Asset[] array = this.Internal_GetAssetList();
+				Asset[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
+				{
+					Asset item = array2[i];
+					assetList.Add(item);
+				}
+				return assetList;
+			}
+		}
+		public ChangeSets changeSets
+		{
+			get
+			{
+				ChangeSets changeSets = new ChangeSets();
+				ChangeSet[] array = this.Internal_GetChangeSets();
+				ChangeSet[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
+				{
+					ChangeSet item = array2[i];
+					changeSets.Add(item);
+				}
+				return changeSets;
+			}
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

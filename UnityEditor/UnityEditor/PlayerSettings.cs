@@ -1,14 +1,16 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Internal;
 namespace UnityEditor
 {
 	public sealed class PlayerSettings : UnityEngine.Object
 	{
-		public sealed class Android
+		public sealed class XboxOne
 		{
-			public static extern bool use24BitDepthBuffer
+			public static extern string ProductId
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -16,6 +18,1115 @@ namespace UnityEditor
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
+			}
+			public static extern string UpdateKey
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string SandboxId
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string ContentId
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string TitleId
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string SCID
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool EnableVariableGPU
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool DisableKinectGpuReservation
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string GameOsOverridePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string PackagingOverridePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern XboxOneEncryptionLevel PackagingEncryption
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string AppManifestOverridePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool IsContentPackage
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string Version
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string Description
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string[] SocketNames
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+			}
+			public static extern string[] AllowedProductIds
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+			}
+			public static extern uint PersistentLocalStorageSize
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static void SetCapability(string capability, bool value)
+			{
+				PlayerSettings.SetPropertyBool(capability, value, BuildTargetGroup.XboxOne);
+			}
+			public static bool GetCapability(string capability)
+			{
+				bool result;
+				try
+				{
+					bool flag = false;
+					PlayerSettings.GetPropertyOptionalBool(capability, ref flag, BuildTargetGroup.XboxOne);
+					result = flag;
+				}
+				catch
+				{
+					result = false;
+				}
+				return result;
+			}
+			internal static void SetSupportedLanguage(string language, bool enabled)
+			{
+				PlayerSettings.SetPropertyBool(language, enabled, BuildTargetGroup.XboxOne);
+			}
+			internal static bool GetSupportedLanguage(string language)
+			{
+				bool result;
+				try
+				{
+					bool flag = false;
+					PlayerSettings.GetPropertyOptionalBool(language, ref flag, BuildTargetGroup.XboxOne);
+					result = flag;
+				}
+				catch
+				{
+					result = false;
+				}
+				return result;
+			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void RemoveSocketDefinition(string name);
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void SetSocketDefinition(string name, string port, int protocol, int[] usages, string templateName, int sessionRequirment, int[] deviceUsages);
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void GetSocketDefinition(string name, out string port, out int protocol, out int[] usages, out string templateName, out int sessionRequirment, out int[] deviceUsages);
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void RemoveAllowedProductId(string id);
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern bool AddAllowedProductId(string id);
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void UpdateAllowedProductId(int idx, string id);
+			public static void SetGameRating(string name, int value)
+			{
+				PlayerSettings.SetPropertyInt(name, value, BuildTargetGroup.XboxOne);
+			}
+			public static int GetGameRating(string name)
+			{
+				int result;
+				try
+				{
+					int num = 0;
+					PlayerSettings.GetPropertyOptionalInt(name, ref num, BuildTargetGroup.XboxOne);
+					result = num;
+				}
+				catch
+				{
+					result = 0;
+				}
+				return result;
+			}
+		}
+		public sealed class PS3
+		{
+			public static extern Texture2D ps3SplashScreen
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int videoMemoryForVertexBuffers
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int videoMemoryForAudio
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool EnableVerboseMemoryStats
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool UseSPUForUmbra
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool EnableMoveSupport
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool DisableDolbyEncoding
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string titleConfigPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string dlcConfigPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string thumbnailPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string backgroundPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string soundPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npTrophyCommId
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int npAgeRating
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npCommunicationPassphrase
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npTrophyCommSig
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npTrophyPackagePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int bootCheckMaxSaveGameSizeKB
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool trialMode
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int saveGameSlots
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+		}
+		public sealed class PS4
+		{
+			public enum PS4AppCategory
+			{
+				Application
+			}
+			public enum PS4RemotePlayKeyAssignment
+			{
+				None = -1,
+				PatternA,
+				PatternB,
+				PatternC,
+				PatternD
+			}
+			public enum PS4EnterButtonAssignment
+			{
+				CircleButton,
+				CrossButton
+			}
+			public static extern string npTrophyPackPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int npAgeRating
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npTitleSecret
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int parentalLevel
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int applicationParameter1
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int applicationParameter2
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int applicationParameter3
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int applicationParameter4
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string passcode
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string monoEnv
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool playerPrefsSupport
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string contentID
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PS4.PS4AppCategory category
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int appType
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string masterVersion
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string appVersion
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PS4.PS4RemotePlayKeyAssignment remotePlayKeyAssignment
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PS4.PS4EnterButtonAssignment enterButtonAssignment
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string paramSfxPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int videoOutPixelFormat
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int videoOutResolution
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string PronunciationXMLPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string PronunciationSIGPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string BackgroundImagePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string StartupImagePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string SaveDataImagePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string BGMPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string ShareFilePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string NPtitleDatPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool pnSessions
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool pnPresence
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool pnFriends
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool pnGameCustomData
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+		}
+		public sealed class PSVita
+		{
+			public enum PSVitaPowerMode
+			{
+				ModeA,
+				ModeB,
+				ModeC
+			}
+			public enum PSVitaTvBootMode
+			{
+				Default,
+				PSVitaBootablePSVitaTvBootable,
+				PSVitaBootablePSVitaTvNotBootable
+			}
+			public enum PSVitaEnterButtonAssignment
+			{
+				Default,
+				CircleButton,
+				CrossButton
+			}
+			public enum PSVitaAppCategory
+			{
+				Application,
+				ApplicationPatch
+			}
+			public enum PSVitaDRMType
+			{
+				PaidFor,
+				Free
+			}
+			public static extern string npTrophyPackPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PSVita.PSVitaPowerMode powerMode
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool acquireBGM
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool npSupportGBMorGJP
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PSVita.PSVitaTvBootMode tvBootMode
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool tvDisableEmu
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool upgradable
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool healthWarning
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool useLibLocation
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool infoBarOnStartup
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool infoBarColor
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PSVita.PSVitaEnterButtonAssignment enterButtonAssignment
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int saveDataQuota
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int parentalLevel
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string shortTitle
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string contentID
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PSVita.PSVitaAppCategory category
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string masterVersion
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string appVersion
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool AllowTwitterDialog
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int npAgeRating
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npCommunicationsID
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npCommsPassphrase
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string npCommsSig
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string paramSfxPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string manualPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string liveAreaGatePath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string liveAreaBackroundPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string liveAreaPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string liveAreaTrialPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string patchChangeInfoPath
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string patchOriginalPackage
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string packagePassword
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string keystoneFile
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.PSVita.PSVitaDRMType drmType
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int storageType
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern int mediaCapacity
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+		}
+		public sealed class Android
+		{
+			public static extern bool disableDepthAndStencilBuffers
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			[Obsolete("This has been replaced by disableDepthAndStencilBuffers")]
+			public static bool use24BitDepthBuffer
+			{
+				get
+				{
+					return !PlayerSettings.Android.disableDepthAndStencilBuffers;
+				}
+				set
+				{
+				}
 			}
 			public static extern int bundleVersionCode
 			{
@@ -54,6 +1165,33 @@ namespace UnityEditor
 				set;
 			}
 			public static extern bool forceSDCardPermission
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool androidTVCompatibility
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern bool androidIsGame
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			internal static extern bool androidBannerEnabled
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -149,6 +1287,15 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			internal static extern AndroidBanner[] GetAndroidBanners();
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			internal static extern Texture2D GetAndroidBannerForHeight(int height);
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			internal static extern void SetAndroidBanners(Texture2D[] banners);
 		}
 		public sealed class iOS
 		{
@@ -233,7 +1380,19 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			public static extern bool exitOnSuspend
+			[Obsolete("use appInBackgroundBehavior")]
+			public static bool exitOnSuspend
+			{
+				get
+				{
+					return PlayerSettings.iOS.appInBackgroundBehavior == iOSAppInBackgroundBehavior.Exit;
+				}
+				set
+				{
+					PlayerSettings.iOS.appInBackgroundBehavior = iOSAppInBackgroundBehavior.Exit;
+				}
+			}
+			public static extern iOSAppInBackgroundBehavior appInBackgroundBehavior
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -252,7 +1411,7 @@ namespace UnityEditor
 				set;
 			}
 		}
-		public enum MetroApplicationShowName
+		public enum WSAApplicationShowName
 		{
 			NotSet,
 			AllLogos,
@@ -260,24 +1419,24 @@ namespace UnityEditor
 			StandardLogoOnly,
 			WideLogoOnly
 		}
-		public enum MetroDefaultTileSize
+		public enum WSADefaultTileSize
 		{
 			NotSet,
 			Medium,
 			Wide
 		}
-		public enum MetroApplicationForegroundText
+		public enum WSAApplicationForegroundText
 		{
 			Light = 1,
 			Dark
 		}
-		public enum MetroCompilationOverrides
+		public enum WSACompilationOverrides
 		{
 			None,
 			UseNetCore,
 			UseNetCorePartially
 		}
-		public enum MetroCapability
+		public enum WSACapability
 		{
 			EnterpriseAuthentication,
 			InternetClient,
@@ -291,9 +1450,10 @@ namespace UnityEditor
 			WebCam,
 			Proximity,
 			Microphone,
-			Location
+			Location,
+			HumanInterfaceDevice
 		}
-		public sealed class Metro
+		public sealed class WSA
 		{
 			public static extern string packageName
 			{
@@ -347,17 +1507,17 @@ namespace UnityEditor
 					Version result;
 					try
 					{
-						result = new Version(PlayerSettingsEditor.ValidateMetroPackageVersion(PlayerSettings.Metro.packageVersionRaw));
+						result = new Version(PlayerSettings.WSA.ValidatePackageVersion(PlayerSettings.WSA.packageVersionRaw));
 					}
 					catch (Exception ex)
 					{
-						throw new Exception(string.Format("{0}, the raw string was {1}", ex.Message, PlayerSettings.Metro.packageVersionRaw));
+						throw new Exception(string.Format("{0}, the raw string was {1}", ex.Message, PlayerSettings.WSA.packageVersionRaw));
 					}
 					return result;
 				}
 				set
 				{
-					PlayerSettings.Metro.packageVersionRaw = value.ToString();
+					PlayerSettings.WSA.packageVersionRaw = value.ToString();
 				}
 			}
 			private static extern string packageVersionRaw
@@ -406,7 +1566,7 @@ namespace UnityEditor
 			{
 				get
 				{
-					long certificateNotAfterRaw = PlayerSettings.Metro.certificateNotAfterRaw;
+					long certificateNotAfterRaw = PlayerSettings.WSA.certificateNotAfterRaw;
 					if (certificateNotAfterRaw != 0L)
 					{
 						return new DateTime?(DateTime.FromFileTime(certificateNotAfterRaw));
@@ -780,7 +1940,7 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			public static extern PlayerSettings.MetroApplicationShowName tileShowName
+			public static extern PlayerSettings.WSAApplicationShowName tileShowName
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -816,7 +1976,7 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			public static extern PlayerSettings.MetroDefaultTileSize defaultTileSize
+			public static extern PlayerSettings.WSADefaultTileSize defaultTileSize
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -825,7 +1985,7 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			public static extern PlayerSettings.MetroCompilationOverrides compilationOverrides
+			public static extern PlayerSettings.WSACompilationOverrides compilationOverrides
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -834,16 +1994,7 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			public static extern PlayerSettings.MetroApplicationForegroundText tileForegroundText
-			{
-				[WrapperlessIcall]
-				[MethodImpl(MethodImplOptions.InternalCall)]
-				get;
-				[WrapperlessIcall]
-				[MethodImpl(MethodImplOptions.InternalCall)]
-				set;
-			}
-			public static extern string[] unprocessedPlugins
+			public static extern PlayerSettings.WSAApplicationForegroundText tileForegroundText
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -857,12 +2008,12 @@ namespace UnityEditor
 				get
 				{
 					Color result;
-					PlayerSettings.Metro.INTERNAL_get_tileBackgroundColor(out result);
+					PlayerSettings.WSA.INTERNAL_get_tileBackgroundColor(out result);
 					return result;
 				}
 				set
 				{
-					PlayerSettings.Metro.INTERNAL_set_tileBackgroundColor(ref value);
+					PlayerSettings.WSA.INTERNAL_set_tileBackgroundColor(ref value);
 				}
 			}
 			public static extern bool enableIndependentInputSource
@@ -887,18 +2038,18 @@ namespace UnityEditor
 			{
 				get
 				{
-					if (PlayerSettings.Metro.splashScreenUseBackgroundColor)
+					if (PlayerSettings.WSA.splashScreenUseBackgroundColor)
 					{
-						return new Color?(PlayerSettings.Metro.splashScreenBackgroundColorRaw);
+						return new Color?(PlayerSettings.WSA.splashScreenBackgroundColorRaw);
 					}
 					return null;
 				}
 				set
 				{
-					PlayerSettings.Metro.splashScreenUseBackgroundColor = value.HasValue;
+					PlayerSettings.WSA.splashScreenUseBackgroundColor = value.HasValue;
 					if (value.HasValue)
 					{
-						PlayerSettings.Metro.splashScreenBackgroundColorRaw = value.Value;
+						PlayerSettings.WSA.splashScreenBackgroundColorRaw = value.Value;
 					}
 				}
 			}
@@ -916,13 +2067,22 @@ namespace UnityEditor
 				get
 				{
 					Color result;
-					PlayerSettings.Metro.INTERNAL_get_splashScreenBackgroundColorRaw(out result);
+					PlayerSettings.WSA.INTERNAL_get_splashScreenBackgroundColorRaw(out result);
 					return result;
 				}
 				set
 				{
-					PlayerSettings.Metro.INTERNAL_set_splashScreenBackgroundColorRaw(ref value);
+					PlayerSettings.WSA.INTERNAL_set_splashScreenBackgroundColorRaw(ref value);
 				}
+			}
+			internal static string ValidatePackageVersion(string value)
+			{
+				Regex regex = new Regex("^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+				if (regex.IsMatch(value))
+				{
+					return value;
+				}
+				return "1.0.0.0";
 			}
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -939,32 +2099,42 @@ namespace UnityEditor
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_set_splashScreenBackgroundColorRaw(ref Color value);
-			public static void SetCapability(PlayerSettings.MetroCapability capability, bool enabled)
+			public static void SetCapability(PlayerSettings.WSACapability capability, bool value)
 			{
-				PlayerSettings.Metro.InternalSetCapability(capability.ToString(), enabled);
+				PlayerSettings.WSA.InternalSetCapability(capability.ToString(), value.ToString());
 			}
-			public static bool GetCapability(PlayerSettings.MetroCapability capability)
+			public static bool GetCapability(PlayerSettings.WSACapability capability)
 			{
-				return PlayerSettings.Metro.InternalGetCapability(capability.ToString());
+				string text = PlayerSettings.WSA.InternalGetCapability(capability.ToString());
+				if (string.IsNullOrEmpty(text))
+				{
+					return false;
+				}
+				bool result;
+				try
+				{
+					result = (bool)TypeDescriptor.GetConverter(typeof(bool)).ConvertFromString(text);
+				}
+				catch
+				{
+					Debug.LogError(string.Concat(new string[]
+					{
+						"Failed to parse value  ('",
+						capability.ToString(),
+						",",
+						text,
+						"') to bool type."
+					}));
+					result = false;
+				}
+				return result;
 			}
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
-			private static extern void InternalSetCapability(string name, bool enabled);
+			private static extern void InternalSetCapability(string name, string value);
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
-			private static extern bool InternalGetCapability(string name);
-		}
-		public sealed class WP8
-		{
-			public static extern string[] unprocessedPlugins
-			{
-				[WrapperlessIcall]
-				[MethodImpl(MethodImplOptions.InternalCall)]
-				get;
-				[WrapperlessIcall]
-				[MethodImpl(MethodImplOptions.InternalCall)]
-				set;
-			}
+			private static extern string InternalGetCapability(string name);
 		}
 		public sealed class BlackBerry
 		{
@@ -1022,15 +2192,6 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			public static extern string authorId
-			{
-				[WrapperlessIcall]
-				[MethodImpl(MethodImplOptions.InternalCall)]
-				get;
-				[WrapperlessIcall]
-				[MethodImpl(MethodImplOptions.InternalCall)]
-				set;
-			}
 			public static extern string cskPassword
 			{
 				[WrapperlessIcall]
@@ -1049,12 +2210,6 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			public static extern void SetAuthorIDOverride(bool enable);
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			public static extern bool IsAuthorIDOverride();
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			public static extern bool HasSharedPermissions();
@@ -1143,9 +2298,22 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			public static extern void SetMicrophonePermissions(bool enable);
 		}
-		public sealed class PS3
+		public sealed class PSM
 		{
-			public static extern int videoMemoryForVertexBuffers
+		}
+		public sealed class SamsungTV
+		{
+			public enum SamsungTVProductCategories
+			{
+				Games,
+				Videos,
+				Sports,
+				Lifestyle,
+				Information,
+				Education,
+				Kids
+			}
+			public static extern string deviceAddress
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1154,10 +2322,43 @@ namespace UnityEditor
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				set;
 			}
-		}
-		public sealed class SamsungTV
-		{
-			public static extern string deviceAddress
+			public static extern string productDescription
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string productAuthor
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string productAuthorEmail
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern string productLink
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+			public static extern PlayerSettings.SamsungTV.SamsungTVProductCategories productCategory
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1184,6 +2385,26 @@ namespace UnityEditor
 			set;
 		}
 		public static extern string productName
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static string cloudProjectId
+		{
+			get
+			{
+				return PlayerSettings.cloudProjectIdRaw;
+			}
+			internal set
+			{
+				PlayerSettings.cloudProjectIdRaw = value;
+			}
+		}
+		private static extern string cloudProjectIdRaw
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1313,7 +2534,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern bool stripPhysics
+		public static extern bool bakeCollisionMeshes
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1349,7 +2570,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern bool d3d11ForceExclusiveMode
+		public static extern D3D11FullscreenMode d3d11FullscreenMode
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1397,15 +2618,6 @@ namespace UnityEditor
 			set;
 		}
 		public static extern Texture2D resolutionDialogBanner
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public static extern string locationUsageDescription
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1582,149 +2794,56 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern string ps3TitleConfigPath
+		public static extern int xboxOneResolution
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern string ps3DLCConfigPath
+		public static extern bool enableInternalProfiler
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
-		public static extern string ps3ThumbnailPath
+		public static extern ActionOnDotNetUnhandledException actionOnDotNetUnhandledException
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
-		public static extern string ps3BackgroundPath
+		public static extern bool logObjCUncaughtExceptions
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
-		public static extern string ps3SoundPath
+		public static extern bool enableCrashReportAPI
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
-		public static extern string ps3TrophyCommId
+		public static extern string locationUsageDescription
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-		}
-		public static extern string ps3NpCommunicationPassphrase
-		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string ps3TrophyCommSig
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string ps3TrophyPackagePath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern int ps3BootCheckMaxSaveGameSizeKB
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern bool ps3TrialMode
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern int ps3SaveGameSlots
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2NPTrophyPackPath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2NPCommsID
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2NPCommsPassphrase
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2NPCommsSig
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2ParamSfxPath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2PackagePassword
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2DLCConfigPath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2ThumbnailPath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2BackgroundPath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2SoundPath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2TrophyCommId
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string psp2TrophyPackagePath
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			set;
 		}
 		public static extern string bundleIdentifier
 		{
@@ -1736,15 +2855,6 @@ namespace UnityEditor
 			set;
 		}
 		public static extern string bundleVersion
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public static extern string shortBundleVersion
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1939,6 +3049,15 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		internal static extern bool submitAnalytics
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public static extern bool stereoscopic3D
 		{
 			[WrapperlessIcall]
@@ -1970,12 +3089,59 @@ namespace UnityEditor
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool GetPropertyOptionalInt(string name, ref int value, [DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target);
+		internal static extern void SetPropertyIntInternal(string name, int value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void InitializePropertyIntInternal(string name, int value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int GetPropertyIntInternal(string name);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetPropertyBoolInternal(string name, bool value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void InitializePropertyBoolInternal(string name, bool value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool GetPropertyBoolInternal(string name);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetPropertyStringInternal(string name, string value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void InitializePropertyStringInternal(string name, string value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetPropertyStringInternal(string name);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetPropertyNameForBuildTargetGroupInternal(BuildTargetGroup target, string name);
+		internal static string GetPropertyNameForBuildTarget(BuildTargetGroup target, string name)
+		{
+			string propertyNameForBuildTargetGroupInternal = PlayerSettings.GetPropertyNameForBuildTargetGroupInternal(target, name);
+			if (propertyNameForBuildTargetGroupInternal != string.Empty)
+			{
+				return propertyNameForBuildTargetGroupInternal;
+			}
+			throw new ArgumentException("Failed to get property name for the given target.");
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void AddEnum(string className, string propertyName, int value, string valueName);
 		[ExcludeFromDocs]
-		public static bool GetPropertyOptionalInt(string name, ref int value)
+		public static void SetPropertyInt(string name, int value)
 		{
 			BuildTargetGroup target = BuildTargetGroup.Unknown;
-			return PlayerSettings.GetPropertyOptionalInt(name, ref value, target);
+			PlayerSettings.SetPropertyInt(name, value, target);
+		}
+		public static void SetPropertyInt(string name, int value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			PlayerSettings.SetPropertyIntInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
+		}
+		public static void SetPropertyInt(string name, int value, BuildTarget target)
+		{
+			PlayerSettings.SetPropertyInt(name, value, BuildPipeline.GetBuildTargetGroup(target));
 		}
 		[ExcludeFromDocs]
 		public static int GetPropertyInt(string name)
@@ -1983,42 +3149,95 @@ namespace UnityEditor
 			BuildTargetGroup target = BuildTargetGroup.Unknown;
 			return PlayerSettings.GetPropertyInt(name, target);
 		}
-		public static int GetPropertyInt(string name, [DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		public static int GetPropertyInt(string name, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
 		{
 			return PlayerSettings.GetPropertyIntInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name));
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetPropertyIntInternal(string name);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetPropertyIntInternal(string name, int value);
-		public static void SetPropertyInt(string name, int value, BuildTarget target)
-		{
-			PlayerSettings.SetPropertyInt(name, value, BuildPipeline.GetBuildTargetGroup(target));
-		}
+		public static extern bool GetPropertyOptionalInt(string name, ref int value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target);
 		[ExcludeFromDocs]
-		public static void SetPropertyInt(string name, int value)
+		public static bool GetPropertyOptionalInt(string name, ref int value)
 		{
 			BuildTargetGroup target = BuildTargetGroup.Unknown;
-			PlayerSettings.SetPropertyInt(name, value, target);
+			return PlayerSettings.GetPropertyOptionalInt(name, ref value, target);
 		}
-		public static void SetPropertyInt(string name, int value, [DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
-		{
-			PlayerSettings.SetPropertyIntInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void InitializePropertyIntInternal(string name, int value);
 		[ExcludeFromDocs]
 		internal static void InitializePropertyInt(string name, int value)
 		{
 			BuildTargetGroup target = BuildTargetGroup.Unknown;
 			PlayerSettings.InitializePropertyInt(name, value, target);
 		}
-		internal static void InitializePropertyInt(string name, int value, [DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		internal static void InitializePropertyInt(string name, int value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
 		{
 			PlayerSettings.InitializePropertyIntInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
+		}
+		[ExcludeFromDocs]
+		public static void SetPropertyBool(string name, bool value)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			PlayerSettings.SetPropertyBool(name, value, target);
+		}
+		public static void SetPropertyBool(string name, bool value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			PlayerSettings.SetPropertyBoolInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
+		}
+		public static void SetPropertyBool(string name, bool value, BuildTarget target)
+		{
+			PlayerSettings.SetPropertyBool(name, value, BuildPipeline.GetBuildTargetGroup(target));
+		}
+		[ExcludeFromDocs]
+		public static bool GetPropertyBool(string name)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			return PlayerSettings.GetPropertyBool(name, target);
+		}
+		public static bool GetPropertyBool(string name, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			return PlayerSettings.GetPropertyBoolInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name));
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool GetPropertyOptionalBool(string name, ref bool value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target);
+		[ExcludeFromDocs]
+		public static bool GetPropertyOptionalBool(string name, ref bool value)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			return PlayerSettings.GetPropertyOptionalBool(name, ref value, target);
+		}
+		[ExcludeFromDocs]
+		internal static void InitializePropertyBool(string name, bool value)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			PlayerSettings.InitializePropertyBool(name, value, target);
+		}
+		internal static void InitializePropertyBool(string name, bool value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			PlayerSettings.InitializePropertyBoolInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
+		}
+		[ExcludeFromDocs]
+		public static void SetPropertyString(string name, string value)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			PlayerSettings.SetPropertyString(name, value, target);
+		}
+		public static void SetPropertyString(string name, string value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			PlayerSettings.SetPropertyStringInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
+		}
+		public static void SetPropertyString(string name, string value, BuildTarget target)
+		{
+			PlayerSettings.SetPropertyString(name, value, BuildPipeline.GetBuildTargetGroup(target));
+		}
+		[ExcludeFromDocs]
+		public static string GetPropertyString(string name)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			return PlayerSettings.GetPropertyString(name, target);
+		}
+		public static string GetPropertyString(string name, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			return PlayerSettings.GetPropertyStringInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name));
 		}
 		[ExcludeFromDocs]
 		public static bool GetPropertyOptionalString(string name, ref string value)
@@ -2026,7 +3245,7 @@ namespace UnityEditor
 			BuildTargetGroup target = BuildTargetGroup.Unknown;
 			return PlayerSettings.GetPropertyOptionalString(name, ref value, target);
 		}
-		public static bool GetPropertyOptionalString(string name, ref string value, [DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		public static bool GetPropertyOptionalString(string name, ref string value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
 		{
 			string propertyOptionalStringInternal = PlayerSettings.GetPropertyOptionalStringInternal(name, target);
 			if (propertyOptionalStringInternal == null)
@@ -2039,17 +3258,32 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetPropertyOptionalStringInternal(string name, BuildTargetGroup target);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetPropertyNameForBuildTargetGroupInternal(BuildTargetGroup target, string name);
-		internal static string GetPropertyNameForBuildTarget(BuildTargetGroup target, string name)
+		[ExcludeFromDocs]
+		internal static void InitializePropertyString(string name, string value)
 		{
-			string propertyNameForBuildTargetGroupInternal = PlayerSettings.GetPropertyNameForBuildTargetGroupInternal(target, name);
-			if (propertyNameForBuildTargetGroupInternal != string.Empty)
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			PlayerSettings.InitializePropertyString(name, value, target);
+		}
+		internal static void InitializePropertyString(string name, string value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			PlayerSettings.InitializePropertyStringInternal(PlayerSettings.GetPropertyNameForBuildTarget(target, name), value);
+		}
+		[ExcludeFromDocs]
+		internal static void InitializePropertyEnum(string name, object value)
+		{
+			BuildTargetGroup target = BuildTargetGroup.Unknown;
+			PlayerSettings.InitializePropertyEnum(name, value, target);
+		}
+		internal static void InitializePropertyEnum(string name, object value, [UnityEngine.Internal.DefaultValue("BuildTargetGroup.Unknown")] BuildTargetGroup target)
+		{
+			string propertyNameForBuildTarget = PlayerSettings.GetPropertyNameForBuildTarget(target, name);
+			string[] names = Enum.GetNames(value.GetType());
+			Array values = Enum.GetValues(value.GetType());
+			for (int i = 0; i < names.Length; i++)
 			{
-				return propertyNameForBuildTargetGroupInternal;
+				PlayerSettings.AddEnum("PlayerSettings", propertyNameForBuildTarget, (int)values.GetValue(i), names[i]);
 			}
-			throw new ArgumentException("Failed to get property name for the given target.");
+			PlayerSettings.InitializePropertyIntInternal(propertyNameForBuildTarget, (int)value);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

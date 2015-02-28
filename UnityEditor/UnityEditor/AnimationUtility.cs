@@ -39,7 +39,7 @@ namespace UnityEditor
 		public static extern bool GetObjectReferenceValue(GameObject root, EditorCurveBinding binding, out UnityEngine.Object targetObject);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern UnityEngine.Object GetAnimatedObject(GameObject gameObject, EditorCurveBinding binding);
+		public static extern UnityEngine.Object GetAnimatedObject(GameObject root, EditorCurveBinding binding);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Type PropertyModificationToEditorCurveBinding(PropertyModification modification, GameObject gameObject, out EditorCurveBinding binding);
@@ -133,7 +133,7 @@ namespace UnityEditor
 		public static extern AnimationClipSettings GetAnimationClipSettings(AnimationClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetAnimationClipSettings(AnimationClip clip, AnimationClipSettings srcClipInfo);
+		public static extern void SetAnimationClipSettings(AnimationClip clip, AnimationClipSettings srcClipInfo);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetAnimationClipSettingsNoDirty(AnimationClip clip, AnimationClipSettings srcClipInfo);
@@ -148,16 +148,28 @@ namespace UnityEditor
 		internal static extern bool CurveSupportsProcedural(AnimationCurve curve);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern ModelImporterAnimationType GetAnimationType(AnimationClip clip);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetAnimationType(AnimationClip clip, ModelImporterAnimationType type);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern AnimationClipStats GetAnimationClipStats(AnimationClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool GetGenerateMotionCurves(AnimationClip clip);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetGenerateMotionCurves(AnimationClip clip, bool value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasGenericRootTransform(AnimationClip clip);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasMotionFloatCurves(AnimationClip clip);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasMotionCurves(AnimationClip clip);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasRootCurves(AnimationClip clip);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool AmbiguousBinding(string path, int classID, Transform root);
 		[Obsolete("Use AnimationMode.InAnimationMode instead")]
 		public static bool InAnimationMode()
 		{
@@ -173,6 +185,10 @@ namespace UnityEditor
 		public static void StopAnimationMode()
 		{
 			AnimationMode.StopAnimationMode();
+		}
+		[Obsolete("SetAnimationType is no longer supported", true)]
+		public static void SetAnimationType(AnimationClip clip, ModelImporterAnimationType type)
+		{
 		}
 	}
 }

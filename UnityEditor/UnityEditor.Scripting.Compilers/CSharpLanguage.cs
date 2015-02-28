@@ -58,13 +58,27 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			return "CSharp";
 		}
-		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform)
+		internal static bool GetUseMicrosoftCSharpCompiler(BuildTarget targetPlatform, bool buildingForEditor, string assemblyName)
 		{
-			if (!buildingForEditor && targetPlatform.ToString().Contains("MetroPlayer") && (PlayerSettings.Metro.compilationOverrides == PlayerSettings.MetroCompilationOverrides.UseNetCore || (PlayerSettings.Metro.compilationOverrides == PlayerSettings.MetroCompilationOverrides.UseNetCorePartially && !island._output.Contains("Assembly-CSharp-firstpass.dll"))))
+			if (buildingForEditor || targetPlatform != BuildTarget.MetroPlayer)
 			{
-				return new MicrosoftCSharpCompiler(island);
+				return false;
 			}
-			return new MonoCSharpCompiler(island);
+			assemblyName = Path.GetFileNameWithoutExtension(assemblyName);
+			PlayerSettings.WSACompilationOverrides compilationOverrides = PlayerSettings.WSA.compilationOverrides;
+			if (compilationOverrides != PlayerSettings.WSACompilationOverrides.UseNetCore)
+			{
+				return compilationOverrides == PlayerSettings.WSACompilationOverrides.UseNetCorePartially && string.Compare(assemblyName, "Assembly-CSharp", true) == 0;
+			}
+			return string.Compare(assemblyName, "Assembly-CSharp", true) == 0 || string.Compare(assemblyName, "Assembly-CSharp-firstPass", true) == 0;
+		}
+		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
+		{
+			if (CSharpLanguage.GetUseMicrosoftCSharpCompiler(targetPlatform, buildingForEditor, island._output))
+			{
+				return new MicrosoftCSharpCompiler(island, runUpdater);
+			}
+			return new MonoCSharpCompiler(island, runUpdater);
 		}
 		public override string GetNamespace(string fileName)
 		{

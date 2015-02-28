@@ -9,6 +9,7 @@ namespace UnityEngine
 		private float m_Max;
 		private float m_MaxBounce;
 		private float m_MaxHardness;
+		private float m_ContactDistance;
 		public float min
 		{
 			get
@@ -51,6 +52,17 @@ namespace UnityEngine
 			set
 			{
 				this.m_MaxBounce = value;
+			}
+		}
+		public float contactDistance
+		{
+			get
+			{
+				return this.m_ContactDistance;
+			}
+			set
+			{
+				this.m_ContactDistance = value;
 			}
 		}
 	}

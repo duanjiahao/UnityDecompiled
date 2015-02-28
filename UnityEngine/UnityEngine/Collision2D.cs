@@ -9,6 +9,14 @@ namespace UnityEngine
 		internal Collider2D m_Collider;
 		internal ContactPoint2D[] m_Contacts;
 		internal Vector2 m_RelativeVelocity;
+		internal bool m_Enabled;
+		public bool enabled
+		{
+			get
+			{
+				return this.m_Enabled;
+			}
+		}
 		public Rigidbody2D rigidbody
 		{
 			get

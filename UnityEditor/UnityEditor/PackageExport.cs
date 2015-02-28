@@ -199,7 +199,7 @@ namespace UnityEditor
 		private void FrameLastGUIRect()
 		{
 			Rect lastRect = GUILayoutUtility.GetLastRect();
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(1);
 			GL.Color(PackageExport.ms_Constants.lineColor);
 			GL.Vertex3(lastRect.xMax + 1f, lastRect.y, 0f);

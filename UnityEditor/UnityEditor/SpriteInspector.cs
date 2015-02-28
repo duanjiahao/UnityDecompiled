@@ -2,7 +2,6 @@ using System;
 using UnityEditor.Sprites;
 using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Sprites;
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Sprite))]
@@ -164,7 +163,7 @@ namespace UnityEditor
 			}
 			float width2 = sprite.rect.width;
 			float height2 = sprite.rect.height;
-			Texture2D spriteTexture = UnityEditor.Sprites.DataUtility.GetSpriteTexture(sprite, false);
+			Texture2D spriteTexture = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(sprite, false);
 			PreviewHelpers.AdjustWidthAndHeightForStaticPreview((int)width2, (int)height2, ref width, ref height);
 			EditorUtility.SetTemporarilyAllowIndieRenderTexture(true);
 			SavedRenderTargetState savedRenderTargetState = new SavedRenderTargetState();
@@ -202,23 +201,23 @@ namespace UnityEditor
 				material.mainTexture = spriteTexture;
 				material.SetPass(0);
 			}
-			Vector4 spriteOuterUV = InternalEditorUtility.GetSpriteOuterUV(sprite, false);
-			Vector4 padding = UnityEngine.Sprites.DataUtility.GetPadding(sprite);
-			Rect textureRect = sprite.textureRect;
-			float width3 = textureRect.width;
-			float height3 = textureRect.height;
+			float num = sprite.rect.width / sprite.bounds.size.x;
+			Vector2[] vertices = sprite.vertices;
+			Vector2[] uv = sprite.uv;
+			ushort[] triangles = sprite.triangles;
+			Vector2 pivot = sprite.pivot;
 			GL.PushMatrix();
 			GL.LoadOrtho();
-			GL.Begin(7);
 			GL.Color(new Color(1f, 1f, 1f, 1f));
-			GL.TexCoord(new Vector3(spriteOuterUV.x, spriteOuterUV.w, 0f));
-			GL.Vertex3(padding.x / width2, (padding.y + height3) / height2, 0f);
-			GL.TexCoord(new Vector3(spriteOuterUV.z, spriteOuterUV.w, 0f));
-			GL.Vertex3((padding.x + width3) / width2, (padding.y + height3) / height2, 0f);
-			GL.TexCoord(new Vector3(spriteOuterUV.z, spriteOuterUV.y, 0f));
-			GL.Vertex3((padding.x + width3) / width2, padding.y / height2, 0f);
-			GL.TexCoord(new Vector3(spriteOuterUV.x, spriteOuterUV.y, 0f));
-			GL.Vertex3(padding.x / width2, padding.y / height2, 0f);
+			GL.Begin(4);
+			for (int i = 0; i < sprite.triangles.Length; i++)
+			{
+				ushort num2 = triangles[i];
+				Vector2 vector2 = vertices[(int)num2];
+				Vector2 vector3 = uv[(int)num2];
+				GL.TexCoord(new Vector3(vector3.x, vector3.y, 0f));
+				GL.Vertex3((vector2.x * num + pivot.x) / width2, (vector2.y * num + pivot.y) / height2, 0f);
+			}
 			GL.End();
 			GL.PopMatrix();
 			GL.sRGBWrite = false;

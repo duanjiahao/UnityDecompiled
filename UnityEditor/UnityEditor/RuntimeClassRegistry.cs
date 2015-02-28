@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Audio;
 namespace UnityEditor
 {
 	internal class RuntimeClassRegistry
@@ -251,6 +252,7 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimationClip), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimationEvent));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AsyncOperation));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Resources), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(CacheIndex));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Keyframe));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(RenderTexture));
@@ -271,14 +273,17 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Canvas), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(RectTransform), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AssemblyIsEditorAssembly), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SharedBetweenAnimatorsAttribute), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimatorStateInfo), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimatorTransitionInfo), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimatorClipInfo), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SkeletonBone), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(HumanBone), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(UIVertex), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(UICharInfo), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(UILineInfo), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AudioClip), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AudioMixer), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "iPhone", "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "AndroidJNI", "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "AndroidJNIHelper", "all");
@@ -303,16 +308,16 @@ namespace UnityEditor
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SamsungTV", "all");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iPhone)
+			if (buildTargetGroup == BuildTargetGroup.iOS)
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "iPhoneKeyboard");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iPhone || (buildTargetGroup == BuildTargetGroup.Standalone && (this.buildTarget == BuildTarget.StandaloneOSXIntel || this.buildTarget == BuildTarget.StandaloneOSXIntel64 || this.buildTarget == BuildTarget.StandaloneOSXUniversal)))
+			if (buildTargetGroup == BuildTargetGroup.iOS || (buildTargetGroup == BuildTargetGroup.Standalone && (this.buildTarget == BuildTarget.StandaloneOSXIntel || this.buildTarget == BuildTarget.StandaloneOSXIntel64 || this.buildTarget == BuildTarget.StandaloneOSXUniversal)))
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SocialPlatforms.GameCenter.GameCenterPlatform", "all");
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SocialPlatforms.GameCenter.GcLeaderboard", "all");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iPhone || buildTargetGroup == BuildTargetGroup.Android || buildTargetGroup == BuildTargetGroup.BB10 || buildTargetGroup == BuildTargetGroup.WP8 || buildTargetGroup == BuildTargetGroup.Tizen)
+			if (buildTargetGroup == BuildTargetGroup.iOS || buildTargetGroup == BuildTargetGroup.Android || buildTargetGroup == BuildTargetGroup.BlackBerry || buildTargetGroup == BuildTargetGroup.WP8 || buildTargetGroup == BuildTargetGroup.Metro || buildTargetGroup == BuildTargetGroup.Tizen)
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "TouchScreenKeyboard");
 			}
@@ -363,6 +368,13 @@ namespace UnityEditor
 			if (buildTargetGroup == BuildTargetGroup.Android)
 			{
 				this.AddManagedBaseClass("UnityEngine.AndroidJavaProxy");
+			}
+			string[] dontStripClassNames = RuntimeInitializeOnLoadManager.dontStripClassNames;
+			string[] array = dontStripClassNames;
+			for (int i = 0; i < array.Length; i++)
+			{
+				string className = array[i];
+				this.AddManagedBaseClass(className);
 			}
 		}
 		internal void AddMethodToPreserve(string assembly, string @namespace, string klassName, string methodName)

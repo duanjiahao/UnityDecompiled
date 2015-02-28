@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using UnityEditor.Hardware;
 using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEngine;
@@ -9,52 +11,58 @@ namespace UnityEditor
 	{
 		private struct PopupElement
 		{
-			public readonly bool requiresTeamLicense;
+			public readonly string id;
 			public readonly bool requiresProLicense;
 			public readonly GUIContent content;
 			public bool Enabled
 			{
 				get
 				{
-					return (!this.requiresTeamLicense || InternalEditorUtility.HasMaint()) && (!this.requiresProLicense || InternalEditorUtility.HasPro());
+					return !this.requiresProLicense || InternalEditorUtility.HasPro();
 				}
 			}
-			public PopupElement(string content, bool requiresTeamLicense, bool requiresProLicense)
+			public PopupElement(string content, bool requiresProLicense)
 			{
+				this.id = content;
 				this.content = new GUIContent(content);
-				this.requiresTeamLicense = requiresTeamLicense;
 				this.requiresProLicense = requiresProLicense;
 			}
 		}
 		private EditorSettingsInspector.PopupElement[] vcDefaultPopupList = new EditorSettingsInspector.PopupElement[]
 		{
-			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Disabled, false, false),
-			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Generic, false, false),
-			new EditorSettingsInspector.PopupElement(ExternalVersionControl.AssetServer, true, false)
+			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Disabled, false),
+			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Generic, false),
+			new EditorSettingsInspector.PopupElement(ExternalVersionControl.AssetServer, true)
 		};
 		private EditorSettingsInspector.PopupElement[] vcPopupList;
 		private EditorSettingsInspector.PopupElement[] serializationPopupList = new EditorSettingsInspector.PopupElement[]
 		{
-			new EditorSettingsInspector.PopupElement("Mixed", false, false),
-			new EditorSettingsInspector.PopupElement("Force Binary", false, false),
-			new EditorSettingsInspector.PopupElement("Force Text", false, false)
-		};
-		private EditorSettingsInspector.PopupElement[] remoteDeviceList = new EditorSettingsInspector.PopupElement[]
-		{
-			new EditorSettingsInspector.PopupElement("None", false, false),
-			new EditorSettingsInspector.PopupElement("Any Android Device", false, false),
-			new EditorSettingsInspector.PopupElement("Any iOS Device", false, false)
+			new EditorSettingsInspector.PopupElement("Mixed", false),
+			new EditorSettingsInspector.PopupElement("Force Binary", false),
+			new EditorSettingsInspector.PopupElement("Force Text", false)
 		};
 		private EditorSettingsInspector.PopupElement[] behaviorPopupList = new EditorSettingsInspector.PopupElement[]
 		{
-			new EditorSettingsInspector.PopupElement("3D", false, false),
-			new EditorSettingsInspector.PopupElement("2D", false, false)
+			new EditorSettingsInspector.PopupElement("3D", false),
+			new EditorSettingsInspector.PopupElement("2D", false)
 		};
 		private EditorSettingsInspector.PopupElement[] spritePackerPopupList = new EditorSettingsInspector.PopupElement[]
 		{
-			new EditorSettingsInspector.PopupElement("Disabled", false, false),
-			new EditorSettingsInspector.PopupElement("Enabled For Builds", false, false),
-			new EditorSettingsInspector.PopupElement("Always Enabled", false, false)
+			new EditorSettingsInspector.PopupElement("Disabled", false),
+			new EditorSettingsInspector.PopupElement("Enabled For Builds", false),
+			new EditorSettingsInspector.PopupElement("Always Enabled", false)
+		};
+		private EditorSettingsInspector.PopupElement[] remoteDevicePopupList;
+		private DevDevice[] remoteDeviceList;
+		private EditorSettingsInspector.PopupElement[] remoteCompressionList = new EditorSettingsInspector.PopupElement[]
+		{
+			new EditorSettingsInspector.PopupElement("JPEG", false),
+			new EditorSettingsInspector.PopupElement("PNG", false)
+		};
+		private EditorSettingsInspector.PopupElement[] remoteResolutionList = new EditorSettingsInspector.PopupElement[]
+		{
+			new EditorSettingsInspector.PopupElement("Normal", false),
+			new EditorSettingsInspector.PopupElement("Downsize", false)
 		};
 		private string[] logLevelPopupList = new string[]
 		{
@@ -62,6 +70,12 @@ namespace UnityEditor
 			"Info",
 			"Notice",
 			"Fatal"
+		};
+		private string[] semanticMergePopupList = new string[]
+		{
+			"Off",
+			"Premerge",
+			"Ask"
 		};
 		public void OnEnable()
 		{
@@ -72,10 +86,42 @@ namespace UnityEditor
 			int i = this.vcDefaultPopupList.Length;
 			while (i < this.vcPopupList.Length)
 			{
-				this.vcPopupList[i] = new EditorSettingsInspector.PopupElement(availablePlugins[num].name, true, false);
+				this.vcPopupList[i] = new EditorSettingsInspector.PopupElement(availablePlugins[num].name, true);
 				i++;
 				num++;
 			}
+			DevDeviceList.Changed += new DevDeviceList.OnChangedHandler(this.OnDeviceListChanged);
+			this.BuildRemoteDeviceList();
+		}
+		public void OnDisable()
+		{
+			DevDeviceList.Changed -= new DevDeviceList.OnChangedHandler(this.OnDeviceListChanged);
+		}
+		private void OnDeviceListChanged()
+		{
+			this.BuildRemoteDeviceList();
+		}
+		private void BuildRemoteDeviceList()
+		{
+			List<DevDevice> list = new List<DevDevice>();
+			List<EditorSettingsInspector.PopupElement> list2 = new List<EditorSettingsInspector.PopupElement>();
+			list.Add(DevDevice.none);
+			list2.Add(new EditorSettingsInspector.PopupElement("None", false));
+			list.Add(new DevDevice("Any Android Device", "Any Android Device", "Android", "Android", DevDeviceState.Connected, DevDeviceFeatures.RemoteConnection));
+			list2.Add(new EditorSettingsInspector.PopupElement("Any Android Device", false));
+			DevDevice[] devices = DevDeviceList.GetDevices();
+			for (int i = 0; i < devices.Length; i++)
+			{
+				DevDevice item = devices[i];
+				bool flag = (item.features & DevDeviceFeatures.RemoteConnection) != DevDeviceFeatures.None;
+				if (item.isConnected && flag)
+				{
+					list.Add(item);
+					list2.Add(new EditorSettingsInspector.PopupElement(item.name, false));
+				}
+			}
+			this.remoteDeviceList = list.ToArray();
+			this.remoteDevicePopupList = list2.ToArray();
 		}
 		public override void OnInspectorGUI()
 		{
@@ -195,6 +241,7 @@ namespace UnityEditor
 					}
 				}
 				GUI.enabled = enabled;
+				EditorUserSettings.semanticMergeMode = (SemanticMergeMode)EditorGUILayout.Popup("Smart merge", (int)EditorUserSettings.semanticMergeMode, this.semanticMergePopupList, new GUILayoutOption[0]);
 				this.DrawOverlayDescriptions();
 			}
 			GUILayout.Space(10f);
@@ -240,26 +287,57 @@ namespace UnityEditor
 				this.DoPopup(rect, this.spritePackerPopupList, num4, new GenericMenu.MenuFunction2(this.SetSpritePackerMode));
 			}
 		}
+		private static int GetIndexById(DevDevice[] elements, string id, int defaultIndex)
+		{
+			for (int i = 0; i < elements.Length; i++)
+			{
+				if (elements[i].id == id)
+				{
+					return i;
+				}
+			}
+			return defaultIndex;
+		}
+		private static int GetIndexById(EditorSettingsInspector.PopupElement[] elements, string id, int defaultIndex)
+		{
+			for (int i = 0; i < elements.Length; i++)
+			{
+				if (elements[i].id == id)
+				{
+					return i;
+				}
+			}
+			return defaultIndex;
+		}
 		private void ShowUnityRemoteGUI(bool editorEnabled)
 		{
 			GUI.enabled = true;
 			GUILayout.Label("Unity Remote", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			GUI.enabled = editorEnabled;
 			string unityRemoteDevice = EditorSettings.unityRemoteDevice;
-			int num = 0;
-			for (int i = 0; i < this.remoteDeviceList.Length; i++)
-			{
-				if (this.remoteDeviceList[i].content.text == unityRemoteDevice)
-				{
-					num = i;
-				}
-			}
-			GUIContent content = new GUIContent(this.remoteDeviceList[num].content);
+			int indexById = EditorSettingsInspector.GetIndexById(this.remoteDeviceList, unityRemoteDevice, 0);
+			GUIContent content = new GUIContent(this.remoteDevicePopupList[indexById].content);
 			Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Device"));
 			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
 			{
-				this.DoPopup(rect, this.remoteDeviceList, num, new GenericMenu.MenuFunction2(this.SetUnityRemoteDevice));
+				this.DoPopup(rect, this.remoteDevicePopupList, indexById, new GenericMenu.MenuFunction2(this.SetUnityRemoteDevice));
+			}
+			int indexById2 = EditorSettingsInspector.GetIndexById(this.remoteCompressionList, EditorSettings.unityRemoteCompression, 0);
+			content = new GUIContent(this.remoteCompressionList[indexById2].content);
+			rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
+			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Compression"));
+			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			{
+				this.DoPopup(rect, this.remoteCompressionList, indexById2, new GenericMenu.MenuFunction2(this.SetUnityRemoteCompression));
+			}
+			int indexById3 = EditorSettingsInspector.GetIndexById(this.remoteResolutionList, EditorSettings.unityRemoteResolution, 0);
+			content = new GUIContent(this.remoteResolutionList[indexById3].content);
+			rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
+			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Resolution"));
+			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			{
+				this.DoPopup(rect, this.remoteResolutionList, indexById3, new GenericMenu.MenuFunction2(this.SetUnityRemoteResolution));
 			}
 		}
 		private void DrawOverlayDescriptions()
@@ -271,17 +349,23 @@ namespace UnityEditor
 			}
 			GUILayout.Space(10f);
 			GUILayout.Label("Overlay legends", EditorStyles.boldLabel, new GUILayoutOption[0]);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			this.DrawOverlayDescription(Asset.States.Local);
 			this.DrawOverlayDescription(Asset.States.OutOfSync);
 			this.DrawOverlayDescription(Asset.States.CheckedOutLocal);
 			this.DrawOverlayDescription(Asset.States.CheckedOutRemote);
 			this.DrawOverlayDescription(Asset.States.DeletedLocal);
 			this.DrawOverlayDescription(Asset.States.DeletedRemote);
+			GUILayout.EndVertical();
+			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			this.DrawOverlayDescription(Asset.States.AddedLocal);
 			this.DrawOverlayDescription(Asset.States.AddedRemote);
 			this.DrawOverlayDescription(Asset.States.Conflicted);
 			this.DrawOverlayDescription(Asset.States.LockedLocal);
 			this.DrawOverlayDescription(Asset.States.LockedRemote);
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
 		}
 		private void DrawOverlayDescription(Asset.States state)
 		{
@@ -358,7 +442,15 @@ namespace UnityEditor
 		}
 		private void SetUnityRemoteDevice(object data)
 		{
-			EditorSettings.unityRemoteDevice = this.remoteDeviceList[(int)data].content.text;
+			EditorSettings.unityRemoteDevice = this.remoteDeviceList[(int)data].id;
+		}
+		private void SetUnityRemoteCompression(object data)
+		{
+			EditorSettings.unityRemoteCompression = this.remoteCompressionList[(int)data].id;
+		}
+		private void SetUnityRemoteResolution(object data)
+		{
+			EditorSettings.unityRemoteResolution = this.remoteResolutionList[(int)data].id;
 		}
 		private void SetDefaultBehaviorMode(object data)
 		{

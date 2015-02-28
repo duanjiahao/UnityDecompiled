@@ -454,6 +454,7 @@ namespace UnityEditor
 					{
 						this.OffsetScaleGUI(ProceduralMaterialInspector.m_Material);
 					}
+					GUILayout.Space(5f);
 					EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
 					this.ShowTextureSizeGUI();
 					EditorGUI.EndDisabledGroup();
@@ -521,65 +522,21 @@ namespace UnityEditor
 			{
 				return;
 			}
-			GUILayoutOption gUILayoutOption = GUILayout.Width(10f);
-			GUILayoutOption gUILayoutOption2 = GUILayout.MinWidth(32f);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 			Vector2 materialScale = ProceduralMaterialInspector.m_Importer.GetMaterialScale(material);
-			Vector2 lhs = materialScale;
 			Vector2 materialOffset = ProceduralMaterialInspector.m_Importer.GetMaterialOffset(material);
-			Vector2 lhs2 = materialOffset;
-			GUILayout.BeginHorizontal(new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(true)
-			});
-			GUILayout.Space(8f);
-			GUILayout.FlexibleSpace();
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Label(string.Empty, EditorStyles.miniLabel, new GUILayoutOption[]
-			{
-				gUILayoutOption
-			});
-			GUILayout.Label("x", EditorStyles.miniLabel, new GUILayoutOption[]
-			{
-				gUILayoutOption
-			});
-			GUILayout.Label("y", EditorStyles.miniLabel, new GUILayoutOption[]
-			{
-				gUILayoutOption
-			});
-			GUILayout.EndVertical();
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Label("Tiling", EditorStyles.miniLabel, new GUILayoutOption[0]);
-			materialScale.x = EditorGUILayout.FloatField(materialScale.x, EditorStyles.miniTextField, new GUILayoutOption[]
-			{
-				gUILayoutOption2
-			});
-			materialScale.y = EditorGUILayout.FloatField(materialScale.y, EditorStyles.miniTextField, new GUILayoutOption[]
-			{
-				gUILayoutOption2
-			});
-			GUILayout.EndVertical();
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Label("Offset", EditorStyles.miniLabel, new GUILayoutOption[0]);
-			materialOffset.x = EditorGUILayout.FloatField(materialOffset.x, EditorStyles.miniTextField, new GUILayoutOption[]
-			{
-				gUILayoutOption2
-			});
-			materialOffset.y = EditorGUILayout.FloatField(materialOffset.y, EditorStyles.miniTextField, new GUILayoutOption[]
-			{
-				gUILayoutOption2
-			});
-			GUILayout.EndVertical();
+			Vector4 scaleOffset = new Vector4(materialScale.x, materialScale.y, materialOffset.x, materialOffset.y);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(10f);
+			Rect rect = GUILayoutUtility.GetRect(100f, 10000f, 32f, 32f);
 			GUILayout.EndHorizontal();
-			if (lhs != materialScale || lhs2 != materialOffset)
+			EditorGUI.BeginChangeCheck();
+			scaleOffset = MaterialEditor.TextureScaleOffsetProperty(rect, scaleOffset);
+			if (EditorGUI.EndChangeCheck())
 			{
 				this.RecordForUndo(material, ProceduralMaterialInspector.m_Importer, "Modify " + material.name + "'s Tiling/Offset");
-				ProceduralMaterialInspector.m_Importer.SetMaterialOffset(material, materialOffset);
-				ProceduralMaterialInspector.m_Importer.SetMaterialScale(material, materialScale);
+				ProceduralMaterialInspector.m_Importer.SetMaterialScale(material, new Vector2(scaleOffset.x, scaleOffset.y));
+				ProceduralMaterialInspector.m_Importer.SetMaterialOffset(material, new Vector2(scaleOffset.z, scaleOffset.w));
 			}
-			GUILayout.EndVertical();
-			GUILayout.EndHorizontal();
 		}
 		protected void InputOptions(ProceduralMaterial material)
 		{
@@ -674,7 +631,6 @@ namespace UnityEditor
 			}
 			GUILayout.Space(4f);
 			EditorGUILayout.EndHorizontal();
-			GUILayout.FlexibleSpace();
 		}
 		protected void ShowGeneratedTexturesGUI(ProceduralMaterial material)
 		{
@@ -737,7 +693,12 @@ namespace UnityEditor
 						"Height (A)",
 						"Emissive (A)",
 						"Specular (A)",
-						"Opacity (A)"
+						"Opacity (A)",
+						"Smoothness (A)",
+						"Amb. Occlusion (A)",
+						"Detail Mask (A)",
+						"Metallic (A)",
+						"Roughness (A)"
 					};
 					EditorGUILayout.Space();
 					EditorGUILayout.Space();

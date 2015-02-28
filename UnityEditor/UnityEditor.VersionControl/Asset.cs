@@ -27,20 +27,6 @@ namespace UnityEditor.VersionControl
 			MetaFile = 32768
 		}
 		private string m_guid;
-		internal bool IsUnderVersionControl
-		{
-			get
-			{
-				return this.IsState(Asset.States.Synced) || this.IsState(Asset.States.OutOfSync) || this.IsState(Asset.States.AddedLocal);
-			}
-		}
-		public string prettyPath
-		{
-			get
-			{
-				return this.path;
-			}
-		}
 		public extern Asset.States state
 		{
 			[WrapperlessIcall]
@@ -95,10 +81,37 @@ namespace UnityEditor.VersionControl
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		internal bool IsUnderVersionControl
+		{
+			get
+			{
+				return this.IsState(Asset.States.Synced) || this.IsState(Asset.States.OutOfSync) || this.IsState(Asset.States.AddedLocal);
+			}
+		}
+		public string prettyPath
+		{
+			get
+			{
+				return this.path;
+			}
+		}
 		public Asset(string clientPath)
 		{
 			this.InternalCreateFromString(clientPath);
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void InternalCreateFromString(string clientPath);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Dispose();
+		~Asset()
+		{
+			this.Dispose();
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool IsChildOf(Asset other);
 		internal static bool IsState(Asset.States isThisState, Asset.States partOfThisState)
 		{
 			return (isThisState & partOfThisState) != Asset.States.None;
@@ -187,18 +200,5 @@ namespace UnityEditor.VersionControl
 		{
 			return Asset.StateToString(this.state);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InternalCreateFromString(string clientPath);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Dispose();
-		~Asset()
-		{
-			this.Dispose();
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool IsChildOf(Asset other);
 	}
 }

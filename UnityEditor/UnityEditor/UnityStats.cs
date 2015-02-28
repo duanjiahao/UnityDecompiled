@@ -5,19 +5,43 @@ namespace UnityEditor
 {
 	public sealed class UnityStats
 	{
+		public static extern int batches
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public static extern int drawCalls
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern int batchedDrawCalls
+		public static extern int dynamicBatchedDrawCalls
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern int batches
+		public static extern int staticBatchedDrawCalls
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern int dynamicBatches
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern int staticBatches
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern int setPassCalls
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -54,6 +78,30 @@ namespace UnityEditor
 			get;
 		}
 		public static extern float renderTime
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern float audioLevel
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern float audioClippingAmount
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern float audioDSPLoad
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern float audioStreamLoad
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]

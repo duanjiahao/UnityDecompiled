@@ -4,29 +4,11 @@ namespace UnityEditor
 {
 	internal class Collider2DEditorBase : ColliderEditorBase
 	{
-		protected SerializedProperty m_Material;
-		protected SerializedProperty m_IsTrigger;
-		public virtual void OnEnable()
+		public override void OnInspectorGUI()
 		{
-			this.m_Material = base.serializedObject.FindProperty("m_Material");
-			this.m_IsTrigger = base.serializedObject.FindProperty("m_IsTrigger");
-		}
-		public virtual void OnDisable()
-		{
-			base.editingCollider = false;
-		}
-		protected void BeginColliderInspector()
-		{
-			base.serializedObject.Update();
-			EditorGUI.BeginDisabledGroup(base.targets.Length > 1);
-			base.InspectorEditButtonGUI();
-			EditorGUI.EndDisabledGroup();
-			EditorGUILayout.PropertyField(this.m_IsTrigger, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_Material, new GUILayoutOption[0]);
-		}
-		protected void EndColliderInspector()
-		{
-			base.serializedObject.ApplyModifiedProperties();
+			base.OnInspectorGUI();
+			this.CheckColliderErrorState();
+			Effector2DEditor.CheckEffectorWarnings(this.target as Collider2D);
 		}
 		protected void CheckColliderErrorState()
 		{
@@ -42,6 +24,17 @@ namespace UnityEditor
 			{
 				EditorGUILayout.HelpBox("The collider did not create any collision shapes as they all failed verification.  This could be because they were deemed too small or the vertices were too close.  Vertices can also become close under certain rotations or very small scaling.", MessageType.Warning);
 			}
+		}
+		protected void BeginColliderInspector()
+		{
+			base.serializedObject.Update();
+			EditorGUI.BeginDisabledGroup(base.targets.Length > 1);
+			base.InspectorEditButtonGUI();
+			EditorGUI.EndDisabledGroup();
+		}
+		protected void EndColliderInspector()
+		{
+			base.serializedObject.ApplyModifiedProperties();
 		}
 	}
 }

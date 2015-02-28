@@ -221,14 +221,14 @@ namespace UnityEditor
 				{
 					minMaxSliderState = (EditorGUIExt.s_MinMaxSliderState = new EditorGUIExt.MinMaxSliderState());
 				}
+				minMaxSliderState.dragStartLimit = startLimit;
+				minMaxSliderState.dragEndLimit = endLimit;
 				if (position2.Contains(current.mousePosition))
 				{
 					minMaxSliderState.dragStartPos = num11;
 					minMaxSliderState.dragStartValue = value;
 					minMaxSliderState.dragStartSize = size;
 					minMaxSliderState.dragStartValuesPerPixel = num10;
-					minMaxSliderState.dragStartLimit = startLimit;
-					minMaxSliderState.dragEndLimit = endLimit;
 					if (rect.Contains(current.mousePosition))
 					{
 						minMaxSliderState.whereWeDrag = 1;
@@ -296,6 +296,7 @@ namespace UnityEditor
 					minMaxSliderState.dragStartPos = num11;
 					minMaxSliderState.dragStartValue = value;
 					minMaxSliderState.dragStartSize = size;
+					minMaxSliderState.dragStartValuesPerPixel = num10;
 					minMaxSliderState.whereWeDrag = 0;
 					GUI.changed = true;
 				}
@@ -659,9 +660,9 @@ namespace UnityEditor
 						string commandName = current.commandName;
 						if (commandName != null)
 						{
-							if (EditorGUIExt.<>f__switch$map9 == null)
+							if (EditorGUIExt.<>f__switch$mapB == null)
 							{
-								EditorGUIExt.<>f__switch$map9 = new Dictionary<string, int>(1)
+								EditorGUIExt.<>f__switch$mapB = new Dictionary<string, int>(1)
 								{
 
 									{
@@ -671,7 +672,7 @@ namespace UnityEditor
 								};
 							}
 							int num;
-							if (EditorGUIExt.<>f__switch$map9.TryGetValue(commandName, out num))
+							if (EditorGUIExt.<>f__switch$mapB.TryGetValue(commandName, out num))
 							{
 								if (num == 0)
 								{

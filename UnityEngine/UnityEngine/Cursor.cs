@@ -4,6 +4,24 @@ namespace UnityEngine
 {
 	public sealed class Cursor
 	{
+		public static extern bool visible
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern CursorLockMode lockState
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		private static void SetCursor(Texture2D texture, CursorMode cursorMode)
 		{
 			Cursor.SetCursor(texture, Vector2.zero, cursorMode);

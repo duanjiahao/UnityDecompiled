@@ -6,7 +6,6 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public class AsyncOperation : YieldInstruction
 	{
-		[NotRenamed]
 		internal IntPtr m_Ptr;
 		public extern bool isDone
 		{

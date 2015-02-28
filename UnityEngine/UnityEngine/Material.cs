@@ -82,6 +82,15 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern MaterialGlobalIlluminationFlags globalIlluminationFlags
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public Material(string contents)
 		{
 			Material.Internal_CreateWithString(this, contents);
@@ -272,5 +281,8 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DisableKeyword(string keyword);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool IsKeywordEnabled(string keyword);
 	}
 }

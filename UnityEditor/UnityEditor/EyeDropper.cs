@@ -114,8 +114,8 @@ namespace UnityEditor
 				if (Event.current.button == 0)
 				{
 					EyeDropper.s_PickCoordinates = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-					EyeDropper.s_LastPickedColor = EyeDropper.GetPickedColor();
 					base.window.Close();
+					EyeDropper.s_LastPickedColor = EyeDropper.GetPickedColor();
 					this.SendEvent("EyeDropperClicked");
 				}
 				break;

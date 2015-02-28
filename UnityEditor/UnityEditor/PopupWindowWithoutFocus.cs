@@ -45,6 +45,7 @@ namespace UnityEditor
 		private void Init(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
 			this.m_WindowContent = windowContent;
+			this.m_WindowContent.editorWindow = this;
 			this.m_ActivatorRect = GUIUtility.GUIToScreenRect(activatorRect);
 			this.m_LastWantedSize = windowContent.GetWindowSize();
 			this.m_LocationPriorityOrder = locationPriorityOrder;

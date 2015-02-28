@@ -35,6 +35,15 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern float bounceIntensity
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public extern LightShadows shadows
 		{
 			[WrapperlessIcall]
@@ -62,6 +71,16 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern float shadowNormalBias
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[Obsolete("Shadow softness is removed in Unity 5.0+")]
 		public extern float shadowSoftness
 		{
 			[WrapperlessIcall]
@@ -71,6 +90,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[Obsolete("Shadow softness is removed in Unity 5.0+")]
 		public extern float shadowSoftnessFade
 		{
 			[WrapperlessIcall]

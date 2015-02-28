@@ -12,7 +12,14 @@ namespace UnityEngine
 		{
 			get
 			{
-				return this.m_AssetBundle.Load(this.m_Path, this.m_Type);
+				return this.m_AssetBundle.LoadAsset(this.m_Path, this.m_Type);
+			}
+		}
+		public Object[] allAssets
+		{
+			get
+			{
+				return this.m_AssetBundle.LoadAssetWithSubAssets_Internal(this.m_Path, this.m_Type);
 			}
 		}
 	}

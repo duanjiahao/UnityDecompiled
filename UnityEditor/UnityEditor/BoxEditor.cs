@@ -11,16 +11,37 @@ namespace UnityEditor
 		private bool m_UseLossyScale;
 		private bool m_AlwaysDisplayHandles;
 		private bool m_DisableZaxis;
+		private bool m_AllowNegativeSize = true;
+		public Handles.DrawCapFunction drawMethodForHandles;
+		public Func<Vector3, float> getHandleSizeMethod;
+		public bool allowNegativeSize
+		{
+			get
+			{
+				return this.m_AllowNegativeSize;
+			}
+			set
+			{
+				this.m_AllowNegativeSize = value;
+			}
+		}
+		public float backfaceAlphaMultiplier
+		{
+			get;
+			set;
+		}
 		public BoxEditor(bool useLossyScale, int controlIdHint)
 		{
 			this.m_UseLossyScale = useLossyScale;
 			this.m_ControlIdHint = controlIdHint;
+			this.backfaceAlphaMultiplier = Handles.backfaceAlphaMultiplier;
 		}
 		public BoxEditor(bool useLossyScale, int controlIdHint, bool disableZaxis)
 		{
 			this.m_UseLossyScale = useLossyScale;
 			this.m_ControlIdHint = controlIdHint;
 			this.m_DisableZaxis = disableZaxis;
+			this.backfaceAlphaMultiplier = Handles.backfaceAlphaMultiplier;
 		}
 		public void OnEnable()
 		{
@@ -55,6 +76,10 @@ namespace UnityEditor
 		}
 		public bool OnSceneGUI(Matrix4x4 transform, Color color, bool handlesOnly, ref Vector3 center, ref Vector3 size)
 		{
+			return this.OnSceneGUI(transform, color, color, handlesOnly, ref center, ref size);
+		}
+		public bool OnSceneGUI(Matrix4x4 transform, Color boxColor, Color midPointHandleColor, bool handlesOnly, ref Vector3 center, ref Vector3 size)
+		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
 			if (!this.m_AlwaysDisplayHandles && !flag)
 			{
@@ -64,8 +89,8 @@ namespace UnityEditor
 				}
 				return false;
 			}
-			Color color2 = Handles.color;
-			Handles.color = color;
+			Color color = Handles.color;
+			Handles.color = boxColor;
 			Vector3 b = center - size * 0.5f;
 			Vector3 a = center + size * 0.5f;
 			Matrix4x4 matrix = Handles.matrix;
@@ -73,9 +98,13 @@ namespace UnityEditor
 			int hotControl = GUIUtility.hotControl;
 			if (!handlesOnly)
 			{
-				this.DrawWireframeBox((a - b) * 0.5f + b, a - b);
+				this.DrawWireframeBox(center, size);
 			}
-			this.MidpointHandles(ref b, ref a, Handles.matrix);
+			Vector3 point = transform.inverse.MultiplyPoint(Camera.current.transform.position);
+			Bounds bounds = new Bounds(center, size);
+			bool isCameraInsideBox = bounds.Contains(point);
+			Handles.color = midPointHandleColor;
+			this.MidpointHandles(ref b, ref a, Handles.matrix, isCameraInsideBox);
 			if (hotControl != GUIUtility.hotControl && GUIUtility.hotControl != 0)
 			{
 				this.m_HandleControlID = GUIUtility.hotControl;
@@ -86,7 +115,7 @@ namespace UnityEditor
 				center = (a + b) * 0.5f;
 				size = a - b;
 			}
-			Handles.color = color2;
+			Handles.color = color;
 			Handles.matrix = matrix;
 			return changed;
 		}
@@ -111,60 +140,79 @@ namespace UnityEditor
 			Handles.DrawLine(array[2], array[7]);
 			Handles.DrawLine(array[3], array[8]);
 		}
-		private void MidpointHandles(ref Vector3 minPos, ref Vector3 maxPos, Matrix4x4 transform)
+		private void MidpointHandles(ref Vector3 minPos, ref Vector3 maxPos, Matrix4x4 transform, bool isCameraInsideBox)
 		{
 			Vector3 vector = new Vector3(1f, 0f, 0f);
 			Vector3 localTangent = new Vector3(0f, 1f, 0f);
 			Vector3 vector2 = new Vector3(0f, 0f, 1f);
 			Vector3 vector3 = (maxPos + minPos) * 0.5f;
 			Vector3 localPos = new Vector3(maxPos.x, vector3.y, vector3.z);
-			maxPos.x = this.MidpointHandle(localPos, localTangent, vector2, transform).x;
+			Vector3 vector4 = this.MidpointHandle(localPos, localTangent, vector2, transform, isCameraInsideBox);
+			maxPos.x = ((!this.m_AllowNegativeSize) ? Math.Max(vector4.x, minPos.x) : vector4.x);
 			localPos = new Vector3(minPos.x, vector3.y, vector3.z);
-			minPos.x = this.MidpointHandle(localPos, localTangent, -vector2, transform).x;
+			vector4 = this.MidpointHandle(localPos, localTangent, -vector2, transform, isCameraInsideBox);
+			minPos.x = ((!this.m_AllowNegativeSize) ? Math.Min(vector4.x, maxPos.x) : vector4.x);
 			localPos = new Vector3(vector3.x, maxPos.y, vector3.z);
-			maxPos.y = this.MidpointHandle(localPos, vector, -vector2, transform).y;
+			vector4 = this.MidpointHandle(localPos, vector, -vector2, transform, isCameraInsideBox);
+			maxPos.y = ((!this.m_AllowNegativeSize) ? Math.Max(vector4.y, minPos.y) : vector4.y);
 			localPos = new Vector3(vector3.x, minPos.y, vector3.z);
-			minPos.y = this.MidpointHandle(localPos, vector, vector2, transform).y;
+			vector4 = this.MidpointHandle(localPos, vector, vector2, transform, isCameraInsideBox);
+			minPos.y = ((!this.m_AllowNegativeSize) ? Math.Min(vector4.y, maxPos.y) : vector4.y);
 			if (!this.m_DisableZaxis)
 			{
 				localPos = new Vector3(vector3.x, vector3.y, maxPos.z);
-				maxPos.z = this.MidpointHandle(localPos, localTangent, -vector, transform).z;
+				vector4 = this.MidpointHandle(localPos, localTangent, -vector, transform, isCameraInsideBox);
+				maxPos.z = ((!this.m_AllowNegativeSize) ? Math.Max(vector4.z, minPos.z) : vector4.z);
 				localPos = new Vector3(vector3.x, vector3.y, minPos.z);
-				minPos.z = this.MidpointHandle(localPos, localTangent, vector, transform).z;
+				vector4 = this.MidpointHandle(localPos, localTangent, vector, transform, isCameraInsideBox);
+				minPos.z = ((!this.m_AllowNegativeSize) ? Math.Min(vector4.z, maxPos.z) : vector4.z);
 			}
 		}
-		private Vector3 MidpointHandle(Vector3 localPos, Vector3 localTangent, Vector3 localBinormal, Matrix4x4 transform)
+		private static void DefaultMidPointDrawFunc(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.DotCap(controlID, position, rotation, size);
+		}
+		private static float DefaultMidpointGetSizeFunc(Vector3 localPos)
+		{
+			return HandleUtility.GetHandleSize(localPos) * 0.03f;
+		}
+		private Vector3 MidpointHandle(Vector3 localPos, Vector3 localTangent, Vector3 localBinormal, Matrix4x4 transform, bool isCameraInsideBox)
 		{
 			Color color = Handles.color;
 			float num = 1f;
-			this.AdjustMidpointHandleColor(localPos, localTangent, localBinormal, transform, num);
+			this.AdjustMidpointHandleColor(localPos, localTangent, localBinormal, transform, num, isCameraInsideBox);
 			int controlID = GUIUtility.GetControlID(this.m_ControlIdHint, FocusType.Keyboard);
 			if (num > 0f)
 			{
 				Vector3 normalized = Vector3.Cross(localTangent, localBinormal).normalized;
-				localPos = Slider1D.Do(controlID, localPos, normalized, HandleUtility.GetHandleSize(localPos) * 0.03f, new Handles.DrawCapFunction(Handles.DotCap), SnapSettings.scale);
+				Handles.DrawCapFunction drawFunc = this.drawMethodForHandles ?? new Handles.DrawCapFunction(BoxEditor.DefaultMidPointDrawFunc);
+				Func<Vector3, float> func = this.getHandleSizeMethod ?? new Func<Vector3, float>(BoxEditor.DefaultMidpointGetSizeFunc);
+				localPos = Slider1D.Do(controlID, localPos, normalized, func(localPos), drawFunc, SnapSettings.scale);
 			}
 			Handles.color = color;
 			return localPos;
 		}
-		private void AdjustMidpointHandleColor(Vector3 localPos, Vector3 localTangent, Vector3 localBinormal, Matrix4x4 transform, float alphaFactor)
+		private void AdjustMidpointHandleColor(Vector3 localPos, Vector3 localTangent, Vector3 localBinormal, Matrix4x4 transform, float alphaFactor, bool isCameraInsideBox)
 		{
-			Vector3 b = transform.MultiplyPoint(localPos);
-			Vector3 lhs = transform.MultiplyVector(localTangent);
-			Vector3 rhs = transform.MultiplyVector(localBinormal);
-			Vector3 normalized = Vector3.Cross(lhs, rhs).normalized;
-			float num;
-			if (Camera.current.isOrthoGraphic)
+			if (!isCameraInsideBox)
 			{
-				num = Vector3.Dot(-Camera.current.transform.forward, normalized);
-			}
-			else
-			{
-				num = Vector3.Dot((Camera.current.transform.position - b).normalized, normalized);
-			}
-			if (num < -0.0001f)
-			{
-				alphaFactor *= Handles.backfaceAlphaMultiplier;
+				Vector3 b = transform.MultiplyPoint(localPos);
+				Vector3 lhs = transform.MultiplyVector(localTangent);
+				Vector3 rhs = transform.MultiplyVector(localBinormal);
+				Vector3 normalized = Vector3.Cross(lhs, rhs).normalized;
+				float num;
+				if (Camera.current.orthographic)
+				{
+					num = Vector3.Dot(-Camera.current.transform.forward, normalized);
+				}
+				else
+				{
+					num = Vector3.Dot((Camera.current.transform.position - b).normalized, normalized);
+				}
+				if (num < -0.0001f)
+				{
+					alphaFactor *= this.backfaceAlphaMultiplier;
+				}
 			}
 			if (alphaFactor < 1f)
 			{
@@ -259,7 +307,7 @@ namespace UnityEditor
 			Vector3 normalized = transform.MultiplyVector(slideDir1).normalized;
 			Vector3 normalized2 = transform.MultiplyVector(slideDir2).normalized;
 			bool flag;
-			if (Camera.current.isOrthoGraphic)
+			if (Camera.current.orthographic)
 			{
 				flag = (Vector3.Dot(-Camera.current.transform.forward, normalized) < 0f && Vector3.Dot(-Camera.current.transform.forward, normalized2) < 0f);
 			}
@@ -271,7 +319,7 @@ namespace UnityEditor
 			}
 			if (flag)
 			{
-				alphaFactor *= Handles.backfaceAlphaMultiplier;
+				alphaFactor *= this.backfaceAlphaMultiplier;
 			}
 			if (alphaFactor < 1f)
 			{

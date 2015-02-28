@@ -133,9 +133,6 @@ namespace UnityEditor
 		public extern void SetInvisible();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetIsDragging(bool dragging);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsZoomed();
 		internal void ShowPopup()
 		{
@@ -306,7 +303,9 @@ namespace UnityEditor
 					pixelRect.y = EditorPrefs.GetFloat(str + "y", this.m_PixelRect.y);
 				}
 				pixelRect.width = Mathf.Max(EditorPrefs.GetFloat(str + "w", this.m_PixelRect.width), this.m_MinSize.x);
+				pixelRect.width = Mathf.Min(pixelRect.width, this.m_MaxSize.x);
 				pixelRect.height = Mathf.Max(EditorPrefs.GetFloat(str + "h", this.m_PixelRect.height), this.m_MinSize.y);
+				pixelRect.height = Mathf.Min(pixelRect.height, this.m_MaxSize.y);
 				this.m_PixelRect = pixelRect;
 			}
 		}
@@ -408,11 +407,15 @@ namespace UnityEditor
 				ContainerWindow.s_ButtonMax = "WinBtnMaxWin";
 			}
 		}
-		public void HandleEdgesEnd(Rect windowPosition)
+		private bool MacWindowCanResize(Rect windowPosition)
 		{
 			bool flag = Mathf.Abs(windowPosition.xMax - this.position.width) < 2f;
 			bool flag2 = Mathf.Abs(windowPosition.yMax - this.position.height) < 2f;
-			if (Event.current.type == EventType.Repaint && ContainerWindow.macEditor && (this.m_MinSize == Vector2.zero || this.m_MinSize != this.m_MaxSize) && flag2 && flag)
+			return (this.m_MinSize == Vector2.zero || this.m_MinSize != this.m_MaxSize) && flag2 && flag;
+		}
+		public void HandleEdgesEnd(Rect windowPosition)
+		{
+			if (ContainerWindow.macEditor && Event.current.type == EventType.Repaint && this.MacWindowCanResize(windowPosition))
 			{
 				if (ContainerWindow.s_WindowResize == null)
 				{
@@ -460,7 +463,10 @@ namespace UnityEditor
 						this.ToggleMaximize();
 					}
 				}
-				this.DragWindowEdgesMac(left, flag, flag2, bottom, windowPosition);
+				if (this.MacWindowCanResize(windowPosition))
+				{
+					this.DragWindowEdgesMac(left, flag, flag2, bottom, windowPosition);
+				}
 			}
 			else
 			{
@@ -603,7 +609,6 @@ namespace UnityEditor
 				if (position.Contains(current.mousePosition) && GUIUtility.hotControl == 0 && current.button == 0)
 				{
 					GUIUtility.hotControl = controlID;
-					this.SetIsDragging(true);
 					Event.current.Use();
 					ContainerWindow.s_LastDragMousePos = GUIUtility.GUIToScreenPoint(current.mousePosition);
 					ContainerWindow.s_DragStartMousePos = ContainerWindow.s_LastDragMousePos;
@@ -618,7 +623,6 @@ namespace UnityEditor
 				if (GUIUtility.hotControl == controlID)
 				{
 					GUIUtility.hotControl = 0;
-					this.SetIsDragging(false);
 					Event.current.Use();
 				}
 				break;

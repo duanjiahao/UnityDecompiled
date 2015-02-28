@@ -32,7 +32,7 @@ namespace UnityEditor
 			{
 				base.isValid = false;
 				base.errorString = "Heightmaps above 4096x4096 in resolution are not supported";
-				Debug.LogError("Heightmaps above 4096x4096 in resolution are not supported");
+				Debug.LogError(base.errorString);
 				return;
 			}
 			List<UnityEngine.Object> list = new List<UnityEngine.Object>();

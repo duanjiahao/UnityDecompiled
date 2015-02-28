@@ -16,7 +16,7 @@ namespace UnityEditorInternal
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void OpenEntryFile(int index);
+		public static extern void RowGotDoubleClicked(int index);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetStatusText();

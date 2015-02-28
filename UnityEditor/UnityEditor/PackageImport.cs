@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -15,14 +16,15 @@ namespace UnityEditor
 			public GUIStyle topBarBg = new GUIStyle("ProjectBrowserHeaderBgTop");
 			public GUIStyle textureIconDropShadow = "ProjectBrowserTextureIconDropShadow";
 			public Color lineColor;
+			public GUIContent badgeNew = EditorGUIUtility.IconContent("AS Badge New");
 			public Constants()
 			{
 				this.lineColor = ((!EditorGUIUtility.isProSkin) ? new Color(0.4f, 0.4f, 0.4f) : new Color(0.1f, 0.1f, 0.1f));
 				this.topBarBg.fixedHeight = 0f;
-				RectOffset arg_D7_0 = this.topBarBg.border;
+				RectOffset arg_E7_0 = this.topBarBg.border;
 				int num = 2;
 				this.topBarBg.border.bottom = num;
-				arg_D7_0.top = num;
+				arg_E7_0.top = num;
 				this.title.fontStyle = FontStyle.Bold;
 				this.title.alignment = TextAnchor.MiddleLeft;
 			}
@@ -42,6 +44,7 @@ namespace UnityEditor
 		private static Texture2D s_PackageIcon;
 		private static Texture2D s_Preview;
 		private static string s_LastPreviewPath;
+		private static readonly char[] s_InvalidPathChars = Path.GetInvalidPathChars();
 		private static PackageImport.Constants ms_Constants;
 		public PackageImport()
 		{
@@ -49,6 +52,10 @@ namespace UnityEditor
 		}
 		public static void ShowImportPackage(string packagePath, AssetsItem[] items, string packageIconPath)
 		{
+			if (!PackageImport.ValidateInput(items))
+			{
+				return;
+			}
 			PackageImport window = EditorWindow.GetWindow<PackageImport>(true, "Importing package");
 			window.Init(packagePath, items, packageIconPath);
 		}
@@ -262,6 +269,57 @@ namespace UnityEditor
 				PackageImport.LoadTexture(previewPath, ref PackageImport.s_Preview);
 			}
 			return PackageImport.s_Preview;
+		}
+		private static bool ValidateInput(AssetsItem[] items)
+		{
+			string text;
+			if (!PackageImport.IsAllFilePathsValid(items, out text))
+			{
+				text += "\nDo you want to import the valid file paths of the package or cancel importing?";
+				return EditorUtility.DisplayDialog("Invalid file path found", text, "Import", "Cancel importing");
+			}
+			return true;
+		}
+		private static bool IsAllFilePathsValid(AssetsItem[] assetItems, out string errorMessage)
+		{
+			for (int i = 0; i < assetItems.Length; i++)
+			{
+				AssetsItem assetsItem = assetItems[i];
+				if (assetsItem.assetIsDir != 1)
+				{
+					char c;
+					int num;
+					if (PackageImport.HasInvalidCharInFilePath(assetsItem.pathName, out c, out num))
+					{
+						errorMessage = string.Format("Invalid character found in file path: '{0}'. Invalid ascii value: {1} (at character index {2}).", assetsItem.pathName, (int)c, num);
+						return false;
+					}
+				}
+			}
+			errorMessage = string.Empty;
+			return true;
+		}
+		private static bool HasInvalidCharInFilePath(string filePath, out char invalidChar, out int invalidCharIndex)
+		{
+			for (int i = 0; i < filePath.Length; i++)
+			{
+				char c = filePath[i];
+				if (PackageImport.s_InvalidPathChars.Contains(c))
+				{
+					invalidChar = c;
+					invalidCharIndex = i;
+					return true;
+				}
+			}
+			invalidChar = ' ';
+			invalidCharIndex = -1;
+			return false;
+		}
+		public static bool HasInvalidCharInFilePath(string filePath)
+		{
+			char c;
+			int num;
+			return PackageImport.HasInvalidCharInFilePath(filePath, out c, out num);
 		}
 	}
 }

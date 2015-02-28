@@ -6,8 +6,8 @@ namespace UnityEditor
 {
 	internal class MaterialEnumDrawer : MaterialPropertyDrawer
 	{
-		public readonly string[] names;
-		public readonly int[] values;
+		private readonly string[] names;
+		private readonly int[] values;
 		public MaterialEnumDrawer(string enumName)
 		{
 			Type[] source = AppDomain.CurrentDomain.GetAssemblies().SelectMany((Assembly x) => AssemblyHelper.GetTypesFromAssembly(x)).ToArray<Type>();
@@ -24,7 +24,10 @@ namespace UnityEditor
 			}
 			catch (Exception)
 			{
-				Debug.LogWarning(string.Format("Failed to create MaterialEnum, enum {0} not found", enumName));
+				Debug.LogWarningFormat("Failed to create MaterialEnum, enum {0} not found", new object[]
+				{
+					enumName
+				});
 				throw;
 			}
 		}

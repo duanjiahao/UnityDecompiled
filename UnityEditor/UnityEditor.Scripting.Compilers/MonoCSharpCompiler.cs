@@ -8,7 +8,7 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal class MonoCSharpCompiler : MonoScriptCompilerBase
 	{
-		public MonoCSharpCompiler(MonoIsland island) : base(island)
+		public MonoCSharpCompiler(MonoIsland island, bool runUpdater) : base(island, runUpdater)
 		{
 		}
 		protected override Program StartCompiler()
@@ -26,22 +26,20 @@ namespace UnityEditor.Scripting.Compilers
 				string fileName = references[i];
 				list.Add("-r:" + ScriptCompilerBase.PrepareFileName(fileName));
 			}
-			string[] defines = this._island._defines;
-			for (int j = 0; j < defines.Length; j++)
+			foreach (string current in this._island._defines.Distinct<string>())
 			{
-				string str = defines[j];
-				list.Add("-define:" + str);
+				list.Add("-define:" + current);
 			}
 			string[] files = this._island._files;
-			for (int k = 0; k < files.Length; k++)
+			for (int j = 0; j < files.Length; j++)
 			{
-				string fileName2 = files[k];
+				string fileName2 = files[j];
 				list.Add(ScriptCompilerBase.PrepareFileName(fileName2));
 			}
 			string[] additionalReferences = this.GetAdditionalReferences();
-			for (int l = 0; l < additionalReferences.Length; l++)
+			for (int k = 0; k < additionalReferences.Length; k++)
 			{
-				string path = additionalReferences[l];
+				string path = additionalReferences[k];
 				string text = Path.Combine(base.GetProfileDirectory(), path);
 				if (File.Exists(text))
 				{
@@ -86,7 +84,7 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			MonoIsland island = new MonoIsland(BuildTarget.StandaloneWindows, "unity", sources, references, defines, outputFile);
 			string[] result;
-			using (MonoCSharpCompiler monoCSharpCompiler = new MonoCSharpCompiler(island))
+			using (MonoCSharpCompiler monoCSharpCompiler = new MonoCSharpCompiler(island, false))
 			{
 				monoCSharpCompiler.BeginCompiling();
 				while (!monoCSharpCompiler.Poll())

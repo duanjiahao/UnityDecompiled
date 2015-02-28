@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.Animations;
 using UnityEditorInternal;
 using UnityEngine;
 namespace UnityEditor
@@ -37,7 +38,7 @@ namespace UnityEditor
 			AnimatorOverrideController animatorOverrideController = this.target as AnimatorOverrideController;
 			RuntimeAnimatorController runtimeAnimatorController = (!this.m_Controller.hasMultipleDifferentValues) ? animatorOverrideController.runtimeAnimatorController : null;
 			EditorGUI.BeginChangeCheck();
-			runtimeAnimatorController = (EditorGUILayout.ObjectField("Controller", runtimeAnimatorController, typeof(AnimatorController), false, new GUILayoutOption[0]) as RuntimeAnimatorController);
+			runtimeAnimatorController = (EditorGUILayout.ObjectField("Controller", runtimeAnimatorController, typeof(UnityEditor.Animations.AnimatorController), false, new GUILayoutOption[0]) as RuntimeAnimatorController);
 			if (EditorGUI.EndChangeCheck())
 			{
 				for (int i = 0; i < base.targets.Length; i++)

@@ -71,6 +71,10 @@ namespace UnityEditor
 		internal static PrefKey kAnimationNextKeyframe = new PrefKey("Animation/Next Keyframe", "&.");
 		internal static PrefKey kAnimationRecordKeyframe = new PrefKey("Animation/Record Keyframe", "k");
 		internal static PrefKey kAnimationShowCurvesToggle = new PrefKey("Animation/Show curves", "c");
+		[NonSerialized]
+		private bool m_SelectionInitializedNonSerialized;
+		[SerializeField]
+		private bool m_SelectionInitializedSerialized;
 		[SerializeField]
 		private SerializedStringTable m_ExpandedFoldouts;
 		[SerializeField]
@@ -544,7 +548,7 @@ namespace UnityEditor
 			List<GameObject> list = new List<GameObject>();
 			while (true)
 			{
-				if (tr.animation || tr.GetComponent<Animator>())
+				if (tr.GetComponent<Animation>() || tr.GetComponent<Animator>())
 				{
 					list.Add(tr.gameObject);
 				}
@@ -583,7 +587,7 @@ namespace UnityEditor
 			List<AnimationSelection> list = new List<AnimationSelection>();
 			GameObject gameObject = (!(Selection.activeGameObject != null)) ? this.state.m_ActiveGameObject : Selection.activeGameObject;
 			Transform transform = (!gameObject) ? null : gameObject.transform;
-			if (transform == null)
+			if (transform == null && this.state.m_RootGameObject != null)
 			{
 				transform = ((!(this.state.m_RootGameObject != null)) ? null : this.state.m_RootGameObject.transform);
 				this.state.m_ActiveGameObject = this.state.m_RootGameObject;
@@ -621,15 +625,16 @@ namespace UnityEditor
 				}
 				this.state.m_ActiveAnimationClip = AnimationWindow.m_Selected[0].clip;
 				this.state.m_RootGameObject = AnimationWindow.m_Selected[0].avatarRootObject;
-				this.state.m_AnimatedGameObject = AnimationWindow.m_Selected[0].animatedObject;
 			}
 			else
 			{
-				this.state.m_ActiveAnimationClip = null;
-				this.state.m_RootGameObject = null;
-				this.state.m_AnimatedGameObject = null;
-				this.state.m_ActiveGameObject = null;
-				this.state.refresh = AnimationWindowState.RefreshType.Everything;
+				if (Selection.activeObject != null)
+				{
+					this.state.m_ActiveAnimationClip = null;
+					this.state.m_RootGameObject = null;
+					this.state.m_ActiveGameObject = null;
+					this.state.refresh = AnimationWindowState.RefreshType.Everything;
+				}
 			}
 			if (flag && flag2)
 			{
@@ -698,6 +703,15 @@ namespace UnityEditor
 					if (!(animatedObject == null))
 					{
 						AnimationMode.SampleAnimationClip(animatedObject, clip, this.state.GetTimeSeconds());
+						Animation component = animatedObject.GetComponent<Animation>();
+						if (component)
+						{
+							AnimationState animationState = component[clip.name];
+							if (animationState)
+							{
+								animationState.time = this.state.GetTimeSeconds();
+							}
+						}
 					}
 				}
 			}
@@ -872,7 +886,7 @@ namespace UnityEditor
 				GUI.EndGroup();
 				return;
 			}
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(1);
 			Color backgroundColor = GUI.backgroundColor;
 			if (sparseLines)
@@ -949,7 +963,7 @@ namespace UnityEditor
 				return;
 			}
 			this.m_CurveEditor.hTicks.SetTickStrengths((float)this.m_CurveEditor.settings.hTickStyle.distMin, (float)this.m_CurveEditor.settings.hTickStyle.distFull, false);
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(1);
 			for (int i = 0; i < this.m_CurveEditor.hTicks.tickLevels; i++)
 			{
@@ -978,22 +992,28 @@ namespace UnityEditor
 			}
 			this.state.OnGUI();
 			this.InitAllViews();
-			if (this.state.m_ActiveGameObject == null)
+			if (!this.m_SelectionInitializedNonSerialized)
 			{
+				if (!this.m_SelectionInitializedSerialized)
+				{
+					this.state.m_ShowCurveEditor = false;
+					this.m_SelectionInitializedSerialized = true;
+				}
 				AnimationWindow.m_Selected = null;
-				this.state.m_ShowCurveEditor = false;
-			}
-			if (AnimationWindow.m_Selected == null)
-			{
 				this.OnSelectionChange();
+				this.m_SelectionInitializedNonSerialized = true;
 			}
-			if (AnimationWindow.m_Selected.Length == 0)
+			if (AnimationWindow.m_Selected != null && AnimationWindow.m_Selected.Length == 0)
 			{
 				this.EndAnimationMode();
 			}
 			if (this.state == null)
 			{
 				return;
+			}
+			if (this.state.m_ActiveAnimationClip == null && AnimationMode.InAnimationMode())
+			{
+				this.EndAnimationMode();
 			}
 			if (this.m_CurveEditorToggleChanged)
 			{
@@ -1104,7 +1124,7 @@ namespace UnityEditor
 				this.PreviewFrame(num2);
 			}
 			EditorGUI.EndDisabledGroup();
-			EditorGUI.BeginDisabledGroup(!this.state.IsEditable);
+			EditorGUI.BeginDisabledGroup(!this.state.IsClipEditable);
 			if ((GUILayout.Button(AnimationWindow.ms_Styles.addKeyframeContent, EditorStyles.toolbarButton, new GUILayoutOption[0]) || AnimationWindow.kAnimationRecordKeyframe.activated) && this.EnsureAnimationMode())
 			{
 				AnimationWindowUtility.AddSelectedKeyframes(this.state, this.state.time);
@@ -1147,7 +1167,7 @@ namespace UnityEditor
 			EditorGUI.EndDisabledGroup();
 			EditorGUILayout.EndHorizontal();
 			GUILayoutUtility.GetRect((float)num, base.position.height - 17f - 18f - 15f);
-			if (AnimationWindow.m_Selected.Length > 0)
+			if (AnimationWindow.m_Selected.Length > 0 && AnimationWindow.m_Selected[0].GameObjectIsAnimatable)
 			{
 				this.HierarchyGUI(num, (int)rect4.height - 15);
 			}
@@ -1226,7 +1246,7 @@ namespace UnityEditor
 			this.HandlePlayhead((float)num, rect2);
 			if (AnimationWindow.m_Selected.Length > 0)
 			{
-				EditorGUI.BeginDisabledGroup(!this.state.IsEditable);
+				EditorGUI.BeginDisabledGroup(!this.state.IsClipEditable);
 				this.HandlePlayhead((float)num, rect3);
 				this.m_AnimationEventTimeLine.EventLineGUI(rect3, AnimationWindow.m_Selected[0], this.state, this.m_CurveEditor);
 				EditorGUI.EndDisabledGroup();
@@ -1354,7 +1374,7 @@ namespace UnityEditor
 		}
 		private static void DrawLine(Vector2 p1, Vector2 p2, Color color)
 		{
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.PushMatrix();
 			GL.MultMatrix(Handles.matrix);
 			GL.Begin(1);
@@ -1370,7 +1390,7 @@ namespace UnityEditor
 			{
 				return;
 			}
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.PushMatrix();
 			GL.MultMatrix(Handles.matrix);
 			GL.Begin(7);
@@ -1437,6 +1457,11 @@ namespace UnityEditor
 				this.FrameSelected();
 			}
 			this.InitSelection();
+		}
+		public void OnBecameVisible()
+		{
+			this.m_SelectionInitializedNonSerialized = false;
+			this.m_SelectionInitializedSerialized = false;
 		}
 		private void SetGridColors()
 		{

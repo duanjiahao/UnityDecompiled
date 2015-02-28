@@ -27,6 +27,21 @@ namespace UnityEditor
 			public readonly GUIStyle notice;
 			public readonly GUIContent smallMip;
 			public readonly GUIContent largeMip;
+			public static readonly GUIContent[] spriteAlignmentOptions = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.Center"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.TopLeft"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.Top"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.TopRight"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.Left"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.Right"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.BottomLeft"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.Bottom"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.BottomRight"),
+				EditorGUIUtility.TextContent("SpriteInspector.Pivot.Custom")
+			};
+			public static GUIContent s_PivotLabel = EditorGUIUtility.TextContent("Pivot");
+			public static GUIContent s_NoSelectionWarning = EditorGUIUtility.TextContent("SpriteEditor.NoTextureOrSpriteSelected");
 			public Styles()
 			{
 				this.toolbar = new GUIStyle(EditorStyles.inspectorBig);

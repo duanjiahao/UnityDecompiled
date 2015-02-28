@@ -18,6 +18,7 @@ namespace UnityEditorInternal
 		}
 		internal class Styles
 		{
+			public GUIContent performanceWarning = new GUIContent(string.Empty, EditorGUIUtility.LoadIcon("console.warnicon.sml"), "Collecting GPU Profiler data might have overhead. Close graph if you don't need its data");
 			public GUIStyle background = "OL Box";
 			public GUIStyle leftPane = "ProfilerLeftPane";
 			public GUIStyle rightPane = "ProfilerRightPane";
@@ -111,7 +112,7 @@ namespace UnityEditorInternal
 			}
 			return selectedFrame;
 		}
-		public int DoGUI(Chart.ChartType type, int selectedFrame, ChartData cdata, bool active, GUIContent icon, out Chart.ChartAction action)
+		public int DoGUI(Chart.ChartType type, int selectedFrame, ChartData cdata, ProfilerArea area, bool active, GUIContent icon, out Chart.ChartAction action)
 		{
 			action = Chart.ChartAction.None;
 			if (cdata == null)
@@ -143,6 +144,7 @@ namespace UnityEditorInternal
 			Rect rect3 = rect2;
 			rect3.x -= 170f;
 			rect3.width = 170f;
+			GUI.Label(new Rect(rect3.x, rect3.y, rect3.width, 20f), GUIContent.Temp(string.Empty, icon.tooltip));
 			if (current.type == EventType.Repaint)
 			{
 				Chart.ms_Styles.rightPane.Draw(rect2, false, false, active, false);
@@ -177,6 +179,10 @@ namespace UnityEditorInternal
 				rect3.y += 10f;
 				this.LabelDraggerDrag(controlID, type, cdata, rect3, active);
 			}
+			if (area == ProfilerArea.GPU)
+			{
+				GUI.Label(new Rect(rect.x + 170f - (float)Chart.ms_Styles.performanceWarning.image.width, rect.yMax - (float)Chart.ms_Styles.performanceWarning.image.height - 2f, (float)Chart.ms_Styles.performanceWarning.image.width, (float)Chart.ms_Styles.performanceWarning.image.height), Chart.ms_Styles.performanceWarning);
+			}
 			if (GUI.Button(new Rect(rect.x + 170f - 13f - 2f, rect.y + 2f, 13f, 13f), GUIContent.none, Chart.ms_Styles.closeButton))
 			{
 				action = Chart.ChartAction.Closed;
@@ -189,7 +195,7 @@ namespace UnityEditorInternal
 			{
 				float num = (float)cdata.NumberOfFrames;
 				selectedFrame -= cdata.firstFrame;
-				HandleUtility.handleWireMaterial.SetPass(0);
+				HandleUtility.ApplyWireMaterial();
 				GL.Begin(7);
 				GL.Color(new Color(1f, 1f, 1f, 0.6f));
 				GL.Vertex3(r.x + r.width / num * (float)selectedFrame, r.y + 1f, 0f);
@@ -211,7 +217,7 @@ namespace UnityEditorInternal
 		}
 		private void DrawChartStacked(int selectedFrame, ChartData cdata, Rect r)
 		{
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			float[] sumbuf = new float[cdata.NumberOfFrames];
 			for (int i = 0; i < cdata.charts.Length; i++)
 			{
@@ -243,6 +249,10 @@ namespace UnityEditorInternal
 		}
 		private void DoLabel(float x, float y, string text, float alignment)
 		{
+			if (string.IsNullOrEmpty(text))
+			{
+				return;
+			}
 			GUIContent content = new GUIContent(text);
 			Vector2 vector = Chart.ms_Styles.whiteLabel.CalcSize(content);
 			Rect position = new Rect(x + vector.x * alignment, y, vector.x, vector.y);

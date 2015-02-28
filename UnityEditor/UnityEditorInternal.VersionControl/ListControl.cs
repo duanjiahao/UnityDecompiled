@@ -446,7 +446,7 @@ namespace UnityEditorInternal.VersionControl
 						if (current.type == EventType.ContextClick)
 						{
 							this.singleSelect = null;
-							if (this.IsSelectedFolder() && !string.IsNullOrEmpty(this.menuFolder))
+							if (!this.IsSelectedAsset() && !string.IsNullOrEmpty(this.menuFolder))
 							{
 								ListControl.s_uniqueIDList[this.uniqueID] = this;
 								EditorUtility.DisplayPopupMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), this.menuFolder, new MenuCommand(null, this.uniqueID));
@@ -908,16 +908,16 @@ namespace UnityEditorInternal.VersionControl
 			}
 			return item.Change != null && this.selectList.ContainsKey("_chkeyprfx_" + item.Change.id.ToString());
 		}
-		private bool IsSelectedFolder()
+		private bool IsSelectedAsset()
 		{
 			foreach (KeyValuePair<string, ListItem> current in this.selectList)
 			{
-				if (current.Value != null && current.Value.Asset != null && !current.Value.Asset.isFolder)
+				if (current.Value != null && current.Value.Asset != null)
 				{
-					return false;
+					return true;
 				}
 			}
-			return true;
+			return false;
 		}
 		private void SelectedClear()
 		{

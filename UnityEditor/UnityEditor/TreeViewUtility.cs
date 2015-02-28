@@ -12,9 +12,9 @@ namespace UnityEditor
 				where itemIDs.Contains(x.id)
 				select x).ToList<TreeViewItem>();
 		}
-		public static TreeViewItem FindItemInList(int id, List<TreeViewItem> treeViewItems)
+		public static TreeViewItem FindItemInList<T>(int id, List<T> treeViewItems) where T : TreeViewItem
 		{
-			return treeViewItems.FirstOrDefault((TreeViewItem t) => t.id == id);
+			return treeViewItems.FirstOrDefault((T t) => t.id == id);
 		}
 		public static TreeViewItem FindItem(int id, TreeViewItem searchFromThisItem)
 		{
@@ -62,64 +62,82 @@ namespace UnityEditor
 		}
 		public static void SetChildParentReferences(List<TreeViewItem> visibleItems, TreeViewItem root)
 		{
-			Dictionary<TreeViewItem, List<TreeViewItem>> dictionary = new Dictionary<TreeViewItem, List<TreeViewItem>>();
 			for (int i = 0; i < visibleItems.Count; i++)
 			{
-				TreeViewItem treeViewItem = visibleItems[i];
-				TreeViewItem treeViewItem2 = TreeViewUtility.FindParent(visibleItems, treeViewItem.depth, i);
-				if (treeViewItem2 == null)
-				{
-					treeViewItem2 = root;
-				}
-				if (!dictionary.ContainsKey(treeViewItem2))
-				{
-					dictionary.Add(treeViewItem2, new List<TreeViewItem>(4));
-				}
-				dictionary[treeViewItem2].Add(treeViewItem);
-				treeViewItem.parent = treeViewItem2;
+				visibleItems[i].parent = null;
 			}
-			foreach (KeyValuePair<TreeViewItem, List<TreeViewItem>> current in dictionary)
+			int num = 0;
+			for (int j = 0; j < visibleItems.Count; j++)
 			{
-				TreeViewUtility.SetParent(current.Value, current.Key);
+				TreeViewUtility.SetChildParentReferences(j, visibleItems);
+				if (visibleItems[j].parent == null)
+				{
+					num++;
+				}
+			}
+			if (num > 0)
+			{
+				List<TreeViewItem> list = new List<TreeViewItem>(num);
+				for (int k = 0; k < visibleItems.Count; k++)
+				{
+					if (visibleItems[k].parent == null)
+					{
+						list.Add(visibleItems[k]);
+						visibleItems[k].parent = root;
+					}
+				}
+				root.children = list;
 			}
 		}
-		private static void SetParent(List<TreeViewItem> children, TreeViewItem parent)
+		private static void SetChildren(TreeViewItem item, List<TreeViewItem> newChildList)
 		{
-			if (parent.hasChildren && parent.children[0] == null)
+			if (LazyTreeViewDataSource.IsChildListForACollapsedParent(item.children) && newChildList == null)
 			{
-				parent.children.RemoveAt(0);
+				return;
 			}
-			if (parent.children == null)
-			{
-				parent.children = new List<TreeViewItem>(children.Count);
-			}
-			parent.children.AddRange(children);
+			item.children = newChildList;
 		}
-		private static void SetParent(TreeViewItem child, TreeViewItem parent)
+		private static void SetChildParentReferences(int parentIndex, List<TreeViewItem> visibleItems)
 		{
-			child.parent = parent;
-			if (parent.hasChildren && parent.children[0] == null)
+			TreeViewItem treeViewItem = visibleItems[parentIndex];
+			bool flag = treeViewItem.children != null && treeViewItem.children.Count > 0 && treeViewItem.children[0] != null;
+			if (flag)
 			{
-				parent.children.RemoveAt(0);
+				return;
 			}
-			parent.AddChild(child);
-		}
-		private static TreeViewItem FindParent(List<TreeViewItem> visibleItems, int childDepth, int childIndex)
-		{
-			if (childDepth == 0)
+			int depth = treeViewItem.depth;
+			int num = 0;
+			for (int i = parentIndex + 1; i < visibleItems.Count; i++)
 			{
-				return null;
-			}
-			while (childIndex >= 0)
-			{
-				TreeViewItem treeViewItem = visibleItems[childIndex];
-				if (treeViewItem.depth == childDepth - 1)
+				if (visibleItems[i].depth == depth + 1)
 				{
-					return treeViewItem;
+					num++;
 				}
-				childIndex--;
+				if (visibleItems[i].depth <= depth)
+				{
+					break;
+				}
 			}
-			return null;
+			List<TreeViewItem> list = null;
+			if (num != 0)
+			{
+				list = new List<TreeViewItem>(num);
+				num = 0;
+				for (int j = parentIndex + 1; j < visibleItems.Count; j++)
+				{
+					if (visibleItems[j].depth == depth + 1)
+					{
+						visibleItems[j].parent = treeViewItem;
+						list.Add(visibleItems[j]);
+						num++;
+					}
+					if (visibleItems[j].depth <= depth)
+					{
+						break;
+					}
+				}
+			}
+			TreeViewUtility.SetChildren(treeViewItem, list);
 		}
 	}
 }

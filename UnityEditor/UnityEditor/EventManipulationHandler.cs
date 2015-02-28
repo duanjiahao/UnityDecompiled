@@ -174,7 +174,7 @@ namespace UnityEditor
 						{
 							this.m_HoverEvent = i;
 							this.m_InstantTooltipText = events[this.m_HoverEvent].functionName;
-							this.m_InstantTooltipPoint = new Vector2(hitRects[this.m_HoverEvent].xMin + (float)((int)(hitRects[this.m_HoverEvent].width / 2f)) + eventLineRect.x, eventLineRect.yMax);
+							this.m_InstantTooltipPoint = new Vector2(mousePosition.x, mousePosition.y);
 						}
 					}
 				}
@@ -190,14 +190,12 @@ namespace UnityEditor
 			{
 				GUIStyle gUIStyle = "AnimationEventTooltip";
 				Vector2 vector = gUIStyle.CalcSize(new GUIContent(this.m_InstantTooltipText));
-				Rect position = new Rect(this.m_InstantTooltipPoint.x - vector.x * 0.5f + 30f, this.m_InstantTooltipPoint.y + 24f, vector.x, vector.y);
+				Rect position = new Rect(window.x + this.m_InstantTooltipPoint.x, window.y + this.m_InstantTooltipPoint.y, vector.x, vector.y);
 				if (position.xMax > window.width)
 				{
 					position.x = window.width - position.width;
 				}
 				GUI.Label(position, this.m_InstantTooltipText, gUIStyle);
-				position = new Rect(this.m_InstantTooltipPoint.x - 30f, this.m_InstantTooltipPoint.y, 7f, 25f);
-				GUI.Label(position, string.Empty, "AnimationEventTooltipArrow");
 			}
 		}
 		private bool DeleteEvents(ref AnimationEvent[] eventList, bool[] deleteIndices)

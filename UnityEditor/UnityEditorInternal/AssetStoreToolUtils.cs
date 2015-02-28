@@ -6,6 +6,9 @@ namespace UnityEditorInternal
 {
 	public sealed class AssetStoreToolUtils
 	{
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool BuildAssetStoreAssetBundle(UnityEngine.Object targetObject, string targetPath);
 		public static bool PreviewAssetStoreAssetBundleInInspector(AssetBundle bundle, AssetStoreAsset info)
 		{
 			info.id = 0;
@@ -20,8 +23,5 @@ namespace UnityEditorInternal
 		{
 			AssetStoreUtils.UpdatePreloading();
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool BuildAssetStoreAssetBundle(UnityEngine.Object targetObject, string targetPath);
 	}
 }

@@ -24,5 +24,6 @@ namespace UnityEditor
 		void InsertFakeItem(int id, int parentID, string name, Texture2D icon);
 		void RemoveFakeItem();
 		bool HasFakeItem();
+		void OnSearchChanged();
 	}
 }

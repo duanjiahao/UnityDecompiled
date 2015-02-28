@@ -12,6 +12,8 @@ namespace UnityEditor
 		public Texture2D m_NormalMap;
 		private Vector2 m_TileSize;
 		private Vector2 m_TileOffset;
+		private Color m_Specular;
+		private float m_Metallic;
 		public TerrainSplatEditor()
 		{
 			base.position = new Rect(50f, 50f, 200f, 300f);
@@ -40,6 +42,8 @@ namespace UnityEditor
 			this.m_NormalMap = splatPrototype.normalMap;
 			this.m_TileSize = splatPrototype.tileSize;
 			this.m_TileOffset = splatPrototype.tileOffset;
+			this.m_Specular = splatPrototype.specular;
+			this.m_Metallic = splatPrototype.metallic;
 		}
 		private void ApplyTerrainSplat()
 		{
@@ -60,6 +64,8 @@ namespace UnityEditor
 			array[this.m_Index].normalMap = this.m_NormalMap;
 			array[this.m_Index].tileSize = this.m_TileSize;
 			array[this.m_Index].tileOffset = this.m_TileOffset;
+			array[this.m_Index].specular = this.m_Specular;
+			array[this.m_Index].metallic = this.m_Metallic;
 			this.m_Terrain.terrainData.splatPrototypes = array;
 			EditorUtility.SetDirty(this.m_Terrain);
 		}
@@ -91,14 +97,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
-		private void ShowNormalMapShaderWarning()
-		{
-			if (this.m_NormalMap != null && this.m_Terrain != null && (this.m_Terrain.materialTemplate == null || !this.m_Terrain.materialTemplate.HasProperty("_Normal0")))
-			{
-				EditorGUILayout.HelpBox("Note: in order for normal map to have effect, a custom material with normal mapped terrain shader needs to be used.", MessageType.Info);
-			}
-		}
-		private static void TextureFieldGUI(string label, ref Texture2D texture)
+		private static void TextureFieldGUI(string label, ref Texture2D texture, float alignmentOffset)
 		{
 			GUILayout.Space(6f);
 			GUILayout.BeginVertical(new GUILayoutOption[]
@@ -111,6 +110,7 @@ namespace UnityEditor
 			{
 				GUILayout.MaxWidth(64f)
 			});
+			rect.x += alignmentOffset;
 			texture = (EditorGUI.DoObjectField(rect, rect, GUIUtility.GetControlID(12354, EditorGUIUtility.native, rect), texture, typeFromHandle, null, null, false) as Texture2D);
 			GUILayout.EndVertical();
 		}
@@ -158,6 +158,14 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 		}
+		private static bool IsUsingMetallic(Terrain.MaterialType materialType, Material materialTemplate)
+		{
+			return materialType == Terrain.MaterialType.BuiltInStandard || (materialType == Terrain.MaterialType.Custom && materialTemplate != null && materialTemplate.HasProperty("_Metallic0"));
+		}
+		private static bool IsUsingSpecular(Terrain.MaterialType materialType, Material materialTemplate)
+		{
+			return materialType == Terrain.MaterialType.BuiltInStandard || (materialType == Terrain.MaterialType.Custom && materialTemplate != null && materialTemplate.HasProperty("_Specular0"));
+		}
 		private void OnGUI()
 		{
 			EditorGUIUtility.labelWidth = (float)Screen.width - 64f - 20f;
@@ -166,12 +174,57 @@ namespace UnityEditor
 			flag &= this.ValidateTerrain();
 			EditorGUI.BeginChangeCheck();
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			TerrainSplatEditor.TextureFieldGUI("Texture", ref this.m_Texture);
-			TerrainSplatEditor.TextureFieldGUI("Normal Map", ref this.m_NormalMap);
+			string label = string.Empty;
+			float alignmentOffset = 0f;
+			switch (this.m_Terrain.materialType)
+			{
+			case Terrain.MaterialType.BuiltInStandard:
+				if (this.m_Terrain.useDefaultSmoothness)
+				{
+					label = "\n Albedo (RGB)";
+				}
+				else
+				{
+					label = " Albedo (RGB)\nSmoothness (A)";
+				}
+				alignmentOffset = 15f;
+				break;
+			case Terrain.MaterialType.BuiltInLegacyDiffuse:
+				label = "\n Diffuse (RGB)";
+				alignmentOffset = 15f;
+				break;
+			case Terrain.MaterialType.BuiltInLegacySpecular:
+				label = "Diffuse (RGB)\n   Gloss (A)";
+				alignmentOffset = 12f;
+				break;
+			case Terrain.MaterialType.Custom:
+				label = " \n  Splat";
+				alignmentOffset = 0f;
+				break;
+			}
+			TerrainSplatEditor.TextureFieldGUI(label, ref this.m_Texture, alignmentOffset);
+			TerrainSplatEditor.TextureFieldGUI("\nNormal", ref this.m_NormalMap, -4f);
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 			flag &= this.ValidateMainTexture(this.m_Texture);
-			this.ShowNormalMapShaderWarning();
+			if (flag)
+			{
+				if (TerrainSplatEditor.IsUsingMetallic(this.m_Terrain.materialType, this.m_Terrain.materialTemplate))
+				{
+					EditorGUILayout.Space();
+					float labelWidth = EditorGUIUtility.labelWidth;
+					EditorGUIUtility.labelWidth = 60f;
+					this.m_Metallic = EditorGUILayout.Slider("Metallic", this.m_Metallic, 0f, 1f, new GUILayoutOption[0]);
+					EditorGUIUtility.labelWidth = labelWidth;
+				}
+				else
+				{
+					if (TerrainSplatEditor.IsUsingSpecular(this.m_Terrain.materialType, this.m_Terrain.materialTemplate))
+					{
+						this.m_Specular = EditorGUILayout.ColorField("Specular", this.m_Specular, new GUILayoutOption[0]);
+					}
+				}
+			}
 			TerrainSplatEditor.SplatSizeGUI(ref this.m_TileSize, ref this.m_TileOffset);
 			bool flag2 = EditorGUI.EndChangeCheck();
 			EditorGUILayout.EndScrollView();

@@ -1,71 +1,51 @@
 using System;
-using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
 	public sealed class iPhoneUtils
 	{
-		[Obsolete("isApplicationGenuine property is deprecated. Please use Application.genuine instead.")]
-		public static extern bool isApplicationGenuine
+		[Obsolete("isApplicationGenuine property is deprecated (UnityUpgradable). Please use Application.genuine instead.", true)]
+		public static bool isApplicationGenuine
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return false;
+			}
 		}
-		[Obsolete("isApplicationGenuineAvailable property is deprecated. Please use Application.genuineCheckAvailable instead.")]
-		public static extern bool isApplicationGenuineAvailable
+		[Obsolete("isApplicationGenuineAvailable property is deprecated (UnityUpgradable). Please use Application.genuineCheckAvailable instead.", true)]
+		public static bool isApplicationGenuineAvailable
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return false;
+			}
 		}
-		[Obsolete("PlayMovie method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
-		public static void PlayMovie(string path, Color bgColor, int controlMode, int scalingMode)
-		{
-			iPhoneUtils.INTERNAL_CALL_PlayMovie(path, ref bgColor, controlMode, scalingMode);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_PlayMovie(string path, ref Color bgColor, int controlMode, int scalingMode);
-		[Obsolete("PlayMovie method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
+		[Obsolete("PlayMovie method is deprecated (UnityUpgradable). Please use Handheld.PlayFullScreenMovie instead.", true)]
 		public static void PlayMovie(string path, Color bgColor, iPhoneMovieControlMode controlMode, iPhoneMovieScalingMode scalingMode)
 		{
-			iPhoneUtils.PlayMovie(path, bgColor, (int)controlMode, (int)scalingMode);
 		}
-		[Obsolete("PlayMovie method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
+		[Obsolete("PlayMovie method is deprecated (UnityUpgradable). Please use Handheld.PlayFullScreenMovie instead.", true)]
 		public static void PlayMovie(string path, Color bgColor, iPhoneMovieControlMode controlMode)
 		{
-			iPhoneUtils.PlayMovie(path, bgColor, (int)controlMode, 1);
 		}
-		[Obsolete("PlayMovie method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
+		[Obsolete("PlayMovie method is deprecated (UnityUpgradable). Please use Handheld.PlayFullScreenMovie instead.", true)]
 		public static void PlayMovie(string path, Color bgColor)
 		{
-			iPhoneUtils.PlayMovie(path, bgColor, 0, 1);
 		}
-		[Obsolete("PlayMovieURL method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
-		public static void PlayMovieURL(string url, Color bgColor, int controlMode, int scalingMode)
-		{
-			iPhoneUtils.INTERNAL_CALL_PlayMovieURL(url, ref bgColor, controlMode, scalingMode);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_PlayMovieURL(string url, ref Color bgColor, int controlMode, int scalingMode);
-		[Obsolete("PlayMovieURL method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
+		[Obsolete("PlayMovieURL method is deprecated (UnityUpgradable). Please use Handheld.PlayFullScreenMovie instead.", true)]
 		public static void PlayMovieURL(string url, Color bgColor, iPhoneMovieControlMode controlMode, iPhoneMovieScalingMode scalingMode)
 		{
-			iPhoneUtils.PlayMovieURL(url, bgColor, (int)controlMode, (int)scalingMode);
 		}
-		[Obsolete("PlayMovieURL method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
+		[Obsolete("PlayMovieURL method is deprecated (UnityUpgradable). Please use Handheld.PlayFullScreenMovie instead.", true)]
 		public static void PlayMovieURL(string url, Color bgColor, iPhoneMovieControlMode controlMode)
 		{
-			iPhoneUtils.PlayMovieURL(url, bgColor, (int)controlMode, 1);
 		}
-		[Obsolete("PlayMovieURL method is deprecated. Please use Handheld.PlayFullScreenMovie instead.")]
+		[Obsolete("PlayMovieURL method is deprecated (UnityUpgradable). Please use Handheld.PlayFullScreenMovie instead.", true)]
 		public static void PlayMovieURL(string url, Color bgColor)
 		{
-			iPhoneUtils.PlayMovieURL(url, bgColor, 0, 1);
 		}
-		[Obsolete("Vibrate method is deprecated. Please use Handheld.Vibrate instead."), WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void Vibrate();
+		[Obsolete("Vibrate method is deprecated (UnityUpgradable). Please use Handheld.Vibrate instead.", true)]
+		public static void Vibrate()
+		{
+		}
 	}
 }

@@ -1,5 +1,5 @@
 using System;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 namespace UnityEditor
 {
 	internal class AvatarMaskUtility
@@ -23,9 +23,8 @@ namespace UnityEditor
 		}
 		public static void UpdateTransformMask(AvatarMask mask, string[] refTransformsPath, string[] humanTransforms)
 		{
-			AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey50 <UpdateTransformMask>c__AnonStorey = new AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey50();
+			AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey69 <UpdateTransformMask>c__AnonStorey = new AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey69();
 			<UpdateTransformMask>c__AnonStorey.refTransformsPath = refTransformsPath;
-			mask.Reset();
 			mask.transformCount = <UpdateTransformMask>c__AnonStorey.refTransformsPath.Length;
 			int i;
 			for (i = 0; i < <UpdateTransformMask>c__AnonStorey.refTransformsPath.Length; i++)
@@ -35,11 +34,22 @@ namespace UnityEditor
 				mask.SetTransformActive(i, value);
 			}
 		}
+		public static void SetActiveHumanTransforms(AvatarMask mask, string[] humanTransforms)
+		{
+			for (int i = 0; i < mask.transformCount; i++)
+			{
+				string path = mask.GetTransformPath(i);
+				if (ArrayUtility.FindIndex<string>(humanTransforms, (string s) => path == s) != -1)
+				{
+					mask.SetTransformActive(i, true);
+				}
+			}
+		}
 		private static string[] TokeniseHumanTransformsPath(string[] refTransformsPath, string[] humanTransforms)
 		{
-			AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey52 <TokeniseHumanTransformsPath>c__AnonStorey = new AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey52();
-			<TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms = humanTransforms;
-			if (<TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms == null)
+			AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey6C <TokeniseHumanTransformsPath>c__AnonStorey6C = new AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey6C();
+			<TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms = humanTransforms;
+			if (<TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms == null)
 			{
 				return null;
 			}
@@ -48,9 +58,9 @@ namespace UnityEditor
 				string.Empty
 			};
 			int i;
-			for (i = 0; i < <TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms.Length; i++)
+			for (i = 0; i < <TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms.Length; i++)
 			{
-				int num = ArrayUtility.FindIndex<string>(refTransformsPath, (string s) => <TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms[i] == FileUtil.GetLastPathNameComponent(s));
+				int num = ArrayUtility.FindIndex<string>(refTransformsPath, (string s) => <TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms[i] == FileUtil.GetLastPathNameComponent(s));
 				if (num != -1)
 				{
 					int index = array.Length;

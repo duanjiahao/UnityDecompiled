@@ -425,7 +425,7 @@ namespace UnityEditor
 		}
 		private void PresetDropDown(Rect rect)
 		{
-			if (EditorGUI.ButtonMouseDown(rect, EditorGUI.s_TitleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText) && this.m_Curve != null)
+			if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText) && this.m_Curve != null)
 			{
 				if (this.m_CurvePresets == null)
 				{
@@ -490,7 +490,7 @@ namespace UnityEditor
 				Keyframe keyframe = this.m_Curve.keys[0];
 				Vector3 lhs = new Vector3(keyframe.time, keyframe.value);
 				lhs = this.m_CurveEditor.DrawingToViewTransformPoint(lhs);
-				Rect position = new Rect(lhs.x - num - 6f, lhs.y, num, 17f);
+				Rect position = new Rect(lhs.x - num + 30f, lhs.y, num, 17f);
 				WrapMode wrapMode = (this.m_Curve == null) ? WrapMode.Default : this.m_Curve.preWrapMode;
 				wrapMode = (WrapMode)EditorGUI.EnumPopup(position, (WrapModeFixedCurve)wrapMode, CurveEditorWindow.ms_Styles.curveWrapPopup);
 				if (this.m_Curve != null && wrapMode != this.m_Curve.preWrapMode)
@@ -502,7 +502,7 @@ namespace UnityEditor
 				keyframe = this.m_Curve.keys[this.m_Curve.length - 1];
 				lhs = new Vector3(keyframe.time, keyframe.value);
 				lhs = this.m_CurveEditor.DrawingToViewTransformPoint(lhs);
-				position = new Rect(lhs.x + 6f, lhs.y, num, 17f);
+				position = new Rect(lhs.x - 30f, lhs.y, num, 17f);
 				wrapMode = ((this.m_Curve == null) ? WrapMode.Default : this.m_Curve.postWrapMode);
 				wrapMode = (WrapMode)EditorGUI.EnumPopup(position, (WrapModeFixedCurve)wrapMode, CurveEditorWindow.ms_Styles.curveWrapPopup);
 				if (this.m_Curve != null && wrapMode != this.m_Curve.postWrapMode)

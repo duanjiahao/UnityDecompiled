@@ -93,6 +93,14 @@ namespace UnityEngine
 		{
 			Debug.Internal_Log(0, (message == null) ? "Null" : message.ToString(), context);
 		}
+		public static void LogFormat(string format, params object[] args)
+		{
+			Debug.Log(string.Format(format, args));
+		}
+		public static void LogFormat(Object context, string format, params object[] args)
+		{
+			Debug.Log(string.Format(format, args), context);
+		}
 		public static void LogError(object message)
 		{
 			Debug.Internal_Log(2, (message == null) ? "Null" : message.ToString(), null);
@@ -101,9 +109,20 @@ namespace UnityEngine
 		{
 			Debug.Internal_Log(2, message.ToString(), context);
 		}
+		public static void LogErrorFormat(string format, params object[] args)
+		{
+			Debug.LogError(string.Format(format, args));
+		}
+		public static void LogErrorFormat(Object context, string format, params object[] args)
+		{
+			Debug.LogError(string.Format(format, args), context);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearDeveloperConsole();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void WriteLineToLogFile(string message);
 		public static void LogException(Exception exception)
 		{
 			Debug.Internal_LogException(exception, null);
@@ -122,6 +141,14 @@ namespace UnityEngine
 		public static void LogWarning(object message, Object context)
 		{
 			Debug.Internal_Log(1, message.ToString(), context);
+		}
+		public static void LogWarningFormat(string format, params object[] args)
+		{
+			Debug.LogWarning(string.Format(format, args));
+		}
+		public static void LogWarningFormat(Object context, string format, params object[] args)
+		{
+			Debug.LogWarning(string.Format(format, args), context);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

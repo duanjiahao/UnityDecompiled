@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -75,7 +74,6 @@ namespace UnityEditor
 			for (int i = 0; i < this.m_Planes.Length; i++)
 			{
 				this.m_Planes[i] = base.GetProperty("plane" + i);
-				Assert.That(this.m_Planes[i] != null);
 				if (i == 0 || this.m_Planes[i].objectReferenceValue != null)
 				{
 					list.Add(this.m_Planes[i]);
@@ -343,7 +341,7 @@ namespace UnityEditor
 			{
 				return;
 			}
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			if (color.a > 0f)
 			{
 				GL.Begin(1);

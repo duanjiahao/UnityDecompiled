@@ -7,9 +7,26 @@ namespace UnityEditor
 		public GameObject m_Tree;
 		public float m_BendFactor;
 		private int m_PrototypeIndex = -1;
+		private bool m_IsValidTree;
 		public void OnEnable()
 		{
 			base.minSize = new Vector2(400f, 150f);
+		}
+		private static bool IsValidTree(GameObject tree, int prototypeIndex, Terrain terrain)
+		{
+			if (tree == null)
+			{
+				return false;
+			}
+			TreePrototype[] treePrototypes = terrain.terrainData.treePrototypes;
+			for (int i = 0; i < treePrototypes.Length; i++)
+			{
+				if (i != prototypeIndex && treePrototypes[i].m_Prefab == tree)
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 		internal void InitializeDefaults(Terrain terrain, int index)
 		{
@@ -25,6 +42,7 @@ namespace UnityEditor
 				this.m_Tree = this.m_Terrain.terrainData.treePrototypes[this.m_PrototypeIndex].prefab;
 				this.m_BendFactor = this.m_Terrain.terrainData.treePrototypes[this.m_PrototypeIndex].bendFactor;
 			}
+			this.m_IsValidTree = TreeWizard.IsValidTree(this.m_Tree, this.m_PrototypeIndex, terrain);
 			this.OnWizardUpdate();
 		}
 		private void DoApply()
@@ -64,6 +82,22 @@ namespace UnityEditor
 		{
 			this.DoApply();
 		}
+		protected override bool DrawWizardGUI()
+		{
+			EditorGUI.BeginChangeCheck();
+			this.m_Tree = (GameObject)EditorGUILayout.ObjectField("Tree Prefab", this.m_Tree, typeof(GameObject), false, new GUILayoutOption[0]);
+			bool flag = this.m_Tree != null && this.m_Tree.GetComponent<LODGroup>() == null;
+			if (flag)
+			{
+				this.m_BendFactor = EditorGUILayout.FloatField("Bend Factor", this.m_BendFactor, new GUILayoutOption[0]);
+			}
+			bool flag2 = EditorGUI.EndChangeCheck();
+			if (flag2)
+			{
+				this.m_IsValidTree = TreeWizard.IsValidTree(this.m_Tree, this.m_PrototypeIndex, this.m_Terrain);
+			}
+			return flag2;
+		}
 		internal override void OnWizardUpdate()
 		{
 			base.OnWizardUpdate();
@@ -74,9 +108,17 @@ namespace UnityEditor
 			}
 			else
 			{
-				if (this.m_PrototypeIndex != -1)
+				if (!this.m_IsValidTree)
 				{
-					this.DoApply();
+					base.errorString = "Tree has already been selected as a prototype";
+					base.isValid = false;
+				}
+				else
+				{
+					if (this.m_PrototypeIndex != -1)
+					{
+						this.DoApply();
+					}
 				}
 			}
 		}

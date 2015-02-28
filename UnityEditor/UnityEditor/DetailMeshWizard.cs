@@ -6,8 +6,10 @@ namespace UnityEditor
 	{
 		public GameObject m_Detail;
 		public float m_NoiseSpread;
-		public float m_RandomWidth;
-		public float m_RandomHeight;
+		public float m_MinWidth;
+		public float m_MaxWidth;
+		public float m_MinHeight;
+		public float m_MaxHeight;
 		public Color m_HealthyColor;
 		public Color m_DryColor;
 		public DetailMeshRenderMode m_RenderMode;
@@ -31,8 +33,10 @@ namespace UnityEditor
 			}
 			this.m_Detail = detailPrototype.prototype;
 			this.m_NoiseSpread = detailPrototype.noiseSpread;
-			this.m_RandomWidth = detailPrototype.maxWidth - 1f;
-			this.m_RandomHeight = detailPrototype.maxHeight - 1f;
+			this.m_MinWidth = detailPrototype.minWidth;
+			this.m_MaxWidth = detailPrototype.maxWidth;
+			this.m_MinHeight = detailPrototype.minHeight;
+			this.m_MaxHeight = detailPrototype.maxHeight;
 			this.m_HealthyColor = detailPrototype.healthyColor;
 			this.m_DryColor = detailPrototype.dryColor;
 			switch (detailPrototype.renderMode)
@@ -70,10 +74,10 @@ namespace UnityEditor
 			array[this.m_PrototypeIndex].prototype = this.m_Detail;
 			array[this.m_PrototypeIndex].prototypeTexture = null;
 			array[this.m_PrototypeIndex].noiseSpread = this.m_NoiseSpread;
-			array[this.m_PrototypeIndex].minWidth = 1f - this.m_RandomWidth;
-			array[this.m_PrototypeIndex].maxWidth = 1f + this.m_RandomWidth;
-			array[this.m_PrototypeIndex].minHeight = 1f - this.m_RandomHeight;
-			array[this.m_PrototypeIndex].maxHeight = 1f + this.m_RandomHeight;
+			array[this.m_PrototypeIndex].minWidth = this.m_MinWidth;
+			array[this.m_PrototypeIndex].maxWidth = this.m_MaxWidth;
+			array[this.m_PrototypeIndex].minHeight = this.m_MinHeight;
+			array[this.m_PrototypeIndex].maxHeight = this.m_MaxHeight;
 			array[this.m_PrototypeIndex].healthyColor = this.m_HealthyColor;
 			array[this.m_PrototypeIndex].dryColor = this.m_DryColor;
 			if (this.m_RenderMode == DetailMeshRenderMode.Grass)

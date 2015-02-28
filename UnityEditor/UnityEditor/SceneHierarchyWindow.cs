@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditorInternal;
 using UnityEngine;
@@ -11,10 +12,10 @@ namespace UnityEditor
 		{
 			private const string kCustomSorting = "CustomSorting";
 			private const string kWarningSymbol = "console.warnicon.sml";
-			private const string kWarningMessage = "Custom fetch is taking a lot of time. Could effect editor frame rate.";
+			private const string kWarningMessage = "The current sorting method is taking a lot of time. Consider using 'Transform Sort' in playmode for better performance.";
 			public GUIContent defaultSortingContent = new GUIContent(EditorGUIUtility.FindTexture("CustomSorting"));
 			public GUIContent createContent = new GUIContent("Create");
-			public GUIContent fetchWarning = new GUIContent(string.Empty, EditorGUIUtility.FindTexture("console.warnicon.sml"), "Custom fetch is taking a lot of time. Could effect editor frame rate.");
+			public GUIContent fetchWarning = new GUIContent(string.Empty, EditorGUIUtility.FindTexture("console.warnicon.sml"), "The current sorting method is taking a lot of time. Consider using 'Transform Sort' in playmode for better performance.");
 			public GUIStyle MiniButton;
 			public Styles()
 			{
@@ -32,12 +33,11 @@ namespace UnityEditor
 		private string m_CurrentSortMethod = string.Empty;
 		[NonSerialized]
 		private int m_LastFramedID = -1;
-		private List<SceneHierarchySortingWindow.InputData> m_SortFunctionNames;
-		private Dictionary<string, BaseHierarchySort> m_SortFunctions;
+		private Dictionary<string, BaseHierarchySort> m_SortingObjects;
 		private bool m_AllowAlphaNumericalSort;
-		private bool m_AllowManualSort;
 		[NonSerialized]
 		private bool m_DidSelectSearchResult;
+		public static bool s_Debug = false;
 		private string currentSortMethod
 		{
 			get
@@ -47,29 +47,21 @@ namespace UnityEditor
 			set
 			{
 				this.m_CurrentSortMethod = value;
-				if (!this.m_SortFunctions.ContainsKey(this.m_CurrentSortMethod))
+				if (!this.m_SortingObjects.ContainsKey(this.m_CurrentSortMethod))
 				{
-					if (this.m_AllowManualSort)
-					{
-						this.m_CurrentSortMethod = "TransformSort";
-					}
-					else
-					{
-						this.m_CurrentSortMethod = "AlphabeticalSort";
-					}
+					this.m_CurrentSortMethod = this.GetNameForType(typeof(TransformSort));
 				}
-				GameObjectTreeViewDataSource gameObjectTreeViewDataSource = this.treeView.data as GameObjectTreeViewDataSource;
-				gameObjectTreeViewDataSource.compareData.comparerImpl = this.m_SortFunctions[this.m_CurrentSortMethod];
-				gameObjectTreeViewDataSource.compareData.comparerImplementsCompare = (gameObjectTreeViewDataSource.compareData.comparerImpl.GetType().GetMethod("Compare").DeclaringType != typeof(BaseHierarchySort));
-				AssetOrGameObjectTreeViewDragging assetOrGameObjectTreeViewDragging = this.treeView.dragging as AssetOrGameObjectTreeViewDragging;
-				assetOrGameObjectTreeViewDragging.allowDragBetween = !gameObjectTreeViewDataSource.compareData.comparerImplementsCompare;
+				GameObjectTreeViewDataSource gameObjectTreeViewDataSource = (GameObjectTreeViewDataSource)this.treeView.data;
+				gameObjectTreeViewDataSource.sortingState.sortingObject = this.m_SortingObjects[this.m_CurrentSortMethod];
+				GameObjectsTreeViewDragging gameObjectsTreeViewDragging = (GameObjectsTreeViewDragging)this.treeView.dragging;
+				gameObjectsTreeViewDragging.allowDragBetween = !gameObjectTreeViewDataSource.sortingState.implementsCompare;
 			}
 		}
 		private bool hasSortMethods
 		{
 			get
 			{
-				return this.m_SortFunctions.Count > 1;
+				return this.m_SortingObjects.Count > 1;
 			}
 		}
 		private Rect treeViewRect
@@ -114,14 +106,33 @@ namespace UnityEditor
 			TreeView expr_AF = this.m_TreeView;
 			expr_AF.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_AF.dragEndedCallback, new Action<int[], bool>(this.OnDragEndedCallback));
 			this.m_TreeView.deselectOnUnhandledMouseDown = true;
-			GameObjectTreeViewDataSource data = new GameObjectTreeViewDataSource(this.m_TreeView, 0, false, false);
-			ITreeViewDragging dragging = new AssetOrGameObjectTreeViewDragging(this.m_TreeView, HierarchyType.GameObjects);
-			ITreeViewGUI gui = new GameObjectTreeViewGUI(this.m_TreeView, false);
-			this.m_TreeView.Init(this.treeViewRect, data, gui, dragging);
-			this.m_AllowAlphaNumericalSort = EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false);
-			this.m_AllowManualSort = EditorPrefs.GetBool("AllowManualHierarchy", true);
+			GameObjectTreeViewDataSource gameObjectTreeViewDataSource = new GameObjectTreeViewDataSource(this.m_TreeView, 0, false, false);
+			GameObjectsTreeViewDragging dragging = new GameObjectsTreeViewDragging(this.m_TreeView);
+			GameObjectTreeViewGUI gui = new GameObjectTreeViewGUI(this.m_TreeView, false);
+			this.m_TreeView.Init(this.treeViewRect, gameObjectTreeViewDataSource, gui, dragging);
+			gameObjectTreeViewDataSource.searchMode = (int)this.m_SearchMode;
+			gameObjectTreeViewDataSource.searchString = this.m_SearchFilter;
+			this.m_AllowAlphaNumericalSort = (EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false) || InternalEditorUtility.inBatchMode);
 			this.SetUpSortMethodLists();
 			this.m_TreeView.ReloadData();
+		}
+		internal void SelectPrevious()
+		{
+			this.m_TreeView.OffsetSelection(-1);
+		}
+		internal void SelectNext()
+		{
+			this.m_TreeView.OffsetSelection(1);
+		}
+		public UnityEngine.Object[] GetCurrentVisibleObjects()
+		{
+			List<TreeViewItem> visibleRows = this.m_TreeView.data.GetVisibleRows();
+			UnityEngine.Object[] array = new UnityEngine.Object[visibleRows.Count];
+			for (int i = 0; i < visibleRows.Count; i++)
+			{
+				array[i] = ((GameObjectTreeViewItem)visibleRows[i]).objectPPTR;
+			}
+			return array;
 		}
 		private void Awake()
 		{
@@ -215,7 +226,7 @@ namespace UnityEditor
 		}
 		public void SearchChanged()
 		{
-			GameObjectTreeViewDataSource gameObjectTreeViewDataSource = this.treeView.data as GameObjectTreeViewDataSource;
+			GameObjectTreeViewDataSource gameObjectTreeViewDataSource = (GameObjectTreeViewDataSource)this.treeView.data;
 			if (gameObjectTreeViewDataSource.searchMode == (int)base.searchMode && gameObjectTreeViewDataSource.searchString == this.m_SearchFilter)
 			{
 				return;
@@ -230,10 +241,6 @@ namespace UnityEditor
 		}
 		private void OnSelectionChange()
 		{
-			if (!this.treeView.IsVisible(Selection.activeInstanceID) && !string.IsNullOrEmpty(this.m_SearchFilter))
-			{
-				base.ClearSearchFilter();
-			}
 			this.treeView.SetSelection(Selection.instanceIDs, true);
 			base.Repaint();
 		}
@@ -251,14 +258,13 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			Rect rect = EditorGUILayout.BeginVertical(EditorStyles.inspectorBig, new GUILayoutOption[0]);
 			GUILayout.Label("Path:", new GUILayoutOption[0]);
-			int num = 1;
 			if (this.m_TreeView.HasSelection())
 			{
-				TreeViewItem treeViewItem = this.m_TreeView.FindNode(this.m_TreeView.GetSelection()[0]);
-				if (treeViewItem != null)
+				int instanceID = this.m_TreeView.GetSelection()[0];
+				IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
+				hierarchyProperty.Find(instanceID, null);
+				if (hierarchyProperty.isValid)
 				{
-					IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
-					hierarchyProperty.Find(treeViewItem.id, null);
 					do
 					{
 						EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -266,7 +272,6 @@ namespace UnityEditor
 						GUILayout.Label(hierarchyProperty.name, new GUILayoutOption[0]);
 						GUILayout.FlexibleSpace();
 						EditorGUILayout.EndHorizontal();
-						num++;
 					}
 					while (hierarchyProperty.Parent());
 				}
@@ -284,41 +289,17 @@ namespace UnityEditor
 			Rect treeViewRect = this.treeViewRect;
 			treeViewRect.height -= searchPathHeight;
 			this.treeView.OnGUI(treeViewRect, this.m_TreeViewKeyboardControlID);
-			this.HandleUnusedDragEvents(this.treeViewRect);
-		}
-		private void HandleUnusedDragEvents(Rect rect)
-		{
-			Event current = Event.current;
-			EventType type = current.type;
-			if (type == EventType.DragUpdated || type == EventType.DragPerform)
-			{
-				if (rect.Contains(current.mousePosition))
-				{
-					bool flag = current.type == EventType.DragPerform;
-					DragAndDrop.visualMode = InternalEditorUtility.HierarchyWindowDrag(null, flag, InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
-					if (flag && DragAndDrop.visualMode != DragAndDropVisualMode.None)
-					{
-						DragAndDrop.AcceptDrag();
-						List<UnityEngine.Object> list = new List<UnityEngine.Object>(DragAndDrop.objectReferences);
-						int[] array = new int[list.Count];
-						for (int i = 0; i < list.Count; i++)
-						{
-							if (!(list[i] == null))
-							{
-								array[i] = list[i].GetInstanceID();
-							}
-						}
-						this.OnDragEndedCallback(array, false);
-					}
-					current.Use();
-				}
-			}
 		}
 		private void DoToolbar()
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
 			this.CreateGameObjectPopup();
 			GUILayout.Space(6f);
+			if (SceneHierarchyWindow.s_Debug)
+			{
+				GUILayout.Label(string.Empty + this.m_TreeView.data.GetVisibleRows().Count, EditorStyles.miniLabel, new GUILayoutOption[0]);
+				GUILayout.Space(6f);
+			}
 			GUILayout.FlexibleSpace();
 			Event current = Event.current;
 			if (base.hasSearchFilterFocus && current.type == EventType.KeyDown && (current.keyCode == KeyCode.DownArrow || current.keyCode == KeyCode.UpArrow))
@@ -339,7 +320,7 @@ namespace UnityEditor
 			GUILayout.Space(6f);
 			if (this.hasSortMethods)
 			{
-				if (Application.isPlaying && (this.treeView.data as GameObjectTreeViewDataSource).isFetchAIssue)
+				if (Application.isPlaying && ((GameObjectTreeViewDataSource)this.treeView.data).isFetchAIssue)
 				{
 					GUILayout.Toggle(false, SceneHierarchyWindow.s_Styles.fetchWarning, SceneHierarchyWindow.s_Styles.MiniButton, new GUILayoutOption[0]);
 				}
@@ -402,71 +383,79 @@ namespace UnityEditor
 		{
 			if (this.hasSortMethods)
 			{
-				GUIContent gUIContent = this.m_SortFunctions[this.currentSortMethod].content;
+				GUIContent gUIContent = this.m_SortingObjects[this.currentSortMethod].content;
 				if (gUIContent == null)
 				{
 					gUIContent = SceneHierarchyWindow.s_Styles.defaultSortingContent;
 					gUIContent.tooltip = this.currentSortMethod;
 				}
 				Rect rect = GUILayoutUtility.GetRect(gUIContent, EditorStyles.toolbarButton);
-				if (EditorGUI.ButtonMouseDown(rect, gUIContent, FocusType.Passive, EditorStyles.toolbarButton) && SceneHierarchySortingWindow.ShowAtPosition(new Vector2(rect.x, rect.y + rect.height), this.m_SortFunctionNames, new SceneHierarchySortingWindow.OnSelectCallback(this.SortFunctionCallback)))
+				if (EditorGUI.ButtonMouseDown(rect, gUIContent, FocusType.Passive, EditorStyles.toolbarButton))
 				{
-					GUIUtility.ExitGUI();
+					List<SceneHierarchySortingWindow.InputData> list = new List<SceneHierarchySortingWindow.InputData>();
+					foreach (KeyValuePair<string, BaseHierarchySort> current in this.m_SortingObjects)
+					{
+						list.Add(new SceneHierarchySortingWindow.InputData
+						{
+							m_TypeName = current.Key,
+							m_Name = ObjectNames.NicifyVariableName(current.Key),
+							m_Selected = current.Key == this.m_CurrentSortMethod
+						});
+					}
+					if (SceneHierarchySortingWindow.ShowAtPosition(new Vector2(rect.x, rect.y + rect.height), list, new SceneHierarchySortingWindow.OnSelectCallback(this.SortFunctionCallback)))
+					{
+						GUIUtility.ExitGUI();
+					}
 				}
 			}
 		}
 		private void SetUpSortMethodLists()
 		{
-			this.m_SortFunctionNames = new List<SceneHierarchySortingWindow.InputData>();
-			this.m_SortFunctions = new Dictionary<string, BaseHierarchySort>();
+			this.m_SortingObjects = new Dictionary<string, BaseHierarchySort>();
 			Assembly[] loadedAssemblies = EditorAssemblies.loadedAssemblies;
 			for (int i = 0; i < loadedAssemblies.Length; i++)
 			{
 				Assembly assembly = loadedAssemblies[i];
 				foreach (BaseHierarchySort current in AssemblyHelper.FindImplementors<BaseHierarchySort>(assembly))
 				{
-					string text = current.ToString();
-					int num = text.LastIndexOf('.');
-					if (num > -1)
+					if (current.GetType() != typeof(AlphabeticalSort) || this.m_AllowAlphaNumericalSort)
 					{
-						text = text.Substring(num + 1);
-					}
-					if (!(text == "TransformSort") || this.m_AllowManualSort)
-					{
-						if (!(text == "AlphabeticalSort") || this.m_AllowAlphaNumericalSort)
-						{
-							this.m_SortFunctions.Add(text, current);
-							SceneHierarchySortingWindow.InputData inputData = new SceneHierarchySortingWindow.InputData();
-							inputData.m_Name = text;
-							this.m_SortFunctionNames.Add(inputData);
-						}
+						string nameForType = this.GetNameForType(current.GetType());
+						this.m_SortingObjects.Add(nameForType, current);
 					}
 				}
 			}
 			this.currentSortMethod = this.m_CurrentSortMethod;
-			foreach (SceneHierarchySortingWindow.InputData current2 in this.m_SortFunctionNames)
-			{
-				if (current2.m_Name == this.m_CurrentSortMethod)
-				{
-					current2.m_Selected = true;
-					break;
-				}
-			}
+		}
+		private string GetNameForType(Type type)
+		{
+			return type.Name;
 		}
 		private void SortFunctionCallback(SceneHierarchySortingWindow.InputData data)
 		{
-			foreach (SceneHierarchySortingWindow.InputData current in this.m_SortFunctionNames)
+			this.SetSortFunction(data.m_TypeName);
+		}
+		public void SetSortFunction(Type sortType)
+		{
+			this.SetSortFunction(this.GetNameForType(sortType));
+		}
+		private void SetSortFunction(string sortTypeName)
+		{
+			if (!this.m_SortingObjects.ContainsKey(sortTypeName))
 			{
-				current.m_Selected = (current == data);
+				Debug.LogError("Invalid search type name: " + sortTypeName);
+				return;
 			}
-			this.currentSortMethod = data.m_Name;
-			this.treeView.SetSelection(this.treeView.GetSelection(), true);
+			this.currentSortMethod = sortTypeName;
+			if (this.treeView.GetSelection().Any<int>())
+			{
+				this.treeView.Frame(this.treeView.GetSelection().First<int>(), true, false);
+			}
 			this.treeView.ReloadData();
 		}
 		public void DirtySortingMethods()
 		{
 			this.m_AllowAlphaNumericalSort = EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false);
-			this.m_AllowManualSort = EditorPrefs.GetBool("AllowManualHierarchy", true);
 			this.SetUpSortMethodLists();
 			this.treeView.SetSelection(this.treeView.GetSelection(), true);
 			this.treeView.ReloadData();

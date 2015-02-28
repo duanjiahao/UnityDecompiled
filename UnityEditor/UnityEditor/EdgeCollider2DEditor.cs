@@ -14,27 +14,8 @@ namespace UnityEditor
 		public override void OnInspectorGUI()
 		{
 			base.BeginColliderInspector();
-			this.ColliderInfoGUI();
+			base.OnInspectorGUI();
 			base.EndColliderInspector();
-			base.CheckColliderErrorState();
-		}
-		private void ColliderInfoGUI()
-		{
-			EditorGUI.BeginDisabledGroup(base.targets.Length != 1);
-			this.m_ShowColliderInfo = EditorGUILayout.Foldout(this.m_ShowColliderInfo, "Collider Info");
-			if (this.m_ShowColliderInfo)
-			{
-				EdgeCollider2D edgeCollider2D = base.targets[0] as EdgeCollider2D;
-				if (edgeCollider2D)
-				{
-					int pointCount = edgeCollider2D.pointCount;
-					string label = (!GUI.enabled) ? "---" : (string.Empty + pointCount);
-					EditorGUI.indentLevel++;
-					EditorGUILayout.LabelField("Vertices", label, new GUILayoutOption[0]);
-					EditorGUI.indentLevel--;
-				}
-			}
-			EditorGUI.EndDisabledGroup();
 		}
 		protected override void OnEditStart()
 		{

@@ -98,7 +98,10 @@ namespace UnityEngine
 		private float OnRepaint()
 		{
 			this.slider.Draw(this.position, GUIContent.none, this.id);
-			this.thumb.Draw(this.ThumbRect(), GUIContent.none, this.id);
+			if (!this.IsEmptySlider())
+			{
+				this.thumb.Draw(this.ThumbRect(), GUIContent.none, this.id);
+			}
 			if (GUIUtility.hotControl != this.id || !this.position.Contains(this.CurrentEvent().mousePosition) || this.IsEmptySlider())
 			{
 				return this.currentValue;

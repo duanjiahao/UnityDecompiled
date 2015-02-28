@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngineInternal;
 namespace UnityEngine
 {
 	public struct Mathf
@@ -10,7 +11,7 @@ namespace UnityEngine
 		public const float NegativeInfinity = float.NegativeInfinity;
 		public const float Deg2Rad = 0.0174532924f;
 		public const float Rad2Deg = 57.29578f;
-		public const float Epsilon = 1.401298E-45f;
+		public static readonly float Epsilon = (!MathfInternal.IsFlushToZeroEnabled) ? MathfInternal.FloatMinDenormal : MathfInternal.FloatMinNormal;
 		public static float Sin(float f)
 		{
 			return (float)Math.Sin((double)f);
@@ -274,7 +275,7 @@ namespace UnityEngine
 		}
 		public static bool Approximately(float a, float b)
 		{
-			return Mathf.Abs(b - a) < Mathf.Max(1E-06f * Mathf.Max(Mathf.Abs(a), Mathf.Abs(b)), 1.121039E-44f);
+			return Mathf.Abs(b - a) < Mathf.Max(1E-06f * Mathf.Max(Mathf.Abs(a), Mathf.Abs(b)), Mathf.Epsilon * 8f);
 		}
 		[ExcludeFromDocs]
 		public static float SmoothDamp(float current, float target, ref float currentVelocity, float smoothTime, float maxSpeed)
@@ -440,5 +441,11 @@ namespace UnityEngine
 			result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
 			return true;
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern ushort FloatToHalf(float val);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float HalfToFloat(ushort val);
 	}
 }

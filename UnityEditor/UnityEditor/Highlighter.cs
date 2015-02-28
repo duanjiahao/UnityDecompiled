@@ -15,6 +15,21 @@ namespace UnityEditor
 		private static float s_LastTime;
 		private static Rect s_RepaintRegion;
 		private static GUIStyle s_HighlightStyle;
+		internal static extern HighlightSearchMode searchMode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		internal static extern bool searching
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		private static GUIStyle highlightStyle
 		{
 			get
@@ -64,21 +79,35 @@ namespace UnityEditor
 				Highlighter.internal_set_activeRect(value);
 			}
 		}
-		internal static extern HighlightSearchMode searchMode
+		internal static void Handle(Rect position, string text)
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			Highlighter.INTERNAL_CALL_Handle(ref position, text);
 		}
-		internal static extern bool searching
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Handle(ref Rect position, string text);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string internal_get_activeText();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void internal_set_activeText(string value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern Rect internal_get_activeRect();
+		internal static void internal_set_activeRect(Rect value)
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			Highlighter.INTERNAL_CALL_internal_set_activeRect(ref value);
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_internal_set_activeRect(ref Rect value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool internal_get_activeVisible();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void internal_set_activeVisible(bool value);
 		public static void Stop()
 		{
 			Highlighter.active = false;
@@ -253,34 +282,5 @@ namespace UnityEditor
 			GUI.color = color;
 			GUI.matrix = matrix;
 		}
-		internal static void Handle(Rect position, string text)
-		{
-			Highlighter.INTERNAL_CALL_Handle(ref position, text);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Handle(ref Rect position, string text);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string internal_get_activeText();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void internal_set_activeText(string value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Rect internal_get_activeRect();
-		internal static void internal_set_activeRect(Rect value)
-		{
-			Highlighter.INTERNAL_CALL_internal_set_activeRect(ref value);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_internal_set_activeRect(ref Rect value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern bool internal_get_activeVisible();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void internal_set_activeVisible(bool value);
 	}
 }

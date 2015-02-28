@@ -11,6 +11,7 @@ namespace UnityEditor
 		private int m_Depth;
 		private string m_DisplayName;
 		private Texture2D m_Icon;
+		private object m_UserData;
 		public virtual int id
 		{
 			get
@@ -34,6 +35,10 @@ namespace UnityEditor
 			get
 			{
 				return this.m_Depth;
+			}
+			set
+			{
+				this.m_Depth = value;
 			}
 		}
 		public virtual bool hasChildren
@@ -74,6 +79,17 @@ namespace UnityEditor
 			set
 			{
 				this.m_Icon = value;
+			}
+		}
+		public virtual object userData
+		{
+			get
+			{
+				return this.m_UserData;
+			}
+			set
+			{
+				this.m_UserData = value;
 			}
 		}
 		public TreeViewItem(int id, int depth, TreeViewItem parent, string displayName)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 namespace UnityEditor
@@ -91,6 +92,35 @@ namespace UnityEditor
 		public static bool Contains(UnityEngine.Object obj)
 		{
 			return Selection.Contains(obj.GetInstanceID());
+		}
+		internal static void Add(int instanceID)
+		{
+			List<int> list = new List<int>(Selection.instanceIDs);
+			if (list.IndexOf(instanceID) < 0)
+			{
+				list.Add(instanceID);
+				Selection.instanceIDs = list.ToArray();
+			}
+		}
+		internal static void Add(UnityEngine.Object obj)
+		{
+			if (obj != null)
+			{
+				Selection.Add(obj.GetInstanceID());
+			}
+		}
+		internal static void Remove(int instanceID)
+		{
+			List<int> list = new List<int>(Selection.instanceIDs);
+			list.Remove(instanceID);
+			Selection.instanceIDs = list.ToArray();
+		}
+		internal static void Remove(UnityEngine.Object obj)
+		{
+			if (obj != null)
+			{
+				Selection.Remove(obj.GetInstanceID());
+			}
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

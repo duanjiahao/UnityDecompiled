@@ -6,12 +6,13 @@ namespace UnityEditor
 	[CustomEditor(typeof(ShaderImporter))]
 	internal class ShaderImporterInspector : AssetImporterInspector
 	{
-		private List<string> names = new List<string>();
+		private List<string> propertyNames = new List<string>();
+		private List<string> displayNames = new List<string>();
 		private List<Texture> textures = new List<Texture>();
 		private List<ShaderUtil.ShaderPropertyTexDim> dimensions = new List<ShaderUtil.ShaderPropertyTexDim>();
 		internal override void OnHeaderControlsGUI()
 		{
-			Shader target = base.assetEditor.target as Shader;
+			Shader target = this.assetEditor.target as Shader;
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("Open...", EditorStyles.miniButton, new GUILayoutOption[0]))
 			{
@@ -23,23 +24,41 @@ namespace UnityEditor
 		{
 			this.ResetValues();
 		}
-		private void ShowDefaultTextures(Shader shader, ShaderImporter importer)
+		private void ShowDefaultTextures()
 		{
-			for (int i = 0; i < this.names.Count; i++)
+			if (this.propertyNames.Count == 0)
 			{
-				string name = this.names[i];
-				string label = ObjectNames.NicifyVariableName(name);
+				return;
+			}
+			EditorGUILayout.LabelField("Default Maps", EditorStyles.boldLabel, new GUILayoutOption[0]);
+			for (int i = 0; i < this.propertyNames.Count; i++)
+			{
 				Texture obj = this.textures[i];
 				Texture value = null;
 				EditorGUI.BeginChangeCheck();
+				Type type;
 				switch (this.dimensions[i])
 				{
 				case ShaderUtil.ShaderPropertyTexDim.TexDim2D:
-					value = (EditorGUILayout.ObjectField(label, obj, typeof(Texture2D), false, new GUILayoutOption[0]) as Texture2D);
+					type = typeof(Texture);
+					break;
+				case ShaderUtil.ShaderPropertyTexDim.TexDim3D:
+					type = typeof(Texture3D);
 					break;
 				case ShaderUtil.ShaderPropertyTexDim.TexDimCUBE:
-					value = (EditorGUILayout.ObjectField(label, obj, typeof(Cubemap), false, new GUILayoutOption[0]) as Cubemap);
+					type = typeof(Cubemap);
 					break;
+				case ShaderUtil.ShaderPropertyTexDim.TexDimAny:
+					type = typeof(Texture);
+					break;
+				default:
+					type = null;
+					break;
+				}
+				if (type != null)
+				{
+					string t = (!string.IsNullOrEmpty(this.displayNames[i])) ? this.displayNames[i] : ObjectNames.NicifyVariableName(this.propertyNames[i]);
+					value = (EditorGUILayout.MiniThumbnailObjectField(GUIContent.Temp(t), obj, type, null, new GUILayoutOption[0]) as Texture);
 				}
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -67,9 +86,9 @@ namespace UnityEditor
 			for (int i = 0; i < propertyCount; i++)
 			{
 				string propertyName = ShaderUtil.GetPropertyName(shader, i);
-				for (int j = 0; j < this.names.Count; j++)
+				for (int j = 0; j < this.propertyNames.Count; j++)
 				{
-					if (this.names[j] == propertyName && this.textures[j] != shaderImporter.GetDefaultTexture(propertyName))
+					if (this.propertyNames[j] == propertyName && this.textures[j] != shaderImporter.GetDefaultTexture(propertyName))
 					{
 						return true;
 					}
@@ -80,7 +99,8 @@ namespace UnityEditor
 		internal override void ResetValues()
 		{
 			base.ResetValues();
-			this.names = new List<string>();
+			this.propertyNames = new List<string>();
+			this.displayNames = new List<string>();
 			this.textures = new List<Texture>();
 			this.dimensions = new List<ShaderUtil.ShaderPropertyTexDim>();
 			ShaderImporter shaderImporter = this.target as ShaderImporter;
@@ -99,8 +119,10 @@ namespace UnityEditor
 				if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
 				{
 					string propertyName = ShaderUtil.GetPropertyName(shader, i);
+					string propertyDescription = ShaderUtil.GetPropertyDescription(shader, i);
 					Texture defaultTexture = shaderImporter.GetDefaultTexture(propertyName);
-					this.names.Add(propertyName);
+					this.propertyNames.Add(propertyName);
+					this.displayNames.Add(propertyDescription);
 					this.textures.Add(defaultTexture);
 					this.dimensions.Add(ShaderUtil.GetTexDim(shader, i));
 				}
@@ -114,7 +136,7 @@ namespace UnityEditor
 			{
 				return;
 			}
-			shaderImporter.SetDefaultTextures(this.names.ToArray(), this.textures.ToArray());
+			shaderImporter.SetDefaultTextures(this.propertyNames.ToArray(), this.textures.ToArray());
 			AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(shaderImporter));
 		}
 		private static int GetNumberOfTextures(Shader shader)
@@ -142,11 +164,11 @@ namespace UnityEditor
 			{
 				return;
 			}
-			if (ShaderImporterInspector.GetNumberOfTextures(shader) != this.names.Count)
+			if (ShaderImporterInspector.GetNumberOfTextures(shader) != this.propertyNames.Count)
 			{
 				this.ResetValues();
 			}
-			this.ShowDefaultTextures(shader, shaderImporter);
+			this.ShowDefaultTextures();
 			base.ApplyRevertGUI();
 		}
 	}

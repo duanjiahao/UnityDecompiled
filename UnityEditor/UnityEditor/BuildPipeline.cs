@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
@@ -18,16 +19,28 @@ namespace UnityEditor
 		internal static extern BuildTargetGroup GetBuildTargetGroup(BuildTarget platform);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern BuildTargetGroup GetBuildTargetGroupByName(string platform);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetBuildTargetGroupDisplayName(BuildTargetGroup targetPlatformGroup);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void PushAssetDependencies();
+		internal static extern string GetBuildTargetName(BuildTarget targetPlatform);
 		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetEditorTargetName();
+		[Obsolete("PushAssetDependencies has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details."), WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void PushAssetDependencies();
+		[Obsolete("PopAssetDependencies has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PopAssetDependencies();
 		private static void LogBuildExceptionAndExit(string buildFunctionName, Exception exception)
 		{
-			Debug.LogError(string.Format("Internal Error in {0}:", buildFunctionName));
+			Debug.LogErrorFormat("Internal Error in {0}:", new object[]
+			{
+				buildFunctionName
+			});
 			Debug.LogException(exception);
 			EditorApplication.Exit(1);
 		}
@@ -46,23 +59,18 @@ namespace UnityEditor
 			}
 			return result;
 		}
-		[ExcludeFromDocs]
-		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target)
-		{
-			BuildOptions options = BuildOptions.None;
-			return BuildPipeline.BuildStreamedSceneAssetBundle(levels, locationPath, target, options);
-		}
-		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, [DefaultValue("0")] BuildOptions options)
+		[Obsolete("BuildStreamedSceneAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, BuildOptions options)
 		{
 			return BuildPipeline.BuildPlayer(levels, locationPath, target, options | BuildOptions.BuildAdditionalStreamedScenes);
 		}
-		[ExcludeFromDocs]
-		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, out uint crc)
+		[Obsolete("BuildStreamedSceneAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target)
 		{
-			BuildOptions options = BuildOptions.None;
-			return BuildPipeline.BuildStreamedSceneAssetBundle(levels, locationPath, target, out crc, options);
+			return BuildPipeline.BuildPlayer(levels, locationPath, target, BuildOptions.BuildAdditionalStreamedScenes);
 		}
-		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, out uint crc, [DefaultValue("0")] BuildOptions options)
+		[Obsolete("BuildStreamedSceneAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, out uint crc, BuildOptions options)
 		{
 			crc = 0u;
 			string result;
@@ -77,10 +85,15 @@ namespace UnityEditor
 			}
 			return result;
 		}
+		[Obsolete("BuildStreamedSceneAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, out uint crc)
+		{
+			return BuildPipeline.BuildStreamedSceneAssetBundle(levels, locationPath, target, out crc, BuildOptions.None);
+		}
 		private static string BuildPlayerInternal(string[] levels, string locationPathName, BuildTarget target, BuildOptions options, out uint crc)
 		{
 			crc = 0u;
-			if (!InternalEditorUtility.HasPro())
+			if (!InternalEditorUtility.HasProFeaturesEnabled())
 			{
 				Debug.LogError("Building Player from editor scripts requires Unity PRO");
 				return "Building Player from editor scripts requires Unity PRO";
@@ -94,38 +107,26 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string BuildPlayerInternalNoCheck(string[] levels, string locationPathName, BuildTarget target, BuildOptions options, bool delayToAfterScriptReload, out uint crc);
-		[ExcludeFromDocs]
+		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
+		{
+			uint num;
+			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out num, assetBundleOptions, targetPlatform);
+		}
+		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, BuildAssetBundleOptions assetBundleOptions)
 		{
 			BuildTarget targetPlatform = BuildTarget.WebPlayer;
 			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, assetBundleOptions, targetPlatform);
 		}
-		[ExcludeFromDocs]
+		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName)
 		{
-			BuildTarget targetPlatform = BuildTarget.WebPlayer;
 			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
-			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, assetBundleOptions, targetPlatform);
+			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, assetBundleOptions);
 		}
-		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, [DefaultValue("BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets")] BuildAssetBundleOptions assetBundleOptions, [DefaultValue("BuildTarget.WebPlayer")] BuildTarget targetPlatform)
-		{
-			uint num;
-			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out num, assetBundleOptions, targetPlatform);
-		}
-		[ExcludeFromDocs]
-		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions)
-		{
-			BuildTarget targetPlatform = BuildTarget.WebPlayer;
-			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out crc, assetBundleOptions, targetPlatform);
-		}
-		[ExcludeFromDocs]
-		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc)
-		{
-			BuildTarget targetPlatform = BuildTarget.WebPlayer;
-			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
-			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out crc, assetBundleOptions, targetPlatform);
-		}
-		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc, [DefaultValue("BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets")] BuildAssetBundleOptions assetBundleOptions, [DefaultValue("BuildTarget.WebPlayer")] BuildTarget targetPlatform)
+		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
 		{
 			crc = 0u;
 			bool result;
@@ -140,38 +141,38 @@ namespace UnityEditor
 			}
 			return result;
 		}
-		[ExcludeFromDocs]
+		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions)
+		{
+			BuildTarget targetPlatform = BuildTarget.WebPlayer;
+			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out crc, assetBundleOptions, targetPlatform);
+		}
+		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc)
+		{
+			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
+			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out crc, assetBundleOptions);
+		}
+		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
+		{
+			uint num;
+			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out num, assetBundleOptions, targetPlatform);
+		}
+		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, BuildAssetBundleOptions assetBundleOptions)
 		{
 			BuildTarget targetPlatform = BuildTarget.WebPlayer;
 			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, assetBundleOptions, targetPlatform);
 		}
-		[ExcludeFromDocs]
+		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName)
 		{
-			BuildTarget targetPlatform = BuildTarget.WebPlayer;
 			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
-			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, assetBundleOptions, targetPlatform);
+			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, assetBundleOptions);
 		}
-		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, [DefaultValue("BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets")] BuildAssetBundleOptions assetBundleOptions, [DefaultValue("BuildTarget.WebPlayer")] BuildTarget targetPlatform)
-		{
-			uint num;
-			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out num, assetBundleOptions, targetPlatform);
-		}
-		[ExcludeFromDocs]
-		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions)
-		{
-			BuildTarget targetPlatform = BuildTarget.WebPlayer;
-			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out crc, assetBundleOptions, targetPlatform);
-		}
-		[ExcludeFromDocs]
-		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc)
-		{
-			BuildTarget targetPlatform = BuildTarget.WebPlayer;
-			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
-			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out crc, assetBundleOptions, targetPlatform);
-		}
-		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc, [DefaultValue("BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets")] BuildAssetBundleOptions assetBundleOptions, [DefaultValue("BuildTarget.WebPlayer")] BuildTarget targetPlatform)
+		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
 		{
 			crc = 0u;
 			bool result;
@@ -186,9 +187,106 @@ namespace UnityEditor
 			}
 			return result;
 		}
+		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions)
+		{
+			BuildTarget targetPlatform = BuildTarget.WebPlayer;
+			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out crc, assetBundleOptions, targetPlatform);
+		}
+		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
+		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc)
+		{
+			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
+			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out crc, assetBundleOptions);
+		}
+		internal static bool DoesBuildTargetSupportIl2cpp(BuildTarget target)
+		{
+			return BuildPipeline.GetPlaybackEngineDirectory(target, BuildOptions.Il2CPP) != string.Empty;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool BuildAssetBundleInternal(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string[] assetNames, string pathName, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform, out uint crc);
+		[ExcludeFromDocs]
+		public static AssetBundleManifest BuildAssetBundles(string outputPath, BuildAssetBundleOptions assetBundleOptions)
+		{
+			BuildTarget targetPlatform = BuildTarget.WebPlayer;
+			return BuildPipeline.BuildAssetBundles(outputPath, assetBundleOptions, targetPlatform);
+		}
+		[ExcludeFromDocs]
+		public static AssetBundleManifest BuildAssetBundles(string outputPath)
+		{
+			BuildTarget targetPlatform = BuildTarget.WebPlayer;
+			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.None;
+			return BuildPipeline.BuildAssetBundles(outputPath, assetBundleOptions, targetPlatform);
+		}
+		public static AssetBundleManifest BuildAssetBundles(string outputPath, [DefaultValue("BuildAssetBundleOptions.None")] BuildAssetBundleOptions assetBundleOptions, [DefaultValue("BuildTarget.WebPlayer")] BuildTarget targetPlatform)
+		{
+			if (!Directory.Exists(outputPath))
+			{
+				Debug.LogError("The output path \"" + outputPath + "\" doesn't exist");
+				return null;
+			}
+			AssetBundleManifest result;
+			try
+			{
+				result = BuildPipeline.BuildAssetBundlesInternal(outputPath, assetBundleOptions, targetPlatform);
+			}
+			catch (Exception exception)
+			{
+				BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildAssetBundles", exception);
+				result = null;
+			}
+			return result;
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern AssetBundleManifest BuildAssetBundlesInternal(string outputPath, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform);
+		[ExcludeFromDocs]
+		public static AssetBundleManifest BuildAssetBundles(string outputPath, AssetBundleBuild[] builds, BuildAssetBundleOptions assetBundleOptions)
+		{
+			BuildTarget targetPlatform = BuildTarget.WebPlayer;
+			return BuildPipeline.BuildAssetBundles(outputPath, builds, assetBundleOptions, targetPlatform);
+		}
+		[ExcludeFromDocs]
+		public static AssetBundleManifest BuildAssetBundles(string outputPath, AssetBundleBuild[] builds)
+		{
+			BuildTarget targetPlatform = BuildTarget.WebPlayer;
+			BuildAssetBundleOptions assetBundleOptions = BuildAssetBundleOptions.None;
+			return BuildPipeline.BuildAssetBundles(outputPath, builds, assetBundleOptions, targetPlatform);
+		}
+		public static AssetBundleManifest BuildAssetBundles(string outputPath, AssetBundleBuild[] builds, [DefaultValue("BuildAssetBundleOptions.None")] BuildAssetBundleOptions assetBundleOptions, [DefaultValue("BuildTarget.WebPlayer")] BuildTarget targetPlatform)
+		{
+			if (!Directory.Exists(outputPath))
+			{
+				Debug.LogError("The output path \"" + outputPath + "\" doesn't exist");
+				return null;
+			}
+			if (builds == null)
+			{
+				Debug.LogError("AssetBundleBuild cannot be null.");
+				return null;
+			}
+			AssetBundleManifest result;
+			try
+			{
+				result = BuildPipeline.BuildAssetBundlesWithInfoInternal(outputPath, builds, assetBundleOptions, targetPlatform);
+			}
+			catch (Exception exception)
+			{
+				BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildAssetBundles", exception);
+				result = null;
+			}
+			return result;
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern AssetBundleManifest BuildAssetBundlesWithInfoInternal(string outputPath, AssetBundleBuild[] builds, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool GetCRCForAssetBundle(string targetPath, out uint crc);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool GetHashForAssetBundle(string targetPath, out Hash128 hash);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool LicenseCheck(BuildTarget target);

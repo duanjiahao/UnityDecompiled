@@ -11,8 +11,21 @@ namespace UnityEditor.Modules
 		{
 			get;
 		}
+		string[] AssemblyReferencesForUserScripts
+		{
+			get;
+		}
 		IBuildPostprocessor CreateBuildPostprocessor();
+		IScriptingImplementations CreateScriptingImplementations();
 		ISettingEditorExtension CreateSettingsEditorExtension();
 		IPreferenceWindowExtension CreatePreferenceWindowExtension();
+		IBuildWindowExtension CreateBuildWindowExtension();
+		IPluginImporterExtension CreatePluginImporterExtension();
+		IUserAssembliesValidator CreateUserAssembliesValidatorExtension();
+		IDevice CreateDevice(string id);
+		void OnActivate();
+		void OnDeactivate();
+		void OnLoad();
+		void OnUnload();
 	}
 }

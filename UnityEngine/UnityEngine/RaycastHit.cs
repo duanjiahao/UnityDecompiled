@@ -95,11 +95,11 @@ namespace UnityEngine
 			{
 				Vector2 result;
 				RaycastHit.CalculateRaycastTexCoord(out result, this.collider, this.m_UV, this.m_Point, this.m_FaceID, 1);
-				if (this.collider.renderer != null)
+				if (this.collider.GetComponent<Renderer>() != null)
 				{
-					Vector4 lightmapTilingOffset = this.collider.renderer.lightmapTilingOffset;
-					result.x = result.x * lightmapTilingOffset.x + lightmapTilingOffset.z;
-					result.y = result.y * lightmapTilingOffset.y + lightmapTilingOffset.w;
+					Vector4 lightmapScaleOffset = this.collider.GetComponent<Renderer>().lightmapScaleOffset;
+					result.x = result.x * lightmapScaleOffset.x + lightmapScaleOffset.z;
+					result.y = result.y * lightmapScaleOffset.y + lightmapScaleOffset.w;
 				}
 				return result;
 			}

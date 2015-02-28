@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -29,6 +29,9 @@ namespace UnityEditor
 		private int m_Mirror;
 		private int m_MaskType;
 		private AvatarMask m_MaskSource;
+		private AnimationEvent[] m_AnimationEvents;
+		private ClipAnimationInfoCurve[] m_AdditionnalCurves;
+		private bool m_MaskNeedsUpdating;
 		public string takeName
 		{
 			get
@@ -258,6 +261,35 @@ namespace UnityEditor
 			set
 			{
 				this.m_MaskSource = value;
+			}
+		}
+		public AnimationEvent[] events
+		{
+			get
+			{
+				return this.m_AnimationEvents;
+			}
+			set
+			{
+				this.m_AnimationEvents = value;
+			}
+		}
+		public ClipAnimationInfoCurve[] curves
+		{
+			get
+			{
+				return this.m_AdditionnalCurves;
+			}
+			set
+			{
+				this.m_AdditionnalCurves = value;
+			}
+		}
+		public bool maskNeedsUpdating
+		{
+			get
+			{
+				return this.m_MaskNeedsUpdating;
 			}
 		}
 		public override bool Equals(object o)

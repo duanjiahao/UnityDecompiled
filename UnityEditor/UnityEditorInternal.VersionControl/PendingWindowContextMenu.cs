@@ -76,9 +76,9 @@ namespace UnityEditorInternal.VersionControl
 		{
 			return ListControl.FromID(userData).SelectedAssets.Count > 0;
 		}
-		private static void ShowInExplorer(int userDatad)
+		private static void ShowInExplorer(int userData)
 		{
-			EditorApplication.ExecuteMenuItem("Assets/Show in Explorer");
+			EditorApplication.ExecuteMenuItem("Assets/Reveal in Finder");
 		}
 		private static bool NewChangeSetTest(int userData)
 		{

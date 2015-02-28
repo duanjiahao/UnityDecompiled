@@ -118,14 +118,12 @@ namespace UnityEditorInternal
 							AnimationWindowHierarchyNode animationWindowHierarchyNode = treeViewItem as AnimationWindowHierarchyNode;
 							if (animationWindowHierarchyNode != null)
 							{
-								AnimationWindowCurve[] curves = this.GetCurves(animationWindowHierarchyNode, true);
-								AnimationWindowCurve[] array = curves;
-								for (int i = 0; i < array.Length; i++)
+								List<AnimationWindowCurve> curves = this.GetCurves(animationWindowHierarchyNode, true);
+								foreach (AnimationWindowCurve current2 in curves)
 								{
-									AnimationWindowCurve item = array[i];
-									if (!this.m_ActiveCurvesCache.Contains(item))
+									if (!this.m_ActiveCurvesCache.Contains(current2))
 									{
-										this.m_ActiveCurvesCache.Add(item);
+										this.m_ActiveCurvesCache.Add(current2);
 									}
 								}
 							}
@@ -149,16 +147,16 @@ namespace UnityEditorInternal
 							AnimationWindowHierarchyNode animationWindowHierarchyNode = current as AnimationWindowHierarchyNode;
 							if (animationWindowHierarchyNode != null && !(animationWindowHierarchyNode is AnimationWindowHierarchyAddButtonNode))
 							{
-								AnimationWindowCurve[] curves;
+								List<AnimationWindowCurve> list;
 								if (current is AnimationWindowHierarchyMasterNode)
 								{
-									curves = this.allCurves.ToArray();
+									list = this.allCurves;
 								}
 								else
 								{
-									curves = this.GetCurves(animationWindowHierarchyNode, true);
+									list = this.GetCurves(animationWindowHierarchyNode, true);
 								}
-								DopeLine dopeLine = new DopeLine(current.id, curves);
+								DopeLine dopeLine = new DopeLine(current.id, list.ToArray());
 								dopeLine.tallMode = this.m_hierarchyState.getTallMode(animationWindowHierarchyNode);
 								dopeLine.objectType = animationWindowHierarchyNode.animatableObjectType;
 								dopeLine.hasChildren = !(animationWindowHierarchyNode is AnimationWindowHierarchyPropertyNode);
@@ -256,14 +254,14 @@ namespace UnityEditorInternal
 		{
 			get
 			{
-				return !this.m_ActiveAnimationClip || !this.IsEditable;
+				return !this.m_ActiveAnimationClip || !this.IsEditable || (this.m_ActiveAnimationClip.hideFlags & HideFlags.NotEditable) != HideFlags.None;
 			}
 		}
 		public bool IsEditable
 		{
 			get
 			{
-				return this.m_ActiveGameObject && (!this.m_ActiveAnimationClip || (this.m_ActiveAnimationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None) && !this.IsPrefab;
+				return this.m_ActiveGameObject && !this.IsPrefab;
 			}
 		}
 		public bool IsClipEditable
@@ -315,6 +313,15 @@ namespace UnityEditorInternal
 						}
 						this.SaveCurve(current);
 					}
+					AnimationEvent[] animationEvents = AnimationUtility.GetAnimationEvents(this.m_ActiveAnimationClip);
+					AnimationEvent[] array = animationEvents;
+					for (int i = 0; i < array.Length; i++)
+					{
+						AnimationEvent animationEvent = array[i];
+						int frame2 = AnimationKeyTime.Time(animationEvent.time, this.frameRate).frame;
+						animationEvent.time = AnimationKeyTime.Frame(frame2, value).time;
+					}
+					AnimationUtility.SetAnimationEvents(this.m_ActiveAnimationClip, animationEvents);
 					this.m_ActiveAnimationClip.frameRate = value;
 					this.m_CurveEditorIsDirty = true;
 				}
@@ -712,7 +719,7 @@ namespace UnityEditorInternal
 				this.m_Window.Repaint();
 			}
 		}
-		public AnimationWindowCurve[] GetCurves(AnimationWindowHierarchyNode hierarchyNode, bool entireHierarchy)
+		public List<AnimationWindowCurve> GetCurves(AnimationWindowHierarchyNode hierarchyNode, bool entireHierarchy)
 		{
 			return AnimationWindowUtility.FilterCurves(this.allCurves.ToArray(), hierarchyNode.path, hierarchyNode.animatableObjectType, hierarchyNode.propertyName);
 		}
@@ -768,6 +775,45 @@ namespace UnityEditorInternal
 		public void ClearHierarchySelection()
 		{
 			this.m_hierarchyState.selectedIDs.Clear();
+		}
+		public List<int> GetAffectedHierarchyIDs(List<AnimationWindowKeyframe> keyframes)
+		{
+			List<int> list = new List<int>();
+			foreach (DopeLine current in this.GetAffectedDopelines(keyframes))
+			{
+				if (!list.Contains(current.m_HierarchyNodeID))
+				{
+					list.Add(current.m_HierarchyNodeID);
+				}
+			}
+			return list;
+		}
+		public List<DopeLine> GetAffectedDopelines(List<AnimationWindowKeyframe> keyframes)
+		{
+			List<DopeLine> list = new List<DopeLine>();
+			foreach (AnimationWindowCurve current in this.GetAffectedCurves(keyframes))
+			{
+				foreach (DopeLine current2 in this.dopelines)
+				{
+					if (!list.Contains(current2) && current2.m_Curves.Contains(current))
+					{
+						list.Add(current2);
+					}
+				}
+			}
+			return list;
+		}
+		public List<AnimationWindowCurve> GetAffectedCurves(List<AnimationWindowKeyframe> keyframes)
+		{
+			List<AnimationWindowCurve> list = new List<AnimationWindowCurve>();
+			foreach (AnimationWindowKeyframe current in keyframes)
+			{
+				if (!list.Contains(current.curve))
+				{
+					list.Add(current.curve);
+				}
+			}
+			return list;
 		}
 		private void SyncSceneSelection(int[] selectedNodeIDs)
 		{

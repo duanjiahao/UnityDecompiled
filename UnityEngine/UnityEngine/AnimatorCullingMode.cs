@@ -4,6 +4,8 @@ namespace UnityEngine
 	public enum AnimatorCullingMode
 	{
 		AlwaysAnimate,
-		BasedOnRenderers
+		CullUpdateTransforms,
+		CullCompletely,
+		BasedOnRenderers = 1
 	}
 }

@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -114,518 +113,87 @@ namespace UnityEditorInternal
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static Texture2D GetIconForFile(string fileName)
-		{
-			int num = fileName.LastIndexOf('.');
-			string text = (num != -1) ? fileName.Substring(num + 1).ToLower() : string.Empty;
-			string text2 = text;
-			switch (text2)
-			{
-			case "boo":
-				return EditorGUIUtility.FindTexture("boo Script Icon");
-			case "cginc":
-				return EditorGUIUtility.FindTexture("CGProgram Icon");
-			case "cs":
-				return EditorGUIUtility.FindTexture("cs Script Icon");
-			case "guiskin":
-				return EditorGUIUtility.FindTexture("GUISkin Icon");
-			case "js":
-				return EditorGUIUtility.FindTexture("Js Script Icon");
-			case "mat":
-				return EditorGUIUtility.FindTexture("Material Icon");
-			case "prefab":
-				return EditorGUIUtility.FindTexture("PrefabNormal Icon");
-			case "shader":
-				return EditorGUIUtility.FindTexture("Shader Icon");
-			case "txt":
-				return EditorGUIUtility.FindTexture("TextAsset Icon");
-			case "unity":
-				return EditorGUIUtility.FindTexture("SceneAsset Icon");
-			case "asset":
-			case "prefs":
-				return EditorGUIUtility.FindTexture("GameManager Icon");
-			case "anim":
-				return EditorGUIUtility.FindTexture("Animation Icon");
-			case "meta":
-				return EditorGUIUtility.FindTexture("MetaFile Icon");
-			case "ttf":
-			case "otf":
-			case "fon":
-			case "fnt":
-				return EditorGUIUtility.FindTexture("Font Icon");
-			case "aac":
-			case "aif":
-			case "aiff":
-			case "au":
-			case "mid":
-			case "midi":
-			case "mp3":
-			case "mpa":
-			case "ra":
-			case "ram":
-			case "wma":
-			case "wav":
-			case "wave":
-			case "ogg":
-				return EditorGUIUtility.FindTexture("AudioClip Icon");
-			case "ai":
-			case "apng":
-			case "png":
-			case "bmp":
-			case "cdr":
-			case "dib":
-			case "eps":
-			case "exif":
-			case "gif":
-			case "ico":
-			case "icon":
-			case "j":
-			case "j2c":
-			case "j2k":
-			case "jas":
-			case "jiff":
-			case "jng":
-			case "jp2":
-			case "jpc":
-			case "jpe":
-			case "jpeg":
-			case "jpf":
-			case "jpg":
-			case "jpw":
-			case "jpx":
-			case "jtf":
-			case "mac":
-			case "omf":
-			case "qif":
-			case "qti":
-			case "qtif":
-			case "tex":
-			case "tfw":
-			case "tga":
-			case "tif":
-			case "tiff":
-			case "wmf":
-			case "psd":
-			case "exr":
-				return EditorGUIUtility.FindTexture("Texture Icon");
-			case "3df":
-			case "3dm":
-			case "3dmf":
-			case "3ds":
-			case "3dv":
-			case "3dx":
-			case "blend":
-			case "c4d":
-			case "lwo":
-			case "lws":
-			case "ma":
-			case "max":
-			case "mb":
-			case "mesh":
-			case "obj":
-			case "vrl":
-			case "wrl":
-			case "wrz":
-			case "fbx":
-				return EditorGUIUtility.FindTexture("Mesh Icon");
-			case "asf":
-			case "asx":
-			case "avi":
-			case "dat":
-			case "divx":
-			case "dvx":
-			case "mlv":
-			case "m2l":
-			case "m2t":
-			case "m2ts":
-			case "m2v":
-			case "m4e":
-			case "m4v":
-			case "mjp":
-			case "mov":
-			case "movie":
-			case "mp21":
-			case "mp4":
-			case "mpe":
-			case "mpeg":
-			case "mpg":
-			case "mpv2":
-			case "ogm":
-			case "qt":
-			case "rm":
-			case "rmvb":
-			case "wmw":
-			case "xvid":
-				return EditorGUIUtility.FindTexture("MovieTexture Icon");
-			case "colors":
-			case "gradients":
-			case "curves":
-			case "curvesnormalized":
-			case "particlecurves":
-			case "particlecurvessigned":
-			case "particledoublecurves":
-			case "particledoublecurvessigned":
-				return EditorGUIUtility.FindTexture("ScriptableObject Icon");
-			}
-			return EditorGUIUtility.FindTexture("DefaultAsset Icon");
-		}
-		public static string[] GetEditorSettingsList(string prefix, int count)
-		{
-			ArrayList arrayList = new ArrayList();
-			for (int i = 1; i <= count; i++)
-			{
-				string @string = EditorPrefs.GetString(prefix + i, "defaultValue");
-				if (@string == "defaultValue")
-				{
-					break;
-				}
-				arrayList.Add(@string);
-			}
-			return arrayList.ToArray(typeof(string)) as string[];
-		}
-		public static void SaveEditorSettingsList(string prefix, string[] aList, int count)
-		{
-			for (int i = 0; i < aList.Length; i++)
-			{
-				EditorPrefs.SetString(prefix + (i + 1), aList[i]);
-			}
-			for (int i = aList.Length + 1; i <= count; i++)
-			{
-				EditorPrefs.DeleteKey(prefix + i);
-			}
-		}
-		public static Camera[] GetSceneViewCameras()
-		{
-			return SceneView.GetAllSceneCameras();
-		}
-		public static void ShowGameView()
-		{
-			WindowLayout.ShowAppropriateViewOnEnterExitPlaymode(true);
-		}
-		public static List<int> GetNewSelection(int clickedInstanceID, List<int> allInstanceIDs, List<int> selectedInstanceIDs, int lastClickedInstanceID, bool keepMultiSelection, bool useShiftAsActionKey, bool allowMultiSelection)
-		{
-			List<int> list = new List<int>();
-			bool flag = Event.current.shift || (EditorGUI.actionKey && useShiftAsActionKey);
-			bool flag2 = EditorGUI.actionKey && !useShiftAsActionKey;
-			if (!allowMultiSelection)
-			{
-				flag2 = (flag = false);
-			}
-			if (flag2)
-			{
-				list.AddRange(selectedInstanceIDs);
-				if (list.Contains(clickedInstanceID))
-				{
-					list.Remove(clickedInstanceID);
-				}
-				else
-				{
-					list.Add(clickedInstanceID);
-				}
-			}
-			else
-			{
-				if (flag)
-				{
-					if (clickedInstanceID == lastClickedInstanceID)
-					{
-						return selectedInstanceIDs;
-					}
-					int num;
-					int num2;
-					if (!InternalEditorUtility.GetFirstAndLastSelected(allInstanceIDs, selectedInstanceIDs, out num, out num2))
-					{
-						list.Add(clickedInstanceID);
-						return list;
-					}
-					int num3 = -1;
-					int num4 = -1;
-					for (int i = 0; i < allInstanceIDs.Count; i++)
-					{
-						if (allInstanceIDs[i] == clickedInstanceID)
-						{
-							num3 = i;
-						}
-						if (lastClickedInstanceID != 0 && allInstanceIDs[i] == lastClickedInstanceID)
-						{
-							num4 = i;
-						}
-					}
-					Assert.That(num3 != -1);
-					int num5 = 0;
-					if (num4 != -1)
-					{
-						num5 = ((num3 <= num4) ? -1 : 1);
-					}
-					int num6;
-					int num7;
-					if (num3 > num2)
-					{
-						num6 = num;
-						num7 = num3;
-					}
-					else
-					{
-						if (num3 >= num && num3 < num2)
-						{
-							if (num5 > 0)
-							{
-								num6 = num3;
-								num7 = num2;
-							}
-							else
-							{
-								num6 = num;
-								num7 = num3;
-							}
-						}
-						else
-						{
-							num6 = num3;
-							num7 = num2;
-						}
-					}
-					for (int j = num6; j <= num7; j++)
-					{
-						list.Add(allInstanceIDs[j]);
-					}
-				}
-				else
-				{
-					if (keepMultiSelection && selectedInstanceIDs.Contains(clickedInstanceID))
-					{
-						list.AddRange(selectedInstanceIDs);
-						return list;
-					}
-					list.Add(clickedInstanceID);
-				}
-			}
-			return list;
-		}
-		private static bool GetFirstAndLastSelected(List<int> allInstanceIDs, List<int> selectedInstanceIDs, out int firstIndex, out int lastIndex)
-		{
-			firstIndex = -1;
-			lastIndex = -1;
-			for (int i = 0; i < allInstanceIDs.Count; i++)
-			{
-				if (selectedInstanceIDs.Contains(allInstanceIDs[i]))
-				{
-					if (firstIndex == -1)
-					{
-						firstIndex = i;
-					}
-					lastIndex = i;
-				}
-			}
-			return firstIndex != -1 && lastIndex != -1;
-		}
-		public static bool IsValidFileName(string filename)
-		{
-			string text = InternalEditorUtility.RemoveInvalidCharsFromFileName(filename, false);
-			return !(text != filename) && !string.IsNullOrEmpty(text);
-		}
-		public static string RemoveInvalidCharsFromFileName(string filename, bool logIfInvalidChars)
-		{
-			if (string.IsNullOrEmpty(filename))
-			{
-				return filename;
-			}
-			filename = filename.Trim();
-			if (string.IsNullOrEmpty(filename))
-			{
-				return filename;
-			}
-			string text = new string(Path.GetInvalidFileNameChars());
-			string text2 = string.Empty;
-			bool flag = false;
-			string text3 = filename;
-			for (int i = 0; i < text3.Length; i++)
-			{
-				char c = text3[i];
-				if (text.IndexOf(c) == -1)
-				{
-					text2 += c;
-				}
-				else
-				{
-					flag = true;
-				}
-			}
-			if (flag && logIfInvalidChars)
-			{
-				string displayStringOfInvalidCharsOfFileName = InternalEditorUtility.GetDisplayStringOfInvalidCharsOfFileName(filename);
-				if (displayStringOfInvalidCharsOfFileName.Length > 0)
-				{
-					Debug.LogWarning(string.Format("A filename cannot contain the following character{0}:  {1}", (displayStringOfInvalidCharsOfFileName.Length <= 1) ? string.Empty : "s", displayStringOfInvalidCharsOfFileName));
-				}
-			}
-			return text2;
-		}
-		public static string GetDisplayStringOfInvalidCharsOfFileName(string filename)
-		{
-			if (string.IsNullOrEmpty(filename))
-			{
-				return string.Empty;
-			}
-			string text = new string(Path.GetInvalidFileNameChars());
-			string text2 = string.Empty;
-			for (int i = 0; i < filename.Length; i++)
-			{
-				char c = filename[i];
-				if (text.IndexOf(c) >= 0 && text2.IndexOf(c) == -1)
-				{
-					if (text2.Length > 0)
-					{
-						text2 += " ";
-					}
-					text2 += c;
-				}
-			}
-			return text2;
-		}
-		internal static bool IsScriptOrAssembly(string filename)
-		{
-			if (string.IsNullOrEmpty(filename))
-			{
-				return false;
-			}
-			string text = Path.GetExtension(filename).ToLower();
-			if (text != null)
-			{
-				if (InternalEditorUtility.<>f__switch$map6 == null)
-				{
-					InternalEditorUtility.<>f__switch$map6 = new Dictionary<string, int>(5)
-					{
-
-						{
-							".cs",
-							0
-						},
-
-						{
-							".js",
-							0
-						},
-
-						{
-							".boo",
-							0
-						},
-
-						{
-							".dll",
-							1
-						},
-
-						{
-							".exe",
-							1
-						}
-					};
-				}
-				int num;
-				if (InternalEditorUtility.<>f__switch$map6.TryGetValue(text, out num))
-				{
-					if (num == 0)
-					{
-						return true;
-					}
-					if (num == 1)
-					{
-						return AssemblyHelper.IsManagedAssembly(filename);
-					}
-				}
-			}
-			return false;
-		}
-		internal static T ParentHasComponent<T>(Transform trans) where T : Component
-		{
-			if (!(trans != null))
-			{
-				return (T)((object)null);
-			}
-			T component = trans.GetComponent<T>();
-			if (component)
-			{
-				return component;
-			}
-			return InternalEditorUtility.ParentHasComponent<T>(trans.parent);
-		}
-		internal static IEnumerable<string> GetAllScriptGUIDs()
-		{
-			return 
-				from asset in AssetDatabase.GetAllAssetPaths()
-				where InternalEditorUtility.IsScriptOrAssembly(asset)
-				select AssetDatabase.AssetPathToGUID(asset);
-		}
-		public static bool DetectDotNetDll(string path)
-		{
-			bool result;
-			using (Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
-			{
-				using (BinaryReader binaryReader = new BinaryReader(stream))
-				{
-					if (stream.Length < 64L)
-					{
-						result = false;
-					}
-					else
-					{
-						stream.Position = 60L;
-						uint num = binaryReader.ReadUInt32();
-						if (num == 0u)
-						{
-							num = 128u;
-						}
-						if ((ulong)num > (ulong)(stream.Length - 256L))
-						{
-							result = false;
-						}
-						else
-						{
-							stream.Position = (long)((ulong)num);
-							uint num2 = binaryReader.ReadUInt32();
-							if (num2 != 17744u)
-							{
-								result = false;
-							}
-							else
-							{
-								stream.Position += 20L;
-								ushort num3 = binaryReader.ReadUInt16();
-								if (num3 != 267 && num3 != 523)
-								{
-									result = false;
-								}
-								else
-								{
-									ushort num4 = (ushort)((ulong)num + (ulong)((num3 != 267) ? 248L : 232L));
-									stream.Position = (long)num4;
-									if (binaryReader.ReadUInt32() == 0u)
-									{
-										result = false;
-									}
-									else
-									{
-										result = true;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			return result;
-		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void BumpMapSettingsFixingWindowReportResult(int result);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool BumpMapTextureNeedsFixing(Material material);
+		public static extern bool BumpMapTextureNeedsFixingInternal(Material material, string propName, bool flaggedAsNormal);
+		internal static bool BumpMapTextureNeedsFixing(MaterialProperty prop)
+		{
+			if (prop.type != MaterialProperty.PropType.Texture)
+			{
+				return false;
+			}
+			bool flaggedAsNormal = (prop.flags & MaterialProperty.PropFlags.Normal) != MaterialProperty.PropFlags.None;
+			UnityEngine.Object[] targets = prop.targets;
+			for (int i = 0; i < targets.Length; i++)
+			{
+				Material material = (Material)targets[i];
+				if (InternalEditorUtility.BumpMapTextureNeedsFixingInternal(material, prop.name, flaggedAsNormal))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void FixNormalmapTexture(Material material);
+		public static extern void FixNormalmapTextureInternal(Material material, string propName);
+		internal static void FixNormalmapTexture(MaterialProperty prop)
+		{
+			UnityEngine.Object[] targets = prop.targets;
+			for (int i = 0; i < targets.Length; i++)
+			{
+				Material material = (Material)targets[i];
+				InternalEditorUtility.FixNormalmapTextureInternal(material, prop.name);
+			}
+		}
+		internal static bool HDRTextureNeedsFixing(MaterialProperty prop, out bool canBeFixedAutomatically)
+		{
+			if ((prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None || prop.displayName.Contains("(HDR"))
+			{
+				Texture textureValue = prop.textureValue;
+				if (textureValue)
+				{
+					string assetPath = AssetDatabase.GetAssetPath(textureValue);
+					TextureImporter x = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+					canBeFixedAutomatically = (x != null);
+					bool flag = TextureUtil.HasAlphaTextureFormat(TextureUtil.GetTextureFormat(textureValue));
+					bool flag2 = TextureUtil.GetUsageMode(textureValue) == TextureUsageMode.RGBMEncoded;
+					if (flag && !flag2)
+					{
+						return true;
+					}
+				}
+			}
+			canBeFixedAutomatically = false;
+			return false;
+		}
+		internal static void FixHDRTexture(MaterialProperty prop)
+		{
+			string assetPath = AssetDatabase.GetAssetPath(prop.textureValue);
+			TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+			if (!textureImporter)
+			{
+				return;
+			}
+			TextureImporterFormat textureFormat = TextureImporterFormat.RGB24;
+			textureImporter.textureFormat = textureFormat;
+			List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+			foreach (BuildPlayerWindow.BuildPlatform current in validPlatforms)
+			{
+				int maxTextureSize;
+				TextureImporterFormat textureImporterFormat;
+				int compressionQuality;
+				bool platformTextureSettings = textureImporter.GetPlatformTextureSettings(current.name, out maxTextureSize, out textureImporterFormat, out compressionQuality);
+				if (platformTextureSettings)
+				{
+					textureImporter.SetPlatformTextureSettings(current.name, maxTextureSize, textureFormat, compressionQuality);
+				}
+			}
+			AssetDatabase.ImportAsset(assetPath);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetEditorAssemblyPath();
@@ -661,6 +229,9 @@ namespace UnityEditorInternal
 		public static extern int AddScriptComponentUnchecked(GameObject gameObject, MonoScript script);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int CreateScriptableObjectUnchecked(MonoScript script);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RequestScriptReload();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -685,7 +256,7 @@ namespace UnityEditorInternal
 		public static extern DragAndDropVisualMode ProjectWindowDrag(HierarchyProperty property, bool perform);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern DragAndDropVisualMode HierarchyWindowDrag(HierarchyProperty property, bool perform, InternalEditorUtility.HierarchyDropMode options);
+		public static extern DragAndDropVisualMode HierarchyWindowDrag(HierarchyProperty property, bool perform, InternalEditorUtility.HierarchyDropMode dropMode);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern DragAndDropVisualMode InspectorWindowDrag(UnityEngine.Object[] targets, bool perform);
@@ -705,10 +276,16 @@ namespace UnityEditorInternal
 		private static extern void INTERNAL_CALL_SetRectTransformTemporaryRect(RectTransform rectTransform, ref Rect rect);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool HasMaint();
+		public static extern bool HasPro();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool HasPro();
+		public static extern bool HasFreeLicense();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool HasEduLicense();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool HasProFeaturesEnabled();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasAdvancedLicenseOnBuildTarget(BuildTarget target);
@@ -724,10 +301,10 @@ namespace UnityEditorInternal
 		internal static extern string GetSortingLayerName(int index);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetSortingLayerNameFromUniqueID(int id);
+		internal static extern int GetSortingLayerUniqueID(int index);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetSortingLayerUserID(int index);
+		internal static extern string GetSortingLayerNameFromUniqueID(int id);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetSortingLayerCount();
@@ -781,10 +358,21 @@ namespace UnityEditorInternal
 		public static extern void LoadDefaultLayout();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void CalculateAmbientProbeFromSkybox();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetupShaderMenu(Material material);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetFullUnityVersion();
+		public static Version GetUnityVersion()
+		{
+			Version version = new Version(InternalEditorUtility.GetUnityVersionDigits());
+			return new Version(version.Major, version.Minor, version.Build, InternalEditorUtility.GetUnityRevision());
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetUnityVersionDigits();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUnityBuildBranch();
@@ -1026,10 +614,13 @@ namespace UnityEditorInternal
 		private static extern void INTERNAL_CALL_SetCustomLighting(Light[] lights, ref Color ambient);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void ClearSceneLighting();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RemoveCustomLighting();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool CalculateShouldEnableLights();
+		internal static extern void DrawSkyboxMaterial(Material mat, Camera cam);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasFullscreenCamera();
@@ -1038,7 +629,7 @@ namespace UnityEditorInternal
 		public static extern void ResetCursor();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Bounds CalculateSelectionBounds(bool usePivotOnlyForParticles);
+		public static extern Bounds CalculateSelectionBounds(bool usePivotOnlyForParticles, bool onlyUseActiveSelection);
 		internal static Bounds CalculateSelectionBoundsInSpace(Vector3 position, Quaternion rotation, bool rectBlueprintMode)
 		{
 			Quaternion rotation2 = Quaternion.Inverse(rotation);
@@ -1135,6 +726,9 @@ namespace UnityEditorInternal
 		public static extern bool CanConnectToCacheServer();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool DetectDotNetDll(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetCrashReportFolder();
 		[ExcludeFromDocs]
 		internal static bool RunningUnderWindows8()
@@ -1166,5 +760,498 @@ namespace UnityEditorInternal
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void AuxWindowManager_OnAssemblyReload();
+		public static Vector2 PassAndReturnVector2(Vector2 v)
+		{
+			return InternalEditorUtility.INTERNAL_CALL_PassAndReturnVector2(ref v);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Vector2 INTERNAL_CALL_PassAndReturnVector2(ref Vector2 v);
+		public static Color32 PassAndReturnColor32(Color32 c)
+		{
+			return InternalEditorUtility.INTERNAL_CALL_PassAndReturnColor32(ref c);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Color32 INTERNAL_CALL_PassAndReturnColor32(ref Color32 c);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool EnsureSceneHasBeenSaved(string operation);
+		public static Texture2D GetIconForFile(string fileName)
+		{
+			int num = fileName.LastIndexOf('.');
+			string text = (num != -1) ? fileName.Substring(num + 1).ToLower() : string.Empty;
+			string text2 = text;
+			switch (text2)
+			{
+			case "boo":
+				return EditorGUIUtility.FindTexture("boo Script Icon");
+			case "cginc":
+				return EditorGUIUtility.FindTexture("CGProgram Icon");
+			case "cs":
+				return EditorGUIUtility.FindTexture("cs Script Icon");
+			case "guiskin":
+				return EditorGUIUtility.FindTexture("GUISkin Icon");
+			case "js":
+				return EditorGUIUtility.FindTexture("Js Script Icon");
+			case "mat":
+				return EditorGUIUtility.FindTexture("Material Icon");
+			case "prefab":
+				return EditorGUIUtility.FindTexture("PrefabNormal Icon");
+			case "shader":
+				return EditorGUIUtility.FindTexture("Shader Icon");
+			case "txt":
+				return EditorGUIUtility.FindTexture("TextAsset Icon");
+			case "unity":
+				return EditorGUIUtility.FindTexture("SceneAsset Icon");
+			case "asset":
+			case "prefs":
+				return EditorGUIUtility.FindTexture("GameManager Icon");
+			case "anim":
+				return EditorGUIUtility.FindTexture("Animation Icon");
+			case "meta":
+				return EditorGUIUtility.FindTexture("MetaFile Icon");
+			case "mixer":
+				return EditorGUIUtility.FindTexture("AudioMixerController Icon");
+			case "ttf":
+			case "otf":
+			case "fon":
+			case "fnt":
+				return EditorGUIUtility.FindTexture("Font Icon");
+			case "aac":
+			case "aif":
+			case "aiff":
+			case "au":
+			case "mid":
+			case "midi":
+			case "mp3":
+			case "mpa":
+			case "ra":
+			case "ram":
+			case "wma":
+			case "wav":
+			case "wave":
+			case "ogg":
+				return EditorGUIUtility.FindTexture("AudioClip Icon");
+			case "ai":
+			case "apng":
+			case "png":
+			case "bmp":
+			case "cdr":
+			case "dib":
+			case "eps":
+			case "exif":
+			case "gif":
+			case "ico":
+			case "icon":
+			case "j":
+			case "j2c":
+			case "j2k":
+			case "jas":
+			case "jiff":
+			case "jng":
+			case "jp2":
+			case "jpc":
+			case "jpe":
+			case "jpeg":
+			case "jpf":
+			case "jpg":
+			case "jpw":
+			case "jpx":
+			case "jtf":
+			case "mac":
+			case "omf":
+			case "qif":
+			case "qti":
+			case "qtif":
+			case "tex":
+			case "tfw":
+			case "tga":
+			case "tif":
+			case "tiff":
+			case "wmf":
+			case "psd":
+			case "exr":
+			case "hdr":
+				return EditorGUIUtility.FindTexture("Texture Icon");
+			case "3df":
+			case "3dm":
+			case "3dmf":
+			case "3ds":
+			case "3dv":
+			case "3dx":
+			case "blend":
+			case "c4d":
+			case "lwo":
+			case "lws":
+			case "ma":
+			case "max":
+			case "mb":
+			case "mesh":
+			case "obj":
+			case "vrl":
+			case "wrl":
+			case "wrz":
+			case "fbx":
+				return EditorGUIUtility.FindTexture("Mesh Icon");
+			case "asf":
+			case "asx":
+			case "avi":
+			case "dat":
+			case "divx":
+			case "dvx":
+			case "mlv":
+			case "m2l":
+			case "m2t":
+			case "m2ts":
+			case "m2v":
+			case "m4e":
+			case "m4v":
+			case "mjp":
+			case "mov":
+			case "movie":
+			case "mp21":
+			case "mp4":
+			case "mpe":
+			case "mpeg":
+			case "mpg":
+			case "mpv2":
+			case "ogm":
+			case "qt":
+			case "rm":
+			case "rmvb":
+			case "wmw":
+			case "xvid":
+				return EditorGUIUtility.FindTexture("MovieTexture Icon");
+			case "colors":
+			case "gradients":
+			case "curves":
+			case "curvesnormalized":
+			case "particlecurves":
+			case "particlecurvessigned":
+			case "particledoublecurves":
+			case "particledoublecurvessigned":
+				return EditorGUIUtility.FindTexture("ScriptableObject Icon");
+			}
+			return EditorGUIUtility.FindTexture("DefaultAsset Icon");
+		}
+		public static string[] GetEditorSettingsList(string prefix, int count)
+		{
+			ArrayList arrayList = new ArrayList();
+			for (int i = 1; i <= count; i++)
+			{
+				string @string = EditorPrefs.GetString(prefix + i, "defaultValue");
+				if (@string == "defaultValue")
+				{
+					break;
+				}
+				arrayList.Add(@string);
+			}
+			return arrayList.ToArray(typeof(string)) as string[];
+		}
+		public static void SaveEditorSettingsList(string prefix, string[] aList, int count)
+		{
+			for (int i = 0; i < aList.Length; i++)
+			{
+				EditorPrefs.SetString(prefix + (i + 1), aList[i]);
+			}
+			for (int i = aList.Length + 1; i <= count; i++)
+			{
+				EditorPrefs.DeleteKey(prefix + i);
+			}
+		}
+		public static string TextAreaForDocBrowser(Rect position, string text, GUIStyle style)
+		{
+			int controlID = GUIUtility.GetControlID("TextAreaWithTabHandling".GetHashCode(), FocusType.Keyboard, position);
+			EditorGUI.RecycledTextEditor s_RecycledEditor = EditorGUI.s_RecycledEditor;
+			Event current = Event.current;
+			if (s_RecycledEditor.IsEditingControl(controlID) && current.type == EventType.KeyDown)
+			{
+				if (current.character == '\t')
+				{
+					s_RecycledEditor.Insert('\t');
+					current.Use();
+					GUI.changed = true;
+					text = s_RecycledEditor.content.text;
+				}
+				if (current.character == '\n')
+				{
+					s_RecycledEditor.Insert('\n');
+					current.Use();
+					GUI.changed = true;
+					text = s_RecycledEditor.content.text;
+				}
+			}
+			bool flag;
+			text = EditorGUI.DoTextField(s_RecycledEditor, controlID, EditorGUI.IndentedRect(position), text, style, null, out flag, false, true, false);
+			return text;
+		}
+		public static Camera[] GetSceneViewCameras()
+		{
+			return SceneView.GetAllSceneCameras();
+		}
+		public static void ShowGameView()
+		{
+			WindowLayout.ShowAppropriateViewOnEnterExitPlaymode(true);
+		}
+		public static List<int> GetNewSelection(int clickedInstanceID, List<int> allInstanceIDs, List<int> selectedInstanceIDs, int lastClickedInstanceID, bool keepMultiSelection, bool useShiftAsActionKey, bool allowMultiSelection)
+		{
+			List<int> list = new List<int>();
+			bool flag = Event.current.shift || (EditorGUI.actionKey && useShiftAsActionKey);
+			bool flag2 = EditorGUI.actionKey && !useShiftAsActionKey;
+			if (!allowMultiSelection)
+			{
+				flag2 = (flag = false);
+			}
+			if (flag2)
+			{
+				list.AddRange(selectedInstanceIDs);
+				if (list.Contains(clickedInstanceID))
+				{
+					list.Remove(clickedInstanceID);
+				}
+				else
+				{
+					list.Add(clickedInstanceID);
+				}
+			}
+			else
+			{
+				if (flag)
+				{
+					if (clickedInstanceID == lastClickedInstanceID)
+					{
+						return selectedInstanceIDs;
+					}
+					int num;
+					int num2;
+					if (!InternalEditorUtility.GetFirstAndLastSelected(allInstanceIDs, selectedInstanceIDs, out num, out num2))
+					{
+						list.Add(clickedInstanceID);
+						return list;
+					}
+					int num3 = -1;
+					int num4 = -1;
+					for (int i = 0; i < allInstanceIDs.Count; i++)
+					{
+						if (allInstanceIDs[i] == clickedInstanceID)
+						{
+							num3 = i;
+						}
+						if (lastClickedInstanceID != 0 && allInstanceIDs[i] == lastClickedInstanceID)
+						{
+							num4 = i;
+						}
+					}
+					int num5 = 0;
+					if (num4 != -1)
+					{
+						num5 = ((num3 <= num4) ? -1 : 1);
+					}
+					int num6;
+					int num7;
+					if (num3 > num2)
+					{
+						num6 = num;
+						num7 = num3;
+					}
+					else
+					{
+						if (num3 >= num && num3 < num2)
+						{
+							if (num5 > 0)
+							{
+								num6 = num3;
+								num7 = num2;
+							}
+							else
+							{
+								num6 = num;
+								num7 = num3;
+							}
+						}
+						else
+						{
+							num6 = num3;
+							num7 = num2;
+						}
+					}
+					for (int j = num6; j <= num7; j++)
+					{
+						list.Add(allInstanceIDs[j]);
+					}
+				}
+				else
+				{
+					if (keepMultiSelection && selectedInstanceIDs.Contains(clickedInstanceID))
+					{
+						list.AddRange(selectedInstanceIDs);
+						return list;
+					}
+					list.Add(clickedInstanceID);
+				}
+			}
+			return list;
+		}
+		private static bool GetFirstAndLastSelected(List<int> allInstanceIDs, List<int> selectedInstanceIDs, out int firstIndex, out int lastIndex)
+		{
+			firstIndex = -1;
+			lastIndex = -1;
+			for (int i = 0; i < allInstanceIDs.Count; i++)
+			{
+				if (selectedInstanceIDs.Contains(allInstanceIDs[i]))
+				{
+					if (firstIndex == -1)
+					{
+						firstIndex = i;
+					}
+					lastIndex = i;
+				}
+			}
+			return firstIndex != -1 && lastIndex != -1;
+		}
+		public static bool IsValidFileName(string filename)
+		{
+			string text = InternalEditorUtility.RemoveInvalidCharsFromFileName(filename, false);
+			return !(text != filename) && !string.IsNullOrEmpty(text);
+		}
+		public static string RemoveInvalidCharsFromFileName(string filename, bool logIfInvalidChars)
+		{
+			if (string.IsNullOrEmpty(filename))
+			{
+				return filename;
+			}
+			filename = filename.Trim();
+			if (string.IsNullOrEmpty(filename))
+			{
+				return filename;
+			}
+			string text = new string(Path.GetInvalidFileNameChars());
+			string text2 = string.Empty;
+			bool flag = false;
+			string text3 = filename;
+			for (int i = 0; i < text3.Length; i++)
+			{
+				char c = text3[i];
+				if (text.IndexOf(c) == -1)
+				{
+					text2 += c;
+				}
+				else
+				{
+					flag = true;
+				}
+			}
+			if (flag && logIfInvalidChars)
+			{
+				string displayStringOfInvalidCharsOfFileName = InternalEditorUtility.GetDisplayStringOfInvalidCharsOfFileName(filename);
+				if (displayStringOfInvalidCharsOfFileName.Length > 0)
+				{
+					Debug.LogWarningFormat("A filename cannot contain the following character{0}:  {1}", new object[]
+					{
+						(displayStringOfInvalidCharsOfFileName.Length <= 1) ? string.Empty : "s",
+						displayStringOfInvalidCharsOfFileName
+					});
+				}
+			}
+			return text2;
+		}
+		public static string GetDisplayStringOfInvalidCharsOfFileName(string filename)
+		{
+			if (string.IsNullOrEmpty(filename))
+			{
+				return string.Empty;
+			}
+			string text = new string(Path.GetInvalidFileNameChars());
+			string text2 = string.Empty;
+			for (int i = 0; i < filename.Length; i++)
+			{
+				char c = filename[i];
+				if (text.IndexOf(c) >= 0 && text2.IndexOf(c) == -1)
+				{
+					if (text2.Length > 0)
+					{
+						text2 += " ";
+					}
+					text2 += c;
+				}
+			}
+			return text2;
+		}
+		internal static bool IsScriptOrAssembly(string filename)
+		{
+			if (string.IsNullOrEmpty(filename))
+			{
+				return false;
+			}
+			string text = Path.GetExtension(filename).ToLower();
+			if (text != null)
+			{
+				if (InternalEditorUtility.<>f__switch$map8 == null)
+				{
+					InternalEditorUtility.<>f__switch$map8 = new Dictionary<string, int>(5)
+					{
+
+						{
+							".cs",
+							0
+						},
+
+						{
+							".js",
+							0
+						},
+
+						{
+							".boo",
+							0
+						},
+
+						{
+							".dll",
+							1
+						},
+
+						{
+							".exe",
+							1
+						}
+					};
+				}
+				int num;
+				if (InternalEditorUtility.<>f__switch$map8.TryGetValue(text, out num))
+				{
+					if (num == 0)
+					{
+						return true;
+					}
+					if (num == 1)
+					{
+						return AssemblyHelper.IsManagedAssembly(filename);
+					}
+				}
+			}
+			return false;
+		}
+		internal static T ParentHasComponent<T>(Transform trans) where T : Component
+		{
+			if (!(trans != null))
+			{
+				return (T)((object)null);
+			}
+			T component = trans.GetComponent<T>();
+			if (component)
+			{
+				return component;
+			}
+			return InternalEditorUtility.ParentHasComponent<T>(trans.parent);
+		}
+		internal static IEnumerable<string> GetAllScriptGUIDs()
+		{
+			return 
+				from asset in AssetDatabase.GetAllAssetPaths()
+				where InternalEditorUtility.IsScriptOrAssembly(asset)
+				select AssetDatabase.AssetPathToGUID(asset);
+		}
 	}
 }

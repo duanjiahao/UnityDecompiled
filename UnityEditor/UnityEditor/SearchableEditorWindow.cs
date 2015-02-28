@@ -11,7 +11,8 @@ namespace UnityEditor
 			All,
 			Name,
 			Type,
-			Label
+			Label,
+			AssetBundleName
 		}
 		public enum SearchModeHierarchyWindow
 		{
@@ -77,6 +78,10 @@ namespace UnityEditor
 					{
 						searchString
 					};
+					searchFilter.assetBundleNames = new string[]
+					{
+						searchString
+					};
 					searchFilter.showAllHits = true;
 				}
 				break;
@@ -91,6 +96,12 @@ namespace UnityEditor
 				break;
 			case SearchableEditorWindow.SearchMode.Label:
 				searchFilter.assetLabels = new string[]
+				{
+					searchString
+				};
+				break;
+			case SearchableEditorWindow.SearchMode.AssetBundleName:
+				searchFilter.assetBundleNames = new string[]
 				{
 					searchString
 				};
@@ -167,9 +178,9 @@ namespace UnityEditor
 		{
 			foreach (SearchableEditorWindow current in SearchableEditorWindow.searchableWindows)
 			{
-				if (current is BaseProjectWindow && current.m_HierarchyType == this.m_HierarchyType)
+				if (current is SceneHierarchyWindow)
 				{
-					((BaseProjectWindow)current).SelectPrevious();
+					((SceneHierarchyWindow)current).SelectPrevious();
 					break;
 				}
 			}
@@ -178,16 +189,16 @@ namespace UnityEditor
 		{
 			foreach (SearchableEditorWindow current in SearchableEditorWindow.searchableWindows)
 			{
-				if (current is BaseProjectWindow && current.m_HierarchyType == this.m_HierarchyType)
+				if (current is SceneHierarchyWindow)
 				{
-					((BaseProjectWindow)current).SelectNext();
+					((SceneHierarchyWindow)current).SelectNext();
 					break;
 				}
 			}
 		}
-		internal virtual void SetSearchFilter(string searchFilter, SearchableEditorWindow.SearchMode searchMode, bool setAll)
+		internal virtual void SetSearchFilter(string searchFilter, SearchableEditorWindow.SearchMode mode, bool setAll)
 		{
-			this.m_SearchMode = searchMode;
+			this.m_SearchMode = mode;
 			this.m_SearchFilter = searchFilter;
 			if (setAll)
 			{
@@ -207,7 +218,11 @@ namespace UnityEditor
 		}
 		internal void SearchFieldGUI()
 		{
-			Rect rect = GUILayoutUtility.GetRect(0f, EditorGUILayout.kLabelFloatMaxW * 1.5f, 16f, 16f, EditorStyles.toolbarSearchField);
+			this.SearchFieldGUI(EditorGUILayout.kLabelFloatMaxW * 1.5f);
+		}
+		internal void SearchFieldGUI(float maxWidth)
+		{
+			Rect rect = GUILayoutUtility.GetRect(EditorGUILayout.kLabelFloatMaxW * 0.2f, maxWidth, 16f, 16f, EditorStyles.toolbarSearchField);
 			if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
 			{
 				this.ClickedSearchField();

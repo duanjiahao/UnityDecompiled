@@ -139,6 +139,16 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern float lfReference
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[Obsolete("lFReference is obsolete. Use lfReference instead (UnityUpgradable).", true)]
 		public extern float lFReference
 		{
 			[WrapperlessIcall]

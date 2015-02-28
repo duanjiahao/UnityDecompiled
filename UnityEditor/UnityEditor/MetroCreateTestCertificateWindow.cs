@@ -23,7 +23,7 @@ namespace UnityEditor
 		{
 			MetroCreateTestCertificateWindow[] array = (MetroCreateTestCertificateWindow[])Resources.FindObjectsOfTypeAll(typeof(MetroCreateTestCertificateWindow));
 			MetroCreateTestCertificateWindow metroCreateTestCertificateWindow = (array.Length <= 0) ? ScriptableObject.CreateInstance<MetroCreateTestCertificateWindow>() : array[0];
-			metroCreateTestCertificateWindow.path = Path.Combine(Application.dataPath, "MetroTestCertificate.pfx").Replace('\\', '/');
+			metroCreateTestCertificateWindow.path = Path.Combine(Application.dataPath, "WSATestCertificate.pfx").Replace('\\', '/');
 			metroCreateTestCertificateWindow.publisher = publisher;
 			metroCreateTestCertificateWindow.password = string.Empty;
 			metroCreateTestCertificateWindow.confirm = metroCreateTestCertificateWindow.password;
@@ -126,9 +126,9 @@ namespace UnityEditor
 								{
 									try
 									{
-										EditorUtility.MetroCreateTestCertificate(this.path, this.publisher, this.password, true);
+										EditorUtility.WSACreateTestCertificate(this.path, this.publisher, this.password, true);
 										AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-										if (!PlayerSettings.Metro.SetCertificate(FileUtil.GetProjectRelativePath(this.path), this.password))
+										if (!PlayerSettings.WSA.SetCertificate(FileUtil.GetProjectRelativePath(this.path), this.password))
 										{
 											this.message = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreatePasswordInvalid");
 										}

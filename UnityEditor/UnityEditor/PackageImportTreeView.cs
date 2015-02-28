@@ -34,8 +34,24 @@ namespace UnityEditor
 		}
 		private class PackageImportTreeViewGUI : TreeViewGUI
 		{
-			private static Texture2D folderIcon = EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName);
+			internal class Constants
+			{
+				public Texture2D folderIcon = EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName);
+				public GUIContent badgeNew = EditorGUIUtility.IconContent("AS Badge New");
+			}
+			private PackageImportTreeView.PackageImportTreeViewGUI.Constants m_Constants;
 			public Action<PackageImportTreeView.PackageImportTreeViewItem> itemWasToggled;
+			internal PackageImportTreeView.PackageImportTreeViewGUI.Constants constants
+			{
+				get
+				{
+					if (this.m_Constants == null)
+					{
+						this.m_Constants = new PackageImportTreeView.PackageImportTreeViewGUI.Constants();
+					}
+					return this.m_Constants;
+				}
+			}
 			public int showPreviewForID
 			{
 				get;
@@ -97,7 +113,7 @@ namespace UnityEditor
 					}
 					if (packageImportTreeViewItem.item.exists == 0)
 					{
-						Texture image = ASMainWindow.badgeNew.image;
+						Texture image = this.constants.badgeNew.image;
 						GUI.DrawTexture(new Rect(rect.xMax - (float)image.width - 6f, rect.y + (rect.height - (float)image.height) / 2f, (float)image.width, (float)image.height), image);
 					}
 				}
@@ -123,7 +139,7 @@ namespace UnityEditor
 				PackageImportTreeView.PackageImportTreeViewItem packageImportTreeViewItem = item as PackageImportTreeView.PackageImportTreeViewItem;
 				if (packageImportTreeViewItem.isFolder)
 				{
-					return PackageImportTreeView.PackageImportTreeViewGUI.folderIcon;
+					return this.constants.folderIcon;
 				}
 				return InternalEditorUtility.GetIconForFile(packageImportTreeViewItem.item.pathName);
 			}
@@ -176,16 +192,19 @@ namespace UnityEditor
 					AssetsItem assetsItem2 = assetItems2[j];
 					if (assetsItem2.assetIsDir != 1)
 					{
-						string fileName = Path.GetFileName(assetsItem2.pathName);
-						string directoryName = Path.GetDirectoryName(assetsItem2.pathName);
-						TreeViewItem treeViewItem = this.EnsureFolderPath(directoryName, dictionary, treeViewFolders, flag);
-						if (treeViewItem != null)
+						if (!PackageImport.HasInvalidCharInFilePath(assetsItem2.pathName))
 						{
-							int hashCode = assetsItem2.pathName.GetHashCode();
-							treeViewItem.AddChild(new PackageImportTreeView.PackageImportTreeViewItem(hashCode, treeViewItem.depth + 1, treeViewItem, fileName)
+							string fileName = Path.GetFileName(assetsItem2.pathName);
+							string directoryName = Path.GetDirectoryName(assetsItem2.pathName);
+							TreeViewItem treeViewItem = this.EnsureFolderPath(directoryName, dictionary, treeViewFolders, flag);
+							if (treeViewItem != null)
 							{
-								item = assetsItem2
-							});
+								int hashCode = assetsItem2.pathName.GetHashCode();
+								treeViewItem.AddChild(new PackageImportTreeView.PackageImportTreeViewItem(hashCode, treeViewItem.depth + 1, treeViewItem, fileName)
+								{
+									item = assetsItem2
+								});
+							}
 						}
 					}
 				}

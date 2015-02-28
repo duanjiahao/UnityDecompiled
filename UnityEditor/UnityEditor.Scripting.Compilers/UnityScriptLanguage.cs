@@ -11,9 +11,9 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			return "UnityScript";
 		}
-		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform)
+		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
-			return new UnityScriptCompiler(island);
+			return new UnityScriptCompiler(island, runUpdater);
 		}
 	}
 }

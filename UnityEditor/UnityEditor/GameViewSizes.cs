@@ -447,9 +447,8 @@ namespace UnityEditor
 			case BuildTargetGroup.Standalone:
 				return GameViewSizeGroupType.Standalone;
 			case BuildTargetGroup.WebPlayer:
-			case BuildTargetGroup.FlashPlayer:
 				return GameViewSizeGroupType.WebPlayer;
-			case BuildTargetGroup.iPhone:
+			case BuildTargetGroup.iOS:
 				return GameViewSizeGroupType.iOS;
 			case BuildTargetGroup.PS3:
 				return GameViewSizeGroupType.PS3;
@@ -459,7 +458,7 @@ namespace UnityEditor
 				return GameViewSizeGroupType.Android;
 			case BuildTargetGroup.WP8:
 				return GameViewSizeGroupType.WP8;
-			case BuildTargetGroup.BB10:
+			case BuildTargetGroup.BlackBerry:
 				return GameViewSizeGroupType.BB10;
 			case BuildTargetGroup.Tizen:
 				return GameViewSizeGroupType.Tizen;

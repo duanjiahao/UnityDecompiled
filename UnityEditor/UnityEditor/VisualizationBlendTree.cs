@@ -1,13 +1,13 @@
 using System;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
 	internal class VisualizationBlendTree
 	{
 		private AnimatorController m_Controller;
-		private StateMachine m_StateMachine;
-		private State m_State;
+		private AnimatorStateMachine m_StateMachine;
+		private AnimatorState m_State;
 		private BlendTree m_BlendTree;
 		private Animator m_Animator;
 		private bool m_ControllerIsDirty;
@@ -16,6 +16,13 @@ namespace UnityEditor
 			get
 			{
 				return this.m_Animator;
+			}
+		}
+		public bool controllerDirty
+		{
+			get
+			{
+				return this.m_ControllerIsDirty;
 			}
 		}
 		public void Init(BlendTree blendTree, Animator animator)
@@ -34,14 +41,9 @@ namespace UnityEditor
 		}
 		private void CreateParameters()
 		{
-			int parameterCount = this.m_Controller.parameterCount;
-			for (int i = 0; i < parameterCount; i++)
+			for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
 			{
-				this.m_Controller.RemoveParameter(0);
-			}
-			for (int j = 0; j < this.m_BlendTree.recursiveBlendParameterCount; j++)
-			{
-				this.m_Controller.AddParameter(this.m_BlendTree.GetRecursiveBlendParameter(j), AnimatorControllerParameterType.Float);
+				this.m_Controller.AddParameter(this.m_BlendTree.GetRecursiveBlendParameter(i), AnimatorControllerParameterType.Float);
 			}
 		}
 		private void CreateStateMachine()
@@ -49,17 +51,21 @@ namespace UnityEditor
 			if (this.m_Controller == null)
 			{
 				this.m_Controller = new AnimatorController();
-				this.m_Controller.hideFlags = HideFlags.DontSave;
+				this.m_Controller.pushUndo = false;
 				this.m_Controller.AddLayer("preview");
-				this.m_StateMachine = this.m_Controller.GetLayerStateMachine(0);
+				this.m_StateMachine = this.m_Controller.layers[0].stateMachine;
+				this.m_StateMachine.pushUndo = false;
 				this.CreateParameters();
 				this.m_State = this.m_StateMachine.AddState("preview");
-				this.m_State.SetMotionInternal(this.m_BlendTree);
+				this.m_State.pushUndo = false;
+				this.m_State.motion = this.m_BlendTree;
 				this.m_State.iKOnFeet = false;
-				this.m_State.hideFlags = HideFlags.DontSave;
+				this.m_State.hideFlags = HideFlags.HideAndDontSave;
+				this.m_StateMachine.hideFlags = HideFlags.HideAndDontSave;
+				this.m_Controller.hideFlags = HideFlags.HideAndDontSave;
 				AnimatorController.SetAnimatorController(this.m_Animator, this.m_Controller);
-				AnimatorController expr_A7 = this.m_Controller;
-				expr_A7.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_A7.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
+				AnimatorController expr_DF = this.m_Controller;
+				expr_DF.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_DF.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
 				this.m_ControllerIsDirty = false;
 			}
 		}
@@ -95,7 +101,12 @@ namespace UnityEditor
 			{
 				this.Reset();
 			}
-			for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
+			int recursiveBlendParameterCount = this.m_BlendTree.recursiveBlendParameterCount;
+			if (this.m_Controller.parameters.Length < recursiveBlendParameterCount)
+			{
+				return;
+			}
+			for (int i = 0; i < recursiveBlendParameterCount; i++)
 			{
 				string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
 				float inputBlendValue = this.m_BlendTree.GetInputBlendValue(recursiveBlendParameter);

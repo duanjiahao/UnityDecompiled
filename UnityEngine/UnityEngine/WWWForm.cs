@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -14,20 +13,20 @@ namespace UnityEngine
 		private List<string> types;
 		private byte[] boundary;
 		private bool containsFiles;
-		public Hashtable headers
+		public Dictionary<string, string> headers
 		{
 			get
 			{
-				Hashtable hashtable = new Hashtable();
+				Dictionary<string, string> dictionary = new Dictionary<string, string>();
 				if (this.containsFiles)
 				{
-					hashtable["Content-Type"] = "multipart/form-data; boundary=\"" + Encoding.UTF8.GetString(this.boundary) + "\"";
+					dictionary["Content-Type"] = "multipart/form-data; boundary=\"" + Encoding.UTF8.GetString(this.boundary, 0, this.boundary.Length) + "\"";
 				}
 				else
 				{
-					hashtable["Content-Type"] = "application/x-www-form-urlencoded";
+					dictionary["Content-Type"] = "application/x-www-form-urlencoded";
 				}
-				return hashtable;
+				return dictionary;
 			}
 		}
 		public byte[] data

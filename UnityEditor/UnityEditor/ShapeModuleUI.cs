@@ -15,7 +15,10 @@ namespace UnityEditor
 			Mesh,
 			ConeShell,
 			ConeVolume,
-			ConeVolumeShell
+			ConeVolumeShell,
+			Circle,
+			CircleEdge,
+			SingleSidedEdge
 		}
 		private class Texts
 		{
@@ -29,7 +32,9 @@ namespace UnityEditor
 			public GUIContent mesh = new GUIContent("Mesh", "Mesh that the particle system will emit from.");
 			public GUIContent randomDirection = new GUIContent("Random Direction", "Randomizes the starting direction of particles.");
 			public GUIContent emitFromShell = new GUIContent("Emit from Shell", "Emit from shell of the sphere. If disabled particles will be emitted from the volume of the shape.");
+			public GUIContent emitFromEdge = new GUIContent("Emit from Edge", "Emit from edge of the shape. If disabled particles will be emitted from the volume of the shape.");
 			public GUIContent emitFrom = new GUIContent("Emit from:", "Specifies from where particles are emitted.");
+			public GUIContent arc = new GUIContent("Arc", "Circle arc angle.");
 		}
 		private SerializedProperty m_Type;
 		private SerializedProperty m_RandomDirection;
@@ -39,6 +44,7 @@ namespace UnityEditor
 		private SerializedProperty m_BoxX;
 		private SerializedProperty m_BoxY;
 		private SerializedProperty m_BoxZ;
+		private SerializedProperty m_Arc;
 		private SerializedProperty m_PlacementMode;
 		private SerializedProperty m_Mesh;
 		private Material m_Material;
@@ -51,7 +57,9 @@ namespace UnityEditor
 			"HemiSphere",
 			"Cone",
 			"Box",
-			"Mesh"
+			"Mesh",
+			"Circle",
+			"Edge"
 		};
 		private ShapeModuleUI.ShapeTypes[] m_GuiTypes = new ShapeModuleUI.ShapeTypes[]
 		{
@@ -59,7 +67,9 @@ namespace UnityEditor
 			ShapeModuleUI.ShapeTypes.HemiSphere,
 			ShapeModuleUI.ShapeTypes.Cone,
 			ShapeModuleUI.ShapeTypes.Box,
-			ShapeModuleUI.ShapeTypes.Mesh
+			ShapeModuleUI.ShapeTypes.Mesh,
+			ShapeModuleUI.ShapeTypes.Circle,
+			ShapeModuleUI.ShapeTypes.SingleSidedEdge
 		};
 		private int[] m_TypeToGuiTypeIndex = new int[]
 		{
@@ -72,7 +82,10 @@ namespace UnityEditor
 			4,
 			2,
 			2,
-			2
+			2,
+			5,
+			5,
+			6
 		};
 		private static ShapeModuleUI.Texts s_Texts = new ShapeModuleUI.Texts();
 		public ShapeModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "ShapeModule", displayName, ModuleUI.VisibilityState.VisibleAndFolded)
@@ -96,10 +109,11 @@ namespace UnityEditor
 			this.m_BoxX = base.GetProperty("boxX");
 			this.m_BoxY = base.GetProperty("boxY");
 			this.m_BoxZ = base.GetProperty("boxZ");
+			this.m_Arc = base.GetProperty("arc");
 			this.m_PlacementMode = base.GetProperty("placementMode");
 			this.m_Mesh = base.GetProperty("m_Mesh");
 			this.m_RandomDirection = base.GetProperty("randomDirection");
-			this.m_Material = (EditorGUIUtility.GetBuiltinExtraResource(typeof(Material), "Default-Diffuse.mat") as Material);
+			this.m_Material = (EditorGUIUtility.GetBuiltinExtraResource(typeof(Material), "Default-Material.mat") as Material);
 			this.m_BoxEditor.SetAlwaysDisplayHandles(true);
 		}
 		public override float GetXAxisScalar()
@@ -144,7 +158,7 @@ namespace UnityEditor
 		}
 		private bool GetUsesShell(ShapeModuleUI.ShapeTypes shapeType)
 		{
-			return shapeType == ShapeModuleUI.ShapeTypes.HemiSphereShell || shapeType == ShapeModuleUI.ShapeTypes.SphereShell || shapeType == ShapeModuleUI.ShapeTypes.ConeShell || shapeType == ShapeModuleUI.ShapeTypes.ConeVolumeShell;
+			return shapeType == ShapeModuleUI.ShapeTypes.HemiSphereShell || shapeType == ShapeModuleUI.ShapeTypes.SphereShell || shapeType == ShapeModuleUI.ShapeTypes.ConeShell || shapeType == ShapeModuleUI.ShapeTypes.ConeVolumeShell || shapeType == ShapeModuleUI.ShapeTypes.CircleEdge;
 		}
 		public override void OnInspectorGUI(ParticleSystem s)
 		{
@@ -214,6 +228,17 @@ namespace UnityEditor
 				ModuleUI.GUIObject(ShapeModuleUI.s_Texts.mesh, this.m_Mesh);
 				break;
 			}
+			case ShapeModuleUI.ShapeTypes.Circle:
+			{
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius);
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.arc, this.m_Arc);
+				bool flag3 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.emitFromEdge, usesShell);
+				num = ((!flag3) ? 10 : 11);
+				break;
+			}
+			case ShapeModuleUI.ShapeTypes.SingleSidedEdge:
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius);
+				break;
 			}
 			this.m_Type.intValue = num;
 			ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.randomDirection, this.m_RandomDirection);
@@ -231,6 +256,14 @@ namespace UnityEditor
 			if (intValue == 0 || intValue == 1)
 			{
 				this.m_Radius.floatValue = Handles.DoSimpleRadiusHandle(Quaternion.identity, Vector3.zero, this.m_Radius.floatValue, false);
+			}
+			if (intValue == 10 || intValue == 11)
+			{
+				float floatValue = this.m_Radius.floatValue;
+				float floatValue2 = this.m_Arc.floatValue;
+				Handles.DoSimpleRadiusArcHandleXY(Quaternion.identity, Vector3.zero, ref floatValue, ref floatValue2);
+				this.m_Radius.floatValue = floatValue;
+				this.m_Arc.floatValue = floatValue2;
 			}
 			else
 			{
@@ -273,16 +306,23 @@ namespace UnityEditor
 							}
 							else
 							{
-								if (intValue == 6)
+								if (intValue == 12)
 								{
-									Mesh mesh = (Mesh)this.m_Mesh.objectReferenceValue;
-									if (mesh)
+									this.m_Radius.floatValue = Handles.DoSimpleEdgeHandle(Quaternion.identity, Vector3.zero, this.m_Radius.floatValue);
+								}
+								else
+								{
+									if (intValue == 6)
 									{
-										bool wireframeMode = ShaderUtil.wireframeMode;
-										ShaderUtil.wireframeMode = true;
-										this.m_Material.SetPass(0);
-										Graphics.DrawMeshNow(mesh, s.transform.localToWorldMatrix);
-										ShaderUtil.wireframeMode = wireframeMode;
+										Mesh mesh = (Mesh)this.m_Mesh.objectReferenceValue;
+										if (mesh)
+										{
+											bool wireframe = GL.wireframe;
+											GL.wireframe = true;
+											this.m_Material.SetPass(0);
+											Graphics.DrawMeshNow(mesh, s.transform.localToWorldMatrix);
+											GL.wireframe = wireframe;
+										}
 									}
 								}
 							}

@@ -44,14 +44,74 @@ namespace UnityEditor
 		}
 		private static HashSet<string> GetAllStrippableModules()
 		{
-			return new HashSet<string>();
+			HashSet<string> hashSet = new HashSet<string>();
+			string[] moduleNames = ModuleMetadata.GetModuleNames();
+			for (int i = 0; i < moduleNames.Length; i++)
+			{
+				string text = moduleNames[i];
+				if (ModuleMetadata.GetModuleStrippable(text))
+				{
+					hashSet.Add(text);
+				}
+			}
+			return hashSet;
 		}
 		private static HashSet<string> GetRequiredStrippableModules(HashSet<string> nativeClasses)
 		{
-			return new HashSet<string>();
+			HashSet<string> hashSet = new HashSet<string>();
+			string[] moduleNames = ModuleMetadata.GetModuleNames();
+			for (int i = 0; i < moduleNames.Length; i++)
+			{
+				string text = moduleNames[i];
+				if (ModuleMetadata.GetModuleStrippable(text))
+				{
+					HashSet<string> classNames = CodeStrippingUtils.GetClassNames(ModuleMetadata.GetModuleClasses(text));
+					if (nativeClasses.Overlaps(classNames))
+					{
+						hashSet.Add(text);
+					}
+				}
+			}
+			return hashSet;
 		}
 		private static void ExcludeModuleManagers(ref HashSet<string> nativeClasses)
 		{
+			string[] moduleNames = ModuleMetadata.GetModuleNames();
+			int derivedFromClassID = BaseObjectTools.StringToClassID("GlobalGameManager");
+			string[] array = moduleNames;
+			for (int i = 0; i < array.Length; i++)
+			{
+				string moduleName = array[i];
+				if (ModuleMetadata.GetModuleStrippable(moduleName))
+				{
+					int[] moduleClasses = ModuleMetadata.GetModuleClasses(moduleName);
+					HashSet<int> hashSet = new HashSet<int>();
+					HashSet<string> hashSet2 = new HashSet<string>();
+					int[] array2 = moduleClasses;
+					for (int j = 0; j < array2.Length; j++)
+					{
+						int num = array2[j];
+						if (BaseObjectTools.IsDerivedFromClassID(num, derivedFromClassID))
+						{
+							hashSet.Add(num);
+						}
+						else
+						{
+							hashSet2.Add(BaseObjectTools.ClassIDToString(num));
+						}
+					}
+					if (hashSet2.Count != 0)
+					{
+						if (!nativeClasses.Overlaps(hashSet2))
+						{
+							foreach (int current in hashSet)
+							{
+								nativeClasses.Remove(BaseObjectTools.ClassIDToString(current));
+							}
+						}
+					}
+				}
+			}
 		}
 		private static HashSet<string> GenerateNativeClassList(RuntimeClassRegistry rcr, string directory, string[] rootAssemblies)
 		{

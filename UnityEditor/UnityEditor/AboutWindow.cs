@@ -8,7 +8,6 @@ namespace UnityEditor
 		private const string kSpecialThanksNames = "Thanks to Forest 'Yoggy' Johnson, Graham McAllister, David Janik-Jones, Raimund Schumacher, Alan J. Dickins and Emil 'Humus' Persson";
 		private static GUIContent s_MonoLogo;
 		private static GUIContent s_AgeiaLogo;
-		private static GUIContent s_UnityLogo;
 		private static GUIContent s_Header;
 		private readonly string kCreditsNames = string.Join(", ", AboutWindowNames.names);
 		private float m_TextYPos = 120f;
@@ -31,7 +30,6 @@ namespace UnityEditor
 			}
 			AboutWindow.s_MonoLogo = EditorGUIUtility.IconContent("MonoLogo");
 			AboutWindow.s_AgeiaLogo = EditorGUIUtility.IconContent("AgeiaLogo");
-			AboutWindow.s_UnityLogo = EditorGUIUtility.IconContent("UnityLogo");
 			AboutWindow.s_Header = EditorGUIUtility.IconContent("AboutWindow.MainHeader");
 		}
 		public void OnEnable()
@@ -60,33 +58,34 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(5f);
-			GUILayout.Label(AboutWindow.s_UnityLogo, GUIStyle.none, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			});
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
 			GUILayout.Label(AboutWindow.s_Header, GUIStyle.none, new GUILayoutOption[0]);
 			this.ListenForSecretCodes();
+			string text = string.Empty;
+			if (InternalEditorUtility.HasPro())
+			{
+				text = " Pro";
+			}
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(52f);
 			this.m_ShowDetailedVersion |= Event.current.alt;
 			if (this.m_ShowDetailedVersion)
 			{
 				int unityVersionDate = InternalEditorUtility.GetUnityVersionDate();
 				DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 				string unityBuildBranch = InternalEditorUtility.GetUnityBuildBranch();
-				string text = string.Empty;
+				string text2 = string.Empty;
 				if (unityBuildBranch.Length > 0)
 				{
-					text = "Branch: " + unityBuildBranch;
+					text2 = "Branch: " + unityBuildBranch;
 				}
-				EditorGUILayout.SelectableLabel(string.Concat(new string[]
+				EditorGUILayout.SelectableLabel(string.Format("Version {0}{1}\n{2:r}\n{3}", new object[]
 				{
-					"Version ",
 					InternalEditorUtility.GetFullUnityVersion(),
-					"\n",
-					string.Format("{0:r}", dateTime.AddSeconds((double)unityVersionDate)),
-					"\n",
-					text
+					text,
+					dateTime.AddSeconds((double)unityVersionDate),
+					text2
 				}), new GUILayoutOption[]
 				{
 					GUILayout.Width(400f),
@@ -96,12 +95,13 @@ namespace UnityEditor
 			}
 			else
 			{
-				GUILayout.Label("Version " + Application.unityVersion, new GUILayoutOption[0]);
+				GUILayout.Label(string.Format("Version {0}{1}", Application.unityVersion, text), new GUILayoutOption[0]);
 			}
 			if (Event.current.type == EventType.ValidateCommand)
 			{
 				return;
 			}
+			GUILayout.EndHorizontal();
 			GUILayout.Space(4f);
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();

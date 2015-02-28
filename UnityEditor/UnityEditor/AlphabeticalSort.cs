@@ -4,8 +4,7 @@ namespace UnityEditor
 {
 	public class AlphabeticalSort : BaseHierarchySort
 	{
-		private const string kDefaultSorting = "AlphabeticalSorting";
-		private GUIContent m_Content = new GUIContent(EditorGUIUtility.FindTexture("AlphabeticalSorting"), "Alphabetical Order");
+		private readonly GUIContent m_Content = new GUIContent(EditorGUIUtility.FindTexture("AlphabeticalSorting"), "Alphabetical Order");
 		public override GUIContent content
 		{
 			get

@@ -78,7 +78,7 @@ namespace UnityEditor
 		}
 		internal static bool IsSdkDir(string path)
 		{
-			return Directory.Exists(Path.Combine(path, "platform-tools"));
+			return Directory.Exists(Path.Combine(path, "platform-tools")) || File.Exists(Path.Combine(Path.Combine(path, "tools"), "android")) || File.Exists(Path.Combine(Path.Combine(path, "tools"), "android.bat"));
 		}
 	}
 }

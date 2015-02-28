@@ -74,8 +74,6 @@ namespace UnityEditor
 		{
 			if (this.m_BrushProjector)
 			{
-				UnityEngine.Object.DestroyImmediate(this.m_BrushProjector.material.shader);
-				UnityEngine.Object.DestroyImmediate(this.m_BrushProjector.material);
 				UnityEngine.Object.DestroyImmediate(this.m_BrushProjector.gameObject);
 				this.m_BrushProjector = null;
 			}
@@ -99,9 +97,7 @@ namespace UnityEditor
 			this.m_BrushProjector.orthographic = true;
 			this.m_BrushProjector.orthographicSize = 10f;
 			this.m_BrushProjector.transform.Rotate(90f, 0f, 0f);
-			Material material = new Material("Shader \"Hidden/Terrain Brush Preview\" {\nProperties {\n\t_MainTex (\"Main\", 2D) = \"gray\" { TexGen ObjectLinear }\n\t_CutoutTex (\"Cutout\", 2D) = \"black\" { TexGen ObjectLinear }\n}\nSubshader {\n\tZWrite Off\n\tOffset -1, -1\n\tFog { Mode Off }\n\tAlphaTest Greater 0\n\tColorMask RGB\n\tPass\n\t{\n\t\tBlend SrcAlpha OneMinusSrcAlpha\n\t\tSetTexture [_MainTex]\n\t\t{\n\t\t\tconstantColor (.2,.7,1,.5)\n\t\t\tcombine constant, texture * constant\n\t\t\tMatrix [_Projector]\n\t\t}\n\n\t\tSetTexture [_CutoutTex]\n\t\t{\n\t\t\tcombine previous, previous * texture\n\t\t\tMatrix [_Projector]\n\t\t}\n\t}\n}\n}");
-			material.shader.hideFlags = HideFlags.HideAndDontSave;
-			material.hideFlags = HideFlags.HideAndDontSave;
+			Material material = EditorGUIUtility.LoadRequired("SceneView/TerrainBrushMaterial.mat") as Material;
 			material.SetTexture("_CutoutTex", (Texture2D)EditorGUIUtility.Load(EditorResourcesUtility.brushesPath + "brush_cutout.png"));
 			this.m_BrushProjector.material = material;
 			this.m_BrushProjector.enabled = false;

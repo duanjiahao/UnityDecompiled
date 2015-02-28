@@ -110,10 +110,6 @@ namespace UnityEditor.VersionControl
 			{
 				mergeMethod = MergeMethod.MergeAll;
 			}
-			if (GUILayout.Button("merging non-conflicts", new GUILayoutOption[0]))
-			{
-				mergeMethod = MergeMethod.MergeNonConflicting;
-			}
 			if (mergeMethod != MergeMethod.MergeNone)
 			{
 				Task task = Provider.Merge(this.resolveList.SelectedAssets, mergeMethod);

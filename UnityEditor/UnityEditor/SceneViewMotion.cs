@@ -243,12 +243,12 @@ namespace UnityEditor
 				if (button == 2 && !SceneViewMotion.s_Dragged && SceneViewMotion.RaycastWorld(Event.current.mousePosition, out raycastHit))
 				{
 					Vector3 b = view.pivot - view.rotation * Vector3.forward * view.cameraDistance;
-					float size = view.size;
+					float newSize = view.size;
 					if (!view.orthographic)
 					{
-						size = view.size * Vector3.Dot(raycastHit.point - b, view.rotation * Vector3.forward) / view.cameraDistance;
+						newSize = view.size * Vector3.Dot(raycastHit.point - b, view.rotation * Vector3.forward) / view.cameraDistance;
 					}
-					view.LookAt(raycastHit.point, view.rotation, size);
+					view.LookAt(raycastHit.point, view.rotation, newSize);
 				}
 				Event.current.Use();
 			}
@@ -527,6 +527,10 @@ namespace UnityEditor
 				view.pivot += a2 * d;
 			}
 			Event.current.Use();
+		}
+		public static void ResetMotion()
+		{
+			SceneViewMotion.s_Motion = Vector3.zero;
 		}
 	}
 }

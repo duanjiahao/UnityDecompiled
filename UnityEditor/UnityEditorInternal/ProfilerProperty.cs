@@ -91,5 +91,11 @@ namespace UnityEditorInternal
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetColumn(ProfilerColumn column);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern AudioProfilerInfo[] GetAudioProfilerInfo();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetAudioProfilerNameByOffset(int offset);
 	}
 }

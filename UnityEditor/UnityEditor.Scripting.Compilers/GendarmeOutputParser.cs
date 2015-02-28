@@ -13,10 +13,10 @@ namespace UnityEditor.Scripting.Compilers
 		[DebuggerHidden]
 		public override IEnumerable<CompilerMessage> Parse(string[] errorOutput, string[] standardOutput, bool compilationHadFailure)
 		{
-			GendarmeOutputParser.<Parse>c__Iterator6 <Parse>c__Iterator = new GendarmeOutputParser.<Parse>c__Iterator6();
+			GendarmeOutputParser.<Parse>c__Iterator8 <Parse>c__Iterator = new GendarmeOutputParser.<Parse>c__Iterator8();
 			<Parse>c__Iterator.standardOutput = standardOutput;
 			<Parse>c__Iterator.<$>standardOutput = standardOutput;
-			GendarmeOutputParser.<Parse>c__Iterator6 expr_15 = <Parse>c__Iterator;
+			GendarmeOutputParser.<Parse>c__Iterator8 expr_15 = <Parse>c__Iterator;
 			expr_15.$PC = -2;
 			return expr_15;
 		}

@@ -8,7 +8,7 @@ namespace UnityEditor
 		private PreviewRenderUtility m_PreviewUtility;
 		private Material m_Material;
 		private Mesh m_Mesh;
-		public Vector2 previewDir = new Vector2(0f, 0f);
+		public Vector2 m_PreviewDir = new Vector2(0f, 0f);
 		public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
@@ -25,18 +25,13 @@ namespace UnityEditor
 				EditorUtility.FormatBytes(TextureUtil.GetRuntimeMemorySize(texture3D))
 			});
 		}
-		public void OnDisable()
+		protected override void OnDisable()
 		{
+			base.OnDisable();
 			if (this.m_PreviewUtility != null)
 			{
 				this.m_PreviewUtility.Cleanup();
 				this.m_PreviewUtility = null;
-			}
-			if (this.m_Material)
-			{
-				UnityEngine.Object.DestroyImmediate(this.m_Material.shader, true);
-				UnityEngine.Object.DestroyImmediate(this.m_Material, true);
-				this.m_Material = null;
 			}
 		}
 		public override void OnPreviewSettings()
@@ -57,7 +52,7 @@ namespace UnityEditor
 				}
 				return;
 			}
-			this.previewDir = PreviewGUI.Drag2D(this.previewDir, r);
+			this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, r);
 			if (Event.current.type != EventType.Repaint)
 			{
 				return;
@@ -69,7 +64,7 @@ namespace UnityEditor
 			Unsupported.SetRenderSettingsUseFogNoDirty(false);
 			this.m_PreviewUtility.m_Camera.transform.position = -Vector3.forward * 3f;
 			this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.identity;
-			Quaternion rot = Quaternion.Euler(this.previewDir.y, 0f, 0f) * Quaternion.Euler(0f, this.previewDir.x, 0f);
+			Quaternion rot = Quaternion.Euler(this.m_PreviewDir.y, 0f, 0f) * Quaternion.Euler(0f, this.m_PreviewDir.x, 0f);
 			this.m_PreviewUtility.DrawMesh(this.m_Mesh, Vector3.zero, rot, this.m_Material, 0);
 			this.m_PreviewUtility.m_Camera.Render();
 			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
@@ -82,22 +77,14 @@ namespace UnityEditor
 			{
 				this.m_PreviewUtility = new PreviewRenderUtility();
 				this.m_PreviewUtility.m_CameraFieldOfView = 30f;
-				this.m_Material = new Material("Shader \"Hidden/3DTextureInspector\" {\n                        Properties {\n\t                        _MainTex (\"\", 3D) = \"\" { TexGen ObjectLinear }\n                        }\n                        SubShader {\n                            Tags { \"ForceSupported\" = \"True\" } \n\t                        Pass { SetTexture[_MainTex] { combine texture } }\n                        }\n                        Fallback Off\n                        }");
-				this.m_Material.hideFlags = HideFlags.HideAndDontSave;
-				this.m_Material.shader.hideFlags = HideFlags.HideAndDontSave;
-				this.m_Material.mainTexture = (this.target as Texture);
 			}
 			if (this.m_Mesh == null)
 			{
-				GameObject gameObject = (GameObject)EditorGUIUtility.LoadRequired("Previews/PreviewMaterials.fbx");
-				gameObject.SetActive(false);
-				foreach (Transform transform in gameObject.transform)
-				{
-					if (transform.name == "sphere")
-					{
-						this.m_Mesh = transform.GetComponent<MeshFilter>().sharedMesh;
-					}
-				}
+				this.m_Mesh = PreviewRenderUtility.GetPreviewSphere();
+			}
+			if (this.m_Material == null)
+			{
+				this.m_Material = (EditorGUIUtility.LoadRequired("Previews/Preview3DTextureMaterial.mat") as Material);
 			}
 		}
 	}

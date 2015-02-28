@@ -21,7 +21,7 @@ namespace TreeEditor
 			Vector3 rhs = this.position - pos;
 			float sqrMagnitude = rhs.sqrMagnitude;
 			float num = Mathf.Max(0f, sqrMagnitude - this.area);
-			if (sqrMagnitude > 1.401298E-45f)
+			if (sqrMagnitude > Mathf.Epsilon)
 			{
 				rhs.Normalize();
 			}

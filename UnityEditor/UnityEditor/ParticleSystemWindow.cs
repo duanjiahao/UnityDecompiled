@@ -13,11 +13,7 @@ namespace UnityEditor
 		private ParticleSystem m_Target;
 		private ParticleEffectUI m_ParticleEffectUI;
 		private bool m_IsVisible;
-		private static GUIContent[] s_Icons = new GUIContent[]
-		{
-			EditorGUIUtility.IconContent("HorizontalSplit"),
-			EditorGUIUtility.IconContent("VerticalSplit")
-		};
+		private static GUIContent[] s_Icons;
 		private static ParticleSystemWindow.Texts s_Texts;
 		private ParticleSystemWindow()
 		{
@@ -238,6 +234,14 @@ namespace UnityEditor
 			if (ParticleSystemWindow.s_Texts == null)
 			{
 				ParticleSystemWindow.s_Texts = new ParticleSystemWindow.Texts();
+			}
+			if (ParticleSystemWindow.s_Icons == null)
+			{
+				ParticleSystemWindow.s_Icons = new GUIContent[]
+				{
+					EditorGUIUtility.IconContent("HorizontalSplit"),
+					EditorGUIUtility.IconContent("VerticalSplit")
+				};
 			}
 			if (this.m_Target == null && (Selection.activeGameObject != null || ParticleSystemEditorUtils.lockedParticleSystem != null))
 			{

@@ -52,9 +52,9 @@ namespace UnityEditor
 		{
 			GameObject gameObject = new GameObject("Test");
 			gameObject.layer = 29;
-			MeshFilter meshFilter = (MeshFilter)gameObject.AddComponent("MeshFilter");
+			MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
 			meshFilter.mesh = mesh;
-			gameObject.AddComponent("MeshCollider");
+			gameObject.AddComponent<MeshCollider>();
 			if (TreeAO.directions == null)
 			{
 				TreeAO.InitializeDirections();
@@ -84,9 +84,9 @@ namespace UnityEditor
 			num /= (float)vertices.Length;
 			for (int l = 0; l < vertices.Length; l++)
 			{
-				Vector4[] expr_1E3_cp_0 = array2;
-				int expr_1E3_cp_1 = l;
-				expr_1E3_cp_0[expr_1E3_cp_1].w = expr_1E3_cp_0[expr_1E3_cp_1].w - num;
+				Vector4[] expr_1D4_cp_0 = array2;
+				int expr_1D4_cp_1 = l;
+				expr_1D4_cp_0[expr_1D4_cp_1].w = expr_1D4_cp_0[expr_1D4_cp_1].w - num;
 			}
 			mesh.tangents = array2;
 			UnityEngine.Object.DestroyImmediate(gameObject);

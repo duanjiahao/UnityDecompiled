@@ -8,8 +8,8 @@ namespace UnityEditor
 		private static void CreateTerrain(MenuCommand menuCommand)
 		{
 			TerrainData terrainData = new TerrainData();
-			terrainData.heightmapResolution = 513;
-			terrainData.size = new Vector3(2000f, 600f, 2000f);
+			terrainData.heightmapResolution = 1025;
+			terrainData.size = new Vector3(1000f, 600f, 1000f);
 			terrainData.heightmapResolution = 512;
 			terrainData.baseMapResolution = 1024;
 			terrainData.SetDetailResolution(1024, terrainData.detailResolutionPerPatch);

@@ -67,6 +67,9 @@ namespace UnityEditor
 		{
 			this.m_Inspector = inspector;
 		}
+		public virtual void Disable()
+		{
+		}
 		public virtual void OnDestroy()
 		{
 			if (this.HasModified())

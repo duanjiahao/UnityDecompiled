@@ -8,5 +8,6 @@ namespace UnityEditor.Scripting.Compilers
 		public int line;
 		public int column;
 		public CompilerMessageType type;
+		public NormalizedCompilerStatus normalizedStatus;
 	}
 }

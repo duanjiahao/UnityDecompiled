@@ -19,8 +19,8 @@ namespace UnityEditor
 			{
 				return;
 			}
-			Sprite sprite = spriteFromDraggedPathsOrObjects[0];
-			if (sprite == null)
+			Sprite x = spriteFromDraggedPathsOrObjects[0];
+			if (x == null)
 			{
 				return;
 			}
@@ -30,7 +30,7 @@ namespace UnityEditor
 			{
 				Vector3 point = HandleUtility.GUIPointToWorldRay(current.mousePosition).GetPoint(10f);
 				point.z = 0f;
-				GameObject objectToUndo = SpriteUtility.DropFramesToSceneToCreateGO(sprite.name, spriteFromDraggedPathsOrObjects, point);
+				GameObject objectToUndo = SpriteUtility.DropFramesToSceneToCreateGO(spriteFromDraggedPathsOrObjects, point);
 				Undo.RegisterCreatedObjectUndo(objectToUndo, "Create Sprite");
 				current.Use();
 			}
@@ -77,7 +77,7 @@ namespace UnityEditor
 					{
 						if (@object is Texture2D)
 						{
-							list.Add(SpriteUtility.TextureToSprite(@object as Texture2D));
+							list.AddRange(SpriteUtility.TextureToSprites(@object as Texture2D));
 						}
 					}
 				}
@@ -106,11 +106,7 @@ namespace UnityEditor
 				{
 					if (@object.GetType() == typeof(Texture2D))
 					{
-						Sprite sprite = SpriteUtility.TextureToSprite(@object as Texture2D);
-						if (sprite != null)
-						{
-							list.Add(sprite);
-						}
+						list.AddRange(SpriteUtility.TextureToSprites(@object as Texture2D));
 					}
 				}
 			}
@@ -150,7 +146,7 @@ namespace UnityEditor
 				{
 					Analytics.Event("Sprite Drag and Drop", "Drop multiple sprites to empty hierarchy", "null", 1);
 					gameObject = new GameObject();
-					gameObject.name = sprites[0].name;
+					gameObject.name = ((!string.IsNullOrEmpty(sprites[0].name)) ? sprites[0].name : "Sprite");
 					gameObject.transform.position = SpriteUtility.GetDefaultInstantiatePosition();
 				}
 			}
@@ -194,7 +190,7 @@ namespace UnityEditor
 			if (perform)
 			{
 				Vector3 defaultInstantiatePosition = SpriteUtility.GetDefaultInstantiatePosition();
-				GameObject gameObject2 = SpriteUtility.DropSpriteToSceneToCreateGO(sprite.name, sprite, defaultInstantiatePosition);
+				GameObject gameObject2 = SpriteUtility.DropSpriteToSceneToCreateGO(sprite, defaultInstantiatePosition);
 				if (gameObject != null)
 				{
 					Analytics.Event("Sprite Drag and Drop", "Drop single sprite to existing gameobject", "null", 1);
@@ -267,11 +263,13 @@ namespace UnityEditor
 			}
 			return @object as Sprite;
 		}
-		public static GameObject DropFramesToSceneToCreateGO(string name, Sprite[] frames, Vector3 position)
+		public static GameObject DropFramesToSceneToCreateGO(Sprite[] frames, Vector3 position)
 		{
 			if (frames.Length > 0)
 			{
 				Sprite sprite = frames[0];
+				string name = (!string.IsNullOrEmpty(sprite.name)) ? sprite.name : "Sprite";
+				name = GameObjectUtility.GetUniqueNameForSibling(null, name);
 				GameObject gameObject = new GameObject(name);
 				SpriteRenderer spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
 				spriteRenderer.sprite = sprite;
@@ -294,10 +292,9 @@ namespace UnityEditor
 			}
 			return null;
 		}
-		public static GameObject DropSpriteToSceneToCreateGO(string name, Sprite sprite, Vector3 position)
+		public static GameObject DropSpriteToSceneToCreateGO(Sprite sprite, Vector3 position)
 		{
-			GameObject gameObject = new GameObject(name);
-			gameObject.name = sprite.name;
+			GameObject gameObject = new GameObject((!string.IsNullOrEmpty(sprite.name)) ? sprite.name : "Sprite");
 			SpriteRenderer spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
 			spriteRenderer.sprite = sprite;
 			gameObject.transform.position = position;
@@ -323,22 +320,39 @@ namespace UnityEditor
 			}
 			return null;
 		}
-		public static Sprite TextureToSprite(Texture2D tex)
+		public static Sprite[] TextureToSprites(Texture2D tex)
 		{
 			UnityEngine.Object[] array = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(tex));
+			List<Sprite> list = new List<Sprite>();
 			for (int i = 0; i < array.Length; i++)
 			{
 				if (array[i].GetType() == typeof(Sprite))
 				{
-					return array[i] as Sprite;
+					list.Add(array[i] as Sprite);
 				}
 			}
-			return SpriteUtility.GenerateDefaultSprite(tex);
+			if (list.Count > 0)
+			{
+				return list.ToArray();
+			}
+			return new Sprite[]
+			{
+				SpriteUtility.GenerateDefaultSprite(tex)
+			};
+		}
+		public static Sprite TextureToSprite(Texture2D tex)
+		{
+			Sprite[] array = SpriteUtility.TextureToSprites(tex);
+			if (array.Length > 0)
+			{
+				return array[0];
+			}
+			return null;
 		}
 		private static bool ValidPathForTextureAsset(string path)
 		{
 			string a = FileUtil.GetPathExtension(path).ToLower();
-			return a == "jpg" || a == "jpeg" || a == "tif" || a == "tiff" || a == "tga" || a == "gif" || a == "png" || a == "psd" || a == "bmp" || a == "iff" || a == "pict" || a == "pic" || a == "pct" || a == "exr";
+			return a == "jpg" || a == "jpeg" || a == "tif" || a == "tiff" || a == "tga" || a == "gif" || a == "png" || a == "psd" || a == "bmp" || a == "iff" || a == "pict" || a == "pic" || a == "pct" || a == "exr" || a == "hdr";
 		}
 	}
 }

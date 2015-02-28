@@ -351,10 +351,6 @@ namespace UnityEngine
 		internal void OnEnable()
 		{
 			this.Apply();
-			foreach (GUIStyle gUIStyle in this.styles.Values)
-			{
-				gUIStyle.CreateObjectReferences();
-			}
 		}
 		internal void Apply()
 		{

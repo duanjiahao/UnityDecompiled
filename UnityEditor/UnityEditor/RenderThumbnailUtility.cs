@@ -6,7 +6,7 @@ namespace UnityEditor
 	{
 		public static Bounds CalculateVisibleBounds(GameObject prefab)
 		{
-			return prefab.renderer.bounds;
+			return prefab.GetComponent<Renderer>().bounds;
 		}
 		public static Texture2D Render(GameObject prefab)
 		{
@@ -14,7 +14,7 @@ namespace UnityEditor
 			{
 				return null;
 			}
-			if (prefab.renderer == null)
+			if (prefab.GetComponent<Renderer>() == null)
 			{
 				return null;
 			}
@@ -63,7 +63,7 @@ namespace UnityEditor
 							string dependency = ShaderUtil.GetDependency(material.shader, "BillboardShader");
 							if (dependency != null && dependency != string.Empty)
 							{
-								material = (UnityEngine.Object.Instantiate(material) as Material);
+								material = UnityEngine.Object.Instantiate<Material>(material);
 								material.shader = Shader.Find(dependency);
 								material.hideFlags = HideFlags.HideAndDontSave;
 							}
@@ -71,7 +71,7 @@ namespace UnityEditor
 							{
 								if (material.SetPass(k))
 								{
-									renderer.Render(j);
+									renderer.RenderNow(j);
 								}
 							}
 							if (material != sharedMaterials[j])

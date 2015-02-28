@@ -20,6 +20,10 @@ namespace UnityEngine
 				return AndroidJavaObject.s_JavaLangClass;
 			}
 		}
+		public AndroidJavaObject(string className, params object[] args) : this()
+		{
+			this._AndroidJavaObject(className, args);
+		}
 		internal AndroidJavaObject(IntPtr jobject) : this()
 		{
 			if (jobject == IntPtr.Zero)
@@ -34,9 +38,49 @@ namespace UnityEngine
 		internal AndroidJavaObject()
 		{
 		}
-		public AndroidJavaObject(string className, params object[] args) : this()
+		public void Dispose()
 		{
-			this._AndroidJavaObject(className, args);
+			this._Dispose();
+		}
+		public void Call(string methodName, params object[] args)
+		{
+			this._Call(methodName, args);
+		}
+		public void CallStatic(string methodName, params object[] args)
+		{
+			this._CallStatic(methodName, args);
+		}
+		public FieldType Get<FieldType>(string fieldName)
+		{
+			return this._Get<FieldType>(fieldName);
+		}
+		public void Set<FieldType>(string fieldName, FieldType val)
+		{
+			this._Set<FieldType>(fieldName, val);
+		}
+		public FieldType GetStatic<FieldType>(string fieldName)
+		{
+			return this._GetStatic<FieldType>(fieldName);
+		}
+		public void SetStatic<FieldType>(string fieldName, FieldType val)
+		{
+			this._SetStatic<FieldType>(fieldName, val);
+		}
+		public IntPtr GetRawObject()
+		{
+			return this._GetRawObject();
+		}
+		public IntPtr GetRawClass()
+		{
+			return this._GetRawClass();
+		}
+		public ReturnType Call<ReturnType>(string methodName, params object[] args)
+		{
+			return this._Call<ReturnType>(methodName, args);
+		}
+		public ReturnType CallStatic<ReturnType>(string methodName, params object[] args)
+		{
+			return this._CallStatic<ReturnType>(methodName, args);
 		}
 		protected void DebugPrint(string msg)
 		{
@@ -713,50 +757,6 @@ namespace UnityEngine
 			{
 				name.Replace('/', '.')
 			});
-		}
-		public void Dispose()
-		{
-			this._Dispose();
-		}
-		public void Call(string methodName, params object[] args)
-		{
-			this._Call(methodName, args);
-		}
-		public void CallStatic(string methodName, params object[] args)
-		{
-			this._CallStatic(methodName, args);
-		}
-		public FieldType Get<FieldType>(string fieldName)
-		{
-			return this._Get<FieldType>(fieldName);
-		}
-		public void Set<FieldType>(string fieldName, FieldType val)
-		{
-			this._Set<FieldType>(fieldName, val);
-		}
-		public FieldType GetStatic<FieldType>(string fieldName)
-		{
-			return this._GetStatic<FieldType>(fieldName);
-		}
-		public void SetStatic<FieldType>(string fieldName, FieldType val)
-		{
-			this._SetStatic<FieldType>(fieldName, val);
-		}
-		public IntPtr GetRawObject()
-		{
-			return this._GetRawObject();
-		}
-		public IntPtr GetRawClass()
-		{
-			return this._GetRawClass();
-		}
-		public ReturnType Call<ReturnType>(string methodName, params object[] args)
-		{
-			return this._Call<ReturnType>(methodName, args);
-		}
-		public ReturnType CallStatic<ReturnType>(string methodName, params object[] args)
-		{
-			return this._CallStatic<ReturnType>(methodName, args);
 		}
 	}
 }

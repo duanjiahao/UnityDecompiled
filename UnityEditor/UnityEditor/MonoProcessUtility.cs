@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -9,11 +8,6 @@ namespace UnityEditor
 	{
 		public static string ProcessToString(Process process)
 		{
-			string text = string.Empty;
-			foreach (string text2 in process.StartInfo.EnvironmentVariables.Keys)
-			{
-				text += string.Format("{0} = '{1}'\n", text2, process.StartInfo.EnvironmentVariables[text2]);
-			}
 			return string.Concat(new string[]
 			{
 				process.StartInfo.FileName,
@@ -21,38 +15,15 @@ namespace UnityEditor
 				process.StartInfo.Arguments,
 				" current dir : ",
 				process.StartInfo.WorkingDirectory,
-				"\n Env: ",
-				text
+				"\n"
 			});
 		}
 		public static void RunMonoProcess(Process process, string name, string resultingFile)
 		{
-			StringBuilder output = new StringBuilder(string.Empty);
-			StringBuilder error = new StringBuilder(string.Empty);
-			process.StartInfo.RedirectStandardOutput = true;
-			process.StartInfo.RedirectStandardError = true;
-			process.OutputDataReceived += delegate(object sender, DataReceivedEventArgs dataLine)
-			{
-				if (!string.IsNullOrEmpty(dataLine.Data))
-				{
-					output.Append(dataLine.Data);
-				}
-			};
-			process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs dataLine)
-			{
-				if (!string.IsNullOrEmpty(dataLine.Data))
-				{
-					error.Append(dataLine.Data);
-				}
-			};
-			process.Start();
-			process.BeginOutputReadLine();
-			process.BeginErrorReadLine();
-			bool flag = process.WaitForExit(300000);
+			MonoProcessRunner monoProcessRunner = new MonoProcessRunner();
+			bool flag = monoProcessRunner.Run(process);
 			if (process.ExitCode != 0 || !File.Exists(resultingFile))
 			{
-				process.CancelOutputRead();
-				process.CancelErrorRead();
 				string text = string.Concat(new object[]
 				{
 					"Failed ",
@@ -70,10 +41,17 @@ namespace UnityEditor
 				{
 					text2,
 					"stdout:\n",
-					output,
-					"\n\n"
+					monoProcessRunner.Output,
+					"\n"
 				});
-				text = text + "stderr:\n" + error;
+				text2 = text;
+				text = string.Concat(new object[]
+				{
+					text2,
+					"stderr:\n",
+					monoProcessRunner.Error,
+					"\n"
+				});
 				Console.WriteLine(text);
 				throw new UnityException(text);
 			}

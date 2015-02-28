@@ -7,8 +7,9 @@ namespace UnityEditor
 	internal class ProceduralTextureInspector : TextureInspector
 	{
 		private bool m_MightHaveModified;
-		public void OnDisable()
+		protected override void OnDisable()
 		{
+			base.OnDisable();
 			if (!EditorApplication.isPlaying && !InternalEditorUtility.ignoreInspectorChanges && this.m_MightHaveModified)
 			{
 				this.m_MightHaveModified = false;

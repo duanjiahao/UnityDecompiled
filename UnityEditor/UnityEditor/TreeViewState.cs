@@ -18,6 +18,8 @@ namespace UnityEditor
 		[SerializeField]
 		private CreateAssetUtility m_CreateAssetUtility = new CreateAssetUtility();
 		[SerializeField]
+		private string m_SearchString;
+		[SerializeField]
 		private float[] m_ColumnWidths;
 		public List<int> selectedIDs
 		{
@@ -83,6 +85,17 @@ namespace UnityEditor
 			set
 			{
 				this.m_ColumnWidths = value;
+			}
+		}
+		public string searchString
+		{
+			get
+			{
+				return this.m_SearchString;
+			}
+			set
+			{
+				this.m_SearchString = value;
 			}
 		}
 		public void OnAwake()

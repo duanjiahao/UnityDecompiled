@@ -14,15 +14,6 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern float shadowDistance
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
 		public static extern bool useLightmaps
 		{
 			[WrapperlessIcall]

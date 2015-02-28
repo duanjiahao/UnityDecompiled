@@ -4,7 +4,7 @@ namespace UnityEditor
 {
 	internal class MaterialToggleDrawer : MaterialPropertyDrawer
 	{
-		public readonly string keyword;
+		private readonly string keyword;
 		public MaterialToggleDrawer()
 		{
 		}

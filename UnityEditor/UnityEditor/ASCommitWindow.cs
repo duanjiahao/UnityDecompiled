@@ -1135,19 +1135,19 @@ namespace UnityEditor
 				GUIContent gUIContent = null;
 				if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Undeleted) || ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Created))
 				{
-					gUIContent = ASMainWindow.badgeNew;
+					gUIContent = ASMainWindow.constants.badgeNew;
 				}
 				else
 				{
 					if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Deleted))
 					{
-						gUIContent = ASMainWindow.badgeDelete;
+						gUIContent = ASMainWindow.constants.badgeDelete;
 					}
 					else
 					{
 						if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Renamed) || ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Moved))
 						{
-							gUIContent = ASMainWindow.badgeMove;
+							gUIContent = ASMainWindow.constants.badgeMove;
 						}
 					}
 				}

@@ -25,7 +25,7 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			return this.process.GetStandardOutput();
 		}
-		protected bool CompilingForMetro()
+		protected bool CompilingForWSA()
 		{
 			return this._island._target == BuildTarget.MetroPlayer;
 		}

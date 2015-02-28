@@ -53,5 +53,9 @@ namespace UnityEditor
 		{
 			GUI.BeginWindows(skinMode, editorWindowInstanceID);
 		}
+		internal static void AssetPopup<T>(SerializedProperty serializedProperty, GUIContent content, string fileExtension) where T : UnityEngine.Object, new()
+		{
+			AssetPopupBackend.AssetPopup<T>(serializedProperty, content, fileExtension);
+		}
 	}
 }

@@ -5,7 +5,6 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public class TrackedReference
 	{
-		[NotRenamed]
 		internal IntPtr m_Ptr;
 		protected TrackedReference()
 		{

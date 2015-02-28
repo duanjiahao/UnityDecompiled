@@ -48,7 +48,25 @@ namespace UnityEngine
 				this.INTERNAL_set_suspensionSpring(ref value);
 			}
 		}
+		public extern float forceAppPointDistance
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public extern float mass
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern float wheelDampingRate
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -116,6 +134,12 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		public extern float sprungMass
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public extern float rpm
 		{
 			[WrapperlessIcall]
@@ -148,6 +172,12 @@ namespace UnityEngine
 		private extern void INTERNAL_set_sidewaysFriction(ref WheelFrictionCurve value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void ConfigureVehicleSubsteps(float speedThreshold, int stepsBelowThreshold, int stepsAboveThreshold);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetGroundHit(out WheelHit hit);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void GetWorldPose(out Vector3 pos, out Quaternion quat);
 	}
 }

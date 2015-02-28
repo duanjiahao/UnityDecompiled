@@ -210,9 +210,9 @@ namespace UnityEditor
 					string nameOfFocusedControl = GUI.GetNameOfFocusedControl();
 					if (nameOfFocusedControl != null)
 					{
-						if (ASConfigWindow.<>f__switch$mapB == null)
+						if (ASConfigWindow.<>f__switch$mapD == null)
 						{
-							ASConfigWindow.<>f__switch$mapB = new Dictionary<string, int>(2)
+							ASConfigWindow.<>f__switch$mapD = new Dictionary<string, int>(2)
 							{
 
 								{
@@ -227,7 +227,7 @@ namespace UnityEditor
 							};
 						}
 						int num;
-						if (ASConfigWindow.<>f__switch$mapB.TryGetValue(nameOfFocusedControl, out num))
+						if (ASConfigWindow.<>f__switch$mapD.TryGetValue(nameOfFocusedControl, out num))
 						{
 							if (num == 0)
 							{

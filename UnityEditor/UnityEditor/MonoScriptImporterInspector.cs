@@ -14,7 +14,7 @@ namespace UnityEditor
 		private SerializedProperty m_Icon;
 		internal override void OnHeaderControlsGUI()
 		{
-			TextAsset textAsset = base.assetEditor.target as TextAsset;
+			TextAsset textAsset = this.assetEditor.target as TextAsset;
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("Open...", EditorStyles.miniButton, new GUILayoutOption[0]))
 			{
@@ -31,10 +31,10 @@ namespace UnityEditor
 		{
 			if (this.m_Icon == null)
 			{
-				this.m_TargetObject = new SerializedObject(base.assetEditor.targets);
+				this.m_TargetObject = new SerializedObject(this.assetEditor.targets);
 				this.m_Icon = this.m_TargetObject.FindProperty("m_Icon");
 			}
-			EditorGUI.ObjectIconDropDown(iconRect, base.assetEditor.targets, true, null, this.m_Icon);
+			EditorGUI.ObjectIconDropDown(iconRect, this.assetEditor.targets, true, null, this.m_Icon);
 		}
 		[MenuItem("CONTEXT/MonoImporter/Reset")]
 		private static void ResetDefaultReferences(MenuCommand command)
@@ -43,9 +43,13 @@ namespace UnityEditor
 			monoImporter.SetDefaultReferences(new string[0], new UnityEngine.Object[0]);
 			AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(monoImporter));
 		}
+		private static bool IsTypeCompatible(Type type)
+		{
+			return type != null && type.IsSubclassOf(typeof(MonoBehaviour));
+		}
 		private void ShowFieldInfo(Type type, MonoImporter importer, List<string> names, List<UnityEngine.Object> objects, ref bool didModify)
 		{
-			if (type == null || !type.IsSubclassOf(typeof(MonoBehaviour)))
+			if (!MonoScriptImporterInspector.IsTypeCompatible(type))
 			{
 				return;
 			}
@@ -58,20 +62,20 @@ namespace UnityEditor
 				FieldInfo fieldInfo = array[i];
 				if (fieldInfo.IsPublic)
 				{
-					goto IL_77;
+					goto IL_67;
 				}
 				object[] customAttributes = fieldInfo.GetCustomAttributes(typeof(SerializeField), true);
 				if (customAttributes != null && customAttributes.Length != 0)
 				{
-					goto IL_77;
+					goto IL_67;
 				}
-				IL_FC:
+				IL_EC:
 				i++;
 				continue;
-				IL_77:
+				IL_67:
 				if (!fieldInfo.FieldType.IsSubclassOf(typeof(UnityEngine.Object)) && fieldInfo.FieldType != typeof(UnityEngine.Object))
 				{
-					goto IL_FC;
+					goto IL_EC;
 				}
 				UnityEngine.Object defaultReference = importer.GetDefaultReference(fieldInfo.Name);
 				UnityEngine.Object @object = EditorGUILayout.ObjectField(ObjectNames.NicifyVariableName(fieldInfo.Name), defaultReference, fieldInfo.FieldType, false, new GUILayoutOption[0]);
@@ -80,31 +84,35 @@ namespace UnityEditor
 				if (defaultReference != @object)
 				{
 					didModify = true;
-					goto IL_FC;
+					goto IL_EC;
 				}
-				goto IL_FC;
+				goto IL_EC;
 			}
 		}
 		public override void OnInspectorGUI()
 		{
-			Vector2 iconSize = EditorGUIUtility.GetIconSize();
-			EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
 			MonoImporter monoImporter = this.target as MonoImporter;
 			MonoScript script = monoImporter.GetScript();
 			if (script)
 			{
+				Type @class = script.GetClass();
+				if (!MonoScriptImporterInspector.IsTypeCompatible(@class))
+				{
+					EditorGUILayout.HelpBox("No MonoBehaviour scripts in the file, or their names do not match the file name.", MessageType.Info);
+				}
+				Vector2 iconSize = EditorGUIUtility.GetIconSize();
+				EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
 				List<string> list = new List<string>();
 				List<UnityEngine.Object> list2 = new List<UnityEngine.Object>();
 				bool flag = false;
-				Type @class = script.GetClass();
 				this.ShowFieldInfo(@class, monoImporter, list, list2, ref flag);
+				EditorGUIUtility.SetIconSize(iconSize);
 				if (flag)
 				{
 					monoImporter.SetDefaultReferences(list.ToArray(), list2.ToArray());
 					AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(monoImporter));
 				}
 			}
-			EditorGUIUtility.SetIconSize(iconSize);
 		}
 	}
 }

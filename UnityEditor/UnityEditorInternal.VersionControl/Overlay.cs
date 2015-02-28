@@ -70,45 +70,66 @@ namespace UnityEditorInternal.VersionControl
 			{
 				Overlay.DrawOverlay(Asset.States.AddedLocal, iconRect);
 			}
-			if (Overlay.IsState(Asset.States.AddedRemote))
+			else
 			{
-				Overlay.DrawOverlay(Asset.States.AddedRemote, iconRect2);
-			}
-			if (Overlay.IsState(Asset.States.CheckedOutLocal) && !Overlay.IsState(Asset.States.LockedLocal) && !Overlay.IsState(Asset.States.AddedLocal))
-			{
-				Overlay.DrawOverlay(Asset.States.CheckedOutLocal, iconRect);
-			}
-			if (Overlay.IsState(Asset.States.CheckedOutRemote) && !Overlay.IsState(Asset.States.LockedRemote) && !Overlay.IsState(Asset.States.AddedRemote))
-			{
-				Overlay.DrawOverlay(Asset.States.CheckedOutRemote, iconRect2);
-			}
-			if (Overlay.IsState(Asset.States.DeletedLocal))
-			{
-				Overlay.DrawOverlay(Asset.States.DeletedLocal, iconRect);
-			}
-			if (Overlay.IsState(Asset.States.DeletedRemote))
-			{
-				Overlay.DrawOverlay(Asset.States.DeletedRemote, iconRect2);
-			}
-			if (Overlay.IsState(Asset.States.Local) && !Overlay.IsState(Asset.States.OutOfSync) && !Overlay.IsState(Asset.States.Synced) && !Overlay.IsState(Asset.States.AddedLocal))
-			{
-				Overlay.DrawOverlay(Asset.States.Local, iconRect3);
-			}
-			if (Overlay.IsState(Asset.States.LockedLocal))
-			{
-				Overlay.DrawOverlay(Asset.States.LockedLocal, iconRect);
-			}
-			if (Overlay.IsState(Asset.States.LockedRemote))
-			{
-				Overlay.DrawOverlay(Asset.States.LockedRemote, iconRect2);
-			}
-			if (Overlay.IsState(Asset.States.OutOfSync))
-			{
-				Overlay.DrawOverlay(Asset.States.OutOfSync, iconRect4);
+				if (Overlay.IsState(Asset.States.DeletedLocal))
+				{
+					Overlay.DrawOverlay(Asset.States.DeletedLocal, iconRect);
+				}
+				else
+				{
+					if (Overlay.IsState(Asset.States.LockedLocal))
+					{
+						Overlay.DrawOverlay(Asset.States.LockedLocal, iconRect);
+					}
+					else
+					{
+						if (Overlay.IsState(Asset.States.CheckedOutLocal))
+						{
+							Overlay.DrawOverlay(Asset.States.CheckedOutLocal, iconRect);
+						}
+						else
+						{
+							if (Overlay.IsState(Asset.States.Local) && !Overlay.IsState(Asset.States.OutOfSync) && !Overlay.IsState(Asset.States.Synced))
+							{
+								Overlay.DrawOverlay(Asset.States.Local, iconRect3);
+							}
+						}
+					}
+				}
 			}
 			if (Overlay.IsState(Asset.States.Conflicted))
 			{
 				Overlay.DrawOverlay(Asset.States.Conflicted, iconRect3);
+			}
+			if (Overlay.IsState(Asset.States.AddedRemote))
+			{
+				Overlay.DrawOverlay(Asset.States.AddedRemote, iconRect2);
+			}
+			else
+			{
+				if (Overlay.IsState(Asset.States.DeletedRemote))
+				{
+					Overlay.DrawOverlay(Asset.States.DeletedRemote, iconRect2);
+				}
+				else
+				{
+					if (Overlay.IsState(Asset.States.LockedRemote))
+					{
+						Overlay.DrawOverlay(Asset.States.LockedRemote, iconRect2);
+					}
+					else
+					{
+						if (Overlay.IsState(Asset.States.CheckedOutRemote))
+						{
+							Overlay.DrawOverlay(Asset.States.CheckedOutRemote, iconRect2);
+						}
+					}
+				}
+			}
+			if (Overlay.IsState(Asset.States.OutOfSync))
+			{
+				Overlay.DrawOverlay(Asset.States.OutOfSync, iconRect4);
 			}
 		}
 		private static bool IsState(Asset.States state)

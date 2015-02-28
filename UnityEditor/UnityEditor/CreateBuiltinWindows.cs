@@ -40,6 +40,11 @@ namespace UnityEditor
 		{
 			EditorWindow.GetWindow<ProfilerWindow>();
 		}
+		[MenuItem("Window/Audio Mixer %8", false, 2008)]
+		private static void ShowAudioMixer()
+		{
+			AudioMixerWindow.Create();
+		}
 		private static void ShowVersionControl()
 		{
 			if (EditorSettings.externalVersionControl == ExternalVersionControl.AssetServer)

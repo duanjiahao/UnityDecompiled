@@ -6,6 +6,7 @@ namespace UnityEditor
 	internal class TextAssetInspector : Editor
 	{
 		private const int kMaxChars = 7000;
+		[NonSerialized]
 		private GUIStyle m_TextStyle;
 		public override void OnInspectorGUI()
 		{

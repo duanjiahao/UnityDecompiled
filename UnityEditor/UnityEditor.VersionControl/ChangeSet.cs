@@ -34,10 +34,6 @@ namespace UnityEditor.VersionControl
 		{
 			this.InternalCopyConstruct(other);
 		}
-		~ChangeSet()
-		{
-			this.Dispose();
-		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalCreate();
@@ -53,5 +49,9 @@ namespace UnityEditor.VersionControl
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
+		~ChangeSet()
+		{
+			this.Dispose();
+		}
 	}
 }

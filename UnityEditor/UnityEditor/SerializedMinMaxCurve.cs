@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using UnityEditorInternal;
 using UnityEngine;
@@ -185,7 +184,6 @@ namespace UnityEditor
 		}
 		public ParticleSystemCurveEditor.CurveData CreateCurveData(Color color)
 		{
-			Assert.That(this.state != MinMaxCurveState.k_Scalar);
 			return new ParticleSystemCurveEditor.CurveData(this.GetUniqueCurveName(), this.m_DisplayName, this.GetMinCurve(), this.maxCurve, color, this.m_SignedRange, new CurveWrapper.GetAxisScalarsCallback(this.GetAxisScalars), new CurveWrapper.SetAxisScalarsCallback(this.SetAxisScalars), this.m_Module.foldout);
 		}
 		private SerializedProperty GetMinCurve()

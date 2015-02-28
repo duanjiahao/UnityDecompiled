@@ -1,117 +1,123 @@
 using System;
-using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
 	public sealed class iPhoneSettings
 	{
-		[Obsolete("screenOrientation property is deprecated. Please use Screen.orientation instead.")]
-		public static extern iPhoneScreenOrientation screenOrientation
+		[Obsolete("screenOrientation property is deprecated (UnityUpgradable). Please use Screen.orientation instead.", true)]
+		public static iPhoneScreenOrientation screenOrientation
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return (iPhoneScreenOrientation)0;
+			}
 		}
-		[Obsolete("verticalOrientation property is deprecated. Please use Screen.orientation instead.")]
-		public static extern bool verticalOrientation
+		[Obsolete("verticalOrientation property is deprecated. Please use Screen.orientation == ScreenOrientation.Portrait instead.")]
+		public static bool verticalOrientation
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return false;
+			}
 		}
-		[Obsolete("screenCanDarken property is deprecated. Please use Screen.sleepTimeout instead.")]
-		public static extern bool screenCanDarken
+		[Obsolete("screenCanDarken property is deprecated. Please use (Screen.sleepTimeout != SleepTimeout.NeverSleep) instead.")]
+		public static bool screenCanDarken
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return false;
+			}
 		}
-		[Obsolete("uniqueIdentifier property is deprecated. Please use SystemInfo.deviceUniqueIdentifier instead.")]
-		public static extern string uniqueIdentifier
+		[Obsolete("uniqueIdentifier property is deprecated (UnityUpgradable). Please use SystemInfo.deviceUniqueIdentifier instead.", true)]
+		public static string uniqueIdentifier
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return string.Empty;
+			}
 		}
-		[Obsolete("name property is deprecated. Please use SystemInfo.deviceName instead.")]
-		public static extern string name
+		[Obsolete("name property is deprecated (UnityUpgradable). Please use SystemInfo.deviceName instead.", true)]
+		public static string name
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return string.Empty;
+			}
 		}
-		[Obsolete("model property is deprecated. Please use SystemInfo.deviceModel instead.")]
-		public static extern string model
+		[Obsolete("model property is deprecated (UnityUpgradable). Please use SystemInfo.deviceModel instead.", true)]
+		public static string model
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return string.Empty;
+			}
 		}
-		[Obsolete("systemName property is deprecated. Please use SystemInfo.operatingSystem instead.")]
-		public static extern string systemName
+		[Obsolete("systemName property is deprecated (UnityUpgradable). Please use SystemInfo.operatingSystem instead.", true)]
+		public static string systemName
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return string.Empty;
+			}
 		}
-		[Obsolete("systemVersion property is deprecated. Please use SystemInfo.operatingSystem instead.")]
-		public static extern string systemVersion
+		[Obsolete("systemVersion property is deprecated (UnityUpgradable). Please use iOS.Device.systemVersion instead.", true)]
+		public static string systemVersion
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return string.Empty;
+			}
 		}
-		[Obsolete("internetReachability property is deprecated. Please use Application.internetReachability instead.")]
-		public static extern iPhoneNetworkReachability internetReachability
+		[Obsolete("internetReachability property is deprecated (UnityUpgradable). Please use Application.internetReachability instead.", true)]
+		public static iPhoneNetworkReachability internetReachability
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return (iPhoneNetworkReachability)0;
+			}
 		}
-		[Obsolete("generation property is deprecated. Please use iPhone.generation instead.")]
-		public static extern iPhoneGeneration generation
+		[Obsolete("generation property is deprecated (UnityUpgradable). Please use iPhone.generation instead.", true)]
+		public static iPhoneGeneration generation
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return (iPhoneGeneration)0;
+			}
 		}
 		[Obsolete("locationServiceStatus property is deprecated. Please use Input.location.status instead.")]
-		public static extern LocationServiceStatus locationServiceStatus
+		public static LocationServiceStatus locationServiceStatus
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return Input.location.status;
+			}
 		}
 		[Obsolete("locationServiceEnabledByUser property is deprecated. Please use Input.location.isEnabledByUser instead.")]
-		public static extern bool locationServiceEnabledByUser
+		public static bool locationServiceEnabledByUser
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return Input.location.isEnabledByUser;
+			}
 		}
-		[Obsolete("StartLocationServiceUpdates method is deprecated. Please use Input.location.Start instead."), WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void StartLocationServiceUpdates(float desiredAccuracyInMeters, float updateDistanceInMeters);
+		[Obsolete("StartLocationServiceUpdates method is deprecated. Please use Input.location.Start instead.")]
+		public static void StartLocationServiceUpdates(float desiredAccuracyInMeters, float updateDistanceInMeters)
+		{
+			Input.location.Start(desiredAccuracyInMeters, updateDistanceInMeters);
+		}
 		[Obsolete("StartLocationServiceUpdates method is deprecated. Please use Input.location.Start instead.")]
 		public static void StartLocationServiceUpdates(float desiredAccuracyInMeters)
 		{
-			iPhoneSettings.StartLocationServiceUpdates(desiredAccuracyInMeters, 10f);
+			Input.location.Start(desiredAccuracyInMeters);
 		}
 		[Obsolete("StartLocationServiceUpdates method is deprecated. Please use Input.location.Start instead.")]
 		public static void StartLocationServiceUpdates()
 		{
-			iPhoneSettings.StartLocationServiceUpdates(10f, 10f);
+			Input.location.Start();
 		}
-		[Obsolete("StopLocationServiceUpdates method is deprecated. Please use Input.location.Stop instead."), WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void StopLocationServiceUpdates();
+		[Obsolete("StopLocationServiceUpdates method is deprecated. Please use Input.location.Stop instead.")]
+		public static void StopLocationServiceUpdates()
+		{
+			Input.location.Stop();
+		}
 	}
 }

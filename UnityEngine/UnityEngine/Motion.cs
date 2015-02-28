@@ -34,7 +34,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public extern bool isAnimatorMotion
+		public extern bool legacy
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -46,8 +46,15 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[WrapperlessIcall]
+		[Obsolete("isAnimatorMotion is not supported anymore. Use !legacy instead.", true)]
+		public extern bool isAnimatorMotion
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		[Obsolete("ValidateIfRetargetable is not supported anymore. Use isHumanMotion instead.", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool ValidateIfRetargetable(bool showWarning);
+		public extern bool ValidateIfRetargetable(bool val);
 	}
 }

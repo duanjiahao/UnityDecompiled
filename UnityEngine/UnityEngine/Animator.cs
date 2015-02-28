@@ -23,6 +23,12 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		internal extern bool isRootPositionOrRotationControlledByCurves
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public extern float humanScale
 		{
 			[WrapperlessIcall]
@@ -36,6 +42,18 @@ namespace UnityEngine
 			get;
 		}
 		public extern Quaternion deltaRotation
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern Vector3 velocity
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern Vector3 angularVelocity
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -76,7 +94,16 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[Obsolete("Use AnimationMode.updateMode instead")]
+		public extern bool linearVelocityBlending
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[Obsolete("Use Animator.updateMode instead")]
 		public bool animatePhysics
 		{
 			get
@@ -154,6 +181,12 @@ namespace UnityEngine
 			set;
 		}
 		public extern int layerCount
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern AnimatorControllerParameter[] parameters
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -248,6 +281,12 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		public extern AnimatorRecorderMode recorderMode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		public extern RuntimeAnimatorController runtimeAnimatorController
 		{
@@ -422,48 +461,126 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_bodyRotation(ref Quaternion value);
+		public Vector3 GetIKPosition(AvatarIKGoal goal)
+		{
+			this.CheckIfInIKPass();
+			return this.GetIKPositionInternal(goal);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Vector3 GetIKPosition(AvatarIKGoal goal);
+		internal extern Vector3 GetIKPositionInternal(AvatarIKGoal goal);
 		public void SetIKPosition(AvatarIKGoal goal, Vector3 goalPosition)
 		{
-			Animator.INTERNAL_CALL_SetIKPosition(this, goal, ref goalPosition);
+			this.CheckIfInIKPass();
+			this.SetIKPositionInternal(goal, goalPosition);
+		}
+		internal void SetIKPositionInternal(AvatarIKGoal goal, Vector3 goalPosition)
+		{
+			Animator.INTERNAL_CALL_SetIKPositionInternal(this, goal, ref goalPosition);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetIKPosition(Animator self, AvatarIKGoal goal, ref Vector3 goalPosition);
+		private static extern void INTERNAL_CALL_SetIKPositionInternal(Animator self, AvatarIKGoal goal, ref Vector3 goalPosition);
+		public Quaternion GetIKRotation(AvatarIKGoal goal)
+		{
+			this.CheckIfInIKPass();
+			return this.GetIKRotationInternal(goal);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Quaternion GetIKRotation(AvatarIKGoal goal);
+		internal extern Quaternion GetIKRotationInternal(AvatarIKGoal goal);
 		public void SetIKRotation(AvatarIKGoal goal, Quaternion goalRotation)
 		{
-			Animator.INTERNAL_CALL_SetIKRotation(this, goal, ref goalRotation);
+			this.CheckIfInIKPass();
+			this.SetIKRotationInternal(goal, goalRotation);
+		}
+		internal void SetIKRotationInternal(AvatarIKGoal goal, Quaternion goalRotation)
+		{
+			Animator.INTERNAL_CALL_SetIKRotationInternal(this, goal, ref goalRotation);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetIKRotation(Animator self, AvatarIKGoal goal, ref Quaternion goalRotation);
+		private static extern void INTERNAL_CALL_SetIKRotationInternal(Animator self, AvatarIKGoal goal, ref Quaternion goalRotation);
+		public float GetIKPositionWeight(AvatarIKGoal goal)
+		{
+			this.CheckIfInIKPass();
+			return this.GetIKPositionWeightInternal(goal);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern float GetIKPositionWeight(AvatarIKGoal goal);
+		internal extern float GetIKPositionWeightInternal(AvatarIKGoal goal);
+		public void SetIKPositionWeight(AvatarIKGoal goal, float value)
+		{
+			this.CheckIfInIKPass();
+			this.SetIKPositionWeightInternal(goal, value);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetIKPositionWeight(AvatarIKGoal goal, float value);
+		internal extern void SetIKPositionWeightInternal(AvatarIKGoal goal, float value);
+		public float GetIKRotationWeight(AvatarIKGoal goal)
+		{
+			this.CheckIfInIKPass();
+			return this.GetIKRotationWeightInternal(goal);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern float GetIKRotationWeight(AvatarIKGoal goal);
+		internal extern float GetIKRotationWeightInternal(AvatarIKGoal goal);
+		public void SetIKRotationWeight(AvatarIKGoal goal, float value)
+		{
+			this.CheckIfInIKPass();
+			this.SetIKRotationWeightInternal(goal, value);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetIKRotationWeight(AvatarIKGoal goal, float value);
+		internal extern void SetIKRotationWeightInternal(AvatarIKGoal goal, float value);
+		public Vector3 GetIKHintPosition(AvatarIKHint hint)
+		{
+			this.CheckIfInIKPass();
+			return this.GetIKHintPositionInternal(hint);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern Vector3 GetIKHintPositionInternal(AvatarIKHint hint);
+		public void SetIKHintPosition(AvatarIKHint hint, Vector3 hintPosition)
+		{
+			this.CheckIfInIKPass();
+			this.SetIKHintPositionInternal(hint, hintPosition);
+		}
+		internal void SetIKHintPositionInternal(AvatarIKHint hint, Vector3 hintPosition)
+		{
+			Animator.INTERNAL_CALL_SetIKHintPositionInternal(this, hint, ref hintPosition);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetIKHintPositionInternal(Animator self, AvatarIKHint hint, ref Vector3 hintPosition);
+		public float GetIKHintPositionWeight(AvatarIKHint hint)
+		{
+			this.CheckIfInIKPass();
+			return this.GetHintWeightPositionInternal(hint);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern float GetHintWeightPositionInternal(AvatarIKHint hint);
+		public void SetIKHintPositionWeight(AvatarIKHint hint, float value)
+		{
+			this.CheckIfInIKPass();
+			this.SetIKHintPositionWeightInternal(hint, value);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetIKHintPositionWeightInternal(AvatarIKHint hint, float value);
 		public void SetLookAtPosition(Vector3 lookAtPosition)
 		{
-			Animator.INTERNAL_CALL_SetLookAtPosition(this, ref lookAtPosition);
+			this.CheckIfInIKPass();
+			this.SetLookAtPositionInternal(lookAtPosition);
+		}
+		internal void SetLookAtPositionInternal(Vector3 lookAtPosition)
+		{
+			Animator.INTERNAL_CALL_SetLookAtPositionInternal(this, ref lookAtPosition);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetLookAtPosition(Animator self, ref Vector3 lookAtPosition);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetLookAtWeight(float weight, [DefaultValue("0.00f")] float bodyWeight, [DefaultValue("1.00f")] float headWeight, [DefaultValue("0.00f")] float eyesWeight, [DefaultValue("0.50f")] float clampWeight);
+		private static extern void INTERNAL_CALL_SetLookAtPositionInternal(Animator self, ref Vector3 lookAtPosition);
 		[ExcludeFromDocs]
 		public void SetLookAtWeight(float weight, float bodyWeight, float headWeight, float eyesWeight)
 		{
@@ -494,9 +611,77 @@ namespace UnityEngine
 			float bodyWeight = 0f;
 			this.SetLookAtWeight(weight, bodyWeight, headWeight, eyesWeight, clampWeight);
 		}
+		public void SetLookAtWeight(float weight, [DefaultValue("0.00f")] float bodyWeight, [DefaultValue("1.00f")] float headWeight, [DefaultValue("0.00f")] float eyesWeight, [DefaultValue("0.50f")] float clampWeight)
+		{
+			this.CheckIfInIKPass();
+			this.SetLookAtWeightInternal(weight, bodyWeight, headWeight, eyesWeight, clampWeight);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetLookAtWeightInternal(float weight, [DefaultValue("0.00f")] float bodyWeight, [DefaultValue("1.00f")] float headWeight, [DefaultValue("0.00f")] float eyesWeight, [DefaultValue("0.50f")] float clampWeight);
+		[ExcludeFromDocs]
+		internal void SetLookAtWeightInternal(float weight, float bodyWeight, float headWeight, float eyesWeight)
+		{
+			float clampWeight = 0.5f;
+			this.SetLookAtWeightInternal(weight, bodyWeight, headWeight, eyesWeight, clampWeight);
+		}
+		[ExcludeFromDocs]
+		internal void SetLookAtWeightInternal(float weight, float bodyWeight, float headWeight)
+		{
+			float clampWeight = 0.5f;
+			float eyesWeight = 0f;
+			this.SetLookAtWeightInternal(weight, bodyWeight, headWeight, eyesWeight, clampWeight);
+		}
+		[ExcludeFromDocs]
+		internal void SetLookAtWeightInternal(float weight, float bodyWeight)
+		{
+			float clampWeight = 0.5f;
+			float eyesWeight = 0f;
+			float headWeight = 1f;
+			this.SetLookAtWeightInternal(weight, bodyWeight, headWeight, eyesWeight, clampWeight);
+		}
+		[ExcludeFromDocs]
+		internal void SetLookAtWeightInternal(float weight)
+		{
+			float clampWeight = 0.5f;
+			float eyesWeight = 0f;
+			float headWeight = 1f;
+			float bodyWeight = 0f;
+			this.SetLookAtWeightInternal(weight, bodyWeight, headWeight, eyesWeight, clampWeight);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern ScriptableObject GetBehaviour(Type type);
+		public T GetBehaviour<T>() where T : StateMachineBehaviour
+		{
+			return this.GetBehaviour(typeof(T)) as T;
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern ScriptableObject[] GetBehaviours(Type type);
+		internal static T[] ConvertStateMachineBehaviour<T>(ScriptableObject[] rawObjects) where T : StateMachineBehaviour
+		{
+			if (rawObjects == null)
+			{
+				return null;
+			}
+			T[] array = new T[rawObjects.Length];
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i] = (T)((object)rawObjects[i]);
+			}
+			return array;
+		}
+		public T[] GetBehaviours<T>() where T : StateMachineBehaviour
+		{
+			return Animator.ConvertStateMachineBehaviour<T>(this.GetBehaviours(typeof(T)));
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetLayerName(int layerIndex);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern int GetLayerIndex(string layerName);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetLayerWeight(int layerIndex);
@@ -512,12 +697,18 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnimatorTransitionInfo GetAnimatorTransitionInfo(int layerIndex);
+		[Obsolete("GetCurrentAnimationClipState is obsolete. Use GetCurrentAnimatorClipInfo instead (UnityUpgradable).", true), WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern AnimatorClipInfo[] GetCurrentAnimationClipState(int layerIndex);
+		[Obsolete("GetNextAnimationClipState is obsolete. Use GetNextAnimatorClipInfo instead (UnityUpgradable).", true), WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern AnimatorClipInfo[] GetNextAnimationClipState(int layerIndex);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern AnimationInfo[] GetCurrentAnimationClipState(int layerIndex);
+		public extern AnimatorClipInfo[] GetCurrentAnimatorClipInfo(int layerIndex);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern AnimationInfo[] GetNextAnimationClipState(int layerIndex);
+		public extern AnimatorClipInfo[] GetNextAnimatorClipInfo(int layerIndex);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsInTransition(int layerIndex);
@@ -640,10 +831,23 @@ namespace UnityEngine
 		public extern void StopRecording();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool HasState(int layerIndex, int stateID);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int StringToHash(string name);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string GetStats();
+		private void CheckIfInIKPass()
+		{
+			if (this.logWarnings && !this.CheckIfInIKPassInternal())
+			{
+				Debug.LogWarning("Setting and getting IK Goals should only be done in OnAnimatorIK or OnStateIK");
+			}
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern bool CheckIfInIKPassInternal();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetFloatString(string name, float value);
@@ -722,6 +926,9 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string GetNextStateName(int layerIndex);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern string ResolveHash(int hash);
 		[Obsolete("GetVector is deprecated.")]
 		public Vector3 GetVector(string name)
 		{

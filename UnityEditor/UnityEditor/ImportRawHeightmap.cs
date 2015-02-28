@@ -78,7 +78,7 @@ namespace UnityEditor
 			{
 				base.isValid = false;
 				base.errorString = "Heightmaps above 4096x4096 in resolution are not supported";
-				Debug.LogError("Heightmaps above 4096x4096 in resolution are not supported");
+				Debug.LogError(base.errorString);
 			}
 			if (File.Exists(this.m_Path) && base.isValid)
 			{

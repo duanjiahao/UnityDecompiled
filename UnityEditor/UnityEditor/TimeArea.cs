@@ -112,7 +112,7 @@ namespace UnityEditor
 				TimeArea.styles = new TimeArea.Styles2();
 			}
 		}
-		private void ApplySettings()
+		protected virtual void ApplySettings()
 		{
 			base.hRangeLocked = this.settings.hRangeLocked;
 			base.vRangeLocked = this.settings.vRangeLocked;
@@ -174,7 +174,7 @@ namespace UnityEditor
 				return;
 			}
 			TimeArea.InitStyles();
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(1);
 			Color backgroundColor = GUI.backgroundColor;
 			this.SetTickMarkerRanges();

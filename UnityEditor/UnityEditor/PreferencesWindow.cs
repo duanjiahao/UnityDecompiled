@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +21,7 @@ namespace UnityEditor
 			public GUIStyle selected = "ServerUpdateChangesetOn";
 			public GUIStyle keysElement = "PreferencesKeysElement";
 			public GUIStyle sectionHeader = new GUIStyle(EditorStyles.largeLabel);
+			public GUIStyle cacheFolderLocation = new GUIStyle(GUI.skin.label);
 			public Constants()
 			{
 				this.sectionScrollView = new GUIStyle(this.sectionScrollView);
@@ -38,7 +38,20 @@ namespace UnityEditor
 				{
 					this.sectionHeader.normal.textColor = new Color(0.7f, 0.7f, 0.7f, 1f);
 				}
+				this.cacheFolderLocation.wordWrap = true;
 			}
+		}
+		internal class Styles
+		{
+			public static readonly GUIContent browse = EditorGUIUtility.TextContent("PreferencesWindow.Browse");
+			public static readonly GUIContent maxCacheSize = EditorGUIUtility.TextContent("PreferencesWindow.GICache.MaxCacheSize");
+			public static readonly GUIContent customCacheLocation = EditorGUIUtility.TextContent("PreferencesWindow.GICache.CustomCacheLocation");
+			public static readonly GUIContent cacheFolderLocation = EditorGUIUtility.TextContent("PreferencesWindow.GICache.CacheFolderLocation");
+			public static readonly GUIContent cacheCompression = EditorGUIUtility.TextContent("PreferencesWindow.GICache.CacheCompression");
+			public static readonly GUIContent cantChangeCacheSettings = EditorGUIUtility.TextContent("PreferencesWindow.GICache.CantChangeCacheSettings");
+			public static readonly GUIContent cleanCache = EditorGUIUtility.TextContent("PreferencesWindow.GICache.CleanCache");
+			public static readonly GUIContent browseGICacheLocation = EditorGUIUtility.TextContent("PreferencesWindow.GICache.BrowseGICacheLocation");
+			public static readonly GUIContent cacheSizeIs = EditorGUIUtility.TextContent("PreferencesWindow.GICache.CacheSize");
 		}
 		private class Section
 		{
@@ -59,6 +72,13 @@ namespace UnityEditor
 				this.content = content;
 				this.guiFunc = guiFunc;
 			}
+		}
+		private struct GICacheSettings
+		{
+			public bool m_EnableCustomPath;
+			public int m_MaximumSize;
+			public string m_CachePath;
+			public int m_CompressionLevel;
 		}
 		private class RefString
 		{
@@ -98,7 +118,7 @@ namespace UnityEditor
 		private static PreferencesWindow.Constants constants = null;
 		private List<IPreferenceWindowExtension> prefWinExtensions;
 		private bool m_AutoRefresh;
-		private bool m_AlwaysShowProjectWizard;
+		private bool m_ReopenLastUsedProjectOnStartup;
 		private bool m_CompressAssetsOnImport;
 		private bool m_UseOSColorPicker;
 		private bool m_EnableEditorAnalytics;
@@ -106,6 +126,7 @@ namespace UnityEditor
 		private bool m_VerifySavingAssets;
 		private bool m_AllowAttachedDebuggingOfEditor;
 		private bool m_AllowAttachedDebuggingOfEditorStateChangedThisSession;
+		private PreferencesWindow.GICacheSettings m_GICacheSettings;
 		private PreferencesWindow.RefString m_ScriptEditorPath = new PreferencesWindow.RefString(string.Empty);
 		private string m_ScriptEditorArgs = string.Empty;
 		private PreferencesWindow.RefString m_ImageAppPath = new PreferencesWindow.RefString(string.Empty);
@@ -169,6 +190,7 @@ namespace UnityEditor
 			this.m_Sections.Add(new PreferencesWindow.Section("External Tools", new PreferencesWindow.OnGUIDelegate(this.ShowExternalApplications)));
 			this.m_Sections.Add(new PreferencesWindow.Section("Colors", new PreferencesWindow.OnGUIDelegate(this.ShowColors)));
 			this.m_Sections.Add(new PreferencesWindow.Section("Keys", new PreferencesWindow.OnGUIDelegate(this.ShowKeys)));
+			this.m_Sections.Add(new PreferencesWindow.Section("GI Cache", new PreferencesWindow.OnGUIDelegate(this.ShowGICache)));
 			this.m_RefreshCustomPreferences = true;
 		}
 		private void AddCustomSections()
@@ -206,7 +228,7 @@ namespace UnityEditor
 				this.AddCustomSections();
 				this.m_RefreshCustomPreferences = false;
 			}
-			EditorGUIUtility.labelWidth = 180f;
+			EditorGUIUtility.labelWidth = 200f;
 			if (PreferencesWindow.constants == null)
 			{
 				PreferencesWindow.constants = new PreferencesWindow.Constants();
@@ -303,7 +325,7 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			this.FilePopup("Image application", this.m_ImageAppPath, ref this.m_ImageAppDisplayNames, ref this.m_ImageApps, this.m_ImageAppPath, null);
 			GUILayout.Space(10f);
-			EditorGUI.BeginDisabledGroup(!InternalEditorUtility.HasMaint());
+			EditorGUI.BeginDisabledGroup(!InternalEditorUtility.HasPro());
 			this.m_DiffToolIndex = EditorGUILayout.Popup("Revision Control Diff/Merge", this.m_DiffToolIndex, this.m_DiffTools, new GUILayoutOption[0]);
 			EditorGUI.EndDisabledGroup();
 			if (this.m_noDiffToolsMessage != string.Empty)
@@ -351,7 +373,7 @@ namespace UnityEditor
 		{
 			GUILayout.Space(10f);
 			this.m_AutoRefresh = EditorGUILayout.Toggle("Auto Refresh", this.m_AutoRefresh, new GUILayoutOption[0]);
-			this.m_AlwaysShowProjectWizard = EditorGUILayout.Toggle("Always Show Project Wizard", this.m_AlwaysShowProjectWizard, new GUILayoutOption[0]);
+			this.m_ReopenLastUsedProjectOnStartup = EditorGUILayout.Toggle("Load Previous Project on Startup", this.m_ReopenLastUsedProjectOnStartup, new GUILayoutOption[0]);
 			bool compressAssetsOnImport = this.m_CompressAssetsOnImport;
 			this.m_CompressAssetsOnImport = EditorGUILayout.Toggle("Compress Assets on Import", compressAssetsOnImport, new GUILayoutOption[0]);
 			if (GUI.changed && this.m_CompressAssetsOnImport != compressAssetsOnImport)
@@ -362,17 +384,24 @@ namespace UnityEditor
 			{
 				this.m_UseOSColorPicker = EditorGUILayout.Toggle("OS X Color Picker", this.m_UseOSColorPicker, new GUILayoutOption[0]);
 			}
-			this.m_EnableEditorAnalytics = EditorGUILayout.Toggle("Editor Analytics", this.m_EnableEditorAnalytics, new GUILayoutOption[0]);
-			bool flag = false;
+			bool flag = Application.HasProLicense();
+			EditorGUI.BeginDisabledGroup(!flag);
+			this.m_EnableEditorAnalytics = !EditorGUILayout.Toggle("Disable Editor Analytics (Pro Only)", !this.m_EnableEditorAnalytics, new GUILayoutOption[0]);
+			if (!flag && !this.m_EnableEditorAnalytics)
+			{
+				this.m_EnableEditorAnalytics = true;
+			}
+			EditorGUI.EndDisabledGroup();
+			bool flag2 = false;
 			EditorGUI.BeginChangeCheck();
 			this.m_ShowAssetStoreSearchHits = EditorGUILayout.Toggle("Show Asset Store search hits", this.m_ShowAssetStoreSearchHits, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
-				flag = true;
+				flag2 = true;
 			}
 			this.m_VerifySavingAssets = EditorGUILayout.Toggle("Verify Saving Assets", this.m_VerifySavingAssets, new GUILayoutOption[0]);
-			EditorGUI.BeginDisabledGroup(!InternalEditorUtility.HasPro());
-			int num = EditorGUILayout.Popup("Skin (Pro Only)", EditorGUIUtility.isProSkin ? 1 : 0, new string[]
+			EditorGUI.BeginDisabledGroup(!flag);
+			int num = EditorGUILayout.Popup("Editor Skin", EditorGUIUtility.isProSkin ? 1 : 0, new string[]
 			{
 				"Light",
 				"Dark"
@@ -389,7 +418,7 @@ namespace UnityEditor
 			{
 				EditorApplication.DirtyHierarchyWindowSorting();
 			}
-			if (flag)
+			if (flag2)
 			{
 				ProjectBrowser.ShowAssetStoreHitsWhileSearchingLocalAssetsChanged();
 			}
@@ -502,7 +531,6 @@ namespace UnityEditor
 				{
 					'/'
 				});
-				Assert.AreEqual(array.Length, 2, "Unexpected Split: " + this.m_SelectedKey.Name);
 				GUILayout.Label(array[0], "boldLabel", new GUILayoutOption[0]);
 				GUILayout.Label(array[1], "boldLabel", new GUILayoutOption[0]);
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -617,6 +645,66 @@ namespace UnityEditor
 				EditorApplication.RequestRepaintAllViews();
 			}
 		}
+		private void ShowGICache()
+		{
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			EditorGUILayout.PrefixLabel(PreferencesWindow.Styles.maxCacheSize, EditorStyles.popup);
+			this.m_GICacheSettings.m_MaximumSize = EditorGUILayout.IntSlider(this.m_GICacheSettings.m_MaximumSize, 5, 100, new GUILayoutOption[0]);
+			this.WritePreferences();
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			if (Lightmapping.isRunning)
+			{
+				GUIContent gUIContent = EditorGUIUtility.TextContent(PreferencesWindow.Styles.cantChangeCacheSettings.text);
+				EditorGUILayout.HelpBox(gUIContent.text, MessageType.Warning, true);
+			}
+			GUILayout.EndHorizontal();
+			EditorGUI.BeginDisabledGroup(Lightmapping.isRunning);
+			this.m_GICacheSettings.m_EnableCustomPath = EditorGUILayout.Toggle(PreferencesWindow.Styles.customCacheLocation, this.m_GICacheSettings.m_EnableCustomPath, new GUILayoutOption[0]);
+			if (this.m_GICacheSettings.m_EnableCustomPath)
+			{
+				GUIStyle popup = EditorStyles.popup;
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				EditorGUILayout.PrefixLabel(PreferencesWindow.Styles.cacheFolderLocation, popup);
+				Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
+				GUIContent content = (!string.IsNullOrEmpty(this.m_GICacheSettings.m_CachePath)) ? new GUIContent(this.m_GICacheSettings.m_CachePath) : PreferencesWindow.Styles.browse;
+				if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, popup))
+				{
+					string cachePath = this.m_GICacheSettings.m_CachePath;
+					string text = EditorUtility.OpenFolderPanel(PreferencesWindow.Styles.browseGICacheLocation.text, cachePath, string.Empty);
+					if (!string.IsNullOrEmpty(text))
+					{
+						this.m_GICacheSettings.m_CachePath = text;
+						this.WritePreferences();
+					}
+				}
+				GUILayout.EndHorizontal();
+			}
+			else
+			{
+				this.m_GICacheSettings.m_CachePath = string.Empty;
+			}
+			this.m_GICacheSettings.m_CompressionLevel = ((!EditorGUILayout.Toggle(PreferencesWindow.Styles.cacheCompression, this.m_GICacheSettings.m_CompressionLevel == 1, new GUILayoutOption[0])) ? 0 : 1);
+			if (GUILayout.Button(PreferencesWindow.Styles.cleanCache, new GUILayoutOption[]
+			{
+				GUILayout.Width(120f)
+			}))
+			{
+				Lightmapping.Clear();
+				Lightmapping.ClearDiskCache();
+			}
+			if (Lightmapping.diskCacheSize >= 0L)
+			{
+				GUILayout.Label(PreferencesWindow.Styles.cacheSizeIs.text + " " + EditorUtility.FormatBytes(Lightmapping.diskCacheSize), new GUILayoutOption[0]);
+			}
+			else
+			{
+				GUILayout.Label(PreferencesWindow.Styles.cacheSizeIs.text + " is being calculated...", new GUILayoutOption[0]);
+			}
+			GUILayout.Label(PreferencesWindow.Styles.cacheFolderLocation.text + ":", new GUILayoutOption[0]);
+			GUILayout.Label(Lightmapping.diskCachePath, PreferencesWindow.constants.cacheFolderLocation, new GUILayoutOption[0]);
+			EditorGUI.EndDisabledGroup();
+		}
 		private void WriteRecentAppsList(string[] paths, string path, string prefsKey)
 		{
 			int num = 0;
@@ -651,17 +739,22 @@ namespace UnityEditor
 			this.WriteRecentAppsList(this.m_ScriptApps, this.m_ScriptEditorPath, "RecentlyUsedScriptApp");
 			this.WriteRecentAppsList(this.m_ImageApps, this.m_ImageAppPath, "RecentlyUsedImageApp");
 			EditorPrefs.SetBool("kAutoRefresh", this.m_AutoRefresh);
-			EditorPrefs.SetBool("AlwaysShowProjectWizard", this.m_AlwaysShowProjectWizard);
+			EditorPrefs.SetBool("ReopenLastUsedProjectOnStartup", this.m_ReopenLastUsedProjectOnStartup);
 			EditorPrefs.SetBool("UseOSColorPicker", this.m_UseOSColorPicker);
 			EditorPrefs.SetBool("EnableEditorAnalytics", this.m_EnableEditorAnalytics);
 			EditorPrefs.SetBool("ShowAssetStoreSearchHits", this.m_ShowAssetStoreSearchHits);
 			EditorPrefs.SetBool("VerifySavingAssets", this.m_VerifySavingAssets);
 			EditorPrefs.SetBool("AllowAttachedDebuggingOfEditor", this.m_AllowAttachedDebuggingOfEditor);
 			EditorPrefs.SetBool("AllowAlphaNumericHierarchy", this.m_AllowAlphaNumericHierarchy);
+			EditorPrefs.SetBool("GICacheEnableCustomPath", this.m_GICacheSettings.m_EnableCustomPath);
+			EditorPrefs.SetInt("GICacheMaximumSizeGB", this.m_GICacheSettings.m_MaximumSize);
+			EditorPrefs.SetString("GICacheFolder", this.m_GICacheSettings.m_CachePath);
+			EditorPrefs.SetInt("GICacheCompressionLevel", this.m_GICacheSettings.m_CompressionLevel);
 			foreach (IPreferenceWindowExtension current in this.prefWinExtensions)
 			{
 				current.WritePreferences();
 			}
+			Lightmapping.UpdateCachePath();
 		}
 		private static void SetupDefaultPreferences()
 		{
@@ -703,7 +796,7 @@ namespace UnityEditor
 			this.m_ScriptAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ScriptApps, "MonoDevelop (built-in)");
 			this.m_ImageAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ImageApps, "Open by file extension");
 			this.m_DiffTools = InternalEditorUtility.GetAvailableDiffTools();
-			if ((this.m_DiffTools == null || this.m_DiffTools.Length == 0) && InternalEditorUtility.HasMaint())
+			if ((this.m_DiffTools == null || this.m_DiffTools.Length == 0) && InternalEditorUtility.HasPro())
 			{
 				this.m_noDiffToolsMessage = InternalEditorUtility.GetNoDiffToolsDetectedMessage();
 			}
@@ -714,11 +807,15 @@ namespace UnityEditor
 				this.m_DiffToolIndex = 0;
 			}
 			this.m_AutoRefresh = EditorPrefs.GetBool("kAutoRefresh");
-			this.m_AlwaysShowProjectWizard = EditorPrefs.GetBool("AlwaysShowProjectWizard");
+			this.m_ReopenLastUsedProjectOnStartup = EditorPrefs.GetBool("ReopenLastUsedProjectOnStartup");
 			this.m_UseOSColorPicker = EditorPrefs.GetBool("UseOSColorPicker");
 			this.m_EnableEditorAnalytics = EditorPrefs.GetBool("EnableEditorAnalytics", true);
 			this.m_ShowAssetStoreSearchHits = EditorPrefs.GetBool("ShowAssetStoreSearchHits", true);
 			this.m_VerifySavingAssets = EditorPrefs.GetBool("VerifySavingAssets", false);
+			this.m_GICacheSettings.m_EnableCustomPath = EditorPrefs.GetBool("GICacheEnableCustomPath");
+			this.m_GICacheSettings.m_CachePath = EditorPrefs.GetString("GICacheFolder");
+			this.m_GICacheSettings.m_MaximumSize = EditorPrefs.GetInt("GICacheMaximumSizeGB");
+			this.m_GICacheSettings.m_CompressionLevel = EditorPrefs.GetInt("GICacheCompressionLevel");
 			this.m_AllowAttachedDebuggingOfEditor = EditorPrefs.GetBool("AllowAttachedDebuggingOfEditor", true);
 			this.m_AllowAlphaNumericHierarchy = EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false);
 			this.m_CompressAssetsOnImport = Unsupported.GetApplicationSettingCompressAssetsOnImport();
@@ -755,17 +852,17 @@ namespace UnityEditor
 		}
 		private void FilePopup(string label, string selectedString, ref string[] names, ref string[] paths, PreferencesWindow.RefString outString, Action onChanged)
 		{
-			GUIStyle gUIStyle = "MiniPopup";
+			GUIStyle popup = EditorStyles.popup;
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUILayout.PrefixLabel(label, gUIStyle);
+			EditorGUILayout.PrefixLabel(label, popup);
 			int[] array = new int[]
 			{
 				Array.IndexOf<string>(paths, selectedString)
 			};
 			GUIContent content = new GUIContent(names[array[0]]);
-			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, gUIStyle);
+			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
 			PreferencesWindow.AppsListUserData userData = new PreferencesWindow.AppsListUserData(paths, outString, onChanged);
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, gUIStyle))
+			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, popup))
 			{
 				ArrayUtility.Add<string>(ref names, "Browse...");
 				EditorUtility.DisplayCustomMenu(rect, names, array, new EditorUtility.SelectMenuItemFunction(this.AppsListClick), userData);
@@ -774,13 +871,13 @@ namespace UnityEditor
 		}
 		private void AndroidSdkLocation()
 		{
-			GUIStyle gUIStyle = "MiniPopup";
+			GUIStyle popup = EditorStyles.popup;
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUILayout.PrefixLabel("Android SDK Location", gUIStyle);
+			EditorGUILayout.PrefixLabel("Android SDK Location", popup);
 			string text = (!string.IsNullOrEmpty(this.m_AndroidSdkPath)) ? this.m_AndroidSdkPath : "Browse...";
 			GUIContent content = new GUIContent(text);
-			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, gUIStyle);
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, gUIStyle))
+			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
+			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, popup))
 			{
 				string text2 = AndroidSdkRoot.Browse(this.m_AndroidSdkPath);
 				if (!string.IsNullOrEmpty(text2))

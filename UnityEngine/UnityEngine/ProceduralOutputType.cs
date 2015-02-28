@@ -9,6 +9,11 @@ namespace UnityEngine
 		Height,
 		Emissive,
 		Specular,
-		Opacity
+		Opacity,
+		Smoothness,
+		AmbientOcclusion,
+		DetailMask,
+		Metallic,
+		Roughness
 	}
 }

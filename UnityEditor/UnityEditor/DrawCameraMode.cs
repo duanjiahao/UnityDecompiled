@@ -7,7 +7,23 @@ namespace UnityEditor
 		Textured,
 		Wireframe,
 		TexturedWire,
+		ShadowCascades,
 		RenderPaths,
-		LightmapResolution
+		AlphaChannel,
+		Overdraw,
+		Mipmaps,
+		DeferredDiffuse,
+		DeferredSpecular,
+		DeferredSmoothness,
+		DeferredNormal,
+		Charting,
+		Systems,
+		Albedo,
+		Emissive,
+		Irradiance,
+		Directionality,
+		Baked,
+		Clustering,
+		LitClustering
 	}
 }

@@ -26,7 +26,7 @@ namespace UnityEditor
 			{
 				return 0;
 			}
-			int num = property.serializedObject.targetObject.GetInstanceID() ^ property.arrayIndexLessPropertyPath.GetHashCode();
+			int num = property.serializedObject.targetObject.GetInstanceID() ^ property.hashCodeForPropertyPathWithoutArrayIndex;
 			if (property.propertyType == SerializedPropertyType.ObjectReference)
 			{
 				num ^= property.objectReferenceInstanceIDValue;

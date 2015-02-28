@@ -98,9 +98,9 @@ namespace UnityEditor
 				string text = this.dropDownMenuItems[selected];
 				if (text != null)
 				{
-					if (ASUpdateWindow.<>f__switch$mapF == null)
+					if (ASUpdateWindow.<>f__switch$map11 == null)
 					{
-						ASUpdateWindow.<>f__switch$mapF = new Dictionary<string, int>(2)
+						ASUpdateWindow.<>f__switch$map11 = new Dictionary<string, int>(2)
 						{
 
 							{
@@ -115,7 +115,7 @@ namespace UnityEditor
 						};
 					}
 					int num;
-					if (ASUpdateWindow.<>f__switch$mapF.TryGetValue(text, out num))
+					if (ASUpdateWindow.<>f__switch$map11.TryGetValue(text, out num))
 					{
 						if (num != 0)
 						{
@@ -391,19 +391,19 @@ namespace UnityEditor
 				GUIContent gUIContent = null;
 				if (this.HasFlag(changeFlags, ChangeFlags.Undeleted) || this.HasFlag(changeFlags, ChangeFlags.Created))
 				{
-					gUIContent = ASMainWindow.badgeNew;
+					gUIContent = ASMainWindow.constants.badgeNew;
 				}
 				else
 				{
 					if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
 					{
-						gUIContent = ASMainWindow.badgeDelete;
+						gUIContent = ASMainWindow.constants.badgeDelete;
 					}
 					else
 					{
 						if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
 						{
-							gUIContent = ASMainWindow.badgeMove;
+							gUIContent = ASMainWindow.constants.badgeMove;
 						}
 					}
 				}

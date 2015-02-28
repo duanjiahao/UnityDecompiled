@@ -7,12 +7,11 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class GUIStyleState
 	{
-		[NotRenamed]
 		[NonSerialized]
 		internal IntPtr m_Ptr;
 		private GUIStyle m_SourceStyle;
 		[NonSerialized]
-		private Texture2D m_BackgroundInternal;
+		private Texture2D m_Background;
 		public Texture2D background
 		{
 			get
@@ -22,7 +21,7 @@ namespace UnityEngine
 			set
 			{
 				this.SetBackgroundInternal(value);
-				this.m_BackgroundInternal = value;
+				this.m_Background = value;
 			}
 		}
 		public Color textColor
@@ -46,11 +45,7 @@ namespace UnityEngine
 		{
 			this.m_SourceStyle = sourceStyle;
 			this.m_Ptr = source;
-			this.RefreshAssetReference();
-		}
-		internal void RefreshAssetReference()
-		{
-			this.m_BackgroundInternal = this.GetBackgroundInternal();
+			this.m_Background = this.GetBackgroundInternal();
 		}
 		~GUIStyleState()
 		{

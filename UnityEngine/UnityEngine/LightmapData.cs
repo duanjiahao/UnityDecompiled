@@ -1,44 +1,44 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 namespace UnityEngine
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class LightmapData
 	{
-		internal Texture2D m_Lightmap;
-		internal Texture2D m_IndirectLightmap;
+		internal Texture2D m_Light;
+		internal Texture2D m_Dir;
 		public Texture2D lightmapFar
 		{
 			get
 			{
-				return this.m_Lightmap;
+				return this.m_Light;
 			}
 			set
 			{
-				this.m_Lightmap = value;
+				this.m_Light = value;
 			}
 		}
-		[Obsolete("Use lightmapFar instead")]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property LightmapData.lightmap has been deprecated. Use Lightmap.lightmapFar instead (UnityUpgradable).", true)]
 		public Texture2D lightmap
 		{
 			get
 			{
-				return this.m_Lightmap;
+				return null;
 			}
 			set
 			{
-				this.m_Lightmap = value;
 			}
 		}
 		public Texture2D lightmapNear
 		{
 			get
 			{
-				return this.m_IndirectLightmap;
+				return this.m_Dir;
 			}
 			set
 			{
-				this.m_IndirectLightmap = value;
+				this.m_Dir = value;
 			}
 		}
 	}

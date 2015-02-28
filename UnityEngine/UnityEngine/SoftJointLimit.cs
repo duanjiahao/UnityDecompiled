@@ -5,8 +5,7 @@ namespace UnityEngine
 	{
 		private float m_Limit;
 		private float m_Bounciness;
-		private float m_Spring;
-		private float m_Damper;
+		private float m_ContactDistance;
 		public float limit
 		{
 			get
@@ -18,26 +17,26 @@ namespace UnityEngine
 				this.m_Limit = value;
 			}
 		}
+		[Obsolete("spring has been moved to SoftJointLimitSpring class in Unity 5", true)]
 		public float spring
 		{
 			get
 			{
-				return this.m_Spring;
+				return 0f;
 			}
 			set
 			{
-				this.m_Spring = value;
 			}
 		}
+		[Obsolete("damper has been moved to SoftJointLimitSpring class in Unity 5", true)]
 		public float damper
 		{
 			get
 			{
-				return this.m_Damper;
+				return 0f;
 			}
 			set
 			{
-				this.m_Damper = value;
 			}
 		}
 		public float bounciness
@@ -49,6 +48,17 @@ namespace UnityEngine
 			set
 			{
 				this.m_Bounciness = value;
+			}
+		}
+		public float contactDistance
+		{
+			get
+			{
+				return this.m_ContactDistance;
+			}
+			set
+			{
+				this.m_ContactDistance = value;
 			}
 		}
 		[Obsolete("Use SoftJointLimit.bounciness instead", true)]

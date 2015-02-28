@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -141,15 +141,31 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool PasteComponentValuesFromPasteboard(Component component);
+		public static void CopyStateMachineDataToPasteboard(UnityEngine.Object stateMachineObject, AnimatorController controller, int layerIndex)
+		{
+			Unsupported.CopyStateMachineDataToPasteboard(new UnityEngine.Object[]
+			{
+				stateMachineObject
+			}, new Vector3[]
+			{
+				default(Vector3)
+			}, controller, layerIndex);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CopyStateToPasteboard(State state, AnimatorController controller);
+		public static extern void CopyStateMachineDataToPasteboard(UnityEngine.Object[] stateMachineObjects, Vector3[] monoPositions, AnimatorController controller, int layerIndex);
+		public static void PasteToStateMachineFromPasteboard(AnimatorStateMachine sm, AnimatorController controller, int layerIndex, Vector3 position)
+		{
+			Undo.RegisterCompleteObjectUndo(sm, "Paste to StateMachine");
+			Unsupported.PasteToStateMachineFromPasteboardInternal(sm, controller, layerIndex, position);
+		}
+		internal static void PasteToStateMachineFromPasteboardInternal(AnimatorStateMachine sm, AnimatorController controller, int layerIndex, Vector3 position)
+		{
+			Unsupported.INTERNAL_CALL_PasteToStateMachineFromPasteboardInternal(sm, controller, layerIndex, ref position);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CopyStateMachineToPasteboard(StateMachine stateMachine, AnimatorController controller);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void PasteToStateMachineFromPasteboard(StateMachine sm, AnimatorController controller);
+		private static extern void INTERNAL_CALL_PasteToStateMachineFromPasteboardInternal(AnimatorStateMachine sm, AnimatorController controller, int layerIndex, ref Vector3 position);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasStateMachineDataInPasteboard();

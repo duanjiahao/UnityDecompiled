@@ -371,7 +371,7 @@ namespace UnityEditor
 					{
 						if (current.clickCount == 2)
 						{
-							LogEntries.OpenEntryFile(this.m_ListView.row);
+							LogEntries.RowGotDoubleClicked(this.m_ListView.row);
 						}
 						flag3 = true;
 					}
@@ -421,7 +421,7 @@ namespace UnityEditor
 				}
 				if (GUIUtility.keyboardControl == this.m_ListView.ID && current.type == EventType.KeyDown && current.keyCode == KeyCode.Return && this.m_ListView.row != 0)
 				{
-					LogEntries.OpenEntryFile(this.m_ListView.row);
+					LogEntries.RowGotDoubleClicked(this.m_ListView.row);
 					Event.current.Use();
 				}
 				if (current.type != EventType.Layout && ListViewGUI.ilvState.rectHeight != 1)

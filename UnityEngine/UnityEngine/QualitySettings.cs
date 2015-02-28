@@ -57,6 +57,28 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public static extern float shadowCascade2Split
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static Vector3 shadowCascade4Split
+		{
+			get
+			{
+				Vector3 result;
+				QualitySettings.INTERNAL_get_shadowCascade4Split(out result);
+				return result;
+			}
+			set
+			{
+				QualitySettings.INTERNAL_set_shadowCascade4Split(ref value);
+			}
+		}
 		public static extern int masterTextureLimit
 		{
 			[WrapperlessIcall]
@@ -103,6 +125,24 @@ namespace UnityEngine
 			set;
 		}
 		public static extern bool softVegetation
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern bool realtimeReflectionProbes
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern bool billboardsFaceCameraPosition
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -189,5 +229,11 @@ namespace UnityEngine
 			bool applyExpensiveChanges = false;
 			QualitySettings.DecreaseLevel(applyExpensiveChanges);
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_get_shadowCascade4Split(out Vector3 value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_set_shadowCascade4Split(ref Vector3 value);
 	}
 }

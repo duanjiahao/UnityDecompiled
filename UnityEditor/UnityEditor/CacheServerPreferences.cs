@@ -29,11 +29,11 @@ namespace UnityEditor
 		public static void OnGUI()
 		{
 			GUILayout.Space(10f);
-			if (!InternalEditorUtility.HasMaint())
+			if (!InternalEditorUtility.HasPro())
 			{
-				GUILayout.Label(EditorGUIUtility.TempContent("You need to have an Asset Server license to use the cache server.", EditorGUIUtility.GetHelpIcon(MessageType.Warning)), EditorStyles.helpBox, new GUILayoutOption[0]);
+				GUILayout.Label(EditorGUIUtility.TempContent("You need to have a Pro license to use the cache server.", EditorGUIUtility.GetHelpIcon(MessageType.Warning)), EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
-			EditorGUI.BeginDisabledGroup(!InternalEditorUtility.HasMaint());
+			EditorGUI.BeginDisabledGroup(!InternalEditorUtility.HasPro());
 			if (!CacheServerPreferences.s_PrefsLoaded)
 			{
 				CacheServerPreferences.ReadPreferences();

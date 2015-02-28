@@ -3,6 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.Modules;
 using UnityEditorInternal;
+using UnityEngine;
 internal abstract class DesktopStandalonePostProcessor
 {
 	protected BuildPostProcessArgs m_PostProcessArgs;
@@ -70,6 +71,9 @@ internal abstract class DesktopStandalonePostProcessor
 			return (this.m_PostProcessArgs.options & BuildOptions.Development) != BuildOptions.None;
 		}
 	}
+	protected DesktopStandalonePostProcessor()
+	{
+	}
 	protected DesktopStandalonePostProcessor(BuildPostProcessArgs postProcessArgs)
 	{
 		this.m_PostProcessArgs = postProcessArgs;
@@ -79,10 +83,82 @@ internal abstract class DesktopStandalonePostProcessor
 		this.SetupStagingArea();
 		this.CopyStagingAreaIntoDestination();
 	}
+	private void CopyNativePlugins()
+	{
+		string buildTargetName = BuildPipeline.GetBuildTargetName(this.m_PostProcessArgs.target);
+		IPluginImporterExtension pluginImporterExtension = new DesktopPluginImporterExtension();
+		string stagingAreaPluginsFolder = this.StagingAreaPluginsFolder;
+		string path = Path.Combine(stagingAreaPluginsFolder, "x86");
+		string path2 = Path.Combine(stagingAreaPluginsFolder, "x86_64");
+		bool flag = false;
+		bool flag2 = false;
+		bool flag3 = false;
+		PluginImporter[] importers = PluginImporter.GetImporters(this.m_PostProcessArgs.target);
+		for (int i = 0; i < importers.Length; i++)
+		{
+			PluginImporter pluginImporter = importers[i];
+			BuildTarget target = this.m_PostProcessArgs.target;
+			if (pluginImporter.isNativePlugin)
+			{
+				if (string.IsNullOrEmpty(pluginImporter.assetPath))
+				{
+					Debug.LogWarning("Got empty plugin importer path for " + this.m_PostProcessArgs.target.ToString());
+				}
+				else
+				{
+					if (!flag)
+					{
+						Directory.CreateDirectory(stagingAreaPluginsFolder);
+						flag = true;
+					}
+					bool flag4 = Directory.Exists(pluginImporter.assetPath);
+					string platformData = pluginImporter.GetPlatformData(target, "CPU");
+					string text = platformData;
+					switch (text)
+					{
+					case "x86":
+						if (target == BuildTarget.StandaloneOSXIntel64 || target == BuildTarget.StandaloneWindows64 || target == BuildTarget.StandaloneLinux64)
+						{
+							goto IL_21A;
+						}
+						if (!flag2)
+						{
+							Directory.CreateDirectory(path);
+							flag2 = true;
+						}
+						break;
+					case "x86_64":
+						if (target != BuildTarget.StandaloneOSXIntel64 && target != BuildTarget.StandaloneOSXUniversal && target != BuildTarget.StandaloneWindows64 && target != BuildTarget.StandaloneLinux64 && target != BuildTarget.StandaloneLinuxUniversal)
+						{
+							goto IL_21A;
+						}
+						if (!flag3)
+						{
+							Directory.CreateDirectory(path2);
+							flag3 = true;
+						}
+						break;
+					case "None":
+						goto IL_21A;
+					}
+					string text2 = Path.Combine(stagingAreaPluginsFolder, pluginImporterExtension.CalculateFinalPluginPath(buildTargetName, pluginImporter));
+					if (flag4)
+					{
+						FileUtil.CopyDirectoryRecursive(pluginImporter.assetPath, text2);
+					}
+					else
+					{
+						FileUtil.UnityFileCopy(pluginImporter.assetPath, text2);
+					}
+				}
+			}
+			IL_21A:;
+		}
+	}
 	protected virtual void SetupStagingArea()
 	{
 		Directory.CreateDirectory(this.DataFolder);
-		PostprocessBuildPlayer.InstallPlugins(this.StagingAreaPluginsFolder, this.m_PostProcessArgs.target);
+		this.CopyNativePlugins();
 		PostprocessBuildPlayer.InstallStreamingAssets(this.DataFolder);
 		if (this.UseIl2Cpp)
 		{
@@ -108,18 +184,23 @@ internal abstract class DesktopStandalonePostProcessor
 	}
 	protected void CopyStagingAreaIntoDestination()
 	{
-		if (this.InstallingIntoBuildsFolder)
+		if (!this.InstallingIntoBuildsFolder)
 		{
-			FileUtil.CopyDirectoryFiltered(this.DataFolder, Unsupported.GetBaseUnityDeveloperFolder() + "/" + this.DestinationFolderForInstallingIntoBuildsFolder, true, (string f) => true, true);
+			this.DeleteDestination();
+			FileUtil.CopyDirectoryFiltered(this.StagingArea, this.DestinationFolder, true, (string f) => true, true);
 			return;
 		}
-		this.DeleteDestination();
-		FileUtil.CopyDirectoryFiltered(this.StagingArea, this.DestinationFolder, true, (string f) => true, true);
+		string text = Unsupported.GetBaseUnityDeveloperFolder() + "/" + this.DestinationFolderForInstallingIntoBuildsFolder;
+		if (!Directory.Exists(Path.GetDirectoryName(text)))
+		{
+			throw new Exception("Installing in builds folder failed because the player has not been built (You most likely want to enable 'Development build').");
+		}
+		FileUtil.CopyDirectoryFiltered(this.DataFolder, text, true, (string f) => true, true);
 	}
 	protected abstract void DeleteDestination();
 	protected virtual string GetVariationName()
 	{
-		return this.PlatformStringFor(this.m_PostProcessArgs.target) + "_" + (((this.m_PostProcessArgs.options & BuildOptions.Development) == BuildOptions.None) ? "nondevelopment" : "development");
+		return string.Format("{0}_{1}", this.PlatformStringFor(this.m_PostProcessArgs.target), (!this.Development) ? "nondevelopment" : "development");
 	}
 	protected abstract string PlatformStringFor(BuildTarget target);
 	protected abstract void RenameFilesInStagingArea();

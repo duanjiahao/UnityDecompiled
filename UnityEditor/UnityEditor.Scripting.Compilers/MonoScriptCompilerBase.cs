@@ -6,8 +6,10 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal abstract class MonoScriptCompilerBase : ScriptCompilerBase
 	{
-		protected MonoScriptCompilerBase(MonoIsland island) : base(island)
+		private readonly bool runUpdater;
+		protected MonoScriptCompilerBase(MonoIsland island, bool runUpdater) : base(island)
 		{
+			this.runUpdater = runUpdater;
 		}
 		protected ManagedProgram StartCompiler(BuildTarget target, string compiler, List<string> arguments)
 		{
@@ -16,9 +18,13 @@ namespace UnityEditor.Scripting.Compilers
 		protected ManagedProgram StartCompiler(BuildTarget target, string compiler, List<string> arguments, bool setMonoEnvironmentVariables)
 		{
 			base.AddCustomResponseFileIfPresent(arguments, Path.GetFileNameWithoutExtension(compiler) + ".rsp");
-			string str = CommandLineFormatter.GenerateResponseFile(arguments);
+			string text = CommandLineFormatter.GenerateResponseFile(arguments);
+			if (this.runUpdater)
+			{
+				APIUpdaterHelper.UpdateScripts(text, this._island.GetExtensionOfSourceFiles());
+			}
 			string monoInstallation = MonoInstallationFinder.GetMonoInstallation();
-			ManagedProgram managedProgram = new ManagedProgram(monoInstallation, this._island._classlib_profile, compiler, " @" + str, setMonoEnvironmentVariables);
+			ManagedProgram managedProgram = new ManagedProgram(monoInstallation, this._island._classlib_profile, compiler, " @" + text, setMonoEnvironmentVariables);
 			managedProgram.Start();
 			return managedProgram;
 		}

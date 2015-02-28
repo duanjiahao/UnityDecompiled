@@ -4,6 +4,12 @@ namespace UnityEngine
 {
 	public sealed class CharacterJoint : Joint
 	{
+		[Obsolete("TargetRotation not in use for Unity 5 and assumed disabled.", true)]
+		public Quaternion targetRotation;
+		[Obsolete("TargetAngularVelocity not in use for Unity 5 and assumed disabled.", true)]
+		public Vector3 targetAngularVelocity;
+		[Obsolete("RotationDrive not in use for Unity 5 and assumed disabled.", true)]
+		public JointDrive rotationDrive;
 		public Vector3 swingAxis
 		{
 			get
@@ -15,6 +21,32 @@ namespace UnityEngine
 			set
 			{
 				this.INTERNAL_set_swingAxis(ref value);
+			}
+		}
+		public SoftJointLimitSpring twistLimitSpring
+		{
+			get
+			{
+				SoftJointLimitSpring result;
+				this.INTERNAL_get_twistLimitSpring(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_twistLimitSpring(ref value);
+			}
+		}
+		public SoftJointLimitSpring swingLimitSpring
+		{
+			get
+			{
+				SoftJointLimitSpring result;
+				this.INTERNAL_get_swingLimitSpring(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_swingLimitSpring(ref value);
 			}
 		}
 		public SoftJointLimit lowTwistLimit
@@ -69,44 +101,32 @@ namespace UnityEngine
 				this.INTERNAL_set_swing2Limit(ref value);
 			}
 		}
-		public Quaternion targetRotation
+		public extern bool enableProjection
 		{
-			get
-			{
-				Quaternion result;
-				this.INTERNAL_get_targetRotation(out result);
-				return result;
-			}
-			set
-			{
-				this.INTERNAL_set_targetRotation(ref value);
-			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
-		public Vector3 targetAngularVelocity
+		public extern float projectionDistance
 		{
-			get
-			{
-				Vector3 result;
-				this.INTERNAL_get_targetAngularVelocity(out result);
-				return result;
-			}
-			set
-			{
-				this.INTERNAL_set_targetAngularVelocity(ref value);
-			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
-		public JointDrive rotationDrive
+		public extern float projectionAngle
 		{
-			get
-			{
-				JointDrive result;
-				this.INTERNAL_get_rotationDrive(out result);
-				return result;
-			}
-			set
-			{
-				this.INTERNAL_set_rotationDrive(ref value);
-			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -114,6 +134,18 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_swingAxis(ref Vector3 value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_twistLimitSpring(out SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_twistLimitSpring(ref SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_swingLimitSpring(out SoftJointLimitSpring value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_swingLimitSpring(ref SoftJointLimitSpring value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_lowTwistLimit(out SoftJointLimit value);
@@ -138,23 +170,5 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_swing2Limit(ref SoftJointLimit value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_targetRotation(out Quaternion value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_targetRotation(ref Quaternion value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_targetAngularVelocity(out Vector3 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_targetAngularVelocity(ref Vector3 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_rotationDrive(out JointDrive value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_rotationDrive(ref JointDrive value);
 	}
 }

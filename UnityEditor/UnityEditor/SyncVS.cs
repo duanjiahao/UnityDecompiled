@@ -20,7 +20,7 @@ namespace UnityEditor
 				get
 				{
 					string externalScriptEditor = InternalEditorUtility.GetExternalScriptEditor();
-					if (SyncVS.InstalledVisualStudios.ContainsKey(UnityEditor.VisualStudioVersion.VisualStudio2008) && SyncVS.PathsAreEquivalent(SyncVS.InstalledVisualStudios[UnityEditor.VisualStudioVersion.VisualStudio2008], externalScriptEditor))
+					if (SyncVS.InstalledVisualStudios.ContainsKey(UnityEditor.VisualStudioVersion.VisualStudio2008) && externalScriptEditor != string.Empty && SyncVS.PathsAreEquivalent(SyncVS.InstalledVisualStudios[UnityEditor.VisualStudioVersion.VisualStudio2008], externalScriptEditor))
 					{
 						return 9;
 					}
@@ -268,14 +268,8 @@ namespace UnityEditor
 			{
 				return false;
 			}
-			if (aPath.Length > 0)
-			{
-				aPath = Path.GetFullPath(aPath);
-			}
-			if (zPath.Length > 0)
-			{
-				zPath = Path.GetFullPath(zPath);
-			}
+			aPath = Path.GetFullPath(aPath);
+			zPath = Path.GetFullPath(zPath);
 			StringComparison comparisonType = StringComparison.OrdinalIgnoreCase;
 			if (!SyncVS.SolutionSynchronizationSettings.IsOSX && !SyncVS.SolutionSynchronizationSettings.IsWindows)
 			{

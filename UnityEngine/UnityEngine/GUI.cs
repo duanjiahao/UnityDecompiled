@@ -85,6 +85,116 @@ namespace UnityEngine
 				return zero;
 			}
 		}
+		public abstract class Scope : IDisposable
+		{
+			private bool m_Disposed;
+			protected abstract void CloseScope();
+			~Scope()
+			{
+				if (!this.m_Disposed)
+				{
+					Debug.LogError("Scope was not disposed! You should use the 'using' keyword or manually call Dispose.");
+					this.Dispose();
+				}
+			}
+			public void Dispose()
+			{
+				if (this.m_Disposed)
+				{
+					return;
+				}
+				this.m_Disposed = true;
+				this.CloseScope();
+			}
+		}
+		public class GroupScope : GUI.Scope
+		{
+			public GroupScope(Rect position)
+			{
+				GUI.BeginGroup(position);
+			}
+			public GroupScope(Rect position, string text)
+			{
+				GUI.BeginGroup(position, text);
+			}
+			public GroupScope(Rect position, Texture image)
+			{
+				GUI.BeginGroup(position, image);
+			}
+			public GroupScope(Rect position, GUIContent content)
+			{
+				GUI.BeginGroup(position, content);
+			}
+			public GroupScope(Rect position, GUIStyle style)
+			{
+				GUI.BeginGroup(position, style);
+			}
+			public GroupScope(Rect position, string text, GUIStyle style)
+			{
+				GUI.BeginGroup(position, text, style);
+			}
+			public GroupScope(Rect position, Texture image, GUIStyle style)
+			{
+				GUI.BeginGroup(position, image, style);
+			}
+			protected override void CloseScope()
+			{
+				GUI.EndGroup();
+			}
+		}
+		public class ScrollViewScope : GUI.Scope
+		{
+			public Vector2 scrollPosition
+			{
+				get;
+				private set;
+			}
+			public bool handleScrollWheel
+			{
+				get;
+				set;
+			}
+			public ScrollViewScope(Rect position, Vector2 scrollPosition, Rect viewRect)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUI.BeginScrollView(position, scrollPosition, viewRect);
+			}
+			public ScrollViewScope(Rect position, Vector2 scrollPosition, Rect viewRect, bool alwaysShowHorizontal, bool alwaysShowVertical)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUI.BeginScrollView(position, scrollPosition, viewRect, alwaysShowHorizontal, alwaysShowVertical);
+			}
+			public ScrollViewScope(Rect position, Vector2 scrollPosition, Rect viewRect, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUI.BeginScrollView(position, scrollPosition, viewRect, horizontalScrollbar, verticalScrollbar);
+			}
+			public ScrollViewScope(Rect position, Vector2 scrollPosition, Rect viewRect, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUI.BeginScrollView(position, scrollPosition, viewRect, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar);
+			}
+			internal ScrollViewScope(Rect position, Vector2 scrollPosition, Rect viewRect, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, GUIStyle background)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = GUI.BeginScrollView(position, scrollPosition, viewRect, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar, background);
+			}
+			protected override void CloseScope()
+			{
+				GUI.EndScrollView(this.handleScrollWheel);
+			}
+		}
+		public class ClipScope : GUI.Scope
+		{
+			public ClipScope(Rect position)
+			{
+				GUI.BeginClip(position);
+			}
+			protected override void CloseScope()
+			{
+				GUI.EndClip();
+			}
+		}
 		public delegate void WindowFunction(int id);
 		private static float scrollStepSize;
 		private static int scrollControlID;
@@ -1309,6 +1419,15 @@ namespace UnityEngine
 			GUIClip.Push(position, Vector2.zero, Vector2.zero, false);
 		}
 		public static void EndGroup()
+		{
+			GUIClip.Pop();
+		}
+		public static void BeginClip(Rect position)
+		{
+			GUIUtility.CheckOnGUI();
+			GUIClip.Push(position, Vector2.zero, Vector2.zero, false);
+		}
+		public static void EndClip()
 		{
 			GUIClip.Pop();
 		}

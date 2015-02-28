@@ -1,5 +1,5 @@
 using System;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -259,6 +259,46 @@ namespace UnityEditor
 		{
 			return this.m_Property.FindPropertyRelative(property);
 		}
+		public bool MaskNeedsUpdating()
+		{
+			AvatarMask maskSource = this.maskSource;
+			if (maskSource == null)
+			{
+				return false;
+			}
+			SerializedProperty serializedProperty = this.Get("bodyMask");
+			if (serializedProperty == null || !serializedProperty.isArray)
+			{
+				return true;
+			}
+			for (int i = 0; i < maskSource.humanoidBodyPartCount; i++)
+			{
+				if (maskSource.GetHumanoidBodyPartActive(i) != (serializedProperty.GetArrayElementAtIndex(i).intValue != 0))
+				{
+					return true;
+				}
+			}
+			SerializedProperty serializedProperty2 = this.Get("transformMask");
+			if (serializedProperty2 == null || !serializedProperty2.isArray)
+			{
+				return true;
+			}
+			if (serializedProperty2.arraySize > 0 && maskSource.transformCount != serializedProperty2.arraySize)
+			{
+				return true;
+			}
+			int arraySize = serializedProperty2.arraySize;
+			for (int j = 0; j < arraySize; j++)
+			{
+				SerializedProperty serializedProperty3 = serializedProperty2.GetArrayElementAtIndex(j).FindPropertyRelative("m_Path");
+				SerializedProperty serializedProperty4 = serializedProperty2.GetArrayElementAtIndex(j).FindPropertyRelative("m_Weight");
+				if (maskSource.GetTransformPath(j) != serializedProperty3.stringValue || maskSource.GetTransformActive(j) != serializedProperty4.floatValue > 0.5f)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 		public void MaskFromClip(AvatarMask mask)
 		{
 			SerializedProperty serializedProperty = this.Get("bodyMask");
@@ -321,6 +361,16 @@ namespace UnityEditor
 			}
 			return result;
 		}
+		public SerializedProperty GetCurveProperty(int index)
+		{
+			SerializedProperty result = null;
+			SerializedProperty serializedProperty = this.Get("curves");
+			if (serializedProperty != null && serializedProperty.isArray)
+			{
+				result = serializedProperty.GetArrayElementAtIndex(index).FindPropertyRelative("curve");
+			}
+			return result;
+		}
 		public string GetCurveName(int index)
 		{
 			string result = string.Empty;
@@ -342,19 +392,19 @@ namespace UnityEditor
 		public AnimationCurve GetCurve(int index)
 		{
 			AnimationCurve result = null;
-			SerializedProperty serializedProperty = this.Get("curves");
-			if (serializedProperty != null && serializedProperty.isArray)
+			SerializedProperty curveProperty = this.GetCurveProperty(index);
+			if (curveProperty != null)
 			{
-				result = serializedProperty.GetArrayElementAtIndex(index).FindPropertyRelative("curve").animationCurveValue;
+				result = curveProperty.animationCurveValue;
 			}
 			return result;
 		}
-		public void SetCurve(int index, AnimationCurve curve)
+		public void SetCurve(int index, AnimationCurve curveValue)
 		{
-			SerializedProperty serializedProperty = this.Get("curves");
-			if (serializedProperty != null && serializedProperty.isArray)
+			SerializedProperty curveProperty = this.GetCurveProperty(index);
+			if (curveProperty != null)
 			{
-				serializedProperty.GetArrayElementAtIndex(index).FindPropertyRelative("curve").animationCurveValue = curve;
+				curveProperty.animationCurveValue = curveValue;
 			}
 		}
 		public void AddCurve()

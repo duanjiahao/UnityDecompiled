@@ -1,11 +1,13 @@
 using Mono.Cecil;
 using Mono.Collections.Generic;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.SerializationLogic;
 namespace UnityEditor
 {
-	public class AssemblyTypeInfoGenerator
+	internal class AssemblyTypeInfoGenerator
 	{
 		public struct FieldInfo
 		{
@@ -17,8 +19,41 @@ namespace UnityEditor
 			public string name;
 			public AssemblyTypeInfoGenerator.FieldInfo[] fields;
 		}
+		private class AssemblyResolver : BaseAssemblyResolver
+		{
+			private readonly IDictionary m_Assemblies;
+			private AssemblyResolver() : this(new Hashtable())
+			{
+			}
+			private AssemblyResolver(IDictionary assemblyCache)
+			{
+				this.m_Assemblies = assemblyCache;
+			}
+			public static IAssemblyResolver WithSearchDirs(params string[] searchDirs)
+			{
+				AssemblyTypeInfoGenerator.AssemblyResolver assemblyResolver = new AssemblyTypeInfoGenerator.AssemblyResolver();
+				for (int i = 0; i < searchDirs.Length; i++)
+				{
+					string directory = searchDirs[i];
+					assemblyResolver.AddSearchDirectory(directory);
+				}
+				return assemblyResolver;
+			}
+			public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
+			{
+				AssemblyDefinition assemblyDefinition = (AssemblyDefinition)this.m_Assemblies[name.Name];
+				if (assemblyDefinition != null)
+				{
+					return assemblyDefinition;
+				}
+				assemblyDefinition = base.Resolve(name, parameters);
+				this.m_Assemblies[name.Name] = assemblyDefinition;
+				return assemblyDefinition;
+			}
+		}
 		private AssemblyDefinition assembly_;
 		private List<AssemblyTypeInfoGenerator.ClassInfo> classes_ = new List<AssemblyTypeInfoGenerator.ClassInfo>();
+		private TypeResolver typeResolver = new TypeResolver(null);
 		public AssemblyTypeInfoGenerator.ClassInfo[] ClassInfoArray
 		{
 			get
@@ -26,13 +61,33 @@ namespace UnityEditor
 				return this.classes_.ToArray();
 			}
 		}
-		public AssemblyTypeInfoGenerator(string assembly)
+		public AssemblyTypeInfoGenerator(string assembly, string[] searchDirs)
 		{
-			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly);
+			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, new ReaderParameters
+			{
+				AssemblyResolver = AssemblyTypeInfoGenerator.AssemblyResolver.WithSearchDirs(searchDirs)
+			});
 		}
-		private string GetFullTypeName(TypeReference type)
+		private string GetMonoEmbeddedFullTypeNameFor(TypeReference type)
 		{
-			return type.FullName.Replace('/', '+').Replace('<', '[').Replace('>', ']');
+			TypeSpecification typeSpecification = type as TypeSpecification;
+			string fullName;
+			if (typeSpecification != null && typeSpecification.IsRequiredModifier)
+			{
+				fullName = typeSpecification.ElementType.FullName;
+			}
+			else
+			{
+				if (type.IsRequiredModifier)
+				{
+					fullName = type.GetElementType().FullName;
+				}
+				else
+				{
+					fullName = type.FullName;
+				}
+			}
+			return fullName.Replace('/', '+').Replace('<', '[').Replace('>', ']');
 		}
 		private TypeReference ResolveGenericInstanceType(TypeReference typeToResolve, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
@@ -54,7 +109,7 @@ namespace UnityEditor
 		}
 		private void AddType(TypeReference typeRef, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
-			if (this.classes_.Any((AssemblyTypeInfoGenerator.ClassInfo x) => x.name == this.GetFullTypeName(typeRef)))
+			if (this.classes_.Any((AssemblyTypeInfoGenerator.ClassInfo x) => x.name == this.GetMonoEmbeddedFullTypeNameFor(typeRef)))
 			{
 				return;
 			}
@@ -64,6 +119,14 @@ namespace UnityEditor
 				typeDefinition = typeRef.Resolve();
 			}
 			catch (AssemblyResolutionException)
+			{
+				return;
+			}
+			catch (NotSupportedException)
+			{
+				return;
+			}
+			if (typeDefinition == null)
 			{
 				return;
 			}
@@ -78,13 +141,33 @@ namespace UnityEditor
 						genericInstanceTypeMap[genericParameters[i]] = genericArguments[i];
 					}
 				}
+				this.typeResolver.Add((GenericInstanceType)typeRef);
 			}
-			AssemblyTypeInfoGenerator.ClassInfo item = default(AssemblyTypeInfoGenerator.ClassInfo);
-			item.name = this.GetFullTypeName(typeRef);
-			item.fields = this.GetFields(typeDefinition, typeRef.IsGenericInstance, genericInstanceTypeMap);
-			this.classes_.Add(item);
-			this.AddNestedTypes(typeDefinition, genericInstanceTypeMap);
-			this.AddBaseType(typeRef, genericInstanceTypeMap);
+			bool flag = false;
+			try
+			{
+				flag = UnitySerializationLogic.ShouldImplementIDeserializable(typeDefinition);
+			}
+			catch
+			{
+			}
+			if (!flag)
+			{
+				this.AddNestedTypes(typeDefinition, genericInstanceTypeMap);
+			}
+			else
+			{
+				AssemblyTypeInfoGenerator.ClassInfo item = default(AssemblyTypeInfoGenerator.ClassInfo);
+				item.name = this.GetMonoEmbeddedFullTypeNameFor(typeRef);
+				item.fields = this.GetFields(typeDefinition, typeRef.IsGenericInstance, genericInstanceTypeMap);
+				this.classes_.Add(item);
+				this.AddNestedTypes(typeDefinition, genericInstanceTypeMap);
+				this.AddBaseType(typeRef, genericInstanceTypeMap);
+			}
+			if (typeRef.IsGenericInstance)
+			{
+				this.typeResolver.Remove((GenericInstanceType)typeRef);
+			}
 		}
 		private void AddNestedTypes(TypeDefinition type, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
@@ -132,20 +215,7 @@ namespace UnityEditor
 		}
 		private AssemblyTypeInfoGenerator.FieldInfo? GetFieldInfo(TypeDefinition type, FieldDefinition field, bool isDeclaringTypeGenericInstance, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
-			if (field.IsStatic)
-			{
-				return null;
-			}
-			if (field.IsInitOnly)
-			{
-				return null;
-			}
-			if ((ushort)(field.Attributes & FieldAttributes.NotSerialized) != 0)
-			{
-				return null;
-			}
-			bool flag = field.CustomAttributes.Any((CustomAttribute ca) => ca.AttributeType.Name == "SerializeField");
-			if (!field.IsPublic && !flag)
+			if (!this.WillSerialize(field))
 			{
 				return null;
 			}
@@ -160,10 +230,23 @@ namespace UnityEditor
 			{
 				type2 = field.FieldType;
 			}
-			value.type = this.GetFullTypeName(type2);
+			value.type = this.GetMonoEmbeddedFullTypeNameFor(type2);
 			return new AssemblyTypeInfoGenerator.FieldInfo?(value);
 		}
-		public void GatherClassInfo()
+		private bool WillSerialize(FieldDefinition field)
+		{
+			bool result;
+			try
+			{
+				result = UnitySerializationLogic.WillUnitySerialize(field, this.typeResolver);
+			}
+			catch (Exception)
+			{
+				result = false;
+			}
+			return result;
+		}
+		public AssemblyTypeInfoGenerator.ClassInfo[] GatherClassInfo()
 		{
 			foreach (ModuleDefinition current in this.assembly_.Modules)
 			{
@@ -175,6 +258,7 @@ namespace UnityEditor
 					}
 				}
 			}
+			return this.classes_.ToArray();
 		}
 	}
 }

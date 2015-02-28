@@ -5,15 +5,6 @@ namespace UnityEditor
 {
 	public sealed class MonoScript : TextAsset
 	{
-		internal extern ScriptableObject editorGraphData
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern MonoScript();

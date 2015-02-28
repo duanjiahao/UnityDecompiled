@@ -30,6 +30,9 @@ namespace UnityEditor
 			public GUIStyle entryOdd = "CN EntryBackOdd";
 			public GUIStyle dropDown = "MiniPullDown";
 			public GUIStyle toggle = "Toggle";
+			public GUIContent badgeDelete = EditorGUIUtility.IconContent("AS Badge Delete");
+			public GUIContent badgeMove = EditorGUIUtility.IconContent("AS Badge Move");
+			public GUIContent badgeNew = EditorGUIUtility.IconContent("AS Badge New");
 			public Vector2 toggleSize;
 			public Constants()
 			{
@@ -41,10 +44,10 @@ namespace UnityEditor
 				this.contentBox.overflow = new RectOffset(0, 1, 0, 1);
 				this.contentBox.padding = new RectOffset(8, 8, 7, 7);
 				this.title = new GUIStyle(this.title);
-				RectOffset arg_202_0 = this.title.padding;
+				RectOffset arg_232_0 = this.title.padding;
 				int num = this.contentBox.padding.left + 2;
 				this.title.padding.right = num;
-				arg_202_0.left = num;
+				arg_232_0.left = num;
 				this.background = new GUIStyle(this.background);
 				this.background.padding.top = 1;
 			}
@@ -101,10 +104,7 @@ namespace UnityEditor
 			}
 		}
 		private const ASMainWindow.Page lastMainPage = ASMainWindow.Page.Commit;
-		private static ASMainWindow.Constants constants = null;
-		public static GUIContent badgeDelete = EditorGUIUtility.IconContent("AS Badge Delete");
-		public static GUIContent badgeMove = EditorGUIUtility.IconContent("AS Badge Move");
-		public static GUIContent badgeNew = EditorGUIUtility.IconContent("AS Badge New");
+		public static ASMainWindow.Constants constants;
 		public AssetsItem[] sharedCommits;
 		public AssetsItem[] sharedDeletedItems;
 		public Changeset[] sharedChangesets;
@@ -910,19 +910,19 @@ namespace UnityEditor
 				GUIContent gUIContent = null;
 				if (this.HasFlag(changeFlags, ChangeFlags.Undeleted) || this.HasFlag(changeFlags, ChangeFlags.Created))
 				{
-					gUIContent = ASMainWindow.badgeNew;
+					gUIContent = ASMainWindow.constants.badgeNew;
 				}
 				else
 				{
 					if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
 					{
-						gUIContent = ASMainWindow.badgeDelete;
+						gUIContent = ASMainWindow.constants.badgeDelete;
 					}
 					else
 					{
 						if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
 						{
-							gUIContent = ASMainWindow.badgeMove;
+							gUIContent = ASMainWindow.constants.badgeMove;
 						}
 					}
 				}
@@ -1336,7 +1336,7 @@ namespace UnityEditor
 			}
 			if (!this.m_CheckedMaint && Event.current.type != EventType.Layout)
 			{
-				if (!InternalEditorUtility.HasMaint())
+				if (!InternalEditorUtility.HasPro())
 				{
 					base.Close();
 					GUIUtility.ExitGUI();

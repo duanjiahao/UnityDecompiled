@@ -20,7 +20,7 @@ namespace UnityEditor.Scripting
 		}
 		public string GetExtensionOfSourceFiles()
 		{
-			return ScriptCompilers.GetExtensionOfSourceFile(this._files[0]);
+			return (this._files.Length <= 0) ? "NA" : ScriptCompilers.GetExtensionOfSourceFile(this._files[0]);
 		}
 	}
 }

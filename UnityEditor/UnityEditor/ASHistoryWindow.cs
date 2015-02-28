@@ -504,19 +504,19 @@ namespace UnityEditor
 			GUIContent gUIContent = null;
 			if (this.HasFlag(flags, ChangeFlags.Undeleted) || this.HasFlag(flags, ChangeFlags.Created))
 			{
-				gUIContent = ASMainWindow.badgeNew;
+				gUIContent = ASMainWindow.constants.badgeNew;
 			}
 			else
 			{
 				if (this.HasFlag(flags, ChangeFlags.Deleted))
 				{
-					gUIContent = ASMainWindow.badgeDelete;
+					gUIContent = ASMainWindow.constants.badgeDelete;
 				}
 				else
 				{
 					if (this.HasFlag(flags, ChangeFlags.Renamed) || this.HasFlag(flags, ChangeFlags.Moved))
 					{
-						gUIContent = ASMainWindow.badgeMove;
+						gUIContent = ASMainWindow.constants.badgeMove;
 					}
 				}
 			}

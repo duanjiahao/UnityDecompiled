@@ -5,27 +5,37 @@ namespace UnityEngine
 {
 	public sealed class TouchScreenKeyboard
 	{
-		[NotRenamed]
 		[NonSerialized]
 		internal IntPtr m_Ptr;
 		public static bool isSupported
 		{
 			get
 			{
-				switch (Application.platform)
+				RuntimePlatform platform = Application.platform;
+				RuntimePlatform runtimePlatform = platform;
+				switch (runtimePlatform)
 				{
-				case RuntimePlatform.IPhonePlayer:
-				case RuntimePlatform.Android:
-				case RuntimePlatform.WP8Player:
-				case RuntimePlatform.BB10Player:
-				case RuntimePlatform.TizenPlayer:
-					return true;
 				case RuntimePlatform.MetroPlayerX86:
 				case RuntimePlatform.MetroPlayerX64:
 				case RuntimePlatform.MetroPlayerARM:
 					return false;
+				case RuntimePlatform.WP8Player:
+				case RuntimePlatform.BB10Player:
+				case RuntimePlatform.TizenPlayer:
+				case RuntimePlatform.PSM:
+					return true;
+				case RuntimePlatform.PSP2:
+				case RuntimePlatform.PS4:
+					IL_35:
+					switch (runtimePlatform)
+					{
+					case RuntimePlatform.IPhonePlayer:
+					case RuntimePlatform.Android:
+						return true;
+					}
+					return false;
 				}
-				return false;
+				goto IL_35;
 			}
 		}
 		public extern string text

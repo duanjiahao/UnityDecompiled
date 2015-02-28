@@ -49,7 +49,7 @@ namespace UnityEditor
 				GUILayout.EndVertical();
 			}
 			base.ApplyRevertGUI();
-			MovieTexture movieTexture = base.assetEditor.target as MovieTexture;
+			MovieTexture movieTexture = this.assetEditor.target as MovieTexture;
 			if (movieTexture && movieTexture.loop)
 			{
 				EditorGUILayout.Space();

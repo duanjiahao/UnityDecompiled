@@ -166,7 +166,7 @@ namespace UnityEditor
 				for (int j = 0; j < state.relativeSizes.Length - 1; j++)
 				{
 					Rect position = (!gUISplitterGroup.isVertical) ? new Rect(state.xOffset + (float)num4 + (float)state.realSizes[j] - (float)(state.splitSize / 2), gUISplitterGroup.rect.y, (float)state.splitSize, gUISplitterGroup.rect.height) : new Rect(state.xOffset + gUISplitterGroup.rect.x, (float)(num4 + state.realSizes[j] - state.splitSize / 2), gUISplitterGroup.rect.width, (float)state.splitSize);
-					EditorGUIUtility.AddCursorRect(position, (!gUISplitterGroup.isVertical) ? MouseCursor.SplitResizeLeftRight : MouseCursor.ResizeVertical);
+					EditorGUIUtility.AddCursorRect(position, (!gUISplitterGroup.isVertical) ? MouseCursor.SplitResizeLeftRight : MouseCursor.ResizeVertical, state.ID);
 					num4 += state.realSizes[j];
 				}
 				break;

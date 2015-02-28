@@ -23,11 +23,12 @@ namespace UnityEditorInternal
 		private GUIStyle animationSelectionTextField;
 		private GUIStyle animationLineStyle;
 		private GUIStyle animationCurveDropdown;
+		private readonly GUIContent k_AnimatePropertyLabel = new GUIContent("Add Property");
 		private AnimationWindowHierarchyNode m_RenamedNode;
 		private Color m_LightSkinPropertyTextColor = new Color(0.35f, 0.35f, 0.35f);
-		private static Color k_KeyColorInDopesheetMode = new Color(0.7f, 0.7f, 0.7f, 1f);
-		private static Color k_KeyColorForNonCurves = new Color(0.7f, 0.7f, 0.7f, 0.5f);
-		private static Color k_LeftoverCurveColor = Color.yellow;
+		private static readonly Color k_KeyColorInDopesheetMode = new Color(0.7f, 0.7f, 0.7f, 1f);
+		private static readonly Color k_KeyColorForNonCurves = new Color(0.7f, 0.7f, 0.7f, 0.5f);
+		private static readonly Color k_LeftoverCurveColor = Color.yellow;
 		internal static int s_WasInsideValueRectFrame = -1;
 		public AnimationWindowState state
 		{
@@ -114,10 +115,10 @@ namespace UnityEditorInternal
 		}
 		private void DoAddCurveButton(Rect rect)
 		{
-			float num = 24f;
+			float num = (rect.width - 230f) / 2f;
 			float num2 = 10f;
 			Rect rect2 = new Rect(rect.xMin + num, rect.yMin + num2, rect.width - num * 2f, rect.height - num2 * 2f);
-			if (GUI.Button(rect2, "Add Curve"))
+			if (GUI.Button(rect2, this.k_AnimatePropertyLabel))
 			{
 				if (!this.state.m_AnimationWindow.EnsureAnimationMode())
 				{
@@ -203,6 +204,19 @@ namespace UnityEditorInternal
 					rect.width -= 77f;
 				}
 				bool flag2 = AnimationWindowUtility.IsNodeLeftOverCurve(node, this.state.m_RootGameObject);
+				bool flag3 = AnimationWindowUtility.IsNodeAmbiguous(node, this.state.m_RootGameObject);
+				string text = string.Empty;
+				string tooltip = string.Empty;
+				if (flag2)
+				{
+					text = " (Missing!)";
+					tooltip = "The GameObject or Component is missing (" + node.path + ")";
+				}
+				if (flag3)
+				{
+					text = " (Duplicate GameObject name!)";
+					tooltip = "Target for curve is ambiguous since there are multiple GameObjects with same name (" + node.path + ")";
+				}
 				if (node.depth == 0)
 				{
 					Transform x = this.state.m_RootGameObject.transform.Find(node.path);
@@ -210,26 +224,24 @@ namespace UnityEditorInternal
 					{
 						flag2 = true;
 					}
-					GUIContent content = new GUIContent(this.GetGameObjectName(node.path) + " : " + node.displayName, this.GetIconForNode(node));
+					TreeViewGUI.s_Styles.content = new GUIContent(this.GetGameObjectName(node.path) + " : " + node.displayName + text, this.GetIconForNode(node), tooltip);
 					Color textColor = this.animationLineStyle.normal.textColor;
 					Color color = (!EditorGUIUtility.isProSkin) ? Color.black : (Color.gray * 1.35f);
-					color = ((!flag2) ? color : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
+					color = ((!flag2 && !flag3) ? color : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
 					this.SetStyleTextColor(this.animationLineStyle, color);
 					rect.xMin += (float)((int)(indent + this.k_FoldoutWidth));
-					this.animationLineStyle.Draw(rect, content, flag, flag, selected, focused);
+					GUI.Label(rect, TreeViewGUI.s_Styles.content, this.animationLineStyle);
 					this.SetStyleTextColor(this.animationLineStyle, textColor);
 				}
 				else
 				{
-					TreeViewGUI.s_Styles.content.text = node.displayName;
-					Texture iconForNode = this.GetIconForNode(node);
-					TreeViewGUI.s_Styles.content.image = iconForNode;
+					TreeViewGUI.s_Styles.content = new GUIContent(node.displayName + text, this.GetIconForNode(node), tooltip);
 					Color textColor2 = this.animationLineStyle.normal.textColor;
 					Color color2 = (!EditorGUIUtility.isProSkin) ? this.m_LightSkinPropertyTextColor : Color.gray;
-					color2 = ((!flag2) ? color2 : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
+					color2 = ((!flag2 && !flag3) ? color2 : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
 					this.SetStyleTextColor(this.animationLineStyle, color2);
 					rect.xMin += (float)((int)(indent + this.k_IndentWidth + this.k_FoldoutWidth));
-					this.animationLineStyle.Draw(rect, TreeViewGUI.s_Styles.content, flag, flag, selected, focused);
+					GUI.Label(rect, TreeViewGUI.s_Styles.content, this.animationLineStyle);
 					this.SetStyleTextColor(this.animationLineStyle, textColor2);
 					if (this.m_TreeView.dragging.GetRowMarkerControlID() == itemControlID)
 					{
@@ -272,8 +284,8 @@ namespace UnityEditorInternal
 			EditorGUI.BeginDisabledGroup(this.state.IsReadOnly);
 			if (node is AnimationWindowHierarchyPropertyNode)
 			{
-				AnimationWindowCurve[] curves = this.state.GetCurves(node, false);
-				if (curves == null || curves.Length == 0)
+				List<AnimationWindowCurve> curves = this.state.GetCurves(node, false);
+				if (curves == null || curves.Count == 0)
 				{
 					return;
 				}
@@ -439,7 +451,7 @@ namespace UnityEditorInternal
 			genericMenu.AddItem(new GUIContent((curvesAffectedByNodes.Count <= 1 && !flag) ? "Remove Property" : "Remove Properties"), false, new GenericMenu.MenuFunction(this.RemoveCurvesFromSelectedNodes));
 			bool flag2 = true;
 			EditorCurveBinding[] array = new EditorCurveBinding[curvesAffectedByNodes2.Count];
-			for (int i = 0; i < curvesAffectedByNodes.Count; i++)
+			for (int i = 0; i < curvesAffectedByNodes2.Count; i++)
 			{
 				array[i] = curvesAffectedByNodes2[i].binding;
 			}
@@ -582,20 +594,18 @@ namespace UnityEditorInternal
 						}
 					}
 				}
-				AnimationWindowCurve[] array;
+				List<AnimationWindowCurve> list;
 				if (animationWindowHierarchyNode is AnimationWindowHierarchyPropertyGroupNode || animationWindowHierarchyNode is AnimationWindowHierarchyPropertyNode)
 				{
-					array = AnimationWindowUtility.FilterCurves(this.state.allCurves.ToArray(), animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType, animationWindowHierarchyNode.propertyName);
+					list = AnimationWindowUtility.FilterCurves(this.state.allCurves.ToArray(), animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType, animationWindowHierarchyNode.propertyName);
 				}
 				else
 				{
-					array = AnimationWindowUtility.FilterCurves(this.state.allCurves.ToArray(), animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType);
+					list = AnimationWindowUtility.FilterCurves(this.state.allCurves.ToArray(), animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType);
 				}
-				AnimationWindowCurve[] array2 = array;
-				for (int i = 0; i < array2.Length; i++)
+				foreach (AnimationWindowCurve current2 in list)
 				{
-					AnimationWindowCurve curve = array2[i];
-					this.state.RemoveCurve(curve);
+					this.state.RemoveCurve(current2);
 				}
 			}
 			this.m_TreeView.ReloadData();
@@ -606,24 +616,10 @@ namespace UnityEditorInternal
 			foreach (AnimationWindowHierarchyNode current in nodes)
 			{
 				AnimationWindowHierarchyNode animationWindowHierarchyNode = current;
-				if (animationWindowHierarchyNode.parent is AnimationWindowHierarchyPropertyGroupNode)
+				if (animationWindowHierarchyNode.parent is AnimationWindowHierarchyPropertyGroupNode && includeLinkedCurves)
 				{
-					if (!includeLinkedCurves)
-					{
-						EditorCurveBinding? binding = animationWindowHierarchyNode.binding;
-						if (!binding.HasValue)
-						{
-							goto IL_6B;
-						}
-						EditorCurveBinding? binding2 = animationWindowHierarchyNode.binding;
-						if (!AnimationWindowUtility.ForceGrouping(binding2.Value))
-						{
-							goto IL_6B;
-						}
-					}
 					animationWindowHierarchyNode = (AnimationWindowHierarchyNode)animationWindowHierarchyNode.parent;
 				}
-				IL_6B:
 				if (animationWindowHierarchyNode is AnimationWindowHierarchyPropertyGroupNode || animationWindowHierarchyNode is AnimationWindowHierarchyPropertyNode)
 				{
 					list.AddRange(AnimationWindowUtility.FilterCurves(this.state.allCurves.ToArray(), animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType, animationWindowHierarchyNode.propertyName));

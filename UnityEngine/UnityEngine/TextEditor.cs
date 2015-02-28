@@ -1264,12 +1264,23 @@ namespace UnityEngine
 			}
 			GUIUtility.systemCopyBuffer = systemCopyBuffer;
 		}
+		private static string ReplaceNewlinesWithSpaces(string value)
+		{
+			value = value.Replace("\r\n", " ");
+			value = value.Replace('\n', ' ');
+			value = value.Replace('\r', ' ');
+			return value;
+		}
 		public bool Paste()
 		{
-			string systemCopyBuffer = GUIUtility.systemCopyBuffer;
-			if (systemCopyBuffer != string.Empty)
+			string text = GUIUtility.systemCopyBuffer;
+			if (text != string.Empty)
 			{
-				this.ReplaceSelection(systemCopyBuffer);
+				if (!this.multiline)
+				{
+					text = TextEditor.ReplaceNewlinesWithSpaces(text);
+				}
+				this.ReplaceSelection(text);
 				return true;
 			}
 			return false;

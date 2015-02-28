@@ -13,6 +13,16 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern float lowpassResonanceQ
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		[Obsolete("lowpassResonaceQ is obsolete. Use lowpassResonanceQ instead (UnityUpgradable).", true)]
 		public extern float lowpassResonaceQ
 		{
 			[WrapperlessIcall]

@@ -7,7 +7,6 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class RectOffset
 	{
-		[NotRenamed]
 		[NonSerialized]
 		internal IntPtr m_Ptr;
 		private GUIStyle m_SourceStyle;

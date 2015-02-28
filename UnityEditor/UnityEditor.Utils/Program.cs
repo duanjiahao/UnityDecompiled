@@ -102,7 +102,7 @@ namespace UnityEditor.Utils
 		public string GetAllOutput()
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.AppendLine("stdout;");
+			stringBuilder.AppendLine("stdout:");
 			string[] standardOutput = this.GetStandardOutput();
 			for (int i = 0; i < standardOutput.Length; i++)
 			{

@@ -1,32 +1,43 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(SkinnedMeshRenderer))]
-	internal class SkinnedMeshRendererEditor : Editor
+	internal class SkinnedMeshRendererEditor : RendererEditorBase
 	{
 		private static int s_BoxHash = "SkinnedMeshRendererEditor".GetHashCode();
 		private SerializedProperty m_CastShadows;
 		private SerializedProperty m_ReceiveShadows;
 		private SerializedProperty m_Materials;
-		private SerializedProperty m_UseLightProbes;
-		private SerializedProperty m_LightProbeAnchor;
 		private SerializedProperty m_AABB;
 		private SerializedProperty m_DirtyAABB;
 		private SerializedProperty m_BlendShapeWeights;
 		private BoxEditor m_BoxEditor = new BoxEditor(false, SkinnedMeshRendererEditor.s_BoxHash);
-		public void OnEnable()
+		private string[] m_ExcludedProperties;
+		public override void OnEnable()
 		{
+			base.OnEnable();
 			this.m_CastShadows = base.serializedObject.FindProperty("m_CastShadows");
 			this.m_ReceiveShadows = base.serializedObject.FindProperty("m_ReceiveShadows");
 			this.m_Materials = base.serializedObject.FindProperty("m_Materials");
-			this.m_UseLightProbes = base.serializedObject.FindProperty("m_UseLightProbes");
-			this.m_LightProbeAnchor = base.serializedObject.FindProperty("m_LightProbeAnchor");
 			this.m_BlendShapeWeights = base.serializedObject.FindProperty("m_BlendShapeWeights");
 			this.m_AABB = base.serializedObject.FindProperty("m_AABB");
 			this.m_DirtyAABB = base.serializedObject.FindProperty("m_DirtyAABB");
 			this.m_BoxEditor.OnEnable();
 			this.m_BoxEditor.SetAlwaysDisplayHandles(true);
+			base.InitializeProbeFields();
+			List<string> list = new List<string>();
+			list.AddRange(new string[]
+			{
+				"m_CastShadows",
+				"m_ReceiveShadows",
+				"m_Materials",
+				"m_BlendShapeWeights",
+				"m_AABB"
+			});
+			list.AddRange(RendererEditorBase.Probes.GetFieldsStringArray());
+			this.m_ExcludedProperties = list.ToArray();
 		}
 		public void OnDisable()
 		{
@@ -39,23 +50,8 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_CastShadows, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_ReceiveShadows, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Materials, true, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_UseLightProbes, new GUILayoutOption[0]);
-			if (this.m_UseLightProbes.boolValue)
-			{
-				EditorGUI.indentLevel++;
-				EditorGUILayout.PropertyField(this.m_LightProbeAnchor, new GUIContent("Anchor Override", this.m_LightProbeAnchor.tooltip), new GUILayoutOption[0]);
-				EditorGUI.indentLevel--;
-			}
-			Editor.DrawPropertiesExcluding(base.serializedObject, new string[]
-			{
-				"m_CastShadows",
-				"m_ReceiveShadows",
-				"m_Materials",
-				"m_UseLightProbes",
-				"m_LightProbeAnchor",
-				"m_BlendShapeWeights",
-				"m_AABB"
-			});
+			base.RenderProbeFields();
+			Editor.DrawPropertiesExcluding(base.serializedObject, this.m_ExcludedProperties);
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(this.m_AABB, new GUIContent("Bounds"), new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())

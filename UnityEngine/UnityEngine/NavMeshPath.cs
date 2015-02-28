@@ -35,6 +35,9 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern int GetCornersNonAlloc(Vector3[] results);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Vector3[] CalculateCornersInternal();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

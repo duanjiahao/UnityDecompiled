@@ -74,6 +74,112 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DrawCube(ref Vector3 center, ref Vector3 size);
+		[ExcludeFromDocs]
+		public static void DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation)
+		{
+			Vector3 one = Vector3.one;
+			Gizmos.DrawMesh(mesh, position, rotation, one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawMesh(Mesh mesh, Vector3 position)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Gizmos.DrawMesh(mesh, position, identity, one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawMesh(Mesh mesh)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Vector3 zero = Vector3.zero;
+			Gizmos.DrawMesh(mesh, zero, identity, one);
+		}
+		public static void DrawMesh(Mesh mesh, [DefaultValue("Vector3.zero")] Vector3 position, [DefaultValue("Quaternion.identity")] Quaternion rotation, [DefaultValue("Vector3.one")] Vector3 scale)
+		{
+			Gizmos.DrawMesh(mesh, -1, position, rotation, scale);
+		}
+		public static void DrawMesh(Mesh mesh, int submeshIndex, [DefaultValue("Vector3.zero")] Vector3 position, [DefaultValue("Quaternion.identity")] Quaternion rotation, [DefaultValue("Vector3.one")] Vector3 scale)
+		{
+			Gizmos.INTERNAL_CALL_DrawMesh(mesh, submeshIndex, ref position, ref rotation, ref scale);
+		}
+		[ExcludeFromDocs]
+		public static void DrawMesh(Mesh mesh, int submeshIndex, Vector3 position, Quaternion rotation)
+		{
+			Vector3 one = Vector3.one;
+			Gizmos.INTERNAL_CALL_DrawMesh(mesh, submeshIndex, ref position, ref rotation, ref one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawMesh(Mesh mesh, int submeshIndex, Vector3 position)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Gizmos.INTERNAL_CALL_DrawMesh(mesh, submeshIndex, ref position, ref identity, ref one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawMesh(Mesh mesh, int submeshIndex)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Vector3 zero = Vector3.zero;
+			Gizmos.INTERNAL_CALL_DrawMesh(mesh, submeshIndex, ref zero, ref identity, ref one);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_DrawMesh(Mesh mesh, int submeshIndex, ref Vector3 position, ref Quaternion rotation, ref Vector3 scale);
+		[ExcludeFromDocs]
+		public static void DrawWireMesh(Mesh mesh, Vector3 position, Quaternion rotation)
+		{
+			Vector3 one = Vector3.one;
+			Gizmos.DrawWireMesh(mesh, position, rotation, one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawWireMesh(Mesh mesh, Vector3 position)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Gizmos.DrawWireMesh(mesh, position, identity, one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawWireMesh(Mesh mesh)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Vector3 zero = Vector3.zero;
+			Gizmos.DrawWireMesh(mesh, zero, identity, one);
+		}
+		public static void DrawWireMesh(Mesh mesh, [DefaultValue("Vector3.zero")] Vector3 position, [DefaultValue("Quaternion.identity")] Quaternion rotation, [DefaultValue("Vector3.one")] Vector3 scale)
+		{
+			Gizmos.DrawWireMesh(mesh, -1, position, rotation, scale);
+		}
+		public static void DrawWireMesh(Mesh mesh, int submeshIndex, [DefaultValue("Vector3.zero")] Vector3 position, [DefaultValue("Quaternion.identity")] Quaternion rotation, [DefaultValue("Vector3.one")] Vector3 scale)
+		{
+			Gizmos.INTERNAL_CALL_DrawWireMesh(mesh, submeshIndex, ref position, ref rotation, ref scale);
+		}
+		[ExcludeFromDocs]
+		public static void DrawWireMesh(Mesh mesh, int submeshIndex, Vector3 position, Quaternion rotation)
+		{
+			Vector3 one = Vector3.one;
+			Gizmos.INTERNAL_CALL_DrawWireMesh(mesh, submeshIndex, ref position, ref rotation, ref one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawWireMesh(Mesh mesh, int submeshIndex, Vector3 position)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Gizmos.INTERNAL_CALL_DrawWireMesh(mesh, submeshIndex, ref position, ref identity, ref one);
+		}
+		[ExcludeFromDocs]
+		public static void DrawWireMesh(Mesh mesh, int submeshIndex)
+		{
+			Vector3 one = Vector3.one;
+			Quaternion identity = Quaternion.identity;
+			Vector3 zero = Vector3.zero;
+			Gizmos.INTERNAL_CALL_DrawWireMesh(mesh, submeshIndex, ref zero, ref identity, ref one);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_DrawWireMesh(Mesh mesh, int submeshIndex, ref Vector3 position, ref Quaternion rotation, ref Vector3 scale);
 		public static void DrawIcon(Vector3 center, string name, [DefaultValue("true")] bool allowScaling)
 		{
 			Gizmos.INTERNAL_CALL_DrawIcon(ref center, name, allowScaling);

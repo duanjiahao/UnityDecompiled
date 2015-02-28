@@ -9,14 +9,8 @@ namespace UnityEditor
 		private static Vector2 s_StartMouseDragPosition;
 		private static List<int> s_StartDragSelection;
 		private static bool s_DidDrag;
-		private static Mesh s_Mesh;
 		private static Vector3 s_EditingScale = Vector3.one;
 		private static Quaternion s_EditingRotation = Quaternion.identity;
-		private static Mesh GetMesh()
-		{
-			PointEditor.s_Mesh = (PointEditor.s_Mesh ?? (Resources.GetBuiltinResource(typeof(Mesh), "New-Sphere.fbx") as Mesh));
-			return PointEditor.s_Mesh;
-		}
 		public static bool MovePoints(IEditablePoint points, Transform cloudTransform, List<int> selection)
 		{
 			if (selection.Count == 0)

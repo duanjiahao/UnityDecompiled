@@ -3,6 +3,10 @@ namespace UnityEngine
 {
 	public class AndroidJavaClass : AndroidJavaObject
 	{
+		public AndroidJavaClass(string className)
+		{
+			this._AndroidJavaClass(className);
+		}
 		internal AndroidJavaClass(IntPtr jclass)
 		{
 			if (jclass == IntPtr.Zero)
@@ -11,10 +15,6 @@ namespace UnityEngine
 			}
 			this.m_jclass = AndroidJNI.NewGlobalRef(jclass);
 			this.m_jobject = IntPtr.Zero;
-		}
-		public AndroidJavaClass(string className)
-		{
-			this._AndroidJavaClass(className);
 		}
 		private void _AndroidJavaClass(string className)
 		{

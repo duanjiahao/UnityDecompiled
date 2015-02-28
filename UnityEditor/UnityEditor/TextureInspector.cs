@@ -5,15 +5,31 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(Texture2D))]
 	internal class TextureInspector : Editor
 	{
-		private static GUIContent s_SmallZoom;
-		private static GUIContent s_LargeZoom;
-		private static GUIContent s_AlphaIcon;
-		private static GUIContent s_RGBIcon;
-		private static GUIStyle s_PreButton;
-		private static GUIStyle s_PreSlider;
-		private static GUIStyle s_PreSliderThumb;
-		private static GUIStyle s_PreLabel;
-		private bool m_bShowAlpha;
+		private class Styles
+		{
+			public GUIContent smallZoom;
+			public GUIContent largeZoom;
+			public GUIContent alphaIcon;
+			public GUIContent RGBIcon;
+			public GUIStyle previewButton;
+			public GUIStyle previewSlider;
+			public GUIStyle previewSliderThumb;
+			public GUIStyle previewLabel;
+			public Styles()
+			{
+				this.smallZoom = EditorGUIUtility.IconContent("PreTextureMipMapLow");
+				this.largeZoom = EditorGUIUtility.IconContent("PreTextureMipMapHigh");
+				this.alphaIcon = EditorGUIUtility.IconContent("PreTextureAlpha");
+				this.RGBIcon = EditorGUIUtility.IconContent("PreTextureRGB");
+				this.previewButton = "preButton";
+				this.previewSlider = "preSlider";
+				this.previewSliderThumb = "preSliderThumb";
+				this.previewLabel = new GUIStyle("preLabel");
+				this.previewLabel.alignment = TextAnchor.UpperCenter;
+			}
+		}
+		private static TextureInspector.Styles s_Styles;
+		private bool m_ShowAlpha;
 		private SerializedProperty m_WrapMode;
 		private SerializedProperty m_FilterMode;
 		private SerializedProperty m_Aniso;
@@ -21,6 +37,23 @@ namespace UnityEditor
 		protected Vector2 m_Pos;
 		[SerializeField]
 		private float m_MipLevel;
+		private CubemapPreview m_CubemapPreview = new CubemapPreview();
+		public float mipLevel
+		{
+			get
+			{
+				if (this.IsCubemap())
+				{
+					return this.m_CubemapPreview.mipLevel;
+				}
+				return this.m_MipLevel;
+			}
+			set
+			{
+				this.m_CubemapPreview.mipLevel = value;
+				this.m_MipLevel = value;
+			}
+		}
 		public static bool IsNormalMap(Texture t)
 		{
 			TextureUsageMode usageMode = TextureUtil.GetUsageMode(t);
@@ -28,14 +61,32 @@ namespace UnityEditor
 		}
 		protected virtual void OnEnable()
 		{
-			float realtimeSinceStartup = Time.realtimeSinceStartup;
-			if (Time.realtimeSinceStartup - realtimeSinceStartup > 1f)
-			{
-				Debug.LogWarning("Took " + (Time.realtimeSinceStartup - realtimeSinceStartup) + " seconds to create SerializedObject!");
-			}
 			this.m_WrapMode = base.serializedObject.FindProperty("m_TextureSettings.m_WrapMode");
 			this.m_FilterMode = base.serializedObject.FindProperty("m_TextureSettings.m_FilterMode");
 			this.m_Aniso = base.serializedObject.FindProperty("m_TextureSettings.m_Aniso");
+		}
+		protected virtual void OnDisable()
+		{
+			this.m_CubemapPreview.OnDisable();
+		}
+		internal void SetCubemapIntensity(float intensity)
+		{
+			if (this.m_CubemapPreview != null)
+			{
+				this.m_CubemapPreview.SetIntensity(intensity);
+			}
+		}
+		public float GetMipLevelForRendering()
+		{
+			if (this.target == null)
+			{
+				return 0f;
+			}
+			if (this.IsCubemap())
+			{
+				return this.m_CubemapPreview.GetMipLevelForRendering(this.target as Texture);
+			}
+			return Mathf.Min(this.m_MipLevel, (float)(TextureUtil.CountMipmaps(this.target as Texture) - 1));
 		}
 		public override void OnInspectorGUI()
 		{
@@ -69,20 +120,27 @@ namespace UnityEditor
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
-		private static void Init()
+		private bool IsCubemap()
 		{
-			TextureInspector.s_SmallZoom = EditorGUIUtility.IconContent("PreTextureMipMapLow");
-			TextureInspector.s_LargeZoom = EditorGUIUtility.IconContent("PreTextureMipMapHigh");
-			TextureInspector.s_AlphaIcon = EditorGUIUtility.IconContent("PreTextureAlpha");
-			TextureInspector.s_RGBIcon = EditorGUIUtility.IconContent("PreTextureRGB");
-			TextureInspector.s_PreButton = "preButton";
-			TextureInspector.s_PreSlider = "preSlider";
-			TextureInspector.s_PreSliderThumb = "preSliderThumb";
-			TextureInspector.s_PreLabel = "preLabel";
+			RenderTexture renderTexture = this.target as RenderTexture;
+			if (renderTexture != null && renderTexture.isCubemap)
+			{
+				return true;
+			}
+			Cubemap x = this.target as Cubemap;
+			return x != null;
 		}
 		public override void OnPreviewSettings()
 		{
-			TextureInspector.Init();
+			if (this.IsCubemap())
+			{
+				this.m_CubemapPreview.OnPreviewSettings(base.targets);
+				return;
+			}
+			if (TextureInspector.s_Styles == null)
+			{
+				TextureInspector.s_Styles = new TextureInspector.Styles();
+			}
 			Texture t = this.target as Texture;
 			bool flag = true;
 			bool flag2 = false;
@@ -119,7 +177,7 @@ namespace UnityEditor
 					{
 						flag2 = false;
 					}
-					if (TextureUtil.HasAlphaTextureFormat(format))
+					if (TextureUtil.HasAlphaTextureFormat(format) && TextureUtil.GetUsageMode(texture) == TextureUsageMode.Default)
 					{
 						flag3 = true;
 					}
@@ -127,29 +185,29 @@ namespace UnityEditor
 			}
 			if (flag2)
 			{
-				this.m_bShowAlpha = true;
+				this.m_ShowAlpha = true;
 				flag = false;
 			}
 			else
 			{
 				if (!flag3)
 				{
-					this.m_bShowAlpha = false;
+					this.m_ShowAlpha = false;
 					flag = false;
 				}
 			}
 			if (flag && !TextureInspector.IsNormalMap(t))
 			{
-				this.m_bShowAlpha = GUILayout.Toggle(this.m_bShowAlpha, (!this.m_bShowAlpha) ? TextureInspector.s_RGBIcon : TextureInspector.s_AlphaIcon, TextureInspector.s_PreButton, new GUILayoutOption[0]);
+				this.m_ShowAlpha = GUILayout.Toggle(this.m_ShowAlpha, (!this.m_ShowAlpha) ? TextureInspector.s_Styles.RGBIcon : TextureInspector.s_Styles.alphaIcon, TextureInspector.s_Styles.previewButton, new GUILayoutOption[0]);
 			}
 			GUI.enabled = (num != 1);
-			GUILayout.Box(TextureInspector.s_SmallZoom, TextureInspector.s_PreLabel, new GUILayoutOption[0]);
+			GUILayout.Box(TextureInspector.s_Styles.smallZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
 			GUI.changed = false;
-			this.m_MipLevel = Mathf.Round(GUILayout.HorizontalSlider(this.m_MipLevel, (float)(num - 1), 0f, TextureInspector.s_PreSlider, TextureInspector.s_PreSliderThumb, new GUILayoutOption[]
+			this.m_MipLevel = Mathf.Round(GUILayout.HorizontalSlider(this.m_MipLevel, (float)(num - 1), 0f, TextureInspector.s_Styles.previewSlider, TextureInspector.s_Styles.previewSliderThumb, new GUILayoutOption[]
 			{
 				GUILayout.MaxWidth(64f)
 			}));
-			GUILayout.Box(TextureInspector.s_LargeZoom, TextureInspector.s_PreLabel, new GUILayoutOption[0]);
+			GUILayout.Box(TextureInspector.s_Styles.largeZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
 			GUI.enabled = true;
 		}
 		public override bool HasPreviewGUI()
@@ -164,21 +222,30 @@ namespace UnityEditor
 			}
 			Texture texture = this.target as Texture;
 			RenderTexture renderTexture = texture as RenderTexture;
-			if (renderTexture != null && !renderTexture.IsCreated())
+			if (renderTexture != null)
 			{
+				if (!SystemInfo.SupportsRenderTextureFormat(renderTexture.format))
+				{
+					return;
+				}
 				renderTexture.Create();
+			}
+			if (this.IsCubemap())
+			{
+				this.m_CubemapPreview.OnPreviewGUI(texture, r, background);
+				return;
 			}
 			int num = Mathf.Max(texture.width, 1);
 			int num2 = Mathf.Max(texture.height, 1);
-			float num3 = (!(texture is Texture2D) && !(texture is ProceduralTexture)) ? 0f : Mathf.Min(this.m_MipLevel, (float)(TextureUtil.CountMipmaps(texture) - 1));
-			float num4 = Mathf.Min(Mathf.Min(r.width / (float)num, r.height / (float)num2), 1f);
-			Rect rect = new Rect(r.x, r.y, (float)num * num4, (float)num2 * num4);
+			float mipLevelForRendering = this.GetMipLevelForRendering();
+			float num3 = Mathf.Min(Mathf.Min(r.width / (float)num, r.height / (float)num2), 1f);
+			Rect rect = new Rect(r.x, r.y, (float)num * num3, (float)num2 * num3);
 			PreviewGUI.BeginScrollView(r, this.m_Pos, rect, "PreHorizontalScrollbar", "PreHorizontalScrollbarThumb");
 			float mipMapBias = texture.mipMapBias;
-			TextureUtil.SetMipMapBiasNoDirty(texture, num3 - this.Log2((float)num / rect.width));
+			TextureUtil.SetMipMapBiasNoDirty(texture, mipLevelForRendering - this.Log2((float)num / rect.width));
 			FilterMode filterMode = texture.filterMode;
 			TextureUtil.SetFilterModeNoDirty(texture, FilterMode.Point);
-			if (this.m_bShowAlpha)
+			if (this.m_ShowAlpha)
 			{
 				EditorGUI.DrawTextureAlpha(rect, texture);
 			}
@@ -207,8 +274,8 @@ namespace UnityEditor
 					int width = texture.width;
 					int height = texture.height;
 					textureImporter.GetWidthAndHeight(ref width, ref height);
-					float num5 = (float)texture.width / (float)width;
-					HandleUtility.handleWireMaterial.SetPass(0);
+					float num4 = (float)texture.width / (float)width;
+					HandleUtility.ApplyWireMaterial();
 					GL.PushMatrix();
 					GL.MultMatrix(Handles.matrix);
 					GL.Begin(1);
@@ -220,10 +287,10 @@ namespace UnityEditor
 						Rect rect4 = spriteMetaData.rect;
 						this.DrawRect(new Rect
 						{
-							xMin = rect2.xMin + rect2.width * (rect4.xMin / (float)texture.width * num5),
-							xMax = rect2.xMin + rect2.width * (rect4.xMax / (float)texture.width * num5),
-							yMin = rect2.yMin + rect2.height * (1f - rect4.yMin / (float)texture.height * num5),
-							yMax = rect2.yMin + rect2.height * (1f - rect4.yMax / (float)texture.height * num5)
+							xMin = rect2.xMin + rect2.width * (rect4.xMin / (float)texture.width * num4),
+							xMax = rect2.xMin + rect2.width * (rect4.xMax / (float)texture.width * num4),
+							yMin = rect2.yMin + rect2.height * (1f - rect4.yMin / (float)texture.height * num4),
+							yMax = rect2.yMin + rect2.height * (1f - rect4.yMax / (float)texture.height * num4)
 						});
 					}
 					GL.End();
@@ -233,9 +300,9 @@ namespace UnityEditor
 			TextureUtil.SetMipMapBiasNoDirty(texture, mipMapBias);
 			TextureUtil.SetFilterModeNoDirty(texture, filterMode);
 			this.m_Pos = PreviewGUI.EndScrollView();
-			if (num3 != 0f)
+			if (mipLevelForRendering != 0f)
 			{
-				EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + num3);
+				EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + mipLevelForRendering);
 			}
 		}
 		private void DrawRect(Rect rect)

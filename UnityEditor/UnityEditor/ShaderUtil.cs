@@ -13,6 +13,25 @@ namespace UnityEditor
 			Range,
 			TexEnv
 		}
+		internal enum ShaderCompilerPlatformType
+		{
+			OpenGL,
+			D3D9,
+			Xbox360,
+			PS3,
+			D3D11,
+			OpenGLES20,
+			OpenGLES20Desktop,
+			Flash,
+			D3D11_9x,
+			OpenGLES30,
+			PSVita,
+			PS4,
+			XboxOne,
+			PSM,
+			Metal,
+			Count
+		}
 		public enum ShaderPropertyTexDim
 		{
 			TexDimUnknown = -1,
@@ -23,15 +42,6 @@ namespace UnityEditor
 			TexDimCUBE,
 			TexDimAny,
 			TexDimRECT = 5
-		}
-		internal enum ShaderModel
-		{
-			None,
-			SM1,
-			SM2,
-			SM3,
-			SM4,
-			SM5
 		}
 		internal static Rect rawViewportRect
 		{
@@ -71,15 +81,9 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		internal static extern bool wireframeMode
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int GetAvailableShaderCompilerPlatforms();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void FetchCachedErrors(Shader s);
@@ -88,7 +92,7 @@ namespace UnityEditor
 		internal static extern int GetErrorCount(Shader s);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetShaderErrorMessage(Shader s, int index);
+		internal static extern string GetShaderErrorMessage(Shader s, int index, bool includeDetails);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetShaderErrorPlatform(Shader s, int index);
@@ -103,16 +107,13 @@ namespace UnityEditor
 		internal static extern int GetShaderErrorLine(Shader s, int index);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetSnippetCount(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetSnippetSize(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetComboCount(Shader s);
+		internal static extern int GetComboCount(Shader s, bool usedBySceneOnly);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasSurfaceShaders(Shader s);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasShaderSnippets(Shader s);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetPropertyCount(Shader s);
@@ -139,19 +140,13 @@ namespace UnityEditor
 		public static extern bool IsShaderPropertyHidden(Shader s, int propertyIdx);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetShaderPropertyAttribute(Shader s, string name);
+		internal static extern string[] GetShaderPropertyAttributes(Shader s, string name);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasShadowCasterPass(Shader s);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern bool HasShadowCollectorPass(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasTangentChannel(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetSourceChannels(Shader s);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool DoesIgnoreProjector(Shader s);
@@ -163,25 +158,16 @@ namespace UnityEditor
 		internal static extern int GetLOD(Shader s);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetFallback(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetSubShaderCount(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetDependency(Shader s, string name);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern ShaderUtil.ShaderModel GetVertexModel(Shader s);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern ShaderUtil.ShaderModel GetFragmentModel(Shader s);
+		internal static extern int GetTextureBindingIndex(Shader s, int texturePropertyID);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool DoesShaderContainFixedFunctionPasses(Shader s);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void OpenCompiledShader(Shader shader, bool allPlatforms);
+		internal static extern void OpenCompiledShader(Shader shader, int mode, int customPlatformsMask, bool includeAllVariants);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void OpenParsedSurfaceShader(Shader shader);
@@ -190,7 +176,31 @@ namespace UnityEditor
 		internal static extern void OpenShaderSnippets(Shader shader);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void OpenShaderCombinations(Shader shader);
+		internal static extern void OpenShaderCombinations(Shader shader, bool usedBySceneOnly);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void CalculateLightmapStrippingFromCurrentScene();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void CalculateFogStrippingFromCurrentScene();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SaveCurrentShaderVariantCollection(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void ClearCurrentShaderVariantCollection();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int GetCurrentShaderVariantCollectionShaderCount();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int GetCurrentShaderVariantCollectionVariantCount();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void GetShaderVariantEntries(Shader shader, ShaderVariantCollection skipAlreadyInCollection, out int[] types, out string[] keywords);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool AddNewShaderToCollection(Shader shader, ShaderVariantCollection collection);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_rawViewportRect(out Rect value);

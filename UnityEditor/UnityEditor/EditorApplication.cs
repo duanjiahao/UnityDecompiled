@@ -65,6 +65,12 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		public static extern bool isRemoteConnected
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public static extern string applicationContentsPath
 		{
 			[WrapperlessIcall]
@@ -83,6 +89,12 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		internal static extern UnityEngine.Object renderSettings
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public static extern double timeSinceStartup
 		{
 			[WrapperlessIcall]
@@ -94,10 +106,30 @@ namespace UnityEditor
 		public static extern void NewScene();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void NewEmptyScene();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool OpenScene(string path);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenSceneAdditive(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void LoadLevelInPlayMode(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void LoadLevelAdditiveInPlayMode(string path);
+		public static AsyncOperation LoadLevelAsyncInPlayMode(string path)
+		{
+			return EditorApplication.LoadLevelAsyncInPlayMode(path, false);
+		}
+		public static AsyncOperation LoadLevelAdditiveAsyncInPlayMode(string path)
+		{
+			return EditorApplication.LoadLevelAsyncInPlayMode(path, true);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern AsyncOperation LoadLevelAsyncInPlayMode(string path, bool isAdditive);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SaveScene([DefaultValue("\"\"")] string path, [DefaultValue("false")] bool saveAsCopy);
@@ -154,6 +186,9 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSceneRepaintDirty();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void MarkSceneDirty();
 		public static void RepaintProjectWindow()
 		{
 			foreach (ProjectBrowser current in ProjectBrowser.GetAllProjectBrowsers())
@@ -294,5 +329,8 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Beep();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void ReportUNetWeaver(string filename, string msg, bool isError);
 	}
 }

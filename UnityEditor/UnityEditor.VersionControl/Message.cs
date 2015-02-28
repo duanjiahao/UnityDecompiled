@@ -27,6 +27,13 @@ namespace UnityEditor.VersionControl
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Dispose();
+		~Message()
+		{
+			this.Dispose();
+		}
 		public void Show()
 		{
 			Message.Info(this.message);
@@ -34,13 +41,6 @@ namespace UnityEditor.VersionControl
 		private static void Info(string message)
 		{
 			Debug.Log("Version control:\n" + message);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Dispose();
-		~Message()
-		{
-			this.Dispose();
 		}
 	}
 }

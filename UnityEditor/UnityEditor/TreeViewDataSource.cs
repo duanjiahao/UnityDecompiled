@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,12 +11,18 @@ namespace UnityEditor
 		protected List<TreeViewItem> m_VisibleRows;
 		protected bool m_NeedRefreshVisibleFolders = true;
 		protected TreeViewItem m_FakeItem;
+		public Action onVisibleRowsChanged;
 		public bool showRootNode
 		{
 			get;
 			set;
 		}
 		public bool rootIsCollapsable
+		{
+			get;
+			set;
+		}
+		public bool alwaysAddFirstItemToSearchResult
 		{
 			get;
 			set;
@@ -56,6 +61,10 @@ namespace UnityEditor
 		{
 			return TreeViewUtility.FindItem(id, this.m_RootItem);
 		}
+		public virtual void OnSearchChanged()
+		{
+			this.m_NeedRefreshVisibleFolders = true;
+		}
 		protected void GetVisibleItemsRecursive(TreeViewItem item, List<TreeViewItem> items)
 		{
 			if (item != this.m_RootItem || this.showRootNode)
@@ -70,13 +79,74 @@ namespace UnityEditor
 				}
 			}
 		}
+		protected void SearchRecursive(TreeViewItem item, string search, List<TreeViewItem> searchResult)
+		{
+			if (item.displayName.ToLower().Contains(search))
+			{
+				searchResult.Add(item);
+			}
+			foreach (TreeViewItem current in item.children)
+			{
+				this.SearchRecursive(current, search, searchResult);
+			}
+		}
+		protected virtual List<TreeViewItem> ExpandedRows(TreeViewItem root)
+		{
+			List<TreeViewItem> list = new List<TreeViewItem>();
+			this.GetVisibleItemsRecursive(this.m_RootItem, list);
+			return list;
+		}
+		protected virtual List<TreeViewItem> Search(TreeViewItem root, string search)
+		{
+			List<TreeViewItem> list = new List<TreeViewItem>();
+			if (this.showRootNode)
+			{
+				this.SearchRecursive(root, search, list);
+				list.Sort(new TreeViewItemAlphaNumericSort());
+			}
+			else
+			{
+				int num = (!this.alwaysAddFirstItemToSearchResult) ? 0 : 1;
+				if (root.hasChildren)
+				{
+					for (int i = num; i < root.children.Count; i++)
+					{
+						this.SearchRecursive(root.children[i], search, list);
+					}
+					list.Sort(new TreeViewItemAlphaNumericSort());
+					if (this.alwaysAddFirstItemToSearchResult)
+					{
+						list.Insert(0, root.children[0]);
+					}
+				}
+			}
+			return list;
+		}
 		public virtual List<TreeViewItem> GetVisibleRows()
 		{
 			if (this.m_VisibleRows == null || this.m_NeedRefreshVisibleFolders)
 			{
-				this.m_VisibleRows = new List<TreeViewItem>();
-				this.GetVisibleItemsRecursive(this.m_RootItem, this.m_VisibleRows);
+				if (this.m_RootItem != null)
+				{
+					if (this.m_TreeView.isSearching)
+					{
+						this.m_VisibleRows = this.Search(this.m_RootItem, this.m_TreeView.searchString.ToLower());
+					}
+					else
+					{
+						this.m_VisibleRows = this.ExpandedRows(this.m_RootItem);
+					}
+				}
+				else
+				{
+					Debug.LogError("TreeView root item is null. Ensure that your TreeViewDataSource sets up at least a root item.");
+					this.m_VisibleRows = new List<TreeViewItem>();
+				}
 				this.m_NeedRefreshVisibleFolders = false;
+				if (this.onVisibleRowsChanged != null)
+				{
+					this.onVisibleRowsChanged();
+				}
 				this.m_TreeView.Repaint();
 			}
 			return this.m_VisibleRows;
@@ -103,7 +173,6 @@ namespace UnityEditor
 			{
 				if (expand)
 				{
-					Assert.That(!this.expandedIDs.Contains(id));
 					this.expandedIDs.Add(id);
 					this.expandedIDs.Sort();
 				}
@@ -155,7 +224,7 @@ namespace UnityEditor
 		}
 		public virtual bool IsExpandable(TreeViewItem item)
 		{
-			return item.hasChildren;
+			return !this.m_TreeView.isSearching && item.hasChildren;
 		}
 		public virtual bool CanBeMultiSelected(TreeViewItem item)
 		{
@@ -167,6 +236,10 @@ namespace UnityEditor
 		}
 		public virtual void OnExpandedStateChanged()
 		{
+			if (this.m_TreeView.expandedStateChanged != null)
+			{
+				this.m_TreeView.expandedStateChanged();
+			}
 		}
 		public virtual bool IsRenamingItemAllowed(TreeViewItem item)
 		{

@@ -10,7 +10,33 @@ namespace UnityEngine
 	public sealed class Application
 	{
 		public delegate void LogCallback(string condition, string stackTrace, LogType type);
-		private static volatile Application.LogCallback s_LogCallback;
+		private static Application.LogCallback s_LogCallbackHandler;
+		private static Application.LogCallback s_LogCallbackHandlerThreaded;
+		private static volatile Application.LogCallback s_RegisterLogCallbackDeprecated;
+		public static event Application.LogCallback logMessageReceived
+		{
+			add
+			{
+				Application.s_LogCallbackHandler = (Application.LogCallback)Delegate.Combine(Application.s_LogCallbackHandler, value);
+				Application.SetLogCallbackDefined(true, Application.s_LogCallbackHandlerThreaded != null);
+			}
+			remove
+			{
+				Application.s_LogCallbackHandler = (Application.LogCallback)Delegate.Remove(Application.s_LogCallbackHandler, value);
+			}
+		}
+		public static event Application.LogCallback logMessageReceivedThreaded
+		{
+			add
+			{
+				Application.s_LogCallbackHandlerThreaded = (Application.LogCallback)Delegate.Combine(Application.s_LogCallbackHandlerThreaded, value);
+				Application.SetLogCallbackDefined(true, true);
+			}
+			remove
+			{
+				Application.s_LogCallbackHandlerThreaded = (Application.LogCallback)Delegate.Remove(Application.s_LogCallbackHandlerThreaded, value);
+			}
+		}
 		public static extern int loadedLevel
 		{
 			[WrapperlessIcall]
@@ -135,7 +161,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[Obsolete("Please use absoluteURL instead")]
+		[Obsolete("absoluteUrl is deprecated (UnityUpgradable). Please use absoluteURL instead.", true)]
 		public static string absoluteUrl
 		{
 			get
@@ -144,6 +170,48 @@ namespace UnityEngine
 			}
 		}
 		public static extern string unityVersion
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern string version
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern string bundleIdentifier
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern ApplicationInstallMode installMode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern ApplicationSandboxType sandboxType
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern string productName
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern string companyName
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public static extern string cloudProjectId
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -198,6 +266,12 @@ namespace UnityEngine
 			get;
 		}
 		public static extern bool genuineCheckAvailable
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		internal static extern bool submitAnalytics
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -388,21 +462,23 @@ namespace UnityEngine
 		[Obsolete("For internal use only"), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CommitSuicide(int mode);
-		public static void RegisterLogCallback(Application.LogCallback handler)
+		private static void CallLogCallback(string logString, string stackTrace, LogType type, bool invokedOnMainThread)
 		{
-			Application.s_LogCallback = handler;
-			Application.SetLogCallbackDefined(handler != null, false);
-		}
-		public static void RegisterLogCallbackThreaded(Application.LogCallback handler)
-		{
-			Application.s_LogCallback = handler;
-			Application.SetLogCallbackDefined(handler != null, true);
-		}
-		private static void CallLogCallback(string logString, string stackTrace, LogType type)
-		{
-			if (Application.s_LogCallback != null)
+			if (invokedOnMainThread)
 			{
-				Application.s_LogCallback(logString, stackTrace, type);
+				Application.LogCallback logCallback = Application.s_LogCallbackHandler;
+				if (logCallback != null)
+				{
+					logCallback(logString, stackTrace, type);
+				}
+			}
+			if (!invokedOnMainThread)
+			{
+				Application.LogCallback logCallback2 = Application.s_LogCallbackHandlerThreaded;
+				if (logCallback2 != null)
+				{
+					logCallback2(logString, stackTrace, type);
+				}
 			}
 		}
 		[WrapperlessIcall]
@@ -429,6 +505,36 @@ namespace UnityEngine
 		internal static UserAuthorization GetUserAuthorizationRequestMode()
 		{
 			return (UserAuthorization)Application.GetUserAuthorizationRequestMode_Internal();
+		}
+		[Obsolete("Application.RegisterLogCallback is deprecated. Use Application.logMessageReceived instead.")]
+		public static void RegisterLogCallback(Application.LogCallback handler)
+		{
+			Application.RegisterLogCallback(handler, false);
+		}
+		[Obsolete("Application.RegisterLogCallbackThreaded is deprecated. Use Application.logMessageReceivedThreaded instead.")]
+		public static void RegisterLogCallbackThreaded(Application.LogCallback handler)
+		{
+			Application.RegisterLogCallback(handler, true);
+		}
+		private static void RegisterLogCallback(Application.LogCallback handler, bool threaded)
+		{
+			if (Application.s_RegisterLogCallbackDeprecated != null)
+			{
+				Application.logMessageReceived -= Application.s_RegisterLogCallbackDeprecated;
+				Application.logMessageReceivedThreaded -= Application.s_RegisterLogCallbackDeprecated;
+			}
+			Application.s_RegisterLogCallbackDeprecated = handler;
+			if (handler != null)
+			{
+				if (threaded)
+				{
+					Application.logMessageReceivedThreaded += handler;
+				}
+				else
+				{
+					Application.logMessageReceived += handler;
+				}
+			}
 		}
 	}
 }

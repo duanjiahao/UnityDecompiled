@@ -47,6 +47,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[Obsolete("since Unity 5.0 iOS WebCamTexture always goes through CVTextureCache and is read to memory on-demand")]
 		public extern bool isReadable
 		{
 			[WrapperlessIcall]
@@ -125,7 +126,7 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Stop(WebCamTexture self);
-		[WrapperlessIcall]
+		[Obsolete("since Unity 5.0 iOS WebCamTexture always goes through CVTextureCache and is read to memory on-demand"), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void MarkNonReadable();
 		[WrapperlessIcall]

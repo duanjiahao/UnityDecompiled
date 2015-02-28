@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.Animations;
 using UnityEditorInternal;
 using UnityEngine;
 namespace UnityEditor
@@ -82,15 +83,17 @@ namespace UnityEditor
 		public static float s_EventTimelineMax = 1.05f;
 		private AnimationClipInfoProperties m_ClipInfo;
 		private AnimationClip m_Clip;
-		private AnimatorController m_Controller;
-		private StateMachine m_StateMachine;
-		private State m_State;
+		private UnityEditor.Animations.AnimatorController m_Controller;
+		private AnimatorStateMachine m_StateMachine;
+		private AnimatorState m_State;
 		private AvatarPreview m_AvatarPreview;
 		private TimeArea m_TimeArea;
 		private TimeArea m_EventTimeArea;
 		private bool m_DraggingRange;
 		private bool m_DraggingRangeBegin;
 		private bool m_DraggingRangeEnd;
+		private float m_DraggingStartFrame;
+		private float m_DraggingStopFrame;
 		private bool m_LoopTime;
 		private bool m_LoopBlend;
 		private bool m_LoopBlendOrientation;
@@ -101,10 +104,10 @@ namespace UnityEditor
 		private AvatarMask m_Mask;
 		private AvatarMaskInspector m_MaskInspector;
 		private string[] m_ReferenceTransformPaths;
-		private bool m_ShowCurves;
+		private static bool m_ShowCurves = false;
 		private EventManipulationHandler m_EventManipulationHandler;
-		private bool m_ShowEvents;
-		private bool m_MaskFoldout;
+		private static bool m_ShowEvents = false;
+		private static bool m_MaskFoldout = false;
 		private Vector2[][][] m_QualityCurves = new Vector2[4][][];
 		private bool m_DirtyQualityCurves;
 		private static GUIContent prevKeyContent = EditorGUIUtility.IconContent("Animation.PrevKey");
@@ -131,6 +134,26 @@ namespace UnityEditor
 				this.m_ReferenceTransformPaths = value;
 			}
 		}
+		internal static void EditWithImporter(AnimationClip clip)
+		{
+			ModelImporter modelImporter = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(clip)) as ModelImporter;
+			if (modelImporter)
+			{
+				Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(modelImporter.assetPath);
+				ModelImporterEditor modelImporterEditor = Editor.CreateEditor(modelImporter) as ModelImporterEditor;
+				EditorPrefs.SetInt(modelImporterEditor.GetType().Name + "ActiveEditorIndex", 2);
+				int value = 0;
+				ModelImporterClipAnimation[] clipAnimations = modelImporter.clipAnimations;
+				for (int i = 0; i < clipAnimations.Length; i++)
+				{
+					if (clipAnimations[i].name == clip.name)
+					{
+						value = i;
+					}
+				}
+				EditorPrefs.SetInt("ModelImporterClipEditor.ActiveClipIndex", value);
+			}
+		}
 		private void UpdateEventsPopupClipInfo(AnimationClipInfoProperties info)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(AnimationEventPopup));
@@ -152,27 +175,35 @@ namespace UnityEditor
 			{
 				if (this.m_Controller == null)
 				{
-					this.m_Controller = new AnimatorController();
-					this.m_Controller.hideFlags = HideFlags.DontSave;
+					this.m_Controller = new UnityEditor.Animations.AnimatorController();
+					this.m_Controller.pushUndo = false;
+					this.m_Controller.hideFlags = HideFlags.HideAndDontSave;
 					this.m_Controller.AddLayer("preview");
-					this.m_StateMachine = this.m_Controller.GetLayerStateMachine(0);
+					this.m_StateMachine = this.m_Controller.layers[0].stateMachine;
+					this.m_StateMachine.pushUndo = false;
+					this.m_StateMachine.hideFlags = HideFlags.HideAndDontSave;
 					if (this.m_ClipInfo != null)
 					{
 						this.InitMask();
-						this.m_Controller.SetLayerMask(0, this.m_Mask);
+						UnityEditor.Animations.AnimatorControllerLayer[] layers = this.m_Controller.layers;
+						layers[0].avatarMask = this.m_Mask;
+						this.m_Controller.layers = layers;
 					}
 				}
 				if (this.m_State == null)
 				{
 					this.m_State = this.m_StateMachine.AddState("preview");
-					this.m_State.SetAnimationClip(this.m_Clip);
+					this.m_State.pushUndo = false;
+					UnityEditor.Animations.AnimatorControllerLayer[] layers2 = this.m_Controller.layers;
+					this.m_State.motion = this.m_Clip;
+					this.m_Controller.layers = layers2;
 					this.m_State.iKOnFeet = this.m_AvatarPreview.IKOnFeet;
-					this.m_State.hideFlags = HideFlags.DontSave;
+					this.m_State.hideFlags = HideFlags.HideAndDontSave;
 				}
-				AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
-				if (AnimatorController.GetEffectiveAnimatorController(this.m_AvatarPreview.Animator) != this.m_Controller)
+				UnityEditor.Animations.AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
+				if (UnityEditor.Animations.AnimatorController.GetEffectiveAnimatorController(this.m_AvatarPreview.Animator) != this.m_Controller)
 				{
-					AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
+					UnityEditor.Animations.AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
 				}
 			}
 		}
@@ -211,13 +242,21 @@ namespace UnityEditor
 			else
 			{
 				base.OnHeaderControlsGUI();
+				ModelImporter x = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(this.target)) as ModelImporter;
+				if (x != null && this.m_ClipInfo == null && GUILayout.Button("Edit...", EditorStyles.miniButton, new GUILayoutOption[]
+				{
+					GUILayout.ExpandWidth(false)
+				}))
+				{
+					AnimationClipEditor.EditWithImporter(this.target as AnimationClip);
+				}
 			}
 		}
 		private void DestroyController()
 		{
 			if (this.m_AvatarPreview != null && this.m_AvatarPreview.Animator != null)
 			{
-				AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, null);
+				UnityEditor.Animations.AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, null);
 			}
 			UnityEngine.Object.DestroyImmediate(this.m_Controller);
 			UnityEngine.Object.DestroyImmediate(this.m_State);
@@ -339,6 +378,7 @@ namespace UnityEditor
 			{
 				UnityEngine.Object.DestroyImmediate(this.m_Mask);
 			}
+			AnimationEventPopup.ClosePopup();
 		}
 		public override bool HasPreviewGUI()
 		{
@@ -396,13 +436,13 @@ namespace UnityEditor
 					{
 						this.m_State.iKOnFeet = this.m_AvatarPreview.IKOnFeet;
 					}
-					float normalizedTime = (this.m_AvatarPreview.timeControl.currentTime - animationClipSettings.startTime) / (animationClipSettings.stopTime - animationClipSettings.startTime);
+					float normalizedTime = (animationClipSettings.stopTime - animationClipSettings.startTime == 0f) ? 0f : ((this.m_AvatarPreview.timeControl.currentTime - animationClipSettings.startTime) / (animationClipSettings.stopTime - animationClipSettings.startTime));
 					this.m_AvatarPreview.Animator.Play(0, 0, normalizedTime);
 					this.m_AvatarPreview.Animator.Update(this.m_AvatarPreview.timeControl.deltaTime);
 				}
 				else
 				{
-					this.m_AvatarPreview.PreviewObject.SampleAnimation(animationClip, this.m_AvatarPreview.timeControl.currentTime);
+					animationClip.SampleAnimation(this.m_AvatarPreview.PreviewObject, this.m_AvatarPreview.timeControl.currentTime);
 				}
 			}
 			this.m_AvatarPreview.DoAvatarPreview(r, background);
@@ -455,18 +495,34 @@ namespace UnityEditor
 			Handles.color = Color.white;
 			EditorGUI.BeginDisabledGroup(flag);
 			float num5 = startFrame / this.m_Clip.frameRate;
-			if (this.m_TimeArea.BrowseRuler(rect, controlID, ref num5, 0f, false, "TL InPoint") != TimeArea.TimeRulerDragMode.None)
+			TimeArea.TimeRulerDragMode timeRulerDragMode = this.m_TimeArea.BrowseRuler(rect, controlID, ref num5, 0f, false, "TL InPoint");
+			if (timeRulerDragMode == TimeArea.TimeRulerDragMode.Cancel)
 			{
-				startFrame = num5 * this.m_Clip.frameRate;
-				startFrame = MathUtils.RoundBasedOnMinimumDifference(startFrame, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
-				changedStart = true;
+				startFrame = this.m_DraggingStartFrame;
+			}
+			else
+			{
+				if (timeRulerDragMode != TimeArea.TimeRulerDragMode.None)
+				{
+					startFrame = num5 * this.m_Clip.frameRate;
+					startFrame = MathUtils.RoundBasedOnMinimumDifference(startFrame, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
+					changedStart = true;
+				}
 			}
 			float num6 = stopFrame / this.m_Clip.frameRate;
-			if (this.m_TimeArea.BrowseRuler(rect, controlID2, ref num6, 0f, false, "TL OutPoint") != TimeArea.TimeRulerDragMode.None)
+			TimeArea.TimeRulerDragMode timeRulerDragMode2 = this.m_TimeArea.BrowseRuler(rect, controlID2, ref num6, 0f, false, "TL OutPoint");
+			if (timeRulerDragMode2 == TimeArea.TimeRulerDragMode.Cancel)
 			{
-				stopFrame = num6 * this.m_Clip.frameRate;
-				stopFrame = MathUtils.RoundBasedOnMinimumDifference(stopFrame, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
-				changedStop = true;
+				stopFrame = this.m_DraggingStopFrame;
+			}
+			else
+			{
+				if (timeRulerDragMode2 != TimeArea.TimeRulerDragMode.None)
+				{
+					stopFrame = num6 * this.m_Clip.frameRate;
+					stopFrame = MathUtils.RoundBasedOnMinimumDifference(stopFrame, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
+					changedStop = true;
+				}
 			}
 			EditorGUI.EndDisabledGroup();
 			if (GUIUtility.hotControl == controlID)
@@ -499,11 +555,11 @@ namespace UnityEditor
 			changedStop |= flag2;
 			if (changedStart)
 			{
-				startFrame = Mathf.Clamp(startFrame, this.m_Clip.startTime * this.m_Clip.frameRate, Mathf.Clamp(stopFrame, startFrame + 0.1f, this.m_Clip.stopTime * this.m_Clip.frameRate));
+				startFrame = Mathf.Clamp(startFrame, this.m_Clip.startTime * this.m_Clip.frameRate, Mathf.Clamp(stopFrame, this.m_Clip.startTime * this.m_Clip.frameRate, stopFrame));
 			}
 			if (changedStop)
 			{
-				stopFrame = Mathf.Clamp(stopFrame, startFrame + 0.1f, this.m_Clip.stopTime * this.m_Clip.frameRate);
+				stopFrame = Mathf.Clamp(stopFrame, startFrame, this.m_Clip.stopTime * this.m_Clip.frameRate);
 			}
 			if (changedStart || changedStop)
 			{
@@ -608,7 +664,7 @@ namespace UnityEditor
 			GUILayout.Label(this.m_Clip.frameRate + " FPS", EditorStyles.miniLabel, new GUILayoutOption[0]);
 			EditorGUI.EndDisabledGroup();
 			EditorGUILayout.EndHorizontal();
-			if (this.m_Clip.isAnimatorMotion)
+			if (!this.m_Clip.legacy)
 			{
 				this.MuscleClipGUI();
 			}
@@ -697,19 +753,20 @@ namespace UnityEditor
 					{
 						this.m_ClipInfo.SetCurveName(i, text);
 					}
-					AnimationCurve animationCurve = this.m_ClipInfo.GetCurve(i);
-					int length = animationCurve.length;
+					SerializedProperty curveProperty = this.m_ClipInfo.GetCurveProperty(i);
+					AnimationCurve animationCurveValue = curveProperty.animationCurveValue;
+					int length = animationCurveValue.length;
 					bool flag = false;
 					int num = length - 1;
 					for (int j = 0; j < length; j++)
 					{
-						if (Mathf.Abs(animationCurve.keys[j].time - normalizedTime) < 0.0001f)
+						if (Mathf.Abs(animationCurveValue.keys[j].time - normalizedTime) < 0.0001f)
 						{
 							flag = true;
 							num = j;
 							break;
 						}
-						if (animationCurve.keys[j].time > normalizedTime)
+						if (animationCurveValue.keys[j].time > normalizedTime)
 						{
 							num = j;
 							break;
@@ -719,7 +776,7 @@ namespace UnityEditor
 					if (GUILayout.Button(AnimationClipEditor.prevKeyContent, new GUILayoutOption[0]) && num > 0)
 					{
 						num--;
-						this.m_AvatarPreview.timeControl.normalizedTime = animationCurve.keys[num].time;
+						this.m_AvatarPreview.timeControl.normalizedTime = animationCurveValue.keys[num].time;
 					}
 					if (GUILayout.Button(AnimationClipEditor.nextKeyContent, new GUILayoutOption[0]))
 					{
@@ -727,12 +784,12 @@ namespace UnityEditor
 						{
 							num++;
 						}
-						this.m_AvatarPreview.timeControl.normalizedTime = animationCurve.keys[num].time;
+						this.m_AvatarPreview.timeControl.normalizedTime = animationCurveValue.keys[num].time;
 					}
 					EditorGUI.BeginDisabledGroup(!flag);
 					string kFloatFieldFormatString = EditorGUI.kFloatFieldFormatString;
 					EditorGUI.kFloatFieldFormatString = "n3";
-					float num2 = animationCurve.Evaluate(normalizedTime);
+					float num2 = animationCurveValue.Evaluate(normalizedTime);
 					float num3 = EditorGUILayout.FloatField(num2, new GUILayoutOption[]
 					{
 						GUILayout.Width(60f)
@@ -744,7 +801,7 @@ namespace UnityEditor
 					{
 						if (flag)
 						{
-							animationCurve.RemoveKey(num);
+							animationCurveValue.RemoveKey(num);
 						}
 						flag2 = true;
 					}
@@ -756,31 +813,32 @@ namespace UnityEditor
 					EditorGUI.EndDisabledGroup();
 					if (flag2)
 					{
-						animationCurve.AddKey(new Keyframe
+						animationCurveValue.AddKey(new Keyframe
 						{
 							time = normalizedTime,
 							value = num3,
 							inTangent = 0f,
 							outTangent = 0f
 						});
+						this.m_ClipInfo.SetCurve(i, animationCurveValue);
+						AnimationCurvePreviewCache.ClearCache();
 					}
 					GUILayout.EndHorizontal();
 					GUILayout.EndVertical();
-					animationCurve = EditorGUILayout.CurveField(animationCurve, new GUILayoutOption[]
+					EditorGUILayout.CurveField(curveProperty, EditorGUI.kCurveColor, default(Rect), new GUILayoutOption[]
 					{
 						GUILayout.Height(40f)
 					});
 					Rect lastRect = GUILayoutUtility.GetLastRect();
-					length = animationCurve.length;
+					length = animationCurveValue.length;
 					Handles.color = Color.red;
 					Handles.DrawLine(new Vector3(lastRect.x + normalizedTime * lastRect.width, lastRect.y, 0f), new Vector3(lastRect.x + normalizedTime * lastRect.width, lastRect.y + lastRect.height, 0f));
 					for (int k = 0; k < length; k++)
 					{
-						float time = animationCurve.keys[k].time;
+						float time = animationCurveValue.keys[k].time;
 						Handles.color = Color.white;
 						Handles.DrawLine(new Vector3(lastRect.x + time * lastRect.width, lastRect.y + lastRect.height - 10f, 0f), new Vector3(lastRect.x + time * lastRect.width, lastRect.y + lastRect.height, 0f));
 					}
-					this.m_ClipInfo.SetCurve(i, animationCurve);
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -841,11 +899,14 @@ namespace UnityEditor
 			this.InitController();
 			AnimationClipSettings animationClipSettings = AnimationUtility.GetAnimationClipSettings(this.m_Clip);
 			bool isHumanMotion = (this.target as Motion).isHumanMotion;
-			bool flag = isHumanMotion && AnimationUtility.HasMotionCurves(this.m_Clip);
+			bool flag = AnimationUtility.HasMotionCurves(this.m_Clip);
+			bool flag2 = AnimationUtility.HasRootCurves(this.m_Clip);
+			bool flag3 = AnimationUtility.HasGenericRootTransform(this.m_Clip);
+			bool flag4 = AnimationUtility.HasMotionFloatCurves(this.m_Clip);
 			this.m_StartFrame = ((!this.m_DraggingRange) ? (animationClipSettings.startTime * this.m_Clip.frameRate) : this.m_StartFrame);
 			this.m_StopFrame = ((!this.m_DraggingRange) ? (animationClipSettings.stopTime * this.m_Clip.frameRate) : this.m_StopFrame);
-			bool flag2 = false;
-			bool flag3 = false;
+			bool flag5 = false;
+			bool flag6 = false;
 			if (this.m_ClipInfo != null)
 			{
 				if (isHumanMotion)
@@ -860,7 +921,7 @@ namespace UnityEditor
 						base.Repaint();
 					}
 				}
-				this.ClipRangeGUI(ref this.m_StartFrame, ref this.m_StopFrame, out flag2, out flag3);
+				this.ClipRangeGUI(ref this.m_StartFrame, ref this.m_StopFrame, out flag5, out flag6);
 			}
 			float num = this.m_StartFrame / this.m_Clip.frameRate;
 			float num2 = this.m_StopFrame / this.m_Clip.frameRate;
@@ -871,11 +932,11 @@ namespace UnityEditor
 			}
 			this.m_AvatarPreview.timeControl.startTime = num;
 			this.m_AvatarPreview.timeControl.stopTime = num2;
-			if (flag2)
+			if (flag5)
 			{
 				this.m_AvatarPreview.timeControl.nextCurrentTime = num;
 			}
-			if (flag3)
+			if (flag6)
 			{
 				this.m_AvatarPreview.timeControl.nextCurrentTime = num2;
 			}
@@ -892,8 +953,8 @@ namespace UnityEditor
 			EditorGUI.indentLevel--;
 			EditorGUI.EndDisabledGroup();
 			EditorGUILayout.Space();
-			bool flag4 = isHumanMotion && (flag2 || flag3);
-			if (!flag)
+			bool flag7 = isHumanMotion && (flag5 || flag6);
+			if (flag2 && !flag)
 			{
 				GUILayout.Label("Root Transform Rotation", EditorStyles.label, new GUILayoutOption[0]);
 				EditorGUI.indentLevel++;
@@ -902,7 +963,7 @@ namespace UnityEditor
 				int num3 = (!animationClipSettings.keepOriginalOrientation) ? 1 : 0;
 				num3 = EditorGUILayout.Popup((!animationClipSettings.loopBlendOrientation) ? AnimationClipEditor.styles.BasedUponStartOrientation : AnimationClipEditor.styles.BasedUponOrientation, num3, (!isHumanMotion) ? AnimationClipEditor.styles.BasedUponRotationOpt : AnimationClipEditor.styles.BasedUponRotationHumanOpt, new GUILayoutOption[0]);
 				animationClipSettings.keepOriginalOrientation = (num3 == 0);
-				if (flag4)
+				if (flag7)
 				{
 					EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 				}
@@ -960,7 +1021,7 @@ namespace UnityEditor
 					num5 = EditorGUILayout.Popup((!animationClipSettings.loopBlendPositionY) ? AnimationClipEditor.styles.BasedUponPositionY : AnimationClipEditor.styles.BasedUponStartPositionY, num5, AnimationClipEditor.styles.BasedUponPositionYOpt, new GUILayoutOption[0]);
 					animationClipSettings.keepOriginalPositionY = (num5 == 0);
 				}
-				if (flag4)
+				if (flag7)
 				{
 					EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 				}
@@ -981,17 +1042,17 @@ namespace UnityEditor
 				EditorGUILayout.Space();
 				if (isHumanMotion)
 				{
-					this.LoopQualityLampAndCurve(controlRect2, muscleClipQualityInfo.loop, AnimationClipEditor.s_LoopMeterHint, flag2, flag3, this.m_QualityCurves[0]);
-					this.LoopQualityLampAndCurve(controlRect3, muscleClipQualityInfo.loopOrientation, AnimationClipEditor.s_LoopOrientationMeterHint, flag2, flag3, this.m_QualityCurves[1]);
-					this.LoopQualityLampAndCurve(controlRect4, muscleClipQualityInfo.loopPositionY, AnimationClipEditor.s_LoopPositionYMeterHint, flag2, flag3, this.m_QualityCurves[2]);
-					this.LoopQualityLampAndCurve(controlRect5, muscleClipQualityInfo.loopPositionXZ, AnimationClipEditor.s_LoopPositionXZMeterHint, flag2, flag3, this.m_QualityCurves[3]);
+					this.LoopQualityLampAndCurve(controlRect2, muscleClipQualityInfo.loop, AnimationClipEditor.s_LoopMeterHint, flag5, flag6, this.m_QualityCurves[0]);
+					this.LoopQualityLampAndCurve(controlRect3, muscleClipQualityInfo.loopOrientation, AnimationClipEditor.s_LoopOrientationMeterHint, flag5, flag6, this.m_QualityCurves[1]);
+					this.LoopQualityLampAndCurve(controlRect4, muscleClipQualityInfo.loopPositionY, AnimationClipEditor.s_LoopPositionYMeterHint, flag5, flag6, this.m_QualityCurves[2]);
+					this.LoopQualityLampAndCurve(controlRect5, muscleClipQualityInfo.loopPositionXZ, AnimationClipEditor.s_LoopPositionXZMeterHint, flag5, flag6, this.m_QualityCurves[3]);
 				}
 			}
 			if (isHumanMotion)
 			{
 				if (flag)
 				{
-					this.LoopQualityLampAndCurve(controlRect2, muscleClipQualityInfo.loop, AnimationClipEditor.s_LoopMeterHint, flag2, flag3, this.m_QualityCurves[0]);
+					this.LoopQualityLampAndCurve(controlRect2, muscleClipQualityInfo.loop, AnimationClipEditor.s_LoopMeterHint, flag5, flag6, this.m_QualityCurves[0]);
 				}
 				animationClipSettings.mirror = EditorGUILayout.Toggle(AnimationClipEditor.styles.Mirror, animationClipSettings.mirror, new GUILayoutOption[0]);
 			}
@@ -999,6 +1060,27 @@ namespace UnityEditor
 			{
 				EditorGUILayout.Space();
 				GUILayout.Label(AnimationClipEditor.styles.MotionCurves, EditorStyles.label, new GUILayoutOption[0]);
+			}
+			if (this.m_ClipInfo == null && flag3 && !flag4)
+			{
+				EditorGUILayout.Space();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				if (flag)
+				{
+					if (GUILayout.Button("Remove Root Motion Curves", new GUILayoutOption[0]))
+					{
+						AnimationUtility.SetGenerateMotionCurves(this.m_Clip, false);
+					}
+				}
+				else
+				{
+					if (GUILayout.Button("Generate Root Motion Curves", new GUILayoutOption[0]))
+					{
+						AnimationUtility.SetGenerateMotionCurves(this.m_Clip, true);
+					}
+				}
+				GUILayout.EndHorizontal();
 			}
 			string statsText = this.GetStatsText();
 			if (statsText != string.Empty)
@@ -1012,7 +1094,7 @@ namespace UnityEditor
 				this.m_MaskInspector.showBody = isHumanMotion;
 				int indentLevel = EditorGUI.indentLevel;
 				bool changed = GUI.changed;
-				this.m_MaskFoldout = EditorGUILayout.Foldout(this.m_MaskFoldout, AnimationClipEditor.styles.Mask);
+				AnimationClipEditor.m_MaskFoldout = EditorGUILayout.Foldout(AnimationClipEditor.m_MaskFoldout, AnimationClipEditor.styles.Mask);
 				GUI.changed = changed;
 				if (this.m_ClipInfo.maskType == ClipAnimationMaskType.CreateFromThisModel && !this.IsMaskUpToDate())
 				{
@@ -1029,20 +1111,37 @@ namespace UnityEditor
 					GUILayout.EndVertical();
 					GUILayout.EndHorizontal();
 				}
-				if (this.m_MaskFoldout)
+				else
+				{
+					if (this.m_ClipInfo.maskType == ClipAnimationMaskType.CopyFromOther && this.m_ClipInfo.MaskNeedsUpdating())
+					{
+						GUILayout.BeginHorizontal(EditorStyles.helpBox, new GUILayoutOption[0]);
+						GUILayout.Label("Source Mask has changed since last import. It must be Updated", EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
+						GUILayout.FlexibleSpace();
+						GUILayout.BeginVertical(new GUILayoutOption[0]);
+						GUILayout.Space(5f);
+						if (GUILayout.Button("Update Mask", new GUILayoutOption[0]))
+						{
+							this.m_ClipInfo.MaskToClip(this.m_ClipInfo.maskSource);
+						}
+						GUILayout.EndVertical();
+						GUILayout.EndHorizontal();
+					}
+				}
+				if (AnimationClipEditor.m_MaskFoldout)
 				{
 					EditorGUI.indentLevel++;
 					this.m_MaskInspector.OnInspectorGUI();
 				}
 				EditorGUI.indentLevel = indentLevel;
 			}
-			bool flag5 = InternalEditorUtility.HasPro();
-			if (flag5 && this.m_ClipInfo != null)
+			bool flag8 = InternalEditorUtility.HasProFeaturesEnabled();
+			if (flag8 && this.m_ClipInfo != null)
 			{
 				bool changed = GUI.changed;
-				this.m_ShowCurves = EditorGUILayout.Foldout(this.m_ShowCurves, AnimationClipEditor.styles.Curves);
+				AnimationClipEditor.m_ShowCurves = EditorGUILayout.Foldout(AnimationClipEditor.m_ShowCurves, AnimationClipEditor.styles.Curves);
 				GUI.changed = changed;
-				if (this.m_ShowCurves)
+				if (AnimationClipEditor.m_ShowCurves)
 				{
 					this.CurveGUI();
 				}
@@ -1050,9 +1149,9 @@ namespace UnityEditor
 			if (this.m_ClipInfo != null)
 			{
 				bool changed = GUI.changed;
-				this.m_ShowEvents = EditorGUILayout.Foldout(this.m_ShowEvents, "Events");
+				AnimationClipEditor.m_ShowEvents = EditorGUILayout.Foldout(AnimationClipEditor.m_ShowEvents, "Events");
 				GUI.changed = changed;
-				if (this.m_ShowEvents)
+				if (AnimationClipEditor.m_ShowEvents)
 				{
 					this.EventsGUI();
 				}
@@ -1069,6 +1168,8 @@ namespace UnityEditor
 				animationClipSettings.loopBlendOrientation = false;
 				animationClipSettings.loopBlendPositionY = false;
 				animationClipSettings.loopBlendPositionXZ = false;
+				this.m_DraggingStartFrame = animationClipSettings.startTime * this.m_Clip.frameRate;
+				this.m_DraggingStopFrame = animationClipSettings.stopTime * this.m_Clip.frameRate;
 				animationClipSettings.startTime = 0f;
 				animationClipSettings.stopTime = this.m_Clip.length;
 				AnimationUtility.SetAnimationClipSettingsNoDirty(this.m_Clip, animationClipSettings);

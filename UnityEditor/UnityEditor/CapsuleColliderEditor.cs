@@ -111,7 +111,7 @@ namespace UnityEditor
 				num = Mathf.Cos(0.7853982f);
 			}
 			float num2;
-			if (Camera.current.isOrthoGraphic)
+			if (Camera.current.orthographic)
 			{
 				num2 = Vector3.Dot(-Camera.current.transform.forward, vector);
 			}

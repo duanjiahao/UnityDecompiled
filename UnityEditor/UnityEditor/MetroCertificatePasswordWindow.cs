@@ -75,7 +75,7 @@ namespace UnityEditor
 							this.message = GUIContent.none;
 							try
 							{
-								if (PlayerSettings.Metro.SetCertificate(this.path, this.password))
+								if (PlayerSettings.WSA.SetCertificate(this.path, this.password))
 								{
 									flag = true;
 								}

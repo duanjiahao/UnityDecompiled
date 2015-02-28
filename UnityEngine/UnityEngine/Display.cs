@@ -106,11 +106,35 @@ namespace UnityEngine
 		}
 		public void Activate()
 		{
-			Display.ActivateDisplayImpl(this.nativeDisplay);
+			Display.ActivateDisplayImpl(this.nativeDisplay, 0, 0, 60);
+		}
+		public void Activate(int width, int height, int refreshRate)
+		{
+			Display.ActivateDisplayImpl(this.nativeDisplay, width, height, refreshRate);
+		}
+		public void SetParams(int width, int height, int x, int y)
+		{
+			Display.SetParamsImpl(this.nativeDisplay, width, height, x, y);
 		}
 		public void SetRenderingResolution(int w, int h)
 		{
 			Display.SetRenderingResolutionImpl(this.nativeDisplay, w, h);
+		}
+		public static bool MultiDisplayLicense()
+		{
+			return Display.MultiDisplayLicenseImpl();
+		}
+		public static Vector3 RelativeMouseAt(Vector3 inputMouseCoordinates)
+		{
+			int num = 0;
+			int num2 = 0;
+			int x = (int)inputMouseCoordinates.x;
+			int y = (int)inputMouseCoordinates.y;
+			Vector3 result;
+			result.z = (float)Display.RelativeMouseAtImpl(x, y, out num, out num2);
+			result.x = (float)num;
+			result.y = (float)num2;
+			return result;
 		}
 		private static void RecreateDisplayList(IntPtr[] nativeDisplay)
 		{
@@ -142,6 +166,15 @@ namespace UnityEngine
 		private static extern void SetRenderingResolutionImpl(IntPtr nativeDisplay, int w, int h);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void ActivateDisplayImpl(IntPtr nativeDisplay);
+		private static extern void ActivateDisplayImpl(IntPtr nativeDisplay, int width, int height, int refreshRate);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetParamsImpl(IntPtr nativeDisplay, int width, int height, int x, int y);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool MultiDisplayLicenseImpl();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int RelativeMouseAtImpl(int x, int y, out int rx, out int ry);
 	}
 }

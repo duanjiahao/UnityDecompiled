@@ -144,41 +144,6 @@ namespace UnityEngine
 				}
 			}
 		}
-		public struct CollisionEvent
-		{
-			private Vector3 m_Intersection;
-			private Vector3 m_Normal;
-			private Vector3 m_Velocity;
-			private int m_ColliderInstanceID;
-			public Vector3 intersection
-			{
-				get
-				{
-					return this.m_Intersection;
-				}
-			}
-			public Vector3 normal
-			{
-				get
-				{
-					return this.m_Normal;
-				}
-			}
-			public Vector3 velocity
-			{
-				get
-				{
-					return this.m_Velocity;
-				}
-			}
-			public Collider collider
-			{
-				get
-				{
-					return ParticleSystem.InstanceIDToCollider(this.m_ColliderInstanceID);
-				}
-			}
-		}
 		public extern float startDelay
 		{
 			[WrapperlessIcall]
@@ -254,6 +219,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		[Obsolete("Use GetSafeCollisionEventSize() instead (UnityUpgradable)")]
 		public extern int safeCollisionEventSize
 		{
 			[WrapperlessIcall]
@@ -365,9 +331,6 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Collider InstanceIDToCollider(int instanceID);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_startColor(out Color value);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -378,9 +341,6 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetParticles(ParticleSystem.Particle[] particles);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern int GetCollisionEvents(GameObject go, ParticleSystem.CollisionEvent[] collisionEvents);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_Simulate(float t, bool restart);

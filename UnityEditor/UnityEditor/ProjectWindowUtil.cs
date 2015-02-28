@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -93,6 +94,11 @@ namespace UnityEditor
 		{
 			Texture2D icon = EditorGUIUtility.IconContent("AnimatorController Icon").image as Texture2D;
 			ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, ScriptableObject.CreateInstance<DoCreateAnimatorController>(), "New Animator Controller.controller", icon, null);
+		}
+		private static void CreateAudioMixer()
+		{
+			Texture2D icon = EditorGUIUtility.IconContent("AudioMixerController Icon").image as Texture2D;
+			ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, ScriptableObject.CreateInstance<DoCreateAudioMixer>(), "NewAudioMixer.mixer", icon, null);
 		}
 		internal static UnityEngine.Object CreateScriptAssetFromTemplate(string pathName, string resourceFile)
 		{
@@ -255,6 +261,73 @@ namespace UnityEditor
 				}
 			}
 			return list.ToArray();
+		}
+		internal static void DuplicateSelectedAssets()
+		{
+			AssetDatabase.Refresh();
+			UnityEngine.Object[] objects = Selection.objects;
+			bool flag = true;
+			UnityEngine.Object[] array = objects;
+			for (int i = 0; i < array.Length; i++)
+			{
+				UnityEngine.Object @object = array[i];
+				AnimationClip animationClip = @object as AnimationClip;
+				if (animationClip == null || (animationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None || !AssetDatabase.Contains(animationClip))
+				{
+					flag = false;
+				}
+			}
+			ArrayList arrayList = new ArrayList();
+			bool flag2 = false;
+			if (flag)
+			{
+				UnityEngine.Object[] array2 = objects;
+				for (int j = 0; j < array2.Length; j++)
+				{
+					UnityEngine.Object object2 = array2[j];
+					AnimationClip animationClip2 = object2 as AnimationClip;
+					if (animationClip2 != null && (animationClip2.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+					{
+						string path = AssetDatabase.GetAssetPath(object2);
+						path = Path.Combine(Path.GetDirectoryName(path), animationClip2.name) + ".anim";
+						string text = AssetDatabase.GenerateUniqueAssetPath(path);
+						AnimationClip animationClip3 = new AnimationClip();
+						EditorUtility.CopySerialized(animationClip2, animationClip3);
+						AssetDatabase.CreateAsset(animationClip3, text);
+						arrayList.Add(text);
+					}
+				}
+			}
+			else
+			{
+				UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
+				UnityEngine.Object[] array3 = filtered;
+				for (int k = 0; k < array3.Length; k++)
+				{
+					UnityEngine.Object assetObject = array3[k];
+					string assetPath = AssetDatabase.GetAssetPath(assetObject);
+					string text2 = AssetDatabase.GenerateUniqueAssetPath(assetPath);
+					if (text2.Length != 0)
+					{
+						flag2 |= !AssetDatabase.CopyAsset(assetPath, text2);
+					}
+					else
+					{
+						flag2 |= true;
+					}
+					if (!flag2)
+					{
+						arrayList.Add(text2);
+					}
+				}
+			}
+			AssetDatabase.Refresh();
+			UnityEngine.Object[] array4 = new UnityEngine.Object[arrayList.Count];
+			for (int l = 0; l < arrayList.Count; l++)
+			{
+				array4[l] = AssetDatabase.LoadMainAssetAtPath(arrayList[l] as string);
+			}
+			Selection.objects = array4;
 		}
 	}
 }

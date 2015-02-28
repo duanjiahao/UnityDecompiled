@@ -8,30 +8,21 @@ namespace UnityEditor
 {
 	public sealed class Handles
 	{
-		private enum PlaneHandle
-		{
-			xzPlane,
-			xyPlane,
-			yzPlane
-		}
 		internal enum FilterMode
 		{
 			Off,
 			ShowFiltered,
 			ShowRest
 		}
-		public delegate void DrawCapFunction(int controlID, Vector3 position, Quaternion rotation, float size);
-		private const float k_BoneThickness = 0.08f;
-		private const int kMaxDottedLineVertices = 1000;
-		private static Vector3[] verts = new Vector3[]
+		private enum PlaneHandle
 		{
-			Vector3.zero,
-			Vector3.zero,
-			Vector3.zero,
-			Vector3.zero
-		};
-		private static bool s_FreeMoveMode = false;
-		private static Vector3 s_PlanarHandlesOctant = Vector3.one;
+			xzPlane,
+			xyPlane,
+			yzPlane
+		}
+		public delegate void DrawCapFunction(int controlID, Vector3 position, Quaternion rotation, float size);
+		private const int kMaxDottedLineVertices = 1000;
+		private const float k_BoneThickness = 0.08f;
 		internal static PrefColor s_XAxisColor = new PrefColor("Scene/X Axis", 0.858823538f, 0.243137255f, 0.113725491f, 0.93f);
 		internal static PrefColor s_YAxisColor = new PrefColor("Scene/Y Axis", 0.6039216f, 0.9529412f, 0.282352954f, 0.93f);
 		internal static PrefColor s_ZAxisColor = new PrefColor("Scene/Z Axis", 0.227450982f, 0.478431374f, 0.972549f, 0.93f);
@@ -69,13 +60,15 @@ namespace UnityEditor
 		internal static Mesh s_ConeMesh;
 		internal static Mesh s_CylinderMesh;
 		internal static Mesh s_QuadMesh;
-		private static bool currentlyDragging
+		private static Vector3[] verts = new Vector3[]
 		{
-			get
-			{
-				return GUIUtility.hotControl != 0;
-			}
-		}
+			Vector3.zero,
+			Vector3.zero,
+			Vector3.zero,
+			Vector3.zero
+		};
+		private static bool s_FreeMoveMode = false;
+		private static Vector3 s_PlanarHandlesOctant = Vector3.one;
 		public static Color xAxisColor
 		{
 			get
@@ -176,6 +169,867 @@ namespace UnityEditor
 			{
 				return Handles.s_Color * new Color(1f, 1f, 1f, 0.5f) + ((!Handles.s_Lighting) ? new Color(0f, 0f, 0f, 0f) : new Color(0f, 0f, 0f, 0.5f));
 			}
+		}
+		private static bool currentlyDragging
+		{
+			get
+			{
+				return GUIUtility.hotControl != 0;
+			}
+		}
+		public static Vector3 PositionHandle(Vector3 position, Quaternion rotation)
+		{
+			return Handles.DoPositionHandle(position, rotation);
+		}
+		public static Quaternion RotationHandle(Quaternion rotation, Vector3 position)
+		{
+			return Handles.DoRotationHandle(rotation, position);
+		}
+		public static Vector3 ScaleHandle(Vector3 scale, Vector3 position, Quaternion rotation, float size)
+		{
+			return Handles.DoScaleHandle(scale, position, rotation, size);
+		}
+		public static float RadiusHandle(Quaternion rotation, Vector3 position, float radius, bool handlesOnly)
+		{
+			return Handles.DoRadiusHandle(rotation, position, radius, handlesOnly);
+		}
+		public static float RadiusHandle(Quaternion rotation, Vector3 position, float radius)
+		{
+			return Handles.DoRadiusHandle(rotation, position, radius, false);
+		}
+		internal static Vector2 ConeHandle(Quaternion rotation, Vector3 position, Vector2 angleAndRange, float angleScale, float rangeScale, bool handlesOnly)
+		{
+			return Handles.DoConeHandle(rotation, position, angleAndRange, angleScale, rangeScale, handlesOnly);
+		}
+		internal static Vector3 ConeFrustrumHandle(Quaternion rotation, Vector3 position, Vector3 radiusAngleRange)
+		{
+			return Handles.DoConeFrustrumHandle(rotation, position, radiusAngleRange);
+		}
+		public static Vector3 Slider(Vector3 position, Vector3 direction)
+		{
+			return Handles.Slider(position, direction, HandleUtility.GetHandleSize(position), new Handles.DrawCapFunction(Handles.ArrowCap), -1f);
+		}
+		public static Vector3 Slider(Vector3 position, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_SliderHash, FocusType.Keyboard);
+			return Slider1D.Do(controlID, position, direction, size, drawFunc, snap);
+		}
+		[ExcludeFromDocs]
+		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
+		{
+			bool drawHelper = false;
+			return Handles.Slider2D(id, handlePos, offset, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, [DefaultValue("false")] bool drawHelper)
+		{
+			return UnityEditorInternal.Slider2D.Do(id, handlePos, offset, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		[ExcludeFromDocs]
+		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
+		{
+			bool drawHelper = false;
+			return Handles.Slider2D(handlePos, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, [DefaultValue("false")] bool drawHelper)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_Slider2DHash, FocusType.Keyboard);
+			return UnityEditorInternal.Slider2D.Do(controlID, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		[ExcludeFromDocs]
+		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
+		{
+			bool drawHelper = false;
+			return Handles.Slider2D(id, handlePos, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, [DefaultValue("false")] bool drawHelper)
+		{
+			return UnityEditorInternal.Slider2D.Do(id, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		[ExcludeFromDocs]
+		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap)
+		{
+			bool drawHelper = false;
+			return Handles.Slider2D(handlePos, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
+		}
+		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap, [DefaultValue("false")] bool drawHelper)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_Slider2DHash, FocusType.Keyboard);
+			return Handles.Slider2D(controlID, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, new Vector2(snap, snap), drawHelper);
+		}
+		public static Quaternion FreeRotateHandle(Quaternion rotation, Vector3 position, float size)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_FreeRotateHandleHash, FocusType.Keyboard);
+			return FreeRotate.Do(controlID, rotation, position, size);
+		}
+		public static Vector3 FreeMoveHandle(Vector3 position, Quaternion rotation, float size, Vector3 snap, Handles.DrawCapFunction capFunc)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_FreeMoveHandleHash, FocusType.Keyboard);
+			return FreeMove.Do(controlID, position, rotation, size, snap, capFunc);
+		}
+		public static float ScaleSlider(float scale, Vector3 position, Vector3 direction, Quaternion rotation, float size, float snap)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_ScaleSliderHash, FocusType.Keyboard);
+			return SliderScale.DoAxis(controlID, scale, position, direction, rotation, size, snap);
+		}
+		public static float ScaleValueHandle(float value, Vector3 position, Quaternion rotation, float size, Handles.DrawCapFunction capFunc, float snap)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_ScaleValueHandleHash, FocusType.Keyboard);
+			return SliderScale.DoCenter(controlID, value, position, rotation, size, capFunc, snap);
+		}
+		public static Quaternion Disc(Quaternion rotation, Vector3 position, Vector3 axis, float size, bool cutoffPlane, float snap)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_DiscHash, FocusType.Keyboard);
+			return UnityEditorInternal.Disc.Do(controlID, rotation, position, axis, size, cutoffPlane, snap);
+		}
+		public static bool Button(Vector3 position, Quaternion direction, float size, float pickSize, Handles.DrawCapFunction capFunc)
+		{
+			int controlID = GUIUtility.GetControlID(Handles.s_ButtonHash, FocusType.Passive);
+			return UnityEditorInternal.Button.Do(controlID, position, direction, size, pickSize, capFunc);
+		}
+		internal static void SetupIgnoreRaySnapObjects()
+		{
+			HandleUtility.ignoreRaySnapObjects = Selection.GetTransforms((SelectionMode)10);
+		}
+		public static float SnapValue(float val, float snap)
+		{
+			if (EditorGUI.actionKey && snap > 0f)
+			{
+				return Mathf.Round(val / snap) * snap;
+			}
+			return val;
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_DrawCameraWithGrid(Camera cam, int renderMode, ref DrawGridParameters gridParam);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_DrawCamera(Camera cam, int renderMode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_FinishDrawingCamera(Camera cam);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_ClearCamera(Camera cam);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Internal_SetCurrentCamera(Camera cam);
+		internal static void SetSceneViewColors(Color wire, Color wireOverlay, Color active, Color selected)
+		{
+			Handles.INTERNAL_CALL_SetSceneViewColors(ref wire, ref wireOverlay, ref active, ref selected);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetSceneViewColors(ref Color wire, ref Color wireOverlay, ref Color active, ref Color selected);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void EnableCameraFx(Camera cam, bool fx);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void EnableCameraFlares(Camera cam, bool flares);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void EnableCameraSkybox(Camera cam, bool skybox);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetCameraOnlyDrawMesh(Camera cam);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_SetupCamera(Camera cam);
+		internal static void DrawTwoShadedWireDisc(Vector3 position, Vector3 axis, float radius)
+		{
+			Color color = Handles.color;
+			Color color2 = color;
+			color.a *= Handles.backfaceAlphaMultiplier;
+			Handles.color = color;
+			Handles.DrawWireDisc(position, axis, radius);
+			Handles.color = color2;
+		}
+		internal static void DrawTwoShadedWireDisc(Vector3 position, Vector3 axis, Vector3 from, float degrees, float radius)
+		{
+			Handles.DrawWireArc(position, axis, from, degrees, radius);
+			Color color = Handles.color;
+			Color color2 = color;
+			color.a *= Handles.backfaceAlphaMultiplier;
+			Handles.color = color;
+			Handles.DrawWireArc(position, axis, from, degrees - 360f, radius);
+			Handles.color = color2;
+		}
+		internal static Matrix4x4 StartCapDraw(Vector3 position, Quaternion rotation, float size)
+		{
+			Shader.SetGlobalColor("_HandleColor", Handles.realHandleColor);
+			Shader.SetGlobalFloat("_HandleSize", size);
+			Matrix4x4 matrix4x = Handles.matrix * Matrix4x4.TRS(position, rotation, Vector3.one);
+			Shader.SetGlobalMatrix("_ObjectToWorld", matrix4x);
+			HandleUtility.handleMaterial.SetPass(0);
+			return matrix4x;
+		}
+		public static void CubeCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Graphics.DrawMeshNow(Handles.s_CubeMesh, Handles.StartCapDraw(position, rotation, size));
+		}
+		public static void SphereCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Graphics.DrawMeshNow(Handles.s_SphereMesh, Handles.StartCapDraw(position, rotation, size));
+		}
+		public static void ConeCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Graphics.DrawMeshNow(Handles.s_ConeMesh, Handles.StartCapDraw(position, rotation, size));
+		}
+		public static void CylinderCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Graphics.DrawMeshNow(Handles.s_CylinderMesh, Handles.StartCapDraw(position, rotation, size));
+		}
+		public static void RectangleCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.RectangleCap(controlID, position, rotation, new Vector2(size, size));
+		}
+		internal static void RectangleCap(int controlID, Vector3 position, Quaternion rotation, Vector2 size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Vector3 b = rotation * new Vector3(size.x, 0f, 0f);
+			Vector3 b2 = rotation * new Vector3(0f, size.y, 0f);
+			Handles.s_RectangleCapPointsCache[0] = position + b + b2;
+			Handles.s_RectangleCapPointsCache[1] = position + b - b2;
+			Handles.s_RectangleCapPointsCache[2] = position - b - b2;
+			Handles.s_RectangleCapPointsCache[3] = position - b + b2;
+			Handles.s_RectangleCapPointsCache[4] = position + b + b2;
+			Handles.DrawPolyLine(Handles.s_RectangleCapPointsCache);
+		}
+		public static void SelectionFrame(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Handles.StartCapDraw(position, rotation, size);
+			Vector3 b = rotation * new Vector3(size, 0f, 0f);
+			Vector3 b2 = rotation * new Vector3(0f, size, 0f);
+			Vector3 vector = position - b + b2;
+			Vector3 vector2 = position + b + b2;
+			Vector3 vector3 = position + b - b2;
+			Vector3 vector4 = position - b - b2;
+			Handles.DrawLine(vector, vector2);
+			Handles.DrawLine(vector2, vector3);
+			Handles.DrawLine(vector3, vector4);
+			Handles.DrawLine(vector4, vector);
+		}
+		public static void DotCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			position = Handles.matrix.MultiplyPoint(position);
+			Vector3 b = Camera.current.transform.right * size;
+			Vector3 b2 = Camera.current.transform.up * size;
+			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.99f);
+			HandleUtility.ApplyWireMaterial();
+			GL.Begin(7);
+			GL.Color(c);
+			GL.Vertex(position + b + b2);
+			GL.Vertex(position + b - b2);
+			GL.Vertex(position - b - b2);
+			GL.Vertex(position - b + b2);
+			GL.End();
+		}
+		public static void CircleCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Handles.StartCapDraw(position, rotation, size);
+			Vector3 normal = rotation * new Vector3(0f, 0f, 1f);
+			Handles.DrawWireDisc(position, normal, size);
+		}
+		public static void ArrowCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Vector3 vector = rotation * Vector3.forward;
+			Handles.ConeCap(controlID, position + vector * size, Quaternion.LookRotation(vector), size * 0.2f);
+			Handles.DrawLine(position, position + vector * size * 0.9f);
+		}
+		[Obsolete("DrawCylinder has been renamed to CylinderCap.")]
+		public static void DrawCylinder(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.CylinderCap(controlID, position, rotation, size);
+		}
+		[Obsolete("DrawSphere has been renamed to SphereCap.")]
+		public static void DrawSphere(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.SphereCap(controlID, position, rotation, size);
+		}
+		[Obsolete("DrawRectangle has been renamed to RectangleCap.")]
+		public static void DrawRectangle(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.RectangleCap(controlID, position, rotation, size);
+		}
+		[Obsolete("DrawCube has been renamed to CubeCap.")]
+		public static void DrawCube(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.CubeCap(controlID, position, rotation, size);
+		}
+		[Obsolete("DrawArrow has been renamed to ArrowCap.")]
+		public static void DrawArrow(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.ArrowCap(controlID, position, rotation, size);
+		}
+		[Obsolete("DrawCone has been renamed to ConeCap.")]
+		public static void DrawCone(int controlID, Vector3 position, Quaternion rotation, float size)
+		{
+			Handles.ConeCap(controlID, position, rotation, size);
+		}
+		public static void DrawLine(Vector3 p1, Vector3 p2)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.75f);
+			HandleUtility.ApplyWireMaterial();
+			GL.PushMatrix();
+			GL.MultMatrix(Handles.matrix);
+			GL.Begin(1);
+			GL.Color(c);
+			GL.Vertex(p1);
+			GL.Vertex(p2);
+			GL.End();
+			GL.PopMatrix();
+		}
+		public static void DrawPolyLine(params Vector3[] points)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.75f);
+			HandleUtility.ApplyWireMaterial();
+			GL.PushMatrix();
+			GL.MultMatrix(Handles.matrix);
+			GL.Begin(1);
+			GL.Color(c);
+			for (int i = 1; i < points.Length; i++)
+			{
+				GL.Vertex(points[i]);
+				GL.Vertex(points[i - 1]);
+			}
+			GL.End();
+			GL.PopMatrix();
+		}
+		public static void DrawDottedLine(Vector3 p1, Vector3 p2, float screenSpaceSize)
+		{
+			Camera current = Camera.current;
+			if (!current || Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.75f);
+			HandleUtility.ApplyWireMaterial();
+			GL.PushMatrix();
+			GL.MultMatrix(Handles.matrix);
+			GL.Begin(1);
+			GL.Color(c);
+			Vector3 vector = current.WorldToScreenPoint(p1);
+			Vector3 vector2 = current.WorldToScreenPoint(p2);
+			float num = Vector2.Distance(vector, vector2);
+			int num2 = Mathf.CeilToInt(num / screenSpaceSize);
+			num2 = Mathf.Min(num2, 1000);
+			screenSpaceSize = num / (float)num2;
+			for (int i = 0; i < num2; i += 2)
+			{
+				GL.Vertex(current.ScreenToWorldPoint(Vector3.Lerp(vector, vector2, (float)i * screenSpaceSize / num)));
+				GL.Vertex(current.ScreenToWorldPoint(Vector3.Lerp(vector, vector2, (float)(i + 1) * screenSpaceSize / num)));
+			}
+			GL.End();
+			GL.PopMatrix();
+		}
+		internal static void DrawAAPolyLine(Color[] colors, Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(colors, points, -1, null, 2f, 0.75f);
+		}
+		internal static void DrawAAPolyLine(float width, Color[] colors, Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(colors, points, -1, null, width, 0.75f);
+		}
+		public static void DrawAAPolyLine(params Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(null, points, -1, null, 2f, 0.75f);
+		}
+		public static void DrawAAPolyLine(float width, params Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(null, points, -1, null, width, 0.75f);
+		}
+		public static void DrawAAPolyLine(Texture2D lineTex, params Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(null, points, -1, lineTex, (float)(lineTex.height / 2), 0.99f);
+		}
+		public static void DrawAAPolyLine(float width, int actualNumberOfPoints, params Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(null, points, actualNumberOfPoints, null, width, 0.75f);
+		}
+		public static void DrawAAPolyLine(Texture2D lineTex, float width, params Vector3[] points)
+		{
+			Handles.DoDrawAAPolyLine(null, points, -1, lineTex, width, 0.99f);
+		}
+		private static void DoDrawAAPolyLine(Color[] colors, Vector3[] points, int actualNumberOfPoints, Texture2D lineTex, float width, float alpha)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			HandleUtility.ApplyWireMaterial();
+			Color color = new Color(1f, 1f, 1f, alpha);
+			if (colors != null)
+			{
+				for (int i = 0; i < colors.Length; i++)
+				{
+					colors[i] *= color;
+				}
+			}
+			else
+			{
+				color *= Handles.s_Color;
+			}
+			Handles.Internal_DrawAAPolyLine(colors, points, color, actualNumberOfPoints, lineTex, width, Handles.matrix);
+		}
+		private static void Internal_DrawAAPolyLine(Color[] colors, Vector3[] points, Color defaultColor, int actualNumberOfPoints, Texture2D texture, float width, Matrix4x4 toWorld)
+		{
+			Handles.INTERNAL_CALL_Internal_DrawAAPolyLine(colors, points, ref defaultColor, actualNumberOfPoints, texture, width, ref toWorld);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_DrawAAPolyLine(Color[] colors, Vector3[] points, ref Color defaultColor, int actualNumberOfPoints, Texture2D texture, float width, ref Matrix4x4 toWorld);
+		public static void DrawAAConvexPolygon(params Vector3[] points)
+		{
+			Handles.DoDrawAAConvexPolygon(points, -1, 1f);
+		}
+		private static void DoDrawAAConvexPolygon(Vector3[] points, int actualNumberOfPoints, float alpha)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			HandleUtility.ApplyWireMaterial();
+			Color defaultColor = new Color(1f, 1f, 1f, alpha) * Handles.s_Color;
+			Handles.Internal_DrawAAConvexPolygon(points, defaultColor, actualNumberOfPoints, Handles.matrix);
+		}
+		private static void Internal_DrawAAConvexPolygon(Vector3[] points, Color defaultColor, int actualNumberOfPoints, Matrix4x4 toWorld)
+		{
+			Handles.INTERNAL_CALL_Internal_DrawAAConvexPolygon(points, ref defaultColor, actualNumberOfPoints, ref toWorld);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_DrawAAConvexPolygon(Vector3[] points, ref Color defaultColor, int actualNumberOfPoints, ref Matrix4x4 toWorld);
+		public static void DrawBezier(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, Color color, Texture2D texture, float width)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			HandleUtility.ApplyWireMaterial();
+			Handles.Internal_DrawBezier(startPosition, endPosition, startTangent, endTangent, color, texture, width, Handles.matrix);
+		}
+		private static void Internal_DrawBezier(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, Color color, Texture2D texture, float width, Matrix4x4 toWorld)
+		{
+			Handles.INTERNAL_CALL_Internal_DrawBezier(ref startPosition, ref endPosition, ref startTangent, ref endTangent, ref color, texture, width, ref toWorld);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_DrawBezier(ref Vector3 startPosition, ref Vector3 endPosition, ref Vector3 startTangent, ref Vector3 endTangent, ref Color color, Texture2D texture, float width, ref Matrix4x4 toWorld);
+		public static void DrawWireDisc(Vector3 center, Vector3 normal, float radius)
+		{
+			Vector3 from = Vector3.Cross(normal, Vector3.up);
+			if (from.sqrMagnitude < 0.001f)
+			{
+				from = Vector3.Cross(normal, Vector3.right);
+			}
+			Handles.DrawWireArc(center, normal, from, 360f, radius);
+		}
+		public static void DrawWireArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius)
+		{
+			Vector3[] array = new Vector3[60];
+			Handles.SetDiscSectionPoints(array, 60, center, normal, from, angle, radius);
+			Handles.DrawPolyLine(array);
+		}
+		public static void DrawSolidRectangleWithOutline(Vector3[] verts, Color faceColor, Color outlineColor)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			HandleUtility.ApplyWireMaterial();
+			GL.PushMatrix();
+			GL.MultMatrix(Handles.matrix);
+			if (faceColor.a > 0f)
+			{
+				Color c = faceColor * Handles.color;
+				GL.Begin(4);
+				for (int i = 0; i < 2; i++)
+				{
+					GL.Color(c);
+					GL.Vertex(verts[i * 2]);
+					GL.Vertex(verts[i * 2 + 1]);
+					GL.Vertex(verts[(i * 2 + 2) % 4]);
+					GL.Vertex(verts[i * 2]);
+					GL.Vertex(verts[(i * 2 + 2) % 4]);
+					GL.Vertex(verts[i * 2 + 1]);
+				}
+				GL.End();
+			}
+			if (outlineColor.a > 0f)
+			{
+				Color c2 = outlineColor * Handles.color;
+				GL.Begin(1);
+				GL.Color(c2);
+				for (int j = 0; j < 4; j++)
+				{
+					GL.Vertex(verts[j]);
+					GL.Vertex(verts[(j + 1) % 4]);
+				}
+				GL.End();
+			}
+			GL.PopMatrix();
+		}
+		public static void DrawSolidDisc(Vector3 center, Vector3 normal, float radius)
+		{
+			Vector3 from = Vector3.Cross(normal, Vector3.up);
+			if (from.sqrMagnitude < 0.001f)
+			{
+				from = Vector3.Cross(normal, Vector3.right);
+			}
+			Handles.DrawSolidArc(center, normal, from, 360f, radius);
+		}
+		public static void DrawSolidArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius)
+		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			Vector3[] array = new Vector3[60];
+			Handles.SetDiscSectionPoints(array, 60, center, normal, from, angle, radius);
+			Shader.SetGlobalColor("_HandleColor", Handles.color * new Color(1f, 1f, 1f, 0.5f));
+			Shader.SetGlobalFloat("_HandleSize", 1f);
+			HandleUtility.ApplyWireMaterial();
+			GL.PushMatrix();
+			GL.MultMatrix(Handles.matrix);
+			GL.Begin(4);
+			for (int i = 1; i < array.Length; i++)
+			{
+				GL.Color(Handles.color);
+				GL.Vertex(center);
+				GL.Vertex(array[i - 1]);
+				GL.Vertex(array[i]);
+				GL.Vertex(center);
+				GL.Vertex(array[i]);
+				GL.Vertex(array[i - 1]);
+			}
+			GL.End();
+			GL.PopMatrix();
+		}
+		internal static void SetDiscSectionPoints(Vector3[] dest, int count, Vector3 center, Vector3 normal, Vector3 from, float angle, float radius)
+		{
+			from.Normalize();
+			Quaternion rotation = Quaternion.AngleAxis(angle / (float)(count - 1), normal);
+			Vector3 vector = from * radius;
+			for (int i = 0; i < count; i++)
+			{
+				dest[i] = center + vector;
+				vector = rotation * vector;
+			}
+		}
+		internal static void Init()
+		{
+			if (!Handles.s_CubeMesh)
+			{
+				GameObject gameObject = (GameObject)EditorGUIUtility.Load("SceneView/HandlesGO.fbx");
+				if (!gameObject)
+				{
+					Debug.Log("ARGH - We couldn't find SceneView/HandlesGO.fbx");
+				}
+				gameObject.SetActive(false);
+				foreach (Transform transform in gameObject.transform)
+				{
+					MeshFilter component = transform.GetComponent<MeshFilter>();
+					string name = transform.name;
+					switch (name)
+					{
+					case "Cube":
+						Handles.s_CubeMesh = component.sharedMesh;
+						break;
+					case "Sphere":
+						Handles.s_SphereMesh = component.sharedMesh;
+						break;
+					case "Cone":
+						Handles.s_ConeMesh = component.sharedMesh;
+						break;
+					case "Cylinder":
+						Handles.s_CylinderMesh = component.sharedMesh;
+						break;
+					case "Quad":
+						Handles.s_QuadMesh = component.sharedMesh;
+						break;
+					}
+				}
+				if (Application.platform == RuntimePlatform.WindowsEditor)
+				{
+					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande.ttf"));
+					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Bold.ttf"));
+					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Small.ttf"));
+					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Small Bold.ttf"));
+					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Big.ttf"));
+				}
+			}
+		}
+		private static void ReplaceFontForWindows(Font font)
+		{
+			if (font.name.Contains("Bold"))
+			{
+				font.fontNames = new string[]
+				{
+					"Verdana Bold",
+					"Tahoma Bold"
+				};
+			}
+			else
+			{
+				font.fontNames = new string[]
+				{
+					"Verdana",
+					"Tahoma"
+				};
+			}
+			font.hideFlags = HideFlags.HideAndDontSave;
+		}
+		public static void Label(Vector3 position, string text)
+		{
+			Handles.Label(position, EditorGUIUtility.TempContent(text), GUI.skin.label);
+		}
+		public static void Label(Vector3 position, Texture image)
+		{
+			Handles.Label(position, EditorGUIUtility.TempContent(image), GUI.skin.label);
+		}
+		public static void Label(Vector3 position, GUIContent content)
+		{
+			Handles.Label(position, content, GUI.skin.label);
+		}
+		public static void Label(Vector3 position, string text, GUIStyle style)
+		{
+			Handles.Label(position, EditorGUIUtility.TempContent(text), style);
+		}
+		public static void Label(Vector3 position, GUIContent content, GUIStyle style)
+		{
+			Handles.BeginGUI();
+			GUI.Label(HandleUtility.WorldPointToSizedRect(position, content, style), content, style);
+			Handles.EndGUI();
+		}
+		internal static Rect GetCameraRect(Rect position)
+		{
+			Rect rect = GUIClip.Unclip(position);
+			Rect result = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
+			return result;
+		}
+		public static Vector2 GetMainGameViewSize()
+		{
+			return GameView.GetSizeOfMainGameView();
+		}
+		public static void ClearCamera(Rect position, Camera camera)
+		{
+			Event current = Event.current;
+			if (camera.targetTexture == null)
+			{
+				Rect rect = GUIClip.Unclip(position);
+				Rect pixelRect = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
+				camera.pixelRect = pixelRect;
+			}
+			else
+			{
+				camera.rect = new Rect(0f, 0f, 1f, 1f);
+			}
+			if (current.type == EventType.Repaint)
+			{
+				Handles.Internal_ClearCamera(camera);
+			}
+			else
+			{
+				Handles.Internal_SetCurrentCamera(camera);
+			}
+		}
+		internal static void DrawCameraImpl(Rect position, Camera camera, DrawCameraMode drawMode, bool drawGrid, DrawGridParameters gridParam, bool finish)
+		{
+			Event current = Event.current;
+			if (current.type == EventType.Repaint)
+			{
+				if (camera.targetTexture == null)
+				{
+					Rect rect = GUIClip.Unclip(position);
+					camera.pixelRect = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
+				}
+				else
+				{
+					camera.rect = new Rect(0f, 0f, 1f, 1f);
+				}
+				if (drawMode == DrawCameraMode.Normal)
+				{
+					RenderTexture targetTexture = camera.targetTexture;
+					camera.targetTexture = RenderTexture.active;
+					camera.Render();
+					camera.targetTexture = targetTexture;
+				}
+				else
+				{
+					if (drawGrid)
+					{
+						Handles.Internal_DrawCameraWithGrid(camera, (int)drawMode, ref gridParam);
+					}
+					else
+					{
+						Handles.Internal_DrawCamera(camera, (int)drawMode);
+					}
+					if (finish)
+					{
+						Handles.Internal_FinishDrawingCamera(camera);
+					}
+				}
+			}
+			else
+			{
+				Handles.Internal_SetCurrentCamera(camera);
+			}
+		}
+		internal static void DrawCamera(Rect position, Camera camera, DrawCameraMode drawMode, DrawGridParameters gridParam)
+		{
+			Handles.DrawCameraImpl(position, camera, drawMode, true, gridParam, true);
+		}
+		internal static void DrawCameraStep1(Rect position, Camera camera, DrawCameraMode drawMode, DrawGridParameters gridParam)
+		{
+			Handles.DrawCameraImpl(position, camera, drawMode, true, gridParam, false);
+		}
+		internal static void DrawCameraStep2(Camera camera, DrawCameraMode drawMode)
+		{
+			if (Event.current.type == EventType.Repaint && drawMode != DrawCameraMode.Normal)
+			{
+				Handles.Internal_FinishDrawingCamera(camera);
+			}
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool DrawCameraTonemap(Camera camera, RenderTexture srcRT, RenderTexture dstRT);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void EmitGUIGeometryForCamera(Camera source, Camera dest);
+		[ExcludeFromDocs]
+		public static void DrawCamera(Rect position, Camera camera)
+		{
+			DrawCameraMode drawMode = DrawCameraMode.Normal;
+			Handles.DrawCamera(position, camera, drawMode);
+		}
+		public static void DrawCamera(Rect position, Camera camera, [DefaultValue("DrawCameraMode.Normal")] DrawCameraMode drawMode)
+		{
+			Handles.DrawCameraImpl(position, camera, drawMode, false, default(DrawGridParameters), true);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetCameraFilterMode(Camera camera, Handles.FilterMode mode);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern Handles.FilterMode GetCameraFilterMode(Camera camera);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void DrawCameraFade(Camera camera, float fade);
+		public static void SetCamera(Camera camera)
+		{
+			if (Event.current.type == EventType.Repaint)
+			{
+				Handles.Internal_SetupCamera(camera);
+			}
+			else
+			{
+				Handles.Internal_SetCurrentCamera(camera);
+			}
+		}
+		public static void SetCamera(Rect position, Camera camera)
+		{
+			Rect rect = GUIClip.Unclip(position);
+			Event current = Event.current;
+			Rect pixelRect = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
+			camera.pixelRect = pixelRect;
+			if (current.type == EventType.Repaint)
+			{
+				Handles.Internal_SetupCamera(camera);
+			}
+			else
+			{
+				Handles.Internal_SetCurrentCamera(camera);
+			}
+		}
+		public static void BeginGUI()
+		{
+			if (Camera.current && Event.current.type == EventType.Repaint)
+			{
+				GUIClip.Reapply();
+			}
+		}
+		[Obsolete("Please use BeginGUI() with GUILayout.BeginArea(position) / GUILayout.EndArea()")]
+		public static void BeginGUI(Rect position)
+		{
+			GUILayout.BeginArea(position);
+		}
+		public static void EndGUI()
+		{
+			Camera current = Camera.current;
+			if (current && Event.current.type == EventType.Repaint)
+			{
+				Handles.Internal_SetupCamera(current);
+			}
+		}
+		internal static void ShowStaticLabelIfNeeded(Vector3 pos)
+		{
+			if (!Tools.s_Hidden && EditorApplication.isPlaying && GameObjectUtility.ContainsStatic(Selection.gameObjects))
+			{
+				Handles.color = Color.white;
+				GUIStyle gUIStyle = "SC ViewAxisLabel";
+				gUIStyle.alignment = TextAnchor.MiddleLeft;
+				gUIStyle.fixedWidth = 0f;
+				Handles.BeginGUI();
+				Rect position = HandleUtility.WorldPointToSizedRect(pos, EditorGUIUtility.TempContent("Static"), gUIStyle);
+				position.x += 10f;
+				position.y += 10f;
+				GUI.Label(position, EditorGUIUtility.TempContent("Static"), gUIStyle);
+				Handles.EndGUI();
+			}
+		}
+		private static Vector3[] Internal_MakeBezierPoints(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, int division)
+		{
+			return Handles.INTERNAL_CALL_Internal_MakeBezierPoints(ref startPosition, ref endPosition, ref startTangent, ref endTangent, division);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Vector3[] INTERNAL_CALL_Internal_MakeBezierPoints(ref Vector3 startPosition, ref Vector3 endPosition, ref Vector3 startTangent, ref Vector3 endTangent, int division);
+		public static Vector3[] MakeBezierPoints(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, int division)
+		{
+			return Handles.Internal_MakeBezierPoints(startPosition, endPosition, startTangent, endTangent, division);
 		}
 		internal static float DistanceToPolygone(Vector3[] vertices)
 		{
@@ -295,7 +1149,7 @@ namespace UnityEditor
 		internal static void DrawBone(Vector3 endPoint, Vector3 basePoint, float size)
 		{
 			Vector3[] boneVertices = Handles.GetBoneVertices(endPoint, basePoint, size);
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(4);
 			GL.Color(Handles.s_Color);
 			for (int i = 0; i < 3; i++)
@@ -754,6 +1608,71 @@ namespace UnityEditor
 			}
 			return scale;
 		}
+		internal static float DoSimpleEdgeHandle(Quaternion rotation, Vector3 position, float radius)
+		{
+			Vector3 vector = rotation * Vector3.right;
+			EditorGUI.BeginChangeCheck();
+			radius = Handles.SizeSlider(position, vector, radius);
+			radius = Handles.SizeSlider(position, -vector, radius);
+			if (EditorGUI.EndChangeCheck())
+			{
+				radius = Mathf.Max(0f, radius);
+			}
+			if (radius > 0f)
+			{
+				Handles.DrawLine(position - vector * radius, position + vector * radius);
+			}
+			return radius;
+		}
+		internal static void DoSimpleRadiusArcHandleXY(Quaternion rotation, Vector3 position, ref float radius, ref float arc)
+		{
+			Vector3 vector = rotation * Vector3.forward;
+			Vector3 vector2 = rotation * Vector3.up;
+			Vector3 vector3 = rotation * Vector3.right;
+			Vector3 a = Quaternion.Euler(0f, 0f, arc) * vector3;
+			EditorGUI.BeginChangeCheck();
+			if (arc < 315f)
+			{
+				radius = Handles.SizeSlider(position, vector3, radius);
+			}
+			if (arc > 135f)
+			{
+				radius = Handles.SizeSlider(position, vector2, radius);
+			}
+			if (arc > 225f)
+			{
+				radius = Handles.SizeSlider(position, -vector3, radius);
+			}
+			if (arc > 315f)
+			{
+				radius = Handles.SizeSlider(position, -vector2, radius);
+			}
+			if (EditorGUI.EndChangeCheck())
+			{
+				radius = Mathf.Max(0f, radius);
+			}
+			if (radius > 0f)
+			{
+				Handles.DrawWireArc(position, vector, vector3, arc, radius);
+				if (arc < 360f)
+				{
+					Handles.DrawLine(position, vector3 * radius);
+					Handles.DrawLine(position, a * radius);
+				}
+				else
+				{
+					Handles.DrawDottedLine(position, vector3 * radius, 5f);
+				}
+				Vector3 vector4 = a * radius;
+				float handleSize = HandleUtility.GetHandleSize(vector4);
+				EditorGUI.BeginChangeCheck();
+				Vector3 rhs = Handles.FreeMoveHandle(vector4, Quaternion.identity, handleSize * 0.03f, SnapSettings.move, new Handles.DrawCapFunction(Handles.CircleCap));
+				if (EditorGUI.EndChangeCheck())
+				{
+					arc += Mathf.Atan2(Vector3.Dot(vector, Vector3.Cross(vector4, rhs)), Vector3.Dot(vector4, rhs)) * 57.29578f;
+				}
+			}
+		}
 		internal static float DoSimpleRadiusHandle(Quaternion rotation, Vector3 position, float radius, bool hemisphere)
 		{
 			Vector3 vector = rotation * Vector3.forward;
@@ -789,830 +1708,6 @@ namespace UnityEditor
 				Handles.DrawWireArc(position, vector3, vector2, (float)((!hemisphere) ? 360 : 180), radius);
 			}
 			return radius;
-		}
-		public static Vector3 PositionHandle(Vector3 position, Quaternion rotation)
-		{
-			return Handles.DoPositionHandle(position, rotation);
-		}
-		public static Quaternion RotationHandle(Quaternion rotation, Vector3 position)
-		{
-			return Handles.DoRotationHandle(rotation, position);
-		}
-		public static Vector3 ScaleHandle(Vector3 scale, Vector3 position, Quaternion rotation, float size)
-		{
-			return Handles.DoScaleHandle(scale, position, rotation, size);
-		}
-		public static float RadiusHandle(Quaternion rotation, Vector3 position, float radius, bool handlesOnly)
-		{
-			return Handles.DoRadiusHandle(rotation, position, radius, handlesOnly);
-		}
-		public static float RadiusHandle(Quaternion rotation, Vector3 position, float radius)
-		{
-			return Handles.DoRadiusHandle(rotation, position, radius, false);
-		}
-		internal static Vector2 ConeHandle(Quaternion rotation, Vector3 position, Vector2 angleAndRange, float angleScale, float rangeScale, bool handlesOnly)
-		{
-			return Handles.DoConeHandle(rotation, position, angleAndRange, angleScale, rangeScale, handlesOnly);
-		}
-		internal static Vector3 ConeFrustrumHandle(Quaternion rotation, Vector3 position, Vector3 radiusAngleRange)
-		{
-			return Handles.DoConeFrustrumHandle(rotation, position, radiusAngleRange);
-		}
-		public static Vector3 Slider(Vector3 position, Vector3 direction)
-		{
-			return Handles.Slider(position, direction, HandleUtility.GetHandleSize(position), new Handles.DrawCapFunction(Handles.ArrowCap), -1f);
-		}
-		public static Vector3 Slider(Vector3 position, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_SliderHash, FocusType.Keyboard);
-			return Slider1D.Do(controlID, position, direction, size, drawFunc, snap);
-		}
-		[ExcludeFromDocs]
-		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
-		{
-			bool drawHelper = false;
-			return Handles.Slider2D(id, handlePos, offset, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, [DefaultValue("false")] bool drawHelper)
-		{
-			return UnityEditorInternal.Slider2D.Do(id, handlePos, offset, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		[ExcludeFromDocs]
-		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
-		{
-			bool drawHelper = false;
-			return Handles.Slider2D(handlePos, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, [DefaultValue("false")] bool drawHelper)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_Slider2DHash, FocusType.Keyboard);
-			return UnityEditorInternal.Slider2D.Do(controlID, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		[ExcludeFromDocs]
-		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
-		{
-			bool drawHelper = false;
-			return Handles.Slider2D(id, handlePos, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		public static Vector3 Slider2D(int id, Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, [DefaultValue("false")] bool drawHelper)
-		{
-			return UnityEditorInternal.Slider2D.Do(id, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		[ExcludeFromDocs]
-		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap)
-		{
-			bool drawHelper = false;
-			return Handles.Slider2D(handlePos, handleDir, slideDir1, slideDir2, handleSize, drawFunc, snap, drawHelper);
-		}
-		public static Vector3 Slider2D(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap, [DefaultValue("false")] bool drawHelper)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_Slider2DHash, FocusType.Keyboard);
-			return Handles.Slider2D(controlID, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, new Vector2(snap, snap), drawHelper);
-		}
-		public static Quaternion FreeRotateHandle(Quaternion rotation, Vector3 position, float size)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_FreeRotateHandleHash, FocusType.Keyboard);
-			return FreeRotate.Do(controlID, rotation, position, size);
-		}
-		public static Vector3 FreeMoveHandle(Vector3 position, Quaternion rotation, float size, Vector3 snap, Handles.DrawCapFunction capFunc)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_FreeMoveHandleHash, FocusType.Keyboard);
-			return FreeMove.Do(controlID, position, rotation, size, snap, capFunc);
-		}
-		public static float ScaleSlider(float scale, Vector3 position, Vector3 direction, Quaternion rotation, float size, float snap)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_ScaleSliderHash, FocusType.Keyboard);
-			return SliderScale.DoAxis(controlID, scale, position, direction, rotation, size, snap);
-		}
-		public static float ScaleValueHandle(float value, Vector3 position, Quaternion rotation, float size, Handles.DrawCapFunction capFunc, float snap)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_ScaleValueHandleHash, FocusType.Keyboard);
-			return SliderScale.DoCenter(controlID, value, position, rotation, size, capFunc, snap);
-		}
-		public static Quaternion Disc(Quaternion rotation, Vector3 position, Vector3 axis, float size, bool cutoffPlane, float snap)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_DiscHash, FocusType.Keyboard);
-			return UnityEditorInternal.Disc.Do(controlID, rotation, position, axis, size, cutoffPlane, snap);
-		}
-		public static bool Button(Vector3 position, Quaternion direction, float size, float pickSize, Handles.DrawCapFunction capFunc)
-		{
-			int controlID = GUIUtility.GetControlID(Handles.s_ButtonHash, FocusType.Passive);
-			return UnityEditorInternal.Button.Do(controlID, position, direction, size, pickSize, capFunc);
-		}
-		internal static void SetupIgnoreRaySnapObjects()
-		{
-			HandleUtility.ignoreRaySnapObjects = Selection.GetTransforms((SelectionMode)10);
-		}
-		public static float SnapValue(float val, float snap)
-		{
-			if (EditorGUI.actionKey && snap > 0f)
-			{
-				return Mathf.Round(val / snap) * snap;
-			}
-			return val;
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_DrawCameraWithGrid(Camera cam, int renderMode, ref DrawGridParameters gridParam);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_DrawCamera(Camera cam, int renderMode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_FinishDrawingCamera(Camera cam);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_ClearCamera(Camera cam);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void Internal_SetCurrentCamera(Camera cam);
-		internal static void SetSceneViewColors(Color wire, Color wireOverlay, Color active, Color selected)
-		{
-			Handles.INTERNAL_CALL_SetSceneViewColors(ref wire, ref wireOverlay, ref active, ref selected);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetSceneViewColors(ref Color wire, ref Color wireOverlay, ref Color active, ref Color selected);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EnableCameraFx(Camera cam, bool fx);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EnableCameraFlares(Camera cam, bool flares);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EnableCameraSkybox(Camera cam, bool skybox);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetCameraOnlyDrawMesh(Camera cam);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_SetupCamera(Camera cam);
-		internal static void DrawTwoShadedWireDisc(Vector3 position, Vector3 axis, float radius)
-		{
-			Color color = Handles.color;
-			Color color2 = color;
-			color.a *= Handles.backfaceAlphaMultiplier;
-			Handles.color = color;
-			Handles.DrawWireDisc(position, axis, radius);
-			Handles.color = color2;
-		}
-		internal static void DrawTwoShadedWireDisc(Vector3 position, Vector3 axis, Vector3 from, float degrees, float radius)
-		{
-			Handles.DrawWireArc(position, axis, from, degrees, radius);
-			Color color = Handles.color;
-			Color color2 = color;
-			color.a *= Handles.backfaceAlphaMultiplier;
-			Handles.color = color;
-			Handles.DrawWireArc(position, axis, from, degrees - 360f, radius);
-			Handles.color = color2;
-		}
-		internal static Matrix4x4 StartCapDraw(Vector3 position, Quaternion rotation, float size)
-		{
-			Shader.SetGlobalColor("_HandleColor", Handles.realHandleColor);
-			Shader.SetGlobalFloat("_HandleSize", size);
-			Matrix4x4 matrix4x = Handles.matrix * Matrix4x4.TRS(position, rotation, Vector3.one);
-			Shader.SetGlobalMatrix("_ObjectToWorld", matrix4x);
-			HandleUtility.handleMaterial.SetPass(0);
-			return matrix4x;
-		}
-		public static void CubeCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Graphics.DrawMeshNow(Handles.s_CubeMesh, Handles.StartCapDraw(position, rotation, size));
-		}
-		public static void SphereCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Graphics.DrawMeshNow(Handles.s_SphereMesh, Handles.StartCapDraw(position, rotation, size));
-		}
-		public static void ConeCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Graphics.DrawMeshNow(Handles.s_ConeMesh, Handles.StartCapDraw(position, rotation, size));
-		}
-		public static void CylinderCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Graphics.DrawMeshNow(Handles.s_CylinderMesh, Handles.StartCapDraw(position, rotation, size));
-		}
-		public static void RectangleCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.RectangleCap(controlID, position, rotation, new Vector2(size, size));
-		}
-		internal static void RectangleCap(int controlID, Vector3 position, Quaternion rotation, Vector2 size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Vector3 b = rotation * new Vector3(size.x, 0f, 0f);
-			Vector3 b2 = rotation * new Vector3(0f, size.y, 0f);
-			Handles.s_RectangleCapPointsCache[0] = position + b + b2;
-			Handles.s_RectangleCapPointsCache[1] = position + b - b2;
-			Handles.s_RectangleCapPointsCache[2] = position - b - b2;
-			Handles.s_RectangleCapPointsCache[3] = position - b + b2;
-			Handles.s_RectangleCapPointsCache[4] = position + b + b2;
-			Handles.DrawPolyLine(Handles.s_RectangleCapPointsCache);
-		}
-		public static void SelectionFrame(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Handles.StartCapDraw(position, rotation, size);
-			Vector3 b = rotation * new Vector3(size, 0f, 0f);
-			Vector3 b2 = rotation * new Vector3(0f, size, 0f);
-			Vector3 vector = position - b + b2;
-			Vector3 vector2 = position + b + b2;
-			Vector3 vector3 = position + b - b2;
-			Vector3 vector4 = position - b - b2;
-			Handles.DrawLine(vector, vector2);
-			Handles.DrawLine(vector2, vector3);
-			Handles.DrawLine(vector3, vector4);
-			Handles.DrawLine(vector4, vector);
-		}
-		public static void DotCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			position = Handles.matrix.MultiplyPoint(position);
-			Vector3 b = Camera.current.transform.right * size;
-			Vector3 b2 = Camera.current.transform.up * size;
-			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.99f);
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.Begin(7);
-			GL.Color(c);
-			GL.Vertex(position + b + b2);
-			GL.Vertex(position + b - b2);
-			GL.Vertex(position - b - b2);
-			GL.Vertex(position - b + b2);
-			GL.End();
-		}
-		public static void CircleCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Handles.StartCapDraw(position, rotation, size);
-			Vector3 normal = rotation * new Vector3(0f, 0f, 1f);
-			Handles.DrawWireDisc(position, normal, size);
-		}
-		public static void ArrowCap(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Vector3 vector = rotation * Vector3.forward;
-			Handles.ConeCap(controlID, position + vector * size, Quaternion.LookRotation(vector), size * 0.2f);
-			Handles.DrawLine(position, position + vector * size * 0.9f);
-		}
-		[Obsolete("DrawCylinder has been renamed to CylinderCap.")]
-		public static void DrawCylinder(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.CylinderCap(controlID, position, rotation, size);
-		}
-		[Obsolete("DrawSphere has been renamed to SphereCap.")]
-		public static void DrawSphere(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.SphereCap(controlID, position, rotation, size);
-		}
-		[Obsolete("DrawRectangle has been renamed to RectangleCap.")]
-		public static void DrawRectangle(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.RectangleCap(controlID, position, rotation, size);
-		}
-		[Obsolete("DrawCube has been renamed to CubeCap.")]
-		public static void DrawCube(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.CubeCap(controlID, position, rotation, size);
-		}
-		[Obsolete("DrawArrow has been renamed to ArrowCap.")]
-		public static void DrawArrow(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.ArrowCap(controlID, position, rotation, size);
-		}
-		[Obsolete("DrawCone has been renamed to ConeCap.")]
-		public static void DrawCone(int controlID, Vector3 position, Quaternion rotation, float size)
-		{
-			Handles.ConeCap(controlID, position, rotation, size);
-		}
-		public static void DrawLine(Vector3 p1, Vector3 p2)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.75f);
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			GL.Begin(1);
-			GL.Color(c);
-			GL.Vertex(p1);
-			GL.Vertex(p2);
-			GL.End();
-			GL.PopMatrix();
-		}
-		public static void DrawPolyLine(params Vector3[] points)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.75f);
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			GL.Begin(1);
-			GL.Color(c);
-			for (int i = 1; i < points.Length; i++)
-			{
-				GL.Vertex(points[i]);
-				GL.Vertex(points[i - 1]);
-			}
-			GL.End();
-			GL.PopMatrix();
-		}
-		public static void DrawDottedLine(Vector3 p1, Vector3 p2, float screenSpaceSize)
-		{
-			Camera current = Camera.current;
-			if (!current || Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Color c = Handles.s_Color * new Color(1f, 1f, 1f, 0.75f);
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			GL.Begin(1);
-			GL.Color(c);
-			Vector3 vector = current.WorldToScreenPoint(p1);
-			Vector3 vector2 = current.WorldToScreenPoint(p2);
-			float num = Vector2.Distance(vector, vector2);
-			int num2 = Mathf.CeilToInt(num / screenSpaceSize);
-			num2 = Mathf.Min(num2, 1000);
-			screenSpaceSize = num / (float)num2;
-			for (int i = 0; i < num2; i += 2)
-			{
-				GL.Vertex(current.ScreenToWorldPoint(Vector3.Lerp(vector, vector2, (float)i * screenSpaceSize / num)));
-				GL.Vertex(current.ScreenToWorldPoint(Vector3.Lerp(vector, vector2, (float)(i + 1) * screenSpaceSize / num)));
-			}
-			GL.End();
-			GL.PopMatrix();
-		}
-		internal static void DrawAAPolyLine(Color[] colors, Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(colors, points, -1, null, 2f, 0.75f);
-		}
-		internal static void DrawAAPolyLine(float width, Color[] colors, Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(colors, points, -1, null, width, 0.75f);
-		}
-		public static void DrawAAPolyLine(params Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(null, points, -1, null, 2f, 0.75f);
-		}
-		public static void DrawAAPolyLine(float width, params Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(null, points, -1, null, width, 0.75f);
-		}
-		public static void DrawAAPolyLine(Texture2D lineTex, params Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(null, points, -1, lineTex, (float)(lineTex.height / 2), 0.99f);
-		}
-		public static void DrawAAPolyLine(float width, int actualNumberOfPoints, params Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(null, points, actualNumberOfPoints, null, width, 0.75f);
-		}
-		public static void DrawAAPolyLine(Texture2D lineTex, float width, params Vector3[] points)
-		{
-			Handles.DoDrawAAPolyLine(null, points, -1, lineTex, width, 0.99f);
-		}
-		private static void DoDrawAAPolyLine(Color[] colors, Vector3[] points, int actualNumberOfPoints, Texture2D lineTex, float width, float alpha)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			HandleUtility.handleWireMaterial.SetPass(0);
-			Color color = new Color(1f, 1f, 1f, alpha);
-			if (colors != null)
-			{
-				for (int i = 0; i < colors.Length; i++)
-				{
-					colors[i] *= color;
-				}
-			}
-			else
-			{
-				color *= Handles.s_Color;
-			}
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			Handles.Internal_DrawAAPolyLine(colors, points, color, actualNumberOfPoints, lineTex, width);
-			GL.PopMatrix();
-		}
-		private static void Internal_DrawAAPolyLine(Color[] colors, Vector3[] points, Color defaultColor, int actualNumberOfPoints, Texture2D texture, float width)
-		{
-			Handles.INTERNAL_CALL_Internal_DrawAAPolyLine(colors, points, ref defaultColor, actualNumberOfPoints, texture, width);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DrawAAPolyLine(Color[] colors, Vector3[] points, ref Color defaultColor, int actualNumberOfPoints, Texture2D texture, float width);
-		public static void DrawBezier(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, Color color, Texture2D texture, float width)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			Handles.Internal_DrawBezier(startPosition, endPosition, startTangent, endTangent, color, texture, width);
-			GL.PopMatrix();
-		}
-		private static void Internal_DrawBezier(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, Color color, Texture2D texture, float width)
-		{
-			Handles.INTERNAL_CALL_Internal_DrawBezier(ref startPosition, ref endPosition, ref startTangent, ref endTangent, ref color, texture, width);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DrawBezier(ref Vector3 startPosition, ref Vector3 endPosition, ref Vector3 startTangent, ref Vector3 endTangent, ref Color color, Texture2D texture, float width);
-		public static void DrawWireDisc(Vector3 center, Vector3 normal, float radius)
-		{
-			Vector3 from = Vector3.Cross(normal, Vector3.up);
-			if (from.sqrMagnitude < 0.001f)
-			{
-				from = Vector3.Cross(normal, Vector3.right);
-			}
-			Handles.DrawWireArc(center, normal, from, 360f, radius);
-		}
-		public static void DrawWireArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius)
-		{
-			Vector3[] array = new Vector3[60];
-			Handles.SetDiscSectionPoints(array, 60, center, normal, from, angle, radius);
-			Handles.DrawPolyLine(array);
-		}
-		public static void DrawSolidRectangleWithOutline(Vector3[] verts, Color faceColor, Color outlineColor)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			if (faceColor.a > 0f)
-			{
-				Color c = faceColor * Handles.color;
-				GL.Begin(4);
-				for (int i = 0; i < 2; i++)
-				{
-					GL.Color(c);
-					GL.Vertex(verts[i * 2]);
-					GL.Vertex(verts[i * 2 + 1]);
-					GL.Vertex(verts[(i * 2 + 2) % 4]);
-					GL.Vertex(verts[i * 2]);
-					GL.Vertex(verts[(i * 2 + 2) % 4]);
-					GL.Vertex(verts[i * 2 + 1]);
-				}
-				GL.End();
-			}
-			if (outlineColor.a > 0f)
-			{
-				Color c2 = outlineColor * Handles.color;
-				GL.Begin(1);
-				GL.Color(c2);
-				for (int j = 0; j < 4; j++)
-				{
-					GL.Vertex(verts[j]);
-					GL.Vertex(verts[(j + 1) % 4]);
-				}
-				GL.End();
-			}
-			GL.PopMatrix();
-		}
-		public static void DrawSolidDisc(Vector3 center, Vector3 normal, float radius)
-		{
-			Vector3 from = Vector3.Cross(normal, Vector3.up);
-			if (from.sqrMagnitude < 0.001f)
-			{
-				from = Vector3.Cross(normal, Vector3.right);
-			}
-			Handles.DrawSolidArc(center, normal, from, 360f, radius);
-		}
-		public static void DrawSolidArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Vector3[] array = new Vector3[60];
-			Handles.SetDiscSectionPoints(array, 60, center, normal, from, angle, radius);
-			Shader.SetGlobalColor("_HandleColor", Handles.color * new Color(1f, 1f, 1f, 0.5f));
-			Shader.SetGlobalFloat("_HandleSize", 1f);
-			HandleUtility.handleWireMaterial.SetPass(0);
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			GL.Begin(4);
-			for (int i = 1; i < array.Length; i++)
-			{
-				GL.Color(Handles.color);
-				GL.Vertex(center);
-				GL.Vertex(array[i - 1]);
-				GL.Vertex(array[i]);
-				GL.Vertex(center);
-				GL.Vertex(array[i]);
-				GL.Vertex(array[i - 1]);
-			}
-			GL.End();
-			GL.PopMatrix();
-		}
-		internal static void SetDiscSectionPoints(Vector3[] dest, int count, Vector3 center, Vector3 normal, Vector3 from, float angle, float radius)
-		{
-			from.Normalize();
-			Quaternion rotation = Quaternion.AngleAxis(angle / (float)(count - 1), normal);
-			Vector3 vector = from * radius;
-			for (int i = 0; i < count; i++)
-			{
-				dest[i] = center + vector;
-				vector = rotation * vector;
-			}
-		}
-		internal static void Init()
-		{
-			if (!Handles.s_CubeMesh)
-			{
-				GameObject gameObject = (GameObject)EditorGUIUtility.Load("SceneView/HandlesGO.fbx");
-				if (!gameObject)
-				{
-					Debug.Log("ARGH - We couldn't find SceneView/HandlesGO.fbx");
-				}
-				gameObject.SetActive(false);
-				foreach (Transform transform in gameObject.transform)
-				{
-					string name = transform.name;
-					switch (name)
-					{
-					case "Cube":
-						Handles.s_CubeMesh = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
-						break;
-					case "Sphere":
-						Handles.s_SphereMesh = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
-						break;
-					case "Cone":
-						Handles.s_ConeMesh = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
-						break;
-					case "Cylinder":
-						Handles.s_CylinderMesh = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
-						break;
-					case "Quad":
-						Handles.s_QuadMesh = ((MeshFilter)transform.GetComponent("MeshFilter")).sharedMesh;
-						break;
-					}
-				}
-				if (Application.platform == RuntimePlatform.WindowsEditor)
-				{
-					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande.ttf"));
-					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Bold.ttf"));
-					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Small.ttf"));
-					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Small Bold.ttf"));
-					Handles.ReplaceFontForWindows((Font)EditorGUIUtility.LoadRequired(EditorResourcesUtility.fontsPath + "Lucida Grande Big.ttf"));
-				}
-			}
-		}
-		private static void ReplaceFontForWindows(Font font)
-		{
-			if (font.name.Contains("Bold"))
-			{
-				font.fontNames = new string[]
-				{
-					"Verdana Bold",
-					"Tahoma Bold"
-				};
-			}
-			else
-			{
-				font.fontNames = new string[]
-				{
-					"Verdana",
-					"Tahoma"
-				};
-			}
-			font.hideFlags = HideFlags.HideAndDontSave;
-		}
-		public static void Label(Vector3 position, string text)
-		{
-			Handles.Label(position, EditorGUIUtility.TempContent(text), GUI.skin.label);
-		}
-		public static void Label(Vector3 position, Texture image)
-		{
-			Handles.Label(position, EditorGUIUtility.TempContent(image), GUI.skin.label);
-		}
-		public static void Label(Vector3 position, GUIContent content)
-		{
-			Handles.Label(position, content, GUI.skin.label);
-		}
-		public static void Label(Vector3 position, string text, GUIStyle style)
-		{
-			Handles.Label(position, EditorGUIUtility.TempContent(text), style);
-		}
-		public static void Label(Vector3 position, GUIContent content, GUIStyle style)
-		{
-			Handles.BeginGUI();
-			GUI.Label(HandleUtility.WorldPointToSizedRect(position, content, style), content, style);
-			Handles.EndGUI();
-		}
-		internal static Rect GetCameraRect(Rect position)
-		{
-			Rect rect = GUIClip.Unclip(position);
-			Rect result = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
-			return result;
-		}
-		public static Vector2 GetMainGameViewSize()
-		{
-			return GameView.GetSizeOfMainGameView();
-		}
-		public static void ClearCamera(Rect position, Camera camera)
-		{
-			Event current = Event.current;
-			if (camera.targetTexture == null)
-			{
-				Rect rect = GUIClip.Unclip(position);
-				Rect pixelRect = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
-				camera.pixelRect = pixelRect;
-			}
-			else
-			{
-				camera.rect = new Rect(0f, 0f, 1f, 1f);
-			}
-			if (current.type == EventType.Repaint)
-			{
-				Handles.Internal_ClearCamera(camera);
-			}
-			else
-			{
-				Handles.Internal_SetCurrentCamera(camera);
-			}
-		}
-		internal static void DrawCameraImpl(Rect position, Camera camera, DrawCameraMode drawMode, bool drawGrid, DrawGridParameters gridParam, bool finish)
-		{
-			Event current = Event.current;
-			if (current.type == EventType.Repaint)
-			{
-				if (camera.targetTexture == null)
-				{
-					Rect rect = GUIClip.Unclip(position);
-					camera.pixelRect = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
-				}
-				else
-				{
-					camera.rect = new Rect(0f, 0f, 1f, 1f);
-				}
-				if (drawMode == DrawCameraMode.Normal)
-				{
-					RenderTexture targetTexture = camera.targetTexture;
-					camera.targetTexture = RenderTexture.active;
-					camera.Render();
-					camera.targetTexture = targetTexture;
-				}
-				else
-				{
-					if (drawGrid)
-					{
-						Handles.Internal_DrawCameraWithGrid(camera, (int)drawMode, ref gridParam);
-					}
-					else
-					{
-						Handles.Internal_DrawCamera(camera, (int)drawMode);
-					}
-					if (finish)
-					{
-						Handles.Internal_FinishDrawingCamera(camera);
-					}
-				}
-			}
-			else
-			{
-				Handles.Internal_SetCurrentCamera(camera);
-			}
-		}
-		internal static void DrawCamera(Rect position, Camera camera, DrawCameraMode drawMode, DrawGridParameters gridParam)
-		{
-			Handles.DrawCameraImpl(position, camera, drawMode, true, gridParam, true);
-		}
-		internal static void DrawCameraStep1(Rect position, Camera camera, DrawCameraMode drawMode, DrawGridParameters gridParam)
-		{
-			Handles.DrawCameraImpl(position, camera, drawMode, true, gridParam, false);
-		}
-		internal static void DrawCameraStep2(Camera camera, DrawCameraMode drawMode)
-		{
-			if (Event.current.type == EventType.Repaint && drawMode != DrawCameraMode.Normal)
-			{
-				Handles.Internal_FinishDrawingCamera(camera);
-			}
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EmitGUIGeometryForCamera(Camera source, Camera dest);
-		[ExcludeFromDocs]
-		public static void DrawCamera(Rect position, Camera camera)
-		{
-			DrawCameraMode drawMode = DrawCameraMode.Normal;
-			Handles.DrawCamera(position, camera, drawMode);
-		}
-		public static void DrawCamera(Rect position, Camera camera, [DefaultValue("DrawCameraMode.Normal")] DrawCameraMode drawMode)
-		{
-			Handles.DrawCameraImpl(position, camera, drawMode, false, default(DrawGridParameters), true);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetCameraFilterMode(Camera camera, Handles.FilterMode mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Handles.FilterMode GetCameraFilterMode(Camera camera);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void DrawCameraFade(Camera camera, float fade);
-		public static void SetCamera(Camera camera)
-		{
-			if (Event.current.type == EventType.Repaint)
-			{
-				Handles.Internal_SetupCamera(camera);
-			}
-			else
-			{
-				Handles.Internal_SetCurrentCamera(camera);
-			}
-		}
-		public static void SetCamera(Rect position, Camera camera)
-		{
-			Rect rect = GUIClip.Unclip(position);
-			Event current = Event.current;
-			Rect pixelRect = new Rect(rect.xMin, (float)Screen.height - rect.yMax, rect.width, rect.height);
-			camera.pixelRect = pixelRect;
-			if (current.type == EventType.Repaint)
-			{
-				Handles.Internal_SetupCamera(camera);
-			}
-			else
-			{
-				Handles.Internal_SetCurrentCamera(camera);
-			}
-		}
-		public static void BeginGUI()
-		{
-			if (Camera.current && Event.current.type == EventType.Repaint)
-			{
-				GUIClip.Reapply();
-			}
-		}
-		[Obsolete("Please use BeginGUI() with GUILayout.BeginArea(position) / GUILayout.EndArea()")]
-		public static void BeginGUI(Rect position)
-		{
-			GUILayout.BeginArea(position);
-		}
-		public static void EndGUI()
-		{
-			Camera current = Camera.current;
-			if (current && Event.current.type == EventType.Repaint)
-			{
-				Handles.Internal_SetupCamera(current);
-			}
-		}
-		internal static void ShowStaticLabelIfNeeded(Vector3 pos)
-		{
-			if (!Tools.s_Hidden && EditorApplication.isPlaying && GameObjectUtility.ContainsStatic(Selection.gameObjects))
-			{
-				Handles.color = Color.white;
-				GUIStyle gUIStyle = "SC ViewAxisLabel";
-				gUIStyle.alignment = TextAnchor.MiddleLeft;
-				gUIStyle.fixedWidth = 0f;
-				Handles.BeginGUI();
-				Rect position = HandleUtility.WorldPointToSizedRect(pos, EditorGUIUtility.TempContent("Static"), gUIStyle);
-				position.x += 10f;
-				position.y += 10f;
-				GUI.Label(position, EditorGUIUtility.TempContent("Static"), gUIStyle);
-				Handles.EndGUI();
-			}
 		}
 	}
 }

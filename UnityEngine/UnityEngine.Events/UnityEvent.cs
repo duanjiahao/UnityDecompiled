@@ -32,9 +32,14 @@ namespace UnityEngine.Events
 		}
 		internal void AddPersistentListener(UnityAction call)
 		{
+			this.AddPersistentListener(call, UnityEventCallState.RuntimeOnly);
+		}
+		internal void AddPersistentListener(UnityAction call, UnityEventCallState callState)
+		{
 			int persistentEventCount = base.GetPersistentEventCount();
 			base.AddPersistentListener();
 			this.RegisterPersistentListener(persistentEventCount, call);
+			base.SetPersistentListenerState(persistentEventCount, callState);
 		}
 		internal void RegisterPersistentListener(int index, UnityAction call)
 		{
@@ -80,9 +85,14 @@ namespace UnityEngine.Events
 		}
 		internal void AddPersistentListener(UnityAction<T0> call)
 		{
+			this.AddPersistentListener(call, UnityEventCallState.RuntimeOnly);
+		}
+		internal void AddPersistentListener(UnityAction<T0> call, UnityEventCallState callState)
+		{
 			int persistentEventCount = base.GetPersistentEventCount();
 			base.AddPersistentListener();
 			this.RegisterPersistentListener(persistentEventCount, call);
+			base.SetPersistentListenerState(persistentEventCount, callState);
 		}
 		internal void RegisterPersistentListener(int index, UnityAction<T0> call)
 		{
@@ -130,9 +140,14 @@ namespace UnityEngine.Events
 		}
 		internal void AddPersistentListener(UnityAction<T0, T1> call)
 		{
+			this.AddPersistentListener(call, UnityEventCallState.RuntimeOnly);
+		}
+		internal void AddPersistentListener(UnityAction<T0, T1> call, UnityEventCallState callState)
+		{
 			int persistentEventCount = base.GetPersistentEventCount();
 			base.AddPersistentListener();
 			this.RegisterPersistentListener(persistentEventCount, call);
+			base.SetPersistentListenerState(persistentEventCount, callState);
 		}
 		internal void RegisterPersistentListener(int index, UnityAction<T0, T1> call)
 		{
@@ -182,9 +197,14 @@ namespace UnityEngine.Events
 		}
 		internal void AddPersistentListener(UnityAction<T0, T1, T2> call)
 		{
+			this.AddPersistentListener(call, UnityEventCallState.RuntimeOnly);
+		}
+		internal void AddPersistentListener(UnityAction<T0, T1, T2> call, UnityEventCallState callState)
+		{
 			int persistentEventCount = base.GetPersistentEventCount();
 			base.AddPersistentListener();
 			this.RegisterPersistentListener(persistentEventCount, call);
+			base.SetPersistentListenerState(persistentEventCount, callState);
 		}
 		internal void RegisterPersistentListener(int index, UnityAction<T0, T1, T2> call)
 		{
@@ -236,9 +256,14 @@ namespace UnityEngine.Events
 		}
 		internal void AddPersistentListener(UnityAction<T0, T1, T2, T3> call)
 		{
+			this.AddPersistentListener(call, UnityEventCallState.RuntimeOnly);
+		}
+		internal void AddPersistentListener(UnityAction<T0, T1, T2, T3> call, UnityEventCallState callState)
+		{
 			int persistentEventCount = base.GetPersistentEventCount();
 			base.AddPersistentListener();
 			this.RegisterPersistentListener(persistentEventCount, call);
+			base.SetPersistentListenerState(persistentEventCount, callState);
 		}
 		internal void RegisterPersistentListener(int index, UnityAction<T0, T1, T2, T3> call)
 		{

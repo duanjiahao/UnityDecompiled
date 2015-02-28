@@ -40,8 +40,10 @@ namespace UnityEditor.Sprites
 			{
 				int instanceID = textureImporterInstanceIDs[i];
 				TextureImporter textureImporter = EditorUtility.InstanceIDToObject(instanceID) as TextureImporter;
-				TextureImportInstructions textureImportInstructions = new TextureImportInstructions();
-				textureImporter.ReadTextureImportInstructions(textureImportInstructions, target);
+				TextureFormat format;
+				ColorSpace colorSpace;
+				int compressionQuality;
+				textureImporter.ReadTextureImportInstructions(target, out format, out colorSpace, out compressionQuality);
 				TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
 				textureImporter.ReadTextureSettings(textureImporterSettings);
 				Sprite[] array = (
@@ -55,10 +57,9 @@ namespace UnityEditor.Sprites
 					Sprite sprite = array2[j];
 					DefaultPackerPolicy.Entry entry = new DefaultPackerPolicy.Entry();
 					entry.sprite = sprite;
-					entry.settings.format = textureImportInstructions.desiredFormat;
-					entry.settings.usageMode = textureImportInstructions.usageMode;
-					entry.settings.colorSpace = textureImportInstructions.colorSpace;
-					entry.settings.compressionQuality = textureImportInstructions.compressionQuality;
+					entry.settings.format = format;
+					entry.settings.colorSpace = colorSpace;
+					entry.settings.compressionQuality = compressionQuality;
 					entry.settings.filterMode = ((!Enum.IsDefined(typeof(FilterMode), textureImporter.filterMode)) ? FilterMode.Bilinear : textureImporter.filterMode);
 					entry.settings.maxWidth = 2048;
 					entry.settings.maxHeight = 2048;

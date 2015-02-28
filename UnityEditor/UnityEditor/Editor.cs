@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -19,39 +20,19 @@ namespace UnityEditor
 				this.inspectorBig.padding.bottom--;
 			}
 		}
-		private const float kImageSectionWidth = 44f;
 		internal const float kLineHeight = 16f;
-		private static Editor.Styles s_Styles;
+		private const float kImageSectionWidth = 44f;
 		private UnityEngine.Object[] m_Targets;
 		private int m_IsDirty;
 		private int m_ReferenceTargetIndex;
 		private PropertyHandlerCache m_PropertyHandlerCache = new PropertyHandlerCache();
-		internal IPreviewable m_Preview;
+		private IPreviewable m_DummyPreview;
 		internal SerializedObject m_SerializedObject;
 		private OptimizedGUIBlock m_OptimizedBlock;
 		internal InspectorMode m_InspectorMode;
 		internal bool hideInspector;
 		internal static bool m_AllowMultiObjectAccess = true;
-		internal virtual IPreviewable Preview
-		{
-			get
-			{
-				if (this.m_Preview == null)
-				{
-					ObjectPreview objectPreview = new ObjectPreview();
-					objectPreview.Initialize(this.targets);
-					this.m_Preview = objectPreview;
-				}
-				return this.m_Preview;
-			}
-		}
-		internal PropertyHandlerCache propertyHandlerCache
-		{
-			get
-			{
-				return this.m_PropertyHandlerCache;
-			}
-		}
+		private static Editor.Styles s_Styles;
 		internal bool canEditMultipleObjects
 		{
 			get
@@ -130,6 +111,239 @@ namespace UnityEditor
 			{
 				this.m_IsDirty = ((!value) ? 0 : 1);
 			}
+		}
+		internal virtual IPreviewable preview
+		{
+			get
+			{
+				if (this.m_DummyPreview == null)
+				{
+					this.m_DummyPreview = new ObjectPreview();
+					this.m_DummyPreview.Initialize(this.targets);
+				}
+				return this.m_DummyPreview;
+			}
+		}
+		internal PropertyHandlerCache propertyHandlerCache
+		{
+			get
+			{
+				return this.m_PropertyHandlerCache;
+			}
+		}
+		[ExcludeFromDocs]
+		public static Editor CreateEditor(UnityEngine.Object targetObject)
+		{
+			Type editorType = null;
+			return Editor.CreateEditor(targetObject, editorType);
+		}
+		public static Editor CreateEditor(UnityEngine.Object targetObject, [DefaultValue("null")] Type editorType)
+		{
+			return Editor.CreateEditor(new UnityEngine.Object[]
+			{
+				targetObject
+			}, editorType);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Editor CreateEditor(UnityEngine.Object[] targetObjects, [DefaultValue("null")] Type editorType);
+		[ExcludeFromDocs]
+		public static Editor CreateEditor(UnityEngine.Object[] targetObjects)
+		{
+			Type editorType = null;
+			return Editor.CreateEditor(targetObjects, editorType);
+		}
+		public static void CreateCachedEditor(UnityEngine.Object targetObject, Type editorType, ref Editor previousEditor)
+		{
+			if (previousEditor != null && previousEditor.m_Targets.Length == 1 && previousEditor.m_Targets[0] == targetObject)
+			{
+				return;
+			}
+			if (previousEditor != null)
+			{
+				UnityEngine.Object.DestroyImmediate(previousEditor);
+			}
+			previousEditor = Editor.CreateEditor(targetObject, editorType);
+		}
+		public static void CreateCachedEditor(UnityEngine.Object[] targetObjects, Type editorType, ref Editor previousEditor)
+		{
+			if (previousEditor != null && ArrayUtility.ArrayEquals<UnityEngine.Object>(previousEditor.m_Targets, targetObjects))
+			{
+				return;
+			}
+			if (previousEditor != null)
+			{
+				UnityEngine.Object.DestroyImmediate(previousEditor);
+			}
+			previousEditor = Editor.CreateEditor(targetObjects, editorType);
+		}
+		internal virtual SerializedObject GetSerializedObjectInternal()
+		{
+			if (this.m_SerializedObject == null)
+			{
+				this.m_SerializedObject = new SerializedObject(this.targets);
+			}
+			return this.m_SerializedObject;
+		}
+		private void CleanupPropertyEditor()
+		{
+			if (this.m_OptimizedBlock != null)
+			{
+				this.m_OptimizedBlock.Dispose();
+				this.m_OptimizedBlock = null;
+			}
+			if (this.m_SerializedObject != null)
+			{
+				this.m_SerializedObject.Dispose();
+				this.m_SerializedObject = null;
+			}
+		}
+		private void OnDisableINTERNAL()
+		{
+			this.CleanupPropertyEditor();
+		}
+		internal void OnForceReloadInspector()
+		{
+			if (this.m_SerializedObject != null)
+			{
+				this.m_SerializedObject.SetIsDifferentCacheDirty();
+			}
+		}
+		internal bool GetOptimizedGUIBlockImplementation(bool isDirty, bool isVisible, out OptimizedGUIBlock block, out float height)
+		{
+			if (this.m_OptimizedBlock == null)
+			{
+				this.m_OptimizedBlock = new OptimizedGUIBlock();
+			}
+			block = this.m_OptimizedBlock;
+			if (!isVisible)
+			{
+				height = 0f;
+				return true;
+			}
+			if (this.m_SerializedObject == null)
+			{
+				this.m_SerializedObject = new SerializedObject(this.targets);
+			}
+			else
+			{
+				this.m_SerializedObject.Update();
+			}
+			this.m_SerializedObject.inspectorMode = this.m_InspectorMode;
+			SerializedProperty iterator = this.m_SerializedObject.GetIterator();
+			height = 2f;
+			bool enterChildren = true;
+			while (iterator.NextVisible(enterChildren))
+			{
+				height += EditorGUI.GetPropertyHeight(iterator, null, true) + 2f;
+				enterChildren = false;
+			}
+			if (height == 2f)
+			{
+				height = 0f;
+			}
+			return true;
+		}
+		internal bool OptimizedInspectorGUIImplementation(Rect contentRect)
+		{
+			SerializedProperty iterator = this.m_SerializedObject.GetIterator();
+			bool enterChildren = true;
+			bool enabled = GUI.enabled;
+			contentRect.xMin += 14f;
+			contentRect.xMax -= 4f;
+			contentRect.y += 2f;
+			while (iterator.NextVisible(enterChildren))
+			{
+				contentRect.height = EditorGUI.GetPropertyHeight(iterator, null, false);
+				EditorGUI.indentLevel = iterator.depth;
+				enterChildren = EditorGUI.PropertyField(contentRect, iterator);
+				contentRect.y += contentRect.height + 2f;
+			}
+			GUI.enabled = enabled;
+			return this.m_SerializedObject.ApplyModifiedProperties();
+		}
+		protected internal static void DrawPropertiesExcluding(SerializedObject obj, params string[] propertyToExclude)
+		{
+			SerializedProperty iterator = obj.GetIterator();
+			bool enterChildren = true;
+			while (iterator.NextVisible(enterChildren))
+			{
+				enterChildren = false;
+				if (!propertyToExclude.Contains(iterator.name))
+				{
+					EditorGUILayout.PropertyField(iterator, true, new GUILayoutOption[0]);
+				}
+			}
+		}
+		public bool DrawDefaultInspector()
+		{
+			return this.DoDrawDefaultInspector();
+		}
+		public virtual void OnInspectorGUI()
+		{
+			this.DrawDefaultInspector();
+		}
+		public virtual bool RequiresConstantRepaint()
+		{
+			return false;
+		}
+		internal void InternalSetTargets(UnityEngine.Object[] t)
+		{
+			this.m_Targets = t;
+		}
+		internal void InternalSetHidden(bool hidden)
+		{
+			this.hideInspector = hidden;
+		}
+		internal virtual bool GetOptimizedGUIBlock(bool isDirty, bool isVisible, out OptimizedGUIBlock block, out float height)
+		{
+			block = null;
+			height = -1f;
+			return false;
+		}
+		internal virtual bool OnOptimizedInspectorGUI(Rect contentRect)
+		{
+			Debug.LogError("Not supported");
+			return false;
+		}
+		public void Repaint()
+		{
+			InspectorWindow.RepaintAllInspectors();
+		}
+		public virtual bool HasPreviewGUI()
+		{
+			return this.preview.HasPreviewGUI();
+		}
+		public virtual GUIContent GetPreviewTitle()
+		{
+			return this.preview.GetPreviewTitle();
+		}
+		public virtual Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
+		{
+			return null;
+		}
+		public virtual void OnPreviewGUI(Rect r, GUIStyle background)
+		{
+			this.preview.OnPreviewGUI(r, background);
+		}
+		public virtual void OnInteractivePreviewGUI(Rect r, GUIStyle background)
+		{
+			this.OnPreviewGUI(r, background);
+		}
+		public virtual void OnPreviewSettings()
+		{
+			this.preview.OnPreviewSettings();
+		}
+		public virtual string GetInfoString()
+		{
+			return this.preview.GetInfoString();
+		}
+		internal virtual void OnAssetStoreInspectorGUI()
+		{
+		}
+		public virtual void ReloadPreviewInstances()
+		{
+			this.preview.ReloadPreviewInstances();
 		}
 		internal static bool DoDrawDefaultInspector(SerializedObject obj)
 		{
@@ -234,16 +448,11 @@ namespace UnityEditor
 		}
 		internal virtual void DrawHeaderHelpAndSettingsGUI(Rect r)
 		{
-			if (EditorGUI.s_HelpIcon == null)
-			{
-				EditorGUI.s_HelpIcon = EditorGUIUtility.IconContent("_Help");
-				EditorGUI.s_TitleSettingsIcon = EditorGUIUtility.IconContent("_Popup");
-			}
 			UnityEngine.Object target = this.target;
 			EditorGUI.HelpIconButton(new Rect(r.xMax - 36f, r.y + 5f, 14f, 14f), target);
 			EditorGUI.BeginDisabledGroup(!this.IsEnabled());
 			Rect position = new Rect(r.xMax - 18f, r.y + 5f, 14f, 14f);
-			if (EditorGUI.ButtonMouseDown(position, EditorGUI.s_TitleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText))
+			if (EditorGUI.ButtonMouseDown(position, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText))
 			{
 				EditorUtility.DisplayObjectContextMenu(position, this.targets, 0);
 			}
@@ -258,6 +467,10 @@ namespace UnityEditor
 		}
 		internal static Rect DrawHeaderGUI(Editor editor, string header)
 		{
+			return Editor.DrawHeaderGUI(editor, header, 0f);
+		}
+		internal static Rect DrawHeaderGUI(Editor editor, string header, float leftMargin)
+		{
 			if (Editor.s_Styles == null)
 			{
 				Editor.s_Styles = new Editor.Styles();
@@ -267,6 +480,10 @@ namespace UnityEditor
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.Space(19f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			if (leftMargin > 0f)
+			{
+				GUILayout.Space(leftMargin);
+			}
 			if (editor)
 			{
 				editor.OnHeaderControlsGUI();
@@ -279,8 +496,8 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 			Rect lastRect = GUILayoutUtility.GetLastRect();
-			float width = lastRect.width;
-			Rect rect = new Rect(lastRect.x + 6f, lastRect.y + 6f, 32f, 32f);
+			Rect r = new Rect(lastRect.x + leftMargin, lastRect.y, lastRect.width - leftMargin, lastRect.height);
+			Rect rect = new Rect(r.x + 6f, r.y + 6f, 32f, 32f);
 			if (editor)
 			{
 				editor.OnHeaderIconGUI(rect);
@@ -289,7 +506,7 @@ namespace UnityEditor
 			{
 				GUI.Label(rect, AssetPreview.GetMiniTypeThumbnail(typeof(UnityEngine.Object)), Editor.s_Styles.centerStyle);
 			}
-			Rect rect2 = new Rect(lastRect.x + 44f, lastRect.y + 6f, width - 44f - 38f - 4f, 16f);
+			Rect rect2 = new Rect(r.x + 44f, r.y + 6f, r.width - 44f - 38f - 4f, 16f);
 			if (editor)
 			{
 				editor.OnHeaderTitleGUI(rect2, header);
@@ -300,10 +517,10 @@ namespace UnityEditor
 			}
 			if (editor)
 			{
-				editor.DrawHeaderHelpAndSettingsGUI(lastRect);
+				editor.DrawHeaderHelpAndSettingsGUI(r);
 			}
 			Event current = Event.current;
-			if (editor != null && !editor.IsEnabled() && current.type == EventType.MouseDown && current.button == 1 && lastRect.Contains(current.mousePosition))
+			if (editor != null && !editor.IsEnabled() && current.type == EventType.MouseDown && current.button == 1 && r.Contains(current.mousePosition))
 			{
 				EditorUtility.DisplayObjectContextMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), editor.targets, 0);
 				current.Use();
@@ -366,197 +583,6 @@ namespace UnityEditor
 		public void ResetTarget()
 		{
 			this.referenceTargetIndex = 0;
-		}
-		[ExcludeFromDocs]
-		public static Editor CreateEditor(UnityEngine.Object obj)
-		{
-			Type editorType = null;
-			return Editor.CreateEditor(obj, editorType);
-		}
-		public static Editor CreateEditor(UnityEngine.Object obj, [DefaultValue("null")] Type editorType)
-		{
-			return Editor.CreateEditor(new UnityEngine.Object[]
-			{
-				obj
-			}, editorType);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Editor CreateEditor(UnityEngine.Object[] objects, [DefaultValue("null")] Type editorType);
-		[ExcludeFromDocs]
-		public static Editor CreateEditor(UnityEngine.Object[] objects)
-		{
-			Type editorType = null;
-			return Editor.CreateEditor(objects, editorType);
-		}
-		internal virtual SerializedObject GetSerializedObjectInternal()
-		{
-			if (this.m_SerializedObject == null)
-			{
-				this.m_SerializedObject = new SerializedObject(this.targets);
-			}
-			return this.m_SerializedObject;
-		}
-		private void CleanupPropertyEditor()
-		{
-			if (this.m_OptimizedBlock != null)
-			{
-				this.m_OptimizedBlock.Dispose();
-				this.m_OptimizedBlock = null;
-			}
-			if (this.m_SerializedObject != null)
-			{
-				this.m_SerializedObject.Dispose();
-				this.m_SerializedObject = null;
-			}
-		}
-		private void OnDisableINTERNAL()
-		{
-			this.CleanupPropertyEditor();
-		}
-		internal void OnForceReloadInspector()
-		{
-			if (this.m_SerializedObject != null)
-			{
-				this.m_SerializedObject.SetIsDifferentCacheDirty();
-			}
-		}
-		internal bool GetOptimizedGUIBlockImplementation(bool isDirty, bool isVisible, out OptimizedGUIBlock block, out float height)
-		{
-			if (this.m_OptimizedBlock == null)
-			{
-				this.m_OptimizedBlock = new OptimizedGUIBlock();
-			}
-			block = this.m_OptimizedBlock;
-			if (!isVisible)
-			{
-				height = 0f;
-				return true;
-			}
-			if (this.m_SerializedObject == null)
-			{
-				this.m_SerializedObject = new SerializedObject(this.targets);
-			}
-			else
-			{
-				this.m_SerializedObject.Update();
-			}
-			this.m_SerializedObject.inspectorMode = this.m_InspectorMode;
-			SerializedProperty iterator = this.m_SerializedObject.GetIterator();
-			height = 2f;
-			bool enterChildren = true;
-			while (iterator.NextVisible(enterChildren))
-			{
-				height += EditorGUI.GetPropertyHeight(iterator, null, true) + 2f;
-				enterChildren = false;
-			}
-			if (height == 2f)
-			{
-				height = 0f;
-			}
-			return true;
-		}
-		internal bool OptimizedInspectorGUIImplementation(Rect contentRect)
-		{
-			SerializedProperty iterator = this.m_SerializedObject.GetIterator();
-			bool enterChildren = true;
-			bool enabled = GUI.enabled;
-			contentRect.xMin += 14f;
-			contentRect.xMax -= 4f;
-			contentRect.y += 2f;
-			while (iterator.NextVisible(enterChildren))
-			{
-				contentRect.height = EditorGUI.GetPropertyHeight(iterator, null, false);
-				EditorGUI.indentLevel = iterator.depth;
-				enterChildren = EditorGUI.PropertyField(contentRect, iterator);
-				contentRect.y += contentRect.height + 2f;
-			}
-			GUI.enabled = enabled;
-			return this.m_SerializedObject.ApplyModifiedProperties();
-		}
-		protected internal static void DrawPropertiesExcluding(SerializedObject obj, params string[] propertyToExclude)
-		{
-			SerializedProperty iterator = obj.GetIterator();
-			int num = 0;
-			bool enterChildren = true;
-			while (iterator.NextVisible(enterChildren))
-			{
-				enterChildren = false;
-				if (num < propertyToExclude.Length && iterator.name == propertyToExclude[num])
-				{
-					num++;
-				}
-				else
-				{
-					EditorGUILayout.PropertyField(iterator, true, new GUILayoutOption[0]);
-				}
-			}
-		}
-		public bool DrawDefaultInspector()
-		{
-			return this.DoDrawDefaultInspector();
-		}
-		public virtual void OnInspectorGUI()
-		{
-			this.DrawDefaultInspector();
-		}
-		public virtual bool RequiresConstantRepaint()
-		{
-			return false;
-		}
-		internal void InternalSetTargets(UnityEngine.Object[] t)
-		{
-			this.m_Targets = t;
-		}
-		internal void InternalSetHidden(bool hidden)
-		{
-			this.hideInspector = hidden;
-		}
-		internal virtual bool GetOptimizedGUIBlock(bool isDirty, bool isVisible, out OptimizedGUIBlock block, out float height)
-		{
-			block = null;
-			height = -1f;
-			return false;
-		}
-		internal virtual bool OnOptimizedInspectorGUI(Rect contentRect)
-		{
-			Debug.LogError("Not supported");
-			return false;
-		}
-		public void Repaint()
-		{
-			InspectorWindow.RepaintAllInspectors();
-		}
-		public virtual bool HasPreviewGUI()
-		{
-			return this.Preview.HasPreviewGUI();
-		}
-		public virtual GUIContent GetPreviewTitle()
-		{
-			return this.Preview.GetPreviewTitle();
-		}
-		public virtual Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
-		{
-			return null;
-		}
-		public virtual void OnPreviewGUI(Rect r, GUIStyle background)
-		{
-			this.Preview.OnPreviewGUI(r, background);
-		}
-		public virtual void OnInteractivePreviewGUI(Rect r, GUIStyle background)
-		{
-			this.OnPreviewGUI(r, background);
-		}
-		public virtual void OnPreviewSettings()
-		{
-			this.Preview.OnPreviewSettings();
-		}
-		public virtual string GetInfoString()
-		{
-			return this.Preview.GetInfoString();
-		}
-		internal virtual void OnAssetStoreInspectorGUI()
-		{
 		}
 	}
 }

@@ -47,7 +47,11 @@ namespace UnityEditor
 					string fileName = Path.GetFileName(text);
 					if (!this.VerifyAssembly(target, fileName))
 					{
-						Debug.LogWarning(string.Format("{0} assembly is referenced by user code, but is not supported on {1} platform. Various failures might follow.", fileName, target.ToString()));
+						Debug.LogWarningFormat("{0} assembly is referenced by user code, but is not supported on {1} platform. Various failures might follow.", new object[]
+						{
+							fileName,
+							target.ToString()
+						});
 					}
 				}
 			}

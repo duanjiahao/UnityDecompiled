@@ -7,6 +7,7 @@ namespace UnityEditor
 {
 	internal class DeleteWindowLayout : EditorWindow
 	{
+		private const int kMaxLayoutNameLength = 15;
 		internal string[] m_Paths;
 		private Vector2 m_ScrollPos;
 		private void InitializePaths()
@@ -31,15 +32,19 @@ namespace UnityEditor
 			{
 				this.InitializePaths();
 			}
-			this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, "OL Box", new GUILayoutOption[0]);
+			this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[0]);
 			string[] paths = this.m_Paths;
 			for (int i = 0; i < paths.Length; i++)
 			{
 				string path = paths[i];
-				string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
-				if (GUILayout.Button(fileNameWithoutExtension, new GUILayoutOption[0]))
+				string text = Path.GetFileNameWithoutExtension(path);
+				if (text.Length > 15)
 				{
-					if (Toolbar.lastLoadedLayoutName == fileNameWithoutExtension)
+					text = text.Substring(0, 15) + "...";
+				}
+				if (GUILayout.Button(text, new GUILayoutOption[0]))
+				{
+					if (Toolbar.lastLoadedLayoutName == text)
 					{
 						Toolbar.lastLoadedLayoutName = null;
 					}

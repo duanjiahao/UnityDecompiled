@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine.Internal;
 namespace UnityEngine
 {
 	public sealed class NavMeshAgent : Behaviour
@@ -183,7 +182,17 @@ namespace UnityEngine
 				this.SetPath(value);
 			}
 		}
+		[Obsolete("Use areaMask instead.")]
 		public extern int walkableMask
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern int areaMask
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -273,6 +282,12 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern bool isOnNavMesh
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public bool SetDestination(Vector3 target)
 		{
 			return NavMeshAgent.INTERNAL_CALL_SetDestination(this, ref target);
@@ -333,14 +348,17 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Move(NavMeshAgent self, ref Vector3 offset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Stop([DefaultValue("false")] bool stopUpdates);
-		[ExcludeFromDocs]
 		public void Stop()
 		{
-			bool stopUpdates = false;
-			this.Stop(stopUpdates);
+			this.StopInternal();
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void StopInternal();
+		[Obsolete("Use Stop() instead")]
+		public void Stop(bool stopUpdates)
+		{
+			this.StopInternal();
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -378,12 +396,18 @@ namespace UnityEngine
 		private static extern bool INTERNAL_CALL_CalculatePathInternal(NavMeshAgent self, ref Vector3 targetPosition, NavMeshPath path);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool SamplePathPosition(int passableMask, float maxDistance, out NavMeshHit hit);
-		[WrapperlessIcall]
+		public extern bool SamplePathPosition(int areaMask, float maxDistance, out NavMeshHit hit);
+		[Obsolete("Use SetAreaCost instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetLayerCost(int layer, float cost);
-		[WrapperlessIcall]
+		[Obsolete("Use GetAreaCost instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetLayerCost(int layer);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetAreaCost(int areaIndex, float areaCost);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern float GetAreaCost(int areaIndex);
 	}
 }

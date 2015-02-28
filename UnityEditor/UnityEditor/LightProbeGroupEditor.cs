@@ -8,8 +8,6 @@ namespace UnityEditor
 {
 	internal class LightProbeGroupEditor : IEditablePoint
 	{
-		private const int kLightProbeCoefficientCount = 27;
-		private const float kDuplicateEpsilonSq = 0.1f;
 		private bool m_Editing;
 		private List<Vector3> m_SourcePositions;
 		private List<int> m_Selection = new List<int>();
@@ -268,7 +266,6 @@ namespace UnityEditor
 			{
 				this.m_Group.probePositions = this.m_SourcePositions.ToArray();
 				this.m_SerializedSelectedProbes.m_Selection = this.m_Selection;
-				LightmappingWindow.ProbePositionsChanged();
 			}
 		}
 		private void DrawTetrahedra()
@@ -281,6 +278,54 @@ namespace UnityEditor
 			{
 				LightmapVisualization.DrawTetrahedra(this.m_ShouldRecalculateTetrahedra, SceneView.lastActiveSceneView.camera.transform.position);
 				this.m_ShouldRecalculateTetrahedra = false;
+			}
+		}
+		public void HandleEditMenuHotKeyCommands()
+		{
+			if (Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand)
+			{
+				bool flag = Event.current.type == EventType.ExecuteCommand;
+				string commandName = Event.current.commandName;
+				switch (commandName)
+				{
+				case "SoftDelete":
+				case "Delete":
+					if (flag)
+					{
+						this.RemoveSelectedProbes();
+					}
+					Event.current.Use();
+					break;
+				case "Duplicate":
+					if (flag)
+					{
+						this.DuplicateSelectedProbes();
+					}
+					Event.current.Use();
+					break;
+				case "SelectAll":
+					if (flag)
+					{
+						this.SelectAllProbes();
+					}
+					Event.current.Use();
+					break;
+				case "Cut":
+					if (flag)
+					{
+						this.CopySelectedProbes();
+						this.RemoveSelectedProbes();
+					}
+					Event.current.Use();
+					break;
+				case "Copy":
+					if (flag)
+					{
+						this.CopySelectedProbes();
+					}
+					Event.current.Use();
+					break;
+				}
 			}
 		}
 		public static void TetrahedralizeSceneProbes(out Vector3[] positions, out int[] indices)
@@ -369,51 +414,7 @@ namespace UnityEditor
 			{
 				return this.m_Editing;
 			}
-			if (Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand)
-			{
-				bool flag3 = Event.current.type == EventType.ExecuteCommand;
-				string commandName = Event.current.commandName;
-				switch (commandName)
-				{
-				case "SoftDelete":
-				case "Delete":
-					if (flag3)
-					{
-						this.RemoveSelectedProbes();
-					}
-					Event.current.Use();
-					break;
-				case "Duplicate":
-					if (flag3)
-					{
-						this.DuplicateSelectedProbes();
-					}
-					Event.current.Use();
-					break;
-				case "SelectAll":
-					if (flag3)
-					{
-						this.SelectAllProbes();
-					}
-					Event.current.Use();
-					break;
-				case "Cut":
-					if (flag3)
-					{
-						this.CopySelectedProbes();
-						this.RemoveSelectedProbes();
-					}
-					Event.current.Use();
-					break;
-				case "Copy":
-					if (flag3)
-					{
-						this.CopySelectedProbes();
-					}
-					Event.current.Use();
-					break;
-				}
-			}
+			this.HandleEditMenuHotKeyCommands();
 			if (this.m_Editing && PointEditor.MovePoints(this, transform, this.m_Selection))
 			{
 				Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
@@ -472,6 +473,14 @@ namespace UnityEditor
 				array[i] = this.m_SourcePositions[this.m_Selection[i]];
 			}
 			return array;
+		}
+		public void UpdateSelectedPosition(int idx, Vector3 position)
+		{
+			if (idx > this.SelectedCount - 1)
+			{
+				return;
+			}
+			this.m_SourcePositions[this.m_Selection[idx]] = position;
 		}
 		public IEnumerable<Vector3> GetPositions()
 		{

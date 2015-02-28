@@ -7,12 +7,16 @@ namespace UnityEditor
 	{
 		private ulong m_AssetTimeStamp;
 		private bool m_MightHaveModified;
-		internal Editor m_AssetEditor;
-		internal Editor assetEditor
+		private Editor m_AssetEditor;
+		internal virtual Editor assetEditor
 		{
 			get
 			{
 				return this.m_AssetEditor;
+			}
+			set
+			{
+				this.m_AssetEditor = value;
 			}
 		}
 		internal override string targetTitle
@@ -34,19 +38,15 @@ namespace UnityEditor
 				this.assetEditor.referenceTargetIndex = value;
 			}
 		}
-		internal override IPreviewable Preview
+		internal override IPreviewable preview
 		{
 			get
 			{
-				if (!this.useAssetDrawPreview)
+				if (this.useAssetDrawPreview && this.assetEditor != null)
 				{
-					return base.Preview;
+					return this.assetEditor;
 				}
-				if (this.m_Preview == null)
-				{
-					return this.assetEditor ?? base.Preview;
-				}
-				return this.m_Preview;
+				return base.preview;
 			}
 		}
 		protected virtual bool useAssetDrawPreview
@@ -79,7 +79,7 @@ namespace UnityEditor
 			}
 			return this.m_SerializedObject;
 		}
-		public void OnDisable()
+		public virtual void OnDisable()
 		{
 			AssetImporter assetImporter = this.target as AssetImporter;
 			if (Unsupported.IsDestroyScriptableObject(this) && this.m_MightHaveModified && assetImporter != null && !InternalEditorUtility.ignoreInspectorChanges && this.HasModified() && !this.AssetWasUpdated())
@@ -176,15 +176,13 @@ namespace UnityEditor
 				AssetDatabase.StopAssetEditing();
 			}
 		}
-		protected void ApplyRevertGUI()
+		protected void RevertButton()
 		{
-			this.m_MightHaveModified = true;
-			EditorGUILayout.Space();
-			bool enabled = GUI.enabled;
-			GUI.enabled = (this.HasModified() && enabled);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Revert", new GUILayoutOption[0]))
+			this.RevertButton("Revert");
+		}
+		protected void RevertButton(string buttonText)
+		{
+			if (GUILayout.Button(buttonText, new GUILayoutOption[0]))
 			{
 				this.m_MightHaveModified = false;
 				this.ResetTimeStamp();
@@ -194,20 +192,47 @@ namespace UnityEditor
 					Debug.LogError("Importer reports modified values after reset.");
 				}
 			}
-			bool flag = false;
-			if (GUILayout.Button("Apply", new GUILayoutOption[0]))
+		}
+		protected bool ApplyButton()
+		{
+			return this.ApplyButton("Apply");
+		}
+		protected bool ApplyButton(string buttonText)
+		{
+			if (GUILayout.Button(buttonText, new GUILayoutOption[0]))
 			{
 				this.ApplyAndImport();
-				flag = true;
+				return true;
 			}
+			return false;
+		}
+		protected virtual bool ApplyRevertGUIButtons()
+		{
+			EditorGUI.BeginDisabledGroup(!this.HasModified());
+			this.RevertButton();
+			bool result = this.ApplyButton();
+			EditorGUI.EndDisabledGroup();
+			return result;
+		}
+		protected void ApplyRevertGUI()
+		{
+			this.m_MightHaveModified = true;
+			EditorGUILayout.Space();
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.FlexibleSpace();
+			bool flag = this.ApplyRevertGUIButtons();
 			if (this.AssetWasUpdated() && Event.current.type != EventType.Layout)
 			{
+				IPreviewable preview = this.preview;
+				if (preview != null)
+				{
+					preview.ReloadPreviewInstances();
+				}
 				this.ResetTimeStamp();
 				this.ResetValues();
 				base.Repaint();
 			}
 			GUILayout.EndHorizontal();
-			GUI.enabled = enabled;
 			if (flag)
 			{
 				GUIUtility.ExitGUI();

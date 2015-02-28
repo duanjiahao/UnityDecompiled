@@ -259,12 +259,12 @@ namespace UnityEditor
 				Dictionary<UnityEngine.Object, bool> dictionary = new Dictionary<UnityEngine.Object, bool>(existingSelection.Length);
 				for (int j = 0; j < existingSelection.Length; j++)
 				{
-					GameObject key = (GameObject)existingSelection[j];
+					UnityEngine.Object key = existingSelection[j];
 					dictionary.Add(key, false);
 				}
 				for (int k = 0; k < newObjects.Length; k++)
 				{
-					GameObject key2 = (GameObject)newObjects[k];
+					UnityEngine.Object key2 = newObjects[k];
 					if (dictionary.ContainsKey(key2))
 					{
 						dictionary.Remove(key2);

@@ -5,7 +5,6 @@ namespace UnityEditor.Sprites
 	public struct AtlasSettings
 	{
 		public TextureFormat format;
-		public TextureUsageMode usageMode;
 		public ColorSpace colorSpace;
 		public int compressionQuality;
 		public FilterMode filterMode;

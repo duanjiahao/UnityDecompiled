@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
-	internal sealed class WindZone : Component
+	public sealed class WindZone : Component
 	{
 		public extern WindZoneMode mode
 		{

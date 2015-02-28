@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1208,7 +1207,6 @@ namespace UnityEditor
 			}
 			private void DrawItem(Rect position, FilteredHierarchy.FilterResult filterItem, BuiltinResource builtinResource, bool isFolderBrowsing)
 			{
-				Assert.IsTrue((filterItem != null && builtinResource == null) || (builtinResource != null && filterItem == null));
 				Event current = Event.current;
 				Rect selectionRect = position;
 				int num = 0;
@@ -1669,6 +1667,7 @@ namespace UnityEditor
 				this.InitBuiltinAssetType(typeof(Font));
 				this.InitBuiltinAssetType(typeof(Shader));
 				this.InitBuiltinAssetType(typeof(Sprite));
+				this.InitBuiltinAssetType(typeof(LightmapParameters));
 			}
 			public void PrintBuiltinResourcesAvailable()
 			{
@@ -1718,10 +1717,6 @@ namespace UnityEditor
 			}
 			public int IndexOf(int instanceID)
 			{
-				if (instanceID == 0)
-				{
-					return -1;
-				}
 				int num = 0;
 				if (this.m_ShowNoneItem)
 				{
@@ -1730,6 +1725,13 @@ namespace UnityEditor
 						return 0;
 					}
 					num++;
+				}
+				else
+				{
+					if (instanceID == 0)
+					{
+						return -1;
+					}
 				}
 				FilteredHierarchy.FilterResult[] results = this.m_FilteredHierarchy.results;
 				for (int i = 0; i < results.Length; i++)
@@ -2766,7 +2768,7 @@ namespace UnityEditor
 				}
 				else
 				{
-					this.m_SelectionOffset = maxIndex - 1 - idx;
+					this.m_SelectionOffset = maxIndex - idx;
 				}
 			}
 			else
@@ -2779,7 +2781,7 @@ namespace UnityEditor
 					return;
 				}
 				this.m_SelectionOffset = Mathf.RoundToInt(this.m_TotalRect.height / num) * columns;
-				int num2 = maxIndex - idx - 1;
+				int num2 = maxIndex - idx;
 				this.m_SelectionOffset = Mathf.Min(Mathf.FloorToInt((float)num2 / (float)columns) * columns, this.m_SelectionOffset);
 			}
 		}

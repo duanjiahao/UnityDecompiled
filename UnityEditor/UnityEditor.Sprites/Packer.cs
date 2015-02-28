@@ -18,6 +18,12 @@ namespace UnityEditor.Sprites
 		private static string[] m_policies = null;
 		private static string m_selectedPolicy = null;
 		private static Dictionary<string, Type> m_policyTypeCache = null;
+		public static extern string[] atlasNames
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		public static string[] Policies
 		{
 			get
@@ -47,12 +53,28 @@ namespace UnityEditor.Sprites
 				Packer.SetSelectedPolicy(value);
 			}
 		}
-		public static extern string[] atlasNames
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Texture2D[] GetTexturesForAtlas(string atlasName);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void RebuildAtlasCacheIfNeeded(BuildTarget target, [DefaultValue("false")] bool displayProgressBar, [DefaultValue("Execution.Normal")] Packer.Execution execution);
+		[ExcludeFromDocs]
+		public static void RebuildAtlasCacheIfNeeded(BuildTarget target, bool displayProgressBar)
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			Packer.Execution execution = Packer.Execution.Normal;
+			Packer.RebuildAtlasCacheIfNeeded(target, displayProgressBar, execution);
 		}
+		[ExcludeFromDocs]
+		public static void RebuildAtlasCacheIfNeeded(BuildTarget target)
+		{
+			Packer.Execution execution = Packer.Execution.Normal;
+			bool displayProgressBar = false;
+			Packer.RebuildAtlasCacheIfNeeded(target, displayProgressBar, execution);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void GetAtlasDataForSprite(Sprite sprite, out string atlasName, [Writable] out Texture2D atlasTexture);
 		private static void SetSelectedPolicy(string value)
 		{
 			Packer.m_selectedPolicy = value;
@@ -83,9 +105,9 @@ namespace UnityEditor.Sprites
 						}
 					}
 				}
-				catch (Exception)
+				catch (Exception ex)
 				{
-					Debug.Log(string.Format("SpritePacker failed to get types from {0}.", assembly.FullName));
+					Debug.Log(string.Format("SpritePacker failed to get types from {0}. Error: {1}", assembly.FullName, ex.Message));
 				}
 			}
 			Packer.m_policies = (
@@ -151,27 +173,5 @@ namespace UnityEditor.Sprites
 				}
 			}
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Texture2D[] GetTexturesForAtlas(string atlasName);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void RebuildAtlasCacheIfNeeded(BuildTarget target, [DefaultValue("false")] bool displayProgressBar, [DefaultValue("Execution.Normal")] Packer.Execution execution);
-		[ExcludeFromDocs]
-		public static void RebuildAtlasCacheIfNeeded(BuildTarget target, bool displayProgressBar)
-		{
-			Packer.Execution execution = Packer.Execution.Normal;
-			Packer.RebuildAtlasCacheIfNeeded(target, displayProgressBar, execution);
-		}
-		[ExcludeFromDocs]
-		public static void RebuildAtlasCacheIfNeeded(BuildTarget target)
-		{
-			Packer.Execution execution = Packer.Execution.Normal;
-			bool displayProgressBar = false;
-			Packer.RebuildAtlasCacheIfNeeded(target, displayProgressBar, execution);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void GetAtlasDataForSprite(Sprite sprite, out string atlasName, [Writable] out Texture2D atlasTexture);
 	}
 }

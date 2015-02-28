@@ -186,8 +186,15 @@ namespace UnityEditor
 			{
 				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
 			}
-			this.Invoke("OnBecameVisible");
-			this.Invoke("OnFocus");
+			try
+			{
+				this.Invoke("OnBecameVisible");
+				this.Invoke("OnFocus");
+			}
+			catch (TargetInvocationException ex)
+			{
+				Debug.LogError(ex.InnerException.GetType().Name + ":" + ex.InnerException.Message);
+			}
 		}
 		protected void DeregisterSelectedPane(bool clearActualView)
 		{

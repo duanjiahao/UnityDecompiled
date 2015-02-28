@@ -67,7 +67,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		internal extern string arrayIndexLessPropertyPath
+		internal extern int hashCodeForPropertyPathWithoutArrayIndex
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -136,6 +136,15 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern long longValue
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public extern bool boolValue
 		{
 			[WrapperlessIcall]
@@ -146,6 +155,15 @@ namespace UnityEditor
 			set;
 		}
 		public extern float floatValue
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern double doubleValue
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -469,7 +487,7 @@ namespace UnityEditor
 		[DebuggerHidden]
 		public IEnumerator GetEnumerator()
 		{
-			SerializedProperty.<GetEnumerator>c__Iterator7 <GetEnumerator>c__Iterator = new SerializedProperty.<GetEnumerator>c__Iterator7();
+			SerializedProperty.<GetEnumerator>c__Iterator0 <GetEnumerator>c__Iterator = new SerializedProperty.<GetEnumerator>c__Iterator0();
 			<GetEnumerator>c__Iterator.<>f__this = this;
 			return <GetEnumerator>c__Iterator;
 		}

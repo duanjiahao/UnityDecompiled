@@ -14,9 +14,9 @@ namespace UnityEditor
 			public int id;
 			public Color color;
 			public SerializedProperty curveProp;
-			public int rangeMin;
-			public int rangeMax;
-			public AudioCurveWrapper(AudioSourceInspector.AudioCurveType type, string legend, int id, Color color, SerializedProperty curveProp, int rangeMin, int rangeMax)
+			public float rangeMin;
+			public float rangeMax;
+			public AudioCurveWrapper(AudioSourceInspector.AudioCurveType type, string legend, int id, Color color, SerializedProperty curveProp, float rangeMin, float rangeMax)
 			{
 				this.type = type;
 				this.legend = new GUIContent(legend);
@@ -30,22 +30,38 @@ namespace UnityEditor
 		private enum AudioCurveType
 		{
 			Volume,
-			Pan,
+			SpatialBlend,
 			Lowpass,
-			Spread
+			Spread,
+			ReverbZoneMix
 		}
 		internal class Styles
 		{
 			public GUIStyle labelStyle = "ProfilerBadge";
 			public GUIContent rolloffLabel = new GUIContent("Volume Rolloff", "Which type of rolloff curve to use");
 			public string controlledByCurveLabel = "Controlled by curve";
-			public GUIContent panLevelLabel = new GUIContent("Pan Level", "Sets how much the 3d position affects the pan and attenuation of the sound. If PanLevel is 0, 3D panning and attenuation is ignored.");
-			public GUIContent spreadLabel = new GUIContent("Spread", "Sets the spread of a 3d sound in speaker space.");
+			public GUIContent audioClipLabel = new GUIContent("AudioClip", "The AudioClip asset played by the AudioSource. Can be undefined if the AudioSource is generating a live stream of audio via OnAudioFilterRead.");
+			public GUIContent panStereoLabel = new GUIContent("Stereo Pan", "Only valid for Mono and Stereo AudioClips. Mono sounds will be panned at constant power left and right. Stereo sounds will Stereo sounds have each left/right value faded up and down according to the specified pan value.");
+			public GUIContent spatialBlendLabel = new GUIContent("Spatial Blend", "Sets how much this AudioSource is treated as a 3D source. 3D sources are affected by spatial position and spread. If 3D Pan Level is 0, all spatial attenuation is ignored.");
+			public GUIContent reverbZoneMixLabel = new GUIContent("Reverb Zone Mix", "Sets how much of the signal this AudioSource is mixing into the global reverb associated with the zones. [0, 1] is a linear range (like volume) while [1, 1.1] lets you boost the reverb mix by 10 dB.");
+			public GUIContent dopplerLevelLabel = new GUIContent("Doppler Level", "Specifies how much the pitch is changed based on the relative velocity between AudioListener and AudioSource.");
+			public GUIContent spreadLabel = new GUIContent("Spread", "Sets the spread of a 3d sound in speaker space");
+			public GUIContent outputMixerGroupLabel = new GUIContent("Output", "Set whether the sound should play through an Audio Mixer first or directly to the Audio Listener");
+			public GUIContent volumeLabel = new GUIContent("Volume", "Sets the overall volume of the sound.");
+			public GUIContent pitchLabel = new GUIContent("Pitch", "Sets the frequency of the sound. Use this to slow down or speed up the sound.");
+			public GUIContent priorityLabel = new GUIContent("Priority", "Sets the priority of the source. Note that a sound with a larger priority value will more likely be stolen by sounds with smaller priority values.");
+			public GUIContent priorityLeftLabel = new GUIContent("High");
+			public GUIContent priorityRightLabel = new GUIContent("Low");
+			public GUIContent spatialLeftLabel = new GUIContent("2D");
+			public GUIContent spatialRightLabel = new GUIContent("3D");
+			public GUIContent panLeftLabel = new GUIContent("Left");
+			public GUIContent panRightLabel = new GUIContent("Right");
 		}
 		private const int kRolloffCurveID = 0;
-		private const int kPanLevelCurveID = 1;
+		private const int kSpatialBlendCurveID = 1;
 		private const int kSpreadCurveID = 2;
 		private const int kLowPassCurveID = 3;
+		private const int kReverbZoneMixCurveID = 4;
 		internal const float kMaxCutoffFrequency = 22000f;
 		private const float EPSILON = 0.0001f;
 		private SerializedProperty m_AudioClip;
@@ -64,19 +80,21 @@ namespace UnityEditor
 		private SerializedProperty m_BypassEffects;
 		private SerializedProperty m_BypassListenerEffects;
 		private SerializedProperty m_BypassReverbZones;
+		private SerializedProperty m_OutputAudioMixerGroup;
 		private SerializedObject m_LowpassObject;
 		private SerializedProperty m_CutoffFrequency;
 		private AudioSourceInspector.AudioCurveWrapper[] m_AudioCurves;
+		private bool m_RefreshCurveEditor;
 		private CurveEditor m_CurveEditor;
 		private Vector3 m_LastListenerPosition;
 		private static CurveEditorSettings m_CurveEditorSettings = new CurveEditorSettings();
 		internal static Color kRolloffCurveColor = new Color(0.9f, 0.3f, 0.2f, 1f);
-		internal static Color kPanLevelCurveColor = new Color(0.25f, 0.7f, 0.2f, 1f);
+		internal static Color kSpatialCurveColor = new Color(0.25f, 0.7f, 0.2f, 1f);
 		internal static Color kSpreadCurveColor = new Color(0.25f, 0.55f, 0.95f, 1f);
 		internal static Color kLowPassCurveColor = new Color(0.8f, 0.25f, 0.9f, 1f);
+		internal static Color kReverbZoneMixCurveColor = new Color(0.7f, 0.7f, 0.2f, 1f);
 		internal bool[] m_SelectedCurves = new bool[0];
 		private bool m_Expanded3D;
-		private bool m_Expanded2D;
 		private static AudioSourceInspector.Styles ms_Styles;
 		private void OnEnable()
 		{
@@ -95,16 +113,18 @@ namespace UnityEditor
 			this.m_BypassEffects = base.serializedObject.FindProperty("BypassEffects");
 			this.m_BypassListenerEffects = base.serializedObject.FindProperty("BypassListenerEffects");
 			this.m_BypassReverbZones = base.serializedObject.FindProperty("BypassReverbZones");
+			this.m_OutputAudioMixerGroup = base.serializedObject.FindProperty("OutputAudioMixerGroup");
 			this.m_AudioCurves = new AudioSourceInspector.AudioCurveWrapper[]
 			{
-				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Volume, "Volume", 0, AudioSourceInspector.kRolloffCurveColor, base.serializedObject.FindProperty("rolloffCustomCurve"), 0, 1),
-				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Pan, "Pan", 1, AudioSourceInspector.kPanLevelCurveColor, base.serializedObject.FindProperty("panLevelCustomCurve"), 0, 1),
-				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Spread, "Spread", 2, AudioSourceInspector.kSpreadCurveColor, base.serializedObject.FindProperty("spreadCustomCurve"), 0, 1),
-				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Lowpass, "Low-Pass", 3, AudioSourceInspector.kLowPassCurveColor, null, 0, 1)
+				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Volume, "Volume", 0, AudioSourceInspector.kRolloffCurveColor, base.serializedObject.FindProperty("rolloffCustomCurve"), 0f, 1f),
+				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.SpatialBlend, "Spatial Blend", 1, AudioSourceInspector.kSpatialCurveColor, base.serializedObject.FindProperty("panLevelCustomCurve"), 0f, 1f),
+				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Spread, "Spread", 2, AudioSourceInspector.kSpreadCurveColor, base.serializedObject.FindProperty("spreadCustomCurve"), 0f, 1f),
+				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.Lowpass, "Low-Pass", 3, AudioSourceInspector.kLowPassCurveColor, null, 0f, 1f),
+				new AudioSourceInspector.AudioCurveWrapper(AudioSourceInspector.AudioCurveType.ReverbZoneMix, "Reverb Zone Mix", 4, AudioSourceInspector.kReverbZoneMixCurveColor, base.serializedObject.FindProperty("reverbZoneMixCustomCurve"), 0f, 1.1f)
 			};
 			AudioSourceInspector.m_CurveEditorSettings.hRangeMin = 0f;
 			AudioSourceInspector.m_CurveEditorSettings.vRangeMin = 0f;
-			AudioSourceInspector.m_CurveEditorSettings.vRangeMax = 1f;
+			AudioSourceInspector.m_CurveEditorSettings.vRangeMax = 1.1f;
 			AudioSourceInspector.m_CurveEditorSettings.hRangeMax = 1f;
 			AudioSourceInspector.m_CurveEditorSettings.vSlider = false;
 			AudioSourceInspector.m_CurveEditorSettings.hSlider = false;
@@ -120,19 +140,18 @@ namespace UnityEditor
 			this.m_CurveEditor.settings = AudioSourceInspector.m_CurveEditorSettings;
 			this.m_CurveEditor.margin = 25f;
 			this.m_CurveEditor.SetShownHRangeInsideMargins(0f, 1f);
-			this.m_CurveEditor.SetShownVRangeInsideMargins(0f, 1f);
+			this.m_CurveEditor.SetShownVRangeInsideMargins(0f, 1.1f);
 			this.m_CurveEditor.ignoreScrollWheelUntilClicked = true;
 			this.m_LastListenerPosition = AudioUtil.GetListenerPos();
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
-			this.m_Expanded2D = EditorPrefs.GetBool("AudioSourceExpanded2D", this.m_Expanded2D);
 			this.m_Expanded3D = EditorPrefs.GetBool("AudioSourceExpanded3D", this.m_Expanded3D);
 		}
 		private void OnDisable()
 		{
-			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
+			this.m_CurveEditor.OnDisable();
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
-			EditorPrefs.SetBool("AudioSourceExpanded2D", this.m_Expanded2D);
+			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
 			EditorPrefs.SetBool("AudioSourceExpanded3D", this.m_Expanded3D);
 		}
 		private CurveWrapper[] GetCurveWrapperArray()
@@ -267,7 +286,7 @@ namespace UnityEditor
 		}
 		private void UndoRedoPerformed()
 		{
-			this.m_CurveEditor.animationCurves = this.GetCurveWrapperArray();
+			this.m_RefreshCurveEditor = true;
 		}
 		private void HandleLowPassFilter()
 		{
@@ -293,7 +312,6 @@ namespace UnityEditor
 		}
 		public override void OnInspectorGUI()
 		{
-			bool updateWrappers = false;
 			this.InitStyles();
 			base.serializedObject.Update();
 			if (this.m_LowpassObject != null)
@@ -311,7 +329,7 @@ namespace UnityEditor
 					AnimationCurve animationCurveValue = audioCurveWrapper.curveProp.animationCurveValue;
 					if (curveWrapperById == null != audioCurveWrapper.curveProp.hasMultipleDifferentValues)
 					{
-						updateWrappers = true;
+						this.m_RefreshCurveEditor = true;
 					}
 					else
 					{
@@ -319,13 +337,13 @@ namespace UnityEditor
 						{
 							if (curveWrapperById.curve.length == 0)
 							{
-								updateWrappers = true;
+								this.m_RefreshCurveEditor = true;
 							}
 							else
 							{
 								if (animationCurveValue.length >= 1 && animationCurveValue.keys[0].value != curveWrapperById.curve.keys[0].value)
 								{
-									updateWrappers = true;
+									this.m_RefreshCurveEditor = true;
 								}
 							}
 						}
@@ -335,50 +353,50 @@ namespace UnityEditor
 				{
 					if (curveWrapperById != null)
 					{
-						updateWrappers = true;
+						this.m_RefreshCurveEditor = true;
 					}
 				}
 			}
-			this.UpdateWrappersAndLegend(ref updateWrappers);
-			EditorGUILayout.PropertyField(this.m_AudioClip, new GUILayoutOption[0]);
-			if (!this.m_AudioClip.hasMultipleDifferentValues && this.m_AudioClip.objectReferenceValue != null)
-			{
-				string t;
-				if (AudioUtil.Is3D(this.m_AudioClip.objectReferenceValue as AudioClip))
-				{
-					t = "This is a 3D Sound.";
-				}
-				else
-				{
-					t = "This is a 2D Sound.";
-				}
-				EditorGUILayout.LabelField(EditorGUIUtility.blankContent, EditorGUIUtility.TempContent(t), EditorStyles.helpBox, new GUILayoutOption[0]);
-			}
+			this.UpdateWrappersAndLegend();
+			EditorGUILayout.PropertyField(this.m_AudioClip, AudioSourceInspector.ms_Styles.audioClipLabel, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
+			EditorGUILayout.PropertyField(this.m_OutputAudioMixerGroup, AudioSourceInspector.ms_Styles.outputMixerGroupLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Mute, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_BypassEffects, new GUILayoutOption[0]);
+			bool flag = base.targets.Any((UnityEngine.Object t) => (t as AudioSource).outputAudioMixerGroup != null);
+			if (flag)
+			{
+				EditorGUI.BeginDisabledGroup(true);
+			}
 			EditorGUILayout.PropertyField(this.m_BypassListenerEffects, new GUILayoutOption[0]);
+			if (flag)
+			{
+				EditorGUI.EndDisabledGroup();
+			}
 			EditorGUILayout.PropertyField(this.m_BypassReverbZones, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_PlayOnAwake, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Loop, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
-			EditorGUILayout.IntSlider(this.m_Priority, 0, 256, new GUILayoutOption[0]);
+			EditorGUIUtility.sliderLabels.SetLabels(AudioSourceInspector.ms_Styles.priorityLeftLabel, AudioSourceInspector.ms_Styles.priorityRightLabel);
+			EditorGUILayout.IntSlider(this.m_Priority, 0, 256, AudioSourceInspector.ms_Styles.priorityLabel, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
-			EditorGUILayout.Slider(this.m_Volume, 0f, 1f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_Pitch, -3f, 3f, new GUILayoutOption[0]);
+			EditorGUILayout.Slider(this.m_Volume, 0f, 1f, AudioSourceInspector.ms_Styles.volumeLabel, new GUILayoutOption[0]);
+			EditorGUILayout.Space();
+			EditorGUILayout.Slider(this.m_Pitch, -3f, 3f, AudioSourceInspector.ms_Styles.pitchLabel, new GUILayoutOption[0]);
+			EditorGUILayout.Space();
+			EditorGUIUtility.sliderLabels.SetLabels(AudioSourceInspector.ms_Styles.panLeftLabel, AudioSourceInspector.ms_Styles.panRightLabel);
+			EditorGUILayout.Slider(this.m_Pan2D, -1f, 1f, AudioSourceInspector.ms_Styles.panStereoLabel, new GUILayoutOption[0]);
+			EditorGUILayout.Space();
+			EditorGUIUtility.sliderLabels.SetLabels(AudioSourceInspector.ms_Styles.spatialLeftLabel, AudioSourceInspector.ms_Styles.spatialRightLabel);
+			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.spatialBlendLabel, this.m_AudioCurves[1].curveProp, 0f, 1f, false);
+			EditorGUILayout.Space();
+			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.reverbZoneMixLabel, this.m_AudioCurves[4].curveProp, 0f, 1.1f, false);
 			EditorGUILayout.Space();
 			this.m_Expanded3D = EditorGUILayout.Foldout(this.m_Expanded3D, "3D Sound Settings");
 			if (this.m_Expanded3D)
 			{
 				EditorGUI.indentLevel++;
-				this.Audio3DGUI(updateWrappers);
-				EditorGUI.indentLevel--;
-			}
-			this.m_Expanded2D = EditorGUILayout.Foldout(this.m_Expanded2D, "2D Sound Settings");
-			if (this.m_Expanded2D)
-			{
-				EditorGUI.indentLevel++;
-				this.Audio2DGUI();
+				this.Audio3DGUI();
 				EditorGUI.indentLevel--;
 			}
 			base.serializedObject.ApplyModifiedProperties();
@@ -394,9 +412,9 @@ namespace UnityEditor
 			property.serializedObject.ApplyModifiedProperties();
 			EditorUtility.ForceReloadInspectors();
 		}
-		private void Audio3DGUI(bool updateWrappers)
+		private void Audio3DGUI()
 		{
-			EditorGUILayout.Slider(this.m_DopplerLevel, 0f, 5f, new GUILayoutOption[0]);
+			EditorGUILayout.Slider(this.m_DopplerLevel, 0f, 5f, AudioSourceInspector.ms_Styles.dopplerLevelLabel, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
 			EditorGUI.BeginChangeCheck();
 			if (this.m_RolloffMode.hasMultipleDifferentValues || (this.m_RolloffMode.enumValueIndex == 2 && this.m_AudioCurves[0].curveProp.hasMultipleDifferentValues))
@@ -424,8 +442,7 @@ namespace UnityEditor
 				}
 				EditorGUI.indentLevel--;
 			}
-			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.panLevelLabel, this.m_AudioCurves[1].curveProp, 0f, 1f);
-			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.spreadLabel, this.m_AudioCurves[2].curveProp, 0f, 360f);
+			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.spreadLabel, this.m_AudioCurves[2].curveProp, 0f, 360f, true);
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(this.m_MaxDistance, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
@@ -434,7 +451,7 @@ namespace UnityEditor
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
-				updateWrappers = true;
+				this.m_RefreshCurveEditor = true;
 			}
 			Rect aspectRect = GUILayoutUtility.GetAspectRect(1.333f, GUI.skin.textField);
 			aspectRect.xMin += EditorGUI.indent;
@@ -442,7 +459,7 @@ namespace UnityEditor
 			{
 				this.m_CurveEditor.rect = new Rect(aspectRect.x, aspectRect.y, aspectRect.width, aspectRect.height);
 			}
-			this.UpdateWrappersAndLegend(ref updateWrappers);
+			this.UpdateWrappersAndLegend();
 			GUI.Label(this.m_CurveEditor.drawRect, GUIContent.none, "TextField");
 			this.m_CurveEditor.hRangeLocked = Event.current.shift;
 			this.m_CurveEditor.vRangeLocked = EditorGUI.actionKey;
@@ -482,13 +499,13 @@ namespace UnityEditor
 				}
 			}
 		}
-		private void UpdateWrappersAndLegend(ref bool updateWrappers)
+		private void UpdateWrappersAndLegend()
 		{
-			if (updateWrappers)
+			if (this.m_RefreshCurveEditor)
 			{
 				this.m_CurveEditor.animationCurves = this.GetCurveWrapperArray();
 				this.SyncShownCurvesToLegend(this.GetShownAudioCurves());
-				updateWrappers = false;
+				this.m_RefreshCurveEditor = false;
 			}
 		}
 		private void DrawLegend()
@@ -537,10 +554,6 @@ namespace UnityEditor
 				}
 			}
 		}
-		private void Audio2DGUI()
-		{
-			EditorGUILayout.Slider(this.m_Pan2D, -1f, 1f, new GUILayoutOption[0]);
-		}
 		private List<AudioSourceInspector.AudioCurveWrapper> GetShownAudioCurves()
 		{
 			return (
@@ -575,7 +588,7 @@ namespace UnityEditor
 			GUI.Label(new Rect(Mathf.Floor(vector3.x - vector.x / 2f), 2f, vector.x, 15f), label, AudioSourceInspector.ms_Styles.labelStyle);
 			GUI.EndGroup();
 		}
-		internal static void AnimProp(GUIContent label, SerializedProperty prop, float min, float max)
+		internal static void AnimProp(GUIContent label, SerializedProperty prop, float min, float max, bool useNormalizedValue)
 		{
 			if (prop.hasMultipleDifferentValues)
 			{
@@ -596,12 +609,12 @@ namespace UnityEditor
 			if (animationCurveValue.length != 1)
 			{
 				EditorGUI.BeginDisabledGroup(true);
-				EditorGUILayout.LabelField(label.text, "Controlled by Curve", new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(label.text, AudioSourceInspector.ms_Styles.controlledByCurveLabel, new GUILayoutOption[0]);
 				EditorGUI.EndDisabledGroup();
 			}
 			else
 			{
-				float num = Mathf.Lerp(min, max, animationCurveValue.keys[0].value);
+				float num = (!useNormalizedValue) ? animationCurveValue.keys[0].value : Mathf.Lerp(min, max, animationCurveValue.keys[0].value);
 				num = MathUtils.DiscardLeastSignificantDecimal(num);
 				EditorGUI.BeginChangeCheck();
 				if (max > min)
@@ -616,7 +629,7 @@ namespace UnityEditor
 				{
 					Keyframe key = animationCurveValue.keys[0];
 					key.time = 0f;
-					key.value = Mathf.InverseLerp(min, max, num);
+					key.value = ((!useNormalizedValue) ? num : Mathf.InverseLerp(min, max, num));
 					animationCurveValue.MoveKey(0, key);
 				}
 			}
@@ -643,6 +656,7 @@ namespace UnityEditor
 				Undo.RecordObject(audioSource, "AudioSource Distance");
 				audioSource.minDistance = minDistance;
 				audioSource.maxDistance = maxDistance;
+				this.m_RefreshCurveEditor = true;
 			}
 			Handles.color = color;
 		}

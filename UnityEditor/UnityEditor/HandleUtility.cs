@@ -63,6 +63,8 @@ namespace UnityEditor
 		private static Material s_HandleMaterial;
 		private static Material s_HandleWireMaterial;
 		private static Material s_HandleWireMaterial2D;
+		private static int s_HandleWireTextureIndex;
+		private static int s_HandleWireTextureIndex2D;
 		private static Stack s_SavedCameras = new Stack();
 		internal static Transform[] ignoreRaySnapObjects = null;
 		public static float acceleration
@@ -141,15 +143,11 @@ namespace UnityEditor
 				return HandleUtility.s_HandleMaterial;
 			}
 		}
-		internal static Material handleWireMaterial
+		private static Material handleWireMaterial
 		{
 			get
 			{
-				if (!HandleUtility.s_HandleWireMaterial)
-				{
-					HandleUtility.s_HandleWireMaterial = (Material)EditorGUIUtility.LoadRequired("SceneView/HandleLines.mat");
-					HandleUtility.s_HandleWireMaterial2D = (Material)EditorGUIUtility.LoadRequired("SceneView/2DHandleLines.mat");
-				}
+				HandleUtility.InitHandleMaterials();
 				return (!Camera.current) ? HandleUtility.s_HandleWireMaterial2D : HandleUtility.s_HandleWireMaterial;
 			}
 		}
@@ -503,10 +501,10 @@ namespace UnityEditor
 		public static GameObject[] PickRectObjects(Rect rect, bool selectPrefabRootsOnly)
 		{
 			Camera current = Camera.current;
-			rect.x /= current.pixelWidth;
-			rect.width /= current.pixelWidth;
-			rect.y /= current.pixelHeight;
-			rect.height /= current.pixelHeight;
+			rect.x /= (float)current.pixelWidth;
+			rect.width /= (float)current.pixelWidth;
+			rect.y /= (float)current.pixelHeight;
+			rect.height /= (float)current.pixelHeight;
 			return HandleUtility.Internal_PickRectObjects(current, rect, selectPrefabRootsOnly);
 		}
 		internal static GameObject[] Internal_PickRectObjects(Camera cam, Rect rect, bool selectPrefabRoots)
@@ -529,13 +527,18 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Internal_FindNearestVertex(Camera cam, ref Vector2 point, Transform[] objectsToSearch, Transform[] ignoreObjects, out Vector3 vertex);
-		public static GameObject PickGameObject(Vector2 position, bool selectPrefabRoot)
+		public static GameObject PickGameObject(Vector2 position, out int materialIndex)
 		{
 			Camera current = Camera.current;
 			int cullingMask = current.cullingMask;
 			position = GUIClip.Unclip(position);
 			position.y = (float)Screen.height - position.y - current.pixelRect.yMin;
-			GameObject gameObject = HandleUtility.Internal_PickClosestGO(current, cullingMask, position);
+			return HandleUtility.Internal_PickClosestGO(current, cullingMask, position, out materialIndex);
+		}
+		public static GameObject PickGameObject(Vector2 position, bool selectPrefabRoot)
+		{
+			int num;
+			GameObject gameObject = HandleUtility.PickGameObject(position, out num);
 			if (!gameObject || !selectPrefabRoot)
 			{
 				return gameObject;
@@ -572,13 +575,33 @@ namespace UnityEditor
 			}
 			return null;
 		}
-		internal static GameObject Internal_PickClosestGO(Camera cam, int layers, Vector2 position)
+		internal static GameObject Internal_PickClosestGO(Camera cam, int layers, Vector2 position, out int materialIndex)
 		{
-			return HandleUtility.INTERNAL_CALL_Internal_PickClosestGO(cam, layers, ref position);
+			return HandleUtility.INTERNAL_CALL_Internal_PickClosestGO(cam, layers, ref position, out materialIndex);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern GameObject INTERNAL_CALL_Internal_PickClosestGO(Camera cam, int layers, ref Vector2 position);
+		private static extern GameObject INTERNAL_CALL_Internal_PickClosestGO(Camera cam, int layers, ref Vector2 position, out int materialIndex);
+		private static void InitHandleMaterials()
+		{
+			if (!HandleUtility.s_HandleWireMaterial)
+			{
+				HandleUtility.s_HandleWireMaterial = (Material)EditorGUIUtility.LoadRequired("SceneView/HandleLines.mat");
+				HandleUtility.s_HandleWireMaterial2D = (Material)EditorGUIUtility.LoadRequired("SceneView/2DHandleLines.mat");
+				HandleUtility.s_HandleWireTextureIndex = ShaderUtil.GetTextureBindingIndex(HandleUtility.s_HandleWireMaterial.shader, Shader.PropertyToID("_MainTex"));
+				HandleUtility.s_HandleWireTextureIndex2D = ShaderUtil.GetTextureBindingIndex(HandleUtility.s_HandleWireMaterial2D.shader, Shader.PropertyToID("_MainTex"));
+			}
+		}
+		internal static void ApplyWireMaterial()
+		{
+			Material handleWireMaterial = HandleUtility.handleWireMaterial;
+			handleWireMaterial.SetPass(0);
+			int textureIndex = (!Camera.current) ? HandleUtility.s_HandleWireTextureIndex2D : HandleUtility.s_HandleWireTextureIndex;
+			HandleUtility.Internal_SetHandleWireTextureIndex(textureIndex);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_SetHandleWireTextureIndex(int textureIndex);
 		public static void PushCamera(Camera camera)
 		{
 			HandleUtility.s_SavedCameras.Push(new HandleUtility.SavedCamera(camera));

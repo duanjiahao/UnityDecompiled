@@ -34,8 +34,8 @@ namespace UnityEditor
 		[DebuggerHidden]
 		internal static IEnumerable<KeyValuePair<string, T>> Prefs<T>() where T : IPrefType
 		{
-			Settings.<Prefs>c__Iterator1<T> <Prefs>c__Iterator = new Settings.<Prefs>c__Iterator1<T>();
-			Settings.<Prefs>c__Iterator1<T> expr_07 = <Prefs>c__Iterator;
+			Settings.<Prefs>c__Iterator2<T> <Prefs>c__Iterator = new Settings.<Prefs>c__Iterator2<T>();
+			Settings.<Prefs>c__Iterator2<T> expr_07 = <Prefs>c__Iterator;
 			expr_07.$PC = -2;
 			return expr_07;
 		}

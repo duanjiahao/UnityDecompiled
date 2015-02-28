@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -9,74 +8,103 @@ namespace UnityEditor
 {
 	public sealed class FileUtil
 	{
-		internal static ArrayList ReadAllText(string path)
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool DeleteFileOrDirectory(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void CopyFileOrDirectory(string from, string to);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void CopyFileOrDirectoryFollowSymlinks(string from, string to);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void MoveFileOrDirectory(string from, string to);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetUniqueTempPathInProject();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetActualPathName(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetProjectRelativePath(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetLastPathNameComponent(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string DeleteLastPathNameComponent(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetPathExtension(string path);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetPathWithoutExtension(string path);
+		public static void ReplaceFile(string src, string dst)
 		{
-			ArrayList arrayList = new ArrayList();
-			using (StreamReader streamReader = File.OpenText(FileUtil.NiceWinPath(path)))
+			if (File.Exists(dst))
 			{
-				string value = string.Empty;
-				while ((value = streamReader.ReadLine()) != null)
-				{
-					arrayList.Add(value);
-				}
+				FileUtil.DeleteFileOrDirectory(dst);
 			}
-			return arrayList;
+			FileUtil.CopyFileOrDirectory(src, dst);
 		}
-		internal static void WriteAllText(string path, ArrayList strings)
+		public static void ReplaceDirectory(string src, string dst)
 		{
-			StreamWriter streamWriter = new StreamWriter(FileUtil.NiceWinPath(path));
-			foreach (string value in strings)
+			if (Directory.Exists(dst))
 			{
-				streamWriter.WriteLine(value);
+				FileUtil.DeleteFileOrDirectory(dst);
 			}
-			streamWriter.Close();
+			FileUtil.CopyFileOrDirectory(src, dst);
 		}
 		internal static void ReplaceText(string path, params string[] input)
 		{
-			ArrayList arrayList = FileUtil.ReadAllText(path);
+			path = FileUtil.NiceWinPath(path);
+			string[] array = File.ReadAllLines(path);
 			for (int i = 0; i < input.Length; i += 2)
 			{
-				for (int j = 0; j < arrayList.Count; j++)
+				for (int j = 0; j < array.Length; j++)
 				{
-					string text = (string)arrayList[j];
-					arrayList[j] = text.Replace(input[i], input[i + 1]);
+					array[j] = array[j].Replace(input[i], input[i + 1]);
 				}
 			}
-			FileUtil.WriteAllText(path, arrayList);
+			File.WriteAllLines(path, array);
 		}
 		internal static bool ReplaceTextRegex(string path, params string[] input)
 		{
 			bool result = false;
-			ArrayList arrayList = FileUtil.ReadAllText(path);
+			path = FileUtil.NiceWinPath(path);
+			string[] array = File.ReadAllLines(path);
 			for (int i = 0; i < input.Length; i += 2)
 			{
-				for (int j = 0; j < arrayList.Count; j++)
+				for (int j = 0; j < array.Length; j++)
 				{
-					string text = (string)arrayList[j];
-					arrayList[j] = Regex.Replace(text, input[i], input[i + 1]);
-					if (text != (string)arrayList[j])
+					string text = array[j];
+					array[j] = Regex.Replace(text, input[i], input[i + 1]);
+					if (text != array[j])
 					{
 						result = true;
 					}
 				}
 			}
-			FileUtil.WriteAllText(path, arrayList);
+			File.WriteAllLines(path, array);
 			return result;
 		}
 		internal static bool AppendTextAfter(string path, string find, string append)
 		{
 			bool result = false;
-			ArrayList arrayList = FileUtil.ReadAllText(path);
-			for (int i = 0; i < arrayList.Count; i++)
+			path = FileUtil.NiceWinPath(path);
+			List<string> list = new List<string>(File.ReadAllLines(path));
+			for (int i = 0; i < list.Count; i++)
 			{
-				if (((string)arrayList[i]).IndexOf(find) > -1)
+				if (list[i].Contains(find))
 				{
-					arrayList.Insert(i + 1, append);
+					list.Insert(i + 1, append);
 					result = true;
 					break;
 				}
 			}
-			FileUtil.WriteAllText(path, arrayList);
+			File.WriteAllLines(path, list.ToArray());
 			return result;
 		}
 		internal static void CopyDirectoryRecursive(string source, string target)
@@ -165,6 +193,23 @@ namespace UnityEditor
 		internal static void UnityDirectoryDelete(string path, bool recursive)
 		{
 			Directory.Delete(FileUtil.NiceWinPath(path), recursive);
+		}
+		internal static void UnityDirectoryRemoveReadonlyAttribute(string target_dir)
+		{
+			string[] files = Directory.GetFiles(target_dir);
+			string[] directories = Directory.GetDirectories(target_dir);
+			string[] array = files;
+			for (int i = 0; i < array.Length; i++)
+			{
+				string path = array[i];
+				File.SetAttributes(path, FileAttributes.Normal);
+			}
+			string[] array2 = directories;
+			for (int j = 0; j < array2.Length; j++)
+			{
+				string target_dir2 = array2[j];
+				FileUtil.UnityDirectoryRemoveReadonlyAttribute(target_dir2);
+			}
 		}
 		internal static void MoveFileIfExists(string src, string dst)
 		{
@@ -273,52 +318,6 @@ namespace UnityEditor
 					FileUtil.WalkFilesystemRecursively(text, fileCallback, directoryCallback);
 				}
 			}
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool DeleteFileOrDirectory(string path);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CopyFileOrDirectory(string from, string to);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CopyFileOrDirectoryFollowSymlinks(string from, string to);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void MoveFileOrDirectory(string from, string to);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string GetUniqueTempPathInProject();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetActualPathName(string path);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string GetProjectRelativePath(string path);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetLastPathNameComponent(string path);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string DeleteLastPathNameComponent(string path);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetPathExtension(string path);
-		public static void ReplaceFile(string src, string dst)
-		{
-			if (File.Exists(dst))
-			{
-				FileUtil.DeleteFileOrDirectory(dst);
-			}
-			FileUtil.CopyFileOrDirectory(src, dst);
-		}
-		public static void ReplaceDirectory(string src, string dst)
-		{
-			if (Directory.Exists(dst))
-			{
-				FileUtil.DeleteFileOrDirectory(dst);
-			}
-			FileUtil.CopyFileOrDirectory(src, dst);
 		}
 	}
 }

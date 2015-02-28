@@ -5,54 +5,12 @@ namespace UnityEditor
 {
 	internal class Toolbar : GUIView
 	{
-		private static GUIContent[] s_ToolIcons = new GUIContent[]
-		{
-			EditorGUIUtility.IconContent("MoveTool"),
-			EditorGUIUtility.IconContent("RotateTool"),
-			EditorGUIUtility.IconContent("ScaleTool"),
-			EditorGUIUtility.IconContent("RectTool"),
-			EditorGUIUtility.IconContent("MoveTool On"),
-			EditorGUIUtility.IconContent("RotateTool On"),
-			EditorGUIUtility.IconContent("ScaleTool On"),
-			EditorGUIUtility.IconContent("RectTool On")
-		};
-		private static GUIContent[] s_ViewToolIcons = new GUIContent[]
-		{
-			EditorGUIUtility.IconContent("ViewToolOrbit"),
-			EditorGUIUtility.IconContent("ViewToolMove"),
-			EditorGUIUtility.IconContent("ViewToolZoom"),
-			EditorGUIUtility.IconContent("ViewToolOrbit"),
-			EditorGUIUtility.IconContent("ViewToolOrbit On"),
-			EditorGUIUtility.IconContent("ViewToolMove On"),
-			EditorGUIUtility.IconContent("ViewToolZoom On"),
-			EditorGUIUtility.IconContent("ViewToolOrbit On")
-		};
-		private static GUIContent[] s_PivotIcons = new GUIContent[]
-		{
-			EditorGUIUtility.TextContent("ToolHandleCenter"),
-			EditorGUIUtility.TextContent("ToolHandlePivot")
-		};
-		private static GUIContent[] s_PivotRotation = new GUIContent[]
-		{
-			EditorGUIUtility.TextContent("ToolHandleLocal"),
-			EditorGUIUtility.TextContent("ToolHandleGlobal")
-		};
-		private static GUIContent s_LayerContent = EditorGUIUtility.TextContent("ToolbarLayers");
-		private static GUIContent[] s_PlayIcons = new GUIContent[]
-		{
-			EditorGUIUtility.IconContent("PlayButton"),
-			EditorGUIUtility.IconContent("PauseButton"),
-			EditorGUIUtility.IconContent("StepButton"),
-			EditorGUIUtility.IconContent("PlayButtonProfile"),
-			EditorGUIUtility.IconContent("PlayButton On"),
-			EditorGUIUtility.IconContent("PauseButton On"),
-			EditorGUIUtility.IconContent("StepButton On"),
-			EditorGUIUtility.IconContent("PlayButtonProfile On"),
-			EditorGUIUtility.IconContent("PlayButton Anim"),
-			EditorGUIUtility.IconContent("PauseButton Anim"),
-			EditorGUIUtility.IconContent("StepButton Anim"),
-			EditorGUIUtility.IconContent("PlayButtonProfile Anim")
-		};
+		private static GUIContent[] s_ToolIcons;
+		private static GUIContent[] s_ViewToolIcons;
+		private static GUIContent[] s_PivotIcons;
+		private static GUIContent[] s_PivotRotation;
+		private static GUIContent s_LayerContent;
+		private static GUIContent[] s_PlayIcons;
 		private bool t1;
 		private bool t2;
 		private bool t3;
@@ -72,6 +30,61 @@ namespace UnityEditor
 				Toolbar.get.Repaint();
 			}
 		}
+		private static void InitializeToolIcons()
+		{
+			if (Toolbar.s_ToolIcons != null)
+			{
+				return;
+			}
+			Toolbar.s_ToolIcons = new GUIContent[]
+			{
+				EditorGUIUtility.IconContent("MoveTool"),
+				EditorGUIUtility.IconContent("RotateTool"),
+				EditorGUIUtility.IconContent("ScaleTool"),
+				EditorGUIUtility.IconContent("RectTool"),
+				EditorGUIUtility.IconContent("MoveTool On"),
+				EditorGUIUtility.IconContent("RotateTool On"),
+				EditorGUIUtility.IconContent("ScaleTool On"),
+				EditorGUIUtility.IconContent("RectTool On")
+			};
+			Toolbar.s_ViewToolIcons = new GUIContent[]
+			{
+				EditorGUIUtility.IconContent("ViewToolOrbit"),
+				EditorGUIUtility.IconContent("ViewToolMove"),
+				EditorGUIUtility.IconContent("ViewToolZoom"),
+				EditorGUIUtility.IconContent("ViewToolOrbit"),
+				EditorGUIUtility.IconContent("ViewToolOrbit On"),
+				EditorGUIUtility.IconContent("ViewToolMove On"),
+				EditorGUIUtility.IconContent("ViewToolZoom On"),
+				EditorGUIUtility.IconContent("ViewToolOrbit On")
+			};
+			Toolbar.s_PivotIcons = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("ToolHandleCenter"),
+				EditorGUIUtility.TextContent("ToolHandlePivot")
+			};
+			Toolbar.s_PivotRotation = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("ToolHandleLocal"),
+				EditorGUIUtility.TextContent("ToolHandleGlobal")
+			};
+			Toolbar.s_LayerContent = EditorGUIUtility.TextContent("ToolbarLayers");
+			Toolbar.s_PlayIcons = new GUIContent[]
+			{
+				EditorGUIUtility.IconContent("PlayButton"),
+				EditorGUIUtility.IconContent("PauseButton"),
+				EditorGUIUtility.IconContent("StepButton"),
+				EditorGUIUtility.IconContent("PlayButtonProfile"),
+				EditorGUIUtility.IconContent("PlayButton On"),
+				EditorGUIUtility.IconContent("PauseButton On"),
+				EditorGUIUtility.IconContent("StepButton On"),
+				EditorGUIUtility.IconContent("PlayButtonProfile On"),
+				EditorGUIUtility.IconContent("PlayButton Anim"),
+				EditorGUIUtility.IconContent("PauseButton Anim"),
+				EditorGUIUtility.IconContent("StepButton Anim"),
+				EditorGUIUtility.IconContent("PlayButtonProfile Anim")
+			};
+		}
 		public void OnEnable()
 		{
 			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(base.Repaint));
@@ -90,10 +103,12 @@ namespace UnityEditor
 		private void OnSelectionChange()
 		{
 			Tools.OnSelectionChange();
+			EditMode.OnSelectionChange();
 			base.Repaint();
 		}
 		private void OnGUI()
 		{
+			Toolbar.InitializeToolIcons();
 			bool isPlayingOrWillChangePlaymode = EditorApplication.isPlayingOrWillChangePlaymode;
 			if (isPlayingOrWillChangePlaymode)
 			{

@@ -639,14 +639,14 @@ namespace UnityEditor
 		}
 		public static void AutoSetupOnInstance(GameObject modelPrefab, SerializedObject modelImporterSerializedObject)
 		{
-			GameObject gameObject = UnityEngine.Object.Instantiate(modelPrefab) as GameObject;
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(modelPrefab);
 			gameObject.hideFlags = HideFlags.HideAndDontSave;
 			AvatarSetupTool.AutoSetup(modelPrefab, gameObject, modelImporterSerializedObject);
 			UnityEngine.Object.DestroyImmediate(gameObject);
 		}
 		public static bool IsPoseValidOnInstance(GameObject modelPrefab, SerializedObject modelImporterSerializedObject)
 		{
-			GameObject gameObject = UnityEngine.Object.Instantiate(modelPrefab) as GameObject;
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(modelPrefab);
 			gameObject.hideFlags = HideFlags.HideAndDontSave;
 			Dictionary<Transform, bool> modelBones = AvatarSetupTool.GetModelBones(gameObject.transform, false, null);
 			AvatarSetupTool.BoneWrapper[] humanBones = AvatarSetupTool.GetHumanBones(modelImporterSerializedObject, modelBones);
@@ -760,7 +760,7 @@ namespace UnityEditor
 				{
 					list = new List<string>(File.ReadAllLines(path));
 				}
-				GameObject gameObject = UnityEngine.Object.Instantiate(modelAsset) as GameObject;
+				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(modelAsset);
 				gameObject.hideFlags = HideFlags.HideAndDontSave;
 				Dictionary<Transform, bool> modelBones = AvatarSetupTool.GetModelBones(gameObject.transform, false, null);
 				AvatarSetupTool.BoneWrapper[] humanBones = AvatarSetupTool.GetHumanBones(serializedObject, modelBones);

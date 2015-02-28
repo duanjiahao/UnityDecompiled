@@ -19,7 +19,7 @@ namespace UnityEditorInternal
 			get;
 			set;
 		}
-		public AddCurvesPopupHierarchyGUI(TreeView treeView, AnimationWindowState state, EditorWindow owner) : base(treeView)
+		public AddCurvesPopupHierarchyGUI(TreeView treeView, AnimationWindowState state, EditorWindow owner) : base(treeView, true)
 		{
 			this.owner = owner;
 			this.state = state;

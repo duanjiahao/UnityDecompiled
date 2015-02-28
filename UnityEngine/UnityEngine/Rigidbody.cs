@@ -67,6 +67,15 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public extern float maxDepenetrationVelocity
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public extern bool isKinematic
 		{
 			[WrapperlessIcall]
@@ -213,6 +222,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[Obsolete("The sleepVelocity is no longer supported. Use sleepThreshold. Note that sleepThreshold is energy but not velocity.")]
 		public extern float sleepVelocity
 		{
 			[WrapperlessIcall]
@@ -222,7 +232,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[Obsolete("The sleepAngularVelocity is no longer supported. Set Use sleepThreshold to specify energy.")]
 		public extern float sleepAngularVelocity
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public extern float sleepThreshold
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -473,32 +493,32 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_WakeUp(Rigidbody self);
-		public bool SweepTest(Vector3 direction, out RaycastHit hitInfo, [DefaultValue("Mathf.Infinity")] float distance)
+		public bool SweepTest(Vector3 direction, out RaycastHit hitInfo, [DefaultValue("Mathf.Infinity")] float maxDistance)
 		{
-			return Rigidbody.INTERNAL_CALL_SweepTest(this, ref direction, out hitInfo, distance);
+			return Rigidbody.INTERNAL_CALL_SweepTest(this, ref direction, out hitInfo, maxDistance);
 		}
 		[ExcludeFromDocs]
 		public bool SweepTest(Vector3 direction, out RaycastHit hitInfo)
 		{
-			float distance = float.PositiveInfinity;
-			return Rigidbody.INTERNAL_CALL_SweepTest(this, ref direction, out hitInfo, distance);
+			float maxDistance = float.PositiveInfinity;
+			return Rigidbody.INTERNAL_CALL_SweepTest(this, ref direction, out hitInfo, maxDistance);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_SweepTest(Rigidbody self, ref Vector3 direction, out RaycastHit hitInfo, float distance);
-		public RaycastHit[] SweepTestAll(Vector3 direction, [DefaultValue("Mathf.Infinity")] float distance)
+		private static extern bool INTERNAL_CALL_SweepTest(Rigidbody self, ref Vector3 direction, out RaycastHit hitInfo, float maxDistance);
+		public RaycastHit[] SweepTestAll(Vector3 direction, [DefaultValue("Mathf.Infinity")] float maxDistance)
 		{
-			return Rigidbody.INTERNAL_CALL_SweepTestAll(this, ref direction, distance);
+			return Rigidbody.INTERNAL_CALL_SweepTestAll(this, ref direction, maxDistance);
 		}
 		[ExcludeFromDocs]
 		public RaycastHit[] SweepTestAll(Vector3 direction)
 		{
-			float distance = float.PositiveInfinity;
-			return Rigidbody.INTERNAL_CALL_SweepTestAll(this, ref direction, distance);
+			float maxDistance = float.PositiveInfinity;
+			return Rigidbody.INTERNAL_CALL_SweepTestAll(this, ref direction, maxDistance);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern RaycastHit[] INTERNAL_CALL_SweepTestAll(Rigidbody self, ref Vector3 direction, float distance);
+		private static extern RaycastHit[] INTERNAL_CALL_SweepTestAll(Rigidbody self, ref Vector3 direction, float maxDistance);
 		[Obsolete("use Rigidbody.maxAngularVelocity instead.")]
 		public void SetMaxAngularVelocity(float a)
 		{

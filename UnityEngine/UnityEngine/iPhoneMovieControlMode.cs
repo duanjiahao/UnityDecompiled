@@ -1,13 +1,9 @@
 using System;
 namespace UnityEngine
 {
-	[Obsolete("iPhoneMovieControlMode enumeration is deprecated. Please use FullScreenMovieControlMode instead.")]
+	[Obsolete("iPhoneMovieControlMode enumeration is deprecated (UnityUpgradable). Please use FullScreenMovieControlMode instead.", true)]
 	public enum iPhoneMovieControlMode
 	{
-		Full,
-		Minimal,
-		CancelOnTouch,
-		Hidden,
-		VolumeOnly = 1
+
 	}
 }

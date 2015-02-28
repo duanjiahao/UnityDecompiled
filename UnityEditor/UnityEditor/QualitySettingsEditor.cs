@@ -20,6 +20,7 @@ namespace UnityEditor
 			public static readonly GUIContent kPlatformTooltip = new GUIContent(string.Empty, "Allow quality setting on platform");
 			public static readonly GUIContent kIconTrash = EditorGUIUtility.IconContent("TreeEditor.Trash", "Delete Level");
 			public static readonly GUIContent kSoftParticlesHint = EditorGUIUtility.TextContent("QualitySettings.SoftParticlesHint");
+			public static readonly GUIContent kBillboardsFaceCameraPos = EditorGUIUtility.TextContent("QualitySettings.BillboardsFaceCameraPos");
 			public static readonly GUIStyle kListEvenBg = "ObjectPickerResultsOdd";
 			public static readonly GUIStyle kListOddBg = "ObjectPickerResultsEven";
 			public static readonly GUIStyle kDefaultDropdown = "QualitySettingsDefault";
@@ -380,7 +381,7 @@ namespace UnityEditor
 				return;
 			}
 			RenderingPath actualRenderingPath = main.actualRenderingPath;
-			if (actualRenderingPath == RenderingPath.DeferredLighting)
+			if (actualRenderingPath == RenderingPath.DeferredLighting || actualRenderingPath == RenderingPath.DeferredShading)
 			{
 				return;
 			}
@@ -389,6 +390,47 @@ namespace UnityEditor
 				return;
 			}
 			EditorGUILayout.HelpBox(QualitySettingsEditor.Styles.kSoftParticlesHint.text, MessageType.Warning, false);
+		}
+		private void DrawCascadeSplitGUI<T>(ref SerializedProperty shadowCascadeSplit)
+		{
+			float[] array = null;
+			Type typeFromHandle = typeof(T);
+			if (typeFromHandle == typeof(float))
+			{
+				array = new float[]
+				{
+					shadowCascadeSplit.floatValue
+				};
+			}
+			else
+			{
+				if (typeFromHandle == typeof(Vector3))
+				{
+					Vector3 vector3Value = shadowCascadeSplit.vector3Value;
+					array = new float[]
+					{
+						Mathf.Clamp(vector3Value[0], 0f, 1f),
+						Mathf.Clamp(vector3Value[1] - vector3Value[0], 0f, 1f),
+						Mathf.Clamp(vector3Value[2] - vector3Value[1], 0f, 1f)
+					};
+				}
+			}
+			if (array != null)
+			{
+				ShadowCascadeSplitGUI.HandleCascadeSliderGUI(ref array);
+				if (typeFromHandle == typeof(float))
+				{
+					shadowCascadeSplit.floatValue = array[0];
+				}
+				else
+				{
+					Vector3 vector3Value2 = default(Vector3);
+					vector3Value2[0] = array[0];
+					vector3Value2[1] = vector3Value2[0] + array[1];
+					vector3Value2[2] = vector3Value2[1] + array[2];
+					shadowCascadeSplit.vector3Value = vector3Value2;
+				}
+			}
 		}
 		public override void OnInspectorGUI()
 		{
@@ -413,17 +455,21 @@ namespace UnityEditor
 			SerializedProperty property2 = arrayElementAtIndex.FindPropertyRelative("shadows");
 			SerializedProperty property3 = arrayElementAtIndex.FindPropertyRelative("shadowResolution");
 			SerializedProperty property4 = arrayElementAtIndex.FindPropertyRelative("shadowProjection");
-			SerializedProperty property5 = arrayElementAtIndex.FindPropertyRelative("shadowCascades");
-			SerializedProperty property6 = arrayElementAtIndex.FindPropertyRelative("shadowDistance");
-			SerializedProperty property7 = arrayElementAtIndex.FindPropertyRelative("blendWeights");
-			SerializedProperty property8 = arrayElementAtIndex.FindPropertyRelative("textureQuality");
-			SerializedProperty property9 = arrayElementAtIndex.FindPropertyRelative("anisotropicTextures");
-			SerializedProperty property10 = arrayElementAtIndex.FindPropertyRelative("antiAliasing");
-			SerializedProperty serializedProperty2 = arrayElementAtIndex.FindPropertyRelative("softParticles");
-			SerializedProperty property11 = arrayElementAtIndex.FindPropertyRelative("vSyncCount");
-			SerializedProperty property12 = arrayElementAtIndex.FindPropertyRelative("lodBias");
-			SerializedProperty property13 = arrayElementAtIndex.FindPropertyRelative("maximumLODLevel");
-			SerializedProperty property14 = arrayElementAtIndex.FindPropertyRelative("particleRaycastBudget");
+			SerializedProperty serializedProperty2 = arrayElementAtIndex.FindPropertyRelative("shadowCascades");
+			SerializedProperty property5 = arrayElementAtIndex.FindPropertyRelative("shadowDistance");
+			SerializedProperty serializedProperty3 = arrayElementAtIndex.FindPropertyRelative("shadowCascade2Split");
+			SerializedProperty serializedProperty4 = arrayElementAtIndex.FindPropertyRelative("shadowCascade4Split");
+			SerializedProperty property6 = arrayElementAtIndex.FindPropertyRelative("blendWeights");
+			SerializedProperty property7 = arrayElementAtIndex.FindPropertyRelative("textureQuality");
+			SerializedProperty property8 = arrayElementAtIndex.FindPropertyRelative("anisotropicTextures");
+			SerializedProperty property9 = arrayElementAtIndex.FindPropertyRelative("antiAliasing");
+			SerializedProperty serializedProperty5 = arrayElementAtIndex.FindPropertyRelative("softParticles");
+			SerializedProperty property10 = arrayElementAtIndex.FindPropertyRelative("realtimeReflectionProbes");
+			SerializedProperty property11 = arrayElementAtIndex.FindPropertyRelative("billboardsFaceCameraPosition");
+			SerializedProperty property12 = arrayElementAtIndex.FindPropertyRelative("vSyncCount");
+			SerializedProperty property13 = arrayElementAtIndex.FindPropertyRelative("lodBias");
+			SerializedProperty property14 = arrayElementAtIndex.FindPropertyRelative("maximumLODLevel");
+			SerializedProperty property15 = arrayElementAtIndex.FindPropertyRelative("particleRaycastBudget");
 			if (string.IsNullOrEmpty(serializedProperty.stringValue))
 			{
 				serializedProperty.stringValue = "Level " + num;
@@ -432,28 +478,41 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Rendering"), EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property7, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property8, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property9, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property10, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(serializedProperty2, new GUILayoutOption[0]);
-			if (serializedProperty2.boolValue)
+			EditorGUILayout.PropertyField(serializedProperty5, new GUILayoutOption[0]);
+			if (serializedProperty5.boolValue)
 			{
 				this.SoftParticlesHintGUI();
 			}
+			EditorGUILayout.PropertyField(property10, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property11, QualitySettingsEditor.Styles.kBillboardsFaceCameraPos, new GUILayoutOption[0]);
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Shadows"), EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property2, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property3, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property4, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property5, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property6, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(serializedProperty2, new GUILayoutOption[0]);
+			if (serializedProperty2.intValue == 2)
+			{
+				this.DrawCascadeSplitGUI<float>(ref serializedProperty3);
+			}
+			else
+			{
+				if (serializedProperty2.intValue == 4)
+				{
+					this.DrawCascadeSplitGUI<Vector3>(ref serializedProperty4);
+				}
+			}
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Other"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property7, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property11, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property6, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property12, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property13, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property14, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property15, new GUILayoutOption[0]);
 			if (this.m_Dragging != null && this.m_Dragging.m_Position != this.m_Dragging.m_StartPosition)
 			{
 				this.m_QualitySettingsProperty.MoveArrayElement(this.m_Dragging.m_StartPosition, this.m_Dragging.m_Position);

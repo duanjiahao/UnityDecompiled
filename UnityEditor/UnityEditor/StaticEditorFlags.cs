@@ -9,6 +9,7 @@ namespace UnityEditor
 		OccludeeStatic = 16,
 		BatchingStatic = 4,
 		NavigationStatic = 8,
-		OffMeshLinkGeneration = 32
+		OffMeshLinkGeneration = 32,
+		ReflectionProbeStatic = 64
 	}
 }

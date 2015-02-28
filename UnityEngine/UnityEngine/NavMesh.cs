@@ -2,67 +2,111 @@ using System;
 using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
-	public sealed class NavMesh : Object
+	public sealed class NavMesh
 	{
-		public static bool Raycast(Vector3 sourcePosition, Vector3 targetPosition, out NavMeshHit hit, int passableMask)
+		public const int AllAreas = -1;
+		public static float avoidancePredictionTime
 		{
-			return NavMesh.INTERNAL_CALL_Raycast(ref sourcePosition, ref targetPosition, out hit, passableMask);
+			get
+			{
+				return NavMesh.GetAvoidancePredictionTime();
+			}
+			set
+			{
+				NavMesh.SetAvoidancePredictionTime(value);
+			}
+		}
+		public static int pathfindingIterationsPerFrame
+		{
+			get
+			{
+				return NavMesh.GetPathfindingIterationsPerFrame();
+			}
+			set
+			{
+				NavMesh.SetPathfindingIterationsPerFrame(value);
+			}
+		}
+		public static bool Raycast(Vector3 sourcePosition, Vector3 targetPosition, out NavMeshHit hit, int areaMask)
+		{
+			return NavMesh.INTERNAL_CALL_Raycast(ref sourcePosition, ref targetPosition, out hit, areaMask);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_Raycast(ref Vector3 sourcePosition, ref Vector3 targetPosition, out NavMeshHit hit, int passableMask);
-		public static bool CalculatePath(Vector3 sourcePosition, Vector3 targetPosition, int passableMask, NavMeshPath path)
+		private static extern bool INTERNAL_CALL_Raycast(ref Vector3 sourcePosition, ref Vector3 targetPosition, out NavMeshHit hit, int areaMask);
+		public static bool CalculatePath(Vector3 sourcePosition, Vector3 targetPosition, int areaMask, NavMeshPath path)
 		{
 			path.ClearCorners();
-			return NavMesh.CalculatePathInternal(sourcePosition, targetPosition, passableMask, path);
+			return NavMesh.CalculatePathInternal(sourcePosition, targetPosition, areaMask, path);
 		}
-		internal static bool CalculatePathInternal(Vector3 sourcePosition, Vector3 targetPosition, int passableMask, NavMeshPath path)
+		internal static bool CalculatePathInternal(Vector3 sourcePosition, Vector3 targetPosition, int areaMask, NavMeshPath path)
 		{
-			return NavMesh.INTERNAL_CALL_CalculatePathInternal(ref sourcePosition, ref targetPosition, passableMask, path);
+			return NavMesh.INTERNAL_CALL_CalculatePathInternal(ref sourcePosition, ref targetPosition, areaMask, path);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_CalculatePathInternal(ref Vector3 sourcePosition, ref Vector3 targetPosition, int passableMask, NavMeshPath path);
-		public static bool FindClosestEdge(Vector3 sourcePosition, out NavMeshHit hit, int passableMask)
+		private static extern bool INTERNAL_CALL_CalculatePathInternal(ref Vector3 sourcePosition, ref Vector3 targetPosition, int areaMask, NavMeshPath path);
+		public static bool FindClosestEdge(Vector3 sourcePosition, out NavMeshHit hit, int areaMask)
 		{
-			return NavMesh.INTERNAL_CALL_FindClosestEdge(ref sourcePosition, out hit, passableMask);
+			return NavMesh.INTERNAL_CALL_FindClosestEdge(ref sourcePosition, out hit, areaMask);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_FindClosestEdge(ref Vector3 sourcePosition, out NavMeshHit hit, int passableMask);
-		public static bool SamplePosition(Vector3 sourcePosition, out NavMeshHit hit, float maxDistance, int allowedMask)
+		private static extern bool INTERNAL_CALL_FindClosestEdge(ref Vector3 sourcePosition, out NavMeshHit hit, int areaMask);
+		public static bool SamplePosition(Vector3 sourcePosition, out NavMeshHit hit, float maxDistance, int areaMask)
 		{
-			return NavMesh.INTERNAL_CALL_SamplePosition(ref sourcePosition, out hit, maxDistance, allowedMask);
+			return NavMesh.INTERNAL_CALL_SamplePosition(ref sourcePosition, out hit, maxDistance, areaMask);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_SamplePosition(ref Vector3 sourcePosition, out NavMeshHit hit, float maxDistance, int allowedMask);
-		[WrapperlessIcall]
+		private static extern bool INTERNAL_CALL_SamplePosition(ref Vector3 sourcePosition, out NavMeshHit hit, float maxDistance, int areaMask);
+		[Obsolete("Use SetAreaCost instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetLayerCost(int layer, float cost);
-		[WrapperlessIcall]
+		[Obsolete("Use GetAreaCost instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetLayerCost(int layer);
-		[WrapperlessIcall]
+		[Obsolete("Use GetAreaFromName instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetNavMeshLayerFromName(string layerName);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetAreaCost(int areaIndex, float cost);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float GetAreaCost(int areaIndex);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetAreaFromName(string areaName);
 		public static NavMeshTriangulation CalculateTriangulation()
 		{
 			NavMeshTriangulation result = default(NavMeshTriangulation);
-			NavMesh.TriangulateInternal(ref result.vertices, ref result.indices, ref result.layers);
+			NavMesh.TriangulateInternal(ref result.vertices, ref result.indices, ref result.areas);
 			return result;
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void TriangulateInternal(ref Vector3[] vertices, ref int[] indices, ref int[] layers);
+		internal static extern void TriangulateInternal(ref Vector3[] vertices, ref int[] indices, ref int[] areas);
 		[Obsolete("use NavMesh.CalculateTriangulation() instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Triangulate(out Vector3[] vertices, out int[] indices);
-		[WrapperlessIcall]
+		[Obsolete("AddOffMeshLinks has no effect and is deprecated."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AddOffMeshLinks();
-		[WrapperlessIcall]
+		[Obsolete("RestoreNavMesh has no effect and is deprecated."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RestoreNavMesh();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetAvoidancePredictionTime(float t);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern float GetAvoidancePredictionTime();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetPathfindingIterationsPerFrame(int iter);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int GetPathfindingIterationsPerFrame();
 	}
 }

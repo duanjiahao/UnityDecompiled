@@ -49,7 +49,7 @@ namespace UnityEditor
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RegisterFullObjectHierarchyUndo(UnityEngine.Object objectToUndo, string name);
 		[Obsolete("Use Undo.RegisterFullObjectHierarchyUndo(Object, string) instead")]
-		private static void RegisterFullObjectHierarchyUndo(UnityEngine.Object objectToUndo)
+		public static void RegisterFullObjectHierarchyUndo(UnityEngine.Object objectToUndo)
 		{
 			Undo.RegisterFullObjectHierarchyUndo(objectToUndo, "Full Object Hierarchy");
 		}
@@ -74,6 +74,12 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetCurrentGroup();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetCurrentGroupName();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetCurrentGroupName(string name);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevertAllInCurrentGroup();

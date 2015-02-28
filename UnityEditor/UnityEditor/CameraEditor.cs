@@ -3,11 +3,17 @@ using UnityEditor.AnimatedValues;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Rendering;
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Camera))]
 	internal class CameraEditor : Editor
 	{
+		private class Styles
+		{
+			public static GUIContent iconRemove = EditorGUIUtility.IconContent("Toolbar Minus", "Remove command buffer");
+			public static GUIStyle invisibleButton = "InvisibleButton";
+		}
 		private enum ProjectionType
 		{
 			Perspective,
@@ -15,11 +21,25 @@ namespace UnityEditor
 		}
 		private const float kPreviewWindowOffset = 10f;
 		private const float kPreviewNormalizedSize = 0.2f;
+		private static readonly GUIContent[] kCameraRenderPaths = new GUIContent[]
+		{
+			new GUIContent("Use Player Settings"),
+			new GUIContent("Forward"),
+			new GUIContent("Deferred"),
+			new GUIContent("Legacy Vertex Lit"),
+			new GUIContent("Legacy Deferred (light prepass)")
+		};
+		private static readonly int[] kCameraRenderPathValues = new int[]
+		{
+			-1,
+			1,
+			3,
+			0,
+			2
+		};
 		private SerializedProperty m_ClearFlags;
 		private SerializedProperty m_BackgroundColor;
 		private SerializedProperty m_NormalizedViewPortRect;
-		private SerializedProperty m_NearClip;
-		private SerializedProperty m_FarClip;
 		private SerializedProperty m_FieldOfView;
 		private SerializedProperty m_Orthographic;
 		private SerializedProperty m_OrthographicSize;
@@ -29,15 +49,37 @@ namespace UnityEditor
 		private SerializedProperty m_OcclusionCulling;
 		private SerializedProperty m_TargetTexture;
 		private SerializedProperty m_HDR;
-		private AnimBool m_ShowBGColorOptions = new AnimBool();
-		private AnimBool m_ShowOrthoOptions = new AnimBool();
-		private AnimBool m_ShowDeferredWarning = new AnimBool();
+		private SerializedProperty[] m_NearAndFarClippingPlanes;
+		private SerializedProperty m_TargetDisplay;
+		private static readonly GUIContent[] s_GameDisplays = new GUIContent[]
+		{
+			new GUIContent("Display 1"),
+			new GUIContent("Display 2"),
+			new GUIContent("Display 3"),
+			new GUIContent("Display 4"),
+			new GUIContent("Display 5"),
+			new GUIContent("Display 6"),
+			new GUIContent("Display 7"),
+			new GUIContent("Display 8")
+		};
+		private static readonly int[] s_GameDisplayValues = new int[]
+		{
+			0,
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		};
+		private readonly AnimBool m_ShowBGColorOptions = new AnimBool();
+		private readonly AnimBool m_ShowOrthoOptions = new AnimBool();
+		private readonly AnimBool m_ShowDeferredWarning = new AnimBool();
 		private Camera m_PreviewCamera;
 		private static readonly Color kGizmoCamera = new Color(0.9137255f, 0.9137255f, 0.9137255f, 0.5019608f);
-		private GUIContent m_ClipingPlanesLabel = new GUIContent("Clipping Planes");
-		private GUIContent m_NearClipPlaneLabel = new GUIContent("Near");
-		private GUIContent m_FarClipPlaneLabel = new GUIContent("Far");
-		private GUIContent m_ViewportLabel = new GUIContent("Viewport Rect");
+		private readonly GUIContent m_ViewportLabel = new GUIContent("Viewport Rect");
+		private bool m_CommandBuffersShown = true;
 		private Camera camera
 		{
 			get
@@ -49,7 +91,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return !InternalEditorUtility.HasPro() && (this.camera.renderingPath == RenderingPath.DeferredLighting || (PlayerSettings.renderingPath == RenderingPath.DeferredLighting && this.camera.renderingPath == RenderingPath.UsePlayerSettings));
+				return !InternalEditorUtility.HasProFeaturesEnabled() && (this.camera.renderingPath == RenderingPath.DeferredLighting || (PlayerSettings.renderingPath == RenderingPath.DeferredLighting && this.camera.renderingPath == RenderingPath.UsePlayerSettings)) && (this.camera.renderingPath == RenderingPath.DeferredShading || (PlayerSettings.renderingPath == RenderingPath.DeferredShading && this.camera.renderingPath == RenderingPath.UsePlayerSettings));
 			}
 		}
 		private Camera previewCamera
@@ -60,7 +102,8 @@ namespace UnityEditor
 				{
 					this.m_PreviewCamera = EditorUtility.CreateGameObjectWithHideFlags("Preview Camera", HideFlags.HideAndDontSave, new Type[]
 					{
-						typeof(Camera)
+						typeof(Camera),
+						typeof(Skybox)
 					}).GetComponent<Camera>();
 				}
 				this.m_PreviewCamera.enabled = false;
@@ -72,8 +115,11 @@ namespace UnityEditor
 			this.m_ClearFlags = base.serializedObject.FindProperty("m_ClearFlags");
 			this.m_BackgroundColor = base.serializedObject.FindProperty("m_BackGroundColor");
 			this.m_NormalizedViewPortRect = base.serializedObject.FindProperty("m_NormalizedViewPortRect");
-			this.m_NearClip = base.serializedObject.FindProperty("near clip plane");
-			this.m_FarClip = base.serializedObject.FindProperty("far clip plane");
+			this.m_NearAndFarClippingPlanes = new SerializedProperty[]
+			{
+				base.serializedObject.FindProperty("near clip plane"),
+				base.serializedObject.FindProperty("far clip plane")
+			};
 			this.m_FieldOfView = base.serializedObject.FindProperty("field of view");
 			this.m_Orthographic = base.serializedObject.FindProperty("orthographic");
 			this.m_OrthographicSize = base.serializedObject.FindProperty("orthographic size");
@@ -83,6 +129,7 @@ namespace UnityEditor
 			this.m_OcclusionCulling = base.serializedObject.FindProperty("m_OcclusionCulling");
 			this.m_TargetTexture = base.serializedObject.FindProperty("m_TargetTexture");
 			this.m_HDR = base.serializedObject.FindProperty("m_HDR");
+			this.m_TargetDisplay = base.serializedObject.FindProperty("m_TargetDisplay");
 			Camera camera = (Camera)this.target;
 			this.m_ShowBGColorOptions.value = (!this.m_ClearFlags.hasMultipleDifferentValues && (camera.clearFlags == CameraClearFlags.Color || camera.clearFlags == CameraClearFlags.Skybox));
 			this.m_ShowOrthoOptions.value = camera.orthographic;
@@ -91,11 +138,113 @@ namespace UnityEditor
 			this.m_ShowOrthoOptions.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowDeferredWarning.valueChanged.AddListener(new UnityAction(base.Repaint));
 		}
-		private void OnDisable()
+		internal void OnDisable()
 		{
 			this.m_ShowBGColorOptions.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowOrthoOptions.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowDeferredWarning.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+		}
+		private void DepthTextureModeGUI()
+		{
+			if (base.targets.Length != 1)
+			{
+				return;
+			}
+			Camera camera = this.target as Camera;
+			if (camera == null || camera.depthTextureMode == DepthTextureMode.None)
+			{
+				return;
+			}
+			bool flag = (camera.depthTextureMode & DepthTextureMode.Depth) != DepthTextureMode.None;
+			bool flag2 = (camera.depthTextureMode & DepthTextureMode.DepthNormals) != DepthTextureMode.None;
+			string text = null;
+			if (flag && flag2)
+			{
+				text = "Info: renders Depth & DepthNormals textures";
+			}
+			else
+			{
+				if (flag)
+				{
+					text = "Info: renders Depth texture";
+				}
+				else
+				{
+					if (flag2)
+					{
+						text = "Info: renders DepthNormals texture";
+					}
+				}
+			}
+			if (text != null)
+			{
+				EditorGUILayout.HelpBox(text, MessageType.None, true);
+			}
+		}
+		private static Rect GetRemoveButtonRect(Rect r)
+		{
+			Vector2 vector = CameraEditor.Styles.invisibleButton.CalcSize(CameraEditor.Styles.iconRemove);
+			return new Rect(r.xMax - vector.x, r.y + (float)((int)(r.height / 2f - vector.y / 2f)), vector.x, vector.y);
+		}
+		private void CommandBufferGUI()
+		{
+			if (base.targets.Length != 1)
+			{
+				return;
+			}
+			Camera camera = this.target as Camera;
+			if (camera == null)
+			{
+				return;
+			}
+			int commandBufferCount = camera.commandBufferCount;
+			if (commandBufferCount == 0)
+			{
+				return;
+			}
+			this.m_CommandBuffersShown = GUILayout.Toggle(this.m_CommandBuffersShown, GUIContent.Temp(commandBufferCount + " command buffers"), EditorStyles.foldout, new GUILayoutOption[0]);
+			if (!this.m_CommandBuffersShown)
+			{
+				return;
+			}
+			EditorGUI.indentLevel++;
+			CameraEvent[] array = (CameraEvent[])Enum.GetValues(typeof(CameraEvent));
+			for (int i = 0; i < array.Length; i++)
+			{
+				CameraEvent cameraEvent = array[i];
+				CommandBuffer[] commandBuffers = camera.GetCommandBuffers(cameraEvent);
+				CommandBuffer[] array2 = commandBuffers;
+				for (int j = 0; j < array2.Length; j++)
+				{
+					CommandBuffer commandBuffer = array2[j];
+					using (new GUILayout.HorizontalScope(new GUILayoutOption[0]))
+					{
+						Rect rect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.miniLabel);
+						rect.xMin += EditorGUI.indent;
+						Rect removeButtonRect = CameraEditor.GetRemoveButtonRect(rect);
+						rect.xMax = removeButtonRect.x;
+						GUI.Label(rect, string.Format("{0}: {1} ({2})", cameraEvent, commandBuffer.name, EditorUtility.FormatBytes(commandBuffer.sizeInBytes)), EditorStyles.miniLabel);
+						if (GUI.Button(removeButtonRect, CameraEditor.Styles.iconRemove, CameraEditor.Styles.invisibleButton))
+						{
+							camera.RemoveCommandBuffer(cameraEvent, commandBuffer);
+							SceneView.RepaintAll();
+							GameView.RepaintAll();
+							GUIUtility.ExitGUI();
+						}
+					}
+				}
+			}
+			using (new GUILayout.HorizontalScope(new GUILayoutOption[0]))
+			{
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Remove all", EditorStyles.miniButton, new GUILayoutOption[0]))
+				{
+					camera.RemoveAllCommandBuffers();
+					SceneView.RepaintAll();
+					GameView.RepaintAll();
+				}
+			}
+			EditorGUI.indentLevel--;
 		}
 		public override void OnInspectorGUI()
 		{
@@ -134,19 +283,11 @@ namespace UnityEditor
 				}
 				EditorGUILayout.EndFadeGroup();
 			}
-			Rect controlRect = EditorGUILayout.GetControlRect(true, 32f, new GUILayoutOption[0]);
-			controlRect.height = 16f;
-			GUI.Label(controlRect, this.m_ClipingPlanesLabel);
-			controlRect.xMin += EditorGUIUtility.labelWidth - 1f;
-			EditorGUIUtility.labelWidth = 32f;
-			EditorGUI.PropertyField(controlRect, this.m_NearClip, this.m_NearClipPlaneLabel);
-			controlRect.y += 16f;
-			EditorGUI.PropertyField(controlRect, this.m_FarClip, this.m_FarClipPlaneLabel);
-			EditorGUIUtility.labelWidth = 0f;
+			EditorGUILayout.PropertiesField(EditorGUI.s_ClipingPlanesLabel, this.m_NearAndFarClippingPlanes, EditorGUI.s_NearAndFarLabels, 35f, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_NormalizedViewPortRect, this.m_ViewportLabel, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(this.m_Depth, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_RenderingPath, new GUILayoutOption[0]);
+			EditorGUILayout.IntPopup(this.m_RenderingPath, CameraEditor.kCameraRenderPaths, CameraEditor.kCameraRenderPathValues, EditorGUIUtility.TempContent("Rendering Path"), new GUILayoutOption[0]);
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowDeferredWarning.faded))
 			{
 				GUIContent gUIContent = EditorGUIUtility.TextContent("CameraEditor.DeferredProOnly");
@@ -156,6 +297,12 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_TargetTexture, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_OcclusionCulling, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_HDR, new GUILayoutOption[0]);
+			if (Display.MultiDisplayLicense())
+			{
+				EditorGUILayout.IntPopup(this.m_TargetDisplay, CameraEditor.s_GameDisplays, CameraEditor.s_GameDisplayValues, EditorGUIUtility.TempContent("Target Display"), new GUILayoutOption[0]);
+			}
+			this.DepthTextureModeGUI();
+			this.CommandBufferGUI();
 			base.serializedObject.ApplyModifiedProperties();
 		}
 		public void OnOverlayGUI(UnityEngine.Object target, SceneView sceneView)
@@ -196,13 +343,27 @@ namespace UnityEditor
 			if (Event.current.type == EventType.Repaint)
 			{
 				this.previewCamera.CopyFrom(camera);
+				Skybox component = this.previewCamera.GetComponent<Skybox>();
+				if (component)
+				{
+					Skybox component2 = camera.GetComponent<Skybox>();
+					if (component2 && component2.enabled)
+					{
+						component.enabled = true;
+						component.material = component2.material;
+					}
+					else
+					{
+						component.enabled = false;
+					}
+				}
 				this.previewCamera.targetTexture = null;
 				this.previewCamera.pixelRect = rect2;
 				Handles.EmitGUIGeometryForCamera(camera, this.previewCamera);
 				this.previewCamera.Render();
 			}
 		}
-		private static float GetGameViewAspectRatio(Camera fallbackCamera)
+		private static float GetGameViewAspectRatio()
 		{
 			Vector2 sizeOfMainGameView = GameView.GetSizeOfMainGameView();
 			if (sizeOfMainGameView.x < 0f)
@@ -220,7 +381,7 @@ namespace UnityEditor
 				return -1f;
 			}
 			float num = rect.width / rect.height;
-			return CameraEditor.GetGameViewAspectRatio(camera) * num;
+			return CameraEditor.GetGameViewAspectRatio() * num;
 		}
 		private static bool GetFrustum(Camera camera, Vector3[] near, Vector3[] far, out float frustumAspect)
 		{
@@ -233,7 +394,7 @@ namespace UnityEditor
 			float num4;
 			float num5;
 			float num6;
-			if (!camera.isOrthoGraphic)
+			if (!camera.orthographic)
 			{
 				float num = Mathf.Tan(camera.fieldOfView * 0.0174532924f * 0.5f);
 				float num2 = num * frustumAspect;
@@ -276,7 +437,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
-		private static void RenderGizmo(Camera camera)
+		internal static void RenderGizmo(Camera camera)
 		{
 			Vector3[] array = new Vector3[4];
 			Vector3[] array2 = new Vector3[4];

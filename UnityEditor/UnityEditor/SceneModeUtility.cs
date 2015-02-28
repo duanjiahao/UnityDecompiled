@@ -107,15 +107,15 @@ namespace UnityEditor
 			{
 				Type type = types[i];
 				Texture2D i2;
-				if (type == typeof(Terrain))
+				if (type == typeof(Renderer))
 				{
-					i2 = (EditorGUIUtility.IconContent("Terrain Icon").image as Texture2D);
+					i2 = (EditorGUIUtility.IconContent("MeshRenderer Icon").image as Texture2D);
 				}
 				else
 				{
-					if (type == typeof(Renderer))
+					if (type == typeof(Terrain))
 					{
-						i2 = (EditorGUIUtility.IconContent("MeshRenderer Icon").image as Texture2D);
+						i2 = (EditorGUIUtility.IconContent("Terrain Icon").image as Texture2D);
 					}
 					else
 					{

@@ -290,18 +290,14 @@ namespace UnityEditor
 			}
 			return null;
 		}
-		private void ApplySettings()
+		protected override void ApplySettings()
 		{
-			base.hRangeLocked = base.settings.hRangeLocked;
-			base.vRangeLocked = base.settings.vRangeLocked;
-			base.hRangeMin = base.settings.hRangeMin;
-			base.hRangeMax = base.settings.hRangeMax;
-			base.vRangeMin = base.settings.vRangeMin;
-			base.vRangeMax = base.settings.vRangeMax;
-			base.scaleWithWindow = base.settings.scaleWithWindow;
-			base.hSlider = base.settings.hSlider;
-			base.vSlider = base.settings.vSlider;
+			base.ApplySettings();
 			this.RecalculateBounds();
+		}
+		internal void ClearSelection()
+		{
+			this.m_Selection.Clear();
 		}
 		internal void ClearDisplayedSelection()
 		{
@@ -1406,7 +1402,7 @@ namespace UnityEditor
 						HandleUtility.Repaint();
 					}
 				}
-				goto IL_3D0;
+				goto IL_3E3;
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == controlID)
 				{
@@ -1414,19 +1410,24 @@ namespace UnityEditor
 					this.s_PickMode = CurveEditor.PickMode.None;
 					Event.current.Use();
 				}
-				goto IL_3D0;
+				goto IL_3E3;
 			case EventType.MouseMove:
+			{
 				IL_39:
 				if (typeForControl == EventType.Layout)
 				{
 					HandleUtility.AddDefaultControl(controlID);
-					goto IL_3D0;
+					goto IL_3E3;
 				}
 				if (typeForControl != EventType.ContextClick)
 				{
-					goto IL_3D0;
+					goto IL_3E3;
 				}
-				if (base.drawRect.Contains(GUIClip.Unclip(Event.current.mousePosition)))
+				Rect drawRect = base.drawRect;
+				float num = 0f;
+				drawRect.y = num;
+				drawRect.x = num;
+				if (drawRect.Contains(Event.current.mousePosition))
 				{
 					Vector2 vector;
 					int curveAtPosition = this.GetCurveAtPosition(base.mousePositionInDrawing, out vector);
@@ -1438,7 +1439,8 @@ namespace UnityEditor
 						Event.current.Use();
 					}
 				}
-				goto IL_3D0;
+				goto IL_3E3;
+			}
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == controlID)
 				{
@@ -1465,17 +1467,17 @@ namespace UnityEditor
 							CurveWrapper curveWrapper = animationCurves[i];
 							if (!curveWrapper.readOnly && !curveWrapper.hidden)
 							{
-								int num = 0;
+								int num2 = 0;
 								Keyframe[] keys = curveWrapper.curve.keys;
 								for (int j = 0; j < keys.Length; j++)
 								{
 									Keyframe keyframe = keys[j];
 									if (rect.Contains(this.GetGUIPoint(new Vector2(keyframe.time, keyframe.value))))
 									{
-										list2.Add(new CurveSelection(curveWrapper.id, this, num));
+										list2.Add(new CurveSelection(curveWrapper.id, this, num2));
 										this.MoveCurveToFront(curveWrapper.id);
 									}
-									num++;
+									num2++;
 								}
 							}
 						}
@@ -1485,10 +1487,10 @@ namespace UnityEditor
 					}
 					current.Use();
 				}
-				goto IL_3D0;
+				goto IL_3E3;
 			}
 			goto IL_39;
-			IL_3D0:
+			IL_3E3:
 			if (this.s_PickMode == CurveEditor.PickMode.Marquee)
 			{
 				GUI.Label(EditorGUIExt.FromToRect(this.s_StartMouseDragPosition, this.s_EndMouseDragPosition), GUIContent.none, this.ms_Styles.selectionRect);
@@ -1964,7 +1966,7 @@ namespace UnityEditor
 			{
 				return;
 			}
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(1);
 			GL.Color(this.m_TangentColor * new Color(1f, 1f, 1f, 0.75f));
 			foreach (CurveSelection current in list)
@@ -2150,7 +2152,7 @@ namespace UnityEditor
 				}
 			}
 			Shader.SetGlobalColor("_HandleColor", color);
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(4);
 			int num = list.Count / 3;
 			for (int j = 0; j < num; j++)
@@ -2353,7 +2355,7 @@ namespace UnityEditor
 			Rect shownArea = base.shownArea;
 			base.hTicks.SetRanges(shownArea.xMin * axisUiScalars.x, shownArea.xMax * axisUiScalars.x, base.drawRect.xMin, base.drawRect.xMax);
 			base.vTicks.SetRanges(shownArea.yMin * axisUiScalars.y, shownArea.yMax * axisUiScalars.y, base.drawRect.yMin, base.drawRect.yMax);
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.Begin(1);
 			base.hTicks.SetTickStrengths((float)base.settings.hTickStyle.distMin, (float)base.settings.hTickStyle.distFull, false);
 			float num;

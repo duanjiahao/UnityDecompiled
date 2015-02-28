@@ -1,41 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor.Hardware;
 using UnityEditorInternal;
 using UnityEngine;
 namespace UnityEditor
 {
-	internal struct AttachProfilerUI
+	internal class AttachProfilerUI
 	{
+		private const int PLAYER_DIRECT_IP_CONNECT_GUID = 65261;
+		private const int PLAYER_DIRECT_URL_CONNECT_GUID = 65262;
 		private GUIContent m_CurrentProfiler;
-		private int[] m_ConnectionGuids;
-		private Rect m_ButtonScreenRect;
 		private static string kEnterIPText = "<Enter IP>";
 		private static GUIContent ms_NotificationMessage;
-		private static string kiOSOverUSB = "iOS profiler over USB";
 		private void SelectProfilerClick(object userData, string[] options, int selected)
 		{
-			if (selected < this.m_ConnectionGuids.Length)
+			List<ProfilerChoise> list = (List<ProfilerChoise>)userData;
+			if (selected < list.Count<ProfilerChoise>())
 			{
-				int connectedProfiler = this.m_ConnectionGuids[selected];
-				ProfilerDriver.connectedProfiler = connectedProfiler;
-			}
-			else
-			{
-				if (options[selected] == AttachProfilerUI.kEnterIPText)
-				{
-					ProfilerIPWindow.Show(this.m_ButtonScreenRect);
-				}
-				else
-				{
-					if (options[selected] == AttachProfilerUI.kiOSOverUSB)
-					{
-						ProfilerDriver.DirectURLConnect("iproxy://");
-					}
-					else
-					{
-						AttachProfilerUI.DirectIPConnect(options[selected]);
-					}
-				}
+				list[selected].ConnectTo();
 			}
 		}
 		public bool IsEditor()
@@ -49,8 +32,15 @@ namespace UnityEditor
 		public static void DirectIPConnect(string ip)
 		{
 			ConsoleWindow.ShowConsoleWindow(true);
-			AttachProfilerUI.ms_NotificationMessage = new GUIContent("Connecting to IP...(this can take a while)");
+			AttachProfilerUI.ms_NotificationMessage = new GUIContent("Connecting to player...(this can take a while)");
 			ProfilerDriver.DirectIPConnect(ip);
+			AttachProfilerUI.ms_NotificationMessage = null;
+		}
+		public static void DirectURLConnect(string url)
+		{
+			ConsoleWindow.ShowConsoleWindow(true);
+			AttachProfilerUI.ms_NotificationMessage = new GUIContent("Connecting to player...(this can take a while)");
+			ProfilerDriver.DirectURLConnect(url);
 			AttachProfilerUI.ms_NotificationMessage = null;
 		}
 		public void OnGUILayout(EditorWindow window)
@@ -73,32 +63,35 @@ namespace UnityEditor
 				window.RemoveNotification();
 			}
 		}
-		public void OnGUI(Rect connectRect, GUIContent profilerLabel)
+		private static void AddLastIPProfiler(List<ProfilerChoise> profilers)
 		{
-			if (!EditorGUI.ButtonMouseDown(connectRect, profilerLabel, FocusType.Native, EditorStyles.toolbarDropDown))
+			string lastIP = ProfilerIPWindow.GetLastIPString();
+			if (string.IsNullOrEmpty(lastIP))
 			{
 				return;
 			}
-			int connectedProfiler = ProfilerDriver.connectedProfiler;
-			this.m_ConnectionGuids = ProfilerDriver.GetAvailableProfilers();
-			int num = this.m_ConnectionGuids.Length;
-			int[] array = new int[1];
-			List<bool> list = new List<bool>();
-			List<string> list2 = new List<string>();
-			for (int i = 0; i < num; i++)
+			ProfilerChoise item = default(ProfilerChoise);
+			item.Name = lastIP;
+			item.Enabled = true;
+			item.IsSelected = (() => ProfilerDriver.connectedProfiler == 65261);
+			item.ConnectTo = delegate
 			{
-				int num2 = this.m_ConnectionGuids[i];
-				string text = ProfilerDriver.GetConnectionIdentifier(num2);
-				bool flag = ProfilerDriver.IsIdentifierConnectable(num2);
-				bool flag2 = ProfilerDriver.IsIdentifierOnLocalhost(num2) && text.Contains("MetroPlayerX");
-				if (flag2)
+				AttachProfilerUI.DirectIPConnect(lastIP);
+			};
+			profilers.Add(item);
+		}
+		private static void AddPlayerProfilers(List<ProfilerChoise> profilers)
+		{
+			int[] availableProfilers = ProfilerDriver.GetAvailableProfilers();
+			for (int i = 0; i < availableProfilers.Length; i++)
+			{
+				int guid = availableProfilers[i];
+				string text = ProfilerDriver.GetConnectionIdentifier(guid);
+				bool flag = ProfilerDriver.IsIdentifierOnLocalhost(guid) && text.Contains("MetroPlayerX");
+				bool flag2 = !flag && ProfilerDriver.IsIdentifierConnectable(guid);
+				if (!flag2)
 				{
-					flag = false;
-				}
-				list.Add(flag);
-				if (!flag)
-				{
-					if (flag2)
+					if (flag)
 					{
 						text += " (Localhost prohibited)";
 					}
@@ -107,35 +100,85 @@ namespace UnityEditor
 						text += " (Version mismatch)";
 					}
 				}
-				list2.Add(text);
-				if (num2 == connectedProfiler)
+				profilers.Add(new ProfilerChoise
 				{
-					array[0] = i;
-				}
+					Name = text,
+					Enabled = flag2,
+					IsSelected = () => ProfilerDriver.connectedProfiler == guid,
+					ConnectTo = delegate
+					{
+						ProfilerDriver.connectedProfiler = guid;
+					}
+				});
 			}
-			string lastIPString = ProfilerIPWindow.GetLastIPString();
-			if (!string.IsNullOrEmpty(lastIPString))
+		}
+		private static void AddDeviceProfilers(List<ProfilerChoise> profilers)
+		{
+			DevDevice[] devices = DevDeviceList.GetDevices();
+			for (int i = 0; i < devices.Length; i++)
 			{
-				if (connectedProfiler == 65261)
+				DevDevice devDevice = devices[i];
+				bool flag = (devDevice.features & DevDeviceFeatures.PlayerConnection) != DevDeviceFeatures.None;
+				if (devDevice.isConnected && flag)
 				{
-					array[0] = num;
+					string url = "device://" + devDevice.id;
+					profilers.Add(new ProfilerChoise
+					{
+						Name = devDevice.name,
+						Enabled = true,
+						IsSelected = () => ProfilerDriver.connectedProfiler == 65262 && ProfilerDriver.directConnectionUrl == url,
+						ConnectTo = delegate
+						{
+							AttachProfilerUI.DirectURLConnect(url);
+						}
+					});
 				}
-				list2.Add(lastIPString);
-				list.Add(true);
 			}
-			if (Application.platform == RuntimePlatform.OSXEditor)
+		}
+		private void AddEnterIPProfiler(List<ProfilerChoise> profilers, Rect buttonScreenRect)
+		{
+			ProfilerChoise item = default(ProfilerChoise);
+			item.Name = AttachProfilerUI.kEnterIPText;
+			item.Enabled = true;
+			item.IsSelected = (() => false);
+			item.ConnectTo = delegate
 			{
-				if (connectedProfiler == 65262)
-				{
-					array[0] = num;
-				}
-				list2.Add(AttachProfilerUI.kiOSOverUSB);
-				list.Add(true);
+				ProfilerIPWindow.Show(buttonScreenRect);
+			};
+			profilers.Add(item);
+		}
+		public void OnGUI(Rect connectRect, GUIContent profilerLabel)
+		{
+			if (!EditorGUI.ButtonMouseDown(connectRect, profilerLabel, FocusType.Native, EditorStyles.toolbarDropDown))
+			{
+				return;
 			}
-			list2.Add(AttachProfilerUI.kEnterIPText);
-			list.Add(true);
-			this.m_ButtonScreenRect = GUIUtility.GUIToScreenRect(connectRect);
-			EditorUtility.DisplayCustomMenu(connectRect, list2.ToArray(), list.ToArray(), array, new EditorUtility.SelectMenuItemFunction(this.SelectProfilerClick), null);
+			List<ProfilerChoise> list = new List<ProfilerChoise>();
+			list.Clear();
+			AttachProfilerUI.AddPlayerProfilers(list);
+			AttachProfilerUI.AddDeviceProfilers(list);
+			AttachProfilerUI.AddLastIPProfiler(list);
+			this.AddEnterIPProfiler(list, GUIUtility.GUIToScreenRect(connectRect));
+			string[] options = (
+				from p in list
+				select p.Name).ToArray<string>();
+			bool[] enabled = (
+				from p in list
+				select p.Enabled).ToArray<bool>();
+			int num = list.FindIndex((ProfilerChoise p) => p.IsSelected());
+			int[] selected;
+			if (num == -1)
+			{
+				selected = new int[0];
+			}
+			else
+			{
+				selected = new int[]
+				{
+					num
+				};
+			}
+			EditorUtility.DisplayCustomMenu(connectRect, options, enabled, selected, new EditorUtility.SelectMenuItemFunction(this.SelectProfilerClick), list);
 		}
 	}
 }

@@ -207,6 +207,18 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetIgnoreLayerCollision(int layer1, int layer2);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsTouching(Collider2D collider1, Collider2D collider2);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsTouchingLayers(Collider2D collider, [DefaultValue("AllLayers")] int layerMask);
+		[ExcludeFromDocs]
+		public static bool IsTouchingLayers(Collider2D collider)
+		{
+			int layerMask = -1;
+			return Physics2D.IsTouchingLayers(collider, layerMask);
+		}
 		internal static void SetEditorDragMovement(bool dragging, GameObject[] objs)
 		{
 			foreach (Rigidbody2D current in Physics2D.m_LastDisabledRigidbody2D)

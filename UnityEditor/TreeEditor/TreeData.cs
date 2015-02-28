@@ -639,7 +639,7 @@ namespace TreeEditor
 			this.mesh.vertices = array;
 			this.mesh.normals = array2;
 			this.mesh.uv = array3;
-			this.mesh.uv1 = array4;
+			this.mesh.uv2 = array4;
 			this.mesh.tangents = array5;
 			this.mesh.colors = array6;
 			int[] array7 = new int[list2.Count * 3];

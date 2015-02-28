@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
@@ -34,8 +35,10 @@ namespace UnityEditor
 		private EditorCache m_EditorCache;
 		private GUIView m_DelegateView;
 		private PreviewResizer m_PreviewResizer = new PreviewResizer();
+		private List<int> m_AllowedIDs;
 		private ObjectListAreaState m_ListAreaState;
 		private ObjectListArea m_ListArea;
+		private ObjectTreeForSelector m_ObjectTreeWithSearch = new ObjectTreeForSelector();
 		private float m_ToolbarHeight = 44f;
 		private float m_PreviewSize;
 		private float m_TopSize;
@@ -47,6 +50,13 @@ namespace UnityEditor
 			get
 			{
 				return new Rect(0f, this.m_ToolbarHeight, base.position.width, Mathf.Max(0f, this.m_TopSize - this.m_ToolbarHeight));
+			}
+		}
+		public List<int> allowedInstanceIDs
+		{
+			get
+			{
+				return this.m_AllowedIDs;
 			}
 		}
 		public static ObjectSelector get
@@ -91,12 +101,16 @@ namespace UnityEditor
 		{
 			base.hideFlags = HideFlags.DontSave;
 		}
+		private bool IsUsingTreeView()
+		{
+			return this.m_ObjectTreeWithSearch.IsInitialized();
+		}
 		private int GetSelectedInstanceID()
 		{
-			int[] selection = this.m_ListArea.GetSelection();
-			if (selection.Length >= 1)
+			int[] array = (!this.IsUsingTreeView()) ? this.m_ListArea.GetSelection() : this.m_ObjectTreeWithSearch.GetSelection();
+			if (array.Length >= 1)
 			{
-				return selection[0];
+				return array[0];
 			}
 			return 0;
 		}
@@ -142,12 +156,11 @@ namespace UnityEditor
 			this.m_ShowWidePreview.value = flag3;
 			arg_52_0.target = flag3;
 		}
-		private void ItemSelectedCallback(bool doubleClicked)
+		private void ListAreaItemSelectedCallback(bool doubleClicked)
 		{
 			if (doubleClicked)
 			{
-				base.Close();
-				GUIUtility.ExitGUI();
+				this.ItemWasDoubleClicked();
 			}
 			else
 			{
@@ -170,7 +183,6 @@ namespace UnityEditor
 				"ProceduralMaterial",
 				"Mesh",
 				"PhysicMaterial",
-				"PhysicsMaterial2D",
 				"GUISkin",
 				"Shader",
 				"TerrainData",
@@ -180,7 +192,9 @@ namespace UnityEditor
 				"RenderTexture",
 				"Texture2D",
 				"ProceduralTexture",
-				"Sprite"
+				"Sprite",
+				"AudioMixerGroup",
+				"AudioMixerSnapshot"
 			};
 			if (checkGameObject && requiredClassName == "GameObject")
 			{
@@ -208,10 +222,19 @@ namespace UnityEditor
 			}
 			this.m_ListArea.Init(this.listPosition, (!this.m_IsShowingAssets) ? HierarchyType.GameObjects : HierarchyType.Assets, searchFilter, true);
 		}
+		private static bool ShouldTreeViewBeUsed(string className)
+		{
+			return className == "AudioMixerGroup";
+		}
 		public void Show(UnityEngine.Object obj, Type requiredType, SerializedProperty property, bool allowSceneObjects)
+		{
+			this.Show(obj, requiredType, property, allowSceneObjects, null);
+		}
+		internal void Show(UnityEngine.Object obj, Type requiredType, SerializedProperty property, bool allowSceneObjects, List<int> allowedInstanceIDs)
 		{
 			this.m_AllowSceneObjects = allowSceneObjects;
 			this.m_IsShowingAssets = true;
+			this.m_AllowedIDs = allowedInstanceIDs;
 			string text = string.Empty;
 			if (property != null)
 			{
@@ -268,20 +291,40 @@ namespace UnityEditor
 			ContainerWindow.SetFreezeDisplay(false);
 			this.m_FocusSearchFilter = true;
 			this.m_Parent.AddToAuxWindowList();
-			this.InitIfNeeded();
+			int num = (!(obj != null)) ? 0 : obj.GetInstanceID();
 			if (property != null && property.hasMultipleDifferentValues)
 			{
-				this.m_ListArea.InitSelection(new int[0]);
+				num = 0;
+			}
+			if (ObjectSelector.ShouldTreeViewBeUsed(text))
+			{
+				this.m_ObjectTreeWithSearch.Init(base.position, this, new UnityAction<ObjectTreeForSelector.TreeSelectorData>(this.CreateAndSetTreeView), new UnityAction<TreeViewItem>(this.TreeViewSelection), new UnityAction(this.ItemWasDoubleClicked), num, 0);
 			}
 			else
 			{
-				int num = (!(obj != null)) ? 0 : obj.GetInstanceID();
+				this.InitIfNeeded();
 				this.m_ListArea.InitSelection(new int[]
 				{
 					num
 				});
-				this.m_ListArea.Frame(num, true, false);
+				if (num != 0)
+				{
+					this.m_ListArea.Frame(num, true, false);
+				}
 			}
+		}
+		private void ItemWasDoubleClicked()
+		{
+			base.Close();
+			GUIUtility.ExitGUI();
+		}
+		private void CreateAndSetTreeView(ObjectTreeForSelector.TreeSelectorData data)
+		{
+			TreeViewForAudioMixerGroup.CreateAndSetTreeView(data);
+		}
+		private void TreeViewSelection(TreeViewItem item)
+		{
+			this.SendEvent("ObjectSelectorUpdated", true);
 		}
 		private void InitIfNeeded()
 		{
@@ -301,7 +344,7 @@ namespace UnityEditor
 				ObjectListArea expr_82 = this.m_ListArea;
 				expr_82.repaintCallback = (Action)Delegate.Combine(expr_82.repaintCallback, new Action(base.Repaint));
 				ObjectListArea expr_A9 = this.m_ListArea;
-				expr_A9.itemSelectedCallback = (Action<bool>)Delegate.Combine(expr_A9.itemSelectedCallback, new Action<bool>(this.ItemSelectedCallback));
+				expr_A9.itemSelectedCallback = (Action<bool>)Delegate.Combine(expr_A9.itemSelectedCallback, new Action<bool>(this.ListAreaItemSelectedCallback));
 				this.m_ListArea.gridSize = this.m_StartGridSize.value;
 				SearchFilter searchFilter = new SearchFilter();
 				searchFilter.nameFilter = this.m_SearchFilter;
@@ -623,8 +666,29 @@ namespace UnityEditor
 			{
 				this.m_ListArea.OnDestroy();
 			}
+			this.m_ObjectTreeWithSearch.Clear();
 		}
 		private void OnGUI()
+		{
+			this.HandleKeyboard();
+			if (this.m_ObjectTreeWithSearch.IsInitialized())
+			{
+				this.OnObjectTreeGUI();
+			}
+			else
+			{
+				this.OnObjectGridGUI();
+			}
+			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+			{
+				this.Cancel();
+			}
+		}
+		private void OnObjectTreeGUI()
+		{
+			this.m_ObjectTreeWithSearch.OnGUI(new Rect(0f, 0f, base.position.width, base.position.height));
+		}
+		private void OnObjectGridGUI()
 		{
 			this.InitIfNeeded();
 			if (this.m_Styles == null)
@@ -640,15 +704,10 @@ namespace UnityEditor
 			EditorPrefs.SetFloat("ObjectSelectorWidth", position.width);
 			EditorPrefs.SetFloat("ObjectSelectorHeight", position.height);
 			GUI.BeginGroup(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none);
-			this.HandleKeyboard();
 			this.m_ListArea.HandleKeyboard(false);
 			this.SearchArea();
 			this.GridListArea();
 			this.PreviewArea();
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-			{
-				this.Cancel();
-			}
 			GUI.EndGroup();
 			GUI.Label(new Rect(base.position.width * 0.5f - 16f, base.position.height - this.m_PreviewSize + 2f, 32f, this.m_Styles.bottomResize.fixedHeight), GUIContent.none, this.m_Styles.bottomResize);
 		}

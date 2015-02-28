@@ -8,6 +8,7 @@ namespace UnityEditor
 		Cylindrical,
 		SimpleSpheremap,
 		NiceSpheremap,
-		FullCubemap
+		FullCubemap,
+		AutoCubemap
 	}
 }

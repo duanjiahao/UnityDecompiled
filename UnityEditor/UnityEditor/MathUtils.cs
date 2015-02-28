@@ -5,6 +5,30 @@ namespace UnityEditor
 	public class MathUtils
 	{
 		private const int kMaxDecimals = 15;
+		internal static float ClampToFloat(double value)
+		{
+			if (value < -3.4028234663852886E+38)
+			{
+				return -3.40282347E+38f;
+			}
+			if (value > 3.4028234663852886E+38)
+			{
+				return 3.40282347E+38f;
+			}
+			return (float)value;
+		}
+		internal static int ClampToInt(long value)
+		{
+			if (value < -2147483648L)
+			{
+				return -2147483648;
+			}
+			if (value > 2147483647L)
+			{
+				return 2147483647;
+			}
+			return (int)value;
+		}
 		internal static float RoundToMultipleOf(float value, float roundingValue)
 		{
 			if (roundingValue == 0f)
@@ -25,6 +49,10 @@ namespace UnityEditor
 		{
 			return Mathf.Clamp(-Mathf.FloorToInt(Mathf.Log10(minDifference)), 0, 15);
 		}
+		internal static int GetNumberOfDecimalsForMinimumDifference(double minDifference)
+		{
+			return (int)Math.Max(0.0, -Math.Floor(Math.Log10(minDifference)));
+		}
 		internal static float RoundBasedOnMinimumDifference(float valueToRound, float minDifference)
 		{
 			if (minDifference == 0f)
@@ -33,10 +61,32 @@ namespace UnityEditor
 			}
 			return (float)Math.Round((double)valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
 		}
+		internal static double RoundBasedOnMinimumDifference(double valueToRound, double minDifference)
+		{
+			if (minDifference == 0.0)
+			{
+				return MathUtils.DiscardLeastSignificantDecimal(valueToRound);
+			}
+			return Math.Round(valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
+		}
 		internal static float DiscardLeastSignificantDecimal(float v)
 		{
 			int digits = Mathf.Clamp((int)(5f - Mathf.Log10(Mathf.Abs(v))), 0, 15);
 			return (float)Math.Round((double)v, digits, MidpointRounding.AwayFromZero);
+		}
+		internal static double DiscardLeastSignificantDecimal(double v)
+		{
+			int digits = Math.Max(0, (int)(5.0 - Math.Log10(Math.Abs(v))));
+			double result;
+			try
+			{
+				result = Math.Round(v, digits);
+			}
+			catch (ArgumentOutOfRangeException)
+			{
+				result = 0.0;
+			}
+			return result;
 		}
 		public static float GetQuatLength(Quaternion q)
 		{
@@ -241,7 +291,7 @@ namespace UnityEditor
 			float num = Vector3.Dot(vector, vector);
 			float num2 = Vector3.Dot(vector2, vector2);
 			float num3 = Vector3.Dot(vector2, rhs);
-			if (num <= 1.401298E-45f && num2 <= 1.401298E-45f)
+			if (num <= Mathf.Epsilon && num2 <= Mathf.Epsilon)
 			{
 				squaredDist = Vector3.Dot(p1 - origin, p1 - origin);
 				s = 0f;
@@ -249,7 +299,7 @@ namespace UnityEditor
 				return p1;
 			}
 			float num4;
-			if (num <= 1.401298E-45f)
+			if (num <= Mathf.Epsilon)
 			{
 				s = 0f;
 				num4 = num3 / num2;
@@ -258,7 +308,7 @@ namespace UnityEditor
 			else
 			{
 				float num5 = Vector3.Dot(vector, rhs);
-				if (num2 <= 1.401298E-45f)
+				if (num2 <= Mathf.Epsilon)
 				{
 					num4 = 0f;
 					s = Mathf.Clamp(-num5 / num, 0f, 1f);

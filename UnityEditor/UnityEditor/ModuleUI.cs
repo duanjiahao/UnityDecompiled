@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -51,6 +50,7 @@ namespace UnityEditor
 		protected const int kPlusAddRemoveButtonSpacing = 5;
 		protected const int kSpacingSubLabel = 4;
 		protected const int kSubLabelWidth = 10;
+		protected const string kFormatString = "g7";
 		public ParticleSystemUI m_ParticleSystemUI;
 		private string m_DisplayName;
 		protected string m_ToolTip = string.Empty;
@@ -548,7 +548,6 @@ namespace UnityEditor
 		}
 		public static bool GUIBoolAsPopup(GUIContent label, SerializedProperty boolProp, string[] options)
 		{
-			Assert.That(options.Length == 2);
 			Rect rect = ModuleUI.GetControlRect(13);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			int num = (!boolProp.boolValue) ? 0 : 1;

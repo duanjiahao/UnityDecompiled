@@ -6,6 +6,15 @@ namespace UnityEditor
 {
 	internal sealed class AudioUtil
 	{
+		public static extern bool resetAllAudioClipPlayCountsOnPlay
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PlayClip(AudioClip clip, [DefaultValue("0")] int startSample, [DefaultValue("false")] bool loop);
@@ -69,7 +78,10 @@ namespace UnityEditor
 		public static extern int GetSoundSize(AudioClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Texture2D GetWaveForm(AudioClip clip, AudioImporter importer, int channel, float width, float height);
+		public static extern AudioCompressionFormat GetSoundCompressionFormat(AudioClip clip);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Texture2D GetWaveForm(AudioClip clip, AssetImporter importer, int channel, float width, float height);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D GetWaveFormFast(AudioClip clip, int channel, int fromSample, int toSample, float width, float height);
@@ -81,12 +93,6 @@ namespace UnityEditor
 		public static extern bool HasPreview(AudioClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsCompressed(AudioClip clip);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsStreamed(AudioClip clip);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern double GetDuration(AudioClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -96,16 +102,13 @@ namespace UnityEditor
 		public static extern float GetFMODCPUUsage();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool Is3D(AudioClip clip);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsMovieAudio(AudioClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsMOD(AudioClip clip);
+		public static extern bool IsTrackerFile(AudioClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int GetMODChannelCount(AudioClip clip);
+		public static extern int GetMusicChannelCount(AudioClip clip);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AnimationCurve GetLowpassCurve(AudioLowPassFilter lowPassFilter);
@@ -118,12 +121,6 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetListenerTransform(Transform t);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern AudioType GetClipType(AudioClip clip);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern AudioType GetPlatformConversionType(AudioType inType, BuildTargetGroup targetGroup, AudioImporterFormat format);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HaveAudioCallback(MonoBehaviour behaviour);

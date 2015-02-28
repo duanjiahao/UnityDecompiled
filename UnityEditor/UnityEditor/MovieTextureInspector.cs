@@ -74,8 +74,9 @@ namespace UnityEditor
 				}
 			}
 		}
-		public void OnDisable()
+		protected override void OnDisable()
 		{
+			base.OnDisable();
 			MovieTexture movieTexture = this.target as MovieTexture;
 			if (!Application.isPlaying && movieTexture != null)
 			{

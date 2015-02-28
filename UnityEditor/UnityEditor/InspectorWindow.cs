@@ -41,6 +41,7 @@ namespace UnityEditor
 		internal const int kInspectorPaddingRight = 4;
 		public Vector2 m_ScrollPosition;
 		public InspectorMode m_InspectorMode;
+		private static bool s_FlushOptimizedGUI;
 		private static readonly List<InspectorWindow> m_AllInspectors = new List<InspectorWindow>();
 		private bool m_ResetKeyboardControl;
 		protected ActiveEditorTracker m_Tracker;
@@ -52,6 +53,7 @@ namespace UnityEditor
 		[SerializeField]
 		private PreviewWindow m_PreviewWindow;
 		private LabelGUI m_LabelGUI = new LabelGUI();
+		private AssetBundleNameGUI m_AssetBundleNameGUI = new AssetBundleNameGUI();
 		private TypeSelectionList m_TypeSelectionList;
 		private double m_lastRenderedTime;
 		private List<IPreviewable> m_Previews;
@@ -114,7 +116,6 @@ namespace UnityEditor
 		protected virtual void OnDisable()
 		{
 			InspectorWindow.m_AllInspectors.Remove(this);
-			this.m_LabelGUI.OnDisable();
 		}
 		private void OnLostFocus()
 		{
@@ -224,6 +225,7 @@ namespace UnityEditor
 		{
 			if (this.m_Tracker != null)
 			{
+				this.m_Tracker.inspectorMode = this.m_InspectorMode;
 				return;
 			}
 			ActiveEditorTracker sharedTracker = ActiveEditorTracker.sharedTracker;
@@ -310,6 +312,7 @@ namespace UnityEditor
 			}
 			InspectorWindow.s_CurrentInspectorWindow = this;
 			Editor[] activeEditors = this.m_Tracker.activeEditors;
+			this.AssignAssetEditor(activeEditors);
 			Profiler.BeginSample("InspectorWindow.DrawEditors()");
 			this.DrawEditors(activeEditors);
 			Profiler.EndSample();
@@ -371,19 +374,22 @@ namespace UnityEditor
 				{
 					if (!EditorUtility.IsPersistent(previewable3.target) || !(AssetDatabase.GetAssetPath(previewable3.target) != AssetDatabase.GetAssetPath(editors[0].target)))
 					{
-						if (previewable3.HasPreviewGUI())
+						if (!(editors[0] is AssetImporterInspector) || previewable3 is AssetImporterInspector)
 						{
-							if (previewable3 == lastInteractedEditor)
+							if (previewable3.HasPreviewGUI())
 							{
-								return previewable3;
-							}
-							if (previewable2 == null && previewable3.GetType() == type)
-							{
-								previewable2 = previewable3;
-							}
-							if (previewable == null)
-							{
-								previewable = previewable3;
+								if (previewable3 == lastInteractedEditor)
+								{
+									return previewable3;
+								}
+								if (previewable2 == null && previewable3.GetType() == type)
+								{
+									previewable2 = previewable3;
+								}
+								if (previewable == null)
+								{
+									previewable = previewable3;
+								}
 							}
 						}
 					}
@@ -415,9 +421,12 @@ namespace UnityEditor
 						{
 							if (!this.ShouldCullEditor(editors, num))
 							{
-								if (editor.HasPreviewGUI())
+								if (!(editors[0] is AssetImporterInspector) || editor is AssetImporterInspector)
 								{
-									list.Add(editor);
+									if (editor.HasPreviewGUI())
+									{
+										list.Add(editor);
+									}
 								}
 							}
 						}
@@ -531,6 +540,7 @@ namespace UnityEditor
 			bool flag = editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI() && this.m_PreviewWindow == null;
 			UnityEngine.Object[] inspectedAssets = this.GetInspectedAssets();
 			bool flag2 = inspectedAssets.Length > 0;
+			bool flag3 = inspectedAssets.Any((UnityEngine.Object a) => !(a is MonoScript) && AssetDatabase.IsMainAsset(a));
 			if (!flag && !flag2)
 			{
 				return;
@@ -596,8 +606,11 @@ namespace UnityEditor
 			}
 			else
 			{
-				position2.xMin = position2.x + InspectorWindow.styles.preToolbar2.CalcSize(content).x + 3f;
-				GUI.Label(lastRect, content, InspectorWindow.styles.preToolbar2);
+				float a2 = position2.xMax - lastRect.xMin - 3f - 20f;
+				float width = Mathf.Min(a2, InspectorWindow.styles.preToolbar2.CalcSize(content).x);
+				Rect position4 = new Rect(lastRect.x, lastRect.y, width, lastRect.height);
+				position2.xMin = position4.xMax + 3f;
+				GUI.Label(position4, content, InspectorWindow.styles.preToolbar2);
 			}
 			if (flag && Event.current.type == EventType.Repaint)
 			{
@@ -615,12 +628,12 @@ namespace UnityEditor
 			float height;
 			if (flag)
 			{
-				Rect position4 = base.position;
+				Rect position5 = base.position;
 				if (EditorSettings.externalVersionControl != ExternalVersionControl.Disabled && EditorSettings.externalVersionControl != ExternalVersionControl.AutoDetect && EditorSettings.externalVersionControl != ExternalVersionControl.Generic)
 				{
-					position4.height -= 17f;
+					position5.height -= 17f;
 				}
-				height = this.m_PreviewResizer.ResizeHandle(position4, 100f, 100f, 17f, lastRect);
+				height = this.m_PreviewResizer.ResizeHandle(position5, 100f, 100f, 17f, lastRect);
 			}
 			else
 			{
@@ -647,6 +660,10 @@ namespace UnityEditor
 				EditorGUI.BeginDisabledGroup(inspectedAssets.Any((UnityEngine.Object a) => EditorUtility.IsPersistent(a) && !AssetDatabase.IsOpenForEdit(a)));
 				this.m_LabelGUI.OnLabelGUI(inspectedAssets);
 				EditorGUI.EndDisabledGroup();
+			}
+			if (flag3)
+			{
+				this.m_AssetBundleNameGUI.OnAssetBundleNameGUI(inspectedAssets);
 			}
 			GUILayout.EndVertical();
 		}
@@ -765,6 +782,13 @@ namespace UnityEditor
 				}
 			}
 		}
+		protected void AssignAssetEditor(Editor[] editors)
+		{
+			if (editors.Length > 1 && editors[0] is AssetImporterInspector)
+			{
+				(editors[0] as AssetImporterInspector).assetEditor = editors[1];
+			}
+		}
 		private void DrawEditors(Editor[] editors)
 		{
 			if (editors.Length == 0)
@@ -773,7 +797,7 @@ namespace UnityEditor
 			}
 			UnityEngine.Object inspectedObject = this.GetInspectedObject();
 			string empty = string.Empty;
-			bool forceDirty = false;
+			bool forceDirty = InspectorWindow.s_FlushOptimizedGUI;
 			if (Event.current.type == EventType.Repaint && inspectedObject != null && this.m_IsOpenForEdit != AssetDatabase.IsOpenForEdit(inspectedObject, out empty))
 			{
 				this.m_IsOpenForEdit = !this.m_IsOpenForEdit;
@@ -785,9 +809,19 @@ namespace UnityEditor
 				dockArea.tabStyle = "dragtabbright";
 			}
 			GUILayout.Space(0f);
-			if (editors.Length > 1 && editors[0] is AssetImporterInspector)
+			if (inspectedObject is Material)
 			{
-				(editors[0] as AssetImporterInspector).m_AssetEditor = editors[1];
+				int num = 0;
+				while (num <= 1 && num < editors.Length)
+				{
+					MaterialEditor materialEditor = editors[num] as MaterialEditor;
+					if (materialEditor != null)
+					{
+						materialEditor.forceVisible = true;
+						break;
+					}
+					num++;
+				}
 			}
 			bool eyeDropperDirty = Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "EyeDropperUpdate";
 			Editor.m_AllowMultiObjectAccess = true;
@@ -814,6 +848,10 @@ namespace UnityEditor
 				GUI.Label(new Rect(0f, 0f, position.width, position.height), "Imported Object", "OL Title");
 				GUI.EndGroup();
 			}
+			if (Event.current.type == EventType.Repaint)
+			{
+				InspectorWindow.s_FlushOptimizedGUI = false;
+			}
 		}
 		private void DrawEditor(Editor editor, int editorIndex, bool forceDirty, ref bool showImportedObjectBarNext, ref Rect importedObjectBarRect, bool eyeDropperDirty)
 		{
@@ -836,7 +874,7 @@ namespace UnityEditor
 			{
 				flag = (visible == 1);
 			}
-			bool flag2 = forceDirty || editor.isInspectorDirty || eyeDropperDirty;
+			bool flag2 = forceDirty || editor.isInspectorDirty || eyeDropperDirty || InspectorWindow.s_FlushOptimizedGUI;
 			if (Event.current.type == EventType.Repaint)
 			{
 				editor.isInspectorDirty = false;
@@ -1112,6 +1150,10 @@ namespace UnityEditor
 		internal static void ShowWindow()
 		{
 			EditorWindow.GetWindow(typeof(InspectorWindow));
+		}
+		private static void FlushOptimizedGUI()
+		{
+			InspectorWindow.s_FlushOptimizedGUI = true;
 		}
 		private void Update()
 		{

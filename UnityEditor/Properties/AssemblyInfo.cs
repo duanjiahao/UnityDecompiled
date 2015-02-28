@@ -3,6 +3,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 [assembly: AssemblyVersion("0.0.0.0")]
+[assembly: InternalsVisibleTo("Unity.PackageManager")]
+[assembly: InternalsVisibleTo("Unity.Automation")]
 [assembly: InternalsVisibleTo("Unity.PureCSharpTests")]
 [assembly: InternalsVisibleTo("Unity.IntegrationTests")]
 [assembly: InternalsVisibleTo("UnityEditor.Graphs")]
@@ -19,5 +21,9 @@ using UnityEngine;
 [assembly: InternalsVisibleTo("UnityEditor.PSP2.Extensions")]
 [assembly: InternalsVisibleTo("UnityEditor.PS4.Extensions")]
 [assembly: InternalsVisibleTo("UnityEditor.PSM.Extensions")]
+[assembly: InternalsVisibleTo("UnityEditor.WebGL.Extensions")]
+[assembly: InternalsVisibleTo("UnityEditor.LinuxStandalone.Extensions")]
+[assembly: InternalsVisibleTo("UnityEditor.WindowsStandalone.Extensions")]
+[assembly: InternalsVisibleTo("UnityEditor.OSXStandalone.Extensions")]
 [assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]
 [assembly: AssemblyIsEditorAssembly]

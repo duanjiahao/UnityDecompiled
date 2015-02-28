@@ -24,7 +24,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern FlashBuildSubtarget flashBuildSubtarget
+		public static extern PSMBuildSubtarget psmBuildSubtarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -34,6 +34,15 @@ namespace UnityEditor
 			set;
 		}
 		public static extern PSP2BuildSubtarget psp2BuildSubtarget
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern PS4BuildSubtarget ps4BuildSubtarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -60,7 +69,43 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public static extern bool needSubmissionMaterials
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern bool compressWithPsArc
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern bool forceInstallation
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public static extern bool enableHeadlessMode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+		public static extern bool buildScriptsOnly
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -87,7 +132,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern AndroidBuildSubtarget androidBuildSubtarget
+		public static extern int streamingInstallLaunchRange
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -96,7 +141,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern BuildTarget selectedMetroTarget
+		public static extern XboxOneDeployMethod xboxOneDeployMethod
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -105,7 +150,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern MetroBuildType metroBuildType
+		public static extern MobileTextureSubtarget androidBuildSubtarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -114,7 +159,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern MetroSDK metroSDK
+		public static extern WSASDK wsaSDK
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -123,7 +168,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern MetroBuildAndRunDeployTarget metroBuildAndRunDeployTarget
+		public static extern WSABuildAndRunDeployTarget wsaBuildAndRunDeployTarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -132,7 +177,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern bool metroGenerateReferenceProjects
+		public static extern bool wsaGenerateReferenceProjects
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -141,7 +186,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern BlackBerryBuildSubtarget blackberryBuildSubtarget
+		public static extern MobileTextureSubtarget blackberryBuildSubtarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -159,7 +204,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern TizenBuildSubtarget tizenBuildSubtarget
+		public static extern MobileTextureSubtarget tizenBuildSubtarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -216,6 +261,15 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		public static extern int webGLOptimizationLevel
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 		public static extern bool connectProfiler
 		{
 			[WrapperlessIcall]
@@ -234,7 +288,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern bool appendProject
+		public static extern bool exportAsGoogleAndroidProject
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]

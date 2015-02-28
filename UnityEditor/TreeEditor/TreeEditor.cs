@@ -185,7 +185,7 @@ namespace TreeEditor
 			Undo.RegisterCreatedObjectUndo(gameObject2, "Create New Tree");
 			Material[] materials;
 			treeData.UpdateMesh(gameObject2.transform.worldToLocalMatrix, out materials);
-			TreeEditor.AssignMaterials(gameObject2.renderer, materials, true);
+			TreeEditor.AssignMaterials(gameObject2.GetComponent<Renderer>(), materials, true);
 			Selection.activeObject = gameObject2;
 		}
 		private static TreeData GetTreeData(Tree tree)
@@ -210,7 +210,7 @@ namespace TreeEditor
 			Profiler.BeginSample("TreeEditor.PreviewMesh");
 			Material[] materials;
 			treeData.PreviewMesh(tree.transform.worldToLocalMatrix, out materials);
-			TreeEditor.AssignMaterials(tree.renderer, materials, false);
+			TreeEditor.AssignMaterials(tree.GetComponent<Renderer>(), materials, false);
 			Profiler.EndSample();
 			if (callExitGUI)
 			{
@@ -257,7 +257,7 @@ namespace TreeEditor
 			Profiler.BeginSample("TreeEditor.UpdateMesh");
 			Material[] materials;
 			treeData.UpdateMesh(tree.transform.worldToLocalMatrix, out materials);
-			TreeEditor.AssignMaterials(tree.renderer, materials, true);
+			TreeEditor.AssignMaterials(tree.GetComponent<Renderer>(), materials, true);
 			TreeEditor.s_SavedSourceMaterialsHash = treeData.materialHash;
 			Profiler.EndSample();
 			if (callExitGUI)
@@ -578,11 +578,11 @@ namespace TreeEditor
 				}
 			}
 			Vector3 center = bounds.center;
-			float size = bounds.size.magnitude + 1f;
+			float newSize = bounds.size.magnitude + 1f;
 			SceneView lastActiveSceneView = SceneView.lastActiveSceneView;
 			if (lastActiveSceneView)
 			{
-				lastActiveSceneView.LookAt(center, lastActiveSceneView.rotation, size);
+				lastActiveSceneView.LookAt(center, lastActiveSceneView.rotation, newSize);
 			}
 		}
 		private void UndoStoreSelected(TreeEditor.EditMode mode)
@@ -1842,7 +1842,7 @@ namespace TreeEditor
 			{
 				return;
 			}
-			Renderer renderer = tree.renderer;
+			Renderer component = tree.GetComponent<Renderer>();
 			this.VerifySelection(treeData);
 			if (TreeEditor.s_SelectedGroup == null)
 			{
@@ -1865,7 +1865,7 @@ namespace TreeEditor
 			}
 			EditorGUILayout.Space();
 			EditorGUILayout.BeginVertical(EditorStyles.inspectorFullWidthMargins, new GUILayoutOption[0]);
-			this.InspectorHierachy(treeData, renderer);
+			this.InspectorHierachy(treeData, component);
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.BeginVertical(EditorStyles.inspectorDefaultMargins, new GUILayoutOption[0]);
 			if (TreeEditor.s_SelectedGroup != null)

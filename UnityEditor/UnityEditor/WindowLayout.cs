@@ -12,7 +12,6 @@ namespace UnityEditor
 	{
 		private const string kMaximizeRestoreFile = "CurrentMaximizeLayout.dwlt";
 		internal static PrefKey s_MaximizeKey = new PrefKey("Window/Maximize View", "# ");
-		private static bool ms_IsLoadingWindowLayout = false;
 		internal static string layoutsPreferencesPath
 		{
 			get
@@ -25,13 +24,6 @@ namespace UnityEditor
 			get
 			{
 				return Directory.GetCurrentDirectory() + "/Library";
-			}
-		}
-		public static void WarnBrokenRepaint()
-		{
-			if (!WindowLayout.ms_IsLoadingWindowLayout)
-			{
-				UnityEngine.Debug.LogError("WindowLayouts are invalid. Please use 'Window -> Layouts -> Revert Factory Settings...' menu to fix it.");
 			}
 		}
 		private static void ShowWindowImmediate(EditorWindow win)
@@ -50,8 +42,8 @@ namespace UnityEditor
 		[DebuggerHidden]
 		private static IEnumerable<T> FindEditorWindowsOfType<T>() where T : class
 		{
-			WindowLayout.<FindEditorWindowsOfType>c__Iterator3<T> <FindEditorWindowsOfType>c__Iterator = new WindowLayout.<FindEditorWindowsOfType>c__Iterator3<T>();
-			WindowLayout.<FindEditorWindowsOfType>c__Iterator3<T> expr_07 = <FindEditorWindowsOfType>c__Iterator;
+			WindowLayout.<FindEditorWindowsOfType>c__Iterator4<T> <FindEditorWindowsOfType>c__Iterator = new WindowLayout.<FindEditorWindowsOfType>c__Iterator4<T>();
+			WindowLayout.<FindEditorWindowsOfType>c__Iterator4<T> expr_07 = <FindEditorWindowsOfType>c__Iterator;
 			expr_07.$PC = -2;
 			return expr_07;
 		}
@@ -251,9 +243,7 @@ namespace UnityEditor
 				WindowLayout.RevertFactorySettings();
 				return;
 			}
-			WindowLayout.ms_IsLoadingWindowLayout = true;
 			UnityEngine.Object[] array = InternalEditorUtility.LoadSerializedFileAndForget(Path.Combine(WindowLayout.layoutsProjectPath, "CurrentMaximizeLayout.dwlt"));
-			WindowLayout.ms_IsLoadingWindowLayout = false;
 			if (array.Length < 2)
 			{
 				UnityEngine.Debug.Log("Maximized serialized file backup not found");
@@ -446,9 +436,7 @@ namespace UnityEditor
 			{
 				ContainerWindow.SetFreezeDisplay(true);
 				WindowLayout.CloseWindows();
-				WindowLayout.ms_IsLoadingWindowLayout = true;
 				UnityEngine.Object[] array3 = InternalEditorUtility.LoadSerializedFileAndForget(path);
-				WindowLayout.ms_IsLoadingWindowLayout = false;
 				ContainerWindow containerWindow2 = null;
 				ContainerWindow containerWindow3 = null;
 				UnityEngine.Object[] array4 = array3;
@@ -527,7 +515,7 @@ namespace UnityEditor
 			catch (Exception arg)
 			{
 				UnityEngine.Debug.LogError("Failed to load window layout: " + arg);
-				switch (EditorUtility.DisplayDialogComplex("Failed to load window layout.", "This can happen if layout contains custom windows and there are compile errors in the project.", "Load Default Layout", "Quit", "Revert Factory Settings"))
+				switch (EditorUtility.DisplayDialogComplex("Failed to load window layout", "This can happen if layout contains custom windows and there are compile errors in the project.", "Load Default Layout", "Quit", "Revert Factory Settings"))
 				{
 				case 0:
 					WindowLayout.LoadDefaultLayout();
@@ -543,7 +531,6 @@ namespace UnityEditor
 			}
 			finally
 			{
-				WindowLayout.ms_IsLoadingWindowLayout = false;
 				ContainerWindow.SetFreezeDisplay(false);
 				if (Path.GetExtension(path) == ".wlt")
 				{

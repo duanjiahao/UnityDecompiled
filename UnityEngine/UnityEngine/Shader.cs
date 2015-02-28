@@ -40,6 +40,12 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		internal extern DisableBatchingType disableBatching
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Shader Find(string name);
@@ -52,6 +58,9 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DisableKeyword(string keyword);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsKeywordEnabled(string keyword);
 		public static void SetGlobalColor(string propertyName, Color color)
 		{
 			Shader.SetGlobalColor(Shader.PropertyToID(propertyName), color);
@@ -104,10 +113,10 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalMatrix(int nameID, ref Matrix4x4 mat);
-		[WrapperlessIcall]
+		[Obsolete("SetGlobalTexGenMode is not supported anymore. Use programmable shaders to achieve the same effect.", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetGlobalTexGenMode(string propertyName, TexGenMode mode);
-		[WrapperlessIcall]
+		[Obsolete("SetGlobalTextureMatrixName is not supported anymore. Use programmable shaders to achieve the same effect.", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetGlobalTextureMatrixName(string propertyName, string matrixName);
 		[WrapperlessIcall]

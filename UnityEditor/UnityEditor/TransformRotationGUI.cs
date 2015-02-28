@@ -31,11 +31,10 @@ namespace UnityEditor
 				this.m_OldQuaternion = localRotation;
 			}
 			bool flag = false;
-			UnityEngine.Object[] array = this.targets;
-			for (int i = 0; i < array.Length; i++)
+			for (int i = 1; i < this.targets.Length; i++)
 			{
-				Transform transform2 = (Transform)array[i];
-				flag |= (transform2.localEulerAngles != this.m_EulerAngles);
+				Quaternion localRotation2 = (this.targets[i] as Transform).localRotation;
+				flag |= (localRotation2.x != localRotation.x || localRotation2.y != localRotation.y || localRotation2.z != localRotation.z || localRotation2.w != localRotation.w);
 			}
 			Rect rect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight * (float)((!EditorGUIUtility.wideMode) ? 2 : 1), new GUILayoutOption[0]);
 			GUIContent label = EditorGUI.BeginProperty(rect, this.rotationContent, this.m_Rotation);
@@ -50,14 +49,14 @@ namespace UnityEditor
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RecordObjects(this.targets, "Inspector");
-				UnityEngine.Object[] array2 = this.targets;
-				for (int j = 0; j < array2.Length; j++)
+				UnityEngine.Object[] array = this.targets;
+				for (int j = 0; j < array.Length; j++)
 				{
-					Transform transform3 = (Transform)array2[j];
-					transform3.localEulerAngles = this.m_EulerAngles;
-					if (transform3.parent != null)
+					Transform transform2 = (Transform)array[j];
+					transform2.localEulerAngles = this.m_EulerAngles;
+					if (transform2.parent != null)
 					{
-						transform3.SendTransformChangedScale();
+						transform2.SendTransformChangedScale();
 					}
 				}
 				this.m_Rotation.serializedObject.SetIsDifferentCacheDirty();

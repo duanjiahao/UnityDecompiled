@@ -12,6 +12,7 @@ namespace UnityEditor
 		}
 		public class InputData
 		{
+			public string m_TypeName;
 			public string m_Name;
 			public bool m_Selected;
 		}

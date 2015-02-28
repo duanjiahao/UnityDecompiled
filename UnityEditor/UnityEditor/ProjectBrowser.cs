@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -83,26 +82,20 @@ namespace UnityEditor
 			{
 				this.m_SubFolder = subFolder;
 			}
-			public static List<string> GetSubFolders(string folder)
-			{
-				if (Directory.Exists(folder))
-				{
-					return new List<string>(Directory.GetDirectories(folder));
-				}
-				return new List<string>();
-			}
 			internal static void Show(string folder, string currentSubFolder, Rect activatorRect, ProjectBrowser caller)
 			{
 				ProjectBrowser.BreadCrumbListMenu.m_Caller = caller;
-				List<string> subFolders = ProjectBrowser.BreadCrumbListMenu.GetSubFolders(folder);
+				string[] subFolders = AssetDatabase.GetSubFolders(folder);
 				GenericMenu genericMenu = new GenericMenu();
-				if (subFolders.Count >= 0)
+				if (subFolders.Length >= 0)
 				{
 					currentSubFolder = Path.GetFileName(currentSubFolder);
-					foreach (string current in subFolders)
+					string[] array = subFolders;
+					for (int i = 0; i < array.Length; i++)
 					{
-						string fileName = Path.GetFileName(current);
-						genericMenu.AddItem(new GUIContent(fileName), fileName == currentSubFolder, new GenericMenu.MenuFunction(new ProjectBrowser.BreadCrumbListMenu(current).SelectSubFolder));
+						string text = array[i];
+						string fileName = Path.GetFileName(text);
+						genericMenu.AddItem(new GUIContent(fileName), fileName == currentSubFolder, new GenericMenu.MenuFunction(new ProjectBrowser.BreadCrumbListMenu(text).SelectSubFolder));
 						genericMenu.ShowAsContext();
 					}
 				}
@@ -338,17 +331,18 @@ namespace UnityEditor
 				}
 				else
 				{
-					if (!string.IsNullOrEmpty(text))
+					string text2 = text;
+					for (int j = 0; j < 30; j++)
 					{
-						string text2 = text;
-						for (int j = 0; j < 30; j++)
+						if (string.IsNullOrEmpty(text2))
 						{
-							text2 = Path.GetDirectoryName(text2);
-							if (!string.IsNullOrEmpty(text2) && Directory.Exists(text2))
-							{
-								hashSet.Add(text2);
-								break;
-							}
+							break;
+						}
+						text2 = Path.GetDirectoryName(text2);
+						if (!string.IsNullOrEmpty(text2) && Directory.Exists(text2))
+						{
+							hashSet.Add(text2);
+							break;
 						}
 					}
 				}
@@ -445,6 +439,16 @@ namespace UnityEditor
 			this.m_SearchAreaMenu = new ExposablePopupMenu();
 			this.RefreshSearchText();
 			this.DefaultSetup();
+		}
+		public void SetSearch(string searchString)
+		{
+			this.SetSearch(SearchFilter.CreateSearchFilterFromString(searchString));
+		}
+		public void SetSearch(SearchFilter searchFilter)
+		{
+			this.m_SearchFilter = searchFilter;
+			this.m_SearchFieldText = searchFilter.FilterToSearchFieldString();
+			this.TopBarSearchSettingsChanged();
 		}
 		private void SetSearchViewState(ProjectBrowser.SearchViewState state)
 		{
@@ -629,7 +633,7 @@ namespace UnityEditor
 				string guid = AssetDatabase.AssetPathToGUID("Assets");
 				AssetsTreeViewDataSource assetsTreeViewDataSource = new AssetsTreeViewDataSource(this.m_AssetTree, AssetDatabase.GetInstanceIDFromGUID(guid), false, false);
 				assetsTreeViewDataSource.foldersFirst = this.GetShouldShowFoldersFirst();
-				this.m_AssetTree.Init(this.m_TreeViewRect, assetsTreeViewDataSource, new AssetsTreeViewGUI(this.m_AssetTree), new AssetOrGameObjectTreeViewDragging(this.m_AssetTree, HierarchyType.Assets));
+				this.m_AssetTree.Init(this.m_TreeViewRect, assetsTreeViewDataSource, new AssetsTreeViewGUI(this.m_AssetTree), new AssetsTreeViewDragging(this.m_AssetTree));
 				this.m_AssetTree.ReloadData();
 			}
 			else
@@ -638,14 +642,14 @@ namespace UnityEditor
 				{
 					this.m_FolderTree = new TreeView(this, this.m_FolderTreeState);
 					this.m_FolderTree.deselectOnUnhandledMouseDown = false;
-					TreeView expr_1C3 = this.m_FolderTree;
-					expr_1C3.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_1C3.selectionChangedCallback, new Action<int[]>(this.FolderTreeSelectionCallback));
-					TreeView expr_1EA = this.m_FolderTree;
-					expr_1EA.contextClickCallback = (Action<int>)Delegate.Combine(expr_1EA.contextClickCallback, new Action<int>(this.FolderTreeViewContextClick));
-					TreeView expr_211 = this.m_FolderTree;
-					expr_211.onGUIRowCallback = (Action<int, Rect>)Delegate.Combine(expr_211.onGUIRowCallback, new Action<int, Rect>(this.OnGUIAssetCallback));
-					TreeView expr_238 = this.m_FolderTree;
-					expr_238.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_238.dragEndedCallback, new Action<int[], bool>(this.FolderTreeDragEnded));
+					TreeView expr_1C2 = this.m_FolderTree;
+					expr_1C2.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_1C2.selectionChangedCallback, new Action<int[]>(this.FolderTreeSelectionCallback));
+					TreeView expr_1E9 = this.m_FolderTree;
+					expr_1E9.contextClickCallback = (Action<int>)Delegate.Combine(expr_1E9.contextClickCallback, new Action<int>(this.FolderTreeViewContextClick));
+					TreeView expr_210 = this.m_FolderTree;
+					expr_210.onGUIRowCallback = (Action<int, Rect>)Delegate.Combine(expr_210.onGUIRowCallback, new Action<int, Rect>(this.OnGUIAssetCallback));
+					TreeView expr_237 = this.m_FolderTree;
+					expr_237.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_237.dragEndedCallback, new Action<int[], bool>(this.FolderTreeDragEnded));
 					this.m_FolderTree.Init(this.m_TreeViewRect, new ProjectBrowserColumnOneTreeViewDataSource(this.m_FolderTree), new ProjectBrowserColumnOneTreeViewGUI(this.m_FolderTree), new ProjectBrowserColumnOneTreeViewDragging(this.m_FolderTree));
 					this.m_FolderTree.ReloadData();
 				}
@@ -693,6 +697,7 @@ namespace UnityEditor
 			{
 				"AnimationClip",
 				"AudioClip",
+				"AudioMixer",
 				"Font",
 				"GUISkin",
 				"Material",
@@ -1408,7 +1413,6 @@ namespace UnityEditor
 					{
 						if (itemType == ProjectBrowser.ItemType.SavedFilter)
 						{
-							Assert.That(selection.Length == 1);
 							ProjectBrowser.DeleteFilter(selection[0]);
 						}
 						else
@@ -1479,7 +1483,7 @@ namespace UnityEditor
 						if (flag)
 						{
 							Event.current.Use();
-							BaseProjectWindow.DuplicateSelectedAssets();
+							ProjectWindowUtil.DuplicateSelectedAssets();
 							GUIUtility.ExitGUI();
 						}
 						else
@@ -1734,7 +1738,6 @@ namespace UnityEditor
 						GUIUtility.keyboardControl = this.m_TreeViewKeyboardControlID;
 					}
 					this.m_AssetTree.OnGUI(this.m_TreeViewRect, this.m_TreeViewKeyboardControlID);
-					ProjectBrowser.HandleUnusedAssetDragEvents(this.m_TreeViewRect);
 				}
 			}
 			else
@@ -1748,21 +1751,14 @@ namespace UnityEditor
 					this.BreadCrumbBar();
 				}
 				this.m_FolderTree.OnGUI(this.m_TreeViewRect, this.m_TreeViewKeyboardControlID);
-				if (current.type == EventType.Repaint)
-				{
-					Color color = GUI.color;
-					GUI.color *= ((!EditorGUIUtility.isProSkin) ? new Color(0.6f, 0.6f, 0.6f, 1.333f) : new Color(0.12f, 0.12f, 0.12f, 1.333f));
-					Rect position2 = new Rect(this.m_ListAreaRect.x - 1f, this.m_ToolbarHeight, 1f, this.m_TreeViewRect.height);
-					GUI.DrawTexture(position2, EditorGUIUtility.whiteTexture);
-					GUI.color = color;
-				}
+				EditorGUIUtility.DrawHorizontalSplitter(new Rect(this.m_ListAreaRect.x, this.m_ToolbarHeight, 1f, this.m_TreeViewRect.height));
 				this.m_ListArea.OnGUI(this.m_ListAreaRect, this.m_ListKeyboardControlID);
 				if (this.m_SearchFilter.GetState() == SearchFilter.State.FolderBrowsing && this.m_ListArea.numItemsDisplayed == 0)
 				{
 					Vector2 vector = EditorStyles.label.CalcSize(ProjectBrowser.s_Styles.m_EmptyFolderText);
-					Rect position3 = new Rect(this.m_ListAreaRect.x + 2f + Mathf.Max(0f, (this.m_ListAreaRect.width - vector.x) * 0.5f), this.m_ListAreaRect.y + 10f, vector.x, 20f);
+					Rect position2 = new Rect(this.m_ListAreaRect.x + 2f + Mathf.Max(0f, (this.m_ListAreaRect.width - vector.x) * 0.5f), this.m_ListAreaRect.y + 10f, vector.x, 20f);
 					EditorGUI.BeginDisabledGroup(true);
-					GUI.Label(position3, ProjectBrowser.s_Styles.m_EmptyFolderText, EditorStyles.label);
+					GUI.Label(position2, ProjectBrowser.s_Styles.m_EmptyFolderText, EditorStyles.label);
 					EditorGUI.EndDisabledGroup();
 				}
 			}
@@ -1818,30 +1814,9 @@ namespace UnityEditor
 				}
 			}
 		}
-		private static void HandleUnusedAssetDragEvents(Rect rect)
-		{
-			Event current = Event.current;
-			EventType type = current.type;
-			if (type == EventType.DragUpdated || type == EventType.DragPerform)
-			{
-				if (rect.Contains(current.mousePosition))
-				{
-					int assetsFolderInstanceID = ProjectBrowserColumnOneTreeViewDataSource.GetAssetsFolderInstanceID();
-					HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-					if (!hierarchyProperty.Find(assetsFolderInstanceID, null))
-					{
-						hierarchyProperty = null;
-					}
-					bool perform = current.type == EventType.DragPerform;
-					DragAndDrop.visualMode = InternalEditorUtility.ProjectWindowDrag(hierarchyProperty, perform);
-					current.Use();
-				}
-			}
-		}
 		private void AssetTreeViewContextClick(int clickedNodeInstanceID)
 		{
 			Event current = Event.current;
-			Assert.That(current.type == EventType.ContextClick);
 			if (clickedNodeInstanceID == 0 && this.m_AssetTree.GetSelection().Length > 0)
 			{
 				int[] array = new int[0];
@@ -1854,7 +1829,6 @@ namespace UnityEditor
 		private void FolderTreeViewContextClick(int clickedNodeInstanceID)
 		{
 			Event current = Event.current;
-			Assert.That(current.type == EventType.ContextClick);
 			if (SavedSearchFilters.IsSavedFilter(clickedNodeInstanceID))
 			{
 				if (clickedNodeInstanceID != SavedSearchFilters.GetRootInstanceID())
@@ -1925,7 +1899,7 @@ namespace UnityEditor
 			if (this.m_EnableOldAssetTree)
 			{
 				GUIContent content = new GUIContent("One Column Layout");
-				GUIContent content2 = new GUIContent("Two Columns Layout");
+				GUIContent content2 = new GUIContent("Two Column Layout");
 				menu.AddItem(content, this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn, new GenericMenu.MenuFunction(this.SetOneColumn));
 				if (base.position.width >= 230f)
 				{
@@ -1951,34 +1925,15 @@ namespace UnityEditor
 			{
 				return;
 			}
-			Rect position = new Rect(this.m_DirectoriesAreaWidth, this.m_ToolbarHeight, 5f, height);
-			if (Event.current.type == EventType.Repaint)
-			{
-				EditorGUIUtility.AddCursorRect(position, MouseCursor.SplitResizeLeftRight);
-			}
-			float num = 0f;
-			float x = EditorGUI.MouseDeltaReader(position, true).x;
-			if (x != 0f)
-			{
-				this.m_DirectoriesAreaWidth += x;
-				float max = width - this.k_MinDirectoriesAreaWidth;
-				num = Mathf.Clamp(this.m_DirectoriesAreaWidth, this.k_MinDirectoriesAreaWidth, max);
-			}
-			float num2 = 230f - this.k_MinDirectoriesAreaWidth;
-			if (width - this.m_DirectoriesAreaWidth < num2)
-			{
-				num = width - num2;
-			}
-			if (num > 0f)
-			{
-				this.m_DirectoriesAreaWidth = num;
-			}
-			float num3 = base.position.width - this.m_DirectoriesAreaWidth;
-			if (num3 != this.m_LastListWidth)
+			Rect dragRect = new Rect(this.m_DirectoriesAreaWidth, this.m_ToolbarHeight, 5f, height);
+			dragRect = EditorGUIUtility.HandleHorizontalSplitter(dragRect, base.position.width, this.k_MinDirectoriesAreaWidth, 230f - this.k_MinDirectoriesAreaWidth);
+			this.m_DirectoriesAreaWidth = dragRect.x;
+			float num = base.position.width - this.m_DirectoriesAreaWidth;
+			if (num != this.m_LastListWidth)
 			{
 				this.RefreshSplittedSelectedPath();
 			}
-			this.m_LastListWidth = num3;
+			this.m_LastListWidth = num;
 		}
 		private void ButtonSaveFilter()
 		{
@@ -2233,7 +2188,7 @@ namespace UnityEditor
 					text2 += text3;
 					this.m_BreadCrumbs.Add(new KeyValuePair<GUIContent, string>(new GUIContent(text3), text2));
 				}
-				this.m_BreadCrumbLastFolderHasSubFolders = (ProjectBrowser.BreadCrumbListMenu.GetSubFolders(text).Count > 0);
+				this.m_BreadCrumbLastFolderHasSubFolders = (AssetDatabase.GetSubFolders(text).Length > 0);
 			}
 			GUI.Label(this.m_ListHeaderRect, GUIContent.none, ProjectBrowser.s_Styles.topBarBg);
 			Rect listHeaderRect = this.m_ListHeaderRect;

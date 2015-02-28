@@ -14,6 +14,54 @@ namespace UnityEditor
 			DontIncludeChildren,
 			Cancel
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern StaticEditorFlags GetStaticEditorFlags(GameObject go);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool AreStaticEditorFlagsSet(GameObject go, StaticEditorFlags flags);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetStaticEditorFlags(GameObject go, StaticEditorFlags flags);
+		[Obsolete("GetNavMeshArea instead."), WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetNavMeshLayer(GameObject go);
+		[Obsolete("GetNavMeshAreaFromName instead."), WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetNavMeshLayerFromName(string name);
+		[Obsolete("SetNavMeshArea instead."), WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetNavMeshLayer(GameObject go, int areaIndex);
+		[Obsolete("GetNavMeshAreaNames instead.")]
+		public static string[] GetNavMeshLayerNames()
+		{
+			return GameObjectUtility.GetNavMeshAreaNames();
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetNavMeshArea(GameObject go);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetNavMeshAreaFromName(string name);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetNavMeshArea(GameObject go, int areaIndex);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetNavMeshAreaNames();
+		[Obsolete("use AnimatorUtility.OptimizeTransformHierarchy instead.")]
+		private static void OptimizeTransformHierarchy(GameObject go)
+		{
+			AnimatorUtility.OptimizeTransformHierarchy(go, null);
+		}
+		[Obsolete("use AnimatorUtility.DeoptimizeTransformHierarchy instead.")]
+		private static void DeoptimizeTransformHierarchy(GameObject go)
+		{
+			AnimatorUtility.DeoptimizeTransformHierarchy(go);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetUniqueNameForSibling(Transform parent, string name);
 		internal static bool ContainsStatic(GameObject[] objects)
 		{
 			if (objects == null || objects.Length == 0)
@@ -63,37 +111,6 @@ namespace UnityEditor
 			child.transform.localRotation = Quaternion.identity;
 			child.transform.localScale = Vector3.one;
 			child.layer = parent.layer;
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern StaticEditorFlags GetStaticEditorFlags(GameObject go);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool AreStaticEditorFlagsSet(GameObject go, StaticEditorFlags flags);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetStaticEditorFlags(GameObject go, StaticEditorFlags flags);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int GetNavMeshLayer(GameObject go);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int GetNavMeshLayerFromName(string name);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetNavMeshLayer(GameObject go, int layer);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string[] GetNavMeshLayerNames();
-		[Obsolete("use AnimatorUtility.OptimizeTransformHierarchy instead.")]
-		private static void OptimizeTransformHierarchy(GameObject go)
-		{
-			AnimatorUtility.OptimizeTransformHierarchy(go, null);
-		}
-		[Obsolete("use AnimatorUtility.DeoptimizeTransformHierarchy instead.")]
-		private static void DeoptimizeTransformHierarchy(GameObject go)
-		{
-			AnimatorUtility.DeoptimizeTransformHierarchy(go);
 		}
 	}
 }

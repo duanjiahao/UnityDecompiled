@@ -1,171 +1,196 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Security;
 using UnityEngine.Internal;
 using UnityEngineInternal;
 namespace UnityEngine
 {
 	public class Component : Object
 	{
-		public Transform transform
+		public extern Transform transform
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern GameObject gameObject
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public string tag
 		{
 			get
 			{
-				return this.InternalGetTransform();
+				return this.gameObject.tag;
+			}
+			set
+			{
+				this.gameObject.tag = value;
 			}
 		}
-		public extern Rigidbody rigidbody
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Rigidbody2D rigidbody2D
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Camera camera
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Light light
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Animation animation
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern ConstantForce constantForce
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Renderer renderer
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern AudioSource audio
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern GUIText guiText
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern NetworkView networkView
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		[Obsolete("Please use guiTexture instead")]
-		public extern GUIElement guiElement
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern GUITexture guiTexture
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Collider collider
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern Collider2D collider2D
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern HingeJoint hingeJoint
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern ParticleEmitter particleEmitter
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern ParticleSystem particleSystem
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public GameObject gameObject
+		[Obsolete("Property rigidbody has been deprecated. Use GetComponent<Rigidbody>() instead. (UnityUpgradable)", true)]
+		public Component rigidbody
 		{
 			get
 			{
-				return this.InternalGetGameObject();
+				throw new NotSupportedException("rigidbody property has been deprecated");
 			}
 		}
-		[Obsolete("the active property is deprecated on components. Please use gameObject.active instead. If you meant to enable / disable a single component use enabled instead.")]
-		public extern bool active
+		[Obsolete("Property rigidbody2D has been deprecated. Use GetComponent<Rigidbody2D>() instead. (UnityUpgradable)", true)]
+		public Component rigidbody2D
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				throw new NotSupportedException("rigidbody2D property has been deprecated");
+			}
 		}
-		public extern string tag
+		[Obsolete("Property camera has been deprecated. Use GetComponent<Camera>() instead. (UnityUpgradable)", true)]
+		public Component camera
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				throw new NotSupportedException("camera property has been deprecated");
+			}
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern Transform InternalGetTransform();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern GameObject InternalGetGameObject();
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Component GetComponent(Type type);
-		public T GetComponent<T>() where T : Component
+		[Obsolete("Property light has been deprecated. Use GetComponent<Light>() instead. (UnityUpgradable)", true)]
+		public Component light
 		{
-			return this.GetComponent(typeof(T)) as T;
+			get
+			{
+				throw new NotSupportedException("light property has been deprecated");
+			}
 		}
-		public Component GetComponent(string type)
+		[Obsolete("Property animation has been deprecated. Use GetComponent<Animation>() instead. (UnityUpgradable)", true)]
+		public Component animation
+		{
+			get
+			{
+				throw new NotSupportedException("animation property has been deprecated");
+			}
+		}
+		[Obsolete("Property constantForce has been deprecated. Use GetComponent<ConstantForce>() instead. (UnityUpgradable)", true)]
+		public Component constantForce
+		{
+			get
+			{
+				throw new NotSupportedException("constantForce property has been deprecated");
+			}
+		}
+		[Obsolete("Property renderer has been deprecated. Use GetComponent<Renderer>() instead. (UnityUpgradable)", true)]
+		public Component renderer
+		{
+			get
+			{
+				throw new NotSupportedException("renderer property has been deprecated");
+			}
+		}
+		[Obsolete("Property audio has been deprecated. Use GetComponent<AudioSource>() instead. (UnityUpgradable)", true)]
+		public Component audio
+		{
+			get
+			{
+				throw new NotSupportedException("audio property has been deprecated");
+			}
+		}
+		[Obsolete("Property guiText has been deprecated. Use GetComponent<GUIText>() instead. (UnityUpgradable)", true)]
+		public Component guiText
+		{
+			get
+			{
+				throw new NotSupportedException("guiText property has been deprecated");
+			}
+		}
+		[Obsolete("Property networkView has been deprecated. Use GetComponent<NetworkView>() instead. (UnityUpgradable)", true)]
+		public Component networkView
+		{
+			get
+			{
+				throw new NotSupportedException("networkView property has been deprecated");
+			}
+		}
+		[Obsolete("Property guiElement has been deprecated. Use GetComponent<GUIElement>() instead. (UnityUpgradable)", true)]
+		public Component guiElement
+		{
+			get
+			{
+				throw new NotSupportedException("guiElement property has been deprecated");
+			}
+		}
+		[Obsolete("Property guiTexture has been deprecated. Use GetComponent<GUITexture>() instead. (UnityUpgradable)", true)]
+		public Component guiTexture
+		{
+			get
+			{
+				throw new NotSupportedException("guiTexture property has been deprecated");
+			}
+		}
+		[Obsolete("Property collider has been deprecated. Use GetComponent<Collider>() instead. (UnityUpgradable)", true)]
+		public Component collider
+		{
+			get
+			{
+				throw new NotSupportedException("collider property has been deprecated");
+			}
+		}
+		[Obsolete("Property collider2D has been deprecated. Use GetComponent<Collider2D>() instead. (UnityUpgradable)", true)]
+		public Component collider2D
+		{
+			get
+			{
+				throw new NotSupportedException("collider2D property has been deprecated");
+			}
+		}
+		[Obsolete("Property hingeJoint has been deprecated. Use GetComponent<HingeJoint>() instead. (UnityUpgradable)", true)]
+		public Component hingeJoint
+		{
+			get
+			{
+				throw new NotSupportedException("hingeJoint property has been deprecated");
+			}
+		}
+		[Obsolete("Property particleEmitter has been deprecated. Use GetComponent<ParticleEmitter>() instead. (UnityUpgradable)", true)]
+		public Component particleEmitter
+		{
+			get
+			{
+				throw new NotSupportedException("particleEmitter property has been deprecated");
+			}
+		}
+		[Obsolete("Property particleSystem has been deprecated. Use GetComponent<ParticleSystem>() instead. (UnityUpgradable)", true)]
+		public Component particleSystem
+		{
+			get
+			{
+				throw new NotSupportedException("particleSystem property has been deprecated");
+			}
+		}
+		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
+		public Component GetComponent(Type type)
 		{
 			return this.gameObject.GetComponent(type);
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void GetComponentFastPath(Type type, IntPtr oneFurtherThanResultValue);
+		[SecuritySafeCritical]
+		public unsafe T GetComponent<T>()
+		{
+			CastHelper<T> castHelper = default(CastHelper<T>);
+			this.GetComponentFastPath(typeof(T), new IntPtr((void*)(&castHelper.onePointerFurtherThanT)));
+			return castHelper.t;
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern Component GetComponent(string type);
 		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		public Component GetComponentInChildren(Type t)
 		{
 			return this.gameObject.GetComponentInChildren(t);
 		}
-		public T GetComponentInChildren<T>() where T : Component
+		public T GetComponentInChildren<T>()
 		{
 			return (T)((object)this.GetComponentInChildren(typeof(T)));
 		}
@@ -179,19 +204,19 @@ namespace UnityEngine
 		{
 			return this.gameObject.GetComponentsInChildren(t, includeInactive);
 		}
-		public T[] GetComponentsInChildren<T>(bool includeInactive) where T : Component
+		public T[] GetComponentsInChildren<T>(bool includeInactive)
 		{
 			return this.gameObject.GetComponentsInChildren<T>(includeInactive);
 		}
-		public void GetComponentsInChildren<T>(bool includeInactive, List<T> result) where T : Component
+		public void GetComponentsInChildren<T>(bool includeInactive, List<T> result)
 		{
 			this.gameObject.GetComponentsInChildren<T>(includeInactive, result);
 		}
-		public T[] GetComponentsInChildren<T>() where T : Component
+		public T[] GetComponentsInChildren<T>()
 		{
 			return this.GetComponentsInChildren<T>(false);
 		}
-		public void GetComponentsInChildren<T>(List<T> results) where T : Component
+		public void GetComponentsInChildren<T>(List<T> results)
 		{
 			this.GetComponentsInChildren<T>(false, results);
 		}
@@ -200,7 +225,7 @@ namespace UnityEngine
 		{
 			return this.gameObject.GetComponentInParent(t);
 		}
-		public T GetComponentInParent<T>() where T : Component
+		public T GetComponentInParent<T>()
 		{
 			return (T)((object)this.GetComponentInParent(typeof(T)));
 		}
@@ -214,34 +239,36 @@ namespace UnityEngine
 		{
 			return this.gameObject.GetComponentsInParent(t, includeInactive);
 		}
-		public T[] GetComponentsInParent<T>(bool includeInactive) where T : Component
+		public T[] GetComponentsInParent<T>(bool includeInactive)
 		{
 			return this.gameObject.GetComponentsInParent<T>(includeInactive);
 		}
-		public T[] GetComponentsInParent<T>() where T : Component
+		public void GetComponentsInParent<T>(bool includeInactive, List<T> results)
+		{
+			this.gameObject.GetComponentsInParent<T>(includeInactive, results);
+		}
+		public T[] GetComponentsInParent<T>()
 		{
 			return this.GetComponentsInParent<T>(false);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Component[] GetComponents(Type type);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern Component[] GetComponentsWithCorrectReturnType(Type type);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void GetComponentsForListInternal(Type searchType, Type listElementType, bool recursive, bool includeInactive, object resultList);
-		public T[] GetComponents<T>() where T : Component
+		public Component[] GetComponents(Type type)
 		{
-			return (T[])this.GetComponentsWithCorrectReturnType(typeof(T));
+			return this.gameObject.GetComponents(type);
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetComponentsForListInternal(Type searchType, object resultList);
 		public void GetComponents(Type type, List<Component> results)
 		{
-			this.GetComponentsForListInternal(type, typeof(Component), false, true, results);
+			this.GetComponentsForListInternal(type, results);
 		}
-		public void GetComponents<T>(List<T> results) where T : Component
+		public void GetComponents<T>(List<T> results)
 		{
-			this.GetComponentsForListInternal(typeof(T), typeof(T), false, true, results);
+			this.GetComponentsForListInternal(typeof(T), results);
+		}
+		public T[] GetComponents<T>()
+		{
+			return this.gameObject.GetComponents<T>();
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

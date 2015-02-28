@@ -71,7 +71,7 @@ namespace UnityEditor
 					string output = Path.Combine(targetCrossCompiledASMFolder, fileName + ".s");
 					if (EditorUtility.DisplayCancelableProgressBar("Building Player", "AOT cross compile " + fileName, 0.95f))
 					{
-						return;
+						throw new OperationCanceledException();
 					}
 					MonoCrossCompile.CrossCompileAOT(buildTarget, text, sourceAssembliesFolder, crossCompileOptions, fileName, output, additionalOptions);
 				}
@@ -136,23 +136,20 @@ namespace UnityEditor
 			long num4 = (long)Math.Min(1800000, (count + 3) * 1000 * 30);
 			foreach (string current in list3)
 			{
-				if (!(Path.GetExtension(current) != ".dll"))
+				string fileName = Path.GetFileName(current);
+				string output = Path.Combine(targetCrossCompiledASMFolder, fileName + ".s");
+				MonoCrossCompile.JobCompileAOT jobCompileAOT = new MonoCrossCompile.JobCompileAOT(buildTarget, crossCompilerPath, sourceAssembliesFolder, crossCompileOptions, fileName, output, additionalOptions);
+				list.Add(jobCompileAOT);
+				list2.Add(jobCompileAOT.m_doneEvent);
+				ThreadPool.QueueUserWorkItem(new WaitCallback(jobCompileAOT.ThreadPoolCallback));
+				if (list2.Count >= Environment.ProcessorCount)
 				{
-					string fileName = Path.GetFileName(current);
-					string output = Path.Combine(targetCrossCompiledASMFolder, fileName + ".s");
-					MonoCrossCompile.JobCompileAOT jobCompileAOT = new MonoCrossCompile.JobCompileAOT(buildTarget, crossCompilerPath, sourceAssembliesFolder, crossCompileOptions, fileName, output, additionalOptions);
-					list.Add(jobCompileAOT);
-					list2.Add(jobCompileAOT.m_doneEvent);
-					ThreadPool.QueueUserWorkItem(new WaitCallback(jobCompileAOT.ThreadPoolCallback));
-					if (list2.Count >= Environment.ProcessorCount)
+					flag = MonoCrossCompile.WaitForBuildOfFile(list2, ref num4);
+					MonoCrossCompile.DisplayAOTProgressBar(count, num3);
+					num3++;
+					if (!flag)
 					{
-						flag = MonoCrossCompile.WaitForBuildOfFile(list2, ref num4);
-						MonoCrossCompile.DisplayAOTProgressBar(count, num3);
-						num3++;
-						if (!flag)
-						{
-							break;
-						}
+						break;
 					}
 				}
 			}
@@ -170,7 +167,11 @@ namespace UnityEditor
 			{
 				if (current2.m_Exception != null)
 				{
-					UnityEngine.Debug.LogError(string.Format("Cross compilation job {0} failed.\n{1}", current2.m_input, current2.m_Exception.ToString()));
+					UnityEngine.Debug.LogErrorFormat("Cross compilation job {0} failed.\n{1}", new object[]
+					{
+						current2.m_input,
+						current2.m_Exception
+					});
 					flag = false;
 				}
 			}
@@ -216,7 +217,7 @@ namespace UnityEditor
 					text += "nodebug,";
 				}
 			}
-			if (target != BuildTarget.iPhone)
+			if (target != BuildTarget.iOS)
 			{
 				text += "print-skipped,";
 			}

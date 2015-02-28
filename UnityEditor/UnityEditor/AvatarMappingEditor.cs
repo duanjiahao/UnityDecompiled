@@ -57,6 +57,8 @@ namespace UnityEditor
 		protected AvatarSetupTool.BoneWrapper[] m_Bones;
 		internal static int s_SelectedBoneIndex = -1;
 		protected bool m_HasSkinnedMesh;
+		private Editor m_CurrentTransformEditor;
+		private bool m_CurrentTransformEditorFoldout;
 		protected int[][] m_BodyPartHumanBone = new int[][]
 		{
 			new int[]
@@ -173,6 +175,22 @@ namespace UnityEditor
 			base.Enable(inspector);
 			this.Init();
 		}
+		public override void Disable()
+		{
+			if (this.m_CurrentTransformEditor != null)
+			{
+				UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
+			}
+			base.Disable();
+		}
+		public override void OnDestroy()
+		{
+			if (this.m_CurrentTransformEditor != null)
+			{
+				UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
+			}
+			base.OnDestroy();
+		}
 		protected void Init()
 		{
 			if (base.gameObject == null)
@@ -184,6 +202,12 @@ namespace UnityEditor
 				this.m_Bones = AvatarSetupTool.GetHumanBones(base.serializedObject, base.modelBones);
 			}
 			this.ValidateMapping();
+			if (this.m_CurrentTransformEditor != null)
+			{
+				UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
+				this.m_CurrentTransformEditor = null;
+			}
+			this.m_CurrentTransformEditorFoldout = true;
 			this.m_HasSkinnedMesh = (base.gameObject.GetComponentInChildren<SkinnedMeshRenderer>() != null);
 			this.InitPose();
 			SceneView.RepaintAll();
@@ -314,6 +338,31 @@ namespace UnityEditor
 				this.TransferPoseIfChanged();
 			}
 			base.ApplyRevertGUI();
+			if (Selection.activeTransform != null)
+			{
+				if (this.m_CurrentTransformEditor != null && this.m_CurrentTransformEditor.target != Selection.activeTransform)
+				{
+					UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
+				}
+				if (this.m_CurrentTransformEditor == null)
+				{
+					this.m_CurrentTransformEditor = Editor.CreateEditor(Selection.activeTransform);
+				}
+				EditorGUILayout.Space();
+				this.m_CurrentTransformEditorFoldout = EditorGUILayout.InspectorTitlebar(this.m_CurrentTransformEditorFoldout, Selection.activeTransform);
+				if (this.m_CurrentTransformEditorFoldout && this.m_CurrentTransformEditor != null)
+				{
+					this.m_CurrentTransformEditor.OnInspectorGUI();
+				}
+			}
+			else
+			{
+				if (this.m_CurrentTransformEditor != null)
+				{
+					UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
+					this.m_CurrentTransformEditor = null;
+				}
+			}
 		}
 		protected void DebugPoseButtons()
 		{
@@ -581,7 +630,7 @@ namespace UnityEditor
 				error = bone.messageName + " is not a child of " + boneWrapper.messageName + ".";
 				return BoneState.InvalidHierarchy;
 			}
-			if (i != 23 && boneWrapper.bone != null && boneWrapper.bone != bone.bone && (bone.bone.position - boneWrapper.bone.position).sqrMagnitude < 1.401298E-45f)
+			if (i != 23 && boneWrapper.bone != null && boneWrapper.bone != bone.bone && (bone.bone.position - boneWrapper.bone.position).sqrMagnitude < Mathf.Epsilon)
 			{
 				error = bone.messageName + " has bone length of zero.";
 				return BoneState.BoneLenghtIsZero;
@@ -722,7 +771,7 @@ namespace UnityEditor
 				string boneName = humanTemplate.Find(this.m_Bones[i].humanBoneName);
 				if (boneName.Length > 0)
 				{
-					Transform bone = base.modelBones.Keys.First((Transform f) => AvatarMappingEditor.MatchName(f.name, boneName));
+					Transform bone = base.modelBones.Keys.FirstOrDefault((Transform f) => AvatarMappingEditor.MatchName(f.name, boneName));
 					this.m_Bones[i].bone = bone;
 				}
 				else

@@ -50,6 +50,7 @@ namespace UnityEditor
 		}
 		private void UndoRedoPerformed()
 		{
+			this.m_Editor.PullProbePositions();
 			this.m_Editor.MarkTetrahedraDirty();
 		}
 		public override void OnInspectorGUI()
@@ -94,6 +95,18 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
+			if (this.m_Editor.SelectedCount == 1)
+			{
+				Vector3 vector = this.m_Editor.GetSelectedPositions()[0];
+				GUIContent label = new GUIContent("Probe Position", "The local position of this probe relative to the parent group.");
+				Vector3 vector2 = EditorGUILayout.Vector3Field(label, vector, new GUILayoutOption[0]);
+				if (vector2 != vector)
+				{
+					this.StartEditProbes();
+					this.m_Editor.UpdateSelectedPosition(0, vector2);
+				}
+			}
+			this.m_Editor.HandleEditMenuHotKeyCommands();
 			this.m_Editor.PushProbePositions();
 			EditorGUI.EndDisabledGroup();
 			if (!flag)
@@ -104,6 +117,10 @@ namespace UnityEditor
 		}
 		private void InternalOnSceneView()
 		{
+			if (!EditorGUIUtility.IsGizmosAllowedForObject(this.target))
+			{
+				return;
+			}
 			if (SceneView.lastActiveSceneView != null && this.m_ShouldFocus)
 			{
 				this.m_ShouldFocus = false;

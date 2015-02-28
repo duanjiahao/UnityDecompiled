@@ -99,17 +99,49 @@ namespace UnityEngine
 		[Obsolete("This function is obsolete and will always return -1. Use IsVersionCached instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetVersionFromCache(string url);
+		public static bool IsVersionCached(string url, int version)
+		{
+			Hash128 hash = new Hash128(0u, 0u, 0u, (uint)version);
+			return Caching.IsVersionCached(url, hash);
+		}
+		public static bool IsVersionCached(string url, Hash128 hash)
+		{
+			return Caching.INTERNAL_CALL_IsVersionCached(url, ref hash);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsVersionCached(string url, int version);
+		private static extern bool INTERNAL_CALL_IsVersionCached(string url, ref Hash128 hash);
+		public static bool MarkAsUsed(string url, int version)
+		{
+			Hash128 hash = new Hash128(0u, 0u, 0u, (uint)version);
+			return Caching.MarkAsUsed(url, hash);
+		}
+		public static bool MarkAsUsed(string url, Hash128 hash)
+		{
+			return Caching.INTERNAL_CALL_MarkAsUsed(url, ref hash);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool MarkAsUsed(string url, int version);
+		private static extern bool INTERNAL_CALL_MarkAsUsed(string url, ref Hash128 hash);
+		public static void SetNoBackupFlag(string url, int version)
+		{
+		}
+		public static void SetNoBackupFlag(string url, Hash128 hash)
+		{
+			Caching.INTERNAL_CALL_SetNoBackupFlag(url, ref hash);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetNoBackupFlag(string url, int version);
+		private static extern void INTERNAL_CALL_SetNoBackupFlag(string url, ref Hash128 hash);
+		public static void ResetNoBackupFlag(string url, int version)
+		{
+		}
+		public static void ResetNoBackupFlag(string url, Hash128 hash)
+		{
+			Caching.INTERNAL_CALL_ResetNoBackupFlag(url, ref hash);
+		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void ResetNoBackupFlag(string url, int version);
+		private static extern void INTERNAL_CALL_ResetNoBackupFlag(string url, ref Hash128 hash);
 	}
 }

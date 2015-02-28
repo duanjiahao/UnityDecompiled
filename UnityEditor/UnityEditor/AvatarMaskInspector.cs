@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -190,6 +190,10 @@ namespace UnityEditor
 					{
 						AvatarMask avatarMask2 = this.target as AvatarMask;
 						avatarMask2.Copy(avatarMask);
+						if (this.humanTransforms != null)
+						{
+							AvatarMaskUtility.SetActiveHumanTransforms(avatarMask2, this.humanTransforms);
+						}
 						this.FillNodeInfos(avatarMask2);
 					}
 				}

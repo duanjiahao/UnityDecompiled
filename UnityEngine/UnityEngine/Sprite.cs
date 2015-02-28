@@ -62,7 +62,34 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		public Vector2 pivot
+		{
+			get
+			{
+				Vector2 result;
+				Sprite.Internal_GetPivot(this, out result);
+				return result;
+			}
+		}
 		public extern Vector4 border
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern Vector2[] vertices
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern ushort[] triangles
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern Vector2[] uv
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -108,5 +135,11 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetTextureRectOffset(Sprite sprite, out Vector2 output);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_GetPivot(Sprite sprite, out Vector2 output);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void OverrideGeometry(Vector2[] vertices, ushort[] triangles);
 	}
 }

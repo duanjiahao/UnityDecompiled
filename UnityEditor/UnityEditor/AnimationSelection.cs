@@ -1,6 +1,6 @@
 using System;
 using System.Collections;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -67,7 +67,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.animatedObject.GetComponent<Animation>() != null || this.animatedObject.GetComponent<Animator>() != null;
+				return this.animatedObject && (this.animatedObject.GetComponent<Animation>() != null || this.animatedObject.GetComponent<Animator>() != null);
 			}
 		}
 		public AnimationClip clip
@@ -420,7 +420,6 @@ namespace UnityEditor
 				AnimationClipSettings animationClipSettings = AnimationUtility.GetAnimationClipSettings(animationClip);
 				animationClipSettings.loopTime = true;
 				AnimationUtility.SetAnimationClipSettingsNoDirty(animationClip, animationClipSettings);
-				AnimationUtility.SetAnimationType(animationClip, ModelImporterAnimationType.Generic);
 			}
 			return animationClip;
 		}
@@ -452,7 +451,7 @@ namespace UnityEditor
 			AnimatorController animatorController = AnimatorController.GetEffectiveAnimatorController(animator);
 			if (!(animatorController == null))
 			{
-				AnimatorController.AddAnimationClipToController(animatorController, newClip);
+				animatorController.AddMotion(newClip);
 				return newClip;
 			}
 			animatorController = AnimatorController.CreateAnimatorControllerForClip(newClip, animatedObject);
@@ -473,7 +472,7 @@ namespace UnityEditor
 			AnimationClip[] animationClips = AnimationUtility.GetAnimationClips(this.animatedObject);
 			Array.Resize<AnimationClip>(ref animationClips, animationClips.Length + 1);
 			animationClips[animationClips.Length - 1] = newClip;
-			AnimationUtility.SetAnimationClips(this.animatedObject.animation, animationClips);
+			AnimationUtility.SetAnimationClips(this.animatedObject.GetComponent<Animation>(), animationClips);
 			return newClip;
 		}
 		private void ChooseClip(AnimationClip newClip)

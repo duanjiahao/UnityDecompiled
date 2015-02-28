@@ -25,7 +25,7 @@ namespace UnityEditor
 			}
 			base.serializedObject.Update();
 			EditorGUI.BeginChangeCheck();
-			AudioSourceInspector.AnimProp(new GUIContent("Cutoff Frequency"), this.m_LowpassLevelCustomCurve, 22000f, 0f);
+			AudioSourceInspector.AnimProp(new GUIContent("Cutoff Frequency"), this.m_LowpassLevelCustomCurve, 22000f, 0f, true);
 			if (EditorGUI.EndChangeCheck())
 			{
 				AnimationCurve animationCurveValue = this.m_LowpassLevelCustomCurve.animationCurveValue;

@@ -4,9 +4,7 @@ namespace UnityEditor
 	public enum AndroidTargetDevice
 	{
 		FAT,
-		ARMv6,
-		Emulator,
-		ARMv7,
+		ARMv7 = 3,
 		x86
 	}
 }

@@ -6,7 +6,7 @@ namespace UnityEditor
 	{
 		private class Texts
 		{
-			public GUIContent duration = new GUIContent("Duration", "The length of time the Particle System is emitting partcles, if the system is looping, this indicates the length of one cycle.");
+			public GUIContent duration = new GUIContent("Duration", "The length of time the Particle System is emitting particles, if the system is looping, this indicates the length of one cycle.");
 			public GUIContent looping = new GUIContent("Looping", "If true, the emission cycle will repeat after the duration.");
 			public GUIContent prewarm = new GUIContent("Prewarm", "When played a prewarmed system will be in a state as if it had emitted one loop cycle. Can only be used if the system is looping.");
 			public GUIContent startDelay = new GUIContent("Start Delay", "Delay in seconds that this Particle System will wait before emitting particles. Cannot be used together with a prewarmed looping system.");
@@ -17,7 +17,7 @@ namespace UnityEditor
 			public GUIContent size = new GUIContent("Start Size", "The start size of particles.");
 			public GUIContent rotation = new GUIContent("Start Rotation", "The start rotation of particles in degrees.");
 			public GUIContent autoplay = new GUIContent("Play On Awake", "If enabled, the system will start playing automatically.");
-			public GUIContent gravity = new GUIContent("Gravity Multiplier", "Scales the gravity defined in Physics Manager");
+			public GUIContent gravity = new GUIContent("Gravity Modifier", "Scales the gravity defined in Physics Manager");
 			public GUIContent inheritvelocity = new GUIContent("Inherit Velocity", "Applies the current directional velocity of the Transform to newly emitted particles.");
 			public GUIContent simulationSpace = new GUIContent("Simulation Space", "Makes particle positions simulate in worldspace or local space. In local space they stay relative to the Transform.");
 			public string[] simulationSpaces = new string[]

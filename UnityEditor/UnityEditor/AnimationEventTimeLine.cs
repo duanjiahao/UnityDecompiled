@@ -172,6 +172,7 @@ namespace UnityEditor
 								animationEvent2.time = this.m_EventTimes[k] + zero.x * state.PixelDeltaToTime(rect);
 								animationEvent2.time = Mathf.Max(0f, animationEvent2.time);
 								animationEvent2.time = (float)Mathf.RoundToInt(animationEvent2.time * activeAnimationClip.frameRate) / activeAnimationClip.frameRate;
+								this.m_EventsAtMouseDown[k] = animationEvent2;
 							}
 						}
 						int[] array3 = new int[this.m_EventsSelected.Length];

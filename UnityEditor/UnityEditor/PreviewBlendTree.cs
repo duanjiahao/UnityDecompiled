@@ -1,5 +1,5 @@
 using System;
-using UnityEditorInternal;
+using UnityEditor.Animations;
 using UnityEngine;
 namespace UnityEditor
 {
@@ -7,8 +7,8 @@ namespace UnityEditor
 	{
 		private AnimatorController m_Controller;
 		private AvatarPreview m_AvatarPreview;
-		private StateMachine m_StateMachine;
-		private State m_State;
+		private AnimatorStateMachine m_StateMachine;
+		private AnimatorState m_State;
 		private BlendTree m_BlendTree;
 		private bool m_ControllerIsDirty;
 		private bool m_PrevIKOnFeet;
@@ -36,14 +36,9 @@ namespace UnityEditor
 		}
 		public void CreateParameters()
 		{
-			int parameterCount = this.m_Controller.parameterCount;
-			for (int i = 0; i < parameterCount; i++)
+			for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
 			{
-				this.m_Controller.RemoveParameter(0);
-			}
-			for (int j = 0; j < this.m_BlendTree.recursiveBlendParameterCount; j++)
-			{
-				this.m_Controller.AddParameter(this.m_BlendTree.GetRecursiveBlendParameter(j), AnimatorControllerParameterType.Float);
+				this.m_Controller.AddParameter(this.m_BlendTree.GetRecursiveBlendParameter(i), AnimatorControllerParameterType.Float);
 			}
 		}
 		private void CreateStateMachine()
@@ -53,17 +48,21 @@ namespace UnityEditor
 				if (this.m_Controller == null)
 				{
 					this.m_Controller = new AnimatorController();
-					this.m_Controller.hideFlags = HideFlags.DontSave;
+					this.m_Controller.pushUndo = false;
 					this.m_Controller.AddLayer("preview");
-					this.m_StateMachine = this.m_Controller.GetLayerStateMachine(0);
+					this.m_StateMachine = this.m_Controller.layers[0].stateMachine;
+					this.m_StateMachine.pushUndo = false;
 					this.CreateParameters();
 					this.m_State = this.m_StateMachine.AddState("preview");
-					this.m_State.SetMotionInternal(this.m_BlendTree);
+					this.m_State.pushUndo = false;
+					this.m_State.motion = this.m_BlendTree;
 					this.m_State.iKOnFeet = this.m_AvatarPreview.IKOnFeet;
-					this.m_State.hideFlags = HideFlags.DontSave;
+					this.m_State.hideFlags = HideFlags.HideAndDontSave;
+					this.m_Controller.hideFlags = HideFlags.HideAndDontSave;
+					this.m_StateMachine.hideFlags = HideFlags.HideAndDontSave;
 					AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
-					AnimatorController expr_D7 = this.m_Controller;
-					expr_D7.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_D7.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
+					AnimatorController expr_10F = this.m_Controller;
+					expr_10F.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_10F.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
 					this.m_ControllerIsDirty = false;
 				}
 				if (AnimatorController.GetEffectiveAnimatorController(this.m_AvatarPreview.Animator) != this.m_Controller)
@@ -118,13 +117,16 @@ namespace UnityEditor
 			{
 				return;
 			}
-			Animator animator = this.m_AvatarPreview.Animator;
-			if (animator)
+			if (this.m_AvatarPreview.PreviewObject == null || this.m_ControllerIsDirty)
 			{
-				if (this.m_ControllerIsDirty)
+				this.m_AvatarPreview.ResetPreviewInstance();
+				if (this.m_AvatarPreview.PreviewObject)
 				{
 					this.ResetStateMachine();
 				}
+			}
+			if (this.m_AvatarPreview.Animator)
+			{
 				if (this.m_PrevIKOnFeet != this.m_AvatarPreview.IKOnFeet)
 				{
 					this.m_PrevIKOnFeet = this.m_AvatarPreview.IKOnFeet;
@@ -136,21 +138,21 @@ namespace UnityEditor
 					this.m_AvatarPreview.Animator.rootPosition = rootPosition;
 					this.m_AvatarPreview.Animator.rootRotation = rootRotation;
 				}
-				if (animator)
+				if (this.m_AvatarPreview.Animator)
 				{
 					for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
 					{
 						string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
 						float inputBlendValue = this.m_BlendTree.GetInputBlendValue(recursiveBlendParameter);
-						animator.SetFloat(recursiveBlendParameter, inputBlendValue);
+						this.m_AvatarPreview.Animator.SetFloat(recursiveBlendParameter, inputBlendValue);
 					}
 				}
 				this.m_AvatarPreview.timeControl.loop = true;
 				float num = 1f;
 				float num2 = 0f;
-				if (animator.layerCount > 0)
+				if (this.m_AvatarPreview.Animator.layerCount > 0)
 				{
-					AnimatorStateInfo currentAnimatorStateInfo = animator.GetCurrentAnimatorStateInfo(0);
+					AnimatorStateInfo currentAnimatorStateInfo = this.m_AvatarPreview.Animator.GetCurrentAnimatorStateInfo(0);
 					num = currentAnimatorStateInfo.length;
 					num2 = currentAnimatorStateInfo.normalizedTime;
 				}
@@ -172,7 +174,7 @@ namespace UnityEditor
 						}
 					}
 				}
-				animator.Update(num3);
+				this.m_AvatarPreview.Animator.Update(num3);
 			}
 		}
 		public void TestForReset()

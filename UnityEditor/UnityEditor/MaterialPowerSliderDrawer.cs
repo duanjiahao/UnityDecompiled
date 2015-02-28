@@ -4,7 +4,7 @@ namespace UnityEditor
 {
 	internal class MaterialPowerSliderDrawer : MaterialPropertyDrawer
 	{
-		public readonly float power;
+		private readonly float power;
 		public MaterialPowerSliderDrawer(float power)
 		{
 			this.power = power;
@@ -25,14 +25,7 @@ namespace UnityEditor
 				EditorGUI.LabelField(position, label2, EditorStyles.helpBox);
 				return;
 			}
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = prop.hasMixedValue;
-			float floatValue = EditorGUI.PowerSlider(position, label, prop.floatValue, prop.rangeLimits.x, prop.rangeLimits.y, this.power);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
-			{
-				prop.floatValue = floatValue;
-			}
+			MaterialEditor.DoPowerRangeProperty(position, prop, label, this.power);
 		}
 	}
 }

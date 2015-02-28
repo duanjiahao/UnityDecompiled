@@ -108,12 +108,29 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetPixels32(Color32[] colors, [DefaultValue("0")] int miplevel);
+		private extern void SetAllPixels32(Color32[] colors, int miplevel);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetBlockOfPixels32(int x, int y, int blockWidth, int blockHeight, Color32[] colors, int miplevel);
 		[ExcludeFromDocs]
 		public void SetPixels32(Color32[] colors)
 		{
 			int miplevel = 0;
 			this.SetPixels32(colors, miplevel);
+		}
+		public void SetPixels32(Color32[] colors, [DefaultValue("0")] int miplevel)
+		{
+			this.SetAllPixels32(colors, miplevel);
+		}
+		[ExcludeFromDocs]
+		public void SetPixels32(int x, int y, int blockWidth, int blockHeight, Color32[] colors)
+		{
+			int miplevel = 0;
+			this.SetPixels32(x, y, blockWidth, blockHeight, colors, miplevel);
+		}
+		public void SetPixels32(int x, int y, int blockWidth, int blockHeight, Color32[] colors, [DefaultValue("0")] int miplevel)
+		{
+			this.SetBlockOfPixels32(x, y, blockWidth, blockHeight, colors, miplevel);
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

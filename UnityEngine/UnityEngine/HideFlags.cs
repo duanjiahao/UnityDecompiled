@@ -7,8 +7,11 @@ namespace UnityEngine
 		None = 0,
 		HideInHierarchy = 1,
 		HideInInspector = 2,
-		DontSave = 4,
+		DontSaveInEditor = 4,
 		NotEditable = 8,
-		HideAndDontSave = 13
+		DontUnloadUnusedAsset = 16,
+		DontSaveInBuild = 32,
+		DontSave = 52,
+		HideAndDontSave = 61
 	}
 }

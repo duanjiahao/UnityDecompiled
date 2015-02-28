@@ -468,7 +468,11 @@ namespace UnityEditor
 				item.downloadProgress = -1f;
 				if (status != "ok")
 				{
-					Debug.LogError(string.Format("Error downloading package {0} ({1})", item.packageName, id));
+					Debug.LogErrorFormat("Error downloading package {0} ({1})", new object[]
+					{
+						item.packageName,
+						id
+					});
 					Debug.LogError(status);
 					this.Close();
 					return;
@@ -479,7 +483,11 @@ namespace UnityEditor
 				}
 				if (!AssetStoreContext.OpenPackageInternal(id))
 				{
-					Debug.LogError(string.Format("Error importing package {0} ({1})", item.packageName, id));
+					Debug.LogErrorFormat("Error importing package {0} ({1})", new object[]
+					{
+						item.packageName,
+						id
+					});
 				}
 				this.Close();
 			});

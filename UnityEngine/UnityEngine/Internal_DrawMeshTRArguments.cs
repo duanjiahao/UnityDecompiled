@@ -9,5 +9,6 @@ namespace UnityEngine
 		public Vector3 position;
 		public int castShadows;
 		public int receiveShadows;
+		public int reflectionProbeAnchorInstanceID;
 	}
 }

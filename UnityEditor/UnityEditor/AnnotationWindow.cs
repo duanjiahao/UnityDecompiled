@@ -35,6 +35,7 @@ namespace UnityEditor
 				this.columnHeaderStyle = new GUIStyle(EditorStyles.miniLabel);
 			}
 		}
+		private const float kWindowWidth = 270f;
 		private const float scrollBarWidth = 14f;
 		private const float listElementHeight = 18f;
 		private const float gizmoRightAlign = 23f;

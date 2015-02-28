@@ -40,17 +40,6 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[Obsolete("Has no effect.")]
-		public bool skinNormals
-		{
-			get
-			{
-				return true;
-			}
-			set
-			{
-			}
-		}
 		public extern bool updateWhenOffscreen
 		{
 			[WrapperlessIcall]

@@ -1,110 +1,169 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 namespace UnityEngine
 {
+	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class AnimationEvent
 	{
-		[NotRenamed]
-		internal IntPtr m_Ptr;
-		private int m_OwnsData;
+		internal float m_Time;
+		internal string m_FunctionName;
+		internal string m_StringParameter;
+		internal Object m_ObjectReferenceParameter;
+		internal float m_FloatParameter;
+		internal int m_IntParameter;
+		internal int m_MessageOptions;
+		internal AnimationEventSource m_Source;
+		internal AnimationState m_StateSender;
+		internal AnimatorStateInfo m_AnimatorStateInfo;
+		internal AnimatorClipInfo m_AnimatorClipInfo;
 		[Obsolete("Use stringParameter instead")]
-		public extern string data
+		public string data
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_StringParameter;
+			}
+			set
+			{
+				this.m_StringParameter = value;
+			}
 		}
-		public extern string stringParameter
+		public string stringParameter
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_StringParameter;
+			}
+			set
+			{
+				this.m_StringParameter = value;
+			}
 		}
-		public extern float floatParameter
+		public float floatParameter
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_FloatParameter;
+			}
+			set
+			{
+				this.m_FloatParameter = value;
+			}
 		}
-		public extern int intParameter
+		public int intParameter
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_IntParameter;
+			}
+			set
+			{
+				this.m_IntParameter = value;
+			}
 		}
-		public extern Object objectReferenceParameter
+		public Object objectReferenceParameter
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_ObjectReferenceParameter;
+			}
+			set
+			{
+				this.m_ObjectReferenceParameter = value;
+			}
 		}
-		public extern string functionName
+		public string functionName
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_FunctionName;
+			}
+			set
+			{
+				this.m_FunctionName = value;
+			}
 		}
-		public extern float time
+		public float time
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.m_Time;
+			}
+			set
+			{
+				this.m_Time = value;
+			}
 		}
-		public extern SendMessageOptions messageOptions
+		public SendMessageOptions messageOptions
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return (SendMessageOptions)this.m_MessageOptions;
+			}
+			set
+			{
+				this.m_MessageOptions = (int)value;
+			}
 		}
-		public extern AnimationState animationState
+		public bool isFiredByLegacy
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return this.m_Source == AnimationEventSource.Legacy;
+			}
+		}
+		public bool isFiredByAnimator
+		{
+			get
+			{
+				return this.m_Source == AnimationEventSource.Animator;
+			}
+		}
+		public AnimationState animationState
+		{
+			get
+			{
+				if (!this.isFiredByLegacy)
+				{
+					Debug.LogError("AnimationEvent was not fired by Animation component, you shouldn't use AnimationEvent.animationState");
+				}
+				return this.m_StateSender;
+			}
+		}
+		public AnimatorStateInfo animatorStateInfo
+		{
+			get
+			{
+				if (!this.isFiredByAnimator)
+				{
+					Debug.LogError("AnimationEvent was not fired by Animator component, you shouldn't use AnimationEvent.animatorStateInfo");
+				}
+				return this.m_AnimatorStateInfo;
+			}
+		}
+		public AnimatorClipInfo animatorClipInfo
+		{
+			get
+			{
+				if (!this.isFiredByAnimator)
+				{
+					Debug.LogError("AnimationEvent was not fired by Animator component, you shouldn't use AnimationEvent.animatorClipInfo");
+				}
+				return this.m_AnimatorClipInfo;
+			}
 		}
 		public AnimationEvent()
 		{
-			this.m_OwnsData = 1;
-			this.Create();
+			this.m_Time = 0f;
+			this.m_FunctionName = string.Empty;
+			this.m_StringParameter = string.Empty;
+			this.m_ObjectReferenceParameter = null;
+			this.m_FloatParameter = 0f;
+			this.m_IntParameter = 0;
+			this.m_MessageOptions = 0;
+			this.m_Source = AnimationEventSource.NoSource;
+			this.m_StateSender = null;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Create();
-		~AnimationEvent()
-		{
-			if (this.m_OwnsData != 0)
-			{
-				this.Destroy();
-			}
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Destroy();
 	}
 }

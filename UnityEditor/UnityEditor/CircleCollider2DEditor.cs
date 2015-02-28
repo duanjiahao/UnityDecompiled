@@ -6,25 +6,17 @@ namespace UnityEditor
 	internal class CircleCollider2DEditor : Collider2DEditorBase
 	{
 		private int m_HandleControlID;
-		protected SerializedProperty m_Center;
-		protected SerializedProperty m_Radius;
 		public override void OnEnable()
 		{
 			base.OnEnable();
 			this.m_HandleControlID = -1;
-			this.m_Center = base.serializedObject.FindProperty("m_Center");
-			this.m_Radius = base.serializedObject.FindProperty("m_Radius");
 		}
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
 			base.InspectorEditButtonGUI();
-			EditorGUILayout.PropertyField(this.m_IsTrigger, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_Material, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_Center, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_Radius, new GUILayoutOption[0]);
+			base.OnInspectorGUI();
 			base.serializedObject.ApplyModifiedProperties();
-			base.CheckColliderErrorState();
 		}
 		public void OnSceneGUI()
 		{
@@ -43,7 +35,7 @@ namespace UnityEditor
 			float num2 = num * circleCollider2D.radius;
 			num2 = Mathf.Abs(num2);
 			num2 = Mathf.Max(num2, 1E-05f);
-			Vector3 position = circleCollider2D.transform.TransformPoint(circleCollider2D.center);
+			Vector3 position = circleCollider2D.transform.TransformPoint(circleCollider2D.offset);
 			int hotControl = GUIUtility.hotControl;
 			float num3 = Handles.RadiusHandle(Quaternion.identity, position, num2, true);
 			if (GUI.changed)

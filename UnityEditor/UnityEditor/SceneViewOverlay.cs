@@ -8,6 +8,7 @@ namespace UnityEditor
 		public enum Ordering
 		{
 			Camera = -100,
+			Cloth = 0,
 			OcclusionCulling = 100,
 			Lightmapping = 200,
 			NavMesh = 300,

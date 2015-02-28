@@ -9,13 +9,24 @@ namespace UnityEditor
 		public LazyTreeViewDataSource(TreeView treeView) : base(treeView)
 		{
 		}
+		public static List<TreeViewItem> CreateChildListForCollapsedParent()
+		{
+			return new List<TreeViewItem>
+			{
+				null
+			};
+		}
+		public static bool IsChildListForACollapsedParent(List<TreeViewItem> childList)
+		{
+			return childList != null && childList.Count == 1 && childList[0] == null;
+		}
 		protected abstract HashSet<int> GetParentsAbove(int id);
 		protected abstract HashSet<int> GetParentsBelow(int id);
-		public override TreeViewItem FindItem(int id)
+		protected virtual void RevealItem(int itemID)
 		{
 			HashSet<int> hashSet = new HashSet<int>(base.expandedIDs);
 			int count = hashSet.Count;
-			HashSet<int> parentsAbove = this.GetParentsAbove(id);
+			HashSet<int> parentsAbove = this.GetParentsAbove(itemID);
 			hashSet.UnionWith(parentsAbove);
 			if (count != hashSet.Count)
 			{
@@ -25,7 +36,11 @@ namespace UnityEditor
 					this.FetchData();
 				}
 			}
-			return base.FindItem(id);
+		}
+		public override TreeViewItem FindItem(int itemID)
+		{
+			this.RevealItem(itemID);
+			return base.FindItem(itemID);
 		}
 		public override void SetExpandedWithChildren(TreeViewItem item, bool expand)
 		{
@@ -56,6 +71,10 @@ namespace UnityEditor
 			{
 				this.FetchData();
 				this.m_NeedRefreshVisibleFolders = false;
+				if (this.onVisibleRowsChanged != null)
+				{
+					this.onVisibleRowsChanged();
+				}
 				this.m_TreeView.Repaint();
 			}
 			return this.m_VisibleRows;

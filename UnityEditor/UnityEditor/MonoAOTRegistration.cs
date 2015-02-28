@@ -58,30 +58,55 @@ namespace UnityEditor
 			}
 			return hashSet;
 		}
-		public static void WriteCPlusPlusFileForStaticAOTModuleRegistration(BuildTarget buildTarget, string librariesFolder, CrossCompileOptions crossCompileOptions, bool advancedLic, string targetDevice, bool stripping, RuntimeClassRegistry usedClassRegistry, AssemblyReferenceChecker checker)
+		public static void WriteCPlusPlusFileForStaticAOTModuleRegistration(BuildTarget buildTarget, string file, CrossCompileOptions crossCompileOptions, bool advancedLic, string targetDevice, bool stripping, RuntimeClassRegistry usedClassRegistry, AssemblyReferenceChecker checker)
 		{
-			using (TextWriter textWriter = new StreamWriter(Path.Combine(librariesFolder, "RegisterMonoModules.cpp")))
+			using (TextWriter textWriter = new StreamWriter(file))
 			{
 				string[] assemblyFileNames = checker.GetAssemblyFileNames();
 				AssemblyDefinition[] assemblyDefinitions = checker.GetAssemblyDefinitions();
 				bool flag = (crossCompileOptions & CrossCompileOptions.FastICall) != CrossCompileOptions.Dynamic;
 				ArrayList arrayList = MonoAOTRegistration.BuildNativeMethodList(assemblyDefinitions);
-				if (buildTarget == BuildTarget.iPhone)
+				if (buildTarget == BuildTarget.iOS)
 				{
 					textWriter.WriteLine("#include \"RegisterMonoModules.h\"");
+					textWriter.WriteLine("#include <stdio.h>");
 				}
 				textWriter.WriteLine(string.Empty);
+				textWriter.WriteLine("#if defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR");
+				textWriter.WriteLine("\t#define DECL_USER_FUNC(f) void f() __attribute__((weak_import))");
+				textWriter.WriteLine("\t#define REGISTER_USER_FUNC(f)\\");
+				textWriter.WriteLine("\t\tdo {\\");
+				textWriter.WriteLine("\t\tif(f != NULL)\\");
+				textWriter.WriteLine("\t\t\tmono_dl_register_symbol(#f, (void*)f);\\");
+				textWriter.WriteLine("\t\telse\\");
+				textWriter.WriteLine("\t\t\t::printf_console(\"Symbol '%s' not found. Maybe missing implementation for Simulator?\\n\", #f);\\");
+				textWriter.WriteLine("\t\t}while(0)");
+				textWriter.WriteLine("#else");
+				textWriter.WriteLine("\t#define DECL_USER_FUNC(f) void f() ");
+				textWriter.WriteLine("\t#if !defined(__arm64__)");
+				textWriter.WriteLine("\t#define REGISTER_USER_FUNC(f) mono_dl_register_symbol(#f, (void*)&f)");
+				textWriter.WriteLine("\t#else");
+				textWriter.WriteLine("\t\t#define REGISTER_USER_FUNC(f)");
+				textWriter.WriteLine("\t#endif");
+				textWriter.WriteLine("#endif");
 				textWriter.WriteLine("extern \"C\"\n{");
 				textWriter.WriteLine("\ttypedef void* gpointer;");
 				textWriter.WriteLine("\ttypedef int gboolean;");
-				textWriter.WriteLine("#if !(TARGET_IPHONE_SIMULATOR)");
-				if (buildTarget == BuildTarget.iPhone)
+				if (buildTarget == BuildTarget.iOS)
 				{
 					textWriter.WriteLine("\tconst char*\t\t\tUnityIPhoneRuntimeVersion = \"{0}\";", Application.unityVersion);
 					textWriter.WriteLine("\tvoid\t\t\t\tmono_dl_register_symbol (const char* name, void *addr);");
-					textWriter.WriteLine("\textern int \t\t\tmono_ficall_flag;");
+					textWriter.WriteLine("#if !defined(__arm64__)");
+					textWriter.WriteLine("\textern int\t\t\tmono_ficall_flag;");
+					textWriter.WriteLine("#endif");
 				}
 				textWriter.WriteLine("\tvoid\t\t\t\tmono_aot_register_module(gpointer *aot_info);");
+				textWriter.WriteLine("#if !(__ORBIS__)");
+				textWriter.WriteLine("#define DLL_EXPORT");
+				textWriter.WriteLine("#else");
+				textWriter.WriteLine("#define DLL_EXPORT __declspec(dllexport)");
+				textWriter.WriteLine("#endif");
+				textWriter.WriteLine("#if !(TARGET_IPHONE_SIMULATOR)");
 				textWriter.WriteLine("\textern gboolean\t\tmono_aot_only;");
 				for (int i = 0; i < assemblyFileNames.Length; i++)
 				{
@@ -95,14 +120,14 @@ namespace UnityEditor
 				textWriter.WriteLine("#endif // !(TARGET_IPHONE_SIMULATOR)");
 				foreach (string arg2 in arrayList)
 				{
-					textWriter.WriteLine("\tvoid\t{0}();", arg2);
+					textWriter.WriteLine("\tDECL_USER_FUNC({0});", arg2);
 				}
 				textWriter.WriteLine("}");
-				textWriter.WriteLine("void RegisterMonoModules()");
+				textWriter.WriteLine("DLL_EXPORT void RegisterMonoModules()");
 				textWriter.WriteLine("{");
-				textWriter.WriteLine("#if !(TARGET_IPHONE_SIMULATOR)");
+				textWriter.WriteLine("#if !(TARGET_IPHONE_SIMULATOR) && !defined(__arm64__)");
 				textWriter.WriteLine("\tmono_aot_only = true;");
-				if (buildTarget == BuildTarget.iPhone)
+				if (buildTarget == BuildTarget.iOS)
 				{
 					textWriter.WriteLine("\tmono_ficall_flag = {0};", (!flag) ? "false" : "true");
 				}
@@ -116,15 +141,15 @@ namespace UnityEditor
 					text2 = text2.Replace(" ", "_");
 					textWriter.WriteLine("\tmono_aot_register_module(mono_aot_module_{0}_info);", text2);
 				}
+				textWriter.WriteLine("#endif // !(TARGET_IPHONE_SIMULATOR) && !defined(__arm64__)");
 				textWriter.WriteLine(string.Empty);
-				if (buildTarget == BuildTarget.iPhone)
+				if (buildTarget == BuildTarget.iOS)
 				{
 					foreach (string arg3 in arrayList)
 					{
-						textWriter.WriteLine("\tmono_dl_register_symbol(\"{0}\", (void*)&{0});", arg3);
+						textWriter.WriteLine("\tREGISTER_USER_FUNC({0});", arg3);
 					}
 				}
-				textWriter.WriteLine("#endif // !(TARGET_IPHONE_SIMULATOR)");
 				textWriter.WriteLine("}");
 				textWriter.WriteLine(string.Empty);
 				AssemblyDefinition assemblyDefinition2 = null;
@@ -135,7 +160,7 @@ namespace UnityEditor
 						assemblyDefinition2 = assemblyDefinitions[k];
 					}
 				}
-				if (buildTarget == BuildTarget.iPhone)
+				if (buildTarget == BuildTarget.iOS)
 				{
 					AssemblyDefinition[] assemblies = new AssemblyDefinition[]
 					{
@@ -239,6 +264,10 @@ namespace UnityEditor
 			string text2 = string.Format("\tRegister_{0}_{1}_{2} ();", typeDefinition.Namespace, typeDefinition.Name, method.Name);
 			text2 = text2.Replace('.', '_');
 			text = text.Replace('.', '_');
+			if (text2.Contains("UnityEngine.Serialization"))
+			{
+				return;
+			}
 			output.WriteLine(text);
 			output.WriteLine(text2);
 		}

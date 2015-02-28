@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEditorInternal;
@@ -9,30 +10,158 @@ namespace UnityEditor
 {
 	internal sealed class AssetStoreContext : ScriptableObject
 	{
+		public class DownloadInfo
+		{
+			public string url;
+			public string key;
+			public string id;
+		}
+		public class LabelAndId
+		{
+			public string label;
+			public string id;
+			public void Initialize(JSONValue json)
+			{
+				if (json.ContainsKey("label"))
+				{
+					this.label = json["label"].AsString();
+				}
+				if (json.ContainsKey("id"))
+				{
+					this.id = json["id"].AsString();
+				}
+			}
+			public override string ToString()
+			{
+				return string.Format("{{label={0}, id={1}}}", this.label, this.id);
+			}
+		}
+		public class Link
+		{
+			public string type;
+			public string id;
+			public void Initialize(JSONValue json)
+			{
+				if (json.ContainsKey("type"))
+				{
+					this.type = json["type"].AsString();
+				}
+				if (json.ContainsKey("id"))
+				{
+					this.id = json["id"].AsString();
+				}
+			}
+			public override string ToString()
+			{
+				return string.Format("{{type={0}, id={1}}}", this.type, this.id);
+			}
+		}
+		public class Package
+		{
+			public string title;
+			public string id;
+			public string version;
+			public string version_id;
+			public string local_icon;
+			public string local_path;
+			public string pubdate;
+			public string description;
+			public AssetStoreContext.LabelAndId publisher;
+			public AssetStoreContext.LabelAndId category;
+			public AssetStoreContext.Link link;
+			public void Initialize(JSONValue json)
+			{
+				if (json.ContainsKey("title"))
+				{
+					this.title = json["title"].AsString();
+				}
+				if (json.ContainsKey("id"))
+				{
+					this.id = json["id"].AsString();
+				}
+				if (json.ContainsKey("version"))
+				{
+					this.version = json["version"].AsString();
+				}
+				if (json.ContainsKey("version_id"))
+				{
+					this.version_id = json["version_id"].AsString();
+				}
+				if (json.ContainsKey("local_icon"))
+				{
+					this.local_icon = json["local_icon"].AsString();
+				}
+				if (json.ContainsKey("local_path"))
+				{
+					this.local_path = json["local_path"].AsString();
+				}
+				if (json.ContainsKey("pubdate"))
+				{
+					this.pubdate = json["pubdate"].AsString();
+				}
+				if (json.ContainsKey("description"))
+				{
+					this.description = json["description"].AsString();
+				}
+				if (json.ContainsKey("publisher"))
+				{
+					this.publisher = new AssetStoreContext.LabelAndId();
+					this.publisher.Initialize(json["publisher"]);
+				}
+				if (json.ContainsKey("category"))
+				{
+					this.category = new AssetStoreContext.LabelAndId();
+					this.category.Initialize(json["category"]);
+				}
+				if (json.ContainsKey("link"))
+				{
+					this.link = new AssetStoreContext.Link();
+					this.link.Initialize(json["link"]);
+				}
+			}
+			public override string ToString()
+			{
+				return string.Format("{{title={0}, id={1}, publisher={2}, category={3}, pubdate={8}, version={4}, version_id={5}, description={9}, link={10}, local_icon={6}, local_path={7}}}", new object[]
+				{
+					this.title,
+					this.id,
+					this.publisher,
+					this.category,
+					this.version,
+					this.version_id,
+					this.local_icon,
+					this.local_path,
+					this.pubdate,
+					this.description,
+					this.link
+				});
+			}
+		}
+		public class PackageList
+		{
+			public AssetStoreContext.Package[] results;
+		}
 		private static Regex standardPackageRe = new Regex("/Standard Packages/(Character\\ Controller|Glass\\ Refraction\\ \\(Pro\\ Only\\)|Image\\ Effects\\ \\(Pro\\ Only\\)|Light\\ Cookies|Light\\ Flares|Particles|Physic\\ Materials|Projectors|Scripts|Standard\\ Assets\\ \\(Mobile\\)|Skyboxes|Terrain\\ Assets|Toon\\ Shading|Tree\\ Creator|Water\\ \\(Basic\\)|Water\\ \\(Pro\\ Only\\))\\.unitypackage$", RegexOptions.IgnoreCase);
 		private static Regex generatedIDRe = new Regex("^\\{(.*)\\}$");
 		private static Regex invalidPathChars = new Regex("[^a-zA-Z0-9() _-]");
-		public bool docked;
-		public string initialOpenURL;
-		public AssetStoreWindow window;
-		private WebScriptObject JS
-		{
-			get
-			{
-				return this.window.scriptObject;
-			}
-		}
-		public WebScriptObject packages
-		{
-			get
-			{
-				WebScriptObject packageList = this.GetPackageList();
-				return packageList.Get("results");
-			}
-		}
+		internal bool docked;
+		internal string initialOpenURL;
+		internal AssetStoreWindow window;
 		private AssetStoreContext()
 		{
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SessionSetString(string key, string value);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string SessionGetString(string key);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SessionRemoveString(string key);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool SessionHasString(string key);
 		public string GetInitialOpenURL()
 		{
 			if (this.initialOpenURL != null)
@@ -50,57 +179,6 @@ namespace UnityEditor
 		public int[] GetLicenseFlags()
 		{
 			return InternalEditorUtility.GetLicenseFlags();
-		}
-		public void Download(WebScriptObject package, WebScriptObject downloadInfo)
-		{
-			string url = downloadInfo.Get("url");
-			string key = downloadInfo.Get("key");
-			string package_id = downloadInfo.Get("id");
-			string package_name = package.Get("title");
-			string publisher_name = package.Get("publisher.label");
-			string category_name = package.Get("category.label");
-			AssetStoreContext.Download(package_id, url, key, package_name, publisher_name, category_name, null);
-		}
-		public static string[] PackageStorePath(string publisher_name, string category_name, string package_name, string package_id, string url)
-		{
-			string[] array = new string[]
-			{
-				publisher_name,
-				category_name,
-				package_name
-			};
-			for (int i = 0; i < 3; i++)
-			{
-				array[i] = AssetStoreContext.invalidPathChars.Replace(array[i], string.Empty);
-			}
-			if (array[2] == string.Empty)
-			{
-				array[2] = AssetStoreContext.invalidPathChars.Replace(package_id, string.Empty);
-			}
-			if (array[2] == string.Empty)
-			{
-				array[2] = AssetStoreContext.invalidPathChars.Replace(url, string.Empty);
-			}
-			return array;
-		}
-		public static void Download(string package_id, string url, string key, string package_name, string publisher_name, string category_name, AssetStoreUtils.DownloadDoneCallback doneCallback)
-		{
-			string[] destination = AssetStoreContext.PackageStorePath(publisher_name, category_name, package_name, package_id, url);
-			JSONValue jSONValue = JSONParser.SimpleParse(AssetStoreUtils.CheckDownload(package_id, url, destination, key));
-			if (jSONValue.Get("in_progress").AsBool(true))
-			{
-				Debug.Log("Will not download " + package_name + ". Download is already in progress.");
-				return;
-			}
-			string a = jSONValue.Get("download.url").AsString(true);
-			string a2 = jSONValue.Get("download.key").AsString(true);
-			bool resumeOK = a == url && a2 == key;
-			JSONValue value = default(JSONValue);
-			value["url"] = url;
-			value["key"] = key;
-			JSONValue jSONValue2 = default(JSONValue);
-			jSONValue2["download"] = value;
-			AssetStoreUtils.Download(package_id, url, destination, key, jSONValue2.ToString(), resumeOK, doneCallback);
 		}
 		public string GetString(string key)
 		{
@@ -134,69 +212,9 @@ namespace UnityEditor
 		{
 			EditorPrefs.DeleteKey(key);
 		}
-		private bool IsBuiltinStandardAsset(string path)
-		{
-			return AssetStoreContext.standardPackageRe.IsMatch(path);
-		}
-		public WebScriptObject GetPackageList()
-		{
-			Dictionary<string, WebScriptObject> dictionary = new Dictionary<string, WebScriptObject>();
-			WebScriptObject webScriptObject = this.JS.ParseJSON("{}");
-			WebScriptObject webScriptObject2 = this.JS.ParseJSON("[]");
-			PackageInfo[] packageList = PackageInfo.GetPackageList();
-			PackageInfo[] array = packageList;
-			for (int i = 0; i < array.Length; i++)
-			{
-				PackageInfo packageInfo = array[i];
-				WebScriptObject webScriptObject3;
-				if (packageInfo.jsonInfo == string.Empty)
-				{
-					webScriptObject3 = this.JS.ParseJSON("{}");
-					webScriptObject3.Set<string>("title", Path.GetFileNameWithoutExtension(packageInfo.packagePath));
-					webScriptObject3.Set<string>("id", "{" + packageInfo.packagePath + "}");
-					if (this.IsBuiltinStandardAsset(packageInfo.packagePath))
-					{
-						webScriptObject3.Set<WebScriptObject>("publisher", this.JS.ParseJSON("{\"label\": \"Unity Technologies\",\"id\": \"1\"}"));
-						webScriptObject3.Set<WebScriptObject>("category", this.JS.ParseJSON("{\"label\": \"Prefab Packages\",\"id\": \"4\"}"));
-						webScriptObject3.Set<string>("version", "3.5.0.0");
-						webScriptObject3.Set<string>("version_id", "-1");
-					}
-				}
-				else
-				{
-					webScriptObject3 = this.JS.ParseJSON(packageInfo.jsonInfo);
-					if (webScriptObject3.Get("id") == null)
-					{
-						WebScriptObject webScriptObject4 = webScriptObject3.Get("link");
-						if (webScriptObject4 != null)
-						{
-							webScriptObject3.Set<string>("id", webScriptObject4.Get("id"));
-						}
-						else
-						{
-							webScriptObject3.Set<string>("id", "{" + packageInfo.packagePath + "}");
-						}
-					}
-				}
-				string key = webScriptObject3.Get("id");
-				webScriptObject3.Set<string>("local_icon", packageInfo.iconURL);
-				webScriptObject3.Set<string>("local_path", packageInfo.packagePath);
-				if (!dictionary.ContainsKey(key) || dictionary[key].Get("version_id") == null || (webScriptObject3.Get("version_id") != null && dictionary[key].Get("version_id") <= webScriptObject3.Get("version_id")))
-				{
-					dictionary[key] = webScriptObject3;
-				}
-			}
-			int num = 0;
-			foreach (KeyValuePair<string, WebScriptObject> current in dictionary)
-			{
-				webScriptObject2.Set<WebScriptObject>(num++, current.Value);
-			}
-			webScriptObject.Set<WebScriptObject>("results", webScriptObject2);
-			return webScriptObject;
-		}
 		public int GetSkinIndex()
 		{
-			return (!EditorGUIUtility.isProSkin) ? 0 : 1;
+			return EditorGUIUtility.skinIndex;
 		}
 		public bool GetDockedStatus()
 		{
@@ -236,49 +254,124 @@ namespace UnityEditor
 			Debug.LogError("Unknown package ID " + id);
 			return false;
 		}
-		public void MakeMenu(WebScriptObject contextMenu)
-		{
-			this.MakeMenu(contextMenu, 0f, 0f);
-		}
-		public void MakeMenu(WebScriptObject contextMenu, float deltaX, float deltaY)
-		{
-			WebScriptObject webScriptObject = contextMenu.Get("commands");
-			int num = webScriptObject.Get("length");
-			string[] array = new string[num];
-			string[] array2 = new string[num];
-			for (int i = 0; i < webScriptObject.Get("length"); i++)
-			{
-				WebScriptObject webScriptObject2 = webScriptObject.Get(i);
-				array[i] = webScriptObject2.Get("label");
-				array2[i] = webScriptObject2.Get("action");
-			}
-			Vector2 mousePosition = Event.current.mousePosition;
-			Rect position = new Rect(mousePosition.x + deltaX, mousePosition.y + deltaY, 0f, 0f);
-			EditorUtility.DisplayCustomMenu(position, array, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), array2);
-		}
 		public void OpenBrowser(string url)
 		{
 			Application.OpenURL(url);
 		}
-		private void ContextMenuClick(object userData, string[] options, int selected)
+		public void Download(AssetStoreContext.Package package, AssetStoreContext.DownloadInfo downloadInfo)
 		{
-			if (selected >= 0)
-			{
-				string[] array = userData as string[];
-				this.JS.EvalJavaScript(array[selected]);
-			}
+			AssetStoreContext.Download(downloadInfo.id, downloadInfo.url, downloadInfo.key, package.title, package.publisher.label, package.category.label, null);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SessionSetString(string key, string value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string SessionGetString(string key);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SessionRemoveString(string key);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool SessionHasString(string key);
+		public static void Download(string package_id, string url, string key, string package_name, string publisher_name, string category_name, AssetStoreUtils.DownloadDoneCallback doneCallback)
+		{
+			string[] destination = AssetStoreContext.PackageStorePath(publisher_name, category_name, package_name, package_id, url);
+			JSONValue jSONValue = JSONParser.SimpleParse(AssetStoreUtils.CheckDownload(package_id, url, destination, key));
+			if (jSONValue.Get("in_progress").AsBool(true))
+			{
+				Debug.Log("Will not download " + package_name + ". Download is already in progress.");
+				return;
+			}
+			string a = jSONValue.Get("download.url").AsString(true);
+			string a2 = jSONValue.Get("download.key").AsString(true);
+			bool resumeOK = a == url && a2 == key;
+			JSONValue value = default(JSONValue);
+			value["url"] = url;
+			value["key"] = key;
+			JSONValue jSONValue2 = default(JSONValue);
+			jSONValue2["download"] = value;
+			AssetStoreUtils.Download(package_id, url, destination, key, jSONValue2.ToString(), resumeOK, doneCallback);
+		}
+		public static string[] PackageStorePath(string publisher_name, string category_name, string package_name, string package_id, string url)
+		{
+			string[] array = new string[]
+			{
+				publisher_name,
+				category_name,
+				package_name
+			};
+			for (int i = 0; i < 3; i++)
+			{
+				array[i] = AssetStoreContext.invalidPathChars.Replace(array[i], string.Empty);
+			}
+			if (array[2] == string.Empty)
+			{
+				array[2] = AssetStoreContext.invalidPathChars.Replace(package_id, string.Empty);
+			}
+			if (array[2] == string.Empty)
+			{
+				array[2] = AssetStoreContext.invalidPathChars.Replace(url, string.Empty);
+			}
+			return array;
+		}
+		public AssetStoreContext.PackageList GetPackageList()
+		{
+			Dictionary<string, AssetStoreContext.Package> dictionary = new Dictionary<string, AssetStoreContext.Package>();
+			PackageInfo[] packageList = PackageInfo.GetPackageList();
+			PackageInfo[] array = packageList;
+			int i = 0;
+			while (i < array.Length)
+			{
+				PackageInfo packageInfo = array[i];
+				AssetStoreContext.Package package = new AssetStoreContext.Package();
+				if (packageInfo.jsonInfo == string.Empty)
+				{
+					package.title = Path.GetFileNameWithoutExtension(packageInfo.packagePath);
+					package.id = packageInfo.packagePath;
+					if (this.IsBuiltinStandardAsset(packageInfo.packagePath))
+					{
+						package.publisher = new AssetStoreContext.LabelAndId
+						{
+							label = "Unity Technologies",
+							id = "1"
+						};
+						package.category = new AssetStoreContext.LabelAndId
+						{
+							label = "Prefab Packages",
+							id = "4"
+						};
+						package.version = "3.5.0.0";
+					}
+					goto IL_144;
+				}
+				JSONValue json = JSONParser.SimpleParse(packageInfo.jsonInfo);
+				if (!json.IsNull())
+				{
+					package.Initialize(json);
+					if (package.id != null)
+					{
+						goto IL_144;
+					}
+					JSONValue jSONValue = json.Get("link.id");
+					if (!jSONValue.IsNull())
+					{
+						package.id = jSONValue.AsString();
+						goto IL_144;
+					}
+					package.id = packageInfo.packagePath;
+					goto IL_144;
+				}
+				IL_203:
+				i++;
+				continue;
+				IL_144:
+				package.local_icon = packageInfo.iconURL;
+				package.local_path = packageInfo.packagePath;
+				if (!dictionary.ContainsKey(package.id) || dictionary[package.id].version_id == null || dictionary[package.id].version_id == "-1" || (package.version_id != null && package.version_id != "-1" && int.Parse(dictionary[package.id].version_id) <= int.Parse(package.version_id)))
+				{
+					dictionary[package.id] = package;
+					goto IL_203;
+				}
+				goto IL_203;
+			}
+			AssetStoreContext.Package[] results = dictionary.Values.ToArray<AssetStoreContext.Package>();
+			return new AssetStoreContext.PackageList
+			{
+				results = results
+			};
+		}
+		private bool IsBuiltinStandardAsset(string path)
+		{
+			return AssetStoreContext.standardPackageRe.IsMatch(path);
+		}
 	}
 }

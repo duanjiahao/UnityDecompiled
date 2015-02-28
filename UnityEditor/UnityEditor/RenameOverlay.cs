@@ -28,6 +28,8 @@ namespace UnityEditor
 		private GUIView m_ClientGUIView;
 		[NonSerialized]
 		private Rect m_LastScreenPosition;
+		[NonSerialized]
+		private bool m_UndoRedoWasPerformed;
 		private string k_RenameOverlayFocusName = "RenameOverlayField";
 		private double s_RenameEndedTime;
 		private static GUIStyle s_DefaultTextFieldStyle = null;
@@ -128,9 +130,12 @@ namespace UnityEditor
 				this.RepaintClientView();
 			}
 			this.m_IsWaitingForDelay = false;
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));
 		}
 		public void EndRename(bool acceptChanges)
 		{
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));
 			if (!this.m_IsRenaming)
 			{
 				return;
@@ -162,6 +167,11 @@ namespace UnityEditor
 			this.m_UserData = 0;
 			this.m_IsWaitingForDelay = false;
 			this.m_OriginalEventType = EventType.Ignore;
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));
+		}
+		private void UndoRedoWasPerformed()
+		{
+			this.m_UndoRedoWasPerformed = true;
 		}
 		public bool HasKeyboardFocus()
 		{
@@ -204,6 +214,12 @@ namespace UnityEditor
 			}
 			if (!this.m_IsRenaming)
 			{
+				return false;
+			}
+			if (this.m_UndoRedoWasPerformed)
+			{
+				this.m_UndoRedoWasPerformed = false;
+				this.EndRename(false);
 				return false;
 			}
 			if (this.m_EditFieldRect.width <= 0f || this.m_EditFieldRect.height <= 0f || this.m_TextFieldControlID == 0)

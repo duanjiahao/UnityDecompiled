@@ -4,15 +4,6 @@ namespace UnityEngine
 {
 	public sealed class TerrainData : Object
 	{
-		public extern PhysicMaterial physicMaterial
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
 		public extern int heightmapWidth
 		{
 			[WrapperlessIcall]
@@ -52,6 +43,15 @@ namespace UnityEngine
 			{
 				this.INTERNAL_set_size(ref value);
 			}
+		}
+		public extern float thickness
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 		public extern float wavingGrassStrength
 		{
@@ -134,6 +134,12 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		public extern int treeInstanceCount
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		public extern TreePrototype[] treePrototypes
 		{
@@ -305,6 +311,16 @@ namespace UnityEngine
 		private extern void Internal_SetDetailLayer(int xBase, int yBase, int totalWidth, int totalHeight, int detailIndex, int[,] data);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern TreeInstance GetTreeInstance(int index);
+		public void SetTreeInstance(int index, TreeInstance instance)
+		{
+			TerrainData.INTERNAL_CALL_SetTreeInstance(this, index, ref instance);
+		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetTreeInstance(TerrainData self, int index, ref TreeInstance instance);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveTreePrototype(int index);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -338,9 +354,6 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Texture2D GetAlphamapTexture(int index);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern bool HasTreeInstances();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddTree(out TreeInstance tree);

@@ -70,7 +70,23 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern int graphicsPixelFillrate
+		[Obsolete("graphicsPixelFillrate is no longer supported in Unity 5.0+.")]
+		public static int graphicsPixelFillrate
+		{
+			get
+			{
+				return -1;
+			}
+		}
+		[Obsolete("Vertex program support is required in Unity 5.0+")]
+		public static bool supportsVertexPrograms
+		{
+			get
+			{
+				return true;
+			}
+		}
+		public static extern bool graphicsMultiThreaded
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -131,12 +147,6 @@ namespace UnityEngine
 			get;
 		}
 		public static extern int supportsStencil
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern bool supportsVertexPrograms
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -205,5 +215,8 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SupportsRenderTextureFormat(RenderTextureFormat format);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool SupportsTextureFormat(TextureFormat format);
 	}
 }

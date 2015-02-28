@@ -92,12 +92,12 @@ namespace UnityEditor.Scripting
 		[DebuggerHidden]
 		private static IEnumerable<string> SearchRecursive(string dir, string mask)
 		{
-			PragmaFixing30.<SearchRecursive>c__Iterator4 <SearchRecursive>c__Iterator = new PragmaFixing30.<SearchRecursive>c__Iterator4();
+			PragmaFixing30.<SearchRecursive>c__Iterator6 <SearchRecursive>c__Iterator = new PragmaFixing30.<SearchRecursive>c__Iterator6();
 			<SearchRecursive>c__Iterator.dir = dir;
 			<SearchRecursive>c__Iterator.mask = mask;
 			<SearchRecursive>c__Iterator.<$>dir = dir;
 			<SearchRecursive>c__Iterator.<$>mask = mask;
-			PragmaFixing30.<SearchRecursive>c__Iterator4 expr_23 = <SearchRecursive>c__Iterator;
+			PragmaFixing30.<SearchRecursive>c__Iterator6 expr_23 = <SearchRecursive>c__Iterator;
 			expr_23.$PC = -2;
 			return expr_23;
 		}

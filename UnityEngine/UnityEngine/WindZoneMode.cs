@@ -1,7 +1,7 @@
 using System;
 namespace UnityEngine
 {
-	internal enum WindZoneMode
+	public enum WindZoneMode
 	{
 		Directional,
 		Spherical

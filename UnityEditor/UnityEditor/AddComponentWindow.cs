@@ -13,9 +13,8 @@ namespace UnityEditor
 	{
 		internal enum Language
 		{
-			JavaScript,
 			CSharp,
-			Boo
+			JavaScript
 		}
 		private class Element : IComparable
 		{
@@ -91,17 +90,16 @@ namespace UnityEditor
 			{
 				get
 				{
-					switch (AddComponentWindow.s_Lang)
+					AddComponentWindow.Language s_Lang = AddComponentWindow.s_Lang;
+					if (s_Lang == AddComponentWindow.Language.CSharp)
 					{
-					case AddComponentWindow.Language.JavaScript:
-						return "js";
-					case AddComponentWindow.Language.CSharp:
 						return "cs";
-					case AddComponentWindow.Language.Boo:
-						return "boo";
-					default:
+					}
+					if (s_Lang != AddComponentWindow.Language.JavaScript)
+					{
 						throw new ArgumentOutOfRangeException();
 					}
+					return "js";
 				}
 			}
 			private string templatePath
@@ -109,17 +107,16 @@ namespace UnityEditor
 				get
 				{
 					string path = Path.Combine(EditorApplication.applicationContentsPath, "Resources/ScriptTemplates");
-					switch (AddComponentWindow.s_Lang)
+					AddComponentWindow.Language s_Lang = AddComponentWindow.s_Lang;
+					if (s_Lang == AddComponentWindow.Language.CSharp)
 					{
-					case AddComponentWindow.Language.JavaScript:
-						return Path.Combine(path, "80-Javascript-NewBehaviourScript.js.txt");
-					case AddComponentWindow.Language.CSharp:
 						return Path.Combine(path, "81-C# Script-NewBehaviourScript.cs.txt");
-					case AddComponentWindow.Language.Boo:
-						return Path.Combine(path, "82-Boo Script-NewBehaviourScript.boo.txt");
-					default:
+					}
+					if (s_Lang != AddComponentWindow.Language.JavaScript)
+					{
 						throw new ArgumentOutOfRangeException();
 					}
+					return Path.Combine(path, "82-Javascript-NewBehaviourScript.js.txt");
 				}
 			}
 			public NewScriptElement() : base(1, "New Script")
@@ -264,6 +261,7 @@ namespace UnityEditor
 				this.previewHeader.padding.bottom += 2;
 			}
 		}
+		private const AddComponentWindow.Language kDefaultLanguage = AddComponentWindow.Language.CSharp;
 		private const int kHeaderHeight = 30;
 		private const int kWindowHeight = 320;
 		private const int kHelpHeight = 0;
@@ -284,6 +282,7 @@ namespace UnityEditor
 		private int m_AnimTarget = 1;
 		private long m_LastTime;
 		private bool m_ScrollToSelected;
+		private string m_DelayedSearch;
 		private string m_Search = string.Empty;
 		internal static string className
 		{
@@ -340,6 +339,13 @@ namespace UnityEditor
 				return children[this.activeParent.selectedIndex];
 			}
 		}
+		private bool isAnimating
+		{
+			get
+			{
+				return this.m_Anim != (float)this.m_AnimTarget;
+			}
+		}
 		static AddComponentWindow()
 		{
 			AddComponentWindow.s_DirtyList = true;
@@ -347,7 +353,12 @@ namespace UnityEditor
 		private void OnEnable()
 		{
 			AddComponentWindow.s_AddComponentWindow = this;
-			AddComponentWindow.s_Lang = (AddComponentWindow.Language)EditorPrefs.GetInt("NewScriptLanguage", 1);
+			AddComponentWindow.s_Lang = (AddComponentWindow.Language)EditorPrefs.GetInt("NewScriptLanguage", 0);
+			if (!Enum.IsDefined(typeof(AddComponentWindow.Language), AddComponentWindow.s_Lang))
+			{
+				EditorPrefs.SetInt("NewScriptLanguage", 0);
+				AddComponentWindow.s_Lang = AddComponentWindow.Language.CSharp;
+			}
 			this.m_Search = EditorPrefs.GetString("ComponentSearchString", string.Empty);
 		}
 		private void OnDisable()
@@ -501,20 +512,28 @@ namespace UnityEditor
 			rect.width -= 16f;
 			GUI.SetNextControlName("ComponentSearch");
 			EditorGUI.BeginDisabledGroup(this.activeParent is AddComponentWindow.NewScriptElement);
-			string text = EditorGUI.SearchField(rect, this.m_Search);
-			EditorGUI.EndDisabledGroup();
-			if (text != this.m_Search)
+			string text = EditorGUI.SearchField(rect, this.m_DelayedSearch ?? this.m_Search);
+			if (text != this.m_Search || this.m_DelayedSearch != null)
 			{
-				this.m_Search = text;
-				EditorPrefs.SetString("ComponentSearchString", this.m_Search);
-				this.RebuildSearch();
+				if (!this.isAnimating)
+				{
+					this.m_Search = (this.m_DelayedSearch ?? text);
+					EditorPrefs.SetString("ComponentSearchString", this.m_Search);
+					this.RebuildSearch();
+					this.m_DelayedSearch = null;
+				}
+				else
+				{
+					this.m_DelayedSearch = text;
+				}
 			}
+			EditorGUI.EndDisabledGroup();
 			this.ListGUI(this.activeTree, this.m_Anim, this.GetElementRelative(0), this.GetElementRelative(-1));
 			if (this.m_Anim < 1f)
 			{
 				this.ListGUI(this.activeTree, this.m_Anim + 1f, this.GetElementRelative(-1), this.GetElementRelative(-2));
 			}
-			if (this.m_Anim != (float)this.m_AnimTarget && Event.current.type == EventType.Repaint)
+			if (this.isAnimating && Event.current.type == EventType.Repaint)
 			{
 				long ticks = DateTime.Now.Ticks;
 				float num = (float)(ticks - this.m_LastTime) / 1E+07f;

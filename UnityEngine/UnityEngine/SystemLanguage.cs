@@ -43,6 +43,8 @@ namespace UnityEngine
 		Turkish,
 		Ukrainian,
 		Vietnamese,
+		ChineseSimplified,
+		ChineseTraditional,
 		Unknown,
 		Hungarian = 18
 	}

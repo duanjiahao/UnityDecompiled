@@ -305,7 +305,7 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SupportsStencil(RenderTexture rt);
-		[Obsolete("RenderTexture.SetBorderColor was removed", true)]
+		[Obsolete("SetBorderColor is no longer supported.", true)]
 		public void SetBorderColor(Color color)
 		{
 		}

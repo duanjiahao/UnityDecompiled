@@ -20,6 +20,7 @@ namespace UnityEditor.VersionControl
 		private Task taskAdd;
 		private int submitResultCode = 256;
 		private string submitErrorMessage;
+		private int m_TextAreaControlID;
 		public void OnEnable()
 		{
 			base.position = new Rect(100f, 100f, 700f, 395f);
@@ -31,6 +32,10 @@ namespace UnityEditor.VersionControl
 			this.taskSubmit = null;
 			this.submitResultCode = 256;
 			this.submitErrorMessage = null;
+		}
+		public void OnDisable()
+		{
+			this.m_TextAreaControlID = 0;
 		}
 		public static void Open(AssetList list, bool submit)
 		{
@@ -155,6 +160,11 @@ namespace UnityEditor.VersionControl
 			{
 				GUI.enabled = false;
 			}
+			Event current = Event.current;
+			if (current.isKey && current.keyCode == KeyCode.Escape)
+			{
+				base.Close();
+			}
 			GUILayout.Label("Description", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			if (this.taskStatus != null && this.taskStatus.resultCode != 0)
 			{
@@ -194,6 +204,15 @@ namespace UnityEditor.VersionControl
 			{
 				GUILayout.Height(150f)
 			}).Trim();
+			if (this.m_TextAreaControlID == 0)
+			{
+				this.m_TextAreaControlID = EditorGUIUtility.s_LastControlID;
+			}
+			if (this.m_TextAreaControlID != 0)
+			{
+				GUIUtility.keyboardControl = this.m_TextAreaControlID;
+				EditorGUIUtility.editingTextField = true;
+			}
 			GUI.enabled = true;
 			GUILayout.Label("Files", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
@@ -231,7 +250,8 @@ namespace UnityEditor.VersionControl
 				{
 					bool enabled = GUI.enabled;
 					GUI.enabled = (this.assetList != null && this.assetList.Count > 0 && !string.IsNullOrEmpty(this.description));
-					if (GUILayout.Button("Submit", new GUILayoutOption[0]))
+					bool flag2 = current.isKey && current.shift && current.keyCode == KeyCode.Return;
+					if (GUILayout.Button("Submit", new GUILayoutOption[0]) || flag2)
 					{
 						this.Save(true);
 					}
@@ -240,10 +260,10 @@ namespace UnityEditor.VersionControl
 			}
 			else
 			{
-				bool flag2 = (this.submitResultCode & 1) != 0;
-				GUI.enabled = flag2;
+				bool flag3 = (this.submitResultCode & 1) != 0;
+				GUI.enabled = flag3;
 				string text = string.Empty;
-				if (flag2)
+				if (flag3)
 				{
 					text = "Finished successfully";
 				}

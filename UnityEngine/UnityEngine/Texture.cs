@@ -80,14 +80,11 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public Vector2 texelSize
+		public extern Vector2 texelSize
 		{
-			get
-			{
-				Vector2 result;
-				Texture.Internal_GetTexelSize(this, out result);
-				return result;
-			}
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -98,9 +95,6 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetHeight(Texture mono);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_GetTexelSize(Texture tex, out Vector2 output);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern IntPtr GetNativeTexturePtr();

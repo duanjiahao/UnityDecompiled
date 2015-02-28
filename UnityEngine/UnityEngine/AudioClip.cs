@@ -56,7 +56,32 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		[Obsolete("Use AudioClip.loadState instead to get more detailed information about the loading process.")]
 		public extern bool isReadyToPlay
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern AudioClipLoadType loadType
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern bool preloadAudioData
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern AudioDataLoadState loadState
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+		public extern bool loadInBackground
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -64,19 +89,40 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void GetData(float[] data, int offsetSamples);
+		public extern bool LoadAudioData();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetData(float[] data, int offsetSamples);
+		public extern bool UnloadAudioData();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetData(float[] data, int offsetSamples);
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool SetData(float[] data, int offsetSamples);
+		[Obsolete("The _3D argument of AudioClip is deprecated. Use the spatialBlend property of AudioSource instead to morph between 2D and 3D playback.")]
 		public static AudioClip Create(string name, int lengthSamples, int channels, int frequency, bool _3D, bool stream)
 		{
-			return AudioClip.Create(name, lengthSamples, channels, frequency, _3D, stream, null, null);
+			return AudioClip.Create(name, lengthSamples, channels, frequency, stream);
 		}
+		[Obsolete("The _3D argument of AudioClip is deprecated. Use the spatialBlend property of AudioSource instead to morph between 2D and 3D playback.")]
 		public static AudioClip Create(string name, int lengthSamples, int channels, int frequency, bool _3D, bool stream, AudioClip.PCMReaderCallback pcmreadercallback)
 		{
-			return AudioClip.Create(name, lengthSamples, channels, frequency, _3D, stream, pcmreadercallback, null);
+			return AudioClip.Create(name, lengthSamples, channels, frequency, stream, pcmreadercallback, null);
 		}
+		[Obsolete("The _3D argument of AudioClip is deprecated. Use the spatialBlend property of AudioSource instead to morph between 2D and 3D playback.")]
 		public static AudioClip Create(string name, int lengthSamples, int channels, int frequency, bool _3D, bool stream, AudioClip.PCMReaderCallback pcmreadercallback, AudioClip.PCMSetPositionCallback pcmsetpositioncallback)
+		{
+			return AudioClip.Create(name, lengthSamples, channels, frequency, stream, pcmreadercallback, pcmsetpositioncallback);
+		}
+		public static AudioClip Create(string name, int lengthSamples, int channels, int frequency, bool stream)
+		{
+			return AudioClip.Create(name, lengthSamples, channels, frequency, stream, null, null);
+		}
+		public static AudioClip Create(string name, int lengthSamples, int channels, int frequency, bool stream, AudioClip.PCMReaderCallback pcmreadercallback)
+		{
+			return AudioClip.Create(name, lengthSamples, channels, frequency, stream, pcmreadercallback, null);
+		}
+		public static AudioClip Create(string name, int lengthSamples, int channels, int frequency, bool stream, AudioClip.PCMReaderCallback pcmreadercallback, AudioClip.PCMSetPositionCallback pcmsetpositioncallback)
 		{
 			if (name == null)
 			{
@@ -105,7 +151,7 @@ namespace UnityEngine
 				AudioClip expr_6F = audioClip;
 				expr_6F.m_PCMSetPositionCallback = (AudioClip.PCMSetPositionCallback)Delegate.Combine(expr_6F.m_PCMSetPositionCallback, pcmsetpositioncallback);
 			}
-			audioClip.Init_Internal(name, lengthSamples, channels, frequency, _3D, stream);
+			audioClip.Init_Internal(name, lengthSamples, channels, frequency, stream);
 			return audioClip;
 		}
 		private void InvokePCMReaderCallback_Internal(float[] data)
@@ -127,6 +173,6 @@ namespace UnityEngine
 		private static extern AudioClip Construct_Internal();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Init_Internal(string name, int lengthSamples, int channels, int frequency, bool _3D, bool stream);
+		private extern void Init_Internal(string name, int lengthSamples, int channels, int frequency, bool stream);
 	}
 }

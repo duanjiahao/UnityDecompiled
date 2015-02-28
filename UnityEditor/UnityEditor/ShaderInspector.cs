@@ -8,23 +8,14 @@ namespace UnityEditor
 	{
 		internal class Styles
 		{
-			public Texture2D errorIcon = EditorGUIUtility.LoadIcon("console.erroricon.sml");
-			public Texture2D warningIcon = EditorGUIUtility.LoadIcon("console.warnicon.sml");
-			public GUIContent showSurface = EditorGUIUtility.TextContent("ShaderInspector.ShowSurface");
-			public GUIContent showCurrent = EditorGUIUtility.TextContent("ShaderInspector.ShowCurrent");
-			public GUIContent showAll = EditorGUIUtility.TextContent("ShaderInspector.ShowAll");
-			public GUIStyle messageStyle = "CN StatusInfo";
-			public GUIStyle evenBackground = "CN EntryBackEven";
-		}
-		internal class ShaderContextData
-		{
-			internal Shader shader;
-			internal int index;
-			internal ShaderContextData(Shader s, int i)
-			{
-				this.shader = s;
-				this.index = i;
-			}
+			public static Texture2D errorIcon = EditorGUIUtility.LoadIcon("console.erroricon.sml");
+			public static Texture2D warningIcon = EditorGUIUtility.LoadIcon("console.warnicon.sml");
+			public static GUIContent showSurface = EditorGUIUtility.TextContent("ShaderInspector.ShowSurface");
+			public static GUIContent showCurrent = new GUIContent("Compile and show code | ▾");
+			public static GUIStyle messageStyle = "CN StatusInfo";
+			public static GUIStyle evenBackground = "CN EntryBackEven";
+			public static GUIContent no = EditorGUIUtility.TextContent("ShaderInspector.No");
+			public static GUIContent builtinSurfaceShader = EditorGUIUtility.TextContent("ShaderInspector.BuiltinSurfaceShader");
 		}
 		private const float kSpace = 5f;
 		private static readonly string[] kPropertyTypes = new string[]
@@ -44,16 +35,6 @@ namespace UnityEditor
 			"Cubemap: ",
 			"Any texture: "
 		};
-		private static readonly string[] kShaderLevels = new string[]
-		{
-			"Fixed function",
-			"SM1.x",
-			"SM2.0",
-			"SM3.0",
-			"SM4.0",
-			"SM5.0"
-		};
-		internal static ShaderInspector.Styles ms_Styles;
 		private static readonly int kErrorViewHash = "ShaderErrorView".GetHashCode();
 		private Vector2 m_ScrollPosition = Vector2.zero;
 		public virtual void OnEnable()
@@ -72,10 +53,6 @@ namespace UnityEditor
 		}
 		public override void OnInspectorGUI()
 		{
-			if (ShaderInspector.ms_Styles == null)
-			{
-				ShaderInspector.ms_Styles = new ShaderInspector.Styles();
-			}
 			Shader shader = this.target as Shader;
 			if (shader == null)
 			{
@@ -83,24 +60,38 @@ namespace UnityEditor
 			}
 			GUI.enabled = true;
 			EditorGUI.indentLevel = 0;
-			if (!shader.isSupported)
-			{
-				GUILayout.Label("Shader has errors or is not supported by your graphics card", EditorStyles.helpBox, new GUILayoutOption[0]);
-			}
-			ShaderInspector.ShowSurfaceShaderButton(shader);
+			this.ShowShaderCodeArea(shader);
 			if (shader.isSupported)
 			{
-				EditorGUILayout.LabelField("Cast shadows", (!ShaderUtil.HasShadowCasterPass(shader) || !ShaderUtil.HasShadowCollectorPass(shader)) ? "no" : "yes", new GUILayoutOption[0]);
+				EditorGUILayout.LabelField("Cast shadows", (!ShaderUtil.HasShadowCasterPass(shader)) ? "no" : "yes", new GUILayoutOption[0]);
 				EditorGUILayout.LabelField("Render queue", ShaderUtil.GetRenderQueue(shader).ToString(CultureInfo.InvariantCulture), new GUILayoutOption[0]);
 				EditorGUILayout.LabelField("LOD", ShaderUtil.GetLOD(shader).ToString(CultureInfo.InvariantCulture), new GUILayoutOption[0]);
-				EditorGUILayout.LabelField("Geometry", ShaderUtil.GetSourceChannels(shader), new GUILayoutOption[0]);
-				EditorGUILayout.LabelField("Vertex shader", ShaderInspector.kShaderLevels[(int)ShaderUtil.GetVertexModel(shader)], new GUILayoutOption[0]);
-				EditorGUILayout.LabelField("Fragment shader", ShaderInspector.kShaderLevels[(int)ShaderUtil.GetFragmentModel(shader)], new GUILayoutOption[0]);
 				EditorGUILayout.LabelField("Ignore projector", (!ShaderUtil.DoesIgnoreProjector(shader)) ? "no" : "yes", new GUILayoutOption[0]);
+				string label;
+				switch (shader.disableBatching)
+				{
+				case DisableBatchingType.False:
+					label = "no";
+					break;
+				case DisableBatchingType.True:
+					label = "yes";
+					break;
+				case DisableBatchingType.WhenLODFading:
+					label = "when LOD fading is on";
+					break;
+				default:
+					label = "unknown";
+					break;
+				}
+				EditorGUILayout.LabelField("Disable batching", label, new GUILayoutOption[0]);
 				ShaderInspector.ShowShaderProperties(shader);
 			}
-			this.ShowShaderErrors(shader);
-			ShaderInspector.ShowDebuggingData(shader);
+		}
+		private void ShowShaderCodeArea(Shader s)
+		{
+			ShaderInspector.ShowSurfaceShaderButton(s);
+			this.ShowCompiledCodeButton(s);
+			this.ShowShaderErrors(s);
 		}
 		private static void ShowShaderProperties(Shader s)
 		{
@@ -113,56 +104,6 @@ namespace UnityEditor
 				string label = ShaderInspector.GetPropertyType(s, i) + ShaderUtil.GetPropertyDescription(s, i);
 				EditorGUILayout.LabelField(propertyName, label, new GUILayoutOption[0]);
 			}
-		}
-		private static void ShowShaderVariantsUI(Shader s)
-		{
-			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUILayout.PrefixLabel("Variants", EditorStyles.miniButton);
-			GUILayout.Label(ShaderUtil.GetComboCount(s).ToString(CultureInfo.InvariantCulture), new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			});
-			if (GUILayout.Button("Show", EditorStyles.miniButton, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			}))
-			{
-				ShaderUtil.OpenShaderCombinations(s);
-				GUIUtility.ExitGUI();
-			}
-			EditorGUILayout.EndHorizontal();
-		}
-		private static void ShowCompiledShaderButtons(Shader s)
-		{
-			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUILayout.PrefixLabel("Compiled code", EditorStyles.miniButton);
-			if (GUILayout.Button(ShaderInspector.ms_Styles.showCurrent, EditorStyles.miniButton, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			}))
-			{
-				ShaderUtil.OpenCompiledShader(s, false);
-				GUIUtility.ExitGUI();
-			}
-			if (GUILayout.Button(ShaderInspector.ms_Styles.showAll, EditorStyles.miniButton, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			}))
-			{
-				ShaderUtil.OpenCompiledShader(s, true);
-				GUIUtility.ExitGUI();
-			}
-			EditorGUILayout.EndHorizontal();
-		}
-		private void CopyShaderError(object o)
-		{
-			ShaderInspector.ShaderContextData shaderContextData = o as ShaderInspector.ShaderContextData;
-			if (shaderContextData == null)
-			{
-				return;
-			}
-			string shaderErrorMessage = ShaderUtil.GetShaderErrorMessage(shaderContextData.shader, shaderContextData.index);
-			EditorGUIUtility.systemCopyBuffer = shaderErrorMessage;
 		}
 		private void ShowShaderErrors(Shader s)
 		{
@@ -180,12 +121,12 @@ namespace UnityEditor
 				GUILayout.MinHeight(minHeight)
 			});
 			EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
-			float height = ShaderInspector.ms_Styles.messageStyle.CalcHeight(EditorGUIUtility.TempContent(ShaderInspector.ms_Styles.errorIcon), 100f);
+			float height = ShaderInspector.Styles.messageStyle.CalcHeight(EditorGUIUtility.TempContent(ShaderInspector.Styles.errorIcon), 100f);
 			Event current = Event.current;
 			for (int i = 0; i < errorCount; i++)
 			{
 				Rect controlRect = EditorGUILayout.GetControlRect(false, height, new GUILayoutOption[0]);
-				string shaderErrorMessage = ShaderUtil.GetShaderErrorMessage(s, i);
+				string shaderErrorMessage = ShaderUtil.GetShaderErrorMessage(s, i, false);
 				string shaderErrorPlatform = ShaderUtil.GetShaderErrorPlatform(s, i);
 				bool shaderErrorWarning = ShaderUtil.GetShaderErrorWarning(s, i);
 				string shaderErrorFile = ShaderUtil.GetShaderErrorFile(s, i, true);
@@ -197,14 +138,7 @@ namespace UnityEditor
 					{
 						string shaderErrorFile2 = ShaderUtil.GetShaderErrorFile(s, i, false);
 						UnityEngine.Object @object = (!string.IsNullOrEmpty(shaderErrorFile2)) ? AssetDatabase.LoadMainAssetAtPath(shaderErrorFile2) : null;
-						if (@object != null)
-						{
-							AssetDatabase.OpenAsset(@object, shaderErrorLine);
-						}
-						else
-						{
-							AssetDatabase.OpenAsset(s, shaderErrorLine);
-						}
+						AssetDatabase.OpenAsset(@object ?? s, shaderErrorLine);
 						GUIUtility.ExitGUI();
 					}
 					current.Use();
@@ -213,12 +147,17 @@ namespace UnityEditor
 				{
 					current.Use();
 					GenericMenu genericMenu = new GenericMenu();
-					genericMenu.AddItem(new GUIContent("Copy error text"), false, new GenericMenu.MenuFunction2(this.CopyShaderError), new ShaderInspector.ShaderContextData(s, i));
+					int errorIndex = i;
+					genericMenu.AddItem(new GUIContent("Copy error text"), false, delegate
+					{
+						string shaderErrorMessage2 = ShaderUtil.GetShaderErrorMessage(s, errorIndex, true);
+						EditorGUIUtility.systemCopyBuffer = shaderErrorMessage2;
+					});
 					genericMenu.ShowAsContext();
 				}
 				if (current.type == EventType.Repaint && (i & 1) == 0)
 				{
-					GUIStyle evenBackground = ShaderInspector.ms_Styles.evenBackground;
+					GUIStyle evenBackground = ShaderInspector.Styles.evenBackground;
 					evenBackground.Draw(controlRect, false, false, false, false);
 				}
 				Rect rect = controlRect;
@@ -258,17 +197,41 @@ namespace UnityEditor
 				}
 				Rect position2 = controlRect;
 				position2.xMax = position.xMin;
-				GUI.Label(position2, EditorGUIUtility.TempContent(shaderErrorMessage, (!shaderErrorWarning) ? ShaderInspector.ms_Styles.errorIcon : ShaderInspector.ms_Styles.warningIcon), ShaderInspector.ms_Styles.messageStyle);
+				GUI.Label(position2, EditorGUIUtility.TempContent(shaderErrorMessage, (!shaderErrorWarning) ? ShaderInspector.Styles.errorIcon : ShaderInspector.Styles.warningIcon), ShaderInspector.Styles.messageStyle);
 			}
 			EditorGUIUtility.SetIconSize(Vector2.zero);
 			GUILayout.EndScrollView();
 		}
-		private static void ShowDebuggingData(Shader s)
+		private void ShowCompiledCodeButton(Shader s)
 		{
-			GUILayout.Space(5f);
-			GUILayout.Label("Debugging:", EditorStyles.boldLabel, new GUILayoutOption[0]);
-			ShaderInspector.ShowCompiledShaderButtons(s);
-			ShaderInspector.ShowShaderVariantsUI(s);
+			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			EditorGUILayout.PrefixLabel("Compiled code", EditorStyles.miniButton);
+			bool flag = ShaderUtil.HasShaderSnippets(s) || ShaderUtil.HasSurfaceShaders(s);
+			if (flag)
+			{
+				GUIContent showCurrent = ShaderInspector.Styles.showCurrent;
+				Rect rect = GUILayoutUtility.GetRect(showCurrent, EditorStyles.miniButton, new GUILayoutOption[]
+				{
+					GUILayout.ExpandWidth(false)
+				});
+				Rect position = new Rect(rect.xMax - 16f, rect.y, 16f, rect.height);
+				if (EditorGUI.ButtonMouseDown(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
+				{
+					Rect last = GUILayoutUtility.topLevel.GetLast();
+					PopupWindow.Show(last, new ShaderInspectorPlatformsPopup(s));
+					GUIUtility.ExitGUI();
+				}
+				if (GUI.Button(rect, showCurrent, EditorStyles.miniButton))
+				{
+					ShaderUtil.OpenCompiledShader(s, ShaderInspectorPlatformsPopup.currentMode, ShaderInspectorPlatformsPopup.currentPlatformMask, ShaderInspectorPlatformsPopup.currentVariantStripping == 0);
+					GUIUtility.ExitGUI();
+				}
+			}
+			else
+			{
+				GUILayout.Button("none (fixed function shader)", GUI.skin.label, new GUILayoutOption[0]);
+			}
+			EditorGUILayout.EndHorizontal();
 		}
 		private static void ShowSurfaceShaderButton(Shader s)
 		{
@@ -277,18 +240,25 @@ namespace UnityEditor
 			EditorGUILayout.PrefixLabel("Surface shader", EditorStyles.miniButton);
 			if (flag)
 			{
-				if (GUILayout.Button(ShaderInspector.ms_Styles.showSurface, EditorStyles.miniButton, new GUILayoutOption[]
+				if (!(AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(s)) == null))
 				{
-					GUILayout.ExpandWidth(false)
-				}))
+					if (GUILayout.Button(ShaderInspector.Styles.showSurface, EditorStyles.miniButton, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					}))
+					{
+						ShaderUtil.OpenParsedSurfaceShader(s);
+						GUIUtility.ExitGUI();
+					}
+				}
+				else
 				{
-					ShaderUtil.OpenParsedSurfaceShader(s);
-					GUIUtility.ExitGUI();
+					GUILayout.Button(ShaderInspector.Styles.builtinSurfaceShader, GUI.skin.label, new GUILayoutOption[0]);
 				}
 			}
 			else
 			{
-				GUILayout.Label("no", new GUILayoutOption[0]);
+				GUILayout.Button(ShaderInspector.Styles.no, GUI.skin.label, new GUILayoutOption[0]);
 			}
 			EditorGUILayout.EndHorizontal();
 		}

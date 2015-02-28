@@ -22,7 +22,7 @@ namespace UnityEditor
 			public float density;
 			public float summedMass;
 		}
-		public Transform root;
+		public Transform pelvis;
 		public Transform leftHips;
 		public Transform leftKnee;
 		public Transform leftFoot;
@@ -75,14 +75,14 @@ namespace UnityEditor
 		}
 		private void OnDrawGizmos()
 		{
-			if (this.root)
+			if (this.pelvis)
 			{
 				Gizmos.color = Color.red;
-				Gizmos.DrawRay(this.root.position, this.root.TransformDirection(this.right));
+				Gizmos.DrawRay(this.pelvis.position, this.pelvis.TransformDirection(this.right));
 				Gizmos.color = Color.green;
-				Gizmos.DrawRay(this.root.position, this.root.TransformDirection(this.up));
+				Gizmos.DrawRay(this.pelvis.position, this.pelvis.TransformDirection(this.up));
 				Gizmos.color = Color.blue;
-				Gizmos.DrawRay(this.root.position, this.root.TransformDirection(this.forward));
+				Gizmos.DrawRay(this.pelvis.position, this.pelvis.TransformDirection(this.forward));
 			}
 		}
 		[MenuItem("GameObject/3D Object/Ragdoll...", false, 2000)]
@@ -98,15 +98,15 @@ namespace UnityEditor
 		}
 		private void CalculateAxes()
 		{
-			if (this.head != null && this.root != null)
+			if (this.head != null && this.pelvis != null)
 			{
-				this.up = RagdollBuilder.CalculateDirectionAxis(this.root.InverseTransformPoint(this.head.position));
+				this.up = RagdollBuilder.CalculateDirectionAxis(this.pelvis.InverseTransformPoint(this.head.position));
 			}
-			if (this.rightElbow != null && this.root != null)
+			if (this.rightElbow != null && this.pelvis != null)
 			{
 				Vector3 vector;
 				Vector3 point;
-				this.DecomposeVector(out vector, out point, this.root.InverseTransformPoint(this.rightElbow.position), this.up);
+				this.DecomposeVector(out vector, out point, this.pelvis.InverseTransformPoint(this.rightElbow.position), this.up);
 				this.right = RagdollBuilder.CalculateDirectionAxis(point);
 			}
 			this.forward = Vector3.Cross(this.right, this.up);
@@ -131,22 +131,22 @@ namespace UnityEditor
 		}
 		private void PrepareBones()
 		{
-			if (this.root)
+			if (this.pelvis)
 			{
-				this.worldRight = this.root.TransformDirection(this.right);
-				this.worldUp = this.root.TransformDirection(this.up);
-				this.worldForward = this.root.TransformDirection(this.forward);
+				this.worldRight = this.pelvis.TransformDirection(this.right);
+				this.worldUp = this.pelvis.TransformDirection(this.up);
+				this.worldForward = this.pelvis.TransformDirection(this.forward);
 			}
 			this.bones = new ArrayList();
 			this.rootBone = new RagdollBuilder.BoneInfo();
-			this.rootBone.name = "Root";
-			this.rootBone.anchor = this.root;
+			this.rootBone.name = "Pelvis";
+			this.rootBone.anchor = this.pelvis;
 			this.rootBone.parent = null;
 			this.rootBone.density = 2.5f;
 			this.bones.Add(this.rootBone);
-			this.AddMirroredJoint("Hips", this.leftHips, this.rightHips, "Root", this.worldRight, this.worldForward, -20f, 70f, 30f, typeof(CapsuleCollider), 0.3f, 1.5f);
+			this.AddMirroredJoint("Hips", this.leftHips, this.rightHips, "Pelvis", this.worldRight, this.worldForward, -20f, 70f, 30f, typeof(CapsuleCollider), 0.3f, 1.5f);
 			this.AddMirroredJoint("Knee", this.leftKnee, this.rightKnee, "Hips", this.worldRight, this.worldForward, -80f, 0f, 0f, typeof(CapsuleCollider), 0.25f, 1.5f);
-			this.AddJoint("Middle Spine", this.middleSpine, "Root", this.worldRight, this.worldForward, -20f, 20f, 10f, null, 1f, 2.5f);
+			this.AddJoint("Middle Spine", this.middleSpine, "Pelvis", this.worldRight, this.worldForward, -20f, 20f, 10f, null, 1f, 2.5f);
 			this.AddMirroredJoint("Arm", this.leftArm, this.rightArm, "Middle Spine", this.worldUp, this.worldForward, -70f, 10f, 50f, typeof(CapsuleCollider), 0.25f, 1f);
 			this.AddMirroredJoint("Elbow", this.leftElbow, this.rightElbow, "Arm", this.worldForward, this.worldUp, -90f, 0f, 0f, typeof(CapsuleCollider), 0.2f, 1f);
 			this.AddJoint("Head", this.head, "Middle Spine", this.worldRight, this.worldForward, -40f, 25f, 25f, null, 1f, 1f);
@@ -160,7 +160,6 @@ namespace UnityEditor
 			this.BuildBodies();
 			this.BuildJoints();
 			this.CalculateMass();
-			this.CalculateSpringDampers();
 		}
 		private RagdollBuilder.BoneInfo FindBone(string name)
 		{
@@ -249,7 +248,7 @@ namespace UnityEditor
 							}
 						}
 					}
-					CapsuleCollider capsuleCollider = (CapsuleCollider)boneInfo.anchor.gameObject.AddComponent("CapsuleCollider");
+					CapsuleCollider capsuleCollider = boneInfo.anchor.gameObject.AddComponent<CapsuleCollider>();
 					capsuleCollider.direction = num;
 					Vector3 zero = Vector3.zero;
 					zero[num] = num2 * 0.5f;
@@ -293,8 +292,8 @@ namespace UnityEditor
 		{
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
 			{
-				boneInfo.anchor.gameObject.AddComponent("Rigidbody");
-				boneInfo.anchor.rigidbody.mass = boneInfo.density;
+				boneInfo.anchor.gameObject.AddComponent<Rigidbody>();
+				boneInfo.anchor.GetComponent<Rigidbody>().mass = boneInfo.density;
 			}
 		}
 		private void BuildJoints()
@@ -303,13 +302,15 @@ namespace UnityEditor
 			{
 				if (boneInfo.parent != null)
 				{
-					CharacterJoint characterJoint = (CharacterJoint)boneInfo.anchor.gameObject.AddComponent("CharacterJoint");
+					CharacterJoint characterJoint = boneInfo.anchor.gameObject.AddComponent<CharacterJoint>();
 					boneInfo.joint = characterJoint;
 					characterJoint.axis = RagdollBuilder.CalculateDirectionAxis(boneInfo.anchor.InverseTransformDirection(boneInfo.axis));
 					characterJoint.swingAxis = RagdollBuilder.CalculateDirectionAxis(boneInfo.anchor.InverseTransformDirection(boneInfo.normalAxis));
 					characterJoint.anchor = Vector3.zero;
-					characterJoint.connectedBody = boneInfo.parent.anchor.rigidbody;
+					characterJoint.connectedBody = boneInfo.parent.anchor.GetComponent<Rigidbody>();
+					characterJoint.enablePreprocessing = false;
 					SoftJointLimit softJointLimit = default(SoftJointLimit);
+					softJointLimit.contactDistance = 0f;
 					softJointLimit.limit = boneInfo.minLimit;
 					characterJoint.lowTwistLimit = softJointLimit;
 					softJointLimit.limit = boneInfo.maxLimit;
@@ -323,7 +324,7 @@ namespace UnityEditor
 		}
 		private void CalculateMassRecurse(RagdollBuilder.BoneInfo bone)
 		{
-			float num = bone.anchor.rigidbody.mass;
+			float num = bone.anchor.GetComponent<Rigidbody>().mass;
 			foreach (RagdollBuilder.BoneInfo boneInfo in bone.children)
 			{
 				this.CalculateMassRecurse(boneInfo);
@@ -337,27 +338,9 @@ namespace UnityEditor
 			float num = this.totalMass / this.rootBone.summedMass;
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
 			{
-				boneInfo.anchor.rigidbody.mass *= num;
+				boneInfo.anchor.GetComponent<Rigidbody>().mass *= num;
 			}
 			this.CalculateMassRecurse(this.rootBone);
-		}
-		private JointDrive CalculateSpringDamper(float frequency, float damping, float mass)
-		{
-			return new JointDrive
-			{
-				positionSpring = 9f * frequency * frequency * mass,
-				positionDamper = 4.5f * frequency * damping * mass
-			};
-		}
-		private void CalculateSpringDampers()
-		{
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
-			{
-				if (boneInfo.joint)
-				{
-					boneInfo.joint.rotationDrive = this.CalculateSpringDamper(this.strength / 100f, 1f, boneInfo.summedMass);
-				}
-			}
 		}
 		private static void CalculateDirection(Vector3 point, out int direction, out float distance)
 		{
@@ -465,45 +448,45 @@ namespace UnityEditor
 		}
 		private void AddBreastColliders()
 		{
-			if (this.middleSpine != null && this.root != null)
+			if (this.middleSpine != null && this.pelvis != null)
 			{
-				Bounds bounds = this.Clip(this.GetBreastBounds(this.root), this.root, this.middleSpine, false);
-				BoxCollider boxCollider = (BoxCollider)this.root.gameObject.AddComponent("BoxCollider");
+				Bounds bounds = this.Clip(this.GetBreastBounds(this.pelvis), this.pelvis, this.middleSpine, false);
+				BoxCollider boxCollider = this.pelvis.gameObject.AddComponent<BoxCollider>();
 				boxCollider.center = bounds.center;
 				boxCollider.size = bounds.size;
 				bounds = this.Clip(this.GetBreastBounds(this.middleSpine), this.middleSpine, this.middleSpine, true);
-				boxCollider = (BoxCollider)this.middleSpine.gameObject.AddComponent("BoxCollider");
+				boxCollider = this.middleSpine.gameObject.AddComponent<BoxCollider>();
 				boxCollider.center = bounds.center;
 				boxCollider.size = bounds.size;
 			}
 			else
 			{
 				Bounds bounds2 = default(Bounds);
-				bounds2.Encapsulate(this.root.InverseTransformPoint(this.leftHips.position));
-				bounds2.Encapsulate(this.root.InverseTransformPoint(this.rightHips.position));
-				bounds2.Encapsulate(this.root.InverseTransformPoint(this.leftArm.position));
-				bounds2.Encapsulate(this.root.InverseTransformPoint(this.rightArm.position));
+				bounds2.Encapsulate(this.pelvis.InverseTransformPoint(this.leftHips.position));
+				bounds2.Encapsulate(this.pelvis.InverseTransformPoint(this.rightHips.position));
+				bounds2.Encapsulate(this.pelvis.InverseTransformPoint(this.leftArm.position));
+				bounds2.Encapsulate(this.pelvis.InverseTransformPoint(this.rightArm.position));
 				Vector3 size = bounds2.size;
 				size[RagdollBuilder.SmallestComponent(bounds2.size)] = size[RagdollBuilder.LargestComponent(bounds2.size)] / 2f;
-				BoxCollider boxCollider2 = (BoxCollider)this.root.gameObject.AddComponent("BoxCollider");
+				BoxCollider boxCollider2 = this.pelvis.gameObject.AddComponent<BoxCollider>();
 				boxCollider2.center = bounds2.center;
 				boxCollider2.size = size;
 			}
 		}
 		private void AddHeadCollider()
 		{
-			if (this.head.collider)
+			if (this.head.GetComponent<Collider>())
 			{
-				UnityEngine.Object.Destroy(this.head.collider);
+				UnityEngine.Object.Destroy(this.head.GetComponent<Collider>());
 			}
 			float num = Vector3.Distance(this.leftArm.transform.position, this.rightArm.transform.position);
 			num /= 4f;
-			SphereCollider sphereCollider = (SphereCollider)this.head.gameObject.AddComponent("SphereCollider");
+			SphereCollider sphereCollider = this.head.gameObject.AddComponent<SphereCollider>();
 			sphereCollider.radius = num;
 			Vector3 zero = Vector3.zero;
 			int index;
 			float num2;
-			RagdollBuilder.CalculateDirection(this.head.InverseTransformPoint(this.root.position), out index, out num2);
+			RagdollBuilder.CalculateDirection(this.head.InverseTransformPoint(this.pelvis.position), out index, out num2);
 			if (num2 > 0f)
 			{
 				zero[index] = -num;

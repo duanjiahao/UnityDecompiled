@@ -6,6 +6,7 @@ namespace UnityEngine
 		UsePlayerSettings = -1,
 		VertexLit,
 		Forward,
-		DeferredLighting
+		DeferredLighting,
+		DeferredShading
 	}
 }

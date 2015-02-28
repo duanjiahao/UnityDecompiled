@@ -28,6 +28,8 @@ namespace UnityEditor
 			public GUIContent castShadows = new GUIContent("Cast Shadows", "Only opaque materials cast shadows");
 			public GUIContent receiveShadows = new GUIContent("Receive Shadows", "Only opaque materials receive shadows");
 			public GUIContent normalDirection = new GUIContent("Normal Direction", "Value between 0.0 and 1.0. If 1.0 is used, normals will point towards camera. If 0.0 is used, normals will point out in the corner direction of the particle.");
+			public GUIContent sortingLayer = EditorGUIUtility.TextContent("Renderer.SortingLayer");
+			public GUIContent sortingOrder = EditorGUIUtility.TextContent("Renderer.SortingOrder");
 			public string[] particleTypes = new string[]
 			{
 				"Billboard",
@@ -48,6 +50,8 @@ namespace UnityEditor
 		private SerializedProperty m_CastShadows;
 		private SerializedProperty m_ReceiveShadows;
 		private SerializedProperty m_Material;
+		private SerializedProperty m_SortingOrder;
+		private SerializedProperty m_SortingLayerID;
 		private SerializedProperty m_RenderMode;
 		private SerializedProperty[] m_Meshes = new SerializedProperty[4];
 		private SerializedProperty[] m_ShownMeshes;
@@ -58,6 +62,7 @@ namespace UnityEditor
 		private SerializedProperty m_SortMode;
 		private SerializedProperty m_SortingFudge;
 		private SerializedProperty m_NormalDirection;
+		private RendererEditorBase.Probes m_Probes;
 		private static RendererModuleUI.Texts s_Texts;
 		public RendererModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "ParticleSystemRenderer", displayName, ModuleUI.VisibilityState.VisibleAndFolded)
 		{
@@ -72,6 +77,8 @@ namespace UnityEditor
 			this.m_CastShadows = base.GetProperty0("m_CastShadows");
 			this.m_ReceiveShadows = base.GetProperty0("m_ReceiveShadows");
 			this.m_Material = base.GetProperty0("m_Materials.Array.data[0]");
+			this.m_SortingOrder = base.GetProperty0("m_SortingOrder");
+			this.m_SortingLayerID = base.GetProperty0("m_SortingLayerID");
 			this.m_RenderMode = base.GetProperty0("m_RenderMode");
 			this.m_MaxParticleSize = base.GetProperty0("m_MaxParticleSize");
 			this.m_CameraVelocityScale = base.GetProperty0("m_CameraVelocityScale");
@@ -80,6 +87,8 @@ namespace UnityEditor
 			this.m_SortingFudge = base.GetProperty0("m_SortingFudge");
 			this.m_SortMode = base.GetProperty0("m_SortMode");
 			this.m_NormalDirection = base.GetProperty0("m_NormalDirection");
+			this.m_Probes = new RendererEditorBase.Probes();
+			this.m_Probes.Initialize(base.serializedObject, false);
 			this.m_Meshes[0] = base.GetProperty0("m_Mesh");
 			this.m_Meshes[1] = base.GetProperty0("m_Mesh1");
 			this.m_Meshes[2] = base.GetProperty0("m_Mesh2");
@@ -133,9 +142,13 @@ namespace UnityEditor
 			}
 			ModuleUI.GUIPopup(RendererModuleUI.s_Texts.sortMode, this.m_SortMode, RendererModuleUI.s_Texts.sortTypes);
 			ModuleUI.GUIFloat(RendererModuleUI.s_Texts.sortingFudge, this.m_SortingFudge);
-			ModuleUI.GUIToggle(RendererModuleUI.s_Texts.castShadows, this.m_CastShadows);
+			ModuleUI.GUIPopup(RendererModuleUI.s_Texts.castShadows, this.m_CastShadows, this.m_CastShadows.enumDisplayNames);
 			ModuleUI.GUIToggle(RendererModuleUI.s_Texts.receiveShadows, this.m_ReceiveShadows);
 			ModuleUI.GUIFloat(RendererModuleUI.s_Texts.maxParticleSize, this.m_MaxParticleSize);
+			EditorGUILayout.Space();
+			EditorGUILayout.SortingLayerField(RendererModuleUI.s_Texts.sortingLayer, this.m_SortingLayerID, ParticleSystemStyles.Get().popup, ParticleSystemStyles.Get().label);
+			ModuleUI.GUIInt(RendererModuleUI.s_Texts.sortingOrder, this.m_SortingOrder);
+			this.m_Probes.OnGUI(s.GetComponent<Renderer>(), true);
 		}
 		private void DoListOfMeshesGUI()
 		{

@@ -30,10 +30,7 @@ namespace UnityEditor
 		{
 			this.m_hoverRect = rect;
 			this.m_tooltip.text = tooltip;
-			if (this.m_Style == null)
-			{
-				this.m_Style = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("Tooltip");
-			}
+			this.m_Style = EditorStyles.tooltip;
 			this.m_Style.wordWrap = false;
 			this.m_optimalSize = this.m_Style.CalcSize(this.m_tooltip);
 			if (this.m_optimalSize.x > 300f)
@@ -47,6 +44,7 @@ namespace UnityEditor
 			this.m_tooltipContainer.ShowPopup();
 			this.m_tooltipContainer.SetAlpha(1f);
 			TooltipView.s_guiView.mouseRayInvisible = true;
+			base.RepaintImmediately();
 		}
 		public static void Show(string tooltip, Rect rect)
 		{

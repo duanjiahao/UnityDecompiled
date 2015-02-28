@@ -5,6 +5,191 @@ namespace UnityEditor
 {
 	public sealed class EditorGUILayout
 	{
+		public class ToggleGroupScope : GUI.Scope
+		{
+			public bool enabled
+			{
+				get;
+				protected set;
+			}
+			public ToggleGroupScope(string label, bool toggle)
+			{
+				this.enabled = EditorGUILayout.BeginToggleGroup(label, toggle);
+			}
+			public ToggleGroupScope(GUIContent label, bool toggle)
+			{
+				this.enabled = EditorGUILayout.BeginToggleGroup(label, toggle);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndToggleGroup();
+			}
+		}
+		public class HorizontalScope : GUI.Scope
+		{
+			public Rect rect
+			{
+				get;
+				protected set;
+			}
+			public HorizontalScope(params GUILayoutOption[] options)
+			{
+				this.rect = EditorGUILayout.BeginHorizontal(options);
+			}
+			public HorizontalScope(GUIStyle style, params GUILayoutOption[] options)
+			{
+				this.rect = EditorGUILayout.BeginHorizontal(style, options);
+			}
+			internal HorizontalScope(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
+			{
+				this.rect = EditorGUILayout.BeginHorizontal(content, style, options);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndHorizontal();
+			}
+		}
+		public class VerticalScope : GUI.Scope
+		{
+			public Rect rect
+			{
+				get;
+				protected set;
+			}
+			public VerticalScope(params GUILayoutOption[] options)
+			{
+				this.rect = EditorGUILayout.BeginVertical(options);
+			}
+			public VerticalScope(GUIStyle style, params GUILayoutOption[] options)
+			{
+				this.rect = EditorGUILayout.BeginVertical(style, options);
+			}
+			internal VerticalScope(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
+			{
+				this.rect = EditorGUILayout.BeginVertical(content, style, options);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndVertical();
+			}
+		}
+		public class ScrollViewScope : GUI.Scope
+		{
+			public Vector2 scrollPosition
+			{
+				get;
+				protected set;
+			}
+			public bool handleScrollWheel
+			{
+				get;
+				set;
+			}
+			public ScrollViewScope(Vector2 scrollPosition, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, horizontalScrollbar, verticalScrollbar, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, GUIStyle style, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, options);
+			}
+			public ScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar, background, options);
+			}
+			internal ScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar, options);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndScrollView(this.handleScrollWheel);
+			}
+		}
+		internal class VerticalScrollViewScope : GUI.Scope
+		{
+			public Vector2 scrollPosition
+			{
+				get;
+				protected set;
+			}
+			public bool handleScrollWheel
+			{
+				get;
+				set;
+			}
+			public VerticalScrollViewScope(Vector2 scrollPosition, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginVerticalScrollView(scrollPosition, options);
+			}
+			public VerticalScrollViewScope(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginVerticalScrollView(scrollPosition, alwaysShowVertical, verticalScrollbar, background, options);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndScrollView(this.handleScrollWheel);
+			}
+		}
+		internal class HorizontalScrollViewScope : GUI.Scope
+		{
+			public Vector2 scrollPosition
+			{
+				get;
+				protected set;
+			}
+			public bool handleScrollWheel
+			{
+				get;
+				set;
+			}
+			public HorizontalScrollViewScope(Vector2 scrollPosition, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginHorizontalScrollView(scrollPosition, options);
+			}
+			public HorizontalScrollViewScope(Vector2 scrollPosition, bool alwaysShowHorizontal, GUIStyle horizontalScrollbar, GUIStyle background, params GUILayoutOption[] options)
+			{
+				this.handleScrollWheel = true;
+				this.scrollPosition = EditorGUILayout.BeginHorizontalScrollView(scrollPosition, alwaysShowHorizontal, horizontalScrollbar, background, options);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndScrollView(this.handleScrollWheel);
+			}
+		}
+		public class FadeGroupScope : GUI.Scope
+		{
+			public bool visible
+			{
+				get;
+				protected set;
+			}
+			public FadeGroupScope(float value)
+			{
+				this.visible = EditorGUILayout.BeginFadeGroup(value);
+			}
+			protected override void CloseScope()
+			{
+				EditorGUILayout.EndFadeGroup();
+			}
+		}
 		internal const float kPlatformTabWidth = 30f;
 		internal static Rect s_LastRect;
 		internal static SavedBool s_SelectedDefault = new SavedBool("Platform.ShownDefaultTab", true);
@@ -21,6 +206,54 @@ namespace UnityEditor
 			{
 				return EditorGUIUtility.labelWidth + EditorGUIUtility.fieldWidth + 5f;
 			}
+		}
+		[ExcludeFromDocs]
+		public static bool Foldout(bool foldout, string content)
+		{
+			GUIStyle foldout2 = EditorStyles.foldout;
+			return EditorGUILayout.Foldout(foldout, content, foldout2);
+		}
+		public static bool Foldout(bool foldout, string content, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
+		{
+			return EditorGUILayout.Foldout(foldout, EditorGUIUtility.TempContent(content), style);
+		}
+		[ExcludeFromDocs]
+		public static bool Foldout(bool foldout, GUIContent content)
+		{
+			GUIStyle foldout2 = EditorStyles.foldout;
+			return EditorGUILayout.Foldout(foldout, content, foldout2);
+		}
+		public static bool Foldout(bool foldout, GUIContent content, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
+		{
+			return EditorGUILayout.FoldoutInternal(foldout, content, style);
+		}
+		[ExcludeFromDocs]
+		public static void PrefixLabel(string label)
+		{
+			GUIStyle followingStyle = "Button";
+			EditorGUILayout.PrefixLabel(label, followingStyle);
+		}
+		public static void PrefixLabel(string label, [DefaultValue("\"Button\"")] GUIStyle followingStyle)
+		{
+			EditorGUILayout.PrefixLabel(EditorGUIUtility.TempContent(label), followingStyle, EditorStyles.label);
+		}
+		public static void PrefixLabel(string label, GUIStyle followingStyle, GUIStyle labelStyle)
+		{
+			EditorGUILayout.PrefixLabel(EditorGUIUtility.TempContent(label), followingStyle, labelStyle);
+		}
+		[ExcludeFromDocs]
+		public static void PrefixLabel(GUIContent label)
+		{
+			GUIStyle followingStyle = "Button";
+			EditorGUILayout.PrefixLabel(label, followingStyle);
+		}
+		public static void PrefixLabel(GUIContent label, [DefaultValue("\"Button\"")] GUIStyle followingStyle)
+		{
+			EditorGUILayout.PrefixLabel(label, followingStyle, EditorStyles.label);
+		}
+		public static void PrefixLabel(GUIContent label, GUIStyle followingStyle, GUIStyle labelStyle)
+		{
+			EditorGUILayout.PrefixLabelInternal(label, followingStyle, labelStyle);
 		}
 		public static void LabelField(string label, params GUILayoutOption[] options)
 		{
@@ -211,10 +444,15 @@ namespace UnityEditor
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
 			return EditorGUI.PasswordField(position, label, password, style);
 		}
-		internal static void VUMeterHorizontal(float value, ref EditorGUI.VUMeterData data, params GUILayoutOption[] options)
+		internal static void VUMeterHorizontal(float value, float peak, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, EditorStyles.numberField, options);
-			EditorGUI.VUMeterHorizontal(position, value, ref data);
+			EditorGUI.VUMeter.HorizontalMeter(position, value, peak, EditorGUI.VUMeter.horizontalVUTexture, Color.grey);
+		}
+		internal static void VUMeterHorizontal(float value, ref EditorGUI.VUMeter.SmoothingData data, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, EditorStyles.numberField, options);
+			EditorGUI.VUMeter.HorizontalMeter(position, value, ref data, EditorGUI.VUMeter.horizontalVUTexture, Color.grey);
 		}
 		public static float FloatField(float value, params GUILayoutOption[] options)
 		{
@@ -246,6 +484,36 @@ namespace UnityEditor
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
 			return EditorGUI.FloatField(position, label, value, style);
 		}
+		public static double DoubleField(double value, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, EditorStyles.numberField, options);
+			return EditorGUI.DoubleField(position, value);
+		}
+		public static double DoubleField(double value, GUIStyle style, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, style, options);
+			return EditorGUI.DoubleField(position, value, style);
+		}
+		public static double DoubleField(string label, double value, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.numberField, options);
+			return EditorGUI.DoubleField(position, label, value);
+		}
+		public static double DoubleField(string label, double value, GUIStyle style, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
+			return EditorGUI.DoubleField(position, label, value, style);
+		}
+		public static double DoubleField(GUIContent label, double value, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.numberField, options);
+			return EditorGUI.DoubleField(position, label, value);
+		}
+		public static double DoubleField(GUIContent label, double value, GUIStyle style, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
+			return EditorGUI.DoubleField(position, label, value, style);
+		}
 		public static int IntField(int value, params GUILayoutOption[] options)
 		{
 			return EditorGUILayout.IntField(value, EditorStyles.numberField, options);
@@ -272,6 +540,33 @@ namespace UnityEditor
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
 			return EditorGUI.IntField(position, label, value, style);
+		}
+		public static long LongField(long value, params GUILayoutOption[] options)
+		{
+			return EditorGUILayout.LongField(value, EditorStyles.numberField, options);
+		}
+		public static long LongField(long value, GUIStyle style, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, style, options);
+			return EditorGUI.LongField(position, value, style);
+		}
+		public static long LongField(string label, long value, params GUILayoutOption[] options)
+		{
+			return EditorGUILayout.LongField(label, value, EditorStyles.numberField, options);
+		}
+		public static long LongField(string label, long value, GUIStyle style, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
+			return EditorGUI.LongField(position, label, value, style);
+		}
+		public static long LongField(GUIContent label, long value, params GUILayoutOption[] options)
+		{
+			return EditorGUILayout.LongField(label, value, EditorStyles.numberField, options);
+		}
+		public static long LongField(GUIContent label, long value, GUIStyle style, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
+			return EditorGUI.LongField(position, label, value, style);
 		}
 		public static float Slider(float value, float leftValue, float rightValue, params GUILayoutOption[] options)
 		{
@@ -301,10 +596,14 @@ namespace UnityEditor
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetSliderRect(true, options);
 			EditorGUI.Slider(position, property, leftValue, rightValue, label);
 		}
-		internal static float PowerSlider(float sliderValue, float min, float max, float power, params GUILayoutOption[] options)
+		internal static float PowerSlider(string label, float value, float leftValue, float rightValue, float power, params GUILayoutOption[] options)
 		{
-			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetSliderRect(false, options);
-			return EditorGUI.PowerSlider(position, sliderValue, min, max, power);
+			return EditorGUILayout.PowerSlider(EditorGUIUtility.TempContent(label), value, leftValue, rightValue, power, options);
+		}
+		internal static float PowerSlider(GUIContent label, float value, float leftValue, float rightValue, float power, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetSliderRect(true, options);
+			return EditorGUI.PowerSlider(position, label, value, leftValue, rightValue, power);
 		}
 		public static int IntSlider(int value, int leftValue, int rightValue, params GUILayoutOption[] options)
 		{
@@ -605,9 +904,22 @@ namespace UnityEditor
 		}
 		public static UnityEngine.Object ObjectField(GUIContent label, UnityEngine.Object obj, Type objType, bool allowSceneObjects, params GUILayoutOption[] options)
 		{
-			float height = (!EditorGUIUtility.HasObjectThumbnail(objType)) ? 16f : 64f;
+			float height;
+			if (EditorGUIUtility.HasObjectThumbnail(objType))
+			{
+				height = 64f;
+			}
+			else
+			{
+				height = 16f;
+			}
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, height, options);
 			return EditorGUI.ObjectField(position, label, obj, objType, allowSceneObjects);
+		}
+		internal static UnityEngine.Object MiniThumbnailObjectField(GUIContent label, UnityEngine.Object obj, Type objType, EditorGUI.ObjectFieldValidator validator, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, options);
+			return EditorGUI.MiniThumbnailObjectField(position, label, obj, objType, validator);
 		}
 		public static Vector2 Vector2Field(string label, Vector2 value, params GUILayoutOption[] options)
 		{
@@ -667,6 +979,13 @@ namespace UnityEditor
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(flag, height, EditorStyles.numberField, options);
 			return EditorGUI.BoundsField(position, label, value);
 		}
+		internal static void PropertiesField(GUIContent label, SerializedProperty[] properties, GUIContent[] propertyLabels, float propertyLabelsWidth, params GUILayoutOption[] options)
+		{
+			bool hasLabel = EditorGUI.LabelHasContent(label);
+			float height = 16f * (float)properties.Length;
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(hasLabel, height, EditorStyles.numberField, options);
+			EditorGUI.PropertiesField(position, label, properties, propertyLabels, propertyLabelsWidth);
+		}
 		internal static int CycleButton(int selected, GUIContent[] options, GUIStyle style)
 		{
 			if (GUILayout.Button(options[selected], style, new GUILayoutOption[0]))
@@ -724,7 +1043,7 @@ namespace UnityEditor
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.colorField, options);
 			return EditorGUI.CurveField(position, label, value, color, ranges);
 		}
-		private static void CurveField(SerializedProperty value, Color color, Rect ranges, params GUILayoutOption[] options)
+		internal static void CurveField(SerializedProperty value, Color color, Rect ranges, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, EditorStyles.colorField, options);
 			EditorGUI.CurveField(position, value, color, ranges);
@@ -736,6 +1055,29 @@ namespace UnityEditor
 		public static bool InspectorTitlebar(bool foldout, UnityEngine.Object[] targetObjs)
 		{
 			return EditorGUI.InspectorTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), foldout, targetObjs);
+		}
+		public static void InspectorTitlebar(UnityEngine.Object[] targetObjs)
+		{
+			EditorGUI.InspectorTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), targetObjs);
+		}
+		internal static bool ToggleTitlebar(bool foldout, GUIContent label, ref bool toggleValue)
+		{
+			return EditorGUI.ToggleTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), label, foldout, ref toggleValue);
+		}
+		internal static bool ToggleTitlebar(bool foldout, GUIContent label, SerializedProperty property)
+		{
+			bool boolValue = property.boolValue;
+			EditorGUI.BeginChangeCheck();
+			foldout = EditorGUI.ToggleTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), label, foldout, ref boolValue);
+			if (EditorGUI.EndChangeCheck())
+			{
+				property.boolValue = boolValue;
+			}
+			return foldout;
+		}
+		internal static bool FoldoutTitlebar(bool foldout, GUIContent label)
+		{
+			return EditorGUI.FoldoutTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), label, foldout);
 		}
 		internal static bool FoldoutInternal(bool foldout, GUIContent content, GUIStyle style)
 		{
@@ -1065,7 +1407,7 @@ namespace UnityEditor
 					int num6 = Mathf.RoundToInt((float)(j + 1) * rect.width / (float)num3);
 					position = new Rect(rect.x + (float)num5, rect.y, (float)(num6 - num5), (float)num4);
 				}
-				if (GUI.Toggle(position, num2 == j, platforms[j].smallIcon, toolbarButton))
+				if (GUI.Toggle(position, num2 == j, new GUIContent(platforms[j].smallIcon, platforms[j].tooltip), toolbarButton))
 				{
 					num2 = j;
 				}
@@ -1158,7 +1500,25 @@ namespace UnityEditor
 		internal static void SortingLayerField(GUIContent label, SerializedProperty layerID, GUIStyle style)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, style, new GUILayoutOption[0]);
-			EditorGUI.SortingLayerField(position, label, layerID, style);
+			EditorGUI.SortingLayerField(position, label, layerID, style, EditorStyles.label);
+		}
+		internal static string TextFieldDropDown(string text, string[] dropDownElement)
+		{
+			return EditorGUILayout.TextFieldDropDown(GUIContent.none, text, dropDownElement);
+		}
+		internal static string TextFieldDropDown(GUIContent label, string text, string[] dropDownElement)
+		{
+			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.textField);
+			return EditorGUI.TextFieldDropDown(rect, label, text, dropDownElement);
+		}
+		internal static string DelayedTextFieldDropDown(string text, string[] dropDownElement)
+		{
+			return EditorGUILayout.DelayedTextFieldDropDown(GUIContent.none, text, dropDownElement);
+		}
+		internal static string DelayedTextFieldDropDown(GUIContent label, string text, string[] dropDownElement)
+		{
+			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.textFieldDropDownText);
+			return EditorGUI.DelayedTextFieldDropDown(rect, label, text, dropDownElement);
 		}
 		internal static Gradient GradientField(Gradient value, params GUILayoutOption[] options)
 		{
@@ -1190,14 +1550,30 @@ namespace UnityEditor
 			Rect position = EditorGUILayout.s_LastRect = GUILayoutUtility.GetRect(EditorGUILayout.kLabelFloatMinW, EditorGUILayout.kLabelFloatMaxW, 16f, 16f, EditorStyles.colorField, options);
 			return EditorGUI.GradientField(label, position, value);
 		}
+		internal static bool ButtonMouseDown(GUIContent content, FocusType focusType, GUIStyle style, params GUILayoutOption[] options)
+		{
+			EditorGUILayout.s_LastRect = GUILayoutUtility.GetRect(content, style, options);
+			return EditorGUI.ButtonMouseDown(EditorGUILayout.s_LastRect, content, focusType, style);
+		}
 		internal static bool IconButton(int id, GUIContent content, GUIStyle style, params GUILayoutOption[] options)
 		{
-			return EditorGUI.IconButton(id, GUILayoutUtility.GetRect(content, style, options), content, style);
+			EditorGUILayout.s_LastRect = GUILayoutUtility.GetRect(content, style, options);
+			return EditorGUI.IconButton(id, EditorGUILayout.s_LastRect, content, style);
 		}
 		internal static void GameViewSizePopup(GameViewSizeGroupType groupType, int selectedIndex, Action<int, object> itemClickedCallback, GUIStyle style, params GUILayoutOption[] options)
 		{
-			Rect controlRect = EditorGUILayout.GetControlRect(false, 16f, style, options);
-			EditorGUI.GameViewSizePopup(controlRect, groupType, selectedIndex, itemClickedCallback, style);
+			EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, style, options);
+			EditorGUI.GameViewSizePopup(EditorGUILayout.s_LastRect, groupType, selectedIndex, itemClickedCallback, style);
+		}
+		internal static void SortingLayerField(GUIContent label, SerializedProperty layerID, GUIStyle style, GUIStyle labelStyle)
+		{
+			EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, style, new GUILayoutOption[0]);
+			EditorGUI.SortingLayerField(EditorGUILayout.s_LastRect, label, layerID, style, labelStyle);
+		}
+		public static float Knob(Vector2 knobSize, float value, float minValue, float maxValue, string unit, Color backgroundColor, Color activeColor, bool showValue, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, knobSize.y, options);
+			return EditorGUI.Knob(position, knobSize, value, minValue, maxValue, unit, backgroundColor, activeColor, showValue, GUIUtility.GetControlID("Knob".GetHashCode(), FocusType.Native, position));
 		}
 		internal static void TargetChoiceField(SerializedProperty property, GUIContent label, params GUILayoutOption[] options)
 		{
@@ -1207,54 +1583,6 @@ namespace UnityEditor
 		{
 			Rect rect = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUILayout.kLabelFloatMaxW, 16f, 16f, EditorStyles.popup, options);
 			EditorGUI.TargetChoiceField(rect, property, label, func);
-		}
-		[ExcludeFromDocs]
-		public static bool Foldout(bool foldout, string content)
-		{
-			GUIStyle foldout2 = EditorStyles.foldout;
-			return EditorGUILayout.Foldout(foldout, content, foldout2);
-		}
-		public static bool Foldout(bool foldout, string content, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
-		{
-			return EditorGUILayout.Foldout(foldout, EditorGUIUtility.TempContent(content), style);
-		}
-		[ExcludeFromDocs]
-		public static bool Foldout(bool foldout, GUIContent content)
-		{
-			GUIStyle foldout2 = EditorStyles.foldout;
-			return EditorGUILayout.Foldout(foldout, content, foldout2);
-		}
-		public static bool Foldout(bool foldout, GUIContent content, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
-		{
-			return EditorGUILayout.FoldoutInternal(foldout, content, style);
-		}
-		[ExcludeFromDocs]
-		public static void PrefixLabel(string label)
-		{
-			GUIStyle followingStyle = "Button";
-			EditorGUILayout.PrefixLabel(label, followingStyle);
-		}
-		public static void PrefixLabel(string label, [DefaultValue("\"Button\"")] GUIStyle followingStyle)
-		{
-			EditorGUILayout.PrefixLabel(EditorGUIUtility.TempContent(label), followingStyle, EditorStyles.label);
-		}
-		public static void PrefixLabel(string label, GUIStyle followingStyle, GUIStyle labelStyle)
-		{
-			EditorGUILayout.PrefixLabel(EditorGUIUtility.TempContent(label), followingStyle, labelStyle);
-		}
-		[ExcludeFromDocs]
-		public static void PrefixLabel(GUIContent label)
-		{
-			GUIStyle followingStyle = "Button";
-			EditorGUILayout.PrefixLabel(label, followingStyle);
-		}
-		public static void PrefixLabel(GUIContent label, [DefaultValue("\"Button\"")] GUIStyle followingStyle)
-		{
-			EditorGUILayout.PrefixLabel(label, followingStyle, EditorStyles.label);
-		}
-		public static void PrefixLabel(GUIContent label, GUIStyle followingStyle, GUIStyle labelStyle)
-		{
-			EditorGUILayout.PrefixLabelInternal(label, followingStyle, labelStyle);
 		}
 	}
 }

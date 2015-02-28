@@ -14,9 +14,9 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			return "Boo";
 		}
-		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform)
+		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
-			return new BooCompiler(island);
+			return new BooCompiler(island, runUpdater);
 		}
 		public override string GetNamespace(string fileName)
 		{

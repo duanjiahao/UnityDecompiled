@@ -198,7 +198,7 @@ namespace UnityEditor
 				return;
 			}
 			Color c = Handles.color * new Color(1f, 1f, 1f, 0.75f);
-			HandleUtility.handleWireMaterial.SetPass(0);
+			HandleUtility.ApplyWireMaterial();
 			GL.PushMatrix();
 			GL.MultMatrix(Handles.matrix);
 			GL.Begin(1);

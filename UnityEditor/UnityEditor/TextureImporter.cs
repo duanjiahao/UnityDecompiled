@@ -350,7 +350,7 @@ namespace UnityEditor
 		internal static extern TextureImporterFormat FullToSimpleTextureFormat(TextureImporterFormat format);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern TextureImporterFormat SimpleToFullTextureFormat2(TextureImporterFormat simpleFormat, TextureImporterType tType, TextureImporterSettings settings, bool doesTextureContainAlpha, bool doesTextureContainColor, BuildTarget destinationPlatform);
+		internal static extern TextureImporterFormat SimpleToFullTextureFormat2(TextureImporterFormat simpleFormat, TextureImporterType tType, TextureImporterSettings settings, bool doesTextureContainAlpha, bool sourceWasHDR, BuildTarget destinationPlatform);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_spritePivot(out Vector2 value);
@@ -368,8 +368,11 @@ namespace UnityEditor
 		internal extern void GetWidthAndHeight(ref int width, ref int height);
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool DoesSourceTextureHaveAlpha();
+		internal extern bool IsSourceTextureHDR();
 		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool DoesSourceTextureHaveAlpha();
+		[Obsolete("DoesSourceTextureHaveColor always returns true in Unity."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool DoesSourceTextureHaveColor();
 		[WrapperlessIcall]
@@ -383,6 +386,6 @@ namespace UnityEditor
 		internal extern string GetImportWarnings();
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void ReadTextureImportInstructions(TextureImportInstructions dest, BuildTarget target);
+		public extern void ReadTextureImportInstructions(BuildTarget target, out TextureFormat desiredFormat, out ColorSpace colorSpace, out int compressionQuality);
 	}
 }

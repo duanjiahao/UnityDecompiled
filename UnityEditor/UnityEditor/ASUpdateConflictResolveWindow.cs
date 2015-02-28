@@ -178,9 +178,9 @@ namespace UnityEditor
 				string text = this.dropDownMenuItems[selected];
 				if (text != null)
 				{
-					if (ASUpdateConflictResolveWindow.<>f__switch$mapE == null)
+					if (ASUpdateConflictResolveWindow.<>f__switch$map10 == null)
 					{
-						ASUpdateConflictResolveWindow.<>f__switch$mapE = new Dictionary<string, int>(2)
+						ASUpdateConflictResolveWindow.<>f__switch$map10 = new Dictionary<string, int>(2)
 						{
 
 							{
@@ -195,7 +195,7 @@ namespace UnityEditor
 						};
 					}
 					int num;
-					if (ASUpdateConflictResolveWindow.<>f__switch$mapE.TryGetValue(text, out num))
+					if (ASUpdateConflictResolveWindow.<>f__switch$map10.TryGetValue(text, out num))
 					{
 						if (num != 0)
 						{
@@ -487,7 +487,7 @@ namespace UnityEditor
 				});
 				if (this.deletionConflict[listViewElement.row] && Event.current.type == EventType.Repaint)
 				{
-					GUIContent badgeDelete = ASMainWindow.badgeDelete;
+					GUIContent badgeDelete = ASMainWindow.constants.badgeDelete;
 					Rect position2 = new Rect(listViewElement.position.x + (float)this.lvHeaderSplit1.realSizes[0] - (float)badgeDelete.image.width - 5f, listViewElement.position.y + listViewElement.position.height / 2f - (float)(badgeDelete.image.height / 2), (float)badgeDelete.image.width, (float)badgeDelete.image.height);
 					EditorGUIUtility.SetIconSize(Vector2.zero);
 					GUIStyle.none.Draw(position2, badgeDelete, false, false, false, false);

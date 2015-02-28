@@ -3,7 +3,10 @@ namespace UnityEngine
 {
 	public enum LightmapsMode
 	{
-		Single,
+		NonDirectional,
+		CombinedDirectional,
+		SeparateDirectional,
+		Single = 0,
 		Dual,
 		Directional
 	}

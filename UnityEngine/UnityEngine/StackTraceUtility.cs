@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Security;
 using System.Text;
 namespace UnityEngine
 {
@@ -11,6 +12,7 @@ namespace UnityEngine
 		{
 			StackTraceUtility.projectFolder = folder;
 		}
+		[SecuritySafeCritical]
 		public static string ExtractStackTrace()
 		{
 			StackTrace stackTrace = new StackTrace(1, true);
@@ -28,6 +30,7 @@ namespace UnityEngine
 			StackTraceUtility.ExtractStringFromExceptionInternal(exception, out empty, out empty2);
 			return empty + "\n" + empty2;
 		}
+		[SecuritySafeCritical]
 		internal static void ExtractStringFromExceptionInternal(object exceptiono, out string message, out string stackTrace)
 		{
 			if (exceptiono == null)
@@ -156,6 +159,7 @@ namespace UnityEngine
 			}
 			return stringBuilder.ToString();
 		}
+		[SecuritySafeCritical]
 		internal static string ExtractFormattedStackTrace(StackTrace stackTrace)
 		{
 			StringBuilder stringBuilder = new StringBuilder(255);

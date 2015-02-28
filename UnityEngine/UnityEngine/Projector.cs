@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
@@ -40,15 +41,26 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property isOrthoGraphic has been deprecated. Use orthographic instead (UnityUpgradable).", true)]
 		public bool isOrthoGraphic
 		{
 			get
 			{
-				return this.orthographic;
+				return false;
 			}
 			set
 			{
-				this.orthographic = value;
+			}
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property orthoGraphicSize has been deprecated. Use orthographicSize instead (UnityUpgradable).", true)]
+		public float orthoGraphicSize
+		{
+			get
+			{
+				return -1f;
+			}
+			set
+			{
 			}
 		}
 		public extern bool orthographic
@@ -68,17 +80,6 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
-		}
-		public float orthoGraphicSize
-		{
-			get
-			{
-				return this.orthographicSize;
-			}
-			set
-			{
-				this.orthographicSize = value;
-			}
 		}
 		public extern int ignoreLayers
 		{

@@ -26,6 +26,18 @@ namespace UnityEditor
 				return LicenseManagementWindow.win;
 			}
 		}
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void CheckForUpdates();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ActivateNewLicense();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ManualActivation();
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ReturnLicense();
 		private static void ShowWindow()
 		{
 			Resolution currentResolution = Screen.currentResolution;
@@ -104,17 +116,5 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			GUILayout.EndArea();
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CheckForUpdates();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void ActivateNewLicense();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void ManualActivation();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void ReturnLicense();
 	}
 }

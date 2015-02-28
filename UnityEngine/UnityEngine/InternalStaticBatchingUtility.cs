@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 namespace UnityEngine
 {
 	internal class InternalStaticBatchingUtility
@@ -49,7 +50,7 @@ namespace UnityEngine
 				{
 					return null;
 				}
-				return meshFilter.renderer;
+				return meshFilter.GetComponent<Renderer>();
 			}
 		}
 		private const int MaxVerticesInBatch = 64000;
@@ -102,13 +103,16 @@ namespace UnityEngine
 				MeshFilter meshFilter = gameObject.GetComponent(typeof(MeshFilter)) as MeshFilter;
 				if (!(meshFilter == null))
 				{
-					if (!(meshFilter.sharedMesh == null))
+					Mesh sharedMesh = meshFilter.sharedMesh;
+					if (!(sharedMesh == null) && sharedMesh.canAccess)
 					{
-						if (meshFilter.sharedMesh.canAccess)
+						Renderer component = meshFilter.GetComponent<Renderer>();
+						if (!(component == null) && component.enabled)
 						{
-							if (!(meshFilter.renderer == null) && meshFilter.renderer.enabled)
+							if (component.staticBatchIndex == 0)
 							{
-								if (meshFilter.renderer.staticBatchIndex == 0)
+								Material[] array = meshFilter.GetComponent<Renderer>().sharedMaterials;
+								if (!array.Any((Material m) => m != null && m.shader != null && m.shader.disableBatching != DisableBatchingType.False))
 								{
 									if (num + meshFilter.sharedMesh.vertexCount > 64000)
 									{
@@ -119,12 +123,17 @@ namespace UnityEngine
 										num = 0;
 									}
 									MeshSubsetCombineUtility.MeshInstance item = default(MeshSubsetCombineUtility.MeshInstance);
-									Mesh sharedMesh = meshFilter.sharedMesh;
 									item.meshInstanceID = sharedMesh.GetInstanceID();
+									item.rendererInstanceID = component.GetInstanceID();
+									MeshRenderer meshRenderer = component as MeshRenderer;
+									if (meshRenderer != null && meshRenderer.additionalVertexStreams != null)
+									{
+										item.additionalVertexStreamsMeshInstanceID = meshRenderer.additionalVertexStreams.GetInstanceID();
+									}
 									item.transform = lhs * meshFilter.transform.localToWorldMatrix;
-									item.lightmapTilingOffset = meshFilter.renderer.lightmapTilingOffset;
+									item.lightmapScaleOffset = component.lightmapScaleOffset;
+									item.realtimeLightmapScaleOffset = component.realtimeLightmapScaleOffset;
 									list.Add(item);
-									Material[] array = meshFilter.renderer.sharedMaterials;
 									if (array.Length > sharedMesh.subMeshCount)
 									{
 										Debug.LogWarning(string.Concat(new object[]
@@ -134,13 +143,13 @@ namespace UnityEngine
 											") than subsets (",
 											sharedMesh.subMeshCount,
 											")"
-										}));
+										}), meshFilter.GetComponent<Renderer>());
 										Material[] array2 = new Material[sharedMesh.subMeshCount];
 										for (int j = 0; j < sharedMesh.subMeshCount; j++)
 										{
-											array2[j] = meshFilter.renderer.sharedMaterials[j];
+											array2[j] = meshFilter.GetComponent<Renderer>().sharedMaterials[j];
 										}
-										meshFilter.renderer.sharedMaterials = array2;
+										meshFilter.GetComponent<Renderer>().sharedMaterials = array2;
 										array = array2;
 									}
 									for (int k = 0; k < Math.Min(array.Length, sharedMesh.subMeshCount); k++)
@@ -188,10 +197,16 @@ namespace UnityEngine
 				Mesh sharedMesh = mesh;
 				MeshFilter meshFilter = (MeshFilter)gameObject.GetComponent(typeof(MeshFilter));
 				meshFilter.sharedMesh = sharedMesh;
-				gameObject.renderer.SetSubsetIndex(subMeshInstance.subMeshIndex, num);
-				gameObject.renderer.staticBatchRootTransform = staticBatchRootTransform;
-				gameObject.renderer.enabled = false;
-				gameObject.renderer.enabled = true;
+				Renderer component = gameObject.GetComponent<Renderer>();
+				component.SetSubsetIndex(subMeshInstance.subMeshIndex, num);
+				component.staticBatchRootTransform = staticBatchRootTransform;
+				component.enabled = false;
+				component.enabled = true;
+				MeshRenderer meshRenderer = component as MeshRenderer;
+				if (meshRenderer != null)
+				{
+					meshRenderer.additionalVertexStreams = null;
+				}
 				num++;
 			}
 		}

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 namespace UnityEngine
@@ -11,11 +12,39 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property GetResolution has been deprecated. Use resolutions instead (UnityUpgradable).", true)]
 		public static Resolution[] GetResolution
 		{
 			get
 			{
-				return Screen.resolutions;
+				return null;
+			}
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property showCursor has been deprecated. Use Cursor.visible instead (UnityUpgradable).", true)]
+		public static bool showCursor
+		{
+			get;
+			set;
+		}
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property lockCursor has been deprecated. Use Cursor.lockState and Cursor.visible instead.")]
+		public static bool lockCursor
+		{
+			get
+			{
+				return CursorLockMode.None == Cursor.lockState;
+			}
+			set
+			{
+				if (value)
+				{
+					Cursor.visible = false;
+					Cursor.lockState = CursorLockMode.Locked;
+				}
+				else
+				{
+					Cursor.lockState = CursorLockMode.None;
+					Cursor.visible = true;
+				}
 			}
 		}
 		public static extern Resolution currentResolution
@@ -23,24 +52,6 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-		}
-		public static extern bool showCursor
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public static extern bool lockCursor
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
 		}
 		public static extern int width
 		{
@@ -125,7 +136,7 @@ namespace UnityEngine
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetResolution(int width, int height, bool fullscreen, [DefaultValue("0")] int preferredRefreshRate);
+		public static extern void SetResolution(int width, int height, bool fullscreen, [UnityEngine.Internal.DefaultValue("0")] int preferredRefreshRate);
 		[ExcludeFromDocs]
 		public static void SetResolution(int width, int height, bool fullscreen)
 		{

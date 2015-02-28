@@ -28,7 +28,10 @@ namespace UnityEditor
 		{
 			None = 0,
 			HideInInspector = 1,
-			PerRendererData = 2
+			PerRendererData = 2,
+			NoScaleOffset = 4,
+			Normal = 8,
+			HDR = 16
 		}
 		public delegate bool ApplyPropertyCallback(MaterialProperty prop, int changeMask, object previousValue);
 		private UnityEngine.Object[] m_Targets;

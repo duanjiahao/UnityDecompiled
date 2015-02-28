@@ -61,10 +61,14 @@ namespace UnityEditor
 		private static int zoomableAreaHash = "ZoomableArea".GetHashCode();
 		private bool m_HRangeLocked;
 		private bool m_VRangeLocked;
-		private float m_HRangeMin = float.NegativeInfinity;
-		private float m_HRangeMax = float.PositiveInfinity;
-		private float m_VRangeMin = float.NegativeInfinity;
-		private float m_VRangeMax = float.PositiveInfinity;
+		private float m_HBaseRangeMin;
+		private float m_HBaseRangeMax = 1f;
+		private float m_VBaseRangeMin;
+		private float m_VBaseRangeMax = 1f;
+		private bool m_HAllowExceedBaseRangeMin = true;
+		private bool m_HAllowExceedBaseRangeMax = true;
+		private bool m_VAllowExceedBaseRangeMin = true;
+		private bool m_VAllowExceedBaseRangeMax = true;
 		private float m_HScaleMin = 0.001f;
 		private float m_HScaleMax = 100000f;
 		private float m_VScaleMin = 0.001f;
@@ -72,6 +76,7 @@ namespace UnityEditor
 		private bool m_ScaleWithWindow;
 		private bool m_HSlider = true;
 		private bool m_VSlider = true;
+		public bool m_UniformScale;
 		private bool m_IgnoreScrollWheelUntilClicked;
 		private Rect m_DrawArea = new Rect(0f, 0f, 100f, 100f);
 		internal Vector2 m_Scale = new Vector2(1f, -1f);
@@ -107,48 +112,136 @@ namespace UnityEditor
 				this.m_VRangeLocked = value;
 			}
 		}
+		public float hBaseRangeMin
+		{
+			get
+			{
+				return this.m_HBaseRangeMin;
+			}
+			set
+			{
+				this.m_HBaseRangeMin = value;
+			}
+		}
+		public float hBaseRangeMax
+		{
+			get
+			{
+				return this.m_HBaseRangeMax;
+			}
+			set
+			{
+				this.m_HBaseRangeMax = value;
+			}
+		}
+		public float vBaseRangeMin
+		{
+			get
+			{
+				return this.m_VBaseRangeMin;
+			}
+			set
+			{
+				this.m_VBaseRangeMin = value;
+			}
+		}
+		public float vBaseRangeMax
+		{
+			get
+			{
+				return this.m_VBaseRangeMax;
+			}
+			set
+			{
+				this.m_VBaseRangeMax = value;
+			}
+		}
+		public bool hAllowExceedBaseRangeMin
+		{
+			get
+			{
+				return this.m_HAllowExceedBaseRangeMin;
+			}
+			set
+			{
+				this.m_HAllowExceedBaseRangeMin = value;
+			}
+		}
+		public bool hAllowExceedBaseRangeMax
+		{
+			get
+			{
+				return this.m_HAllowExceedBaseRangeMax;
+			}
+			set
+			{
+				this.m_HAllowExceedBaseRangeMax = value;
+			}
+		}
+		public bool vAllowExceedBaseRangeMin
+		{
+			get
+			{
+				return this.m_VAllowExceedBaseRangeMin;
+			}
+			set
+			{
+				this.m_VAllowExceedBaseRangeMin = value;
+			}
+		}
+		public bool vAllowExceedBaseRangeMax
+		{
+			get
+			{
+				return this.m_VAllowExceedBaseRangeMax;
+			}
+			set
+			{
+				this.m_VAllowExceedBaseRangeMax = value;
+			}
+		}
 		public float hRangeMin
 		{
 			get
 			{
-				return this.m_HRangeMin;
+				return (!this.hAllowExceedBaseRangeMin) ? this.hBaseRangeMin : float.NegativeInfinity;
 			}
 			set
 			{
-				this.m_HRangeMin = value;
+				this.SetAllowExceed(ref this.m_HBaseRangeMin, ref this.m_HAllowExceedBaseRangeMin, value);
 			}
 		}
 		public float hRangeMax
 		{
 			get
 			{
-				return this.m_HRangeMax;
+				return (!this.hAllowExceedBaseRangeMax) ? this.hBaseRangeMax : float.PositiveInfinity;
 			}
 			set
 			{
-				this.m_HRangeMax = value;
+				this.SetAllowExceed(ref this.m_HBaseRangeMax, ref this.m_HAllowExceedBaseRangeMax, value);
 			}
 		}
 		public float vRangeMin
 		{
 			get
 			{
-				return this.m_VRangeMin;
+				return (!this.vAllowExceedBaseRangeMin) ? this.vBaseRangeMin : float.NegativeInfinity;
 			}
 			set
 			{
-				this.m_VRangeMin = value;
+				this.SetAllowExceed(ref this.m_VBaseRangeMin, ref this.m_VAllowExceedBaseRangeMin, value);
 			}
 		}
 		public float vRangeMax
 		{
 			get
 			{
-				return this.m_VRangeMax;
+				return (!this.vAllowExceedBaseRangeMax) ? this.vBaseRangeMax : float.PositiveInfinity;
 			}
 			set
 			{
-				this.m_VRangeMax = value;
+				this.SetAllowExceed(ref this.m_VBaseRangeMax, ref this.m_VAllowExceedBaseRangeMax, value);
 			}
 		}
 		public bool scaleWithWindow
@@ -186,6 +279,17 @@ namespace UnityEditor
 				Rect rect = this.rect;
 				this.m_VSlider = value;
 				this.rect = rect;
+			}
+		}
+		public bool uniformScale
+		{
+			get
+			{
+				return this.m_UniformScale;
+			}
+			set
+			{
+				this.m_UniformScale = value;
 			}
 		}
 		public bool ignoreScrollWheelUntilClicked
@@ -346,9 +450,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				bool flag = this.hRangeMin > float.NegativeInfinity && this.hRangeMax < float.PositiveInfinity;
-				bool flag2 = this.vRangeMin > float.NegativeInfinity && this.vRangeMax < float.PositiveInfinity;
-				return new Bounds(new Vector3((!flag) ? 0f : ((this.hRangeMin + this.hRangeMax) * 0.5f), (!flag2) ? 0f : ((this.vRangeMin + this.hRangeMax) * 0.5f), 0f), new Vector3((!flag) ? 2f : (this.hRangeMax - this.hRangeMin), (!flag2) ? 2f : (this.vRangeMax - this.vRangeMin), 1f));
+				return new Bounds(new Vector3((this.hBaseRangeMin + this.hBaseRangeMax) * 0.5f, (this.vBaseRangeMin + this.vBaseRangeMax) * 0.5f, 0f), new Vector3(this.hBaseRangeMax - this.hBaseRangeMin, this.vBaseRangeMax - this.vBaseRangeMin, 1f));
 			}
 		}
 		public Matrix4x4 drawingToViewMatrix
@@ -374,6 +476,19 @@ namespace UnityEditor
 		{
 			this.m_MinimalGUI = minimalGUI;
 			this.styles = new ZoomableArea.Styles(minimalGUI);
+		}
+		private void SetAllowExceed(ref float rangeEnd, ref bool allowExceed, float value)
+		{
+			if (value == float.NegativeInfinity || value == float.PositiveInfinity)
+			{
+				rangeEnd = (float)((value != float.NegativeInfinity) ? 1 : 0);
+				allowExceed = true;
+			}
+			else
+			{
+				rangeEnd = value;
+				allowExceed = false;
+			}
 		}
 		internal void SetDrawRectHack(Rect r, bool scrollbars)
 		{
@@ -544,6 +659,7 @@ namespace UnityEditor
 			Rect shownAreaInsideMargins = this.shownAreaInsideMargins;
 			float num = this.styles.sliderWidth - this.styles.visualSliderWidth;
 			float num2 = (!this.vSlider || !this.hSlider) ? 0f : num;
+			Vector2 a = this.m_Scale;
 			if (this.m_HSlider)
 			{
 				Rect position = new Rect(this.drawRect.x + 1f, this.drawRect.yMax - num, this.drawRect.width - num2, this.styles.sliderWidth);
@@ -579,6 +695,16 @@ namespace UnityEditor
 					num4 = Mathf.Max(num4, num3 + this.m_VScaleMin);
 				}
 				this.SetShownVRangeInsideMargins(num3, num4);
+			}
+			if (this.uniformScale)
+			{
+				float num6 = this.drawRect.width / this.drawRect.height;
+				a -= this.m_Scale;
+				Vector2 b = new Vector2(-a.y * num6, -a.x / num6);
+				this.m_Scale -= b;
+				this.m_Translation.x = this.m_Translation.x - a.y / 2f;
+				this.m_Translation.y = this.m_Translation.y - a.x / 2f;
+				this.EnforceScaleAndRange();
 			}
 		}
 		private void Pan()

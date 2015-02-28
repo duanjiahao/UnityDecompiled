@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 namespace UnityEngine
 {
-	public sealed class ParticleEmitter : Component
+	public class ParticleEmitter : Component
 	{
 		public extern bool emit
 		{
@@ -174,6 +174,9 @@ namespace UnityEngine
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+		internal ParticleEmitter()
+		{
 		}
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

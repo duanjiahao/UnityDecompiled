@@ -53,28 +53,35 @@ namespace UnityEditorInternal
 			}
 			return AnimationMode.IsPropertyAnimated(target, "material." + materialProp.name);
 		}
-		public static bool ApplyMaterialModificationToAnimationRecording(MaterialProperty materialProp, int changedMask, Renderer target, object oldValue)
+		public static void SetupMaterialPropertyBlock(MaterialProperty materialProp, int changedMask, Renderer target)
 		{
 			MaterialPropertyBlock materialPropertyBlock = new MaterialPropertyBlock();
 			target.GetPropertyBlock(materialPropertyBlock);
 			materialProp.WriteToMaterialPropertyBlock(materialPropertyBlock, changedMask);
 			target.SetPropertyBlock(materialPropertyBlock);
+		}
+		public static bool ApplyMaterialModificationToAnimationRecording(MaterialProperty materialProp, int changedMask, Renderer target, object oldValue)
+		{
 			switch (materialProp.type)
 			{
 			case MaterialProperty.PropType.Color:
+				MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 				MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(materialProp, target, (Color)oldValue);
 				return true;
 			case MaterialProperty.PropType.Vector:
+				MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 				MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(materialProp, target, (Vector4)oldValue);
 				return true;
 			case MaterialProperty.PropType.Float:
 			case MaterialProperty.PropType.Range:
+				MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 				MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(materialProp, target, (float)oldValue);
 				return true;
 			case MaterialProperty.PropType.Texture:
 				if (MaterialProperty.IsTextureOffsetAndScaleChangedMask(changedMask))
 				{
 					string name = materialProp.name + "_ST";
+					MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 					MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(name, target, (Vector4)oldValue);
 					return true;
 				}

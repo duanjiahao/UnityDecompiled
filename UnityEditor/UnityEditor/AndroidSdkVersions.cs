@@ -13,6 +13,7 @@ namespace UnityEditor
 		AndroidApiLevel16,
 		AndroidApiLevel17,
 		AndroidApiLevel18,
-		AndroidApiLevel19
+		AndroidApiLevel19,
+		AndroidApiLevel21 = 21
 	}
 }
