@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditorInternal
 {
 	public enum CanAppendBuild

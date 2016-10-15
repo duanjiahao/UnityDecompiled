@@ -1,21 +1,27 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class Slider2D
 	{
 		private static Vector2 s_CurrentMousePosition;
+
 		private static Vector3 s_StartPosition;
+
 		private static Vector2 s_StartPlaneOffset;
+
 		public static Vector3 Do(int id, Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap, bool drawHelper)
 		{
 			return Slider2D.Do(id, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, new Vector2(snap, snap), drawHelper);
 		}
+
 		public static Vector3 Do(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap, bool drawHelper)
 		{
 			return Slider2D.Do(id, handlePos, offset, handleDir, slideDir1, slideDir2, handleSize, drawFunc, new Vector2(snap, snap), drawHelper);
 		}
+
 		public static Vector3 Do(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, bool drawHelper)
 		{
 			bool changed = GUI.changed;
@@ -28,6 +34,7 @@ namespace UnityEditorInternal
 			GUI.changed |= changed;
 			return handlePos;
 		}
+
 		private static Vector2 CalcDeltaAlongDirections(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, bool drawHelper)
 		{
 			Vector2 vector = new Vector2(0f, 0f);
@@ -125,16 +132,13 @@ namespace UnityEditorInternal
 					HandleUtility.AddControl(id, HandleUtility.DistanceToLine(handlePos + offset, handlePos + handleDir * handleSize));
 					HandleUtility.AddControl(id, HandleUtility.DistanceToCircle(handlePos + offset + handleDir * handleSize, handleSize * 0.2f));
 				}
+				else if (drawFunc == new Handles.DrawCapFunction(Handles.RectangleCap))
+				{
+					HandleUtility.AddControl(id, HandleUtility.DistanceToRectangle(handlePos + offset, Quaternion.LookRotation(handleDir, slideDir1), handleSize));
+				}
 				else
 				{
-					if (drawFunc == new Handles.DrawCapFunction(Handles.RectangleCap))
-					{
-						HandleUtility.AddControl(id, HandleUtility.DistanceToRectangle(handlePos + offset, Quaternion.LookRotation(handleDir, slideDir1), handleSize));
-					}
-					else
-					{
-						HandleUtility.AddControl(id, HandleUtility.DistanceToCircle(handlePos + offset, handleSize * 0.5f));
-					}
+					HandleUtility.AddControl(id, HandleUtility.DistanceToCircle(handlePos + offset, handleSize * 0.5f));
 				}
 				break;
 			}

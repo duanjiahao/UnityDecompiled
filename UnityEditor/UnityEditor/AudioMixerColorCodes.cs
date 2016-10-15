@@ -1,15 +1,18 @@
 using System;
 using UnityEditor.Audio;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class AudioMixerColorCodes
 	{
 		private struct ItemData
 		{
-			public AudioMixerGroupController group;
+			public AudioMixerGroupController[] groups;
+
 			public int index;
 		}
+
 		private static Color[] darkSkinColors = new Color[]
 		{
 			new Color(0.5f, 0.5f, 0.5f, 0.2f),
@@ -22,6 +25,7 @@ namespace UnityEditor
 			new Color(0f, 0.745098054f, 0.784313738f),
 			new Color(0.5411765f, 0.7529412f, 0.003921569f)
 		};
+
 		private static Color[] lightSkinColors = new Color[]
 		{
 			new Color(0.5f, 0.5f, 0.5f, 0.2f),
@@ -34,6 +38,7 @@ namespace UnityEditor
 			new Color(0f, 0.709803939f, 0.7254902f),
 			new Color(0.447058827f, 0.6627451f, 0.09411765f)
 		};
+
 		private static string[] colorNames = new string[]
 		{
 			"No Color",
@@ -46,10 +51,12 @@ namespace UnityEditor
 			"Cyan",
 			"Green"
 		};
+
 		private static string[] GetColorNames()
 		{
 			return AudioMixerColorCodes.colorNames;
 		}
+
 		private static Color[] GetColors()
 		{
 			if (EditorGUIUtility.isProSkin)
@@ -58,24 +65,34 @@ namespace UnityEditor
 			}
 			return AudioMixerColorCodes.lightSkinColors;
 		}
-		public static void AddColorItemsToGenericMenu(GenericMenu menu, AudioMixerGroupController group)
+
+		public static void AddColorItemsToGenericMenu(GenericMenu menu, AudioMixerGroupController[] groups)
 		{
 			Color[] colors = AudioMixerColorCodes.GetColors();
 			string[] array = AudioMixerColorCodes.GetColorNames();
 			for (int i = 0; i < colors.Length; i++)
 			{
-				menu.AddItem(new GUIContent(array[i]), i == group.userColorIndex, new GenericMenu.MenuFunction2(AudioMixerColorCodes.ItemCallback), new AudioMixerColorCodes.ItemData
+				bool on = groups.Length == 1 && i == groups[0].userColorIndex;
+				menu.AddItem(new GUIContent(array[i]), on, new GenericMenu.MenuFunction2(AudioMixerColorCodes.ItemCallback), new AudioMixerColorCodes.ItemData
 				{
-					group = group,
+					groups = groups,
 					index = i
 				});
 			}
 		}
+
 		private static void ItemCallback(object data)
 		{
 			AudioMixerColorCodes.ItemData itemData = (AudioMixerColorCodes.ItemData)data;
-			itemData.group.userColorIndex = itemData.index;
+			Undo.RecordObjects(itemData.groups, "Change Group(s) Color");
+			AudioMixerGroupController[] groups = itemData.groups;
+			for (int i = 0; i < groups.Length; i++)
+			{
+				AudioMixerGroupController audioMixerGroupController = groups[i];
+				audioMixerGroupController.userColorIndex = itemData.index;
+			}
 		}
+
 		public static Color GetColor(int index)
 		{
 			Color[] colors = AudioMixerColorCodes.GetColors();

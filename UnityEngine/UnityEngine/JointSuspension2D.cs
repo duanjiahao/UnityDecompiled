@@ -1,11 +1,15 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct JointSuspension2D
 	{
 		private float m_DampingRatio;
+
 		private float m_Frequency;
+
 		private float m_Angle;
+
 		public float dampingRatio
 		{
 			get
@@ -17,6 +21,7 @@ namespace UnityEngine
 				this.m_DampingRatio = value;
 			}
 		}
+
 		public float frequency
 		{
 			get
@@ -28,6 +33,7 @@ namespace UnityEngine
 				this.m_Frequency = value;
 			}
 		}
+
 		public float angle
 		{
 			get

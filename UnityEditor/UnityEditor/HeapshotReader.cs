@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 namespace UnityEditor
 {
 	internal class HeapshotReader
@@ -12,6 +13,7 @@ namespace UnityEditor
 			UnityObjects,
 			EndOfFile = 255
 		}
+
 		public enum ObjectType
 		{
 			None,
@@ -19,64 +21,87 @@ namespace UnityEditor
 			Managed,
 			UnityRoot
 		}
+
 		public class FieldInfo
 		{
 			public string name = string.Empty;
+
 			public FieldInfo()
 			{
 			}
+
 			public FieldInfo(string name)
 			{
 				this.name = name;
 			}
 		}
+
 		public class TypeInfo
 		{
 			public string name = string.Empty;
+
 			public Dictionary<uint, HeapshotReader.FieldInfo> fields = new Dictionary<uint, HeapshotReader.FieldInfo>();
+
 			public TypeInfo()
 			{
 			}
+
 			public TypeInfo(string name)
 			{
 				this.name = name;
 			}
 		}
+
 		public class ReferenceInfo
 		{
 			public uint code;
+
 			public HeapshotReader.ObjectInfo referencedObject;
+
 			public HeapshotReader.FieldInfo fieldInfo;
+
 			public ReferenceInfo()
 			{
 			}
+
 			public ReferenceInfo(HeapshotReader.ObjectInfo refObj, HeapshotReader.FieldInfo field)
 			{
 				this.referencedObject = refObj;
 				this.fieldInfo = field;
 			}
 		}
+
 		public class BackReferenceInfo
 		{
 			public HeapshotReader.ObjectInfo parentObject;
+
 			public HeapshotReader.FieldInfo fieldInfo;
 		}
+
 		public class ObjectInfo
 		{
 			public uint code;
+
 			public HeapshotReader.TypeInfo typeInfo;
+
 			public uint size;
+
 			public List<HeapshotReader.ReferenceInfo> references = new List<HeapshotReader.ReferenceInfo>();
+
 			public List<HeapshotReader.BackReferenceInfo> inverseReferences = new List<HeapshotReader.BackReferenceInfo>();
+
 			public HeapshotReader.ObjectType type;
+
 			public ObjectInfo()
 			{
 			}
+
 			public ObjectInfo(HeapshotReader.TypeInfo typeInfo, uint size)
 			{
 				this.typeInfo = typeInfo;
 				this.size = size;
 			}
+
 			public ObjectInfo(HeapshotReader.TypeInfo typeInfo, uint size, HeapshotReader.ObjectType type)
 			{
 				this.typeInfo = typeInfo;
@@ -84,16 +109,27 @@ namespace UnityEditor
 				this.type = type;
 			}
 		}
+
 		private const uint kMagicNumber = 1319894481u;
+
 		private const int kLogVersion = 6;
+
 		private const string kLogFileLabel = "heap-shot logfile";
+
 		private Dictionary<uint, HeapshotReader.TypeInfo> types = new Dictionary<uint, HeapshotReader.TypeInfo>();
+
 		private Dictionary<uint, HeapshotReader.ObjectInfo> objects = new Dictionary<uint, HeapshotReader.ObjectInfo>();
+
 		private List<HeapshotReader.ReferenceInfo> roots = new List<HeapshotReader.ReferenceInfo>();
+
 		private List<HeapshotReader.ObjectInfo> allObjects = new List<HeapshotReader.ObjectInfo>();
+
 		private List<HeapshotReader.TypeInfo> allTypes = new List<HeapshotReader.TypeInfo>();
+
 		private HeapshotReader.ObjectInfo kUnmanagedObject = new HeapshotReader.ObjectInfo(new HeapshotReader.TypeInfo("Unmanaged"), 0u);
+
 		private HeapshotReader.ObjectInfo kUnity = new HeapshotReader.ObjectInfo(new HeapshotReader.TypeInfo("<Unity>"), 0u, HeapshotReader.ObjectType.UnityRoot);
+
 		public List<HeapshotReader.ReferenceInfo> Roots
 		{
 			get
@@ -101,6 +137,7 @@ namespace UnityEditor
 				return this.roots;
 			}
 		}
+
 		public List<HeapshotReader.ObjectInfo> Objects
 		{
 			get
@@ -108,6 +145,7 @@ namespace UnityEditor
 				return this.allObjects;
 			}
 		}
+
 		public List<HeapshotReader.TypeInfo> Types
 		{
 			get
@@ -115,6 +153,7 @@ namespace UnityEditor
 				return this.allTypes;
 			}
 		}
+
 		public List<HeapshotReader.ObjectInfo> GetObjectsOfType(string name)
 		{
 			List<HeapshotReader.ObjectInfo> list = new List<HeapshotReader.ObjectInfo>();
@@ -127,6 +166,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		public bool Open(string fileName)
 		{
 			this.types.Clear();
@@ -168,6 +208,7 @@ namespace UnityEditor
 			stream.Close();
 			return true;
 		}
+
 		private void ReadHeader(BinaryReader reader)
 		{
 			uint num = reader.ReadUInt32();
@@ -191,6 +232,7 @@ namespace UnityEditor
 			reader.ReadUInt32();
 			reader.ReadUInt32();
 		}
+
 		private bool ReadData(BinaryReader reader)
 		{
 			HeapshotReader.Tag tag = (HeapshotReader.Tag)reader.ReadByte();
@@ -215,6 +257,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private void ReadType(BinaryReader reader)
 		{
 			uint num = reader.ReadUInt32();
@@ -234,6 +277,7 @@ namespace UnityEditor
 			this.types[num] = typeInfo;
 			this.allTypes.Add(typeInfo);
 		}
+
 		private void ReadObject(BinaryReader reader)
 		{
 			uint num = reader.ReadUInt32();
@@ -256,16 +300,13 @@ namespace UnityEditor
 				{
 					referenceInfo.fieldInfo = null;
 				}
+				else if (objectInfo.typeInfo.fields.ContainsKey(num3))
+				{
+					referenceInfo.fieldInfo = objectInfo.typeInfo.fields[num3];
+				}
 				else
 				{
-					if (objectInfo.typeInfo.fields.ContainsKey(num3))
-					{
-						referenceInfo.fieldInfo = objectInfo.typeInfo.fields[num3];
-					}
-					else
-					{
-						referenceInfo.fieldInfo = null;
-					}
+					referenceInfo.fieldInfo = null;
 				}
 				objectInfo.references.Add(referenceInfo);
 			}
@@ -277,6 +318,7 @@ namespace UnityEditor
 			this.objects[num] = objectInfo;
 			this.allObjects.Add(objectInfo);
 		}
+
 		private void ReadUnityObjects(BinaryReader reader)
 		{
 			uint key;
@@ -291,6 +333,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ResolveReferences()
 		{
 			foreach (KeyValuePair<uint, HeapshotReader.ObjectInfo> current in this.objects)
@@ -313,6 +356,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ResolveInverseReferences()
 		{
 			foreach (KeyValuePair<uint, HeapshotReader.ObjectInfo> current in this.objects)
@@ -326,6 +370,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ResolveRoots()
 		{
 			foreach (KeyValuePair<uint, HeapshotReader.ObjectInfo> current in this.objects)

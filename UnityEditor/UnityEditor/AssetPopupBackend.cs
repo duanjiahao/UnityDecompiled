@@ -1,11 +1,12 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetPopupBackend
 	{
-		public static void AssetPopup<T>(SerializedProperty serializedProperty, GUIContent label, string fileExtension) where T : UnityEngine.Object, new()
+		public static void AssetPopup<T>(SerializedProperty serializedProperty, GUIContent label, string fileExtension, string defaultFieldName) where T : UnityEngine.Object, new()
 		{
 			bool showMixedValue = EditorGUI.showMixedValue;
 			EditorGUI.showMixedValue = serializedProperty.hasMultipleDifferentValues;
@@ -15,29 +16,32 @@ namespace UnityEditor
 			{
 				buttonContent = EditorGUI.mixedValueContent;
 			}
+			else if (serializedProperty.objectReferenceValue != null)
+			{
+				buttonContent = GUIContent.Temp(serializedProperty.objectReferenceStringValue);
+			}
 			else
 			{
-				if (serializedProperty.objectReferenceValue != null)
-				{
-					buttonContent = GUIContent.Temp(serializedProperty.objectReferenceStringValue);
-				}
-				else
-				{
-					buttonContent = GUIContent.Temp("Default");
-				}
+				buttonContent = GUIContent.Temp(defaultFieldName);
 			}
 			Rect buttonRect;
 			if (AudioMixerEffectGUI.PopupButton(label, buttonContent, EditorStyles.popup, out buttonRect, new GUILayoutOption[0]))
 			{
-				AssetPopupBackend.ShowAssetsPopupMenu<T>(buttonRect, objectReferenceTypeString, serializedProperty, fileExtension);
+				AssetPopupBackend.ShowAssetsPopupMenu<T>(buttonRect, objectReferenceTypeString, serializedProperty, fileExtension, defaultFieldName);
 			}
 			EditorGUI.showMixedValue = showMixedValue;
 		}
-		private static void ShowAssetsPopupMenu<T>(Rect buttonRect, string typeName, SerializedProperty serializedProperty, string fileExtension) where T : UnityEngine.Object, new()
+
+		public static void AssetPopup<T>(SerializedProperty serializedProperty, GUIContent label, string fileExtension) where T : UnityEngine.Object, new()
+		{
+			AssetPopupBackend.AssetPopup<T>(serializedProperty, label, fileExtension, "Default");
+		}
+
+		private static void ShowAssetsPopupMenu<T>(Rect buttonRect, string typeName, SerializedProperty serializedProperty, string fileExtension, string defaultFieldName) where T : UnityEngine.Object, new()
 		{
 			GenericMenu genericMenu = new GenericMenu();
 			int num = (!(serializedProperty.objectReferenceValue != null)) ? 0 : serializedProperty.objectReferenceValue.GetInstanceID();
-			genericMenu.AddItem(new GUIContent("Default"), num == 0, new GenericMenu.MenuFunction2(AssetPopupBackend.AssetPopupMenuCallback), new object[]
+			genericMenu.AddItem(new GUIContent(defaultFieldName), num == 0, new GenericMenu.MenuFunction2(AssetPopupBackend.AssetPopupMenuCallback), new object[]
 			{
 				0,
 				serializedProperty
@@ -85,6 +89,12 @@ namespace UnityEditor
 			});
 			genericMenu.DropDown(buttonRect);
 		}
+
+		private static void ShowAssetsPopupMenu<T>(Rect buttonRect, string typeName, SerializedProperty serializedProperty, string fileExtension) where T : UnityEngine.Object, new()
+		{
+			AssetPopupBackend.ShowAssetsPopupMenu<T>(buttonRect, typeName, serializedProperty, fileExtension, "Default");
+		}
+
 		private static void AssetPopupMenuCallback(object userData)
 		{
 			object[] array = userData as object[];

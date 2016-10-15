@@ -1,12 +1,22 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MainWindow : View, ICleanuppable
 	{
 		private const float kStatusbarHeight = 20f;
-		private const float kMinWidth = 711f;
+
+		private static readonly Vector2 kMinSize = new Vector2(950f, 300f);
+
+		private static readonly Vector2 kMaxSize = new Vector2(10000f, 10000f);
+
+		private void OnEnable()
+		{
+			base.SetMinMaxSizes(MainWindow.kMinSize, MainWindow.kMaxSize);
+		}
+
 		protected override void SetPosition(Rect newPos)
 		{
 			base.SetPosition(newPos);
@@ -22,20 +32,23 @@ namespace UnityEditor
 				base.children[2].position = new Rect(0f, newPos.height - base.children[2].position.height, newPos.width, base.children[2].position.height);
 			}
 		}
+
 		protected override void ChildrenMinMaxChanged()
 		{
 			if (base.children.Length == 3)
 			{
 				Toolbar toolbar = (Toolbar)base.children[0];
-				base.SetMinMaxSizes(new Vector2(711f, toolbar.CalcHeight() + 20f + base.children[1].minSize.y), new Vector2(10000f, 10000f));
+				Vector2 min = new Vector2(MainWindow.kMinSize.x, Mathf.Max(MainWindow.kMinSize.y, toolbar.CalcHeight() + 20f + base.children[1].minSize.y));
+				base.SetMinMaxSizes(min, MainWindow.kMaxSize);
 			}
 			base.ChildrenMinMaxChanged();
 		}
+
 		public static void MakeMain()
 		{
 			ContainerWindow containerWindow = ScriptableObject.CreateInstance<ContainerWindow>();
 			MainWindow mainWindow = ScriptableObject.CreateInstance<MainWindow>();
-			mainWindow.SetMinMaxSizes(new Vector2(711f, 300f), new Vector2(10000f, 10000f));
+			mainWindow.SetMinMaxSizes(MainWindow.kMinSize, MainWindow.kMaxSize);
 			containerWindow.mainView = mainWindow;
 			Resolution desktopResolution = InternalEditorUtility.GetDesktopResolution();
 			int num = Mathf.Clamp(desktopResolution.width * 3 / 4, 800, 1400);
@@ -44,6 +57,7 @@ namespace UnityEditor
 			containerWindow.Show(ShowMode.MainWindow, true, true);
 			containerWindow.DisplayAllViews();
 		}
+
 		public void Cleanup()
 		{
 			if (base.children[1].children.Length == 0)

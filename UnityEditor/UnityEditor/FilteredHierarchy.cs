@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class FilteredHierarchy
@@ -9,25 +10,43 @@ namespace UnityEditor
 		public class FilterResult
 		{
 			public int instanceID;
+
 			public string name;
+
 			public bool hasChildren;
+
 			public int colorCode;
+
 			public bool isMainRepresentation;
+
 			public bool hasFullPreviewImage;
+
 			public IconDrawStyle iconDrawStyle;
+
 			public bool isFolder;
+
 			public HierarchyType type;
+
 			private Texture2D m_Icon;
+
 			public Texture2D icon
 			{
 				get
 				{
-					if (this.m_Icon == null && this.type == HierarchyType.Assets)
+					if (this.m_Icon == null)
 					{
-						string assetPath = AssetDatabase.GetAssetPath(this.instanceID);
-						if (assetPath != null)
+						if (this.type == HierarchyType.Assets)
 						{
-							return AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
+							string assetPath = AssetDatabase.GetAssetPath(this.instanceID);
+							if (assetPath != null)
+							{
+								return AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
+							}
+						}
+						else if (this.type == HierarchyType.GameObjects)
+						{
+							UnityEngine.Object obj = EditorUtility.InstanceIDToObject(this.instanceID);
+							this.m_Icon = AssetPreview.GetMiniThumbnail(obj);
 						}
 					}
 					return this.m_Icon;
@@ -37,6 +56,7 @@ namespace UnityEditor
 					this.m_Icon = value;
 				}
 			}
+
 			public string guid
 			{
 				get
@@ -53,10 +73,15 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private SearchFilter m_SearchFilter = new SearchFilter();
+
 		private FilteredHierarchy.FilterResult[] m_Results = new FilteredHierarchy.FilterResult[0];
+
 		private FilteredHierarchy.FilterResult[] m_VisibleItems = new FilteredHierarchy.FilterResult[0];
+
 		private HierarchyType m_HierarchyType;
+
 		public HierarchyType hierarchyType
 		{
 			get
@@ -64,6 +89,7 @@ namespace UnityEditor
 				return this.m_HierarchyType;
 			}
 		}
+
 		public FilteredHierarchy.FilterResult[] results
 		{
 			get
@@ -75,6 +101,7 @@ namespace UnityEditor
 				return this.m_Results;
 			}
 		}
+
 		public SearchFilter searchFilter
 		{
 			get
@@ -89,15 +116,18 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public bool foldersFirst
 		{
 			get;
 			set;
 		}
+
 		public FilteredHierarchy(HierarchyType type)
 		{
 			this.m_HierarchyType = type;
 		}
+
 		public void SetResults(int[] instanceIDs)
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(this.m_HierarchyType);
@@ -111,6 +141,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CopyPropertyData(ref FilteredHierarchy.FilterResult result, HierarchyProperty property)
 		{
 			if (result == null)
@@ -130,18 +161,16 @@ namespace UnityEditor
 			{
 				result.icon = property.icon;
 			}
+			else if (property.isFolder && !property.hasChildren)
+			{
+				result.icon = EditorGUIUtility.FindTexture(EditorResourcesUtility.emptyFolderIconName);
+			}
 			else
 			{
-				if (property.isFolder && !property.hasChildren)
-				{
-					result.icon = EditorGUIUtility.FindTexture(EditorResourcesUtility.emptyFolderIconName);
-				}
-				else
-				{
-					result.icon = null;
-				}
+				result.icon = null;
 			}
 		}
+
 		private void SearchAllAssets(HierarchyProperty property)
 		{
 			int num = property.CountRemaining(null);
@@ -155,6 +184,7 @@ namespace UnityEditor
 				num2++;
 			}
 		}
+
 		private void SearchInFolders(HierarchyProperty property)
 		{
 			List<FilteredHierarchy.FilterResult> list = new List<FilteredHierarchy.FilterResult>();
@@ -180,6 +210,7 @@ namespace UnityEditor
 			}
 			this.m_Results = list.ToArray();
 		}
+
 		private void FolderBrowsing(HierarchyProperty property)
 		{
 			List<FilteredHierarchy.FilterResult> list = new List<FilteredHierarchy.FilterResult>();
@@ -214,6 +245,7 @@ namespace UnityEditor
 			}
 			this.m_Results = list.ToArray();
 		}
+
 		private void AddResults(HierarchyProperty property)
 		{
 			switch (this.m_SearchFilter.GetState())
@@ -236,6 +268,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		public void ResultsChanged()
 		{
 			this.m_Results = new FilteredHierarchy.FilterResult[0];
@@ -269,15 +302,13 @@ namespace UnityEditor
 					}
 				}
 			}
-			else
+			else if (this.m_HierarchyType == HierarchyType.GameObjects)
 			{
-				if (this.m_HierarchyType == HierarchyType.GameObjects)
-				{
-					HierarchyProperty hierarchyProperty2 = new HierarchyProperty(HierarchyType.GameObjects);
-					hierarchyProperty2.SetSearchFilter(this.m_SearchFilter);
-				}
+				HierarchyProperty hierarchyProperty2 = new HierarchyProperty(HierarchyType.GameObjects);
+				hierarchyProperty2.SetSearchFilter(this.m_SearchFilter);
 			}
 		}
+
 		public void RefreshVisibleItems(List<int> expandedInstanceIDs)
 		{
 			bool flag = this.m_SearchFilter.IsSearching();
@@ -294,6 +325,7 @@ namespace UnityEditor
 			}
 			this.m_VisibleItems = list.ToArray();
 		}
+
 		public List<int> GetSubAssetInstanceIDs(int mainAssetInstanceID)
 		{
 			for (int i = 0; i < this.m_Results.Length; i++)
@@ -313,6 +345,7 @@ namespace UnityEditor
 			Debug.LogError("Not main rep " + mainAssetInstanceID);
 			return new List<int>();
 		}
+
 		public int AddSubItemsOfMainRepresentation(int mainRepresentionIndex, List<FilteredHierarchy.FilterResult> visibleItems)
 		{
 			int num = 0;

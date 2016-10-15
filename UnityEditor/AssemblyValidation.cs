@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 internal class AssemblyValidation
 {
 	private static Dictionary<RuntimePlatform, List<Type>> _rulesByPlatform;
+
 	public static ValidationResult Validate(RuntimePlatform platform, IEnumerable<string> userAssemblies, params object[] options)
 	{
 		AssemblyValidation.WarmUpRulesCache();
@@ -27,6 +29,7 @@ internal class AssemblyValidation
 			Success = true
 		};
 	}
+
 	private static void WarmUpRulesCache()
 	{
 		if (AssemblyValidation._rulesByPlatform != null)
@@ -40,28 +43,31 @@ internal class AssemblyValidation
 			AssemblyValidation.RegisterValidationRule(current);
 		}
 	}
+
 	private static bool IsValidationRule(Type type)
 	{
 		return AssemblyValidation.ValidationRuleAttributesFor(type).Any<AssemblyValidationRule>();
 	}
+
 	private static IEnumerable<IValidationRule> ValidationRulesFor(RuntimePlatform platform, params object[] options)
 	{
-		return 
-			from t in AssemblyValidation.ValidationRuleTypesFor(platform)
-			select AssemblyValidation.CreateValidationRuleWithOptions(t, options) into v
-			where v != null
-			select v;
+		return from t in AssemblyValidation.ValidationRuleTypesFor(platform)
+		select AssemblyValidation.CreateValidationRuleWithOptions(t, options) into v
+		where v != null
+		select v;
 	}
+
 	[DebuggerHidden]
 	private static IEnumerable<Type> ValidationRuleTypesFor(RuntimePlatform platform)
 	{
-		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator3 <ValidationRuleTypesFor>c__Iterator = new AssemblyValidation.<ValidationRuleTypesFor>c__Iterator3();
+		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator5 <ValidationRuleTypesFor>c__Iterator = new AssemblyValidation.<ValidationRuleTypesFor>c__Iterator5();
 		<ValidationRuleTypesFor>c__Iterator.platform = platform;
 		<ValidationRuleTypesFor>c__Iterator.<$>platform = platform;
-		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator3 expr_15 = <ValidationRuleTypesFor>c__Iterator;
+		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator5 expr_15 = <ValidationRuleTypesFor>c__Iterator;
 		expr_15.$PC = -2;
 		return expr_15;
 	}
+
 	private static IValidationRule CreateValidationRuleWithOptions(Type type, params object[] options)
 	{
 		List<object> list = new List<object>(options);
@@ -85,13 +91,14 @@ internal class AssemblyValidation
 		Block_2:
 		return null;
 	}
+
 	private static ConstructorInfo ConstructorFor(Type type, IEnumerable<object> options)
 	{
-		Type[] types = (
-			from o in options
-			select o.GetType()).ToArray<Type>();
+		Type[] types = (from o in options
+		select o.GetType()).ToArray<Type>();
 		return type.GetConstructor(types);
 	}
+
 	internal static void RegisterValidationRule(Type type)
 	{
 		foreach (AssemblyValidationRule current in AssemblyValidation.ValidationRuleAttributesFor(type))
@@ -99,6 +106,7 @@ internal class AssemblyValidation
 			AssemblyValidation.RegisterValidationRuleForPlatform(current.Platform, type);
 		}
 	}
+
 	internal static void RegisterValidationRuleForPlatform(RuntimePlatform platform, Type type)
 	{
 		if (!AssemblyValidation._rulesByPlatform.ContainsKey(platform))
@@ -111,6 +119,7 @@ internal class AssemblyValidation
 		}
 		AssemblyValidation._rulesByPlatform[platform].Sort((Type a, Type b) => AssemblyValidation.CompareValidationRulesByPriority(a, b, platform));
 	}
+
 	internal static int CompareValidationRulesByPriority(Type a, Type b, RuntimePlatform platform)
 	{
 		int num = AssemblyValidation.PriorityFor(a, platform);
@@ -121,13 +130,14 @@ internal class AssemblyValidation
 		}
 		return (num >= num2) ? 1 : -1;
 	}
+
 	private static int PriorityFor(Type type, RuntimePlatform platform)
 	{
-		return (
-			from attr in AssemblyValidation.ValidationRuleAttributesFor(type)
-			where attr.Platform == platform
-			select attr.Priority).FirstOrDefault<int>();
+		return (from attr in AssemblyValidation.ValidationRuleAttributesFor(type)
+		where attr.Platform == platform
+		select attr.Priority).FirstOrDefault<int>();
 	}
+
 	private static IEnumerable<AssemblyValidationRule> ValidationRuleAttributesFor(Type type)
 	{
 		return type.GetCustomAttributes(true).OfType<AssemblyValidationRule>();

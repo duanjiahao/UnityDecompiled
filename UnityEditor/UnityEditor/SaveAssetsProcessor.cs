@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	[Obsolete("Use UnityEditor.AssetModificationProcessor")]

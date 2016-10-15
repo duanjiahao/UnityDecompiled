@@ -1,24 +1,30 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(OcclusionArea))]
 	internal class OcclusionAreaEditor : Editor
 	{
 		private SerializedObject m_Object;
+
 		private SerializedProperty m_Size;
+
 		private SerializedProperty m_Center;
+
 		private void OnEnable()
 		{
 			this.m_Object = new SerializedObject(this.target);
 			this.m_Size = base.serializedObject.FindProperty("m_Size");
 			this.m_Center = base.serializedObject.FindProperty("m_Center");
 		}
+
 		private void OnDisable()
 		{
 			this.m_Object.Dispose();
 			this.m_Object = null;
 		}
+
 		private void OnSceneGUI()
 		{
 			this.m_Object.Update();
@@ -50,6 +56,7 @@ namespace UnityEditor
 			GUI.changed |= changed;
 			Handles.color = color;
 		}
+
 		private float SizeSlider(Vector3 p, Vector3 d, float r)
 		{
 			Vector3 vector = p + d * r;

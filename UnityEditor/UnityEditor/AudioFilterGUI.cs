@@ -1,10 +1,12 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AudioFilterGUI
 	{
 		private EditorGUI.VUMeter.SmoothingData[] dataOut;
+
 		public void DrawAudioFilterGUI(MonoBehaviour behaviour)
 		{
 			int customFilterChannelCount = AudioUtil.GetCustomFilterChannelCount(behaviour);

@@ -2,11 +2,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using UnityEditor.BuildReporting;
+using UnityEditor.Connect;
 using UnityEditor.Modules;
+using UnityEditor.SceneManagement;
 using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 namespace UnityEditor
 {
 	internal class BuildPlayerWindow : EditorWindow
@@ -18,14 +24,21 @@ namespace UnityEditor
 				return new CaseInsensitiveComparer().Compare(y, x);
 			}
 		}
+
 		public class BuildPlatform
 		{
 			public string name;
+
 			public GUIContent title;
+
 			public Texture2D smallIcon;
+
 			public BuildTargetGroup targetGroup;
+
 			public bool forceShowTarget;
+
 			public string tooltip;
+
 			public BuildTarget DefaultTarget
 			{
 				get
@@ -34,9 +47,7 @@ namespace UnityEditor
 					{
 					case BuildTargetGroup.Standalone:
 						return BuildTarget.StandaloneWindows;
-					case BuildTargetGroup.WebPlayer:
-						return BuildTarget.WebPlayer;
-					case BuildTargetGroup.iOS:
+					case BuildTargetGroup.iPhone:
 						return BuildTarget.iOS;
 					case BuildTargetGroup.PS3:
 						return BuildTarget.PS3;
@@ -44,16 +55,10 @@ namespace UnityEditor
 						return BuildTarget.XBOX360;
 					case BuildTargetGroup.Android:
 						return BuildTarget.Android;
-					case BuildTargetGroup.GLESEmu:
-						return BuildTarget.StandaloneGLESEmu;
 					case BuildTargetGroup.WebGL:
 						return BuildTarget.WebGL;
 					case BuildTargetGroup.Metro:
-						return BuildTarget.MetroPlayer;
-					case BuildTargetGroup.WP8:
-						return BuildTarget.WP8Player;
-					case BuildTargetGroup.BlackBerry:
-						return BuildTarget.BB10;
+						return BuildTarget.WSAPlayer;
 					case BuildTargetGroup.Tizen:
 						return BuildTarget.Tizen;
 					case BuildTargetGroup.PSP2:
@@ -64,53 +69,58 @@ namespace UnityEditor
 						return BuildTarget.XboxOne;
 					case BuildTargetGroup.SamsungTV:
 						return BuildTarget.SamsungTV;
+					case BuildTargetGroup.Nintendo3DS:
+						return BuildTarget.Nintendo3DS;
+					case BuildTargetGroup.WiiU:
+						return BuildTarget.WiiU;
+					case BuildTargetGroup.tvOS:
+						return BuildTarget.tvOS;
 					}
-					return (BuildTarget)(-1);
+					return BuildTarget.iPhone;
 				}
 			}
-			public BuildPlatform(string locTitle, BuildTargetGroup targetGroup, bool forceShowTarget) : this(locTitle, string.Empty, targetGroup, forceShowTarget)
+
+			public BuildPlatform(string locTitle, string iconId, BuildTargetGroup targetGroup, bool forceShowTarget) : this(locTitle, string.Empty, iconId, targetGroup, forceShowTarget)
 			{
 			}
-			public BuildPlatform(string locTitle, string tooltip, BuildTargetGroup targetGroup, bool forceShowTarget)
+
+			public BuildPlatform(string locTitle, string tooltip, string iconId, BuildTargetGroup targetGroup, bool forceShowTarget)
 			{
 				this.targetGroup = targetGroup;
 				this.name = ((targetGroup == BuildTargetGroup.Unknown) ? string.Empty : BuildPipeline.GetBuildTargetGroupName(this.DefaultTarget));
-				this.title = EditorGUIUtility.TextContent(locTitle);
-				this.smallIcon = (EditorGUIUtility.IconContent(locTitle + ".Small").image as Texture2D);
+				this.title = EditorGUIUtility.TextContentWithIcon(locTitle, iconId);
+				this.smallIcon = (EditorGUIUtility.IconContent(iconId + ".Small").image as Texture2D);
 				this.tooltip = tooltip;
 				this.forceShowTarget = forceShowTarget;
 			}
 		}
+
 		private class BuildPlatforms
 		{
 			public BuildPlayerWindow.BuildPlatform[] buildPlatforms;
+
 			public BuildTarget[] standaloneSubtargets;
+
 			public GUIContent[] standaloneSubtargetStrings;
-			public GUIContent[] webGLOptimizationLevels = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("BuildSettings.WebGLOptimizationLevel1"),
-				EditorGUIUtility.TextContent("BuildSettings.WebGLOptimizationLevel2"),
-				EditorGUIUtility.TextContent("BuildSettings.WebGLOptimizationLevel3")
-			};
+
 			internal BuildPlatforms()
 			{
 				List<BuildPlayerWindow.BuildPlatform> list = new List<BuildPlayerWindow.BuildPlatform>();
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.Web", BuildTargetGroup.WebPlayer, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.Standalone", BuildTargetGroup.Standalone, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.iPhone", BuildTargetGroup.iOS, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.Android", BuildTargetGroup.Android, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.BlackBerry", BuildTargetGroup.BlackBerry, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.Tizen", BuildTargetGroup.Tizen, false));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.XBox360", BuildTargetGroup.XBOX360, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.XboxOne", BuildTargetGroup.XboxOne, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.PS3", BuildTargetGroup.PS3, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.PSP2", BuildTargetGroup.PSP2, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.PS4", BuildTargetGroup.PS4, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.StandaloneGLESEmu", BuildTargetGroup.GLESEmu, false));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.Metro", BuildTargetGroup.Metro, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.WP8", BuildTargetGroup.WP8, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.WebGL", BuildTargetGroup.WebGL, true));
-				list.Add(new BuildPlayerWindow.BuildPlatform("BuildSettings.SamsungTV", BuildTargetGroup.SamsungTV, false));
+				list.Add(new BuildPlayerWindow.BuildPlatform("PC, Mac & Linux Standalone", "BuildSettings.Standalone", BuildTargetGroup.Standalone, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("iOS", "BuildSettings.iPhone", BuildTargetGroup.iPhone, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("tvOS", "BuildSettings.tvOS", BuildTargetGroup.tvOS, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Android", "BuildSettings.Android", BuildTargetGroup.Android, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Tizen", "BuildSettings.Tizen", BuildTargetGroup.Tizen, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Xbox 360", "BuildSettings.XBox360", BuildTargetGroup.XBOX360, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Xbox One", "BuildSettings.XboxOne", BuildTargetGroup.XboxOne, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("PS3", "BuildSettings.PS3", BuildTargetGroup.PS3, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("PS Vita", "BuildSettings.PSP2", BuildTargetGroup.PSP2, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("PS4", "BuildSettings.PS4", BuildTargetGroup.PS4, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Wii U", "BuildSettings.WiiU", BuildTargetGroup.WiiU, false));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Windows Store", "BuildSettings.Metro", BuildTargetGroup.Metro, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("WebGL", "BuildSettings.WebGL", BuildTargetGroup.WebGL, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Samsung TV", "BuildSettings.SamsungTV", BuildTargetGroup.SamsungTV, true));
+				list.Add(new BuildPlayerWindow.BuildPlatform("Nintendo 3DS", "BuildSettings.N3DS", BuildTargetGroup.Nintendo3DS, false));
 				foreach (BuildPlayerWindow.BuildPlatform current in list)
 				{
 					current.tooltip = BuildPipeline.GetBuildTargetGroupDisplayName(current.targetGroup) + " settings";
@@ -118,6 +128,7 @@ namespace UnityEditor
 				this.buildPlatforms = list.ToArray();
 				this.SetupStandaloneSubtargets();
 			}
+
 			private void SetupStandaloneSubtargets()
 			{
 				List<BuildTarget> list = new List<BuildTarget>();
@@ -125,21 +136,22 @@ namespace UnityEditor
 				if (ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(BuildTarget.StandaloneWindows)))
 				{
 					list.Add(BuildTarget.StandaloneWindows);
-					list2.Add(EditorGUIUtility.TextContent("BuildSettings.StandaloneWindows"));
+					list2.Add(EditorGUIUtility.TextContent("Windows"));
 				}
 				if (ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(BuildTarget.StandaloneOSXIntel)))
 				{
 					list.Add(BuildTarget.StandaloneOSXIntel);
-					list2.Add(EditorGUIUtility.TextContent("BuildSettings.StandaloneOSXIntel"));
+					list2.Add(EditorGUIUtility.TextContent("Mac OS X"));
 				}
 				if (ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(BuildTarget.StandaloneLinux)))
 				{
 					list.Add(BuildTarget.StandaloneLinux);
-					list2.Add(EditorGUIUtility.TextContent("BuildSettings.StandaloneLinux"));
+					list2.Add(EditorGUIUtility.TextContent("Linux"));
 				}
 				this.standaloneSubtargets = list.ToArray();
 				this.standaloneSubtargetStrings = list2.ToArray();
 			}
+
 			public string GetBuildTargetDisplayName(BuildTarget target)
 			{
 				BuildPlayerWindow.BuildPlatform[] array = this.buildPlatforms;
@@ -151,10 +163,6 @@ namespace UnityEditor
 						return buildPlatform.title.text;
 					}
 				}
-				if (target == BuildTarget.WebPlayerStreamed)
-				{
-					return this.BuildPlatformFromTargetGroup(BuildTargetGroup.WebPlayer).title.text;
-				}
 				for (int j = 0; j < this.standaloneSubtargets.Length; j++)
 				{
 					if (this.standaloneSubtargets[j] == BuildPlayerWindow.BuildPlatforms.DefaultTargetForPlatform(target))
@@ -164,6 +172,7 @@ namespace UnityEditor
 				}
 				return "Unsupported Target";
 			}
+
 			public static Dictionary<GUIContent, BuildTarget> GetArchitecturesForPlatform(BuildTarget target)
 			{
 				switch (target)
@@ -195,17 +204,14 @@ namespace UnityEditor
 					IL_78:
 					return new Dictionary<GUIContent, BuildTarget>
 					{
-
 						{
 							EditorGUIUtility.TextContent("x86"),
 							BuildTarget.StandaloneLinux
 						},
-
 						{
 							EditorGUIUtility.TextContent("x86_64"),
 							BuildTarget.StandaloneLinux64
 						},
-
 						{
 							EditorGUIUtility.TextContent("x86 + x86_64 (Universal)"),
 							BuildTarget.StandaloneLinuxUniversal
@@ -218,12 +224,10 @@ namespace UnityEditor
 				IL_4D:
 				return new Dictionary<GUIContent, BuildTarget>
 				{
-
 					{
 						EditorGUIUtility.TextContent("x86"),
 						BuildTarget.StandaloneWindows
 					},
-
 					{
 						EditorGUIUtility.TextContent("x86_64"),
 						BuildTarget.StandaloneWindows64
@@ -232,23 +236,21 @@ namespace UnityEditor
 				IL_B6:
 				return new Dictionary<GUIContent, BuildTarget>
 				{
-
 					{
 						EditorGUIUtility.TextContent("x86"),
 						BuildTarget.StandaloneOSXIntel
 					},
-
 					{
 						EditorGUIUtility.TextContent("x86_64"),
 						BuildTarget.StandaloneOSXIntel64
 					},
-
 					{
 						EditorGUIUtility.TextContent("Universal"),
 						BuildTarget.StandaloneOSXUniversal
 					}
 				};
 			}
+
 			public static BuildTarget DefaultTargetForPlatform(BuildTarget target)
 			{
 				switch (target)
@@ -261,6 +263,7 @@ namespace UnityEditor
 				case BuildTarget.WebGL:
 				case (BuildTarget)22:
 				case (BuildTarget)23:
+				case BuildTarget.WP8Player:
 					IL_37:
 					switch (target)
 					{
@@ -273,15 +276,14 @@ namespace UnityEditor
 					return target;
 				case BuildTarget.StandaloneWindows64:
 					return BuildTarget.StandaloneWindows;
-				case BuildTarget.MetroPlayer:
-					return BuildTarget.MetroPlayer;
-				case BuildTarget.WP8Player:
-					return BuildTarget.WP8Player;
+				case BuildTarget.WSAPlayer:
+					return BuildTarget.WSAPlayer;
 				case BuildTarget.StandaloneOSXIntel64:
 					return BuildTarget.StandaloneOSXIntel;
 				}
 				goto IL_37;
 			}
+
 			public int BuildPlatformIndexFromTargetGroup(BuildTargetGroup group)
 			{
 				for (int i = 0; i < this.buildPlatforms.Length; i++)
@@ -293,151 +295,196 @@ namespace UnityEditor
 				}
 				return -1;
 			}
+
 			public BuildPlayerWindow.BuildPlatform BuildPlatformFromTargetGroup(BuildTargetGroup group)
 			{
 				int num = this.BuildPlatformIndexFromTargetGroup(group);
 				return (num == -1) ? null : this.buildPlatforms[num];
 			}
 		}
+
 		private class Styles
 		{
 			public const float kButtonWidth = 110f;
+
 			private const string kShopURL = "https://store.unity3d.com/shop/";
+
 			private const string kDownloadURL = "http://unity3d.com/unity/download/";
+
 			private const string kMailURL = "http://unity3d.com/company/sales?type=sales";
+
 			public GUIStyle selected = "ServerUpdateChangesetOn";
+
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle title = "OL title";
+
 			public GUIStyle evenRow = "CN EntryBackEven";
+
 			public GUIStyle oddRow = "CN EntryBackOdd";
+
 			public GUIStyle platformSelector = "PlayerSettingsPlatform";
+
 			public GUIStyle toggle = "Toggle";
+
 			public GUIStyle levelString = "PlayerSettingsLevel";
+
 			public GUIStyle levelStringCounter = new GUIStyle("Label");
+
 			public Vector2 toggleSize;
-			public GUIContent noSessionDialogText = EditorGUIUtility.TextContent("UploadingBuildsMonitor.NoSessionDialogText");
-			public GUIContent platformTitle = EditorGUIUtility.TextContent("BuildSettings.PlatformTitle");
-			public GUIContent switchPlatform = EditorGUIUtility.TextContent("BuildSettings.SwitchPlatform");
-			public GUIContent build = EditorGUIUtility.TextContent("BuildSettings.Build");
-			public GUIContent export = EditorGUIUtility.TextContent("BuildSettings.Export");
-			public GUIContent buildAndRun = EditorGUIUtility.TextContent("BuildSettings.BuildAndRun");
-			public GUIContent scenesInBuild = EditorGUIUtility.TextContent("BuildSettings.ScenesInBuild");
+
+			public GUIContent noSessionDialogText = EditorGUIUtility.TextContent("In order to publish your build to UDN, you need to sign in via the AssetStore and tick the 'Stay signed in' checkbox.");
+
+			public GUIContent platformTitle = EditorGUIUtility.TextContent("Platform|Which platform to build for");
+
+			public GUIContent switchPlatform = EditorGUIUtility.TextContent("Switch Platform");
+
+			public GUIContent build = EditorGUIUtility.TextContent("Build");
+
+			public GUIContent export = EditorGUIUtility.TextContent("Export");
+
+			public GUIContent buildAndRun = EditorGUIUtility.TextContent("Build And Run");
+
+			public GUIContent scenesInBuild = EditorGUIUtility.TextContent("Scenes In Build|Which scenes to include in the build");
+
+			public GUIContent copyPdbFiles = EditorGUIUtility.TextContent("Copy PDB files|Copy pdb files to final destination, contains debugging symbols");
+
 			public Texture2D activePlatformIcon = EditorGUIUtility.IconContent("BuildSettings.SelectedIcon").image as Texture2D;
+
 			public GUIContent[,] notLicensedMessages;
+
 			private GUIContent[,] buildTargetNotInstalled;
+
 			public GUIContent standaloneTarget;
+
 			public GUIContent architecture;
-			public GUIContent webPlayerStreamed;
-			public GUIContent webPlayerOfflineDeployment;
+
 			public GUIContent debugBuild;
+
 			public GUIContent profileBuild;
+
 			public GUIContent allowDebugging;
+
 			public GUIContent symlinkiOSLibraries;
+
 			public GUIContent explicitNullChecks;
+
+			public GUIContent explicitDivideByZeroChecks;
+
 			public GUIContent enableHeadlessMode;
-			public GUIContent webGLOptimizationLevel;
+
 			public GUIContent buildScriptsOnly;
+
+			public GUIContent forceOptimizeScriptCompilation;
+
+			public GUIContent learnAboutUnityCloudBuild;
+
 			public Styles()
 			{
-				GUIContent[,] expr_128 = new GUIContent[16, 3];
-				expr_128[0, 0] = EditorGUIUtility.TextContent("BuildSettings.NoWeb");
-				expr_128[0, 1] = EditorGUIUtility.TextContent("BuildSettings.NoWebButton");
-				expr_128[0, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[1, 0] = EditorGUIUtility.TextContent("BuildSettings.NoStandalone");
-				expr_128[1, 1] = EditorGUIUtility.TextContent("BuildSettings.NoWebButton");
-				expr_128[1, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[2, 0] = EditorGUIUtility.TextContent("BuildSettings.NoiPhone");
-				expr_128[2, 1] = EditorGUIUtility.TextContent("BuildSettings.NoiPhoneButton");
-				expr_128[2, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[3, 0] = EditorGUIUtility.TextContent("BuildSettings.NoAndroid");
-				expr_128[3, 1] = EditorGUIUtility.TextContent("BuildSettings.NoAndroidButton");
-				expr_128[3, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[4, 0] = EditorGUIUtility.TextContent("BuildSettings.NoBB10");
-				expr_128[4, 1] = EditorGUIUtility.TextContent("BuildSettings.NoBB10Button");
-				expr_128[4, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[5, 0] = EditorGUIUtility.TextContent("BuildSettings.NoTizen");
-				expr_128[5, 1] = EditorGUIUtility.TextContent("BuildSettings.NoTizenButton");
-				expr_128[5, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[6, 0] = EditorGUIUtility.TextContent("BuildSettings.NoXBox360");
-				expr_128[6, 1] = EditorGUIUtility.TextContent("BuildSettings.NoXBox360Button");
-				expr_128[6, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
-				expr_128[7, 0] = EditorGUIUtility.TextContent("BuildSettings.NoXboxOne");
-				expr_128[7, 1] = EditorGUIUtility.TextContent("BuildSettings.NoXboxOneButton");
-				expr_128[7, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
-				expr_128[8, 0] = EditorGUIUtility.TextContent("BuildSettings.NoPS3");
-				expr_128[8, 1] = EditorGUIUtility.TextContent("BuildSettings.NoPS3Button");
-				expr_128[8, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
-				expr_128[9, 0] = EditorGUIUtility.TextContent("BuildSettings.NoPSP2");
-				expr_128[9, 1] = EditorGUIUtility.TextContent("BuildSettings.NoPSP2Button");
-				expr_128[9, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
-				expr_128[10, 0] = EditorGUIUtility.TextContent("BuildSettings.NoPS4");
-				expr_128[10, 1] = EditorGUIUtility.TextContent("BuildSettings.NoPS4Button");
-				expr_128[10, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
-				expr_128[11, 0] = EditorGUIUtility.TextContent("BuildSettings.NoGLESEmu");
-				expr_128[11, 1] = EditorGUIUtility.TextContent("BuildSettings.NoGLESEmuButton");
-				expr_128[11, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
-				expr_128[12, 0] = EditorGUIUtility.TextContent("BuildSettings.NoFlash");
-				expr_128[12, 1] = EditorGUIUtility.TextContent("BuildSettings.NoFlashButton");
-				expr_128[12, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[13, 0] = EditorGUIUtility.TextContent("BuildSettings.NoMetro");
-				expr_128[13, 1] = EditorGUIUtility.TextContent("BuildSettings.NoMetroButton");
-				expr_128[13, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[14, 0] = EditorGUIUtility.TextContent("BuildSettings.NoWP8");
-				expr_128[14, 1] = EditorGUIUtility.TextContent("BuildSettings.NoWP8Button");
-				expr_128[14, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				expr_128[15, 0] = EditorGUIUtility.TextContent("BuildSettings.NoSamsungTV");
-				expr_128[15, 1] = EditorGUIUtility.TextContent("BuildSettings.NoSamsungTVButton");
-				expr_128[15, 2] = new GUIContent("https://store.unity3d.com/shop/");
-				this.notLicensedMessages = expr_128;
-				GUIContent[,] expr_4AB = new GUIContent[16, 3];
-				expr_4AB[0, 0] = EditorGUIUtility.TextContent("BuildSettings.WebNotInstalled");
-				expr_4AB[0, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[1, 0] = EditorGUIUtility.TextContent("BuildSettings.StandaloneNotInstalled");
-				expr_4AB[1, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[2, 0] = EditorGUIUtility.TextContent("BuildSettings.iPhoneNotInstalled");
-				expr_4AB[2, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[3, 0] = EditorGUIUtility.TextContent("BuildSettings.AndroidNotInstalled");
-				expr_4AB[3, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[4, 0] = EditorGUIUtility.TextContent("BuildSettings.BlackBerryNotInstalled");
-				expr_4AB[4, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[5, 0] = EditorGUIUtility.TextContent("BuildSettings.TizenNotInstalled");
-				expr_4AB[5, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[6, 0] = EditorGUIUtility.TextContent("BuildSettings.XBOX360NotInstalled");
-				expr_4AB[6, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[7, 0] = EditorGUIUtility.TextContent("BuildSettings.XboxOneNotInstalled");
-				expr_4AB[7, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[8, 0] = EditorGUIUtility.TextContent("BuildSettings.PS3NotInstalled");
-				expr_4AB[8, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[9, 0] = EditorGUIUtility.TextContent("BuildSettings.PSP2NotInstalled");
-				expr_4AB[9, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[10, 0] = EditorGUIUtility.TextContent("BuildSettings.PS4NotInstalled");
-				expr_4AB[10, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[11, 0] = EditorGUIUtility.TextContent("BuildSettings.GLESEmuNotInstalled");
-				expr_4AB[11, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[12, 0] = EditorGUIUtility.TextContent("BuildSettings.FlashNotInstalled");
-				expr_4AB[12, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[13, 0] = EditorGUIUtility.TextContent("BuildSettings.MetroNotInstalled");
-				expr_4AB[13, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[14, 0] = EditorGUIUtility.TextContent("BuildSettings.WP8NotInstalled");
-				expr_4AB[14, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				expr_4AB[15, 0] = EditorGUIUtility.TextContent("BuildSettings.SamsungTVNotInstalled");
-				expr_4AB[15, 2] = new GUIContent("http://unity3d.com/unity/download/");
-				this.buildTargetNotInstalled = expr_4AB;
-				this.standaloneTarget = EditorGUIUtility.TextContent("BuildSettings.StandaloneTarget");
-				this.architecture = EditorGUIUtility.TextContent("BuildSettings.Architecture");
-				this.webPlayerStreamed = EditorGUIUtility.TextContent("BuildSettings.WebPlayerStreamed");
-				this.webPlayerOfflineDeployment = EditorGUIUtility.TextContent("BuildSettings.WebPlayerOfflineDeployment");
-				this.debugBuild = EditorGUIUtility.TextContent("BuildSettings.DebugBuild");
-				this.profileBuild = EditorGUIUtility.TextContent("BuildSettings.ConnectProfiler");
-				this.allowDebugging = EditorGUIUtility.TextContent("BuildSettings.AllowDebugging");
-				this.symlinkiOSLibraries = EditorGUIUtility.TextContent("BuildSettings.SymlinkiOSLibraries");
-				this.explicitNullChecks = EditorGUIUtility.TextContent("BuildSettings.ExplicitNullChecks");
-				this.enableHeadlessMode = EditorGUIUtility.TextContent("BuildSettings.EnableHeadlessMode");
-				this.webGLOptimizationLevel = EditorGUIUtility.TextContent("BuildSettings.WebGLOptimizationLevel");
-				this.buildScriptsOnly = EditorGUIUtility.TextContent("BuildSettings.BuildScriptsOnly");
+				GUIContent[,] expr_138 = new GUIContent[15, 3];
+				expr_138[0, 0] = EditorGUIUtility.TextContent("Your license does not cover Standalone Publishing.");
+				expr_138[0, 1] = new GUIContent(string.Empty);
+				expr_138[0, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[1, 0] = EditorGUIUtility.TextContent("Your license does not cover iOS Publishing.");
+				expr_138[1, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[1, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[2, 0] = EditorGUIUtility.TextContent("Your license does not cover Apple TV Publishing.");
+				expr_138[2, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[2, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[3, 0] = EditorGUIUtility.TextContent("Your license does not cover Android Publishing.");
+				expr_138[3, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[3, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[4, 0] = EditorGUIUtility.TextContent("Your license does not cover Tizen Publishing.");
+				expr_138[4, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[4, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[5, 0] = EditorGUIUtility.TextContent("Your license does not cover Xbox 360 Publishing.");
+				expr_138[5, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[5, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				expr_138[6, 0] = EditorGUIUtility.TextContent("Your license does not cover Xbox One Publishing.");
+				expr_138[6, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[6, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				expr_138[7, 0] = EditorGUIUtility.TextContent("Your license does not cover PS3 Publishing.");
+				expr_138[7, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[7, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				expr_138[8, 0] = EditorGUIUtility.TextContent("Your license does not cover PS Vita Publishing.");
+				expr_138[8, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[8, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				expr_138[9, 0] = EditorGUIUtility.TextContent("Your license does not cover PS4 Publishing.");
+				expr_138[9, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[9, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				expr_138[10, 0] = EditorGUIUtility.TextContent("Your license does not cover Wii U Publishing.");
+				expr_138[10, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[10, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				expr_138[11, 0] = EditorGUIUtility.TextContent("Your license does not cover Windows Store Publishing.");
+				expr_138[11, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[11, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[12, 0] = EditorGUIUtility.TextContent("Your license does not cover Windows Phone 8 Publishing.");
+				expr_138[12, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[12, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[13, 0] = EditorGUIUtility.TextContent("Your license does not cover SamsungTV Publishing");
+				expr_138[13, 1] = EditorGUIUtility.TextContent("Go to Our Online Store");
+				expr_138[13, 2] = new GUIContent("https://store.unity3d.com/shop/");
+				expr_138[14, 0] = EditorGUIUtility.TextContent("Your license does not cover Nintendo 3DS Publishing");
+				expr_138[14, 1] = EditorGUIUtility.TextContent("Contact sales");
+				expr_138[14, 2] = new GUIContent("http://unity3d.com/company/sales?type=sales");
+				this.notLicensedMessages = expr_138;
+				GUIContent[,] expr_482 = new GUIContent[15, 3];
+				expr_482[0, 0] = EditorGUIUtility.TextContent("Standalone Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[0, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[1, 0] = EditorGUIUtility.TextContent("iOS Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[1, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[2, 0] = EditorGUIUtility.TextContent("Apple TV Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[2, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[3, 0] = EditorGUIUtility.TextContent("Android Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[3, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[4, 0] = EditorGUIUtility.TextContent("Tizen is not supported in this build.\nDownload a build that supports it.");
+				expr_482[4, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[5, 0] = EditorGUIUtility.TextContent("Xbox 360 Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[5, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[6, 0] = EditorGUIUtility.TextContent("Xbox One Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[6, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[7, 0] = EditorGUIUtility.TextContent("PS3 Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[7, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[8, 0] = EditorGUIUtility.TextContent("PS Vita Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[8, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[9, 0] = EditorGUIUtility.TextContent("PS4 Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[9, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[10, 0] = EditorGUIUtility.TextContent("Wii U Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[10, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[11, 0] = EditorGUIUtility.TextContent("Windows Store Player is not supported in\nthis build.\n\nDownload a build that supports it.");
+				expr_482[11, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[12, 0] = EditorGUIUtility.TextContent("Windows Phone 8 Player is not supported\nin this build.\n\nDownload a build that supports it.");
+				expr_482[12, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[13, 0] = EditorGUIUtility.TextContent("SamsungTV Player is not supported in this build.\nDownload a build that supports it.");
+				expr_482[13, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				expr_482[14, 0] = EditorGUIUtility.TextContent("Nintendo 3DS is not supported in this build.\nDownload a build that supports it.");
+				expr_482[14, 2] = new GUIContent("http://unity3d.com/unity/download/");
+				this.buildTargetNotInstalled = expr_482;
+				this.standaloneTarget = EditorGUIUtility.TextContent("Target Platform|Destination platform for standalone build");
+				this.architecture = EditorGUIUtility.TextContent("Architecture|Build architecture for standalone");
+				this.debugBuild = EditorGUIUtility.TextContent("Development Build");
+				this.profileBuild = EditorGUIUtility.TextContent("Autoconnect Profiler");
+				this.allowDebugging = EditorGUIUtility.TextContent("Script Debugging");
+				this.symlinkiOSLibraries = EditorGUIUtility.TextContent("Symlink Unity libraries");
+				this.explicitNullChecks = EditorGUIUtility.TextContent("Explicit Null Checks");
+				this.explicitDivideByZeroChecks = EditorGUIUtility.TextContent("Divide By Zero Checks");
+				this.enableHeadlessMode = EditorGUIUtility.TextContent("Headless Mode");
+				this.buildScriptsOnly = EditorGUIUtility.TextContent("Scripts Only Build");
+				this.forceOptimizeScriptCompilation = EditorGUIUtility.TextContent("Build Optimized Scripts|Compile IL2CPP using full compiler optimizations. Note this will obfuscate callstack output.");
+				this.learnAboutUnityCloudBuild = EditorGUIUtility.TextContent("Learn about Unity Cloud Build");
 				base..ctor();
 				this.levelStringCounter.alignment = TextAnchor.MiddleRight;
+				if (Unsupported.IsDeveloperBuild() && (this.buildTargetNotInstalled.GetLength(0) != this.notLicensedMessages.GetLength(0) || this.buildTargetNotInstalled.GetLength(0) != BuildPlayerWindow.s_BuildPlatforms.buildPlatforms.Length))
+				{
+					Debug.LogErrorFormat("Build platforms and messages are desynced in BuildPlayerWindow! ({0} vs. {1} vs. {2}) DON'T SHIP THIS!", new object[]
+					{
+						this.buildTargetNotInstalled.GetLength(0),
+						this.notLicensedMessages.GetLength(0),
+						BuildPlayerWindow.s_BuildPlatforms.buildPlatforms.Length
+					});
+				}
 			}
+
 			public GUIContent GetTargetNotInstalled(int index, int item)
 			{
 				if (index >= this.buildTargetNotInstalled.GetLength(0))
@@ -446,55 +493,44 @@ namespace UnityEditor
 				}
 				return this.buildTargetNotInstalled[index, item];
 			}
+
 			public GUIContent GetDownloadErrorForTarget(BuildTarget target)
 			{
 				return null;
 			}
 		}
-		private class ScenePostprocessor : AssetPostprocessor
-		{
-			private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromPath)
-			{
-				EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
-				for (int i = 0; i < movedAssets.Length; i++)
-				{
-					string path = movedAssets[i];
-					if (Path.GetExtension(path) == ".unity")
-					{
-						EditorBuildSettingsScene[] array = scenes;
-						for (int j = 0; j < array.Length; j++)
-						{
-							EditorBuildSettingsScene editorBuildSettingsScene = array[j];
-							if (editorBuildSettingsScene.path.ToLower() == movedFromPath[i].ToLower())
-							{
-								editorBuildSettingsScene.path = path;
-							}
-						}
-					}
-				}
-				EditorBuildSettings.scenes = scenes;
-			}
-		}
+
 		private const string kAssetsFolder = "Assets/";
+
 		private const string kEditorBuildSettingsPath = "ProjectSettings/EditorBuildSettings.asset";
+
 		private static BuildPlayerWindow.BuildPlatforms s_BuildPlatforms;
+
 		private ListViewState lv = new ListViewState();
+
 		private bool[] selectedLVItems = new bool[0];
+
 		private bool[] selectedBeforeDrag;
+
 		private int initialSelectedLVItem = -1;
+
 		private Vector2 scrollPosition = new Vector2(0f, 0f);
+
 		private static BuildPlayerWindow.Styles styles;
+
 		public BuildPlayerWindow()
 		{
 			base.position = new Rect(50f, 50f, 540f, 530f);
-			base.minSize = new Vector2(550f, 580f);
-			base.title = "Build Settings";
+			base.minSize = new Vector2(630f, 580f);
+			base.titleContent = new GUIContent("Build Settings");
 		}
+
 		private static void ShowBuildPlayerWindow()
 		{
 			EditorUserBuildSettings.selectedBuildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
 			EditorWindow.GetWindow<BuildPlayerWindow>(true, "Build Settings");
 		}
+
 		private static void BuildPlayerAndRun()
 		{
 			if (!BuildPlayerWindow.BuildPlayerWithDefaultSettings(false, BuildOptions.AutoRunPlayer))
@@ -502,6 +538,7 @@ namespace UnityEditor
 				BuildPlayerWindow.ShowBuildPlayerWindow();
 			}
 		}
+
 		private static void BuildPlayerAndSelect()
 		{
 			if (!BuildPlayerWindow.BuildPlayerWithDefaultSettings(false, BuildOptions.ShowBuiltPlayer))
@@ -509,77 +546,33 @@ namespace UnityEditor
 				BuildPlayerWindow.ShowBuildPlayerWindow();
 			}
 		}
-		private static bool EnsureLoggedInAndBuild(bool askForBuildLocation, BuildOptions forceOptions)
-		{
-			if (string.IsNullOrEmpty(UploadingBuildsMonitor.GetActiveSessionID()))
-			{
-				AssetStoreLoginWindow.Login(BuildPlayerWindow.styles.noSessionDialogText.text, delegate(string errorMessage)
-				{
-					if (string.IsNullOrEmpty(errorMessage))
-					{
-						BuildPlayerWindow.BuildPlayerWithDefaultSettings(askForBuildLocation, forceOptions, false);
-					}
-					else
-					{
-						Debug.LogError(errorMessage);
-					}
-				});
-				return false;
-			}
-			return true;
-		}
+
 		private static bool BuildPlayerWithDefaultSettings(bool askForBuildLocation, BuildOptions forceOptions)
 		{
 			return BuildPlayerWindow.BuildPlayerWithDefaultSettings(askForBuildLocation, forceOptions, true);
 		}
+
 		private static bool IsMetroPlayer(BuildTarget target)
 		{
-			return target == BuildTarget.MetroPlayer;
+			return target == BuildTarget.WSAPlayer;
 		}
-		private static bool IsWP8Player(BuildTarget target)
-		{
-			return target == BuildTarget.WP8Player;
-		}
-		private static bool IsIl2cppBuild()
-		{
-			int num = 0;
-			PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref num, EditorUserBuildSettings.selectedBuildTargetGroup);
-			return num == 1;
-		}
-		private static ScriptingImplementation GetDefaultNonIl2cppBackend()
-		{
-			IScriptingImplementations scriptingImplementations = ModuleManager.GetScriptingImplementations(EditorUserBuildSettings.selectedBuildTargetGroup);
-			if (scriptingImplementations == null || scriptingImplementations.Enabled == null || scriptingImplementations.Enabled.Length == 0)
-			{
-				return ScriptingImplementation.Mono2x;
-			}
-			if (scriptingImplementations.Enabled.Length == 1)
-			{
-				return scriptingImplementations.Enabled[0];
-			}
-			ScriptingImplementation result = ScriptingImplementation.Mono2x;
-			ScriptingImplementation[] enabled = scriptingImplementations.Enabled;
-			for (int i = 0; i < enabled.Length; i++)
-			{
-				ScriptingImplementation scriptingImplementation = enabled[i];
-				if (scriptingImplementation != ScriptingImplementation.IL2CPP)
-				{
-					result = scriptingImplementation;
-					break;
-				}
-			}
-			return result;
-		}
+
 		private static bool BuildPlayerWithDefaultSettings(bool askForBuildLocation, BuildOptions forceOptions, bool first)
 		{
 			bool flag = false;
-			if (first && EditorUserBuildSettings.webPlayerDeployOnline && !BuildPlayerWindow.EnsureLoggedInAndBuild(askForBuildLocation, forceOptions))
+			BuildPlayerWindow.InitBuildPlatforms();
+			if (!UnityConnect.instance.canBuildWithUPID && !EditorUtility.DisplayDialog("Missing Project ID", "Because you are not a member of this project this build will not access Unity services.\nDo you want to continue?", "Yes", "No"))
 			{
 				return false;
 			}
-			BuildPlayerWindow.InitBuildPlatforms();
 			BuildTarget buildTarget = BuildPlayerWindow.CalculateSelectedBuildTarget();
 			if (!BuildPipeline.IsBuildTargetSupported(buildTarget))
+			{
+				return false;
+			}
+			string targetStringFromBuildTargetGroup = ModuleManager.GetTargetStringFromBuildTargetGroup(BuildPlayerWindow.s_BuildPlatforms.BuildPlatformFromTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup).targetGroup);
+			IBuildWindowExtension buildWindowExtension = ModuleManager.GetBuildWindowExtension(targetStringFromBuildTargetGroup);
+			if (buildWindowExtension != null && (forceOptions & BuildOptions.AutoRunPlayer) != BuildOptions.None && !buildWindowExtension.EnabledBuildAndRunButton())
 			{
 				return false;
 			}
@@ -594,13 +587,8 @@ namespace UnityEditor
 					return false;
 				}
 			}
-			if (buildTarget == BuildTarget.BB10 && (forceOptions & BuildOptions.AutoRunPlayer) != BuildOptions.None && (string.IsNullOrEmpty(PlayerSettings.BlackBerry.deviceAddress) || string.IsNullOrEmpty(PlayerSettings.BlackBerry.devicePassword)))
-			{
-				Debug.LogError(EditorGUIUtility.TextContent("BuildSettings.BlackBerryValidationFailed").text);
-				return false;
-			}
 			string text = string.Empty;
-			bool flag2 = EditorUserBuildSettings.installInBuildFolder && PostprocessBuildPlayer.SupportsInstallInBuildFolder(buildTarget) && (Unsupported.IsDeveloperBuild() || BuildPlayerWindow.IsMetroPlayer(buildTarget) || BuildPlayerWindow.IsWP8Player(buildTarget));
+			bool flag2 = EditorUserBuildSettings.installInBuildFolder && PostprocessBuildPlayer.SupportsInstallInBuildFolder(buildTarget) && (Unsupported.IsDeveloperBuild() || BuildPlayerWindow.IsMetroPlayer(buildTarget));
 			BuildOptions buildOptions = forceOptions;
 			bool development = EditorUserBuildSettings.development;
 			if (development)
@@ -619,19 +607,11 @@ namespace UnityEditor
 			{
 				buildOptions |= BuildOptions.AcceptExternalModificationsToPlayer;
 			}
-			if (EditorUserBuildSettings.webPlayerDeployOnline)
-			{
-				buildOptions |= BuildOptions.DeployOnline;
-			}
-			if (EditorUserBuildSettings.webPlayerOfflineDeployment)
-			{
-				buildOptions |= BuildOptions.WebPlayerOfflineDeployment;
-			}
 			if (EditorUserBuildSettings.enableHeadlessMode)
 			{
 				buildOptions |= BuildOptions.EnableHeadlessMode;
 			}
-			if (EditorUserBuildSettings.connectProfiler && (development || buildTarget == BuildTarget.MetroPlayer || BuildPlayerWindow.IsWP8Player(buildTarget)))
+			if (EditorUserBuildSettings.connectProfiler && (development || buildTarget == BuildTarget.WSAPlayer))
 			{
 				buildOptions |= BuildOptions.ConnectWithProfiler;
 			}
@@ -639,40 +619,21 @@ namespace UnityEditor
 			{
 				buildOptions |= BuildOptions.BuildScriptsOnly;
 			}
+			if (EditorUserBuildSettings.forceOptimizeScriptCompilation)
+			{
+				buildOptions |= BuildOptions.ForceOptimizeScriptCompilation;
+			}
 			if (flag2)
 			{
 				buildOptions |= BuildOptions.InstallInBuildFolder;
 			}
 			if (!flag2)
 			{
-				if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.WebPlayer && EditorUserBuildSettings.webPlayerDeployOnline)
+				if (askForBuildLocation && !BuildPlayerWindow.PickBuildLocation(buildTarget, buildOptions, out flag))
 				{
-					text = Path.Combine(Path.Combine(Path.GetTempPath(), "Unity"), "UDNBuild");
-					try
-					{
-						Directory.CreateDirectory(text);
-					}
-					catch (Exception)
-					{
-					}
-					if (!Directory.Exists(text))
-					{
-						Debug.LogErrorFormat("Failed to create temporary build directory at {0}", new object[]
-						{
-							text
-						});
-						return false;
-					}
-					text = text.Replace('\\', '/');
+					return false;
 				}
-				else
-				{
-					if (askForBuildLocation && !BuildPlayerWindow.PickBuildLocation(buildTarget, buildOptions, out flag))
-					{
-						return false;
-					}
-					text = EditorUserBuildSettings.GetBuildLocation(buildTarget);
-				}
+				text = EditorUserBuildSettings.GetBuildLocation(buildTarget);
 				if (text.Length == 0)
 				{
 					return false;
@@ -730,10 +691,10 @@ namespace UnityEditor
 					delayToAfterScriptReload = true;
 				}
 			}
-			uint num = 0u;
-			string text2 = BuildPipeline.BuildPlayerInternalNoCheck(levels, text, buildTarget, buildOptions, delayToAfterScriptReload, out num);
-			return text2.Length == 0;
+			BuildReport buildReport = BuildPipeline.BuildPlayerInternalNoCheck(levels, text, buildTarget, buildOptions, delayToAfterScriptReload);
+			return buildReport == null || buildReport.totalErrors == 0;
 		}
+
 		private void ActiveScenesGUI()
 		{
 			int num = 0;
@@ -742,16 +703,16 @@ namespace UnityEditor
 			bool actionKey = EditorGUI.actionKey;
 			Event current = Event.current;
 			Rect rect = GUILayoutUtility.GetRect(BuildPlayerWindow.styles.scenesInBuild, BuildPlayerWindow.styles.title);
-			ArrayList arrayList = new ArrayList(EditorBuildSettings.scenes);
-			this.lv.totalRows = arrayList.Count;
-			if (this.selectedLVItems.Length != arrayList.Count)
+			List<EditorBuildSettingsScene> list = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+			this.lv.totalRows = list.Count;
+			if (this.selectedLVItems.Length != list.Count)
 			{
-				Array.Resize<bool>(ref this.selectedLVItems, arrayList.Count);
+				Array.Resize<bool>(ref this.selectedLVItems, list.Count);
 			}
-			int[] array = new int[arrayList.Count];
+			int[] array = new int[list.Count];
 			for (int i = 0; i < array.Length; i++)
 			{
-				EditorBuildSettingsScene editorBuildSettingsScene = (EditorBuildSettingsScene)arrayList[i];
+				EditorBuildSettingsScene editorBuildSettingsScene = list[i];
 				array[i] = num;
 				if (editorBuildSettingsScene.enabled)
 				{
@@ -760,47 +721,52 @@ namespace UnityEditor
 			}
 			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv, (ListViewOptions)3, BuildPlayerWindow.styles.box, new GUILayoutOption[0]))
 			{
-				EditorBuildSettingsScene editorBuildSettingsScene2 = (EditorBuildSettingsScene)arrayList[listViewElement.row];
+				EditorBuildSettingsScene editorBuildSettingsScene2 = list[listViewElement.row];
 				bool flag = File.Exists(editorBuildSettingsScene2.path);
-				EditorGUI.BeginDisabledGroup(!flag);
-				bool flag2 = this.selectedLVItems[listViewElement.row];
-				if (flag2 && current.type == EventType.Repaint)
+				using (new EditorGUI.DisabledScope(!flag))
 				{
-					BuildPlayerWindow.styles.selected.Draw(listViewElement.position, false, false, false, false);
-				}
-				if (!flag)
-				{
-					editorBuildSettingsScene2.enabled = false;
-				}
-				Rect position = new Rect(listViewElement.position.x + 4f, listViewElement.position.y, BuildPlayerWindow.styles.toggleSize.x, BuildPlayerWindow.styles.toggleSize.y);
-				EditorGUI.BeginChangeCheck();
-				editorBuildSettingsScene2.enabled = GUI.Toggle(position, editorBuildSettingsScene2.enabled, string.Empty);
-				if (EditorGUI.EndChangeCheck() && flag2)
-				{
-					for (int j = 0; j < arrayList.Count; j++)
+					bool flag2 = this.selectedLVItems[listViewElement.row];
+					if (flag2 && current.type == EventType.Repaint)
 					{
-						if (this.selectedLVItems[j])
+						BuildPlayerWindow.styles.selected.Draw(listViewElement.position, false, false, false, false);
+					}
+					if (!flag)
+					{
+						editorBuildSettingsScene2.enabled = false;
+					}
+					Rect position = new Rect(listViewElement.position.x + 4f, listViewElement.position.y, BuildPlayerWindow.styles.toggleSize.x, BuildPlayerWindow.styles.toggleSize.y);
+					EditorGUI.BeginChangeCheck();
+					editorBuildSettingsScene2.enabled = GUI.Toggle(position, editorBuildSettingsScene2.enabled, string.Empty);
+					if (EditorGUI.EndChangeCheck() && flag2)
+					{
+						for (int j = 0; j < list.Count; j++)
 						{
-							((EditorBuildSettingsScene)arrayList[j]).enabled = editorBuildSettingsScene2.enabled;
+							if (this.selectedLVItems[j])
+							{
+								list[j].enabled = editorBuildSettingsScene2.enabled;
+							}
 						}
 					}
+					GUILayout.Space(BuildPlayerWindow.styles.toggleSize.x);
+					string text = editorBuildSettingsScene2.path;
+					if (text.StartsWith("Assets/"))
+					{
+						text = text.Substring("Assets/".Length);
+					}
+					if (text.EndsWith(".unity", StringComparison.InvariantCultureIgnoreCase))
+					{
+						text = text.Substring(0, text.Length - ".unity".Length);
+					}
+					Rect rect2 = GUILayoutUtility.GetRect(EditorGUIUtility.TempContent(text), BuildPlayerWindow.styles.levelString);
+					if (Event.current.type == EventType.Repaint)
+					{
+						BuildPlayerWindow.styles.levelString.Draw(rect2, EditorGUIUtility.TempContent(text), false, false, flag2, false);
+					}
+					GUILayout.Label((!editorBuildSettingsScene2.enabled) ? string.Empty : array[listViewElement.row].ToString(), BuildPlayerWindow.styles.levelStringCounter, new GUILayoutOption[]
+					{
+						GUILayout.MaxWidth(36f)
+					});
 				}
-				GUILayout.Space(BuildPlayerWindow.styles.toggleSize.x);
-				string text = editorBuildSettingsScene2.path;
-				if (text.StartsWith("Assets/"))
-				{
-					text = text.Substring("Assets/".Length);
-				}
-				Rect rect2 = GUILayoutUtility.GetRect(EditorGUIUtility.TempContent(text), BuildPlayerWindow.styles.levelString);
-				if (Event.current.type == EventType.Repaint)
-				{
-					BuildPlayerWindow.styles.levelString.Draw(rect2, EditorGUIUtility.TempContent(text), false, false, flag2, false);
-				}
-				GUILayout.Label((!editorBuildSettingsScene2.enabled) ? string.Empty : array[listViewElement.row].ToString(), BuildPlayerWindow.styles.levelStringCounter, new GUILayoutOption[]
-				{
-					GUILayout.MaxWidth(36f)
-				});
-				EditorGUI.EndDisabledGroup();
 				if (ListViewGUILayout.HasMouseUp(listViewElement.position) && !shift && !actionKey)
 				{
 					if (!shift && !actionKey)
@@ -808,19 +774,16 @@ namespace UnityEditor
 						ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLVItem, ref this.selectedLVItems);
 					}
 				}
-				else
+				else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 				{
-					if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+					if (!this.selectedLVItems[listViewElement.row] || shift || actionKey)
 					{
-						if (!this.selectedLVItems[listViewElement.row] || shift || actionKey)
-						{
-							ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLVItem, ref this.selectedLVItems);
-						}
-						this.lv.row = listViewElement.row;
-						this.selectedBeforeDrag = new bool[this.selectedLVItems.Length];
-						this.selectedLVItems.CopyTo(this.selectedBeforeDrag, 0);
-						this.selectedBeforeDrag[this.lv.row] = true;
+						ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLVItem, ref this.selectedLVItems);
 					}
+					this.lv.row = listViewElement.row;
+					this.selectedBeforeDrag = new bool[this.selectedLVItems.Length];
+					this.selectedLVItems.CopyTo(this.selectedBeforeDrag, 0);
+					this.selectedBeforeDrag[this.lv.row] = true;
 				}
 			}
 			GUI.Label(rect, BuildPlayerWindow.styles.scenesInBuild, BuildPlayerWindow.styles.title);
@@ -830,18 +793,15 @@ namespace UnityEditor
 				{
 					Event.current.Use();
 				}
-				else
+				else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
 				{
-					if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
+					for (int i = 0; i < this.selectedLVItems.Length; i++)
 					{
-						for (int i = 0; i < this.selectedLVItems.Length; i++)
-						{
-							this.selectedLVItems[i] = true;
-						}
-						this.lv.selectionChanged = true;
-						Event.current.Use();
-						GUIUtility.ExitGUI();
+						this.selectedLVItems[i] = true;
 					}
+					this.lv.selectionChanged = true;
+					Event.current.Use();
+					GUIUtility.ExitGUI();
 				}
 			}
 			if (this.lv.selectionChanged)
@@ -854,21 +814,25 @@ namespace UnityEditor
 				int num2 = 0;
 				for (int i = 0; i < this.lv.fileNames.Length; i++)
 				{
-					if (this.lv.fileNames[i].EndsWith("unity"))
+					if (this.lv.fileNames[i].EndsWith("unity", StringComparison.InvariantCultureIgnoreCase))
 					{
-						EditorBuildSettingsScene editorBuildSettingsScene3 = new EditorBuildSettingsScene();
-						editorBuildSettingsScene3.path = FileUtil.GetProjectRelativePath(this.lv.fileNames[i]);
-						if (editorBuildSettingsScene3.path == string.Empty)
+						string scenePath = FileUtil.GetProjectRelativePath(this.lv.fileNames[i]);
+						if (scenePath == string.Empty)
 						{
-							editorBuildSettingsScene3.path = this.lv.fileNames[i];
+							scenePath = this.lv.fileNames[i];
 						}
-						editorBuildSettingsScene3.enabled = true;
-						arrayList.Insert(this.lv.draggedTo + num2++, editorBuildSettingsScene3);
+						if (!list.Any((EditorBuildSettingsScene s) => s.path == scenePath))
+						{
+							EditorBuildSettingsScene editorBuildSettingsScene3 = new EditorBuildSettingsScene();
+							editorBuildSettingsScene3.path = scenePath;
+							editorBuildSettingsScene3.enabled = true;
+							list.Insert(this.lv.draggedTo + num2++, editorBuildSettingsScene3);
+						}
 					}
 				}
 				if (num2 != 0)
 				{
-					Array.Resize<bool>(ref this.selectedLVItems, arrayList.Count);
+					Array.Resize<bool>(ref this.selectedLVItems, list.Count);
 					for (int i = 0; i < this.selectedLVItems.Length; i++)
 					{
 						this.selectedLVItems[i] = (i >= this.lv.draggedTo && i < this.lv.draggedTo + num2);
@@ -878,15 +842,15 @@ namespace UnityEditor
 			}
 			if (this.lv.draggedTo != -1)
 			{
-				ArrayList arrayList2 = new ArrayList();
+				List<EditorBuildSettingsScene> list2 = new List<EditorBuildSettingsScene>();
 				int num3 = 0;
 				int i = 0;
 				while (i < this.selectedLVItems.Length)
 				{
 					if (this.selectedBeforeDrag[i])
 					{
-						arrayList2.Add(arrayList[num3]);
-						arrayList.RemoveAt(num3);
+						list2.Add(list[num3]);
+						list.RemoveAt(num3);
 						num3--;
 						if (this.lv.draggedTo >= i)
 						{
@@ -896,14 +860,14 @@ namespace UnityEditor
 					i++;
 					num3++;
 				}
-				this.lv.draggedTo = ((this.lv.draggedTo <= arrayList.Count && this.lv.draggedTo >= 0) ? this.lv.draggedTo : arrayList.Count);
-				arrayList.InsertRange(this.lv.draggedTo, arrayList2);
+				this.lv.draggedTo = ((this.lv.draggedTo <= list.Count && this.lv.draggedTo >= 0) ? this.lv.draggedTo : list.Count);
+				list.InsertRange(this.lv.draggedTo, list2);
 				for (i = 0; i < this.selectedLVItems.Length; i++)
 				{
-					this.selectedLVItems[i] = (i >= this.lv.draggedTo && i < this.lv.draggedTo + arrayList2.Count);
+					this.selectedLVItems[i] = (i >= this.lv.draggedTo && i < this.lv.draggedTo + list2.Count);
 				}
 			}
-			if (current.type == EventType.KeyDown && (current.keyCode == KeyCode.Backspace || current.keyCode == KeyCode.Delete))
+			if (current.type == EventType.KeyDown && (current.keyCode == KeyCode.Backspace || current.keyCode == KeyCode.Delete) && GUIUtility.keyboardControl == this.lv.ID)
 			{
 				int num3 = 0;
 				int i = 0;
@@ -911,7 +875,7 @@ namespace UnityEditor
 				{
 					if (this.selectedLVItems[i])
 					{
-						arrayList.RemoveAt(num3);
+						list.RemoveAt(num3);
 						num3--;
 					}
 					this.selectedLVItems[i] = false;
@@ -921,30 +885,38 @@ namespace UnityEditor
 				this.lv.row = 0;
 				current.Use();
 			}
-			EditorBuildSettings.scenes = (arrayList.ToArray(typeof(EditorBuildSettingsScene)) as EditorBuildSettingsScene[]);
+			EditorBuildSettings.scenes = list.ToArray();
 		}
-		private void AddCurrentScene()
+
+		private void AddOpenScenes()
 		{
-			string currentScene = EditorApplication.currentScene;
-			if (currentScene.Length == 0)
+			List<EditorBuildSettingsScene> list = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+			bool flag = false;
+			for (int i = 0; i < SceneManager.sceneCount; i++)
 			{
-				EditorApplication.SaveCurrentSceneIfUserWantsToForce();
-				currentScene = EditorApplication.currentScene;
-			}
-			if (currentScene.Length != 0)
-			{
-				EditorBuildSettings.scenes = (new ArrayList(EditorBuildSettings.scenes)
+				Scene scene = SceneManager.GetSceneAt(i);
+				if (scene.path.Length != 0 || EditorSceneManager.SaveScene(scene, string.Empty, false))
 				{
-					new EditorBuildSettingsScene
+					if (!list.Any((EditorBuildSettingsScene s) => s.path == scene.path))
 					{
-						path = currentScene,
-						enabled = true
+						list.Add(new EditorBuildSettingsScene
+						{
+							path = scene.path,
+							enabled = true
+						});
+						flag = true;
 					}
-				}.ToArray(typeof(EditorBuildSettingsScene)) as EditorBuildSettingsScene[]);
+				}
 			}
+			if (!flag)
+			{
+				return;
+			}
+			EditorBuildSettings.scenes = list.ToArray();
 			base.Repaint();
 			GUIUtility.ExitGUI();
 		}
+
 		private static BuildTarget CalculateSelectedBuildTarget()
 		{
 			BuildTargetGroup selectedBuildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
@@ -952,10 +924,6 @@ namespace UnityEditor
 			if (buildTargetGroup == BuildTargetGroup.Standalone)
 			{
 				return EditorUserBuildSettings.selectedStandaloneTarget;
-			}
-			if (buildTargetGroup == BuildTargetGroup.WebPlayer)
-			{
-				return (!EditorUserBuildSettings.webPlayerStreamed) ? BuildTarget.WebPlayer : BuildTarget.WebPlayerStreamed;
 			}
 			if (BuildPlayerWindow.s_BuildPlatforms == null)
 			{
@@ -968,6 +936,7 @@ namespace UnityEditor
 			}
 			return buildPlatform.DefaultTarget;
 		}
+
 		private void ActiveBuildTargetsGUI()
 		{
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
@@ -1022,6 +991,18 @@ namespace UnityEditor
 			GUI.enabled = true;
 			GUILayout.EndVertical();
 		}
+
+		private void ShowAlert()
+		{
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(10f);
+			GUILayout.BeginVertical(new GUILayoutOption[0]);
+			EditorGUILayout.HelpBox("Because you are not a member of this project this build will not access Unity services.", MessageType.Warning);
+			GUILayout.EndVertical();
+			GUILayout.Space(5f);
+			GUILayout.EndHorizontal();
+		}
+
 		private void ShowOption(BuildPlayerWindow.BuildPlatform bp, GUIContent title, GUIStyle background)
 		{
 			Rect rect = GUILayoutUtility.GetRect(50f, 36f);
@@ -1053,46 +1034,51 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void OnGUI()
 		{
+			BuildPlayerWindow.InitBuildPlatforms();
 			if (BuildPlayerWindow.styles == null)
 			{
 				BuildPlayerWindow.styles = new BuildPlayerWindow.Styles();
 				BuildPlayerWindow.styles.toggleSize = BuildPlayerWindow.styles.toggle.CalcSize(new GUIContent("X"));
 				this.lv.rowHeight = (int)BuildPlayerWindow.styles.levelString.CalcHeight(new GUIContent("X"), 100f);
 			}
-			BuildPlayerWindow.InitBuildPlatforms();
-			GUILayout.Space(10f);
+			if (!UnityConnect.instance.canBuildWithUPID)
+			{
+				this.ShowAlert();
+			}
+			GUILayout.Space(5f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(10f);
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			string empty = string.Empty;
 			bool flag = !AssetDatabase.IsOpenForEdit("ProjectSettings/EditorBuildSettings.asset", out empty);
-			EditorGUI.BeginDisabledGroup(flag);
-			this.ActiveScenesGUI();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			if (flag)
+			using (new EditorGUI.DisabledScope(flag))
 			{
-				GUI.enabled = true;
-				if (Provider.enabled && GUILayout.Button("Checkout", new GUILayoutOption[0]))
+				this.ActiveScenesGUI();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				if (flag)
 				{
-					Asset assetByPath = Provider.GetAssetByPath("ProjectSettings/EditorBuildSettings.asset");
-					Task task = Provider.Checkout(new AssetList
+					GUI.enabled = true;
+					if (Provider.enabled && GUILayout.Button("Check out", new GUILayoutOption[0]))
 					{
-						assetByPath
-					}, CheckoutMode.Both);
-					task.SetCompletionAction(CompletionAction.UpdatePendingWindow);
+						Asset assetByPath = Provider.GetAssetByPath("ProjectSettings/EditorBuildSettings.asset");
+						Provider.Checkout(new AssetList
+						{
+							assetByPath
+						}, CheckoutMode.Asset);
+					}
+					GUILayout.Label(empty, new GUILayoutOption[0]);
+					GUI.enabled = false;
 				}
-				GUILayout.Label(empty, new GUILayoutOption[0]);
-				GUI.enabled = false;
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Add Open Scenes", new GUILayoutOption[0]))
+				{
+					this.AddOpenScenes();
+				}
+				GUILayout.EndHorizontal();
 			}
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Add Current", new GUILayoutOption[0]))
-			{
-				this.AddCurrentScene();
-			}
-			GUILayout.EndHorizontal();
-			EditorGUI.EndDisabledGroup();
 			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[]
 			{
@@ -1109,19 +1095,17 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.EndHorizontal();
 		}
+
 		private static BuildTarget RestoreLastKnownPlatformsBuildTarget(BuildPlayerWindow.BuildPlatform bp)
 		{
 			BuildTargetGroup targetGroup = bp.targetGroup;
-			if (targetGroup == BuildTargetGroup.Standalone)
-			{
-				return EditorUserBuildSettings.selectedStandaloneTarget;
-			}
-			if (targetGroup != BuildTargetGroup.WebPlayer)
+			if (targetGroup != BuildTargetGroup.Standalone)
 			{
 				return bp.DefaultTarget;
 			}
-			return (!EditorUserBuildSettings.webPlayerStreamed) ? BuildTarget.WebPlayer : BuildTarget.WebPlayerStreamed;
+			return EditorUserBuildSettings.selectedStandaloneTarget;
 		}
+
 		private static void InitBuildPlatforms()
 		{
 			if (BuildPlayerWindow.s_BuildPlatforms == null)
@@ -1130,6 +1114,7 @@ namespace UnityEditor
 				BuildPlayerWindow.RepairSelectedBuildTargetGroup();
 			}
 		}
+
 		internal static List<BuildPlayerWindow.BuildPlatform> GetValidPlatforms()
 		{
 			BuildPlayerWindow.InitBuildPlatforms();
@@ -1145,22 +1130,26 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		internal static bool IsBuildTargetGroupSupported(BuildTarget target)
 		{
 			return target == BuildTarget.StandaloneWindows || BuildPipeline.IsBuildTargetSupported(target);
 		}
+
 		private static void RepairSelectedBuildTargetGroup()
 		{
 			BuildTargetGroup selectedBuildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
 			if (selectedBuildTargetGroup == BuildTargetGroup.Unknown || BuildPlayerWindow.s_BuildPlatforms == null || BuildPlayerWindow.s_BuildPlatforms.BuildPlatformIndexFromTargetGroup(selectedBuildTargetGroup) < 0)
 			{
-				EditorUserBuildSettings.selectedBuildTargetGroup = BuildTargetGroup.WebPlayer;
+				EditorUserBuildSettings.selectedBuildTargetGroup = BuildTargetGroup.Standalone;
 			}
 		}
+
 		private static bool IsAnyStandaloneModuleLoaded()
 		{
 			return ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(BuildTarget.StandaloneLinux)) || ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(BuildTarget.StandaloneOSXIntel)) || ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(BuildTarget.StandaloneWindows));
 		}
+
 		private static BuildTarget GetBestStandaloneTarget(BuildTarget selectedTarget)
 		{
 			if (ModuleManager.IsPlatformSupportLoaded(ModuleManager.GetTargetStringFromBuildTarget(selectedTarget)))
@@ -1185,6 +1174,96 @@ namespace UnityEditor
 			}
 			return BuildTarget.StandaloneWindows;
 		}
+
+		private static string GetPlaybackEngineDownloadURL(string moduleName)
+		{
+			string unityVersionFull = InternalEditorUtility.GetUnityVersionFull();
+			string text = string.Empty;
+			string text2 = string.Empty;
+			int num = unityVersionFull.LastIndexOf('_');
+			if (num != -1)
+			{
+				text = unityVersionFull.Substring(num + 1);
+				text2 = unityVersionFull.Substring(0, num);
+			}
+			if (moduleName == "XboxOne")
+			{
+				return "http://blogs.unity3d.com/2014/08/11/unity-for-xbox-one-is-here/";
+			}
+			Dictionary<string, string> dictionary = new Dictionary<string, string>
+			{
+				{
+					"SamsungTV",
+					"Samsung-TV"
+				},
+				{
+					"tvOS",
+					"AppleTV"
+				},
+				{
+					"OSXStandalone",
+					"Mac"
+				},
+				{
+					"WindowsStandalone",
+					"Windows"
+				},
+				{
+					"LinuxStandalone",
+					"Linux"
+				}
+			};
+			if (dictionary.ContainsKey(moduleName))
+			{
+				moduleName = dictionary[moduleName];
+			}
+			string text3 = "Unknown";
+			string text4;
+			string text5;
+			if (text2.IndexOf('a') != -1 || text2.IndexOf('b') != -1)
+			{
+				text4 = "beta";
+				text5 = "download";
+			}
+			else
+			{
+				text4 = "download";
+				text5 = "download_unity";
+			}
+			if (Application.platform == RuntimePlatform.WindowsEditor)
+			{
+				text3 = "TargetSupportInstaller";
+			}
+			else if (Application.platform == RuntimePlatform.OSXEditor)
+			{
+				text3 = "MacEditorTargetInstaller";
+			}
+			string text6 = string.Concat(new string[]
+			{
+				"http://",
+				text4,
+				".unity3d.com/",
+				text5,
+				"/",
+				text,
+				"/",
+				text3,
+				"/UnitySetup-",
+				moduleName,
+				"-Support-for-Editor-",
+				text2
+			});
+			if (Application.platform == RuntimePlatform.WindowsEditor)
+			{
+				text6 += ".exe";
+			}
+			else if (Application.platform == RuntimePlatform.OSXEditor)
+			{
+				text6 += ".pkg";
+			}
+			return text6;
+		}
+
 		private void ShowBuildTargetSettings()
 		{
 			EditorGUIUtility.labelWidth = Mathf.Min(180f, (base.position.width - 265f) * 0.47f);
@@ -1203,18 +1282,37 @@ namespace UnityEditor
 				BuildPlayerWindow.GUIBuildButtons(false, false, false, buildPlatform);
 				return;
 			}
-			if (flag && !string.IsNullOrEmpty(ModuleManager.GetTargetStringFromBuildTarget(buildTarget)) && ModuleManager.GetBuildPostProcessor(buildTarget) == null && (EditorUserBuildSettings.selectedBuildTargetGroup != BuildTargetGroup.Standalone || !BuildPlayerWindow.IsAnyStandaloneModuleLoaded()))
+			string targetStringFromBuildTarget = ModuleManager.GetTargetStringFromBuildTarget(buildTarget);
+			if (flag && !string.IsNullOrEmpty(targetStringFromBuildTarget) && ModuleManager.GetBuildPostProcessor(buildTarget) == null && (EditorUserBuildSettings.selectedBuildTargetGroup != BuildTargetGroup.Standalone || !BuildPlayerWindow.IsAnyStandaloneModuleLoaded()))
 			{
 				GUILayout.Label("No " + BuildPlayerWindow.s_BuildPlatforms.GetBuildTargetDisplayName(buildTarget) + " module loaded.", new GUILayoutOption[0]);
-				if (GUILayout.Button("Module Manager", EditorStyles.miniButton, new GUILayoutOption[]
+				if (GUILayout.Button("Open Download Page", EditorStyles.miniButton, new GUILayoutOption[]
 				{
 					GUILayout.ExpandWidth(false)
 				}))
 				{
-					InternalEditorUtility.ShowPackageManagerWindow();
+					string playbackEngineDownloadURL = BuildPlayerWindow.GetPlaybackEngineDownloadURL(targetStringFromBuildTarget);
+					Help.BrowseURL(playbackEngineDownloadURL);
 				}
 				BuildPlayerWindow.GUIBuildButtons(false, false, false, buildPlatform);
 				return;
+			}
+			if (Application.HasProLicense() && !InternalEditorUtility.HasAdvancedLicenseOnBuildTarget(buildTarget))
+			{
+				string text = string.Format("{0} is not included in your Unity Plus or Pro license. Your {0} build will include a Unity Personal splash screen.\n\nYou must be eligible to use Unity Personal to use this build option. Please refer to our EULA for further information.", BuildPlayerWindow.s_BuildPlatforms.GetBuildTargetDisplayName(buildTarget));
+				GUILayout.BeginVertical(EditorStyles.helpBox, new GUILayoutOption[0]);
+				GUILayout.Label(text, EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				if (GUILayout.Button("EULA", EditorStyles.miniButton, new GUILayoutOption[0]))
+				{
+					Application.OpenURL("http://unity3d.com/legal/eula");
+				}
+				if (GUILayout.Button(string.Format("Add {0} to your Unity Plus or Pro license", BuildPlayerWindow.s_BuildPlatforms.GetBuildTargetDisplayName(buildTarget)), EditorStyles.miniButton, new GUILayoutOption[0]))
+				{
+					Application.OpenURL("http://unity3d.com/get-unity");
+				}
+				GUILayout.EndHorizontal();
+				GUILayout.EndVertical();
 			}
 			GUIContent downloadErrorForTarget = BuildPlayerWindow.styles.GetDownloadErrorForTarget(buildTarget);
 			if (downloadErrorForTarget != null)
@@ -1285,86 +1383,58 @@ namespace UnityEditor
 					EditorUserBuildSettings.selectedStandaloneTarget = buildTarget2;
 					GUIUtility.ExitGUI();
 				}
-				goto IL_512;
+				if (bestStandaloneTarget == BuildTarget.StandaloneWindows || bestStandaloneTarget == BuildTarget.StandaloneWindows64)
+				{
+					DesktopStandaloneSettings.CopyPDBFiles = EditorGUILayout.Toggle(BuildPlayerWindow.styles.copyPdbFiles, DesktopStandaloneSettings.CopyPDBFiles, new GUILayoutOption[0]);
+				}
+				goto IL_55A;
 			}
 			case BuildTargetGroup.WebPlayer:
-			{
-				EditorUserBuildSettings.webPlayerDeployOnline = false;
-				GUI.enabled = BuildPipeline.LicenseCheck(BuildTarget.WebPlayerStreamed);
-				bool webPlayerStreamed = EditorGUILayout.Toggle(BuildPlayerWindow.styles.webPlayerStreamed, EditorUserBuildSettings.webPlayerStreamed, new GUILayoutOption[0]);
-				if (GUI.changed)
-				{
-					EditorUserBuildSettings.webPlayerStreamed = webPlayerStreamed;
-				}
-				bool enabled = GUI.enabled;
-				if (EditorUserBuildSettings.webPlayerDeployOnline)
-				{
-					GUI.enabled = false;
-				}
-				EditorUserBuildSettings.webPlayerOfflineDeployment = EditorGUILayout.Toggle(BuildPlayerWindow.styles.webPlayerOfflineDeployment, EditorUserBuildSettings.webPlayerOfflineDeployment, new GUILayoutOption[0]);
-				GUI.enabled = enabled;
-				goto IL_512;
-			}
 			case (BuildTargetGroup)3:
-				IL_2E0:
-				if (targetGroup != BuildTargetGroup.WebGL)
+				IL_3AA:
+				if (targetGroup != BuildTargetGroup.tvOS)
 				{
-					goto IL_512;
+					goto IL_55A;
 				}
-				EditorUserBuildSettings.webGLOptimizationLevel = EditorGUILayout.Popup(BuildPlayerWindow.styles.webGLOptimizationLevel, EditorUserBuildSettings.webGLOptimizationLevel - 1, BuildPlayerWindow.s_BuildPlatforms.webGLOptimizationLevels, new GUILayoutOption[0]) + 1;
-				goto IL_512;
-			case BuildTargetGroup.iOS:
-				if (Application.platform == RuntimePlatform.OSXEditor)
-				{
-					EditorUserBuildSettings.symlinkLibraries = EditorGUILayout.Toggle(BuildPlayerWindow.styles.symlinkiOSLibraries, EditorUserBuildSettings.symlinkLibraries, new GUILayoutOption[0]);
-				}
-				goto IL_512;
+				goto IL_52C;
+			case BuildTargetGroup.iPhone:
+				goto IL_52C;
 			}
-			goto IL_2E0;
-			IL_512:
+			goto IL_3AA;
+			IL_52C:
+			if (Application.platform == RuntimePlatform.OSXEditor)
+			{
+				EditorUserBuildSettings.symlinkLibraries = EditorGUILayout.Toggle(BuildPlayerWindow.styles.symlinkiOSLibraries, EditorUserBuildSettings.symlinkLibraries, new GUILayoutOption[0]);
+			}
+			IL_55A:
 			GUI.enabled = true;
 			bool flag2 = buildWindowExtension == null || buildWindowExtension.EnabledBuildButton();
 			bool enableBuildAndRunButton = false;
-			bool flag3 = (buildWindowExtension == null) ? (buildTarget != BuildTarget.WebGL) : buildWindowExtension.ShouldDrawScriptDebuggingCheckbox();
+			bool flag3 = buildWindowExtension == null || buildWindowExtension.ShouldDrawScriptDebuggingCheckbox();
 			bool flag4 = buildWindowExtension != null && buildWindowExtension.ShouldDrawExplicitNullCheckbox();
-			bool flag5 = buildWindowExtension == null || buildWindowExtension.ShouldDrawDevelopmentPlayerCheckbox();
-			bool flag6 = (buildTarget == BuildTarget.StandaloneLinux || buildTarget == BuildTarget.StandaloneLinux64 || buildTarget == BuildTarget.StandaloneLinuxUniversal) && InternalEditorUtility.HasProFeaturesEnabled();
+			bool flag5 = buildWindowExtension != null && buildWindowExtension.ShouldDrawExplicitDivideByZeroCheckbox();
+			bool flag6 = buildWindowExtension == null || buildWindowExtension.ShouldDrawDevelopmentPlayerCheckbox();
+			bool flag7 = buildTarget == BuildTarget.StandaloneLinux || buildTarget == BuildTarget.StandaloneLinux64 || buildTarget == BuildTarget.StandaloneLinuxUniversal;
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(buildTarget);
-			bool flag7 = buildPostProcessor != null && buildPostProcessor.SupportsScriptsOnlyBuild();
+			bool flag8 = buildPostProcessor != null && buildPostProcessor.SupportsScriptsOnlyBuild();
 			bool canInstallInBuildFolder = false;
 			if (BuildPipeline.IsBuildTargetSupported(buildTarget))
 			{
-				bool flag8 = buildWindowExtension == null || buildWindowExtension.ShouldDrawProfilerCheckbox();
-				GUI.enabled = flag5;
-				if (flag5)
+				bool flag9 = buildWindowExtension == null || buildWindowExtension.ShouldDrawProfilerCheckbox();
+				GUI.enabled = flag6;
+				if (flag6)
 				{
 					EditorUserBuildSettings.development = EditorGUILayout.Toggle(BuildPlayerWindow.styles.debugBuild, EditorUserBuildSettings.development, new GUILayoutOption[0]);
 				}
 				bool development = EditorUserBuildSettings.development;
 				GUI.enabled = development;
-				GUI.enabled = (GUI.enabled && InternalEditorUtility.HasAdvancedLicenseOnBuildTarget(buildTarget));
-				GUI.enabled = (GUI.enabled && buildPlatform.targetGroup != BuildTargetGroup.WebPlayer);
-				if (flag8)
+				if (flag9)
 				{
 					if (!GUI.enabled)
 					{
-						if (!InternalEditorUtility.HasAdvancedLicenseOnBuildTarget(buildTarget))
+						if (!development)
 						{
-							BuildPlayerWindow.styles.profileBuild.tooltip = "Pro Version for selected platform is needed for profiling";
-						}
-						else
-						{
-							if (!development)
-							{
-								BuildPlayerWindow.styles.profileBuild.tooltip = "Profiling only enabled in Development Player";
-							}
-							else
-							{
-								if (buildPlatform.targetGroup == BuildTargetGroup.WebPlayer)
-								{
-									BuildPlayerWindow.styles.profileBuild.tooltip = "Autoconnect not available from webplayer. Manually connect in Profiler";
-								}
-							}
+							BuildPlayerWindow.styles.profileBuild.tooltip = "Profiling only enabled in Development Player";
 						}
 					}
 					else
@@ -1376,15 +1446,18 @@ namespace UnityEditor
 				GUI.enabled = development;
 				if (flag3)
 				{
-					bool enabled2 = GUI.enabled;
-					GUI.enabled = (buildTarget != BuildTarget.iOS || !BuildPlayerWindow.IsIl2cppBuild());
-					BuildPlayerWindow.styles.allowDebugging.tooltip = string.Empty;
-					if (!GUI.enabled)
-					{
-						BuildPlayerWindow.styles.allowDebugging.tooltip = "Debugging projects that target the IL2CPP scripting backend is not supported";
-					}
 					EditorUserBuildSettings.allowDebugging = EditorGUILayout.Toggle(BuildPlayerWindow.styles.allowDebugging, EditorUserBuildSettings.allowDebugging, new GUILayoutOption[0]);
-					GUI.enabled = enabled2;
+				}
+				bool flag10 = false;
+				int num5 = 0;
+				if (PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref num5, buildPlatform.targetGroup))
+				{
+					flag10 = (num5 == 1);
+				}
+				bool flag11 = buildWindowExtension != null && development && flag10 && buildWindowExtension.ShouldDrawForceOptimizeScriptsCheckbox();
+				if (flag11)
+				{
+					EditorUserBuildSettings.forceOptimizeScriptCompilation = EditorGUILayout.Toggle(BuildPlayerWindow.styles.forceOptimizeScriptCompilation, EditorUserBuildSettings.forceOptimizeScriptCompilation, new GUILayoutOption[0]);
 				}
 				if (flag4)
 				{
@@ -1396,12 +1469,22 @@ namespace UnityEditor
 					EditorUserBuildSettings.explicitNullChecks = EditorGUILayout.Toggle(BuildPlayerWindow.styles.explicitNullChecks, EditorUserBuildSettings.explicitNullChecks, new GUILayoutOption[0]);
 					GUI.enabled = development;
 				}
-				if (flag7)
+				if (flag5)
+				{
+					GUI.enabled = !development;
+					if (!GUI.enabled)
+					{
+						EditorUserBuildSettings.explicitDivideByZeroChecks = true;
+					}
+					EditorUserBuildSettings.explicitDivideByZeroChecks = EditorGUILayout.Toggle(BuildPlayerWindow.styles.explicitDivideByZeroChecks, EditorUserBuildSettings.explicitDivideByZeroChecks, new GUILayoutOption[0]);
+					GUI.enabled = development;
+				}
+				if (flag8)
 				{
 					EditorUserBuildSettings.buildScriptsOnly = EditorGUILayout.Toggle(BuildPlayerWindow.styles.buildScriptsOnly, EditorUserBuildSettings.buildScriptsOnly, new GUILayoutOption[0]);
 				}
 				GUI.enabled = !development;
-				if (flag6)
+				if (flag7)
 				{
 					EditorUserBuildSettings.enableHeadlessMode = EditorGUILayout.Toggle(BuildPlayerWindow.styles.enableHeadlessMode, EditorUserBuildSettings.enableHeadlessMode && !development, new GUILayoutOption[0]);
 				}
@@ -1433,9 +1516,15 @@ namespace UnityEditor
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
 			}
-			BuildPlayerWindow.GUIBuildButtons(flag2, enableBuildAndRunButton, canInstallInBuildFolder, buildPlatform);
+			BuildPlayerWindow.GUIBuildButtons(buildWindowExtension, flag2, enableBuildAndRunButton, canInstallInBuildFolder, buildPlatform);
 		}
+
 		private static void GUIBuildButtons(bool enableBuildButton, bool enableBuildAndRunButton, bool canInstallInBuildFolder, BuildPlayerWindow.BuildPlatform platform)
+		{
+			BuildPlayerWindow.GUIBuildButtons(null, enableBuildButton, enableBuildAndRunButton, canInstallInBuildFolder, platform);
+		}
+
+		private static void GUIBuildButtons(IBuildWindowExtension buildWindowExtension, bool enableBuildButton, bool enableBuildAndRunButton, bool canInstallInBuildFolder, BuildPlayerWindow.BuildPlatform platform)
 		{
 			GUILayout.FlexibleSpace();
 			if (canInstallInBuildFolder)
@@ -1449,6 +1538,26 @@ namespace UnityEditor
 			{
 				EditorUserBuildSettings.installInBuildFolder = false;
 			}
+			if (buildWindowExtension != null && Unsupported.IsDeveloperBuild())
+			{
+				buildWindowExtension.ShowInternalPlatformBuildOptions();
+			}
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.FlexibleSpace();
+			if (EditorGUILayout.LinkLabel(BuildPlayerWindow.styles.learnAboutUnityCloudBuild, new GUILayoutOption[0]))
+			{
+				Application.OpenURL(string.Format("{0}/from/editor/buildsettings?upid={1}&pid={2}&currentplatform={3}&selectedplatform={4}&unityversion={5}", new object[]
+				{
+					WebURLs.cloudBuildPage,
+					PlayerSettings.cloudProjectId,
+					PlayerSettings.productGUID,
+					EditorUserBuildSettings.activeBuildTarget,
+					BuildPlayerWindow.CalculateSelectedBuildTarget(),
+					Application.unityVersion
+				}));
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.Space(6f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
 			GUIContent content = BuildPlayerWindow.styles.build;
@@ -1456,7 +1565,7 @@ namespace UnityEditor
 			{
 				content = BuildPlayerWindow.styles.export;
 			}
-			if (platform.targetGroup == BuildTargetGroup.iOS && Application.platform != RuntimePlatform.OSXEditor)
+			if (platform.targetGroup == BuildTargetGroup.iPhone && Application.platform != RuntimePlatform.OSXEditor)
 			{
 				enableBuildAndRunButton = false;
 			}
@@ -1480,6 +1589,7 @@ namespace UnityEditor
 			}
 			GUILayout.EndHorizontal();
 		}
+
 		private static bool PickBuildLocation(BuildTarget target, BuildOptions options, out bool updateExistingBuild)
 		{
 			updateExistingBuild = false;
@@ -1487,44 +1597,66 @@ namespace UnityEditor
 			if (target == BuildTarget.Android && EditorUserBuildSettings.exportAsGoogleAndroidProject)
 			{
 				string title = "Export Google Android Project";
-				string location = EditorUtility.SaveFolderPanel(title, buildLocation, string.Empty);
-				EditorUserBuildSettings.SetBuildLocation(target, location);
+				string text = EditorUtility.SaveFolderPanel(title, buildLocation, string.Empty);
+				string text2 = BuildPlayerWindow.ConvertToRelativePath(text);
+				if (text2 != string.Empty)
+				{
+					text = text2;
+				}
+				EditorUserBuildSettings.SetBuildLocation(target, text);
 				return true;
 			}
 			string extensionForBuildTarget = PostprocessBuildPlayer.GetExtensionForBuildTarget(target, options);
 			string directory = FileUtil.DeleteLastPathNameComponent(buildLocation);
 			string lastPathNameComponent = FileUtil.GetLastPathNameComponent(buildLocation);
 			string title2 = "Build " + BuildPlayerWindow.s_BuildPlatforms.GetBuildTargetDisplayName(target);
-			string text = EditorUtility.SaveBuildPanel(target, title2, directory, lastPathNameComponent, extensionForBuildTarget, out updateExistingBuild);
-			if (text == string.Empty)
+			string text3 = EditorUtility.SaveBuildPanel(target, title2, directory, lastPathNameComponent, extensionForBuildTarget, out updateExistingBuild);
+			if (text3 == string.Empty)
 			{
 				return false;
 			}
-			if (extensionForBuildTarget != string.Empty && FileUtil.GetPathExtension(text).ToLower() != extensionForBuildTarget)
+			string text4 = BuildPlayerWindow.ConvertToRelativePath(text3);
+			if (text4 != string.Empty)
 			{
-				text = text + '.' + extensionForBuildTarget;
+				text3 = text4;
 			}
-			string lastPathNameComponent2 = FileUtil.GetLastPathNameComponent(text);
+			if (extensionForBuildTarget != string.Empty && FileUtil.GetPathExtension(text3).ToLower() != extensionForBuildTarget)
+			{
+				text3 = text3 + '.' + extensionForBuildTarget;
+			}
+			string lastPathNameComponent2 = FileUtil.GetLastPathNameComponent(text3);
 			if (lastPathNameComponent2 == string.Empty)
 			{
 				return false;
 			}
-			string path = (!(extensionForBuildTarget != string.Empty)) ? text : FileUtil.DeleteLastPathNameComponent(text);
+			string path = (!(extensionForBuildTarget != string.Empty)) ? text3 : FileUtil.DeleteLastPathNameComponent(text3);
 			if (!Directory.Exists(path))
 			{
 				Directory.CreateDirectory(path);
 			}
-			if (target == BuildTarget.iOS && Application.platform != RuntimePlatform.OSXEditor && !BuildPlayerWindow.FolderIsEmpty(text) && !BuildPlayerWindow.UserWantsToDeleteFiles(text))
+			if (target == BuildTarget.iOS && Application.platform != RuntimePlatform.OSXEditor && !BuildPlayerWindow.FolderIsEmpty(text3) && !BuildPlayerWindow.UserWantsToDeleteFiles(text3))
 			{
 				return false;
 			}
-			EditorUserBuildSettings.SetBuildLocation(target, text);
+			EditorUserBuildSettings.SetBuildLocation(target, text3);
 			return true;
 		}
+
+		private static string ConvertToRelativePath(string path)
+		{
+			string text = FileUtil.GetProjectRelativePath(path);
+			if (text != string.Empty && FileUtil.DeleteLastPathNameComponent(text) == string.Empty)
+			{
+				text = text.Insert(0, "./");
+			}
+			return text;
+		}
+
 		private static bool FolderIsEmpty(string path)
 		{
 			return !Directory.Exists(path) || (Directory.GetDirectories(path).Length == 0 && Directory.GetFiles(path).Length == 0);
 		}
+
 		private static bool UserWantsToDeleteFiles(string path)
 		{
 			string message = "WARNING: all files and folders located in target folder: '" + path + "' will be deleted by build process.";

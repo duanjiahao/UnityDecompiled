@@ -1,13 +1,16 @@
 using System;
+
 namespace UnityEditor.Audio
 {
 	internal sealed class AudioEffectParameterPath : AudioGroupParameterPath
 	{
 		public AudioMixerEffectController effect;
+
 		public AudioEffectParameterPath(AudioMixerGroupController group, AudioMixerEffectController effect, GUID parameter) : base(group, parameter)
 		{
 			this.effect = effect;
 		}
+
 		public override string ResolveStringPath(bool getOnlyBasePath)
 		{
 			if (getOnlyBasePath)

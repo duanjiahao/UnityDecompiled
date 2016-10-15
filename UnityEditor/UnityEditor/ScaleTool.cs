@@ -1,11 +1,14 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ScaleTool : ManipulationTool
 	{
 		private static ScaleTool s_Instance;
+
 		private static Vector3 s_CurrentScale = Vector3.one;
+
 		public static void OnGUI(SceneView view)
 		{
 			if (ScaleTool.s_Instance == null)
@@ -14,6 +17,7 @@ namespace UnityEditor
 			}
 			ScaleTool.s_Instance.OnToolGUI(view);
 		}
+
 		public override void ToolGUI(SceneView view, Vector3 handlePosition, bool isStatic)
 		{
 			Quaternion quaternion = (Selection.transforms.Length <= 1) ? Tools.handleLocalRotation : Tools.handleRotation;

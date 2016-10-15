@@ -1,19 +1,30 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MetroCertificatePasswordWindow : EditorWindow
 	{
 		private const float kSpace = 5f;
+
 		private const char kPasswordChar = '●';
+
 		private const string kPasswordId = "password";
+
 		private static readonly GUILayoutOption kLabelWidth = GUILayout.Width(110f);
+
 		private static readonly GUILayoutOption kButtonWidth = GUILayout.Width(110f);
+
 		private string path;
+
 		private string password;
+
 		private GUIContent message;
+
 		private GUIStyle messageStyle;
+
 		private string focus;
+
 		public static void Show(string path)
 		{
 			MetroCertificatePasswordWindow[] array = (MetroCertificatePasswordWindow[])Resources.FindObjectsOfTypeAll(typeof(MetroCertificatePasswordWindow));
@@ -30,13 +41,14 @@ namespace UnityEditor
 			}
 			else
 			{
-				metroCertificatePasswordWindow.title = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificatePasswordTitle").text;
+				metroCertificatePasswordWindow.titleContent = EditorGUIUtility.TextContent("Enter Windows Store Certificate Password");
 				metroCertificatePasswordWindow.position = new Rect(100f, 100f, 350f, 90f);
 				metroCertificatePasswordWindow.minSize = new Vector2(metroCertificatePasswordWindow.position.width, metroCertificatePasswordWindow.position.height);
 				metroCertificatePasswordWindow.maxSize = metroCertificatePasswordWindow.minSize;
 				metroCertificatePasswordWindow.ShowUtility();
 			}
 		}
+
 		public void OnGUI()
 		{
 			Event current = Event.current;
@@ -55,7 +67,7 @@ namespace UnityEditor
 					GUILayout.FlexibleSpace();
 					using (HorizontalLayout.DoLayout())
 					{
-						GUILayout.Label(EditorGUIUtility.TextContent("PlayerSettings.MetroCertificatePasswordPassword"), new GUILayoutOption[]
+						GUILayout.Label(EditorGUIUtility.TextContent("Password|Certificate password."), new GUILayoutOption[]
 						{
 							MetroCertificatePasswordWindow.kLabelWidth
 						});
@@ -67,7 +79,7 @@ namespace UnityEditor
 					{
 						GUILayout.Label(this.message, this.messageStyle, new GUILayoutOption[0]);
 						GUILayout.FlexibleSpace();
-						if (GUILayout.Button(EditorGUIUtility.TextContent("PlayerSettings.MetroCertificatePasswordButton"), new GUILayoutOption[]
+						if (GUILayout.Button(EditorGUIUtility.TextContent("Ok"), new GUILayoutOption[]
 						{
 							MetroCertificatePasswordWindow.kButtonWidth
 						}) || flag2)
@@ -81,7 +93,7 @@ namespace UnityEditor
 								}
 								else
 								{
-									this.message = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificatePasswordPasswordInvalid");
+									this.message = EditorGUIUtility.TextContent("Invalid password.");
 								}
 							}
 							catch (UnityException ex)
@@ -98,13 +110,10 @@ namespace UnityEditor
 			{
 				base.Close();
 			}
-			else
+			else if (this.focus != null)
 			{
-				if (this.focus != null)
-				{
-					EditorGUI.FocusTextInControl(this.focus);
-					this.focus = null;
-				}
+				EditorGUI.FocusTextInControl(this.focus);
+				this.focus = null;
 			}
 		}
 	}

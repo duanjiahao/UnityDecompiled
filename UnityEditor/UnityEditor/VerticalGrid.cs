@@ -1,13 +1,18 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class VerticalGrid
 	{
 		private int m_Columns = 1;
+
 		private int m_Rows;
+
 		private float m_Height;
+
 		private float m_HorizontalSpacing;
+
 		public int columns
 		{
 			get
@@ -15,6 +20,7 @@ namespace UnityEditor
 				return this.m_Columns;
 			}
 		}
+
 		public int rows
 		{
 			get
@@ -22,6 +28,7 @@ namespace UnityEditor
 				return this.m_Rows;
 			}
 		}
+
 		public float height
 		{
 			get
@@ -29,6 +36,7 @@ namespace UnityEditor
 				return this.m_Height;
 			}
 		}
+
 		public float horizontalSpacing
 		{
 			get
@@ -36,56 +44,67 @@ namespace UnityEditor
 				return this.m_HorizontalSpacing;
 			}
 		}
+
 		public float fixedWidth
 		{
 			get;
 			set;
 		}
+
 		public Vector2 itemSize
 		{
 			get;
 			set;
 		}
+
 		public float verticalSpacing
 		{
 			get;
 			set;
 		}
+
 		public float minHorizontalSpacing
 		{
 			get;
 			set;
 		}
+
 		public float topMargin
 		{
 			get;
 			set;
 		}
+
 		public float bottomMargin
 		{
 			get;
 			set;
 		}
+
 		public float rightMargin
 		{
 			get;
 			set;
 		}
+
 		public float leftMargin
 		{
 			get;
 			set;
 		}
+
 		public float fixedHorizontalSpacing
 		{
 			get;
 			set;
 		}
+
 		public bool useFixedHorizontalSpacing
 		{
 			get;
 			set;
 		}
+
 		public void InitNumRowsAndColumns(int itemCount, int maxNumRows)
 		{
 			if (this.useFixedHorizontalSpacing)
@@ -107,12 +126,14 @@ namespace UnityEditor
 				this.m_Height = (float)this.m_Rows * (this.itemSize.y + this.verticalSpacing) - this.verticalSpacing + this.topMargin + this.bottomMargin;
 			}
 		}
+
 		public int CalcColumns()
 		{
 			float num = (!this.useFixedHorizontalSpacing) ? this.minHorizontalSpacing : this.fixedHorizontalSpacing;
 			int a = (int)Mathf.Floor((this.fixedWidth - this.leftMargin - this.rightMargin) / (this.itemSize.x + num));
 			return Mathf.Max(a, 1);
 		}
+
 		public int CalcRows(int itemCount)
 		{
 			int num = (int)Mathf.Ceil((float)itemCount / (float)this.CalcColumns());
@@ -122,6 +143,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		public Rect CalcRect(int itemIdx, float yOffset)
 		{
 			float num = Mathf.Floor((float)(itemIdx / this.columns));
@@ -132,11 +154,13 @@ namespace UnityEditor
 			}
 			return new Rect(this.leftMargin + this.horizontalSpacing * 0.5f + num2 * (this.itemSize.x + this.horizontalSpacing), num * (this.itemSize.y + this.verticalSpacing) + this.topMargin + yOffset, this.itemSize.x, this.itemSize.y);
 		}
+
 		public int GetMaxVisibleItems(float height)
 		{
 			int num = (int)Mathf.Ceil((height - this.topMargin - this.bottomMargin) / (this.itemSize.y + this.verticalSpacing));
 			return num * this.columns;
 		}
+
 		public bool IsVisibleInScrollView(float scrollViewHeight, float scrollPos, float gridStartY, int maxIndex, out int startIndex, out int endIndex)
 		{
 			startIndex = (endIndex = 0);
@@ -159,6 +183,7 @@ namespace UnityEditor
 			endIndex = Mathf.Clamp(endIndex, 0, maxIndex);
 			return true;
 		}
+
 		public override string ToString()
 		{
 			return string.Format("VerticalGrid: rows {0}, columns {1}, fixedWidth {2}, itemSize {3}", new object[]

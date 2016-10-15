@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor.Audio;
+
 namespace UnityEditor
 {
 	internal class AudioMixerUtility
@@ -8,16 +9,19 @@ namespace UnityEditor
 		public class VisitorFetchInstanceIDs
 		{
 			public List<int> instanceIDs = new List<int>();
+
 			public void Visitor(AudioMixerGroupController group)
 			{
 				this.instanceIDs.Add(group.GetInstanceID());
 			}
 		}
+
 		public static void RepaintAudioMixerAndInspectors()
 		{
 			InspectorWindow.RepaintAllInspectors();
 			AudioMixerWindow.RepaintAudioMixerWindow();
 		}
+
 		public static void VisitGroupsRecursivly(AudioMixerGroupController group, Action<AudioMixerGroupController> visitorCallback)
 		{
 			AudioMixerGroupController[] children = group.children;

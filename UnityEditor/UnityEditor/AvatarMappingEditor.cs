@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -21,27 +22,53 @@ namespace UnityEditor
 				EditorGUIUtility.TextContent("Left Leg"),
 				EditorGUIUtility.TextContent("Right Leg")
 			};
+
 			public GUIContent RequiredBone = EditorGUIUtility.TextContent("Optional Bones");
+
 			public GUIContent DoneCharacter = EditorGUIUtility.TextContent("Done");
+
 			public GUIContent mapping = EditorGUIUtility.TextContent("Mapping");
+
 			public GUIContent clearMapping = EditorGUIUtility.TextContent("Clear");
+
 			public GUIContent autoMapping = EditorGUIUtility.TextContent("Automap");
+
+			public GUIContent bipedMapping = EditorGUIUtility.TextContent("Biped");
+
 			public GUIContent loadMapping = EditorGUIUtility.TextContent("Load");
+
 			public GUIContent saveMapping = EditorGUIUtility.TextContent("Save");
+
 			public GUIContent pose = EditorGUIUtility.TextContent("Pose");
+
 			public GUIContent resetPose = EditorGUIUtility.TextContent("Reset");
+
 			public GUIContent sampleBindPose = EditorGUIUtility.TextContent("Sample Bind-Pose");
+
 			public GUIContent enforceTPose = EditorGUIUtility.TextContent("Enforce T-Pose");
+
+			public GUIContent bipedPose = EditorGUIUtility.TextContent("Biped Pose");
+
 			public GUIContent ShowError = EditorGUIUtility.TextContent("Show Error (s)...");
+
 			public GUIContent CloseError = EditorGUIUtility.TextContent("Close Error (s)");
+
 			public GUIContent dotFill = EditorGUIUtility.IconContent("AvatarInspector/DotFill");
+
 			public GUIContent dotFrame = EditorGUIUtility.IconContent("AvatarInspector/DotFrame");
+
 			public GUIContent dotFrameDotted = EditorGUIUtility.IconContent("AvatarInspector/DotFrameDotted");
+
 			public GUIContent dotSelection = EditorGUIUtility.IconContent("AvatarInspector/DotSelection");
+
 			public GUIStyle box = new GUIStyle("box");
+
 			public GUIStyle toolbar = "TE Toolbar";
+
 			public GUIStyle toolbarDropDown = "TE ToolbarDropDown";
+
 			public GUIStyle errorLabel = new GUIStyle(EditorStyles.wordWrappedMiniLabel);
+
 			public Styles()
 			{
 				this.box.padding = new RectOffset(0, 0, 0, 0);
@@ -49,16 +76,30 @@ namespace UnityEditor
 				this.errorLabel.normal.textColor = new Color(0.6f, 0f, 0f, 1f);
 			}
 		}
+
 		private static AvatarMappingEditor.Styles s_Styles;
+
 		protected bool[] m_BodyPartToggle;
+
 		protected bool[] m_BodyPartFoldout;
+
 		protected int m_BodyView;
+
 		[SerializeField]
 		protected AvatarSetupTool.BoneWrapper[] m_Bones;
+
 		internal static int s_SelectedBoneIndex = -1;
+
+		internal static bool s_DirtySelection;
+
 		protected bool m_HasSkinnedMesh;
+
+		private bool m_IsBiped;
+
 		private Editor m_CurrentTransformEditor;
+
 		private bool m_CurrentTransformEditorFoldout;
+
 		protected int[][] m_BodyPartHumanBone = new int[][]
 		{
 			new int[]
@@ -144,7 +185,9 @@ namespace UnityEditor
 				20
 			}
 		};
+
 		private Vector2 m_FoldoutScroll = Vector2.zero;
+
 		internal static AvatarMappingEditor.Styles styles
 		{
 			get
@@ -156,12 +199,9 @@ namespace UnityEditor
 				return AvatarMappingEditor.s_Styles;
 			}
 		}
+
 		public AvatarMappingEditor()
 		{
-			if (AvatarSetupTool.sHumanParent.Length != HumanTrait.BoneCount)
-			{
-				throw new Exception("Avatar's Human parent list is out of sync");
-			}
 			this.m_BodyPartToggle = new bool[9];
 			this.m_BodyPartFoldout = new bool[9];
 			for (int i = 0; i < 9; i++)
@@ -170,11 +210,13 @@ namespace UnityEditor
 				this.m_BodyPartFoldout[i] = true;
 			}
 		}
+
 		public override void Enable(AvatarEditor inspector)
 		{
 			base.Enable(inspector);
 			this.Init();
 		}
+
 		public override void Disable()
 		{
 			if (this.m_CurrentTransformEditor != null)
@@ -183,6 +225,7 @@ namespace UnityEditor
 			}
 			base.Disable();
 		}
+
 		public override void OnDestroy()
 		{
 			if (this.m_CurrentTransformEditor != null)
@@ -191,12 +234,18 @@ namespace UnityEditor
 			}
 			base.OnDestroy();
 		}
+
 		protected void Init()
 		{
 			if (base.gameObject == null)
 			{
 				return;
 			}
+			if (AvatarSetupTool.sHumanParent.Length != HumanTrait.BoneCount)
+			{
+				throw new Exception("Avatar's Human parent list is out of sync");
+			}
+			this.m_IsBiped = AvatarBipedMapper.IsBiped(base.gameObject.transform, null);
 			if (this.m_Bones == null)
 			{
 				this.m_Bones = AvatarSetupTool.GetHumanBones(base.serializedObject, base.modelBones);
@@ -212,12 +261,14 @@ namespace UnityEditor
 			this.InitPose();
 			SceneView.RepaintAll();
 		}
+
 		protected override void ResetValues()
 		{
 			base.ResetValues();
 			this.ResetBones();
 			this.Init();
 		}
+
 		protected void ResetBones()
 		{
 			for (int i = 0; i < this.m_Bones.Length; i++)
@@ -225,6 +276,7 @@ namespace UnityEditor
 				this.m_Bones[i].Reset(base.serializedObject, base.modelBones);
 			}
 		}
+
 		protected bool IsValidHuman()
 		{
 			Animator component = base.gameObject.GetComponent<Animator>();
@@ -235,6 +287,7 @@ namespace UnityEditor
 			Avatar avatar = component.avatar;
 			return avatar != null && avatar.isHuman;
 		}
+
 		protected void InitPose()
 		{
 			if (this.IsValidHuman())
@@ -244,6 +297,7 @@ namespace UnityEditor
 				AvatarSetupTool.TransferDescriptionToPose(base.serializedObject, base.root);
 			}
 		}
+
 		protected void ValidateMapping()
 		{
 			for (int i = 0; i < this.m_Bones.Length; i++)
@@ -253,6 +307,7 @@ namespace UnityEditor
 				this.m_Bones[i].error = error;
 			}
 		}
+
 		private void EnableBodyParts(bool[] toggles, params int[] parts)
 		{
 			for (int i = 0; i < this.m_BodyPartToggle.Length; i++)
@@ -265,6 +320,7 @@ namespace UnityEditor
 				toggles[num] = true;
 			}
 		}
+
 		private void HandleBodyView(int bodyView)
 		{
 			if (bodyView == 0)
@@ -300,6 +356,7 @@ namespace UnityEditor
 				});
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (Event.current.type == EventType.ValidateCommand && Event.current.commandName == "UndoRedoPerformed")
@@ -311,6 +368,17 @@ namespace UnityEditor
 				}
 			}
 			this.UpdateSelectedBone();
+			if (Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Backspace || Event.current.keyCode == KeyCode.Delete) && AvatarMappingEditor.s_SelectedBoneIndex != -1 && AvatarMappingEditor.s_SelectedBoneIndex < this.m_Bones.Length)
+			{
+				Undo.RegisterCompleteObjectUndo(this, "Avatar mapping modified");
+				AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[AvatarMappingEditor.s_SelectedBoneIndex];
+				boneWrapper.bone = null;
+				boneWrapper.state = BoneState.None;
+				boneWrapper.Serialize(base.serializedObject);
+				Selection.activeTransform = null;
+				GUI.changed = true;
+				Event.current.Use();
+			}
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			EditorGUI.BeginChangeCheck();
 			GUILayout.BeginVertical(string.Empty, "TE NodeBackground", new GUILayoutOption[0]);
@@ -349,21 +417,19 @@ namespace UnityEditor
 					this.m_CurrentTransformEditor = Editor.CreateEditor(Selection.activeTransform);
 				}
 				EditorGUILayout.Space();
-				this.m_CurrentTransformEditorFoldout = EditorGUILayout.InspectorTitlebar(this.m_CurrentTransformEditorFoldout, Selection.activeTransform);
+				this.m_CurrentTransformEditorFoldout = EditorGUILayout.InspectorTitlebar(this.m_CurrentTransformEditorFoldout, Selection.activeTransform, true);
 				if (this.m_CurrentTransformEditorFoldout && this.m_CurrentTransformEditor != null)
 				{
 					this.m_CurrentTransformEditor.OnInspectorGUI();
 				}
 			}
-			else
+			else if (this.m_CurrentTransformEditor != null)
 			{
-				if (this.m_CurrentTransformEditor != null)
-				{
-					UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
-					this.m_CurrentTransformEditor = null;
-				}
+				UnityEngine.Object.DestroyImmediate(this.m_CurrentTransformEditor);
+				this.m_CurrentTransformEditor = null;
 			}
 		}
+
 		protected void DebugPoseButtons()
 		{
 			if (GUILayout.Button("Default Pose", new GUILayoutOption[0]) && this.IsValidHuman())
@@ -376,6 +442,7 @@ namespace UnityEditor
 				AvatarSetupTool.TransferDescriptionToPose(base.serializedObject, base.root);
 			}
 		}
+
 		protected void TransferPoseIfChanged()
 		{
 			GameObject[] gameObjects = Selection.gameObjects;
@@ -390,6 +457,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected void DisplayMappingButtons()
 		{
 			GUILayout.BeginHorizontal(string.Empty, AvatarMappingEditor.styles.toolbar, new GUILayoutOption[]
@@ -401,6 +469,10 @@ namespace UnityEditor
 			{
 				GenericMenu genericMenu = new GenericMenu();
 				genericMenu.AddItem(AvatarMappingEditor.styles.clearMapping, false, new GenericMenu.MenuFunction(this.ClearMapping));
+				if (this.m_IsBiped)
+				{
+					genericMenu.AddItem(AvatarMappingEditor.styles.bipedMapping, false, new GenericMenu.MenuFunction(this.PerformBipedMapping));
+				}
 				genericMenu.AddItem(AvatarMappingEditor.styles.autoMapping, false, new GenericMenu.MenuFunction(this.PerformAutoMapping));
 				genericMenu.AddItem(AvatarMappingEditor.styles.loadMapping, false, new GenericMenu.MenuFunction(this.ApplyTemplate));
 				genericMenu.AddItem(AvatarMappingEditor.styles.saveMapping, false, new GenericMenu.MenuFunction(this.SaveHumanTemplate));
@@ -411,6 +483,10 @@ namespace UnityEditor
 			{
 				GenericMenu genericMenu2 = new GenericMenu();
 				genericMenu2.AddItem(AvatarMappingEditor.styles.resetPose, false, new GenericMenu.MenuFunction(this.CopyPrefabPose));
+				if (this.m_IsBiped)
+				{
+					genericMenu2.AddItem(AvatarMappingEditor.styles.bipedPose, false, new GenericMenu.MenuFunction(this.BipedPose));
+				}
 				if (this.m_HasSkinnedMesh)
 				{
 					genericMenu2.AddItem(AvatarMappingEditor.styles.sampleBindPose, false, new GenericMenu.MenuFunction(this.SampleBindPose));
@@ -425,30 +501,49 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 		}
+
 		protected void CopyPrefabPose()
 		{
 			AvatarSetupTool.CopyPose(base.gameObject, base.prefab);
 			AvatarSetupTool.TransferPoseToDescription(base.serializedObject, base.root);
 			this.m_Inspector.Repaint();
 		}
+
 		protected void SampleBindPose()
 		{
 			AvatarSetupTool.SampleBindPose(base.gameObject);
 			AvatarSetupTool.TransferPoseToDescription(base.serializedObject, base.root);
 			this.m_Inspector.Repaint();
 		}
+
+		protected void BipedPose()
+		{
+			AvatarBipedMapper.BipedPose(base.gameObject, this.m_Bones);
+			AvatarSetupTool.TransferPoseToDescription(base.serializedObject, base.root);
+			this.m_Inspector.Repaint();
+		}
+
 		protected void MakePoseValid()
 		{
 			AvatarSetupTool.MakePoseValid(this.m_Bones);
 			AvatarSetupTool.TransferPoseToDescription(base.serializedObject, base.root);
 			this.m_Inspector.Repaint();
 		}
+
 		protected void PerformAutoMapping()
 		{
 			this.AutoMapping();
 			this.ValidateMapping();
 			SceneView.RepaintAll();
 		}
+
+		protected void PerformBipedMapping()
+		{
+			this.BipedMapping();
+			this.ValidateMapping();
+			SceneView.RepaintAll();
+		}
+
 		protected void AutoMapping()
 		{
 			Dictionary<int, Transform> dictionary = AvatarAutoMapper.MapBones(base.gameObject.transform, base.modelBones);
@@ -459,6 +554,18 @@ namespace UnityEditor
 				boneWrapper.Serialize(base.serializedObject);
 			}
 		}
+
+		protected void BipedMapping()
+		{
+			Dictionary<int, Transform> dictionary = AvatarBipedMapper.MapBones(base.gameObject.transform);
+			foreach (KeyValuePair<int, Transform> current in dictionary)
+			{
+				AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[current.Key];
+				boneWrapper.bone = current.Value;
+				boneWrapper.Serialize(base.serializedObject);
+			}
+		}
+
 		protected void ClearMapping()
 		{
 			if (base.serializedObject != null)
@@ -470,14 +577,17 @@ namespace UnityEditor
 				SceneView.RepaintAll();
 			}
 		}
+
 		protected Vector4 QuaternionToVector4(Quaternion rot)
 		{
 			return new Vector4(rot.x, rot.y, rot.z, rot.w);
 		}
+
 		protected Quaternion Vector4ToQuaternion(Vector4 rot)
 		{
 			return new Quaternion(rot.x, rot.y, rot.z, rot.w);
 		}
+
 		protected bool IsAnyBodyPartActive()
 		{
 			for (int i = 1; i < this.m_BodyPartToggle.Length; i++)
@@ -489,6 +599,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void UpdateSelectedBone()
 		{
 			int num = AvatarMappingEditor.s_SelectedBoneIndex;
@@ -516,6 +627,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected void DisplayFoldout()
 		{
 			Dictionary<Transform, bool> modelBones = base.modelBones;
@@ -536,16 +648,27 @@ namespace UnityEditor
 			{
 				if (this.m_BodyPartToggle[i])
 				{
-					this.m_BodyPartFoldout[i] = GUILayout.Toggle(this.m_BodyPartFoldout[i], AvatarMappingEditor.styles.BodyPartMapping[i], EditorStyles.foldout, new GUILayoutOption[0]);
-					EditorGUI.indentLevel++;
-					if (this.m_BodyPartFoldout[i])
+					if (AvatarMappingEditor.s_DirtySelection && !this.m_BodyPartFoldout[i])
 					{
 						for (int j = 0; j < this.m_BodyPartHumanBone[i].Length; j++)
 						{
 							int num = this.m_BodyPartHumanBone[i][j];
-							if (num != -1)
+							if (AvatarMappingEditor.s_SelectedBoneIndex == num)
 							{
-								AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[num];
+								this.m_BodyPartFoldout[i] = true;
+							}
+						}
+					}
+					this.m_BodyPartFoldout[i] = GUILayout.Toggle(this.m_BodyPartFoldout[i], AvatarMappingEditor.styles.BodyPartMapping[i], EditorStyles.foldout, new GUILayoutOption[0]);
+					EditorGUI.indentLevel++;
+					if (this.m_BodyPartFoldout[i])
+					{
+						for (int k = 0; k < this.m_BodyPartHumanBone[i].Length; k++)
+						{
+							int num2 = this.m_BodyPartHumanBone[i][k];
+							if (num2 != -1)
+							{
+								AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[num2];
 								string text = boneWrapper.humanBoneName;
 								if (i == 5 || i == 6 || i == 8)
 								{
@@ -559,8 +682,8 @@ namespace UnityEditor
 								Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 								Rect selectRect = controlRect;
 								selectRect.width -= 15f;
-								boneWrapper.HandleClickSelection(selectRect, num);
-								boneWrapper.BoneDotGUI(new Rect(controlRect.x + EditorGUI.indent, controlRect.y - 1f, 19f, 19f), num, false, false, base.serializedObject, this);
+								boneWrapper.HandleClickSelection(selectRect, num2);
+								boneWrapper.BoneDotGUI(new Rect(controlRect.x + EditorGUI.indent, controlRect.y - 1f, 19f, 19f), num2, false, false, base.serializedObject, this);
 								controlRect.xMin += 19f;
 								Transform transform = EditorGUI.ObjectField(controlRect, new GUIContent(text), boneWrapper.bone, typeof(Transform), true) as Transform;
 								if (transform != boneWrapper.bone)
@@ -586,8 +709,10 @@ namespace UnityEditor
 					EditorGUI.indentLevel--;
 				}
 			}
+			AvatarMappingEditor.s_DirtySelection = false;
 			EditorGUIUtility.SetIconSize(Vector2.zero);
 		}
+
 		private bool TransformChanged(Transform tr)
 		{
 			SerializedProperty serializedProperty = AvatarSetupTool.FindSkeletonBone(base.serializedObject, tr, false, false);
@@ -611,6 +736,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		protected BoneState GetBoneState(int i, out string error)
 		{
 			error = string.Empty;
@@ -635,10 +761,9 @@ namespace UnityEditor
 				error = bone.messageName + " has bone length of zero.";
 				return BoneState.BoneLenghtIsZero;
 			}
-			IEnumerable<AvatarSetupTool.BoneWrapper> source = 
-				from f in this.m_Bones
-				where f.bone == bone.bone
-				select f;
+			IEnumerable<AvatarSetupTool.BoneWrapper> source = from f in this.m_Bones
+			where f.bone == bone.bone
+			select f;
 			if (source.Count<AvatarSetupTool.BoneWrapper>() > 1)
 			{
 				error = bone.messageName + " is also assigned to ";
@@ -663,6 +788,7 @@ namespace UnityEditor
 			}
 			return BoneState.Valid;
 		}
+
 		protected AvatarControl.BodyPartColor IsValidBodyPart(BodyPart bodyPart)
 		{
 			AvatarControl.BodyPartColor bodyPartColor = AvatarControl.BodyPartColor.Off;
@@ -719,6 +845,7 @@ namespace UnityEditor
 			}
 			return AvatarControl.BodyPartColor.Green | bodyPartColor;
 		}
+
 		private HumanTemplate OpenHumanTemplate()
 		{
 			string text = "Assets/";
@@ -750,6 +877,7 @@ namespace UnityEditor
 			}
 			return humanTemplate;
 		}
+
 		public static bool MatchName(string transformName, string boneName)
 		{
 			string text = ":";
@@ -758,6 +886,7 @@ namespace UnityEditor
 			string[] array2 = boneName.Split(separator);
 			return transformName == boneName || (array.Length > 1 && array[1] == boneName) || (array2.Length > 1 && transformName == array2[1]) || (array.Length > 1 && array2.Length > 1 && array[1] == array2[1]);
 		}
+
 		protected void ApplyTemplate()
 		{
 			Undo.RegisterCompleteObjectUndo(this, "Apply Template");
@@ -783,6 +912,7 @@ namespace UnityEditor
 			this.ValidateMapping();
 			SceneView.RepaintAll();
 		}
+
 		private void SaveHumanTemplate()
 		{
 			string message = string.Format("Create a new human template", new object[0]);
@@ -802,6 +932,7 @@ namespace UnityEditor
 			}
 			AssetDatabase.CreateAsset(humanTemplate, text);
 		}
+
 		public override void OnSceneGUI()
 		{
 			if (AvatarMappingEditor.s_Styles == null)

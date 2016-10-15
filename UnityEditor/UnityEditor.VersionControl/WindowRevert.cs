@@ -1,24 +1,30 @@
 using System;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 namespace UnityEditor.VersionControl
 {
 	internal class WindowRevert : EditorWindow
 	{
 		private ListControl revertList = new ListControl();
+
 		private AssetList assetList = new AssetList();
+
 		public void OnEnable()
 		{
 			base.position = new Rect(100f, 100f, 700f, 230f);
 			base.minSize = new Vector2(700f, 230f);
 			this.revertList.ReadOnly = true;
 		}
+
 		public static void Open(ChangeSet change)
 		{
 			Task task = Provider.ChangeSetStatus(change);
 			task.Wait();
 			WindowRevert.GetWindow().DoOpen(task.assetList);
 		}
+
 		public static void Open(AssetList assets)
 		{
 			Task task = Provider.Status(assets);
@@ -32,15 +38,18 @@ namespace UnityEditor.VersionControl
 			});
 			WindowRevert.GetWindow().DoOpen(revert);
 		}
+
 		private static WindowRevert GetWindow()
 		{
 			return EditorWindow.GetWindow<WindowRevert>(true, "Version Control Revert");
 		}
+
 		private void DoOpen(AssetList revert)
 		{
 			this.assetList = revert;
 			this.RefreshList();
 		}
+
 		private void RefreshList()
 		{
 			this.revertList.Clear();
@@ -57,6 +66,7 @@ namespace UnityEditor.VersionControl
 			this.revertList.Refresh();
 			base.Repaint();
 		}
+
 		private void OnGUI()
 		{
 			GUILayout.Label("Revert Files", EditorStyles.boldLabel, new GUILayoutOption[0]);
@@ -79,17 +89,19 @@ namespace UnityEditor.VersionControl
 			}
 			if (this.assetList.Count > 0 && GUILayout.Button("Revert", new GUILayoutOption[0]))
 			{
+				string text = string.Empty;
 				foreach (Asset current in this.assetList)
 				{
-					if (current.path == EditorApplication.currentScene)
+					Scene sceneByPath = SceneManager.GetSceneByPath(current.path);
+					if (sceneByPath.IsValid() && sceneByPath.isLoaded)
 					{
-						if (!EditorUtility.DisplayDialog("Revert open scene?", "You are about to revert your currently open scene:\n\n" + EditorApplication.currentScene + "\n\nContinuing will remove all unsaved changes.", "Continue", "Cancel"))
-						{
-							base.Close();
-							return;
-						}
-						break;
+						text = text + sceneByPath.path + "\n";
 					}
+				}
+				if (text.Length > 0 && !EditorUtility.DisplayDialog("Revert open scene(s)?", "You are about to revert your currently open scene(s):\n\n" + text + "\nContinuing will remove all unsaved changes.", "Continue", "Cancel"))
+				{
+					base.Close();
+					return;
 				}
 				Provider.Revert(this.assetList, RevertMode.Normal).Wait();
 				WindowPending.UpdateAllWindows();

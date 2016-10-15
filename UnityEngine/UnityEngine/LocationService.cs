@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+
 namespace UnityEngine
 {
 	public sealed class LocationService
@@ -11,27 +12,32 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern LocationServiceStatus status
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern LocationInfo lastData
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Start([DefaultValue("10f")] float desiredAccuracyInMeters, [DefaultValue("10f")] float updateDistanceInMeters);
+
 		[ExcludeFromDocs]
 		public void Start(float desiredAccuracyInMeters)
 		{
 			float updateDistanceInMeters = 10f;
 			this.Start(desiredAccuracyInMeters, updateDistanceInMeters);
 		}
+
 		[ExcludeFromDocs]
 		public void Start()
 		{
@@ -39,6 +45,7 @@ namespace UnityEngine
 			float desiredAccuracyInMeters = 10f;
 			this.Start(desiredAccuracyInMeters, updateDistanceInMeters);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Stop();

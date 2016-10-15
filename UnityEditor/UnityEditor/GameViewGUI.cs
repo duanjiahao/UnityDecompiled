@@ -1,19 +1,30 @@
 using System;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	internal class GameViewGUI
 	{
 		private static int m_FrameCounter;
+
 		private static float m_ClientTimeAccumulator;
+
 		private static float m_RenderTimeAccumulator;
+
 		private static float m_MaxTimeAccumulator;
+
 		private static float m_ClientFrameTime;
+
 		private static float m_RenderFrameTime;
+
 		private static float m_MaxFrameTime;
+
 		private static GUIStyle s_SectionHeaderStyle;
+
 		private static GUIStyle s_LabelStyle;
+
 		private static GUIStyle sectionHeaderStyle
 		{
 			get
@@ -25,6 +36,7 @@ namespace UnityEditor
 				return GameViewGUI.s_SectionHeaderStyle;
 			}
 		}
+
 		private static GUIStyle labelStyle
 		{
 			get
@@ -37,6 +49,7 @@ namespace UnityEditor
 				return GameViewGUI.s_LabelStyle;
 			}
 		}
+
 		private static string FormatNumber(int num)
 		{
 			if (num < 1000)
@@ -49,6 +62,7 @@ namespace UnityEditor
 			}
 			return ((double)num * 1E-06).ToString("f1") + "M";
 		}
+
 		private static void UpdateFrameTime()
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -77,6 +91,7 @@ namespace UnityEditor
 				GameViewGUI.m_FrameCounter = 0;
 			}
 		}
+
 		private static string FormatDb(float vol)
 		{
 			if (vol == 0f)
@@ -85,6 +100,8 @@ namespace UnityEditor
 			}
 			return string.Format("{0:F1} dB", 20f * Mathf.Log10(vol));
 		}
+
+		[RequiredByNativeCode]
 		public static void GameViewStatsGUI()
 		{
 			GUI.skin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene);
@@ -96,7 +113,7 @@ namespace UnityEditor
 			{
 				num2 += 220f;
 			}
-			GUILayout.BeginArea(new Rect((float)Screen.width - num - 10f, 27f, num, num2), "Statistics", GUI.skin.window);
+			GUILayout.BeginArea(new Rect(GUIView.current.position.width - num - 10f, 27f, num, num2), "Statistics", GUI.skin.window);
 			GUILayout.Label("Audio:", GameViewGUI.sectionHeaderStyle, new GUILayoutOption[0]);
 			StringBuilder stringBuilder = new StringBuilder(400);
 			float audioLevel = UnityStats.audioLevel;
@@ -112,6 +129,7 @@ namespace UnityEditor
 			int screenBytes = UnityStats.screenBytes;
 			int num4 = UnityStats.dynamicBatchedDrawCalls - UnityStats.dynamicBatches;
 			int num5 = UnityStats.staticBatchedDrawCalls - UnityStats.staticBatches;
+			int num6 = UnityStats.instancedBatchedDrawCalls - UnityStats.instancedBatches;
 			StringBuilder stringBuilder2 = new StringBuilder(400);
 			if (GameViewGUI.m_ClientFrameTime > GameViewGUI.m_RenderFrameTime)
 			{
@@ -121,7 +139,7 @@ namespace UnityEditor
 			{
 				stringBuilder2.Append(string.Format("  CPU: main {0:F1}ms  render thread <b>{1:F1}</b>ms\n", GameViewGUI.m_ClientFrameTime * 1000f, GameViewGUI.m_RenderFrameTime * 1000f));
 			}
-			stringBuilder2.Append(string.Format("  Batches: <b>{0}</b> \tSaved by batching: {1}\n", UnityStats.batches, num4 + num5));
+			stringBuilder2.Append(string.Format("  Batches: <b>{0}</b> \tSaved by batching: {1}\n", UnityStats.batches, num4 + num5 + num6));
 			stringBuilder2.Append(string.Format("  Tris: {0} \tVerts: {1} \n", GameViewGUI.FormatNumber(UnityStats.triangles), GameViewGUI.FormatNumber(UnityStats.vertices)));
 			stringBuilder2.Append(string.Format("  Screen: {0} - {1}\n", UnityStats.screenRes, EditorUtility.FormatBytes(screenBytes)));
 			stringBuilder2.Append(string.Format("  SetPass calls: {0} \tShadow casters: {1} \n", UnityStats.setPassCalls, UnityStats.shadowCasters));

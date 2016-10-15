@@ -3,20 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Edit Animation Event", useTypeNameAsIconName = false)]
 	internal class AnimationEventPopup : EditorWindow
 	{
-		public const string kLogicGraphEventFunction = "LogicGraphEvent";
 		private const string kAmbiguousPostFix = " (Function Is Ambiguous)";
+
 		private const string kNotSupportedPostFix = " (Function Not Supported)";
+
 		private const string kNoneSelected = "(No Function Selected)";
+
 		private GameObject m_Root;
+
 		private AnimationClip m_Clip;
+
 		private int m_EventIndex;
-		private string m_LogicEventName;
+
 		private AnimationClipInfoProperties m_ClipInfo;
+
 		private EditorWindow m_Owner;
+
 		public AnimationClipInfoProperties clipInfo
 		{
 			get
@@ -28,6 +36,7 @@ namespace UnityEditor
 				this.m_ClipInfo = value;
 			}
 		}
+
 		private int eventIndex
 		{
 			get
@@ -36,19 +45,22 @@ namespace UnityEditor
 			}
 			set
 			{
-				if (this.m_EventIndex != value)
-				{
-					this.m_LogicEventName = string.Empty;
-				}
 				this.m_EventIndex = value;
 			}
 		}
+
+		private void OnEnable()
+		{
+			base.titleContent = base.GetLocalizedTitleContent();
+		}
+
 		internal static void InitWindow(AnimationEventPopup popup)
 		{
 			popup.minSize = new Vector2(400f, 140f);
 			popup.maxSize = new Vector2(400f, 140f);
-			popup.title = EditorGUIUtility.TextContent("UnityEditor.AnimationEventPopup").text;
+			popup.titleContent = EditorGUIUtility.TextContent("Edit Animation Event");
 		}
+
 		internal static void Edit(GameObject root, AnimationClip clip, int index, EditorWindow owner)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(AnimationEventPopup));
@@ -64,6 +76,7 @@ namespace UnityEditor
 			animationEventPopup.m_Owner = owner;
 			animationEventPopup.Repaint();
 		}
+
 		internal static void Edit(AnimationClipInfoProperties clipInfo, int index)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(AnimationEventPopup));
@@ -79,6 +92,7 @@ namespace UnityEditor
 			animationEventPopup.eventIndex = index;
 			animationEventPopup.Repaint();
 		}
+
 		internal static void UpdateSelection(GameObject root, AnimationClip clip, int index, EditorWindow owner)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(AnimationEventPopup));
@@ -93,6 +107,7 @@ namespace UnityEditor
 			animationEventPopup.m_Owner = owner;
 			animationEventPopup.Repaint();
 		}
+
 		internal static int Create(GameObject root, AnimationClip clip, float time, EditorWindow owner)
 		{
 			AnimationEvent animationEvent = new AnimationEvent();
@@ -107,6 +122,7 @@ namespace UnityEditor
 			window.m_Owner = owner;
 			return num;
 		}
+
 		internal static void ClosePopup()
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(AnimationEventPopup));
@@ -116,15 +132,12 @@ namespace UnityEditor
 				animationEventPopup.Close();
 			}
 		}
+
 		public static string FormatEvent(GameObject root, AnimationEvent evt)
 		{
 			if (string.IsNullOrEmpty(evt.functionName))
 			{
 				return "(No Function Selected)";
-			}
-			if (AnimationEventPopup.IsLogicGraphEvent(evt))
-			{
-				return AnimationEventPopup.FormatLogicGraphEvent(evt);
 			}
 			if (!AnimationEventPopup.IsSupportedMethodName(evt.functionName))
 			{
@@ -142,9 +155,8 @@ namespace UnityEditor
 						MethodInfo method = type.GetMethod(evt.functionName, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 						if (method != null)
 						{
-							IEnumerable<Type> paramTypes = 
-								from p in method.GetParameters()
-								select p.ParameterType;
+							IEnumerable<Type> paramTypes = from p in method.GetParameters()
+							select p.ParameterType;
 							return evt.functionName + AnimationEventPopup.FormatEventArguments(paramTypes, evt);
 						}
 					}
@@ -152,17 +164,12 @@ namespace UnityEditor
 			}
 			return evt.functionName + " (Function Not Supported)";
 		}
-		private static string FormatLogicGraphEvent(AnimationEvent evt)
-		{
-			return "LogicGraphEvent" + AnimationEventPopup.FormatEventArguments(new Type[]
-			{
-				typeof(string)
-			}, evt);
-		}
+
 		private static bool IsSupportedMethodName(string name)
 		{
 			return !(name == "Main") && !(name == "Start") && !(name == "Awake") && !(name == "Update");
 		}
+
 		private static string FormatEventArguments(IEnumerable<Type> paramTypes, AnimationEvent evt)
 		{
 			if (!paramTypes.Any<Type>())
@@ -222,6 +229,7 @@ namespace UnityEditor
 			}
 			return " (Function Not Supported)";
 		}
+
 		private static void CollectSupportedMethods(GameObject root, out List<string> supportedMethods, out List<Type> supportedMethodsParameter)
 		{
 			supportedMethods = new List<string>();
@@ -247,27 +255,28 @@ namespace UnityEditor
 								ParameterInfo[] parameters = methodInfo.GetParameters();
 								if (parameters.Length <= 1)
 								{
+									Type type2 = null;
 									if (parameters.Length == 1)
 									{
-										Type parameterType = parameters[0].ParameterType;
-										if (parameterType != typeof(string) && parameterType != typeof(float) && parameterType != typeof(int) && parameterType != typeof(AnimationEvent) && parameterType != typeof(UnityEngine.Object) && !parameterType.IsSubclassOf(typeof(UnityEngine.Object)) && !parameterType.IsEnum)
+										type2 = parameters[0].ParameterType;
+										if (type2 != typeof(string) && type2 != typeof(float) && type2 != typeof(int) && type2 != typeof(AnimationEvent) && type2 != typeof(UnityEngine.Object) && !type2.IsSubclassOf(typeof(UnityEngine.Object)) && !type2.IsEnum)
 										{
-											goto IL_160;
+											goto IL_16C;
 										}
-										supportedMethodsParameter.Add(parameterType);
-									}
-									else
-									{
-										supportedMethodsParameter.Add(null);
 									}
 									if (supportedMethods.Contains(name))
 									{
-										hashSet.Add(name);
+										int index = supportedMethods.IndexOf(name);
+										if (supportedMethodsParameter[index] != type2)
+										{
+											hashSet.Add(name);
+										}
 									}
 									supportedMethods.Add(name);
+									supportedMethodsParameter.Add(type2);
 								}
 							}
-							IL_160:;
+							IL_16C:;
 						}
 						type = type.BaseType;
 					}
@@ -286,6 +295,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static int InsertAnimationEvent(ref AnimationEvent[] events, AnimationClip clip, AnimationEvent evt)
 		{
 			Undo.RegisterCompleteObjectUndo(clip, "Add Event");
@@ -307,6 +317,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		public void OnGUI()
 		{
 			AnimationEvent[] array = null;
@@ -314,12 +325,9 @@ namespace UnityEditor
 			{
 				array = AnimationUtility.GetAnimationEvents(this.m_Clip);
 			}
-			else
+			else if (this.m_ClipInfo != null)
 			{
-				if (this.m_ClipInfo != null)
-				{
-					array = this.m_ClipInfo.GetEvents();
-				}
+				array = this.m_ClipInfo.GetEvents();
 			}
 			if (array == null || this.eventIndex < 0 || this.eventIndex >= array.Length)
 			{
@@ -342,16 +350,13 @@ namespace UnityEditor
 						{
 							str = " ( float )";
 						}
+						else if (list2[i] == typeof(int))
+						{
+							str = " ( int )";
+						}
 						else
 						{
-							if (list2[i] == typeof(int))
-							{
-								str = " ( int )";
-							}
-							else
-							{
-								str = string.Format(" ( {0} )", list2[i].Name);
-							}
+							str = string.Format(" ( {0} )", list2[i].Name);
 						}
 					}
 					list3.Add(list[i] + str);
@@ -378,7 +383,7 @@ namespace UnityEditor
 				if (num2 != num && num != -1 && num != count)
 				{
 					animationEvent.functionName = list[num];
-					animationEvent.stringParameter = ((!AnimationEventPopup.IsLogicGraphEvent(animationEvent)) ? string.Empty : AnimationEventPopup.GetEventNameForLogicGraphEvent(array, animationEvent));
+					animationEvent.stringParameter = string.Empty;
 				}
 				Type type = list2[num];
 				if (type != null)
@@ -392,14 +397,7 @@ namespace UnityEditor
 					{
 						EditorGUILayout.PrefixLabel("Parameters");
 					}
-					if (AnimationEventPopup.IsLogicGraphEvent(animationEvent))
-					{
-						this.DoEditLogicGraphEventParameters(animationEvent);
-					}
-					else
-					{
-						AnimationEventPopup.DoEditRegularParameters(animationEvent, type);
-					}
+					AnimationEventPopup.DoEditRegularParameters(animationEvent, type);
 				}
 			}
 			else
@@ -414,83 +412,23 @@ namespace UnityEditor
 					Undo.RegisterCompleteObjectUndo(this.m_Clip, "Animation Event Change");
 					AnimationUtility.SetAnimationEvents(this.m_Clip, array);
 				}
-				else
+				else if (this.m_ClipInfo != null)
 				{
-					if (this.m_ClipInfo != null)
-					{
-						this.m_ClipInfo.SetEvent(this.m_EventIndex, animationEvent);
-					}
+					this.m_ClipInfo.SetEvent(this.m_EventIndex, animationEvent);
 				}
 			}
 		}
+
 		private static bool EscapePressed()
 		{
 			return Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape;
 		}
+
 		private static bool EnterPressed()
 		{
 			return Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return;
 		}
-		private void DoEditLogicGraphEventParameters(AnimationEvent evt)
-		{
-			if (string.IsNullOrEmpty(this.m_LogicEventName))
-			{
-				this.m_LogicEventName = evt.stringParameter;
-			}
-			bool flag = AnimationEventPopup.EnterPressed();
-			this.m_LogicEventName = EditorGUILayout.TextField("Event name", this.m_LogicEventName, new GUILayoutOption[0]);
-			if (this.m_LogicEventName == evt.stringParameter || this.m_LogicEventName.Trim() == string.Empty)
-			{
-				return;
-			}
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Set", EditorStyles.miniButton, new GUILayoutOption[0]) || flag)
-			{
-				AnimationEventPopup.RenameAllReferencesToTheLogicGraphAnimationEventInCurrentScene(this.m_Root.GetComponent(typeof(Animation)) as Animation, evt.stringParameter, this.m_LogicEventName);
-				evt.stringParameter = this.m_LogicEventName;
-				this.LogicGraphEventParameterEditingDone(evt);
-				GUI.changed = true;
-			}
-			if (GUILayout.Button("Cancel", EditorStyles.miniButton, new GUILayoutOption[0]) || AnimationEventPopup.EscapePressed())
-			{
-				this.LogicGraphEventParameterEditingDone(evt);
-			}
-			GUILayout.EndHorizontal();
-		}
-		private static void RenameAllReferencesToTheLogicGraphAnimationEventInCurrentScene(Animation animation, string oldName, string newName)
-		{
-			Assembly assembly = (
-				from asm in AppDomain.CurrentDomain.GetAssemblies()
-				where asm.GetName().Name == "UnityEditor.Graphs.LogicGraph"
-				select asm).FirstOrDefault<Assembly>();
-			if (assembly == null)
-			{
-				throw new Exception("Could not find the logic graph assembly in loaded assemblies.");
-			}
-			Type type = assembly.GetType("UnityEngine.Graphs.LogicGraph.OnAnimationEventNode");
-			if (type == null)
-			{
-				throw new Exception("Failed to find type 'OnAnimationEventNode'.");
-			}
-			MethodInfo method = type.GetMethod("AnimationEventNameChanged");
-			if (method == null)
-			{
-				throw new Exception("Could not find 'AnimationEventNameChanged' method.");
-			}
-			method.Invoke(null, new object[]
-			{
-				animation,
-				oldName,
-				newName
-			});
-		}
-		private void LogicGraphEventParameterEditingDone(AnimationEvent evt)
-		{
-			GUIUtility.keyboardControl = 0;
-			this.m_LogicEventName = string.Empty;
-			Event.current.Use();
-		}
+
 		private static void DoEditRegularParameters(AnimationEvent evt, Type selectedParameter)
 		{
 			if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(float))
@@ -501,12 +439,9 @@ namespace UnityEditor
 			{
 				evt.intParameter = AnimationEventPopup.EnumPopup("Enum", selectedParameter, evt.intParameter);
 			}
-			else
+			else if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(int))
 			{
-				if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(int))
-				{
-					evt.intParameter = EditorGUILayout.IntField("Int", evt.intParameter, new GUILayoutOption[0]);
-				}
+				evt.intParameter = EditorGUILayout.IntField("Int", evt.intParameter, new GUILayoutOption[0]);
 			}
 			if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(string))
 			{
@@ -523,29 +458,7 @@ namespace UnityEditor
 				evt.objectReferenceParameter = EditorGUILayout.ObjectField(ObjectNames.NicifyVariableName(type.Name), evt.objectReferenceParameter, type, allowSceneObjects, new GUILayoutOption[0]);
 			}
 		}
-		private static string GetEventNameForLogicGraphEvent(IEnumerable<AnimationEvent> events, AnimationEvent animEvent)
-		{
-			for (int i = 1; i < 1000; i++)
-			{
-				string name = "LogicGraphEvent" + i;
-				if (!events.Any((AnimationEvent evt) => AnimationEventPopup.IsLogicGraphEvent(evt) && evt.stringParameter == name))
-				{
-					string text = "LogicGraphEvent" + i;
-					animEvent.stringParameter = text;
-					return text;
-				}
-			}
-			return string.Empty;
-		}
-		private static void AddLogicGraphEventFunction(List<string> methods, List<Type> parameters)
-		{
-			methods.Insert(0, "LogicGraphEvent");
-			parameters.Insert(0, typeof(string));
-		}
-		private static bool IsLogicGraphEvent(AnimationEvent evt)
-		{
-			return evt.functionName == "LogicGraphEvent";
-		}
+
 		public static int EnumPopup(string label, Type enumType, int selected)
 		{
 			if (!enumType.IsEnum)
@@ -562,6 +475,7 @@ namespace UnityEditor
 			Enum value = (Enum)Enum.Parse(enumType, names[num]);
 			return Convert.ToInt32(value);
 		}
+
 		private void OnDestroy()
 		{
 			if (this.m_Owner)

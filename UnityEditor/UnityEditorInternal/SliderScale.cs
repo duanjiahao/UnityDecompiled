@@ -1,15 +1,21 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class SliderScale
 	{
 		private static float s_StartScale;
+
 		private static float s_ScaleDrawLength = 1f;
+
 		private static float s_ValueDrag;
+
 		private static Vector2 s_StartMousePosition;
+
 		private static Vector2 s_CurrentMousePosition;
+
 		public static float DoAxis(int id, float scale, Vector3 position, Vector3 direction, Quaternion rotation, float size, float snap)
 		{
 			Event current = Event.current;
@@ -73,6 +79,7 @@ namespace UnityEditorInternal
 			}
 			return scale;
 		}
+
 		public static float DoCenter(int id, float value, Vector3 position, Quaternion rotation, float size, Handles.DrawCapFunction capFunc, float snap)
 		{
 			Event current = Event.current;

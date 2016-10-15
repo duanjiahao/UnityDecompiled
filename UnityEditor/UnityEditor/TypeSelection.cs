@@ -1,11 +1,14 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TypeSelection : IComparable
 	{
 		public GUIContent label;
+
 		public UnityEngine.Object[] objects;
+
 		public TypeSelection(string typeName, UnityEngine.Object[] objects)
 		{
 			this.objects = objects;
@@ -18,6 +21,7 @@ namespace UnityEditor
 			}));
 			this.label.image = AssetPreview.GetMiniTypeThumbnail(objects[0]);
 		}
+
 		public int CompareTo(object o)
 		{
 			TypeSelection typeSelection = (TypeSelection)o;

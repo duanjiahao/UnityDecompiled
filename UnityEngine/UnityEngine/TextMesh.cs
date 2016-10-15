@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class TextMesh : Component
@@ -13,6 +14,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Font font
 		{
 			[WrapperlessIcall]
@@ -22,6 +24,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int fontSize
 		{
 			[WrapperlessIcall]
@@ -31,6 +34,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern FontStyle fontStyle
 		{
 			[WrapperlessIcall]
@@ -40,6 +44,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float offsetZ
 		{
 			[WrapperlessIcall]
@@ -49,6 +54,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TextAlignment alignment
 		{
 			[WrapperlessIcall]
@@ -58,6 +64,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TextAnchor anchor
 		{
 			[WrapperlessIcall]
@@ -67,6 +74,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float characterSize
 		{
 			[WrapperlessIcall]
@@ -76,6 +84,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float lineSpacing
 		{
 			[WrapperlessIcall]
@@ -85,6 +94,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float tabSize
 		{
 			[WrapperlessIcall]
@@ -94,6 +104,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool richText
 		{
 			[WrapperlessIcall]
@@ -103,6 +114,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Color color
 		{
 			get
@@ -116,9 +128,11 @@ namespace UnityEngine
 				this.INTERNAL_set_color(ref value);
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_color(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_color(ref Color value);

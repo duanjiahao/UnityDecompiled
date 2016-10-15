@@ -1,17 +1,27 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class NormalCurveRenderer : CurveRenderer
 	{
 		private const float kSegmentWindowResolution = 1000f;
+
 		private const int kMaximumSampleCount = 50;
+
+		private const int kMaximumLoops = 100;
+
 		private AnimationCurve m_Curve;
+
 		private float m_CustomRangeStart;
+
 		private float m_CustomRangeEnd;
+
 		private WrapMode preWrapMode = WrapMode.Once;
+
 		private WrapMode postWrapMode = WrapMode.Once;
+
 		private float rangeStart
 		{
 			get
@@ -19,6 +29,7 @@ namespace UnityEditor
 				return (this.m_CustomRangeStart != 0f || this.m_CustomRangeEnd != 0f || this.m_Curve.length <= 0) ? this.m_CustomRangeStart : this.m_Curve.keys[0].time;
 			}
 		}
+
 		private float rangeEnd
 		{
 			get
@@ -26,6 +37,7 @@ namespace UnityEditor
 				return (this.m_CustomRangeStart != 0f || this.m_CustomRangeEnd != 0f || this.m_Curve.length <= 0) ? this.m_CustomRangeEnd : this.m_Curve.keys[this.m_Curve.length - 1].time;
 			}
 		}
+
 		public NormalCurveRenderer(AnimationCurve curve)
 		{
 			this.m_Curve = curve;
@@ -34,42 +46,51 @@ namespace UnityEditor
 				this.m_Curve = new AnimationCurve();
 			}
 		}
+
 		public AnimationCurve GetCurve()
 		{
 			return this.m_Curve;
 		}
+
 		public float RangeStart()
 		{
 			return this.rangeStart;
 		}
+
 		public float RangeEnd()
 		{
 			return this.rangeEnd;
 		}
+
 		public void SetWrap(WrapMode wrap)
 		{
 			this.preWrapMode = wrap;
 			this.postWrapMode = wrap;
 		}
+
 		public void SetWrap(WrapMode preWrap, WrapMode postWrap)
 		{
 			this.preWrapMode = preWrap;
 			this.postWrapMode = postWrap;
 		}
+
 		public void SetCustomRange(float start, float end)
 		{
 			this.m_CustomRangeStart = start;
 			this.m_CustomRangeEnd = end;
 		}
+
 		public float EvaluateCurveSlow(float time)
 		{
 			return this.m_Curve.Evaluate(time);
 		}
+
 		public float EvaluateCurveDeltaSlow(float time)
 		{
 			float num = 0.0001f;
 			return (this.m_Curve.Evaluate(time + num) - this.m_Curve.Evaluate(time - num)) / (num * 2f);
 		}
+
 		private Vector3[] GetPoints(float minTime, float maxTime)
 		{
 			List<Vector3> list = new List<Vector3>();
@@ -96,6 +117,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		public static float[,] CalculateRanges(float minTime, float maxTime, float rangeStart, float rangeEnd, WrapMode preWrapMode, WrapMode postWrapMode)
 		{
 			if (postWrapMode != preWrapMode)
@@ -145,6 +167,7 @@ namespace UnityEditor
 				return expr_E4;
 			}
 		}
+
 		private static int GetSegmentResolution(float minTime, float maxTime, float keyTime, float nextKeyTime)
 		{
 			float num = maxTime - minTime;
@@ -152,6 +175,7 @@ namespace UnityEditor
 			int value = Mathf.RoundToInt(1000f * (num2 / num));
 			return Mathf.Clamp(value, 1, 50);
 		}
+
 		private void AddPoints(ref List<Vector3> points, float minTime, float maxTime, float visibleMinTime, float visibleMaxTime)
 		{
 			if (this.m_Curve[0].time >= minTime)
@@ -186,11 +210,13 @@ namespace UnityEditor
 				points.Add(new Vector3(this.rangeEnd, this.m_Curve[this.m_Curve.length - 1].value));
 			}
 		}
+
 		public void DrawCurve(float minTime, float maxTime, Color color, Matrix4x4 transform, Color wrapColor)
 		{
 			Vector3[] points = this.GetPoints(minTime, maxTime);
 			NormalCurveRenderer.DrawCurveWrapped(minTime, maxTime, this.rangeStart, this.rangeEnd, this.preWrapMode, this.postWrapMode, color, transform, points, wrapColor);
 		}
+
 		public static void DrawPolyLine(Matrix4x4 transform, float minDistance, params Vector3[] points)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -217,6 +243,7 @@ namespace UnityEditor
 			GL.End();
 			GL.PopMatrix();
 		}
+
 		public static void DrawCurveWrapped(float minTime, float maxTime, float rangeStart, float rangeEnd, WrapMode preWrap, WrapMode postWrap, Color color, Matrix4x4 transform, Vector3[] points, Color wrapColor)
 		{
 			if (points.Length == 0)
@@ -229,6 +256,14 @@ namespace UnityEditor
 			{
 				num = Mathf.FloorToInt((minTime - rangeStart) / (rangeEnd - rangeStart));
 				num2 = Mathf.CeilToInt((maxTime - rangeEnd) / (rangeEnd - rangeStart));
+				if (num < -100)
+				{
+					preWrap = WrapMode.Once;
+				}
+				if (num2 > 100)
+				{
+					postWrap = WrapMode.Once;
+				}
 			}
 			else
 			{
@@ -265,44 +300,38 @@ namespace UnityEditor
 				list.Add(transform.MultiplyPoint(points[0]));
 				Handles.DrawPolyLine(list.ToArray());
 			}
-			else
+			else if (preWrap == WrapMode.PingPong)
 			{
-				if (preWrap == WrapMode.PingPong)
+				list = new List<Vector3>();
+				for (int k = num; k < 0; k++)
 				{
-					list = new List<Vector3>();
-					for (int k = num; k < 0; k++)
+					for (int l = 0; l < points.Length; l++)
 					{
-						for (int l = 0; l < points.Length; l++)
+						if ((float)(k / 2) == (float)k / 2f)
 						{
-							if ((float)(k / 2) == (float)k / 2f)
-							{
-								Vector3 vector2 = points[l];
-								vector2.x += (float)k * (rangeEnd - rangeStart);
-								vector2 = transform.MultiplyPoint(vector2);
-								list.Add(vector2);
-							}
-							else
-							{
-								Vector3 vector3 = points[num3 - l];
-								vector3.x = -vector3.x + (float)(k + 1) * (rangeEnd - rangeStart) + rangeStart * 2f;
-								vector3 = transform.MultiplyPoint(vector3);
-								list.Add(vector3);
-							}
+							Vector3 vector2 = points[l];
+							vector2.x += (float)k * (rangeEnd - rangeStart);
+							vector2 = transform.MultiplyPoint(vector2);
+							list.Add(vector2);
+						}
+						else
+						{
+							Vector3 vector3 = points[num3 - l];
+							vector3.x = -vector3.x + (float)(k + 1) * (rangeEnd - rangeStart) + rangeStart * 2f;
+							vector3 = transform.MultiplyPoint(vector3);
+							list.Add(vector3);
 						}
 					}
-					Handles.DrawPolyLine(list.ToArray());
 				}
-				else
+				Handles.DrawPolyLine(list.ToArray());
+			}
+			else if (num < 0)
+			{
+				Handles.DrawPolyLine(new Vector3[]
 				{
-					if (num < 0)
-					{
-						Handles.DrawPolyLine(new Vector3[]
-						{
-							transform.MultiplyPoint(new Vector3(minTime, points[0].y, 0f)),
-							transform.MultiplyPoint(new Vector3(Mathf.Min(maxTime, points[0].x), points[0].y, 0f))
-						});
-					}
-				}
+					transform.MultiplyPoint(new Vector3(minTime, points[0].y, 0f)),
+					transform.MultiplyPoint(new Vector3(Mathf.Min(maxTime, points[0].x), points[0].y, 0f))
+				});
 			}
 			if (postWrap == WrapMode.Loop)
 			{
@@ -320,50 +349,46 @@ namespace UnityEditor
 				}
 				Handles.DrawPolyLine(list.ToArray());
 			}
-			else
+			else if (postWrap == WrapMode.PingPong)
 			{
-				if (postWrap == WrapMode.PingPong)
+				list = new List<Vector3>();
+				for (int num4 = 1; num4 <= num2; num4++)
 				{
-					list = new List<Vector3>();
-					for (int num4 = 1; num4 <= num2; num4++)
+					for (int num5 = 0; num5 < points.Length; num5++)
 					{
-						for (int num5 = 0; num5 < points.Length; num5++)
+						if ((float)(num4 / 2) == (float)num4 / 2f)
 						{
-							if ((float)(num4 / 2) == (float)num4 / 2f)
-							{
-								Vector3 vector5 = points[num5];
-								vector5.x += (float)num4 * (rangeEnd - rangeStart);
-								vector5 = transform.MultiplyPoint(vector5);
-								list.Add(vector5);
-							}
-							else
-							{
-								Vector3 vector6 = points[num3 - num5];
-								vector6.x = -vector6.x + (float)(num4 + 1) * (rangeEnd - rangeStart) + rangeStart * 2f;
-								vector6 = transform.MultiplyPoint(vector6);
-								list.Add(vector6);
-							}
+							Vector3 vector5 = points[num5];
+							vector5.x += (float)num4 * (rangeEnd - rangeStart);
+							vector5 = transform.MultiplyPoint(vector5);
+							list.Add(vector5);
+						}
+						else
+						{
+							Vector3 vector6 = points[num3 - num5];
+							vector6.x = -vector6.x + (float)(num4 + 1) * (rangeEnd - rangeStart) + rangeStart * 2f;
+							vector6 = transform.MultiplyPoint(vector6);
+							list.Add(vector6);
 						}
 					}
-					Handles.DrawPolyLine(list.ToArray());
 				}
-				else
+				Handles.DrawPolyLine(list.ToArray());
+			}
+			else if (num2 > 0)
+			{
+				Handles.DrawPolyLine(new Vector3[]
 				{
-					if (num2 > 0)
-					{
-						Handles.DrawPolyLine(new Vector3[]
-						{
-							transform.MultiplyPoint(new Vector3(Mathf.Max(minTime, points[num3].x), points[num3].y, 0f)),
-							transform.MultiplyPoint(new Vector3(maxTime, points[num3].y, 0f))
-						});
-					}
-				}
+					transform.MultiplyPoint(new Vector3(Mathf.Max(minTime, points[num3].x), points[num3].y, 0f)),
+					transform.MultiplyPoint(new Vector3(maxTime, points[num3].y, 0f))
+				});
 			}
 		}
+
 		public Bounds GetBounds()
 		{
 			return this.GetBounds(this.rangeStart, this.rangeEnd);
 		}
+
 		public Bounds GetBounds(float minTime, float maxTime)
 		{
 			Vector3[] points = this.GetPoints(minTime, maxTime);

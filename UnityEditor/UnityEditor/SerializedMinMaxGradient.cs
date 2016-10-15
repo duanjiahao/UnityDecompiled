@@ -1,19 +1,29 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SerializedMinMaxGradient
 	{
 		public SerializedProperty m_MaxGradient;
+
 		public SerializedProperty m_MinGradient;
+
 		public SerializedProperty m_MaxColor;
+
 		public SerializedProperty m_MinColor;
+
 		private SerializedProperty m_MinMaxState;
+
 		public bool m_AllowColor;
+
 		public bool m_AllowGradient;
+
 		public bool m_AllowRandomBetweenTwoColors;
+
 		public bool m_AllowRandomBetweenTwoGradients;
+
 		public MinMaxGradientState state
 		{
 			get
@@ -25,14 +35,17 @@ namespace UnityEditor
 				this.SetMinMaxState(value);
 			}
 		}
+
 		public SerializedMinMaxGradient(SerializedModule m)
 		{
 			this.Init(m, "gradient");
 		}
+
 		public SerializedMinMaxGradient(SerializedModule m, string name)
 		{
 			this.Init(m, name);
 		}
+
 		private void Init(SerializedModule m, string name)
 		{
 			this.m_MaxGradient = m.GetProperty(name, "maxGradient");
@@ -45,6 +58,7 @@ namespace UnityEditor
 			this.m_AllowRandomBetweenTwoColors = true;
 			this.m_AllowRandomBetweenTwoGradients = true;
 		}
+
 		private void SetMinMaxState(MinMaxGradientState newState)
 		{
 			if (newState == this.state)
@@ -53,11 +67,13 @@ namespace UnityEditor
 			}
 			this.m_MinMaxState.intValue = (int)newState;
 		}
+
 		public static Color GetGradientAsColor(SerializedProperty gradientProp)
 		{
 			Gradient gradientValue = gradientProp.gradientValue;
 			return gradientValue.constantColor;
 		}
+
 		public static void SetGradientAsColor(SerializedProperty gradientProp, Color color)
 		{
 			Gradient gradientValue = gradientProp.gradientValue;

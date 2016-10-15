@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	public enum AndroidSdkVersions
@@ -14,6 +15,7 @@ namespace UnityEditor
 		AndroidApiLevel17,
 		AndroidApiLevel18,
 		AndroidApiLevel19,
-		AndroidApiLevel21 = 21
+		AndroidApiLevel21 = 21,
+		AndroidApiLevel22
 	}
 }

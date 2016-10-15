@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	public abstract class IAudioEffectPluginGUI
@@ -7,14 +8,17 @@ namespace UnityEditor
 		{
 			get;
 		}
+
 		public abstract string Description
 		{
 			get;
 		}
+
 		public abstract string Vendor
 		{
 			get;
 		}
+
 		public abstract bool OnGUI(IAudioEffectPlugin plugin);
 	}
 }

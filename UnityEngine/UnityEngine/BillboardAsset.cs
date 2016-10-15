@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class BillboardAsset : Object
@@ -13,6 +14,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float height
 		{
 			[WrapperlessIcall]
@@ -22,6 +24,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float bottom
 		{
 			[WrapperlessIcall]
@@ -31,24 +34,28 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int imageCount
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int vertexCount
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int indexCount
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern Material material
 		{
 			[WrapperlessIcall]
@@ -58,12 +65,15 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern void MakeRenderMesh(Mesh mesh);
+		internal extern void MakeRenderMesh(Mesh mesh, float widthScale, float heightScale, float rotation);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern void MakeMaterialProperties(MaterialPropertyBlock properties, Camera camera, float widthScale, float heightScale, float rotation);
+		internal extern void MakeMaterialProperties(MaterialPropertyBlock properties, Camera camera);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void MakePreviewMesh(Mesh mesh);

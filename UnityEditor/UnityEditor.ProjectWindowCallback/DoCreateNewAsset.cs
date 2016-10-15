@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.ProjectWindowCallback
 {
 	internal class DoCreateNewAsset : EndNameEditAction

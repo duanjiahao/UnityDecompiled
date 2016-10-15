@@ -1,24 +1,37 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TreeViewItem : IComparable<TreeViewItem>
 	{
 		private int m_ID;
+
 		private TreeViewItem m_Parent;
+
 		private List<TreeViewItem> m_Children;
+
 		private int m_Depth;
+
 		private string m_DisplayName;
+
 		private Texture2D m_Icon;
+
 		private object m_UserData;
+
 		public virtual int id
 		{
 			get
 			{
 				return this.m_ID;
 			}
+			set
+			{
+				this.m_ID = value;
+			}
 		}
+
 		public virtual string displayName
 		{
 			get
@@ -30,6 +43,7 @@ namespace UnityEditor
 				this.m_DisplayName = value;
 			}
 		}
+
 		public virtual int depth
 		{
 			get
@@ -41,6 +55,7 @@ namespace UnityEditor
 				this.m_Depth = value;
 			}
 		}
+
 		public virtual bool hasChildren
 		{
 			get
@@ -48,6 +63,7 @@ namespace UnityEditor
 				return this.m_Children != null && this.m_Children.Count > 0;
 			}
 		}
+
 		public virtual List<TreeViewItem> children
 		{
 			get
@@ -59,6 +75,7 @@ namespace UnityEditor
 				this.m_Children = value;
 			}
 		}
+
 		public virtual TreeViewItem parent
 		{
 			get
@@ -70,6 +87,7 @@ namespace UnityEditor
 				this.m_Parent = value;
 			}
 		}
+
 		public virtual Texture2D icon
 		{
 			get
@@ -81,6 +99,7 @@ namespace UnityEditor
 				this.m_Icon = value;
 			}
 		}
+
 		public virtual object userData
 		{
 			get
@@ -92,6 +111,7 @@ namespace UnityEditor
 				this.m_UserData = value;
 			}
 		}
+
 		public TreeViewItem(int id, int depth, TreeViewItem parent, string displayName)
 		{
 			this.m_Depth = depth;
@@ -99,6 +119,7 @@ namespace UnityEditor
 			this.m_ID = id;
 			this.m_DisplayName = displayName;
 		}
+
 		public void AddChild(TreeViewItem child)
 		{
 			if (this.m_Children == null)
@@ -111,10 +132,12 @@ namespace UnityEditor
 				child.parent = this;
 			}
 		}
+
 		public virtual int CompareTo(TreeViewItem other)
 		{
 			return this.displayName.CompareTo(other.displayName);
 		}
+
 		public override string ToString()
 		{
 			return string.Format("Item: '{0}' ({1}), has {2} children, depth {3}, parent id {4}", new object[]

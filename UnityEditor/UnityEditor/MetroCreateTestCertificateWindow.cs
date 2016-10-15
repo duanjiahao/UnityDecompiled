@@ -1,24 +1,39 @@
 using System;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MetroCreateTestCertificateWindow : EditorWindow
 	{
 		private const float kSpace = 5f;
+
 		private const char kPasswordChar = '●';
+
 		private const string kPublisherId = "publisher";
+
 		private const string kPasswordId = "password";
+
 		private const string kConfirmId = "confirm";
+
 		private static readonly GUILayoutOption kLabelWidth = GUILayout.Width(110f);
+
 		private static readonly GUILayoutOption kButtonWidth = GUILayout.Width(110f);
+
 		private string path;
+
 		private string publisher;
+
 		private string password;
+
 		private string confirm;
+
 		private GUIContent message;
+
 		private GUIStyle messageStyle;
+
 		private string focus;
+
 		public static void Show(string publisher)
 		{
 			MetroCreateTestCertificateWindow[] array = (MetroCreateTestCertificateWindow[])Resources.FindObjectsOfTypeAll(typeof(MetroCreateTestCertificateWindow));
@@ -27,7 +42,7 @@ namespace UnityEditor
 			metroCreateTestCertificateWindow.publisher = publisher;
 			metroCreateTestCertificateWindow.password = string.Empty;
 			metroCreateTestCertificateWindow.confirm = metroCreateTestCertificateWindow.password;
-			metroCreateTestCertificateWindow.message = ((!File.Exists(metroCreateTestCertificateWindow.path)) ? GUIContent.none : EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreateOverwrite"));
+			metroCreateTestCertificateWindow.message = ((!File.Exists(metroCreateTestCertificateWindow.path)) ? GUIContent.none : EditorGUIUtility.TextContent("Current file will be overwritten."));
 			metroCreateTestCertificateWindow.messageStyle = new GUIStyle(GUI.skin.label);
 			metroCreateTestCertificateWindow.messageStyle.fontStyle = FontStyle.Italic;
 			metroCreateTestCertificateWindow.focus = "publisher";
@@ -37,13 +52,14 @@ namespace UnityEditor
 			}
 			else
 			{
-				metroCreateTestCertificateWindow.title = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreateTitle").text;
+				metroCreateTestCertificateWindow.titleContent = EditorGUIUtility.TextContent("Create Test Certificate for Windows Store");
 				metroCreateTestCertificateWindow.position = new Rect(100f, 100f, 350f, 140f);
 				metroCreateTestCertificateWindow.minSize = new Vector2(metroCreateTestCertificateWindow.position.width, metroCreateTestCertificateWindow.position.height);
 				metroCreateTestCertificateWindow.maxSize = metroCreateTestCertificateWindow.minSize;
 				metroCreateTestCertificateWindow.ShowUtility();
 			}
 		}
+
 		public void OnGUI()
 		{
 			Event current = Event.current;
@@ -62,7 +78,7 @@ namespace UnityEditor
 					GUILayout.FlexibleSpace();
 					using (HorizontalLayout.DoLayout())
 					{
-						GUILayout.Label(EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreatePublisher"), new GUILayoutOption[]
+						GUILayout.Label(EditorGUIUtility.TextContent("Publisher|Publisher of the package."), new GUILayoutOption[]
 						{
 							MetroCreateTestCertificateWindow.kLabelWidth
 						});
@@ -72,7 +88,7 @@ namespace UnityEditor
 					GUILayout.Space(5f);
 					using (HorizontalLayout.DoLayout())
 					{
-						GUILayout.Label(EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreatePassword"), new GUILayoutOption[]
+						GUILayout.Label(EditorGUIUtility.TextContent("Password|Certificate password."), new GUILayoutOption[]
 						{
 							MetroCreateTestCertificateWindow.kLabelWidth
 						});
@@ -82,7 +98,7 @@ namespace UnityEditor
 					GUILayout.Space(5f);
 					using (HorizontalLayout.DoLayout())
 					{
-						GUILayout.Label(EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreateConfirmPassword"), new GUILayoutOption[]
+						GUILayout.Label(EditorGUIUtility.TextContent("Confirm password|Re-enter certificate password."), new GUILayoutOption[]
 						{
 							MetroCreateTestCertificateWindow.kLabelWidth
 						});
@@ -94,7 +110,7 @@ namespace UnityEditor
 					{
 						GUILayout.Label(this.message, this.messageStyle, new GUILayoutOption[0]);
 						GUILayout.FlexibleSpace();
-						if (GUILayout.Button(EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreateButton"), new GUILayoutOption[]
+						if (GUILayout.Button(EditorGUIUtility.TextContent("Create"), new GUILayoutOption[]
 						{
 							MetroCreateTestCertificateWindow.kButtonWidth
 						}) || flag2)
@@ -102,42 +118,39 @@ namespace UnityEditor
 							this.message = GUIContent.none;
 							if (string.IsNullOrEmpty(this.publisher))
 							{
-								this.message = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreatePublisherMissing");
+								this.message = EditorGUIUtility.TextContent("Publisher must be specified.");
 								this.focus = "publisher";
 							}
-							else
+							else if (this.password != this.confirm)
 							{
-								if (this.password != this.confirm)
+								if (string.IsNullOrEmpty(this.confirm))
 								{
-									if (string.IsNullOrEmpty(this.confirm))
-									{
-										this.message = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreateConfirmPasswordConfirm");
-										this.focus = "confirm";
-									}
-									else
-									{
-										this.message = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreatePasswordMismatch");
-										this.password = string.Empty;
-										this.confirm = this.password;
-										this.focus = "password";
-									}
+									this.message = EditorGUIUtility.TextContent("Confirm the password.");
+									this.focus = "confirm";
 								}
 								else
 								{
-									try
+									this.message = EditorGUIUtility.TextContent("Passwords do not match.");
+									this.password = string.Empty;
+									this.confirm = this.password;
+									this.focus = "password";
+								}
+							}
+							else
+							{
+								try
+								{
+									EditorUtility.WSACreateTestCertificate(this.path, this.publisher, this.password, true);
+									AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+									if (!PlayerSettings.WSA.SetCertificate(FileUtil.GetProjectRelativePath(this.path), this.password))
 									{
-										EditorUtility.WSACreateTestCertificate(this.path, this.publisher, this.password, true);
-										AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-										if (!PlayerSettings.WSA.SetCertificate(FileUtil.GetProjectRelativePath(this.path), this.password))
-										{
-											this.message = EditorGUIUtility.TextContent("PlayerSettings.MetroCertificateCreatePasswordInvalid");
-										}
-										flag = true;
+										this.message = EditorGUIUtility.TextContent("Invalid password.");
 									}
-									catch (UnityException ex)
-									{
-										Debug.LogError(ex.Message);
-									}
+									flag = true;
+								}
+								catch (UnityException ex)
+								{
+									Debug.LogError(ex.Message);
 								}
 							}
 						}
@@ -150,13 +163,10 @@ namespace UnityEditor
 			{
 				base.Close();
 			}
-			else
+			else if (this.focus != null)
 			{
-				if (this.focus != null)
-				{
-					EditorGUI.FocusTextInControl(this.focus);
-					this.focus = null;
-				}
+				EditorGUI.FocusTextInControl(this.focus);
+				this.focus = null;
 			}
 		}
 	}

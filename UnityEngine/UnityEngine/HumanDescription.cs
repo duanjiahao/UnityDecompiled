@@ -1,17 +1,29 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct HumanDescription
 	{
 		public HumanBone[] human;
+
 		public SkeletonBone[] skeleton;
-		private float m_ArmTwist;
-		private float m_ForeArmTwist;
-		private float m_UpperLegTwist;
-		private float m_LegTwist;
-		private float m_ArmStretch;
-		private float m_LegStretch;
-		private float m_FeetSpacing;
+
+		internal float m_ArmTwist;
+
+		internal float m_ForeArmTwist;
+
+		internal float m_UpperLegTwist;
+
+		internal float m_LegTwist;
+
+		internal float m_ArmStretch;
+
+		internal float m_LegStretch;
+
+		internal float m_FeetSpacing;
+
+		internal bool m_HasTranslationDoF;
+
 		public float upperArmTwist
 		{
 			get
@@ -23,6 +35,7 @@ namespace UnityEngine
 				this.m_ArmTwist = value;
 			}
 		}
+
 		public float lowerArmTwist
 		{
 			get
@@ -34,6 +47,7 @@ namespace UnityEngine
 				this.m_ForeArmTwist = value;
 			}
 		}
+
 		public float upperLegTwist
 		{
 			get
@@ -45,6 +59,7 @@ namespace UnityEngine
 				this.m_UpperLegTwist = value;
 			}
 		}
+
 		public float lowerLegTwist
 		{
 			get
@@ -56,6 +71,7 @@ namespace UnityEngine
 				this.m_LegTwist = value;
 			}
 		}
+
 		public float armStretch
 		{
 			get
@@ -67,6 +83,7 @@ namespace UnityEngine
 				this.m_ArmStretch = value;
 			}
 		}
+
 		public float legStretch
 		{
 			get
@@ -78,6 +95,7 @@ namespace UnityEngine
 				this.m_LegStretch = value;
 			}
 		}
+
 		public float feetSpacing
 		{
 			get
@@ -87,6 +105,18 @@ namespace UnityEngine
 			set
 			{
 				this.m_FeetSpacing = value;
+			}
+		}
+
+		public bool hasTranslationDoF
+		{
+			get
+			{
+				return this.m_HasTranslationDoF;
+			}
+			set
+			{
+				this.m_HasTranslationDoF = value;
 			}
 		}
 	}

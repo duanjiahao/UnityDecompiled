@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal interface ITreeViewGUI
@@ -9,26 +9,43 @@ namespace UnityEditor
 		{
 			get;
 		}
+
 		float topRowMargin
 		{
 			get;
 		}
+
 		float bottomRowMargin
 		{
 			get;
 		}
-		Vector2 GetTotalSize(List<TreeViewItem> rows);
-		void GetFirstAndLastRowVisible(List<TreeViewItem> rows, float topPixel, float heightInPixels, out int firstRowVisible, out int lastRowVisible);
-		float GetTopPixelOfRow(int row, List<TreeViewItem> rows);
-		float GetHeightOfLastRow();
+
+		void OnInitialize();
+
+		Vector2 GetTotalSize();
+
+		void GetFirstAndLastRowVisible(out int firstRowVisible, out int lastRowVisible);
+
+		Rect GetRowRect(int row, float rowWidth);
+
+		Rect GetRectForFraming(int row);
+
 		int GetNumRowsOnPageUpDown(TreeViewItem fromItem, bool pageUp, float heightOfTreeView);
-		Rect OnRowGUI(TreeViewItem item, int row, float rowWidth, bool selected, bool focused);
+
+		void OnRowGUI(Rect rowRect, TreeViewItem item, int row, bool selected, bool focused);
+
 		void BeginRowGUI();
+
 		void EndRowGUI();
-		void BeginPingNode(TreeViewItem item, float topPixelOfRow, float availableWidth);
-		void EndPingNode();
+
+		void BeginPingItem(TreeViewItem item, float topPixelOfRow, float availableWidth);
+
+		void EndPingItem();
+
 		bool BeginRename(TreeViewItem item, float delay);
+
 		void EndRename();
+
 		float GetContentIndent(TreeViewItem item);
 	}
 }

@@ -4,16 +4,23 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 namespace UnityEditor
 {
 	internal class AssemblyReferenceChecker
 	{
 		private HashSet<string> referencedMethods = new HashSet<string>();
+
 		private HashSet<string> referencedTypes = new HashSet<string>();
+
 		private HashSet<string> definedMethods = new HashSet<string>();
+
 		private HashSet<AssemblyDefinition> assemblyDefinitions = new HashSet<AssemblyDefinition>();
+
 		private HashSet<string> assemblyFileNames = new HashSet<string>();
+
 		private DateTime startTime = DateTime.MinValue;
+
 		private void CollectReferencesFromRootsRecursive(string dir, IEnumerable<string> roots, bool ignoreSystemDlls)
 		{
 			foreach (string current in roots)
@@ -22,7 +29,7 @@ namespace UnityEditor
 				if (!this.assemblyFileNames.Contains(current))
 				{
 					AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(fileName);
-					if (!ignoreSystemDlls || !this.IsiPhoneIgnoredSystemDll(assemblyDefinition.Name.Name))
+					if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(assemblyDefinition.Name.Name))
 					{
 						this.assemblyFileNames.Add(current);
 						this.assemblyDefinitions.Add(assemblyDefinition);
@@ -41,6 +48,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void CollectReferencesFromRoots(string dir, IEnumerable<string> roots, bool withMethods, float progressValue, bool ignoreSystemDlls)
 		{
 			this.CollectReferencesFromRootsRecursive(dir, roots, ignoreSystemDlls);
@@ -51,6 +59,7 @@ namespace UnityEditor
 				this.CollectReferencedMethods(array, this.referencedMethods, this.definedMethods, progressValue);
 			}
 		}
+
 		public void CollectReferences(string path, bool withMethods, float progressValue, bool ignoreSystemDlls)
 		{
 			this.assemblyDefinitions = new HashSet<AssemblyDefinition>();
@@ -62,7 +71,7 @@ namespace UnityEditor
 				if (!(Path.GetExtension(text) != ".dll"))
 				{
 					AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(text);
-					if (!ignoreSystemDlls || !this.IsiPhoneIgnoredSystemDll(assemblyDefinition.Name.Name))
+					if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(assemblyDefinition.Name.Name))
 					{
 						this.assemblyFileNames.Add(Path.GetFileName(text));
 						this.assemblyDefinitions.Add(assemblyDefinition);
@@ -76,6 +85,7 @@ namespace UnityEditor
 				this.CollectReferencedMethods(array3, this.referencedMethods, this.definedMethods, progressValue);
 			}
 		}
+
 		private void CollectReferencedMethods(AssemblyDefinition[] definitions, HashSet<string> referencedMethods, HashSet<string> definedMethods, float progressValue)
 		{
 			for (int i = 0; i < definitions.Length; i++)
@@ -87,6 +97,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CollectReferencedMethods(TypeDefinition typ, HashSet<string> referencedMethods, HashSet<string> definedMethods, float progressValue)
 		{
 			this.DisplayProgress(progressValue);
@@ -109,6 +120,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DisplayProgress(float progressValue)
 		{
 			TimeSpan timeSpan = DateTime.Now - this.startTime;
@@ -126,31 +138,37 @@ namespace UnityEditor
 				this.startTime = DateTime.Now;
 			}
 		}
+
 		public bool HasReferenceToMethod(string methodName)
 		{
 			return this.referencedMethods.Any((string item) => item.Contains(methodName));
 		}
+
 		public bool HasDefinedMethod(string methodName)
 		{
 			return this.definedMethods.Any((string item) => item.Contains(methodName));
 		}
+
 		public bool HasReferenceToType(string typeName)
 		{
 			return this.referencedTypes.Any((string item) => item.StartsWith(typeName));
 		}
+
 		public AssemblyDefinition[] GetAssemblyDefinitions()
 		{
 			return this.assemblyDefinitions.ToArray<AssemblyDefinition>();
 		}
+
 		public string[] GetAssemblyFileNames()
 		{
 			return this.assemblyFileNames.ToArray<string>();
 		}
+
 		public string WhoReferencesClass(string klass, bool ignoreSystemDlls)
 		{
 			foreach (AssemblyDefinition current in this.assemblyDefinitions)
 			{
-				if (!ignoreSystemDlls || !this.IsiPhoneIgnoredSystemDll(current.Name.Name))
+				if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(current.Name.Name))
 				{
 					AssemblyDefinition[] assemblies = new AssemblyDefinition[]
 					{
@@ -165,10 +183,12 @@ namespace UnityEditor
 			}
 			return null;
 		}
-		private bool IsiPhoneIgnoredSystemDll(string name)
+
+		public static bool IsIgnoredSystemDll(string name)
 		{
-			return name.StartsWith("System") || name.Equals("UnityEngine") || name.Equals("Mono.Posix");
+			return name.StartsWith("System") || name.Equals("UnityEngine") || name.Equals("UnityEngine.Networking") || name.Equals("Mono.Posix");
 		}
+
 		public static bool GetScriptsHaveMouseEvents(string path)
 		{
 			AssemblyReferenceChecker assemblyReferenceChecker = new AssemblyReferenceChecker();

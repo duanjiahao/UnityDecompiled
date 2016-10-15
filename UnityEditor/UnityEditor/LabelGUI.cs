@@ -2,31 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class LabelGUI
 	{
 		private HashSet<UnityEngine.Object> m_CurrentAssetsSet;
+
 		private PopupList.InputData m_AssetLabels;
+
 		private string m_ChangedLabel;
+
 		private bool m_CurrentChanged;
+
 		private bool m_ChangeWasAdd;
+
 		private bool m_IgnoreNextAssetLabelsChangedCall;
+
 		private static Action<UnityEngine.Object> s_AssetLabelsForObjectChangedDelegates;
+
 		private static int s_MaxShownLabels = 10;
+
 		public void OnEnable()
 		{
 			LabelGUI.s_AssetLabelsForObjectChangedDelegates = (Action<UnityEngine.Object>)Delegate.Combine(LabelGUI.s_AssetLabelsForObjectChangedDelegates, new Action<UnityEngine.Object>(this.AssetLabelsChangedForObject));
 		}
+
 		public void OnDisable()
 		{
 			LabelGUI.s_AssetLabelsForObjectChangedDelegates = (Action<UnityEngine.Object>)Delegate.Remove(LabelGUI.s_AssetLabelsForObjectChangedDelegates, new Action<UnityEngine.Object>(this.AssetLabelsChangedForObject));
 			this.SaveLabels();
 		}
+
 		public void OnLostFocus()
 		{
 			this.SaveLabels();
 		}
+
 		public void AssetLabelsChangedForObject(UnityEngine.Object asset)
 		{
 			if (!this.m_IgnoreNextAssetLabelsChangedCall && this.m_CurrentAssetsSet != null && this.m_CurrentAssetsSet.Contains(asset))
@@ -35,6 +47,7 @@ namespace UnityEditor
 			}
 			this.m_IgnoreNextAssetLabelsChangedCall = false;
 		}
+
 		public void SaveLabels()
 		{
 			if (this.m_CurrentChanged && this.m_AssetLabels != null && this.m_CurrentAssetsSet != null)
@@ -53,13 +66,10 @@ namespace UnityEditor
 							flag2 = true;
 						}
 					}
-					else
+					else if (list.Contains(this.m_ChangedLabel))
 					{
-						if (list.Contains(this.m_ChangedLabel))
-						{
-							list.Remove(this.m_ChangedLabel);
-							flag2 = true;
-						}
+						list.Remove(this.m_ChangedLabel);
+						flag2 = true;
 					}
 					if (flag2)
 					{
@@ -79,6 +89,7 @@ namespace UnityEditor
 				this.m_CurrentChanged = false;
 			}
 		}
+
 		public void AssetLabelListCallback(PopupList.ListElement element)
 		{
 			this.m_ChangedLabel = element.text;
@@ -89,6 +100,7 @@ namespace UnityEditor
 			this.SaveLabels();
 			InspectorWindow.RepaintAllInspectors();
 		}
+
 		public void InitLabelCache(UnityEngine.Object[] assets)
 		{
 			HashSet<UnityEngine.Object> hashSet = new HashSet<UnityEngine.Object>(assets);
@@ -99,6 +111,7 @@ namespace UnityEditor
 				this.GetLabelsForAssets(assets, out source, out source2);
 				this.m_AssetLabels = new PopupList.InputData
 				{
+					m_CloseOnSelection = false,
 					m_AllowCustom = true,
 					m_OnSelectCallback = new PopupList.OnSelectCallback(this.AssetLabelListCallback),
 					m_MaxCount = 15,
@@ -119,6 +132,7 @@ namespace UnityEditor
 			this.m_CurrentAssetsSet = hashSet;
 			this.m_CurrentChanged = false;
 		}
+
 		public void OnLabelGUI(UnityEngine.Object[] assets)
 		{
 			this.InitLabelCache(assets);
@@ -144,15 +158,15 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndHorizontal();
 		}
+
 		private void DrawLabelList(bool partiallySelected, float xMax)
 		{
 			GUIStyle style = (!partiallySelected) ? EditorStyles.assetLabel : EditorStyles.assetLabelPartial;
 			Event current = Event.current;
-			foreach (GUIContent current2 in (
-				from i in this.m_AssetLabels.m_ListElements
-				where (!partiallySelected) ? i.selected : i.partiallySelected
-				orderby i.text.ToLower()
-				select i.m_Content).Take(LabelGUI.s_MaxShownLabels))
+			foreach (GUIContent current2 in (from i in this.m_AssetLabels.m_ListElements
+			where (!partiallySelected) ? i.selected : i.partiallySelected
+			orderby i.text.ToLower()
+			select i.m_Content).Take(LabelGUI.s_MaxShownLabels))
 			{
 				Rect rect = GUILayoutUtility.GetRect(current2, style);
 				if (Event.current.type == EventType.Repaint && rect.xMax >= xMax)
@@ -168,6 +182,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void GetLabelsForAssets(UnityEngine.Object[] assets, out List<string> all, out List<string> partial)
 		{
 			all = new List<string>();

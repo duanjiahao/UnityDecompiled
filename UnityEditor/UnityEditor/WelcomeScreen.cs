@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class WelcomeScreen : EditorWindow
@@ -8,34 +9,62 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent unityLogo = EditorGUIUtility.IconContent("UnityLogo");
+
 			public GUIContent mainHeader = EditorGUIUtility.IconContent("WelcomeScreen.MainHeader");
-			public GUIContent mainText = EditorGUIUtility.TextContent("WelcomeScreen.MainText");
+
+			public GUIContent mainText = EditorGUIUtility.TextContent("As you dive into Unity, may we suggest a few hints to get you off to a good start?");
+
 			public GUIContent videoTutLogo = EditorGUIUtility.IconContent("WelcomeScreen.VideoTutLogo");
-			public GUIContent videoTutHeader = EditorGUIUtility.TextContent("WelcomeScreen.VideoTutHeader");
-			public GUIContent videoTutText = EditorGUIUtility.TextContent("WelcomeScreen.VideoTutText");
+
+			public GUIContent videoTutHeader = EditorGUIUtility.TextContent("Video Tutorials");
+
+			public GUIContent videoTutText = EditorGUIUtility.TextContent("We have collected some videos to make you productive immediately.");
+
 			public GUIContent unityBasicsLogo = EditorGUIUtility.IconContent("WelcomeScreen.UnityBasicsLogo");
-			public GUIContent unityBasicsHeader = EditorGUIUtility.TextContent("WelcomeScreen.UnityBasicsHeader");
-			public GUIContent unityBasicsText = EditorGUIUtility.TextContent("WelcomeScreen.UnityBasicsText");
+
+			public GUIContent unityBasicsHeader = EditorGUIUtility.TextContent("Unity Basics");
+
+			public GUIContent unityBasicsText = EditorGUIUtility.TextContent("Take a look at our manual for a quick startup guide.");
+
 			public GUIContent unityForumLogo = EditorGUIUtility.IconContent("WelcomeScreen.UnityForumLogo");
-			public GUIContent unityForumHeader = EditorGUIUtility.TextContent("WelcomeScreen.UnityForumHeader");
-			public GUIContent unityForumText = EditorGUIUtility.TextContent("WelcomeScreen.UnityForumText");
+
+			public GUIContent unityForumHeader = EditorGUIUtility.TextContent("Unity Forum");
+
+			public GUIContent unityForumText = EditorGUIUtility.TextContent("Meet the other Unity users here - the friendliest people in the industry.");
+
 			public GUIContent unityAnswersLogo = EditorGUIUtility.IconContent("WelcomeScreen.UnityAnswersLogo");
-			public GUIContent unityAnswersHeader = EditorGUIUtility.TextContent("WelcomeScreen.UnityAnswersHeader");
-			public GUIContent unityAnswersText = EditorGUIUtility.TextContent("WelcomeScreen.UnityAnswersText");
+
+			public GUIContent unityAnswersHeader = EditorGUIUtility.TextContent("Unity Answers");
+
+			public GUIContent unityAnswersText = EditorGUIUtility.TextContent("Have a question about how to use Unity? Check our answers site for precise how-to knowledge.");
+
 			public GUIContent assetStoreLogo = EditorGUIUtility.IconContent("WelcomeScreen.AssetStoreLogo");
-			public GUIContent assetStoreHeader = EditorGUIUtility.TextContent("WelcomeScreen.AssetStoreHeader");
-			public GUIContent assetStoreText = EditorGUIUtility.TextContent("WelcomeScreen.AssetStoreText");
-			public GUIContent showAtStartupText = EditorGUIUtility.TextContent("WelcomeScreen.ShowAtStartup");
+
+			public GUIContent assetStoreHeader = EditorGUIUtility.TextContent("Unity Asset Store");
+
+			public GUIContent assetStoreText = EditorGUIUtility.TextContent("The Asset Store is the place to find art assets, game code and extensions directly inside the Unity editor. It's like having a complete supermarket under your desk.");
+
+			public GUIContent showAtStartupText = EditorGUIUtility.TextContent("Show at Startup");
 		}
+
 		private const string kVideoTutURL = "http://unity3d.com/learn/tutorials/modules/";
+
 		private const string kUnityBasicsHelp = "file:///unity/Manual/UnityBasics.html";
+
 		private const string kUnityAnswersURL = "http://answers.unity3d.com/";
+
 		private const string kUnityForumURL = "http://forum.unity3d.com/";
+
 		private const string kAssetStoreURL = "home/?ref=http%3a%2f%2fUnityEditor.unity3d.com%2fWelcomeScreen";
+
 		private const float kItemHeight = 55f;
+
 		private static WelcomeScreen.Styles styles;
+
 		private static bool s_ShowAtStartup;
+
 		private static int s_ShowCount;
+
 		private static void DoShowWelcomeScreen(string how)
 		{
 			WelcomeScreen.s_ShowCount++;
@@ -43,10 +72,12 @@ namespace UnityEditor
 			Analytics.Track(string.Format("/WelcomeScreen/Show/{0}/{1}", how, WelcomeScreen.s_ShowCount));
 			EditorWindow.GetWindowWithRect<WelcomeScreen>(new Rect(0f, 0f, 570f, 440f), true, "Welcome To Unity");
 		}
+
 		private static void ShowWelcomeScreen()
 		{
 			WelcomeScreen.DoShowWelcomeScreen("Manual");
 		}
+
 		private static void ShowWelcomeScreenAtStartup()
 		{
 			WelcomeScreen.LoadLogos();
@@ -55,6 +86,7 @@ namespace UnityEditor
 				WelcomeScreen.DoShowWelcomeScreen("Startup");
 			}
 		}
+
 		private static void LoadLogos()
 		{
 			if (WelcomeScreen.styles == null)
@@ -64,6 +96,7 @@ namespace UnityEditor
 				WelcomeScreen.styles = new WelcomeScreen.Styles();
 			}
 		}
+
 		public void OnGUI()
 		{
 			WelcomeScreen.LoadLogos();
@@ -112,6 +145,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.EndVertical();
 		}
+
 		private void ShowEntry(GUIContent logo, string url, GUIContent header, GUIContent text, string analyticsAction)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[]
@@ -143,6 +177,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 		}
+
 		private void ShowHelpPageOrBrowseURL(string url, string analyticsAction)
 		{
 			Analytics.Track(string.Format("/WelcomeScreen/OpenURL/{0}/{1}", analyticsAction, WelcomeScreen.s_ShowCount));
@@ -150,17 +185,14 @@ namespace UnityEditor
 			{
 				Help.ShowHelpPage(url);
 			}
+			else if (url.StartsWith("home/"))
+			{
+				AssetStore.Open(url);
+				GUIUtility.ExitGUI();
+			}
 			else
 			{
-				if (url.StartsWith("home/"))
-				{
-					AssetStore.Open(url);
-					GUIUtility.ExitGUI();
-				}
-				else
-				{
-					Help.BrowseURL(url);
-				}
+				Help.BrowseURL(url);
 			}
 		}
 	}

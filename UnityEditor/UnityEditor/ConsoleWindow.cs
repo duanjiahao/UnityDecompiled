@@ -1,32 +1,54 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Text;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Console", useTypeNameAsIconName = true)]
 	internal class ConsoleWindow : EditorWindow, IHasCustomMenu
 	{
 		internal class Constants
 		{
 			public static bool ms_Loaded;
+
 			public static GUIStyle Box;
+
 			public static GUIStyle Button;
+
 			public static GUIStyle MiniButton;
+
 			public static GUIStyle MiniButtonLeft;
+
 			public static GUIStyle MiniButtonMiddle;
+
 			public static GUIStyle MiniButtonRight;
+
 			public static GUIStyle LogStyle;
+
 			public static GUIStyle WarningStyle;
+
 			public static GUIStyle ErrorStyle;
+
 			public static GUIStyle EvenBackground;
+
 			public static GUIStyle OddBackground;
+
 			public static GUIStyle MessageStyle;
+
 			public static GUIStyle StatusError;
+
 			public static GUIStyle StatusWarn;
+
 			public static GUIStyle StatusLog;
+
 			public static GUIStyle Toolbar;
+
 			public static GUIStyle CountBadge;
+
 			public static void Init()
 			{
 				if (ConsoleWindow.Constants.ms_Loaded)
@@ -53,6 +75,7 @@ namespace UnityEditor
 				ConsoleWindow.Constants.CountBadge = "CN CountBadge";
 			}
 		}
+
 		private enum Mode
 		{
 			Error = 1,
@@ -74,8 +97,10 @@ namespace UnityEditor
 			ScriptingException = 131072,
 			DontExtractStacktrace = 262144,
 			ShouldClearOnPlay = 524288,
-			GraphCompileError = 1048576
+			GraphCompileError = 1048576,
+			ScriptingAssertion = 2097152
 		}
+
 		private enum ConsoleFlags
 		{
 			Collapse = 1,
@@ -89,12 +114,26 @@ namespace UnityEditor
 			LogLevelWarning = 256,
 			LogLevelError = 512
 		}
+
+		public struct StackTraceLogTypeData
+		{
+			public LogType logType;
+
+			public StackTraceLogType stackTraceLogType;
+		}
+
 		private const int m_RowHeight = 32;
+
 		private ListViewState m_ListView;
+
 		private string m_ActiveText = string.Empty;
+
 		private int m_ActiveInstanceID;
+
 		private bool m_DevBuild;
+
 		private Vector2 m_TextScroll = Vector2.zero;
+
 		private SplitterState spl = new SplitterState(new float[]
 		{
 			70f,
@@ -104,27 +143,42 @@ namespace UnityEditor
 			32,
 			32
 		}, null);
+
 		private static bool ms_LoadedIcons;
+
 		internal static Texture2D iconInfo;
+
 		internal static Texture2D iconWarn;
+
 		internal static Texture2D iconError;
+
 		internal static Texture2D iconInfoSmall;
+
 		internal static Texture2D iconWarnSmall;
+
 		internal static Texture2D iconErrorSmall;
+
 		internal static Texture2D iconInfoMono;
+
 		internal static Texture2D iconWarnMono;
+
 		internal static Texture2D iconErrorMono;
+
 		private int ms_LVHeight;
+
 		private static ConsoleWindow ms_ConsoleWindow;
+
 		public ConsoleWindow()
 		{
 			base.position = new Rect(200f, 200f, 800f, 400f);
 			this.m_ListView = new ListViewState(0, 32);
 		}
+
 		private static void ShowConsoleWindowImmediate()
 		{
 			ConsoleWindow.ShowConsoleWindow(true);
 		}
+
 		public static void ShowConsoleWindow(bool immediate)
 		{
 			if (ConsoleWindow.ms_ConsoleWindow == null)
@@ -139,6 +193,7 @@ namespace UnityEditor
 				ConsoleWindow.ms_ConsoleWindow.Focus();
 			}
 		}
+
 		internal static void LoadIcons()
 		{
 			if (ConsoleWindow.ms_LoadedIcons)
@@ -157,6 +212,8 @@ namespace UnityEditor
 			ConsoleWindow.iconErrorMono = EditorGUIUtility.LoadIcon("console.erroricon.inactive.sml");
 			ConsoleWindow.Constants.Init();
 		}
+
+		[RequiredByNativeCode]
 		public static void LogChanged()
 		{
 			if (ConsoleWindow.ms_ConsoleWindow == null)
@@ -165,15 +222,19 @@ namespace UnityEditor
 			}
 			ConsoleWindow.ms_ConsoleWindow.DoLogChanged();
 		}
+
 		public void DoLogChanged()
 		{
 			ConsoleWindow.ms_ConsoleWindow.Repaint();
 		}
+
 		private void OnEnable()
 		{
+			base.titleContent = base.GetLocalizedTitleContent();
 			ConsoleWindow.ms_ConsoleWindow = this;
 			this.m_DevBuild = Unsupported.IsDeveloperBuild();
 		}
+
 		private void OnDisable()
 		{
 			if (ConsoleWindow.ms_ConsoleWindow == this)
@@ -181,21 +242,25 @@ namespace UnityEditor
 				ConsoleWindow.ms_ConsoleWindow = null;
 			}
 		}
+
 		private static bool HasMode(int mode, ConsoleWindow.Mode modeToCheck)
 		{
 			return (mode & (int)modeToCheck) != 0;
 		}
+
 		private bool HasFlag(ConsoleWindow.ConsoleFlags flags)
 		{
 			return (LogEntries.consoleFlags & (int)flags) != 0;
 		}
+
 		private void SetFlag(ConsoleWindow.ConsoleFlags flags, bool val)
 		{
 			LogEntries.SetConsoleFlag((int)flags, val);
 		}
+
 		internal static Texture2D GetIconForErrorMode(int mode, bool large)
 		{
-			if (ConsoleWindow.HasMode(mode, (ConsoleWindow.Mode)1050963))
+			if (ConsoleWindow.HasMode(mode, (ConsoleWindow.Mode)3148115))
 			{
 				return (!large) ? ConsoleWindow.iconErrorSmall : ConsoleWindow.iconError;
 			}
@@ -209,9 +274,10 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		internal static GUIStyle GetStyleForErrorMode(int mode)
 		{
-			if (ConsoleWindow.HasMode(mode, (ConsoleWindow.Mode)1050963))
+			if (ConsoleWindow.HasMode(mode, (ConsoleWindow.Mode)3148115))
 			{
 				return ConsoleWindow.Constants.ErrorStyle;
 			}
@@ -221,9 +287,10 @@ namespace UnityEditor
 			}
 			return ConsoleWindow.Constants.LogStyle;
 		}
+
 		internal static GUIStyle GetStatusStyleForErrorMode(int mode)
 		{
-			if (ConsoleWindow.HasMode(mode, (ConsoleWindow.Mode)1050963))
+			if (ConsoleWindow.HasMode(mode, (ConsoleWindow.Mode)3148115))
 			{
 				return ConsoleWindow.Constants.StatusError;
 			}
@@ -233,6 +300,7 @@ namespace UnityEditor
 			}
 			return ConsoleWindow.Constants.StatusLog;
 		}
+
 		private static string ContextString(LogEntry entry)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
@@ -240,16 +308,13 @@ namespace UnityEditor
 			{
 				stringBuilder.Append("Error ");
 			}
+			else if (ConsoleWindow.HasMode(entry.mode, ConsoleWindow.Mode.Log))
+			{
+				stringBuilder.Append("Log ");
+			}
 			else
 			{
-				if (ConsoleWindow.HasMode(entry.mode, ConsoleWindow.Mode.Log))
-				{
-					stringBuilder.Append("Log ");
-				}
-				else
-				{
-					stringBuilder.Append("Assert ");
-				}
+				stringBuilder.Append("Assert ");
 			}
 			stringBuilder.Append("in file: ");
 			stringBuilder.Append(entry.file);
@@ -262,11 +327,13 @@ namespace UnityEditor
 			}
 			return stringBuilder.ToString();
 		}
+
 		private static string GetFirstLine(string s)
 		{
 			int num = s.IndexOf("\n");
 			return (num == -1) ? s : s.Substring(0, num);
 		}
+
 		private static string GetFirstTwoLines(string s)
 		{
 			int num = s.IndexOf("\n");
@@ -280,6 +347,7 @@ namespace UnityEditor
 			}
 			return s;
 		}
+
 		private void SetActiveEntry(LogEntry entry)
 		{
 			if (entry != null)
@@ -301,6 +369,7 @@ namespace UnityEditor
 				this.m_ListView.row = -1;
 			}
 		}
+
 		private static void ShowConsoleRow(int row)
 		{
 			ConsoleWindow.ShowConsoleWindow(false);
@@ -311,6 +380,7 @@ namespace UnityEditor
 				ConsoleWindow.ms_ConsoleWindow.Repaint();
 			}
 		}
+
 		private void OnGUI()
 		{
 			Event current = Event.current;
@@ -453,6 +523,25 @@ namespace UnityEditor
 				current.Use();
 			}
 		}
+
+		public void ToggleLogStackTraces(object userData)
+		{
+			ConsoleWindow.StackTraceLogTypeData stackTraceLogTypeData = (ConsoleWindow.StackTraceLogTypeData)userData;
+			PlayerSettings.SetStackTraceLogType(stackTraceLogTypeData.logType, stackTraceLogTypeData.stackTraceLogType);
+		}
+
+		public void ToggleLogStackTracesForAll(object userData)
+		{
+			using (IEnumerator enumerator = Enum.GetValues(typeof(LogType)).GetEnumerator())
+			{
+				while (enumerator.MoveNext())
+				{
+					LogType logType = (LogType)((int)enumerator.Current);
+					PlayerSettings.SetStackTraceLogType(logType, (StackTraceLogType)((int)userData));
+				}
+			}
+		}
+
 		public void AddItemsToMenu(GenericMenu menu)
 		{
 			if (Application.platform == RuntimePlatform.OSXEditor)
@@ -460,6 +549,56 @@ namespace UnityEditor
 				menu.AddItem(new GUIContent("Open Player Log"), false, new GenericMenu.MenuFunction(InternalEditorUtility.OpenPlayerConsole));
 			}
 			menu.AddItem(new GUIContent("Open Editor Log"), false, new GenericMenu.MenuFunction(InternalEditorUtility.OpenEditorConsole));
+			this.AddStackTraceLoggingMenu(menu);
+		}
+
+		private void AddStackTraceLoggingMenu(GenericMenu menu)
+		{
+			using (IEnumerator enumerator = Enum.GetValues(typeof(LogType)).GetEnumerator())
+			{
+				while (enumerator.MoveNext())
+				{
+					LogType logType = (LogType)((int)enumerator.Current);
+					using (IEnumerator enumerator2 = Enum.GetValues(typeof(StackTraceLogType)).GetEnumerator())
+					{
+						while (enumerator2.MoveNext())
+						{
+							StackTraceLogType stackTraceLogType = (StackTraceLogType)((int)enumerator2.Current);
+							ConsoleWindow.StackTraceLogTypeData stackTraceLogTypeData;
+							stackTraceLogTypeData.logType = logType;
+							stackTraceLogTypeData.stackTraceLogType = stackTraceLogType;
+							menu.AddItem(new GUIContent(string.Concat(new object[]
+							{
+								"Stack Trace Logging/",
+								logType,
+								"/",
+								stackTraceLogType
+							})), PlayerSettings.GetStackTraceLogType(logType) == stackTraceLogType, new GenericMenu.MenuFunction2(this.ToggleLogStackTraces), stackTraceLogTypeData);
+						}
+					}
+				}
+			}
+			int num = (int)PlayerSettings.GetStackTraceLogType(LogType.Log);
+			using (IEnumerator enumerator3 = Enum.GetValues(typeof(LogType)).GetEnumerator())
+			{
+				while (enumerator3.MoveNext())
+				{
+					LogType logType2 = (LogType)((int)enumerator3.Current);
+					if (PlayerSettings.GetStackTraceLogType(logType2) != (StackTraceLogType)num)
+					{
+						num = -1;
+						break;
+					}
+				}
+			}
+			using (IEnumerator enumerator4 = Enum.GetValues(typeof(StackTraceLogType)).GetEnumerator())
+			{
+				while (enumerator4.MoveNext())
+				{
+					StackTraceLogType stackTraceLogType2 = (StackTraceLogType)((int)enumerator4.Current);
+					menu.AddItem(new GUIContent("Stack Trace Logging/All/" + stackTraceLogType2), num == (int)stackTraceLogType2, new GenericMenu.MenuFunction2(this.ToggleLogStackTracesForAll), stackTraceLogType2);
+				}
+			}
 		}
 	}
 }

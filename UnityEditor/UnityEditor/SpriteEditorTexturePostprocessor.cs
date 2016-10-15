@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SpriteEditorTexturePostprocessor : AssetPostprocessor
@@ -8,6 +9,7 @@ namespace UnityEditor
 		{
 			return 1;
 		}
+
 		public void OnPostprocessTexture(Texture2D tex)
 		{
 			if (SpriteEditorWindow.s_Instance != null && base.assetPath.Equals(SpriteEditorWindow.s_Instance.m_SelectedAssetPath))

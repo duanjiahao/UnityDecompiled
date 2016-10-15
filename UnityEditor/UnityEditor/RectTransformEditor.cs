@@ -5,6 +5,7 @@ using UnityEditor.AnimatedValues;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(RectTransform))]
@@ -13,23 +14,36 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle lockStyle = EditorStyles.miniButton;
+
 			public GUIStyle measuringLabelStyle = new GUIStyle("PreOverlayLabel");
+
 			public GUIContent anchorsContent = new GUIContent("Anchors");
+
 			public GUIContent anchorMinContent = new GUIContent("Min", "The normalized position in the parent rectangle that the lower left corner is anchored to.");
+
 			public GUIContent anchorMaxContent = new GUIContent("Max", "The normalized position in the parent rectangle that the upper right corner is anchored to.");
+
 			public GUIContent positionContent = new GUIContent("Position", "The local position of the rectangle. The position specifies this rectangle's pivot relative to the anchor reference point.");
+
 			public GUIContent sizeContent = new GUIContent("Size", "The size of the rectangle.");
+
 			public GUIContent pivotContent = new GUIContent("Pivot", "The pivot point specified in normalized values between 0 and 1. The pivot point is the origin of this rectangle. Rotation and scaling is around this point.");
+
 			public GUIContent transformScaleContent = new GUIContent("Scale", "The local scaling of this Game Object relative to the parent. This scales everything including image borders and text.");
+
 			public GUIContent transformPositionZContent = new GUIContent("Pos Z", "Distance to offset the rectangle along the Z axis of the parent. The effect is visible if the Canvas uses a perspective camera, or if a parent RectTransform is rotated along the X or Y axis.");
+
 			public GUIContent rawEditContent;
+
 			public GUIContent blueprintContent;
+
 			public Styles()
 			{
 				this.rawEditContent = EditorGUIUtility.IconContent("RectTransformRaw", "Raw edit mode. When enabled, editing pivot and anchor values will not counter-adjust the position and size of the rectangle in order to make it stay in place.");
 				this.blueprintContent = EditorGUIUtility.IconContent("RectTransformBlueprint", "Blueprint mode. Edit RectTransforms as if they were not rotated and scaled. This enables snapping too.");
 			}
 		}
+
 		private enum AnchorFusedState
 		{
 			None,
@@ -37,70 +51,128 @@ namespace UnityEditor
 			Horizontal,
 			Vertical
 		}
+
 		private delegate float FloatGetter(RectTransform rect);
+
 		private delegate void FloatSetter(RectTransform rect, float f);
+
 		private const string kShowAnchorPropsPrefName = "RectTransformEditor.showAnchorProperties";
+
 		private const string kLockRectPrefName = "RectTransformEditor.lockRect";
+
 		private const float kDottedLineSize = 5f;
+
 		private static Vector2 kShadowOffset = new Vector2(1f, -1f);
+
 		private static Color kShadowColor = new Color(0f, 0f, 0f, 0.5f);
+
 		private static float kDropdownSize = 49f;
+
 		private static Color kRectInParentSpaceColor = new Color(1f, 1f, 1f, 0.4f);
+
 		private static Color kParentColor = new Color(1f, 1f, 1f, 0.6f);
+
 		private static Color kSiblingColor = new Color(1f, 1f, 1f, 0.2f);
+
 		private static Color kAnchorColor = new Color(1f, 1f, 1f, 1f);
+
 		private static Color kAnchorLineColor = new Color(1f, 1f, 1f, 0.6f);
+
 		private static Vector3[] s_Corners = new Vector3[4];
+
 		private static RectTransformEditor.Styles s_Styles;
+
 		private static int s_FoldoutHash = "Foldout".GetHashCode();
+
 		private static int s_FloatFieldHash = "EditorTextField".GetHashCode();
+
 		private static int s_ParentRectPreviewHandlesHash = "ParentRectPreviewDragHandles".GetHashCode();
+
 		private static GUIContent[] s_XYLabels = new GUIContent[]
 		{
 			new GUIContent("X"),
 			new GUIContent("Y")
 		};
+
 		private static GUIContent[] s_XYZLabels = new GUIContent[]
 		{
 			new GUIContent("X"),
 			new GUIContent("Y"),
 			new GUIContent("Z")
 		};
+
 		private static bool[] s_ScaleDisabledMask = new bool[3];
+
 		private static Vector3 s_StartMouseWorldPos;
+
 		private static Vector3 s_StartPosition;
+
 		private static Vector2 s_StartMousePos;
+
 		private static bool s_DragAnchorsTogether;
+
 		private static Vector2 s_StartDragAnchorMin;
+
 		private static Vector2 s_StartDragAnchorMax;
+
 		private static RectTransformEditor.AnchorFusedState s_AnchorFusedState = RectTransformEditor.AnchorFusedState.None;
+
 		private SerializedProperty m_AnchorMin;
+
 		private SerializedProperty m_AnchorMax;
+
 		private SerializedProperty m_AnchoredPosition;
+
 		private SerializedProperty m_SizeDelta;
+
 		private SerializedProperty m_Pivot;
+
 		private SerializedProperty m_LocalPositionZ;
+
 		private SerializedProperty m_LocalScale;
+
 		private TransformRotationGUI m_RotationGUI;
+
 		private bool m_ShowLayoutOptions;
+
 		private bool m_RawEditMode;
+
 		private int m_TargetCount;
+
 		private Dictionary<int, AnimBool> m_KeyboardControlIDs = new Dictionary<int, AnimBool>();
+
 		private AnimBool m_ChangingAnchors = new AnimBool();
+
 		private AnimBool m_ChangingPivot = new AnimBool();
+
 		private AnimBool m_ChangingWidth = new AnimBool();
+
 		private AnimBool m_ChangingHeight = new AnimBool();
+
 		private AnimBool m_ChangingPosX = new AnimBool();
+
 		private AnimBool m_ChangingPosY = new AnimBool();
+
 		private AnimBool m_ChangingLeft = new AnimBool();
+
 		private AnimBool m_ChangingRight = new AnimBool();
+
 		private AnimBool m_ChangingTop = new AnimBool();
+
 		private AnimBool m_ChangingBottom = new AnimBool();
+
+		private LayoutDropdownWindow m_DropdownWindow;
+
 		private static float s_ParentDragTime = 0f;
+
 		private static float s_ParentDragId = 0f;
+
 		private static Rect s_ParentDragOrigRect = default(Rect);
+
 		private static Rect s_ParentDragPreviewRect = default(Rect);
+
 		private static RectTransform s_ParentDragRectTransform = null;
+
 		private static RectTransformEditor.Styles styles
 		{
 			get
@@ -112,6 +184,7 @@ namespace UnityEditor
 				return RectTransformEditor.s_Styles;
 			}
 		}
+
 		private void OnEnable()
 		{
 			this.m_AnchorMin = base.serializedObject.FindProperty("m_AnchorMin");
@@ -141,6 +214,7 @@ namespace UnityEditor
 			this.m_ChangingBottom.valueChanged.AddListener(new UnityAction(this.RepaintScene));
 			ManipulationToolUtility.handleDragChange = (ManipulationToolUtility.HandleDragChange)Delegate.Combine(ManipulationToolUtility.handleDragChange, new ManipulationToolUtility.HandleDragChange(this.HandleDragChange));
 		}
+
 		private void OnDisable()
 		{
 			this.m_ChangingAnchors.valueChanged.RemoveListener(new UnityAction(this.RepaintScene));
@@ -154,7 +228,12 @@ namespace UnityEditor
 			this.m_ChangingTop.valueChanged.RemoveListener(new UnityAction(this.RepaintScene));
 			this.m_ChangingBottom.valueChanged.RemoveListener(new UnityAction(this.RepaintScene));
 			ManipulationToolUtility.handleDragChange = (ManipulationToolUtility.HandleDragChange)Delegate.Remove(ManipulationToolUtility.handleDragChange, new ManipulationToolUtility.HandleDragChange(this.HandleDragChange));
+			if (this.m_DropdownWindow != null && this.m_DropdownWindow.editorWindow != null)
+			{
+				this.m_DropdownWindow.editorWindow.Close();
+			}
 		}
+
 		private void HandleDragChange(string handleName, bool dragging)
 		{
 			AnimBool animBool;
@@ -195,20 +274,19 @@ namespace UnityEditor
 				animBool.target = dragging;
 			}
 		}
+
 		private void SetFadingBasedOnMouseDownUp(ref AnimBool animBool, Event eventBefore)
 		{
 			if (eventBefore.type == EventType.MouseDrag && Event.current.type != EventType.MouseDrag)
 			{
 				animBool.value = true;
 			}
-			else
+			else if (eventBefore.type == EventType.MouseUp && Event.current.type != EventType.MouseUp)
 			{
-				if (eventBefore.type == EventType.MouseUp && Event.current.type != EventType.MouseUp)
-				{
-					animBool.target = false;
-				}
+				animBool.target = false;
 			}
 		}
+
 		private void SetFadingBasedOnControlID(ref AnimBool animBool, int id)
 		{
 			GUIView y = (!(EditorWindow.focusedWindow == null)) ? EditorWindow.focusedWindow.m_Parent : null;
@@ -217,27 +295,27 @@ namespace UnityEditor
 				animBool.value = true;
 				this.m_KeyboardControlIDs[id] = animBool;
 			}
-			else
+			else if ((GUIUtility.keyboardControl != id || GUIView.current != y) && this.m_KeyboardControlIDs.ContainsKey(id))
 			{
-				if ((GUIUtility.keyboardControl != id || GUIView.current != y) && this.m_KeyboardControlIDs.ContainsKey(id))
+				this.m_KeyboardControlIDs.Remove(id);
+				if (!this.m_KeyboardControlIDs.ContainsValue(animBool))
 				{
-					this.m_KeyboardControlIDs.Remove(id);
-					if (!this.m_KeyboardControlIDs.ContainsValue(animBool))
-					{
-						animBool.target = false;
-					}
+					animBool.target = false;
 				}
 			}
 		}
+
 		private void RepaintScene()
 		{
 			SceneView.RepaintAll();
 		}
+
 		private static bool ShouldDoIntSnapping(RectTransform rect)
 		{
 			Canvas componentInParent = rect.gameObject.GetComponentInParent<Canvas>();
 			return componentInParent != null && componentInParent.renderMode != RenderMode.WorldSpace;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (!EditorGUIUtility.wideMode)
@@ -295,6 +373,7 @@ namespace UnityEditor
 			RectTransformEditor.Vector3FieldWithDisabledMash(EditorGUILayout.GetControlRect(new GUILayoutOption[0]), this.m_LocalScale, RectTransformEditor.styles.transformScaleContent, RectTransformEditor.s_ScaleDisabledMask);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private static void Vector3FieldWithDisabledMash(Rect position, SerializedProperty property, GUIContent label, bool[] disabledMask)
 		{
 			int controlID = GUIUtility.GetControlID(RectTransformEditor.s_FoldoutHash, EditorGUIUtility.native, position);
@@ -304,6 +383,7 @@ namespace UnityEditor
 			serializedProperty.NextVisible(true);
 			EditorGUI.MultiPropertyField(position, RectTransformEditor.s_XYZLabels, serializedProperty, 13f, disabledMask);
 		}
+
 		private void LayoutDropdownButton(bool anyWithoutParent)
 		{
 			Rect rect = GUILayoutUtility.GetRect(0f, 0f);
@@ -311,22 +391,25 @@ namespace UnityEditor
 			rect.y += 17f;
 			rect.height = RectTransformEditor.kDropdownSize;
 			rect.width = RectTransformEditor.kDropdownSize;
-			EditorGUI.BeginDisabledGroup(anyWithoutParent);
-			Color color = GUI.color;
-			GUI.color = new Color(1f, 1f, 1f, 0.6f) * color;
-			if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, "box"))
+			using (new EditorGUI.DisabledScope(anyWithoutParent))
 			{
-				GUIUtility.keyboardControl = 0;
-				PopupWindow.Show(rect, new LayoutDropdownWindow(base.serializedObject));
+				Color color = GUI.color;
+				GUI.color = new Color(1f, 1f, 1f, 0.6f) * color;
+				if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, "box"))
+				{
+					GUIUtility.keyboardControl = 0;
+					this.m_DropdownWindow = new LayoutDropdownWindow(base.serializedObject);
+					PopupWindow.Show(rect, this.m_DropdownWindow);
+				}
+				GUI.color = color;
 			}
-			GUI.color = color;
-			EditorGUI.EndDisabledGroup();
 			if (!anyWithoutParent)
 			{
 				LayoutDropdownWindow.DrawLayoutMode(new RectOffset(7, 7, 7, 7).Remove(rect), this.m_AnchorMin, this.m_AnchorMax, this.m_AnchoredPosition, this.m_SizeDelta);
 				LayoutDropdownWindow.DrawLayoutModeHeadersOutsideRect(rect, this.m_AnchorMin, this.m_AnchorMax, this.m_AnchoredPosition, this.m_SizeDelta);
 			}
 		}
+
 		private void SmartPositionAndSizeFields(bool anyWithoutParent, bool anyDrivenX, bool anyDrivenY)
 		{
 			Rect controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight * 4f, new GUILayoutOption[0]);
@@ -445,6 +528,7 @@ namespace UnityEditor
 			rect.x += rect.width;
 			this.RawButton(rect);
 		}
+
 		private void SmartAnchorFields()
 		{
 			Rect controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight * (float)((!this.m_ShowLayoutOptions) ? 1 : 3), new GUILayoutOption[0]);
@@ -478,6 +562,7 @@ namespace UnityEditor
 			}, DrivenTransformProperties.AnchorMaxX, DrivenTransformProperties.AnchorMaxY, this.m_AnchorMax.FindPropertyRelative("x"), this.m_AnchorMax.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMaxContent);
 			EditorGUI.indentLevel--;
 		}
+
 		private void SmartPivotField()
 		{
 			this.Vector2Field(EditorGUILayout.GetControlRect(new GUILayoutOption[0]), (RectTransform rectTransform) => rectTransform.pivot.x, delegate(RectTransform rectTransform, float val)
@@ -488,6 +573,7 @@ namespace UnityEditor
 				RectTransformEditor.SetPivotSmart(rectTransform, val, 1, !this.m_RawEditMode, false);
 			}, DrivenTransformProperties.PivotX, DrivenTransformProperties.PivotY, this.m_Pivot.FindPropertyRelative("x"), this.m_Pivot.FindPropertyRelative("y"), RectTransformEditor.styles.pivotContent);
 		}
+
 		private void RawButton(Rect position)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -497,6 +583,7 @@ namespace UnityEditor
 				EditorPrefs.SetBool("RectTransformEditor.lockRect", this.m_RawEditMode);
 			}
 		}
+
 		private void BlueprintButton(Rect position)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -507,31 +594,33 @@ namespace UnityEditor
 				Tools.RepaintAllToolViews();
 			}
 		}
+
 		private void FloatFieldLabelAbove(Rect position, RectTransformEditor.FloatGetter getter, RectTransformEditor.FloatSetter setter, DrivenTransformProperties driven, GUIContent label)
 		{
-			EditorGUI.BeginDisabledGroup(base.targets.Any((UnityEngine.Object x) => ((x as RectTransform).drivenProperties & driven) != DrivenTransformProperties.None));
-			float value = getter(this.target as RectTransform);
-			EditorGUI.showMixedValue = ((
-				from x in base.targets
-				select getter(x as RectTransform)).Distinct<float>().Count<float>() >= 2);
-			EditorGUI.BeginChangeCheck();
-			int controlID = GUIUtility.GetControlID(RectTransformEditor.s_FloatFieldHash, FocusType.Keyboard, position);
-			Rect rect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-			Rect position2 = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight, position.width, EditorGUIUtility.singleLineHeight);
-			EditorGUI.HandlePrefixLabel(position, rect, label, controlID);
-			float f = EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position2, rect, controlID, value, EditorGUI.kFloatFieldFormatString, EditorStyles.textField, true);
-			if (EditorGUI.EndChangeCheck())
+			using (new EditorGUI.DisabledScope(base.targets.Any((UnityEngine.Object x) => ((x as RectTransform).drivenProperties & driven) != DrivenTransformProperties.None)))
 			{
-				Undo.RecordObjects(base.targets, "Inspector");
-				UnityEngine.Object[] targets = base.targets;
-				for (int i = 0; i < targets.Length; i++)
+				float value = getter(this.target as RectTransform);
+				EditorGUI.showMixedValue = ((from x in base.targets
+				select getter(x as RectTransform)).Distinct<float>().Count<float>() >= 2);
+				EditorGUI.BeginChangeCheck();
+				int controlID = GUIUtility.GetControlID(RectTransformEditor.s_FloatFieldHash, FocusType.Keyboard, position);
+				Rect rect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+				Rect position2 = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight, position.width, EditorGUIUtility.singleLineHeight);
+				EditorGUI.HandlePrefixLabel(position, rect, label, controlID);
+				float f = EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position2, rect, controlID, value, EditorGUI.kFloatFieldFormatString, EditorStyles.textField, true);
+				if (EditorGUI.EndChangeCheck())
 				{
-					RectTransform rect2 = (RectTransform)targets[i];
-					setter(rect2, f);
+					Undo.RecordObjects(base.targets, "Inspector");
+					UnityEngine.Object[] targets = base.targets;
+					for (int i = 0; i < targets.Length; i++)
+					{
+						RectTransform rect2 = (RectTransform)targets[i];
+						setter(rect2, f);
+					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
 		}
+
 		private void Vector2Field(Rect position, RectTransformEditor.FloatGetter xGetter, RectTransformEditor.FloatSetter xSetter, RectTransformEditor.FloatGetter yGetter, RectTransformEditor.FloatSetter ySetter, DrivenTransformProperties xDriven, DrivenTransformProperties yDriven, SerializedProperty xProperty, SerializedProperty yProperty, GUIContent label)
 		{
 			EditorGUI.PrefixLabel(position, -1, label);
@@ -550,27 +639,29 @@ namespace UnityEditor
 			EditorGUIUtility.labelWidth = labelWidth;
 			EditorGUI.indentLevel = indentLevel;
 		}
+
 		private void FloatField(Rect position, RectTransformEditor.FloatGetter getter, RectTransformEditor.FloatSetter setter, DrivenTransformProperties driven, GUIContent label)
 		{
-			EditorGUI.BeginDisabledGroup(base.targets.Any((UnityEngine.Object x) => ((x as RectTransform).drivenProperties & driven) != DrivenTransformProperties.None));
-			float value = getter(this.target as RectTransform);
-			EditorGUI.showMixedValue = ((
-				from x in base.targets
-				select getter(x as RectTransform)).Distinct<float>().Count<float>() >= 2);
-			EditorGUI.BeginChangeCheck();
-			float f = EditorGUI.FloatField(position, label, value);
-			if (EditorGUI.EndChangeCheck())
+			using (new EditorGUI.DisabledScope(base.targets.Any((UnityEngine.Object x) => ((x as RectTransform).drivenProperties & driven) != DrivenTransformProperties.None)))
 			{
-				Undo.RecordObjects(base.targets, "Inspector");
-				UnityEngine.Object[] targets = base.targets;
-				for (int i = 0; i < targets.Length; i++)
+				float value = getter(this.target as RectTransform);
+				EditorGUI.showMixedValue = ((from x in base.targets
+				select getter(x as RectTransform)).Distinct<float>().Count<float>() >= 2);
+				EditorGUI.BeginChangeCheck();
+				float f = EditorGUI.FloatField(position, label, value);
+				if (EditorGUI.EndChangeCheck())
 				{
-					RectTransform rect = (RectTransform)targets[i];
-					setter(rect, f);
+					Undo.RecordObjects(base.targets, "Inspector");
+					UnityEngine.Object[] targets = base.targets;
+					for (int i = 0; i < targets.Length; i++)
+					{
+						RectTransform rect = (RectTransform)targets[i];
+						setter(rect, f);
+					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
 		}
+
 		private Rect GetColumnRect(Rect totalRect, int column)
 		{
 			totalRect.xMin += EditorGUIUtility.labelWidth - 1f;
@@ -579,6 +670,7 @@ namespace UnityEditor
 			result.width = (totalRect.width - 4f) / 3f;
 			return result;
 		}
+
 		private int AnchorPopup(Rect position, string label, int selected, string[] displayedOptions)
 		{
 			EditorGUIUtility.labelWidth = 12f;
@@ -586,6 +678,7 @@ namespace UnityEditor
 			EditorGUIUtility.labelWidth = 0f;
 			return result;
 		}
+
 		private void DrawRect(Rect rect, Transform space, bool dotted)
 		{
 			Vector3 vector = space.TransformPoint(new Vector2(rect.x, rect.y));
@@ -607,6 +700,7 @@ namespace UnityEditor
 				RectHandles.DrawDottedLineWithShadow(RectTransformEditor.kShadowColor, RectTransformEditor.kShadowOffset, vector4, vector, 5f);
 			}
 		}
+
 		private void OnSceneGUI()
 		{
 			RectTransform rectTransform = this.target as RectTransform;
@@ -662,6 +756,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ParentRectPreviewDragHandles(RectTransform gui, Transform space)
 		{
 			if (gui == null)
@@ -721,6 +816,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void SetTemporaryRect(RectTransform gui, Rect rect, int id)
 		{
 			if (RectTransformEditor.s_ParentDragRectTransform == null)
@@ -729,12 +825,9 @@ namespace UnityEditor
 				RectTransformEditor.s_ParentDragOrigRect = gui.rect;
 				RectTransformEditor.s_ParentDragId = (float)id;
 			}
-			else
+			else if (RectTransformEditor.s_ParentDragRectTransform != gui)
 			{
-				if (RectTransformEditor.s_ParentDragRectTransform != gui)
-				{
-					return;
-				}
+				return;
 			}
 			RectTransformEditor.s_ParentDragPreviewRect = rect;
 			RectTransformEditor.s_ParentDragTime = Time.realtimeSinceStartup;
@@ -742,6 +835,7 @@ namespace UnityEditor
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.UpdateTemporaryRect));
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.UpdateTemporaryRect));
 		}
+
 		private void UpdateTemporaryRect()
 		{
 			if (RectTransformEditor.s_ParentDragRectTransform == null)
@@ -774,6 +868,7 @@ namespace UnityEditor
 			SceneView.RepaintAll();
 			GameView.RepaintAll();
 		}
+
 		private void AllAnchorsSceneGUI(RectTransform gui, RectTransform guiParent, Transform parentSpace, Transform transform)
 		{
 			Handles.color = RectTransformEditor.kParentColor;
@@ -800,10 +895,27 @@ namespace UnityEditor
 			Handles.color = RectTransformEditor.kAnchorColor;
 			this.AnchorsSceneGUI(gui, guiParent, parentSpace, true);
 		}
+
 		private Vector3 GetAnchorLocal(RectTransform guiParent, Vector2 anchor)
 		{
-			return Rect.NormalizedToPoint(guiParent.rect, anchor);
+			return RectTransformEditor.NormalizedToPointUnclamped(guiParent.rect, anchor);
 		}
+
+		private static Vector2 NormalizedToPointUnclamped(Rect rectangle, Vector2 normalizedRectCoordinates)
+		{
+			return new Vector2(Mathf.LerpUnclamped(rectangle.x, rectangle.xMax, normalizedRectCoordinates.x), Mathf.LerpUnclamped(rectangle.y, rectangle.yMax, normalizedRectCoordinates.y));
+		}
+
+		private static bool AnchorAllowedOutsideParent(int axis, int minmax)
+		{
+			if (EditorGUI.actionKey || GUIUtility.hotControl == 0)
+			{
+				return true;
+			}
+			float num = (minmax != 0) ? RectTransformEditor.s_StartDragAnchorMax[axis] : RectTransformEditor.s_StartDragAnchorMin[axis];
+			return num < -0.001f || num > 1.001f;
+		}
+
 		private void AnchorsSceneGUI(RectTransform gui, RectTransform guiParent, Transform parentSpace, bool interactive)
 		{
 			if (Event.current.type == EventType.MouseDown)
@@ -813,19 +925,13 @@ namespace UnityEditor
 				{
 					RectTransformEditor.s_AnchorFusedState = RectTransformEditor.AnchorFusedState.All;
 				}
-				else
+				else if (gui.anchorMin.x == gui.anchorMax.x)
 				{
-					if (gui.anchorMin.x == gui.anchorMax.x)
-					{
-						RectTransformEditor.s_AnchorFusedState = RectTransformEditor.AnchorFusedState.Horizontal;
-					}
-					else
-					{
-						if (gui.anchorMin.y == gui.anchorMax.y)
-						{
-							RectTransformEditor.s_AnchorFusedState = RectTransformEditor.AnchorFusedState.Vertical;
-						}
-					}
+					RectTransformEditor.s_AnchorFusedState = RectTransformEditor.AnchorFusedState.Horizontal;
+				}
+				else if (gui.anchorMin.y == gui.anchorMax.y)
+				{
+					RectTransformEditor.s_AnchorFusedState = RectTransformEditor.AnchorFusedState.Vertical;
 				}
 			}
 			this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 0, 0, GUIUtility.GetControlID(FocusType.Passive));
@@ -856,6 +962,7 @@ namespace UnityEditor
 				this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 1, 2, controlID5);
 			}
 		}
+
 		private void AnchorSceneGUI(RectTransform gui, RectTransform guiParent, Transform parentSpace, bool interactive, int minmaxX, int minmaxY, int id)
 		{
 			Vector3 vector = default(Vector2);
@@ -904,7 +1011,11 @@ namespace UnityEditor
 					bool flag = num3 == 1;
 					float num4 = (!flag) ? gui.anchorMin[i] : gui.anchorMax[i];
 					float num5 = num4 + vector3[i];
-					float num6 = Mathf.Clamp01(num5);
+					float num6 = num5;
+					if (!RectTransformEditor.AnchorAllowedOutsideParent(i, num3))
+					{
+						num6 = Mathf.Clamp01(num6);
+					}
 					if (num3 == 0)
 					{
 						num6 = Mathf.Min(num6, gui.anchorMax[i]);
@@ -936,14 +1047,17 @@ namespace UnityEditor
 			}
 			this.SetFadingBasedOnMouseDownUp(ref this.m_ChangingAnchors, @event);
 		}
+
 		private static float Round(float value)
 		{
 			return Mathf.Floor(0.5f + value);
 		}
+
 		private static int RoundToInt(float value)
 		{
 			return Mathf.FloorToInt(0.5f + value);
 		}
+
 		private void DrawSizes(Rect rectInUserSpace, Transform userSpace, Rect rectInParentSpace, Transform parentSpace, RectTransform gui, RectTransform guiParent)
 		{
 			float size = 0.05f * HandleUtility.GetHandleSize(parentSpace.position);
@@ -987,6 +1101,7 @@ namespace UnityEditor
 				this.DrawSizeDistances(userSpace, rectInParentSpace, parentSpace, gui, guiParent, size, 1, this.m_ChangingHeight.faded);
 			}
 		}
+
 		private void DrawSizeDistances(Transform userSpace, Rect rectInParentSpace, Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, int axis, float alpha)
 		{
 			if (alpha <= 0f)
@@ -1014,6 +1129,7 @@ namespace UnityEditor
 			Vector3 b = ((axis != 0) ? userSpace.right : userSpace.up) * size * 2f;
 			this.DrawLabelBetweenPoints(RectTransformEditor.s_Corners[0] + b, RectTransformEditor.s_Corners[(axis != 0) ? 1 : 3] + b, label);
 		}
+
 		private void DrawPositionDistances(Transform userSpace, Rect rectInParentSpace, Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, int axis, int side, float alpha)
 		{
 			if (guiParent == null || alpha <= 0f)
@@ -1034,7 +1150,7 @@ namespace UnityEditor
 				Vector2 v = Rect.NormalizedToPoint(rectInParentSpace, gui.pivot);
 				vector = v;
 				vector2 = v;
-				vector[axis] = Mathf.Lerp(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
+				vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
 				num = gui.anchoredPosition[axis];
 			}
 			else
@@ -1044,13 +1160,13 @@ namespace UnityEditor
 				vector2 = center;
 				if (side == 1)
 				{
-					vector[axis] = Mathf.Lerp(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
+					vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
 					vector2[axis] = rectInParentSpace.min[axis];
 					num = gui.offsetMin[axis];
 				}
 				else
 				{
-					vector[axis] = Mathf.Lerp(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMax[axis]);
+					vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMax[axis]);
 					vector2[axis] = rectInParentSpace.max[axis];
 					num = -gui.offsetMax[axis];
 				}
@@ -1061,6 +1177,12 @@ namespace UnityEditor
 			GUIContent label = new GUIContent(num.ToString());
 			this.DrawLabelBetweenPoints(vector, vector2, label);
 		}
+
+		private float LerpUnclamped(float a, float b, float t)
+		{
+			return a * (1f - t) + b * t;
+		}
+
 		private void DrawAnchorDistances(Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, float alpha)
 		{
 			if (guiParent == null || alpha <= 0f)
@@ -1102,11 +1224,21 @@ namespace UnityEditor
 				int num = RectTransformEditor.RoundToInt(gui.anchorMin[1 - k] * 100f);
 				int num2 = RectTransformEditor.RoundToInt((gui.anchorMax[1 - k] - gui.anchorMin[1 - k]) * 100f);
 				int num3 = RectTransformEditor.RoundToInt((1f - gui.anchorMax[1 - k]) * 100f);
-				this.DrawLabelBetweenPoints(array[k, 0] - b, array[k, 1] - b, GUIContent.Temp(num.ToString() + "%"));
-				this.DrawLabelBetweenPoints(array[k, 1] - b, array[k, 2] - b, GUIContent.Temp(num2.ToString() + "%"));
-				this.DrawLabelBetweenPoints(array[k, 2] - b, array[k, 3] - b, GUIContent.Temp(num3.ToString() + "%"));
+				if (num > 0)
+				{
+					this.DrawLabelBetweenPoints(array[k, 0] - b, array[k, 1] - b, GUIContent.Temp(num.ToString() + "%"));
+				}
+				if (num2 > 0)
+				{
+					this.DrawLabelBetweenPoints(array[k, 1] - b, array[k, 2] - b, GUIContent.Temp(num2.ToString() + "%"));
+				}
+				if (num3 > 0)
+				{
+					this.DrawLabelBetweenPoints(array[k, 2] - b, array[k, 3] - b, GUIContent.Temp(num3.ToString() + "%"));
+				}
 			}
 		}
+
 		private void DrawAnchorRect(Transform parentSpace, RectTransform gui, RectTransform guiParent, int axis, float alpha)
 		{
 			if (guiParent == null || alpha <= 0f)
@@ -1121,9 +1253,10 @@ namespace UnityEditor
 			{
 				if (i != 1 || gui.anchorMin[axis] != gui.anchorMax[axis])
 				{
+					array[i, 0][1 - axis] = Mathf.Min(0f, gui.anchorMin[1 - axis]);
+					array[i, 1][1 - axis] = Mathf.Max(1f, gui.anchorMax[1 - axis]);
 					for (int j = 0; j < 2; j++)
 					{
-						array[i, j][1 - axis] = (float)j;
 						array[i, j][axis] = ((i != 0) ? gui.anchorMax[axis] : gui.anchorMin[axis]);
 						array[i, j] = parentSpace.TransformPoint(this.GetAnchorLocal(guiParent, array[i, j]));
 					}
@@ -1131,6 +1264,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DrawLabelBetweenPoints(Vector3 pA, Vector3 pB, GUIContent label)
 		{
 			if (pA == pB)
@@ -1153,6 +1287,7 @@ namespace UnityEditor
 			GUI.matrix = matrix;
 			Handles.EndGUI();
 		}
+
 		private static Vector3 GetRectReferenceCorner(RectTransform gui, bool worldSpace)
 		{
 			if (!worldSpace)
@@ -1167,6 +1302,7 @@ namespace UnityEditor
 			}
 			return RectTransformEditor.s_Corners[0];
 		}
+
 		private void DrawAnchor(Vector3 pos, Vector3 right, Vector3 up)
 		{
 			pos -= up * 0.5f;
@@ -1181,6 +1317,7 @@ namespace UnityEditor
 				pos
 			});
 		}
+
 		public static void SetPivotSmart(RectTransform rect, float value, int axis, bool smart, bool parentSpace)
 		{
 			Vector3 rectReferenceCorner = RectTransformEditor.GetRectReferenceCorner(rect, !parentSpace);
@@ -1197,14 +1334,17 @@ namespace UnityEditor
 				rect.transform.position = position;
 			}
 		}
+
 		public static void SetAnchorSmart(RectTransform rect, float value, int axis, bool isMax, bool smart)
 		{
 			RectTransformEditor.SetAnchorSmart(rect, value, axis, isMax, smart, false, false, false);
 		}
+
 		public static void SetAnchorSmart(RectTransform rect, float value, int axis, bool isMax, bool smart, bool enforceExactValue)
 		{
 			RectTransformEditor.SetAnchorSmart(rect, value, axis, isMax, smart, enforceExactValue, false, false);
 		}
+
 		public static void SetAnchorSmart(RectTransform rect, float value, int axis, bool isMax, bool smart, bool enforceExactValue, bool enforceMinNoLargerThanMax, bool moveTogether)
 		{
 			RectTransform rectTransform = null;
@@ -1220,7 +1360,11 @@ namespace UnityEditor
 					smart = false;
 				}
 			}
-			value = Mathf.Clamp01(value);
+			bool flag = !RectTransformEditor.AnchorAllowedOutsideParent(axis, (!isMax) ? 0 : 1);
+			if (flag)
+			{
+				value = Mathf.Clamp01(value);
+			}
 			if (enforceMinNoLargerThanMax)
 			{
 				if (isMax)
@@ -1251,7 +1395,10 @@ namespace UnityEditor
 					{
 						value = RectTransformEditor.Round(value * 1000f) * 0.001f;
 					}
-					value = Mathf.Clamp01(value);
+					if (flag)
+					{
+						value = Mathf.Clamp01(value);
+					}
 					if (enforceMinNoLargerThanMax)
 					{
 						if (isMax)

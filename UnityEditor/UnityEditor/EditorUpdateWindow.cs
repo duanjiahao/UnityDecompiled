@@ -1,23 +1,37 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EditorUpdateWindow : EditorWindow
 	{
 		private static GUIContent s_UnityLogo;
+
 		private static GUIContent s_Title;
+
 		private static GUIContent s_TextHasUpdate;
+
 		private static GUIContent s_TextUpToDate;
+
 		private static GUIContent s_CheckForNewUpdatesText;
+
 		private static string s_ErrorString;
+
 		private static string s_LatestVersionString;
+
 		private static string s_LatestVersionMessage;
+
 		private static string s_UpdateURL;
+
 		private static bool s_HasUpdate;
+
 		private static bool s_HasConnectionError;
+
 		private static bool s_ShowAtStartup;
+
 		private Vector2 m_ScrollPos;
+
 		private static void ShowEditorErrorWindow(string errorString)
 		{
 			EditorUpdateWindow.LoadResources();
@@ -26,6 +40,7 @@ namespace UnityEditor
 			EditorUpdateWindow.s_HasUpdate = false;
 			EditorUpdateWindow.ShowWindow();
 		}
+
 		private static void ShowEditorUpdateWindow(string latestVersionString, string latestVersionMessage, string updateURL)
 		{
 			EditorUpdateWindow.LoadResources();
@@ -36,10 +51,12 @@ namespace UnityEditor
 			EditorUpdateWindow.s_HasUpdate = (updateURL.Length > 0);
 			EditorUpdateWindow.ShowWindow();
 		}
+
 		private static void ShowWindow()
 		{
 			EditorWindow.GetWindowWithRect(typeof(EditorUpdateWindow), new Rect(100f, 100f, 570f, 400f), true, EditorUpdateWindow.s_Title.text);
 		}
+
 		private static void LoadResources()
 		{
 			if (EditorUpdateWindow.s_UnityLogo != null)
@@ -47,12 +64,13 @@ namespace UnityEditor
 				return;
 			}
 			EditorUpdateWindow.s_ShowAtStartup = EditorPrefs.GetBool("EditorUpdateShowAtStartup", true);
-			EditorUpdateWindow.s_Title = EditorGUIUtility.TextContent("EditorUpdateWindow.Title");
+			EditorUpdateWindow.s_Title = EditorGUIUtility.TextContent("Unity Editor Update Check");
 			EditorUpdateWindow.s_UnityLogo = EditorGUIUtility.IconContent("UnityLogo");
-			EditorUpdateWindow.s_TextHasUpdate = EditorGUIUtility.TextContent("EditorUpdateWindow.TextHasUpdate");
-			EditorUpdateWindow.s_TextUpToDate = EditorGUIUtility.TextContent("EditorUpdateWindow.TextUpToDate");
-			EditorUpdateWindow.s_CheckForNewUpdatesText = EditorGUIUtility.TextContent("EditorUpdateWindow.CheckForNewUpdatesText");
+			EditorUpdateWindow.s_TextHasUpdate = EditorGUIUtility.TextContent("There is a new version of the Unity Editor available for download.\n\nCurrently installed version is {0}\nNew version is {1}");
+			EditorUpdateWindow.s_TextUpToDate = EditorGUIUtility.TextContent("The Unity Editor is up to date. Currently installed version is {0}");
+			EditorUpdateWindow.s_CheckForNewUpdatesText = EditorGUIUtility.TextContent("Check for Updates");
 		}
+
 		public void OnGUI()
 		{
 			EditorUpdateWindow.LoadResources();
@@ -70,48 +88,45 @@ namespace UnityEditor
 					GUILayout.Width(405f)
 				});
 			}
+			else if (EditorUpdateWindow.s_HasUpdate)
+			{
+				GUILayout.Label(string.Format(EditorUpdateWindow.s_TextHasUpdate.text, InternalEditorUtility.GetFullUnityVersion(), EditorUpdateWindow.s_LatestVersionString), "WordWrappedLabel", new GUILayoutOption[]
+				{
+					GUILayout.Width(300f)
+				});
+				GUILayout.Space(20f);
+				this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[]
+				{
+					GUILayout.Width(405f),
+					GUILayout.Height(200f)
+				});
+				GUILayout.Label(EditorUpdateWindow.s_LatestVersionMessage, "WordWrappedLabel", new GUILayoutOption[0]);
+				EditorGUILayout.EndScrollView();
+				GUILayout.Space(20f);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				if (GUILayout.Button("Download new version", new GUILayoutOption[]
+				{
+					GUILayout.Width(200f)
+				}))
+				{
+					Help.BrowseURL(EditorUpdateWindow.s_UpdateURL);
+				}
+				if (GUILayout.Button("Skip new version", new GUILayoutOption[]
+				{
+					GUILayout.Width(200f)
+				}))
+				{
+					EditorPrefs.SetString("EditorUpdateSkipVersionString", EditorUpdateWindow.s_LatestVersionString);
+					base.Close();
+				}
+				GUILayout.EndHorizontal();
+			}
 			else
 			{
-				if (EditorUpdateWindow.s_HasUpdate)
+				GUILayout.Label(string.Format(EditorUpdateWindow.s_TextUpToDate.text, Application.unityVersion), "WordWrappedLabel", new GUILayoutOption[]
 				{
-					GUILayout.Label(string.Format(EditorUpdateWindow.s_TextHasUpdate.text, InternalEditorUtility.GetFullUnityVersion(), EditorUpdateWindow.s_LatestVersionString), "WordWrappedLabel", new GUILayoutOption[]
-					{
-						GUILayout.Width(300f)
-					});
-					GUILayout.Space(20f);
-					this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[]
-					{
-						GUILayout.Width(405f),
-						GUILayout.Height(200f)
-					});
-					GUILayout.Label(EditorUpdateWindow.s_LatestVersionMessage, "WordWrappedLabel", new GUILayoutOption[0]);
-					EditorGUILayout.EndScrollView();
-					GUILayout.Space(20f);
-					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-					if (GUILayout.Button("Download new version", new GUILayoutOption[]
-					{
-						GUILayout.Width(200f)
-					}))
-					{
-						Help.BrowseURL(EditorUpdateWindow.s_UpdateURL);
-					}
-					if (GUILayout.Button("Skip new version", new GUILayoutOption[]
-					{
-						GUILayout.Width(200f)
-					}))
-					{
-						EditorPrefs.SetString("EditorUpdateSkipVersionString", EditorUpdateWindow.s_LatestVersionString);
-						base.Close();
-					}
-					GUILayout.EndHorizontal();
-				}
-				else
-				{
-					GUILayout.Label(string.Format(EditorUpdateWindow.s_TextUpToDate.text, Application.unityVersion), "WordWrappedLabel", new GUILayoutOption[]
-					{
-						GUILayout.Width(405f)
-					});
-				}
+					GUILayout.Width(405f)
+				});
 			}
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();

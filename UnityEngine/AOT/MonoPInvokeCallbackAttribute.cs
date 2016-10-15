@@ -1,4 +1,5 @@
 using System;
+
 namespace AOT
 {
 	[AttributeUsage(AttributeTargets.Method)]

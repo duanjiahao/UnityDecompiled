@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SceneHierarchySortingWindow : EditorWindow
@@ -8,30 +9,38 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle background = "grey_border";
+
 			public GUIStyle menuItem = "MenuItem";
 		}
+
 		public class InputData
 		{
 			public string m_TypeName;
+
 			public string m_Name;
+
 			public bool m_Selected;
 		}
+
 		public delegate void OnSelectCallback(SceneHierarchySortingWindow.InputData element);
+
 		private const float kFrameWidth = 1f;
+
 		private static SceneHierarchySortingWindow s_SceneHierarchySortingWindow;
+
 		private static long s_LastClosedTime;
+
 		private static SceneHierarchySortingWindow.Styles s_Styles;
+
 		private List<SceneHierarchySortingWindow.InputData> m_Data;
+
 		private SceneHierarchySortingWindow.OnSelectCallback m_Callback;
-		private SceneHierarchySortingWindow()
-		{
-			base.hideFlags = HideFlags.DontSave;
-			base.wantsMouseMove = true;
-		}
+
 		private float GetHeight()
 		{
 			return 16f * (float)this.m_Data.Count;
 		}
+
 		private float GetWidth()
 		{
 			float num = 0f;
@@ -45,10 +54,18 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
+		private void OnEnable()
+		{
+			base.hideFlags = HideFlags.DontSave;
+			base.wantsMouseMove = true;
+		}
+
 		private void OnDisable()
 		{
 			SceneHierarchySortingWindow.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 		}
+
 		internal static bool ShowAtPosition(Vector2 pos, List<SceneHierarchySortingWindow.InputData> data, SceneHierarchySortingWindow.OnSelectCallback callback)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
@@ -64,6 +81,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void Init(Vector2 pos, List<SceneHierarchySortingWindow.InputData> data, SceneHierarchySortingWindow.OnSelectCallback callback)
 		{
 			Rect rect = new Rect(pos.x, pos.y - 16f, 16f, 16f);
@@ -80,6 +98,7 @@ namespace UnityEditor
 			Vector2 windowSize = new Vector2(x, y);
 			base.ShowAsDropDown(rect, windowSize);
 		}
+
 		internal void OnGUI()
 		{
 			if (Event.current.type == EventType.Layout)
@@ -93,6 +112,7 @@ namespace UnityEditor
 			this.Draw();
 			GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, SceneHierarchySortingWindow.s_Styles.background);
 		}
+
 		private void Draw()
 		{
 			Rect rect = new Rect(1f, 1f, base.position.width - 2f, 16f);
@@ -102,6 +122,7 @@ namespace UnityEditor
 				rect.y += 16f;
 			}
 		}
+
 		private void DrawListElement(Rect rect, SceneHierarchySortingWindow.InputData data)
 		{
 			EditorGUI.BeginChangeCheck();

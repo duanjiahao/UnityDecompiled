@@ -1,24 +1,34 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MaterialToggleDrawer : MaterialPropertyDrawer
 	{
-		private readonly string keyword;
+		protected readonly string keyword;
+
 		public MaterialToggleDrawer()
 		{
 		}
+
 		public MaterialToggleDrawer(string keyword)
 		{
 			this.keyword = keyword;
 		}
+
 		private static bool IsPropertyTypeSuitable(MaterialProperty prop)
 		{
 			return prop.type == MaterialProperty.PropType.Float || prop.type == MaterialProperty.PropType.Range;
 		}
-		private void SetKeyword(MaterialProperty prop, bool on)
+
+		protected virtual void SetKeyword(MaterialProperty prop, bool on)
 		{
-			string text = (!string.IsNullOrEmpty(this.keyword)) ? this.keyword : (prop.name.ToUpperInvariant() + "_ON");
+			this.SetKeywordInternal(prop, on, "_ON");
+		}
+
+		protected void SetKeywordInternal(MaterialProperty prop, bool on, string defaultKeywordSuffix)
+		{
+			string text = (!string.IsNullOrEmpty(this.keyword)) ? this.keyword : (prop.name.ToUpperInvariant() + defaultKeywordSuffix);
 			UnityEngine.Object[] targets = prop.targets;
 			for (int i = 0; i < targets.Length; i++)
 			{
@@ -33,6 +43,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
 			if (!MaterialToggleDrawer.IsPropertyTypeSuitable(prop))
@@ -41,7 +52,8 @@ namespace UnityEditor
 			}
 			return base.GetPropertyHeight(prop, label, editor);
 		}
-		public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+
+		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
 			if (!MaterialToggleDrawer.IsPropertyTypeSuitable(prop))
 			{
@@ -60,6 +72,7 @@ namespace UnityEditor
 				this.SetKeyword(prop, flag);
 			}
 		}
+
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);

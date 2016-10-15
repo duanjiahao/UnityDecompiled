@@ -1,4 +1,6 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	internal class SendMouseEvents
@@ -6,43 +8,64 @@ namespace UnityEngine
 		private struct HitInfo
 		{
 			public GameObject target;
+
 			public Camera camera;
+
 			public void SendMessage(string name)
 			{
 				this.target.SendMessage(name, null, SendMessageOptions.DontRequireReceiver);
 			}
+
 			public static bool Compare(SendMouseEvents.HitInfo lhs, SendMouseEvents.HitInfo rhs)
 			{
 				return lhs.target == rhs.target && lhs.camera == rhs.camera;
 			}
+
 			public static implicit operator bool(SendMouseEvents.HitInfo exists)
 			{
 				return exists.target != null && exists.camera != null;
 			}
 		}
+
 		private const int m_HitIndexGUI = 0;
+
 		private const int m_HitIndexPhysics3D = 1;
+
 		private const int m_HitIndexPhysics2D = 2;
+
+		private static bool s_MouseUsed = false;
+
 		private static readonly SendMouseEvents.HitInfo[] m_LastHit = new SendMouseEvents.HitInfo[]
 		{
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo)
 		};
+
 		private static readonly SendMouseEvents.HitInfo[] m_MouseDownHit = new SendMouseEvents.HitInfo[]
 		{
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo)
 		};
+
 		private static readonly SendMouseEvents.HitInfo[] m_CurrentHit = new SendMouseEvents.HitInfo[]
 		{
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo),
 			default(SendMouseEvents.HitInfo)
 		};
+
 		private static Camera[] m_Cameras;
-		private static void DoSendMouseEvents(int mouseUsed, int skipRTCameras)
+
+		[RequiredByNativeCode]
+		private static void SetMouseMoved()
+		{
+			SendMouseEvents.s_MouseUsed = true;
+		}
+
+		[RequiredByNativeCode]
+		private static void DoSendMouseEvents(int skipRTCameras)
 		{
 			Vector3 mousePosition = Input.mousePosition;
 			int allCamerasCount = Camera.allCamerasCount;
@@ -55,7 +78,7 @@ namespace UnityEngine
 			{
 				SendMouseEvents.m_CurrentHit[i] = default(SendMouseEvents.HitInfo);
 			}
-			if (mouseUsed == 0)
+			if (!SendMouseEvents.s_MouseUsed)
 			{
 				Camera[] cameras = SendMouseEvents.m_Cameras;
 				for (int j = 0; j < cameras.Length; j++)
@@ -91,13 +114,10 @@ namespace UnityEngine
 									SendMouseEvents.m_CurrentHit[1].target = gameObject;
 									SendMouseEvents.m_CurrentHit[1].camera = camera;
 								}
-								else
+								else if (camera.clearFlags == CameraClearFlags.Skybox || camera.clearFlags == CameraClearFlags.Color)
 								{
-									if (camera.clearFlags == CameraClearFlags.Skybox || camera.clearFlags == CameraClearFlags.Color)
-									{
-										SendMouseEvents.m_CurrentHit[1].target = null;
-										SendMouseEvents.m_CurrentHit[1].camera = null;
-									}
+									SendMouseEvents.m_CurrentHit[1].target = null;
+									SendMouseEvents.m_CurrentHit[1].camera = null;
 								}
 								GameObject gameObject2 = camera.RaycastTry2D(ray, distance, camera.cullingMask & camera.eventMask);
 								if (gameObject2 != null)
@@ -105,13 +125,10 @@ namespace UnityEngine
 									SendMouseEvents.m_CurrentHit[2].target = gameObject2;
 									SendMouseEvents.m_CurrentHit[2].camera = camera;
 								}
-								else
+								else if (camera.clearFlags == CameraClearFlags.Skybox || camera.clearFlags == CameraClearFlags.Color)
 								{
-									if (camera.clearFlags == CameraClearFlags.Skybox || camera.clearFlags == CameraClearFlags.Color)
-									{
-										SendMouseEvents.m_CurrentHit[2].target = null;
-										SendMouseEvents.m_CurrentHit[2].camera = null;
-									}
+									SendMouseEvents.m_CurrentHit[2].target = null;
+									SendMouseEvents.m_CurrentHit[2].camera = null;
 								}
 							}
 						}
@@ -122,7 +139,9 @@ namespace UnityEngine
 			{
 				SendMouseEvents.SendEvents(k, SendMouseEvents.m_CurrentHit[k]);
 			}
+			SendMouseEvents.s_MouseUsed = false;
 		}
+
 		private static void SendEvents(int i, SendMouseEvents.HitInfo hit)
 		{
 			bool mouseButtonDown = Input.GetMouseButtonDown(0);
@@ -135,27 +154,21 @@ namespace UnityEngine
 					SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseDown");
 				}
 			}
-			else
+			else if (!mouseButton)
 			{
-				if (!mouseButton)
+				if (SendMouseEvents.m_MouseDownHit[i])
 				{
-					if (SendMouseEvents.m_MouseDownHit[i])
+					if (SendMouseEvents.HitInfo.Compare(hit, SendMouseEvents.m_MouseDownHit[i]))
 					{
-						if (SendMouseEvents.HitInfo.Compare(hit, SendMouseEvents.m_MouseDownHit[i]))
-						{
-							SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseUpAsButton");
-						}
-						SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseUp");
-						SendMouseEvents.m_MouseDownHit[i] = default(SendMouseEvents.HitInfo);
+						SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseUpAsButton");
 					}
+					SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseUp");
+					SendMouseEvents.m_MouseDownHit[i] = default(SendMouseEvents.HitInfo);
 				}
-				else
-				{
-					if (SendMouseEvents.m_MouseDownHit[i])
-					{
-						SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseDrag");
-					}
-				}
+			}
+			else if (SendMouseEvents.m_MouseDownHit[i])
+			{
+				SendMouseEvents.m_MouseDownHit[i].SendMessage("OnMouseDrag");
 			}
 			if (SendMouseEvents.HitInfo.Compare(hit, SendMouseEvents.m_LastHit[i]))
 			{

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class OffMeshLink : Component
@@ -13,12 +14,14 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool occupied
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern float costOverride
 		{
 			[WrapperlessIcall]
@@ -28,6 +31,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool biDirectional
 		{
 			[WrapperlessIcall]
@@ -37,6 +41,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("Use area instead.")]
 		public extern int navMeshLayer
 		{
@@ -47,6 +52,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int area
 		{
 			[WrapperlessIcall]
@@ -56,6 +62,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool autoUpdatePositions
 		{
 			[WrapperlessIcall]
@@ -65,6 +72,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Transform startTransform
 		{
 			[WrapperlessIcall]
@@ -74,6 +82,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Transform endTransform
 		{
 			[WrapperlessIcall]
@@ -83,6 +92,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void UpdatePositions();

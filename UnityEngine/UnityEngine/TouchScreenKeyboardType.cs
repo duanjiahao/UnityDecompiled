@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum TouchScreenKeyboardType
@@ -10,6 +11,7 @@ namespace UnityEngine
 		NumberPad,
 		PhonePad,
 		NamePhonePad,
-		EmailAddress
+		EmailAddress,
+		NintendoNetworkAccount
 	}
 }

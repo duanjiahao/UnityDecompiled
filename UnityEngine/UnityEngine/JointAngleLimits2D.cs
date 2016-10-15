@@ -1,10 +1,13 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct JointAngleLimits2D
 	{
 		private float m_LowerAngle;
+
 		private float m_UpperAngle;
+
 		public float min
 		{
 			get
@@ -16,6 +19,7 @@ namespace UnityEngine
 				this.m_LowerAngle = value;
 			}
 		}
+
 		public float max
 		{
 			get

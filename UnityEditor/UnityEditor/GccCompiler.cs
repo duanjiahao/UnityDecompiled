@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 namespace UnityEditor
 {
 	internal class GccCompiler : NativeCompiler
 	{
 		private readonly ICompilerSettings m_Settings;
+
 		protected override string objectFileExtension
 		{
 			get
@@ -13,10 +15,12 @@ namespace UnityEditor
 				return "o";
 			}
 		}
+
 		public GccCompiler(ICompilerSettings settings)
 		{
 			this.m_Settings = settings;
 		}
+
 		private void Compile(string file, string includePaths)
 		{
 			string arguments = string.Format(" -c {0} -O0 -Wno-unused-value -Wno-invalid-offsetof -fvisibility=hidden -fno-rtti {1} {2} -o {3}", new object[]
@@ -28,6 +32,7 @@ namespace UnityEditor
 			});
 			base.Execute(arguments, this.m_Settings.CompilerPath);
 		}
+
 		public override void CompileDynamicLibrary(string outFile, IEnumerable<string> sources, IEnumerable<string> includePaths, IEnumerable<string> libraries, IEnumerable<string> libraryPaths)
 		{
 			string[] array = sources.ToArray<string>();

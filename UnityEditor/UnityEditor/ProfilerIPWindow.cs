@@ -1,13 +1,18 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ProfilerIPWindow : EditorWindow
 	{
 		private const string kTextFieldId = "IPWindow";
+
 		private const string kLastIP = "ProfilerLastIP";
+
 		internal string m_IPString = ProfilerIPWindow.GetLastIPString();
+
 		internal bool didFocus;
+
 		public static void Show(Rect buttonScreenRect)
 		{
 			Rect rect = new Rect(buttonScreenRect.x, buttonScreenRect.yMax, 300f, 50f);
@@ -15,10 +20,12 @@ namespace UnityEditor
 			windowWithRect.position = rect;
 			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
 		}
+
 		public static string GetLastIPString()
 		{
 			return EditorPrefs.GetString("ProfilerLastIP", string.Empty);
 		}
+
 		private void OnGUI()
 		{
 			Event current = Event.current;

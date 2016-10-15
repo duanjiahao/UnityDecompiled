@@ -1,23 +1,39 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class ZoomableArea
 	{
-		[Serializable]
+		public enum YDirection
+		{
+			Positive,
+			Negative
+		}
+
 		public class Styles
 		{
 			public GUIStyle horizontalScrollbar;
+
 			public GUIStyle horizontalMinMaxScrollbarThumb;
+
 			public GUIStyle horizontalScrollbarLeftButton;
+
 			public GUIStyle horizontalScrollbarRightButton;
+
 			public GUIStyle verticalScrollbar;
+
 			public GUIStyle verticalMinMaxScrollbarThumb;
+
 			public GUIStyle verticalScrollbarUpButton;
+
 			public GUIStyle verticalScrollbarDownButton;
+
 			public float sliderWidth;
+
 			public float visualSliderWidth;
+
 			public Styles(bool minimalGUI)
 			{
 				if (minimalGUI)
@@ -31,65 +47,136 @@ namespace UnityEditor
 					this.sliderWidth = 15f;
 				}
 			}
-			public void InitGUIStyles(bool minimalGUI)
+
+			public void InitGUIStyles(bool minimalGUI, bool enableSliderZoom)
 			{
 				if (minimalGUI)
 				{
-					this.horizontalMinMaxScrollbarThumb = "MiniMinMaxSliderHorizontal";
+					this.horizontalMinMaxScrollbarThumb = ((!enableSliderZoom) ? "MiniSliderhorizontal" : "MiniMinMaxSliderHorizontal");
 					this.horizontalScrollbarLeftButton = GUIStyle.none;
 					this.horizontalScrollbarRightButton = GUIStyle.none;
 					this.horizontalScrollbar = GUIStyle.none;
-					this.verticalMinMaxScrollbarThumb = "MiniMinMaxSlidervertical";
+					this.verticalMinMaxScrollbarThumb = ((!enableSliderZoom) ? "MiniSliderVertical" : "MiniMinMaxSlidervertical");
 					this.verticalScrollbarUpButton = GUIStyle.none;
 					this.verticalScrollbarDownButton = GUIStyle.none;
 					this.verticalScrollbar = GUIStyle.none;
 				}
 				else
 				{
-					this.horizontalMinMaxScrollbarThumb = "horizontalMinMaxScrollbarThumb";
+					this.horizontalMinMaxScrollbarThumb = ((!enableSliderZoom) ? "horizontalscrollbarthumb" : "horizontalMinMaxScrollbarThumb");
 					this.horizontalScrollbarLeftButton = "horizontalScrollbarLeftbutton";
 					this.horizontalScrollbarRightButton = "horizontalScrollbarRightbutton";
 					this.horizontalScrollbar = GUI.skin.horizontalScrollbar;
-					this.verticalMinMaxScrollbarThumb = "verticalMinMaxScrollbarThumb";
+					this.verticalMinMaxScrollbarThumb = ((!enableSliderZoom) ? "verticalscrollbarthumb" : "verticalMinMaxScrollbarThumb");
 					this.verticalScrollbarUpButton = "verticalScrollbarUpbutton";
 					this.verticalScrollbarDownButton = "verticalScrollbarDownbutton";
 					this.verticalScrollbar = GUI.skin.verticalScrollbar;
 				}
 			}
 		}
+
+		private const float kMinScale = 1E-05f;
+
+		private const float kMaxScale = 100000f;
+
 		private static Vector2 m_MouseDownPosition = new Vector2(-1000000f, -1000000f);
+
 		private static int zoomableAreaHash = "ZoomableArea".GetHashCode();
+
+		[SerializeField]
 		private bool m_HRangeLocked;
+
+		[SerializeField]
 		private bool m_VRangeLocked;
+
+		[SerializeField]
 		private float m_HBaseRangeMin;
+
+		[SerializeField]
 		private float m_HBaseRangeMax = 1f;
+
+		[SerializeField]
 		private float m_VBaseRangeMin;
+
+		[SerializeField]
 		private float m_VBaseRangeMax = 1f;
+
+		[SerializeField]
 		private bool m_HAllowExceedBaseRangeMin = true;
+
+		[SerializeField]
 		private bool m_HAllowExceedBaseRangeMax = true;
+
+		[SerializeField]
 		private bool m_VAllowExceedBaseRangeMin = true;
+
+		[SerializeField]
 		private bool m_VAllowExceedBaseRangeMax = true;
-		private float m_HScaleMin = 0.001f;
+
+		private float m_HScaleMin = 1E-05f;
+
 		private float m_HScaleMax = 100000f;
-		private float m_VScaleMin = 0.001f;
+
+		private float m_VScaleMin = 1E-05f;
+
 		private float m_VScaleMax = 100000f;
+
+		[SerializeField]
 		private bool m_ScaleWithWindow;
+
+		[SerializeField]
 		private bool m_HSlider = true;
+
+		[SerializeField]
 		private bool m_VSlider = true;
-		public bool m_UniformScale;
+
+		[SerializeField]
 		private bool m_IgnoreScrollWheelUntilClicked;
+
+		[SerializeField]
+		private bool m_EnableMouseInput = true;
+
+		[SerializeField]
+		private bool m_EnableSliderZoom = true;
+
+		public bool m_UniformScale;
+
+		[SerializeField]
+		private ZoomableArea.YDirection m_UpDirection;
+
+		[SerializeField]
 		private Rect m_DrawArea = new Rect(0f, 0f, 100f, 100f);
+
+		[SerializeField]
 		internal Vector2 m_Scale = new Vector2(1f, -1f);
+
+		[SerializeField]
 		internal Vector2 m_Translation = new Vector2(0f, 0f);
+
+		[SerializeField]
 		private float m_MarginLeft;
+
+		[SerializeField]
 		private float m_MarginRight;
+
+		[SerializeField]
 		private float m_MarginTop;
+
+		[SerializeField]
 		private float m_MarginBottom;
+
+		[SerializeField]
 		private Rect m_LastShownAreaInsideMargins = new Rect(0f, 0f, 100f, 100f);
+
 		private int verticalScrollbarID;
+
 		private int horizontalScrollbarID;
+
+		[SerializeField]
 		private bool m_MinimalGUI;
-		private ZoomableArea.Styles styles;
+
+		private ZoomableArea.Styles m_Styles;
+
 		public bool hRangeLocked
 		{
 			get
@@ -101,6 +188,7 @@ namespace UnityEditor
 				this.m_HRangeLocked = value;
 			}
 		}
+
 		public bool vRangeLocked
 		{
 			get
@@ -112,6 +200,7 @@ namespace UnityEditor
 				this.m_VRangeLocked = value;
 			}
 		}
+
 		public float hBaseRangeMin
 		{
 			get
@@ -123,6 +212,7 @@ namespace UnityEditor
 				this.m_HBaseRangeMin = value;
 			}
 		}
+
 		public float hBaseRangeMax
 		{
 			get
@@ -134,6 +224,7 @@ namespace UnityEditor
 				this.m_HBaseRangeMax = value;
 			}
 		}
+
 		public float vBaseRangeMin
 		{
 			get
@@ -145,6 +236,7 @@ namespace UnityEditor
 				this.m_VBaseRangeMin = value;
 			}
 		}
+
 		public float vBaseRangeMax
 		{
 			get
@@ -156,6 +248,7 @@ namespace UnityEditor
 				this.m_VBaseRangeMax = value;
 			}
 		}
+
 		public bool hAllowExceedBaseRangeMin
 		{
 			get
@@ -167,6 +260,7 @@ namespace UnityEditor
 				this.m_HAllowExceedBaseRangeMin = value;
 			}
 		}
+
 		public bool hAllowExceedBaseRangeMax
 		{
 			get
@@ -178,6 +272,7 @@ namespace UnityEditor
 				this.m_HAllowExceedBaseRangeMax = value;
 			}
 		}
+
 		public bool vAllowExceedBaseRangeMin
 		{
 			get
@@ -189,6 +284,7 @@ namespace UnityEditor
 				this.m_VAllowExceedBaseRangeMin = value;
 			}
 		}
+
 		public bool vAllowExceedBaseRangeMax
 		{
 			get
@@ -200,6 +296,7 @@ namespace UnityEditor
 				this.m_VAllowExceedBaseRangeMax = value;
 			}
 		}
+
 		public float hRangeMin
 		{
 			get
@@ -211,6 +308,7 @@ namespace UnityEditor
 				this.SetAllowExceed(ref this.m_HBaseRangeMin, ref this.m_HAllowExceedBaseRangeMin, value);
 			}
 		}
+
 		public float hRangeMax
 		{
 			get
@@ -222,6 +320,7 @@ namespace UnityEditor
 				this.SetAllowExceed(ref this.m_HBaseRangeMax, ref this.m_HAllowExceedBaseRangeMax, value);
 			}
 		}
+
 		public float vRangeMin
 		{
 			get
@@ -233,6 +332,7 @@ namespace UnityEditor
 				this.SetAllowExceed(ref this.m_VBaseRangeMin, ref this.m_VAllowExceedBaseRangeMin, value);
 			}
 		}
+
 		public float vRangeMax
 		{
 			get
@@ -244,6 +344,55 @@ namespace UnityEditor
 				this.SetAllowExceed(ref this.m_VBaseRangeMax, ref this.m_VAllowExceedBaseRangeMax, value);
 			}
 		}
+
+		public float hScaleMin
+		{
+			get
+			{
+				return this.m_HScaleMin;
+			}
+			set
+			{
+				this.m_HScaleMin = Mathf.Clamp(value, 1E-05f, 100000f);
+			}
+		}
+
+		public float hScaleMax
+		{
+			get
+			{
+				return this.m_HScaleMax;
+			}
+			set
+			{
+				this.m_HScaleMax = Mathf.Clamp(value, 1E-05f, 100000f);
+			}
+		}
+
+		public float vScaleMin
+		{
+			get
+			{
+				return this.m_VScaleMin;
+			}
+			set
+			{
+				this.m_VScaleMin = Mathf.Clamp(value, 1E-05f, 100000f);
+			}
+		}
+
+		public float vScaleMax
+		{
+			get
+			{
+				return this.m_VScaleMax;
+			}
+			set
+			{
+				this.m_VScaleMax = Mathf.Clamp(value, 1E-05f, 100000f);
+			}
+		}
+
 		public bool scaleWithWindow
 		{
 			get
@@ -255,6 +404,7 @@ namespace UnityEditor
 				this.m_ScaleWithWindow = value;
 			}
 		}
+
 		public bool hSlider
 		{
 			get
@@ -268,6 +418,7 @@ namespace UnityEditor
 				this.rect = rect;
 			}
 		}
+
 		public bool vSlider
 		{
 			get
@@ -281,17 +432,7 @@ namespace UnityEditor
 				this.rect = rect;
 			}
 		}
-		public bool uniformScale
-		{
-			get
-			{
-				return this.m_UniformScale;
-			}
-			set
-			{
-				this.m_UniformScale = value;
-			}
-		}
+
 		public bool ignoreScrollWheelUntilClicked
 		{
 			get
@@ -303,6 +444,47 @@ namespace UnityEditor
 				this.m_IgnoreScrollWheelUntilClicked = value;
 			}
 		}
+
+		public bool enableMouseInput
+		{
+			get
+			{
+				return this.m_EnableMouseInput;
+			}
+			set
+			{
+				this.m_EnableMouseInput = value;
+			}
+		}
+
+		public bool uniformScale
+		{
+			get
+			{
+				return this.m_UniformScale;
+			}
+			set
+			{
+				this.m_UniformScale = value;
+			}
+		}
+
+		public ZoomableArea.YDirection upDirection
+		{
+			get
+			{
+				return this.m_UpDirection;
+			}
+			set
+			{
+				if (this.m_UpDirection != value)
+				{
+					this.m_UpDirection = value;
+					this.m_Scale.y = -this.m_Scale.y;
+				}
+			}
+		}
+
 		public Vector2 scale
 		{
 			get
@@ -310,6 +492,15 @@ namespace UnityEditor
 				return this.m_Scale;
 			}
 		}
+
+		public Vector2 translation
+		{
+			get
+			{
+				return this.m_Translation;
+			}
+		}
+
 		public float margin
 		{
 			set
@@ -320,6 +511,7 @@ namespace UnityEditor
 				this.m_MarginLeft = value;
 			}
 		}
+
 		public float leftmargin
 		{
 			get
@@ -331,6 +523,7 @@ namespace UnityEditor
 				this.m_MarginLeft = value;
 			}
 		}
+
 		public float rightmargin
 		{
 			get
@@ -342,6 +535,7 @@ namespace UnityEditor
 				this.m_MarginRight = value;
 			}
 		}
+
 		public float topmargin
 		{
 			get
@@ -353,6 +547,7 @@ namespace UnityEditor
 				this.m_MarginTop = value;
 			}
 		}
+
 		public float bottommargin
 		{
 			get
@@ -364,6 +559,19 @@ namespace UnityEditor
 				this.m_MarginBottom = value;
 			}
 		}
+
+		private ZoomableArea.Styles styles
+		{
+			get
+			{
+				if (this.m_Styles == null)
+				{
+					this.m_Styles = new ZoomableArea.Styles(this.m_MinimalGUI);
+				}
+				return this.m_Styles;
+			}
+		}
+
 		public Rect rect
 		{
 			get
@@ -389,6 +597,7 @@ namespace UnityEditor
 				this.EnforceScaleAndRange();
 			}
 		}
+
 		public Rect drawRect
 		{
 			get
@@ -396,21 +605,37 @@ namespace UnityEditor
 				return this.m_DrawArea;
 			}
 		}
+
 		public Rect shownArea
 		{
 			get
 			{
-				return new Rect(-this.m_Translation.x / this.m_Scale.x, -(this.m_Translation.y - this.drawRect.height) / this.m_Scale.y, this.drawRect.width / this.m_Scale.x, this.drawRect.height / -this.m_Scale.y);
+				if (this.m_UpDirection == ZoomableArea.YDirection.Positive)
+				{
+					return new Rect(-this.m_Translation.x / this.m_Scale.x, -(this.m_Translation.y - this.drawRect.height) / this.m_Scale.y, this.drawRect.width / this.m_Scale.x, this.drawRect.height / -this.m_Scale.y);
+				}
+				return new Rect(-this.m_Translation.x / this.m_Scale.x, -this.m_Translation.y / this.m_Scale.y, this.drawRect.width / this.m_Scale.x, this.drawRect.height / this.m_Scale.y);
 			}
 			set
 			{
-				this.m_Scale.x = this.drawRect.width / value.width;
-				this.m_Scale.y = -this.drawRect.height / value.height;
-				this.m_Translation.x = -value.x * this.m_Scale.x;
-				this.m_Translation.y = this.drawRect.height - value.y * this.m_Scale.y;
+				if (this.m_UpDirection == ZoomableArea.YDirection.Positive)
+				{
+					this.m_Scale.x = this.drawRect.width / value.width;
+					this.m_Scale.y = -this.drawRect.height / value.height;
+					this.m_Translation.x = -value.x * this.m_Scale.x;
+					this.m_Translation.y = this.drawRect.height - value.y * this.m_Scale.y;
+				}
+				else
+				{
+					this.m_Scale.x = this.drawRect.width / value.width;
+					this.m_Scale.y = this.drawRect.height / value.height;
+					this.m_Translation.x = -value.x * this.m_Scale.x;
+					this.m_Translation.y = -value.y * this.m_Scale.y;
+				}
 				this.EnforceScaleAndRange();
 			}
 		}
+
 		public Rect shownAreaInsideMargins
 		{
 			get
@@ -423,6 +648,7 @@ namespace UnityEditor
 				this.EnforceScaleAndRange();
 			}
 		}
+
 		private Rect shownAreaInsideMarginsInternal
 		{
 			get
@@ -440,12 +666,23 @@ namespace UnityEditor
 			}
 			set
 			{
-				this.m_Scale.x = (this.drawRect.width - this.leftmargin - this.rightmargin) / value.width;
-				this.m_Scale.y = -(this.drawRect.height - this.topmargin - this.bottommargin) / value.height;
-				this.m_Translation.x = -value.x * this.m_Scale.x + this.leftmargin;
-				this.m_Translation.y = this.drawRect.height - value.y * this.m_Scale.y - this.topmargin;
+				if (this.m_UpDirection == ZoomableArea.YDirection.Positive)
+				{
+					this.m_Scale.x = (this.drawRect.width - this.leftmargin - this.rightmargin) / value.width;
+					this.m_Scale.y = -(this.drawRect.height - this.topmargin - this.bottommargin) / value.height;
+					this.m_Translation.x = -value.x * this.m_Scale.x + this.leftmargin;
+					this.m_Translation.y = this.drawRect.height - value.y * this.m_Scale.y - this.topmargin;
+				}
+				else
+				{
+					this.m_Scale.x = (this.drawRect.width - this.leftmargin - this.rightmargin) / value.width;
+					this.m_Scale.y = (this.drawRect.height - this.topmargin - this.bottommargin) / value.height;
+					this.m_Translation.x = -value.x * this.m_Scale.x + this.leftmargin;
+					this.m_Translation.y = -value.y * this.m_Scale.y + this.topmargin;
+				}
 			}
 		}
+
 		public virtual Bounds drawingBounds
 		{
 			get
@@ -453,6 +690,7 @@ namespace UnityEditor
 				return new Bounds(new Vector3((this.hBaseRangeMin + this.hBaseRangeMax) * 0.5f, (this.vBaseRangeMin + this.vBaseRangeMax) * 0.5f, 0f), new Vector3(this.hBaseRangeMax - this.hBaseRangeMin, this.vBaseRangeMax - this.vBaseRangeMin, 1f));
 			}
 		}
+
 		public Matrix4x4 drawingToViewMatrix
 		{
 			get
@@ -460,6 +698,7 @@ namespace UnityEditor
 				return Matrix4x4.TRS(this.m_Translation, Quaternion.identity, new Vector3(this.m_Scale.x, this.m_Scale.y, 1f));
 			}
 		}
+
 		public Vector2 mousePositionInDrawing
 		{
 			get
@@ -467,16 +706,23 @@ namespace UnityEditor
 				return this.ViewToDrawingTransformPoint(Event.current.mousePosition);
 			}
 		}
+
 		public ZoomableArea()
 		{
 			this.m_MinimalGUI = false;
-			this.styles = new ZoomableArea.Styles(false);
 		}
+
 		public ZoomableArea(bool minimalGUI)
 		{
 			this.m_MinimalGUI = minimalGUI;
-			this.styles = new ZoomableArea.Styles(minimalGUI);
 		}
+
+		public ZoomableArea(bool minimalGUI, bool enableSliderZoom)
+		{
+			this.m_MinimalGUI = minimalGUI;
+			this.m_EnableSliderZoom = enableSliderZoom;
+		}
+
 		private void SetAllowExceed(ref float rangeEnd, ref bool allowExceed, float value)
 		{
 			if (value == float.NegativeInfinity || value == float.PositiveInfinity)
@@ -490,93 +736,123 @@ namespace UnityEditor
 				allowExceed = false;
 			}
 		}
-		internal void SetDrawRectHack(Rect r, bool scrollbars)
+
+		internal void SetDrawRectHack(Rect r)
 		{
 			this.m_DrawArea = r;
-			this.m_VSlider = scrollbars;
-			this.m_HSlider = scrollbars;
 		}
-		public void OnEnable()
-		{
-			this.styles = new ZoomableArea.Styles(this.m_MinimalGUI);
-		}
+
 		public void SetShownHRangeInsideMargins(float min, float max)
 		{
 			this.m_Scale.x = (this.drawRect.width - this.leftmargin - this.rightmargin) / (max - min);
 			this.m_Translation.x = -min * this.m_Scale.x + this.leftmargin;
 			this.EnforceScaleAndRange();
 		}
+
 		public void SetShownHRange(float min, float max)
 		{
 			this.m_Scale.x = this.drawRect.width / (max - min);
 			this.m_Translation.x = -min * this.m_Scale.x;
 			this.EnforceScaleAndRange();
 		}
+
 		public void SetShownVRangeInsideMargins(float min, float max)
 		{
-			this.m_Scale.y = -(this.drawRect.height - this.topmargin - this.bottommargin) / (max - min);
-			this.m_Translation.y = this.drawRect.height - min * this.m_Scale.y - this.topmargin;
+			if (this.m_UpDirection == ZoomableArea.YDirection.Positive)
+			{
+				this.m_Scale.y = -(this.drawRect.height - this.topmargin - this.bottommargin) / (max - min);
+				this.m_Translation.y = this.drawRect.height - min * this.m_Scale.y - this.topmargin;
+			}
+			else
+			{
+				this.m_Scale.y = (this.drawRect.height - this.topmargin - this.bottommargin) / (max - min);
+				this.m_Translation.y = -min * this.m_Scale.y - this.bottommargin;
+			}
 			this.EnforceScaleAndRange();
 		}
+
 		public void SetShownVRange(float min, float max)
 		{
-			this.m_Scale.y = -this.drawRect.height / (max - min);
-			this.m_Translation.y = this.drawRect.height - min * this.m_Scale.y;
+			if (this.m_UpDirection == ZoomableArea.YDirection.Positive)
+			{
+				this.m_Scale.y = -this.drawRect.height / (max - min);
+				this.m_Translation.y = this.drawRect.height - min * this.m_Scale.y;
+			}
+			else
+			{
+				this.m_Scale.y = this.drawRect.height / (max - min);
+				this.m_Translation.y = -min * this.m_Scale.y;
+			}
 			this.EnforceScaleAndRange();
 		}
+
 		public Vector2 DrawingToViewTransformPoint(Vector2 lhs)
 		{
 			return new Vector2(lhs.x * this.m_Scale.x + this.m_Translation.x, lhs.y * this.m_Scale.y + this.m_Translation.y);
 		}
+
 		public Vector3 DrawingToViewTransformPoint(Vector3 lhs)
 		{
 			return new Vector3(lhs.x * this.m_Scale.x + this.m_Translation.x, lhs.y * this.m_Scale.y + this.m_Translation.y, 0f);
 		}
+
 		public Vector2 ViewToDrawingTransformPoint(Vector2 lhs)
 		{
 			return new Vector2((lhs.x - this.m_Translation.x) / this.m_Scale.x, (lhs.y - this.m_Translation.y) / this.m_Scale.y);
 		}
+
 		public Vector3 ViewToDrawingTransformPoint(Vector3 lhs)
 		{
 			return new Vector3((lhs.x - this.m_Translation.x) / this.m_Scale.x, (lhs.y - this.m_Translation.y) / this.m_Scale.y, 0f);
 		}
+
 		public Vector2 DrawingToViewTransformVector(Vector2 lhs)
 		{
 			return new Vector2(lhs.x * this.m_Scale.x, lhs.y * this.m_Scale.y);
 		}
+
 		public Vector3 DrawingToViewTransformVector(Vector3 lhs)
 		{
 			return new Vector3(lhs.x * this.m_Scale.x, lhs.y * this.m_Scale.y, 0f);
 		}
+
 		public Vector2 ViewToDrawingTransformVector(Vector2 lhs)
 		{
 			return new Vector2(lhs.x / this.m_Scale.x, lhs.y / this.m_Scale.y);
 		}
+
 		public Vector3 ViewToDrawingTransformVector(Vector3 lhs)
 		{
 			return new Vector3(lhs.x / this.m_Scale.x, lhs.y / this.m_Scale.y, 0f);
 		}
+
 		public Vector2 NormalizeInViewSpace(Vector2 vec)
 		{
 			vec = Vector2.Scale(vec, this.m_Scale);
 			vec /= vec.magnitude;
 			return Vector2.Scale(vec, new Vector2(1f / this.m_Scale.x, 1f / this.m_Scale.y));
 		}
+
 		private bool IsZoomEvent()
 		{
 			return Event.current.button == 1 && Event.current.alt;
 		}
+
 		private bool IsPanEvent()
 		{
 			return (Event.current.button == 0 && Event.current.alt) || (Event.current.button == 2 && !Event.current.command);
 		}
+
 		public void BeginViewGUI()
 		{
 			if (this.styles.horizontalScrollbar == null)
 			{
-				this.styles.InitGUIStyles(this.m_MinimalGUI);
+				this.styles.InitGUIStyles(this.m_MinimalGUI, this.m_EnableSliderZoom);
 			}
-			this.HandleZoomAndPanEvents(this.m_DrawArea);
+			if (this.enableMouseInput)
+			{
+				this.HandleZoomAndPanEvents(this.m_DrawArea);
+			}
 			this.horizontalScrollbarID = GUIUtility.GetControlID(EditorGUIExt.s_MinMaxSliderHash, FocusType.Passive);
 			this.verticalScrollbarID = GUIUtility.GetControlID(EditorGUIExt.s_MinMaxSliderHash, FocusType.Passive);
 			if (!this.m_MinimalGUI || Event.current.type != EventType.Repaint)
@@ -584,6 +860,7 @@ namespace UnityEditor
 				this.SliderGUI();
 			}
 		}
+
 		public void HandleZoomAndPanEvents(Rect area)
 		{
 			GUILayout.BeginArea(area);
@@ -616,16 +893,13 @@ namespace UnityEditor
 				{
 					if (this.IsZoomEvent())
 					{
-						this.Zoom(ZoomableArea.m_MouseDownPosition, false);
+						this.HandleZoomEvent(ZoomableArea.m_MouseDownPosition, false);
 						Event.current.Use();
 					}
-					else
+					else if (this.IsPanEvent())
 					{
-						if (this.IsPanEvent())
-						{
-							this.Pan();
-							Event.current.Use();
-						}
+						this.Pan();
+						Event.current.Use();
 					}
 				}
 				break;
@@ -634,7 +908,7 @@ namespace UnityEditor
 				{
 					if (!this.m_IgnoreScrollWheelUntilClicked || GUIUtility.keyboardControl == controlID)
 					{
-						this.Zoom(this.mousePositionInDrawing, true);
+						this.HandleZoomEvent(this.mousePositionInDrawing, true);
 						Event.current.Use();
 					}
 				}
@@ -642,6 +916,7 @@ namespace UnityEditor
 			}
 			GUILayout.EndArea();
 		}
+
 		public void EndViewGUI()
 		{
 			if (this.m_MinimalGUI && Event.current.type == EventType.Repaint)
@@ -649,64 +924,111 @@ namespace UnityEditor
 				this.SliderGUI();
 			}
 		}
+
 		private void SliderGUI()
 		{
 			if (!this.m_HSlider && !this.m_VSlider)
 			{
 				return;
 			}
-			Bounds drawingBounds = this.drawingBounds;
-			Rect shownAreaInsideMargins = this.shownAreaInsideMargins;
-			float num = this.styles.sliderWidth - this.styles.visualSliderWidth;
-			float num2 = (!this.vSlider || !this.hSlider) ? 0f : num;
-			Vector2 a = this.m_Scale;
-			if (this.m_HSlider)
+			using (new EditorGUI.DisabledScope(!this.enableMouseInput))
 			{
-				Rect position = new Rect(this.drawRect.x + 1f, this.drawRect.yMax - num, this.drawRect.width - num2, this.styles.sliderWidth);
-				float width = shownAreaInsideMargins.width;
-				float xMin = shownAreaInsideMargins.xMin;
-				EditorGUIExt.MinMaxScroller(position, this.horizontalScrollbarID, ref xMin, ref width, drawingBounds.min.x, drawingBounds.max.x, float.NegativeInfinity, float.PositiveInfinity, this.styles.horizontalScrollbar, this.styles.horizontalMinMaxScrollbarThumb, this.styles.horizontalScrollbarLeftButton, this.styles.horizontalScrollbarRightButton, true);
-				float num3 = xMin;
-				float num4 = xMin + width;
-				if (num3 > shownAreaInsideMargins.xMin)
+				Bounds drawingBounds = this.drawingBounds;
+				Rect shownAreaInsideMargins = this.shownAreaInsideMargins;
+				float num = this.styles.sliderWidth - this.styles.visualSliderWidth;
+				float num2 = (!this.vSlider || !this.hSlider) ? 0f : num;
+				Vector2 a = this.m_Scale;
+				if (this.m_HSlider)
 				{
-					num3 = Mathf.Min(num3, num4 - this.m_HScaleMin);
+					Rect position = new Rect(this.drawRect.x + 1f, this.drawRect.yMax - num, this.drawRect.width - num2, this.styles.sliderWidth);
+					float width = shownAreaInsideMargins.width;
+					float num3 = shownAreaInsideMargins.xMin;
+					if (this.m_EnableSliderZoom)
+					{
+						EditorGUIExt.MinMaxScroller(position, this.horizontalScrollbarID, ref num3, ref width, drawingBounds.min.x, drawingBounds.max.x, float.NegativeInfinity, float.PositiveInfinity, this.styles.horizontalScrollbar, this.styles.horizontalMinMaxScrollbarThumb, this.styles.horizontalScrollbarLeftButton, this.styles.horizontalScrollbarRightButton, true);
+					}
+					else
+					{
+						num3 = GUI.Scroller(position, num3, width, drawingBounds.min.x, drawingBounds.max.x, this.styles.horizontalScrollbar, this.styles.horizontalMinMaxScrollbarThumb, this.styles.horizontalScrollbarLeftButton, this.styles.horizontalScrollbarRightButton, true);
+					}
+					float num4 = num3;
+					float num5 = num3 + width;
+					if (num4 > shownAreaInsideMargins.xMin)
+					{
+						num4 = Mathf.Min(num4, num5 - this.rect.width / this.m_HScaleMax);
+					}
+					if (num5 < shownAreaInsideMargins.xMax)
+					{
+						num5 = Mathf.Max(num5, num4 + this.rect.width / this.m_HScaleMax);
+					}
+					this.SetShownHRangeInsideMargins(num4, num5);
 				}
-				if (num4 < shownAreaInsideMargins.xMax)
+				if (this.m_VSlider)
 				{
-					num4 = Mathf.Max(num4, num3 + this.m_HScaleMin);
+					if (this.m_UpDirection == ZoomableArea.YDirection.Positive)
+					{
+						Rect position2 = new Rect(this.drawRect.xMax - num, this.drawRect.y, this.styles.sliderWidth, this.drawRect.height - num2);
+						float height = shownAreaInsideMargins.height;
+						float num6 = -shownAreaInsideMargins.yMax;
+						if (this.m_EnableSliderZoom)
+						{
+							EditorGUIExt.MinMaxScroller(position2, this.verticalScrollbarID, ref num6, ref height, -drawingBounds.max.y, -drawingBounds.min.y, float.NegativeInfinity, float.PositiveInfinity, this.styles.verticalScrollbar, this.styles.verticalMinMaxScrollbarThumb, this.styles.verticalScrollbarUpButton, this.styles.verticalScrollbarDownButton, false);
+						}
+						else
+						{
+							num6 = GUI.Scroller(position2, num6, height, -drawingBounds.max.y, -drawingBounds.min.y, this.styles.verticalScrollbar, this.styles.verticalMinMaxScrollbarThumb, this.styles.verticalScrollbarUpButton, this.styles.verticalScrollbarDownButton, false);
+						}
+						float num4 = -(num6 + height);
+						float num5 = -num6;
+						if (num4 > shownAreaInsideMargins.yMin)
+						{
+							num4 = Mathf.Min(num4, num5 - this.rect.height / this.m_VScaleMax);
+						}
+						if (num5 < shownAreaInsideMargins.yMax)
+						{
+							num5 = Mathf.Max(num5, num4 + this.rect.height / this.m_VScaleMax);
+						}
+						this.SetShownVRangeInsideMargins(num4, num5);
+					}
+					else
+					{
+						Rect position3 = new Rect(this.drawRect.xMax - num, this.drawRect.y, this.styles.sliderWidth, this.drawRect.height - num2);
+						float height2 = shownAreaInsideMargins.height;
+						float num7 = shownAreaInsideMargins.yMin;
+						if (this.m_EnableSliderZoom)
+						{
+							EditorGUIExt.MinMaxScroller(position3, this.verticalScrollbarID, ref num7, ref height2, drawingBounds.min.y, drawingBounds.max.y, float.NegativeInfinity, float.PositiveInfinity, this.styles.verticalScrollbar, this.styles.verticalMinMaxScrollbarThumb, this.styles.verticalScrollbarUpButton, this.styles.verticalScrollbarDownButton, false);
+						}
+						else
+						{
+							num7 = GUI.Scroller(position3, num7, height2, drawingBounds.min.y, drawingBounds.max.y, this.styles.verticalScrollbar, this.styles.verticalMinMaxScrollbarThumb, this.styles.verticalScrollbarUpButton, this.styles.verticalScrollbarDownButton, false);
+						}
+						float num4 = num7;
+						float num5 = num7 + height2;
+						if (num4 > shownAreaInsideMargins.yMin)
+						{
+							num4 = Mathf.Min(num4, num5 - this.rect.height / this.m_VScaleMax);
+						}
+						if (num5 < shownAreaInsideMargins.yMax)
+						{
+							num5 = Mathf.Max(num5, num4 + this.rect.height / this.m_VScaleMax);
+						}
+						this.SetShownVRangeInsideMargins(num4, num5);
+					}
 				}
-				this.SetShownHRangeInsideMargins(num3, num4);
-			}
-			if (this.m_VSlider)
-			{
-				Rect position2 = new Rect(this.drawRect.xMax - num, this.drawRect.y, this.styles.sliderWidth, this.drawRect.height - num2);
-				float height = shownAreaInsideMargins.height;
-				float num5 = -shownAreaInsideMargins.yMax;
-				EditorGUIExt.MinMaxScroller(position2, this.verticalScrollbarID, ref num5, ref height, -drawingBounds.max.y, -drawingBounds.min.y, float.NegativeInfinity, float.PositiveInfinity, this.styles.verticalScrollbar, this.styles.verticalMinMaxScrollbarThumb, this.styles.verticalScrollbarUpButton, this.styles.verticalScrollbarDownButton, false);
-				float num3 = -(num5 + height);
-				float num4 = -num5;
-				if (num3 > shownAreaInsideMargins.yMin)
+				if (this.uniformScale)
 				{
-					num3 = Mathf.Min(num3, num4 - this.m_VScaleMin);
+					float num8 = this.drawRect.width / this.drawRect.height;
+					a -= this.m_Scale;
+					Vector2 b = new Vector2(-a.y * num8, -a.x / num8);
+					this.m_Scale -= b;
+					this.m_Translation.x = this.m_Translation.x - a.y / 2f;
+					this.m_Translation.y = this.m_Translation.y - a.x / 2f;
+					this.EnforceScaleAndRange();
 				}
-				if (num4 < shownAreaInsideMargins.yMax)
-				{
-					num4 = Mathf.Max(num4, num3 + this.m_VScaleMin);
-				}
-				this.SetShownVRangeInsideMargins(num3, num4);
-			}
-			if (this.uniformScale)
-			{
-				float num6 = this.drawRect.width / this.drawRect.height;
-				a -= this.m_Scale;
-				Vector2 b = new Vector2(-a.y * num6, -a.x / num6);
-				this.m_Scale -= b;
-				this.m_Translation.x = this.m_Translation.x - a.y / 2f;
-				this.m_Translation.y = this.m_Translation.y - a.x / 2f;
-				this.EnforceScaleAndRange();
 			}
 		}
+
 		private void Pan()
 		{
 			if (!this.m_HRangeLocked)
@@ -719,39 +1041,56 @@ namespace UnityEditor
 			}
 			this.EnforceScaleAndRange();
 		}
-		private void Zoom(Vector2 zoomAround, bool scrollwhell)
+
+		private void HandleZoomEvent(Vector2 zoomAround, bool scrollwhell)
 		{
 			float num = Event.current.delta.x + Event.current.delta.y;
 			if (scrollwhell)
 			{
 				num = -num;
 			}
-			float num2 = Mathf.Max(0.01f, 1f + num * 0.01f);
-			if (!this.m_HRangeLocked)
+			float d = Mathf.Max(0.01f, 1f + num * 0.01f);
+			this.SetScaleFocused(zoomAround, d * this.m_Scale, Event.current.shift, EditorGUI.actionKey);
+		}
+
+		public void SetScaleFocused(Vector2 focalPoint, Vector2 newScale)
+		{
+			this.SetScaleFocused(focalPoint, newScale, false, false);
+		}
+
+		public void SetScaleFocused(Vector2 focalPoint, Vector2 newScale, bool lockHorizontal, bool lockVertical)
+		{
+			if (!this.m_HRangeLocked && !lockHorizontal)
 			{
-				this.m_Translation.x = this.m_Translation.x - zoomAround.x * (num2 - 1f) * this.m_Scale.x;
-				this.m_Scale.x = this.m_Scale.x * num2;
+				this.m_Translation.x = this.m_Translation.x - focalPoint.x * (newScale.x - this.m_Scale.x);
+				this.m_Scale.x = newScale.x;
 			}
-			if (!this.m_VRangeLocked)
+			if (!this.m_VRangeLocked && !lockVertical)
 			{
-				this.m_Translation.y = this.m_Translation.y - zoomAround.y * (num2 - 1f) * this.m_Scale.y;
-				this.m_Scale.y = this.m_Scale.y * num2;
+				this.m_Translation.y = this.m_Translation.y - focalPoint.y * (newScale.y - this.m_Scale.y);
+				this.m_Scale.y = newScale.y;
 			}
 			this.EnforceScaleAndRange();
 		}
-		private void EnforceScaleAndRange()
+
+		public void SetTransform(Vector2 newTranslation, Vector2 newScale)
 		{
-			float hScaleMin = this.m_HScaleMin;
-			float vScaleMin = this.m_VScaleMin;
-			float value = this.m_HScaleMax;
-			float value2 = this.m_VScaleMax;
+			this.m_Scale = newScale;
+			this.m_Translation = newTranslation;
+			this.EnforceScaleAndRange();
+		}
+
+		public void EnforceScaleAndRange()
+		{
+			float num = this.rect.width / this.m_HScaleMin;
+			float num2 = this.rect.height / this.m_VScaleMin;
 			if (this.hRangeMax != float.PositiveInfinity && this.hRangeMin != float.NegativeInfinity)
 			{
-				value = Mathf.Min(this.m_HScaleMax, this.hRangeMax - this.hRangeMin);
+				num = Mathf.Min(num, this.hRangeMax - this.hRangeMin);
 			}
 			if (this.vRangeMax != float.PositiveInfinity && this.vRangeMin != float.NegativeInfinity)
 			{
-				value2 = Mathf.Min(this.m_VScaleMax, this.vRangeMax - this.vRangeMin);
+				num2 = Mathf.Min(num2, this.vRangeMax - this.vRangeMin);
 			}
 			Rect lastShownAreaInsideMargins = this.m_LastShownAreaInsideMargins;
 			Rect shownAreaInsideMargins = this.shownAreaInsideMargins;
@@ -759,25 +1098,25 @@ namespace UnityEditor
 			{
 				return;
 			}
-			float num = 1E-05f;
-			if (shownAreaInsideMargins.width < lastShownAreaInsideMargins.width - num)
+			float num3 = 1E-05f;
+			if (shownAreaInsideMargins.width < lastShownAreaInsideMargins.width - num3)
 			{
-				float t = Mathf.InverseLerp(lastShownAreaInsideMargins.width, shownAreaInsideMargins.width, hScaleMin);
+				float t = Mathf.InverseLerp(lastShownAreaInsideMargins.width, shownAreaInsideMargins.width, this.rect.width / this.m_HScaleMax);
 				shownAreaInsideMargins = new Rect(Mathf.Lerp(lastShownAreaInsideMargins.x, shownAreaInsideMargins.x, t), shownAreaInsideMargins.y, Mathf.Lerp(lastShownAreaInsideMargins.width, shownAreaInsideMargins.width, t), shownAreaInsideMargins.height);
 			}
-			if (shownAreaInsideMargins.height < lastShownAreaInsideMargins.height - num)
+			if (shownAreaInsideMargins.height < lastShownAreaInsideMargins.height - num3)
 			{
-				float t2 = Mathf.InverseLerp(lastShownAreaInsideMargins.height, shownAreaInsideMargins.height, vScaleMin);
+				float t2 = Mathf.InverseLerp(lastShownAreaInsideMargins.height, shownAreaInsideMargins.height, this.rect.height / this.m_VScaleMax);
 				shownAreaInsideMargins = new Rect(shownAreaInsideMargins.x, Mathf.Lerp(lastShownAreaInsideMargins.y, shownAreaInsideMargins.y, t2), shownAreaInsideMargins.width, Mathf.Lerp(lastShownAreaInsideMargins.height, shownAreaInsideMargins.height, t2));
 			}
-			if (shownAreaInsideMargins.width > lastShownAreaInsideMargins.width + num)
+			if (shownAreaInsideMargins.width > lastShownAreaInsideMargins.width + num3)
 			{
-				float t3 = Mathf.InverseLerp(lastShownAreaInsideMargins.width, shownAreaInsideMargins.width, value);
+				float t3 = Mathf.InverseLerp(lastShownAreaInsideMargins.width, shownAreaInsideMargins.width, num);
 				shownAreaInsideMargins = new Rect(Mathf.Lerp(lastShownAreaInsideMargins.x, shownAreaInsideMargins.x, t3), shownAreaInsideMargins.y, Mathf.Lerp(lastShownAreaInsideMargins.width, shownAreaInsideMargins.width, t3), shownAreaInsideMargins.height);
 			}
-			if (shownAreaInsideMargins.height > lastShownAreaInsideMargins.height + num)
+			if (shownAreaInsideMargins.height > lastShownAreaInsideMargins.height + num3)
 			{
-				float t4 = Mathf.InverseLerp(lastShownAreaInsideMargins.height, shownAreaInsideMargins.height, value2);
+				float t4 = Mathf.InverseLerp(lastShownAreaInsideMargins.height, shownAreaInsideMargins.height, num2);
 				shownAreaInsideMargins = new Rect(shownAreaInsideMargins.x, Mathf.Lerp(lastShownAreaInsideMargins.y, shownAreaInsideMargins.y, t4), shownAreaInsideMargins.width, Mathf.Lerp(lastShownAreaInsideMargins.height, shownAreaInsideMargins.height, t4));
 			}
 			if (shownAreaInsideMargins.xMin < this.hRangeMin)
@@ -799,14 +1138,17 @@ namespace UnityEditor
 			this.shownAreaInsideMarginsInternal = shownAreaInsideMargins;
 			this.m_LastShownAreaInsideMargins = shownAreaInsideMargins;
 		}
+
 		public float PixelToTime(float pixelX, Rect rect)
 		{
 			return (pixelX - rect.x) * this.shownArea.width / rect.width + this.shownArea.x;
 		}
+
 		public float TimeToPixel(float time, Rect rect)
 		{
 			return (time - this.shownArea.x) / this.shownArea.width * rect.width + rect.x;
 		}
+
 		public float PixelDeltaToTime(Rect rect)
 		{
 			return this.shownArea.width / rect.width;

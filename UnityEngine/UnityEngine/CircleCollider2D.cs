@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class CircleCollider2D : Collider2D
@@ -13,7 +14,8 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[Obsolete("CircleCollider2D.center has been deprecated. Use CircleCollider2D.offset instead (UnityUpgradable).", true)]
+
+		[Obsolete("CircleCollider2D.center has been deprecated. Use CircleCollider2D.offset instead (UnityUpgradable) -> offset", true)]
 		public Vector2 center
 		{
 			get

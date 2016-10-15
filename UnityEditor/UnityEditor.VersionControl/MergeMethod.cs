@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.VersionControl
 {
 	[Flags]
@@ -6,6 +7,7 @@ namespace UnityEditor.VersionControl
 	{
 		MergeNone = 0,
 		MergeAll = 1,
+		[Obsolete("This member is no longer supported (UnityUpgradable) -> MergeNone", true)]
 		MergeNonConflicting = 2
 	}
 }

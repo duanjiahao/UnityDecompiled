@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(Avatar))]
@@ -12,11 +15,14 @@ namespace UnityEditor
 			public GUIContent[] tabs = new GUIContent[]
 			{
 				EditorGUIUtility.TextContent("Mapping"),
-				EditorGUIUtility.TextContent("Muscles")
+				EditorGUIUtility.TextContent("Muscles & Settings")
 			};
+
 			public GUIContent editCharacter = EditorGUIUtility.TextContent("Configure Avatar");
+
 			public GUIContent reset = EditorGUIUtility.TextContent("Reset");
 		}
+
 		private enum EditMode
 		{
 			NotEditing,
@@ -24,32 +30,57 @@ namespace UnityEditor
 			Editing,
 			Stopping
 		}
+
 		[Serializable]
 		protected class SceneStateCache
 		{
 			public SceneView view;
+
 			public SceneView.SceneViewState state;
 		}
+
 		private const int sMappingTab = 0;
+
 		private const int sMuscleTab = 1;
+
 		private const int sHandleTab = 2;
+
 		private const int sColliderTab = 3;
+
 		private const int sDefaultTab = 0;
+
 		private static AvatarEditor.Styles s_Styles;
+
 		protected int m_TabIndex;
+
 		internal GameObject m_GameObject;
+
 		internal Dictionary<Transform, bool> m_ModelBones;
+
 		private AvatarEditor.EditMode m_EditMode;
+
 		internal bool m_CameFromImportSettings;
+
 		private bool m_SwitchToEditMode;
+
 		internal static bool s_EditImmediatelyOnNextOpen;
+
+		private SceneSetup[] sceneSetup;
+
 		protected bool m_InspectorLocked;
+
 		protected List<AvatarEditor.SceneStateCache> m_SceneStates;
+
 		private AvatarMuscleEditor m_MuscleEditor;
+
 		private AvatarHandleEditor m_HandleEditor;
+
 		private AvatarColliderEditor m_ColliderEditor;
+
 		private AvatarMappingEditor m_MappingEditor;
-		private string m_UserFileName;
+
+		private GameObject m_PrefabInstance;
+
 		private static AvatarEditor.Styles styles
 		{
 			get
@@ -61,6 +92,7 @@ namespace UnityEditor
 				return AvatarEditor.s_Styles;
 			}
 		}
+
 		internal Avatar avatar
 		{
 			get
@@ -68,6 +100,7 @@ namespace UnityEditor
 				return this.target as Avatar;
 			}
 		}
+
 		protected AvatarSubEditor editor
 		{
 			get
@@ -100,6 +133,7 @@ namespace UnityEditor
 				this.m_MappingEditor = (value as AvatarMappingEditor);
 			}
 		}
+
 		public GameObject prefab
 		{
 			get
@@ -108,6 +142,7 @@ namespace UnityEditor
 				return AssetDatabase.LoadMainAssetAtPath(assetPath) as GameObject;
 			}
 		}
+
 		internal override SerializedObject GetSerializedObjectInternal()
 		{
 			if (this.m_SerializedObject == null)
@@ -120,6 +155,7 @@ namespace UnityEditor
 			}
 			return this.m_SerializedObject;
 		}
+
 		private void OnEnable()
 		{
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
@@ -129,19 +165,17 @@ namespace UnityEditor
 				this.m_ModelBones = AvatarSetupTool.GetModelBones(this.m_GameObject.transform, false, null);
 				this.editor.Enable(this);
 			}
-			else
+			else if (this.m_EditMode == AvatarEditor.EditMode.NotEditing)
 			{
-				if (this.m_EditMode == AvatarEditor.EditMode.NotEditing)
+				this.editor = null;
+				if (AvatarEditor.s_EditImmediatelyOnNextOpen)
 				{
-					this.editor = null;
-					if (AvatarEditor.s_EditImmediatelyOnNextOpen)
-					{
-						this.m_CameFromImportSettings = true;
-						AvatarEditor.s_EditImmediatelyOnNextOpen = false;
-					}
+					this.m_CameFromImportSettings = true;
+					AvatarEditor.s_EditImmediatelyOnNextOpen = false;
 				}
 			}
 		}
+
 		private void OnDisable()
 		{
 			if (this.m_EditMode == AvatarEditor.EditMode.Editing)
@@ -155,6 +189,7 @@ namespace UnityEditor
 				this.m_SerializedObject = null;
 			}
 		}
+
 		private void OnDestroy()
 		{
 			if (this.m_EditMode == AvatarEditor.EditMode.Editing)
@@ -162,6 +197,7 @@ namespace UnityEditor
 				this.SwitchToAssetMode();
 			}
 		}
+
 		private void SelectAsset()
 		{
 			UnityEngine.Object activeObject;
@@ -176,6 +212,7 @@ namespace UnityEditor
 			}
 			Selection.activeObject = activeObject;
 		}
+
 		protected void CreateEditor()
 		{
 			switch (this.m_TabIndex)
@@ -195,15 +232,18 @@ namespace UnityEditor
 			this.editor.hideFlags = HideFlags.HideAndDontSave;
 			this.editor.Enable(this);
 		}
+
 		protected void DestroyEditor()
 		{
 			this.editor.OnDestroy();
 			this.editor = null;
 		}
+
 		public override bool UseDefaultMargins()
 		{
 			return false;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			GUI.enabled = true;
@@ -212,22 +252,17 @@ namespace UnityEditor
 			{
 				this.EditingGUI();
 			}
-			else
+			else if (!this.m_CameFromImportSettings)
 			{
-				if (!this.m_CameFromImportSettings)
-				{
-					this.EditButtonGUI();
-				}
-				else
-				{
-					if (this.m_EditMode == AvatarEditor.EditMode.NotEditing && Event.current.type == EventType.Repaint)
-					{
-						this.m_SwitchToEditMode = true;
-					}
-				}
+				this.EditButtonGUI();
+			}
+			else if (this.m_EditMode == AvatarEditor.EditMode.NotEditing && Event.current.type == EventType.Repaint)
+			{
+				this.m_SwitchToEditMode = true;
 			}
 			EditorGUILayout.EndVertical();
 		}
+
 		private void EditButtonGUI()
 		{
 			if (this.avatar == null || !this.avatar.isHuman)
@@ -245,7 +280,7 @@ namespace UnityEditor
 			if (GUILayout.Button(AvatarEditor.styles.editCharacter, new GUILayoutOption[]
 			{
 				GUILayout.Width(120f)
-			}) && EditorApplication.SaveCurrentSceneIfUserWantsTo())
+			}) && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
 			{
 				this.SwitchToEditMode();
 				GUIUtility.ExitGUI();
@@ -253,6 +288,7 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			EditorGUILayout.EndHorizontal();
 		}
+
 		private void EditingGUI()
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -264,12 +300,16 @@ namespace UnityEditor
 			if (num != this.m_TabIndex)
 			{
 				this.DestroyEditor();
-				this.m_TabIndex = num;
+				if (this.avatar != null && this.avatar.isHuman)
+				{
+					this.m_TabIndex = num;
+				}
 				this.CreateEditor();
 			}
 			GUILayout.EndHorizontal();
 			this.editor.OnInspectorGUI();
 		}
+
 		public void OnSceneGUI()
 		{
 			if (this.m_EditMode == AvatarEditor.EditMode.Editing)
@@ -277,12 +317,13 @@ namespace UnityEditor
 				this.editor.OnSceneGUI();
 			}
 		}
+
 		internal void SwitchToEditMode()
 		{
 			this.m_EditMode = AvatarEditor.EditMode.Starting;
 			this.ChangeInspectorLock(true);
-			this.m_UserFileName = EditorApplication.currentScene;
-			EditorApplication.NewScene();
+			this.sceneSetup = EditorSceneManager.GetSceneManagerSetup();
+			EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects).name = "Avatar Configuration";
 			this.m_GameObject = UnityEngine.Object.Instantiate<GameObject>(this.prefab);
 			if (base.serializedObject.FindProperty("m_OptimizeGameObjects").boolValue)
 			{
@@ -294,6 +335,7 @@ namespace UnityEditor
 				AnimatorController animatorController = new AnimatorController();
 				animatorController.hideFlags = HideFlags.DontSave;
 				animatorController.AddLayer("preview");
+				animatorController.layers[0].stateMachine.hideFlags = HideFlags.DontSave;
 				component.runtimeAnimatorController = animatorController;
 			}
 			Dictionary<Transform, bool> modelBones = AvatarSetupTool.GetModelBones(this.m_GameObject.transform, true, null);
@@ -320,9 +362,11 @@ namespace UnityEditor
 				sceneView.m_SceneViewState.showMaterialUpdate = false;
 				sceneView.m_SceneViewState.showFog = false;
 				sceneView.m_SceneViewState.showSkybox = false;
+				sceneView.m_SceneViewState.showImageEffects = false;
 				sceneView.FrameSelected();
 			}
 		}
+
 		internal void SwitchToAssetMode()
 		{
 			foreach (AvatarEditor.SceneStateCache current in this.m_SceneStates)
@@ -333,6 +377,7 @@ namespace UnityEditor
 					current.view.m_SceneViewState.showFlares = current.state.showFlares;
 					current.view.m_SceneViewState.showMaterialUpdate = current.state.showMaterialUpdate;
 					current.view.m_SceneViewState.showSkybox = current.state.showSkybox;
+					current.view.m_SceneViewState.showImageEffects = current.state.showImageEffects;
 				}
 			}
 			this.m_EditMode = AvatarEditor.EditMode.Stopping;
@@ -340,43 +385,41 @@ namespace UnityEditor
 			this.ChangeInspectorLock(this.m_InspectorLocked);
 			if (!EditorApplication.isUpdating && !Unsupported.IsDestroyScriptableObject(this))
 			{
-				string currentScene = EditorApplication.currentScene;
-				if (currentScene.Length <= 0)
+				string path = SceneManager.GetActiveScene().path;
+				if (path.Length <= 0)
 				{
-					if (this.m_UserFileName.Length > 0)
+					if (this.sceneSetup != null && this.sceneSetup.Length > 0)
 					{
-						EditorApplication.OpenScene(this.m_UserFileName);
+						EditorSceneManager.RestoreSceneManagerSetup(this.sceneSetup);
+						this.sceneSetup = null;
 					}
 					else
 					{
-						EditorApplication.NewScene();
+						EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects);
 					}
 				}
 			}
-			else
+			else if (Unsupported.IsDestroyScriptableObject(this))
 			{
-				if (Unsupported.IsDestroyScriptableObject(this))
+				EditorApplication.CallbackFunction CleanUpSceneOnDestroy = null;
+				CleanUpSceneOnDestroy = delegate
 				{
-					EditorApplication.CallbackFunction CleanUpSceneOnDestroy = null;
-					string userFileName = this.m_UserFileName;
-					CleanUpSceneOnDestroy = delegate
+					string path2 = SceneManager.GetActiveScene().path;
+					if (path2.Length <= 0)
 					{
-						string currentScene2 = EditorApplication.currentScene;
-						if (currentScene2.Length <= 0)
+						if (this.sceneSetup != null && this.sceneSetup.Length > 0)
 						{
-							if (userFileName.Length > 0)
-							{
-								EditorApplication.OpenScene(userFileName);
-							}
-							else
-							{
-								EditorApplication.NewScene();
-							}
+							EditorSceneManager.RestoreSceneManagerSetup(this.sceneSetup);
+							this.sceneSetup = null;
 						}
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, CleanUpSceneOnDestroy);
-					};
-					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, CleanUpSceneOnDestroy);
-				}
+						else
+						{
+							EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects);
+						}
+					}
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, CleanUpSceneOnDestroy);
+				};
+				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, CleanUpSceneOnDestroy);
 			}
 			this.m_GameObject = null;
 			this.m_ModelBones = null;
@@ -386,6 +429,7 @@ namespace UnityEditor
 				this.m_EditMode = AvatarEditor.EditMode.NotEditing;
 			}
 		}
+
 		private void ChangeInspectorLock(bool locked)
 		{
 			InspectorWindow[] allInspectorWindows = InspectorWindow.GetAllInspectorWindows();
@@ -405,6 +449,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void Update()
 		{
 			if (this.m_SwitchToEditMode)
@@ -419,40 +464,40 @@ namespace UnityEditor
 				{
 					this.SwitchToAssetMode();
 				}
-				else
+				else if (EditorApplication.isPlaying)
 				{
-					if (EditorApplication.isPlaying)
+					this.SwitchToAssetMode();
+				}
+				else if (this.m_ModelBones != null)
+				{
+					foreach (KeyValuePair<Transform, bool> current in this.m_ModelBones)
 					{
-						this.SwitchToAssetMode();
-					}
-					else
-					{
-						if (this.m_ModelBones != null)
+						if (current.Key == null)
 						{
-							foreach (KeyValuePair<Transform, bool> current in this.m_ModelBones)
-							{
-								if (current.Key == null)
-								{
-									this.SwitchToAssetMode();
-									break;
-								}
-							}
+							this.SwitchToAssetMode();
+							break;
 						}
 					}
 				}
 			}
 		}
+
 		public bool HasFrameBounds()
 		{
-			foreach (KeyValuePair<Transform, bool> current in this.m_ModelBones)
+			if (this.m_ModelBones != null)
 			{
-				if (current.Key == Selection.activeTransform)
+				foreach (KeyValuePair<Transform, bool> current in this.m_ModelBones)
 				{
-					return true;
+					if (current.Key == Selection.activeTransform)
+					{
+						return true;
+					}
 				}
+				return false;
 			}
 			return false;
 		}
+
 		public Bounds OnGetFrameBounds()
 		{
 			Transform activeTransform = Selection.activeTransform;

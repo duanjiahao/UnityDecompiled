@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class GUISlideGroup
@@ -8,19 +9,24 @@ namespace UnityEditor
 		private class SlideGroupInternal : GUILayoutGroup
 		{
 			private int m_ID;
+
 			private GUISlideGroup m_Owner;
+
 			internal Rect m_FinalRect;
+
 			public void SetID(GUISlideGroup owner, int id)
 			{
 				this.m_ID = id;
 				this.m_Owner = owner;
 			}
+
 			public override void SetHorizontal(float x, float width)
 			{
 				this.m_FinalRect.x = x;
 				this.m_FinalRect.width = width;
 				base.SetHorizontal(x, width);
 			}
+
 			public override void SetVertical(float y, float height)
 			{
 				this.m_FinalRect.y = y;
@@ -35,10 +41,15 @@ namespace UnityEditor
 				base.SetVertical(rect.y, rect.height);
 			}
 		}
+
 		private const float kLerp = 0.1f;
+
 		private const float kSnap = 0.5f;
+
 		internal static GUISlideGroup current;
+
 		private Dictionary<int, Rect> animIDs = new Dictionary<int, Rect>();
+
 		public void Begin()
 		{
 			if (GUISlideGroup.current != null)
@@ -48,15 +59,18 @@ namespace UnityEditor
 			}
 			GUISlideGroup.current = this;
 		}
+
 		public void End()
 		{
 			GUISlideGroup.current = null;
 		}
+
 		public void Reset()
 		{
 			GUISlideGroup.current = null;
 			this.animIDs.Clear();
 		}
+
 		public Rect BeginHorizontal(int id, params GUILayoutOption[] options)
 		{
 			GUISlideGroup.SlideGroupInternal slideGroupInternal = (GUISlideGroup.SlideGroupInternal)GUILayoutUtility.BeginLayoutGroup(GUIStyle.none, options, typeof(GUISlideGroup.SlideGroupInternal));
@@ -64,10 +78,12 @@ namespace UnityEditor
 			slideGroupInternal.isVertical = false;
 			return slideGroupInternal.m_FinalRect;
 		}
+
 		public void EndHorizontal()
 		{
 			GUILayoutUtility.EndLayoutGroup();
 		}
+
 		public Rect GetRect(int id, Rect r)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -77,6 +93,7 @@ namespace UnityEditor
 			bool flag;
 			return this.GetRect(id, r, out flag);
 		}
+
 		private Rect GetRect(int id, Rect r, out bool changed)
 		{
 			if (!this.animIDs.ContainsKey(id))

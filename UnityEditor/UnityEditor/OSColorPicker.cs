@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal sealed class OSColorPicker
@@ -11,6 +12,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static Color color
 		{
 			get
@@ -24,15 +26,19 @@ namespace UnityEditor
 				OSColorPicker.INTERNAL_set_color(ref value);
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Show(bool showAlpha);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Close();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_color(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_color(ref Color value);

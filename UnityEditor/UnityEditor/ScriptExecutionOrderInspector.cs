@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(MonoManager))]
@@ -10,10 +11,12 @@ namespace UnityEditor
 		public class SortMonoScriptExecutionOrder : IComparer<MonoScript>
 		{
 			private ScriptExecutionOrderInspector inspector;
+
 			public SortMonoScriptExecutionOrder(ScriptExecutionOrderInspector inspector)
 			{
 				this.inspector = inspector;
 			}
+
 			public int Compare(MonoScript x, MonoScript y)
 			{
 				if (!(x != null) || !(y != null))
@@ -29,6 +32,7 @@ namespace UnityEditor
 				return executionOrder.CompareTo(executionOrder2);
 			}
 		}
+
 		public class SortMonoScriptNameOrder : IComparer<MonoScript>
 		{
 			public int Compare(MonoScript x, MonoScript y)
@@ -40,20 +44,33 @@ namespace UnityEditor
 				return -1;
 			}
 		}
+
 		public class Styles
 		{
-			public GUIContent helpText = EditorGUIUtility.TextContent("ScriptExecutionOrderInspector.HelpText");
+			public GUIContent helpText = EditorGUIUtility.TextContent("Add scripts to the custom order and drag them to reorder.\n\nScripts in the custom order can execute before or after the default time and are executed from top to bottom. All other scripts execute at the default time in the order they are loaded.\n\n(Changing the order of a script may modify the meta data for more than one script.)");
+
 			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add script to custom order");
+
 			public GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove script from custom order");
-			public GUIContent defaultTimeContent = EditorGUIUtility.TextContent("ScriptExecutionOrderInspector.DefaultTime");
+
+			public GUIContent defaultTimeContent = EditorGUIUtility.TextContent("Default Time|All scripts not in the custom order are executed at the default time.");
+
 			public GUIStyle toolbar = "TE Toolbar";
+
 			public GUIStyle toolbarDropDown = "TE ToolbarDropDown";
+
 			public GUIStyle boxBackground = "TE NodeBackground";
+
 			public GUIStyle removeButton = "InvisibleButton";
+
 			public GUIStyle elementBackground = new GUIStyle("OL Box");
+
 			public GUIStyle defaultTime = new GUIStyle(EditorStyles.inspectorBig);
+
 			public GUIStyle draggingHandle = "WindowBottomResize";
+
 			public GUIStyle dropField = new GUIStyle(EditorStyles.objectFieldThumb);
+
 			public Styles()
 			{
 				this.boxBackground.margin = new RectOffset();
@@ -68,17 +85,24 @@ namespace UnityEditor
 				this.dropField.focused.background = null;
 			}
 		}
+
 		private class DragReorderGUI
 		{
 			public delegate void DrawElementDelegate(Rect r, object obj, bool dragging);
+
 			private static int s_ReorderingDraggedElement;
+
 			private static float[] s_ReorderingPositions;
+
 			private static int[] s_ReorderingGoals;
+
 			private static int s_DragReorderGUIHash = "DragReorderGUI".GetHashCode();
+
 			private static bool IsDefaultTimeElement(MonoScript element)
 			{
 				return element.name == string.Empty;
 			}
+
 			public static int DragReorder(Rect position, int elementHeight, List<MonoScript> elements, ScriptExecutionOrderInspector.DragReorderGUI.DrawElementDelegate drawElementDelegate)
 			{
 				int controlID = GUIUtility.GetControlID(ScriptExecutionOrderInspector.DragReorderGUI.s_DragReorderGUIHash, FocusType.Passive);
@@ -216,12 +240,19 @@ namespace UnityEditor
 				return result;
 			}
 		}
+
 		private const int kOrderRangeMin = -32000;
+
 		private const int kOrderRangeMax = 32000;
+
 		private const int kListElementHeight = 21;
+
 		private const int kIntFieldWidth = 50;
+
 		private const int kPreferredSpacing = 100;
+
 		private const string kOrderValuesEditorPrefString = "ScriptExecutionOrderShowOrderValues";
+
 		private int[] kRoundingAmounts = new int[]
 		{
 			1000,
@@ -232,16 +263,35 @@ namespace UnityEditor
 			5,
 			1
 		};
+
 		private MonoScript m_Edited;
+
 		private List<MonoScript> m_CustomTimeScripts;
+
 		private List<MonoScript> m_DefaultTimeScripts;
+
 		private static MonoScript sDummyScript;
+
 		private Vector2 m_Scroll = Vector2.zero;
+
 		private MonoScript[] m_AllScripts;
+
 		private int[] m_AllOrders;
+
 		private bool m_DirtyOrders;
+
 		private static int s_DropFieldHash = "DropField".GetHashCode();
+
 		public static ScriptExecutionOrderInspector.Styles m_Styles;
+
+		internal override string targetTitle
+		{
+			get
+			{
+				return "Script Execution Order";
+			}
+		}
+
 		public void OnEnable()
 		{
 			if (ScriptExecutionOrderInspector.sDummyScript == null)
@@ -253,6 +303,7 @@ namespace UnityEditor
 				this.PopulateScriptArray();
 			}
 		}
+
 		private static UnityEngine.Object MonoScriptValidatorCallback(UnityEngine.Object[] references, Type objType, SerializedProperty property)
 		{
 			for (int i = 0; i < references.Length; i++)
@@ -266,6 +317,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private static bool IsValidScript(MonoScript script)
 		{
 			if (script == null)
@@ -280,6 +332,7 @@ namespace UnityEditor
 			bool flag2 = typeof(ScriptableObject).IsAssignableFrom(script.GetClass());
 			return (flag || flag2) && AssetDatabase.GetAssetPath(script).IndexOf("Assets/") == 0;
 		}
+
 		private void PopulateScriptArray()
 		{
 			this.m_AllScripts = MonoImporter.GetAllRuntimeMonoScripts();
@@ -309,6 +362,7 @@ namespace UnityEditor
 			this.m_Edited = null;
 			this.m_DirtyOrders = false;
 		}
+
 		private int GetExecutionOrder(MonoScript script)
 		{
 			int num = Array.IndexOf<MonoScript>(this.m_AllScripts, script);
@@ -318,6 +372,7 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		private void SetExecutionOrder(MonoScript script, int order)
 		{
 			int num = Array.IndexOf<MonoScript>(this.m_AllScripts, script);
@@ -327,6 +382,7 @@ namespace UnityEditor
 				this.m_DirtyOrders = true;
 			}
 		}
+
 		private void Apply()
 		{
 			List<int> list = new List<int>();
@@ -342,8 +398,7 @@ namespace UnityEditor
 			bool flag = true;
 			if (Provider.enabled)
 			{
-				Task task = Provider.Checkout(list2.ToArray(), CheckoutMode.Both);
-				task.SetCompletionAction(CompletionAction.UpdatePendingWindow);
+				Task task = Provider.Checkout(list2.ToArray(), CheckoutMode.Meta);
 				task.Wait();
 				flag = task.success;
 			}
@@ -360,10 +415,12 @@ namespace UnityEditor
 				Debug.LogError("Could not checkout scrips in version control for changing script execution order");
 			}
 		}
+
 		private void Revert()
 		{
 			this.PopulateScriptArray();
 		}
+
 		private void OnDestroy()
 		{
 			if (this.m_DirtyOrders && EditorUtility.DisplayDialog("Unapplied execution order", "Unapplied script execution order", "Apply", "Revert"))
@@ -371,6 +428,7 @@ namespace UnityEditor
 				this.Apply();
 			}
 		}
+
 		private void ApplyRevertGUI()
 		{
 			EditorGUILayout.Space();
@@ -389,10 +447,12 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUI.enabled = enabled;
 		}
+
 		private void MenuSelection(object userData, string[] options, int selected)
 		{
 			this.AddScriptToCustomOrder(this.m_DefaultTimeScripts[selected]);
 		}
+
 		private void AddScriptToCustomOrder(MonoScript script)
 		{
 			if (!ScriptExecutionOrderInspector.IsValidScript(script))
@@ -408,6 +468,7 @@ namespace UnityEditor
 			this.m_CustomTimeScripts.Add(script);
 			this.m_DefaultTimeScripts.Remove(script);
 		}
+
 		private void ShowScriptPopup(Rect r)
 		{
 			int count = this.m_DefaultTimeScripts.Count;
@@ -420,6 +481,7 @@ namespace UnityEditor
 			}
 			EditorUtility.DisplayCustomMenu(r, array, array2, null, new EditorUtility.SelectMenuItemFunction(this.MenuSelection), null);
 		}
+
 		private int RoundBasedOnContext(int val, int lowerBound, int upperBound)
 		{
 			int num = Mathf.Max(0, (upperBound - lowerBound) / 6);
@@ -435,10 +497,12 @@ namespace UnityEditor
 			}
 			return val;
 		}
+
 		private int RoundByAmount(int val, int rounding)
 		{
 			return Mathf.RoundToInt((float)val / (float)rounding) * rounding;
 		}
+
 		private int GetAverageRoundedAwayFromZero(int a, int b)
 		{
 			if ((a + b) % 2 == 0)
@@ -447,6 +511,7 @@ namespace UnityEditor
 			}
 			return (a + b + Math.Sign(a + b)) / 2;
 		}
+
 		private void SetExecutionOrderAtIndexAccordingToNeighbors(int indexOfChangedItem, int pushDirection)
 		{
 			if (indexOfChangedItem < 0 || indexOfChangedItem >= this.m_CustomTimeScripts.Count)
@@ -483,6 +548,7 @@ namespace UnityEditor
 			}
 			this.SetExecutionOrderAtIndex(indexOfChangedItem, num);
 		}
+
 		private void UpdateOrder(MonoScript changedScript)
 		{
 			this.m_CustomTimeScripts.Remove(changedScript);
@@ -520,6 +586,7 @@ namespace UnityEditor
 			}
 			this.PushAwayToAvoidConflicts(num, bestPushDirectionForOrderValue);
 		}
+
 		private void PushAwayToAvoidConflicts(int startIndex, int pushDirection)
 		{
 			int num = startIndex;
@@ -533,6 +600,7 @@ namespace UnityEditor
 				num += pushDirection;
 			}
 		}
+
 		private int GetBestPushDirectionForOrderValue(int order)
 		{
 			int num = (int)Mathf.Sign((float)order);
@@ -542,10 +610,12 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		public override bool UseDefaultMargins()
 		{
 			return false;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (ScriptExecutionOrderInspector.m_Styles == null)
@@ -596,35 +666,43 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.FlexibleSpace();
 		}
+
 		private int GetExecutionOrderAtIndex(int idx)
 		{
 			return this.GetExecutionOrder(this.m_CustomTimeScripts[idx]);
 		}
+
 		private void SetExecutionOrderAtIndex(int idx, int order)
 		{
 			this.SetExecutionOrder(this.m_CustomTimeScripts[idx], order);
 		}
+
 		private Rect GetButtonLabelRect(Rect r)
 		{
 			return new Rect(r.x + 20f, r.y + 1f, r.width - this.GetMinusButtonSize().x - 10f - 20f - 55f, r.height);
 		}
+
 		private Rect GetAddRemoveButtonRect(Rect r)
 		{
 			Vector2 minusButtonSize = this.GetMinusButtonSize();
 			return new Rect(r.xMax - minusButtonSize.x - 5f, r.y + 1f, minusButtonSize.x, minusButtonSize.y);
 		}
+
 		private Rect GetFieldRect(Rect r)
 		{
 			return new Rect(r.xMax - 50f - this.GetMinusButtonSize().x - 10f, r.y + 2f, 50f, r.height - 5f);
 		}
+
 		private Vector2 GetMinusButtonSize()
 		{
 			return ScriptExecutionOrderInspector.m_Styles.removeButton.CalcSize(ScriptExecutionOrderInspector.m_Styles.iconToolbarMinus);
 		}
+
 		private Rect GetDraggingHandleRect(Rect r)
 		{
 			return new Rect(r.x + 5f, r.y + 7f, 10f, r.height - 14f);
 		}
+
 		public void DrawElement(Rect r, object obj, bool dragging)
 		{
 			MonoScript monoScript = obj as MonoScript;
@@ -635,7 +713,7 @@ namespace UnityEditor
 			}
 			GUI.Label(this.GetButtonLabelRect(r), monoScript.GetClass().FullName);
 			int executionOrder = this.GetExecutionOrder(monoScript);
-			string s = EditorGUI.DelayedTextField(this.GetFieldRect(r), executionOrder.ToString(), "0123456789-", EditorStyles.textField);
+			string s = EditorGUI.DelayedTextFieldInternal(this.GetFieldRect(r), executionOrder.ToString(), "0123456789-", EditorStyles.textField);
 			int num = executionOrder;
 			if (int.TryParse(s, out num) && num != executionOrder)
 			{

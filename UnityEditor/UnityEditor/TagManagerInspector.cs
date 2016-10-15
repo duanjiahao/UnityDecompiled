@@ -1,18 +1,26 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(TagManager))]
 	internal class TagManagerInspector : Editor
 	{
 		protected SerializedProperty m_Tags;
+
 		protected SerializedProperty m_SortingLayers;
+
 		protected SerializedProperty m_Layers;
+
 		private ReorderableList m_TagsList;
+
 		private ReorderableList m_SortLayersList;
+
 		private ReorderableList m_LayersList;
+
 		protected bool m_IsEditable;
+
 		public TagManager tagManager
 		{
 			get
@@ -20,6 +28,7 @@ namespace UnityEditor
 				return this.target as TagManager;
 			}
 		}
+
 		internal override string targetTitle
 		{
 			get
@@ -27,6 +36,7 @@ namespace UnityEditor
 				return "Tags & Layers";
 			}
 		}
+
 		public virtual void OnEnable()
 		{
 			this.m_Tags = base.serializedObject.FindProperty("tags");
@@ -77,6 +87,7 @@ namespace UnityEditor
 			}
 			this.m_Layers.isExpanded = true;
 		}
+
 		private void AddToTagsList(ReorderableList list)
 		{
 			int arraySize = this.m_Tags.arraySize;
@@ -85,10 +96,12 @@ namespace UnityEditor
 			arrayElementAtIndex.stringValue = "New Tag";
 			list.index = list.serializedProperty.arraySize - 1;
 		}
+
 		private void RemoveFromTagsList(ReorderableList list)
 		{
 			ReorderableList.defaultBehaviours.DoRemoveButton(list);
 		}
+
 		private void DrawTagListElement(Rect rect, int index, bool selected, bool focused)
 		{
 			rect.height -= 2f;
@@ -103,6 +116,7 @@ namespace UnityEditor
 			}
 			GUI.enabled = enabled;
 		}
+
 		private void AddToSortLayerList(ReorderableList list)
 		{
 			base.serializedObject.ApplyModifiedProperties();
@@ -110,10 +124,12 @@ namespace UnityEditor
 			base.serializedObject.Update();
 			list.index = list.serializedProperty.arraySize - 1;
 		}
+
 		public void ReorderSortLayerList(ReorderableList list)
 		{
 			InternalEditorUtility.UpdateSortingLayersOrder();
 		}
+
 		private void RemoveFromSortLayerList(ReorderableList list)
 		{
 			ReorderableList.defaultBehaviours.DoRemoveButton(list);
@@ -121,14 +137,17 @@ namespace UnityEditor
 			base.serializedObject.Update();
 			InternalEditorUtility.UpdateSortingLayersOrder();
 		}
+
 		private bool CanEditSortLayerEntry(int index)
 		{
 			return index >= 0 && index < InternalEditorUtility.GetSortingLayerCount() && !InternalEditorUtility.IsSortingLayerDefault(index);
 		}
+
 		private bool CanRemoveSortLayerEntry(ReorderableList list)
 		{
 			return this.CanEditSortLayerEntry(list.index);
 		}
+
 		private void DrawSortLayerListElement(Rect rect, int index, bool selected, bool focused)
 		{
 			rect.height -= 2f;
@@ -145,6 +164,7 @@ namespace UnityEditor
 			}
 			GUI.enabled = enabled;
 		}
+
 		private void DrawLayerListElement(Rect rect, int index, bool selected, bool focused)
 		{
 			rect.height -= 2f;
@@ -168,6 +188,7 @@ namespace UnityEditor
 			}
 			GUI.enabled = enabled;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();

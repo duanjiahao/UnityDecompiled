@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ColumnView
@@ -8,19 +9,32 @@ namespace UnityEditor
 		public class Styles
 		{
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle selected = "PR Label";
+
 			public Texture2D categoryArrowIcon = EditorStyles.foldout.normal.background;
 		}
+
 		public delegate void ObjectColumnFunction(object value);
+
 		public delegate object ObjectColumnGetDataFunction(object value);
+
 		private static ColumnView.Styles s_Styles;
+
 		private readonly List<ListViewState> m_ListViewStates;
+
 		private readonly List<int> m_CachedSelectedIndices;
+
 		private Vector2 m_ScrollPosition;
+
 		private string m_SearchText = string.Empty;
+
 		public float columnWidth = 150f;
+
 		public int minimumNumberOfColumns = 1;
+
 		private int m_ColumnToFocusKeyboard = -1;
+
 		public string searchText
 		{
 			get
@@ -28,6 +42,7 @@ namespace UnityEditor
 				return this.m_SearchText;
 			}
 		}
+
 		public bool isSearching
 		{
 			get
@@ -35,11 +50,13 @@ namespace UnityEditor
 				return this.searchText != string.Empty;
 			}
 		}
+
 		public ColumnView()
 		{
 			this.m_ListViewStates = new List<ListViewState>();
 			this.m_CachedSelectedIndices = new List<int>();
 		}
+
 		private static void InitStyles()
 		{
 			if (ColumnView.s_Styles == null)
@@ -47,6 +64,7 @@ namespace UnityEditor
 				ColumnView.s_Styles = new ColumnView.Styles();
 			}
 		}
+
 		public void SetSelected(int column, int selectionIndex)
 		{
 			if (this.m_ListViewStates.Count == column)
@@ -60,14 +78,17 @@ namespace UnityEditor
 			this.m_CachedSelectedIndices[column] = selectionIndex;
 			this.m_ListViewStates[column].row = selectionIndex;
 		}
+
 		public void SetKeyboardFocusColumn(int column)
 		{
 			this.m_ColumnToFocusKeyboard = column;
 		}
+
 		public void OnGUI(List<ColumnViewElement> elements, ColumnView.ObjectColumnFunction previewColumnFunction)
 		{
 			this.OnGUI(elements, previewColumnFunction, null, null, null);
 		}
+
 		public void OnGUI(List<ColumnViewElement> elements, ColumnView.ObjectColumnFunction previewColumnFunction, ColumnView.ObjectColumnFunction selectedSearchItemFunction, ColumnView.ObjectColumnFunction selectedRegularItemFunction, ColumnView.ObjectColumnGetDataFunction getDataForDraggingFunction)
 		{
 			ColumnView.InitStyles();
@@ -145,6 +166,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.EndScrollView();
 		}
+
 		private static void DoItemSelectedEvent(ColumnView.ObjectColumnFunction selectedRegularItemFunction, object value)
 		{
 			if (selectedRegularItemFunction != null)
@@ -153,11 +175,13 @@ namespace UnityEditor
 			}
 			Event.current.Use();
 		}
+
 		private void DoSearchItemSelectedEvent(ColumnView.ObjectColumnFunction selectedSearchItemFunction, object value)
 		{
 			this.m_SearchText = string.Empty;
 			ColumnView.DoItemSelectedEvent(selectedSearchItemFunction, value);
 		}
+
 		private void DoDummyColumn()
 		{
 			GUILayout.Box(GUIContent.none, ColumnView.s_Styles.background, new GUILayoutOption[]
@@ -165,6 +189,7 @@ namespace UnityEditor
 				GUILayout.Width(this.columnWidth + 1f)
 			});
 		}
+
 		private static void DoPreviewColumn(object selectedObject, ColumnView.ObjectColumnFunction previewColumnFunction)
 		{
 			GUILayout.BeginVertical(ColumnView.s_Styles.background, new GUILayoutOption[0]);
@@ -174,6 +199,7 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 		}
+
 		private int DoListColumn(ListViewState listView, List<ColumnViewElement> columnViewElements, int columnIndex, int selectedIndex, ColumnView.ObjectColumnFunction selectedSearchItemFunction, ColumnView.ObjectColumnFunction selectedRegularItemFunction, ColumnView.ObjectColumnGetDataFunction getDataForDraggingFunction)
 		{
 			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && listView.row > -1)
@@ -234,6 +260,7 @@ namespace UnityEditor
 			}
 			return selectedIndex;
 		}
+
 		private static void DoDragAndDrop(ListViewState listView, ListViewElement element, List<ColumnViewElement> columnViewElements, ColumnView.ObjectColumnGetDataFunction getDataForDraggingFunction)
 		{
 			if (GUIUtility.hotControl == listView.ID && Event.current.type == EventType.MouseDown && element.position.Contains(Event.current.mousePosition) && Event.current.button == 0)
@@ -260,6 +287,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoDoubleClick(ListViewElement element, ColumnViewElement columnViewElement, ColumnView.ObjectColumnFunction selectedSearchItemFunction, ColumnView.ObjectColumnFunction selectedRegularItemFunction)
 		{
 			if (Event.current.type == EventType.MouseDown && element.position.Contains(Event.current.mousePosition) && Event.current.button == 0 && Event.current.clickCount == 2)
@@ -274,6 +302,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static KeyCode StealImportantListviewKeys()
 		{
 			if (Event.current.type == EventType.KeyDown)

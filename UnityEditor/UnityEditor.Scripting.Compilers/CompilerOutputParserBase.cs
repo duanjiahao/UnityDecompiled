@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal abstract class CompilerOutputParserBase
@@ -16,6 +17,7 @@ namespace UnityEditor.Scripting.Compilers
 			result.normalizedStatus = default(NormalizedCompilerStatus);
 			return result;
 		}
+
 		protected internal static CompilerMessage CreateCompilerMessageFromMatchedRegex(string line, Match m, string erroridentifier)
 		{
 			CompilerMessage result;
@@ -27,10 +29,12 @@ namespace UnityEditor.Scripting.Compilers
 			result.normalizedStatus = default(NormalizedCompilerStatus);
 			return result;
 		}
+
 		public virtual IEnumerable<CompilerMessage> Parse(string[] errorOutput, bool compilationHadFailure)
 		{
 			return this.Parse(errorOutput, new string[0], compilationHadFailure);
 		}
+
 		public virtual IEnumerable<CompilerMessage> Parse(string[] errorOutput, string[] standardOutput, bool compilationHadFailure)
 		{
 			bool flag = false;
@@ -58,12 +62,16 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			return list;
 		}
+
 		protected virtual NormalizedCompilerStatus NormalizedStatusFor(Match match)
 		{
 			return default(NormalizedCompilerStatus);
 		}
+
 		protected abstract string GetErrorIdentifier();
+
 		protected abstract Regex GetOutputRegex();
+
 		protected static NormalizedCompilerStatus TryNormalizeCompilerStatus(Match match, string memberNotFoundError, Regex missingMemberRegex)
 		{
 			string value = match.Groups["id"].Value;

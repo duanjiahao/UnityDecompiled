@@ -1,11 +1,15 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct SoftJointLimit
 	{
 		private float m_Limit;
+
 		private float m_Bounciness;
+
 		private float m_ContactDistance;
+
 		public float limit
 		{
 			get
@@ -17,7 +21,8 @@ namespace UnityEngine
 				this.m_Limit = value;
 			}
 		}
-		[Obsolete("spring has been moved to SoftJointLimitSpring class in Unity 5", true)]
+
+		[Obsolete("Spring has been moved to SoftJointLimitSpring class in Unity 5", true)]
 		public float spring
 		{
 			get
@@ -28,7 +33,8 @@ namespace UnityEngine
 			{
 			}
 		}
-		[Obsolete("damper has been moved to SoftJointLimitSpring class in Unity 5", true)]
+
+		[Obsolete("Damper has been moved to SoftJointLimitSpring class in Unity 5", true)]
 		public float damper
 		{
 			get
@@ -39,6 +45,7 @@ namespace UnityEngine
 			{
 			}
 		}
+
 		public float bounciness
 		{
 			get
@@ -50,6 +57,7 @@ namespace UnityEngine
 				this.m_Bounciness = value;
 			}
 		}
+
 		public float contactDistance
 		{
 			get
@@ -61,6 +69,7 @@ namespace UnityEngine
 				this.m_ContactDistance = value;
 			}
 		}
+
 		[Obsolete("Use SoftJointLimit.bounciness instead", true)]
 		public float bouncyness
 		{

@@ -2,6 +2,7 @@ using Boo.Lang.Compiler.Ast;
 using Boo.Lang.Parser;
 using System;
 using System.Linq;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal class BooLanguage : SupportedLanguage
@@ -10,14 +11,17 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			return "boo";
 		}
+
 		public override string GetLanguageName()
 		{
 			return "Boo";
 		}
+
 		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
 			return new BooCompiler(island, runUpdater);
 		}
+
 		public override string GetNamespace(string fileName)
 		{
 			try

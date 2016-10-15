@@ -1,18 +1,23 @@
 using System;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor.VersionControl
 {
 	internal class WindowResolve : EditorWindow
 	{
 		private ListControl resolveList = new ListControl();
+
 		private AssetList assetList = new AssetList();
+
 		private bool cancelled;
+
 		public void OnEnable()
 		{
 			base.position = new Rect(100f, 100f, 650f, 330f);
 			base.minSize = new Vector2(650f, 330f);
 		}
+
 		public void OnDisable()
 		{
 			if (!this.cancelled)
@@ -20,6 +25,7 @@ namespace UnityEditor.VersionControl
 				WindowPending.UpdateAllWindows();
 			}
 		}
+
 		public static void Open(ChangeSet change)
 		{
 			Task task = Provider.ChangeSetStatus(change);
@@ -27,6 +33,7 @@ namespace UnityEditor.VersionControl
 			WindowResolve window = WindowResolve.GetWindow();
 			window.DoOpen(task.assetList);
 		}
+
 		public static void Open(AssetList assets)
 		{
 			Task task = Provider.Status(assets);
@@ -34,10 +41,12 @@ namespace UnityEditor.VersionControl
 			WindowResolve window = WindowResolve.GetWindow();
 			window.DoOpen(task.assetList);
 		}
+
 		private static WindowResolve GetWindow()
 		{
 			return EditorWindow.GetWindow<WindowResolve>(true, "Version Control Resolve");
 		}
+
 		private void DoOpen(AssetList resolve)
 		{
 			bool includeFolder = true;
@@ -47,6 +56,7 @@ namespace UnityEditor.VersionControl
 			});
 			this.RefreshList();
 		}
+
 		private void RefreshList()
 		{
 			this.resolveList.Clear();
@@ -73,6 +83,7 @@ namespace UnityEditor.VersionControl
 			this.resolveList.Refresh();
 			base.Repaint();
 		}
+
 		private void OnGUI()
 		{
 			this.cancelled = false;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class HeapshotWindow : EditorWindow
@@ -10,10 +11,15 @@ namespace UnityEditor
 		public class HeapshotUIObject
 		{
 			private string name;
+
 			private HeapshotReader.ObjectInfo obj;
+
 			private List<HeapshotWindow.HeapshotUIObject> children = new List<HeapshotWindow.HeapshotUIObject>();
+
 			private bool inverseReference;
+
 			private bool isDummyObject;
+
 			public bool HasChildren
 			{
 				get
@@ -21,6 +27,7 @@ namespace UnityEditor
 					return (!this.inverseReference) ? (this.obj.references.Count > 0) : (this.obj.inverseReferences.Count > 0);
 				}
 			}
+
 			public bool IsExpanded
 			{
 				get
@@ -28,6 +35,7 @@ namespace UnityEditor
 					return this.HasChildren && this.children.Count > 0;
 				}
 			}
+
 			public string Name
 			{
 				get
@@ -35,6 +43,7 @@ namespace UnityEditor
 					return this.name;
 				}
 			}
+
 			public uint Code
 			{
 				get
@@ -42,6 +51,7 @@ namespace UnityEditor
 					return this.obj.code;
 				}
 			}
+
 			public uint Size
 			{
 				get
@@ -49,6 +59,7 @@ namespace UnityEditor
 					return this.obj.size;
 				}
 			}
+
 			public int ReferenceCount
 			{
 				get
@@ -56,6 +67,7 @@ namespace UnityEditor
 					return (!this.inverseReference) ? this.obj.references.Count : this.obj.inverseReferences.Count;
 				}
 			}
+
 			public int InverseReferenceCount
 			{
 				get
@@ -63,6 +75,7 @@ namespace UnityEditor
 					return (!this.inverseReference) ? this.obj.inverseReferences.Count : this.obj.references.Count;
 				}
 			}
+
 			public bool IsDummyObject
 			{
 				get
@@ -74,6 +87,7 @@ namespace UnityEditor
 					this.isDummyObject = value;
 				}
 			}
+
 			public string TypeName
 			{
 				get
@@ -81,6 +95,7 @@ namespace UnityEditor
 					return this.obj.typeInfo.name;
 				}
 			}
+
 			public HeapshotReader.ObjectInfo ObjectInfo
 			{
 				get
@@ -88,6 +103,7 @@ namespace UnityEditor
 					return this.obj;
 				}
 			}
+
 			public List<HeapshotWindow.HeapshotUIObject> Children
 			{
 				get
@@ -99,12 +115,14 @@ namespace UnityEditor
 					return null;
 				}
 			}
+
 			public HeapshotUIObject(string name, HeapshotReader.ObjectInfo refObject, bool inverseReference)
 			{
 				this.name = name;
 				this.obj = refObject;
 				this.inverseReference = inverseReference;
 			}
+
 			public void Expand()
 			{
 				if (this.IsExpanded)
@@ -129,6 +147,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			public void Collapse()
 			{
 				if (!this.IsExpanded)
@@ -138,45 +157,75 @@ namespace UnityEditor
 				this.children.Clear();
 			}
 		}
+
 		internal class UIStyles
 		{
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle header = "OL title";
+
 			public GUIStyle rightHeader = "OL title TextRight";
+
 			public GUIStyle entryEven = "OL EntryBackEven";
+
 			public GUIStyle entryOdd = "OL EntryBackOdd";
+
 			public GUIStyle numberLabel = "OL Label";
+
 			public GUIStyle foldout = "IN foldout";
 		}
+
 		internal class UIOptions
 		{
 			public const float height = 16f;
+
 			public const float foldoutWidth = 14f;
+
 			public const float tabWidth = 50f;
 		}
+
 		private delegate void OnSelect(HeapshotWindow.HeapshotUIObject o);
+
 		private delegate void DelegateReceivedHeapshot(string fileName);
+
 		private const string heapshotExtension = ".heapshot";
+
 		private HeapshotReader heapshotReader;
+
 		private List<string> heapshotFiles = new List<string>();
+
 		private int itemIndex = -1;
+
 		private Rect guiRect;
+
 		private int selectedItem = -1;
+
 		private int currentTab;
+
 		private string lastOpenedHeapshotFile = string.Empty;
+
 		private string lastOpenedProfiler = string.Empty;
+
 		private static HeapshotWindow.DelegateReceivedHeapshot onReceivedHeapshot;
+
 		private List<HeapshotWindow.HeapshotUIObject> hsRoots = new List<HeapshotWindow.HeapshotUIObject>();
+
 		private List<HeapshotWindow.HeapshotUIObject> hsAllObjects = new List<HeapshotWindow.HeapshotUIObject>();
+
 		private List<HeapshotWindow.HeapshotUIObject> hsBackTraceObjects = new List<HeapshotWindow.HeapshotUIObject>();
+
 		private Vector2 leftViewScrollPosition = Vector2.zero;
+
 		private Vector2 rightViewScrollPosition = Vector2.zero;
+
 		private static HeapshotWindow.UIStyles ms_Styles;
+
 		private SplitterState viewSplit = new SplitterState(new float[]
 		{
 			50f,
 			50f
 		}, null, null);
+
 		private string[] titleNames = new string[]
 		{
 			"Field Name",
@@ -185,6 +234,7 @@ namespace UnityEditor
 			"Size",
 			"References/Referenced"
 		};
+
 		private SplitterState titleSplit1 = new SplitterState(new float[]
 		{
 			30f,
@@ -200,6 +250,7 @@ namespace UnityEditor
 			50,
 			50
 		}, null);
+
 		private SplitterState titleSplit2 = new SplitterState(new float[]
 		{
 			30f,
@@ -215,8 +266,11 @@ namespace UnityEditor
 			50,
 			50
 		}, null);
+
 		private int selectedHeapshot = -1;
+
 		private int[] connectionGuids;
+
 		private string HeapshotPath
 		{
 			get
@@ -224,6 +278,7 @@ namespace UnityEditor
 				return Application.dataPath + "/../Heapshots";
 			}
 		}
+
 		private static HeapshotWindow.UIStyles Styles
 		{
 			get
@@ -236,11 +291,13 @@ namespace UnityEditor
 				return arg_17_0;
 			}
 		}
+
 		private static void Init()
 		{
 			EditorWindow window = EditorWindow.GetWindow(typeof(HeapshotWindow));
-			window.title = "Mono heapshot";
+			window.titleContent = EditorGUIUtility.TextContent("Mono heapshot");
 		}
+
 		private static void EventHeapShotReceived(string name)
 		{
 			Debug.Log("Received " + name);
@@ -249,11 +306,13 @@ namespace UnityEditor
 				HeapshotWindow.onReceivedHeapshot(name);
 			}
 		}
+
 		private void OnReceivedHeapshot(string name)
 		{
 			this.SearchForHeapShots();
 			this.OpenHeapshot(name);
 		}
+
 		private void SearchForHeapShots()
 		{
 			this.heapshotFiles.Clear();
@@ -276,18 +335,22 @@ namespace UnityEditor
 				this.selectedHeapshot = this.heapshotFiles.Count - 1;
 			}
 		}
+
 		private void OnEnable()
 		{
 			HeapshotWindow.onReceivedHeapshot = new HeapshotWindow.DelegateReceivedHeapshot(this.OnReceivedHeapshot);
 		}
+
 		private void OnDisable()
 		{
 			HeapshotWindow.onReceivedHeapshot = null;
 		}
+
 		private void OnFocus()
 		{
 			this.SearchForHeapShots();
 		}
+
 		private void RefreshHeapshotUIObjects()
 		{
 			this.hsRoots.Clear();
@@ -323,6 +386,7 @@ namespace UnityEditor
 				this.hsAllObjects.Add(heapshotUIObject);
 			}
 		}
+
 		private int GetItemCount(List<HeapshotWindow.HeapshotUIObject> objects)
 		{
 			int num = 0;
@@ -336,6 +400,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private void OpenHeapshot(string fileName)
 		{
 			this.heapshotReader = new HeapshotReader();
@@ -350,6 +415,7 @@ namespace UnityEditor
 				Debug.LogError("Failed to read " + text);
 			}
 		}
+
 		private void OnGUI()
 		{
 			GUI.Label(new Rect(0f, 0f, base.position.width, 20f), "Heapshots are located here: " + Path.Combine(Application.dataPath, "Heapshots"));
@@ -429,11 +495,13 @@ namespace UnityEditor
 			}
 			GUI.EndScrollView();
 		}
+
 		private void OnSelectObject(HeapshotWindow.HeapshotUIObject o)
 		{
 			this.hsBackTraceObjects.Clear();
 			this.hsBackTraceObjects.Add(new HeapshotWindow.HeapshotUIObject(o.Name, o.ObjectInfo, true));
 		}
+
 		private void DoActiveProfilerButton(Rect position)
 		{
 			if (EditorGUI.ButtonMouseDown(position, new GUIContent("Active Profler"), FocusType.Native, EditorStyles.toolbarDropDown))
@@ -463,12 +531,14 @@ namespace UnityEditor
 				EditorUtility.DisplayCustomMenu(position, array3, array2, array, new EditorUtility.SelectMenuItemFunction(this.SelectProfilerClick), null);
 			}
 		}
+
 		private void SelectProfilerClick(object userData, string[] options, int selected)
 		{
 			int num = this.connectionGuids[selected];
 			this.lastOpenedProfiler = ProfilerDriver.GetConnectionIdentifier(num);
 			ProfilerDriver.connectedProfiler = num;
 		}
+
 		private void DoTitles(SplitterState splitter)
 		{
 			SplitterGUILayout.BeginHorizontalSplit(splitter, new GUILayoutOption[0]);
@@ -481,6 +551,7 @@ namespace UnityEditor
 			}
 			SplitterGUILayout.EndHorizontalSplit();
 		}
+
 		private void DoHeapshotObjects(List<HeapshotWindow.HeapshotUIObject> objects, SplitterState splitter, int indent, HeapshotWindow.OnSelect onSelect)
 		{
 			if (objects == null)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 namespace UnityEditor.Macros
 {
 	public static class MethodEvaluator
@@ -10,10 +11,12 @@ namespace UnityEditor.Macros
 		public class AssemblyResolver
 		{
 			private readonly string _assemblyDirectory;
+
 			public AssemblyResolver(string assemblyDirectory)
 			{
 				this._assemblyDirectory = assemblyDirectory;
 			}
+
 			public Assembly AssemblyResolve(object sender, ResolveEventArgs args)
 			{
 				string str = args.Name.Split(new char[]
@@ -28,6 +31,7 @@ namespace UnityEditor.Macros
 				return null;
 			}
 		}
+
 		public static object Eval(string assemblyFile, string typeName, string methodName, Type[] paramTypes, object[] args)
 		{
 			string directoryName = Path.GetDirectoryName(assemblyFile);
@@ -56,11 +60,11 @@ namespace UnityEditor.Macros
 			}
 			return result;
 		}
+
 		private static string ToCommaSeparatedString<T>(IEnumerable<T> items)
 		{
-			return string.Join(", ", (
-				from o in items
-				select o.ToString()).ToArray<string>());
+			return string.Join(", ", (from o in items
+			select o.ToString()).ToArray<string>());
 		}
 	}
 }

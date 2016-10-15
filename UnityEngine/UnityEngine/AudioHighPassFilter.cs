@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class AudioHighPassFilter : Behaviour
@@ -13,6 +15,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float highpassResonanceQ
 		{
 			[WrapperlessIcall]
@@ -22,15 +25,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[Obsolete("highpassResonaceQ is obsolete. Use highpassResonanceQ instead (UnityUpgradable).", true)]
-		public extern float highpassResonaceQ
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("AudioHighPassFilter.highpassResonaceQ is obsolete. Use highpassResonanceQ instead (UnityUpgradable) -> highpassResonanceQ", true)]
+		public float highpassResonaceQ
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.highpassResonanceQ;
+			}
+			set
+			{
+			}
 		}
 	}
 }

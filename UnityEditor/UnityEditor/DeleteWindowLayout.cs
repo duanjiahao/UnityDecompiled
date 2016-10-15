@@ -3,13 +3,23 @@ using System.Collections;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Delete Layout")]
 	internal class DeleteWindowLayout : EditorWindow
 	{
 		private const int kMaxLayoutNameLength = 15;
+
 		internal string[] m_Paths;
+
 		private Vector2 m_ScrollPos;
+
+		private void OnEnable()
+		{
+			base.titleContent = base.GetLocalizedTitleContent();
+		}
+
 		private void InitializePaths()
 		{
 			string[] files = Directory.GetFiles(WindowLayout.layoutsPreferencesPath);
@@ -26,6 +36,7 @@ namespace UnityEditor
 			}
 			this.m_Paths = (arrayList.ToArray(typeof(string)) as string[]);
 		}
+
 		private void OnGUI()
 		{
 			if (this.m_Paths == null)

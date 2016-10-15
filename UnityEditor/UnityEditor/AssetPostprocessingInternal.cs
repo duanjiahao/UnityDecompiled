@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetPostprocessingInternal
@@ -16,12 +18,16 @@ namespace UnityEditor
 				return postprocessOrder.CompareTo(postprocessOrder2);
 			}
 		}
+
 		internal class PostprocessStack
 		{
 			internal ArrayList m_ImportProcessors;
 		}
+
 		private static ArrayList m_PostprocessStack;
+
 		private static ArrayList m_ImportProcessors;
+
 		private static void LogPostProcessorMissingDefaultConstructor(Type type)
 		{
 			Debug.LogErrorFormat("{0} requires a default constructor to be used as an asset post processor", new object[]
@@ -29,6 +35,7 @@ namespace UnityEditor
 				type
 			});
 		}
+
 		private static void PostprocessAllAssets(string[] importedAssets, string[] addedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromPathAssets)
 		{
 			object[] parameters = new object[]
@@ -48,6 +55,7 @@ namespace UnityEditor
 			}
 			SyncVS.PostprocessSyncProject(importedAssets, addedAssets, deletedAssets, movedAssets, movedFromPathAssets);
 		}
+
 		private static void PreprocessAssembly(string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -58,18 +66,39 @@ namespace UnityEditor
 				});
 			}
 		}
+
 		internal static void CallOnGeneratedCSProjectFiles()
 		{
-			foreach (Type current in EditorAssemblies.SubclassesOf(typeof(AssetPostprocessor)))
+			object[] parameters = new object[0];
+			foreach (MethodInfo current in AssetPostprocessingInternal.AllPostProcessorMethodsNamed("OnGeneratedCSProjectFiles"))
 			{
-				MethodInfo method = current.GetMethod("OnGeneratedCSProjectFiles", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-				if (method != null)
-				{
-					object[] parameters = new object[0];
-					method.Invoke(null, parameters);
-				}
+				current.Invoke(null, parameters);
 			}
 		}
+
+		internal static bool OnPreGeneratingCSProjectFiles()
+		{
+			object[] parameters = new object[0];
+			bool flag = false;
+			foreach (MethodInfo current in AssetPostprocessingInternal.AllPostProcessorMethodsNamed("OnPreGeneratingCSProjectFiles"))
+			{
+				object obj = current.Invoke(null, parameters);
+				if (current.ReturnType == typeof(bool))
+				{
+					flag |= (bool)obj;
+				}
+			}
+			return flag;
+		}
+
+		private static IEnumerable<MethodInfo> AllPostProcessorMethodsNamed(string callbackName)
+		{
+			return from assetPostprocessorClass in EditorAssemblies.SubclassesOf(typeof(AssetPostprocessor))
+			select assetPostprocessorClass.GetMethod(callbackName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) into method
+			where method != null
+			select method;
+		}
+
 		private static void InitPostprocessors(string pathName)
 		{
 			AssetPostprocessingInternal.m_ImportProcessors = new ArrayList();
@@ -99,6 +128,7 @@ namespace UnityEditor
 			}
 			AssetPostprocessingInternal.m_PostprocessStack.Add(postprocessStack);
 		}
+
 		private static void CleanupPostprocessors()
 		{
 			if (AssetPostprocessingInternal.m_PostprocessStack != null)
@@ -111,6 +141,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static uint[] GetMeshProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -140,6 +171,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private static void PreprocessMesh(string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -147,6 +179,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessModel", null);
 			}
 		}
+
 		private static void PreprocessSpeedTree(string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -154,6 +187,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessSpeedTree", null);
 			}
 		}
+
 		private static void PreprocessAnimation(string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -161,6 +195,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAnimation", null);
 			}
 		}
+
 		private static Material ProcessMeshAssignMaterial(Renderer renderer, Material material)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -178,6 +213,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private static bool ProcessMeshHasAssignMaterial()
 		{
 			foreach (AssetPostprocessor assetPostprocessor in AssetPostprocessingInternal.m_ImportProcessors)
@@ -189,6 +225,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private static void PostprocessMesh(GameObject gameObject)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -200,6 +237,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessModel", args);
 			}
 		}
+
 		private static void PostprocessSpeedTree(GameObject gameObject)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -211,6 +249,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSpeedTree", args);
 			}
 		}
+
 		private static void PostprocessGameObjectWithUserProperties(GameObject go, string[] prop_names, object[] prop_values)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -224,6 +263,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessGameObjectWithUserProperties", args);
 			}
 		}
+
 		private static uint[] GetTextureProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -252,6 +292,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private static void PreprocessTexture(string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -259,6 +300,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessTexture", null);
 			}
 		}
+
 		private static void PostprocessTexture(Texture2D tex, string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -270,6 +312,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessTexture", args);
 			}
 		}
+
 		private static void PostprocessSprites(Texture2D tex, string pathName, Sprite[] sprites)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -282,6 +325,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSprites", args);
 			}
 		}
+
 		private static uint[] GetAudioProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -310,6 +354,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private static void PreprocessAudio(string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -317,6 +362,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAudio", null);
 			}
 		}
+
 		private static void PostprocessAudio(AudioClip tex, string pathName)
 		{
 			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
@@ -328,6 +374,7 @@ namespace UnityEditor
 				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessAudio", args);
 			}
 		}
+
 		private static void PostprocessAssetbundleNameChanged(string assetPAth, string prevoiusAssetBundleName, string newAssetBundleName)
 		{
 			object[] args = new object[]

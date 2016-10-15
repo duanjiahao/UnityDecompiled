@@ -1,16 +1,23 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class Disc
 	{
 		private static Vector2 s_StartMousePosition;
+
 		private static Vector2 s_CurrentMousePosition;
+
 		private static Vector3 s_StartPosition;
+
 		private static Vector3 s_StartAxis;
+
 		private static Quaternion s_StartRotation;
+
 		private static float s_RotationDist;
+
 		public static Quaternion Do(int id, Quaternion rotation, Vector3 position, Vector3 axis, float size, bool cutoffPlane, float snap)
 		{
 			if (Mathf.Abs(Vector3.Dot(Camera.current.transform.forward, axis)) > 0.999f)

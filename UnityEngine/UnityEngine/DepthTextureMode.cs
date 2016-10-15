@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	[Flags]
@@ -6,6 +7,7 @@ namespace UnityEngine
 	{
 		None = 0,
 		Depth = 1,
-		DepthNormals = 2
+		DepthNormals = 2,
+		MotionVectors = 4
 	}
 }

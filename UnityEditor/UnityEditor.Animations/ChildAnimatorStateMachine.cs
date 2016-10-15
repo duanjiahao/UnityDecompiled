@@ -1,11 +1,16 @@
 using System;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.Animations
 {
+	[RequiredByNativeCode]
 	public struct ChildAnimatorStateMachine
 	{
 		private AnimatorStateMachine m_StateMachine;
+
 		private Vector3 m_Position;
+
 		public AnimatorStateMachine stateMachine
 		{
 			get
@@ -17,6 +22,7 @@ namespace UnityEditor.Animations
 				this.m_StateMachine = value;
 			}
 		}
+
 		public Vector3 position
 		{
 			get

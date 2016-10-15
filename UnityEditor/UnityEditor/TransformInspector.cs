@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Transform))]
@@ -7,19 +8,27 @@ namespace UnityEditor
 	{
 		private class Contents
 		{
-			public GUIContent positionContent = new GUIContent("Position", "The local position of this Game Object relative to the parent.");
-			public GUIContent scaleContent = new GUIContent("Scale", "The local scaling of this Game Object relative to the parent.");
+			public GUIContent positionContent = new GUIContent(LocalizationDatabase.GetLocalizedString("Position"), LocalizationDatabase.GetLocalizedString("The local position of this Game Object relative to the parent."));
+
+			public GUIContent scaleContent = new GUIContent(LocalizationDatabase.GetLocalizedString("Scale"), LocalizationDatabase.GetLocalizedString("The local scaling of this Game Object relative to the parent."));
+
 			public GUIContent[] subLabels = new GUIContent[]
 			{
 				new GUIContent("X"),
 				new GUIContent("Y")
 			};
-			public string floatingPointWarning = "Due to floating-point precision limitations, it is recommended to bring the world coordinates of the GameObject within a smaller range.";
+
+			public string floatingPointWarning = LocalizationDatabase.GetLocalizedString("Due to floating-point precision limitations, it is recommended to bring the world coordinates of the GameObject within a smaller range.");
 		}
+
 		private SerializedProperty m_Position;
+
 		private SerializedProperty m_Scale;
+
 		private TransformRotationGUI m_RotationGUI;
+
 		private static TransformInspector.Contents s_Contents;
+
 		public void OnEnable()
 		{
 			this.m_Position = base.serializedObject.FindProperty("m_LocalPosition");
@@ -28,8 +37,9 @@ namespace UnityEditor
 			{
 				this.m_RotationGUI = new TransformRotationGUI();
 			}
-			this.m_RotationGUI.OnEnable(base.serializedObject.FindProperty("m_LocalRotation"), new GUIContent("Rotation"));
+			this.m_RotationGUI.OnEnable(base.serializedObject.FindProperty("m_LocalRotation"), new GUIContent(LocalizationDatabase.GetLocalizedString("Rotation")));
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (TransformInspector.s_Contents == null)
@@ -51,6 +61,7 @@ namespace UnityEditor
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private void Inspector3D()
 		{
 			EditorGUILayout.PropertyField(this.m_Position, TransformInspector.s_Contents.positionContent, new GUILayoutOption[0]);

@@ -1,14 +1,19 @@
 using System;
 using System.Runtime.InteropServices;
+
 namespace UnityEngine
 {
 	[StructLayout(LayoutKind.Sequential)]
 	internal sealed class RuntimeInitializeMethodInfo
 	{
 		private string m_FullClassName;
+
 		private string m_MethodName;
+
 		private int m_OrderNumber;
+
 		private bool m_IsUnityClass;
+
 		internal string fullClassName
 		{
 			get
@@ -20,6 +25,7 @@ namespace UnityEngine
 				this.m_FullClassName = value;
 			}
 		}
+
 		internal string methodName
 		{
 			get
@@ -31,6 +37,7 @@ namespace UnityEngine
 				this.m_MethodName = value;
 			}
 		}
+
 		internal int orderNumber
 		{
 			get
@@ -42,6 +49,7 @@ namespace UnityEngine
 				this.m_OrderNumber = value;
 			}
 		}
+
 		internal bool isUnityClass
 		{
 			get

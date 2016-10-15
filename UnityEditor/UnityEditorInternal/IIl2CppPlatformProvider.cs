@@ -1,5 +1,7 @@
 using System;
 using UnityEditor;
+using UnityEditor.BuildReporting;
+
 namespace UnityEditorInternal
 {
 	internal interface IIl2CppPlatformProvider
@@ -8,46 +10,74 @@ namespace UnityEditorInternal
 		{
 			get;
 		}
+
 		bool emitNullChecks
 		{
 			get;
 		}
+
 		bool enableStackTraces
 		{
 			get;
 		}
+
 		bool enableArrayBoundsCheck
 		{
 			get;
 		}
-		bool compactMode
+
+		bool enableDivideByZeroCheck
 		{
 			get;
 		}
+
 		bool loadSymbols
 		{
 			get;
 		}
+
 		string nativeLibraryFileName
 		{
 			get;
 		}
+
 		string il2CppFolder
 		{
 			get;
 		}
-		bool usePrecompiledHeader
+
+		bool developmentMode
 		{
 			get;
 		}
+
+		string moduleStrippingInformationFolder
+		{
+			get;
+		}
+
+		bool supportsEngineStripping
+		{
+			get;
+		}
+
+		BuildReport buildReport
+		{
+			get;
+		}
+
 		string[] includePaths
 		{
 			get;
 		}
+
 		string[] libraryPaths
 		{
 			get;
 		}
+
 		INativeCompiler CreateNativeCompiler();
+
+		Il2CppNativeCodeBuilder CreateIl2CppNativeCodeBuilder();
 	}
 }

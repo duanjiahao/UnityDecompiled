@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class WindZone : Component
@@ -13,6 +14,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float radius
 		{
 			[WrapperlessIcall]
@@ -22,6 +24,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float windMain
 		{
 			[WrapperlessIcall]
@@ -31,6 +34,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float windTurbulence
 		{
 			[WrapperlessIcall]
@@ -40,6 +44,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float windPulseMagnitude
 		{
 			[WrapperlessIcall]
@@ -49,6 +54,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float windPulseFrequency
 		{
 			[WrapperlessIcall]

@@ -1,16 +1,23 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class Brush
 	{
 		internal const int kMinBrushSize = 3;
+
 		private float[] m_Strength;
+
 		private int m_Size;
+
 		private Texture2D m_Brush;
+
 		private Texture2D m_Preview;
+
 		private Projector m_BrushProjector;
+
 		public bool Load(Texture2D brushTex, int size)
 		{
 			if (this.m_Brush == brushTex && size == this.m_Size && this.m_Strength != null)
@@ -64,12 +71,14 @@ namespace UnityEditor
 			this.m_Size = 1;
 			return false;
 		}
+
 		public float GetStrengthInt(int ix, int iy)
 		{
 			ix = Mathf.Clamp(ix, 0, this.m_Size - 1);
 			iy = Mathf.Clamp(iy, 0, this.m_Size - 1);
 			return this.m_Strength[iy * this.m_Size + ix];
 		}
+
 		public void Dispose()
 		{
 			if (this.m_BrushProjector)
@@ -80,10 +89,12 @@ namespace UnityEditor
 			UnityEngine.Object.DestroyImmediate(this.m_Preview);
 			this.m_Preview = null;
 		}
+
 		public Projector GetPreviewProjector()
 		{
 			return this.m_BrushProjector;
 		}
+
 		private void CreatePreviewBrush()
 		{
 			GameObject gameObject = EditorUtility.CreateGameObjectWithHideFlags("TerrainInspectorBrushPreview", HideFlags.HideAndDontSave, new Type[]

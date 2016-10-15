@@ -1,15 +1,21 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(CapsuleCollider))]
 	internal class CapsuleColliderEditor : Collider3DEditorBase
 	{
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Radius;
+
 		private SerializedProperty m_Height;
+
 		private SerializedProperty m_Direction;
+
 		private int m_HandleControlID;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
@@ -19,6 +25,7 @@ namespace UnityEditor
 			this.m_Direction = base.serializedObject.FindProperty("m_Direction");
 			this.m_HandleControlID = -1;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -31,6 +38,7 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Direction, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		public void OnSceneGUI()
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
@@ -55,34 +63,36 @@ namespace UnityEditor
 			float x = capsuleExtents.x;
 			Matrix4x4 matrix = ColliderUtil.CalculateCapsuleTransform(capsuleCollider);
 			int hotControl = GUIUtility.hotControl;
-			Vector3 vector = Vector3.up * num * 0.5f;
-			float num2 = CapsuleColliderEditor.SizeHandle(vector, Vector3.up, matrix, true);
+			float num2 = capsuleCollider.height;
+			Vector3 vector = Vector3.left * num * 0.5f;
+			float num3 = CapsuleColliderEditor.SizeHandle(vector, Vector3.left, matrix, true);
 			if (!GUI.changed)
 			{
-				num2 = CapsuleColliderEditor.SizeHandle(-vector, Vector3.down, matrix, true);
+				num3 = CapsuleColliderEditor.SizeHandle(-vector, Vector3.right, matrix, true);
 			}
 			if (GUI.changed)
 			{
-				float num3 = num / capsuleCollider.height;
-				capsuleCollider.height += num2 / num3;
+				float num4 = num / capsuleCollider.height;
+				num2 += num3 / num4;
 			}
-			num2 = CapsuleColliderEditor.SizeHandle(Vector3.left * x, Vector3.left, matrix, true);
+			float num5 = capsuleCollider.radius;
+			num3 = CapsuleColliderEditor.SizeHandle(Vector3.forward * x, Vector3.forward, matrix, true);
 			if (!GUI.changed)
 			{
-				num2 = CapsuleColliderEditor.SizeHandle(-Vector3.left * x, -Vector3.left, matrix, true);
-			}
-			if (!GUI.changed)
-			{
-				num2 = CapsuleColliderEditor.SizeHandle(Vector3.forward * x, Vector3.forward, matrix, true);
+				num3 = CapsuleColliderEditor.SizeHandle(-Vector3.forward * x, -Vector3.forward, matrix, true);
 			}
 			if (!GUI.changed)
 			{
-				num2 = CapsuleColliderEditor.SizeHandle(-Vector3.forward * x, -Vector3.forward, matrix, true);
+				num3 = CapsuleColliderEditor.SizeHandle(Vector3.up * x, Vector3.up, matrix, true);
+			}
+			if (!GUI.changed)
+			{
+				num3 = CapsuleColliderEditor.SizeHandle(-Vector3.up * x, -Vector3.up, matrix, true);
 			}
 			if (GUI.changed)
 			{
-				float num4 = Mathf.Max(capsuleExtents.z / capsuleCollider.radius, capsuleExtents.x / capsuleCollider.radius);
-				capsuleCollider.radius += num2 / num4;
+				float num6 = Mathf.Max(capsuleExtents.z / capsuleCollider.radius, capsuleExtents.x / capsuleCollider.radius);
+				num5 += num3 / num6;
 			}
 			if (hotControl != GUIUtility.hotControl && GUIUtility.hotControl != 0)
 			{
@@ -90,13 +100,14 @@ namespace UnityEditor
 			}
 			if (GUI.changed)
 			{
-				Undo.RecordObject(capsuleCollider, "Modified Box Collider");
-				capsuleCollider.radius = Mathf.Max(capsuleCollider.radius, 1E-05f);
-				capsuleCollider.height = Mathf.Max(capsuleCollider.height, 1E-05f);
+				Undo.RecordObject(capsuleCollider, "Modify Capsule Collider");
+				capsuleCollider.radius = Mathf.Max(num5, 1E-05f);
+				capsuleCollider.height = Mathf.Max(num2, 1E-05f);
 			}
 			Handles.color = color;
 			GUI.enabled = enabled;
 		}
+
 		private static float SizeHandle(Vector3 localPos, Vector3 localPullDir, Matrix4x4 matrix, bool isEdgeHandle)
 		{
 			Vector3 vector = matrix.MultiplyVector(localPullDir);

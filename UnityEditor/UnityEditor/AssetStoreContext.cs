@@ -4,22 +4,30 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using UnityEditor.Web;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
-	internal sealed class AssetStoreContext : ScriptableObject
+	[InitializeOnLoad]
+	internal sealed class AssetStoreContext
 	{
 		public class DownloadInfo
 		{
 			public string url;
+
 			public string key;
+
 			public string id;
 		}
+
 		public class LabelAndId
 		{
 			public string label;
+
 			public string id;
+
 			public void Initialize(JSONValue json)
 			{
 				if (json.ContainsKey("label"))
@@ -31,15 +39,19 @@ namespace UnityEditor
 					this.id = json["id"].AsString();
 				}
 			}
+
 			public override string ToString()
 			{
 				return string.Format("{{label={0}, id={1}}}", this.label, this.id);
 			}
 		}
+
 		public class Link
 		{
 			public string type;
+
 			public string id;
+
 			public void Initialize(JSONValue json)
 			{
 				if (json.ContainsKey("type"))
@@ -51,24 +63,37 @@ namespace UnityEditor
 					this.id = json["id"].AsString();
 				}
 			}
+
 			public override string ToString()
 			{
 				return string.Format("{{type={0}, id={1}}}", this.type, this.id);
 			}
 		}
+
 		public class Package
 		{
 			public string title;
+
 			public string id;
+
 			public string version;
+
 			public string version_id;
+
 			public string local_icon;
+
 			public string local_path;
+
 			public string pubdate;
+
 			public string description;
+
 			public AssetStoreContext.LabelAndId publisher;
+
 			public AssetStoreContext.LabelAndId category;
+
 			public AssetStoreContext.Link link;
+
 			public void Initialize(JSONValue json)
 			{
 				if (json.ContainsKey("title"))
@@ -119,6 +144,7 @@ namespace UnityEditor
 					this.link.Initialize(json["link"]);
 				}
 			}
+
 			public override string ToString()
 			{
 				return string.Format("{{title={0}, id={1}, publisher={2}, category={3}, pubdate={8}, version={4}, version_id={5}, description={9}, link={10}, local_icon={6}, local_path={7}}}", new object[]
@@ -137,31 +163,58 @@ namespace UnityEditor
 				});
 			}
 		}
+
 		public class PackageList
 		{
 			public AssetStoreContext.Package[] results;
 		}
-		private static Regex standardPackageRe = new Regex("/Standard Packages/(Character\\ Controller|Glass\\ Refraction\\ \\(Pro\\ Only\\)|Image\\ Effects\\ \\(Pro\\ Only\\)|Light\\ Cookies|Light\\ Flares|Particles|Physic\\ Materials|Projectors|Scripts|Standard\\ Assets\\ \\(Mobile\\)|Skyboxes|Terrain\\ Assets|Toon\\ Shading|Tree\\ Creator|Water\\ \\(Basic\\)|Water\\ \\(Pro\\ Only\\))\\.unitypackage$", RegexOptions.IgnoreCase);
-		private static Regex generatedIDRe = new Regex("^\\{(.*)\\}$");
-		private static Regex invalidPathChars = new Regex("[^a-zA-Z0-9() _-]");
+
+		private static Regex s_StandardPackageRegExp;
+
+		private static Regex s_GeneratedIDRegExp;
+
+		private static Regex s_InvalidPathCharsRegExp;
+
 		internal bool docked;
+
 		internal string initialOpenURL;
-		internal AssetStoreWindow window;
-		private AssetStoreContext()
+
+		private static AssetStoreContext s_Instance;
+
+		static AssetStoreContext()
 		{
+			AssetStoreContext.s_StandardPackageRegExp = new Regex("/Standard Packages/(Character\\ Controller|Glass\\ Refraction\\ \\(Pro\\ Only\\)|Image\\ Effects\\ \\(Pro\\ Only\\)|Light\\ Cookies|Light\\ Flares|Particles|Physic\\ Materials|Projectors|Scripts|Standard\\ Assets\\ \\(Mobile\\)|Skyboxes|Terrain\\ Assets|Toon\\ Shading|Tree\\ Creator|Water\\ \\(Basic\\)|Water\\ \\(Pro\\ Only\\))\\.unitypackage$", RegexOptions.IgnoreCase);
+			AssetStoreContext.s_GeneratedIDRegExp = new Regex("^\\{(.*)\\}$");
+			AssetStoreContext.s_InvalidPathCharsRegExp = new Regex("[^a-zA-Z0-9() _-]");
+			AssetStoreContext.GetInstance();
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SessionSetString(string key, string value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SessionGetString(string key);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SessionRemoveString(string key);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SessionHasString(string key);
+
+		public static AssetStoreContext GetInstance()
+		{
+			if (AssetStoreContext.s_Instance == null)
+			{
+				AssetStoreContext.s_Instance = new AssetStoreContext();
+				JSProxyMgr.GetInstance().AddGlobalObject("AssetStoreContext", AssetStoreContext.s_Instance);
+			}
+			return AssetStoreContext.s_Instance;
+		}
+
 		public string GetInitialOpenURL()
 		{
 			if (this.initialOpenURL != null)
@@ -172,65 +225,80 @@ namespace UnityEditor
 			}
 			return string.Empty;
 		}
+
 		public string GetAuthToken()
 		{
 			return InternalEditorUtility.GetAuthToken();
 		}
+
 		public int[] GetLicenseFlags()
 		{
 			return InternalEditorUtility.GetLicenseFlags();
 		}
+
 		public string GetString(string key)
 		{
 			return EditorPrefs.GetString(key);
 		}
+
 		public int GetInt(string key)
 		{
 			return EditorPrefs.GetInt(key);
 		}
+
 		public float GetFloat(string key)
 		{
 			return EditorPrefs.GetFloat(key);
 		}
+
 		public void SetString(string key, string value)
 		{
 			EditorPrefs.SetString(key, value);
 		}
+
 		public void SetInt(string key, int value)
 		{
 			EditorPrefs.SetInt(key, value);
 		}
+
 		public void SetFloat(string key, float value)
 		{
 			EditorPrefs.SetFloat(key, value);
 		}
+
 		public bool HasKey(string key)
 		{
 			return EditorPrefs.HasKey(key);
 		}
+
 		public void DeleteKey(string key)
 		{
 			EditorPrefs.DeleteKey(key);
 		}
+
 		public int GetSkinIndex()
 		{
 			return EditorGUIUtility.skinIndex;
 		}
+
 		public bool GetDockedStatus()
 		{
 			return this.docked;
 		}
+
 		public bool OpenPackage(string id)
 		{
 			return this.OpenPackage(id, "default");
 		}
+
 		public bool OpenPackage(string id, string action)
 		{
 			return AssetStoreContext.OpenPackageInternal(id);
 		}
+
 		public static bool OpenPackageInternal(string id)
 		{
-			Match match = AssetStoreContext.generatedIDRe.Match(id);
+			Match match = AssetStoreContext.s_GeneratedIDRegExp.Match(id);
 			if (match.Success && File.Exists(match.Groups[1].Value))
 			{
 				AssetDatabase.ImportPackage(match.Groups[1].Value, true);
@@ -254,14 +322,17 @@ namespace UnityEditor
 			Debug.LogError("Unknown package ID " + id);
 			return false;
 		}
+
 		public void OpenBrowser(string url)
 		{
 			Application.OpenURL(url);
 		}
+
 		public void Download(AssetStoreContext.Package package, AssetStoreContext.DownloadInfo downloadInfo)
 		{
 			AssetStoreContext.Download(downloadInfo.id, downloadInfo.url, downloadInfo.key, package.title, package.publisher.label, package.category.label, null);
 		}
+
 		public static void Download(string package_id, string url, string key, string package_name, string publisher_name, string category_name, AssetStoreUtils.DownloadDoneCallback doneCallback)
 		{
 			string[] destination = AssetStoreContext.PackageStorePath(publisher_name, category_name, package_name, package_id, url);
@@ -281,6 +352,7 @@ namespace UnityEditor
 			jSONValue2["download"] = value;
 			AssetStoreUtils.Download(package_id, url, destination, key, jSONValue2.ToString(), resumeOK, doneCallback);
 		}
+
 		public static string[] PackageStorePath(string publisher_name, string category_name, string package_name, string package_id, string url)
 		{
 			string[] array = new string[]
@@ -291,18 +363,19 @@ namespace UnityEditor
 			};
 			for (int i = 0; i < 3; i++)
 			{
-				array[i] = AssetStoreContext.invalidPathChars.Replace(array[i], string.Empty);
+				array[i] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(array[i], string.Empty);
 			}
 			if (array[2] == string.Empty)
 			{
-				array[2] = AssetStoreContext.invalidPathChars.Replace(package_id, string.Empty);
+				array[2] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(package_id, string.Empty);
 			}
 			if (array[2] == string.Empty)
 			{
-				array[2] = AssetStoreContext.invalidPathChars.Replace(url, string.Empty);
+				array[2] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(url, string.Empty);
 			}
 			return array;
 		}
+
 		public AssetStoreContext.PackageList GetPackageList()
 		{
 			Dictionary<string, AssetStoreContext.Package> dictionary = new Dictionary<string, AssetStoreContext.Package>();
@@ -369,9 +442,10 @@ namespace UnityEditor
 				results = results
 			};
 		}
+
 		private bool IsBuiltinStandardAsset(string path)
 		{
-			return AssetStoreContext.standardPackageRe.IsMatch(path);
+			return AssetStoreContext.s_StandardPackageRegExp.IsMatch(path);
 		}
 	}
 }

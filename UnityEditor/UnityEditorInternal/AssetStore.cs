@@ -1,5 +1,6 @@
 using System;
 using UnityEditor;
+
 namespace UnityEditorInternal
 {
 	public sealed class AssetStore

@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(ModelImporter))]
@@ -11,6 +12,7 @@ namespace UnityEditor
 				return base.activeEditor is ModelImporterModelEditor;
 			}
 		}
+
 		protected override bool useAssetDrawPreview
 		{
 			get
@@ -18,6 +20,7 @@ namespace UnityEditor
 				return false;
 			}
 		}
+
 		internal override void OnEnable()
 		{
 			if (this.m_SubEditorTypes == null)
@@ -36,6 +39,11 @@ namespace UnityEditor
 				};
 			}
 			base.OnEnable();
+		}
+
+		public override bool HasPreviewGUI()
+		{
+			return base.HasPreviewGUI() && base.targets.Length < 2;
 		}
 	}
 }

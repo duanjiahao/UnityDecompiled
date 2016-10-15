@@ -1,6 +1,7 @@
 using System;
 using UnityEditor.Callbacks;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PostprocessScene
@@ -13,9 +14,9 @@ namespace UnityEditor
 				int num;
 				int num2;
 				PlayerSettings.GetBatchingForPlatform(EditorUserBuildSettings.activeBuildTarget, out num, out num2);
-				if (num != 0 && PlayerSettings.advancedLicense)
+				if (num != 0)
 				{
-					InternalStaticBatchingUtility.Combine(null, true);
+					InternalStaticBatchingUtility.Combine(null, true, true);
 				}
 			}
 		}

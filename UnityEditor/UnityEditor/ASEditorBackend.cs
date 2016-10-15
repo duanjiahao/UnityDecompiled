@@ -1,24 +1,39 @@
 using System;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ASEditorBackend
 	{
 		public const string kServerSettingsFile = "Library/ServerPreferences.plist";
+
 		public const string kUserName = "Maint UserName";
+
 		public const string kPassword = "Maint Password";
+
 		public const string kTimeout = "Maint Timeout";
+
 		public const string kSettingsType = "Maint settings type";
+
 		public const string kConnectionSettings = "Maint Connection Settings";
+
 		public const string kPortNumber = "Maint port number";
+
 		public const string kServer = "Maint Server";
+
 		public const string kDatabaseName = "Maint database name";
+
 		public const string kProjectName = "Maint project name";
+
 		public const int kDefaultServerPort = 10733;
+
 		public static ASMainWindow asMainWin;
+
 		private static string s_TestingConflictResClass;
+
 		private static string s_TestingConflictResFunction;
+
 		public static ASMainWindow ASWin
 		{
 			get
@@ -26,6 +41,7 @@ namespace UnityEditor
 				return (!(ASEditorBackend.asMainWin != null)) ? EditorWindow.GetWindowDontShow<ASMainWindow>() : ASEditorBackend.asMainWin;
 			}
 		}
+
 		public static void DoAS()
 		{
 			if (!ASEditorBackend.ASWin.Error)
@@ -34,10 +50,12 @@ namespace UnityEditor
 				ASEditorBackend.ASWin.Focus();
 			}
 		}
+
 		public static void ShowASConflictResolutionsWindow(string[] conflicting)
 		{
 			ASEditorBackend.ASWin.ShowConflictResolutions(conflicting);
 		}
+
 		public static void CommitItemsChanged()
 		{
 			if (ASEditorBackend.asMainWin != null || (ASEditorBackend.asMainWin == null && Resources.FindObjectsOfTypeAll(typeof(ASMainWindow)).Length != 0))
@@ -45,6 +63,7 @@ namespace UnityEditor
 				ASEditorBackend.ASWin.CommitItemsChanged();
 			}
 		}
+
 		public static void CBReinitCommitWindow(int actionResult)
 		{
 			if (ASEditorBackend.ASWin.asCommitWin != null)
@@ -52,6 +71,7 @@ namespace UnityEditor
 				ASEditorBackend.ASWin.asCommitWin.Reinit(actionResult != 0);
 			}
 		}
+
 		public static void CBCommitFinished(int actionResult)
 		{
 			if (ASEditorBackend.ASWin.asCommitWin != null)
@@ -59,6 +79,7 @@ namespace UnityEditor
 				ASEditorBackend.ASWin.asCommitWin.CommitFinished(actionResult != 0);
 			}
 		}
+
 		public static void CBOverviewsCommitFinished(int actionResult)
 		{
 			if (ASEditorBackend.ASWin != null)
@@ -66,6 +87,7 @@ namespace UnityEditor
 				ASEditorBackend.ASWin.CommitFinished(actionResult != 0);
 			}
 		}
+
 		public static void CBReinitOnSuccess(int actionResult)
 		{
 			if (actionResult != 0)
@@ -77,30 +99,37 @@ namespace UnityEditor
 				ASEditorBackend.ASWin.Repaint();
 			}
 		}
+
 		public static void CBReinitASMainWindow()
 		{
 			ASEditorBackend.ASWin.Reinit();
 		}
+
 		public static void CBDoDiscardChanges(int actionResult)
 		{
 			ASEditorBackend.ASWin.DoDiscardChanges(actionResult != 0);
 		}
+
 		public static void CBInitUpdatePage(int actionResult)
 		{
 			ASEditorBackend.ASWin.InitUpdatePage(actionResult != 0);
 		}
+
 		public static void CBInitHistoryPage(int actionResult)
 		{
 			ASEditorBackend.ASWin.InitHistoryPage(actionResult != 0);
 		}
+
 		public static void CBInitOverviewPage(int actionResult)
 		{
 			ASEditorBackend.ASWin.InitOverviewPage(actionResult != 0);
 		}
+
 		public static bool SettingsIfNeeded()
 		{
 			return ASEditorBackend.InitializeMaintBinding();
 		}
+
 		public static bool SettingsAreValid()
 		{
 			PListConfig pListConfig = new PListConfig("Library/ServerPreferences.plist");
@@ -111,26 +140,31 @@ namespace UnityEditor
 			string text5 = pListConfig["Maint port number"];
 			return text.Length != 0 && text2.Length != 0 && text3.Length != 0 && text4.Length != 0 && text5.Length != 0;
 		}
+
 		internal static string GetPassword(string server, string user)
 		{
 			string key = "ASPassword::" + server + "::" + user;
 			return EditorPrefs.GetString(key, string.Empty);
 		}
+
 		internal static void SetPassword(string server, string user, string password)
 		{
 			string key = "ASPassword::" + server + "::" + user;
 			EditorPrefs.SetString(key, password);
 		}
+
 		internal static void AddUser(string server, string user)
 		{
 			string key = "ASUser::" + server;
 			EditorPrefs.SetString(key, user);
 		}
+
 		internal static string GetUser(string server)
 		{
 			string key = "ASUser::" + server;
 			return EditorPrefs.GetString(key, string.Empty);
 		}
+
 		public static bool InitializeMaintBinding()
 		{
 			PListConfig pListConfig = new PListConfig("Library/ServerPreferences.plist");
@@ -168,12 +202,14 @@ namespace UnityEditor
 			AssetServer.Initialize(text, connectionString, timeout);
 			return true;
 		}
+
 		public static void Testing_SetActionFinishedCallback(string klass, string name)
 		{
 			AssetServer.SaveString("s_TestingClass", klass);
 			AssetServer.SaveString("s_TestingFunction", name);
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "Testing_DummyCallback");
 		}
+
 		private static void Testing_DummyCallback(bool success)
 		{
 			ASEditorBackend.Testing_Invoke(AssetServer.GetAndRemoveString("s_TestingClass"), AssetServer.GetAndRemoveString("s_TestingFunction"), new object[]
@@ -181,11 +217,13 @@ namespace UnityEditor
 				success
 			});
 		}
+
 		private static void Testing_SetExceptionHandler(string exceptionHandlerClass, string exceptionHandlerFunction)
 		{
 			AssetServer.SaveString("s_ExceptionHandlerClass", exceptionHandlerClass);
 			AssetServer.SaveString("s_ExceptionHandlerFunction", exceptionHandlerFunction);
 		}
+
 		private static void Testing_Invoke(string klass, string method, params object[] prms)
 		{
 			try
@@ -211,9 +249,9 @@ namespace UnityEditor
 			}
 			catch (Exception ex)
 			{
-				if (ex.InnerException != null && ex.InnerException.GetType() == typeof(ExitGUIException))
+				if (GUIUtility.ShouldRethrowException(ex))
 				{
-					throw ex;
+					throw;
 				}
 				ASEditorBackend.Testing_Invoke(AssetServer.GetString("s_ExceptionHandlerClass"), AssetServer.GetString("s_ExceptionHandlerFunction"), new object[]
 				{
@@ -221,6 +259,7 @@ namespace UnityEditor
 				});
 			}
 		}
+
 		public static void Testing_SetActiveDatabase(string host, int port, string projectName, string dbName, string user, string pwd)
 		{
 			PListConfig pListConfig = new PListConfig("Library/ServerPreferences.plist");
@@ -235,6 +274,7 @@ namespace UnityEditor
 			pListConfig["Maint Connection Settings"] = string.Empty;
 			pListConfig.Save();
 		}
+
 		public static bool Testing_SetupDatabase(string host, int port, string adminUser, string adminPwd, string user, string pwd, string projectName)
 		{
 			AssetServer.AdminSetCredentials(host, port, adminUser, adminPwd);
@@ -264,6 +304,7 @@ namespace UnityEditor
 			ASEditorBackend.Testing_SetActiveDatabase(host, port, projectName, databaseName, user, pwd);
 			return true;
 		}
+
 		public static string[] Testing_GetAllDatabaseNames()
 		{
 			MaintDatabaseRecord[] array = AssetServer.AdminRefreshDatabases();
@@ -274,11 +315,13 @@ namespace UnityEditor
 			}
 			return array2;
 		}
+
 		public static void Testing_SetConflictResolutionFunction(string klass, string fn)
 		{
 			ASEditorBackend.s_TestingConflictResClass = klass;
 			ASEditorBackend.s_TestingConflictResFunction = fn;
 		}
+
 		public static void Testing_DummyConflictResolutionFunction(string[] conflicting)
 		{
 			ASEditorBackend.Testing_Invoke(ASEditorBackend.s_TestingConflictResClass, ASEditorBackend.s_TestingConflictResFunction, new object[]

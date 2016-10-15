@@ -2,14 +2,23 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AnimationWindowCurve : IComparable<AnimationWindowCurve>
 	{
 		public const float timeEpsilon = 1E-05f;
+
 		public List<AnimationWindowKeyframe> m_Keyframes;
+
 		public Type m_ValueType;
+
 		private EditorCurveBinding m_Binding;
+
+		private AnimationClip m_Clip;
+
+		private ISelectionBinding m_SelectionBinding;
+
 		public EditorCurveBinding binding
 		{
 			get
@@ -17,6 +26,7 @@ namespace UnityEditorInternal
 				return this.m_Binding;
 			}
 		}
+
 		public bool isPPtrCurve
 		{
 			get
@@ -24,6 +34,7 @@ namespace UnityEditorInternal
 				return this.m_Binding.isPPtrCurve;
 			}
 		}
+
 		public string propertyName
 		{
 			get
@@ -31,6 +42,7 @@ namespace UnityEditorInternal
 				return this.m_Binding.propertyName;
 			}
 		}
+
 		public string path
 		{
 			get
@@ -38,6 +50,7 @@ namespace UnityEditorInternal
 				return this.m_Binding.path;
 			}
 		}
+
 		public Type type
 		{
 			get
@@ -45,6 +58,7 @@ namespace UnityEditorInternal
 				return this.m_Binding.type;
 			}
 		}
+
 		public int length
 		{
 			get
@@ -52,6 +66,7 @@ namespace UnityEditorInternal
 				return this.m_Keyframes.Count;
 			}
 		}
+
 		public int depth
 		{
 			get
@@ -62,13 +77,68 @@ namespace UnityEditorInternal
 				}).Length;
 			}
 		}
+
+		public AnimationClip clip
+		{
+			get
+			{
+				return this.m_Clip;
+			}
+		}
+
+		public float timeOffset
+		{
+			get
+			{
+				return (this.m_SelectionBinding == null) ? 0f : this.m_SelectionBinding.timeOffset;
+			}
+		}
+
+		public bool clipIsEditable
+		{
+			get
+			{
+				return this.m_SelectionBinding == null || this.m_SelectionBinding.clipIsEditable;
+			}
+		}
+
+		public bool animationIsEditable
+		{
+			get
+			{
+				return this.m_SelectionBinding == null || this.m_SelectionBinding.animationIsEditable;
+			}
+		}
+
+		public int selectionID
+		{
+			get
+			{
+				return (this.m_SelectionBinding == null) ? 0 : this.m_SelectionBinding.id;
+			}
+		}
+
+		public ISelectionBinding selectionBindingInterface
+		{
+			get
+			{
+				return this.m_SelectionBinding;
+			}
+			set
+			{
+				this.m_SelectionBinding = value;
+			}
+		}
+
 		public AnimationWindowCurve(AnimationClip clip, EditorCurveBinding binding, Type valueType)
 		{
 			binding = RotationCurveInterpolation.RemapAnimationBindingForRotationCurves(binding, clip);
 			this.m_Binding = binding;
 			this.m_ValueType = valueType;
+			this.m_Clip = clip;
 			this.LoadKeyframes(clip);
 		}
+
 		public void LoadKeyframes(AnimationClip clip)
 		{
 			this.m_Keyframes = new List<AnimationWindowKeyframe>();
@@ -93,10 +163,18 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		public override int GetHashCode()
 		{
-			return this.m_Binding.GetHashCode();
+			return this.selectionID * 27 ^ this.binding.GetHashCode();
 		}
+
+		public int GetCurveID()
+		{
+			int num = (!(this.clip == null)) ? this.clip.GetInstanceID() : 0;
+			return this.selectionID * 729 ^ num * 27 ^ this.binding.GetHashCode();
+		}
+
 		public int CompareTo(AnimationWindowCurve obj)
 		{
 			bool flag = this.path.Equals(obj.path);
@@ -119,31 +197,26 @@ namespace UnityEditorInternal
 					return 1;
 				}
 			}
-			else
+			else if (flag3)
 			{
-				if (flag3)
+				if (this.type == typeof(Transform))
 				{
-					if (this.type == typeof(Transform))
-					{
-						return -1;
-					}
-					return 1;
+					return -1;
 				}
-				else
+				return 1;
+			}
+			else if (this.path == obj.path && obj.type == this.type)
+			{
+				int componentIndex = AnimationWindowUtility.GetComponentIndex(obj.propertyName);
+				int componentIndex2 = AnimationWindowUtility.GetComponentIndex(this.propertyName);
+				if (componentIndex != -1 && componentIndex2 != -1 && this.propertyName.Substring(0, this.propertyName.Length - 2) == obj.propertyName.Substring(0, obj.propertyName.Length - 2))
 				{
-					if (this.path == obj.path && obj.type == this.type)
-					{
-						int componentIndex = AnimationWindowUtility.GetComponentIndex(obj.propertyName);
-						int componentIndex2 = AnimationWindowUtility.GetComponentIndex(this.propertyName);
-						if (componentIndex != -1 && componentIndex2 != -1 && this.propertyName.Substring(0, this.propertyName.Length - 2) == obj.propertyName.Substring(0, obj.propertyName.Length - 2))
-						{
-							return componentIndex2 - componentIndex;
-						}
-					}
+					return componentIndex2 - componentIndex;
 				}
 			}
 			return (this.path + this.type + this.propertyName).CompareTo(obj.path + obj.type + obj.propertyName);
 		}
+
 		public AnimationCurve ToAnimationCurve()
 		{
 			int count = this.m_Keyframes.Count;
@@ -164,6 +237,7 @@ namespace UnityEditorInternal
 			animationCurve.keys = list.ToArray();
 			return animationCurve;
 		}
+
 		public ObjectReferenceKeyframe[] ToObjectCurve()
 		{
 			int count = this.m_Keyframes.Count;
@@ -182,6 +256,7 @@ namespace UnityEditorInternal
 			}
 			return list.ToArray();
 		}
+
 		public AnimationWindowKeyframe FindKeyAtTime(AnimationKeyTime keyTime)
 		{
 			int keyframeIndex = this.GetKeyframeIndex(keyTime);
@@ -191,12 +266,14 @@ namespace UnityEditorInternal
 			}
 			return this.m_Keyframes[keyframeIndex];
 		}
+
 		public void AddKeyframe(AnimationWindowKeyframe key, AnimationKeyTime keyTime)
 		{
 			this.RemoveKeyframe(keyTime);
 			this.m_Keyframes.Add(key);
 			this.m_Keyframes.Sort((AnimationWindowKeyframe a, AnimationWindowKeyframe b) => a.time.CompareTo(b.time));
 		}
+
 		public void RemoveKeyframe(AnimationKeyTime time)
 		{
 			for (int i = this.m_Keyframes.Count - 1; i >= 0; i--)
@@ -207,10 +284,12 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		public bool HasKeyframe(AnimationKeyTime time)
 		{
 			return this.GetKeyframeIndex(time) != -1;
 		}
+
 		public int GetKeyframeIndex(AnimationKeyTime time)
 		{
 			for (int i = 0; i < this.m_Keyframes.Count; i++)
@@ -221,6 +300,17 @@ namespace UnityEditorInternal
 				}
 			}
 			return -1;
+		}
+
+		public void RemoveKeysAtRange(float startTime, float endTime)
+		{
+			for (int i = this.m_Keyframes.Count - 1; i >= 0; i--)
+			{
+				if (Mathf.Approximately(endTime, this.m_Keyframes[i].time) || (this.m_Keyframes[i].time > startTime && this.m_Keyframes[i].time < endTime))
+				{
+					this.m_Keyframes.RemoveAt(i);
+				}
+			}
 		}
 	}
 }

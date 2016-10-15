@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class FlowLayout : GUILayoutGroup
@@ -7,15 +8,24 @@ namespace UnityEditor
 		private struct LineInfo
 		{
 			public float minSize;
+
 			public float maxSize;
+
 			public float start;
+
 			public float size;
+
 			public int topBorder;
+
 			public int bottomBorder;
+
 			public int expandSize;
 		}
+
 		private int m_Lines;
+
 		private FlowLayout.LineInfo[] m_LineInfo;
+
 		public override void CalcWidth()
 		{
 			bool flag = this.minWidth != 0f;
@@ -27,11 +37,12 @@ namespace UnityEditor
 					this.minWidth = 0f;
 					foreach (GUILayoutEntry current in this.entries)
 					{
-						this.minWidth = Mathf.Max(this.childMinWidth, current.minWidth);
+						this.minWidth = Mathf.Max(this.m_ChildMinWidth, current.minWidth);
 					}
 				}
 			}
 		}
+
 		public override void SetHorizontal(float x, float width)
 		{
 			base.SetHorizontal(x, width);
@@ -60,6 +71,7 @@ namespace UnityEditor
 				this.m_Lines++;
 			}
 		}
+
 		public override void CalcHeight()
 		{
 			if (this.entries.Count == 0)
@@ -67,10 +79,10 @@ namespace UnityEditor
 				this.maxHeight = (this.minHeight = 0f);
 				return;
 			}
-			this.childMinHeight = (this.childMaxHeight = 0f);
+			this.m_ChildMinHeight = (this.m_ChildMaxHeight = 0f);
 			int top = 0;
 			int bottom = 0;
-			this.stretchableCountY = 0;
+			this.m_StretchableCountY = 0;
 			if (!this.isVertical)
 			{
 				this.m_LineInfo = new FlowLayout.LineInfo[this.m_Lines];
@@ -90,14 +102,14 @@ namespace UnityEditor
 				}
 				for (int j = 0; j < this.m_Lines; j++)
 				{
-					this.childMinHeight += this.m_LineInfo[j].minSize;
-					this.childMaxHeight += this.m_LineInfo[j].maxSize;
+					this.m_ChildMinHeight += this.m_LineInfo[j].minSize;
+					this.m_ChildMaxHeight += this.m_LineInfo[j].maxSize;
 				}
 				for (int k = 1; k < this.m_Lines; k++)
 				{
 					float num2 = (float)Mathf.Max(this.m_LineInfo[k - 1].bottomBorder, this.m_LineInfo[k].topBorder);
-					this.childMinHeight += num2;
-					this.childMaxHeight += num2;
+					this.m_ChildMinHeight += num2;
+					this.m_ChildMaxHeight += num2;
 				}
 				top = this.m_LineInfo[0].topBorder;
 				bottom = this.m_LineInfo[this.m_LineInfo.Length - 1].bottomBorder;
@@ -106,11 +118,11 @@ namespace UnityEditor
 			this.margin.bottom = bottom;
 			float num4;
 			float num3 = num4 = 0f;
-			this.minHeight = Mathf.Max(this.minHeight, this.childMinHeight + num4 + num3);
+			this.minHeight = Mathf.Max(this.minHeight, this.m_ChildMinHeight + num4 + num3);
 			if (this.maxHeight == 0f)
 			{
-				this.stretchHeight += this.stretchableCountY + ((!base.style.stretchHeight) ? 0 : 1);
-				this.maxHeight = this.childMaxHeight + num4 + num3;
+				this.stretchHeight += this.m_StretchableCountY + ((!base.style.stretchHeight) ? 0 : 1);
+				this.maxHeight = this.m_ChildMaxHeight + num4 + num3;
 			}
 			else
 			{
@@ -118,6 +130,7 @@ namespace UnityEditor
 			}
 			this.maxHeight = Mathf.Max(this.maxHeight, this.minHeight);
 		}
+
 		public override void SetVertical(float y, float height)
 		{
 			if (this.entries.Count == 0)
@@ -139,9 +152,9 @@ namespace UnityEditor
 				float num2 = y + (float)this.margin.vertical;
 				float num3 = num2 - this.spacing * (float)(this.m_Lines - 1);
 				float t = 0f;
-				if (this.childMinHeight != this.childMaxHeight)
+				if (this.m_ChildMinHeight != this.m_ChildMaxHeight)
 				{
-					t = Mathf.Clamp((num3 - this.childMinHeight) / (this.childMaxHeight - this.childMinHeight), 0f, 1f);
+					t = Mathf.Clamp((num3 - this.m_ChildMinHeight) / (this.m_ChildMaxHeight - this.m_ChildMinHeight), 0f, 1f);
 				}
 				float num4 = num;
 				for (int i = 0; i < this.m_Lines; i++)

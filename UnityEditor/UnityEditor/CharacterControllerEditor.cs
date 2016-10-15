@@ -1,19 +1,29 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(CharacterController))]
 	internal class CharacterControllerEditor : Editor
 	{
 		private SerializedProperty m_Height;
+
 		private SerializedProperty m_Radius;
+
 		private SerializedProperty m_SlopeLimit;
+
 		private SerializedProperty m_StepOffset;
+
 		private SerializedProperty m_SkinWidth;
+
 		private SerializedProperty m_MinMoveDistance;
+
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Direction;
+
 		private int m_HandleControlID;
+
 		public void OnEnable()
 		{
 			this.m_Height = base.serializedObject.FindProperty("m_Height");
@@ -25,9 +35,11 @@ namespace UnityEditor
 			this.m_Center = base.serializedObject.FindProperty("m_Center");
 			this.m_HandleControlID = -1;
 		}
+
 		public void OnDisable()
 		{
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -40,6 +52,7 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Height, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		public void OnSceneGUI()
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
@@ -107,6 +120,7 @@ namespace UnityEditor
 			Handles.color = color;
 			GUI.enabled = enabled;
 		}
+
 		private static float SizeHandle(Vector3 localPos, Vector3 localPullDir, Matrix4x4 matrix, bool isEdgeHandle)
 		{
 			Vector3 vector = matrix.MultiplyVector(localPullDir);

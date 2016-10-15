@@ -2,25 +2,31 @@ using System;
 using UnityEditor.Sprites;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Sprite))]
 	internal class SpriteInspector : Editor
 	{
-		public readonly GUIContent[] spriteAlignmentOptions = new GUIContent[]
+		private static class Styles
 		{
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Center"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.TopLeft"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Top"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.TopRight"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Left"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Right"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.BottomLeft"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Bottom"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.BottomRight"),
-			EditorGUIUtility.TextContent("SpriteInspector.Pivot.Custom")
-		};
-		public readonly GUIContent spriteAlignment = EditorGUIUtility.TextContent("SpriteInspector.Pivot");
+			public static readonly GUIContent[] spriteAlignmentOptions = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("Center"),
+				EditorGUIUtility.TextContent("Top Left"),
+				EditorGUIUtility.TextContent("Top"),
+				EditorGUIUtility.TextContent("Top Right"),
+				EditorGUIUtility.TextContent("Left"),
+				EditorGUIUtility.TextContent("Right"),
+				EditorGUIUtility.TextContent("Bottom Left"),
+				EditorGUIUtility.TextContent("Bottom"),
+				EditorGUIUtility.TextContent("Bottom Right"),
+				EditorGUIUtility.TextContent("Custom")
+			};
+
+			public static readonly GUIContent spriteAlignment = EditorGUIUtility.TextContent("Pivot|Sprite pivot point in its localspace. May be used for syncing animation frames of different sizes.");
+		}
+
 		private Sprite sprite
 		{
 			get
@@ -28,6 +34,7 @@ namespace UnityEditor
 				return this.target as Sprite;
 			}
 		}
+
 		private SpriteMetaData GetMetaData(string name)
 		{
 			string assetPath = AssetDatabase.GetAssetPath(this.sprite);
@@ -42,6 +49,7 @@ namespace UnityEditor
 			}
 			return SpriteInspector.GetMetaDataInMultipleMode(name, textureImporter);
 		}
+
 		private static SpriteMetaData GetMetaDataInMultipleMode(string name, TextureImporter textureImporter)
 		{
 			SpriteMetaData[] spritesheet = textureImporter.spritesheet;
@@ -54,6 +62,7 @@ namespace UnityEditor
 			}
 			return default(SpriteMetaData);
 		}
+
 		private static SpriteMetaData GetMetaDataInSingleMode(string name, TextureImporter textureImporter)
 		{
 			SpriteMetaData result = default(SpriteMetaData);
@@ -66,6 +75,7 @@ namespace UnityEditor
 			result.alignment = textureImporterSettings.spriteAlignment;
 			return result;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			bool flag;
@@ -83,11 +93,11 @@ namespace UnityEditor
 			if (flag2)
 			{
 				int alignment = this.GetMetaData(this.sprite.name).alignment;
-				EditorGUILayout.LabelField(this.spriteAlignment, this.spriteAlignmentOptions[alignment], new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(SpriteInspector.Styles.spriteAlignment, SpriteInspector.Styles.spriteAlignmentOptions[alignment], new GUILayoutOption[0]);
 			}
 			else
 			{
-				EditorGUILayout.LabelField(this.spriteAlignment.text, "-", new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(SpriteInspector.Styles.spriteAlignment.text, "-", new GUILayoutOption[0]);
 			}
 			if (flag3)
 			{
@@ -105,6 +115,7 @@ namespace UnityEditor
 				EditorGUILayout.LabelField("Border", "-", new GUILayoutOption[0]);
 			}
 		}
+
 		private void UnifiedValues(out bool name, out bool alignment, out bool border)
 		{
 			name = true;
@@ -155,7 +166,8 @@ namespace UnityEditor
 				}
 			}
 		}
-		private static Texture2D BuildPreviewTexture(int width, int height, Sprite sprite, Material spriteRendererMaterial)
+
+		public static Texture2D BuildPreviewTexture(int width, int height, Sprite sprite, Material spriteRendererMaterial, bool isPolygon)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
@@ -164,8 +176,10 @@ namespace UnityEditor
 			float width2 = sprite.rect.width;
 			float height2 = sprite.rect.height;
 			Texture2D spriteTexture = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(sprite, false);
-			PreviewHelpers.AdjustWidthAndHeightForStaticPreview((int)width2, (int)height2, ref width, ref height);
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(true);
+			if (!isPolygon)
+			{
+				PreviewHelpers.AdjustWidthAndHeightForStaticPreview((int)width2, (int)height2, ref width, ref height);
+			}
 			SavedRenderTargetState savedRenderTargetState = new SavedRenderTargetState();
 			RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Default);
 			RenderTexture.active = temporary;
@@ -199,6 +213,8 @@ namespace UnityEditor
 			{
 				material = new Material(Shader.Find("Hidden/BlitCopy"));
 				material.mainTexture = spriteTexture;
+				material.mainTextureScale = Vector2.one;
+				material.mainTextureOffset = Vector2.zero;
 				material.SetPass(0);
 			}
 			float num = sprite.rect.width / sprite.bounds.size.x;
@@ -210,7 +226,7 @@ namespace UnityEditor
 			GL.LoadOrtho();
 			GL.Color(new Color(1f, 1f, 1f, 1f));
 			GL.Begin(4);
-			for (int i = 0; i < sprite.triangles.Length; i++)
+			for (int i = 0; i < triangles.Length; i++)
 			{
 				ushort num2 = triangles[i];
 				Vector2 vector2 = vertices[(int)num2];
@@ -238,21 +254,29 @@ namespace UnityEditor
 			texture2D.Apply();
 			RenderTexture.ReleaseTemporary(temporary);
 			savedRenderTargetState.Restore();
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(false);
 			if (material != null)
 			{
 				UnityEngine.Object.DestroyImmediate(material);
 			}
 			return texture2D;
 		}
+
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
-			return SpriteInspector.BuildPreviewTexture(width, height, this.sprite, null);
+			bool isPolygon = false;
+			TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+			if (textureImporter != null)
+			{
+				isPolygon = (textureImporter.spriteImportMode == SpriteImportMode.Polygon);
+			}
+			return SpriteInspector.BuildPreviewTexture(width, height, this.sprite, null, isPolygon);
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.target != null;
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (this.target == null)
@@ -263,9 +287,17 @@ namespace UnityEditor
 			{
 				return;
 			}
-			SpriteInspector.DrawPreview(r, this.sprite, null);
+			bool isPolygon = false;
+			string assetPath = AssetDatabase.GetAssetPath(this.sprite);
+			TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+			if (textureImporter != null)
+			{
+				isPolygon = (textureImporter.spriteImportMode == SpriteImportMode.Polygon);
+			}
+			SpriteInspector.DrawPreview(r, this.sprite, null, isPolygon);
 		}
-		public static void DrawPreview(Rect r, Sprite frame, Material spriteRendererMaterial)
+
+		public static void DrawPreview(Rect r, Sprite frame, Material spriteRendererMaterial, bool isPolygon)
 		{
 			if (frame == null)
 			{
@@ -274,7 +306,7 @@ namespace UnityEditor
 			float num = Mathf.Min(r.width / frame.rect.width, r.height / frame.rect.height);
 			Rect position = new Rect(r.x, r.y, frame.rect.width * num, frame.rect.height * num);
 			position.center = r.center;
-			Texture2D texture2D = SpriteInspector.BuildPreviewTexture((int)position.width, (int)position.height, frame, spriteRendererMaterial);
+			Texture2D texture2D = SpriteInspector.BuildPreviewTexture((int)position.width, (int)position.height, frame, spriteRendererMaterial, isPolygon);
 			EditorGUI.DrawTextureTransparent(position, texture2D, ScaleMode.ScaleToFit);
 			Vector4 border = frame.border;
 			if (!Mathf.Approximately((border * num).sqrMagnitude, 0f))
@@ -284,6 +316,7 @@ namespace UnityEditor
 			}
 			UnityEngine.Object.DestroyImmediate(texture2D);
 		}
+
 		public override string GetInfoString()
 		{
 			if (this.target == null)

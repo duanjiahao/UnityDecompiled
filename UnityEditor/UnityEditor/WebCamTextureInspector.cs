@@ -1,12 +1,15 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(WebCamTexture))]
 	internal class WebCamTextureInspector : Editor
 	{
 		private static GUIContent[] s_PlayIcons = new GUIContent[2];
+
 		private Vector2 m_Pos;
+
 		public override void OnInspectorGUI()
 		{
 			WebCamTexture webCamTexture = this.target as WebCamTexture;
@@ -15,15 +18,18 @@ namespace UnityEditor
 			EditorGUILayout.LabelField("Requested Height", webCamTexture.requestedHeight.ToString(), new GUILayoutOption[0]);
 			EditorGUILayout.LabelField("Device Name", webCamTexture.deviceName, new GUILayoutOption[0]);
 		}
+
 		private static void Init()
 		{
 			WebCamTextureInspector.s_PlayIcons[0] = EditorGUIUtility.IconContent("preAudioPlayOff");
 			WebCamTextureInspector.s_PlayIcons[1] = EditorGUIUtility.IconContent("preAudioPlayOn");
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.target != null;
 		}
+
 		public override void OnPreviewSettings()
 		{
 			WebCamTextureInspector.Init();
@@ -44,6 +50,7 @@ namespace UnityEditor
 			}
 			GUI.enabled = true;
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (Event.current.type == EventType.Repaint)
@@ -72,6 +79,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void OnDisable()
 		{
 			WebCamTexture webCamTexture = this.target as WebCamTexture;
@@ -80,6 +88,7 @@ namespace UnityEditor
 				webCamTexture.Stop();
 			}
 		}
+
 		public override string GetInfoString()
 		{
 			Texture texture = this.target as Texture;

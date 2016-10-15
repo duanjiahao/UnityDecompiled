@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Internal;
+
 namespace UnityEditor.Sprites
 {
 	public sealed class Packer
@@ -14,16 +15,22 @@ namespace UnityEditor.Sprites
 			Normal,
 			ForceRegroup
 		}
+
 		public static string kDefaultPolicy = typeof(DefaultPackerPolicy).Name;
+
 		private static string[] m_policies = null;
+
 		private static string m_selectedPolicy = null;
+
 		private static Dictionary<string, Type> m_policyTypeCache = null;
+
 		public static extern string[] atlasNames
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static string[] Policies
 		{
 			get
@@ -32,6 +39,7 @@ namespace UnityEditor.Sprites
 				return Packer.m_policies;
 			}
 		}
+
 		public static string SelectedPolicy
 		{
 			get
@@ -53,18 +61,26 @@ namespace UnityEditor.Sprites
 				Packer.SetSelectedPolicy(value);
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D[] GetTexturesForAtlas(string atlasName);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Texture2D[] GetAlphaTexturesForAtlas(string atlasName);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RebuildAtlasCacheIfNeeded(BuildTarget target, [DefaultValue("false")] bool displayProgressBar, [DefaultValue("Execution.Normal")] Packer.Execution execution);
+
 		[ExcludeFromDocs]
 		public static void RebuildAtlasCacheIfNeeded(BuildTarget target, bool displayProgressBar)
 		{
 			Packer.Execution execution = Packer.Execution.Normal;
 			Packer.RebuildAtlasCacheIfNeeded(target, displayProgressBar, execution);
 		}
+
 		[ExcludeFromDocs]
 		public static void RebuildAtlasCacheIfNeeded(BuildTarget target)
 		{
@@ -72,14 +88,17 @@ namespace UnityEditor.Sprites
 			bool displayProgressBar = false;
 			Packer.RebuildAtlasCacheIfNeeded(target, displayProgressBar, execution);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void GetAtlasDataForSprite(Sprite sprite, out string atlasName, [Writable] out Texture2D atlasTexture);
+
 		private static void SetSelectedPolicy(string value)
 		{
 			Packer.m_selectedPolicy = value;
 			PlayerSettings.spritePackerPolicy = Packer.m_selectedPolicy;
 		}
+
 		private static void RegenerateList()
 		{
 			if (Packer.m_policies != null)
@@ -110,9 +129,8 @@ namespace UnityEditor.Sprites
 					Debug.Log(string.Format("SpritePacker failed to get types from {0}. Error: {1}", assembly.FullName, ex.Message));
 				}
 			}
-			Packer.m_policies = (
-				from t in list
-				select t.Name).ToArray<string>();
+			Packer.m_policies = (from t in list
+			select t.Name).ToArray<string>();
 			Packer.m_policyTypeCache = new Dictionary<string, Type>();
 			foreach (Type current in list)
 			{
@@ -132,6 +150,7 @@ namespace UnityEditor.Sprites
 				Packer.SetSelectedPolicy(Packer.kDefaultPolicy);
 			}
 		}
+
 		internal static string GetSelectedPolicyId()
 		{
 			Packer.RegenerateList();
@@ -139,14 +158,15 @@ namespace UnityEditor.Sprites
 			IPackerPolicy packerPolicy = Activator.CreateInstance(type) as IPackerPolicy;
 			return string.Format("{0}::{1}", type.AssemblyQualifiedName, packerPolicy.GetVersion());
 		}
+
 		internal static void ExecuteSelectedPolicy(BuildTarget target, int[] textureImporterInstanceIDs)
 		{
 			Packer.RegenerateList();
-			Analytics.Event("SpritePacker", "ExecuteSelectedPolicy", target.ToString(), textureImporterInstanceIDs.Length);
 			Type type = Packer.m_policyTypeCache[Packer.m_selectedPolicy];
 			IPackerPolicy packerPolicy = Activator.CreateInstance(type) as IPackerPolicy;
 			packerPolicy.OnGroupAtlases(target, new PackerJob(), textureImporterInstanceIDs);
 		}
+
 		internal static void SaveUnappliedTextureImporterSettings()
 		{
 			InspectorWindow[] allInspectorWindows = InspectorWindow.GetAllInspectorWindows();

@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	internal enum ColliderErrorState2D

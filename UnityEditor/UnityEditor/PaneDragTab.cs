@@ -2,36 +2,56 @@ using System;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	internal class PaneDragTab : GUIView
 	{
 		private const float kTopThumbnailOffset = 10f;
+
 		[SerializeField]
 		private bool m_Shadow;
+
 		private static PaneDragTab s_Get;
+
 		[SerializeField]
 		private Vector2 m_ThumbnailSize = new Vector2(80f, 60f);
+
 		private Rect m_StartRect;
+
 		[SerializeField]
 		private Rect m_TargetRect;
+
 		[SerializeField]
 		private static GUIStyle s_PaneStyle;
+
 		[SerializeField]
 		private static GUIStyle s_TabStyle;
+
 		private AnimBool m_PaneVisible = new AnimBool();
+
 		private AnimBool m_TabVisible = new AnimBool();
+
 		private float m_StartAlpha = 1f;
+
 		private float m_TargetAlpha = 1f;
+
 		private bool m_DidResizeOnLastLayout;
+
 		private DropInfo.Type m_Type = (DropInfo.Type)(-1);
+
 		private float m_StartTime;
+
 		public GUIContent content;
+
 		private Texture2D m_Thumbnail;
+
 		[SerializeField]
 		internal ContainerWindow m_Window;
+
 		[SerializeField]
 		private ContainerWindow m_InFrontOfWindow;
+
 		public static PaneDragTab get
 		{
 			get
@@ -52,16 +72,19 @@ namespace UnityEditor
 				return PaneDragTab.s_Get;
 			}
 		}
+
 		public void OnEnable()
 		{
 			this.m_PaneVisible.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_TabVisible.valueChanged.AddListener(new UnityAction(base.Repaint));
 		}
+
 		public void OnDisable()
 		{
 			this.m_PaneVisible.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_TabVisible.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 		}
+
 		public void GrabThumbnail()
 		{
 			if (this.m_Thumbnail != null)
@@ -74,6 +97,7 @@ namespace UnityEditor
 			float num = (float)(this.m_Thumbnail.width * this.m_Thumbnail.height);
 			this.m_ThumbnailSize = new Vector2((float)this.m_Thumbnail.width, (float)this.m_Thumbnail.height) * Mathf.Sqrt(Mathf.Clamp01(50000f / num));
 		}
+
 		public void SetDropInfo(DropInfo di, Vector2 mouseScreenPos, ContainerWindow inFrontOf)
 		{
 			if (this.m_Type != di.type || (di.type == DropInfo.Type.Pane && di.rect != this.m_TargetRect))
@@ -113,6 +137,7 @@ namespace UnityEditor
 			this.SetWindowPos(this.GetInterpolatedRect(this.CalcFade()));
 			base.Repaint();
 		}
+
 		public void Close()
 		{
 			if (this.m_Thumbnail != null)
@@ -126,6 +151,7 @@ namespace UnityEditor
 			UnityEngine.Object.DestroyImmediate(this, true);
 			PaneDragTab.s_Get = null;
 		}
+
 		public void Show(Rect pixelPos, Vector2 mouseScreenPosition)
 		{
 			if (!this.m_Window)
@@ -143,10 +169,12 @@ namespace UnityEditor
 			this.m_Window.Show(ShowMode.NoShadow, true, false);
 			this.m_TargetRect = pixelPos;
 		}
+
 		private void SetWindowPos(Rect screenPosition)
 		{
 			this.m_Window.position = screenPosition;
 		}
+
 		private float CalcFade()
 		{
 			if (Application.platform == RuntimePlatform.WindowsEditor)
@@ -155,10 +183,12 @@ namespace UnityEditor
 			}
 			return Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(5f * (Time.realtimeSinceStartup - this.m_StartTime)));
 		}
+
 		private Rect GetInterpolatedRect(float fade)
 		{
 			return new Rect(Mathf.Lerp(this.m_StartRect.x, this.m_TargetRect.x, fade), Mathf.Lerp(this.m_StartRect.y, this.m_TargetRect.y, fade), Mathf.Lerp(this.m_StartRect.width, this.m_TargetRect.width, fade), Mathf.Lerp(this.m_StartRect.height, this.m_TargetRect.height, fade));
 		}
+
 		private void OnGUI()
 		{
 			float num = this.CalcFade();

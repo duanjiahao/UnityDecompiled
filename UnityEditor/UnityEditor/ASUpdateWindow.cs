@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -10,37 +11,64 @@ namespace UnityEditor
 		internal class Constants
 		{
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle entrySelected = "ServerUpdateChangesetOn";
+
 			public GUIStyle entryNormal = "ServerUpdateChangeset";
+
 			public GUIStyle serverUpdateLog = "ServerUpdateLog";
+
 			public GUIStyle serverChangeCount = "ServerChangeCount";
+
 			public GUIStyle title = "OL title";
+
 			public GUIStyle element = "OL elem";
+
 			public GUIStyle header = "OL header";
+
 			public GUIStyle serverUpdateInfo = "ServerUpdateInfo";
+
 			public GUIStyle button = "Button";
+
 			public GUIStyle errorLabel = "ErrorLabel";
+
 			public GUIStyle bigButton = "LargeButton";
+
 			public GUIStyle wwText = "AS TextArea";
+
 			public GUIStyle entryEven = "CN EntryBackEven";
+
 			public GUIStyle entryOdd = "CN EntryBackOdd";
 		}
+
 		private ASUpdateWindow.Constants constants;
+
 		private ASUpdateConflictResolveWindow asResolveWin;
+
 		private ASMainWindow parentWin;
+
 		private string[] dropDownMenuItems = new string[]
 		{
 			"Compare",
 			"Compare Binary"
 		};
+
 		private Changeset[] changesets;
+
 		private Vector2 iconSize = new Vector2(16f, 16f);
+
 		private string[] messageFirstLines;
+
 		private int maxNickLength;
+
 		private string selectedGUID = string.Empty;
+
 		private bool isDirSelected;
+
 		private ListViewState lv;
+
 		private ParentViewState pv = new ParentViewState();
+
 		private SplitterState horSplit = new SplitterState(new float[]
 		{
 			50f,
@@ -50,6 +78,7 @@ namespace UnityEditor
 			50,
 			50
 		}, null);
+
 		private SplitterState vertSplit = new SplitterState(new float[]
 		{
 			60f,
@@ -59,8 +88,11 @@ namespace UnityEditor
 			32,
 			32
 		}, null);
+
 		private string totalUpdates;
+
 		private bool showingConflicts;
+
 		public bool ShowingConflicts
 		{
 			get
@@ -68,6 +100,7 @@ namespace UnityEditor
 				return this.showingConflicts;
 			}
 		}
+
 		public bool CanContinue
 		{
 			get
@@ -75,6 +108,7 @@ namespace UnityEditor
 				return this.asResolveWin.CanContinue();
 			}
 		}
+
 		public ASUpdateWindow(ASMainWindow parentWin, Changeset[] changesets)
 		{
 			this.changesets = changesets;
@@ -91,6 +125,7 @@ namespace UnityEditor
 			}
 			this.totalUpdates = changesets.Length.ToString() + ((changesets.Length != 1) ? " Updates" : " Update");
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -98,16 +133,14 @@ namespace UnityEditor
 				string text = this.dropDownMenuItems[selected];
 				if (text != null)
 				{
-					if (ASUpdateWindow.<>f__switch$map11 == null)
+					if (ASUpdateWindow.<>f__switch$map14 == null)
 					{
-						ASUpdateWindow.<>f__switch$map11 = new Dictionary<string, int>(2)
+						ASUpdateWindow.<>f__switch$map14 = new Dictionary<string, int>(2)
 						{
-
 							{
 								"Compare",
 								0
 							},
-
 							{
 								"Compare Binary",
 								1
@@ -115,7 +148,7 @@ namespace UnityEditor
 						};
 					}
 					int num;
-					if (ASUpdateWindow.<>f__switch$map11.TryGetValue(text, out num))
+					if (ASUpdateWindow.<>f__switch$map14.TryGetValue(text, out num))
 					{
 						if (num != 0)
 						{
@@ -132,6 +165,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoSelectionChange()
 		{
 			if (this.lv.row != -1)
@@ -174,11 +208,13 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private string GetFirstSelected()
 		{
 			UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
 			return (filtered.Length == 0) ? string.Empty : AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(filtered[0]));
 		}
+
 		public void OnSelectionChange()
 		{
 			if (this.showingConflicts)
@@ -191,10 +227,12 @@ namespace UnityEditor
 				this.parentWin.Repaint();
 			}
 		}
+
 		public int GetSelectedRevisionNumber()
 		{
 			return (this.pv.lv.row <= this.lv.totalRows - 1 && this.lv.row >= 0) ? this.changesets[this.lv.row].changeset : -1;
 		}
+
 		public void SetSelectedRevisionLine(int selIndex)
 		{
 			if (selIndex >= this.lv.totalRows)
@@ -215,6 +253,7 @@ namespace UnityEditor
 			this.pv.selectedFile = -1;
 			this.DoSelectionChange();
 		}
+
 		public string[] GetGUIDs()
 		{
 			List<string> list = new List<string>();
@@ -234,6 +273,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		public bool DoUpdate(bool afterResolvingConflicts)
 		{
 			AssetServer.RemoveMaintErrorsFromConsole();
@@ -246,15 +286,18 @@ namespace UnityEditor
 			AssetServer.DoUpdateOnNextTick(!afterResolvingConflicts, "ShowASConflictResolutionsWindow");
 			return true;
 		}
+
 		public void ShowConflictResolutions(string[] conflicting)
 		{
 			this.asResolveWin = new ASUpdateConflictResolveWindow(conflicting);
 			this.showingConflicts = true;
 		}
+
 		private bool HasFlag(ChangeFlags flags, ChangeFlags flagToCheck)
 		{
 			return (flagToCheck & flags) != ChangeFlags.None;
 		}
+
 		private void DoSelect(int folderI, int fileI, int row)
 		{
 			this.pv.selectedFile = fileI;
@@ -280,6 +323,7 @@ namespace UnityEditor
 				this.isDirSelected = false;
 			}
 		}
+
 		public void UpdateGUI()
 		{
 			SplitterGUILayout.BeginHorizontalSplit(this.horSplit, new GUILayoutOption[0]);
@@ -351,21 +395,18 @@ namespace UnityEditor
 						this.DoSelect(num, num2, listViewElement2.row);
 					}
 				}
-				else
+				else if (ListViewGUILayout.HasMouseDown(listViewElement2.position, 1))
 				{
-					if (ListViewGUILayout.HasMouseDown(listViewElement2.position, 1))
+					if (this.lv.row != listViewElement2.row)
 					{
-						if (this.lv.row != listViewElement2.row)
-						{
-							this.DoSelect(num, num2, listViewElement2.row);
-						}
-						if (!this.isDirSelected && this.selectedGUID != string.Empty)
-						{
-							GUIUtility.hotControl = 0;
-							Rect position2 = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-							EditorUtility.DisplayCustomMenu(position2, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
-							Event.current.Use();
-						}
+						this.DoSelect(num, num2, listViewElement2.row);
+					}
+					if (!this.isDirSelected && this.selectedGUID != string.Empty)
+					{
+						GUIUtility.hotControl = 0;
+						Rect position2 = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+						EditorUtility.DisplayCustomMenu(position2, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+						Event.current.Use();
 					}
 				}
 				if (listViewElement2.row == this.pv.lv.row && Event.current.type == EventType.Repaint)
@@ -393,19 +434,13 @@ namespace UnityEditor
 				{
 					gUIContent = ASMainWindow.constants.badgeNew;
 				}
-				else
+				else if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
 				{
-					if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
-					{
-						gUIContent = ASMainWindow.constants.badgeDelete;
-					}
-					else
-					{
-						if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
-						{
-							gUIContent = ASMainWindow.constants.badgeMove;
-						}
-					}
+					gUIContent = ASMainWindow.constants.badgeDelete;
+				}
+				else if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
+				{
+					gUIContent = ASMainWindow.constants.badgeMove;
 				}
 				if (gUIContent != null && Event.current.type == EventType.Repaint)
 				{
@@ -440,6 +475,7 @@ namespace UnityEditor
 			SplitterGUILayout.EndVerticalSplit();
 			SplitterGUILayout.EndHorizontalSplit();
 		}
+
 		private bool DoShowDiff(bool binary)
 		{
 			List<string> list = new List<string>();
@@ -465,10 +501,12 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public void Repaint()
 		{
 			this.parentWin.Repaint();
 		}
+
 		public bool DoGUI()
 		{
 			bool enabled = GUI.enabled;

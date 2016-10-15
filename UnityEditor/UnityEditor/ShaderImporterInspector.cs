@@ -1,15 +1,21 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(ShaderImporter))]
 	internal class ShaderImporterInspector : AssetImporterInspector
 	{
 		private List<string> propertyNames = new List<string>();
+
 		private List<string> displayNames = new List<string>();
+
 		private List<Texture> textures = new List<Texture>();
-		private List<ShaderUtil.ShaderPropertyTexDim> dimensions = new List<ShaderUtil.ShaderPropertyTexDim>();
+
+		private List<TextureDimension> dimensions = new List<TextureDimension>();
+
 		internal override void OnHeaderControlsGUI()
 		{
 			Shader target = this.assetEditor.target as Shader;
@@ -20,10 +26,12 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
+
 		public void OnEnable()
 		{
 			this.ResetValues();
 		}
+
 		private void ShowDefaultTextures()
 		{
 			if (this.propertyNames.Count == 0)
@@ -36,29 +44,11 @@ namespace UnityEditor
 				Texture obj = this.textures[i];
 				Texture value = null;
 				EditorGUI.BeginChangeCheck();
-				Type type;
-				switch (this.dimensions[i])
-				{
-				case ShaderUtil.ShaderPropertyTexDim.TexDim2D:
-					type = typeof(Texture);
-					break;
-				case ShaderUtil.ShaderPropertyTexDim.TexDim3D:
-					type = typeof(Texture3D);
-					break;
-				case ShaderUtil.ShaderPropertyTexDim.TexDimCUBE:
-					type = typeof(Cubemap);
-					break;
-				case ShaderUtil.ShaderPropertyTexDim.TexDimAny:
-					type = typeof(Texture);
-					break;
-				default:
-					type = null;
-					break;
-				}
-				if (type != null)
+				Type textureTypeFromDimension = MaterialEditor.GetTextureTypeFromDimension(this.dimensions[i]);
+				if (textureTypeFromDimension != null)
 				{
 					string t = (!string.IsNullOrEmpty(this.displayNames[i])) ? this.displayNames[i] : ObjectNames.NicifyVariableName(this.propertyNames[i]);
-					value = (EditorGUILayout.MiniThumbnailObjectField(GUIContent.Temp(t), obj, type, null, new GUILayoutOption[0]) as Texture);
+					value = (EditorGUILayout.MiniThumbnailObjectField(GUIContent.Temp(t), obj, textureTypeFromDimension, null, new GUILayoutOption[0]) as Texture);
 				}
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -66,6 +56,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal override bool HasModified()
 		{
 			if (base.HasModified())
@@ -96,13 +87,14 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal override void ResetValues()
 		{
 			base.ResetValues();
 			this.propertyNames = new List<string>();
 			this.displayNames = new List<string>();
 			this.textures = new List<Texture>();
-			this.dimensions = new List<ShaderUtil.ShaderPropertyTexDim>();
+			this.dimensions = new List<TextureDimension>();
 			ShaderImporter shaderImporter = this.target as ShaderImporter;
 			if (shaderImporter == null)
 			{
@@ -128,6 +120,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal override void Apply()
 		{
 			base.Apply();
@@ -139,6 +132,7 @@ namespace UnityEditor
 			shaderImporter.SetDefaultTextures(this.propertyNames.ToArray(), this.textures.ToArray());
 			AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(shaderImporter));
 		}
+
 		private static int GetNumberOfTextures(Shader shader)
 		{
 			int num = 0;
@@ -152,6 +146,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			ShaderImporter shaderImporter = this.target as ShaderImporter;

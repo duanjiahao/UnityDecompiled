@@ -1,16 +1,24 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor.Animations
 {
 	public struct ChildMotion
 	{
 		private Motion m_Motion;
+
 		private float m_Threshold;
+
 		private Vector2 m_Position;
+
 		private float m_TimeScale;
+
 		private float m_CycleOffset;
+
 		private string m_DirectBlendParameter;
+
 		private bool m_Mirror;
+
 		public Motion motion
 		{
 			get
@@ -22,6 +30,7 @@ namespace UnityEditor.Animations
 				this.m_Motion = value;
 			}
 		}
+
 		public float threshold
 		{
 			get
@@ -33,6 +42,7 @@ namespace UnityEditor.Animations
 				this.m_Threshold = value;
 			}
 		}
+
 		public Vector2 position
 		{
 			get
@@ -44,6 +54,7 @@ namespace UnityEditor.Animations
 				this.m_Position = value;
 			}
 		}
+
 		public float timeScale
 		{
 			get
@@ -55,6 +66,7 @@ namespace UnityEditor.Animations
 				this.m_TimeScale = value;
 			}
 		}
+
 		public float cycleOffset
 		{
 			get
@@ -66,6 +78,7 @@ namespace UnityEditor.Animations
 				this.m_CycleOffset = value;
 			}
 		}
+
 		public string directBlendParameter
 		{
 			get
@@ -77,6 +90,7 @@ namespace UnityEditor.Animations
 				this.m_DirectBlendParameter = value;
 			}
 		}
+
 		public bool mirror
 		{
 			get

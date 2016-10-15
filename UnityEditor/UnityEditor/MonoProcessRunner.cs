@@ -3,12 +3,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+
 namespace UnityEditor
 {
 	internal class MonoProcessRunner
 	{
 		public StringBuilder Output = new StringBuilder(string.Empty);
+
 		public StringBuilder Error = new StringBuilder(string.Empty);
+
 		public bool Run(Process process)
 		{
 			process.StartInfo.RedirectStandardOutput = true;
@@ -36,6 +39,7 @@ namespace UnityEditor
 			thread2.Join();
 			return result;
 		}
+
 		private void ReadOutput(object process)
 		{
 			Process process2 = process as Process;
@@ -50,6 +54,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		private void ReadErrors(object process)
 		{
 			Process process2 = process as Process;

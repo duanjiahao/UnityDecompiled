@@ -1,4 +1,5 @@
 using System;
+
 namespace JetBrains.Annotations
 {
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -9,9 +10,11 @@ namespace JetBrains.Annotations
 			get;
 			private set;
 		}
+
 		public NotifyPropertyChangedInvocatorAttribute()
 		{
 		}
+
 		public NotifyPropertyChangedInvocatorAttribute(string parameterName)
 		{
 			this.ParameterName = parameterName;

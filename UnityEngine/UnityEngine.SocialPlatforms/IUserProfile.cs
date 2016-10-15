@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.SocialPlatforms
 {
 	public interface IUserProfile
@@ -7,18 +8,22 @@ namespace UnityEngine.SocialPlatforms
 		{
 			get;
 		}
+
 		string id
 		{
 			get;
 		}
+
 		bool isFriend
 		{
 			get;
 		}
+
 		UserState state
 		{
 			get;
 		}
+
 		Texture2D image
 		{
 			get;

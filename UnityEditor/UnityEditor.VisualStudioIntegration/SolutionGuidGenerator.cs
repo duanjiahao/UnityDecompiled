@@ -1,6 +1,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+
 namespace UnityEditor.VisualStudioIntegration
 {
 	public static class SolutionGuidGenerator
@@ -9,15 +10,18 @@ namespace UnityEditor.VisualStudioIntegration
 		{
 			return SolutionGuidGenerator.ComputeGuidHashFor(projectName + "salt");
 		}
+
 		public static string GuidForSolution(string projectName)
 		{
 			return SolutionGuidGenerator.ComputeGuidHashFor(projectName);
 		}
+
 		private static string ComputeGuidHashFor(string input)
 		{
 			byte[] bs = MD5.Create().ComputeHash(Encoding.Default.GetBytes(input));
 			return SolutionGuidGenerator.HashAsGuid(SolutionGuidGenerator.HashToString(bs));
 		}
+
 		private static string HashAsGuid(string hash)
 		{
 			string text = string.Concat(new string[]
@@ -34,6 +38,7 @@ namespace UnityEditor.VisualStudioIntegration
 			});
 			return text.ToUpper();
 		}
+
 		private static string HashToString(byte[] bs)
 		{
 			StringBuilder stringBuilder = new StringBuilder();

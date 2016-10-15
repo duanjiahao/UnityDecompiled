@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class BodyMaskEditor
@@ -7,7 +8,9 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent UnityDude = EditorGUIUtility.IconContent("AvatarInspector/BodySIlhouette");
+
 			public GUIContent PickingTexture = EditorGUIUtility.IconContent("AvatarInspector/BodyPartPicker");
+
 			public GUIContent[] BodyPart = new GUIContent[]
 			{
 				EditorGUIUtility.IconContent("AvatarInspector/MaskEditor_Root"),
@@ -25,7 +28,9 @@ namespace UnityEditor
 				EditorGUIUtility.IconContent("AvatarInspector/RightFingersIk")
 			};
 		}
+
 		private static BodyMaskEditor.Styles styles = new BodyMaskEditor.Styles();
+
 		protected static Color[] m_MaskBodyPartPicker = new Color[]
 		{
 			new Color(1f, 0.5647059f, 0f),
@@ -43,9 +48,12 @@ namespace UnityEditor
 			new Color(0.7921569f, 0.7921569f, 0.7921569f),
 			new Color(0.396078438f, 0.396078438f, 0.396078438f)
 		};
+
 		private static string sAvatarBodyMaskStr = "AvatarMask";
+
 		private static int s_Hint = BodyMaskEditor.sAvatarBodyMaskStr.GetHashCode();
-		public static bool[] Show(bool[] bodyPartToggle, int count)
+
+		public static void Show(SerializedProperty bodyMask, int count)
 		{
 			if (BodyMaskEditor.styles.UnityDude.image)
 			{
@@ -53,16 +61,9 @@ namespace UnityEditor
 				{
 					GUILayout.MaxWidth((float)BodyMaskEditor.styles.UnityDude.image.width)
 				});
-				rect.x += ((float)Screen.width - rect.width) / 2f;
+				rect.x += (GUIView.current.position.width - rect.width) / 2f;
 				Color color = GUI.color;
-				if (bodyPartToggle[0])
-				{
-					GUI.color = Color.green;
-				}
-				else
-				{
-					GUI.color = Color.red;
-				}
+				GUI.color = ((bodyMask.GetArrayElementAtIndex(0).intValue != 1) ? Color.red : Color.green);
 				if (BodyMaskEditor.styles.BodyPart[0].image)
 				{
 					GUI.DrawTexture(rect, BodyMaskEditor.styles.BodyPart[0].image);
@@ -71,25 +72,18 @@ namespace UnityEditor
 				GUI.DrawTexture(rect, BodyMaskEditor.styles.UnityDude.image);
 				for (int i = 1; i < count; i++)
 				{
-					if (bodyPartToggle[i])
-					{
-						GUI.color = Color.green;
-					}
-					else
-					{
-						GUI.color = Color.red;
-					}
+					GUI.color = ((bodyMask.GetArrayElementAtIndex(i).intValue != 1) ? Color.red : Color.green);
 					if (BodyMaskEditor.styles.BodyPart[i].image)
 					{
 						GUI.DrawTexture(rect, BodyMaskEditor.styles.BodyPart[i].image);
 					}
 				}
 				GUI.color = color;
-				BodyMaskEditor.DoPicking(rect, bodyPartToggle, count);
+				BodyMaskEditor.DoPicking(rect, bodyMask, count);
 			}
-			return bodyPartToggle;
 		}
-		protected static void DoPicking(Rect rect, bool[] bodyPartToggle, int count)
+
+		protected static void DoPicking(Rect rect, SerializedProperty bodyMask, int count)
 		{
 			if (BodyMaskEditor.styles.PickingTexture.image)
 			{
@@ -111,7 +105,7 @@ namespace UnityEditor
 							if (BodyMaskEditor.m_MaskBodyPartPicker[i] == pixel)
 							{
 								GUI.changed = true;
-								bodyPartToggle[i] = !bodyPartToggle[i];
+								bodyMask.GetArrayElementAtIndex(i).intValue = ((bodyMask.GetArrayElementAtIndex(i).intValue != 1) ? 1 : 0);
 								flag = true;
 							}
 						}
@@ -121,12 +115,12 @@ namespace UnityEditor
 							int num = 0;
 							while (num < count && !flag2)
 							{
-								flag2 = bodyPartToggle[num];
+								flag2 = (bodyMask.GetArrayElementAtIndex(num).intValue == 1);
 								num++;
 							}
 							for (int j = 0; j < count; j++)
 							{
-								bodyPartToggle[j] = !flag2;
+								bodyMask.GetArrayElementAtIndex(j).intValue = (flag2 ? 0 : 1);
 							}
 							GUI.changed = true;
 						}

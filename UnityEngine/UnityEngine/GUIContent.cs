@@ -1,21 +1,29 @@
 using System;
 using System.Runtime.InteropServices;
+
 namespace UnityEngine
 {
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
-	public sealed class GUIContent
+	public class GUIContent
 	{
 		[SerializeField]
 		private string m_Text = string.Empty;
+
 		[SerializeField]
 		private Texture m_Image;
+
 		[SerializeField]
 		private string m_Tooltip = string.Empty;
+
+		private static readonly GUIContent s_Text = new GUIContent();
+
+		private static readonly GUIContent s_Image = new GUIContent();
+
+		private static readonly GUIContent s_TextImage = new GUIContent();
+
 		public static GUIContent none = new GUIContent(string.Empty);
-		private static GUIContent s_Text = new GUIContent();
-		private static GUIContent s_Image = new GUIContent();
-		private static GUIContent s_TextImage = new GUIContent();
+
 		public string text
 		{
 			get
@@ -27,6 +35,7 @@ namespace UnityEngine
 				this.m_Text = value;
 			}
 		}
+
 		public Texture image
 		{
 			get
@@ -38,6 +47,7 @@ namespace UnityEngine
 				this.m_Image = value;
 			}
 		}
+
 		public string tooltip
 		{
 			get
@@ -49,86 +59,111 @@ namespace UnityEngine
 				this.m_Tooltip = value;
 			}
 		}
+
 		internal int hash
 		{
 			get
 			{
 				int result = 0;
-				if (this.m_Text != null && this.m_Text != string.Empty)
+				if (!string.IsNullOrEmpty(this.m_Text))
 				{
 					result = this.m_Text.GetHashCode() * 37;
 				}
 				return result;
 			}
 		}
+
 		public GUIContent()
 		{
 		}
+
 		public GUIContent(string text)
 		{
 			this.m_Text = text;
 		}
+
 		public GUIContent(Texture image)
 		{
 			this.m_Image = image;
 		}
+
 		public GUIContent(string text, Texture image)
 		{
 			this.m_Text = text;
 			this.m_Image = image;
 		}
+
 		public GUIContent(string text, string tooltip)
 		{
 			this.m_Text = text;
 			this.m_Tooltip = tooltip;
 		}
+
 		public GUIContent(Texture image, string tooltip)
 		{
 			this.m_Image = image;
 			this.m_Tooltip = tooltip;
 		}
+
 		public GUIContent(string text, Texture image, string tooltip)
 		{
 			this.m_Text = text;
 			this.m_Image = image;
 			this.m_Tooltip = tooltip;
 		}
+
 		public GUIContent(GUIContent src)
 		{
 			this.m_Text = src.m_Text;
 			this.m_Image = src.m_Image;
 			this.m_Tooltip = src.m_Tooltip;
 		}
+
 		internal static GUIContent Temp(string t)
 		{
 			GUIContent.s_Text.m_Text = t;
 			GUIContent.s_Text.m_Tooltip = string.Empty;
 			return GUIContent.s_Text;
 		}
+
 		internal static GUIContent Temp(string t, string tooltip)
 		{
 			GUIContent.s_Text.m_Text = t;
 			GUIContent.s_Text.m_Tooltip = tooltip;
 			return GUIContent.s_Text;
 		}
+
 		internal static GUIContent Temp(Texture i)
 		{
 			GUIContent.s_Image.m_Image = i;
+			GUIContent.s_Image.m_Tooltip = string.Empty;
 			return GUIContent.s_Image;
 		}
+
+		internal static GUIContent Temp(Texture i, string tooltip)
+		{
+			GUIContent.s_Image.m_Image = i;
+			GUIContent.s_Image.m_Tooltip = tooltip;
+			return GUIContent.s_Image;
+		}
+
 		internal static GUIContent Temp(string t, Texture i)
 		{
 			GUIContent.s_TextImage.m_Text = t;
 			GUIContent.s_TextImage.m_Image = i;
 			return GUIContent.s_TextImage;
 		}
+
 		internal static void ClearStaticCache()
 		{
 			GUIContent.s_Text.m_Text = null;
+			GUIContent.s_Text.m_Tooltip = string.Empty;
 			GUIContent.s_Image.m_Image = null;
+			GUIContent.s_Image.m_Tooltip = string.Empty;
 			GUIContent.s_TextImage.m_Text = null;
 			GUIContent.s_TextImage.m_Image = null;
 		}
+
 		internal static GUIContent[] Temp(string[] texts)
 		{
 			GUIContent[] array = new GUIContent[texts.Length];
@@ -138,6 +173,7 @@ namespace UnityEngine
 			}
 			return array;
 		}
+
 		internal static GUIContent[] Temp(Texture[] images)
 		{
 			GUIContent[] array = new GUIContent[images.Length];

@@ -1,14 +1,19 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	public static class SpriteEditorHandles
 	{
 		private static Vector2 s_CurrentMousePosition;
+
 		private static Vector2 s_DragStartScreenPosition;
+
 		private static Vector2 s_DragScreenOffset;
+
 		private static int s_RectSelectionID = GUIUtility.GetPermanentControlID();
+
 		internal static Vector2 PointSlider(Vector2 pos, MouseCursor cursor, GUIStyle dragDot, GUIStyle dragDotActive)
 		{
 			int controlID = GUIUtility.GetControlID("Slider1D".GetHashCode(), FocusType.Keyboard);
@@ -29,11 +34,13 @@ namespace UnityEditorInternal
 			}
 			return SpriteEditorHandles.ScaleSlider(pos, cursor, rect);
 		}
+
 		internal static Vector2 ScaleSlider(Vector2 pos, MouseCursor cursor, Rect cursorRect)
 		{
 			int controlID = GUIUtility.GetControlID("Slider1D".GetHashCode(), FocusType.Keyboard);
 			return SpriteEditorHandles.ScaleSlider(controlID, pos, cursor, cursorRect);
 		}
+
 		private static Vector2 ScaleSlider(int id, Vector2 pos, MouseCursor cursor, Rect cursorRect)
 		{
 			Vector2 b = Handles.matrix.MultiplyPoint(pos);
@@ -88,6 +95,7 @@ namespace UnityEditorInternal
 			}
 			return pos;
 		}
+
 		internal static Vector2 PivotSlider(Rect sprite, Vector2 pos, GUIStyle pivotDot, GUIStyle pivotDotActive)
 		{
 			int controlID = GUIUtility.GetControlID("Slider1D".GetHashCode(), FocusType.Keyboard);
@@ -157,6 +165,7 @@ namespace UnityEditorInternal
 			pos = new Vector2((pos.x - sprite.xMin) / sprite.width, (pos.y - sprite.yMin) / sprite.height);
 			return pos;
 		}
+
 		internal static Rect SliderRect(Rect pos)
 		{
 			int controlID = GUIUtility.GetControlID("SliderRect".GetHashCode(), FocusType.Keyboard);
@@ -215,6 +224,7 @@ namespace UnityEditorInternal
 			}
 			return pos;
 		}
+
 		internal static void HandleSliderRectMouseDown(int id, Event evt, Rect pos)
 		{
 			GUIUtility.keyboardControl = id;
@@ -225,6 +235,7 @@ namespace UnityEditorInternal
 			SpriteEditorHandles.s_DragScreenOffset = SpriteEditorHandles.s_CurrentMousePosition - b;
 			EditorGUIUtility.SetWantsMouseJumping(1);
 		}
+
 		internal static Rect RectCreator(float textureWidth, float textureHeight, GUIStyle rectStyle)
 		{
 			Event current = Event.current;
@@ -284,10 +295,12 @@ namespace UnityEditorInternal
 			}
 			return result;
 		}
+
 		private static bool ValidRect(Vector2 startPoint, Vector2 endPoint)
 		{
 			return Mathf.Abs((endPoint - startPoint).x) > 5f && Mathf.Abs((endPoint - startPoint).y) > 5f;
 		}
+
 		private static Rect GetCurrentRect(bool screenSpace, float textureWidth, float textureHeight, Vector2 startPoint, Vector2 endPoint)
 		{
 			Rect rect = EditorGUIExt.FromToRect(Handles.s_InverseMatrix.MultiplyPoint(startPoint), Handles.s_InverseMatrix.MultiplyPoint(endPoint));

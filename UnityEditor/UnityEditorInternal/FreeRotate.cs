@@ -1,11 +1,13 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class FreeRotate
 	{
 		private static Vector2 s_CurrentMousePosition;
+
 		public static Quaternion Do(int id, Quaternion rotation, Vector3 position, float size)
 		{
 			Vector3 vector = Handles.matrix.MultiplyPoint(position);

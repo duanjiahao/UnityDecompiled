@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal class MemoryElementDataManager
@@ -13,14 +14,17 @@ namespace UnityEditor
 			DontSave,
 			Other
 		}
+
 		private static int SortByMemoryClassName(ObjectInfo x, ObjectInfo y)
 		{
 			return y.className.CompareTo(x.className);
 		}
+
 		private static int SortByMemorySize(MemoryElement x, MemoryElement y)
 		{
 			return y.totalMemory.CompareTo(x.totalMemory);
 		}
+
 		private static MemoryElementDataManager.ObjectTypeFilter GetObjectTypeFilter(ObjectInfo info)
 		{
 			switch (info.reason)
@@ -38,6 +42,7 @@ namespace UnityEditor
 			}
 			return MemoryElementDataManager.ObjectTypeFilter.Scene;
 		}
+
 		private static bool HasValidNames(List<MemoryElement> memory)
 		{
 			for (int i = 0; i < memory.Count; i++)
@@ -49,6 +54,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private static List<MemoryElement> GenerateObjectTypeGroups(ObjectInfo[] memory, MemoryElementDataManager.ObjectTypeFilter filter)
 		{
 			List<MemoryElement> list = new List<MemoryElement>();
@@ -77,6 +83,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		public static MemoryElement GetTreeRoot(ObjectMemoryInfo[] memoryObjectList, int[] referencesIndices)
 		{
 			ObjectInfo[] array = new ObjectInfo[memoryObjectList.Length];

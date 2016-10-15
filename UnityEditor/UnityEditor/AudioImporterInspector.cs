@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(AudioImporter))]
@@ -20,6 +21,7 @@ namespace UnityEditor
 				"96,000 Hz",
 				"192,000 Hz"
 			};
+
 			public static readonly int[] kSampleRateValues = new int[]
 			{
 				8000,
@@ -31,30 +33,47 @@ namespace UnityEditor
 				192000
 			};
 		}
+
 		private struct MultiValueStatus
 		{
 			public bool multiLoadType;
+
 			public bool multiSampleRateSetting;
+
 			public bool multiSampleRateOverride;
+
 			public bool multiCompressionFormat;
+
 			public bool multiQuality;
+
 			public bool multiConversionMode;
 		}
+
 		private struct SampleSettingProperties
 		{
 			public AudioImporterSampleSettings settings;
+
 			public bool forcedOverrideState;
+
 			public bool overrideIsForced;
+
 			public bool loadTypeChanged;
+
 			public bool sampleRateSettingChanged;
+
 			public bool sampleRateOverrideChanged;
+
 			public bool compressionFormatChanged;
+
 			public bool qualityChanged;
+
 			public bool conversionModeChanged;
+
 			public bool HasModified()
 			{
 				return this.overrideIsForced || this.loadTypeChanged || this.sampleRateSettingChanged || this.sampleRateOverrideChanged || this.compressionFormatChanged || this.qualityChanged || this.conversionModeChanged;
 			}
+
 			public void ClearChangedFlags()
 			{
 				this.forcedOverrideState = false;
@@ -67,28 +86,40 @@ namespace UnityEditor
 				this.conversionModeChanged = false;
 			}
 		}
+
 		private enum OverrideStatus
 		{
 			NoOverrides,
 			MixedOverrides,
 			AllOverrides
 		}
+
 		public SerializedProperty m_ForceToMono;
+
+		public SerializedProperty m_Normalize;
+
 		public SerializedProperty m_PreloadAudioData;
+
 		public SerializedProperty m_LoadInBackground;
+
 		public SerializedProperty m_OrigSize;
+
 		public SerializedProperty m_CompSize;
+
 		private AudioImporterInspector.SampleSettingProperties m_DefaultSampleSettings;
+
 		private Dictionary<BuildTargetGroup, AudioImporterInspector.SampleSettingProperties> m_SampleSettingOverrides;
+
 		[DebuggerHidden]
 		private IEnumerable<AudioImporter> GetAllAudioImporterTargets()
 		{
-			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator5 <GetAllAudioImporterTargets>c__Iterator = new AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator5();
+			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator7 <GetAllAudioImporterTargets>c__Iterator = new AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator7();
 			<GetAllAudioImporterTargets>c__Iterator.<>f__this = this;
-			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator5 expr_0E = <GetAllAudioImporterTargets>c__Iterator;
+			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator7 expr_0E = <GetAllAudioImporterTargets>c__Iterator;
 			expr_0E.$PC = -2;
 			return expr_0E;
 		}
+
 		private bool SyncSettingsToBackend()
 		{
 			BuildPlayerWindow.BuildPlatform[] array = BuildPlayerWindow.GetValidPlatforms().ToArray();
@@ -132,37 +163,34 @@ namespace UnityEditor
 						{
 							current.Internal_ClearSampleSettingOverride(targetGroup);
 						}
-						else
+						else if (current.Internal_ContainsSampleSettingsOverride(targetGroup) || (value.overrideIsForced && value.forcedOverrideState))
 						{
-							if (current.Internal_ContainsSampleSettingsOverride(targetGroup) || (value.overrideIsForced && value.forcedOverrideState))
+							AudioImporterSampleSettings settings = current.Internal_GetOverrideSampleSettings(targetGroup);
+							if (value.loadTypeChanged)
 							{
-								AudioImporterSampleSettings settings = current.Internal_GetOverrideSampleSettings(targetGroup);
-								if (value.loadTypeChanged)
-								{
-									settings.loadType = value.settings.loadType;
-								}
-								if (value.sampleRateSettingChanged)
-								{
-									settings.sampleRateSetting = value.settings.sampleRateSetting;
-								}
-								if (value.sampleRateOverrideChanged)
-								{
-									settings.sampleRateOverride = value.settings.sampleRateOverride;
-								}
-								if (value.compressionFormatChanged)
-								{
-									settings.compressionFormat = value.settings.compressionFormat;
-								}
-								if (value.qualityChanged)
-								{
-									settings.quality = value.settings.quality;
-								}
-								if (value.conversionModeChanged)
-								{
-									settings.conversionMode = value.settings.conversionMode;
-								}
-								current.Internal_SetOverrideSampleSettings(targetGroup, settings);
+								settings.loadType = value.settings.loadType;
 							}
+							if (value.sampleRateSettingChanged)
+							{
+								settings.sampleRateSetting = value.settings.sampleRateSetting;
+							}
+							if (value.sampleRateOverrideChanged)
+							{
+								settings.sampleRateOverride = value.settings.sampleRateOverride;
+							}
+							if (value.compressionFormatChanged)
+							{
+								settings.compressionFormat = value.settings.compressionFormat;
+							}
+							if (value.qualityChanged)
+							{
+								settings.quality = value.settings.quality;
+							}
+							if (value.conversionModeChanged)
+							{
+								settings.conversionMode = value.settings.conversionMode;
+							}
+							current.Internal_SetOverrideSampleSettings(targetGroup, settings);
 						}
 						this.m_SampleSettingOverrides[targetGroup] = value;
 					}
@@ -183,6 +211,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private bool ResetSettingsFromBackend()
 		{
 			if (this.GetAllAudioImporterTargets().Any<AudioImporter>())
@@ -215,6 +244,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		public bool CurrentPlatformHasAutoTranslatedCompression()
 		{
 			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
@@ -232,10 +262,20 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public bool IsHardwareSound(AudioCompressionFormat format)
 		{
-			return format == AudioCompressionFormat.VAG || format == AudioCompressionFormat.HEVAG;
+			switch (format)
+			{
+			case AudioCompressionFormat.VAG:
+			case AudioCompressionFormat.HEVAG:
+			case AudioCompressionFormat.XMA:
+			case AudioCompressionFormat.GCADPCM:
+				return true;
+			}
+			return false;
 		}
+
 		public bool CurrentSelectionContainsHardwareSounds()
 		{
 			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
@@ -248,20 +288,24 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public void OnEnable()
 		{
 			this.m_ForceToMono = base.serializedObject.FindProperty("m_ForceToMono");
+			this.m_Normalize = base.serializedObject.FindProperty("m_Normalize");
 			this.m_PreloadAudioData = base.serializedObject.FindProperty("m_PreloadAudioData");
 			this.m_LoadInBackground = base.serializedObject.FindProperty("m_LoadInBackground");
 			this.m_OrigSize = base.serializedObject.FindProperty("m_PreviewData.m_OrigSize");
 			this.m_CompSize = base.serializedObject.FindProperty("m_PreviewData.m_CompSize");
 			this.ResetSettingsFromBackend();
 		}
+
 		internal override void ResetValues()
 		{
 			base.ResetValues();
 			this.ResetSettingsFromBackend();
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.UpdateIfDirtyOrScript();
@@ -285,14 +329,14 @@ namespace UnityEditor
 				num2 += current2.compSize;
 			}
 			GUILayout.Space(10f);
-			EditorGUILayout.HelpBox(string.Concat(new object[]
+			EditorGUILayout.HelpBox(string.Concat(new string[]
 			{
 				"Original Size: \t",
-				num,
-				" bytes\nImported Size: \t",
-				num2,
-				" bytes\nRatio: \t\t",
-				(100f * (float)num2 / (float)num).ToString("#.00"),
+				EditorUtility.FormatBytes(num),
+				"\nImported Size: \t",
+				EditorUtility.FormatBytes(num2),
+				"\nRatio: \t\t",
+				(100f * (float)num2 / (float)num).ToString("0.00"),
 				"%"
 			}), MessageType.Info);
 			if (this.CurrentPlatformHasAutoTranslatedCompression())
@@ -307,6 +351,7 @@ namespace UnityEditor
 			}
 			base.ApplyRevertGUI();
 		}
+
 		private AudioImporterInspector.MultiValueStatus GetMultiValueStatus(BuildTargetGroup platform)
 		{
 			AudioImporterInspector.MultiValueStatus result;
@@ -352,6 +397,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private AudioImporterInspector.OverrideStatus GetOverrideStatus(BuildTargetGroup platform)
 		{
 			bool flag = false;
@@ -383,12 +429,13 @@ namespace UnityEditor
 			}
 			return AudioImporterInspector.OverrideStatus.AllOverrides;
 		}
+
 		private AudioCompressionFormat[] GetFormatsForPlatform(BuildTargetGroup platform)
 		{
 			List<AudioCompressionFormat> list = new List<AudioCompressionFormat>();
 			if (platform == BuildTargetGroup.WebGL)
 			{
-				list.Add(AudioCompressionFormat.MP3);
+				list.Add(AudioCompressionFormat.AAC);
 				return list.ToArray();
 			}
 			list.Add(AudioCompressionFormat.PCM);
@@ -397,7 +444,7 @@ namespace UnityEditor
 				list.Add(AudioCompressionFormat.Vorbis);
 			}
 			list.Add(AudioCompressionFormat.ADPCM);
-			if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.WebPlayer && platform != BuildTargetGroup.Unknown)
+			if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.Metro && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.XboxOne && platform != BuildTargetGroup.XBOX360 && platform != BuildTargetGroup.Unknown)
 			{
 				list.Add(AudioCompressionFormat.MP3);
 			}
@@ -409,19 +456,31 @@ namespace UnityEditor
 			{
 				list.Add(AudioCompressionFormat.HEVAG);
 			}
+			if (platform == BuildTargetGroup.WiiU)
+			{
+				list.Add(AudioCompressionFormat.GCADPCM);
+			}
+			if (platform == BuildTargetGroup.XboxOne)
+			{
+				list.Add(AudioCompressionFormat.XMA);
+			}
 			return list.ToArray();
 		}
+
 		private bool CompressionFormatHasQuality(AudioCompressionFormat format)
 		{
 			switch (format)
 			{
 			case AudioCompressionFormat.Vorbis:
 			case AudioCompressionFormat.MP3:
+			case AudioCompressionFormat.XMA:
+			case AudioCompressionFormat.AAC:
 				return true;
 			}
 			return false;
 		}
-		private void OnSampleSettingGUI(BuildTargetGroup platform, AudioImporterInspector.MultiValueStatus status, bool selectionContainsTrackerFile, ref AudioImporterInspector.SampleSettingProperties properties)
+
+		private void OnSampleSettingGUI(BuildTargetGroup platform, AudioImporterInspector.MultiValueStatus status, bool selectionContainsTrackerFile, ref AudioImporterInspector.SampleSettingProperties properties, bool disablePreloadAudioDataOption)
 		{
 			EditorGUI.showMixedValue = (status.multiLoadType && !properties.loadTypeChanged);
 			EditorGUI.BeginChangeCheck();
@@ -430,6 +489,17 @@ namespace UnityEditor
 			{
 				properties.settings.loadType = loadType;
 				properties.loadTypeChanged = true;
+			}
+			using (new EditorGUI.DisabledScope(disablePreloadAudioDataOption))
+			{
+				if (disablePreloadAudioDataOption)
+				{
+					EditorGUILayout.Toggle("Preload Audio Data", false, new GUILayoutOption[0]);
+				}
+				else
+				{
+					EditorGUILayout.PropertyField(this.m_PreloadAudioData, new GUILayoutOption[0]);
+				}
 			}
 			if (!selectionContainsTrackerFile)
 			{
@@ -475,21 +545,28 @@ namespace UnityEditor
 				EditorGUI.showMixedValue = false;
 			}
 		}
+
 		private void OnAudioImporterGUI(bool selectionContainsTrackerFile)
 		{
 			if (!selectionContainsTrackerFile)
 			{
 				EditorGUILayout.PropertyField(this.m_ForceToMono, new GUILayoutOption[0]);
+				EditorGUI.indentLevel++;
+				using (new EditorGUI.DisabledScope(!this.m_ForceToMono.boolValue))
+				{
+					EditorGUILayout.PropertyField(this.m_Normalize, new GUILayoutOption[0]);
+				}
+				EditorGUI.indentLevel--;
 				EditorGUILayout.PropertyField(this.m_LoadInBackground, new GUILayoutOption[0]);
 			}
-			EditorGUILayout.PropertyField(this.m_PreloadAudioData, new GUILayoutOption[0]);
-			GUILayout.Space(10f);
 			BuildPlayerWindow.BuildPlatform[] array = BuildPlayerWindow.GetValidPlatforms().ToArray();
+			GUILayout.Space(10f);
 			int num = EditorGUILayout.BeginPlatformGrouping(array, GUIContent.Temp("Default"));
 			if (num == -1)
 			{
+				bool disablePreloadAudioDataOption = this.m_DefaultSampleSettings.settings.loadType == AudioClipLoadType.Streaming;
 				AudioImporterInspector.MultiValueStatus multiValueStatus = this.GetMultiValueStatus(BuildTargetGroup.Unknown);
-				this.OnSampleSettingGUI(BuildTargetGroup.Unknown, multiValueStatus, selectionContainsTrackerFile, ref this.m_DefaultSampleSettings);
+				this.OnSampleSettingGUI(BuildTargetGroup.Unknown, multiValueStatus, selectionContainsTrackerFile, ref this.m_DefaultSampleSettings, disablePreloadAudioDataOption);
 			}
 			else
 			{
@@ -499,22 +576,25 @@ namespace UnityEditor
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.showMixedValue = (overrideStatus == AudioImporterInspector.OverrideStatus.MixedOverrides && !value.overrideIsForced);
 				bool flag = (value.overrideIsForced && value.forcedOverrideState) || (!value.overrideIsForced && overrideStatus != AudioImporterInspector.OverrideStatus.NoOverrides);
-				flag = EditorGUILayout.Toggle("Override for " + array[num].name, flag, new GUILayoutOption[0]);
+				flag = EditorGUILayout.ToggleLeft("Override for " + array[num].title.text, flag, new GUILayoutOption[0]);
 				EditorGUI.showMixedValue = false;
 				if (EditorGUI.EndChangeCheck())
 				{
 					value.forcedOverrideState = flag;
 					value.overrideIsForced = true;
 				}
+				bool disablePreloadAudioDataOption2 = ((value.overrideIsForced && value.forcedOverrideState) || this.GetOverrideStatus(targetGroup) == AudioImporterInspector.OverrideStatus.AllOverrides) && value.settings.loadType == AudioClipLoadType.Streaming;
 				AudioImporterInspector.MultiValueStatus multiValueStatus2 = this.GetMultiValueStatus(targetGroup);
 				bool disabled = (!value.overrideIsForced || !value.forcedOverrideState) && overrideStatus != AudioImporterInspector.OverrideStatus.AllOverrides;
-				EditorGUI.BeginDisabledGroup(disabled);
-				this.OnSampleSettingGUI(targetGroup, multiValueStatus2, selectionContainsTrackerFile, ref value);
-				EditorGUI.EndDisabledGroup();
+				using (new EditorGUI.DisabledScope(disabled))
+				{
+					this.OnSampleSettingGUI(targetGroup, multiValueStatus2, selectionContainsTrackerFile, ref value, disablePreloadAudioDataOption2);
+				}
 				this.m_SampleSettingOverrides[targetGroup] = value;
 			}
 			EditorGUILayout.EndPlatformGrouping();
 		}
+
 		internal override bool HasModified()
 		{
 			if (base.HasModified())
@@ -535,10 +615,15 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal override void Apply()
 		{
 			base.Apply();
 			this.SyncSettingsToBackend();
+			foreach (ProjectBrowser current in ProjectBrowser.GetAllProjectBrowsers())
+			{
+				current.Repaint();
+			}
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class LightmapParameters : UnityEngine.Object
@@ -14,6 +15,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float clusterResolution
 		{
 			[WrapperlessIcall]
@@ -23,6 +25,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int irradianceBudget
 		{
 			[WrapperlessIcall]
@@ -32,6 +35,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int irradianceQuality
 		{
 			[WrapperlessIcall]
@@ -41,6 +45,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float backFaceTolerance
 		{
 			[WrapperlessIcall]
@@ -50,6 +55,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float modellingTolerance
 		{
 			[WrapperlessIcall]
@@ -59,6 +65,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float edgeStitching
 		{
 			[WrapperlessIcall]
@@ -68,6 +75,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int systemTag
 		{
 			[WrapperlessIcall]
@@ -77,6 +85,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool isTransparent
 		{
 			[WrapperlessIcall]
@@ -86,6 +95,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int AOQuality
 		{
 			[WrapperlessIcall]
@@ -95,6 +105,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int AOAntiAliasingSamples
 		{
 			[WrapperlessIcall]
@@ -104,6 +115,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int blurRadius
 		{
 			[WrapperlessIcall]
@@ -113,6 +125,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int directLightQuality
 		{
 			[WrapperlessIcall]
@@ -122,6 +135,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int antiAliasingSamples
 		{
 			[WrapperlessIcall]
@@ -131,6 +145,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int bakedLightmapTag
 		{
 			[WrapperlessIcall]
@@ -140,10 +155,12 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public LightmapParameters()
 		{
 			LightmapParameters.Internal_CreateLightmapParameters(this);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateLightmapParameters([Writable] LightmapParameters self);

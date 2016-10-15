@@ -1,15 +1,22 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class HeightmapPainter
 	{
 		public int size;
+
 		public float strength;
+
 		public float targetHeight;
+
 		public TerrainTool tool;
+
 		public Brush brush;
+
 		public TerrainData terrainData;
+
 		private float Smooth(int x, int y)
 		{
 			float num = 0f;
@@ -25,6 +32,7 @@ namespace UnityEditor
 			num += this.terrainData.GetHeight(x, y - 1) * num2;
 			return num / 8f;
 		}
+
 		private float ApplyBrush(float height, float brushStrength, int x, int y)
 		{
 			if (this.tool == TerrainTool.PaintHeight)
@@ -52,6 +60,7 @@ namespace UnityEditor
 				return height;
 			}
 		}
+
 		public void PaintHeight(float xCenterNormalized, float yCenterNormalized)
 		{
 			int num;

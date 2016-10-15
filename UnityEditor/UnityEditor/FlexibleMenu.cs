@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class FlexibleMenu : PopupWindowContent
@@ -7,11 +8,14 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle menuItem = "MenuItem";
+
 			public GUIContent plusButtonText = new GUIContent(string.Empty, "Add New Item");
 		}
+
 		internal static class ItemContextMenu
 		{
 			private static FlexibleMenu s_Caller;
+
 			public static void Show(int itemIndex, FlexibleMenu caller)
 			{
 				FlexibleMenu.ItemContextMenu.s_Caller = caller;
@@ -21,30 +25,46 @@ namespace UnityEditor
 				genericMenu.ShowAsContext();
 				GUIUtility.ExitGUI();
 			}
+
 			private static void Delete(object userData)
 			{
 				int index = (int)userData;
 				FlexibleMenu.ItemContextMenu.s_Caller.DeleteItem(index);
 			}
+
 			private static void Edit(object userData)
 			{
 				int showEditWindowForIndex = (int)userData;
 				FlexibleMenu.ItemContextMenu.s_Caller.m_ShowEditWindowForIndex = showEditWindowForIndex;
 			}
 		}
+
 		private const float lineHeight = 18f;
+
 		private const float seperatorHeight = 8f;
+
 		private const float leftMargin = 25f;
+
 		private static FlexibleMenu.Styles s_Styles;
+
 		private IFlexibleMenuItemProvider m_ItemProvider;
+
 		private FlexibleMenuModifyItemUI m_ModifyItemUI;
+
 		private readonly Action<int, object> m_ItemClickedCallback;
+
 		private Vector2 m_ScrollPosition = Vector2.zero;
+
 		private bool m_ShowAddNewPresetItem;
+
 		private int m_ShowEditWindowForIndex = -1;
+
 		private int m_HoverIndex;
+
 		private int[] m_SeperatorIndices;
+
 		private float m_MaxTextWidth = -1f;
+
 		private int maxIndex
 		{
 			get
@@ -52,11 +72,13 @@ namespace UnityEditor
 				return (!this.m_ShowAddNewPresetItem) ? (this.m_ItemProvider.Count() - 1) : this.m_ItemProvider.Count();
 			}
 		}
+
 		public int selectedIndex
 		{
 			get;
 			set;
 		}
+
 		public FlexibleMenu(IFlexibleMenuItemProvider itemProvider, int selectionIndex, FlexibleMenuModifyItemUI modifyItemUi, Action<int, object> itemClickedCallback)
 		{
 			this.m_ItemProvider = itemProvider;
@@ -66,18 +88,22 @@ namespace UnityEditor
 			this.selectedIndex = selectionIndex;
 			this.m_ShowAddNewPresetItem = (this.m_ModifyItemUI != null);
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			return this.CalcSize();
 		}
+
 		private bool IsDeleteModiferPressed()
 		{
 			return Event.current.alt;
 		}
+
 		private bool AllowDeleteClick(int index)
 		{
 			return this.IsDeleteModiferPressed() && this.m_ItemProvider.IsModificationAllowed(index) && GUIUtility.hotControl == 0;
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			if (FlexibleMenu.s_Styles == null)
@@ -140,13 +166,10 @@ namespace UnityEditor
 								this.Repaint();
 							}
 						}
-						else
+						else if (this.m_HoverIndex == i)
 						{
-							if (this.m_HoverIndex == i)
-							{
-								this.m_HoverIndex = -1;
-								this.Repaint();
-							}
+							this.m_HoverIndex = -1;
+							this.Repaint();
 						}
 						goto IL_389;
 					case EventType.MouseDrag:
@@ -209,6 +232,7 @@ namespace UnityEditor
 			}
 			GUI.EndScrollView();
 		}
+
 		private void SelectItem(int index)
 		{
 			this.selectedIndex = index;
@@ -217,6 +241,7 @@ namespace UnityEditor
 				this.m_ItemClickedCallback(index, this.m_ItemProvider.GetItem(index));
 			}
 		}
+
 		private Vector2 CalcSize()
 		{
 			float y = (float)(this.maxIndex + 1) * 18f + (float)this.m_SeperatorIndices.Length * 8f;
@@ -226,10 +251,12 @@ namespace UnityEditor
 			}
 			return new Vector2(this.m_MaxTextWidth, y);
 		}
+
 		private void ClearCachedWidth()
 		{
 			this.m_MaxTextWidth = -1f;
 		}
+
 		private float CalcWidth()
 		{
 			if (FlexibleMenu.s_Styles == null)
@@ -244,10 +271,12 @@ namespace UnityEditor
 			}
 			return num + 6f;
 		}
+
 		private void Repaint()
 		{
 			HandleUtility.Repaint();
 		}
+
 		private void CreateNewItemButton(Rect itemRect)
 		{
 			if (this.m_ModifyItemUI == null)
@@ -268,6 +297,7 @@ namespace UnityEditor
 				PopupWindow.Show(rect, this.m_ModifyItemUI);
 			}
 		}
+
 		private void EditExistingItem(Rect itemRect, int index)
 		{
 			if (this.m_ModifyItemUI == null)
@@ -284,12 +314,14 @@ namespace UnityEditor
 			});
 			PopupWindow.Show(itemRect, this.m_ModifyItemUI);
 		}
+
 		private void DeleteItem(int index)
 		{
 			this.ClearCachedWidth();
 			this.m_ItemProvider.Remove(index);
 			this.selectedIndex = Mathf.Clamp(this.selectedIndex, 0, this.m_ItemProvider.Count() - 1);
 		}
+
 		public static void DrawRect(Rect rect, Color color)
 		{
 			if (Event.current.type != EventType.Repaint)

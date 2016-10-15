@@ -1,4 +1,5 @@
 using System;
+
 namespace JetBrains.Annotations
 {
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
@@ -9,14 +10,17 @@ namespace JetBrains.Annotations
 			get;
 			private set;
 		}
+
 		public bool ForceFullStates
 		{
 			get;
 			private set;
 		}
+
 		public ContractAnnotationAttribute([NotNull] string contract) : this(contract, false)
 		{
 		}
+
 		public ContractAnnotationAttribute([NotNull] string contract, bool forceFullStates)
 		{
 			this.Contract = contract;

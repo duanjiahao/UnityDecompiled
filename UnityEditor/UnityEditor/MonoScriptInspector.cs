@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(MonoScript))]

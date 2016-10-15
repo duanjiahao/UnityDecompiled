@@ -1,25 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 namespace UnityEditor
 {
 	internal static class TreeViewUtility
 	{
 		public static List<TreeViewItem> FindItemsInList(IEnumerable<int> itemIDs, List<TreeViewItem> treeViewItems)
 		{
-			return (
-				from x in treeViewItems
-				where itemIDs.Contains(x.id)
-				select x).ToList<TreeViewItem>();
+			return (from x in treeViewItems
+			where itemIDs.Contains(x.id)
+			select x).ToList<TreeViewItem>();
 		}
+
 		public static TreeViewItem FindItemInList<T>(int id, List<T> treeViewItems) where T : TreeViewItem
 		{
 			return treeViewItems.FirstOrDefault((T t) => t.id == id);
 		}
+
 		public static TreeViewItem FindItem(int id, TreeViewItem searchFromThisItem)
 		{
 			return TreeViewUtility.FindItemRecursive(id, searchFromThisItem);
 		}
+
 		private static TreeViewItem FindItemRecursive(int id, TreeViewItem item)
 		{
 			if (item == null)
@@ -44,6 +47,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public static void DebugPrintToEditorLogRecursive(TreeViewItem item)
 		{
 			if (item == null)
@@ -60,6 +64,7 @@ namespace UnityEditor
 				TreeViewUtility.DebugPrintToEditorLogRecursive(current);
 			}
 		}
+
 		public static void SetChildParentReferences(List<TreeViewItem> visibleItems, TreeViewItem root)
 		{
 			for (int i = 0; i < visibleItems.Count; i++)
@@ -89,6 +94,7 @@ namespace UnityEditor
 				root.children = list;
 			}
 		}
+
 		private static void SetChildren(TreeViewItem item, List<TreeViewItem> newChildList)
 		{
 			if (LazyTreeViewDataSource.IsChildListForACollapsedParent(item.children) && newChildList == null)
@@ -97,6 +103,7 @@ namespace UnityEditor
 			}
 			item.children = newChildList;
 		}
+
 		private static void SetChildParentReferences(int parentIndex, List<TreeViewItem> visibleItems)
 		{
 			TreeViewItem treeViewItem = visibleItems[parentIndex];

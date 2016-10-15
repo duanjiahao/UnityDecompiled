@@ -1,13 +1,17 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(SphereCollider))]
 	internal class SphereColliderEditor : Collider3DEditorBase
 	{
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Radius;
+
 		private int m_HandleControlID;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
@@ -15,6 +19,7 @@ namespace UnityEditor
 			this.m_Radius = base.serializedObject.FindProperty("m_Radius");
 			this.m_HandleControlID = -1;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -25,6 +30,7 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Radius, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		public void OnSceneGUI()
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;

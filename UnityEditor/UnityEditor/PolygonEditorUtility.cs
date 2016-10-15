@@ -1,25 +1,42 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PolygonEditorUtility
 	{
 		private const float k_HandlePointSnap = 0.2f;
+
 		private const float k_HandlePickDistance = 50f;
+
 		private Collider2D m_ActiveCollider;
+
 		private bool m_LoopingCollider;
+
 		private int m_MinPathPoints = 3;
+
 		private int m_SelectedPath = -1;
+
 		private int m_SelectedVertex = -1;
+
 		private float m_SelectedDistance;
+
 		private int m_SelectedEdgePath = -1;
+
 		private int m_SelectedEdgeVertex0 = -1;
+
 		private int m_SelectedEdgeVertex1 = -1;
+
 		private float m_SelectedEdgeDistance;
+
 		private bool m_LeftIntersect;
+
 		private bool m_RightIntersect;
+
 		private bool m_DeleteMode;
+
 		private bool m_FirstOnSceneGUIAfterReset;
+
 		public void Reset()
 		{
 			this.m_SelectedPath = -1;
@@ -31,6 +48,7 @@ namespace UnityEditor
 			this.m_RightIntersect = false;
 			this.m_FirstOnSceneGUIAfterReset = true;
 		}
+
 		private void UndoRedoPerformed()
 		{
 			if (this.m_ActiveCollider != null)
@@ -40,6 +58,7 @@ namespace UnityEditor
 				this.StartEditing(activeCollider);
 			}
 		}
+
 		public void StartEditing(Collider2D collider)
 		{
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
@@ -64,12 +83,14 @@ namespace UnityEditor
 			}
 			throw new NotImplementedException(string.Format("PolygonEditorUtility does not support {0}", collider));
 		}
+
 		public void StopEditing()
 		{
 			PolygonEditor.StopEditing();
 			this.m_ActiveCollider = null;
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
+
 		private void ApplyEditing(Collider2D collider)
 		{
 			PolygonCollider2D polygonCollider2D = collider as PolygonCollider2D;
@@ -86,9 +107,14 @@ namespace UnityEditor
 			}
 			throw new NotImplementedException(string.Format("PolygonEditorUtility does not support {0}", collider));
 		}
+
 		public void OnSceneGUI()
 		{
 			if (this.m_ActiveCollider == null)
+			{
+				return;
+			}
+			if (Tools.viewToolActive)
 			{
 				return;
 			}
@@ -131,15 +157,15 @@ namespace UnityEditor
 				{
 					this.m_SelectedEdgePath = -1;
 				}
-				current.Use();
-			}
-			else
-			{
-				if (current.type == EventType.MouseUp)
+				if (current.type == EventType.MouseMove)
 				{
-					this.m_LeftIntersect = false;
-					this.m_RightIntersect = false;
+					current.Use();
 				}
+			}
+			else if (current.type == EventType.MouseUp)
+			{
+				this.m_LeftIntersect = false;
+				this.m_RightIntersect = false;
 			}
 			bool flag = false;
 			bool flag2 = false;
@@ -153,19 +179,13 @@ namespace UnityEditor
 				flag2 = (this.m_SelectedEdgeDistance < this.m_SelectedDistance - num4);
 				flag = !flag2;
 			}
-			else
+			else if (this.m_SelectedPath != -1)
 			{
-				if (this.m_SelectedPath != -1)
-				{
-					flag = true;
-				}
-				else
-				{
-					if (this.m_SelectedEdgePath != -1)
-					{
-						flag2 = true;
-					}
-				}
+				flag = true;
+			}
+			else if (this.m_SelectedEdgePath != -1)
+			{
+				flag2 = true;
 			}
 			if (this.m_DeleteMode && flag2)
 			{
@@ -258,10 +278,12 @@ namespace UnityEditor
 			}
 			this.m_FirstOnSceneGUIAfterReset = false;
 		}
+
 		private bool DeleteCommandEvent(Event evt)
 		{
 			return (evt.type == EventType.ExecuteCommand || evt.type == EventType.ValidateCommand) && (evt.commandName == "Delete" || evt.commandName == "SoftDelete");
 		}
+
 		private void DrawEdgesForSelectedPoint(Vector3 worldPos, Transform transform, bool leftIntersect, bool rightIntersect, bool loop)
 		{
 			bool flag = true;
@@ -310,6 +332,7 @@ namespace UnityEditor
 			}
 			Handles.color = Color.white;
 		}
+
 		private Vector2 GetNearestPointOnEdge(Vector2 point, Vector2 start, Vector2 end)
 		{
 			Vector2 rhs = point - start;

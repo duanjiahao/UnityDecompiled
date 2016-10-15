@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetStoreLoginWindow : EditorWindow
@@ -8,20 +9,31 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle link = new GUIStyle(EditorStyles.miniLabel);
+
 			public Styles()
 			{
 				this.link.normal.textColor = new Color(0.26f, 0.51f, 0.75f, 1f);
 			}
 		}
+
 		public delegate void LoginCallback(string errorMessage);
+
 		private const float kBaseHeight = 110f;
+
 		private static AssetStoreLoginWindow.Styles styles;
+
 		private static GUIContent s_AssetStoreLogo;
+
 		private string m_LoginReason;
+
 		private string m_LoginRemoteMessage;
+
 		private string m_Username = string.Empty;
+
 		private string m_Password = string.Empty;
+
 		private AssetStoreLoginWindow.LoginCallback m_LoginCallback;
+
 		public static bool IsLoggedIn
 		{
 			get
@@ -29,6 +41,7 @@ namespace UnityEditor
 				return AssetStoreClient.HasActiveSessionID;
 			}
 		}
+
 		public static void Login(string loginReason, AssetStoreLoginWindow.LoginCallback callback)
 		{
 			if (AssetStoreClient.HasActiveSessionID)
@@ -52,10 +65,12 @@ namespace UnityEditor
 				}
 			});
 		}
+
 		public static void Logout()
 		{
 			AssetStoreClient.Logout();
 		}
+
 		public static void ShowAssetStoreLoginWindow(string loginReason, AssetStoreLoginWindow.LoginCallback callback)
 		{
 			AssetStoreLoginWindow windowWithRect = EditorWindow.GetWindowWithRect<AssetStoreLoginWindow>(new Rect(100f, 100f, 360f, 140f), true, "Login to Asset Store");
@@ -67,6 +82,7 @@ namespace UnityEditor
 			windowWithRect.m_LoginRemoteMessage = null;
 			Analytics.Track("/AssetStore/Login");
 		}
+
 		private static void LoadLogos()
 		{
 			if (AssetStoreLoginWindow.s_AssetStoreLogo != null)
@@ -75,6 +91,7 @@ namespace UnityEditor
 			}
 			AssetStoreLoginWindow.s_AssetStoreLogo = new GUIContent(string.Empty);
 		}
+
 		public void OnDisable()
 		{
 			if (this.m_LoginCallback != null)
@@ -84,6 +101,7 @@ namespace UnityEditor
 			this.m_LoginCallback = null;
 			this.m_Password = null;
 		}
+
 		public void OnGUI()
 		{
 			if (AssetStoreLoginWindow.styles == null)
@@ -189,6 +207,7 @@ namespace UnityEditor
 				EditorGUI.FocusTextInControl("username");
 			}
 		}
+
 		private void DoLogin()
 		{
 			this.m_LoginRemoteMessage = null;

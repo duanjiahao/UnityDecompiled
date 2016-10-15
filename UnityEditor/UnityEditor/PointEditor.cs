@@ -2,93 +2,44 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PointEditor
 	{
 		private static Vector2 s_StartMouseDragPosition;
+
 		private static List<int> s_StartDragSelection;
+
 		private static bool s_DidDrag;
-		private static Vector3 s_EditingScale = Vector3.one;
-		private static Quaternion s_EditingRotation = Quaternion.identity;
+
+		private static List<int> s_SelectionStart;
+
 		public static bool MovePoints(IEditablePoint points, Transform cloudTransform, List<int> selection)
 		{
 			if (selection.Count == 0)
 			{
 				return false;
 			}
-			if (Event.current.type == EventType.MouseUp)
-			{
-				PointEditor.s_EditingScale = Vector3.one;
-				PointEditor.s_EditingRotation = Quaternion.identity;
-			}
 			if (Camera.current)
 			{
 				Vector3 vector = Vector3.zero;
 				vector = ((Tools.pivotMode != PivotMode.Pivot) ? (selection.Aggregate(vector, (Vector3 current, int index) => current + points.GetPosition(index)) / (float)selection.Count) : points.GetPosition(selection[0]));
 				vector = cloudTransform.TransformPoint(vector);
-				switch (Tools.current)
+				Vector3 position = Handles.PositionHandle(vector, (Tools.pivotRotation != PivotRotation.Local) ? Quaternion.identity : cloudTransform.rotation);
+				if (GUI.changed)
 				{
-				case Tool.Move:
-				{
-					Vector3 position = Handles.PositionHandle(vector, (Tools.pivotRotation != PivotRotation.Local) ? Quaternion.identity : cloudTransform.rotation);
-					if (GUI.changed)
+					Vector3 b = cloudTransform.InverseTransformPoint(position) - cloudTransform.InverseTransformPoint(vector);
+					foreach (int current2 in selection)
 					{
-						Vector3 b = cloudTransform.InverseTransformPoint(position) - cloudTransform.InverseTransformPoint(vector);
-						foreach (int current4 in selection)
-						{
-							points.SetPosition(current4, points.GetPosition(current4) + b);
-						}
-						return true;
+						points.SetPosition(current2, points.GetPosition(current2) + b);
 					}
-					break;
-				}
-				case Tool.Rotate:
-				{
-					Quaternion rotation = Handles.RotationHandle(PointEditor.s_EditingRotation, vector);
-					if (GUI.changed)
-					{
-						Vector3 b2 = cloudTransform.InverseTransformPoint(vector);
-						foreach (int current2 in selection)
-						{
-							Vector3 vector2 = points.GetPosition(current2) - b2;
-							vector2 = Quaternion.Inverse(PointEditor.s_EditingRotation) * vector2;
-							vector2 = rotation * vector2;
-							vector2 += b2;
-							points.SetPosition(current2, vector2);
-						}
-						PointEditor.s_EditingRotation = rotation;
-						return true;
-					}
-					break;
-				}
-				case Tool.Scale:
-				{
-					Vector3 vector3 = Handles.ScaleHandle(PointEditor.s_EditingScale, vector, Quaternion.identity, HandleUtility.GetHandleSize(vector));
-					if (GUI.changed)
-					{
-						Vector3 b3 = cloudTransform.InverseTransformPoint(vector);
-						foreach (int current3 in selection)
-						{
-							Vector3 vector4 = points.GetPosition(current3) - b3;
-							vector4.x /= PointEditor.s_EditingScale.x;
-							vector4.y /= PointEditor.s_EditingScale.y;
-							vector4.z /= PointEditor.s_EditingScale.z;
-							vector4.x *= vector3.x;
-							vector4.y *= vector3.y;
-							vector4.z *= vector3.z;
-							vector4 += b3;
-							points.SetPosition(current3, vector4);
-						}
-						PointEditor.s_EditingScale = vector3;
-						return true;
-					}
-					break;
-				}
+					return true;
 				}
 			}
 			return false;
 		}
+
 		public static int FindNearest(Vector2 point, Transform cloudTransform, IEditablePoint points)
 		{
 			Ray ray = HandleUtility.GUIPointToWorldRay(point);
@@ -106,12 +57,12 @@ namespace UnityEditor
 			{
 				return -1;
 			}
-			IOrderedEnumerable<KeyValuePair<int, float>> source = 
-				from x in dictionary
-				orderby x.Value
-				select x;
+			IOrderedEnumerable<KeyValuePair<int, float>> source = from x in dictionary
+			orderby x.Value
+			select x;
 			return source.First<KeyValuePair<int, float>>().Key;
 		}
+
 		public static bool SelectPoints(IEditablePoint points, Transform cloudTransform, ref List<int> selection, bool firstSelect)
 		{
 			int controlID = GUIUtility.GetControlID(FocusType.Passive);
@@ -131,6 +82,7 @@ namespace UnityEditor
 						selection.Clear();
 						result = true;
 					}
+					PointEditor.s_SelectionStart = new List<int>(selection);
 					GUIUtility.hotControl = controlID;
 					PointEditor.s_StartMouseDragPosition = current.mousePosition;
 					PointEditor.s_StartDragSelection = new List<int>(selection);
@@ -186,7 +138,17 @@ namespace UnityEditor
 						Vector2 point = HandleUtility.WorldToGUIPoint(points.GetPosition(i));
 						if (rect.Contains(point))
 						{
-							selection.Add(i);
+							if (EditorGUI.actionKey)
+							{
+								if (PointEditor.s_SelectionStart.Contains(i))
+								{
+									selection.Remove(i);
+								}
+							}
+							else if (!PointEditor.s_SelectionStart.Contains(i))
+							{
+								selection.Add(i);
+							}
 						}
 					}
 					Handles.matrix = matrix;
@@ -210,10 +172,12 @@ namespace UnityEditor
 			selection = selection.Distinct<int>().ToList<int>();
 			return result;
 		}
+
 		public static void Draw(IEditablePoint points, Transform cloudTransform, List<int> selection, bool twoPassDrawing)
 		{
 			LightmapVisualization.DrawPointCloud(points.GetUnselectedPositions(), points.GetSelectedPositions(), points.GetDefaultColor(), points.GetSelectedColor(), points.GetPointScale(), cloudTransform);
 		}
+
 		private static Rect FromToRect(Vector2 from, Vector2 to)
 		{
 			Rect result = new Rect(from.x, from.y, to.x - from.x, to.y - from.y);

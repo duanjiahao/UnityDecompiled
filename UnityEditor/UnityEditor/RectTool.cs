@@ -1,33 +1,57 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RectTool : ManipulationTool
 	{
 		internal const string kChangingLeft = "ChangingLeft";
+
 		internal const string kChangingRight = "ChangingRight";
+
 		internal const string kChangingTop = "ChangingTop";
+
 		internal const string kChangingBottom = "ChangingBottom";
+
 		internal const string kChangingPosX = "ChangingPosX";
+
 		internal const string kChangingPosY = "ChangingPosY";
+
 		internal const string kChangingWidth = "ChangingWidth";
+
 		internal const string kChangingHeight = "ChangingHeight";
+
 		internal const string kChangingPivot = "ChangingPivot";
+
 		private const float kMinVisibleSize = 0.2f;
+
 		private static RectTool s_Instance;
+
 		private static int s_ResizeHandlesHash = "ResizeHandles".GetHashCode();
+
 		private static int s_RotationHandlesHash = "RotationHandles".GetHashCode();
+
 		private static int s_MoveHandleHash = "MoveHandle".GetHashCode();
+
 		private static int s_PivotHandleHash = "PivotHandle".GetHashCode();
+
 		private static Rect s_StartRect = default(Rect);
+
 		private static Vector3 s_StartMouseWorldPos;
+
 		private static Vector3 s_StartPosition;
+
 		private static Vector2 s_StartMousePos;
+
 		private static Vector3 s_StartRectPosition;
+
 		private static Vector2 s_CurrentMousePos;
+
 		private static bool s_Moving = false;
+
 		private static int s_LockAxis = -1;
+
 		public static void OnGUI(SceneView view)
 		{
 			if (RectTool.s_Instance == null)
@@ -36,6 +60,7 @@ namespace UnityEditor
 			}
 			RectTool.s_Instance.OnToolGUI(view);
 		}
+
 		public static Vector2 GetLocalRectPoint(Rect rect, int index)
 		{
 			switch (index)
@@ -52,6 +77,7 @@ namespace UnityEditor
 				return Vector3.zero;
 			}
 		}
+
 		public override void ToolGUI(SceneView view, Vector3 handlePosition, bool isStatic)
 		{
 			Rect handleRect = Tools.handleRect;
@@ -82,18 +108,17 @@ namespace UnityEditor
 				RectTransform component = Selection.activeTransform.GetComponent<RectTransform>();
 				bool flag = Selection.transforms.Length > 1;
 				bool flag2 = !flag && Tools.pivotMode == PivotMode.Pivot && component != null;
-				EditorGUI.BeginDisabledGroup(!flag && !flag2);
-				EditorGUI.BeginChangeCheck();
-				Vector3 a = RectTool.PivotHandleGUI(handleRect, handlePosition2, handleRectRotation);
-				if (EditorGUI.EndChangeCheck() && !isStatic)
+				using (new EditorGUI.DisabledScope(!flag && !flag2))
 				{
-					if (flag)
+					EditorGUI.BeginChangeCheck();
+					Vector3 a = RectTool.PivotHandleGUI(handleRect, handlePosition2, handleRectRotation);
+					if (EditorGUI.EndChangeCheck() && !isStatic)
 					{
-						Tools.localHandleOffset += Quaternion.Inverse(Tools.handleRotation) * (a - handlePosition2);
-					}
-					else
-					{
-						if (flag2)
+						if (flag)
+						{
+							Tools.localHandleOffset += Quaternion.Inverse(Tools.handleRotation) * (a - handlePosition2);
+						}
+						else if (flag2)
 						{
 							Transform activeTransform = Selection.activeTransform;
 							Undo.RecordObject(component, "Move Rectangle Pivot");
@@ -107,7 +132,6 @@ namespace UnityEditor
 						}
 					}
 				}
-				EditorGUI.EndDisabledGroup();
 			}
 			TransformManipulator.BeginManipulationHandling(true);
 			if (!Tools.vertexDragging)
@@ -148,6 +172,7 @@ namespace UnityEditor
 						{
 							Transform transform3 = transforms2[k];
 							transform3.RotateAround(handlePosition, vector4, angle);
+							transform3.SetLocalEulerHint(transform3.GetLocalEulerAngles(transform3.rotationOrder));
 							if (transform3.parent != null)
 							{
 								transform3.SendTransformChangedScale();
@@ -169,11 +194,13 @@ namespace UnityEditor
 			TransformManipulator.EndManipulationHandling();
 			GUI.color = color;
 		}
+
 		private static Vector3 GetRectPointInWorld(Rect rect, Vector3 pivot, Quaternion rotation, int xHandle, int yHandle)
 		{
 			Vector3 point = new Vector2(point.x = Mathf.Lerp(rect.xMin, rect.xMax, (float)xHandle * 0.5f), point.y = Mathf.Lerp(rect.yMin, rect.yMax, (float)yHandle * 0.5f));
 			return rotation * point + pivot;
 		}
+
 		private static Vector3 ResizeHandlesGUI(Rect rect, Vector3 pivot, Quaternion rotation, out Vector3 scalePivot)
 		{
 			if (Event.current.type == EventType.MouseDown)
@@ -332,6 +359,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private static Vector3 MoveHandlesGUI(Rect rect, Vector3 pivot, Quaternion rotation)
 		{
 			int controlID = GUIUtility.GetControlID(RectTool.s_MoveHandleHash, FocusType.Passive);
@@ -384,7 +412,7 @@ namespace UnityEditor
 				{
 					if (!RectTool.s_Moving)
 					{
-						Selection.activeGameObject = HandleUtility.PickGameObject(current.mousePosition, true);
+						Selection.activeGameObject = SceneViewPicking.PickGameObject(current.mousePosition);
 					}
 					GUIUtility.hotControl = 0;
 					EditorGUIUtility.SetWantsMouseJumping(0);
@@ -481,6 +509,7 @@ namespace UnityEditor
 			ManipulationToolUtility.DetectDraggingBasedOnMouseDownUp("ChangingBottom", typeForControl);
 			return vector;
 		}
+
 		private static float SceneViewDistanceToDisc(Vector3 center, Vector3 normal, float radius, Vector2 mousePos)
 		{
 			Plane plane = new Plane(normal, center);
@@ -493,6 +522,7 @@ namespace UnityEditor
 			}
 			return float.PositiveInfinity;
 		}
+
 		private static float SceneViewDistanceToRectangle(Vector3[] worldPoints, Vector2 mousePos)
 		{
 			Vector2[] array = new Vector2[4];
@@ -502,6 +532,7 @@ namespace UnityEditor
 			}
 			return RectTool.DistanceToRectangle(array, mousePos);
 		}
+
 		private static float DistancePointToLineSegment(Vector2 point, Vector2 a, Vector2 b)
 		{
 			float sqrMagnitude = (b - a).sqrMagnitude;
@@ -521,6 +552,7 @@ namespace UnityEditor
 			Vector2 b2 = a + num * (b - a);
 			return (point - b2).magnitude;
 		}
+
 		private static float DistanceToRectangle(Vector2[] screenPoints, Vector2 mousePos)
 		{
 			bool flag = false;
@@ -552,6 +584,7 @@ namespace UnityEditor
 			}
 			return 0f;
 		}
+
 		private static Quaternion RotationHandlesGUI(Rect rect, Vector3 pivot, Quaternion rotation)
 		{
 			Vector3 eulerAngles = rotation.eulerAngles;
@@ -582,6 +615,7 @@ namespace UnityEditor
 			}
 			return rotation;
 		}
+
 		private static Vector3 PivotHandleGUI(Rect rect, Vector3 pivot, Quaternion rotation)
 		{
 			int controlID = GUIUtility.GetControlID(RectTool.s_PivotHandleHash, FocusType.Passive);

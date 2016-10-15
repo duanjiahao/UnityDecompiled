@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+
 namespace UnityEngine.Events
 {
 	internal abstract class BaseInvokableCall
@@ -7,6 +8,7 @@ namespace UnityEngine.Events
 		protected BaseInvokableCall()
 		{
 		}
+
 		protected BaseInvokableCall(object target, MethodInfo function)
 		{
 			if (target == null)
@@ -18,7 +20,9 @@ namespace UnityEngine.Events
 				throw new ArgumentNullException("function");
 			}
 		}
+
 		public abstract void Invoke(object[] args);
+
 		protected static void ThrowOnInvalidArg<T>(object arg)
 		{
 			if (arg != null && !(arg is T))
@@ -30,10 +34,18 @@ namespace UnityEngine.Events
 				}));
 			}
 		}
+
 		protected static bool AllowInvoke(Delegate @delegate)
 		{
-			return @delegate.Method.IsStatic || @delegate.Target != null;
+			object target = @delegate.Target;
+			if (target == null)
+			{
+				return true;
+			}
+			UnityEngine.Object @object = target as UnityEngine.Object;
+			return object.ReferenceEquals(@object, null) || @object != null;
 		}
+
 		public abstract bool Find(object targetObj, MethodInfo method);
 	}
 }

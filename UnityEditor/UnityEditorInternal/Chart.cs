@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class Chart
@@ -11,42 +12,68 @@ namespace UnityEditorInternal
 			Activated,
 			Closed
 		}
+
 		internal enum ChartType
 		{
 			StackedFill,
 			Line
 		}
+
 		internal class Styles
 		{
 			public GUIContent performanceWarning = new GUIContent(string.Empty, EditorGUIUtility.LoadIcon("console.warnicon.sml"), "Collecting GPU Profiler data might have overhead. Close graph if you don't need its data");
+
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle leftPane = "ProfilerLeftPane";
+
 			public GUIStyle rightPane = "ProfilerRightPane";
+
 			public GUIStyle paneSubLabel = "ProfilerPaneSubLabel";
-			public GUIStyle closeButton = "WinBtnCloseWin";
+
+			public GUIStyle closeButton = "WinBtnClose";
+
 			public GUIStyle whiteLabel = "ProfilerBadge";
+
 			public GUIStyle selectedLabel = "ProfilerSelectedLabel";
 		}
+
 		public const float kSideWidth = 170f;
+
 		private const int kDistFromTopToFirstLabel = 20;
+
 		private const int kLabelHeight = 11;
+
 		private const int kCloseButtonSize = 13;
+
 		private const float kLabelXOffset = 40f;
+
 		private const float kWarningLabelHeightOffset = 43f;
+
 		private static int s_ChartHash = "Charts".GetHashCode();
+
 		private Vector3[] m_CachedLineData;
+
 		private string m_ChartSettingsName;
+
 		private static Chart.Styles ms_Styles = null;
+
 		private int m_DragItemIndex = -1;
+
 		private Vector2 m_DragDownPos;
+
 		private int[] m_ChartOrderBackup;
+
 		private int m_MouseDownIndex = -1;
+
 		public string m_NotSupportedWarning;
+
 		public void LoadAndBindSettings(string chartSettingsName, ChartData cdata)
 		{
 			this.m_ChartSettingsName = chartSettingsName;
 			this.LoadChartsSettings(cdata);
 		}
+
 		private int MoveSelectedFrame(int selectedFrame, ChartData cdata, int direction)
 		{
 			int numberOfFrames = cdata.NumberOfFrames;
@@ -57,12 +84,14 @@ namespace UnityEditorInternal
 			}
 			return num;
 		}
+
 		private int DoFrameSelectionDrag(float x, Rect r, ChartData cdata, int len)
 		{
 			int num = Mathf.RoundToInt((x - r.x) / r.width * (float)len - 0.5f);
 			GUI.changed = true;
 			return Mathf.Clamp(num + cdata.firstFrame, cdata.firstSelectableFrame, cdata.firstFrame + len);
 		}
+
 		private int HandleFrameSelectionEvents(int selectedFrame, int chartControlID, Rect chartFrame, ChartData cdata, int len)
 		{
 			Event current = Event.current;
@@ -99,19 +128,17 @@ namespace UnityEditorInternal
 						selectedFrame = this.MoveSelectedFrame(selectedFrame, cdata, -1);
 						current.Use();
 					}
-					else
+					else if (current.keyCode == KeyCode.RightArrow)
 					{
-						if (current.keyCode == KeyCode.RightArrow)
-						{
-							selectedFrame = this.MoveSelectedFrame(selectedFrame, cdata, 1);
-							current.Use();
-						}
+						selectedFrame = this.MoveSelectedFrame(selectedFrame, cdata, 1);
+						current.Use();
 					}
 				}
 				break;
 			}
 			return selectedFrame;
 		}
+
 		public int DoGUI(Chart.ChartType type, int selectedFrame, ChartData cdata, ProfilerArea area, bool active, GUIContent icon, out Chart.ChartAction action)
 		{
 			action = Chart.ChartAction.None;
@@ -189,9 +216,14 @@ namespace UnityEditorInternal
 			}
 			return selectedFrame;
 		}
+
 		private void DrawSelectedFrame(int selectedFrame, ChartData cdata, Rect r)
 		{
-			if (selectedFrame - cdata.firstSelectableFrame >= 0)
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
+			if (cdata.firstSelectableFrame != -1 && selectedFrame - cdata.firstSelectableFrame >= 0)
 			{
 				float num = (float)cdata.NumberOfFrames;
 				selectedFrame -= cdata.firstFrame;
@@ -206,15 +238,26 @@ namespace UnityEditorInternal
 				GL.End();
 			}
 		}
+
+		private void DrawMaxValueScale(ChartData cdata, Rect r)
+		{
+			Handles.Label(new Vector3(r.x + r.width / 2f - 20f, r.yMin + 2f, 0f), "Scale: " + cdata.maxValue);
+		}
+
 		private void DrawChartLine(int selectedFrame, ChartData cdata, Rect r)
 		{
 			for (int i = 0; i < cdata.charts.Length; i++)
 			{
 				this.DrawChartItemLine(r, cdata, i);
 			}
+			if (cdata.maxValue > 0f)
+			{
+				this.DrawMaxValueScale(cdata, r);
+			}
 			this.DrawSelectedFrame(selectedFrame, cdata, r);
 			this.DrawLabelsLine(selectedFrame, cdata, r);
 		}
+
 		private void DrawChartStacked(int selectedFrame, ChartData cdata, Rect r)
 		{
 			HandleUtility.ApplyWireMaterial();
@@ -247,7 +290,8 @@ namespace UnityEditorInternal
 				EditorGUI.DropShadowLabel(new Rect(r.x + r.width - vector.x - 3f, r.y + 3f, vector.x, vector.y), content, Chart.ms_Styles.selectedLabel);
 			}
 		}
-		private void DoLabel(float x, float y, string text, float alignment)
+
+		internal static void DoLabel(float x, float y, string text, float alignment)
 		{
 			if (string.IsNullOrEmpty(text))
 			{
@@ -258,6 +302,7 @@ namespace UnityEditorInternal
 			Rect position = new Rect(x + vector.x * alignment, y, vector.x, vector.y);
 			EditorGUI.DoDropShadowLabel(position, content, Chart.ms_Styles.whiteLabel, 0.3f);
 		}
+
 		private static void CorrectLabelPositions(float[] ypositions, float[] heights, float maxHeight)
 		{
 			int num = 5;
@@ -300,11 +345,13 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		private static float GetLabelHeight(string text)
 		{
 			GUIContent content = new GUIContent(text);
 			return Chart.ms_Styles.whiteLabel.CalcSize(content).y;
 		}
+
 		private void DrawLabelsStacked(int selectedFrame, ChartData cdata, Rect r)
 		{
 			if (cdata.selectedLabels == null)
@@ -317,28 +364,29 @@ namespace UnityEditorInternal
 				return;
 			}
 			selectedFrame -= cdata.firstFrame;
-			float x = r.x + r.width / (float)numberOfFrames * (float)selectedFrame;
-			float num = cdata.scale[0] * r.height;
+			float num = r.width / (float)numberOfFrames;
+			float num2 = r.x + num * (float)selectedFrame;
+			float num3 = cdata.scale[0] * r.height;
 			float[] array = new float[cdata.charts.Length];
 			float[] array2 = new float[array.Length];
-			float num2 = 0f;
+			float num4 = 0f;
 			for (int i = 0; i < cdata.charts.Length; i++)
 			{
 				array[i] = -1f;
 				array2[i] = 0f;
-				int num3 = cdata.chartOrder[i];
-				if (cdata.charts[num3].enabled)
+				int num5 = cdata.chartOrder[i];
+				if (cdata.charts[num5].enabled)
 				{
-					float num4 = cdata.charts[num3].data[selectedFrame];
-					if (num4 != -1f)
+					float num6 = cdata.charts[num5].data[selectedFrame];
+					if (num6 != -1f)
 					{
-						float num5 = (!cdata.hasOverlay) ? num4 : cdata.charts[num3].overlayData[selectedFrame];
-						if (num5 * num > 5f)
+						float num7 = (!cdata.hasOverlay) ? num6 : cdata.charts[num5].overlayData[selectedFrame];
+						if (num7 * num3 > 5f)
 						{
-							array[i] = (num2 + num5 * 0.5f) * num;
-							array2[i] = Chart.GetLabelHeight(cdata.selectedLabels[num3]);
+							array[i] = (num4 + num7 * 0.5f) * num3;
+							array2[i] = Chart.GetLabelHeight(cdata.selectedLabels[num5]);
 						}
-						num2 += num4;
+						num4 += num6;
 					}
 				}
 			}
@@ -347,18 +395,20 @@ namespace UnityEditorInternal
 			{
 				if (array2[j] > 0f)
 				{
-					int num6 = cdata.chartOrder[j];
-					Color color = cdata.charts[num6].color;
+					int num8 = cdata.chartOrder[j];
+					Color color = cdata.charts[num8].color;
 					GUI.contentColor = color * 0.8f + Color.white * 0.2f;
-					float alignment = ((num6 & 1) != 0) ? 0.05f : -1.05f;
-					this.DoLabel(x, r.y + r.height - array[j] - 8f, cdata.selectedLabels[num6], alignment);
+					float alignment = (float)(((num8 & 1) != 0) ? 0 : -1);
+					float num9 = ((num8 & 1) != 0) ? (num + 1f) : -1f;
+					Chart.DoLabel(num2 + num9, r.y + r.height - array[j] - 8f, cdata.selectedLabels[num8], alignment);
 				}
 			}
 			GUI.contentColor = Color.white;
 		}
+
 		private void DrawGridStacked(Rect r, ChartData cdata)
 		{
-			if (cdata.grid == null || cdata.gridLabels == null)
+			if (Event.current.type != EventType.Repaint || cdata.grid == null || cdata.gridLabels == null)
 			{
 				return;
 			}
@@ -379,10 +429,11 @@ namespace UnityEditorInternal
 				float num2 = r.y + r.height - cdata.grid[j] * cdata.scale[0] * r.height;
 				if (num2 > r.y)
 				{
-					this.DoLabel(r.x + 5f, num2 - 8f, cdata.gridLabels[j], 0f);
+					Chart.DoLabel(r.x + 5f, num2 - 8f, cdata.gridLabels[j], 0f);
 				}
 			}
 		}
+
 		private void DrawLabelsLine(int selectedFrame, ChartData cdata, Rect r)
 		{
 			if (cdata.selectedLabels == null)
@@ -409,19 +460,22 @@ namespace UnityEditorInternal
 				}
 			}
 			Chart.CorrectLabelPositions(array, array2, r.height);
-			float x = r.x + r.width / (float)numberOfFrames * (float)selectedFrame;
+			float num2 = r.width / (float)numberOfFrames;
+			float num3 = r.x + num2 * (float)selectedFrame;
 			for (int j = 0; j < cdata.charts.Length; j++)
 			{
 				if (array2[j] > 0f)
 				{
 					Color color = cdata.charts[j].color;
 					GUI.contentColor = (color + Color.white) * 0.5f;
-					float alignment = ((j & 1) != 0) ? 0.05f : -1.05f;
-					this.DoLabel(x, r.y + r.height - array[j] - 8f, cdata.selectedLabels[j], alignment);
+					float alignment = (float)(((j & 1) != 0) ? 0 : -1);
+					float num4 = ((j & 1) != 0) ? (num2 + 1f) : -1f;
+					Chart.DoLabel(num3 + num4, r.y + r.height - array[j] - 8f, cdata.selectedLabels[j], alignment);
 				}
 			}
 			GUI.contentColor = Color.white;
 		}
+
 		private void DrawChartItemLine(Rect r, ChartData cdata, int index)
 		{
 			if (!cdata.charts[index].enabled)
@@ -461,8 +515,13 @@ namespace UnityEditorInternal
 			Handles.color = color;
 			Handles.DrawAAPolyLine(2f, num2, this.m_CachedLineData);
 		}
+
 		private void DrawChartItemStacked(Rect r, int index, ChartData cdata, float[] sumbuf)
 		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
 			int numberOfFrames = cdata.NumberOfFrames;
 			float num = r.width / (float)numberOfFrames;
 			index = cdata.chartOrder[index];
@@ -510,8 +569,13 @@ namespace UnityEditorInternal
 			}
 			GL.End();
 		}
+
 		private void DrawChartItemStackedOverlay(Rect r, int index, ChartData cdata, float[] sumbuf)
 		{
+			if (Event.current.type != EventType.Repaint)
+			{
+				return;
+			}
 			int numberOfFrames = cdata.NumberOfFrames;
 			float num = r.width / (float)numberOfFrames;
 			index = cdata.chartOrder[index];
@@ -547,6 +611,7 @@ namespace UnityEditorInternal
 			}
 			GL.End();
 		}
+
 		private void DrawLabelDragger(Chart.ChartType type, Rect r, ChartData cdata)
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
@@ -581,6 +646,7 @@ namespace UnityEditorInternal
 			}
 			GUI.backgroundColor = Color.white;
 		}
+
 		private void LabelDraggerDrag(int chartControlID, Chart.ChartType chartType, ChartData cdata, Rect r, bool active)
 		{
 			if (chartType == Chart.ChartType.Line || !active)
@@ -642,20 +708,17 @@ namespace UnityEditorInternal
 						Event.current.Use();
 					}
 				}
-				else
+				else if (this.m_DragItemIndex != -1 && typeForControl == EventType.MouseDrag && i != this.m_DragItemIndex)
 				{
-					if (this.m_DragItemIndex != -1 && typeForControl == EventType.MouseDrag && i != this.m_DragItemIndex)
+					float y = current.mousePosition.y;
+					float num2 = r.y + 20f + (float)(num * 11);
+					if (y >= num2 && y < num2 + 11f)
 					{
-						float y = current.mousePosition.y;
-						float num2 = r.y + 20f + (float)(num * 11);
-						if (y >= num2 && y < num2 + 11f)
-						{
-							int num3 = cdata.chartOrder[i];
-							cdata.chartOrder[i] = cdata.chartOrder[this.m_DragItemIndex];
-							cdata.chartOrder[this.m_DragItemIndex] = num3;
-							this.m_DragItemIndex = i;
-							this.SaveChartsSettingsOrder(cdata);
-						}
+						int num3 = cdata.chartOrder[i];
+						cdata.chartOrder[i] = cdata.chartOrder[this.m_DragItemIndex];
+						cdata.chartOrder[this.m_DragItemIndex] = num3;
+						this.m_DragItemIndex = i;
+						this.SaveChartsSettingsOrder(cdata);
 					}
 				}
 				i--;
@@ -672,6 +735,7 @@ namespace UnityEditorInternal
 				current.Use();
 			}
 		}
+
 		private void LoadChartsSettings(ChartData cdata)
 		{
 			if (string.IsNullOrEmpty(this.m_ChartSettingsName))
@@ -708,6 +772,7 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		private void SaveChartsSettingsOrder(ChartData cdata)
 		{
 			if (string.IsNullOrEmpty(this.m_ChartSettingsName))
@@ -725,6 +790,7 @@ namespace UnityEditorInternal
 			}
 			EditorPrefs.SetString(this.m_ChartSettingsName + "Order", text);
 		}
+
 		private void SaveChartsSettingsEnabled(ChartData cdata)
 		{
 			string text = string.Empty;

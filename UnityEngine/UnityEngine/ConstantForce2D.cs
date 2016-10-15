@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class ConstantForce2D : PhysicsUpdateBehaviour2D
@@ -17,6 +18,7 @@ namespace UnityEngine
 				this.INTERNAL_set_force(ref value);
 			}
 		}
+
 		public Vector2 relativeForce
 		{
 			get
@@ -30,6 +32,7 @@ namespace UnityEngine
 				this.INTERNAL_set_relativeForce(ref value);
 			}
 		}
+
 		public extern float torque
 		{
 			[WrapperlessIcall]
@@ -39,15 +42,19 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_force(out Vector2 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_force(ref Vector2 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_relativeForce(out Vector2 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_relativeForce(ref Vector2 value);

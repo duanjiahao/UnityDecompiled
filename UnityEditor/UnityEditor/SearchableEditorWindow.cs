@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public class SearchableEditorWindow : EditorWindow
@@ -14,20 +15,30 @@ namespace UnityEditor
 			Label,
 			AssetBundleName
 		}
+
 		public enum SearchModeHierarchyWindow
 		{
 			All,
 			Name,
 			Type
 		}
+
 		private static List<SearchableEditorWindow> searchableWindows = new List<SearchableEditorWindow>();
+
 		private static int s_SearchableEditorWindowSearchField = "SearchableEditorWindowSearchField".GetHashCode();
+
 		internal HierarchyType m_HierarchyType = HierarchyType.Assets;
+
 		internal string m_SearchFilter = string.Empty;
+
 		internal SearchableEditorWindow.SearchMode m_SearchMode;
+
 		private bool m_FocusSearchField;
+
 		private bool m_HasSearchFilterFocus;
+
 		private int m_SearchFieldControlId;
+
 		internal bool hasSearchFilter
 		{
 			get
@@ -35,6 +46,7 @@ namespace UnityEditor
 				return this.m_SearchFilter != string.Empty;
 			}
 		}
+
 		internal bool hasSearchFilterFocus
 		{
 			get
@@ -46,6 +58,7 @@ namespace UnityEditor
 				this.m_HasSearchFilterFocus = value;
 			}
 		}
+
 		internal SearchableEditorWindow.SearchMode searchMode
 		{
 			get
@@ -57,6 +70,7 @@ namespace UnityEditor
 				this.m_SearchMode = value;
 			}
 		}
+
 		internal static SearchFilter CreateFilter(string searchString, SearchableEditorWindow.SearchMode searchMode)
 		{
 			SearchFilter searchFilter = new SearchFilter();
@@ -109,6 +123,7 @@ namespace UnityEditor
 			}
 			return searchFilter;
 		}
+
 		[MenuItem("Assets/Find References In Scene", false, 25)]
 		private static void OnSearchForReferences()
 		{
@@ -143,6 +158,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		[MenuItem("Assets/Find References In Scene", true)]
 		private static bool OnSearchForReferencesValidate()
 		{
@@ -154,18 +170,22 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public virtual void OnEnable()
 		{
 			SearchableEditorWindow.searchableWindows.Add(this);
 		}
+
 		public virtual void OnDisable()
 		{
 			SearchableEditorWindow.searchableWindows.Remove(this);
 		}
+
 		internal void FocusSearchField()
 		{
 			this.m_FocusSearchField = true;
 		}
+
 		internal void ClearSearchFilter()
 		{
 			this.SetSearchFilter(string.Empty, this.m_SearchMode, true);
@@ -174,6 +194,7 @@ namespace UnityEditor
 				EditorGUI.s_RecycledEditor.controlID = 0;
 			}
 		}
+
 		internal void SelectPreviousSearchResult()
 		{
 			foreach (SearchableEditorWindow current in SearchableEditorWindow.searchableWindows)
@@ -185,6 +206,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal void SelectNextSearchResult()
 		{
 			foreach (SearchableEditorWindow current in SearchableEditorWindow.searchableWindows)
@@ -196,6 +218,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal virtual void SetSearchFilter(string searchFilter, SearchableEditorWindow.SearchMode mode, bool setAll)
 		{
 			this.m_SearchMode = mode;
@@ -213,13 +236,16 @@ namespace UnityEditor
 			base.Repaint();
 			EditorApplication.Internal_CallSearchHasChanged();
 		}
+
 		internal virtual void ClickedSearchField()
 		{
 		}
+
 		internal void SearchFieldGUI()
 		{
 			this.SearchFieldGUI(EditorGUILayout.kLabelFloatMaxW * 1.5f);
 		}
+
 		internal void SearchFieldGUI(float maxWidth)
 		{
 			Rect rect = GUILayoutUtility.GetRect(EditorGUILayout.kLabelFloatMaxW * 0.2f, maxWidth, 16f, 16f, EditorStyles.toolbarSearchField);

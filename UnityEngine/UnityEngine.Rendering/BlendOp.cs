@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.Rendering
 {
 	public enum BlendOp
@@ -23,6 +24,21 @@ namespace UnityEngine.Rendering
 		LogicalAndReverse,
 		LogicalAndInverted,
 		LogicalOrReverse,
-		LogicalOrInverted
+		LogicalOrInverted,
+		Multiply,
+		Screen,
+		Overlay,
+		Darken,
+		Lighten,
+		ColorDodge,
+		ColorBurn,
+		HardLight,
+		SoftLight,
+		Difference,
+		Exclusion,
+		HSLHue,
+		HSLSaturation,
+		HSLColor,
+		HSLLuminosity
 	}
 }

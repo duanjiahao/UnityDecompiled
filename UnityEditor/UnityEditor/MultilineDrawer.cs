@@ -1,11 +1,13 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomPropertyDrawer(typeof(MultilineAttribute))]
 	internal sealed class MultilineDrawer : PropertyDrawer
 	{
 		private const int kLineHeight = 13;
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			if (property.propertyType == SerializedPropertyType.String)
@@ -28,6 +30,7 @@ namespace UnityEditor
 				EditorGUI.LabelField(position, label.text, "Use Multiline with string.");
 			}
 		}
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			return ((!EditorGUIUtility.wideMode) ? 16f : 0f) + 16f + (float)((((MultilineAttribute)base.attribute).lines - 1) * 13);

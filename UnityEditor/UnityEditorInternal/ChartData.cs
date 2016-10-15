@@ -1,17 +1,29 @@
 using System;
+
 namespace UnityEditorInternal
 {
 	internal class ChartData
 	{
 		public ChartSeries[] charts;
+
 		public int[] chartOrder;
+
 		public float[] scale;
+
 		public float[] grid;
+
 		public string[] gridLabels;
+
 		public string[] selectedLabels;
+
 		public int firstFrame;
+
 		public int firstSelectableFrame;
+
 		public bool hasOverlay;
+
+		public float maxValue;
+
 		public int NumberOfFrames
 		{
 			get
@@ -19,6 +31,7 @@ namespace UnityEditorInternal
 				return this.charts[0].data.Length;
 			}
 		}
+
 		public void Assign(ChartSeries[] items, int firstFrame, int firstSelectableFrame)
 		{
 			this.charts = items;
@@ -33,10 +46,12 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		public void AssignScale(float[] scale)
 		{
 			this.scale = scale;
 		}
+
 		public void SetGrid(float[] grid, string[] labels)
 		{
 			this.grid = grid;

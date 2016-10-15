@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+
 namespace UnityEditorInternal
 {
 	[Serializable]
 	internal class AnimationWindowHierarchyState : TreeViewState
 	{
-		public List<int> m_TallInstanceIDs = new List<int>();
-		public bool getTallMode(AnimationWindowHierarchyNode node)
+		private List<int> m_TallInstanceIDs = new List<int>();
+
+		public bool GetTallMode(AnimationWindowHierarchyNode node)
 		{
 			return this.m_TallInstanceIDs.Contains(node.id);
 		}
-		public void setTallMode(AnimationWindowHierarchyNode node, bool tallMode)
+
+		public void SetTallMode(AnimationWindowHierarchyNode node, bool tallMode)
 		{
 			if (tallMode)
 			{
@@ -20,6 +23,19 @@ namespace UnityEditorInternal
 			else
 			{
 				this.m_TallInstanceIDs.Remove(node.id);
+			}
+		}
+
+		public int GetTallInstancesCount()
+		{
+			return this.m_TallInstanceIDs.Count;
+		}
+
+		public void AddTallInstance(int id)
+		{
+			if (!this.m_TallInstanceIDs.Contains(id))
+			{
+				this.m_TallInstanceIDs.Add(id);
 			}
 		}
 	}

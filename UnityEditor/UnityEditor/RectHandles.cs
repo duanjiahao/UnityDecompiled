@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RectHandles
@@ -7,18 +8,30 @@ namespace UnityEditor
 		private class Styles
 		{
 			public readonly GUIStyle dragdot = "U2D.dragDot";
+
 			public readonly GUIStyle pivotdot = "U2D.pivotDot";
+
 			public readonly GUIStyle dragdotactive = "U2D.dragDotActive";
+
 			public readonly GUIStyle pivotdotactive = "U2D.pivotDotActive";
 		}
+
 		private static RectHandles.Styles s_Styles;
+
 		private static Vector2 s_StartMousePosition;
+
 		private static Vector2 s_CurrentMousePosition;
+
 		private static Vector3 s_StartPosition;
+
 		private static float s_StartRotation;
+
 		private static float s_RotationDist;
+
 		private static int s_LastCursorId = 0;
+
 		private static Vector3[] s_TempVectors = new Vector3[0];
+
 		internal static bool RaycastGUIPointToWorldHit(Vector2 guiPoint, Plane plane, out Vector3 hit)
 		{
 			Ray ray = HandleUtility.GUIPointToWorldRay(guiPoint);
@@ -27,6 +40,7 @@ namespace UnityEditor
 			hit = ((!flag) ? Vector3.zero : ray.GetPoint(distance));
 			return flag;
 		}
+
 		internal static void DetectCursorChange(int id)
 		{
 			if (HandleUtility.nearestControl == id)
@@ -34,19 +48,18 @@ namespace UnityEditor
 				RectHandles.s_LastCursorId = id;
 				Event.current.Use();
 			}
-			else
+			else if (RectHandles.s_LastCursorId == id)
 			{
-				if (RectHandles.s_LastCursorId == id)
-				{
-					RectHandles.s_LastCursorId = 0;
-					Event.current.Use();
-				}
+				RectHandles.s_LastCursorId = 0;
+				Event.current.Use();
 			}
 		}
+
 		internal static Vector3 SideSlider(int id, Vector3 position, Vector3 sideVector, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap)
 		{
 			return RectHandles.SideSlider(id, position, sideVector, direction, size, drawFunc, snap, 0f);
 		}
+
 		internal static Vector3 SideSlider(int id, Vector3 position, Vector3 sideVector, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap, float bias)
 		{
 			Event current = Event.current;
@@ -69,15 +82,13 @@ namespace UnityEditor
 					HandleUtility.AddControl(id, HandleUtility.DistanceToLine(position + sideVector * 0.5f - normalized2 * size * 2f, position - sideVector * 0.5f + normalized2 * size * 2f) - bias);
 				}
 			}
-			else
+			else if ((HandleUtility.nearestControl == id && GUIUtility.hotControl == 0) || GUIUtility.hotControl == id)
 			{
-				if ((HandleUtility.nearestControl == id && GUIUtility.hotControl == 0) || GUIUtility.hotControl == id)
-				{
-					RectHandles.HandleDirectionalCursor(position, normalized, direction);
-				}
+				RectHandles.HandleDirectionalCursor(position, normalized, direction);
 			}
 			return vector;
 		}
+
 		internal static Vector3 CornerSlider(int id, Vector3 cornerPos, Vector3 handleDir, Vector3 outwardsDir1, Vector3 outwardsDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
 		{
 			Event current = Event.current;
@@ -99,6 +110,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private static void HandleDirectionalCursor(Vector3 handlePosition, Vector3 handlePlaneNormal, Vector3 direction)
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
@@ -111,6 +123,7 @@ namespace UnityEditor
 				EditorGUIUtility.AddCursorRect(position, RectHandles.GetScaleCursor(direction2));
 			}
 		}
+
 		public static float AngleAroundAxis(Vector3 dirA, Vector3 dirB, Vector3 axis)
 		{
 			dirA = Vector3.ProjectOnPlane(dirA, axis);
@@ -118,6 +131,7 @@ namespace UnityEditor
 			float num = Vector3.Angle(dirA, dirB);
 			return num * (float)((Vector3.Dot(axis, Vector3.Cross(dirA, dirB)) >= 0f) ? 1 : -1);
 		}
+
 		public static float RotationSlider(int id, Vector3 cornerPos, float rotation, Vector3 pivot, Vector3 handleDir, Vector3 outwardsDir1, Vector3 outwardsDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
 		{
 			Vector3 b = outwardsDir1 + outwardsDir2;
@@ -137,6 +151,7 @@ namespace UnityEditor
 			}
 			return rotation - RectHandles.AngleAroundAxis(a - pivot, cornerPos - pivot, handleDir);
 		}
+
 		private static Vector2 WorldToScreenSpaceDir(Vector3 worldPos, Vector3 worldDir)
 		{
 			Vector3 b = HandleUtility.WorldToGUIPoint(worldPos);
@@ -145,6 +160,7 @@ namespace UnityEditor
 			result.y *= -1f;
 			return result;
 		}
+
 		private static MouseCursor GetScaleCursor(Vector2 direction)
 		{
 			float num = Mathf.Atan2(direction.x, direction.y) * 57.29578f;
@@ -186,6 +202,7 @@ namespace UnityEditor
 			}
 			return MouseCursor.ResizeVertical;
 		}
+
 		public static void RectScalingCap(int controlID, Vector3 position, Quaternion rotation, float size)
 		{
 			if (RectHandles.s_Styles == null)
@@ -194,6 +211,7 @@ namespace UnityEditor
 			}
 			RectHandles.DrawImageBasedCap(controlID, position, rotation, size, RectHandles.s_Styles.dragdot, RectHandles.s_Styles.dragdotactive);
 		}
+
 		public static void PivotCap(int controlID, Vector3 position, Quaternion rotation, float size)
 		{
 			if (RectHandles.s_Styles == null)
@@ -202,6 +220,7 @@ namespace UnityEditor
 			}
 			RectHandles.DrawImageBasedCap(controlID, position, rotation, size, RectHandles.s_Styles.pivotdot, RectHandles.s_Styles.pivotdotactive);
 		}
+
 		private static void DrawImageBasedCap(int controlID, Vector3 position, Quaternion rotation, float size, GUIStyle normal, GUIStyle active)
 		{
 			if (Camera.current && Vector3.Dot(position - Camera.current.transform.position, Camera.current.transform.forward) < 0f)
@@ -223,6 +242,7 @@ namespace UnityEditor
 			}
 			Handles.EndGUI();
 		}
+
 		public static void RenderRectWithShadow(bool active, params Vector3[] corners)
 		{
 			Vector3[] points = new Vector3[]
@@ -238,6 +258,7 @@ namespace UnityEditor
 			RectHandles.DrawPolyLineWithShadow(new Color(0f, 0f, 0f, (!active) ? 0.5f : 1f), new Vector2(1f, -1f), points);
 			Handles.color = color;
 		}
+
 		public static void DrawPolyLineWithShadow(Color shadowColor, Vector2 screenOffset, params Vector3[] points)
 		{
 			Camera current = Camera.current;
@@ -260,6 +281,7 @@ namespace UnityEditor
 			Handles.color = color;
 			Handles.DrawPolyLine(points);
 		}
+
 		public static void DrawDottedLineWithShadow(Color shadowColor, Vector2 screenOffset, Vector3 p1, Vector3 p2, float screenSpaceSize)
 		{
 			Camera current = Camera.current;

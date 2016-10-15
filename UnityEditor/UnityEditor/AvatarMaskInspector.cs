@@ -3,43 +3,74 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(AvatarMask))]
 	internal class AvatarMaskInspector : Editor
 	{
-		private class Styles
+		private static class Styles
 		{
-			public GUIContent MaskDefinition = EditorGUIUtility.TextContent("AvatarMaskEditor.MaskDefinition");
-			public GUIContent[] MaskDefinitionOpt = new GUIContent[]
+			public static GUIContent MaskDefinition = EditorGUIUtility.TextContent("Definition|Choose between Create From This Model, Copy From Other Avatar. The first one create a Mask for this file and the second one use a Mask from another file to import animation.");
+
+			public static GUIContent[] MaskDefinitionOpt = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("AvatarMaskEditor.CreateFromThisModel"),
-				EditorGUIUtility.TextContent("AvatarMaskEditor.CopyFromOther")
+				EditorGUIUtility.TextContent("Create From This Model|Create a Mask based on the model from this file. For Humanoid rig all the human transform are always imported and converted to muscle curve, thus they cannot be unchecked."),
+				EditorGUIUtility.TextContent("Copy From Other Mask|Copy a Mask from another file to import animation clip.")
 			};
-			public GUIContent BodyMask = EditorGUIUtility.TextContent("AvatarMaskEditor.BodyMask");
-			public GUIContent TransformMask = EditorGUIUtility.TextContent("AvatarMaskEditor.TransformMask");
+
+			public static GUIContent BodyMask = EditorGUIUtility.TextContent("Humanoid|Define which body part are active. Also define which animation curves will be imported for an Animation Clip.");
+
+			public static GUIContent TransformMask = EditorGUIUtility.TextContent("Transform|Define which transform are active. Also define which animation curves will be imported for an Animation Clip.");
 		}
+
 		private struct NodeInfo
 		{
 			public bool m_Expanded;
+
 			public bool m_Show;
+
 			public bool m_Enabled;
+
 			public int m_ParentIndex;
+
 			public List<int> m_ChildIndices;
+
 			public int m_Depth;
+
+			public SerializedProperty m_Path;
+
+			public SerializedProperty m_Weight;
+
+			public string m_Name;
 		}
-		private static AvatarMaskInspector.Styles styles = new AvatarMaskInspector.Styles();
-		protected bool[] m_BodyPartToggle;
+
 		private bool m_ShowBodyMask = true;
+
 		private bool m_BodyMaskFoldout;
+
 		private bool m_CanImport = true;
+
+		private SerializedProperty m_BodyMask;
+
+		private SerializedProperty m_TransformMask;
+
 		private SerializedProperty m_AnimationType;
+
 		private AnimationClipInfoProperties m_ClipInfo;
+
+		private string[] m_TransformPaths;
+
 		private AvatarMaskInspector.NodeInfo[] m_NodeInfos;
+
 		private Avatar m_RefAvatar;
+
 		private ModelImporter m_RefImporter;
+
 		private bool m_TransformMaskFoldout;
+
 		private string[] m_HumanTransform;
+
 		public bool canImport
 		{
 			get
@@ -51,6 +82,7 @@ namespace UnityEditor
 				this.m_CanImport = value;
 			}
 		}
+
 		public AnimationClipInfoProperties clipInfo
 		{
 			get
@@ -65,13 +97,18 @@ namespace UnityEditor
 					this.m_ClipInfo.MaskFromClip(this.target as AvatarMask);
 					SerializedObject serializedObject = this.m_ClipInfo.maskTypeProperty.serializedObject;
 					this.m_AnimationType = serializedObject.FindProperty("m_AnimationType");
+					ModelImporter modelImporter = serializedObject.targetObject as ModelImporter;
+					this.m_TransformPaths = modelImporter.transformPaths;
 				}
 				else
 				{
+					this.m_TransformPaths = null;
 					this.m_AnimationType = null;
 				}
+				this.InitializeSerializedProperties();
 			}
 		}
+
 		private ModelImporterAnimationType animationType
 		{
 			get
@@ -83,6 +120,7 @@ namespace UnityEditor
 				return ModelImporterAnimationType.None;
 			}
 		}
+
 		public bool showBody
 		{
 			get
@@ -94,6 +132,7 @@ namespace UnityEditor
 				this.m_ShowBodyMask = value;
 			}
 		}
+
 		public string[] humanTransforms
 		{
 			get
@@ -114,21 +153,41 @@ namespace UnityEditor
 				return this.m_HumanTransform;
 			}
 		}
+
+		private void InitializeSerializedProperties()
+		{
+			if (this.clipInfo != null)
+			{
+				this.m_BodyMask = this.clipInfo.bodyMaskProperty;
+				this.m_TransformMask = this.clipInfo.transformMaskProperty;
+			}
+			else
+			{
+				this.m_BodyMask = base.serializedObject.FindProperty("m_Mask");
+				this.m_TransformMask = base.serializedObject.FindProperty("m_Elements");
+			}
+			this.FillNodeInfos();
+		}
+
 		private void OnEnable()
 		{
-			AvatarMask avatarMask = this.target as AvatarMask;
-			this.m_BodyPartToggle = new bool[avatarMask.humanoidBodyPartCount];
+			this.InitializeSerializedProperties();
 		}
+
 		public override void OnInspectorGUI()
 		{
-			EditorGUI.BeginChangeCheck();
+			Profiler.BeginSample("AvatarMaskInspector.OnInspectorGUI()");
+			if (this.clipInfo == null)
+			{
+				base.serializedObject.Update();
+			}
 			bool flag = false;
 			if (this.clipInfo != null)
 			{
 				EditorGUI.BeginChangeCheck();
 				int num = (int)this.clipInfo.maskType;
 				EditorGUI.showMixedValue = this.clipInfo.maskTypeProperty.hasMultipleDifferentValues;
-				num = EditorGUILayout.Popup(AvatarMaskInspector.styles.MaskDefinition, num, AvatarMaskInspector.styles.MaskDefinitionOpt, new GUILayoutOption[0]);
+				num = EditorGUILayout.Popup(AvatarMaskInspector.Styles.MaskDefinition, num, AvatarMaskInspector.Styles.MaskDefinitionOpt, new GUILayoutOption[0]);
 				EditorGUI.showMixedValue = false;
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -143,14 +202,22 @@ namespace UnityEditor
 			}
 			bool enabled = GUI.enabled;
 			GUI.enabled = !flag;
+			EditorGUI.BeginChangeCheck();
 			this.OnBodyInspectorGUI();
 			this.OnTransformInspectorGUI();
-			GUI.enabled = enabled;
-			if (EditorGUI.EndChangeCheck() && this.clipInfo != null)
+			if (this.clipInfo != null && EditorGUI.EndChangeCheck())
 			{
-				this.clipInfo.MaskToClip(this.target as AvatarMask);
+				AvatarMask mask = this.target as AvatarMask;
+				this.clipInfo.MaskFromClip(mask);
 			}
+			GUI.enabled = enabled;
+			if (this.clipInfo == null)
+			{
+				base.serializedObject.ApplyModifiedProperties();
+			}
+			Profiler.EndSample();
 		}
+
 		protected void CopyFromOtherGUI()
 		{
 			if (this.clipInfo == null)
@@ -167,6 +234,31 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndHorizontal();
 		}
+
+		public bool IsMaskUpToDate()
+		{
+			if (this.clipInfo == null)
+			{
+				return false;
+			}
+			if (this.m_NodeInfos.Length != this.m_TransformPaths.Length)
+			{
+				return false;
+			}
+			SerializedProperty arrayElementAtIndex = this.m_TransformMask.GetArrayElementAtIndex(0);
+			for (int i = 1; i < this.m_NodeInfos.Length; i++)
+			{
+				string path = this.m_NodeInfos[i].m_Path.stringValue;
+				int num = ArrayUtility.FindIndex<string>(this.m_TransformPaths, (string s) => s == path);
+				if (num == -1)
+				{
+					return false;
+				}
+				arrayElementAtIndex.Next(false);
+			}
+			return true;
+		}
+
 		private void UpdateMask(ClipAnimationMaskType maskType)
 		{
 			if (this.clipInfo == null)
@@ -177,69 +269,50 @@ namespace UnityEditor
 			{
 				SerializedObject serializedObject = this.clipInfo.maskTypeProperty.serializedObject;
 				ModelImporter modelImporter = serializedObject.targetObject as ModelImporter;
-				AvatarMask mask = this.target as AvatarMask;
-				AvatarMaskUtility.UpdateTransformMask(mask, modelImporter.transformPaths, this.humanTransforms);
-				this.FillNodeInfos(mask);
+				AvatarMaskUtility.UpdateTransformMask(this.m_TransformMask, modelImporter.transformPaths, this.humanTransforms);
+				this.FillNodeInfos();
 			}
-			else
+			else if (maskType == ClipAnimationMaskType.CopyFromOther)
 			{
-				if (maskType == ClipAnimationMaskType.CopyFromOther)
+				AvatarMask avatarMask = this.clipInfo.maskSourceProperty.objectReferenceValue as AvatarMask;
+				if (avatarMask != null)
 				{
-					AvatarMask avatarMask = this.clipInfo.maskSourceProperty.objectReferenceValue as AvatarMask;
-					if (avatarMask != null)
+					AvatarMask avatarMask2 = this.target as AvatarMask;
+					avatarMask2.Copy(avatarMask);
+					if (this.humanTransforms != null)
 					{
-						AvatarMask avatarMask2 = this.target as AvatarMask;
-						avatarMask2.Copy(avatarMask);
-						if (this.humanTransforms != null)
-						{
-							AvatarMaskUtility.SetActiveHumanTransforms(avatarMask2, this.humanTransforms);
-						}
-						this.FillNodeInfos(avatarMask2);
+						AvatarMaskUtility.SetActiveHumanTransforms(avatarMask2, this.humanTransforms);
 					}
+					this.clipInfo.MaskToClip(avatarMask2);
+					this.FillNodeInfos();
 				}
 			}
+			AvatarMask mask = this.target as AvatarMask;
+			this.clipInfo.MaskFromClip(mask);
 		}
+
 		public void OnBodyInspectorGUI()
 		{
 			if (this.m_ShowBodyMask)
 			{
 				bool changed = GUI.changed;
-				this.m_BodyMaskFoldout = EditorGUILayout.Foldout(this.m_BodyMaskFoldout, AvatarMaskInspector.styles.BodyMask);
+				this.m_BodyMaskFoldout = EditorGUILayout.Foldout(this.m_BodyMaskFoldout, AvatarMaskInspector.Styles.BodyMask);
 				GUI.changed = changed;
 				if (this.m_BodyMaskFoldout)
 				{
-					AvatarMask avatarMask = this.target as AvatarMask;
-					for (int i = 0; i < avatarMask.humanoidBodyPartCount; i++)
-					{
-						this.m_BodyPartToggle[i] = avatarMask.GetHumanoidBodyPartActive(i);
-					}
-					this.m_BodyPartToggle = BodyMaskEditor.Show(this.m_BodyPartToggle, avatarMask.humanoidBodyPartCount);
-					bool flag = false;
-					for (int j = 0; j < avatarMask.humanoidBodyPartCount; j++)
-					{
-						flag |= (avatarMask.GetHumanoidBodyPartActive(j) != this.m_BodyPartToggle[j]);
-					}
-					if (flag)
-					{
-						Undo.RegisterCompleteObjectUndo(avatarMask, "Body Mask Edit");
-						for (int k = 0; k < avatarMask.humanoidBodyPartCount; k++)
-						{
-							avatarMask.SetHumanoidBodyPartActive(k, this.m_BodyPartToggle[k]);
-						}
-						EditorUtility.SetDirty(avatarMask);
-					}
+					BodyMaskEditor.Show(this.m_BodyMask, 13);
 				}
 			}
 		}
+
 		public void OnTransformInspectorGUI()
 		{
-			AvatarMask avatarMask = this.target as AvatarMask;
-			float left = 0f;
-			float top = 0f;
+			float xmin = 0f;
+			float ymin = 0f;
 			float num = 0f;
-			float bottom = 0f;
+			float ymax = 0f;
 			bool changed = GUI.changed;
-			this.m_TransformMaskFoldout = EditorGUILayout.Foldout(this.m_TransformMaskFoldout, AvatarMaskInspector.styles.TransformMask);
+			this.m_TransformMaskFoldout = EditorGUILayout.Foldout(this.m_TransformMaskFoldout, AvatarMaskInspector.Styles.TransformMask);
 			GUI.changed = changed;
 			if (this.m_TransformMaskFoldout)
 			{
@@ -247,24 +320,18 @@ namespace UnityEditor
 				{
 					this.ImportAvatarReference();
 				}
-				if (this.m_NodeInfos == null || avatarMask.transformCount != this.m_NodeInfos.Length)
+				if (this.m_NodeInfos == null || this.m_TransformMask.arraySize != this.m_NodeInfos.Length)
 				{
-					this.FillNodeInfos(avatarMask);
+					this.FillNodeInfos();
 				}
 				this.ComputeShownElements();
 				GUILayout.Space(1f);
 				int indentLevel = EditorGUI.indentLevel;
-				int transformCount = avatarMask.transformCount;
-				for (int i = 1; i < transformCount; i++)
+				int arraySize = this.m_TransformMask.arraySize;
+				for (int i = 1; i < arraySize; i++)
 				{
 					if (this.m_NodeInfos[i].m_Show)
 					{
-						string transformPath = avatarMask.GetTransformPath(i);
-						string[] array = transformPath.Split(new char[]
-						{
-							'/'
-						});
-						string text = array[array.Length - 1];
 						GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 						EditorGUI.indentLevel = this.m_NodeInfos[i].m_Depth + 1;
 						EditorGUI.BeginChangeCheck();
@@ -280,31 +347,33 @@ namespace UnityEditor
 						bool enabled = GUI.enabled;
 						GUI.enabled = this.m_NodeInfos[i].m_Enabled;
 						bool flag = Event.current.button == 1;
-						avatarMask.SetTransformActive(i, GUI.Toggle(rect, avatarMask.GetTransformActive(i), string.Empty));
+						bool flag2 = this.m_NodeInfos[i].m_Weight.floatValue > 0f;
+						flag2 = GUI.Toggle(rect, flag2, string.Empty);
 						GUI.enabled = enabled;
-						if (EditorGUI.EndChangeCheck() && !flag)
+						if (EditorGUI.EndChangeCheck())
 						{
-							this.CheckChildren(avatarMask, i, avatarMask.GetTransformActive(i));
+							this.m_NodeInfos[i].m_Weight.floatValue = ((!flag2) ? 0f : 1f);
+							if (!flag)
+							{
+								this.CheckChildren(i, flag2);
+							}
 						}
 						if (this.m_NodeInfos[i].m_ChildIndices.Count > 0)
 						{
-							this.m_NodeInfos[i].m_Expanded = EditorGUILayout.Foldout(this.m_NodeInfos[i].m_Expanded, text);
+							this.m_NodeInfos[i].m_Expanded = EditorGUILayout.Foldout(this.m_NodeInfos[i].m_Expanded, this.m_NodeInfos[i].m_Name);
 						}
 						else
 						{
-							EditorGUILayout.LabelField(text, new GUILayoutOption[0]);
+							EditorGUILayout.LabelField(this.m_NodeInfos[i].m_Name, new GUILayoutOption[0]);
 						}
 						if (i == 1)
 						{
-							top = rect.yMin;
-							left = rect.xMin;
+							ymin = rect.yMin;
+							xmin = rect.xMin;
 						}
-						else
+						else if (i == arraySize - 1)
 						{
-							if (i == transformCount - 1)
-							{
-								bottom = rect.yMax;
-							}
+							ymax = rect.yMax;
 						}
 						num = Mathf.Max(num, GUILayoutUtility.GetLastRect().xMax);
 						GUILayout.EndHorizontal();
@@ -312,7 +381,7 @@ namespace UnityEditor
 				}
 				EditorGUI.indentLevel = indentLevel;
 			}
-			Rect rect2 = Rect.MinMaxRect(left, top, num, bottom);
+			Rect rect2 = Rect.MinMaxRect(xmin, ymin, num, ymax);
 			if (Event.current != null && Event.current.type == EventType.MouseUp && Event.current.button == 1 && rect2.Contains(Event.current.mousePosition))
 			{
 				GenericMenu genericMenu = new GenericMenu();
@@ -322,28 +391,28 @@ namespace UnityEditor
 				Event.current.Use();
 			}
 		}
+
 		private void SetAllTransformActive(bool active)
 		{
 			for (int i = 0; i < this.m_NodeInfos.Length; i++)
 			{
 				if (this.m_NodeInfos[i].m_Enabled)
 				{
-					(this.target as AvatarMask).SetTransformActive(i, active);
+					this.m_NodeInfos[i].m_Weight.floatValue = ((!active) ? 0f : 1f);
 				}
 			}
-			if (this.clipInfo != null)
-			{
-				this.clipInfo.MaskToClip(this.target as AvatarMask);
-			}
 		}
+
 		private void SelectAll()
 		{
 			this.SetAllTransformActive(true);
 		}
+
 		private void DeselectAll()
 		{
 			this.SetAllTransformActive(false);
 		}
+
 		private void ImportAvatarReference()
 		{
 			EditorGUI.BeginChangeCheck();
@@ -354,15 +423,26 @@ namespace UnityEditor
 			}
 			if (this.m_RefImporter != null && GUILayout.Button("Import skeleton", new GUILayoutOption[0]))
 			{
-				AvatarMaskUtility.UpdateTransformMask(this.target as AvatarMask, this.m_RefImporter.transformPaths, null);
+				AvatarMaskUtility.UpdateTransformMask(this.m_TransformMask, this.m_RefImporter.transformPaths, null);
 			}
 		}
-		private void FillNodeInfos(AvatarMask mask)
+
+		private void FillNodeInfos()
 		{
-			this.m_NodeInfos = new AvatarMaskInspector.NodeInfo[mask.transformCount];
+			this.m_NodeInfos = new AvatarMaskInspector.NodeInfo[this.m_TransformMask.arraySize];
+			if (this.m_TransformMask.arraySize == 0)
+			{
+				return;
+			}
+			string[] array = new string[this.m_TransformMask.arraySize];
+			SerializedProperty arrayElementAtIndex = this.m_TransformMask.GetArrayElementAtIndex(0);
+			arrayElementAtIndex.Next(false);
 			for (int i = 1; i < this.m_NodeInfos.Length; i++)
 			{
-				string fullPath = mask.GetTransformPath(i);
+				this.m_NodeInfos[i].m_Path = arrayElementAtIndex.FindPropertyRelative("m_Path");
+				this.m_NodeInfos[i].m_Weight = arrayElementAtIndex.FindPropertyRelative("m_Weight");
+				array[i] = this.m_NodeInfos[i].m_Path.stringValue;
+				string fullPath = array[i];
 				if (this.humanTransforms != null)
 				{
 					this.m_NodeInfos[i].m_Enabled = (ArrayUtility.FindIndex<string>(this.humanTransforms, (string s) => fullPath == s) == -1);
@@ -374,42 +454,39 @@ namespace UnityEditor
 				this.m_NodeInfos[i].m_Expanded = true;
 				this.m_NodeInfos[i].m_ParentIndex = -1;
 				this.m_NodeInfos[i].m_ChildIndices = new List<int>();
-				AvatarMaskInspector.NodeInfo[] arg_F6_0_cp_0 = this.m_NodeInfos;
-				int arg_F6_0_cp_1 = i;
-				int arg_F6_1;
+				AvatarMaskInspector.NodeInfo[] arg_17F_0_cp_0 = this.m_NodeInfos;
+				int arg_17F_0_cp_1 = i;
+				int arg_17F_1;
 				if (i == 0)
 				{
-					arg_F6_1 = 0;
+					arg_17F_1 = 0;
 				}
 				else
 				{
-					arg_F6_1 = fullPath.Count((char f) => f == '/');
+					arg_17F_1 = fullPath.Count((char f) => f == '/');
 				}
-				arg_F6_0_cp_0[arg_F6_0_cp_1].m_Depth = arg_F6_1;
+				arg_17F_0_cp_0[arg_17F_0_cp_1].m_Depth = arg_17F_1;
 				string text = string.Empty;
 				int num = fullPath.LastIndexOf('/');
 				if (num > 0)
 				{
 					text = fullPath.Substring(0, num);
 				}
-				int transformCount = mask.transformCount;
-				for (int j = 0; j < transformCount; j++)
+				num = ((num != -1) ? (num + 1) : 0);
+				this.m_NodeInfos[i].m_Name = fullPath.Substring(num);
+				for (int j = 1; j < i; j++)
 				{
-					string transformPath = mask.GetTransformPath(j);
-					if (text != string.Empty && transformPath == text)
+					string a = array[j];
+					if (text != string.Empty && a == text)
 					{
 						this.m_NodeInfos[i].m_ParentIndex = j;
-					}
-					if (transformPath.StartsWith(fullPath))
-					{
-						if (transformPath.Count((char f) => f == '/') == this.m_NodeInfos[i].m_Depth + 1)
-						{
-							this.m_NodeInfos[i].m_ChildIndices.Add(j);
-						}
+						this.m_NodeInfos[j].m_ChildIndices.Add(i);
 					}
 				}
+				arrayElementAtIndex.Next(false);
 			}
 		}
+
 		private void ComputeShownElements()
 		{
 			for (int i = 0; i < this.m_NodeInfos.Length; i++)
@@ -420,6 +497,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ComputeShownElements(int currentIndex, bool show)
 		{
 			this.m_NodeInfos[currentIndex].m_Show = show;
@@ -429,15 +507,16 @@ namespace UnityEditor
 				this.ComputeShownElements(current, show2);
 			}
 		}
-		private void CheckChildren(AvatarMask mask, int index, bool value)
+
+		private void CheckChildren(int index, bool value)
 		{
 			foreach (int current in this.m_NodeInfos[index].m_ChildIndices)
 			{
 				if (this.m_NodeInfos[current].m_Enabled)
 				{
-					mask.SetTransformActive(current, value);
+					this.m_NodeInfos[current].m_Weight.floatValue = ((!value) ? 0f : 1f);
 				}
-				this.CheckChildren(mask, current, value);
+				this.CheckChildren(current, value);
 			}
 		}
 	}

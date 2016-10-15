@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class IconSelector : EditorWindow
@@ -7,30 +8,46 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle background = "sv_iconselector_back";
+
 			public GUIStyle seperator = "sv_iconselector_sep";
+
 			public GUIStyle selection = "sv_iconselector_selection";
+
 			public GUIStyle selectionLabel = "sv_iconselector_labelselection";
+
 			public GUIStyle noneButton = "sv_iconselector_button";
 		}
+
 		public delegate void MonoScriptIconChangedCallback(MonoScript monoScript);
+
 		private static IconSelector s_IconSelector = null;
+
 		private static long s_LastClosedTime = 0L;
+
 		private static int s_LastInstanceID = -1;
+
 		private static int s_HashIconSelector = "IconSelector".GetHashCode();
+
 		private static IconSelector.Styles m_Styles;
+
 		private UnityEngine.Object m_TargetObject;
+
 		private Texture2D m_StartIcon;
+
 		private bool m_ShowLabelIcons;
+
 		private GUIContent[] m_LabelLargeIcons;
+
 		private GUIContent[] m_LabelIcons;
+
 		private GUIContent[] m_LargeIcons;
+
 		private GUIContent[] m_SmallIcons;
+
 		private GUIContent m_NoneButtonContent;
+
 		private IconSelector.MonoScriptIconChangedCallback m_MonoScriptIconChangedCallback;
-		private IconSelector()
-		{
-			base.hideFlags = HideFlags.DontSave;
-		}
+
 		private GUIContent[] GetTextures(string baseName, string postFix, int startIndex, int count)
 		{
 			GUIContent[] array = new GUIContent[count];
@@ -40,15 +57,19 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private void OnEnable()
 		{
+			base.hideFlags = HideFlags.DontSave;
 		}
+
 		private void OnDisable()
 		{
 			this.SaveIconChanges();
 			IconSelector.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 			IconSelector.s_IconSelector = null;
 		}
+
 		private void SaveIconChanges()
 		{
 			Texture2D iconForObject = EditorGUIUtility.GetIconForObject(this.m_TargetObject);
@@ -68,6 +89,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static bool ShowAtPosition(UnityEngine.Object targetObj, Rect activatorRect, bool showLabelIcons)
 		{
 			int instanceID = targetObj.GetInstanceID();
@@ -86,6 +108,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal static void SetMonoScriptIconChangedCallback(IconSelector.MonoScriptIconChangedCallback callback)
 		{
 			if (IconSelector.s_IconSelector != null)
@@ -97,6 +120,7 @@ namespace UnityEditor
 				Debug.Log("ERROR: setting callback on hidden IconSelector");
 			}
 		}
+
 		private void Init(UnityEngine.Object targetObj, Rect activatorRect, bool showLabelIcons)
 		{
 			this.m_TargetObject = targetObj;
@@ -118,6 +142,7 @@ namespace UnityEditor
 			}
 			base.ShowAsDropDown(buttonRect, new Vector2(x, y));
 		}
+
 		private Texture2D ConvertLargeIconToSmallIcon(Texture2D largeIcon, ref bool isLabelIcon)
 		{
 			if (largeIcon == null)
@@ -142,6 +167,7 @@ namespace UnityEditor
 			}
 			return largeIcon;
 		}
+
 		private Texture2D ConvertSmallIconToLargeIcon(Texture2D smallIcon, bool labelIcon)
 		{
 			if (labelIcon)
@@ -166,6 +192,7 @@ namespace UnityEditor
 			}
 			return smallIcon;
 		}
+
 		private void DoButton(GUIContent content, Texture2D selectedIcon, bool labelIcon)
 		{
 			int controlID = GUIUtility.GetControlID(IconSelector.s_HashIconSelector, FocusType.Keyboard);
@@ -191,11 +218,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoTopSection(bool anySelected)
 		{
 			Rect position = new Rect(6f, 4f, 110f, 20f);
 			GUI.Label(position, "Select Icon");
-			if (anySelected)
+			using (new EditorGUI.DisabledScope(!anySelected))
 			{
 				Rect position2 = new Rect(93f, 6f, 43f, 12f);
 				if (GUI.Button(position2, this.m_NoneButtonContent, IconSelector.m_Styles.noneButton))
@@ -206,12 +234,14 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CloseWindow()
 		{
 			base.Close();
 			GUI.changed = true;
 			GUIUtility.ExitGUI();
 		}
+
 		internal void OnGUI()
 		{
 			if (IconSelector.m_Styles == null)

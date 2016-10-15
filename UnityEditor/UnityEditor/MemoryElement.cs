@@ -1,22 +1,32 @@
 using System;
 using System.Collections.Generic;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class MemoryElement
 	{
 		public List<MemoryElement> children;
+
 		public MemoryElement parent;
+
 		public ObjectInfo memoryInfo;
+
 		public int totalMemory;
+
 		public int totalChildCount;
+
 		public string name;
+
 		public bool expanded;
+
 		public string description;
+
 		public MemoryElement()
 		{
 			this.children = new List<MemoryElement>();
 		}
+
 		public MemoryElement(string n)
 		{
 			this.expanded = false;
@@ -24,6 +34,7 @@ namespace UnityEditor
 			this.children = new List<MemoryElement>();
 			this.description = string.Empty;
 		}
+
 		public MemoryElement(ObjectInfo memInfo, bool finalize)
 		{
 			this.expanded = false;
@@ -36,6 +47,7 @@ namespace UnityEditor
 				this.children = new List<MemoryElement>();
 			}
 		}
+
 		public MemoryElement(string n, List<MemoryElement> groups)
 		{
 			this.name = n;
@@ -49,6 +61,7 @@ namespace UnityEditor
 				this.AddChild(current);
 			}
 		}
+
 		public void ExpandChildren()
 		{
 			if (this.children != null)
@@ -61,10 +74,12 @@ namespace UnityEditor
 				this.AddChild(new MemoryElement(this.memoryInfo.referencedBy[i], false));
 			}
 		}
+
 		public int AccumulatedChildCount()
 		{
 			return this.totalChildCount;
 		}
+
 		public int ChildCount()
 		{
 			if (this.children != null)
@@ -73,10 +88,12 @@ namespace UnityEditor
 			}
 			return this.ReferenceCount();
 		}
+
 		public int ReferenceCount()
 		{
 			return (this.memoryInfo == null || this.memoryInfo.referencedBy == null) ? 0 : this.memoryInfo.referencedBy.Count;
 		}
+
 		public void AddChild(MemoryElement node)
 		{
 			if (node == this)
@@ -88,6 +105,7 @@ namespace UnityEditor
 			this.totalMemory += node.totalMemory;
 			this.totalChildCount += node.totalChildCount;
 		}
+
 		public int GetChildIndexInList()
 		{
 			for (int i = 0; i < this.parent.children.Count; i++)
@@ -99,6 +117,7 @@ namespace UnityEditor
 			}
 			return this.parent.children.Count;
 		}
+
 		public MemoryElement GetPrevNode()
 		{
 			int num = this.GetChildIndexInList() - 1;
@@ -113,6 +132,7 @@ namespace UnityEditor
 			}
 			return this.parent;
 		}
+
 		public MemoryElement GetNextNode()
 		{
 			if (this.expanded && this.children.Count > 0)
@@ -136,6 +156,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public MemoryElement GetRoot()
 		{
 			if (this.parent != null)
@@ -144,10 +165,12 @@ namespace UnityEditor
 			}
 			return this;
 		}
+
 		public MemoryElement FirstChild()
 		{
 			return this.children[0];
 		}
+
 		public MemoryElement LastChild()
 		{
 			if (!this.expanded)

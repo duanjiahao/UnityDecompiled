@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class Timeline
@@ -13,30 +14,52 @@ namespace UnityEditor
 			FullSelection,
 			Destination,
 			Source,
-			Playhead
+			Playhead,
+			TimeArea
 		}
+
 		private class Styles
 		{
 			public readonly GUIStyle block = new GUIStyle("MeTransitionBlock");
+
 			public GUIStyle leftBlock = new GUIStyle("MeTransitionBlock");
+
 			public GUIStyle rightBlock = new GUIStyle("MeTransitionBlock");
+
 			public GUIStyle timeBlockRight = new GUIStyle("MeTimeLabel");
+
 			public GUIStyle timeBlockLeft = new GUIStyle("MeTimeLabel");
+
 			public readonly GUIStyle offLeft = new GUIStyle("MeTransOffLeft");
+
 			public readonly GUIStyle offRight = new GUIStyle("MeTransOffRight");
+
 			public readonly GUIStyle onLeft = new GUIStyle("MeTransOnLeft");
+
 			public readonly GUIStyle onRight = new GUIStyle("MeTransOnRight");
+
 			public readonly GUIStyle offOn = new GUIStyle("MeTransOff2On");
+
 			public readonly GUIStyle onOff = new GUIStyle("MeTransOn2Off");
+
 			public readonly GUIStyle background = new GUIStyle("MeTransitionBack");
+
 			public readonly GUIStyle header = new GUIStyle("MeTransitionHead");
+
 			public readonly GUIStyle handLeft = new GUIStyle("MeTransitionHandleLeft");
+
 			public readonly GUIStyle handRight = new GUIStyle("MeTransitionHandleRight");
+
 			public readonly GUIStyle handLeftPrev = new GUIStyle("MeTransitionHandleLeftPrev");
+
 			public readonly GUIStyle playhead = new GUIStyle("MeTransPlayhead");
+
 			public readonly GUIStyle selectHead = new GUIStyle("MeTransitionSelectHead");
+
 			public readonly GUIStyle select = new GUIStyle("MeTransitionSelect");
+
 			public readonly GUIStyle overlay = new GUIStyle("MeTransBGOver");
+
 			public Styles()
 			{
 				this.timeBlockRight.alignment = TextAnchor.MiddleRight;
@@ -44,37 +67,68 @@ namespace UnityEditor
 				this.timeBlockLeft.normal.background = null;
 			}
 		}
+
 		internal class PivotSample
 		{
 			public float m_Time;
+
 			public float m_Weight;
 		}
+
 		private TimeArea m_TimeArea;
+
 		private float m_Time = float.PositiveInfinity;
+
 		private float m_StartTime;
+
 		private float m_StopTime = 1f;
+
 		private string m_SrcName = "Left";
+
 		private string m_DstName = "Right";
+
 		private bool m_SrcLoop;
+
 		private bool m_DstLoop;
+
 		private float m_SrcStartTime;
+
 		private float m_SrcStopTime = 0.75f;
+
 		private float m_DstStartTime = 0.25f;
+
 		private float m_DstStopTime = 1f;
+
 		private bool m_HasExitTime;
+
 		private float m_TransitionStartTime = float.PositiveInfinity;
+
 		private float m_TransitionStopTime = float.PositiveInfinity;
+
+		private float m_SampleStopTime = float.PositiveInfinity;
+
 		private float m_DstDragOffset;
+
 		private float m_LeftThumbOffset;
+
 		private float m_RightThumbOffset;
+
 		private Timeline.DragStates m_DragState;
+
 		private int id = -1;
+
 		private Rect m_Rect = new Rect(0f, 0f, 0f, 0f);
+
 		private Vector3[] m_SrcPivotVectors;
+
 		private Vector3[] m_DstPivotVectors;
+
 		private List<Timeline.PivotSample> m_SrcPivotList = new List<Timeline.PivotSample>();
+
 		private List<Timeline.PivotSample> m_DstPivotList = new List<Timeline.PivotSample>();
+
 		private Timeline.Styles styles;
+
 		public List<Timeline.PivotSample> SrcPivotList
 		{
 			get
@@ -87,6 +141,7 @@ namespace UnityEditor
 				this.m_SrcPivotVectors = null;
 			}
 		}
+
 		public List<Timeline.PivotSample> DstPivotList
 		{
 			get
@@ -99,6 +154,7 @@ namespace UnityEditor
 				this.m_DstPivotVectors = null;
 			}
 		}
+
 		public bool srcLoop
 		{
 			get
@@ -110,6 +166,7 @@ namespace UnityEditor
 				this.m_SrcLoop = value;
 			}
 		}
+
 		public bool dstLoop
 		{
 			get
@@ -121,6 +178,7 @@ namespace UnityEditor
 				this.m_DstLoop = value;
 			}
 		}
+
 		public float Time
 		{
 			get
@@ -132,6 +190,7 @@ namespace UnityEditor
 				this.m_Time = value;
 			}
 		}
+
 		public float StartTime
 		{
 			get
@@ -143,6 +202,7 @@ namespace UnityEditor
 				this.m_StartTime = value;
 			}
 		}
+
 		public float StopTime
 		{
 			get
@@ -154,6 +214,7 @@ namespace UnityEditor
 				this.m_StopTime = value;
 			}
 		}
+
 		public string SrcName
 		{
 			get
@@ -165,6 +226,7 @@ namespace UnityEditor
 				this.m_SrcName = value;
 			}
 		}
+
 		public string DstName
 		{
 			get
@@ -176,6 +238,7 @@ namespace UnityEditor
 				this.m_DstName = value;
 			}
 		}
+
 		public float SrcStartTime
 		{
 			get
@@ -187,6 +250,7 @@ namespace UnityEditor
 				this.m_SrcStartTime = value;
 			}
 		}
+
 		public float SrcStopTime
 		{
 			get
@@ -198,6 +262,7 @@ namespace UnityEditor
 				this.m_SrcStopTime = value;
 			}
 		}
+
 		public float SrcDuration
 		{
 			get
@@ -205,6 +270,7 @@ namespace UnityEditor
 				return this.SrcStopTime - this.SrcStartTime;
 			}
 		}
+
 		public float DstStartTime
 		{
 			get
@@ -216,6 +282,7 @@ namespace UnityEditor
 				this.m_DstStartTime = value;
 			}
 		}
+
 		public float DstStopTime
 		{
 			get
@@ -227,6 +294,7 @@ namespace UnityEditor
 				this.m_DstStopTime = value;
 			}
 		}
+
 		public float DstDuration
 		{
 			get
@@ -234,6 +302,7 @@ namespace UnityEditor
 				return this.DstStopTime - this.DstStartTime;
 			}
 		}
+
 		public float TransitionStartTime
 		{
 			get
@@ -245,6 +314,7 @@ namespace UnityEditor
 				this.m_TransitionStartTime = value;
 			}
 		}
+
 		public float TransitionStopTime
 		{
 			get
@@ -256,6 +326,7 @@ namespace UnityEditor
 				this.m_TransitionStopTime = value;
 			}
 		}
+
 		public bool HasExitTime
 		{
 			get
@@ -267,6 +338,7 @@ namespace UnityEditor
 				this.m_HasExitTime = value;
 			}
 		}
+
 		public float TransitionDuration
 		{
 			get
@@ -274,14 +346,29 @@ namespace UnityEditor
 				return this.TransitionStopTime - this.TransitionStartTime;
 			}
 		}
+
+		public float SampleStopTime
+		{
+			get
+			{
+				return this.m_SampleStopTime;
+			}
+			set
+			{
+				this.m_SampleStopTime = value;
+			}
+		}
+
 		public Timeline()
 		{
 			this.Init();
 		}
+
 		public void ResetRange()
 		{
 			this.m_TimeArea.SetShownHRangeInsideMargins(0f, this.StopTime);
 		}
+
 		private void Init()
 		{
 			if (this.id == -1)
@@ -298,13 +385,13 @@ namespace UnityEditor
 				this.m_TimeArea.margin = 10f;
 				this.m_TimeArea.scaleWithWindow = true;
 				this.m_TimeArea.hTicks.SetTickModulosForFrameRate(30f);
-				this.m_TimeArea.OnEnable();
 			}
 			if (this.styles == null)
 			{
 				this.styles = new Timeline.Styles();
 			}
 		}
+
 		private List<Vector3> GetControls(List<Vector3> segmentPoints, float scale)
 		{
 			List<Vector3> list = new List<Vector3>();
@@ -323,33 +410,31 @@ namespace UnityEditor
 					list.Add(vector);
 					list.Add(item);
 				}
+				else if (i == segmentPoints.Count - 1)
+				{
+					Vector3 b = segmentPoints[i - 1];
+					Vector3 vector2 = segmentPoints[i];
+					Vector3 a3 = vector2 - b;
+					Vector3 item2 = vector2 - scale * a3;
+					list.Add(item2);
+					list.Add(vector2);
+				}
 				else
 				{
-					if (i == segmentPoints.Count - 1)
-					{
-						Vector3 b = segmentPoints[i - 1];
-						Vector3 vector2 = segmentPoints[i];
-						Vector3 a3 = vector2 - b;
-						Vector3 item2 = vector2 - scale * a3;
-						list.Add(item2);
-						list.Add(vector2);
-					}
-					else
-					{
-						Vector3 b2 = segmentPoints[i - 1];
-						Vector3 vector3 = segmentPoints[i];
-						Vector3 a4 = segmentPoints[i + 1];
-						Vector3 normalized = (a4 - b2).normalized;
-						Vector3 item3 = vector3 - scale * normalized * (vector3 - b2).magnitude;
-						Vector3 item4 = vector3 + scale * normalized * (a4 - vector3).magnitude;
-						list.Add(item3);
-						list.Add(vector3);
-						list.Add(item4);
-					}
+					Vector3 b2 = segmentPoints[i - 1];
+					Vector3 vector3 = segmentPoints[i];
+					Vector3 a4 = segmentPoints[i + 1];
+					Vector3 normalized = (a4 - b2).normalized;
+					Vector3 item3 = vector3 - scale * normalized * (vector3 - b2).magnitude;
+					Vector3 item4 = vector3 + scale * normalized * (a4 - vector3).magnitude;
+					list.Add(item3);
+					list.Add(vector3);
+					list.Add(item4);
 				}
 			}
 			return list;
 		}
+
 		private Vector3 CalculatePoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
 		{
 			float num = 1f - t;
@@ -362,6 +447,7 @@ namespace UnityEditor
 			a += 3f * num * num2 * p2;
 			return a + d2 * p3;
 		}
+
 		private Color[] GetPivotColors(Vector3[] vectors, float motionStart, float motionStop, Color fromColor, Color toColor, Color loopColor, float offset)
 		{
 			Color[] array = new Color[vectors.Length];
@@ -374,62 +460,55 @@ namespace UnityEditor
 				{
 					array[i] = Color.Lerp(fromColor, toColor, (vectors[i].x - num) / num3);
 				}
+				else if (vectors[i].x < num && vectors[i].x >= motionStart + offset)
+				{
+					array[i] = fromColor;
+				}
+				else if (vectors[i].x > num2 && vectors[i].x <= motionStop + offset)
+				{
+					array[i] = toColor;
+				}
 				else
 				{
-					if (vectors[i].x < num && vectors[i].x >= motionStart + offset)
-					{
-						array[i] = fromColor;
-					}
-					else
-					{
-						if (vectors[i].x > num2 && vectors[i].x <= motionStop + offset)
-						{
-							array[i] = toColor;
-						}
-						else
-						{
-							array[i] = loopColor;
-						}
-					}
+					array[i] = loopColor;
 				}
 			}
 			return array;
 		}
-		private Vector3[] GetPivotVectors(Timeline.PivotSample[] samples, float motionStart, float motionStop, Rect rect, bool loop)
+
+		private Vector3[] GetPivotVectors(Timeline.PivotSample[] samples, float width, Rect rect, float height, bool loop)
 		{
-			if (samples.Length == 0 || motionStop - motionStart < 0.33f)
+			if (samples.Length == 0 || width < 0.33f)
 			{
 				return new Vector3[0];
 			}
-			float num = motionStop - motionStart;
 			List<Vector3> list = new List<Vector3>();
 			for (int i = 0; i < samples.Length; i++)
 			{
 				Timeline.PivotSample pivotSample = samples[i];
 				Vector3 zero = Vector3.zero;
 				zero.x = this.m_TimeArea.TimeToPixel(pivotSample.m_Time, rect);
-				zero.y = rect.height / 16f + pivotSample.m_Weight * 12f * rect.height / 16f;
+				zero.y = height / 16f + pivotSample.m_Weight * 12f * height / 16f;
 				list.Add(zero);
 			}
 			if (loop && list[list.Count - 1].x <= rect.width)
 			{
 				float x = list[list.Count - 1].x;
-				int num2 = 0;
-				int num3 = 1;
+				int num = 0;
+				int num2 = 1;
 				List<Vector3> list2 = new List<Vector3>();
-				list2.Add(list[list.Count - 1]);
 				while (x < rect.width)
 				{
-					if (num2 > list.Count - 1)
+					if (num > list.Count - 1)
 					{
-						num2 = 0;
-						num3++;
+						num = 0;
+						num2++;
 					}
-					Vector3 item = list[num2];
-					item.x += (float)num3 * num;
+					Vector3 item = list[num];
+					item.x += (float)num2 * width;
 					x = item.x;
 					list2.Add(item);
-					num2++;
+					num++;
 				}
 				list.AddRange(list2);
 			}
@@ -452,6 +531,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private Vector3[] OffsetPivotVectors(Vector3[] vectors, float offset)
 		{
 			for (int i = 0; i < vectors.Length; i++)
@@ -461,6 +541,7 @@ namespace UnityEditor
 			}
 			return vectors;
 		}
+
 		private void DoPivotCurves()
 		{
 			Color white = Color.white;
@@ -472,31 +553,49 @@ namespace UnityEditor
 			Rect rect = new Rect(0f, 18f, this.m_Rect.width, 66f);
 			GUI.BeginGroup(rect);
 			float num = this.m_TimeArea.TimeToPixel(this.SrcStartTime, rect);
-			float motionStop = this.m_TimeArea.TimeToPixel(this.SrcStopTime, rect);
-			float num2 = this.m_TimeArea.TimeToPixel(this.DstStartTime, rect);
-			float motionStop2 = this.m_TimeArea.TimeToPixel(this.DstStopTime, rect);
+			float num2 = this.m_TimeArea.TimeToPixel(this.SrcStopTime, rect);
+			float num3 = this.m_TimeArea.TimeToPixel(this.DstStartTime, rect);
+			float num4 = this.m_TimeArea.TimeToPixel(this.DstStopTime, rect);
 			if (this.m_SrcPivotVectors == null)
 			{
-				this.m_SrcPivotVectors = this.GetPivotVectors(this.m_SrcPivotList.ToArray(), num, motionStop, rect, this.srcLoop);
+				this.m_SrcPivotVectors = this.GetPivotVectors(this.m_SrcPivotList.ToArray(), num2 - num, rect, rect.height, this.srcLoop);
 			}
 			if (this.m_DstPivotVectors == null)
 			{
-				this.m_DstPivotVectors = this.GetPivotVectors(this.m_DstPivotList.ToArray(), num2, motionStop2, rect, this.dstLoop);
+				this.m_DstPivotVectors = this.GetPivotVectors(this.m_DstPivotList.ToArray(), num4 - num3, rect, rect.height, this.dstLoop);
 			}
-			this.m_DstPivotVectors = this.OffsetPivotVectors(this.m_DstPivotVectors, this.m_DstDragOffset + num2 - num);
-			Color[] pivotColors = this.GetPivotColors(this.m_SrcPivotVectors, num, motionStop, white, toColor, loopColor, 0f);
-			Color[] pivotColors2 = this.GetPivotColors(this.m_DstPivotVectors, num2, motionStop2, fromColor, white2, loopColor2, this.m_DstDragOffset);
+			this.m_DstPivotVectors = this.OffsetPivotVectors(this.m_DstPivotVectors, this.m_DstDragOffset + num3 - num);
+			Color[] pivotColors = this.GetPivotColors(this.m_SrcPivotVectors, num, num2, white, toColor, loopColor, 0f);
+			Color[] pivotColors2 = this.GetPivotColors(this.m_DstPivotVectors, num3, num4, fromColor, white2, loopColor2, this.m_DstDragOffset);
 			Handles.DrawAAPolyLine(pivotColors, this.m_SrcPivotVectors);
 			Handles.DrawAAPolyLine(pivotColors2, this.m_DstPivotVectors);
 			GUI.EndGroup();
 		}
+
 		private void EnforceConstraints()
 		{
+			Rect rect = new Rect(0f, 0f, this.m_Rect.width, 150f);
+			if (this.m_DragState == Timeline.DragStates.LeftSelection)
+			{
+				float min = this.m_TimeArea.TimeToPixel(this.SrcStartTime, rect) - this.m_TimeArea.TimeToPixel(this.TransitionStartTime, rect);
+				float max = this.m_TimeArea.TimeToPixel(this.TransitionStopTime, rect) - this.m_TimeArea.TimeToPixel(this.TransitionStartTime, rect);
+				this.m_LeftThumbOffset = Mathf.Clamp(this.m_LeftThumbOffset, min, max);
+			}
+			if (this.m_DragState == Timeline.DragStates.RightSelection)
+			{
+				float num = this.m_TimeArea.TimeToPixel(this.TransitionStartTime, rect) - this.m_TimeArea.TimeToPixel(this.TransitionStopTime, rect);
+				if (this.m_RightThumbOffset < num)
+				{
+					this.m_RightThumbOffset = num;
+				}
+			}
 		}
+
 		private bool WasDraggingData()
 		{
 			return this.m_DstDragOffset != 0f || this.m_LeftThumbOffset != 0f || this.m_RightThumbOffset != 0f;
 		}
+
 		public bool DoTimeline(Rect timeRect)
 		{
 			bool result = false;
@@ -504,18 +603,16 @@ namespace UnityEditor
 			this.m_Rect = timeRect;
 			float num = this.m_TimeArea.PixelToTime(timeRect.xMin, timeRect);
 			float num2 = this.m_TimeArea.PixelToTime(timeRect.xMax, timeRect);
-			if (num != this.StartTime)
+			if (!Mathf.Approximately(num, this.StartTime))
 			{
 				this.StartTime = num;
 				GUI.changed = true;
 			}
-			if (num2 != this.StopTime)
+			if (!Mathf.Approximately(num2, this.StopTime))
 			{
 				this.StopTime = num2;
 				GUI.changed = true;
 			}
-			this.Time = ((this.Time >= this.StartTime) ? this.Time : this.StartTime);
-			this.Time = ((this.Time <= this.StopTime) ? this.Time : this.StartTime);
 			this.Time = Mathf.Max(this.Time, 0f);
 			if (Event.current.type == EventType.Repaint)
 			{
@@ -528,17 +625,17 @@ namespace UnityEditor
 			Rect rect = new Rect(0f, 0f, timeRect.width, timeRect.height);
 			Rect position = new Rect(0f, 0f, timeRect.width, 18f);
 			Rect position2 = new Rect(0f, 18f, timeRect.width, 132f);
-			float num3 = this.m_TimeArea.TimeToPixel(this.SrcStartTime, timeRect);
-			float num4 = this.m_TimeArea.TimeToPixel(this.SrcStopTime, timeRect);
-			float num5 = this.m_TimeArea.TimeToPixel(this.DstStartTime, timeRect) + this.m_DstDragOffset;
-			float num6 = this.m_TimeArea.TimeToPixel(this.DstStopTime, timeRect) + this.m_DstDragOffset;
-			float num7 = this.m_TimeArea.TimeToPixel(this.TransitionStartTime, timeRect) + this.m_LeftThumbOffset;
-			float num8 = this.m_TimeArea.TimeToPixel(this.TransitionStopTime, timeRect) + this.m_RightThumbOffset;
-			float num9 = this.m_TimeArea.TimeToPixel(this.Time, timeRect);
+			float num3 = this.m_TimeArea.TimeToPixel(this.SrcStartTime, rect);
+			float num4 = this.m_TimeArea.TimeToPixel(this.SrcStopTime, rect);
+			float num5 = this.m_TimeArea.TimeToPixel(this.DstStartTime, rect) + this.m_DstDragOffset;
+			float num6 = this.m_TimeArea.TimeToPixel(this.DstStopTime, rect) + this.m_DstDragOffset;
+			float num7 = this.m_TimeArea.TimeToPixel(this.TransitionStartTime, rect) + this.m_LeftThumbOffset;
+			float num8 = this.m_TimeArea.TimeToPixel(this.TransitionStopTime, rect) + this.m_RightThumbOffset;
+			float num9 = this.m_TimeArea.TimeToPixel(this.Time, rect);
 			Rect rect2 = new Rect(num3, 85f, num4 - num3, 32f);
 			Rect rect3 = new Rect(num5, 117f, num6 - num5, 32f);
 			Rect position3 = new Rect(num7, 0f, num8 - num7, 18f);
-			Rect position4 = new Rect(num7, 18f, num8 - num7, timeRect.height - 18f);
+			Rect position4 = new Rect(num7, 18f, num8 - num7, rect.height - 18f);
 			Rect position5 = new Rect(num7 - 9f, 5f, 9f, 15f);
 			Rect position6 = new Rect(num8, 5f, 9f, 15f);
 			Rect position7 = new Rect(num9 - 7f, 4f, 15f, 15f);
@@ -570,44 +667,37 @@ namespace UnityEditor
 				{
 					this.m_DragState = Timeline.DragStates.Playhead;
 				}
+				else if (rect2.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.Source;
+				}
+				else if (rect3.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.Destination;
+				}
+				else if (position5.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.LeftSelection;
+				}
+				else if (position6.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.RightSelection;
+				}
+				else if (position3.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.FullSelection;
+				}
+				else if (position.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.TimeArea;
+				}
+				else if (position2.Contains(current.mousePosition))
+				{
+					this.m_DragState = Timeline.DragStates.TimeArea;
+				}
 				else
 				{
-					if (rect2.Contains(current.mousePosition))
-					{
-						this.m_DragState = Timeline.DragStates.Source;
-					}
-					else
-					{
-						if (rect3.Contains(current.mousePosition))
-						{
-							this.m_DragState = Timeline.DragStates.Destination;
-						}
-						else
-						{
-							if (position5.Contains(current.mousePosition))
-							{
-								this.m_DragState = Timeline.DragStates.LeftSelection;
-							}
-							else
-							{
-								if (position6.Contains(current.mousePosition))
-								{
-									this.m_DragState = Timeline.DragStates.RightSelection;
-								}
-								else
-								{
-									if (position3.Contains(current.mousePosition))
-									{
-										this.m_DragState = Timeline.DragStates.FullSelection;
-									}
-									else
-									{
-										this.m_DragState = Timeline.DragStates.None;
-									}
-								}
-							}
-						}
-					}
+					this.m_DragState = Timeline.DragStates.None;
 				}
 				current.Use();
 			}
@@ -616,11 +706,17 @@ namespace UnityEditor
 				switch (this.m_DragState)
 				{
 				case Timeline.DragStates.LeftSelection:
-					this.m_LeftThumbOffset += current.delta.x;
+					if ((current.delta.x > 0f && current.mousePosition.x > num3) || (current.delta.x < 0f && current.mousePosition.x < num8))
+					{
+						this.m_LeftThumbOffset += current.delta.x;
+					}
 					this.EnforceConstraints();
 					break;
 				case Timeline.DragStates.RightSelection:
-					this.m_RightThumbOffset += current.delta.x;
+					if ((current.delta.x > 0f && current.mousePosition.x > num7) || current.delta.x < 0f)
+					{
+						this.m_RightThumbOffset += current.delta.x;
+					}
 					this.EnforceConstraints();
 					break;
 				case Timeline.DragStates.FullSelection:
@@ -634,25 +730,34 @@ namespace UnityEditor
 					break;
 				case Timeline.DragStates.Source:
 				{
-					TimeArea expr_498_cp_0 = this.m_TimeArea;
-					expr_498_cp_0.m_Translation.x = expr_498_cp_0.m_Translation.x + current.delta.x;
+					TimeArea expr_499_cp_0 = this.m_TimeArea;
+					expr_499_cp_0.m_Translation.x = expr_499_cp_0.m_Translation.x + current.delta.x;
 					break;
 				}
 				case Timeline.DragStates.Playhead:
-					this.Time = this.m_TimeArea.PixelToTime(num9 + current.delta.x, timeRect);
+					if ((current.delta.x > 0f && current.mousePosition.x > num3) || (current.delta.x < 0f && current.mousePosition.x <= this.m_TimeArea.TimeToPixel(this.SampleStopTime, rect)))
+					{
+						this.Time = this.m_TimeArea.PixelToTime(num9 + current.delta.x, rect);
+					}
 					break;
+				case Timeline.DragStates.TimeArea:
+				{
+					TimeArea expr_4C4_cp_0 = this.m_TimeArea;
+					expr_4C4_cp_0.m_Translation.x = expr_4C4_cp_0.m_Translation.x + current.delta.x;
+					break;
+				}
 				}
 				current.Use();
 				GUI.changed = true;
 			}
 			if (current.type == EventType.MouseUp && GUIUtility.hotControl == this.id)
 			{
-				this.SrcStartTime = this.m_TimeArea.PixelToTime(num3, timeRect);
-				this.SrcStopTime = this.m_TimeArea.PixelToTime(num4, timeRect);
-				this.DstStartTime = this.m_TimeArea.PixelToTime(num5, timeRect);
-				this.DstStopTime = this.m_TimeArea.PixelToTime(num6, timeRect);
-				this.TransitionStartTime = this.m_TimeArea.PixelToTime(num7, timeRect);
-				this.TransitionStopTime = this.m_TimeArea.PixelToTime(num8, timeRect);
+				this.SrcStartTime = this.m_TimeArea.PixelToTime(num3, rect);
+				this.SrcStopTime = this.m_TimeArea.PixelToTime(num4, rect);
+				this.DstStartTime = this.m_TimeArea.PixelToTime(num5, rect);
+				this.DstStopTime = this.m_TimeArea.PixelToTime(num6, rect);
+				this.TransitionStartTime = this.m_TimeArea.PixelToTime(num7, rect);
+				this.TransitionStopTime = this.m_TimeArea.PixelToTime(num8, rect);
 				GUI.changed = true;
 				this.m_DragState = Timeline.DragStates.None;
 				result = this.WasDraggingData();
@@ -691,65 +796,65 @@ namespace UnityEditor
 				{
 					GUI.Box(new Rect(num11 + num12, 0f, num13, rect2.height), GUIContent.none, this.styles.offRight);
 				}
-				float num14 = 1f;
+				float b = 1f;
 				float x = this.styles.block.CalcSize(content).x;
-				float num15 = Mathf.Max(0f, num11) - 20f;
-				float num16 = num15 + 15f;
-				if (num15 < x && num16 > 0f && this.m_DragState == Timeline.DragStates.LeftSelection)
+				float num14 = Mathf.Max(0f, num11) - 20f;
+				float num15 = num14 + 15f;
+				if (num14 < x && num15 > 0f && this.m_DragState == Timeline.DragStates.LeftSelection)
 				{
-					num14 = 0f;
+					b = 0f;
 				}
 				GUI.EndGroup();
-				float num17 = this.styles.leftBlock.normal.textColor.a;
-				if (!Mathf.Approximately(num17, num14) && Event.current.type == EventType.Repaint)
+				float a = this.styles.leftBlock.normal.textColor.a;
+				if (!Mathf.Approximately(a, b) && Event.current.type == EventType.Repaint)
 				{
-					num17 = Mathf.Lerp(num17, num14, 0.1f);
-					this.styles.leftBlock.normal.textColor = new Color(this.styles.leftBlock.normal.textColor.r, this.styles.leftBlock.normal.textColor.g, this.styles.leftBlock.normal.textColor.b, num17);
+					a = Mathf.Lerp(a, b, 0.1f);
+					this.styles.leftBlock.normal.textColor = new Color(this.styles.leftBlock.normal.textColor.r, this.styles.leftBlock.normal.textColor.g, this.styles.leftBlock.normal.textColor.b, a);
 					HandleUtility.Repaint();
 				}
 				GUI.Box(position8, content, this.styles.leftBlock);
 				position8 = new Rect(position8.xMax, 85f, position8.xMax - position8.xMin, 32f);
 			}
 			GUIContent content2 = EditorGUIUtility.TempContent(this.DstName);
-			int num18 = (!this.dstLoop) ? 1 : (1 + (int)((num8 - rect3.xMin) / (rect3.xMax - rect3.xMin)));
+			int num16 = (!this.dstLoop) ? 1 : (1 + (int)((num8 - rect3.xMin) / (rect3.xMax - rect3.xMin)));
 			position8 = rect3;
 			if (rect3.width < 10f)
 			{
-				position8 = new Rect(rect3.x, rect3.y, (rect3.xMax - rect3.xMin) * (float)num18, rect3.height);
-				num18 = 1;
+				position8 = new Rect(rect3.x, rect3.y, (rect3.xMax - rect3.xMin) * (float)num16, rect3.height);
+				num16 = 1;
 			}
-			for (int j = 0; j < num18; j++)
+			for (int j = 0; j < num16; j++)
 			{
 				GUI.BeginGroup(position8, GUIContent.none, this.styles.rightBlock);
-				float num19 = num7 - position8.xMin;
-				float num20 = num8 - num7;
-				float num21 = position8.xMax - position8.xMin - (num19 + num20);
+				float num17 = num7 - position8.xMin;
+				float num18 = num8 - num7;
+				float num19 = position8.xMax - position8.xMin - (num17 + num18);
+				if (num17 > 0f)
+				{
+					GUI.Box(new Rect(0f, 0f, num17, rect3.height), GUIContent.none, this.styles.offLeft);
+				}
+				if (num18 > 0f)
+				{
+					GUI.Box(new Rect(num17, 0f, num18, rect3.height), GUIContent.none, this.styles.offOn);
+				}
 				if (num19 > 0f)
 				{
-					GUI.Box(new Rect(0f, 0f, num19, rect3.height), GUIContent.none, this.styles.offLeft);
+					GUI.Box(new Rect(num17 + num18, 0f, num19, rect3.height), GUIContent.none, this.styles.onRight);
 				}
-				if (num20 > 0f)
-				{
-					GUI.Box(new Rect(num19, 0f, num20, rect3.height), GUIContent.none, this.styles.offOn);
-				}
-				if (num21 > 0f)
-				{
-					GUI.Box(new Rect(num19 + num20, 0f, num21, rect3.height), GUIContent.none, this.styles.onRight);
-				}
-				float num22 = 1f;
+				float b2 = 1f;
 				float x2 = this.styles.block.CalcSize(content2).x;
-				float num23 = Mathf.Max(0f, num19) - 20f;
-				float num24 = num23 + 15f;
-				if (num23 < x2 && num24 > 0f && (this.m_DragState == Timeline.DragStates.LeftSelection || this.m_DragState == Timeline.DragStates.Destination))
+				float num20 = Mathf.Max(0f, num17) - 20f;
+				float num21 = num20 + 15f;
+				if (num20 < x2 && num21 > 0f && (this.m_DragState == Timeline.DragStates.LeftSelection || this.m_DragState == Timeline.DragStates.Destination))
 				{
-					num22 = 0f;
+					b2 = 0f;
 				}
 				GUI.EndGroup();
-				float num25 = this.styles.rightBlock.normal.textColor.a;
-				if (!Mathf.Approximately(num25, num22) && Event.current.type == EventType.Repaint)
+				float a2 = this.styles.rightBlock.normal.textColor.a;
+				if (!Mathf.Approximately(a2, b2) && Event.current.type == EventType.Repaint)
 				{
-					num25 = Mathf.Lerp(num25, num22, 0.1f);
-					this.styles.rightBlock.normal.textColor = new Color(this.styles.rightBlock.normal.textColor.r, this.styles.rightBlock.normal.textColor.g, this.styles.rightBlock.normal.textColor.b, num25);
+					a2 = Mathf.Lerp(a2, b2, 0.1f);
+					this.styles.rightBlock.normal.textColor = new Color(this.styles.rightBlock.normal.textColor.r, this.styles.rightBlock.normal.textColor.g, this.styles.rightBlock.normal.textColor.b, a2);
 					HandleUtility.Repaint();
 				}
 				GUI.Box(position8, content2, this.styles.rightBlock);
@@ -763,7 +868,7 @@ namespace UnityEditor
 			GUI.Box(position7, GUIContent.none, this.styles.playhead);
 			Color color = Handles.color;
 			Handles.color = Color.white;
-			Handles.DrawLine(new Vector3(num9, 19f, 0f), new Vector3(num9, timeRect.height, 0f));
+			Handles.DrawLine(new Vector3(num9, 19f, 0f), new Vector3(num9, rect.height, 0f));
 			Handles.color = color;
 			bool flag = this.SrcStopTime - this.SrcStartTime < 0.0333333351f;
 			bool flag2 = this.DstStopTime - this.DstStartTime < 0.0333333351f;

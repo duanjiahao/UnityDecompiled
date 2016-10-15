@@ -2,11 +2,13 @@ using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class DragAndDrop
 	{
 		private static Hashtable ms_GenericData;
+
 		public static extern UnityEngine.Object[] objectReferences
 		{
 			[WrapperlessIcall]
@@ -16,6 +18,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern string[] paths
 		{
 			[WrapperlessIcall]
@@ -25,6 +28,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern DragAndDropVisualMode visualMode
 		{
 			[WrapperlessIcall]
@@ -34,6 +38,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int activeControlID
 		{
 			[WrapperlessIcall]
@@ -43,6 +48,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static bool HandleDelayedDrag(Rect position, int id, UnityEngine.Object objectToDrag)
 		{
 			Event current = Event.current;
@@ -78,14 +84,17 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public static void PrepareStartDrag()
 		{
 			DragAndDrop.ms_GenericData = null;
 			DragAndDrop.PrepareStartDrag_Internal();
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void PrepareStartDrag_Internal();
+
 		public static void StartDrag(string title)
 		{
 			if (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag)
@@ -97,12 +106,15 @@ namespace UnityEditor
 				Debug.LogError("Drags can only be started from MouseDown or MouseDrag events");
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void StartDrag_Internal(string title);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AcceptDrag();
+
 		public static object GetGenericData(string type)
 		{
 			if (DragAndDrop.ms_GenericData != null && DragAndDrop.ms_GenericData.Contains(type))
@@ -111,6 +123,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public static void SetGenericData(string type, object data)
 		{
 			if (DragAndDrop.ms_GenericData == null)

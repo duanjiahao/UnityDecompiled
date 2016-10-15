@@ -1,14 +1,17 @@
 using System;
+
 namespace UnityEditor.Audio
 {
 	internal class AudioGroupParameterPath : AudioParameterPath
 	{
 		public AudioMixerGroupController group;
+
 		public AudioGroupParameterPath(AudioMixerGroupController group, GUID parameter)
 		{
 			this.group = group;
 			this.parameter = parameter;
 		}
+
 		public override string ResolveStringPath(bool getOnlyBasePath)
 		{
 			if (getOnlyBasePath)
@@ -25,6 +28,7 @@ namespace UnityEditor.Audio
 			}
 			return "Error finding Parameter path.";
 		}
+
 		protected string GetBasePath(string group, string effect)
 		{
 			string str = " (of " + group;

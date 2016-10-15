@@ -8,6 +8,7 @@ using UnityEditor.Animations;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(UnityEditor.Animations.BlendTree))]
@@ -16,21 +17,53 @@ namespace UnityEditor
 		private class Styles
 		{
 			public readonly GUIStyle background = "MeBlendBackground";
+
 			public readonly GUIStyle triangleLeft = "MeBlendTriangleLeft";
+
 			public readonly GUIStyle triangleRight = "MeBlendTriangleRight";
+
 			public readonly GUIStyle blendPosition = "MeBlendPosition";
+
 			public GUIStyle clickDragFloatFieldLeft = new GUIStyle(EditorStyles.miniTextField);
+
 			public GUIStyle clickDragFloatFieldRight = new GUIStyle(EditorStyles.miniTextField);
+
 			public GUIStyle clickDragFloatLabelLeft = new GUIStyle(EditorStyles.miniLabel);
+
 			public GUIStyle clickDragFloatLabelRight = new GUIStyle(EditorStyles.miniLabel);
+
 			public GUIStyle headerIcon = new GUIStyle();
+
 			public GUIStyle errorStyle = new GUIStyle(EditorStyles.wordWrappedLabel);
+
 			public GUIContent speedIcon = new GUIContent(EditorGUIUtility.IconContent("SpeedScale"));
+
 			public GUIContent mirrorIcon = new GUIContent(EditorGUIUtility.IconContent("Mirror"));
+
 			public Texture2D pointIcon = EditorGUIUtility.LoadIcon("blendKey");
+
 			public Texture2D pointIconSelected = EditorGUIUtility.LoadIcon("blendKeySelected");
+
 			public Texture2D pointIconOverlay = EditorGUIUtility.LoadIcon("blendKeyOverlay");
+
 			public Texture2D samplerIcon = EditorGUIUtility.LoadIcon("blendSampler");
+
+			public Color visBgColor;
+
+			public Color visWeightColor;
+
+			public Color visWeightShapeColor;
+
+			public Color visWeightLineColor;
+
+			public Color visPointColor;
+
+			public Color visPointEmptyColor;
+
+			public Color visPointOverlayColor;
+
+			public Color visSamplerColor;
+
 			public Styles()
 			{
 				this.errorStyle.alignment = TextAnchor.MiddleCenter;
@@ -41,60 +74,98 @@ namespace UnityEditor
 				this.clickDragFloatFieldRight.alignment = TextAnchor.MiddleRight;
 				this.clickDragFloatLabelLeft.alignment = TextAnchor.MiddleLeft;
 				this.clickDragFloatLabelRight.alignment = TextAnchor.MiddleRight;
+				this.visBgColor = (EditorGUIUtility.isProSkin ? new Color(0.2f, 0.2f, 0.2f) : new Color(0.95f, 0.95f, 1f));
+				this.visWeightColor = (EditorGUIUtility.isProSkin ? new Color(0.65f, 0.75f, 1f, 0.65f) : new Color(0.5f, 0.6f, 0.9f, 0.8f));
+				this.visWeightShapeColor = (EditorGUIUtility.isProSkin ? new Color(0.4f, 0.65f, 1f, 0.12f) : new Color(0.4f, 0.65f, 1f, 0.15f));
+				this.visWeightLineColor = (EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.6f) : new Color(0f, 0f, 0f, 0.3f));
+				this.visPointColor = (EditorGUIUtility.isProSkin ? new Color(0.5f, 0.7f, 1f) : new Color(0.5f, 0.7f, 1f));
+				this.visPointEmptyColor = (EditorGUIUtility.isProSkin ? new Color(0.6f, 0.6f, 0.6f) : new Color(0.8f, 0.8f, 0.8f));
+				this.visPointOverlayColor = (EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.4f) : new Color(0f, 0f, 0f, 0.2f));
+				this.visSamplerColor = (EditorGUIUtility.isProSkin ? new Color(1f, 0.4f, 0.4f) : new Color(1f, 0.4f, 0.4f));
 			}
 		}
+
 		private enum ChildPropertyToCompute
 		{
 			Threshold,
 			PositionX,
 			PositionY
 		}
+
 		private delegate float GetFloatFromMotion(Motion motion, float mirrorMultiplier);
+
 		private const int kVisResolution = 64;
+
 		private static BlendTreeInspector.Styles styles;
-		internal static UnityEditor.Animations.AnimatorController currentController = null;
-		internal static Animator currentAnimator = null;
-		internal static UnityEditor.Animations.BlendTree parentBlendTree = null;
-		internal static Action<UnityEditor.Animations.BlendTree> blendParameterInputChanged = null;
+
+		internal static UnityEditor.Animations.AnimatorController currentController;
+
+		internal static Animator currentAnimator;
+
+		internal static UnityEditor.Animations.BlendTree parentBlendTree;
+
+		internal static Action<UnityEditor.Animations.BlendTree> blendParameterInputChanged;
+
 		private readonly int m_BlendAnimationID = "BlendAnimationIDHash".GetHashCode();
+
 		private readonly int m_ClickDragFloatID = "ClickDragFloatIDHash".GetHashCode();
+
 		private ReorderableList m_ReorderableList;
+
 		private SerializedProperty m_Childs;
+
 		private SerializedProperty m_BlendParameter;
+
 		private SerializedProperty m_BlendParameterY;
+
 		private UnityEditor.Animations.BlendTree m_BlendTree;
+
 		private SerializedProperty m_UseAutomaticThresholds;
+
 		private SerializedProperty m_NormalizedBlendValues;
+
 		private SerializedProperty m_MinThreshold;
+
 		private SerializedProperty m_MaxThreshold;
+
 		private SerializedProperty m_Name;
+
 		private SerializedProperty m_BlendType;
+
 		private AnimBool m_ShowGraph = new AnimBool();
+
 		private AnimBool m_ShowCompute = new AnimBool();
+
 		private AnimBool m_ShowAdjust = new AnimBool();
+
 		private bool m_ShowGraphValue;
+
 		private float[] m_Weights;
+
 		private Texture2D m_BlendTex;
+
 		private List<Texture2D> m_WeightTexs = new List<Texture2D>();
+
 		private string m_WarningMessage;
+
 		private PreviewBlendTree m_PreviewBlendTree;
+
 		private VisualizationBlendTree m_VisBlendTree;
-		[NonSerialized]
+
 		private GameObject m_VisInstance;
+
 		private static bool s_ClickDragFloatDragged;
+
 		private static float s_ClickDragFloatDistance;
+
 		private Rect m_BlendRect;
+
 		private int m_SelectedPoint = -1;
+
 		private bool s_DraggingPoint;
-		private static Color s_VisBgColor = EditorGUIUtility.isProSkin ? new Color(0.2f, 0.2f, 0.2f) : new Color(0.95f, 0.95f, 1f);
-		private static Color s_VisWeightColor = EditorGUIUtility.isProSkin ? new Color(0.65f, 0.75f, 1f, 0.65f) : new Color(0.5f, 0.6f, 0.9f, 0.8f);
-		private static Color s_VisWeightShapeColor = EditorGUIUtility.isProSkin ? new Color(0.4f, 0.65f, 1f, 0.12f) : new Color(0.4f, 0.65f, 1f, 0.15f);
-		private static Color s_VisWeightLineColor = EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.6f) : new Color(0f, 0f, 0f, 0.3f);
-		private static Color s_VisPointColor = EditorGUIUtility.isProSkin ? new Color(0.5f, 0.7f, 1f) : new Color(0.5f, 0.7f, 1f);
-		private static Color s_VisPointEmptyColor = EditorGUIUtility.isProSkin ? new Color(0.6f, 0.6f, 0.6f) : new Color(0.8f, 0.8f, 0.8f);
-		private static Color s_VisPointOverlayColor = EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.4f) : new Color(0f, 0f, 0f, 0.2f);
-		private static Color s_VisSamplerColor = EditorGUIUtility.isProSkin ? new Color(1f, 0.4f, 0.4f) : new Color(1f, 0.4f, 0.4f);
+
 		private int kNumCirclePoints = 20;
+
 		private int ParameterCount
 		{
 			get
@@ -102,6 +173,39 @@ namespace UnityEditor
 				return (this.m_BlendType.intValue <= 0) ? 1 : ((this.m_BlendType.intValue >= 4) ? 0 : 2);
 			}
 		}
+
+		internal static void SetParameterValue(Animator animator, UnityEditor.Animations.BlendTree blendTree, UnityEditor.Animations.BlendTree parentBlendTree, string parameterName, float parameterValue)
+		{
+			bool flag = EditorApplication.isPlaying && animator != null && animator.enabled && animator.gameObject.activeInHierarchy;
+			if (flag)
+			{
+				animator.SetFloat(parameterName, parameterValue);
+			}
+			blendTree.SetInputBlendValue(parameterName, parameterValue);
+			if (BlendTreeInspector.blendParameterInputChanged != null)
+			{
+				BlendTreeInspector.blendParameterInputChanged(blendTree);
+			}
+			if (parentBlendTree != null)
+			{
+				parentBlendTree.SetInputBlendValue(parameterName, parameterValue);
+				if (BlendTreeInspector.blendParameterInputChanged != null)
+				{
+					BlendTreeInspector.blendParameterInputChanged(parentBlendTree);
+				}
+			}
+		}
+
+		internal static float GetParameterValue(Animator animator, UnityEditor.Animations.BlendTree blendTree, string parameterName)
+		{
+			bool flag = EditorApplication.isPlaying && animator != null && animator.enabled && animator.gameObject.activeInHierarchy;
+			if (flag)
+			{
+				return animator.GetFloat(parameterName);
+			}
+			return blendTree.GetInputBlendValue(parameterName);
+		}
+
 		public void OnEnable()
 		{
 			this.m_Name = base.serializedObject.FindProperty("m_Name");
@@ -113,6 +217,7 @@ namespace UnityEditor
 			this.m_MaxThreshold = base.serializedObject.FindProperty("m_MaxThreshold");
 			this.m_BlendType = base.serializedObject.FindProperty("m_BlendType");
 		}
+
 		private void Init()
 		{
 			if (BlendTreeInspector.styles == null)
@@ -177,11 +282,13 @@ namespace UnityEditor
 				this.ValidatePositions();
 			}
 		}
+
 		internal override void OnHeaderIconGUI(Rect iconRect)
 		{
 			Texture2D miniThumbnail = AssetPreview.GetMiniThumbnail(this.target);
 			GUI.Label(iconRect, miniThumbnail);
 		}
+
 		internal override void OnHeaderTitleGUI(Rect titleRect, string header)
 		{
 			base.serializedObject.Update();
@@ -189,7 +296,7 @@ namespace UnityEditor
 			position.height = 16f;
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = this.m_Name.hasMultipleDifferentValues;
-			string text = EditorGUI.DelayedTextField(position, this.m_Name.stringValue, null, EditorStyles.textField);
+			string text = EditorGUI.DelayedTextField(position, this.m_Name.stringValue, EditorStyles.textField);
 			EditorGUI.showMixedValue = false;
 			if (EditorGUI.EndChangeCheck() && !string.IsNullOrEmpty(text))
 			{
@@ -202,6 +309,7 @@ namespace UnityEditor
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		internal override void OnHeaderControlsGUI()
 		{
 			EditorGUIUtility.labelWidth = 80f;
@@ -209,6 +317,7 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_BlendType, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private List<string> CollectParameters(UnityEditor.Animations.AnimatorController controller)
 		{
 			List<string> list = new List<string>();
@@ -226,6 +335,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		private void ParameterGUI()
 		{
 			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -259,6 +369,7 @@ namespace UnityEditor
 			base.serializedObject.ApplyModifiedProperties();
 			EditorGUILayout.EndHorizontal();
 		}
+
 		public override void OnInspectorGUI()
 		{
 			this.Init();
@@ -278,53 +389,38 @@ namespace UnityEditor
 					this.BlendGraph(EditorGUILayout.GetControlRect(false, 40f, BlendTreeInspector.styles.background, new GUILayoutOption[0]));
 					this.ThresholdValues();
 				}
-				else
+				else if (this.m_BlendType.intValue == 4)
 				{
-					if (this.m_BlendType.intValue == 4)
+					for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
 					{
-						for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
+						string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
+						float recursiveBlendParameterMin = this.m_BlendTree.GetRecursiveBlendParameterMin(i);
+						float recursiveBlendParameterMax = this.m_BlendTree.GetRecursiveBlendParameterMax(i);
+						EditorGUI.BeginChangeCheck();
+						float parameterValue = EditorGUILayout.Slider(recursiveBlendParameter, BlendTreeInspector.GetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, recursiveBlendParameter), recursiveBlendParameterMin, recursiveBlendParameterMax, new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
 						{
-							string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
-							float recursiveBlendParameterMin = this.m_BlendTree.GetRecursiveBlendParameterMin(i);
-							float recursiveBlendParameterMax = this.m_BlendTree.GetRecursiveBlendParameterMax(i);
-							EditorGUI.BeginChangeCheck();
-							float value = EditorGUILayout.Slider(recursiveBlendParameter, this.m_BlendTree.GetInputBlendValue(recursiveBlendParameter), recursiveBlendParameterMin, recursiveBlendParameterMax, new GUILayoutOption[0]);
-							if (EditorGUI.EndChangeCheck())
-							{
-								if (BlendTreeInspector.parentBlendTree)
-								{
-									BlendTreeInspector.parentBlendTree.SetInputBlendValue(recursiveBlendParameter, value);
-									if (BlendTreeInspector.blendParameterInputChanged != null)
-									{
-										BlendTreeInspector.blendParameterInputChanged(BlendTreeInspector.parentBlendTree);
-									}
-								}
-								this.m_BlendTree.SetInputBlendValue(recursiveBlendParameter, value);
-								if (BlendTreeInspector.blendParameterInputChanged != null)
-								{
-									BlendTreeInspector.blendParameterInputChanged(this.m_BlendTree);
-								}
-							}
+							BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, recursiveBlendParameter, parameterValue);
 						}
 					}
-					else
+				}
+				else
+				{
+					GUILayout.Space(1f);
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.FlexibleSpace();
+					Rect aspectRect = GUILayoutUtility.GetAspectRect(1f, new GUILayoutOption[]
 					{
-						GUILayout.Space(1f);
-						GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-						GUILayout.FlexibleSpace();
-						Rect aspectRect = GUILayoutUtility.GetAspectRect(1f, new GUILayoutOption[]
-						{
-							GUILayout.MaxWidth(235f)
-						});
-						GUI.Label(new Rect(aspectRect.x - 1f, aspectRect.y - 1f, aspectRect.width + 2f, aspectRect.height + 2f), GUIContent.none, EditorStyles.textField);
-						GUI.BeginGroup(aspectRect);
-						aspectRect.x = 0f;
-						aspectRect.y = 0f;
-						this.BlendGraph2D(aspectRect);
-						GUI.EndGroup();
-						GUILayout.FlexibleSpace();
-						GUILayout.EndHorizontal();
-					}
+						GUILayout.MaxWidth(235f)
+					});
+					GUI.Label(new Rect(aspectRect.x - 1f, aspectRect.y - 1f, aspectRect.width + 2f, aspectRect.height + 2f), GUIContent.none, EditorStyles.textField);
+					GUI.BeginGroup(aspectRect);
+					aspectRect.x = 0f;
+					aspectRect.y = 0f;
+					this.BlendGraph2D(aspectRect);
+					GUI.EndGroup();
+					GUILayout.FlexibleSpace();
+					GUILayout.EndHorizontal();
 				}
 				GUILayout.Space(5f);
 			}
@@ -344,6 +440,7 @@ namespace UnityEditor
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private void SetMinMaxThresholds()
 		{
 			float num = float.PositiveInfinity;
@@ -358,6 +455,7 @@ namespace UnityEditor
 			this.m_MinThreshold.floatValue = ((this.m_Childs.arraySize <= 0) ? 0f : num);
 			this.m_MaxThreshold.floatValue = ((this.m_Childs.arraySize <= 0) ? 1f : num2);
 		}
+
 		private void ThresholdValues()
 		{
 			Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
@@ -396,10 +494,12 @@ namespace UnityEditor
 				this.m_MaxThreshold.floatValue = Mathf.Max(num, num2);
 			}
 		}
+
 		public float ClickDragFloat(Rect position, float value)
 		{
 			return this.ClickDragFloat(position, value, false);
 		}
+
 		public float ClickDragFloat(Rect position, float value, bool alignRight)
 		{
 			string allowedletters = "inftynaeINFTYNAE0123456789.,-";
@@ -479,27 +579,24 @@ namespace UnityEditor
 					{
 						value = float.PositiveInfinity;
 					}
+					else if (a == "-inf" || a == "-infinity")
+					{
+						value = float.NegativeInfinity;
+					}
 					else
 					{
-						if (a == "-inf" || a == "-infinity")
+						text = text.Replace(',', '.');
+						if (!float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out value))
 						{
-							value = float.NegativeInfinity;
+							EditorGUI.s_RecycledCurrentEditingFloat = 0.0;
+							value = 0f;
+							return value;
 						}
-						else
+						if (float.IsNaN(value))
 						{
-							text = text.Replace(',', '.');
-							if (!float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out value))
-							{
-								EditorGUI.s_RecycledCurrentEditingFloat = 0.0;
-								value = 0f;
-								return value;
-							}
-							if (float.IsNaN(value))
-							{
-								value = 0f;
-							}
-							EditorGUI.s_RecycledCurrentEditingFloat = (double)value;
+							value = 0f;
 						}
+						EditorGUI.s_RecycledCurrentEditingFloat = (double)value;
 					}
 				}
 			}
@@ -511,6 +608,7 @@ namespace UnityEditor
 			}
 			return value;
 		}
+
 		private void BlendGraph(Rect area)
 		{
 			area.xMin += 1f;
@@ -531,7 +629,7 @@ namespace UnityEditor
 				array[j] = area.x + Mathf.InverseLerp(num, num2, array[j]) * area.width;
 			}
 			string blendParameter = this.m_BlendTree.blendParameter;
-			float num3 = area.x + Mathf.InverseLerp(num, num2, this.m_BlendTree.GetInputBlendValue(blendParameter)) * area.width;
+			float num3 = area.x + Mathf.InverseLerp(num, num2, BlendTreeInspector.GetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, blendParameter)) * area.width;
 			Rect position = new Rect(num3 - 4f, area.y, 9f, 42f);
 			Event current = Event.current;
 			switch (current.GetTypeForControl(controlID))
@@ -545,41 +643,26 @@ namespace UnityEditor
 					this.m_ReorderableList.index = -1;
 					float num4 = Mathf.InverseLerp(0f, area.width, current.mousePosition.x - 4f);
 					num4 = Mathf.Lerp(num, num2, num4);
-					this.m_BlendTree.SetInputBlendValue(blendParameter, num4);
-					if (BlendTreeInspector.parentBlendTree)
-					{
-						BlendTreeInspector.parentBlendTree.SetInputBlendValue(blendParameter, num4);
-						if (BlendTreeInspector.blendParameterInputChanged != null)
-						{
-							BlendTreeInspector.blendParameterInputChanged(BlendTreeInspector.parentBlendTree);
-						}
-					}
-					if (BlendTreeInspector.blendParameterInputChanged != null)
-					{
-						BlendTreeInspector.blendParameterInputChanged(this.m_BlendTree);
-					}
+					BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameter, num4);
 				}
-				else
+				else if (area.Contains(current.mousePosition))
 				{
-					if (area.Contains(current.mousePosition))
+					current.Use();
+					GUIUtility.hotControl = controlID;
+					GUIUtility.keyboardControl = controlID;
+					float x = current.mousePosition.x;
+					float num5 = float.PositiveInfinity;
+					for (int k = 0; k < array.Length; k++)
 					{
-						current.Use();
-						GUIUtility.hotControl = controlID;
-						GUIUtility.keyboardControl = controlID;
-						float x = current.mousePosition.x;
-						float num5 = float.PositiveInfinity;
-						for (int k = 0; k < array.Length; k++)
+						float num6 = (k != 0) ? array[k - 1] : array[k];
+						float num7 = (k != array.Length - 1) ? array[k + 1] : array[k];
+						if (Mathf.Abs(x - array[k]) < num5 && x < num7 && x > num6)
 						{
-							float num6 = (k != 0) ? array[k - 1] : array[k];
-							float num7 = (k != array.Length - 1) ? array[k + 1] : array[k];
-							if (Mathf.Abs(x - array[k]) < num5 && x < num7 && x > num6)
-							{
-								num5 = Mathf.Abs(x - array[k]);
-								this.m_ReorderableList.index = k;
-							}
+							num5 = Mathf.Abs(x - array[k]);
+							this.m_ReorderableList.index = k;
 						}
-						this.m_UseAutomaticThresholds.boolValue = false;
 					}
+					this.m_UseAutomaticThresholds.boolValue = false;
 				}
 				break;
 			case EventType.MouseUp:
@@ -598,19 +681,7 @@ namespace UnityEditor
 					{
 						float num8 = Mathf.InverseLerp(0f, area.width, current.mousePosition.x - 4f);
 						num8 = Mathf.Lerp(num, num2, num8);
-						this.m_BlendTree.SetInputBlendValue(blendParameter, num8);
-						if (BlendTreeInspector.parentBlendTree)
-						{
-							BlendTreeInspector.parentBlendTree.SetInputBlendValue(blendParameter, num8);
-							if (BlendTreeInspector.blendParameterInputChanged != null)
-							{
-								BlendTreeInspector.blendParameterInputChanged(BlendTreeInspector.parentBlendTree);
-							}
-						}
-						if (BlendTreeInspector.blendParameterInputChanged != null)
-						{
-							BlendTreeInspector.blendParameterInputChanged(this.m_BlendTree);
-						}
+						BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameter, num8);
 					}
 					else
 					{
@@ -640,13 +711,11 @@ namespace UnityEditor
 						{
 							serializedProperty2.floatValue = serializedProperty5.floatValue;
 						}
-						else
+						else if (serializedProperty6.floatValue - serializedProperty2.floatValue <= num10)
 						{
-							if (serializedProperty6.floatValue - serializedProperty2.floatValue <= num10)
-							{
-								serializedProperty2.floatValue = serializedProperty6.floatValue;
-							}
+							serializedProperty2.floatValue = serializedProperty6.floatValue;
 						}
+						this.SetMinMaxThresholds();
 					}
 				}
 				break;
@@ -674,6 +743,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void UpdateBlendVisualization()
 		{
 			Vector2[] activeMotionPositions = this.GetActiveMotionPositions();
@@ -717,6 +787,7 @@ namespace UnityEditor
 			BlendTreePreviewUtility.CalculateBlendTexture(this.m_VisBlendTree.animator, 0, this.m_VisBlendTree.animator.GetCurrentAnimatorStateInfo(0).fullPathHash, this.m_BlendTex, array, this.m_BlendRect);
 			stopwatch.Stop();
 		}
+
 		private Vector2[] GetMotionPositions()
 		{
 			int arraySize = this.m_Childs.arraySize;
@@ -729,6 +800,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private Vector2[] GetActiveMotionPositions()
 		{
 			List<Vector2> list = new List<Vector2>();
@@ -745,6 +817,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private int[] GetMotionToActiveMotionIndices()
 		{
 			int arraySize = this.m_Childs.arraySize;
@@ -766,10 +839,15 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private Rect Get2DBlendRect(Vector2[] points)
 		{
 			Vector2 vector = Vector2.zero;
 			float num = 0f;
+			if (points.Length == 0)
+			{
+				return default(Rect);
+			}
 			if (this.m_BlendType.intValue == 3)
 			{
 				Vector2 a = points[0];
@@ -801,11 +879,13 @@ namespace UnityEditor
 			num *= 1.35f;
 			return new Rect(vector.x - num, vector.y - num, num * 2f, num * 2f);
 		}
+
 		private float ConvertFloat(float input, float fromMin, float fromMax, float toMin, float toMax)
 		{
 			float num = (input - fromMin) / (fromMax - fromMin);
 			return toMin * (1f - num) + toMax * num;
 		}
+
 		private void BlendGraph2D(Rect area)
 		{
 			if (this.m_VisBlendTree.controllerDirty)
@@ -824,8 +904,8 @@ namespace UnityEditor
 			}
 			string blendParameter = this.m_BlendTree.blendParameter;
 			string blendParameterY = this.m_BlendTree.blendParameterY;
-			float num = this.m_BlendTree.GetInputBlendValue(blendParameter);
-			float num2 = this.m_BlendTree.GetInputBlendValue(blendParameterY);
+			float num = BlendTreeInspector.GetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, blendParameter);
+			float num2 = BlendTreeInspector.GetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, blendParameterY);
 			int num3 = this.GetActiveMotionPositions().Length;
 			if (this.m_Weights == null || num3 != this.m_Weights.Length)
 			{
@@ -846,24 +926,21 @@ namespace UnityEditor
 					GUIUtility.hotControl = controlID;
 					this.m_SelectedPoint = -1;
 				}
-				else
+				else if (area.Contains(current.mousePosition))
 				{
-					if (area.Contains(current.mousePosition))
+					this.m_ReorderableList.index = -1;
+					for (int j = 0; j < motionPositions.Length; j++)
 					{
-						this.m_ReorderableList.index = -1;
-						for (int j = 0; j < motionPositions.Length; j++)
+						Rect rect = new Rect(motionPositions[j].x - 4f, motionPositions[j].y - 4f, 9f, 9f);
+						if (rect.Contains(current.mousePosition))
 						{
-							Rect rect = new Rect(motionPositions[j].x - 4f, motionPositions[j].y - 4f, 9f, 9f);
-							if (rect.Contains(current.mousePosition))
-							{
-								current.Use();
-								GUIUtility.hotControl = controlID;
-								this.m_SelectedPoint = j;
-								this.m_ReorderableList.index = j;
-							}
+							current.Use();
+							GUIUtility.hotControl = controlID;
+							this.m_SelectedPoint = j;
+							this.m_ReorderableList.index = j;
 						}
-						current.Use();
 					}
+					current.Use();
 				}
 				break;
 			case EventType.MouseUp:
@@ -882,21 +959,8 @@ namespace UnityEditor
 						Vector2 vector3;
 						vector3.x = this.ConvertFloat(current.mousePosition.x, area.xMin, area.xMax, vector.x, vector2.x);
 						vector3.y = this.ConvertFloat(current.mousePosition.y, area.yMax, area.yMin, vector.y, vector2.y);
-						this.m_BlendTree.SetInputBlendValue(blendParameter, vector3.x);
-						this.m_BlendTree.SetInputBlendValue(blendParameterY, vector3.y);
-						if (BlendTreeInspector.parentBlendTree)
-						{
-							BlendTreeInspector.parentBlendTree.SetInputBlendValue(blendParameter, vector3.x);
-							BlendTreeInspector.parentBlendTree.SetInputBlendValue(blendParameterY, vector3.y);
-							if (BlendTreeInspector.blendParameterInputChanged != null)
-							{
-								BlendTreeInspector.blendParameterInputChanged(BlendTreeInspector.parentBlendTree);
-							}
-						}
-						if (BlendTreeInspector.blendParameterInputChanged != null)
-						{
-							BlendTreeInspector.blendParameterInputChanged(this.m_BlendTree);
-						}
+						BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameter, vector3.x);
+						BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameterY, vector3.y);
 						current.Use();
 					}
 					else
@@ -924,22 +988,19 @@ namespace UnityEditor
 				}
 				break;
 			case EventType.Repaint:
-				GUI.color = BlendTreeInspector.s_VisBgColor;
+				GUI.color = BlendTreeInspector.styles.visBgColor;
 				GUI.DrawTexture(area, EditorGUIUtility.whiteTexture);
 				if (this.m_ReorderableList.index < 0)
 				{
-					Color color = BlendTreeInspector.s_VisWeightColor;
-					color.a *= 0.75f;
-					GUI.color = color;
+					Color visWeightColor = BlendTreeInspector.styles.visWeightColor;
+					visWeightColor.a *= 0.75f;
+					GUI.color = visWeightColor;
 					GUI.DrawTexture(area, this.m_BlendTex);
 				}
-				else
+				else if (motionToActiveMotionIndices[this.m_ReorderableList.index] >= 0)
 				{
-					if (motionToActiveMotionIndices[this.m_ReorderableList.index] >= 0)
-					{
-						GUI.color = BlendTreeInspector.s_VisWeightColor;
-						GUI.DrawTexture(area, this.m_WeightTexs[motionToActiveMotionIndices[this.m_ReorderableList.index]]);
-					}
+					GUI.color = BlendTreeInspector.styles.visWeightColor;
+					GUI.DrawTexture(area, this.m_WeightTexs[motionToActiveMotionIndices[this.m_ReorderableList.index]]);
 				}
 				GUI.color = Color.white;
 				if (!this.s_DraggingPoint)
@@ -965,22 +1026,22 @@ namespace UnityEditor
 					bool flag = this.m_ReorderableList.index == n;
 					if (motionToActiveMotionIndices[n] < 0)
 					{
-						GUI.color = BlendTreeInspector.s_VisPointEmptyColor;
+						GUI.color = BlendTreeInspector.styles.visPointEmptyColor;
 					}
 					else
 					{
-						GUI.color = BlendTreeInspector.s_VisPointColor;
+						GUI.color = BlendTreeInspector.styles.visPointColor;
 					}
 					GUI.DrawTexture(position2, (!flag) ? BlendTreeInspector.styles.pointIcon : BlendTreeInspector.styles.pointIconSelected);
 					if (flag)
 					{
-						GUI.color = BlendTreeInspector.s_VisPointOverlayColor;
+						GUI.color = BlendTreeInspector.styles.visPointOverlayColor;
 						GUI.DrawTexture(position2, BlendTreeInspector.styles.pointIconOverlay);
 					}
 				}
 				if (!this.s_DraggingPoint)
 				{
-					GUI.color = BlendTreeInspector.s_VisSamplerColor;
+					GUI.color = BlendTreeInspector.styles.visSamplerColor;
 					GUI.DrawTexture(position, BlendTreeInspector.styles.samplerIcon);
 				}
 				GUI.color = Color.white;
@@ -990,19 +1051,18 @@ namespace UnityEditor
 			{
 				this.ShowHelp(area, EditorGUIUtility.TempContent("The selected child has no Motion assigned."));
 			}
-			else
+			else if (this.m_WarningMessage != null)
 			{
-				if (this.m_WarningMessage != null)
-				{
-					this.ShowHelp(area, EditorGUIUtility.TempContent(this.m_WarningMessage));
-				}
+				this.ShowHelp(area, EditorGUIUtility.TempContent(this.m_WarningMessage));
 			}
 		}
+
 		private void ShowHelp(Rect area, GUIContent content)
 		{
 			float height = EditorStyles.helpBox.CalcHeight(content, area.width);
 			GUI.Label(new Rect(area.x, area.y, area.width, height), content, EditorStyles.helpBox);
 		}
+
 		private void ValidatePositions()
 		{
 			this.m_WarningMessage = null;
@@ -1028,12 +1088,11 @@ namespace UnityEditor
 			}
 			if (this.m_BlendType.intValue == 1)
 			{
-				List<float> list = (
-					from e in motionPositions
-					where e != Vector2.zero
-					select Mathf.Atan2(e.y, e.x) into e
-					orderby e
-					select e).ToList<float>();
+				List<float> list = (from e in motionPositions
+				where e != Vector2.zero
+				select Mathf.Atan2(e.y, e.x) into e
+				orderby e
+				select e).ToList<float>();
 				float num2 = 0f;
 				float num3 = 180f;
 				for (int j = 0; j < list.Count; j++)
@@ -1056,34 +1115,29 @@ namespace UnityEditor
 				{
 					this.m_WarningMessage = "Simple Directional blend should have motions with directions less than 180 degrees apart.";
 				}
-				else
+				else if (num3 * 57.29578f < 2f)
 				{
-					if (num3 * 57.29578f < 2f)
-					{
-						this.m_WarningMessage = "Simple Directional blend should not have multiple motions in almost the same direction.";
-					}
+					this.m_WarningMessage = "Simple Directional blend should not have multiple motions in almost the same direction.";
 				}
 			}
-			else
+			else if (this.m_BlendType.intValue == 2)
 			{
-				if (this.m_BlendType.intValue == 2)
+				bool flag2 = false;
+				for (int k = 0; k < motionPositions.Length; k++)
 				{
-					bool flag2 = false;
-					for (int k = 0; k < motionPositions.Length; k++)
+					if (motionPositions[k] == Vector2.zero)
 					{
-						if (motionPositions[k] == Vector2.zero)
-						{
-							flag2 = true;
-							break;
-						}
+						flag2 = true;
+						break;
 					}
-					if (!flag2)
-					{
-						this.m_WarningMessage = "Freeform Directional blend should have one motion at position (0,0) to avoid discontinuities.";
-					}
+				}
+				if (!flag2)
+				{
+					this.m_WarningMessage = "Freeform Directional blend should have one motion at position (0,0) to avoid discontinuities.";
 				}
 			}
 		}
+
 		private void DrawWeightShape(Vector2 point, float weight, int pass)
 		{
 			if (weight <= 0f)
@@ -1102,15 +1156,16 @@ namespace UnityEditor
 			array[0] = (array[this.kNumCirclePoints + 1] = (array[1] + array[this.kNumCirclePoints]) * 0.5f);
 			if (pass == 0)
 			{
-				Handles.color = BlendTreeInspector.s_VisWeightShapeColor;
+				Handles.color = BlendTreeInspector.styles.visWeightShapeColor;
 				Handles.DrawSolidDisc(point + new Vector2(0.5f, 0.5f), -Vector3.forward, num);
 			}
 			else
 			{
-				Handles.color = BlendTreeInspector.s_VisWeightLineColor;
+				Handles.color = BlendTreeInspector.styles.visWeightLineColor;
 				Handles.DrawAAPolyLine(array);
 			}
 		}
+
 		private void DrawAnimation(float val, float min, float max, bool selected, Rect area)
 		{
 			float y = area.y;
@@ -1140,6 +1195,7 @@ namespace UnityEditor
 			Handles.DrawAAPolyLine(points);
 			Handles.color = color;
 		}
+
 		public void EndDragChild(ReorderableList list)
 		{
 			List<float> list2 = new List<float>();
@@ -1158,6 +1214,7 @@ namespace UnityEditor
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private void DrawHeader(Rect headerRect)
 		{
 			headerRect.xMin += 14f;
@@ -1175,26 +1232,24 @@ namespace UnityEditor
 					GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Threshold"), EditorStyles.label);
 					num++;
 				}
+				else if (this.m_BlendType.intValue == 4)
+				{
+					GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Parameter"), EditorStyles.label);
+					num++;
+				}
 				else
 				{
-					if (this.m_BlendType.intValue == 4)
-					{
-						GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Parameter"), EditorStyles.label);
-						num++;
-					}
-					else
-					{
-						GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Pos X"), EditorStyles.label);
-						num++;
-						GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Pos Y"), EditorStyles.label);
-						num++;
-					}
+					GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Pos X"), EditorStyles.label);
+					num++;
+					GUI.Label(rowRects[num], EditorGUIUtility.TempContent("Pos Y"), EditorStyles.label);
+					num++;
 				}
 				GUI.Label(rowRects[num], BlendTreeInspector.styles.speedIcon, BlendTreeInspector.styles.headerIcon);
 				num++;
 				GUI.Label(rowRects[num], BlendTreeInspector.styles.mirrorIcon, BlendTreeInspector.styles.headerIcon);
 			}
 		}
+
 		public void AddButton(Rect rect, ReorderableList list)
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -1202,15 +1257,29 @@ namespace UnityEditor
 			genericMenu.AddItem(EditorGUIUtility.TempContent("New Blend Tree"), false, new GenericMenu.MenuFunction(this.AddBlendTreeCallback));
 			genericMenu.Popup(rect, 0);
 		}
+
+		public static bool DeleteBlendTreeDialog(string toDelete)
+		{
+			string title = "Delete selected Blend Tree asset?";
+			return EditorUtility.DisplayDialog(title, toDelete, "Delete", "Cancel");
+		}
+
 		public void RemoveButton(ReorderableList list)
 		{
-			this.m_Childs.DeleteArrayElementAtIndex(list.index);
-			if (list.index >= this.m_Childs.arraySize)
+			SerializedProperty arrayElementAtIndex = this.m_Childs.GetArrayElementAtIndex(list.index);
+			SerializedProperty serializedProperty = arrayElementAtIndex.FindPropertyRelative("m_Motion");
+			Motion motion = serializedProperty.objectReferenceValue as Motion;
+			if (motion == null || BlendTreeInspector.DeleteBlendTreeDialog(motion.name))
 			{
-				list.index = this.m_Childs.arraySize - 1;
+				this.m_Childs.DeleteArrayElementAtIndex(list.index);
+				if (list.index >= this.m_Childs.arraySize)
+				{
+					list.index = this.m_Childs.arraySize - 1;
+				}
+				this.SetMinMaxThresholds();
 			}
-			this.SetMinMaxThresholds();
 		}
+
 		private Rect[] GetRowRects(Rect r, int blendType)
 		{
 			int num = (blendType <= 0 || blendType >= 4) ? 1 : 2;
@@ -1239,6 +1308,7 @@ namespace UnityEditor
 			array[num7] = new Rect(num6, r.y, num3, r.height);
 			return array;
 		}
+
 		public void DrawChild(Rect r, int index, bool isActive, bool isFocused)
 		{
 			SerializedProperty arrayElementAtIndex = this.m_Childs.GetArrayElementAtIndex(index);
@@ -1265,54 +1335,52 @@ namespace UnityEditor
 			if (this.m_BlendType.intValue == 0)
 			{
 				SerializedProperty serializedProperty2 = arrayElementAtIndex.FindPropertyRelative("m_Threshold");
-				EditorGUI.BeginDisabledGroup(this.m_UseAutomaticThresholds.boolValue);
-				float floatValue = serializedProperty2.floatValue;
-				EditorGUI.BeginChangeCheck();
-				string s = EditorGUI.DelayedTextField(rowRects[num], floatValue.ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.textField);
-				num++;
-				if (EditorGUI.EndChangeCheck() && float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out floatValue))
+				using (new EditorGUI.DisabledScope(this.m_UseAutomaticThresholds.boolValue))
 				{
-					serializedProperty2.floatValue = floatValue;
-					base.serializedObject.ApplyModifiedProperties();
-					this.m_BlendTree.SortChildren();
-					this.SetMinMaxThresholds();
-					GUI.changed = true;
+					float floatValue = serializedProperty2.floatValue;
+					EditorGUI.BeginChangeCheck();
+					string s = EditorGUI.DelayedTextFieldInternal(rowRects[num], floatValue.ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.textField);
+					num++;
+					if (EditorGUI.EndChangeCheck() && float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out floatValue))
+					{
+						serializedProperty2.floatValue = floatValue;
+						base.serializedObject.ApplyModifiedProperties();
+						this.m_BlendTree.SortChildren();
+						this.SetMinMaxThresholds();
+						GUI.changed = true;
+					}
 				}
-				EditorGUI.EndDisabledGroup();
+			}
+			else if (this.m_BlendType.intValue == 4)
+			{
+				List<string> list = this.CollectParameters(BlendTreeInspector.currentController);
+				ChildMotion[] children = this.m_BlendTree.children;
+				string text = children[index].directBlendParameter;
+				EditorGUI.BeginChangeCheck();
+				text = EditorGUI.TextFieldDropDown(rowRects[num], text, list.ToArray());
+				num++;
+				if (EditorGUI.EndChangeCheck())
+				{
+					children[index].directBlendParameter = text;
+					this.m_BlendTree.children = children;
+				}
 			}
 			else
 			{
-				if (this.m_BlendType.intValue == 4)
+				SerializedProperty serializedProperty3 = arrayElementAtIndex.FindPropertyRelative("m_Position");
+				Vector2 vector2Value = serializedProperty3.vector2Value;
+				for (int i = 0; i < 2; i++)
 				{
-					List<string> list = this.CollectParameters(BlendTreeInspector.currentController);
-					ChildMotion[] children = this.m_BlendTree.children;
-					string text = children[index].directBlendParameter;
 					EditorGUI.BeginChangeCheck();
-					text = EditorGUI.TextFieldDropDown(rowRects[num], text, list.ToArray());
+					string s2 = EditorGUI.DelayedTextFieldInternal(rowRects[num], vector2Value[i].ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.textField);
 					num++;
-					if (EditorGUI.EndChangeCheck())
+					float value;
+					if (EditorGUI.EndChangeCheck() && float.TryParse(s2, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out value))
 					{
-						children[index].directBlendParameter = text;
-						this.m_BlendTree.children = children;
-					}
-				}
-				else
-				{
-					SerializedProperty serializedProperty3 = arrayElementAtIndex.FindPropertyRelative("m_Position");
-					Vector2 vector2Value = serializedProperty3.vector2Value;
-					for (int i = 0; i < 2; i++)
-					{
-						EditorGUI.BeginChangeCheck();
-						string s2 = EditorGUI.DelayedTextField(rowRects[num], vector2Value[i].ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.textField);
-						num++;
-						float value;
-						if (EditorGUI.EndChangeCheck() && float.TryParse(s2, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out value))
-						{
-							vector2Value[i] = Mathf.Clamp(value, -10000f, 10000f);
-							serializedProperty3.vector2Value = vector2Value;
-							base.serializedObject.ApplyModifiedProperties();
-							GUI.changed = true;
-						}
+						vector2Value[i] = Mathf.Clamp(value, -10000f, 10000f);
+						serializedProperty3.vector2Value = vector2Value;
+						base.serializedObject.ApplyModifiedProperties();
+						GUI.changed = true;
 					}
 				}
 			}
@@ -1323,9 +1391,10 @@ namespace UnityEditor
 			}
 			else
 			{
-				EditorGUI.BeginDisabledGroup(true);
-				EditorGUI.IntField(rowRects[num], 1);
-				EditorGUI.EndDisabledGroup();
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUI.IntField(rowRects[num], 1);
+				}
 			}
 			num++;
 			if (serializedProperty.objectReferenceValue is AnimationClip && (serializedProperty.objectReferenceValue as AnimationClip).isHumanMotion)
@@ -1337,11 +1406,13 @@ namespace UnityEditor
 			}
 			else
 			{
-				EditorGUI.BeginDisabledGroup(true);
-				EditorGUI.Toggle(rowRects[num], false);
-				EditorGUI.EndDisabledGroup();
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUI.Toggle(rowRects[num], false);
+				}
 			}
 		}
+
 		private bool AllMotions()
 		{
 			bool flag = true;
@@ -1354,6 +1425,7 @@ namespace UnityEditor
 			}
 			return flag;
 		}
+
 		private void AutoCompute()
 		{
 			if (this.m_BlendType.intValue == 0)
@@ -1361,16 +1433,13 @@ namespace UnityEditor
 				EditorGUILayout.PropertyField(this.m_UseAutomaticThresholds, EditorGUIUtility.TempContent("Automate Thresholds"), new GUILayoutOption[0]);
 				this.m_ShowCompute.target = !this.m_UseAutomaticThresholds.boolValue;
 			}
+			else if (this.m_BlendType.intValue == 4)
+			{
+				this.m_ShowCompute.target = false;
+			}
 			else
 			{
-				if (this.m_BlendType.intValue == 4)
-				{
-					this.m_ShowCompute.target = false;
-				}
-				else
-				{
-					this.m_ShowCompute.target = true;
-				}
+				this.m_ShowCompute.target = true;
 			}
 			this.m_ShowAdjust.target = this.AllMotions();
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowCompute.faded))
@@ -1410,6 +1479,7 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndFadeGroup();
 		}
+
 		private void AddComputeMenuItems(GenericMenu menu, string menuItemPrefix, BlendTreeInspector.ChildPropertyToCompute prop)
 		{
 			menu.AddItem(new GUIContent(menuItemPrefix + "Speed"), false, new GenericMenu.MenuFunction2(this.ComputeFromSpeed), prop);
@@ -1419,36 +1489,43 @@ namespace UnityEditor
 			menu.AddItem(new GUIContent(menuItemPrefix + "Angular Speed (Rad)"), false, new GenericMenu.MenuFunction2(this.ComputeFromAngularSpeedRadians), prop);
 			menu.AddItem(new GUIContent(menuItemPrefix + "Angular Speed (Deg)"), false, new GenericMenu.MenuFunction2(this.ComputeFromAngularSpeedDegrees), prop);
 		}
+
 		private void ComputeFromSpeed(object obj)
 		{
 			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.apparentSpeed, prop);
 		}
+
 		private void ComputeFromVelocityX(object obj)
 		{
 			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageSpeed.x * mirrorMultiplier, prop);
 		}
+
 		private void ComputeFromVelocityY(object obj)
 		{
 			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageSpeed.y, prop);
 		}
+
 		private void ComputeFromVelocityZ(object obj)
 		{
 			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageSpeed.z, prop);
 		}
+
 		private void ComputeFromAngularSpeedDegrees(object obj)
 		{
 			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageAngularSpeed * 180f / 3.14159274f * mirrorMultiplier, prop);
 		}
+
 		private void ComputeFromAngularSpeedRadians(object obj)
 		{
 			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageAngularSpeed * mirrorMultiplier, prop);
 		}
+
 		private void ComputeProperty(BlendTreeInspector.GetFloatFromMotion func, BlendTreeInspector.ChildPropertyToCompute prop)
 		{
 			float num = 0f;
@@ -1507,16 +1584,19 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ComputePositionsFromVelocity()
 		{
 			this.ComputeFromVelocityX(BlendTreeInspector.ChildPropertyToCompute.PositionX);
 			this.ComputeFromVelocityZ(BlendTreeInspector.ChildPropertyToCompute.PositionY);
 		}
+
 		private void ComputePositionsFromSpeedAndAngularSpeed()
 		{
 			this.ComputeFromAngularSpeedRadians(BlendTreeInspector.ChildPropertyToCompute.PositionX);
 			this.ComputeFromSpeed(BlendTreeInspector.ChildPropertyToCompute.PositionY);
 		}
+
 		private void ComputeTimeScaleFromSpeed()
 		{
 			float apparentSpeed = this.m_BlendTree.apparentSpeed;
@@ -1546,6 +1626,7 @@ namespace UnityEditor
 			}
 			this.m_SerializedObject.ApplyModifiedProperties();
 		}
+
 		private void ResetTimeScale()
 		{
 			for (int i = 0; i < this.m_Childs.arraySize; i++)
@@ -1560,6 +1641,7 @@ namespace UnityEditor
 			}
 			this.m_SerializedObject.ApplyModifiedProperties();
 		}
+
 		private void SortByThreshold()
 		{
 			this.m_SerializedObject.Update();
@@ -1584,6 +1666,7 @@ namespace UnityEditor
 			}
 			this.m_SerializedObject.ApplyModifiedProperties();
 		}
+
 		private void SetMinMaxThreshold()
 		{
 			this.m_SerializedObject.Update();
@@ -1593,21 +1676,30 @@ namespace UnityEditor
 			this.m_MaxThreshold.floatValue = Mathf.Max(serializedProperty.floatValue, serializedProperty2.floatValue);
 			this.m_SerializedObject.ApplyModifiedProperties();
 		}
+
 		private void AddChildAnimation()
 		{
-			Undo.RegisterCompleteObjectUndo(this.m_BlendTree, "Child animation added");
 			this.m_BlendTree.AddChild(null);
-			this.SetNewThresholdAndPosition(this.m_BlendTree.children.Length - 1);
-			this.m_ReorderableList.index = this.m_Childs.arraySize - 1;
+			int num = this.m_BlendTree.children.Length;
+			this.m_BlendTree.SetDirectBlendTreeParameter(num - 1, BlendTreeInspector.currentController.GetDefaultBlendTreeParameter());
+			this.SetNewThresholdAndPosition(num - 1);
+			this.m_ReorderableList.index = num - 1;
 		}
+
 		private void AddBlendTreeCallback()
 		{
-			Undo.RegisterCompleteObjectUndo(this.m_BlendTree, "Child blendtree added");
 			UnityEditor.Animations.BlendTree blendTree = this.m_BlendTree.CreateBlendTreeChild(0f);
-			blendTree.blendParameter = this.m_BlendTree.blendParameter;
-			this.SetNewThresholdAndPosition(this.m_BlendTree.children.Length - 1);
+			ChildMotion[] children = this.m_BlendTree.children;
+			int num = children.Length;
+			if (BlendTreeInspector.currentController != null)
+			{
+				blendTree.blendParameter = this.m_BlendTree.blendParameter;
+				this.m_BlendTree.SetDirectBlendTreeParameter(num - 1, BlendTreeInspector.currentController.GetDefaultBlendTreeParameter());
+			}
+			this.SetNewThresholdAndPosition(num - 1);
 			this.m_ReorderableList.index = this.m_Childs.arraySize - 1;
 		}
+
 		private void SetNewThresholdAndPosition(int index)
 		{
 			base.serializedObject.Update();
@@ -1620,16 +1712,13 @@ namespace UnityEditor
 					float floatValue2 = this.m_Childs.GetArrayElementAtIndex(index - 1).FindPropertyRelative("m_Threshold").floatValue;
 					floatValue3 = floatValue2 + (floatValue2 - floatValue);
 				}
+				else if (this.m_Childs.arraySize == 1)
+				{
+					floatValue3 = 0f;
+				}
 				else
 				{
-					if (this.m_Childs.arraySize == 1)
-					{
-						floatValue3 = 0f;
-					}
-					else
-					{
-						floatValue3 = this.m_Childs.GetArrayElementAtIndex(this.m_Childs.arraySize - 1).FindPropertyRelative("m_Threshold").floatValue + 1f;
-					}
+					floatValue3 = this.m_Childs.GetArrayElementAtIndex(this.m_Childs.arraySize - 1).FindPropertyRelative("m_Threshold").floatValue + 1f;
 				}
 				SerializedProperty serializedProperty = this.m_Childs.GetArrayElementAtIndex(index).FindPropertyRelative("m_Threshold");
 				serializedProperty.floatValue = floatValue3;
@@ -1667,10 +1756,12 @@ namespace UnityEditor
 			serializedProperty2.vector2Value = vector;
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.m_PreviewBlendTree != null && this.m_PreviewBlendTree.HasPreviewGUI();
 		}
+
 		public override void OnPreviewSettings()
 		{
 			if (this.m_PreviewBlendTree != null)
@@ -1678,6 +1769,7 @@ namespace UnityEditor
 				this.m_PreviewBlendTree.OnPreviewSettings();
 			}
 		}
+
 		public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
 		{
 			if (this.m_PreviewBlendTree != null)
@@ -1685,6 +1777,7 @@ namespace UnityEditor
 				this.m_PreviewBlendTree.OnInteractivePreviewGUI(r, background);
 			}
 		}
+
 		public void OnDisable()
 		{
 			if (this.m_PreviewBlendTree != null)
@@ -1692,6 +1785,7 @@ namespace UnityEditor
 				this.m_PreviewBlendTree.OnDisable();
 			}
 		}
+
 		public void OnDestroy()
 		{
 			if (this.m_PreviewBlendTree != null)

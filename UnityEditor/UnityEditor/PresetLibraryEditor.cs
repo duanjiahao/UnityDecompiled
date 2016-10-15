@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PresetLibraryEditor<T> where T : PresetLibrary
@@ -11,22 +12,31 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle innerShadowBg = PresetLibraryEditor<T>.Styles.GetStyle("InnerShadowBg");
+
 			public GUIStyle optionsButton = PresetLibraryEditor<T>.Styles.GetStyle("PaneOptions");
+
 			public GUIStyle newPresetStyle = new GUIStyle(EditorStyles.boldLabel);
+
 			public GUIContent plusButtonText = new GUIContent(string.Empty, "Add new preset");
-			public GUIContent plusButtonTextNotCheckedOut = new GUIContent(string.Empty, "To add presets you need to press the 'Checkout' button below");
+
+			public GUIContent plusButtonTextNotCheckedOut = new GUIContent(string.Empty, "To add presets you need to press the 'Check out' button below");
+
 			public GUIContent header = new GUIContent("Presets");
+
 			public GUIContent newPreset = new GUIContent("New");
+
 			public Styles()
 			{
 				this.newPresetStyle.alignment = TextAnchor.MiddleCenter;
 				this.newPresetStyle.normal.textColor = Color.white;
 			}
+
 			private static GUIStyle GetStyle(string styleName)
 			{
 				return styleName;
 			}
 		}
+
 		private class DragState
 		{
 			public int dragUponIndex
@@ -34,35 +44,43 @@ namespace UnityEditor
 				get;
 				set;
 			}
+
 			public int draggingIndex
 			{
 				get;
 				set;
 			}
+
 			public bool insertAfterIndex
 			{
 				get;
 				set;
 			}
+
 			public Rect dragUponRect
 			{
 				get;
 				set;
 			}
+
 			public DragState()
 			{
 				this.dragUponIndex = -1;
 				this.draggingIndex = -1;
 			}
+
 			public bool IsDragging()
 			{
 				return this.draggingIndex != -1;
 			}
 		}
+
 		internal class PresetContextMenu
 		{
 			private static PresetLibraryEditor<T> s_Caller;
+
 			private static int s_PresetIndex;
+
 			internal static void Show(bool isOpenForEdit, int presetIndex, object newPresetObject, PresetLibraryEditor<T> caller)
 			{
 				PresetLibraryEditor<T>.PresetContextMenu.s_Caller = caller;
@@ -94,34 +112,43 @@ namespace UnityEditor
 				}
 				genericMenu.ShowAsContext();
 			}
+
 			private void Delete(object userData)
 			{
 				PresetLibraryEditor<T>.PresetContextMenu.s_Caller.DeletePreset(PresetLibraryEditor<T>.PresetContextMenu.s_PresetIndex);
 			}
+
 			private void Replace(object userData)
 			{
 				PresetLibraryEditor<T>.PresetContextMenu.s_Caller.ReplacePreset(PresetLibraryEditor<T>.PresetContextMenu.s_PresetIndex, userData);
 			}
+
 			private void Rename(object userData)
 			{
 				T currentLib = PresetLibraryEditor<T>.PresetContextMenu.s_Caller.GetCurrentLib();
 				string name = currentLib.GetName(PresetLibraryEditor<T>.PresetContextMenu.s_PresetIndex);
 				PresetLibraryEditor<T>.PresetContextMenu.s_Caller.BeginRenaming(name, PresetLibraryEditor<T>.PresetContextMenu.s_PresetIndex, 0f);
 			}
+
 			private void MoveToTop(object userData)
 			{
 				PresetLibraryEditor<T>.PresetContextMenu.s_Caller.MovePreset(PresetLibraryEditor<T>.PresetContextMenu.s_PresetIndex, 0, false);
 			}
 		}
+
 		private class SettingsMenu
 		{
 			private class ViewModeData
 			{
 				public GUIContent text;
+
 				public int itemHeight;
+
 				public PresetLibraryEditorState.ItemViewMode viewmode;
 			}
+
 			private static PresetLibraryEditor<T> s_Owner;
+
 			public static void Show(Rect activatorRect, PresetLibraryEditor<T> owner)
 			{
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner = owner;
@@ -136,7 +163,8 @@ namespace UnityEditor
 						new PresetLibraryEditor<T>.SettingsMenu.ViewModeData
 						{
 							text = new GUIContent("Grid"),
-							itemHeight = num
+							itemHeight = num,
+							viewmode = PresetLibraryEditorState.ItemViewMode.Grid
 						},
 						new PresetLibraryEditor<T>.SettingsMenu.ViewModeData
 						{
@@ -153,12 +181,14 @@ namespace UnityEditor
 						new PresetLibraryEditor<T>.SettingsMenu.ViewModeData
 						{
 							text = new GUIContent("Small Grid"),
-							itemHeight = num
+							itemHeight = num,
+							viewmode = PresetLibraryEditorState.ItemViewMode.Grid
 						},
 						new PresetLibraryEditor<T>.SettingsMenu.ViewModeData
 						{
 							text = new GUIContent("Large Grid"),
-							itemHeight = num2
+							itemHeight = num2,
+							viewmode = PresetLibraryEditorState.ItemViewMode.Grid
 						},
 						new PresetLibraryEditor<T>.SettingsMenu.ViewModeData
 						{
@@ -208,29 +238,35 @@ namespace UnityEditor
 				genericMenu.AddItem(new GUIContent("Reveal Current Library Location"), false, new GenericMenu.MenuFunction2(PresetLibraryEditor<T>.SettingsMenu.RevealCurrentLibrary), 0);
 				genericMenu.DropDown(activatorRect);
 			}
+
 			private static void ViewModeChange(object userData)
 			{
 				PresetLibraryEditor<T>.SettingsMenu.ViewModeData viewModeData = (PresetLibraryEditor<T>.SettingsMenu.ViewModeData)userData;
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner.itemViewMode = viewModeData.viewmode;
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner.previewHeight = (float)viewModeData.itemHeight;
 			}
+
 			private static void LibraryModeChange(object userData)
 			{
 				string currentLibraryWithoutExtension = (string)userData;
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner.currentLibraryWithoutExtension = currentLibraryWithoutExtension;
 			}
+
 			private static void CreateLibrary(object userData)
 			{
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner.wantsToCreateLibrary = true;
 			}
+
 			private static void RevealCurrentLibrary(object userData)
 			{
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner.RevealCurrentLibrary();
 			}
+
 			private static bool HasDefaultPresets()
 			{
 				return PresetLibraryEditor<T>.SettingsMenu.s_Owner.addDefaultPresets != null;
 			}
+
 			private static void AddDefaultPresetsToCurrentLibrary(object userData)
 			{
 				if (PresetLibraryEditor<T>.SettingsMenu.s_Owner.addDefaultPresets != null)
@@ -240,28 +276,47 @@ namespace UnityEditor
 				PresetLibraryEditor<T>.SettingsMenu.s_Owner.SaveCurrentLib();
 			}
 		}
+
 		private const float kGridLabelHeight = 16f;
+
 		private const float kCheckoutButtonMaxWidth = 100f;
+
 		private const float kCheckoutButtonMargin = 2f;
+
 		private static PresetLibraryEditor<T>.Styles s_Styles;
+
 		private PresetLibraryEditor<T>.DragState m_DragState = new PresetLibraryEditor<T>.DragState();
+
 		private readonly VerticalGrid m_Grid = new VerticalGrid();
+
 		private readonly PresetLibraryEditorState m_State;
+
 		private readonly ScriptableObjectSaveLoadHelper<T> m_SaveLoadHelper;
+
 		private readonly Action<int, object> m_ItemClickedCallback;
+
 		public Action<PresetLibrary> addDefaultPresets;
+
 		public Action presetsWasReordered;
+
 		private Vector2 m_MinMaxPreviewHeight = new Vector2(14f, 64f);
+
 		private float m_PreviewAspect = 8f;
+
 		private bool m_ShowAddNewPresetItem = true;
+
 		private bool m_ShowedScrollBarLastFrame;
+
 		private bool m_IsOpenForEdit = true;
+
 		private PresetFileLocation m_PresetLibraryFileLocation;
+
 		public float contentHeight
 		{
 			get;
 			private set;
 		}
+
 		private float topAreaHeight
 		{
 			get
@@ -269,6 +324,7 @@ namespace UnityEditor
 				return 20f;
 			}
 		}
+
 		private float versionControlAreaHeight
 		{
 			get
@@ -276,46 +332,55 @@ namespace UnityEditor
 				return 20f;
 			}
 		}
+
 		private float gridWidth
 		{
 			get;
 			set;
 		}
+
 		public bool wantsToCreateLibrary
 		{
 			get;
 			set;
 		}
+
 		public bool showHeader
 		{
 			get;
 			set;
 		}
+
 		public float settingsMenuRightMargin
 		{
 			get;
 			set;
 		}
+
 		public bool alwaysShowScrollAreaHorizontalLines
 		{
 			get;
 			set;
 		}
+
 		public bool useOnePixelOverlappedGrid
 		{
 			get;
 			set;
 		}
+
 		public RectOffset marginsForList
 		{
 			get;
 			set;
 		}
+
 		public RectOffset marginsForGrid
 		{
 			get;
 			set;
 		}
+
 		public string currentLibraryWithoutExtension
 		{
 			get
@@ -330,6 +395,7 @@ namespace UnityEditor
 				this.Repaint();
 			}
 		}
+
 		public float previewAspect
 		{
 			get
@@ -341,6 +407,7 @@ namespace UnityEditor
 				this.m_PreviewAspect = value;
 			}
 		}
+
 		public Vector2 minMaxPreviewHeight
 		{
 			get
@@ -353,6 +420,7 @@ namespace UnityEditor
 				this.previewHeight = this.previewHeight;
 			}
 		}
+
 		public float previewHeight
 		{
 			get
@@ -365,6 +433,7 @@ namespace UnityEditor
 				this.Repaint();
 			}
 		}
+
 		public PresetLibraryEditorState.ItemViewMode itemViewMode
 		{
 			get
@@ -378,6 +447,7 @@ namespace UnityEditor
 				this.Repaint();
 			}
 		}
+
 		private bool drawLabels
 		{
 			get
@@ -385,6 +455,7 @@ namespace UnityEditor
 				return this.m_State.itemViewMode == PresetLibraryEditorState.ItemViewMode.List;
 			}
 		}
+
 		private string pathWithExtension
 		{
 			get
@@ -392,6 +463,7 @@ namespace UnityEditor
 				return this.currentLibraryWithoutExtension + "." + this.m_SaveLoadHelper.fileExtensionWithoutDot;
 			}
 		}
+
 		public PresetLibraryEditor(ScriptableObjectSaveLoadHelper<T> helper, PresetLibraryEditorState state, Action<int, object> itemClickedCallback)
 		{
 			this.m_SaveLoadHelper = helper;
@@ -404,6 +476,7 @@ namespace UnityEditor
 			this.marginsForGrid = new RectOffset(5, 5, 5, 5);
 			this.m_PresetLibraryFileLocation = PresetLibraryLocations.GetFileLocationFromPath(this.currentLibraryWithoutExtension);
 		}
+
 		public void InitializeGrid(float availableWidth)
 		{
 			T currentLib = this.GetCurrentLib();
@@ -419,10 +492,12 @@ namespace UnityEditor
 				Debug.LogError("Could not load preset library " + this.currentLibraryWithoutExtension);
 			}
 		}
+
 		private void Repaint()
 		{
 			HandleUtility.Repaint();
 		}
+
 		private void ValidateNoExtension(string value)
 		{
 			if (Path.HasExtension(value))
@@ -430,6 +505,7 @@ namespace UnityEditor
 				Debug.LogError("currentLibraryWithoutExtension should not have an extension: " + value);
 			}
 		}
+
 		private string CreateNewLibraryCallback(string libraryName, PresetFileLocation fileLocation)
 		{
 			string defaultFilePathForFileLocation = PresetLibraryLocations.GetDefaultFilePathForFileLocation(fileLocation);
@@ -440,12 +516,14 @@ namespace UnityEditor
 			}
 			return ScriptableSingleton<PresetLibraryManager>.instance.GetLastError();
 		}
+
 		private static bool IsItemVisible(float scrollHeight, float itemYMin, float itemYMax, float scrollPos)
 		{
 			float num = itemYMin - scrollPos;
 			float num2 = itemYMax - scrollPos;
 			return num2 >= 0f && num <= scrollHeight;
 		}
+
 		private void OnLayoutChanged()
 		{
 			T currentLib = this.GetCurrentLib();
@@ -455,6 +533,7 @@ namespace UnityEditor
 			}
 			this.SetupGrid(this.gridWidth, currentLib.Count());
 		}
+
 		private void SetupGrid(float width, int itemCount)
 		{
 			if (width < 1f)
@@ -505,6 +584,7 @@ namespace UnityEditor
 			float num = this.m_Grid.CalcRect(itemCount - 1, 0f).yMax + this.m_Grid.bottomMargin;
 			this.contentHeight = this.topAreaHeight + num + ((!this.m_IsOpenForEdit) ? this.versionControlAreaHeight : 0f);
 		}
+
 		public void OnGUI(Rect rect, object presetObject)
 		{
 			if (rect.width < 2f)
@@ -522,6 +602,7 @@ namespace UnityEditor
 			this.TopArea(rect2);
 			this.ListArea(rect3, currentLib, presetObject);
 		}
+
 		private void TopArea(Rect rect)
 		{
 			GUI.BeginGroup(rect);
@@ -549,17 +630,20 @@ namespace UnityEditor
 			}
 			GUI.EndGroup();
 		}
+
 		private Rect GetDragRect(Rect itemRect)
 		{
 			int num = Mathf.FloorToInt(this.m_Grid.horizontalSpacing * 0.5f + 0.5f);
 			int num2 = Mathf.FloorToInt(this.m_Grid.verticalSpacing * 0.5f + 0.5f);
 			return new RectOffset(num, num, num2, num2).Add(itemRect);
 		}
+
 		private void ClearDragState()
 		{
 			this.m_DragState.dragUponIndex = -1;
 			this.m_DragState.draggingIndex = -1;
 		}
+
 		private void DrawHoverEffect(Rect itemRect, bool drawAsSelection)
 		{
 			Color color = GUI.color;
@@ -568,20 +652,22 @@ namespace UnityEditor
 			GUI.Label(position, GUIContent.none, EditorStyles.helpBox);
 			GUI.color = color;
 		}
+
 		private void VersionControlArea(Rect rect)
 		{
 			if (rect.width > 100f)
 			{
 				rect = new Rect(rect.xMax - 100f - 2f, rect.y + 2f, 100f, rect.height - 4f);
 			}
-			if (GUI.Button(rect, "Checkout", EditorStyles.miniButton))
+			if (GUI.Button(rect, "Check out", EditorStyles.miniButton))
 			{
 				Provider.Checkout(new string[]
 				{
 					this.pathWithExtension
-				}, CheckoutMode.Both).SetCompletionAction(CompletionAction.UpdatePendingWindow);
+				}, CheckoutMode.Asset);
 			}
 		}
+
 		private void ListArea(Rect rect, PresetLibrary lib, object newPresetObject)
 		{
 			if (lib == null)
@@ -593,12 +679,9 @@ namespace UnityEditor
 			{
 				this.m_IsOpenForEdit = AssetDatabase.IsOpenForEdit(this.pathWithExtension);
 			}
-			else
+			else if (this.m_PresetLibraryFileLocation == PresetFileLocation.PreferencesFolder)
 			{
-				if (this.m_PresetLibraryFileLocation == PresetFileLocation.PreferencesFolder)
-				{
-					this.m_IsOpenForEdit = true;
-				}
+				this.m_IsOpenForEdit = true;
 			}
 			if (!this.m_IsOpenForEdit)
 			{
@@ -709,13 +792,10 @@ namespace UnityEditor
 									this.Repaint();
 								}
 							}
-							else
+							else if (this.m_State.m_HoverIndex == j)
 							{
-								if (this.m_State.m_HoverIndex == j)
-								{
-									this.m_State.m_HoverIndex = -1;
-									this.Repaint();
-								}
+								this.m_State.m_HoverIndex = -1;
+								this.Repaint();
 							}
 							break;
 						case EventType.MouseDrag:
@@ -816,6 +896,7 @@ namespace UnityEditor
 			}
 			GUI.EndScrollView();
 		}
+
 		private void DrawDragInsertionMarker()
 		{
 			if (!this.m_DragState.IsDragging())
@@ -835,54 +916,52 @@ namespace UnityEditor
 					rect = new Rect(dragRect.xMin, dragRect.yMin - 1f, dragRect.width, 2f);
 				}
 			}
+			else if (this.m_DragState.insertAfterIndex)
+			{
+				rect = new Rect(dragRect.xMax - 1f, dragRect.yMin, 2f, dragRect.height);
+			}
 			else
 			{
-				if (this.m_DragState.insertAfterIndex)
-				{
-					rect = new Rect(dragRect.xMax - 1f, dragRect.yMin, 2f, dragRect.height);
-				}
-				else
-				{
-					rect = new Rect(dragRect.xMin - 1f, dragRect.yMin, 2f, dragRect.height);
-				}
+				rect = new Rect(dragRect.xMin - 1f, dragRect.yMin, 2f, dragRect.height);
 			}
 			EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 1f));
 		}
+
 		private void CreateNewPresetButton(Rect buttonRect, object newPresetObject, PresetLibrary lib, bool isOpenForEdit)
 		{
-			EditorGUI.BeginDisabledGroup(!isOpenForEdit);
-			if (GUI.Button(buttonRect, (!isOpenForEdit) ? PresetLibraryEditor<T>.s_Styles.plusButtonTextNotCheckedOut : PresetLibraryEditor<T>.s_Styles.plusButtonText))
+			using (new EditorGUI.DisabledScope(!isOpenForEdit))
 			{
-				int itemIndex = this.CreateNewPreset(newPresetObject, string.Empty);
-				if (this.drawLabels)
+				if (GUI.Button(buttonRect, (!isOpenForEdit) ? PresetLibraryEditor<T>.s_Styles.plusButtonTextNotCheckedOut : PresetLibraryEditor<T>.s_Styles.plusButtonText))
 				{
-					this.BeginRenaming(string.Empty, itemIndex, 0f);
+					int itemIndex = this.CreateNewPreset(newPresetObject, string.Empty);
+					if (this.drawLabels)
+					{
+						this.BeginRenaming(string.Empty, itemIndex, 0f);
+					}
+					InspectorWindow.RepaintAllInspectors();
 				}
-				InspectorWindow.RepaintAllInspectors();
-			}
-			if (Event.current.type == EventType.Repaint)
-			{
-				Rect rect = new RectOffset(-3, -3, -3, -3).Add(buttonRect);
-				lib.Draw(rect, newPresetObject);
-				if (buttonRect.width > 30f)
+				if (Event.current.type == EventType.Repaint)
 				{
-					PresetLibraryEditor<T>.LabelWithOutline(buttonRect, PresetLibraryEditor<T>.s_Styles.newPreset, new Color(0.1f, 0.1f, 0.1f), PresetLibraryEditor<T>.s_Styles.newPresetStyle);
-				}
-				else
-				{
-					if (lib.Count() == 0 && isOpenForEdit)
+					Rect rect = new RectOffset(-3, -3, -3, -3).Add(buttonRect);
+					lib.Draw(rect, newPresetObject);
+					if (buttonRect.width > 30f)
+					{
+						PresetLibraryEditor<T>.LabelWithOutline(buttonRect, PresetLibraryEditor<T>.s_Styles.newPreset, new Color(0.1f, 0.1f, 0.1f), PresetLibraryEditor<T>.s_Styles.newPresetStyle);
+					}
+					else if (lib.Count() == 0 && isOpenForEdit)
 					{
 						buttonRect.x = buttonRect.xMax + 5f;
 						buttonRect.width = 200f;
 						buttonRect.height = 16f;
-						EditorGUI.BeginDisabledGroup(true);
-						GUI.Label(buttonRect, "Click to add new preset");
-						EditorGUI.EndDisabledGroup();
+						using (new EditorGUI.DisabledScope(true))
+						{
+							GUI.Label(buttonRect, "Click to add new preset");
+						}
 					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
 		}
+
 		private static void LabelWithOutline(Rect rect, GUIContent content, Color outlineColor, GUIStyle style)
 		{
 			Color color = GUI.color;
@@ -903,18 +982,22 @@ namespace UnityEditor
 			GUI.color = color;
 			GUI.Label(rect, content, style);
 		}
+
 		private bool IsRenaming(int itemID)
 		{
 			return this.GetRenameOverlay().IsRenaming() && this.GetRenameOverlay().userData == itemID && !this.GetRenameOverlay().isWaitingForDelay;
 		}
+
 		private RenameOverlay GetRenameOverlay()
 		{
 			return this.m_State.m_RenameOverlay;
 		}
+
 		private void BeginRenaming(string name, int itemIndex, float delay)
 		{
 			this.GetRenameOverlay().BeginRename(name, itemIndex, delay);
 		}
+
 		private void EndRename()
 		{
 			if (!this.GetRenameOverlay().userAcceptedRename)
@@ -931,6 +1014,7 @@ namespace UnityEditor
 			}
 			this.GetRenameOverlay().EndRename(true);
 		}
+
 		public T GetCurrentLib()
 		{
 			T t = ScriptableSingleton<PresetLibraryManager>.instance.GetLibrary<T>(this.m_SaveLoadHelper, this.currentLibraryWithoutExtension);
@@ -957,10 +1041,12 @@ namespace UnityEditor
 			}
 			return t;
 		}
+
 		public void UnloadUsedLibraries()
 		{
 			ScriptableSingleton<PresetLibraryManager>.instance.UnloadAllLibrariesFor<T>(this.m_SaveLoadHelper);
 		}
+
 		public void DeletePreset(int presetIndex)
 		{
 			T currentLib = this.GetCurrentLib();
@@ -981,6 +1067,7 @@ namespace UnityEditor
 			}
 			this.OnLayoutChanged();
 		}
+
 		public void ReplacePreset(int presetIndex, object presetObject)
 		{
 			T currentLib = this.GetCurrentLib();
@@ -1000,6 +1087,7 @@ namespace UnityEditor
 				this.presetsWasReordered();
 			}
 		}
+
 		public void MovePreset(int presetIndex, int destPresetIndex, bool insertAfterDestIndex)
 		{
 			T currentLib = this.GetCurrentLib();
@@ -1019,6 +1107,7 @@ namespace UnityEditor
 				this.presetsWasReordered();
 			}
 		}
+
 		public int CreateNewPreset(object presetObject, string presetName)
 		{
 			T currentLib = this.GetCurrentLib();
@@ -1037,6 +1126,7 @@ namespace UnityEditor
 			this.OnLayoutChanged();
 			return currentLib.Count() - 1;
 		}
+
 		public void SaveCurrentLib()
 		{
 			T currentLib = this.GetCurrentLib();
@@ -1048,6 +1138,7 @@ namespace UnityEditor
 			ScriptableSingleton<PresetLibraryManager>.instance.SaveLibrary<T>(this.m_SaveLoadHelper, currentLib, this.currentLibraryWithoutExtension);
 			InternalEditorUtility.RepaintAllViews();
 		}
+
 		public T CreateNewLibrary(string presetLibraryPathWithoutExtension)
 		{
 			T t = ScriptableSingleton<PresetLibraryManager>.instance.CreateLibrary<T>(this.m_SaveLoadHelper, presetLibraryPathWithoutExtension);
@@ -1058,6 +1149,7 @@ namespace UnityEditor
 			}
 			return t;
 		}
+
 		public void RevealCurrentLibrary()
 		{
 			if (this.m_PresetLibraryFileLocation == PresetFileLocation.PreferencesFolder)

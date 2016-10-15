@@ -1,15 +1,18 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(TextMesh))]
 	internal class TextMeshInspector : Editor
 	{
 		private SerializedProperty m_Font;
+
 		private void OnEnable()
 		{
 			this.m_Font = base.serializedObject.FindProperty("m_Font");
 		}
+
 		public override void OnInspectorGUI()
 		{
 			Font y = (!this.m_Font.hasMultipleDifferentValues) ? (this.m_Font.objectReferenceValue as Font) : null;

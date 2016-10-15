@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.SocialPlatforms
 {
 	public interface IAchievement
@@ -8,23 +9,28 @@ namespace UnityEngine.SocialPlatforms
 			get;
 			set;
 		}
+
 		double percentCompleted
 		{
 			get;
 			set;
 		}
+
 		bool completed
 		{
 			get;
 		}
+
 		bool hidden
 		{
 			get;
 		}
+
 		DateTime lastReportedDate
 		{
 			get;
 		}
+
 		void ReportProgress(Action<bool> callback);
 	}
 }

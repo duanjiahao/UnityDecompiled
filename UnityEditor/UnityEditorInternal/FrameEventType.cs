@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditorInternal
 {
 	internal enum FrameEventType
@@ -23,6 +24,7 @@ namespace UnityEditorInternal
 		SkinOnGPU,
 		DrawProcedural,
 		ComputeDispatch,
-		PluginEvent
+		PluginEvent,
+		InstancedMesh
 	}
 }

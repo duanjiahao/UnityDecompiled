@@ -1,17 +1,25 @@
 using System;
 using UnityEditor.Animations;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PreviewBlendTree
 	{
 		private AnimatorController m_Controller;
+
 		private AvatarPreview m_AvatarPreview;
+
 		private AnimatorStateMachine m_StateMachine;
+
 		private AnimatorState m_State;
+
 		private BlendTree m_BlendTree;
+
 		private bool m_ControllerIsDirty;
+
 		private bool m_PrevIKOnFeet;
+
 		public Animator PreviewAnimator
 		{
 			get
@@ -19,10 +27,12 @@ namespace UnityEditor
 				return this.m_AvatarPreview.Animator;
 			}
 		}
+
 		protected virtual void ControllerDirty()
 		{
 			this.m_ControllerIsDirty = true;
 		}
+
 		public void Init(BlendTree blendTree, Animator animator)
 		{
 			this.m_BlendTree = blendTree;
@@ -34,6 +44,7 @@ namespace UnityEditor
 			}
 			this.CreateStateMachine();
 		}
+
 		public void CreateParameters()
 		{
 			for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
@@ -41,6 +52,7 @@ namespace UnityEditor
 				this.m_Controller.AddParameter(this.m_BlendTree.GetRecursiveBlendParameter(i), AnimatorControllerParameterType.Float);
 			}
 		}
+
 		private void CreateStateMachine()
 		{
 			if (this.m_AvatarPreview != null && this.m_AvatarPreview.Animator != null)
@@ -71,6 +83,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ClearStateMachine()
 		{
 			if (this.m_AvatarPreview != null && this.m_AvatarPreview.Animator != null)
@@ -88,20 +101,24 @@ namespace UnityEditor
 			this.m_Controller = null;
 			this.m_State = null;
 		}
+
 		private void OnPreviewAvatarChanged()
 		{
 			this.ResetStateMachine();
 		}
+
 		public void ResetStateMachine()
 		{
 			this.ClearStateMachine();
 			this.CreateStateMachine();
 		}
+
 		public void OnDisable()
 		{
 			this.ClearStateMachine();
 			this.m_AvatarPreview.OnDestroy();
 		}
+
 		public void OnDestroy()
 		{
 			this.ClearStateMachine();
@@ -111,6 +128,7 @@ namespace UnityEditor
 				this.m_AvatarPreview = null;
 			}
 		}
+
 		private void UpdateAvatarState()
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -143,8 +161,8 @@ namespace UnityEditor
 					for (int i = 0; i < this.m_BlendTree.recursiveBlendParameterCount; i++)
 					{
 						string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
-						float inputBlendValue = this.m_BlendTree.GetInputBlendValue(recursiveBlendParameter);
-						this.m_AvatarPreview.Animator.SetFloat(recursiveBlendParameter, inputBlendValue);
+						float parameterValue = BlendTreeInspector.GetParameterValue(this.m_AvatarPreview.Animator, this.m_BlendTree, recursiveBlendParameter);
+						this.m_AvatarPreview.Animator.SetFloat(recursiveBlendParameter, parameterValue);
 					}
 				}
 				this.m_AvatarPreview.timeControl.loop = true;
@@ -166,17 +184,15 @@ namespace UnityEditor
 					{
 						num3 -= num;
 					}
-					else
+					else if (num2 < 0f)
 					{
-						if (num2 < 0f)
-						{
-							num3 += num;
-						}
+						num3 += num;
 					}
 				}
 				this.m_AvatarPreview.Animator.Update(num3);
 			}
 		}
+
 		public void TestForReset()
 		{
 			if (this.m_State != null && this.m_AvatarPreview != null && this.m_State.iKOnFeet != this.m_AvatarPreview.IKOnFeet)
@@ -184,14 +200,17 @@ namespace UnityEditor
 				this.ResetStateMachine();
 			}
 		}
+
 		public bool HasPreviewGUI()
 		{
 			return true;
 		}
+
 		public void OnPreviewSettings()
 		{
 			this.m_AvatarPreview.DoPreviewSettings();
 		}
+
 		public void OnInteractivePreviewGUI(Rect r, GUIStyle background)
 		{
 			this.UpdateAvatarState();

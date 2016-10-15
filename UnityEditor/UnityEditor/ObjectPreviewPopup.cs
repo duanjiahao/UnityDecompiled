@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ObjectPreviewPopup : PopupWindowContent
@@ -7,13 +8,20 @@ namespace UnityEditor
 		internal class Styles
 		{
 			public readonly GUIStyle toolbar = "preToolbar";
+
 			public readonly GUIStyle toolbarText = "preToolbar2";
+
 			public GUIStyle background = "preBackground";
 		}
+
 		private const float kToolbarHeight = 17f;
+
 		private readonly Editor m_Editor;
+
 		private readonly GUIContent m_ObjectName;
+
 		private ObjectPreviewPopup.Styles s_Styles;
+
 		public ObjectPreviewPopup(UnityEngine.Object previewObject)
 		{
 			if (previewObject == null)
@@ -24,6 +32,7 @@ namespace UnityEditor
 			this.m_ObjectName = new GUIContent(previewObject.name, AssetDatabase.GetAssetPath(previewObject));
 			this.m_Editor = Editor.CreateEditor(previewObject);
 		}
+
 		public override void OnClose()
 		{
 			if (this.m_Editor != null)
@@ -31,6 +40,7 @@ namespace UnityEditor
 				UnityEngine.Object.DestroyImmediate(this.m_Editor);
 			}
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			if (this.m_Editor == null)
@@ -52,6 +62,7 @@ namespace UnityEditor
 			Rect r = new Rect(rect.x, rect.y + 17f, rect.width, rect.height - 17f);
 			this.m_Editor.OnPreviewGUI(r, this.s_Styles.background);
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			return new Vector2(300f, 317f);

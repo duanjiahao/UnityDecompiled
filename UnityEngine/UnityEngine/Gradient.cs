@@ -1,12 +1,16 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class Gradient
 	{
 		internal IntPtr m_Ptr;
+
 		public extern GradientColorKey[] colorKeys
 		{
 			[WrapperlessIcall]
@@ -16,6 +20,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern GradientAlphaKey[] alphaKeys
 		{
 			[WrapperlessIcall]
@@ -25,6 +30,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal Color constantColor
 		{
 			get
@@ -38,29 +44,45 @@ namespace UnityEngine
 				this.INTERNAL_set_constantColor(ref value);
 			}
 		}
+
+		[RequiredByNativeCode]
 		public Gradient()
 		{
 			this.Init();
 		}
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Init();
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Cleanup();
+
 		~Gradient()
 		{
 			this.Cleanup();
 		}
+
+		public Color Evaluate(float time)
+		{
+			Color result;
+			Gradient.INTERNAL_CALL_Evaluate(this, time, out result);
+			return result;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Color Evaluate(float time);
+		private static extern void INTERNAL_CALL_Evaluate(Gradient self, float time, out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_constantColor(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_constantColor(ref Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetKeys(GradientColorKey[] colorKeys, GradientAlphaKey[] alphaKeys);

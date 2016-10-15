@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor.ProjectWindowCallback
 {
 	internal class DoCreatePrefab : EndNameEditAction

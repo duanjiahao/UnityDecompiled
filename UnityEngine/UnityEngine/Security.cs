@@ -7,19 +7,24 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Security.Cryptography;
 using UnityEngine.Internal;
+
 namespace UnityEngine
 {
 	public sealed class Security
 	{
 		private const string publicVerificationKey = "<RSAKeyValue><Modulus>uP7lsvrE6fNoQWhUIdJnQrgKoGXBkgWgs5l1xmS9gfyNkFSXgugIpfmN/0YrtL57PezYFXN0CogAnOpOtcUmpcIrh524VL/7bIh+jDUaOCG292PIx92dtzqCTvbUdCYUmaag9VlrdAw05FxYQJi2iZ/X6EiuO1TnqpVNFCDb6pXPAssoO4Uxn9JXBzL0muNRdcmFGRiLp7JQOL7a2aeU9mF9qjMprnww0k8COa6tHdnNWJqaxdFO+Etk3os0ns/gQ2FWrztKemM1Wfu7lk/B1F+V2g0adwlTiuyNHw6to+5VQXWK775RXB9wAGr8KhsVD5IJvmxrdBT8KVEWve+OXQ==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>";
+
 		private static List<Assembly> _verifiedAssemblies = new List<Assembly>();
+
 		private static readonly string kSignatureExtension = ".signature";
+
 		[ExcludeFromDocs]
 		public static bool PrefetchSocketPolicy(string ip, int atPort)
 		{
 			int timeout = 3000;
 			return Security.PrefetchSocketPolicy(ip, atPort, timeout);
 		}
+
 		public static bool PrefetchSocketPolicy(string ip, int atPort, [DefaultValue("3000")] int timeout)
 		{
 			MethodInfo unityCrossDomainHelperMethod = Security.GetUnityCrossDomainHelperMethod("PrefetchSocketPolicy");
@@ -31,6 +36,7 @@ namespace UnityEngine
 			});
 			return (bool)obj;
 		}
+
 		[SecuritySafeCritical]
 		public static string GetChainOfTrustValue(string name)
 		{
@@ -42,9 +48,11 @@ namespace UnityEngine
 			byte[] publicKeyToken = callingAssembly.GetName().GetPublicKeyToken();
 			return Security.GetChainOfTrustValueInternal(name, Security.TokenToHex(publicKeyToken));
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetChainOfTrustValueInternal(string name, string publicKeyToken);
+
 		private static MethodInfo GetUnityCrossDomainHelperMethod(string methodname)
 		{
 			Type type = Types.GetType("UnityEngine.UnityCrossDomainHelper", "CrossDomainPolicyParser, Version=1.0.0.0, Culture=neutral");
@@ -59,6 +67,7 @@ namespace UnityEngine
 			}
 			return method;
 		}
+
 		internal static string TokenToHex(byte[] token)
 		{
 			if (token == null || 8 > token.Length)
@@ -77,10 +86,12 @@ namespace UnityEngine
 				token[7]
 			});
 		}
+
 		internal static void ClearVerifiedAssemblies()
 		{
 			Security._verifiedAssemblies.Clear();
 		}
+
 		[SecuritySafeCritical]
 		public static Assembly LoadAndVerifyAssembly(byte[] assemblyData, string authorizationKey)
 		{
@@ -105,16 +116,14 @@ namespace UnityEngine
 			}
 			return Security.LoadAndVerifyAssemblyInternal(assemblyData);
 		}
+
 		[SecuritySafeCritical]
 		public static Assembly LoadAndVerifyAssembly(byte[] assemblyData)
 		{
-			if (Application.GetBuildUnityVersion() >= Application.GetNumericUnityVersion("4.5.0a4"))
-			{
-				Debug.LogError("Unable to verify assembly data; you must provide an authorization key when loading this assembly.");
-				return null;
-			}
-			return Security.LoadAndVerifyAssemblyInternal(assemblyData);
+			Debug.LogError("Unable to verify assembly data; you must provide an authorization key when loading this assembly.");
+			return null;
 		}
+
 		[SecuritySafeCritical]
 		private static Assembly LoadAndVerifyAssemblyInternal(byte[] assemblyData)
 		{
@@ -142,6 +151,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		internal static bool VerifySignature(string file, byte[] publicKey)
 		{
 			try

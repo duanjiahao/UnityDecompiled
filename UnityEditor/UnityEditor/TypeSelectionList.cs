@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TypeSelectionList
 	{
 		private List<TypeSelection> m_TypeSelections;
+
 		public List<TypeSelection> typeSelections
 		{
 			get
@@ -13,6 +15,7 @@ namespace UnityEditor
 				return this.m_TypeSelections;
 			}
 		}
+
 		public TypeSelectionList(UnityEngine.Object[] objects)
 		{
 			Dictionary<string, List<UnityEngine.Object>> dictionary = new Dictionary<string, List<UnityEngine.Object>>();

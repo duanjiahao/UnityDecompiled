@@ -1,15 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor.BuildReporting;
 using UnityEditor.Modules;
 using UnityEditor.Utils;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PostprocessBuildPlayer
 	{
 		internal const string StreamingAssets = "Assets/StreamingAssets";
+
 		public static string subDir32Bit
 		{
 			get
@@ -17,6 +19,7 @@ namespace UnityEditor
 				return "x86";
 			}
 		}
+
 		public static string subDir64Bit
 		{
 			get
@@ -24,172 +27,12 @@ namespace UnityEditor
 				return "x86_64";
 			}
 		}
+
 		internal static string GenerateBundleIdentifier(string companyName, string productName)
 		{
 			return "unity." + companyName + "." + productName;
 		}
-		internal static void InstallPlugins(string destPluginFolder, BuildTarget target)
-		{
-			string text = "Assets/Plugins";
-			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
-			if (buildPostProcessor != null)
-			{
-				bool flag;
-				string[] array = buildPostProcessor.FindPluginFilesToCopy(text, out flag);
-				if (array != null)
-				{
-					if (array.Length > 0 && !Directory.Exists(destPluginFolder))
-					{
-						Directory.CreateDirectory(destPluginFolder);
-					}
-					string[] array2 = array;
-					for (int i = 0; i < array2.Length; i++)
-					{
-						string text2 = array2[i];
-						if (Directory.Exists(text2))
-						{
-							string target2 = Path.Combine(destPluginFolder, text2);
-							FileUtil.CopyDirectoryRecursive(text2, target2);
-						}
-						else
-						{
-							string fileName = Path.GetFileName(text2);
-							if (flag)
-							{
-								string directoryName = Path.GetDirectoryName(text2.Substring(text.Length + 1));
-								string text3 = Path.Combine(destPluginFolder, directoryName);
-								string to = Path.Combine(text3, fileName);
-								if (!Directory.Exists(text3))
-								{
-									Directory.CreateDirectory(text3);
-								}
-								FileUtil.UnityFileCopy(text2, to);
-							}
-							else
-							{
-								string to2 = Path.Combine(destPluginFolder, fileName);
-								FileUtil.UnityFileCopy(text2, to2);
-							}
-						}
-					}
-					return;
-				}
-			}
-			bool flag2 = false;
-			List<string> list = new List<string>();
-			bool flag3 = target == BuildTarget.StandaloneOSXIntel || target == BuildTarget.StandaloneOSXIntel64 || target == BuildTarget.StandaloneOSXUniversal;
-			bool copyDirectories = flag3;
-			string extension = string.Empty;
-			string debugExtension = string.Empty;
-			if (flag3)
-			{
-				extension = ".bundle";
-				list.Add(string.Empty);
-			}
-			else
-			{
-				if (target == BuildTarget.StandaloneWindows)
-				{
-					extension = ".dll";
-					debugExtension = ".pdb";
-					PostprocessBuildPlayer.AddPluginSubdirIfExists(list, text, PostprocessBuildPlayer.subDir32Bit);
-				}
-				else
-				{
-					if (target == BuildTarget.StandaloneWindows64)
-					{
-						extension = ".dll";
-						debugExtension = ".pdb";
-						PostprocessBuildPlayer.AddPluginSubdirIfExists(list, text, PostprocessBuildPlayer.subDir64Bit);
-					}
-					else
-					{
-						if (target == BuildTarget.StandaloneGLESEmu)
-						{
-							extension = ".dll";
-							debugExtension = ".pdb";
-							list.Add(string.Empty);
-						}
-						else
-						{
-							if (target == BuildTarget.StandaloneLinux)
-							{
-								extension = ".so";
-								PostprocessBuildPlayer.AddPluginSubdirIfExists(list, text, PostprocessBuildPlayer.subDir32Bit);
-							}
-							else
-							{
-								if (target == BuildTarget.StandaloneLinux64)
-								{
-									extension = ".so";
-									PostprocessBuildPlayer.AddPluginSubdirIfExists(list, text, PostprocessBuildPlayer.subDir64Bit);
-								}
-								else
-								{
-									if (target == BuildTarget.StandaloneLinuxUniversal)
-									{
-										extension = ".so";
-										list.Add(PostprocessBuildPlayer.subDir32Bit);
-										list.Add(PostprocessBuildPlayer.subDir64Bit);
-										flag2 = true;
-									}
-									else
-									{
-										if (target == BuildTarget.PS3)
-										{
-											extension = ".sprx";
-											list.Add(string.Empty);
-										}
-										else
-										{
-											if (target == BuildTarget.Android)
-											{
-												extension = ".so";
-												list.Add("Android");
-											}
-											else
-											{
-												if (target == BuildTarget.BB10)
-												{
-													extension = ".so";
-													list.Add("BlackBerry");
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			foreach (string current in list)
-			{
-				if (flag2)
-				{
-					PostprocessBuildPlayer.InstallPluginsByExtension(Path.Combine(text, current), extension, debugExtension, Path.Combine(destPluginFolder, current), copyDirectories);
-				}
-				else
-				{
-					PostprocessBuildPlayer.InstallPluginsByExtension(Path.Combine(text, current), extension, debugExtension, destPluginFolder, copyDirectories);
-				}
-			}
-		}
-		private static void AddPluginSubdirIfExists(List<string> subdirs, string basedir, string subdir)
-		{
-			if (Directory.Exists(Path.Combine(basedir, subdir)))
-			{
-				subdirs.Add(subdir);
-			}
-			else
-			{
-				subdirs.Add(string.Empty);
-			}
-		}
-		internal static bool IsPlugin(string path, string targetExtension)
-		{
-			return string.Compare(Path.GetExtension(path), targetExtension, true) == 0 || string.Compare(Path.GetFileName(path), targetExtension, true) == 0;
-		}
+
 		internal static bool InstallPluginsByExtension(string pluginSourceFolder, string extension, string debugExtension, string destPluginFolder, bool copyDirectories)
 		{
 			bool result = false;
@@ -217,18 +60,16 @@ namespace UnityEditor
 					{
 						FileUtil.CopyDirectoryRecursive(text, text2);
 					}
-					else
+					else if (!Directory.Exists(text))
 					{
-						if (!Directory.Exists(text))
-						{
-							FileUtil.UnityFileCopy(text, text2);
-						}
+						FileUtil.UnityFileCopy(text, text2);
 					}
 					result = true;
 				}
 			}
 			return result;
 		}
+
 		internal static void InstallStreamingAssets(string stagingAreaDataPath)
 		{
 			if (Directory.Exists("Assets/StreamingAssets"))
@@ -236,6 +77,7 @@ namespace UnityEditor
 				FileUtil.CopyDirectoryRecursiveForPostprocess("Assets/StreamingAssets", Path.Combine(stagingAreaDataPath, "StreamingAssets"), true);
 			}
 		}
+
 		public static string GetScriptLayoutFileFromBuild(BuildOptions options, BuildTarget target, string installPath, string fileName)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
@@ -245,11 +87,23 @@ namespace UnityEditor
 			}
 			return string.Empty;
 		}
+
+		public static string PrepareForBuild(BuildOptions options, BuildTarget target)
+		{
+			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			if (buildPostProcessor == null)
+			{
+				return null;
+			}
+			return buildPostProcessor.PrepareForBuild(options, target);
+		}
+
 		public static bool SupportsScriptsOnlyBuild(BuildTarget target)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
 			return buildPostProcessor != null && buildPostProcessor.SupportsScriptsOnlyBuild();
 		}
+
 		public static string GetExtensionForBuildTarget(BuildTarget target, BuildOptions options)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
@@ -259,6 +113,7 @@ namespace UnityEditor
 			}
 			return buildPostProcessor.GetExtension(target, options);
 		}
+
 		public static bool SupportsInstallInBuildFolder(BuildTarget target)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
@@ -281,7 +136,7 @@ namespace UnityEditor
 					return true;
 				case BuildTarget.PS4:
 					IL_44:
-					if (target != BuildTarget.MetroPlayer && target != BuildTarget.WP8Player)
+					if (target != BuildTarget.WSAPlayer)
 					{
 						return false;
 					}
@@ -291,6 +146,7 @@ namespace UnityEditor
 			}
 			goto IL_2F;
 		}
+
 		public static void Launch(BuildTarget target, string path, string productName, BuildOptions options)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
@@ -307,7 +163,8 @@ namespace UnityEditor
 			}
 			throw new UnityException(string.Format("Launching {0} build target via mono is not supported", target));
 		}
-		public static void Postprocess(BuildTarget target, string installPath, string companyName, string productName, int width, int height, string downloadWebplayerUrl, string manualDownloadWebplayerUrl, BuildOptions options, RuntimeClassRegistry usedClassRegistry)
+
+		public static void Postprocess(BuildTarget target, string installPath, string companyName, string productName, int width, int height, string downloadWebplayerUrl, string manualDownloadWebplayerUrl, BuildOptions options, RuntimeClassRegistry usedClassRegistry, BuildReport report)
 		{
 			string stagingArea = "Temp/StagingArea";
 			string stagingAreaData = "Temp/StagingArea/Data";
@@ -333,15 +190,13 @@ namespace UnityEditor
 				args.productGUID = PlayerSettings.productGUID;
 				args.options = options;
 				args.usedClassRegistry = usedClassRegistry;
+				args.report = report;
 				buildPostProcessor.PostProcess(args);
 				return;
 			}
-			if (target != BuildTarget.WebPlayer && target != BuildTarget.WebPlayerStreamed)
-			{
-				throw new UnityException(string.Format("Build target '{0}' not supported", target));
-			}
-			PostProcessWebPlayer.PostProcess(options, installPath, downloadWebplayerUrl, width, height);
+			throw new UnityException(string.Format("Build target '{0}' not supported", target));
 		}
+
 		internal static string ExecuteSystemProcess(string command, string args, string workingdir)
 		{
 			ProcessStartInfo si = new ProcessStartInfo
@@ -360,6 +215,7 @@ namespace UnityEditor
 			program.Dispose();
 			return standardOutputAsString;
 		}
+
 		internal static string GetArchitectureForTarget(BuildTarget target)
 		{
 			switch (target)

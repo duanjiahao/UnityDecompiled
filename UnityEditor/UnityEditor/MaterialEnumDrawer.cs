@@ -2,24 +2,32 @@ using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MaterialEnumDrawer : MaterialPropertyDrawer
 	{
-		private readonly string[] names;
+		private readonly GUIContent[] names;
+
 		private readonly int[] values;
+
 		public MaterialEnumDrawer(string enumName)
 		{
 			Type[] source = AppDomain.CurrentDomain.GetAssemblies().SelectMany((Assembly x) => AssemblyHelper.GetTypesFromAssembly(x)).ToArray<Type>();
 			try
 			{
 				Type enumType = source.FirstOrDefault((Type x) => x.IsSubclassOf(typeof(Enum)) && (x.Name == enumName || x.FullName == enumName));
-				this.names = Enum.GetNames(enumType);
-				Array array = Enum.GetValues(enumType);
-				this.values = new int[array.Length];
+				string[] array = Enum.GetNames(enumType);
+				this.names = new GUIContent[array.Length];
 				for (int i = 0; i < array.Length; i++)
 				{
-					this.values[i] = (int)array.GetValue(i);
+					this.names[i] = new GUIContent(array[i]);
+				}
+				Array array2 = Enum.GetValues(enumType);
+				this.values = new int[array2.Length];
+				for (int j = 0; j < array2.Length; j++)
+				{
+					this.values[j] = (int)array2.GetValue(j);
 				}
 			}
 			catch (Exception)
@@ -31,6 +39,7 @@ namespace UnityEditor
 				throw;
 			}
 		}
+
 		public MaterialEnumDrawer(string n1, float v1) : this(new string[]
 		{
 			n1
@@ -40,6 +49,7 @@ namespace UnityEditor
 		})
 		{
 		}
+
 		public MaterialEnumDrawer(string n1, float v1, string n2, float v2) : this(new string[]
 		{
 			n1,
@@ -51,6 +61,7 @@ namespace UnityEditor
 		})
 		{
 		}
+
 		public MaterialEnumDrawer(string n1, float v1, string n2, float v2, string n3, float v3) : this(new string[]
 		{
 			n1,
@@ -64,6 +75,7 @@ namespace UnityEditor
 		})
 		{
 		}
+
 		public MaterialEnumDrawer(string n1, float v1, string n2, float v2, string n3, float v3, string n4, float v4) : this(new string[]
 		{
 			n1,
@@ -79,6 +91,7 @@ namespace UnityEditor
 		})
 		{
 		}
+
 		public MaterialEnumDrawer(string n1, float v1, string n2, float v2, string n3, float v3, string n4, float v4, string n5, float v5) : this(new string[]
 		{
 			n1,
@@ -96,6 +109,7 @@ namespace UnityEditor
 		})
 		{
 		}
+
 		public MaterialEnumDrawer(string n1, float v1, string n2, float v2, string n3, float v3, string n4, float v4, string n5, float v5, string n6, float v6) : this(new string[]
 		{
 			n1,
@@ -115,6 +129,7 @@ namespace UnityEditor
 		})
 		{
 		}
+
 		public MaterialEnumDrawer(string n1, float v1, string n2, float v2, string n3, float v3, string n4, float v4, string n5, float v5, string n6, float v6, string n7, float v7) : this(new string[]
 		{
 			n1,
@@ -136,15 +151,21 @@ namespace UnityEditor
 		})
 		{
 		}
-		public MaterialEnumDrawer(string[] names, float[] vals)
+
+		public MaterialEnumDrawer(string[] enumNames, float[] vals)
 		{
-			this.names = names;
-			this.values = new int[vals.Length];
-			for (int i = 0; i < vals.Length; i++)
+			this.names = new GUIContent[enumNames.Length];
+			for (int i = 0; i < enumNames.Length; i++)
 			{
-				this.values[i] = (int)vals[i];
+				this.names[i] = new GUIContent(enumNames[i]);
+			}
+			this.values = new int[vals.Length];
+			for (int j = 0; j < vals.Length; j++)
+			{
+				this.values[j] = (int)vals[j];
 			}
 		}
+
 		public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
 			if (prop.type != MaterialProperty.PropType.Float && prop.type != MaterialProperty.PropType.Range)
@@ -153,7 +174,8 @@ namespace UnityEditor
 			}
 			return base.GetPropertyHeight(prop, label, editor);
 		}
-		public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+
+		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
 			if (prop.type != MaterialProperty.PropType.Float && prop.type != MaterialProperty.PropType.Range)
 			{

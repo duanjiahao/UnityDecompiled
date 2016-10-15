@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SubModuleUI : ModuleUI
@@ -12,28 +13,38 @@ namespace UnityEditor
 			Death,
 			TypesMax
 		}
+
 		private class Texts
 		{
 			public GUIContent[] subEmitterTypeTexts;
-			public GUIContent create = new GUIContent(string.Empty, "Create and assign a Particle System as sub emitter");
+
+			public GUIContent create = EditorGUIUtility.TextContent("|Create and assign a Particle System as sub emitter");
+
 			public Texts()
 			{
 				this.subEmitterTypeTexts = new GUIContent[3];
-				this.subEmitterTypeTexts[0] = new GUIContent("Birth", "Start spawning on birth of particle.");
-				this.subEmitterTypeTexts[1] = new GUIContent("Collision", "Spawn on collision of particle. Sub emitter can only emit as burst.");
-				this.subEmitterTypeTexts[2] = new GUIContent("Death", "Spawn on death of particle. Sub emitter can only emit as burst.");
+				this.subEmitterTypeTexts[0] = EditorGUIUtility.TextContent("Birth|Start spawning on birth of particle.");
+				this.subEmitterTypeTexts[1] = EditorGUIUtility.TextContent("Collision|Spawn on collision of particle. Sub emitter can only emit as burst.");
+				this.subEmitterTypeTexts[2] = EditorGUIUtility.TextContent("Death|Spawn on death of particle. Sub emitter can only emit as burst.");
 			}
 		}
+
 		private const int k_MaxSubPerType = 2;
+
 		private SerializedProperty[,] m_SubEmitters;
+
 		private int m_CheckObjectTypeIndex = -1;
+
 		private int m_CheckObjectIndex = -1;
+
 		private static SubModuleUI.Texts s_Texts;
+
 		public SubModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "SubModule", displayName)
 		{
 			this.m_ToolTip = "Sub emission of particles. This allows each particle to emit particles in another system.";
 			this.Init();
 		}
+
 		protected override void Init()
 		{
 			if (this.m_SubEmitters != null)
@@ -48,15 +59,32 @@ namespace UnityEditor
 			this.m_SubEmitters[2, 0] = base.GetProperty("subEmitterDeath");
 			this.m_SubEmitters[2, 1] = base.GetProperty("subEmitterDeath1");
 		}
+
 		public override void Validate()
 		{
 		}
+
 		private void CreateAndAssignSubEmitter(SerializedProperty objectRefProp, SubModuleUI.SubEmitterType type)
 		{
 			GameObject gameObject = this.m_ParticleSystemUI.m_ParticleEffectUI.CreateParticleSystem(this.m_ParticleSystemUI.m_ParticleSystem, type);
-			gameObject.name = "SubEmitter";
+			switch (type)
+			{
+			case SubModuleUI.SubEmitterType.Birth:
+				gameObject.name = "SubEmitterBirth";
+				break;
+			case SubModuleUI.SubEmitterType.Collision:
+				gameObject.name = "SubEmitterCollision";
+				break;
+			case SubModuleUI.SubEmitterType.Death:
+				gameObject.name = "SubEmitterDeath";
+				break;
+			default:
+				gameObject.name = "SubEmitter";
+				break;
+			}
 			objectRefProp.objectReferenceValue = gameObject.GetComponent<ParticleSystem>();
 		}
+
 		private void Update()
 		{
 			if (this.m_CheckObjectIndex >= 0 && this.m_CheckObjectTypeIndex >= 0 && !ObjectSelector.isVisible)
@@ -68,7 +96,7 @@ namespace UnityEditor
 					bool flag = true;
 					if (this.ValidateSubemitter(particleSystem))
 					{
-						string text = ParticleSystemEditorUtils.CheckCircularReferences(particleSystem, this.m_ParticleSystemUI.m_ParticleSystem, this.m_ParticleSystemUI.m_ParticleEffectUI.GetRoot());
+						string text = ParticleSystemEditorUtils.CheckCircularReferences(particleSystem);
 						if (text.Length == 0)
 						{
 							this.CheckIfChild(objectReferenceValue);
@@ -96,6 +124,7 @@ namespace UnityEditor
 				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
 			}
 		}
+
 		internal static bool IsChild(ParticleSystem subEmitter, ParticleSystem root)
 		{
 			if (subEmitter == null || root == null)
@@ -105,6 +134,7 @@ namespace UnityEditor
 			ParticleSystem root2 = ParticleSystemEditorUtils.GetRoot(subEmitter);
 			return root2 == root;
 		}
+
 		private bool ValidateSubemitter(ParticleSystem subEmitter)
 		{
 			if (subEmitter == null)
@@ -126,6 +156,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private void CheckIfChild(UnityEngine.Object subEmitter)
 		{
 			if (subEmitter != null)
@@ -153,12 +184,13 @@ namespace UnityEditor
 						ParticleSystem particleSystem = subEmitter as ParticleSystem;
 						if (particleSystem)
 						{
-							particleSystem.gameObject.transform.parent = this.m_ParticleSystemUI.m_ParticleSystem.transform;
+							Undo.SetTransformParent(this.m_ParticleSystemUI.m_ParticleSystem.transform, particleSystem.gameObject.transform.transform, "Reparent sub emitter");
 						}
 					}
 				}
 			}
 		}
+
 		public override void OnInspectorGUI(ParticleSystem s)
 		{
 			if (SubModuleUI.s_Texts == null)
@@ -209,6 +241,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void UpdateCullingSupportedString(ref string text)
 		{
 			text += "\n\tSub Emitters are enabled.";

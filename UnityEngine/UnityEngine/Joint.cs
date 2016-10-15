@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public class Joint : Component
@@ -13,6 +14,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Vector3 axis
 		{
 			get
@@ -26,6 +28,7 @@ namespace UnityEngine
 				this.INTERNAL_set_axis(ref value);
 			}
 		}
+
 		public Vector3 anchor
 		{
 			get
@@ -39,6 +42,7 @@ namespace UnityEngine
 				this.INTERNAL_set_anchor(ref value);
 			}
 		}
+
 		public Vector3 connectedAnchor
 		{
 			get
@@ -52,6 +56,7 @@ namespace UnityEngine
 				this.INTERNAL_set_connectedAnchor(ref value);
 			}
 		}
+
 		public extern bool autoConfigureConnectedAnchor
 		{
 			[WrapperlessIcall]
@@ -61,6 +66,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float breakForce
 		{
 			[WrapperlessIcall]
@@ -70,6 +76,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float breakTorque
 		{
 			[WrapperlessIcall]
@@ -79,6 +86,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool enableCollision
 		{
 			[WrapperlessIcall]
@@ -88,6 +96,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool enablePreprocessing
 		{
 			[WrapperlessIcall]
@@ -97,21 +106,27 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_axis(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_axis(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anchor(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anchor(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_connectedAnchor(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_connectedAnchor(ref Vector3 value);

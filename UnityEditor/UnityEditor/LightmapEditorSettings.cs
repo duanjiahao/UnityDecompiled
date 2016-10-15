@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	public sealed class LightmapEditorSettings
@@ -14,6 +16,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int maxAtlasHeight
 		{
 			[WrapperlessIcall]
@@ -23,6 +26,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern float resolution
 		{
 			[WrapperlessIcall]
@@ -32,6 +36,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern float bakeResolution
 		{
 			[WrapperlessIcall]
@@ -41,6 +46,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool textureCompression
 		{
 			[WrapperlessIcall]
@@ -50,6 +56,17 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern ReflectionCubemapCompression reflectionCubemapCompression
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern float aoMaxDistance
 		{
 			[WrapperlessIcall]
@@ -59,6 +76,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int padding
 		{
 			[WrapperlessIcall]
@@ -68,6 +86,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("LightmapEditorSettings.aoContrast has been deprecated.", false)]
 		public static float aoContrast
 		{
@@ -79,6 +98,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.aoAmount has been deprecated.", false)]
 		public static float aoAmount
 		{
@@ -90,6 +110,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.lockAtlas has been deprecated.", false)]
 		public static bool lockAtlas
 		{
@@ -101,6 +122,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.skyLightColor has been deprecated.", false)]
 		public static Color skyLightColor
 		{
@@ -112,6 +134,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.skyLightIntensity has been deprecated.", false)]
 		public static float skyLightIntensity
 		{
@@ -123,6 +146,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.quality has been deprecated.", false)]
 		public static LightmapBakeQuality quality
 		{
@@ -134,6 +158,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.bounceBoost has been deprecated.", false)]
 		public static float bounceBoost
 		{
@@ -145,6 +170,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherRays has been deprecated.", false)]
 		public static int finalGatherRays
 		{
@@ -156,6 +182,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherContrastThreshold has been deprecated.", false)]
 		public static float finalGatherContrastThreshold
 		{
@@ -167,6 +194,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherGradientThreshold has been deprecated.", false)]
 		public static float finalGatherGradientThreshold
 		{
@@ -178,6 +206,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherInterpolationPoints has been deprecated.", false)]
 		public static int finalGatherInterpolationPoints
 		{
@@ -189,6 +218,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.lastUsedResolution has been deprecated.", false)]
 		public static float lastUsedResolution
 		{
@@ -200,6 +230,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.bounces has been deprecated.", false)]
 		public static int bounces
 		{
@@ -211,6 +242,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.bounceIntensity has been deprecated.", false)]
 		public static float bounceIntensity
 		{
@@ -222,36 +254,47 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Reset();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsLightmappedOrDynamicLightmappedForRendering(Renderer renderer);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasZeroAreaMesh(Renderer renderer);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasClampedResolution(Renderer renderer);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetSystemResolution(Renderer renderer, out int width, out int height);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetTerrainSystemResolution(Terrain terrain, out int width, out int height, out int numChunksInX, out int numChunksInY);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetInstanceResolution(Renderer renderer, out int width, out int height);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetInputSystemHash(Renderer renderer, out Hash128 inputSystemHash);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetInstanceHash(Renderer renderer, out Hash128 instanceHash);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetGeometryHash(Renderer renderer, out Hash128 geometryHash);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object GetLightmapSettings();

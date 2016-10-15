@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MonoProcessUtility
@@ -18,6 +19,7 @@ namespace UnityEditor
 				"\n"
 			});
 		}
+
 		public static void RunMonoProcess(Process process, string name, string resultingFile)
 		{
 			MonoProcessRunner monoProcessRunner = new MonoProcessRunner();
@@ -56,6 +58,7 @@ namespace UnityEditor
 				throw new UnityException(text);
 			}
 		}
+
 		public static string GetMonoExec(BuildTarget buildTarget)
 		{
 			string monoBinDirectory = BuildPipeline.GetMonoBinDirectory(buildTarget);
@@ -65,11 +68,13 @@ namespace UnityEditor
 			}
 			return Path.Combine(monoBinDirectory, "mono.exe");
 		}
+
 		public static string GetMonoPath(BuildTarget buildTarget)
 		{
 			string monoLibDirectory = BuildPipeline.GetMonoLibDirectory(buildTarget);
 			return monoLibDirectory + Path.PathSeparator + ".";
 		}
+
 		public static Process PrepareMonoProcess(BuildTarget target, string workDir)
 		{
 			Process process = new Process();

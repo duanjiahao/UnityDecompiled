@@ -1,6 +1,7 @@
 using System;
 using UnityEditor.Audio;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class AudioMixerEffectGUI
@@ -8,18 +9,24 @@ namespace UnityEditor
 		private class ExposedParamContext
 		{
 			public AudioMixerController controller;
+
 			public AudioParameterPath path;
+
 			public ExposedParamContext(AudioMixerController controller, AudioParameterPath path)
 			{
 				this.controller = controller;
 				this.path = path;
 			}
 		}
+
 		private class ParameterTransitionOverrideContext
 		{
 			public AudioMixerController controller;
+
 			public GUID parameter;
+
 			public ParameterTransitionType type;
+
 			public ParameterTransitionOverrideContext(AudioMixerController controller, GUID parameter, ParameterTransitionType type)
 			{
 				this.controller = controller;
@@ -27,18 +34,24 @@ namespace UnityEditor
 				this.type = type;
 			}
 		}
+
 		private class ParameterTransitionOverrideRemoveContext
 		{
 			public AudioMixerController controller;
+
 			public GUID parameter;
+
 			public ParameterTransitionOverrideRemoveContext(AudioMixerController controller, GUID parameter)
 			{
 				this.controller = controller;
 				this.parameter = parameter;
 			}
 		}
+
 		private const string kAudioSliderFloatFormat = "F2";
+
 		private const string kExposedParameterUnicodeChar = " ➔";
+
 		private static AudioMixerDrawUtils.Styles styles
 		{
 			get
@@ -46,10 +59,12 @@ namespace UnityEditor
 				return AudioMixerDrawUtils.styles;
 			}
 		}
+
 		public static void EffectHeader(string text)
 		{
 			GUILayout.Label(text, AudioMixerEffectGUI.styles.headerStyle, new GUILayoutOption[0]);
 		}
+
 		public static bool Slider(GUIContent label, ref float value, float displayScale, float displayExponent, string unit, float leftValue, float rightValue, AudioMixerController controller, AudioParameterPath path, params GUILayoutOption[] options)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -100,6 +115,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public static void ExposePopupCallback(object obj)
 		{
 			AudioMixerEffectGUI.ExposedParamContext exposedParamContext = (AudioMixerEffectGUI.ExposedParamContext)obj;
@@ -107,6 +123,7 @@ namespace UnityEditor
 			exposedParamContext.controller.AddExposedParameter(exposedParamContext.path);
 			AudioMixerUtility.RepaintAudioMixerAndInspectors();
 		}
+
 		public static void UnexposePopupCallback(object obj)
 		{
 			AudioMixerEffectGUI.ExposedParamContext exposedParamContext = (AudioMixerEffectGUI.ExposedParamContext)obj;
@@ -114,6 +131,7 @@ namespace UnityEditor
 			exposedParamContext.controller.RemoveExposedParameter(exposedParamContext.path.parameter);
 			AudioMixerUtility.RepaintAudioMixerAndInspectors();
 		}
+
 		public static void ParameterTransitionOverrideCallback(object obj)
 		{
 			AudioMixerEffectGUI.ParameterTransitionOverrideContext parameterTransitionOverrideContext = (AudioMixerEffectGUI.ParameterTransitionOverrideContext)obj;
@@ -127,6 +145,7 @@ namespace UnityEditor
 				parameterTransitionOverrideContext.controller.TargetSnapshot.SetTransitionTypeOverride(parameterTransitionOverrideContext.parameter, parameterTransitionOverrideContext.type);
 			}
 		}
+
 		public static bool PopupButton(GUIContent label, GUIContent buttonContent, GUIStyle style, out Rect buttonRect, params GUILayoutOption[] options)
 		{
 			if (label != null)

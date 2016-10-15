@@ -1,23 +1,35 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class DetailTextureWizard : TerrainWizard
 	{
 		public Texture2D m_DetailTexture;
+
 		public float m_MinWidth;
+
 		public float m_MaxWidth;
+
 		public float m_MinHeight;
+
 		public float m_MaxHeight;
+
 		public float m_NoiseSpread;
+
 		public Color m_HealthyColor;
+
 		public Color m_DryColor;
+
 		public bool m_Billboard;
+
 		private int m_PrototypeIndex = -1;
+
 		public void OnEnable()
 		{
 			base.minSize = new Vector2(400f, 400f);
 		}
+
 		internal void InitializeDefaults(Terrain terrain, int index)
 		{
 			this.m_Terrain = terrain;
@@ -43,6 +55,7 @@ namespace UnityEditor
 			this.m_Billboard = (detailPrototype.renderMode == DetailRenderMode.GrassBillboard);
 			this.OnWizardUpdate();
 		}
+
 		private void DoApply()
 		{
 			if (base.terrainData == null)
@@ -72,14 +85,17 @@ namespace UnityEditor
 			this.m_Terrain.terrainData.detailPrototypes = array;
 			EditorUtility.SetDirty(this.m_Terrain);
 		}
+
 		private void OnWizardCreate()
 		{
 			this.DoApply();
 		}
+
 		private void OnWizardOtherButton()
 		{
 			this.DoApply();
 		}
+
 		internal override void OnWizardUpdate()
 		{
 			this.m_MinHeight = Mathf.Max(0f, this.m_MinHeight);
@@ -92,12 +108,9 @@ namespace UnityEditor
 				base.errorString = "Please assign a detail texture";
 				base.isValid = false;
 			}
-			else
+			else if (this.m_PrototypeIndex != -1)
 			{
-				if (this.m_PrototypeIndex != -1)
-				{
-					this.DoApply();
-				}
+				this.DoApply();
 			}
 		}
 	}

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Navigation", icon = "Navigation")]
 	internal class NavMeshEditorWindow : EditorWindow, IHasCustomMenu
 	{
 		private enum Mode
@@ -13,54 +15,95 @@ namespace UnityEditor
 			BakeSettings,
 			AreaSettings
 		}
+
 		private class Styles
 		{
-			public readonly GUIContent m_AgentRadiusContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.Radius");
-			public readonly GUIContent m_AgentHeightContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.Height");
-			public readonly GUIContent m_AgentSlopeContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.MaxSlope");
-			public readonly GUIContent m_AgentDropContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.DropHeight");
-			public readonly GUIContent m_AgentClimbContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.StepHeight");
-			public readonly GUIContent m_AgentJumpContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.JumpDistance");
-			public readonly GUIContent m_AgentPlacementContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.HeightMesh");
-			public readonly GUIContent m_MinRegionAreaContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.MinRegionArea");
-			public readonly GUIContent m_ManualCellSizeContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.ManualCellSize");
-			public readonly GUIContent m_CellSizeContent = EditorGUIUtility.TextContent("NavMeshEditorWindow.CellSize");
+			public readonly GUIContent m_AgentRadiusContent = EditorGUIUtility.TextContent("Agent Radius|How close to the walls navigation mesh exist.");
+
+			public readonly GUIContent m_AgentHeightContent = EditorGUIUtility.TextContent("Agent Height|How much vertical clearance space must exist.");
+
+			public readonly GUIContent m_AgentSlopeContent = EditorGUIUtility.TextContent("Max Slope|Maximum slope the agent can walk up.");
+
+			public readonly GUIContent m_AgentDropContent = EditorGUIUtility.TextContent("Drop Height|Maximum agent drop height.");
+
+			public readonly GUIContent m_AgentClimbContent = EditorGUIUtility.TextContent("Step Height|The height of discontinuities in the level the agent can climb over (i.e. steps and stairs).");
+
+			public readonly GUIContent m_AgentJumpContent = EditorGUIUtility.TextContent("Jump Distance|Maximum agent jump distance.");
+
+			public readonly GUIContent m_AgentPlacementContent = EditorGUIUtility.TextContent("Height Mesh|Generate an accurate height mesh for precise agent placement (slower).");
+
+			public readonly GUIContent m_MinRegionAreaContent = EditorGUIUtility.TextContent("Min Region Area|Minimum area that a navmesh region can be.");
+
+			public readonly GUIContent m_ManualCellSizeContent = EditorGUIUtility.TextContent("Manual Voxel Size|Enable to set voxel size manually.");
+
+			public readonly GUIContent m_CellSizeContent = EditorGUIUtility.TextContent("Voxel Size|Specifies at the voxelization resolution at which the NavMesh is build.");
+
 			public readonly GUIContent m_AgentSizeHeader = new GUIContent("Baked Agent Size");
+
 			public readonly GUIContent m_OffmeshHeader = new GUIContent("Generated Off Mesh Links");
+
 			public readonly GUIContent m_AdvancedHeader = new GUIContent("Advanced");
+
 			public readonly GUIContent m_NameLabel = new GUIContent("Name");
+
 			public readonly GUIContent m_CostLabel = new GUIContent("Cost");
+
 			public readonly GUIContent[] m_ModeToggles = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("NavmeshEditor.ObjectSettings"),
-				EditorGUIUtility.TextContent("NavmeshEditor.BakeSettings"),
-				EditorGUIUtility.TextContent("NavmeshEditor.AreaSettings")
+				EditorGUIUtility.TextContent("Object|Bake settings for the currently selected object."),
+				EditorGUIUtility.TextContent("Bake|Navmesh bake settings."),
+				EditorGUIUtility.TextContent("Areas|Navmesh area settings.")
 			};
 		}
+
 		private const string kRootPath = "m_BuildSettings.";
+
 		private static NavMeshEditorWindow s_NavMeshEditorWindow;
+
 		private SerializedObject m_Object;
+
 		private SerializedProperty m_AgentRadius;
+
 		private SerializedProperty m_AgentHeight;
+
 		private SerializedProperty m_AgentSlope;
+
 		private SerializedProperty m_AgentClimb;
+
 		private SerializedProperty m_LedgeDropHeight;
+
 		private SerializedProperty m_MaxJumpAcrossDistance;
+
 		private SerializedProperty m_MinRegionArea;
+
 		private SerializedProperty m_ManualCellSize;
+
 		private SerializedProperty m_CellSize;
+
 		private SerializedProperty m_AccuratePlacement;
+
 		private SerializedObject m_NavMeshAreasObject;
+
 		private SerializedProperty m_Areas;
+
 		private static NavMeshEditorWindow.Styles s_Styles;
+
 		private Vector2 m_ScrollPos = Vector2.zero;
+
 		private int m_SelectedNavMeshAgentCount;
+
 		private int m_SelectedNavMeshObstacleCount;
+
 		private bool m_Advanced;
+
 		private bool m_HasPendingAgentDebugInfo;
+
 		private bool m_HasRepaintedForPendingAgentDebugInfo;
+
 		private ReorderableList m_AreasList;
+
 		private NavMeshEditorWindow.Mode m_Mode;
+
 		[MenuItem("Window/Navigation", false, 2100)]
 		public static void SetupWindow()
 		{
@@ -68,11 +111,12 @@ namespace UnityEditor
 			{
 				typeof(InspectorWindow)
 			});
-			window.title = EditorGUIUtility.TextContent("NavmeshEditor.WindowTitle").text;
 			window.minSize = new Vector2(300f, 360f);
 		}
+
 		public void OnEnable()
 		{
+			base.titleContent = base.GetLocalizedTitleContent();
 			NavMeshEditorWindow.s_NavMeshEditorWindow = this;
 			this.Init();
 			EditorApplication.searchChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.searchChanged, new EditorApplication.CallbackFunction(base.Repaint));
@@ -80,6 +124,7 @@ namespace UnityEditor
 			this.UpdateSelectedAgentAndObstacleState();
 			base.Repaint();
 		}
+
 		private void Init()
 		{
 			this.m_Object = new SerializedObject(NavMeshBuilder.navMeshSettingsObject);
@@ -104,10 +149,12 @@ namespace UnityEditor
 				this.m_AreasList.elementHeight = EditorGUIUtility.singleLineHeight + 2f;
 			}
 		}
+
 		private int Bit(int a, int b)
 		{
 			return (a & 1 << b) >> b;
 		}
+
 		private Color GetAreaColor(int i)
 		{
 			if (i == 0)
@@ -119,12 +166,14 @@ namespace UnityEditor
 			int num3 = (this.Bit(i, 5) + this.Bit(i, 0) * 2 + 1) * 63;
 			return new Color((float)num / 255f, (float)num2 / 255f, (float)num3 / 255f, 0.5f);
 		}
+
 		public void OnDisable()
 		{
 			NavMeshEditorWindow.s_NavMeshEditorWindow = null;
 			EditorApplication.searchChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.searchChanged, new EditorApplication.CallbackFunction(base.Repaint));
 			SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneViewGUI));
 		}
+
 		private void UpdateSelectedAgentAndObstacleState()
 		{
 			UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(NavMeshAgent), (SelectionMode)12);
@@ -132,6 +181,7 @@ namespace UnityEditor
 			this.m_SelectedNavMeshAgentCount = filtered.Length;
 			this.m_SelectedNavMeshObstacleCount = filtered2.Length;
 		}
+
 		private void OnSelectionChange()
 		{
 			this.UpdateSelectedAgentAndObstacleState();
@@ -141,10 +191,12 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void ModeToggle()
 		{
 			this.m_Mode = (NavMeshEditorWindow.Mode)GUILayout.Toolbar((int)this.m_Mode, NavMeshEditorWindow.s_Styles.m_ModeToggles, "LargeButton", new GUILayoutOption[0]);
 		}
+
 		private void GetAreaListRects(Rect rect, out Rect stripeRect, out Rect labelRect, out Rect nameRect, out Rect costRect)
 		{
 			float num = EditorGUIUtility.singleLineHeight * 0.8f;
@@ -160,6 +212,7 @@ namespace UnityEditor
 			num5 += num4;
 			costRect = new Rect(num5, rect.y, num3, rect.height);
 		}
+
 		private void DrawAreaListHeader(Rect rect)
 		{
 			Rect rect2;
@@ -170,6 +223,7 @@ namespace UnityEditor
 			GUI.Label(position, NavMeshEditorWindow.s_Styles.m_NameLabel);
 			GUI.Label(position2, NavMeshEditorWindow.s_Styles.m_CostLabel);
 		}
+
 		private void DrawAreaListElement(Rect rect, int index, bool selected, bool focused)
 		{
 			SerializedProperty arrayElementAtIndex = this.m_Areas.GetArrayElementAtIndex(index);
@@ -241,6 +295,7 @@ namespace UnityEditor
 			GUI.enabled = enabled;
 			EditorGUI.indentLevel = indentLevel;
 		}
+
 		public void OnGUI()
 		{
 			if (this.m_Object.targetObject == null)
@@ -272,6 +327,7 @@ namespace UnityEditor
 			NavMeshEditorWindow.BakeButtons();
 			this.m_Object.ApplyModifiedProperties();
 		}
+
 		public void OnBecameVisible()
 		{
 			if (NavMeshVisualizationSettings.showNavigation)
@@ -281,11 +337,13 @@ namespace UnityEditor
 			NavMeshVisualizationSettings.showNavigation = true;
 			NavMeshEditorWindow.RepaintSceneAndGameViews();
 		}
+
 		public void OnBecameInvisible()
 		{
 			NavMeshVisualizationSettings.showNavigation = false;
 			NavMeshEditorWindow.RepaintSceneAndGameViews();
 		}
+
 		private static void RepaintSceneAndGameViews()
 		{
 			SceneView.RepaintAll();
@@ -296,6 +354,7 @@ namespace UnityEditor
 				gameView.Repaint();
 			}
 		}
+
 		public void OnSceneViewGUI(SceneView sceneView)
 		{
 			if (!NavMeshVisualizationSettings.showNavigation)
@@ -312,24 +371,26 @@ namespace UnityEditor
 				SceneViewOverlay.Window(new GUIContent("Obstacle Display"), new SceneViewOverlay.WindowFunction(NavMeshEditorWindow.DisplayObstacleControls), 300, SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget);
 			}
 		}
+
 		private static void DisplayControls(UnityEngine.Object target, SceneView sceneView)
 		{
 			EditorGUIUtility.labelWidth = 150f;
 			bool flag = false;
 			bool showNavMesh = NavMeshVisualizationSettings.showNavMesh;
-			if (showNavMesh != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowNavMesh"), showNavMesh, new GUILayoutOption[0]))
+			if (showNavMesh != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show NavMesh"), showNavMesh, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showNavMesh = !showNavMesh;
 				flag = true;
 			}
-			EditorGUI.BeginDisabledGroup(!NavMeshVisualizationSettings.hasHeightMesh);
-			bool showHeightMesh = NavMeshVisualizationSettings.showHeightMesh;
-			if (showHeightMesh != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowHeightMesh"), showHeightMesh, new GUILayoutOption[0]))
+			using (new EditorGUI.DisabledScope(!NavMeshVisualizationSettings.hasHeightMesh))
 			{
-				NavMeshVisualizationSettings.showHeightMesh = !showHeightMesh;
-				flag = true;
+				bool showHeightMesh = NavMeshVisualizationSettings.showHeightMesh;
+				if (showHeightMesh != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show HeightMesh"), showHeightMesh, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showHeightMesh = !showHeightMesh;
+					flag = true;
+				}
 			}
-			EditorGUI.EndDisabledGroup();
 			if (Unsupported.IsDeveloperBuild())
 			{
 				GUILayout.Label("Internal", new GUILayoutOption[0]);
@@ -363,6 +424,7 @@ namespace UnityEditor
 				NavMeshEditorWindow.RepaintSceneAndGameViews();
 			}
 		}
+
 		private void OnInspectorUpdate()
 		{
 			if (this.m_SelectedNavMeshAgentCount > 0)
@@ -381,6 +443,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static void DisplayAgentControls(UnityEngine.Object target, SceneView sceneView)
 		{
 			EditorGUIUtility.labelWidth = 150f;
@@ -390,31 +453,31 @@ namespace UnityEditor
 				NavMeshEditorWindow.s_NavMeshEditorWindow.m_HasPendingAgentDebugInfo = NavMeshVisualizationSettings.hasPendingAgentDebugInfo;
 			}
 			bool showAgentPath = NavMeshVisualizationSettings.showAgentPath;
-			if (showAgentPath != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowAgentPath"), showAgentPath, new GUILayoutOption[0]))
+			if (showAgentPath != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show Path Polygons|Shows the polygons leading to goal."), showAgentPath, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showAgentPath = !showAgentPath;
 				flag = true;
 			}
 			bool showAgentPathInfo = NavMeshVisualizationSettings.showAgentPathInfo;
-			if (showAgentPathInfo != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowAgentPathInfo"), showAgentPathInfo, new GUILayoutOption[0]))
+			if (showAgentPathInfo != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show Path Query Nodes|Shows the nodes expanded during last path query."), showAgentPathInfo, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showAgentPathInfo = !showAgentPathInfo;
 				flag = true;
 			}
 			bool showAgentNeighbours = NavMeshVisualizationSettings.showAgentNeighbours;
-			if (showAgentNeighbours != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowAgentNeighbours"), showAgentNeighbours, new GUILayoutOption[0]))
+			if (showAgentNeighbours != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show Neighbours|Show the agent neighbours cosidered during simulation."), showAgentNeighbours, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showAgentNeighbours = !showAgentNeighbours;
 				flag = true;
 			}
 			bool showAgentWalls = NavMeshVisualizationSettings.showAgentWalls;
-			if (showAgentWalls != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowAgentWalls"), showAgentWalls, new GUILayoutOption[0]))
+			if (showAgentWalls != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show Walls|Shows the wall segments handled during simulation."), showAgentWalls, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showAgentWalls = !showAgentWalls;
 				flag = true;
 			}
 			bool showAgentAvoidance = NavMeshVisualizationSettings.showAgentAvoidance;
-			if (showAgentAvoidance != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowAgentAvoidance"), showAgentAvoidance, new GUILayoutOption[0]))
+			if (showAgentAvoidance != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show Avoidance|Shows the processed avoidance geometry from simulation."), showAgentAvoidance, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showAgentAvoidance = !showAgentAvoidance;
 				flag = true;
@@ -452,12 +515,13 @@ namespace UnityEditor
 				NavMeshEditorWindow.RepaintSceneAndGameViews();
 			}
 		}
+
 		private static void DisplayObstacleControls(UnityEngine.Object target, SceneView sceneView)
 		{
 			EditorGUIUtility.labelWidth = 150f;
 			bool flag = false;
 			bool showObstacleCarveHull = NavMeshVisualizationSettings.showObstacleCarveHull;
-			if (showObstacleCarveHull != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("NavMeshEditorWindow.ShowObstacleCarveHull"), showObstacleCarveHull, new GUILayoutOption[0]))
+			if (showObstacleCarveHull != EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Show Carve Hull|Shows the hull used to carve the obstacle from navmesh."), showObstacleCarveHull, new GUILayoutOption[0]))
 			{
 				NavMeshVisualizationSettings.showObstacleCarveHull = !showObstacleCarveHull;
 				flag = true;
@@ -467,14 +531,17 @@ namespace UnityEditor
 				NavMeshEditorWindow.RepaintSceneAndGameViews();
 			}
 		}
+
 		public virtual void AddItemsToMenu(GenericMenu menu)
 		{
 			menu.AddItem(new GUIContent("Reset Bake Settings"), false, new GenericMenu.MenuFunction(this.ResetBakeSettings));
 		}
+
 		private void ResetBakeSettings()
 		{
 			Unsupported.SmartReset(NavMeshBuilder.navMeshSettingsObject);
 		}
+
 		public static void BackgroundTaskStatusChanged()
 		{
 			if (NavMeshEditorWindow.s_NavMeshEditorWindow != null)
@@ -482,6 +549,7 @@ namespace UnityEditor
 				NavMeshEditorWindow.s_NavMeshEditorWindow.Repaint();
 			}
 		}
+
 		private static IEnumerable<GameObject> GetObjectsRecurse(GameObject root)
 		{
 			List<GameObject> list = new List<GameObject>
@@ -494,6 +562,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		private static List<GameObject> GetObjects(bool includeChildren)
 		{
 			if (includeChildren)
@@ -509,10 +578,12 @@ namespace UnityEditor
 			}
 			return new List<GameObject>(Selection.gameObjects);
 		}
+
 		private static bool SelectionHasChildren()
 		{
 			return Selection.gameObjects.Any((GameObject obj) => obj.transform.childCount > 0);
 		}
+
 		private static void SetNavMeshArea(int area, bool includeChildren)
 		{
 			List<GameObject> objects = NavMeshEditorWindow.GetObjects(includeChildren);
@@ -526,6 +597,7 @@ namespace UnityEditor
 				GameObjectUtility.SetNavMeshArea(current, area);
 			}
 		}
+
 		private static void ObjectSettings()
 		{
 			bool flag = true;
@@ -553,41 +625,44 @@ namespace UnityEditor
 				GUILayout.Label("Select a MeshRenderer or a Terrain from the scene.", EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 		}
+
 		private static void ObjectSettings(UnityEngine.Object[] components, GameObject[] gos)
 		{
 			EditorGUILayout.MultiSelectionObjectTitleBar(components);
 			SerializedObject serializedObject = new SerializedObject(gos);
-			EditorGUI.BeginDisabledGroup(!SceneModeUtility.StaticFlagField("Navigation Static", serializedObject.FindProperty("m_StaticEditorFlags"), 8));
-			SceneModeUtility.StaticFlagField("Generate OffMeshLinks", serializedObject.FindProperty("m_StaticEditorFlags"), 32);
-			SerializedProperty serializedProperty = serializedObject.FindProperty("m_NavMeshLayer");
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = serializedProperty.hasMultipleDifferentValues;
-			string[] navMeshAreaNames = GameObjectUtility.GetNavMeshAreaNames();
-			int navMeshArea = GameObjectUtility.GetNavMeshArea(gos[0]);
-			int selectedIndex = -1;
-			for (int i = 0; i < navMeshAreaNames.Length; i++)
+			using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Navigation Static", serializedObject.FindProperty("m_StaticEditorFlags"), 8)))
 			{
-				if (GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[i]) == navMeshArea)
+				SceneModeUtility.StaticFlagField("Generate OffMeshLinks", serializedObject.FindProperty("m_StaticEditorFlags"), 32);
+				SerializedProperty serializedProperty = serializedObject.FindProperty("m_NavMeshLayer");
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = serializedProperty.hasMultipleDifferentValues;
+				string[] navMeshAreaNames = GameObjectUtility.GetNavMeshAreaNames();
+				int navMeshArea = GameObjectUtility.GetNavMeshArea(gos[0]);
+				int selectedIndex = -1;
+				for (int i = 0; i < navMeshAreaNames.Length; i++)
 				{
-					selectedIndex = i;
-					break;
+					if (GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[i]) == navMeshArea)
+					{
+						selectedIndex = i;
+						break;
+					}
+				}
+				int num = EditorGUILayout.Popup("Navigation Area", selectedIndex, navMeshAreaNames, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					int navMeshAreaFromName = GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[num]);
+					GameObjectUtility.ShouldIncludeChildren shouldIncludeChildren = GameObjectUtility.DisplayUpdateChildrenDialogIfNeeded(Selection.gameObjects, "Change Navigation Area", "Do you want change the navigation area to " + navMeshAreaNames[num] + " for all the child objects as well?");
+					if (shouldIncludeChildren != GameObjectUtility.ShouldIncludeChildren.Cancel)
+					{
+						serializedProperty.intValue = navMeshAreaFromName;
+						NavMeshEditorWindow.SetNavMeshArea(navMeshAreaFromName, shouldIncludeChildren == GameObjectUtility.ShouldIncludeChildren.IncludeChildren);
+					}
 				}
 			}
-			int num = EditorGUILayout.Popup("Navigation Area", selectedIndex, navMeshAreaNames, new GUILayoutOption[0]);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
-			{
-				int navMeshAreaFromName = GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[num]);
-				GameObjectUtility.ShouldIncludeChildren shouldIncludeChildren = GameObjectUtility.DisplayUpdateChildrenDialogIfNeeded(Selection.gameObjects, "Change Navigation Area", "Do you want change the navigation area to " + navMeshAreaNames[num] + " for all the child objects as well?");
-				if (shouldIncludeChildren != GameObjectUtility.ShouldIncludeChildren.Cancel)
-				{
-					serializedProperty.intValue = navMeshAreaFromName;
-					NavMeshEditorWindow.SetNavMeshArea(navMeshAreaFromName, shouldIncludeChildren == GameObjectUtility.ShouldIncludeChildren.IncludeChildren);
-				}
-			}
-			EditorGUI.EndDisabledGroup();
 			serializedObject.ApplyModifiedProperties();
 		}
+
 		private void DrawAgentDiagram(Rect rect, float agentRadius, float agentHeight, float agentClimb, float agentSlope)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -664,6 +739,7 @@ namespace UnityEditor
 			GUI.Label(new Rect(num14 + 20f, num15 - 15f, 150f, 20f), string.Format("{0}°", agentSlope));
 			Handles.color = color;
 		}
+
 		private void BakeSettings()
 		{
 			EditorGUILayout.LabelField(NavMeshEditorWindow.s_Styles.m_AgentSizeHeader, EditorStyles.boldLabel, new GUILayoutOption[0]);
@@ -697,9 +773,9 @@ namespace UnityEditor
 			{
 				this.m_AgentClimb.floatValue = num3;
 			}
-			if (this.m_AgentClimb.floatValue >= this.m_AgentHeight.floatValue)
+			if (this.m_AgentClimb.floatValue > this.m_AgentHeight.floatValue)
 			{
-				EditorGUILayout.HelpBox("Step height should be less than agent height.\nClamping step height to " + this.m_AgentHeight.floatValue + ".", MessageType.Warning);
+				EditorGUILayout.HelpBox("Step height should be less than agent height.\nClamping step height to " + this.m_AgentHeight.floatValue + " internally when baking.", MessageType.Warning);
 			}
 			float floatValue = this.m_CellSize.floatValue;
 			float num4 = floatValue * 0.5f;
@@ -722,20 +798,6 @@ namespace UnityEditor
 			}
 			EditorGUILayout.Space();
 			EditorGUILayout.LabelField(NavMeshEditorWindow.s_Styles.m_OffmeshHeader, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			bool flag = !InternalEditorUtility.HasProFeaturesEnabled();
-			if (flag)
-			{
-				EditorGUILayout.HelpBox("This is only available in the Pro version of Unity.", MessageType.Warning);
-				if (this.m_LedgeDropHeight.floatValue != 0f)
-				{
-					this.m_LedgeDropHeight.floatValue = 0f;
-				}
-				if (this.m_MaxJumpAcrossDistance.floatValue != 0f)
-				{
-					this.m_MaxJumpAcrossDistance.floatValue = 0f;
-				}
-				GUI.enabled = false;
-			}
 			float num10 = EditorGUILayout.FloatField(NavMeshEditorWindow.s_Styles.m_AgentDropContent, this.m_LedgeDropHeight.floatValue, new GUILayoutOption[0]);
 			if (num10 >= 0f && !Mathf.Approximately(num10 - this.m_LedgeDropHeight.floatValue, 0f))
 			{
@@ -746,62 +808,56 @@ namespace UnityEditor
 			{
 				this.m_MaxJumpAcrossDistance.floatValue = num11;
 			}
-			if (flag)
-			{
-				GUI.enabled = true;
-			}
 			EditorGUILayout.Space();
 			this.m_Advanced = GUILayout.Toggle(this.m_Advanced, NavMeshEditorWindow.s_Styles.m_AdvancedHeader, EditorStyles.foldout, new GUILayoutOption[0]);
 			if (this.m_Advanced)
 			{
 				EditorGUI.indentLevel++;
-				bool flag2 = EditorGUILayout.Toggle(NavMeshEditorWindow.s_Styles.m_ManualCellSizeContent, this.m_ManualCellSize.boolValue, new GUILayoutOption[0]);
-				if (flag2 != this.m_ManualCellSize.boolValue)
+				bool flag = EditorGUILayout.Toggle(NavMeshEditorWindow.s_Styles.m_ManualCellSizeContent, this.m_ManualCellSize.boolValue, new GUILayoutOption[0]);
+				if (flag != this.m_ManualCellSize.boolValue)
 				{
-					this.m_ManualCellSize.boolValue = flag2;
-					if (!flag2)
+					this.m_ManualCellSize.boolValue = flag;
+					if (!flag)
 					{
 						this.m_CellSize.floatValue = 2f * this.m_AgentRadius.floatValue / 6f;
 					}
 				}
-				EditorGUI.BeginDisabledGroup(!this.m_ManualCellSize.boolValue);
 				EditorGUI.indentLevel++;
-				float num12 = EditorGUILayout.FloatField(NavMeshEditorWindow.s_Styles.m_CellSizeContent, this.m_CellSize.floatValue, new GUILayoutOption[0]);
-				if (num12 > 0f && !Mathf.Approximately(num12 - this.m_CellSize.floatValue, 0f))
+				using (new EditorGUI.DisabledScope(!this.m_ManualCellSize.boolValue))
 				{
-					this.m_CellSize.floatValue = Math.Max(0.01f, num12);
-				}
-				if (num12 < 0.01f)
-				{
-					EditorGUILayout.HelpBox("The voxel size should be larger than 0.01.", MessageType.Warning);
-				}
-				float num13 = (this.m_CellSize.floatValue <= 0f) ? 0f : (this.m_AgentRadius.floatValue / this.m_CellSize.floatValue);
-				EditorGUILayout.LabelField(" ", num13.ToString("0.00") + " voxels per agent radius", EditorStyles.miniLabel, new GUILayoutOption[0]);
-				if (this.m_ManualCellSize.boolValue)
-				{
-					float num14 = this.m_CellSize.floatValue * 0.5f;
-					if ((int)Mathf.Floor(this.m_AgentHeight.floatValue / num14) > 250)
+					float num12 = EditorGUILayout.FloatField(NavMeshEditorWindow.s_Styles.m_CellSizeContent, this.m_CellSize.floatValue, new GUILayoutOption[0]);
+					if (num12 > 0f && !Mathf.Approximately(num12 - this.m_CellSize.floatValue, 0f))
 					{
-						EditorGUILayout.HelpBox("The number of voxels per agent height is too high. This will reduce the accuracy of the navmesh. Consider using voxel size of at least " + (this.m_AgentHeight.floatValue / 250f / 0.5f).ToString("0.000") + ".", MessageType.Warning);
+						this.m_CellSize.floatValue = Math.Max(0.01f, num12);
 					}
-					if (num13 < 1f)
+					if (num12 < 0.01f)
 					{
-						EditorGUILayout.HelpBox("The number of voxels per agent radius is too small. The agent may not avoid walls and ledges properly. Consider using voxel size of at least " + (this.m_AgentRadius.floatValue / 2f).ToString("0.000") + " (2 voxels per agent radius).", MessageType.Warning);
+						EditorGUILayout.HelpBox("The voxel size should be larger than 0.01.", MessageType.Warning);
 					}
-					else
+					float num13 = (this.m_CellSize.floatValue <= 0f) ? 0f : (this.m_AgentRadius.floatValue / this.m_CellSize.floatValue);
+					EditorGUILayout.LabelField(" ", num13.ToString("0.00") + " voxels per agent radius", EditorStyles.miniLabel, new GUILayoutOption[0]);
+					if (this.m_ManualCellSize.boolValue)
 					{
-						if (num13 > 8f)
+						float num14 = this.m_CellSize.floatValue * 0.5f;
+						if ((int)Mathf.Floor(this.m_AgentHeight.floatValue / num14) > 250)
+						{
+							EditorGUILayout.HelpBox("The number of voxels per agent height is too high. This will reduce the accuracy of the navmesh. Consider using voxel size of at least " + (this.m_AgentHeight.floatValue / 250f / 0.5f).ToString("0.000") + ".", MessageType.Warning);
+						}
+						if (num13 < 1f)
+						{
+							EditorGUILayout.HelpBox("The number of voxels per agent radius is too small. The agent may not avoid walls and ledges properly. Consider using voxel size of at least " + (this.m_AgentRadius.floatValue / 2f).ToString("0.000") + " (2 voxels per agent radius).", MessageType.Warning);
+						}
+						else if (num13 > 8f)
 						{
 							EditorGUILayout.HelpBox("The number of voxels per agent radius is too high. It can cause excessive build times. Consider using voxel size closer to " + (this.m_AgentRadius.floatValue / 8f).ToString("0.000") + " (8 voxels per radius).", MessageType.Warning);
 						}
 					}
-				}
-				if (this.m_ManualCellSize.boolValue)
-				{
-					EditorGUILayout.HelpBox("Voxel size controls how accurately the navigation mesh is generated from the level geometry. A good voxel size is 2-4 voxels per agent radius. Making voxel size smaller will increase build time.", MessageType.None);
+					if (this.m_ManualCellSize.boolValue)
+					{
+						EditorGUILayout.HelpBox("Voxel size controls how accurately the navigation mesh is generated from the level geometry. A good voxel size is 2-4 voxels per agent radius. Making voxel size smaller will increase build time.", MessageType.None);
+					}
 				}
 				EditorGUI.indentLevel--;
-				EditorGUI.EndDisabledGroup();
 				EditorGUILayout.Space();
 				float num15 = EditorGUILayout.FloatField(NavMeshEditorWindow.s_Styles.m_MinRegionAreaContent, this.m_MinRegionArea.floatValue, new GUILayoutOption[0]);
 				if (num15 >= 0f && num15 != this.m_MinRegionArea.floatValue)
@@ -809,14 +865,57 @@ namespace UnityEditor
 					this.m_MinRegionArea.floatValue = num15;
 				}
 				EditorGUILayout.Space();
-				bool flag3 = EditorGUILayout.Toggle(NavMeshEditorWindow.s_Styles.m_AgentPlacementContent, this.m_AccuratePlacement.boolValue, new GUILayoutOption[0]);
-				if (flag3 != this.m_AccuratePlacement.boolValue)
+				bool flag2 = EditorGUILayout.Toggle(NavMeshEditorWindow.s_Styles.m_AgentPlacementContent, this.m_AccuratePlacement.boolValue, new GUILayoutOption[0]);
+				if (flag2 != this.m_AccuratePlacement.boolValue)
 				{
-					this.m_AccuratePlacement.boolValue = flag3;
+					this.m_AccuratePlacement.boolValue = flag2;
 				}
 				EditorGUI.indentLevel--;
 			}
+			if (Unsupported.IsDeveloperBuild())
+			{
+				EditorGUILayout.Space();
+				GUILayout.Label("Internal Bake Debug Options", EditorStyles.boldLabel, new GUILayoutOption[0]);
+				EditorGUILayout.HelpBox("Note: The debug visualization is build during bake, so you'll need to bake for these settings to take effect.", MessageType.None);
+				bool showAutoOffMeshLinkSampling = NavMeshVisualizationSettings.showAutoOffMeshLinkSampling;
+				if (showAutoOffMeshLinkSampling != EditorGUILayout.Toggle(new GUIContent("Show Auto-Off-MeshLink Sampling"), showAutoOffMeshLinkSampling, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showAutoOffMeshLinkSampling = !showAutoOffMeshLinkSampling;
+				}
+				bool showVoxels = NavMeshVisualizationSettings.showVoxels;
+				if (showVoxels != EditorGUILayout.Toggle(new GUIContent("Show Voxels"), showVoxels, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showVoxels = !showVoxels;
+				}
+				bool showWalkable = NavMeshVisualizationSettings.showWalkable;
+				if (showWalkable != EditorGUILayout.Toggle(new GUIContent("Show Walkable"), showWalkable, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showWalkable = !showWalkable;
+				}
+				bool showRawContours = NavMeshVisualizationSettings.showRawContours;
+				if (showRawContours != EditorGUILayout.Toggle(new GUIContent("Show Raw Contours"), showRawContours, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showRawContours = !showRawContours;
+				}
+				bool showContours = NavMeshVisualizationSettings.showContours;
+				if (showContours != EditorGUILayout.Toggle(new GUIContent("Show Contours"), showContours, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showContours = !showContours;
+				}
+				bool showInputs = NavMeshVisualizationSettings.showInputs;
+				if (showInputs != EditorGUILayout.Toggle(new GUIContent("Show Inputs"), showInputs, new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.showInputs = !showInputs;
+				}
+				if (GUILayout.Button("Clear Visualiation Data", new GUILayoutOption[0]))
+				{
+					NavMeshVisualizationSettings.ClearVisualizationData();
+					NavMeshEditorWindow.RepaintSceneAndGameViews();
+				}
+				EditorGUILayout.Space();
+			}
 		}
+
 		private void AreaSettings()
 		{
 			if (this.m_NavMeshAreasObject == null || this.m_AreasList == null)
@@ -827,6 +926,7 @@ namespace UnityEditor
 			this.m_AreasList.DoLayoutList();
 			this.m_NavMeshAreasObject.ApplyModifiedProperties();
 		}
+
 		private static void BakeButtons()
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);

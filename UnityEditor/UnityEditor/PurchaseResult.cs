@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal class PurchaseResult : AssetStoreResultBase<PurchaseResult>
@@ -15,12 +16,17 @@ namespace UnityEditor
 			PurchaseDeclined,
 			Ok
 		}
+
 		public PurchaseResult.Status status;
+
 		public int packageID;
+
 		public string message;
+
 		public PurchaseResult(AssetStoreResultBase<PurchaseResult>.Callback c) : base(c)
 		{
 		}
+
 		protected override void Parse(Dictionary<string, JSONValue> dict)
 		{
 			this.packageID = int.Parse(dict["package_id"].AsString());
@@ -30,47 +36,29 @@ namespace UnityEditor
 			{
 				this.status = PurchaseResult.Status.BasketNotEmpty;
 			}
-			else
+			else if (a == "service-disabled")
 			{
-				if (a == "service-disabled")
-				{
-					this.status = PurchaseResult.Status.ServiceDisabled;
-				}
-				else
-				{
-					if (a == "user-anonymous")
-					{
-						this.status = PurchaseResult.Status.AnonymousUser;
-					}
-					else
-					{
-						if (a == "password-missing")
-						{
-							this.status = PurchaseResult.Status.PasswordMissing;
-						}
-						else
-						{
-							if (a == "password-wrong")
-							{
-								this.status = PurchaseResult.Status.PasswordWrong;
-							}
-							else
-							{
-								if (a == "purchase-declined")
-								{
-									this.status = PurchaseResult.Status.PurchaseDeclined;
-								}
-								else
-								{
-									if (a == "ok")
-									{
-										this.status = PurchaseResult.Status.Ok;
-									}
-								}
-							}
-						}
-					}
-				}
+				this.status = PurchaseResult.Status.ServiceDisabled;
+			}
+			else if (a == "user-anonymous")
+			{
+				this.status = PurchaseResult.Status.AnonymousUser;
+			}
+			else if (a == "password-missing")
+			{
+				this.status = PurchaseResult.Status.PasswordMissing;
+			}
+			else if (a == "password-wrong")
+			{
+				this.status = PurchaseResult.Status.PasswordWrong;
+			}
+			else if (a == "purchase-declined")
+			{
+				this.status = PurchaseResult.Status.PurchaseDeclined;
+			}
+			else if (a == "ok")
+			{
+				this.status = PurchaseResult.Status.Ok;
 			}
 		}
 	}

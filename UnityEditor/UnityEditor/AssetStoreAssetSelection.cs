@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class AssetStoreAssetSelection
 	{
 		public delegate void AssetsRefreshed();
+
 		internal static Dictionary<int, AssetStoreAsset> s_SelectedAssets;
+
 		public static int Count
 		{
 			get
@@ -14,6 +17,7 @@ namespace UnityEditor
 				return (AssetStoreAssetSelection.s_SelectedAssets != null) ? AssetStoreAssetSelection.s_SelectedAssets.Count : 0;
 			}
 		}
+
 		public static bool Empty
 		{
 			get
@@ -21,6 +25,7 @@ namespace UnityEditor
 				return AssetStoreAssetSelection.s_SelectedAssets == null || AssetStoreAssetSelection.s_SelectedAssets.Count == 0;
 			}
 		}
+
 		public static void AddAsset(AssetStoreAsset searchResult, Texture2D placeholderPreviewImage)
 		{
 			if (placeholderPreviewImage != null)
@@ -49,8 +54,8 @@ namespace UnityEditor
 					}
 					try
 					{
-						AssetBundleCreateRequest cr = AssetBundle.CreateFromMemory(c.bytes);
-						cr.DisableCompatibilityChecks();
+						AssetBundleCreateRequest cr = AssetBundle.LoadFromMemoryAsync(c.bytes);
+						cr.compatibilityChecks = AssetBundleCreateRequest.CompatibilityCheck.ClassVersion;
 						searchResult.previewBundleRequest = cr;
 						EditorApplication.CallbackFunction callback = null;
 						double startTime = EditorApplication.timeSinceStartup;
@@ -93,16 +98,14 @@ namespace UnityEditor
 				};
 				client.Begin();
 			}
-			else
+			else if (!string.IsNullOrEmpty(searchResult.staticPreviewURL))
 			{
-				if (!string.IsNullOrEmpty(searchResult.staticPreviewURL))
-				{
-					AssetStoreAssetSelection.DownloadStaticPreview(searchResult);
-				}
+				AssetStoreAssetSelection.DownloadStaticPreview(searchResult);
 			}
 			AssetStoreAssetSelection.AddAssetInternal(searchResult);
 			AssetStoreAssetSelection.RefreshFromServer(null);
 		}
+
 		internal static void AddAssetInternal(AssetStoreAsset searchResult)
 		{
 			if (AssetStoreAssetSelection.s_SelectedAssets == null)
@@ -111,6 +114,7 @@ namespace UnityEditor
 			}
 			AssetStoreAssetSelection.s_SelectedAssets[searchResult.id] = searchResult;
 		}
+
 		private static void DownloadStaticPreview(AssetStoreAsset searchResult)
 		{
 			AsyncHTTPClient client = new AsyncHTTPClient(searchResult.staticPreviewURL);
@@ -130,6 +134,7 @@ namespace UnityEditor
 			};
 			client.Begin();
 		}
+
 		public static void RefreshFromServer(AssetStoreAssetSelection.AssetsRefreshed callback)
 		{
 			if (AssetStoreAssetSelection.s_SelectedAssets.Count == 0)
@@ -159,19 +164,13 @@ namespace UnityEditor
 				{
 					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.Ok;
 				}
-				else
+				else if (results.status == AssetStoreAssetsInfo.Status.BasketNotEmpty)
 				{
-					if (results.status == AssetStoreAssetsInfo.Status.BasketNotEmpty)
-					{
-						AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.BasketNotEmpty;
-					}
-					else
-					{
-						if (results.status == AssetStoreAssetsInfo.Status.AnonymousUser)
-						{
-							AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.AnonymousUser;
-						}
-					}
+					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.BasketNotEmpty;
+				}
+				else if (results.status == AssetStoreAssetsInfo.Status.AnonymousUser)
+				{
+					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.AnonymousUser;
 				}
 				AssetStoreAssetInspector.s_PurchaseMessage = results.message;
 				AssetStoreAssetInspector.s_PaymentMethodCard = results.paymentMethodCard;
@@ -184,6 +183,7 @@ namespace UnityEditor
 				}
 			});
 		}
+
 		private static Texture2D ScaleImage(Texture2D source, int w, int h)
 		{
 			if (source.width % 4 != 0)
@@ -214,10 +214,12 @@ namespace UnityEditor
 			texture2D.Apply();
 			return texture2D;
 		}
+
 		public static bool ContainsAsset(int id)
 		{
 			return AssetStoreAssetSelection.s_SelectedAssets != null && AssetStoreAssetSelection.s_SelectedAssets.ContainsKey(id);
 		}
+
 		public static void Clear()
 		{
 			if (AssetStoreAssetSelection.s_SelectedAssets == null)
@@ -230,6 +232,7 @@ namespace UnityEditor
 			}
 			AssetStoreAssetSelection.s_SelectedAssets.Clear();
 		}
+
 		public static AssetStoreAsset GetFirstAsset()
 		{
 			if (AssetStoreAssetSelection.s_SelectedAssets == null)

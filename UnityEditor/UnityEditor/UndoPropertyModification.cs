@@ -1,10 +1,17 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
+	[RequiredByNativeCode]
 	public struct UndoPropertyModification
 	{
-		public PropertyModification propertyModification;
+		public PropertyModification previousValue;
+
+		public PropertyModification currentValue;
+
 		private int m_KeepPrefabOverride;
+
 		public bool keepPrefabOverride
 		{
 			get

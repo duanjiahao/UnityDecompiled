@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Obsolete("Use Undo.RecordObject before modifying the object instead")]
@@ -8,9 +9,11 @@ namespace UnityEditor
 		public UndoSnapshot(UnityEngine.Object[] objectsToUndo)
 		{
 		}
+
 		public void Restore()
 		{
 		}
+
 		public void Dispose()
 		{
 		}

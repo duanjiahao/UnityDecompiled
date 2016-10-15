@@ -2,38 +2,66 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Server", useTypeNameAsIconName = true)]
 	internal class ASMainWindow : EditorWindow, IHasCustomMenu
 	{
 		internal class Constants
 		{
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle groupBox;
+
 			public GUIStyle groupBoxNoMargin;
+
 			public GUIStyle contentBox = "GroupBox";
+
 			public GUIStyle entrySelected = "ServerUpdateChangesetOn";
+
 			public GUIStyle entryNormal = "ServerUpdateChangeset";
+
 			public GUIStyle element = "OL elem";
+
 			public GUIStyle header = "OL header";
+
 			public GUIStyle title = "OL Title";
+
 			public GUIStyle columnHeader = "OL Title";
+
 			public GUIStyle serverUpdateLog = "ServerUpdateLog";
+
 			public GUIStyle serverUpdateInfo = "ServerUpdateInfo";
+
 			public GUIStyle smallButton = "Button";
+
 			public GUIStyle errorLabel = "ErrorLabel";
+
 			public GUIStyle miniButton = "MiniButton";
+
 			public GUIStyle button = "Button";
+
 			public GUIStyle largeButton = "ButtonMid";
+
 			public GUIStyle bigButton = "LargeButton";
+
 			public GUIStyle entryEven = "CN EntryBackEven";
+
 			public GUIStyle entryOdd = "CN EntryBackOdd";
+
 			public GUIStyle dropDown = "MiniPullDown";
+
 			public GUIStyle toggle = "Toggle";
+
 			public GUIContent badgeDelete = EditorGUIUtility.IconContent("AS Badge Delete");
+
 			public GUIContent badgeMove = EditorGUIUtility.IconContent("AS Badge Move");
+
 			public GUIContent badgeNew = EditorGUIUtility.IconContent("AS Badge New");
+
 			public Vector2 toggleSize;
+
 			public Constants()
 			{
 				this.groupBoxNoMargin = new GUIStyle();
@@ -52,12 +80,14 @@ namespace UnityEditor
 				this.background.padding.top = 1;
 			}
 		}
+
 		public enum ShowSearchField
 		{
 			None,
 			ProjectView,
 			HistoryList
 		}
+
 		internal enum Page
 		{
 			NotInitialized = -1,
@@ -68,11 +98,14 @@ namespace UnityEditor
 			ServerConfig,
 			Admin
 		}
+
 		[Serializable]
 		public class SearchField
 		{
 			private string m_FilterText = string.Empty;
+
 			private bool m_Show;
+
 			public string FilterText
 			{
 				get
@@ -80,6 +113,7 @@ namespace UnityEditor
 					return this.m_FilterText;
 				}
 			}
+
 			public bool Show
 			{
 				get
@@ -91,6 +125,7 @@ namespace UnityEditor
 					this.m_Show = value;
 				}
 			}
+
 			public bool DoGUI()
 			{
 				GUI.SetNextControlName("SearchFilter");
@@ -103,15 +138,25 @@ namespace UnityEditor
 				return false;
 			}
 		}
+
 		private const ASMainWindow.Page lastMainPage = ASMainWindow.Page.Commit;
+
 		public static ASMainWindow.Constants constants;
+
 		public AssetsItem[] sharedCommits;
+
 		public AssetsItem[] sharedDeletedItems;
+
 		public Changeset[] sharedChangesets;
+
 		private GUIContent[] changesetContents;
+
 		public ASMainWindow.ShowSearchField m_ShowSearch;
+
 		public ASMainWindow.ShowSearchField m_SearchToShow = ASMainWindow.ShowSearchField.HistoryList;
+
 		public ASMainWindow.SearchField m_SearchField = new ASMainWindow.SearchField();
+
 		private string[] pageTitles = new string[]
 		{
 			"Overview",
@@ -119,6 +164,7 @@ namespace UnityEditor
 			"Commit",
 			string.Empty
 		};
+
 		private string[] dropDownMenuItems = new string[]
 		{
 			"Connection",
@@ -128,12 +174,14 @@ namespace UnityEditor
 			string.Empty,
 			"Server Administration"
 		};
+
 		private string[] unconfiguredDropDownMenuItems = new string[]
 		{
 			"Connection",
 			string.Empty,
 			"Server Administration"
 		};
+
 		private string[] commitDropDownMenuItems = new string[]
 		{
 			"Commit",
@@ -143,23 +191,41 @@ namespace UnityEditor
 			string.Empty,
 			"Discard"
 		};
+
 		private bool needsSetup = true;
+
 		private string connectionString = string.Empty;
+
 		private int maxNickLength = 1;
+
 		private bool showSmallWindow;
+
 		private int widthToHideButtons = 591;
+
 		private bool wasHidingButtons;
+
 		private ASMainWindow.Page selectedPage = ASMainWindow.Page.NotInitialized;
+
 		private ListViewState lv = new ListViewState(0);
+
 		private ParentViewState pv = new ParentViewState();
+
 		internal ASHistoryWindow asHistoryWin;
+
 		internal ASUpdateWindow asUpdateWin;
+
 		internal ASCommitWindow asCommitWin;
+
 		internal ASServerAdminWindow asAdminWin;
+
 		internal ASConfigWindow asConfigWin;
+
 		private bool error;
+
 		private bool isInitialUpdate;
+
 		private Vector2 iconSize = new Vector2(16f, 16f);
+
 		private SplitterState splitter = new SplitterState(new float[]
 		{
 			50f,
@@ -169,15 +235,25 @@ namespace UnityEditor
 			80,
 			80
 		}, null);
+
 		private bool committing;
+
 		private bool selectionChangedWhileCommitting;
+
 		private string commitMessage = string.Empty;
+
 		private bool pvHasSelection;
+
 		private bool somethingDiscardableSelected;
+
 		private bool mySelection;
+
 		private bool focusCommitMessage;
+
 		private int lastRevertSelectionChanged = -1;
+
 		private bool m_CheckedMaint;
+
 		public bool NeedsSetup
 		{
 			get
@@ -189,6 +265,7 @@ namespace UnityEditor
 				this.needsSetup = value;
 			}
 		}
+
 		public bool Error
 		{
 			get
@@ -196,21 +273,25 @@ namespace UnityEditor
 				return this.error;
 			}
 		}
+
 		public ASMainWindow()
 		{
 			base.position = new Rect(50f, 50f, 800f, 600f);
 		}
+
 		public void LogError(string errorStr)
 		{
 			Debug.LogError(errorStr);
 			AssetServer.SetAssetServerError(errorStr, false);
 			this.error = true;
 		}
+
 		private void Awake()
 		{
 			this.pv.lv = new ListViewState(0);
 			this.isInitialUpdate = true;
 		}
+
 		private void NotifyClosingCommit()
 		{
 			if (this.asCommitWin != null)
@@ -218,6 +299,7 @@ namespace UnityEditor
 				this.asCommitWin.OnClose();
 			}
 		}
+
 		private void OnDestroy()
 		{
 			this.sharedCommits = null;
@@ -229,6 +311,7 @@ namespace UnityEditor
 				this.NotifyClosingCommit();
 			}
 		}
+
 		private void DoSelectionChange()
 		{
 			if (this.committing)
@@ -249,6 +332,7 @@ namespace UnityEditor
 			}
 			this.pvHasSelection = ASCommitWindow.MarkSelected(this.pv, list);
 		}
+
 		private void OnSelectionChange()
 		{
 			switch (this.selectedPage)
@@ -276,11 +360,13 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		internal void Reinit()
 		{
 			this.SwitchSelectedPage(ASMainWindow.Page.Overview);
 			base.Repaint();
 		}
+
 		public void DoDiscardChanges(bool lastActionsResult)
 		{
 			List<string> list = new List<string>();
@@ -301,6 +387,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitOnSuccess");
 			AssetServer.DoUpdateWithoutConflictResolutionOnNextTick(list.ToArray());
 		}
+
 		private bool WordWrappedLabelButton(string label, string buttonText)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -312,6 +399,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return result;
 		}
+
 		private bool ToolbarToggle(bool pressed, string title, GUIStyle style)
 		{
 			bool changed = GUI.changed;
@@ -324,10 +412,12 @@ namespace UnityEditor
 			GUI.changed |= changed;
 			return false;
 		}
+
 		private bool RightButton(string title)
 		{
 			return this.RightButton(title, ASMainWindow.constants.smallButton);
 		}
+
 		private bool RightButton(string title, GUIStyle style)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -336,6 +426,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return result;
 		}
+
 		public void ShowConflictResolutions(string[] conflicting)
 		{
 			if (this.asUpdateWin == null)
@@ -345,6 +436,7 @@ namespace UnityEditor
 			}
 			this.asUpdateWin.ShowConflictResolutions(conflicting);
 		}
+
 		public virtual void AddItemsToMenu(GenericMenu menu)
 		{
 			if (!this.needsSetup)
@@ -362,14 +454,17 @@ namespace UnityEditor
 			}
 			menu.AddItem(new GUIContent("Server Administration"), false, new GenericMenu.MenuFunction2(this.ActionSwitchPage), ASMainWindow.Page.Admin);
 		}
+
 		public bool UpdateNeedsRefresh()
 		{
 			return this.sharedChangesets == null || AssetServer.GetRefreshUpdate();
 		}
+
 		public bool CommitNeedsRefresh()
 		{
 			return this.sharedCommits == null || this.sharedDeletedItems == null || AssetServer.GetRefreshCommit();
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -392,6 +487,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CommitContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -414,6 +510,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void CommitItemsChanged()
 		{
 			this.InitCommits();
@@ -424,6 +521,7 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		public void RevertProject(int toRevision, Changeset[] changesets)
 		{
 			AssetServer.SetStickyChangeset(toRevision);
@@ -432,12 +530,14 @@ namespace UnityEditor
 			this.asUpdateWin.DoUpdate(false);
 			this.selectedPage = ASMainWindow.Page.Update;
 		}
+
 		public void ShowHistory()
 		{
 			this.SwitchSelectedPage(ASMainWindow.Page.Overview);
 			this.isInitialUpdate = false;
 			this.SwitchSelectedPage(ASMainWindow.Page.History);
 		}
+
 		private void ActionRefresh()
 		{
 			switch (this.selectedPage)
@@ -468,10 +568,12 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void ActionSwitchPage(object page)
 		{
 			this.SwitchSelectedPage((ASMainWindow.Page)((int)page));
 		}
+
 		private void ActionDiscardChanges()
 		{
 			if (EditorUtility.DisplayDialog("Discard all changes", "Are you sure you want to discard all local changes made in the project?", "Discard", "Cancel"))
@@ -488,6 +590,7 @@ namespace UnityEditor
 				AssetServer.DoUpdateStatusOnNextTick();
 			}
 		}
+
 		private void SwitchSelectedPage(ASMainWindow.Page page)
 		{
 			ASMainWindow.Page page2 = this.selectedPage;
@@ -499,6 +602,7 @@ namespace UnityEditor
 				this.error = false;
 			}
 		}
+
 		private void InitiateUpdateStatusWithCallback(string callbackName)
 		{
 			if (!ASEditorBackend.SettingsIfNeeded())
@@ -511,6 +615,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
 			AssetServer.DoUpdateStatusOnNextTick();
 		}
+
 		private void InitiateRefreshAssetsWithCallback(string callbackName)
 		{
 			if (!ASEditorBackend.SettingsIfNeeded())
@@ -523,6 +628,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
 			AssetServer.DoRefreshAssetsOnNextTick();
 		}
+
 		private void InitiateRefreshAssetsAndUpdateStatusWithCallback(string callbackName)
 		{
 			if (!ASEditorBackend.SettingsIfNeeded())
@@ -535,6 +641,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
 			AssetServer.DoRefreshAssetsAndUpdateStatusOnNextTick();
 		}
+
 		private void SelectedPageChanged()
 		{
 			AssetServer.ClearAssetServerError();
@@ -590,6 +697,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		public void InitUpdatePage(bool lastActionsResult)
 		{
 			if (!lastActionsResult)
@@ -609,6 +717,7 @@ namespace UnityEditor
 			this.asUpdateWin = new ASUpdateWindow(this, this.sharedChangesets);
 			this.asUpdateWin.SetSelectedRevisionLine(0);
 		}
+
 		private void InitCommits()
 		{
 			if (this.CommitNeedsRefresh())
@@ -632,6 +741,7 @@ namespace UnityEditor
 			this.pv.initialSelectedItem = -1;
 			AssetServer.ClearRefreshCommit();
 		}
+
 		private void GetUpdates()
 		{
 			AssetServer.ClearAssetServerError();
@@ -645,6 +755,7 @@ namespace UnityEditor
 				this.sharedChangesets = null;
 			}
 		}
+
 		public void DisplayedItemsChanged()
 		{
 			float[] array = new float[2];
@@ -666,6 +777,7 @@ namespace UnityEditor
 			}, null);
 			this.DoSelectionChange();
 		}
+
 		public void InitOverviewPage(bool lastActionsResult)
 		{
 			if (!lastActionsResult)
@@ -693,6 +805,7 @@ namespace UnityEditor
 			this.InitCommits();
 			this.DisplayedItemsChanged();
 		}
+
 		public void InitHistoryPage(bool lastActionsResult)
 		{
 			if (!lastActionsResult)
@@ -707,6 +820,7 @@ namespace UnityEditor
 				return;
 			}
 		}
+
 		private void OverviewPageGUI()
 		{
 			bool enabled = GUI.enabled;
@@ -715,12 +829,9 @@ namespace UnityEditor
 			{
 				this.wasHidingButtons = this.showSmallWindow;
 			}
-			else
+			else if (this.showSmallWindow != this.wasHidingButtons)
 			{
-				if (this.showSmallWindow != this.wasHidingButtons)
-				{
-					GUIUtility.ExitGUI();
-				}
+				GUIUtility.ExitGUI();
 			}
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			if (!this.showSmallWindow)
@@ -754,6 +865,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUI.enabled = enabled;
 		}
+
 		private void OtherServerCommands()
 		{
 			GUILayout.BeginVertical(ASMainWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -772,6 +884,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndVertical();
 		}
+
 		private void ShortServerInfo()
 		{
 			GUILayout.BeginVertical(ASMainWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -789,6 +902,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndVertical();
 		}
+
 		private void ServerAdministration()
 		{
 			GUILayout.BeginVertical(ASMainWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -802,10 +916,12 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndVertical();
 		}
+
 		private bool HasFlag(ChangeFlags flags, ChangeFlags flagToCheck)
 		{
 			return (flagToCheck & flags) != ChangeFlags.None;
 		}
+
 		private void MySelectionToGlobalSelection()
 		{
 			this.mySelection = true;
@@ -818,6 +934,7 @@ namespace UnityEditor
 			this.pvHasSelection = this.pv.HasTrue();
 			this.somethingDiscardableSelected = ASCommitWindow.SomethingDiscardableSelected(this.pv);
 		}
+
 		private void DoCommitParentView()
 		{
 			bool shift = Event.current.shift;
@@ -850,45 +967,39 @@ namespace UnityEditor
 							flag |= ListViewGUILayout.MultiSelection(row, this.pv.lv.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
 						}
 					}
-					else
+					else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 					{
-						if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+						if (Event.current.clickCount == 2)
 						{
-							if (Event.current.clickCount == 2)
-							{
-								ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems(this.pv, false, false), false);
-								GUIUtility.ExitGUI();
-							}
-							else
-							{
-								if (!this.pv.selectedItems[listViewElement.row] || shift || actionKey)
-								{
-									flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
-								}
-								this.pv.selectedFile = num2;
-								this.pv.selectedFolder = num;
-								this.pv.lv.row = listViewElement.row;
-							}
+							ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems(this.pv, false, false), false);
+							GUIUtility.ExitGUI();
 						}
 						else
 						{
-							if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+							if (!this.pv.selectedItems[listViewElement.row] || shift || actionKey)
 							{
-								if (!this.pv.selectedItems[listViewElement.row])
-								{
-									flag = true;
-									this.pv.ClearSelection();
-									this.pv.selectedItems[listViewElement.row] = true;
-									this.pv.selectedFile = num2;
-									this.pv.selectedFolder = num;
-									this.pv.lv.row = listViewElement.row;
-								}
-								GUIUtility.hotControl = 0;
-								Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-								EditorUtility.DisplayCustomMenu(position, this.commitDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.CommitContextMenuClick), null);
-								Event.current.Use();
+								flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
 							}
+							this.pv.selectedFile = num2;
+							this.pv.selectedFolder = num;
+							this.pv.lv.row = listViewElement.row;
 						}
+					}
+					else if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+					{
+						if (!this.pv.selectedItems[listViewElement.row])
+						{
+							flag = true;
+							this.pv.ClearSelection();
+							this.pv.selectedItems[listViewElement.row] = true;
+							this.pv.selectedFile = num2;
+							this.pv.selectedFolder = num;
+							this.pv.lv.row = listViewElement.row;
+						}
+						GUIUtility.hotControl = 0;
+						Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+						EditorUtility.DisplayCustomMenu(position, this.commitDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.CommitContextMenuClick), null);
+						Event.current.Use();
 					}
 				}
 				ChangeFlags changeFlags;
@@ -912,19 +1023,13 @@ namespace UnityEditor
 				{
 					gUIContent = ASMainWindow.constants.badgeNew;
 				}
-				else
+				else if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
 				{
-					if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
-					{
-						gUIContent = ASMainWindow.constants.badgeDelete;
-					}
-					else
-					{
-						if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
-						{
-							gUIContent = ASMainWindow.constants.badgeMove;
-						}
-					}
+					gUIContent = ASMainWindow.constants.badgeDelete;
+				}
+				else if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
+				{
+					gUIContent = ASMainWindow.constants.badgeMove;
 				}
 				if (gUIContent != null && Event.current.type == EventType.Repaint)
 				{
@@ -943,17 +1048,14 @@ namespace UnityEditor
 					{
 						Event.current.Use();
 					}
-					else
+					else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
 					{
-						if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
+						for (int i = 0; i < this.pv.selectedItems.Length; i++)
 						{
-							for (int i = 0; i < this.pv.selectedItems.Length; i++)
-							{
-								this.pv.selectedItems[i] = true;
-							}
-							flag = true;
-							Event.current.Use();
+							this.pv.selectedItems[i] = true;
 						}
+						flag = true;
+						Event.current.Use();
 					}
 				}
 				if (GUIUtility.keyboardControl == this.pv.lv.ID && !actionKey && this.pv.lv.selectionChanged)
@@ -967,6 +1069,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoCommit()
 		{
 			if (this.commitMessage == string.Empty && !EditorUtility.DisplayDialog("Commit without description", "Are you sure you want to commit with empty commit description message?", "Commit", "Cancel"))
@@ -998,6 +1101,7 @@ namespace UnityEditor
 			this.committing = false;
 			GUIUtility.ExitGUI();
 		}
+
 		private void StartCommitting()
 		{
 			this.committing = true;
@@ -1005,6 +1109,7 @@ namespace UnityEditor
 			this.selectionChangedWhileCommitting = false;
 			this.focusCommitMessage = true;
 		}
+
 		internal void CommitFinished(bool actionResult)
 		{
 			if (actionResult)
@@ -1017,6 +1122,7 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void CancelCommit()
 		{
 			this.committing = false;
@@ -1025,6 +1131,7 @@ namespace UnityEditor
 				this.DoSelectionChange();
 			}
 		}
+
 		private void DoMyRevert(bool afterMarkingDependencies)
 		{
 			if (!afterMarkingDependencies)
@@ -1050,6 +1157,7 @@ namespace UnityEditor
 				ASCommitWindow.DoRevert(ASCommitWindow.GetParentViewSelectedItems(this.pv, true, true), "CBInitOverviewPage");
 			}
 		}
+
 		private void ShortCommitList()
 		{
 			bool enabled = GUI.enabled;
@@ -1172,6 +1280,7 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void ShortUpdateList()
 		{
 			GUILayout.BeginVertical((!this.showSmallWindow) ? ASMainWindow.constants.groupBox : ASMainWindow.constants.groupBoxNoMargin, new GUILayoutOption[0]);
@@ -1185,73 +1294,71 @@ namespace UnityEditor
 				GUILayout.Label("Could not retrieve changes", new GUILayoutOption[0]);
 				GUILayout.EndVertical();
 			}
+			else if (this.sharedChangesets.Length == 0)
+			{
+				GUILayout.BeginVertical(ASMainWindow.constants.contentBox, new GUILayoutOption[]
+				{
+					GUILayout.ExpandHeight(true)
+				});
+				GUILayout.Label("You are up to date", new GUILayoutOption[0]);
+				GUILayout.EndVertical();
+			}
 			else
 			{
-				if (this.sharedChangesets.Length == 0)
+				this.lv.totalRows = this.sharedChangesets.Length;
+				int num = (int)ASMainWindow.constants.entryNormal.CalcHeight(new GUIContent("X"), 100f);
+				ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.MiddleLeft;
+				ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.MiddleLeft;
+				foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv, ASMainWindow.constants.background, new GUILayoutOption[0]))
 				{
-					GUILayout.BeginVertical(ASMainWindow.constants.contentBox, new GUILayoutOption[]
+					Rect rect = GUILayoutUtility.GetRect(GUIClip.visibleRect.width, (float)num, new GUILayoutOption[]
 					{
-						GUILayout.ExpandHeight(true)
+						GUILayout.MinHeight((float)num)
 					});
-					GUILayout.Label("You are up to date", new GUILayoutOption[0]);
-					GUILayout.EndVertical();
-				}
-				else
-				{
-					this.lv.totalRows = this.sharedChangesets.Length;
-					int num = (int)ASMainWindow.constants.entryNormal.CalcHeight(new GUIContent("X"), 100f);
-					ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.MiddleLeft;
-					ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.MiddleLeft;
-					foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv, ASMainWindow.constants.background, new GUILayoutOption[0]))
+					Rect position = rect;
+					position.x += 1f;
+					position.y += 1f;
+					if (listViewElement.row % 2 == 0)
 					{
-						Rect rect = GUILayoutUtility.GetRect(GUIClip.visibleRect.width, (float)num, new GUILayoutOption[]
+						if (Event.current.type == EventType.Repaint)
 						{
-							GUILayout.MinHeight((float)num)
-						});
-						Rect position = rect;
-						position.x += 1f;
-						position.y += 1f;
-						if (listViewElement.row % 2 == 0)
-						{
-							if (Event.current.type == EventType.Repaint)
-							{
-								ASMainWindow.constants.entryEven.Draw(position, false, false, false, false);
-							}
-							position.y += rect.height;
-							if (Event.current.type == EventType.Repaint)
-							{
-								ASMainWindow.constants.entryOdd.Draw(position, false, false, false, false);
-							}
+							ASMainWindow.constants.entryEven.Draw(position, false, false, false, false);
 						}
-						position = rect;
-						position.width -= (float)(this.maxNickLength + 25);
-						position.x += 10f;
-						GUI.Button(position, this.changesetContents[listViewElement.row], ASMainWindow.constants.serverUpdateLog);
-						position = rect;
-						position.x += position.width - (float)this.maxNickLength - 5f;
-						GUI.Label(position, this.sharedChangesets[listViewElement.row].owner, ASMainWindow.constants.serverUpdateInfo);
+						position.y += rect.height;
+						if (Event.current.type == EventType.Repaint)
+						{
+							ASMainWindow.constants.entryOdd.Draw(position, false, false, false, false);
+						}
 					}
-					ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.UpperLeft;
-					ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.UpperLeft;
-					GUILayout.BeginHorizontal(ASMainWindow.constants.contentBox, new GUILayoutOption[0]);
-					GUILayout.FlexibleSpace();
-					if (GUILayout.Button("Update", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
-					{
-						this.selectedPage = ASMainWindow.Page.Update;
-						this.InitUpdatePage(true);
-						this.asUpdateWin.DoUpdate(false);
-					}
-					if (GUILayout.Button("Details", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
-					{
-						this.SwitchSelectedPage(ASMainWindow.Page.Update);
-						base.Repaint();
-						GUIUtility.ExitGUI();
-					}
-					GUILayout.EndHorizontal();
+					position = rect;
+					position.width -= (float)(this.maxNickLength + 25);
+					position.x += 10f;
+					GUI.Button(position, this.changesetContents[listViewElement.row], ASMainWindow.constants.serverUpdateLog);
+					position = rect;
+					position.x += position.width - (float)this.maxNickLength - 5f;
+					GUI.Label(position, this.sharedChangesets[listViewElement.row].owner, ASMainWindow.constants.serverUpdateInfo);
 				}
+				ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.UpperLeft;
+				ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.UpperLeft;
+				GUILayout.BeginHorizontal(ASMainWindow.constants.contentBox, new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Update", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
+				{
+					this.selectedPage = ASMainWindow.Page.Update;
+					this.InitUpdatePage(true);
+					this.asUpdateWin.DoUpdate(false);
+				}
+				if (GUILayout.Button("Details", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
+				{
+					this.SwitchSelectedPage(ASMainWindow.Page.Update);
+					base.Repaint();
+					GUIUtility.ExitGUI();
+				}
+				GUILayout.EndHorizontal();
 			}
 			GUILayout.EndVertical();
 		}
+
 		private void DoSelectedPageGUI()
 		{
 			switch (this.selectedPage)
@@ -1294,6 +1401,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void SetShownSearchField(ASMainWindow.ShowSearchField newShow)
 		{
 			EditorGUI.FocusTextInControl("SearchFilter");
@@ -1302,6 +1410,7 @@ namespace UnityEditor
 			this.m_SearchField.Show = true;
 			this.asHistoryWin.FilterItems(false);
 		}
+
 		private void DoSearchToggle(ASMainWindow.ShowSearchField field)
 		{
 			if (this.selectedPage == ASMainWindow.Page.History)
@@ -1313,10 +1422,12 @@ namespace UnityEditor
 				GUILayout.Space(10f);
 			}
 		}
+
 		private bool IsLastOne(int f, int fl, ParentViewState st)
 		{
 			return st.folders.Length - 1 == f && st.folders[f].files.Length - 1 == fl;
 		}
+
 		private void OnGUI()
 		{
 			if (EditorSettings.externalVersionControl != ExternalVersionControl.Disabled && EditorSettings.externalVersionControl != ExternalVersionControl.AssetServer)
@@ -1336,7 +1447,7 @@ namespace UnityEditor
 			}
 			if (!this.m_CheckedMaint && Event.current.type != EventType.Layout)
 			{
-				if (!InternalEditorUtility.HasPro())
+				if (!InternalEditorUtility.HasTeamLicense())
 				{
 					base.Close();
 					GUIUtility.ExitGUI();
@@ -1491,6 +1602,11 @@ namespace UnityEditor
 				EditorUtility.DisplayCustomMenu(position, (!this.needsSetup) ? this.dropDownMenuItems : this.unconfiguredDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
 				Event.current.Use();
 			}
+		}
+
+		private void OnEnable()
+		{
+			base.titleContent = base.GetLocalizedTitleContent();
 		}
 	}
 }

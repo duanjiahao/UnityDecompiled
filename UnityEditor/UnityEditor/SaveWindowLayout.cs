@@ -2,12 +2,21 @@ using System;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Save Layout")]
 	internal class SaveWindowLayout : EditorWindow
 	{
 		internal string m_LayoutName = Toolbar.lastLoadedLayoutName;
+
 		internal bool didFocus;
+
+		private void OnEnable()
+		{
+			base.titleContent = base.GetLocalizedTitleContent();
+		}
+
 		private void OnGUI()
 		{
 			GUILayout.Space(5f);

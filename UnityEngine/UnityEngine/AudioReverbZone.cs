@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class AudioReverbZone : Behaviour
@@ -13,6 +14,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float maxDistance
 		{
 			[WrapperlessIcall]
@@ -22,6 +24,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern AudioReverbPreset reverbPreset
 		{
 			[WrapperlessIcall]
@@ -31,6 +34,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int room
 		{
 			[WrapperlessIcall]
@@ -40,6 +44,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int roomHF
 		{
 			[WrapperlessIcall]
@@ -49,6 +54,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int roomLF
 		{
 			[WrapperlessIcall]
@@ -58,6 +64,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float decayTime
 		{
 			[WrapperlessIcall]
@@ -67,6 +74,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float decayHFRatio
 		{
 			[WrapperlessIcall]
@@ -76,6 +84,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int reflections
 		{
 			[WrapperlessIcall]
@@ -85,6 +94,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float reflectionsDelay
 		{
 			[WrapperlessIcall]
@@ -94,6 +104,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int reverb
 		{
 			[WrapperlessIcall]
@@ -103,6 +114,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float reverbDelay
 		{
 			[WrapperlessIcall]
@@ -112,6 +124,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float HFReference
 		{
 			[WrapperlessIcall]
@@ -121,6 +134,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float LFReference
 		{
 			[WrapperlessIcall]
@@ -130,6 +144,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float roomRolloffFactor
 		{
 			[WrapperlessIcall]
@@ -139,6 +154,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float diffusion
 		{
 			[WrapperlessIcall]
@@ -148,6 +164,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float density
 		{
 			[WrapperlessIcall]

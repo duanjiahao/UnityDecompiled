@@ -1,7 +1,8 @@
 using System;
+
 namespace UnityEditor
 {
-	[CustomEditor(typeof(DefaultAsset))]
+	[CustomEditor(typeof(DefaultAsset), isFallback = true)]
 	internal class DefaultAssetInspector : Editor
 	{
 		public override void OnInspectorGUI()

@@ -1,8 +1,9 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Occlusion", icon = "Occlusion")]
 	internal class OcclusionCullingWindow : EditorWindow
 	{
 		private class Styles
@@ -13,32 +14,53 @@ namespace UnityEditor
 				new GUIContent("Bake"),
 				new GUIContent("Visualization")
 			};
+
 			public GUIStyle labelStyle = EditorStyles.wordWrappedMiniLabel;
+
 			public GUIContent emptyAreaSelection = new GUIContent("Select a Mesh Renderer or an Occlusion Area from the scene.");
+
 			public GUIContent emptyCameraSelection = new GUIContent("Select a Camera from the scene.");
+
 			public GUIContent visualizationNote = new GUIContent("The visualization may not correspond to current bake settings and Occlusion Area placements if they have been changed since last bake.");
+
 			public GUIContent seeVisualizationInScene = new GUIContent("See the occlusion culling visualization in the Scene View based on the selected Camera.");
+
 			public GUIContent noOcclusionData = new GUIContent("No occlusion data has been baked.");
-			public GUIContent smallestHole = EditorGUIUtility.TextContent("OcclusionCullingWindow.SmallestHole");
-			public GUIContent backfaceThreshold = EditorGUIUtility.TextContent("OcclusionCullingWindow.BackfaceThreshold");
-			public GUIContent farClipPlane = EditorGUIUtility.TextContent("OcclusionCullingWindow.FarClipPlane");
-			public GUIContent smallestOccluder = EditorGUIUtility.TextContent("OcclusionCullingWindow.SmallestOccluder");
-			public GUIContent defaultParameterText = EditorGUIUtility.TextContent("OcclusionCullingWindow.DefaultParameters");
+
+			public GUIContent smallestHole = EditorGUIUtility.TextContent("Smallest Hole|Smallest hole in the geometry through which the camera is supposed to see. The single float value of the parameter represents the diameter of the imaginary smallest hole, i.e. the maximum extent of a 3D object that fits through the hole.");
+
+			public GUIContent backfaceThreshold = EditorGUIUtility.TextContent("Backface Threshold|The backface threshold is a size optimization that reduces unnecessary details by testing backfaces. A value of 100 is robust and never removes any backfaces. A value of 5 aggressively reduces the data based on locations with visible backfaces. The idea is that typically valid camera positions cannot see many backfaces.  For example geometry under terrain and inside solid objects can be removed.");
+
+			public GUIContent farClipPlane = EditorGUIUtility.TextContent("Far Clip Plane|Far Clip Plane used during baking. This should match the largest far clip plane used by any camera in the scene. A value of 0.0 sets the far plane to Infinity.");
+
+			public GUIContent smallestOccluder = EditorGUIUtility.TextContent("Smallest Occluder|The size of the smallest object that will be used to hide other objects when doing occlusion culling. For example, if a value of 4 is chosen, then all the objects that are higher or wider than 4 meters will block visibility and the objects that are smaller than that will not. This value is a tradeoff between occlusion accuracy and storage size.");
+
+			public GUIContent defaultParameterText = EditorGUIUtility.TextContent("Default Parameters|The default parameters guarantee that any given scene computes fast and the occlusion culling results are good. As the parameters are always scene specific, better results will be achieved when fine tuning the parameters on a scene to scene basis. All the parameters are dependent on the unit scale of the scene and it is imperative that the unit scale parameter is set correctly before setting the default values.");
 		}
+
 		private enum Mode
 		{
 			AreaSettings,
 			BakeSettings,
 			Visualization
 		}
+
 		private static bool s_IsVisible;
+
 		private bool m_PreVis;
+
 		private string m_Warning;
+
 		private static OcclusionCullingWindow ms_OcclusionCullingWindow;
+
 		private UnityEngine.Object[] m_Objects;
+
 		private Vector2 m_ScrollPosition = Vector2.zero;
+
 		private OcclusionCullingWindow.Mode m_Mode;
+
 		private static OcclusionCullingWindow.Styles s_Styles;
+
 		private void OnBecameVisible()
 		{
 			if (OcclusionCullingWindow.s_IsVisible)
@@ -50,6 +72,7 @@ namespace UnityEditor
 			StaticOcclusionCullingVisualization.showOcclusionCulling = true;
 			SceneView.RepaintAll();
 		}
+
 		private void OnBecameInvisible()
 		{
 			OcclusionCullingWindow.s_IsVisible = false;
@@ -57,6 +80,7 @@ namespace UnityEditor
 			StaticOcclusionCullingVisualization.showOcclusionCulling = false;
 			SceneView.RepaintAll();
 		}
+
 		private void OnSelectionChange()
 		{
 			if (this.m_Mode == OcclusionCullingWindow.Mode.AreaSettings || this.m_Mode == OcclusionCullingWindow.Mode.Visualization)
@@ -64,18 +88,22 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void OnEnable()
 		{
+			base.titleContent = base.GetLocalizedTitleContent();
 			OcclusionCullingWindow.ms_OcclusionCullingWindow = this;
 			base.autoRepaintOnSceneChange = true;
 			EditorApplication.searchChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.searchChanged, new EditorApplication.CallbackFunction(base.Repaint));
 			base.Repaint();
 		}
+
 		private void OnDisable()
 		{
 			OcclusionCullingWindow.ms_OcclusionCullingWindow = null;
 			EditorApplication.searchChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.searchChanged, new EditorApplication.CallbackFunction(base.Repaint));
 		}
+
 		private static void BackgroundTaskStatusChanged()
 		{
 			if (OcclusionCullingWindow.ms_OcclusionCullingWindow)
@@ -83,28 +111,17 @@ namespace UnityEditor
 				OcclusionCullingWindow.ms_OcclusionCullingWindow.Repaint();
 			}
 		}
+
 		[MenuItem("Window/Occlusion Culling", false, 2099)]
 		private static void GenerateWindow()
 		{
-			if (Application.HasAdvancedLicense())
+			OcclusionCullingWindow window = EditorWindow.GetWindow<OcclusionCullingWindow>(new Type[]
 			{
-				OcclusionCullingWindow window = EditorWindow.GetWindow<OcclusionCullingWindow>(new Type[]
-				{
-					typeof(InspectorWindow)
-				});
-				window.title = "Occlusion";
-				window.minSize = new Vector2(300f, 250f);
-			}
-			else
-			{
-				Debug.LogError("Occlusion Culling is only supported in Unity Pro.");
-			}
+				typeof(InspectorWindow)
+			});
+			window.minSize = new Vector2(300f, 250f);
 		}
-		[MenuItem("Window/Occlusion Culling", true, 2099)]
-		public static bool SetupWindowValidate()
-		{
-			return InternalEditorUtility.HasProFeaturesEnabled();
-		}
+
 		private void SummaryGUI()
 		{
 			GUILayout.BeginVertical(EditorStyles.helpBox, new GUILayoutOption[0]);
@@ -126,6 +143,7 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 		}
+
 		private OcclusionArea CreateNewArea()
 		{
 			GameObject gameObject = new GameObject("Occlusion Area");
@@ -133,6 +151,7 @@ namespace UnityEditor
 			Selection.activeGameObject = gameObject;
 			return result;
 		}
+
 		private void AreaSelectionGUI()
 		{
 			bool flag = true;
@@ -186,6 +205,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CameraSelectionGUI()
 		{
 			SceneModeUtility.SearchBar(new Type[]
@@ -212,6 +232,7 @@ namespace UnityEditor
 				GUILayout.Label(OcclusionCullingWindow.s_Styles.emptyCameraSelection, EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 		}
+
 		private void BakeSettings()
 		{
 			float width = 150f;
@@ -243,6 +264,7 @@ namespace UnityEditor
 				StaticOcclusionCulling.backfaceThreshold = backfaceThreshold;
 			}
 		}
+
 		private void BakeButtons()
 		{
 			float width = 95f;
@@ -268,19 +290,17 @@ namespace UnityEditor
 					StaticOcclusionCulling.Cancel();
 				}
 			}
-			else
+			else if (GUILayout.Button("Bake", new GUILayoutOption[]
 			{
-				if (GUILayout.Button("Bake", new GUILayoutOption[]
-				{
-					GUILayout.Width(width)
-				}))
-				{
-					StaticOcclusionCulling.GenerateInBackground();
-				}
+				GUILayout.Width(width)
+			}))
+			{
+				StaticOcclusionCulling.GenerateInBackground();
 			}
 			GUILayout.EndHorizontal();
 			GUI.enabled = true;
 		}
+
 		private void ModeToggle()
 		{
 			this.m_Mode = (OcclusionCullingWindow.Mode)GUILayout.Toolbar((int)this.m_Mode, OcclusionCullingWindow.s_Styles.ModeToggles, "LargeButton", new GUILayoutOption[0]);
@@ -297,13 +317,9 @@ namespace UnityEditor
 				SceneView.RepaintAll();
 			}
 		}
+
 		private void OnGUI()
 		{
-			if (!Application.HasAdvancedLicense())
-			{
-				EditorGUILayout.HelpBox(BuildPipeline.GetBuildTargetAdvancedLicenseName(EditorUserBuildSettings.activeBuildTarget) + " is required for Occlusion Culling on " + BuildPipeline.GetBuildTargetGroupName(EditorUserBuildSettings.activeBuildTarget), MessageType.Warning);
-				return;
-			}
 			if (OcclusionCullingWindow.s_Styles == null)
 			{
 				OcclusionCullingWindow.s_Styles = new OcclusionCullingWindow.Styles();
@@ -343,6 +359,7 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			this.SummaryGUI();
 		}
+
 		public void OnSceneViewGUI(SceneView sceneView)
 		{
 			if (!OcclusionCullingWindow.s_IsVisible)
@@ -351,10 +368,13 @@ namespace UnityEditor
 			}
 			SceneViewOverlay.Window(new GUIContent("Occlusion Culling"), new SceneViewOverlay.WindowFunction(this.DisplayControls), 100, SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget);
 		}
+
 		private void OnDidOpenScene()
 		{
+			StaticOcclusionCulling.InvalidatePrevisualisationData();
 			base.Repaint();
 		}
+
 		private void SetShowVolumePreVis()
 		{
 			StaticOcclusionCullingVisualization.showPreVisualization = true;
@@ -368,6 +388,7 @@ namespace UnityEditor
 			}
 			SceneView.RepaintAll();
 		}
+
 		private void SetShowVolumeCulling()
 		{
 			StaticOcclusionCullingVisualization.showPreVisualization = false;
@@ -378,6 +399,7 @@ namespace UnityEditor
 			}
 			SceneView.RepaintAll();
 		}
+
 		private bool ShowModePopup(Rect popupRect)
 		{
 			int umbraDataSize = StaticOcclusionCulling.umbraDataSize;
@@ -411,6 +433,7 @@ namespace UnityEditor
 			}
 			return this.m_PreVis;
 		}
+
 		private void DisplayControls(UnityEngine.Object target, SceneView sceneView)
 		{
 			if (!sceneView)
@@ -431,12 +454,9 @@ namespace UnityEditor
 					{
 						this.m_Warning = "No camera selected for occlusion preview.";
 					}
-					else
+					else if (!StaticOcclusionCullingVisualization.isPreviewOcclusionCullingCameraInPVS)
 					{
-						if (!StaticOcclusionCullingVisualization.isPreviewOcclusionCullingCameraInPVS)
-						{
-							this.m_Warning = "Camera is not inside an Occlusion View Area.";
-						}
+						this.m_Warning = "Camera is not inside an Occlusion View Area.";
 					}
 				}
 			}

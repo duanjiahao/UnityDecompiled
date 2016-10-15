@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EyeDropper : GUIView
@@ -8,17 +9,30 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle eyeDropperHorizontalLine = "EyeDropperHorizontalLine";
+
 			public GUIStyle eyeDropperVerticalLine = "EyeDropperVerticalLine";
+
 			public GUIStyle eyeDropperPickedPixel = "EyeDropperPickedPixel";
 		}
+
 		private const int kPixelSize = 10;
+
 		private const int kDummyWindowSize = 10000;
+
 		internal static Color s_LastPickedColor;
+
 		private GUIView m_DelegateView;
+
 		private Texture2D m_Preview;
+
 		private static EyeDropper s_Instance;
+
 		private static Vector2 s_PickCoordinates = Vector2.zero;
+
+		private bool m_Focused;
+
 		private static EyeDropper.Styles styles;
+
 		private static EyeDropper get
 		{
 			get
@@ -30,14 +44,17 @@ namespace UnityEditor
 				return EyeDropper.s_Instance;
 			}
 		}
+
 		private EyeDropper()
 		{
 			EyeDropper.s_Instance = this;
 		}
+
 		public static void Start(GUIView viewToUpdate)
 		{
 			EyeDropper.get.Show(viewToUpdate);
 		}
+
 		private void Show(GUIView sourceView)
 		{
 			this.m_DelegateView = sourceView;
@@ -54,14 +71,17 @@ namespace UnityEditor
 			base.wantsMouseMove = true;
 			base.StealMouseCapture();
 		}
+
 		public static Color GetPickedColor()
 		{
 			return InternalEditorUtility.ReadScreenPixel(EyeDropper.s_PickCoordinates, 1, 1)[0];
 		}
+
 		public static Color GetLastPickedColor()
 		{
 			return EyeDropper.s_LastPickedColor;
 		}
+
 		public static void DrawPreview(Rect position)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -106,6 +126,7 @@ namespace UnityEditor
 			Rect position4 = new Rect((a.x - pixelPos.x) * num3 + position.x, (a.y - pixelPos.y) * num5 + position.y, num3, num5);
 			EyeDropper.styles.eyeDropperPickedPixel.Draw(position4, false, false, false, false);
 		}
+
 		private void OnGUI()
 		{
 			switch (Event.current.type)
@@ -116,38 +137,53 @@ namespace UnityEditor
 					EyeDropper.s_PickCoordinates = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 					base.window.Close();
 					EyeDropper.s_LastPickedColor = EyeDropper.GetPickedColor();
-					this.SendEvent("EyeDropperClicked");
+					this.SendEvent("EyeDropperClicked", true);
 				}
 				break;
 			case EventType.MouseMove:
 				EyeDropper.s_PickCoordinates = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 				base.StealMouseCapture();
-				this.SendEvent("EyeDropperUpdate");
+				this.SendEvent("EyeDropperUpdate", true);
 				break;
 			case EventType.KeyDown:
 				if (Event.current.keyCode == KeyCode.Escape)
 				{
 					base.window.Close();
-					this.SendEvent("EyeDropperCancelled");
+					this.SendEvent("EyeDropperCancelled", true);
 				}
 				break;
 			}
 		}
-		private void SendEvent(string eventName)
+
+		private void SendEvent(string eventName, bool exitGUI)
 		{
 			if (this.m_DelegateView)
 			{
 				Event e = EditorGUIUtility.CommandEvent(eventName);
 				this.m_DelegateView.SendEvent(e);
-				GUIUtility.ExitGUI();
+				if (exitGUI)
+				{
+					GUIUtility.ExitGUI();
+				}
 			}
 		}
+
 		public new void OnDestroy()
 		{
 			if (this.m_Preview)
 			{
 				UnityEngine.Object.DestroyImmediate(this.m_Preview);
 			}
+			if (!this.m_Focused)
+			{
+				this.SendEvent("EyeDropperCancelled", false);
+			}
+		}
+
+		protected override bool OnFocus()
+		{
+			this.m_Focused = true;
+			return base.OnFocus();
 		}
 	}
 }

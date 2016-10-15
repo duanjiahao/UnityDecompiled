@@ -1,28 +1,35 @@
 using System;
+
 namespace UnityEditor
 {
 	internal class EditorApplicationLayout
 	{
 		private static GameView m_GameView;
+
 		private static View m_RootSplit;
+
 		internal static bool IsInitializingPlaymodeLayout()
 		{
 			return EditorApplicationLayout.m_GameView != null;
 		}
+
 		internal static void SetPlaymodeLayout()
 		{
 			EditorApplicationLayout.InitPlaymodeLayout();
 			EditorApplicationLayout.FinalizePlaymodeLayout();
 		}
+
 		internal static void SetStopmodeLayout()
 		{
 			WindowLayout.ShowAppropriateViewOnEnterExitPlaymode(false);
 			Toolbar.RepaintToolbar();
 		}
+
 		internal static void SetPausemodeLayout()
 		{
 			EditorApplicationLayout.SetStopmodeLayout();
 		}
+
 		internal static void InitPlaymodeLayout()
 		{
 			EditorApplicationLayout.m_GameView = (WindowLayout.ShowAppropriateViewOnEnterExitPlaymode(true) as GameView);
@@ -45,6 +52,7 @@ namespace UnityEditor
 			EditorApplicationLayout.m_GameView.m_Parent.SetAsStartView();
 			Toolbar.RepaintToolbar();
 		}
+
 		internal static void FinalizePlaymodeLayout()
 		{
 			if (EditorApplicationLayout.m_GameView != null)
@@ -57,6 +65,7 @@ namespace UnityEditor
 			}
 			EditorApplicationLayout.Clear();
 		}
+
 		private static void Clear()
 		{
 			EditorApplicationLayout.m_RootSplit = null;

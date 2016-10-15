@@ -1,18 +1,28 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PingData
 	{
 		public float m_TimeStart = -1f;
+
 		public float m_ZoomTime = 0.2f;
+
 		public float m_WaitTime = 2.5f;
+
 		public float m_FadeOutTime = 1.5f;
+
 		public float m_PeakScale = 1.75f;
+
 		public Action<Rect> m_ContentDraw;
+
 		public Rect m_ContentRect;
+
 		public float m_AvailableWidth = 100f;
+
 		public GUIStyle m_PingStyle;
+
 		public bool isPinging
 		{
 			get
@@ -20,6 +30,7 @@ namespace UnityEditor
 				return this.m_TimeStart > -1f;
 			}
 		}
+
 		public void HandlePing()
 		{
 			if (this.isPinging)
@@ -40,13 +51,10 @@ namespace UnityEditor
 						Matrix4x4 lhs = Matrix4x4.TRS(vector, Quaternion.identity, new Vector3(num4, num4, 1f)) * Matrix4x4.TRS(-vector, Quaternion.identity, Vector3.one);
 						GUI.matrix = lhs * matrix2;
 					}
-					else
+					else if (num2 > this.m_ZoomTime + this.m_WaitTime)
 					{
-						if (num2 > this.m_ZoomTime + this.m_WaitTime)
-						{
-							float num5 = (num - num2) / this.m_FadeOutTime;
-							GUI.color = new Color(color.r, color.g, color.b, color.a * num5);
-						}
+						float num5 = (num - num2) / this.m_FadeOutTime;
+						GUI.color = new Color(color.r, color.g, color.b, color.a * num5);
 					}
 					if (this.m_ContentDraw != null && Event.current.type == EventType.Repaint)
 					{

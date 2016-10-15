@@ -1,39 +1,69 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class Tools : ScriptableObject
 	{
 		internal delegate void OnToolChangedFunc(Tool from, Tool to);
+
 		private static Tools s_Get;
+
 		internal static Tools.OnToolChangedFunc onToolChanged;
+
 		internal static ViewTool s_LockedViewTool = ViewTool.None;
+
 		internal static int s_ButtonDown = -1;
+
 		private PivotMode m_PivotMode;
+
 		private bool m_RectBlueprintMode;
+
 		private PivotRotation m_PivotRotation;
+
 		internal static bool s_Hidden = false;
+
 		internal static bool vertexDragging;
+
 		private static Vector3 s_LockHandlePosition;
+
 		private static bool s_LockHandlePositionActive = false;
+
 		private static int s_LockHandleRectAxis;
+
 		private static bool s_LockHandleRectAxisActive = false;
+
 		private int m_VisibleLayers = -1;
+
 		private int m_LockedLayers = -1;
+
 		internal Quaternion m_GlobalHandleRotation = Quaternion.identity;
+
 		private Tool currentTool = Tool.Move;
+
 		private ViewTool m_ViewTool = ViewTool.Pan;
+
 		private static int originalTool;
+
 		private static PrefKey kViewKey = new PrefKey("Tools/View", "q");
+
 		private static PrefKey kMoveKey = new PrefKey("Tools/Move", "w");
+
 		private static PrefKey kRotateKey = new PrefKey("Tools/Rotate", "e");
+
 		private static PrefKey kScaleKey = new PrefKey("Tools/Scale", "r");
+
 		private static PrefKey kRectKey = new PrefKey("Tools/Rect Handles", "t");
+
 		private static PrefKey kPivotMode = new PrefKey("Tools/Pivot Mode", "z");
+
 		private static PrefKey kPivotRotation = new PrefKey("Tools/Pivot Rotation", "x");
+
 		internal static Vector3 handleOffset;
+
 		internal static Vector3 localHandleOffset;
+
 		private static Tools get
 		{
 			get
@@ -46,6 +76,7 @@ namespace UnityEditor
 				return Tools.s_Get;
 			}
 		}
+
 		public static Tool current
 		{
 			get
@@ -66,6 +97,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static ViewTool viewTool
 		{
 			get
@@ -82,26 +114,17 @@ namespace UnityEditor
 						{
 							Tools.get.m_ViewTool = ViewTool.Pan;
 						}
-						else
+						else if ((Tools.s_ButtonDown <= 0 && flag) || (Tools.s_ButtonDown == 1 && current.alt))
 						{
-							if ((Tools.s_ButtonDown <= 0 && flag) || (Tools.s_ButtonDown == 1 && current.alt))
-							{
-								Tools.get.m_ViewTool = ViewTool.Zoom;
-							}
-							else
-							{
-								if (Tools.s_ButtonDown <= 0 && current.alt)
-								{
-									Tools.get.m_ViewTool = ViewTool.Orbit;
-								}
-								else
-								{
-									if (Tools.s_ButtonDown == 1 && !current.alt)
-									{
-										Tools.get.m_ViewTool = ViewTool.FPS;
-									}
-								}
-							}
+							Tools.get.m_ViewTool = ViewTool.Zoom;
+						}
+						else if (Tools.s_ButtonDown <= 0 && current.alt)
+						{
+							Tools.get.m_ViewTool = ViewTool.Orbit;
+						}
+						else if (Tools.s_ButtonDown == 1 && !current.alt)
+						{
+							Tools.get.m_ViewTool = ViewTool.FPS;
 						}
 					}
 				}
@@ -116,6 +139,7 @@ namespace UnityEditor
 				Tools.get.m_ViewTool = value;
 			}
 		}
+
 		internal static bool viewToolActive
 		{
 			get
@@ -123,6 +147,7 @@ namespace UnityEditor
 				return (GUIUtility.hotControl == 0 || Tools.s_LockedViewTool != ViewTool.None) && (Tools.s_LockedViewTool != ViewTool.None || Tools.current == Tool.View || Event.current.alt || Tools.s_ButtonDown == 1 || Tools.s_ButtonDown == 2);
 			}
 		}
+
 		public static Vector3 handlePosition
 		{
 			get
@@ -139,6 +164,7 @@ namespace UnityEditor
 				return Tools.GetHandlePosition();
 			}
 		}
+
 		public static Rect handleRect
 		{
 			get
@@ -148,6 +174,7 @@ namespace UnityEditor
 				return Tools.GetRectFromBoundsForAxis(bounds, rectAxisForViewDir);
 			}
 		}
+
 		public static Quaternion handleRectRotation
 		{
 			get
@@ -157,6 +184,7 @@ namespace UnityEditor
 				return Tools.GetRectRotationForAxis(Tools.handleRotation, rectAxisForViewDir);
 			}
 		}
+
 		public static PivotMode pivotMode
 		{
 			get
@@ -172,6 +200,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static bool rectBlueprintMode
 		{
 			get
@@ -187,6 +216,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static Quaternion handleRotation
 		{
 			get
@@ -210,6 +240,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static PivotRotation pivotRotation
 		{
 			get
@@ -225,6 +256,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static bool hidden
 		{
 			get
@@ -236,6 +268,7 @@ namespace UnityEditor
 				Tools.s_Hidden = value;
 			}
 		}
+
 		public static int visibleLayers
 		{
 			get
@@ -252,6 +285,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static int lockedLayers
 		{
 			get
@@ -268,6 +302,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static Quaternion handleLocalRotation
 		{
 			get
@@ -284,6 +319,7 @@ namespace UnityEditor
 				return activeTransform.rotation;
 			}
 		}
+
 		internal static Vector3 GetHandlePosition()
 		{
 			Transform activeTransform = Selection.activeTransform;
@@ -314,6 +350,7 @@ namespace UnityEditor
 				return InternalEditorUtility.CalculateSelectionBounds(true, false).center + b;
 			}
 		}
+
 		private static int GetRectAxisForViewDir(Bounds bounds, Quaternion rotation, Vector3 viewDir)
 		{
 			if (Tools.s_LockHandleRectAxisActive)
@@ -347,6 +384,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private static Rect GetRectFromBoundsForAxis(Bounds bounds, int axis)
 		{
 			switch (axis)
@@ -358,6 +396,7 @@ namespace UnityEditor
 			}
 			return new Rect(bounds.min.x, bounds.min.y, bounds.size.x, bounds.size.y);
 		}
+
 		private static Quaternion GetRectRotationForAxis(Quaternion rotation, int axis)
 		{
 			switch (axis)
@@ -369,20 +408,24 @@ namespace UnityEditor
 			}
 			return rotation;
 		}
+
 		internal static void LockHandleRectRotation()
 		{
 			Bounds bounds = InternalEditorUtility.CalculateSelectionBoundsInSpace(Tools.handlePosition, Tools.handleRotation, Tools.rectBlueprintMode);
 			Tools.s_LockHandleRectAxis = Tools.GetRectAxisForViewDir(bounds, Tools.handleRotation, SceneView.currentDrawingSceneView.camera.transform.forward);
 			Tools.s_LockHandleRectAxisActive = true;
 		}
+
 		internal static void UnlockHandleRectRotation()
 		{
 			Tools.s_LockHandleRectAxisActive = false;
 		}
+
 		internal static int GetPivotMode()
 		{
 			return (int)Tools.pivotMode;
 		}
+
 		private void OnEnable()
 		{
 			Tools.s_Get = this;
@@ -393,19 +436,23 @@ namespace UnityEditor
 			Tools.visibleLayers = EditorPrefs.GetInt("VisibleLayers", -1);
 			Tools.lockedLayers = EditorPrefs.GetInt("LockedLayers", 0);
 		}
+
 		private void OnDisable()
 		{
 			EditorApplication.globalEventHandler = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.globalEventHandler, new EditorApplication.CallbackFunction(Tools.ControlsHack));
 		}
+
 		internal static void OnSelectionChange()
 		{
 			Tools.ResetGlobalHandleRotation();
 			Tools.localHandleOffset = Vector3.zero;
 		}
+
 		internal static void ResetGlobalHandleRotation()
 		{
 			Tools.get.m_GlobalHandleRotation = Quaternion.identity;
 		}
+
 		internal static void ControlsHack()
 		{
 			Event current = Event.current;
@@ -494,6 +541,7 @@ namespace UnityEditor
 				Tools.RepaintAllToolViews();
 			}
 		}
+
 		internal static void RepaintAllToolViews()
 		{
 			if (Toolbar.get)
@@ -503,19 +551,23 @@ namespace UnityEditor
 			SceneView.RepaintAll();
 			InspectorWindow.RepaintAllInspectors();
 		}
+
 		internal static void HandleKeys()
 		{
 			Tools.ControlsHack();
 		}
+
 		internal static void LockHandlePosition(Vector3 pos)
 		{
 			Tools.s_LockHandlePosition = pos;
 			Tools.s_LockHandlePositionActive = true;
 		}
+
 		internal static void LockHandlePosition()
 		{
 			Tools.LockHandlePosition(Tools.handlePosition);
 		}
+
 		internal static void UnlockHandlePosition()
 		{
 			Tools.s_LockHandlePositionActive = false;

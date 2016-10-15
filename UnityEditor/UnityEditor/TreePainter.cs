@@ -1,48 +1,65 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TreePainter
 	{
 		public static float brushSize = 40f;
+
 		public static float spacing = 0.8f;
+
 		public static bool lockWidthToHeight = true;
+
 		public static bool randomRotation = true;
+
 		public static bool allowHeightVar = true;
+
 		public static bool allowWidthVar = true;
+
 		public static float treeColorAdjustment = 0.4f;
+
 		public static float treeHeight = 1f;
+
 		public static float treeHeightVariation = 0.1f;
+
 		public static float treeWidth = 1f;
+
 		public static float treeWidthVariation = 0.1f;
-		public static int selectedTree;
+
+		public static int selectedTree = -1;
+
 		private static Color GetTreeColor()
 		{
 			Color result = Color.white * UnityEngine.Random.Range(1f, 1f - TreePainter.treeColorAdjustment);
 			result.a = 1f;
 			return result;
 		}
+
 		private static float GetTreeHeight()
 		{
 			float num = (!TreePainter.allowHeightVar) ? 0f : TreePainter.treeHeightVariation;
 			return TreePainter.treeHeight * UnityEngine.Random.Range(1f - num, 1f + num);
 		}
+
 		private static float GetTreeWidth()
 		{
 			float num = (!TreePainter.allowWidthVar) ? 0f : TreePainter.treeWidthVariation;
 			return TreePainter.treeWidth * UnityEngine.Random.Range(1f - num, 1f + num);
 		}
+
 		private static float GetTreeRotation()
 		{
 			return (!TreePainter.randomRotation) ? 0f : UnityEngine.Random.Range(0f, 6.28318548f);
 		}
+
 		public static void PlaceTrees(Terrain terrain, float xBase, float yBase)
 		{
-			if (terrain.terrainData.treePrototypes.Length == 0)
+			int prototypeCount = TerrainInspectorUtil.GetPrototypeCount(terrain.terrainData);
+			if (TreePainter.selectedTree == -1 || TreePainter.selectedTree >= prototypeCount)
 			{
 				return;
 			}
-			TreePainter.selectedTree = Mathf.Min(TerrainInspectorUtil.GetPrototypeCount(terrain.terrainData) - 1, TreePainter.selectedTree);
 			if (!TerrainInspectorUtil.PrototypeIsRenderable(terrain.terrainData, TreePainter.selectedTree))
 			{
 				return;
@@ -90,15 +107,13 @@ namespace UnityEditor
 				num4++;
 			}
 		}
-		private float GetTreePlacementSize(TerrainData terrainData, float treeCount)
-		{
-			return TerrainInspectorUtil.GetTreePlacementSize(terrainData, TreePainter.selectedTree, TreePainter.spacing, treeCount);
-		}
+
 		public static void RemoveTrees(Terrain terrain, float xBase, float yBase, bool clearSelectedOnly)
 		{
 			float radius = TreePainter.brushSize / terrain.terrainData.size.x;
 			terrain.RemoveTrees(new Vector2(xBase, yBase), radius, (!clearSelectedOnly) ? -1 : TreePainter.selectedTree);
 		}
+
 		public static void MassPlaceTrees(TerrainData terrainData, int numberOfTrees, bool randomTreeColor, bool keepExistingTrees)
 		{
 			int num = terrainData.treePrototypes.Length;

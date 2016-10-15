@@ -1,15 +1,22 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	internal class AppStatusBar : GUIView
 	{
 		private static AppStatusBar s_AppStatusBar;
+
 		private static GUIContent[] s_StatusWheel;
+
 		private string m_LastMiniMemoryOverview = string.Empty;
+
 		private static GUIStyle background;
+
 		private static GUIStyle resize;
+
 		private void OnEnable()
 		{
 			AppStatusBar.s_AppStatusBar = this;
@@ -19,6 +26,8 @@ namespace UnityEditor
 				AppStatusBar.s_StatusWheel[i] = EditorGUIUtility.IconContent("WaitSpin" + i.ToString("00"));
 			}
 		}
+
+		[RequiredByNativeCode]
 		public static void StatusChanged()
 		{
 			if (AppStatusBar.s_AppStatusBar)
@@ -26,6 +35,7 @@ namespace UnityEditor
 				AppStatusBar.s_AppStatusBar.Repaint();
 			}
 		}
+
 		private void OnInspectorUpdate()
 		{
 			string miniMemoryOverview = ProfilerDriver.miniMemoryOverview;
@@ -35,13 +45,13 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void OnGUI()
 		{
 			ConsoleWindow.LoadIcons();
 			if (AppStatusBar.background == null)
 			{
 				AppStatusBar.background = "AppToolbar";
-				AppStatusBar.resize = "WindowResizeMac";
 			}
 			if (EditorApplication.isPlayingOrWillChangePlaymode)
 			{
@@ -50,10 +60,6 @@ namespace UnityEditor
 			if (Event.current.type == EventType.Repaint)
 			{
 				AppStatusBar.background.Draw(new Rect(0f, 0f, base.position.width, base.position.height), false, false, false, false);
-				if (ContainerWindow.macEditor)
-				{
-					AppStatusBar.resize.Draw(new Rect(base.position.width - AppStatusBar.resize.fixedWidth, base.position.height - AppStatusBar.resize.fixedHeight, AppStatusBar.resize.fixedWidth, AppStatusBar.resize.fixedHeight), false, false, false, false);
-				}
 			}
 			bool isCompiling = EditorApplication.isCompiling;
 			GUILayout.Space(2f);
@@ -72,7 +78,7 @@ namespace UnityEditor
 				{
 					GUILayout.Label(statusText, statusStyleForErrorMode, new GUILayoutOption[]
 					{
-						GUILayout.MaxWidth((float)(Screen.width - 52))
+						GUILayout.MaxWidth(GUIView.current.position.width - 52f)
 					});
 				}
 				else
@@ -109,13 +115,10 @@ namespace UnityEditor
 					GUI.Label(new Rect(num - 310f, 0f, 310f, 19f), "THIS IS AN UNTESTED BLEEDINGEDGE UNITY BUILD");
 					GUI.color = color;
 				}
-				else
+				else if (Unsupported.IsDeveloperBuild())
 				{
-					if (Unsupported.IsDeveloperBuild())
-					{
-						GUI.Label(new Rect(num - 200f, 0f, 200f, 19f), this.m_LastMiniMemoryOverview, EditorStyles.progressBarText);
-						EditorGUIUtility.CleanCache(this.m_LastMiniMemoryOverview);
-					}
+					GUI.Label(new Rect(num - 200f, 0f, 200f, 19f), this.m_LastMiniMemoryOverview, EditorStyles.progressBarText);
+					EditorGUIUtility.CleanCache(this.m_LastMiniMemoryOverview);
 				}
 			}
 			base.DoWindowDecorationEnd();

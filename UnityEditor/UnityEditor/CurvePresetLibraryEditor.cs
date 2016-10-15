@@ -1,13 +1,16 @@
 using System;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(CurvePresetLibrary))]
 	internal class CurvePresetLibraryEditor : Editor
 	{
 		private GenericPresetLibraryInspector<CurvePresetLibrary> m_GenericPresetLibraryInspector;
+
 		private CurveLibraryType m_CurveLibraryType;
+
 		public void OnEnable()
 		{
 			string assetPath = AssetDatabase.GetAssetPath(this.target.GetInstanceID());
@@ -19,6 +22,7 @@ namespace UnityEditor
 			this.m_GenericPresetLibraryInspector.presetSize = new Vector2(72f, 20f);
 			this.m_GenericPresetLibraryInspector.lineSpacing = 5f;
 		}
+
 		public void OnDestroy()
 		{
 			if (this.m_GenericPresetLibraryInspector != null)
@@ -26,6 +30,7 @@ namespace UnityEditor
 				this.m_GenericPresetLibraryInspector.OnDestroy();
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			string basePrefText = CurvePresetsContentsForPopupWindow.GetBasePrefText(this.m_CurveLibraryType);
@@ -35,6 +40,7 @@ namespace UnityEditor
 				this.m_GenericPresetLibraryInspector.OnInspectorGUI();
 			}
 		}
+
 		private void OnEditButtonClicked(string libraryPath)
 		{
 			Rect curveRanges = this.GetCurveRanges();
@@ -51,6 +57,7 @@ namespace UnityEditor
 			CurveEditorWindow.instance.Show(GUIView.current, curveEditorSettings);
 			CurveEditorWindow.instance.currentPresetLibrary = libraryPath;
 		}
+
 		private string GetHeader()
 		{
 			CurveLibraryType curveLibraryType = this.m_CurveLibraryType;
@@ -64,6 +71,7 @@ namespace UnityEditor
 			}
 			return "Curve Preset Library (Normalized 0 - 1)";
 		}
+
 		private Rect GetCurveRanges()
 		{
 			CurveLibraryType curveLibraryType = this.m_CurveLibraryType;
@@ -77,6 +85,7 @@ namespace UnityEditor
 			}
 			return new Rect(0f, 0f, 1f, 1f);
 		}
+
 		private CurveLibraryType GetCurveLibraryTypeFromExtension(string extension)
 		{
 			string curveLibraryExtension = PresetLibraryLocations.GetCurveLibraryExtension(true);

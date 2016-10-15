@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class CustomEditorAttributes
@@ -10,16 +11,25 @@ namespace UnityEditor
 		private class MonoEditorType
 		{
 			public Type m_InspectedType;
+
 			public Type m_InspectorType;
+
 			public bool m_EditorForChildClasses;
+
+			public bool m_IsFallback;
 		}
+
 		private static readonly List<CustomEditorAttributes.MonoEditorType> kSCustomEditors = new List<CustomEditorAttributes.MonoEditorType>();
+
 		private static readonly List<CustomEditorAttributes.MonoEditorType> kSCustomMultiEditors = new List<CustomEditorAttributes.MonoEditorType>();
+
 		private static bool s_Initialized;
+
 		internal static Type FindCustomEditorType(UnityEngine.Object o, bool multiEdit)
 		{
 			return CustomEditorAttributes.FindCustomEditorTypeByType(o.GetType(), multiEdit);
 		}
+
 		internal static Type FindCustomEditorTypeByType(Type type, bool multiEdit)
 		{
 			if (!CustomEditorAttributes.s_Initialized)
@@ -32,25 +42,22 @@ namespace UnityEditor
 				CustomEditorAttributes.s_Initialized = true;
 			}
 			List<CustomEditorAttributes.MonoEditorType> source = (!multiEdit) ? CustomEditorAttributes.kSCustomEditors : CustomEditorAttributes.kSCustomMultiEditors;
-			Type inspected;
-			for (inspected = type; inspected != null; inspected = inspected.BaseType)
+			int pass;
+			for (pass = 0; pass < 2; pass++)
 			{
-				CustomEditorAttributes.MonoEditorType monoEditorType;
-				if (type == inspected)
+				Type inspected;
+				for (inspected = type; inspected != null; inspected = inspected.BaseType)
 				{
-					monoEditorType = source.FirstOrDefault((CustomEditorAttributes.MonoEditorType x) => inspected == x.m_InspectedType);
-				}
-				else
-				{
-					monoEditorType = source.FirstOrDefault((CustomEditorAttributes.MonoEditorType x) => inspected == x.m_InspectedType && x.m_EditorForChildClasses);
-				}
-				if (monoEditorType != null)
-				{
-					return monoEditorType.m_InspectorType;
+					CustomEditorAttributes.MonoEditorType monoEditorType = source.FirstOrDefault((CustomEditorAttributes.MonoEditorType x) => (type == inspected || x.m_EditorForChildClasses) && pass == 1 == x.m_IsFallback && inspected == x.m_InspectedType);
+					if (monoEditorType != null)
+					{
+						return monoEditorType.m_InspectorType;
+					}
 				}
 			}
 			return null;
 		}
+
 		internal static void Rebuild(Assembly assembly)
 		{
 			Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(assembly);
@@ -68,25 +75,23 @@ namespace UnityEditor
 					{
 						Debug.Log("Can't load custom inspector " + type.Name + " because the inspected type is null.");
 					}
+					else if (!type.IsSubclassOf(typeof(Editor)))
+					{
+						if (!(type.FullName == "TweakMode") || !type.IsEnum || !(customEditor.m_InspectedType.FullName == "BloomAndFlares"))
+						{
+							Debug.LogWarning(type.Name + " uses the CustomEditor attribute but does not inherit from Editor.\nYou must inherit from Editor. See the Editor class script documentation.");
+						}
+					}
 					else
 					{
-						if (!type.IsSubclassOf(typeof(Editor)))
+						monoEditorType.m_InspectedType = customEditor.m_InspectedType;
+						monoEditorType.m_InspectorType = type;
+						monoEditorType.m_EditorForChildClasses = customEditor.m_EditorForChildClasses;
+						monoEditorType.m_IsFallback = customEditor.isFallback;
+						CustomEditorAttributes.kSCustomEditors.Add(monoEditorType);
+						if (type.GetCustomAttributes(typeof(CanEditMultipleObjects), false).Length > 0)
 						{
-							if (!(type.FullName == "TweakMode") || !type.IsEnum || !(customEditor.m_InspectedType.FullName == "BloomAndFlares"))
-							{
-								Debug.LogWarning(type.Name + " uses the CustomEditor attribute but does not inherit from Editor.\nYou must inherit from Editor. See the Editor class script documentation.");
-							}
-						}
-						else
-						{
-							monoEditorType.m_InspectedType = customEditor.m_InspectedType;
-							monoEditorType.m_InspectorType = type;
-							monoEditorType.m_EditorForChildClasses = customEditor.m_EditorForChildClasses;
-							CustomEditorAttributes.kSCustomEditors.Add(monoEditorType);
-							if (type.GetCustomAttributes(typeof(CanEditMultipleObjects), false).Length > 0)
-							{
-								CustomEditorAttributes.kSCustomMultiEditors.Add(monoEditorType);
-							}
+							CustomEditorAttributes.kSCustomMultiEditors.Add(monoEditorType);
 						}
 					}
 				}

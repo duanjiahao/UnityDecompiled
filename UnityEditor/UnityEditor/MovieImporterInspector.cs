@@ -1,14 +1,19 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(MovieImporter))]
 	internal class MovieImporterInspector : AssetImporterInspector
 	{
 		private float m_quality;
+
 		private float m_duration;
+
 		private bool m_linearTexture;
-		private static GUIContent linearTextureContent = EditorGUIUtility.TextContent("TextureImporter.LinearTexture");
+
+		private static GUIContent linearTextureContent = EditorGUIUtility.TextContent("Bypass sRGB Sampling|Texture will not be converted from gamma space to linear when sampled. Enable for IMGUI textures and non-color textures.");
+
 		internal override bool showImportedObject
 		{
 			get
@@ -16,11 +21,13 @@ namespace UnityEditor
 				return false;
 			}
 		}
+
 		internal override bool HasModified()
 		{
 			MovieImporter movieImporter = this.target as MovieImporter;
 			return movieImporter.quality != this.m_quality || movieImporter.linearTexture != this.m_linearTexture;
 		}
+
 		internal override void ResetValues()
 		{
 			MovieImporter movieImporter = this.target as MovieImporter;
@@ -28,12 +35,14 @@ namespace UnityEditor
 			this.m_linearTexture = movieImporter.linearTexture;
 			this.m_duration = movieImporter.duration;
 		}
+
 		internal override void Apply()
 		{
 			MovieImporter movieImporter = this.target as MovieImporter;
 			movieImporter.quality = this.m_quality;
 			movieImporter.linearTexture = this.m_linearTexture;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			MovieImporter x = this.target as MovieImporter;
@@ -57,18 +66,22 @@ namespace UnityEditor
 				GUILayout.Label("The Loop setting in the Inspector is obsolete. Use the Scripting API to control looping instead.\n\nThe loop setting will be disabled on next re-import or by disabling it above.", EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 		}
+
 		private double GetAudioBitrateForQuality(double f)
 		{
 			return 56000.0 + 200000.0 * f;
 		}
+
 		private double GetVideoBitrateForQuality(double f)
 		{
 			return 100000.0 + 8000000.0 * f;
 		}
+
 		private double GetAudioQualityForBitrate(double f)
 		{
 			return (f - 56000.0) / 200000.0;
 		}
+
 		private double GetVideoQualityForBitrate(double f)
 		{
 			return (f - 100000.0) / 8000000.0;

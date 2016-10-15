@@ -4,13 +4,16 @@ using System.Linq;
 using UnityEditor.Scripting;
 using UnityEditor.Scripting.Compilers;
 using UnityEditor.Utils;
+
 internal abstract class GendarmeValidationRule : IValidationRule
 {
 	private readonly string _gendarmeExePath;
+
 	protected GendarmeValidationRule(string gendarmeExePath)
 	{
 		this._gendarmeExePath = gendarmeExePath;
 	}
+
 	public ValidationResult Validate(IEnumerable<string> userAssemblies, params object[] options)
 	{
 		string arguments = this.BuildGendarmeCommandLineArguments(userAssemblies);
@@ -18,6 +21,7 @@ internal abstract class GendarmeValidationRule : IValidationRule
 		ValidationResult validationResult2 = validationResult;
 		validationResult2.Success = true;
 		validationResult2.Rule = this;
+		validationResult2.CompilerMessages = null;
 		validationResult = validationResult2;
 		try
 		{
@@ -31,13 +35,18 @@ internal abstract class GendarmeValidationRule : IValidationRule
 				new CompilerMessage
 				{
 					file = "Exception",
-					message = ex.Message
+					message = ex.Message,
+					line = 0,
+					column = 0,
+					type = CompilerMessageType.Error
 				}
 			};
 		}
 		return validationResult;
 	}
+
 	protected abstract GendarmeOptions ConfigureGendarme(IEnumerable<string> userAssemblies);
+
 	protected string BuildGendarmeCommandLineArguments(IEnumerable<string> userAssemblies)
 	{
 		GendarmeOptions gendarmeOptions = this.ConfigureGendarme(userAssemblies);
@@ -53,6 +62,7 @@ internal abstract class GendarmeValidationRule : IValidationRule
 		list.AddRange(gendarmeOptions.UserAssemblies);
 		return list.Aggregate((string agg, string i) => agg + " " + i);
 	}
+
 	private static bool StartManagedProgram(string exe, string arguments, CompilerOutputParserBase parser, ref IEnumerable<CompilerMessage> compilerMessages)
 	{
 		using (ManagedProgram managedProgram = GendarmeValidationRule.ManagedProgramFor(exe, arguments))
@@ -75,8 +85,9 @@ internal abstract class GendarmeValidationRule : IValidationRule
 		}
 		return false;
 	}
+
 	private static ManagedProgram ManagedProgramFor(string exe, string arguments)
 	{
-		return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, arguments);
+		return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, arguments, null);
 	}
 }

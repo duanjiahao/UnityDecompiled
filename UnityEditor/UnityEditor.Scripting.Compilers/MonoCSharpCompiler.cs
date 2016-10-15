@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using UnityEditor.Utils;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal class MonoCSharpCompiler : MonoScriptCompilerBase
@@ -11,6 +12,7 @@ namespace UnityEditor.Scripting.Compilers
 		public MonoCSharpCompiler(MonoIsland island, bool runUpdater) : base(island, runUpdater)
 		{
 		}
+
 		protected override Program StartCompiler()
 		{
 			List<string> list = new List<string>
@@ -48,6 +50,7 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			return base.StartCompiler(this._island._target, this.GetCompilerPath(list), list);
 		}
+
 		private string[] GetAdditionalReferences()
 		{
 			return new string[]
@@ -56,6 +59,7 @@ namespace UnityEditor.Scripting.Compilers
 				"System.Xml.Linq.dll"
 			};
 		}
+
 		private string GetCompilerPath(List<string> arguments)
 		{
 			string profileDirectory = base.GetProfileDirectory();
@@ -76,10 +80,12 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			throw new ApplicationException("Unable to find csharp compiler in " + profileDirectory);
 		}
+
 		protected override CompilerOutputParserBase CreateOutputParser()
 		{
 			return new MonoCSharpCompilerOutputParser();
 		}
+
 		public static string[] Compile(string[] sources, string[] references, string[] defines, string outputFile)
 		{
 			MonoIsland island = new MonoIsland(BuildTarget.StandaloneWindows, "unity", sources, references, defines, outputFile);
@@ -91,9 +97,8 @@ namespace UnityEditor.Scripting.Compilers
 				{
 					Thread.Sleep(50);
 				}
-				result = (
-					from cm in monoCSharpCompiler.GetCompilerMessages()
-					select cm.message).ToArray<string>();
+				result = (from cm in monoCSharpCompiler.GetCompilerMessages()
+				select cm.message).ToArray<string>();
 			}
 			return result;
 		}

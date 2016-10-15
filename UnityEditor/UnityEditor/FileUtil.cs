@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class FileUtil
@@ -11,36 +12,47 @@ namespace UnityEditor
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DeleteFileOrDirectory(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyFileOrDirectory(string from, string to);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyFileOrDirectoryFollowSymlinks(string from, string to);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void MoveFileOrDirectory(string from, string to);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUniqueTempPathInProject();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetActualPathName(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetProjectRelativePath(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetLastPathNameComponent(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string DeleteLastPathNameComponent(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetPathExtension(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetPathWithoutExtension(string path);
+
 		public static void ReplaceFile(string src, string dst)
 		{
 			if (File.Exists(dst))
@@ -49,6 +61,7 @@ namespace UnityEditor
 			}
 			FileUtil.CopyFileOrDirectory(src, dst);
 		}
+
 		public static void ReplaceDirectory(string src, string dst)
 		{
 			if (Directory.Exists(dst))
@@ -57,6 +70,7 @@ namespace UnityEditor
 			}
 			FileUtil.CopyFileOrDirectory(src, dst);
 		}
+
 		internal static void ReplaceText(string path, params string[] input)
 		{
 			path = FileUtil.NiceWinPath(path);
@@ -70,6 +84,7 @@ namespace UnityEditor
 			}
 			File.WriteAllLines(path, array);
 		}
+
 		internal static bool ReplaceTextRegex(string path, params string[] input)
 		{
 			bool result = false;
@@ -90,6 +105,7 @@ namespace UnityEditor
 			File.WriteAllLines(path, array);
 			return result;
 		}
+
 		internal static bool AppendTextAfter(string path, string find, string append)
 		{
 			bool result = false;
@@ -107,34 +123,42 @@ namespace UnityEditor
 			File.WriteAllLines(path, list.ToArray());
 			return result;
 		}
+
 		internal static void CopyDirectoryRecursive(string source, string target)
 		{
 			FileUtil.CopyDirectoryRecursive(source, target, false, false);
 		}
+
 		internal static void CopyDirectoryRecursiveIgnoreMeta(string source, string target)
 		{
 			FileUtil.CopyDirectoryRecursive(source, target, false, true);
 		}
+
 		internal static void CopyDirectoryRecursive(string source, string target, bool overwrite)
 		{
 			FileUtil.CopyDirectoryRecursive(source, target, overwrite, false);
 		}
+
 		internal static void CopyDirectory(string source, string target, bool overwrite)
 		{
 			FileUtil.CopyDirectoryFiltered(source, target, overwrite, (string f) => true, false);
 		}
+
 		internal static void CopyDirectoryRecursive(string source, string target, bool overwrite, bool ignoreMeta)
 		{
 			FileUtil.CopyDirectoryRecursiveFiltered(source, target, overwrite, (!ignoreMeta) ? null : "\\.meta$");
 		}
+
 		internal static void CopyDirectoryRecursiveForPostprocess(string source, string target, bool overwrite)
 		{
 			FileUtil.CopyDirectoryRecursiveFiltered(source, target, overwrite, ".*/\\.+|\\.meta$");
 		}
+
 		internal static void CopyDirectoryRecursiveFiltered(string source, string target, bool overwrite, string regExExcludeFilter)
 		{
 			FileUtil.CopyDirectoryFiltered(source, target, overwrite, regExExcludeFilter, true);
 		}
+
 		internal static void CopyDirectoryFiltered(string source, string target, bool overwrite, string regExExcludeFilter, bool recursive)
 		{
 			Regex exclude = null;
@@ -153,6 +177,7 @@ namespace UnityEditor
 			Func<string, bool> includeCallback = (string file) => exclude == null || !exclude.IsMatch(file);
 			FileUtil.CopyDirectoryFiltered(source, target, overwrite, includeCallback, recursive);
 		}
+
 		internal static void CopyDirectoryFiltered(string source, string target, bool overwrite, Func<string, bool> includeCallback, bool recursive)
 		{
 			if (!Directory.Exists(target))
@@ -186,14 +211,17 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static void UnityDirectoryDelete(string path)
 		{
 			FileUtil.UnityDirectoryDelete(path, false);
 		}
+
 		internal static void UnityDirectoryDelete(string path, bool recursive)
 		{
 			Directory.Delete(FileUtil.NiceWinPath(path), recursive);
 		}
+
 		internal static void UnityDirectoryRemoveReadonlyAttribute(string target_dir)
 		{
 			string[] files = Directory.GetFiles(target_dir);
@@ -211,6 +239,7 @@ namespace UnityEditor
 				FileUtil.UnityDirectoryRemoveReadonlyAttribute(target_dir2);
 			}
 		}
+
 		internal static void MoveFileIfExists(string src, string dst)
 		{
 			if (File.Exists(src))
@@ -220,6 +249,7 @@ namespace UnityEditor
 				File.SetLastWriteTime(dst, DateTime.Now);
 			}
 		}
+
 		internal static void CopyFileIfExists(string src, string dst, bool overwrite)
 		{
 			if (File.Exists(src))
@@ -227,30 +257,37 @@ namespace UnityEditor
 				FileUtil.UnityFileCopy(src, dst, overwrite);
 			}
 		}
+
 		internal static void UnityFileCopy(string from, string to, bool overwrite)
 		{
 			File.Copy(FileUtil.NiceWinPath(from), FileUtil.NiceWinPath(to), overwrite);
 		}
+
 		internal static string NiceWinPath(string unityPath)
 		{
 			return (Application.platform != RuntimePlatform.WindowsEditor) ? unityPath : unityPath.Replace("/", "\\");
 		}
+
 		internal static string UnityGetFileNameWithoutExtension(string path)
 		{
 			return Path.GetFileNameWithoutExtension(path.Replace("//", "\\\\")).Replace("\\\\", "//");
 		}
+
 		internal static string UnityGetFileName(string path)
 		{
 			return Path.GetFileName(path.Replace("//", "\\\\")).Replace("\\\\", "//");
 		}
+
 		internal static string UnityGetDirectoryName(string path)
 		{
 			return Path.GetDirectoryName(path.Replace("//", "\\\\")).Replace("\\\\", "//");
 		}
+
 		internal static void UnityFileCopy(string from, string to)
 		{
 			FileUtil.UnityFileCopy(from, to, false);
 		}
+
 		internal static void CreateOrCleanDirectory(string dir)
 		{
 			if (Directory.Exists(dir))
@@ -259,6 +296,7 @@ namespace UnityEditor
 			}
 			Directory.CreateDirectory(dir);
 		}
+
 		internal static string RemovePathPrefix(string fullPath, string prefix)
 		{
 			string[] array = fullPath.Split(new char[]
@@ -284,6 +322,7 @@ namespace UnityEditor
 			}
 			return string.Join(Path.DirectorySeparatorChar.ToString(), array, num, array.Length - num);
 		}
+
 		internal static string CombinePaths(params string[] paths)
 		{
 			if (paths == null)
@@ -292,6 +331,7 @@ namespace UnityEditor
 			}
 			return string.Join(Path.DirectorySeparatorChar.ToString(), paths);
 		}
+
 		internal static List<string> GetAllFilesRecursive(string path)
 		{
 			List<string> files = new List<string>();
@@ -301,6 +341,7 @@ namespace UnityEditor
 			}, (string p) => true);
 			return files;
 		}
+
 		internal static void WalkFilesystemRecursively(string path, Action<string> fileCallback, Func<string, bool> directoryCallback)
 		{
 			string[] files = Directory.GetFiles(path);
@@ -318,6 +359,20 @@ namespace UnityEditor
 					FileUtil.WalkFilesystemRecursively(text, fileCallback, directoryCallback);
 				}
 			}
+		}
+
+		internal static long GetDirectorySize(string path)
+		{
+			string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+			long num = 0L;
+			string[] array = files;
+			for (int i = 0; i < array.Length; i++)
+			{
+				string fileName = array[i];
+				FileInfo fileInfo = new FileInfo(fileName);
+				num += fileInfo.Length;
+			}
+			return num;
 		}
 	}
 }

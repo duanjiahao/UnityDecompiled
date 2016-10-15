@@ -1,33 +1,43 @@
 using System;
 using System.Reflection;
 using UnityEngine.Serialization;
+
 namespace UnityEngine.Events
 {
 	[Serializable]
 	public abstract class UnityEventBase : ISerializationCallbackReceiver
 	{
 		private InvokableCallList m_Calls;
+
 		[FormerlySerializedAs("m_PersistentListeners"), SerializeField]
 		private PersistentCallGroup m_PersistentCalls;
+
 		[SerializeField]
 		private string m_TypeName;
+
 		private bool m_CallsDirty = true;
+
 		protected UnityEventBase()
 		{
 			this.m_Calls = new InvokableCallList();
 			this.m_PersistentCalls = new PersistentCallGroup();
 			this.m_TypeName = base.GetType().AssemblyQualifiedName;
 		}
+
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
 		}
+
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
 			this.DirtyPersistentCalls();
 			this.m_TypeName = base.GetType().AssemblyQualifiedName;
 		}
+
 		protected abstract MethodInfo FindMethod_Impl(string name, object targetObj);
+
 		internal abstract BaseInvokableCall GetDelegate(object target, MethodInfo theFunction);
+
 		internal MethodInfo FindMethod(PersistentCall call)
 		{
 			Type argumentType = typeof(UnityEngine.Object);
@@ -37,6 +47,7 @@ namespace UnityEngine.Events
 			}
 			return this.FindMethod(call.methodName, call.target, call.mode, argumentType);
 		}
+
 		internal MethodInfo FindMethod(string name, object listener, PersistentListenerMode mode, Type argumentType)
 		{
 			switch (mode)
@@ -74,25 +85,30 @@ namespace UnityEngine.Events
 				return null;
 			}
 		}
+
 		public int GetPersistentEventCount()
 		{
 			return this.m_PersistentCalls.Count;
 		}
+
 		public UnityEngine.Object GetPersistentTarget(int index)
 		{
 			PersistentCall listener = this.m_PersistentCalls.GetListener(index);
 			return (listener == null) ? null : listener.target;
 		}
+
 		public string GetPersistentMethodName(int index)
 		{
 			PersistentCall listener = this.m_PersistentCalls.GetListener(index);
 			return (listener == null) ? string.Empty : listener.methodName;
 		}
+
 		private void DirtyPersistentCalls()
 		{
 			this.m_Calls.ClearPersistent();
 			this.m_CallsDirty = true;
 		}
+
 		private void RebuildPersistentCallsIfNeeded()
 		{
 			if (this.m_CallsDirty)
@@ -101,6 +117,7 @@ namespace UnityEngine.Events
 				this.m_CallsDirty = false;
 			}
 		}
+
 		public void SetPersistentListenerState(int index, UnityEventCallState state)
 		{
 			PersistentCall listener = this.m_PersistentCalls.GetListener(index);
@@ -110,31 +127,38 @@ namespace UnityEngine.Events
 			}
 			this.DirtyPersistentCalls();
 		}
+
 		protected void AddListener(object targetObj, MethodInfo method)
 		{
 			this.m_Calls.AddListener(this.GetDelegate(targetObj, method));
 		}
+
 		internal void AddCall(BaseInvokableCall call)
 		{
 			this.m_Calls.AddListener(call);
 		}
+
 		protected void RemoveListener(object targetObj, MethodInfo method)
 		{
 			this.m_Calls.RemoveListener(targetObj, method);
 		}
+
 		public void RemoveAllListeners()
 		{
 			this.m_Calls.Clear();
 		}
+
 		protected void Invoke(object[] parameters)
 		{
 			this.RebuildPersistentCallsIfNeeded();
 			this.m_Calls.Invoke(parameters);
 		}
+
 		public override string ToString()
 		{
 			return base.ToString() + " " + base.GetType().FullName;
 		}
+
 		public static MethodInfo GetValidMethodInfo(object obj, string functionName, Type[] argumentTypes)
 		{
 			Type type = obj.GetType();
@@ -168,10 +192,12 @@ namespace UnityEngine.Events
 			}
 			return null;
 		}
+
 		protected bool ValidateRegistration(MethodInfo method, object targetObj, PersistentListenerMode mode)
 		{
 			return this.ValidateRegistration(method, targetObj, mode, typeof(UnityEngine.Object));
 		}
+
 		protected bool ValidateRegistration(MethodInfo method, object targetObj, PersistentListenerMode mode, Type argumentType)
 		{
 			if (method == null)
@@ -211,10 +237,12 @@ namespace UnityEngine.Events
 			}
 			return true;
 		}
+
 		internal void AddPersistentListener()
 		{
 			this.m_PersistentCalls.AddListener();
 		}
+
 		protected void RegisterPersistentListener(int index, object targetObj, MethodInfo method)
 		{
 			if (!this.ValidateRegistration(method, targetObj, PersistentListenerMode.EventDefined))
@@ -224,6 +252,7 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RegisterEventPersistentListener(index, targetObj as UnityEngine.Object, method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void RemovePersistentListener(UnityEngine.Object target, MethodInfo method)
 		{
 			if (method == null || method.IsStatic || target == null || target.GetInstanceID() == 0)
@@ -233,22 +262,26 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RemoveListeners(target, method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void RemovePersistentListener(int index)
 		{
 			this.m_PersistentCalls.RemoveListener(index);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void UnregisterPersistentListener(int index)
 		{
 			this.m_PersistentCalls.UnregisterPersistentListener(index);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void AddVoidPersistentListener(UnityAction call)
 		{
 			int persistentEventCount = this.GetPersistentEventCount();
 			this.AddPersistentListener();
 			this.RegisterVoidPersistentListener(persistentEventCount, call);
 		}
+
 		internal void RegisterVoidPersistentListener(int index, UnityAction call)
 		{
 			if (call == null)
@@ -263,12 +296,14 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RegisterVoidPersistentListener(index, call.Target as UnityEngine.Object, call.Method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void AddIntPersistentListener(UnityAction<int> call, int argument)
 		{
 			int persistentEventCount = this.GetPersistentEventCount();
 			this.AddPersistentListener();
 			this.RegisterIntPersistentListener(persistentEventCount, call, argument);
 		}
+
 		internal void RegisterIntPersistentListener(int index, UnityAction<int> call, int argument)
 		{
 			if (call == null)
@@ -283,12 +318,14 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RegisterIntPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void AddFloatPersistentListener(UnityAction<float> call, float argument)
 		{
 			int persistentEventCount = this.GetPersistentEventCount();
 			this.AddPersistentListener();
 			this.RegisterFloatPersistentListener(persistentEventCount, call, argument);
 		}
+
 		internal void RegisterFloatPersistentListener(int index, UnityAction<float> call, float argument)
 		{
 			if (call == null)
@@ -303,12 +340,14 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RegisterFloatPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void AddBoolPersistentListener(UnityAction<bool> call, bool argument)
 		{
 			int persistentEventCount = this.GetPersistentEventCount();
 			this.AddPersistentListener();
 			this.RegisterBoolPersistentListener(persistentEventCount, call, argument);
 		}
+
 		internal void RegisterBoolPersistentListener(int index, UnityAction<bool> call, bool argument)
 		{
 			if (call == null)
@@ -323,12 +362,14 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RegisterBoolPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void AddStringPersistentListener(UnityAction<string> call, string argument)
 		{
 			int persistentEventCount = this.GetPersistentEventCount();
 			this.AddPersistentListener();
 			this.RegisterStringPersistentListener(persistentEventCount, call, argument);
 		}
+
 		internal void RegisterStringPersistentListener(int index, UnityAction<string> call, string argument)
 		{
 			if (call == null)
@@ -343,12 +384,14 @@ namespace UnityEngine.Events
 			this.m_PersistentCalls.RegisterStringPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
 			this.DirtyPersistentCalls();
 		}
+
 		internal void AddObjectPersistentListener<T>(UnityAction<T> call, T argument) where T : UnityEngine.Object
 		{
 			int persistentEventCount = this.GetPersistentEventCount();
 			this.AddPersistentListener();
 			this.RegisterObjectPersistentListener<T>(persistentEventCount, call, argument);
 		}
+
 		internal void RegisterObjectPersistentListener<T>(int index, UnityAction<T> call, T argument) where T : UnityEngine.Object
 		{
 			if (call == null)

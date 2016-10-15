@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.VersionControl
 {
 	[Flags]
@@ -6,6 +7,7 @@ namespace UnityEditor.VersionControl
 	{
 		Asset = 1,
 		Meta = 2,
-		Both = 3
+		Both = 3,
+		Exact = 4
 	}
 }

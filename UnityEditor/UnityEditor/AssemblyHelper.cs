@@ -6,24 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor.Modules;
-using UnityEditor.Scripting.Compilers;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssemblyHelper
 	{
 		private const int kDefaultDepth = 10;
-		public static bool IsWindowsRuntimeAssembly(string assemblyPath)
-		{
-			bool isWindowsRuntime;
-			using (FileStream fileStream = File.Open(assemblyPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-			{
-				AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(fileStream);
-				isWindowsRuntime = assemblyDefinition.Name.IsWindowsRuntime;
-			}
-			return isWindowsRuntime;
-		}
+
 		public static void CheckForAssemblyFileNameMismatch(string assemblyPath)
 		{
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyPath);
@@ -40,6 +31,7 @@ namespace UnityEditor
 				}));
 			}
 		}
+
 		public static string[] GetNamesOfAssembliesLoadedInCurrentDomain()
 		{
 			Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -58,6 +50,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		public static Assembly FindLoadedAssemblyWithName(string s)
 		{
 			Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -78,11 +71,13 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public static string ExtractInternalAssemblyName(string path)
 		{
 			AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(path);
 			return assemblyDefinition.Name.Name;
 		}
+
 		private static AssemblyDefinition GetAssemblyDefinitionCached(string path, Dictionary<string, AssemblyDefinition> cache)
 		{
 			if (cache.ContainsKey(path))
@@ -93,27 +88,19 @@ namespace UnityEditor
 			cache[path] = assemblyDefinition;
 			return assemblyDefinition;
 		}
+
 		private static bool IgnoreAssembly(string assemblyPath, BuildTarget target)
 		{
-			if (target != BuildTarget.MetroPlayer)
+			if (target == BuildTarget.WSAPlayer)
 			{
-				if (target == BuildTarget.WP8Player)
-				{
-					if (assemblyPath.IndexOf("mscorlib.dll") != -1 || assemblyPath.IndexOf("System.") != -1 || assemblyPath.IndexOf("Windows.dll") != -1 || assemblyPath.IndexOf("Microsoft.") != -1 || assemblyPath.IndexOf("platform.dll") != -1)
-					{
-						return true;
-					}
-				}
-			}
-			else
-			{
-				if (assemblyPath.IndexOf("mscorlib.dll") != -1 || assemblyPath.IndexOf("System.") != -1 || assemblyPath.IndexOf("Windows.dll") != -1 || assemblyPath.IndexOf("WinRTLegacy.dll") != -1 || assemblyPath.IndexOf("platform.dll") != -1)
+				if (assemblyPath.IndexOf("mscorlib.dll") != -1 || assemblyPath.IndexOf("System.") != -1 || assemblyPath.IndexOf("Windows.dll") != -1 || assemblyPath.IndexOf("Microsoft.") != -1 || assemblyPath.IndexOf("Windows.") != -1 || assemblyPath.IndexOf("WinRTLegacy.dll") != -1 || assemblyPath.IndexOf("platform.dll") != -1)
 				{
 					return true;
 				}
 			}
 			return AssemblyHelper.IsInternalAssembly(assemblyPath);
 		}
+
 		private static void AddReferencedAssembliesRecurse(string assemblyPath, List<string> alreadyFoundAssemblies, string[] allAssemblyPaths, string[] foldersToSearch, Dictionary<string, AssemblyDefinition> cache, BuildTarget target)
 		{
 			if (AssemblyHelper.IgnoreAssembly(assemblyPath, target))
@@ -130,13 +117,12 @@ namespace UnityEditor
 				return;
 			}
 			alreadyFoundAssemblies.Add(assemblyPath);
-			IEnumerable<string> source = (
-				from i in PluginImporter.GetImporters(target).Where(delegate(PluginImporter i)
-				{
-					string platformData = i.GetPlatformData(target, "CPU");
-					return !string.IsNullOrEmpty(platformData) && !string.Equals(platformData, "AnyCPU", StringComparison.InvariantCultureIgnoreCase);
-				})
-				select Path.GetFileName(i.assetPath)).Distinct<string>();
+			IEnumerable<string> source = (from i in PluginImporter.GetImporters(target).Where(delegate(PluginImporter i)
+			{
+				string platformData = i.GetPlatformData(target, "CPU");
+				return !string.IsNullOrEmpty(platformData) && !string.Equals(platformData, "AnyCPU", StringComparison.InvariantCultureIgnoreCase);
+			})
+			select Path.GetFileName(i.assetPath)).Distinct<string>();
 			foreach (AssemblyNameReference referencedAssembly in assemblyDefinitionCached.MainModule.AssemblyReferences)
 			{
 				if (!(referencedAssembly.Name == "BridgeInterface"))
@@ -181,6 +167,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static string FindAssemblyName(string fullName, string name, string[] allAssemblyPaths, string[] foldersToSearch, Dictionary<string, AssemblyDefinition> cache)
 		{
 			for (int i = 0; i < allAssemblyPaths.Length; i++)
@@ -202,6 +189,7 @@ namespace UnityEditor
 			}
 			return string.Empty;
 		}
+
 		public static string[] FindAssembliesReferencedBy(string[] paths, string[] foldersToSearch, BuildTarget target)
 		{
 			List<string> list = new List<string>();
@@ -216,6 +204,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		public static string[] FindAssembliesReferencedBy(string path, string[] foldersToSearch, BuildTarget target)
 		{
 			return AssemblyHelper.FindAssembliesReferencedBy(new string[]
@@ -223,6 +212,7 @@ namespace UnityEditor
 				path
 			}, foldersToSearch, target);
 		}
+
 		private static bool IsTypeMonoBehaviourOrScriptableObject(AssemblyDefinition assembly, TypeReference type)
 		{
 			if (type == null)
@@ -238,16 +228,18 @@ namespace UnityEditor
 			{
 				assembly2 = typeof(MonoBehaviour).Assembly;
 			}
-			else
+			else if (type.Scope.Name == "UnityEditor")
 			{
-				if (type.Scope.Name == "UnityEditor")
-				{
-					assembly2 = typeof(EditorWindow).Assembly;
-				}
+				assembly2 = typeof(EditorWindow).Assembly;
+			}
+			else if (type.Scope.Name == "UnityEngine.UI")
+			{
+				assembly2 = AssemblyHelper.FindLoadedAssemblyWithName("UnityEngine.UI");
 			}
 			if (assembly2 != null)
 			{
-				Type type2 = assembly2.GetType(type.FullName);
+				string name = (!type.IsGenericInstance) ? type.FullName : (type.Namespace + "." + type.Name);
+				Type type2 = assembly2.GetType(name);
 				if (type2 == typeof(MonoBehaviour) || type2.IsSubclassOf(typeof(MonoBehaviour)))
 				{
 					return true;
@@ -267,6 +259,7 @@ namespace UnityEditor
 			}
 			return typeDefinition != null && AssemblyHelper.IsTypeMonoBehaviourOrScriptableObject(assembly, typeDefinition.BaseType);
 		}
+
 		public static void ExtractAllClassesThatInheritMonoBehaviourAndScriptableObject(string path, out string[] classNamesArray, out string[] classNameSpacesArray)
 		{
 			List<string> list = new List<string>();
@@ -281,35 +274,56 @@ namespace UnityEditor
 				foreach (TypeDefinition current2 in current.Types)
 				{
 					TypeReference baseType = current2.BaseType;
-					if (AssemblyHelper.IsTypeMonoBehaviourOrScriptableObject(assemblyDefinition, baseType))
+					try
 					{
-						list.Add(current2.Name);
-						list2.Add(current2.Namespace);
+						if (AssemblyHelper.IsTypeMonoBehaviourOrScriptableObject(assemblyDefinition, baseType))
+						{
+							list.Add(current2.Name);
+							list2.Add(current2.Namespace);
+						}
+					}
+					catch (Exception)
+					{
+						UnityEngine.Debug.LogError(string.Concat(new string[]
+						{
+							"Failed to extract ",
+							current2.FullName,
+							" class of base type ",
+							baseType.FullName,
+							" when inspecting ",
+							path
+						}));
 					}
 				}
 			}
 			classNamesArray = list.ToArray();
 			classNameSpacesArray = list2.ToArray();
 		}
+
 		public static AssemblyTypeInfoGenerator.ClassInfo[] ExtractAssemblyTypeInfo(BuildTarget targetPlatform, bool isEditor, string assemblyPathName, string[] searchDirs)
 		{
-			if (CSharpLanguage.GetUseMicrosoftCSharpCompiler(targetPlatform, isEditor, assemblyPathName))
-			{
-				WSASDK wSASDK = EditorUserBuildSettings.wsaSDK;
-				if (wSASDK == WSASDK.UniversalSDK81)
-				{
-					wSASDK = WSASDK.SDK81;
-				}
-				string nETCoreFrameworkReferencesDirectory = MicrosoftCSharpCompiler.GetNETCoreFrameworkReferencesDirectory(wSASDK);
-				searchDirs = new List<string>(searchDirs)
-				{
-					nETCoreFrameworkReferencesDirectory
-				}.ToArray();
-			}
 			AssemblyTypeInfoGenerator.ClassInfo[] result;
 			try
 			{
-				AssemblyTypeInfoGenerator assemblyTypeInfoGenerator = new AssemblyTypeInfoGenerator(assemblyPathName, searchDirs);
+				string targetStringFromBuildTarget = ModuleManager.GetTargetStringFromBuildTarget(targetPlatform);
+				ICompilationExtension compilationExtension = ModuleManager.GetCompilationExtension(targetStringFromBuildTarget);
+				string[] compilerExtraAssemblyPaths = compilationExtension.GetCompilerExtraAssemblyPaths(isEditor, assemblyPathName);
+				if (compilerExtraAssemblyPaths != null && compilerExtraAssemblyPaths.Length > 0)
+				{
+					List<string> list = new List<string>(searchDirs);
+					list.AddRange(compilerExtraAssemblyPaths);
+					searchDirs = list.ToArray();
+				}
+				IAssemblyResolver assemblyResolver = compilationExtension.GetAssemblyResolver(isEditor, assemblyPathName, searchDirs);
+				AssemblyTypeInfoGenerator assemblyTypeInfoGenerator;
+				if (assemblyResolver == null)
+				{
+					assemblyTypeInfoGenerator = new AssemblyTypeInfoGenerator(assemblyPathName, searchDirs);
+				}
+				else
+				{
+					assemblyTypeInfoGenerator = new AssemblyTypeInfoGenerator(assemblyPathName, assemblyResolver);
+				}
 				result = assemblyTypeInfoGenerator.GatherClassInfo();
 			}
 			catch (Exception ex)
@@ -324,6 +338,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		internal static Type[] GetTypesFromAssembly(Assembly assembly)
 		{
 			if (assembly == null)
@@ -341,28 +356,34 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		[DebuggerHidden]
 		internal static IEnumerable<T> FindImplementors<T>(Assembly assembly) where T : class
 		{
-			AssemblyHelper.<FindImplementors>c__Iterator1<T> <FindImplementors>c__Iterator = new AssemblyHelper.<FindImplementors>c__Iterator1<T>();
+			AssemblyHelper.<FindImplementors>c__Iterator2<T> <FindImplementors>c__Iterator = new AssemblyHelper.<FindImplementors>c__Iterator2<T>();
 			<FindImplementors>c__Iterator.assembly = assembly;
 			<FindImplementors>c__Iterator.<$>assembly = assembly;
-			AssemblyHelper.<FindImplementors>c__Iterator1<T> expr_15 = <FindImplementors>c__Iterator;
+			AssemblyHelper.<FindImplementors>c__Iterator2<T> expr_15 = <FindImplementors>c__Iterator;
 			expr_15.$PC = -2;
 			return expr_15;
 		}
+
 		public static bool IsManagedAssembly(string file)
 		{
-			return InternalEditorUtility.DetectDotNetDll(file);
+			DllType dllType = InternalEditorUtility.DetectDotNetDll(file);
+			return dllType != DllType.Unknown && dllType != DllType.Native;
 		}
+
 		public static bool IsInternalAssembly(string file)
 		{
-			return ModuleManager.IsRegisteredModule(file);
+			return ModuleManager.IsRegisteredModule(file) || ModuleUtils.GetAdditionalReferencesForUserScripts().Any((string p) => p.Equals(file));
 		}
+
 		internal static ICollection<string> FindAssemblies(string basePath)
 		{
 			return AssemblyHelper.FindAssemblies(basePath, 10);
 		}
+
 		internal static ICollection<string> FindAssemblies(string basePath, int maxDepth)
 		{
 			List<string> list = new List<string>();
@@ -373,10 +394,9 @@ namespace UnityEditor
 			try
 			{
 				DirectoryInfo directoryInfo = new DirectoryInfo(basePath);
-				list.AddRange(
-					from file in directoryInfo.GetFiles()
-					where AssemblyHelper.IsManagedAssembly(file.FullName)
-					select file.FullName);
+				list.AddRange(from file in directoryInfo.GetFiles()
+				where AssemblyHelper.IsManagedAssembly(file.FullName)
+				select file.FullName);
 				DirectoryInfo[] directories = directoryInfo.GetDirectories();
 				for (int i = 0; i < directories.Length; i++)
 				{

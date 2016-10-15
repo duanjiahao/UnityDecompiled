@@ -1,6 +1,8 @@
 using System;
+
 namespace UnityEditor
 {
+	[Obsolete("TargetIOSGraphics is ignored, use SetGraphicsAPIs/GetGraphicsAPIs APIs")]
 	public enum TargetIOSGraphics
 	{
 		OpenGLES_2_0 = 2,

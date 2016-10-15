@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Audio;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AudioMixerTreeViewDragging : TreeViewDragging
@@ -10,17 +11,22 @@ namespace UnityEditor
 		private class DragData
 		{
 			public List<AudioMixerItem> m_DraggedItems;
+
 			public DragData(List<AudioMixerItem> draggedItems)
 			{
 				this.m_DraggedItems = draggedItems;
 			}
 		}
+
 		private const string k_AudioMixerDraggingID = "AudioMixerDragging";
+
 		private Action<List<AudioMixerController>, AudioMixerController> m_MixersDroppedOnMixerCallback;
+
 		public AudioMixerTreeViewDragging(TreeView treeView, Action<List<AudioMixerController>, AudioMixerController> mixerDroppedOnMixerCallback) : base(treeView)
 		{
 			this.m_MixersDroppedOnMixerCallback = mixerDroppedOnMixerCallback;
 		}
+
 		public override void StartDrag(TreeViewItem draggedNode, List<int> draggedNodes)
 		{
 			if (EditorApplication.isPlaying)
@@ -34,6 +40,7 @@ namespace UnityEditor
 			string title = draggedNodes.Count + " AudioMixer" + ((draggedNodes.Count <= 1) ? string.Empty : "s");
 			DragAndDrop.StartDrag(title);
 		}
+
 		public override bool DragElement(TreeViewItem targetItem, Rect targetItemRect, bool firstItem)
 		{
 			AudioMixerTreeViewDragging.DragData dragData = DragAndDrop.GetGenericData("AudioMixerDragging") as AudioMixerTreeViewDragging.DragData;
@@ -64,6 +71,7 @@ namespace UnityEditor
 			}
 			return base.DragElement(targetItem, targetItemRect, firstItem);
 		}
+
 		public override DragAndDropVisualMode DoDrag(TreeViewItem parentNode, TreeViewItem targetNode, bool perform, TreeViewDragging.DropPosition dragPos)
 		{
 			AudioMixerTreeViewDragging.DragData dragData = DragAndDrop.GetGenericData("AudioMixerDragging") as AudioMixerTreeViewDragging.DragData;
@@ -75,9 +83,8 @@ namespace UnityEditor
 			AudioMixerItem audioMixerItem = parentNode as AudioMixerItem;
 			if (audioMixerItem != null && dragData != null)
 			{
-				List<AudioMixerGroupController> groupsToBeMoved = (
-					from i in draggedItems
-					select i.mixer.masterGroup).ToList<AudioMixerGroupController>();
+				List<AudioMixerGroupController> groupsToBeMoved = (from i in draggedItems
+				select i.mixer.masterGroup).ToList<AudioMixerGroupController>();
 				List<AudioMixerGroupController> allAudioGroupsSlow = audioMixerItem.mixer.GetAllAudioGroupsSlow();
 				bool flag = AudioMixerController.WillModificationOfTopologyCauseFeedback(allAudioGroupsSlow, groupsToBeMoved, audioMixerItem.mixer.masterGroup, null);
 				bool flag2 = this.ValidDrag(parentNode, draggedItems) && !flag;
@@ -89,11 +96,11 @@ namespace UnityEditor
 			}
 			return DragAndDropVisualMode.None;
 		}
+
 		private bool ValidDrag(TreeViewItem parent, List<AudioMixerItem> draggedItems)
 		{
-			List<int> list = (
-				from n in draggedItems
-				select n.id).ToList<int>();
+			List<int> list = (from n in draggedItems
+			select n.id).ToList<int>();
 			for (TreeViewItem treeViewItem = parent; treeViewItem != null; treeViewItem = treeViewItem.parent)
 			{
 				if (list.Contains(treeViewItem.id))
@@ -103,16 +110,17 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private List<AudioMixerItem> GetAudioMixerItemsFromIDs(List<int> draggedMixers)
 		{
-			List<TreeViewItem> source = TreeViewUtility.FindItemsInList(draggedMixers, this.m_TreeView.data.GetVisibleRows());
+			List<TreeViewItem> source = TreeViewUtility.FindItemsInList(draggedMixers, this.m_TreeView.data.GetRows());
 			return source.OfType<AudioMixerItem>().ToList<AudioMixerItem>();
 		}
+
 		private List<AudioMixerController> GetAudioMixersFromItems(List<AudioMixerItem> draggedItems)
 		{
-			return (
-				from i in draggedItems
-				select i.mixer).ToList<AudioMixerController>();
+			return (from i in draggedItems
+			select i.mixer).ToList<AudioMixerController>();
 		}
 	}
 }

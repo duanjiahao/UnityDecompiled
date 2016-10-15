@@ -2,11 +2,13 @@ using System;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public class ScriptableSingleton<T> : ScriptableObject where T : ScriptableObject
 	{
 		private static T s_Instance;
+
 		public static T instance
 		{
 			get
@@ -18,6 +20,7 @@ namespace UnityEditor
 				return ScriptableSingleton<T>.s_Instance;
 			}
 		}
+
 		protected ScriptableSingleton()
 		{
 			if (ScriptableSingleton<T>.s_Instance != null)
@@ -29,6 +32,7 @@ namespace UnityEditor
 				ScriptableSingleton<T>.s_Instance = (this as T);
 			}
 		}
+
 		private static void CreateAndLoad()
 		{
 			string filePath = ScriptableSingleton<T>.GetFilePath();
@@ -42,6 +46,7 @@ namespace UnityEditor
 				t.hideFlags = HideFlags.HideAndDontSave;
 			}
 		}
+
 		protected virtual void Save(bool saveAsText)
 		{
 			if (ScriptableSingleton<T>.s_Instance == null)
@@ -63,6 +68,7 @@ namespace UnityEditor
 				}, filePath, saveAsText);
 			}
 		}
+
 		private static string GetFilePath()
 		{
 			Type typeFromHandle = typeof(T);

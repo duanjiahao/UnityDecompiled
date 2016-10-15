@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RectSelection
@@ -11,18 +13,28 @@ namespace UnityEditor
 			Additive,
 			Subtractive
 		}
+
 		private Vector2 m_SelectStartPoint;
+
 		private Vector2 m_SelectMousePoint;
+
 		private UnityEngine.Object[] m_SelectionStart;
+
 		private bool m_RectSelecting;
+
 		private Dictionary<GameObject, bool> m_LastSelection;
+
 		private UnityEngine.Object[] m_CurrentSelection;
+
 		private EditorWindow m_Window;
+
 		private static int s_RectSelectionID = GUIUtility.GetPermanentControlID();
+
 		public RectSelection(EditorWindow window)
 		{
 			this.m_Window = window;
 		}
+
 		public void OnGUI()
 		{
 			Event current = Event.current;
@@ -35,16 +47,12 @@ namespace UnityEditor
 			case EventType.MouseDown:
 				if (HandleUtility.nearestControl == num && current.button == 0)
 				{
-					if (SceneView.lastActiveSceneView.m_OneClickDragObject == null && !current.shift && !EditorGUI.actionKey)
-					{
-						this.TryOneClickDrag();
-					}
 					GUIUtility.hotControl = num;
 					this.m_SelectStartPoint = mousePosition;
 					this.m_SelectionStart = Selection.objects;
 					this.m_RectSelecting = false;
 				}
-				goto IL_518;
+				goto IL_4CB;
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == num && current.button == 0)
 				{
@@ -58,40 +66,27 @@ namespace UnityEditor
 					}
 					else
 					{
-						UnityEngine.Object @object = HandleUtility.PickGameObject(Event.current.mousePosition, true);
-						if (current.shift)
+						if (current.shift || EditorGUI.actionKey)
 						{
-							if (Selection.activeGameObject == @object)
+							GameObject gameObject = HandleUtility.PickGameObject(current.mousePosition, false);
+							if ((!EditorGUI.actionKey) ? (Selection.activeGameObject == gameObject) : Selection.gameObjects.Contains(gameObject))
 							{
-								RectSelection.UpdateSelection(this.m_SelectionStart, @object, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
+								RectSelection.UpdateSelection(this.m_SelectionStart, gameObject, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
 							}
 							else
 							{
-								RectSelection.UpdateSelection(this.m_SelectionStart, @object, RectSelection.SelectionType.Additive, this.m_RectSelecting);
+								RectSelection.UpdateSelection(this.m_SelectionStart, HandleUtility.PickGameObject(current.mousePosition, true), RectSelection.SelectionType.Additive, this.m_RectSelecting);
 							}
 						}
 						else
 						{
-							if (EditorGUI.actionKey && @object != null)
-							{
-								if (Selection.Contains(@object))
-								{
-									RectSelection.UpdateSelection(this.m_SelectionStart, @object, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
-								}
-								else
-								{
-									RectSelection.UpdateSelection(this.m_SelectionStart, @object, RectSelection.SelectionType.Additive, this.m_RectSelecting);
-								}
-							}
-							else
-							{
-								RectSelection.UpdateSelection(this.m_SelectionStart, @object, RectSelection.SelectionType.Normal, this.m_RectSelecting);
-							}
+							GameObject newObject = SceneViewPicking.PickGameObject(current.mousePosition);
+							RectSelection.UpdateSelection(this.m_SelectionStart, newObject, RectSelection.SelectionType.Normal, this.m_RectSelecting);
 						}
 						current.Use();
 					}
 				}
-				goto IL_518;
+				goto IL_4CB;
 			case EventType.MouseMove:
 			case EventType.KeyDown:
 			case EventType.KeyUp:
@@ -99,7 +94,7 @@ namespace UnityEditor
 				IL_4C:
 				if (typeForControl != EventType.ExecuteCommand)
 				{
-					goto IL_518;
+					goto IL_4CB;
 				}
 				if (num == GUIUtility.hotControl && current.commandName == "ModifierKeysChanged")
 				{
@@ -107,20 +102,17 @@ namespace UnityEditor
 					{
 						RectSelection.UpdateSelection(this.m_SelectionStart, this.m_CurrentSelection, RectSelection.SelectionType.Additive, this.m_RectSelecting);
 					}
+					else if (EditorGUI.actionKey)
+					{
+						RectSelection.UpdateSelection(this.m_SelectionStart, this.m_CurrentSelection, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
+					}
 					else
 					{
-						if (EditorGUI.actionKey)
-						{
-							RectSelection.UpdateSelection(this.m_SelectionStart, this.m_CurrentSelection, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
-						}
-						else
-						{
-							RectSelection.UpdateSelection(this.m_SelectionStart, this.m_CurrentSelection, RectSelection.SelectionType.Normal, this.m_RectSelecting);
-						}
+						RectSelection.UpdateSelection(this.m_SelectionStart, this.m_CurrentSelection, RectSelection.SelectionType.Normal, this.m_RectSelecting);
 					}
 					current.Use();
 				}
-				goto IL_518;
+				goto IL_4CB;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == num)
 				{
@@ -176,40 +168,38 @@ namespace UnityEditor
 								{
 									RectSelection.UpdateSelection(this.m_SelectionStart, array, RectSelection.SelectionType.Additive, this.m_RectSelecting);
 								}
+								else if (EditorGUI.actionKey)
+								{
+									RectSelection.UpdateSelection(this.m_SelectionStart, array, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
+								}
 								else
 								{
-									if (EditorGUI.actionKey)
-									{
-										RectSelection.UpdateSelection(this.m_SelectionStart, array, RectSelection.SelectionType.Subtractive, this.m_RectSelecting);
-									}
-									else
-									{
-										RectSelection.UpdateSelection(this.m_SelectionStart, array, RectSelection.SelectionType.Normal, this.m_RectSelecting);
-									}
+									RectSelection.UpdateSelection(this.m_SelectionStart, array, RectSelection.SelectionType.Normal, this.m_RectSelecting);
 								}
 							}
 						}
 					}
 					current.Use();
 				}
-				goto IL_518;
+				goto IL_4CB;
 			case EventType.Repaint:
 				if (GUIUtility.hotControl == num && this.m_RectSelecting)
 				{
 					EditorStyles.selectionRect.Draw(EditorGUIExt.FromToRect(this.m_SelectStartPoint, this.m_SelectMousePoint), GUIContent.none, false, false, false, false);
 				}
-				goto IL_518;
+				goto IL_4CB;
 			case EventType.Layout:
 				if (!Tools.viewToolActive)
 				{
 					HandleUtility.AddDefaultControl(num);
 				}
-				goto IL_518;
+				goto IL_4CB;
 			}
 			goto IL_4C;
-			IL_518:
+			IL_4CB:
 			Handles.EndGUI();
 		}
+
 		private static void UpdateSelection(UnityEngine.Object[] existingSelection, UnityEngine.Object newObject, RectSelection.SelectionType type, bool isRectSelection)
 		{
 			UnityEngine.Object[] newObjects;
@@ -226,6 +216,7 @@ namespace UnityEditor
 			}
 			RectSelection.UpdateSelection(existingSelection, newObjects, type, isRectSelection);
 		}
+
 		private static void UpdateSelection(UnityEngine.Object[] existingSelection, UnityEngine.Object[] newObjects, RectSelection.SelectionType type, bool isRectSelection)
 		{
 			switch (type)
@@ -278,35 +269,7 @@ namespace UnityEditor
 			}
 			Selection.objects = newObjects;
 		}
-		private void TryOneClickDrag()
-		{
-			EventType type = Event.current.type;
-			if (type == EventType.MouseDown)
-			{
-				UnityEngine.Object @object = HandleUtility.PickGameObject(Event.current.mousePosition, true);
-				if (@object)
-				{
-					GameObject gameObject = @object as GameObject;
-					bool flag = false;
-					GameObject[] gameObjects = Selection.gameObjects;
-					for (int i = 0; i < gameObjects.Length; i++)
-					{
-						GameObject y = gameObjects[i];
-						if (gameObject == y)
-						{
-							flag = true;
-							break;
-						}
-					}
-					if (!flag && gameObject.GetComponent<SpriteRenderer>() != null)
-					{
-						RectSelection.UpdateSelection(this.m_SelectionStart, @object, RectSelection.SelectionType.Normal, this.m_RectSelecting);
-						SceneView.lastActiveSceneView.m_OneClickDragObject = @object;
-						Event.current.Use();
-					}
-				}
-			}
-		}
+
 		internal void SendCommandsOnModifierKeys()
 		{
 			this.m_Window.SendEvent(EditorGUIUtility.CommandEvent("ModifierKeysChanged"));

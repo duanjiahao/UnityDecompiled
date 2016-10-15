@@ -1,10 +1,13 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct JointTranslationLimits2D
 	{
 		private float m_LowerTranslation;
+
 		private float m_UpperTranslation;
+
 		public float min
 		{
 			get
@@ -16,6 +19,7 @@ namespace UnityEngine
 				this.m_LowerTranslation = value;
 			}
 		}
+
 		public float max
 		{
 			get

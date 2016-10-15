@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MemoryTreeList
@@ -7,29 +8,52 @@ namespace UnityEditor
 		internal class Styles
 		{
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle header = "OL title";
+
 			public GUIStyle entryEven = "OL EntryBackEven";
+
 			public GUIStyle entryOdd = "OL EntryBackOdd";
+
 			public GUIStyle numberLabel = "OL Label";
+
 			public GUIStyle foldout = "IN foldout";
 		}
+
 		private const float kIndentPx = 16f;
+
 		private const float kBaseIndent = 4f;
+
 		protected const float kSmallMargin = 4f;
+
 		protected const float kRowHeight = 16f;
+
 		protected const float kNameColumnSize = 300f;
+
 		protected const float kColumnSize = 70f;
+
 		protected const float kFoldoutSize = 14f;
+
 		private static MemoryTreeList.Styles m_Styles;
+
 		public MemoryElementSelection m_MemorySelection;
+
 		protected MemoryElement m_Root;
+
 		protected EditorWindow m_EditorWindow;
+
 		protected SplitterState m_Splitter;
+
 		protected MemoryTreeList m_DetailView;
+
 		protected int m_ControlID;
+
 		protected Vector2 m_ScrollPosition;
+
 		protected float m_SelectionOffset;
+
 		protected float m_VisibleHeight;
+
 		protected static MemoryTreeList.Styles styles
 		{
 			get
@@ -42,6 +66,7 @@ namespace UnityEditor
 				return arg_17_0;
 			}
 		}
+
 		public MemoryTreeList(EditorWindow editorWindow, MemoryTreeList detailview)
 		{
 			this.m_MemorySelection = new MemoryElementSelection();
@@ -50,6 +75,7 @@ namespace UnityEditor
 			this.m_ControlID = GUIUtility.GetPermanentControlID();
 			this.SetupSplitter();
 		}
+
 		protected virtual void SetupSplitter()
 		{
 			float[] array = new float[1];
@@ -58,6 +84,7 @@ namespace UnityEditor
 			array2[0] = 100;
 			this.m_Splitter = new SplitterState(array, array2, null);
 		}
+
 		public void OnGUI()
 		{
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
@@ -88,10 +115,12 @@ namespace UnityEditor
 			GUILayout.EndScrollView();
 			GUILayout.EndVertical();
 		}
+
 		private static float Clamp(float value, float min, float max)
 		{
 			return (value >= min) ? ((value <= max) ? value : max) : min;
 		}
+
 		public void SetRoot(MemoryElement root)
 		{
 			this.m_Root = root;
@@ -104,10 +133,12 @@ namespace UnityEditor
 				this.m_DetailView.SetRoot(null);
 			}
 		}
+
 		public MemoryElement GetRoot()
 		{
 			return this.m_Root;
 		}
+
 		protected static void DrawBackground(int row, bool selected)
 		{
 			Rect position = MemoryTreeList.GenerateRect(row);
@@ -117,15 +148,18 @@ namespace UnityEditor
 				gUIStyle.Draw(position, GUIContent.none, false, false, selected, false);
 			}
 		}
+
 		protected virtual void DrawHeader()
 		{
 			GUILayout.Label("Referenced By:", MemoryTreeList.styles.header, new GUILayoutOption[0]);
 		}
+
 		protected static Rect GenerateRect(int row)
 		{
 			Rect result = new Rect(1f, 16f * (float)row, GUIClip.visibleRect.width, 16f);
 			return result;
 		}
+
 		protected virtual void DrawData(Rect rect, MemoryElement memoryElement, int indent, int row, bool selected)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -135,6 +169,7 @@ namespace UnityEditor
 			string text = memoryElement.name + "(" + memoryElement.memoryInfo.className + ")";
 			MemoryTreeList.styles.numberLabel.Draw(rect, text, false, false, false, selected);
 		}
+
 		protected void DrawRecursiveData(MemoryElement element, ref int row, int indent)
 		{
 			if (element.ChildCount() == 0)
@@ -148,6 +183,7 @@ namespace UnityEditor
 				this.DrawItem(current, ref row, indent);
 			}
 		}
+
 		protected virtual void DrawItem(MemoryElement memoryElement, ref int row, int indent)
 		{
 			bool flag = this.m_MemorySelection.isSelected(memoryElement);
@@ -175,6 +211,7 @@ namespace UnityEditor
 				this.DrawRecursiveData(memoryElement, ref row, indent + 1);
 			}
 		}
+
 		protected void RowClicked(Event evt, MemoryElement memoryElement)
 		{
 			this.m_MemorySelection.SetSelection(memoryElement);
@@ -195,6 +232,7 @@ namespace UnityEditor
 			}
 			this.m_EditorWindow.Repaint();
 		}
+
 		protected void HandleKeyboard()
 		{
 			Event current = Event.current;
@@ -274,6 +312,7 @@ namespace UnityEditor
 			this.EnsureVisible();
 			this.m_EditorWindow.Repaint();
 		}
+
 		private void RecursiveFindSelected(MemoryElement element, ref int row)
 		{
 			if (this.m_MemorySelection.isSelected(element))
@@ -291,6 +330,7 @@ namespace UnityEditor
 				this.RecursiveFindSelected(current, ref row);
 			}
 		}
+
 		protected void EnsureVisible()
 		{
 			int num = 0;

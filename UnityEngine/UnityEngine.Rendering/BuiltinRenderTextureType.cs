@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.Rendering
 {
 	public enum BuiltinRenderTextureType
@@ -14,6 +15,7 @@ namespace UnityEngine.Rendering
 		GBuffer0,
 		GBuffer1,
 		GBuffer2,
-		GBuffer3
+		GBuffer3,
+		Reflections
 	}
 }

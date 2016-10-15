@@ -1,22 +1,37 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(AudioClip))]
 	internal class AudioClipInspector : Editor
 	{
+		private PreviewRenderUtility m_PreviewUtility;
+
 		private AudioClip m_PlayingClip;
+
 		private Vector2 m_Position = Vector2.zero;
+
 		private GUIView m_GUI;
+
 		private static GUIStyle s_PreButton;
+
 		private static Rect m_wantedRect;
+
 		private static bool m_bAutoPlay;
+
 		private static bool m_bLoop = false;
+
 		private static bool m_bPlayFirst;
+
 		private static GUIContent[] s_PlayIcons = new GUIContent[2];
+
 		private static GUIContent[] s_AutoPlayIcons = new GUIContent[2];
+
 		private static GUIContent[] s_LoopIcons = new GUIContent[2];
+
 		private static Texture2D s_DefaultIcon;
+
 		private bool playing
 		{
 			get
@@ -24,9 +39,11 @@ namespace UnityEditor
 				return this.m_PlayingClip != null;
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 		}
+
 		private static void Init()
 		{
 			if (AudioClipInspector.s_PreButton != null)
@@ -44,12 +61,13 @@ namespace UnityEditor
 			AudioClipInspector.s_LoopIcons[1] = EditorGUIUtility.IconContent("preAudioLoopOn", "Loop off");
 			AudioClipInspector.s_DefaultIcon = EditorGUIUtility.LoadIcon("Profiler.Audio");
 		}
+
 		public void OnDisable()
 		{
 			AudioUtil.StopAllClips();
-			AudioUtil.ClearWaveForm(this.target as AudioClip);
 			EditorPrefs.SetBool("AutoPlayAudio", AudioClipInspector.m_bAutoPlay);
 		}
+
 		public void OnEnable()
 		{
 			AudioClipInspector.m_bAutoPlay = EditorPrefs.GetBool("AutoPlayAudio", false);
@@ -58,26 +76,39 @@ namespace UnityEditor
 				AudioClipInspector.m_bPlayFirst = true;
 			}
 		}
+
+		public void OnDestroy()
+		{
+			if (this.m_PreviewUtility != null)
+			{
+				this.m_PreviewUtility.Cleanup();
+				this.m_PreviewUtility = null;
+			}
+		}
+
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
+			AudioClip clip = this.target as AudioClip;
 			AssetImporter atPath = AssetImporter.GetAtPath(assetPath);
-			AudioImporter exists = atPath as AudioImporter;
-			if (!exists)
+			AudioImporter audioImporter = atPath as AudioImporter;
+			if (audioImporter == null || !ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
 				return null;
 			}
-			AudioClip audioClip = this.target as AudioClip;
-			Texture2D[] array = new Texture2D[audioClip.channels];
-			for (int i = 0; i < audioClip.channels; i++)
+			if (this.m_PreviewUtility == null)
 			{
-				array[i] = AudioUtil.GetWaveForm(audioClip, atPath, i, (float)width, (float)(height / audioClip.channels));
+				this.m_PreviewUtility = new PreviewRenderUtility();
 			}
-			return AudioClipInspector.CombineWaveForms(array);
+			this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
+			this.DoRenderPreview(clip, audioImporter, new Rect(0.05f * (float)width * EditorGUIUtility.pixelsPerPoint, 0.05f * (float)width * EditorGUIUtility.pixelsPerPoint, 1.9f * (float)width * EditorGUIUtility.pixelsPerPoint, 1.9f * (float)height * EditorGUIUtility.pixelsPerPoint), 1f);
+			return this.m_PreviewUtility.EndStaticPreview();
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return base.targets != null;
 		}
+
 		public override void OnPreviewSettings()
 		{
 			if (AudioClipInspector.s_DefaultIcon == null)
@@ -85,40 +116,79 @@ namespace UnityEditor
 				AudioClipInspector.Init();
 			}
 			AudioClip audioClip = this.target as AudioClip;
-			EditorGUI.BeginDisabledGroup(AudioUtil.IsMovieAudio(audioClip));
-			bool flag = base.targets.Length > 1;
-			EditorGUI.BeginDisabledGroup(flag);
-			AudioClipInspector.m_bAutoPlay = (!flag && AudioClipInspector.m_bAutoPlay);
-			AudioClipInspector.m_bAutoPlay = (PreviewGUI.CycleButton((!AudioClipInspector.m_bAutoPlay) ? 0 : 1, AudioClipInspector.s_AutoPlayIcons) != 0);
-			EditorGUI.EndDisabledGroup();
-			bool bLoop = AudioClipInspector.m_bLoop;
-			AudioClipInspector.m_bLoop = (PreviewGUI.CycleButton((!AudioClipInspector.m_bLoop) ? 0 : 1, AudioClipInspector.s_LoopIcons) != 0);
-			if (bLoop != AudioClipInspector.m_bLoop && this.playing)
+			using (new EditorGUI.DisabledScope(AudioUtil.IsMovieAudio(audioClip)))
 			{
-				AudioUtil.LoopClip(audioClip, AudioClipInspector.m_bLoop);
-			}
-			EditorGUI.BeginDisabledGroup(flag && !this.playing);
-			bool flag2 = PreviewGUI.CycleButton((!this.playing) ? 0 : 1, AudioClipInspector.s_PlayIcons) != 0;
-			if (flag2 != this.playing)
-			{
-				if (flag2)
+				bool flag = base.targets.Length > 1;
+				using (new EditorGUI.DisabledScope(flag))
 				{
-					AudioUtil.PlayClip(audioClip, 0, AudioClipInspector.m_bLoop);
-					this.m_PlayingClip = audioClip;
+					AudioClipInspector.m_bAutoPlay = (!flag && AudioClipInspector.m_bAutoPlay);
+					AudioClipInspector.m_bAutoPlay = (PreviewGUI.CycleButton((!AudioClipInspector.m_bAutoPlay) ? 0 : 1, AudioClipInspector.s_AutoPlayIcons) != 0);
 				}
-				else
+				bool bLoop = AudioClipInspector.m_bLoop;
+				AudioClipInspector.m_bLoop = (PreviewGUI.CycleButton((!AudioClipInspector.m_bLoop) ? 0 : 1, AudioClipInspector.s_LoopIcons) != 0);
+				if (bLoop != AudioClipInspector.m_bLoop && this.playing)
 				{
-					AudioUtil.StopAllClips();
-					this.m_PlayingClip = null;
+					AudioUtil.LoopClip(audioClip, AudioClipInspector.m_bLoop);
+				}
+				using (new EditorGUI.DisabledScope(flag && !this.playing))
+				{
+					bool flag2 = PreviewGUI.CycleButton((!this.playing) ? 0 : 1, AudioClipInspector.s_PlayIcons) != 0;
+					if (flag2 != this.playing)
+					{
+						if (flag2)
+						{
+							AudioUtil.PlayClip(audioClip, 0, AudioClipInspector.m_bLoop);
+							this.m_PlayingClip = audioClip;
+						}
+						else
+						{
+							AudioUtil.StopAllClips();
+							this.m_PlayingClip = null;
+						}
+					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.EndDisabledGroup();
 		}
-		public override void ReloadPreviewInstances()
+
+		private void DoRenderPreview(AudioClip clip, AudioImporter audioImporter, Rect wantedRect, float scaleFactor)
 		{
-			AudioUtil.ClearWaveForm(this.target as AudioClip);
+			scaleFactor *= 0.95f;
+			float[] minMaxData = (!(audioImporter == null)) ? AudioUtil.GetMinMaxData(audioImporter) : null;
+			int numChannels = clip.channels;
+			int numSamples = (minMaxData != null) ? (minMaxData.Length / (2 * numChannels)) : 0;
+			float num = wantedRect.height / (float)numChannels;
+			int channel;
+			for (channel = 0; channel < numChannels; channel++)
+			{
+				Rect r = new Rect(wantedRect.x, wantedRect.y + num * (float)channel, wantedRect.width, num);
+				Color curveColor = new Color(1f, 0.549019635f, 0f, 1f);
+				AudioCurveRendering.DrawMinMaxFilledCurve(r, delegate(float x, out Color col, out float minValue, out float maxValue)
+				{
+					col = curveColor;
+					if (numSamples <= 0)
+					{
+						minValue = 0f;
+						maxValue = 0f;
+					}
+					else
+					{
+						float f = Mathf.Clamp(x * (float)(numSamples - 2), 0f, (float)(numSamples - 2));
+						int num2 = (int)Mathf.Floor(f);
+						int num3 = (num2 * numChannels + channel) * 2;
+						int num4 = num3 + numChannels * 2;
+						minValue = Mathf.Min(minMaxData[num3 + 1], minMaxData[num4 + 1]) * scaleFactor;
+						maxValue = Mathf.Max(minMaxData[num3], minMaxData[num4]) * scaleFactor;
+						if (minValue > maxValue)
+						{
+							float num5 = minValue;
+							minValue = maxValue;
+							maxValue = num5;
+						}
+					}
+				});
+			}
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (AudioClipInspector.s_DefaultIcon == null)
@@ -165,24 +235,21 @@ namespace UnityEditor
 					{
 						EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), string.Format("Module file with " + AudioUtil.GetMusicChannelCount(audioClip) + " channels.", new object[0]));
 					}
-					else
+					else if (AudioUtil.IsMovieAudio(audioClip))
 					{
-						if (AudioUtil.IsMovieAudio(audioClip))
+						if (r.width > 450f)
 						{
-							if (r.width > 450f)
-							{
-								EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), "Audio is attached to a movie. To audition the sound, play the movie.");
-							}
-							else
-							{
-								EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), "Audio is attached to a movie.");
-								EditorGUI.DropShadowLabel(new Rect(r.x, num3 + 10f, r.width, 20f), "To audition the sound, play the movie.");
-							}
+							EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), "Audio is attached to a movie. To audition the sound, play the movie.");
 						}
 						else
 						{
-							EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), "Can not show PCM data for this file");
+							EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), "Audio is attached to a movie.");
+							EditorGUI.DropShadowLabel(new Rect(r.x, num3 + 10f, r.width, 20f), "To audition the sound, play the movie.");
 						}
+					}
+					else
+					{
+						EditorGUI.DropShadowLabel(new Rect(r.x, num3, r.width, 20f), "Can not show PCM data for this file");
 					}
 				}
 				if (this.m_PlayingClip == audioClip)
@@ -195,29 +262,9 @@ namespace UnityEditor
 			else
 			{
 				PreviewGUI.BeginScrollView(AudioClipInspector.m_wantedRect, this.m_Position, AudioClipInspector.m_wantedRect, "PreHorizontalScrollbar", "PreHorizontalScrollbarThumb");
-				Texture2D texture2D;
-				if (r.width < 100f)
+				if (Event.current.type == EventType.Repaint)
 				{
-					texture2D = AssetPreview.GetAssetPreview(audioClip);
-				}
-				else
-				{
-					texture2D = AudioUtil.GetWaveFormFast(audioClip, 1, 0, audioClip.samples, r.width, r.height);
-				}
-				if (texture2D == null)
-				{
-					GUI.DrawTexture(new Rect
-					{
-						x = (AudioClipInspector.m_wantedRect.width - (float)AudioClipInspector.s_DefaultIcon.width) / 2f + AudioClipInspector.m_wantedRect.x,
-						y = (AudioClipInspector.m_wantedRect.height - (float)AudioClipInspector.s_DefaultIcon.height) / 2f + AudioClipInspector.m_wantedRect.y,
-						width = (float)AudioClipInspector.s_DefaultIcon.width,
-						height = (float)AudioClipInspector.s_DefaultIcon.height
-					}, AudioClipInspector.s_DefaultIcon);
-					base.Repaint();
-				}
-				else
-				{
-					GUI.DrawTexture(new Rect(AudioClipInspector.m_wantedRect.x, AudioClipInspector.m_wantedRect.y, AudioClipInspector.m_wantedRect.width, AudioClipInspector.m_wantedRect.height), texture2D);
+					this.DoRenderPreview(audioClip, AudioUtil.GetImporterFromClip(audioClip), AudioClipInspector.m_wantedRect, 1f);
 				}
 				for (int i = 0; i < channelCount; i++)
 				{
@@ -258,39 +305,23 @@ namespace UnityEditor
 				GUIView.current.Repaint();
 			}
 		}
-		private static Texture2D CombineWaveForms(Texture2D[] waveForms)
-		{
-			if (waveForms.Length == 1)
-			{
-				return waveForms[0];
-			}
-			int width = waveForms[0].width;
-			int num = 0;
-			for (int i = 0; i < waveForms.Length; i++)
-			{
-				Texture2D texture2D = waveForms[i];
-				num += texture2D.height;
-			}
-			Texture2D texture2D2 = new Texture2D(width, num, TextureFormat.ARGB32, false);
-			int num2 = 0;
-			for (int j = 0; j < waveForms.Length; j++)
-			{
-				Texture2D texture2D3 = waveForms[j];
-				num2 += texture2D3.height;
-				texture2D2.SetPixels(0, num - num2, width, texture2D3.height, texture2D3.GetPixels());
-				UnityEngine.Object.DestroyImmediate(texture2D3);
-			}
-			texture2D2.Apply();
-			return texture2D2;
-		}
+
 		public override string GetInfoString()
 		{
 			AudioClip clip = this.target as AudioClip;
 			int channelCount = AudioUtil.GetChannelCount(clip);
 			string text = (channelCount != 1) ? ((channelCount != 2) ? ((channelCount - 1).ToString() + ".1") : "Stereo") : "Mono";
-			string str = string.Concat(new object[]
+			AudioCompressionFormat targetPlatformSoundCompressionFormat = AudioUtil.GetTargetPlatformSoundCompressionFormat(clip);
+			AudioCompressionFormat soundCompressionFormat = AudioUtil.GetSoundCompressionFormat(clip);
+			string text2 = targetPlatformSoundCompressionFormat.ToString();
+			if (targetPlatformSoundCompressionFormat != soundCompressionFormat)
 			{
-				AudioUtil.GetSoundCompressionFormat(clip).ToString(),
+				text2 = text2 + " (" + soundCompressionFormat.ToString() + " in editor)";
+			}
+			string text3 = text2;
+			text2 = string.Concat(new object[]
+			{
+				text3,
 				", ",
 				AudioUtil.GetFrequency(clip),
 				" Hz, ",
@@ -300,14 +331,13 @@ namespace UnityEditor
 			TimeSpan timeSpan = new TimeSpan(0, 0, 0, 0, (int)AudioUtil.GetDuration(clip));
 			if ((uint)AudioUtil.GetDuration(clip) == 4294967295u)
 			{
-				str += "Unlimited";
+				text2 += "Unlimited";
 			}
 			else
 			{
-				str += string.Format("{0:00}:{1:00}.{2:000}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds);
+				text2 += string.Format("{0:00}:{1:00}.{2:000}", timeSpan.Minutes, timeSpan.Seconds, timeSpan.Milliseconds);
 			}
-			str += ", ";
-			return str + EditorUtility.FormatBytes(AudioUtil.GetSoundSize(clip));
+			return text2;
 		}
 	}
 }

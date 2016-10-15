@@ -1,18 +1,25 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(OffMeshLink))]
 	internal class OffMeshLinkInspector : Editor
 	{
 		private SerializedProperty m_AreaIndex;
+
 		private SerializedProperty m_Start;
+
 		private SerializedProperty m_End;
+
 		private SerializedProperty m_CostOverride;
+
 		private SerializedProperty m_BiDirectional;
+
 		private SerializedProperty m_Activated;
+
 		private SerializedProperty m_AutoUpdatePositions;
+
 		private void OnEnable()
 		{
 			this.m_AreaIndex = base.serializedObject.FindProperty("m_AreaIndex");
@@ -23,13 +30,9 @@ namespace UnityEditor
 			this.m_Activated = base.serializedObject.FindProperty("m_Activated");
 			this.m_AutoUpdatePositions = base.serializedObject.FindProperty("m_AutoUpdatePositions");
 		}
+
 		public override void OnInspectorGUI()
 		{
-			if (!InternalEditorUtility.HasProFeaturesEnabled())
-			{
-				EditorGUILayout.HelpBox("This is only available in the Pro version of Unity.", MessageType.Warning);
-				GUI.enabled = false;
-			}
 			base.serializedObject.Update();
 			EditorGUILayout.PropertyField(this.m_Start, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_End, new GUILayoutOption[0]);
@@ -40,6 +43,7 @@ namespace UnityEditor
 			this.SelectNavMeshArea();
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private void SelectNavMeshArea()
 		{
 			EditorGUI.BeginChangeCheck();

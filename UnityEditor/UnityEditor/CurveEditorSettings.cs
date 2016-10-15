@@ -1,27 +1,45 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class CurveEditorSettings
 	{
 		private TickStyle m_HTickStyle = new TickStyle();
+
 		private TickStyle m_VTickStyle = new TickStyle();
+
 		private bool m_HRangeLocked;
+
 		private bool m_VRangeLocked;
+
 		private float m_HRangeMin = float.NegativeInfinity;
+
 		private float m_HRangeMax = float.PositiveInfinity;
+
 		private float m_VRangeMin = float.NegativeInfinity;
+
 		private float m_VRangeMax = float.PositiveInfinity;
+
 		public float hTickLabelOffset;
-		public Color wrapColor = new Color(1f, 1f, 1f, 0.5f);
+
+		public EditorGUIUtility.SkinnedColor wrapColor = new EditorGUIUtility.SkinnedColor(new Color(1f, 1f, 1f, 0.5f), new Color(0.65f, 0.65f, 0.65f, 0.5f));
+
 		public bool useFocusColors;
+
 		public bool showAxisLabels = true;
+
 		public bool allowDraggingCurvesAndRegions = true;
+
 		public bool allowDeleteLastKeyInCurve;
+
 		private bool m_ScaleWithWindow = true;
+
 		private bool m_HSlider = true;
+
 		private bool m_VSlider = true;
+
 		internal TickStyle hTickStyle
 		{
 			get
@@ -33,6 +51,7 @@ namespace UnityEditor
 				this.m_HTickStyle = value;
 			}
 		}
+
 		internal TickStyle vTickStyle
 		{
 			get
@@ -44,6 +63,7 @@ namespace UnityEditor
 				this.m_VTickStyle = value;
 			}
 		}
+
 		internal bool hRangeLocked
 		{
 			get
@@ -55,6 +75,7 @@ namespace UnityEditor
 				this.m_HRangeLocked = value;
 			}
 		}
+
 		internal bool vRangeLocked
 		{
 			get
@@ -66,6 +87,7 @@ namespace UnityEditor
 				this.m_VRangeLocked = value;
 			}
 		}
+
 		public float hRangeMin
 		{
 			get
@@ -77,6 +99,7 @@ namespace UnityEditor
 				this.m_HRangeMin = value;
 			}
 		}
+
 		public float hRangeMax
 		{
 			get
@@ -88,6 +111,7 @@ namespace UnityEditor
 				this.m_HRangeMax = value;
 			}
 		}
+
 		public float vRangeMin
 		{
 			get
@@ -99,6 +123,7 @@ namespace UnityEditor
 				this.m_VRangeMin = value;
 			}
 		}
+
 		public float vRangeMax
 		{
 			get
@@ -110,6 +135,7 @@ namespace UnityEditor
 				this.m_VRangeMax = value;
 			}
 		}
+
 		public bool hasUnboundedRanges
 		{
 			get
@@ -117,6 +143,7 @@ namespace UnityEditor
 				return this.m_HRangeMin == float.NegativeInfinity || this.m_HRangeMax == float.PositiveInfinity || this.m_VRangeMin == float.NegativeInfinity || this.m_VRangeMax == float.PositiveInfinity;
 			}
 		}
+
 		internal bool scaleWithWindow
 		{
 			get
@@ -128,6 +155,7 @@ namespace UnityEditor
 				this.m_ScaleWithWindow = value;
 			}
 		}
+
 		public bool hSlider
 		{
 			get
@@ -139,6 +167,7 @@ namespace UnityEditor
 				this.m_HSlider = value;
 			}
 		}
+
 		public bool vSlider
 		{
 			get
@@ -148,17 +177,6 @@ namespace UnityEditor
 			set
 			{
 				this.m_VSlider = value;
-			}
-		}
-		public CurveEditorSettings()
-		{
-			if (EditorGUIUtility.isProSkin)
-			{
-				this.wrapColor = new Color(0.65f, 0.65f, 0.65f, 0.5f);
-			}
-			else
-			{
-				this.wrapColor = new Color(1f, 1f, 1f, 0.5f);
 			}
 		}
 	}

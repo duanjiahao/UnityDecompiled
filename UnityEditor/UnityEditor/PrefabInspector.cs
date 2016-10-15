@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PrefabInspector
@@ -31,6 +32,7 @@ namespace UnityEditor
 			}
 			PrefabInspector.AddComponentGUI(prefabObject);
 		}
+
 		private static void AddComponentGUI(UnityEngine.Object prefab)
 		{
 			SerializedObject serializedObject = new SerializedObject(prefab);

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -10,14 +11,22 @@ namespace UnityEditor
 			Grid,
 			List
 		}
+
 		[SerializeField]
 		private PresetLibraryEditorState.ItemViewMode m_ItemViewMode;
+
 		public float m_PreviewHeight = 32f;
+
 		public Vector2 m_ScrollPosition;
+
 		public string m_CurrrentLibrary = PresetLibraryLocations.defaultPresetLibraryPath;
+
 		public int m_HoverIndex = -1;
+
 		public RenameOverlay m_RenameOverlay = new RenameOverlay();
+
 		public string m_Prefix;
+
 		public PresetLibraryEditorState.ItemViewMode itemViewMode
 		{
 			get
@@ -34,14 +43,17 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public PresetLibraryEditorState(string prefix)
 		{
 			this.m_Prefix = prefix;
 		}
+
 		public static PresetLibraryEditorState.ItemViewMode GetItemViewMode(string prefix)
 		{
 			return (PresetLibraryEditorState.ItemViewMode)EditorPrefs.GetInt(prefix + "ViewMode", 0);
 		}
+
 		public void TransferEditorPrefsState(bool load)
 		{
 			if (load)

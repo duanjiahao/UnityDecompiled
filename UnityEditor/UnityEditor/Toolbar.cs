@@ -1,23 +1,93 @@
 using System;
+using UnityEditor.Collaboration;
+using UnityEditor.Connect;
+using UnityEditor.Web;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class Toolbar : GUIView
 	{
+		private enum CollabToolbarState
+		{
+			NeedToEnableCollab,
+			UpToDate,
+			Conflict,
+			OperationError,
+			ServerHasChanges,
+			FilesToPush,
+			InProgress,
+			Disabled
+		}
+
+		private static class Styles
+		{
+			public static readonly GUIStyle collabButtonStyle = new GUIStyle("Dropdown")
+			{
+				padding = 
+				{
+					left = 24
+				}
+			};
+
+			public static readonly GUIStyle dropdown = "Dropdown";
+
+			public static readonly GUIStyle appToolbar = "AppToolbar";
+		}
+
+		private const float kCollabButtonWidth = 78f;
+
 		private static GUIContent[] s_ToolIcons;
+
 		private static GUIContent[] s_ViewToolIcons;
+
 		private static GUIContent[] s_PivotIcons;
+
 		private static GUIContent[] s_PivotRotation;
+
 		private static GUIContent s_LayerContent;
+
 		private static GUIContent[] s_PlayIcons;
-		private bool t1;
-		private bool t2;
-		private bool t3;
+
+		private static GUIContent s_AccountContent;
+
+		private static GUIContent s_CloudIcon;
+
+		private Toolbar.CollabToolbarState m_CollabToolbarState = Toolbar.CollabToolbarState.UpToDate;
+
+		private static GUIContent[] s_CollabIcons;
+
+		private ButtonWithAnimatedIconRotation m_CollabButton;
+
+		private string m_DynamicTooltip;
+
+		private static bool m_ShowCollabTooltip = false;
+
 		private static GUIContent[] s_ShownToolIcons = new GUIContent[5];
+
 		public static Toolbar get = null;
+
 		[SerializeField]
 		private string m_LastLoadedLayoutName;
+
+		private GUIContent currentCollabContent
+		{
+			get
+			{
+				GUIContent gUIContent = new GUIContent(Toolbar.s_CollabIcons[(int)this.m_CollabToolbarState]);
+				if (!Toolbar.m_ShowCollabTooltip)
+				{
+					gUIContent.tooltip = null;
+				}
+				else if (this.m_DynamicTooltip != string.Empty)
+				{
+					gUIContent.tooltip = this.m_DynamicTooltip;
+				}
+				return gUIContent;
+			}
+		}
+
 		internal static string lastLoadedLayoutName
 		{
 			get
@@ -30,7 +100,8 @@ namespace UnityEditor
 				Toolbar.get.Repaint();
 			}
 		}
-		private static void InitializeToolIcons()
+
+		private void InitializeToolIcons()
 		{
 			if (Toolbar.s_ToolIcons != null)
 			{
@@ -38,9 +109,9 @@ namespace UnityEditor
 			}
 			Toolbar.s_ToolIcons = new GUIContent[]
 			{
-				EditorGUIUtility.IconContent("MoveTool"),
-				EditorGUIUtility.IconContent("RotateTool"),
-				EditorGUIUtility.IconContent("ScaleTool"),
+				EditorGUIUtility.IconContent("MoveTool", "|Move the selected objects."),
+				EditorGUIUtility.IconContent("RotateTool", "|Rotate the selected objects."),
+				EditorGUIUtility.IconContent("ScaleTool", "|Scale the selected objects."),
 				EditorGUIUtility.IconContent("RectTool"),
 				EditorGUIUtility.IconContent("MoveTool On"),
 				EditorGUIUtility.IconContent("RotateTool On"),
@@ -49,10 +120,10 @@ namespace UnityEditor
 			};
 			Toolbar.s_ViewToolIcons = new GUIContent[]
 			{
-				EditorGUIUtility.IconContent("ViewToolOrbit"),
+				EditorGUIUtility.IconContent("ViewToolOrbit", "|Orbit the Scene view."),
 				EditorGUIUtility.IconContent("ViewToolMove"),
 				EditorGUIUtility.IconContent("ViewToolZoom"),
-				EditorGUIUtility.IconContent("ViewToolOrbit"),
+				EditorGUIUtility.IconContent("ViewToolOrbit", "|Orbit the Scene view."),
 				EditorGUIUtility.IconContent("ViewToolOrbit On"),
 				EditorGUIUtility.IconContent("ViewToolMove On"),
 				EditorGUIUtility.IconContent("ViewToolZoom On"),
@@ -60,15 +131,15 @@ namespace UnityEditor
 			};
 			Toolbar.s_PivotIcons = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("ToolHandleCenter"),
-				EditorGUIUtility.TextContent("ToolHandlePivot")
+				EditorGUIUtility.TextContentWithIcon("Center|The tool handle is placed at the center of the selection.", "ToolHandleCenter"),
+				EditorGUIUtility.TextContentWithIcon("Pivot|The tool handle is placed at the active object's pivot point.", "ToolHandlePivot")
 			};
 			Toolbar.s_PivotRotation = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("ToolHandleLocal"),
-				EditorGUIUtility.TextContent("ToolHandleGlobal")
+				EditorGUIUtility.TextContentWithIcon("Local|Tool handles are in active object's rotation.", "ToolHandleLocal"),
+				EditorGUIUtility.TextContentWithIcon("Global|Tool handles are in global rotation.", "ToolHandleGlobal")
 			};
-			Toolbar.s_LayerContent = EditorGUIUtility.TextContent("ToolbarLayers");
+			Toolbar.s_LayerContent = EditorGUIUtility.TextContent("Layers|Which layers are visible in the Scene views.");
 			Toolbar.s_PlayIcons = new GUIContent[]
 			{
 				EditorGUIUtility.IconContent("PlayButton"),
@@ -84,63 +155,217 @@ namespace UnityEditor
 				EditorGUIUtility.IconContent("StepButton Anim"),
 				EditorGUIUtility.IconContent("PlayButtonProfile Anim")
 			};
+			Toolbar.s_CloudIcon = EditorGUIUtility.IconContent("CloudConnect");
+			Toolbar.s_AccountContent = new GUIContent("Account");
+			Toolbar.s_CollabIcons = new GUIContent[]
+			{
+				EditorGUIUtility.TextContentWithIcon("Collab| You need to enable collab.", "CollabNew"),
+				EditorGUIUtility.TextContentWithIcon("Collab| You are up to date.", "Collab"),
+				EditorGUIUtility.TextContentWithIcon("Collab| Please fix your conflicts prior to publishing.", "CollabConflict"),
+				EditorGUIUtility.TextContentWithIcon("Collab| Last operation failed. Please retry later.", "CollabError"),
+				EditorGUIUtility.TextContentWithIcon("Collab| Please update, there are server changes.", "CollabPull"),
+				EditorGUIUtility.TextContentWithIcon("Collab| You have files to publish.", "CollabPush"),
+				EditorGUIUtility.TextContentWithIcon("Collab| Operation in progress.", "CollabProgress"),
+				EditorGUIUtility.TextContentWithIcon("Collab| Collab is disabled.", "CollabNew")
+			};
 		}
+
 		public void OnEnable()
 		{
 			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(base.Repaint));
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.OnSelectionChange));
+			UnityConnect.instance.StateChanged += new UnityEditor.Connect.StateChangedDelegate(this.OnUnityConnectStateChanged);
+			UnityConnect.instance.UserStateChanged += new UserStateChangedDelegate(this.OnUnityConnectUserStateChanged);
 			Toolbar.get = this;
+			Collab.instance.StateChanged += new UnityEditor.Collaboration.StateChangedDelegate(this.OnCollabStateChanged);
+			if (this.m_CollabButton == null)
+			{
+				this.m_CollabButton = new ButtonWithAnimatedIconRotation(() => (float)EditorApplication.timeSinceStartup * 500f, new Action(base.Repaint), 20f, true);
+			}
 		}
+
 		public void OnDisable()
 		{
 			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(base.Repaint));
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.OnSelectionChange));
+			UnityConnect.instance.StateChanged -= new UnityEditor.Connect.StateChangedDelegate(this.OnUnityConnectStateChanged);
+			UnityConnect.instance.UserStateChanged -= new UserStateChangedDelegate(this.OnUnityConnectUserStateChanged);
+			Collab.instance.StateChanged -= new UnityEditor.Collaboration.StateChangedDelegate(this.OnCollabStateChanged);
+			if (this.m_CollabButton != null)
+			{
+				this.m_CollabButton.Clear();
+			}
 		}
+
 		protected override bool OnFocus()
 		{
 			return false;
 		}
+
 		private void OnSelectionChange()
 		{
 			Tools.OnSelectionChange();
-			EditMode.OnSelectionChange();
 			base.Repaint();
 		}
+
+		protected void OnUnityConnectStateChanged(ConnectInfo state)
+		{
+			this.UpdateCollabToolbarState();
+			Toolbar.RepaintToolbar();
+		}
+
+		protected void OnUnityConnectUserStateChanged(UserInfo state)
+		{
+			this.UpdateCollabToolbarState();
+		}
+
+		private Rect GetThinArea(Rect pos)
+		{
+			return new Rect(pos.x, 7f, pos.width, 18f);
+		}
+
+		private Rect GetThickArea(Rect pos)
+		{
+			return new Rect(pos.x, 5f, pos.width, 24f);
+		}
+
+		private void ReserveWidthLeft(float width, ref Rect pos)
+		{
+			pos.x -= width;
+			pos.width = width;
+		}
+
+		private void ReserveWidthRight(float width, ref Rect pos)
+		{
+			pos.x += pos.width;
+			pos.width = width;
+		}
+
+		private void ReserveRight(float width, ref Rect pos)
+		{
+			pos.x += width;
+		}
+
+		private void ReserveBottom(float height, ref Rect pos)
+		{
+			pos.y += height;
+		}
+
 		private void OnGUI()
 		{
-			Toolbar.InitializeToolIcons();
+			float width = 10f;
+			float width2 = 20f;
+			float num = 32f;
+			float num2 = 64f;
+			float width3 = 80f;
+			this.InitializeToolIcons();
 			bool isPlayingOrWillChangePlaymode = EditorApplication.isPlayingOrWillChangePlaymode;
 			if (isPlayingOrWillChangePlaymode)
 			{
 				GUI.color = HostView.kPlayModeDarken;
 			}
-			GUIStyle gUIStyle = "AppToolbar";
 			if (Event.current.type == EventType.Repaint)
 			{
-				gUIStyle.Draw(new Rect(0f, 0f, base.position.width, base.position.height), false, false, false, false);
+				Toolbar.Styles.appToolbar.Draw(new Rect(0f, 0f, base.position.width, base.position.height), false, false, false, false);
 			}
-			this.DoToolButtons();
-			float num = 100f;
-			float num2 = (base.position.width - num) / 2f;
-			num2 = Mathf.Max(num2, 373f);
-			GUILayout.BeginArea(new Rect(num2, 5f, 120f, 24f));
+			Rect pos = new Rect(0f, 0f, 0f, 0f);
+			this.ReserveWidthRight(width, ref pos);
+			this.ReserveWidthRight(num * 5f, ref pos);
+			this.DoToolButtons(this.GetThickArea(pos));
+			this.ReserveWidthRight(width2, ref pos);
+			this.ReserveWidthRight(num2 * 2f, ref pos);
+			this.DoPivotButtons(this.GetThinArea(pos));
+			float num3 = 100f;
+			pos = new Rect((base.position.width - num3) / 2f, 0f, 140f, 0f);
+			GUILayout.BeginArea(this.GetThickArea(pos));
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			this.DoPlayButtons(isPlayingOrWillChangePlaymode);
 			GUILayout.EndHorizontal();
 			GUILayout.EndArea();
-			float num3 = 220f;
-			num2 = base.position.width - num3;
-			num2 = Mathf.Max(num2, 440f);
-			GUILayout.BeginArea(new Rect(num2, 7f, base.position.width - num2 - 10f, 24f));
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			this.DoLayersDropDown();
-			GUILayout.Space(6f);
-			this.DoLayoutDropDown();
-			GUILayout.EndArea();
+			pos = new Rect(base.position.width, 0f, 0f, 0f);
+			this.ReserveWidthLeft(width, ref pos);
+			this.ReserveWidthLeft(width3, ref pos);
+			this.DoLayoutDropDown(this.GetThinArea(pos));
+			this.ReserveWidthLeft(width, ref pos);
+			this.ReserveWidthLeft(width3, ref pos);
+			this.DoLayersDropDown(this.GetThinArea(pos));
+			this.ReserveWidthLeft(width2, ref pos);
+			this.ReserveWidthLeft(width3, ref pos);
+			if (EditorGUI.ButtonMouseDown(this.GetThinArea(pos), Toolbar.s_AccountContent, FocusType.Passive, Toolbar.Styles.dropdown))
+			{
+				this.ShowUserMenu(this.GetThinArea(pos));
+			}
+			this.ReserveWidthLeft(width, ref pos);
+			this.ReserveWidthLeft(32f, ref pos);
+			if (GUI.Button(this.GetThinArea(pos), Toolbar.s_CloudIcon))
+			{
+				UnityConnectServiceCollection.instance.ShowService("Hub", true);
+			}
+			if (UnityConnect.instance.userInfo.whitelisted)
+			{
+				this.ReserveWidthLeft(width, ref pos);
+				this.ReserveWidthLeft(78f, ref pos);
+				this.DoCollabDropDown(this.GetThinArea(pos));
+			}
 			EditorGUI.ShowRepaints();
 			Highlighter.ControlHighlightGUI(this);
 		}
-		private void DoToolButtons()
+
+		private void ShowUserMenu(Rect dropDownRect)
+		{
+			GenericMenu genericMenu = new GenericMenu();
+			if (!UnityConnect.instance.online)
+			{
+				genericMenu.AddDisabledItem(new GUIContent("Go to account"));
+				genericMenu.AddDisabledItem(new GUIContent("Sign in..."));
+				if (!Application.HasProLicense())
+				{
+					genericMenu.AddSeparator(string.Empty);
+					genericMenu.AddDisabledItem(new GUIContent("Upgrade to Pro"));
+				}
+			}
+			else
+			{
+				string accountUrl = UnityConnect.instance.GetConfigurationURL(CloudConfigUrl.CloudPortal);
+				if (UnityConnect.instance.loggedIn)
+				{
+					genericMenu.AddItem(new GUIContent("Go to account"), false, delegate
+					{
+						UnityConnect.instance.OpenAuthorizedURLInWebBrowser(accountUrl);
+					});
+				}
+				else
+				{
+					genericMenu.AddDisabledItem(new GUIContent("Go to account"));
+				}
+				if (UnityConnect.instance.loggedIn)
+				{
+					string text = "Sign out " + UnityConnect.instance.userInfo.displayName;
+					genericMenu.AddItem(new GUIContent(text), false, delegate
+					{
+						UnityConnect.instance.Logout();
+					});
+				}
+				else
+				{
+					genericMenu.AddItem(new GUIContent("Sign in..."), false, delegate
+					{
+						UnityConnect.instance.ShowLogin();
+					});
+				}
+				if (!Application.HasProLicense())
+				{
+					genericMenu.AddSeparator(string.Empty);
+					genericMenu.AddItem(new GUIContent("Upgrade to Pro"), false, delegate
+					{
+						Application.OpenURL("https://store.unity3d.com/");
+					});
+				}
+			}
+			genericMenu.DropDown(dropDownRect);
+		}
+
+		private void DoToolButtons(Rect rect)
 		{
 			GUI.changed = false;
 			int num = (int)((!Tools.viewToolActive) ? Tools.current : Tool.View);
@@ -150,17 +375,21 @@ namespace UnityEditor
 				Toolbar.s_ShownToolIcons[i].tooltip = Toolbar.s_ToolIcons[i - 1].tooltip;
 			}
 			Toolbar.s_ShownToolIcons[0] = Toolbar.s_ViewToolIcons[(int)(Tools.viewTool + ((num != 0) ? 0 : 4))];
-			num = GUI.Toolbar(new Rect(10f, 5f, 160f, 24f), num, Toolbar.s_ShownToolIcons, "Command");
+			num = GUI.Toolbar(rect, num, Toolbar.s_ShownToolIcons, "Command");
 			if (GUI.changed)
 			{
 				Tools.current = (Tool)num;
 			}
-			Tools.pivotMode = (PivotMode)EditorGUI.CycleButton(new Rect(190f, 8f, 64f, 18f), (int)Tools.pivotMode, Toolbar.s_PivotIcons, "ButtonLeft");
+		}
+
+		private void DoPivotButtons(Rect rect)
+		{
+			Tools.pivotMode = (PivotMode)EditorGUI.CycleButton(new Rect(rect.x, rect.y, rect.width / 2f, rect.height), (int)Tools.pivotMode, Toolbar.s_PivotIcons, "ButtonLeft");
 			if (Tools.current == Tool.Scale && Selection.transforms.Length < 2)
 			{
 				GUI.enabled = false;
 			}
-			PivotRotation pivotRotation = (PivotRotation)EditorGUI.CycleButton(new Rect(254f, 8f, 64f, 18f), (int)Tools.pivotRotation, Toolbar.s_PivotRotation, "ButtonRight");
+			PivotRotation pivotRotation = (PivotRotation)EditorGUI.CycleButton(new Rect(rect.x + rect.width / 2f, rect.y, rect.width / 2f, rect.height), (int)Tools.pivotRotation, Toolbar.s_PivotRotation, "ButtonRight");
 			if (Tools.pivotRotation != pivotRotation)
 			{
 				Tools.pivotRotation = pivotRotation;
@@ -178,6 +407,7 @@ namespace UnityEditor
 				Tools.RepaintAllToolViews();
 			}
 		}
+
 		private void DoPlayButtons(bool isOrWillEnterPlaymode)
 		{
 			bool isPlaying = EditorApplication.isPlaying;
@@ -209,22 +439,18 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
-		private void DoLayersDropDown()
+
+		private void DoLayersDropDown(Rect rect)
 		{
 			GUIStyle style = "DropDown";
-			Rect rect = GUILayoutUtility.GetRect(Toolbar.s_LayerContent, style);
-			if (EditorGUI.ButtonMouseDown(rect, Toolbar.s_LayerContent, FocusType.Passive, style))
+			if (EditorGUI.ButtonMouseDown(rect, Toolbar.s_LayerContent, FocusType.Passive, style) && LayerVisibilityWindow.ShowAtPosition(rect))
 			{
-				Rect last = GUILayoutUtility.topLevel.GetLast();
-				if (LayerVisibilityWindow.ShowAtPosition(last))
-				{
-					GUIUtility.ExitGUI();
-				}
+				GUIUtility.ExitGUI();
 			}
 		}
-		private void DoLayoutDropDown()
+
+		private void DoLayoutDropDown(Rect rect)
 		{
-			Rect rect = GUILayoutUtility.GetRect(Toolbar.s_LayerContent, "DropDown");
 			if (EditorGUI.ButtonMouseDown(rect, GUIContent.Temp(Toolbar.lastLoadedLayoutName), FocusType.Passive, "DropDown"))
 			{
 				Vector2 vector = GUIUtility.GUIToScreenPoint(new Vector2(rect.x, rect.y));
@@ -232,18 +458,112 @@ namespace UnityEditor
 				rect.y = vector.y;
 				EditorUtility.Internal_DisplayPopupMenu(rect, "Window/Layouts", this, 0);
 			}
-			GUILayout.EndHorizontal();
 		}
+
+		private void ShowPopup(Rect rect)
+		{
+			AssetDatabase.SaveAssets();
+			this.ReserveRight(39f, ref rect);
+			this.ReserveBottom(5f, ref rect);
+			if (CollabToolbarWindow.ShowCenteredAtPosition(rect))
+			{
+				GUIUtility.ExitGUI();
+			}
+		}
+
+		private void DoCollabDropDown(Rect rect)
+		{
+			this.UpdateCollabToolbarState();
+			bool flag = false;
+			bool flag2 = UnityConnect.instance.connectInfo.online && UnityConnect.instance.connectInfo.loggedIn;
+			bool whitelisted = Collab.instance.collabInfo.whitelisted;
+			bool flag3 = whitelisted && flag2 && !EditorApplication.isPlaying;
+			using (new EditorGUI.DisabledScope(!flag3))
+			{
+				bool animate = this.m_CollabToolbarState == Toolbar.CollabToolbarState.InProgress;
+				EditorGUIUtility.SetIconSize(new Vector2(12f, 12f));
+				if (this.m_CollabButton.OnGUI(rect, this.currentCollabContent, animate, Toolbar.Styles.collabButtonStyle))
+				{
+					flag = true;
+				}
+				EditorGUIUtility.SetIconSize(Vector2.zero);
+			}
+			if (flag)
+			{
+				this.ShowPopup(rect);
+			}
+		}
+
+		public void OnCollabStateChanged(CollabInfo info)
+		{
+			this.UpdateCollabToolbarState();
+		}
+
+		public void UpdateCollabToolbarState()
+		{
+			Toolbar.CollabToolbarState collabToolbarState = Toolbar.CollabToolbarState.UpToDate;
+			Collab instance = Collab.instance;
+			bool flag = instance.JobRunning(0);
+			CollabInfo collabInfo = instance.collabInfo;
+			this.m_DynamicTooltip = string.Empty;
+			if (!Collab.instance.collabInfo.whitelisted)
+			{
+				this.m_DynamicTooltip = "Please check that this project is part of an organization that has been accepted into the collaborate beta.\r\n\r\nGo to Services > Settings > Organization and change your project Organization to the one that has been accepted into the Collaborate beta.";
+				collabToolbarState = Toolbar.CollabToolbarState.Disabled;
+			}
+			else if (!collabInfo.ready)
+			{
+				collabToolbarState = Toolbar.CollabToolbarState.InProgress;
+			}
+			else if (collabInfo.error)
+			{
+				collabToolbarState = Toolbar.CollabToolbarState.OperationError;
+				this.m_DynamicTooltip = "Last operation failed. " + collabInfo.lastErrorMsg;
+			}
+			else if (flag)
+			{
+				collabToolbarState = Toolbar.CollabToolbarState.InProgress;
+			}
+			else
+			{
+				bool flag2 = CollabAccess.Instance.IsServiceEnabled();
+				if (!UnityConnect.instance.projectInfo.projectBound || !flag2)
+				{
+					collabToolbarState = Toolbar.CollabToolbarState.NeedToEnableCollab;
+				}
+				else if (collabInfo.update)
+				{
+					collabToolbarState = Toolbar.CollabToolbarState.ServerHasChanges;
+				}
+				else if (collabInfo.conflict)
+				{
+					collabToolbarState = Toolbar.CollabToolbarState.Conflict;
+				}
+				else if (collabInfo.publish)
+				{
+					collabToolbarState = Toolbar.CollabToolbarState.FilesToPush;
+				}
+			}
+			if (collabToolbarState != this.m_CollabToolbarState || CollabToolbarWindow.s_ToolbarIsVisible == Toolbar.m_ShowCollabTooltip)
+			{
+				this.m_CollabToolbarState = collabToolbarState;
+				Toolbar.m_ShowCollabTooltip = !CollabToolbarWindow.s_ToolbarIsVisible;
+				Toolbar.RepaintToolbar();
+			}
+		}
+
 		private static void InternalWillTogglePlaymode()
 		{
 			InternalEditorUtility.RepaintAllViews();
 		}
+
 		private static void TogglePlaying()
 		{
 			bool isPlaying = !EditorApplication.isPlaying;
 			EditorApplication.isPlaying = isPlaying;
 			Toolbar.InternalWillTogglePlaymode();
 		}
+
 		internal static void RepaintToolbar()
 		{
 			if (Toolbar.get != null)
@@ -251,6 +571,7 @@ namespace UnityEditor
 				Toolbar.get.Repaint();
 			}
 		}
+
 		public float CalcHeight()
 		{
 			return 30f;

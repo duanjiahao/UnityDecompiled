@@ -1,11 +1,14 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class LayerMatrixGUI
 	{
 		public delegate bool GetValueFunc(int layerA, int layerB);
+
 		public delegate void SetValueFunc(int layerA, int layerB, bool val);
+
 		public static void DoGUI(string title, ref bool show, ref Vector2 scrollPos, LayerMatrixGUI.GetValueFunc getValue, LayerMatrixGUI.SetValueFunc setValue)
 		{
 			int num = 0;

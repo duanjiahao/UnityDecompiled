@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	public enum TextureImporterFormat
@@ -6,6 +7,7 @@ namespace UnityEditor
 		AutomaticCompressed = -1,
 		Automatic16bit = -2,
 		AutomaticTruecolor = -3,
+		AutomaticCrunched = -5,
 		DXT1 = 10,
 		DXT5 = 12,
 		RGB16 = 7,
@@ -15,7 +17,9 @@ namespace UnityEditor
 		RGBA32 = 4,
 		ARGB32,
 		RGBA16 = 13,
-		PVRTC_RGB2 = 30,
+		DXT1Crunched = 28,
+		DXT5Crunched,
+		PVRTC_RGB2,
 		PVRTC_RGBA2,
 		PVRTC_RGB4,
 		PVRTC_RGBA4,

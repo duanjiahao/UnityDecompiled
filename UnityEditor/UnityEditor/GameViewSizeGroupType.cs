@@ -1,16 +1,19 @@
 using System;
+
 namespace UnityEditor
 {
 	public enum GameViewSizeGroupType
 	{
 		Standalone,
+		[Obsolete("WebPlayer has been removed in 5.4", false)]
 		WebPlayer,
 		iOS,
 		Android,
 		PS3,
 		Xbox360,
-		BB10,
+		WiiU,
 		Tizen,
-		WP8
+		WP8,
+		Nintendo3DS
 	}
 }

@@ -1,14 +1,23 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct RaycastHit2D
 	{
 		private Vector2 m_Centroid;
+
 		private Vector2 m_Point;
+
 		private Vector2 m_Normal;
+
 		private float m_Distance;
+
 		private float m_Fraction;
+
 		private Collider2D m_Collider;
+
 		public Vector2 centroid
 		{
 			get
@@ -20,6 +29,7 @@ namespace UnityEngine
 				this.m_Centroid = value;
 			}
 		}
+
 		public Vector2 point
 		{
 			get
@@ -31,6 +41,7 @@ namespace UnityEngine
 				this.m_Point = value;
 			}
 		}
+
 		public Vector2 normal
 		{
 			get
@@ -42,6 +53,7 @@ namespace UnityEngine
 				this.m_Normal = value;
 			}
 		}
+
 		public float distance
 		{
 			get
@@ -53,6 +65,7 @@ namespace UnityEngine
 				this.m_Distance = value;
 			}
 		}
+
 		public float fraction
 		{
 			get
@@ -64,6 +77,7 @@ namespace UnityEngine
 				this.m_Fraction = value;
 			}
 		}
+
 		public Collider2D collider
 		{
 			get
@@ -71,6 +85,7 @@ namespace UnityEngine
 				return this.m_Collider;
 			}
 		}
+
 		public Rigidbody2D rigidbody
 		{
 			get
@@ -78,6 +93,7 @@ namespace UnityEngine
 				return (!(this.collider != null)) ? null : this.collider.attachedRigidbody;
 			}
 		}
+
 		public Transform transform
 		{
 			get
@@ -94,6 +110,7 @@ namespace UnityEngine
 				return null;
 			}
 		}
+
 		public int CompareTo(RaycastHit2D other)
 		{
 			if (this.collider == null)
@@ -106,6 +123,7 @@ namespace UnityEngine
 			}
 			return this.fraction.CompareTo(other.fraction);
 		}
+
 		public static implicit operator bool(RaycastHit2D hit)
 		{
 			return hit.collider != null;

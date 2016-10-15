@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	internal class AttributeHelperEngine
 	{
+		[RequiredByNativeCode]
 		private static Type GetParentTypeDisallowingMultipleInclusion(Type type)
 		{
 			Stack<Type> stack = new Stack<Type>();
@@ -16,23 +19,28 @@ namespace UnityEngine
 			{
 				Type type2 = stack.Pop();
 				object[] customAttributes = type2.GetCustomAttributes(typeof(DisallowMultipleComponent), false);
-				if (customAttributes.Length != 0)
+				int num = customAttributes.Length;
+				if (num != 0)
 				{
 					return type2;
 				}
 			}
 			return null;
 		}
+
+		[RequiredByNativeCode]
 		private static Type[] GetRequiredComponents(Type klass)
 		{
 			List<Type> list = null;
 			while (klass != null && klass != typeof(MonoBehaviour))
 			{
-				object[] customAttributes = klass.GetCustomAttributes(typeof(RequireComponent), false);
-				for (int i = 0; i < customAttributes.Length; i++)
+				RequireComponent[] array = (RequireComponent[])klass.GetCustomAttributes(typeof(RequireComponent), false);
+				Type baseType = klass.BaseType;
+				RequireComponent[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
 				{
-					RequireComponent requireComponent = (RequireComponent)customAttributes[i];
-					if (list == null && customAttributes.Length == 1 && klass.BaseType == typeof(MonoBehaviour))
+					RequireComponent requireComponent = array2[i];
+					if (list == null && array.Length == 1 && baseType == typeof(MonoBehaviour))
 					{
 						return new Type[]
 						{
@@ -58,7 +66,7 @@ namespace UnityEngine
 						list.Add(requireComponent.m_Type2);
 					}
 				}
-				klass = klass.BaseType;
+				klass = baseType;
 			}
 			if (list == null)
 			{
@@ -66,12 +74,15 @@ namespace UnityEngine
 			}
 			return list.ToArray();
 		}
+
+		[RequiredByNativeCode]
 		private static bool CheckIsEditorScript(Type klass)
 		{
 			while (klass != null && klass != typeof(MonoBehaviour))
 			{
 				object[] customAttributes = klass.GetCustomAttributes(typeof(ExecuteInEditMode), false);
-				if (customAttributes.Length != 0)
+				int num = customAttributes.Length;
+				if (num != 0)
 				{
 					return true;
 				}

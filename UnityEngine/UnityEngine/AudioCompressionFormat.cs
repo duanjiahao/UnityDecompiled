@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum AudioCompressionFormat
@@ -8,6 +9,9 @@ namespace UnityEngine
 		ADPCM,
 		MP3,
 		VAG,
-		HEVAG
+		HEVAG,
+		XMA,
+		AAC,
+		GCADPCM
 	}
 }

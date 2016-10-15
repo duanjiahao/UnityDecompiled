@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -7,10 +8,13 @@ namespace UnityEditor
 	{
 		[SerializeField]
 		private AnimationCurve m_MinCurve;
+
 		[SerializeField]
 		private AnimationCurve m_MaxCurve;
+
 		[SerializeField]
 		private bool m_SignedRange;
+
 		public AnimationCurve minCurve
 		{
 			get
@@ -22,6 +26,7 @@ namespace UnityEditor
 				this.m_MinCurve = value;
 			}
 		}
+
 		public AnimationCurve maxCurve
 		{
 			get
@@ -33,6 +38,7 @@ namespace UnityEditor
 				this.m_MaxCurve = value;
 			}
 		}
+
 		public bool signedRange
 		{
 			get
@@ -44,6 +50,7 @@ namespace UnityEditor
 				this.m_SignedRange = value;
 			}
 		}
+
 		public DoubleCurve(AnimationCurve minCurve, AnimationCurve maxCurve, bool signedRange)
 		{
 			if (minCurve != null)
@@ -62,6 +69,7 @@ namespace UnityEditor
 			}
 			this.m_SignedRange = signedRange;
 		}
+
 		public bool IsSingleCurve()
 		{
 			return this.minCurve == null || this.minCurve.length == 0;

@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.Sprites
 {
 	internal class TightPackerPolicy : DefaultPackerPolicy
@@ -10,7 +11,16 @@ namespace UnityEditor.Sprites
 				return "[RECT]";
 			}
 		}
+
 		protected override bool AllowTightWhenTagged
+		{
+			get
+			{
+				return false;
+			}
+		}
+
+		protected override bool AllowRotationFlipping
 		{
 			get
 			{

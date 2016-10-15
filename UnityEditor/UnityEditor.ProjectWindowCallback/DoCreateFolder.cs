@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor.ProjectWindowCallback
 {
 	internal class DoCreateFolder : EndNameEditAction

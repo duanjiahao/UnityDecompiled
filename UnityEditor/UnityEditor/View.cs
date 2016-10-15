@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[StructLayout(LayoutKind.Sequential)]
@@ -9,18 +10,25 @@ namespace UnityEditor
 	{
 		[SerializeField]
 		private MonoReloadableIntPtr m_ViewPtr;
+
 		[SerializeField]
 		private View[] m_Children = new View[0];
+
 		[NonSerialized]
 		private View m_Parent;
+
 		[NonSerialized]
 		private ContainerWindow m_Window;
+
 		[SerializeField]
 		private Rect m_Position = new Rect(0f, 0f, 100f, 100f);
+
 		[SerializeField]
 		internal Vector2 m_MinSize;
+
 		[SerializeField]
 		internal Vector2 m_MaxSize;
+
 		public Vector2 minSize
 		{
 			get
@@ -28,6 +36,7 @@ namespace UnityEditor
 				return this.m_MinSize;
 			}
 		}
+
 		public Vector2 maxSize
 		{
 			get
@@ -35,6 +44,7 @@ namespace UnityEditor
 				return this.m_MaxSize;
 			}
 		}
+
 		public View[] allChildren
 		{
 			get
@@ -50,6 +60,7 @@ namespace UnityEditor
 				return (View[])arrayList.ToArray(typeof(View));
 			}
 		}
+
 		public Rect position
 		{
 			get
@@ -61,6 +72,7 @@ namespace UnityEditor
 				this.SetPosition(value);
 			}
 		}
+
 		public Rect windowPosition
 		{
 			get
@@ -73,6 +85,7 @@ namespace UnityEditor
 				return new Rect(windowPosition.x + this.position.x, windowPosition.y + this.position.y, this.position.width, this.position.height);
 			}
 		}
+
 		public Rect screenPosition
 		{
 			get
@@ -87,6 +100,7 @@ namespace UnityEditor
 				return windowPosition;
 			}
 		}
+
 		public ContainerWindow window
 		{
 			get
@@ -94,6 +108,7 @@ namespace UnityEditor
 				return this.m_Window;
 			}
 		}
+
 		public View parent
 		{
 			get
@@ -101,6 +116,7 @@ namespace UnityEditor
 				return this.m_Parent;
 			}
 		}
+
 		public View[] children
 		{
 			get
@@ -108,10 +124,7 @@ namespace UnityEditor
 				return this.m_Children;
 			}
 		}
-		public View()
-		{
-			base.hideFlags = HideFlags.DontSave;
-		}
+
 		internal virtual void Reflow()
 		{
 			View[] children = this.children;
@@ -121,6 +134,7 @@ namespace UnityEditor
 				view.Reflow();
 			}
 		}
+
 		internal string DebugHierarchy(int level)
 		{
 			string text = string.Empty;
@@ -154,6 +168,7 @@ namespace UnityEditor
 			}
 			return text2;
 		}
+
 		internal virtual void Initialize(ContainerWindow win)
 		{
 			this.SetWindow(win);
@@ -165,6 +180,7 @@ namespace UnityEditor
 				view.Initialize(win);
 			}
 		}
+
 		internal void SetMinMaxSizes(Vector2 min, Vector2 max)
 		{
 			if (this.minSize == min && this.maxSize == max)
@@ -182,17 +198,26 @@ namespace UnityEditor
 				this.window.SetMinMaxSizes(min, max);
 			}
 		}
+
 		protected virtual void ChildrenMinMaxChanged()
 		{
 		}
+
+		private void __internalAwake()
+		{
+			base.hideFlags = HideFlags.DontSave;
+		}
+
 		protected virtual void SetPosition(Rect newPos)
 		{
 			this.m_Position = newPos;
 		}
+
 		internal void SetPositionOnly(Rect newPos)
 		{
 			this.m_Position = newPos;
 		}
+
 		public int IndexOfChild(View child)
 		{
 			int num = 0;
@@ -208,6 +233,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		public void OnDestroy()
 		{
 			View[] children = this.m_Children;
@@ -217,10 +243,12 @@ namespace UnityEditor
 				UnityEngine.Object.DestroyImmediate(obj, true);
 			}
 		}
+
 		public void AddChild(View child)
 		{
 			this.AddChild(child, this.m_Children.Length);
 		}
+
 		public virtual void AddChild(View child, int idx)
 		{
 			Array.Resize<View>(ref this.m_Children, this.m_Children.Length + 1);
@@ -237,6 +265,7 @@ namespace UnityEditor
 			child.SetWindowRecurse(this.window);
 			this.ChildrenMinMaxChanged();
 		}
+
 		public virtual void RemoveChild(View child)
 		{
 			int num = Array.IndexOf<View>(this.m_Children, child);
@@ -249,6 +278,7 @@ namespace UnityEditor
 				this.RemoveChild(num);
 			}
 		}
+
 		public virtual void RemoveChild(int idx)
 		{
 			View view = this.m_Children[idx];
@@ -258,10 +288,12 @@ namespace UnityEditor
 			Array.Resize<View>(ref this.m_Children, this.m_Children.Length - 1);
 			this.ChildrenMinMaxChanged();
 		}
+
 		protected virtual void SetWindow(ContainerWindow win)
 		{
 			this.m_Window = win;
 		}
+
 		internal void SetWindowRecurse(ContainerWindow win)
 		{
 			this.SetWindow(win);
@@ -272,6 +304,7 @@ namespace UnityEditor
 				view.SetWindowRecurse(win);
 			}
 		}
+
 		protected virtual bool OnFocus()
 		{
 			return true;

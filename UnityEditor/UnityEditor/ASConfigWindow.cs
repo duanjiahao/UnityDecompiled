@@ -2,30 +2,46 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class ASConfigWindow
 	{
 		private const int listLenghts = 20;
+
 		private static ASMainWindow.Constants constants;
+
 		private ListViewState serversLv = new ListViewState(0);
+
 		private ListViewState projectsLv = new ListViewState(0);
+
 		private string serverAddress = string.Empty;
+
 		private string projectName = string.Empty;
+
 		private string userName = string.Empty;
+
 		private string password = string.Empty;
+
 		private string port = string.Empty;
+
 		private bool resetKeyboardControl;
+
 		private string[] projectsList;
+
 		private string[] serversList;
+
 		private PListConfig plc;
+
 		private ASMainWindow parentWin;
+
 		public ASConfigWindow(ASMainWindow parent)
 		{
 			this.parentWin = parent;
 			this.LoadConfig();
 		}
+
 		private void LoadConfig()
 		{
 			PListConfig pListConfig = new PListConfig("Library/ServerPreferences.plist");
@@ -45,6 +61,7 @@ namespace UnityEditor
 				this.serversLv.row = ArrayUtility.IndexOf<string>(this.serversList, this.serverAddress);
 			}
 		}
+
 		private void GetUserAndPassword()
 		{
 			string user = ASEditorBackend.GetUser(this.serverAddress);
@@ -58,6 +75,7 @@ namespace UnityEditor
 				this.password = user;
 			}
 		}
+
 		private void GetDefaultPListConfig()
 		{
 			this.plc = new PListConfig("Library/ServerPreferences.plist");
@@ -80,6 +98,7 @@ namespace UnityEditor
 				this.plc["Maint Connection Settings"] = string.Empty;
 			}
 		}
+
 		private void DoShowProjects()
 		{
 			int num = 10733;
@@ -112,6 +131,7 @@ namespace UnityEditor
 				this.projectsLv.totalRows = 0;
 			}
 		}
+
 		private void ClearConfig()
 		{
 			if (EditorUtility.DisplayDialog("Clear Configuration", "Are you sure you want to disconnect from Asset Server project and clear all configuration values?", "Clear", "Cancel"))
@@ -125,6 +145,7 @@ namespace UnityEditor
 				this.resetKeyboardControl = true;
 			}
 		}
+
 		private void DoConnect()
 		{
 			AssetServer.RemoveMaintErrorsFromConsole();
@@ -164,6 +185,7 @@ namespace UnityEditor
 				this.parentWin.Repaint();
 			}
 		}
+
 		private void ServersPopup()
 		{
 			if (this.serversList.Length > 0)
@@ -182,6 +204,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoConfigGUI()
 		{
 			bool enabled = GUI.enabled;
@@ -210,16 +233,14 @@ namespace UnityEditor
 					string nameOfFocusedControl = GUI.GetNameOfFocusedControl();
 					if (nameOfFocusedControl != null)
 					{
-						if (ASConfigWindow.<>f__switch$mapD == null)
+						if (ASConfigWindow.<>f__switch$map10 == null)
 						{
-							ASConfigWindow.<>f__switch$mapD = new Dictionary<string, int>(2)
+							ASConfigWindow.<>f__switch$map10 = new Dictionary<string, int>(2)
 							{
-
 								{
 									"password",
 									0
 								},
-
 								{
 									"project",
 									1
@@ -227,7 +248,7 @@ namespace UnityEditor
 							};
 						}
 						int num;
-						if (ASConfigWindow.<>f__switch$mapD.TryGetValue(nameOfFocusedControl, out num))
+						if (ASConfigWindow.<>f__switch$map10.TryGetValue(nameOfFocusedControl, out num))
 						{
 							if (num == 0)
 							{
@@ -296,6 +317,7 @@ namespace UnityEditor
 			GUI.enabled = enabled;
 			GUILayout.EndHorizontal();
 		}
+
 		private void DoProjectsGUI()
 		{
 			GUILayout.BeginVertical(ASConfigWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -314,6 +336,7 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 		}
+
 		public bool DoGUI()
 		{
 			if (ASConfigWindow.constants == null)

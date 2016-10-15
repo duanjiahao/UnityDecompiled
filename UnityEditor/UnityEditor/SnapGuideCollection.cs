@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SnapGuideCollection
 	{
 		private List<SnapGuide> currentGuides;
+
 		private Dictionary<float, List<SnapGuide>> guides = new Dictionary<float, List<SnapGuide>>();
+
 		public void Clear()
 		{
 			this.guides.Clear();
 		}
+
 		public void AddGuide(SnapGuide guide)
 		{
 			List<SnapGuide> list;
@@ -21,6 +25,7 @@ namespace UnityEditor
 			}
 			list.Add(guide);
 		}
+
 		public float SnapToGuides(float value, float snapDistance)
 		{
 			if (this.guides.Count == 0)
@@ -49,6 +54,7 @@ namespace UnityEditor
 			}
 			return value;
 		}
+
 		public void OnGUI()
 		{
 			if (Event.current.type == EventType.MouseUp)
@@ -56,6 +62,7 @@ namespace UnityEditor
 				this.currentGuides = null;
 			}
 		}
+
 		public void DrawGuides()
 		{
 			if (this.currentGuides != null)

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class GameViewSizesMenuModifyItemUI : FlexibleMenuModifyItemUI
@@ -7,29 +8,41 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent headerAdd = new GUIContent("Add");
+
 			public GUIContent headerEdit = new GUIContent("Edit");
+
 			public GUIContent typeName = new GUIContent("Type");
+
 			public GUIContent widthHeightText = new GUIContent("Width & Height");
+
 			public GUIContent optionalText = new GUIContent("Label");
+
 			public GUIContent ok = new GUIContent("OK");
+
 			public GUIContent cancel = new GUIContent("Cancel");
+
 			public GUIContent[] typeNames = new GUIContent[]
 			{
 				new GUIContent("Aspect Ratio"),
 				new GUIContent("Fixed Resolution")
 			};
 		}
+
 		private static GameViewSizesMenuModifyItemUI.Styles s_Styles;
+
 		private GameViewSize m_GameViewSize;
+
 		public override void OnClose()
 		{
 			this.m_GameViewSize = null;
 			base.OnClose();
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			return new Vector2(230f, 140f);
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			if (GameViewSizesMenuModifyItemUI.s_Styles == null)
@@ -85,17 +98,18 @@ namespace UnityEditor
 			GUILayout.Space(num);
 			GUILayout.FlexibleSpace();
 			string text = this.m_GameViewSize.displayText;
-			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(text));
-			if (string.IsNullOrEmpty(text))
+			using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(text)))
 			{
-				text = "Result";
+				if (string.IsNullOrEmpty(text))
+				{
+					text = "Result";
+				}
+				else
+				{
+					text = this.GetCroppedText(text, cropWidth, EditorStyles.label);
+				}
+				GUILayout.Label(GUIContent.Temp(text), EditorStyles.label, new GUILayoutOption[0]);
 			}
-			else
-			{
-				text = this.GetCroppedText(text, cropWidth, EditorStyles.label);
-			}
-			GUILayout.Label(GUIContent.Temp(text), EditorStyles.label, new GUILayoutOption[0]);
-			EditorGUI.EndDisabledGroup();
 			GUILayout.FlexibleSpace();
 			GUILayout.Space(num);
 			GUILayout.EndHorizontal();
@@ -106,17 +120,19 @@ namespace UnityEditor
 			{
 				base.editorWindow.Close();
 			}
-			EditorGUI.BeginDisabledGroup(!flag);
-			if (GUILayout.Button(GameViewSizesMenuModifyItemUI.s_Styles.ok, new GUILayoutOption[0]))
+			using (new EditorGUI.DisabledScope(!flag))
 			{
-				gameViewSize.Set(this.m_GameViewSize);
-				base.Accepted();
-				base.editorWindow.Close();
+				if (GUILayout.Button(GameViewSizesMenuModifyItemUI.s_Styles.ok, new GUILayoutOption[0]))
+				{
+					gameViewSize.Set(this.m_GameViewSize);
+					base.Accepted();
+					base.editorWindow.Close();
+				}
 			}
-			EditorGUI.EndDisabledGroup();
 			GUILayout.Space(10f);
 			GUILayout.EndHorizontal();
 		}
+
 		private string GetCroppedText(string fullText, float cropWidth, GUIStyle style)
 		{
 			int numCharactersThatFitWithinWidth = style.GetNumCharactersThatFitWithinWidth(fullText, cropWidth);

@@ -1,10 +1,22 @@
 using System;
+
 namespace UnityEngine
 {
 	public sealed class AndroidJavaException : Exception
 	{
-		internal AndroidJavaException(string message) : base(message)
+		private string mJavaStackTrace;
+
+		public override string StackTrace
 		{
+			get
+			{
+				return this.mJavaStackTrace + base.StackTrace;
+			}
+		}
+
+		internal AndroidJavaException(string message, string javaStackTrace) : base(message)
+		{
+			this.mJavaStackTrace = javaStackTrace;
 		}
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using UnityEditor.Utils;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class NativeProgram : Program

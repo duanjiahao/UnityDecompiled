@@ -1,40 +1,53 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(MeshRenderer))]
 	internal class MeshRendererEditor : RendererEditorBase
 	{
-		private string[] m_ExcludedProperties;
+		private SerializedProperty m_CastShadows;
+
+		private SerializedProperty m_ReceiveShadows;
+
+		private SerializedProperty m_MotionVectors;
+
+		private SerializedProperty m_Materials;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
+			this.m_CastShadows = base.serializedObject.FindProperty("m_CastShadows");
+			this.m_ReceiveShadows = base.serializedObject.FindProperty("m_ReceiveShadows");
+			this.m_MotionVectors = base.serializedObject.FindProperty("m_MotionVectors");
+			this.m_Materials = base.serializedObject.FindProperty("m_Materials");
 			base.InitializeProbeFields();
-			List<string> list = new List<string>();
-			list.Add("m_LightmapParameters");
-			list.AddRange(RendererEditorBase.Probes.GetFieldsStringArray());
-			this.m_ExcludedProperties = list.ToArray();
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
-			Editor.DrawPropertiesExcluding(base.serializedObject, this.m_ExcludedProperties);
+			bool flag = false;
 			SerializedProperty serializedProperty = base.serializedObject.FindProperty("m_Materials");
 			if (!serializedProperty.hasMultipleDifferentValues)
 			{
-				MeshRendererEditor.DisplayMaterialWarning(base.serializedObject, serializedProperty);
+				MeshFilter component = ((MeshRenderer)base.serializedObject.targetObject).GetComponent<MeshFilter>();
+				flag = (component != null && component.sharedMesh != null && serializedProperty.arraySize > component.sharedMesh.subMeshCount);
 			}
-			base.RenderProbeFields();
-			base.serializedObject.ApplyModifiedProperties();
-		}
-		private static void DisplayMaterialWarning(SerializedObject obj, SerializedProperty property)
-		{
-			MeshFilter component = ((MeshRenderer)obj.targetObject).GetComponent<MeshFilter>();
-			if (component != null && component.sharedMesh != null && property.arraySize > component.sharedMesh.subMeshCount)
+			EditorGUILayout.PropertyField(this.m_CastShadows, true, new GUILayoutOption[0]);
+			bool disabled = SceneView.IsUsingDeferredRenderingPath();
+			using (new EditorGUI.DisabledScope(disabled))
+			{
+				EditorGUILayout.PropertyField(this.m_ReceiveShadows, true, new GUILayoutOption[0]);
+			}
+			EditorGUILayout.PropertyField(this.m_MotionVectors, true, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_Materials, true, new GUILayoutOption[0]);
+			if (!this.m_Materials.hasMultipleDifferentValues && flag)
 			{
 				EditorGUILayout.HelpBox("This renderer has more materials than the Mesh has submeshes. Multiple materials will be applied to the same submesh, which costs performance. Consider using multiple shader passes.", MessageType.Warning, true);
 			}
+			base.RenderProbeFields();
+			base.serializedObject.ApplyModifiedProperties();
 		}
 	}
 }

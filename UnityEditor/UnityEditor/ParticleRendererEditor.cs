@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(ParticleRenderer))]
@@ -9,6 +10,7 @@ namespace UnityEditor
 		{
 			base.OnEnable();
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();

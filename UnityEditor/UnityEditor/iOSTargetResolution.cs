@@ -1,6 +1,8 @@
 using System;
+
 namespace UnityEditor
 {
+	[Obsolete("iOSTargetResolution is ignored, use Screen.SetResolution APIs")]
 	public enum iOSTargetResolution
 	{
 		Native,

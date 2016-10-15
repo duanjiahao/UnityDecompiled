@@ -1,32 +1,41 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ListViewGUI
 	{
 		private static int[] dummyWidths = new int[1];
+
 		internal static ListViewShared.InternalListViewState ilvState = new ListViewShared.InternalListViewState();
+
 		private static int listViewHash = "ListView".GetHashCode();
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(Rect pos, ListViewState state)
 		{
 			return ListViewGUI.DoListView(pos, state, null, string.Empty);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUI.ListView(state, (ListViewOptions)0, null, string.Empty, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, int[] colWidths, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUI.ListView(state, (ListViewOptions)0, colWidths, string.Empty, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, ListViewOptions lvOptions, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUI.ListView(state, lvOptions, null, string.Empty, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, ListViewOptions lvOptions, string dragTitle, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUI.ListView(state, lvOptions, null, dragTitle, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, ListViewOptions lvOptions, int[] colWidths, string dragTitle, GUIStyle style, params GUILayoutOption[] options)
 		{
 			GUILayout.BeginHorizontal(style, new GUILayoutOption[0]);
@@ -53,6 +62,7 @@ namespace UnityEditor
 			}
 			return ListViewGUI.DoListView(GUILayoutUtility.GetRect(1f, (float)(state.totalRows * state.rowHeight + 3)), state, colWidths, string.Empty);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator DoListView(Rect pos, ListViewState state, int[] colWidths, string dragTitle)
 		{
 			int controlID = GUIUtility.GetControlID(ListViewGUI.listViewHash, FocusType.Native);
@@ -97,18 +107,22 @@ namespace UnityEditor
 			}
 			return new ListViewShared.ListViewElementsEnumerator(ListViewGUI.ilvState, colWidths, num, num2, dragTitle, new Rect(0f, (float)(num * state.rowHeight), pos.width, (float)state.rowHeight));
 		}
+
 		public static bool MultiSelection(int prevSelected, int currSelected, ref int initialSelected, ref bool[] selectedItems)
 		{
 			return ListViewShared.MultiSelection(ListViewGUI.ilvState, prevSelected, currSelected, ref initialSelected, ref selectedItems);
 		}
+
 		public static bool HasMouseUp(Rect r)
 		{
 			return ListViewShared.HasMouseUp(ListViewGUI.ilvState, r, 0);
 		}
+
 		public static bool HasMouseDown(Rect r)
 		{
 			return ListViewShared.HasMouseDown(ListViewGUI.ilvState, r, 0);
 		}
+
 		public static bool HasMouseDown(Rect r, int button)
 		{
 			return ListViewShared.HasMouseDown(ListViewGUI.ilvState, r, button);

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TimeControl
@@ -7,29 +8,52 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent playIcon = EditorGUIUtility.IconContent("PlayButton");
+
 			public GUIContent pauseIcon = EditorGUIUtility.IconContent("PauseButton");
+
 			public GUIStyle playButton = "TimeScrubberButton";
+
 			public GUIStyle timeScrubber = "TimeScrubber";
 		}
+
 		private const float kStepTime = 0.01f;
+
 		private const float kScrubberHeight = 21f;
+
 		private const float kPlayButtonWidth = 33f;
+
 		public float currentTime = float.NegativeInfinity;
+
 		private bool m_NextCurrentTimeSet;
+
 		public float startTime;
+
 		public float stopTime = 1f;
+
 		public bool playSelection;
+
 		public bool loop = true;
+
 		public float playbackSpeed = 1f;
+
 		private float m_DeltaTime;
+
 		private bool m_DeltaTimeSet;
+
 		private double m_LastFrameEditorTime;
+
 		private bool m_Playing;
+
 		private bool m_ResetOnPlay;
+
 		private float m_MouseDrag;
+
 		private bool m_WrapForwardDrag;
+
 		private static TimeControl.Styles s_Styles;
+
 		private static readonly int kScrubberIDHash = "ScrubberIDHash".GetHashCode();
+
 		public float nextCurrentTime
 		{
 			set
@@ -38,6 +62,7 @@ namespace UnityEditor
 				this.m_NextCurrentTimeSet = true;
 			}
 		}
+
 		public float deltaTime
 		{
 			get
@@ -50,6 +75,7 @@ namespace UnityEditor
 				this.m_DeltaTimeSet = true;
 			}
 		}
+
 		public float normalizedTime
 		{
 			get
@@ -61,6 +87,7 @@ namespace UnityEditor
 				this.currentTime = this.startTime * (1f - value) + this.stopTime * value;
 			}
 		}
+
 		public bool playing
 		{
 			get
@@ -89,6 +116,7 @@ namespace UnityEditor
 				this.m_Playing = value;
 			}
 		}
+
 		public void DoTimeControl(Rect rect)
 		{
 			if (TimeControl.s_Styles == null)
@@ -136,12 +164,9 @@ namespace UnityEditor
 						{
 							this.currentTime -= this.stopTime - this.startTime;
 						}
-						else
+						else if (this.m_MouseDrag < 0f)
 						{
-							if (this.m_MouseDrag < 0f)
-							{
-								this.currentTime += this.stopTime - this.startTime;
-							}
+							this.currentTime += this.stopTime - this.startTime;
 						}
 						this.m_WrapForwardDrag = true;
 						this.m_MouseDrag = Mathf.Repeat(this.m_MouseDrag, rect3.width);
@@ -186,10 +211,12 @@ namespace UnityEditor
 			Handles.DrawLine(new Vector2(num, rect3.yMin), new Vector2(num, rect3.yMax));
 			Handles.DrawLine(new Vector2(num + 1f, rect3.yMin), new Vector2(num + 1f, rect3.yMax));
 		}
+
 		public void OnDisable()
 		{
 			this.playing = false;
 		}
+
 		public void Update()
 		{
 			if (!this.m_DeltaTimeSet)

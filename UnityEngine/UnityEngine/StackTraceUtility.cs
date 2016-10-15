@@ -3,26 +3,33 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security;
 using System.Text;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public class StackTraceUtility
 	{
 		private static string projectFolder = string.Empty;
+
+		[RequiredByNativeCode]
 		internal static void SetProjectFolder(string folder)
 		{
 			StackTraceUtility.projectFolder = folder;
 		}
-		[SecuritySafeCritical]
+
+		[SecuritySafeCritical, RequiredByNativeCode]
 		public static string ExtractStackTrace()
 		{
 			StackTrace stackTrace = new StackTrace(1, true);
 			return StackTraceUtility.ExtractFormattedStackTrace(stackTrace).ToString();
 		}
+
 		private static bool IsSystemStacktraceType(object name)
 		{
 			string text = (string)name;
 			return text.StartsWith("UnityEditor.") || text.StartsWith("UnityEngine.") || text.StartsWith("System.") || text.StartsWith("UnityScript.Lang.") || text.StartsWith("Boo.Lang.") || text.StartsWith("UnityEngine.SetupCoroutine");
 		}
+
 		public static string ExtractStringFromException(object exception)
 		{
 			string empty = string.Empty;
@@ -30,7 +37,8 @@ namespace UnityEngine
 			StackTraceUtility.ExtractStringFromExceptionInternal(exception, out empty, out empty2);
 			return empty + "\n" + empty2;
 		}
-		[SecuritySafeCritical]
+
+		[SecuritySafeCritical, RequiredByNativeCode]
 		internal static void ExtractStringFromExceptionInternal(object exceptiono, out string message, out string stackTrace)
 		{
 			if (exceptiono == null)
@@ -78,6 +86,8 @@ namespace UnityEngine
 			stringBuilder.Append(StackTraceUtility.ExtractFormattedStackTrace(stackTrace2));
 			stackTrace = stringBuilder.ToString();
 		}
+
+		[RequiredByNativeCode]
 		internal static string PostprocessStacktrace(string oldString, bool stripEngineInternalInformation)
 		{
 			if (oldString == null)
@@ -159,6 +169,7 @@ namespace UnityEngine
 			}
 			return stringBuilder.ToString();
 		}
+
 		[SecuritySafeCritical]
 		internal static string ExtractFormattedStackTrace(StackTrace stackTrace)
 		{
@@ -200,7 +211,7 @@ namespace UnityEngine
 						}
 						stringBuilder.Append(")");
 						string text = frame.GetFileName();
-						if (text != null && (!(declaringType.Name == "Debug") || !(declaringType.Namespace == "UnityEngine")))
+						if (text != null && (!(declaringType.Name == "Debug") || !(declaringType.Namespace == "UnityEngine")) && (!(declaringType.Name == "Logger") || !(declaringType.Namespace == "UnityEngine")) && (!(declaringType.Name == "DebugLogHandler") || !(declaringType.Namespace == "UnityEngine")) && (!(declaringType.Name == "Assert") || !(declaringType.Namespace == "UnityEngine.Assertions")))
 						{
 							stringBuilder.Append(" (at ");
 							if (text.StartsWith(StackTraceUtility.projectFolder))

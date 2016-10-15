@@ -1,18 +1,27 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AnimationWindowKeyframe
 	{
 		public float m_InTangent;
+
 		public float m_OutTangent;
+
 		public int m_TangentMode;
+
 		public int m_TimeHash;
+
 		private int m_Hash;
+
 		private float m_time;
+
 		private object m_value;
+
 		private AnimationWindowCurve m_curve;
+
 		public float time
 		{
 			get
@@ -26,6 +35,7 @@ namespace UnityEditorInternal
 				this.m_TimeHash = value.GetHashCode();
 			}
 		}
+
 		public object value
 		{
 			get
@@ -38,6 +48,7 @@ namespace UnityEditorInternal
 				this.m_Hash = 0;
 			}
 		}
+
 		public AnimationWindowCurve curve
 		{
 			get
@@ -50,6 +61,7 @@ namespace UnityEditorInternal
 				this.m_Hash = 0;
 			}
 		}
+
 		public bool isPPtrCurve
 		{
 			get
@@ -57,9 +69,11 @@ namespace UnityEditorInternal
 				return this.curve.isPPtrCurve;
 			}
 		}
+
 		public AnimationWindowKeyframe()
 		{
 		}
+
 		public AnimationWindowKeyframe(AnimationWindowKeyframe key)
 		{
 			this.time = key.time;
@@ -69,6 +83,7 @@ namespace UnityEditorInternal
 			this.m_OutTangent = key.m_OutTangent;
 			this.m_TangentMode = key.m_TangentMode;
 		}
+
 		public AnimationWindowKeyframe(AnimationWindowCurve curve, Keyframe key)
 		{
 			this.time = key.time;
@@ -78,12 +93,14 @@ namespace UnityEditorInternal
 			this.m_OutTangent = key.outTangent;
 			this.m_TangentMode = key.tangentMode;
 		}
+
 		public AnimationWindowKeyframe(AnimationWindowCurve curve, ObjectReferenceKeyframe key)
 		{
 			this.time = key.time;
 			this.value = key.value;
 			this.curve = curve;
 		}
+
 		public int GetHash()
 		{
 			if (this.m_Hash == 0)
@@ -92,6 +109,18 @@ namespace UnityEditorInternal
 				this.m_Hash = 33 * this.m_Hash + this.time.GetHashCode();
 			}
 			return this.m_Hash;
+		}
+
+		public int GetIndex()
+		{
+			for (int i = 0; i < this.curve.m_Keyframes.Count; i++)
+			{
+				if (this.curve.m_Keyframes[i] == this)
+				{
+					return i;
+				}
+			}
+			return -1;
 		}
 	}
 }

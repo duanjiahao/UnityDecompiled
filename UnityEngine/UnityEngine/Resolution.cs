@@ -1,11 +1,17 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct Resolution
 	{
 		private int m_Width;
+
 		private int m_Height;
+
 		private int m_RefreshRate;
+
 		public int width
 		{
 			get
@@ -17,6 +23,7 @@ namespace UnityEngine
 				this.m_Width = value;
 			}
 		}
+
 		public int height
 		{
 			get
@@ -28,6 +35,7 @@ namespace UnityEngine
 				this.m_Height = value;
 			}
 		}
+
 		public int refreshRate
 		{
 			get
@@ -38,6 +46,16 @@ namespace UnityEngine
 			{
 				this.m_RefreshRate = value;
 			}
+		}
+
+		public override string ToString()
+		{
+			return UnityString.Format("{0} x {1} @ {2}Hz", new object[]
+			{
+				this.m_Width,
+				this.m_Height,
+				this.m_RefreshRate
+			});
 		}
 	}
 }

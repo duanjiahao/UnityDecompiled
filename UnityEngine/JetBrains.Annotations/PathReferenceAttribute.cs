@@ -1,4 +1,5 @@
 using System;
+
 namespace JetBrains.Annotations
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -10,9 +11,11 @@ namespace JetBrains.Annotations
 			get;
 			private set;
 		}
+
 		public PathReferenceAttribute()
 		{
 		}
+
 		public PathReferenceAttribute([PathReference] string basePath)
 		{
 			this.BasePath = basePath;

@@ -2,14 +2,19 @@ using System;
 using UnityEditor.Audio;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AudioMixerExposedParameterView
 	{
 		private ReorderableListWithRenameAndScrollView m_ReorderableListWithRenameAndScrollView;
+
 		private AudioMixerController m_Controller;
+
 		private SerializedObject m_ControllerSerialized;
+
 		private ReorderableListWithRenameAndScrollView.State m_State;
+
 		private float height
 		{
 			get
@@ -17,10 +22,12 @@ namespace UnityEditor
 				return this.m_ReorderableListWithRenameAndScrollView.list.GetHeight();
 			}
 		}
+
 		public AudioMixerExposedParameterView(ReorderableListWithRenameAndScrollView.State state)
 		{
 			this.m_State = state;
 		}
+
 		public void OnMixerControllerChanged(AudioMixerController controller)
 		{
 			this.m_Controller = controller;
@@ -30,6 +37,7 @@ namespace UnityEditor
 			}
 			this.RecreateListControl();
 		}
+
 		public void RecreateListControl()
 		{
 			if (this.m_Controller != null)
@@ -53,6 +61,7 @@ namespace UnityEditor
 				expr_106.onGetNameAtIndex = (Func<int, string>)Delegate.Combine(expr_106.onGetNameAtIndex, new Func<int, string>(this.GetNameOfElement));
 			}
 		}
+
 		public void OnGUI(Rect rect)
 		{
 			if (this.m_Controller == null)
@@ -61,6 +70,7 @@ namespace UnityEditor
 			}
 			this.m_ReorderableListWithRenameAndScrollView.OnGUI(rect);
 		}
+
 		public void OnContextClick(int itemIndex)
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -74,6 +84,7 @@ namespace UnityEditor
 			}, itemIndex);
 			genericMenu.ShowAsContext();
 		}
+
 		private void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
 		{
 			Event current = Event.current;
@@ -86,10 +97,12 @@ namespace UnityEditor
 			{
 				return;
 			}
-			EditorGUI.BeginDisabledGroup(true);
-			this.m_ReorderableListWithRenameAndScrollView.elementStyleRightAligned.Draw(rect, this.GetInfoString(index), false, false, false, false);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(true))
+			{
+				this.m_ReorderableListWithRenameAndScrollView.elementStyleRightAligned.Draw(rect, this.GetInfoString(index), false, false, false, false);
+			}
 		}
+
 		public Vector2 CalcSize()
 		{
 			float num = 0f;
@@ -103,22 +116,26 @@ namespace UnityEditor
 			}
 			return new Vector2(num, this.height);
 		}
+
 		private string GetInfoString(int index)
 		{
 			ExposedAudioParameter exposedAudioParameter = this.m_Controller.exposedParameters[index];
 			return this.m_Controller.ResolveExposedParameterPath(exposedAudioParameter.guid, false);
 		}
+
 		private float WidthOfRow(int index, GUIStyle leftStyle, GUIStyle rightStyle)
 		{
 			string infoString = this.GetInfoString(index);
 			Vector2 vector = rightStyle.CalcSize(GUIContent.Temp(infoString));
 			return leftStyle.CalcSize(GUIContent.Temp(this.GetNameOfElement(index))).x + vector.x + 25f;
 		}
+
 		private string GetNameOfElement(int index)
 		{
 			ExposedAudioParameter exposedAudioParameter = this.m_Controller.exposedParameters[index];
 			return exposedAudioParameter.name;
 		}
+
 		public void NameChanged(int index, string newName)
 		{
 			if (newName.Length > 64)
@@ -137,6 +154,7 @@ namespace UnityEditor
 			exposedParameters[index].name = newName;
 			this.m_Controller.exposedParameters = exposedParameters;
 		}
+
 		private void Delete(int index)
 		{
 			if (this.m_Controller != null)
@@ -146,10 +164,12 @@ namespace UnityEditor
 				this.m_Controller.RemoveExposedParameter(exposedAudioParameter.guid);
 			}
 		}
+
 		public void EndDragChild(ReorderableList list)
 		{
 			this.m_ControllerSerialized.ApplyModifiedProperties();
 		}
+
 		public void OnEvent()
 		{
 			this.m_ReorderableListWithRenameAndScrollView.OnEvent();

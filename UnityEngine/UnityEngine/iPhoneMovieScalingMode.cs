@@ -1,9 +1,13 @@
 using System;
+
 namespace UnityEngine
 {
-	[Obsolete("iPhoneMovieScalingMode enumeration is deprecated (UnityUpgradable). Please use FullScreenMovieScalingMode instead.", true)]
+	[Obsolete("iPhoneMovieScalingMode enumeration is deprecated. Please use FullScreenMovieScalingMode instead  (UnityUpgradable) -> FullScreenMovieScalingMode", true)]
 	public enum iPhoneMovieScalingMode
 	{
-
+		None,
+		AspectFit,
+		AspectFill,
+		Fill
 	}
 }

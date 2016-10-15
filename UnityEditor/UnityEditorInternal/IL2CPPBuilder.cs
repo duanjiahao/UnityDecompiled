@@ -1,38 +1,39 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using UnityEditor;
 using UnityEditor.Scripting.Compilers;
+
 namespace UnityEditorInternal
 {
 	internal class IL2CPPBuilder
 	{
 		private readonly string m_TempFolder;
+
 		private readonly string m_StagingAreaData;
+
 		private readonly IIl2CppPlatformProvider m_PlatformProvider;
+
 		private readonly Action<string> m_ModifyOutputBeforeCompile;
+
 		private readonly RuntimeClassRegistry m_RuntimeClassRegistry;
-		private string[] Il2CppBlacklistPaths
-		{
-			get
-			{
-				return new string[]
-				{
-					Path.Combine("..", "platform_native_link.xml")
-				};
-			}
-		}
-		public IL2CPPBuilder(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry)
+
+		private readonly bool m_DevelopmentBuild;
+
+		private readonly LinkXmlReader m_linkXmlReader = new LinkXmlReader();
+
+		public IL2CPPBuilder(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool developmentBuild)
 		{
 			this.m_TempFolder = tempFolder;
 			this.m_StagingAreaData = stagingAreaData;
 			this.m_PlatformProvider = platformProvider;
 			this.m_ModifyOutputBeforeCompile = modifyOutputBeforeCompile;
 			this.m_RuntimeClassRegistry = runtimeClassRegistry;
+			this.m_DevelopmentBuild = developmentBuild;
 		}
+
 		public void Run()
 		{
 			string cppOutputDirectoryInStagingArea = this.GetCppOutputDirectoryInStagingArea();
@@ -44,88 +45,75 @@ namespace UnityEditorInternal
 				FileInfo fileInfo = new FileInfo(fileName);
 				fileInfo.IsReadOnly = false;
 			}
-			this.PatchAssemblies();
-			this.StripAssemblies(this.GetUserAssemblies(fullPath), fullPath);
-			this.ConvertPlayerDlltoCpp(this.GetUserAssembliesOrUnityEngine(fullPath), cppOutputDirectoryInStagingArea, fullPath);
+			AssemblyStripper.StripAssemblies(this.m_StagingAreaData, this.m_PlatformProvider, this.m_RuntimeClassRegistry, this.m_DevelopmentBuild);
+			FileUtil.CreateOrCleanDirectory(cppOutputDirectoryInStagingArea);
 			if (this.m_ModifyOutputBeforeCompile != null)
 			{
 				this.m_ModifyOutputBeforeCompile(cppOutputDirectoryInStagingArea);
 			}
+			this.ConvertPlayerDlltoCpp(this.GetUserAssembliesToConvert(fullPath), cppOutputDirectoryInStagingArea, fullPath);
 			INativeCompiler nativeCompiler = this.m_PlatformProvider.CreateNativeCompiler();
-			if (nativeCompiler != null)
+			if (nativeCompiler != null && this.m_PlatformProvider.CreateIl2CppNativeCodeBuilder() == null)
 			{
-				string text = Path.Combine(this.m_StagingAreaData, "Native");
-				Directory.CreateDirectory(text);
-				text = Path.Combine(text, this.m_PlatformProvider.nativeLibraryFileName);
+				string outFile = this.OutputFileRelativePath();
 				List<string> list = new List<string>(this.m_PlatformProvider.includePaths);
 				list.Add(cppOutputDirectoryInStagingArea);
-				this.m_PlatformProvider.CreateNativeCompiler().CompileDynamicLibrary(text, NativeCompiler.AllSourceFilesIn(cppOutputDirectoryInStagingArea), list, this.m_PlatformProvider.libraryPaths, new string[0]);
+				this.m_PlatformProvider.CreateNativeCompiler().CompileDynamicLibrary(outFile, NativeCompiler.AllSourceFilesIn(cppOutputDirectoryInStagingArea), list, this.m_PlatformProvider.libraryPaths, new string[0]);
 			}
 		}
-		private string[] GetUserAssembliesOrUnityEngine(string managedDir)
+
+		private string OutputFileRelativePath()
 		{
-			string[] array = this.GetUserAssemblies(managedDir);
-			if (array.Length == 0)
-			{
-				array = Directory.GetFiles(managedDir, "UnityEngine.dll", SearchOption.TopDirectoryOnly);
-			}
-			return array;
+			string text = Path.Combine(this.m_StagingAreaData, "Native");
+			Directory.CreateDirectory(text);
+			return Path.Combine(text, this.m_PlatformProvider.nativeLibraryFileName);
 		}
-		private bool HasStrippingInformation()
+
+		internal List<string> GetUserAssembliesToConvert(string managedDir)
 		{
-			return this.m_RuntimeClassRegistry != null && this.m_RuntimeClassRegistry.UsedTypePerUserAssembly != null;
+			HashSet<string> userAssemblies = this.GetUserAssemblies(managedDir);
+			userAssemblies.Add(Directory.GetFiles(managedDir, "UnityEngine.dll", SearchOption.TopDirectoryOnly).Single<string>());
+			userAssemblies.UnionWith(this.FilterUserAssemblies(Directory.GetFiles(managedDir, "*.dll", SearchOption.TopDirectoryOnly), new Predicate<string>(this.m_linkXmlReader.IsDLLUsed), managedDir));
+			return userAssemblies.ToList<string>();
 		}
-		private bool ShouldAddUGUIAsUserAssembly()
+
+		private HashSet<string> GetUserAssemblies(string managedDir)
 		{
-			return !this.HasStrippingInformation() || this.m_RuntimeClassRegistry.IsUGUIUsed();
+			HashSet<string> hashSet = new HashSet<string>();
+			hashSet.UnionWith(this.FilterUserAssemblies(this.m_RuntimeClassRegistry.GetUserAssemblies(), new Predicate<string>(this.m_RuntimeClassRegistry.IsDLLUsed), managedDir));
+			hashSet.UnionWith(this.FilterUserAssemblies(Directory.GetFiles(managedDir, "I18N*.dll", SearchOption.TopDirectoryOnly), (string assembly) => true, managedDir));
+			return hashSet;
 		}
-		private string[] GetUserAssemblies(string managedDir)
+
+		private IEnumerable<string> FilterUserAssemblies(IEnumerable<string> assemblies, Predicate<string> isUsed, string managedDir)
 		{
-			return (
-				from s in this.m_RuntimeClassRegistry.GetUserAssemblies()
-				select Path.Combine(managedDir, s)).ToArray<string>();
+			return from assembly in assemblies
+			where isUsed(assembly)
+			select assembly into usedAssembly
+			select Path.Combine(managedDir, usedAssembly);
 		}
-		private IEnumerable<string> GetAssembliesInDirectory(string assemblyName, string managedDir)
-		{
-			return Directory.GetFiles(managedDir, assemblyName, SearchOption.TopDirectoryOnly);
-		}
+
 		public string GetCppOutputDirectoryInStagingArea()
 		{
-			return Path.Combine(this.m_TempFolder, "il2cppOutput");
+			return IL2CPPBuilder.GetCppOutputPath(this.m_TempFolder);
 		}
-		private void PatchAssemblies()
+
+		public static string GetCppOutputPath(string tempFolder)
 		{
-			string fullPath = Path.GetFullPath(this.m_StagingAreaData + "/Managed");
-			string text = fullPath + "/mscorlib.dll";
-			string text2 = fullPath + "/mscorlib.unpatched.dll";
-			File.Move(text, text2);
-			File.Copy(this.m_PlatformProvider.il2CppFolder + "/replacements.dll", fullPath + "/replacements.dll");
-			Runner.RunManagedProgram(this.m_PlatformProvider.il2CppFolder + "/AssemblyPatcher/AssemblyPatcher.exe", string.Format("-a \"{0}\" -o \"{1}\" -c \"{2}\" --log-config \"{3}\" -s \"{4}\"", new object[]
-			{
-				text2,
-				text,
-				this.m_PlatformProvider.il2CppFolder + "/assemblypatcher_config.txt",
-				this.m_PlatformProvider.il2CppFolder + "/AssemblyPatcher.Log.Config.xml",
-				Path.GetFullPath(this.m_StagingAreaData + "/Managed")
-			}));
-			File.Delete(text2);
+			return Path.Combine(tempFolder, "il2cppOutput");
 		}
+
 		private void ConvertPlayerDlltoCpp(ICollection<string> userAssemblies, string outputDirectory, string workingDirectory)
 		{
 			if (userAssemblies.Count == 0)
 			{
-				Directory.CreateDirectory(outputDirectory);
 				return;
 			}
+			string[] array = (from s in Directory.GetFiles("Assets", "il2cpp_extra_types.txt", SearchOption.AllDirectories)
+			select Path.Combine(Directory.GetCurrentDirectory(), s)).ToArray<string>();
 			string il2CppExe = this.GetIl2CppExe();
 			List<string> list = new List<string>();
-			list.Add("--copy-level=None");
-			list.Add("--enable-generic-sharing");
-			list.Add("--enable-unity-event-support");
-			if (this.m_PlatformProvider.usePrecompiledHeader)
-			{
-				list.Add("--use-precompiled-header");
-			}
+			list.Add("--convert-to-cpp");
 			if (this.m_PlatformProvider.emitNullChecks)
 			{
 				list.Add("--emit-null-checks");
@@ -138,101 +126,71 @@ namespace UnityEditorInternal
 			{
 				list.Add("--enable-array-bounds-check");
 			}
-			if (this.m_PlatformProvider.compactMode)
+			if (this.m_PlatformProvider.enableDivideByZeroCheck)
 			{
-				list.Add("--output-format=Compact");
+				list.Add("--enable-divide-by-zero-check");
 			}
 			if (this.m_PlatformProvider.loadSymbols)
 			{
 				list.Add("--enable-symbol-loading");
 			}
-			string empty = string.Empty;
-			if (PlayerSettings.GetPropertyOptionalString("additionalIl2CppArgs", ref empty))
+			if (this.m_PlatformProvider.developmentMode)
 			{
-				list.Add(empty);
+				list.Add("--development-mode");
 			}
-			List<string> source = new List<string>(userAssemblies)
+			Il2CppNativeCodeBuilder il2CppNativeCodeBuilder = this.m_PlatformProvider.CreateIl2CppNativeCodeBuilder();
+			if (il2CppNativeCodeBuilder != null)
 			{
-				outputDirectory
-			};
-			list.AddRange(
-				from arg in source
-				select "\"" + Path.GetFullPath(arg) + "\"");
-			string text = list.Aggregate(string.Empty, (string current, string arg) => current + arg + " ");
-			Console.WriteLine("Invoking il2cpp with arguments: " + text);
-			Runner.RunManagedProgram(il2CppExe, text, workingDirectory, new Il2CppOutputParser());
-		}
-		private void StripAssemblies(string[] assemblies, string managedAssemblyFolderPath)
-		{
-			List<string> list = new List<string>();
-			list.AddRange(assemblies);
-			string[] assembliesToStrip = list.ToArray();
-			string[] searchDirs = new string[]
+				string fullUnityVersion = InternalEditorUtility.GetFullUnityVersion();
+				Il2CppNativeCodeBuilderUtils.ClearCacheIfEditorVersionDiffers(il2CppNativeCodeBuilder, fullUnityVersion);
+				Il2CppNativeCodeBuilderUtils.PrepareCacheDirectory(il2CppNativeCodeBuilder, fullUnityVersion);
+				list.AddRange(Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths));
+			}
+			if (array.Length > 0)
 			{
-				managedAssemblyFolderPath
-			};
-			this.RunAssemblyStripper(assemblies, managedAssemblyFolderPath, assembliesToStrip, searchDirs, AssemblyStripper.MonoLinker2Path);
-		}
-		private void RunAssemblyStripper(IEnumerable assemblies, string managedAssemblyFolderPath, string[] assembliesToStrip, string[] searchDirs, string monoLinkerPath)
-		{
-			IEnumerable<string> enumerable = this.Il2CppBlacklistPaths;
-			if (this.m_RuntimeClassRegistry != null)
-			{
-				enumerable = enumerable.Concat(new string[]
+				string[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
 				{
-					this.WriteMethodsToPreserveBlackList()
-				});
-			}
-			string text;
-			string text2;
-			if (AssemblyStripper.Strip(assembliesToStrip, searchDirs, managedAssemblyFolderPath, managedAssemblyFolderPath, out text, out text2, monoLinkerPath, Path.Combine(this.m_PlatformProvider.il2CppFolder, "LinkerDescriptors"), enumerable))
-			{
-				return;
-			}
-			throw new Exception(string.Concat(new object[]
-			{
-				"Error in stripping assemblies: ",
-				assemblies,
-				", ",
-				text2
-			}));
-		}
-		private string WriteMethodsToPreserveBlackList()
-		{
-			string text = Directory.GetCurrentDirectory() + "/" + this.m_StagingAreaData + "/methods_pointedto_by_uievents.xml";
-			File.WriteAllText(text, this.GetMethodPreserveBlacklistContents());
-			return text;
-		}
-		private string GetMethodPreserveBlacklistContents()
-		{
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.AppendLine("<linker>");
-			IEnumerable<IGrouping<string, RuntimeClassRegistry.MethodDescription>> enumerable = 
-				from m in this.m_RuntimeClassRegistry.GetMethodsToPreserve()
-				group m by m.assembly;
-			foreach (IGrouping<string, RuntimeClassRegistry.MethodDescription> current in enumerable)
-			{
-				stringBuilder.AppendLine(string.Format("\t<assembly fullname=\"{0}\">", current.Key));
-				IEnumerable<IGrouping<string, RuntimeClassRegistry.MethodDescription>> enumerable2 = 
-					from m in current
-					group m by m.fullTypeName;
-				foreach (IGrouping<string, RuntimeClassRegistry.MethodDescription> current2 in enumerable2)
-				{
-					stringBuilder.AppendLine(string.Format("\t\t<type fullname=\"{0}\">", current2.Key));
-					foreach (RuntimeClassRegistry.MethodDescription current3 in current2)
-					{
-						stringBuilder.AppendLine(string.Format("\t\t\t<method name=\"{0}\"/>", current3.methodName));
-					}
-					stringBuilder.AppendLine("\t\t</type>");
+					string arg2 = array2[i];
+					list.Add(string.Format("--extra-types.file=\"{0}\"", arg2));
 				}
-				stringBuilder.AppendLine("\t</assembly>");
 			}
-			stringBuilder.AppendLine("</linker>");
-			return stringBuilder.ToString();
+			string text = Path.Combine(this.m_PlatformProvider.il2CppFolder, "il2cpp_default_extra_types.txt");
+			if (File.Exists(text))
+			{
+				list.Add(string.Format("--extra-types.file=\"{0}\"", text));
+			}
+			string text2 = string.Empty;
+			if (PlayerSettings.GetPropertyOptionalString("additionalIl2CppArgs", ref text2))
+			{
+				list.Add(text2);
+			}
+			text2 = Environment.GetEnvironmentVariable("IL2CPP_ADDITIONAL_ARGS");
+			if (!string.IsNullOrEmpty(text2))
+			{
+				list.Add(text2);
+			}
+			List<string> source = new List<string>(userAssemblies);
+			list.AddRange(from arg in source
+			select "--assembly=\"" + Path.GetFullPath(arg) + "\"");
+			list.Add(string.Format("--generatedcppdir=\"{0}\"", Path.GetFullPath(outputDirectory)));
+			string text3 = list.Aggregate(string.Empty, (string current, string arg) => current + arg + " ");
+			Console.WriteLine("Invoking il2cpp with arguments: " + text3);
+			if (EditorUtility.DisplayCancelableProgressBar("Building Player", "Converting managed assemblies to C++", 0.3f))
+			{
+				throw new OperationCanceledException();
+			}
+			Action<ProcessStartInfo> setupStartInfo = null;
+			if (il2CppNativeCodeBuilder != null)
+			{
+				setupStartInfo = new Action<ProcessStartInfo>(il2CppNativeCodeBuilder.SetupStartInfo);
+			}
+			Runner.RunManagedProgram(il2CppExe, text3, workingDirectory, new Il2CppOutputParser(), setupStartInfo);
 		}
+
 		private string GetIl2CppExe()
 		{
-			return this.m_PlatformProvider.il2CppFolder + "/il2cpp.exe";
+			return this.m_PlatformProvider.il2CppFolder + "/build/il2cpp.exe";
 		}
 	}
 }

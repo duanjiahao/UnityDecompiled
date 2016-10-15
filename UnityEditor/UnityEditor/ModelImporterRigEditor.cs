@@ -1,43 +1,61 @@
 using System;
+using System.Collections.Generic;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ModelImporterRigEditor : AssetImporterInspector
 	{
 		private class Styles
 		{
-			public GUIContent AnimationType = EditorGUIUtility.TextContent("ModelImporterAnimationType");
+			public GUIContent AnimationType = EditorGUIUtility.TextContent("Animation Type|The type of animation to support / import.");
+
 			public GUIContent[] AnimationTypeOpt = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("ModelImporterAnimationTypeNone"),
-				EditorGUIUtility.TextContent("ModelImporterAnimationTypeLegacy"),
-				EditorGUIUtility.TextContent("ModelImporterAnimationTypeGeneric"),
-				EditorGUIUtility.TextContent("ModelImporterAnimationTypeHumanoid")
+				EditorGUIUtility.TextContent("None|No animation present."),
+				EditorGUIUtility.TextContent("Legacy|Legacy animation system."),
+				EditorGUIUtility.TextContent("Generic|Generic Mecanim animation."),
+				EditorGUIUtility.TextContent("Humanoid|Humanoid Mecanim animation system.")
 			};
-			public GUIContent AnimLabel = EditorGUIUtility.TextContent("ModelImporterAnimLabel");
+
+			public GUIContent AnimLabel = EditorGUIUtility.TextContent("Generation|Controls how animations are imported.");
+
 			public GUIContent[] AnimationsOpt = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("ModelImporterAnimNone"),
-				EditorGUIUtility.TextContent("ModelImporterAnimOrigRoot"),
-				EditorGUIUtility.TextContent("ModelImporterAnimNode"),
-				EditorGUIUtility.TextContent("ModelImporterAnimRoot"),
-				EditorGUIUtility.TextContent("ModelImporterAnimRootNew")
+				EditorGUIUtility.TextContent("Don't Import|No animation or skinning is imported."),
+				EditorGUIUtility.TextContent("Store in Original Roots (Deprecated)|Animations are stored in the root objects of your animation package (these might be different from the root objects in Unity)."),
+				EditorGUIUtility.TextContent("Store in Nodes (Deprecated)|Animations are stored together with the objects they animate. Use this when you have a complex animation setup and want full scripting control."),
+				EditorGUIUtility.TextContent("Store in Root (Deprecated)|Animations are stored in the scene's transform root objects. Use this when animating anything that has a hierarchy."),
+				EditorGUIUtility.TextContent("Store in Root (New)")
 			};
+
 			public GUIStyle helpText = new GUIStyle(EditorStyles.helpBox);
+
 			public GUIContent avatar = new GUIContent("Animator");
+
 			public GUIContent configureAvatar = EditorGUIUtility.TextContent("Configure...");
+
 			public GUIContent avatarValid = EditorGUIUtility.TextContent("✓");
+
 			public GUIContent avatarInvalid = EditorGUIUtility.TextContent("✕");
+
 			public GUIContent avatarPending = EditorGUIUtility.TextContent("...");
-			public GUIContent UpdateMuscleDefinitionFromSource = EditorGUIUtility.TextContent("ModelImporterRigUpdateMuscleDefinitionFromSource");
-			public GUIContent RootNode = EditorGUIUtility.TextContent("ModelImporterRigRootNode");
-			public GUIContent AvatarDefinition = EditorGUIUtility.TextContent("ModelImporterRigAvatarDefinition");
+
+			public GUIContent UpdateMuscleDefinitionFromSource = EditorGUIUtility.TextContent("Update|Update the copy of the muscle definition from the source.");
+
+			public GUIContent RootNode = EditorGUIUtility.TextContent("Root node|Specify the root node used to extract the animation translation.");
+
+			public GUIContent AvatarDefinition = EditorGUIUtility.TextContent("Avatar Definition|Choose between Create From This Model or Copy From Other Avatar. The first one create an Avatar for this file and the second one use an Avatar from another file to import animation.");
+
 			public GUIContent[] AvatarDefinitionOpt = new GUIContent[]
 			{
-				EditorGUIUtility.TextContent("ModelImporterRigCreateFromThisModel"),
-				EditorGUIUtility.TextContent("ModelImporterRigCopyFromOtherAvatar")
+				EditorGUIUtility.TextContent("Create From This Model|Create an Avatar based on the model from this file."),
+				EditorGUIUtility.TextContent("Copy From Other Avatar|Copy an Avatar from another file to import muscle clip. No avatar will be created.")
 			};
-			public GUIContent UpdateReferenceClips = EditorGUIUtility.TextContent("ModelImporterRigUpdateReferenceClips");
+
+			public GUIContent UpdateReferenceClips = EditorGUIUtility.TextContent("Update reference clips|Click on this button to update all the @convention file referencing this file. Should set all these files to Copy From Other Avatar, set the source Avatar to this one and reimport all these files.");
+
 			public Styles()
 			{
 				this.helpText.normal.background = null;
@@ -45,11 +63,15 @@ namespace UnityEditor
 				this.helpText.padding = new RectOffset(0, 0, 0, 0);
 			}
 		}
+
 		private struct MappingRelevantSettings
 		{
 			public bool humanoid;
+
 			public bool copyAvatar;
+
 			public bool hasNoAnimation;
+
 			public bool usesOwnAvatar
 			{
 				get
@@ -58,21 +80,41 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private const float kDeleteWidth = 17f;
+
 		public int m_SelectedClipIndex = -1;
+
 		private Avatar m_Avatar;
+
 		private SerializedProperty m_OptimizeGameObjects;
+
 		private SerializedProperty m_AnimationType;
+
 		private SerializedProperty m_AvatarSource;
+
 		private SerializedProperty m_CopyAvatar;
+
 		private SerializedProperty m_LegacyGenerateAnimations;
+
 		private SerializedProperty m_AnimationCompression;
+
 		private SerializedProperty m_RootMotionBoneName;
+
 		private GUIContent[] m_RootMotionBoneList;
+
 		private ExposeTransformEditor m_ExposeTransformEditor;
+
 		private bool m_AvatarCopyIsUpToDate;
+
 		private bool m_CanMultiEditTransformList;
+
+		private bool m_IsBiped;
+
+		private List<string> m_BipedMappingReport;
+
 		private static ModelImporterRigEditor.Styles styles;
+
 		private ModelImporter singleImporter
 		{
 			get
@@ -80,6 +122,7 @@ namespace UnityEditor
 				return base.targets[0] as ModelImporter;
 			}
 		}
+
 		private ModelImporterAnimationType animationType
 		{
 			get
@@ -91,11 +134,13 @@ namespace UnityEditor
 				this.m_AnimationType.intValue = (int)value;
 			}
 		}
+
 		public int rootIndex
 		{
 			get;
 			set;
 		}
+
 		public bool isLocked
 		{
 			get
@@ -118,6 +163,7 @@ namespace UnityEditor
 				return false;
 			}
 		}
+
 		public void OnEnable()
 		{
 			this.m_AnimationType = base.serializedObject.FindProperty("m_AnimationType");
@@ -143,7 +189,15 @@ namespace UnityEditor
 			this.m_ExposeTransformEditor.OnEnable(this.singleImporter.transformPaths, base.serializedObject);
 			this.m_CanMultiEditTransformList = this.CanMultiEditTransformList();
 			this.CheckIfAvatarCopyIsUpToDate();
+			this.m_IsBiped = false;
+			this.m_BipedMappingReport = new List<string>();
+			if (this.m_AnimationType.intValue == 3)
+			{
+				GameObject gameObject = AssetDatabase.LoadMainAssetAtPath(this.singleImporter.assetPath) as GameObject;
+				this.m_IsBiped = AvatarBipedMapper.IsBiped(gameObject.transform, this.m_BipedMappingReport);
+			}
 		}
+
 		private bool CanMultiEditTransformList()
 		{
 			string[] transformPaths = this.singleImporter.transformPaths;
@@ -157,6 +211,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private void CheckIfAvatarCopyIsUpToDate()
 		{
 			if ((this.animationType != ModelImporterAnimationType.Human && this.animationType != ModelImporterAnimationType.Generic) || this.m_AvatarSource.objectReferenceValue == null)
@@ -168,11 +223,13 @@ namespace UnityEditor
 			ModelImporter otherImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
 			this.m_AvatarCopyIsUpToDate = ModelImporterRigEditor.DoesHumanDescriptionMatch(this.singleImporter, otherImporter);
 		}
+
 		internal override void ResetValues()
 		{
 			base.ResetValues();
 			this.m_Avatar = (AssetDatabase.LoadAssetAtPath((this.target as ModelImporter).assetPath, typeof(Avatar)) as Avatar);
 		}
+
 		private void LegacyGUI()
 		{
 			EditorGUILayout.Popup(this.m_LegacyGenerateAnimations, ModelImporterRigEditor.styles.AnimationsOpt, ModelImporterRigEditor.styles.AnimLabel, new GUILayoutOption[0]);
@@ -181,6 +238,7 @@ namespace UnityEditor
 				EditorGUILayout.HelpBox("The animation import setting \"" + ModelImporterRigEditor.styles.AnimationsOpt[this.m_LegacyGenerateAnimations.intValue].text + "\" is deprecated.", MessageType.Warning);
 			}
 		}
+
 		private void AvatarSourceGUI()
 		{
 			EditorGUI.BeginChangeCheck();
@@ -193,6 +251,7 @@ namespace UnityEditor
 				this.m_CopyAvatar.boolValue = (num == 1);
 			}
 		}
+
 		private void GenericGUI()
 		{
 			this.AvatarSourceGUI();
@@ -200,10 +259,11 @@ namespace UnityEditor
 			{
 				if (!this.m_CopyAvatar.boolValue)
 				{
-					EditorGUI.BeginDisabledGroup(!this.m_CanMultiEditTransformList);
 					EditorGUI.BeginChangeCheck();
-					this.rootIndex = EditorGUILayout.Popup(ModelImporterRigEditor.styles.RootNode, this.rootIndex, this.m_RootMotionBoneList, new GUILayoutOption[0]);
-					EditorGUI.EndDisabledGroup();
+					using (new EditorGUI.DisabledScope(!this.m_CanMultiEditTransformList))
+					{
+						this.rootIndex = EditorGUILayout.Popup(ModelImporterRigEditor.styles.RootNode, this.rootIndex, this.m_RootMotionBoneList, new GUILayoutOption[0]);
+					}
 					if (EditorGUI.EndChangeCheck())
 					{
 						if (this.rootIndex > 0 && this.rootIndex < this.m_RootMotionBoneList.Length)
@@ -222,6 +282,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void HumanoidGUI()
 		{
 			this.AvatarSourceGUI();
@@ -236,8 +297,25 @@ namespace UnityEditor
 					this.CopyAvatarGUI();
 				}
 			}
+			if (this.m_IsBiped)
+			{
+				if (this.m_BipedMappingReport.Count > 0)
+				{
+					string text = "A Biped was detected, but cannot be configured properly because of an unsupported hierarchy. Adjust Biped settings in 3DS Max before exporting to correct this problem.\n";
+					for (int i = 0; i < this.m_BipedMappingReport.Count; i++)
+					{
+						text += this.m_BipedMappingReport[i];
+					}
+					EditorGUILayout.HelpBox(text, MessageType.Warning);
+				}
+				else
+				{
+					EditorGUILayout.HelpBox("A Biped was detected. Default Biped mapping and T-Pose have been configured for this avatar. Translation DoFs have been activated. Use Configure to modify default Biped setup.", MessageType.Info);
+				}
+			}
 			EditorGUILayout.Space();
 		}
+
 		private void ConfigureAvatarGUI()
 		{
 			if (base.targets.Length > 1)
@@ -269,24 +347,27 @@ namespace UnityEditor
 			}
 			Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 			GUI.Label(new Rect(controlRect.xMax - 75f - 18f, controlRect.y, 18f, controlRect.height), content, EditorStyles.label);
-			EditorGUI.BeginDisabledGroup(this.m_Avatar == null);
-			if (GUI.Button(new Rect(controlRect.xMax - 75f, controlRect.y + 1f, 75f, controlRect.height - 1f), ModelImporterRigEditor.styles.configureAvatar, EditorStyles.miniButton))
+			using (new EditorGUI.DisabledScope(this.m_Avatar == null))
 			{
-				if (!this.isLocked)
+				if (GUI.Button(new Rect(controlRect.xMax - 75f, controlRect.y + 1f, 75f, controlRect.height - 1f), ModelImporterRigEditor.styles.configureAvatar, EditorStyles.miniButton))
 				{
-					if (EditorApplication.SaveCurrentSceneIfUserWantsTo())
+					if (!this.isLocked)
 					{
-						Selection.activeObject = this.m_Avatar;
-						AvatarEditor.s_EditImmediatelyOnNextOpen = true;
+						if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+						{
+							Selection.activeObject = this.m_Avatar;
+							AvatarEditor.s_EditImmediatelyOnNextOpen = true;
+						}
+						GUIUtility.ExitGUI();
+					}
+					else
+					{
+						Debug.Log("Cannot configure avatar, inspector is locked");
 					}
 				}
-				else
-				{
-					Debug.Log("Cannot configure avatar, inspector is locked");
-				}
 			}
-			EditorGUI.EndDisabledGroup();
 		}
+
 		private void CheckAvatar(Avatar sourceAvatar)
 		{
 			if (sourceAvatar != null)
@@ -302,22 +383,20 @@ namespace UnityEditor
 						this.m_AvatarSource.objectReferenceValue = null;
 					}
 				}
-				else
+				else if (!sourceAvatar.isHuman && this.animationType != ModelImporterAnimationType.Generic)
 				{
-					if (!sourceAvatar.isHuman && this.animationType != ModelImporterAnimationType.Generic)
+					if (EditorUtility.DisplayDialog("Asigning an Generic Avatar on a Humanoid Rig", "Do you want to change Animation Type to Generic ?", "Yes", "No"))
 					{
-						if (EditorUtility.DisplayDialog("Asigning an Generic Avatar on a Humanoid Rig", "Do you want to change Animation Type to Generic ?", "Yes", "No"))
-						{
-							this.animationType = ModelImporterAnimationType.Generic;
-						}
-						else
-						{
-							this.m_AvatarSource.objectReferenceValue = null;
-						}
+						this.animationType = ModelImporterAnimationType.Generic;
+					}
+					else
+					{
+						this.m_AvatarSource.objectReferenceValue = null;
 					}
 				}
 			}
 		}
+
 		private void CopyAvatarGUI()
 		{
 			GUILayout.Label("If you have already created an Avatar for another model with a rig identical to this one, you can copy its Avatar definition.\nWith this option, this model will not create any avatar but only import animations.", EditorStyles.helpBox, new GUILayoutOption[0]);
@@ -343,6 +422,7 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndHorizontal();
 		}
+
 		private void ShowUpdateReferenceClip()
 		{
 			if (base.targets.Length > 1 || this.animationType != ModelImporterAnimationType.Human || this.m_CopyAvatar.boolValue)
@@ -387,6 +467,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (ModelImporterRigEditor.styles == null)
@@ -402,12 +483,9 @@ namespace UnityEditor
 				{
 					this.m_AnimationCompression.intValue = 1;
 				}
-				else
+				else if (this.animationType == ModelImporterAnimationType.Generic || this.animationType == ModelImporterAnimationType.Human)
 				{
-					if (this.animationType == ModelImporterAnimationType.Generic || this.animationType == ModelImporterAnimationType.Human)
-					{
-						this.m_AnimationCompression.intValue = 3;
-					}
+					this.m_AnimationCompression.intValue = 3;
 				}
 			}
 			EditorGUILayout.Space();
@@ -417,19 +495,13 @@ namespace UnityEditor
 				{
 					this.HumanoidGUI();
 				}
-				else
+				else if (this.animationType == ModelImporterAnimationType.Generic)
 				{
-					if (this.animationType == ModelImporterAnimationType.Generic)
-					{
-						this.GenericGUI();
-					}
-					else
-					{
-						if (this.animationType == ModelImporterAnimationType.Legacy)
-						{
-							this.LegacyGUI();
-						}
-					}
+					this.GenericGUI();
+				}
+				else if (this.animationType == ModelImporterAnimationType.Legacy)
+				{
+					this.LegacyGUI();
 				}
 			}
 			if (this.m_Avatar && this.m_Avatar.isValid && this.m_Avatar.isHuman)
@@ -451,13 +523,15 @@ namespace UnityEditor
 				if (this.m_OptimizeGameObjects.boolValue && base.serializedObject.targetObjects.Length == 1)
 				{
 					EditorGUILayout.Space();
-					EditorGUI.BeginDisabledGroup(!this.m_CanMultiEditTransformList);
-					this.m_ExposeTransformEditor.OnGUI();
-					EditorGUI.EndDisabledGroup();
+					using (new EditorGUI.DisabledScope(!this.m_CanMultiEditTransformList))
+					{
+						this.m_ExposeTransformEditor.OnGUI();
+					}
 				}
 			}
 			base.ApplyRevertGUI();
 		}
+
 		private static SerializedObject GetModelImporterSerializedObject(string assetPath)
 		{
 			ModelImporter modelImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
@@ -467,6 +541,7 @@ namespace UnityEditor
 			}
 			return new SerializedObject(modelImporter);
 		}
+
 		private static bool DoesHumanDescriptionMatch(ModelImporter importer, ModelImporter otherImporter)
 		{
 			SerializedObject serializedObject = new SerializedObject(new UnityEngine.Object[]
@@ -479,10 +554,12 @@ namespace UnityEditor
 			serializedObject.Dispose();
 			return result;
 		}
+
 		private static void CopyHumanDescriptionToDestination(SerializedObject sourceObject, SerializedObject targetObject)
 		{
 			targetObject.CopyFromSerializedProperty(sourceObject.FindProperty("m_HumanDescription"));
 		}
+
 		private void CopyHumanDescriptionFromOtherModel(Avatar sourceAvatar)
 		{
 			string assetPath = AssetDatabase.GetAssetPath(sourceAvatar);
@@ -490,6 +567,7 @@ namespace UnityEditor
 			ModelImporterRigEditor.CopyHumanDescriptionToDestination(modelImporterSerializedObject, base.serializedObject);
 			modelImporterSerializedObject.Dispose();
 		}
+
 		private void SetupReferencedClip(string otherModelImporterPath)
 		{
 			SerializedObject modelImporterSerializedObject = ModelImporterRigEditor.GetModelImporterSerializedObject(otherModelImporterPath);
@@ -511,6 +589,7 @@ namespace UnityEditor
 				modelImporterSerializedObject.Dispose();
 			}
 		}
+
 		internal override void Apply()
 		{
 			ModelImporterRigEditor.MappingRelevantSettings[] array = new ModelImporterRigEditor.MappingRelevantSettings[base.targets.Length];
@@ -562,6 +641,7 @@ namespace UnityEditor
 						AnimatorUtility.DeoptimizeTransformHierarchy(gameObject);
 					}
 					AvatarSetupTool.AutoSetupOnInstance(gameObject, serializedObject3);
+					this.m_IsBiped = AvatarBipedMapper.IsBiped(gameObject.transform, this.m_BipedMappingReport);
 					if (flag)
 					{
 						UnityEngine.Object.DestroyImmediate(gameObject);

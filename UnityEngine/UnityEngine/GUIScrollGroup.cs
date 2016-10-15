@@ -1,20 +1,39 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	internal sealed class GUIScrollGroup : GUILayoutGroup
 	{
 		public float calcMinWidth;
+
 		public float calcMaxWidth;
+
 		public float calcMinHeight;
+
 		public float calcMaxHeight;
+
 		public float clientWidth;
+
 		public float clientHeight;
+
 		public bool allowHorizontalScroll = true;
+
 		public bool allowVerticalScroll = true;
+
 		public bool needsHorizontalScrollbar;
+
 		public bool needsVerticalScrollbar;
+
 		public GUIStyle horizontalScrollbar;
+
 		public GUIStyle verticalScrollbar;
+
+		[RequiredByNativeCode]
+		public GUIScrollGroup()
+		{
+		}
+
 		public override void CalcWidth()
 		{
 			float minWidth = this.minWidth;
@@ -44,6 +63,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public override void SetHorizontal(float x, float width)
 		{
 			float num = (!this.needsVerticalScrollbar) ? width : (width - this.verticalScrollbar.fixedWidth - (float)this.verticalScrollbar.margin.left);
@@ -69,6 +89,7 @@ namespace UnityEngine
 				this.clientWidth = num;
 			}
 		}
+
 		public override void CalcHeight()
 		{
 			float minHeight = this.minHeight;
@@ -104,6 +125,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public override void SetVertical(float y, float height)
 		{
 			float num = height;

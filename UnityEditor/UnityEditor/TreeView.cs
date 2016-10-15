@@ -1,86 +1,153 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.AnimatedValues;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	internal class TreeView
 	{
+		internal const string kExpansionAnimationPrefKey = "TreeViewExpansionAnimation";
+
 		private const float kSpaceForScrollBar = 16f;
+
 		private EditorWindow m_EditorWindow;
+
+		private readonly TreeViewItemExpansionAnimator m_ExpansionAnimator = new TreeViewItemExpansionAnimator();
+
+		private AnimFloat m_FramingAnimFloat;
+
+		private bool m_StopIteratingItems;
+
 		private List<int> m_DragSelection = new List<int>();
+
 		private bool m_UseScrollView = true;
+
 		private bool m_AllowRenameOnMouseUp = true;
+
+		private bool m_UseExpansionAnimation = EditorPrefs.GetBool("TreeViewExpansionAnimation", false);
+
 		private bool m_GrabKeyboardFocus;
+
 		private Rect m_TotalRect;
+
 		private bool m_HadFocusLastEvent;
+
 		private int m_KeyboardControlID;
+
 		public Action<int[]> selectionChangedCallback
 		{
 			get;
 			set;
 		}
+
 		public Action<int> itemDoubleClickedCallback
 		{
 			get;
 			set;
 		}
+
 		public Action<int[], bool> dragEndedCallback
 		{
 			get;
 			set;
 		}
-		public Action<int> contextClickCallback
+
+		public Action<int> contextClickItemCallback
 		{
 			get;
 			set;
 		}
+
+		public Action contextClickOutsideItemsCallback
+		{
+			get;
+			set;
+		}
+
 		public Action keyboardInputCallback
 		{
 			get;
 			set;
 		}
+
 		public Action expandedStateChanged
 		{
 			get;
 			set;
 		}
+
 		public Action<string> searchChanged
 		{
 			get;
 			set;
 		}
+
+		public Action<Vector2> scrollChanged
+		{
+			get;
+			set;
+		}
+
 		public Action<int, Rect> onGUIRowCallback
 		{
 			get;
 			set;
 		}
+
 		public ITreeViewDataSource data
 		{
 			get;
 			set;
 		}
+
 		public ITreeViewDragging dragging
 		{
 			get;
 			set;
 		}
+
 		public ITreeViewGUI gui
 		{
 			get;
 			set;
 		}
+
 		public TreeViewState state
 		{
 			get;
 			set;
 		}
+
+		public TreeViewItemExpansionAnimator expansionAnimator
+		{
+			get
+			{
+				return this.m_ExpansionAnimator;
+			}
+		}
+
 		public bool deselectOnUnhandledMouseDown
 		{
 			get;
 			set;
 		}
+
+		public bool useExpansionAnimation
+		{
+			get
+			{
+				return this.m_UseExpansionAnimation;
+			}
+			set
+			{
+				this.m_UseExpansionAnimation = value;
+			}
+		}
+
 		public bool isSearching
 		{
 			get
@@ -88,6 +155,7 @@ namespace UnityEditor
 				return !string.IsNullOrEmpty(this.state.searchString);
 			}
 		}
+
 		public string searchString
 		{
 			get
@@ -104,84 +172,98 @@ namespace UnityEditor
 				}
 			}
 		}
+
+		private bool animatingExpansion
+		{
+			get
+			{
+				return this.m_UseExpansionAnimation && this.m_ExpansionAnimator.isAnimating;
+			}
+		}
+
 		public TreeView(EditorWindow editorWindow, TreeViewState treeViewState)
 		{
 			this.m_EditorWindow = editorWindow;
 			this.state = treeViewState;
 		}
+
 		public void Init(Rect rect, ITreeViewDataSource data, ITreeViewGUI gui, ITreeViewDragging dragging)
 		{
 			this.data = data;
 			this.gui = gui;
 			this.dragging = dragging;
 			this.m_TotalRect = rect;
+			data.OnInitialize();
+			gui.OnInitialize();
+			if (dragging != null)
+			{
+				dragging.OnInitialize();
+			}
+			this.expandedStateChanged = (Action)Delegate.Combine(this.expandedStateChanged, new Action(this.ExpandedStateHasChanged));
+			this.m_FramingAnimFloat = new AnimFloat(this.state.scrollPos.y, new UnityAction(this.AnimatedScrollChanged));
 		}
+
+		private void ExpandedStateHasChanged()
+		{
+			this.m_StopIteratingItems = true;
+		}
+
 		public bool IsSelected(int id)
 		{
 			return this.state.selectedIDs.Contains(id);
 		}
+
 		public bool HasSelection()
 		{
 			return this.state.selectedIDs.Count<int>() > 0;
 		}
+
 		public int[] GetSelection()
 		{
 			return this.state.selectedIDs.ToArray();
 		}
-		private bool IsSameAsCurrentSelection(int[] selectedIDs)
+
+		public int[] GetRowIDs()
 		{
-			if (selectedIDs.Length != this.state.selectedIDs.Count)
-			{
-				return false;
-			}
-			for (int i = 0; i < selectedIDs.Length; i++)
-			{
-				if (selectedIDs[i] != this.state.selectedIDs[i])
-				{
-					return false;
-				}
-			}
-			return true;
+			return (from item in this.data.GetRows()
+			select item.id).ToArray<int>();
 		}
-		public int[] GetVisibleRowIDs()
-		{
-			return (
-				from item in this.data.GetVisibleRows()
-				select item.id).ToArray<int>();
-		}
+
 		public void SetSelection(int[] selectedIDs, bool revealSelectionAndFrameLastSelected)
+		{
+			this.SetSelection(selectedIDs, revealSelectionAndFrameLastSelected, false);
+		}
+
+		public void SetSelection(int[] selectedIDs, bool revealSelectionAndFrameLastSelected, bool animatedFraming)
 		{
 			if (selectedIDs.Length > 0)
 			{
 				if (revealSelectionAndFrameLastSelected)
 				{
-					int[] selectedIDs2 = selectedIDs;
-					for (int i = 0; i < selectedIDs2.Length; i++)
+					for (int i = 0; i < selectedIDs.Length; i++)
 					{
-						int id = selectedIDs2[i];
-						this.RevealNode(id);
+						int id = selectedIDs[i];
+						this.data.RevealItem(id);
 					}
 				}
 				this.state.selectedIDs = new List<int>(selectedIDs);
-				if (this.state.selectedIDs.IndexOf(this.state.lastClickedID) < 0)
+				bool flag = this.state.selectedIDs.IndexOf(this.state.lastClickedID) >= 0;
+				if (!flag)
 				{
-					List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-					List<int> list = (
-						from item in visibleRows
-						where selectedIDs.Contains(item.id)
-						select item.id).ToList<int>();
-					if (list.Count > 0)
+					int num = selectedIDs.Last<int>();
+					if (this.data.GetRow(num) != -1)
 					{
-						this.state.lastClickedID = list[list.Count - 1];
+						this.state.lastClickedID = num;
+						flag = true;
 					}
 					else
 					{
 						this.state.lastClickedID = 0;
 					}
 				}
-				if (revealSelectionAndFrameLastSelected)
+				if (revealSelectionAndFrameLastSelected && flag)
 				{
-					this.Frame(this.state.lastClickedID, true, false);
+					this.Frame(this.state.lastClickedID, true, false, animatedFraming);
 				}
 			}
 			else
@@ -190,14 +272,17 @@ namespace UnityEditor
 				this.state.lastClickedID = 0;
 			}
 		}
-		public TreeViewItem FindNode(int id)
+
+		public TreeViewItem FindItem(int id)
 		{
 			return this.data.FindItem(id);
 		}
+
 		public void SetUseScrollView(bool useScrollView)
 		{
 			this.m_UseScrollView = useScrollView;
 		}
+
 		public void Repaint()
 		{
 			if (this.m_EditorWindow != null)
@@ -205,25 +290,30 @@ namespace UnityEditor
 				this.m_EditorWindow.Repaint();
 			}
 		}
+
 		public void ReloadData()
 		{
 			this.data.ReloadData();
 			this.Repaint();
+			this.m_StopIteratingItems = true;
 		}
+
 		public bool HasFocus()
 		{
 			return this.m_EditorWindow != null && this.m_EditorWindow.m_Parent.hasFocus && GUIUtility.keyboardControl == this.m_KeyboardControlID;
 		}
+
 		internal static int GetItemControlID(TreeViewItem item)
 		{
 			return ((item == null) ? 0 : item.id) + 10000000;
 		}
-		private void HandleUnusedMouseEventsForNode(Rect rect, TreeViewItem item, bool firstItem)
+
+		public void HandleUnusedMouseEventsForItem(Rect rect, TreeViewItem item, bool firstItem)
 		{
 			int itemControlID = TreeView.GetItemControlID(item);
 			Event current = Event.current;
-			EventType type = current.type;
-			switch (type)
+			EventType typeForControl = current.GetTypeForControl(itemControlID);
+			switch (typeForControl)
 			{
 			case EventType.MouseDown:
 				if (rect.Contains(Event.current.mousePosition))
@@ -241,26 +331,29 @@ namespace UnityEditor
 						}
 						else
 						{
-							this.m_DragSelection = this.GetNewSelection(item, true, false);
+							if (this.dragging == null || this.dragging.CanStartDrag(item, this.m_DragSelection, Event.current.mousePosition))
+							{
+								this.m_DragSelection = this.GetNewSelection(item, true, false);
+								DragAndDropDelay dragAndDropDelay = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), itemControlID);
+								dragAndDropDelay.mouseDownPosition = Event.current.mousePosition;
+							}
 							GUIUtility.hotControl = itemControlID;
-							DragAndDropDelay dragAndDropDelay = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), itemControlID);
-							dragAndDropDelay.mouseDownPosition = Event.current.mousePosition;
 						}
 						current.Use();
 					}
-					else
+					else if (Event.current.button == 1)
 					{
-						if (Event.current.button == 1)
-						{
-							bool keepMultiSelection = true;
-							this.SelectionClick(item, keepMultiSelection);
-						}
+						bool keepMultiSelection = true;
+						this.SelectionClick(item, keepMultiSelection);
 					}
 				}
 				return;
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == itemControlID)
 				{
+					GUIUtility.hotControl = 0;
+					this.m_DragSelection.Clear();
+					current.Use();
 					if (rect.Contains(current.mousePosition))
 					{
 						float contentIndent = this.gui.GetContentIndent(item);
@@ -274,15 +367,12 @@ namespace UnityEditor
 						{
 							this.SelectionClick(item, false);
 						}
-						GUIUtility.hotControl = 0;
 					}
-					this.m_DragSelection.Clear();
-					current.Use();
 				}
 				return;
 			case EventType.MouseMove:
-				IL_2C:
-				if (type == EventType.DragUpdated || type == EventType.DragPerform)
+				IL_2D:
+				if (typeForControl == EventType.DragUpdated || typeForControl == EventType.DragPerform)
 				{
 					if (this.dragging != null && this.dragging.DragElement(item, rect, firstItem))
 					{
@@ -290,20 +380,20 @@ namespace UnityEditor
 					}
 					return;
 				}
-				if (type != EventType.ContextClick)
+				if (typeForControl != EventType.ContextClick)
 				{
 					return;
 				}
-				if (rect.Contains(current.mousePosition) && this.contextClickCallback != null)
+				if (rect.Contains(current.mousePosition) && this.contextClickItemCallback != null)
 				{
-					this.contextClickCallback(item.id);
+					this.contextClickItemCallback(item.id);
 				}
 				return;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == itemControlID && this.dragging != null)
 				{
 					DragAndDropDelay dragAndDropDelay2 = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), itemControlID);
-					if (dragAndDropDelay2.CanStartDrag())
+					if (dragAndDropDelay2.CanStartDrag() && this.dragging.CanStartDrag(item, this.m_DragSelection, dragAndDropDelay2.mouseDownPosition))
 					{
 						this.dragging.StartDrag(item, this.m_DragSelection);
 						GUIUtility.hotControl = 0;
@@ -312,12 +402,14 @@ namespace UnityEditor
 				}
 				return;
 			}
-			goto IL_2C;
+			goto IL_2D;
 		}
+
 		public void GrabKeyboardFocus()
 		{
 			this.m_GrabKeyboardFocus = true;
 		}
+
 		public void NotifyListenersThatSelectionChanged()
 		{
 			if (this.selectionChangedCallback != null)
@@ -325,6 +417,7 @@ namespace UnityEditor
 				this.selectionChangedCallback(this.state.selectedIDs.ToArray());
 			}
 		}
+
 		public void NotifyListenersThatDragEnded(int[] draggedIDs, bool draggedItemsFromOwnTreeView)
 		{
 			if (this.dragEndedCallback != null)
@@ -332,14 +425,59 @@ namespace UnityEditor
 				this.dragEndedCallback(draggedIDs, draggedItemsFromOwnTreeView);
 			}
 		}
+
 		public Vector2 GetContentSize()
 		{
-			return this.gui.GetTotalSize(this.data.GetVisibleRows());
+			return this.gui.GetTotalSize();
 		}
+
 		public Rect GetTotalRect()
 		{
 			return this.m_TotalRect;
 		}
+
+		public bool IsItemDragSelectedOrSelected(TreeViewItem item)
+		{
+			return (this.m_DragSelection.Count <= 0) ? this.state.selectedIDs.Contains(item.id) : this.m_DragSelection.Contains(item.id);
+		}
+
+		private void DoItemGUI(TreeViewItem item, int row, float rowWidth, bool hasFocus)
+		{
+			if (row < 0 || row >= this.data.rowCount)
+			{
+				Debug.LogError(string.Concat(new object[]
+				{
+					"Invalid. Org row: ",
+					row,
+					" Num rows ",
+					this.data.rowCount
+				}));
+				return;
+			}
+			bool selected = this.IsItemDragSelectedOrSelected(item);
+			Rect rect = this.gui.GetRowRect(row, rowWidth);
+			if (this.animatingExpansion)
+			{
+				rect = this.m_ExpansionAnimator.OnBeginRowGUI(row, rect);
+			}
+			if (this.animatingExpansion)
+			{
+				this.m_ExpansionAnimator.OnRowGUI(row);
+			}
+			this.gui.OnRowGUI(rect, item, row, selected, hasFocus);
+			if (this.animatingExpansion)
+			{
+				this.m_ExpansionAnimator.OnEndRowGUI(row);
+			}
+			if (this.onGUIRowCallback != null)
+			{
+				float contentIndent = this.gui.GetContentIndent(item);
+				Rect arg = new Rect(rect.x + contentIndent, rect.y, rect.width - contentIndent, rect.height);
+				this.onGUIRowCallback(item.id, arg);
+			}
+			this.HandleUnusedMouseEventsForItem(rect, item, row == 0);
+		}
+
 		public void OnGUI(Rect rect, int keyboardControlID)
 		{
 			this.m_TotalRect = rect;
@@ -361,39 +499,198 @@ namespace UnityEditor
 					this.m_AllowRenameOnMouseUp = false;
 				}
 			}
-			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-			Vector2 totalSize = this.gui.GetTotalSize(visibleRows);
+			if (this.animatingExpansion)
+			{
+				this.m_ExpansionAnimator.OnBeforeAllRowsGUI();
+			}
+			this.data.InitIfNeeded();
+			Vector2 totalSize = this.gui.GetTotalSize();
 			Rect viewRect = new Rect(0f, 0f, totalSize.x, totalSize.y);
 			if (this.m_UseScrollView)
 			{
 				this.state.scrollPos = GUI.BeginScrollView(this.m_TotalRect, this.state.scrollPos, viewRect);
 			}
+			else
+			{
+				GUI.BeginClip(this.m_TotalRect);
+			}
 			this.gui.BeginRowGUI();
-			float topPixel = (!this.m_UseScrollView) ? 0f : this.state.scrollPos.y;
 			int num;
 			int num2;
-			this.gui.GetFirstAndLastRowVisible(visibleRows, topPixel, this.m_TotalRect.height, out num, out num2);
-			for (int i = num; i <= num2; i++)
+			this.gui.GetFirstAndLastRowVisible(out num, out num2);
+			if (num2 >= 0)
 			{
-				TreeViewItem treeViewItem = visibleRows[i];
-				bool selected = (this.m_DragSelection.Count <= 0) ? this.state.selectedIDs.Contains(treeViewItem.id) : this.m_DragSelection.Contains(treeViewItem.id);
-				Rect rect2 = this.gui.OnRowGUI(treeViewItem, i, Mathf.Max(GUIClip.visibleRect.width, viewRect.width), selected, flag);
-				if (this.onGUIRowCallback != null)
-				{
-					float contentIndent = this.gui.GetContentIndent(treeViewItem);
-					Rect arg = new Rect(rect2.x + contentIndent, rect2.y, rect2.width - contentIndent, rect2.height);
-					this.onGUIRowCallback(treeViewItem.id, arg);
-				}
-				this.HandleUnusedMouseEventsForNode(rect2, visibleRows[i], i == 0);
+				int numVisibleRows = num2 - num + 1;
+				float rowWidth = Mathf.Max(GUIClip.visibleRect.width, viewRect.width);
+				this.IterateVisibleItems(num, numVisibleRows, rowWidth, flag);
+			}
+			if (this.animatingExpansion)
+			{
+				this.m_ExpansionAnimator.OnAfterAllRowsGUI();
 			}
 			this.gui.EndRowGUI();
 			if (this.m_UseScrollView)
 			{
 				GUI.EndScrollView();
 			}
+			else
+			{
+				GUI.EndClip();
+			}
 			this.HandleUnusedEvents();
 			this.KeyboardGUI();
 		}
+
+		private void IterateVisibleItems(int firstRow, int numVisibleRows, float rowWidth, bool hasFocus)
+		{
+			this.m_StopIteratingItems = false;
+			int num = 0;
+			int i = 0;
+			while (i < numVisibleRows)
+			{
+				int num2 = firstRow + i;
+				if (this.animatingExpansion)
+				{
+					int endRow = this.m_ExpansionAnimator.endRow;
+					if (this.m_ExpansionAnimator.CullRow(num2, this.gui))
+					{
+						num++;
+						num2 = endRow + num;
+					}
+					else
+					{
+						num2 += num;
+					}
+					if (num2 < this.data.rowCount)
+					{
+						goto IL_AE;
+					}
+				}
+				else
+				{
+					float num3 = this.gui.GetRowRect(num2, rowWidth).y - this.state.scrollPos.y;
+					if (num3 <= this.m_TotalRect.height)
+					{
+						goto IL_AE;
+					}
+				}
+				IL_D0:
+				i++;
+				continue;
+				IL_AE:
+				this.DoItemGUI(this.data.GetItem(num2), num2, rowWidth, hasFocus);
+				if (this.m_StopIteratingItems)
+				{
+					return;
+				}
+				goto IL_D0;
+			}
+		}
+
+		private List<int> GetVisibleSelectedIds()
+		{
+			int num;
+			int num2;
+			this.gui.GetFirstAndLastRowVisible(out num, out num2);
+			if (num2 < 0)
+			{
+				return new List<int>();
+			}
+			List<int> list = new List<int>(num2 - num);
+			for (int i = num; i < num2; i++)
+			{
+				TreeViewItem item = this.data.GetItem(i);
+				list.Add(item.id);
+			}
+			return (from id in list
+			where this.state.selectedIDs.Contains(id)
+			select id).ToList<int>();
+		}
+
+		private void ExpansionAnimationEnded(TreeViewAnimationInput setup)
+		{
+			if (!setup.expanding)
+			{
+				this.ChangeExpandedState(setup.item, false);
+			}
+		}
+
+		private float GetAnimationDuration(float height)
+		{
+			return (height <= 60f) ? (height * 0.1f / 60f) : 0.1f;
+		}
+
+		public void UserInputChangedExpandedState(TreeViewItem item, int row, bool expand)
+		{
+			if (this.useExpansionAnimation)
+			{
+				if (expand)
+				{
+					this.ChangeExpandedState(item, true);
+				}
+				int num = row + 1;
+				int lastChildRowUnder = this.GetLastChildRowUnder(row);
+				float width = GUIClip.visibleRect.width;
+				Rect rectForRows = this.GetRectForRows(num, lastChildRowUnder, width);
+				float animationDuration = this.GetAnimationDuration(rectForRows.height);
+				TreeViewAnimationInput setup = new TreeViewAnimationInput
+				{
+					animationDuration = (double)animationDuration,
+					startRow = num,
+					endRow = lastChildRowUnder,
+					startRowRect = this.gui.GetRowRect(num, width),
+					rowsRect = rectForRows,
+					startTime = EditorApplication.timeSinceStartup,
+					expanding = expand,
+					animationEnded = new Action<TreeViewAnimationInput>(this.ExpansionAnimationEnded),
+					item = item,
+					treeView = this
+				};
+				this.expansionAnimator.BeginAnimating(setup);
+			}
+			else
+			{
+				this.ChangeExpandedState(item, expand);
+			}
+		}
+
+		private void ChangeExpandedState(TreeViewItem item, bool expand)
+		{
+			if (Event.current.alt)
+			{
+				this.data.SetExpandedWithChildren(item, expand);
+			}
+			else
+			{
+				this.data.SetExpanded(item, expand);
+			}
+			if (expand)
+			{
+				this.UserExpandedItem(item);
+			}
+		}
+
+		private int GetLastChildRowUnder(int row)
+		{
+			List<TreeViewItem> rows = this.data.GetRows();
+			int depth = rows[row].depth;
+			for (int i = row + 1; i < rows.Count; i++)
+			{
+				if (rows[i].depth <= depth)
+				{
+					return i - 1;
+				}
+			}
+			return rows.Count - 1;
+		}
+
+		protected virtual Rect GetRectForRows(int startRow, int endRow, float rowWidth)
+		{
+			Rect rowRect = this.gui.GetRowRect(startRow, rowWidth);
+			Rect rowRect2 = this.gui.GetRowRect(endRow, rowWidth);
+			return new Rect(rowRect.x, rowRect.y, rowWidth, rowRect2.yMax - rowRect.yMin);
+		}
+
 		private void HandleUnusedEvents()
 		{
 			EventType type = Event.current.type;
@@ -440,37 +737,43 @@ namespace UnityEditor
 				}
 				return;
 			case EventType.ContextClick:
-				if (this.m_TotalRect.Contains(Event.current.mousePosition) && this.contextClickCallback != null)
+				if (this.m_TotalRect.Contains(Event.current.mousePosition) && this.contextClickOutsideItemsCallback != null)
 				{
-					this.contextClickCallback(0);
+					this.contextClickOutsideItemsCallback();
 				}
 				return;
 			}
 			goto IL_34;
 		}
+
 		public void OnEvent()
 		{
 			this.state.renameOverlay.OnEvent();
 		}
+
 		public bool BeginNameEditing(float delay)
 		{
-			if (this.state.selectedIDs.Count == 1)
+			if (this.state.selectedIDs.Count == 0)
 			{
-				TreeViewItem treeViewItem = this.data.FindItem(this.state.selectedIDs[0]);
-				if (treeViewItem != null)
+				return false;
+			}
+			List<TreeViewItem> rows = this.data.GetRows();
+			TreeViewItem treeViewItem = null;
+			foreach (int id in this.state.selectedIDs)
+			{
+				TreeViewItem treeViewItem2 = rows.Find((TreeViewItem i) => i.id == id);
+				if (treeViewItem == null)
 				{
-					if (this.data.IsRenamingItemAllowed(treeViewItem))
-					{
-						return this.gui.BeginRename(treeViewItem, delay);
-					}
+					treeViewItem = treeViewItem2;
 				}
-				else
+				else if (treeViewItem2 != null)
 				{
-					Debug.LogError("Item not found for renaming with id = " + this.state.selectedIDs[0]);
+					return false;
 				}
 			}
-			return false;
+			return treeViewItem != null && this.data.IsRenamingItemAllowed(treeViewItem) && this.gui.BeginRename(treeViewItem, delay);
 		}
+
 		public void EndNameEditing(bool acceptChanges)
 		{
 			if (this.state.renameOverlay.IsRenaming())
@@ -479,6 +782,56 @@ namespace UnityEditor
 				this.gui.EndRename();
 			}
 		}
+
+		private TreeViewItem GetItemAndRowIndex(int id, out int row)
+		{
+			row = this.data.GetRow(id);
+			if (row == -1)
+			{
+				return null;
+			}
+			return this.data.GetItem(row);
+		}
+
+		private void HandleFastCollapse(TreeViewItem item, int row)
+		{
+			if (item.depth == 0)
+			{
+				for (int i = row - 1; i >= 0; i--)
+				{
+					if (this.data.GetItem(i).hasChildren)
+					{
+						this.OffsetSelection(i - row);
+						return;
+					}
+				}
+			}
+			else if (item.depth > 0)
+			{
+				for (int j = row - 1; j >= 0; j--)
+				{
+					if (this.data.GetItem(j).depth < item.depth)
+					{
+						this.OffsetSelection(j - row);
+						return;
+					}
+				}
+			}
+		}
+
+		private void HandleFastExpand(TreeViewItem item, int row)
+		{
+			int rowCount = this.data.rowCount;
+			for (int i = row + 1; i < rowCount; i++)
+			{
+				if (this.data.GetItem(i).hasChildren)
+				{
+					this.OffsetSelection(i - row);
+					break;
+				}
+			}
+		}
+
 		private void KeyboardGUI()
 		{
 			if (this.m_KeyboardControlID != GUIUtility.keyboardControl || !GUI.enabled)
@@ -495,7 +848,7 @@ namespace UnityEditor
 				switch (keyCode)
 				{
 				case KeyCode.KeypadEnter:
-					goto IL_392;
+					goto IL_2FB;
 				case KeyCode.KeypadEquals:
 				case KeyCode.Insert:
 				case KeyCode.F1:
@@ -507,7 +860,7 @@ namespace UnityEditor
 						}
 						return;
 					}
-					goto IL_392;
+					goto IL_2FB;
 				case KeyCode.UpArrow:
 					Event.current.Use();
 					this.OffsetSelection(-1);
@@ -519,27 +872,17 @@ namespace UnityEditor
 				case KeyCode.RightArrow:
 					foreach (int current in this.state.selectedIDs)
 					{
-						TreeViewItem treeViewItem = this.data.FindItem(current);
-						if (treeViewItem != null)
+						int row;
+						TreeViewItem itemAndRowIndex = this.GetItemAndRowIndex(current, out row);
+						if (itemAndRowIndex != null)
 						{
-							if (this.data.IsExpandable(treeViewItem) && !this.data.IsExpanded(treeViewItem))
+							if (this.data.IsExpandable(itemAndRowIndex) && !this.data.IsExpanded(itemAndRowIndex))
 							{
-								if (Event.current.alt)
-								{
-									this.data.SetExpandedWithChildren(treeViewItem, true);
-								}
-								else
-								{
-									this.data.SetExpanded(treeViewItem, true);
-								}
-								this.UserExpandedNode(treeViewItem);
+								this.UserInputChangedExpandedState(itemAndRowIndex, row, true);
 							}
-							else
+							else if (this.state.selectedIDs.Count == 1)
 							{
-								if (treeViewItem.hasChildren && this.state.selectedIDs.Count == 1)
-								{
-									this.SelectionClick(treeViewItem.children[0], false);
-								}
+								this.HandleFastExpand(itemAndRowIndex, row);
 							}
 						}
 					}
@@ -548,26 +891,17 @@ namespace UnityEditor
 				case KeyCode.LeftArrow:
 					foreach (int current2 in this.state.selectedIDs)
 					{
-						TreeViewItem treeViewItem2 = this.data.FindItem(current2);
-						if (treeViewItem2 != null)
+						int row2;
+						TreeViewItem itemAndRowIndex2 = this.GetItemAndRowIndex(current2, out row2);
+						if (itemAndRowIndex2 != null)
 						{
-							if (this.data.IsExpandable(treeViewItem2) && this.data.IsExpanded(treeViewItem2))
+							if (this.data.IsExpandable(itemAndRowIndex2) && this.data.IsExpanded(itemAndRowIndex2))
 							{
-								if (Event.current.alt)
-								{
-									this.data.SetExpandedWithChildren(treeViewItem2, false);
-								}
-								else
-								{
-									this.data.SetExpanded(treeViewItem2, false);
-								}
+								this.UserInputChangedExpandedState(itemAndRowIndex2, row2, false);
 							}
-							else
+							else if (this.state.selectedIDs.Count == 1)
 							{
-								if (treeViewItem2.parent != null && this.state.selectedIDs.Count == 1 && this.data.GetVisibleRows().Contains(treeViewItem2.parent))
-								{
-									this.SelectionClick(treeViewItem2.parent, false);
-								}
+								this.HandleFastCollapse(itemAndRowIndex2, row2);
 							}
 						}
 					}
@@ -584,10 +918,10 @@ namespace UnityEditor
 				case KeyCode.PageUp:
 				{
 					Event.current.Use();
-					TreeViewItem treeViewItem3 = this.data.FindItem(this.state.lastClickedID);
-					if (treeViewItem3 != null)
+					TreeViewItem treeViewItem = this.data.FindItem(this.state.lastClickedID);
+					if (treeViewItem != null)
 					{
-						int numRowsOnPageUpDown = this.gui.GetNumRowsOnPageUpDown(treeViewItem3, true, this.m_TotalRect.height);
+						int numRowsOnPageUpDown = this.gui.GetNumRowsOnPageUpDown(treeViewItem, true, this.m_TotalRect.height);
 						this.OffsetSelection(-numRowsOnPageUpDown);
 					}
 					return;
@@ -595,10 +929,10 @@ namespace UnityEditor
 				case KeyCode.PageDown:
 				{
 					Event.current.Use();
-					TreeViewItem treeViewItem4 = this.data.FindItem(this.state.lastClickedID);
-					if (treeViewItem4 != null)
+					TreeViewItem treeViewItem2 = this.data.FindItem(this.state.lastClickedID);
+					if (treeViewItem2 != null)
 					{
-						int numRowsOnPageUpDown2 = this.gui.GetNumRowsOnPageUpDown(treeViewItem4, true, this.m_TotalRect.height);
+						int numRowsOnPageUpDown2 = this.gui.GetNumRowsOnPageUpDown(treeViewItem2, true, this.m_TotalRect.height);
 						this.OffsetSelection(numRowsOnPageUpDown2);
 					}
 					return;
@@ -611,13 +945,14 @@ namespace UnityEditor
 					return;
 				}
 				goto IL_8E;
-				IL_392:
+				IL_2FB:
 				if (Application.platform == RuntimePlatform.OSXEditor && this.BeginNameEditing(0f))
 				{
 					Event.current.Use();
 				}
 			}
 		}
+
 		internal static int GetIndexOfID(List<TreeViewItem> items, int id)
 		{
 			for (int i = 0; i < items.Count; i++)
@@ -629,24 +964,27 @@ namespace UnityEditor
 			}
 			return -1;
 		}
-		public bool IsLastClickedPartOfVisibleRows()
+
+		public bool IsLastClickedPartOfRows()
 		{
-			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-			return visibleRows.Count != 0 && TreeView.GetIndexOfID(visibleRows, this.state.lastClickedID) >= 0;
+			List<TreeViewItem> rows = this.data.GetRows();
+			return rows.Count != 0 && TreeView.GetIndexOfID(rows, this.state.lastClickedID) >= 0;
 		}
+
 		public void OffsetSelection(int offset)
 		{
-			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-			if (visibleRows.Count == 0)
+			List<TreeViewItem> rows = this.data.GetRows();
+			if (rows.Count == 0)
 			{
 				return;
 			}
 			Event.current.Use();
-			int indexOfID = TreeView.GetIndexOfID(visibleRows, this.state.lastClickedID);
-			int num = Mathf.Clamp(indexOfID + offset, 0, visibleRows.Count - 1);
-			this.EnsureRowIsVisible(num, visibleRows);
-			this.SelectionByKey(visibleRows[num]);
+			int indexOfID = TreeView.GetIndexOfID(rows, this.state.lastClickedID);
+			int num = Mathf.Clamp(indexOfID + offset, 0, rows.Count - 1);
+			this.EnsureRowIsVisible(num, true);
+			this.SelectionByKey(rows[num]);
 		}
+
 		private bool GetFirstAndLastSelected(List<TreeViewItem> items, out int firstIndex, out int lastIndex)
 		{
 			firstIndex = -1;
@@ -664,25 +1002,28 @@ namespace UnityEditor
 			}
 			return firstIndex != -1 && lastIndex != -1;
 		}
+
 		private List<int> GetNewSelection(TreeViewItem clickedItem, bool keepMultiSelection, bool useShiftAsActionKey)
 		{
-			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-			List<int> list = new List<int>(visibleRows.Count);
-			for (int i = 0; i < visibleRows.Count; i++)
+			List<TreeViewItem> rows = this.data.GetRows();
+			List<int> list = new List<int>(rows.Count);
+			for (int i = 0; i < rows.Count; i++)
 			{
-				list.Add(visibleRows[i].id);
+				list.Add(rows[i].id);
 			}
 			List<int> selectedIDs = this.state.selectedIDs;
 			int lastClickedID = this.state.lastClickedID;
 			bool allowMultiSelection = this.data.CanBeMultiSelected(clickedItem);
 			return InternalEditorUtility.GetNewSelection(clickedItem.id, list, selectedIDs, lastClickedID, keepMultiSelection, useShiftAsActionKey, allowMultiSelection);
 		}
+
 		private void SelectionByKey(TreeViewItem itemSelected)
 		{
 			this.state.selectedIDs = this.GetNewSelection(itemSelected, false, true);
 			this.state.lastClickedID = itemSelected.id;
 			this.NotifyListenersThatSelectionChanged();
 		}
+
 		public void RemoveSelection()
 		{
 			if (this.state.selectedIDs.Count > 0)
@@ -691,97 +1032,111 @@ namespace UnityEditor
 				this.NotifyListenersThatSelectionChanged();
 			}
 		}
-		private void SelectionClick(TreeViewItem itemClicked, bool keepMultiSelection)
+
+		public void SelectionClick(TreeViewItem itemClicked, bool keepMultiSelection)
 		{
 			this.state.selectedIDs = this.GetNewSelection(itemClicked, keepMultiSelection, false);
 			this.state.lastClickedID = ((itemClicked == null) ? 0 : itemClicked.id);
 			this.NotifyListenersThatSelectionChanged();
 		}
-		private float EnsureRowIsVisible(int row, List<TreeViewItem> rows)
+
+		private float GetTopPixelOfRow(int row)
 		{
-			float num = -1f;
+			return this.gui.GetRowRect(row, 1f).y;
+		}
+
+		private void EnsureRowIsVisible(int row, bool animated)
+		{
 			if (row >= 0)
 			{
-				num = this.gui.GetTopPixelOfRow(row, rows);
-				float min = num - this.m_TotalRect.height + this.gui.GetHeightOfLastRow();
-				this.state.scrollPos.y = Mathf.Clamp(this.state.scrollPos.y, min, num);
-				return num;
+				Rect rectForFraming = this.gui.GetRectForFraming(row);
+				float y = rectForFraming.y;
+				float num = rectForFraming.yMax - this.m_TotalRect.height;
+				if (this.state.scrollPos.y < num)
+				{
+					this.ChangeScrollValue(num, animated);
+				}
+				else if (this.state.scrollPos.y > y)
+				{
+					this.ChangeScrollValue(y, animated);
+				}
 			}
-			return num;
 		}
+
+		private void AnimatedScrollChanged()
+		{
+			this.Repaint();
+			this.state.scrollPos.y = this.m_FramingAnimFloat.value;
+		}
+
+		private void ChangeScrollValue(float targetScrollPos, bool animated)
+		{
+			if (this.m_UseExpansionAnimation && animated)
+			{
+				this.m_FramingAnimFloat.value = this.state.scrollPos.y;
+				this.m_FramingAnimFloat.target = targetScrollPos;
+				this.m_FramingAnimFloat.speed = 3f;
+			}
+			else
+			{
+				this.state.scrollPos.y = targetScrollPos;
+			}
+		}
+
 		public void Frame(int id, bool frame, bool ping)
 		{
+			this.Frame(id, frame, ping, false);
+		}
+
+		public void Frame(int id, bool frame, bool ping, bool animated)
+		{
 			float num = -1f;
-			TreeViewItem treeViewItem = null;
 			if (frame)
 			{
-				this.RevealNode(id);
-				List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-				int indexOfID = TreeView.GetIndexOfID(visibleRows, id);
-				if (indexOfID >= 0)
+				this.data.RevealItem(id);
+				int row = this.data.GetRow(id);
+				if (row >= 0)
 				{
-					treeViewItem = visibleRows[indexOfID];
-					num = this.gui.GetTopPixelOfRow(indexOfID, visibleRows);
-					this.EnsureRowIsVisible(indexOfID, visibleRows);
+					num = this.GetTopPixelOfRow(row);
+					this.EnsureRowIsVisible(row, animated);
 				}
 			}
 			if (ping)
 			{
-				if (num == -1f)
+				int row2 = this.data.GetRow(id);
+				if (num == -1f && row2 >= 0)
 				{
-					List<TreeViewItem> visibleRows2 = this.data.GetVisibleRows();
-					int indexOfID2 = TreeView.GetIndexOfID(visibleRows2, id);
-					if (indexOfID2 >= 0)
-					{
-						treeViewItem = visibleRows2[indexOfID2];
-						num = this.gui.GetTopPixelOfRow(indexOfID2, visibleRows2);
-					}
+					num = this.GetTopPixelOfRow(row2);
 				}
-				if (num >= 0f && treeViewItem != null)
+				if (num >= 0f && row2 >= 0 && row2 < this.data.rowCount)
 				{
+					TreeViewItem item = this.data.GetItem(row2);
 					float num2 = (this.GetContentSize().y <= this.m_TotalRect.height) ? 0f : -16f;
-					this.gui.BeginPingNode(treeViewItem, num, this.m_TotalRect.width + num2);
+					this.gui.BeginPingItem(item, num, this.m_TotalRect.width + num2);
 				}
 			}
 		}
+
 		public void EndPing()
 		{
-			this.gui.EndPingNode();
+			this.gui.EndPingItem();
 		}
-		public bool IsVisible(int id)
-		{
-			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
-			return TreeView.GetIndexOfID(visibleRows, id) >= 0;
-		}
-		private void RevealNode(int id)
-		{
-			if (this.IsVisible(id))
-			{
-				return;
-			}
-			TreeViewItem treeViewItem = this.FindNode(id);
-			if (treeViewItem != null)
-			{
-				for (TreeViewItem parent = treeViewItem.parent; parent != null; parent = parent.parent)
-				{
-					this.data.SetExpanded(parent, true);
-				}
-			}
-		}
-		public void UserExpandedNode(TreeViewItem item)
+
+		public void UserExpandedItem(TreeViewItem item)
 		{
 		}
+
 		public List<int> SortIDsInVisiblityOrder(List<int> ids)
 		{
 			if (ids.Count <= 1)
 			{
 				return ids;
 			}
-			List<TreeViewItem> visibleRows = this.data.GetVisibleRows();
+			List<TreeViewItem> rows = this.data.GetRows();
 			List<int> list = new List<int>();
-			for (int i = 0; i < visibleRows.Count; i++)
+			for (int i = 0; i < rows.Count; i++)
 			{
-				int id = visibleRows[i].id;
+				int id = rows[i].id;
 				for (int j = 0; j < ids.Count; j++)
 				{
 					if (ids[j] == id)

@@ -1,17 +1,21 @@
 using System;
 using System.Reflection;
+
 namespace UnityEngine
 {
 	public class AndroidJavaProxy
 	{
 		public readonly AndroidJavaClass javaInterface;
+
 		public AndroidJavaProxy(string javaInterface) : this(new AndroidJavaClass(javaInterface))
 		{
 		}
+
 		public AndroidJavaProxy(AndroidJavaClass javaInterface)
 		{
 			this.javaInterface = javaInterface;
 		}
+
 		public virtual AndroidJavaObject Invoke(string methodName, object[] args)
 		{
 			Exception ex = null;
@@ -66,6 +70,7 @@ namespace UnityEngine
 				")"
 			}));
 		}
+
 		public virtual AndroidJavaObject Invoke(string methodName, AndroidJavaObject[] javaArgs)
 		{
 			object[] array = new object[javaArgs.Length];

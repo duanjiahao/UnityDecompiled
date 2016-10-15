@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class BoxCollider : Collider
@@ -17,6 +18,7 @@ namespace UnityEngine
 				this.INTERNAL_set_center(ref value);
 			}
 		}
+
 		public Vector3 size
 		{
 			get
@@ -30,6 +32,7 @@ namespace UnityEngine
 				this.INTERNAL_set_size(ref value);
 			}
 		}
+
 		[Obsolete("use BoxCollider.size instead.")]
 		public Vector3 extents
 		{
@@ -42,15 +45,19 @@ namespace UnityEngine
 				this.size = value * 2f;
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_center(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_center(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_size(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_size(ref Vector3 value);

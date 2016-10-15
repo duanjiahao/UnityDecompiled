@@ -1,15 +1,25 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class SplatPrototype
 	{
-		private Texture2D m_Texture;
-		private Texture2D m_NormalMap;
-		private Vector2 m_TileSize = new Vector2(15f, 15f);
-		private Vector2 m_TileOffset = new Vector2(0f, 0f);
-		private Vector4 m_SpecularMetallic = new Vector4(0f, 0f, 0f, 0f);
+		internal Texture2D m_Texture;
+
+		internal Texture2D m_NormalMap;
+
+		internal Vector2 m_TileSize = new Vector2(15f, 15f);
+
+		internal Vector2 m_TileOffset = new Vector2(0f, 0f);
+
+		internal Vector4 m_SpecularMetallic = new Vector4(0f, 0f, 0f, 0f);
+
+		internal float m_Smoothness;
+
 		public Texture2D texture
 		{
 			get
@@ -21,6 +31,7 @@ namespace UnityEngine
 				this.m_Texture = value;
 			}
 		}
+
 		public Texture2D normalMap
 		{
 			get
@@ -32,6 +43,7 @@ namespace UnityEngine
 				this.m_NormalMap = value;
 			}
 		}
+
 		public Vector2 tileSize
 		{
 			get
@@ -43,6 +55,7 @@ namespace UnityEngine
 				this.m_TileSize = value;
 			}
 		}
+
 		public Vector2 tileOffset
 		{
 			get
@@ -54,6 +67,7 @@ namespace UnityEngine
 				this.m_TileOffset = value;
 			}
 		}
+
 		public Color specular
 		{
 			get
@@ -67,6 +81,7 @@ namespace UnityEngine
 				this.m_SpecularMetallic.z = value.b;
 			}
 		}
+
 		public float metallic
 		{
 			get
@@ -76,6 +91,18 @@ namespace UnityEngine
 			set
 			{
 				this.m_SpecularMetallic.w = value;
+			}
+		}
+
+		public float smoothness
+		{
+			get
+			{
+				return this.m_Smoothness;
+			}
+			set
+			{
+				this.m_Smoothness = value;
 			}
 		}
 	}

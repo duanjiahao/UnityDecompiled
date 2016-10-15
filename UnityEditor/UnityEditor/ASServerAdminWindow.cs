@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -14,10 +15,15 @@ namespace UnityEditor
 			CreateProject,
 			ModifyUser
 		}
+
 		private const int listLenghts = 20;
+
 		private static ASMainWindow.Constants constants;
+
 		private ListViewState lv;
+
 		private ListViewState lv2;
+
 		private SplitterState lvSplit = new SplitterState(new float[]
 		{
 			5f,
@@ -31,26 +37,47 @@ namespace UnityEditor
 			70,
 			100
 		}, null);
+
 		private MaintDatabaseRecord[] databases;
+
 		private MaintUserRecord[] users;
+
 		private ASMainWindow parentWin;
+
 		private bool splittersOk;
+
 		private bool resetKeyboardControl;
+
 		private ASServerAdminWindow.Action currAction;
+
 		private string[] servers;
+
 		private string server = string.Empty;
+
 		private string user = string.Empty;
+
 		private string password = string.Empty;
+
 		private string nPassword1 = string.Empty;
+
 		private string nPassword2 = string.Empty;
+
 		private string nProjectName = string.Empty;
+
 		private string nTemplateProjectName = string.Empty;
+
 		private string nFullName = string.Empty;
+
 		private string nUserName = string.Empty;
+
 		private string nEmail = string.Empty;
+
 		private bool projectSelected;
+
 		private bool userSelected;
+
 		private bool isConnected;
+
 		public ASServerAdminWindow(ASMainWindow parentWin)
 		{
 			this.lv = new ListViewState(0);
@@ -60,6 +87,7 @@ namespace UnityEditor
 			this.server = EditorPrefs.GetString("ASAdminServer");
 			this.user = "admin";
 		}
+
 		private void ServersPopup()
 		{
 			if (this.servers.Length > 0)
@@ -78,6 +106,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private bool WordWrappedLabelButton(string label, string buttonText)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -89,6 +118,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return result;
 		}
+
 		private bool CanPerformCurrentAction()
 		{
 			switch (this.currAction)
@@ -119,6 +149,7 @@ namespace UnityEditor
 				return false;
 			}
 		}
+
 		private void PerformCurrentAction()
 		{
 			switch (this.currAction)
@@ -170,6 +201,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void ActionBox()
 		{
 			bool enabled = GUI.enabled;
@@ -305,6 +337,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void DoRefreshDatabases()
 		{
 			MaintDatabaseRecord[] array = AssetServer.AdminRefreshDatabases();
@@ -323,6 +356,7 @@ namespace UnityEditor
 			this.lv2.totalRows = 0;
 			this.users = new MaintUserRecord[0];
 		}
+
 		private void DoConnect()
 		{
 			EditorPrefs.SetString("ASAdminServer", this.server);
@@ -347,6 +381,7 @@ namespace UnityEditor
 			AssetServer.AdminSetCredentials(text, port, this.user, this.password);
 			this.DoRefreshDatabases();
 		}
+
 		private void DoGetUsers()
 		{
 			MaintUserRecord[] array = AssetServer.AdminGetUsers(this.databases[this.lv.row].dbName);
@@ -361,6 +396,7 @@ namespace UnityEditor
 			this.lv2.totalRows = this.users.Length;
 			this.lv2.row = -1;
 		}
+
 		public bool DoGUI()
 		{
 			bool enabled = GUI.enabled;
