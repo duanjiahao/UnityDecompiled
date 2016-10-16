@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor.Animations
 {
 	public sealed class AnimatorStateTransition : AnimatorTransitionBase
@@ -14,6 +15,7 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float offset
 		{
 			[WrapperlessIcall]
@@ -23,6 +25,7 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TransitionInterruptionSource interruptionSource
 		{
 			[WrapperlessIcall]
@@ -32,6 +35,7 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool orderedInterruption
 		{
 			[WrapperlessIcall]
@@ -41,6 +45,7 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float exitTime
 		{
 			[WrapperlessIcall]
@@ -50,6 +55,7 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool hasExitTime
 		{
 			[WrapperlessIcall]
@@ -59,6 +65,17 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern bool hasFixedDuration
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern bool canTransitionToSelf
 		{
 			[WrapperlessIcall]
@@ -68,10 +85,12 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public AnimatorStateTransition()
 		{
 			AnimatorStateTransition.Internal_Create(this);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorStateTransition mono);

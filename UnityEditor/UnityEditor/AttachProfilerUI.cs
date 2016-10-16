@@ -4,15 +4,21 @@ using System.Linq;
 using UnityEditor.Hardware;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AttachProfilerUI
 	{
 		private const int PLAYER_DIRECT_IP_CONNECT_GUID = 65261;
+
 		private const int PLAYER_DIRECT_URL_CONNECT_GUID = 65262;
+
 		private GUIContent m_CurrentProfiler;
+
 		private static string kEnterIPText = "<Enter IP>";
+
 		private static GUIContent ms_NotificationMessage;
+
 		private void SelectProfilerClick(object userData, string[] options, int selected)
 		{
 			List<ProfilerChoise> list = (List<ProfilerChoise>)userData;
@@ -21,14 +27,17 @@ namespace UnityEditor
 				list[selected].ConnectTo();
 			}
 		}
+
 		public bool IsEditor()
 		{
 			return ProfilerDriver.IsConnectionEditor();
 		}
+
 		public string GetConnectedProfiler()
 		{
 			return ProfilerDriver.GetConnectionIdentifier(ProfilerDriver.connectedProfiler);
 		}
+
 		public static void DirectIPConnect(string ip)
 		{
 			ConsoleWindow.ShowConsoleWindow(true);
@@ -36,6 +45,7 @@ namespace UnityEditor
 			ProfilerDriver.DirectIPConnect(ip);
 			AttachProfilerUI.ms_NotificationMessage = null;
 		}
+
 		public static void DirectURLConnect(string url)
 		{
 			ConsoleWindow.ShowConsoleWindow(true);
@@ -43,11 +53,12 @@ namespace UnityEditor
 			ProfilerDriver.DirectURLConnect(url);
 			AttachProfilerUI.ms_NotificationMessage = null;
 		}
+
 		public void OnGUILayout(EditorWindow window)
 		{
 			if (this.m_CurrentProfiler == null)
 			{
-				this.m_CurrentProfiler = EditorGUIUtility.TextContent("Profiler.CurrentProfiler");
+				this.m_CurrentProfiler = EditorGUIUtility.TextContent("Active Profiler|Select connected player to profile");
 			}
 			Rect rect = GUILayoutUtility.GetRect(this.m_CurrentProfiler, EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{
@@ -63,6 +74,7 @@ namespace UnityEditor
 				window.RemoveNotification();
 			}
 		}
+
 		private static void AddLastIPProfiler(List<ProfilerChoise> profilers)
 		{
 			string lastIP = ProfilerIPWindow.GetLastIPString();
@@ -80,6 +92,7 @@ namespace UnityEditor
 			};
 			profilers.Add(item);
 		}
+
 		private static void AddPlayerProfilers(List<ProfilerChoise> profilers)
 		{
 			int[] availableProfilers = ProfilerDriver.GetAvailableProfilers();
@@ -104,7 +117,7 @@ namespace UnityEditor
 				{
 					Name = text,
 					Enabled = flag2,
-					IsSelected = () => ProfilerDriver.connectedProfiler == guid,
+					IsSelected = (() => ProfilerDriver.connectedProfiler == guid),
 					ConnectTo = delegate
 					{
 						ProfilerDriver.connectedProfiler = guid;
@@ -112,6 +125,7 @@ namespace UnityEditor
 				});
 			}
 		}
+
 		private static void AddDeviceProfilers(List<ProfilerChoise> profilers)
 		{
 			DevDevice[] devices = DevDeviceList.GetDevices();
@@ -126,7 +140,7 @@ namespace UnityEditor
 					{
 						Name = devDevice.name,
 						Enabled = true,
-						IsSelected = () => ProfilerDriver.connectedProfiler == 65262 && ProfilerDriver.directConnectionUrl == url,
+						IsSelected = (() => ProfilerDriver.connectedProfiler == 65262 && ProfilerDriver.directConnectionUrl == url),
 						ConnectTo = delegate
 						{
 							AttachProfilerUI.DirectURLConnect(url);
@@ -135,6 +149,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void AddEnterIPProfiler(List<ProfilerChoise> profilers, Rect buttonScreenRect)
 		{
 			ProfilerChoise item = default(ProfilerChoise);
@@ -147,6 +162,7 @@ namespace UnityEditor
 			};
 			profilers.Add(item);
 		}
+
 		public void OnGUI(Rect connectRect, GUIContent profilerLabel)
 		{
 			if (!EditorGUI.ButtonMouseDown(connectRect, profilerLabel, FocusType.Native, EditorStyles.toolbarDropDown))
@@ -159,12 +175,10 @@ namespace UnityEditor
 			AttachProfilerUI.AddDeviceProfilers(list);
 			AttachProfilerUI.AddLastIPProfiler(list);
 			this.AddEnterIPProfiler(list, GUIUtility.GUIToScreenRect(connectRect));
-			string[] options = (
-				from p in list
-				select p.Name).ToArray<string>();
-			bool[] enabled = (
-				from p in list
-				select p.Enabled).ToArray<bool>();
+			string[] options = (from p in list
+			select p.Name).ToArray<string>();
+			bool[] enabled = (from p in list
+			select p.Enabled).ToArray<bool>();
 			int num = list.FindIndex((ProfilerChoise p) => p.IsSelected());
 			int[] selected;
 			if (num == -1)

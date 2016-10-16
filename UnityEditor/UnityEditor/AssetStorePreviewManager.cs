@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal sealed class AssetStorePreviewManager
@@ -8,12 +9,19 @@ namespace UnityEditor
 		public class CachedAssetStoreImage
 		{
 			private const double kFadeTime = 0.5;
+
 			public Texture2D image;
+
 			public double lastUsed;
+
 			public double lastFetched;
+
 			public int requestedWidth;
+
 			public string label;
+
 			internal AsyncHTTPClient client;
+
 			public Color color
 			{
 				get
@@ -22,22 +30,39 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private const double kQueryDelay = 0.2;
+
 		private const int kMaxConcurrentDownloads = 15;
+
 		private const int kMaxConvertionsPerTick = 1;
+
 		private static AssetStorePreviewManager s_SharedAssetStorePreviewManager;
+
 		private static RenderTexture s_RenderTexture;
+
 		private Dictionary<string, AssetStorePreviewManager.CachedAssetStoreImage> m_CachedAssetStoreImages;
+
 		private int m_MaxCachedAssetStoreImages = 10;
+
 		private int m_Aborted;
+
 		private int m_Success;
+
 		internal int Requested;
+
 		internal int CacheHit;
+
 		private int m_CacheRemove;
+
 		private int m_ConvertedThisTick;
+
 		private AssetStorePreviewManager.CachedAssetStoreImage m_DummyItem = new AssetStorePreviewManager.CachedAssetStoreImage();
+
 		private PreviewRenderUtility m_PreviewUtility;
+
 		private static bool s_NeedsRepaint;
+
 		internal static AssetStorePreviewManager Instance
 		{
 			get
@@ -50,6 +75,7 @@ namespace UnityEditor
 				return AssetStorePreviewManager.s_SharedAssetStorePreviewManager;
 			}
 		}
+
 		private static Dictionary<string, AssetStorePreviewManager.CachedAssetStoreImage> CachedAssetStoreImages
 		{
 			get
@@ -61,6 +87,7 @@ namespace UnityEditor
 				return AssetStorePreviewManager.Instance.m_CachedAssetStoreImages;
 			}
 		}
+
 		public static int MaxCachedImages
 		{
 			get
@@ -72,6 +99,7 @@ namespace UnityEditor
 				AssetStorePreviewManager.Instance.m_MaxCachedAssetStoreImages = value;
 			}
 		}
+
 		public static bool CacheFull
 		{
 			get
@@ -79,6 +107,7 @@ namespace UnityEditor
 				return AssetStorePreviewManager.CachedAssetStoreImages.Count >= AssetStorePreviewManager.MaxCachedImages;
 			}
 		}
+
 		public static int Downloading
 		{
 			get
@@ -94,9 +123,11 @@ namespace UnityEditor
 				return num;
 			}
 		}
+
 		private AssetStorePreviewManager()
 		{
 		}
+
 		public static string StatsString()
 		{
 			return string.Format("Reqs: {0}, Ok: {1}, Abort: {2}, CacheDel: {3}, Cache: {4}/{5}, CacheHit: {6}", new object[]
@@ -110,6 +141,7 @@ namespace UnityEditor
 				AssetStorePreviewManager.Instance.CacheHit
 			});
 		}
+
 		public static AssetStorePreviewManager.CachedAssetStoreImage TextureFromUrl(string url, string label, int textureSize, GUIStyle labelStyle, GUIStyle iconStyle, bool onlyCached)
 		{
 			if (string.IsNullOrEmpty(url))
@@ -166,6 +198,7 @@ namespace UnityEditor
 			AssetStorePreviewManager.Instance.Requested++;
 			return cachedAssetStoreImage;
 		}
+
 		private static AsyncHTTPClient SetupTextureDownload(AssetStorePreviewManager.CachedAssetStoreImage cached, string url, string tag)
 		{
 			AsyncHTTPClient client = new AsyncHTTPClient(url);
@@ -213,6 +246,7 @@ namespace UnityEditor
 			};
 			return client;
 		}
+
 		private static void ExpireCacheEntries()
 		{
 			while (AssetStorePreviewManager.CacheFull)
@@ -245,6 +279,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static AssetStorePreviewManager.CachedAssetStoreImage RenderEntry(AssetStorePreviewManager.CachedAssetStoreImage cached, GUIStyle labelStyle, GUIStyle iconStyle)
 		{
 			if (cached.label == null || cached.image == null)
@@ -259,9 +294,9 @@ namespace UnityEditor
 			AssetStorePreviewManager.Instance.m_ConvertedThisTick++;
 			return cached;
 		}
+
 		internal static void ScaleImage(int w, int h, Texture2D inimage, Texture2D outimage, GUIStyle bgStyle)
 		{
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(true);
 			SavedRenderTargetState savedRenderTargetState = new SavedRenderTargetState();
 			if (AssetStorePreviewManager.s_RenderTexture != null && (AssetStorePreviewManager.s_RenderTexture.width != w || AssetStorePreviewManager.s_RenderTexture.height != h))
 			{
@@ -289,14 +324,11 @@ namespace UnityEditor
 				screenRect.height = (float)((int)num);
 				screenRect.y += (float)((int)(num * 0.5f));
 			}
-			else
+			else if (inimage.width < inimage.height)
 			{
-				if (inimage.width < inimage.height)
-				{
-					float num2 = screenRect.width * ((float)inimage.width / (float)inimage.height);
-					screenRect.width = (float)((int)num2);
-					screenRect.x += (float)((int)(num2 * 0.5f));
-				}
+				float num2 = screenRect.width * ((float)inimage.width / (float)inimage.height);
+				screenRect.width = (float)((int)num2);
+				screenRect.x += (float)((int)(num2 * 0.5f));
 			}
 			if (bgStyle != null && bgStyle.normal != null && bgStyle.normal.background != null)
 			{
@@ -307,14 +339,15 @@ namespace UnityEditor
 			outimage.Apply();
 			outimage.hideFlags = HideFlags.HideAndDontSave;
 			savedRenderTargetState.Restore();
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(false);
 		}
+
 		public static bool CheckRepaint()
 		{
 			bool result = AssetStorePreviewManager.s_NeedsRepaint;
 			AssetStorePreviewManager.s_NeedsRepaint = false;
 			return result;
 		}
+
 		public static void AbortSize(int size)
 		{
 			AsyncHTTPClient.AbortByTag("previewSize-" + size.ToString());
@@ -327,6 +360,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static void AbortOlderThan(double timestamp)
 		{
 			foreach (KeyValuePair<string, AssetStorePreviewManager.CachedAssetStoreImage> current in AssetStorePreviewManager.CachedAssetStoreImages)

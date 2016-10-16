@@ -1,17 +1,26 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class DetailPainter
 	{
 		public int size;
+
 		public float opacity;
+
 		public float targetStrength;
+
 		public Brush brush;
+
 		public TerrainData terrainData;
+
 		public TerrainTool tool;
+
 		public bool randomizeDetails;
+
 		public bool clearSelectedOnly;
+
 		public void Paint(float xCenterNormalized, float yCenterNormalized, int detailIndex)
 		{
 			if (detailIndex >= this.terrainData.detailPrototypes.Length)
@@ -46,8 +55,8 @@ namespace UnityEditor
 						int ix = num5 + k - (num - num3 + num4);
 						int iy = num6 + j - (num2 - num3 + num4);
 						float t = this.opacity * this.brush.GetStrengthInt(ix, iy);
-						float to = this.targetStrength;
-						float num11 = Mathf.Lerp((float)detailLayer[j, k], to, t);
+						float b = this.targetStrength;
+						float num11 = Mathf.Lerp((float)detailLayer[j, k], b, t);
 						detailLayer[j, k] = Mathf.RoundToInt(num11 - 0.5f + UnityEngine.Random.value);
 					}
 				}

@@ -1,15 +1,21 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class DoubleCurvePresetsContentsForPopupWindow : PopupWindowContent
 	{
 		private PresetLibraryEditor<DoubleCurvePresetLibrary> m_CurveLibraryEditor;
+
 		private PresetLibraryEditorState m_CurveLibraryEditorState;
+
 		private DoubleCurve m_DoubleCurve;
+
 		private bool m_WantsToClose;
+
 		private Action<DoubleCurve> m_PresetSelectedCallback;
+
 		public DoubleCurve doubleCurveToSave
 		{
 			get
@@ -21,27 +27,33 @@ namespace UnityEditor
 				this.m_DoubleCurve = value;
 			}
 		}
+
 		public DoubleCurvePresetsContentsForPopupWindow(DoubleCurve doubleCurveToSave, Action<DoubleCurve> presetSelectedCallback)
 		{
 			this.m_DoubleCurve = doubleCurveToSave;
 			this.m_PresetSelectedCallback = presetSelectedCallback;
 		}
+
 		public override void OnClose()
 		{
 			this.m_CurveLibraryEditorState.TransferEditorPrefsState(false);
 		}
+
 		public PresetLibraryEditor<DoubleCurvePresetLibrary> GetPresetLibraryEditor()
 		{
 			return this.m_CurveLibraryEditor;
 		}
+
 		private bool IsSingleCurve(DoubleCurve doubleCurve)
 		{
 			return doubleCurve.minCurve == null || doubleCurve.minCurve.length == 0;
 		}
+
 		private string GetEditorPrefBaseName()
 		{
 			return PresetLibraryLocations.GetParticleCurveLibraryExtension(this.m_DoubleCurve.IsSingleCurve(), this.m_DoubleCurve.signedRange);
 		}
+
 		public void InitIfNeeded()
 		{
 			if (this.m_CurveLibraryEditorState == null)
@@ -62,10 +74,12 @@ namespace UnityEditor
 				this.m_CurveLibraryEditor.showHeader = true;
 			}
 		}
+
 		private void PresetsWasReordered()
 		{
 			InspectorWindow.RepaintAllInspectors();
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			this.InitIfNeeded();
@@ -75,6 +89,7 @@ namespace UnityEditor
 				base.editorWindow.Close();
 			}
 		}
+
 		private void ItemClickedCallback(int clickCount, object presetObject)
 		{
 			DoubleCurve doubleCurve = presetObject as DoubleCurve;
@@ -84,10 +99,12 @@ namespace UnityEditor
 			}
 			this.m_PresetSelectedCallback(doubleCurve);
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			return new Vector2(240f, 330f);
 		}
+
 		private void AddDefaultPresetsToLibrary(PresetLibrary presetLibrary)
 		{
 			DoubleCurvePresetLibrary doubleCurvePresetLibrary = presetLibrary as DoubleCurvePresetLibrary;
@@ -102,22 +119,20 @@ namespace UnityEditor
 			{
 				list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedSingleCurveDefaults(signedRange);
 			}
+			else if (signedRange)
+			{
+				list = DoubleCurvePresetsContentsForPopupWindow.GetSignedDoubleCurveDefaults();
+			}
 			else
 			{
-				if (signedRange)
-				{
-					list = DoubleCurvePresetsContentsForPopupWindow.GetSignedDoubleCurveDefaults();
-				}
-				else
-				{
-					list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedDoubleCurveDefaults();
-				}
+				list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedDoubleCurveDefaults();
 			}
 			foreach (DoubleCurve current in list)
 			{
 				doubleCurvePresetLibrary.Add(current, string.Empty);
 			}
 		}
+
 		private static List<DoubleCurve> GetUnsignedSingleCurveDefaults(bool signedRange)
 		{
 			return new List<DoubleCurve>
@@ -133,6 +148,7 @@ namespace UnityEditor
 				new DoubleCurve(null, new AnimationCurve(CurveEditorWindow.GetEaseInOutMirrorKeys()), signedRange)
 			};
 		}
+
 		private static List<DoubleCurve> GetUnsignedDoubleCurveDefaults()
 		{
 			return new List<DoubleCurve>
@@ -140,6 +156,7 @@ namespace UnityEditor
 				new DoubleCurve(new AnimationCurve(CurveEditorWindow.GetConstantKeys(0f)), new AnimationCurve(CurveEditorWindow.GetConstantKeys(1f)), false)
 			};
 		}
+
 		private static List<DoubleCurve> GetSignedDoubleCurveDefaults()
 		{
 			return new List<DoubleCurve>

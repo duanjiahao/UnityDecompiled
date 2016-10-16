@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class GradientPresetLibrary : PresetLibrary
@@ -11,8 +12,10 @@ namespace UnityEditor
 		{
 			[SerializeField]
 			private string m_Name;
+
 			[SerializeField]
 			private Gradient m_Gradient;
+
 			public Gradient gradient
 			{
 				get
@@ -24,6 +27,7 @@ namespace UnityEditor
 					this.m_Gradient = value;
 				}
 			}
+
 			public string name
 			{
 				get
@@ -35,22 +39,27 @@ namespace UnityEditor
 					this.m_Name = value;
 				}
 			}
+
 			public GradientPreset(Gradient preset, string presetName)
 			{
 				this.gradient = preset;
 				this.name = presetName;
 			}
 		}
+
 		[SerializeField]
 		private List<GradientPresetLibrary.GradientPreset> m_Presets = new List<GradientPresetLibrary.GradientPreset>();
+
 		public override int Count()
 		{
 			return this.m_Presets.Count;
 		}
+
 		public override object GetPreset(int index)
 		{
 			return this.m_Presets[index].gradient;
 		}
+
 		public override void Add(object presetObject, string presetName)
 		{
 			Gradient gradient = presetObject as Gradient;
@@ -64,6 +73,7 @@ namespace UnityEditor
 			gradient2.colorKeys = gradient.colorKeys;
 			this.m_Presets.Add(new GradientPresetLibrary.GradientPreset(gradient2, presetName));
 		}
+
 		public override void Replace(int index, object newPresetObject)
 		{
 			Gradient gradient = newPresetObject as Gradient;
@@ -77,22 +87,27 @@ namespace UnityEditor
 			gradient2.colorKeys = gradient.colorKeys;
 			this.m_Presets[index].gradient = gradient2;
 		}
+
 		public override void Remove(int index)
 		{
 			this.m_Presets.RemoveAt(index);
 		}
+
 		public override void Move(int index, int destIndex, bool insertAfterDestIndex)
 		{
 			PresetLibraryHelpers.MoveListItem<GradientPresetLibrary.GradientPreset>(this.m_Presets, index, destIndex, insertAfterDestIndex);
 		}
+
 		public override void Draw(Rect rect, int index)
 		{
 			this.DrawInternal(rect, this.m_Presets[index].gradient);
 		}
+
 		public override void Draw(Rect rect, object presetObject)
 		{
 			this.DrawInternal(rect, presetObject as Gradient);
 		}
+
 		private void DrawInternal(Rect rect, Gradient gradient)
 		{
 			if (gradient == null)
@@ -101,14 +116,17 @@ namespace UnityEditor
 			}
 			GradientEditor.DrawGradientWithBackground(rect, GradientPreviewCache.GetGradientPreview(gradient));
 		}
+
 		public override string GetName(int index)
 		{
 			return this.m_Presets[index].name;
 		}
+
 		public override void SetName(int index, string presetName)
 		{
 			this.m_Presets[index].name = presetName;
 		}
+
 		public void DebugCreateTonsOfPresets()
 		{
 			int num = 150;

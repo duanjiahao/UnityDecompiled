@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal abstract class ManipulationTool
@@ -11,12 +12,14 @@ namespace UnityEditor
 				return;
 			}
 			bool flag = !Tools.s_Hidden && EditorApplication.isPlaying && GameObjectUtility.ContainsStatic(Selection.gameObjects);
-			EditorGUI.BeginDisabledGroup(flag);
-			Vector3 handlePosition = Tools.handlePosition;
-			this.ToolGUI(view, handlePosition, flag);
-			Handles.ShowStaticLabelIfNeeded(handlePosition);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(flag))
+			{
+				Vector3 handlePosition = Tools.handlePosition;
+				this.ToolGUI(view, handlePosition, flag);
+				Handles.ShowStaticLabelIfNeeded(handlePosition);
+			}
 		}
+
 		public abstract void ToolGUI(SceneView view, Vector3 handlePosition, bool isStatic);
 	}
 }

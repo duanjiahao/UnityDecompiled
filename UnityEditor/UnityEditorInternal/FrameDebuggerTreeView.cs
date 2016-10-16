@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class FrameDebuggerTreeView
@@ -10,23 +11,30 @@ namespace UnityEditorInternal
 		private class FDTreeViewItem : TreeViewItem
 		{
 			public FrameDebuggerEvent m_FrameEvent;
+
 			public int m_ChildEventCount;
+
 			public int m_EventIndex;
+
 			public FDTreeViewItem(int id, int depth, FrameDebuggerTreeView.FDTreeViewItem parent, string displayName) : base(id, depth, parent, displayName)
 			{
 				this.m_EventIndex = id;
 			}
 		}
+
 		private class FDTreeViewGUI : TreeViewGUI
 		{
 			private const float kSmallMargin = 4f;
+
 			public FDTreeViewGUI(TreeView treeView) : base(treeView)
 			{
 			}
-			protected override Texture GetIconForNode(TreeViewItem item)
+
+			protected override Texture GetIconForItem(TreeViewItem item)
 			{
 				return null;
 			}
+
 			protected override void DrawIconAndLabel(Rect rect, TreeViewItem itemRaw, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
 			{
 				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = (FrameDebuggerTreeView.FDTreeViewItem)itemRaw;
@@ -62,29 +70,36 @@ namespace UnityEditorInternal
 				gUIStyle = FrameDebuggerWindow.styles.rowText;
 				gUIStyle.Draw(rect, content, false, false, false, selected && focused);
 			}
+
 			protected override void RenameEnded()
 			{
 			}
 		}
+
 		internal class FDTreeViewDataSource : TreeViewDataSource
 		{
 			private class FDTreeHierarchyLevel
 			{
 				internal readonly FrameDebuggerTreeView.FDTreeViewItem item;
+
 				internal readonly List<TreeViewItem> children;
+
 				internal FDTreeHierarchyLevel(int depth, int id, string name, FrameDebuggerTreeView.FDTreeViewItem parent)
 				{
 					this.item = new FrameDebuggerTreeView.FDTreeViewItem(id, depth, parent, name);
 					this.children = new List<TreeViewItem>();
 				}
 			}
+
 			private FrameDebuggerEvent[] m_FrameEvents;
+
 			public FDTreeViewDataSource(TreeView treeView, FrameDebuggerEvent[] frameEvents) : base(treeView)
 			{
 				this.m_FrameEvents = frameEvents;
 				base.rootIsCollapsable = false;
-				base.showRootNode = false;
+				base.showRootItem = false;
 			}
+
 			public void SetEvents(FrameDebuggerEvent[] frameEvents)
 			{
 				bool flag = this.m_FrameEvents == null || this.m_FrameEvents.Length < 1;
@@ -96,14 +111,17 @@ namespace UnityEditorInternal
 					this.SetExpandedWithChildren(this.m_RootItem, true);
 				}
 			}
+
 			public override bool IsRenamingItemAllowed(TreeViewItem item)
 			{
 				return false;
 			}
+
 			public override bool CanBeMultiSelected(TreeViewItem item)
 			{
 				return false;
 			}
+
 			private static void CloseLastHierarchyLevel(List<FrameDebuggerTreeView.FDTreeViewDataSource.FDTreeHierarchyLevel> eventStack, int prevFrameEventIndex)
 			{
 				int index = eventStack.Count - 1;
@@ -115,6 +133,7 @@ namespace UnityEditorInternal
 				}
 				eventStack.RemoveAt(index);
 			}
+
 			public override void FetchData()
 			{
 				FrameDebuggerTreeView.FDTreeViewDataSource.FDTreeHierarchyLevel fDTreeHierarchyLevel = new FrameDebuggerTreeView.FDTreeViewDataSource.FDTreeHierarchyLevel(0, 0, string.Empty, null);
@@ -148,8 +167,8 @@ namespace UnityEditorInternal
 						fDTreeHierarchyLevel2.children.Add(fDTreeHierarchyLevel3.item);
 						list.Add(fDTreeHierarchyLevel3);
 					}
-					GameObject gameObjectForEvent = FrameDebuggerWindow.GetGameObjectForEvent(i);
-					string displayName = (!gameObjectForEvent) ? string.Empty : (" " + gameObjectForEvent.name);
+					GameObject frameEventGameObject = FrameDebuggerUtility.GetFrameEventGameObject(i);
+					string displayName = (!frameEventGameObject) ? string.Empty : (" " + frameEventGameObject.name);
 					FrameDebuggerTreeView.FDTreeViewDataSource.FDTreeHierarchyLevel fDTreeHierarchyLevel4 = list[list.Count - 1];
 					int id = i + 1;
 					FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = new FrameDebuggerTreeView.FDTreeViewItem(id, list.Count - 1, fDTreeHierarchyLevel4.item, displayName);
@@ -164,9 +183,13 @@ namespace UnityEditorInternal
 				this.m_RootItem = fDTreeHierarchyLevel.item;
 			}
 		}
+
 		internal readonly TreeView m_TreeView;
+
 		internal FrameDebuggerTreeView.FDTreeViewDataSource m_DataSource;
+
 		private readonly FrameDebuggerWindow m_FrameDebugger;
+
 		public FrameDebuggerTreeView(FrameDebuggerEvent[] frameEvents, TreeViewState treeViewState, FrameDebuggerWindow window, Rect startRect)
 		{
 			this.m_FrameDebugger = window;
@@ -178,6 +201,7 @@ namespace UnityEditorInternal
 			TreeView expr_5E = this.m_TreeView;
 			expr_5E.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_5E.selectionChangedCallback, new Action<int[]>(this.SelectionChanged));
 		}
+
 		private void SelectionChanged(int[] selectedIDs)
 		{
 			if (selectedIDs.Length < 1)
@@ -188,7 +212,7 @@ namespace UnityEditorInternal
 			int num2 = num;
 			if (num2 <= 0)
 			{
-				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = this.m_TreeView.FindNode(num) as FrameDebuggerTreeView.FDTreeViewItem;
+				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = this.m_TreeView.FindItem(num) as FrameDebuggerTreeView.FDTreeViewItem;
 				if (fDTreeViewItem != null)
 				{
 					num2 = fDTreeViewItem.m_EventIndex;
@@ -200,12 +224,13 @@ namespace UnityEditorInternal
 			}
 			this.m_FrameDebugger.ChangeFrameEventLimit(num2);
 		}
+
 		public void SelectFrameEventIndex(int eventIndex)
 		{
 			int[] selection = this.m_TreeView.GetSelection();
 			if (selection.Length > 0)
 			{
-				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = this.m_TreeView.FindNode(selection[0]) as FrameDebuggerTreeView.FDTreeViewItem;
+				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = this.m_TreeView.FindItem(selection[0]) as FrameDebuggerTreeView.FDTreeViewItem;
 				if (fDTreeViewItem != null && eventIndex == fDTreeViewItem.m_EventIndex)
 				{
 					return;
@@ -216,6 +241,7 @@ namespace UnityEditorInternal
 				eventIndex
 			}, true);
 		}
+
 		public void OnGUI(Rect rect)
 		{
 			int controlID = GUIUtility.GetControlID(FocusType.Keyboard);

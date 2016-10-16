@@ -1,19 +1,29 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class BoxEditor
 	{
 		private const float kViewAngleThreshold = 0.05235988f;
+
 		private int m_ControlIdHint;
+
 		private int m_HandleControlID;
+
 		private bool m_UseLossyScale;
+
 		private bool m_AlwaysDisplayHandles;
+
 		private bool m_DisableZaxis;
+
 		private bool m_AllowNegativeSize = true;
+
 		public Handles.DrawCapFunction drawMethodForHandles;
+
 		public Func<Vector3, float> getHandleSizeMethod;
+
 		public bool allowNegativeSize
 		{
 			get
@@ -25,17 +35,20 @@ namespace UnityEditor
 				this.m_AllowNegativeSize = value;
 			}
 		}
+
 		public float backfaceAlphaMultiplier
 		{
 			get;
 			set;
 		}
+
 		public BoxEditor(bool useLossyScale, int controlIdHint)
 		{
 			this.m_UseLossyScale = useLossyScale;
 			this.m_ControlIdHint = controlIdHint;
 			this.backfaceAlphaMultiplier = Handles.backfaceAlphaMultiplier;
 		}
+
 		public BoxEditor(bool useLossyScale, int controlIdHint, bool disableZaxis)
 		{
 			this.m_UseLossyScale = useLossyScale;
@@ -43,21 +56,26 @@ namespace UnityEditor
 			this.m_DisableZaxis = disableZaxis;
 			this.backfaceAlphaMultiplier = Handles.backfaceAlphaMultiplier;
 		}
+
 		public void OnEnable()
 		{
 			this.m_HandleControlID = -1;
 		}
+
 		public void OnDisable()
 		{
 		}
+
 		public void SetAlwaysDisplayHandles(bool enable)
 		{
 			this.m_AlwaysDisplayHandles = enable;
 		}
+
 		public bool OnSceneGUI(Transform transform, Color color, ref Vector3 center, ref Vector3 size)
 		{
 			return this.OnSceneGUI(transform, color, true, ref center, ref size);
 		}
+
 		public bool OnSceneGUI(Transform transform, Color color, bool handlesOnly, ref Vector3 center, ref Vector3 size)
 		{
 			if (this.m_UseLossyScale)
@@ -74,10 +92,12 @@ namespace UnityEditor
 			}
 			return this.OnSceneGUI(transform.localToWorldMatrix, color, handlesOnly, ref center, ref size);
 		}
+
 		public bool OnSceneGUI(Matrix4x4 transform, Color color, bool handlesOnly, ref Vector3 center, ref Vector3 size)
 		{
 			return this.OnSceneGUI(transform, color, color, handlesOnly, ref center, ref size);
 		}
+
 		public bool OnSceneGUI(Matrix4x4 transform, Color boxColor, Color midPointHandleColor, bool handlesOnly, ref Vector3 center, ref Vector3 size)
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
@@ -89,6 +109,10 @@ namespace UnityEditor
 				}
 				return false;
 			}
+			if (Tools.viewToolActive)
+			{
+				return false;
+			}
 			Color color = Handles.color;
 			Handles.color = boxColor;
 			Vector3 b = center - size * 0.5f;
@@ -98,7 +122,7 @@ namespace UnityEditor
 			int hotControl = GUIUtility.hotControl;
 			if (!handlesOnly)
 			{
-				this.DrawWireframeBox(center, size);
+				Handles.DrawWireCube(center, size);
 			}
 			Vector3 point = transform.inverse.MultiplyPoint(Camera.current.transform.position);
 			Bounds bounds = new Bounds(center, size);
@@ -119,27 +143,7 @@ namespace UnityEditor
 			Handles.matrix = matrix;
 			return changed;
 		}
-		public void DrawWireframeBox(Vector3 center, Vector3 siz)
-		{
-			Vector3 vector = siz * 0.5f;
-			Vector3[] array = new Vector3[]
-			{
-				center + new Vector3(-vector.x, -vector.y, -vector.z),
-				center + new Vector3(-vector.x, vector.y, -vector.z),
-				center + new Vector3(vector.x, vector.y, -vector.z),
-				center + new Vector3(vector.x, -vector.y, -vector.z),
-				center + new Vector3(-vector.x, -vector.y, -vector.z),
-				center + new Vector3(-vector.x, -vector.y, vector.z),
-				center + new Vector3(-vector.x, vector.y, vector.z),
-				center + new Vector3(vector.x, vector.y, vector.z),
-				center + new Vector3(vector.x, -vector.y, vector.z),
-				center + new Vector3(-vector.x, -vector.y, vector.z)
-			};
-			Handles.DrawPolyLine(array);
-			Handles.DrawLine(array[1], array[6]);
-			Handles.DrawLine(array[2], array[7]);
-			Handles.DrawLine(array[3], array[8]);
-		}
+
 		private void MidpointHandles(ref Vector3 minPos, ref Vector3 maxPos, Matrix4x4 transform, bool isCameraInsideBox)
 		{
 			Vector3 vector = new Vector3(1f, 0f, 0f);
@@ -168,14 +172,17 @@ namespace UnityEditor
 				minPos.z = ((!this.m_AllowNegativeSize) ? Math.Min(vector4.z, maxPos.z) : vector4.z);
 			}
 		}
+
 		private static void DefaultMidPointDrawFunc(int controlID, Vector3 position, Quaternion rotation, float size)
 		{
 			Handles.DotCap(controlID, position, rotation, size);
 		}
+
 		private static float DefaultMidpointGetSizeFunc(Vector3 localPos)
 		{
 			return HandleUtility.GetHandleSize(localPos) * 0.03f;
 		}
+
 		private Vector3 MidpointHandle(Vector3 localPos, Vector3 localTangent, Vector3 localBinormal, Matrix4x4 transform, bool isCameraInsideBox)
 		{
 			Color color = Handles.color;
@@ -192,6 +199,7 @@ namespace UnityEditor
 			Handles.color = color;
 			return localPos;
 		}
+
 		private void AdjustMidpointHandleColor(Vector3 localPos, Vector3 localTangent, Vector3 localBinormal, Matrix4x4 transform, float alphaFactor, bool isCameraInsideBox)
 		{
 			if (!isCameraInsideBox)
@@ -219,6 +227,7 @@ namespace UnityEditor
 				Handles.color = new Color(Handles.color.r, Handles.color.g, Handles.color.b, Handles.color.a * alphaFactor);
 			}
 		}
+
 		private void EdgeHandles(ref Vector3 minPos, ref Vector3 maxPos, Matrix4x4 transform)
 		{
 			Vector3 vector = new Vector3(1f, 0f, 0f);
@@ -276,6 +285,7 @@ namespace UnityEditor
 			maxPos.y = vector6.y;
 			minPos.z = vector6.z;
 		}
+
 		private Vector3 EdgeHandle(Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, Matrix4x4 transform)
 		{
 			Color color = Handles.color;
@@ -301,6 +311,7 @@ namespace UnityEditor
 			Handles.color = color;
 			return handlePos;
 		}
+
 		private void AdjustEdgeHandleColor(Vector3 handlePos, Vector3 slideDir1, Vector3 slideDir2, Matrix4x4 transform, float alphaFactor)
 		{
 			Vector3 inPoint = transform.MultiplyPoint(handlePos);

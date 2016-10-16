@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+
 namespace UnityEngine.Serialization
 {
 	public class UnitySurrogateSelector : ISurrogateSelector
@@ -25,10 +26,12 @@ namespace UnityEngine.Serialization
 			selector = null;
 			return null;
 		}
+
 		public void ChainSelector(ISurrogateSelector selector)
 		{
 			throw new NotImplementedException();
 		}
+
 		public ISurrogateSelector GetNextSelector()
 		{
 			throw new NotImplementedException();

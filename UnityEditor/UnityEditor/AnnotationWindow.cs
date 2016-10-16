@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AnnotationWindow : EditorWindow
@@ -9,17 +10,29 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle toolbar = "toolbar";
+
 			public GUIStyle toggle = "OL Toggle";
+
 			public GUIStyle listEvenBg = "ObjectPickerResultsOdd";
+
 			public GUIStyle listOddBg = "ObjectPickerResultsEven";
+
 			public GUIStyle listSectionHeaderBg = "ObjectPickerResultsEven";
+
 			public GUIStyle background = "grey_border";
+
 			public GUIStyle seperator = "sv_iconselector_sep";
+
 			public GUIStyle iconDropDown = "IN dropdown";
+
 			public GUIStyle listTextStyle;
+
 			public GUIStyle listHeaderStyle;
+
 			public GUIStyle texelWorldSizeStyle;
+
 			public GUIStyle columnHeaderStyle;
+
 			public Styles()
 			{
 				this.listTextStyle = new GUIStyle(EditorStyles.label);
@@ -35,39 +48,65 @@ namespace UnityEditor
 				this.columnHeaderStyle = new GUIStyle(EditorStyles.miniLabel);
 			}
 		}
+
 		private const float kWindowWidth = 270f;
+
 		private const float scrollBarWidth = 14f;
+
 		private const float listElementHeight = 18f;
+
 		private const float gizmoRightAlign = 23f;
+
 		private const float iconRightAlign = 64f;
+
 		private const float frameWidth = 1f;
+
 		private const float k_AnimDuration = 0.4f;
+
 		private const int maxShowRecent = 5;
+
 		private const string textGizmoVisible = "Show/Hide Gizmo";
+
 		private const float exponentStart = -3f;
+
 		private const float exponentRange = 3f;
+
 		private const string kAlwaysFullSizeText = "Always Full Size";
+
 		private const string kHideAllIconsText = "Hide All Icons";
+
 		private static bool s_Debug;
+
 		private static AnnotationWindow s_AnnotationWindow;
+
 		private static long s_LastClosedTime;
+
 		private static AnnotationWindow.Styles m_Styles;
+
 		private List<AInfo> m_RecentAnnotations;
+
 		private List<AInfo> m_BuiltinAnnotations;
+
 		private List<AInfo> m_ScriptAnnotations;
+
 		private Vector2 m_ScrollPosition;
+
 		private bool m_SyncWithState;
+
 		private string m_LastScriptThatHasShownTheIconSelector;
+
 		private List<MonoScript> m_MonoScriptIconsChanged;
+
 		private GUIContent iconToggleContent = new GUIContent(string.Empty, "Show/Hide Icon");
+
 		private GUIContent iconSelectContent = new GUIContent(string.Empty, "Select Icon");
-		private GUIContent icon3dGizmoContent = new GUIContent("3D Gizmos");
+
+		private GUIContent icon3dGizmoContent = new GUIContent("3D Icons");
+
 		private GUIContent showGridContent = new GUIContent("Show Grid");
+
 		private bool m_IsGameView;
-		private AnnotationWindow()
-		{
-			base.hideFlags = HideFlags.DontSave;
-		}
+
 		private static float ConvertTexelWorldSizeTo01(float texelWorldSize)
 		{
 			if (texelWorldSize == -1f)
@@ -80,6 +119,7 @@ namespace UnityEditor
 			}
 			return (Mathf.Log10(texelWorldSize) - -3f) / 3f;
 		}
+
 		private static float Convert01ToTexelWorldSize(float value01)
 		{
 			if (value01 <= 0f)
@@ -88,6 +128,7 @@ namespace UnityEditor
 			}
 			return Mathf.Pow(10f, -3f + 3f * value01);
 		}
+
 		private static string ConvertTexelWorldSizeToString(float texelWorldSize)
 		{
 			if (texelWorldSize == -1f)
@@ -102,6 +143,7 @@ namespace UnityEditor
 			int numberOfDecimalsForMinimumDifference = MathUtils.GetNumberOfDecimalsForMinimumDifference(num * 0.1f);
 			return num.ToString("N" + numberOfDecimalsForMinimumDifference);
 		}
+
 		public void MonoScriptIconChanged(MonoScript monoScript)
 		{
 			if (monoScript == null)
@@ -121,6 +163,7 @@ namespace UnityEditor
 				this.m_MonoScriptIconsChanged.Add(monoScript);
 			}
 		}
+
 		public static void IconChanged()
 		{
 			if (AnnotationWindow.s_AnnotationWindow != null)
@@ -128,13 +171,17 @@ namespace UnityEditor
 				AnnotationWindow.s_AnnotationWindow.IconHasChanged();
 			}
 		}
+
 		private float GetTopSectionHeight()
 		{
 			return 50f;
 		}
+
 		private void OnEnable()
 		{
+			base.hideFlags = HideFlags.DontSave;
 		}
+
 		private void OnDisable()
 		{
 			foreach (MonoScript current in this.m_MonoScriptIconsChanged)
@@ -144,6 +191,7 @@ namespace UnityEditor
 			AnnotationWindow.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 			AnnotationWindow.s_AnnotationWindow = null;
 		}
+
 		internal static bool ShowAtPosition(Rect buttonRect, bool isGameView)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
@@ -159,6 +207,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void Init(Rect buttonRect, bool isGameView)
 		{
 			buttonRect = GUIUtility.GUIToScreenRect(buttonRect);
@@ -171,6 +220,7 @@ namespace UnityEditor
 			Vector2 windowSize = new Vector2(270f, num);
 			base.ShowAsDropDown(buttonRect, windowSize);
 		}
+
 		private void IconHasChanged()
 		{
 			if (string.IsNullOrEmpty(this.m_LastScriptThatHasShownTheIconSelector))
@@ -188,12 +238,14 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		private void Cancel()
 		{
 			base.Close();
 			GUI.changed = true;
 			GUIUtility.ExitGUI();
 		}
+
 		private AInfo GetAInfo(int classID, string scriptClass)
 		{
 			if (scriptClass != string.Empty)
@@ -202,6 +254,7 @@ namespace UnityEditor
 			}
 			return this.m_BuiltinAnnotations.Find((AInfo o) => o.m_ClassID == classID);
 		}
+
 		private void SyncToState()
 		{
 			Annotation[] annotations = AnnotationUtility.GetAnnotations();
@@ -289,6 +342,7 @@ namespace UnityEditor
 				Debug.Log(text);
 			}
 		}
+
 		internal void OnGUI()
 		{
 			if (Event.current.type == EventType.Layout)
@@ -312,6 +366,7 @@ namespace UnityEditor
 				this.Cancel();
 			}
 		}
+
 		private void DrawTopSection(float topSectionHeight)
 		{
 			GUI.Label(new Rect(1f, 0f, base.position.width - 2f, topSectionHeight), string.Empty, EditorStyles.inspectorBig);
@@ -326,23 +381,26 @@ namespace UnityEditor
 				Rect position2 = new Rect(0f, num3 + 10f, base.position.width - num2, 20f);
 				GUI.Label(position2, AnnotationWindow.ConvertTexelWorldSizeToString(iconSize), AnnotationWindow.m_Styles.texelWorldSizeStyle);
 			}
-			EditorGUI.BeginDisabledGroup(!AnnotationUtility.use3dGizmos);
-			float num4 = 160f;
-			float num5 = AnnotationWindow.ConvertTexelWorldSizeTo01(iconSize);
-			Rect position3 = new Rect(base.position.width - num2 - num4, num3, num4, 20f);
-			num5 = GUI.HorizontalSlider(position3, num5, 0f, 1f);
-			if (GUI.changed)
+			using (new EditorGUI.DisabledScope(!AnnotationUtility.use3dGizmos))
 			{
-				AnnotationUtility.iconSize = AnnotationWindow.Convert01ToTexelWorldSize(num5);
-				SceneView.RepaintAll();
+				float num4 = 160f;
+				float num5 = AnnotationWindow.ConvertTexelWorldSizeTo01(iconSize);
+				Rect position3 = new Rect(base.position.width - num2 - num4, num3, num4, 20f);
+				num5 = GUI.HorizontalSlider(position3, num5, 0f, 1f);
+				if (GUI.changed)
+				{
+					AnnotationUtility.iconSize = AnnotationWindow.Convert01ToTexelWorldSize(num5);
+					SceneView.RepaintAll();
+				}
 			}
-			EditorGUI.EndDisabledGroup();
 			num3 += 20f;
-			EditorGUI.BeginDisabledGroup(this.m_IsGameView);
-			position = new Rect(num2 - 2f, num3, 80f, 20f);
-			AnnotationUtility.showGrid = GUI.Toggle(position, AnnotationUtility.showGrid, this.showGridContent);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(this.m_IsGameView))
+			{
+				position = new Rect(num2 - 2f, num3, 80f, 20f);
+				AnnotationUtility.showGrid = GUI.Toggle(position, AnnotationUtility.showGrid, this.showGridContent);
+			}
 		}
+
 		private void DrawAnnotationList(float startY, float height)
 		{
 			Rect position = new Rect(1f, startY + 1f, base.position.width - 2f, height - 1f - 1f);
@@ -358,10 +416,12 @@ namespace UnityEditor
 			this.DrawNormalList(true, num2, this.m_ScrollPosition.y - 18f, this.m_ScrollPosition.y + num);
 			GUI.EndScrollView();
 		}
+
 		private void Flip(ref bool even)
 		{
 			even = !even;
 		}
+
 		private float DrawNormalList(bool doDraw, float listElementWidth, float startY, float endY)
 		{
 			bool flag = true;
@@ -371,6 +431,7 @@ namespace UnityEditor
 			y = this.DrawListSection(y, "Scripts", this.m_ScriptAnnotations, doDraw, listElementWidth, startY, endY, ref flag, false, ref flag2);
 			return this.DrawListSection(y, "Built-in Components", this.m_BuiltinAnnotations, doDraw, listElementWidth, startY, endY, ref flag, false, ref flag2);
 		}
+
 		private float DrawListSection(float y, string sectionHeader, List<AInfo> listElements, bool doDraw, float listElementWidth, float startY, float endY, ref bool even, bool useSeperator, ref bool headerDrawn)
 		{
 			float num = y;
@@ -416,6 +477,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private void DrawListHeader(string header, Rect rect, ref bool headerDrawn)
 		{
 			GUI.Label(rect, GUIContent.Temp(header), AnnotationWindow.m_Styles.listHeaderStyle);
@@ -432,6 +494,7 @@ namespace UnityEditor
 				GUI.color = Color.white;
 			}
 		}
+
 		private void DrawListElement(Rect rect, bool even, AInfo ainfo)
 		{
 			if (ainfo == null)
@@ -490,12 +553,9 @@ namespace UnityEditor
 					}
 				}
 			}
-			else
+			else if (ainfo.HasIcon())
 			{
-				if (ainfo.HasIcon())
-				{
-					texture = AssetPreview.GetMiniTypeThumbnailFromClassID(ainfo.m_ClassID);
-				}
+				texture = AssetPreview.GetMiniTypeThumbnailFromClassID(ainfo.m_ClassID);
 			}
 			if (texture != null)
 			{
@@ -533,11 +593,13 @@ namespace UnityEditor
 			GUI.changed = changed;
 			GUI.color = color;
 		}
+
 		private void SetIconState(AInfo ainfo)
 		{
 			AnnotationUtility.SetIconEnabled(ainfo.m_ClassID, ainfo.m_ScriptClass, (!ainfo.m_IconEnabled) ? 0 : 1);
 			SceneView.RepaintAll();
 		}
+
 		private void SetGizmoState(AInfo ainfo)
 		{
 			AnnotationUtility.SetGizmoEnabled(ainfo.m_ClassID, ainfo.m_ScriptClass, (!ainfo.m_GizmoEnabled) ? 0 : 1);

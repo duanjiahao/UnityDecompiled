@@ -1,12 +1,16 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal struct QuaternionCurveTangentCalculation
 	{
 		private AnimationCurve eulerX;
+
 		private AnimationCurve eulerY;
+
 		private AnimationCurve eulerZ;
+
 		public AnimationCurve GetCurve(int index)
 		{
 			if (index == 0)
@@ -19,41 +23,42 @@ namespace UnityEditor
 			}
 			return this.eulerZ;
 		}
+
 		public void SetCurve(int index, AnimationCurve curve)
 		{
 			if (index == 0)
 			{
 				this.eulerX = curve;
 			}
+			else if (index == 1)
+			{
+				this.eulerY = curve;
+			}
 			else
 			{
-				if (index == 1)
-				{
-					this.eulerY = curve;
-				}
-				else
-				{
-					this.eulerZ = curve;
-				}
+				this.eulerZ = curve;
 			}
 		}
+
 		private Vector3 EvaluateEulerCurvesDirectly(float time)
 		{
 			return new Vector3(this.eulerX.Evaluate(time), this.eulerY.Evaluate(time), this.eulerZ.Evaluate(time));
 		}
+
 		public float CalculateLinearTangent(int fromIndex, int toIndex, int componentIndex)
 		{
 			AnimationCurve curve = this.GetCurve(componentIndex);
 			return this.CalculateLinearTangent(curve[fromIndex], curve[toIndex], componentIndex);
 		}
+
 		public float CalculateLinearTangent(Keyframe from, Keyframe to, int component)
 		{
 			float num = 0.01f;
 			Vector3 vector = this.EvaluateEulerCurvesDirectly(to.time);
 			Vector3 euler = this.EvaluateEulerCurvesDirectly(from.time);
-			Quaternion from2 = Quaternion.Euler(vector);
-			Quaternion to2 = Quaternion.Euler(euler);
-			Quaternion q = Quaternion.Slerp(from2, to2, num);
+			Quaternion a = Quaternion.Euler(vector);
+			Quaternion b = Quaternion.Euler(euler);
+			Quaternion q = Quaternion.Slerp(a, b, num);
 			Vector3 eulerFromQuaternion = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q, vector);
 			switch (component)
 			{
@@ -67,6 +72,7 @@ namespace UnityEditor
 				return 0f;
 			}
 		}
+
 		public float CalculateSmoothTangent(int index, int component)
 		{
 			AnimationCurve curve = this.GetCurve(component);
@@ -117,6 +123,7 @@ namespace UnityEditor
 			Vector3 eulerFromQuaternion2 = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q2, vector);
 			return ((eulerFromQuaternion2 - eulerFromQuaternion) / (num3 * 2f))[component];
 		}
+
 		public static Vector3[] GetEquivalentEulerAngles(Quaternion quat)
 		{
 			Vector3 eulerAngles = quat.eulerAngles;
@@ -126,6 +133,7 @@ namespace UnityEditor
 				new Vector3(180f - eulerAngles.x, eulerAngles.y + 180f, eulerAngles.z + 180f)
 			};
 		}
+
 		public static Vector3 GetEulerFromQuaternion(Quaternion q, Vector3 refEuler)
 		{
 			Vector3[] equivalentEulerAngles = QuaternionCurveTangentCalculation.GetEquivalentEulerAngles(q);
@@ -163,6 +171,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static float SafeDeltaDivide(float dy, float dx)
 		{
 			if (dx == 0f)
@@ -171,6 +180,7 @@ namespace UnityEditor
 			}
 			return dy / dx;
 		}
+
 		public void UpdateTangentsFromMode(int componentIndex)
 		{
 			AnimationCurve curve = this.GetCurve(componentIndex);
@@ -179,6 +189,7 @@ namespace UnityEditor
 				this.UpdateTangentsFromMode(i, componentIndex);
 			}
 		}
+
 		public void UpdateTangentsFromMode(int index, int componentIndex)
 		{
 			AnimationCurve curve = this.GetCurve(componentIndex);
@@ -205,36 +216,10 @@ namespace UnityEditor
 				curve.MoveKey(index, key);
 			}
 		}
+
 		public static void UpdateTangentsFromMode(AnimationCurve curve, AnimationClip clip, EditorCurveBinding curveBinding)
 		{
-			if (RotationCurveInterpolation.GetModeFromCurveData(curveBinding) == RotationCurveInterpolation.Mode.NonBaked)
-			{
-				QuaternionCurveTangentCalculation quaternionCurveTangentCalculation = default(QuaternionCurveTangentCalculation);
-				int curveIndexFromName = RotationCurveInterpolation.GetCurveIndexFromName(curveBinding.propertyName);
-				for (int i = 0; i < 3; i++)
-				{
-					if (i == curveIndexFromName)
-					{
-						quaternionCurveTangentCalculation.SetCurve(i, curve);
-					}
-					else
-					{
-						EditorCurveBinding binding = curveBinding;
-						binding.propertyName = "localEulerAngles." + RotationCurveInterpolation.kPostFix[i];
-						AnimationCurve editorCurve = AnimationUtility.GetEditorCurve(clip, binding);
-						if (editorCurve == null)
-						{
-							return;
-						}
-						quaternionCurveTangentCalculation.SetCurve(i, editorCurve);
-					}
-				}
-				quaternionCurveTangentCalculation.UpdateTangentsFromMode(curveIndexFromName);
-			}
-			else
-			{
-				CurveUtility.UpdateTangentsFromMode(curve);
-			}
+			CurveUtility.UpdateTangentsFromMode(curve);
 		}
 	}
 }

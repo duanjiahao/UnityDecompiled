@@ -1,19 +1,26 @@
 using System;
+using UnityEditor.Collaboration;
+using UnityEditor.Connect;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.VersionControl;
+using UnityEditor.Web;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetsTreeViewGUI : TreeViewGUI
 	{
 		private const float k_IconOverlayPadding = 7f;
+
 		private static bool s_VCEnabled;
+
 		public AssetsTreeViewGUI(TreeView treeView) : base(treeView)
 		{
 			base.iconOverlayGUI = (Action<TreeViewItem, Rect>)Delegate.Combine(base.iconOverlayGUI, new Action<TreeViewItem, Rect>(this.OnIconOverlayGUI));
 			this.k_TopRowMargin = 4f;
 		}
+
 		public override void BeginRowGUI()
 		{
 			AssetsTreeViewGUI.s_VCEnabled = Provider.isActive;
@@ -22,19 +29,23 @@ namespace UnityEditor
 			base.iconLeftPadding = num;
 			base.BeginRowGUI();
 		}
+
 		protected CreateAssetUtility GetCreateAssetUtility()
 		{
 			return this.m_TreeView.state.createAssetUtility;
 		}
+
 		protected virtual bool IsCreatingNewAsset(int instanceID)
 		{
 			return this.GetCreateAssetUtility().IsCreatingNewAsset() && this.IsRenaming(instanceID);
 		}
-		protected override void ClearRenameAndNewNodeState()
+
+		protected override void ClearRenameAndNewItemState()
 		{
 			this.GetCreateAssetUtility().Clear();
-			base.ClearRenameAndNewNodeState();
+			base.ClearRenameAndNewItemState();
 		}
+
 		protected override void RenameEnded()
 		{
 			string name = (!string.IsNullOrEmpty(base.GetRenameOverlay().name)) ? base.GetRenameOverlay().name : base.GetRenameOverlay().originalName;
@@ -53,29 +64,34 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected override void SyncFakeItem()
 		{
 			if (!this.m_TreeView.data.HasFakeItem() && this.GetCreateAssetUtility().IsCreatingNewAsset())
 			{
-				int instanceID = AssetDatabase.LoadAssetAtPath(this.GetCreateAssetUtility().folder, typeof(UnityEngine.Object)).GetInstanceID();
-				this.m_TreeView.data.InsertFakeItem(this.GetCreateAssetUtility().instanceID, instanceID, this.GetCreateAssetUtility().originalName, this.GetCreateAssetUtility().icon);
+				int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(this.GetCreateAssetUtility().folder);
+				this.m_TreeView.data.InsertFakeItem(this.GetCreateAssetUtility().instanceID, mainAssetInstanceID, this.GetCreateAssetUtility().originalName, this.GetCreateAssetUtility().icon);
 			}
 			if (this.m_TreeView.data.HasFakeItem() && !this.GetCreateAssetUtility().IsCreatingNewAsset())
 			{
 				this.m_TreeView.data.RemoveFakeItem();
 			}
 		}
+
 		public virtual void BeginCreateNewAsset(int instanceID, EndNameEditAction endAction, string pathName, Texture2D icon, string resourceFile)
 		{
-			this.ClearRenameAndNewNodeState();
-			this.GetCreateAssetUtility().BeginNewAssetCreation(instanceID, endAction, pathName, icon, resourceFile);
-			this.SyncFakeItem();
-			if (!base.GetRenameOverlay().BeginRename(this.GetCreateAssetUtility().originalName, instanceID, 0f))
+			this.ClearRenameAndNewItemState();
+			if (this.GetCreateAssetUtility().BeginNewAssetCreation(instanceID, endAction, pathName, icon, resourceFile))
 			{
-				Debug.LogError("Rename not started (when creating new asset)");
+				this.SyncFakeItem();
+				if (!base.GetRenameOverlay().BeginRename(this.GetCreateAssetUtility().originalName, instanceID, 0f))
+				{
+					Debug.LogError("Rename not started (when creating new asset)");
+				}
 			}
 		}
-		protected override Texture GetIconForNode(TreeViewItem item)
+
+		protected override Texture GetIconForItem(TreeViewItem item)
 		{
 			if (item == null)
 			{
@@ -97,13 +113,24 @@ namespace UnityEditor
 			}
 			return texture;
 		}
+
 		private void OnIconOverlayGUI(TreeViewItem item, Rect overlayRect)
 		{
+			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
+			{
+				bool flag = CollabAccess.Instance.IsServiceEnabled();
+				if (flag && AssetDatabase.IsMainAsset(item.id))
+				{
+					string assetPath = AssetDatabase.GetAssetPath(item.id);
+					string guid = AssetDatabase.AssetPathToGUID(assetPath);
+					CollabProjectHook.OnProjectWindowItemIconOverlay(guid, overlayRect);
+				}
+			}
 			if (AssetsTreeViewGUI.s_VCEnabled && AssetDatabase.IsMainAsset(item.id))
 			{
-				string assetPath = AssetDatabase.GetAssetPath(item.id);
-				string guid = AssetDatabase.AssetPathToGUID(assetPath);
-				ProjectHooks.OnProjectWindowItem(guid, overlayRect);
+				string assetPath2 = AssetDatabase.GetAssetPath(item.id);
+				string guid2 = AssetDatabase.AssetPathToGUID(assetPath2);
+				ProjectHooks.OnProjectWindowItem(guid2, overlayRect);
 			}
 		}
 	}

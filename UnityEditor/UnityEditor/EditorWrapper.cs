@@ -1,13 +1,17 @@
 using System;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EditorWrapper : IDisposable
 	{
 		public delegate void VoidDelegate(SceneView sceneView);
+
 		private Editor editor;
+
 		public EditorWrapper.VoidDelegate OnSceneDrag;
+
 		public string name
 		{
 			get
@@ -15,21 +19,26 @@ namespace UnityEditor
 				return this.editor.target.name;
 			}
 		}
+
 		private EditorWrapper()
 		{
 		}
+
 		public bool HasPreviewGUI()
 		{
 			return this.editor.HasPreviewGUI();
 		}
+
 		public void OnPreviewSettings()
 		{
 			this.editor.OnPreviewSettings();
 		}
+
 		public void OnPreviewGUI(Rect position, GUIStyle background)
 		{
 			this.editor.OnPreviewGUI(position, background);
 		}
+
 		public void OnInteractivePreviewGUI(Rect r, GUIStyle background)
 		{
 			if (this.editor != null)
@@ -37,6 +46,7 @@ namespace UnityEditor
 				this.editor.OnInteractivePreviewGUI(r, background);
 			}
 		}
+
 		internal void OnAssetStoreInspectorGUI()
 		{
 			if (this.editor != null)
@@ -44,10 +54,12 @@ namespace UnityEditor
 				this.editor.OnAssetStoreInspectorGUI();
 			}
 		}
+
 		public string GetInfoString()
 		{
 			return this.editor.GetInfoString();
 		}
+
 		public static EditorWrapper Make(UnityEngine.Object obj, EditorFeatures requirements)
 		{
 			EditorWrapper editorWrapper = new EditorWrapper();
@@ -58,6 +70,7 @@ namespace UnityEditor
 			editorWrapper.Dispose();
 			return null;
 		}
+
 		private bool Init(UnityEngine.Object obj, EditorFeatures requirements)
 		{
 			this.editor = Editor.CreateEditor(obj);
@@ -85,9 +98,11 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private void DefaultOnSceneDrag(SceneView sceneView)
 		{
 		}
+
 		public void Dispose()
 		{
 			if (this.editor != null)
@@ -98,6 +113,7 @@ namespace UnityEditor
 			}
 			GC.SuppressFinalize(this);
 		}
+
 		~EditorWrapper()
 		{
 			Debug.LogError("Failed to dispose EditorWrapper.");

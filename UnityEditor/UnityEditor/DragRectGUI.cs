@@ -1,12 +1,16 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class DragRectGUI
 	{
 		private static int dragRectHash = "DragRect".GetHashCode();
+
 		private static int s_DragCandidateState = 0;
+
 		private static float s_DragSensitivity = 1f;
+
 		public static int DragRect(Rect position, int value, int minValue, int maxValue)
 		{
 			Event current = Event.current;
@@ -42,12 +46,9 @@ namespace UnityEditor
 						{
 							value = minValue;
 						}
-						else
+						else if (value > maxValue)
 						{
-							if (value > maxValue)
-							{
-								value = maxValue;
-							}
+							value = maxValue;
 						}
 					}
 				}

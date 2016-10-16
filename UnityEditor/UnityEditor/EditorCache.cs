@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EditorCache : IDisposable
 	{
 		private Dictionary<UnityEngine.Object, EditorWrapper> m_EditorCache;
+
 		private Dictionary<UnityEngine.Object, bool> m_UsedEditors;
+
 		private EditorFeatures m_Requirements;
+
 		public EditorWrapper this[UnityEngine.Object o]
 		{
 			get
@@ -18,24 +22,23 @@ namespace UnityEditor
 					return this.m_EditorCache[o];
 				}
 				EditorWrapper editorWrapper = EditorWrapper.Make(o, this.m_Requirements);
-				if (editorWrapper == null)
-				{
-					return null;
-				}
 				EditorWrapper editorWrapper2 = editorWrapper;
 				this.m_EditorCache[o] = editorWrapper2;
 				return editorWrapper2;
 			}
 		}
+
 		public EditorCache() : this(EditorFeatures.None)
 		{
 		}
+
 		public EditorCache(EditorFeatures requirements)
 		{
 			this.m_Requirements = requirements;
 			this.m_EditorCache = new Dictionary<UnityEngine.Object, EditorWrapper>();
 			this.m_UsedEditors = new Dictionary<UnityEngine.Object, bool>();
 		}
+
 		public void CleanupUntouchedEditors()
 		{
 			List<UnityEngine.Object> list = new List<UnityEngine.Object>();
@@ -50,22 +53,29 @@ namespace UnityEditor
 			{
 				foreach (UnityEngine.Object current2 in list)
 				{
-					this.m_EditorCache[current2].Dispose();
+					EditorWrapper editorWrapper = this.m_EditorCache[current2];
 					this.m_EditorCache.Remove(current2);
+					if (editorWrapper != null)
+					{
+						editorWrapper.Dispose();
+					}
 				}
 			}
 			this.m_UsedEditors.Clear();
 		}
+
 		public void CleanupAllEditors()
 		{
 			this.m_UsedEditors.Clear();
 			this.CleanupUntouchedEditors();
 		}
+
 		public void Dispose()
 		{
 			this.CleanupAllEditors();
 			GC.SuppressFinalize(this);
 		}
+
 		~EditorCache()
 		{
 			Debug.LogError("Failed to dispose EditorCache.");

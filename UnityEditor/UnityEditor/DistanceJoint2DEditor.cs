@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(DistanceJoint2D))]
@@ -12,13 +13,13 @@ namespace UnityEditor
 			{
 				return;
 			}
-			Vector3 anchor = Joint2DEditorBase.TransformPoint(distanceJoint2D.transform, distanceJoint2D.anchor);
+			Vector3 anchor = Joint2DEditor.TransformPoint(distanceJoint2D.transform, distanceJoint2D.anchor);
 			Vector3 vector = distanceJoint2D.connectedAnchor;
 			if (distanceJoint2D.connectedBody)
 			{
-				vector = Joint2DEditorBase.TransformPoint(distanceJoint2D.connectedBody.transform, vector);
+				vector = Joint2DEditor.TransformPoint(distanceJoint2D.connectedBody.transform, vector);
 			}
-			Joint2DEditorBase.DrawDistanceGizmo(anchor, vector, distanceJoint2D.distance);
+			Joint2DEditor.DrawDistanceGizmo(anchor, vector, distanceJoint2D.distance);
 			base.OnSceneGUI();
 		}
 	}

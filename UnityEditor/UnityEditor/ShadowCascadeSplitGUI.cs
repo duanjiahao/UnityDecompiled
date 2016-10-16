@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class ShadowCascadeSplitGUI
@@ -8,8 +9,11 @@ namespace UnityEditor
 		private class DragCache
 		{
 			public int m_ActivePartition;
+
 			public float m_NormalizedPartitionSize;
+
 			public Vector2 m_LastCachedMousePosition;
+
 			public DragCache(int activePartition, float normalizedPartitionSize, Vector2 currentMousePos)
 			{
 				this.m_ActivePartition = activePartition;
@@ -17,11 +21,17 @@ namespace UnityEditor
 				this.m_LastCachedMousePosition = currentMousePos;
 			}
 		}
+
 		private const int kSliderbarTopMargin = 2;
+
 		private const int kSliderbarHeight = 24;
+
 		private const int kSliderbarBottomMargin = 2;
+
 		private const int kPartitionHandleWidth = 2;
+
 		private const int kPartitionHandleExtraHitAreaWidth = 2;
+
 		private static readonly Color[] kCascadeColors = new Color[]
 		{
 			new Color(0.5f, 0.5f, 0.6f, 1f),
@@ -29,16 +39,24 @@ namespace UnityEditor
 			new Color(0.6f, 0.6f, 0.5f, 1f),
 			new Color(0.6f, 0.5f, 0.5f, 1f)
 		};
+
 		private static readonly GUIStyle s_CascadeSliderBG = "LODSliderRange";
+
 		private static readonly GUIStyle s_TextCenteredStyle = new GUIStyle(EditorStyles.whiteMiniLabel)
 		{
 			alignment = TextAnchor.MiddleCenter
 		};
+
 		private static ShadowCascadeSplitGUI.DragCache s_DragCache;
+
 		private static readonly int s_CascadeSliderId = "s_CascadeSliderId".GetHashCode();
+
 		private static SceneView s_RestoreSceneView;
+
 		private static DrawCameraMode s_OldSceneDrawMode = DrawCameraMode.Textured;
+
 		private static bool s_OldSceneLightingMode;
+
 		public static void HandleCascadeSliderGUI(ref float[] normalizedCascadePartitions)
 		{
 			GUILayout.Label("Cascade splits", new GUILayoutOption[0]);
@@ -49,7 +67,7 @@ namespace UnityEditor
 			});
 			GUI.Box(rect, GUIContent.none);
 			float num = rect.x;
-			float top = rect.y + 2f;
+			float y = rect.y + 2f;
 			float num2 = rect.width - (float)(normalizedCascadePartitions.Length * 2);
 			Color color = GUI.color;
 			Color backgroundColor = GUI.backgroundColor;
@@ -66,7 +84,7 @@ namespace UnityEditor
 				num3 = (num3 + 1) % ShadowCascadeSplitGUI.kCascadeColors.Length;
 				GUI.backgroundColor = ShadowCascadeSplitGUI.kCascadeColors[num3];
 				float num6 = num2 * num5;
-				Rect rect2 = new Rect(num, top, num6, 24f);
+				Rect rect2 = new Rect(num, y, num6, 24f);
 				GUI.Box(rect2, GUIContent.none, ShadowCascadeSplitGUI.s_CascadeSliderBG);
 				num += num6;
 				GUI.color = Color.white;

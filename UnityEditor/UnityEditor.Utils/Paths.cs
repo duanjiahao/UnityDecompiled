@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 namespace UnityEditor.Utils
 {
 	internal static class Paths
@@ -18,6 +19,7 @@ namespace UnityEditor.Utils
 			}
 			return text;
 		}
+
 		public static string[] Split(string path)
 		{
 			List<string> list = new List<string>(path.Split(new char[]
@@ -39,6 +41,7 @@ namespace UnityEditor.Utils
 			}
 			return list.ToArray();
 		}
+
 		public static string GetFileOrFolderName(string path)
 		{
 			string result;
@@ -57,6 +60,7 @@ namespace UnityEditor.Utils
 			}
 			return result;
 		}
+
 		public static string CreateTempDirectory()
 		{
 			string tempFileName = Path.GetTempFileName();
@@ -64,6 +68,7 @@ namespace UnityEditor.Utils
 			Directory.CreateDirectory(tempFileName);
 			return tempFileName;
 		}
+
 		public static string NormalizePath(this string path)
 		{
 			if (Path.DirectorySeparatorChar == '\\')
@@ -71,6 +76,11 @@ namespace UnityEditor.Utils
 				return path.Replace('/', Path.DirectorySeparatorChar);
 			}
 			return path.Replace('\\', Path.DirectorySeparatorChar);
+		}
+
+		public static bool AreEqual(string pathA, string pathB, bool ignoreCase)
+		{
+			return (pathA == string.Empty && pathB == string.Empty) || (!string.IsNullOrEmpty(pathA) && !string.IsNullOrEmpty(pathB) && string.Compare(Path.GetFullPath(pathA), Path.GetFullPath(pathB), (!ignoreCase) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) == 0);
 		}
 	}
 }

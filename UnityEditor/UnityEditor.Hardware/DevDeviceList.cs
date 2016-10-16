@@ -1,11 +1,13 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor.Hardware
 {
 	public sealed class DevDeviceList
 	{
 		public delegate void OnChangedHandler();
+
 		public static event DevDeviceList.OnChangedHandler Changed
 		{
 			[MethodImpl(MethodImplOptions.Synchronized)]
@@ -19,6 +21,7 @@ namespace UnityEditor.Hardware
 				DevDeviceList.Changed = (DevDeviceList.OnChangedHandler)Delegate.Remove(DevDeviceList.Changed, value);
 			}
 		}
+
 		public static void OnChanged()
 		{
 			if (DevDeviceList.Changed != null)
@@ -26,6 +29,7 @@ namespace UnityEditor.Hardware
 				DevDeviceList.Changed();
 			}
 		}
+
 		public static bool FindDevice(string deviceId, out DevDevice device)
 		{
 			DevDevice[] devices = DevDeviceList.GetDevices();
@@ -41,14 +45,17 @@ namespace UnityEditor.Hardware
 			device = default(DevDevice);
 			return false;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern DevDevice[] GetDevices();
+
 		internal static void Update(string target, DevDevice[] devices)
 		{
 			DevDeviceList.UpdateInternal(target, devices);
 			DevDeviceList.OnChanged();
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateInternal(string target, DevDevice[] devices);

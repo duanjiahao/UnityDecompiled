@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.SocialPlatforms
 {
 	public enum TimeScope

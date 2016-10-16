@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PresetLibraryManager : ScriptableSingleton<PresetLibraryManager>
@@ -10,8 +11,11 @@ namespace UnityEditor
 		private class LibraryCache
 		{
 			private string m_Identifier;
+
 			private List<ScriptableObject> m_LoadedLibraries = new List<ScriptableObject>();
+
 			private List<string> m_LoadedLibraryIDs = new List<string>();
+
 			public string identifier
 			{
 				get
@@ -19,6 +23,7 @@ namespace UnityEditor
 					return this.m_Identifier;
 				}
 			}
+
 			public List<ScriptableObject> loadedLibraries
 			{
 				get
@@ -26,6 +31,7 @@ namespace UnityEditor
 					return this.m_LoadedLibraries;
 				}
 			}
+
 			public List<string> loadedLibraryIDs
 			{
 				get
@@ -33,10 +39,12 @@ namespace UnityEditor
 					return this.m_LoadedLibraryIDs;
 				}
 			}
+
 			public LibraryCache(string identifier)
 			{
 				this.m_Identifier = identifier;
 			}
+
 			public void UnloadScriptableObjects()
 			{
 				foreach (ScriptableObject current in this.m_LoadedLibraries)
@@ -47,8 +55,11 @@ namespace UnityEditor
 				this.m_LoadedLibraryIDs.Clear();
 			}
 		}
+
 		private static string s_LastError;
+
 		private List<PresetLibraryManager.LibraryCache> m_LibraryCaches = new List<PresetLibraryManager.LibraryCache>();
+
 		private HideFlags libraryHideFlag
 		{
 			get
@@ -56,15 +67,18 @@ namespace UnityEditor
 				return HideFlags.DontSave;
 			}
 		}
+
 		public void GetAvailableLibraries<T>(ScriptableObjectSaveLoadHelper<T> helper, out List<string> preferencesLibs, out List<string> projectLibs) where T : ScriptableObject
 		{
 			preferencesLibs = PresetLibraryLocations.GetAvailableFilesWithExtensionOnTheHDD(PresetFileLocation.PreferencesFolder, helper.fileExtensionWithoutDot);
 			projectLibs = PresetLibraryLocations.GetAvailableFilesWithExtensionOnTheHDD(PresetFileLocation.ProjectFolder, helper.fileExtensionWithoutDot);
 		}
+
 		private string GetLibaryNameFromPath(string filePath)
 		{
 			return Path.GetFileNameWithoutExtension(filePath);
 		}
+
 		public T CreateLibrary<T>(ScriptableObjectSaveLoadHelper<T> helper, string presetLibraryPathWithoutExtension) where T : ScriptableObject
 		{
 			string libaryNameFromPath = this.GetLibaryNameFromPath(presetLibraryPathWithoutExtension);
@@ -94,6 +108,7 @@ namespace UnityEditor
 			PresetLibraryManager.s_LastError = null;
 			return t;
 		}
+
 		public T GetLibrary<T>(ScriptableObjectSaveLoadHelper<T> helper, string presetLibraryPathWithoutExtension) where T : ScriptableObject
 		{
 			PresetLibraryManager.LibraryCache presetLibraryCache = this.GetPresetLibraryCache(helper.fileExtensionWithoutDot);
@@ -126,6 +141,7 @@ namespace UnityEditor
 			}
 			return (T)((object)null);
 		}
+
 		public void UnloadAllLibrariesFor<T>(ScriptableObjectSaveLoadHelper<T> helper) where T : ScriptableObject
 		{
 			for (int i = 0; i < this.m_LibraryCaches.Count; i++)
@@ -138,6 +154,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void SaveLibrary<T>(ScriptableObjectSaveLoadHelper<T> helper, T library, string presetLibraryPathWithoutExtension) where T : ScriptableObject
 		{
 			bool flag = File.Exists(presetLibraryPathWithoutExtension + "." + helper.fileExtensionWithoutDot);
@@ -147,12 +164,14 @@ namespace UnityEditor
 				AssetDatabase.Refresh();
 			}
 		}
+
 		public string GetLastError()
 		{
 			string result = PresetLibraryManager.s_LastError;
 			PresetLibraryManager.s_LastError = null;
 			return result;
 		}
+
 		private PresetLibraryManager.LibraryCache GetPresetLibraryCache(string identifier)
 		{
 			foreach (PresetLibraryManager.LibraryCache current in this.m_LibraryCaches)

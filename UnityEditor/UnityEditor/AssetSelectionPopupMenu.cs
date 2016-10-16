@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetSelectionPopupMenu
@@ -26,6 +27,7 @@ namespace UnityEditor
 			}
 			genericMenu.DropDown(buttonRect);
 		}
+
 		private static void SelectCallback(object userData)
 		{
 			UnityEngine.Object @object = userData as UnityEngine.Object;
@@ -34,6 +36,7 @@ namespace UnityEditor
 				Selection.activeInstanceID = @object.GetInstanceID();
 			}
 		}
+
 		private static List<UnityEngine.Object> FindAssetsOfType(string[] classNames)
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);

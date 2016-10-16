@@ -1,15 +1,21 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(OcclusionPortal))]
 	internal class OcclusionPortalInspector : Editor
 	{
 		private static readonly int s_BoxHash = "BoxColliderEditor".GetHashCode();
+
 		private readonly BoxEditor m_BoxEditor = new BoxEditor(true, OcclusionPortalInspector.s_BoxHash);
+
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Size;
+
 		private SerializedObject m_Object;
+
 		public void OnEnable()
 		{
 			this.m_Object = new SerializedObject(base.targets);
@@ -18,6 +24,7 @@ namespace UnityEditor
 			this.m_BoxEditor.OnEnable();
 			this.m_BoxEditor.SetAlwaysDisplayHandles(true);
 		}
+
 		private void OnSceneGUI()
 		{
 			OcclusionPortal occlusionPortal = this.target as OcclusionPortal;

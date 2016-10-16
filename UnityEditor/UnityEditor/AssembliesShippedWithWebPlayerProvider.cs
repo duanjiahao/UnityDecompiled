@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	internal static class AssembliesShippedWithWebPlayerProvider

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EventManipulationHandler
@@ -7,8 +8,11 @@ namespace UnityEditor
 		private class EventModificationContextMenuObjet
 		{
 			public AnimationClipInfoProperties m_Info;
+
 			public float m_Time;
+
 			public int m_Index;
+
 			public EventModificationContextMenuObjet(AnimationClipInfoProperties info, float time, int index)
 			{
 				this.m_Info = info;
@@ -16,24 +20,35 @@ namespace UnityEditor
 				this.m_Index = index;
 			}
 		}
+
 		private Rect[] m_EventRects = new Rect[0];
+
 		private static AnimationEvent[] m_EventsAtMouseDown;
+
 		private static float[] m_EventTimes;
+
 		private int m_HoverEvent = -1;
+
 		private string m_InstantTooltipText;
+
 		private Vector2 m_InstantTooltipPoint = Vector2.zero;
+
 		private bool[] m_EventsSelected;
+
 		private TimeArea m_Timeline;
+
 		public EventManipulationHandler(TimeArea timeArea)
 		{
 			this.m_Timeline = timeArea;
 		}
+
 		public void SelectEvent(AnimationEvent[] events, int index, AnimationClipInfoProperties clipInfo)
 		{
 			this.m_EventsSelected = new bool[events.Length];
 			this.m_EventsSelected[index] = true;
 			AnimationEventPopup.Edit(clipInfo, index);
 		}
+
 		public bool HandleEventManipulation(Rect rect, ref AnimationEvent[] events, AnimationClipInfoProperties clipInfo)
 		{
 			Texture image = EditorGUIUtility.IconContent("Animation.EventMarker").image;
@@ -80,7 +95,7 @@ namespace UnityEditor
 			int num6;
 			float num7;
 			float num8;
-			HighLevelEvent highLevelEvent = EditorGUIExt.MultiSelection(rect, array2, new GUIContent(image), array, ref this.m_EventsSelected, null, out num6, out zero, out num7, out num8, GUIStyleX.none);
+			HighLevelEvent highLevelEvent = EditorGUIExt.MultiSelection(rect, array2, new GUIContent(image), array, ref this.m_EventsSelected, null, out num6, out zero, out num7, out num8, GUIStyle.none);
 			if (highLevelEvent != HighLevelEvent.None)
 			{
 				switch (highLevelEvent)
@@ -147,17 +162,20 @@ namespace UnityEditor
 			this.CheckRectsOnMouseMove(rect, events, array);
 			return result;
 		}
+
 		public void EventLineContextMenuAdd(object obj)
 		{
 			EventManipulationHandler.EventModificationContextMenuObjet eventModificationContextMenuObjet = (EventManipulationHandler.EventModificationContextMenuObjet)obj;
 			eventModificationContextMenuObjet.m_Info.AddEvent(eventModificationContextMenuObjet.m_Time);
 			this.SelectEvent(eventModificationContextMenuObjet.m_Info.GetEvents(), eventModificationContextMenuObjet.m_Info.GetEventCount() - 1, eventModificationContextMenuObjet.m_Info);
 		}
+
 		public void EventLineContextMenuDelete(object obj)
 		{
 			EventManipulationHandler.EventModificationContextMenuObjet eventModificationContextMenuObjet = (EventManipulationHandler.EventModificationContextMenuObjet)obj;
 			eventModificationContextMenuObjet.m_Info.RemoveEvent(eventModificationContextMenuObjet.m_Index);
 		}
+
 		private void CheckRectsOnMouseMove(Rect eventLineRect, AnimationEvent[] events, Rect[] hitRects)
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
@@ -184,6 +202,7 @@ namespace UnityEditor
 				this.m_HoverEvent = -1;
 			}
 		}
+
 		public void DrawInstantTooltip(Rect window)
 		{
 			if (this.m_InstantTooltipText != null && this.m_InstantTooltipText != string.Empty)
@@ -198,6 +217,7 @@ namespace UnityEditor
 				GUI.Label(position, this.m_InstantTooltipText, gUIStyle);
 			}
 		}
+
 		private bool DeleteEvents(ref AnimationEvent[] eventList, bool[] deleteIndices)
 		{
 			bool flag = false;

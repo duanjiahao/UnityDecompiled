@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class ProfilerHierarchyGUI
@@ -9,30 +10,53 @@ namespace UnityEditorInternal
 		internal class Styles
 		{
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle header = "OL title";
+
 			public GUIStyle rightHeader = "OL title TextRight";
+
 			public GUIStyle entryEven = "OL EntryBackEven";
+
 			public GUIStyle entryOdd = "OL EntryBackOdd";
+
 			public GUIStyle numberLabel = "OL Label";
+
 			public GUIStyle foldout = "IN foldout";
+
+			public GUIStyle miniPullDown = "MiniPullDown";
+
 			public GUIContent disabledSearchText = new GUIContent("Showing search results are disabled while recording with deep profiling.\nStop recording to view search results.");
+
 			public GUIContent notShowingAllResults = new GUIContent("...", "Narrow your search. Not all search results can be shown.");
+
+			public GUIContent instrumentationIcon = EditorGUIUtility.IconContent("Profiler.Record", "Record|Record profiling information");
 		}
+
 		internal class SearchResults
 		{
 			private struct SearchResult
 			{
 				public string propertyPath;
+
 				public string[] columnValues;
 			}
+
 			private ProfilerHierarchyGUI.SearchResults.SearchResult[] m_SearchResults;
+
 			private int m_NumResultsUsed;
+
 			private ProfilerColumn[] m_ColumnsToShow;
+
 			private int m_SelectedSearchIndex;
+
 			private bool m_FoundAllResults;
+
 			private string m_LastSearchString;
+
 			private int m_LastFrameIndex;
+
 			private ProfilerColumn m_LastSortType;
+
 			public int numRows
 			{
 				get
@@ -40,6 +64,7 @@ namespace UnityEditorInternal
 					return this.m_NumResultsUsed + ((!this.m_FoundAllResults) ? 1 : 0);
 				}
 			}
+
 			public int selectedSearchIndex
 			{
 				get
@@ -66,6 +91,7 @@ namespace UnityEditorInternal
 					}
 				}
 			}
+
 			public void Init(int maxNumberSearchResults)
 			{
 				this.m_SearchResults = new ProfilerHierarchyGUI.SearchResults.SearchResult[maxNumberSearchResults];
@@ -76,6 +102,7 @@ namespace UnityEditorInternal
 				this.m_ColumnsToShow = null;
 				this.m_SelectedSearchIndex = -1;
 			}
+
 			public void Filter(ProfilerProperty property, ProfilerColumn[] columns, string searchString, int frameIndex, ProfilerColumn sortType)
 			{
 				if (searchString == this.m_LastSearchString && frameIndex == this.m_LastFrameIndex && sortType == this.m_LastSortType)
@@ -87,6 +114,7 @@ namespace UnityEditorInternal
 				this.m_LastSortType = sortType;
 				this.IterateProfilingData(property, columns, searchString);
 			}
+
 			private void IterateProfilingData(ProfilerProperty property, ProfilerColumn[] columns, string searchString)
 			{
 				this.m_NumResultsUsed = 0;
@@ -122,6 +150,7 @@ namespace UnityEditorInternal
 				}
 				this.m_NumResultsUsed = num;
 			}
+
 			public void Draw(ProfilerHierarchyGUI gui, int controlID)
 			{
 				this.HandleCommandEvents(gui);
@@ -180,6 +209,7 @@ namespace UnityEditorInternal
 					gui.DrawTextColumn(ref position, ProfilerHierarchyGUI.styles.notShowingAllResults.text, 0, 4f, false);
 				}
 			}
+
 			private static void GetFirstAndLastRowVisible(int numRows, float rowHeight, float scrollBarY, float scrollAreaHeight, out int firstRowVisible, out int lastRowVisible)
 			{
 				firstRowVisible = (int)Mathf.Floor(scrollBarY / rowHeight);
@@ -187,6 +217,7 @@ namespace UnityEditorInternal
 				firstRowVisible = Mathf.Max(firstRowVisible, 0);
 				lastRowVisible = Mathf.Min(lastRowVisible, numRows - 1);
 			}
+
 			public void MoveSelection(int steps, ProfilerHierarchyGUI gui)
 			{
 				int num = Mathf.Clamp(this.m_SelectedSearchIndex + steps, 0, this.m_NumResultsUsed - 1);
@@ -196,6 +227,7 @@ namespace UnityEditorInternal
 					gui.m_Window.SetSelectedPropertyPath(this.m_SearchResults[num].propertyPath);
 				}
 			}
+
 			private void HandleCommandEvents(ProfilerHierarchyGUI gui)
 			{
 				Event current = Event.current;
@@ -214,37 +246,73 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		private const float kRowHeight = 16f;
+
 		private const float kFoldoutSize = 14f;
+
 		private const float kIndent = 16f;
+
 		private const float kSmallMargin = 4f;
+
 		private const float kBaseIndent = 4f;
+
+		private const float kInstrumentationButtonWidth = 30f;
+
+		private const float kInstrumentationButtonOffset = 5f;
+
 		private const int kFirst = -999999;
+
 		private const int kLast = 999999;
+
 		private const float kScrollbarWidth = 16f;
+
 		private static int hierarchyViewHash = "HierarchyView".GetHashCode();
+
 		protected static ProfilerHierarchyGUI.Styles ms_Styles;
+
 		private IProfilerWindowController m_Window;
+
 		private SplitterState m_Splitter;
+
 		private ProfilerColumn[] m_ColumnsToShow;
+
 		private string[] m_ColumnNames;
+
 		private bool[] m_VisibleColumns;
+
 		private float[] m_SplitterRelativeSizes;
+
 		private int[] m_SplitterMinWidths;
+
 		private string m_ColumnSettingsName;
+
 		private Vector2 m_TextScroll = Vector2.zero;
+
 		private GUIContent[] m_HeaderContent;
+
 		private GUIContent m_SearchHeader;
+
 		private SerializedStringTable m_ExpandedHash = new SerializedStringTable();
+
 		private bool m_ExpandAll;
+
 		private int m_ScrollViewHeight;
+
 		private int m_DoScroll;
+
 		private int m_SelectedIndex = -1;
+
 		private bool m_DetailPane;
+
 		private ProfilerHierarchyGUI.SearchResults m_SearchResults;
+
 		private bool m_SetKeyboardFocus;
+
 		private ProfilerColumn m_SortType = ProfilerColumn.TotalTime;
+
 		private string m_DetailViewSelectedProperty = string.Empty;
+
 		protected static ProfilerHierarchyGUI.Styles styles
 		{
 			get
@@ -257,6 +325,7 @@ namespace UnityEditorInternal
 				return arg_17_0;
 			}
 		}
+
 		public int selectedIndex
 		{
 			get
@@ -279,6 +348,7 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		public ProfilerColumn sortType
 		{
 			get
@@ -290,6 +360,7 @@ namespace UnityEditorInternal
 				this.m_SortType = value;
 			}
 		}
+
 		public ProfilerHierarchyGUI(IProfilerWindowController window, string columnSettingsName, ProfilerColumn[] columnsToShow, string[] columnNames, bool detailPane, ProfilerColumn sort)
 		{
 			this.m_Window = window;
@@ -302,7 +373,7 @@ namespace UnityEditorInternal
 			this.m_Splitter = null;
 			for (int i = 0; i < this.m_HeaderContent.Length; i++)
 			{
-				this.m_HeaderContent[i] = EditorGUIUtility.TextContent(this.m_ColumnNames[i]);
+				this.m_HeaderContent[i] = ((!this.m_ColumnNames[i].StartsWith("|")) ? new GUIContent(this.m_ColumnNames[i]) : EditorGUIUtility.IconContent("ProfilerColumn." + columnsToShow[i].ToString(), this.m_ColumnNames[i]));
 			}
 			if (columnsToShow.Length != columnNames.Length)
 			{
@@ -318,14 +389,17 @@ namespace UnityEditorInternal
 			this.m_SearchResults.Init(100);
 			this.m_Window.Repaint();
 		}
+
 		public void SetKeyboardFocus()
 		{
 			this.m_SetKeyboardFocus = true;
 		}
+
 		public void SelectFirstRow()
 		{
 			this.MoveSelection(-999999);
 		}
+
 		private void SetupSplitter()
 		{
 			if (this.m_Splitter != null && this.m_SplitterMinWidths != null)
@@ -360,6 +434,7 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		public ProfilerProperty GetDetailedProperty(ProfilerProperty property)
 		{
 			bool enterChildren = true;
@@ -380,10 +455,12 @@ namespace UnityEditorInternal
 			}
 			return null;
 		}
+
 		private void DoScroll()
 		{
 			this.m_DoScroll = 2;
 		}
+
 		public void FrameSelection()
 		{
 			if (string.IsNullOrEmpty(ProfilerDriver.selectedPropertyPath))
@@ -404,6 +481,7 @@ namespace UnityEditorInternal
 			}
 			this.DoScroll();
 		}
+
 		private void MoveSelection(int steps)
 		{
 			if (this.IsSearchActive())
@@ -456,6 +534,7 @@ namespace UnityEditorInternal
 			}
 			profilerProperty.Cleanup();
 		}
+
 		private void SetExpanded(string expandedName, bool expanded)
 		{
 			if (expanded != this.IsExpanded(expandedName))
@@ -470,6 +549,7 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		private void HandleKeyboard(int id)
 		{
 			Event current = Event.current;
@@ -537,10 +617,12 @@ namespace UnityEditorInternal
 			this.DoScroll();
 			current.Use();
 		}
+
 		private bool IsSearchActive()
 		{
 			return this.m_Window.IsSearching();
 		}
+
 		private void DrawColumnsHeader(string searchString)
 		{
 			bool flag = false;
@@ -565,14 +647,17 @@ namespace UnityEditorInternal
 			}
 			GUILayout.Space(1f);
 		}
+
 		private bool IsExpanded(string expanded)
 		{
 			return this.m_ExpandAll || this.m_ExpandedHash.Contains(expanded);
 		}
+
 		private void SetExpanded(ProfilerProperty property, bool expanded)
 		{
 			this.SetExpanded(property.propertyPath, expanded);
 		}
+
 		private int DrawProfilingData(ProfilerProperty property, string searchString, int id)
 		{
 			int num;
@@ -592,6 +677,7 @@ namespace UnityEditorInternal
 			}
 			return num;
 		}
+
 		private int DrawSearchResult(ProfilerProperty property, string searchString, int id)
 		{
 			if (!this.AllowSearching())
@@ -603,6 +689,7 @@ namespace UnityEditorInternal
 			this.m_SearchResults.Draw(this, id);
 			return this.m_SearchResults.numRows;
 		}
+
 		private int DrawTreeView(ProfilerProperty property, int id)
 		{
 			this.m_SelectedIndex = -1;
@@ -631,20 +718,24 @@ namespace UnityEditorInternal
 			}
 			return num;
 		}
+
 		private void DoSearchingDisabledInfoGUI()
 		{
-			EditorGUI.BeginDisabledGroup(true);
-			TextAnchor alignment = EditorStyles.label.alignment;
-			EditorStyles.label.alignment = TextAnchor.MiddleCenter;
-			GUI.Label(new Rect(0f, 10f, GUIClip.visibleRect.width, 30f), ProfilerHierarchyGUI.styles.disabledSearchText, EditorStyles.label);
-			EditorStyles.label.alignment = alignment;
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(true))
+			{
+				TextAnchor alignment = EditorStyles.label.alignment;
+				EditorStyles.label.alignment = TextAnchor.MiddleCenter;
+				GUI.Label(new Rect(0f, 10f, GUIClip.visibleRect.width, 30f), ProfilerHierarchyGUI.styles.disabledSearchText, EditorStyles.label);
+				EditorStyles.label.alignment = alignment;
+			}
 		}
+
 		private bool AllowSearching()
 		{
 			bool flag = Profiler.enabled && (ProfilerDriver.profileEditor || EditorApplication.isPlaying);
 			return !flag || !ProfilerDriver.deepProfiling;
 		}
+
 		private void UnselectIfClickedOnEmptyArea(int rowCount)
 		{
 			Rect rect = GUILayoutUtility.GetRect(GUIClip.visibleRect.width, 16f * (float)rowCount, new GUILayoutOption[]
@@ -665,6 +756,7 @@ namespace UnityEditorInternal
 			}
 			Event.current.Use();
 		}
+
 		private void HandleHeaderMouse(Rect columnHeaderRect)
 		{
 			Event current = Event.current;
@@ -677,6 +769,7 @@ namespace UnityEditorInternal
 			EditorUtility.DisplayCustomMenu(position, this.m_ColumnNames, this.GetVisibleDropDownIndexList(), new EditorUtility.SelectMenuItemFunction(this.ColumnContextClick), null);
 			current.Use();
 		}
+
 		private void SetColumnVisible(int index, bool enabled)
 		{
 			this.SetupSplitter();
@@ -710,6 +803,7 @@ namespace UnityEditorInternal
 			this.m_Splitter = new SplitterState(this.m_Splitter.relativeSizes, this.m_Splitter.minSizes, null);
 			this.SaveColumns();
 		}
+
 		private int[] GetVisibleDropDownIndexList()
 		{
 			List<int> list = new List<int>();
@@ -722,6 +816,7 @@ namespace UnityEditorInternal
 			}
 			return list.ToArray();
 		}
+
 		private void SaveColumns()
 		{
 			string text = string.Empty;
@@ -731,14 +826,17 @@ namespace UnityEditorInternal
 			}
 			EditorPrefs.SetString(this.m_ColumnSettingsName, text);
 		}
+
 		private bool ColIsVisible(int index)
 		{
 			return index >= 0 && index <= this.m_VisibleColumns.Length && this.m_VisibleColumns[index];
 		}
+
 		private void ColumnContextClick(object userData, string[] options, int selected)
 		{
 			this.SetColumnVisible(selected, !this.ColIsVisible(selected));
 		}
+
 		protected void DrawTextColumn(ref Rect currentRect, string text, int index, float margin, bool selected)
 		{
 			if (index != 0)
@@ -750,6 +848,7 @@ namespace UnityEditorInternal
 			ProfilerHierarchyGUI.styles.numberLabel.Draw(currentRect, text, false, false, false, selected);
 			currentRect.x -= margin;
 		}
+
 		private static string DetailViewSelectedPropertyPath(ProfilerProperty property)
 		{
 			if (property == null || property.instanceIDs == null || property.instanceIDs.Length == 0 || property.instanceIDs[0] == 0)
@@ -758,18 +857,22 @@ namespace UnityEditorInternal
 			}
 			return ProfilerHierarchyGUI.DetailViewSelectedPropertyPath(property, property.instanceIDs[0]);
 		}
+
 		private static string DetailViewSelectedPropertyPath(ProfilerProperty property, int instanceId)
 		{
 			return property.propertyPath + "/" + instanceId;
 		}
+
 		private Rect GetRowRect(int rowIndex)
 		{
 			return new Rect(1f, 16f * (float)rowIndex, GUIClip.visibleRect.width, 16f);
 		}
+
 		private GUIStyle GetRowBackgroundStyle(int rowIndex)
 		{
 			return (rowIndex % 2 != 0) ? ProfilerHierarchyGUI.styles.entryOdd : ProfilerHierarchyGUI.styles.entryEven;
 		}
+
 		private void RowMouseDown(string propertyPath)
 		{
 			if (propertyPath == ProfilerDriver.selectedPropertyPath)
@@ -781,6 +884,7 @@ namespace UnityEditorInternal
 				this.m_Window.SetSelectedPropertyPath(propertyPath);
 			}
 		}
+
 		private bool DrawProfileDataItem(ProfilerProperty property, int rowCount, bool selected, int id)
 		{
 			bool flag = false;
@@ -806,18 +910,32 @@ namespace UnityEditorInternal
 				}
 				num += 16f;
 			}
+			string column = property.GetColumn(this.m_ColumnsToShow[0]);
 			if (current.type == EventType.Repaint)
 			{
-				this.DrawTextColumn(ref position, property.GetColumn(this.m_ColumnsToShow[0]), 0, (this.m_ColumnsToShow[0] != ProfilerColumn.FunctionName) ? 4f : num, selected);
+				this.DrawTextColumn(ref position, column, 0, (this.m_ColumnsToShow[0] != ProfilerColumn.FunctionName) ? 4f : num, selected);
+			}
+			if (ProfilerInstrumentationPopup.InstrumentationEnabled && ProfilerInstrumentationPopup.FunctionHasInstrumentationPopup(column))
+			{
+				float num2 = position.x + num + 5f + ProfilerHierarchyGUI.styles.numberLabel.CalcSize(new GUIContent(column)).x;
+				num2 = Mathf.Clamp(num2, 0f, (float)this.m_Splitter.realSizes[0] - 30f + 2f);
+				Rect rect = new Rect(num2, position.y, 30f, 16f);
+				if (GUI.Button(rect, ProfilerHierarchyGUI.styles.instrumentationIcon, ProfilerHierarchyGUI.styles.miniPullDown))
+				{
+					ProfilerInstrumentationPopup.Show(rect, column);
+				}
+			}
+			if (current.type == EventType.Repaint)
+			{
 				ProfilerHierarchyGUI.styles.numberLabel.alignment = TextAnchor.MiddleRight;
-				int num2 = 1;
+				int num3 = 1;
 				for (int i = 1; i < this.m_VisibleColumns.Length; i++)
 				{
 					if (this.ColIsVisible(i))
 					{
-						position.x += (float)this.m_Splitter.realSizes[num2 - 1];
-						position.width = (float)this.m_Splitter.realSizes[num2] - 4f;
-						num2++;
+						position.x += (float)this.m_Splitter.realSizes[num3 - 1];
+						position.width = (float)this.m_Splitter.realSizes[num3] - 4f;
+						num3++;
 						ProfilerHierarchyGUI.styles.numberLabel.Draw(position, property.GetColumn(this.m_ColumnsToShow[i]), false, false, false, selected);
 					}
 				}
@@ -851,13 +969,10 @@ namespace UnityEditorInternal
 								this.m_DetailViewSelectedProperty = string.Empty;
 							}
 						}
-						else
+						else if (current.clickCount == 2)
 						{
-							if (current.clickCount == 2)
-							{
-								ProfilerHierarchyGUI.SelectObjectsInHierarchyView(property);
-								this.m_DetailViewSelectedProperty = ProfilerHierarchyGUI.DetailViewSelectedPropertyPath(property);
-							}
+							ProfilerHierarchyGUI.SelectObjectsInHierarchyView(property);
+							this.m_DetailViewSelectedProperty = ProfilerHierarchyGUI.DetailViewSelectedPropertyPath(property);
 						}
 					}
 					else
@@ -866,16 +981,13 @@ namespace UnityEditorInternal
 					}
 					this.DoScroll();
 				}
+				else if (!this.m_DetailPane)
+				{
+					this.m_Window.ClearSelectedPropertyPath();
+				}
 				else
 				{
-					if (!this.m_DetailPane)
-					{
-						this.m_Window.ClearSelectedPropertyPath();
-					}
-					else
-					{
-						this.m_DetailViewSelectedProperty = string.Empty;
-					}
+					this.m_DetailViewSelectedProperty = string.Empty;
 				}
 				GUIUtility.keyboardControl = id;
 				current.Use();
@@ -886,6 +998,7 @@ namespace UnityEditorInternal
 			}
 			return flag;
 		}
+
 		private static void SelectObjectsInHierarchyView(ProfilerProperty property)
 		{
 			int[] instanceIDs = property.instanceIDs;
@@ -900,12 +1013,9 @@ namespace UnityEditorInternal
 				{
 					list.Add(component.gameObject);
 				}
-				else
+				else if (@object != null)
 				{
-					if (@object != null)
-					{
-						list.Add(@object);
-					}
+					list.Add(@object);
 				}
 			}
 			if (list.Count != 0)
@@ -913,6 +1023,7 @@ namespace UnityEditorInternal
 				Selection.objects = list.ToArray();
 			}
 		}
+
 		private void DrawTitle(GUIContent name, int index)
 		{
 			if (!this.ColIsVisible(index))
@@ -930,6 +1041,7 @@ namespace UnityEditorInternal
 				this.sortType = profilerColumn;
 			}
 		}
+
 		private void DoScrolling()
 		{
 			if (this.m_DoScroll > 0)
@@ -947,6 +1059,7 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		public void DoGUI(ProfilerProperty property, string searchString, bool expandAll)
 		{
 			this.m_ExpandAll = expandAll;

@@ -5,16 +5,19 @@ using System.Linq;
 using UnityEditor.Audio;
 using UnityEngine;
 using UnityEngine.Audio;
+
 namespace UnityEditor
 {
 	internal class AudioMixersDataSource : TreeViewDataSource
 	{
 		private Func<List<AudioMixerController>> m_GetAllControllersCallback;
+
 		public AudioMixersDataSource(TreeView treeView, Func<List<AudioMixerController>> getAllControllersCallback) : base(treeView)
 		{
-			base.showRootNode = false;
+			base.showRootItem = false;
 			this.m_GetAllControllersCallback = getAllControllersCallback;
 		}
+
 		public override void FetchData()
 		{
 			int depth = -1;
@@ -25,9 +28,8 @@ namespace UnityEditor
 			this.m_NeedRefreshVisibleFolders = true;
 			if (list.Count > 0)
 			{
-				List<AudioMixerItem> list2 = (
-					from mixer in list
-					select new AudioMixerItem(mixer.GetInstanceID(), 0, this.m_RootItem, mixer.name, mixer, AudioMixersDataSource.GetInfoText(mixer))).ToList<AudioMixerItem>();
+				List<AudioMixerItem> list2 = (from mixer in list
+				select new AudioMixerItem(mixer.GetInstanceID(), 0, this.m_RootItem, mixer.name, mixer, AudioMixersDataSource.GetInfoText(mixer))).ToList<AudioMixerItem>();
 				foreach (AudioMixerItem current in list2)
 				{
 					this.SetChildParentOfMixerItem(current, list2);
@@ -40,6 +42,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static string GetInfoText(AudioMixerController controller)
 		{
 			string result;
@@ -53,6 +56,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private void SetChildParentOfMixerItem(AudioMixerItem item, List<AudioMixerItem> items)
 		{
 			if (item.mixer.outputAudioMixerGroup != null)
@@ -69,6 +73,7 @@ namespace UnityEditor
 				this.m_RootItem.AddChild(item);
 			}
 		}
+
 		private void SetItemDepthRecursive(TreeViewItem item, int depth)
 		{
 			item.depth = depth;
@@ -81,6 +86,7 @@ namespace UnityEditor
 				this.SetItemDepthRecursive(current, depth + 1);
 			}
 		}
+
 		private void SortRecursive(TreeViewItem item)
 		{
 			if (!item.hasChildren)
@@ -93,10 +99,12 @@ namespace UnityEditor
 				this.SortRecursive(current);
 			}
 		}
+
 		public override bool IsRenamingItemAllowed(TreeViewItem item)
 		{
 			return true;
 		}
+
 		public int GetInsertAfterItemIDForNewItem(string newName, TreeViewItem parentItem)
 		{
 			int result = parentItem.id;
@@ -116,6 +124,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public override void InsertFakeItem(int id, int parentID, string name, Texture2D icon)
 		{
 			TreeViewItem treeViewItem = this.FindItem(id);
@@ -133,12 +142,12 @@ namespace UnityEditor
 			if (this.FindItem(parentID) != null)
 			{
 				this.SetExpanded(parentID, true);
-				List<TreeViewItem> visibleRows = this.GetVisibleRows();
-				int indexOfID = TreeView.GetIndexOfID(visibleRows, parentID);
+				List<TreeViewItem> rows = this.GetRows();
+				int indexOfID = TreeView.GetIndexOfID(rows, parentID);
 				TreeViewItem treeViewItem2;
 				if (indexOfID >= 0)
 				{
-					treeViewItem2 = visibleRows[indexOfID];
+					treeViewItem2 = rows[indexOfID];
 				}
 				else
 				{
@@ -148,35 +157,32 @@ namespace UnityEditor
 				this.m_FakeItem = new TreeViewItem(id, num, treeViewItem2, name);
 				this.m_FakeItem.icon = icon;
 				int insertAfterItemIDForNewItem = this.GetInsertAfterItemIDForNewItem(name, treeViewItem2);
-				int num2 = TreeView.GetIndexOfID(visibleRows, insertAfterItemIDForNewItem);
+				int num2 = TreeView.GetIndexOfID(rows, insertAfterItemIDForNewItem);
 				if (num2 >= 0)
 				{
-					while (++num2 < visibleRows.Count)
+					while (++num2 < rows.Count)
 					{
-						if (visibleRows[num2].depth <= num)
+						if (rows[num2].depth <= num)
 						{
 							break;
 						}
 					}
-					if (num2 < visibleRows.Count)
+					if (num2 < rows.Count)
 					{
-						visibleRows.Insert(num2, this.m_FakeItem);
+						rows.Insert(num2, this.m_FakeItem);
 					}
 					else
 					{
-						visibleRows.Add(this.m_FakeItem);
+						rows.Add(this.m_FakeItem);
 					}
+				}
+				else if (rows.Count > 0)
+				{
+					rows.Insert(0, this.m_FakeItem);
 				}
 				else
 				{
-					if (visibleRows.Count > 0)
-					{
-						visibleRows.Insert(0, this.m_FakeItem);
-					}
-					else
-					{
-						visibleRows.Add(this.m_FakeItem);
-					}
+					rows.Add(this.m_FakeItem);
 				}
 				this.m_NeedRefreshVisibleFolders = false;
 				this.m_TreeView.Frame(this.m_FakeItem.id, true, false);

@@ -2,19 +2,29 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class Highlighter
 	{
 		private const float kPulseSpeed = 0.45f;
+
 		private const float kPopupDuration = 0.33f;
+
 		private const int kExpansionMovementSize = 5;
+
 		private static GUIView s_View;
+
 		private static HighlightSearchMode s_SearchMode;
+
 		private static float s_HighlightElapsedTime;
+
 		private static float s_LastTime;
+
 		private static Rect s_RepaintRegion;
+
 		private static GUIStyle s_HighlightStyle;
+
 		internal static extern HighlightSearchMode searchMode
 		{
 			[WrapperlessIcall]
@@ -24,12 +34,14 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern bool searching
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		private static GUIStyle highlightStyle
 		{
 			get
@@ -41,11 +53,13 @@ namespace UnityEditor
 				return Highlighter.s_HighlightStyle;
 			}
 		}
+
 		public static bool active
 		{
 			get;
 			private set;
 		}
+
 		public static bool activeVisible
 		{
 			get
@@ -57,6 +71,7 @@ namespace UnityEditor
 				Highlighter.internal_set_activeVisible(value);
 			}
 		}
+
 		public static string activeText
 		{
 			get
@@ -68,6 +83,7 @@ namespace UnityEditor
 				Highlighter.internal_set_activeText(value);
 			}
 		}
+
 		public static Rect activeRect
 		{
 			get
@@ -79,35 +95,52 @@ namespace UnityEditor
 				Highlighter.internal_set_activeRect(value);
 			}
 		}
+
 		internal static void Handle(Rect position, string text)
 		{
 			Highlighter.INTERNAL_CALL_Handle(ref position, text);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Handle(ref Rect position, string text);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string internal_get_activeText();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void internal_set_activeText(string value);
+
+		internal static Rect internal_get_activeRect()
+		{
+			Rect result;
+			Highlighter.INTERNAL_CALL_internal_get_activeRect(out result);
+			return result;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Rect internal_get_activeRect();
+		private static extern void INTERNAL_CALL_internal_get_activeRect(out Rect value);
+
 		internal static void internal_set_activeRect(Rect value)
 		{
 			Highlighter.INTERNAL_CALL_internal_set_activeRect(ref value);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_internal_set_activeRect(ref Rect value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool internal_get_activeVisible();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void internal_set_activeVisible(bool value);
+
 		public static void Stop()
 		{
 			Highlighter.active = false;
@@ -117,10 +150,12 @@ namespace UnityEditor
 			Highlighter.s_LastTime = 0f;
 			Highlighter.s_HighlightElapsedTime = 0f;
 		}
+
 		public static bool Highlight(string windowTitle, string text)
 		{
 			return Highlighter.Highlight(windowTitle, text, HighlightSearchMode.Auto);
 		}
+
 		public static bool Highlight(string windowTitle, string text, HighlightSearchMode mode)
 		{
 			Highlighter.Stop();
@@ -154,6 +189,7 @@ namespace UnityEditor
 			InternalEditorUtility.RepaintAllViews();
 			return flag;
 		}
+
 		public static void HighlightIdentifier(Rect position, string identifier)
 		{
 			if (Highlighter.searchMode == HighlightSearchMode.Identifier || Highlighter.searchMode == HighlightSearchMode.Auto)
@@ -161,6 +197,7 @@ namespace UnityEditor
 				Highlighter.Handle(position, identifier);
 			}
 		}
+
 		private static void Update()
 		{
 			Rect activeRect = Highlighter.activeRect;
@@ -205,6 +242,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static bool SetWindow(string windowTitle)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(GUIView));
@@ -215,24 +253,22 @@ namespace UnityEditor
 				GUIView gUIView = (GUIView)array2[i];
 				if (gUIView is HostView)
 				{
-					if (EditorGUIUtility.TextContent((gUIView as HostView).actualView.title).text == windowTitle)
+					if ((gUIView as HostView).actualView.titleContent.text == windowTitle)
 					{
 						x = gUIView;
 						break;
 					}
 				}
-				else
+				else if (gUIView.window && gUIView.GetType().Name == windowTitle)
 				{
-					if (gUIView.window && gUIView.GetType().Name == windowTitle)
-					{
-						x = gUIView;
-						break;
-					}
+					x = gUIView;
+					break;
 				}
 			}
 			Highlighter.s_View = x;
 			return x != null;
 		}
+
 		private static bool Search()
 		{
 			Highlighter.searchMode = Highlighter.s_SearchMode;
@@ -245,6 +281,7 @@ namespace UnityEditor
 			Highlighter.Stop();
 			return false;
 		}
+
 		internal static void ControlHighlightGUI(GUIView self)
 		{
 			if (Highlighter.s_View == null || self.window != Highlighter.s_View.window)

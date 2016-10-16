@@ -1,14 +1,21 @@
 using System;
+
 namespace UnityEngine.SocialPlatforms.Impl
 {
 	public class Leaderboard : ILeaderboard
 	{
 		private bool m_Loading;
+
 		private IScore m_LocalUserScore;
+
 		private uint m_MaxRange;
+
 		private IScore[] m_Scores;
+
 		private string m_Title;
+
 		private string[] m_UserIDs;
+
 		public bool loading
 		{
 			get
@@ -16,26 +23,31 @@ namespace UnityEngine.SocialPlatforms.Impl
 				return ActivePlatform.Instance.GetLoading(this);
 			}
 		}
+
 		public string id
 		{
 			get;
 			set;
 		}
+
 		public UserScope userScope
 		{
 			get;
 			set;
 		}
+
 		public Range range
 		{
 			get;
 			set;
 		}
+
 		public TimeScope timeScope
 		{
 			get;
 			set;
 		}
+
 		public IScore localUserScore
 		{
 			get
@@ -43,6 +55,7 @@ namespace UnityEngine.SocialPlatforms.Impl
 				return this.m_LocalUserScore;
 			}
 		}
+
 		public uint maxRange
 		{
 			get
@@ -50,6 +63,7 @@ namespace UnityEngine.SocialPlatforms.Impl
 				return this.m_MaxRange;
 			}
 		}
+
 		public IScore[] scores
 		{
 			get
@@ -57,6 +71,7 @@ namespace UnityEngine.SocialPlatforms.Impl
 				return this.m_Scores;
 			}
 		}
+
 		public string title
 		{
 			get
@@ -64,6 +79,7 @@ namespace UnityEngine.SocialPlatforms.Impl
 				return this.m_Title;
 			}
 		}
+
 		public Leaderboard()
 		{
 			this.id = "Invalid";
@@ -77,10 +93,12 @@ namespace UnityEngine.SocialPlatforms.Impl
 			this.m_Title = "Invalid";
 			this.m_UserIDs = new string[0];
 		}
+
 		public void SetUserFilter(string[] userIDs)
 		{
 			this.m_UserIDs = userIDs;
 		}
+
 		public override string ToString()
 		{
 			return string.Concat(new object[]
@@ -107,26 +125,32 @@ namespace UnityEngine.SocialPlatforms.Impl
 				this.m_UserIDs.Length
 			});
 		}
+
 		public void LoadScores(Action<bool> callback)
 		{
 			ActivePlatform.Instance.LoadScores(this, callback);
 		}
+
 		public void SetLocalUserScore(IScore score)
 		{
 			this.m_LocalUserScore = score;
 		}
+
 		public void SetMaxRange(uint maxRange)
 		{
 			this.m_MaxRange = maxRange;
 		}
+
 		public void SetScores(IScore[] scores)
 		{
 			this.m_Scores = scores;
 		}
+
 		public void SetTitle(string title)
 		{
 			this.m_Title = title;
 		}
+
 		public string[] GetUserFilter()
 		{
 			return this.m_UserIDs;

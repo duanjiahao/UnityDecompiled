@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(NavMeshAgent))]
@@ -8,24 +9,42 @@ namespace UnityEditor
 		private class Styles
 		{
 			public readonly GUIContent m_AgentSizeHeader = new GUIContent("Agent Size");
+
 			public readonly GUIContent m_AgentSteeringHeader = new GUIContent("Steering");
+
 			public readonly GUIContent m_AgentAvoidanceHeader = new GUIContent("Obstacle Avoidance");
+
 			public readonly GUIContent m_AgentPathFindingHeader = new GUIContent("Path Finding");
 		}
+
 		private SerializedProperty m_WalkableMask;
+
 		private SerializedProperty m_Radius;
+
 		private SerializedProperty m_Speed;
+
 		private SerializedProperty m_Acceleration;
+
 		private SerializedProperty m_AngularSpeed;
+
 		private SerializedProperty m_StoppingDistance;
+
 		private SerializedProperty m_AutoTraverseOffMeshLink;
+
 		private SerializedProperty m_AutoBraking;
+
 		private SerializedProperty m_AutoRepath;
+
 		private SerializedProperty m_Height;
+
 		private SerializedProperty m_BaseOffset;
+
 		private SerializedProperty m_ObstacleAvoidanceType;
+
 		private SerializedProperty m_AvoidancePriority;
+
 		private static NavMeshAgentInspector.Styles s_Styles;
+
 		private void OnEnable()
 		{
 			this.m_WalkableMask = base.serializedObject.FindProperty("m_WalkableMask");
@@ -42,6 +61,7 @@ namespace UnityEditor
 			this.m_ObstacleAvoidanceType = base.serializedObject.FindProperty("m_ObstacleAvoidanceType");
 			this.m_AvoidancePriority = base.serializedObject.FindProperty("avoidancePriority");
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (NavMeshAgentInspector.s_Styles == null)
@@ -69,12 +89,12 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_AutoTraverseOffMeshLink, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_AutoRepath, new GUILayoutOption[0]);
 			string[] navMeshAreaNames = GameObjectUtility.GetNavMeshAreaNames();
-			int intValue = this.m_WalkableMask.intValue;
+			long longValue = this.m_WalkableMask.longValue;
 			int num = 0;
 			for (int i = 0; i < navMeshAreaNames.Length; i++)
 			{
 				int navMeshAreaFromName = GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[i]);
-				if ((1 << navMeshAreaFromName & intValue) > 0)
+				if ((1L << (navMeshAreaFromName & 31) & longValue) != 0L)
 				{
 					num |= 1 << i;
 				}
@@ -88,19 +108,19 @@ namespace UnityEditor
 			{
 				if (num2 == -1)
 				{
-					this.m_WalkableMask.intValue = -1;
+					this.m_WalkableMask.longValue = (long)((ulong)-1);
 				}
 				else
 				{
-					int num3 = 0;
+					uint num3 = 0u;
 					for (int j = 0; j < navMeshAreaNames.Length; j++)
 					{
-						if ((num2 >> j & 1) > 0)
+						if ((num2 >> j & 1) != 0)
 						{
-							num3 |= 1 << GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[j]);
+							num3 |= 1u << GameObjectUtility.GetNavMeshAreaFromName(navMeshAreaNames[j]);
 						}
 					}
-					this.m_WalkableMask.intValue = num3;
+					this.m_WalkableMask.longValue = (long)((ulong)num3);
 				}
 			}
 			base.serializedObject.ApplyModifiedProperties();

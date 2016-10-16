@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetStoreInstaBuyWindow : EditorWindow
@@ -15,20 +16,35 @@ namespace UnityEditor
 			Building,
 			Downloading
 		}
+
 		private const int kStandardHeight = 160;
+
 		private const double kBuildPollInterval = 2.0;
+
 		private const int kMaxPolls = 150;
+
 		private static GUIContent s_AssetStoreLogo;
+
 		private string m_Password = string.Empty;
+
 		private AssetStoreAsset m_Asset;
+
 		private string m_Message = string.Empty;
+
 		private AssetStoreInstaBuyWindow.PurchaseStatus m_Purchasing;
+
 		private double m_NextAllowedBuildRequestTime;
+
 		private int m_BuildAttempts;
+
 		private string m_PurchaseMessage;
+
 		private string m_PaymentMethodCard;
+
 		private string m_PaymentMethodExpire;
+
 		private string m_PriceText;
+
 		public static AssetStoreInstaBuyWindow ShowAssetStoreInstaBuyWindow(AssetStoreAsset asset, string purchaseMessage, string paymentMethodCard, string paymentMethodExpire, string priceText)
 		{
 			AssetStoreInstaBuyWindow windowWithRect = EditorWindow.GetWindowWithRect<AssetStoreInstaBuyWindow>(new Rect(100f, 100f, 400f, 160f), true, "Buy package from Asset Store");
@@ -52,6 +68,7 @@ namespace UnityEditor
 			Analytics.Track(string.Format("/AssetStore/ShowInstaBuy/{0}/{1}", windowWithRect.m_Asset.packageID, windowWithRect.m_Asset.id));
 			return windowWithRect;
 		}
+
 		public static void ShowAssetStoreInstaBuyWindowBuilding(AssetStoreAsset asset)
 		{
 			AssetStoreInstaBuyWindow assetStoreInstaBuyWindow = AssetStoreInstaBuyWindow.ShowAssetStoreInstaBuyWindow(asset, string.Empty, string.Empty, string.Empty, string.Empty);
@@ -65,6 +82,7 @@ namespace UnityEditor
 			asset.previewInfo.buildProgress = 0f;
 			Analytics.Track(string.Format("/AssetStore/ShowInstaFree/{0}/{1}", assetStoreInstaBuyWindow.m_Asset.packageID, assetStoreInstaBuyWindow.m_Asset.id));
 		}
+
 		private static void LoadLogos()
 		{
 			if (AssetStoreInstaBuyWindow.s_AssetStoreLogo != null)
@@ -73,6 +91,7 @@ namespace UnityEditor
 			}
 			AssetStoreInstaBuyWindow.s_AssetStoreLogo = EditorGUIUtility.IconContent("WelcomeScreen.AssetStoreLogo");
 		}
+
 		public void OnInspectorUpdate()
 		{
 			if (this.m_Purchasing == AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild && this.m_NextAllowedBuildRequestTime <= EditorApplication.timeSinceStartup)
@@ -81,10 +100,12 @@ namespace UnityEditor
 				this.BuildPackage();
 			}
 		}
+
 		private void OnEnable()
 		{
 			AssetStoreUtils.RegisterDownloadDelegate(this);
 		}
+
 		public void OnDisable()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = (this.m_Asset != null) ? this.m_Asset.previewInfo : null;
@@ -96,6 +117,7 @@ namespace UnityEditor
 			AssetStoreUtils.UnRegisterDownloadDelegate(this);
 			this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.Init;
 		}
+
 		public void OnDownloadProgress(string id, string message, int bytes, int total)
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = (this.m_Asset != null) ? this.m_Asset.previewInfo : null;
@@ -113,6 +135,7 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		public void OnGUI()
 		{
 			AssetStoreInstaBuyWindow.LoadLogos();
@@ -148,6 +171,7 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 		}
+
 		private void PasswordGUI()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = this.m_Asset.previewInfo;
@@ -214,6 +238,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5f);
 		}
+
 		private void PurchaseSuccessGUI()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = this.m_Asset.previewInfo;
@@ -262,6 +287,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5f);
 		}
+
 		private void DownloadingGUI()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = this.m_Asset.previewInfo;
@@ -297,6 +323,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5f);
 		}
+
 		private void PurchaseDeclinedGUI()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = this.m_Asset.previewInfo;
@@ -345,6 +372,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5f);
 		}
+
 		private void CompletePurchase()
 		{
 			this.m_Message = string.Empty;
@@ -407,6 +435,7 @@ namespace UnityEditor
 			});
 			Analytics.Track(string.Format("/AssetStore/InstaBuy/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 		}
+
 		private void BuildPackage()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = this.m_Asset.previewInfo;
@@ -453,6 +482,7 @@ namespace UnityEditor
 				base.Repaint();
 			});
 		}
+
 		private void DownloadPackage()
 		{
 			AssetStoreAsset.PreviewInfo item = this.m_Asset.previewInfo;

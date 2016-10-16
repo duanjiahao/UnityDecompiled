@@ -5,38 +5,80 @@ using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngineInternal;
+
 namespace UnityEditor
 {
 	internal class LightingWindowObjectTab
 	{
 		private class Styles
 		{
-			public GUIContent PreserveUVs = EditorGUIUtility.TextContent("LightmapEditor.PreserveUVs");
-			public GUIContent ImportantGI = EditorGUIUtility.TextContent("LightmapEditor.ImportantGI");
-			public GUIContent AutoUVMaxDistance = EditorGUIUtility.TextContent("LightmapEditor.AutoUVMaxDistance");
-			public GUIContent AutoUVMaxAngle = EditorGUIUtility.TextContent("LightmapEditor.AutoUVMaxAngle");
-			public GUIContent LightmapParameters = EditorGUIUtility.TextContent("LightmapEditor.LightmapParameters");
-			public GUIContent AtlasTilingX = EditorGUIUtility.TextContent("LightmapEditor.AtlasTilingX");
-			public GUIContent AtlasTilingY = EditorGUIUtility.TextContent("LightmapEditor.AtlasTilingY");
-			public GUIContent AtlasOffsetX = EditorGUIUtility.TextContent("LightmapEditor.AtlasOffsetX");
-			public GUIContent AtlasOffsetY = EditorGUIUtility.TextContent("LightmapEditor.AtlasOffsetY");
-			public GUIContent ClampedSize = EditorGUIUtility.TextContent("LightmapEditor.ClampedSize");
-			public GUIContent ClampedPackingResolution = EditorGUIUtility.TextContent("LightmapEditor.ClampedPackingResolution");
-			public GUIContent ZeroAreaPackingMesh = EditorGUIUtility.TextContent("LightmapEditor.ZeroAreaPackingMesh");
-			public GUIContent NoNormalsNoLightmapping = EditorGUIUtility.TextContent("LightmapEditor.NoNormalsNoLightmapping");
-			public GUIContent Atlas = EditorGUIUtility.TextContent("LightmapEditor.Atlas");
-			public GUIContent RealtimeLM = EditorGUIUtility.TextContent("LightmapEditor.RealtimeLM");
-			public GUIContent ChunkSize = EditorGUIUtility.TextContent("LightmapEditor.ChunkSize");
-			public GUIContent EmptySelection = EditorGUIUtility.TextContent("LightmapEditor.EmptySelection");
-			public GUIContent ScaleInLightmap = EditorGUIUtility.TextContent("LightmapEditor.ScaleInLightmap");
-			public GUIContent TerrainLightmapSize = EditorGUIUtility.TextContent("LightmapEditor.Terrain.LightmapSize");
-			public GUIContent AtlasIndex = EditorGUIUtility.TextContent("LightmapEditor.AtlasIndex");
-			public GUIContent RealtimeLMResolution = EditorGUIUtility.TextContent("LightmapEditor.RealtimeLMResolution");
-			public GUIContent RealtimeLMInstanceResolution = EditorGUIUtility.TextContent("LightmapEditor.RealtimeLMInstanceResolution");
-			public GUIContent RealtimeLMInputSystemHash = EditorGUIUtility.TextContent("LightmapEditor.RealtimeLMInputSystemHash");
-			public GUIContent RealtimeLMInstanceHash = EditorGUIUtility.TextContent("LightmapEditor.RealtimeLMInstanceHash");
-			public GUIContent RealtimeLMGeometryHash = EditorGUIUtility.TextContent("LightmapEditor.RealtimeLMGeometryHash");
+			public GUIContent PreserveUVs = EditorGUIUtility.TextContent("Preserve UVs|Preserve the incoming lightmap UVs when generating realtime GI UVs. The incoming UVs are packed but charts are not scaled or merged. This is necessary for correct edge stitching of axis aligned chart edges.");
+
+			public GUIContent IgnoreNormalsForChartDetection = EditorGUIUtility.TextContent("Ignore Normals|Do not compare normals when detecting charts for realtime GI. This can be necessary when using hand authored UVs to avoid unnecessary chart splits.");
+
+			public int[] MinimumChartSizeValues = new int[]
+			{
+				2,
+				4
+			};
+
+			public GUIContent[] MinimumChartSizeStrings = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("2 (Minimum)"),
+				EditorGUIUtility.TextContent("4 (Stitchable)")
+			};
+
+			public GUIContent MinimumChartSize = EditorGUIUtility.TextContent("Min Chart Size|Directionality is generated at half resolution so in order to stitch properly at least 4x4 texels are needed in a chart so that a gradient can be generated on all sides of the chart. If stitching is not needed set this value to 2 in order to save texels for better performance at runtime and a faster lighting build.");
+
+			public GUIContent ImportantGI = EditorGUIUtility.TextContent("Important GI|Make all other objects dependent upon this object. Useful for objects that will be strongly emissive to make sure that other objects will be illuminated by it.");
+
+			public GUIContent AutoUVMaxDistance = EditorGUIUtility.TextContent("Auto UV Max Distance|Enlighten automatically generates simplified UVs by merging UV charts. Charts will only be simplified if the worldspace distance between the charts is smaller than this value.");
+
+			public GUIContent AutoUVMaxAngle = EditorGUIUtility.TextContent("Auto UV Max Angle|Enlighten automatically generates simplified UVs by merging UV charts. Charts will only be simplified if the angle between the charts is smaller than this value.");
+
+			public GUIContent LightmapParameters = EditorGUIUtility.TextContent("Advanced Parameters|Lets you configure per instance lightmapping parameters. Objects will be automatically grouped by unique parameter sets.");
+
+			public GUIContent AtlasTilingX = EditorGUIUtility.TextContent("Tiling X");
+
+			public GUIContent AtlasTilingY = EditorGUIUtility.TextContent("Tiling Y");
+
+			public GUIContent AtlasOffsetX = EditorGUIUtility.TextContent("Offset X");
+
+			public GUIContent AtlasOffsetY = EditorGUIUtility.TextContent("Offset Y");
+
+			public GUIContent ClampedSize = EditorGUIUtility.TextContent("Object's size in lightmap has reached the max atlas size.|If you need higher resolution for this object, divide it into smaller meshes or set higher max atlas size via the LightmapEditorSettings class.");
+
+			public GUIContent ClampedPackingResolution = EditorGUIUtility.TextContent("Object's size in the realtime lightmap has reached the maximum size.|If you need higher resolution for this object, divide it into smaller meshes.");
+
+			public GUIContent ZeroAreaPackingMesh = EditorGUIUtility.TextContent("Mesh used by the renderer has zero UV or surface area. Non zero area is required for lightmapping.");
+
+			public GUIContent NoNormalsNoLightmapping = EditorGUIUtility.TextContent("Mesh used by the renderer doesn't have normals. Normals are needed for lightmapping.");
+
+			public GUIContent Atlas = EditorGUIUtility.TextContent("Baked Lightmap");
+
+			public GUIContent RealtimeLM = EditorGUIUtility.TextContent("Realtime Lightmap");
+
+			public GUIContent ChunkSize = EditorGUIUtility.TextContent("Chunk Size");
+
+			public GUIContent EmptySelection = EditorGUIUtility.TextContent("Select a Light, Mesh Renderer or a Terrain from the scene.");
+
+			public GUIContent ScaleInLightmap = EditorGUIUtility.TextContent("Scale In Lightmap|Object's surface multiplied by this value determines it's size in the lightmap. 0 - don't lightmap this object.");
+
+			public GUIContent TerrainLightmapSize = EditorGUIUtility.TextContent("Lightmap Size|Defines the size of the lightmap that will be used only by this terrain.");
+
+			public GUIContent AtlasIndex = EditorGUIUtility.TextContent("Lightmap Index");
+
+			public GUIContent RealtimeLMResolution = EditorGUIUtility.TextContent("System Resolution|The resolution in texels of the realtime lightmap that this renderer belongs to.");
+
+			public GUIContent RealtimeLMInstanceResolution = EditorGUIUtility.TextContent("Instance Resolution|The resolution in texels of the realtime lightmap packed instance.");
+
+			public GUIContent RealtimeLMInputSystemHash = EditorGUIUtility.TextContent("System Hash|The hash of the realtime system that the renderer belongs to.");
+
+			public GUIContent RealtimeLMInstanceHash = EditorGUIUtility.TextContent("Instance Hash|The hash of the realtime GI instance.");
+
+			public GUIContent RealtimeLMGeometryHash = EditorGUIUtility.TextContent("Geometry Hash|The hash of the realtime GI geometry that the renderer is using.");
 		}
+
 		private GITextureType[] kObjectPreviewTextureTypes = new GITextureType[]
 		{
 			GITextureType.Charting,
@@ -47,46 +89,62 @@ namespace UnityEditor
 			GITextureType.Baked,
 			GITextureType.BakedDirectional
 		};
+
 		private static GUIContent[] kObjectPreviewTextureOptions = new GUIContent[]
 		{
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.Charting"),
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.Albedo"),
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.Emissive"),
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.Irradiance"),
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.Directionality"),
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.Baked"),
-			EditorGUIUtility.TextContent("LightmapEditor.ObjectPreviewTextureOptions.BakedDirectional")
+			EditorGUIUtility.TextContent("Charting"),
+			EditorGUIUtility.TextContent("Albedo"),
+			EditorGUIUtility.TextContent("Emissive"),
+			EditorGUIUtility.TextContent("Realtime Intensity"),
+			EditorGUIUtility.TextContent("Realtime Direction"),
+			EditorGUIUtility.TextContent("Baked Intensity"),
+			EditorGUIUtility.TextContent("Baked Direction")
 		};
+
 		private static LightingWindowObjectTab.Styles s_Styles;
+
 		private ZoomableArea m_ZoomablePreview;
+
 		private GUIContent m_SelectedObjectPreviewTexture;
+
 		private int m_PreviousSelection;
+
 		private bool m_ShowBakedLM;
+
 		private bool m_ShowRealtimeLM;
+
 		private bool m_HasSeparateIndirectUV;
+
 		private AnimBool m_ShowClampedSize = new AnimBool();
+
 		private Editor m_LightEditor;
+
 		private Editor m_LightmapParametersEditor;
+
 		public void OnEnable(EditorWindow window)
 		{
 			this.m_ShowClampedSize.value = false;
 			this.m_ShowClampedSize.valueChanged.AddListener(new UnityAction(window.Repaint));
 		}
+
 		public void OnDisable()
 		{
 			UnityEngine.Object.DestroyImmediate(this.m_LightEditor);
 			UnityEngine.Object.DestroyImmediate(this.m_LightmapParametersEditor);
 		}
+
 		private Editor GetLightEditor(Light[] lights)
 		{
 			Editor.CreateCachedEditor(lights, typeof(LightEditor), ref this.m_LightEditor);
 			return this.m_LightEditor;
 		}
+
 		private Editor GetLightmapParametersEditor(UnityEngine.Object[] lights)
 		{
 			Editor.CreateCachedEditor(lights, typeof(LightmapParametersEditor), ref this.m_LightmapParametersEditor);
 			return this.m_LightmapParametersEditor;
 		}
+
 		public void ObjectPreview(Rect r)
 		{
 			if (r.height <= 0f)
@@ -145,9 +203,7 @@ namespace UnityEditor
 			}
 			this.m_SelectedObjectPreviewTexture = LightingWindowObjectTab.kObjectPreviewTextureOptions[num];
 			LightmapType lightmapType = (this.kObjectPreviewTextureTypes[num] != GITextureType.Baked && this.kObjectPreviewTextureTypes[num] != GITextureType.BakedDirectional) ? LightmapType.DynamicLightmap : LightmapType.StaticLightmap;
-			SerializedObject serializedObject = new SerializedObject(LightmapEditorSettings.GetLightmapSettings());
-			SerializedProperty serializedProperty = serializedObject.FindProperty("m_LightmapsMode");
-			bool flag = (this.kObjectPreviewTextureTypes[num] == GITextureType.Baked || this.kObjectPreviewTextureTypes[num] == GITextureType.BakedDirectional) && serializedProperty.intValue == 2;
+			bool flag = (this.kObjectPreviewTextureTypes[num] == GITextureType.Baked || this.kObjectPreviewTextureTypes[num] == GITextureType.BakedDirectional) && LightmapSettings.lightmapsMode == LightmapsMode.SeparateDirectional;
 			if (flag)
 			{
 				GUIContent gUIContent = GUIContent.Temp("Indirect");
@@ -177,38 +233,37 @@ namespace UnityEditor
 						float num2 = drawableArea.y - 14f;
 						position3.y -= num2;
 						drawableArea.y -= num2;
+						FilterMode filterMode = texture2D.filterMode;
 						texture2D.filterMode = FilterMode.Point;
 						GITextureType textureType2 = this.kObjectPreviewTextureTypes[num];
 						bool drawSpecularUV = flag && this.m_HasSeparateIndirectUV;
 						LightmapVisualizationUtility.DrawTextureWithUVOverlay(texture2D, Selection.activeGameObject, drawableArea, position3, textureType2, drawSpecularUV);
+						texture2D.filterMode = filterMode;
 					}
 				}
 			}
-			else
+			else if (Event.current.commandName == "FrameSelected")
 			{
-				if (Event.current.commandName == "FrameSelected")
+				Vector4 lightmapTilingOffset = LightmapVisualizationUtility.GetLightmapTilingOffset(lightmapType);
+				Vector2 vector = new Vector2(lightmapTilingOffset.z, lightmapTilingOffset.w);
+				Vector2 lhs = vector + new Vector2(lightmapTilingOffset.x, lightmapTilingOffset.y);
+				vector = Vector2.Max(vector, Vector2.zero);
+				lhs = Vector2.Min(lhs, Vector2.one);
+				float y = 1f - vector.y;
+				vector.y = 1f - lhs.y;
+				lhs.y = y;
+				Rect shownArea = new Rect(vector.x, vector.y, lhs.x - vector.x, lhs.y - vector.y);
+				shownArea.x -= Mathf.Clamp(shownArea.height - shownArea.width, 0f, 3.40282347E+38f) / 2f;
+				shownArea.y -= Mathf.Clamp(shownArea.width - shownArea.height, 0f, 3.40282347E+38f) / 2f;
+				float num3 = Mathf.Max(shownArea.width, shownArea.height);
+				shownArea.height = num3;
+				shownArea.width = num3;
+				if (flag && this.m_HasSeparateIndirectUV)
 				{
-					Vector4 lightmapTilingOffset = LightmapVisualizationUtility.GetLightmapTilingOffset(lightmapType);
-					Vector2 vector = new Vector2(lightmapTilingOffset.z, lightmapTilingOffset.w);
-					Vector2 lhs = vector + new Vector2(lightmapTilingOffset.x, lightmapTilingOffset.y);
-					vector = Vector2.Max(vector, Vector2.zero);
-					lhs = Vector2.Min(lhs, Vector2.one);
-					float y = 1f - vector.y;
-					vector.y = 1f - lhs.y;
-					lhs.y = y;
-					Rect shownArea = new Rect(vector.x, vector.y, lhs.x - vector.x, lhs.y - vector.y);
-					shownArea.x -= Mathf.Clamp(shownArea.height - shownArea.width, 0f, 3.40282347E+38f) / 2f;
-					shownArea.y -= Mathf.Clamp(shownArea.width - shownArea.height, 0f, 3.40282347E+38f) / 2f;
-					float num3 = Mathf.Max(shownArea.width, shownArea.height);
-					shownArea.height = num3;
-					shownArea.width = num3;
-					if (flag && this.m_HasSeparateIndirectUV)
-					{
-						shownArea.x += 0.5f;
-					}
-					this.m_ZoomablePreview.shownArea = shownArea;
-					Event.current.Use();
+					shownArea.x += 0.5f;
 				}
+				this.m_ZoomablePreview.shownArea = shownArea;
+				Event.current.Use();
 			}
 			if (this.m_PreviousSelection != Selection.activeInstanceID)
 			{
@@ -223,6 +278,7 @@ namespace UnityEditor
 			this.m_ZoomablePreview.EndViewGUI();
 			GUILayoutUtility.GetRect(r.width, r.height);
 		}
+
 		public bool EditLights()
 		{
 			GameObject[] array;
@@ -236,6 +292,7 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			return true;
 		}
+
 		public bool EditLightmapParameters()
 		{
 			UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(LightmapParameters), SelectionMode.Unfiltered);
@@ -248,6 +305,7 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			return true;
 		}
+
 		public bool EditTerrains()
 		{
 			GameObject[] array;
@@ -258,37 +316,39 @@ namespace UnityEditor
 			}
 			EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
 			SerializedObject serializedObject = new SerializedObject(array);
-			EditorGUI.BeginDisabledGroup(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1));
-			if (GUI.enabled)
+			using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1)))
 			{
-				this.ShowTerrainChunks(selectedObjectsOfType);
+				if (GUI.enabled)
+				{
+					this.ShowTerrainChunks(selectedObjectsOfType);
+				}
+				SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType.ToArray<Terrain>());
+				float lightmapScale = this.LightmapScaleGUI(serializedObject2, 1f);
+				TerrainData terrainData = selectedObjectsOfType[0].terrainData;
+				float cachedSurfaceArea = (!(terrainData != null)) ? 0f : (terrainData.size.x * terrainData.size.z);
+				this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
+				LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters, true);
+				if (GUI.enabled && selectedObjectsOfType.Length == 1 && selectedObjectsOfType[0].terrainData != null)
+				{
+					this.ShowBakePerformanceWarning(serializedObject2, selectedObjectsOfType[0]);
+				}
+				this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
+				if (this.m_ShowBakedLM)
+				{
+					this.ShowAtlasGUI(serializedObject2);
+				}
+				this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
+				if (this.m_ShowRealtimeLM)
+				{
+					this.ShowRealtimeLMGUI(selectedObjectsOfType[0]);
+				}
+				serializedObject.ApplyModifiedProperties();
+				serializedObject2.ApplyModifiedProperties();
 			}
-			SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType.ToArray<Terrain>());
-			float lightmapScale = this.LightmapScaleGUI(serializedObject2, 1f);
-			TerrainData terrainData = selectedObjectsOfType[0].terrainData;
-			float cachedSurfaceArea = (!(terrainData != null)) ? 0f : (terrainData.size.x * terrainData.size.z);
-			this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
-			LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters);
-			if (GUI.enabled && selectedObjectsOfType.Length == 1 && selectedObjectsOfType[0].terrainData != null)
-			{
-				this.ShowBakePerformanceWarning(serializedObject2, selectedObjectsOfType[0]);
-			}
-			this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
-			if (this.m_ShowBakedLM)
-			{
-				this.ShowAtlasGUI(serializedObject2);
-			}
-			this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
-			if (this.m_ShowRealtimeLM)
-			{
-				this.ShowRealtimeLMGUI(selectedObjectsOfType[0]);
-			}
-			serializedObject.ApplyModifiedProperties();
-			serializedObject2.ApplyModifiedProperties();
-			EditorGUI.EndDisabledGroup();
 			GUILayout.Space(10f);
 			return true;
 		}
+
 		public bool EditRenderers()
 		{
 			GameObject[] array;
@@ -303,49 +363,54 @@ namespace UnityEditor
 			}
 			EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
 			SerializedObject serializedObject = new SerializedObject(array);
-			EditorGUI.BeginDisabledGroup(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1));
-			SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType);
-			float num = LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
-			for (int i = 1; i < selectedObjectsOfType.Length; i++)
+			using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1)))
 			{
-				if (!Mathf.Approximately(num, LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[i])))
+				SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType);
+				float num = LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
+				for (int i = 1; i < selectedObjectsOfType.Length; i++)
 				{
-					num = 1f;
+					if (!Mathf.Approximately(num, LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[i])))
+					{
+						num = 1f;
+					}
 				}
+				float lightmapScale = this.LightmapScaleGUI(serializedObject2, num) * LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
+				float cachedSurfaceArea = (!(selectedObjectsOfType[0] is MeshRenderer)) ? InternalMeshUtil.GetCachedSkinnedMeshSurfaceArea(selectedObjectsOfType[0] as SkinnedMeshRenderer) : InternalMeshUtil.GetCachedMeshSurfaceArea(selectedObjectsOfType[0] as MeshRenderer);
+				this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
+				EditorGUILayout.PropertyField(serializedObject2.FindProperty("m_ImportantGI"), LightingWindowObjectTab.s_Styles.ImportantGI, new GUILayoutOption[0]);
+				LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters, true);
+				GUILayout.Space(10f);
+				this.RendererUVSettings(serializedObject2);
+				GUILayout.Space(10f);
+				this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
+				if (this.m_ShowBakedLM)
+				{
+					this.ShowAtlasGUI(serializedObject2);
+				}
+				this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
+				if (this.m_ShowRealtimeLM)
+				{
+					this.ShowRealtimeLMGUI(serializedObject2, selectedObjectsOfType[0]);
+				}
+				if (LightmapEditorSettings.HasZeroAreaMesh(selectedObjectsOfType[0]))
+				{
+					EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ZeroAreaPackingMesh.text, MessageType.Warning);
+				}
+				if (LightmapEditorSettings.HasClampedResolution(selectedObjectsOfType[0]))
+				{
+					EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ClampedPackingResolution.text, MessageType.Warning);
+				}
+				if (!LightingWindowObjectTab.HasNormals(selectedObjectsOfType[0]))
+				{
+					EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.NoNormalsNoLightmapping.text, MessageType.Warning);
+				}
+				serializedObject.ApplyModifiedProperties();
+				serializedObject2.ApplyModifiedProperties();
 			}
-			float lightmapScale = this.LightmapScaleGUI(serializedObject2, num) * LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
-			float cachedSurfaceArea = (!(selectedObjectsOfType[0] is MeshRenderer)) ? InternalMeshUtil.GetCachedSkinnedMeshSurfaceArea(selectedObjectsOfType[0] as SkinnedMeshRenderer) : InternalMeshUtil.GetCachedMeshSurfaceArea(selectedObjectsOfType[0] as MeshRenderer);
-			this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
-			this.RendererUVSettings(serializedObject2);
-			LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters);
-			this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
-			if (this.m_ShowBakedLM)
-			{
-				this.ShowAtlasGUI(serializedObject2);
-			}
-			this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
-			if (this.m_ShowRealtimeLM)
-			{
-				this.ShowRealtimeLMGUI(serializedObject2, selectedObjectsOfType[0]);
-			}
-			if (LightmapEditorSettings.HasZeroAreaMesh(selectedObjectsOfType[0]))
-			{
-				EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ZeroAreaPackingMesh.text, MessageType.Warning);
-			}
-			if (LightmapEditorSettings.HasClampedResolution(selectedObjectsOfType[0]))
-			{
-				EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ClampedPackingResolution.text, MessageType.Warning);
-			}
-			if (!LightingWindowObjectTab.HasNormals(selectedObjectsOfType[0]))
-			{
-				EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.NoNormalsNoLightmapping.text, MessageType.Warning);
-			}
-			serializedObject.ApplyModifiedProperties();
-			serializedObject2.ApplyModifiedProperties();
-			EditorGUI.EndDisabledGroup();
 			GUILayout.Space(10f);
 			return true;
 		}
+
 		public void ObjectSettings()
 		{
 			if (LightingWindowObjectTab.s_Styles == null)
@@ -368,6 +433,7 @@ namespace UnityEditor
 				GUILayout.Label(LightingWindowObjectTab.s_Styles.EmptySelection, EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 		}
+
 		private Rect ResizeRectToFit(Rect rect, Rect to)
 		{
 			float a = to.width / rect.width;
@@ -377,12 +443,14 @@ namespace UnityEditor
 			float height = (float)((int)Mathf.Round(rect.height * num));
 			return new Rect(rect.x, rect.y, width, height);
 		}
+
 		private Rect CenterToRect(Rect rect, Rect to)
 		{
 			float num = Mathf.Clamp((float)((int)(to.width - rect.width)) / 2f, 0f, 2.14748365E+09f);
 			float num2 = Mathf.Clamp((float)((int)(to.height - rect.height)) / 2f, 0f, 2.14748365E+09f);
 			return new Rect(rect.x + num, rect.y + num2, rect.width, rect.height);
 		}
+
 		private Rect ScaleRectByZoomableArea(Rect rect, ZoomableArea zoomableArea)
 		{
 			float num = -(zoomableArea.shownArea.x / zoomableArea.shownArea.width) * rect.width;
@@ -391,22 +459,28 @@ namespace UnityEditor
 			float height = rect.height / zoomableArea.shownArea.height;
 			return new Rect(rect.x + num, rect.y + num2, width, height);
 		}
+
 		private void RendererUVSettings(SerializedObject so)
 		{
 			SerializedProperty serializedProperty = so.FindProperty("m_PreserveUVs");
 			EditorGUILayout.PropertyField(serializedProperty, LightingWindowObjectTab.s_Styles.PreserveUVs, new GUILayoutOption[0]);
 			bool boolValue = serializedProperty.boolValue;
-			EditorGUI.BeginDisabledGroup(boolValue);
-			SerializedProperty serializedProperty2 = so.FindProperty("m_AutoUVMaxDistance");
-			EditorGUILayout.PropertyField(serializedProperty2, LightingWindowObjectTab.s_Styles.AutoUVMaxDistance, new GUILayoutOption[0]);
-			if (serializedProperty2.floatValue < 0f)
+			using (new EditorGUI.DisabledScope(boolValue))
 			{
-				serializedProperty2.floatValue = 0f;
+				SerializedProperty serializedProperty2 = so.FindProperty("m_AutoUVMaxDistance");
+				EditorGUILayout.PropertyField(serializedProperty2, LightingWindowObjectTab.s_Styles.AutoUVMaxDistance, new GUILayoutOption[0]);
+				if (serializedProperty2.floatValue < 0f)
+				{
+					serializedProperty2.floatValue = 0f;
+				}
+				EditorGUILayout.Slider(so.FindProperty("m_AutoUVMaxAngle"), 0f, 180f, LightingWindowObjectTab.s_Styles.AutoUVMaxAngle, new GUILayoutOption[0]);
 			}
-			EditorGUILayout.Slider(so.FindProperty("m_AutoUVMaxAngle"), 0f, 180f, LightingWindowObjectTab.s_Styles.AutoUVMaxAngle, new GUILayoutOption[0]);
-			EditorGUI.EndDisabledGroup();
-			EditorGUILayout.PropertyField(so.FindProperty("m_ImportantGI"), LightingWindowObjectTab.s_Styles.ImportantGI, new GUILayoutOption[0]);
+			SerializedProperty property = so.FindProperty("m_IgnoreNormalsForChartDetection");
+			EditorGUILayout.PropertyField(property, LightingWindowObjectTab.s_Styles.IgnoreNormalsForChartDetection, new GUILayoutOption[0]);
+			SerializedProperty property2 = so.FindProperty("m_MinimumChartSize");
+			EditorGUILayout.IntPopup(property2, LightingWindowObjectTab.s_Styles.MinimumChartSizeStrings, LightingWindowObjectTab.s_Styles.MinimumChartSizeValues, LightingWindowObjectTab.s_Styles.MinimumChartSize, new GUILayoutOption[0]);
 		}
+
 		private void ShowClampedSizeInLightmapGUI(float lightmapScale, float cachedSurfaceArea)
 		{
 			float num = Mathf.Sqrt(cachedSurfaceArea) * LightmapEditorSettings.bakeResolution * lightmapScale;
@@ -418,6 +492,7 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndFadeGroup();
 		}
+
 		private float LightmapScaleGUI(SerializedObject so, float lodScale)
 		{
 			SerializedProperty serializedProperty = so.FindProperty("m_ScaleInLightmap");
@@ -433,6 +508,7 @@ namespace UnityEditor
 			EditorGUI.EndProperty();
 			return num;
 		}
+
 		private void ShowAtlasGUI(SerializedObject so)
 		{
 			EditorGUI.indentLevel++;
@@ -443,6 +519,7 @@ namespace UnityEditor
 			EditorGUILayout.LabelField(LightingWindowObjectTab.s_Styles.AtlasOffsetY, new GUIContent(so.FindProperty("m_LightmapTilingOffset.w").floatValue.ToString()), new GUILayoutOption[0]);
 			EditorGUI.indentLevel--;
 		}
+
 		private void ShowRealtimeLMGUI(SerializedObject so, Renderer renderer)
 		{
 			EditorGUI.indentLevel++;
@@ -475,6 +552,7 @@ namespace UnityEditor
 			}
 			EditorGUI.indentLevel--;
 		}
+
 		private static bool HasNormals(Renderer renderer)
 		{
 			Mesh mesh = null;
@@ -486,15 +564,13 @@ namespace UnityEditor
 					mesh = component.sharedMesh;
 				}
 			}
-			else
+			else if (renderer is SkinnedMeshRenderer)
 			{
-				if (renderer is SkinnedMeshRenderer)
-				{
-					mesh = (renderer as SkinnedMeshRenderer).sharedMesh;
-				}
+				mesh = (renderer as SkinnedMeshRenderer).sharedMesh;
 			}
 			return InternalMeshUtil.HasNormals(mesh);
 		}
+
 		private void ShowTerrainChunks(Terrain[] terrains)
 		{
 			int num = 0;
@@ -510,13 +586,10 @@ namespace UnityEditor
 					num = num3;
 					num2 = num4;
 				}
-				else
+				else if (num != num3 || num2 != num4)
 				{
-					if (num != num3 || num2 != num4)
-					{
-						num2 = (num = 0);
-						break;
-					}
+					num2 = (num = 0);
+					break;
 				}
 			}
 			if (num * num2 > 1)
@@ -524,6 +597,7 @@ namespace UnityEditor
 				GUILayout.Label(string.Format("Terrain is chunked up into {0} instances for baking.", num * num2), EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
 		}
+
 		private void ShowBakePerformanceWarning(SerializedObject so, Terrain terrain)
 		{
 			float x = terrain.terrainData.size.x;
@@ -544,6 +618,7 @@ namespace UnityEditor
 				EditorGUILayout.HelpBox("Baking resolution for this terrain probably is TOO LOW. If it takes long time in Clustering stage, try use a higher resolution parameter set.", MessageType.Warning);
 			}
 		}
+
 		private void ShowRealtimeLMGUI(Terrain terrain)
 		{
 			EditorGUI.indentLevel++;
@@ -562,13 +637,49 @@ namespace UnityEditor
 			}
 			EditorGUI.indentLevel--;
 		}
-		public static bool LightmapParametersGUI(SerializedProperty prop, GUIContent content)
+
+		private static bool isBuiltIn(SerializedProperty prop)
+		{
+			if (prop.objectReferenceValue != null)
+			{
+				LightmapParameters lightmapParameters = prop.objectReferenceValue as LightmapParameters;
+				return lightmapParameters.hideFlags == HideFlags.NotEditable;
+			}
+			return false;
+		}
+
+		public static bool LightmapParametersGUI(SerializedProperty prop, GUIContent content, bool advancedParameters)
 		{
 			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUIInternal.AssetPopup<LightmapParameters>(prop, content, "giparams");
-			EditorGUI.BeginDisabledGroup(prop.objectReferenceValue == null);
+			if (advancedParameters)
+			{
+				EditorGUIInternal.AssetPopup<LightmapParameters>(prop, content, "giparams", "Default scene parameter");
+			}
+			else
+			{
+				EditorGUIInternal.AssetPopup<LightmapParameters>(prop, content, "giparams", "Default-Medium");
+			}
+			string text = "Edit...";
+			if (LightingWindowObjectTab.isBuiltIn(prop))
+			{
+				text = "View";
+			}
 			bool result = false;
-			if (GUILayout.Button("Edit...", EditorStyles.miniButton, new GUILayoutOption[]
+			if (prop.objectReferenceValue == null)
+			{
+				using (new EditorGUI.DisabledScope(true))
+				{
+					if (GUILayout.Button(text, EditorStyles.miniButton, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					}))
+					{
+						Selection.activeObject = null;
+						result = true;
+					}
+				}
+			}
+			else if (GUILayout.Button(text, EditorStyles.miniButton, new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(false)
 			}))
@@ -576,7 +687,6 @@ namespace UnityEditor
 				Selection.activeObject = prop.objectReferenceValue;
 				result = true;
 			}
-			EditorGUI.EndDisabledGroup();
 			EditorGUILayout.EndHorizontal();
 			return result;
 		}

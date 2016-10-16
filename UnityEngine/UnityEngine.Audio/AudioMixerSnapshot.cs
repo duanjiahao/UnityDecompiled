@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine.Audio
 {
 	public class AudioMixerSnapshot : UnityEngine.Object
@@ -10,9 +11,11 @@ namespace UnityEngine.Audio
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		internal AudioMixerSnapshot()
 		{
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void TransitionTo(float timeToReach);

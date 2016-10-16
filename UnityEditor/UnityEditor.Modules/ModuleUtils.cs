@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 namespace UnityEditor.Modules
 {
 	internal static class ModuleUtils
@@ -10,6 +11,16 @@ namespace UnityEditor.Modules
 			foreach (IPlatformSupportModule current in ModuleManager.platformSupportModules)
 			{
 				list.AddRange(current.AssemblyReferencesForUserScripts);
+			}
+			return list.ToArray();
+		}
+
+		internal static string[] GetAdditionalReferencesForEditorCsharpProject()
+		{
+			List<string> list = new List<string>();
+			foreach (IPlatformSupportModule current in ModuleManager.platformSupportModules)
+			{
+				list.AddRange(current.AssemblyReferencesForEditorCsharpProject);
 			}
 			return list.ToArray();
 		}

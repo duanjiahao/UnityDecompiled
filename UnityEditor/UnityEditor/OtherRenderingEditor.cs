@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(RenderSettings))]
@@ -7,15 +8,23 @@ namespace UnityEditor
 	{
 		internal class Styles
 		{
-			public static readonly GUIContent otherHeader = EditorGUIUtility.TextContent("RenderSettings.OtherHeader");
+			public static readonly GUIContent otherHeader = EditorGUIUtility.TextContent("Other Settings");
 		}
+
 		private const string kShowEditorKey = "ShowOtherRenderingEditorFoldout";
+
 		protected SerializedProperty m_HaloStrength;
+
 		protected SerializedProperty m_FlareStrength;
+
 		protected SerializedProperty m_FlareFadeSpeed;
+
 		protected SerializedProperty m_HaloTexture;
+
 		protected SerializedProperty m_SpotCookie;
+
 		private bool m_ShowEditor;
+
 		public virtual void OnEnable()
 		{
 			this.m_HaloStrength = base.serializedObject.FindProperty("m_HaloStrength");
@@ -23,12 +32,14 @@ namespace UnityEditor
 			this.m_FlareFadeSpeed = base.serializedObject.FindProperty("m_FlareFadeSpeed");
 			this.m_HaloTexture = base.serializedObject.FindProperty("m_HaloTexture");
 			this.m_SpotCookie = base.serializedObject.FindProperty("m_SpotCookie");
-			this.m_ShowEditor = InspectorState.GetBool("ShowOtherRenderingEditorFoldout", false);
+			this.m_ShowEditor = SessionState.GetBool("ShowOtherRenderingEditorFoldout", false);
 		}
+
 		public virtual void OnDisable()
 		{
-			InspectorState.SetBool("ShowOtherRenderingEditorFoldout", this.m_ShowEditor);
+			SessionState.SetBool("ShowOtherRenderingEditorFoldout", this.m_ShowEditor);
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();

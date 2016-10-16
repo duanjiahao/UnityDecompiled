@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(BillboardAsset))]
@@ -9,32 +10,58 @@ namespace UnityEditor
 		private class GUIStyles
 		{
 			public readonly GUIContent m_Width = new GUIContent("Width");
+
 			public readonly GUIContent m_Height = new GUIContent("Height");
+
 			public readonly GUIContent m_Bottom = new GUIContent("Bottom");
+
 			public readonly GUIContent m_ImageCount = new GUIContent("Image Count");
+
 			public readonly GUIContent m_VertexCount = new GUIContent("Vertex Count");
+
 			public readonly GUIContent m_IndexCount = new GUIContent("Index Count");
+
 			public readonly GUIContent m_Material = new GUIContent("Material");
+
 			public readonly GUIContent m_Shaded = new GUIContent("Shaded");
+
 			public readonly GUIContent m_Geometry = new GUIContent("Geometry");
+
 			public readonly GUIStyle m_DropdownButton = new GUIStyle("MiniPopup");
 		}
+
 		private SerializedProperty m_Width;
+
 		private SerializedProperty m_Height;
+
 		private SerializedProperty m_Bottom;
+
 		private SerializedProperty m_ImageCount;
+
 		private SerializedProperty m_VertexCount;
+
 		private SerializedProperty m_IndexCount;
+
 		private SerializedProperty m_Material;
+
 		private bool m_PreviewShaded = true;
+
 		private Vector2 m_PreviewDir = new Vector2(-120f, 20f);
+
 		private PreviewRenderUtility m_PreviewUtility;
+
 		private Mesh m_ShadedMesh;
+
 		private Mesh m_GeometryMesh;
+
 		private MaterialPropertyBlock m_ShadedMaterialProperties;
+
 		private Material m_GeometryMaterial;
+
 		private Material m_WireframeMaterial;
+
 		private static BillboardAssetInspector.GUIStyles s_Styles;
+
 		private static BillboardAssetInspector.GUIStyles Styles
 		{
 			get
@@ -46,6 +73,7 @@ namespace UnityEditor
 				return BillboardAssetInspector.s_Styles;
 			}
 		}
+
 		private void OnEnable()
 		{
 			this.m_Width = base.serializedObject.FindProperty("width");
@@ -56,6 +84,7 @@ namespace UnityEditor
 			this.m_IndexCount = base.serializedObject.FindProperty("indices.Array.size");
 			this.m_Material = base.serializedObject.FindProperty("material");
 		}
+
 		private void OnDisable()
 		{
 			if (this.m_PreviewUtility != null)
@@ -67,11 +96,11 @@ namespace UnityEditor
 				this.m_GeometryMaterial = null;
 				if (this.m_WireframeMaterial != null)
 				{
-					UnityEngine.Object.DestroyImmediate(this.m_WireframeMaterial.shader, true);
 					UnityEngine.Object.DestroyImmediate(this.m_WireframeMaterial, true);
 				}
 			}
 		}
+
 		private void InitPreview()
 		{
 			if (this.m_PreviewUtility == null)
@@ -85,12 +114,11 @@ namespace UnityEditor
 				this.m_GeometryMesh.MarkDynamic();
 				this.m_ShadedMaterialProperties = new MaterialPropertyBlock();
 				this.m_GeometryMaterial = (EditorGUIUtility.GetBuiltinExtraResource(typeof(Material), "Default-Material.mat") as Material);
-				this.m_WireframeMaterial = new Material(ModelInspector.WireframeShaderSource);
-				this.m_WireframeMaterial.hideFlags = HideFlags.HideAndDontSave;
-				this.m_WireframeMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
+				this.m_WireframeMaterial = ModelInspector.CreateWireframeMaterial();
 				EditorUtility.SetCameraAnimateMaterials(this.m_PreviewUtility.m_Camera, true);
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -98,19 +126,22 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Height, BillboardAssetInspector.Styles.m_Height, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Bottom, BillboardAssetInspector.Styles.m_Bottom, new GUILayoutOption[0]);
 			GUILayout.Space(10f);
-			EditorGUI.BeginDisabledGroup(true);
-			EditorGUILayout.PropertyField(this.m_ImageCount, BillboardAssetInspector.Styles.m_ImageCount, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_VertexCount, BillboardAssetInspector.Styles.m_VertexCount, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_IndexCount, BillboardAssetInspector.Styles.m_IndexCount, new GUILayoutOption[0]);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(true))
+			{
+				EditorGUILayout.PropertyField(this.m_ImageCount, BillboardAssetInspector.Styles.m_ImageCount, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_VertexCount, BillboardAssetInspector.Styles.m_VertexCount, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_IndexCount, BillboardAssetInspector.Styles.m_IndexCount, new GUILayoutOption[0]);
+			}
 			GUILayout.Space(10f);
 			EditorGUILayout.PropertyField(this.m_Material, BillboardAssetInspector.Styles.m_Material, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.target != null;
 		}
+
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -122,6 +153,7 @@ namespace UnityEditor
 			this.DoRenderPreview(true);
 			return this.m_PreviewUtility.EndStaticPreview();
 		}
+
 		public override void OnPreviewSettings()
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -154,6 +186,7 @@ namespace UnityEditor
 				genericMenu.DropDown(rect);
 			}
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -172,13 +205,14 @@ namespace UnityEditor
 			}
 			this.m_PreviewUtility.BeginPreview(r, background);
 			this.DoRenderPreview(this.m_PreviewShaded);
-			Texture image = this.m_PreviewUtility.EndPreview();
-			GUI.DrawTexture(r, image, ScaleMode.StretchToFill, false);
+			this.m_PreviewUtility.EndAndDrawPreview(r);
 		}
+
 		public override string GetInfoString()
 		{
 			return string.Format("{0} verts, {1} tris, {2} images", this.m_VertexCount.intValue, this.m_IndexCount.intValue / 3, this.m_ImageCount.intValue);
 		}
+
 		private void DoRenderPreview(bool shaded)
 		{
 			BillboardAsset billboardAsset = this.target as BillboardAsset;
@@ -197,8 +231,8 @@ namespace UnityEditor
 			InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);
 			if (shaded)
 			{
-				billboardAsset.MakeRenderMesh(this.m_ShadedMesh);
-				billboardAsset.MakeMaterialProperties(this.m_ShadedMaterialProperties, this.m_PreviewUtility.m_Camera, 1f, 1f, 0f);
+				billboardAsset.MakeRenderMesh(this.m_ShadedMesh, 1f, 1f, 0f);
+				billboardAsset.MakeMaterialProperties(this.m_ShadedMaterialProperties, this.m_PreviewUtility.m_Camera);
 				ModelInspector.RenderMeshPreviewSkipCameraAndLighting(this.m_ShadedMesh, bounds, this.m_PreviewUtility, billboardAsset.material, null, this.m_ShadedMaterialProperties, new Vector2(0f, 0f), -1);
 			}
 			else

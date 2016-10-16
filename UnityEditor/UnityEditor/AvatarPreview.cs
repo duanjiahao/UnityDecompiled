@@ -2,6 +2,7 @@ using System;
 using UnityEditor.Animations;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AvatarPreview
@@ -9,20 +10,29 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent speedScale = EditorGUIUtility.IconContent("SpeedScale", "Changes animation preview speed");
+
 			public GUIContent pivot = EditorGUIUtility.IconContent("AvatarPivot", "Displays avatar's pivot and mass center");
+
 			public GUIContent ik = new GUIContent("IK", "Activates feet IK preview");
+
 			public GUIContent avatarIcon = EditorGUIUtility.IconContent("Avatar Icon", "Changes the model to use for previewing.");
+
 			public GUIStyle preButton = "preButton";
+
 			public GUIStyle preSlider = "preSlider";
+
 			public GUIStyle preSliderThumb = "preSliderThumb";
+
 			public GUIStyle preLabel = "preLabel";
 		}
+
 		private enum PreviewPopupOptions
 		{
 			Auto,
 			DefaultModel,
 			Other
 		}
+
 		protected enum ViewTool
 		{
 			None,
@@ -30,56 +40,107 @@ namespace UnityEditor
 			Zoom,
 			Orbit
 		}
+
 		public delegate void OnAvatarChange();
+
 		private const string kIkPref = "AvatarpreviewShowIK";
+
 		private const string kReferencePref = "AvatarpreviewShowReference";
+
 		private const string kSpeedPref = "AvatarpreviewSpeed";
+
 		private const float kTimeControlRectHeight = 21f;
+
 		private const string s_PreviewStr = "Preview";
+
 		private const string s_PreviewSceneStr = "PreviewSene";
+
 		private const float kFloorFadeDuration = 0.2f;
+
 		private const float kFloorScale = 5f;
+
 		private const float kFloorScaleSmall = 0.2f;
+
 		private const float kFloorTextureScale = 4f;
+
 		private const float kFloorAlpha = 0.5f;
+
 		private const float kFloorShadowAlpha = 0.3f;
+
 		private AvatarPreview.OnAvatarChange m_OnAvatarChangeFunc;
+
 		public TimeControl timeControl;
+
 		public int fps = 60;
+
 		private Material m_FloorMaterial;
+
 		private Material m_FloorMaterialSmall;
+
 		private Material m_ShadowMaskMaterial;
+
 		private Material m_ShadowPlaneMaterial;
+
 		private PreviewRenderUtility m_PreviewUtility;
+
 		private GameObject m_PreviewInstance;
+
 		private GameObject m_ReferenceInstance;
+
 		private GameObject m_DirectionInstance;
+
 		private GameObject m_PivotInstance;
+
 		private GameObject m_RootInstance;
+
 		private float m_BoundingVolumeScale;
+
 		private Motion m_SourcePreviewMotion;
+
 		private Animator m_SourceScenePreviewAnimator;
+
 		private int m_PreviewHint = "Preview".GetHashCode();
+
 		private int m_PreviewSceneHint = "PreviewSene".GetHashCode();
+
 		private Texture2D m_FloorTexture;
+
 		private Mesh m_FloorPlane;
+
 		private bool m_ShowReference;
+
 		private bool m_IKOnFeet;
+
 		private bool m_ShowIKOnFeetButton = true;
+
 		private bool m_IsValid;
+
 		private int m_ModelSelectorId = GUIUtility.GetPermanentControlID();
+
 		private float m_PrevFloorHeight;
+
 		private float m_NextFloorHeight;
+
 		private Vector2 m_PreviewDir = new Vector2(120f, -20f);
+
 		private float m_AvatarScale = 1f;
+
 		private float m_ZoomFactor = 1f;
+
 		private Vector3 m_PivotPositionOffset = Vector3.zero;
+
 		private static AvatarPreview.Styles s_Styles;
+
 		private float m_LastNormalizedTime = -1000f;
+
 		private float m_LastStartTime = -1000f;
+
 		private float m_LastStopTime = -1000f;
+
 		private bool m_NextTargetIsForward = true;
+
 		protected AvatarPreview.ViewTool m_ViewTool;
+
 		public AvatarPreview.OnAvatarChange OnAvatarChangeFunc
 		{
 			set
@@ -87,6 +148,7 @@ namespace UnityEditor
 				this.m_OnAvatarChangeFunc = value;
 			}
 		}
+
 		public bool IKOnFeet
 		{
 			get
@@ -94,6 +156,7 @@ namespace UnityEditor
 				return this.m_IKOnFeet;
 			}
 		}
+
 		public bool ShowIKOnFeetButton
 		{
 			get
@@ -105,6 +168,7 @@ namespace UnityEditor
 				this.m_ShowIKOnFeetButton = value;
 			}
 		}
+
 		public Animator Animator
 		{
 			get
@@ -112,6 +176,7 @@ namespace UnityEditor
 				return (!(this.m_PreviewInstance != null)) ? null : (this.m_PreviewInstance.GetComponent(typeof(Animator)) as Animator);
 			}
 		}
+
 		public GameObject PreviewObject
 		{
 			get
@@ -119,6 +184,7 @@ namespace UnityEditor
 				return this.m_PreviewInstance;
 			}
 		}
+
 		public ModelImporterAnimationType animationClipType
 		{
 			get
@@ -126,13 +192,15 @@ namespace UnityEditor
 				return AvatarPreview.GetAnimationType(this.m_SourcePreviewMotion);
 			}
 		}
+
 		public Vector3 bodyPosition
 		{
 			get
 			{
-				return (!this.Animator || !this.Animator.isHuman) ? GameObjectInspector.GetRenderableCenterRecurse(this.m_PreviewInstance, 2, 8) : this.Animator.bodyPosition;
+				return (!this.Animator || !this.Animator.isHuman) ? GameObjectInspector.GetRenderableCenterRecurse(this.m_PreviewInstance, 2, 8) : this.Animator.GetBodyPositionInternal();
 			}
 		}
+
 		protected AvatarPreview.ViewTool viewTool
 		{
 			get
@@ -147,24 +215,19 @@ namespace UnityEditor
 					{
 						this.m_ViewTool = AvatarPreview.ViewTool.Pan;
 					}
-					else
+					else if ((current.button <= 0 && flag) || (current.button == 1 && current.alt))
 					{
-						if ((current.button <= 0 && flag) || (current.button == 1 && current.alt))
-						{
-							this.m_ViewTool = AvatarPreview.ViewTool.Zoom;
-						}
-						else
-						{
-							if ((current.button <= 0 && current.alt) || current.button == 1)
-							{
-								this.m_ViewTool = AvatarPreview.ViewTool.Orbit;
-							}
-						}
+						this.m_ViewTool = AvatarPreview.ViewTool.Zoom;
+					}
+					else if ((current.button <= 0 && current.alt) || current.button == 1)
+					{
+						this.m_ViewTool = AvatarPreview.ViewTool.Orbit;
 					}
 				}
 				return this.m_ViewTool;
 			}
 		}
+
 		protected MouseCursor currentCursor
 		{
 			get
@@ -182,10 +245,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public AvatarPreview(Animator previewObjectInScene, Motion objectOnSameAsset)
 		{
 			this.InitInstance(previewObjectInScene, objectOnSameAsset);
 		}
+
 		private void SetPreviewCharacterEnabled(bool enabled, bool showReference)
 		{
 			if (this.m_PreviewInstance != null)
@@ -197,6 +262,7 @@ namespace UnityEditor
 			GameObjectInspector.SetEnabledRecursive(this.m_PivotInstance, showReference && enabled);
 			GameObjectInspector.SetEnabledRecursive(this.m_RootInstance, showReference && enabled);
 		}
+
 		private static AnimationClip GetFirstAnimationClipFromMotion(Motion motion)
 		{
 			AnimationClip animationClip = motion as AnimationClip;
@@ -215,6 +281,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public static ModelImporterAnimationType GetAnimationType(GameObject go)
 		{
 			Animator component = go.GetComponent<Animator>();
@@ -236,6 +303,7 @@ namespace UnityEditor
 				return ModelImporterAnimationType.None;
 			}
 		}
+
 		public static ModelImporterAnimationType GetAnimationType(Motion motion)
 		{
 			AnimationClip firstAnimationClipFromMotion = AvatarPreview.GetFirstAnimationClipFromMotion(motion);
@@ -253,6 +321,7 @@ namespace UnityEditor
 			}
 			return ModelImporterAnimationType.Generic;
 		}
+
 		public static bool IsValidPreviewGameObject(GameObject target, ModelImporterAnimationType requiredClipType)
 		{
 			if (target != null && !target.activeSelf)
@@ -261,6 +330,7 @@ namespace UnityEditor
 			}
 			return target != null && target.activeSelf && GameObjectInspector.HasRenderablePartsRecurse(target) && (requiredClipType == ModelImporterAnimationType.None || AvatarPreview.GetAnimationType(target) == requiredClipType);
 		}
+
 		public static GameObject FindBestFittingRenderableGameObjectFromModelAsset(UnityEngine.Object asset, ModelImporterAnimationType animationType)
 		{
 			if (asset == null)
@@ -274,12 +344,13 @@ namespace UnityEditor
 			}
 			string assetPath = modelImporter.CalculateBestFittingPreviewGameObject();
 			GameObject gameObject = AssetDatabase.LoadMainAssetAtPath(assetPath) as GameObject;
-			if (AvatarPreview.IsValidPreviewGameObject(gameObject, animationType))
+			if (AvatarPreview.IsValidPreviewGameObject(gameObject, ModelImporterAnimationType.None))
 			{
 				return gameObject;
 			}
 			return null;
 		}
+
 		private static GameObject CalculatePreviewGameObject(Animator selectedAnimator, Motion motion, ModelImporterAnimationType animationType)
 		{
 			AnimationClip firstAnimationClipFromMotion = AvatarPreview.GetFirstAnimationClipFromMotion(motion);
@@ -307,20 +378,24 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private static GameObject GetGenericAnimationFallback()
 		{
 			return (GameObject)EditorGUIUtility.Load("Avatar/DefaultGeneric.fbx");
 		}
+
 		private static GameObject GetHumanoidFallback()
 		{
 			return (GameObject)EditorGUIUtility.Load("Avatar/DefaultAvatar.fbx");
 		}
+
 		public void ResetPreviewInstance()
 		{
 			UnityEngine.Object.DestroyImmediate(this.m_PreviewInstance);
 			GameObject go = AvatarPreview.CalculatePreviewGameObject(this.m_SourceScenePreviewAnimator, this.m_SourcePreviewMotion, this.animationClipType);
 			this.SetupBounds(go);
 		}
+
 		private void SetupBounds(GameObject go)
 		{
 			this.m_IsValid = (go != null && go != AvatarPreview.GetGenericAnimationFallback());
@@ -340,6 +415,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void InitInstance(Animator scenePreviewObject, Motion motion)
 		{
 			this.m_SourcePreviewMotion = motion;
@@ -382,6 +458,7 @@ namespace UnityEditor
 			this.timeControl.playbackSpeed = EditorPrefs.GetFloat("AvatarpreviewSpeed", 1f);
 			this.SetPreviewCharacterEnabled(false, false);
 		}
+
 		private void Init()
 		{
 			if (this.m_PreviewUtility == null)
@@ -427,6 +504,7 @@ namespace UnityEditor
 				this.m_ShadowPlaneMaterial.hideFlags = HideFlags.HideAndDontSave;
 			}
 		}
+
 		public void OnDestroy()
 		{
 			if (this.m_PreviewUtility != null)
@@ -448,10 +526,12 @@ namespace UnityEditor
 				this.timeControl.OnDisable();
 			}
 		}
+
 		public void DoSelectionChange()
 		{
 			this.m_OnAvatarChangeFunc();
 		}
+
 		private float PreviewSlider(float val, float snapThreshold)
 		{
 			val = GUILayout.HorizontalSlider(val, 0.1f, 2f, AvatarPreview.s_Styles.preSlider, AvatarPreview.s_Styles.preSliderThumb, new GUILayoutOption[]
@@ -462,50 +542,33 @@ namespace UnityEditor
 			{
 				val = 0.25f;
 			}
-			else
+			else if (val > 0.5f - snapThreshold && val < 0.5f + snapThreshold)
 			{
-				if (val > 0.5f - snapThreshold && val < 0.5f + snapThreshold)
-				{
-					val = 0.5f;
-				}
-				else
-				{
-					if (val > 0.75f - snapThreshold && val < 0.75f + snapThreshold)
-					{
-						val = 0.75f;
-					}
-					else
-					{
-						if (val > 1f - snapThreshold && val < 1f + snapThreshold)
-						{
-							val = 1f;
-						}
-						else
-						{
-							if (val > 1.25f - snapThreshold && val < 1.25f + snapThreshold)
-							{
-								val = 1.25f;
-							}
-							else
-							{
-								if (val > 1.5f - snapThreshold && val < 1.5f + snapThreshold)
-								{
-									val = 1.5f;
-								}
-								else
-								{
-									if (val > 1.75f - snapThreshold && val < 1.75f + snapThreshold)
-									{
-										val = 1.75f;
-									}
-								}
-							}
-						}
-					}
-				}
+				val = 0.5f;
+			}
+			else if (val > 0.75f - snapThreshold && val < 0.75f + snapThreshold)
+			{
+				val = 0.75f;
+			}
+			else if (val > 1f - snapThreshold && val < 1f + snapThreshold)
+			{
+				val = 1f;
+			}
+			else if (val > 1.25f - snapThreshold && val < 1.25f + snapThreshold)
+			{
+				val = 1.25f;
+			}
+			else if (val > 1.5f - snapThreshold && val < 1.5f + snapThreshold)
+			{
+				val = 1.5f;
+			}
+			else if (val > 1.75f - snapThreshold && val < 1.75f + snapThreshold)
+			{
+				val = 1.75f;
 			}
 			return val;
 		}
+
 		public void DoPreviewSettings()
 		{
 			this.Init();
@@ -533,6 +596,7 @@ namespace UnityEditor
 			}
 			GUILayout.Label(this.timeControl.playbackSpeed.ToString("f2"), AvatarPreview.s_Styles.preLabel, new GUILayoutOption[0]);
 		}
+
 		private RenderTexture RenderPreviewShadowmap(Light light, float scale, Vector3 center, Vector3 floorPos, out Matrix4x4 outShadowMatrix)
 		{
 			Camera camera = this.m_PreviewUtility.m_Camera;
@@ -584,7 +648,8 @@ namespace UnityEditor
 			camera.targetTexture = targetTexture;
 			return temporary;
 		}
-		public Texture DoRenderPreview(Rect previewRect, GUIStyle background)
+
+		public void DoRenderPreview(Rect previewRect, GUIStyle background)
 		{
 			this.m_PreviewUtility.BeginPreview(previewRect, background);
 			Vector3 bodyPosition = this.bodyPosition;
@@ -599,22 +664,19 @@ namespace UnityEditor
 				quaternion2 = this.Animator.bodyRotation;
 				pivotPos = this.Animator.pivotPosition;
 			}
+			else if (this.Animator && this.Animator.hasRootMotion)
+			{
+				quaternion = this.Animator.rootRotation;
+				vector = this.Animator.rootPosition;
+				quaternion2 = Quaternion.identity;
+				pivotPos = Vector3.zero;
+			}
 			else
 			{
-				if (this.Animator && this.Animator.hasRootMotion)
-				{
-					quaternion = this.Animator.rootRotation;
-					vector = this.Animator.rootPosition;
-					quaternion2 = Quaternion.identity;
-					pivotPos = Vector3.zero;
-				}
-				else
-				{
-					quaternion = Quaternion.identity;
-					vector = Vector3.zero;
-					quaternion2 = Quaternion.identity;
-					pivotPos = Vector3.zero;
-				}
+				quaternion = Quaternion.identity;
+				vector = Vector3.zero;
+				quaternion2 = Quaternion.identity;
+				pivotPos = Vector3.zero;
 			}
 			bool oldFog = this.SetupPreviewLightingAndFx();
 			Vector3 forward = quaternion2 * Vector3.forward;
@@ -661,8 +723,8 @@ namespace UnityEditor
 			{
 				bool flag2 = this.m_NextFloorHeight > this.m_PrevFloorHeight;
 				float num4 = (!flag2) ? this.m_PrevFloorHeight : this.m_NextFloorHeight;
-				float from = (!flag2) ? this.m_NextFloorHeight : this.m_PrevFloorHeight;
-				float num5 = ((num4 != num2) ? 1f : (1f - num3)) * Mathf.InverseLerp(from, num4, vector.y);
+				float a = (!flag2) ? this.m_NextFloorHeight : this.m_PrevFloorHeight;
+				float num5 = ((num4 != num2) ? 1f : (1f - num3)) * Mathf.InverseLerp(a, num4, vector.y);
 				position.y = num4;
 				Material floorMaterialSmall = this.m_FloorMaterialSmall;
 				floorMaterialSmall.mainTextureOffset = -new Vector2(position.x, position.z) * 0.2f * 0.08f;
@@ -677,8 +739,8 @@ namespace UnityEditor
 			this.SetPreviewCharacterEnabled(false, false);
 			AvatarPreview.TeardownPreviewLightingAndFx(oldFog);
 			RenderTexture.ReleaseTemporary(renderTexture);
-			return this.m_PreviewUtility.EndPreview();
 		}
+
 		private bool SetupPreviewLightingAndFx()
 		{
 			this.m_PreviewUtility.m_Light[0].intensity = 1.4f;
@@ -690,11 +752,13 @@ namespace UnityEditor
 			Unsupported.SetRenderSettingsUseFogNoDirty(false);
 			return fog;
 		}
+
 		private static void TeardownPreviewLightingAndFx(bool oldFog)
 		{
 			Unsupported.SetRenderSettingsUseFogNoDirty(oldFog);
 			InternalEditorUtility.RemoveCustomLighting();
 		}
+
 		private void PositionPreviewObjects(Quaternion pivotRot, Vector3 pivotPos, Quaternion bodyRot, Vector3 bodyPos, Quaternion directionRot, Quaternion rootRot, Vector3 rootPos, Vector3 directionPos, float scale)
 		{
 			this.m_ReferenceInstance.transform.position = rootPos;
@@ -724,12 +788,9 @@ namespace UnityEditor
 					{
 						num2 -= 1f;
 					}
-					else
+					else if (num2 < -0.5f)
 					{
-						if (num2 < -0.5f)
-						{
-							num2 += 1f;
-						}
+						num2 += 1f;
 					}
 				}
 				this.m_LastNormalizedTime = normalizedTime;
@@ -747,6 +808,7 @@ namespace UnityEditor
 				this.Animator.SetTarget(AvatarTarget.Root, (float)((!this.m_NextTargetIsForward) ? 0 : 1));
 			}
 		}
+
 		public void AvatarTimeControlGUI(Rect rect)
 		{
 			Rect rect2 = rect;
@@ -754,8 +816,15 @@ namespace UnityEditor
 			this.timeControl.DoTimeControl(rect2);
 			rect.y = rect.yMax - 20f;
 			float num = this.timeControl.currentTime - this.timeControl.startTime;
-			EditorGUI.DropShadowLabel(new Rect(rect.x, rect.y, rect.width, 20f), string.Format("{0,2}:{1:00} ({2:000.0%})", (int)num, this.Repeat(Mathf.FloorToInt(num * (float)this.fps), this.fps), this.timeControl.normalizedTime));
+			EditorGUI.DropShadowLabel(new Rect(rect.x, rect.y, rect.width, 20f), string.Format("{0,2}:{1:00} ({2:000.0%}) Frame {3}", new object[]
+			{
+				(int)num,
+				this.Repeat(Mathf.FloorToInt(num * (float)this.fps), this.fps),
+				this.timeControl.normalizedTime,
+				Mathf.FloorToInt(this.timeControl.currentTime * (float)this.fps)
+			}));
 		}
+
 		protected void HandleMouseDown(Event evt, int id, Rect previewRect)
 		{
 			if (this.viewTool != AvatarPreview.ViewTool.None && previewRect.Contains(evt.mousePosition))
@@ -765,6 +834,7 @@ namespace UnityEditor
 				GUIUtility.hotControl = id;
 			}
 		}
+
 		protected void HandleMouseUp(Event evt, int id)
 		{
 			if (GUIUtility.hotControl == id)
@@ -775,6 +845,7 @@ namespace UnityEditor
 				evt.Use();
 			}
 		}
+
 		protected void HandleMouseDrag(Event evt, int id, Rect previewRect)
 		{
 			if (this.m_PreviewInstance == null)
@@ -800,6 +871,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected void HandleViewTool(Event evt, EventType eventType, int id, Rect previewRect)
 		{
 			switch (eventType)
@@ -818,32 +890,32 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		public void DoAvatarPreviewDrag(EventType type)
 		{
 			if (type == EventType.DragUpdated)
 			{
 				DragAndDrop.visualMode = DragAndDropVisualMode.Link;
 			}
-			else
+			else if (type == EventType.DragPerform)
 			{
-				if (type == EventType.DragPerform)
+				DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+				GameObject gameObject = DragAndDrop.objectReferences[0] as GameObject;
+				if (gameObject)
 				{
-					DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-					GameObject gameObject = DragAndDrop.objectReferences[0] as GameObject;
-					if (gameObject)
-					{
-						DragAndDrop.AcceptDrag();
-						this.SetPreview(gameObject);
-					}
+					DragAndDrop.AcceptDrag();
+					this.SetPreview(gameObject);
 				}
 			}
 		}
+
 		public void DoAvatarPreviewOrbit(Event evt, Rect previewRect)
 		{
 			this.m_PreviewDir -= evt.delta * (float)((!evt.shift) ? 1 : 3) / Mathf.Min(previewRect.width, previewRect.height) * 140f;
 			this.m_PreviewDir.y = Mathf.Clamp(this.m_PreviewDir.y, -90f, 90f);
 			evt.Use();
 		}
+
 		public void DoAvatarPreviewPan(Event evt)
 		{
 			Camera camera = this.m_PreviewUtility.m_Camera;
@@ -854,6 +926,7 @@ namespace UnityEditor
 			this.m_PivotPositionOffset += b;
 			evt.Use();
 		}
+
 		public void DoAvatarPreviewFrame(Event evt, EventType type, Rect previewRect)
 		{
 			if (type == EventType.KeyDown && evt.keyCode == KeyCode.F)
@@ -868,6 +941,7 @@ namespace UnityEditor
 				evt.Use();
 			}
 		}
+
 		protected Vector3 GetCurrentMouseWorldPosition(Event evt, Rect previewRect)
 		{
 			Camera camera = this.m_PreviewUtility.m_Camera;
@@ -877,6 +951,7 @@ namespace UnityEditor
 				z = Vector3.Distance(this.bodyPosition, camera.transform.position)
 			});
 		}
+
 		public void DoAvatarPreviewZoom(Event evt, float delta)
 		{
 			float num = -delta * 0.05f;
@@ -884,6 +959,7 @@ namespace UnityEditor
 			this.m_ZoomFactor = Mathf.Max(this.m_ZoomFactor, this.m_AvatarScale / 10f);
 			evt.Use();
 		}
+
 		public void DoAvatarPreview(Rect rect, GUIStyle background)
 		{
 			this.Init();
@@ -904,8 +980,8 @@ namespace UnityEditor
 			EventType typeForControl = current.GetTypeForControl(controlID);
 			if (typeForControl == EventType.Repaint && this.m_IsValid)
 			{
-				Texture image = this.DoRenderPreview(rect2, background);
-				GUI.DrawTexture(rect2, image, ScaleMode.StretchToFill, false);
+				this.DoRenderPreview(rect2, background);
+				this.m_PreviewUtility.EndAndDrawPreview(rect2);
 			}
 			this.AvatarTimeControlGUI(rect);
 			GUI.DrawTexture(position, AvatarPreview.s_Styles.avatarIcon.image);
@@ -934,6 +1010,7 @@ namespace UnityEditor
 				EditorGUIUtility.AddCursorRect(rect2, this.currentCursor);
 			}
 		}
+
 		private void SetPreviewAvatarOption(object obj)
 		{
 			AvatarPreview.PreviewPopupOptions previewPopupOptions = (AvatarPreview.PreviewPopupOptions)((int)obj);
@@ -941,22 +1018,17 @@ namespace UnityEditor
 			{
 				this.SetPreview(null);
 			}
-			else
+			else if (previewPopupOptions == AvatarPreview.PreviewPopupOptions.DefaultModel)
 			{
-				if (previewPopupOptions == AvatarPreview.PreviewPopupOptions.DefaultModel)
-				{
-					this.SetPreview(AvatarPreview.GetHumanoidFallback());
-				}
-				else
-				{
-					if (previewPopupOptions == AvatarPreview.PreviewPopupOptions.Other)
-					{
-						ObjectSelector.get.Show(null, typeof(GameObject), null, false);
-						ObjectSelector.get.objectSelectorID = this.m_ModelSelectorId;
-					}
-				}
+				this.SetPreview(AvatarPreview.GetHumanoidFallback());
+			}
+			else if (previewPopupOptions == AvatarPreview.PreviewPopupOptions.Other)
+			{
+				ObjectSelector.get.Show(null, typeof(GameObject), null, false);
+				ObjectSelector.get.objectSelectorID = this.m_ModelSelectorId;
 			}
 		}
+
 		private void SetPreview(GameObject gameObject)
 		{
 			AvatarPreviewSelection.SetPreview(this.animationClipType, gameObject);
@@ -967,6 +1039,7 @@ namespace UnityEditor
 				this.m_OnAvatarChangeFunc();
 			}
 		}
+
 		private int Repeat(int t, int length)
 		{
 			return (t % length + length) % length;

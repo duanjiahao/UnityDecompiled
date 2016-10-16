@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+
 namespace UnityEngine.Serialization
 {
 	internal class DictionarySerializationSurrogate<TKey, TValue> : ISerializationSurrogate
@@ -10,6 +11,7 @@ namespace UnityEngine.Serialization
 			Dictionary<TKey, TValue> dictionary = (Dictionary<TKey, TValue>)obj;
 			dictionary.GetObjectData(info, context);
 		}
+
 		public object SetObjectData(object obj, SerializationInfo info, StreamingContext context, ISurrogateSelector selector)
 		{
 			IEqualityComparer<TKey> comparer = (IEqualityComparer<TKey>)info.GetValue("Comparer", typeof(IEqualityComparer<TKey>));

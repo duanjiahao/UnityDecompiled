@@ -1,28 +1,34 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RectTransformSnapping
 	{
 		internal const float kSnapThreshold = 0.05f;
+
 		private static SnapGuideCollection[] s_SnapGuides = new SnapGuideCollection[]
 		{
 			new SnapGuideCollection(),
 			new SnapGuideCollection()
 		};
+
 		private static float[] kSidesAndMiddle = new float[]
 		{
 			0f,
 			0.5f,
 			1f
 		};
+
 		private static Vector3[] s_Corners = new Vector3[4];
+
 		internal static void OnGUI()
 		{
 			RectTransformSnapping.s_SnapGuides[0].OnGUI();
 			RectTransformSnapping.s_SnapGuides[1].OnGUI();
 		}
+
 		internal static void DrawGuides()
 		{
 			if (EditorGUI.actionKey)
@@ -32,6 +38,7 @@ namespace UnityEditor
 			RectTransformSnapping.s_SnapGuides[0].DrawGuides();
 			RectTransformSnapping.s_SnapGuides[1].DrawGuides();
 		}
+
 		private static Vector3 GetInterpolatedCorner(Vector3[] corners, int mainAxis, float alongMainAxis, float alongOtherAxis)
 		{
 			if (mainAxis != 0)
@@ -42,6 +49,7 @@ namespace UnityEditor
 			}
 			return corners[0] * (1f - alongMainAxis) * (1f - alongOtherAxis) + corners[1] * (1f - alongMainAxis) * alongOtherAxis + corners[3] * alongMainAxis * (1f - alongOtherAxis) + corners[2] * alongMainAxis * alongOtherAxis;
 		}
+
 		internal static void CalculatePivotSnapValues(Rect rect, Vector3 pivot, Quaternion rotation)
 		{
 			for (int i = 0; i < 2; i++)
@@ -53,6 +61,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static void CalculateAnchorSnapValues(Transform parentSpace, Transform self, RectTransform gui, int minmaxX, int minmaxY)
 		{
 			for (int i = 0; i < 2; i++)
@@ -92,6 +101,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static void CalculateOffsetSnapValues(Transform parentSpace, Transform self, RectTransform parentRect, RectTransform rect, int xHandle, int yHandle)
 		{
 			for (int i = 0; i < 2; i++)
@@ -115,6 +125,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static void CalculatePositionSnapValues(Transform parentSpace, Transform self, RectTransform parentRect, RectTransform rect)
 		{
 			for (int i = 0; i < 2; i++)
@@ -138,6 +149,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static List<SnapGuide> GetSnapGuides(Transform parentSpace, Transform self, RectTransform parentRect, RectTransform rect, int axis, int side)
 		{
 			List<SnapGuide> list = new List<SnapGuide>();
@@ -183,6 +195,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		private static Vector3[] GetGuideLineForRect(RectTransform rect, int axis, float side)
 		{
 			Vector3[] array = new Vector3[2];
@@ -194,6 +207,7 @@ namespace UnityEditor
 			array[1] = rect.transform.TransformPoint(array[1]);
 			return array;
 		}
+
 		private static Vector3[] GetGuideLineForRect(Rect rect, Vector3 pivot, Quaternion rotation, int axis, float side)
 		{
 			Vector3[] array = new Vector3[2];
@@ -205,6 +219,7 @@ namespace UnityEditor
 			array[1] = rotation * array[1] + pivot;
 			return array;
 		}
+
 		private static float GetGuideValueForRect(RectTransform rect, float value, int axis, float side)
 		{
 			RectTransform component = rect.transform.parent.GetComponent<RectTransform>();
@@ -213,10 +228,12 @@ namespace UnityEditor
 			float num3 = rect.rect.size[axis] * (rect.pivot[axis] - side);
 			return value - num2 + num3;
 		}
+
 		internal static Vector2 SnapToGuides(Vector2 value, Vector2 snapDistance)
 		{
 			return new Vector2(RectTransformSnapping.SnapToGuides(value.x, snapDistance.x, 0), RectTransformSnapping.SnapToGuides(value.y, snapDistance.y, 1));
 		}
+
 		internal static float SnapToGuides(float value, float snapDistance, int axis)
 		{
 			if (EditorGUI.actionKey)

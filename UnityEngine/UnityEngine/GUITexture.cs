@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class GUITexture : GUIElement
@@ -17,6 +18,7 @@ namespace UnityEngine
 				this.INTERNAL_set_color(ref value);
 			}
 		}
+
 		public extern Texture texture
 		{
 			[WrapperlessIcall]
@@ -26,6 +28,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Rect pixelInset
 		{
 			get
@@ -39,6 +42,7 @@ namespace UnityEngine
 				this.INTERNAL_set_pixelInset(ref value);
 			}
 		}
+
 		public extern RectOffset border
 		{
 			[WrapperlessIcall]
@@ -48,15 +52,19 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_color(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_color(ref Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_pixelInset(out Rect value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_pixelInset(ref Rect value);

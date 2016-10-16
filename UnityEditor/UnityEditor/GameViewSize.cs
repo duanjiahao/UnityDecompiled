@@ -1,24 +1,34 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class GameViewSize
 	{
 		private const int kMaxBaseTextLength = 40;
+
 		private const int kMinResolution = 10;
+
 		private const int kMinAspect = 0;
+
 		private const int kMaxResolutionOrAspect = 99999;
+
 		[SerializeField]
 		private string m_BaseText;
+
 		[SerializeField]
 		private GameViewSizeType m_SizeType;
+
 		[SerializeField]
 		private int m_Width;
+
 		[SerializeField]
 		private int m_Height;
+
 		[NonSerialized]
 		private string m_CachedDisplayText;
+
 		public string baseText
 		{
 			get
@@ -35,6 +45,7 @@ namespace UnityEditor
 				this.Changed();
 			}
 		}
+
 		public GameViewSizeType sizeType
 		{
 			get
@@ -48,6 +59,7 @@ namespace UnityEditor
 				this.Changed();
 			}
 		}
+
 		public int width
 		{
 			get
@@ -61,6 +73,7 @@ namespace UnityEditor
 				this.Changed();
 			}
 		}
+
 		public int height
 		{
 			get
@@ -74,6 +87,7 @@ namespace UnityEditor
 				this.Changed();
 			}
 		}
+
 		public bool isFreeAspectRatio
 		{
 			get
@@ -81,6 +95,7 @@ namespace UnityEditor
 				return this.width == 0;
 			}
 		}
+
 		public float aspectRatio
 		{
 			get
@@ -92,6 +107,7 @@ namespace UnityEditor
 				return (float)this.width / (float)this.height;
 			}
 		}
+
 		public string displayText
 		{
 			get
@@ -104,6 +120,7 @@ namespace UnityEditor
 				return arg_1C_0;
 			}
 		}
+
 		private string sizeText
 		{
 			get
@@ -120,6 +137,7 @@ namespace UnityEditor
 				return string.Empty;
 			}
 		}
+
 		public GameViewSize(GameViewSizeType type, int width, int height, string baseText)
 		{
 			this.sizeType = type;
@@ -127,10 +145,12 @@ namespace UnityEditor
 			this.height = height;
 			this.baseText = baseText;
 		}
+
 		public GameViewSize(GameViewSize other)
 		{
 			this.Set(other);
 		}
+
 		private void Clamp()
 		{
 			int width = this.m_Width;
@@ -159,6 +179,7 @@ namespace UnityEditor
 				this.Changed();
 			}
 		}
+
 		public void Set(GameViewSize other)
 		{
 			this.sizeType = other.sizeType;
@@ -167,6 +188,7 @@ namespace UnityEditor
 			this.baseText = other.baseText;
 			this.Changed();
 		}
+
 		private string ComposeDisplayString()
 		{
 			if (this.width == 0 && this.height == 0)
@@ -179,6 +201,7 @@ namespace UnityEditor
 			}
 			return this.baseText + " (" + this.sizeText + ")";
 		}
+
 		private void Changed()
 		{
 			this.m_CachedDisplayText = null;

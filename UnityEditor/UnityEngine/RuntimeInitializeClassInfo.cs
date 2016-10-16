@@ -1,13 +1,19 @@
 using System;
 using System.Runtime.InteropServices;
+
 namespace UnityEngine
 {
 	[StructLayout(LayoutKind.Sequential)]
 	internal sealed class RuntimeInitializeClassInfo
 	{
 		private string m_AssemblyName;
+
 		private string m_ClassName;
+
 		private string[] m_MethodNames;
+
+		private RuntimeInitializeLoadType[] m_LoadTypes;
+
 		internal string assemblyName
 		{
 			get
@@ -19,6 +25,7 @@ namespace UnityEngine
 				this.m_AssemblyName = value;
 			}
 		}
+
 		internal string className
 		{
 			get
@@ -30,6 +37,7 @@ namespace UnityEngine
 				this.m_ClassName = value;
 			}
 		}
+
 		internal string[] methodNames
 		{
 			get
@@ -39,6 +47,18 @@ namespace UnityEngine
 			set
 			{
 				this.m_MethodNames = value;
+			}
+		}
+
+		internal RuntimeInitializeLoadType[] loadTypes
+		{
+			get
+			{
+				return this.m_LoadTypes;
+			}
+			set
+			{
+				this.m_LoadTypes = value;
 			}
 		}
 	}

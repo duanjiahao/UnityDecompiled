@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	[Obsolete("LightmapBakeQuality has been deprecated.", false)]

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class MovieImporter : AssetImporter
@@ -14,6 +15,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool linearTexture
 		{
 			[WrapperlessIcall]
@@ -23,6 +25,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float duration
 		{
 			[WrapperlessIcall]

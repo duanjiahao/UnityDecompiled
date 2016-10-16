@@ -1,33 +1,47 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AddCurvesPopup : EditorWindow
 	{
+		public delegate void OnNewCurveAdded(AddCurvesPopupPropertyNode node);
+
 		private const float k_WindowPadding = 3f;
-		internal static AnimationWindowState s_State;
+
+		internal static IAnimationRecordingState s_State;
+
 		private static AddCurvesPopup s_AddCurvesPopup;
+
 		private static long s_LastClosedTime;
+
 		private static AddCurvesPopupHierarchy s_Hierarchy;
+
 		private static Vector2 windowSize = new Vector2(240f, 250f);
+
+		private static AddCurvesPopup.OnNewCurveAdded NewCurveAddedCallback;
+
 		internal static UnityEngine.Object animatableObject
 		{
 			get;
 			set;
 		}
+
 		internal static GameObject gameObject
 		{
 			get;
 			set;
 		}
+
 		internal static string path
 		{
 			get
 			{
-				return AnimationUtility.CalculateTransformPath(AddCurvesPopup.gameObject.transform, AddCurvesPopup.s_State.m_RootGameObject.transform);
+				return AnimationUtility.CalculateTransformPath(AddCurvesPopup.gameObject.transform, AddCurvesPopup.s_State.activeRootGameObject.transform);
 			}
 		}
+
 		private void Init(Rect buttonRect)
 		{
 			buttonRect = GUIUtility.GUIToScreenRect(buttonRect);
@@ -36,27 +50,24 @@ namespace UnityEditorInternal
 				PopupLocationHelper.PopupLocation.Right
 			});
 		}
+
 		private void OnDisable()
 		{
 			AddCurvesPopup.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 			AddCurvesPopup.s_AddCurvesPopup = null;
 			AddCurvesPopup.s_Hierarchy = null;
 		}
+
 		internal static void AddNewCurve(AddCurvesPopupPropertyNode node)
 		{
-			if (!AnimationWindow.EnsureAllHaveClips())
-			{
-				return;
-			}
 			AnimationWindowUtility.CreateDefaultCurves(AddCurvesPopup.s_State, node.curveBindings);
-			TreeViewItem treeViewItem = (!(node.parent.displayName == "GameObject")) ? node.parent.parent : node.parent;
-			AddCurvesPopup.s_State.m_hierarchyState.selectedIDs.Clear();
-			AddCurvesPopup.s_State.m_hierarchyState.selectedIDs.Add(treeViewItem.id);
-			AddCurvesPopup.s_State.m_HierarchyData.SetExpanded(treeViewItem, true);
-			AddCurvesPopup.s_State.m_HierarchyData.SetExpanded(node.parent.id, true);
-			AddCurvesPopup.s_State.m_CurveEditorIsDirty = true;
+			if (AddCurvesPopup.NewCurveAddedCallback != null)
+			{
+				AddCurvesPopup.NewCurveAddedCallback(node);
+			}
 		}
-		internal static bool ShowAtPosition(Rect buttonRect, AnimationWindowState state)
+
+		internal static bool ShowAtPosition(Rect buttonRect, IAnimationRecordingState state, AddCurvesPopup.OnNewCurveAdded newCurveCallback)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
 			if (num >= AddCurvesPopup.s_LastClosedTime + 50L)
@@ -66,12 +77,14 @@ namespace UnityEditorInternal
 				{
 					AddCurvesPopup.s_AddCurvesPopup = ScriptableObject.CreateInstance<AddCurvesPopup>();
 				}
+				AddCurvesPopup.NewCurveAddedCallback = newCurveCallback;
 				AddCurvesPopup.s_State = state;
 				AddCurvesPopup.s_AddCurvesPopup.Init(buttonRect);
 				return true;
 			}
 			return false;
 		}
+
 		internal void OnGUI()
 		{
 			if (Event.current.type == EventType.Layout)

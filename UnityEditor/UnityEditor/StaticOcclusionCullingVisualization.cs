@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class StaticOcclusionCullingVisualization
@@ -14,6 +15,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool showPreVisualization
 		{
 			[WrapperlessIcall]
@@ -23,6 +25,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool showViewVolumes
 		{
 			[WrapperlessIcall]
@@ -32,6 +35,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool showDynamicObjectBounds
 		{
 			[WrapperlessIcall]
@@ -41,6 +45,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool showPortals
 		{
 			[WrapperlessIcall]
@@ -50,6 +55,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool showVisibilityLines
 		{
 			[WrapperlessIcall]
@@ -59,6 +65,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool showGeometryCulling
 		{
 			[WrapperlessIcall]
@@ -68,18 +75,21 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool isPreviewOcclusionCullingCameraInPVS
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern Camera previewOcclusionCamera
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern Camera previewOcclucionCamera
 		{
 			[WrapperlessIcall]

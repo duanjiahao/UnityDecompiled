@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class LODGroupGUI
@@ -9,47 +10,80 @@ namespace UnityEditor
 		public class GUIStyles
 		{
 			public readonly GUIStyle m_LODSliderBG = "LODSliderBG";
+
 			public readonly GUIStyle m_LODSliderRange = "LODSliderRange";
+
 			public readonly GUIStyle m_LODSliderRangeSelected = "LODSliderRangeSelected";
+
 			public readonly GUIStyle m_LODSliderText = "LODSliderText";
+
 			public readonly GUIStyle m_LODSliderTextSelected = "LODSliderTextSelected";
+
 			public readonly GUIStyle m_LODStandardButton = "Button";
+
 			public readonly GUIStyle m_LODRendererButton = "LODRendererButton";
+
 			public readonly GUIStyle m_LODRendererAddButton = "LODRendererAddButton";
+
 			public readonly GUIStyle m_LODRendererRemove = "LODRendererRemove";
+
 			public readonly GUIStyle m_LODBlackBox = "LODBlackBox";
+
 			public readonly GUIStyle m_LODCameraLine = "LODCameraLine";
+
 			public readonly GUIStyle m_LODSceneText = "LODSceneText";
+
 			public readonly GUIStyle m_LODRenderersText = "LODRenderersText";
+
 			public readonly GUIStyle m_LODLevelNotifyText = "LODLevelNotifyText";
+
 			public readonly GUIContent m_IconRendererPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add New Renderers");
+
 			public readonly GUIContent m_IconRendererMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove Renderer");
+
 			public readonly GUIContent m_CameraIcon = EditorGUIUtility.IconContent("Camera Icon");
-			public readonly GUIContent m_UploadToImporter = new GUIContent("Upload to Importer", "Upload the modified screen percentages to the model importer.");
-			public readonly GUIContent m_UploadToImporterDisabled = new GUIContent("Upload to Importer", "Number of LOD's in the scene instance differ from the number of LOD's in the imported model.");
-			public readonly GUIContent m_RecalculateBounds = new GUIContent("Bounds", "Recalculate bounds for the current LOD group.");
-			public readonly GUIContent m_LightmapScale = new GUIContent("Lightmap Scale", "Set the lightmap scale to match the LOD percentages");
-			public readonly GUIContent m_RendersTitle = new GUIContent("Renderers:");
+
+			public readonly GUIContent m_UploadToImporter = EditorGUIUtility.TextContent("Upload to Importer|Upload the modified screen percentages to the model importer.");
+
+			public readonly GUIContent m_UploadToImporterDisabled = EditorGUIUtility.TextContent("Upload to Importer|Number of LOD's in the scene instance differ from the number of LOD's in the imported model.");
+
+			public readonly GUIContent m_RecalculateBounds = EditorGUIUtility.TextContent("Bounds|Recalculate bounds for the current LOD group.");
+
+			public readonly GUIContent m_LightmapScale = EditorGUIUtility.TextContent("Lightmap Scale|Set the lightmap scale to match the LOD percentages.");
+
+			public readonly GUIContent m_RendersTitle = EditorGUIUtility.TextContent("Renderers:");
+
+			public readonly GUIContent m_AnimatedCrossFadeInvalidText = EditorGUIUtility.TextContent("Animated cross-fading is currently disabled. Please enable \"Animate Between Next LOD\" on either the current or the previous LOD.");
+
+			public readonly GUIContent m_AnimatedCrossFadeInconsistentText = EditorGUIUtility.TextContent("Animated cross-fading is currently disabled. \"Animate Between Next LOD\" is enabled but the next LOD is not in Animated Cross Fade mode.");
+
+			public readonly GUIContent m_AnimateBetweenPreviousLOD = EditorGUIUtility.TextContent("Animate Between Previous LOD|Cross-fade animation plays when transits between this LOD and the previous (lower) LOD.");
 		}
+
 		public class LODInfo
 		{
 			public Rect m_ButtonPosition;
+
 			public Rect m_RangePosition;
+
 			public int LODLevel
 			{
 				get;
 				private set;
 			}
+
 			public string LODName
 			{
 				get;
 				private set;
 			}
+
 			public float RawScreenPercent
 			{
 				get;
 				set;
 			}
+
 			public float ScreenPercent
 			{
 				get
@@ -61,6 +95,7 @@ namespace UnityEditor
 					this.RawScreenPercent = LODGroupGUI.LinearizeScreenPercentage(value);
 				}
 			}
+
 			public LODInfo(int lodLevel, string name, float screenPercentage)
 			{
 				this.LODLevel = lodLevel;
@@ -68,17 +103,29 @@ namespace UnityEditor
 				this.RawScreenPercent = screenPercentage;
 			}
 		}
+
 		public const int kSceneLabelHalfWidth = 100;
+
 		public const int kSceneLabelHeight = 45;
+
 		public const int kSceneHeaderOffset = 40;
+
 		public const int kSliderBarTopMargin = 18;
+
 		public const int kSliderBarHeight = 30;
+
 		public const int kSliderBarBottomMargin = 16;
+
 		public const int kRenderersButtonHeight = 60;
+
 		public const int kButtonPadding = 2;
+
 		public const int kDeleteButtonSize = 20;
+
 		public const int kSelectedLODRangePadding = 3;
+
 		public const int kRenderAreaForegroundPadding = 3;
+
 		public static readonly Color[] kLODColors = new Color[]
 		{
 			new Color(0.4831376f, 0.6211768f, 0.0219608f, 1f),
@@ -90,8 +137,11 @@ namespace UnityEditor
 			new Color(0.4486272f, 0.4078432f, 0.050196f, 1f),
 			new Color(0.7749016f, 0.6368624f, 0.0250984f, 1f)
 		};
+
 		public static readonly Color kCulledLODColor = new Color(0.4f, 0f, 0f, 1f);
+
 		private static LODGroupGUI.GUIStyles s_Styles;
+
 		public static LODGroupGUI.GUIStyles Styles
 		{
 			get
@@ -103,6 +153,7 @@ namespace UnityEditor
 				return LODGroupGUI.s_Styles;
 			}
 		}
+
 		public static float DelinearizeScreenPercentage(float percentage)
 		{
 			if (Mathf.Approximately(0f, percentage))
@@ -111,14 +162,17 @@ namespace UnityEditor
 			}
 			return Mathf.Sqrt(percentage);
 		}
+
 		public static float LinearizeScreenPercentage(float percentage)
 		{
 			return percentage * percentage;
 		}
+
 		public static Rect CalcLODButton(Rect totalRect, float percentage)
 		{
 			return new Rect(totalRect.x + Mathf.Round(totalRect.width * (1f - percentage)) - 5f, totalRect.y, 10f, totalRect.height);
 		}
+
 		public static Rect GetCulledBox(Rect totalRect, float previousLODPercentage)
 		{
 			Rect result = LODGroupGUI.CalcLODRange(totalRect, previousLODPercentage, 0f);
@@ -127,6 +181,7 @@ namespace UnityEditor
 			result.center += new Vector2(0f, 1f);
 			return result;
 		}
+
 		public static List<LODGroupGUI.LODInfo> CreateLODInfos(int numLODs, Rect area, Func<int, string> nameGen, Func<int, float> heightGen)
 		{
 			List<LODGroupGUI.LODInfo> list = new List<LODGroupGUI.LODInfo>();
@@ -140,6 +195,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		public static void SetSelectedLODLevelPercentage(float newScreenPercentage, int lod, List<LODGroupGUI.LODInfo> lods)
 		{
 			float num = 0f;
@@ -158,6 +214,7 @@ namespace UnityEditor
 			num = Mathf.Clamp01(num);
 			lods[lod].ScreenPercent = Mathf.Clamp(newScreenPercentage, num, num2);
 		}
+
 		public static void DrawLODSlider(Rect area, IList<LODGroupGUI.LODInfo> lods, int selectedLevel)
 		{
 			LODGroupGUI.Styles.m_LODSliderBG.Draw(area, GUIContent.none, false, false, false, false);
@@ -169,6 +226,7 @@ namespace UnityEditor
 			}
 			LODGroupGUI.DrawCulledRange(area, (lods.Count <= 0) ? 1f : lods[lods.Count - 1].RawScreenPercent);
 		}
+
 		public static void DrawMixedValueLODSlider(Rect area)
 		{
 			LODGroupGUI.Styles.m_LODSliderBG.Draw(area, GUIContent.none, false, false, false, false);
@@ -183,16 +241,19 @@ namespace UnityEditor
 			};
 			GUI.Label(area, "---", style);
 		}
+
 		private static Rect CalcLODRange(Rect totalRect, float startPercent, float endPercent)
 		{
 			float num = Mathf.Round(totalRect.width * (1f - startPercent));
 			float num2 = Mathf.Round(totalRect.width * (1f - endPercent));
 			return new Rect(totalRect.x + num, totalRect.y, num2 - num, totalRect.height);
 		}
+
 		private static void DrawLODButton(LODGroupGUI.LODInfo currentLOD)
 		{
 			EditorGUIUtility.AddCursorRect(currentLOD.m_ButtonPosition, MouseCursor.ResizeHorizontal);
 		}
+
 		private static void DrawLODRange(LODGroupGUI.LODInfo currentLOD, float previousLODPercentage, bool isSelected)
 		{
 			Color backgroundColor = GUI.backgroundColor;
@@ -220,6 +281,7 @@ namespace UnityEditor
 			}
 			GUI.backgroundColor = backgroundColor;
 		}
+
 		private static void DrawCulledRange(Rect totalRect, float previousLODPercentage)
 		{
 			if (Mathf.Approximately(previousLODPercentage, 0f))

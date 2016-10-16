@@ -1,27 +1,45 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(AudioReverbZone))]
 	internal class AudioReverbZoneEditor : Editor
 	{
 		private SerializedProperty m_MinDistance;
+
 		private SerializedProperty m_MaxDistance;
+
 		private SerializedProperty m_ReverbPreset;
+
 		private SerializedProperty m_Room;
+
 		private SerializedProperty m_RoomHF;
+
 		private SerializedProperty m_RoomLF;
+
 		private SerializedProperty m_DecayTime;
+
 		private SerializedProperty m_DecayHFRatio;
+
 		private SerializedProperty m_Reflections;
+
 		private SerializedProperty m_ReflectionsDelay;
+
 		private SerializedProperty m_Reverb;
+
 		private SerializedProperty m_ReverbDelay;
+
 		private SerializedProperty m_HFReference;
+
 		private SerializedProperty m_LFReference;
+
 		private SerializedProperty m_RoomRolloffFactor;
+
 		private SerializedProperty m_Diffusion;
+
 		private SerializedProperty m_Density;
+
 		private void OnEnable()
 		{
 			this.m_MinDistance = base.serializedObject.FindProperty("m_MinDistance");
@@ -42,6 +60,7 @@ namespace UnityEditor
 			this.m_Diffusion = base.serializedObject.FindProperty("m_Diffusion");
 			this.m_Density = base.serializedObject.FindProperty("m_Density");
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -54,24 +73,26 @@ namespace UnityEditor
 			{
 				base.serializedObject.SetIsDifferentCacheDirty();
 			}
-			EditorGUI.BeginDisabledGroup(this.m_ReverbPreset.enumValueIndex != 27 || this.m_ReverbPreset.hasMultipleDifferentValues);
-			EditorGUILayout.IntSlider(this.m_Room, -10000, 0, new GUILayoutOption[0]);
-			EditorGUILayout.IntSlider(this.m_RoomHF, -10000, 0, new GUILayoutOption[0]);
-			EditorGUILayout.IntSlider(this.m_RoomLF, -10000, 0, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_DecayTime, 0.1f, 20f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_DecayHFRatio, 0.1f, 2f, new GUILayoutOption[0]);
-			EditorGUILayout.IntSlider(this.m_Reflections, -10000, 1000, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_ReflectionsDelay, 0f, 0.3f, new GUILayoutOption[0]);
-			EditorGUILayout.IntSlider(this.m_Reverb, -10000, 2000, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_ReverbDelay, 0f, 0.1f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_HFReference, 1000f, 20000f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_LFReference, 20f, 1000f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_RoomRolloffFactor, 0f, 10f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_Diffusion, 0f, 100f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_Density, 0f, 100f, new GUILayoutOption[0]);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(this.m_ReverbPreset.enumValueIndex != 27 || this.m_ReverbPreset.hasMultipleDifferentValues))
+			{
+				EditorGUILayout.IntSlider(this.m_Room, -10000, 0, new GUILayoutOption[0]);
+				EditorGUILayout.IntSlider(this.m_RoomHF, -10000, 0, new GUILayoutOption[0]);
+				EditorGUILayout.IntSlider(this.m_RoomLF, -10000, 0, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_DecayTime, 0.1f, 20f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_DecayHFRatio, 0.1f, 2f, new GUILayoutOption[0]);
+				EditorGUILayout.IntSlider(this.m_Reflections, -10000, 1000, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReflectionsDelay, 0f, 0.3f, new GUILayoutOption[0]);
+				EditorGUILayout.IntSlider(this.m_Reverb, -10000, 2000, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReverbDelay, 0f, 0.1f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_HFReference, 1000f, 20000f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_LFReference, 20f, 1000f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_RoomRolloffFactor, 0f, 10f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_Diffusion, 0f, 100f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_Density, 0f, 100f, new GUILayoutOption[0]);
+			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private void OnSceneGUI()
 		{
 			AudioReverbZone audioReverbZone = (AudioReverbZone)this.target;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RagdollBuilder : ScriptableWizard
@@ -8,44 +9,82 @@ namespace UnityEditor
 		private class BoneInfo
 		{
 			public string name;
+
 			public Transform anchor;
+
 			public CharacterJoint joint;
+
 			public RagdollBuilder.BoneInfo parent;
+
 			public float minLimit;
+
 			public float maxLimit;
+
 			public float swingLimit;
+
 			public Vector3 axis;
+
 			public Vector3 normalAxis;
+
 			public float radiusScale;
+
 			public Type colliderType;
+
 			public ArrayList children = new ArrayList();
+
 			public float density;
+
 			public float summedMass;
 		}
+
 		public Transform pelvis;
+
 		public Transform leftHips;
+
 		public Transform leftKnee;
+
 		public Transform leftFoot;
+
 		public Transform rightHips;
+
 		public Transform rightKnee;
+
 		public Transform rightFoot;
+
 		public Transform leftArm;
+
 		public Transform leftElbow;
+
 		public Transform rightArm;
+
 		public Transform rightElbow;
+
 		public Transform middleSpine;
+
 		public Transform head;
+
 		public float totalMass = 20f;
+
 		public float strength;
+
 		private Vector3 right = Vector3.right;
+
 		private Vector3 up = Vector3.up;
+
 		private Vector3 forward = Vector3.forward;
+
 		private Vector3 worldRight = Vector3.right;
+
 		private Vector3 worldUp = Vector3.up;
+
 		private Vector3 worldForward = Vector3.forward;
+
 		public bool flipForward;
+
 		private ArrayList bones;
+
 		private RagdollBuilder.BoneInfo rootBone;
+
 		private string CheckConsistency()
 		{
 			this.PrepareBones();
@@ -73,6 +112,7 @@ namespace UnityEditor
 			}
 			return string.Empty;
 		}
+
 		private void OnDrawGizmos()
 		{
 			if (this.pelvis)
@@ -85,17 +125,20 @@ namespace UnityEditor
 				Gizmos.DrawRay(this.pelvis.position, this.pelvis.TransformDirection(this.forward));
 			}
 		}
+
 		[MenuItem("GameObject/3D Object/Ragdoll...", false, 2000)]
 		private static void CreateWizard()
 		{
 			ScriptableWizard.DisplayWizard<RagdollBuilder>("Create Ragdoll");
 		}
+
 		private void DecomposeVector(out Vector3 normalCompo, out Vector3 tangentCompo, Vector3 outwardDir, Vector3 outwardNormal)
 		{
 			outwardNormal = outwardNormal.normalized;
 			normalCompo = outwardNormal * Vector3.Dot(outwardDir, outwardNormal);
 			tangentCompo = outwardDir - normalCompo;
 		}
+
 		private void CalculateAxes()
 		{
 			if (this.head != null && this.pelvis != null)
@@ -115,6 +158,7 @@ namespace UnityEditor
 				this.forward = -this.forward;
 			}
 		}
+
 		private void OnWizardUpdate()
 		{
 			base.errorString = this.CheckConsistency();
@@ -129,6 +173,7 @@ namespace UnityEditor
 			}
 			base.isValid = (base.errorString.Length == 0);
 		}
+
 		private void PrepareBones()
 		{
 			if (this.pelvis)
@@ -151,6 +196,7 @@ namespace UnityEditor
 			this.AddMirroredJoint("Elbow", this.leftElbow, this.rightElbow, "Arm", this.worldForward, this.worldUp, -90f, 0f, 0f, typeof(CapsuleCollider), 0.2f, 1f);
 			this.AddJoint("Head", this.head, "Middle Spine", this.worldRight, this.worldForward, -40f, 25f, 25f, null, 1f, 1f);
 		}
+
 		private void OnWizardCreate()
 		{
 			this.Cleanup();
@@ -161,6 +207,7 @@ namespace UnityEditor
 			this.BuildJoints();
 			this.CalculateMass();
 		}
+
 		private RagdollBuilder.BoneInfo FindBone(string name)
 		{
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
@@ -172,11 +219,13 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private void AddMirroredJoint(string name, Transform leftAnchor, Transform rightAnchor, string parent, Vector3 worldTwistAxis, Vector3 worldSwingAxis, float minLimit, float maxLimit, float swingLimit, Type colliderType, float radiusScale, float density)
 		{
 			this.AddJoint("Left " + name, leftAnchor, parent, worldTwistAxis, worldSwingAxis, minLimit, maxLimit, swingLimit, colliderType, radiusScale, density);
 			this.AddJoint("Right " + name, rightAnchor, parent, worldTwistAxis, worldSwingAxis, minLimit, maxLimit, swingLimit, colliderType, radiusScale, density);
 		}
+
 		private void AddJoint(string name, Transform anchor, string parent, Vector3 worldTwistAxis, Vector3 worldSwingAxis, float minLimit, float maxLimit, float swingLimit, Type colliderType, float radiusScale, float density)
 		{
 			RagdollBuilder.BoneInfo boneInfo = new RagdollBuilder.BoneInfo();
@@ -194,23 +243,18 @@ namespace UnityEditor
 			{
 				boneInfo.parent = this.FindBone(parent);
 			}
-			else
+			else if (name.StartsWith("Left"))
 			{
-				if (name.StartsWith("Left"))
-				{
-					boneInfo.parent = this.FindBone("Left " + parent);
-				}
-				else
-				{
-					if (name.StartsWith("Right"))
-					{
-						boneInfo.parent = this.FindBone("Right " + parent);
-					}
-				}
+				boneInfo.parent = this.FindBone("Left " + parent);
+			}
+			else if (name.StartsWith("Right"))
+			{
+				boneInfo.parent = this.FindBone("Right " + parent);
 			}
 			boneInfo.parent.children.Add(boneInfo);
 			this.bones.Add(boneInfo);
 		}
+
 		private void BuildCapsules()
 		{
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
@@ -258,6 +302,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void Cleanup()
 		{
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
@@ -288,6 +333,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void BuildBodies()
 		{
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
@@ -296,6 +342,7 @@ namespace UnityEditor
 				boneInfo.anchor.GetComponent<Rigidbody>().mass = boneInfo.density;
 			}
 		}
+
 		private void BuildJoints()
 		{
 			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
@@ -322,6 +369,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CalculateMassRecurse(RagdollBuilder.BoneInfo bone)
 		{
 			float num = bone.anchor.GetComponent<Rigidbody>().mass;
@@ -332,6 +380,7 @@ namespace UnityEditor
 			}
 			bone.summedMass = num;
 		}
+
 		private void CalculateMass()
 		{
 			this.CalculateMassRecurse(this.rootBone);
@@ -342,6 +391,7 @@ namespace UnityEditor
 			}
 			this.CalculateMassRecurse(this.rootBone);
 		}
+
 		private static void CalculateDirection(Vector3 point, out int direction, out float distance)
 		{
 			direction = 0;
@@ -355,6 +405,7 @@ namespace UnityEditor
 			}
 			distance = point[direction];
 		}
+
 		private static Vector3 CalculateDirectionAxis(Vector3 point)
 		{
 			int index = 0;
@@ -371,6 +422,7 @@ namespace UnityEditor
 			}
 			return zero;
 		}
+
 		private static int SmallestComponent(Vector3 point)
 		{
 			int num = 0;
@@ -384,6 +436,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private static int LargestComponent(Vector3 point)
 		{
 			int num = 0;
@@ -397,6 +450,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private static int SecondLargestComponent(Vector3 point)
 		{
 			int num = RagdollBuilder.SmallestComponent(point);
@@ -417,6 +471,7 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		private Bounds Clip(Bounds bounds, Transform relativeTo, Transform clipTransform, bool below)
 		{
 			int index = RagdollBuilder.LargestComponent(bounds.size);
@@ -434,6 +489,7 @@ namespace UnityEditor
 			}
 			return bounds;
 		}
+
 		private Bounds GetBreastBounds(Transform relativeTo)
 		{
 			Bounds result = default(Bounds);
@@ -446,6 +502,7 @@ namespace UnityEditor
 			result.size = size;
 			return result;
 		}
+
 		private void AddBreastColliders()
 		{
 			if (this.middleSpine != null && this.pelvis != null)
@@ -473,6 +530,7 @@ namespace UnityEditor
 				boxCollider2.size = size;
 			}
 		}
+
 		private void AddHeadCollider()
 		{
 			if (this.head.GetComponent<Collider>())

@@ -1,17 +1,25 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.SocialPlatforms.Impl;
+
 namespace UnityEngine.SocialPlatforms
 {
 	public class Local : ISocialPlatform
 	{
 		private static LocalUser m_LocalUser;
+
 		private List<UserProfile> m_Friends = new List<UserProfile>();
+
 		private List<UserProfile> m_Users = new List<UserProfile>();
+
 		private List<AchievementDescription> m_AchievementDescriptions = new List<AchievementDescription>();
+
 		private List<Achievement> m_Achievements = new List<Achievement>();
+
 		private List<Leaderboard> m_Leaderboards = new List<Leaderboard>();
+
 		private Texture2D m_DefaultTexture;
+
 		public ILocalUser localUser
 		{
 			get
@@ -23,6 +31,7 @@ namespace UnityEngine.SocialPlatforms
 				return Local.m_LocalUser;
 			}
 		}
+
 		void ISocialPlatform.Authenticate(ILocalUser user, Action<bool> callback)
 		{
 			LocalUser localUser = (LocalUser)user;
@@ -38,6 +47,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(true);
 			}
 		}
+
 		void ISocialPlatform.LoadFriends(ILocalUser user, Action<bool> callback)
 		{
 			if (!this.VerifyUser())
@@ -50,6 +60,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(true);
 			}
 		}
+
 		void ISocialPlatform.LoadScores(ILeaderboard board, Action<bool> callback)
 		{
 			if (!this.VerifyUser())
@@ -73,10 +84,12 @@ namespace UnityEngine.SocialPlatforms
 				callback(true);
 			}
 		}
+
 		bool ISocialPlatform.GetLoading(ILeaderboard board)
 		{
 			return this.VerifyUser() && ((Leaderboard)board).loading;
 		}
+
 		public void LoadUsers(string[] userIDs, Action<IUserProfile[]> callback)
 		{
 			List<UserProfile> list = new List<UserProfile>();
@@ -104,6 +117,7 @@ namespace UnityEngine.SocialPlatforms
 			}
 			callback(list.ToArray());
 		}
+
 		public void ReportProgress(string id, double progress, Action<bool> callback)
 		{
 			if (!this.VerifyUser())
@@ -148,6 +162,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(false);
 			}
 		}
+
 		public void LoadAchievementDescriptions(Action<IAchievementDescription[]> callback)
 		{
 			if (!this.VerifyUser())
@@ -159,6 +174,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(this.m_AchievementDescriptions.ToArray());
 			}
 		}
+
 		public void LoadAchievements(Action<IAchievement[]> callback)
 		{
 			if (!this.VerifyUser())
@@ -170,6 +186,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(this.m_Achievements.ToArray());
 			}
 		}
+
 		public void ReportScore(long score, string board, Action<bool> callback)
 		{
 			if (!this.VerifyUser())
@@ -197,6 +214,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(false);
 			}
 		}
+
 		public void LoadScores(string leaderboardID, Action<IScore[]> callback)
 		{
 			if (!this.VerifyUser())
@@ -221,6 +239,7 @@ namespace UnityEngine.SocialPlatforms
 				callback(new Score[0]);
 			}
 		}
+
 		private void SortScores(Leaderboard board)
 		{
 			List<Score> list = new List<Score>((Score[])board.scores);
@@ -230,6 +249,7 @@ namespace UnityEngine.SocialPlatforms
 				list[i].SetRank(i + 1);
 			}
 		}
+
 		private void SetLocalPlayerScore(Leaderboard board)
 		{
 			IScore[] scores = board.scores;
@@ -243,22 +263,27 @@ namespace UnityEngine.SocialPlatforms
 				}
 			}
 		}
+
 		public void ShowAchievementsUI()
 		{
 			Debug.Log("ShowAchievementsUI not implemented");
 		}
+
 		public void ShowLeaderboardUI()
 		{
 			Debug.Log("ShowLeaderboardUI not implemented");
 		}
+
 		public ILeaderboard CreateLeaderboard()
 		{
 			return new Leaderboard();
 		}
+
 		public IAchievement CreateAchievement()
 		{
 			return new Achievement();
 		}
+
 		private bool VerifyUser()
 		{
 			if (!this.localUser.authenticated)
@@ -268,6 +293,7 @@ namespace UnityEngine.SocialPlatforms
 			}
 			return true;
 		}
+
 		private void PopulateStaticData()
 		{
 			this.m_Friends.Add(new UserProfile("Fred", "1001", true, UserState.Online, this.m_DefaultTexture));
@@ -290,6 +316,7 @@ namespace UnityEngine.SocialPlatforms
 			}.ToArray());
 			this.m_Leaderboards.Add(leaderboard);
 		}
+
 		private Texture2D CreateDummyTexture(int width, int height)
 		{
 			Texture2D texture2D = new Texture2D(width, height);

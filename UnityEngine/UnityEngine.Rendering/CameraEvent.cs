@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.Rendering
 {
 	public enum CameraEvent
@@ -23,6 +24,8 @@ namespace UnityEngine.Rendering
 		AfterForwardAlpha,
 		BeforeImageEffects,
 		AfterImageEffects,
-		AfterEverything
+		AfterEverything,
+		BeforeReflections,
+		AfterReflections
 	}
 }

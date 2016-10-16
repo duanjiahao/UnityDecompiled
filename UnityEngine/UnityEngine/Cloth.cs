@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+
 namespace UnityEngine
 {
 	public sealed class Cloth : Component
@@ -14,6 +15,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float bendingStiffness
 		{
 			[WrapperlessIcall]
@@ -23,6 +25,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float stretchingStiffness
 		{
 			[WrapperlessIcall]
@@ -32,6 +35,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float damping
 		{
 			[WrapperlessIcall]
@@ -41,6 +45,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Vector3 externalAcceleration
 		{
 			get
@@ -54,6 +59,7 @@ namespace UnityEngine
 				this.INTERNAL_set_externalAcceleration(ref value);
 			}
 		}
+
 		public Vector3 randomAcceleration
 		{
 			get
@@ -67,6 +73,7 @@ namespace UnityEngine
 				this.INTERNAL_set_randomAcceleration(ref value);
 			}
 		}
+
 		public extern bool useGravity
 		{
 			[WrapperlessIcall]
@@ -76,6 +83,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("Deprecated. Cloth.selfCollisions is no longer supported since Unity 5.0.", true)]
 		public extern bool selfCollision
 		{
@@ -86,6 +94,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool enabled
 		{
 			[WrapperlessIcall]
@@ -95,18 +104,21 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Vector3[] vertices
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern Vector3[] normals
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern float friction
 		{
 			[WrapperlessIcall]
@@ -116,6 +128,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float collisionMassScale
 		{
 			[WrapperlessIcall]
@@ -125,6 +138,8 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		[Obsolete("useContinuousCollision is no longer supported, use enableContinuousCollision instead")]
 		public extern float useContinuousCollision
 		{
 			[WrapperlessIcall]
@@ -134,6 +149,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern bool enableContinuousCollision
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern float useVirtualParticles
 		{
 			[WrapperlessIcall]
@@ -143,6 +169,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern bool enableTethers
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern ClothSkinningCoefficient[] coefficients
 		{
 			[WrapperlessIcall]
@@ -152,6 +189,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float worldVelocityScale
 		{
 			[WrapperlessIcall]
@@ -161,6 +199,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float worldAccelerationScale
 		{
 			[WrapperlessIcall]
@@ -170,7 +209,21 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern bool solverFrequency
+
+		[Obsolete("Parameter solverFrequency is obsolete and no longer supported. Please use clothSolverFrequency instead.")]
+		public bool solverFrequency
+		{
+			get
+			{
+				return this.clothSolverFrequency > 0f;
+			}
+			set
+			{
+				this.clothSolverFrequency = ((!value) ? 0f : 120f);
+			}
+		}
+
+		public extern float clothSolverFrequency
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -179,6 +232,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern CapsuleCollider[] capsuleColliders
 		{
 			[WrapperlessIcall]
@@ -188,6 +242,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ClothSphereColliderPair[] sphereColliders
 		{
 			[WrapperlessIcall]
@@ -197,28 +252,36 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_externalAcceleration(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_externalAcceleration(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_randomAcceleration(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_randomAcceleration(ref Vector3 value);
+
 		public void ClearTransformMotion()
 		{
 			Cloth.INTERNAL_CALL_ClearTransformMotion(this);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ClearTransformMotion(Cloth self);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetEnabledFading(bool enabled, [DefaultValue("0.5f")] float interpolationTime);
+
 		[ExcludeFromDocs]
 		public void SetEnabledFading(bool enabled)
 		{

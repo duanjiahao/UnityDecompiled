@@ -1,12 +1,22 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public class MathUtils
 	{
 		private const int kMaxDecimals = 15;
+
 		internal static float ClampToFloat(double value)
 		{
+			if (double.IsPositiveInfinity(value))
+			{
+				return float.PositiveInfinity;
+			}
+			if (double.IsNegativeInfinity(value))
+			{
+				return float.NegativeInfinity;
+			}
 			if (value < -3.4028234663852886E+38)
 			{
 				return -3.40282347E+38f;
@@ -17,6 +27,7 @@ namespace UnityEditor
 			}
 			return (float)value;
 		}
+
 		internal static int ClampToInt(long value)
 		{
 			if (value < -2147483648L)
@@ -29,6 +40,7 @@ namespace UnityEditor
 			}
 			return (int)value;
 		}
+
 		internal static float RoundToMultipleOf(float value, float roundingValue)
 		{
 			if (roundingValue == 0f)
@@ -37,6 +49,7 @@ namespace UnityEditor
 			}
 			return Mathf.Round(value / roundingValue) * roundingValue;
 		}
+
 		internal static float GetClosestPowerOfTen(float positiveNumber)
 		{
 			if (positiveNumber <= 0f)
@@ -45,14 +58,17 @@ namespace UnityEditor
 			}
 			return Mathf.Pow(10f, (float)Mathf.RoundToInt(Mathf.Log10(positiveNumber)));
 		}
+
 		internal static int GetNumberOfDecimalsForMinimumDifference(float minDifference)
 		{
-			return Mathf.Clamp(-Mathf.FloorToInt(Mathf.Log10(minDifference)), 0, 15);
+			return Mathf.Clamp(-Mathf.FloorToInt(Mathf.Log10(Mathf.Abs(minDifference))), 0, 15);
 		}
+
 		internal static int GetNumberOfDecimalsForMinimumDifference(double minDifference)
 		{
-			return (int)Math.Max(0.0, -Math.Floor(Math.Log10(minDifference)));
+			return (int)Math.Max(0.0, -Math.Floor(Math.Log10(Math.Abs(minDifference))));
 		}
+
 		internal static float RoundBasedOnMinimumDifference(float valueToRound, float minDifference)
 		{
 			if (minDifference == 0f)
@@ -61,6 +77,7 @@ namespace UnityEditor
 			}
 			return (float)Math.Round((double)valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
 		}
+
 		internal static double RoundBasedOnMinimumDifference(double valueToRound, double minDifference)
 		{
 			if (minDifference == 0.0)
@@ -69,11 +86,13 @@ namespace UnityEditor
 			}
 			return Math.Round(valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
 		}
+
 		internal static float DiscardLeastSignificantDecimal(float v)
 		{
 			int digits = Mathf.Clamp((int)(5f - Mathf.Log10(Mathf.Abs(v))), 0, 15);
 			return (float)Math.Round((double)v, digits, MidpointRounding.AwayFromZero);
 		}
+
 		internal static double DiscardLeastSignificantDecimal(double v)
 		{
 			int digits = Math.Max(0, (int)(5.0 - Math.Log10(Math.Abs(v))));
@@ -88,14 +107,17 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static float GetQuatLength(Quaternion q)
 		{
 			return Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 		}
+
 		public static Quaternion GetQuatConjugate(Quaternion q)
 		{
 			return new Quaternion(-q.x, -q.y, -q.z, q.w);
 		}
+
 		public static Matrix4x4 OrthogonalizeMatrix(Matrix4x4 m)
 		{
 			Matrix4x4 identity = Matrix4x4.identity;
@@ -109,6 +131,7 @@ namespace UnityEditor
 			identity.SetColumn(2, normalized);
 			return identity;
 		}
+
 		public static void QuaternionNormalize(ref Quaternion q)
 		{
 			float num = 1f / Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
@@ -117,6 +140,7 @@ namespace UnityEditor
 			q.z *= num;
 			q.w *= num;
 		}
+
 		public static Quaternion QuaternionFromMatrix(Matrix4x4 m)
 		{
 			Quaternion result = default(Quaternion);
@@ -130,6 +154,7 @@ namespace UnityEditor
 			MathUtils.QuaternionNormalize(ref result);
 			return result;
 		}
+
 		public static Quaternion GetQuatLog(Quaternion q)
 		{
 			Quaternion result = q;
@@ -148,6 +173,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static Quaternion GetQuatExp(Quaternion q)
 		{
 			Quaternion result = q;
@@ -163,6 +189,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static Quaternion GetQuatSquad(float t, Quaternion q0, Quaternion q1, Quaternion a0, Quaternion a1)
 		{
 			float t2 = 2f * t * (1f - t);
@@ -176,6 +203,7 @@ namespace UnityEditor
 			result.w /= num;
 			return result;
 		}
+
 		public static Quaternion GetSquadIntermediate(Quaternion q0, Quaternion q1, Quaternion q2)
 		{
 			Quaternion quatConjugate = MathUtils.GetQuatConjugate(q1);
@@ -184,6 +212,7 @@ namespace UnityEditor
 			Quaternion q3 = new Quaternion(-0.25f * (quatLog.x + quatLog2.x), -0.25f * (quatLog.y + quatLog2.y), -0.25f * (quatLog.z + quatLog2.z), -0.25f * (quatLog.w + quatLog2.w));
 			return q1 * MathUtils.GetQuatExp(q3);
 		}
+
 		public static float Ease(float t, float k1, float k2)
 		{
 			float num = k1 * 2f / 3.14159274f + k2 - k1 + (1f - k2) * 2f / 3.14159274f;
@@ -192,19 +221,17 @@ namespace UnityEditor
 			{
 				num2 = k1 * 0.636619747f * (Mathf.Sin(t / k1 * 3.14159274f / 2f - 1.57079637f) + 1f);
 			}
+			else if (t < k2)
+			{
+				num2 = 2f * k1 / 3.14159274f + t - k1;
+			}
 			else
 			{
-				if (t < k2)
-				{
-					num2 = 2f * k1 / 3.14159274f + t - k1;
-				}
-				else
-				{
-					num2 = 2f * k1 / 3.14159274f + k2 - k1 + (1f - k2) * 0.636619747f * Mathf.Sin((t - k2) / (1f - k2) * 3.14159274f / 2f);
-				}
+				num2 = 2f * k1 / 3.14159274f + k2 - k1 + (1f - k2) * 0.636619747f * Mathf.Sin((t - k2) / (1f - k2) * 3.14159274f / 2f);
 			}
 			return num2 / num;
 		}
+
 		public static Quaternion Slerp(Quaternion p, Quaternion q, float t)
 		{
 			float num = Quaternion.Dot(p, q);
@@ -241,6 +268,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static object IntersectRayTriangle(Ray ray, Vector3 v0, Vector3 v1, Vector3 v2, bool bidirectional)
 		{
 			Vector3 lhs = v1 - v0;
@@ -281,6 +309,7 @@ namespace UnityEditor
 				normal = Vector3.Normalize(vector2)
 			};
 		}
+
 		public static Vector3 ClosestPtSegmentRay(Vector3 p1, Vector3 q1, Ray ray, out float squaredDist, out float s, out Vector3 closestRay)
 		{
 			Vector3 origin = ray.origin;
@@ -331,13 +360,10 @@ namespace UnityEditor
 						num4 = 0f;
 						s = Mathf.Clamp(-num5 / num, 0f, 1f);
 					}
-					else
+					else if (num4 > 1f)
 					{
-						if (num4 > 1f)
-						{
-							num4 = 1f;
-							s = Mathf.Clamp((num6 - num5) / num, 0f, 1f);
-						}
+						num4 = 1f;
+						s = Mathf.Clamp((num6 - num5) / num, 0f, 1f);
 					}
 				}
 			}
@@ -347,6 +373,7 @@ namespace UnityEditor
 			closestRay = vector4;
 			return vector3;
 		}
+
 		public static bool IntersectRaySphere(Ray ray, Vector3 sphereOrigin, float sphereRadius, ref float t, ref Vector3 q)
 		{
 			Vector3 vector = ray.origin - sphereOrigin;
@@ -369,6 +396,7 @@ namespace UnityEditor
 			q = ray.origin + t * ray.direction;
 			return true;
 		}
+
 		public static bool ClosestPtRaySphere(Ray ray, Vector3 sphereOrigin, float sphereRadius, ref float t, ref Vector3 q)
 		{
 			Vector3 vector = ray.origin - sphereOrigin;

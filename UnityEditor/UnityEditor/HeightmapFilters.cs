@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class HeightmapFilters
@@ -14,6 +15,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static void Noise(float[,] heights, TerrainData terrain)
 		{
 			for (int i = 0; i < heights.GetLength(0); i++)
@@ -24,6 +26,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static void Smooth(float[,] heights, TerrainData terrain)
 		{
 			float[,] array = heights.Clone() as float[,];
@@ -44,6 +47,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static void Smooth(TerrainData terrain)
 		{
 			int heightmapWidth = terrain.heightmapWidth;
@@ -52,6 +56,7 @@ namespace UnityEditor
 			HeightmapFilters.Smooth(heights, terrain);
 			terrain.SetHeights(0, 0, heights);
 		}
+
 		public static void Flatten(TerrainData terrain, float height)
 		{
 			int heightmapWidth = terrain.heightmapWidth;

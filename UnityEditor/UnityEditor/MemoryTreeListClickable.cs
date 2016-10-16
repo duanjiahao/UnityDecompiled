@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MemoryTreeListClickable : MemoryTreeList
@@ -7,6 +8,7 @@ namespace UnityEditor
 		public MemoryTreeListClickable(EditorWindow editorWindow, MemoryTreeList detailview) : base(editorWindow, detailview)
 		{
 		}
+
 		protected override void SetupSplitter()
 		{
 			float[] array = new float[3];
@@ -19,12 +21,14 @@ namespace UnityEditor
 			array2[2] = 50;
 			this.m_Splitter = new SplitterState(array, array2, null);
 		}
+
 		protected override void DrawHeader()
 		{
 			GUILayout.Label("Name", MemoryTreeList.styles.header, new GUILayoutOption[0]);
 			GUILayout.Label("Memory", MemoryTreeList.styles.header, new GUILayoutOption[0]);
 			GUILayout.Label("Ref count", MemoryTreeList.styles.header, new GUILayoutOption[0]);
 		}
+
 		protected override void DrawData(Rect rect, MemoryElement memoryElement, int indent, int row, bool selected)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -48,12 +52,9 @@ namespace UnityEditor
 			{
 				MemoryTreeList.styles.numberLabel.Draw(rect, memoryElement.ReferenceCount().ToString(), false, false, false, selected);
 			}
-			else
+			else if (selected)
 			{
-				if (selected)
-				{
-					MemoryTreeList.styles.numberLabel.Draw(rect, string.Empty, false, false, false, selected);
-				}
+				MemoryTreeList.styles.numberLabel.Draw(rect, string.Empty, false, false, false, selected);
 			}
 		}
 	}

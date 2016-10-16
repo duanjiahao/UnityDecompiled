@@ -1,32 +1,43 @@
 using System;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class GenericPresetLibraryInspector<T> where T : ScriptableObject
 	{
 		private readonly ScriptableObjectSaveLoadHelper<T> m_SaveLoadHelper;
+
 		private readonly UnityEngine.Object m_Target;
+
 		private readonly string m_Header;
+
 		private readonly VerticalGrid m_Grid;
+
 		private readonly Action<string> m_EditButtonClickedCallback;
+
 		private static GUIStyle s_EditButtonStyle;
+
 		private float m_LastRepaintedWidth = -1f;
+
 		public int maxShowNumPresets
 		{
 			get;
 			set;
 		}
+
 		public Vector2 presetSize
 		{
 			get;
 			set;
 		}
+
 		public float lineSpacing
 		{
 			get;
 			set;
 		}
+
 		public string extension
 		{
 			get
@@ -34,26 +45,31 @@ namespace UnityEditor
 				return this.m_SaveLoadHelper.fileExtensionWithoutDot;
 			}
 		}
+
 		public bool useOnePixelOverlappedGrid
 		{
 			get;
 			set;
 		}
+
 		public RectOffset marginsForList
 		{
 			get;
 			set;
 		}
+
 		public RectOffset marginsForGrid
 		{
 			get;
 			set;
 		}
+
 		public PresetLibraryEditorState.ItemViewMode itemViewMode
 		{
 			get;
 			set;
 		}
+
 		public GenericPresetLibraryInspector(UnityEngine.Object target, string header, Action<string> editButtonClicked)
 		{
 			this.m_Target = target;
@@ -78,10 +94,12 @@ namespace UnityEditor
 			this.marginsForGrid = new RectOffset(10, 10, 5, 5);
 			this.itemViewMode = PresetLibraryEditorState.ItemViewMode.List;
 		}
+
 		public void OnDestroy()
 		{
 			ScriptableSingleton<PresetLibraryManager>.instance.UnloadAllLibrariesFor<T>(this.m_SaveLoadHelper);
 		}
+
 		public void OnInspectorGUI()
 		{
 			if (GenericPresetLibraryInspector<T>.s_EditButtonStyle == null)
@@ -108,6 +126,7 @@ namespace UnityEditor
 			}
 			this.DrawPresets(text);
 		}
+
 		private void DrawPresets(string libraryPath)
 		{
 			if (GUIClip.visibleRect.width > 0f)
@@ -150,6 +169,7 @@ namespace UnityEditor
 				GUI.Label(position2, string.Format("+ {0} more...", num2));
 			}
 		}
+
 		private void SetupGrid(float availableWidth, int itemCount, PresetLibraryEditorState.ItemViewMode presetsViewMode)
 		{
 			this.m_Grid.useFixedHorizontalSpacing = this.useOnePixelOverlappedGrid;

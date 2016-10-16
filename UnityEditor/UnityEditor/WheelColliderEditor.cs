@@ -1,19 +1,29 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(WheelCollider))]
 	internal class WheelColliderEditor : Editor
 	{
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Radius;
+
 		private SerializedProperty m_SuspensionDistance;
+
 		private SerializedProperty m_SuspensionSpring;
+
 		private SerializedProperty m_ForceAppPointDistance;
+
 		private SerializedProperty m_Mass;
+
 		private SerializedProperty m_WheelDampingRate;
+
 		private SerializedProperty m_ForwardFriction;
+
 		private SerializedProperty m_SidewaysFriction;
+
 		public void OnEnable()
 		{
 			this.m_Center = base.serializedObject.FindProperty("m_Center");
@@ -26,6 +36,7 @@ namespace UnityEditor
 			this.m_ForwardFriction = base.serializedObject.FindProperty("m_ForwardFriction");
 			this.m_SidewaysFriction = base.serializedObject.FindProperty("m_SidewaysFriction");
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -11,30 +12,54 @@ namespace UnityEditor
 		private class Constants
 		{
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle entrySelected = "ServerUpdateChangesetOn";
+
 			public GUIStyle serverChangeCount = "ServerChangeCount";
+
 			public GUIStyle title = "OL title";
+
 			public GUIStyle element = "OL elem";
+
 			public GUIStyle header = "OL header";
+
 			public GUIStyle button = "Button";
+
 			public GUIStyle serverUpdateInfo = "ServerUpdateInfo";
+
 			public GUIStyle wwText = "AS TextArea";
+
 			public GUIStyle errorLabel = "ErrorLabel";
+
 			public GUIStyle dropDown = "MiniPullDown";
+
 			public GUIStyle bigButton = "LargeButton";
 		}
+
 		private const int listLenghts = 20;
+
 		private const int widthToHideButtons = 432;
+
 		private bool wasHidingButtons;
+
 		private bool resetKeyboardControl;
+
 		private static ASCommitWindow.Constants constants;
+
 		private ParentViewState pv1state = new ParentViewState();
+
 		private ParentViewState pv2state = new ParentViewState();
+
 		private bool pv1hasSelection;
+
 		private bool pv2hasSelection;
+
 		private bool somethingDiscardableSelected;
+
 		private bool mySelection;
+
 		private string[] commitMessageList;
+
 		private string[] dropDownMenuItems = new string[]
 		{
 			string.Empty,
@@ -44,9 +69,13 @@ namespace UnityEditor
 			string.Empty,
 			"Discard"
 		};
+
 		private string[] guidsToTransferToTheRightSide;
+
 		private string dragTitle = string.Empty;
+
 		private Vector2 iconSize = new Vector2(16f, 16f);
+
 		private SplitterState horSplit = new SplitterState(new float[]
 		{
 			50f,
@@ -56,6 +85,7 @@ namespace UnityEditor
 			50,
 			50
 		}, null);
+
 		private SplitterState vertSplit = new SplitterState(new float[]
 		{
 			60f,
@@ -65,22 +95,34 @@ namespace UnityEditor
 			32,
 			64
 		}, null);
+
 		internal string description = string.Empty;
+
 		private string totalChanges;
+
 		private ASMainWindow parentWin;
+
 		private bool initialUpdate;
+
 		private Vector2 scrollPos = Vector2.zero;
+
 		internal bool lastTransferMovedDependencies;
+
 		internal int lastRevertSelectionChanged = -1;
+
 		internal int showReinitedWarning = -1;
+
 		private static List<string> s_AssetGuids;
+
 		private static string s_Callback;
+
 		public ASCommitWindow(ASMainWindow parentWin, string[] guidsToTransfer)
 		{
 			this.guidsToTransferToTheRightSide = guidsToTransfer;
 			this.parentWin = parentWin;
 			this.initialUpdate = true;
 		}
+
 		internal void AssetItemsToParentViews()
 		{
 			this.pv1state.Clear();
@@ -116,6 +158,7 @@ namespace UnityEditor
 			this.totalChanges = (this.pv1state.lv.totalRows - this.pv1state.GetFoldersCount() + num).ToString() + " Local Changes";
 			this.GetPersistedData();
 		}
+
 		internal void Reinit(bool lastActionsResult)
 		{
 			this.parentWin.sharedCommits = ASCommitWindow.GetCommits();
@@ -123,12 +166,14 @@ namespace UnityEditor
 			AssetServer.ClearRefreshCommit();
 			this.AssetItemsToParentViews();
 		}
+
 		internal void Update()
 		{
 			this.SetPersistedData();
 			this.AssetItemsToParentViews();
 			this.GetPersistedData();
 		}
+
 		internal void CommitFinished(bool actionResult)
 		{
 			if (actionResult)
@@ -141,6 +186,7 @@ namespace UnityEditor
 				this.parentWin.Repaint();
 			}
 		}
+
 		internal void InitiateReinit()
 		{
 			if (this.parentWin.CommitNeedsRefresh())
@@ -155,21 +201,19 @@ namespace UnityEditor
 				}
 				this.Reinit(true);
 			}
+			else if (this.initialUpdate)
+			{
+				this.AssetItemsToParentViews();
+				this.initialUpdate = false;
+			}
 			else
 			{
-				if (this.initialUpdate)
-				{
-					this.AssetItemsToParentViews();
-					this.initialUpdate = false;
-				}
-				else
-				{
-					this.SetPersistedData();
-					AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitCommitWindow");
-					AssetServer.DoRefreshAssetsOnNextTick();
-				}
+				this.SetPersistedData();
+				AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitCommitWindow");
+				AssetServer.DoRefreshAssetsOnNextTick();
 			}
 		}
+
 		private void GetPersistedData()
 		{
 			this.description = AssetServer.GetLastCommitMessage();
@@ -203,6 +247,7 @@ namespace UnityEditor
 				this.commitMessageList[i] = this.commitMessageList[i].Replace('/', '?').Replace('%', '?');
 			}
 		}
+
 		private void SetPersistedData()
 		{
 			AssetServer.SetLastCommitMessage(this.description);
@@ -228,10 +273,12 @@ namespace UnityEditor
 			}
 			AssetServer.SetCommitSelectionGUIDs(list.ToArray());
 		}
+
 		internal void OnClose()
 		{
 			this.SetPersistedData();
 		}
+
 		private List<string> GetSelectedItems()
 		{
 			this.pv1hasSelection = this.pv1state.HasTrue();
@@ -240,6 +287,7 @@ namespace UnityEditor
 			parentViewSelectedItems.Remove(AssetServer.GetRootGUID());
 			return parentViewSelectedItems;
 		}
+
 		private void MySelectionToGlobalSelection()
 		{
 			this.mySelection = true;
@@ -250,6 +298,7 @@ namespace UnityEditor
 				AssetServer.SetSelectionFromGUID(selectedItems[0]);
 			}
 		}
+
 		internal static bool DoShowDiff(List<string> selectedAssets, bool binary)
 		{
 			List<string> list = new List<string>();
@@ -277,10 +326,12 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal static bool IsDiscardableAsset(string guid, ChangeFlags changeFlags)
 		{
 			return AssetServer.IsConstantGUID(guid) == 0 || (!ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Created) && !ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Undeleted));
 		}
+
 		internal static List<string> GetParentViewSelectedItems(ParentViewState state, bool includeFolders, bool excludeUndiscardableOnes)
 		{
 			List<string> list = new List<string>();
@@ -315,6 +366,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		internal static void DoRevert(List<string> assetGuids, string callback)
 		{
 			if (assetGuids.Count == 0)
@@ -326,6 +378,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASCommitWindow", "DoRevertAfterDialog");
 			AssetServer.ShowDialogOnNextTick("Discard changes", "Are you really sure you want to discard selected changes?", "Discard", "Cancel");
 		}
+
 		internal static void DoRevertAfterDialog(bool result)
 		{
 			if (result)
@@ -334,6 +387,7 @@ namespace UnityEditor
 				AssetServer.DoUpdateWithoutConflictResolutionOnNextTick(ASCommitWindow.s_AssetGuids.ToArray());
 			}
 		}
+
 		internal static bool MarkSelected(ParentViewState activeState, List<string> guids)
 		{
 			int num = 0;
@@ -356,10 +410,12 @@ namespace UnityEditor
 			}
 			return flag;
 		}
+
 		internal static AssetsItem[] GetCommits()
 		{
-			return AssetServer.BuildAllExportPackageAssetListAssetsItems();
+			return AssetServer.GetChangedAssetsItems();
 		}
+
 		internal void AddToCommitMessageHistory(string description)
 		{
 			if (description.Trim() != string.Empty)
@@ -372,14 +428,17 @@ namespace UnityEditor
 				InternalEditorUtility.SaveEditorSettingsList("ASCommitMsgs", this.commitMessageList, 20);
 			}
 		}
+
 		internal static bool ShowDiscardWarning()
 		{
 			return EditorUtility.DisplayDialog("Discard changes", "More items will be discarded then initially selected. Dependencies of selected items where all marked in commit window. Please review.", "Discard", "Cancel");
 		}
+
 		internal bool CanCommit()
 		{
 			return this.pv2state.folders.Length != 0;
 		}
+
 		internal string[] GetItemsToCommit()
 		{
 			List<string> list = new List<string>();
@@ -400,6 +459,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		internal void DoCommit()
 		{
 			if (AssetServer.GetRefreshCommit())
@@ -420,6 +480,7 @@ namespace UnityEditor
 			AssetServer.DoCommitOnNextTick(this.description, itemsToCommit);
 			GUIUtility.ExitGUI();
 		}
+
 		private bool TransferDependentParentFolders(ref List<string> guidsOfFoldersToRemove, string guid, bool leftToRight)
 		{
 			bool result = false;
@@ -479,6 +540,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private bool TransferDeletedDependentParentFolders(ref List<string> guidsOfFoldersToRemove, string guid, bool leftToRight)
 		{
 			bool flag = false;
@@ -537,6 +599,7 @@ namespace UnityEditor
 			}
 			return flag;
 		}
+
 		private bool DoTransfer(ref ParentViewFolder[] foldersFrom, ref ParentViewFolder[] foldersTo, int folder, int file, ref List<string> guidsOfFoldersToRemove, bool leftToRight)
 		{
 			ParentViewFolder parentViewFolder = foldersFrom[folder];
@@ -609,6 +672,7 @@ namespace UnityEditor
 			}
 			return flag;
 		}
+
 		private bool MarkDependantFiles(ParentViewState pvState)
 		{
 			string[] array = new string[0];
@@ -647,6 +711,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private void DoTransferAll(ParentViewState pvState, ParentViewState anotherPvState, int selFolder, int selFile)
 		{
 			List<string> list = new List<string>();
@@ -686,6 +751,7 @@ namespace UnityEditor
 			AssetServer.SetSelectionFromGUID(string.Empty);
 			this.lastTransferMovedDependencies = flag;
 		}
+
 		private static bool AnyOfTheParentsIsSelected(ref ParentViewState pvState, string guid)
 		{
 			string text = guid;
@@ -698,6 +764,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public static bool MarkAllFolderDependenciesForDiscarding(ParentViewState pvState, ParentViewState anotherPvState)
 		{
 			bool result = false;
@@ -740,32 +807,29 @@ namespace UnityEditor
 						}
 					}
 				}
+				else if (!ASCommitWindow.AllFolderWouldBeMovedAnyway(pvState, parentViewFolder.guid))
+				{
+					if (ASCommitWindow.AnyOfTheParentsIsSelected(ref pvState, parentViewFolder.guid))
+					{
+						pvState.selectedItems[num] = true;
+						list.Add(parentViewFolder.guid);
+						for (int k = 1; k <= parentViewFolder.files.Length; k++)
+						{
+							pvState.selectedItems[num + k] = true;
+						}
+						result = true;
+					}
+				}
 				else
 				{
-					if (!ASCommitWindow.AllFolderWouldBeMovedAnyway(pvState, parentViewFolder.guid))
+					for (int l = 1; l <= parentViewFolder.files.Length; l++)
 					{
-						if (ASCommitWindow.AnyOfTheParentsIsSelected(ref pvState, parentViewFolder.guid))
+						if (!pvState.selectedItems[num + l])
 						{
-							pvState.selectedItems[num] = true;
-							list.Add(parentViewFolder.guid);
-							for (int k = 1; k <= parentViewFolder.files.Length; k++)
-							{
-								pvState.selectedItems[num + k] = true;
-							}
-							result = true;
+							pvState.selectedItems[num + l] = true;
 						}
 					}
-					else
-					{
-						for (int l = 1; l <= parentViewFolder.files.Length; l++)
-						{
-							if (!pvState.selectedItems[num + l])
-							{
-								pvState.selectedItems[num + l] = true;
-							}
-						}
-						list.Add(parentViewFolder.guid);
-					}
+					list.Add(parentViewFolder.guid);
 				}
 				num += 1 + pvState.folders[i].files.Length;
 			}
@@ -832,10 +896,12 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private static bool HasFlag(ChangeFlags flags, ChangeFlags flagToCheck)
 		{
 			return (flagToCheck & flags) != ChangeFlags.None;
 		}
+
 		private void DoSelectionChange()
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -869,6 +935,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal void OnSelectionChange()
 		{
 			if (!this.mySelection)
@@ -882,6 +949,7 @@ namespace UnityEditor
 			}
 			this.somethingDiscardableSelected = ASCommitWindow.SomethingDiscardableSelected((!this.pv2hasSelection) ? this.pv1state : this.pv2state);
 		}
+
 		public static bool SomethingDiscardableSelected(ParentViewState st)
 		{
 			int num = 0;
@@ -905,6 +973,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private static bool AllFolderWouldBeMovedAnyway(ParentViewState pvState, string guid)
 		{
 			int num = 0;
@@ -932,10 +1001,12 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private bool DoShowMyDiff(bool binary)
 		{
 			return ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems((!this.pv2hasSelection) ? this.pv1state : this.pv2state, false, false), binary);
 		}
+
 		private void DoMyRevert(bool afterMarkingDependencies)
 		{
 			if (!afterMarkingDependencies)
@@ -967,6 +1038,7 @@ namespace UnityEditor
 				ASCommitWindow.DoRevert(ASCommitWindow.GetParentViewSelectedItems((!this.pv2hasSelection) ? this.pv1state : this.pv2state, true, true), "CBReinitCommitWindow");
 			}
 		}
+
 		private void MenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -976,6 +1048,7 @@ namespace UnityEditor
 				this.parentWin.Repaint();
 			}
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -1001,6 +1074,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static int IndexOfFolderWithGUID(ParentViewFolder[] folders, string guid)
 		{
 			for (int i = 0; i < folders.Length; i++)
@@ -1012,6 +1086,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		private static int FolderIndexToTotalIndex(ParentViewFolder[] folders, int folderIndex)
 		{
 			int num = 0;
@@ -1021,6 +1096,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private static int FolderSelectionIndexFromGUID(ParentViewFolder[] folders, string guid)
 		{
 			int num = 0;
@@ -1034,6 +1110,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		private void AddFolderToRemove(ref List<string> guidsOfFoldersToRemove, string guid)
 		{
 			if (!guidsOfFoldersToRemove.Contains(guid))
@@ -1041,6 +1118,7 @@ namespace UnityEditor
 				guidsOfFoldersToRemove.Add(guid);
 			}
 		}
+
 		private bool ParentViewGUI(ParentViewState pvState, ParentViewState anotherPvState, ref bool hasSelection)
 		{
 			bool flag = false;
@@ -1075,46 +1153,40 @@ namespace UnityEditor
 						flag2 |= ListViewGUILayout.MultiSelection(row, pvState.lv.row, ref pvState.initialSelectedItem, ref pvState.selectedItems);
 					}
 				}
-				else
+				else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 				{
-					if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+					if (Event.current.clickCount == 2)
 					{
-						if (Event.current.clickCount == 2)
-						{
-							this.DoShowMyDiff(false);
-							GUIUtility.ExitGUI();
-						}
-						else
-						{
-							if (!pvState.selectedItems[listViewElement.row] || shift || actionKey)
-							{
-								flag2 |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref pvState.initialSelectedItem, ref pvState.selectedItems);
-							}
-							pvState.selectedFile = num2;
-							pvState.selectedFolder = num;
-							lv.row = listViewElement.row;
-						}
+						this.DoShowMyDiff(false);
+						GUIUtility.ExitGUI();
 					}
 					else
 					{
-						if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+						if (!pvState.selectedItems[listViewElement.row] || shift || actionKey)
 						{
-							if (!pvState.selectedItems[listViewElement.row])
-							{
-								flag2 = true;
-								pvState.ClearSelection();
-								pvState.selectedItems[listViewElement.row] = true;
-								pvState.selectedFile = num2;
-								pvState.selectedFolder = num;
-								lv.row = listViewElement.row;
-							}
-							this.dropDownMenuItems[0] = ((pvState != this.pv1state) ? "<<<" : ">>>");
-							GUIUtility.hotControl = 0;
-							Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-							EditorUtility.DisplayCustomMenu(position, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
-							Event.current.Use();
+							flag2 |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref pvState.initialSelectedItem, ref pvState.selectedItems);
 						}
+						pvState.selectedFile = num2;
+						pvState.selectedFolder = num;
+						lv.row = listViewElement.row;
 					}
+				}
+				else if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+				{
+					if (!pvState.selectedItems[listViewElement.row])
+					{
+						flag2 = true;
+						pvState.ClearSelection();
+						pvState.selectedItems[listViewElement.row] = true;
+						pvState.selectedFile = num2;
+						pvState.selectedFolder = num;
+						lv.row = listViewElement.row;
+					}
+					this.dropDownMenuItems[0] = ((pvState != this.pv1state) ? "<<<" : ">>>");
+					GUIUtility.hotControl = 0;
+					Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+					EditorUtility.DisplayCustomMenu(position, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+					Event.current.Use();
 				}
 				ChangeFlags changeFlags;
 				if (num2 != -1)
@@ -1137,19 +1209,13 @@ namespace UnityEditor
 				{
 					gUIContent = ASMainWindow.constants.badgeNew;
 				}
-				else
+				else if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Deleted))
 				{
-					if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Deleted))
-					{
-						gUIContent = ASMainWindow.constants.badgeDelete;
-					}
-					else
-					{
-						if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Renamed) || ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Moved))
-						{
-							gUIContent = ASMainWindow.constants.badgeMove;
-						}
-					}
+					gUIContent = ASMainWindow.constants.badgeDelete;
+				}
+				else if (ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Renamed) || ASCommitWindow.HasFlag(changeFlags, ChangeFlags.Moved))
+				{
+					gUIContent = ASMainWindow.constants.badgeMove;
 				}
 				if (gUIContent != null && Event.current.type == EventType.Repaint)
 				{
@@ -1168,17 +1234,14 @@ namespace UnityEditor
 					{
 						Event.current.Use();
 					}
-					else
+					else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
 					{
-						if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
+						for (int i = 0; i < pvState.selectedItems.Length; i++)
 						{
-							for (int i = 0; i < pvState.selectedItems.Length; i++)
-							{
-								pvState.selectedItems[i] = true;
-							}
-							flag2 = true;
-							Event.current.Use();
+							pvState.selectedItems[i] = true;
 						}
+						flag2 = true;
+						Event.current.Use();
 					}
 				}
 				if (lv.customDraggedFromID != 0 && lv.customDraggedFromID == anotherPvState.lv.ID)
@@ -1195,16 +1258,13 @@ namespace UnityEditor
 							flag = true;
 						}
 					}
-					else
+					else if (pvState.selectedFolder != -1 && Event.current.type == EventType.KeyDown && GUIUtility.keyboardControl == lv.ID && Event.current.keyCode == KeyCode.Return)
 					{
-						if (pvState.selectedFolder != -1 && Event.current.type == EventType.KeyDown && GUIUtility.keyboardControl == lv.ID && Event.current.keyCode == KeyCode.Return)
-						{
-							this.DoTransferAll(pvState, anotherPvState, pvState.selectedFolder, pvState.selectedFile);
-							ListViewGUILayout.MultiSelection(row, lv.row, ref pvState.initialSelectedItem, ref pvState.selectedItems);
-							pvState.IndexToFolderAndFile(lv.row, ref pvState.selectedFolder, ref pvState.selectedFile);
-							Event.current.Use();
-							flag = true;
-						}
+						this.DoTransferAll(pvState, anotherPvState, pvState.selectedFolder, pvState.selectedFile);
+						ListViewGUILayout.MultiSelection(row, lv.row, ref pvState.initialSelectedItem, ref pvState.selectedItems);
+						pvState.IndexToFolderAndFile(lv.row, ref pvState.selectedFolder, ref pvState.selectedFile);
+						Event.current.Use();
+						flag = true;
 					}
 				}
 				if (lv.selectionChanged || flag2)
@@ -1223,6 +1283,7 @@ namespace UnityEditor
 			EditorGUIUtility.SetIconSize(Vector2.zero);
 			return !flag;
 		}
+
 		internal bool DoGUI()
 		{
 			bool enabled = GUI.enabled;
@@ -1240,12 +1301,9 @@ namespace UnityEditor
 			{
 				this.wasHidingButtons = flag;
 			}
-			else
+			else if (flag != this.wasHidingButtons)
 			{
-				if (flag != this.wasHidingButtons)
-				{
-					GUIUtility.ExitGUI();
-				}
+				GUIUtility.ExitGUI();
 			}
 			SplitterGUILayout.BeginHorizontalSplit(this.horSplit, new GUILayoutOption[0]);
 			GUILayout.BeginVertical(ASCommitWindow.constants.box, new GUILayoutOption[0]);

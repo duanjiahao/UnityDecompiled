@@ -1,16 +1,20 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor.Animations
 {
 	public sealed class AvatarMask : UnityEngine.Object
 	{
-		public extern int humanoidBodyPartCount
+		[Obsolete("AvatarMask.humanoidBodyPartCount is deprecated. Use AvatarMaskBodyPart.LastBodyPart instead.")]
+		private int humanoidBodyPartCount
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return 13;
+			}
 		}
+
 		public extern int transformCount
 		{
 			[WrapperlessIcall]
@@ -20,44 +24,53 @@ namespace UnityEditor.Animations
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal extern bool hasFeetIK
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AvatarMask();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetHumanoidBodyPartActive(int index);
+		public extern bool GetHumanoidBodyPartActive(AvatarMaskBodyPart index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetHumanoidBodyPartActive(int index, bool value);
+		public extern void SetHumanoidBodyPartActive(AvatarMaskBodyPart index, bool value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetTransformPath(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTransformPath(int index, string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetTransformActive(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTransformActive(int index, bool value);
+
 		internal void Copy(AvatarMask other)
 		{
-			for (int i = 0; i < this.humanoidBodyPartCount; i++)
+			for (AvatarMaskBodyPart avatarMaskBodyPart = AvatarMaskBodyPart.Root; avatarMaskBodyPart < AvatarMaskBodyPart.LastBodyPart; avatarMaskBodyPart++)
 			{
-				this.SetHumanoidBodyPartActive(i, other.GetHumanoidBodyPartActive(i));
+				this.SetHumanoidBodyPartActive(avatarMaskBodyPart, other.GetHumanoidBodyPartActive(avatarMaskBodyPart));
 			}
 			this.transformCount = other.transformCount;
-			for (int j = 0; j < other.transformCount; j++)
+			for (int i = 0; i < other.transformCount; i++)
 			{
-				this.SetTransformPath(j, other.GetTransformPath(j));
-				this.SetTransformActive(j, other.GetTransformActive(j));
+				this.SetTransformPath(i, other.GetTransformPath(i));
+				this.SetTransformActive(i, other.GetTransformActive(i));
 			}
 		}
 	}

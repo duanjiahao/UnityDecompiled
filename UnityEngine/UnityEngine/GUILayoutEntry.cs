@@ -1,18 +1,29 @@
 using System;
+
 namespace UnityEngine
 {
 	internal class GUILayoutEntry
 	{
 		public float minWidth;
+
 		public float maxWidth;
+
 		public float minHeight;
+
 		public float maxHeight;
+
 		public Rect rect = new Rect(0f, 0f, 0f, 0f);
+
 		public int stretchWidth;
+
 		public int stretchHeight;
+
 		private GUIStyle m_Style = GUIStyle.none;
+
 		internal static Rect kDummyRect = new Rect(0f, 0f, 1f, 1f);
+
 		protected static int indent = 0;
+
 		public GUIStyle style
 		{
 			get
@@ -25,6 +36,7 @@ namespace UnityEngine
 				this.ApplyStyleSettings(value);
 			}
 		}
+
 		public virtual RectOffset margin
 		{
 			get
@@ -32,6 +44,7 @@ namespace UnityEngine
 				return this.style.margin;
 			}
 		}
+
 		public GUILayoutEntry(float _minWidth, float _maxWidth, float _minHeight, float _maxHeight, GUIStyle _style)
 		{
 			this.minWidth = _minWidth;
@@ -44,6 +57,7 @@ namespace UnityEngine
 			}
 			this.style = _style;
 		}
+
 		public GUILayoutEntry(float _minWidth, float _maxWidth, float _minHeight, float _maxHeight, GUIStyle _style, GUILayoutOption[] options)
 		{
 			this.minWidth = _minWidth;
@@ -53,28 +67,34 @@ namespace UnityEngine
 			this.style = _style;
 			this.ApplyOptions(options);
 		}
+
 		public virtual void CalcWidth()
 		{
 		}
+
 		public virtual void CalcHeight()
 		{
 		}
+
 		public virtual void SetHorizontal(float x, float width)
 		{
 			this.rect.x = x;
 			this.rect.width = width;
 		}
+
 		public virtual void SetVertical(float y, float height)
 		{
 			this.rect.y = y;
 			this.rect.height = height;
 		}
+
 		protected virtual void ApplyStyleSettings(GUIStyle style)
 		{
 			this.stretchWidth = ((style.fixedWidth != 0f || !style.stretchWidth) ? 0 : 1);
 			this.stretchHeight = ((style.fixedHeight != 0f || !style.stretchHeight) ? 0 : 1);
 			this.m_Style = style;
 		}
+
 		public virtual void ApplyOptions(GUILayoutOption[] options)
 		{
 			if (options == null)
@@ -141,6 +161,7 @@ namespace UnityEngine
 				this.maxHeight = this.minHeight;
 			}
 		}
+
 		public override string ToString()
 		{
 			string text = string.Empty;

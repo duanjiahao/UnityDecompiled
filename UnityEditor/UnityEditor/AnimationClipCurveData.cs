@@ -1,20 +1,28 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class AnimationClipCurveData
 	{
 		public string path;
+
 		public Type type;
+
 		public string propertyName;
+
 		public AnimationCurve curve;
+
 		internal int classID;
+
 		internal int scriptInstanceID;
+
 		public AnimationClipCurveData()
 		{
 		}
+
 		public AnimationClipCurveData(EditorCurveBinding binding)
 		{
 			this.path = binding.path;

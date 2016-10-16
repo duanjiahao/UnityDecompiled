@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.VersionControl
 {
 	public enum CompletionAction
@@ -9,6 +10,7 @@ namespace UnityEditor.VersionControl
 		OnChangeSetsPendingWindow,
 		OnGotLatestPendingWindow,
 		OnSubmittedChangeWindow,
-		OnAddedChangeWindow
+		OnAddedChangeWindow,
+		OnCheckoutCompleted
 	}
 }

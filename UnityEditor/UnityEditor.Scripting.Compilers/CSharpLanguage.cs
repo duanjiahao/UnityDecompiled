@@ -4,6 +4,8 @@ using ICSharpCode.NRefactory.Visitors;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor.Modules;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal class CSharpLanguage : SupportedLanguage
@@ -11,13 +13,17 @@ namespace UnityEditor.Scripting.Compilers
 		private class VisitorData
 		{
 			public string TargetClassName;
+
 			public Stack<string> CurrentNamespaces;
+
 			public string DiscoveredNamespace;
+
 			public VisitorData()
 			{
 				this.CurrentNamespaces = new Stack<string>();
 			}
 		}
+
 		private class NamespaceVisitor : AbstractAstVisitor
 		{
 			public override object VisitNamespaceDeclaration(NamespaceDeclaration namespaceDeclaration, object data)
@@ -28,6 +34,7 @@ namespace UnityEditor.Scripting.Compilers
 				visitorData.CurrentNamespaces.Pop();
 				return null;
 			}
+
 			public override object VisitTypeDeclaration(TypeDeclaration typeDeclaration, object data)
 			{
 				CSharpLanguage.VisitorData visitorData = (CSharpLanguage.VisitorData)data;
@@ -50,36 +57,37 @@ namespace UnityEditor.Scripting.Compilers
 				return null;
 			}
 		}
+
 		public override string GetExtensionICanCompile()
 		{
 			return "cs";
 		}
+
 		public override string GetLanguageName()
 		{
 			return "CSharp";
 		}
-		internal static bool GetUseMicrosoftCSharpCompiler(BuildTarget targetPlatform, bool buildingForEditor, string assemblyName)
+
+		internal static CSharpCompiler GetCSharpCompiler(BuildTarget targetPlatform, bool buildingForEditor, string assemblyName)
 		{
-			if (buildingForEditor || targetPlatform != BuildTarget.MetroPlayer)
-			{
-				return false;
-			}
-			assemblyName = Path.GetFileNameWithoutExtension(assemblyName);
-			PlayerSettings.WSACompilationOverrides compilationOverrides = PlayerSettings.WSA.compilationOverrides;
-			if (compilationOverrides != PlayerSettings.WSACompilationOverrides.UseNetCore)
-			{
-				return compilationOverrides == PlayerSettings.WSACompilationOverrides.UseNetCorePartially && string.Compare(assemblyName, "Assembly-CSharp", true) == 0;
-			}
-			return string.Compare(assemblyName, "Assembly-CSharp", true) == 0 || string.Compare(assemblyName, "Assembly-CSharp-firstPass", true) == 0;
+			string targetStringFromBuildTarget = ModuleManager.GetTargetStringFromBuildTarget(targetPlatform);
+			ICompilationExtension compilationExtension = ModuleManager.GetCompilationExtension(targetStringFromBuildTarget);
+			return compilationExtension.GetCsCompiler(buildingForEditor, assemblyName);
 		}
+
 		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
-			if (CSharpLanguage.GetUseMicrosoftCSharpCompiler(targetPlatform, buildingForEditor, island._output))
+			CSharpCompiler cSharpCompiler = CSharpLanguage.GetCSharpCompiler(targetPlatform, buildingForEditor, island._output);
+			if (cSharpCompiler != CSharpCompiler.Mono)
 			{
-				return new MicrosoftCSharpCompiler(island, runUpdater);
+				if (cSharpCompiler == CSharpCompiler.Microsoft)
+				{
+					return new MicrosoftCSharpCompiler(island, runUpdater);
+				}
 			}
 			return new MonoCSharpCompiler(island, runUpdater);
 		}
+
 		public override string GetNamespace(string fileName)
 		{
 			using (IParser parser = ParserFactory.CreateParser(fileName))

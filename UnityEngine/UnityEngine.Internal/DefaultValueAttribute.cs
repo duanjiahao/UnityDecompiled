@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.Internal
 {
 	[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.GenericParameter)]
@@ -6,6 +7,7 @@ namespace UnityEngine.Internal
 	public class DefaultValueAttribute : Attribute
 	{
 		private object DefaultValue;
+
 		public object Value
 		{
 			get
@@ -13,10 +15,12 @@ namespace UnityEngine.Internal
 				return this.DefaultValue;
 			}
 		}
+
 		public DefaultValueAttribute(string value)
 		{
 			this.DefaultValue = value;
 		}
+
 		public override bool Equals(object obj)
 		{
 			DefaultValueAttribute defaultValueAttribute = obj as DefaultValueAttribute;
@@ -30,6 +34,7 @@ namespace UnityEngine.Internal
 			}
 			return this.DefaultValue.Equals(defaultValueAttribute.Value);
 		}
+
 		public override int GetHashCode()
 		{
 			if (this.DefaultValue == null)

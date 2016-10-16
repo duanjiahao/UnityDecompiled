@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetSaveDialog : EditorWindow
@@ -8,31 +9,48 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle selected = "ServerUpdateChangesetOn";
+
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle button = "LargeButton";
-			public GUIContent saveSelected = EditorGUIUtility.TextContent("SaveAssetDialog.SaveSelected");
-			public GUIContent saveAll = EditorGUIUtility.TextContent("SaveAssetDialog.SaveAll");
-			public GUIContent dontSave = EditorGUIUtility.TextContent("SaveAssetDialog.DontSave");
-			public GUIContent close = EditorGUIUtility.TextContent("SaveAssetDialog.Close");
+
+			public GUIContent saveSelected = EditorGUIUtility.TextContent("Save Selected");
+
+			public GUIContent saveAll = EditorGUIUtility.TextContent("Save All");
+
+			public GUIContent dontSave = EditorGUIUtility.TextContent("Don't Save");
+
+			public GUIContent close = EditorGUIUtility.TextContent("Close");
+
 			public float buttonWidth;
+
 			public Styles()
 			{
 				this.buttonWidth = Mathf.Max(Mathf.Max(this.button.CalcSize(this.saveSelected).x, this.button.CalcSize(this.saveAll).x), this.button.CalcSize(this.dontSave).x);
 			}
 		}
+
 		private static AssetSaveDialog.Styles s_Styles;
+
 		private List<string> m_Assets;
+
 		private List<string> m_AssetsToSave;
+
 		private ListViewState m_LV = new ListViewState();
+
 		private int m_InitialSelectedItem = -1;
+
 		private bool[] m_SelectedItems;
+
 		private List<GUIContent> m_Content;
+
 		private void SetAssets(string[] assets)
 		{
 			this.m_Assets = new List<string>(assets);
 			this.RebuildLists(true);
 			this.m_AssetsToSave = new List<string>();
 		}
+
 		public static void ShowWindow(string[] inAssets, out string[] assetsThatShouldBeSaved)
 		{
 			int num = 0;
@@ -67,7 +85,7 @@ namespace UnityEditor
 				}
 			}
 			AssetSaveDialog windowDontShow = EditorWindow.GetWindowDontShow<AssetSaveDialog>();
-			windowDontShow.title = EditorGUIUtility.TextContent("SaveAssetDialog.Title").text;
+			windowDontShow.titleContent = EditorGUIUtility.TextContent("Save Assets");
 			windowDontShow.SetAssets(array);
 			windowDontShow.ShowUtility();
 			windowDontShow.ShowModal();
@@ -75,6 +93,7 @@ namespace UnityEditor
 			windowDontShow.m_AssetsToSave.CopyTo(assetsThatShouldBeSaved, 0);
 			array2.CopyTo(assetsThatShouldBeSaved, windowDontShow.m_AssetsToSave.Count);
 		}
+
 		public static GUIContent GetContentForAsset(string path)
 		{
 			Texture cachedIcon = AssetDatabase.GetCachedIcon(path);
@@ -88,9 +107,11 @@ namespace UnityEditor
 			}
 			return new GUIContent(path, cachedIcon);
 		}
+
 		private void HandleKeyboard()
 		{
 		}
+
 		private void OnGUI()
 		{
 			if (AssetSaveDialog.s_Styles == null)
@@ -172,16 +193,19 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(10f);
 		}
+
 		private void Cancel()
 		{
 			base.Close();
 			GUIUtility.ExitGUI();
 		}
+
 		private void CloseWindow()
 		{
 			base.Close();
 			GUIUtility.ExitGUI();
 		}
+
 		private void SaveSelectedAssets()
 		{
 			List<string> list = new List<string>();
@@ -199,6 +223,7 @@ namespace UnityEditor
 			this.m_Assets = list;
 			this.RebuildLists(false);
 		}
+
 		private void IgnoreSelectedAssets()
 		{
 			List<string> list = new List<string>();
@@ -216,6 +241,7 @@ namespace UnityEditor
 				this.CloseWindow();
 			}
 		}
+
 		private void RebuildLists(bool selected)
 		{
 			this.m_LV.totalRows = this.m_Assets.Count;

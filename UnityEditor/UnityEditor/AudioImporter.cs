@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class AudioImporter : AssetImporter
@@ -14,6 +15,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool forceToMono
 		{
 			[WrapperlessIcall]
@@ -23,6 +25,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public bool loadInBackground
 		{
 			get
@@ -34,6 +37,7 @@ namespace UnityEditor
 				this.Internal_SetLoadInBackground(value);
 			}
 		}
+
 		public bool preloadAudioData
 		{
 			get
@@ -45,6 +49,7 @@ namespace UnityEditor
 				this.Internal_SetPreloadAudioData(value);
 			}
 		}
+
 		[Obsolete("Setting and getting the compression format is not used anymore (use compressionFormat in defaultSampleSettings instead). Source audio file is assumed to be PCM Wav.")]
 		private AudioImporterFormat format
 		{
@@ -59,6 +64,7 @@ namespace UnityEditor
 				this.defaultSampleSettings = defaultSampleSettings;
 			}
 		}
+
 		[Obsolete("Setting and getting import channels is not used anymore (use forceToMono instead)", true)]
 		public AudioImporterChannels channels
 		{
@@ -70,6 +76,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("AudioImporter.compressionBitrate is no longer supported", true)]
 		public extern int compressionBitrate
 		{
@@ -80,6 +87,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("AudioImporter.loopable is no longer supported. All audio assets encoded by Unity are by default loopable.")]
 		public extern bool loopable
 		{
@@ -90,6 +98,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("AudioImporter.hardware is no longer supported. All mixing of audio is done by software and only some platforms use hardware acceleration to perform decoding.")]
 		public extern bool hardware
 		{
@@ -100,6 +109,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("Setting/Getting decompressOnLoad is deprecated. Use AudioImporterSampleSettings.loadType instead.")]
 		private bool decompressOnLoad
 		{
@@ -114,6 +124,7 @@ namespace UnityEditor
 				this.defaultSampleSettings = defaultSampleSettings;
 			}
 		}
+
 		[Obsolete("AudioImporter.quality is no longer supported. Use AudioImporterSampleSettings.")]
 		private float quality
 		{
@@ -128,6 +139,7 @@ namespace UnityEditor
 				this.defaultSampleSettings = defaultSampleSettings;
 			}
 		}
+
 		[Obsolete("AudioImporter.threeD is no longer supported")]
 		public extern bool threeD
 		{
@@ -138,6 +150,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("AudioImporter.durationMS is deprecated.", true)]
 		internal extern int durationMS
 		{
@@ -145,6 +158,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("AudioImporter.frequency is deprecated.", true)]
 		internal extern int frequency
 		{
@@ -152,6 +166,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("AudioImporter.origChannelCount is deprecated.", true)]
 		internal extern int origChannelCount
 		{
@@ -159,6 +174,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("AudioImporter.origIsCompressible is deprecated.", true)]
 		internal extern bool origIsCompressible
 		{
@@ -166,6 +182,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("AudioImporter.origIsMonoForcable is deprecated.", true)]
 		internal extern bool origIsMonoForcable
 		{
@@ -173,6 +190,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("AudioImporter.defaultBitrate is deprecated.", true)]
 		internal extern int defaultBitrate
 		{
@@ -180,6 +198,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("AudioImporter.origType is deprecated.", true)]
 		internal AudioType origType
 		{
@@ -188,6 +207,7 @@ namespace UnityEditor
 				return AudioType.UNKNOWN;
 			}
 		}
+
 		[Obsolete("AudioImporter.origFileSize is deprecated.", true)]
 		internal extern int origFileSize
 		{
@@ -195,90 +215,107 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		internal extern int origSize
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		internal extern int compSize
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public bool ContainsSampleSettingsOverride(string platform)
 		{
 			BuildTargetGroup buildTargetGroupByName = BuildPipeline.GetBuildTargetGroupByName(platform);
 			if (buildTargetGroupByName == BuildTargetGroup.Unknown)
 			{
-				Debug.LogError("Unknown platform passed to AudioImporter.ContainsSampleSettingsOverride (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', 'WSA' or 'BlackBerry'");
+				Debug.LogError("Unknown platform passed to AudioImporter.ContainsSampleSettingsOverride (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', or 'WSA'");
 				return false;
 			}
 			return this.Internal_ContainsSampleSettingsOverride(buildTargetGroupByName);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_ContainsSampleSettingsOverride(BuildTargetGroup platformGroup);
+
 		public AudioImporterSampleSettings GetOverrideSampleSettings(string platform)
 		{
 			BuildTargetGroup buildTargetGroupByName = BuildPipeline.GetBuildTargetGroupByName(platform);
 			if (buildTargetGroupByName == BuildTargetGroup.Unknown)
 			{
-				Debug.LogError("Unknown platform passed to AudioImporter.GetOverrideSampleSettings (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', 'WSA' or 'BlackBerry'");
+				Debug.LogError("Unknown platform passed to AudioImporter.GetOverrideSampleSettings (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', or 'WSA'");
 				return this.defaultSampleSettings;
 			}
 			return this.Internal_GetOverrideSampleSettings(buildTargetGroupByName);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AudioImporterSampleSettings Internal_GetOverrideSampleSettings(BuildTargetGroup platformGroup);
+
 		public bool SetOverrideSampleSettings(string platform, AudioImporterSampleSettings settings)
 		{
 			BuildTargetGroup buildTargetGroupByName = BuildPipeline.GetBuildTargetGroupByName(platform);
 			if (buildTargetGroupByName == BuildTargetGroup.Unknown)
 			{
-				Debug.LogError("Unknown platform passed to AudioImporter.SetOverrideSampleSettings (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', 'WSA' or 'BlackBerry'");
+				Debug.LogError("Unknown platform passed to AudioImporter.SetOverrideSampleSettings (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', or 'WSA'");
 				return false;
 			}
 			return this.Internal_SetOverrideSampleSettings(buildTargetGroupByName, settings);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_SetOverrideSampleSettings(BuildTargetGroup platformGroup, AudioImporterSampleSettings settings);
+
 		public bool ClearSampleSettingOverride(string platform)
 		{
 			BuildTargetGroup buildTargetGroupByName = BuildPipeline.GetBuildTargetGroupByName(platform);
 			if (buildTargetGroupByName == BuildTargetGroup.Unknown)
 			{
-				Debug.LogError("Unknown platform passed to AudioImporter.ClearSampleSettingOverride (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', 'WSA' or 'BlackBerry'");
+				Debug.LogError("Unknown platform passed to AudioImporter.ClearSampleSettingOverride (" + platform + "), please use one of 'Web', 'Standalone', 'iOS', 'Android', 'WebGL', 'PS3', 'PS4', 'PSP2', 'PSM', 'XBox360', 'XboxOne', 'WP8', or 'WSA'");
 				return false;
 			}
 			return this.Internal_ClearSampleSettingOverride(buildTargetGroupByName);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_ClearSampleSettingOverride(BuildTargetGroup platform);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetLoadInBackground(bool flag);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool Internal_GetLoadInBackground();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetPreloadAudioData(bool flag);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool Internal_GetPreloadAudioData();
+
 		[Obsolete("AudioImporter.updateOrigData is deprecated.", true), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void updateOrigData();
+
 		[Obsolete("AudioImporter.minBitrate is deprecated.", true)]
 		internal int minBitrate(AudioType type)
 		{
 			return 0;
 		}
+
 		[Obsolete("AudioImporter.maxBitrate is deprecated.", true)]
 		internal int maxBitrate(AudioType type)
 		{

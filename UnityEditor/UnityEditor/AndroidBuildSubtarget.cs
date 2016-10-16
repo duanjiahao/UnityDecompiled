@@ -1,8 +1,9 @@
 using System;
 using System.ComponentModel;
+
 namespace UnityEditor
 {
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("UnityEditor.AndroidBuildSubtarget has been deprecated. Use UnityEngine.MobileTextureSubtarget instead (UnityUpgradable).", true)]
+	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("UnityEditor.AndroidBuildSubtarget has been deprecated. Use UnityEditor.MobileTextureSubtarget instead (UnityUpgradable) -> MobileTextureSubtarget", true)]
 	public enum AndroidBuildSubtarget
 	{
 		Generic = -1,

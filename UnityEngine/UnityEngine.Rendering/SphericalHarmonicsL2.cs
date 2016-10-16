@@ -1,36 +1,66 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine.Rendering
 {
+	[UsedByNativeCode]
 	public struct SphericalHarmonicsL2
 	{
 		private float shr0;
+
 		private float shr1;
+
 		private float shr2;
+
 		private float shr3;
+
 		private float shr4;
+
 		private float shr5;
+
 		private float shr6;
+
 		private float shr7;
+
 		private float shr8;
+
 		private float shg0;
+
 		private float shg1;
+
 		private float shg2;
+
 		private float shg3;
+
 		private float shg4;
+
 		private float shg5;
+
 		private float shg6;
+
 		private float shg7;
+
 		private float shg8;
+
 		private float shb0;
+
 		private float shb1;
+
 		private float shb2;
+
 		private float shb3;
+
 		private float shb4;
+
 		private float shb5;
+
 		private float shb6;
+
 		private float shb7;
+
 		private float shb8;
+
 		public float this[int rgb, int coefficient]
 		{
 			get
@@ -185,40 +215,50 @@ namespace UnityEngine.Rendering
 				}
 			}
 		}
+
 		public void Clear()
 		{
 			SphericalHarmonicsL2.ClearInternal(ref this);
 		}
+
 		private static void ClearInternal(ref SphericalHarmonicsL2 sh)
 		{
 			SphericalHarmonicsL2.INTERNAL_CALL_ClearInternal(ref sh);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ClearInternal(ref SphericalHarmonicsL2 sh);
+
 		public void AddAmbientLight(Color color)
 		{
 			SphericalHarmonicsL2.AddAmbientLightInternal(color, ref this);
 		}
+
 		private static void AddAmbientLightInternal(Color color, ref SphericalHarmonicsL2 sh)
 		{
 			SphericalHarmonicsL2.INTERNAL_CALL_AddAmbientLightInternal(ref color, ref sh);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AddAmbientLightInternal(ref Color color, ref SphericalHarmonicsL2 sh);
+
 		public void AddDirectionalLight(Vector3 direction, Color color, float intensity)
 		{
 			Color color2 = color * (2f * intensity);
 			SphericalHarmonicsL2.AddDirectionalLightInternal(direction, color2, ref this);
 		}
+
 		private static void AddDirectionalLightInternal(Vector3 direction, Color color, ref SphericalHarmonicsL2 sh)
 		{
 			SphericalHarmonicsL2.INTERNAL_CALL_AddDirectionalLightInternal(ref direction, ref color, ref sh);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AddDirectionalLightInternal(ref Vector3 direction, ref Color color, ref SphericalHarmonicsL2 sh);
+
 		public override int GetHashCode()
 		{
 			int num = 17;
@@ -250,6 +290,7 @@ namespace UnityEngine.Rendering
 			num = num * 23 + this.shb7.GetHashCode();
 			return num * 23 + this.shb8.GetHashCode();
 		}
+
 		public override bool Equals(object other)
 		{
 			if (!(other is SphericalHarmonicsL2))
@@ -259,6 +300,7 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2 rhs = (SphericalHarmonicsL2)other;
 			return this == rhs;
 		}
+
 		public static SphericalHarmonicsL2 operator *(SphericalHarmonicsL2 lhs, float rhs)
 		{
 			return new SphericalHarmonicsL2
@@ -292,6 +334,7 @@ namespace UnityEngine.Rendering
 				shb8 = lhs.shb8 * rhs
 			};
 		}
+
 		public static SphericalHarmonicsL2 operator *(float lhs, SphericalHarmonicsL2 rhs)
 		{
 			return new SphericalHarmonicsL2
@@ -325,6 +368,7 @@ namespace UnityEngine.Rendering
 				shb8 = rhs.shb8 * lhs
 			};
 		}
+
 		public static SphericalHarmonicsL2 operator +(SphericalHarmonicsL2 lhs, SphericalHarmonicsL2 rhs)
 		{
 			return new SphericalHarmonicsL2
@@ -358,10 +402,12 @@ namespace UnityEngine.Rendering
 				shb8 = lhs.shb8 + rhs.shb8
 			};
 		}
+
 		public static bool operator ==(SphericalHarmonicsL2 lhs, SphericalHarmonicsL2 rhs)
 		{
 			return lhs.shr0 == rhs.shr0 && lhs.shr1 == rhs.shr1 && lhs.shr2 == rhs.shr2 && lhs.shr3 == rhs.shr3 && lhs.shr4 == rhs.shr4 && lhs.shr5 == rhs.shr5 && lhs.shr6 == rhs.shr6 && lhs.shr7 == rhs.shr7 && lhs.shr8 == rhs.shr8 && lhs.shg0 == rhs.shg0 && lhs.shg1 == rhs.shg1 && lhs.shg2 == rhs.shg2 && lhs.shg3 == rhs.shg3 && lhs.shg4 == rhs.shg4 && lhs.shg5 == rhs.shg5 && lhs.shg6 == rhs.shg6 && lhs.shg7 == rhs.shg7 && lhs.shg8 == rhs.shg8 && lhs.shb0 == rhs.shb0 && lhs.shb1 == rhs.shb1 && lhs.shb2 == rhs.shb2 && lhs.shb3 == rhs.shb3 && lhs.shb4 == rhs.shb4 && lhs.shb5 == rhs.shb5 && lhs.shb6 == rhs.shb6 && lhs.shb7 == rhs.shb7 && lhs.shb8 == rhs.shb8;
 		}
+
 		public static bool operator !=(SphericalHarmonicsL2 lhs, SphericalHarmonicsL2 rhs)
 		{
 			return !(lhs == rhs);

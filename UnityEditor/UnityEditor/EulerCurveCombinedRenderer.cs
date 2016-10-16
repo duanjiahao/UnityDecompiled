@@ -1,29 +1,49 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EulerCurveCombinedRenderer
 	{
 		private const int kSegmentResolution = 40;
+
 		private const float epsilon = 0.001f;
+
 		private AnimationCurve quaternionX;
+
 		private AnimationCurve quaternionY;
+
 		private AnimationCurve quaternionZ;
+
 		private AnimationCurve quaternionW;
+
 		private AnimationCurve eulerX;
+
 		private AnimationCurve eulerY;
+
 		private AnimationCurve eulerZ;
+
 		private SortedDictionary<float, Vector3> points;
+
 		private float cachedEvaluationTime = float.PositiveInfinity;
+
 		private Vector3 cachedEvaluationValue;
+
 		private float cachedRangeStart = float.PositiveInfinity;
+
 		private float cachedRangeEnd = float.NegativeInfinity;
+
 		private Vector3 refEuler;
+
 		private float m_CustomRangeStart;
+
 		private float m_CustomRangeEnd;
+
 		private WrapMode preWrapMode = WrapMode.Once;
+
 		private WrapMode postWrapMode = WrapMode.Once;
+
 		private float rangeStart
 		{
 			get
@@ -31,6 +51,7 @@ namespace UnityEditor
 				return (this.m_CustomRangeStart != 0f || this.m_CustomRangeEnd != 0f || this.eulerX.length <= 0) ? this.m_CustomRangeStart : this.eulerX.keys[0].time;
 			}
 		}
+
 		private float rangeEnd
 		{
 			get
@@ -38,16 +59,18 @@ namespace UnityEditor
 				return (this.m_CustomRangeStart != 0f || this.m_CustomRangeEnd != 0f || this.eulerX.length <= 0) ? this.m_CustomRangeEnd : this.eulerX.keys[this.eulerX.length - 1].time;
 			}
 		}
+
 		public EulerCurveCombinedRenderer(AnimationCurve quaternionX, AnimationCurve quaternionY, AnimationCurve quaternionZ, AnimationCurve quaternionW, AnimationCurve eulerX, AnimationCurve eulerY, AnimationCurve eulerZ)
 		{
-			this.quaternionX = quaternionX;
-			this.quaternionY = quaternionY;
-			this.quaternionZ = quaternionZ;
-			this.quaternionW = quaternionW;
+			this.quaternionX = ((quaternionX != null) ? quaternionX : new AnimationCurve());
+			this.quaternionY = ((quaternionY != null) ? quaternionY : new AnimationCurve());
+			this.quaternionZ = ((quaternionZ != null) ? quaternionZ : new AnimationCurve());
+			this.quaternionW = ((quaternionW != null) ? quaternionW : new AnimationCurve());
 			this.eulerX = ((eulerX != null) ? eulerX : new AnimationCurve());
 			this.eulerY = ((eulerY != null) ? eulerY : new AnimationCurve());
 			this.eulerZ = ((eulerZ != null) ? eulerZ : new AnimationCurve());
 		}
+
 		public AnimationCurve GetCurveOfComponent(int component)
 		{
 			switch (component)
@@ -62,37 +85,45 @@ namespace UnityEditor
 				return null;
 			}
 		}
+
 		public float RangeStart()
 		{
 			return this.rangeStart;
 		}
+
 		public float RangeEnd()
 		{
 			return this.rangeEnd;
 		}
+
 		public WrapMode PreWrapMode()
 		{
 			return this.preWrapMode;
 		}
+
 		public WrapMode PostWrapMode()
 		{
 			return this.postWrapMode;
 		}
+
 		public void SetWrap(WrapMode wrap)
 		{
 			this.preWrapMode = wrap;
 			this.postWrapMode = wrap;
 		}
+
 		public void SetWrap(WrapMode preWrap, WrapMode postWrap)
 		{
 			this.preWrapMode = preWrap;
 			this.postWrapMode = postWrap;
 		}
+
 		public void SetCustomRange(float start, float end)
 		{
 			this.m_CustomRangeStart = start;
 			this.m_CustomRangeEnd = end;
 		}
+
 		private Vector3 GetValues(float time, bool keyReference)
 		{
 			if (this.quaternionX == null)
@@ -111,22 +142,32 @@ namespace UnityEditor
 			{
 				Debug.LogError("W curve is null!");
 			}
-			Quaternion q = this.EvaluateQuaternionCurvesDirectly(time);
-			if (keyReference)
+			if (this.quaternionX.length != 0 && this.quaternionY.length != 0 && this.quaternionZ.length != 0 && this.quaternionW.length != 0)
+			{
+				Quaternion q = this.EvaluateQuaternionCurvesDirectly(time);
+				if (keyReference)
+				{
+					this.refEuler = this.EvaluateEulerCurvesDirectly(time);
+				}
+				this.refEuler = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q, this.refEuler);
+			}
+			else
 			{
 				this.refEuler = this.EvaluateEulerCurvesDirectly(time);
 			}
-			this.refEuler = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q, this.refEuler);
 			return this.refEuler;
 		}
+
 		private Quaternion EvaluateQuaternionCurvesDirectly(float time)
 		{
 			return new Quaternion(this.quaternionX.Evaluate(time), this.quaternionY.Evaluate(time), this.quaternionZ.Evaluate(time), this.quaternionW.Evaluate(time));
 		}
+
 		private Vector3 EvaluateEulerCurvesDirectly(float time)
 		{
 			return new Vector3(this.eulerX.Evaluate(time), this.eulerY.Evaluate(time), this.eulerZ.Evaluate(time));
 		}
+
 		private void CalculateCurves(float minTime, float maxTime)
 		{
 			this.points = new SortedDictionary<float, Vector3>();
@@ -136,9 +177,14 @@ namespace UnityEditor
 				this.AddPoints(array[i, 0], array[i, 1]);
 			}
 		}
+
 		private void AddPoints(float minTime, float maxTime)
 		{
 			AnimationCurve animationCurve = this.quaternionX;
+			if (animationCurve.length == 0)
+			{
+				animationCurve = this.eulerX;
+			}
 			if (animationCurve.length == 0)
 			{
 				return;
@@ -163,7 +209,7 @@ namespace UnityEditor
 					this.points[num] = this.GetValues(num, true);
 					for (float num2 = 1f; num2 <= 20f; num2 += 1f)
 					{
-						num = Mathf.Lerp(this.quaternionX[i].time, animationCurve[i + 1].time, (num2 - 0.001f) / 40f);
+						num = Mathf.Lerp(animationCurve[i].time, animationCurve[i + 1].time, (num2 - 0.001f) / 40f);
 						this.points[num] = this.GetValues(num, false);
 					}
 					num = animationCurve[i + 1].time;
@@ -176,6 +222,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public float EvaluateCurveDeltaSlow(float time, int component)
 		{
 			if (this.quaternionX == null)
@@ -184,6 +231,7 @@ namespace UnityEditor
 			}
 			return (this.EvaluateCurveSlow(time + 0.001f, component) - this.EvaluateCurveSlow(time - 0.001f, component)) / 0.002f;
 		}
+
 		public float EvaluateCurveSlow(float time, int component)
 		{
 			if (this.GetCurveOfComponent(component).length == 1)
@@ -226,6 +274,7 @@ namespace UnityEditor
 			Debug.LogError("List of euler curve points is empty, probably caused by lack of euler curve key synching");
 			return 0f;
 		}
+
 		public void DrawCurve(float minTime, float maxTime, Color color, Matrix4x4 transform, int component, Color wrapColor)
 		{
 			if (minTime < this.cachedRangeStart || maxTime > this.cachedRangeEnd)
@@ -249,6 +298,7 @@ namespace UnityEditor
 			}
 			NormalCurveRenderer.DrawCurveWrapped(minTime, maxTime, this.rangeStart, this.rangeEnd, this.preWrapMode, this.postWrapMode, color, transform, list.ToArray(), wrapColor);
 		}
+
 		public Bounds GetBounds(float minTime, float maxTime, int component)
 		{
 			this.CalculateCurves(minTime, maxTime);

@@ -2,32 +2,39 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetInspector
 	{
 		private static AssetInspector s_Instance;
+
 		private GUIContent[] m_Menu = new GUIContent[]
 		{
 			EditorGUIUtility.TextContent("Show Diff"),
 			EditorGUIUtility.TextContent("Show History"),
 			EditorGUIUtility.TextContent("Discard")
 		};
+
 		private GUIContent[] m_UnmodifiedMenu = new GUIContent[]
 		{
 			EditorGUIUtility.TextContent("Show History")
 		};
+
 		private AssetInspector()
 		{
 		}
+
 		internal static bool IsAssetServerSetUp()
 		{
-			return InternalEditorUtility.HasPro() && ASEditorBackend.SettingsAreValid();
+			return InternalEditorUtility.HasTeamLicense() && ASEditorBackend.SettingsAreValid();
 		}
+
 		private bool HasFlag(ChangeFlags flags, ChangeFlags flagToCheck)
 		{
 			return (flagToCheck & flags) != ChangeFlags.None;
 		}
+
 		public static AssetInspector Get()
 		{
 			if (AssetInspector.s_Instance == null)
@@ -36,6 +43,7 @@ namespace UnityEditor
 			}
 			return AssetInspector.s_Instance;
 		}
+
 		private string AddChangesetFlag(string str, string strToAdd)
 		{
 			if (str != string.Empty)
@@ -49,6 +57,7 @@ namespace UnityEditor
 			}
 			return str;
 		}
+
 		private string GetGUID()
 		{
 			if (Selection.objects.Length == 0)
@@ -57,6 +66,7 @@ namespace UnityEditor
 			}
 			return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.objects[0]));
 		}
+
 		private void DoShowDiff(string guid)
 		{
 			List<string> list = new List<string>();
@@ -67,6 +77,7 @@ namespace UnityEditor
 			Debug.Log("Comparing asset revisions " + workingItemChangeset.ToString() + " and Local");
 			AssetServer.CompareFiles(list.ToArray(), list2.ToArray());
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if ((bool)userData && selected == 0)
@@ -97,6 +108,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private ChangeFlags GetChangeFlags()
 		{
 			string gUID = this.GetGUID();
@@ -106,6 +118,7 @@ namespace UnityEditor
 			}
 			return AssetServer.GetChangeFlags(gUID);
 		}
+
 		private string GetModificationString(ChangeFlags flags)
 		{
 			string text = string.Empty;
@@ -131,6 +144,7 @@ namespace UnityEditor
 			}
 			return text;
 		}
+
 		public void OnAssetStatusGUI(Rect r, int id, UnityEngine.Object target, GUIStyle style)
 		{
 			if (target == null)

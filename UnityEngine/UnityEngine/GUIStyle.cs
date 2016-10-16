@@ -1,59 +1,68 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using UnityEngine.Internal;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class GUIStyle
 	{
 		[NonSerialized]
 		internal IntPtr m_Ptr;
+
 		[NonSerialized]
 		private GUIStyleState m_Normal;
+
 		[NonSerialized]
 		private GUIStyleState m_Hover;
+
 		[NonSerialized]
 		private GUIStyleState m_Active;
+
 		[NonSerialized]
 		private GUIStyleState m_Focused;
+
 		[NonSerialized]
 		private GUIStyleState m_OnNormal;
+
 		[NonSerialized]
 		private GUIStyleState m_OnHover;
+
 		[NonSerialized]
 		private GUIStyleState m_OnActive;
+
 		[NonSerialized]
 		private GUIStyleState m_OnFocused;
+
 		[NonSerialized]
 		private RectOffset m_Border;
+
 		[NonSerialized]
 		private RectOffset m_Padding;
+
 		[NonSerialized]
 		private RectOffset m_Margin;
+
 		[NonSerialized]
 		private RectOffset m_Overflow;
+
 		[NonSerialized]
 		private Font m_FontInternal;
+
 		internal static bool showKeyboardFocus = true;
+
 		private static GUIStyle s_None;
-		public extern string name
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+
 		public GUIStyleState normal
 		{
 			get
 			{
 				if (this.m_Normal == null)
 				{
-					this.m_Normal = new GUIStyleState(this, this.GetStyleStatePtr(0));
+					this.m_Normal = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(0));
 				}
 				return this.m_Normal;
 			}
@@ -62,13 +71,14 @@ namespace UnityEngine
 				this.AssignStyleState(0, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState hover
 		{
 			get
 			{
 				if (this.m_Hover == null)
 				{
-					this.m_Hover = new GUIStyleState(this, this.GetStyleStatePtr(1));
+					this.m_Hover = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(1));
 				}
 				return this.m_Hover;
 			}
@@ -77,13 +87,14 @@ namespace UnityEngine
 				this.AssignStyleState(1, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState active
 		{
 			get
 			{
 				if (this.m_Active == null)
 				{
-					this.m_Active = new GUIStyleState(this, this.GetStyleStatePtr(2));
+					this.m_Active = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(2));
 				}
 				return this.m_Active;
 			}
@@ -92,13 +103,14 @@ namespace UnityEngine
 				this.AssignStyleState(2, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState onNormal
 		{
 			get
 			{
 				if (this.m_OnNormal == null)
 				{
-					this.m_OnNormal = new GUIStyleState(this, this.GetStyleStatePtr(4));
+					this.m_OnNormal = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(4));
 				}
 				return this.m_OnNormal;
 			}
@@ -107,13 +119,14 @@ namespace UnityEngine
 				this.AssignStyleState(4, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState onHover
 		{
 			get
 			{
 				if (this.m_OnHover == null)
 				{
-					this.m_OnHover = new GUIStyleState(this, this.GetStyleStatePtr(5));
+					this.m_OnHover = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(5));
 				}
 				return this.m_OnHover;
 			}
@@ -122,13 +135,14 @@ namespace UnityEngine
 				this.AssignStyleState(5, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState onActive
 		{
 			get
 			{
 				if (this.m_OnActive == null)
 				{
-					this.m_OnActive = new GUIStyleState(this, this.GetStyleStatePtr(6));
+					this.m_OnActive = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(6));
 				}
 				return this.m_OnActive;
 			}
@@ -137,13 +151,14 @@ namespace UnityEngine
 				this.AssignStyleState(6, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState focused
 		{
 			get
 			{
 				if (this.m_Focused == null)
 				{
-					this.m_Focused = new GUIStyleState(this, this.GetStyleStatePtr(3));
+					this.m_Focused = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(3));
 				}
 				return this.m_Focused;
 			}
@@ -152,13 +167,14 @@ namespace UnityEngine
 				this.AssignStyleState(3, value.m_Ptr);
 			}
 		}
+
 		public GUIStyleState onFocused
 		{
 			get
 			{
 				if (this.m_OnFocused == null)
 				{
-					this.m_OnFocused = new GUIStyleState(this, this.GetStyleStatePtr(7));
+					this.m_OnFocused = GUIStyleState.GetGUIStyleState(this, this.GetStyleStatePtr(7));
 				}
 				return this.m_OnFocused;
 			}
@@ -167,6 +183,7 @@ namespace UnityEngine
 				this.AssignStyleState(7, value.m_Ptr);
 			}
 		}
+
 		public RectOffset border
 		{
 			get
@@ -182,6 +199,7 @@ namespace UnityEngine
 				this.AssignRectOffset(0, value.m_Ptr);
 			}
 		}
+
 		public RectOffset margin
 		{
 			get
@@ -197,6 +215,7 @@ namespace UnityEngine
 				this.AssignRectOffset(1, value.m_Ptr);
 			}
 		}
+
 		public RectOffset padding
 		{
 			get
@@ -212,6 +231,7 @@ namespace UnityEngine
 				this.AssignRectOffset(2, value.m_Ptr);
 			}
 		}
+
 		public RectOffset overflow
 		{
 			get
@@ -227,6 +247,71 @@ namespace UnityEngine
 				this.AssignRectOffset(3, value.m_Ptr);
 			}
 		}
+
+		[Obsolete("warning Don't use clipOffset - put things inside BeginGroup instead. This functionality will be removed in a later version.")]
+		public Vector2 clipOffset
+		{
+			get
+			{
+				return this.Internal_clipOffset;
+			}
+			set
+			{
+				this.Internal_clipOffset = value;
+			}
+		}
+
+		public Font font
+		{
+			get
+			{
+				return this.GetFontInternal();
+			}
+			set
+			{
+				this.SetFontInternal(value);
+				this.m_FontInternal = value;
+			}
+		}
+
+		public float lineHeight
+		{
+			get
+			{
+				return Mathf.Round(GUIStyle.Internal_GetLineHeight(this.m_Ptr));
+			}
+		}
+
+		public static GUIStyle none
+		{
+			get
+			{
+				if (GUIStyle.s_None == null)
+				{
+					GUIStyle.s_None = new GUIStyle();
+				}
+				return GUIStyle.s_None;
+			}
+		}
+
+		public bool isHeightDependantOnWidth
+		{
+			get
+			{
+				return this.fixedHeight == 0f && this.wordWrap && this.imagePosition != ImagePosition.ImageOnly;
+			}
+		}
+
+		public extern string name
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern ImagePosition imagePosition
 		{
 			[WrapperlessIcall]
@@ -236,6 +321,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TextAnchor alignment
 		{
 			[WrapperlessIcall]
@@ -245,6 +331,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool wordWrap
 		{
 			[WrapperlessIcall]
@@ -254,6 +341,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TextClipping clipping
 		{
 			[WrapperlessIcall]
@@ -263,6 +351,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Vector2 contentOffset
 		{
 			get
@@ -276,18 +365,7 @@ namespace UnityEngine
 				this.INTERNAL_set_contentOffset(ref value);
 			}
 		}
-		[Obsolete("Don't use clipOffset - put things inside begingroup instead. This functionality will be removed in a later version.")]
-		public Vector2 clipOffset
-		{
-			get
-			{
-				return this.Internal_clipOffset;
-			}
-			set
-			{
-				this.Internal_clipOffset = value;
-			}
-		}
+
 		internal Vector2 Internal_clipOffset
 		{
 			get
@@ -301,6 +379,7 @@ namespace UnityEngine
 				this.INTERNAL_set_Internal_clipOffset(ref value);
 			}
 		}
+
 		public extern float fixedWidth
 		{
 			[WrapperlessIcall]
@@ -310,6 +389,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float fixedHeight
 		{
 			[WrapperlessIcall]
@@ -319,6 +399,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool stretchWidth
 		{
 			[WrapperlessIcall]
@@ -328,6 +409,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool stretchHeight
 		{
 			[WrapperlessIcall]
@@ -337,18 +419,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public Font font
-		{
-			get
-			{
-				return this.GetFontInternal();
-			}
-			set
-			{
-				this.SetFontInternal(value);
-				this.m_FontInternal = value;
-			}
-		}
+
 		public extern int fontSize
 		{
 			[WrapperlessIcall]
@@ -358,6 +429,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern FontStyle fontStyle
 		{
 			[WrapperlessIcall]
@@ -367,6 +439,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool richText
 		{
 			[WrapperlessIcall]
@@ -376,97 +449,40 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public float lineHeight
-		{
-			get
-			{
-				return Mathf.Round(GUIStyle.Internal_GetLineHeight(this.m_Ptr));
-			}
-		}
-		public static GUIStyle none
-		{
-			get
-			{
-				if (GUIStyle.s_None == null)
-				{
-					GUIStyle.s_None = new GUIStyle();
-				}
-				return GUIStyle.s_None;
-			}
-		}
-		public bool isHeightDependantOnWidth
-		{
-			get
-			{
-				return this.fixedHeight == 0f && this.wordWrap && this.imagePosition != ImagePosition.ImageOnly;
-			}
-		}
+
 		public GUIStyle()
 		{
 			this.Init();
 		}
+
 		public GUIStyle(GUIStyle other)
 		{
 			this.InitCopy(other);
 		}
+
 		~GUIStyle()
 		{
 			this.Cleanup();
 		}
+
+		internal static void CleanupRoots()
+		{
+			GUIStyle.s_None = null;
+		}
+
 		internal void InternalOnAfterDeserialize()
 		{
-			this.m_FontInternal = this.GetFontInternal();
-			this.m_Normal = new GUIStyleState(this, this.GetStyleStatePtr(0));
-			this.m_Hover = new GUIStyleState(this, this.GetStyleStatePtr(1));
-			this.m_Active = new GUIStyleState(this, this.GetStyleStatePtr(2));
-			this.m_Focused = new GUIStyleState(this, this.GetStyleStatePtr(3));
-			this.m_OnNormal = new GUIStyleState(this, this.GetStyleStatePtr(4));
-			this.m_OnHover = new GUIStyleState(this, this.GetStyleStatePtr(5));
-			this.m_OnActive = new GUIStyleState(this, this.GetStyleStatePtr(6));
-			this.m_OnFocused = new GUIStyleState(this, this.GetStyleStatePtr(7));
+			this.m_FontInternal = this.GetFontInternalDuringLoadingThread();
+			this.m_Normal = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(0));
+			this.m_Hover = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(1));
+			this.m_Active = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(2));
+			this.m_Focused = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(3));
+			this.m_OnNormal = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(4));
+			this.m_OnHover = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(5));
+			this.m_OnActive = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(6));
+			this.m_OnFocused = GUIStyleState.ProduceGUIStyleStateFromDeserialization(this, this.GetStyleStatePtr(7));
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Init();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InitCopy(GUIStyle other);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Cleanup();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern IntPtr GetStyleStatePtr(int idx);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void AssignStyleState(int idx, IntPtr srcStyleState);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern IntPtr GetRectOffsetPtr(int idx);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void AssignRectOffset(int idx, IntPtr srcRectOffset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_contentOffset(out Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_contentOffset(ref Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_Internal_clipOffset(out Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_Internal_clipOffset(ref Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern float Internal_GetLineHeight(IntPtr target);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetFontInternal(Font value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern Font GetFontInternal();
+
 		private static void Internal_Draw(IntPtr target, Rect position, GUIContent content, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
 		{
 			Internal_DrawArguments internal_DrawArguments = default(Internal_DrawArguments);
@@ -478,9 +494,7 @@ namespace UnityEngine
 			internal_DrawArguments.hasKeyboardFocus = ((!hasKeyboardFocus) ? 0 : 1);
 			GUIStyle.Internal_Draw(content, ref internal_DrawArguments);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_Draw(GUIContent content, ref Internal_DrawArguments arguments);
+
 		public void Draw(Rect position, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -490,6 +504,7 @@ namespace UnityEngine
 			}
 			GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.none, isHover, isActive, on, hasKeyboardFocus);
 		}
+
 		public void Draw(Rect position, string text, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -499,6 +514,7 @@ namespace UnityEngine
 			}
 			GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.Temp(text), isHover, isActive, on, hasKeyboardFocus);
 		}
+
 		public void Draw(Rect position, Texture image, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -508,6 +524,7 @@ namespace UnityEngine
 			}
 			GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.Temp(image), isHover, isActive, on, hasKeyboardFocus);
 		}
+
 		public void Draw(Rect position, GUIContent content, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -517,13 +534,13 @@ namespace UnityEngine
 			}
 			GUIStyle.Internal_Draw(this.m_Ptr, position, content, isHover, isActive, on, hasKeyboardFocus);
 		}
-		[ExcludeFromDocs]
+
 		public void Draw(Rect position, GUIContent content, int controlID)
 		{
-			bool on = false;
-			this.Draw(position, content, controlID, on);
+			this.Draw(position, content, controlID, false);
 		}
-		public void Draw(Rect position, GUIContent content, int controlID, [DefaultValue("false")] bool on)
+
+		public void Draw(Rect position, GUIContent content, int controlID, bool on)
 		{
 			if (Event.current.type != EventType.Repaint)
 			{
@@ -539,13 +556,7 @@ namespace UnityEngine
 				Debug.LogError("Style.Draw may not be called with GUIContent that is null.");
 			}
 		}
-		private static void Internal_Draw2(IntPtr style, Rect position, GUIContent content, int controlID, bool on)
-		{
-			GUIStyle.INTERNAL_CALL_Internal_Draw2(style, ref position, content, controlID, on);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_Draw2(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
+
 		internal void DrawPrefixLabel(Rect position, GUIContent content, int controlID)
 		{
 			if (content != null)
@@ -557,23 +568,7 @@ namespace UnityEngine
 				Debug.LogError("Style.DrawPrefixLabel may not be called with GUIContent that is null.");
 			}
 		}
-		private static void Internal_DrawPrefixLabel(IntPtr style, Rect position, GUIContent content, int controlID, bool on)
-		{
-			GUIStyle.INTERNAL_CALL_Internal_DrawPrefixLabel(style, ref position, content, controlID, on);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DrawPrefixLabel(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern float Internal_GetCursorFlashOffset();
-		private static void Internal_DrawCursor(IntPtr target, Rect position, GUIContent content, int pos, Color cursorColor)
-		{
-			GUIStyle.INTERNAL_CALL_Internal_DrawCursor(target, ref position, content, pos, ref cursorColor);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DrawCursor(IntPtr target, ref Rect position, GUIContent content, int pos, ref Color cursorColor);
+
 		public void DrawCursor(Rect position, GUIContent content, int controlID, int Character)
 		{
 			Event current = Event.current;
@@ -589,9 +584,7 @@ namespace UnityEngine
 				GUIStyle.Internal_DrawCursor(this.m_Ptr, position, content, Character, cursorColor);
 			}
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_DrawWithTextSelection(GUIContent content, ref Internal_DrawWithTextSelectionArguments arguments);
+
 		internal void DrawWithTextSelection(Rect position, GUIContent content, int controlID, int firstSelectedCharacter, int lastSelectedCharacter, bool drawSelectionAsComposition)
 		{
 			if (Event.current.type != EventType.Repaint)
@@ -621,71 +614,58 @@ namespace UnityEngine
 			internal_DrawWithTextSelectionArguments.drawSelectionAsComposition = ((!drawSelectionAsComposition) ? 0 : 1);
 			GUIStyle.Internal_DrawWithTextSelection(content, ref internal_DrawWithTextSelectionArguments);
 		}
+
 		public void DrawWithTextSelection(Rect position, GUIContent content, int controlID, int firstSelectedCharacter, int lastSelectedCharacter)
 		{
 			this.DrawWithTextSelection(position, content, controlID, firstSelectedCharacter, lastSelectedCharacter, false);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetDefaultFont(Font font);
+
 		public Vector2 GetCursorPixelPosition(Rect position, GUIContent content, int cursorStringIndex)
 		{
 			Vector2 result;
 			GUIStyle.Internal_GetCursorPixelPosition(this.m_Ptr, position, content, cursorStringIndex, out result);
 			return result;
 		}
-		internal static void Internal_GetCursorPixelPosition(IntPtr target, Rect position, GUIContent content, int cursorStringIndex, out Vector2 ret)
-		{
-			GUIStyle.INTERNAL_CALL_Internal_GetCursorPixelPosition(target, ref position, content, cursorStringIndex, out ret);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_GetCursorPixelPosition(IntPtr target, ref Rect position, GUIContent content, int cursorStringIndex, out Vector2 ret);
+
 		public int GetCursorStringIndex(Rect position, GUIContent content, Vector2 cursorPixelPosition)
 		{
 			return GUIStyle.Internal_GetCursorStringIndex(this.m_Ptr, position, content, cursorPixelPosition);
 		}
-		internal static int Internal_GetCursorStringIndex(IntPtr target, Rect position, GUIContent content, Vector2 cursorPixelPosition)
-		{
-			return GUIStyle.INTERNAL_CALL_Internal_GetCursorStringIndex(target, ref position, content, ref cursorPixelPosition);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern int INTERNAL_CALL_Internal_GetCursorStringIndex(IntPtr target, ref Rect position, GUIContent content, ref Vector2 cursorPixelPosition);
+
 		internal int GetNumCharactersThatFitWithinWidth(string text, float width)
 		{
 			return GUIStyle.Internal_GetNumCharactersThatFitWithinWidth(this.m_Ptr, text, width);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int Internal_GetNumCharactersThatFitWithinWidth(IntPtr target, string text, float width);
+
 		public Vector2 CalcSize(GUIContent content)
 		{
 			Vector2 result;
 			GUIStyle.Internal_CalcSize(this.m_Ptr, content, out result);
 			return result;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void Internal_CalcSize(IntPtr target, GUIContent content, out Vector2 ret);
+
+		internal Vector2 CalcSizeWithConstraints(GUIContent content, Vector2 constraints)
+		{
+			Vector2 result;
+			GUIStyle.Internal_CalcSizeWithConstraints(this.m_Ptr, content, constraints, out result);
+			return result;
+		}
+
 		public Vector2 CalcScreenSize(Vector2 contentSize)
 		{
 			return new Vector2((this.fixedWidth == 0f) ? Mathf.Ceil(contentSize.x + (float)this.padding.left + (float)this.padding.right) : this.fixedWidth, (this.fixedHeight == 0f) ? Mathf.Ceil(contentSize.y + (float)this.padding.top + (float)this.padding.bottom) : this.fixedHeight);
 		}
+
 		public float CalcHeight(GUIContent content, float width)
 		{
 			return GUIStyle.Internal_CalcHeight(this.m_Ptr, content, width);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern float Internal_CalcHeight(IntPtr target, GUIContent content, float width);
+
 		public void CalcMinMaxWidth(GUIContent content, out float minWidth, out float maxWidth)
 		{
 			GUIStyle.Internal_CalcMinMaxWidth(this.m_Ptr, content, out minWidth, out maxWidth);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_CalcMinMaxWidth(IntPtr target, GUIContent content, out float minWidth, out float maxWidth);
+
 		public override string ToString()
 		{
 			return UnityString.Format("GUIStyle '{0}'", new object[]
@@ -693,6 +673,168 @@ namespace UnityEngine
 				this.name
 			});
 		}
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Init();
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void InitCopy(GUIStyle other);
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Cleanup();
+
+		[ThreadAndSerializationSafe]
+		private IntPtr GetStyleStatePtr(int idx)
+		{
+			IntPtr result;
+			GUIStyle.INTERNAL_CALL_GetStyleStatePtr(this, idx, out result);
+			return result;
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetStyleStatePtr(GUIStyle self, int idx, out IntPtr value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void AssignStyleState(int idx, IntPtr srcStyleState);
+
+		private IntPtr GetRectOffsetPtr(int idx)
+		{
+			IntPtr result;
+			GUIStyle.INTERNAL_CALL_GetRectOffsetPtr(this, idx, out result);
+			return result;
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetRectOffsetPtr(GUIStyle self, int idx, out IntPtr value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void AssignRectOffset(int idx, IntPtr srcRectOffset);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_contentOffset(out Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_contentOffset(ref Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_Internal_clipOffset(out Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_Internal_clipOffset(ref Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern float Internal_GetLineHeight(IntPtr target);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetFontInternal(Font value);
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern Font GetFontInternalDuringLoadingThread();
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern Font GetFontInternal();
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_Draw(GUIContent content, ref Internal_DrawArguments arguments);
+
+		private static void Internal_Draw2(IntPtr style, Rect position, GUIContent content, int controlID, bool on)
+		{
+			GUIStyle.INTERNAL_CALL_Internal_Draw2(style, ref position, content, controlID, on);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_Draw2(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
+
+		private static void Internal_DrawPrefixLabel(IntPtr style, Rect position, GUIContent content, int controlID, bool on)
+		{
+			GUIStyle.INTERNAL_CALL_Internal_DrawPrefixLabel(style, ref position, content, controlID, on);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_DrawPrefixLabel(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern float Internal_GetCursorFlashOffset();
+
+		private static void Internal_DrawCursor(IntPtr target, Rect position, GUIContent content, int pos, Color cursorColor)
+		{
+			GUIStyle.INTERNAL_CALL_Internal_DrawCursor(target, ref position, content, pos, ref cursorColor);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_DrawCursor(IntPtr target, ref Rect position, GUIContent content, int pos, ref Color cursorColor);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_DrawWithTextSelection(GUIContent content, ref Internal_DrawWithTextSelectionArguments arguments);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetDefaultFont(Font font);
+
+		internal static void Internal_GetCursorPixelPosition(IntPtr target, Rect position, GUIContent content, int cursorStringIndex, out Vector2 ret)
+		{
+			GUIStyle.INTERNAL_CALL_Internal_GetCursorPixelPosition(target, ref position, content, cursorStringIndex, out ret);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_GetCursorPixelPosition(IntPtr target, ref Rect position, GUIContent content, int cursorStringIndex, out Vector2 ret);
+
+		internal static int Internal_GetCursorStringIndex(IntPtr target, Rect position, GUIContent content, Vector2 cursorPixelPosition)
+		{
+			return GUIStyle.INTERNAL_CALL_Internal_GetCursorStringIndex(target, ref position, content, ref cursorPixelPosition);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int INTERNAL_CALL_Internal_GetCursorStringIndex(IntPtr target, ref Rect position, GUIContent content, ref Vector2 cursorPixelPosition);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int Internal_GetNumCharactersThatFitWithinWidth(IntPtr target, string text, float width);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Internal_CalcSize(IntPtr target, GUIContent content, out Vector2 ret);
+
+		internal static void Internal_CalcSizeWithConstraints(IntPtr target, GUIContent content, Vector2 maxSize, out Vector2 ret)
+		{
+			GUIStyle.INTERNAL_CALL_Internal_CalcSizeWithConstraints(target, content, ref maxSize, out ret);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_CalcSizeWithConstraints(IntPtr target, GUIContent content, ref Vector2 maxSize, out Vector2 ret);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern float Internal_CalcHeight(IntPtr target, GUIContent content, float width);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_CalcMinMaxWidth(IntPtr target, GUIContent content, out float minWidth, out float maxWidth);
+
 		public static implicit operator GUIStyle(string str)
 		{
 			if (GUISkin.current == null)

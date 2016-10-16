@@ -1,14 +1,20 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AnimationCurveContextMenu
 	{
 		private SerializedProperty m_Prop1;
+
 		private SerializedProperty m_Prop2;
+
 		private SerializedProperty m_Scalar;
+
 		private ParticleSystemCurveEditor m_ParticleSystemCurveEditor;
+
 		private Rect m_CurveRanges;
+
 		private AnimationCurveContextMenu(SerializedProperty prop1, SerializedProperty prop2, SerializedProperty scalar, Rect curveRanges, ParticleSystemCurveEditor owner)
 		{
 			this.m_Prop1 = prop1;
@@ -17,6 +23,7 @@ namespace UnityEditor
 			this.m_ParticleSystemCurveEditor = owner;
 			this.m_CurveRanges = curveRanges;
 		}
+
 		internal static void Show(Rect position, SerializedProperty property, SerializedProperty property2, SerializedProperty scalar, Rect curveRanges, ParticleSystemCurveEditor curveEditor)
 		{
 			GUIContent content = new GUIContent("Copy");
@@ -36,6 +43,7 @@ namespace UnityEditor
 			}
 			genericMenu.DropDown(position);
 		}
+
 		private void Copy()
 		{
 			AnimationCurve animCurve = (this.m_Prop1 == null) ? null : this.m_Prop1.animationCurveValue;
@@ -43,6 +51,7 @@ namespace UnityEditor
 			float scalar = (this.m_Scalar == null) ? 1f : this.m_Scalar.floatValue;
 			ParticleSystemClipboard.CopyAnimationCurves(animCurve, animCurve2, scalar);
 		}
+
 		private void Paste()
 		{
 			ParticleSystemClipboard.PasteAnimationCurves(this.m_Prop1, this.m_Prop2, this.m_Scalar, this.m_CurveRanges, this.m_ParticleSystemCurveEditor);

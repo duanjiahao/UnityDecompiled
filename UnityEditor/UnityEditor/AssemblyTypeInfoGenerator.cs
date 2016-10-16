@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.SerializationLogic;
+using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssemblyTypeInfoGenerator
@@ -12,23 +14,30 @@ namespace UnityEditor
 		public struct FieldInfo
 		{
 			public string name;
+
 			public string type;
 		}
+
 		public struct ClassInfo
 		{
 			public string name;
+
 			public AssemblyTypeInfoGenerator.FieldInfo[] fields;
 		}
+
 		private class AssemblyResolver : BaseAssemblyResolver
 		{
 			private readonly IDictionary m_Assemblies;
+
 			private AssemblyResolver() : this(new Hashtable())
 			{
 			}
+
 			private AssemblyResolver(IDictionary assemblyCache)
 			{
 				this.m_Assemblies = assemblyCache;
 			}
+
 			public static IAssemblyResolver WithSearchDirs(params string[] searchDirs)
 			{
 				AssemblyTypeInfoGenerator.AssemblyResolver assemblyResolver = new AssemblyTypeInfoGenerator.AssemblyResolver();
@@ -39,6 +48,7 @@ namespace UnityEditor
 				}
 				return assemblyResolver;
 			}
+
 			public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
 			{
 				AssemblyDefinition assemblyDefinition = (AssemblyDefinition)this.m_Assemblies[name.Name];
@@ -51,9 +61,13 @@ namespace UnityEditor
 				return assemblyDefinition;
 			}
 		}
+
 		private AssemblyDefinition assembly_;
+
 		private List<AssemblyTypeInfoGenerator.ClassInfo> classes_ = new List<AssemblyTypeInfoGenerator.ClassInfo>();
+
 		private TypeResolver typeResolver = new TypeResolver(null);
+
 		public AssemblyTypeInfoGenerator.ClassInfo[] ClassInfoArray
 		{
 			get
@@ -61,6 +75,7 @@ namespace UnityEditor
 				return this.classes_.ToArray();
 			}
 		}
+
 		public AssemblyTypeInfoGenerator(string assembly, string[] searchDirs)
 		{
 			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, new ReaderParameters
@@ -68,6 +83,15 @@ namespace UnityEditor
 				AssemblyResolver = AssemblyTypeInfoGenerator.AssemblyResolver.WithSearchDirs(searchDirs)
 			});
 		}
+
+		public AssemblyTypeInfoGenerator(string assembly, IAssemblyResolver resolver)
+		{
+			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, new ReaderParameters
+			{
+				AssemblyResolver = resolver
+			});
+		}
+
 		private string GetMonoEmbeddedFullTypeNameFor(TypeReference type)
 		{
 			TypeSpecification typeSpecification = type as TypeSpecification;
@@ -76,19 +100,17 @@ namespace UnityEditor
 			{
 				fullName = typeSpecification.ElementType.FullName;
 			}
+			else if (type.IsRequiredModifier)
+			{
+				fullName = type.GetElementType().FullName;
+			}
 			else
 			{
-				if (type.IsRequiredModifier)
-				{
-					fullName = type.GetElementType().FullName;
-				}
-				else
-				{
-					fullName = type.FullName;
-				}
+				fullName = type.FullName;
 			}
 			return fullName.Replace('/', '+').Replace('<', '[').Replace('>', ']');
 		}
+
 		private TypeReference ResolveGenericInstanceType(TypeReference typeToResolve, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			ArrayType arrayType = typeToResolve as ArrayType;
@@ -107,6 +129,7 @@ namespace UnityEditor
 			}
 			return typeToResolve;
 		}
+
 		private void AddType(TypeReference typeRef, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			if (this.classes_.Any((AssemblyTypeInfoGenerator.ClassInfo x) => x.name == this.GetMonoEmbeddedFullTypeNameFor(typeRef)))
@@ -169,6 +192,7 @@ namespace UnityEditor
 				this.typeResolver.Remove((GenericInstanceType)typeRef);
 			}
 		}
+
 		private void AddNestedTypes(TypeDefinition type, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			foreach (TypeDefinition current in type.NestedTypes)
@@ -176,6 +200,7 @@ namespace UnityEditor
 				this.AddType(current, genericInstanceTypeMap);
 			}
 		}
+
 		private void AddBaseType(TypeReference typeRef, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			TypeReference typeReference = typeRef.Resolve().BaseType;
@@ -189,17 +214,18 @@ namespace UnityEditor
 				this.AddType(typeReference, genericInstanceTypeMap);
 			}
 		}
+
 		private TypeReference MakeGenericInstance(TypeReference genericClass, IEnumerable<TypeReference> arguments, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			GenericInstanceType genericInstanceType = new GenericInstanceType(genericClass);
-			foreach (TypeReference current in 
-				from x in arguments
-				select this.ResolveGenericInstanceType(x, genericInstanceTypeMap))
+			foreach (TypeReference current in from x in arguments
+			select this.ResolveGenericInstanceType(x, genericInstanceTypeMap))
 			{
 				genericInstanceType.GenericArguments.Add(current);
 			}
 			return genericInstanceType;
 		}
+
 		private AssemblyTypeInfoGenerator.FieldInfo[] GetFields(TypeDefinition type, bool isGenericInstance, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			List<AssemblyTypeInfoGenerator.FieldInfo> list = new List<AssemblyTypeInfoGenerator.FieldInfo>();
@@ -213,6 +239,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private AssemblyTypeInfoGenerator.FieldInfo? GetFieldInfo(TypeDefinition type, FieldDefinition field, bool isDeclaringTypeGenericInstance, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			if (!this.WillSerialize(field))
@@ -233,6 +260,7 @@ namespace UnityEditor
 			value.type = this.GetMonoEmbeddedFullTypeNameFor(type2);
 			return new AssemblyTypeInfoGenerator.FieldInfo?(value);
 		}
+
 		private bool WillSerialize(FieldDefinition field)
 		{
 			bool result;
@@ -240,12 +268,19 @@ namespace UnityEditor
 			{
 				result = UnitySerializationLogic.WillUnitySerialize(field, this.typeResolver);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				Debug.LogFormat("Field '{0}' from '{1}', exception {2}", new object[]
+				{
+					field.FullName,
+					field.Module.FullyQualifiedName,
+					ex.Message
+				});
 				result = false;
 			}
 			return result;
 		}
+
 		public AssemblyTypeInfoGenerator.ClassInfo[] GatherClassInfo()
 		{
 			foreach (ModuleDefinition current in this.assembly_.Modules)

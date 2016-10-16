@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class PointEffector2D : Effector2D
@@ -13,6 +14,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float forceVariation
 		{
 			[WrapperlessIcall]
@@ -22,6 +24,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float distanceScale
 		{
 			[WrapperlessIcall]
@@ -31,6 +34,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float drag
 		{
 			[WrapperlessIcall]
@@ -40,6 +44,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float angularDrag
 		{
 			[WrapperlessIcall]
@@ -49,6 +54,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern EffectorSelection2D forceSource
 		{
 			[WrapperlessIcall]
@@ -58,6 +64,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern EffectorSelection2D forceTarget
 		{
 			[WrapperlessIcall]
@@ -67,6 +74,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern EffectorForceMode2D forceMode
 		{
 			[WrapperlessIcall]

@@ -1,17 +1,25 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct AccelerationEvent
 	{
-		private Vector3 m_Acceleration;
+		private float x;
+
+		private float y;
+
+		private float z;
+
 		private float m_TimeDelta;
+
 		public Vector3 acceleration
 		{
 			get
 			{
-				return this.m_Acceleration;
+				return new Vector3(this.x, this.y, this.z);
 			}
 		}
+
 		public float deltaTime
 		{
 			get

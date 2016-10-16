@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class ReorderableListWithRenameAndScrollView
@@ -10,12 +11,16 @@ namespace UnityEditorInternal
 		public class State
 		{
 			public Vector2 m_ScrollPos = new Vector2(0f, 0f);
+
 			public RenameOverlay m_RenameOverlay = new RenameOverlay();
 		}
+
 		public class Styles
 		{
 			public GUIStyle reorderableListLabel = new GUIStyle("PR Label");
+
 			public GUIStyle reorderableListLabelRightAligned;
+
 			public Styles()
 			{
 				Texture2D background = this.reorderableListLabel.hover.background;
@@ -36,19 +41,33 @@ namespace UnityEditorInternal
 				this.reorderableListLabelRightAligned.clipping = TextClipping.Overflow;
 			}
 		}
+
 		private ReorderableList m_ReorderableList;
+
 		private ReorderableListWithRenameAndScrollView.State m_State;
+
 		private int m_LastSelectedIndex = -1;
+
 		private bool m_HadKeyFocusAtMouseDown;
+
 		private int m_FrameIndex = -1;
+
 		public GUIStyle listElementStyle;
+
 		public GUIStyle renameOverlayStyle;
+
 		public Func<int, string> onGetNameAtIndex;
+
 		public Action<int, string> onNameChangedAtIndex;
+
 		public Action<int> onSelectionChanged;
+
 		public Action<int> onDeleteItemAtIndex;
+
 		public ReorderableList.ElementCallbackDelegate onCustomDrawElement;
+
 		private static ReorderableListWithRenameAndScrollView.Styles s_Styles;
+
 		public ReorderableList list
 		{
 			get
@@ -56,6 +75,7 @@ namespace UnityEditorInternal
 				return this.m_ReorderableList;
 			}
 		}
+
 		public GUIStyle elementStyle
 		{
 			get
@@ -63,6 +83,7 @@ namespace UnityEditorInternal
 				return this.listElementStyle ?? ReorderableListWithRenameAndScrollView.s_Styles.reorderableListLabel;
 			}
 		}
+
 		public GUIStyle elementStyleRightAligned
 		{
 			get
@@ -70,6 +91,7 @@ namespace UnityEditorInternal
 				return ReorderableListWithRenameAndScrollView.s_Styles.reorderableListLabelRightAligned;
 			}
 		}
+
 		public ReorderableListWithRenameAndScrollView(ReorderableList list, ReorderableListWithRenameAndScrollView.State state)
 		{
 			this.m_State = state;
@@ -83,14 +105,17 @@ namespace UnityEditorInternal
 			ReorderableList expr_9D = this.m_ReorderableList;
 			expr_9D.onReorderCallback = (ReorderableList.ReorderCallbackDelegate)Delegate.Combine(expr_9D.onReorderCallback, new ReorderableList.ReorderCallbackDelegate(this.ReorderCallback));
 		}
+
 		private RenameOverlay GetRenameOverlay()
 		{
 			return this.m_State.m_RenameOverlay;
 		}
+
 		public void OnEvent()
 		{
 			this.GetRenameOverlay().OnEvent();
 		}
+
 		private void EnsureRowIsVisible(int index, float scrollGUIHeight)
 		{
 			if (index < 0)
@@ -101,6 +126,7 @@ namespace UnityEditorInternal
 			float min = num - scrollGUIHeight + this.m_ReorderableList.elementHeight + 3f;
 			this.m_State.m_ScrollPos.y = Mathf.Clamp(this.m_State.m_ScrollPos.y, min, num);
 		}
+
 		public void OnGUI(Rect rect)
 		{
 			if (ReorderableListWithRenameAndScrollView.s_Styles == null)
@@ -130,10 +156,12 @@ namespace UnityEditorInternal
 			this.KeyboardHandling();
 			this.CommandHandling();
 		}
+
 		public bool IsRenamingIndex(int index)
 		{
 			return this.GetRenameOverlay().IsRenaming() && this.GetRenameOverlay().userData == index && !this.GetRenameOverlay().isWaitingForDelay;
 		}
+
 		public void DrawElement(Rect r, int index, bool isActive, bool isFocused)
 		{
 			if (this.IsRenamingIndex(index))
@@ -145,18 +173,16 @@ namespace UnityEditorInternal
 				}
 				this.DoRenameOverlay();
 			}
+			else if (this.onCustomDrawElement != null)
+			{
+				this.onCustomDrawElement(r, index, isActive, isFocused);
+			}
 			else
 			{
-				if (this.onCustomDrawElement != null)
-				{
-					this.onCustomDrawElement(r, index, isActive, isFocused);
-				}
-				else
-				{
-					this.DrawElementText(r, index, isActive, index == this.m_ReorderableList.index, isFocused);
-				}
+				this.DrawElementText(r, index, isActive, index == this.m_ReorderableList.index, isFocused);
 			}
 		}
+
 		public void DrawElementText(Rect r, int index, bool isActive, bool isSelected, bool isFocused)
 		{
 			if (Event.current.type == EventType.Repaint && this.onGetNameAtIndex != null)
@@ -164,6 +190,7 @@ namespace UnityEditorInternal
 				this.elementStyle.Draw(r, this.onGetNameAtIndex(index), false, false, isSelected, true);
 			}
 		}
+
 		public virtual void DoRenameOverlay()
 		{
 			if (this.GetRenameOverlay().IsRenaming() && !this.GetRenameOverlay().OnGUI())
@@ -171,6 +198,7 @@ namespace UnityEditorInternal
 				this.RenameEnded();
 			}
 		}
+
 		public void BeginRename(int index, float delay)
 		{
 			this.GetRenameOverlay().BeginRename(this.onGetNameAtIndex(index), index, delay);
@@ -178,6 +206,7 @@ namespace UnityEditorInternal
 			this.m_LastSelectedIndex = index;
 			this.FrameItem(index);
 		}
+
 		private void RenameEnded()
 		{
 			if (this.GetRenameOverlay().userAcceptedRename && this.onNameChangedAtIndex != null)
@@ -192,6 +221,7 @@ namespace UnityEditorInternal
 			}
 			this.GetRenameOverlay().Clear();
 		}
+
 		public void EndRename(bool acceptChanges)
 		{
 			if (this.GetRenameOverlay().IsRenaming())
@@ -200,10 +230,12 @@ namespace UnityEditorInternal
 				this.RenameEnded();
 			}
 		}
+
 		public void ReorderCallback(ReorderableList list)
 		{
 			this.m_LastSelectedIndex = list.index;
 		}
+
 		public void MouseUpCallback(ReorderableList list)
 		{
 			if (this.m_HadKeyFocusAtMouseDown && list.index == this.m_LastSelectedIndex)
@@ -212,6 +244,7 @@ namespace UnityEditorInternal
 			}
 			this.m_LastSelectedIndex = list.index;
 		}
+
 		public void SelectCallback(ReorderableList list)
 		{
 			this.FrameItem(list.index);
@@ -220,6 +253,7 @@ namespace UnityEditorInternal
 				this.onSelectionChanged(list.index);
 			}
 		}
+
 		private void RemoveSelected()
 		{
 			if (this.m_ReorderableList.index < 0 || this.m_ReorderableList.index >= this.m_ReorderableList.count)
@@ -232,14 +266,17 @@ namespace UnityEditorInternal
 				this.onDeleteItemAtIndex(this.m_ReorderableList.index);
 			}
 		}
+
 		public void FrameItem(int index)
 		{
 			this.m_FrameIndex = index;
 		}
+
 		private bool CanBeginRename()
 		{
 			return !this.GetRenameOverlay().IsRenaming() && this.m_ReorderableList.index >= 0;
 		}
+
 		private void CommandHandling()
 		{
 			Event current = Event.current;
@@ -248,11 +285,10 @@ namespace UnityEditorInternal
 				string commandName = current.commandName;
 				if (commandName != null)
 				{
-					if (ReorderableListWithRenameAndScrollView.<>f__switch$map12 == null)
+					if (ReorderableListWithRenameAndScrollView.<>f__switch$map15 == null)
 					{
-						ReorderableListWithRenameAndScrollView.<>f__switch$map12 = new Dictionary<string, int>(1)
+						ReorderableListWithRenameAndScrollView.<>f__switch$map15 = new Dictionary<string, int>(1)
 						{
-
 							{
 								"OnLostFocus",
 								0
@@ -260,7 +296,7 @@ namespace UnityEditorInternal
 						};
 					}
 					int num;
-					if (ReorderableListWithRenameAndScrollView.<>f__switch$map12.TryGetValue(commandName, out num))
+					if (ReorderableListWithRenameAndScrollView.<>f__switch$map15.TryGetValue(commandName, out num))
 					{
 						if (num == 0)
 						{
@@ -271,6 +307,7 @@ namespace UnityEditorInternal
 				}
 			}
 		}
+
 		private void KeyboardHandling()
 		{
 			Event current = Event.current;

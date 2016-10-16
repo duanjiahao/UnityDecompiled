@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class BumpMapSettingsFixingWindow : EditorWindow
@@ -8,28 +9,38 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle selected = "ServerUpdateChangesetOn";
+
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle button = "LargeButton";
-			public GUIContent overviewText = EditorGUIUtility.TextContent("BumpMapSettingsFixingWindow.overviewText");
+
+			public GUIContent overviewText = EditorGUIUtility.TextContent("A Material is using the texture as a normal map.\nThe texture must be marked as a normal map in the import settings.");
 		}
+
 		private static BumpMapSettingsFixingWindow.Styles s_Styles;
+
 		private ListViewState m_LV = new ListViewState();
+
 		private string[] m_Paths;
+
 		public BumpMapSettingsFixingWindow()
 		{
-			base.title = "NormalMap settings";
+			base.titleContent = new GUIContent("NormalMap settings");
 		}
+
 		public static void ShowWindow(string[] paths)
 		{
 			BumpMapSettingsFixingWindow window = EditorWindow.GetWindow<BumpMapSettingsFixingWindow>(true);
 			window.SetPaths(paths);
 			window.ShowUtility();
 		}
+
 		public void SetPaths(string[] paths)
 		{
 			this.m_Paths = paths;
 			this.m_LV.totalRows = paths.Length;
 		}
+
 		private void OnGUI()
 		{
 			if (BumpMapSettingsFixingWindow.s_Styles == null)
@@ -70,6 +81,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(10f);
 		}
+
 		private void OnDestroy()
 		{
 			InternalEditorUtility.BumpMapSettingsFixingWindowReportResult(0);

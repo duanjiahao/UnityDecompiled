@@ -1,14 +1,23 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.Hardware
 {
+	[RequiredByNativeCode]
 	public struct DevDevice
 	{
 		public readonly string id;
+
 		public readonly string name;
+
 		public readonly string type;
+
 		public readonly string module;
+
 		public readonly DevDeviceState state;
+
 		public readonly DevDeviceFeatures features;
+
 		public bool isConnected
 		{
 			get
@@ -16,6 +25,7 @@ namespace UnityEditor.Hardware
 				return this.state == DevDeviceState.Connected;
 			}
 		}
+
 		public static DevDevice none
 		{
 			get
@@ -23,6 +33,7 @@ namespace UnityEditor.Hardware
 				return new DevDevice("None", "None", "none", "internal", DevDeviceState.Disconnected, DevDeviceFeatures.None);
 			}
 		}
+
 		public DevDevice(string id, string name, string type, string module, DevDeviceState state, DevDeviceFeatures features)
 		{
 			this.id = id;
@@ -32,6 +43,7 @@ namespace UnityEditor.Hardware
 			this.state = state;
 			this.features = features;
 		}
+
 		public override string ToString()
 		{
 			return string.Concat(new object[]

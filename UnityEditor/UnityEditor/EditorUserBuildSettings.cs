@@ -1,11 +1,13 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class EditorUserBuildSettings
 	{
 		public static Action activeBuildTargetChanged;
+
 		public static extern BuildTargetGroup selectedBuildTargetGroup
 		{
 			[WrapperlessIcall]
@@ -15,6 +17,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern BuildTarget selectedStandaloneTarget
 		{
 			[WrapperlessIcall]
@@ -24,6 +27,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern PSMBuildSubtarget psmBuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -33,6 +37,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern PSP2BuildSubtarget psp2BuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -42,6 +47,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern PS4BuildSubtarget ps4BuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -51,6 +57,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern SCEBuildSubtarget sceBuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -60,6 +67,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool explicitNullChecks
 		{
 			[WrapperlessIcall]
@@ -69,6 +77,17 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern bool explicitDivideByZeroChecks
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern bool needSubmissionMaterials
 		{
 			[WrapperlessIcall]
@@ -78,6 +97,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool compressWithPsArc
 		{
 			[WrapperlessIcall]
@@ -87,6 +107,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool forceInstallation
 		{
 			[WrapperlessIcall]
@@ -96,6 +117,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool enableHeadlessMode
 		{
 			[WrapperlessIcall]
@@ -105,6 +127,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool buildScriptsOnly
 		{
 			[WrapperlessIcall]
@@ -114,6 +137,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern XboxBuildSubtarget xboxBuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -123,6 +147,47 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern WiiUBuildDebugLevel wiiUBuildDebugLevel
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern WiiUBuildOutput wiiuBuildOutput
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern bool wiiUEnableNetAPI
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern int wiiUBootMode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern XboxRunMethod xboxRunMethod
 		{
 			[WrapperlessIcall]
@@ -132,6 +197,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int streamingInstallLaunchRange
 		{
 			[WrapperlessIcall]
@@ -141,6 +207,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern XboxOneDeployMethod xboxOneDeployMethod
 		{
 			[WrapperlessIcall]
@@ -150,6 +217,33 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern string xboxOneUsername
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern string xboxOneNetworkSharePath
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static string xboxOneAdditionalDebugPorts
+		{
+			get;
+			set;
+		}
+
 		public static extern MobileTextureSubtarget androidBuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -159,6 +253,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern WSASDK wsaSDK
 		{
 			[WrapperlessIcall]
@@ -168,6 +263,17 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern WSAUWPBuildType wsaUWPBuildType
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern WSABuildAndRunDeployTarget wsaBuildAndRunDeployTarget
 		{
 			[WrapperlessIcall]
@@ -177,6 +283,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool wsaGenerateReferenceProjects
 		{
 			[WrapperlessIcall]
@@ -186,24 +293,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern MobileTextureSubtarget blackberryBuildSubtarget
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public static extern BlackBerryBuildType blackberryBuildType
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+
 		public static extern MobileTextureSubtarget tizenBuildSubtarget
 		{
 			[WrapperlessIcall]
@@ -213,6 +303,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool webPlayerStreamed
 		{
 			[WrapperlessIcall]
@@ -222,6 +313,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool webPlayerOfflineDeployment
 		{
 			[WrapperlessIcall]
@@ -231,27 +323,21 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern bool webPlayerDeployOnline
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+
 		public static extern BuildTarget activeBuildTarget
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string[] activeScriptCompilationDefines
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool development
 		{
 			[WrapperlessIcall]
@@ -261,7 +347,8 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern int webGLOptimizationLevel
+
+		public static extern bool webGLUsePreBuiltUnityEngine
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -270,6 +357,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool connectProfiler
 		{
 			[WrapperlessIcall]
@@ -279,6 +367,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool allowDebugging
 		{
 			[WrapperlessIcall]
@@ -288,6 +377,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool exportAsGoogleAndroidProject
 		{
 			[WrapperlessIcall]
@@ -297,6 +387,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool symlinkLibraries
 		{
 			[WrapperlessIcall]
@@ -306,6 +397,37 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		internal static extern bool symlinkTrampoline
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		internal static extern iOSBuildType iOSBuildConfigType
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern bool n3dsCreateCIAFile
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern bool installInBuildFolder
 		{
 			[WrapperlessIcall]
@@ -315,9 +437,29 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern bool forceOptimizeScriptCompilation
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetWSADotNetNative(WSABuildType config, bool enabled);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool GetWSADotNetNative(WSABuildType config);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SwitchActiveBuildTarget(BuildTarget target);
+
 		internal static void Internal_ActiveBuildTargetChanged()
 		{
 			if (EditorUserBuildSettings.activeBuildTargetChanged != null)
@@ -325,11 +467,21 @@ namespace UnityEditor
 				EditorUserBuildSettings.activeBuildTargetChanged();
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetBuildLocation(BuildTarget target);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetBuildLocation(BuildTarget target, string location);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetPlatformSettings(string platformName, string name, string value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetPlatformSettings(string platformName, string name);
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	public sealed class AssetStoreToolUtils
@@ -9,6 +10,7 @@ namespace UnityEditorInternal
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BuildAssetStoreAssetBundle(UnityEngine.Object targetObject, string targetPath);
+
 		public static bool PreviewAssetStoreAssetBundleInInspector(AssetBundle bundle, AssetStoreAsset info)
 		{
 			info.id = 0;
@@ -19,6 +21,7 @@ namespace UnityEditorInternal
 			AssetStoreAssetInspector.Instance.Repaint();
 			return true;
 		}
+
 		public static void UpdatePreloadingInternal()
 		{
 			AssetStoreUtils.UpdatePreloading();

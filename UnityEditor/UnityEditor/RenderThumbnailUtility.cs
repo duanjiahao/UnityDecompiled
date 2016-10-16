@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RenderThumbnailUtility
@@ -8,6 +9,7 @@ namespace UnityEditor
 		{
 			return prefab.GetComponent<Renderer>().bounds;
 		}
+
 		public static Texture2D Render(GameObject prefab)
 		{
 			if (prefab == null)
@@ -18,7 +20,6 @@ namespace UnityEditor
 			{
 				return null;
 			}
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(true);
 			Texture2D texture2D = new Texture2D(64, 64);
 			texture2D.hideFlags = HideFlags.HideAndDontSave;
 			texture2D.name = "Preview Texture";
@@ -26,6 +27,7 @@ namespace UnityEditor
 			GameObject gameObject = new GameObject("Preview");
 			gameObject.hideFlags = HideFlags.HideAndDontSave;
 			Camera camera = gameObject.AddComponent(typeof(Camera)) as Camera;
+			camera.cameraType = CameraType.Preview;
 			camera.clearFlags = CameraClearFlags.Color;
 			camera.backgroundColor = new Color(0.5f, 0.5f, 0.5f, 0f);
 			camera.cullingMask = 0;
@@ -86,7 +88,6 @@ namespace UnityEditor
 			RenderTexture.ReleaseTemporary(temporary);
 			UnityEngine.Object.DestroyImmediate(gameObject);
 			Camera.SetupCurrent(current);
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(false);
 			return texture2D;
 		}
 	}

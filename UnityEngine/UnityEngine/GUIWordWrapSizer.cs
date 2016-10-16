@@ -1,25 +1,30 @@
 using System;
+
 namespace UnityEngine
 {
 	internal sealed class GUIWordWrapSizer : GUILayoutEntry
 	{
-		private GUIContent content;
-		private float forcedMinHeight;
-		private float forcedMaxHeight;
-		public GUIWordWrapSizer(GUIStyle _style, GUIContent _content, GUILayoutOption[] options) : base(0f, 0f, 0f, 0f, _style)
+		private readonly GUIContent m_Content;
+
+		private readonly float m_ForcedMinHeight;
+
+		private readonly float m_ForcedMaxHeight;
+
+		public GUIWordWrapSizer(GUIStyle style, GUIContent content, GUILayoutOption[] options) : base(0f, 0f, 0f, 0f, style)
 		{
-			this.content = new GUIContent(_content);
-			base.ApplyOptions(options);
-			this.forcedMinHeight = this.minHeight;
-			this.forcedMaxHeight = this.maxHeight;
+			this.m_Content = new GUIContent(content);
+			this.ApplyOptions(options);
+			this.m_ForcedMinHeight = this.minHeight;
+			this.m_ForcedMaxHeight = this.maxHeight;
 		}
+
 		public override void CalcWidth()
 		{
 			if (this.minWidth == 0f || this.maxWidth == 0f)
 			{
 				float minWidth;
 				float maxWidth;
-				base.style.CalcMinMaxWidth(this.content, out minWidth, out maxWidth);
+				base.style.CalcMinMaxWidth(this.m_Content, out minWidth, out maxWidth);
 				if (this.minWidth == 0f)
 				{
 					this.minWidth = minWidth;
@@ -30,26 +35,27 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public override void CalcHeight()
 		{
-			if (this.forcedMinHeight == 0f || this.forcedMaxHeight == 0f)
+			if (this.m_ForcedMinHeight == 0f || this.m_ForcedMaxHeight == 0f)
 			{
-				float num = base.style.CalcHeight(this.content, this.rect.width);
-				if (this.forcedMinHeight == 0f)
+				float num = base.style.CalcHeight(this.m_Content, this.rect.width);
+				if (this.m_ForcedMinHeight == 0f)
 				{
 					this.minHeight = num;
 				}
 				else
 				{
-					this.minHeight = this.forcedMinHeight;
+					this.minHeight = this.m_ForcedMinHeight;
 				}
-				if (this.forcedMaxHeight == 0f)
+				if (this.m_ForcedMaxHeight == 0f)
 				{
 					this.maxHeight = num;
 				}
 				else
 				{
-					this.maxHeight = this.forcedMaxHeight;
+					this.maxHeight = this.m_ForcedMaxHeight;
 				}
 			}
 		}

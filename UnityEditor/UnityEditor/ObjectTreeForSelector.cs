@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -11,27 +12,37 @@ namespace UnityEditor
 		internal class TreeSelectorData
 		{
 			public ObjectTreeForSelector objectTreeForSelector;
+
 			public EditorWindow editorWindow;
+
 			public TreeViewState state;
+
 			public Rect treeViewRect;
+
 			public int userData;
 		}
+
 		[Serializable]
 		public class SelectionEvent : UnityEvent<TreeViewItem>
 		{
 		}
+
 		[Serializable]
 		public class TreeViewNeededEvent : UnityEvent<ObjectTreeForSelector.TreeSelectorData>
 		{
 		}
+
 		[Serializable]
 		public class DoubleClickedEvent : UnityEvent
 		{
 		}
+
 		private class Styles
 		{
 			public GUIStyle searchBg = new GUIStyle("ProjectBrowserTopBarBg");
+
 			public GUIStyle bottomBarBg = new GUIStyle("ProjectBrowserBottomBarBg");
+
 			public Styles()
 			{
 				this.searchBg.border = new RectOffset(0, 0, 2, 2);
@@ -41,26 +52,44 @@ namespace UnityEditor
 				this.bottomBarBg.padding = new RectOffset(5, 5, 0, 0);
 			}
 		}
+
 		private const string kSearchFieldTag = "TreeSearchField";
+
 		private const float kBottomBarHeight = 17f;
+
 		private const float kTopBarHeight = 27f;
+
 		private EditorWindow m_Owner;
+
 		private TreeView m_TreeView;
+
 		private TreeViewState m_TreeViewState;
+
 		private bool m_FocusSearchFilter;
+
 		private int m_ErrorCounter;
+
 		private int m_OriginalSelectedID;
+
 		private int m_UserData;
+
 		private int m_LastSelectedID = -1;
+
 		private string m_SelectedPath = string.Empty;
+
 		private ObjectTreeForSelector.SelectionEvent m_SelectionEvent;
+
 		private ObjectTreeForSelector.TreeViewNeededEvent m_TreeViewNeededEvent;
+
 		private ObjectTreeForSelector.DoubleClickedEvent m_DoubleClickedEvent;
+
 		private static ObjectTreeForSelector.Styles s_Styles;
+
 		public bool IsInitialized()
 		{
 			return this.m_Owner != null;
 		}
+
 		public void Init(Rect position, EditorWindow owner, UnityAction<ObjectTreeForSelector.TreeSelectorData> treeViewNeededCallback, UnityAction<TreeViewItem> selectionCallback, UnityAction doubleClickedCallback, int initialSelectedTreeViewItemID, int userData)
 		{
 			this.Clear();
@@ -87,6 +116,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void Clear()
 		{
 			this.m_Owner = null;
@@ -100,6 +130,7 @@ namespace UnityEditor
 			this.m_ErrorCounter = 0;
 			this.m_FocusSearchFilter = false;
 		}
+
 		public int[] GetSelection()
 		{
 			if (this.m_TreeView != null)
@@ -108,6 +139,7 @@ namespace UnityEditor
 			}
 			return new int[0];
 		}
+
 		public void SetTreeView(TreeView treeView)
 		{
 			this.m_TreeView = treeView;
@@ -120,6 +152,7 @@ namespace UnityEditor
 			TreeView expr_82 = this.m_TreeView;
 			expr_82.itemDoubleClickedCallback = (Action<int>)Delegate.Combine(expr_82.itemDoubleClickedCallback, new Action<int>(this.OnItemDoubleClicked));
 		}
+
 		private bool EnsureTreeViewIsValid(Rect treeViewRect)
 		{
 			if (this.m_TreeViewState == null)
@@ -153,10 +186,12 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private Rect GetTreeViewRect(Rect position)
 		{
 			return new Rect(0f, 27f, position.width, position.height - 17f - 27f);
 		}
+
 		public void OnGUI(Rect position)
 		{
 			if (ObjectTreeForSelector.s_Styles == null)
@@ -178,6 +213,7 @@ namespace UnityEditor
 			this.TreeViewArea(treeViewRect, controlID);
 			this.BottomBar(bottomRect);
 		}
+
 		private void BottomBar(Rect bottomRect)
 		{
 			int num = this.m_TreeView.GetSelection().FirstOrDefault<int>();
@@ -185,7 +221,7 @@ namespace UnityEditor
 			{
 				this.m_LastSelectedID = num;
 				this.m_SelectedPath = string.Empty;
-				TreeViewItem treeViewItem = this.m_TreeView.FindNode(num);
+				TreeViewItem treeViewItem = this.m_TreeView.FindItem(num);
 				if (treeViewItem != null)
 				{
 					StringBuilder stringBuilder = new StringBuilder();
@@ -208,6 +244,7 @@ namespace UnityEditor
 				GUI.Label(bottomRect, GUIContent.Temp(this.m_SelectedPath), EditorStyles.miniLabel);
 			}
 		}
+
 		private void OnItemDoubleClicked(int id)
 		{
 			if (this.m_DoubleClickedEvent != null)
@@ -215,6 +252,7 @@ namespace UnityEditor
 				this.m_DoubleClickedEvent.Invoke();
 			}
 		}
+
 		private void OnItemSelectionChanged(int[] selection)
 		{
 			if (this.m_SelectionEvent != null)
@@ -222,11 +260,12 @@ namespace UnityEditor
 				TreeViewItem item = null;
 				if (selection.Length > 0)
 				{
-					item = this.m_TreeView.FindNode(selection[0]);
+					item = this.m_TreeView.FindItem(selection[0]);
 				}
 				this.FireSelectionEvent(item);
 			}
 		}
+
 		private void HandleKeyboard(int treeViewControlID)
 		{
 			if (Event.current.type != EventType.KeyDown)
@@ -242,7 +281,7 @@ namespace UnityEditor
 			if (flag)
 			{
 				GUIUtility.keyboardControl = treeViewControlID;
-				if (this.m_TreeView.IsLastClickedPartOfVisibleRows())
+				if (this.m_TreeView.IsLastClickedPartOfRows())
 				{
 					this.FrameSelectedTreeViewItem();
 				}
@@ -253,10 +292,12 @@ namespace UnityEditor
 				Event.current.Use();
 			}
 		}
+
 		private void FrameSelectedTreeViewItem()
 		{
 			this.m_TreeView.Frame(this.m_TreeView.state.lastClickedID, true, false);
 		}
+
 		private void HandleCommandEvents()
 		{
 			Event current = Event.current;
@@ -283,6 +324,7 @@ namespace UnityEditor
 				current.Use();
 			}
 		}
+
 		private void FireSelectionEvent(TreeViewItem item)
 		{
 			if (this.m_SelectionEvent != null)
@@ -290,14 +332,16 @@ namespace UnityEditor
 				this.m_SelectionEvent.Invoke(item);
 			}
 		}
+
 		private void TreeViewArea(Rect treeViewRect, int treeViewControlID)
 		{
-			bool flag = this.m_TreeView.data.GetVisibleRows().Count > 0;
+			bool flag = this.m_TreeView.data.rowCount > 0;
 			if (flag)
 			{
 				this.m_TreeView.OnGUI(treeViewRect, treeViewControlID);
 			}
 		}
+
 		private void SearchArea(Rect toolbarRect)
 		{
 			GUI.Label(toolbarRect, GUIContent.none, ObjectTreeForSelector.s_Styles.searchBg);
@@ -322,6 +366,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal void FocusSearchField()
 		{
 			this.m_FocusSearchFilter = true;

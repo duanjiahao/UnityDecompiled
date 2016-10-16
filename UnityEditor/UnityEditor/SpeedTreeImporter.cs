@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	public sealed class SpeedTreeImporter : AssetImporter
@@ -15,18 +16,21 @@ namespace UnityEditor
 			"Best",
 			"Palm"
 		};
+
 		public extern bool hasImported
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern string materialFolderPath
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern float scaleFactor
 		{
 			[WrapperlessIcall]
@@ -36,6 +40,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Color mainColor
 		{
 			get
@@ -49,19 +54,14 @@ namespace UnityEditor
 				this.INTERNAL_set_mainColor(ref value);
 			}
 		}
+
+		[Obsolete("specColor is no longer used and has been deprecated.", false)]
 		public Color specColor
 		{
-			get
-			{
-				Color result;
-				this.INTERNAL_get_specColor(out result);
-				return result;
-			}
-			set
-			{
-				this.INTERNAL_set_specColor(ref value);
-			}
+			get;
+			set;
 		}
+
 		public Color hueVariation
 		{
 			get
@@ -75,15 +75,14 @@ namespace UnityEditor
 				this.INTERNAL_set_hueVariation(ref value);
 			}
 		}
-		public extern float shininess
+
+		[Obsolete("shininess is no longer used and has been deprecated.", false)]
+		public float shininess
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float alphaTestRef
 		{
 			[WrapperlessIcall]
@@ -93,12 +92,14 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool hasBillboard
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool enableSmoothLODTransition
 		{
 			[WrapperlessIcall]
@@ -108,6 +109,17 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern bool animateCrossFading
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern float billboardTransitionCrossFadeWidth
 		{
 			[WrapperlessIcall]
@@ -117,6 +129,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float fadeOutWidth
 		{
 			[WrapperlessIcall]
@@ -126,6 +139,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float[] LODHeights
 		{
 			[WrapperlessIcall]
@@ -135,6 +149,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool[] castShadows
 		{
 			[WrapperlessIcall]
@@ -144,6 +159,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool[] receiveShadows
 		{
 			[WrapperlessIcall]
@@ -153,6 +169,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool[] useLightProbes
 		{
 			[WrapperlessIcall]
@@ -162,6 +179,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ReflectionProbeUsage[] reflectionProbeUsages
 		{
 			[WrapperlessIcall]
@@ -171,6 +189,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool[] enableBump
 		{
 			[WrapperlessIcall]
@@ -180,6 +199,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool[] enableHue
 		{
 			[WrapperlessIcall]
@@ -189,12 +209,14 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int bestWindQuality
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int[] windQualities
 		{
 			[WrapperlessIcall]
@@ -204,26 +226,36 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		internal extern bool materialsShouldBeRegenerated
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_mainColor(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_mainColor(ref Color value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_specColor(out Color value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_specColor(ref Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_hueVariation(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_hueVariation(ref Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void GenerateMaterials();
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetMaterialVersionToCurrent();
 	}
 }

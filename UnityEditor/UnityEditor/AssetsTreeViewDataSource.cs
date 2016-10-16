@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetsTreeViewDataSource : LazyTreeViewDataSource
@@ -27,45 +28,54 @@ namespace UnityEditor
 				return EditorUtility.NaturalCompare(x.displayName, y.displayName);
 			}
 		}
+
 		private class FolderTreeItem : TreeViewItem
 		{
 			public FolderTreeItem(int id, int depth, TreeViewItem parent, string displayName) : base(id, depth, parent, displayName)
 			{
 			}
 		}
+
 		private class NonFolderTreeItem : TreeViewItem
 		{
 			public NonFolderTreeItem(int id, int depth, TreeViewItem parent, string displayName) : base(id, depth, parent, displayName)
 			{
 			}
 		}
+
 		private const HierarchyType k_HierarchyType = HierarchyType.Assets;
+
 		private readonly int m_RootInstanceID;
+
 		public bool foldersOnly
 		{
 			get;
 			set;
 		}
+
 		public bool foldersFirst
 		{
 			get;
 			set;
 		}
-		public AssetsTreeViewDataSource(TreeView treeView, int rootInstanceID, bool showRootNode, bool rootNodeIsCollapsable) : base(treeView)
+
+		public AssetsTreeViewDataSource(TreeView treeView, int rootInstanceID, bool showRootItem, bool rootItemIsCollapsable) : base(treeView)
 		{
 			this.m_RootInstanceID = rootInstanceID;
-			this.showRootNode = showRootNode;
-			base.rootIsCollapsable = rootNodeIsCollapsable;
+			this.showRootItem = showRootItem;
+			base.rootIsCollapsable = rootItemIsCollapsable;
 		}
+
 		private static string CreateDisplayName(int instanceID)
 		{
 			return Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(instanceID));
 		}
+
 		public override void FetchData()
 		{
 			int depth = 0;
 			this.m_RootItem = new TreeViewItem(this.m_RootInstanceID, depth, null, AssetsTreeViewDataSource.CreateDisplayName(this.m_RootInstanceID));
-			if (!base.showRootNode)
+			if (!base.showRootItem)
 			{
 				this.SetExpanded(this.m_RootItem, true);
 			}
@@ -75,7 +85,7 @@ namespace UnityEditor
 			{
 				Debug.LogError("Root Asset with id " + this.m_RootInstanceID + " not found!!");
 			}
-			int num = hierarchyProperty.depth + ((!base.showRootNode) ? 1 : 0);
+			int num = hierarchyProperty.depth + ((!base.showRootItem) ? 1 : 0);
 			int[] expanded = base.expandedIDs.ToArray();
 			Texture2D icon = EditorGUIUtility.FindTexture(EditorResourcesUtility.emptyFolderIconName);
 			this.m_VisibleRows = new List<TreeViewItem>();
@@ -119,6 +129,7 @@ namespace UnityEditor
 			bool revealSelectionAndFrameLastSelected = false;
 			this.m_TreeView.SetSelection(Selection.instanceIDs, revealSelectionAndFrameLastSelected);
 		}
+
 		private static void FoldersFirstRecursive(TreeViewItem item)
 		{
 			if (!item.hasChildren)
@@ -149,19 +160,13 @@ namespace UnityEditor
 			}
 			item.children = new List<TreeViewItem>(array);
 		}
+
 		protected override HashSet<int> GetParentsAbove(int id)
 		{
-			HashSet<int> hashSet = new HashSet<int>();
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			if (hierarchyProperty.Find(id, null))
-			{
-				while (hierarchyProperty.Parent())
-				{
-					hashSet.Add(hierarchyProperty.instanceID);
-				}
-			}
-			return hashSet;
+			int[] ancestors = ProjectWindowUtil.GetAncestors(id);
+			return new HashSet<int>(ancestors);
 		}
+
 		protected override HashSet<int> GetParentsBelow(int id)
 		{
 			HashSet<int> hashSet = new HashSet<int>();
@@ -180,19 +185,23 @@ namespace UnityEditor
 			}
 			return hashSet;
 		}
+
 		public override void OnExpandedStateChanged()
 		{
 			InternalEditorUtility.expandedProjectWindowItems = base.expandedIDs.ToArray();
+			base.OnExpandedStateChanged();
 		}
+
 		public override bool IsRenamingItemAllowed(TreeViewItem item)
 		{
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			return (!hierarchyProperty.Find(item.id, null) || hierarchyProperty.isMainRepresentation) && item.parent != null;
+			return !AssetDatabase.IsSubAsset(item.id) && item.parent != null;
 		}
+
 		protected CreateAssetUtility GetCreateAssetUtility()
 		{
 			return this.m_TreeView.state.createAssetUtility;
 		}
+
 		public int GetInsertAfterItemIDForNewItem(string newName, TreeViewItem parentItem, bool isCreatingNewFolder, bool foldersFirst)
 		{
 			if (!parentItem.hasChildren)
@@ -224,6 +233,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public override void InsertFakeItem(int id, int parentID, string name, Texture2D icon)
 		{
 			bool isCreatingNewFolder = this.GetCreateAssetUtility().endAction is DoCreateFolder;
@@ -242,12 +252,12 @@ namespace UnityEditor
 			if (this.FindItem(parentID) != null)
 			{
 				this.SetExpanded(parentID, true);
-				List<TreeViewItem> visibleRows = this.GetVisibleRows();
-				int indexOfID = TreeView.GetIndexOfID(visibleRows, parentID);
+				List<TreeViewItem> rows = this.GetRows();
+				int indexOfID = TreeView.GetIndexOfID(rows, parentID);
 				TreeViewItem treeViewItem2;
 				if (indexOfID >= 0)
 				{
-					treeViewItem2 = visibleRows[indexOfID];
+					treeViewItem2 = rows[indexOfID];
 				}
 				else
 				{
@@ -257,35 +267,32 @@ namespace UnityEditor
 				this.m_FakeItem = new TreeViewItem(id, num, treeViewItem2, name);
 				this.m_FakeItem.icon = icon;
 				int insertAfterItemIDForNewItem = this.GetInsertAfterItemIDForNewItem(name, treeViewItem2, isCreatingNewFolder, this.foldersFirst);
-				int num2 = TreeView.GetIndexOfID(visibleRows, insertAfterItemIDForNewItem);
+				int num2 = TreeView.GetIndexOfID(rows, insertAfterItemIDForNewItem);
 				if (num2 >= 0)
 				{
-					while (++num2 < visibleRows.Count)
+					while (++num2 < rows.Count)
 					{
-						if (visibleRows[num2].depth <= num)
+						if (rows[num2].depth <= num)
 						{
 							break;
 						}
 					}
-					if (num2 < visibleRows.Count)
+					if (num2 < rows.Count)
 					{
-						visibleRows.Insert(num2, this.m_FakeItem);
+						rows.Insert(num2, this.m_FakeItem);
 					}
 					else
 					{
-						visibleRows.Add(this.m_FakeItem);
+						rows.Add(this.m_FakeItem);
 					}
+				}
+				else if (rows.Count > 0)
+				{
+					rows.Insert(0, this.m_FakeItem);
 				}
 				else
 				{
-					if (visibleRows.Count > 0)
-					{
-						visibleRows.Insert(0, this.m_FakeItem);
-					}
-					else
-					{
-						visibleRows.Add(this.m_FakeItem);
-					}
+					rows.Add(this.m_FakeItem);
 				}
 				this.m_NeedRefreshVisibleFolders = false;
 				this.m_TreeView.Frame(this.m_FakeItem.id, true, false);

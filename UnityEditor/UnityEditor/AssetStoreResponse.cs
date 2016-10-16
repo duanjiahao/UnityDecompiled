@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal class AssetStoreResponse
 	{
 		internal AsyncHTTPClient job;
+
 		public Dictionary<string, JSONValue> dict;
+
 		public bool ok;
+
 		public bool failed
 		{
 			get
@@ -15,6 +19,7 @@ namespace UnityEditor
 				return !this.ok;
 			}
 		}
+
 		public string message
 		{
 			get
@@ -26,6 +31,7 @@ namespace UnityEditor
 				return this.dict["message"].AsString(true);
 			}
 		}
+
 		private static string EncodeString(string str)
 		{
 			str = str.Replace("\"", "\\\"");
@@ -37,6 +43,7 @@ namespace UnityEditor
 			str = str.Replace("\t", "\\t");
 			return str;
 		}
+
 		public override string ToString()
 		{
 			string text = "{";

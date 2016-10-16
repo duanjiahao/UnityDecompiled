@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -7,6 +8,7 @@ namespace UnityEditor
 	internal sealed class MaintDatabaseRecord
 	{
 		public string name;
+
 		public string dbName;
 	}
 }

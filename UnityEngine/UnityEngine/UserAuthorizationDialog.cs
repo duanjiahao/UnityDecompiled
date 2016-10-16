@@ -1,13 +1,18 @@
 using System;
+
 namespace UnityEngine
 {
 	[AddComponentMenu("")]
 	internal class UserAuthorizationDialog : MonoBehaviour
 	{
 		private const int width = 385;
+
 		private const int height = 155;
+
 		private Rect windowRect;
+
 		private Texture warningIcon;
+
 		private void Start()
 		{
 			this.warningIcon = (Resources.GetBuiltinResource(typeof(Texture2D), "WarningSign.psd") as Texture2D);
@@ -18,6 +23,7 @@ namespace UnityEngine
 			}
 			this.windowRect = new Rect((float)(Screen.width / 2 - 192), (float)(Screen.height / 2 - 77), 385f, 155f);
 		}
+
 		private void OnGUI()
 		{
 			GUISkin skin = GUI.skin;
@@ -80,6 +86,7 @@ namespace UnityEngine
 			this.windowRect = GUI.Window(0, this.windowRect, new GUI.WindowFunction(this.DoUserAuthorizationDialog), "Unity Web Player Authorization Request");
 			GUI.skin = skin;
 		}
+
 		private void DoUserAuthorizationDialog(int windowID)
 		{
 			UserAuthorization userAuthorizationRequestMode = Application.GetUserAuthorizationRequestMode();
@@ -99,20 +106,17 @@ namespace UnityEngine
 			{
 				GUILayout.Label("The content on this site would like to use your\ncomputer's web camera and microphone.\nThese images and sounds may be recorded.", new GUILayoutOption[0]);
 			}
+			else if (userAuthorizationRequestMode == UserAuthorization.WebCam)
+			{
+				GUILayout.Label("The content on this site would like to use\nyour computer's web camera. The images\nfrom your web camera may be recorded.", new GUILayoutOption[0]);
+			}
 			else
 			{
-				if (userAuthorizationRequestMode == UserAuthorization.WebCam)
+				if (userAuthorizationRequestMode != UserAuthorization.Microphone)
 				{
-					GUILayout.Label("The content on this site would like to use\nyour computer's web camera. The images\nfrom your web camera may be recorded.", new GUILayoutOption[0]);
+					return;
 				}
-				else
-				{
-					if (userAuthorizationRequestMode != UserAuthorization.Microphone)
-					{
-						return;
-					}
-					GUILayout.Label("The content on this site would like to use\nyour computer's microphone. The sounds\nfrom your microphone may be recorded.", new GUILayoutOption[0]);
-				}
+				GUILayout.Label("The content on this site would like to use\nyour computer's microphone. The sounds\nfrom your microphone may be recorded.", new GUILayoutOption[0]);
 			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndVertical();

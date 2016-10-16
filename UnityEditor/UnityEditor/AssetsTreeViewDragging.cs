@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal class AssetsTreeViewDragging : TreeViewDragging
@@ -8,6 +9,7 @@ namespace UnityEditor
 		public AssetsTreeViewDragging(TreeView treeView) : base(treeView)
 		{
 		}
+
 		public override void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs)
 		{
 			DragAndDrop.PrepareStartDrag();
@@ -23,6 +25,7 @@ namespace UnityEditor
 				DragAndDrop.StartDrag(dragAndDropTitle);
 			}
 		}
+
 		public override DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPos)
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);

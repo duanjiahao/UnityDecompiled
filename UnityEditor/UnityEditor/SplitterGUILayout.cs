@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SplitterGUILayout
@@ -7,6 +8,7 @@ namespace UnityEditor
 		internal class GUISplitterGroup : GUILayoutGroup
 		{
 			public SplitterState state;
+
 			public override void SetHorizontal(float x, float width)
 			{
 				if (!this.isVertical)
@@ -36,6 +38,7 @@ namespace UnityEditor
 					base.SetHorizontal(x, width);
 				}
 			}
+
 			public override void SetVertical(float y, float height)
 			{
 				this.rect.y = y;
@@ -74,50 +77,49 @@ namespace UnityEditor
 						i++;
 					}
 				}
-				else
+				else if (base.style != GUIStyle.none)
 				{
-					if (base.style != GUIStyle.none)
+					foreach (GUILayoutEntry current2 in this.entries)
 					{
-						foreach (GUILayoutEntry current2 in this.entries)
+						float num4 = (float)Mathf.Max(current2.margin.top, padding.top);
+						float y2 = y + num4;
+						float num5 = height - (float)Mathf.Max(current2.margin.bottom, padding.bottom) - num4;
+						if (current2.stretchHeight != 0)
 						{
-							float num4 = (float)Mathf.Max(current2.margin.top, padding.top);
-							float y2 = y + num4;
-							float num5 = height - (float)Mathf.Max(current2.margin.bottom, padding.bottom) - num4;
-							if (current2.stretchHeight != 0)
-							{
-								current2.SetVertical(y2, num5);
-							}
-							else
-							{
-								current2.SetVertical(y2, Mathf.Clamp(num5, current2.minHeight, current2.maxHeight));
-							}
+							current2.SetVertical(y2, num5);
+						}
+						else
+						{
+							current2.SetVertical(y2, Mathf.Clamp(num5, current2.minHeight, current2.maxHeight));
 						}
 					}
-					else
+				}
+				else
+				{
+					float num6 = y - (float)this.margin.top;
+					float num7 = height + (float)this.margin.vertical;
+					foreach (GUILayoutEntry current3 in this.entries)
 					{
-						float num6 = y - (float)this.margin.top;
-						float num7 = height + (float)this.margin.vertical;
-						foreach (GUILayoutEntry current3 in this.entries)
+						if (current3.stretchHeight != 0)
 						{
-							if (current3.stretchHeight != 0)
-							{
-								current3.SetVertical(num6 + (float)current3.margin.top, num7 - (float)current3.margin.vertical);
-							}
-							else
-							{
-								current3.SetVertical(num6 + (float)current3.margin.top, Mathf.Clamp(num7 - (float)current3.margin.vertical, current3.minHeight, current3.maxHeight));
-							}
+							current3.SetVertical(num6 + (float)current3.margin.top, num7 - (float)current3.margin.vertical);
+						}
+						else
+						{
+							current3.SetVertical(num6 + (float)current3.margin.top, Mathf.Clamp(num7 - (float)current3.margin.vertical, current3.minHeight, current3.maxHeight));
 						}
 					}
 				}
 			}
 		}
+
 		private static int splitterHash = "Splitter".GetHashCode();
+
 		public static void BeginSplit(SplitterState state, GUIStyle style, bool vertical, params GUILayoutOption[] options)
 		{
 			SplitterGUILayout.GUISplitterGroup gUISplitterGroup = (SplitterGUILayout.GUISplitterGroup)GUILayoutUtility.BeginLayoutGroup(style, null, typeof(SplitterGUILayout.GUISplitterGroup));
 			state.ID = GUIUtility.GetControlID(SplitterGUILayout.splitterHash, FocusType.Native);
-			switch (Event.current.type)
+			switch (Event.current.GetTypeForControl(state.ID))
 			{
 			case EventType.MouseDown:
 				if (Event.current.button == 0 && Event.current.clickCount == 1)
@@ -179,26 +181,32 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		public static void BeginHorizontalSplit(SplitterState state, params GUILayoutOption[] options)
 		{
 			SplitterGUILayout.BeginSplit(state, GUIStyle.none, false, options);
 		}
+
 		public static void BeginVerticalSplit(SplitterState state, params GUILayoutOption[] options)
 		{
 			SplitterGUILayout.BeginSplit(state, GUIStyle.none, true, options);
 		}
+
 		public static void BeginHorizontalSplit(SplitterState state, GUIStyle style, params GUILayoutOption[] options)
 		{
 			SplitterGUILayout.BeginSplit(state, style, false, options);
 		}
+
 		public static void BeginVerticalSplit(SplitterState state, GUIStyle style, params GUILayoutOption[] options)
 		{
 			SplitterGUILayout.BeginSplit(state, style, true, options);
 		}
+
 		public static void EndVerticalSplit()
 		{
 			GUILayoutUtility.EndLayoutGroup();
 		}
+
 		public static void EndHorizontalSplit()
 		{
 			GUILayoutUtility.EndLayoutGroup();

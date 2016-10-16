@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public class AndroidJavaClass : AndroidJavaObject
@@ -7,6 +8,7 @@ namespace UnityEngine
 		{
 			this._AndroidJavaClass(className);
 		}
+
 		internal AndroidJavaClass(IntPtr jclass)
 		{
 			if (jclass == IntPtr.Zero)
@@ -16,6 +18,7 @@ namespace UnityEngine
 			this.m_jclass = AndroidJNI.NewGlobalRef(jclass);
 			this.m_jobject = IntPtr.Zero;
 		}
+
 		private void _AndroidJavaClass(string className)
 		{
 			base.DebugPrint("Creating AndroidJavaClass from " + className);

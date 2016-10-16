@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TargetChoiceHandler
 	{
 		internal delegate void TargetChoiceMenuFunction(SerializedProperty property, UnityEngine.Object target);
+
 		internal static void DuplicateArrayElement(object userData)
 		{
 			SerializedProperty serializedProperty = (SerializedProperty)userData;
@@ -13,6 +15,7 @@ namespace UnityEditor
 			serializedProperty.serializedObject.ApplyModifiedProperties();
 			EditorUtility.ForceReloadInspectors();
 		}
+
 		internal static void DeleteArrayElement(object userData)
 		{
 			SerializedProperty serializedProperty = (SerializedProperty)userData;
@@ -20,6 +23,7 @@ namespace UnityEditor
 			serializedProperty.serializedObject.ApplyModifiedProperties();
 			EditorUtility.ForceReloadInspectors();
 		}
+
 		internal static void SetPrefabOverride(object userData)
 		{
 			SerializedProperty serializedProperty = (SerializedProperty)userData;
@@ -27,17 +31,20 @@ namespace UnityEditor
 			serializedProperty.serializedObject.ApplyModifiedProperties();
 			EditorUtility.ForceReloadInspectors();
 		}
+
 		internal static void SetToValueOfTarget(SerializedProperty property, UnityEngine.Object target)
 		{
 			property.SetToValueOfTarget(target);
 			property.serializedObject.ApplyModifiedProperties();
 			EditorUtility.ForceReloadInspectors();
 		}
+
 		private static void TargetChoiceForwardFunction(object userData)
 		{
 			PropertyAndTargetHandler propertyAndTargetHandler = (PropertyAndTargetHandler)userData;
 			propertyAndTargetHandler.function(propertyAndTargetHandler.property, propertyAndTargetHandler.target);
 		}
+
 		internal static void AddSetToValueOfTargetMenuItems(GenericMenu menu, SerializedProperty property, TargetChoiceHandler.TargetChoiceMenuFunction func)
 		{
 			SerializedProperty property2 = property.serializedObject.FindProperty(property.propertyPath);

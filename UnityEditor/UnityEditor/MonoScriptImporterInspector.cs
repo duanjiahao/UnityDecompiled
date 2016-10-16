@@ -2,16 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(MonoImporter))]
 	internal class MonoScriptImporterInspector : AssetImporterInspector
 	{
 		private const int m_RowHeight = 16;
+
 		private static GUIContent s_HelpIcon;
+
 		private static GUIContent s_TitleSettingsIcon;
+
 		private SerializedObject m_TargetObject;
+
 		private SerializedProperty m_Icon;
+
 		internal override void OnHeaderControlsGUI()
 		{
 			TextAsset textAsset = this.assetEditor.target as TextAsset;
@@ -27,6 +33,7 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
+
 		internal override void OnHeaderIconGUI(Rect iconRect)
 		{
 			if (this.m_Icon == null)
@@ -36,6 +43,7 @@ namespace UnityEditor
 			}
 			EditorGUI.ObjectIconDropDown(iconRect, this.assetEditor.targets, true, null, this.m_Icon);
 		}
+
 		[MenuItem("CONTEXT/MonoImporter/Reset")]
 		private static void ResetDefaultReferences(MenuCommand command)
 		{
@@ -43,10 +51,12 @@ namespace UnityEditor
 			monoImporter.SetDefaultReferences(new string[0], new UnityEngine.Object[0]);
 			AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(monoImporter));
 		}
+
 		private static bool IsTypeCompatible(Type type)
 		{
-			return type != null && type.IsSubclassOf(typeof(MonoBehaviour));
+			return type != null && (type.IsSubclassOf(typeof(MonoBehaviour)) || type.IsSubclassOf(typeof(ScriptableObject)));
 		}
+
 		private void ShowFieldInfo(Type type, MonoImporter importer, List<string> names, List<UnityEngine.Object> objects, ref bool didModify)
 		{
 			if (!MonoScriptImporterInspector.IsTypeCompatible(type))
@@ -89,6 +99,7 @@ namespace UnityEditor
 				goto IL_EC;
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			MonoImporter monoImporter = this.target as MonoImporter;

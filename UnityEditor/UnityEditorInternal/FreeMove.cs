@@ -1,13 +1,17 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class FreeMove
 	{
 		private static Vector2 s_StartMousePosition;
+
 		private static Vector2 s_CurrentMousePosition;
+
 		private static Vector3 s_StartPosition;
+
 		public static Vector3 Do(int id, Vector3 position, Quaternion rotation, float size, Vector3 snap, Handles.DrawCapFunction capFunc)
 		{
 			Vector3 position2 = Handles.matrix.MultiplyPoint(position);

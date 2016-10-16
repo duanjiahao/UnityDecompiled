@@ -1,25 +1,41 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(AudioReverbFilter))]
 	internal class AudioReverbFilterEditor : Editor
 	{
 		private SerializedProperty m_ReverbPreset;
+
 		private SerializedProperty m_DryLevel;
+
 		private SerializedProperty m_Room;
+
 		private SerializedProperty m_RoomHF;
+
 		private SerializedProperty m_RoomLF;
+
 		private SerializedProperty m_DecayTime;
+
 		private SerializedProperty m_DecayHFRatio;
+
 		private SerializedProperty m_ReflectionsLevel;
+
 		private SerializedProperty m_ReflectionsDelay;
+
 		private SerializedProperty m_ReverbLevel;
+
 		private SerializedProperty m_ReverbDelay;
+
 		private SerializedProperty m_HFReference;
+
 		private SerializedProperty m_LFReference;
+
 		private SerializedProperty m_Diffusion;
+
 		private SerializedProperty m_Density;
+
 		private void OnEnable()
 		{
 			this.m_ReverbPreset = base.serializedObject.FindProperty("m_ReverbPreset");
@@ -38,15 +54,9 @@ namespace UnityEditor
 			this.m_Diffusion = base.serializedObject.FindProperty("m_Diffusion");
 			this.m_Density = base.serializedObject.FindProperty("m_Density");
 		}
+
 		public override void OnInspectorGUI()
 		{
-			if (!Application.HasAdvancedLicense())
-			{
-				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				GUIContent content = new GUIContent("This is only available in the Pro version of Unity.");
-				GUILayout.Label(content, EditorStyles.helpBox, new GUILayoutOption[0]);
-				GUILayout.EndHorizontal();
-			}
 			base.serializedObject.Update();
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(this.m_ReverbPreset, new GUILayoutOption[0]);
@@ -54,22 +64,23 @@ namespace UnityEditor
 			{
 				base.serializedObject.SetIsDifferentCacheDirty();
 			}
-			EditorGUI.BeginDisabledGroup(this.m_ReverbPreset.enumValueIndex != 27 || this.m_ReverbPreset.hasMultipleDifferentValues);
-			EditorGUILayout.Slider(this.m_DryLevel, -10000f, 0f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_Room, -10000f, 0f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_RoomHF, -10000f, 0f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_RoomLF, -10000f, 0f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_DecayTime, 0.1f, 20f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_DecayHFRatio, 0.1f, 2f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_ReflectionsLevel, -10000f, 1000f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_ReflectionsDelay, 0f, 0.3f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_ReverbLevel, -10000f, 2000f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_ReverbDelay, 0f, 0.1f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_HFReference, 1000f, 20000f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_LFReference, 20f, 1000f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_Diffusion, 0f, 100f, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_Density, 0f, 100f, new GUILayoutOption[0]);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(this.m_ReverbPreset.enumValueIndex != 27 || this.m_ReverbPreset.hasMultipleDifferentValues))
+			{
+				EditorGUILayout.Slider(this.m_DryLevel, -10000f, 0f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_Room, -10000f, 0f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_RoomHF, -10000f, 0f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_RoomLF, -10000f, 0f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_DecayTime, 0.1f, 20f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_DecayHFRatio, 0.1f, 2f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReflectionsLevel, -10000f, 1000f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReflectionsDelay, 0f, 0.3f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReverbLevel, -10000f, 2000f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReverbDelay, 0f, 0.1f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_HFReference, 1000f, 20000f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_LFReference, 20f, 1000f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_Diffusion, 0f, 100f, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_Density, 0f, 100f, new GUILayoutOption[0]);
+			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
 	}

@@ -1,9 +1,11 @@
 using System;
+
 namespace UnityEditor
 {
 	internal class FlattenHeightmap : TerrainWizard
 	{
 		public float height;
+
 		internal override void OnWizardUpdate()
 		{
 			if (base.terrainData)
@@ -17,6 +19,7 @@ namespace UnityEditor
 				});
 			}
 		}
+
 		private void OnWizardCreate()
 		{
 			Undo.RegisterCompleteObjectUndo(base.terrainData, "Flatten Heightmap");

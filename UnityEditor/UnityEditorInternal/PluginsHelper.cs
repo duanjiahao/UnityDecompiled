@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEditor.Modules;
+
 namespace UnityEditorInternal
 {
 	internal class PluginsHelper

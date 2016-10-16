@@ -1,20 +1,31 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal sealed class LicenseManagementWindow : EditorWindow
 	{
 		private static int width = 600;
+
 		private static int height = 350;
+
 		private static int left = 0;
+
 		private static int top = 0;
+
 		private static int offsetX = 50;
+
 		private static int offsetY = 25;
+
 		private static int buttonWidth = 140;
+
 		private static Rect windowArea;
+
 		private static Rect rectArea = new Rect((float)LicenseManagementWindow.offsetX, (float)LicenseManagementWindow.offsetY, (float)(LicenseManagementWindow.width - LicenseManagementWindow.offsetX * 2), (float)(LicenseManagementWindow.height - LicenseManagementWindow.offsetY * 2));
+
 		private static LicenseManagementWindow win = null;
+
 		private static LicenseManagementWindow Window
 		{
 			get
@@ -26,18 +37,23 @@ namespace UnityEditor
 				return LicenseManagementWindow.win;
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CheckForUpdates();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ActivateNewLicense();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ManualActivation();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ReturnLicense();
+
 		private static void ShowWindow()
 		{
 			Resolution currentResolution = Screen.currentResolution;
@@ -48,6 +64,7 @@ namespace UnityEditor
 			LicenseManagementWindow.win.position = LicenseManagementWindow.windowArea;
 			LicenseManagementWindow.win.Show();
 		}
+
 		private void OnGUI()
 		{
 			GUILayout.BeginArea(LicenseManagementWindow.rectArea);

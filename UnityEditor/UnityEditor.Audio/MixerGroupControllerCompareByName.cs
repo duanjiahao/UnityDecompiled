@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 namespace UnityEditor.Audio
 {
 	internal class MixerGroupControllerCompareByName : IComparer<AudioMixerGroupController>

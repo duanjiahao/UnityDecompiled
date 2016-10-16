@@ -2,22 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class JSONParser
 	{
 		private string json;
+
 		private int line;
+
 		private int linechar;
+
 		private int len;
+
 		private int idx;
+
 		private int pctParsed;
+
 		private char cur;
+
 		private static char[] endcodes = new char[]
 		{
 			'\\',
 			'"'
 		};
+
 		public JSONParser(string jsondata)
 		{
 			this.json = jsondata + "    ";
@@ -27,6 +36,7 @@ namespace UnityEditorInternal
 			this.idx = 0;
 			this.pctParsed = 0;
 		}
+
 		public static JSONValue SimpleParse(string jsondata)
 		{
 			JSONParser jSONParser = new JSONParser(jsondata);
@@ -40,11 +50,13 @@ namespace UnityEditorInternal
 			}
 			return new JSONValue(null);
 		}
+
 		public JSONValue Parse()
 		{
 			this.cur = this.json[this.idx];
 			return this.ParseValue();
 		}
+
 		private char Next()
 		{
 			if (this.cur == '\n')
@@ -66,6 +78,7 @@ namespace UnityEditorInternal
 			this.cur = this.json[this.idx];
 			return this.cur;
 		}
+
 		private void SkipWs()
 		{
 			string text = " \n\t\r";
@@ -74,10 +87,12 @@ namespace UnityEditorInternal
 				this.Next();
 			}
 		}
+
 		private string PosMsg()
 		{
 			return "line " + this.line.ToString() + ", column " + this.linechar.ToString();
 		}
+
 		private JSONValue ParseValue()
 		{
 			this.SkipWs();
@@ -127,6 +142,7 @@ namespace UnityEditorInternal
 			}
 			goto IL_76;
 		}
+
 		private JSONValue ParseArray()
 		{
 			this.Next();
@@ -145,6 +161,7 @@ namespace UnityEditorInternal
 			this.Next();
 			return new JSONValue(list);
 		}
+
 		private JSONValue ParseDict()
 		{
 			this.Next();
@@ -174,6 +191,7 @@ namespace UnityEditorInternal
 			this.Next();
 			return new JSONValue(dictionary);
 		}
+
 		private JSONValue ParseString()
 		{
 			string text = string.Empty;
@@ -279,6 +297,7 @@ namespace UnityEditorInternal
 			this.Next();
 			return new JSONValue(text);
 		}
+
 		private JSONValue ParseNumber()
 		{
 			string text = string.Empty;
@@ -333,6 +352,7 @@ namespace UnityEditorInternal
 			}
 			return result;
 		}
+
 		private JSONValue ParseConstant()
 		{
 			string a = string.Empty;
@@ -357,12 +377,9 @@ namespace UnityEditorInternal
 					return new JSONValue(false);
 				}
 			}
-			else
+			else if (a == "null")
 			{
-				if (a == "null")
-				{
-					return new JSONValue(null);
-				}
+				return new JSONValue(null);
 			}
 			throw new JSONParseException("Invalid token at " + this.PosMsg());
 		}

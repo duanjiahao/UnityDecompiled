@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor.Utils;
 using UnityEngineInternal;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal class BooCompiler : MonoScriptCompilerBase
@@ -11,6 +12,7 @@ namespace UnityEditor.Scripting.Compilers
 		public BooCompiler(MonoIsland island, bool runUpdater) : base(island, runUpdater)
 		{
 		}
+
 		protected override Program StartCompiler()
 		{
 			List<string> list = new List<string>
@@ -39,6 +41,7 @@ namespace UnityEditor.Scripting.Compilers
 			string compiler = Path.Combine(base.GetProfileDirectory(), "booc.exe");
 			return base.StartCompiler(this._island._target, compiler, list);
 		}
+
 		protected override CompilerOutputParserBase CreateOutputParser()
 		{
 			return new BooCompilerOutputParser();

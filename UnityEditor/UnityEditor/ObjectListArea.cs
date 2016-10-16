@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor.Collaboration;
 using UnityEditor.VersionControl;
+using UnityEditor.Web;
 using UnityEditorInternal;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ObjectListArea
@@ -13,31 +16,57 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle resultsLabel = new GUIStyle("PR Label");
+
 			public GUIStyle resultsGridLabel = ObjectListArea.Styles.GetStyle("ProjectBrowserGridLabel");
+
 			public GUIStyle resultsGrid = "ObjectPickerResultsGrid";
+
 			public GUIStyle background = "ObjectPickerBackground";
+
 			public GUIStyle previewTextureBackground = "ObjectPickerPreviewBackground";
+
 			public GUIStyle groupHeaderMiddle = ObjectListArea.Styles.GetStyle("ProjectBrowserHeaderBgMiddle");
+
 			public GUIStyle groupHeaderTop = ObjectListArea.Styles.GetStyle("ProjectBrowserHeaderBgTop");
+
 			public GUIStyle groupHeaderLabel = "Label";
+
 			public GUIStyle groupHeaderLabelCount = "MiniLabel";
+
 			public GUIStyle groupFoldout = "Foldout";
+
 			public GUIStyle toolbarBack = "ObjectPickerToolbar";
+
 			public GUIStyle resultsFocusMarker;
+
 			public GUIStyle miniRenameField = new GUIStyle("PR TextField");
+
 			public GUIStyle ping = new GUIStyle("PR Ping");
+
 			public GUIStyle miniPing = new GUIStyle("PR Ping");
+
 			public GUIStyle iconDropShadow = ObjectListArea.Styles.GetStyle("ProjectBrowserIconDropShadow");
+
 			public GUIStyle textureIconDropShadow = ObjectListArea.Styles.GetStyle("ProjectBrowserTextureIconDropShadow");
+
 			public GUIStyle iconAreaBg = ObjectListArea.Styles.GetStyle("ProjectBrowserIconAreaBg");
+
 			public GUIStyle previewBg = ObjectListArea.Styles.GetStyle("ProjectBrowserPreviewBg");
+
 			public GUIStyle subAssetBg = ObjectListArea.Styles.GetStyle("ProjectBrowserSubAssetBg");
+
 			public GUIStyle subAssetBgOpenEnded = ObjectListArea.Styles.GetStyle("ProjectBrowserSubAssetBgOpenEnded");
+
 			public GUIStyle subAssetBgCloseEnded = ObjectListArea.Styles.GetStyle("ProjectBrowserSubAssetBgCloseEnded");
+
 			public GUIStyle subAssetBgMiddle = ObjectListArea.Styles.GetStyle("ProjectBrowserSubAssetBgMiddle");
+
 			public GUIStyle subAssetBgDivider = ObjectListArea.Styles.GetStyle("ProjectBrowserSubAssetBgDivider");
+
 			public GUIStyle subAssetExpandButton = ObjectListArea.Styles.GetStyle("ProjectBrowserSubAssetExpandBtn");
+
 			public GUIContent m_AssetStoreNotAvailableText = new GUIContent("The Asset Store is not available");
+
 			public Styles()
 			{
 				this.resultsFocusMarker = new GUIStyle(this.resultsGridLabel);
@@ -53,24 +82,37 @@ namespace UnityEditor
 				this.miniPing.alignment = TextAnchor.MiddleCenter;
 				this.resultsLabel.alignment = TextAnchor.MiddleLeft;
 			}
+
 			private static GUIStyle GetStyle(string styleName)
 			{
 				return styleName;
 			}
 		}
+
 		private class AssetStoreGroup : ObjectListArea.Group
 		{
 			public const int kDefaultRowsShown = 3;
+
 			public const int kDefaultRowsShownListMode = 10;
+
 			private const int kMoreButtonOffset = 3;
+
 			private const int kMoreRowsAdded = 10;
+
 			private const int kMoreRowsAddedListMode = 75;
+
 			private const int kMaxQueryItems = 1000;
+
 			private GUIContent m_Content = new GUIContent();
+
 			private List<AssetStoreAsset> m_Assets;
+
 			private string m_Name;
+
 			private bool m_ListMode;
+
 			private Vector3 m_ShowMoreDims;
+
 			public string Name
 			{
 				get
@@ -78,6 +120,7 @@ namespace UnityEditor
 					return this.m_Name;
 				}
 			}
+
 			public List<AssetStoreAsset> Assets
 			{
 				get
@@ -89,6 +132,7 @@ namespace UnityEditor
 					this.m_Assets = value;
 				}
 			}
+
 			public override int ItemCount
 			{
 				get
@@ -96,6 +140,7 @@ namespace UnityEditor
 					return Math.Min(this.m_Assets.Count, this.ItemsWantedShown);
 				}
 			}
+
 			public override bool ListMode
 			{
 				get
@@ -107,6 +152,7 @@ namespace UnityEditor
 					this.m_ListMode = value;
 				}
 			}
+
 			public bool NeedItems
 			{
 				get
@@ -116,11 +162,13 @@ namespace UnityEditor
 					return (this.ItemsAvailable >= num && count < num) || (this.ItemsAvailable < num && count < this.ItemsAvailable);
 				}
 			}
+
 			public override bool NeedsRepaint
 			{
 				get;
 				protected set;
 			}
+
 			public AssetStoreGroup(ObjectListArea owner, string groupTitle, string groupName) : base(owner, groupTitle)
 			{
 				this.m_Assets = new List<AssetStoreAsset>();
@@ -130,9 +178,11 @@ namespace UnityEditor
 				this.m_Owner.UpdateGroupSizes(this);
 				this.ItemsWantedShown = 3 * this.m_Grid.columns;
 			}
+
 			public override void UpdateAssets()
 			{
 			}
+
 			protected override void DrawInternal(int itemIdx, int endItem, float yOffset)
 			{
 				int count = this.m_Assets.Count;
@@ -203,29 +253,27 @@ namespace UnityEditor
 							EditorStyles.miniButton.Draw(position, "More", false, false, false, false);
 						}
 					}
-					else
+					else if (current.button == 0 && position.Contains(current.mousePosition))
 					{
-						if (current.button == 0 && position.Contains(current.mousePosition))
+						if (this.ListMode)
 						{
-							if (this.ListMode)
-							{
-								this.ItemsWantedShown += 75;
-							}
-							else
-							{
-								int num4 = this.m_Grid.columns - this.ItemCount % this.m_Grid.columns;
-								num4 %= this.m_Grid.columns;
-								this.ItemsWantedShown += 10 * this.m_Grid.columns + num4;
-							}
-							if (this.NeedItems)
-							{
-								this.m_Owner.QueryAssetStore();
-							}
-							current.Use();
+							this.ItemsWantedShown += 75;
 						}
+						else
+						{
+							int num4 = this.m_Grid.columns - this.ItemCount % this.m_Grid.columns;
+							num4 %= this.m_Grid.columns;
+							this.ItemsWantedShown += 10 * this.m_Grid.columns + num4;
+						}
+						if (this.NeedItems)
+						{
+							this.m_Owner.QueryAssetStore();
+						}
+						current.Use();
 					}
 				}
 			}
+
 			private AssetStorePreviewManager.CachedAssetStoreImage GetIconForAssetStoreAsset(AssetStoreAsset assetStoreResource)
 			{
 				if (!string.IsNullOrEmpty(assetStoreResource.staticPreviewURL))
@@ -235,6 +283,7 @@ namespace UnityEditor
 				}
 				return null;
 			}
+
 			private void DrawIcon(Rect position, AssetStoreAsset assetStoreResource)
 			{
 				bool flag = false;
@@ -263,6 +312,7 @@ namespace UnityEditor
 					base.DrawDropShadowOverlay(position, flag, false, false);
 				}
 			}
+
 			private void DrawLabel(Rect position, AssetStoreAsset assetStoreResource, bool selected)
 			{
 				if (this.ListMode)
@@ -280,11 +330,13 @@ namespace UnityEditor
 					ObjectListArea.s_Styles.resultsGridLabel.Draw(new Rect(position.x, position.yMax + 1f, position.width - 1f, ObjectListArea.s_Styles.resultsGridLabel.fixedHeight), croppedLabelText, false, false, selected, this.m_Owner.HasFocus());
 				}
 			}
+
 			public override void UpdateFilter(HierarchyType hierarchyType, SearchFilter searchFilter, bool showFoldersFirst)
 			{
 				this.ItemsWantedShown = ((!this.ListMode) ? (3 * this.m_Grid.columns) : 10);
 				this.Assets.Clear();
 			}
+
 			public override void UpdateHeight()
 			{
 				this.m_Height = (float)((int)this.kGroupSeparatorHeight);
@@ -299,6 +351,7 @@ namespace UnityEditor
 				}
 				this.m_Height += (float)(6 + (int)this.m_ShowMoreDims.y);
 			}
+
 			public int IndexOf(int assetID)
 			{
 				int num = 0;
@@ -312,6 +365,7 @@ namespace UnityEditor
 				}
 				return -1;
 			}
+
 			public AssetStoreAsset AssetAtIndex(int selectedIdx)
 			{
 				if (selectedIdx >= this.m_Grid.rows * this.m_Grid.columns)
@@ -333,6 +387,7 @@ namespace UnityEditor
 				}
 				return null;
 			}
+
 			protected int HandleMouse(Rect position)
 			{
 				Event current = Event.current;
@@ -347,37 +402,46 @@ namespace UnityEditor
 						}
 					}
 				}
-				else
+				else if (current.button == 0 && position.Contains(current.mousePosition))
 				{
-					if (current.button == 0 && position.Contains(current.mousePosition))
+					this.m_Owner.Repaint();
+					if (current.clickCount == 2)
 					{
-						this.m_Owner.Repaint();
-						if (current.clickCount == 2)
-						{
-							current.Use();
-							return 2;
-						}
-						this.m_Owner.ScrollToPosition(ObjectListArea.AdjustRectForFraming(position));
 						current.Use();
-						return 1;
+						return 2;
 					}
+					this.m_Owner.ScrollToPosition(ObjectListArea.AdjustRectForFraming(position));
+					current.Use();
+					return 1;
 				}
 				return 0;
 			}
 		}
+
 		private abstract class Group
 		{
 			protected readonly float kGroupSeparatorHeight = EditorStyles.toolbar.fixedHeight;
+
 			protected string m_GroupSeparatorTitle;
+
 			protected static int[] s_Empty;
+
 			public ObjectListArea m_Owner;
+
 			public VerticalGrid m_Grid = new VerticalGrid();
+
 			public float m_Height;
+
 			public bool Visible = true;
+
 			public int ItemsAvailable;
+
 			public int ItemsWantedShown;
+
 			protected bool m_Collapsable = true;
+
 			public double m_LastClickedDrawTime;
+
 			public float Height
 			{
 				get
@@ -385,20 +449,24 @@ namespace UnityEditor
 					return this.m_Height;
 				}
 			}
+
 			public abstract int ItemCount
 			{
 				get;
 			}
+
 			public abstract bool ListMode
 			{
 				get;
 				set;
 			}
+
 			public abstract bool NeedsRepaint
 			{
 				get;
 				protected set;
 			}
+
 			public bool visiblePreference
 			{
 				get
@@ -414,6 +482,7 @@ namespace UnityEditor
 					EditorPrefs.SetBool(this.m_GroupSeparatorTitle, value);
 				}
 			}
+
 			public Group(ObjectListArea owner, string groupTitle)
 			{
 				this.m_GroupSeparatorTitle = groupTitle;
@@ -424,17 +493,24 @@ namespace UnityEditor
 				this.m_Owner = owner;
 				this.Visible = this.visiblePreference;
 			}
+
 			public abstract void UpdateAssets();
+
 			public abstract void UpdateHeight();
+
 			protected abstract void DrawInternal(int itemIdx, int endItem, float yOffset);
+
 			public abstract void UpdateFilter(HierarchyType hierarchyType, SearchFilter searchFilter, bool showFoldersFirst);
+
 			protected virtual float GetHeaderHeight()
 			{
 				return this.kGroupSeparatorHeight;
 			}
+
 			protected virtual void HandleUnusedDragEvents(float yOffset)
 			{
 			}
+
 			private int FirstVisibleRow(float yOffset, Vector2 scrollPos)
 			{
 				if (!this.Visible)
@@ -450,10 +526,12 @@ namespace UnityEditor
 				}
 				return result;
 			}
+
 			private bool IsInView(float yOffset, Vector2 scrollPos, float scrollViewHeight)
 			{
 				return scrollPos.y + scrollViewHeight >= yOffset && yOffset + this.Height >= scrollPos.y;
 			}
+
 			public void Draw(float yOffset, Vector2 scrollPos)
 			{
 				this.NeedsRepaint = false;
@@ -484,6 +562,7 @@ namespace UnityEditor
 				}
 				this.HandleUnusedDragEvents(yOffset);
 			}
+
 			protected void DrawObjectIcon(Rect position, Texture icon)
 			{
 				if (icon == null)
@@ -496,12 +575,14 @@ namespace UnityEditor
 				GUI.DrawTexture(new Rect(position.x + (float)(((int)position.width - width) / 2), position.y + (float)(((int)position.height - width) / 2), (float)width, (float)width), icon, ScaleMode.ScaleToFit);
 				icon.filterMode = filterMode;
 			}
+
 			protected void DrawDropShadowOverlay(Rect position, bool selected, bool isDropTarget, bool isRenaming)
 			{
 				float num = position.width / 128f;
 				Rect position2 = new Rect(position.x - 4f * num, position.y - 2f * num, position.width + 8f * num, position.height + 12f * num - 0.5f);
 				ObjectListArea.s_Styles.iconDropShadow.Draw(position2, GUIContent.none, false, false, selected || isDropTarget, this.m_Owner.HasFocus() || isRenaming || isDropTarget);
 			}
+
 			protected void DrawHeaderBackground(Rect rect, bool firstHeader)
 			{
 				if (Event.current.type != EventType.Repaint)
@@ -510,6 +591,7 @@ namespace UnityEditor
 				}
 				GUI.Label(rect, GUIContent.none, (!firstHeader) ? ObjectListArea.s_Styles.groupHeaderMiddle : ObjectListArea.s_Styles.groupHeaderTop);
 			}
+
 			protected float GetHeaderYPosInScrollArea(float yOffset)
 			{
 				float result = yOffset;
@@ -520,6 +602,7 @@ namespace UnityEditor
 				}
 				return result;
 			}
+
 			protected virtual void DrawHeader(float yOffset, bool collapsable)
 			{
 				Rect rect = new Rect(0f, this.GetHeaderYPosInScrollArea(yOffset), this.m_Owner.GetVisibleWidth(), this.kGroupSeparatorHeight - 1f);
@@ -556,6 +639,7 @@ namespace UnityEditor
 					this.DrawItemCount(rect);
 				}
 			}
+
 			protected void DrawItemCount(Rect rect)
 			{
 				string text = this.ItemsAvailable.ToString() + " Total";
@@ -568,10 +652,12 @@ namespace UnityEditor
 				rect.y += 2f;
 				GUI.Label(rect, text, ObjectListArea.s_Styles.groupHeaderLabelCount);
 			}
+
 			private UnityEngine.Object[] GetSelectedReferences()
 			{
 				return Selection.objects;
 			}
+
 			private static string[] GetMainSelectedPaths()
 			{
 				List<string> list = new List<string>();
@@ -588,15 +674,21 @@ namespace UnityEditor
 				return list.ToArray();
 			}
 		}
+
 		private class LocalGroup : ObjectListArea.Group
 		{
 			private class ItemFader
 			{
 				private double m_FadeDuration = 0.3;
+
 				private double m_FirstToLastDuration = 0.3;
+
 				private double m_FadeStartTime;
+
 				private double m_TimeBetweenEachItem;
+
 				private List<int> m_InstanceIDs;
+
 				public void Start(List<int> instanceIDs)
 				{
 					this.m_InstanceIDs = instanceIDs;
@@ -608,6 +700,7 @@ namespace UnityEditor
 						this.m_TimeBetweenEachItem = this.m_FirstToLastDuration / (double)(this.m_InstanceIDs.Count - 1);
 					}
 				}
+
 				public float GetAlpha(int instanceID)
 				{
 					if (this.m_InstanceIDs == null)
@@ -634,22 +727,39 @@ namespace UnityEditor
 					return 1f;
 				}
 			}
+
 			public const int k_ListModeLeftPadding = 16;
+
 			public const int k_ListModeLeftPaddingForSubAssets = 28;
+
 			public const int k_ListModeVersionControlOverlayPadding = 14;
+
 			private BuiltinResource[] m_NoneList;
+
 			private GUIContent m_Content = new GUIContent();
+
 			private List<int> m_DragSelection = new List<int>();
+
 			private int m_DropTargetControlID;
+
 			private Dictionary<string, BuiltinResource[]> m_BuiltinResourceMap;
+
 			private BuiltinResource[] m_CurrentBuiltinResources;
+
 			private bool m_ShowNoneItem;
+
 			private List<int> m_LastRenderedAssetInstanceIDs = new List<int>();
+
 			private List<int> m_LastRenderedAssetDirtyIDs = new List<int>();
+
 			public bool m_ListMode;
+
 			private FilteredHierarchy m_FilteredHierarchy;
+
 			private BuiltinResource[] m_ActiveBuiltinList;
+
 			private ObjectListArea.LocalGroup.ItemFader m_ItemFader = new ObjectListArea.LocalGroup.ItemFader();
+
 			public bool ShowNone
 			{
 				get
@@ -657,6 +767,7 @@ namespace UnityEditor
 					return this.m_ShowNoneItem;
 				}
 			}
+
 			public override bool NeedsRepaint
 			{
 				get
@@ -667,6 +778,7 @@ namespace UnityEditor
 				{
 				}
 			}
+
 			public SearchFilter searchFilter
 			{
 				get
@@ -674,6 +786,7 @@ namespace UnityEditor
 					return this.m_FilteredHierarchy.searchFilter;
 				}
 			}
+
 			public override bool ListMode
 			{
 				get
@@ -685,6 +798,7 @@ namespace UnityEditor
 					this.m_ListMode = value;
 				}
 			}
+
 			public bool HasBuiltinResources
 			{
 				get
@@ -692,6 +806,7 @@ namespace UnityEditor
 					return this.m_CurrentBuiltinResources.Length > 0;
 				}
 			}
+
 			public override int ItemCount
 			{
 				get
@@ -703,6 +818,7 @@ namespace UnityEditor
 					return num2 + num3 + num4;
 				}
 			}
+
 			public LocalGroup(ObjectListArea owner, string groupTitle, bool showNone) : base(owner, groupTitle)
 			{
 				this.m_ShowNoneItem = showNone;
@@ -711,6 +827,7 @@ namespace UnityEditor
 				this.ItemsWantedShown = 2147483647;
 				this.m_Collapsable = false;
 			}
+
 			public override void UpdateAssets()
 			{
 				if (this.m_FilteredHierarchy.hierarchyType == HierarchyType.Assets)
@@ -723,10 +840,12 @@ namespace UnityEditor
 				}
 				this.ItemsAvailable = this.m_FilteredHierarchy.results.Length + this.m_ActiveBuiltinList.Length;
 			}
+
 			protected override float GetHeaderHeight()
 			{
 				return 0f;
 			}
+
 			protected override void DrawHeader(float yOffset, bool collapsable)
 			{
 				if (this.GetHeaderHeight() > 0f)
@@ -757,6 +876,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			public override void UpdateHeight()
 			{
 				this.m_Height = this.GetHeaderHeight();
@@ -766,10 +886,12 @@ namespace UnityEditor
 				}
 				this.m_Height += this.m_Grid.height;
 			}
+
 			private bool IsCreatingAtThisIndex(int itemIdx)
 			{
 				return this.m_Owner.m_State.m_NewAssetIndexInList == itemIdx;
 			}
+
 			protected override void DrawInternal(int beginIndex, int endIndex, float yOffset)
 			{
 				int num = beginIndex;
@@ -839,16 +961,19 @@ namespace UnityEditor
 					this.m_Owner.Repaint();
 				}
 			}
+
 			private void ClearDirtyStateTracking()
 			{
 				this.m_LastRenderedAssetInstanceIDs.Clear();
 				this.m_LastRenderedAssetDirtyIDs.Clear();
 			}
+
 			private void AddDirtyStateFor(int instanceID)
 			{
 				this.m_LastRenderedAssetInstanceIDs.Add(instanceID);
 				this.m_LastRenderedAssetDirtyIDs.Add(EditorUtility.GetDirtyIndex(instanceID));
 			}
+
 			public bool IsAnyLastRenderedAssetsDirty()
 			{
 				for (int i = 0; i < this.m_LastRenderedAssetInstanceIDs.Count; i++)
@@ -862,6 +987,7 @@ namespace UnityEditor
 				}
 				return false;
 			}
+
 			protected override void HandleUnusedDragEvents(float yOffset)
 			{
 				if (!this.m_Owner.allowDragging)
@@ -897,6 +1023,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			private void HandleMouseWithDragging(int instanceID, int controlID, Rect rect)
 			{
 				Event current = Event.current;
@@ -959,12 +1086,9 @@ namespace UnityEditor
 							}
 							current.Use();
 						}
-						else
+						else if (Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
 						{
-							if (Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
-							{
-								this.m_Owner.SetSelection(this.GetNewSelection(instanceID, true, false).ToArray(), false);
-							}
+							this.m_Owner.SetSelection(this.GetNewSelection(instanceID, true, false).ToArray(), false);
 						}
 						return;
 					case EventType.MouseUp:
@@ -1037,6 +1161,7 @@ namespace UnityEditor
 				}
 				goto IL_39;
 			}
+
 			private void HandleMouseWithoutDragging(int instanceID, int controlID, Rect position)
 			{
 				Event current = Event.current;
@@ -1062,21 +1187,19 @@ namespace UnityEditor
 						}
 					}
 				}
-				else
+				else if (current.button == 0 && position.Contains(current.mousePosition))
 				{
-					if (current.button == 0 && position.Contains(current.mousePosition))
+					this.m_Owner.Repaint();
+					if (current.clickCount == 1)
 					{
-						this.m_Owner.Repaint();
-						if (current.clickCount == 1)
-						{
-							this.m_Owner.ScrollToPosition(ObjectListArea.AdjustRectForFraming(position));
-						}
-						current.Use();
-						List<int> newSelection = this.GetNewSelection(instanceID, false, false);
-						this.m_Owner.SetSelection(newSelection.ToArray(), current.clickCount == 2);
+						this.m_Owner.ScrollToPosition(ObjectListArea.AdjustRectForFraming(position));
 					}
+					current.Use();
+					List<int> newSelection = this.GetNewSelection(instanceID, false, false);
+					this.m_Owner.SetSelection(newSelection.ToArray(), current.clickCount == 2);
 				}
 			}
+
 			public void ChangeExpandedState(int instanceID, bool expanded)
 			{
 				this.m_Owner.m_State.m_ExpandedInstanceIDs.Remove(instanceID);
@@ -1086,10 +1209,12 @@ namespace UnityEditor
 				}
 				this.m_FilteredHierarchy.RefreshVisibleItems(this.m_Owner.m_State.m_ExpandedInstanceIDs);
 			}
+
 			private bool IsExpanded(int instanceID)
 			{
 				return this.m_Owner.m_State.m_ExpandedInstanceIDs.IndexOf(instanceID) >= 0;
 			}
+
 			private void SelectAndFrameParentOf(int instanceID)
 			{
 				int num = 0;
@@ -1118,11 +1243,13 @@ namespace UnityEditor
 					this.m_Owner.Frame(num, true, false);
 				}
 			}
+
 			private bool IsRenaming(int instanceID)
 			{
 				RenameOverlay renameOverlay = this.m_Owner.GetRenameOverlay();
 				return renameOverlay.IsRenaming() && renameOverlay.userData == instanceID && !renameOverlay.isWaitingForDelay;
 			}
+
 			protected void DrawSubAssetRowBg(int startSubAssetIndex, int endSubAssetIndex, bool continued, float yOffset)
 			{
 				Rect rect = this.m_Grid.CalcRect(startSubAssetIndex, yOffset);
@@ -1151,6 +1278,7 @@ namespace UnityEditor
 				position.height = Mathf.Ceil(position.height);
 				ObjectListArea.s_Styles.subAssetBgMiddle.Draw(position, GUIContent.none, false, false, false, false);
 			}
+
 			private void DrawSubAssetBackground(int beginIndex, int endIndex, float yOffset)
 			{
 				if (Event.current.type != EventType.Repaint)
@@ -1180,14 +1308,11 @@ namespace UnityEditor
 							}
 							endSubAssetIndex = num3;
 						}
-						else
+						else if (num2 != -1)
 						{
-							if (num2 != -1)
-							{
-								this.DrawSubAssetRowBg(num2, endSubAssetIndex, false, yOffset);
-								num2 = -1;
-								endSubAssetIndex = -1;
-							}
+							this.DrawSubAssetRowBg(num2, endSubAssetIndex, false, yOffset);
+							num2 = -1;
+							endSubAssetIndex = -1;
 						}
 					}
 					if (num2 != -1)
@@ -1205,6 +1330,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			private void DrawItem(Rect position, FilteredHierarchy.FilterResult filterItem, BuiltinResource builtinResource, bool isFolderBrowsing)
 			{
 				Event current = Event.current;
@@ -1216,12 +1342,9 @@ namespace UnityEditor
 					num = filterItem.instanceID;
 					flag = (filterItem.hasChildren && !filterItem.isFolder && isFolderBrowsing);
 				}
-				else
+				else if (builtinResource != null)
 				{
-					if (builtinResource != null)
-					{
-						num = builtinResource.m_InstanceID;
-					}
+					num = builtinResource.m_InstanceID;
 				}
 				int controlIDFromInstanceID = ObjectListArea.LocalGroup.GetControlIDFromInstanceID(num);
 				bool flag2;
@@ -1267,16 +1390,13 @@ namespace UnityEditor
 							}
 						}
 					}
-					else
+					else if (this.ListMode || this.m_Owner.IsPreviewIconExpansionModifierPressed())
 					{
-						if (this.ListMode || this.m_Owner.IsPreviewIconExpansionModifierPressed())
+						if (!this.IsExpanded(num))
 						{
-							if (!this.IsExpanded(num))
-							{
-								flag3 = true;
-							}
-							current.Use();
+							flag3 = true;
 						}
+						current.Use();
 					}
 				}
 				if (flag && current.type == EventType.MouseDown && current.button == 0 && position2.Contains(current.mousePosition))
@@ -1318,7 +1438,7 @@ namespace UnityEditor
 					{
 						this.m_DropTargetControlID = 0;
 					}
-					bool flag6 = controlIDFromInstanceID == this.m_DropTargetControlID;
+					bool flag6 = controlIDFromInstanceID == this.m_DropTargetControlID && this.m_DragSelection.IndexOf(this.m_DropTargetControlID) == -1;
 					string text = (filterItem == null) ? builtinResource.m_Name : filterItem.name;
 					if (this.ListMode)
 					{
@@ -1431,6 +1551,10 @@ namespace UnityEditor
 						}
 						if (!flag5)
 						{
+							if (flag6)
+							{
+								ObjectListArea.s_Styles.resultsLabel.Draw(new Rect(rect.x - 10f, rect.y, rect.width + 20f, rect.height), GUIContent.none, true, true, false, false);
+							}
 							text = this.m_Owner.GetCroppedLabelText(num, text, position.width);
 							ObjectListArea.s_Styles.resultsGridLabel.Draw(rect, text, false, false, flag2, this.m_Owner.HasFocus());
 						}
@@ -1440,6 +1564,11 @@ namespace UnityEditor
 						}
 						if (filterItem != null && filterItem.isMainRepresentation)
 						{
+							bool flag8 = CollabAccess.Instance.IsServiceEnabled();
+							if (flag8 && Collab.instance.GetCollabInfo().whitelisted)
+							{
+								CollabProjectHook.OnProjectWindowItemIconOverlay(filterItem.guid, position);
+							}
 							ProjectHooks.OnProjectWindowItem(filterItem.guid, position);
 						}
 					}
@@ -1473,6 +1602,7 @@ namespace UnityEditor
 					this.HandleMouseWithoutDragging(num, controlIDFromInstanceID, position);
 				}
 			}
+
 			private static Rect ActualImageDrawPosition(Rect position, float imageWidth, float imageHeight)
 			{
 				if (imageWidth > position.width || imageHeight > position.height)
@@ -1483,10 +1613,11 @@ namespace UnityEditor
 					GUI.CalculateScaledTextureRects(position, ScaleMode.ScaleToFit, imageAspect, ref result, ref rect);
 					return result;
 				}
-				float left = position.x + Mathf.Round((position.width - imageWidth) / 2f);
-				float top = position.y + Mathf.Round((position.height - imageHeight) / 2f);
-				return new Rect(left, top, imageWidth, imageHeight);
+				float x = position.x + Mathf.Round((position.width - imageWidth) / 2f);
+				float y = position.y + Mathf.Round((position.height - imageHeight) / 2f);
+				return new Rect(x, y, imageWidth, imageHeight);
 			}
+
 			public List<KeyValuePair<string, int>> GetVisibleNameAndInstanceIDs()
 			{
 				List<KeyValuePair<string, int>> list = new List<KeyValuePair<string, int>>();
@@ -1506,9 +1637,11 @@ namespace UnityEditor
 				}
 				return list;
 			}
+
 			private void BeginPing(int instanceID)
 			{
 			}
+
 			public List<int> GetInstanceIDs()
 			{
 				List<int> list = new List<int>();
@@ -1532,6 +1665,7 @@ namespace UnityEditor
 				}
 				return list;
 			}
+
 			public List<int> GetNewSelection(int clickedInstanceID, bool beginOfDrag, bool useShiftAsActionKey)
 			{
 				List<int> instanceIDs = this.GetInstanceIDs();
@@ -1540,11 +1674,13 @@ namespace UnityEditor
 				bool allowMultiSelect = this.m_Owner.allowMultiSelect;
 				return InternalEditorUtility.GetNewSelection(clickedInstanceID, instanceIDs, selectedInstanceIDs, lastClickedInstanceID, beginOfDrag, useShiftAsActionKey, allowMultiSelect);
 			}
+
 			public override void UpdateFilter(HierarchyType hierarchyType, SearchFilter searchFilter, bool foldersFirst)
 			{
 				this.RefreshHierarchy(hierarchyType, searchFilter, foldersFirst);
 				this.RefreshBuiltinResourceList(searchFilter);
 			}
+
 			private void RefreshHierarchy(HierarchyType hierarchyType, SearchFilter searchFilter, bool foldersFirst)
 			{
 				this.m_FilteredHierarchy = new FilteredHierarchy(hierarchyType);
@@ -1552,6 +1688,7 @@ namespace UnityEditor
 				this.m_FilteredHierarchy.searchFilter = searchFilter;
 				this.m_FilteredHierarchy.RefreshVisibleItems(this.m_Owner.m_State.m_ExpandedInstanceIDs);
 			}
+
 			private void RefreshBuiltinResourceList(SearchFilter searchFilter)
 			{
 				if (!this.m_Owner.allowBuiltinResources || searchFilter.GetState() == SearchFilter.State.FolderBrowsing || searchFilter.GetState() == SearchFilter.State.EmptySearchFilter)
@@ -1608,6 +1745,21 @@ namespace UnityEditor
 				}
 				this.m_CurrentBuiltinResources = array;
 			}
+
+			public string GetNameOfLocalAsset(int instanceID)
+			{
+				FilteredHierarchy.FilterResult[] results = this.m_FilteredHierarchy.results;
+				for (int i = 0; i < results.Length; i++)
+				{
+					FilteredHierarchy.FilterResult filterResult = results[i];
+					if (filterResult.instanceID == instanceID)
+					{
+						return filterResult.name;
+					}
+				}
+				return null;
+			}
+
 			public bool IsBuiltinAsset(int instanceID)
 			{
 				foreach (KeyValuePair<string, BuiltinResource[]> current in this.m_BuiltinResourceMap)
@@ -1623,6 +1775,7 @@ namespace UnityEditor
 				}
 				return false;
 			}
+
 			private void InitBuiltinAssetType(Type type)
 			{
 				if (type == null)
@@ -1643,6 +1796,7 @@ namespace UnityEditor
 					this.m_BuiltinResourceMap.Add(text, builtinResourceList);
 				}
 			}
+
 			public void InitBuiltinResources()
 			{
 				if (this.m_BuiltinResourceMap != null)
@@ -1669,6 +1823,7 @@ namespace UnityEditor
 				this.InitBuiltinAssetType(typeof(Sprite));
 				this.InitBuiltinAssetType(typeof(LightmapParameters));
 			}
+
 			public void PrintBuiltinResourcesAvailable()
 			{
 				string text = string.Empty;
@@ -1689,6 +1844,7 @@ namespace UnityEditor
 				}
 				Debug.Log(text);
 			}
+
 			public int IndexOfNewText(string newText, bool isCreatingNewFolder, bool foldersFirst)
 			{
 				int i = 0;
@@ -1715,6 +1871,7 @@ namespace UnityEditor
 				}
 				return i;
 			}
+
 			public int IndexOf(int instanceID)
 			{
 				int num = 0;
@@ -1726,12 +1883,9 @@ namespace UnityEditor
 					}
 					num++;
 				}
-				else
+				else if (instanceID == 0)
 				{
-					if (instanceID == 0)
-					{
-						return -1;
-					}
+					return -1;
 				}
 				FilteredHierarchy.FilterResult[] results = this.m_FilteredHierarchy.results;
 				for (int i = 0; i < results.Length; i++)
@@ -1759,6 +1913,7 @@ namespace UnityEditor
 				}
 				return -1;
 			}
+
 			public FilteredHierarchy.FilterResult LookupByInstanceID(int instanceID)
 			{
 				if (instanceID == 0)
@@ -1782,6 +1937,7 @@ namespace UnityEditor
 				}
 				return null;
 			}
+
 			public bool InstanceIdAtIndex(int index, out int instanceID)
 			{
 				instanceID = 0;
@@ -1822,10 +1978,12 @@ namespace UnityEditor
 				}
 				return index < this.m_Grid.rows * this.m_Grid.columns;
 			}
+
 			public virtual void StartDrag(int draggedInstanceID, List<int> selectedInstanceIDs)
 			{
 				ProjectWindowUtil.StartDrag(draggedInstanceID, selectedInstanceIDs);
 			}
+
 			public DragAndDropVisualMode DoDrag(int dragToInstanceID, bool perform)
 			{
 				HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -1835,10 +1993,12 @@ namespace UnityEditor
 				}
 				return InternalEditorUtility.ProjectWindowDrag(hierarchyProperty, perform);
 			}
+
 			internal static int GetControlIDFromInstanceID(int instanceID)
 			{
 				return instanceID + 100000000;
 			}
+
 			public bool DoCharacterOffsetSelection()
 			{
 				if (Event.current.type == EventType.KeyDown && Event.current.shift)
@@ -1882,11 +2042,13 @@ namespace UnityEditor
 				}
 				return false;
 			}
+
 			public void ShowObjectsInList(int[] instanceIDs)
 			{
 				this.m_FilteredHierarchy = new FilteredHierarchy(HierarchyType.Assets);
 				this.m_FilteredHierarchy.SetResults(instanceIDs);
 			}
+
 			public static void DrawIconAndLabel(Rect rect, FilteredHierarchy.FilterResult filterItem, string label, Texture2D icon, bool selected, bool focus)
 			{
 				float num = (!ObjectListArea.s_VCEnabled) ? 0f : 14f;
@@ -1903,112 +2065,184 @@ namespace UnityEditor
 				{
 					Rect drawRect = rect;
 					drawRect.width = num + 16f;
+					bool flag = CollabAccess.Instance.IsServiceEnabled();
+					if (flag && Collab.instance.GetCollabInfo().whitelisted)
+					{
+						CollabProjectHook.OnProjectWindowItemIconOverlay(filterItem.guid, drawRect);
+					}
 					ProjectHooks.OnProjectWindowItem(filterItem.guid, drawRect);
 				}
 			}
 		}
+
 		private const int kHome = -2147483648;
+
 		private const int kEnd = 2147483647;
+
 		private const int kPageDown = 2147483646;
+
 		private const int kPageUp = -2147483647;
+
 		private const float k_ListModeVersionControlOverlayPadding = 14f;
+
 		private const double kDelayQueryAfterScroll = 0.0;
+
 		private const int kListLineHeight = 16;
+
 		private const int kSpaceForScrollBar = 16;
+
 		private const double kQueryDelay = 0.2;
+
 		private static ObjectListArea.Styles s_Styles;
+
 		private ObjectListAreaState m_State;
+
 		private int m_SelectionOffset;
+
 		private static bool s_VCEnabled;
+
 		private PingData m_Ping = new PingData();
+
 		private EditorWindow m_Owner;
+
 		private int m_KeyboardControlID;
+
 		private Dictionary<int, string> m_InstanceIDToCroppedNameMap = new Dictionary<int, string>();
+
 		private int m_WidthUsedForCroppingName;
+
 		private bool m_AllowRenameOnMouseUp = true;
+
 		private Vector2 m_LastScrollPosition = new Vector2(0f, 0f);
+
 		private double LastScrollTime;
+
 		public bool selectedAssetStoreAsset;
+
 		internal Texture m_SelectedObjectIcon;
+
 		private ObjectListArea.LocalGroup m_LocalAssets;
+
 		private List<ObjectListArea.AssetStoreGroup> m_StoreAssets;
+
 		private string m_AssetStoreError = string.Empty;
+
 		private List<ObjectListArea.Group> m_Groups;
+
 		private Rect m_TotalRect;
+
 		private Rect m_VisibleRect;
+
 		private int m_pingIndex;
+
 		private int m_MinIconSize = 32;
+
 		private int m_MinGridSize = 16;
+
 		private int m_MaxGridSize = 96;
+
 		private bool m_AllowThumbnails = true;
+
 		private int m_LeftPaddingForPinging;
+
 		private bool m_FrameLastClickedItem;
+
 		private bool m_ShowLocalAssetsOnly = true;
+
 		public bool m_RequeryAssetStore;
+
 		private bool m_QueryInProgress;
+
 		private int m_ResizePreviewCacheTo;
+
 		private string m_LastAssetStoreQuerySearchFilter = string.Empty;
+
 		private string[] m_LastAssetStoreQueryClassName = new string[0];
+
 		private string[] m_LastAssetStoreQueryLabels = new string[0];
+
 		private double m_LastAssetStoreQueryChangeTime;
+
 		private double m_NextDirtyCheck;
+
 		private Action m_RepaintWantedCallback;
+
 		private Action<bool> m_ItemSelectedCallback;
+
 		private Action m_KeyboardInputCallback;
+
 		private Action m_GotKeyboardFocus;
+
 		private Func<Rect, float> m_DrawLocalAssetHeader;
+
 		private Action m_AssetStoreSearchEnded;
+
 		internal static bool s_Debug;
+
 		public float m_SpaceBetween = 6f;
+
 		public float m_TopMargin = 10f;
+
 		public float m_BottomMargin = 10f;
+
 		public float m_RightMargin = 10f;
+
 		public float m_LeftMargin = 10f;
+
 		public bool allowDragging
 		{
 			get;
 			set;
 		}
+
 		public bool allowRenaming
 		{
 			get;
 			set;
 		}
+
 		public bool allowMultiSelect
 		{
 			get;
 			set;
 		}
+
 		public bool allowDeselection
 		{
 			get;
 			set;
 		}
+
 		public bool allowFocusRendering
 		{
 			get;
 			set;
 		}
+
 		public bool allowBuiltinResources
 		{
 			get;
 			set;
 		}
+
 		public bool allowUserRenderingHook
 		{
 			get;
 			set;
 		}
+
 		public bool allowFindNextShortcut
 		{
 			get;
 			set;
 		}
+
 		public bool foldersFirst
 		{
 			get;
 			set;
 		}
+
 		public Action repaintCallback
 		{
 			get
@@ -2020,6 +2254,7 @@ namespace UnityEditor
 				this.m_RepaintWantedCallback = value;
 			}
 		}
+
 		public Action<bool> itemSelectedCallback
 		{
 			get
@@ -2031,6 +2266,7 @@ namespace UnityEditor
 				this.m_ItemSelectedCallback = value;
 			}
 		}
+
 		public Action keyboardCallback
 		{
 			get
@@ -2042,6 +2278,7 @@ namespace UnityEditor
 				this.m_KeyboardInputCallback = value;
 			}
 		}
+
 		public Action gotKeyboardFocus
 		{
 			get
@@ -2053,6 +2290,7 @@ namespace UnityEditor
 				this.m_GotKeyboardFocus = value;
 			}
 		}
+
 		public Action assetStoreSearchEnded
 		{
 			get
@@ -2064,6 +2302,7 @@ namespace UnityEditor
 				this.m_AssetStoreSearchEnded = value;
 			}
 		}
+
 		public Func<Rect, float> drawLocalAssetHeader
 		{
 			get
@@ -2075,6 +2314,7 @@ namespace UnityEditor
 				this.m_DrawLocalAssetHeader = value;
 			}
 		}
+
 		public int gridSize
 		{
 			get
@@ -2090,6 +2330,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public int minGridSize
 		{
 			get
@@ -2097,6 +2338,7 @@ namespace UnityEditor
 				return this.m_MinGridSize;
 			}
 		}
+
 		public int maxGridSize
 		{
 			get
@@ -2104,6 +2346,7 @@ namespace UnityEditor
 				return this.m_MaxGridSize;
 			}
 		}
+
 		public int numItemsDisplayed
 		{
 			get
@@ -2111,6 +2354,7 @@ namespace UnityEditor
 				return this.m_LocalAssets.ItemCount;
 			}
 		}
+
 		public ObjectListArea(ObjectListAreaState state, EditorWindow owner, bool showNoneItem)
 		{
 			this.m_State = state;
@@ -2122,16 +2366,19 @@ namespace UnityEditor
 			this.m_Groups = new List<ObjectListArea.Group>();
 			this.m_Groups.Add(this.m_LocalAssets);
 		}
+
 		public void ShowObjectsInList(int[] instanceIDs)
 		{
 			this.Init(this.m_TotalRect, HierarchyType.Assets, new SearchFilter(), false);
 			this.m_LocalAssets.ShowObjectsInList(instanceIDs);
 		}
+
 		public void Init(Rect rect, HierarchyType hierarchyType, SearchFilter searchFilter, bool checkThumbnails)
 		{
 			this.m_VisibleRect = rect;
 			this.m_TotalRect = rect;
 			this.m_LocalAssets.UpdateFilter(hierarchyType, searchFilter, this.foldersFirst);
+			this.m_LocalAssets.UpdateAssets();
 			foreach (ObjectListArea.AssetStoreGroup current in this.m_StoreAssets)
 			{
 				current.UpdateFilter(hierarchyType, searchFilter, this.foldersFirst);
@@ -2166,10 +2413,12 @@ namespace UnityEditor
 			this.ClearCroppedLabelCache();
 			this.SetupData(true);
 		}
+
 		private bool HasFocus()
 		{
 			return !this.allowFocusRendering || (this.m_KeyboardControlID == GUIUtility.keyboardControl && this.m_Owner.m_Parent.hasFocus);
 		}
+
 		private void QueryAssetStore()
 		{
 			bool requeryAssetStore = this.m_RequeryAssetStore;
@@ -2282,6 +2531,7 @@ namespace UnityEditor
 			}
 			AssetStoreClient.SearchAssets(this.m_LastAssetStoreQuerySearchFilter, this.m_LastAssetStoreQueryClassName, this.m_LastAssetStoreQueryLabels, list, callback);
 		}
+
 		private void EnsureAssetStoreGroupsAreOpenIfAllClosed()
 		{
 			if (this.m_StoreAssets.Count > 0)
@@ -2306,10 +2556,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void RequeryAssetStore()
 		{
 			this.m_RequeryAssetStore = true;
 		}
+
 		private void ClearAssetStoreGroups()
 		{
 			this.m_Groups.Clear();
@@ -2317,6 +2569,7 @@ namespace UnityEditor
 			this.m_StoreAssets.Clear();
 			this.Repaint();
 		}
+
 		public string GetAssetStoreButtonText()
 		{
 			string text = "Asset Store";
@@ -2338,29 +2591,30 @@ namespace UnityEditor
 			}
 			return text;
 		}
+
 		private bool ShowAssetStoreHitsWhileSearchingLocalAssets()
 		{
 			return EditorPrefs.GetBool("ShowAssetStoreSearchHits", true);
 		}
+
 		public void ShowAssetStoreHitCountWhileSearchingLocalAssetsChanged()
 		{
 			if (this.ShowAssetStoreHitsWhileSearchingLocalAssets())
 			{
 				this.RequeryAssetStore();
 			}
-			else
+			else if (this.m_ShowLocalAssetsOnly)
 			{
-				if (this.m_ShowLocalAssetsOnly)
-				{
-					this.ClearAssetStoreGroups();
-				}
+				this.ClearAssetStoreGroups();
 			}
 			this.Repaint();
 		}
+
 		internal float GetVisibleWidth()
 		{
 			return this.m_VisibleRect.width;
 		}
+
 		public void OnGUI(Rect position, int keyboardControlID)
 		{
 			if (ObjectListArea.s_Styles == null)
@@ -2406,6 +2660,7 @@ namespace UnityEditor
 			this.DoOffsetSelection();
 			this.HandleUnusedEvents();
 		}
+
 		private void FrameLastClickedItemIfWanted()
 		{
 			if (this.m_FrameLastClickedItem && Event.current.type == EventType.Repaint)
@@ -2418,6 +2673,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void HandleUnusedEvents()
 		{
 			if (this.allowDeselection && Event.current.type == EventType.MouseDown && Event.current.button == 0 && this.m_TotalRect.Contains(Event.current.mousePosition))
@@ -2425,10 +2681,12 @@ namespace UnityEditor
 				this.SetSelection(new int[0], false);
 			}
 		}
+
 		public bool CanShowThumbnails()
 		{
 			return this.m_AllowThumbnails;
 		}
+
 		private static string CreateFilterString(string searchString, string requiredClassName)
 		{
 			string text = searchString;
@@ -2438,6 +2696,7 @@ namespace UnityEditor
 			}
 			return text;
 		}
+
 		private bool ObjectsHaveThumbnails(HierarchyType type, SearchFilter searchFilter)
 		{
 			if (this.m_LocalAssets.HasBuiltinResources)
@@ -2463,10 +2722,12 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal void OnDestroy()
 		{
 			AssetPreview.DeletePreviewTextureManagerByID(this.GetAssetPreviewManagerID());
 		}
+
 		private void Repaint()
 		{
 			if (this.m_RepaintWantedCallback != null)
@@ -2474,18 +2735,22 @@ namespace UnityEditor
 				this.m_RepaintWantedCallback();
 			}
 		}
+
 		public void OnEvent()
 		{
 			this.GetRenameOverlay().OnEvent();
 		}
+
 		private CreateAssetUtility GetCreateAssetUtility()
 		{
 			return this.m_State.m_CreateAssetUtility;
 		}
+
 		private RenameOverlay GetRenameOverlay()
 		{
 			return this.m_State.m_RenameOverlay;
 		}
+
 		internal void BeginNamingNewAsset(string newAssetName, int instanceID, bool isCreatingNewFolder)
 		{
 			this.m_State.m_NewAssetIndexInList = this.m_LocalAssets.IndexOfNewText(newAssetName, isCreatingNewFolder, this.foldersFirst);
@@ -2500,6 +2765,7 @@ namespace UnityEditor
 			}
 			this.Repaint();
 		}
+
 		public bool BeginRename(float delay)
 		{
 			if (!this.allowRenaming)
@@ -2511,9 +2777,22 @@ namespace UnityEditor
 				return false;
 			}
 			int num = this.m_State.m_SelectedInstanceIDs[0];
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			return (!hierarchyProperty.Find(num, null) || hierarchyProperty.isMainRepresentation) && !this.m_LocalAssets.IsBuiltinAsset(num) && hierarchyProperty.isValid && this.GetRenameOverlay().BeginRename(hierarchyProperty.name, num, delay);
+			if (AssetDatabase.IsSubAsset(num))
+			{
+				return false;
+			}
+			if (this.m_LocalAssets.IsBuiltinAsset(num))
+			{
+				return false;
+			}
+			if (!AssetDatabase.Contains(num))
+			{
+				return false;
+			}
+			string nameOfLocalAsset = this.m_LocalAssets.GetNameOfLocalAsset(num);
+			return nameOfLocalAsset != null && this.GetRenameOverlay().BeginRename(nameOfLocalAsset, num, delay);
 		}
+
 		public void EndRename(bool acceptChanges)
 		{
 			if (this.GetRenameOverlay().IsRenaming())
@@ -2522,6 +2801,7 @@ namespace UnityEditor
 				this.RenameEnded();
 			}
 		}
+
 		private void RenameEnded()
 		{
 			string name = (!string.IsNullOrEmpty(this.GetRenameOverlay().name)) ? this.GetRenameOverlay().name : this.GetRenameOverlay().originalName;
@@ -2533,12 +2813,9 @@ namespace UnityEditor
 					this.GetCreateAssetUtility().EndNewAssetCreation(name);
 				}
 			}
-			else
+			else if (this.GetRenameOverlay().userAcceptedRename)
 			{
-				if (this.GetRenameOverlay().userAcceptedRename)
-				{
-					ObjectNames.SetNameSmartWithInstanceID(userData, name);
-				}
+				ObjectNames.SetNameSmartWithInstanceID(userData, name);
 			}
 			if (this.GetRenameOverlay().HasKeyboardFocus())
 			{
@@ -2550,12 +2827,14 @@ namespace UnityEditor
 			}
 			this.ClearRenameState();
 		}
+
 		private void ClearRenameState()
 		{
 			this.GetRenameOverlay().Clear();
 			this.GetCreateAssetUtility().Clear();
 			this.m_State.m_NewAssetIndexInList = -1;
 		}
+
 		internal void HandleRenameOverlay()
 		{
 			if (this.GetRenameOverlay().IsRenaming())
@@ -2568,23 +2847,28 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public bool IsSelected(int instanceID)
 		{
 			return this.m_State.m_SelectedInstanceIDs.Contains(instanceID);
 		}
+
 		public int[] GetSelection()
 		{
 			return this.m_State.m_SelectedInstanceIDs.ToArray();
 		}
+
 		public bool IsLastClickedItemVisible()
 		{
 			return this.GetSelectedAssetIdx() >= 0;
 		}
+
 		public void SelectAll()
 		{
 			List<int> instanceIDs = this.m_LocalAssets.GetInstanceIDs();
 			this.SetSelection(instanceIDs.ToArray(), false);
 		}
+
 		private void SetSelection(int[] selectedInstanceIDs, bool doubleClicked)
 		{
 			this.InitSelection(selectedInstanceIDs);
@@ -2594,6 +2878,7 @@ namespace UnityEditor
 				this.m_ItemSelectedCallback(doubleClicked);
 			}
 		}
+
 		public void InitSelection(int[] selectedInstanceIDs)
 		{
 			this.m_State.m_SelectedInstanceIDs = new List<int>(selectedInstanceIDs);
@@ -2614,6 +2899,7 @@ namespace UnityEditor
 				AssetStoreAssetSelection.Clear();
 			}
 		}
+
 		private void SetSelection(AssetStoreAsset assetStoreResult, bool doubleClicked)
 		{
 			this.m_State.m_SelectedInstanceIDs.Clear();
@@ -2628,6 +2914,7 @@ namespace UnityEditor
 				this.m_ItemSelectedCallback(doubleClicked);
 			}
 		}
+
 		private void HandleZoomScrolling()
 		{
 			if (EditorGUI.actionKey && Event.current.type == EventType.ScrollWheel && this.m_TotalRect.Contains(Event.current.mousePosition))
@@ -2646,10 +2933,19 @@ namespace UnityEditor
 				GUI.changed = true;
 			}
 		}
+
 		private bool IsPreviewIconExpansionModifierPressed()
 		{
 			return Event.current.alt;
 		}
+
+		private bool AllowLeftRightArrowNavigation()
+		{
+			bool flag = !this.m_LocalAssets.ListMode && !this.IsPreviewIconExpansionModifierPressed();
+			bool flag2 = !this.m_ShowLocalAssetsOnly || this.m_LocalAssets.ItemCount > 1;
+			return flag && flag2;
+		}
+
 		public void HandleKeyboard(bool checkKeyboardControl)
 		{
 			if ((checkKeyboardControl && GUIUtility.keyboardControl != this.m_KeyboardControlID) || !GUI.enabled)
@@ -2674,13 +2970,13 @@ namespace UnityEditor
 						num = this.m_LocalAssets.m_Grid.columns;
 						break;
 					case KeyCode.RightArrow:
-						if (!this.m_LocalAssets.ListMode && !this.IsPreviewIconExpansionModifierPressed())
+						if (this.AllowLeftRightArrowNavigation())
 						{
 							num = 1;
 						}
 						break;
 					case KeyCode.LeftArrow:
-						if (!this.m_LocalAssets.ListMode && !this.IsPreviewIconExpansionModifierPressed())
+						if (this.AllowLeftRightArrowNavigation())
 						{
 							num = -1;
 						}
@@ -2701,19 +2997,26 @@ namespace UnityEditor
 				}
 				else
 				{
+					bool flag = false;
 					switch (Event.current.keyCode)
 					{
 					case KeyCode.UpArrow:
 					case KeyCode.DownArrow:
-					case KeyCode.RightArrow:
-					case KeyCode.LeftArrow:
 					case KeyCode.Home:
 					case KeyCode.End:
 					case KeyCode.PageUp:
 					case KeyCode.PageDown:
+						flag = true;
+						break;
+					case KeyCode.RightArrow:
+					case KeyCode.LeftArrow:
+						flag = this.AllowLeftRightArrowNavigation();
+						break;
+					}
+					if (flag)
+					{
 						this.SelectFirst();
 						Event.current.Use();
-						break;
 					}
 				}
 				if (num != 0)
@@ -2729,15 +3032,13 @@ namespace UnityEditor
 					Event.current.Use();
 					GUI.changed = true;
 				}
-				else
+				else if (this.allowFindNextShortcut && this.m_LocalAssets.DoCharacterOffsetSelection())
 				{
-					if (this.allowFindNextShortcut && this.m_LocalAssets.DoCharacterOffsetSelection())
-					{
-						Event.current.Use();
-					}
+					Event.current.Use();
 				}
 			}
 		}
+
 		private void DoOffsetSelectionSpecialKeys(int idx, int maxIndex)
 		{
 			float num = this.m_LocalAssets.m_Grid.itemSize.y + this.m_LocalAssets.m_Grid.verticalSpacing;
@@ -2785,6 +3086,7 @@ namespace UnityEditor
 				this.m_SelectionOffset = Mathf.Min(Mathf.FloorToInt((float)num2 / (float)columns) * columns, this.m_SelectionOffset);
 			}
 		}
+
 		private void DoOffsetSelection()
 		{
 			if (this.m_SelectionOffset == 0)
@@ -2816,19 +3118,22 @@ namespace UnityEditor
 			int selectedAssetByIdx = num2;
 			this.SetSelectedAssetByIdx(selectedAssetByIdx);
 		}
+
 		public void OffsetSelection(int selectionOffset)
 		{
 			this.m_SelectionOffset = selectionOffset;
 		}
+
 		public void SelectFirst()
 		{
 			int selectedAssetByIdx = 0;
-			if (this.m_ShowLocalAssetsOnly && this.m_LocalAssets.ShowNone)
+			if (this.m_ShowLocalAssetsOnly && this.m_LocalAssets.ShowNone && this.m_LocalAssets.ItemCount > 1)
 			{
 				selectedAssetByIdx = 1;
 			}
 			this.SetSelectedAssetByIdx(selectedAssetByIdx);
 		}
+
 		public int GetInstanceIDByIndex(int index)
 		{
 			int result;
@@ -2838,6 +3143,7 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		private void SetSelectedAssetByIdx(int selectedIdx)
 		{
 			int num;
@@ -2886,15 +3192,21 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void Reveal(int instanceID)
 		{
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			if (hierarchyProperty.Find(instanceID, null) && hierarchyProperty.Parent() && !hierarchyProperty.isFolder)
+			if (!AssetDatabase.Contains(instanceID))
 			{
-				int instanceID2 = hierarchyProperty.instanceID;
-				this.m_LocalAssets.ChangeExpandedState(instanceID2, true);
+				return;
+			}
+			int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(AssetDatabase.GetAssetPath(instanceID));
+			bool flag = mainAssetInstanceID != instanceID;
+			if (flag)
+			{
+				this.m_LocalAssets.ChangeExpandedState(mainAssetInstanceID, true);
 			}
 		}
+
 		public bool Frame(int instanceID, bool frame, bool ping)
 		{
 			if (ObjectListArea.s_Styles == null)
@@ -2931,6 +3243,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private int GetSelectedAssetIdx()
 		{
 			int num = this.m_LocalAssets.IndexOf(this.m_State.m_LastClickedInstanceID);
@@ -2963,6 +3276,23 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
+		private bool SkipGroup(ObjectListArea.Group group)
+		{
+			if (this.m_ShowLocalAssetsOnly)
+			{
+				if (group is ObjectListArea.AssetStoreGroup)
+				{
+					return true;
+				}
+			}
+			else if (group is ObjectListArea.LocalGroup)
+			{
+				return true;
+			}
+			return false;
+		}
+
 		private int GetMaxIdx()
 		{
 			int num = 0;
@@ -2970,30 +3300,20 @@ namespace UnityEditor
 			int num3 = 0;
 			foreach (ObjectListArea.Group current in this.m_Groups)
 			{
-				if (this.m_ShowLocalAssetsOnly)
+				if (!this.SkipGroup(current))
 				{
-					if (current is ObjectListArea.AssetStoreGroup)
+					if (current.Visible)
 					{
-						continue;
+						num2 += num3;
+						num3 = current.m_Grid.rows * current.m_Grid.columns;
+						num = current.ItemCount - 1;
 					}
-				}
-				else
-				{
-					if (current is ObjectListArea.LocalGroup)
-					{
-						continue;
-					}
-				}
-				if (current.Visible)
-				{
-					num2 += num3;
-					num3 = current.m_Grid.rows * current.m_Grid.columns;
-					num = current.ItemCount - 1;
 				}
 			}
 			int num4 = num2 + num;
 			return (num3 + num4 != 0) ? num4 : -1;
 		}
+
 		private bool IsLocalAssetsCurrentlySelected()
 		{
 			int num = this.m_State.m_SelectedInstanceIDs.FirstOrDefault<int>();
@@ -3004,21 +3324,27 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void SetupData(bool forceReflow)
 		{
 			foreach (ObjectListArea.Group current in this.m_Groups)
 			{
-				current.UpdateAssets();
+				if (!this.SkipGroup(current))
+				{
+					current.UpdateAssets();
+				}
 			}
-			if (forceReflow || Event.current.type == EventType.Layout)
+			if (forceReflow || Event.current.type == EventType.Repaint)
 			{
 				this.Reflow();
 			}
 		}
+
 		private bool IsObjectSelector()
 		{
 			return this.m_LocalAssets.ShowNone;
 		}
+
 		private void HandleListArea()
 		{
 			this.SetupData(false);
@@ -3032,24 +3358,13 @@ namespace UnityEditor
 			float num = 0f;
 			foreach (ObjectListArea.Group current in this.m_Groups)
 			{
-				if (this.m_ShowLocalAssetsOnly)
+				if (!this.SkipGroup(current))
 				{
-					if (current is ObjectListArea.AssetStoreGroup)
+					num += current.Height;
+					if (this.m_LocalAssets.ShowNone)
 					{
-						continue;
+						break;
 					}
-				}
-				else
-				{
-					if (current is ObjectListArea.LocalGroup)
-					{
-						continue;
-					}
-				}
-				num += current.Height;
-				if (this.m_LocalAssets.ShowNone)
-				{
-					break;
 				}
 			}
 			Rect totalRect = this.m_TotalRect;
@@ -3072,26 +3387,15 @@ namespace UnityEditor
 			float num2 = 0f;
 			foreach (ObjectListArea.Group current2 in this.m_Groups)
 			{
-				if (this.m_ShowLocalAssetsOnly)
+				if (!this.SkipGroup(current2))
 				{
-					if (current2 is ObjectListArea.AssetStoreGroup)
+					current2.Draw(num2, scrollPosition);
+					flag2 = (flag2 || current2.NeedsRepaint);
+					num2 += current2.Height;
+					if (this.m_LocalAssets.ShowNone)
 					{
-						continue;
+						break;
 					}
-				}
-				else
-				{
-					if (current2 is ObjectListArea.LocalGroup)
-					{
-						continue;
-					}
-				}
-				current2.Draw(num2, scrollPosition);
-				flag2 = (flag2 || current2.NeedsRepaint);
-				num2 += current2.Height;
-				if (this.m_LocalAssets.ShowNone)
-				{
-					break;
 				}
 			}
 			this.HandlePing();
@@ -3112,11 +3416,13 @@ namespace UnityEditor
 			{
 				Vector2 vector = EditorStyles.label.CalcSize(ObjectListArea.s_Styles.m_AssetStoreNotAvailableText);
 				Rect position = new Rect(this.m_TotalRect.x + 2f + Mathf.Max(0f, (this.m_TotalRect.width - vector.x) * 0.5f), this.m_TotalRect.y + 10f, vector.x, 20f);
-				EditorGUI.BeginDisabledGroup(true);
-				GUI.Label(position, ObjectListArea.s_Styles.m_AssetStoreNotAvailableText, EditorStyles.label);
-				EditorGUI.EndDisabledGroup();
+				using (new EditorGUI.DisabledScope(true))
+				{
+					GUI.Label(position, ObjectListArea.s_Styles.m_AssetStoreNotAvailableText, EditorStyles.label);
+				}
 			}
 		}
+
 		private bool IsListMode()
 		{
 			if (this.allowMultiSelect)
@@ -3125,28 +3431,29 @@ namespace UnityEditor
 			}
 			return this.gridSize == 16 || !this.CanShowThumbnails();
 		}
+
 		private void Reflow()
 		{
 			if (this.gridSize < 20)
 			{
 				this.gridSize = this.m_MinGridSize;
 			}
-			else
+			else if (this.gridSize < this.m_MinIconSize)
 			{
-				if (this.gridSize < this.m_MinIconSize)
-				{
-					this.gridSize = this.m_MinIconSize;
-				}
+				this.gridSize = this.m_MinIconSize;
 			}
 			if (this.IsListMode())
 			{
 				foreach (ObjectListArea.Group current in this.m_Groups)
 				{
-					current.ListMode = true;
-					this.UpdateGroupSizes(current);
-					if (this.m_LocalAssets.ShowNone)
+					if (!this.SkipGroup(current))
 					{
-						break;
+						current.ListMode = true;
+						this.UpdateGroupSizes(current);
+						if (this.m_LocalAssets.ShowNone)
+						{
+							break;
+						}
 					}
 				}
 				this.m_ResizePreviewCacheTo = Mathf.CeilToInt(this.m_TotalRect.height / 16f) + 10;
@@ -3156,12 +3463,15 @@ namespace UnityEditor
 				float num = 0f;
 				foreach (ObjectListArea.Group current2 in this.m_Groups)
 				{
-					current2.ListMode = false;
-					this.UpdateGroupSizes(current2);
-					num += current2.Height;
-					if (this.m_LocalAssets.ShowNone)
+					if (!this.SkipGroup(current2))
 					{
-						break;
+						current2.ListMode = false;
+						this.UpdateGroupSizes(current2);
+						num += current2.Height;
+						if (this.m_LocalAssets.ShowNone)
+						{
+							break;
+						}
 					}
 				}
 				bool flag = this.m_TotalRect.height < num;
@@ -3169,12 +3479,15 @@ namespace UnityEditor
 				{
 					foreach (ObjectListArea.Group current3 in this.m_Groups)
 					{
-						current3.m_Grid.fixedWidth = this.m_TotalRect.width - 16f;
-						current3.m_Grid.InitNumRowsAndColumns(current3.ItemCount, current3.m_Grid.CalcRows(current3.ItemsWantedShown));
-						current3.UpdateHeight();
-						if (this.m_LocalAssets.ShowNone)
+						if (!this.SkipGroup(current3))
 						{
-							break;
+							current3.m_Grid.fixedWidth = this.m_TotalRect.width - 16f;
+							current3.m_Grid.InitNumRowsAndColumns(current3.ItemCount, current3.m_Grid.CalcRows(current3.ItemsWantedShown));
+							current3.UpdateHeight();
+							if (this.m_LocalAssets.ShowNone)
+							{
+								break;
+							}
 						}
 					}
 				}
@@ -3183,6 +3496,7 @@ namespace UnityEditor
 				AssetPreview.SetPreviewTextureCacheSize(maxNumVisibleItems * 2 + 30, this.GetAssetPreviewManagerID());
 			}
 		}
+
 		private void UpdateGroupSizes(ObjectListArea.Group g)
 		{
 			if (g.ListMode)
@@ -3212,16 +3526,26 @@ namespace UnityEditor
 				g.UpdateHeight();
 			}
 		}
+
 		private int GetMaxNumVisibleItems()
 		{
-			return this.m_LocalAssets.m_Grid.GetMaxVisibleItems(this.m_TotalRect.height);
+			foreach (ObjectListArea.Group current in this.m_Groups)
+			{
+				if (!this.SkipGroup(current))
+				{
+					return current.m_Grid.GetMaxVisibleItems(this.m_TotalRect.height);
+				}
+			}
+			return 0;
 		}
+
 		private static Rect AdjustRectForFraming(Rect r)
 		{
 			r.height += ObjectListArea.s_Styles.resultsGridLabel.fixedHeight * 2f;
 			r.y -= ObjectListArea.s_Styles.resultsGridLabel.fixedHeight;
 			return r;
 		}
+
 		private void CenterRect(Rect r)
 		{
 			float num = (r.yMax + r.yMin) / 2f;
@@ -3229,6 +3553,7 @@ namespace UnityEditor
 			this.m_State.m_ScrollPosition.y = num - num2;
 			this.ScrollToPosition(r);
 		}
+
 		private void ScrollToPosition(Rect r)
 		{
 			float y = r.y;
@@ -3244,6 +3569,7 @@ namespace UnityEditor
 			}
 			this.m_State.m_ScrollPosition.y = Mathf.Max(this.m_State.m_ScrollPosition.y, 0f);
 		}
+
 		public void OnInspectorUpdate()
 		{
 			if (EditorApplication.timeSinceStartup > this.m_NextDirtyCheck && this.m_LocalAssets.IsAnyLastRenderedAssetsDirty())
@@ -3257,10 +3583,12 @@ namespace UnityEditor
 				this.Repaint();
 			}
 		}
+
 		private void ClearCroppedLabelCache()
 		{
 			this.m_InstanceIDToCroppedNameMap.Clear();
 		}
+
 		protected string GetCroppedLabelText(int instanceID, string fullText, float cropWidth)
 		{
 			if (this.m_WidthUsedForCroppingName != (int)cropWidth)
@@ -3293,10 +3621,12 @@ namespace UnityEditor
 			}
 			return text;
 		}
+
 		public bool IsShowing(int instanceID)
 		{
 			return this.m_LocalAssets.IndexOf(instanceID) >= 0;
 		}
+
 		public bool IsShowingAny(int[] instanceIDs)
 		{
 			if (instanceIDs.Length == 0)
@@ -3313,6 +3643,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		protected Texture GetIconByInstanceID(int instanceID)
 		{
 			Texture result = null;
@@ -3323,10 +3654,12 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		internal int GetAssetPreviewManagerID()
 		{
 			return this.m_Owner.GetInstanceID();
 		}
+
 		public void BeginPing(int instanceID)
 		{
 			if (ObjectListArea.s_Styles == null)
@@ -3385,10 +3718,12 @@ namespace UnityEditor
 				this.Repaint();
 			}
 		}
+
 		public void EndPing()
 		{
 			this.m_Ping.m_TimeStart = -1f;
 		}
+
 		private void HandlePing()
 		{
 			if (this.m_Ping.isPinging && !this.m_LocalAssets.ListMode)
@@ -3403,6 +3738,7 @@ namespace UnityEditor
 				this.Repaint();
 			}
 		}
+
 		private Vector2 CalculatePingPosition()
 		{
 			Rect rect = this.m_LocalAssets.m_Grid.CalcRect(this.m_pingIndex, 0f);

@@ -1,10 +1,12 @@
 using System;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class MemoryElementSelection
 	{
 		private MemoryElement m_Selected;
+
 		public MemoryElement Selected
 		{
 			get
@@ -12,6 +14,7 @@ namespace UnityEditor
 				return this.m_Selected;
 			}
 		}
+
 		public void SetSelection(MemoryElement node)
 		{
 			this.m_Selected = node;
@@ -20,14 +23,17 @@ namespace UnityEditor
 				parent.expanded = true;
 			}
 		}
+
 		public void ClearSelection()
 		{
 			this.m_Selected = null;
 		}
+
 		public bool isSelected(MemoryElement node)
 		{
 			return this.m_Selected == node;
 		}
+
 		public void MoveUp()
 		{
 			if (this.m_Selected == null)
@@ -48,6 +54,7 @@ namespace UnityEditor
 				this.SetSelection(prevNode.FirstChild());
 			}
 		}
+
 		public void MoveDown()
 		{
 			if (this.m_Selected == null)
@@ -64,6 +71,7 @@ namespace UnityEditor
 				this.SetSelection(nextNode);
 			}
 		}
+
 		public void MoveFirst()
 		{
 			if (this.m_Selected == null)
@@ -76,6 +84,7 @@ namespace UnityEditor
 			}
 			this.SetSelection(this.m_Selected.GetRoot().FirstChild());
 		}
+
 		public void MoveLast()
 		{
 			if (this.m_Selected == null)
@@ -88,6 +97,7 @@ namespace UnityEditor
 			}
 			this.SetSelection(this.m_Selected.GetRoot().LastChild());
 		}
+
 		public void MoveParent()
 		{
 			if (this.m_Selected == null)

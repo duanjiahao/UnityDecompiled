@@ -1,5 +1,6 @@
 using System;
 using UnityEditor.Animations;
+
 namespace UnityEditor.ProjectWindowCallback
 {
 	internal class DoCreateAnimatorController : EndNameEditAction

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ListViewGUILayout
@@ -7,6 +8,7 @@ namespace UnityEditor
 		internal class GUILayoutedListViewGroup : GUILayoutGroup
 		{
 			internal ListViewState state;
+
 			public override void CalcWidth()
 			{
 				base.CalcWidth();
@@ -14,6 +16,7 @@ namespace UnityEditor
 				this.maxWidth = 0f;
 				this.stretchWidth = 10000;
 			}
+
 			public override void CalcHeight()
 			{
 				this.minHeight = 0f;
@@ -34,6 +37,7 @@ namespace UnityEditor
 					this.maxHeight *= (float)this.state.totalRows;
 				}
 			}
+
 			private void AddYRecursive(GUILayoutEntry e, float y)
 			{
 				e.rect.y = e.rect.y + y;
@@ -46,6 +50,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			public void AddY()
 			{
 				if (this.entries.Count > 0)
@@ -53,6 +58,7 @@ namespace UnityEditor
 					this.AddYRecursive(this.entries[0], this.entries[0].minHeight);
 				}
 			}
+
 			public void AddY(float val)
 			{
 				if (this.entries.Count > 0)
@@ -61,23 +67,32 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static int layoutedListViewHash = "layoutedListView".GetHashCode();
+
 		private static ListViewState lvState = null;
+
 		private static int listViewHash = "ListView".GetHashCode();
+
 		private static int[] dummyWidths = new int[1];
+
 		private static Rect dummyRect = new Rect(0f, 0f, 1f, 1f);
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUILayout.ListView(state, (ListViewOptions)0, string.Empty, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, string dragTitle, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUILayout.ListView(state, (ListViewOptions)0, dragTitle, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, ListViewOptions lvOptions, GUIStyle style, params GUILayoutOption[] options)
 		{
 			return ListViewGUILayout.ListView(state, lvOptions, string.Empty, style, options);
 		}
+
 		public static ListViewShared.ListViewElementsEnumerator ListView(ListViewState state, ListViewOptions lvOptions, string dragTitle, GUIStyle style, params GUILayoutOption[] options)
 		{
 			ListViewGUILayout.lvState = state;
@@ -105,6 +120,7 @@ namespace UnityEditor
 			}
 			return ListViewGUILayout.DoListView(state, null, dragTitle);
 		}
+
 		private static ListViewShared.ListViewElementsEnumerator DoListView(ListViewState state, int[] colWidths, string dragTitle)
 		{
 			Rect rect = ListViewGUILayout.dummyRect;
@@ -148,6 +164,7 @@ namespace UnityEditor
 			}
 			return new ListViewShared.ListViewElementsEnumerator(ilvState, colWidths, num, num2, dragTitle, new Rect(0f, (float)(num * state.rowHeight), rect.width, (float)state.rowHeight));
 		}
+
 		private static void BeginLayoutedListview(ListViewState state, GUIStyle style, params GUILayoutOption[] options)
 		{
 			ListViewGUILayout.GUILayoutedListViewGroup gUILayoutedListViewGroup = (ListViewGUILayout.GUILayoutedListViewGroup)GUILayoutUtility.BeginLayoutGroup(style, null, typeof(ListViewGUILayout.GUILayoutedListViewGroup));
@@ -162,18 +179,22 @@ namespace UnityEditor
 				gUILayoutedListViewGroup.ApplyOptions(options);
 			}
 		}
+
 		public static bool MultiSelection(int prevSelected, int currSelected, ref int initialSelected, ref bool[] selectedItems)
 		{
 			return ListViewShared.MultiSelection(ListViewGUILayout.lvState.ilvState, prevSelected, currSelected, ref initialSelected, ref selectedItems);
 		}
+
 		public static bool HasMouseUp(Rect r)
 		{
 			return ListViewShared.HasMouseUp(ListViewGUILayout.lvState.ilvState, r, 0);
 		}
+
 		public static bool HasMouseDown(Rect r)
 		{
 			return ListViewShared.HasMouseDown(ListViewGUILayout.lvState.ilvState, r, 0);
 		}
+
 		public static bool HasMouseDown(Rect r, int button)
 		{
 			return ListViewShared.HasMouseDown(ListViewGUILayout.lvState.ilvState, r, button);

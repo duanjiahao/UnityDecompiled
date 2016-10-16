@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SnapSettings : EditorWindow
@@ -7,25 +8,44 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle buttonLeft = "ButtonLeft";
+
 			public GUIStyle buttonMid = "ButtonMid";
+
 			public GUIStyle buttonRight = "ButtonRight";
-			public GUIContent snapAllAxes = EditorGUIUtility.TextContent("Snap.SnapAllAxes");
-			public GUIContent snapX = EditorGUIUtility.TextContent("Snap.SnapX");
-			public GUIContent snapY = EditorGUIUtility.TextContent("Snap.SnapY");
-			public GUIContent snapZ = EditorGUIUtility.TextContent("Snap.SnapZ");
-			public GUIContent moveX = EditorGUIUtility.TextContent("Snap.MoveX");
-			public GUIContent moveY = EditorGUIUtility.TextContent("Snap.MoveY");
-			public GUIContent moveZ = EditorGUIUtility.TextContent("Snap.MoveZ");
-			public GUIContent scale = EditorGUIUtility.TextContent("Snap.Scale");
-			public GUIContent rotation = EditorGUIUtility.TextContent("Snap.Rotation");
+
+			public GUIContent snapAllAxes = EditorGUIUtility.TextContent("Snap All Axes|Snaps selected objects to the grid");
+
+			public GUIContent snapX = EditorGUIUtility.TextContent("X|Snaps selected objects to the grid on the x axis");
+
+			public GUIContent snapY = EditorGUIUtility.TextContent("Y|Snaps selected objects to the grid on the y axis");
+
+			public GUIContent snapZ = EditorGUIUtility.TextContent("Z|Snaps selected objects to the grid on the z axis");
+
+			public GUIContent moveX = EditorGUIUtility.TextContent("Move X|Grid spacing X");
+
+			public GUIContent moveY = EditorGUIUtility.TextContent("Move Y|Grid spacing Y");
+
+			public GUIContent moveZ = EditorGUIUtility.TextContent("Move Z|Grid spacing Z");
+
+			public GUIContent scale = EditorGUIUtility.TextContent("Scale|Grid spacing for scaling");
+
+			public GUIContent rotation = EditorGUIUtility.TextContent("Rotation|Grid spacing for rotation in degrees");
 		}
+
 		private static float s_MoveSnapX;
+
 		private static float s_MoveSnapY;
+
 		private static float s_MoveSnapZ;
+
 		private static float s_ScaleSnap;
+
 		private static float s_RotationSnap;
+
 		private static bool s_Initialized;
+
 		private static SnapSettings.Styles ms_Styles;
+
 		public static Vector3 move
 		{
 			get
@@ -43,6 +63,7 @@ namespace UnityEditor
 				SnapSettings.s_MoveSnapZ = value.z;
 			}
 		}
+
 		public static float scale
 		{
 			get
@@ -56,6 +77,7 @@ namespace UnityEditor
 				SnapSettings.s_ScaleSnap = value;
 			}
 		}
+
 		public static float rotation
 		{
 			get
@@ -69,6 +91,7 @@ namespace UnityEditor
 				SnapSettings.s_RotationSnap = value;
 			}
 		}
+
 		private static void Initialize()
 		{
 			if (!SnapSettings.s_Initialized)
@@ -81,11 +104,13 @@ namespace UnityEditor
 				SnapSettings.s_Initialized = true;
 			}
 		}
+
 		[MenuItem("Edit/Snap Settings...")]
 		private static void ShowSnapSettings()
 		{
 			EditorWindow.GetWindowWithRect<SnapSettings>(new Rect(100f, 100f, 230f, 130f), true, "Snap settings");
 		}
+
 		private void OnGUI()
 		{
 			if (SnapSettings.ms_Styles == null)

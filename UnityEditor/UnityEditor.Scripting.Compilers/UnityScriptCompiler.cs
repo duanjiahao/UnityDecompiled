@@ -5,18 +5,22 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor.Utils;
 using UnityEngineInternal;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal class UnityScriptCompiler : MonoScriptCompilerBase
 	{
 		private static readonly Regex UnityEditorPattern = new Regex("UnityEditor\\.dll$", RegexOptions.ExplicitCapture);
+
 		public UnityScriptCompiler(MonoIsland island, bool runUpdater) : base(island, runUpdater)
 		{
 		}
+
 		protected override CompilerOutputParserBase CreateOutputParser()
 		{
 			return new UnityScriptCompilerOutputParser();
 		}
+
 		protected override Program StartCompiler()
 		{
 			List<string> list = new List<string>
@@ -51,12 +55,9 @@ namespace UnityEditor.Scripting.Compilers
 			{
 				list.Add("-i:UnityEditor");
 			}
-			else
+			else if (!BuildPipeline.IsUnityScriptEvalSupported(this._island._target))
 			{
-				if (!BuildPipeline.IsUnityScriptEvalSupported(this._island._target))
-				{
-					list.Add(string.Format("-disable-eval:eval is not supported on the current build target ({0}).", this._island._target));
-				}
+				list.Add(string.Format("-disable-eval:eval is not supported on the current build target ({0}).", this._island._target));
 			}
 			string[] files = this._island._files;
 			for (int j = 0; j < files.Length; j++)
@@ -67,10 +68,12 @@ namespace UnityEditor.Scripting.Compilers
 			string compiler = Path.Combine(base.GetProfileDirectory(), "us.exe");
 			return base.StartCompiler(this._island._target, compiler, list);
 		}
+
 		private bool StrictBuildTarget()
 		{
 			return Array.IndexOf<string>(this._island._defines, "ENABLE_DUCK_TYPING") == -1;
 		}
+
 		protected override string[] GetStreamContainingCompilerMessages()
 		{
 			return base.GetStandardOutput();

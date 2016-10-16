@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SceneViewOverlay
@@ -14,19 +15,26 @@ namespace UnityEditor
 			NavMesh = 300,
 			ParticleEffect = 400
 		}
+
 		public enum WindowDisplayOption
 		{
 			MultipleWindowsPerTarget,
 			OneWindowPerTarget,
 			OneWindowPerTitle
 		}
+
 		private class OverlayWindow : IComparable<SceneViewOverlay.OverlayWindow>
 		{
 			public GUIContent m_Title;
+
 			public SceneViewOverlay.WindowFunction m_SceneViewFunc;
+
 			public int m_PrimaryOrder;
+
 			public int m_SecondaryOrder;
+
 			public UnityEngine.Object m_Target;
+
 			public int CompareTo(SceneViewOverlay.OverlayWindow other)
 			{
 				int num = other.m_PrimaryOrder.CompareTo(this.m_PrimaryOrder);
@@ -37,16 +45,23 @@ namespace UnityEditor
 				return num;
 			}
 		}
+
 		public delegate void WindowFunction(UnityEngine.Object target, SceneView sceneView);
+
 		private static List<SceneViewOverlay.OverlayWindow> m_Windows;
+
 		private Rect m_WindowRect = new Rect(0f, 0f, 0f, 0f);
+
 		private SceneView m_SceneView;
+
 		private float k_WindowPadding = 9f;
+
 		public SceneViewOverlay(SceneView sceneView)
 		{
 			this.m_SceneView = sceneView;
 			SceneViewOverlay.m_Windows = new List<SceneViewOverlay.OverlayWindow>();
 		}
+
 		public void Begin()
 		{
 			if (!this.m_SceneView.m_ShowSceneViewWindows)
@@ -59,6 +74,7 @@ namespace UnityEditor
 			}
 			this.m_SceneView.BeginWindows();
 		}
+
 		public void End()
 		{
 			if (!this.m_SceneView.m_ShowSceneViewWindows)
@@ -76,6 +92,7 @@ namespace UnityEditor
 			}
 			this.m_SceneView.EndWindows();
 		}
+
 		private void WindowTrampoline(int id)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -102,6 +119,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 		}
+
 		private void EatMouseInput(Rect position)
 		{
 			SceneView.AddCursorRect(position, MouseCursor.Arrow);
@@ -136,10 +154,12 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		public static void Window(GUIContent title, SceneViewOverlay.WindowFunction sceneViewFunc, int order, SceneViewOverlay.WindowDisplayOption option)
 		{
 			SceneViewOverlay.Window(title, sceneViewFunc, order, null, option);
 		}
+
 		public static void Window(GUIContent title, SceneViewOverlay.WindowFunction sceneViewFunc, int order, UnityEngine.Object target, SceneViewOverlay.WindowDisplayOption option)
 		{
 			if (Event.current.type != EventType.Layout)

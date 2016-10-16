@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor.ProjectWindowCallback;
+using UnityEditor.TreeViewTests;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Project", icon = "Project")]
 	internal class ProjectBrowser : EditorWindow, IHasCustomMenu
 	{
 		internal enum ItemType
@@ -14,11 +17,13 @@ namespace UnityEditor
 			Asset,
 			SavedFilter
 		}
+
 		private enum ViewMode
 		{
 			OneColumn,
 			TwoColumns
 		}
+
 		public enum SearchViewState
 		{
 			NotSearching,
@@ -26,42 +31,68 @@ namespace UnityEditor
 			SubFolders,
 			AssetStore
 		}
+
 		private class Styles
 		{
 			public GUIStyle smallStatus = "ObjectPickerSmallStatus";
+
 			public GUIStyle largeStatus = "ObjectPickerLargeStatus";
+
 			public GUIStyle toolbarBack = "ObjectPickerToolbar";
+
 			public GUIStyle tab = "ObjectPickerTab";
+
 			public GUIStyle bottomResize = "WindowBottomResize";
+
 			public GUIStyle background = "ObjectPickerBackground";
+
 			public GUIStyle previewBackground = "PopupCurveSwatchBackground";
+
 			public GUIStyle previewTextureBackground = "ObjectPickerPreviewBackground";
+
 			public GUIStyle bottomBarBg = "ProjectBrowserBottomBarBg";
+
 			public GUIStyle topBarBg = "ProjectBrowserTopBarBg";
+
 			public GUIStyle selectedPathLabel = "Label";
+
 			public GUIStyle exposablePopup = ProjectBrowser.Styles.GetStyle("ExposablePopupMenu");
+
 			public GUIStyle lockButton = "IN LockButton";
+
 			public GUIStyle foldout = "AC RightArrow";
+
 			public GUIStyle exposablePopupItem = ProjectBrowser.Styles.GetStyle("ExposablePopupItem");
+
 			public GUIContent m_FilterByLabel = new GUIContent(EditorGUIUtility.FindTexture("FilterByLabel"), "Search by Label");
+
 			public GUIContent m_FilterByType = new GUIContent(EditorGUIUtility.FindTexture("FilterByType"), "Search by Type");
+
 			public GUIContent m_ShowChildAssetsContent = new GUIContent(string.Empty, EditorGUIUtility.FindTexture("UnityEditor.HierarchyWindow"), "Toggle visibility of child assets in folders");
+
 			public GUIContent m_CreateDropdownContent = new GUIContent("Create");
+
 			public GUIContent m_SaveFilterContent = new GUIContent(EditorGUIUtility.FindTexture("Favorite"), "Save search");
+
 			public GUIContent m_EmptyFolderText = new GUIContent("This folder is empty");
+
 			public GUIContent m_SearchIn = new GUIContent("Search:");
+
 			private static GUIStyle GetStyle(string styleName)
 			{
 				return styleName;
 			}
 		}
+
 		internal class SavedFiltersContextMenu
 		{
 			private int m_SavedFilterInstanceID;
+
 			private SavedFiltersContextMenu(int savedFilterInstanceID)
 			{
 				this.m_SavedFilterInstanceID = savedFilterInstanceID;
 			}
+
 			internal static void Show(int savedFilterInstanceID)
 			{
 				GUIContent content = new GUIContent("Delete");
@@ -69,19 +100,24 @@ namespace UnityEditor
 				genericMenu.AddItem(content, false, new GenericMenu.MenuFunction(new ProjectBrowser.SavedFiltersContextMenu(savedFilterInstanceID).Delete));
 				genericMenu.ShowAsContext();
 			}
+
 			private void Delete()
 			{
 				ProjectBrowser.DeleteFilter(this.m_SavedFilterInstanceID);
 			}
 		}
+
 		internal class BreadCrumbListMenu
 		{
 			private static ProjectBrowser m_Caller;
+
 			private string m_SubFolder;
+
 			private BreadCrumbListMenu(string subFolder)
 			{
 				this.m_SubFolder = subFolder;
 			}
+
 			internal static void Show(string folder, string currentSubFolder, Rect activatorRect, ProjectBrowser caller)
 			{
 				ProjectBrowser.BreadCrumbListMenu.m_Caller = caller;
@@ -105,6 +141,7 @@ namespace UnityEditor
 				}
 				genericMenu.DropDown(activatorRect);
 			}
+
 			private void SelectSubFolder()
 			{
 				int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(this.m_SubFolder);
@@ -114,11 +151,13 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal class AssetStoreItemContextMenu
 		{
 			private AssetStoreItemContextMenu()
 			{
 			}
+
 			internal static void Show()
 			{
 				GenericMenu genericMenu = new GenericMenu();
@@ -134,6 +173,7 @@ namespace UnityEditor
 				}
 				genericMenu.ShowAsContext();
 			}
+
 			private void OpenAssetStoreWindow()
 			{
 				AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
@@ -143,82 +183,138 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private const float k_MinHeight = 250f;
+
 		private const float k_MinWidthOneColumn = 230f;
+
 		private const float k_MinWidthTwoColumns = 230f;
+
 		private const float k_BottomBarHeight = 17f;
+
 		private const float k_ResizerWidth = 5f;
+
 		private const float k_SliderWidth = 55f;
+
 		private static List<ProjectBrowser> s_ProjectBrowsers = new List<ProjectBrowser>();
+
 		public static ProjectBrowser s_LastInteractedProjectBrowser;
+
 		private static ProjectBrowser.Styles s_Styles;
+
 		private static int s_HashForSearchField = "ProjectBrowserSearchField".GetHashCode();
+
 		[SerializeField]
 		private SearchFilter m_SearchFilter;
+
 		[NonSerialized]
 		private string m_SearchFieldText = string.Empty;
+
 		[SerializeField]
 		private ProjectBrowser.ViewMode m_ViewMode = ProjectBrowser.ViewMode.TwoColumns;
+
 		[SerializeField]
 		private int m_StartGridSize = 64;
+
 		[SerializeField]
 		private string[] m_LastFolders = new string[0];
+
 		[SerializeField]
 		private float m_LastFoldersGridSize = -1f;
+
 		[SerializeField]
 		private string m_LastProjectPath;
+
 		[SerializeField]
 		private bool m_IsLocked;
+
 		private bool m_EnableOldAssetTree = true;
+
 		private bool m_FocusSearchField;
+
 		private string m_SelectedPath;
+
 		private List<GUIContent> m_SelectedPathSplitted = new List<GUIContent>();
+
 		private float m_LastListWidth;
+
 		private int m_CurrentNumItems;
+
 		private bool m_DidSelectSearchResult;
+
 		private bool m_ItemSelectedByRightClickThisEvent;
+
 		private bool m_InternalSelectionChange;
+
 		private SearchFilter.SearchArea m_LastLocalAssetsSearchArea;
+
 		private PopupList.InputData m_AssetLabels;
+
 		private PopupList.InputData m_ObjectTypes;
+
 		private bool m_UseTreeViewSelectionInsteadOfMainSelection;
+
 		[SerializeField]
 		private TreeViewState m_FolderTreeState;
+
 		private TreeView m_FolderTree;
+
 		private int m_TreeViewKeyboardControlID;
+
 		[SerializeField]
 		private TreeViewState m_AssetTreeState;
+
 		private TreeView m_AssetTree;
+
 		[SerializeField]
 		private ObjectListAreaState m_ListAreaState;
+
 		private ObjectListArea m_ListArea;
+
 		private int m_ListKeyboardControlID;
+
 		private bool m_GrabKeyboardFocusForListArea;
+
 		private List<KeyValuePair<GUIContent, string>> m_BreadCrumbs = new List<KeyValuePair<GUIContent, string>>();
+
 		private bool m_BreadCrumbLastFolderHasSubFolders;
+
 		private ExposablePopupMenu m_SearchAreaMenu;
+
 		private float m_ToolbarHeight;
+
 		private float k_MinDirectoriesAreaWidth = 110f;
+
 		[SerializeField]
 		private float m_DirectoriesAreaWidth = 115f;
+
 		[NonSerialized]
 		private float m_SearchAreaMenuOffset = -1f;
+
 		[NonSerialized]
 		private Rect m_ListAreaRect;
+
 		[NonSerialized]
 		private Rect m_TreeViewRect;
+
 		[NonSerialized]
 		private Rect m_BottomBarRect;
+
 		[NonSerialized]
 		private Rect m_ListHeaderRect;
+
 		[NonSerialized]
 		private int m_LastFramedID = -1;
+
 		[NonSerialized]
 		public GUIContent m_SearchAllAssets = new GUIContent("Assets");
+
 		[NonSerialized]
 		public GUIContent m_SearchInFolders = new GUIContent(string.Empty);
+
 		[NonSerialized]
 		public GUIContent m_SearchAssetStore = new GUIContent("Asset Store");
+
 		private bool useTreeViewSelectionInsteadOfMainSelection
 		{
 			get
@@ -230,6 +326,7 @@ namespace UnityEditor
 				this.m_UseTreeViewSelectionInsteadOfMainSelection = value;
 			}
 		}
+
 		public float listAreaGridSize
 		{
 			get
@@ -237,43 +334,63 @@ namespace UnityEditor
 				return (float)this.m_ListArea.gridSize;
 			}
 		}
+
 		private ProjectBrowser()
 		{
 		}
+
 		public static List<ProjectBrowser> GetAllProjectBrowsers()
 		{
 			return ProjectBrowser.s_ProjectBrowsers;
 		}
+
 		private void OnEnable()
 		{
-			base.title = "Project";
+			base.titleContent = base.GetLocalizedTitleContent();
 			ProjectBrowser.s_ProjectBrowsers.Add(this);
 			EditorApplication.projectWindowChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.projectWindowChanged, new EditorApplication.CallbackFunction(this.OnProjectChanged));
 			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(this.OnPlayModeStateChanged));
 			EditorApplication.assetLabelsChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.assetLabelsChanged, new EditorApplication.CallbackFunction(this.OnAssetLabelsChanged));
+			EditorApplication.assetBundleNameChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.assetBundleNameChanged, new EditorApplication.CallbackFunction(this.OnAssetBundleNameChanged));
 			ProjectBrowser.s_LastInteractedProjectBrowser = this;
 		}
+
 		private void OnDisable()
 		{
 			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(this.OnPlayModeStateChanged));
 			EditorApplication.projectWindowChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.projectWindowChanged, new EditorApplication.CallbackFunction(this.OnProjectChanged));
 			EditorApplication.assetLabelsChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.assetLabelsChanged, new EditorApplication.CallbackFunction(this.OnAssetLabelsChanged));
+			EditorApplication.assetBundleNameChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.assetBundleNameChanged, new EditorApplication.CallbackFunction(this.OnAssetBundleNameChanged));
 			ProjectBrowser.s_ProjectBrowsers.Remove(this);
 		}
+
 		private void OnPlayModeStateChanged()
 		{
 			this.EndRenaming();
 		}
+
 		private void OnAssetLabelsChanged()
 		{
 			if (this.Initialized())
 			{
 				this.SetupAssetLabelList();
+				if (this.m_SearchFilter.IsSearching())
+				{
+					this.InitListArea();
+				}
 			}
 		}
+
+		private void OnAssetBundleNameChanged()
+		{
+			if (this.m_ListArea != null)
+			{
+				this.InitListArea();
+			}
+		}
+
 		private void Awake()
 		{
-			base.title = "Project";
 			if (this.m_ListAreaState != null)
 			{
 				this.m_ListAreaState.OnAwake();
@@ -288,8 +405,12 @@ namespace UnityEditor
 				this.m_AssetTreeState.OnAwake();
 				this.m_AssetTreeState.expandedIDs = new List<int>(InternalEditorUtility.expandedProjectWindowItems);
 			}
-			Analytics.Event("ProjectBrowser", "StartLayout", this.m_ViewMode.ToString(), 1);
+			if (this.m_SearchFilter != null)
+			{
+				this.EnsureValidFolders();
+			}
 		}
+
 		private string GetAnalyticsSizeLabel(float size)
 		{
 			if (size > 600f)
@@ -302,6 +423,7 @@ namespace UnityEditor
 			}
 			return "240 - 600 pix";
 		}
+
 		internal static ProjectBrowser.ItemType GetItemType(int instanceID)
 		{
 			if (SavedSearchFilters.IsSavedFilter(instanceID))
@@ -310,6 +432,7 @@ namespace UnityEditor
 			}
 			return ProjectBrowser.ItemType.Asset;
 		}
+
 		internal string GetActiveFolderPath()
 		{
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && this.m_SearchFilter.GetState() == SearchFilter.State.FolderBrowsing && this.m_SearchFilter.folders.Length > 0)
@@ -318,6 +441,7 @@ namespace UnityEditor
 			}
 			return "Assets";
 		}
+
 		private void EnsureValidFolders()
 		{
 			HashSet<string> hashSet = new HashSet<string>();
@@ -325,7 +449,7 @@ namespace UnityEditor
 			for (int i = 0; i < folders.Length; i++)
 			{
 				string text = folders[i];
-				if (Directory.Exists(text))
+				if (AssetDatabase.IsValidFolder(text))
 				{
 					hashSet.Add(text);
 				}
@@ -338,8 +462,8 @@ namespace UnityEditor
 						{
 							break;
 						}
-						text2 = Path.GetDirectoryName(text2);
-						if (!string.IsNullOrEmpty(text2) && Directory.Exists(text2))
+						text2 = ProjectWindowUtil.GetContainingFolder(text2);
+						if (!string.IsNullOrEmpty(text2) && AssetDatabase.IsValidFolder(text2))
 						{
 							hashSet.Add(text2);
 							break;
@@ -349,6 +473,7 @@ namespace UnityEditor
 			}
 			this.m_SearchFilter.folders = hashSet.ToArray<string>();
 		}
+
 		private void OnProjectChanged()
 		{
 			if (this.m_AssetTree != null)
@@ -369,10 +494,12 @@ namespace UnityEditor
 			this.RefreshSelectedPath();
 			this.m_BreadCrumbs.Clear();
 		}
+
 		public bool Initialized()
 		{
 			return this.m_ListArea != null;
 		}
+
 		public void Init()
 		{
 			if (this.Initialized())
@@ -440,16 +567,19 @@ namespace UnityEditor
 			this.RefreshSearchText();
 			this.DefaultSetup();
 		}
+
 		public void SetSearch(string searchString)
 		{
 			this.SetSearch(SearchFilter.CreateSearchFilterFromString(searchString));
 		}
+
 		public void SetSearch(SearchFilter searchFilter)
 		{
 			this.m_SearchFilter = searchFilter;
 			this.m_SearchFieldText = searchFilter.FilterToSearchFieldString();
 			this.TopBarSearchSettingsChanged();
 		}
+
 		private void SetSearchViewState(ProjectBrowser.SearchViewState state)
 		{
 			switch (state)
@@ -470,6 +600,7 @@ namespace UnityEditor
 			this.InitSearchMenu();
 			this.InitListArea();
 		}
+
 		private ProjectBrowser.SearchViewState GetSearchViewState()
 		{
 			switch (this.m_SearchFilter.GetState())
@@ -484,6 +615,7 @@ namespace UnityEditor
 				return ProjectBrowser.SearchViewState.NotSearching;
 			}
 		}
+
 		private void SearchButtonClickedCallback(ExposablePopupMenu.ItemData itemClicked)
 		{
 			if (!itemClicked.m_On)
@@ -493,9 +625,9 @@ namespace UnityEditor
 				{
 					this.m_LastLocalAssetsSearchArea = this.m_SearchFilter.searchArea;
 				}
-				Analytics.Event("ProjectBrowser", "UserChangedSearchArea", this.m_SearchFilter.searchArea.ToString(), 1);
 			}
 		}
+
 		private void InitSearchMenu()
 		{
 			ProjectBrowser.SearchViewState searchViewState = this.GetSearchViewState();
@@ -536,10 +668,12 @@ namespace UnityEditor
 			ExposablePopupMenu.PopupButtonData popupButtonData = new ExposablePopupMenu.PopupButtonData(content, ProjectBrowser.s_Styles.exposablePopup);
 			this.m_SearchAreaMenu.Init(list, 10f, 450f, popupButtonData, new Action<ExposablePopupMenu.ItemData>(this.SearchButtonClickedCallback));
 		}
+
 		private void AssetStoreSearchEndedCallback()
 		{
 			this.InitSearchMenu();
 		}
+
 		public static void ShowAssetStoreHitsWhileSearchingLocalAssetsChanged()
 		{
 			foreach (ProjectBrowser current in ProjectBrowser.s_ProjectBrowsers)
@@ -548,6 +682,7 @@ namespace UnityEditor
 				current.InitSearchMenu();
 			}
 		}
+
 		private void RefreshSearchText()
 		{
 			if (this.m_SearchFilter.folders.Length > 0)
@@ -586,6 +721,7 @@ namespace UnityEditor
 			this.m_BreadCrumbs.Clear();
 			this.InitSearchMenu();
 		}
+
 		private void DefaultSetup()
 		{
 			if (this.m_LastProjectPath != Directory.GetCurrentDirectory())
@@ -593,13 +729,18 @@ namespace UnityEditor
 				this.m_SearchFilter = new SearchFilter();
 				this.m_LastFolders = new string[0];
 				this.SyncFilterGUI();
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
+				if (Selection.activeInstanceID != 0)
+				{
+					this.FrameObjectPrivate(Selection.activeInstanceID, !this.m_IsLocked, false);
+				}
+				if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && !this.IsShowingFolderContents())
 				{
 					this.SelectAssetsFolder();
 				}
 			}
 			this.m_LastProjectPath = Directory.GetCurrentDirectory();
 		}
+
 		private void OnGUIAssetCallback(int instanceID, Rect rect)
 		{
 			if (EditorApplication.projectWindowItemOnGUI != null)
@@ -608,6 +749,7 @@ namespace UnityEditor
 				EditorApplication.projectWindowItemOnGUI(guid, rect);
 			}
 		}
+
 		private void InitViewMode(ProjectBrowser.ViewMode viewMode)
 		{
 			this.m_ViewMode = viewMode;
@@ -623,45 +765,46 @@ namespace UnityEditor
 				TreeView expr_72 = this.m_AssetTree;
 				expr_72.keyboardInputCallback = (Action)Delegate.Combine(expr_72.keyboardInputCallback, new Action(this.AssetTreeKeyboardInputCallback));
 				TreeView expr_99 = this.m_AssetTree;
-				expr_99.contextClickCallback = (Action<int>)Delegate.Combine(expr_99.contextClickCallback, new Action<int>(this.AssetTreeViewContextClick));
+				expr_99.contextClickItemCallback = (Action<int>)Delegate.Combine(expr_99.contextClickItemCallback, new Action<int>(this.AssetTreeViewContextClick));
 				TreeView expr_C0 = this.m_AssetTree;
-				expr_C0.itemDoubleClickedCallback = (Action<int>)Delegate.Combine(expr_C0.itemDoubleClickedCallback, new Action<int>(this.AssetTreeItemDoubleClickedCallback));
+				expr_C0.contextClickOutsideItemsCallback = (Action)Delegate.Combine(expr_C0.contextClickOutsideItemsCallback, new Action(this.AssetTreeViewContextClickOutsideItems));
 				TreeView expr_E7 = this.m_AssetTree;
-				expr_E7.onGUIRowCallback = (Action<int, Rect>)Delegate.Combine(expr_E7.onGUIRowCallback, new Action<int, Rect>(this.OnGUIAssetCallback));
+				expr_E7.itemDoubleClickedCallback = (Action<int>)Delegate.Combine(expr_E7.itemDoubleClickedCallback, new Action<int>(this.AssetTreeItemDoubleClickedCallback));
 				TreeView expr_10E = this.m_AssetTree;
-				expr_10E.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_10E.dragEndedCallback, new Action<int[], bool>(this.AssetTreeDragEnded));
+				expr_10E.onGUIRowCallback = (Action<int, Rect>)Delegate.Combine(expr_10E.onGUIRowCallback, new Action<int, Rect>(this.OnGUIAssetCallback));
+				TreeView expr_135 = this.m_AssetTree;
+				expr_135.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_135.dragEndedCallback, new Action<int[], bool>(this.AssetTreeDragEnded));
 				string guid = AssetDatabase.AssetPathToGUID("Assets");
 				AssetsTreeViewDataSource assetsTreeViewDataSource = new AssetsTreeViewDataSource(this.m_AssetTree, AssetDatabase.GetInstanceIDFromGUID(guid), false, false);
 				assetsTreeViewDataSource.foldersFirst = this.GetShouldShowFoldersFirst();
 				this.m_AssetTree.Init(this.m_TreeViewRect, assetsTreeViewDataSource, new AssetsTreeViewGUI(this.m_AssetTree), new AssetsTreeViewDragging(this.m_AssetTree));
 				this.m_AssetTree.ReloadData();
 			}
-			else
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
 			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
-				{
-					this.m_FolderTree = new TreeView(this, this.m_FolderTreeState);
-					this.m_FolderTree.deselectOnUnhandledMouseDown = false;
-					TreeView expr_1C2 = this.m_FolderTree;
-					expr_1C2.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_1C2.selectionChangedCallback, new Action<int[]>(this.FolderTreeSelectionCallback));
-					TreeView expr_1E9 = this.m_FolderTree;
-					expr_1E9.contextClickCallback = (Action<int>)Delegate.Combine(expr_1E9.contextClickCallback, new Action<int>(this.FolderTreeViewContextClick));
-					TreeView expr_210 = this.m_FolderTree;
-					expr_210.onGUIRowCallback = (Action<int, Rect>)Delegate.Combine(expr_210.onGUIRowCallback, new Action<int, Rect>(this.OnGUIAssetCallback));
-					TreeView expr_237 = this.m_FolderTree;
-					expr_237.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_237.dragEndedCallback, new Action<int[], bool>(this.FolderTreeDragEnded));
-					this.m_FolderTree.Init(this.m_TreeViewRect, new ProjectBrowserColumnOneTreeViewDataSource(this.m_FolderTree), new ProjectBrowserColumnOneTreeViewGUI(this.m_FolderTree), new ProjectBrowserColumnOneTreeViewDragging(this.m_FolderTree));
-					this.m_FolderTree.ReloadData();
-				}
+				this.m_FolderTree = new TreeView(this, this.m_FolderTreeState);
+				this.m_FolderTree.deselectOnUnhandledMouseDown = false;
+				TreeView expr_1E9 = this.m_FolderTree;
+				expr_1E9.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_1E9.selectionChangedCallback, new Action<int[]>(this.FolderTreeSelectionCallback));
+				TreeView expr_210 = this.m_FolderTree;
+				expr_210.contextClickItemCallback = (Action<int>)Delegate.Combine(expr_210.contextClickItemCallback, new Action<int>(this.FolderTreeViewContextClick));
+				TreeView expr_237 = this.m_FolderTree;
+				expr_237.onGUIRowCallback = (Action<int, Rect>)Delegate.Combine(expr_237.onGUIRowCallback, new Action<int, Rect>(this.OnGUIAssetCallback));
+				TreeView expr_25E = this.m_FolderTree;
+				expr_25E.dragEndedCallback = (Action<int[], bool>)Delegate.Combine(expr_25E.dragEndedCallback, new Action<int[], bool>(this.FolderTreeDragEnded));
+				this.m_FolderTree.Init(this.m_TreeViewRect, new ProjectBrowserColumnOneTreeViewDataSource(this.m_FolderTree), new ProjectBrowserColumnOneTreeViewGUI(this.m_FolderTree), new ProjectBrowserColumnOneTreeViewDragging(this.m_FolderTree));
+				this.m_FolderTree.ReloadData();
 			}
 			float x = (this.m_ViewMode != ProjectBrowser.ViewMode.OneColumn) ? 230f : 230f;
 			base.minSize = new Vector2(x, 250f);
 			base.maxSize = new Vector2(10000f, 10000f);
 		}
+
 		private bool GetShouldShowFoldersFirst()
 		{
 			return Application.platform != RuntimePlatform.OSXEditor;
 		}
+
 		private void SetViewMode(ProjectBrowser.ViewMode newViewMode)
 		{
 			if (this.m_ViewMode == newViewMode)
@@ -676,6 +819,7 @@ namespace UnityEditor
 			}
 			base.RepaintImmediately();
 		}
+
 		private void EndRenaming()
 		{
 			if (this.m_AssetTree != null)
@@ -691,6 +835,7 @@ namespace UnityEditor
 				this.m_ListArea.EndRename(true);
 			}
 		}
+
 		private string[] GetTypesDisplayNames()
 		{
 			return new string[]
@@ -712,6 +857,7 @@ namespace UnityEditor
 				"Texture"
 			};
 		}
+
 		public void TypeListCallback(PopupList.ListElement element)
 		{
 			if (!Event.current.control)
@@ -725,10 +871,9 @@ namespace UnityEditor
 				}
 			}
 			element.selected = !element.selected;
-			string[] array = (
-				from item in this.m_ObjectTypes.m_ListElements
-				where item.selected
-				select item.text).ToArray<string>();
+			string[] array = (from item in this.m_ObjectTypes.m_ListElements
+			where item.selected
+			select item.text).ToArray<string>();
 			for (int i = 0; i < array.Length; i++)
 			{
 				array[i] = array[i];
@@ -738,6 +883,7 @@ namespace UnityEditor
 			this.TopBarSearchSettingsChanged();
 			base.Repaint();
 		}
+
 		public void AssetLabelListCallback(PopupList.ListElement element)
 		{
 			if (!Event.current.control)
@@ -751,14 +897,14 @@ namespace UnityEditor
 				}
 			}
 			element.selected = !element.selected;
-			this.m_SearchFilter.assetLabels = (
-				from item in this.m_AssetLabels.m_ListElements
-				where item.selected
-				select item.text).ToArray<string>();
+			this.m_SearchFilter.assetLabels = (from item in this.m_AssetLabels.m_ListElements
+			where item.selected
+			select item.text).ToArray<string>();
 			this.m_SearchFieldText = this.m_SearchFilter.FilterToSearchFieldString();
 			this.TopBarSearchSettingsChanged();
 			base.Repaint();
 		}
+
 		private void SetupDroplists()
 		{
 			this.SetupAssetLabelList();
@@ -778,6 +924,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void SetupAssetLabelList()
 		{
 			Dictionary<string, float> allLabels = AssetDatabase.GetAllLabels();
@@ -796,6 +943,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void SyncFilterGUI()
 		{
 			List<string> list = new List<string>(this.m_SearchFilter.assetLabels);
@@ -810,6 +958,7 @@ namespace UnityEditor
 			}
 			this.m_SearchFieldText = this.m_SearchFilter.FilterToSearchFieldString();
 		}
+
 		private static int GetParentInstanceID(int objectInstanceID)
 		{
 			string assetPath = AssetDatabase.GetAssetPath(objectInstanceID);
@@ -829,20 +978,13 @@ namespace UnityEditor
 			}
 			return -1;
 		}
-		public static bool IsFolder(int instanceID)
-		{
-			if (instanceID == 0)
-			{
-				return false;
-			}
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			return hierarchyProperty.Find(instanceID, null) && hierarchyProperty.isFolder;
-		}
+
 		private bool IsShowingFolder(int folderInstanceID)
 		{
 			string assetPath = AssetDatabase.GetAssetPath(folderInstanceID);
 			return new List<string>(this.m_SearchFilter.folders).Contains(assetPath);
 		}
+
 		private void ShowFolderContents(int folderInstanceID, bool revealAndFrameInFolderTree)
 		{
 			if (this.m_ViewMode != ProjectBrowser.ViewMode.TwoColumns)
@@ -865,13 +1007,16 @@ namespace UnityEditor
 			}, revealAndFrameInFolderTree);
 			this.FolderTreeSelectionChanged(true);
 		}
+
 		private bool IsShowingFolderContents()
 		{
 			return this.m_SearchFilter.folders.Length > 0;
 		}
+
 		private void ListGotKeyboardFocus()
 		{
 		}
+
 		private void ListAreaKeyboardCallback()
 		{
 			if (Event.current.type == EventType.KeyDown)
@@ -936,6 +1081,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ShowParentFolderOfCurrentlySelected()
 		{
 			if (this.IsShowingFolderContents())
@@ -943,7 +1089,7 @@ namespace UnityEditor
 				int[] selection = this.m_FolderTree.GetSelection();
 				if (selection.Length == 1)
 				{
-					TreeViewItem treeViewItem = this.m_FolderTree.FindNode(selection[0]);
+					TreeViewItem treeViewItem = this.m_FolderTree.FindItem(selection[0]);
 					if (treeViewItem != null && treeViewItem.parent != null && treeViewItem.id != ProjectBrowserColumnOneTreeViewDataSource.GetAssetsFolderInstanceID())
 					{
 						this.SetFolderSelection(new int[]
@@ -956,6 +1102,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void OpenListAreaSelection()
 		{
 			int[] selection = this.m_ListArea.GetSelection();
@@ -967,7 +1114,7 @@ namespace UnityEditor
 				for (int i = 0; i < array.Length; i++)
 				{
 					int instanceID = array[i];
-					if (ProjectBrowser.IsFolder(instanceID))
+					if (ProjectWindowUtil.IsFolder(instanceID))
 					{
 						num2++;
 					}
@@ -979,13 +1126,10 @@ namespace UnityEditor
 					{
 						this.SetFolderSelection(selection, false);
 					}
-					else
+					else if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
 					{
-						if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
-						{
-							this.ClearSearch();
-							this.m_AssetTree.Frame(selection[0], true, false);
-						}
+						this.ClearSearch();
+						this.m_AssetTree.Frame(selection[0], true, false);
 					}
 					base.Repaint();
 					GUIUtility.ExitGUI();
@@ -998,6 +1142,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static void OpenAssetSelection(int[] selectedInstanceIDs)
 		{
 			for (int i = 0; i < selectedInstanceIDs.Length; i++)
@@ -1010,10 +1155,12 @@ namespace UnityEditor
 			}
 			GUIUtility.ExitGUI();
 		}
+
 		private void SetAsLastInteractedProjectBrowser()
 		{
 			ProjectBrowser.s_LastInteractedProjectBrowser = this;
 		}
+
 		private void RefreshSelectedPath()
 		{
 			if (Selection.activeObject != null)
@@ -1026,6 +1173,7 @@ namespace UnityEditor
 			}
 			this.m_SelectedPathSplitted.Clear();
 		}
+
 		private void ListAreaItemSelectedCallback(bool doubleClicked)
 		{
 			this.SetAsLastInteractedProjectBrowser();
@@ -1037,12 +1185,9 @@ namespace UnityEditor
 				this.m_SearchFilter.searchArea = this.m_LastLocalAssetsSearchArea;
 				this.m_InternalSelectionChange = true;
 			}
-			else
+			else if (AssetStoreAssetSelection.Count > 0)
 			{
-				if (AssetStoreAssetSelection.Count > 0)
-				{
-					Selection.activeObject = AssetStoreAssetInspector.Instance;
-				}
+				Selection.activeObject = AssetStoreAssetInspector.Instance;
 			}
 			this.m_FocusSearchField = false;
 			if (Event.current.button == 1 && Event.current.type == EventType.MouseDown)
@@ -1056,29 +1201,17 @@ namespace UnityEditor
 				this.OpenListAreaSelection();
 			}
 		}
-		private int GetParentFolderInstanceID(int instanceID)
-		{
-			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			if (hierarchyProperty.Find(instanceID, null))
-			{
-				while (hierarchyProperty.Parent())
-				{
-					if (hierarchyProperty.isFolder)
-					{
-						return hierarchyProperty.instanceID;
-					}
-				}
-			}
-			return ProjectBrowserColumnOneTreeViewDataSource.GetAssetsFolderInstanceID();
-		}
+
 		private void OnGotFocus()
 		{
 		}
+
 		private void OnLostFocus()
 		{
 			this.EndRenaming();
 			EditorGUI.EndEditingActiveTextField();
 		}
+
 		private void OnSelectionChange()
 		{
 			if (this.m_ListArea == null)
@@ -1091,25 +1224,19 @@ namespace UnityEditor
 				bool revealSelectionAndFrameLastSelected = !this.m_IsLocked;
 				this.m_AssetTree.SetSelection(Selection.instanceIDs, revealSelectionAndFrameLastSelected);
 			}
-			else
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && !this.m_InternalSelectionChange)
 			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && !this.m_InternalSelectionChange)
+				bool flag = !this.m_IsLocked && Selection.instanceIDs.Length > 0;
+				if (flag)
 				{
-					bool flag = !this.m_IsLocked && Selection.instanceIDs.Length > 0;
-					if (flag)
+					int instanceID = Selection.instanceIDs[Selection.instanceIDs.Length - 1];
+					if (this.m_SearchFilter.IsSearching())
 					{
-						int instanceID = Selection.instanceIDs[Selection.instanceIDs.Length - 1];
-						if (this.m_SearchFilter.IsSearching())
-						{
-							this.m_ListArea.Frame(instanceID, true, false);
-						}
-						else
-						{
-							if (flag)
-							{
-								this.FrameObjectPrivate(instanceID, true, false);
-							}
-						}
+						this.m_ListArea.Frame(instanceID, true, false);
+					}
+					else
+					{
+						this.FrameObjectInTwoColumnMode(instanceID, true, false);
 					}
 				}
 			}
@@ -1122,6 +1249,7 @@ namespace UnityEditor
 			this.RefreshSelectedPath();
 			base.Repaint();
 		}
+
 		private void SetFoldersInSearchFilter(int[] selectedInstanceIDs)
 		{
 			this.m_SearchFilter.folders = ProjectBrowser.GetFolderPathsFromInstanceIDs(selectedInstanceIDs);
@@ -1131,16 +1259,19 @@ namespace UnityEditor
 				this.m_ListArea.gridSize = (int)this.m_LastFoldersGridSize;
 			}
 		}
+
 		private void SetFolderSelection(int[] selectedInstanceIDs, bool revealSelectionAndFrameLastSelected)
 		{
 			this.m_FolderTree.SetSelection(selectedInstanceIDs, revealSelectionAndFrameLastSelected);
 			this.SetFoldersInSearchFilter(selectedInstanceIDs);
 			this.FolderTreeSelectionChanged(true);
 		}
+
 		private void AssetTreeItemDoubleClickedCallback(int instanceID)
 		{
 			ProjectBrowser.OpenAssetSelection(Selection.instanceIDs);
 		}
+
 		private void AssetTreeKeyboardInputCallback()
 		{
 			if (Event.current.type == EventType.KeyDown)
@@ -1175,6 +1306,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void AssetTreeSelectionCallback(int[] selectedTreeViewInstanceIDs)
 		{
 			this.SetAsLastInteractedProjectBrowser();
@@ -1187,6 +1319,7 @@ namespace UnityEditor
 			this.SetSearchFoldersFromCurrentSelection();
 			this.RefreshSearchText();
 		}
+
 		private void SetSearchFoldersFromCurrentSelection()
 		{
 			HashSet<string> hashSet = new HashSet<string>();
@@ -1194,22 +1327,26 @@ namespace UnityEditor
 			for (int i = 0; i < instanceIDs.Length; i++)
 			{
 				int instanceID = instanceIDs[i];
-				HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-				if (hierarchyProperty.Find(instanceID, null))
+				if (AssetDatabase.Contains(instanceID))
 				{
-					int num = 0;
-					while (hierarchyProperty.isValid && !hierarchyProperty.isFolder && num++ < 3)
+					string assetPath = AssetDatabase.GetAssetPath(instanceID);
+					if (AssetDatabase.IsValidFolder(assetPath))
 					{
-						hierarchyProperty.Parent();
+						hashSet.Add(assetPath);
 					}
-					if (hierarchyProperty.isValid && hierarchyProperty.isFolder)
+					else
 					{
-						hashSet.Add(AssetDatabase.GetAssetPath(hierarchyProperty.instanceID));
+						string containingFolder = ProjectWindowUtil.GetContainingFolder(assetPath);
+						if (!string.IsNullOrEmpty(containingFolder))
+						{
+							hashSet.Add(containingFolder);
+						}
 					}
 				}
 			}
 			this.m_SearchFilter.folders = ProjectWindowUtil.GetBaseFolders(hashSet.ToArray<string>());
 		}
+
 		private void SetSearchFolderFromFolderTreeSelection()
 		{
 			if (this.m_FolderTree != null)
@@ -1217,6 +1354,7 @@ namespace UnityEditor
 				this.m_SearchFilter.folders = ProjectBrowser.GetFolderPathsFromInstanceIDs(this.m_FolderTree.GetSelection());
 			}
 		}
+
 		private void FolderTreeSelectionCallback(int[] selectedTreeViewInstanceIDs)
 		{
 			this.SetAsLastInteractedProjectBrowser();
@@ -1252,6 +1390,7 @@ namespace UnityEditor
 			}
 			this.FolderTreeSelectionChanged(folderWasSelected);
 		}
+
 		private bool ValidateFilter(int savedFilterID, SearchFilter filter)
 		{
 			if (filter == null)
@@ -1277,6 +1416,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private void ShowAndHideFolderTreeSelectionAsNeeded()
 		{
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && this.m_FolderTree != null)
@@ -1306,12 +1446,14 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void InitListArea()
 		{
 			this.ShowAndHideFolderTreeSelectionAsNeeded();
 			this.m_ListArea.Init(this.m_ListAreaRect, HierarchyType.Assets, this.m_SearchFilter, false);
 			this.m_ListArea.InitSelection(Selection.instanceIDs);
 		}
+
 		private void OnInspectorUpdate()
 		{
 			if (this.m_ListArea != null)
@@ -1319,6 +1461,7 @@ namespace UnityEditor
 				this.m_ListArea.OnInspectorUpdate();
 			}
 		}
+
 		private void OnDestroy()
 		{
 			if (this.m_ListArea != null)
@@ -1330,6 +1473,7 @@ namespace UnityEditor
 				ProjectBrowser.s_LastInteractedProjectBrowser = null;
 			}
 		}
+
 		private static List<string> GetMainPaths(List<int> instanceIDs)
 		{
 			List<string> list = new List<string>();
@@ -1343,6 +1487,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		internal static int[] DuplicateFolders(int[] instanceIDs)
 		{
 			AssetDatabase.Refresh();
@@ -1378,6 +1523,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private static void DeleteFilter(int filterInstanceID)
 		{
 			if (SavedSearchFilters.GetRootInstanceID() == filterInstanceID)
@@ -1394,6 +1540,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private bool HandleCommandEventsForTreeView()
 		{
 			EventType type = Event.current.type;
@@ -1415,47 +1562,42 @@ namespace UnityEditor
 						{
 							ProjectBrowser.DeleteFilter(selection[0]);
 						}
-						else
+						else if (itemType == ProjectBrowser.ItemType.Asset)
 						{
-							if (itemType == ProjectBrowser.ItemType.Asset)
+							bool flag2 = Event.current.commandName == "SoftDelete";
+							ProjectBrowser.DeleteSelectedAssets(flag2);
+							if (flag2)
 							{
-								bool flag2 = Event.current.commandName == "SoftDelete";
-								ProjectBrowser.DeleteSelectedAssets(flag2);
-								if (flag2)
-								{
-									base.Focus();
-								}
+								base.Focus();
 							}
 						}
 					}
 					GUIUtility.ExitGUI();
 				}
-				else
+				else if (Event.current.commandName == "Duplicate")
 				{
-					if (Event.current.commandName == "Duplicate")
+					if (flag)
 					{
-						if (flag)
+						if (itemType != ProjectBrowser.ItemType.SavedFilter)
 						{
-							if (itemType != ProjectBrowser.ItemType.SavedFilter)
+							if (itemType == ProjectBrowser.ItemType.Asset)
 							{
-								if (itemType == ProjectBrowser.ItemType.Asset)
-								{
-									Event.current.Use();
-									int[] selectedIDs = ProjectBrowser.DuplicateFolders(selection);
-									this.m_FolderTree.SetSelection(selectedIDs, true);
-									GUIUtility.ExitGUI();
-								}
+								Event.current.Use();
+								int[] selectedIDs = ProjectBrowser.DuplicateFolders(selection);
+								this.m_FolderTree.SetSelection(selectedIDs, true);
+								GUIUtility.ExitGUI();
 							}
 						}
-						else
-						{
-							Event.current.Use();
-						}
+					}
+					else
+					{
+						Event.current.Use();
 					}
 				}
 			}
 			return false;
 		}
+
 		private bool HandleCommandEvents()
 		{
 			EventType type = Event.current.type;
@@ -1476,81 +1618,67 @@ namespace UnityEditor
 					}
 					GUIUtility.ExitGUI();
 				}
-				else
+				else if (Event.current.commandName == "Duplicate")
 				{
-					if (Event.current.commandName == "Duplicate")
+					if (flag)
 					{
-						if (flag)
-						{
-							Event.current.Use();
-							ProjectWindowUtil.DuplicateSelectedAssets();
-							GUIUtility.ExitGUI();
-						}
-						else
-						{
-							UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
-							if (filtered.Length != 0)
-							{
-								Event.current.Use();
-							}
-						}
+						Event.current.Use();
+						ProjectWindowUtil.DuplicateSelectedAssets();
+						GUIUtility.ExitGUI();
 					}
 					else
 					{
-						if (Event.current.commandName == "FocusProjectWindow")
+						UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
+						if (filtered.Length != 0)
 						{
-							if (flag)
-							{
-								this.FrameObjectPrivate(Selection.activeInstanceID, true, false);
-								Event.current.Use();
-								base.Focus();
-								GUIUtility.ExitGUI();
-							}
-							else
-							{
-								Event.current.Use();
-							}
-						}
-						else
-						{
-							if (Event.current.commandName == "SelectAll")
-							{
-								if (flag)
-								{
-									this.SelectAll();
-								}
-								Event.current.Use();
-							}
-							else
-							{
-								if (Event.current.commandName == "FrameSelected")
-								{
-									if (flag)
-									{
-										this.FrameObjectPrivate(Selection.activeInstanceID, true, false);
-										Event.current.Use();
-										GUIUtility.ExitGUI();
-									}
-									Event.current.Use();
-								}
-								else
-								{
-									if (Event.current.commandName == "Find")
-									{
-										if (flag)
-										{
-											this.m_FocusSearchField = true;
-										}
-										Event.current.Use();
-									}
-								}
-							}
+							Event.current.Use();
 						}
 					}
+				}
+				else if (Event.current.commandName == "FocusProjectWindow")
+				{
+					if (flag)
+					{
+						this.FrameObjectPrivate(Selection.activeInstanceID, true, false);
+						Event.current.Use();
+						base.Focus();
+						GUIUtility.ExitGUI();
+					}
+					else
+					{
+						Event.current.Use();
+					}
+				}
+				else if (Event.current.commandName == "SelectAll")
+				{
+					if (flag)
+					{
+						this.SelectAll();
+					}
+					Event.current.Use();
+				}
+				else if (Event.current.commandName == "FrameSelected")
+				{
+					if (flag)
+					{
+						this.FrameObjectPrivate(Selection.activeInstanceID, true, false);
+						Event.current.Use();
+						GUIUtility.ExitGUI();
+					}
+					Event.current.Use();
+				}
+				else if (Event.current.commandName == "Find")
+				{
+					if (flag)
+					{
+						this.m_FocusSearchField = true;
+					}
+					Event.current.Use();
 				}
 			}
 			return false;
 		}
+
 		private void SelectAll()
 		{
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
@@ -1561,23 +1689,21 @@ namespace UnityEditor
 				}
 				else
 				{
-					int[] visibleRowIDs = this.m_AssetTree.GetVisibleRowIDs();
-					this.m_AssetTree.SetSelection(visibleRowIDs, false);
-					this.AssetTreeSelectionCallback(visibleRowIDs);
+					int[] rowIDs = this.m_AssetTree.GetRowIDs();
+					this.m_AssetTree.SetSelection(rowIDs, false);
+					this.AssetTreeSelectionCallback(rowIDs);
 				}
+			}
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
+			{
+				this.m_ListArea.SelectAll();
 			}
 			else
 			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
-				{
-					this.m_ListArea.SelectAll();
-				}
-				else
-				{
-					Debug.LogError("Missing implementation for ViewMode " + this.m_ViewMode);
-				}
+				Debug.LogError("Missing implementation for ViewMode " + this.m_ViewMode);
 			}
 		}
+
 		private void RefreshSplittedSelectedPath()
 		{
 			if (ProjectBrowser.s_Styles == null)
@@ -1625,6 +1751,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private float GetBottomBarHeight()
 		{
 			if (this.m_SelectedPathSplitted.Count == 0)
@@ -1637,10 +1764,12 @@ namespace UnityEditor
 			}
 			return 17f * (float)this.m_SelectedPathSplitted.Count;
 		}
+
 		private float GetListHeaderHeight()
 		{
 			return (this.m_SearchFilter.GetState() != SearchFilter.State.EmptySearchFilter) ? 18f : 0f;
 		}
+
 		private void CalculateRects()
 		{
 			float bottomBarHeight = this.GetBottomBarHeight();
@@ -1661,6 +1790,7 @@ namespace UnityEditor
 				this.m_ListHeaderRect = new Rect(this.m_ListAreaRect.x, this.m_ToolbarHeight, this.m_ListAreaRect.width, listHeaderHeight);
 			}
 		}
+
 		private void EndPing()
 		{
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
@@ -1673,6 +1803,7 @@ namespace UnityEditor
 				this.m_ListArea.EndPing();
 			}
 		}
+
 		private void OnEvent()
 		{
 			if (this.m_AssetTree != null)
@@ -1688,6 +1819,7 @@ namespace UnityEditor
 				this.m_ListArea.OnEvent();
 			}
 		}
+
 		private void OnGUI()
 		{
 			if (ProjectBrowser.s_Styles == null)
@@ -1757,9 +1889,10 @@ namespace UnityEditor
 				{
 					Vector2 vector = EditorStyles.label.CalcSize(ProjectBrowser.s_Styles.m_EmptyFolderText);
 					Rect position2 = new Rect(this.m_ListAreaRect.x + 2f + Mathf.Max(0f, (this.m_ListAreaRect.width - vector.x) * 0.5f), this.m_ListAreaRect.y + 10f, vector.x, 20f);
-					EditorGUI.BeginDisabledGroup(true);
-					GUI.Label(position2, ProjectBrowser.s_Styles.m_EmptyFolderText, EditorStyles.label);
-					EditorGUI.EndDisabledGroup();
+					using (new EditorGUI.DisabledScope(true))
+					{
+						GUI.Label(position2, ProjectBrowser.s_Styles.m_EmptyFolderText, EditorStyles.label);
+					}
 				}
 			}
 			this.HandleContextClickInListArea(this.m_ListAreaRect);
@@ -1782,6 +1915,7 @@ namespace UnityEditor
 			}
 			this.HandleCommandEvents();
 		}
+
 		private void HandleContextClickInListArea(Rect listRect)
 		{
 			Event current = Event.current;
@@ -1805,19 +1939,24 @@ namespace UnityEditor
 					}
 				}
 			}
-			else
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && this.m_SearchFilter.GetState() == SearchFilter.State.FolderBrowsing && current.button == 1 && !this.m_ItemSelectedByRightClickThisEvent && this.m_SearchFilter.folders.Length > 0 && listRect.Contains(current.mousePosition))
 			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && this.m_SearchFilter.GetState() == SearchFilter.State.FolderBrowsing && current.button == 1 && !this.m_ItemSelectedByRightClickThisEvent && this.m_SearchFilter.folders.Length > 0 && listRect.Contains(current.mousePosition))
-				{
-					this.m_InternalSelectionChange = true;
-					Selection.instanceIDs = ProjectBrowser.GetFolderInstanceIDs(this.m_SearchFilter.folders);
-				}
+				this.m_InternalSelectionChange = true;
+				Selection.instanceIDs = ProjectBrowser.GetFolderInstanceIDs(this.m_SearchFilter.folders);
 			}
 		}
-		private void AssetTreeViewContextClick(int clickedNodeInstanceID)
+
+		private void AssetTreeViewContextClick(int clickedItemID)
 		{
 			Event current = Event.current;
-			if (clickedNodeInstanceID == 0 && this.m_AssetTree.GetSelection().Length > 0)
+			EditorUtility.DisplayPopupMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), "Assets/", null);
+			current.Use();
+		}
+
+		private void AssetTreeViewContextClickOutsideItems()
+		{
+			Event current = Event.current;
+			if (this.m_AssetTree.GetSelection().Length > 0)
 			{
 				int[] array = new int[0];
 				this.m_AssetTree.SetSelection(array, false);
@@ -1826,25 +1965,24 @@ namespace UnityEditor
 			EditorUtility.DisplayPopupMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), "Assets/", null);
 			current.Use();
 		}
-		private void FolderTreeViewContextClick(int clickedNodeInstanceID)
+
+		private void FolderTreeViewContextClick(int clickedItemID)
 		{
 			Event current = Event.current;
-			if (SavedSearchFilters.IsSavedFilter(clickedNodeInstanceID))
+			if (SavedSearchFilters.IsSavedFilter(clickedItemID))
 			{
-				if (clickedNodeInstanceID != SavedSearchFilters.GetRootInstanceID())
+				if (clickedItemID != SavedSearchFilters.GetRootInstanceID())
 				{
-					ProjectBrowser.SavedFiltersContextMenu.Show(clickedNodeInstanceID);
+					ProjectBrowser.SavedFiltersContextMenu.Show(clickedItemID);
 				}
 			}
 			else
 			{
-				if (clickedNodeInstanceID != 0)
-				{
-					EditorUtility.DisplayPopupMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), "Assets/", null);
-				}
+				EditorUtility.DisplayPopupMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), "Assets/", null);
 			}
 			current.Use();
 		}
+
 		private void AssetTreeDragEnded(int[] draggedInstanceIds, bool draggedItemsFromOwnTreeView)
 		{
 			if (draggedInstanceIds != null && draggedItemsFromOwnTreeView)
@@ -1855,9 +1993,11 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
+
 		private void FolderTreeDragEnded(int[] draggedInstanceIds, bool draggedItemsFromOwnTreeView)
 		{
 		}
+
 		private void TopToolbar()
 		{
 			GUILayout.BeginArea(new Rect(0f, 0f, base.position.width, this.m_ToolbarHeight));
@@ -1882,18 +2022,29 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.EndArea();
 		}
+
 		private void SetOneColumn()
 		{
 			this.SetViewMode(ProjectBrowser.ViewMode.OneColumn);
 		}
+
 		private void SetTwoColumns()
 		{
 			this.SetViewMode(ProjectBrowser.ViewMode.TwoColumns);
 		}
+
 		private void OpenTreeViewTestWindow()
 		{
 			EditorWindow.GetWindow<TreeViewTestWindow>();
 		}
+
+		private void ToggleExpansionAnimationPreference()
+		{
+			bool @bool = EditorPrefs.GetBool("TreeViewExpansionAnimation", false);
+			EditorPrefs.SetBool("TreeViewExpansionAnimation", !@bool);
+			InternalEditorUtility.RequestScriptReload();
+		}
+
 		public virtual void AddItemsToMenu(GenericMenu menu)
 		{
 			if (this.m_EnableOldAssetTree)
@@ -1911,14 +2062,17 @@ namespace UnityEditor
 				}
 				if (Unsupported.IsDeveloperBuild())
 				{
-					menu.AddItem(new GUIContent("Debug TreeView"), false, new GenericMenu.MenuFunction(this.OpenTreeViewTestWindow));
+					menu.AddItem(new GUIContent("DEVELOPER/Open TreeView Test Window..."), false, new GenericMenu.MenuFunction(this.OpenTreeViewTestWindow));
+					menu.AddItem(new GUIContent("DEVELOPER/Use TreeView Expansion Animation"), EditorPrefs.GetBool("TreeViewExpansionAnimation", false), new GenericMenu.MenuFunction(this.ToggleExpansionAnimationPreference));
 				}
 			}
 		}
+
 		private float DrawLocalAssetHeader(Rect r)
 		{
 			return 0f;
 		}
+
 		private void ResizeHandling(float width, float height)
 		{
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
@@ -1935,48 +2089,48 @@ namespace UnityEditor
 			}
 			this.m_LastListWidth = num;
 		}
+
 		private void ButtonSaveFilter()
 		{
-			EditorGUI.BeginDisabledGroup(!this.m_SearchFilter.IsSearching());
-			if (GUILayout.Button(ProjectBrowser.s_Styles.m_SaveFilterContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			using (new EditorGUI.DisabledScope(!this.m_SearchFilter.IsSearching()))
 			{
-				ProjectBrowserColumnOneTreeViewGUI projectBrowserColumnOneTreeViewGUI = this.m_FolderTree.gui as ProjectBrowserColumnOneTreeViewGUI;
-				if (projectBrowserColumnOneTreeViewGUI != null)
+				if (GUILayout.Button(ProjectBrowser.s_Styles.m_SaveFilterContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
 				{
-					bool flag = true;
-					int[] selection = this.m_FolderTree.GetSelection();
-					if (selection.Length == 1)
+					ProjectBrowserColumnOneTreeViewGUI projectBrowserColumnOneTreeViewGUI = this.m_FolderTree.gui as ProjectBrowserColumnOneTreeViewGUI;
+					if (projectBrowserColumnOneTreeViewGUI != null)
 					{
-						int num = selection[0];
-						bool flag2 = SavedSearchFilters.GetRootInstanceID() == num;
-						if (SavedSearchFilters.IsSavedFilter(num) && !flag2)
+						bool flag = true;
+						int[] selection = this.m_FolderTree.GetSelection();
+						if (selection.Length == 1)
 						{
-							flag = false;
-							string title = "Overwrite Filter?";
-							string message = "Do you want to overwrite '" + SavedSearchFilters.GetName(num) + "' or create a new filter?";
-							int num2 = EditorUtility.DisplayDialogComplex(title, message, "Overwrite", "Create", "Cancel");
-							if (num2 == 0)
+							int num = selection[0];
+							bool flag2 = SavedSearchFilters.GetRootInstanceID() == num;
+							if (SavedSearchFilters.IsSavedFilter(num) && !flag2)
 							{
-								SavedSearchFilters.UpdateExistingSavedFilter(num, this.m_SearchFilter, this.listAreaGridSize);
-							}
-							else
-							{
-								if (num2 == 1)
+								flag = false;
+								string title = "Overwrite Filter?";
+								string message = "Do you want to overwrite '" + SavedSearchFilters.GetName(num) + "' or create a new filter?";
+								int num2 = EditorUtility.DisplayDialogComplex(title, message, "Overwrite", "Create", "Cancel");
+								if (num2 == 0)
+								{
+									SavedSearchFilters.UpdateExistingSavedFilter(num, this.m_SearchFilter, this.listAreaGridSize);
+								}
+								else if (num2 == 1)
 								{
 									flag = true;
 								}
 							}
 						}
-					}
-					if (flag)
-					{
-						base.Focus();
-						projectBrowserColumnOneTreeViewGUI.BeginCreateSavedFilter(this.m_SearchFilter);
+						if (flag)
+						{
+							base.Focus();
+							projectBrowserColumnOneTreeViewGUI.BeginCreateSavedFilter(this.m_SearchFilter);
+						}
 					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
 		}
+
 		private void CreateDropdown()
 		{
 			Rect rect = GUILayoutUtility.GetRect(ProjectBrowser.s_Styles.m_CreateDropdownContent, EditorStyles.toolbarDropDown);
@@ -1986,6 +2140,7 @@ namespace UnityEditor
 				EditorUtility.DisplayPopupMenu(rect, "Assets/Create", null);
 			}
 		}
+
 		private void AssetLabelsDropDown()
 		{
 			Rect rect = GUILayoutUtility.GetRect(ProjectBrowser.s_Styles.m_FilterByLabel, EditorStyles.toolbarButton);
@@ -1994,6 +2149,7 @@ namespace UnityEditor
 				PopupWindow.Show(rect, new PopupList(this.m_AssetLabels));
 			}
 		}
+
 		private void TypeDropDown()
 		{
 			Rect rect = GUILayoutUtility.GetRect(ProjectBrowser.s_Styles.m_FilterByType, EditorStyles.toolbarButton);
@@ -2003,6 +2159,7 @@ namespace UnityEditor
 				PopupWindow.Show(last, new PopupList(this.m_ObjectTypes));
 			}
 		}
+
 		private void SearchField()
 		{
 			Rect rect = GUILayoutUtility.GetRect(0f, EditorGUILayout.kLabelFloatMaxW * 1.5f, 16f, 16f, EditorStyles.toolbarSearchField, new GUILayoutOption[]
@@ -2040,6 +2197,7 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void TopBarSearchSettingsChanged()
 		{
 			if (!this.m_SearchFilter.IsSearching())
@@ -2054,22 +2212,16 @@ namespace UnityEditor
 						{
 							GUIUtility.keyboardControl = this.m_TreeViewKeyboardControlID;
 						}
-						else
+						else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
 						{
-							if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
-							{
-								GUIUtility.keyboardControl = this.m_ListKeyboardControlID;
-							}
+							GUIUtility.keyboardControl = this.m_ListKeyboardControlID;
 						}
 					}
 				}
-				else
+				else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && GUIUtility.keyboardControl == 0 && this.m_LastFolders != null && this.m_LastFolders.Length > 0)
 				{
-					if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && GUIUtility.keyboardControl == 0 && this.m_LastFolders != null && this.m_LastFolders.Length > 0)
-					{
-						this.m_SearchFilter.folders = this.m_LastFolders;
-						this.SetFolderSelection(ProjectBrowser.GetFolderInstanceIDs(this.m_LastFolders), true);
-					}
+					this.m_SearchFilter.folders = this.m_LastFolders;
+					this.SetFolderSelection(ProjectBrowser.GetFolderInstanceIDs(this.m_LastFolders), true);
 				}
 			}
 			else
@@ -2078,6 +2230,7 @@ namespace UnityEditor
 			}
 			this.InitListArea();
 		}
+
 		private static int[] GetFolderInstanceIDs(string[] folders)
 		{
 			int[] array = new int[folders.Length];
@@ -2087,6 +2240,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private static string[] GetFolderPathsFromInstanceIDs(int[] instanceIDs)
 		{
 			List<string> list = new List<string>();
@@ -2101,6 +2255,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private void ClearSearch()
 		{
 			this.m_SearchFilter.ClearSearch();
@@ -2109,6 +2264,7 @@ namespace UnityEditor
 			this.m_ObjectTypes.DeselectAll();
 			this.m_DidSelectSearchResult = false;
 		}
+
 		private void FolderTreeSelectionChanged(bool folderWasSelected)
 		{
 			if (folderWasSelected)
@@ -2126,6 +2282,7 @@ namespace UnityEditor
 			this.RefreshSearchText();
 			this.InitListArea();
 		}
+
 		private void IconSizeSlider(Rect r)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -2136,6 +2293,7 @@ namespace UnityEditor
 				this.m_ListArea.gridSize = gridSize;
 			}
 		}
+
 		private void SearchAreaBar()
 		{
 			GUI.Label(this.m_ListHeaderRect, GUIContent.none, ProjectBrowser.s_Styles.topBarBg);
@@ -2153,6 +2311,7 @@ namespace UnityEditor
 			listHeaderRect.width -= this.m_SearchAreaMenuOffset + 7f;
 			listHeaderRect.width = this.m_SearchAreaMenu.OnGUI(listHeaderRect);
 		}
+
 		private void BreadCrumbBar()
 		{
 			if (this.m_ListHeaderRect.height <= 0f)
@@ -2225,14 +2384,12 @@ namespace UnityEditor
 					listHeaderRect.x += 11f;
 				}
 			}
-			else
+			else if (this.m_SearchFilter.folders.Length > 1)
 			{
-				if (this.m_SearchFilter.folders.Length > 1)
-				{
-					GUI.Label(listHeaderRect, GUIContent.Temp("Showing multiple folders..."), EditorStyles.miniLabel);
-				}
+				GUI.Label(listHeaderRect, GUIContent.Temp("Showing multiple folders..."), EditorStyles.miniLabel);
 			}
 		}
+
 		private void BottomBar()
 		{
 			if (this.m_BottomBarRect.height == 0f)
@@ -2258,10 +2415,12 @@ namespace UnityEditor
 			}
 			EditorGUIUtility.SetIconSize(new Vector2(0f, 0f));
 		}
+
 		private void SelectAssetsFolder()
 		{
 			this.ShowFolderContents(ProjectBrowserColumnOneTreeViewDataSource.GetAssetsFolderInstanceID(), true);
 		}
+
 		private string ValidateCreateNewAssetPath(string pathName)
 		{
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns && this.m_SearchFilter.GetState() == SearchFilter.State.FolderBrowsing && this.m_SearchFilter.folders.Length > 0 && !pathName.StartsWith("assets/", StringComparison.CurrentCultureIgnoreCase) && Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets).Length == 0)
@@ -2271,6 +2430,7 @@ namespace UnityEditor
 			}
 			return pathName;
 		}
+
 		internal void BeginPreimportedNameEditing(int instanceID, EndNameEditAction endAction, string pathName, Texture2D icon, string resourceFile)
 		{
 			if (!this.Initialized())
@@ -2286,30 +2446,30 @@ namespace UnityEditor
 					this.SelectAssetsFolder();
 				}
 				pathName = this.ValidateCreateNewAssetPath(pathName);
-				this.m_ListAreaState.m_CreateAssetUtility.BeginNewAssetCreation(instanceID, endAction, pathName, icon, resourceFile);
-				this.ShowFolderContents(AssetDatabase.GetMainAssetInstanceID(this.m_ListAreaState.m_CreateAssetUtility.folder), true);
-				this.m_ListArea.BeginNamingNewAsset(this.m_ListAreaState.m_CreateAssetUtility.originalName, instanceID, isCreatingNewFolder);
-			}
-			else
-			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
+				if (this.m_ListAreaState.m_CreateAssetUtility.BeginNewAssetCreation(instanceID, endAction, pathName, icon, resourceFile))
 				{
-					if (this.m_SearchFilter.IsSearching())
-					{
-						this.ClearSearch();
-					}
-					AssetsTreeViewGUI assetsTreeViewGUI = this.m_AssetTree.gui as AssetsTreeViewGUI;
-					if (assetsTreeViewGUI != null)
-					{
-						assetsTreeViewGUI.BeginCreateNewAsset(instanceID, endAction, pathName, icon, resourceFile);
-					}
-					else
-					{
-						Debug.LogError("Not valid defaultTreeViewGUI!");
-					}
+					this.ShowFolderContents(AssetDatabase.GetMainAssetInstanceID(this.m_ListAreaState.m_CreateAssetUtility.folder), true);
+					this.m_ListArea.BeginNamingNewAsset(this.m_ListAreaState.m_CreateAssetUtility.originalName, instanceID, isCreatingNewFolder);
+				}
+			}
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
+			{
+				if (this.m_SearchFilter.IsSearching())
+				{
+					this.ClearSearch();
+				}
+				AssetsTreeViewGUI assetsTreeViewGUI = this.m_AssetTree.gui as AssetsTreeViewGUI;
+				if (assetsTreeViewGUI != null)
+				{
+					assetsTreeViewGUI.BeginCreateNewAsset(instanceID, endAction, pathName, icon, resourceFile);
+				}
+				else
+				{
+					Debug.LogError("Not valid defaultTreeViewGUI!");
 				}
 			}
 		}
+
 		public void FrameObject(int instanceID, bool ping)
 		{
 			this.FrameObjectPrivate(instanceID, !this.m_IsLocked, ping);
@@ -2318,6 +2478,7 @@ namespace UnityEditor
 				this.m_GrabKeyboardFocusForListArea = true;
 			}
 		}
+
 		private void FrameObjectPrivate(int instanceID, bool frame, bool ping)
 		{
 			if (instanceID == 0 || this.m_ListArea == null)
@@ -2332,41 +2493,41 @@ namespace UnityEditor
 			this.ClearSearch();
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
 			{
-				int num = 0;
-				IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-				if (hierarchyProperty.Find(instanceID, null))
-				{
-					while (hierarchyProperty.Parent())
-					{
-						if (hierarchyProperty.isFolder)
-						{
-							num = hierarchyProperty.instanceID;
-							break;
-						}
-					}
-					if (num == 0)
-					{
-						num = ProjectBrowserColumnOneTreeViewDataSource.GetAssetsFolderInstanceID();
-					}
-				}
-				if (num != 0)
-				{
-					this.m_FolderTree.Frame(num, frame, ping);
-					if (frame)
-					{
-						this.ShowFolderContents(num, true);
-					}
-					this.m_ListArea.Frame(instanceID, frame, ping);
-				}
+				this.FrameObjectInTwoColumnMode(instanceID, frame, ping);
 			}
-			else
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
 			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
-				{
-					this.m_AssetTree.Frame(instanceID, frame, ping);
-				}
+				this.m_AssetTree.Frame(instanceID, frame, ping);
 			}
 		}
+
+		private void FrameObjectInTwoColumnMode(int instanceID, bool frame, bool ping)
+		{
+			int num = 0;
+			string assetPath = AssetDatabase.GetAssetPath(instanceID);
+			if (!string.IsNullOrEmpty(assetPath))
+			{
+				string containingFolder = ProjectWindowUtil.GetContainingFolder(assetPath);
+				if (!string.IsNullOrEmpty(containingFolder))
+				{
+					num = AssetDatabase.GetMainAssetInstanceID(containingFolder);
+				}
+				if (num == 0)
+				{
+					num = ProjectBrowserColumnOneTreeViewDataSource.GetAssetsFolderInstanceID();
+				}
+			}
+			if (num != 0)
+			{
+				this.m_FolderTree.Frame(num, frame, ping);
+				if (frame)
+				{
+					this.ShowFolderContents(num, true);
+				}
+				this.m_ListArea.Frame(instanceID, frame, ping);
+			}
+		}
+
 		private static int[] GetTreeViewFolderSelection()
 		{
 			ProjectBrowser projectBrowser = ProjectBrowser.s_LastInteractedProjectBrowser;
@@ -2376,6 +2537,7 @@ namespace UnityEditor
 			}
 			return new int[0];
 		}
+
 		private int GetProjectBrowserDebugID()
 		{
 			for (int i = 0; i < ProjectBrowser.s_ProjectBrowsers.Count; i++)
@@ -2387,6 +2549,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		internal static void DeleteSelectedAssets(bool askIfSure)
 		{
 			int[] treeViewFolderSelection = ProjectBrowser.GetTreeViewFolderSelection();
@@ -2448,8 +2611,10 @@ namespace UnityEditor
 					AssetDatabase.MoveAssetToTrash(current);
 				}
 				AssetDatabase.StopAssetEditing();
+				Selection.instanceIDs = new int[0];
 			}
 		}
+
 		internal IHierarchyProperty GetHierarchyPropertyUsingFilter(string textFilter)
 		{
 			return FilteredHierarchyProperty.CreateHierarchyPropertyForFilter(new FilteredHierarchy(HierarchyType.Assets)
@@ -2457,26 +2622,29 @@ namespace UnityEditor
 				searchFilter = SearchFilter.CreateSearchFilterFromString(textFilter)
 			});
 		}
+
 		internal void ShowObjectsInList(int[] instanceIDs)
 		{
+			if (!this.Initialized())
+			{
+				this.Init();
+			}
 			if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
 			{
 				this.m_ListArea.ShowObjectsInList(instanceIDs);
 				this.m_FolderTree.SetSelection(new int[0], false);
 			}
-			else
+			else if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
 			{
-				if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
+				int[] instanceIDs2 = Selection.instanceIDs;
+				for (int i = 0; i < instanceIDs2.Length; i++)
 				{
-					int[] instanceIDs2 = Selection.instanceIDs;
-					for (int i = 0; i < instanceIDs2.Length; i++)
-					{
-						int id = instanceIDs2[i];
-						this.m_AssetTree.Frame(id, true, false);
-					}
+					int id = instanceIDs2[i];
+					this.m_AssetTree.Frame(id, true, false);
 				}
 			}
 		}
+
 		private static void ShowSelectedObjectsInLastInteractedProjectBrowser()
 		{
 			if (ProjectBrowser.s_LastInteractedProjectBrowser != null)
@@ -2485,6 +2653,7 @@ namespace UnityEditor
 				ProjectBrowser.s_LastInteractedProjectBrowser.ShowObjectsInList(instanceIDs);
 			}
 		}
+
 		protected virtual void ShowButton(Rect r)
 		{
 			if (ProjectBrowser.s_Styles == null)

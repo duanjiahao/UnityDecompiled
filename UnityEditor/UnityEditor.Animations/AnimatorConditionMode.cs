@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.Animations
 {
 	public enum AnimatorConditionMode

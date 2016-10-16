@@ -1,7 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine.iOS
 {
+	[RequiredByNativeCode]
 	public sealed class ADBannerView
 	{
 		public enum Layout
@@ -19,16 +22,25 @@ namespace UnityEngine.iOS
 			Center = 10,
 			Manual = -1
 		}
+
 		public enum Type
 		{
 			Banner,
 			MediumRect
 		}
+
 		public delegate void BannerWasClickedDelegate();
+
 		public delegate void BannerWasLoadedDelegate();
+
+		public delegate void BannerFailedToLoadDelegate();
+
 		private ADBannerView.Layout _layout;
+
 		private IntPtr _bannerView;
+
 		private static bool _AlwaysFalseDummy;
+
 		public static event ADBannerView.BannerWasClickedDelegate onBannerWasClicked
 		{
 			[MethodImpl(MethodImplOptions.Synchronized)]
@@ -42,6 +54,7 @@ namespace UnityEngine.iOS
 				ADBannerView.onBannerWasClicked = (ADBannerView.BannerWasClickedDelegate)Delegate.Remove(ADBannerView.onBannerWasClicked, value);
 			}
 		}
+
 		public static event ADBannerView.BannerWasLoadedDelegate onBannerWasLoaded
 		{
 			[MethodImpl(MethodImplOptions.Synchronized)]
@@ -55,6 +68,21 @@ namespace UnityEngine.iOS
 				ADBannerView.onBannerWasLoaded = (ADBannerView.BannerWasLoadedDelegate)Delegate.Remove(ADBannerView.onBannerWasLoaded, value);
 			}
 		}
+
+		public static event ADBannerView.BannerFailedToLoadDelegate onBannerFailedToLoad
+		{
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			add
+			{
+				ADBannerView.onBannerFailedToLoad = (ADBannerView.BannerFailedToLoadDelegate)Delegate.Combine(ADBannerView.onBannerFailedToLoad, value);
+			}
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			remove
+			{
+				ADBannerView.onBannerFailedToLoad = (ADBannerView.BannerFailedToLoadDelegate)Delegate.Remove(ADBannerView.onBannerFailedToLoad, value);
+			}
+		}
+
 		public bool loaded
 		{
 			get
@@ -62,6 +90,7 @@ namespace UnityEngine.iOS
 				return ADBannerView.Native_BannerAdLoaded(this._bannerView);
 			}
 		}
+
 		public bool visible
 		{
 			get
@@ -73,6 +102,7 @@ namespace UnityEngine.iOS
 				ADBannerView.Native_ShowBanner(this._bannerView, value);
 			}
 		}
+
 		public ADBannerView.Layout layout
 		{
 			get
@@ -85,6 +115,7 @@ namespace UnityEngine.iOS
 				ADBannerView.Native_LayoutBanner(this._bannerView, (int)this._layout);
 			}
 		}
+
 		public Vector2 position
 		{
 			get
@@ -99,6 +130,7 @@ namespace UnityEngine.iOS
 				ADBannerView.Native_MoveBanner(this._bannerView, pos);
 			}
 		}
+
 		public Vector2 size
 		{
 			get
@@ -108,61 +140,86 @@ namespace UnityEngine.iOS
 				return this.OSToScreenCoords(v);
 			}
 		}
+
 		public ADBannerView(ADBannerView.Type type, ADBannerView.Layout layout)
 		{
 			if (ADBannerView._AlwaysFalseDummy)
 			{
 				ADBannerView.FireBannerWasClicked();
 				ADBannerView.FireBannerWasLoaded();
+				ADBannerView.FireBannerFailedToLoad();
 			}
 			this._bannerView = ADBannerView.Native_CreateBanner((int)type, (int)layout);
 		}
+
+		private static IntPtr Native_CreateBanner(int type, int layout)
+		{
+			IntPtr result;
+			ADBannerView.INTERNAL_CALL_Native_CreateBanner(type, layout, out result);
+			return result;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern IntPtr Native_CreateBanner(int type, int layout);
+		private static extern void INTERNAL_CALL_Native_CreateBanner(int type, int layout, out IntPtr value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Native_ShowBanner(IntPtr view, bool show);
+
 		private static void Native_MoveBanner(IntPtr view, Vector2 pos)
 		{
 			ADBannerView.INTERNAL_CALL_Native_MoveBanner(view, ref pos);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Native_MoveBanner(IntPtr view, ref Vector2 pos);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Native_LayoutBanner(IntPtr view, int layout);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Native_BannerTypeAvailable(int type);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Native_BannerPosition(IntPtr view, out Vector2 pos);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Native_BannerSize(IntPtr view, out Vector2 pos);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Native_BannerAdLoaded(IntPtr view);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Native_BannerAdVisible(IntPtr view);
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Native_DestroyBanner(IntPtr view);
+
 		public static bool IsAvailable(ADBannerView.Type type)
 		{
 			return ADBannerView.Native_BannerTypeAvailable((int)type);
 		}
+
 		~ADBannerView()
 		{
 			ADBannerView.Native_DestroyBanner(this._bannerView);
 		}
+
 		private Vector2 OSToScreenCoords(Vector2 v)
 		{
 			return new Vector2(v.x * (float)Screen.width, v.y * (float)Screen.height);
 		}
+
+		[RequiredByNativeCode]
 		private static void FireBannerWasClicked()
 		{
 			if (ADBannerView.onBannerWasClicked != null)
@@ -170,11 +227,22 @@ namespace UnityEngine.iOS
 				ADBannerView.onBannerWasClicked();
 			}
 		}
+
+		[RequiredByNativeCode]
 		private static void FireBannerWasLoaded()
 		{
 			if (ADBannerView.onBannerWasLoaded != null)
 			{
 				ADBannerView.onBannerWasLoaded();
+			}
+		}
+
+		[RequiredByNativeCode]
+		private static void FireBannerFailedToLoad()
+		{
+			if (ADBannerView.onBannerFailedToLoad != null)
+			{
+				ADBannerView.onBannerFailedToLoad();
 			}
 		}
 	}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects]
@@ -12,26 +13,25 @@ namespace UnityEditor
 		{
 			Branch,
 			BranchDetail,
-			BranchBlend,
 			Frond,
 			Leaf,
-			FacingLeaf,
 			Mesh
 		}
+
 		private string[] speedTreeGeometryTypeString = new string[]
 		{
 			"GEOM_TYPE_BRANCH",
 			"GEOM_TYPE_BRANCH_DETAIL",
-			"GEOM_TYPE_BRANCH_BLEND",
 			"GEOM_TYPE_FROND",
 			"GEOM_TYPE_LEAF",
-			"GEOM_TYPE_FACING_LEAF",
 			"GEOM_TYPE_MESH"
 		};
+
 		private bool ShouldEnableAlphaTest(SpeedTreeMaterialInspector.SpeedTreeGeometryType geomType)
 		{
-			return geomType == SpeedTreeMaterialInspector.SpeedTreeGeometryType.Frond || geomType == SpeedTreeMaterialInspector.SpeedTreeGeometryType.Leaf || geomType == SpeedTreeMaterialInspector.SpeedTreeGeometryType.FacingLeaf;
+			return geomType == SpeedTreeMaterialInspector.SpeedTreeGeometryType.Frond || geomType == SpeedTreeMaterialInspector.SpeedTreeGeometryType.Leaf;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -84,9 +84,8 @@ namespace UnityEditor
 			if (materialProperty2 != null)
 			{
 				list.Remove(materialProperty2);
-				IEnumerable<bool> source = 
-					from t in base.targets
-					select ((Material)t).shaderKeywords.Contains("EFFECT_BUMP");
+				IEnumerable<bool> source = from t in base.targets
+				select ((Material)t).shaderKeywords.Contains("EFFECT_BUMP");
 				bool? flag2 = this.ToggleShaderProperty(materialProperty2, source.First<bool>(), source.Distinct<bool>().Count<bool>() > 1);
 				if (flag2.HasValue)
 				{
@@ -112,9 +111,8 @@ namespace UnityEditor
 					base.ShaderProperty(materialProperty3, materialProperty3.displayName);
 				}
 			}
-			IEnumerable<bool> enumerable = 
-				from t in base.targets
-				select ((Material)t).shaderKeywords.Contains("EFFECT_HUE_VARIATION");
+			IEnumerable<bool> enumerable = from t in base.targets
+			select ((Material)t).shaderKeywords.Contains("EFFECT_HUE_VARIATION");
 			MaterialProperty materialProperty4 = list.Find((MaterialProperty prop) => prop.name == "_HueVariation");
 			if (enumerable != null && materialProperty4 != null)
 			{
@@ -146,12 +144,13 @@ namespace UnityEditor
 			}
 			foreach (MaterialProperty current4 in list)
 			{
-				if ((current4.flags & MaterialProperty.PropFlags.HideInInspector) == MaterialProperty.PropFlags.None)
+				if ((current4.flags & (MaterialProperty.PropFlags.HideInInspector | MaterialProperty.PropFlags.PerRendererData)) == MaterialProperty.PropFlags.None)
 				{
 					base.ShaderProperty(current4, current4.displayName);
 				}
 			}
 		}
+
 		private bool? ToggleShaderProperty(MaterialProperty prop, bool enable, bool hasMixedEnable)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -163,11 +162,12 @@ namespace UnityEditor
 			EditorGUI.showMixedValue = false;
 			bool? result = (!EditorGUI.EndChangeCheck()) ? null : new bool?(enable);
 			GUILayout.Space(-EditorGUIUtility.singleLineHeight);
-			EditorGUI.BeginDisabledGroup(!enable && !hasMixedEnable);
-			EditorGUI.showMixedValue = prop.hasMixedValue;
-			base.ShaderProperty(prop, " ");
-			EditorGUI.showMixedValue = false;
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(!enable && !hasMixedEnable))
+			{
+				EditorGUI.showMixedValue = prop.hasMixedValue;
+				base.ShaderProperty(prop, " ");
+				EditorGUI.showMixedValue = false;
+			}
 			return result;
 		}
 	}

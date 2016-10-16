@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ProjectBrowserColumnOneTreeViewDragging : AssetsTreeViewDragging
@@ -8,6 +10,7 @@ namespace UnityEditor
 		public ProjectBrowserColumnOneTreeViewDragging(TreeView treeView) : base(treeView)
 		{
 		}
+
 		public override void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs)
 		{
 			if (SavedSearchFilters.IsSavedFilter(draggedItem.id) && draggedItem.id == SavedSearchFilters.GetRootInstanceID())
@@ -16,6 +19,7 @@ namespace UnityEditor
 			}
 			ProjectWindowUtil.StartDrag(draggedItem.id, draggedItemIDs);
 		}
+
 		public override DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPos)
 		{
 			if (targetItem == null)
@@ -51,26 +55,23 @@ namespace UnityEditor
 						UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
 						if (objectReferences.Length > 0)
 						{
-							HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-							if (hierarchyProperty.Find(objectReferences[0].GetInstanceID(), null))
+							string assetPath = AssetDatabase.GetAssetPath(objectReferences[0].GetInstanceID());
+							if (!string.IsNullOrEmpty(assetPath))
 							{
+								string name = new DirectoryInfo(assetPath).Name;
 								SearchFilter searchFilter = new SearchFilter();
-								string assetPath = AssetDatabase.GetAssetPath(hierarchyProperty.instanceID);
-								if (!string.IsNullOrEmpty(assetPath))
+								searchFilter.folders = new string[]
 								{
-									searchFilter.folders = new string[]
-									{
-										assetPath
-									};
-									bool addAsChild = targetItem == parentItem;
-									float listAreaGridSize = ProjectBrowserColumnOneTreeViewGUI.GetListAreaGridSize();
-									int activeInstanceID = SavedSearchFilters.AddSavedFilterAfterInstanceID(hierarchyProperty.name, searchFilter, listAreaGridSize, targetItem.id, addAsChild);
-									Selection.activeInstanceID = activeInstanceID;
-								}
-								else
-								{
-									Debug.Log("Could not get asset path from id " + hierarchyProperty.name);
-								}
+									assetPath
+								};
+								bool addAsChild = targetItem == parentItem;
+								float listAreaGridSize = ProjectBrowserColumnOneTreeViewGUI.GetListAreaGridSize();
+								int activeInstanceID = SavedSearchFilters.AddSavedFilterAfterInstanceID(name, searchFilter, listAreaGridSize, targetItem.id, addAsChild);
+								Selection.activeInstanceID = activeInstanceID;
+							}
+							else
+							{
+								Debug.Log("Could not get asset path from id " + objectReferences[0].GetInstanceID());
 							}
 						}
 					}

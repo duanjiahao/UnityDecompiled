@@ -5,6 +5,7 @@ using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetModificationProcessorInternal
@@ -14,8 +15,11 @@ namespace UnityEditor
 			Binary,
 			Text
 		}
+
 		private static IEnumerable<Type> assetModificationProcessors;
+
 		internal static MethodInfo[] isOpenForEditMethods;
+
 		private static IEnumerable<Type> AssetModificationProcessors
 		{
 			get
@@ -30,6 +34,7 @@ namespace UnityEditor
 				return AssetModificationProcessorInternal.assetModificationProcessors;
 			}
 		}
+
 		private static bool CheckArgumentTypes(Type[] types, MethodInfo method)
 		{
 			ParameterInfo[] parameters = method.GetParameters();
@@ -74,6 +79,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private static bool CheckArgumentTypesAndReturnType(Type[] types, MethodInfo method, Type returnType)
 		{
 			if (returnType != method.ReturnType)
@@ -93,6 +99,7 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.CheckArgumentTypes(types, method);
 		}
+
 		private static bool CheckArguments(object[] args, MethodInfo method)
 		{
 			Type[] array = new Type[args.Length];
@@ -102,6 +109,7 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.CheckArgumentTypes(array, method);
 		}
+
 		private static bool CheckArgumentsAndReturnType(object[] args, MethodInfo method, Type returnType)
 		{
 			Type[] array = new Type[args.Length];
@@ -111,6 +119,7 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.CheckArgumentTypesAndReturnType(array, method, returnType);
 		}
+
 		private static void OnWillCreateAsset(string path)
 		{
 			foreach (Type current in AssetModificationProcessorInternal.AssetModificationProcessors)
@@ -129,6 +138,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static void FileModeChanged(string[] assets, UnityEditor.VersionControl.FileMode mode)
 		{
 			if (Provider.enabled && Provider.PromptAndCheckoutIfNeeded(assets, string.Empty))
@@ -136,6 +146,7 @@ namespace UnityEditor
 				Provider.SetFileMode(assets, mode);
 			}
 		}
+
 		private static void OnWillSaveAssets(string[] assets, out string[] assetsThatShouldBeSaved, out string[] assetsThatShouldBeReverted, int explicitlySaveScene)
 		{
 			assetsThatShouldBeReverted = new string[0];
@@ -189,22 +200,24 @@ namespace UnityEditor
 			assets = list.ToArray();
 			if (assets.Length != 0 && !Provider.PromptAndCheckoutIfNeeded(assets, string.Empty))
 			{
-				Debug.LogError("Could not checkout the following files in version control before saving: " + string.Join(", ", assets));
+				Debug.LogError("Could not check out the following files in version control before saving: " + string.Join(", ", assets));
 				assetsThatShouldBeSaved = new string[0];
 				return;
 			}
 		}
+
 		private static void RequireTeamLicense()
 		{
-			if (!InternalEditorUtility.HasPro())
+			if (!InternalEditorUtility.HasTeamLicense())
 			{
-				throw new MethodAccessException("Requires Pro license");
+				throw new MethodAccessException("Requires team license");
 			}
 		}
+
 		private static AssetMoveResult OnWillMoveAsset(string fromPath, string toPath, string[] newPaths, string[] NewMetaPaths)
 		{
 			AssetMoveResult assetMoveResult = AssetMoveResult.DidNotMove;
-			if (!InternalEditorUtility.HasPro())
+			if (!InternalEditorUtility.HasTeamLicense())
 			{
 				return assetMoveResult;
 			}
@@ -228,10 +241,11 @@ namespace UnityEditor
 			}
 			return assetMoveResult;
 		}
+
 		private static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options)
 		{
 			AssetDeleteResult assetDeleteResult = AssetDeleteResult.DidNotDelete;
-			if (!InternalEditorUtility.HasPro())
+			if (!InternalEditorUtility.HasTeamLicense())
 			{
 				return assetDeleteResult;
 			}
@@ -259,6 +273,7 @@ namespace UnityEditor
 			assetDeleteResult = AssetModificationHook.OnWillDeleteAsset(assetPath, options);
 			return assetDeleteResult;
 		}
+
 		internal static MethodInfo[] GetIsOpenForEditMethods()
 		{
 			if (AssetModificationProcessorInternal.isOpenForEditMethods == null)
@@ -287,6 +302,7 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.isOpenForEditMethods;
 		}
+
 		internal static bool IsOpenForEdit(string assetPath, out string message)
 		{
 			message = string.Empty;
@@ -312,6 +328,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		internal static void OnStatusUpdated()
 		{
 			WindowPending.OnStatusUpdated();

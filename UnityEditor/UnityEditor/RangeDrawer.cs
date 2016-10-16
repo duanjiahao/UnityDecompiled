@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomPropertyDrawer(typeof(RangeAttribute))]
@@ -12,16 +13,13 @@ namespace UnityEditor
 			{
 				EditorGUI.Slider(position, property, rangeAttribute.min, rangeAttribute.max, label);
 			}
+			else if (property.propertyType == SerializedPropertyType.Integer)
+			{
+				EditorGUI.IntSlider(position, property, (int)rangeAttribute.min, (int)rangeAttribute.max, label);
+			}
 			else
 			{
-				if (property.propertyType == SerializedPropertyType.Integer)
-				{
-					EditorGUI.IntSlider(position, property, (int)rangeAttribute.min, (int)rangeAttribute.max, label);
-				}
-				else
-				{
-					EditorGUI.LabelField(position, label.text, "Use Range with float or int.");
-				}
+				EditorGUI.LabelField(position, label.text, "Use Range with float or int.");
 			}
 		}
 	}

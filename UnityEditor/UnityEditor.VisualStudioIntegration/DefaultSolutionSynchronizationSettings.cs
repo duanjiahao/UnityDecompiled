@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.VisualStudioIntegration
 {
 	internal class DefaultSolutionSynchronizationSettings : ISolutionSynchronizationSettings
@@ -10,6 +11,7 @@ namespace UnityEditor.VisualStudioIntegration
 				return 9;
 			}
 		}
+
 		public virtual string SolutionTemplate
 		{
 			get
@@ -21,22 +23,23 @@ namespace UnityEditor.VisualStudioIntegration
 					string.Empty,
 					"{1}",
 					"Global",
-					"\tGlobalSection(SolutionConfigurationPlatforms) = preSolution",
-					"\t\tDebug|Any CPU = Debug|Any CPU",
-					"\t\tRelease|Any CPU = Release|Any CPU",
-					"\tEndGlobalSection",
-					"\tGlobalSection(ProjectConfigurationPlatforms) = postSolution",
+					"    GlobalSection(SolutionConfigurationPlatforms) = preSolution",
+					"        Debug|Any CPU = Debug|Any CPU",
+					"        Release|Any CPU = Release|Any CPU",
+					"    EndGlobalSection",
+					"    GlobalSection(ProjectConfigurationPlatforms) = postSolution",
 					"{2}",
-					"\tEndGlobalSection",
-					"\tGlobalSection(SolutionProperties) = preSolution",
-					"\t\tHideSolutionNode = FALSE",
-					"\tEndGlobalSection",
-					"\t{3}",
+					"    EndGlobalSection",
+					"    GlobalSection(SolutionProperties) = preSolution",
+					"        HideSolutionNode = FALSE",
+					"    EndGlobalSection",
+					"{3}",
 					"EndGlobal",
 					string.Empty
-				});
+				}).Replace("    ", "\t");
 			}
 		}
+
 		public virtual string SolutionProjectEntryTemplate
 		{
 			get
@@ -45,22 +48,24 @@ namespace UnityEditor.VisualStudioIntegration
 				{
 					"Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"",
 					"EndProject"
-				});
+				}).Replace("    ", "\t");
 			}
 		}
+
 		public virtual string SolutionProjectConfigurationTemplate
 		{
 			get
 			{
 				return string.Join("\r\n", new string[]
 				{
-					"\t\t{{{0}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU",
-					"\t\t{{{0}}}.Debug|Any CPU.Build.0 = Debug|Any CPU",
-					"\t\t{{{0}}}.Release|Any CPU.ActiveCfg = Release|Any CPU",
-					"\t\t{{{0}}}.Release|Any CPU.Build.0 = Release|Any CPU"
-				});
+					"        {{{0}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU",
+					"        {{{0}}}.Debug|Any CPU.Build.0 = Debug|Any CPU",
+					"        {{{0}}}.Release|Any CPU.ActiveCfg = Release|Any CPU",
+					"        {{{0}}}.Release|Any CPU.Build.0 = Release|Any CPU"
+				}).Replace("    ", "\t");
 			}
 		}
+
 		public virtual string EditorAssemblyPath
 		{
 			get
@@ -68,6 +73,7 @@ namespace UnityEditor.VisualStudioIntegration
 				return "/Managed/UnityEditor.dll";
 			}
 		}
+
 		public virtual string EngineAssemblyPath
 		{
 			get
@@ -75,6 +81,7 @@ namespace UnityEditor.VisualStudioIntegration
 				return "/Managed/UnityEngine.dll";
 			}
 		}
+
 		public virtual string MonoLibFolder
 		{
 			get
@@ -82,6 +89,7 @@ namespace UnityEditor.VisualStudioIntegration
 				return this.FrameworksPath() + "/Mono/lib/mono/unity/";
 			}
 		}
+
 		public virtual string[] Defines
 		{
 			get
@@ -89,6 +97,7 @@ namespace UnityEditor.VisualStudioIntegration
 				return new string[0];
 			}
 		}
+
 		public virtual string GetProjectHeaderTemplate(ScriptingLanguage language)
 		{
 			return string.Join("\r\n", new string[]
@@ -96,54 +105,54 @@ namespace UnityEditor.VisualStudioIntegration
 				"<?xml version=\"1.0\" encoding=\"utf-8\"?>",
 				"<Project ToolsVersion=\"{0}\" DefaultTargets=\"Build\" xmlns=\"{6}\">",
 				"  <PropertyGroup>",
-				"\t<Configuration Condition=\" '$(Configuration)' == '' \">Debug</Configuration>",
-				"\t<Platform Condition=\" '$(Platform)' == '' \">AnyCPU</Platform>",
-				"\t<ProductVersion>{1}</ProductVersion>",
-				"\t<SchemaVersion>2.0</SchemaVersion>",
-				"\t<ProjectGuid>{{{2}}}</ProjectGuid>",
-				"\t<OutputType>Library</OutputType>",
-				"\t<AppDesignerFolder>Properties</AppDesignerFolder>",
-				"\t<RootNamespace></RootNamespace>",
-				"\t<AssemblyName>{7}</AssemblyName>",
-				"\t<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>",
-				"\t<FileAlignment>512</FileAlignment>",
-				"\t<BaseDirectory>Assets</BaseDirectory>",
+				"    <Configuration Condition=\" '$(Configuration)' == '' \">Debug</Configuration>",
+				"    <Platform Condition=\" '$(Platform)' == '' \">AnyCPU</Platform>",
+				"    <ProductVersion>{1}</ProductVersion>",
+				"    <SchemaVersion>2.0</SchemaVersion>",
+				"    <RootNamespace>{8}</RootNamespace>",
+				"    <ProjectGuid>{{{2}}}</ProjectGuid>",
+				"    <OutputType>Library</OutputType>",
+				"    <AppDesignerFolder>Properties</AppDesignerFolder>",
+				"    <AssemblyName>{7}</AssemblyName>",
+				"    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>",
+				"    <FileAlignment>512</FileAlignment>",
+				"    <BaseDirectory>Assets</BaseDirectory>",
 				"  </PropertyGroup>",
 				"  <PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' \">",
-				"\t<DebugSymbols>true</DebugSymbols>",
-				"\t<DebugType>full</DebugType>",
-				"\t<Optimize>false</Optimize>",
-				"\t<OutputPath>Temp\\bin\\Debug\\</OutputPath>",
-				"\t<DefineConstants>DEBUG;TRACE;{5}</DefineConstants>",
-				"\t<ErrorReport>prompt</ErrorReport>",
-				"\t<WarningLevel>4</WarningLevel>",
-				"\t<NoWarn>0169</NoWarn>",
+				"    <DebugSymbols>true</DebugSymbols>",
+				"    <DebugType>full</DebugType>",
+				"    <Optimize>false</Optimize>",
+				"    <OutputPath>Temp\\bin\\Debug\\</OutputPath>",
+				"    <DefineConstants>{5}</DefineConstants>",
+				"    <ErrorReport>prompt</ErrorReport>",
+				"    <WarningLevel>4</WarningLevel>",
+				"    <NoWarn>0169</NoWarn>",
 				"  </PropertyGroup>",
 				"  <PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' \">",
-				"\t<DebugType>pdbonly</DebugType>",
-				"\t<Optimize>true</Optimize>",
-				"\t<OutputPath>Temp\\bin\\Release\\</OutputPath>",
-				"\t<DefineConstants>TRACE</DefineConstants>",
-				"\t<ErrorReport>prompt</ErrorReport>",
-				"\t<WarningLevel>4</WarningLevel>",
-				"\t<NoWarn>0169</NoWarn>",
+				"    <DebugType>pdbonly</DebugType>",
+				"    <Optimize>true</Optimize>",
+				"    <OutputPath>Temp\\bin\\Release\\</OutputPath>",
+				"    <ErrorReport>prompt</ErrorReport>",
+				"    <WarningLevel>4</WarningLevel>",
+				"    <NoWarn>0169</NoWarn>",
 				"  </PropertyGroup>",
 				"  <ItemGroup>",
-				"\t<Reference Include=\"System\" />",
+				"    <Reference Include=\"System\" />",
 				"    <Reference Include=\"System.XML\" />",
-				"\t<Reference Include=\"System.Core\" />",
-				"\t<Reference Include=\"System.Xml.Linq\" />",
-				"\t<Reference Include=\"UnityEngine\">",
-				"\t  <HintPath>{3}</HintPath>",
-				"\t</Reference>",
-				"\t<Reference Include=\"UnityEditor\">",
-				"\t  <HintPath>{4}</HintPath>",
-				"\t</Reference>",
+				"    <Reference Include=\"System.Core\" />",
+				"    <Reference Include=\"System.Xml.Linq\" />",
+				"    <Reference Include=\"UnityEngine\">",
+				"      <HintPath>{3}</HintPath>",
+				"    </Reference>",
+				"    <Reference Include=\"UnityEditor\">",
+				"      <HintPath>{4}</HintPath>",
+				"    </Reference>",
 				"  </ItemGroup>",
 				"  <ItemGroup>",
 				string.Empty
 			});
 		}
+
 		public virtual string GetProjectFooterTemplate(ScriptingLanguage language)
 		{
 			return string.Join("\r\n", new string[]
@@ -151,7 +160,7 @@ namespace UnityEditor.VisualStudioIntegration
 				"  </ItemGroup>",
 				"  <Import Project=\"$(MSBuildToolsPath)\\Microsoft.CSharp.targets\" />",
 				"  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. ",
-				"\t   Other similar extension points exist, see Microsoft.Common.targets.",
+				"       Other similar extension points exist, see Microsoft.Common.targets.",
 				"  <Target Name=\"BeforeBuild\">",
 				"  </Target>",
 				"  <Target Name=\"AfterBuild\">",
@@ -162,6 +171,7 @@ namespace UnityEditor.VisualStudioIntegration
 				string.Empty
 			});
 		}
+
 		protected virtual string FrameworksPath()
 		{
 			return string.Empty;

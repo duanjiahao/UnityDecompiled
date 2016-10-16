@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public static class SceneModeUtility
@@ -10,10 +11,15 @@ namespace UnityEditor
 		{
 			public GUIStyle typeButton = "SearchModeFilter";
 		}
+
 		private static Type s_FocusType;
+
 		private static SceneHierarchyWindow s_HierarchyWindow;
+
 		private static GUIContent s_NoneButtonContent;
+
 		private static SceneModeUtility.Styles s_Styles;
+
 		private static SceneModeUtility.Styles styles
 		{
 			get
@@ -25,6 +31,7 @@ namespace UnityEditor
 				return SceneModeUtility.s_Styles;
 			}
 		}
+
 		public static T[] GetSelectedObjectsOfType<T>(out GameObject[] gameObjects, params Type[] types) where T : UnityEngine.Object
 		{
 			if (types.Length == 0)
@@ -57,6 +64,7 @@ namespace UnityEditor
 			gameObjects = list.ToArray();
 			return list2.ToArray();
 		}
+
 		public static void SearchForType(Type type)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(SceneHierarchyWindow));
@@ -85,6 +93,7 @@ namespace UnityEditor
 				SceneModeUtility.s_FocusType = null;
 			}
 		}
+
 		public static Type SearchBar(params Type[] types)
 		{
 			if (SceneModeUtility.s_NoneButtonContent == null)
@@ -111,16 +120,13 @@ namespace UnityEditor
 				{
 					i2 = (EditorGUIUtility.IconContent("MeshRenderer Icon").image as Texture2D);
 				}
+				else if (type == typeof(Terrain))
+				{
+					i2 = (EditorGUIUtility.IconContent("Terrain Icon").image as Texture2D);
+				}
 				else
 				{
-					if (type == typeof(Terrain))
-					{
-						i2 = (EditorGUIUtility.IconContent("Terrain Icon").image as Texture2D);
-					}
-					else
-					{
-						i2 = AssetPreview.GetMiniTypeThumbnail(type);
-					}
+					i2 = AssetPreview.GetMiniTypeThumbnail(type);
 				}
 				string t = ObjectNames.NicifyVariableName(type.Name) + "s";
 				GUIContent label2 = EditorGUIUtility.TempContent(t, i2);
@@ -133,6 +139,7 @@ namespace UnityEditor
 			EditorGUILayout.EndHorizontal();
 			return SceneModeUtility.s_FocusType;
 		}
+
 		private static bool TypeButton(GUIContent label, bool selected, GUIStyle style)
 		{
 			EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
@@ -140,6 +147,7 @@ namespace UnityEditor
 			EditorGUIUtility.SetIconSize(Vector2.zero);
 			return flag && flag != selected;
 		}
+
 		public static bool StaticFlagField(string label, SerializedProperty property, int flag)
 		{
 			bool flag2 = (property.intValue & flag) != 0;
@@ -158,6 +166,7 @@ namespace UnityEditor
 			}
 			return flag4;
 		}
+
 		public static bool SetStaticFlags(UnityEngine.Object[] targetObjects, int changedFlags, bool flagValue)
 		{
 			bool flag = changedFlags == -1;
@@ -187,6 +196,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private static void GetObjectsRecurse(Transform root, List<GameObject> arr)
 		{
 			arr.Add(root.gameObject);
@@ -195,6 +205,7 @@ namespace UnityEditor
 				SceneModeUtility.GetObjectsRecurse(root2, arr);
 			}
 		}
+
 		public static GameObject[] GetObjects(UnityEngine.Object[] gameObjects, bool includeChildren)
 		{
 			List<GameObject> list = new List<GameObject>();

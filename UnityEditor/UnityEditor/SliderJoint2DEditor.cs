@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(SliderJoint2D))]
@@ -12,10 +13,10 @@ namespace UnityEditor
 			{
 				return;
 			}
-			Vector3 vector = Joint2DEditorBase.TransformPoint(sliderJoint2D.transform, sliderJoint2D.anchor);
+			Vector3 vector = Joint2DEditor.TransformPoint(sliderJoint2D.transform, sliderJoint2D.anchor);
 			Vector3 vector2 = vector;
 			Vector3 vector3 = vector;
-			Vector3 vector4 = Joint2DEditorBase.RotateVector2(Vector3.right, -sliderJoint2D.angle - sliderJoint2D.transform.eulerAngles.z);
+			Vector3 vector4 = Joint2DEditor.RotateVector2(Vector3.right, -sliderJoint2D.angle - sliderJoint2D.transform.eulerAngles.z);
 			Handles.color = Color.green;
 			if (sliderJoint2D.useLimits)
 			{
@@ -24,8 +25,8 @@ namespace UnityEditor
 				Vector3 a = Vector3.Cross(vector4, Vector3.forward);
 				float d = HandleUtility.GetHandleSize(vector2) * 0.16f;
 				float d2 = HandleUtility.GetHandleSize(vector3) * 0.16f;
-				Joint2DEditorBase.DrawAALine(vector2 + a * d, vector2 - a * d);
-				Joint2DEditorBase.DrawAALine(vector3 + a * d2, vector3 - a * d2);
+				Joint2DEditor.DrawAALine(vector2 + a * d, vector2 - a * d);
+				Joint2DEditor.DrawAALine(vector3 + a * d2, vector3 - a * d2);
 			}
 			else
 			{
@@ -33,7 +34,7 @@ namespace UnityEditor
 				vector2 += vector4;
 				vector3 -= vector4;
 			}
-			Joint2DEditorBase.DrawAALine(vector2, vector3);
+			Joint2DEditor.DrawAALine(vector2, vector3);
 			base.OnSceneGUI();
 		}
 	}

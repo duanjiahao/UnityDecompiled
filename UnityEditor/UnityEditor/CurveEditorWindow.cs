@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -8,22 +10,39 @@ namespace UnityEditor
 		internal class Styles
 		{
 			public GUIStyle curveEditorBackground = "PopupCurveEditorBackground";
+
 			public GUIStyle miniToolbarPopup = "MiniToolbarPopup";
+
 			public GUIStyle miniToolbarButton = "MiniToolbarButtonLeft";
+
 			public GUIStyle curveSwatch = "PopupCurveEditorSwatch";
+
 			public GUIStyle curveSwatchArea = "PopupCurveSwatchBackground";
+
 			public GUIStyle curveWrapPopup = "PopupCurveDropdown";
 		}
+
 		private const int kPresetsHeight = 46;
+
+		private static GUIContent s_WrapModeMenuIcon;
+
 		private static CurveEditorWindow s_SharedCurveEditor;
+
 		private CurveEditor m_CurveEditor;
+
 		private AnimationCurve m_Curve;
+
 		private Color m_Color;
+
 		private CurvePresetsContentsForPopupWindow m_CurvePresets;
+
 		private GUIContent m_GUIContent = new GUIContent();
+
 		[SerializeField]
 		private GUIView delegateView;
+
 		internal static CurveEditorWindow.Styles ms_Styles;
+
 		public static CurveEditorWindow instance
 		{
 			get
@@ -35,6 +54,7 @@ namespace UnityEditor
 				return CurveEditorWindow.s_SharedCurveEditor;
 			}
 		}
+
 		public string currentPresetLibrary
 		{
 			get
@@ -48,6 +68,7 @@ namespace UnityEditor
 				this.m_CurvePresets.currentPresetLibrary = value;
 			}
 		}
+
 		public static AnimationCurve curve
 		{
 			get
@@ -67,6 +88,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static Color color
 		{
 			get
@@ -79,6 +101,7 @@ namespace UnityEditor
 				CurveEditorWindow.instance.RefreshShownCurves();
 			}
 		}
+
 		public static bool visible
 		{
 			get
@@ -86,6 +109,7 @@ namespace UnityEditor
 				return CurveEditorWindow.s_SharedCurveEditor != null;
 			}
 		}
+
 		private CurveLibraryType curveLibraryType
 		{
 			get
@@ -97,12 +121,18 @@ namespace UnityEditor
 				return CurveLibraryType.NormalizedZeroToOne;
 			}
 		}
+
+		static CurveEditorWindow()
+		{
+			CurveEditorWindow.s_WrapModeMenuIcon = EditorGUIUtility.IconContent("AnimationWrapModeMenu");
+		}
+
 		private void OnEnable()
 		{
 			CurveEditorWindow.s_SharedCurveEditor = this;
 			this.Init(null);
-			this.m_CurveEditor.OnEnable();
 		}
+
 		private void Init(CurveEditorSettings settings)
 		{
 			this.m_CurveEditor = new CurveEditor(this.GetCurveEditorRect(), this.GetCurveWrapperArray(), true);
@@ -128,6 +158,7 @@ namespace UnityEditor
 			}
 			this.m_CurveEditor.FrameSelected(horizontally, vertically);
 		}
+
 		private bool GetNormalizationRect(out Rect normalizationRect)
 		{
 			normalizationRect = default(Rect);
@@ -138,6 +169,7 @@ namespace UnityEditor
 			normalizationRect = new Rect(this.m_CurveEditor.settings.hRangeMin, this.m_CurveEditor.settings.vRangeMin, this.m_CurveEditor.settings.hRangeMax - this.m_CurveEditor.settings.hRangeMin, this.m_CurveEditor.settings.vRangeMax - this.m_CurveEditor.settings.vRangeMin);
 			return true;
 		}
+
 		private static Keyframe[] CopyAndScaleCurveKeys(Keyframe[] orgKeys, Rect rect, bool realToNormalized)
 		{
 			if (rect.width == 0f || rect.height == 0f || float.IsInfinity(rect.width) || float.IsInfinity(rect.height))
@@ -164,6 +196,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private void InitCurvePresets()
 		{
 			if (this.m_CurvePresets == null)
@@ -192,10 +225,12 @@ namespace UnityEditor
 				this.m_CurvePresets.InitIfNeeded();
 			}
 		}
+
 		private void OnDestroy()
 		{
 			this.m_CurvePresets.GetPresetLibraryEditor().UnloadUsedLibraries();
 		}
+
 		private void OnDisable()
 		{
 			this.m_CurveEditor.OnDisable();
@@ -203,27 +238,27 @@ namespace UnityEditor
 			{
 				CurveEditorWindow.s_SharedCurveEditor = null;
 			}
-			else
+			else if (!this.Equals(CurveEditorWindow.s_SharedCurveEditor))
 			{
-				if (!this.Equals(CurveEditorWindow.s_SharedCurveEditor))
-				{
-					throw new ApplicationException("s_SharedCurveEditor does not equal this");
-				}
+				throw new ApplicationException("s_SharedCurveEditor does not equal this");
 			}
 		}
+
 		private void RefreshShownCurves()
 		{
 			this.m_CurveEditor.animationCurves = this.GetCurveWrapperArray();
 		}
+
 		public void Show(GUIView viewToUpdate, CurveEditorSettings settings)
 		{
 			this.delegateView = viewToUpdate;
 			this.Init(settings);
 			base.ShowAuxWindow();
-			base.title = "Curve";
+			base.titleContent = new GUIContent("Curve");
 			base.minSize = new Vector2(240f, 286f);
 			base.maxSize = new Vector2(10000f, 10000f);
 		}
+
 		private CurveWrapper[] GetCurveWrapperArray()
 		{
 			if (this.m_Curve == null)
@@ -243,10 +278,12 @@ namespace UnityEditor
 				curveWrapper
 			};
 		}
+
 		private Rect GetCurveEditorRect()
 		{
 			return new Rect(0f, 0f, base.position.width, base.position.height - 46f);
 		}
+
 		internal static Keyframe[] GetLinearKeys()
 		{
 			Keyframe[] array = new Keyframe[]
@@ -262,6 +299,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		internal static Keyframe[] GetLinearMirrorKeys()
 		{
 			Keyframe[] array = new Keyframe[]
@@ -277,6 +315,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		internal static Keyframe[] GetEaseInKeys()
 		{
 			Keyframe[] result = new Keyframe[]
@@ -287,6 +326,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static Keyframe[] GetEaseInMirrorKeys()
 		{
 			Keyframe[] result = new Keyframe[]
@@ -297,6 +337,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static Keyframe[] GetEaseOutKeys()
 		{
 			Keyframe[] result = new Keyframe[]
@@ -307,6 +348,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static Keyframe[] GetEaseOutMirrorKeys()
 		{
 			Keyframe[] result = new Keyframe[]
@@ -317,6 +359,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static Keyframe[] GetEaseInOutKeys()
 		{
 			Keyframe[] result = new Keyframe[]
@@ -327,6 +370,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static Keyframe[] GetEaseInOutMirrorKeys()
 		{
 			Keyframe[] result = new Keyframe[]
@@ -337,6 +381,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static Keyframe[] GetConstantKeys(float value)
 		{
 			Keyframe[] result = new Keyframe[]
@@ -347,6 +392,7 @@ namespace UnityEditor
 			CurveEditorWindow.SetSmoothEditable(ref result);
 			return result;
 		}
+
 		internal static void SetSmoothEditable(ref Keyframe[] keys)
 		{
 			for (int i = 0; i < keys.Length; i++)
@@ -356,6 +402,7 @@ namespace UnityEditor
 				CurveUtility.SetKeyTangentMode(ref keys[i], 1, TangentMode.Editable);
 			}
 		}
+
 		private void OnGUI()
 		{
 			bool flag = Event.current.type == EventType.MouseUp;
@@ -415,14 +462,12 @@ namespace UnityEditor
 				this.DoUpdateCurve(false);
 				this.SendEvent("CurveChangeCompleted", true);
 			}
-			else
+			else if (Event.current.type != EventType.Layout && Event.current.type != EventType.Repaint)
 			{
-				if (Event.current.type != EventType.Layout && Event.current.type != EventType.Repaint)
-				{
-					this.DoUpdateCurve(true);
-				}
+				this.DoUpdateCurve(true);
 			}
 		}
+
 		private void PresetDropDown(Rect rect)
 		{
 			if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText) && this.m_Curve != null)
@@ -450,6 +495,7 @@ namespace UnityEditor
 				PopupWindow.Show(rect, this.m_CurvePresets);
 			}
 		}
+
 		private void ValidateCurveLibraryTypeAndScale()
 		{
 			Rect rect;
@@ -460,18 +506,17 @@ namespace UnityEditor
 					Debug.LogError("When having a normalize rect we should be using curve library type: NormalizedZeroToOne (normalizationRect: " + rect + ")");
 				}
 			}
-			else
+			else if (this.curveLibraryType != CurveLibraryType.Unbounded)
 			{
-				if (this.curveLibraryType != CurveLibraryType.Unbounded)
-				{
-					Debug.LogError("When NOT having a normalize rect we should be using library type: Unbounded");
-				}
+				Debug.LogError("When NOT having a normalize rect we should be using library type: Unbounded");
 			}
 		}
+
 		public void UpdateCurve()
 		{
 			this.DoUpdateCurve(false);
 		}
+
 		private void DoUpdateCurve(bool exitGUI)
 		{
 			if (this.m_CurveEditor.animationCurves.Length > 0 && this.m_CurveEditor.animationCurves[0] != null && this.m_CurveEditor.animationCurves[0].changed)
@@ -480,40 +525,92 @@ namespace UnityEditor
 				this.SendEvent("CurveChanged", exitGUI);
 			}
 		}
+
 		private void DoWrapperPopups()
 		{
-			if (this.m_Curve != null && this.m_Curve.length >= 2)
+			if (this.m_Curve != null && this.m_Curve.length >= 2 && this.m_Curve.preWrapMode != WrapMode.Default)
 			{
 				Color contentColor = GUI.contentColor;
 				GUI.contentColor = Color.white;
-				float num = 60f;
-				Keyframe keyframe = this.m_Curve.keys[0];
-				Vector3 lhs = new Vector3(keyframe.time, keyframe.value);
-				lhs = this.m_CurveEditor.DrawingToViewTransformPoint(lhs);
-				Rect position = new Rect(lhs.x - num + 30f, lhs.y, num, 17f);
+				Keyframe key = this.m_Curve.keys[0];
 				WrapMode wrapMode = (this.m_Curve == null) ? WrapMode.Default : this.m_Curve.preWrapMode;
-				wrapMode = (WrapMode)EditorGUI.EnumPopup(position, (WrapModeFixedCurve)wrapMode, CurveEditorWindow.ms_Styles.curveWrapPopup);
+				wrapMode = this.WrapModeIconPopup(key, wrapMode, -1.5f);
 				if (this.m_Curve != null && wrapMode != this.m_Curve.preWrapMode)
 				{
 					this.m_Curve.preWrapMode = wrapMode;
 					this.RefreshShownCurves();
 					this.SendEvent("CurveChanged", true);
 				}
-				keyframe = this.m_Curve.keys[this.m_Curve.length - 1];
-				lhs = new Vector3(keyframe.time, keyframe.value);
-				lhs = this.m_CurveEditor.DrawingToViewTransformPoint(lhs);
-				position = new Rect(lhs.x - 30f, lhs.y, num, 17f);
-				wrapMode = ((this.m_Curve == null) ? WrapMode.Default : this.m_Curve.postWrapMode);
-				wrapMode = (WrapMode)EditorGUI.EnumPopup(position, (WrapModeFixedCurve)wrapMode, CurveEditorWindow.ms_Styles.curveWrapPopup);
-				if (this.m_Curve != null && wrapMode != this.m_Curve.postWrapMode)
+				Keyframe key2 = this.m_Curve.keys[this.m_Curve.length - 1];
+				WrapMode wrapMode2 = (this.m_Curve == null) ? WrapMode.Default : this.m_Curve.postWrapMode;
+				wrapMode2 = this.WrapModeIconPopup(key2, wrapMode2, 0.5f);
+				if (this.m_Curve != null && wrapMode2 != this.m_Curve.postWrapMode)
 				{
-					this.m_Curve.postWrapMode = wrapMode;
+					this.m_Curve.postWrapMode = wrapMode2;
 					this.RefreshShownCurves();
 					this.SendEvent("CurveChanged", true);
 				}
 				GUI.contentColor = contentColor;
 			}
 		}
+
+		private WrapMode WrapModeIconPopup(Keyframe key, WrapMode oldWrap, float hOffset)
+		{
+			float num = (float)CurveEditorWindow.s_WrapModeMenuIcon.image.width;
+			Vector3 lhs = new Vector3(key.time, key.value);
+			lhs = this.m_CurveEditor.DrawingToViewTransformPoint(lhs);
+			Rect position = new Rect(lhs.x + num * hOffset, lhs.y, num, num);
+			Enum[] array = Enum.GetValues(typeof(WrapModeFixedCurve)).Cast<Enum>().ToArray<Enum>();
+			string[] texts = (from x in Enum.GetNames(typeof(WrapModeFixedCurve))
+			select ObjectNames.NicifyVariableName(x)).ToArray<string>();
+			int selected = Array.IndexOf<Enum>(array, (WrapModeFixedCurve)oldWrap);
+			int controlID = GUIUtility.GetControlID("WrapModeIconPopup".GetHashCode(), EditorGUIUtility.native, position);
+			int selectedValueForControl = EditorGUI.PopupCallbackInfo.GetSelectedValueForControl(controlID, selected);
+			GUIContent[] options = EditorGUIUtility.TempContent(texts);
+			Event current = Event.current;
+			EventType type = current.type;
+			switch (type)
+			{
+			case EventType.KeyDown:
+				if (current.MainActionKeyForControl(controlID))
+				{
+					if (Application.platform == RuntimePlatform.OSXEditor)
+					{
+						position.y = position.y - (float)(selectedValueForControl * 16) - 19f;
+					}
+					EditorGUI.PopupCallbackInfo.instance = new EditorGUI.PopupCallbackInfo(controlID);
+					EditorUtility.DisplayCustomMenu(position, options, selectedValueForControl, new EditorUtility.SelectMenuItemFunction(EditorGUI.PopupCallbackInfo.instance.SetEnumValueDelegate), null);
+					current.Use();
+				}
+				goto IL_20E;
+			case EventType.KeyUp:
+			case EventType.ScrollWheel:
+				IL_106:
+				if (type != EventType.MouseDown)
+				{
+					goto IL_20E;
+				}
+				if (current.button == 0 && position.Contains(current.mousePosition))
+				{
+					if (Application.platform == RuntimePlatform.OSXEditor)
+					{
+						position.y = position.y - (float)(selectedValueForControl * 16) - 19f;
+					}
+					EditorGUI.PopupCallbackInfo.instance = new EditorGUI.PopupCallbackInfo(controlID);
+					EditorUtility.DisplayCustomMenu(position, options, selectedValueForControl, new EditorUtility.SelectMenuItemFunction(EditorGUI.PopupCallbackInfo.instance.SetEnumValueDelegate), null);
+					GUIUtility.keyboardControl = controlID;
+					current.Use();
+				}
+				goto IL_20E;
+			case EventType.Repaint:
+				GUIStyle.none.Draw(position, CurveEditorWindow.s_WrapModeMenuIcon, controlID, false);
+				goto IL_20E;
+			}
+			goto IL_106;
+			IL_20E:
+			return (WrapMode)array[selectedValueForControl];
+		}
+
 		private void SendEvent(string eventName, bool exitGUI)
 		{
 			if (this.delegateView)

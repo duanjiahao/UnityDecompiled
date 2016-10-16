@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -11,25 +12,44 @@ namespace UnityEditor
 		private class Constants
 		{
 			public GUIStyle ButtonLeft = "ButtonLeft";
+
 			public GUIStyle ButtonMiddle = "ButtonMid";
+
 			public GUIStyle ButtonRight = "ButtonRight";
+
 			public GUIStyle EntrySelected = "ServerUpdateChangesetOn";
+
 			public GUIStyle EntryNormal = "ServerUpdateInfo";
+
 			public GUIStyle lvHeader = "OL title";
+
 			public GUIStyle selected = "ServerUpdateChangesetOn";
+
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle button = "Button";
+
 			public GUIStyle bigButton = "LargeButton";
 		}
+
 		private ListViewState lv1 = new ListViewState();
+
 		private ListViewState lv2 = new ListViewState();
+
 		private bool[] selectedLV1Items;
+
 		private bool[] selectedLV2Items;
+
 		private bool[] deletionConflict;
+
 		private int initialSelectedLV1Item = -1;
+
 		private int initialSelectedLV2Item = -1;
+
 		private bool lv1HasSelection;
+
 		private bool lv2HasSelection;
+
 		private SplitterState lvHeaderSplit1 = new SplitterState(new float[]
 		{
 			20f,
@@ -39,6 +59,7 @@ namespace UnityEditor
 			100,
 			100
 		}, null);
+
 		private SplitterState lvHeaderSplit2 = new SplitterState(new float[]
 		{
 			20f,
@@ -48,6 +69,7 @@ namespace UnityEditor
 			100,
 			100
 		}, null);
+
 		private static string[] conflictButtonTexts = new string[]
 		{
 			"Skip Asset",
@@ -56,31 +78,49 @@ namespace UnityEditor
 			"Merge",
 			"Unresolved"
 		};
+
 		private static string[] nameConflictButtonTexts = new string[]
 		{
 			"Rename Local Asset",
 			"Rename Server Asset"
 		};
+
 		private string[] dropDownMenuItems = new string[]
 		{
 			"Compare",
 			"Compare Binary"
 		};
+
 		private string[] downloadConflicts = new string[0];
+
 		private string[] nameConflicts = new string[0];
+
 		private string[] dConflictPaths = new string[0];
+
 		private string[] dNamingPaths = new string[0];
+
 		private DownloadResolution[] downloadResolutions = new DownloadResolution[0];
+
 		private NameConflictResolution[] namingResolutions = new NameConflictResolution[0];
+
 		private int downloadConflictsToResolve;
+
 		private bool showDownloadConflicts;
+
 		private bool showNamingConflicts;
+
 		private bool mySelection;
+
 		private bool enableContinueButton;
+
 		private bool enableMergeButton = true;
+
 		private bool splittersOk;
+
 		private Vector2 iconSize = new Vector2(16f, 16f);
+
 		private ASUpdateConflictResolveWindow.Constants constants;
+
 		private string[] downloadResolutionString = new string[]
 		{
 			"Unresolved",
@@ -89,12 +129,14 @@ namespace UnityEditor
 			"Ignore Server Changes",
 			"Merge"
 		};
+
 		private string[] namingResolutionString = new string[]
 		{
 			"Unresolved",
 			"Rename Local Asset",
 			"Rename Server Asset"
 		};
+
 		public ASUpdateConflictResolveWindow(string[] conflicting)
 		{
 			this.downloadConflictsToResolve = 0;
@@ -159,18 +201,22 @@ namespace UnityEditor
 			this.selectedLV2Items = new bool[this.nameConflicts.Length];
 			this.DoSelectionChange();
 		}
+
 		public string[] GetDownloadConflicts()
 		{
 			return this.downloadConflicts;
 		}
+
 		public string[] GetNameConflicts()
 		{
 			return this.nameConflicts;
 		}
+
 		public bool CanContinue()
 		{
 			return this.enableContinueButton;
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -178,16 +224,14 @@ namespace UnityEditor
 				string text = this.dropDownMenuItems[selected];
 				if (text != null)
 				{
-					if (ASUpdateConflictResolveWindow.<>f__switch$map10 == null)
+					if (ASUpdateConflictResolveWindow.<>f__switch$map13 == null)
 					{
-						ASUpdateConflictResolveWindow.<>f__switch$map10 = new Dictionary<string, int>(2)
+						ASUpdateConflictResolveWindow.<>f__switch$map13 = new Dictionary<string, int>(2)
 						{
-
 							{
 								"Compare",
 								0
 							},
-
 							{
 								"Compare Binary",
 								1
@@ -195,7 +239,7 @@ namespace UnityEditor
 						};
 					}
 					int num;
-					if (ASUpdateConflictResolveWindow.<>f__switch$map10.TryGetValue(text, out num))
+					if (ASUpdateConflictResolveWindow.<>f__switch$map13.TryGetValue(text, out num))
 					{
 						if (num != 0)
 						{
@@ -212,6 +256,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ResolveSelectedDownloadConflicts(DownloadResolution res)
 		{
 			int num = -1;
@@ -259,6 +304,7 @@ namespace UnityEditor
 				EditorUtility.DisplayDialog("Some conflicting changes cannot be merged", "Notice that not all selected changes where selected for merging. This happened because not all of them can be merged (e.g. assets are binary or deleted).", "OK");
 			}
 		}
+
 		private void ResolveSelectedNamingConflicts(NameConflictResolution res)
 		{
 			if (res != NameConflictResolution.Unresolved)
@@ -279,6 +325,7 @@ namespace UnityEditor
 				this.enableContinueButton = (this.downloadConflictsToResolve == 0);
 			}
 		}
+
 		private bool DoShowDiff(bool binary)
 		{
 			List<string> list = new List<string>();
@@ -300,6 +347,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private string[] GetSelectedGUIDs()
 		{
 			List<string> list = new List<string>();
@@ -312,6 +360,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private string[] GetSelectedNamingGUIDs()
 		{
 			List<string> list = new List<string>();
@@ -324,6 +373,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private bool HasTrue(ref bool[] array)
 		{
 			for (int i = 0; i < array.Length; i++)
@@ -335,6 +385,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void DoSelectionChange()
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -360,6 +411,7 @@ namespace UnityEditor
 			this.lv2HasSelection = this.HasTrue(ref this.selectedLV2Items);
 			this.enableMergeButton = this.AtLeastOneSelectedAssetCanBeMerged();
 		}
+
 		public void OnSelectionChange(ASUpdateWindow parentWin)
 		{
 			if (!this.mySelection)
@@ -372,6 +424,7 @@ namespace UnityEditor
 				this.mySelection = false;
 			}
 		}
+
 		private bool AtLeastOneSelectedAssetCanBeMerged()
 		{
 			for (int i = 0; i < this.downloadConflicts.Length; i++)
@@ -383,6 +436,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void DoDownloadConflictsGUI()
 		{
 			bool enabled = GUI.enabled;
@@ -440,45 +494,39 @@ namespace UnityEditor
 						flag |= ListViewGUILayout.MultiSelection(row, this.lv1.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
 					}
 				}
-				else
+				else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 				{
-					if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+					if (Event.current.clickCount == 2 && !AssetServer.AssetIsDir(this.downloadConflicts[listViewElement.row]))
 					{
-						if (Event.current.clickCount == 2 && !AssetServer.AssetIsDir(this.downloadConflicts[listViewElement.row]))
-						{
-							this.DoShowDiff(false);
-							GUIUtility.ExitGUI();
-						}
-						else
-						{
-							if (!this.selectedLV1Items[listViewElement.row] || shift || actionKey)
-							{
-								flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
-							}
-							this.lv1.row = listViewElement.row;
-						}
+						this.DoShowDiff(false);
+						GUIUtility.ExitGUI();
 					}
 					else
 					{
-						if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+						if (!this.selectedLV1Items[listViewElement.row] || shift || actionKey)
 						{
-							if (!this.selectedLV1Items[listViewElement.row])
-							{
-								flag = true;
-								for (int i = 0; i < this.selectedLV1Items.Length; i++)
-								{
-									this.selectedLV1Items[i] = false;
-								}
-								this.lv1.selectionChanged = true;
-								this.selectedLV1Items[listViewElement.row] = true;
-								this.lv1.row = listViewElement.row;
-							}
-							GUIUtility.hotControl = 0;
-							Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-							EditorUtility.DisplayCustomMenu(position, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
-							Event.current.Use();
+							flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
 						}
+						this.lv1.row = listViewElement.row;
 					}
+				}
+				else if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+				{
+					if (!this.selectedLV1Items[listViewElement.row])
+					{
+						flag = true;
+						for (int i = 0; i < this.selectedLV1Items.Length; i++)
+						{
+							this.selectedLV1Items[i] = false;
+						}
+						this.lv1.selectionChanged = true;
+						this.selectedLV1Items[listViewElement.row] = true;
+						this.lv1.row = listViewElement.row;
+					}
+					GUIUtility.hotControl = 0;
+					Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+					EditorUtility.DisplayCustomMenu(position, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+					Event.current.Use();
 				}
 				GUILayout.Label(this.downloadResolutionString[(int)this.downloadResolutions[listViewElement.row]], new GUILayoutOption[]
 				{
@@ -506,29 +554,23 @@ namespace UnityEditor
 				{
 					Event.current.Use();
 				}
-				else
+				else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
 				{
-					if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
+					for (int j = 0; j < this.selectedLV1Items.Length; j++)
 					{
-						for (int j = 0; j < this.selectedLV1Items.Length; j++)
-						{
-							this.selectedLV1Items[j] = true;
-						}
-						flag = true;
-						Event.current.Use();
+						this.selectedLV1Items[j] = true;
 					}
+					flag = true;
+					Event.current.Use();
 				}
 				if (this.lv1.selectionChanged && !actionKey)
 				{
 					flag |= ListViewGUILayout.MultiSelection(row, this.lv1.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
 				}
-				else
+				else if (GUIUtility.keyboardControl == this.lv1.ID && Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && !AssetServer.AssetIsDir(this.downloadConflicts[this.lv1.row]))
 				{
-					if (GUIUtility.keyboardControl == this.lv1.ID && Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && !AssetServer.AssetIsDir(this.downloadConflicts[this.lv1.row]))
-					{
-						this.DoShowDiff(false);
-						GUIUtility.ExitGUI();
-					}
+					this.DoShowDiff(false);
+					GUIUtility.ExitGUI();
 				}
 			}
 			if (this.lv1.selectionChanged || flag)
@@ -539,6 +581,7 @@ namespace UnityEditor
 				this.enableMergeButton = this.AtLeastOneSelectedAssetCanBeMerged();
 			}
 		}
+
 		private void DoNamingConflictsGUI()
 		{
 			bool enabled = GUI.enabled;
@@ -585,16 +628,13 @@ namespace UnityEditor
 						flag |= ListViewGUILayout.MultiSelection(row, this.lv2.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
 					}
 				}
-				else
+				else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 				{
-					if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+					if (!this.selectedLV2Items[listViewElement.row] || shift || actionKey)
 					{
-						if (!this.selectedLV2Items[listViewElement.row] || shift || actionKey)
-						{
-							flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
-						}
-						this.lv2.row = listViewElement.row;
+						flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
 					}
+					this.lv2.row = listViewElement.row;
 				}
 				GUILayout.Label(this.namingResolutionString[(int)this.namingResolutions[listViewElement.row]], new GUILayoutOption[]
 				{
@@ -614,17 +654,14 @@ namespace UnityEditor
 				{
 					Event.current.Use();
 				}
-				else
+				else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
 				{
-					if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
+					for (int i = 0; i < this.selectedLV2Items.Length; i++)
 					{
-						for (int i = 0; i < this.selectedLV2Items.Length; i++)
-						{
-							this.selectedLV2Items[i] = true;
-						}
-						flag = true;
-						Event.current.Use();
+						this.selectedLV2Items[i] = true;
 					}
+					flag = true;
+					Event.current.Use();
 				}
 				if (this.lv2.selectionChanged && !actionKey)
 				{
@@ -638,6 +675,7 @@ namespace UnityEditor
 				this.lv2HasSelection = this.HasTrue(ref this.selectedLV2Items);
 			}
 		}
+
 		public bool DoGUI(ASUpdateWindow parentWin)
 		{
 			if (this.constants == null)

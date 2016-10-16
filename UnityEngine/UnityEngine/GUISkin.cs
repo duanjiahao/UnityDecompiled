@@ -1,63 +1,93 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
-	[ExecuteInEditMode]
+	[ExecuteInEditMode, RequiredByNativeCode]
 	[Serializable]
 	public sealed class GUISkin : ScriptableObject
 	{
 		internal delegate void SkinChangedDelegate();
+
 		[SerializeField]
 		private Font m_Font;
+
 		[SerializeField]
 		private GUIStyle m_box;
+
 		[SerializeField]
 		private GUIStyle m_button;
+
 		[SerializeField]
 		private GUIStyle m_toggle;
+
 		[SerializeField]
 		private GUIStyle m_label;
+
 		[SerializeField]
 		private GUIStyle m_textField;
+
 		[SerializeField]
 		private GUIStyle m_textArea;
+
 		[SerializeField]
 		private GUIStyle m_window;
+
 		[SerializeField]
 		private GUIStyle m_horizontalSlider;
+
 		[SerializeField]
 		private GUIStyle m_horizontalSliderThumb;
+
 		[SerializeField]
 		private GUIStyle m_verticalSlider;
+
 		[SerializeField]
 		private GUIStyle m_verticalSliderThumb;
+
 		[SerializeField]
 		private GUIStyle m_horizontalScrollbar;
+
 		[SerializeField]
 		private GUIStyle m_horizontalScrollbarThumb;
+
 		[SerializeField]
 		private GUIStyle m_horizontalScrollbarLeftButton;
+
 		[SerializeField]
 		private GUIStyle m_horizontalScrollbarRightButton;
+
 		[SerializeField]
 		private GUIStyle m_verticalScrollbar;
+
 		[SerializeField]
 		private GUIStyle m_verticalScrollbarThumb;
+
 		[SerializeField]
 		private GUIStyle m_verticalScrollbarUpButton;
+
 		[SerializeField]
 		private GUIStyle m_verticalScrollbarDownButton;
+
 		[SerializeField]
 		private GUIStyle m_ScrollView;
+
 		[SerializeField]
 		internal GUIStyle[] m_CustomStyles;
+
 		[SerializeField]
 		private GUISettings m_Settings = new GUISettings();
+
 		internal static GUIStyle ms_Error;
-		private Dictionary<string, GUIStyle> styles;
+
+		private Dictionary<string, GUIStyle> m_Styles;
+
 		internal static GUISkin.SkinChangedDelegate m_SkinChanged;
+
 		internal static GUISkin current;
+
 		public Font font
 		{
 			get
@@ -74,6 +104,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle box
 		{
 			get
@@ -86,6 +117,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle label
 		{
 			get
@@ -98,6 +130,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle textField
 		{
 			get
@@ -110,6 +143,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle textArea
 		{
 			get
@@ -122,6 +156,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle button
 		{
 			get
@@ -134,6 +169,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle toggle
 		{
 			get
@@ -146,6 +182,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle window
 		{
 			get
@@ -158,6 +195,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle horizontalSlider
 		{
 			get
@@ -170,6 +208,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle horizontalSliderThumb
 		{
 			get
@@ -182,6 +221,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle verticalSlider
 		{
 			get
@@ -194,6 +234,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle verticalSliderThumb
 		{
 			get
@@ -206,6 +247,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle horizontalScrollbar
 		{
 			get
@@ -218,6 +260,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle horizontalScrollbarThumb
 		{
 			get
@@ -230,6 +273,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle horizontalScrollbarLeftButton
 		{
 			get
@@ -242,6 +286,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle horizontalScrollbarRightButton
 		{
 			get
@@ -254,6 +299,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle verticalScrollbar
 		{
 			get
@@ -266,6 +312,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle verticalScrollbarThumb
 		{
 			get
@@ -278,6 +325,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle verticalScrollbarUpButton
 		{
 			get
@@ -290,6 +338,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle verticalScrollbarDownButton
 		{
 			get
@@ -302,6 +351,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle scrollView
 		{
 			get
@@ -314,6 +364,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUIStyle[] customStyles
 		{
 			get
@@ -326,6 +377,7 @@ namespace UnityEngine
 				this.Apply();
 			}
 		}
+
 		public GUISettings settings
 		{
 			get
@@ -333,6 +385,7 @@ namespace UnityEngine
 				return this.m_Settings;
 			}
 		}
+
 		internal static GUIStyle error
 		{
 			get
@@ -344,14 +397,23 @@ namespace UnityEngine
 				return GUISkin.ms_Error;
 			}
 		}
+
 		public GUISkin()
 		{
 			this.m_CustomStyles = new GUIStyle[1];
 		}
+
 		internal void OnEnable()
 		{
 			this.Apply();
 		}
+
+		internal static void CleanupRoots()
+		{
+			GUISkin.current = null;
+			GUISkin.ms_Error = null;
+		}
+
 		internal void Apply()
 		{
 			if (this.m_CustomStyles == null)
@@ -360,6 +422,7 @@ namespace UnityEngine
 			}
 			this.BuildStyleCache();
 		}
+
 		private void BuildStyleCache()
 		{
 			if (this.m_box == null)
@@ -442,46 +505,46 @@ namespace UnityEngine
 			{
 				this.m_ScrollView = new GUIStyle();
 			}
-			this.styles = new Dictionary<string, GUIStyle>(StringComparer.OrdinalIgnoreCase);
-			this.styles["box"] = this.m_box;
+			this.m_Styles = new Dictionary<string, GUIStyle>(StringComparer.OrdinalIgnoreCase);
+			this.m_Styles["box"] = this.m_box;
 			this.m_box.name = "box";
-			this.styles["button"] = this.m_button;
+			this.m_Styles["button"] = this.m_button;
 			this.m_button.name = "button";
-			this.styles["toggle"] = this.m_toggle;
+			this.m_Styles["toggle"] = this.m_toggle;
 			this.m_toggle.name = "toggle";
-			this.styles["label"] = this.m_label;
+			this.m_Styles["label"] = this.m_label;
 			this.m_label.name = "label";
-			this.styles["window"] = this.m_window;
+			this.m_Styles["window"] = this.m_window;
 			this.m_window.name = "window";
-			this.styles["textfield"] = this.m_textField;
+			this.m_Styles["textfield"] = this.m_textField;
 			this.m_textField.name = "textfield";
-			this.styles["textarea"] = this.m_textArea;
+			this.m_Styles["textarea"] = this.m_textArea;
 			this.m_textArea.name = "textarea";
-			this.styles["horizontalslider"] = this.m_horizontalSlider;
+			this.m_Styles["horizontalslider"] = this.m_horizontalSlider;
 			this.m_horizontalSlider.name = "horizontalslider";
-			this.styles["horizontalsliderthumb"] = this.m_horizontalSliderThumb;
+			this.m_Styles["horizontalsliderthumb"] = this.m_horizontalSliderThumb;
 			this.m_horizontalSliderThumb.name = "horizontalsliderthumb";
-			this.styles["verticalslider"] = this.m_verticalSlider;
+			this.m_Styles["verticalslider"] = this.m_verticalSlider;
 			this.m_verticalSlider.name = "verticalslider";
-			this.styles["verticalsliderthumb"] = this.m_verticalSliderThumb;
+			this.m_Styles["verticalsliderthumb"] = this.m_verticalSliderThumb;
 			this.m_verticalSliderThumb.name = "verticalsliderthumb";
-			this.styles["horizontalscrollbar"] = this.m_horizontalScrollbar;
+			this.m_Styles["horizontalscrollbar"] = this.m_horizontalScrollbar;
 			this.m_horizontalScrollbar.name = "horizontalscrollbar";
-			this.styles["horizontalscrollbarthumb"] = this.m_horizontalScrollbarThumb;
+			this.m_Styles["horizontalscrollbarthumb"] = this.m_horizontalScrollbarThumb;
 			this.m_horizontalScrollbarThumb.name = "horizontalscrollbarthumb";
-			this.styles["horizontalscrollbarleftbutton"] = this.m_horizontalScrollbarLeftButton;
+			this.m_Styles["horizontalscrollbarleftbutton"] = this.m_horizontalScrollbarLeftButton;
 			this.m_horizontalScrollbarLeftButton.name = "horizontalscrollbarleftbutton";
-			this.styles["horizontalscrollbarrightbutton"] = this.m_horizontalScrollbarRightButton;
+			this.m_Styles["horizontalscrollbarrightbutton"] = this.m_horizontalScrollbarRightButton;
 			this.m_horizontalScrollbarRightButton.name = "horizontalscrollbarrightbutton";
-			this.styles["verticalscrollbar"] = this.m_verticalScrollbar;
+			this.m_Styles["verticalscrollbar"] = this.m_verticalScrollbar;
 			this.m_verticalScrollbar.name = "verticalscrollbar";
-			this.styles["verticalscrollbarthumb"] = this.m_verticalScrollbarThumb;
+			this.m_Styles["verticalscrollbarthumb"] = this.m_verticalScrollbarThumb;
 			this.m_verticalScrollbarThumb.name = "verticalscrollbarthumb";
-			this.styles["verticalscrollbarupbutton"] = this.m_verticalScrollbarUpButton;
+			this.m_Styles["verticalscrollbarupbutton"] = this.m_verticalScrollbarUpButton;
 			this.m_verticalScrollbarUpButton.name = "verticalscrollbarupbutton";
-			this.styles["verticalscrollbardownbutton"] = this.m_verticalScrollbarDownButton;
+			this.m_Styles["verticalscrollbardownbutton"] = this.m_verticalScrollbarDownButton;
 			this.m_verticalScrollbarDownButton.name = "verticalscrollbardownbutton";
-			this.styles["scrollview"] = this.m_ScrollView;
+			this.m_Styles["scrollview"] = this.m_ScrollView;
 			this.m_ScrollView.name = "scrollview";
 			if (this.m_CustomStyles != null)
 			{
@@ -489,13 +552,14 @@ namespace UnityEngine
 				{
 					if (this.m_CustomStyles[i] != null)
 					{
-						this.styles[this.m_CustomStyles[i].name] = this.m_CustomStyles[i];
+						this.m_Styles[this.m_CustomStyles[i].name] = this.m_CustomStyles[i];
 					}
 				}
 			}
 			GUISkin.error.stretchHeight = true;
 			GUISkin.error.normal.textColor = Color.red;
 		}
+
 		public GUIStyle GetStyle(string styleName)
 		{
 			GUIStyle gUIStyle = this.FindStyle(styleName);
@@ -514,6 +578,7 @@ namespace UnityEngine
 			}));
 			return GUISkin.error;
 		}
+
 		public GUIStyle FindStyle(string styleName)
 		{
 			if (this == null)
@@ -521,17 +586,18 @@ namespace UnityEngine
 				Debug.LogError("GUISkin is NULL");
 				return null;
 			}
-			if (this.styles == null)
+			if (this.m_Styles == null)
 			{
 				this.BuildStyleCache();
 			}
 			GUIStyle result;
-			if (this.styles.TryGetValue(styleName, out result))
+			if (this.m_Styles.TryGetValue(styleName, out result))
 			{
 				return result;
 			}
 			return null;
 		}
+
 		internal void MakeCurrent()
 		{
 			GUISkin.current = this;
@@ -541,13 +607,14 @@ namespace UnityEngine
 				GUISkin.m_SkinChanged();
 			}
 		}
+
 		public IEnumerator GetEnumerator()
 		{
-			if (this.styles == null)
+			if (this.m_Styles == null)
 			{
 				this.BuildStyleCache();
 			}
-			return this.styles.Values.GetEnumerator();
+			return this.m_Styles.Values.GetEnumerator();
 		}
 	}
 }

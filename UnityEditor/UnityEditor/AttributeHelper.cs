@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AttributeHelper
@@ -11,18 +14,27 @@ namespace UnityEditor
 		private struct MonoGizmoMethod
 		{
 			public MethodInfo drawGizmo;
+
 			public Type drawnType;
+
 			public int options;
 		}
+
 		private struct MonoMenuItem
 		{
 			public string menuItem;
+
 			public string execute;
+
 			public string validate;
+
 			public int priority;
+
 			public int index;
+
 			public Type type;
 		}
+
 		internal class CompareMenuIndex : IComparer
 		{
 			int IComparer.Compare(object xo, object yo)
@@ -36,6 +48,18 @@ namespace UnityEditor
 				return monoMenuItem.index.CompareTo(monoMenuItem2.index);
 			}
 		}
+
+		private struct MonoCreateAssetItem
+		{
+			public string menuItem;
+
+			public string fileName;
+
+			public int order;
+
+			public Type type;
+		}
+
 		private static AttributeHelper.MonoGizmoMethod[] ExtractGizmos(Assembly assembly)
 		{
 			List<AttributeHelper.MonoGizmoMethod> list = new List<AttributeHelper.MonoGizmoMethod>();
@@ -56,7 +80,7 @@ namespace UnityEditor
 						ParameterInfo[] parameters = methodInfo.GetParameters();
 						if (parameters.Length != 2)
 						{
-							Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but does not take parameters (ComponentType, GizmoType) so will be ignored.", methodInfo.DeclaringType.FullName, methodInfo.Name));
+							UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but does not take parameters (ComponentType, GizmoType) so will be ignored.", methodInfo.DeclaringType.FullName, methodInfo.Name));
 						}
 						else
 						{
@@ -69,14 +93,14 @@ namespace UnityEditor
 							{
 								if (!parameters[0].ParameterType.IsAssignableFrom(drawGizmo.drawnType))
 								{
-									Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but the component type it applies to could not be determined.", methodInfo.DeclaringType.FullName, methodInfo.Name));
+									UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but the component type it applies to could not be determined.", methodInfo.DeclaringType.FullName, methodInfo.Name));
 									goto IL_18E;
 								}
 								item.drawnType = drawGizmo.drawnType;
 							}
 							if (parameters[1].ParameterType != typeof(GizmoType) && parameters[1].ParameterType != typeof(int))
 							{
-								Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but does not take a second parameter of type GizmoType so will be ignored.", methodInfo.DeclaringType.FullName, methodInfo.Name));
+								UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but does not take a second parameter of type GizmoType so will be ignored.", methodInfo.DeclaringType.FullName, methodInfo.Name));
 							}
 							else
 							{
@@ -91,6 +115,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private static AttributeHelper.MonoMenuItem[] ExtractMenuCommands(Assembly assembly)
 		{
 			bool @bool = EditorPrefs.GetBool("InternalMode", false);
@@ -145,6 +170,7 @@ namespace UnityEditor
 			Array.Sort(array3, new AttributeHelper.CompareMenuIndex());
 			return array3;
 		}
+
 		private static AttributeHelper.MonoMenuItem[] ExtractContextMenu(Type klass)
 		{
 			Dictionary<string, AttributeHelper.MonoMenuItem> dictionary = new Dictionary<string, AttributeHelper.MonoMenuItem>();
@@ -166,6 +192,7 @@ namespace UnityEditor
 			}
 			return dictionary.Values.ToArray<AttributeHelper.MonoMenuItem>();
 		}
+
 		private static string GetComponentMenuName(Type klass)
 		{
 			object[] customAttributes = klass.GetCustomAttributes(typeof(AddComponentMenu), false);
@@ -176,6 +203,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private static int GetComponentMenuOrdering(Type klass)
 		{
 			object[] customAttributes = klass.GetCustomAttributes(typeof(AddComponentMenu), false);
@@ -186,6 +214,46 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
+		private static AttributeHelper.MonoCreateAssetItem[] ExtractCreateAssetMenuItems(Assembly assembly)
+		{
+			List<AttributeHelper.MonoCreateAssetItem> list = new List<AttributeHelper.MonoCreateAssetItem>();
+			Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(assembly);
+			Type[] array = typesFromAssembly;
+			for (int i = 0; i < array.Length; i++)
+			{
+				Type type = array[i];
+				CreateAssetMenuAttribute createAssetMenuAttribute = (CreateAssetMenuAttribute)Attribute.GetCustomAttribute(type, typeof(CreateAssetMenuAttribute));
+				if (createAssetMenuAttribute != null)
+				{
+					if (!type.IsSubclassOf(typeof(ScriptableObject)))
+					{
+						UnityEngine.Debug.LogWarningFormat("CreateAssetMenu attribute on {0} will be ignored as {0} is not derived from ScriptableObject.", new object[]
+						{
+							type.FullName
+						});
+					}
+					else
+					{
+						string menuItem = (!string.IsNullOrEmpty(createAssetMenuAttribute.menuName)) ? createAssetMenuAttribute.menuName : ObjectNames.NicifyVariableName(type.Name);
+						string text = (!string.IsNullOrEmpty(createAssetMenuAttribute.fileName)) ? createAssetMenuAttribute.fileName : ("New " + ObjectNames.NicifyVariableName(type.Name) + ".asset");
+						if (!Path.HasExtension(text))
+						{
+							text += ".asset";
+						}
+						list.Add(new AttributeHelper.MonoCreateAssetItem
+						{
+							menuItem = menuItem,
+							fileName = text,
+							order = createAssetMenuAttribute.order,
+							type = type
+						});
+					}
+				}
+			}
+			return list.ToArray();
+		}
+
 		internal static ArrayList FindEditorClassesWithAttribute(Type attrib)
 		{
 			ArrayList arrayList = new ArrayList();
@@ -198,6 +266,7 @@ namespace UnityEditor
 			}
 			return arrayList;
 		}
+
 		internal static object InvokeMemberIfAvailable(object target, string methodName, object[] args)
 		{
 			MethodInfo method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -207,9 +276,10 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		internal static bool GameObjectContainsAttribute(GameObject go, Type attributeType)
 		{
-			Component[] components = go.GetComponents(typeof(MonoBehaviour));
+			Component[] components = go.GetComponents(typeof(Component));
 			for (int i = 0; i < components.Length; i++)
 			{
 				Component component = components[i];
@@ -223,6 +293,25 @@ namespace UnityEditor
 				}
 			}
 			return false;
+		}
+
+		[DebuggerHidden]
+		internal static IEnumerable<T> CallMethodsWithAttribute<T>(Type attributeType, params object[] arguments)
+		{
+			AttributeHelper.<CallMethodsWithAttribute>c__Iterator3<T> <CallMethodsWithAttribute>c__Iterator = new AttributeHelper.<CallMethodsWithAttribute>c__Iterator3<T>();
+			<CallMethodsWithAttribute>c__Iterator.attributeType = attributeType;
+			<CallMethodsWithAttribute>c__Iterator.arguments = arguments;
+			<CallMethodsWithAttribute>c__Iterator.<$>attributeType = attributeType;
+			<CallMethodsWithAttribute>c__Iterator.<$>arguments = arguments;
+			AttributeHelper.<CallMethodsWithAttribute>c__Iterator3<T> expr_23 = <CallMethodsWithAttribute>c__Iterator;
+			expr_23.$PC = -2;
+			return expr_23;
+		}
+
+		internal static string GetHelpURLFromAttribute(Type objectType)
+		{
+			HelpURLAttribute helpURLAttribute = (HelpURLAttribute)Attribute.GetCustomAttribute(objectType, typeof(HelpURLAttribute));
+			return (helpURLAttribute == null) ? null : helpURLAttribute.URL;
 		}
 	}
 }

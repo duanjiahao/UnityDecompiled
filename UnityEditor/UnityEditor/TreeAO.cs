@@ -1,13 +1,18 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TreeAO
 	{
 		private const int kWorkLayer = 29;
+
 		private const float occlusion = 0.5f;
+
 		private static bool kDebug;
+
 		private static Vector3[] directions;
+
 		private static int PermuteCuboid(Vector3[] dirs, int offset, float x, float y, float z)
 		{
 			dirs[offset] = new Vector3(x, y, z);
@@ -20,6 +25,7 @@ namespace UnityEditor
 			dirs[offset + 7] = new Vector3(-x, -y, -z);
 			return offset + 8;
 		}
+
 		public static void InitializeDirections()
 		{
 			float num = (1f + Mathf.Sqrt(5f)) / 2f;
@@ -48,6 +54,7 @@ namespace UnityEditor
 				TreeAO.directions[i] = TreeAO.directions[i].normalized;
 			}
 		}
+
 		public static void CalcSoftOcclusion(Mesh mesh)
 		{
 			GameObject gameObject = new GameObject("Test");
@@ -91,6 +98,7 @@ namespace UnityEditor
 			mesh.tangents = array2;
 			UnityEngine.Object.DestroyImmediate(gameObject);
 		}
+
 		private static int CountIntersections(Vector3 v, Vector3 dist, float length)
 		{
 			v += dist * 0.01f;
@@ -115,6 +123,7 @@ namespace UnityEditor
 			}
 			return num + array.Length;
 		}
+
 		private static float GetWeight(int coeff, Vector3 dir)
 		{
 			switch (coeff)

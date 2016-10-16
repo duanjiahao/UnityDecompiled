@@ -1,10 +1,12 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MoveTool : ManipulationTool
 	{
 		private static MoveTool s_Instance;
+
 		public static void OnGUI(SceneView view)
 		{
 			if (MoveTool.s_Instance == null)
@@ -13,6 +15,7 @@ namespace UnityEditor
 			}
 			MoveTool.s_Instance.OnToolGUI(view);
 		}
+
 		public override void ToolGUI(SceneView view, Vector3 handlePosition, bool isStatic)
 		{
 			TransformManipulator.BeginManipulationHandling(false);

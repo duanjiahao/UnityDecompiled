@@ -1,25 +1,38 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(CircleCollider2D))]
 	internal class CircleCollider2DEditor : Collider2DEditorBase
 	{
 		private int m_HandleControlID;
+
+		private SerializedProperty m_Radius;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
 			this.m_HandleControlID = -1;
+			this.m_Radius = base.serializedObject.FindProperty("m_Radius");
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
 			base.InspectorEditButtonGUI();
 			base.OnInspectorGUI();
+			EditorGUILayout.PropertyField(this.m_Radius, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
+			base.CheckAllErrorsAndWarnings();
 		}
+
 		public void OnSceneGUI()
 		{
+			if (Tools.viewToolActive)
+			{
+				return;
+			}
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
 			CircleCollider2D circleCollider2D = (CircleCollider2D)this.target;
 			Color color = Handles.color;

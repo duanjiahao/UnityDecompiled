@@ -1,9 +1,11 @@
 using System;
+
 namespace UnityEngine.SocialPlatforms
 {
 	internal static class ActivePlatform
 	{
 		private static ISocialPlatform _active;
+
 		internal static ISocialPlatform Instance
 		{
 			get
@@ -19,6 +21,7 @@ namespace UnityEngine.SocialPlatforms
 				ActivePlatform._active = value;
 			}
 		}
+
 		private static ISocialPlatform SelectSocialPlatform()
 		{
 			return new Local();

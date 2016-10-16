@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(SpringJoint2D))]
@@ -12,13 +13,13 @@ namespace UnityEditor
 			{
 				return;
 			}
-			Vector3 anchor = Joint2DEditorBase.TransformPoint(springJoint2D.transform, springJoint2D.anchor);
+			Vector3 anchor = Joint2DEditor.TransformPoint(springJoint2D.transform, springJoint2D.anchor);
 			Vector3 vector = springJoint2D.connectedAnchor;
 			if (springJoint2D.connectedBody)
 			{
-				vector = Joint2DEditorBase.TransformPoint(springJoint2D.connectedBody.transform, vector);
+				vector = Joint2DEditor.TransformPoint(springJoint2D.connectedBody.transform, vector);
 			}
-			Joint2DEditorBase.DrawDistanceGizmo(anchor, vector, springJoint2D.distance);
+			Joint2DEditor.DrawDistanceGizmo(anchor, vector, springJoint2D.distance);
 			base.OnSceneGUI();
 		}
 	}

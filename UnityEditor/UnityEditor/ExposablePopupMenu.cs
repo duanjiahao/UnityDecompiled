@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ExposablePopupMenu
@@ -8,11 +9,17 @@ namespace UnityEditor
 		public class ItemData
 		{
 			public GUIContent m_GUIContent;
+
 			public GUIStyle m_Style;
+
 			public bool m_On;
+
 			public bool m_Enabled;
+
 			public object m_UserData;
+
 			public float m_Width;
+
 			public ItemData(GUIContent content, GUIStyle style, bool on, bool enabled, object userData)
 			{
 				this.m_GUIContent = content;
@@ -22,20 +29,26 @@ namespace UnityEditor
 				this.m_UserData = userData;
 			}
 		}
+
 		public class PopupButtonData
 		{
 			public GUIContent m_GUIContent;
+
 			public GUIStyle m_Style;
+
 			public PopupButtonData(GUIContent content, GUIStyle style)
 			{
 				this.m_GUIContent = content;
 				this.m_Style = style;
 			}
 		}
+
 		internal class PopUpMenu
 		{
 			private static List<ExposablePopupMenu.ItemData> m_Data;
+
 			private static ExposablePopupMenu m_Caller;
+
 			internal static void Show(Rect activatorRect, List<ExposablePopupMenu.ItemData> buttonData, ExposablePopupMenu caller)
 			{
 				ExposablePopupMenu.PopUpMenu.m_Data = buttonData;
@@ -54,6 +67,7 @@ namespace UnityEditor
 				}
 				genericMenu.DropDown(activatorRect);
 			}
+
 			private static void SelectionCallback(object userData)
 			{
 				ExposablePopupMenu.ItemData item = (ExposablePopupMenu.ItemData)userData;
@@ -62,13 +76,21 @@ namespace UnityEditor
 				ExposablePopupMenu.PopUpMenu.m_Data = null;
 			}
 		}
+
 		private List<ExposablePopupMenu.ItemData> m_Items;
+
 		private float m_WidthOfButtons;
+
 		private float m_ItemSpacing;
+
 		private ExposablePopupMenu.PopupButtonData m_PopupButtonData;
+
 		private float m_WidthOfPopup;
+
 		private float m_MinWidthOfPopup;
+
 		private Action<ExposablePopupMenu.ItemData> m_SelectionChangedCallback;
+
 		public void Init(List<ExposablePopupMenu.ItemData> items, float itemSpacing, float minWidthOfPopup, ExposablePopupMenu.PopupButtonData popupButtonData, Action<ExposablePopupMenu.ItemData> selectionChangedCallback)
 		{
 			this.m_Items = items;
@@ -78,6 +100,7 @@ namespace UnityEditor
 			this.m_MinWidthOfPopup = minWidthOfPopup;
 			this.CalcWidths();
 		}
+
 		public float OnGUI(Rect rect)
 		{
 			if (rect.width >= this.m_WidthOfButtons && rect.width > this.m_MinWidthOfPopup)
@@ -87,9 +110,10 @@ namespace UnityEditor
 				{
 					position.width = current.m_Width;
 					EditorGUI.BeginChangeCheck();
-					EditorGUI.BeginDisabledGroup(!current.m_Enabled);
-					GUI.Toggle(position, current.m_On, current.m_GUIContent, current.m_Style);
-					EditorGUI.EndDisabledGroup();
+					using (new EditorGUI.DisabledScope(!current.m_Enabled))
+					{
+						GUI.Toggle(position, current.m_On, current.m_GUIContent, current.m_Style);
+					}
 					if (EditorGUI.EndChangeCheck())
 					{
 						this.SelectionChanged(current);
@@ -109,6 +133,7 @@ namespace UnityEditor
 			}
 			return this.m_WidthOfPopup;
 		}
+
 		private void CalcWidths()
 		{
 			this.m_WidthOfButtons = 0f;
@@ -122,6 +147,7 @@ namespace UnityEditor
 			vector.x += 3f;
 			this.m_WidthOfPopup = vector.x;
 		}
+
 		private void SelectionChanged(ExposablePopupMenu.ItemData item)
 		{
 			if (this.m_SelectionChangedCallback != null)

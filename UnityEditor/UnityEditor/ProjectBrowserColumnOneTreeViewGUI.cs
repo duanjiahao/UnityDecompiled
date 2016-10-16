@@ -1,25 +1,39 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ProjectBrowserColumnOneTreeViewGUI : AssetsTreeViewGUI
 	{
 		private const float k_DistBetweenRootTypes = 15f;
+
 		private Texture2D k_FavoritesIcon = EditorGUIUtility.FindTexture("Favorite Icon");
+
 		private Texture2D k_FavoriteFolderIcon = EditorGUIUtility.FindTexture("FolderFavorite Icon");
+
 		private Texture2D k_FavoriteFilterIcon = EditorGUIUtility.FindTexture("Search Icon");
+
 		private bool m_IsCreatingSavedFilter;
+
 		public ProjectBrowserColumnOneTreeViewGUI(TreeView treeView) : base(treeView)
 		{
 		}
-		public override Vector2 GetTotalSize(List<TreeViewItem> rows)
+
+		public override Vector2 GetTotalSize()
 		{
-			Vector2 totalSize = base.GetTotalSize(rows);
+			Vector2 totalSize = base.GetTotalSize();
 			totalSize.y += 15f;
 			return totalSize;
 		}
-		public override float GetTopPixelOfRow(int row, List<TreeViewItem> rows)
+
+		public override Rect GetRowRect(int row, float rowWidth)
+		{
+			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			return new Rect(0f, this.GetTopPixelOfRow(row, rows), rowWidth, this.k_LineHeight);
+		}
+
+		private float GetTopPixelOfRow(int row, List<TreeViewItem> rows)
 		{
 			float num = (float)row * this.k_LineHeight;
 			TreeViewItem treeViewItem = rows[row];
@@ -29,41 +43,37 @@ namespace UnityEditor
 			}
 			return num;
 		}
-		public override float GetHeightOfLastRow()
-		{
-			return this.k_LineHeight;
-		}
+
 		public override int GetNumRowsOnPageUpDown(TreeViewItem fromItem, bool pageUp, float heightOfTreeView)
 		{
 			return (int)Mathf.Floor(heightOfTreeView / this.k_LineHeight) - 1;
 		}
-		public override void GetFirstAndLastRowVisible(List<TreeViewItem> rows, float topPixel, float heightInPixels, out int firstRowVisible, out int lastRowVisible)
+
+		public override void GetFirstAndLastRowVisible(out int firstRowVisible, out int lastRowVisible)
 		{
-			firstRowVisible = (int)Mathf.Floor(topPixel / this.k_LineHeight);
-			lastRowVisible = firstRowVisible + (int)Mathf.Ceil(heightInPixels / this.k_LineHeight);
+			float y = this.m_TreeView.state.scrollPos.y;
+			float height = this.m_TreeView.GetTotalRect().height;
+			firstRowVisible = (int)Mathf.Floor(y / this.k_LineHeight);
+			lastRowVisible = firstRowVisible + (int)Mathf.Ceil(height / this.k_LineHeight);
 			float num = 15f / this.k_LineHeight;
 			firstRowVisible -= (int)Mathf.Ceil(2f * num);
 			lastRowVisible += (int)Mathf.Ceil(2f * num);
 			firstRowVisible = Mathf.Max(firstRowVisible, 0);
-			lastRowVisible = Mathf.Min(lastRowVisible, rows.Count - 1);
+			lastRowVisible = Mathf.Min(lastRowVisible, this.m_TreeView.data.rowCount - 1);
 		}
-		public override Rect OnRowGUI(TreeViewItem item, int row, float rowWidth, bool selected, bool focused)
+
+		public override void OnRowGUI(Rect rowRect, TreeViewItem item, int row, bool selected, bool focused)
 		{
-			float num = (float)row * this.k_LineHeight;
-			if (ProjectBrowser.GetItemType(item.id) == ProjectBrowser.ItemType.Asset)
-			{
-				num += 15f;
-			}
-			Rect rect = new Rect(0f, num, rowWidth, this.k_LineHeight);
 			bool useBoldFont = this.IsVisibleRootNode(item);
-			this.DoNodeGUI(rect, item, selected, focused, useBoldFont);
-			return rect;
+			this.DoItemGUI(rowRect, row, item, selected, focused, useBoldFont);
 		}
+
 		private bool IsVisibleRootNode(TreeViewItem item)
 		{
 			return (this.m_TreeView.data as ProjectBrowserColumnOneTreeViewDataSource).IsVisibleRootNode(item);
 		}
-		protected override Texture GetIconForNode(TreeViewItem item)
+
+		protected override Texture GetIconForItem(TreeViewItem item)
 		{
 			if (item != null && item.icon != null)
 			{
@@ -72,7 +82,7 @@ namespace UnityEditor
 			SearchFilterTreeItem searchFilterTreeItem = item as SearchFilterTreeItem;
 			if (searchFilterTreeItem == null)
 			{
-				return base.GetIconForNode(item);
+				return base.GetIconForItem(item);
 			}
 			if (this.IsVisibleRootNode(item))
 			{
@@ -84,6 +94,7 @@ namespace UnityEditor
 			}
 			return this.k_FavoriteFilterIcon;
 		}
+
 		public static float GetListAreaGridSize()
 		{
 			float result = -1f;
@@ -93,6 +104,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		internal virtual void BeginCreateSavedFilter(SearchFilter filter)
 		{
 			string text = "New Saved Search";
@@ -101,6 +113,7 @@ namespace UnityEditor
 			this.m_TreeView.Frame(num, true, false);
 			this.m_TreeView.state.renameOverlay.BeginRename(text, num, 0f);
 		}
+
 		protected override void RenameEnded()
 		{
 			int userData = base.GetRenameOverlay().userData;
@@ -121,22 +134,19 @@ namespace UnityEditor
 					SavedSearchFilters.RemoveSavedFilter(userData);
 				}
 			}
+			else if (itemType == ProjectBrowser.ItemType.SavedFilter)
+			{
+				if (base.GetRenameOverlay().userAcceptedRename)
+				{
+					SavedSearchFilters.SetName(userData, base.GetRenameOverlay().name);
+				}
+			}
 			else
 			{
-				if (itemType == ProjectBrowser.ItemType.SavedFilter)
+				base.RenameEnded();
+				if (base.GetRenameOverlay().userAcceptedRename)
 				{
-					if (base.GetRenameOverlay().userAcceptedRename)
-					{
-						SavedSearchFilters.SetName(userData, base.GetRenameOverlay().name);
-					}
-				}
-				else
-				{
-					base.RenameEnded();
-					if (base.GetRenameOverlay().userAcceptedRename)
-					{
-						this.m_TreeView.NotifyListenersThatSelectionChanged();
-					}
+					this.m_TreeView.NotifyListenersThatSelectionChanged();
 				}
 			}
 		}

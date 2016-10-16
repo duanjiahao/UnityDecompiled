@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	internal class AndroidJNISafe
@@ -10,18 +11,26 @@ namespace UnityEngine
 			{
 				AndroidJNI.ExceptionClear();
 				IntPtr intPtr2 = AndroidJNI.FindClass("java/lang/Throwable");
+				IntPtr intPtr3 = AndroidJNI.FindClass("android/util/Log");
 				try
 				{
 					IntPtr methodID = AndroidJNI.GetMethodID(intPtr2, "toString", "()Ljava/lang/String;");
-					throw new AndroidJavaException(AndroidJNI.CallStringMethod(intPtr, methodID, new jvalue[0]));
+					IntPtr staticMethodID = AndroidJNI.GetStaticMethodID(intPtr3, "getStackTraceString", "(Ljava/lang/Throwable;)Ljava/lang/String;");
+					string message = AndroidJNI.CallStringMethod(intPtr, methodID, new jvalue[0]);
+					jvalue[] array = new jvalue[1];
+					array[0].l = intPtr;
+					string javaStackTrace = AndroidJNI.CallStaticStringMethod(intPtr3, staticMethodID, array);
+					throw new AndroidJavaException(message, javaStackTrace);
 				}
 				finally
 				{
 					AndroidJNISafe.DeleteLocalRef(intPtr);
 					AndroidJNISafe.DeleteLocalRef(intPtr2);
+					AndroidJNISafe.DeleteLocalRef(intPtr3);
 				}
 			}
 		}
+
 		public static void DeleteGlobalRef(IntPtr globalref)
 		{
 			if (globalref != IntPtr.Zero)
@@ -29,6 +38,7 @@ namespace UnityEngine
 				AndroidJNI.DeleteGlobalRef(globalref);
 			}
 		}
+
 		public static void DeleteLocalRef(IntPtr localref)
 		{
 			if (localref != IntPtr.Zero)
@@ -36,6 +46,7 @@ namespace UnityEngine
 				AndroidJNI.DeleteLocalRef(localref);
 			}
 		}
+
 		public static IntPtr NewStringUTF(string bytes)
 		{
 			IntPtr result;
@@ -49,6 +60,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static string GetStringUTFChars(IntPtr str)
 		{
 			string stringUTFChars;
@@ -62,6 +74,7 @@ namespace UnityEngine
 			}
 			return stringUTFChars;
 		}
+
 		public static IntPtr GetObjectClass(IntPtr ptr)
 		{
 			IntPtr objectClass;
@@ -75,6 +88,7 @@ namespace UnityEngine
 			}
 			return objectClass;
 		}
+
 		public static IntPtr GetStaticMethodID(IntPtr clazz, string name, string sig)
 		{
 			IntPtr staticMethodID;
@@ -88,6 +102,7 @@ namespace UnityEngine
 			}
 			return staticMethodID;
 		}
+
 		public static IntPtr GetMethodID(IntPtr obj, string name, string sig)
 		{
 			IntPtr methodID;
@@ -101,6 +116,7 @@ namespace UnityEngine
 			}
 			return methodID;
 		}
+
 		public static IntPtr GetFieldID(IntPtr clazz, string name, string sig)
 		{
 			IntPtr fieldID;
@@ -114,6 +130,7 @@ namespace UnityEngine
 			}
 			return fieldID;
 		}
+
 		public static IntPtr GetStaticFieldID(IntPtr clazz, string name, string sig)
 		{
 			IntPtr staticFieldID;
@@ -127,6 +144,7 @@ namespace UnityEngine
 			}
 			return staticFieldID;
 		}
+
 		public static IntPtr FromReflectedMethod(IntPtr refMethod)
 		{
 			IntPtr result;
@@ -140,6 +158,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr FromReflectedField(IntPtr refField)
 		{
 			IntPtr result;
@@ -153,6 +172,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr FindClass(string name)
 		{
 			IntPtr result;
@@ -166,6 +186,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr NewObject(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			IntPtr result;
@@ -179,6 +200,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static void SetStaticObjectField(IntPtr clazz, IntPtr fieldID, IntPtr val)
 		{
 			try
@@ -190,6 +212,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticStringField(IntPtr clazz, IntPtr fieldID, string val)
 		{
 			try
@@ -201,6 +224,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticCharField(IntPtr clazz, IntPtr fieldID, char val)
 		{
 			try
@@ -212,6 +236,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticDoubleField(IntPtr clazz, IntPtr fieldID, double val)
 		{
 			try
@@ -223,6 +248,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticFloatField(IntPtr clazz, IntPtr fieldID, float val)
 		{
 			try
@@ -234,6 +260,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticLongField(IntPtr clazz, IntPtr fieldID, long val)
 		{
 			try
@@ -245,6 +272,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticShortField(IntPtr clazz, IntPtr fieldID, short val)
 		{
 			try
@@ -256,6 +284,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticByteField(IntPtr clazz, IntPtr fieldID, byte val)
 		{
 			try
@@ -267,6 +296,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticBooleanField(IntPtr clazz, IntPtr fieldID, bool val)
 		{
 			try
@@ -278,6 +308,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStaticIntField(IntPtr clazz, IntPtr fieldID, int val)
 		{
 			try
@@ -289,6 +320,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static IntPtr GetStaticObjectField(IntPtr clazz, IntPtr fieldID)
 		{
 			IntPtr staticObjectField;
@@ -302,6 +334,7 @@ namespace UnityEngine
 			}
 			return staticObjectField;
 		}
+
 		public static string GetStaticStringField(IntPtr clazz, IntPtr fieldID)
 		{
 			string staticStringField;
@@ -315,6 +348,7 @@ namespace UnityEngine
 			}
 			return staticStringField;
 		}
+
 		public static char GetStaticCharField(IntPtr clazz, IntPtr fieldID)
 		{
 			char staticCharField;
@@ -328,6 +362,7 @@ namespace UnityEngine
 			}
 			return staticCharField;
 		}
+
 		public static double GetStaticDoubleField(IntPtr clazz, IntPtr fieldID)
 		{
 			double staticDoubleField;
@@ -341,6 +376,7 @@ namespace UnityEngine
 			}
 			return staticDoubleField;
 		}
+
 		public static float GetStaticFloatField(IntPtr clazz, IntPtr fieldID)
 		{
 			float staticFloatField;
@@ -354,6 +390,7 @@ namespace UnityEngine
 			}
 			return staticFloatField;
 		}
+
 		public static long GetStaticLongField(IntPtr clazz, IntPtr fieldID)
 		{
 			long staticLongField;
@@ -367,6 +404,7 @@ namespace UnityEngine
 			}
 			return staticLongField;
 		}
+
 		public static short GetStaticShortField(IntPtr clazz, IntPtr fieldID)
 		{
 			short staticShortField;
@@ -380,6 +418,7 @@ namespace UnityEngine
 			}
 			return staticShortField;
 		}
+
 		public static byte GetStaticByteField(IntPtr clazz, IntPtr fieldID)
 		{
 			byte staticByteField;
@@ -393,6 +432,7 @@ namespace UnityEngine
 			}
 			return staticByteField;
 		}
+
 		public static bool GetStaticBooleanField(IntPtr clazz, IntPtr fieldID)
 		{
 			bool staticBooleanField;
@@ -406,6 +446,7 @@ namespace UnityEngine
 			}
 			return staticBooleanField;
 		}
+
 		public static int GetStaticIntField(IntPtr clazz, IntPtr fieldID)
 		{
 			int staticIntField;
@@ -419,6 +460,7 @@ namespace UnityEngine
 			}
 			return staticIntField;
 		}
+
 		public static void CallStaticVoidMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			try
@@ -430,6 +472,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static IntPtr CallStaticObjectMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			IntPtr result;
@@ -443,6 +486,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static string CallStaticStringMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			string result;
@@ -456,6 +500,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static char CallStaticCharMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			char result;
@@ -469,6 +514,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static double CallStaticDoubleMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			double result;
@@ -482,6 +528,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static float CallStaticFloatMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			float result;
@@ -495,6 +542,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static long CallStaticLongMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			long result;
@@ -508,6 +556,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static short CallStaticShortMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			short result;
@@ -521,6 +570,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static byte CallStaticByteMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			byte result;
@@ -534,6 +584,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static bool CallStaticBooleanMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			bool result;
@@ -547,6 +598,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static int CallStaticIntMethod(IntPtr clazz, IntPtr methodID, jvalue[] args)
 		{
 			int result;
@@ -560,6 +612,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static void SetObjectField(IntPtr obj, IntPtr fieldID, IntPtr val)
 		{
 			try
@@ -571,6 +624,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetStringField(IntPtr obj, IntPtr fieldID, string val)
 		{
 			try
@@ -582,6 +636,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetCharField(IntPtr obj, IntPtr fieldID, char val)
 		{
 			try
@@ -593,6 +648,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetDoubleField(IntPtr obj, IntPtr fieldID, double val)
 		{
 			try
@@ -604,6 +660,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetFloatField(IntPtr obj, IntPtr fieldID, float val)
 		{
 			try
@@ -615,6 +672,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetLongField(IntPtr obj, IntPtr fieldID, long val)
 		{
 			try
@@ -626,6 +684,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetShortField(IntPtr obj, IntPtr fieldID, short val)
 		{
 			try
@@ -637,6 +696,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetByteField(IntPtr obj, IntPtr fieldID, byte val)
 		{
 			try
@@ -648,6 +708,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetBooleanField(IntPtr obj, IntPtr fieldID, bool val)
 		{
 			try
@@ -659,6 +720,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static void SetIntField(IntPtr obj, IntPtr fieldID, int val)
 		{
 			try
@@ -670,6 +732,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static IntPtr GetObjectField(IntPtr obj, IntPtr fieldID)
 		{
 			IntPtr objectField;
@@ -683,6 +746,7 @@ namespace UnityEngine
 			}
 			return objectField;
 		}
+
 		public static string GetStringField(IntPtr obj, IntPtr fieldID)
 		{
 			string stringField;
@@ -696,6 +760,7 @@ namespace UnityEngine
 			}
 			return stringField;
 		}
+
 		public static char GetCharField(IntPtr obj, IntPtr fieldID)
 		{
 			char charField;
@@ -709,6 +774,7 @@ namespace UnityEngine
 			}
 			return charField;
 		}
+
 		public static double GetDoubleField(IntPtr obj, IntPtr fieldID)
 		{
 			double doubleField;
@@ -722,6 +788,7 @@ namespace UnityEngine
 			}
 			return doubleField;
 		}
+
 		public static float GetFloatField(IntPtr obj, IntPtr fieldID)
 		{
 			float floatField;
@@ -735,6 +802,7 @@ namespace UnityEngine
 			}
 			return floatField;
 		}
+
 		public static long GetLongField(IntPtr obj, IntPtr fieldID)
 		{
 			long longField;
@@ -748,6 +816,7 @@ namespace UnityEngine
 			}
 			return longField;
 		}
+
 		public static short GetShortField(IntPtr obj, IntPtr fieldID)
 		{
 			short shortField;
@@ -761,6 +830,7 @@ namespace UnityEngine
 			}
 			return shortField;
 		}
+
 		public static byte GetByteField(IntPtr obj, IntPtr fieldID)
 		{
 			byte byteField;
@@ -774,6 +844,7 @@ namespace UnityEngine
 			}
 			return byteField;
 		}
+
 		public static bool GetBooleanField(IntPtr obj, IntPtr fieldID)
 		{
 			bool booleanField;
@@ -787,6 +858,7 @@ namespace UnityEngine
 			}
 			return booleanField;
 		}
+
 		public static int GetIntField(IntPtr obj, IntPtr fieldID)
 		{
 			int intField;
@@ -800,6 +872,7 @@ namespace UnityEngine
 			}
 			return intField;
 		}
+
 		public static void CallVoidMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			try
@@ -811,6 +884,7 @@ namespace UnityEngine
 				AndroidJNISafe.CheckException();
 			}
 		}
+
 		public static IntPtr CallObjectMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			IntPtr result;
@@ -824,6 +898,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static string CallStringMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			string result;
@@ -837,6 +912,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static char CallCharMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			char result;
@@ -850,6 +926,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static double CallDoubleMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			double result;
@@ -863,6 +940,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static float CallFloatMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			float result;
@@ -876,6 +954,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static long CallLongMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			long result;
@@ -889,6 +968,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static short CallShortMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			short result;
@@ -902,6 +982,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static byte CallByteMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			byte result;
@@ -915,6 +996,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static bool CallBooleanMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			bool result;
@@ -928,6 +1010,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static int CallIntMethod(IntPtr obj, IntPtr methodID, jvalue[] args)
 		{
 			int result;
@@ -941,6 +1024,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr[] FromObjectArray(IntPtr array)
 		{
 			IntPtr[] result;
@@ -954,6 +1038,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static char[] FromCharArray(IntPtr array)
 		{
 			char[] result;
@@ -967,6 +1052,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static double[] FromDoubleArray(IntPtr array)
 		{
 			double[] result;
@@ -980,6 +1066,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static float[] FromFloatArray(IntPtr array)
 		{
 			float[] result;
@@ -993,6 +1080,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static long[] FromLongArray(IntPtr array)
 		{
 			long[] result;
@@ -1006,6 +1094,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static short[] FromShortArray(IntPtr array)
 		{
 			short[] result;
@@ -1019,6 +1108,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static byte[] FromByteArray(IntPtr array)
 		{
 			byte[] result;
@@ -1032,6 +1122,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static bool[] FromBooleanArray(IntPtr array)
 		{
 			bool[] result;
@@ -1045,6 +1136,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static int[] FromIntArray(IntPtr array)
 		{
 			int[] result;
@@ -1058,6 +1150,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToObjectArray(IntPtr[] array)
 		{
 			IntPtr result;
@@ -1071,6 +1164,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToObjectArray(IntPtr[] array, IntPtr type)
 		{
 			IntPtr result;
@@ -1084,6 +1178,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToCharArray(char[] array)
 		{
 			IntPtr result;
@@ -1097,6 +1192,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToDoubleArray(double[] array)
 		{
 			IntPtr result;
@@ -1110,6 +1206,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToFloatArray(float[] array)
 		{
 			IntPtr result;
@@ -1123,6 +1220,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToLongArray(long[] array)
 		{
 			IntPtr result;
@@ -1136,6 +1234,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToShortArray(short[] array)
 		{
 			IntPtr result;
@@ -1149,6 +1248,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToByteArray(byte[] array)
 		{
 			IntPtr result;
@@ -1162,6 +1262,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToBooleanArray(bool[] array)
 		{
 			IntPtr result;
@@ -1175,6 +1276,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr ToIntArray(int[] array)
 		{
 			IntPtr result;
@@ -1188,6 +1290,7 @@ namespace UnityEngine
 			}
 			return result;
 		}
+
 		public static IntPtr GetObjectArrayElement(IntPtr array, int index)
 		{
 			IntPtr objectArrayElement;
@@ -1201,6 +1304,7 @@ namespace UnityEngine
 			}
 			return objectArrayElement;
 		}
+
 		public static int GetArrayLength(IntPtr array)
 		{
 			int arrayLength;

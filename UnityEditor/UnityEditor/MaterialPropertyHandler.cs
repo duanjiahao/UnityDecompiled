@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MaterialPropertyHandler
 	{
 		private MaterialPropertyDrawer m_PropertyDrawer;
+
 		private List<MaterialPropertyDrawer> m_DecoratorDrawers;
+
 		private static Dictionary<string, MaterialPropertyHandler> s_PropertyHandlers = new Dictionary<string, MaterialPropertyHandler>();
+
 		public MaterialPropertyDrawer propertyDrawer
 		{
 			get
@@ -17,11 +21,13 @@ namespace UnityEditor
 				return this.m_PropertyDrawer;
 			}
 		}
+
 		public bool IsEmpty()
 		{
 			return this.m_PropertyDrawer == null && (this.m_DecoratorDrawers == null || this.m_DecoratorDrawers.Count == 0);
 		}
-		public void OnGUI(ref Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+
+		public void OnGUI(ref Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
 			float num = position.height;
 			position.height = 0f;
@@ -29,7 +35,7 @@ namespace UnityEditor
 			{
 				foreach (MaterialPropertyDrawer current in this.m_DecoratorDrawers)
 				{
-					position.height = current.GetPropertyHeight(prop, label, editor);
+					position.height = current.GetPropertyHeight(prop, label.text, editor);
 					float labelWidth = EditorGUIUtility.labelWidth;
 					float fieldWidth = EditorGUIUtility.fieldWidth;
 					current.OnGUI(position, prop, label, editor);
@@ -49,6 +55,7 @@ namespace UnityEditor
 				EditorGUIUtility.fieldWidth = fieldWidth;
 			}
 		}
+
 		public float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
 			float num = 0f;
@@ -65,6 +72,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private static string GetPropertyString(Shader shader, string name)
 		{
 			if (shader == null)
@@ -73,6 +81,7 @@ namespace UnityEditor
 			}
 			return shader.GetInstanceID() + "_" + name;
 		}
+
 		internal static void InvalidatePropertyCache(Shader shader)
 		{
 			if (shader == null)
@@ -93,6 +102,7 @@ namespace UnityEditor
 				MaterialPropertyHandler.s_PropertyHandlers.Remove(current2);
 			}
 		}
+
 		private static MaterialPropertyDrawer CreatePropertyDrawer(Type klass, string argsText)
 		{
 			if (string.IsNullOrEmpty(argsText))
@@ -119,6 +129,7 @@ namespace UnityEditor
 			}
 			return Activator.CreateInstance(klass, array2) as MaterialPropertyDrawer;
 		}
+
 		private static MaterialPropertyDrawer GetShaderPropertyDrawer(string attrib, out bool isDecorator)
 		{
 			isDecorator = false;
@@ -158,6 +169,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private static MaterialPropertyHandler GetShaderPropertyHandler(Shader shader, string name)
 		{
 			string[] shaderPropertyAttributes = ShaderUtil.GetShaderPropertyAttributes(shader, name);
@@ -194,6 +206,7 @@ namespace UnityEditor
 			}
 			return materialPropertyHandler;
 		}
+
 		internal static MaterialPropertyHandler GetHandler(Shader shader, string name)
 		{
 			if (shader == null)

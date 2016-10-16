@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AddCurvesPopupGameObjectNode : TreeViewItem

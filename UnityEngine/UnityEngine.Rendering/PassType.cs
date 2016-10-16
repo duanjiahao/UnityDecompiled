@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.Rendering
 {
 	public enum PassType
@@ -13,6 +14,7 @@ namespace UnityEngine.Rendering
 		LightPrePassFinal,
 		ShadowCaster,
 		Deferred = 10,
-		Meta
+		Meta,
+		MotionVectors
 	}
 }

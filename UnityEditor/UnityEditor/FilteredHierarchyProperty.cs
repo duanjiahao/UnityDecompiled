@@ -1,11 +1,14 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class FilteredHierarchyProperty : IHierarchyProperty
 	{
 		private FilteredHierarchy m_Hierarchy;
+
 		private int m_Position = -1;
+
 		public int instanceID
 		{
 			get
@@ -13,6 +16,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].instanceID;
 			}
 		}
+
 		public UnityEngine.Object pptrValue
 		{
 			get
@@ -20,6 +24,7 @@ namespace UnityEditor
 				return EditorUtility.InstanceIDToObject(this.instanceID);
 			}
 		}
+
 		public string name
 		{
 			get
@@ -27,6 +32,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].name;
 			}
 		}
+
 		public bool hasChildren
 		{
 			get
@@ -34,6 +40,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].hasChildren;
 			}
 		}
+
 		public bool isMainRepresentation
 		{
 			get
@@ -41,6 +48,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].isMainRepresentation;
 			}
 		}
+
 		public bool hasFullPreviewImage
 		{
 			get
@@ -48,6 +56,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].hasFullPreviewImage;
 			}
 		}
+
 		public IconDrawStyle iconDrawStyle
 		{
 			get
@@ -55,6 +64,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].iconDrawStyle;
 			}
 		}
+
 		public bool isFolder
 		{
 			get
@@ -62,6 +72,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].isFolder;
 			}
 		}
+
 		public int depth
 		{
 			get
@@ -69,6 +80,7 @@ namespace UnityEditor
 				return 0;
 			}
 		}
+
 		public int row
 		{
 			get
@@ -76,6 +88,7 @@ namespace UnityEditor
 				return this.m_Position;
 			}
 		}
+
 		public int colorCode
 		{
 			get
@@ -83,6 +96,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].colorCode;
 			}
 		}
+
 		public string guid
 		{
 			get
@@ -90,6 +104,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].guid;
 			}
 		}
+
 		public bool isValid
 		{
 			get
@@ -97,6 +112,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results != null && this.m_Position < this.m_Hierarchy.results.Length && this.m_Position >= 0;
 			}
 		}
+
 		public Texture2D icon
 		{
 			get
@@ -104,6 +120,7 @@ namespace UnityEditor
 				return this.m_Hierarchy.results[this.m_Position].icon;
 			}
 		}
+
 		public int[] ancestors
 		{
 			get
@@ -111,10 +128,12 @@ namespace UnityEditor
 				return new int[0];
 			}
 		}
+
 		public FilteredHierarchyProperty(FilteredHierarchy filter)
 		{
 			this.m_Hierarchy = filter;
 		}
+
 		public static IHierarchyProperty CreateHierarchyPropertyForFilter(FilteredHierarchy filteredHierarchy)
 		{
 			if (filteredHierarchy.searchFilter.GetState() != SearchFilter.State.EmptySearchFilter)
@@ -123,32 +142,39 @@ namespace UnityEditor
 			}
 			return new HierarchyProperty(filteredHierarchy.hierarchyType);
 		}
+
 		public void Reset()
 		{
 			this.m_Position = -1;
 		}
+
 		public bool IsExpanded(int[] expanded)
 		{
 			return false;
 		}
+
 		public bool Next(int[] expanded)
 		{
 			this.m_Position++;
 			return this.m_Position < this.m_Hierarchy.results.Length;
 		}
+
 		public bool NextWithDepthCheck(int[] expanded, int minDepth)
 		{
 			return this.Next(expanded);
 		}
+
 		public bool Previous(int[] expanded)
 		{
 			this.m_Position--;
 			return this.m_Position >= 0;
 		}
+
 		public bool Parent()
 		{
 			return false;
 		}
+
 		public bool Find(int _instanceID, int[] expanded)
 		{
 			this.Reset();
@@ -161,15 +187,18 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public int[] FindAllAncestors(int[] instanceIDs)
 		{
 			return new int[0];
 		}
+
 		public bool Skip(int count, int[] expanded)
 		{
 			this.m_Position += count;
 			return this.m_Position < this.m_Hierarchy.results.Length;
 		}
+
 		public int CountRemaining(int[] expanded)
 		{
 			return this.m_Hierarchy.results.Length - this.m_Position - 1;

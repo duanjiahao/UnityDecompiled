@@ -1,15 +1,22 @@
 using System;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class ParentViewState
 	{
 		public ListViewState lv;
+
 		public int selectedFolder = -1;
+
 		public int selectedFile = -1;
+
 		public int initialSelectedItem = -1;
+
 		public ParentViewFolder[] folders = new ParentViewFolder[0];
+
 		public bool[] selectedItems;
+
 		public int GetLineCount()
 		{
 			int num = 0;
@@ -19,6 +26,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		public bool HasTrue()
 		{
 			for (int i = 0; i < this.selectedItems.Length; i++)
@@ -30,14 +38,17 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public void SetLineCount()
 		{
 			this.lv.totalRows = this.GetLineCount();
 		}
+
 		public int GetFoldersCount()
 		{
 			return this.folders.Length;
 		}
+
 		public void ClearSelection()
 		{
 			for (int i = 0; i < this.selectedItems.Length; i++)
@@ -46,6 +57,7 @@ namespace UnityEditor
 			}
 			this.initialSelectedItem = -1;
 		}
+
 		internal static int IndexOf(ParentViewFolder[] foldersFrom, string lfname)
 		{
 			for (int i = 0; i < foldersFrom.Length; i++)
@@ -57,6 +69,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		internal static int IndexOf(ParentViewFile[] filesFrom, string lfname)
 		{
 			for (int i = 0; i < filesFrom.Length; i++)
@@ -68,14 +81,17 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		internal static int CompareViewFolder(ParentViewFolder p1, ParentViewFolder p2)
 		{
 			return string.Compare(p1.name, p2.name, true);
 		}
+
 		internal static int CompareViewFile(ParentViewFile p1, ParentViewFile p2)
 		{
 			return string.Compare(p1.name, p2.name, true);
 		}
+
 		private void AddAssetItem(string guid, string pathName, bool isDir, ChangeFlags changeFlags, int changeset)
 		{
 			if (pathName == string.Empty)
@@ -125,6 +141,7 @@ namespace UnityEditor
 				ArrayUtility.Add<ParentViewFile>(ref parentViewFolder.files, new ParentViewFile(text3, guid, changeFlags));
 			}
 		}
+
 		public void AddAssetItems(AssetsItem[] assets)
 		{
 			for (int i = 0; i < assets.Length; i++)
@@ -138,6 +155,7 @@ namespace UnityEditor
 				Array.Sort<ParentViewFile>(this.folders[j].files, new Comparison<ParentViewFile>(ParentViewState.CompareViewFile));
 			}
 		}
+
 		public void AddAssetItems(Changeset assets)
 		{
 			ChangesetItem[] items = assets.items;
@@ -152,6 +170,7 @@ namespace UnityEditor
 				Array.Sort<ParentViewFile>(this.folders[j].files, new Comparison<ParentViewFile>(ParentViewState.CompareViewFile));
 			}
 		}
+
 		public void AddAssetItems(DeletedAsset[] assets)
 		{
 			for (int i = 0; i < assets.Length; i++)
@@ -165,6 +184,7 @@ namespace UnityEditor
 				Array.Sort<ParentViewFile>(this.folders[j].files, new Comparison<ParentViewFile>(ParentViewState.CompareViewFile));
 			}
 		}
+
 		public void Clear()
 		{
 			this.folders = new ParentViewFolder[0];
@@ -172,6 +192,7 @@ namespace UnityEditor
 			this.selectedFile = -1;
 			this.initialSelectedItem = -1;
 		}
+
 		public bool NextFileFolder(ref int folder, ref int file)
 		{
 			if (folder >= this.folders.Length)
@@ -194,6 +215,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		public bool IndexToFolderAndFile(int index, ref int folder, ref int file)
 		{
 			folder = 0;

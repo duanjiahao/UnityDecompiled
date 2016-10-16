@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor.Sprites
 {
 	internal class PackerWindow : SpriteUtilityWindow
@@ -9,39 +10,51 @@ namespace UnityEditor.Sprites
 		private struct Edge
 		{
 			public ushort v0;
+
 			public ushort v1;
+
 			public Edge(ushort a, ushort b)
 			{
 				this.v0 = a;
 				this.v1 = b;
 			}
+
 			public override bool Equals(object obj)
 			{
 				PackerWindow.Edge edge = (PackerWindow.Edge)obj;
 				return (this.v0 == edge.v0 && this.v1 == edge.v1) || (this.v0 == edge.v1 && this.v1 == edge.v0);
 			}
+
 			public override int GetHashCode()
 			{
 				return ((int)this.v0 << 16 | (int)this.v1) ^ ((int)this.v1 << 16 | (int)this.v0).GetHashCode();
 			}
 		}
+
 		private static string[] s_AtlasNamesEmpty = new string[]
 		{
 			"Sprite atlas cache is empty"
 		};
+
 		private string[] m_AtlasNames = PackerWindow.s_AtlasNamesEmpty;
+
 		private int m_SelectedAtlas;
+
 		private static string[] s_PageNamesEmpty = new string[0];
+
 		private string[] m_PageNames = PackerWindow.s_PageNamesEmpty;
+
 		private int m_SelectedPage;
+
 		private Sprite m_SelectedSprite;
+
 		private void OnEnable()
 		{
 			base.minSize = new Vector2(400f, 256f);
-			base.title = EditorGUIUtility.TextContent("SpritePackerWindow.WindowTitle").text;
+			base.titleContent = EditorGUIUtility.TextContent("Sprite Packer");
 			this.Reset();
-			Analytics.Event("SpritePacker", "Window", "OnEnable", 1);
 		}
+
 		private void Reset()
 		{
 			this.RefreshAtlasNameList();
@@ -50,6 +63,7 @@ namespace UnityEditor.Sprites
 			this.m_SelectedPage = 0;
 			this.m_SelectedSprite = null;
 		}
+
 		private void RefreshAtlasNameList()
 		{
 			this.m_AtlasNames = Packer.atlasNames;
@@ -58,6 +72,7 @@ namespace UnityEditor.Sprites
 				this.m_SelectedAtlas = 0;
 			}
 		}
+
 		private void RefreshAtlasPageList()
 		{
 			if (this.m_AtlasNames.Length > 0)
@@ -79,6 +94,7 @@ namespace UnityEditor.Sprites
 				this.m_SelectedPage = 0;
 			}
 		}
+
 		private void OnAtlasNameListChanged()
 		{
 			if (this.m_AtlasNames.Length > 0)
@@ -96,17 +112,7 @@ namespace UnityEditor.Sprites
 			}
 			this.Reset();
 		}
-		private bool ValidateProGUI()
-		{
-			if (!Application.HasAdvancedLicense())
-			{
-				EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				GUILayout.Label("Sprite packing is only supported in Unity Pro.", new GUILayoutOption[0]);
-				EditorGUILayout.EndHorizontal();
-				return false;
-			}
-			return true;
-		}
+
 		private bool ValidateIsPackingEnabled()
 		{
 			if (EditorSettings.spritePackerMode == SpritePackerMode.Disabled)
@@ -122,50 +128,54 @@ namespace UnityEditor.Sprites
 			}
 			return true;
 		}
+
 		private void DoToolbarGUI()
 		{
 			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUI.BeginDisabledGroup(Application.isPlaying);
-			if (GUILayout.Button("Pack", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			using (new EditorGUI.DisabledScope(Application.isPlaying))
 			{
-				Packer.RebuildAtlasCacheIfNeeded(EditorUserBuildSettings.activeBuildTarget, true);
-				this.m_SelectedSprite = null;
-				this.RefreshAtlasPageList();
-				this.RefreshState();
-			}
-			else
-			{
-				EditorGUI.BeginDisabledGroup(Packer.SelectedPolicy == Packer.kDefaultPolicy);
-				if (GUILayout.Button("Repack", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+				if (GUILayout.Button("Pack", EditorStyles.toolbarButton, new GUILayoutOption[0]))
 				{
-					Packer.RebuildAtlasCacheIfNeeded(EditorUserBuildSettings.activeBuildTarget, true, Packer.Execution.ForceRegroup);
+					Packer.RebuildAtlasCacheIfNeeded(EditorUserBuildSettings.activeBuildTarget, true);
 					this.m_SelectedSprite = null;
 					this.RefreshAtlasPageList();
 					this.RefreshState();
 				}
-				EditorGUI.EndDisabledGroup();
+				else
+				{
+					using (new EditorGUI.DisabledScope(Packer.SelectedPolicy == Packer.kDefaultPolicy))
+					{
+						if (GUILayout.Button("Repack", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+						{
+							Packer.RebuildAtlasCacheIfNeeded(EditorUserBuildSettings.activeBuildTarget, true, Packer.Execution.ForceRegroup);
+							this.m_SelectedSprite = null;
+							this.RefreshAtlasPageList();
+							this.RefreshState();
+						}
+					}
+				}
 			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.BeginDisabledGroup(this.m_AtlasNames.Length == 0);
-			GUILayout.Space(16f);
-			GUILayout.Label("View atlas:", new GUILayoutOption[0]);
-			EditorGUI.BeginChangeCheck();
-			this.m_SelectedAtlas = EditorGUILayout.Popup(this.m_SelectedAtlas, this.m_AtlasNames, EditorStyles.toolbarPopup, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
+			using (new EditorGUI.DisabledScope(this.m_AtlasNames.Length == 0))
 			{
-				this.RefreshAtlasPageList();
-				this.m_SelectedSprite = null;
+				GUILayout.Space(16f);
+				GUILayout.Label("View atlas:", new GUILayoutOption[0]);
+				EditorGUI.BeginChangeCheck();
+				this.m_SelectedAtlas = EditorGUILayout.Popup(this.m_SelectedAtlas, this.m_AtlasNames, EditorStyles.toolbarPopup, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
+				{
+					this.RefreshAtlasPageList();
+					this.m_SelectedSprite = null;
+				}
+				EditorGUI.BeginChangeCheck();
+				this.m_SelectedPage = EditorGUILayout.Popup(this.m_SelectedPage, this.m_PageNames, EditorStyles.toolbarPopup, new GUILayoutOption[]
+				{
+					GUILayout.Width(70f)
+				});
+				if (EditorGUI.EndChangeCheck())
+				{
+					this.m_SelectedSprite = null;
+				}
 			}
-			EditorGUI.BeginChangeCheck();
-			this.m_SelectedPage = EditorGUILayout.Popup(this.m_SelectedPage, this.m_PageNames, EditorStyles.toolbarPopup, new GUILayoutOption[]
-			{
-				GUILayout.Width(70f)
-			});
-			if (EditorGUI.EndChangeCheck())
-			{
-				this.m_SelectedSprite = null;
-			}
-			EditorGUI.EndDisabledGroup();
 			EditorGUI.BeginChangeCheck();
 			string[] policies = Packer.Policies;
 			int num = Array.IndexOf<string>(policies, Packer.SelectedPolicy);
@@ -176,6 +186,7 @@ namespace UnityEditor.Sprites
 			}
 			EditorGUILayout.EndHorizontal();
 		}
+
 		private void OnSelectionChange()
 		{
 			if (Selection.activeObject == null)
@@ -208,6 +219,7 @@ namespace UnityEditor.Sprites
 				base.Repaint();
 			}
 		}
+
 		private void RefreshState()
 		{
 			string[] atlasNames = Packer.atlasNames;
@@ -236,13 +248,13 @@ namespace UnityEditor.Sprites
 				this.m_SelectedPage = 0;
 			}
 			base.SetNewTexture(texturesForAtlas[this.m_SelectedPage]);
+			Texture2D[] alphaTexturesForAtlas = Packer.GetAlphaTexturesForAtlas(atlasName);
+			Texture2D alphaTextureOverride = (this.m_SelectedPage >= alphaTexturesForAtlas.Length) ? null : alphaTexturesForAtlas[this.m_SelectedPage];
+			base.SetAlphaTextureOverride(alphaTextureOverride);
 		}
+
 		public void OnGUI()
 		{
-			if (!this.ValidateProGUI())
-			{
-				return;
-			}
 			if (!this.ValidateIsPackingEnabled())
 			{
 				return;
@@ -271,10 +283,12 @@ namespace UnityEditor.Sprites
 			EditorGUILayout.EndHorizontal();
 			Handles.matrix = matrix;
 		}
+
 		private void DrawLineUtility(Vector2 from, Vector2 to)
 		{
 			SpriteEditorUtility.DrawLine(new Vector3(from.x * (float)this.m_Texture.width + 1f / this.m_Zoom, from.y * (float)this.m_Texture.height + 1f / this.m_Zoom, 0f), new Vector3(to.x * (float)this.m_Texture.width + 1f / this.m_Zoom, to.y * (float)this.m_Texture.height + 1f / this.m_Zoom, 0f));
 		}
+
 		private PackerWindow.Edge[] FindUniqueEdges(ushort[] indices)
 		{
 			PackerWindow.Edge[] array = new PackerWindow.Edge[indices.Length];
@@ -285,12 +299,12 @@ namespace UnityEditor.Sprites
 				array[i * 3 + 1] = new PackerWindow.Edge(indices[i * 3 + 1], indices[i * 3 + 2]);
 				array[i * 3 + 2] = new PackerWindow.Edge(indices[i * 3 + 2], indices[i * 3]);
 			}
-			return (
-				from x in array
-				group x by x into x
-				where x.Count<PackerWindow.Edge>() == 1
-				select x.First<PackerWindow.Edge>()).ToArray<PackerWindow.Edge>();
+			return (from x in array
+			group x by x into x
+			where x.Count<PackerWindow.Edge>() == 1
+			select x.First<PackerWindow.Edge>()).ToArray<PackerWindow.Edge>();
 		}
+
 		protected override void DrawGizmos()
 		{
 			if (this.m_SelectedSprite != null && this.m_Texture != null)

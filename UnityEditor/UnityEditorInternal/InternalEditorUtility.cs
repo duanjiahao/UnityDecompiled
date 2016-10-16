@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEditor.Scripting;
 using UnityEngine;
 using UnityEngine.Internal;
+
 namespace UnityEditorInternal
 {
 	public sealed class InternalEditorUtility
@@ -20,18 +21,28 @@ namespace UnityEditorInternal
 			kHierarchyDropBetween,
 			kHierarchyDropAfterParent = 4
 		}
+
+		public static extern bool isApplicationActive
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public static extern bool inBatchMode
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool isHumanControllingUs
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern int[] expandedProjectWindowItems
 		{
 			[WrapperlessIcall]
@@ -41,84 +52,99 @@ namespace UnityEditorInternal
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern string[] tags
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string[] layers
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		internal static extern string[] sortingLayerNames
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		internal static extern int[] sortingLayerUniqueIDs
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string unityPreferencesFolder
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float defaultScreenWidth
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float defaultScreenHeight
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float defaultWebScreenWidth
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float defaultWebScreenHeight
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float remoteScreenWidth
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float remoteScreenHeight
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool ignoreInspectorChanges
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void BumpMapSettingsFixingWindowReportResult(int result);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BumpMapTextureNeedsFixingInternal(Material material, string propName, bool flaggedAsNormal);
+
 		internal static bool BumpMapTextureNeedsFixing(MaterialProperty prop)
 		{
 			if (prop.type != MaterialProperty.PropType.Texture)
@@ -137,9 +163,11 @@ namespace UnityEditorInternal
 			}
 			return false;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FixNormalmapTextureInternal(Material material, string propName);
+
 		internal static void FixNormalmapTexture(MaterialProperty prop)
 		{
 			UnityEngine.Object[] targets = prop.targets;
@@ -149,6 +177,7 @@ namespace UnityEditorInternal
 				InternalEditorUtility.FixNormalmapTextureInternal(material, prop.name);
 			}
 		}
+
 		internal static bool HDRTextureNeedsFixing(MaterialProperty prop, out bool canBeFixedAutomatically)
 		{
 			if ((prop.flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None || prop.displayName.Contains("(HDR"))
@@ -170,6 +199,7 @@ namespace UnityEditorInternal
 			canBeFixedAutomatically = false;
 			return false;
 		}
+
 		internal static void FixHDRTexture(MaterialProperty prop)
 		{
 			string assetPath = AssetDatabase.GetAssetPath(prop.textureValue);
@@ -189,233 +219,325 @@ namespace UnityEditorInternal
 				bool platformTextureSettings = textureImporter.GetPlatformTextureSettings(current.name, out maxTextureSize, out textureImporterFormat, out compressionQuality);
 				if (platformTextureSettings)
 				{
-					textureImporter.SetPlatformTextureSettings(current.name, maxTextureSize, textureFormat, compressionQuality);
+					textureImporter.SetPlatformTextureSettings(current.name, maxTextureSize, textureFormat, compressionQuality, false);
 				}
 			}
 			AssetDatabase.ImportAsset(assetPath);
+			UnityEngine.Object[] targets = prop.targets;
+			for (int i = 0; i < targets.Length; i++)
+			{
+				UnityEngine.Object dirty = targets[i];
+				EditorUtility.SetDirty(dirty);
+			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetEditorAssemblyPath();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetEngineAssemblyPath();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string CalculateHashForObjectsAndDependencies(UnityEngine.Object[] objects);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ExecuteCommandOnKeyWindow(string commandName);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Material[] InstantiateMaterialsInEditMode(Renderer renderer);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern CanAppendBuild BuildCanBeAppended(BuildTarget target, string location);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void RegisterExtensionDll(string dllLocation, string guid);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetupCustomDll(string dllName, string dllLocation);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Assembly LoadAssemblyWrapper(string dllName, string dllLocation);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetPlatformPath(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int AddScriptComponentUnchecked(GameObject gameObject, MonoScript script);
+		internal static extern int AddScriptComponentUncheckedUndoable(GameObject gameObject, MonoScript script);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int CreateScriptableObjectUnchecked(MonoScript script);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RequestScriptReload();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SwitchSkinAndRepaintAllViews();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RepaintAllViews();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetIsInspectorExpanded(UnityEngine.Object obj);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetIsInspectorExpanded(UnityEngine.Object obj, bool isExpanded);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SaveToSerializedFileAndForget(UnityEngine.Object[] obj, string path, bool allowTextSerialization);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] LoadSerializedFileAndForget(string path);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern DragAndDropVisualMode ProjectWindowDrag(HierarchyProperty property, bool perform);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern DragAndDropVisualMode HierarchyWindowDrag(HierarchyProperty property, bool perform, InternalEditorUtility.HierarchyDropMode dropMode);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern DragAndDropVisualMode InspectorWindowDrag(UnityEngine.Object[] targets, bool perform);
+
 		public static DragAndDropVisualMode SceneViewDrag(UnityEngine.Object dropUpon, Vector3 worldPosition, Vector2 viewportPosition, bool perform)
 		{
 			return InternalEditorUtility.INTERNAL_CALL_SceneViewDrag(dropUpon, ref worldPosition, ref viewportPosition, perform);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern DragAndDropVisualMode INTERNAL_CALL_SceneViewDrag(UnityEngine.Object dropUpon, ref Vector3 worldPosition, ref Vector2 viewportPosition, bool perform);
+
 		public static void SetRectTransformTemporaryRect(RectTransform rectTransform, Rect rect)
 		{
 			InternalEditorUtility.INTERNAL_CALL_SetRectTransformTemporaryRect(rectTransform, ref rect);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetRectTransformTemporaryRect(RectTransform rectTransform, ref Rect rect);
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool HasTeamLicense();
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasPro();
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasFreeLicense();
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasEduLicense();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool HasProFeaturesEnabled();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasAdvancedLicenseOnBuildTarget(BuildTarget target);
+
 		public static Rect GetBoundsOfDesktopAtPoint(Vector2 pos)
 		{
-			return InternalEditorUtility.INTERNAL_CALL_GetBoundsOfDesktopAtPoint(ref pos);
+			Rect result;
+			InternalEditorUtility.INTERNAL_CALL_GetBoundsOfDesktopAtPoint(ref pos, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Rect INTERNAL_CALL_GetBoundsOfDesktopAtPoint(ref Vector2 pos);
+		private static extern void INTERNAL_CALL_GetBoundsOfDesktopAtPoint(ref Vector2 pos, out Rect value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetSortingLayerName(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetSortingLayerUniqueID(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetSortingLayerNameFromUniqueID(int id);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetSortingLayerCount();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSortingLayerName(int index, string name);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSortingLayerLocked(int index, bool locked);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetSortingLayerLocked(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsSortingLayerDefault(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void AddSortingLayer();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateSortingLayersOrder();
+
+		public static Vector4 GetSpriteOuterUV(Sprite sprite, bool getAtlasData)
+		{
+			Vector4 result;
+			InternalEditorUtility.INTERNAL_CALL_GetSpriteOuterUV(sprite, getAtlasData, out result);
+			return result;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Vector4 GetSpriteOuterUV(Sprite sprite, bool getAtlasData);
+		private static extern void INTERNAL_CALL_GetSpriteOuterUV(Sprite sprite, bool getAtlasData, out Vector4 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object GetObjectFromInstanceID(int instanceID);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetClassIDWithoutLoadingObject(int instanceID);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object GetLoadedObjectFromInstanceID(int instanceID);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetLayerName(int layer);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetExternalScriptEditor();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetExternalScriptEditorArgs();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ReloadWindowLayoutMenu();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevertFactoryLayoutSettings(bool quitOnCancel);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadDefaultLayout();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CalculateAmbientProbeFromSkybox();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetupShaderMenu(Material material);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetUnityVersionFull();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetFullUnityVersion();
+
 		public static Version GetUnityVersion()
 		{
 			Version version = new Version(InternalEditorUtility.GetUnityVersionDigits());
 			return new Version(version.Major, version.Minor, version.Build, InternalEditorUtility.GetUnityRevision());
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUnityVersionDigits();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUnityBuildBranch();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetUnityVersionDate();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetUnityRevision();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsUnityBeta();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUnityCopyright();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetLicenseInfo();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int[] GetLicenseFlags();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAuthToken();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenEditorConsole();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetGameObjectInstanceIDFromComponent(int instanceID);
+
 		public static Color[] ReadScreenPixel(Vector2 pixelPos, int sizex, int sizey)
 		{
 			return InternalEditorUtility.INTERNAL_CALL_ReadScreenPixel(ref pixelPos, sizex, sizey);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Color[] INTERNAL_CALL_ReadScreenPixel(ref Vector2 pixelPos, int sizex, int sizey);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenPlayerConsole();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Resolution GetDesktopResolution();
+
 		public static string TextifyEvent(Event evt)
 		{
 			if (evt == null)
@@ -592,44 +714,66 @@ namespace UnityEditorInternal
 			}
 			return str2 + str;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAvailableDiffTools();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetNoDiffToolsDetectedMessage();
+
 		public static Bounds TransformBounds(Bounds b, Transform t)
 		{
-			return InternalEditorUtility.INTERNAL_CALL_TransformBounds(ref b, t);
+			Bounds result;
+			InternalEditorUtility.INTERNAL_CALL_TransformBounds(ref b, t, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Bounds INTERNAL_CALL_TransformBounds(ref Bounds b, Transform t);
+		private static extern void INTERNAL_CALL_TransformBounds(ref Bounds b, Transform t, out Bounds value);
+
 		public static void SetCustomLighting(Light[] lights, Color ambient)
 		{
 			InternalEditorUtility.INTERNAL_CALL_SetCustomLighting(lights, ref ambient);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetCustomLighting(Light[] lights, ref Color ambient);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ClearSceneLighting();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RemoveCustomLighting();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void DrawSkyboxMaterial(Material mat, Camera cam);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasFullscreenCamera();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ResetCursor();
+
+		public static Bounds CalculateSelectionBounds(bool usePivotOnlyForParticles, bool onlyUseActiveSelection)
+		{
+			Bounds result;
+			InternalEditorUtility.INTERNAL_CALL_CalculateSelectionBounds(usePivotOnlyForParticles, onlyUseActiveSelection, out result);
+			return result;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Bounds CalculateSelectionBounds(bool usePivotOnlyForParticles, bool onlyUseActiveSelection);
+		private static extern void INTERNAL_CALL_CalculateSelectionBounds(bool usePivotOnlyForParticles, bool onlyUseActiveSelection, out Bounds value);
+
 		internal static Bounds CalculateSelectionBoundsInSpace(Vector3 position, Quaternion rotation, bool rectBlueprintMode)
 		{
 			Quaternion rotation2 = Quaternion.Inverse(rotation);
@@ -672,10 +816,12 @@ namespace UnityEditorInternal
 			}
 			return new Bounds((vector + vector2) * 0.5f, vector2 - vector);
 		}
+
 		internal static bool SupportsRectLayout(Transform tr)
 		{
 			return !(tr == null) && !(tr.parent == null) && !(tr.GetComponent<RectTransform>() == null) && !(tr.parent.GetComponent<RectTransform>() == null);
 		}
+
 		private static Bounds GetLocalBounds(GameObject gameObject)
 		{
 			RectTransform component = gameObject.GetComponent<RectTransform>();
@@ -694,48 +840,81 @@ namespace UnityEditorInternal
 			}
 			if (component2 is SpriteRenderer)
 			{
-				SpriteRenderer spriteRenderer = component2 as SpriteRenderer;
-				if (spriteRenderer.sprite != null)
-				{
-					Bounds bounds = spriteRenderer.sprite.bounds;
-					Vector3 size = bounds.size;
-					size.z = 0f;
-					bounds.size = size;
-					return bounds;
-				}
+				return ((SpriteRenderer)component2).GetSpriteBounds();
 			}
 			return new Bounds(Vector3.zero, Vector3.zero);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OnGameViewFocus(bool focus);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool OpenFileAtLineExternal(string filename, int line);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern MonoIsland[] GetMonoIslands();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Xbox360GenerateSPAConfig(string spaPath);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Xbox360SaveSplashScreenToFile(Texture2D image, string spaPath);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool WiiUSaveStartupScreenToFile(Texture2D image, string path, int outputWidth, int outputHeight);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CanConnectToCacheServer();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool DetectDotNetDll(string path);
+		public static extern ulong VerifyCacheServerIntegrity();
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern ulong FixCacheServerIntegrityErrors();
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern DllType DetectDotNetDll(string path);
+
+		public static bool IsDotNet4Dll(string path)
+		{
+			DllType dllType = InternalEditorUtility.DetectDotNetDll(path);
+			switch (dllType)
+			{
+			case DllType.Unknown:
+			case DllType.Native:
+			case DllType.UnknownManaged:
+			case DllType.ManagedNET35:
+				return false;
+			case DllType.ManagedNET40:
+			case DllType.WinMDNative:
+			case DllType.WinMDNET40:
+				return true;
+			default:
+				throw new Exception(string.Format("Unknown dll type: {0}", dllType));
+			}
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetCrashReportFolder();
+
 		[ExcludeFromDocs]
 		internal static bool RunningUnderWindows8()
 		{
 			bool orHigher = true;
 			return InternalEditorUtility.RunningUnderWindows8(orHigher);
 		}
+
 		internal static bool RunningUnderWindows8([DefaultValue("true")] bool orHigher)
 		{
 			if (Application.platform != RuntimePlatform.WindowsEditor)
@@ -751,32 +930,45 @@ namespace UnityEditorInternal
 			}
 			return major == 6 && minor == 2;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int DetermineDepthOrder(Transform lhs, Transform rhs);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ShowPackageManagerWindow();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void AuxWindowManager_OnAssemblyReload();
+
 		public static Vector2 PassAndReturnVector2(Vector2 v)
 		{
-			return InternalEditorUtility.INTERNAL_CALL_PassAndReturnVector2(ref v);
+			Vector2 result;
+			InternalEditorUtility.INTERNAL_CALL_PassAndReturnVector2(ref v, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector2 INTERNAL_CALL_PassAndReturnVector2(ref Vector2 v);
+		private static extern void INTERNAL_CALL_PassAndReturnVector2(ref Vector2 v, out Vector2 value);
+
 		public static Color32 PassAndReturnColor32(Color32 c)
 		{
-			return InternalEditorUtility.INTERNAL_CALL_PassAndReturnColor32(ref c);
+			Color32 result;
+			InternalEditorUtility.INTERNAL_CALL_PassAndReturnColor32(ref c, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Color32 INTERNAL_CALL_PassAndReturnColor32(ref Color32 c);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_PassAndReturnColor32(ref Color32 c, out Color32 value);
+
+		[Obsolete("use EditorSceneManager.EnsureUntitledSceneHasBeenSaved"), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool EnsureSceneHasBeenSaved(string operation);
+
 		public static Texture2D GetIconForFile(string fileName)
 		{
 			int num = fileName.LastIndexOf('.');
@@ -796,6 +988,8 @@ namespace UnityEditorInternal
 				return EditorGUIUtility.FindTexture("Js Script Icon");
 			case "mat":
 				return EditorGUIUtility.FindTexture("Material Icon");
+			case "physicmaterial":
+				return EditorGUIUtility.FindTexture("PhysicMaterial Icon");
 			case "prefab":
 				return EditorGUIUtility.FindTexture("PrefabNormal Icon");
 			case "shader":
@@ -935,6 +1129,7 @@ namespace UnityEditorInternal
 			}
 			return EditorGUIUtility.FindTexture("DefaultAsset Icon");
 		}
+
 		public static string[] GetEditorSettingsList(string prefix, int count)
 		{
 			ArrayList arrayList = new ArrayList();
@@ -949,6 +1144,7 @@ namespace UnityEditorInternal
 			}
 			return arrayList.ToArray(typeof(string)) as string[];
 		}
+
 		public static void SaveEditorSettingsList(string prefix, string[] aList, int count)
 		{
 			for (int i = 0; i < aList.Length; i++)
@@ -960,6 +1156,7 @@ namespace UnityEditorInternal
 				EditorPrefs.DeleteKey(prefix + i);
 			}
 		}
+
 		public static string TextAreaForDocBrowser(Rect position, string text, GUIStyle style)
 		{
 			int controlID = GUIUtility.GetControlID("TextAreaWithTabHandling".GetHashCode(), FocusType.Keyboard, position);
@@ -972,28 +1169,31 @@ namespace UnityEditorInternal
 					s_RecycledEditor.Insert('\t');
 					current.Use();
 					GUI.changed = true;
-					text = s_RecycledEditor.content.text;
+					text = s_RecycledEditor.text;
 				}
 				if (current.character == '\n')
 				{
 					s_RecycledEditor.Insert('\n');
 					current.Use();
 					GUI.changed = true;
-					text = s_RecycledEditor.content.text;
+					text = s_RecycledEditor.text;
 				}
 			}
 			bool flag;
 			text = EditorGUI.DoTextField(s_RecycledEditor, controlID, EditorGUI.IndentedRect(position), text, style, null, out flag, false, true, false);
 			return text;
 		}
+
 		public static Camera[] GetSceneViewCameras()
 		{
 			return SceneView.GetAllSceneCameras();
 		}
+
 		public static void ShowGameView()
 		{
 			WindowLayout.ShowAppropriateViewOnEnterExitPlaymode(true);
 		}
+
 		public static List<int> GetNewSelection(int clickedInstanceID, List<int> allInstanceIDs, List<int> selectedInstanceIDs, int lastClickedInstanceID, bool keepMultiSelection, bool useShiftAsActionKey, bool allowMultiSelection)
 		{
 			List<int> list = new List<int>();
@@ -1015,84 +1215,79 @@ namespace UnityEditorInternal
 					list.Add(clickedInstanceID);
 				}
 			}
-			else
+			else if (flag)
 			{
-				if (flag)
+				if (clickedInstanceID == lastClickedInstanceID)
 				{
-					if (clickedInstanceID == lastClickedInstanceID)
+					return selectedInstanceIDs;
+				}
+				int num;
+				int num2;
+				if (!InternalEditorUtility.GetFirstAndLastSelected(allInstanceIDs, selectedInstanceIDs, out num, out num2))
+				{
+					list.Add(clickedInstanceID);
+					return list;
+				}
+				int num3 = -1;
+				int num4 = -1;
+				for (int i = 0; i < allInstanceIDs.Count; i++)
+				{
+					if (allInstanceIDs[i] == clickedInstanceID)
 					{
-						return selectedInstanceIDs;
+						num3 = i;
 					}
-					int num;
-					int num2;
-					if (!InternalEditorUtility.GetFirstAndLastSelected(allInstanceIDs, selectedInstanceIDs, out num, out num2))
+					if (lastClickedInstanceID != 0 && allInstanceIDs[i] == lastClickedInstanceID)
 					{
-						list.Add(clickedInstanceID);
-						return list;
+						num4 = i;
 					}
-					int num3 = -1;
-					int num4 = -1;
-					for (int i = 0; i < allInstanceIDs.Count; i++)
+				}
+				int num5 = 0;
+				if (num4 != -1)
+				{
+					num5 = ((num3 <= num4) ? -1 : 1);
+				}
+				int num6;
+				int num7;
+				if (num3 > num2)
+				{
+					num6 = num;
+					num7 = num3;
+				}
+				else if (num3 >= num && num3 < num2)
+				{
+					if (num5 > 0)
 					{
-						if (allInstanceIDs[i] == clickedInstanceID)
-						{
-							num3 = i;
-						}
-						if (lastClickedInstanceID != 0 && allInstanceIDs[i] == lastClickedInstanceID)
-						{
-							num4 = i;
-						}
+						num6 = num3;
+						num7 = num2;
 					}
-					int num5 = 0;
-					if (num4 != -1)
-					{
-						num5 = ((num3 <= num4) ? -1 : 1);
-					}
-					int num6;
-					int num7;
-					if (num3 > num2)
+					else
 					{
 						num6 = num;
 						num7 = num3;
 					}
-					else
-					{
-						if (num3 >= num && num3 < num2)
-						{
-							if (num5 > 0)
-							{
-								num6 = num3;
-								num7 = num2;
-							}
-							else
-							{
-								num6 = num;
-								num7 = num3;
-							}
-						}
-						else
-						{
-							num6 = num3;
-							num7 = num2;
-						}
-					}
-					for (int j = num6; j <= num7; j++)
-					{
-						list.Add(allInstanceIDs[j]);
-					}
 				}
 				else
 				{
-					if (keepMultiSelection && selectedInstanceIDs.Contains(clickedInstanceID))
-					{
-						list.AddRange(selectedInstanceIDs);
-						return list;
-					}
-					list.Add(clickedInstanceID);
+					num6 = num3;
+					num7 = num2;
 				}
+				for (int j = num6; j <= num7; j++)
+				{
+					list.Add(allInstanceIDs[j]);
+				}
+			}
+			else
+			{
+				if (keepMultiSelection && selectedInstanceIDs.Contains(clickedInstanceID))
+				{
+					list.AddRange(selectedInstanceIDs);
+					return list;
+				}
+				list.Add(clickedInstanceID);
 			}
 			return list;
 		}
+
 		private static bool GetFirstAndLastSelected(List<int> allInstanceIDs, List<int> selectedInstanceIDs, out int firstIndex, out int lastIndex)
 		{
 			firstIndex = -1;
@@ -1110,11 +1305,13 @@ namespace UnityEditorInternal
 			}
 			return firstIndex != -1 && lastIndex != -1;
 		}
+
 		public static bool IsValidFileName(string filename)
 		{
 			string text = InternalEditorUtility.RemoveInvalidCharsFromFileName(filename, false);
 			return !(text != filename) && !string.IsNullOrEmpty(text);
 		}
+
 		public static string RemoveInvalidCharsFromFileName(string filename, bool logIfInvalidChars)
 		{
 			if (string.IsNullOrEmpty(filename))
@@ -1156,6 +1353,7 @@ namespace UnityEditorInternal
 			}
 			return text2;
 		}
+
 		public static string GetDisplayStringOfInvalidCharsOfFileName(string filename)
 		{
 			if (string.IsNullOrEmpty(filename))
@@ -1178,6 +1376,7 @@ namespace UnityEditorInternal
 			}
 			return text2;
 		}
+
 		internal static bool IsScriptOrAssembly(string filename)
 		{
 			if (string.IsNullOrEmpty(filename))
@@ -1191,27 +1390,22 @@ namespace UnityEditorInternal
 				{
 					InternalEditorUtility.<>f__switch$map8 = new Dictionary<string, int>(5)
 					{
-
 						{
 							".cs",
 							0
 						},
-
 						{
 							".js",
 							0
 						},
-
 						{
 							".boo",
 							0
 						},
-
 						{
 							".dll",
 							1
 						},
-
 						{
 							".exe",
 							1
@@ -1233,6 +1427,7 @@ namespace UnityEditorInternal
 			}
 			return false;
 		}
+
 		internal static T ParentHasComponent<T>(Transform trans) where T : Component
 		{
 			if (!(trans != null))
@@ -1246,12 +1441,12 @@ namespace UnityEditorInternal
 			}
 			return InternalEditorUtility.ParentHasComponent<T>(trans.parent);
 		}
+
 		internal static IEnumerable<string> GetAllScriptGUIDs()
 		{
-			return 
-				from asset in AssetDatabase.GetAllAssetPaths()
-				where InternalEditorUtility.IsScriptOrAssembly(asset)
-				select AssetDatabase.AssetPathToGUID(asset);
+			return from asset in AssetDatabase.GetAllAssetPaths()
+			where InternalEditorUtility.IsScriptOrAssembly(asset)
+			select AssetDatabase.AssetPathToGUID(asset);
 		}
 	}
 }

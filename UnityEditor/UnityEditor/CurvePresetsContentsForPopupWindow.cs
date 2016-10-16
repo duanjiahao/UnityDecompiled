@@ -2,16 +2,23 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class CurvePresetsContentsForPopupWindow : PopupWindowContent
 	{
 		private PresetLibraryEditor<CurvePresetLibrary> m_CurveLibraryEditor;
+
 		private PresetLibraryEditorState m_CurveLibraryEditorState;
+
 		private AnimationCurve m_Curve;
+
 		private CurveLibraryType m_CurveLibraryType;
+
 		private bool m_WantsToClose;
+
 		private Action<AnimationCurve> m_PresetSelectedCallback;
+
 		public AnimationCurve curveToSaveAsPreset
 		{
 			get
@@ -23,6 +30,7 @@ namespace UnityEditor
 				this.m_Curve = value;
 			}
 		}
+
 		public string currentPresetLibrary
 		{
 			get
@@ -36,16 +44,19 @@ namespace UnityEditor
 				this.m_CurveLibraryEditor.currentLibraryWithoutExtension = value;
 			}
 		}
+
 		public CurvePresetsContentsForPopupWindow(AnimationCurve animCurve, CurveLibraryType curveLibraryType, Action<AnimationCurve> presetSelectedCallback)
 		{
 			this.m_CurveLibraryType = curveLibraryType;
 			this.m_Curve = animCurve;
 			this.m_PresetSelectedCallback = presetSelectedCallback;
 		}
+
 		public static string GetBasePrefText(CurveLibraryType curveLibraryType)
 		{
 			return CurvePresetsContentsForPopupWindow.GetExtension(curveLibraryType);
 		}
+
 		private static string GetExtension(CurveLibraryType curveLibraryType)
 		{
 			if (curveLibraryType == CurveLibraryType.Unbounded)
@@ -59,14 +70,17 @@ namespace UnityEditor
 			}
 			return PresetLibraryLocations.GetCurveLibraryExtension(true);
 		}
+
 		public override void OnClose()
 		{
 			this.m_CurveLibraryEditorState.TransferEditorPrefsState(false);
 		}
+
 		public PresetLibraryEditor<CurvePresetLibrary> GetPresetLibraryEditor()
 		{
 			return this.m_CurveLibraryEditor;
 		}
+
 		public void InitIfNeeded()
 		{
 			if (this.m_CurveLibraryEditorState == null)
@@ -87,10 +101,12 @@ namespace UnityEditor
 				this.m_CurveLibraryEditor.showHeader = true;
 			}
 		}
+
 		private void OnPresetsWasReordered()
 		{
 			InternalEditorUtility.RepaintAllViews();
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			this.InitIfNeeded();
@@ -100,6 +116,7 @@ namespace UnityEditor
 				base.editorWindow.Close();
 			}
 		}
+
 		private void ItemClickedCallback(int clickCount, object presetObject)
 		{
 			AnimationCurve animationCurve = presetObject as AnimationCurve;
@@ -109,10 +126,12 @@ namespace UnityEditor
 			}
 			this.m_PresetSelectedCallback(animationCurve);
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			return new Vector2(240f, 330f);
 		}
+
 		private void AddDefaultPresetsToLibrary(PresetLibrary presetLibrary)
 		{
 			CurvePresetLibrary curvePresetLibrary = presetLibrary as CurvePresetLibrary;

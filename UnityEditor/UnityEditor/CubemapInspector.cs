@@ -1,11 +1,13 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(Cubemap))]
 	internal class CubemapInspector : TextureInspector
 	{
 		private const int kTextureSize = 64;
+
 		private static readonly string[] kSizes = new string[]
 		{
 			"16",
@@ -17,6 +19,7 @@ namespace UnityEditor
 			"1024",
 			"2048"
 		};
+
 		private static readonly int[] kSizesValues = new int[]
 		{
 			16,
@@ -28,12 +31,15 @@ namespace UnityEditor
 			1024,
 			2048
 		};
+
 		private Texture2D[] m_Images;
+
 		protected override void OnEnable()
 		{
 			base.OnEnable();
 			this.InitTexturesFromCubemap();
 		}
+
 		protected override void OnDisable()
 		{
 			base.OnDisable();
@@ -49,6 +55,7 @@ namespace UnityEditor
 			}
 			this.m_Images = null;
 		}
+
 		private void InitTexturesFromCubemap()
 		{
 			Cubemap cubemap = this.target as Cubemap;
@@ -77,6 +84,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (this.m_Images == null)
@@ -106,10 +114,11 @@ namespace UnityEditor
 			EditorGUIUtility.labelWidth = 0f;
 			EditorGUILayout.Space();
 			EditorGUI.BeginChangeCheck();
-			int num = TextureUtil.GetGLWidth(cubemap);
+			EditorGUILayout.HelpBox("Lowering face size is a destructive operation, you might need to re-assign the textures later to fix resolution issues. It's preferable to use Cubemap texture import type instead of Legacy Cubemap assets.", MessageType.Warning);
+			int num = TextureUtil.GetGPUWidth(cubemap);
 			num = EditorGUILayout.IntPopup("Face size", num, CubemapInspector.kSizes, CubemapInspector.kSizesValues, new GUILayoutOption[0]);
-			int num2 = TextureUtil.CountMipmaps(cubemap);
-			bool useMipmap = EditorGUILayout.Toggle("MipMaps", num2 > 1, new GUILayoutOption[0]);
+			int mipmapCount = TextureUtil.GetMipmapCount(cubemap);
+			bool useMipmap = EditorGUILayout.Toggle("MipMaps", mipmapCount > 1, new GUILayoutOption[0]);
 			bool flag = TextureUtil.GetLinearSampled(cubemap);
 			flag = EditorGUILayout.Toggle("Linear", flag, new GUILayoutOption[0]);
 			bool flag2 = TextureUtil.IsCubemapReadable(cubemap);
@@ -124,10 +133,12 @@ namespace UnityEditor
 				cubemap.Apply();
 			}
 		}
+
 		internal override void OnAssetStoreInspectorGUI()
 		{
 			this.OnInspectorGUI();
 		}
+
 		private void ShowFace(string label, CubemapFace face)
 		{
 			Cubemap cubemapRef = this.target as Cubemap;
@@ -139,6 +150,7 @@ namespace UnityEditor
 				this.m_Images[(int)face] = texture2D;
 			}
 		}
+
 		public static UnityEngine.Object ObjectField(string label, UnityEngine.Object obj, Type objType, bool allowSceneObjects, params GUILayoutOption[] options)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);

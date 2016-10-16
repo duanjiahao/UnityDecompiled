@@ -1,22 +1,36 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class AnimationEvent
 	{
 		internal float m_Time;
+
 		internal string m_FunctionName;
+
 		internal string m_StringParameter;
+
 		internal Object m_ObjectReferenceParameter;
+
 		internal float m_FloatParameter;
+
 		internal int m_IntParameter;
+
 		internal int m_MessageOptions;
+
 		internal AnimationEventSource m_Source;
+
 		internal AnimationState m_StateSender;
+
 		internal AnimatorStateInfo m_AnimatorStateInfo;
+
 		internal AnimatorClipInfo m_AnimatorClipInfo;
+
 		[Obsolete("Use stringParameter instead")]
 		public string data
 		{
@@ -29,6 +43,7 @@ namespace UnityEngine
 				this.m_StringParameter = value;
 			}
 		}
+
 		public string stringParameter
 		{
 			get
@@ -40,6 +55,7 @@ namespace UnityEngine
 				this.m_StringParameter = value;
 			}
 		}
+
 		public float floatParameter
 		{
 			get
@@ -51,6 +67,7 @@ namespace UnityEngine
 				this.m_FloatParameter = value;
 			}
 		}
+
 		public int intParameter
 		{
 			get
@@ -62,6 +79,7 @@ namespace UnityEngine
 				this.m_IntParameter = value;
 			}
 		}
+
 		public Object objectReferenceParameter
 		{
 			get
@@ -73,6 +91,7 @@ namespace UnityEngine
 				this.m_ObjectReferenceParameter = value;
 			}
 		}
+
 		public string functionName
 		{
 			get
@@ -84,6 +103,7 @@ namespace UnityEngine
 				this.m_FunctionName = value;
 			}
 		}
+
 		public float time
 		{
 			get
@@ -95,6 +115,7 @@ namespace UnityEngine
 				this.m_Time = value;
 			}
 		}
+
 		public SendMessageOptions messageOptions
 		{
 			get
@@ -106,6 +127,7 @@ namespace UnityEngine
 				this.m_MessageOptions = (int)value;
 			}
 		}
+
 		public bool isFiredByLegacy
 		{
 			get
@@ -113,6 +135,7 @@ namespace UnityEngine
 				return this.m_Source == AnimationEventSource.Legacy;
 			}
 		}
+
 		public bool isFiredByAnimator
 		{
 			get
@@ -120,6 +143,7 @@ namespace UnityEngine
 				return this.m_Source == AnimationEventSource.Animator;
 			}
 		}
+
 		public AnimationState animationState
 		{
 			get
@@ -131,6 +155,7 @@ namespace UnityEngine
 				return this.m_StateSender;
 			}
 		}
+
 		public AnimatorStateInfo animatorStateInfo
 		{
 			get
@@ -142,6 +167,7 @@ namespace UnityEngine
 				return this.m_AnimatorStateInfo;
 			}
 		}
+
 		public AnimatorClipInfo animatorClipInfo
 		{
 			get
@@ -153,6 +179,7 @@ namespace UnityEngine
 				return this.m_AnimatorClipInfo;
 			}
 		}
+
 		public AnimationEvent()
 		{
 			this.m_Time = 0f;
@@ -164,6 +191,12 @@ namespace UnityEngine
 			this.m_MessageOptions = 0;
 			this.m_Source = AnimationEventSource.NoSource;
 			this.m_StateSender = null;
+		}
+
+		internal int GetHash()
+		{
+			int hashCode = this.functionName.GetHashCode();
+			return 33 * hashCode + this.time.GetHashCode();
 		}
 	}
 }

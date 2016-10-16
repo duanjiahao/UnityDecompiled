@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -16,13 +17,19 @@ namespace UnityEditor
 			DeletedItemsRoot,
 			DeletedItems
 		}
+
 		private class Styles
 		{
 			public GUIStyle foldout = "IN Foldout";
+
 			public GUIStyle insertion = "PR Insertion";
+
 			public GUIStyle label = "PR Label";
+
 			public GUIStyle ping = new GUIStyle("PR Ping");
+
 			public GUIStyle toolbarButton = "ToolbarButton";
+
 			public Styles()
 			{
 				this.ping.overflow.left = -2;
@@ -31,27 +38,46 @@ namespace UnityEditor
 				this.ping.padding.right = 0;
 			}
 		}
+
 		private int[] m_ExpandedArray = new int[0];
+
 		public Vector2 m_ScrollPosition;
+
 		private static float m_RowHeight = 16f;
+
 		private float m_FoldoutSize = 14f;
+
 		private float m_Indent = 16f;
+
 		private float m_BaseIndent = 16f;
+
 		private float m_SpaceAtTheTop = ASHistoryFileView.m_RowHeight + 6f;
+
 		private static int ms_FileViewHash = "FileView".GetHashCode();
+
 		private int m_FileViewControlID = -1;
+
 		private static bool OSX = Application.platform == RuntimePlatform.OSXEditor;
+
 		private ASHistoryFileView.SelectionType m_SelType;
+
 		private bool m_DeletedItemsToggle;
+
 		private DeletedAsset[] m_DeletedItems;
+
 		private bool m_DeletedItemsInitialized;
+
 		private ParentViewState m_DelPVstate = new ParentViewState();
+
 		private Rect m_ScreenRect;
+
 		private static ASHistoryFileView.Styles ms_Styles = null;
+
 		private GUIContent[] dropDownMenuItems = new GUIContent[]
 		{
 			new GUIContent("Recover")
 		};
+
 		public ASHistoryFileView.SelectionType SelType
 		{
 			get
@@ -70,6 +96,7 @@ namespace UnityEditor
 				this.m_SelType = value;
 			}
 		}
+
 		private bool DeletedItemsToggle
 		{
 			get
@@ -85,11 +112,13 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public ASHistoryFileView()
 		{
 			this.m_DelPVstate.lv = new ListViewState(0);
 			this.m_DelPVstate.lv.totalRows = 0;
 		}
+
 		private void SetupDeletedItems()
 		{
 			this.m_DeletedItems = AssetServer.GetServerDeletedItems();
@@ -101,6 +130,7 @@ namespace UnityEditor
 			this.m_DelPVstate.selectedItems = new bool[this.m_DelPVstate.lv.totalRows];
 			this.m_DeletedItemsInitialized = true;
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
@@ -111,6 +141,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void SelectDeletedItem(string guid)
 		{
 			this.SelType = ASHistoryFileView.SelectionType.DeletedItems;
@@ -140,6 +171,7 @@ namespace UnityEditor
 				num++;
 			}
 		}
+
 		public void DoRecover()
 		{
 			string[] selectedDeletedItemGUIDs = this.GetSelectedDeletedItemGUIDs();
@@ -174,6 +206,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitASMainWindow");
 			AssetServer.DoRecoverOnNextTick(array);
 		}
+
 		public string[] GetSelectedDeletedItemGUIDs()
 		{
 			List<string> list = new List<string>();
@@ -197,6 +230,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		public string[] GetAllDeletedItemGUIDs()
 		{
 			if (!this.m_DeletedItemsInitialized)
@@ -210,9 +244,11 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		public void FilterItems(string filterText)
 		{
 		}
+
 		private int ControlIDForProperty(HierarchyProperty property)
 		{
 			if (property != null)
@@ -221,6 +257,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		private void SetExpanded(int instanceID, bool expand)
 		{
 			Hashtable hashtable = new Hashtable();
@@ -248,6 +285,7 @@ namespace UnityEditor
 			}
 			InternalEditorUtility.expandedProjectWindowItems = this.m_ExpandedArray;
 		}
+
 		private void SetExpandedRecurse(int instanceID, bool expand)
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -261,6 +299,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void SelectionClick(HierarchyProperty property)
 		{
 			if (EditorGUI.actionKey)
@@ -277,53 +316,52 @@ namespace UnityEditor
 				}
 				Selection.objects = (arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[]);
 			}
-			else
+			else if (Event.current.shift)
 			{
-				if (Event.current.shift)
+				HierarchyProperty firstSelected = this.GetFirstSelected();
+				HierarchyProperty lastSelected = this.GetLastSelected();
+				if (!firstSelected.isValid)
 				{
-					HierarchyProperty firstSelected = this.GetFirstSelected();
-					HierarchyProperty lastSelected = this.GetLastSelected();
-					if (!firstSelected.isValid)
-					{
-						Selection.activeObject = property.pptrValue;
-						return;
-					}
-					HierarchyProperty hierarchyProperty;
-					HierarchyProperty hierarchyProperty2;
-					if (property.row > lastSelected.row)
-					{
-						hierarchyProperty = firstSelected;
-						hierarchyProperty2 = property;
-					}
-					else
-					{
-						hierarchyProperty = property;
-						hierarchyProperty2 = lastSelected;
-					}
-					ArrayList arrayList2 = new ArrayList();
-					arrayList2.Add(hierarchyProperty.pptrValue);
-					while (hierarchyProperty.Next(this.m_ExpandedArray))
-					{
-						arrayList2.Add(hierarchyProperty.pptrValue);
-						if (hierarchyProperty.instanceID == hierarchyProperty2.instanceID)
-						{
-							break;
-						}
-					}
-					Selection.objects = (arrayList2.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[]);
+					Selection.activeObject = property.pptrValue;
+					return;
+				}
+				HierarchyProperty hierarchyProperty;
+				HierarchyProperty hierarchyProperty2;
+				if (property.row > lastSelected.row)
+				{
+					hierarchyProperty = firstSelected;
+					hierarchyProperty2 = property;
 				}
 				else
 				{
-					Selection.activeObject = property.pptrValue;
+					hierarchyProperty = property;
+					hierarchyProperty2 = lastSelected;
 				}
+				ArrayList arrayList2 = new ArrayList();
+				arrayList2.Add(hierarchyProperty.pptrValue);
+				while (hierarchyProperty.Next(this.m_ExpandedArray))
+				{
+					arrayList2.Add(hierarchyProperty.pptrValue);
+					if (hierarchyProperty.instanceID == hierarchyProperty2.instanceID)
+					{
+						break;
+					}
+				}
+				Selection.objects = (arrayList2.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[]);
+			}
+			else
+			{
+				Selection.activeObject = property.pptrValue;
 			}
 			this.SelType = ASHistoryFileView.SelectionType.Items;
 			this.FrameObject(Selection.activeObject);
 		}
+
 		private HierarchyProperty GetActiveSelected()
 		{
 			return this.GetFirstSelected();
 		}
+
 		private HierarchyProperty GetFirstSelected()
 		{
 			int num = 1000000000;
@@ -341,6 +379,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private HierarchyProperty GetLast()
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -352,6 +391,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private HierarchyProperty GetFirst()
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -361,6 +401,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private void OpenAssetSelection()
 		{
 			int[] instanceIDs = Selection.instanceIDs;
@@ -373,6 +414,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private HierarchyProperty GetLastSelected()
 		{
 			int num = -1;
@@ -390,6 +432,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private void AllProjectKeyboard()
 		{
 			KeyCode keyCode = Event.current.keyCode;
@@ -404,6 +447,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void AssetViewKeyboard()
 		{
 			KeyCode keyCode = Event.current.keyCode;
@@ -431,14 +475,11 @@ namespace UnityEditor
 						Selection.objects = new UnityEngine.Object[0];
 						this.ScrollTo(0f);
 					}
-					else
+					else if (firstSelected.Previous(this.m_ExpandedArray))
 					{
-						if (firstSelected.Previous(this.m_ExpandedArray))
-						{
-							UnityEngine.Object pptrValue = firstSelected.pptrValue;
-							this.SelectionClick(firstSelected);
-							this.FrameObject(pptrValue);
-						}
+						UnityEngine.Object pptrValue = firstSelected.pptrValue;
+						this.SelectionClick(firstSelected);
+						this.FrameObject(pptrValue);
 					}
 				}
 				goto IL_3F9;
@@ -452,25 +493,19 @@ namespace UnityEditor
 					this.OpenAssetSelection();
 					GUIUtility.ExitGUI();
 				}
-				else
+				else if (lastSelected != null)
 				{
-					if (lastSelected != null)
+					if (lastSelected.instanceID == this.GetLast().instanceID)
 					{
-						if (lastSelected.instanceID == this.GetLast().instanceID)
-						{
-							this.SelType = ASHistoryFileView.SelectionType.DeletedItemsRoot;
-							Selection.objects = new UnityEngine.Object[0];
-							this.ScrollToDeletedItem(-1);
-						}
-						else
-						{
-							if (lastSelected.Next(this.m_ExpandedArray))
-							{
-								UnityEngine.Object pptrValue2 = lastSelected.pptrValue;
-								this.SelectionClick(lastSelected);
-								this.FrameObject(pptrValue2);
-							}
-						}
+						this.SelType = ASHistoryFileView.SelectionType.DeletedItemsRoot;
+						Selection.objects = new UnityEngine.Object[0];
+						this.ScrollToDeletedItem(-1);
+					}
+					else if (lastSelected.Next(this.m_ExpandedArray))
+					{
+						UnityEngine.Object pptrValue2 = lastSelected.pptrValue;
+						this.SelectionClick(lastSelected);
+						this.FrameObject(pptrValue2);
 					}
 				}
 				goto IL_3F9;
@@ -536,13 +571,10 @@ namespace UnityEditor
 						this.SelectionClick(hierarchyProperty);
 						this.FrameObject(pptrValue3);
 					}
-					else
+					else if (this.GetFirst() != null)
 					{
-						if (this.GetFirst() != null)
-						{
-							Selection.activeObject = this.GetFirst().pptrValue;
-							this.FrameObject(Selection.activeObject);
-						}
+						Selection.activeObject = this.GetFirst().pptrValue;
+						this.FrameObject(Selection.activeObject);
 					}
 				}
 				goto IL_3F9;
@@ -571,13 +603,10 @@ namespace UnityEditor
 						this.SelectionClick(hierarchyProperty2);
 						this.FrameObject(pptrValue4);
 					}
-					else
+					else if (this.GetLast() != null)
 					{
-						if (this.GetLast() != null)
-						{
-							Selection.activeObject = this.GetLast().pptrValue;
-							this.FrameObject(Selection.activeObject);
-						}
+						Selection.activeObject = this.GetLast().pptrValue;
+						this.FrameObject(Selection.activeObject);
 					}
 				}
 				goto IL_3F9;
@@ -592,6 +621,7 @@ namespace UnityEditor
 			IL_3F9:
 			Event.current.Use();
 		}
+
 		private void DeletedItemsRootKeyboard(ASHistoryWindow parentWin)
 		{
 			switch (Event.current.keyCode)
@@ -628,6 +658,7 @@ namespace UnityEditor
 			}
 			Event.current.Use();
 		}
+
 		private void DeletedItemsKeyboard(ASHistoryWindow parentWin)
 		{
 			int row = this.m_DelPVstate.lv.row;
@@ -706,6 +737,7 @@ namespace UnityEditor
 				parentWin.DoLocalSelectionChange();
 			}
 		}
+
 		private void ScrollToDeletedItem(int index)
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -719,6 +751,7 @@ namespace UnityEditor
 				this.ScrollTo(num + (float)(index + 1) * ASHistoryFileView.m_RowHeight);
 			}
 		}
+
 		private void KeyboardGUI(ASHistoryWindow parentWin)
 		{
 			if (Event.current.GetTypeForControl(this.m_FileViewControlID) != EventType.KeyDown || this.m_FileViewControlID != GUIUtility.keyboardControl)
@@ -741,6 +774,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private bool FrameObject(UnityEngine.Object target)
 		{
 			if (target == null)
@@ -763,11 +797,13 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void ScrollTo(float scrollTop)
 		{
 			float min = scrollTop - this.m_ScreenRect.height + ASHistoryFileView.m_RowHeight;
 			this.m_ScrollPosition.y = Mathf.Clamp(this.m_ScrollPosition.y, min, scrollTop);
 		}
+
 		public void DoDeletedItemsGUI(ASHistoryWindow parentWin, Rect theRect, GUIStyle s, float offset, float endOffset, bool focused)
 		{
 			Event current = Event.current;
@@ -859,6 +895,7 @@ namespace UnityEditor
 				offset += ASHistoryFileView.m_RowHeight;
 			}
 		}
+
 		public void DoGUI(ASHistoryWindow parentWin, Rect theRect, bool focused)
 		{
 			if (ASHistoryFileView.ms_Styles == null)
@@ -887,13 +924,10 @@ namespace UnityEditor
 			{
 				num3 = num;
 			}
-			else
+			else if (num3 < 0)
 			{
-				if (num3 < 0)
-				{
-					num3 = 0;
-					this.m_ScrollPosition.y = 0f;
-				}
+				num3 = 0;
+				this.m_ScrollPosition.y = 0f;
 			}
 			GUIContent gUIContent = new GUIContent();
 			Event current = Event.current;
@@ -960,12 +994,9 @@ namespace UnityEditor
 						AssetDatabase.OpenAsset(instanceID);
 						GUIUtility.ExitGUI();
 					}
-					else
+					else if (position.Contains(current.mousePosition))
 					{
-						if (position.Contains(current.mousePosition))
-						{
-							this.SelectionClick(hierarchyProperty);
-						}
+						this.SelectionClick(hierarchyProperty);
 					}
 					current.Use();
 				}
@@ -990,16 +1021,14 @@ namespace UnityEditor
 					}
 				}
 			}
-			else
+			else if (current.button == 0 && this.m_ScreenRect.Contains(current.mousePosition))
 			{
-				if (current.button == 0 && this.m_ScreenRect.Contains(current.mousePosition))
-				{
-					GUIUtility.hotControl = this.m_FileViewControlID;
-					current.Use();
-				}
+				GUIUtility.hotControl = this.m_FileViewControlID;
+				current.Use();
 			}
 			this.HandleFraming();
 		}
+
 		private void HandleFraming()
 		{
 			if ((Event.current.type == EventType.ExecuteCommand || Event.current.type == EventType.ValidateCommand) && Event.current.commandName == "FrameSelected")
@@ -1012,6 +1041,7 @@ namespace UnityEditor
 				Event.current.Use();
 			}
 		}
+
 		private void DoFramingMindSelectionType()
 		{
 			switch (this.m_SelType)
@@ -1030,6 +1060,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private List<int> GetOneFolderImplicitSelection(HierarchyProperty property, Hashtable selection, bool rootSelected, ref bool retHasSelectionInside, out bool eof)
 		{
 			int depth = property.depth;
@@ -1071,6 +1102,7 @@ namespace UnityEditor
 			list4.AddRange(list3);
 			return list4;
 		}
+
 		public string[] GetImplicitProjectViewSelection()
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);

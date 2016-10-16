@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AnimationWindowHierarchyDataSource : TreeViewDataSource
@@ -11,95 +12,131 @@ namespace UnityEditorInternal
 			get;
 			set;
 		}
+
 		public bool showAll
 		{
 			get;
 			set;
 		}
+
 		public AnimationWindowHierarchyDataSource(TreeView treeView, AnimationWindowState animationWindowState) : base(treeView)
 		{
 			this.state = animationWindowState;
 		}
+
 		private void SetupRootNodeSettings()
 		{
-			base.showRootNode = false;
+			base.showRootItem = false;
 			base.rootIsCollapsable = false;
 			this.SetExpanded(this.m_RootItem, true);
 		}
+
 		private AnimationWindowHierarchyNode GetEmptyRootNode()
 		{
 			return new AnimationWindowHierarchyNode(0, -1, null, null, string.Empty, string.Empty, "root");
 		}
+
 		public override void FetchData()
 		{
 			this.m_RootItem = this.GetEmptyRootNode();
 			this.SetupRootNodeSettings();
-			if (this.state.m_ActiveGameObject == null || this.state.m_RootGameObject == null)
+			this.m_NeedRefreshVisibleFolders = true;
+			if (this.state.activeRootGameObject == null && this.state.activeAnimationClip == null)
 			{
+				this.root.children = null;
 				return;
 			}
 			List<AnimationWindowHierarchyNode> list = new List<AnimationWindowHierarchyNode>();
 			if (this.state.allCurves.Count > 0)
 			{
-				list.Add(new AnimationWindowHierarchyMasterNode());
+				list.Add(new AnimationWindowHierarchyMasterNode
+				{
+					curves = this.state.allCurves.ToArray()
+				});
 			}
 			list.AddRange(this.CreateTreeFromCurves());
-			list.Add(new AnimationWindowHierarchyAddButtonNode());
+			if (this.state.activeRootGameObject != null)
+			{
+				list.Add(new AnimationWindowHierarchyAddButtonNode());
+			}
 			TreeViewUtility.SetChildParentReferences(new List<TreeViewItem>(list.ToArray()), this.root);
-			this.m_NeedRefreshVisibleFolders = true;
 		}
+
 		public override bool IsRenamingItemAllowed(TreeViewItem item)
 		{
-			return !(item is AnimationWindowHierarchyAddButtonNode) && !(item is AnimationWindowHierarchyMasterNode) && (item as AnimationWindowHierarchyNode).path.Length != 0;
+			return !(item is AnimationWindowHierarchyAddButtonNode) && !(item is AnimationWindowHierarchyMasterNode) && !(item is AnimationWindowHierarchyClipNode) && (item as AnimationWindowHierarchyNode).path.Length != 0;
 		}
+
 		public List<AnimationWindowHierarchyNode> CreateTreeFromCurves()
 		{
 			List<AnimationWindowHierarchyNode> list = new List<AnimationWindowHierarchyNode>();
 			List<AnimationWindowCurve> list2 = new List<AnimationWindowCurve>();
-			AnimationWindowCurve[] array = this.state.allCurves.ToArray();
+			AnimationWindowSelectionItem[] array = this.state.selection.ToArray();
 			for (int i = 0; i < array.Length; i++)
 			{
-				AnimationWindowCurve animationWindowCurve = array[i];
-				AnimationWindowCurve animationWindowCurve2 = (i >= array.Length - 1) ? null : array[i + 1];
-				list2.Add(animationWindowCurve);
-				bool flag = animationWindowCurve2 != null && AnimationWindowUtility.GetPropertyGroupName(animationWindowCurve2.propertyName) == AnimationWindowUtility.GetPropertyGroupName(animationWindowCurve.propertyName);
-				bool flag2 = animationWindowCurve2 != null && animationWindowCurve.path.Equals(animationWindowCurve2.path) && animationWindowCurve.type == animationWindowCurve2.type;
-				if (i == array.Length - 1 || !flag || !flag2)
+				AnimationWindowSelectionItem animationWindowSelectionItem = array[i];
+				AnimationWindowCurve[] array2 = animationWindowSelectionItem.curves.ToArray();
+				AnimationWindowHierarchyNode parentNode = (AnimationWindowHierarchyNode)this.m_RootItem;
+				if (this.state.selection.count > 1)
 				{
-					if (list2.Count > 1)
+					AnimationWindowHierarchyNode animationWindowHierarchyNode = this.AddClipNodeToHierarchy(animationWindowSelectionItem, array2, parentNode);
+					list.Add(animationWindowHierarchyNode);
+					parentNode = animationWindowHierarchyNode;
+				}
+				for (int j = 0; j < array2.Length; j++)
+				{
+					AnimationWindowCurve animationWindowCurve = array2[j];
+					AnimationWindowCurve animationWindowCurve2 = (j >= array2.Length - 1) ? null : array2[j + 1];
+					list2.Add(animationWindowCurve);
+					bool flag = animationWindowCurve2 != null && AnimationWindowUtility.GetPropertyGroupName(animationWindowCurve2.propertyName) == AnimationWindowUtility.GetPropertyGroupName(animationWindowCurve.propertyName);
+					bool flag2 = animationWindowCurve2 != null && animationWindowCurve.path.Equals(animationWindowCurve2.path) && animationWindowCurve.type == animationWindowCurve2.type;
+					if (j == array2.Length - 1 || !flag || !flag2)
 					{
-						list.Add(this.AddPropertyGroupToHierarchy(list2.ToArray(), (AnimationWindowHierarchyNode)this.m_RootItem));
+						if (list2.Count > 1)
+						{
+							list.Add(this.AddPropertyGroupToHierarchy(animationWindowSelectionItem, list2.ToArray(), parentNode));
+						}
+						else
+						{
+							list.Add(this.AddPropertyToHierarchy(animationWindowSelectionItem, list2[0], parentNode));
+						}
+						list2.Clear();
 					}
-					else
-					{
-						list.Add(this.AddPropertyToHierarchy(list2[0], (AnimationWindowHierarchyNode)this.m_RootItem));
-					}
-					list2.Clear();
 				}
 			}
 			return list;
 		}
-		private AnimationWindowHierarchyPropertyGroupNode AddPropertyGroupToHierarchy(AnimationWindowCurve[] curves, AnimationWindowHierarchyNode parentNode)
+
+		private AnimationWindowHierarchyClipNode AddClipNodeToHierarchy(AnimationWindowSelectionItem selectedItem, AnimationWindowCurve[] curves, AnimationWindowHierarchyNode parentNode)
+		{
+			return new AnimationWindowHierarchyClipNode(parentNode, selectedItem.id, selectedItem.animationClip.name)
+			{
+				curves = curves
+			};
+		}
+
+		private AnimationWindowHierarchyPropertyGroupNode AddPropertyGroupToHierarchy(AnimationWindowSelectionItem selectedItem, AnimationWindowCurve[] curves, AnimationWindowHierarchyNode parentNode)
 		{
 			List<AnimationWindowHierarchyNode> list = new List<AnimationWindowHierarchyNode>();
 			Type type = curves[0].type;
-			AnimationWindowHierarchyPropertyGroupNode animationWindowHierarchyPropertyGroupNode = new AnimationWindowHierarchyPropertyGroupNode(type, AnimationWindowUtility.GetPropertyGroupName(curves[0].propertyName), curves[0].path, parentNode);
+			AnimationWindowHierarchyPropertyGroupNode animationWindowHierarchyPropertyGroupNode = new AnimationWindowHierarchyPropertyGroupNode(type, selectedItem.id, AnimationWindowUtility.GetPropertyGroupName(curves[0].propertyName), curves[0].path, parentNode);
 			animationWindowHierarchyPropertyGroupNode.icon = this.GetIcon(curves[0].binding);
 			animationWindowHierarchyPropertyGroupNode.indent = curves[0].depth;
 			animationWindowHierarchyPropertyGroupNode.curves = curves;
 			for (int i = 0; i < curves.Length; i++)
 			{
 				AnimationWindowCurve curve = curves[i];
-				AnimationWindowHierarchyPropertyNode animationWindowHierarchyPropertyNode = this.AddPropertyToHierarchy(curve, animationWindowHierarchyPropertyGroupNode);
+				AnimationWindowHierarchyPropertyNode animationWindowHierarchyPropertyNode = this.AddPropertyToHierarchy(selectedItem, curve, animationWindowHierarchyPropertyGroupNode);
 				animationWindowHierarchyPropertyNode.displayName = AnimationWindowUtility.GetPropertyDisplayName(animationWindowHierarchyPropertyNode.propertyName);
 				list.Add(animationWindowHierarchyPropertyNode);
 			}
 			TreeViewUtility.SetChildParentReferences(new List<TreeViewItem>(list.ToArray()), animationWindowHierarchyPropertyGroupNode);
 			return animationWindowHierarchyPropertyGroupNode;
 		}
-		private AnimationWindowHierarchyPropertyNode AddPropertyToHierarchy(AnimationWindowCurve curve, AnimationWindowHierarchyNode parentNode)
+
+		private AnimationWindowHierarchyPropertyNode AddPropertyToHierarchy(AnimationWindowSelectionItem selectedItem, AnimationWindowCurve curve, AnimationWindowHierarchyNode parentNode)
 		{
-			AnimationWindowHierarchyPropertyNode animationWindowHierarchyPropertyNode = new AnimationWindowHierarchyPropertyNode(curve.type, curve.propertyName, curve.path, parentNode, curve.binding, curve.isPPtrCurve);
+			AnimationWindowHierarchyPropertyNode animationWindowHierarchyPropertyNode = new AnimationWindowHierarchyPropertyNode(curve.type, selectedItem.id, curve.propertyName, curve.path, parentNode, curve.binding, curve.isPPtrCurve);
 			if (parentNode.icon != null)
 			{
 				animationWindowHierarchyPropertyNode.icon = parentNode.icon;
@@ -115,18 +152,20 @@ namespace UnityEditorInternal
 			};
 			return animationWindowHierarchyPropertyNode;
 		}
+
 		public Texture2D GetIcon(EditorCurveBinding curveBinding)
 		{
-			if (this.state.m_RootGameObject != null)
+			if (this.state.activeRootGameObject != null)
 			{
-				UnityEngine.Object animatedObject = AnimationUtility.GetAnimatedObject(this.state.m_RootGameObject, curveBinding);
+				object animatedObject = AnimationUtility.GetAnimatedObject(this.state.activeRootGameObject, curveBinding);
 				if (animatedObject != null)
 				{
-					return AssetPreview.GetMiniThumbnail(AnimationUtility.GetAnimatedObject(this.state.m_RootGameObject, curveBinding));
+					return AssetPreview.GetMiniThumbnail(AnimationUtility.GetAnimatedObject(this.state.activeRootGameObject, curveBinding));
 				}
 			}
 			return AssetPreview.GetMiniTypeThumbnail(curveBinding.type);
 		}
+
 		public void UpdateData()
 		{
 			this.m_TreeView.ReloadData();

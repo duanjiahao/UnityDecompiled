@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[FilePath("SearchFilters", FilePathAttribute.Location.PreferencesFolder)]
@@ -8,28 +9,36 @@ namespace UnityEditor
 	{
 		[SerializeField]
 		private List<SavedFilter> m_SavedFilters;
+
 		private Action m_SavedFiltersChanged;
+
 		private bool m_AllowHierarchy;
+
 		public static int AddSavedFilter(string displayName, SearchFilter filter, float previewSize)
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.Add(displayName, filter, previewSize, SavedSearchFilters.GetRootInstanceID(), true);
 		}
+
 		public static int AddSavedFilterAfterInstanceID(string displayName, SearchFilter filter, float previewSize, int insertAfterID, bool addAsChild)
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.Add(displayName, filter, previewSize, insertAfterID, addAsChild);
 		}
+
 		public static void RemoveSavedFilter(int instanceID)
 		{
 			ScriptableSingleton<SavedSearchFilters>.instance.Remove(instanceID);
 		}
+
 		public static bool IsSavedFilter(int instanceID)
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.IndexOf(instanceID) >= 0;
 		}
+
 		public static int GetRootInstanceID()
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.GetRoot();
 		}
+
 		public static SearchFilter GetFilter(int instanceID)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
@@ -39,6 +48,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public static float GetPreviewSize(int instanceID)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
@@ -48,6 +58,7 @@ namespace UnityEditor
 			}
 			return -1f;
 		}
+
 		public static string GetName(int instanceID)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
@@ -64,6 +75,7 @@ namespace UnityEditor
 			}));
 			return string.Empty;
 		}
+
 		public static void SetName(int instanceID, string name)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
@@ -83,14 +95,17 @@ namespace UnityEditor
 				}));
 			}
 		}
+
 		public static void UpdateExistingSavedFilter(int instanceID, SearchFilter filter, float previewSize)
 		{
 			ScriptableSingleton<SavedSearchFilters>.instance.UpdateFilter(instanceID, filter, previewSize);
 		}
+
 		public static TreeViewItem ConvertToTreeView()
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.BuildTreeView();
 		}
+
 		public static void AddChangeListener(Action callback)
 		{
 			SavedSearchFilters expr_05 = ScriptableSingleton<SavedSearchFilters>.instance;
@@ -98,18 +113,22 @@ namespace UnityEditor
 			SavedSearchFilters expr_20 = ScriptableSingleton<SavedSearchFilters>.instance;
 			expr_20.m_SavedFiltersChanged = (Action)Delegate.Combine(expr_20.m_SavedFiltersChanged, callback);
 		}
+
 		public static void MoveSavedFilter(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
 		{
 			ScriptableSingleton<SavedSearchFilters>.instance.Move(instanceID, parentInstanceID, targetInstanceID, after);
 		}
+
 		public static bool CanMoveSavedFilter(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.IsValidMove(instanceID, parentInstanceID, targetInstanceID, after);
 		}
+
 		public static bool AllowsHierarchy()
 		{
 			return ScriptableSingleton<SavedSearchFilters>.instance.m_AllowHierarchy;
 		}
+
 		private bool IsValidMove(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
 		{
 			int num = this.IndexOf(instanceID);
@@ -145,6 +164,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private void Move(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
 		{
 			if (!this.IsValidMove(instanceID, parentInstanceID, targetInstanceID, after))
@@ -174,6 +194,7 @@ namespace UnityEditor
 			}
 			this.Changed();
 		}
+
 		private void UpdateFilter(int instanceID, SearchFilter filter, float previewSize)
 		{
 			SavedFilter savedFilter = this.Find(instanceID);
@@ -198,6 +219,7 @@ namespace UnityEditor
 				}));
 			}
 		}
+
 		private int GetNextAvailableID()
 		{
 			List<int> list = new List<int>();
@@ -227,6 +249,7 @@ namespace UnityEditor
 			}));
 			return ProjectWindowUtil.k_FavoritesStartInstanceID + 1000;
 		}
+
 		private int Add(string displayName, SearchFilter filter, float previewSize, int insertAfterInstanceID, bool addAsChild)
 		{
 			SearchFilter searchFilter = null;
@@ -262,6 +285,7 @@ namespace UnityEditor
 			this.Changed();
 			return savedFilter.m_ID;
 		}
+
 		private List<SavedFilter> GetSavedFilterAndChildren(int instanceID)
 		{
 			List<SavedFilter> list = new List<SavedFilter>();
@@ -280,6 +304,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		private void Remove(int instanceID)
 		{
 			int num = this.IndexOf(instanceID);
@@ -293,6 +318,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private int IndexOf(int instanceID)
 		{
 			for (int i = 0; i < this.m_SavedFilters.Count; i++)
@@ -304,6 +330,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		private SavedFilter Find(int instanceID)
 		{
 			int num = this.IndexOf(instanceID);
@@ -313,6 +340,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private void Init()
 		{
 			if (this.m_SavedFilters == null || this.m_SavedFilters.Count == 0)
@@ -341,6 +369,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private int GetRoot()
 		{
 			if (this.m_SavedFilters != null && this.m_SavedFilters.Count > 0)
@@ -349,6 +378,7 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		private TreeViewItem BuildTreeView()
 		{
 			this.Init();
@@ -378,6 +408,7 @@ namespace UnityEditor
 			TreeViewUtility.SetChildParentReferences(list, treeViewItem);
 			return treeViewItem;
 		}
+
 		private void Changed()
 		{
 			bool saveAsText = true;
@@ -387,6 +418,7 @@ namespace UnityEditor
 				this.m_SavedFiltersChanged();
 			}
 		}
+
 		public override string ToString()
 		{
 			string text = "Saved Filters ";

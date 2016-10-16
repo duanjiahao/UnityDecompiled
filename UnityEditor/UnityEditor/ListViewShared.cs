@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ListViewShared
@@ -9,42 +10,70 @@ namespace UnityEditor
 		internal class InternalListViewState
 		{
 			public int id = -1;
+
 			public int invisibleRows;
+
 			public int endRow;
+
 			public int rectHeight;
+
 			public ListViewState state;
+
 			public bool beganHorizontal;
+
 			public Rect rect;
+
 			public bool wantsReordering;
+
 			public bool wantsExternalFiles;
+
 			public bool wantsToStartCustomDrag;
+
 			public bool wantsToAcceptCustomDrag;
+
 			public int dragItem;
 		}
+
 		internal class InternalLayoutedListViewState : ListViewShared.InternalListViewState
 		{
 			public ListViewGUILayout.GUILayoutedListViewGroup group;
 		}
+
 		internal class Constants
 		{
 			public static string insertion = "PR Insertion";
 		}
+
 		internal class ListViewElementsEnumerator : IDisposable, IEnumerator, IEnumerator<ListViewElement>
 		{
 			private int[] colWidths;
+
 			private int xTo;
+
 			private int yFrom;
+
 			private int yTo;
+
 			private Rect firstRect;
+
 			private Rect rect;
+
 			private int xPos = -1;
+
 			private int yPos = -1;
+
 			private ListViewElement element;
+
 			private ListViewShared.InternalListViewState ilvState;
+
 			private ListViewShared.InternalLayoutedListViewState ilvStateL;
+
 			private bool quiting;
+
 			private bool isLayouted;
+
 			private string dragTitle;
+
 			ListViewElement IEnumerator<ListViewElement>.Current
 			{
 				get
@@ -52,6 +81,7 @@ namespace UnityEditor
 					return this.element;
 				}
 			}
+
 			object IEnumerator.Current
 			{
 				get
@@ -59,6 +89,7 @@ namespace UnityEditor
 					return this.element;
 				}
 			}
+
 			internal ListViewElementsEnumerator(ListViewShared.InternalListViewState ilvState, int[] colWidths, int yFrom, int yTo, string dragTitle, Rect firstRect)
 			{
 				this.colWidths = colWidths;
@@ -75,6 +106,7 @@ namespace UnityEditor
 				ilvState.state.customDraggedFromID = 0;
 				this.Reset();
 			}
+
 			public bool MoveNext()
 			{
 				if (this.xPos > -1)
@@ -106,13 +138,10 @@ namespace UnityEditor
 								this.ilvState.state.dropHereRect = new Rect(this.ilvState.rect.x, 0f, this.ilvState.rect.width, (float)(this.ilvState.state.rowHeight * 2));
 								DragAndDrop.StartDrag(this.dragTitle);
 							}
-							else
+							else if (this.ilvState.wantsToStartCustomDrag)
 							{
-								if (this.ilvState.wantsToStartCustomDrag)
-								{
-									DragAndDrop.SetGenericData("CustomDragID", this.ilvState.state.ID);
-									DragAndDrop.StartDrag(this.dragTitle);
-								}
+								DragAndDrop.SetGenericData("CustomDragID", this.ilvState.state.ID);
+								DragAndDrop.StartDrag(this.dragTitle);
 							}
 						}
 						Event.current.Use();
@@ -229,94 +258,85 @@ namespace UnityEditor
 							}
 						}
 					}
-					else
+					else if (this.ilvState.wantsExternalFiles)
 					{
-						if (this.ilvState.wantsExternalFiles)
+						EventType type = Event.current.type;
+						if (type != EventType.DragUpdated)
 						{
-							EventType type = Event.current.type;
-							if (type != EventType.DragUpdated)
+							if (type != EventType.DragPerform)
 							{
-								if (type != EventType.DragPerform)
+								if (type == EventType.DragExited)
 								{
-									if (type == EventType.DragExited)
-									{
-										this.ilvState.wantsExternalFiles = false;
-										this.ilvState.state.drawDropHere = false;
-										GUIUtility.hotControl = 0;
-									}
-								}
-								else
-								{
-									if (GUIClip.visibleRect.Contains(Event.current.mousePosition))
-									{
-										this.ilvState.state.fileNames = DragAndDrop.paths;
-										DragAndDrop.AcceptDrag();
-										Event.current.Use();
-										this.ilvState.wantsExternalFiles = false;
-										this.ilvState.state.drawDropHere = false;
-										this.ilvState.state.draggedTo = Mathf.RoundToInt(Event.current.mousePosition.y / (float)this.ilvState.state.rowHeight);
-										if (this.ilvState.state.draggedTo > this.ilvState.state.totalRows)
-										{
-											this.ilvState.state.draggedTo = this.ilvState.state.totalRows;
-										}
-										this.ilvState.state.row = this.ilvState.state.draggedTo;
-									}
+									this.ilvState.wantsExternalFiles = false;
+									this.ilvState.state.drawDropHere = false;
 									GUIUtility.hotControl = 0;
 								}
 							}
 							else
 							{
-								if (GUIClip.visibleRect.Contains(Event.current.mousePosition) && DragAndDrop.paths != null && DragAndDrop.paths.Length != 0)
+								if (GUIClip.visibleRect.Contains(Event.current.mousePosition))
 								{
-									DragAndDrop.visualMode = ((!this.ilvState.rect.Contains(Event.current.mousePosition)) ? DragAndDropVisualMode.None : DragAndDropVisualMode.Copy);
+									this.ilvState.state.fileNames = DragAndDrop.paths;
+									DragAndDrop.AcceptDrag();
 									Event.current.Use();
-									if (DragAndDrop.visualMode != DragAndDropVisualMode.None)
+									this.ilvState.wantsExternalFiles = false;
+									this.ilvState.state.drawDropHere = false;
+									this.ilvState.state.draggedTo = Mathf.RoundToInt(Event.current.mousePosition.y / (float)this.ilvState.state.rowHeight);
+									if (this.ilvState.state.draggedTo > this.ilvState.state.totalRows)
 									{
-										this.ilvState.state.dropHereRect = new Rect(this.ilvState.rect.x, (float)((Mathf.RoundToInt(Event.current.mousePosition.y / (float)this.ilvState.state.rowHeight) - 1) * this.ilvState.state.rowHeight), this.ilvState.rect.width, (float)this.ilvState.state.rowHeight);
-										if (this.ilvState.state.dropHereRect.y >= (float)(this.ilvState.state.rowHeight * this.ilvState.state.totalRows))
-										{
-											this.ilvState.state.dropHereRect.y = (float)(this.ilvState.state.rowHeight * (this.ilvState.state.totalRows - 1));
-										}
-										this.ilvState.state.drawDropHere = true;
+										this.ilvState.state.draggedTo = this.ilvState.state.totalRows;
 									}
+									this.ilvState.state.row = this.ilvState.state.draggedTo;
 								}
+								GUIUtility.hotControl = 0;
+							}
+						}
+						else if (GUIClip.visibleRect.Contains(Event.current.mousePosition) && DragAndDrop.paths != null && DragAndDrop.paths.Length != 0)
+						{
+							DragAndDrop.visualMode = ((!this.ilvState.rect.Contains(Event.current.mousePosition)) ? DragAndDropVisualMode.None : DragAndDropVisualMode.Copy);
+							Event.current.Use();
+							if (DragAndDrop.visualMode != DragAndDropVisualMode.None)
+							{
+								this.ilvState.state.dropHereRect = new Rect(this.ilvState.rect.x, (float)((Mathf.RoundToInt(Event.current.mousePosition.y / (float)this.ilvState.state.rowHeight) - 1) * this.ilvState.state.rowHeight), this.ilvState.rect.width, (float)this.ilvState.state.rowHeight);
+								if (this.ilvState.state.dropHereRect.y >= (float)(this.ilvState.state.rowHeight * this.ilvState.state.totalRows))
+								{
+									this.ilvState.state.dropHereRect.y = (float)(this.ilvState.state.rowHeight * (this.ilvState.state.totalRows - 1));
+								}
+								this.ilvState.state.drawDropHere = true;
+							}
+						}
+					}
+					else if (this.ilvState.wantsToAcceptCustomDrag && ListViewShared.dragControlID != this.ilvState.state.ID)
+					{
+						EventType type = Event.current.type;
+						if (type != EventType.DragUpdated)
+						{
+							if (type != EventType.DragPerform)
+							{
+								if (type == EventType.DragExited)
+								{
+									GUIUtility.hotControl = 0;
+								}
+							}
+							else
+							{
+								object genericData = DragAndDrop.GetGenericData("CustomDragID");
+								if (GUIClip.visibleRect.Contains(Event.current.mousePosition) && genericData != null)
+								{
+									this.ilvState.state.customDraggedFromID = (int)genericData;
+									DragAndDrop.AcceptDrag();
+									Event.current.Use();
+								}
+								GUIUtility.hotControl = 0;
 							}
 						}
 						else
 						{
-							if (this.ilvState.wantsToAcceptCustomDrag && ListViewShared.dragControlID != this.ilvState.state.ID)
+							object genericData2 = DragAndDrop.GetGenericData("CustomDragID");
+							if (GUIClip.visibleRect.Contains(Event.current.mousePosition) && genericData2 != null)
 							{
-								EventType type = Event.current.type;
-								if (type != EventType.DragUpdated)
-								{
-									if (type != EventType.DragPerform)
-									{
-										if (type == EventType.DragExited)
-										{
-											GUIUtility.hotControl = 0;
-										}
-									}
-									else
-									{
-										object genericData = DragAndDrop.GetGenericData("CustomDragID");
-										if (GUIClip.visibleRect.Contains(Event.current.mousePosition) && genericData != null)
-										{
-											this.ilvState.state.customDraggedFromID = (int)genericData;
-											DragAndDrop.AcceptDrag();
-											Event.current.Use();
-										}
-										GUIUtility.hotControl = 0;
-									}
-								}
-								else
-								{
-									object genericData2 = DragAndDrop.GetGenericData("CustomDragID");
-									if (GUIClip.visibleRect.Contains(Event.current.mousePosition) && genericData2 != null)
-									{
-										DragAndDrop.visualMode = ((!this.ilvState.rect.Contains(Event.current.mousePosition)) ? DragAndDropVisualMode.None : DragAndDropVisualMode.Move);
-										Event.current.Use();
-									}
-								}
+								DragAndDrop.visualMode = ((!this.ilvState.rect.Contains(Event.current.mousePosition)) ? DragAndDropVisualMode.None : DragAndDropVisualMode.Move);
+								Event.current.Use();
 							}
 						}
 					}
@@ -334,19 +354,16 @@ namespace UnityEditor
 					this.ilvState.wantsReordering = false;
 					this.ilvState.wantsExternalFiles = false;
 				}
-				else
+				else if (this.isLayouted)
 				{
-					if (this.isLayouted)
+					if (this.yPos != this.yFrom)
 					{
-						if (this.yPos != this.yFrom)
-						{
-							this.ilvStateL.group.ResetCursor();
-							this.ilvStateL.group.AddY();
-						}
-						else
-						{
-							this.ilvStateL.group.AddY((float)(this.ilvState.invisibleRows * this.ilvState.state.rowHeight));
-						}
+						this.ilvStateL.group.ResetCursor();
+						this.ilvStateL.group.AddY();
+					}
+					else
+					{
+						this.ilvStateL.group.AddY((float)(this.ilvState.invisibleRows * this.ilvState.state.rowHeight));
 					}
 				}
 				if (this.isLayouted)
@@ -362,21 +379,27 @@ namespace UnityEditor
 				}
 				return !this.quiting;
 			}
+
 			public void Reset()
 			{
 				this.xPos = -1;
 				this.yPos = this.yFrom;
 			}
+
 			public IEnumerator GetEnumerator()
 			{
 				return this;
 			}
+
 			public void Dispose()
 			{
 			}
 		}
+
 		public static bool OSX = Application.platform == RuntimePlatform.OSXEditor;
+
 		internal static int dragControlID = -1;
+
 		private static bool DoLVPageUpDown(ListViewShared.InternalListViewState ilvState, ref int selectedRow, ref Vector2 scrollPos, bool up)
 		{
 			int num = ilvState.endRow - ilvState.invisibleRows;
@@ -412,15 +435,18 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal static bool ListViewKeyboard(ListViewShared.InternalListViewState ilvState, int totalCols)
 		{
 			int totalRows = ilvState.state.totalRows;
 			return Event.current.type == EventType.KeyDown && totalRows != 0 && GUIUtility.keyboardControl == ilvState.state.ID && Event.current.GetTypeForControl(ilvState.state.ID) == EventType.KeyDown && ListViewShared.SendKey(ilvState, Event.current.keyCode, totalCols);
 		}
+
 		internal static void SendKey(ListViewState state, KeyCode keyCode)
 		{
 			ListViewShared.SendKey(state.ilvState, keyCode, 1);
 		}
+
 		internal static bool SendKey(ListViewShared.InternalListViewState ilvState, KeyCode keyCode, int totalCols)
 		{
 			ListViewState state = ilvState.state;
@@ -477,10 +503,12 @@ namespace UnityEditor
 			Event.current.Use();
 			return true;
 		}
+
 		internal static bool HasMouseDown(ListViewShared.InternalListViewState ilvState, Rect r)
 		{
 			return ListViewShared.HasMouseDown(ilvState, r, 0);
 		}
+
 		internal static bool HasMouseDown(ListViewShared.InternalListViewState ilvState, Rect r, int button)
 		{
 			if (Event.current.type == EventType.MouseDown && Event.current.button == button && r.Contains(Event.current.mousePosition))
@@ -492,10 +520,12 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal static bool HasMouseUp(ListViewShared.InternalListViewState ilvState, Rect r)
 		{
 			return ListViewShared.HasMouseUp(ilvState, r, 0);
 		}
+
 		internal static bool HasMouseUp(ListViewShared.InternalListViewState ilvState, Rect r, int button)
 		{
 			if (Event.current.type == EventType.MouseUp && Event.current.button == button && r.Contains(Event.current.mousePosition))
@@ -506,6 +536,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		internal static bool MultiSelection(ListViewShared.InternalListViewState ilvState, int prevSelected, int currSelected, ref int initialSelected, ref bool[] selectedItems)
 		{
 			bool shift = Event.current.shift;
@@ -551,31 +582,28 @@ namespace UnityEditor
 					selectedItems[k] = true;
 				}
 			}
+			else if (actionKey)
+			{
+				selectedItems[currSelected] = !selectedItems[currSelected];
+				initialSelected = currSelected;
+				result = true;
+			}
 			else
 			{
-				if (actionKey)
+				if (!selectedItems[currSelected])
 				{
-					selectedItems[currSelected] = !selectedItems[currSelected];
-					initialSelected = currSelected;
 					result = true;
 				}
-				else
+				for (int l = 0; l < selectedItems.Length; l++)
 				{
-					if (!selectedItems[currSelected])
+					if (selectedItems[l] && currSelected != l)
 					{
 						result = true;
 					}
-					for (int l = 0; l < selectedItems.Length; l++)
-					{
-						if (selectedItems[l] && currSelected != l)
-						{
-							result = true;
-						}
-						selectedItems[l] = false;
-					}
-					initialSelected = -1;
-					selectedItems[currSelected] = true;
+					selectedItems[l] = false;
 				}
+				initialSelected = -1;
+				selectedItems[currSelected] = true;
 			}
 			if (ilvState != null)
 			{
@@ -583,14 +611,17 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		internal static Vector2 ListViewScrollToRow(ListViewShared.InternalListViewState ilvState, int row)
 		{
 			return ListViewShared.ListViewScrollToRow(ilvState, ilvState.state.scrollPos, row);
 		}
+
 		internal static int ListViewScrollToRow(ListViewShared.InternalListViewState ilvState, int currPosY, int row)
 		{
 			return (int)ListViewShared.ListViewScrollToRow(ilvState, new Vector2(0f, (float)currPosY), row).y;
 		}
+
 		internal static Vector2 ListViewScrollToRow(ListViewShared.InternalListViewState ilvState, Vector2 currPos, int row)
 		{
 			if (ilvState.invisibleRows < row && ilvState.endRow > row)
@@ -609,12 +640,9 @@ namespace UnityEditor
 			{
 				currPos.y = 0f;
 			}
-			else
+			else if (currPos.y > (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight))
 			{
-				if (currPos.y > (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight))
-				{
-					currPos.y = (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight);
-				}
+				currPos.y = (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight);
 			}
 			return currPos;
 		}

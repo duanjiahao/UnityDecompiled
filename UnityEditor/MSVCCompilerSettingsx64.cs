@@ -1,9 +1,13 @@
 using System;
+
 internal class MSVCCompilerSettingsx64 : ICompilerSettings
 {
 	private readonly string m_CompilerPath;
+
 	private readonly string m_LinkerPath;
+
 	private readonly string[] m_LibPaths;
+
 	public string CompilerPath
 	{
 		get
@@ -11,6 +15,7 @@ internal class MSVCCompilerSettingsx64 : ICompilerSettings
 			return this.m_CompilerPath;
 		}
 	}
+
 	public string LinkerPath
 	{
 		get
@@ -18,6 +23,7 @@ internal class MSVCCompilerSettingsx64 : ICompilerSettings
 			return this.m_LinkerPath;
 		}
 	}
+
 	public string[] LibPaths
 	{
 		get
@@ -25,6 +31,7 @@ internal class MSVCCompilerSettingsx64 : ICompilerSettings
 			return this.m_LibPaths;
 		}
 	}
+
 	public string MachineSpecification
 	{
 		get
@@ -32,6 +39,7 @@ internal class MSVCCompilerSettingsx64 : ICompilerSettings
 			return "X64";
 		}
 	}
+
 	public MSVCCompilerSettingsx64()
 	{
 		if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VS100COMNTOOLS")))
@@ -43,7 +51,7 @@ internal class MSVCCompilerSettingsx64 : ICompilerSettings
 		this.m_LibPaths = new string[]
 		{
 			Environment.ExpandEnvironmentVariables("%VS100COMNTOOLS%..\\..\\VC\\lib\\amd64"),
-			"C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.0A\\Lib\\x64"
+			Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%\\Microsoft SDKs\\Windows\\v7.0A\\Lib\\x64")
 		};
 	}
 }

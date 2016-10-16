@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class MeshUtility
@@ -23,18 +24,23 @@ namespace UnityEditor
 			}
 			MeshUtility.SetPerTriangleUV2NoCheck(src, triUV);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetPerTriangleUV2NoCheck(Mesh src, Vector2[] triUV);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Vector2[] ComputeTextureBoundingHull(Texture texture, int vertexCount);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetMeshCompression(Mesh mesh, ModelImporterMeshCompression compression);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern ModelImporterMeshCompression GetMeshCompression(Mesh mesh);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Optimize(Mesh mesh);

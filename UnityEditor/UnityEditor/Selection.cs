@@ -3,16 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class Selection
 	{
+		public static Action selectionChanged;
+
 		public static extern Transform[] transforms
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern Transform activeTransform
 		{
 			[WrapperlessIcall]
@@ -22,12 +26,14 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern GameObject[] gameObjects
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern GameObject activeGameObject
 		{
 			[WrapperlessIcall]
@@ -37,6 +43,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern UnityEngine.Object activeObject
 		{
 			[WrapperlessIcall]
@@ -46,6 +53,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int activeInstanceID
 		{
 			[WrapperlessIcall]
@@ -55,6 +63,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern UnityEngine.Object[] objects
 		{
 			[WrapperlessIcall]
@@ -64,6 +73,7 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int[] instanceIDs
 		{
 			[WrapperlessIcall]
@@ -73,26 +83,31 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern string[] assetGUIDsDeepSelection
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string[] assetGUIDs
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static bool Contains(int instanceID)
 		{
 			return Array.IndexOf<int>(Selection.instanceIDs, instanceID) != -1;
 		}
+
 		public static bool Contains(UnityEngine.Object obj)
 		{
 			return Selection.Contains(obj.GetInstanceID());
 		}
+
 		internal static void Add(int instanceID)
 		{
 			List<int> list = new List<int>(Selection.instanceIDs);
@@ -102,6 +117,7 @@ namespace UnityEditor
 				Selection.instanceIDs = list.ToArray();
 			}
 		}
+
 		internal static void Add(UnityEngine.Object obj)
 		{
 			if (obj != null)
@@ -109,12 +125,14 @@ namespace UnityEditor
 				Selection.Add(obj.GetInstanceID());
 			}
 		}
+
 		internal static void Remove(int instanceID)
 		{
 			List<int> list = new List<int>(Selection.instanceIDs);
 			list.Remove(instanceID);
 			Selection.instanceIDs = list.ToArray();
 		}
+
 		internal static void Remove(UnityEngine.Object obj)
 		{
 			if (obj != null)
@@ -122,9 +140,11 @@ namespace UnityEditor
 				Selection.Remove(obj.GetInstanceID());
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Transform[] GetTransforms(SelectionMode mode);
+
 		public static UnityEngine.Object[] GetFiltered(Type type, SelectionMode mode)
 		{
 			ArrayList arrayList = new ArrayList();
@@ -142,36 +162,42 @@ namespace UnityEditor
 					}
 				}
 			}
+			else if (type == typeof(GameObject) || type.IsSubclassOf(typeof(GameObject)))
+			{
+				Transform[] transforms2 = Selection.GetTransforms(mode);
+				Transform[] array2 = transforms2;
+				for (int j = 0; j < array2.Length; j++)
+				{
+					Transform transform2 = array2[j];
+					arrayList.Add(transform2.gameObject);
+				}
+			}
 			else
 			{
-				if (type == typeof(GameObject) || type.IsSubclassOf(typeof(GameObject)))
+				UnityEngine.Object[] objectsMode = Selection.GetObjectsMode(mode);
+				UnityEngine.Object[] array3 = objectsMode;
+				for (int k = 0; k < array3.Length; k++)
 				{
-					Transform[] transforms2 = Selection.GetTransforms(mode);
-					Transform[] array2 = transforms2;
-					for (int j = 0; j < array2.Length; j++)
+					UnityEngine.Object @object = array3[k];
+					if (@object != null && (@object.GetType() == type || @object.GetType().IsSubclassOf(type)))
 					{
-						Transform transform2 = array2[j];
-						arrayList.Add(transform2.gameObject);
-					}
-				}
-				else
-				{
-					UnityEngine.Object[] objectsMode = Selection.GetObjectsMode(mode);
-					UnityEngine.Object[] array3 = objectsMode;
-					for (int k = 0; k < array3.Length; k++)
-					{
-						UnityEngine.Object @object = array3[k];
-						if (@object != null && (@object.GetType() == type || @object.GetType().IsSubclassOf(type)))
-						{
-							arrayList.Add(@object);
-						}
+						arrayList.Add(@object);
 					}
 				}
 			}
 			return (UnityEngine.Object[])arrayList.ToArray(typeof(UnityEngine.Object));
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object[] GetObjectsMode(SelectionMode mode);
+
+		private static void Internal_CallSelectionChanged()
+		{
+			if (Selection.selectionChanged != null)
+			{
+				Selection.selectionChanged();
+			}
+		}
 	}
 }

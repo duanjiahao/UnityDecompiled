@@ -1,20 +1,33 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class HostData
 	{
 		private int m_Nat;
+
 		private string m_GameType;
+
 		private string m_GameName;
+
 		private int m_ConnectedPlayers;
+
 		private int m_PlayerLimit;
+
 		private string[] m_IP;
+
 		private int m_Port;
+
 		private int m_PasswordProtected;
+
 		private string m_Comment;
+
 		private string m_GUID;
+
 		public bool useNat
 		{
 			get
@@ -26,6 +39,7 @@ namespace UnityEngine
 				this.m_Nat = ((!value) ? 0 : 1);
 			}
 		}
+
 		public string gameType
 		{
 			get
@@ -37,6 +51,7 @@ namespace UnityEngine
 				this.m_GameType = value;
 			}
 		}
+
 		public string gameName
 		{
 			get
@@ -48,6 +63,7 @@ namespace UnityEngine
 				this.m_GameName = value;
 			}
 		}
+
 		public int connectedPlayers
 		{
 			get
@@ -59,6 +75,7 @@ namespace UnityEngine
 				this.m_ConnectedPlayers = value;
 			}
 		}
+
 		public int playerLimit
 		{
 			get
@@ -70,6 +87,7 @@ namespace UnityEngine
 				this.m_PlayerLimit = value;
 			}
 		}
+
 		public string[] ip
 		{
 			get
@@ -81,6 +99,7 @@ namespace UnityEngine
 				this.m_IP = value;
 			}
 		}
+
 		public int port
 		{
 			get
@@ -92,6 +111,7 @@ namespace UnityEngine
 				this.m_Port = value;
 			}
 		}
+
 		public bool passwordProtected
 		{
 			get
@@ -103,6 +123,7 @@ namespace UnityEngine
 				this.m_PasswordProtected = ((!value) ? 0 : 1);
 			}
 		}
+
 		public string comment
 		{
 			get
@@ -114,6 +135,7 @@ namespace UnityEngine
 				this.m_Comment = value;
 			}
 		}
+
 		public string guid
 		{
 			get

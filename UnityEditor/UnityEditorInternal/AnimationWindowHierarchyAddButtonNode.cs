@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditorInternal
 {
 	internal class AnimationWindowHierarchyAddButtonNode : AnimationWindowHierarchyNode

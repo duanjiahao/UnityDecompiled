@@ -1,10 +1,13 @@
 using System;
+
 namespace UnityEditor.Audio
 {
 	internal class MixerEffectDefinition
 	{
 		private readonly string m_EffectName;
+
 		private readonly MixerParameterDefinition[] m_Parameters;
+
 		public string name
 		{
 			get
@@ -12,6 +15,7 @@ namespace UnityEditor.Audio
 				return this.m_EffectName;
 			}
 		}
+
 		public MixerParameterDefinition[] parameters
 		{
 			get
@@ -19,6 +23,7 @@ namespace UnityEditor.Audio
 				return this.m_Parameters;
 			}
 		}
+
 		public MixerEffectDefinition(string name, MixerParameterDefinition[] parameters)
 		{
 			this.m_EffectName = name;

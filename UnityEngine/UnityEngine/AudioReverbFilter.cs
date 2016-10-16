@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	public sealed class AudioReverbFilter : Behaviour
@@ -13,6 +15,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float dryLevel
 		{
 			[WrapperlessIcall]
@@ -22,6 +25,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float room
 		{
 			[WrapperlessIcall]
@@ -31,6 +35,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float roomHF
 		{
 			[WrapperlessIcall]
@@ -40,6 +45,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float roomRolloff
 		{
 			[WrapperlessIcall]
@@ -49,6 +55,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float decayTime
 		{
 			[WrapperlessIcall]
@@ -58,6 +65,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float decayHFRatio
 		{
 			[WrapperlessIcall]
@@ -67,6 +75,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float reflectionsLevel
 		{
 			[WrapperlessIcall]
@@ -76,6 +85,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float reflectionsDelay
 		{
 			[WrapperlessIcall]
@@ -85,6 +95,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float reverbLevel
 		{
 			[WrapperlessIcall]
@@ -94,6 +105,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float reverbDelay
 		{
 			[WrapperlessIcall]
@@ -103,6 +115,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float diffusion
 		{
 			[WrapperlessIcall]
@@ -112,6 +125,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float density
 		{
 			[WrapperlessIcall]
@@ -121,6 +135,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float hfReference
 		{
 			[WrapperlessIcall]
@@ -130,6 +145,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float roomLF
 		{
 			[WrapperlessIcall]
@@ -139,6 +155,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float lfReference
 		{
 			[WrapperlessIcall]
@@ -148,15 +165,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[Obsolete("lFReference is obsolete. Use lfReference instead (UnityUpgradable).", true)]
-		public extern float lFReference
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("AudioReverbFilter.lFReference is obsolete. Use lfReference instead (UnityUpgradable) -> lfReference", true)]
+		public float lFReference
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return this.lfReference;
+			}
+			set
+			{
+			}
 		}
 	}
 }

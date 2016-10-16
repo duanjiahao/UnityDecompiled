@@ -1,5 +1,7 @@
 using System;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Texture2D))]
@@ -8,13 +10,21 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent smallZoom;
+
 			public GUIContent largeZoom;
+
 			public GUIContent alphaIcon;
+
 			public GUIContent RGBIcon;
+
 			public GUIStyle previewButton;
+
 			public GUIStyle previewSlider;
+
 			public GUIStyle previewSliderThumb;
+
 			public GUIStyle previewLabel;
+
 			public Styles()
 			{
 				this.smallZoom = EditorGUIUtility.IconContent("PreTextureMipMapLow");
@@ -28,16 +38,25 @@ namespace UnityEditor
 				this.previewLabel.alignment = TextAnchor.UpperCenter;
 			}
 		}
+
 		private static TextureInspector.Styles s_Styles;
+
 		private bool m_ShowAlpha;
-		private SerializedProperty m_WrapMode;
-		private SerializedProperty m_FilterMode;
-		private SerializedProperty m_Aniso;
+
+		protected SerializedProperty m_WrapMode;
+
+		protected SerializedProperty m_FilterMode;
+
+		protected SerializedProperty m_Aniso;
+
 		[SerializeField]
 		protected Vector2 m_Pos;
+
 		[SerializeField]
 		private float m_MipLevel;
+
 		private CubemapPreview m_CubemapPreview = new CubemapPreview();
+
 		public float mipLevel
 		{
 			get
@@ -54,21 +73,25 @@ namespace UnityEditor
 				this.m_MipLevel = value;
 			}
 		}
+
 		public static bool IsNormalMap(Texture t)
 		{
 			TextureUsageMode usageMode = TextureUtil.GetUsageMode(t);
 			return usageMode == TextureUsageMode.NormalmapPlain || usageMode == TextureUsageMode.NormalmapDXT5nm;
 		}
+
 		protected virtual void OnEnable()
 		{
 			this.m_WrapMode = base.serializedObject.FindProperty("m_TextureSettings.m_WrapMode");
 			this.m_FilterMode = base.serializedObject.FindProperty("m_TextureSettings.m_FilterMode");
 			this.m_Aniso = base.serializedObject.FindProperty("m_TextureSettings.m_Aniso");
 		}
+
 		protected virtual void OnDisable()
 		{
 			this.m_CubemapPreview.OnDisable();
 		}
+
 		internal void SetCubemapIntensity(float intensity)
 		{
 			if (this.m_CubemapPreview != null)
@@ -76,6 +99,7 @@ namespace UnityEditor
 				this.m_CubemapPreview.SetIntensity(intensity);
 			}
 		}
+
 		public float GetMipLevelForRendering()
 		{
 			if (this.target == null)
@@ -86,11 +110,20 @@ namespace UnityEditor
 			{
 				return this.m_CubemapPreview.GetMipLevelForRendering(this.target as Texture);
 			}
-			return Mathf.Min(this.m_MipLevel, (float)(TextureUtil.CountMipmaps(this.target as Texture) - 1));
+			return Mathf.Min(this.m_MipLevel, (float)(TextureUtil.GetMipmapCount(this.target as Texture) - 1));
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
+			this.DoWrapModePopup();
+			this.DoFilterModePopup();
+			this.DoAnisoLevelSlider();
+			base.serializedObject.ApplyModifiedProperties();
+		}
+
+		protected void DoWrapModePopup()
+		{
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = this.m_WrapMode.hasMultipleDifferentValues;
 			TextureWrapMode textureWrapMode = (TextureWrapMode)this.m_WrapMode.intValue;
@@ -100,6 +133,10 @@ namespace UnityEditor
 			{
 				this.m_WrapMode.intValue = (int)textureWrapMode;
 			}
+		}
+
+		protected void DoFilterModePopup()
+		{
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = this.m_FilterMode.hasMultipleDifferentValues;
 			FilterMode filterMode = (FilterMode)this.m_FilterMode.intValue;
@@ -109,6 +146,10 @@ namespace UnityEditor
 			{
 				this.m_FilterMode.intValue = (int)filterMode;
 			}
+		}
+
+		protected void DoAnisoLevelSlider()
+		{
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = this.m_Aniso.hasMultipleDifferentValues;
 			int num = this.m_Aniso.intValue;
@@ -118,18 +159,30 @@ namespace UnityEditor
 			{
 				this.m_Aniso.intValue = num;
 			}
-			base.serializedObject.ApplyModifiedProperties();
+			TextureInspector.DoAnisoGlobalSettingNote(num);
 		}
+
+		internal static void DoAnisoGlobalSettingNote(int anisoLevel)
+		{
+			if (anisoLevel > 1)
+			{
+				if (QualitySettings.anisotropicFiltering == AnisotropicFiltering.Disable)
+				{
+					EditorGUILayout.HelpBox("Anisotropic filtering is disabled for all textures in Quality Settings.", MessageType.Info);
+				}
+				else if (QualitySettings.anisotropicFiltering == AnisotropicFiltering.ForceEnable)
+				{
+					EditorGUILayout.HelpBox("Anisotropic filtering is enabled for all textures in Quality Settings.", MessageType.Info);
+				}
+			}
+		}
+
 		private bool IsCubemap()
 		{
-			RenderTexture renderTexture = this.target as RenderTexture;
-			if (renderTexture != null && renderTexture.isCubemap)
-			{
-				return true;
-			}
-			Cubemap x = this.target as Cubemap;
-			return x != null;
+			Texture texture = this.target as Texture;
+			return texture != null && texture.dimension == TextureDimension.Cube;
 		}
+
 		public override void OnPreviewSettings()
 		{
 			if (this.IsCubemap())
@@ -162,17 +215,13 @@ namespace UnityEditor
 					format = (texture as Texture2D).format;
 					flag4 = true;
 				}
-				else
+				else if (texture is ProceduralTexture)
 				{
-					if (texture is ProceduralTexture)
-					{
-						format = (texture as ProceduralTexture).format;
-						flag4 = true;
-					}
+					format = (texture as ProceduralTexture).format;
+					flag4 = true;
 				}
 				if (flag4)
 				{
-					num = Mathf.Max(num, TextureUtil.CountMipmaps(texture));
 					if (!TextureUtil.IsAlphaOnlyTextureFormat(format))
 					{
 						flag2 = false;
@@ -182,19 +231,17 @@ namespace UnityEditor
 						flag3 = true;
 					}
 				}
+				num = Mathf.Max(num, TextureUtil.GetMipmapCount(texture));
 			}
 			if (flag2)
 			{
 				this.m_ShowAlpha = true;
 				flag = false;
 			}
-			else
+			else if (!flag3)
 			{
-				if (!flag3)
-				{
-					this.m_ShowAlpha = false;
-					flag = false;
-				}
+				this.m_ShowAlpha = false;
+				flag = false;
 			}
 			if (flag && !TextureInspector.IsNormalMap(t))
 			{
@@ -210,10 +257,12 @@ namespace UnityEditor
 			GUILayout.Box(TextureInspector.s_Styles.largeZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
 			GUI.enabled = true;
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.target != null;
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (Event.current.type == EventType.Repaint)
@@ -305,6 +354,7 @@ namespace UnityEditor
 				EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + mipLevelForRendering);
 			}
 		}
+
 		private void DrawRect(Rect rect)
 		{
 			GL.Vertex(new Vector3(rect.xMin, rect.yMin, 0f));
@@ -316,6 +366,7 @@ namespace UnityEditor
 			GL.Vertex(new Vector3(rect.xMin, rect.yMax, 0f));
 			GL.Vertex(new Vector3(rect.xMin, rect.yMin, 0f));
 		}
+
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -323,12 +374,26 @@ namespace UnityEditor
 				return null;
 			}
 			Texture texture = this.target as Texture;
+			if (this.IsCubemap())
+			{
+				return this.m_CubemapPreview.RenderStaticPreview(texture, width, height);
+			}
+			TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+			if (textureImporter != null && textureImporter.spriteImportMode == SpriteImportMode.Polygon)
+			{
+				Sprite sprite = subAssets[0] as Sprite;
+				if (sprite)
+				{
+					return SpriteInspector.BuildPreviewTexture(width, height, sprite, null, true);
+				}
+			}
 			PreviewHelpers.AdjustWidthAndHeightForStaticPreview(texture.width, texture.height, ref width, ref height);
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(true);
 			RenderTexture active = RenderTexture.active;
 			Rect rawViewportRect = ShaderUtil.rawViewportRect;
-			RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
+			bool flag = !TextureUtil.GetLinearSampled(texture);
+			RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.Default, (!flag) ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB);
 			Material material = EditorGUI.GetMaterialForSpecialTexture(texture);
+			GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
 			if (material)
 			{
 				if (Unsupported.IsDeveloperBuild())
@@ -341,6 +406,7 @@ namespace UnityEditor
 			{
 				Graphics.Blit(texture, temporary);
 			}
+			GL.sRGBWrite = false;
 			RenderTexture.active = temporary;
 			Texture2D texture2D = this.target as Texture2D;
 			Texture2D texture2D2;
@@ -357,82 +423,99 @@ namespace UnityEditor
 			RenderTexture.ReleaseTemporary(temporary);
 			EditorGUIUtility.SetRenderTextureNoViewport(active);
 			ShaderUtil.rawViewportRect = rawViewportRect;
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(false);
 			if (material && Unsupported.IsDeveloperBuild())
 			{
 				UnityEngine.Object.DestroyImmediate(material);
 			}
 			return texture2D2;
 		}
+
 		private float Log2(float x)
 		{
 			return (float)(Math.Log((double)x) / Math.Log(2.0));
 		}
+
 		public override string GetInfoString()
 		{
 			Texture texture = this.target as Texture;
 			Texture2D texture2D = this.target as Texture2D;
+			TextureImporter textureImporter = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
 			string text = texture.width.ToString() + "x" + texture.height.ToString();
 			if (QualitySettings.desiredColorSpace == ColorSpace.Linear)
 			{
 				text = text + " " + TextureUtil.GetTextureColorSpaceString(texture);
 			}
-			bool flag = TextureInspector.IsNormalMap(texture);
-			bool flag2 = TextureUtil.DoesTextureStillNeedToBeCompressed(AssetDatabase.GetAssetPath(texture));
-			bool flag3 = texture2D != null && TextureUtil.IsNonPowerOfTwo(texture2D);
+			bool flag = textureImporter && textureImporter.qualifiesForSpritePacking;
+			bool flag2 = TextureInspector.IsNormalMap(texture);
+			bool flag3 = TextureUtil.DoesTextureStillNeedToBeCompressed(AssetDatabase.GetAssetPath(texture));
+			bool flag4 = texture2D != null && TextureUtil.IsNonPowerOfTwo(texture2D);
 			TextureFormat textureFormat = TextureUtil.GetTextureFormat(texture);
-			bool flag4 = !flag2;
-			if (flag3)
+			bool flag5 = !flag3;
+			if (flag4)
 			{
 				text += " (NPOT)";
 			}
-			if (flag2)
+			if (flag3)
 			{
 				text += " (Not yet compressed)";
 			}
+			else if (flag2)
+			{
+				TextureFormat textureFormat2 = textureFormat;
+				switch (textureFormat2)
+				{
+				case TextureFormat.ARGB4444:
+					text += "  Nm 16 bit";
+					goto IL_16B;
+				case TextureFormat.RGB24:
+				case TextureFormat.RGBA32:
+					IL_112:
+					if (textureFormat2 != TextureFormat.DXT5)
+					{
+						text = text + "  " + TextureUtil.GetTextureFormatString(textureFormat);
+						goto IL_16B;
+					}
+					text += "  DXTnm";
+					goto IL_16B;
+				case TextureFormat.ARGB32:
+					text += "  Nm 32 bit";
+					goto IL_16B;
+				}
+				goto IL_112;
+				IL_16B:;
+			}
+			else if (flag)
+			{
+				TextureFormat format;
+				ColorSpace colorSpace;
+				int num;
+				textureImporter.ReadTextureImportInstructions(EditorUserBuildSettings.activeBuildTarget, out format, out colorSpace, out num);
+				string text2 = text;
+				text = string.Concat(new string[]
+				{
+					text2,
+					"\n ",
+					TextureUtil.GetTextureFormatString(textureFormat),
+					"(Original) ",
+					TextureUtil.GetTextureFormatString(format),
+					"(Atlas)"
+				});
+			}
 			else
 			{
-				if (flag)
-				{
-					TextureFormat textureFormat2 = textureFormat;
-					switch (textureFormat2)
-					{
-					case TextureFormat.ARGB4444:
-						text += "  Nm 16 bit";
-						goto IL_142;
-					case TextureFormat.RGB24:
-					case TextureFormat.RGBA32:
-						IL_E9:
-						if (textureFormat2 != TextureFormat.DXT5)
-						{
-							text = text + "  " + TextureUtil.GetTextureFormatString(textureFormat);
-							goto IL_142;
-						}
-						text += "  DXTnm";
-						goto IL_142;
-					case TextureFormat.ARGB32:
-						text += "  Nm 32 bit";
-						goto IL_142;
-					}
-					goto IL_E9;
-					IL_142:;
-				}
-				else
-				{
-					text = text + "  " + TextureUtil.GetTextureFormatString(textureFormat);
-				}
+				text = text + "  " + TextureUtil.GetTextureFormatString(textureFormat);
 			}
-			if (flag4)
+			if (flag5)
 			{
 				text = text + "\n" + EditorUtility.FormatBytes(TextureUtil.GetStorageMemorySize(texture));
 			}
 			if (TextureUtil.GetUsageMode(texture) == TextureUsageMode.AlwaysPadded)
 			{
-				int gLWidth = TextureUtil.GetGLWidth(texture);
-				int gLHeight = TextureUtil.GetGLHeight(texture);
-				if (texture.width != gLWidth || texture.height != gLHeight)
+				int gPUWidth = TextureUtil.GetGPUWidth(texture);
+				int gPUHeight = TextureUtil.GetGPUHeight(texture);
+				if (texture.width != gPUWidth || texture.height != gPUHeight)
 				{
-					text += string.Format("\nPadded to {0}x{1}", gLWidth, gLHeight);
+					text += string.Format("\nPadded to {0}x{1}", gPUWidth, gPUHeight);
 				}
 			}
 			return text;

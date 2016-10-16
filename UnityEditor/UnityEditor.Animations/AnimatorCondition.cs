@@ -1,11 +1,15 @@
 using System;
+
 namespace UnityEditor.Animations
 {
 	public struct AnimatorCondition
 	{
 		private AnimatorConditionMode m_ConditionMode;
+
 		private string m_ConditionEvent;
+
 		private float m_EventTreshold;
+
 		public AnimatorConditionMode mode
 		{
 			get
@@ -17,6 +21,7 @@ namespace UnityEditor.Animations
 				this.m_ConditionMode = value;
 			}
 		}
+
 		public string parameter
 		{
 			get
@@ -28,6 +33,7 @@ namespace UnityEditor.Animations
 				this.m_ConditionEvent = value;
 			}
 		}
+
 		public float threshold
 		{
 			get

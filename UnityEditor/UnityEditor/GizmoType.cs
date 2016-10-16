@@ -1,12 +1,18 @@
 using System;
+
 namespace UnityEditor
 {
 	public enum GizmoType
 	{
-		Active = 8,
-		SelectedOrChild = 16,
-		NotSelected = 2,
+		Pickable = 1,
+		NotInSelectionHierarchy,
+		NonSelected = 32,
 		Selected = 4,
-		Pickable = 1
+		Active = 8,
+		InSelectionHierarchy = 16,
+		[Obsolete("Use NotInSelectionHierarchy instead (UnityUpgradable) -> NotInSelectionHierarchy")]
+		NotSelected = -127,
+		[Obsolete("Use InSelectionHierarchy instead (UnityUpgradable) -> InSelectionHierarchy")]
+		SelectedOrChild = -127
 	}
 }

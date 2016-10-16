@@ -4,13 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal static class CommandLineFormatter
 	{
 		private static readonly Regex UnsafeCharsWindows = new Regex("[^A-Za-z0-9\\_\\-\\.\\:\\,\\/\\@\\\\]");
+
 		private static readonly Regex UnescapeableChars = new Regex("[\\x00-\\x08\\x10-\\x1a\\x1c-\\x1f\\x7f\\xff]");
+
 		private static readonly Regex Quotes = new Regex("\"");
+
 		public static string EscapeCharsQuote(string input)
 		{
 			if (input.IndexOf('\'') == -1)
@@ -23,6 +27,7 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			return null;
 		}
+
 		public static string PrepareFileName(string input)
 		{
 			if (Application.platform == RuntimePlatform.OSXEditor)
@@ -31,6 +36,7 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			return CommandLineFormatter.EscapeCharsWindows(input);
 		}
+
 		public static string EscapeCharsWindows(string input)
 		{
 			if (input.Length == 0)
@@ -48,15 +54,15 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			return input;
 		}
+
 		internal static string GenerateResponseFile(IEnumerable<string> arguments)
 		{
 			string uniqueTempPathInProject = FileUtil.GetUniqueTempPathInProject();
 			using (StreamWriter streamWriter = new StreamWriter(uniqueTempPathInProject))
 			{
-				foreach (string current in 
-					from a in arguments
-					where a != null
-					select a)
+				foreach (string current in from a in arguments
+				where a != null
+				select a)
 				{
 					streamWriter.WriteLine(current);
 				}

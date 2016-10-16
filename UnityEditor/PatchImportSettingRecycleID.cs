@@ -1,8 +1,8 @@
 using System;
 using UnityEditor;
+
 internal class PatchImportSettingRecycleID
 {
-	private const int kMaxObjectsPerClassID = 100000;
 	public static void Patch(SerializedObject serializedObject, int classID, string oldName, string newName)
 	{
 		PatchImportSettingRecycleID.PatchMultiple(serializedObject, classID, new string[]
@@ -13,6 +13,7 @@ internal class PatchImportSettingRecycleID
 			newName
 		});
 	}
+
 	public static void PatchMultiple(SerializedObject serializedObject, int classID, string[] oldNames, string[] newNames)
 	{
 		int num = oldNames.Length;
@@ -20,7 +21,7 @@ internal class PatchImportSettingRecycleID
 		foreach (SerializedProperty serializedProperty2 in serializedProperty)
 		{
 			SerializedProperty serializedProperty3 = serializedProperty2.FindPropertyRelative("first");
-			if (serializedProperty3.intValue >= 100000 * classID && serializedProperty3.intValue < 100000 * (classID + 1))
+			if (AssetImporter.LocalFileIDToClassID(serializedProperty3.longValue) == classID)
 			{
 				SerializedProperty serializedProperty4 = serializedProperty2.FindPropertyRelative("second");
 				int num2 = Array.IndexOf<string>(oldNames, serializedProperty4.stringValue);

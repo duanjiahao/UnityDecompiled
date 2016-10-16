@@ -1,26 +1,35 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class TreeViewState
 	{
 		public Vector2 scrollPos;
+
 		[SerializeField]
 		private List<int> m_SelectedIDs = new List<int>();
+
 		[SerializeField]
 		private int m_LastClickedID;
+
 		[SerializeField]
 		private List<int> m_ExpandedIDs = new List<int>();
+
 		[SerializeField]
 		private RenameOverlay m_RenameOverlay = new RenameOverlay();
+
 		[SerializeField]
 		private CreateAssetUtility m_CreateAssetUtility = new CreateAssetUtility();
+
 		[SerializeField]
 		private string m_SearchString;
+
 		[SerializeField]
 		private float[] m_ColumnWidths;
+
 		public List<int> selectedIDs
 		{
 			get
@@ -32,6 +41,7 @@ namespace UnityEditor
 				this.m_SelectedIDs = value;
 			}
 		}
+
 		public int lastClickedID
 		{
 			get
@@ -43,6 +53,7 @@ namespace UnityEditor
 				this.m_LastClickedID = value;
 			}
 		}
+
 		public List<int> expandedIDs
 		{
 			get
@@ -54,6 +65,7 @@ namespace UnityEditor
 				this.m_ExpandedIDs = value;
 			}
 		}
+
 		public RenameOverlay renameOverlay
 		{
 			get
@@ -65,6 +77,7 @@ namespace UnityEditor
 				this.m_RenameOverlay = value;
 			}
 		}
+
 		public CreateAssetUtility createAssetUtility
 		{
 			get
@@ -76,6 +89,7 @@ namespace UnityEditor
 				this.m_CreateAssetUtility = value;
 			}
 		}
+
 		public float[] columnWidths
 		{
 			get
@@ -87,6 +101,7 @@ namespace UnityEditor
 				this.m_ColumnWidths = value;
 			}
 		}
+
 		public string searchString
 		{
 			get
@@ -98,6 +113,7 @@ namespace UnityEditor
 				this.m_SearchString = value;
 			}
 		}
+
 		public void OnAwake()
 		{
 			this.m_RenameOverlay.Clear();

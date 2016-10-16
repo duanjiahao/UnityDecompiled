@@ -2,20 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SimpleProfiler
 	{
 		private static Stack<string> m_Names = new Stack<string>();
+
 		private static Stack<float> m_StartTime = new Stack<float>();
+
 		private static Dictionary<string, float> m_Timers = new Dictionary<string, float>();
+
 		private static Dictionary<string, int> m_Calls = new Dictionary<string, int>();
+
 		[Conditional("SIMPLE_PROFILER")]
 		public static void Begin(string label)
 		{
 			SimpleProfiler.m_Names.Push(label);
 			SimpleProfiler.m_StartTime.Push(Time.realtimeSinceStartup);
 		}
+
 		[Conditional("SIMPLE_PROFILER")]
 		public static void End()
 		{
@@ -48,6 +54,7 @@ namespace UnityEditor
 				SimpleProfiler.m_Calls[text] = 1;
 			}
 		}
+
 		[Conditional("SIMPLE_PROFILER")]
 		public static void PrintTimes()
 		{

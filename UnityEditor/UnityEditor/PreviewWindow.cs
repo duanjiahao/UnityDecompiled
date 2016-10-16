@@ -1,34 +1,41 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PreviewWindow : InspectorWindow
 	{
 		[SerializeField]
 		private InspectorWindow m_ParentInspectorWindow;
+
 		public void SetParentInspector(InspectorWindow inspector)
 		{
 			this.m_ParentInspectorWindow = inspector;
 		}
+
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			base.title = "Preview";
+			base.titleContent = EditorGUIUtility.TextContent("Preview");
 			base.minSize = new Vector2(260f, 220f);
 		}
+
 		protected override void OnDisable()
 		{
 			base.OnDisable();
 			this.m_ParentInspectorWindow.Repaint();
 		}
+
 		protected override void CreateTracker()
 		{
 			this.m_Tracker = this.m_ParentInspectorWindow.GetTracker();
 		}
+
 		public override Editor GetLastInteractedEditor()
 		{
 			return this.m_ParentInspectorWindow.GetLastInteractedEditor();
 		}
+
 		protected override void OnGUI()
 		{
 			if (!this.m_ParentInspectorWindow)
@@ -77,9 +84,11 @@ namespace UnityEditor
 				editorThatControlsPreview.DrawPreview(rect2);
 			}
 		}
+
 		public override void AddItemsToMenu(GenericMenu menu)
 		{
 		}
+
 		protected override void ShowButton(Rect r)
 		{
 		}

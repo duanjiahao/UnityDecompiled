@@ -1,10 +1,15 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct WebCamDevice
 	{
 		internal string m_Name;
+
 		internal int m_Flags;
+
 		public string name
 		{
 			get
@@ -12,6 +17,7 @@ namespace UnityEngine
 				return this.m_Name;
 			}
 		}
+
 		public bool isFrontFacing
 		{
 			get

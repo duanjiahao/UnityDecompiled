@@ -2,15 +2,18 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.Audio;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AudioGroupDataSource : TreeViewDataSource
 	{
 		public AudioMixerController m_Controller;
+
 		public AudioGroupDataSource(TreeView treeView, AudioMixerController controller) : base(treeView)
 		{
 			this.m_Controller = controller;
 		}
+
 		private void AddNodesRecursively(AudioMixerGroupController group, TreeViewItem parent, int depth)
 		{
 			List<TreeViewItem> list = new List<TreeViewItem>();
@@ -24,10 +27,12 @@ namespace UnityEditor
 			}
 			parent.children = list;
 		}
+
 		public static int GetUniqueNodeID(AudioMixerGroupController group)
 		{
 			return group.GetInstanceID();
 		}
+
 		public override void FetchData()
 		{
 			if (this.m_Controller == null)
@@ -46,6 +51,7 @@ namespace UnityEditor
 			this.AddNodesRecursively(this.m_Controller.masterGroup, this.m_RootItem, 1);
 			this.m_NeedRefreshVisibleFolders = true;
 		}
+
 		public override bool IsRenamingItemAllowed(TreeViewItem node)
 		{
 			AudioMixerTreeViewNode audioMixerTreeViewNode = node as AudioMixerTreeViewNode;

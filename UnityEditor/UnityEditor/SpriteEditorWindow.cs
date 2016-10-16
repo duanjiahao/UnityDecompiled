@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor.Sprites;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SpriteEditorWindow : SpriteUtilityWindow
@@ -13,29 +14,138 @@ namespace UnityEditor
 			BorderEditing,
 			RectEditing
 		}
+
+		private class SpriteEditorWindowStyles
+		{
+			public static readonly GUIContent changeShapeLabel = EditorGUIUtility.TextContent("Change Shape");
+
+			public static readonly GUIContent sliceButtonLabel = EditorGUIUtility.TextContent("Slice");
+
+			public static readonly GUIContent trimButtonLabel = EditorGUIUtility.TextContent("Trim|Trims selected rectangle (T)");
+
+			public static readonly GUIContent sidesLabel = EditorGUIUtility.TextContent("Sides");
+
+			public static readonly GUIContent polygonChangeShapeHelpBoxContent = EditorGUIUtility.TextContent("Sides can only be either 0 or anything between 3 and 128");
+
+			public static readonly GUIContent changeButtonLabel = EditorGUIUtility.TextContent("Change|Change to the new number of sides");
+
+			public static readonly GUIContent editingDiableMessageLabel = EditorGUIUtility.TextContent("Editing is disabled during play mode");
+
+			public static readonly GUIContent spriteLabel = EditorGUIUtility.TextContent("Sprite");
+
+			public static readonly GUIContent customPivotLabel = EditorGUIUtility.TextContent("Custom Pivot");
+
+			public static readonly GUIContent borderLabel = EditorGUIUtility.TextContent("Border");
+
+			public static readonly GUIContent lLabel = EditorGUIUtility.TextContent("L");
+
+			public static readonly GUIContent tLabel = EditorGUIUtility.TextContent("T");
+
+			public static readonly GUIContent rLabel = EditorGUIUtility.TextContent("R");
+
+			public static readonly GUIContent bLabel = EditorGUIUtility.TextContent("B");
+
+			public static readonly GUIContent positionLabel = EditorGUIUtility.TextContent("Position");
+
+			public static readonly GUIContent xLabel = EditorGUIUtility.TextContent("X");
+
+			public static readonly GUIContent yLabel = EditorGUIUtility.TextContent("Y");
+
+			public static readonly GUIContent wLabel = EditorGUIUtility.TextContent("W");
+
+			public static readonly GUIContent hLabel = EditorGUIUtility.TextContent("H");
+
+			public static readonly GUIContent nameLabel = EditorGUIUtility.TextContent("Name");
+
+			public static readonly GUIContent revertButtonLabel = EditorGUIUtility.TextContent("Revert");
+
+			public static readonly GUIContent applyButtonLabel = EditorGUIUtility.TextContent("Apply");
+
+			public static readonly GUIContent spriteEditorWindowTitle = EditorGUIUtility.TextContent("Sprite Editor");
+
+			public static readonly GUIContent pendingChangesDialogContent = EditorGUIUtility.TextContent("You have pending changes in the Sprite Editor Window.\nDo you want to apply these changes?");
+
+			public static readonly GUIContent yesButtonLabel = EditorGUIUtility.TextContent("Yes");
+
+			public static readonly GUIContent noButtonLabel = EditorGUIUtility.TextContent("No");
+
+			public static readonly GUIContent applyRevertDialogTitle = EditorGUIUtility.TextContent("Unapplied import settings");
+
+			public static readonly GUIContent applyRevertDialogContent = EditorGUIUtility.TextContent("Unapplied import settings for '{0}'");
+
+			public static readonly GUIContent creatingMultipleSpriteDialogTitle = EditorGUIUtility.TextContent("Creating multiple sprites");
+
+			public static readonly GUIContent creatingMultipleSpriteDialogContent = EditorGUIUtility.TextContent("Creating {0} sprites. \nThis can take up to several minutes");
+
+			public static readonly GUIContent okButtonLabel = EditorGUIUtility.TextContent("Ok");
+
+			public static readonly GUIContent cancelButtonLabel = EditorGUIUtility.TextContent("Cancel");
+		}
+
 		public enum AutoSlicingMethod
 		{
 			DeleteAll,
 			Smart,
 			Safe
 		}
+
 		private const float maxSnapDistance = 14f;
+
+		private const float marginForFraming = 0.05f;
+
+		private const float k_WarningMessageWidth = 250f;
+
+		private const float k_WarningMessageHeight = 40f;
+
+		private const int k_PolygonChangeShapeWindowMargin = 17;
+
+		private const int k_PolygonChangeShapeWindowWidth = 150;
+
+		private const int k_PolygonChangeShapeWindowHeight = 45;
+
+		private const int k_PolygonChangeShapeWindowWarningHeight = 65;
+
+		protected const float k_InspectorHeight = 160f;
+
 		internal static PrefKey k_SpriteEditorTrim = new PrefKey("Sprite Editor/Trim", "#t");
+
 		public static SpriteEditorWindow s_Instance;
+
 		public bool m_ResetOnNextRepaint;
+
 		public bool m_IgnoreNextPostprocessEvent;
+
 		public Texture2D m_OriginalTexture;
+
+		private int m_PolygonSides;
+
+		private bool m_ShowPolygonChangeShapeWindow;
+
+		private Rect m_PolygonChangeShapeWindowRect = new Rect(0f, 17f, 150f, 45f);
+
 		private SpriteRectCache m_RectsCache;
+
 		private SerializedObject m_TextureImporterSO;
+
 		private TextureImporter m_TextureImporter;
+
 		private SerializedProperty m_TextureImporterSprites;
+
+		private SerializedProperty m_SpriteSheetOutline;
+
 		public static bool s_OneClickDragStarted = false;
+
 		private bool m_TextureIsDirty;
+
 		private static bool[] s_AlphaPixelCache;
+
 		public string m_SelectedAssetPath;
+
 		private SpriteEditorWindow.GizmoMode m_GizmoMode;
+
 		[SerializeField]
 		private SpriteRect m_Selected;
+
 		public Texture2D originalTexture
 		{
 			get
@@ -43,10 +153,23 @@ namespace UnityEditor
 				return this.m_OriginalTexture;
 			}
 		}
-		private SpriteRect selected
+
+		internal Texture2D previewTexture
 		{
 			get
 			{
+				return this.m_Texture;
+			}
+		}
+
+		internal SpriteRect selected
+		{
+			get
+			{
+				if (this.IsEditingDisabled())
+				{
+					return null;
+				}
 				return this.m_Selected;
 			}
 			set
@@ -57,6 +180,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private int defaultColliderAlphaCutoff
 		{
 			get
@@ -64,6 +188,7 @@ namespace UnityEditor
 				return 254;
 			}
 		}
+
 		private float defaultColliderDetail
 		{
 			get
@@ -71,13 +196,23 @@ namespace UnityEditor
 				return 0.25f;
 			}
 		}
+
 		private Rect inspectorRect
 		{
 			get
 			{
-				return new Rect(base.position.width - 330f - 8f - 16f, base.position.height - 148f - 8f - 16f, 330f, 148f);
+				return new Rect(base.position.width - 330f - 8f - 16f, base.position.height - 160f - 8f - 16f, 330f, 160f);
 			}
 		}
+
+		private Rect warningMessageRect
+		{
+			get
+			{
+				return new Rect(base.position.width - 250f - 8f - 16f, 24f, 250f, 40f);
+			}
+		}
+
 		private bool multipleSprites
 		{
 			get
@@ -85,6 +220,15 @@ namespace UnityEditor
 				return this.m_TextureImporter != null && this.m_TextureImporter.spriteImportMode == SpriteImportMode.Multiple;
 			}
 		}
+
+		private bool validSprite
+		{
+			get
+			{
+				return this.m_TextureImporter != null && this.m_TextureImporter.spriteImportMode != SpriteImportMode.None;
+			}
+		}
+
 		private bool activeTextureSelected
 		{
 			get
@@ -92,6 +236,7 @@ namespace UnityEditor
 				return this.m_TextureImporter != null && this.m_Texture != null && this.m_OriginalTexture != null;
 			}
 		}
+
 		public bool textureIsDirty
 		{
 			get
@@ -103,6 +248,7 @@ namespace UnityEditor
 				this.m_TextureIsDirty = value;
 			}
 		}
+
 		public bool selectedTextureChanged
 		{
 			get
@@ -111,10 +257,64 @@ namespace UnityEditor
 				return selectedTexture2D != null && this.m_OriginalTexture != selectedTexture2D;
 			}
 		}
+
+		private bool polygonSprite
+		{
+			get
+			{
+				return this.m_TextureImporter != null && this.m_TextureImporter.spriteImportMode == SpriteImportMode.Polygon;
+			}
+		}
+
+		private bool isSidesValid
+		{
+			get
+			{
+				return this.m_PolygonSides == 0 || (this.m_PolygonSides >= 3 && this.m_PolygonSides <= 128);
+			}
+		}
+
 		public static void GetWindow()
 		{
 			EditorWindow.GetWindow<SpriteEditorWindow>();
 		}
+
+		private void ModifierKeysChanged()
+		{
+			if (EditorWindow.focusedWindow == this)
+			{
+				base.Repaint();
+			}
+		}
+
+		public static void TextureImporterApply(SerializedObject so)
+		{
+			if (SpriteEditorWindow.s_Instance == null)
+			{
+				return;
+			}
+			SpriteEditorWindow.s_Instance.ApplyCacheSettingsToInspector(so);
+		}
+
+		private void ApplyCacheSettingsToInspector(SerializedObject so)
+		{
+			if (this.m_TextureImporterSO != null && this.m_TextureImporterSO.targetObject == so.targetObject)
+			{
+				if (so.FindProperty("m_SpriteMode").intValue == this.m_TextureImporterSO.FindProperty("m_SpriteMode").intValue)
+				{
+					SpriteEditorWindow.s_Instance.m_IgnoreNextPostprocessEvent = true;
+				}
+				else if (this.textureIsDirty)
+				{
+					bool flag = EditorUtility.DisplayDialog(SpriteEditorWindow.SpriteEditorWindowStyles.spriteEditorWindowTitle.text, SpriteEditorWindow.SpriteEditorWindowStyles.pendingChangesDialogContent.text, SpriteEditorWindow.SpriteEditorWindowStyles.yesButtonLabel.text, SpriteEditorWindow.SpriteEditorWindowStyles.noButtonLabel.text);
+					if (flag)
+					{
+						this.DoApply(so);
+					}
+				}
+			}
+		}
+
 		public void RefreshPropertiesCache()
 		{
 			this.m_OriginalTexture = this.GetSelectedTexture2D();
@@ -129,6 +329,7 @@ namespace UnityEditor
 			}
 			this.m_TextureImporterSO = new SerializedObject(this.m_TextureImporter);
 			this.m_TextureImporterSprites = this.m_TextureImporterSO.FindProperty("m_SpriteSheet.m_Sprites");
+			this.m_SpriteSheetOutline = this.m_TextureImporterSO.FindProperty("m_SpriteSheet.m_Outline");
 			if (this.m_RectsCache != null)
 			{
 				this.selected = ((this.m_TextureImporterSprites.arraySize <= 0) ? null : this.m_RectsCache.RectAt(0));
@@ -143,6 +344,7 @@ namespace UnityEditor
 			}
 			this.m_Texture.filterMode = FilterMode.Point;
 		}
+
 		public void InvalidatePropertiesCache()
 		{
 			if (this.m_RectsCache)
@@ -160,12 +362,63 @@ namespace UnityEditor
 			this.m_TextureImporterSprites = null;
 			SpriteEditorWindow.s_AlphaPixelCache = null;
 		}
+
 		private void InitializeAnimVariables()
 		{
 		}
+
+		private void DeterminePolygonSides()
+		{
+			if (this.selected != null && this.selected.m_Outline != null && this.selected.m_Outline.Count == 1)
+			{
+				this.m_PolygonSides = this.selected.m_Outline[0].Count;
+			}
+			else
+			{
+				this.m_PolygonSides = 0;
+			}
+		}
+
+		private static void AcquireOutline(SerializedProperty outlineSP, SpriteRect spriteRect)
+		{
+			for (int i = 0; i < outlineSP.arraySize; i++)
+			{
+				List<Vector2> list = new List<Vector2>();
+				SerializedProperty arrayElementAtIndex = outlineSP.GetArrayElementAtIndex(i);
+				for (int j = 0; j < arrayElementAtIndex.arraySize; j++)
+				{
+					Vector2 vector2Value = arrayElementAtIndex.GetArrayElementAtIndex(j).vector2Value;
+					list.Add(vector2Value);
+				}
+				spriteRect.m_Outline.Add(list);
+			}
+		}
+
+		private static void ApplyOutlineChanges(SerializedProperty outlineSP, SpriteRect spriteRect)
+		{
+			outlineSP.ClearArray();
+			for (int i = 0; i < spriteRect.m_Outline.Count; i++)
+			{
+				outlineSP.InsertArrayElementAtIndex(i);
+				SerializedProperty arrayElementAtIndex = outlineSP.GetArrayElementAtIndex(i);
+				arrayElementAtIndex.ClearArray();
+				List<Vector2> list = spriteRect.m_Outline[i];
+				for (int j = 0; j < list.Count; j++)
+				{
+					arrayElementAtIndex.InsertArrayElementAtIndex(j);
+					arrayElementAtIndex.GetArrayElementAtIndex(j).vector2Value = list[j];
+				}
+			}
+		}
+
+		public bool IsEditingDisabled()
+		{
+			return EditorApplication.isPlayingOrWillChangePlaymode;
+		}
+
 		private void OnSelectionChange()
 		{
-			if (this.selectedTextureChanged)
+			if (this.GetSelectedTexture2D() == null || this.selectedTextureChanged)
 			{
 				this.HandleApplyRevertDialog();
 			}
@@ -174,23 +427,34 @@ namespace UnityEditor
 			this.UpdateSelectedSprite();
 			base.Repaint();
 		}
+
 		public void Reset()
 		{
 			this.InvalidatePropertiesCache();
 			this.selected = null;
+			this.textureIsDirty = false;
 			this.m_Zoom = -1f;
 			this.RefreshPropertiesCache();
 			this.RefreshRects();
+			this.m_ShowPolygonChangeShapeWindow = this.polygonSprite;
+			if (this.m_ShowPolygonChangeShapeWindow)
+			{
+				this.DeterminePolygonSides();
+			}
 			base.Repaint();
 		}
+
 		private void OnEnable()
 		{
 			base.minSize = new Vector2(360f, 200f);
-			base.title = EditorGUIUtility.TextContent("SpriteEditorWindow.WindowTitle").text;
+			base.titleContent = SpriteEditorWindow.SpriteEditorWindowStyles.spriteEditorWindowTitle;
 			SpriteEditorWindow.s_Instance = this;
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
+			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.ModifierKeysChanged));
+			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.ModifierKeysChanged));
 			this.Reset();
 		}
+
 		private void UndoRedoPerformed()
 		{
 			Texture2D selectedTexture2D = this.GetSelectedTexture2D();
@@ -204,18 +468,25 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		private void OnDisable()
 		{
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
+			if (this.m_RectsCache != null)
+			{
+				Undo.ClearUndo(this.m_RectsCache);
+			}
 			this.HandleApplyRevertDialog();
 			this.InvalidatePropertiesCache();
+			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.ModifierKeysChanged));
 			SpriteEditorWindow.s_Instance = null;
 		}
+
 		private void HandleApplyRevertDialog()
 		{
 			if (this.textureIsDirty && this.m_TextureImporter != null)
 			{
-				if (EditorUtility.DisplayDialog("Unapplied import settings", "Unapplied import settings for '" + this.m_TextureImporter.assetPath + "'", "Apply", "Revert"))
+				if (EditorUtility.DisplayDialog(SpriteEditorWindow.SpriteEditorWindowStyles.applyRevertDialogTitle.text, string.Format(SpriteEditorWindow.SpriteEditorWindowStyles.applyRevertDialogContent.text, this.m_TextureImporter.assetPath), SpriteEditorWindow.SpriteEditorWindowStyles.applyButtonLabel.text, SpriteEditorWindow.SpriteEditorWindowStyles.revertButtonLabel.text))
 				{
 					this.DoApply();
 				}
@@ -225,6 +496,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void RefreshRects()
 		{
 			if (this.m_TextureImporterSprites == null)
@@ -234,6 +506,7 @@ namespace UnityEditor
 			if (this.m_RectsCache)
 			{
 				this.m_RectsCache.ClearAll();
+				Undo.ClearUndo(this.m_RectsCache);
 				UnityEngine.Object.DestroyImmediate(this.m_RectsCache);
 			}
 			this.m_RectsCache = ScriptableObject.CreateInstance<SpriteRectCache>();
@@ -247,10 +520,13 @@ namespace UnityEditor
 					spriteRect.m_Alignment = (SpriteAlignment)this.m_TextureImporterSprites.GetArrayElementAtIndex(i).FindPropertyRelative("m_Alignment").intValue;
 					spriteRect.m_Border = this.m_TextureImporterSprites.GetArrayElementAtIndex(i).FindPropertyRelative("m_Border").vector4Value;
 					spriteRect.m_Pivot = SpriteEditorUtility.GetPivotValue(spriteRect.m_Alignment, this.m_TextureImporterSprites.GetArrayElementAtIndex(i).FindPropertyRelative("m_Pivot").vector2Value);
+					spriteRect.m_TessellationDetail = this.m_TextureImporterSprites.GetArrayElementAtIndex(i).FindPropertyRelative("m_TessellationDetail").floatValue;
+					SerializedProperty outlineSP = this.m_TextureImporterSprites.GetArrayElementAtIndex(i).FindPropertyRelative("m_Outline");
+					SpriteEditorWindow.AcquireOutline(outlineSP, spriteRect);
 					this.m_RectsCache.AddRect(spriteRect);
 				}
 			}
-			else
+			else if (this.validSprite)
 			{
 				SpriteRect spriteRect2 = new SpriteRect();
 				spriteRect2.m_Rect = new Rect(0f, 0f, (float)this.m_Texture.width, (float)this.m_Texture.height);
@@ -258,6 +534,8 @@ namespace UnityEditor
 				spriteRect2.m_Alignment = (SpriteAlignment)this.m_TextureImporterSO.FindProperty("m_Alignment").intValue;
 				spriteRect2.m_Border = this.m_TextureImporter.spriteBorder;
 				spriteRect2.m_Pivot = SpriteEditorUtility.GetPivotValue(spriteRect2.m_Alignment, this.m_TextureImporter.spritePivot);
+				spriteRect2.m_TessellationDetail = this.m_TextureImporterSO.FindProperty("m_SpriteTessellationDetail").floatValue;
+				SpriteEditorWindow.AcquireOutline(this.m_SpriteSheetOutline, spriteRect2);
 				this.m_RectsCache.AddRect(spriteRect2);
 			}
 			if (this.m_RectsCache.Count > 0)
@@ -265,6 +543,7 @@ namespace UnityEditor
 				this.selected = this.m_RectsCache.RectAt(0);
 			}
 		}
+
 		private void OnGUI()
 		{
 			if (this.m_ResetOnNextRepaint || this.selectedTextureChanged)
@@ -275,9 +554,10 @@ namespace UnityEditor
 			Matrix4x4 matrix = Handles.matrix;
 			if (!this.activeTextureSelected)
 			{
-				EditorGUI.BeginDisabledGroup(true);
-				GUILayout.Label(SpriteUtilityWindow.Styles.s_NoSelectionWarning, new GUILayoutOption[0]);
-				EditorGUI.EndDisabledGroup();
+				using (new EditorGUI.DisabledScope(true))
+				{
+					GUILayout.Label(SpriteUtilityWindow.Styles.s_NoSelectionWarning, new GUILayoutOption[0]);
+				}
 				return;
 			}
 			base.InitStyles();
@@ -292,11 +572,18 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			base.DoTextureGUI();
 			EditorGUILayout.EndHorizontal();
+			this.DoPolygonChangeShapeWindow();
+			this.DoEditingDisabledMessage();
 			this.DoSelectedFrameInspector();
 			Handles.matrix = matrix;
 		}
+
 		protected override void DoTextureGUIExtras()
 		{
+			if (this.IsEditingDisabled())
+			{
+				return;
+			}
 			this.HandleGizmoMode();
 			if (this.multipleSprites)
 			{
@@ -315,6 +602,7 @@ namespace UnityEditor
 				this.HandleDragging();
 			}
 			this.HandleSelection();
+			this.HandleFrameSelected();
 			if (this.multipleSprites)
 			{
 				this.HandleCreate();
@@ -322,6 +610,7 @@ namespace UnityEditor
 				this.HandleDuplicate();
 			}
 		}
+
 		private void HandleGizmoMode()
 		{
 			if (Event.current.control)
@@ -338,30 +627,157 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void DoToolbarGUI()
 		{
-			EditorGUI.BeginDisabledGroup(!this.multipleSprites);
-			Rect buttonRect = EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			if (GUILayout.Button("Slice", "toolbarPopup", new GUILayoutOption[0]))
+			if (this.polygonSprite)
 			{
-				SpriteEditorMenu.s_SpriteEditor = this;
-				if (SpriteEditorMenu.ShowAtPosition(buttonRect))
+				using (new EditorGUI.DisabledScope(this.IsEditingDisabled()))
 				{
-					GUIUtility.ExitGUI();
+					this.m_ShowPolygonChangeShapeWindow = GUILayout.Toggle(this.m_ShowPolygonChangeShapeWindow, SpriteEditorWindow.SpriteEditorWindowStyles.changeShapeLabel, EditorStyles.toolbarButton, new GUILayoutOption[0]);
 				}
 			}
-			EditorGUI.BeginDisabledGroup(this.selected == null);
-			if (GUILayout.Button(new GUIContent("Trim", "Trims selected rectangle (T)"), EditorStyles.toolbarButton, new GUILayoutOption[0]) || SpriteEditorWindow.k_SpriteEditorTrim.activated)
+			else
 			{
-				Rect rect = this.TrimAlpha(this.selected.m_Rect);
-				rect = this.ClampSpriteRect(rect);
-				this.selected.m_Rect = rect;
-				base.Repaint();
+				using (new EditorGUI.DisabledScope(!this.multipleSprites || this.IsEditingDisabled()))
+				{
+					Rect buttonRect = EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					if (GUILayout.Button(SpriteEditorWindow.SpriteEditorWindowStyles.sliceButtonLabel, "toolbarPopup", new GUILayoutOption[0]))
+					{
+						SpriteEditorMenu.s_SpriteEditor = this;
+						if (SpriteEditorMenu.ShowAtPosition(buttonRect))
+						{
+							GUIUtility.ExitGUI();
+						}
+					}
+					using (new EditorGUI.DisabledScope(this.selected == null))
+					{
+						if (GUILayout.Button(SpriteEditorWindow.SpriteEditorWindowStyles.trimButtonLabel, EditorStyles.toolbarButton, new GUILayoutOption[0]) || (string.IsNullOrEmpty(GUI.GetNameOfFocusedControl()) && SpriteEditorWindow.k_SpriteEditorTrim.activated))
+						{
+							Rect rect = this.TrimAlpha(this.selected.m_Rect);
+							if (rect.width <= 0f && rect.height <= 0f)
+							{
+								this.m_RectsCache.RemoveRect(this.selected);
+								this.selected = null;
+							}
+							else
+							{
+								rect = this.ClampSpriteRect(rect);
+								if (this.selected.m_Rect != rect)
+								{
+									this.textureIsDirty = true;
+								}
+								this.selected.m_Rect = rect;
+							}
+							base.Repaint();
+						}
+					}
+					EditorGUILayout.EndHorizontal();
+				}
 			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.EndDisabledGroup();
-			EditorGUILayout.EndHorizontal();
 		}
+
+		private void DoPolygonChangeShapeWindow()
+		{
+			if (this.m_ShowPolygonChangeShapeWindow)
+			{
+				bool flag = false;
+				float labelWidth = EditorGUIUtility.labelWidth;
+				EditorGUIUtility.labelWidth = 45f;
+				GUILayout.BeginArea(this.m_PolygonChangeShapeWindowRect);
+				GUILayout.BeginVertical(GUI.skin.box, new GUILayoutOption[0]);
+				Event current = Event.current;
+				if (this.isSidesValid && current.type == EventType.KeyDown && current.keyCode == KeyCode.Return)
+				{
+					flag = true;
+					current.Use();
+				}
+				EditorGUI.FocusTextInControl("PolygonSidesInput");
+				GUI.SetNextControlName("PolygonSidesInput");
+				EditorGUI.BeginChangeCheck();
+				this.m_PolygonSides = EditorGUILayout.IntField(SpriteEditorWindow.SpriteEditorWindowStyles.sidesLabel, this.m_PolygonSides, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
+				{
+					if (!this.isSidesValid)
+					{
+						this.m_PolygonChangeShapeWindowRect.height = 65f;
+					}
+					else
+					{
+						this.m_PolygonChangeShapeWindowRect.height = 45f;
+					}
+				}
+				GUILayout.FlexibleSpace();
+				if (!this.isSidesValid)
+				{
+					EditorGUILayout.HelpBox(SpriteEditorWindow.SpriteEditorWindowStyles.polygonChangeShapeHelpBoxContent.text, MessageType.Warning, true);
+				}
+				else
+				{
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.FlexibleSpace();
+					using (new EditorGUI.DisabledScope(!this.isSidesValid))
+					{
+						if (GUILayout.Button(SpriteEditorWindow.SpriteEditorWindowStyles.changeButtonLabel, new GUILayoutOption[0]))
+						{
+							flag = true;
+						}
+					}
+					GUILayout.EndHorizontal();
+				}
+				GUILayout.EndVertical();
+				if (flag)
+				{
+					if (this.isSidesValid)
+					{
+						this.GeneratePolygonOutline(this.m_PolygonSides);
+					}
+					this.m_ShowPolygonChangeShapeWindow = false;
+				}
+				EditorGUIUtility.labelWidth = labelWidth;
+				GUILayout.EndArea();
+			}
+		}
+
+		private void FourIntFields(GUIContent label, GUIContent labelX, GUIContent labelY, GUIContent labelZ, GUIContent labelW, ref int x, ref int y, ref int z, ref int w)
+		{
+			Rect rect = GUILayoutUtility.GetRect(322f, 322f, 32f, 32f);
+			Rect position = rect;
+			position.width = EditorGUIUtility.labelWidth;
+			position.height = 16f;
+			GUI.Label(position, label);
+			Rect position2 = rect;
+			position2.width -= EditorGUIUtility.labelWidth;
+			position2.height = 16f;
+			position2.x += EditorGUIUtility.labelWidth;
+			position2.width /= 2f;
+			position2.width -= 2f;
+			EditorGUIUtility.labelWidth = 12f;
+			GUI.SetNextControlName("FourIntFields_x");
+			x = EditorGUI.IntField(position2, labelX, x);
+			position2.x += position2.width + 3f;
+			GUI.SetNextControlName("FourIntFields_y");
+			y = EditorGUI.IntField(position2, labelY, y);
+			position2.y += 16f;
+			position2.x -= position2.width + 3f;
+			GUI.SetNextControlName("FourIntFields_z");
+			z = EditorGUI.IntField(position2, labelZ, z);
+			position2.x += position2.width + 3f;
+			GUI.SetNextControlName("FourIntFields_w");
+			w = EditorGUI.IntField(position2, labelW, w);
+			EditorGUIUtility.labelWidth = 135f;
+		}
+
+		private void DoEditingDisabledMessage()
+		{
+			if (this.IsEditingDisabled())
+			{
+				GUILayout.BeginArea(this.warningMessageRect);
+				EditorGUILayout.HelpBox(SpriteEditorWindow.SpriteEditorWindowStyles.editingDiableMessageLabel.text, MessageType.Warning);
+				GUILayout.EndArea();
+			}
+		}
+
 		private void DoSelectedFrameInspector()
 		{
 			if (this.selected != null)
@@ -370,30 +786,32 @@ namespace UnityEditor
 				float labelWidth = EditorGUIUtility.labelWidth;
 				EditorGUIUtility.labelWidth = 135f;
 				GUILayout.BeginArea(this.inspectorRect);
-				GUILayout.BeginVertical(new GUIContent("Sprite"), GUI.skin.window, new GUILayoutOption[0]);
-				EditorGUI.BeginDisabledGroup(!this.multipleSprites);
-				this.DoNameField();
-				this.DoPositionField();
-				EditorGUI.EndDisabledGroup();
-				Rect fieldLocation;
-				this.DoBorderFields(out fieldLocation);
-				this.DoPivotFields(fieldLocation);
+				GUILayout.BeginVertical(SpriteEditorWindow.SpriteEditorWindowStyles.spriteLabel, GUI.skin.window, new GUILayoutOption[0]);
+				using (new EditorGUI.DisabledScope(!this.multipleSprites))
+				{
+					this.DoNameField();
+					this.DoPositionField();
+				}
+				this.DoBorderFields();
+				this.DoPivotFields();
 				GUILayout.EndVertical();
 				GUILayout.EndArea();
 				EditorGUIUtility.labelWidth = labelWidth;
 			}
 		}
-		private void DoPivotFields(Rect fieldLocation)
+
+		private void DoPivotFields()
 		{
 			EditorGUI.BeginChangeCheck();
 			this.selected.m_Alignment = (SpriteAlignment)EditorGUILayout.Popup(SpriteUtilityWindow.Styles.s_PivotLabel, (int)this.selected.m_Alignment, SpriteUtilityWindow.Styles.spriteAlignmentOptions, new GUILayoutOption[0]);
 			Vector2 pivot = this.selected.m_Pivot;
-			EditorGUI.BeginDisabledGroup(this.selected.m_Alignment != SpriteAlignment.Custom);
-			fieldLocation.x = 5f;
-			fieldLocation.y += 36f;
-			fieldLocation.width = 414f;
-			Vector2 customOffset = EditorGUI.Vector2Field(fieldLocation, "Custom Pivot", pivot);
-			EditorGUI.EndDisabledGroup();
+			Vector2 customOffset = pivot;
+			using (new EditorGUI.DisabledScope(this.selected.m_Alignment != SpriteAlignment.Custom))
+			{
+				Rect rect = GUILayoutUtility.GetRect(322f, 322f, 32f, 32f);
+				GUI.SetNextControlName("PivotField");
+				customOffset = EditorGUI.Vector2Field(rect, SpriteEditorWindow.SpriteEditorWindowStyles.customPivotLabel, pivot);
+			}
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Pivot");
@@ -401,32 +819,17 @@ namespace UnityEditor
 				this.selected.m_Pivot = SpriteEditorUtility.GetPivotValue(this.selected.m_Alignment, customOffset);
 			}
 		}
-		private void DoBorderFields(out Rect fieldLocation)
+
+		private void DoBorderFields()
 		{
 			EditorGUI.BeginChangeCheck();
-			Rect rect = GUILayoutUtility.GetRect(322f, 322f, 32f, 32f);
 			Vector4 vector = this.ClampSpriteBorder(this.selected.m_Border);
-			Vector4 border = vector;
-			Rect position = rect;
-			position.width = EditorGUIUtility.labelWidth;
-			position.height = 16f;
-			GUI.Label(position, "Border");
-			fieldLocation = rect;
-			fieldLocation.width -= EditorGUIUtility.labelWidth;
-			fieldLocation.height = 16f;
-			fieldLocation.x += EditorGUIUtility.labelWidth;
-			fieldLocation.width /= 2f;
-			fieldLocation.width -= 2f;
-			EditorGUIUtility.labelWidth = 12f;
-			border.x = (float)EditorGUI.IntField(fieldLocation, "L", Mathf.RoundToInt(border.x));
-			fieldLocation.x += fieldLocation.width + 3f;
-			border.w = (float)EditorGUI.IntField(fieldLocation, "T", Mathf.RoundToInt(border.w));
-			fieldLocation.y += 16f;
-			fieldLocation.x -= fieldLocation.width + 3f;
-			border.z = (float)EditorGUI.IntField(fieldLocation, "R", Mathf.RoundToInt(border.z));
-			fieldLocation.x += fieldLocation.width + 3f;
-			border.y = (float)EditorGUI.IntField(fieldLocation, "B", Mathf.RoundToInt(border.y));
-			EditorGUIUtility.labelWidth = 135f;
+			int num = Mathf.RoundToInt(vector.x);
+			int num2 = Mathf.RoundToInt(vector.y);
+			int num3 = Mathf.RoundToInt(vector.z);
+			int num4 = Mathf.RoundToInt(vector.w);
+			this.FourIntFields(SpriteEditorWindow.SpriteEditorWindowStyles.borderLabel, SpriteEditorWindow.SpriteEditorWindowStyles.lLabel, SpriteEditorWindow.SpriteEditorWindowStyles.tLabel, SpriteEditorWindow.SpriteEditorWindowStyles.rLabel, SpriteEditorWindow.SpriteEditorWindowStyles.bLabel, ref num, ref num4, ref num3, ref num2);
+			Vector4 border = new Vector4((float)num, (float)num2, (float)num3, (float)num4);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Border");
@@ -434,11 +837,17 @@ namespace UnityEditor
 				this.selected.m_Border = this.ClampSpriteBorder(border);
 			}
 		}
+
 		private void DoPositionField()
 		{
 			EditorGUI.BeginChangeCheck();
 			Rect rect = this.selected.m_Rect;
-			Rect rect2 = EditorGUILayout.RectField("Position", this.FlipNegativeRect(rect), new GUILayoutOption[0]);
+			int num = Mathf.RoundToInt(rect.x);
+			int num2 = Mathf.RoundToInt(rect.y);
+			int num3 = Mathf.RoundToInt(rect.width);
+			int num4 = Mathf.RoundToInt(rect.height);
+			this.FourIntFields(SpriteEditorWindow.SpriteEditorWindowStyles.positionLabel, SpriteEditorWindow.SpriteEditorWindowStyles.xLabel, SpriteEditorWindow.SpriteEditorWindowStyles.yLabel, SpriteEditorWindow.SpriteEditorWindowStyles.wLabel, SpriteEditorWindow.SpriteEditorWindowStyles.hLabel, ref num, ref num2, ref num3, ref num4);
+			Rect rect2 = new Rect((float)num, (float)num2, (float)num3, (float)num4);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Position");
@@ -446,11 +855,13 @@ namespace UnityEditor
 				this.selected.m_Rect = this.ClampSpriteRect(rect2);
 			}
 		}
+
 		private void DoNameField()
 		{
 			EditorGUI.BeginChangeCheck();
 			string name = this.selected.m_Name;
-			string text = EditorGUILayout.TextField("Name", name, new GUILayoutOption[0]);
+			GUI.SetNextControlName("SpriteName");
+			string text = EditorGUILayout.TextField(SpriteEditorWindow.SpriteEditorWindowStyles.nameLabel, name, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Change Sprite Name");
@@ -475,26 +886,30 @@ namespace UnityEditor
 				this.selected.m_Name = text;
 			}
 		}
+
 		private void DoApplyRevertGUI()
 		{
-			EditorGUI.BeginDisabledGroup(!this.textureIsDirty);
-			if (GUILayout.Button("Revert", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			using (new EditorGUI.DisabledScope(!this.textureIsDirty))
 			{
-				this.DoRevert();
+				if (GUILayout.Button(SpriteEditorWindow.SpriteEditorWindowStyles.revertButtonLabel, EditorStyles.toolbarButton, new GUILayoutOption[0]))
+				{
+					this.DoRevert();
+				}
+				if (GUILayout.Button(SpriteEditorWindow.SpriteEditorWindowStyles.applyButtonLabel, EditorStyles.toolbarButton, new GUILayoutOption[0]))
+				{
+					this.DoApply();
+				}
 			}
-			if (GUILayout.Button("Apply", EditorStyles.toolbarButton, new GUILayoutOption[0]))
-			{
-				this.DoApply();
-			}
-			EditorGUI.EndDisabledGroup();
 		}
-		private void DoApply()
+
+		private void DoApply(SerializedObject so)
 		{
 			if (this.multipleSprites)
 			{
 				List<string> list = new List<string>();
 				List<string> list2 = new List<string>();
-				this.m_TextureImporterSprites.ClearArray();
+				SerializedProperty serializedProperty = so.FindProperty("m_SpriteSheet.m_Sprites");
+				serializedProperty.ClearArray();
 				for (int i = 0; i < this.m_RectsCache.Count; i++)
 				{
 					SpriteRect spriteRect = this.m_RectsCache.RectAt(i);
@@ -507,53 +922,66 @@ namespace UnityEditor
 						list.Add(spriteRect.m_OriginalName);
 						list2.Add(spriteRect.m_Name);
 					}
-					this.m_TextureImporterSprites.InsertArrayElementAtIndex(i);
-					SerializedProperty arrayElementAtIndex = this.m_TextureImporterSprites.GetArrayElementAtIndex(i);
+					serializedProperty.InsertArrayElementAtIndex(i);
+					SerializedProperty arrayElementAtIndex = serializedProperty.GetArrayElementAtIndex(i);
 					arrayElementAtIndex.FindPropertyRelative("m_Rect").rectValue = spriteRect.m_Rect;
 					arrayElementAtIndex.FindPropertyRelative("m_Border").vector4Value = spriteRect.m_Border;
 					arrayElementAtIndex.FindPropertyRelative("m_Name").stringValue = spriteRect.m_Name;
 					arrayElementAtIndex.FindPropertyRelative("m_Alignment").intValue = (int)spriteRect.m_Alignment;
 					arrayElementAtIndex.FindPropertyRelative("m_Pivot").vector2Value = spriteRect.m_Pivot;
+					arrayElementAtIndex.FindPropertyRelative("m_TessellationDetail").floatValue = spriteRect.m_TessellationDetail;
+					SerializedProperty outlineSP = arrayElementAtIndex.FindPropertyRelative("m_Outline");
+					SpriteEditorWindow.ApplyOutlineChanges(outlineSP, spriteRect);
 				}
 				if (list.Count > 0)
 				{
-					PatchImportSettingRecycleID.PatchMultiple(this.m_TextureImporterSO, 213, list.ToArray(), list2.ToArray());
+					PatchImportSettingRecycleID.PatchMultiple(so, 213, list.ToArray(), list2.ToArray());
 				}
-				this.m_TextureImporterSO.ApplyModifiedProperties();
 			}
-			else
+			else if (this.m_RectsCache.Count > 0)
 			{
-				if (this.m_RectsCache.Count > 0)
-				{
-					SpriteRect spriteRect2 = this.m_RectsCache.RectAt(0);
-					this.m_TextureImporterSO.FindProperty("m_Alignment").intValue = (int)spriteRect2.m_Alignment;
-					this.m_TextureImporterSO.ApplyModifiedProperties();
-					this.m_TextureImporter.spriteBorder = spriteRect2.m_Border;
-					this.m_TextureImporter.spritePivot = spriteRect2.m_Pivot;
-				}
+				SpriteRect spriteRect2 = this.m_RectsCache.RectAt(0);
+				so.FindProperty("m_Alignment").intValue = (int)spriteRect2.m_Alignment;
+				so.FindProperty("m_SpriteBorder").vector4Value = spriteRect2.m_Border;
+				so.FindProperty("m_SpritePivot").vector2Value = spriteRect2.m_Pivot;
+				so.FindProperty("m_SpriteTessellationDetail").floatValue = spriteRect2.m_TessellationDetail;
+				this.m_SpriteSheetOutline.ClearArray();
+				SpriteEditorWindow.ApplyOutlineChanges(this.m_SpriteSheetOutline, spriteRect2);
 			}
+		}
+
+		private void DoApply()
+		{
+			Undo.ClearUndo(this.m_RectsCache);
+			this.DoApply(this.m_TextureImporterSO);
+			this.m_TextureImporterSO.ApplyModifiedPropertiesWithoutUndo();
 			this.m_IgnoreNextPostprocessEvent = true;
 			this.DoTextureReimport(this.m_TextureImporter.assetPath);
 			this.textureIsDirty = false;
+			this.selected = null;
 		}
+
 		private void DoRevert()
 		{
 			this.m_TextureIsDirty = false;
 			this.selected = null;
 			this.RefreshRects();
+			GUI.FocusControl(string.Empty);
 		}
+
 		private void HandleDuplicate()
 		{
-			if (Event.current.commandName == "Duplicate" && (Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand))
+			if ((Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand) && Event.current.commandName == "Duplicate")
 			{
 				if (Event.current.type == EventType.ExecuteCommand)
 				{
 					Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Duplicate sprite");
-					this.selected = this.AddSprite(this.selected.m_Rect, (int)this.selected.m_Alignment, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
+					this.selected = this.AddSprite(this.selected.m_Rect, (int)this.selected.m_Alignment, this.selected.m_Pivot, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
 				}
 				Event.current.Use();
 			}
 		}
+
 		private void HandleCreate()
 		{
 			if (!this.MouseOnTopOfInspector() && !Event.current.alt)
@@ -563,14 +991,15 @@ namespace UnityEditor
 				if (EditorGUI.EndChangeCheck() && rect.width > 0f && rect.height > 0f)
 				{
 					Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Create sprite");
-					this.selected = this.AddSprite(rect, 0, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
+					this.selected = this.AddSprite(rect, 0, Vector2.zero, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
 					GUIUtility.keyboardControl = 0;
 				}
 			}
 		}
+
 		private void HandleDelete()
 		{
-			if ((Event.current.commandName == "SoftDelete" || Event.current.commandName == "Delete") && (Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand))
+			if ((Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand) && (Event.current.commandName == "SoftDelete" || Event.current.commandName == "Delete"))
 			{
 				if (Event.current.type == EventType.ExecuteCommand)
 				{
@@ -582,6 +1011,7 @@ namespace UnityEditor
 				Event.current.Use();
 			}
 		}
+
 		private void HandleDragging()
 		{
 			if (this.selected != null && !this.MouseOnTopOfInspector())
@@ -599,6 +1029,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void HandleSelection()
 		{
 			if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && GUIUtility.hotControl == 0 && !Event.current.alt && !this.MouseOnTopOfInspector())
@@ -619,10 +1050,41 @@ namespace UnityEditor
 				}
 			}
 		}
+
+		private void HandleFrameSelected()
+		{
+			if ((Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand) && Event.current.commandName == "FrameSelected")
+			{
+				if (Event.current.type == EventType.ExecuteCommand)
+				{
+					if (this.selected == null)
+					{
+						return;
+					}
+					Rect rect = this.selected.m_Rect;
+					float zoom = this.m_Zoom;
+					if (rect.width < rect.height)
+					{
+						zoom = this.m_TextureViewRect.height / (rect.height + this.m_TextureViewRect.height * 0.05f);
+					}
+					else
+					{
+						zoom = this.m_TextureViewRect.width / (rect.width + this.m_TextureViewRect.width * 0.05f);
+					}
+					this.m_Zoom = zoom;
+					this.m_ScrollPosition.x = (rect.center.x - (float)this.m_Texture.width * 0.5f) * this.m_Zoom;
+					this.m_ScrollPosition.y = (rect.center.y - (float)this.m_Texture.height * 0.5f) * this.m_Zoom * -1f;
+					base.Repaint();
+				}
+				Event.current.Use();
+			}
+		}
+
 		private bool ShouldShowRectScaling()
 		{
 			return this.selected != null && this.m_GizmoMode == SpriteEditorWindow.GizmoMode.RectEditing;
 		}
+
 		private void HandlePivotHandle()
 		{
 			if (this.selected != null)
@@ -634,21 +1096,38 @@ namespace UnityEditor
 				if (EditorGUI.EndChangeCheck())
 				{
 					Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Move sprite pivot");
-					this.selected.m_Pivot = this.SnapPivot(pivot);
+					if (Event.current.control)
+					{
+						this.selected.m_Pivot = this.SnapPivot(pivot);
+					}
+					else
+					{
+						this.selected.m_Pivot = pivot;
+						this.selected.m_Alignment = SpriteAlignment.Custom;
+					}
 					this.textureIsDirty = true;
 				}
 			}
 		}
+
 		private Rect ClampSpriteRect(Rect rect)
 		{
-			return SpriteEditorUtility.RoundedRect(new Rect
+			Rect rect2 = default(Rect);
+			rect2.xMin = Mathf.Clamp(rect.xMin, 0f, (float)(this.m_Texture.width - 1));
+			rect2.yMin = Mathf.Clamp(rect.yMin, 0f, (float)(this.m_Texture.height - 1));
+			rect2.xMax = Mathf.Clamp(rect.xMax, 1f, (float)this.m_Texture.width);
+			rect2.yMax = Mathf.Clamp(rect.yMax, 1f, (float)this.m_Texture.height);
+			if (Mathf.RoundToInt(rect2.width) == 0)
 			{
-				xMin = Mathf.Clamp(rect.xMin, 0f, (float)(this.m_Texture.width - 1)),
-				yMin = Mathf.Clamp(rect.yMin, 0f, (float)(this.m_Texture.height - 1)),
-				xMax = Mathf.Clamp(rect.xMax, 1f, (float)this.m_Texture.width),
-				yMax = Mathf.Clamp(rect.yMax, 1f, (float)this.m_Texture.height)
-			});
+				rect2.width = 1f;
+			}
+			if (Mathf.RoundToInt(rect2.height) == 0)
+			{
+				rect2.height = 1f;
+			}
+			return SpriteEditorUtility.RoundedRect(rect2);
 		}
+
 		private Rect FlipNegativeRect(Rect rect)
 		{
 			return new Rect
@@ -659,6 +1138,7 @@ namespace UnityEditor
 				yMax = Mathf.Max(rect.yMin, rect.yMax)
 			};
 		}
+
 		private Vector4 ClampSpriteBorder(Vector4 border)
 		{
 			Rect rect = this.FlipNegativeRect(this.selected.m_Rect);
@@ -672,29 +1152,28 @@ namespace UnityEditor
 				w = (float)Mathf.RoundToInt(Mathf.Clamp(border.w, 0f, Mathf.Min(height - border.y, height)))
 			};
 		}
+
 		private Vector2 SnapPivot(Vector2 pivot)
 		{
 			SpriteRect selected = this.selected;
 			Rect rect = selected.m_Rect;
 			Vector2 vector = new Vector2(rect.xMin + rect.width * pivot.x, rect.yMin + rect.height * pivot.y);
 			Vector2[] snapPointsArray = this.GetSnapPointsArray(rect);
-			bool flag = false;
+			SpriteAlignment alignment = SpriteAlignment.Custom;
+			float num = 3.40282347E+38f;
 			for (int i = 0; i < snapPointsArray.Length; i++)
 			{
-				if ((vector - snapPointsArray[i]).magnitude * this.m_Zoom < 14f)
+				float num2 = (vector - snapPointsArray[i]).magnitude * this.m_Zoom;
+				if (num2 < num)
 				{
-					vector = snapPointsArray[i];
-					this.selected.m_Alignment = (SpriteAlignment)i;
-					flag = true;
-					break;
+					alignment = (SpriteAlignment)i;
+					num = num2;
 				}
 			}
-			if (!flag)
-			{
-				this.selected.m_Alignment = SpriteAlignment.Custom;
-			}
+			this.selected.m_Alignment = alignment;
 			return this.ConvertFromTextureToNormalizedSpace(vector, rect);
 		}
+
 		public Vector2 ApplySpriteAlignmentToPivot(Vector2 pivot, Rect rect, SpriteAlignment alignment)
 		{
 			Vector2[] snapPointsArray = this.GetSnapPointsArray(rect);
@@ -705,10 +1184,12 @@ namespace UnityEditor
 			}
 			return pivot;
 		}
+
 		private Vector2 ConvertFromTextureToNormalizedSpace(Vector2 texturePos, Rect rect)
 		{
 			return new Vector2((texturePos.x - rect.xMin) / rect.width, (texturePos.y - rect.yMin) / rect.height);
 		}
+
 		private Vector2[] GetSnapPointsArray(Rect rect)
 		{
 			Vector2[] array = new Vector2[9];
@@ -723,21 +1204,20 @@ namespace UnityEditor
 			array[8] = new Vector2(rect.xMax, rect.yMin);
 			return array;
 		}
+
 		private void UpdateSelectedSprite()
 		{
 			if (Selection.activeObject is Sprite)
 			{
 				this.SelectSpriteIndex(Selection.activeObject as Sprite);
 			}
-			else
+			else if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SpriteRenderer>())
 			{
-				if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SpriteRenderer>())
-				{
-					Sprite sprite = Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite;
-					this.SelectSpriteIndex(sprite);
-				}
+				Sprite sprite = Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite;
+				this.SelectSpriteIndex(sprite);
 			}
 		}
+
 		private void SelectSpriteIndex(Sprite sprite)
 		{
 			if (sprite == null)
@@ -754,6 +1234,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private Texture2D GetSelectedTexture2D()
 		{
 			Texture2D texture2D = null;
@@ -761,19 +1242,13 @@ namespace UnityEditor
 			{
 				texture2D = (Selection.activeObject as Texture2D);
 			}
-			else
+			else if (Selection.activeObject is Sprite)
 			{
-				if (Selection.activeObject is Sprite)
-				{
-					texture2D = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(Selection.activeObject as Sprite, false);
-				}
-				else
-				{
-					if (Selection.activeGameObject && Selection.activeGameObject.GetComponent<SpriteRenderer>() && Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite)
-					{
-						texture2D = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite, false);
-					}
-				}
+				texture2D = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(Selection.activeObject as Sprite, false);
+			}
+			else if (Selection.activeGameObject && Selection.activeGameObject.GetComponent<SpriteRenderer>() && Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite)
+			{
+				texture2D = UnityEditor.Sprites.SpriteUtility.GetSpriteTexture(Selection.activeGameObject.GetComponent<SpriteRenderer>().sprite, false);
 			}
 			if (texture2D != null)
 			{
@@ -781,6 +1256,7 @@ namespace UnityEditor
 			}
 			return texture2D;
 		}
+
 		protected override void DrawGizmos()
 		{
 			SpriteEditorUtility.BeginLines(new Color(0f, 0f, 0f, 0.25f));
@@ -802,14 +1278,36 @@ namespace UnityEditor
 				}
 			}
 			SpriteEditorUtility.EndLines();
-			SpriteEditorUtility.BeginLines(new Color(0f, 1f, 0f, 0.7f));
-			for (int k = 0; k < this.m_RectsCache.Count; k++)
+			if (this.polygonSprite)
 			{
-				SpriteRect spriteRect = this.m_RectsCache.RectAt(k);
-				if (this.ShouldDrawBorders(spriteRect))
+				for (int k = 0; k < this.m_RectsCache.Count; k++)
 				{
-					Vector4 border = spriteRect.m_Border;
-					Rect rect2 = spriteRect.m_Rect;
+					SpriteRect spriteRect = this.m_RectsCache.RectAt(k);
+					Vector2 b = spriteRect.m_Rect.size * 0.5f;
+					if (spriteRect.m_Outline.Count > 0)
+					{
+						SpriteEditorUtility.BeginLines(new Color(0.75f, 0.75f, 0.75f, 0.75f));
+						for (int l = 0; l < spriteRect.m_Outline.Count; l++)
+						{
+							int m;
+							for (m = 0; m < spriteRect.m_Outline[l].Count - 1; m++)
+							{
+								SpriteEditorUtility.DrawLine(spriteRect.m_Outline[l][m] + b, spriteRect.m_Outline[l][m + 1] + b);
+							}
+							SpriteEditorUtility.DrawLine(spriteRect.m_Outline[l][m] + b, spriteRect.m_Outline[l][0] + b);
+						}
+						SpriteEditorUtility.EndLines();
+					}
+				}
+			}
+			SpriteEditorUtility.BeginLines(new Color(0f, 1f, 0f, 0.7f));
+			for (int n = 0; n < this.m_RectsCache.Count; n++)
+			{
+				SpriteRect spriteRect2 = this.m_RectsCache.RectAt(n);
+				if (this.ShouldDrawBorders(spriteRect2))
+				{
+					Vector4 border = spriteRect2.m_Border;
+					Rect rect2 = spriteRect2.m_Rect;
 					SpriteEditorUtility.DrawLine(new Vector3(rect2.xMin + border.x, rect2.yMin), new Vector3(rect2.xMin + border.x, rect2.yMax));
 					SpriteEditorUtility.DrawLine(new Vector3(rect2.xMax - border.z, rect2.yMin), new Vector3(rect2.xMax - border.z, rect2.yMax));
 					SpriteEditorUtility.DrawLine(new Vector3(rect2.xMin, rect2.yMin + border.y), new Vector3(rect2.xMax, rect2.yMin + border.y));
@@ -828,11 +1326,13 @@ namespace UnityEditor
 				SpriteEditorUtility.EndLines();
 			}
 		}
+
 		private bool ShouldDrawBorders(SpriteRect currentRect)
 		{
 			Vector4 border = currentRect.m_Border;
 			return !Mathf.Approximately(border.sqrMagnitude, 0f) || (currentRect == this.selected && this.m_GizmoMode == SpriteEditorWindow.GizmoMode.BorderEditing);
 		}
+
 		private SpriteRect TrySelect(Vector2 mousePosition)
 		{
 			float num = 1E+07f;
@@ -857,17 +1357,21 @@ namespace UnityEditor
 			}
 			return result;
 		}
-		public SpriteRect AddSprite(Rect rect, int alignment, int colliderAlphaCutoff, float colliderDetail)
+
+		public SpriteRect AddSprite(Rect rect, int alignment, Vector2 pivot, int colliderAlphaCutoff, float colliderDetail)
 		{
 			SpriteRect spriteRect = new SpriteRect();
 			spriteRect.m_Rect = rect;
 			spriteRect.m_Alignment = (SpriteAlignment)alignment;
+			spriteRect.m_Pivot = pivot;
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(this.m_TextureImporter.assetPath);
 			spriteRect.m_Name = this.GetUniqueName(fileNameWithoutExtension);
+			spriteRect.m_OriginalName = spriteRect.m_Name;
 			this.textureIsDirty = true;
 			this.m_RectsCache.AddRect(spriteRect);
 			return spriteRect;
 		}
+
 		private string GetUniqueName(string prefix)
 		{
 			int num = 0;
@@ -888,6 +1392,7 @@ namespace UnityEditor
 			while (flag);
 			return text;
 		}
+
 		private Rect TrimAlpha(Rect rect)
 		{
 			int num = (int)rect.xMax;
@@ -907,8 +1412,13 @@ namespace UnityEditor
 					}
 				}
 			}
+			if (num > num2 || num3 > num4)
+			{
+				return new Rect(0f, 0f, 0f, 0f);
+			}
 			return new Rect((float)num, (float)num3, (float)(num2 - num + 1), (float)(num4 - num3 + 1));
 		}
+
 		public void DoTextureReimport(string path)
 		{
 			if (this.m_TextureImporterSO != null)
@@ -925,6 +1435,7 @@ namespace UnityEditor
 				this.textureIsDirty = false;
 			}
 		}
+
 		private void HandleRectCornerScalingHandles()
 		{
 			if (this.selected == null)
@@ -961,6 +1472,7 @@ namespace UnityEditor
 				this.selected.m_Border = this.ClampSpriteBorder(this.selected.m_Border);
 			}
 		}
+
 		private void HandleRectSideScalingHandles()
 		{
 			if (this.selected == null)
@@ -993,6 +1505,7 @@ namespace UnityEditor
 				this.textureIsDirty = true;
 			}
 		}
+
 		private void HandleBorderSidePointScalingSliders()
 		{
 			if (this.selected == null)
@@ -1030,6 +1543,7 @@ namespace UnityEditor
 			}
 			this.selected.m_Border = this.ClampSpriteBorder(border);
 		}
+
 		private void HandleBorderCornerScalingHandles()
 		{
 			if (this.selected == null)
@@ -1061,6 +1575,7 @@ namespace UnityEditor
 			}
 			this.selected.m_Border = this.ClampSpriteBorder(border);
 		}
+
 		private void HandleBorderSideScalingHandles()
 		{
 			if (this.selected == null)
@@ -1093,6 +1608,7 @@ namespace UnityEditor
 				this.textureIsDirty = true;
 			}
 		}
+
 		private void HandleBorderPointSlider(ref float x, ref float y, MouseCursor mouseCursor, bool isHidden, GUIStyle dragDot, GUIStyle dragDotActive, Color color)
 		{
 			Color color2 = GUI.color;
@@ -1109,6 +1625,7 @@ namespace UnityEditor
 			y = vector.y;
 			GUI.color = color2;
 		}
+
 		private float HandleBorderScaleSlider(float x, float y, float width, float height, bool isHorizontal)
 		{
 			float fixedWidth = SpriteUtilityWindow.s_Styles.dragBorderdot.fixedWidth;
@@ -1131,7 +1648,8 @@ namespace UnityEditor
 			}
 			return (!isHorizontal) ? y : x;
 		}
-		public void DoAutomaticSlicing(int minimumSpriteSize, int alignment, SpriteEditorWindow.AutoSlicingMethod slicingMethod)
+
+		public void DoAutomaticSlicing(int minimumSpriteSize, int alignment, Vector2 pivot, SpriteEditorWindow.AutoSlicingMethod slicingMethod)
 		{
 			Undo.RegisterCompleteObjectUndo(this.m_RectsCache, "Automatic Slicing");
 			if (slicingMethod == SpriteEditorWindow.AutoSlicingMethod.DeleteAll)
@@ -1142,17 +1660,18 @@ namespace UnityEditor
 			list = this.SortRects(list);
 			foreach (Rect current in list)
 			{
-				this.AddSprite(current, alignment, slicingMethod);
+				this.AddSprite(current, alignment, pivot, slicingMethod);
 			}
 			this.selected = null;
 			this.textureIsDirty = true;
 			base.Repaint();
 		}
-		public void DoGridSlicing(Vector2 size, Vector2 offset, Vector2 padding, int alignment)
+
+		public void DoGridSlicing(Vector2 size, Vector2 offset, Vector2 padding, int alignment, Vector2 pivot)
 		{
 			Rect[] array = InternalSpriteUtility.GenerateGridSpriteRectangles(this.m_Texture, offset, size, padding);
 			bool flag = true;
-			if (array.Length > 1000 && !EditorUtility.DisplayDialog("Creating multiple sprites", "Creating " + array.Length + " sprites. \nThis can take up to several minutes.", "Ok", "Cancel"))
+			if (array.Length > 1000 && !EditorUtility.DisplayDialog(SpriteEditorWindow.SpriteEditorWindowStyles.creatingMultipleSpriteDialogTitle.text, string.Format(SpriteEditorWindow.SpriteEditorWindowStyles.creatingMultipleSpriteDialogContent.text, array.Length), SpriteEditorWindow.SpriteEditorWindowStyles.okButtonLabel.text, SpriteEditorWindow.SpriteEditorWindowStyles.cancelButtonLabel.text))
 			{
 				flag = false;
 			}
@@ -1164,13 +1683,28 @@ namespace UnityEditor
 				for (int i = 0; i < array2.Length; i++)
 				{
 					Rect rect = array2[i];
-					this.AddSprite(rect, alignment, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
+					this.AddSprite(rect, alignment, pivot, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
 				}
 				this.selected = null;
 				this.textureIsDirty = true;
 			}
 			base.Repaint();
 		}
+
+		public void GeneratePolygonOutline(int sides)
+		{
+			for (int i = 0; i < this.m_RectsCache.Count; i++)
+			{
+				SpriteRect spriteRect = this.m_RectsCache.RectAt(i);
+				List<Vector2> list = new List<Vector2>();
+				list.AddRange(UnityEditor.Sprites.SpriteUtility.GeneratePolygonOutlineVerticesOfSize(sides, (int)spriteRect.m_Rect.width, (int)spriteRect.m_Rect.height));
+				spriteRect.m_Outline.Clear();
+				spriteRect.m_Outline.Add(list);
+				this.m_TextureIsDirty = true;
+			}
+			base.Repaint();
+		}
+
 		private List<Rect> SortRects(List<Rect> rects)
 		{
 			List<Rect> list = new List<Rect>();
@@ -1188,6 +1722,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		private List<Rect> RectSweep(List<Rect> rects, Rect sweepRect)
 		{
 			if (rects == null || rects.Count == 0)
@@ -1209,7 +1744,8 @@ namespace UnityEditor
 			list.Sort((Rect a, Rect b) => a.x.CompareTo(b.x));
 			return list;
 		}
-		private void AddSprite(Rect frame, int alignment, SpriteEditorWindow.AutoSlicingMethod slicingMethod)
+
+		private void AddSprite(Rect frame, int alignment, Vector2 pivot, SpriteEditorWindow.AutoSlicingMethod slicingMethod)
 		{
 			if (slicingMethod != SpriteEditorWindow.AutoSlicingMethod.DeleteAll)
 			{
@@ -1220,18 +1756,20 @@ namespace UnityEditor
 					{
 						existingOverlappingSprite.m_Rect = frame;
 						existingOverlappingSprite.m_Alignment = (SpriteAlignment)alignment;
+						existingOverlappingSprite.m_Pivot = pivot;
 					}
 				}
 				else
 				{
-					this.AddSprite(frame, alignment, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
+					this.AddSprite(frame, alignment, pivot, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
 				}
 			}
 			else
 			{
-				this.AddSprite(frame, alignment, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
+				this.AddSprite(frame, alignment, pivot, this.defaultColliderAlphaCutoff, this.defaultColliderDetail);
 			}
 		}
+
 		private SpriteRect GetExistingOverlappingSprite(Rect rect)
 		{
 			for (int i = 0; i < this.m_RectsCache.Count; i++)
@@ -1244,10 +1782,12 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private bool Overlap(Rect a, Rect b)
 		{
 			return a.xMin < b.xMax && a.xMax > b.xMin && a.yMin < b.yMax && a.yMax > b.yMin;
 		}
+
 		private bool MouseOnTopOfInspector()
 		{
 			if (this.selected == null)
@@ -1258,6 +1798,7 @@ namespace UnityEditor
 			vector += new Vector2(0f, -22f);
 			return this.inspectorRect.Contains(vector);
 		}
+
 		private bool PixelHasAlpha(int x, int y)
 		{
 			if (this.m_Texture == null)
@@ -1276,23 +1817,26 @@ namespace UnityEditor
 			int num = y * this.m_Texture.width + x;
 			return SpriteEditorWindow.s_AlphaPixelCache[num];
 		}
+
 		private Texture2D CreateTemporaryDuplicate(Texture2D original, int width, int height)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture || !original)
 			{
 				return null;
 			}
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(true);
 			RenderTexture active = RenderTexture.active;
-			RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
+			bool flag = !TextureUtil.GetLinearSampled(original);
+			RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.Default, (!flag) ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB);
+			GL.sRGBWrite = (flag && QualitySettings.activeColorSpace == ColorSpace.Linear);
 			Graphics.Blit(original, temporary);
+			GL.sRGBWrite = false;
 			RenderTexture.active = temporary;
-			Texture2D texture2D = new Texture2D(width, height, TextureFormat.ARGB32, original.mipmapCount > 1);
+			bool flag2 = width >= SystemInfo.maxTextureSize || height >= SystemInfo.maxTextureSize;
+			Texture2D texture2D = new Texture2D(width, height, TextureFormat.ARGB32, original.mipmapCount > 1 || flag2);
 			texture2D.ReadPixels(new Rect(0f, 0f, (float)width, (float)height), 0, 0);
 			texture2D.Apply();
 			RenderTexture.ReleaseTemporary(temporary);
 			EditorGUIUtility.SetRenderTextureNoViewport(active);
-			EditorUtility.SetTemporarilyAllowIndieRenderTexture(false);
 			texture2D.alphaIsTransparency = original.alphaIsTransparency;
 			return texture2D;
 		}

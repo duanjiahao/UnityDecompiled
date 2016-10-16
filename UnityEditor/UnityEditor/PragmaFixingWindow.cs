@@ -1,6 +1,7 @@
 using System;
 using UnityEditor.Scripting;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PragmaFixingWindow : EditorWindow
@@ -8,27 +9,36 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle selected = "ServerUpdateChangesetOn";
+
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle button = "LargeButton";
 		}
+
 		private static PragmaFixingWindow.Styles s_Styles;
+
 		private ListViewState m_LV = new ListViewState();
+
 		private string[] m_Paths;
+
 		public PragmaFixingWindow()
 		{
-			base.title = "Unity - #pragma fixing";
+			base.titleContent = new GUIContent("Unity - #pragma fixing");
 		}
+
 		public static void ShowWindow(string[] paths)
 		{
 			PragmaFixingWindow window = EditorWindow.GetWindow<PragmaFixingWindow>(true);
 			window.SetPaths(paths);
 			window.ShowModal();
 		}
+
 		public void SetPaths(string[] paths)
 		{
 			this.m_Paths = paths;
 			this.m_LV.totalRows = paths.Length;
 		}
+
 		private void OnGUI()
 		{
 			if (PragmaFixingWindow.s_Styles == null)

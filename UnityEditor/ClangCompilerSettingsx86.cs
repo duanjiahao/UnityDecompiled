@@ -1,4 +1,5 @@
 using System;
+
 internal class ClangCompilerSettingsx86 : ICompilerSettings
 {
 	public string CompilerPath
@@ -8,6 +9,7 @@ internal class ClangCompilerSettingsx86 : ICompilerSettings
 			return "clang++";
 		}
 	}
+
 	public string LinkerPath
 	{
 		get
@@ -15,6 +17,7 @@ internal class ClangCompilerSettingsx86 : ICompilerSettings
 			return "ld";
 		}
 	}
+
 	public string[] LibPaths
 	{
 		get
@@ -22,6 +25,7 @@ internal class ClangCompilerSettingsx86 : ICompilerSettings
 			return new string[0];
 		}
 	}
+
 	public string MachineSpecification
 	{
 		get

@@ -1,20 +1,27 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 internal class PreviewGUI
 {
 	internal class Styles
 	{
 		public static GUIStyle preButton;
+
 		public static void Init()
 		{
 			PreviewGUI.Styles.preButton = "preButton";
 		}
 	}
+
 	private static int sliderHash = "Slider".GetHashCode();
+
 	private static Rect s_ViewRect;
+
 	private static Rect s_Position;
+
 	private static Vector2 s_ScrollPos;
+
 	internal static void BeginScrollView(Rect position, Vector2 scrollPosition, Rect viewRect, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar)
 	{
 		PreviewGUI.s_ScrollPos = scrollPosition;
@@ -22,11 +29,13 @@ internal class PreviewGUI
 		PreviewGUI.s_Position = position;
 		GUIClip.Push(position, new Vector2(Mathf.Round(-scrollPosition.x - viewRect.x - (viewRect.width - position.width) * 0.5f), Mathf.Round(-scrollPosition.y - viewRect.y - (viewRect.height - position.height) * 0.5f)), Vector2.zero, false);
 	}
+
 	public static int CycleButton(int selected, GUIContent[] options)
 	{
 		PreviewGUI.Styles.Init();
 		return EditorGUILayout.CycleButton(selected, options, PreviewGUI.Styles.preButton);
 	}
+
 	public static Vector2 EndScrollView()
 	{
 		GUIClip.Pop();
@@ -82,6 +91,7 @@ internal class PreviewGUI
 		}
 		return result;
 	}
+
 	public static Vector2 Drag2D(Vector2 scrollPosition, Rect position)
 	{
 		int controlID = GUIUtility.GetControlID(PreviewGUI.sliderHash, FocusType.Passive);

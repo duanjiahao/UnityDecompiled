@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AudioMixersTreeViewGUI : TreeViewGUI
@@ -11,6 +12,7 @@ namespace UnityEditor
 			this.k_IconWidth = 0f;
 			this.k_TopRowMargin = (this.k_BottomRowMargin = 2f);
 		}
+
 		protected override void DrawIconAndLabel(Rect rect, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
 		{
 			if (!isPinging)
@@ -34,9 +36,10 @@ namespace UnityEditor
 			}
 			Rect position = rect;
 			position.x += audioMixerItem.labelWidth + 8f;
-			EditorGUI.BeginDisabledGroup(true);
-			gUIStyle.Draw(position, audioMixerItem.infoText, false, false, false, false);
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(true))
+			{
+				gUIStyle.Draw(position, audioMixerItem.infoText, false, false, false, false);
+			}
 			if (base.iconOverlayGUI != null)
 			{
 				Rect arg = rect;
@@ -44,14 +47,17 @@ namespace UnityEditor
 				base.iconOverlayGUI(item, arg);
 			}
 		}
-		protected override Texture GetIconForNode(TreeViewItem node)
+
+		protected override Texture GetIconForItem(TreeViewItem node)
 		{
 			return null;
 		}
+
 		protected CreateAssetUtility GetCreateAssetUtility()
 		{
 			return this.m_TreeView.state.createAssetUtility;
 		}
+
 		protected override void RenameEnded()
 		{
 			string name = (!string.IsNullOrEmpty(base.GetRenameOverlay().name)) ? base.GetRenameOverlay().name : base.GetRenameOverlay().originalName;
@@ -71,15 +77,18 @@ namespace UnityEditor
 				}
 			}
 		}
-		protected override void ClearRenameAndNewNodeState()
+
+		protected override void ClearRenameAndNewItemState()
 		{
 			this.GetCreateAssetUtility().Clear();
-			base.ClearRenameAndNewNodeState();
+			base.ClearRenameAndNewItemState();
 		}
+
 		private AudioMixerItem GetSelectedItem()
 		{
-			return this.m_TreeView.FindNode(this.m_TreeView.GetSelection().FirstOrDefault<int>()) as AudioMixerItem;
+			return this.m_TreeView.FindItem(this.m_TreeView.GetSelection().FirstOrDefault<int>()) as AudioMixerItem;
 		}
+
 		protected override void SyncFakeItem()
 		{
 			if (!this.m_TreeView.data.HasFakeItem() && this.GetCreateAssetUtility().IsCreatingNewAsset())
@@ -97,9 +106,10 @@ namespace UnityEditor
 				this.m_TreeView.data.RemoveFakeItem();
 			}
 		}
+
 		public void BeginCreateNewMixer()
 		{
-			this.ClearRenameAndNewNodeState();
+			this.ClearRenameAndNewItemState();
 			string newAssetResourceFile = string.Empty;
 			AudioMixerItem selectedItem = this.GetSelectedItem();
 			if (selectedItem != null && selectedItem.mixer.outputAudioMixerGroup != null)
@@ -107,11 +117,13 @@ namespace UnityEditor
 				newAssetResourceFile = selectedItem.mixer.outputAudioMixerGroup.GetInstanceID().ToString();
 			}
 			int num = 0;
-			this.GetCreateAssetUtility().BeginNewAssetCreation(num, ScriptableObject.CreateInstance<DoCreateAudioMixer>(), "NewAudioMixer.mixer", null, newAssetResourceFile);
-			this.SyncFakeItem();
-			if (!base.GetRenameOverlay().BeginRename(this.GetCreateAssetUtility().originalName, num, 0f))
+			if (this.GetCreateAssetUtility().BeginNewAssetCreation(num, ScriptableObject.CreateInstance<DoCreateAudioMixer>(), "NewAudioMixer.mixer", null, newAssetResourceFile))
 			{
-				Debug.LogError("Rename not started (when creating new asset)");
+				this.SyncFakeItem();
+				if (!base.GetRenameOverlay().BeginRename(this.GetCreateAssetUtility().originalName, num, 0f))
+				{
+					Debug.LogError("Rename not started (when creating new asset)");
+				}
 			}
 		}
 	}

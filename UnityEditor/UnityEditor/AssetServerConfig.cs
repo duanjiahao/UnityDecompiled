@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetServerConfig
 	{
 		private Dictionary<string, string> fileContents;
+
 		private string fileName;
+
 		private static Regex sKeyTag = new Regex("<key>([^<]+)</key>");
+
 		private static Regex sValueTag = new Regex("<string>([^<]+)</string>");
+
 		public string connectionSettings
 		{
 			get
@@ -22,6 +27,7 @@ namespace UnityEditor
 				this.fileContents["Maint Connection Settings"] = value;
 			}
 		}
+
 		public string server
 		{
 			get
@@ -33,6 +39,7 @@ namespace UnityEditor
 				this.fileContents["Maint Server"] = value;
 			}
 		}
+
 		public int portNumber
 		{
 			get
@@ -44,6 +51,7 @@ namespace UnityEditor
 				this.fileContents["Maint port number"] = value.ToString();
 			}
 		}
+
 		public float timeout
 		{
 			get
@@ -55,6 +63,7 @@ namespace UnityEditor
 				this.fileContents["Maint Timeout"] = value.ToString();
 			}
 		}
+
 		public string userName
 		{
 			get
@@ -66,6 +75,7 @@ namespace UnityEditor
 				this.fileContents["Maint UserName"] = value;
 			}
 		}
+
 		public string dbName
 		{
 			get
@@ -77,6 +87,7 @@ namespace UnityEditor
 				this.fileContents["Maint database name"] = value;
 			}
 		}
+
 		public string projectName
 		{
 			get
@@ -88,6 +99,7 @@ namespace UnityEditor
 				this.fileContents["Maint project name"] = value;
 			}
 		}
+
 		public string settingsType
 		{
 			get
@@ -99,6 +111,7 @@ namespace UnityEditor
 				this.fileContents["Maint settings type"] = value;
 			}
 		}
+
 		public AssetServerConfig()
 		{
 			this.fileContents = new Dictionary<string, string>();

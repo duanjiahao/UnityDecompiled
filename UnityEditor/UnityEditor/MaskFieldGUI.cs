@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class MaskFieldGUI
@@ -8,18 +9,27 @@ namespace UnityEditor
 		private class MaskCallbackInfo
 		{
 			private const string kMaskMenuChangedMessage = "MaskMenuChanged";
+
 			public static MaskFieldGUI.MaskCallbackInfo m_Instance;
+
 			private readonly int m_ControlID;
+
 			private int m_Mask;
+
 			private bool m_SetAll;
+
 			private bool m_ClearAll;
+
 			private bool m_DoNothing;
+
 			private readonly GUIView m_SourceView;
+
 			public MaskCallbackInfo(int controlID)
 			{
 				this.m_ControlID = controlID;
 				this.m_SourceView = GUIView.current;
 			}
+
 			public static int GetSelectedValueForControl(int controlID, int mask, out int changedFlags, out bool changedToValue)
 			{
 				Event current = Event.current;
@@ -42,20 +52,17 @@ namespace UnityEditor
 								changedFlags = -1;
 								changedToValue = false;
 							}
+							else if (MaskFieldGUI.MaskCallbackInfo.m_Instance.m_SetAll)
+							{
+								mask = -1;
+								changedFlags = -1;
+								changedToValue = true;
+							}
 							else
 							{
-								if (MaskFieldGUI.MaskCallbackInfo.m_Instance.m_SetAll)
-								{
-									mask = -1;
-									changedFlags = -1;
-									changedToValue = true;
-								}
-								else
-								{
-									mask ^= MaskFieldGUI.MaskCallbackInfo.m_Instance.m_Mask;
-									changedFlags = MaskFieldGUI.MaskCallbackInfo.m_Instance.m_Mask;
-									changedToValue = ((mask & MaskFieldGUI.MaskCallbackInfo.m_Instance.m_Mask) > 0);
-								}
+								mask ^= MaskFieldGUI.MaskCallbackInfo.m_Instance.m_Mask;
+								changedFlags = MaskFieldGUI.MaskCallbackInfo.m_Instance.m_Mask;
+								changedToValue = ((mask & MaskFieldGUI.MaskCallbackInfo.m_Instance.m_Mask) != 0);
 							}
 							GUI.changed = true;
 						}
@@ -68,6 +75,7 @@ namespace UnityEditor
 				}
 				return mask;
 			}
+
 			internal void SetMaskValueDelegate(object userData, string[] options, int selected)
 			{
 				if (selected != 0)
@@ -91,12 +99,14 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static int DoMaskField(Rect position, int controlID, int mask, string[] flagNames, GUIStyle style)
 		{
 			int num;
 			bool flag;
 			return MaskFieldGUI.DoMaskField(position, controlID, mask, flagNames, style, out num, out flag);
 		}
+
 		internal static int DoMaskField(Rect position, int controlID, int mask, string[] flagNames, GUIStyle style, out int changedFlags, out bool changedToValue)
 		{
 			mask = MaskFieldGUI.MaskCallbackInfo.GetSelectedValueForControl(controlID, mask, out changedFlags, out changedToValue);
@@ -108,7 +118,7 @@ namespace UnityEditor
 			};
 			for (int i = 0; i < flagNames.Length; i++)
 			{
-				if ((mask & 1 << i) > 0)
+				if ((mask & 1 << i) != 0)
 				{
 					list.Add(i + 2);
 				}
@@ -149,14 +159,11 @@ namespace UnityEditor
 			{
 				style.Draw(position, content, controlID, false);
 			}
-			else
+			else if ((current.type == EventType.MouseDown && position.Contains(current.mousePosition)) || current.MainActionKeyForControl(controlID))
 			{
-				if ((current.type == EventType.MouseDown && position.Contains(current.mousePosition)) || current.MainActionKeyForControl(controlID))
-				{
-					MaskFieldGUI.MaskCallbackInfo.m_Instance = new MaskFieldGUI.MaskCallbackInfo(controlID);
-					current.Use();
-					EditorUtility.DisplayCustomMenu(position, list2.ToArray(), (!EditorGUI.showMixedValue) ? list.ToArray() : new int[0], new EditorUtility.SelectMenuItemFunction(MaskFieldGUI.MaskCallbackInfo.m_Instance.SetMaskValueDelegate), null);
-				}
+				MaskFieldGUI.MaskCallbackInfo.m_Instance = new MaskFieldGUI.MaskCallbackInfo(controlID);
+				current.Use();
+				EditorUtility.DisplayCustomMenu(position, list2.ToArray(), (!EditorGUI.showMixedValue) ? list.ToArray() : new int[0], new EditorUtility.SelectMenuItemFunction(MaskFieldGUI.MaskCallbackInfo.m_Instance.SetMaskValueDelegate), null);
 			}
 			return mask;
 		}

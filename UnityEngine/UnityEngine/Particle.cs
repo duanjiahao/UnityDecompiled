@@ -1,16 +1,27 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[Obsolete("This is part of the legacy particle system, which is deprecated and will be removed in a future release. Use the ParticleSystem component instead.", false), UsedByNativeCode]
 	public struct Particle
 	{
 		private Vector3 m_Position;
+
 		private Vector3 m_Velocity;
+
 		private float m_Size;
+
 		private float m_Rotation;
+
 		private float m_AngularVelocity;
+
 		private float m_Energy;
+
 		private float m_StartEnergy;
+
 		private Color m_Color;
+
 		public Vector3 position
 		{
 			get
@@ -22,6 +33,7 @@ namespace UnityEngine
 				this.m_Position = value;
 			}
 		}
+
 		public Vector3 velocity
 		{
 			get
@@ -33,6 +45,7 @@ namespace UnityEngine
 				this.m_Velocity = value;
 			}
 		}
+
 		public float energy
 		{
 			get
@@ -44,6 +57,7 @@ namespace UnityEngine
 				this.m_Energy = value;
 			}
 		}
+
 		public float startEnergy
 		{
 			get
@@ -55,6 +69,7 @@ namespace UnityEngine
 				this.m_StartEnergy = value;
 			}
 		}
+
 		public float size
 		{
 			get
@@ -66,6 +81,7 @@ namespace UnityEngine
 				this.m_Size = value;
 			}
 		}
+
 		public float rotation
 		{
 			get
@@ -77,6 +93,7 @@ namespace UnityEngine
 				this.m_Rotation = value;
 			}
 		}
+
 		public float angularVelocity
 		{
 			get
@@ -88,6 +105,7 @@ namespace UnityEngine
 				this.m_AngularVelocity = value;
 			}
 		}
+
 		public Color color
 		{
 			get

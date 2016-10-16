@@ -1,17 +1,27 @@
 using System;
+
 namespace UnityEngine
 {
 	internal struct SliderHandler
 	{
 		private readonly Rect position;
+
 		private readonly float currentValue;
+
 		private readonly float size;
+
 		private readonly float start;
+
 		private readonly float end;
+
 		private readonly GUIStyle slider;
+
 		private readonly GUIStyle thumb;
+
 		private readonly bool horiz;
+
 		private readonly int id;
+
 		public SliderHandler(Rect position, float currentValue, float size, float start, float end, GUIStyle slider, GUIStyle thumb, bool horiz, int id)
 		{
 			this.position = position;
@@ -24,6 +34,7 @@ namespace UnityEngine
 			this.horiz = horiz;
 			this.id = id;
 		}
+
 		public float Handle()
 		{
 			if (this.slider == null || this.thumb == null)
@@ -43,6 +54,7 @@ namespace UnityEngine
 			}
 			return this.currentValue;
 		}
+
 		private float OnMouseDown()
 		{
 			if (!this.position.Contains(this.CurrentEvent().mousePosition) || this.IsEmptySlider())
@@ -69,6 +81,7 @@ namespace UnityEngine
 			this.StartDraggingWithValue(num);
 			return this.Clamp(num);
 		}
+
 		private float OnMouseDrag()
 		{
 			if (GUIUtility.hotControl != this.id)
@@ -86,6 +99,7 @@ namespace UnityEngine
 			float value = sliderState.dragStartValue + num / this.ValuesPerPixel();
 			return this.Clamp(value);
 		}
+
 		private float OnMouseUp()
 		{
 			if (GUIUtility.hotControl == this.id)
@@ -95,6 +109,7 @@ namespace UnityEngine
 			}
 			return this.currentValue;
 		}
+
 		private float OnRepaint()
 		{
 			this.slider.Draw(this.position, GUIContent.none, this.id);
@@ -132,24 +147,29 @@ namespace UnityEngine
 			}
 			return this.ClampedCurrentValue();
 		}
+
 		private EventType CurrentEventType()
 		{
 			return this.CurrentEvent().GetTypeForControl(this.id);
 		}
+
 		private int CurrentScrollTroughSide()
 		{
 			float num = (!this.horiz) ? this.CurrentEvent().mousePosition.y : this.CurrentEvent().mousePosition.x;
 			float num2 = (!this.horiz) ? this.ThumbRect().y : this.ThumbRect().x;
 			return (num <= num2) ? -1 : 1;
 		}
+
 		private bool IsEmptySlider()
 		{
 			return this.start == this.end;
 		}
+
 		private bool SupportsPageMovements()
 		{
 			return this.size != 0f && GUI.usePageScrollbars;
 		}
+
 		private float PageMovementValue()
 		{
 			float num = this.currentValue;
@@ -164,6 +184,7 @@ namespace UnityEngine
 			}
 			return this.Clamp(num);
 		}
+
 		private float PageUpMovementBound()
 		{
 			if (this.horiz)
@@ -172,10 +193,12 @@ namespace UnityEngine
 			}
 			return this.ThumbRect().yMax - this.position.y;
 		}
+
 		private Event CurrentEvent()
 		{
 			return Event.current;
 		}
+
 		private float ValueForCurrentMousePosition()
 		{
 			if (this.horiz)
@@ -184,14 +207,17 @@ namespace UnityEngine
 			}
 			return (this.MousePosition() - this.ThumbRect().height * 0.5f) / this.ValuesPerPixel() + this.start - this.size * 0.5f;
 		}
+
 		private float Clamp(float value)
 		{
 			return Mathf.Clamp(value, this.MinValue(), this.MaxValue());
 		}
+
 		private Rect ThumbSelectionRect()
 		{
 			return this.ThumbRect();
 		}
+
 		private void StartDraggingWithValue(float dragStartValue)
 		{
 			SliderState sliderState = this.SliderState();
@@ -199,14 +225,17 @@ namespace UnityEngine
 			sliderState.dragStartValue = dragStartValue;
 			sliderState.isDragging = true;
 		}
+
 		private SliderState SliderState()
 		{
 			return (SliderState)GUIUtility.GetStateObject(typeof(SliderState), this.id);
 		}
+
 		private Rect ThumbRect()
 		{
 			return (!this.horiz) ? this.VerticalThumbRect() : this.HorizontalThumbRect();
 		}
+
 		private Rect VerticalThumbRect()
 		{
 			float num = this.ValuesPerPixel();
@@ -216,6 +245,7 @@ namespace UnityEngine
 			}
 			return new Rect(this.position.x + (float)this.slider.padding.left, (this.ClampedCurrentValue() + this.size - this.start) * num + this.position.y + (float)this.slider.padding.top, this.position.width - (float)this.slider.padding.horizontal, this.size * -num + this.ThumbSize());
 		}
+
 		private Rect HorizontalThumbRect()
 		{
 			float num = this.ValuesPerPixel();
@@ -225,10 +255,12 @@ namespace UnityEngine
 			}
 			return new Rect((this.ClampedCurrentValue() + this.size - this.start) * num + this.position.x + (float)this.slider.padding.left, this.position.y, this.size * -num + this.ThumbSize(), this.position.height);
 		}
+
 		private float ClampedCurrentValue()
 		{
 			return this.Clamp(this.currentValue);
 		}
+
 		private float MousePosition()
 		{
 			if (this.horiz)
@@ -237,6 +269,7 @@ namespace UnityEngine
 			}
 			return this.CurrentEvent().mousePosition.y - this.position.y;
 		}
+
 		private float ValuesPerPixel()
 		{
 			if (this.horiz)
@@ -245,6 +278,7 @@ namespace UnityEngine
 			}
 			return (this.position.height - (float)this.slider.padding.vertical - this.ThumbSize()) / (this.end - this.start);
 		}
+
 		private float ThumbSize()
 		{
 			if (this.horiz)
@@ -253,10 +287,12 @@ namespace UnityEngine
 			}
 			return (this.thumb.fixedHeight == 0f) ? ((float)this.thumb.padding.vertical) : this.thumb.fixedHeight;
 		}
+
 		private float MaxValue()
 		{
 			return Mathf.Max(this.start, this.end) - this.size;
 		}
+
 		private float MinValue()
 		{
 			return Mathf.Min(this.start, this.end);

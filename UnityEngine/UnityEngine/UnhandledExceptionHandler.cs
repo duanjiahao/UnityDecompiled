@@ -1,13 +1,17 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	internal sealed class UnhandledExceptionHandler
 	{
+		[RequiredByNativeCode]
 		private static void RegisterUECatcher()
 		{
 			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionHandler.HandleUnhandledException);
 		}
+
 		private static void HandleUnhandledException(object sender, UnhandledExceptionEventArgs args)
 		{
 			Exception ex = args.ExceptionObject as Exception;
@@ -17,6 +21,7 @@ namespace UnityEngine
 			}
 			UnhandledExceptionHandler.NativeUnhandledExceptionHandler();
 		}
+
 		private static void PrintException(string title, Exception e)
 		{
 			Debug.LogError(title + e.ToString());
@@ -25,7 +30,8 @@ namespace UnityEngine
 				UnhandledExceptionHandler.PrintException("Inner Exception: ", e.InnerException);
 			}
 		}
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void NativeUnhandledExceptionHandler();
 	}

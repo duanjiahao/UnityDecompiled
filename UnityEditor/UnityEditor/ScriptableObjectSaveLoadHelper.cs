@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ScriptableObjectSaveLoadHelper<T> where T : ScriptableObject
@@ -11,11 +12,13 @@ namespace UnityEditor
 			get;
 			private set;
 		}
+
 		private SaveType saveType
 		{
 			get;
 			set;
 		}
+
 		public ScriptableObjectSaveLoadHelper(string fileExtensionWithoutDot, SaveType saveType)
 		{
 			this.saveType = saveType;
@@ -24,6 +27,7 @@ namespace UnityEditor
 				'.'
 			});
 		}
+
 		public T Load(string filePath)
 		{
 			filePath = this.AppendFileExtensionIfNeeded(filePath);
@@ -37,10 +41,12 @@ namespace UnityEditor
 			}
 			return (T)((object)null);
 		}
+
 		public T Create()
 		{
 			return ScriptableObject.CreateInstance<T>();
 		}
+
 		public void Save(T t, string filePath)
 		{
 			if (t == null)
@@ -64,10 +70,12 @@ namespace UnityEditor
 				t
 			}, filePath, this.saveType == SaveType.Text);
 		}
+
 		public override string ToString()
 		{
 			return string.Format("{0}, {1}, {2}", this.fileExtensionWithoutDot, this.saveType);
 		}
+
 		private string AppendFileExtensionIfNeeded(string path)
 		{
 			if (!Path.HasExtension(path) && !string.IsNullOrEmpty(this.fileExtensionWithoutDot))

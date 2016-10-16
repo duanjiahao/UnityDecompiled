@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
 	[Serializable]
@@ -7,14 +8,19 @@ namespace UnityEngine
 	{
 		[SerializeField]
 		private bool m_DoubleClickSelectsWord = true;
+
 		[SerializeField]
 		private bool m_TripleClickSelectsLine = true;
+
 		[SerializeField]
 		private Color m_CursorColor = Color.white;
+
 		[SerializeField]
 		private float m_CursorFlashSpeed = -1f;
+
 		[SerializeField]
 		private Color m_SelectionColor = new Color(0.5f, 0.5f, 1f);
+
 		public bool doubleClickSelectsWord
 		{
 			get
@@ -26,6 +32,7 @@ namespace UnityEngine
 				this.m_DoubleClickSelectsWord = value;
 			}
 		}
+
 		public bool tripleClickSelectsLine
 		{
 			get
@@ -37,6 +44,7 @@ namespace UnityEngine
 				this.m_TripleClickSelectsLine = value;
 			}
 		}
+
 		public Color cursorColor
 		{
 			get
@@ -48,6 +56,7 @@ namespace UnityEngine
 				this.m_CursorColor = value;
 			}
 		}
+
 		public float cursorFlashSpeed
 		{
 			get
@@ -63,6 +72,7 @@ namespace UnityEngine
 				this.m_CursorFlashSpeed = value;
 			}
 		}
+
 		public Color selectionColor
 		{
 			get
@@ -74,6 +84,7 @@ namespace UnityEngine
 				this.m_SelectionColor = value;
 			}
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_GetCursorFlashSpeed();

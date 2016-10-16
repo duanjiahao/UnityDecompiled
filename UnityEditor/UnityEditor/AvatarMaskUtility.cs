@@ -1,11 +1,14 @@
 using System;
 using UnityEditor.Animations;
+
 namespace UnityEditor
 {
 	internal class AvatarMaskUtility
 	{
 		private static string sHuman = "m_HumanDescription.m_Human";
+
 		private static string sBoneName = "m_BoneName";
+
 		public static string[] GetAvatarHumanTransform(SerializedObject so, string[] refTransformsPath)
 		{
 			SerializedProperty serializedProperty = so.FindProperty(AvatarMaskUtility.sHuman);
@@ -21,9 +24,10 @@ namespace UnityEditor
 			}
 			return AvatarMaskUtility.TokeniseHumanTransformsPath(refTransformsPath, humanTransforms);
 		}
+
 		public static void UpdateTransformMask(AvatarMask mask, string[] refTransformsPath, string[] humanTransforms)
 		{
-			AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey69 <UpdateTransformMask>c__AnonStorey = new AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey69();
+			AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey94 <UpdateTransformMask>c__AnonStorey = new AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey94();
 			<UpdateTransformMask>c__AnonStorey.refTransformsPath = refTransformsPath;
 			mask.transformCount = <UpdateTransformMask>c__AnonStorey.refTransformsPath.Length;
 			int i;
@@ -34,6 +38,23 @@ namespace UnityEditor
 				mask.SetTransformActive(i, value);
 			}
 		}
+
+		public static void UpdateTransformMask(SerializedProperty transformMask, string[] refTransformsPath, string[] humanTransforms)
+		{
+			AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey96 <UpdateTransformMask>c__AnonStorey = new AvatarMaskUtility.<UpdateTransformMask>c__AnonStorey96();
+			<UpdateTransformMask>c__AnonStorey.refTransformsPath = refTransformsPath;
+			AvatarMask avatarMask = new AvatarMask();
+			avatarMask.transformCount = <UpdateTransformMask>c__AnonStorey.refTransformsPath.Length;
+			int i;
+			for (i = 0; i < <UpdateTransformMask>c__AnonStorey.refTransformsPath.Length; i++)
+			{
+				bool value = humanTransforms == null || ArrayUtility.FindIndex<string>(humanTransforms, (string s) => <UpdateTransformMask>c__AnonStorey.refTransformsPath[i] == s) != -1;
+				avatarMask.SetTransformPath(i, <UpdateTransformMask>c__AnonStorey.refTransformsPath[i]);
+				avatarMask.SetTransformActive(i, value);
+			}
+			ModelImporter.UpdateTransformMask(avatarMask, transformMask);
+		}
+
 		public static void SetActiveHumanTransforms(AvatarMask mask, string[] humanTransforms)
 		{
 			for (int i = 0; i < mask.transformCount; i++)
@@ -45,11 +66,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static string[] TokeniseHumanTransformsPath(string[] refTransformsPath, string[] humanTransforms)
 		{
-			AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey6C <TokeniseHumanTransformsPath>c__AnonStorey6C = new AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey6C();
-			<TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms = humanTransforms;
-			if (<TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms == null)
+			AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey99 <TokeniseHumanTransformsPath>c__AnonStorey = new AvatarMaskUtility.<TokeniseHumanTransformsPath>c__AnonStorey99();
+			<TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms = humanTransforms;
+			if (<TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms == null)
 			{
 				return null;
 			}
@@ -58,9 +80,9 @@ namespace UnityEditor
 				string.Empty
 			};
 			int i;
-			for (i = 0; i < <TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms.Length; i++)
+			for (i = 0; i < <TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms.Length; i++)
 			{
-				int num = ArrayUtility.FindIndex<string>(refTransformsPath, (string s) => <TokeniseHumanTransformsPath>c__AnonStorey6C.humanTransforms[i] == FileUtil.GetLastPathNameComponent(s));
+				int num = ArrayUtility.FindIndex<string>(refTransformsPath, (string s) => <TokeniseHumanTransformsPath>c__AnonStorey.humanTransforms[i] == FileUtil.GetLastPathNameComponent(s));
 				if (num != -1)
 				{
 					int index = array.Length;

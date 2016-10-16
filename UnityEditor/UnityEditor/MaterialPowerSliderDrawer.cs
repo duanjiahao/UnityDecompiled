@@ -1,14 +1,17 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MaterialPowerSliderDrawer : MaterialPropertyDrawer
 	{
 		private readonly float power;
+
 		public MaterialPowerSliderDrawer(float power)
 		{
 			this.power = power;
 		}
+
 		public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
 			if (prop.type != MaterialProperty.PropType.Range)
@@ -17,7 +20,8 @@ namespace UnityEditor
 			}
 			return base.GetPropertyHeight(prop, label, editor);
 		}
-		public override void OnGUI(Rect position, MaterialProperty prop, string label, MaterialEditor editor)
+
+		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
 			if (prop.type != MaterialProperty.PropType.Range)
 			{

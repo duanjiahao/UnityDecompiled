@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal abstract class LazyTreeViewDataSource : TreeViewDataSource
@@ -9,6 +10,7 @@ namespace UnityEditor
 		public LazyTreeViewDataSource(TreeView treeView) : base(treeView)
 		{
 		}
+
 		public static List<TreeViewItem> CreateChildListForCollapsedParent()
 		{
 			return new List<TreeViewItem>
@@ -16,13 +18,17 @@ namespace UnityEditor
 				null
 			};
 		}
+
 		public static bool IsChildListForACollapsedParent(List<TreeViewItem> childList)
 		{
 			return childList != null && childList.Count == 1 && childList[0] == null;
 		}
+
 		protected abstract HashSet<int> GetParentsAbove(int id);
+
 		protected abstract HashSet<int> GetParentsBelow(int id);
-		protected virtual void RevealItem(int itemID)
+
+		public override void RevealItem(int itemID)
 		{
 			HashSet<int> hashSet = new HashSet<int>(base.expandedIDs);
 			int count = hashSet.Count;
@@ -37,11 +43,13 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override TreeViewItem FindItem(int itemID)
 		{
 			this.RevealItem(itemID);
 			return base.FindItem(itemID);
 		}
+
 		public override void SetExpandedWithChildren(TreeViewItem item, bool expand)
 		{
 			HashSet<int> hashSet = new HashSet<int>(base.expandedIDs);
@@ -56,6 +64,7 @@ namespace UnityEditor
 			}
 			this.SetExpandedIDs(hashSet.ToArray<int>());
 		}
+
 		public override bool SetExpanded(int id, bool expand)
 		{
 			if (base.SetExpanded(id, expand))
@@ -65,7 +74,8 @@ namespace UnityEditor
 			}
 			return false;
 		}
-		public override List<TreeViewItem> GetVisibleRows()
+
+		public override void InitIfNeeded()
 		{
 			if (this.m_VisibleRows == null || this.m_NeedRefreshVisibleFolders)
 			{
@@ -77,6 +87,11 @@ namespace UnityEditor
 				}
 				this.m_TreeView.Repaint();
 			}
+		}
+
+		public override List<TreeViewItem> GetRows()
+		{
+			this.InitIfNeeded();
 			return this.m_VisibleRows;
 		}
 	}

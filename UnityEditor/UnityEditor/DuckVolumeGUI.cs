@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class DuckVolumeGUI : IAudioEffectPluginGUI
@@ -11,14 +12,23 @@ namespace UnityEditor
 			Ratio,
 			MakeupGain
 		}
+
 		public static string kThresholdName = "Threshold";
+
 		public static string kRatioName = "Ratio";
+
 		public static string kMakeupGainName = "Make-up Gain";
+
 		public static string kAttackTimeName = "Attack Time";
+
 		public static string kReleaseTimeName = "Release Time";
+
 		public static string kKneeName = "Knee";
+
 		public static GUIStyle textStyle10 = DuckVolumeGUI.BuildGUIStyleForLabel(Color.grey, 10, false, FontStyle.Normal, TextAnchor.MiddleLeft);
+
 		private static DuckVolumeGUI.DragType dragtype = DuckVolumeGUI.DragType.None;
+
 		public override string Name
 		{
 			get
@@ -26,6 +36,7 @@ namespace UnityEditor
 				return "Duck Volume";
 			}
 		}
+
 		public override string Description
 		{
 			get
@@ -33,6 +44,7 @@ namespace UnityEditor
 				return "Volume Ducking";
 			}
 		}
+
 		public override string Vendor
 		{
 			get
@@ -40,6 +52,7 @@ namespace UnityEditor
 				return "Unity Technologies";
 			}
 		}
+
 		public static GUIStyle BuildGUIStyleForLabel(Color color, int fontSize, bool wrapText, FontStyle fontstyle, TextAnchor anchor)
 		{
 			GUIStyle gUIStyle = new GUIStyle();
@@ -53,19 +66,23 @@ namespace UnityEditor
 			gUIStyle.normal.textColor = color;
 			return gUIStyle;
 		}
+
 		public static void DrawText(float x, float y, string text)
 		{
 			GUI.Label(new Rect(x, y - 5f, 200f, 10f), new GUIContent(text, string.Empty), DuckVolumeGUI.textStyle10);
 		}
+
 		public static void DrawLine(float x1, float y1, float x2, float y2, Color col)
 		{
 			Handles.color = col;
 			Handles.DrawLine(new Vector3(x1, y1, 0f), new Vector3(x2, y2, 0f));
 		}
+
 		protected static Color ScaleAlpha(Color col, float blend)
 		{
 			return new Color(col.r, col.g, col.b, col.a * blend);
 		}
+
 		protected static void DrawVU(Rect r, float level, float blend, bool topdown)
 		{
 			level = 1f - level;
@@ -73,6 +90,7 @@ namespace UnityEditor
 			AudioMixerDrawUtils.DrawRect(r, new Color(0.1f, 0.1f, 0.1f));
 			AudioMixerDrawUtils.DrawRect(rect, new Color(0.6f, 0.2f, 0.2f));
 		}
+
 		private static float EvaluateDuckingVolume(float x, float ratio, float threshold, float makeupGain, float knee, float dbRange, float dbMin)
 		{
 			float num = 1f / ratio;
@@ -86,15 +104,13 @@ namespace UnityEditor
 				num6 += knee;
 				num5 = num6 * (num2 * num6 + 1f) + num3;
 			}
-			else
+			else if (num6 > 0f)
 			{
-				if (num6 > 0f)
-				{
-					num5 = threshold + num * num6;
-				}
+				num5 = threshold + num * num6;
 			}
 			return 2f * (num5 + makeupGain - dbMin) / dbRange - 1f;
 		}
+
 		private static bool CurveDisplay(IAudioEffectPlugin plugin, Rect r0, ref float threshold, ref float ratio, ref float makeupGain, ref float attackTime, ref float releaseTime, ref float knee, float sidechainLevel, float outputLevel, float blend)
 		{
 			Event current = Event.current;
@@ -165,23 +181,17 @@ namespace UnityEditor
 							threshold = Mathf.Clamp(threshold + current.delta.x * 0.1f * num7, min, max);
 						}
 					}
+					else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.Ratio)
+					{
+						ratio = Mathf.Clamp(ratio + current.delta.y * ((ratio <= 1f) ? 0.003f : 0.05f) * num7, min2, max2);
+					}
+					else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.MakeupGain)
+					{
+						makeupGain = Mathf.Clamp(makeupGain - current.delta.y * 0.5f * num7, min3, max3);
+					}
 					else
 					{
-						if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.Ratio)
-						{
-							ratio = Mathf.Clamp(ratio + current.delta.y * ((ratio <= 1f) ? 0.003f : 0.05f) * num7, min2, max2);
-						}
-						else
-						{
-							if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.MakeupGain)
-							{
-								makeupGain = Mathf.Clamp(makeupGain - current.delta.y * 0.5f * num7, min3, max3);
-							}
-							else
-							{
-								Debug.LogError("Drag: Unhandled enum");
-							}
-						}
+						Debug.LogError("Drag: Unhandled enum");
 					}
 					result = true;
 					current.Use();
@@ -216,12 +226,9 @@ namespace UnityEditor
 							col = new Color(col.r * 1.2f, col.g * 1.2f, col.b * 1.2f);
 						}
 					}
-					else
+					else if (num18 > 0f)
 					{
-						if (num18 > 0f)
-						{
-							num17 = duckThreshold + duckGradient * num18;
-						}
+						num17 = duckThreshold + duckGradient * num18;
 					}
 					return 2f * (num17 + duckMakeupGain - dbMin) / dbRange - 1f;
 				});
@@ -237,12 +244,9 @@ namespace UnityEditor
 							num18 += duckKnee;
 							num17 = num18 * (duckKneeC1 * num18 + 1f) + duckKneeC2;
 						}
-						else
+						else if (num18 > 0f)
 						{
-							if (num18 > 0f)
-							{
-								num17 = duckThreshold + duckGradient * num18;
-							}
+							num17 = duckThreshold + duckGradient * num18;
 						}
 						return 2f * (num17 + duckMakeupGain - dbMin) / dbRange - 1f;
 					}, Color.white);
@@ -274,20 +278,17 @@ namespace UnityEditor
 						new Vector3(r.x + num6 - r.width, r.y + num8 + num9 * duckGradient * r.width, 0f)
 					});
 				}
-				else
+				else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.ThresholdAndKnee)
 				{
-					if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.ThresholdAndKnee)
-					{
-						float num10 = (threshold - knee - dbMin) / dbRange;
-						float num11 = (threshold + knee - dbMin) / dbRange;
-						float num12 = DuckVolumeGUI.EvaluateDuckingVolume(num10, ratio, threshold, makeupGain, knee, dbRange, dbMin);
-						float num13 = DuckVolumeGUI.EvaluateDuckingVolume(num11, ratio, threshold, makeupGain, knee, dbRange, dbMin);
-						float num14 = r.yMax - (num12 + 1f) * 0.5f * r.height;
-						float num15 = r.yMax - (num13 + 1f) * 0.5f * r.height;
-						EditorGUI.DrawRect(new Rect(r.x + num10 * r.width, num14, 1f, r.height - num14), new Color(0f, 0f, 0f, 0.5f));
-						EditorGUI.DrawRect(new Rect(r.x + num11 * r.width - 1f, num15, 1f, r.height - num15), new Color(0f, 0f, 0f, 0.5f));
-						EditorGUI.DrawRect(new Rect(r.x + num6 - 1f, r.y, 3f, r.height), Color.white);
-					}
+					float num10 = (threshold - knee - dbMin) / dbRange;
+					float num11 = (threshold + knee - dbMin) / dbRange;
+					float num12 = DuckVolumeGUI.EvaluateDuckingVolume(num10, ratio, threshold, makeupGain, knee, dbRange, dbMin);
+					float num13 = DuckVolumeGUI.EvaluateDuckingVolume(num11, ratio, threshold, makeupGain, knee, dbRange, dbMin);
+					float num14 = r.yMax - (num12 + 1f) * 0.5f * r.height;
+					float num15 = r.yMax - (num13 + 1f) * 0.5f * r.height;
+					EditorGUI.DrawRect(new Rect(r.x + num10 * r.width, num14, 1f, r.height - num14), new Color(0f, 0f, 0f, 0.5f));
+					EditorGUI.DrawRect(new Rect(r.x + num11 * r.width - 1f, num15, 1f, r.height - num15), new Color(0f, 0f, 0f, 0.5f));
+					EditorGUI.DrawRect(new Rect(r.x + num6 - 1f, r.y, 3f, r.height), Color.white);
 				}
 				outputLevel = (Mathf.Clamp(outputLevel - makeupGain, dbMin, dbMin + dbRange) - dbMin) / dbRange;
 				if (EditorApplication.isPlaying)
@@ -299,6 +300,7 @@ namespace UnityEditor
 			AudioCurveRendering.EndCurveFrame();
 			return result;
 		}
+
 		public override bool OnGUI(IAudioEffectPlugin plugin)
 		{
 			float blend = (!plugin.IsPluginEditableAndEnabled()) ? 0.5f : 1f;

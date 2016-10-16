@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	[StructLayout(LayoutKind.Sequential)]
@@ -14,6 +16,8 @@ namespace UnityEditor
 			Range,
 			Texture
 		}
+
+		[Obsolete("Use UnityEngine.Rendering.TextureDimension instead", false)]
 		public enum TexDim
 		{
 			Unknown = -1,
@@ -23,6 +27,7 @@ namespace UnityEditor
 			Cube,
 			Any = 6
 		}
+
 		[Flags]
 		public enum PropFlags
 		{
@@ -33,18 +38,31 @@ namespace UnityEditor
 			Normal = 8,
 			HDR = 16
 		}
+
 		public delegate bool ApplyPropertyCallback(MaterialProperty prop, int changeMask, object previousValue);
+
 		private UnityEngine.Object[] m_Targets;
+
 		private MaterialProperty.ApplyPropertyCallback m_ApplyPropertyCallback;
+
 		private string m_Name;
+
 		private string m_DisplayName;
+
 		private object m_Value;
+
 		private Vector4 m_TextureScaleAndOffset;
+
 		private Vector2 m_RangeLimits;
+
 		private MaterialProperty.PropType m_Type;
+
 		private MaterialProperty.PropFlags m_Flags;
-		private MaterialProperty.TexDim m_TextureDimension;
+
+		private TextureDimension m_TextureDimension;
+
 		private int m_MixedValueMask;
+
 		public UnityEngine.Object[] targets
 		{
 			get
@@ -52,6 +70,7 @@ namespace UnityEditor
 				return this.m_Targets;
 			}
 		}
+
 		public MaterialProperty.PropType type
 		{
 			get
@@ -59,6 +78,7 @@ namespace UnityEditor
 				return this.m_Type;
 			}
 		}
+
 		public string name
 		{
 			get
@@ -66,6 +86,7 @@ namespace UnityEditor
 				return this.m_Name;
 			}
 		}
+
 		public string displayName
 		{
 			get
@@ -73,6 +94,7 @@ namespace UnityEditor
 				return this.m_DisplayName;
 			}
 		}
+
 		public MaterialProperty.PropFlags flags
 		{
 			get
@@ -80,13 +102,15 @@ namespace UnityEditor
 				return this.m_Flags;
 			}
 		}
-		public MaterialProperty.TexDim textureDimension
+
+		public TextureDimension textureDimension
 		{
 			get
 			{
 				return this.m_TextureDimension;
 			}
 		}
+
 		public Vector2 rangeLimits
 		{
 			get
@@ -94,6 +118,7 @@ namespace UnityEditor
 				return this.m_RangeLimits;
 			}
 		}
+
 		public bool hasMixedValue
 		{
 			get
@@ -101,6 +126,7 @@ namespace UnityEditor
 				return (this.m_MixedValueMask & 1) != 0;
 			}
 		}
+
 		public MaterialProperty.ApplyPropertyCallback applyPropertyCallback
 		{
 			get
@@ -112,6 +138,7 @@ namespace UnityEditor
 				this.m_ApplyPropertyCallback = value;
 			}
 		}
+
 		internal int mixedValueMask
 		{
 			get
@@ -119,6 +146,7 @@ namespace UnityEditor
 				return this.m_MixedValueMask;
 			}
 		}
+
 		public Color colorValue
 		{
 			get
@@ -142,6 +170,7 @@ namespace UnityEditor
 				this.ApplyProperty(value);
 			}
 		}
+
 		public Vector4 vectorValue
 		{
 			get
@@ -165,6 +194,7 @@ namespace UnityEditor
 				this.ApplyProperty(value);
 			}
 		}
+
 		public float floatValue
 		{
 			get
@@ -188,6 +218,7 @@ namespace UnityEditor
 				this.ApplyProperty(value);
 			}
 		}
+
 		public Texture textureValue
 		{
 			get
@@ -214,6 +245,7 @@ namespace UnityEditor
 				this.ApplyProperty(value2, 1);
 			}
 		}
+
 		public Vector4 textureScaleAndOffset
 		{
 			get
@@ -245,19 +277,23 @@ namespace UnityEditor
 				this.ApplyProperty(previousValue, num);
 			}
 		}
+
 		public void ReadFromMaterialPropertyBlock(MaterialPropertyBlock block)
 		{
 			ShaderUtil.ApplyMaterialPropertyBlockToMaterialProperty(block, this);
 		}
+
 		public void WriteToMaterialPropertyBlock(MaterialPropertyBlock materialblock, int changedPropertyMask)
 		{
 			ShaderUtil.ApplyMaterialPropertyToMaterialPropertyBlock(this, changedPropertyMask, materialblock);
 		}
+
 		internal static bool IsTextureOffsetAndScaleChangedMask(int changedMask)
 		{
 			changedMask >>= 1;
 			return changedMask != 0;
 		}
+
 		private void ApplyProperty(object newValue)
 		{
 			this.m_MixedValueMask = 0;
@@ -265,6 +301,7 @@ namespace UnityEditor
 			this.m_Value = newValue;
 			this.ApplyProperty(value, 1);
 		}
+
 		private void ApplyProperty(object previousValue, int changedPropertyMask)
 		{
 			if (this.targets == null || this.targets.Length == 0)

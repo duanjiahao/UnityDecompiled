@@ -1,15 +1,22 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SplatPainter
 	{
 		public int size;
+
 		public float strength;
+
 		public Brush brush;
+
 		public float target;
+
 		public TerrainData terrainData;
+
 		public TerrainTool tool;
+
 		private float ApplyBrush(float height, float brushStrength)
 		{
 			if (this.target > height)
@@ -22,6 +29,7 @@ namespace UnityEditor
 			height = Mathf.Max(height, this.target);
 			return height;
 		}
+
 		private void Normalize(int x, int y, int splatIndex, float[,,] alphamap)
 		{
 			float num = alphamap[y, x, splatIndex];
@@ -53,6 +61,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void Paint(float xCenterNormalized, float yCenterNormalized, int splatIndex)
 		{
 			if (splatIndex >= this.terrainData.alphamapLayers)

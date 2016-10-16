@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomPropertyDrawer(typeof(HeaderAttribute))]
@@ -11,6 +12,7 @@ namespace UnityEditor
 			position = EditorGUI.IndentedRect(position);
 			GUI.Label(position, (base.attribute as HeaderAttribute).header, EditorStyles.boldLabel);
 		}
+
 		public override float GetHeight()
 		{
 			return 24f;

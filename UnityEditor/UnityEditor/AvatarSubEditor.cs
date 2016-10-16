@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class AvatarSubEditor : ScriptableObject
 	{
 		protected AvatarEditor m_Inspector;
+
 		protected GameObject gameObject
 		{
 			get
@@ -14,6 +16,7 @@ namespace UnityEditor
 				return this.m_Inspector.m_GameObject;
 			}
 		}
+
 		protected GameObject prefab
 		{
 			get
@@ -21,6 +24,7 @@ namespace UnityEditor
 				return this.m_Inspector.prefab;
 			}
 		}
+
 		protected Dictionary<Transform, bool> modelBones
 		{
 			get
@@ -28,6 +32,7 @@ namespace UnityEditor
 				return this.m_Inspector.m_ModelBones;
 			}
 		}
+
 		protected Transform root
 		{
 			get
@@ -35,6 +40,7 @@ namespace UnityEditor
 				return (!(this.gameObject == null)) ? this.gameObject.transform : null;
 			}
 		}
+
 		protected SerializedObject serializedObject
 		{
 			get
@@ -42,6 +48,7 @@ namespace UnityEditor
 				return this.m_Inspector.serializedObject;
 			}
 		}
+
 		protected Avatar avatarAsset
 		{
 			get
@@ -49,6 +56,7 @@ namespace UnityEditor
 				return this.m_Inspector.avatar;
 			}
 		}
+
 		private static void DoWriteAllAssets()
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(UnityEngine.Object));
@@ -63,13 +71,16 @@ namespace UnityEditor
 			}
 			EditorApplication.SaveAssets();
 		}
+
 		public virtual void Enable(AvatarEditor inspector)
 		{
 			this.m_Inspector = inspector;
 		}
+
 		public virtual void Disable()
 		{
 		}
+
 		public virtual void OnDestroy()
 		{
 			if (this.HasModified())
@@ -88,24 +99,30 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public virtual void OnInspectorGUI()
 		{
 		}
+
 		public virtual void OnSceneGUI()
 		{
 		}
+
 		protected bool HasModified()
 		{
 			return this.serializedObject.hasModifiedProperties;
 		}
+
 		protected virtual void ResetValues()
 		{
 			this.serializedObject.Update();
 		}
+
 		protected void Apply()
 		{
 			this.serializedObject.ApplyModifiedProperties();
 		}
+
 		public void ApplyAndImport()
 		{
 			this.Apply();
@@ -113,25 +130,27 @@ namespace UnityEditor
 			AssetDatabase.ImportAsset(assetPath);
 			this.ResetValues();
 		}
+
 		protected void ApplyRevertGUI()
 		{
 			EditorGUILayout.Space();
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUI.BeginDisabledGroup(!this.HasModified());
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Revert", new GUILayoutOption[0]))
+			using (new EditorGUI.DisabledScope(!this.HasModified()))
 			{
-				this.ResetValues();
-				if (this.HasModified())
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Revert", new GUILayoutOption[0]))
 				{
-					Debug.LogError("Avatar tool reports modified values after reset.");
+					this.ResetValues();
+					if (this.HasModified())
+					{
+						Debug.LogError("Avatar tool reports modified values after reset.");
+					}
+				}
+				if (GUILayout.Button("Apply", new GUILayoutOption[0]))
+				{
+					this.ApplyAndImport();
 				}
 			}
-			if (GUILayout.Button("Apply", new GUILayoutOption[0]))
-			{
-				this.ApplyAndImport();
-			}
-			EditorGUI.EndDisabledGroup();
 			if (GUILayout.Button("Done", new GUILayoutOption[0]))
 			{
 				this.m_Inspector.SwitchToAssetMode();

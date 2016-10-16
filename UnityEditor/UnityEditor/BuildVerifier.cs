@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.XPath;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class BuildVerifier
 	{
 		private Dictionary<string, HashSet<string>> m_UnsupportedAssemblies;
+
 		private static BuildVerifier ms_Inst;
+
 		protected BuildVerifier()
 		{
 			this.m_UnsupportedAssemblies = new Dictionary<string, HashSet<string>>();
@@ -36,6 +39,7 @@ namespace UnityEditor
 				this.m_UnsupportedAssemblies[text2].Add(attribute);
 			}
 		}
+
 		protected void VerifyBuildInternal(BuildTarget target, string managedDllFolder)
 		{
 			string[] files = Directory.GetFiles(managedDllFolder);
@@ -56,10 +60,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected bool VerifyAssembly(BuildTarget target, string assembly)
 		{
 			return (!this.m_UnsupportedAssemblies.ContainsKey("*") || !this.m_UnsupportedAssemblies["*"].Contains(assembly)) && (!this.m_UnsupportedAssemblies.ContainsKey(target.ToString()) || !this.m_UnsupportedAssemblies[target.ToString()].Contains(assembly));
 		}
+
 		public static void VerifyBuild(BuildTarget target, string managedDllFolder)
 		{
 			if (BuildVerifier.ms_Inst == null)

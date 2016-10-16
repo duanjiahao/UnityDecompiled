@@ -1,62 +1,60 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
+
 namespace UnityEngine
 {
 	public sealed class CrashReport
 	{
 		private static List<CrashReport> internalReports;
+
 		private static object reportsLock = new object();
+
 		private readonly string id;
+
 		public readonly DateTime time;
+
 		public readonly string text;
+
 		public static CrashReport[] reports
 		{
 			get
 			{
 				CrashReport.PopulateReports();
 				object obj = CrashReport.reportsLock;
-				Monitor.Enter(obj);
 				CrashReport[] result;
-				try
+				lock (obj)
 				{
 					result = CrashReport.internalReports.ToArray();
-				}
-				finally
-				{
-					Monitor.Exit(obj);
 				}
 				return result;
 			}
 		}
+
 		public static CrashReport lastReport
 		{
 			get
 			{
 				CrashReport.PopulateReports();
 				object obj = CrashReport.reportsLock;
-				Monitor.Enter(obj);
-				try
+				lock (obj)
 				{
 					if (CrashReport.internalReports.Count > 0)
 					{
 						return CrashReport.internalReports[CrashReport.internalReports.Count - 1];
 					}
 				}
-				finally
-				{
-					Monitor.Exit(obj);
-				}
 				return null;
 			}
 		}
+
 		private CrashReport(string id, DateTime time, string text)
 		{
 			this.id = id;
 			this.time = time;
 			this.text = text;
 		}
+
 		private static int Compare(CrashReport c1, CrashReport c2)
 		{
 			long ticks = c1.time.Ticks;
@@ -71,11 +69,11 @@ namespace UnityEngine
 			}
 			return 0;
 		}
+
 		private static void PopulateReports()
 		{
 			object obj = CrashReport.reportsLock;
-			Monitor.Enter(obj);
-			try
+			lock (obj)
 			{
 				if (CrashReport.internalReports == null)
 				{
@@ -95,11 +93,8 @@ namespace UnityEngine
 					CrashReport.internalReports.Sort(new Comparison<CrashReport>(CrashReport.Compare));
 				}
 			}
-			finally
-			{
-				Monitor.Exit(obj);
-			}
 		}
+
 		public static void RemoveAll()
 		{
 			CrashReport[] reports = CrashReport.reports;
@@ -109,29 +104,28 @@ namespace UnityEngine
 				crashReport.Remove();
 			}
 		}
+
 		public void Remove()
 		{
 			if (CrashReport.RemoveReport(this.id))
 			{
 				object obj = CrashReport.reportsLock;
-				Monitor.Enter(obj);
-				try
+				lock (obj)
 				{
 					CrashReport.internalReports.Remove(this);
 				}
-				finally
-				{
-					Monitor.Exit(obj);
-				}
 			}
 		}
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string[] GetReports();
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetReportData(string id, out double secondsSinceUnixEpoch, out string text);
-		[WrapperlessIcall]
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool RemoveReport(string id);
 	}

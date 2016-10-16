@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ParticleSystemUI
@@ -12,19 +13,30 @@ namespace UnityEditor
 			SubCollision,
 			SubDeath
 		}
+
 		protected class Texts
 		{
 			public GUIContent addModules = new GUIContent(string.Empty, "Show/Hide Modules");
+
 			public GUIContent supportsCullingText = new GUIContent(string.Empty, ParticleSystemStyles.Get().warningIcon);
 		}
+
 		public ParticleEffectUI m_ParticleEffectUI;
+
 		public ModuleUI[] m_Modules;
+
 		public ParticleSystem m_ParticleSystem;
+
 		public SerializedObject m_ParticleSystemSerializedObject;
+
 		public SerializedObject m_RendererSerializedObject;
+
 		private static string[] s_ModuleNames;
-		private static string m_SupportsCullingText;
+
+		private string m_SupportsCullingText;
+
 		private static ParticleSystemUI.Texts s_Texts;
+
 		public void Init(ParticleEffectUI owner, ParticleSystem ps)
 		{
 			if (ParticleSystemUI.s_ModuleNames == null)
@@ -35,7 +47,7 @@ namespace UnityEditor
 			this.m_ParticleSystem = ps;
 			this.m_ParticleSystemSerializedObject = new SerializedObject(this.m_ParticleSystem);
 			this.m_RendererSerializedObject = null;
-			ParticleSystemUI.m_SupportsCullingText = null;
+			this.m_SupportsCullingText = null;
 			this.m_Modules = ParticleSystemUI.CreateUIModules(this, this.m_ParticleSystemSerializedObject);
 			ParticleSystemRenderer particleSystemRenderer = this.GetParticleSystemRenderer();
 			if (particleSystemRenderer != null)
@@ -44,6 +56,7 @@ namespace UnityEditor
 			}
 			this.UpdateParticleSystemInfoString();
 		}
+
 		internal ParticleSystemRenderer GetParticleSystemRenderer()
 		{
 			if (this.m_ParticleSystem != null)
@@ -52,10 +65,12 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		internal ModuleUI GetParticleSystemRendererModuleUI()
 		{
 			return this.m_Modules[this.m_Modules.Length - 1];
 		}
+
 		private void InitRendererUI()
 		{
 			ParticleSystemRenderer particleSystemRenderer = this.GetParticleSystemRenderer();
@@ -71,6 +86,7 @@ namespace UnityEditor
 				EditorUtility.SetSelectedWireframeHidden(particleSystemRenderer, !ParticleEffectUI.m_ShowWireframe);
 			}
 		}
+
 		private void ClearRenderer()
 		{
 			this.m_RendererSerializedObject = null;
@@ -81,10 +97,12 @@ namespace UnityEditor
 			}
 			this.m_Modules[this.m_Modules.Length - 1] = null;
 		}
+
 		public string GetName()
 		{
 			return this.m_ParticleSystem.gameObject.name;
 		}
+
 		public float GetEmitterDuration()
 		{
 			InitialModuleUI initialModuleUI = this.m_Modules[0] as InitialModuleUI;
@@ -94,10 +112,12 @@ namespace UnityEditor
 			}
 			return -1f;
 		}
+
 		private ParticleSystem GetSelectedParticleSystem()
 		{
 			return Selection.activeGameObject.GetComponent<ParticleSystem>();
 		}
+
 		public void OnGUI(ParticleSystem root, float width, bool fixedWidth)
 		{
 			if (ParticleSystemUI.s_Texts == null)
@@ -143,14 +163,15 @@ namespace UnityEditor
 						}
 						if (moduleUI.foldout)
 						{
-							EditorGUI.BeginDisabledGroup(!moduleUI.enabled);
-							Rect position = EditorGUILayout.BeginVertical(ParticleSystemStyles.Get().modulePadding, new GUILayoutOption[0]);
-							position.y -= 4f;
-							position.height += 4f;
-							GUI.Label(position, GUIContent.none, ParticleSystemStyles.Get().moduleBgStyle);
-							moduleUI.OnInspectorGUI(this.m_ParticleSystem);
-							EditorGUILayout.EndVertical();
-							EditorGUI.EndDisabledGroup();
+							using (new EditorGUI.DisabledScope(!moduleUI.enabled))
+							{
+								Rect position = EditorGUILayout.BeginVertical(ParticleSystemStyles.Get().modulePadding, new GUILayoutOption[0]);
+								position.y -= 4f;
+								position.height += 4f;
+								GUI.Label(position, GUIContent.none, ParticleSystemStyles.Get().moduleBgStyle);
+								moduleUI.OnInspectorGUI(this.m_ParticleSystem);
+								EditorGUILayout.EndVertical();
+							}
 						}
 						if (flag2)
 						{
@@ -171,12 +192,9 @@ namespace UnityEditor
 											num2 = particleSystemRenderer.mesh.GetInstanceID();
 										}
 									}
-									else
+									else if (particleSystemRenderer.sharedMaterial != null)
 									{
-										if (particleSystemRenderer.sharedMaterial != null)
-										{
-											num2 = particleSystemRenderer.sharedMaterial.GetInstanceID();
-										}
+										num2 = particleSystemRenderer.sharedMaterial.GetInstanceID();
 									}
 									if (EditorUtility.IsDirty(num2))
 									{
@@ -292,7 +310,7 @@ namespace UnityEditor
 						{
 							GUI.Label(position4, GUIContent.none, ParticleSystemStyles.Get().plus);
 						}
-						ParticleSystemUI.s_Texts.supportsCullingText.tooltip = ParticleSystemUI.m_SupportsCullingText;
+						ParticleSystemUI.s_Texts.supportsCullingText.tooltip = this.m_SupportsCullingText;
 						if (flag2 && ParticleSystemUI.s_Texts.supportsCullingText.tooltip != null)
 						{
 							GUI.Label(position6, ParticleSystemUI.s_Texts.supportsCullingText);
@@ -305,6 +323,7 @@ namespace UnityEditor
 			EditorGUILayout.EndVertical();
 			this.ApplyProperties();
 		}
+
 		public void OnSceneGUI()
 		{
 			if (this.m_Modules == null || this.m_ParticleSystem == null)
@@ -314,42 +333,22 @@ namespace UnityEditor
 			if (this.m_ParticleSystem.particleCount > 0)
 			{
 				ParticleSystemRenderer particleSystemRenderer = this.GetParticleSystemRenderer();
-				EditorUtility.SetSelectedWireframeHidden(particleSystemRenderer, !ParticleEffectUI.m_ShowWireframe);
-				if (ParticleEffectUI.m_ShowWireframe)
+				if (ParticleEffectUI.m_ShowBounds)
 				{
-					ModuleUI particleSystemRendererModuleUI = this.GetParticleSystemRendererModuleUI();
-					ParticleSystemRenderer particleSystemRenderer2 = this.GetParticleSystemRenderer();
-					if (particleSystemRendererModuleUI != null && particleSystemRendererModuleUI.enabled && particleSystemRenderer2.editorEnabled)
-					{
-						Vector3 extents = particleSystemRenderer.bounds.extents;
-						Transform transform = Camera.current.transform;
-						Vector2 size = new Vector2(0f, 0f);
-						Vector3[] array = new Vector3[]
-						{
-							new Vector3(-1f, -1f, -1f),
-							new Vector3(-1f, -1f, 1f),
-							new Vector3(-1f, 1f, -1f),
-							new Vector3(-1f, 1f, 1f),
-							new Vector3(1f, -1f, -1f),
-							new Vector3(1f, -1f, 1f),
-							new Vector3(1f, 1f, -1f),
-							new Vector3(1f, 1f, 1f)
-						};
-						for (int i = 0; i < 8; i++)
-						{
-							size.x = Mathf.Max(size.x, Vector3.Dot(Vector3.Scale(array[i], extents), transform.right));
-							size.y = Mathf.Max(size.y, Vector3.Dot(Vector3.Scale(array[i], extents), transform.up));
-						}
-						Handles.RectangleCap(0, particleSystemRenderer.bounds.center, Camera.current.transform.rotation, size);
-					}
+					Color color = Handles.color;
+					Handles.color = Color.yellow;
+					Bounds bounds = particleSystemRenderer.bounds;
+					Handles.DrawWireCube(bounds.center, bounds.size);
+					Handles.color = color;
 				}
+				EditorUtility.SetSelectedWireframeHidden(particleSystemRenderer, !ParticleEffectUI.m_ShowWireframe);
 			}
 			this.UpdateProperties();
 			InitialModuleUI initial = (InitialModuleUI)this.m_Modules[0];
 			ModuleUI[] modules = this.m_Modules;
-			for (int j = 0; j < modules.Length; j++)
+			for (int i = 0; i < modules.Length; i++)
 			{
-				ModuleUI moduleUI = modules[j];
+				ModuleUI moduleUI = modules[i];
 				if (moduleUI != null && moduleUI.visibleUI && moduleUI.enabled)
 				{
 					if (moduleUI.foldout)
@@ -360,6 +359,7 @@ namespace UnityEditor
 			}
 			this.ApplyProperties();
 		}
+
 		public void ApplyProperties()
 		{
 			bool hasModifiedProperties = this.m_ParticleSystemSerializedObject.hasModifiedProperties;
@@ -378,6 +378,7 @@ namespace UnityEditor
 				this.m_RendererSerializedObject.ApplyModifiedProperties();
 			}
 		}
+
 		private void UpdateParticleSystemInfoString()
 		{
 			string empty = string.Empty;
@@ -392,13 +393,14 @@ namespace UnityEditor
 			}
 			if (empty != string.Empty)
 			{
-				ParticleSystemUI.m_SupportsCullingText = "Automatic culling is disabled because: " + empty;
+				this.m_SupportsCullingText = "Automatic culling is disabled because: " + empty;
 			}
 			else
 			{
-				ParticleSystemUI.m_SupportsCullingText = null;
+				this.m_SupportsCullingText = null;
 			}
 		}
+
 		public void UpdateProperties()
 		{
 			this.m_ParticleSystemSerializedObject.UpdateIfDirtyOrScript();
@@ -407,6 +409,7 @@ namespace UnityEditor
 				this.m_RendererSerializedObject.UpdateIfDirtyOrScript();
 			}
 		}
+
 		private void ResetModules()
 		{
 			ModuleUI[] modules = this.m_Modules;
@@ -442,6 +445,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ShowAddModuleMenu()
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -461,6 +465,7 @@ namespace UnityEditor
 			genericMenu.ShowAsContext();
 			Event.current.Use();
 		}
+
 		private void AddModuleCallback(object obj)
 		{
 			int num = (int)obj;
@@ -482,6 +487,7 @@ namespace UnityEditor
 			}
 			this.ApplyProperties();
 		}
+
 		private void ModuleMenuCallback(object obj)
 		{
 			int num = (int)obj;
@@ -499,6 +505,7 @@ namespace UnityEditor
 				this.m_Modules[num].enabled = false;
 			}
 		}
+
 		private void ShowModuleMenu(int moduleIndex)
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -513,6 +520,7 @@ namespace UnityEditor
 			genericMenu.ShowAsContext();
 			Event.current.Use();
 		}
+
 		private void EmitterMenuCallback(object obj)
 		{
 			switch ((int)obj)
@@ -528,6 +536,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void ShowEmitterMenu()
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -545,28 +554,32 @@ namespace UnityEditor
 			genericMenu.ShowAsContext();
 			Event.current.Use();
 		}
+
 		private static ModuleUI[] CreateUIModules(ParticleSystemUI e, SerializedObject so)
 		{
 			int num = 0;
-			ModuleUI[] expr_09 = new ModuleUI[17];
+			ModuleUI[] expr_09 = new ModuleUI[19];
 			expr_09[0] = new InitialModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
 			expr_09[1] = new EmissionModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
 			expr_09[2] = new ShapeModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
 			expr_09[3] = new VelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
 			expr_09[4] = new ClampVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[5] = new ForceModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[6] = new ColorModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[7] = new ColorByVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[8] = new SizeModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[9] = new SizeByVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[10] = new RotationModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[11] = new RotationByVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[12] = new ExternalForcesModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[13] = new CollisionModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[14] = new SubModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
-			expr_09[15] = new UVModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[5] = new InheritVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[6] = new ForceModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[7] = new ColorModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[8] = new ColorByVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[9] = new SizeModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[10] = new SizeByVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[11] = new RotationModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[12] = new RotationByVelocityModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[13] = new ExternalForcesModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[14] = new CollisionModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[15] = new TriggerModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[16] = new SubModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
+			expr_09[17] = new UVModuleUI(e, so, ParticleSystemUI.s_ModuleNames[num++]);
 			return expr_09;
 		}
+
 		public static string[] GetUIModuleNames()
 		{
 			return new string[]
@@ -576,6 +589,7 @@ namespace UnityEditor
 				"Shape",
 				"Velocity over Lifetime",
 				"Limit Velocity over Lifetime",
+				"Inherit Velocity",
 				"Force over Lifetime",
 				"Color over Lifetime",
 				"Color by Speed",
@@ -585,6 +599,7 @@ namespace UnityEditor
 				"Rotation by Speed",
 				"External Forces",
 				"Collision",
+				"Triggers",
 				"Sub Emitters",
 				"Texture Sheet Animation",
 				"Renderer"

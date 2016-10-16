@@ -1,8 +1,8 @@
 using System;
 using UnityEditor.AnimatedValues;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Light))]
@@ -10,18 +10,25 @@ namespace UnityEditor
 	{
 		private class Styles
 		{
-			public readonly GUIContent LightBounceIntensity = EditorGUIUtility.TextContent("LightmapEditor.Light.BounceIntensity");
-			public readonly GUIContent ShadowType = new GUIContent("Shadow Type", "Shadow cast options");
-			public readonly GUIContent BakedShadowRadius = new GUIContent("Baked Shadow Radius");
-			public readonly GUIContent BakedShadowAngle = new GUIContent("Baked Shadow Angle");
-			public readonly string NoShadowsWarning = EditorGUIUtility.TextContent("LightEditor.NoShadowsWarning").text;
-			public readonly GUIContent LightmappingModeLabel = new GUIContent("Baking");
+			public readonly GUIContent LightBounceIntensity = EditorGUIUtility.TextContent("Bounce Intensity|Indirect light intensity multiplier.");
+
+			public readonly GUIContent ShadowType = EditorGUIUtility.TextContent("Shadow Type|Shadow cast options");
+
+			public readonly GUIContent BakedShadowRadius = EditorGUIUtility.TextContent("Baked Shadow Radius");
+
+			public readonly GUIContent BakedShadowAngle = EditorGUIUtility.TextContent("Baked Shadow Angle");
+
+			public readonly GUIContent ShadowNearPlane = EditorGUIUtility.TextContent("Shadow Near Plane|Shadow near plane, clamped to 0.1 units or 1% of light range, whichever is lower.");
+
+			public readonly GUIContent LightmappingModeLabel = EditorGUIUtility.TextContent("Baking");
+
 			public readonly GUIContent[] LightmappingModes = new GUIContent[]
 			{
-				new GUIContent("Realtime"),
-				new GUIContent("Baked"),
-				new GUIContent("Mixed")
+				EditorGUIUtility.TextContent("Realtime"),
+				EditorGUIUtility.TextContent("Baked"),
+				EditorGUIUtility.TextContent("Mixed")
 			};
+
 			public readonly int[] LightmappingModeValues = new int[]
 			{
 				4,
@@ -29,43 +36,79 @@ namespace UnityEditor
 				1
 			};
 		}
+
 		private SerializedProperty m_Type;
+
 		private SerializedProperty m_Range;
+
 		private SerializedProperty m_SpotAngle;
+
 		private SerializedProperty m_CookieSize;
+
 		private SerializedProperty m_Color;
+
 		private SerializedProperty m_Intensity;
+
 		private SerializedProperty m_BounceIntensity;
+
 		private SerializedProperty m_Cookie;
+
 		private SerializedProperty m_ShadowsType;
+
 		private SerializedProperty m_ShadowsStrength;
+
 		private SerializedProperty m_ShadowsResolution;
+
 		private SerializedProperty m_ShadowsBias;
+
 		private SerializedProperty m_ShadowsNormalBias;
+
+		private SerializedProperty m_ShadowsNearPlane;
+
 		private SerializedProperty m_Halo;
+
 		private SerializedProperty m_Flare;
+
 		private SerializedProperty m_RenderMode;
+
 		private SerializedProperty m_CullingMask;
+
 		private SerializedProperty m_Lightmapping;
+
 		private SerializedProperty m_AreaSizeX;
+
 		private SerializedProperty m_AreaSizeY;
+
 		private SerializedProperty m_BakedShadowRadius;
+
 		private SerializedProperty m_BakedShadowAngle;
+
 		private AnimBool m_ShowSpotOptions = new AnimBool();
+
 		private AnimBool m_ShowPointOptions = new AnimBool();
+
 		private AnimBool m_ShowDirOptions = new AnimBool();
+
 		private AnimBool m_ShowAreaOptions = new AnimBool();
+
 		private AnimBool m_ShowRuntimeOptions = new AnimBool();
+
 		private AnimBool m_ShowShadowOptions = new AnimBool();
-		private AnimBool m_ShowShadowWarning = new AnimBool();
-		private AnimBool m_ShowAreaWarning = new AnimBool();
+
 		private AnimBool m_ShowIndirectWarning = new AnimBool();
+
 		private AnimBool m_ShowBakingWarning = new AnimBool();
+
 		private AnimBool m_BakedShadowAngleOptions = new AnimBool();
+
 		private AnimBool m_BakedShadowRadiusOptions = new AnimBool();
+
 		private static LightEditor.Styles s_Styles;
+
 		internal static Color kGizmoLight = new Color(0.996078432f, 0.992156863f, 0.533333361f, 0.5019608f);
+
 		internal static Color kGizmoDisabledLight = new Color(0.5294118f, 0.454901963f, 0.196078435f, 0.5019608f);
+
 		private bool typeIsSame
 		{
 			get
@@ -73,6 +116,7 @@ namespace UnityEditor
 				return !this.m_Type.hasMultipleDifferentValues;
 			}
 		}
+
 		private bool shadowTypeIsSame
 		{
 			get
@@ -80,6 +124,7 @@ namespace UnityEditor
 				return !this.m_ShadowsType.hasMultipleDifferentValues;
 			}
 		}
+
 		private Light light
 		{
 			get
@@ -87,6 +132,7 @@ namespace UnityEditor
 				return this.target as Light;
 			}
 		}
+
 		private bool isBakedOrMixed
 		{
 			get
@@ -94,6 +140,7 @@ namespace UnityEditor
 				return this.m_Lightmapping.intValue != 4;
 			}
 		}
+
 		private bool spotOptionsValue
 		{
 			get
@@ -101,6 +148,7 @@ namespace UnityEditor
 				return this.typeIsSame && this.light.type == LightType.Spot;
 			}
 		}
+
 		private bool pointOptionsValue
 		{
 			get
@@ -108,6 +156,7 @@ namespace UnityEditor
 				return this.typeIsSame && this.light.type == LightType.Point;
 			}
 		}
+
 		private bool dirOptionsValue
 		{
 			get
@@ -115,6 +164,7 @@ namespace UnityEditor
 				return this.typeIsSame && this.light.type == LightType.Directional;
 			}
 		}
+
 		private bool areaOptionsValue
 		{
 			get
@@ -122,6 +172,7 @@ namespace UnityEditor
 				return this.typeIsSame && this.light.type == LightType.Area;
 			}
 		}
+
 		private bool runtimeOptionsValue
 		{
 			get
@@ -129,6 +180,7 @@ namespace UnityEditor
 				return this.typeIsSame && this.light.type != LightType.Area && this.m_Lightmapping.intValue != 2;
 			}
 		}
+
 		private bool bakedShadowRadius
 		{
 			get
@@ -136,6 +188,7 @@ namespace UnityEditor
 				return this.typeIsSame && (this.light.type == LightType.Point || this.light.type == LightType.Spot) && this.isBakedOrMixed;
 			}
 		}
+
 		private bool bakedShadowAngle
 		{
 			get
@@ -143,6 +196,7 @@ namespace UnityEditor
 				return this.typeIsSame && this.light.type == LightType.Directional && this.isBakedOrMixed;
 			}
 		}
+
 		private bool shadowOptionsValue
 		{
 			get
@@ -150,34 +204,31 @@ namespace UnityEditor
 				return this.shadowTypeIsSame && this.light.shadows != LightShadows.None;
 			}
 		}
-		private bool shadowWarningValue
-		{
-			get
-			{
-				return this.typeIsSame && !InternalEditorUtility.HasProFeaturesEnabled() && this.light.type != LightType.Directional;
-			}
-		}
+
 		private bool areaWarningValue
 		{
 			get
 			{
-				return this.typeIsSame && !InternalEditorUtility.HasProFeaturesEnabled() && this.light.type == LightType.Area;
+				return this.typeIsSame && this.light.type == LightType.Area;
 			}
 		}
+
 		private bool bounceWarningValue
 		{
 			get
 			{
-				return this.typeIsSame && InternalEditorUtility.HasProFeaturesEnabled() && (this.light.type == LightType.Point || this.light.type == LightType.Spot) && this.m_Lightmapping.intValue == 4 && this.m_BounceIntensity.floatValue > 0f;
+				return this.typeIsSame && (this.light.type == LightType.Point || this.light.type == LightType.Spot) && this.m_Lightmapping.intValue == 4 && this.m_BounceIntensity.floatValue > 0f;
 			}
 		}
+
 		private bool bakingWarningValue
 		{
 			get
 			{
-				return !Lightmapping.bakedLightmapsEnabled && this.isBakedOrMixed;
+				return !Lightmapping.bakedGI && this.isBakedOrMixed;
 			}
 		}
+
 		private void SetOptions(AnimBool animBool, bool initialize, bool targetValue)
 		{
 			if (initialize)
@@ -190,6 +241,7 @@ namespace UnityEditor
 				animBool.target = targetValue;
 			}
 		}
+
 		private void UpdateShowOptions(bool initialize)
 		{
 			this.SetOptions(this.m_ShowSpotOptions, initialize, this.spotOptionsValue);
@@ -197,14 +249,13 @@ namespace UnityEditor
 			this.SetOptions(this.m_ShowDirOptions, initialize, this.dirOptionsValue);
 			this.SetOptions(this.m_ShowAreaOptions, initialize, this.areaOptionsValue);
 			this.SetOptions(this.m_ShowShadowOptions, initialize, this.shadowOptionsValue);
-			this.SetOptions(this.m_ShowShadowWarning, initialize, this.shadowWarningValue);
-			this.SetOptions(this.m_ShowAreaWarning, initialize, this.areaWarningValue);
 			this.SetOptions(this.m_ShowIndirectWarning, initialize, this.bounceWarningValue);
 			this.SetOptions(this.m_ShowBakingWarning, initialize, this.bakingWarningValue);
 			this.SetOptions(this.m_ShowRuntimeOptions, initialize, this.runtimeOptionsValue);
 			this.SetOptions(this.m_BakedShadowAngleOptions, initialize, this.bakedShadowAngle);
 			this.SetOptions(this.m_BakedShadowRadiusOptions, initialize, this.bakedShadowRadius);
 		}
+
 		private void OnEnable()
 		{
 			this.m_Type = base.serializedObject.FindProperty("m_Type");
@@ -220,6 +271,7 @@ namespace UnityEditor
 			this.m_ShadowsResolution = base.serializedObject.FindProperty("m_Shadows.m_Resolution");
 			this.m_ShadowsBias = base.serializedObject.FindProperty("m_Shadows.m_Bias");
 			this.m_ShadowsNormalBias = base.serializedObject.FindProperty("m_Shadows.m_NormalBias");
+			this.m_ShadowsNearPlane = base.serializedObject.FindProperty("m_Shadows.m_NearPlane");
 			this.m_Halo = base.serializedObject.FindProperty("m_DrawHalo");
 			this.m_Flare = base.serializedObject.FindProperty("m_Flare");
 			this.m_RenderMode = base.serializedObject.FindProperty("m_RenderMode");
@@ -231,6 +283,7 @@ namespace UnityEditor
 			this.m_BakedShadowAngle = base.serializedObject.FindProperty("m_ShadowAngle");
 			this.UpdateShowOptions(true);
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (LightEditor.s_Styles == null)
@@ -245,7 +298,7 @@ namespace UnityEditor
 				EditorGUILayout.IntPopup(this.m_Lightmapping, LightEditor.s_Styles.LightmappingModes, LightEditor.s_Styles.LightmappingModeValues, LightEditor.s_Styles.LightmappingModeLabel, new GUILayoutOption[0]);
 				if (EditorGUILayout.BeginFadeGroup(this.m_ShowBakingWarning.faded))
 				{
-					GUIContent gUIContent = EditorGUIUtility.TextContent("LightEditor.GIBakingDisabledWarning");
+					GUIContent gUIContent = EditorGUIUtility.TextContent("Enable Baked GI from Lighting window to use Baked or Mixed.");
 					EditorGUILayout.HelpBox(gUIContent.text, MessageType.Warning, false);
 				}
 				EditorGUILayout.EndFadeGroup();
@@ -254,12 +307,6 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			bool flag = this.m_ShowDirOptions.isAnimating && this.m_ShowAreaOptions.isAnimating && (this.m_ShowDirOptions.target || this.m_ShowAreaOptions.target);
 			float value = (!flag) ? (1f - Mathf.Max(this.m_ShowDirOptions.faded, this.m_ShowAreaOptions.faded)) : 0f;
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowAreaWarning.faded))
-			{
-				GUIContent gUIContent2 = EditorGUIUtility.TextContent("LightEditor.AreaLightsProOnly");
-				EditorGUILayout.HelpBox(gUIContent2.text, MessageType.Warning, false);
-			}
-			EditorGUILayout.EndFadeGroup();
 			if (EditorGUILayout.BeginFadeGroup(value))
 			{
 				EditorGUILayout.PropertyField(this.m_Range, new GUILayoutOption[0]);
@@ -272,8 +319,8 @@ namespace UnityEditor
 			EditorGUILayout.EndFadeGroup();
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowAreaOptions.faded))
 			{
-				EditorGUILayout.PropertyField(this.m_AreaSizeX, new GUIContent("Width"), new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_AreaSizeY, new GUIContent("Height"), new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_AreaSizeX, EditorGUIUtility.TextContent("Width"), new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_AreaSizeY, EditorGUIUtility.TextContent("Height"), new GUILayoutOption[0]);
 			}
 			EditorGUILayout.EndFadeGroup();
 			EditorGUILayout.PropertyField(this.m_Color, new GUILayoutOption[0]);
@@ -281,8 +328,8 @@ namespace UnityEditor
 			EditorGUILayout.Slider(this.m_BounceIntensity, 0f, 8f, LightEditor.s_Styles.LightBounceIntensity, new GUILayoutOption[0]);
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowIndirectWarning.faded))
 			{
-				GUIContent gUIContent3 = EditorGUIUtility.TextContent("LightEditor.NoIndirectShadowsWarnings");
-				EditorGUILayout.HelpBox(gUIContent3.text, MessageType.Warning, false);
+				GUIContent gUIContent2 = EditorGUIUtility.TextContent("Currently realtime indirect bounce light shadowing for spot and point lights is not supported.");
+				EditorGUILayout.HelpBox(gUIContent2.text, MessageType.Warning, false);
 			}
 			EditorGUILayout.EndFadeGroup();
 			this.ShadowsGUI();
@@ -303,11 +350,12 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			if (SceneView.currentDrawingSceneView != null && !SceneView.currentDrawingSceneView.m_SceneLighting)
 			{
-				GUIContent gUIContent4 = EditorGUIUtility.TextContent("LightEditor.LightingDisabledInSceneViewWarning");
-				EditorGUILayout.HelpBox(gUIContent4.text, MessageType.Warning, false);
+				GUIContent gUIContent3 = EditorGUIUtility.TextContent("One of your scene views has lighting disabled, please keep this in mind when editing lighting.");
+				EditorGUILayout.HelpBox(gUIContent3.text, MessageType.Warning, false);
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		private void ShadowsGUI()
 		{
 			float num = 1f - this.m_ShowAreaOptions.faded;
@@ -319,33 +367,36 @@ namespace UnityEditor
 			EditorGUILayout.EndFadeGroup();
 			EditorGUI.indentLevel++;
 			num *= this.m_ShowShadowOptions.faded;
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowShadowWarning.faded * num))
-			{
-				EditorGUILayout.HelpBox(LightEditor.s_Styles.NoShadowsWarning, MessageType.Warning, false);
-			}
-			EditorGUILayout.EndFadeGroup();
-			num *= 1f - this.m_ShowShadowWarning.faded;
 			if (EditorGUILayout.BeginFadeGroup(num * this.m_ShowRuntimeOptions.faded))
 			{
 				EditorGUILayout.Slider(this.m_ShadowsStrength, 0f, 1f, new GUILayoutOption[0]);
 				EditorGUILayout.PropertyField(this.m_ShadowsResolution, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_ShadowsBias, 0f, 2f, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_ShadowsNormalBias, 0f, 3f, new GUILayoutOption[0]);
+				float leftValue = Mathf.Min(0.01f * this.m_Range.floatValue, 0.1f);
+				EditorGUILayout.Slider(this.m_ShadowsNearPlane, leftValue, 10f, LightEditor.s_Styles.ShadowNearPlane, new GUILayoutOption[0]);
 			}
 			EditorGUILayout.EndFadeGroup();
 			if (EditorGUILayout.BeginFadeGroup(num * this.m_BakedShadowRadiusOptions.faded))
 			{
-				EditorGUILayout.PropertyField(this.m_BakedShadowRadius, LightEditor.s_Styles.BakedShadowRadius, new GUILayoutOption[0]);
+				using (new EditorGUI.DisabledScope(this.m_ShadowsType.intValue != 2))
+				{
+					EditorGUILayout.PropertyField(this.m_BakedShadowRadius, LightEditor.s_Styles.BakedShadowRadius, new GUILayoutOption[0]);
+				}
 			}
 			EditorGUILayout.EndFadeGroup();
 			if (EditorGUILayout.BeginFadeGroup(num * this.m_BakedShadowAngleOptions.faded))
 			{
-				EditorGUILayout.Slider(this.m_BakedShadowAngle, 0f, 90f, LightEditor.s_Styles.BakedShadowAngle, new GUILayoutOption[0]);
+				using (new EditorGUI.DisabledScope(this.m_ShadowsType.intValue != 2))
+				{
+					EditorGUILayout.Slider(this.m_BakedShadowAngle, 0f, 90f, LightEditor.s_Styles.BakedShadowAngle, new GUILayoutOption[0]);
+				}
 			}
 			EditorGUILayout.EndFadeGroup();
 			EditorGUI.indentLevel--;
 			EditorGUILayout.Space();
 		}
+
 		private void OnSceneGUI()
 		{
 			Light light = (Light)this.target;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal class AssetStoreSearchResults : AssetStoreResultBase<AssetStoreSearchResults>
@@ -8,11 +9,17 @@ namespace UnityEditor
 		internal struct Group
 		{
 			public List<AssetStoreAsset> assets;
+
 			public int totalFound;
+
 			public string label;
+
 			public string name;
+
 			public int offset;
+
 			public int limit;
+
 			public static AssetStoreSearchResults.Group Create()
 			{
 				return new AssetStoreSearchResults.Group
@@ -25,10 +32,13 @@ namespace UnityEditor
 				};
 			}
 		}
+
 		internal List<AssetStoreSearchResults.Group> groups = new List<AssetStoreSearchResults.Group>();
+
 		public AssetStoreSearchResults(AssetStoreResultBase<AssetStoreSearchResults>.Callback c) : base(c)
 		{
 		}
+
 		protected override void Parse(Dictionary<string, JSONValue> dict)
 		{
 			foreach (JSONValue current in dict["groups"].AsList(true))
@@ -49,6 +59,7 @@ namespace UnityEditor
 				num++;
 			}
 		}
+
 		private static string StripExtension(string path)
 		{
 			if (path == null)
@@ -58,6 +69,7 @@ namespace UnityEditor
 			int num = path.LastIndexOf(".");
 			return (num >= 0) ? path.Substring(0, num) : path;
 		}
+
 		private void ParseList(JSONValue matches, ref AssetStoreSearchResults.Group group)
 		{
 			List<AssetStoreAsset> assets = group.assets;

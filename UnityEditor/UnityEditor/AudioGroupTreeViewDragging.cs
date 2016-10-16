@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Audio;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AudioGroupTreeViewDragging : AssetsTreeViewDragging
 	{
 		private AudioMixerGroupTreeView m_owner;
+
 		public AudioGroupTreeViewDragging(TreeView treeView, AudioMixerGroupTreeView owner) : base(treeView)
 		{
 			this.m_owner = owner;
 		}
+
 		public override void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs)
 		{
 			if (!EditorApplication.isPlaying)
@@ -19,6 +22,7 @@ namespace UnityEditor
 				base.StartDrag(draggedItem, draggedItemIDs);
 			}
 		}
+
 		public override DragAndDropVisualMode DoDrag(TreeViewItem parentNode, TreeViewItem targetNode, bool perform, TreeViewDragging.DropPosition dragPos)
 		{
 			AudioMixerTreeViewNode audioMixerTreeViewNode = targetNode as AudioMixerTreeViewNode;
@@ -26,9 +30,8 @@ namespace UnityEditor
 			List<AudioMixerGroupController> list = new List<UnityEngine.Object>(DragAndDrop.objectReferences).OfType<AudioMixerGroupController>().ToList<AudioMixerGroupController>();
 			if (audioMixerTreeViewNode2 != null && list.Count > 0)
 			{
-				List<int> list2 = (
-					from i in list
-					select i.GetInstanceID()).ToList<int>();
+				List<int> list2 = (from i in list
+				select i.GetInstanceID()).ToList<int>();
 				bool flag = this.ValidDrag(parentNode, list2) && !AudioMixerController.WillModificationOfTopologyCauseFeedback(this.m_owner.Controller.GetAllAudioGroupsSlow(), list, audioMixerTreeViewNode2.group, null);
 				if (perform && flag)
 				{
@@ -41,6 +44,7 @@ namespace UnityEditor
 			}
 			return DragAndDropVisualMode.None;
 		}
+
 		private bool ValidDrag(TreeViewItem parent, List<int> draggedInstanceIDs)
 		{
 			for (TreeViewItem treeViewItem = parent; treeViewItem != null; treeViewItem = treeViewItem.parent)

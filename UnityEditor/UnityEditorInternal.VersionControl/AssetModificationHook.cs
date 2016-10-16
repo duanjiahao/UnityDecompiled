@@ -2,6 +2,7 @@ using System;
 using UnityEditor;
 using UnityEditor.VersionControl;
 using UnityEngine;
+
 namespace UnityEditorInternal.VersionControl
 {
 	public class AssetModificationHook
@@ -17,6 +18,7 @@ namespace UnityEditorInternal.VersionControl
 			}
 			return asset;
 		}
+
 		public static AssetMoveResult OnWillMoveAsset(string from, string to)
 		{
 			if (!Provider.enabled)
@@ -52,6 +54,7 @@ namespace UnityEditorInternal.VersionControl
 			task.Wait();
 			return (AssetMoveResult)((!task.success) ? 1 : task.resultCode);
 		}
+
 		public static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions option)
 		{
 			if (!Provider.enabled)
@@ -63,6 +66,7 @@ namespace UnityEditorInternal.VersionControl
 			task.Wait();
 			return (!task.success) ? AssetDeleteResult.FailedDelete : AssetDeleteResult.DidNotDelete;
 		}
+
 		public static bool IsOpenForEdit(string assetPath, out string message)
 		{
 			message = string.Empty;

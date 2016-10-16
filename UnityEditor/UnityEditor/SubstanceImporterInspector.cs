@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(SubstanceArchive))]
@@ -11,16 +12,26 @@ namespace UnityEditor
 		private class SubstanceStyles
 		{
 			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add substance from prototype.");
+
 			public GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove selected substance.");
+
 			public GUIContent iconDuplicate = EditorGUIUtility.IconContent("TreeEditor.Duplicate", "Duplicate selected substance.");
+
 			public GUIStyle resultsGridLabel = "ObjectPickerResultsGridLabel";
+
 			public GUIStyle resultsGrid = "ObjectPickerResultsGrid";
+
 			public GUIStyle gridBackground = "TE NodeBackground";
+
 			public GUIStyle background = "ObjectPickerBackground";
+
 			public GUIStyle toolbar = "TE Toolbar";
+
 			public GUIStyle toolbarButton = "TE toolbarbutton";
+
 			public GUIStyle toolbarDropDown = "TE toolbarDropDown";
 		}
+
 		public class SubstanceNameComparer : IComparer
 		{
 			public int Compare(object o1, object o2)
@@ -30,27 +41,48 @@ namespace UnityEditor
 				return EditorUtility.NaturalCompare(@object.name, object2.name);
 			}
 		}
+
 		private const float kPreviewWidth = 60f;
+
 		private const float kPreviewHeight = 76f;
+
 		private const int kMaxRows = 2;
+
 		private static SubstanceArchive s_LastSelectedPackage = null;
+
 		private static string s_CachedSelectedMaterialInstanceName = null;
+
 		private string m_SelectedMaterialInstanceName;
+
 		private Vector2 m_ListScroll = Vector2.zero;
+
 		private EditorCache m_EditorCache;
+
 		[NonSerialized]
 		private string[] m_PrototypeNames;
+
 		private Editor m_MaterialInspector;
+
 		protected bool m_IsVisible;
+
 		public Vector2 previewDir = new Vector2(0f, -20f);
+
 		public int selectedMesh;
+
 		public int lightMode = 1;
+
 		private PreviewRenderUtility m_PreviewUtility;
+
 		private static Mesh[] s_Meshes = new Mesh[4];
+
 		private static GUIContent[] s_MeshIcons = new GUIContent[4];
+
 		private static GUIContent[] s_LightIcons = new GUIContent[2];
+
 		private SubstanceImporterInspector.SubstanceStyles m_SubstanceStyles;
+
 		private static int previewNoDragDropHash = "PreviewWithoutDragAndDrop".GetHashCode();
+
 		public void OnEnable()
 		{
 			if (this.target == SubstanceImporterInspector.s_LastSelectedPackage)
@@ -62,6 +94,7 @@ namespace UnityEditor
 				SubstanceImporterInspector.s_LastSelectedPackage = (this.target as SubstanceArchive);
 			}
 		}
+
 		public void OnDisable()
 		{
 			if (this.m_EditorCache != null)
@@ -81,6 +114,7 @@ namespace UnityEditor
 				this.m_PreviewUtility = null;
 			}
 		}
+
 		private ProceduralMaterial GetSelectedMaterial()
 		{
 			SubstanceImporter importer = this.GetImporter();
@@ -100,6 +134,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		private void SelectNextMaterial()
 		{
 			SubstanceImporter importer = this.GetImporter();
@@ -127,6 +162,7 @@ namespace UnityEditor
 			}
 			this.m_SelectedMaterialInstanceName = selectedMaterialInstanceName;
 		}
+
 		private Editor GetSelectedMaterialInspector()
 		{
 			ProceduralMaterial selectedMaterial = this.GetSelectedMaterial();
@@ -154,6 +190,7 @@ namespace UnityEditor
 			}
 			return this.m_MaterialInspector;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (this.m_SubstanceStyles == null)
@@ -172,10 +209,12 @@ namespace UnityEditor
 				selectedMaterialInspector.OnInspectorGUI();
 			}
 		}
+
 		private SubstanceImporter GetImporter()
 		{
 			return AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(this.target)) as SubstanceImporter;
 		}
+
 		private void MaterialListing()
 		{
 			ProceduralMaterial[] sortedMaterials = this.GetSortedMaterials();
@@ -214,9 +253,9 @@ namespace UnityEditor
 				ProceduralMaterial proceduralMaterial2 = sortedMaterials[j];
 				if (!(proceduralMaterial2 == null))
 				{
-					float left = (float)(j % num3) * 60f;
-					float top = (float)(j / num3) * 76f;
-					Rect rect2 = new Rect(left, top, 60f, 76f);
+					float x = (float)(j % num3) * 60f;
+					float y = (float)(j / num3) * 76f;
+					Rect rect2 = new Rect(x, y, 60f, 76f);
 					bool flag = proceduralMaterial2.name == this.m_SelectedMaterialInstanceName;
 					Event current = Event.current;
 					int controlID = GUIUtility.GetControlID(SubstanceImporterInspector.previewNoDragDropHash, FocusType.Native, rect2);
@@ -231,26 +270,20 @@ namespace UnityEditor
 							this.m_SubstanceStyles.resultsGridLabel.Draw(position2, EditorGUIUtility.TempContent(proceduralMaterial2.name), false, false, flag, flag);
 						}
 					}
-					else
+					else if (current.button == 0)
 					{
-						if (current.button == 0)
+						if (rect2.Contains(current.mousePosition))
 						{
-							if (rect2.Contains(current.mousePosition))
+							if (current.clickCount == 1)
 							{
-								if (current.clickCount == 1)
-								{
-									this.m_SelectedMaterialInstanceName = proceduralMaterial2.name;
-									current.Use();
-								}
-								else
-								{
-									if (current.clickCount == 2)
-									{
-										AssetDatabase.OpenAsset(proceduralMaterial2);
-										GUIUtility.ExitGUI();
-										current.Use();
-									}
-								}
+								this.m_SelectedMaterialInstanceName = proceduralMaterial2.name;
+								current.Use();
+							}
+							else if (current.clickCount == 2)
+							{
+								AssetDatabase.OpenAsset(proceduralMaterial2);
+								GUIUtility.ExitGUI();
+								current.Use();
 							}
 						}
 					}
@@ -261,10 +294,12 @@ namespace UnityEditor
 			}
 			GUI.EndScrollView();
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.GetSelectedMaterialInspector() != null;
 		}
+
 		public override void OnPreviewGUI(Rect position, GUIStyle style)
 		{
 			Editor selectedMaterialInspector = this.GetSelectedMaterialInspector();
@@ -273,6 +308,7 @@ namespace UnityEditor
 				selectedMaterialInspector.OnPreviewGUI(position, style);
 			}
 		}
+
 		public override string GetInfoString()
 		{
 			Editor selectedMaterialInspector = this.GetSelectedMaterialInspector();
@@ -282,6 +318,7 @@ namespace UnityEditor
 			}
 			return string.Empty;
 		}
+
 		public override void OnPreviewSettings()
 		{
 			Editor selectedMaterialInspector = this.GetSelectedMaterialInspector();
@@ -290,11 +327,13 @@ namespace UnityEditor
 				selectedMaterialInspector.OnPreviewSettings();
 			}
 		}
+
 		public void InstanciatePrototype(object prototypeName)
 		{
 			this.m_SelectedMaterialInstanceName = this.GetImporter().InstantiateMaterial(prototypeName as string);
 			this.ApplyAndRefresh(false);
 		}
+
 		private ProceduralMaterial[] GetSortedMaterials()
 		{
 			SubstanceImporter importer = this.GetImporter();
@@ -302,6 +341,7 @@ namespace UnityEditor
 			Array.Sort(materials, new SubstanceImporterInspector.SubstanceNameComparer());
 			return materials;
 		}
+
 		private void MaterialManagement()
 		{
 			SubstanceImporter importer = this.GetImporter();
@@ -312,48 +352,48 @@ namespace UnityEditor
 			ProceduralMaterial selectedMaterial = this.GetSelectedMaterial();
 			GUILayout.BeginHorizontal(this.m_SubstanceStyles.toolbar, new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
-			EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-			if (this.m_PrototypeNames.Length > 1)
+			using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
 			{
-				Rect rect = GUILayoutUtility.GetRect(this.m_SubstanceStyles.iconToolbarPlus, this.m_SubstanceStyles.toolbarDropDown);
-				if (EditorGUI.ButtonMouseDown(rect, this.m_SubstanceStyles.iconToolbarPlus, FocusType.Passive, this.m_SubstanceStyles.toolbarDropDown))
+				if (this.m_PrototypeNames.Length > 1)
 				{
-					GenericMenu genericMenu = new GenericMenu();
-					for (int i = 0; i < this.m_PrototypeNames.Length; i++)
+					Rect rect = GUILayoutUtility.GetRect(this.m_SubstanceStyles.iconToolbarPlus, this.m_SubstanceStyles.toolbarDropDown);
+					if (EditorGUI.ButtonMouseDown(rect, this.m_SubstanceStyles.iconToolbarPlus, FocusType.Passive, this.m_SubstanceStyles.toolbarDropDown))
 					{
-						genericMenu.AddItem(new GUIContent(this.m_PrototypeNames[i]), false, new GenericMenu.MenuFunction2(this.InstanciatePrototype), this.m_PrototypeNames[i]);
+						GenericMenu genericMenu = new GenericMenu();
+						for (int i = 0; i < this.m_PrototypeNames.Length; i++)
+						{
+							genericMenu.AddItem(new GUIContent(this.m_PrototypeNames[i]), false, new GenericMenu.MenuFunction2(this.InstanciatePrototype), this.m_PrototypeNames[i]);
+						}
+						genericMenu.DropDown(rect);
 					}
-					genericMenu.DropDown(rect);
 				}
-			}
-			else
-			{
-				if (this.m_PrototypeNames.Length == 1 && GUILayout.Button(this.m_SubstanceStyles.iconToolbarPlus, this.m_SubstanceStyles.toolbarButton, new GUILayoutOption[0]))
+				else if (this.m_PrototypeNames.Length == 1 && GUILayout.Button(this.m_SubstanceStyles.iconToolbarPlus, this.m_SubstanceStyles.toolbarButton, new GUILayoutOption[0]))
 				{
 					this.m_SelectedMaterialInstanceName = this.GetImporter().InstantiateMaterial(this.m_PrototypeNames[0]);
 					this.ApplyAndRefresh(true);
 				}
-			}
-			EditorGUI.BeginDisabledGroup(selectedMaterial == null);
-			if (GUILayout.Button(this.m_SubstanceStyles.iconToolbarMinus, this.m_SubstanceStyles.toolbarButton, new GUILayoutOption[0]) && this.GetSortedMaterials().Length > 1)
-			{
-				this.SelectNextMaterial();
-				importer.DestroyMaterial(selectedMaterial);
-				this.ApplyAndRefresh(true);
-			}
-			if (GUILayout.Button(this.m_SubstanceStyles.iconDuplicate, this.m_SubstanceStyles.toolbarButton, new GUILayoutOption[0]))
-			{
-				string text = importer.CloneMaterial(selectedMaterial);
-				if (text != string.Empty)
+				using (new EditorGUI.DisabledScope(selectedMaterial == null))
 				{
-					this.m_SelectedMaterialInstanceName = text;
-					this.ApplyAndRefresh(true);
+					if (GUILayout.Button(this.m_SubstanceStyles.iconToolbarMinus, this.m_SubstanceStyles.toolbarButton, new GUILayoutOption[0]) && this.GetSortedMaterials().Length > 1)
+					{
+						this.SelectNextMaterial();
+						importer.DestroyMaterial(selectedMaterial);
+						this.ApplyAndRefresh(true);
+					}
+					if (GUILayout.Button(this.m_SubstanceStyles.iconDuplicate, this.m_SubstanceStyles.toolbarButton, new GUILayoutOption[0]))
+					{
+						string text = importer.CloneMaterial(selectedMaterial);
+						if (text != string.Empty)
+						{
+							this.m_SelectedMaterialInstanceName = text;
+							this.ApplyAndRefresh(true);
+						}
+					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.EndDisabledGroup();
 			EditorGUILayout.EndHorizontal();
 		}
+
 		private void ApplyAndRefresh(bool exitGUI)
 		{
 			string assetPath = AssetDatabase.GetAssetPath(this.target);
@@ -364,6 +404,7 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		private void Init()
 		{
 			if (this.m_PreviewUtility == null)
@@ -403,6 +444,7 @@ namespace UnityEditor
 				SubstanceImporterInspector.s_LightIcons[1] = EditorGUIUtility.IconContent("PreMatLight1");
 			}
 		}
+
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -414,6 +456,7 @@ namespace UnityEditor
 			this.DoRenderPreview(subAssets);
 			return this.m_PreviewUtility.EndStaticPreview();
 		}
+
 		protected void DoRenderPreview(UnityEngine.Object[] subAssets)
 		{
 			if (this.m_PreviewUtility.m_RenderTexture.width <= 0 || this.m_PreviewUtility.m_RenderTexture.height <= 0)

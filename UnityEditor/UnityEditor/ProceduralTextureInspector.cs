@@ -1,12 +1,14 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(ProceduralTexture))]
 	internal class ProceduralTextureInspector : TextureInspector
 	{
 		private bool m_MightHaveModified;
+
 		protected override void OnDisable()
 		{
 			base.OnDisable();
@@ -50,6 +52,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
@@ -74,6 +77,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			base.OnPreviewGUI(r, background);

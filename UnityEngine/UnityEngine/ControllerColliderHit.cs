@@ -1,17 +1,27 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
-	public sealed class ControllerColliderHit
+	public class ControllerColliderHit
 	{
 		internal CharacterController m_Controller;
+
 		internal Collider m_Collider;
+
 		internal Vector3 m_Point;
+
 		internal Vector3 m_Normal;
+
 		internal Vector3 m_MoveDirection;
+
 		internal float m_MoveLength;
+
 		internal int m_Push;
+
 		public CharacterController controller
 		{
 			get
@@ -19,6 +29,7 @@ namespace UnityEngine
 				return this.m_Controller;
 			}
 		}
+
 		public Collider collider
 		{
 			get
@@ -26,6 +37,7 @@ namespace UnityEngine
 				return this.m_Collider;
 			}
 		}
+
 		public Rigidbody rigidbody
 		{
 			get
@@ -33,6 +45,7 @@ namespace UnityEngine
 				return this.m_Collider.attachedRigidbody;
 			}
 		}
+
 		public GameObject gameObject
 		{
 			get
@@ -40,6 +53,7 @@ namespace UnityEngine
 				return this.m_Collider.gameObject;
 			}
 		}
+
 		public Transform transform
 		{
 			get
@@ -47,6 +61,7 @@ namespace UnityEngine
 				return this.m_Collider.transform;
 			}
 		}
+
 		public Vector3 point
 		{
 			get
@@ -54,6 +69,7 @@ namespace UnityEngine
 				return this.m_Point;
 			}
 		}
+
 		public Vector3 normal
 		{
 			get
@@ -61,6 +77,7 @@ namespace UnityEngine
 				return this.m_Normal;
 			}
 		}
+
 		public Vector3 moveDirection
 		{
 			get
@@ -68,6 +85,7 @@ namespace UnityEngine
 				return this.m_MoveDirection;
 			}
 		}
+
 		public float moveLength
 		{
 			get
@@ -75,6 +93,7 @@ namespace UnityEngine
 				return this.m_MoveLength;
 			}
 		}
+
 		private bool push
 		{
 			get

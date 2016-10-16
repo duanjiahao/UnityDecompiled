@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SplitView : View, ICleanuppable, IDropArea
@@ -8,19 +9,28 @@ namespace UnityEditor
 		private class ExtraDropInfo
 		{
 			public Rect dropRect;
+
 			public int idx;
+
 			public ExtraDropInfo(Rect _dropRect, int _idx)
 			{
 				this.dropRect = _dropRect;
 				this.idx = _idx;
 			}
 		}
+
 		internal const float kGrabDist = 5f;
+
 		public bool vertical;
+
 		public int controlID;
+
 		private SplitterState splitState;
+
 		private static float[] s_StartDragPos;
+
 		private static float[] s_DragPos;
+
 		private void SetupSplitter()
 		{
 			int[] array = new int[base.children.Length];
@@ -34,6 +44,7 @@ namespace UnityEditor
 			this.splitState = new SplitterState(array, array2, null);
 			this.splitState.splitSize = 10;
 		}
+
 		private void SetupRectsFromSplitter()
 		{
 			if (base.children.Length == 0)
@@ -67,6 +78,7 @@ namespace UnityEditor
 				num += num5;
 			}
 		}
+
 		private static void RecalcMinMaxAndReflowAll(SplitView start)
 		{
 			SplitView splitView = start;
@@ -80,6 +92,7 @@ namespace UnityEditor
 			SplitView.RecalcMinMaxRecurse(splitView2);
 			SplitView.ReflowRecurse(splitView2);
 		}
+
 		private static void RecalcMinMaxRecurse(SplitView node)
 		{
 			View[] children = node.children;
@@ -94,6 +107,7 @@ namespace UnityEditor
 			}
 			node.ChildrenMinMaxChanged();
 		}
+
 		private static void ReflowRecurse(SplitView node)
 		{
 			node.Reflow();
@@ -108,6 +122,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal override void Reflow()
 		{
 			this.SetupSplitter();
@@ -118,6 +133,7 @@ namespace UnityEditor
 			this.splitState.RelativeToRealSizes((!this.vertical) ? ((int)base.position.width) : ((int)base.position.height));
 			this.SetupRectsFromSplitter();
 		}
+
 		private void PlaceView(int i, float pos, float size)
 		{
 			float num = Mathf.Round(pos);
@@ -130,12 +146,14 @@ namespace UnityEditor
 				base.children[i].position = new Rect(num, 0f, Mathf.Round(pos + size) - num, base.position.height);
 			}
 		}
+
 		public override void AddChild(View child, int idx)
 		{
 			base.AddChild(child, idx);
 			this.ChildrenMinMaxChanged();
 			this.splitState = null;
 		}
+
 		public void RemoveChildNice(View child)
 		{
 			if (base.children.Length != 1)
@@ -146,16 +164,13 @@ namespace UnityEditor
 				{
 					num2 = 0f;
 				}
+				else if (num == base.children.Length - 1)
+				{
+					num2 = 1f;
+				}
 				else
 				{
-					if (num == base.children.Length - 1)
-					{
-						num2 = 1f;
-					}
-					else
-					{
-						num2 = 0.5f;
-					}
+					num2 = 0.5f;
 				}
 				num2 = ((!this.vertical) ? Mathf.Lerp(child.position.xMin, child.position.xMax, num2) : Mathf.Lerp(child.position.yMin, child.position.yMax, num2));
 				if (num > 0)
@@ -196,11 +211,13 @@ namespace UnityEditor
 			}
 			this.RemoveChild(child);
 		}
+
 		public override void RemoveChild(View child)
 		{
 			this.splitState = null;
 			base.RemoveChild(child);
 		}
+
 		private DropInfo DoDropZone(int idx, Vector2 mousePos, Rect sourceRect, Rect previewRect)
 		{
 			if (!sourceRect.Contains(mousePos))
@@ -214,6 +231,7 @@ namespace UnityEditor
 				rect = previewRect
 			};
 		}
+
 		private DropInfo CheckRootWindowDropZones(Vector2 mouseScreenPosition)
 		{
 			DropInfo dropInfo = null;
@@ -241,6 +259,7 @@ namespace UnityEditor
 			}
 			return dropInfo;
 		}
+
 		public DropInfo DragOver(EditorWindow w, Vector2 mouseScreenPosition)
 		{
 			DropInfo dropInfo = this.CheckRootWindowDropZones(mouseScreenPosition);
@@ -287,20 +306,17 @@ namespace UnityEditor
 								num = 2;
 							}
 						}
-						else
+						else if (num == 6)
 						{
-							if (num == 6)
+							Vector2 vector3 = new Vector2(screenPosition.xMax, screenPosition.yMax) - mouseScreenPosition;
+							Vector2 vector4 = new Vector2(-num2, -num3);
+							if (vector3.x * vector4.y - vector3.y * vector4.x < 0f)
 							{
-								Vector2 vector3 = new Vector2(screenPosition.xMax, screenPosition.yMax) - mouseScreenPosition;
-								Vector2 vector4 = new Vector2(-num2, -num3);
-								if (vector3.x * vector4.y - vector3.y * vector4.x < 0f)
-								{
-									num = 2;
-								}
-								else
-								{
-									num = 4;
-								}
+								num = 2;
+							}
+							else
+							{
+								num = 4;
 							}
 						}
 						float num4 = Mathf.Round(Mathf.Max(screenPosition.width / 3f, 100f));
@@ -368,6 +384,7 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		protected override void ChildrenMinMaxChanged()
 		{
 			Vector2 zero = Vector2.zero;
@@ -399,10 +416,12 @@ namespace UnityEditor
 			this.splitState = null;
 			base.SetMinMaxSizes(zero, zero2);
 		}
+
 		public override string ToString()
 		{
 			return (!this.vertical) ? "SplitView (horiz)" : "SplitView (vert)";
 		}
+
 		public bool PerformDrop(EditorWindow w, DropInfo di, Vector2 screenPos)
 		{
 			int num = (int)di.userData;
@@ -446,49 +465,46 @@ namespace UnityEditor
 					splitView.AddChild(dockArea, (!flag) ? 1 : 0);
 				}
 			}
+			else if (num < 1000)
+			{
+				Rect rect3 = rect;
+				rect3.x -= base.screenPosition.x;
+				rect3.y -= base.screenPosition.y;
+				this.MakeRoomForRect(rect3);
+				this.AddChild(dockArea, num);
+				dockArea.position = rect3;
+			}
 			else
 			{
-				if (num < 1000)
+				int num2 = num % 1000;
+				if (base.children.Length != 1)
 				{
-					Rect rect3 = rect;
-					rect3.x -= base.screenPosition.x;
-					rect3.y -= base.screenPosition.y;
-					this.MakeRoomForRect(rect3);
-					this.AddChild(dockArea, num);
-					dockArea.position = rect3;
+					SplitView splitView2 = ScriptableObject.CreateInstance<SplitView>();
+					splitView2.vertical = !this.vertical;
+					Rect position2 = base.children[num2].position;
+					splitView2.AddChild(base.children[num2]);
+					this.AddChild(splitView2, num2);
+					splitView2.position = position2;
+					float num3 = 0f;
+					position2.y = num3;
+					position2.x = num3;
+					splitView2.children[0].position = position2;
+					Rect rect4 = rect;
+					rect4.x -= splitView2.screenPosition.x;
+					rect4.y -= splitView2.screenPosition.y;
+					splitView2.MakeRoomForRect(rect4);
+					splitView2.AddChild(dockArea, (num >= 2000) ? 1 : 0);
+					dockArea.position = rect4;
 				}
 				else
 				{
-					int num2 = num % 1000;
-					if (base.children.Length != 1)
-					{
-						SplitView splitView2 = ScriptableObject.CreateInstance<SplitView>();
-						splitView2.vertical = !this.vertical;
-						Rect position2 = base.children[num2].position;
-						splitView2.AddChild(base.children[num2]);
-						this.AddChild(splitView2, num2);
-						splitView2.position = position2;
-						float num3 = 0f;
-						position2.y = num3;
-						position2.x = num3;
-						splitView2.children[0].position = position2;
-						Rect rect4 = rect;
-						rect4.x -= splitView2.screenPosition.x;
-						rect4.y -= splitView2.screenPosition.y;
-						splitView2.MakeRoomForRect(rect4);
-						splitView2.AddChild(dockArea, (num >= 2000) ? 1 : 0);
-						dockArea.position = rect4;
-					}
-					else
-					{
-						this.vertical = !this.vertical;
-						Rect rect5 = rect;
-						rect5.x -= base.screenPosition.x;
-						rect5.y -= base.screenPosition.y;
-						this.MakeRoomForRect(rect5);
-						this.AddChild(dockArea, (num != 1000) ? 1 : 0);
-						dockArea.position = rect5;
-					}
+					this.vertical = !this.vertical;
+					Rect rect5 = rect;
+					rect5.x -= base.screenPosition.x;
+					rect5.y -= base.screenPosition.y;
+					this.MakeRoomForRect(rect5);
+					this.AddChild(dockArea, (num != 1000) ? 1 : 0);
+					dockArea.position = rect5;
 				}
 			}
 			DockArea.s_OriginalDragSource.RemoveTab(w);
@@ -499,6 +515,7 @@ namespace UnityEditor
 			dockArea.MakeVistaDWMHappyDance();
 			return true;
 		}
+
 		private static string PosVals(float[] posVals)
 		{
 			string text = "[";
@@ -516,6 +533,7 @@ namespace UnityEditor
 			}
 			return text + "]";
 		}
+
 		private void MakeRoomForRect(Rect r)
 		{
 			Rect[] array = new Rect[base.children.Length];
@@ -529,6 +547,7 @@ namespace UnityEditor
 				base.children[j].position = array[j];
 			}
 		}
+
 		private void CalcRoomForRect(Rect[] sources, Rect r)
 		{
 			float num = (!this.vertical) ? r.x : r.y;
@@ -637,6 +656,7 @@ namespace UnityEditor
 				num2 += num9;
 			}
 		}
+
 		public void Cleanup()
 		{
 			SplitView splitView = base.parent as SplitView;
@@ -712,6 +732,7 @@ namespace UnityEditor
 			this.splitState = null;
 			this.Reflow();
 		}
+
 		public void SplitGUI(Event evt)
 		{
 			if (this.splitState == null)
@@ -795,6 +816,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		protected override void SetPosition(Rect newPos)
 		{
 			base.SetPosition(newPos);

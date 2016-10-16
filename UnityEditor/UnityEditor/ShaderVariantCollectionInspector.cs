@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(ShaderVariantCollection))]
@@ -8,56 +9,50 @@ namespace UnityEditor
 	{
 		private class Styles
 		{
-			public static GUIContent iconAdd = EditorGUIUtility.IconContent("Toolbar Plus", "Add variant");
-			public static GUIContent iconRemove = EditorGUIUtility.IconContent("Toolbar Minus", "Remove entry");
-			public static GUIStyle invisibleButton = "InvisibleButton";
+			public static readonly GUIContent iconAdd = EditorGUIUtility.IconContent("Toolbar Plus", "Add variant");
+
+			public static readonly GUIContent iconRemove = EditorGUIUtility.IconContent("Toolbar Minus", "Remove entry");
+
+			public static readonly GUIStyle invisibleButton = "InvisibleButton";
 		}
-		internal class AddVariantMenuData
-		{
-			public Shader shader;
-			public ShaderVariantCollection collection;
-			public int[] types;
-			public string[] keywords;
-		}
+
 		private SerializedProperty m_Shaders;
+
 		public virtual void OnEnable()
 		{
 			this.m_Shaders = base.serializedObject.FindProperty("m_Shaders");
 		}
+
 		private static Rect GetAddRemoveButtonRect(Rect r)
 		{
 			Vector2 vector = ShaderVariantCollectionInspector.Styles.invisibleButton.CalcSize(ShaderVariantCollectionInspector.Styles.iconRemove);
 			return new Rect(r.xMax - vector.x, r.y + (float)((int)(r.height / 2f - vector.y / 2f)), vector.x, vector.y);
 		}
-		private void AddVariantMenuSelected(object userData, string[] options, int selected)
+
+		private void DisplayAddVariantsWindow(Shader shader, ShaderVariantCollection collection)
 		{
-			ShaderVariantCollectionInspector.AddVariantMenuData addVariantMenuData = (ShaderVariantCollectionInspector.AddVariantMenuData)userData;
-			string[] keywords = addVariantMenuData.keywords[selected].Split(new char[]
-			{
-				' '
-			});
-			ShaderVariantCollection.ShaderVariant variant = new ShaderVariantCollection.ShaderVariant(addVariantMenuData.shader, (PassType)addVariantMenuData.types[selected], keywords);
-			Undo.RecordObject(addVariantMenuData.collection, "Add variant");
-			addVariantMenuData.collection.Add(variant);
-		}
-		private void DisplayAddVariantsMenu(Rect rect, Shader shader, ShaderVariantCollection collection)
-		{
-			ShaderVariantCollectionInspector.AddVariantMenuData addVariantMenuData = new ShaderVariantCollectionInspector.AddVariantMenuData();
-			addVariantMenuData.shader = shader;
-			addVariantMenuData.collection = collection;
-			ShaderUtil.GetShaderVariantEntries(shader, collection, out addVariantMenuData.types, out addVariantMenuData.keywords);
-			if (addVariantMenuData.keywords.Length == 0)
+			AddShaderVariantWindow.PopupData popupData = new AddShaderVariantWindow.PopupData();
+			popupData.shader = shader;
+			popupData.collection = collection;
+			string[] array;
+			ShaderUtil.GetShaderVariantEntries(shader, collection, out popupData.types, out array);
+			if (array.Length == 0)
 			{
 				EditorApplication.Beep();
 				return;
 			}
-			string[] array = new string[addVariantMenuData.keywords.Length];
-			for (int i = 0; i < addVariantMenuData.keywords.Length; i++)
+			popupData.keywords = new string[array.Length][];
+			for (int i = 0; i < array.Length; i++)
 			{
-				array[i] = (PassType)addVariantMenuData.types[i] + "/" + ((!string.IsNullOrEmpty(addVariantMenuData.keywords[i])) ? addVariantMenuData.keywords[i] : "<no keywords>");
+				popupData.keywords[i] = array[i].Split(new char[]
+				{
+					' '
+				});
 			}
-			EditorUtility.DisplayCustomMenu(rect, array, null, new EditorUtility.SelectMenuItemFunction(this.AddVariantMenuSelected), addVariantMenuData);
+			AddShaderVariantWindow.ShowAddVariantWindow(popupData);
+			GUIUtility.ExitGUI();
 		}
+
 		private void DrawShaderEntry(int shaderIndex)
 		{
 			SerializedProperty arrayElementAtIndex = this.m_Shaders.GetArrayElementAtIndex(shaderIndex);
@@ -97,9 +92,10 @@ namespace UnityEditor
 			Rect addRemoveButtonRect3 = ShaderVariantCollectionInspector.GetAddRemoveButtonRect(rect3);
 			if (GUI.Button(addRemoveButtonRect3, ShaderVariantCollectionInspector.Styles.iconAdd, ShaderVariantCollectionInspector.Styles.invisibleButton))
 			{
-				this.DisplayAddVariantsMenu(addRemoveButtonRect3, shader, this.target as ShaderVariantCollection);
+				this.DisplayAddVariantsWindow(shader, this.target as ShaderVariantCollection);
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();

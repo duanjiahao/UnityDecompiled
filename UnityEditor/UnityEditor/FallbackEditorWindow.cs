@@ -1,17 +1,19 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class FallbackEditorWindow : EditorWindow
 	{
 		private FallbackEditorWindow()
 		{
-			base.title = "Failed to load";
 		}
+
 		private void OnEnable()
 		{
-			base.title = "Failed to load";
+			base.titleContent = new GUIContent("Failed to load");
 		}
+
 		private void OnGUI()
 		{
 			GUILayout.BeginVertical(new GUILayoutOption[0]);

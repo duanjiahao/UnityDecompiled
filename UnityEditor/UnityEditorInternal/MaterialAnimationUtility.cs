@@ -1,32 +1,37 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal static class MaterialAnimationUtility
 	{
 		private const string kMaterialPrefix = "material.";
+
 		private static UndoPropertyModification[] CreateUndoPropertyModifications(int count, UnityEngine.Object target)
 		{
 			UndoPropertyModification[] array = new UndoPropertyModification[count];
 			for (int i = 0; i < array.Length; i++)
 			{
-				array[i].propertyModification = new PropertyModification();
-				array[i].propertyModification.target = target;
+				array[i].previousValue = new PropertyModification();
+				array[i].previousValue.target = target;
 			}
 			return array;
 		}
+
 		private static void SetupPropertyModification(string name, float value, UndoPropertyModification prop)
 		{
-			prop.propertyModification.propertyPath = "material." + name;
-			prop.propertyModification.value = value.ToString();
+			prop.previousValue.propertyPath = "material." + name;
+			prop.previousValue.value = value.ToString();
 		}
+
 		private static void ApplyMaterialModificationToAnimationRecording(MaterialProperty materialProp, UnityEngine.Object target, float value)
 		{
 			UndoPropertyModification[] array = MaterialAnimationUtility.CreateUndoPropertyModifications(1, target);
 			MaterialAnimationUtility.SetupPropertyModification(materialProp.name, value, array[0]);
 			Undo.postprocessModifications(array);
 		}
+
 		private static void ApplyMaterialModificationToAnimationRecording(MaterialProperty materialProp, UnityEngine.Object target, Color color)
 		{
 			UndoPropertyModification[] array = MaterialAnimationUtility.CreateUndoPropertyModifications(4, target);
@@ -36,6 +41,7 @@ namespace UnityEditorInternal
 			MaterialAnimationUtility.SetupPropertyModification(materialProp.name + ".a", color.a, array[3]);
 			Undo.postprocessModifications(array);
 		}
+
 		private static void ApplyMaterialModificationToAnimationRecording(string name, UnityEngine.Object target, Vector4 vec)
 		{
 			UndoPropertyModification[] array = MaterialAnimationUtility.CreateUndoPropertyModifications(4, target);
@@ -45,6 +51,7 @@ namespace UnityEditorInternal
 			MaterialAnimationUtility.SetupPropertyModification(name + ".w", vec.w, array[3]);
 			Undo.postprocessModifications(array);
 		}
+
 		public static bool IsAnimated(MaterialProperty materialProp, Renderer target)
 		{
 			if (materialProp.type == MaterialProperty.PropType.Texture)
@@ -53,6 +60,7 @@ namespace UnityEditorInternal
 			}
 			return AnimationMode.IsPropertyAnimated(target, "material." + materialProp.name);
 		}
+
 		public static void SetupMaterialPropertyBlock(MaterialProperty materialProp, int changedMask, Renderer target)
 		{
 			MaterialPropertyBlock materialPropertyBlock = new MaterialPropertyBlock();
@@ -60,6 +68,7 @@ namespace UnityEditorInternal
 			materialProp.WriteToMaterialPropertyBlock(materialPropertyBlock, changedMask);
 			target.SetPropertyBlock(materialPropertyBlock);
 		}
+
 		public static bool ApplyMaterialModificationToAnimationRecording(MaterialProperty materialProp, int changedMask, Renderer target, object oldValue)
 		{
 			switch (materialProp.type)

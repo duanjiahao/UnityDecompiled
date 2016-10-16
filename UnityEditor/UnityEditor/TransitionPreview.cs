@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TransitionPreview
@@ -9,23 +10,32 @@ namespace UnityEditor
 		private class ParameterInfo
 		{
 			public string m_Name;
+
 			public float m_Value;
 		}
+
 		private class TransitionInfo
 		{
 			private AnimatorState m_SrcState;
+
 			private AnimatorState m_DstState;
+
 			private float m_TransitionDuration;
+
 			private float m_TransitionOffset;
+
 			private float m_ExitTime;
+
 			public TransitionInfo()
 			{
 				this.Init();
 			}
+
 			public bool IsEqual(TransitionPreview.TransitionInfo info)
 			{
 				return this.m_SrcState == info.m_SrcState && this.m_DstState == info.m_DstState && Mathf.Approximately(this.m_TransitionDuration, info.m_TransitionDuration) && Mathf.Approximately(this.m_TransitionOffset, info.m_TransitionOffset) && Mathf.Approximately(this.m_ExitTime, info.m_ExitTime);
 			}
+
 			private void Init()
 			{
 				this.m_SrcState = null;
@@ -34,6 +44,7 @@ namespace UnityEditor
 				this.m_TransitionOffset = 0f;
 				this.m_ExitTime = 0.5f;
 			}
+
 			public void Set(AnimatorStateTransition transition, AnimatorState srcState, AnimatorState dstState)
 			{
 				if (transition != null)
@@ -50,39 +61,73 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private AvatarPreview m_AvatarPreview;
+
 		private Timeline m_Timeline;
+
 		private AnimatorController m_Controller;
+
 		private AnimatorStateMachine m_StateMachine;
+
 		private List<Vector2> m_ParameterMinMax = new List<Vector2>();
+
 		private List<TransitionPreview.ParameterInfo> m_ParameterInfoList;
+
 		private AnimatorStateTransition m_RefTransition;
+
 		private TransitionPreview.TransitionInfo m_RefTransitionInfo = new TransitionPreview.TransitionInfo();
+
 		private AnimatorStateTransition m_Transition;
+
 		private AnimatorState m_SrcState;
+
 		private AnimatorState m_DstState;
+
 		private AnimatorState m_RefSrcState;
+
 		private AnimatorState m_RefDstState;
+
 		private Motion m_SrcMotion;
+
 		private Motion m_DstMotion;
+
 		private bool m_ShowBlendValue;
+
 		private bool m_MustResample = true;
+
 		private bool m_MustSampleMotions;
+
 		private float m_LastEvalTime = -1f;
+
 		private bool m_IsResampling;
+
 		private AvatarMask m_LayerMask;
+
 		private int m_LayerIndex;
+
 		private bool m_ValidTransition = true;
+
 		private float m_LeftStateWeightA;
+
 		private float m_LeftStateWeightB = 1f;
+
 		private float m_LeftStateTimeA;
+
 		private float m_LeftStateTimeB = 1f;
+
 		private float m_RightStateWeightA;
+
 		private float m_RightStateWeightB = 1f;
+
 		private float m_RightStateTimeA;
+
 		private float m_RightStateTimeB = 1f;
+
 		private List<Timeline.PivotSample> m_SrcPivotList = new List<Timeline.PivotSample>();
+
 		private List<Timeline.PivotSample> m_DstPivotList = new List<Timeline.PivotSample>();
+
 		public bool mustResample
 		{
 			get
@@ -94,6 +139,7 @@ namespace UnityEditor
 				this.m_MustResample = value;
 			}
 		}
+
 		private int FindParameterInfo(List<TransitionPreview.ParameterInfo> parameterInfoList, string name)
 		{
 			int num = -1;
@@ -108,20 +154,22 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private void SetMotion(AnimatorState state, int layerIndex, Motion motion)
 		{
 			AnimatorControllerLayer[] layers = this.m_Controller.layers;
 			state.motion = motion;
 			this.m_Controller.layers = layers;
 		}
+
 		private void CopyStateForPreview(AnimatorState src, ref AnimatorState dst)
 		{
-			dst.name = src.name;
 			dst.iKOnFeet = src.iKOnFeet;
 			dst.speed = src.speed;
 			dst.mirror = src.mirror;
 			dst.motion = src.motion;
 		}
+
 		private void CopyTransitionForPreview(AnimatorStateTransition src, ref AnimatorStateTransition dst)
 		{
 			if (src != null)
@@ -129,12 +177,15 @@ namespace UnityEditor
 				dst.duration = src.duration;
 				dst.offset = src.offset;
 				dst.exitTime = src.exitTime;
+				dst.hasFixedDuration = src.hasFixedDuration;
 			}
 		}
+
 		private bool MustResample(TransitionPreview.TransitionInfo info)
 		{
 			return this.mustResample || !info.IsEqual(this.m_RefTransitionInfo);
 		}
+
 		private void WriteParametersInController()
 		{
 			if (this.m_Controller)
@@ -151,10 +202,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void ResampleTransition(AnimatorStateTransition transition, AvatarMask layerMask, TransitionPreview.TransitionInfo info, Animator previewObject)
 		{
 			this.m_IsResampling = true;
 			this.m_MustResample = false;
+			this.m_ValidTransition = true;
 			bool flag = this.m_RefTransition != transition;
 			this.m_RefTransition = transition;
 			this.m_RefTransitionInfo = info;
@@ -169,6 +222,7 @@ namespace UnityEditor
 			this.Init(previewObject, (!(motion != null)) ? this.m_RefDstState.motion : motion);
 			if (this.m_Controller == null)
 			{
+				this.m_IsResampling = false;
 				return;
 			}
 			this.m_AvatarPreview.Animator.allowConstantClipSamplingOptimization = false;
@@ -190,18 +244,19 @@ namespace UnityEditor
 			{
 				this.m_AvatarPreview.Animator.stabilizeFeet = false;
 			}
-			float num = length2 * this.m_RefTransition.exitTime + length2 * this.m_Transition.duration + length;
+			float num = length2 * this.m_RefTransition.exitTime + this.m_Transition.duration * ((!this.m_RefTransition.hasFixedDuration) ? length2 : 1f) + length;
 			if (num > 2000f)
 			{
 				Debug.LogWarning("Transition duration is longer than 2000 second, Disabling previewer.");
 				this.m_ValidTransition = false;
+				this.m_IsResampling = false;
 				return;
 			}
 			float num2 = (this.m_RefTransition.exitTime <= 0f) ? length2 : (length2 * this.m_RefTransition.exitTime);
 			float num3 = (num2 <= 0f) ? 0.0333333351f : Mathf.Min(Mathf.Max(num2 / 300f, 0.0333333351f), num2 / 5f);
 			float num4 = (length <= 0f) ? 0.0333333351f : Mathf.Min(Mathf.Max(length / 300f, 0.0333333351f), length / 5f);
-			num3 = Mathf.Max(num3, num / 300f);
-			num4 = Mathf.Max(num4, num / 300f);
+			num3 = Mathf.Max(num3, num / 600f);
+			num4 = Mathf.Max(num4, num / 600f);
 			float num5 = num3;
 			float num6 = 0f;
 			bool flag2 = false;
@@ -211,17 +266,15 @@ namespace UnityEditor
 			this.m_LeftStateWeightA = 0f;
 			this.m_LeftStateTimeA = 0f;
 			this.m_AvatarPreview.Animator.Update(0f);
-			int num7 = 0;
-			while (!flag4)
+			while (!flag4 && num6 < num)
 			{
-				num7++;
 				this.m_AvatarPreview.Animator.Update(num5);
 				AnimatorStateInfo currentAnimatorStateInfo = this.m_AvatarPreview.Animator.GetCurrentAnimatorStateInfo(this.m_LayerIndex);
 				num6 += num5;
 				if (!flag2)
 				{
-					this.m_LeftStateWeightA = currentAnimatorStateInfo.normalizedTime;
-					this.m_LeftStateTimeA = num6;
+					this.m_LeftStateWeightA = (this.m_LeftStateWeightB = currentAnimatorStateInfo.normalizedTime);
+					this.m_LeftStateTimeA = (this.m_LeftStateTimeB = num6);
 					flag2 = true;
 				}
 				if (flag3 && num6 >= num)
@@ -253,12 +306,13 @@ namespace UnityEditor
 			this.m_AvatarPreview.Animator.StopRecording();
 			if (Mathf.Approximately(this.m_LeftStateWeightB, this.m_LeftStateWeightA) || Mathf.Approximately(this.m_RightStateWeightB, this.m_RightStateWeightA))
 			{
-				Debug.LogWarning("Speed difference between states is too big. Transition preview will be disabled.");
+				Debug.LogWarning("Difference in effective length between states is too big. Transition preview will be disabled.");
 				this.m_ValidTransition = false;
+				this.m_IsResampling = false;
 				return;
 			}
-			float num8 = (this.m_LeftStateTimeB - this.m_LeftStateTimeA) / (this.m_LeftStateWeightB - this.m_LeftStateWeightA);
-			float num9 = (this.m_RightStateTimeB - this.m_RightStateTimeA) / (this.m_RightStateWeightB - this.m_RightStateWeightA);
+			float num7 = (this.m_LeftStateTimeB - this.m_LeftStateTimeA) / (this.m_LeftStateWeightB - this.m_LeftStateWeightA);
+			float num8 = (this.m_RightStateTimeB - this.m_RightStateTimeA) / (this.m_RightStateWeightB - this.m_RightStateWeightA);
 			if (this.m_MustSampleMotions)
 			{
 				this.m_MustSampleMotions = false;
@@ -268,18 +322,17 @@ namespace UnityEditor
 				this.m_StateMachine.defaultState = this.m_DstState;
 				this.m_Transition.mute = true;
 				AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
+				this.m_AvatarPreview.Animator.Update(0f);
 				this.m_AvatarPreview.Animator.SetLayerWeight(this.m_LayerIndex, 1f);
 				this.m_AvatarPreview.Animator.Update(1E-07f);
 				this.WriteParametersInController();
-				num6 = 0f;
-				while (num6 <= num9)
+				for (num6 = 0f; num6 <= num8; num6 += num5 * 2f)
 				{
-					this.m_AvatarPreview.Animator.Update(num5 * 2f);
-					num6 += num5 * 2f;
 					Timeline.PivotSample pivotSample = new Timeline.PivotSample();
 					pivotSample.m_Time = num6;
 					pivotSample.m_Weight = this.m_AvatarPreview.Animator.pivotWeight;
 					this.m_DstPivotList.Add(pivotSample);
+					this.m_AvatarPreview.Animator.Update(num5 * 2f);
 				}
 				num5 = num3;
 				this.m_StateMachine.defaultState = this.m_SrcState;
@@ -288,15 +341,13 @@ namespace UnityEditor
 				this.m_AvatarPreview.Animator.Update(1E-07f);
 				this.WriteParametersInController();
 				this.m_AvatarPreview.Animator.SetLayerWeight(this.m_LayerIndex, 1f);
-				num6 = 0f;
-				while (num6 <= num8)
+				for (num6 = 0f; num6 <= num7; num6 += num5 * 2f)
 				{
-					this.m_AvatarPreview.Animator.Update(num5 * 2f);
-					num6 += num5 * 2f;
 					Timeline.PivotSample pivotSample2 = new Timeline.PivotSample();
 					pivotSample2.m_Time = num6;
 					pivotSample2.m_Weight = this.m_AvatarPreview.Animator.pivotWeight;
 					this.m_SrcPivotList.Add(pivotSample2);
+					this.m_AvatarPreview.Animator.Update(num5 * 2f);
 				}
 				this.m_Transition.mute = false;
 				AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
@@ -307,15 +358,16 @@ namespace UnityEditor
 			this.m_AvatarPreview.timeControl.currentTime = this.m_Timeline.Time;
 			if (flag)
 			{
-				Timeline arg_74F_0 = this.m_Timeline;
-				float num10 = this.m_AvatarPreview.timeControl.currentTime = (this.m_AvatarPreview.timeControl.startTime = 0f);
-				this.m_Timeline.StartTime = num10;
-				arg_74F_0.Time = num10;
+				Timeline arg_7B0_0 = this.m_Timeline;
+				float num9 = this.m_AvatarPreview.timeControl.currentTime = (this.m_AvatarPreview.timeControl.startTime = 0f);
+				this.m_Timeline.StartTime = num9;
+				arg_7B0_0.Time = num9;
 				this.m_Timeline.ResetRange();
 			}
 			this.m_AvatarPreview.Animator.StartPlayback();
 			this.m_IsResampling = false;
 		}
+
 		public void SetTransition(AnimatorStateTransition transition, AnimatorState sourceState, AnimatorState destinationState, AnimatorControllerLayer srcLayer, Animator previewObject)
 		{
 			this.m_RefSrcState = sourceState;
@@ -327,6 +379,7 @@ namespace UnityEditor
 				this.ResampleTransition(transition, srcLayer.avatarMask, transitionInfo, previewObject);
 			}
 		}
+
 		private void OnPreviewAvatarChanged()
 		{
 			this.m_RefTransitionInfo = new TransitionPreview.TransitionInfo();
@@ -334,6 +387,7 @@ namespace UnityEditor
 			this.CreateController();
 			this.CreateParameterInfoList();
 		}
+
 		private void ClearController()
 		{
 			if (this.m_AvatarPreview != null && this.m_AvatarPreview.Animator != null)
@@ -350,6 +404,7 @@ namespace UnityEditor
 			this.m_DstState = null;
 			this.m_Transition = null;
 		}
+
 		private void CreateParameterInfoList()
 		{
 			this.m_ParameterInfoList = new List<TransitionPreview.ParameterInfo>();
@@ -364,6 +419,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CreateController()
 		{
 			if (this.m_Controller == null && this.m_AvatarPreview != null && this.m_AvatarPreview.Animator != null && this.m_RefTransition != null)
@@ -376,15 +432,14 @@ namespace UnityEditor
 				bool flag = true;
 				if (this.m_LayerMask != null)
 				{
-					int humanoidBodyPartCount = this.m_LayerMask.humanoidBodyPartCount;
-					int num = 0;
-					while (num < humanoidBodyPartCount && flag)
+					AvatarMaskBodyPart avatarMaskBodyPart = AvatarMaskBodyPart.Root;
+					while (avatarMaskBodyPart < AvatarMaskBodyPart.LastBodyPart && flag)
 					{
-						if (!this.m_LayerMask.GetHumanoidBodyPartActive(num))
+						if (!this.m_LayerMask.GetHumanoidBodyPartActive(avatarMaskBodyPart))
 						{
 							flag = false;
 						}
-						num++;
+						avatarMaskBodyPart++;
 					}
 					if (!flag)
 					{
@@ -420,15 +475,15 @@ namespace UnityEditor
 					for (int j = 0; j < blendTree2.recursiveBlendParameterCount; j++)
 					{
 						string recursiveBlendParameter2 = blendTree2.GetRecursiveBlendParameter(j);
-						int num2 = this.m_Controller.IndexOfParameter(recursiveBlendParameter2);
-						if (num2 == -1)
+						int num = this.m_Controller.IndexOfParameter(recursiveBlendParameter2);
+						if (num == -1)
 						{
 							this.m_Controller.AddParameter(recursiveBlendParameter2, AnimatorControllerParameterType.Float);
 							this.m_ParameterMinMax.Add(new Vector2(blendTree2.GetRecursiveBlendParameterMin(j), blendTree2.GetRecursiveBlendParameterMax(j)));
 						}
 						else
 						{
-							this.m_ParameterMinMax[num2] = new Vector2(Mathf.Min(blendTree2.GetRecursiveBlendParameterMin(j), this.m_ParameterMinMax[num2][0]), Mathf.Max(blendTree2.GetRecursiveBlendParameterMax(j), this.m_ParameterMinMax[num2][1]));
+							this.m_ParameterMinMax[num] = new Vector2(Mathf.Min(blendTree2.GetRecursiveBlendParameterMin(j), this.m_ParameterMinMax[num][0]), Mathf.Max(blendTree2.GetRecursiveBlendParameterMax(j), this.m_ParameterMinMax[num][1]));
 						}
 					}
 				}
@@ -446,10 +501,11 @@ namespace UnityEditor
 				this.CopyTransitionForPreview(this.m_RefTransition, ref this.m_Transition);
 				this.DisableIKOnFeetIfNeeded();
 				AnimatorController.SetAnimatorController(this.m_AvatarPreview.Animator, this.m_Controller);
-				AnimatorController expr_400 = this.m_Controller;
-				expr_400.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_400.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
+				AnimatorController expr_3F0 = this.m_Controller;
+				expr_3F0.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_3F0.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
 			}
 		}
+
 		private void ControllerDirty()
 		{
 			if (!this.m_IsResampling)
@@ -457,6 +513,7 @@ namespace UnityEditor
 				this.m_MustResample = true;
 			}
 		}
+
 		private void DisableIKOnFeetIfNeeded()
 		{
 			bool flag = false;
@@ -474,6 +531,7 @@ namespace UnityEditor
 				this.m_DstState.iKOnFeet = false;
 			}
 		}
+
 		private void Init(Animator scenePreviewObject, Motion motion)
 		{
 			if (this.m_AvatarPreview == null)
@@ -493,6 +551,7 @@ namespace UnityEditor
 				this.CreateParameterInfoList();
 			}
 		}
+
 		public void DoTransitionPreview()
 		{
 			if (this.m_Controller == null)
@@ -525,6 +584,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoTimeline()
 		{
 			if (!this.m_ValidTransition)
@@ -533,10 +593,10 @@ namespace UnityEditor
 			}
 			float num = (this.m_LeftStateTimeB - this.m_LeftStateTimeA) / (this.m_LeftStateWeightB - this.m_LeftStateWeightA);
 			float num2 = (this.m_RightStateTimeB - this.m_RightStateTimeA) / (this.m_RightStateWeightB - this.m_RightStateWeightA);
-			float num3 = this.m_Transition.duration * num;
+			float num3 = this.m_Transition.duration * ((!this.m_RefTransition.hasFixedDuration) ? num : 1f);
 			this.m_Timeline.SrcStartTime = 0f;
 			this.m_Timeline.SrcStopTime = num;
-			this.m_Timeline.SrcName = this.m_SrcState.name;
+			this.m_Timeline.SrcName = this.m_RefSrcState.name;
 			this.m_Timeline.HasExitTime = this.m_RefTransition.hasExitTime;
 			this.m_Timeline.srcLoop = (this.m_SrcMotion && this.m_SrcMotion.isLooping);
 			this.m_Timeline.dstLoop = (this.m_DstMotion && this.m_DstMotion.isLooping);
@@ -545,11 +605,12 @@ namespace UnityEditor
 			this.m_Timeline.Time = this.m_AvatarPreview.timeControl.currentTime;
 			this.m_Timeline.DstStartTime = this.m_Timeline.TransitionStartTime - this.m_RefTransition.offset * num2;
 			this.m_Timeline.DstStopTime = this.m_Timeline.DstStartTime + num2;
+			this.m_Timeline.SampleStopTime = this.m_AvatarPreview.timeControl.stopTime;
 			if (this.m_Timeline.TransitionStopTime == float.PositiveInfinity)
 			{
 				this.m_Timeline.TransitionStopTime = Mathf.Min(this.m_Timeline.DstStopTime, this.m_Timeline.SrcStopTime);
 			}
-			this.m_Timeline.DstName = this.m_DstState.name;
+			this.m_Timeline.DstName = this.m_RefDstState.name;
 			this.m_Timeline.SrcPivotList = this.m_SrcPivotList;
 			this.m_Timeline.DstPivotList = this.m_DstPivotList;
 			Rect controlRect = EditorGUILayout.GetControlRect(false, 150f, EditorStyles.label, new GUILayoutOption[0]);
@@ -561,16 +622,18 @@ namespace UnityEditor
 				{
 					Undo.RegisterCompleteObjectUndo(this.m_RefTransition, "Edit Transition");
 					this.m_RefTransition.exitTime = this.m_Timeline.TransitionStartTime / this.m_Timeline.SrcDuration;
-					this.m_RefTransition.duration = this.m_Timeline.TransitionDuration / this.m_Timeline.SrcDuration;
+					this.m_RefTransition.duration = this.m_Timeline.TransitionDuration / ((!this.m_RefTransition.hasFixedDuration) ? this.m_Timeline.SrcDuration : 1f);
 					this.m_RefTransition.offset = (this.m_Timeline.TransitionStartTime - this.m_Timeline.DstStartTime) / this.m_Timeline.DstDuration;
 				}
 				this.m_AvatarPreview.timeControl.nextCurrentTime = Mathf.Clamp(this.m_Timeline.Time, 0f, this.m_AvatarPreview.timeControl.stopTime);
 			}
 		}
+
 		public void OnDisable()
 		{
 			this.ClearController();
 		}
+
 		public void OnDestroy()
 		{
 			this.ClearController();
@@ -584,10 +647,12 @@ namespace UnityEditor
 				this.m_AvatarPreview = null;
 			}
 		}
+
 		public bool HasPreviewGUI()
 		{
 			return true;
 		}
+
 		public void OnPreviewSettings()
 		{
 			if (this.m_AvatarPreview != null)
@@ -595,6 +660,7 @@ namespace UnityEditor
 				this.m_AvatarPreview.DoPreviewSettings();
 			}
 		}
+
 		public void OnInteractivePreviewGUI(Rect r, GUIStyle background)
 		{
 			if (this.m_AvatarPreview != null && this.m_Controller != null)

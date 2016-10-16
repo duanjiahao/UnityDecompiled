@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+
 namespace UnityEngine
 {
 	public sealed class Screen
@@ -12,26 +13,13 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property GetResolution has been deprecated. Use resolutions instead (UnityUpgradable).", true)]
-		public static Resolution[] GetResolution
-		{
-			get
-			{
-				return null;
-			}
-		}
-		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property showCursor has been deprecated. Use Cursor.visible instead (UnityUpgradable).", true)]
-		public static bool showCursor
-		{
-			get;
-			set;
-		}
+
 		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property lockCursor has been deprecated. Use Cursor.lockState and Cursor.visible instead.")]
 		public static bool lockCursor
 		{
 			get
 			{
-				return CursorLockMode.None == Cursor.lockState;
+				return CursorLockMode.Locked == Cursor.lockState;
 			}
 			set
 			{
@@ -47,30 +35,37 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public static extern Resolution currentResolution
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		[ThreadAndSerializationSafe]
 		public static extern int width
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		[ThreadAndSerializationSafe]
 		public static extern int height
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern float dpi
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool fullScreen
 		{
 			[WrapperlessIcall]
@@ -80,6 +75,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool autorotateToPortrait
 		{
 			[WrapperlessIcall]
@@ -89,6 +85,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool autorotateToPortraitUpsideDown
 		{
 			[WrapperlessIcall]
@@ -98,6 +95,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool autorotateToLandscapeLeft
 		{
 			[WrapperlessIcall]
@@ -107,6 +105,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool autorotateToLandscapeRight
 		{
 			[WrapperlessIcall]
@@ -116,6 +115,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern ScreenOrientation orientation
 		{
 			[WrapperlessIcall]
@@ -125,6 +125,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int sleepTimeout
 		{
 			[WrapperlessIcall]
@@ -134,9 +135,27 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property GetResolution has been deprecated. Use resolutions instead (UnityUpgradable) -> resolutions", true)]
+		public static Resolution[] GetResolution
+		{
+			get
+			{
+				return null;
+			}
+		}
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property showCursor has been deprecated. Use Cursor.visible instead (UnityUpgradable) -> UnityEngine.Cursor.visible", true)]
+		public static bool showCursor
+		{
+			get;
+			set;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetResolution(int width, int height, bool fullscreen, [UnityEngine.Internal.DefaultValue("0")] int preferredRefreshRate);
+
 		[ExcludeFromDocs]
 		public static void SetResolution(int width, int height, bool fullscreen)
 		{

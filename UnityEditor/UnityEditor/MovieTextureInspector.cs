@@ -1,51 +1,58 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(MovieTexture))]
 	internal class MovieTextureInspector : TextureInspector
 	{
 		private static GUIContent[] s_PlayIcons = new GUIContent[2];
+
 		private static void Init()
 		{
 			MovieTextureInspector.s_PlayIcons[0] = EditorGUIUtility.IconContent("preAudioPlayOff");
 			MovieTextureInspector.s_PlayIcons[1] = EditorGUIUtility.IconContent("preAudioPlayOn");
 		}
+
 		protected override void OnEnable()
 		{
 		}
+
 		public override void OnInspectorGUI()
 		{
 		}
+
 		public override void OnPreviewSettings()
 		{
 			MovieTextureInspector.Init();
-			EditorGUI.BeginDisabledGroup(Application.isPlaying || base.targets.Length > 1);
-			MovieTexture movieTexture = this.target as MovieTexture;
-			AudioClip audioClip = movieTexture.audioClip;
-			bool flag = PreviewGUI.CycleButton((!movieTexture.isPlaying) ? 0 : 1, MovieTextureInspector.s_PlayIcons) != 0;
-			if (flag != movieTexture.isPlaying)
+			using (new EditorGUI.DisabledScope(Application.isPlaying || base.targets.Length > 1))
 			{
-				if (flag)
+				MovieTexture movieTexture = this.target as MovieTexture;
+				AudioClip audioClip = movieTexture.audioClip;
+				bool flag = PreviewGUI.CycleButton((!movieTexture.isPlaying) ? 0 : 1, MovieTextureInspector.s_PlayIcons) != 0;
+				if (flag != movieTexture.isPlaying)
 				{
-					movieTexture.Stop();
-					movieTexture.Play();
-					if (audioClip != null)
+					if (flag)
 					{
-						AudioUtil.PlayClip(audioClip);
+						movieTexture.Stop();
+						movieTexture.Play();
+						if (audioClip != null)
+						{
+							AudioUtil.PlayClip(audioClip);
+						}
 					}
-				}
-				else
-				{
-					movieTexture.Pause();
-					if (audioClip != null)
+					else
 					{
-						AudioUtil.PauseClip(audioClip);
+						movieTexture.Pause();
+						if (audioClip != null)
+						{
+							AudioUtil.PauseClip(audioClip);
+						}
 					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (Event.current.type == EventType.Repaint)
@@ -74,6 +81,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected override void OnDisable()
 		{
 			base.OnDisable();
@@ -88,6 +96,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override string GetInfoString()
 		{
 			string text = base.GetInfoString();

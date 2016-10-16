@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public class ObjectPreview : IPreviewable
@@ -7,23 +8,36 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle preBackground = "preBackground";
+
 			public GUIStyle preBackgroundSolid = new GUIStyle("preBackground");
+
 			public GUIStyle previewMiniLabel = new GUIStyle(EditorStyles.whiteMiniLabel);
+
 			public GUIStyle dropShadowLabelStyle = new GUIStyle("PreOverlayLabel");
+
 			public Styles()
 			{
 				this.preBackgroundSolid.overflow = this.preBackgroundSolid.border;
 				this.previewMiniLabel.alignment = TextAnchor.UpperCenter;
 			}
 		}
+
 		private const int kPreviewLabelHeight = 12;
+
 		private const int kPreviewMinSize = 55;
+
 		private const int kGridTargetCount = 25;
+
 		private const int kGridSpacing = 10;
+
 		private const int kPreviewLabelPadding = 5;
+
 		private static ObjectPreview.Styles s_Styles;
+
 		protected UnityEngine.Object[] m_Targets;
+
 		protected int m_ReferenceTargetIndex;
+
 		public virtual UnityEngine.Object target
 		{
 			get
@@ -31,24 +45,29 @@ namespace UnityEditor
 				return this.m_Targets[this.m_ReferenceTargetIndex];
 			}
 		}
+
 		public virtual void Initialize(UnityEngine.Object[] targets)
 		{
 			this.m_ReferenceTargetIndex = 0;
 			this.m_Targets = targets;
 		}
+
 		public virtual bool MoveNextTarget()
 		{
 			this.m_ReferenceTargetIndex++;
 			return this.m_ReferenceTargetIndex < this.m_Targets.Length - 1;
 		}
+
 		public virtual void ResetTarget()
 		{
 			this.m_ReferenceTargetIndex = 0;
 		}
+
 		public virtual bool HasPreviewGUI()
 		{
 			return false;
 		}
+
 		public virtual GUIContent GetPreviewTitle()
 		{
 			GUIContent gUIContent = new GUIContent();
@@ -74,6 +93,7 @@ namespace UnityEditor
 			}
 			return gUIContent;
 		}
+
 		public virtual void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (Event.current.type == EventType.Repaint)
@@ -81,24 +101,30 @@ namespace UnityEditor
 				background.Draw(r, false, false, false, false);
 			}
 		}
+
 		public virtual void OnInteractivePreviewGUI(Rect r, GUIStyle background)
 		{
 			this.OnPreviewGUI(r, background);
 		}
+
 		public virtual void OnPreviewSettings()
 		{
 		}
+
 		public virtual string GetInfoString()
 		{
 			return string.Empty;
 		}
+
 		public void DrawPreview(Rect previewArea)
 		{
 			ObjectPreview.DrawPreview(this, previewArea, this.m_Targets);
 		}
+
 		public virtual void ReloadPreviewInstances()
 		{
 		}
+
 		internal static void DrawPreview(IPreviewable defaultPreview, Rect previewArea, UnityEngine.Object[] targets)
 		{
 			if (ObjectPreview.s_Styles == null)
@@ -183,6 +209,7 @@ namespace UnityEditor
 				EditorGUI.DropShadowLabel(new Rect(previewArea.x, previewArea.yMax - num7 - 5f, previewArea.width, num7), text);
 			}
 		}
+
 		private static int[] GetGridDivision(Rect rect, int minimumNr, int labelHeight)
 		{
 			float num = Mathf.Sqrt(rect.width * rect.height / (float)minimumNr);
@@ -215,6 +242,7 @@ namespace UnityEditor
 				num3
 			};
 		}
+
 		private static float AbsRatioDiff(float x, float y)
 		{
 			return Mathf.Max(x / y, y / x);

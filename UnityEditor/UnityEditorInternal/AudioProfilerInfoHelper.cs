@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AudioProfilerInfoHelper
@@ -33,17 +34,22 @@ namespace UnityEditorInternal
 			IsOpenMemoryPoint,
 			_LastColumn
 		}
+
 		public class AudioProfilerInfoComparer : IComparer<AudioProfilerInfoWrapper>
 		{
 			public AudioProfilerInfoHelper.ColumnIndices primarySortKey;
+
 			public AudioProfilerInfoHelper.ColumnIndices secondarySortKey;
+
 			public bool sortByDescendingOrder;
+
 			public AudioProfilerInfoComparer(AudioProfilerInfoHelper.ColumnIndices primarySortKey, AudioProfilerInfoHelper.ColumnIndices secondarySortKey, bool sortByDescendingOrder)
 			{
 				this.primarySortKey = primarySortKey;
 				this.secondarySortKey = secondarySortKey;
 				this.sortByDescendingOrder = sortByDescendingOrder;
 			}
+
 			private int CompareInternal(AudioProfilerInfoWrapper a, AudioProfilerInfoWrapper b, AudioProfilerInfoHelper.ColumnIndices key)
 			{
 				int num = 0;
@@ -65,7 +71,7 @@ namespace UnityEditorInternal
 					num = a.info.playCount.CompareTo(b.info.playCount);
 					break;
 				case AudioProfilerInfoHelper.ColumnIndices.Is3D:
-					num = (a.info.flags & 1).CompareTo(b.info.flags & 1);
+					num = (a.info.flags & 1).CompareTo(b.info.flags & 1) + (a.info.flags & 2).CompareTo(b.info.flags & 2) * 2;
 					break;
 				case AudioProfilerInfoHelper.ColumnIndices.IsPaused:
 					num = (a.info.flags & 4).CompareTo(b.info.flags & 4);
@@ -121,25 +127,42 @@ namespace UnityEditorInternal
 				}
 				return (!this.sortByDescendingOrder) ? num : (-num);
 			}
+
 			public int Compare(AudioProfilerInfoWrapper a, AudioProfilerInfoWrapper b)
 			{
 				int num = this.CompareInternal(a, b, this.primarySortKey);
 				return (num != 0) ? num : this.CompareInternal(a, b, this.secondarySortKey);
 			}
 		}
+
 		public const int AUDIOPROFILER_FLAGS_3D = 1;
+
+		public const int AUDIOPROFILER_FLAGS_ISSPATIAL = 2;
+
 		public const int AUDIOPROFILER_FLAGS_PAUSED = 4;
+
 		public const int AUDIOPROFILER_FLAGS_MUTED = 8;
+
 		public const int AUDIOPROFILER_FLAGS_VIRTUAL = 16;
+
 		public const int AUDIOPROFILER_FLAGS_ONESHOT = 32;
+
 		public const int AUDIOPROFILER_FLAGS_GROUP = 64;
+
 		public const int AUDIOPROFILER_FLAGS_STREAM = 128;
+
 		public const int AUDIOPROFILER_FLAGS_COMPRESSED = 256;
+
 		public const int AUDIOPROFILER_FLAGS_LOOPED = 512;
+
 		public const int AUDIOPROFILER_FLAGS_OPENMEMORY = 1024;
+
 		public const int AUDIOPROFILER_FLAGS_OPENMEMORYPOINT = 2048;
+
 		public const int AUDIOPROFILER_FLAGS_OPENUSER = 4096;
+
 		public const int AUDIOPROFILER_FLAGS_NONBLOCKING = 8192;
+
 		private static string FormatDb(float vol)
 		{
 			if (vol == 0f)
@@ -148,6 +171,7 @@ namespace UnityEditorInternal
 			}
 			return string.Format("{0:0.00} dB", 20f * Mathf.Log10(vol));
 		}
+
 		public static string GetColumnString(AudioProfilerInfoWrapper info, AudioProfilerInfoHelper.ColumnIndices index)
 		{
 			bool flag = (info.info.flags & 1) != 0;
@@ -165,7 +189,7 @@ namespace UnityEditorInternal
 			case AudioProfilerInfoHelper.ColumnIndices.PlayCount:
 				return (!flag2) ? info.info.playCount.ToString() : string.Empty;
 			case AudioProfilerInfoHelper.ColumnIndices.Is3D:
-				return (!flag2) ? ((!flag) ? "NO" : "YES") : string.Empty;
+				return (!flag2) ? ((!flag) ? "NO" : (((info.info.flags & 2) == 0) ? "YES" : "Spatial")) : string.Empty;
 			case AudioProfilerInfoHelper.ColumnIndices.IsPaused:
 				return (!flag2) ? (((info.info.flags & 4) == 0) ? "NO" : "YES") : string.Empty;
 			case AudioProfilerInfoHelper.ColumnIndices.IsMuted:
@@ -204,6 +228,7 @@ namespace UnityEditorInternal
 				return "Unknown";
 			}
 		}
+
 		public static int GetLastColumnIndex()
 		{
 			return (!Unsupported.IsDeveloperBuild()) ? 15 : 22;

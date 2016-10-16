@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using UnityEditor.Modules;
 using UnityEditor.Scripting.Compilers;
+
 namespace UnityEditor
 {
 	internal class ManagedEditorCodeRebuilder
@@ -15,12 +16,14 @@ namespace UnityEditor
 			'\r',
 			'\n'
 		};
+
 		private static bool Run(out CompilerMessage[] messages, bool includeModules)
 		{
 			int num;
 			messages = ManagedEditorCodeRebuilder.ParseResults(ManagedEditorCodeRebuilder.GetOutputStream(ManagedEditorCodeRebuilder.GetJamStartInfo(includeModules), out num));
 			return num == 0;
 		}
+
 		private static ProcessStartInfo GetJamStartInfo(bool includeModules)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
@@ -41,6 +44,7 @@ namespace UnityEditor
 				FileName = "perl"
 			};
 		}
+
 		private static CompilerMessage[] ParseResults(string text)
 		{
 			Console.Write(text);
@@ -55,6 +59,7 @@ namespace UnityEditor
 			}
 			return list.ToArray();
 		}
+
 		private static string GetOutputStream(ProcessStartInfo startInfo, out int exitCode)
 		{
 			startInfo.UseShellExecute = false;

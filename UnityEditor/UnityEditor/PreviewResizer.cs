@@ -1,22 +1,32 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class PreviewResizer
 	{
 		private static float s_DraggedPreviewSize;
+
 		private static float s_CachedPreviewSizeWhileDragging;
+
 		private static float s_MouseDownLocation;
+
 		private static float s_MouseDownValue;
+
 		private static bool s_MouseDragged;
+
 		[SerializeField]
 		private float m_CachedPref;
+
 		[SerializeField]
 		private int m_ControlHash;
+
 		[SerializeField]
 		private string m_PrefName;
+
 		private int m_Id;
+
 		private int id
 		{
 			get
@@ -28,6 +38,7 @@ namespace UnityEditor
 				return this.m_Id;
 			}
 		}
+
 		public void Init(string prefName)
 		{
 			if (this.m_ControlHash != 0 && !string.IsNullOrEmpty(this.m_PrefName))
@@ -38,10 +49,12 @@ namespace UnityEditor
 			this.m_PrefName = "Preview_" + prefName;
 			this.m_CachedPref = EditorPrefs.GetFloat(this.m_PrefName, 1f);
 		}
+
 		public float ResizeHandle(Rect windowPosition, float minSize, float minRemainingSize, float resizerHeight)
 		{
 			return this.ResizeHandle(windowPosition, minSize, minRemainingSize, resizerHeight, default(Rect));
 		}
+
 		public float ResizeHandle(Rect windowPosition, float minSize, float minRemainingSize, float resizerHeight, Rect dragRect)
 		{
 			if (Mathf.Abs(this.m_CachedPref) < minSize)
@@ -92,6 +105,7 @@ namespace UnityEditor
 			PreviewResizer.s_CachedPreviewSizeWhileDragging = num2;
 			return num2;
 		}
+
 		public bool GetExpanded()
 		{
 			if (GUIUtility.hotControl == this.id)
@@ -100,6 +114,7 @@ namespace UnityEditor
 			}
 			return this.m_CachedPref > 0f;
 		}
+
 		public float GetPreviewSize()
 		{
 			if (GUIUtility.hotControl == this.id)
@@ -108,20 +123,24 @@ namespace UnityEditor
 			}
 			return Mathf.Max(0f, this.m_CachedPref);
 		}
+
 		public bool GetExpandedBeforeDragging()
 		{
 			return this.m_CachedPref > 0f;
 		}
+
 		public void SetExpanded(bool expanded)
 		{
 			this.m_CachedPref = Mathf.Abs(this.m_CachedPref) * (float)((!expanded) ? -1 : 1);
 			EditorPrefs.SetFloat(this.m_PrefName, this.m_CachedPref);
 		}
+
 		public void ToggleExpanded()
 		{
 			this.m_CachedPref = -this.m_CachedPref;
 			EditorPrefs.SetFloat(this.m_PrefName, this.m_CachedPref);
 		}
+
 		public static float PixelPreciseCollapsibleSlider(int id, Rect position, float value, float min, float max, ref bool expanded)
 		{
 			Event current = Event.current;

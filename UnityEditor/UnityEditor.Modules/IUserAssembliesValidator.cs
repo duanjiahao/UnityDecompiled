@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor.Modules
 {
 	internal interface IUserAssembliesValidator
@@ -7,7 +8,9 @@ namespace UnityEditor.Modules
 		{
 			get;
 		}
+
 		void Validate(string[] userAssemblies);
+
 		void Cleanup();
 	}
 }

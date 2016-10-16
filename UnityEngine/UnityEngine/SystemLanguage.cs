@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum SystemLanguage
@@ -21,6 +22,7 @@ namespace UnityEngine
 		German,
 		Greek,
 		Hebrew,
+		[Obsolete("Use SystemLanguage.Hungarian instead (UnityUpgradable) -> Hungarian", true)]
 		Hugarian,
 		Icelandic,
 		Indonesian,

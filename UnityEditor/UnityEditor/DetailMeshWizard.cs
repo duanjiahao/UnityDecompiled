@@ -1,23 +1,35 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class DetailMeshWizard : TerrainWizard
 	{
 		public GameObject m_Detail;
+
 		public float m_NoiseSpread;
+
 		public float m_MinWidth;
+
 		public float m_MaxWidth;
+
 		public float m_MinHeight;
+
 		public float m_MaxHeight;
+
 		public Color m_HealthyColor;
+
 		public Color m_DryColor;
+
 		public DetailMeshRenderMode m_RenderMode;
+
 		private int m_PrototypeIndex = -1;
+
 		public void OnEnable()
 		{
 			base.minSize = new Vector2(400f, 400f);
 		}
+
 		internal void InitializeDefaults(Terrain terrain, int index)
 		{
 			this.m_Terrain = terrain;
@@ -54,6 +66,7 @@ namespace UnityEditor
 			}
 			this.OnWizardUpdate();
 		}
+
 		private void DoApply()
 		{
 			if (base.terrainData == null)
@@ -91,14 +104,17 @@ namespace UnityEditor
 			this.m_Terrain.terrainData.detailPrototypes = array;
 			EditorUtility.SetDirty(this.m_Terrain);
 		}
+
 		private void OnWizardCreate()
 		{
 			this.DoApply();
 		}
+
 		private void OnWizardOtherButton()
 		{
 			this.DoApply();
 		}
+
 		internal override void OnWizardUpdate()
 		{
 			base.OnWizardUpdate();
@@ -107,12 +123,9 @@ namespace UnityEditor
 				base.errorString = "Please assign a detail prefab";
 				base.isValid = false;
 			}
-			else
+			else if (this.m_PrototypeIndex != -1)
 			{
-				if (this.m_PrototypeIndex != -1)
-				{
-					this.DoApply();
-				}
+				this.DoApply();
 			}
 		}
 	}

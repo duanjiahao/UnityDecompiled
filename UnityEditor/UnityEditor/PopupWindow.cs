@@ -1,23 +1,29 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public class PopupWindow : EditorWindow
 	{
 		private PopupWindowContent m_WindowContent;
+
 		private Vector2 m_LastWantedSize = Vector2.zero;
+
 		private Rect m_ActivatorRect;
+
 		private static double s_LastClosedTime;
+
 		private static Rect s_LastActivatorRect;
+
 		internal PopupWindow()
 		{
-			base.hideFlags = HideFlags.DontSave;
-			base.wantsMouseMove = true;
 		}
+
 		public static void Show(Rect activatorRect, PopupWindowContent windowContent)
 		{
 			PopupWindow.Show(activatorRect, windowContent, null);
 		}
+
 		internal static void Show(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
 			if (PopupWindow.ShouldShowWindow(activatorRect))
@@ -30,6 +36,7 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
+
 		private static bool ShouldShowWindow(Rect activatorRect)
 		{
 			bool flag = EditorApplication.timeSinceStartup - PopupWindow.s_LastClosedTime < 0.2;
@@ -40,14 +47,18 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private void Init(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
+			base.hideFlags = HideFlags.DontSave;
+			base.wantsMouseMove = true;
 			this.m_WindowContent = windowContent;
 			this.m_WindowContent.editorWindow = this;
 			this.m_WindowContent.OnOpen();
 			this.m_ActivatorRect = GUIUtility.GUIToScreenRect(activatorRect);
 			base.ShowAsDropDown(this.m_ActivatorRect, this.m_WindowContent.GetWindowSize(), locationPriorityOrder);
 		}
+
 		internal void OnGUI()
 		{
 			this.FitWindowToContent();
@@ -55,6 +66,7 @@ namespace UnityEditor
 			this.m_WindowContent.OnGUI(rect);
 			GUI.Label(rect, GUIContent.none, "grey_border");
 		}
+
 		private void FitWindowToContent()
 		{
 			Vector2 windowSize = this.m_WindowContent.GetWindowSize();
@@ -68,6 +80,7 @@ namespace UnityEditor
 				base.position = dropDownRect;
 			}
 		}
+
 		private void OnDisable()
 		{
 			PopupWindow.s_LastClosedTime = EditorApplication.timeSinceStartup;

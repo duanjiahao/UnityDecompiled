@@ -1,21 +1,30 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AvatarSkeletonDrawer
 	{
 		private static bool sPoseError;
+
 		private static Color kSkeletonColor = new Color(0.403921574f, 0.403921574f, 0.403921574f, 0.25f);
+
 		private static Color kDummyColor = new Color(0.235294119f, 0.235294119f, 0.235294119f, 0.25f);
+
 		private static Color kHumanColor = new Color(0f, 0.8235294f, 0.2901961f, 0.25f);
+
 		private static Color kErrorColor = new Color(1f, 0f, 0f, 0.25f);
+
 		private static Color kErrorMessageColor = new Color(1f, 0f, 0f, 0.75f);
+
 		private static Color kSelectedColor = new Color(0.5019608f, 0.7529412f, 1f, 0.15f);
+
 		public static void DrawSkeleton(Transform reference, Dictionary<Transform, bool> actualBones)
 		{
 			AvatarSkeletonDrawer.DrawSkeleton(reference, actualBones, null);
 		}
+
 		public static void DrawSkeleton(Transform reference, Dictionary<Transform, bool> actualBones, AvatarSetupTool.BoneWrapper[] bones)
 		{
 			if (reference == null || actualBones == null)
@@ -58,6 +67,7 @@ namespace UnityEditor
 				Handles.EndGUI();
 			}
 		}
+
 		private static bool DrawSkeletonSubTree(Dictionary<Transform, bool> actualBones, AvatarSetupTool.BoneWrapper[] bones, Quaternion orientation, Transform tr, Bounds bounds)
 		{
 			if (!actualBones.ContainsKey(tr))
@@ -95,23 +105,17 @@ namespace UnityEditor
 				AvatarSkeletonDrawer.DrawPoseError(tr, bounds);
 				Handles.color = AvatarSkeletonDrawer.kErrorColor;
 			}
+			else if (num2 != -1)
+			{
+				Handles.color = AvatarSkeletonDrawer.kHumanColor;
+			}
+			else if (!actualBones[tr])
+			{
+				Handles.color = AvatarSkeletonDrawer.kDummyColor;
+			}
 			else
 			{
-				if (num2 != -1)
-				{
-					Handles.color = AvatarSkeletonDrawer.kHumanColor;
-				}
-				else
-				{
-					if (!actualBones[tr])
-					{
-						Handles.color = AvatarSkeletonDrawer.kDummyColor;
-					}
-					else
-					{
-						Handles.color = AvatarSkeletonDrawer.kSkeletonColor;
-					}
-				}
+				Handles.color = AvatarSkeletonDrawer.kSkeletonColor;
 			}
 			Handles.DoBoneHandle(tr, actualBones);
 			if (Selection.activeObject == tr)
@@ -121,6 +125,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		private static void DrawPoseError(Transform node, Bounds bounds)
 		{
 			Camera current = Camera.current;

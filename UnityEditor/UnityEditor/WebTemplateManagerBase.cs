@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal abstract class WebTemplateManagerBase
@@ -10,27 +11,39 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle thumbnail = "IN ThumbnailShadow";
+
 			public GUIStyle thumbnailLabel = "IN ThumbnailSelection";
 		}
+
 		private const float kWebTemplateGridPadding = 15f;
+
 		private const float kThumbnailSize = 80f;
+
 		private const float kThumbnailLabelHeight = 20f;
+
 		private const float kThumbnailPadding = 5f;
+
 		private static WebTemplateManagerBase.Styles s_Styles;
+
 		private WebTemplate[] s_Templates;
+
 		private GUIContent[] s_TemplateGUIThumbnails;
+
 		public abstract string customTemplatesFolder
 		{
 			get;
 		}
+
 		public abstract string builtinTemplatesFolder
 		{
 			get;
 		}
+
 		public abstract Texture2D defaultIcon
 		{
 			get;
 		}
+
 		public WebTemplate[] Templates
 		{
 			get
@@ -42,6 +55,7 @@ namespace UnityEditor
 				return this.s_Templates;
 			}
 		}
+
 		public GUIContent[] TemplateGUIThumbnails
 		{
 			get
@@ -53,6 +67,7 @@ namespace UnityEditor
 				return this.s_TemplateGUIThumbnails;
 			}
 		}
+
 		public int GetTemplateIndex(string path)
 		{
 			for (int i = 0; i < this.Templates.Length; i++)
@@ -64,11 +79,13 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		public void ClearTemplates()
 		{
 			this.s_Templates = null;
 			this.s_TemplateGUIThumbnails = null;
 		}
+
 		private void BuildTemplateList()
 		{
 			List<WebTemplate> list = new List<WebTemplate>();
@@ -91,6 +108,7 @@ namespace UnityEditor
 				this.s_TemplateGUIThumbnails[i] = this.s_Templates[i].ToGUIContent(this.defaultIcon);
 			}
 		}
+
 		private WebTemplate Load(string path)
 		{
 			if (!Directory.Exists(path) || Directory.GetFiles(path, "index.*").Length < 1)
@@ -99,7 +117,8 @@ namespace UnityEditor
 			}
 			string[] array = path.Split(new char[]
 			{
-				Path.DirectorySeparatorChar
+				'/',
+				'\\'
 			});
 			WebTemplate webTemplate = new WebTemplate();
 			webTemplate.m_Name = array[array.Length - 1];
@@ -132,6 +151,7 @@ namespace UnityEditor
 			webTemplate.m_CustomKeys = list.ToArray();
 			return webTemplate;
 		}
+
 		private List<WebTemplate> ListTemplates(string path)
 		{
 			List<WebTemplate> list = new List<WebTemplate>();
@@ -148,6 +168,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		public void SelectionUI(SerializedProperty templateProp)
 		{
 			if (WebTemplateManagerBase.s_Styles == null)
@@ -156,7 +177,7 @@ namespace UnityEditor
 			}
 			if (this.TemplateGUIThumbnails.Length < 1)
 			{
-				GUILayout.Label(EditorGUIUtility.TextContent("PlayerSettings.NoTemplatesFound"), new GUILayoutOption[0]);
+				GUILayout.Label(EditorGUIUtility.TextContent("No templates found."), new GUILayoutOption[0]);
 			}
 			else
 			{
@@ -193,6 +214,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static int ThumbnailList(Rect rect, int selection, GUIContent[] thumbnails, int maxRowItems)
 		{
 			int num = 0;
@@ -213,6 +235,7 @@ namespace UnityEditor
 			}
 			return selection;
 		}
+
 		private static bool ThumbnailListItem(Rect rect, bool selected, GUIContent content)
 		{
 			EventType type = Event.current.type;
@@ -225,20 +248,18 @@ namespace UnityEditor
 					WebTemplateManagerBase.s_Styles.thumbnailLabel.Draw(new Rect(rect.x, rect.y + rect.height - 20f, rect.width, 20f), content.text, false, false, selected, selected);
 				}
 			}
-			else
+			else if (rect.Contains(Event.current.mousePosition))
 			{
-				if (rect.Contains(Event.current.mousePosition))
+				if (!selected)
 				{
-					if (!selected)
-					{
-						GUI.changed = true;
-					}
-					selected = true;
-					Event.current.Use();
+					GUI.changed = true;
 				}
+				selected = true;
+				Event.current.Use();
 			}
 			return selected;
 		}
+
 		private static string PrettyTemplateKeyName(string name)
 		{
 			string[] array = name.Split(new char[]
@@ -252,6 +273,7 @@ namespace UnityEditor
 			}
 			return string.Join(" ", array);
 		}
+
 		private static string UppercaseFirst(string target)
 		{
 			if (string.IsNullOrEmpty(target))

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+
 namespace UnityEditor.Modules
 {
 	internal class DefaultPluginImporterExtension : IPluginImporterExtension
@@ -16,34 +17,41 @@ namespace UnityEditor.Modules
 				get;
 				set;
 			}
+
 			internal string key
 			{
 				get;
 				set;
 			}
+
 			internal object defaultValue
 			{
 				get;
 				set;
 			}
+
 			internal Type type
 			{
 				get;
 				set;
 			}
+
 			internal string platformName
 			{
 				get;
 				set;
 			}
+
 			internal object value
 			{
 				get;
 				set;
 			}
+
 			internal Property(string name, string key, object defaultValue, string platformName) : this(new GUIContent(name), key, defaultValue, platformName)
 			{
 			}
+
 			internal Property(GUIContent name, string key, object defaultValue, string platformName)
 			{
 				this.name = name;
@@ -52,6 +60,7 @@ namespace UnityEditor.Modules
 				this.type = defaultValue.GetType();
 				this.platformName = platformName;
 			}
+
 			internal virtual void Reset(PluginImporterInspector inspector)
 			{
 				string platformData = inspector.importer.GetPlatformData(this.platformName, this.key);
@@ -81,49 +90,55 @@ namespace UnityEditor.Modules
 					}
 				}
 			}
+
 			internal virtual void Apply(PluginImporterInspector inspector)
 			{
 				inspector.importer.SetPlatformData(this.platformName, this.key, this.value.ToString());
 			}
+
 			internal virtual void OnGUI(PluginImporterInspector inspector)
 			{
 				if (this.type == typeof(bool))
 				{
 					this.value = EditorGUILayout.Toggle(this.name, (bool)this.value, new GUILayoutOption[0]);
 				}
+				else if (this.type.IsEnum)
+				{
+					this.value = EditorGUILayout.EnumPopup(this.name, (Enum)this.value, new GUILayoutOption[0]);
+				}
 				else
 				{
-					if (this.type.IsEnum)
+					if (this.type != typeof(string))
 					{
-						this.value = EditorGUILayout.EnumPopup(this.name, (Enum)this.value, new GUILayoutOption[0]);
+						throw new NotImplementedException("Don't know how to display value.");
 					}
-					else
-					{
-						if (this.type != typeof(string))
-						{
-							throw new NotImplementedException("Don't know how to display value.");
-						}
-						this.value = EditorGUILayout.TextField(this.name, (string)this.value, new GUILayoutOption[0]);
-					}
+					this.value = EditorGUILayout.TextField(this.name, (string)this.value, new GUILayoutOption[0]);
 				}
 			}
 		}
+
 		protected bool hasModified;
+
 		protected DefaultPluginImporterExtension.Property[] properties;
+
 		internal bool propertiesRefreshed;
+
 		public DefaultPluginImporterExtension(DefaultPluginImporterExtension.Property[] properties)
 		{
 			this.properties = properties;
 		}
+
 		public virtual void ResetValues(PluginImporterInspector inspector)
 		{
 			this.hasModified = false;
 			this.RefreshProperties(inspector);
 		}
+
 		public virtual bool HasModified(PluginImporterInspector inspector)
 		{
 			return this.hasModified;
 		}
+
 		public virtual void Apply(PluginImporterInspector inspector)
 		{
 			if (!this.propertiesRefreshed)
@@ -137,13 +152,16 @@ namespace UnityEditor.Modules
 				property.Apply(inspector);
 			}
 		}
+
 		public virtual void OnEnable(PluginImporterInspector inspector)
 		{
 			this.RefreshProperties(inspector);
 		}
+
 		public virtual void OnDisable(PluginImporterInspector inspector)
 		{
 		}
+
 		public virtual void OnPlatformSettingsGUI(PluginImporterInspector inspector)
 		{
 			if (!this.propertiesRefreshed)
@@ -162,6 +180,7 @@ namespace UnityEditor.Modules
 				this.hasModified = true;
 			}
 		}
+
 		protected virtual void RefreshProperties(PluginImporterInspector inspector)
 		{
 			DefaultPluginImporterExtension.Property[] array = this.properties;
@@ -172,16 +191,17 @@ namespace UnityEditor.Modules
 			}
 			this.propertiesRefreshed = true;
 		}
+
 		public virtual string CalculateFinalPluginPath(string platformName, PluginImporter imp)
 		{
 			return Path.GetFileName(imp.assetPath);
 		}
+
 		protected Dictionary<string, List<PluginImporter>> GetCompatiblePlugins(string buildTargetName)
 		{
-			PluginImporter[] array = (
-				from imp in PluginImporter.GetAllImporters()
-				where (imp.GetCompatibleWithPlatform(buildTargetName) || imp.GetCompatibleWithAnyPlatform()) && !string.IsNullOrEmpty(imp.assetPath)
-				select imp).ToArray<PluginImporter>();
+			PluginImporter[] array = (from imp in PluginImporter.GetAllImporters()
+			where (imp.GetCompatibleWithPlatform(buildTargetName) || imp.GetCompatibleWithAnyPlatform()) && !string.IsNullOrEmpty(imp.assetPath)
+			select imp).ToArray<PluginImporter>();
 			Dictionary<string, List<PluginImporter>> dictionary = new Dictionary<string, List<PluginImporter>>();
 			PluginImporter[] array2 = array;
 			for (int i = 0; i < array2.Length; i++)
@@ -204,6 +224,7 @@ namespace UnityEditor.Modules
 			}
 			return dictionary;
 		}
+
 		public virtual bool CheckFileCollisions(string buildTargetName)
 		{
 			Dictionary<string, List<PluginImporter>> compatiblePlugins = this.GetCompatiblePlugins(buildTargetName);

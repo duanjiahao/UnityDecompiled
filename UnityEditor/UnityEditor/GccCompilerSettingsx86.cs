@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	internal class GccCompilerSettingsx86 : ICompilerSettings
@@ -10,6 +11,7 @@ namespace UnityEditor
 				return new string[0];
 			}
 		}
+
 		public string CompilerPath
 		{
 			get
@@ -17,6 +19,7 @@ namespace UnityEditor
 				return "/usr/bin/g++";
 			}
 		}
+
 		public string LinkerPath
 		{
 			get
@@ -24,6 +27,7 @@ namespace UnityEditor
 				return this.CompilerPath;
 			}
 		}
+
 		public string MachineSpecification
 		{
 			get

@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+
 namespace UnityEditor.Utils
 {
 	internal class ProcessOutputStreamReader
 	{
 		private readonly Func<bool> hostProcessExited;
+
 		private readonly StreamReader stream;
+
 		internal List<string> lines;
+
 		private Thread thread;
+
 		internal ProcessOutputStreamReader(Process p, StreamReader stream) : this(() => p.HasExited, stream)
 		{
 		}
+
 		internal ProcessOutputStreamReader(Func<bool> hostProcessExited, StreamReader stream)
 		{
 			this.hostProcessExited = hostProcessExited;
@@ -22,6 +28,7 @@ namespace UnityEditor.Utils
 			this.thread = new Thread(new ThreadStart(this.ThreadFunc));
 			this.thread.Start();
 		}
+
 		private void ThreadFunc()
 		{
 			if (this.hostProcessExited())
@@ -36,17 +43,13 @@ namespace UnityEditor.Utils
 					return;
 				}
 				List<string> obj = this.lines;
-				Monitor.Enter(obj);
-				try
+				lock (obj)
 				{
 					this.lines.Add(text);
 				}
-				finally
-				{
-					Monitor.Exit(obj);
-				}
 			}
 		}
+
 		internal string[] GetOutput()
 		{
 			if (this.hostProcessExited())
@@ -54,15 +57,10 @@ namespace UnityEditor.Utils
 				this.thread.Join();
 			}
 			List<string> obj = this.lines;
-			Monitor.Enter(obj);
 			string[] result;
-			try
+			lock (obj)
 			{
 				result = this.lines.ToArray();
-			}
-			finally
-			{
-				Monitor.Exit(obj);
 			}
 			return result;
 		}

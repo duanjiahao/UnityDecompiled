@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+
 namespace UnityEngine
 {
 	public class Transform : Component, IEnumerable
@@ -9,7 +10,9 @@ namespace UnityEngine
 		private sealed class Enumerator : IEnumerator
 		{
 			private Transform outer;
+
 			private int currentIndex = -1;
+
 			public object Current
 			{
 				get
@@ -17,20 +20,24 @@ namespace UnityEngine
 					return this.outer.GetChild(this.currentIndex);
 				}
 			}
+
 			internal Enumerator(Transform outer)
 			{
 				this.outer = outer;
 			}
+
 			public bool MoveNext()
 			{
 				int childCount = this.outer.childCount;
 				return ++this.currentIndex < childCount;
 			}
+
 			public void Reset()
 			{
 				this.currentIndex = -1;
 			}
 		}
+
 		public Vector3 position
 		{
 			get
@@ -44,6 +51,7 @@ namespace UnityEngine
 				this.INTERNAL_set_position(ref value);
 			}
 		}
+
 		public Vector3 localPosition
 		{
 			get
@@ -57,6 +65,7 @@ namespace UnityEngine
 				this.INTERNAL_set_localPosition(ref value);
 			}
 		}
+
 		public Vector3 eulerAngles
 		{
 			get
@@ -68,19 +77,19 @@ namespace UnityEngine
 				this.rotation = Quaternion.Euler(value);
 			}
 		}
+
 		public Vector3 localEulerAngles
 		{
 			get
 			{
-				Vector3 result;
-				this.INTERNAL_get_localEulerAngles(out result);
-				return result;
+				return this.localRotation.eulerAngles;
 			}
 			set
 			{
-				this.INTERNAL_set_localEulerAngles(ref value);
+				this.localRotation = Quaternion.Euler(value);
 			}
 		}
+
 		public Vector3 right
 		{
 			get
@@ -92,6 +101,7 @@ namespace UnityEngine
 				this.rotation = Quaternion.FromToRotation(Vector3.right, value);
 			}
 		}
+
 		public Vector3 up
 		{
 			get
@@ -103,6 +113,7 @@ namespace UnityEngine
 				this.rotation = Quaternion.FromToRotation(Vector3.up, value);
 			}
 		}
+
 		public Vector3 forward
 		{
 			get
@@ -114,6 +125,7 @@ namespace UnityEngine
 				this.rotation = Quaternion.LookRotation(value);
 			}
 		}
+
 		public Quaternion rotation
 		{
 			get
@@ -127,6 +139,7 @@ namespace UnityEngine
 				this.INTERNAL_set_rotation(ref value);
 			}
 		}
+
 		public Quaternion localRotation
 		{
 			get
@@ -140,6 +153,17 @@ namespace UnityEngine
 				this.INTERNAL_set_localRotation(ref value);
 			}
 		}
+
+		internal extern RotationOrder rotationOrder
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public Vector3 localScale
 		{
 			get
@@ -153,6 +177,7 @@ namespace UnityEngine
 				this.INTERNAL_set_localScale(ref value);
 			}
 		}
+
 		public Transform parent
 		{
 			get
@@ -168,6 +193,7 @@ namespace UnityEngine
 				this.parentInternal = value;
 			}
 		}
+
 		internal extern Transform parentInternal
 		{
 			[WrapperlessIcall]
@@ -177,6 +203,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Matrix4x4 worldToLocalMatrix
 		{
 			get
@@ -186,6 +213,7 @@ namespace UnityEngine
 				return result;
 			}
 		}
+
 		public Matrix4x4 localToWorldMatrix
 		{
 			get
@@ -195,18 +223,21 @@ namespace UnityEngine
 				return result;
 			}
 		}
+
 		public extern Transform root
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int childCount
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public Vector3 lossyScale
 		{
 			get
@@ -216,6 +247,7 @@ namespace UnityEngine
 				return result;
 			}
 		}
+
 		public extern bool hasChanged
 		{
 			[WrapperlessIcall]
@@ -225,64 +257,121 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern int hierarchyCapacity
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int hierarchyCount
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		protected Transform()
 		{
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_position(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_position(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_localPosition(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_localPosition(ref Vector3 value);
+
+		internal Vector3 GetLocalEulerAngles(RotationOrder order)
+		{
+			Vector3 result;
+			Transform.INTERNAL_CALL_GetLocalEulerAngles(this, order, out result);
+			return result;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_get_localEulerAngles(out Vector3 value);
+		private static extern void INTERNAL_CALL_GetLocalEulerAngles(Transform self, RotationOrder order, out Vector3 value);
+
+		internal void SetLocalEulerAngles(Vector3 euler, RotationOrder order)
+		{
+			Transform.INTERNAL_CALL_SetLocalEulerAngles(this, ref euler, order);
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void INTERNAL_set_localEulerAngles(ref Vector3 value);
+		private static extern void INTERNAL_CALL_SetLocalEulerAngles(Transform self, ref Vector3 euler, RotationOrder order);
+
+		internal void SetLocalEulerHint(Vector3 euler)
+		{
+			Transform.INTERNAL_CALL_SetLocalEulerHint(this, ref euler);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetLocalEulerHint(Transform self, ref Vector3 euler);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_rotation(out Quaternion value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_rotation(ref Quaternion value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_localRotation(out Quaternion value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_localRotation(ref Quaternion value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_localScale(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_localScale(ref Vector3 value);
+
 		public void SetParent(Transform parent)
 		{
 			this.SetParent(parent, true);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetParent(Transform parent, bool worldPositionStays);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_worldToLocalMatrix(out Matrix4x4 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_localToWorldMatrix(out Matrix4x4 value);
+
 		[ExcludeFromDocs]
 		public void Translate(Vector3 translation)
 		{
 			Space relativeTo = Space.Self;
 			this.Translate(translation, relativeTo);
 		}
+
 		public void Translate(Vector3 translation, [DefaultValue("Space.Self")] Space relativeTo)
 		{
 			if (relativeTo == Space.World)
@@ -294,16 +383,19 @@ namespace UnityEngine
 				this.position += this.TransformDirection(translation);
 			}
 		}
+
 		[ExcludeFromDocs]
 		public void Translate(float x, float y, float z)
 		{
 			Space relativeTo = Space.Self;
 			this.Translate(x, y, z, relativeTo);
 		}
+
 		public void Translate(float x, float y, float z, [DefaultValue("Space.Self")] Space relativeTo)
 		{
 			this.Translate(new Vector3(x, y, z), relativeTo);
 		}
+
 		public void Translate(Vector3 translation, Transform relativeTo)
 		{
 			if (relativeTo)
@@ -315,16 +407,19 @@ namespace UnityEngine
 				this.position += translation;
 			}
 		}
+
 		public void Translate(float x, float y, float z, Transform relativeTo)
 		{
 			this.Translate(new Vector3(x, y, z), relativeTo);
 		}
+
 		[ExcludeFromDocs]
 		public void Rotate(Vector3 eulerAngles)
 		{
 			Space relativeTo = Space.Self;
 			this.Rotate(eulerAngles, relativeTo);
 		}
+
 		public void Rotate(Vector3 eulerAngles, [DefaultValue("Space.Self")] Space relativeTo)
 		{
 			Quaternion rhs = Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z);
@@ -337,29 +432,35 @@ namespace UnityEngine
 				this.rotation *= Quaternion.Inverse(this.rotation) * rhs * this.rotation;
 			}
 		}
+
 		[ExcludeFromDocs]
 		public void Rotate(float xAngle, float yAngle, float zAngle)
 		{
 			Space relativeTo = Space.Self;
 			this.Rotate(xAngle, yAngle, zAngle, relativeTo);
 		}
+
 		public void Rotate(float xAngle, float yAngle, float zAngle, [DefaultValue("Space.Self")] Space relativeTo)
 		{
 			this.Rotate(new Vector3(xAngle, yAngle, zAngle), relativeTo);
 		}
+
 		internal void RotateAroundInternal(Vector3 axis, float angle)
 		{
 			Transform.INTERNAL_CALL_RotateAroundInternal(this, ref axis, angle);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RotateAroundInternal(Transform self, ref Vector3 axis, float angle);
+
 		[ExcludeFromDocs]
 		public void Rotate(Vector3 axis, float angle)
 		{
 			Space relativeTo = Space.Self;
 			this.Rotate(axis, angle, relativeTo);
 		}
+
 		public void Rotate(Vector3 axis, float angle, [DefaultValue("Space.Self")] Space relativeTo)
 		{
 			if (relativeTo == Space.Self)
@@ -371,6 +472,7 @@ namespace UnityEngine
 				this.RotateAroundInternal(axis, angle * 0.0174532924f);
 			}
 		}
+
 		public void RotateAround(Vector3 point, Vector3 axis, float angle)
 		{
 			Vector3 vector = this.position;
@@ -381,12 +483,14 @@ namespace UnityEngine
 			this.position = vector;
 			this.RotateAroundInternal(axis, angle * 0.0174532924f);
 		}
+
 		[ExcludeFromDocs]
 		public void LookAt(Transform target)
 		{
 			Vector3 up = Vector3.up;
 			this.LookAt(target, up);
 		}
+
 		public void LookAt(Transform target, [DefaultValue("Vector3.up")] Vector3 worldUp)
 		{
 			if (target)
@@ -394,142 +498,193 @@ namespace UnityEngine
 				this.LookAt(target.position, worldUp);
 			}
 		}
+
 		public void LookAt(Vector3 worldPosition, [DefaultValue("Vector3.up")] Vector3 worldUp)
 		{
 			Transform.INTERNAL_CALL_LookAt(this, ref worldPosition, ref worldUp);
 		}
+
 		[ExcludeFromDocs]
 		public void LookAt(Vector3 worldPosition)
 		{
 			Vector3 up = Vector3.up;
 			Transform.INTERNAL_CALL_LookAt(this, ref worldPosition, ref up);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_LookAt(Transform self, ref Vector3 worldPosition, ref Vector3 worldUp);
+
 		public Vector3 TransformDirection(Vector3 direction)
 		{
-			return Transform.INTERNAL_CALL_TransformDirection(this, ref direction);
+			Vector3 result;
+			Transform.INTERNAL_CALL_TransformDirection(this, ref direction, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_TransformDirection(Transform self, ref Vector3 direction);
+		private static extern void INTERNAL_CALL_TransformDirection(Transform self, ref Vector3 direction, out Vector3 value);
+
 		public Vector3 TransformDirection(float x, float y, float z)
 		{
 			return this.TransformDirection(new Vector3(x, y, z));
 		}
+
 		public Vector3 InverseTransformDirection(Vector3 direction)
 		{
-			return Transform.INTERNAL_CALL_InverseTransformDirection(this, ref direction);
+			Vector3 result;
+			Transform.INTERNAL_CALL_InverseTransformDirection(this, ref direction, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_InverseTransformDirection(Transform self, ref Vector3 direction);
+		private static extern void INTERNAL_CALL_InverseTransformDirection(Transform self, ref Vector3 direction, out Vector3 value);
+
 		public Vector3 InverseTransformDirection(float x, float y, float z)
 		{
 			return this.InverseTransformDirection(new Vector3(x, y, z));
 		}
+
 		public Vector3 TransformVector(Vector3 vector)
 		{
-			return Transform.INTERNAL_CALL_TransformVector(this, ref vector);
+			Vector3 result;
+			Transform.INTERNAL_CALL_TransformVector(this, ref vector, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_TransformVector(Transform self, ref Vector3 vector);
+		private static extern void INTERNAL_CALL_TransformVector(Transform self, ref Vector3 vector, out Vector3 value);
+
 		public Vector3 TransformVector(float x, float y, float z)
 		{
 			return this.TransformVector(new Vector3(x, y, z));
 		}
+
 		public Vector3 InverseTransformVector(Vector3 vector)
 		{
-			return Transform.INTERNAL_CALL_InverseTransformVector(this, ref vector);
+			Vector3 result;
+			Transform.INTERNAL_CALL_InverseTransformVector(this, ref vector, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_InverseTransformVector(Transform self, ref Vector3 vector);
+		private static extern void INTERNAL_CALL_InverseTransformVector(Transform self, ref Vector3 vector, out Vector3 value);
+
 		public Vector3 InverseTransformVector(float x, float y, float z)
 		{
 			return this.InverseTransformVector(new Vector3(x, y, z));
 		}
+
 		public Vector3 TransformPoint(Vector3 position)
 		{
-			return Transform.INTERNAL_CALL_TransformPoint(this, ref position);
+			Vector3 result;
+			Transform.INTERNAL_CALL_TransformPoint(this, ref position, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_TransformPoint(Transform self, ref Vector3 position);
+		private static extern void INTERNAL_CALL_TransformPoint(Transform self, ref Vector3 position, out Vector3 value);
+
 		public Vector3 TransformPoint(float x, float y, float z)
 		{
 			return this.TransformPoint(new Vector3(x, y, z));
 		}
+
 		public Vector3 InverseTransformPoint(Vector3 position)
 		{
-			return Transform.INTERNAL_CALL_InverseTransformPoint(this, ref position);
+			Vector3 result;
+			Transform.INTERNAL_CALL_InverseTransformPoint(this, ref position, out result);
+			return result;
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_InverseTransformPoint(Transform self, ref Vector3 position);
+		private static extern void INTERNAL_CALL_InverseTransformPoint(Transform self, ref Vector3 position, out Vector3 value);
+
 		public Vector3 InverseTransformPoint(float x, float y, float z)
 		{
 			return this.InverseTransformPoint(new Vector3(x, y, z));
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DetachChildren();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAsFirstSibling();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAsLastSibling();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetSiblingIndex(int index);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetSiblingIndex();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Transform Find(string name);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SendTransformChangedScale();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_lossyScale(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsChildOf(Transform parent);
+
 		public Transform FindChild(string name)
 		{
 			return this.Find(name);
 		}
+
 		public IEnumerator GetEnumerator()
 		{
 			return new Transform.Enumerator(this);
 		}
+
 		[Obsolete("use Transform.Rotate instead.")]
 		public void RotateAround(Vector3 axis, float angle)
 		{
 			Transform.INTERNAL_CALL_RotateAround(this, ref axis, angle);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RotateAround(Transform self, ref Vector3 axis, float angle);
+
 		[Obsolete("use Transform.Rotate instead.")]
 		public void RotateAroundLocal(Vector3 axis, float angle)
 		{
 			Transform.INTERNAL_CALL_RotateAroundLocal(this, ref axis, angle);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RotateAroundLocal(Transform self, ref Vector3 axis, float angle);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Transform GetChild(int index);
+
 		[Obsolete("use Transform.childCount instead."), WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetChildCount();
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool IsNonUniformScaleTransform();

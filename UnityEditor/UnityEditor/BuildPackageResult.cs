@@ -2,17 +2,21 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class BuildPackageResult : AssetStoreResultBase<BuildPackageResult>
 	{
 		internal AssetStoreAsset asset;
+
 		internal int packageID;
+
 		internal BuildPackageResult(AssetStoreAsset asset, AssetStoreResultBase<BuildPackageResult>.Callback c) : base(c)
 		{
 			this.asset = asset;
 			this.packageID = -1;
 		}
+
 		protected override void Parse(Dictionary<string, JSONValue> dict)
 		{
 			dict = dict["download"].AsDict();

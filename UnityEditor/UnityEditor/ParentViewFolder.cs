@@ -1,16 +1,24 @@
 using System;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class ParentViewFolder
 	{
 		private const string rootDirText = "/";
+
 		private const string assetsFolder = "Assets";
+
 		private const string libraryFolder = "Library";
+
 		public string guid;
+
 		public string name;
+
 		public ChangeFlags changeFlags;
+
 		public ParentViewFile[] files;
+
 		public ParentViewFolder(string name, string guid)
 		{
 			this.guid = guid;
@@ -18,6 +26,7 @@ namespace UnityEditor
 			this.changeFlags = ChangeFlags.None;
 			this.files = new ParentViewFile[0];
 		}
+
 		public ParentViewFolder(string name, string guid, ChangeFlags flags)
 		{
 			this.guid = guid;
@@ -25,6 +34,7 @@ namespace UnityEditor
 			this.changeFlags = flags;
 			this.files = new ParentViewFile[0];
 		}
+
 		public static string MakeNiceName(string name)
 		{
 			if (name.StartsWith("Assets"))
@@ -45,6 +55,7 @@ namespace UnityEditor
 				return (!(name == string.Empty)) ? name : "/";
 			}
 		}
+
 		public ParentViewFolder CloneWithoutFiles()
 		{
 			return new ParentViewFolder(this.name, this.guid, this.changeFlags);

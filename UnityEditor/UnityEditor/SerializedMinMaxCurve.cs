@@ -1,25 +1,43 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SerializedMinMaxCurve
 	{
 		public SerializedProperty scalar;
+
 		public SerializedProperty maxCurve;
+
 		public SerializedProperty minCurve;
+
 		public SerializedProperty minCurveFirstKeyValue;
+
 		public SerializedProperty maxCurveFirstKeyValue;
+
 		private SerializedProperty minMaxState;
+
 		public ModuleUI m_Module;
+
 		private string m_Name;
+
 		public GUIContent m_DisplayName;
+
 		private bool m_SignedRange;
+
 		public float m_DefaultCurveScalar;
+
 		public float m_RemapValue;
+
 		public bool m_AllowConstant;
+
 		public bool m_AllowRandom;
+
+		public bool m_AllowCurves;
+
 		public float m_MaxAllowedScalar = float.PositiveInfinity;
+
 		public MinMaxCurveState state
 		{
 			get
@@ -31,6 +49,7 @@ namespace UnityEditor
 				this.SetMinMaxState(value);
 			}
 		}
+
 		public bool signedRange
 		{
 			get
@@ -38,6 +57,7 @@ namespace UnityEditor
 				return this.m_SignedRange;
 			}
 		}
+
 		public float maxConstant
 		{
 			get
@@ -65,6 +85,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public float minConstant
 		{
 			get
@@ -92,23 +113,33 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName)
 		{
-			this.Init(m, displayName, "curve", false);
+			this.Init(m, displayName, "curve", false, false);
 		}
+
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name)
 		{
-			this.Init(m, displayName, name, false);
+			this.Init(m, displayName, name, false, false);
 		}
+
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, bool signedRange)
 		{
-			this.Init(m, displayName, "curve", signedRange);
+			this.Init(m, displayName, "curve", signedRange, false);
 		}
+
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name, bool signedRange)
 		{
-			this.Init(m, displayName, name, signedRange);
+			this.Init(m, displayName, name, signedRange, false);
 		}
-		private void Init(ModuleUI m, GUIContent displayName, string uniqueName, bool signedRange)
+
+		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name, bool signedRange, bool useProp0)
+		{
+			this.Init(m, displayName, name, signedRange, useProp0);
+		}
+
+		private void Init(ModuleUI m, GUIContent displayName, string uniqueName, bool signedRange, bool useProp0)
 		{
 			this.m_Module = m;
 			this.m_DisplayName = displayName;
@@ -118,18 +149,20 @@ namespace UnityEditor
 			this.m_DefaultCurveScalar = 1f;
 			this.m_AllowConstant = true;
 			this.m_AllowRandom = true;
-			this.scalar = m.GetProperty(this.m_Name, "scalar");
-			this.maxCurve = m.GetProperty(this.m_Name, "maxCurve");
+			this.m_AllowCurves = true;
+			this.scalar = ((!useProp0) ? m.GetProperty(this.m_Name, "scalar") : m.GetProperty0(this.m_Name, "scalar"));
+			this.maxCurve = ((!useProp0) ? m.GetProperty(this.m_Name, "maxCurve") : m.GetProperty0(this.m_Name, "maxCurve"));
 			this.maxCurveFirstKeyValue = this.maxCurve.FindPropertyRelative("m_Curve.Array.data[0].value");
-			this.minCurve = m.GetProperty(this.m_Name, "minCurve");
+			this.minCurve = ((!useProp0) ? m.GetProperty(this.m_Name, "minCurve") : m.GetProperty0(this.m_Name, "minCurve"));
 			this.minCurveFirstKeyValue = this.minCurve.FindPropertyRelative("m_Curve.Array.data[0].value");
-			this.minMaxState = m.GetProperty(this.m_Name, "minMaxState");
+			this.minMaxState = ((!useProp0) ? m.GetProperty(this.m_Name, "minMaxState") : m.GetProperty0(this.m_Name, "minMaxState"));
 			if ((this.state == MinMaxCurveState.k_Curve || this.state == MinMaxCurveState.k_TwoCurves) && this.m_Module.m_ParticleSystemUI.m_ParticleEffectUI.IsParticleSystemUIVisible(this.m_Module.m_ParticleSystemUI))
 			{
 				m.GetParticleSystemCurveEditor().AddCurveDataIfNeeded(this.GetUniqueCurveName(), this.CreateCurveData(Color.black));
 			}
 			m.AddToModuleCurves(this.maxCurve);
 		}
+
 		private float ClampValueToMaxAllowed(float val)
 		{
 			if (Mathf.Abs(val) > this.m_MaxAllowedScalar)
@@ -138,12 +171,14 @@ namespace UnityEditor
 			}
 			return val;
 		}
+
 		public void SetScalarAndNormalizedConstants(float newScalar, float totalMin, float totalMax)
 		{
 			this.scalar.floatValue = newScalar;
 			this.SetNormalizedConstant(this.minCurve, totalMin);
 			this.SetNormalizedConstant(this.maxCurve, totalMax);
 		}
+
 		private void SetNormalizedConstant(SerializedProperty curve, float totalValue)
 		{
 			float num = this.scalar.floatValue;
@@ -151,15 +186,18 @@ namespace UnityEditor
 			float value = totalValue / num;
 			this.SetCurveConstant(curve, value);
 		}
+
 		public Vector2 GetAxisScalars()
 		{
 			return new Vector2(this.m_Module.GetXAxisScalar(), this.scalar.floatValue * this.m_RemapValue);
 		}
+
 		public void SetAxisScalars(Vector2 axisScalars)
 		{
 			float num = (this.m_RemapValue != 0f) ? this.m_RemapValue : 1f;
 			this.scalar.floatValue = axisScalars.y / num;
 		}
+
 		public void RemoveCurveFromEditor()
 		{
 			ParticleSystemCurveEditor particleSystemCurveEditor = this.m_Module.GetParticleSystemCurveEditor();
@@ -168,6 +206,7 @@ namespace UnityEditor
 				particleSystemCurveEditor.RemoveCurve(this.GetMinCurve(), this.maxCurve);
 			}
 		}
+
 		public bool OnCurveAreaMouseDown(int button, Rect drawRect, Rect curveRanges)
 		{
 			if (button == 0)
@@ -182,14 +221,17 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public ParticleSystemCurveEditor.CurveData CreateCurveData(Color color)
 		{
 			return new ParticleSystemCurveEditor.CurveData(this.GetUniqueCurveName(), this.m_DisplayName, this.GetMinCurve(), this.maxCurve, color, this.m_SignedRange, new CurveWrapper.GetAxisScalarsCallback(this.GetAxisScalars), new CurveWrapper.SetAxisScalarsCallback(this.SetAxisScalars), this.m_Module.foldout);
 		}
+
 		private SerializedProperty GetMinCurve()
 		{
 			return (this.state != MinMaxCurveState.k_TwoCurves) ? null : this.minCurve;
 		}
+
 		public void ToggleCurveInEditor()
 		{
 			ParticleSystemCurveEditor particleSystemCurveEditor = this.m_Module.GetParticleSystemCurveEditor();
@@ -202,6 +244,7 @@ namespace UnityEditor
 				particleSystemCurveEditor.AddCurve(this.CreateCurveData(particleSystemCurveEditor.GetAvailableColor()));
 			}
 		}
+
 		private void SetMinMaxState(MinMaxCurveState newState)
 		{
 			if (newState == this.state)
@@ -245,6 +288,7 @@ namespace UnityEditor
 			}
 			AnimationCurvePreviewCache.ClearCache();
 		}
+
 		private void InitSingleScalar(MinMaxCurveState oldState)
 		{
 			switch (oldState)
@@ -260,6 +304,7 @@ namespace UnityEditor
 			}
 			this.SetCurveConstant(this.maxCurve, 1f);
 		}
+
 		private void InitDoubleScalars(MinMaxCurveState oldState)
 		{
 			this.minConstant = this.GetAverageKeyValue(this.minCurve.animationCurveValue.keys) * this.scalar.floatValue;
@@ -278,6 +323,7 @@ namespace UnityEditor
 			}
 			this.SetCurveRequirements();
 		}
+
 		private void InitSingleCurve(MinMaxCurveState oldState)
 		{
 			switch (oldState)
@@ -288,6 +334,7 @@ namespace UnityEditor
 			}
 			this.SetCurveRequirements();
 		}
+
 		private void InitDoubleCurves(MinMaxCurveState oldState)
 		{
 			switch (oldState)
@@ -298,6 +345,7 @@ namespace UnityEditor
 			}
 			this.SetCurveRequirements();
 		}
+
 		private float GetNormalizedValueFromScalar()
 		{
 			if (this.scalar.floatValue < 0f)
@@ -310,6 +358,7 @@ namespace UnityEditor
 			}
 			return 0f;
 		}
+
 		private void SetCurveRequirements()
 		{
 			this.scalar.floatValue = Mathf.Abs(this.scalar.floatValue);
@@ -318,6 +367,7 @@ namespace UnityEditor
 				this.scalar.floatValue = this.m_DefaultCurveScalar;
 			}
 		}
+
 		private void SetCurveConstant(SerializedProperty curve, float value)
 		{
 			curve.animationCurveValue = new AnimationCurve(new Keyframe[]
@@ -325,6 +375,7 @@ namespace UnityEditor
 				new Keyframe(0f, value)
 			});
 		}
+
 		private float GetAverageKeyValue(Keyframe[] keyFrames)
 		{
 			float num = 0f;
@@ -335,6 +386,7 @@ namespace UnityEditor
 			}
 			return num / (float)keyFrames.Length;
 		}
+
 		private float GetMaxKeyValue(Keyframe[] keyFrames)
 		{
 			float num = float.NegativeInfinity;
@@ -357,6 +409,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private bool IsCurveConstant(Keyframe[] keyFrames, out float constantValue)
 		{
 			if (keyFrames.Length == 0)
@@ -374,10 +427,12 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		public string GetUniqueCurveName()
 		{
 			return SerializedModule.Concat(this.m_Module.GetUniqueModuleName(), this.m_Name);
 		}
+
 		public bool SupportsProcedural()
 		{
 			bool flag = AnimationUtility.CurveSupportsProcedural(this.maxCurve.animationCurveValue);

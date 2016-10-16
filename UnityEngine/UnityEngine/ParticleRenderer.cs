@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
+
 namespace UnityEngine
 {
+	[Obsolete("This component is part of the legacy particle system, which is deprecated and will be removed in a future release. Use the ParticleSystem component instead.", false)]
 	public sealed class ParticleRenderer : Renderer
 	{
 		public extern ParticleRenderMode particleRenderMode
@@ -13,6 +15,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float lengthScale
 		{
 			[WrapperlessIcall]
@@ -22,6 +25,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float velocityScale
 		{
 			[WrapperlessIcall]
@@ -31,6 +35,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float cameraVelocityScale
 		{
 			[WrapperlessIcall]
@@ -40,6 +45,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float maxParticleSize
 		{
 			[WrapperlessIcall]
@@ -49,6 +55,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int uvAnimationXTile
 		{
 			[WrapperlessIcall]
@@ -58,6 +65,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int uvAnimationYTile
 		{
 			[WrapperlessIcall]
@@ -67,6 +75,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float uvAnimationCycles
 		{
 			[WrapperlessIcall]
@@ -76,6 +85,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("animatedTextureCount has been replaced by uvAnimationXTile and uvAnimationYTile.")]
 		public int animatedTextureCount
 		{
@@ -88,6 +98,7 @@ namespace UnityEngine
 				this.uvAnimationXTile = value;
 			}
 		}
+
 		public float maxPartileSize
 		{
 			get
@@ -99,6 +110,7 @@ namespace UnityEngine
 				this.maxParticleSize = value;
 			}
 		}
+
 		public extern Rect[] uvTiles
 		{
 			[WrapperlessIcall]
@@ -108,6 +120,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("This function has been removed.", true)]
 		public AnimationCurve widthCurve
 		{
@@ -119,6 +132,7 @@ namespace UnityEngine
 			{
 			}
 		}
+
 		[Obsolete("This function has been removed.", true)]
 		public AnimationCurve heightCurve
 		{
@@ -130,6 +144,7 @@ namespace UnityEngine
 			{
 			}
 		}
+
 		[Obsolete("This function has been removed.", true)]
 		public AnimationCurve rotationCurve
 		{

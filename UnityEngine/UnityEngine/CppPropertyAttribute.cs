@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
@@ -7,6 +8,7 @@ namespace UnityEngine
 		public CppPropertyAttribute(string getter, string setter)
 		{
 		}
+
 		public CppPropertyAttribute(string getter)
 		{
 		}

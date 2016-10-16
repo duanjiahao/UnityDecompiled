@@ -3,36 +3,55 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Internal;
+
 namespace UnityEditor
 {
 	public class EditorWindow : ScriptableObject
 	{
 		private const double kWarningFadeoutWait = 4.0;
+
 		private const double kWarningFadeoutTime = 1.0;
+
 		[HideInInspector, SerializeField]
 		private bool m_AutoRepaintOnSceneChange;
+
 		[HideInInspector, SerializeField]
 		private Vector2 m_MinSize = new Vector2(100f, 100f);
+
 		[HideInInspector, SerializeField]
 		private Vector2 m_MaxSize = new Vector2(4000f, 4000f);
+
 		[HideInInspector, SerializeField]
-		internal string m_Title;
+		internal GUIContent m_TitleContent;
+
 		[HideInInspector, SerializeField]
 		private int m_DepthBufferBits;
+
 		[HideInInspector, SerializeField]
 		private int m_AntiAlias;
+
 		[HideInInspector, SerializeField]
 		internal Rect m_Pos = new Rect(0f, 0f, 320f, 240f);
-		[NonSerialized]
-		private GUIContent m_CachedTitleContent;
+
 		private Rect m_GameViewRect;
+
+		private Rect m_GameViewClippedRect;
+
+		private Vector2 m_GameViewTargetSize;
+
 		private bool m_DontClearBackground;
+
 		private bool m_WantsMouseMove;
+
 		[NonSerialized]
 		internal HostView m_Parent;
+
 		internal GUIContent m_Notification;
+
 		private Vector2 m_NotificationSize;
+
 		internal float m_FadeoutTime;
+
 		public bool wantsMouseMove
 		{
 			get
@@ -45,6 +64,7 @@ namespace UnityEditor
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
+
 		internal bool dontClearBackground
 		{
 			get
@@ -60,6 +80,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public bool autoRepaintOnSceneChange
 		{
 			get
@@ -72,6 +93,7 @@ namespace UnityEditor
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
+
 		public bool maximized
 		{
 			get
@@ -94,6 +116,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal bool hasFocus
 		{
 			get
@@ -101,6 +124,7 @@ namespace UnityEditor
 				return this.m_Parent && this.m_Parent.actualView == this;
 			}
 		}
+
 		internal bool docked
 		{
 			get
@@ -108,6 +132,7 @@ namespace UnityEditor
 				return this.m_Parent != null && this.m_Parent.window != null && !this.m_Parent.window.IsNotDocked();
 			}
 		}
+
 		public static EditorWindow focusedWindow
 		{
 			get
@@ -120,6 +145,7 @@ namespace UnityEditor
 				return null;
 			}
 		}
+
 		public static EditorWindow mouseOverWindow
 		{
 			get
@@ -132,6 +158,7 @@ namespace UnityEditor
 				return null;
 			}
 		}
+
 		public Vector2 minSize
 		{
 			get
@@ -144,6 +171,7 @@ namespace UnityEditor
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
+
 		public Vector2 maxSize
 		{
 			get
@@ -156,33 +184,41 @@ namespace UnityEditor
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
+
+		[Obsolete("Use titleContent instead (it supports setting a title icon as well).")]
 		public string title
 		{
 			get
 			{
-				return this.m_Title;
+				return this.titleContent.text;
 			}
 			set
 			{
-				this.m_Title = value;
-				this.m_CachedTitleContent = null;
-				if (this.m_Parent && this.m_Parent.window && this.m_Parent.window.mainView == this.m_Parent)
-				{
-					this.m_Parent.window.title = this.m_Title;
-				}
+				this.titleContent = EditorGUIUtility.TextContent(value);
 			}
 		}
-		internal GUIContent cachedTitleContent
+
+		public GUIContent titleContent
 		{
 			get
 			{
-				if (this.m_CachedTitleContent == null)
+				GUIContent arg_1B_0;
+				if ((arg_1B_0 = this.m_TitleContent) == null)
 				{
-					this.m_CachedTitleContent = EditorGUIUtility.TextContent(this.m_Title);
+					arg_1B_0 = (this.m_TitleContent = new GUIContent());
 				}
-				return this.m_CachedTitleContent;
+				return arg_1B_0;
+			}
+			set
+			{
+				this.m_TitleContent = value;
+				if (this.m_TitleContent != null && this.m_Parent && this.m_Parent.window && this.m_Parent.window.mainView == this.m_Parent)
+				{
+					this.m_Parent.window.title = this.m_TitleContent.text;
+				}
 			}
 		}
+
 		public int depthBufferBits
 		{
 			get
@@ -194,6 +230,7 @@ namespace UnityEditor
 				this.m_DepthBufferBits = value;
 			}
 		}
+
 		public int antiAlias
 		{
 			get
@@ -205,6 +242,7 @@ namespace UnityEditor
 				this.m_AntiAlias = value;
 			}
 		}
+
 		public Rect position
 		{
 			get
@@ -221,37 +259,91 @@ namespace UnityEditor
 					{
 						this.m_Parent.window.position = value;
 					}
+					else if (!dockArea || (dockArea.parent && dockArea.m_Panes.Count == 1 && !dockArea.parent.parent))
+					{
+						dockArea.window.position = dockArea.borderSize.Add(value);
+					}
 					else
 					{
-						if (!dockArea || (dockArea.parent && dockArea.m_Panes.Count == 1 && !dockArea.parent.parent))
-						{
-							dockArea.window.position = dockArea.borderSize.Add(value);
-						}
-						else
-						{
-							dockArea.RemoveTab(this);
-							EditorWindow.CreateNewWindowForEditorWindow(this, true, true);
-						}
+						dockArea.RemoveTab(this);
+						EditorWindow.CreateNewWindowForEditorWindow(this, true, true);
 					}
 				}
 			}
 		}
+
 		public EditorWindow()
 		{
-			this.title = base.GetType().ToString();
-			base.hideFlags = HideFlags.DontSave;
+			this.titleContent.text = base.GetType().ToString();
 		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void MakeModal(ContainerWindow win);
+
+		[ExcludeFromDocs]
+		public static EditorWindow GetWindow(Type t, bool utility, string title)
+		{
+			bool focus = true;
+			return EditorWindow.GetWindow(t, utility, title, focus);
+		}
+
+		[ExcludeFromDocs]
+		public static EditorWindow GetWindow(Type t, bool utility)
+		{
+			bool focus = true;
+			string title = null;
+			return EditorWindow.GetWindow(t, utility, title, focus);
+		}
+
+		[ExcludeFromDocs]
+		public static EditorWindow GetWindow(Type t)
+		{
+			bool focus = true;
+			string title = null;
+			bool utility = false;
+			return EditorWindow.GetWindow(t, utility, title, focus);
+		}
+
+		public static EditorWindow GetWindow(Type t, [DefaultValue("false")] bool utility, [DefaultValue("null")] string title, [DefaultValue("true")] bool focus)
+		{
+			return EditorWindow.GetWindowPrivate(t, utility, title, focus);
+		}
+
+		[ExcludeFromDocs]
+		public static EditorWindow GetWindowWithRect(Type t, Rect rect, bool utility)
+		{
+			string title = null;
+			return EditorWindow.GetWindowWithRect(t, rect, utility, title);
+		}
+
+		[ExcludeFromDocs]
+		public static EditorWindow GetWindowWithRect(Type t, Rect rect)
+		{
+			string title = null;
+			bool utility = false;
+			return EditorWindow.GetWindowWithRect(t, rect, utility, title);
+		}
+
+		public static EditorWindow GetWindowWithRect(Type t, Rect rect, [DefaultValue("false")] bool utility, [DefaultValue("null")] string title)
+		{
+			return EditorWindow.GetWindowWithRectPrivate(t, rect, utility, title);
+		}
+
 		public void BeginWindows()
 		{
 			EditorGUIInternal.BeginWindowsForward(1, base.GetInstanceID());
 		}
+
 		public void EndWindows()
 		{
 			GUI.EndWindows();
 		}
+
 		internal virtual void OnResized()
 		{
 		}
+
 		internal void CheckForWindowRepaint()
 		{
 			double timeSinceStartup = EditorApplication.timeSinceStartup;
@@ -266,17 +358,61 @@ namespace UnityEditor
 			}
 			this.Repaint();
 		}
+
+		internal GUIContent GetLocalizedTitleContent()
+		{
+			return EditorWindow.GetLocalizedTitleContentFromType(base.GetType());
+		}
+
+		internal static GUIContent GetLocalizedTitleContentFromType(Type t)
+		{
+			EditorWindowTitleAttribute editorWindowTitleAttribute = EditorWindow.GetEditorWindowTitleAttribute(t);
+			if (editorWindowTitleAttribute == null)
+			{
+				return new GUIContent(t.ToString());
+			}
+			string text = string.Empty;
+			if (!string.IsNullOrEmpty(editorWindowTitleAttribute.icon))
+			{
+				text = editorWindowTitleAttribute.icon;
+			}
+			else if (editorWindowTitleAttribute.useTypeNameAsIconName)
+			{
+				text = t.ToString();
+			}
+			if (!string.IsNullOrEmpty(text))
+			{
+				return EditorGUIUtility.TextContentWithIcon(editorWindowTitleAttribute.title, text);
+			}
+			return EditorGUIUtility.TextContent(editorWindowTitleAttribute.title);
+		}
+
+		private static EditorWindowTitleAttribute GetEditorWindowTitleAttribute(Type t)
+		{
+			object[] customAttributes = t.GetCustomAttributes(true);
+			object[] array = customAttributes;
+			for (int i = 0; i < array.Length; i++)
+			{
+				object obj = array[i];
+				Attribute attribute = (Attribute)obj;
+				if (attribute.TypeId == typeof(EditorWindowTitleAttribute))
+				{
+					return (EditorWindowTitleAttribute)obj;
+				}
+			}
+			return null;
+		}
+
 		public void ShowNotification(GUIContent notification)
 		{
 			this.m_Notification = new GUIContent(notification);
-			EditorStyles.notificationText.CalcMinMaxWidth(this.m_Notification, out this.m_NotificationSize.y, out this.m_NotificationSize.x);
-			this.m_NotificationSize.y = EditorStyles.notificationText.CalcHeight(this.m_Notification, this.m_NotificationSize.x);
 			if (this.m_FadeoutTime == 0f)
 			{
 				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.CheckForWindowRepaint));
 			}
 			this.m_FadeoutTime = (float)(EditorApplication.timeSinceStartup + 4.0);
 		}
+
 		public void RemoveNotification()
 		{
 			if (this.m_FadeoutTime == 0f)
@@ -287,8 +423,11 @@ namespace UnityEditor
 			this.m_Notification = null;
 			this.m_FadeoutTime = 0f;
 		}
+
 		internal void DrawNotification()
 		{
+			EditorStyles.notificationText.CalcMinMaxWidth(this.m_Notification, out this.m_NotificationSize.y, out this.m_NotificationSize.x);
+			this.m_NotificationSize.y = EditorStyles.notificationText.CalcHeight(this.m_Notification, this.m_NotificationSize.x);
 			Vector2 notificationSize = this.m_NotificationSize;
 			float num = this.position.width - (float)EditorStyles.notificationText.margin.horizontal;
 			float num2 = this.position.height - (float)EditorStyles.notificationText.margin.vertical - 20f;
@@ -311,6 +450,7 @@ namespace UnityEditor
 			GUI.Label(position, GUIContent.none, EditorStyles.notificationBackground);
 			EditorGUI.DoDropShadowLabel(position, this.m_Notification, EditorStyles.notificationText, 0.3f);
 		}
+
 		internal int GetNumTabs()
 		{
 			DockArea dockArea = this.m_Parent as DockArea;
@@ -320,6 +460,7 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		internal bool ShowNextTabIfPossible()
 		{
 			DockArea dockArea = this.m_Parent as DockArea;
@@ -336,6 +477,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public void ShowTab()
 		{
 			DockArea dockArea = this.m_Parent as DockArea;
@@ -349,6 +491,7 @@ namespace UnityEditor
 			}
 			this.Repaint();
 		}
+
 		public void Focus()
 		{
 			if (this.m_Parent)
@@ -357,6 +500,7 @@ namespace UnityEditor
 				this.m_Parent.Focus();
 			}
 		}
+
 		internal void MakeParentsSettingsMatchMe()
 		{
 			if (!this.m_Parent || this.m_Parent.actualView != this)
@@ -368,7 +512,7 @@ namespace UnityEditor
 			bool flag = this.m_Parent.antiAlias != this.m_AntiAlias || this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
 			this.m_Parent.antiAlias = this.m_AntiAlias;
 			this.m_Parent.depthBufferBits = this.m_DepthBufferBits;
-			this.m_Parent.SetInternalGameViewRect(this.m_GameViewRect);
+			this.m_Parent.SetInternalGameViewDimensions(this.m_GameViewRect, this.m_GameViewClippedRect, this.m_GameViewTargetSize);
 			this.m_Parent.wantsMouseMove = this.m_WantsMouseMove;
 			Vector2 b = new Vector2((float)(this.m_Parent.borderSize.left + this.m_Parent.borderSize.right), (float)(this.m_Parent.borderSize.top + this.m_Parent.borderSize.bottom));
 			this.m_Parent.SetMinMaxSizes(this.minSize + b, this.maxSize + b);
@@ -377,16 +521,18 @@ namespace UnityEditor
 				this.m_Parent.RecreateContext();
 			}
 		}
+
 		public void ShowUtility()
 		{
 			this.ShowWithMode(ShowMode.Utility);
 		}
+
 		public void ShowPopup()
 		{
 			if (this.m_Parent == null)
 			{
 				ContainerWindow containerWindow = ScriptableObject.CreateInstance<ContainerWindow>();
-				containerWindow.title = this.title;
+				containerWindow.title = this.titleContent.text;
 				HostView hostView = ScriptableObject.CreateInstance<HostView>();
 				hostView.actualView = this;
 				Rect position = this.m_Parent.borderSize.Add(new Rect(this.position.x, this.position.y, this.position.width, this.position.height));
@@ -396,13 +542,14 @@ namespace UnityEditor
 				containerWindow.ShowPopup();
 			}
 		}
+
 		internal void ShowWithMode(ShowMode mode)
 		{
 			if (this.m_Parent == null)
 			{
 				SavedGUIState savedGUIState = SavedGUIState.Create();
 				ContainerWindow containerWindow = ScriptableObject.CreateInstance<ContainerWindow>();
-				containerWindow.title = this.title;
+				containerWindow.title = this.titleContent.text;
 				HostView hostView = ScriptableObject.CreateInstance<HostView>();
 				hostView.actualView = this;
 				Rect position = this.m_Parent.borderSize.Add(new Rect(this.position.x, this.position.y, this.position.width, this.position.height));
@@ -413,10 +560,12 @@ namespace UnityEditor
 				savedGUIState.ApplyAndForget();
 			}
 		}
+
 		public void ShowAsDropDown(Rect buttonRect, Vector2 windowSize)
 		{
 			this.ShowAsDropDown(buttonRect, windowSize, null);
 		}
+
 		internal void ShowAsDropDown(Rect buttonRect, Vector2 windowSize, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
 			this.position = this.ShowAsDropDownFitToScreen(buttonRect, windowSize, locationPriorityOrder);
@@ -431,6 +580,7 @@ namespace UnityEditor
 			this.m_Parent.AddToAuxWindowList();
 			this.m_Parent.window.m_DontSaveToLayout = true;
 		}
+
 		internal Rect ShowAsDropDownFitToScreen(Rect buttonRect, Vector2 windowSize, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
 			if (this.m_Parent == null)
@@ -439,55 +589,34 @@ namespace UnityEditor
 			}
 			return this.m_Parent.window.GetDropDownRect(buttonRect, windowSize, windowSize, locationPriorityOrder);
 		}
-		[ExcludeFromDocs]
+
 		public void Show()
 		{
-			bool immediateDisplay = false;
-			this.Show(immediateDisplay);
+			this.Show(false);
 		}
-		public void Show([DefaultValue("false")] bool immediateDisplay)
+
+		public void Show(bool immediateDisplay)
 		{
 			if (this.m_Parent == null)
 			{
 				EditorWindow.CreateNewWindowForEditorWindow(this, true, immediateDisplay);
 			}
 		}
+
 		public void ShowAuxWindow()
 		{
 			this.ShowWithMode(ShowMode.AuxWindow);
 			this.Focus();
 			this.m_Parent.AddToAuxWindowList();
 		}
+
 		internal void ShowModal()
 		{
 			this.ShowWithMode(ShowMode.AuxWindow);
 			this.MakeModal(this.m_Parent.window);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern void MakeModal(ContainerWindow win);
-		[ExcludeFromDocs]
-		public static EditorWindow GetWindow(Type t, bool utility, string title)
-		{
-			bool focus = true;
-			return EditorWindow.GetWindow(t, utility, title, focus);
-		}
-		[ExcludeFromDocs]
-		public static EditorWindow GetWindow(Type t, bool utility)
-		{
-			bool focus = true;
-			string title = null;
-			return EditorWindow.GetWindow(t, utility, title, focus);
-		}
-		[ExcludeFromDocs]
-		public static EditorWindow GetWindow(Type t)
-		{
-			bool focus = true;
-			string title = null;
-			bool utility = false;
-			return EditorWindow.GetWindow(t, utility, title, focus);
-		}
-		public static EditorWindow GetWindow(Type t, [DefaultValue("false")] bool utility, [DefaultValue("null")] string title, [DefaultValue("true")] bool focus)
+
+		private static EditorWindow GetWindowPrivate(Type t, bool utility, string title, bool focus)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(t);
 			EditorWindow editorWindow = (array.Length <= 0) ? null : ((EditorWindow)array[0]);
@@ -496,7 +625,7 @@ namespace UnityEditor
 				editorWindow = (ScriptableObject.CreateInstance(t) as EditorWindow);
 				if (title != null)
 				{
-					editorWindow.title = title;
+					editorWindow.titleContent = new GUIContent(title);
 				}
 				if (utility)
 				{
@@ -507,48 +636,54 @@ namespace UnityEditor
 					editorWindow.Show();
 				}
 			}
-			else
+			else if (focus)
 			{
-				if (focus)
-				{
-					editorWindow.Show();
-					editorWindow.Focus();
-				}
+				editorWindow.Show();
+				editorWindow.Focus();
 			}
 			return editorWindow;
 		}
+
 		public static T GetWindow<T>() where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(false, null, true);
 		}
+
 		public static T GetWindow<T>(bool utility) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(utility, null, true);
 		}
+
 		public static T GetWindow<T>(bool utility, string title) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(utility, title, true);
 		}
+
 		public static T GetWindow<T>(string title) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(title, true);
 		}
+
 		public static T GetWindow<T>(string title, bool focus) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(false, title, focus);
 		}
+
 		public static T GetWindow<T>(bool utility, string title, bool focus) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow(typeof(T), utility, title, focus) as T;
 		}
+
 		public static T GetWindow<T>(params Type[] desiredDockNextTo) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(null, true, desiredDockNextTo);
 		}
+
 		public static T GetWindow<T>(string title, params Type[] desiredDockNextTo) where T : EditorWindow
 		{
 			return EditorWindow.GetWindow<T>(title, true, desiredDockNextTo);
 		}
+
 		public static T GetWindow<T>(string title, bool focus, params Type[] desiredDockNextTo) where T : EditorWindow
 		{
 			T[] array = Resources.FindObjectsOfTypeAll(typeof(T)) as T[];
@@ -564,16 +699,17 @@ namespace UnityEditor
 			t = ScriptableObject.CreateInstance<T>();
 			if (title != null)
 			{
-				t.title = title;
+				t.titleContent = new GUIContent(title);
 			}
 			Type desired;
 			for (int i = 0; i < desiredDockNextTo.Length; i++)
 			{
 				desired = desiredDockNextTo[i];
 				ContainerWindow[] windows = ContainerWindow.windows;
-				for (int j = 0; j < windows.Length; j++)
+				ContainerWindow[] array2 = windows;
+				for (int j = 0; j < array2.Length; j++)
 				{
-					ContainerWindow containerWindow = windows[j];
+					ContainerWindow containerWindow = array2[j];
 					View[] allChildren = containerWindow.mainView.allChildren;
 					for (int k = 0; k < allChildren.Length; k++)
 					{
@@ -593,6 +729,7 @@ namespace UnityEditor
 			t.Show();
 			return t;
 		}
+
 		public static void FocusWindowIfItsOpen(Type t)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(t);
@@ -602,10 +739,12 @@ namespace UnityEditor
 				editorWindow.Focus();
 			}
 		}
+
 		public static void FocusWindowIfItsOpen<T>() where T : EditorWindow
 		{
 			EditorWindow.FocusWindowIfItsOpen(typeof(T));
 		}
+
 		internal void RemoveFromDockArea()
 		{
 			DockArea dockArea = this.m_Parent as DockArea;
@@ -614,20 +753,8 @@ namespace UnityEditor
 				dockArea.RemoveTab(this, true);
 			}
 		}
-		[ExcludeFromDocs]
-		public static EditorWindow GetWindowWithRect(Type t, Rect rect, bool utility)
-		{
-			string title = null;
-			return EditorWindow.GetWindowWithRect(t, rect, utility, title);
-		}
-		[ExcludeFromDocs]
-		public static EditorWindow GetWindowWithRect(Type t, Rect rect)
-		{
-			string title = null;
-			bool utility = false;
-			return EditorWindow.GetWindowWithRect(t, rect, utility, title);
-		}
-		public static EditorWindow GetWindowWithRect(Type t, Rect rect, [DefaultValue("false")] bool utility, [DefaultValue("null")] string title)
+
+		private static EditorWindow GetWindowWithRectPrivate(Type t, Rect rect, bool utility, string title)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(t);
 			EditorWindow editorWindow = (array.Length <= 0) ? null : ((EditorWindow)array[0]);
@@ -639,7 +766,7 @@ namespace UnityEditor
 				editorWindow.position = rect;
 				if (title != null)
 				{
-					editorWindow.title = title;
+					editorWindow.titleContent = new GUIContent(title);
 				}
 				if (utility)
 				{
@@ -656,18 +783,22 @@ namespace UnityEditor
 			}
 			return editorWindow;
 		}
+
 		public static T GetWindowWithRect<T>(Rect rect) where T : EditorWindow
 		{
 			return EditorWindow.GetWindowWithRect<T>(rect, false, null, true);
 		}
+
 		public static T GetWindowWithRect<T>(Rect rect, bool utility) where T : EditorWindow
 		{
 			return EditorWindow.GetWindowWithRect<T>(rect, utility, null, true);
 		}
+
 		public static T GetWindowWithRect<T>(Rect rect, bool utility, string title) where T : EditorWindow
 		{
 			return EditorWindow.GetWindowWithRect<T>(rect, utility, title, true);
 		}
+
 		public static T GetWindowWithRect<T>(Rect rect, bool utility, string title, bool focus) where T : EditorWindow
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(T));
@@ -688,7 +819,7 @@ namespace UnityEditor
 				result.position = rect;
 				if (title != null)
 				{
-					result.title = title;
+					result.titleContent = new GUIContent(title);
 				}
 				if (utility)
 				{
@@ -701,11 +832,13 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		internal static T GetWindowDontShow<T>() where T : EditorWindow
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(T));
 			return (array.Length <= 0) ? ScriptableObject.CreateInstance<T>() : ((T)((object)array[0]));
 		}
+
 		public void Close()
 		{
 			if (WindowLayout.IsMaximized(this))
@@ -723,6 +856,7 @@ namespace UnityEditor
 			}
 			UnityEngine.Object.DestroyImmediate(this, true);
 		}
+
 		public void Repaint()
 		{
 			if (this.m_Parent && this.m_Parent.actualView == this)
@@ -730,6 +864,7 @@ namespace UnityEditor
 				this.m_Parent.Repaint();
 			}
 		}
+
 		internal void RepaintImmediately()
 		{
 			if (this.m_Parent && this.m_Parent.actualView == this)
@@ -737,23 +872,30 @@ namespace UnityEditor
 				this.m_Parent.RepaintImmediately();
 			}
 		}
-		internal Rect GetCurrentGameViewRect()
-		{
-			return this.m_GameViewRect;
-		}
-		internal void SetInternalGameViewRect(Rect rect)
+
+		internal void SetParentGameViewDimensions(Rect rect, Rect clippedRect, Vector2 targetSize)
 		{
 			this.m_GameViewRect = rect;
-			this.m_Parent.SetInternalGameViewRect(this.m_GameViewRect);
+			this.m_GameViewClippedRect = clippedRect;
+			this.m_GameViewTargetSize = targetSize;
+			this.m_Parent.SetInternalGameViewDimensions(this.m_GameViewRect, this.m_GameViewClippedRect, this.m_GameViewTargetSize);
 		}
+
 		public bool SendEvent(Event e)
 		{
 			return this.m_Parent.SendEvent(e);
 		}
+
+		private void __internalAwake()
+		{
+			base.hideFlags = HideFlags.DontSave;
+		}
+
 		internal static void CreateNewWindowForEditorWindow(EditorWindow window, bool loadPosition, bool showImmediately)
 		{
 			EditorWindow.CreateNewWindowForEditorWindow(window, new Vector2(window.position.x, window.position.y), loadPosition, showImmediately);
 		}
+
 		internal static void CreateNewWindowForEditorWindow(EditorWindow window, Vector2 screenPosition, bool loadPosition, bool showImmediately)
 		{
 			ContainerWindow containerWindow = ScriptableObject.CreateInstance<ContainerWindow>();
@@ -769,10 +911,12 @@ namespace UnityEditor
 			containerWindow.Show(ShowMode.NormalWindow, loadPosition, showImmediately);
 			containerWindow.OnResize();
 		}
+
 		[ContextMenu("Add Scene")]
 		internal void AddSceneTab()
 		{
 		}
+
 		[ContextMenu("Add Game")]
 		internal void AddGameTab()
 		{

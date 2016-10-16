@@ -1,13 +1,19 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct HumanLimit
 	{
 		private Vector3 m_Min;
+
 		private Vector3 m_Max;
+
 		private Vector3 m_Center;
+
 		private float m_AxisLength;
+
 		private int m_UseDefaultValues;
+
 		public bool useDefaultValues
 		{
 			get
@@ -19,6 +25,7 @@ namespace UnityEngine
 				this.m_UseDefaultValues = ((!value) ? 0 : 1);
 			}
 		}
+
 		public Vector3 min
 		{
 			get
@@ -30,6 +37,7 @@ namespace UnityEngine
 				this.m_Min = value;
 			}
 		}
+
 		public Vector3 max
 		{
 			get
@@ -41,6 +49,7 @@ namespace UnityEngine
 				this.m_Max = value;
 			}
 		}
+
 		public Vector3 center
 		{
 			get
@@ -52,6 +61,7 @@ namespace UnityEngine
 				this.m_Center = value;
 			}
 		}
+
 		public float axisLength
 		{
 			get

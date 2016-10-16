@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+
 namespace UnityEditor.Animations
 {
 	[Serializable]
@@ -8,7 +9,9 @@ namespace UnityEditor.Animations
 	public sealed class StateMachineBehaviourContext
 	{
 		public AnimatorController animatorController;
+
 		public UnityEngine.Object animatorObject;
+
 		public int layerIndex;
 	}
 }

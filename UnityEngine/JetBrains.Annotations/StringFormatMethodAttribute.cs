@@ -1,4 +1,5 @@
 using System;
+
 namespace JetBrains.Annotations
 {
 	[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -9,6 +10,7 @@ namespace JetBrains.Annotations
 			get;
 			private set;
 		}
+
 		public StringFormatMethodAttribute(string formatParameterName)
 		{
 			this.FormatParameterName = formatParameterName;

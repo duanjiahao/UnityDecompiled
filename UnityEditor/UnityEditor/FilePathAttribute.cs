@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[AttributeUsage(AttributeTargets.Class)]
@@ -11,11 +12,13 @@ namespace UnityEditor
 			PreferencesFolder,
 			ProjectFolder
 		}
+
 		public string filepath
 		{
 			get;
 			set;
 		}
+
 		public FilePathAttribute(string relativePath, FilePathAttribute.Location location)
 		{
 			if (string.IsNullOrEmpty(relativePath))

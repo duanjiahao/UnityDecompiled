@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class AvatarSetupTool
@@ -12,17 +13,29 @@ namespace UnityEditor
 		internal class BoneWrapper
 		{
 			public const int kIconSize = 19;
+
 			private static string sHumanName = "m_HumanName";
+
 			private static string sBoneName = "m_BoneName";
+
 			private string m_HumanBoneName;
+
 			public string error = string.Empty;
+
 			public Transform bone;
+
 			public BoneState state;
+
 			private static Color kBoneValid = new Color(0f, 0.75f, 0f, 1f);
+
 			private static Color kBoneInvalid = new Color(1f, 0.3f, 0.25f, 1f);
+
 			private static Color kBoneInactive = Color.gray;
+
 			private static Color kBoneSelected = new Color(0.4f, 0.7f, 1f, 1f);
+
 			private static Color kBoneDrop = new Color(0.1f, 0.7f, 1f, 1f);
+
 			public string humanBoneName
 			{
 				get
@@ -30,6 +43,7 @@ namespace UnityEditor
 					return this.m_HumanBoneName;
 				}
 			}
+
 			public string messageName
 			{
 				get
@@ -37,11 +51,13 @@ namespace UnityEditor
 					return ObjectNames.NicifyVariableName(this.m_HumanBoneName) + " Transform '" + ((!this.bone) ? "None" : this.bone.name) + "'";
 				}
 			}
+
 			public BoneWrapper(string humanBoneName, SerializedObject serializedObject, Dictionary<Transform, bool> bones)
 			{
 				this.m_HumanBoneName = humanBoneName;
 				this.Reset(serializedObject, bones);
 			}
+
 			public void Reset(SerializedObject serializedObject, Dictionary<Transform, bool> bones)
 			{
 				this.bone = null;
@@ -53,6 +69,7 @@ namespace UnityEditor
 				}
 				this.state = BoneState.Valid;
 			}
+
 			public void Serialize(SerializedObject serializedObject)
 			{
 				if (this.bone == null)
@@ -68,6 +85,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			protected void DeleteSerializedProperty(SerializedObject serializedObject)
 			{
 				SerializedProperty serializedProperty = serializedObject.FindProperty(AvatarSetupTool.sHuman);
@@ -85,6 +103,7 @@ namespace UnityEditor
 					}
 				}
 			}
+
 			public SerializedProperty GetSerializedProperty(SerializedObject serializedObject, bool createIfMissing)
 			{
 				SerializedProperty serializedProperty = serializedObject.FindProperty(AvatarSetupTool.sHuman);
@@ -112,6 +131,7 @@ namespace UnityEditor
 				}
 				return null;
 			}
+
 			public void BoneDotGUI(Rect rect, int boneIndex, bool doClickSelect, bool doDragDrop, SerializedObject serializedObject, AvatarMappingEditor editor)
 			{
 				int controlID = GUIUtility.GetControlID(FocusType.Passive, rect);
@@ -133,23 +153,17 @@ namespace UnityEditor
 				{
 					GUI.color = AvatarSetupTool.BoneWrapper.kBoneDrop;
 				}
+				else if (this.state == BoneState.Valid)
+				{
+					GUI.color = AvatarSetupTool.BoneWrapper.kBoneValid;
+				}
+				else if (this.state == BoneState.None)
+				{
+					GUI.color = AvatarSetupTool.BoneWrapper.kBoneInactive;
+				}
 				else
 				{
-					if (this.state == BoneState.Valid)
-					{
-						GUI.color = AvatarSetupTool.BoneWrapper.kBoneValid;
-					}
-					else
-					{
-						if (this.state == BoneState.None)
-						{
-							GUI.color = AvatarSetupTool.BoneWrapper.kBoneInactive;
-						}
-						else
-						{
-							GUI.color = AvatarSetupTool.BoneWrapper.kBoneInvalid;
-						}
-					}
+					GUI.color = AvatarSetupTool.BoneWrapper.kBoneInvalid;
 				}
 				Texture image;
 				if (HumanTrait.RequiredBone(boneIndex))
@@ -167,12 +181,14 @@ namespace UnityEditor
 				}
 				GUI.color = color;
 			}
+
 			public void HandleClickSelection(Rect selectRect, int boneIndex)
 			{
 				Event current = Event.current;
 				if (current.type == EventType.MouseDown && selectRect.Contains(current.mousePosition))
 				{
 					AvatarMappingEditor.s_SelectedBoneIndex = boneIndex;
+					AvatarMappingEditor.s_DirtySelection = true;
 					Selection.activeTransform = this.bone;
 					if (this.bone != null)
 					{
@@ -181,6 +197,7 @@ namespace UnityEditor
 					current.Use();
 				}
 			}
+
 			private void HandleDragDrop(Rect dropRect, int boneIndex, int id, SerializedObject serializedObject, AvatarMappingEditor editor)
 			{
 				EventType type = Event.current.type;
@@ -195,67 +212,73 @@ namespace UnityEditor
 						}
 					}
 				}
-				else
+				else if (dropRect.Contains(Event.current.mousePosition) && GUI.enabled)
 				{
-					if (dropRect.Contains(Event.current.mousePosition) && GUI.enabled)
+					UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
+					UnityEngine.Object @object = (objectReferences.Length != 1) ? null : objectReferences[0];
+					if (@object != null && ((!(@object is Transform) && !(@object is GameObject)) || EditorUtility.IsPersistent(@object)))
 					{
-						UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
-						UnityEngine.Object @object = (objectReferences.Length != 1) ? null : objectReferences[0];
-						if (@object != null && ((!(@object is Transform) && !(@object is GameObject)) || EditorUtility.IsPersistent(@object)))
+						@object = null;
+					}
+					if (@object != null)
+					{
+						DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
+						if (type == EventType.DragPerform)
 						{
-							@object = null;
-						}
-						if (@object != null)
-						{
-							DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
-							if (type == EventType.DragPerform)
+							Undo.RegisterCompleteObjectUndo(editor, "Avatar mapping modified");
+							if (@object is GameObject)
 							{
-								Undo.RegisterCompleteObjectUndo(editor, "Avatar mapping modified");
-								if (@object is GameObject)
-								{
-									this.bone = (@object as GameObject).transform;
-								}
-								else
-								{
-									this.bone = (@object as Transform);
-								}
-								this.Serialize(serializedObject);
-								GUI.changed = true;
-								DragAndDrop.AcceptDrag();
-								DragAndDrop.activeControlID = 0;
+								this.bone = (@object as GameObject).transform;
 							}
 							else
 							{
-								DragAndDrop.activeControlID = id;
+								this.bone = (@object as Transform);
 							}
-							Event.current.Use();
+							this.Serialize(serializedObject);
+							GUI.changed = true;
+							DragAndDrop.AcceptDrag();
+							DragAndDrop.activeControlID = 0;
 						}
+						else
+						{
+							DragAndDrop.activeControlID = id;
+						}
+						Event.current.Use();
 					}
 				}
 			}
 		}
+
 		private class BonePoseData
 		{
 			public Vector3 direction = Vector3.zero;
+
 			public bool compareInGlobalSpace;
+
 			public float maxAngle;
+
 			public int[] childIndices;
+
 			public Vector3 planeNormal = Vector3.zero;
+
 			public BonePoseData(Vector3 dir, bool globalSpace, float maxAngleDiff)
 			{
 				this.direction = ((!(dir == Vector3.zero)) ? dir.normalized : dir);
 				this.compareInGlobalSpace = globalSpace;
 				this.maxAngle = maxAngleDiff;
 			}
+
 			public BonePoseData(Vector3 dir, bool globalSpace, float maxAngleDiff, int[] children) : this(dir, globalSpace, maxAngleDiff)
 			{
 				this.childIndices = children;
 			}
+
 			public BonePoseData(Vector3 dir, bool globalSpace, float maxAngleDiff, Vector3 planeNormal, int[] children) : this(dir, globalSpace, maxAngleDiff, children)
 			{
 				this.planeNormal = planeNormal;
 			}
 		}
+
 		private class TransformHierarchySorter : IComparer<Transform>
 		{
 			public int Compare(Transform a, Transform b)
@@ -276,6 +299,7 @@ namespace UnityEditor
 				return -1;
 			}
 		}
+
 		private class SkinTransformHierarchySorter : IComparer<SkinnedMeshRenderer>
 		{
 			public int Compare(SkinnedMeshRenderer skinA, SkinnedMeshRenderer skinB)
@@ -298,13 +322,23 @@ namespace UnityEditor
 				return -1;
 			}
 		}
+
 		private static string sHuman = "m_HumanDescription.m_Human";
+
+		private static string sHasTranslationDoF = "m_HumanDescription.m_HasTranslationDoF";
+
 		internal static string sSkeleton = "m_HumanDescription.m_Skeleton";
+
 		internal static string sName = "m_Name";
+
 		internal static string sPosition = "m_Position";
+
 		internal static string sRotation = "m_Rotation";
+
 		internal static string sScale = "m_Scale";
+
 		internal static string sTransformModified = "m_TransformModified";
+
 		internal static int[] sHumanParent = new int[]
 		{
 			0,
@@ -362,6 +396,7 @@ namespace UnityEditor
 			51,
 			52
 		};
+
 		private static AvatarSetupTool.BonePoseData[] sBonePoses = new AvatarSetupTool.BonePoseData[]
 		{
 			new AvatarSetupTool.BonePoseData(Vector3.up, true, 15f),
@@ -434,6 +469,7 @@ namespace UnityEditor
 			new AvatarSetupTool.BonePoseData(Vector3.right, false, 5f),
 			new AvatarSetupTool.BonePoseData(Vector3.right, false, 5f)
 		};
+
 		public static Dictionary<Transform, bool> GetModelBones(Transform root, bool includeAll, AvatarSetupTool.BoneWrapper[] humanBones)
 		{
 			if (root == null)
@@ -491,6 +527,7 @@ namespace UnityEditor
 			}
 			return dictionary;
 		}
+
 		private static bool DetermineIsActualBone(Transform tr, Dictionary<Transform, bool> bones, List<Transform> skinnedBones, bool includeAll, AvatarSetupTool.BoneWrapper[] humanBones)
 		{
 			bool flag = includeAll;
@@ -540,12 +577,9 @@ namespace UnityEditor
 									flag3 = true;
 								}
 							}
-							else
+							else if (bounds.Contains(tr.position))
 							{
-								if (bounds.Contains(tr.position))
-								{
-									flag = true;
-								}
+								flag = true;
 							}
 						}
 					}
@@ -567,25 +601,20 @@ namespace UnityEditor
 			{
 				bones[tr] = true;
 			}
-			else
+			else if (flag2)
 			{
-				if (flag2)
+				if (!bones.ContainsKey(tr))
 				{
-					if (!bones.ContainsKey(tr))
-					{
-						bones[tr] = false;
-					}
+					bones[tr] = false;
 				}
-				else
-				{
-					if (flag3)
-					{
-						bones[tr.parent] = true;
-					}
-				}
+			}
+			else if (flag3)
+			{
+				bones[tr.parent] = true;
 			}
 			return bones.ContainsKey(tr);
 		}
+
 		public static int GetFirstHumanBoneAncestor(AvatarSetupTool.BoneWrapper[] bones, int boneIndex)
 		{
 			boneIndex = AvatarSetupTool.sHumanParent[boneIndex];
@@ -595,6 +624,7 @@ namespace UnityEditor
 			}
 			return boneIndex;
 		}
+
 		public static int GetHumanBoneChild(AvatarSetupTool.BoneWrapper[] bones, int boneIndex)
 		{
 			for (int i = 0; i < AvatarSetupTool.sHumanParent.Length; i++)
@@ -606,6 +636,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		public static AvatarSetupTool.BoneWrapper[] GetHumanBones(SerializedObject serializedObject, Dictionary<Transform, bool> actualBones)
 		{
 			string[] boneName = HumanTrait.BoneName;
@@ -616,11 +647,13 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		public static void ClearAll(SerializedObject serializedObject)
 		{
 			AvatarSetupTool.ClearHumanBoneArray(serializedObject);
 			AvatarSetupTool.ClearSkeletonBoneArray(serializedObject);
 		}
+
 		public static void ClearHumanBoneArray(SerializedObject serializedObject)
 		{
 			SerializedProperty serializedProperty = serializedObject.FindProperty(AvatarSetupTool.sHuman);
@@ -629,6 +662,7 @@ namespace UnityEditor
 				serializedProperty.ClearArray();
 			}
 		}
+
 		public static void ClearSkeletonBoneArray(SerializedObject serializedObject)
 		{
 			SerializedProperty serializedProperty = serializedObject.FindProperty(AvatarSetupTool.sSkeleton);
@@ -637,6 +671,7 @@ namespace UnityEditor
 				serializedProperty.ClearArray();
 			}
 		}
+
 		public static void AutoSetupOnInstance(GameObject modelPrefab, SerializedObject modelImporterSerializedObject)
 		{
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(modelPrefab);
@@ -644,6 +679,7 @@ namespace UnityEditor
 			AvatarSetupTool.AutoSetup(modelPrefab, gameObject, modelImporterSerializedObject);
 			UnityEngine.Object.DestroyImmediate(gameObject);
 		}
+
 		public static bool IsPoseValidOnInstance(GameObject modelPrefab, SerializedObject modelImporterSerializedObject)
 		{
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(modelPrefab);
@@ -655,17 +691,28 @@ namespace UnityEditor
 			UnityEngine.Object.DestroyImmediate(gameObject);
 			return result;
 		}
+
 		public static void AutoSetup(GameObject modelPrefab, GameObject modelInstance, SerializedObject modelImporterSerializedObject)
 		{
 			SerializedProperty serializedProperty = modelImporterSerializedObject.FindProperty(AvatarSetupTool.sHuman);
+			SerializedProperty serializedProperty2 = modelImporterSerializedObject.FindProperty(AvatarSetupTool.sHasTranslationDoF);
 			if (serializedProperty == null || !serializedProperty.isArray)
 			{
 				return;
 			}
 			AvatarSetupTool.ClearHumanBoneArray(modelImporterSerializedObject);
+			bool flag = AvatarBipedMapper.IsBiped(modelInstance.transform, null);
 			AvatarSetupTool.SampleBindPose(modelInstance);
 			Dictionary<Transform, bool> modelBones = AvatarSetupTool.GetModelBones(modelInstance.transform, false, null);
-			Dictionary<int, Transform> dictionary = AvatarAutoMapper.MapBones(modelInstance.transform, modelBones);
+			Dictionary<int, Transform> dictionary;
+			if (flag)
+			{
+				dictionary = AvatarBipedMapper.MapBones(modelInstance.transform);
+			}
+			else
+			{
+				dictionary = AvatarAutoMapper.MapBones(modelInstance.transform, modelBones);
+			}
 			AvatarSetupTool.BoneWrapper[] humanBones = AvatarSetupTool.GetHumanBones(modelImporterSerializedObject, modelBones);
 			for (int i = 0; i < humanBones.Length; i++)
 			{
@@ -680,16 +727,25 @@ namespace UnityEditor
 				}
 				boneWrapper.Serialize(modelImporterSerializedObject);
 			}
-			float poseError = AvatarSetupTool.GetPoseError(humanBones);
-			AvatarSetupTool.CopyPose(modelInstance, modelPrefab);
-			float poseError2 = AvatarSetupTool.GetPoseError(humanBones);
-			if (poseError < poseError2)
+			if (!flag)
 			{
-				AvatarSetupTool.SampleBindPose(modelInstance);
+				float poseError = AvatarSetupTool.GetPoseError(humanBones);
+				AvatarSetupTool.CopyPose(modelInstance, modelPrefab);
+				float poseError2 = AvatarSetupTool.GetPoseError(humanBones);
+				if (poseError < poseError2)
+				{
+					AvatarSetupTool.SampleBindPose(modelInstance);
+				}
+				AvatarSetupTool.MakePoseValid(humanBones);
 			}
-			AvatarSetupTool.MakePoseValid(humanBones);
+			else
+			{
+				AvatarBipedMapper.BipedPose(modelInstance, humanBones);
+				serializedProperty2.boolValue = true;
+			}
 			AvatarSetupTool.TransferPoseToDescription(modelImporterSerializedObject, modelInstance.transform);
 		}
+
 		public static bool TestAndValidateAutoSetup(GameObject modelAsset)
 		{
 			if (modelAsset == null)
@@ -796,6 +852,7 @@ namespace UnityEditor
 			}
 			return true;
 		}
+
 		public static void DebugTransformTree(Transform tr, Dictionary<Transform, bool> bones, int level)
 		{
 			string str = "  ";
@@ -816,6 +873,7 @@ namespace UnityEditor
 				AvatarSetupTool.DebugTransformTree(tr2, bones, level + 1);
 			}
 		}
+
 		public static SerializedProperty FindSkeletonBone(SerializedObject serializedObject, Transform t, bool createMissing, bool isRoot)
 		{
 			SerializedProperty serializedProperty = serializedObject.FindProperty(AvatarSetupTool.sSkeleton);
@@ -825,6 +883,7 @@ namespace UnityEditor
 			}
 			return AvatarSetupTool.FindSkeletonBone(serializedProperty, t, createMissing, isRoot);
 		}
+
 		public static SerializedProperty FindSkeletonBone(SerializedProperty skeletonBoneArray, Transform t, bool createMissing, bool isRoot)
 		{
 			if (isRoot && skeletonBoneArray.arraySize > 0)
@@ -864,10 +923,16 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		public static void CopyPose(GameObject go, GameObject source)
 		{
-			AvatarSetupTool.CopyPose(go.transform, source.transform);
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(source);
+			gameObject.hideFlags = HideFlags.HideAndDontSave;
+			AnimatorUtility.DeoptimizeTransformHierarchy(gameObject);
+			AvatarSetupTool.CopyPose(go.transform, gameObject.transform);
+			UnityEngine.Object.DestroyImmediate(gameObject);
 		}
+
 		private static void CopyPose(Transform t, Transform source)
 		{
 			t.localPosition = source.localPosition;
@@ -882,6 +947,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static void GetBindPoseBonePositionRotation(Matrix4x4 skinMatrix, Matrix4x4 boneMatrix, Transform bone, out Vector3 position, out Quaternion rotation)
 		{
 			Matrix4x4 matrix4x = skinMatrix * boneMatrix.inverse;
@@ -901,6 +967,7 @@ namespace UnityEditor
 				rotation = Quaternion.LookRotation(-vector2, -vector);
 			}
 		}
+
 		public static void SampleBindPose(GameObject go)
 		{
 			List<SkinnedMeshRenderer> list = new List<SkinnedMeshRenderer>(go.GetComponentsInChildren<SkinnedMeshRenderer>());
@@ -938,6 +1005,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static void ShowBindPose(SkinnedMeshRenderer skin)
 		{
 			Matrix4x4 localToWorldMatrix = skin.transform.localToWorldMatrix;
@@ -955,6 +1023,7 @@ namespace UnityEditor
 				Handles.DrawLine(vector, vector + rotation * Vector3.forward * 0.3f * handleSize);
 			}
 		}
+
 		public static void TransferPoseToDescription(SerializedObject serializedObject, Transform root)
 		{
 			SkeletonBone[] skeletonBones = new SkeletonBone[0];
@@ -965,6 +1034,7 @@ namespace UnityEditor
 			SerializedProperty serializedProperty = serializedObject.FindProperty(AvatarSetupTool.sSkeleton);
 			ModelImporter.UpdateSkeletonPose(skeletonBones, serializedProperty);
 		}
+
 		private static void TransferPoseToDescription(SerializedObject serializedObject, Transform transform, bool isRoot, ref SkeletonBone[] skeletonBones)
 		{
 			ArrayUtility.Add<SkeletonBone>(ref skeletonBones, new SkeletonBone
@@ -980,6 +1050,7 @@ namespace UnityEditor
 				AvatarSetupTool.TransferPoseToDescription(serializedObject, transform2, false, ref skeletonBones);
 			}
 		}
+
 		public static void TransferDescriptionToPose(SerializedObject serializedObject, Transform root)
 		{
 			if (root != null)
@@ -987,6 +1058,7 @@ namespace UnityEditor
 				AvatarSetupTool.TransferDescriptionToPose(serializedObject, root, true);
 			}
 		}
+
 		private static void TransferDescriptionToPose(SerializedObject serializedObject, Transform transform, bool isRoot)
 		{
 			SerializedProperty serializedProperty = AvatarSetupTool.FindSkeletonBone(serializedObject, transform, false, isRoot);
@@ -1008,10 +1080,12 @@ namespace UnityEditor
 				AvatarSetupTool.TransferDescriptionToPose(serializedObject, transform2, false);
 			}
 		}
+
 		public static bool IsPoseValid(AvatarSetupTool.BoneWrapper[] bones)
 		{
 			return AvatarSetupTool.GetPoseError(bones) == 0f;
 		}
+
 		public static float GetPoseError(AvatarSetupTool.BoneWrapper[] bones)
 		{
 			Quaternion avatarOrientation = AvatarSetupTool.AvatarComputeOrientation(bones);
@@ -1022,6 +1096,7 @@ namespace UnityEditor
 			}
 			return num + AvatarSetupTool.GetCharacterPositionError(bones);
 		}
+
 		public static void MakePoseValid(AvatarSetupTool.BoneWrapper[] bones)
 		{
 			Quaternion avatarOrientation = AvatarSetupTool.AvatarComputeOrientation(bones);
@@ -1035,6 +1110,7 @@ namespace UnityEditor
 			}
 			AvatarSetupTool.MakeCharacterPositionValid(bones);
 		}
+
 		public static float GetBoneAlignmentError(AvatarSetupTool.BoneWrapper[] bones, Quaternion avatarOrientation, int boneIndex)
 		{
 			if (boneIndex < 0 || boneIndex >= AvatarSetupTool.sBonePoses.Length)
@@ -1072,6 +1148,7 @@ namespace UnityEditor
 			}
 			return Mathf.Max(0f, Vector3.Angle(vector, to) - bonePoseData.maxAngle);
 		}
+
 		public static void MakeBoneAlignmentValid(AvatarSetupTool.BoneWrapper[] bones, Quaternion avatarOrientation, int boneIndex)
 		{
 			if (boneIndex < 0 || boneIndex >= AvatarSetupTool.sBonePoses.Length || boneIndex >= bones.Length)
@@ -1133,6 +1210,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static Quaternion GetRotationSpace(AvatarSetupTool.BoneWrapper[] bones, Quaternion avatarOrientation, int boneIndex)
 		{
 			Quaternion lhs = Quaternion.identity;
@@ -1153,6 +1231,7 @@ namespace UnityEditor
 			}
 			return lhs * avatarOrientation;
 		}
+
 		private static Vector3 GetBoneAlignmentDirection(AvatarSetupTool.BoneWrapper[] bones, Quaternion avatarOrientation, int boneIndex)
 		{
 			if (AvatarSetupTool.sBonePoses[boneIndex] == null)
@@ -1192,8 +1271,7 @@ namespace UnityEditor
 					return Vector3.zero;
 				}
 				vector = Vector3.zero;
-				IEnumerator enumerator = boneWrapper.bone.GetEnumerator();
-				try
+				using (IEnumerator enumerator = boneWrapper.bone.GetEnumerator())
 				{
 					if (enumerator.MoveNext())
 					{
@@ -1201,17 +1279,10 @@ namespace UnityEditor
 						vector = transform.position - boneWrapper.bone.position;
 					}
 				}
-				finally
-				{
-					IDisposable disposable = enumerator as IDisposable;
-					if (disposable != null)
-					{
-						disposable.Dispose();
-					}
-				}
 			}
 			return vector.normalized;
 		}
+
 		public static Quaternion AvatarComputeOrientation(AvatarSetupTool.BoneWrapper[] bones)
 		{
 			Transform bone = bones[1].bone;
@@ -1224,6 +1295,7 @@ namespace UnityEditor
 			}
 			return Quaternion.identity;
 		}
+
 		public static Quaternion AvatarComputeOrientation(Vector3 leftUpLeg, Vector3 rightUpLeg, Vector3 leftArm, Vector3 rightArm)
 		{
 			Vector3 a = Vector3.Normalize(rightUpLeg - leftUpLeg);
@@ -1254,13 +1326,15 @@ namespace UnityEditor
 			}
 			return Quaternion.LookRotation(vector2, vector);
 		}
+
 		private static float GetCharacterPositionError(AvatarSetupTool.BoneWrapper[] bones)
 		{
 			float result;
 			AvatarSetupTool.GetCharacterPositionAdjustVector(bones, out result);
 			return result;
 		}
-		private static void MakeCharacterPositionValid(AvatarSetupTool.BoneWrapper[] bones)
+
+		internal static void MakeCharacterPositionValid(AvatarSetupTool.BoneWrapper[] bones)
 		{
 			float num;
 			Vector3 characterPositionAdjustVector = AvatarSetupTool.GetCharacterPositionAdjustVector(bones, out num);
@@ -1269,6 +1343,7 @@ namespace UnityEditor
 				bones[0].bone.position += characterPositionAdjustVector;
 			}
 		}
+
 		private static Vector3 GetCharacterPositionAdjustVector(AvatarSetupTool.BoneWrapper[] bones, out float error)
 		{
 			error = 0f;

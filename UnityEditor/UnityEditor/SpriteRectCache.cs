@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -8,6 +9,7 @@ namespace UnityEditor
 	{
 		[SerializeField]
 		public List<SpriteRect> m_Rects;
+
 		public int Count
 		{
 			get
@@ -19,6 +21,7 @@ namespace UnityEditor
 				return 0;
 			}
 		}
+
 		public SpriteRect RectAt(int i)
 		{
 			if (i >= this.Count)
@@ -27,6 +30,7 @@ namespace UnityEditor
 			}
 			return this.m_Rects[i];
 		}
+
 		public void AddRect(SpriteRect r)
 		{
 			if (this.m_Rects != null)
@@ -34,6 +38,7 @@ namespace UnityEditor
 				this.m_Rects.Add(r);
 			}
 		}
+
 		public void RemoveRect(SpriteRect r)
 		{
 			if (this.m_Rects != null)
@@ -41,6 +46,7 @@ namespace UnityEditor
 				this.m_Rects.Remove(r);
 			}
 		}
+
 		public void ClearAll()
 		{
 			if (this.m_Rects != null)
@@ -48,6 +54,7 @@ namespace UnityEditor
 				this.m_Rects.Clear();
 			}
 		}
+
 		public int GetIndex(SpriteRect spriteRect)
 		{
 			if (this.m_Rects != null)
@@ -56,10 +63,12 @@ namespace UnityEditor
 			}
 			return 0;
 		}
+
 		public bool Contains(SpriteRect spriteRect)
 		{
 			return this.m_Rects != null && this.m_Rects.Contains(spriteRect);
 		}
+
 		private void OnEnable()
 		{
 			if (this.m_Rects == null)

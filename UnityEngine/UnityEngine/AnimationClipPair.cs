@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+
 namespace UnityEngine
 {
 	[Serializable]
@@ -7,6 +8,7 @@ namespace UnityEngine
 	public sealed class AnimationClipPair
 	{
 		public AnimationClip originalClip;
+
 		public AnimationClip overrideClip;
 	}
 }

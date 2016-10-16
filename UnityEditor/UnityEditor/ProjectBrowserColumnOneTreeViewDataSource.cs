@@ -2,17 +2,20 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ProjectBrowserColumnOneTreeViewDataSource : TreeViewDataSource
 	{
 		private static string kProjectBrowserString = "ProjectBrowser";
+
 		public ProjectBrowserColumnOneTreeViewDataSource(TreeView treeView) : base(treeView)
 		{
-			base.showRootNode = false;
+			base.showRootItem = false;
 			base.rootIsCollapsable = false;
 			SavedSearchFilters.AddChangeListener(new Action(this.ReloadData));
 		}
+
 		public override bool SetExpanded(int id, bool expand)
 		{
 			if (base.SetExpanded(id, expand))
@@ -32,32 +35,39 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public override bool IsExpandable(TreeViewItem item)
 		{
 			return item.hasChildren && (item != this.m_RootItem || base.rootIsCollapsable);
 		}
+
 		public override bool CanBeMultiSelected(TreeViewItem item)
 		{
 			return ProjectBrowser.GetItemType(item.id) != ProjectBrowser.ItemType.SavedFilter;
 		}
+
 		public override bool CanBeParent(TreeViewItem item)
 		{
 			return !(item is SearchFilterTreeItem) || SavedSearchFilters.AllowsHierarchy();
 		}
+
 		public bool IsVisibleRootNode(TreeViewItem item)
 		{
 			return item.parent != null && item.parent.parent == null;
 		}
+
 		public override bool IsRenamingItemAllowed(TreeViewItem item)
 		{
 			return !this.IsVisibleRootNode(item) && base.IsRenamingItemAllowed(item);
 		}
+
 		public static int GetAssetsFolderInstanceID()
 		{
 			string path = "Assets";
 			string guid = AssetDatabase.AssetPathToGUID(path);
 			return AssetDatabase.GetInstanceIDFromGUID(guid);
 		}
+
 		public override void FetchData()
 		{
 			this.m_RootItem = new TreeViewItem(2147483647, 0, null, "Invisible Root Item");
@@ -80,6 +90,7 @@ namespace UnityEditor
 			}
 			this.m_NeedRefreshVisibleFolders = true;
 		}
+
 		private void ReadAssetDatabase(TreeViewItem parent, int baseDepth)
 		{
 			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -93,7 +104,7 @@ namespace UnityEditor
 				{
 					list.Add(new TreeViewItem(hierarchyProperty.instanceID, baseDepth + hierarchyProperty.depth, null, hierarchyProperty.name)
 					{
-						icon = (!hierarchyProperty.hasChildren) ? texture2D2 : texture2D
+						icon = ((!hierarchyProperty.hasChildren) ? texture2D2 : texture2D)
 					});
 				}
 			}

@@ -1,15 +1,25 @@
 using System;
+
 namespace UnityEngine
 {
 	public struct JointLimits
 	{
 		private float m_Min;
-		private float m_MinBounce;
-		private float m_MinHardness;
+
 		private float m_Max;
-		private float m_MaxBounce;
-		private float m_MaxHardness;
+
+		private float m_Bounciness;
+
+		private float m_BounceMinVelocity;
+
 		private float m_ContactDistance;
+
+		[Obsolete("minBounce and maxBounce are replaced by a single JointLimits.bounciness for both limit ends.", true)]
+		public float minBounce;
+
+		[Obsolete("minBounce and maxBounce are replaced by a single JointLimits.bounciness for both limit ends.", true)]
+		public float maxBounce;
+
 		public float min
 		{
 			get
@@ -21,17 +31,7 @@ namespace UnityEngine
 				this.m_Min = value;
 			}
 		}
-		public float minBounce
-		{
-			get
-			{
-				return this.m_MinBounce;
-			}
-			set
-			{
-				this.m_MinBounce = value;
-			}
-		}
+
 		public float max
 		{
 			get
@@ -43,17 +43,31 @@ namespace UnityEngine
 				this.m_Max = value;
 			}
 		}
-		public float maxBounce
+
+		public float bounciness
 		{
 			get
 			{
-				return this.m_MaxBounce;
+				return this.m_Bounciness;
 			}
 			set
 			{
-				this.m_MaxBounce = value;
+				this.m_Bounciness = value;
 			}
 		}
+
+		public float bounceMinVelocity
+		{
+			get
+			{
+				return this.m_BounceMinVelocity;
+			}
+			set
+			{
+				this.m_BounceMinVelocity = value;
+			}
+		}
+
 		public float contactDistance
 		{
 			get

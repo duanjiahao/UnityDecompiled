@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class EditorGUIExt
@@ -9,41 +10,69 @@ namespace UnityEditor
 		{
 			public GUIStyle selectionRect = "SelectionRect";
 		}
+
 		private class MinMaxSliderState
 		{
 			public float dragStartPos;
+
 			public float dragStartValue;
+
 			public float dragStartSize;
+
 			public float dragStartValuesPerPixel;
+
 			public float dragStartLimit;
+
 			public float dragEndLimit;
+
 			public int whereWeDrag = -1;
 		}
+
 		private enum DragSelectionState
 		{
 			None,
 			DragSelecting,
 			Dragging
 		}
+
 		private static EditorGUIExt.Styles ms_Styles = new EditorGUIExt.Styles();
+
 		private static int repeatButtonHash = "repeatButton".GetHashCode();
+
 		private static float nextScrollStepTime = 0f;
+
 		private static int firstScrollWait = 250;
+
 		private static int scrollWait = 30;
+
 		private static int scrollControlID;
+
 		private static EditorGUIExt.MinMaxSliderState s_MinMaxSliderState;
+
 		private static int kFirstScrollWait = 250;
+
 		private static int kScrollWait = 30;
+
 		private static DateTime s_NextScrollStepTime = DateTime.Now;
+
 		private static Vector2 s_MouseDownPos = Vector2.zero;
+
 		private static EditorGUIExt.DragSelectionState s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.None;
+
 		private static Vector2 s_StartSelectPos = Vector2.zero;
+
 		private static List<bool> s_SelectionBackup = null;
+
 		private static List<bool> s_LastFrameSelections = null;
+
 		internal static int s_MinMaxSliderHash = "MinMaxSlider".GetHashCode();
+
 		private static bool adding = false;
+
 		private static bool[] initSelections;
+
 		private static int initIndex = 0;
+
 		private static bool DoRepeatButton(Rect position, GUIContent content, GUIStyle style, FocusType focusType)
 		{
 			int controlID = GUIUtility.GetControlID(EditorGUIExt.repeatButtonHash, focusType, position);
@@ -77,6 +106,7 @@ namespace UnityEditor
 				return false;
 			}
 		}
+
 		private static bool ScrollerRepeatButton(int scrollerID, Rect rect, GUIStyle style)
 		{
 			bool result = false;
@@ -89,13 +119,10 @@ namespace UnityEditor
 					result = true;
 					EditorGUIExt.nextScrollStepTime = Time.realtimeSinceStartup + 0.001f * (float)EditorGUIExt.firstScrollWait;
 				}
-				else
+				else if (Time.realtimeSinceStartup >= EditorGUIExt.nextScrollStepTime)
 				{
-					if (Time.realtimeSinceStartup >= EditorGUIExt.nextScrollStepTime)
-					{
-						result = true;
-						EditorGUIExt.nextScrollStepTime = Time.realtimeSinceStartup + 0.001f * (float)EditorGUIExt.scrollWait;
-					}
+					result = true;
+					EditorGUIExt.nextScrollStepTime = Time.realtimeSinceStartup + 0.001f * (float)EditorGUIExt.scrollWait;
 				}
 				if (Event.current.type == EventType.Repaint)
 				{
@@ -104,6 +131,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static void MinMaxScroller(Rect position, int id, ref float value, ref float size, float visualStart, float visualEnd, float startLimit, float endLimit, GUIStyle slider, GUIStyle thumb, GUIStyle leftButton, GUIStyle rightButton, bool horiz)
 		{
 			float num;
@@ -159,10 +187,12 @@ namespace UnityEditor
 				value = Mathf.Clamp(value, endLimit, startLimit - size);
 			}
 		}
+
 		public static void MinMaxSlider(Rect position, ref float value, ref float size, float visualStart, float visualEnd, float startLimit, float endLimit, GUIStyle slider, GUIStyle thumb, bool horiz)
 		{
 			EditorGUIExt.DoMinMaxSlider(position, GUIUtility.GetControlID(EditorGUIExt.s_MinMaxSliderHash, FocusType.Passive), ref value, ref size, visualStart, visualEnd, startLimit, endLimit, slider, thumb, horiz);
 		}
+
 		internal static void DoMinMaxSlider(Rect position, int id, ref float value, ref float size, float visualStart, float visualEnd, float startLimit, float endLimit, GUIStyle slider, GUIStyle thumb, bool horiz)
 		{
 			Event current = Event.current;
@@ -233,16 +263,13 @@ namespace UnityEditor
 					{
 						minMaxSliderState.whereWeDrag = 1;
 					}
+					else if (rect2.Contains(current.mousePosition))
+					{
+						minMaxSliderState.whereWeDrag = 2;
+					}
 					else
 					{
-						if (rect2.Contains(current.mousePosition))
-						{
-							minMaxSliderState.whereWeDrag = 2;
-						}
-						else
-						{
-							minMaxSliderState.whereWeDrag = 0;
-						}
+						minMaxSliderState.whereWeDrag = 0;
 					}
 					GUIUtility.hotControl = id;
 					current.Use();
@@ -265,16 +292,13 @@ namespace UnityEditor
 							value -= size * num8 * 0.9f;
 						}
 					}
+					else if (num11 > position2.yMax - position.y)
+					{
+						value += size * num8 * 0.9f;
+					}
 					else
 					{
-						if (num11 > position2.yMax - position.y)
-						{
-							value += size * num8 * 0.9f;
-						}
-						else
-						{
-							value -= size * num8 * 0.9f;
-						}
+						value -= size * num8 * 0.9f;
 					}
 					minMaxSliderState.whereWeDrag = 0;
 					GUI.changed = true;
@@ -393,16 +417,13 @@ namespace UnityEditor
 							value -= size * num8 * 0.9f;
 						}
 					}
+					else if (num11 > position2.yMax - position.y)
+					{
+						value += size * num8 * 0.9f;
+					}
 					else
 					{
-						if (num11 > position2.yMax - position.y)
-						{
-							value += size * num8 * 0.9f;
-						}
-						else
-						{
-							value -= size * num8 * 0.9f;
-						}
+						value -= size * num8 * 0.9f;
 					}
 					minMaxSliderState.whereWeDrag = -1;
 					GUI.changed = true;
@@ -413,6 +434,7 @@ namespace UnityEditor
 			}
 			}
 		}
+
 		public static bool DragSelection(Rect[] positions, ref bool[] selections, GUIStyle style)
 		{
 			int controlID = GUIUtility.GetControlID(34553287, FocusType.Keyboard);
@@ -526,6 +548,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		private static bool Any(bool[] selections)
 		{
 			for (int i = 0; i < selections.Length; i++)
@@ -537,6 +560,7 @@ namespace UnityEditor
 			}
 			return false;
 		}
+
 		public static HighLevelEvent MultiSelection(Rect rect, Rect[] positions, GUIContent content, Rect[] hitPositions, ref bool[] selections, bool[] readOnly, out int clickedIndex, out Vector2 offset, out float startSelect, out float endSelect, GUIStyle style)
 		{
 			int controlID = GUIUtility.GetControlID(41623453, FocusType.Keyboard);
@@ -549,13 +573,16 @@ namespace UnityEditor
 				return HighLevelEvent.None;
 			}
 			bool flag = false;
-			if (GUIUtility.keyboardControl == controlID)
+			if (Event.current.type != EventType.Layout)
 			{
-				flag = true;
-			}
-			else
-			{
-				selections = new bool[selections.Length];
+				if (GUIUtility.keyboardControl == controlID)
+				{
+					flag = true;
+				}
+				else
+				{
+					selections = new bool[selections.Length];
+				}
 			}
 			EventType typeForControl = current.GetTypeForControl(controlID);
 			EventType eventType = typeForControl;
@@ -649,7 +676,7 @@ namespace UnityEditor
 			case EventType.MouseMove:
 			case EventType.KeyUp:
 			case EventType.ScrollWheel:
-				IL_96:
+				IL_A6:
 				switch (eventType)
 				{
 				case EventType.ValidateCommand:
@@ -660,11 +687,10 @@ namespace UnityEditor
 						string commandName = current.commandName;
 						if (commandName != null)
 						{
-							if (EditorGUIExt.<>f__switch$mapB == null)
+							if (EditorGUIExt.<>f__switch$mapE == null)
 							{
-								EditorGUIExt.<>f__switch$mapB = new Dictionary<string, int>(1)
+								EditorGUIExt.<>f__switch$mapE = new Dictionary<string, int>(1)
 								{
-
 									{
 										"Delete",
 										0
@@ -672,7 +698,7 @@ namespace UnityEditor
 								};
 							}
 							int num;
-							if (EditorGUIExt.<>f__switch$mapB.TryGetValue(commandName, out num))
+							if (EditorGUIExt.<>f__switch$mapE.TryGetValue(commandName, out num))
 							{
 								if (num == 0)
 								{
@@ -775,16 +801,13 @@ namespace UnityEditor
 					{
 						GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 0.5f);
 					}
+					else if (selections[n])
+					{
+						GUI.color = color * new Color(0.3f, 0.55f, 0.95f, 1f);
+					}
 					else
 					{
-						if (selections[n])
-						{
-							GUI.color = color * new Color(0.3f, 0.55f, 0.95f, 1f);
-						}
-						else
-						{
-							GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 1f);
-						}
+						GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 1f);
 					}
 					style.Draw(positions[n], content, controlID, selections[n]);
 				}
@@ -792,8 +815,9 @@ namespace UnityEditor
 				return HighLevelEvent.None;
 			}
 			}
-			goto IL_96;
+			goto IL_A6;
 		}
+
 		private static int GetIndexUnderMouse(Rect[] hitPositions, bool[] readOnly)
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
@@ -806,6 +830,7 @@ namespace UnityEditor
 			}
 			return -1;
 		}
+
 		internal static Rect FromToRect(Vector2 start, Vector2 end)
 		{
 			Rect result = new Rect(start.x, start.y, end.x - start.x, end.y - start.y);

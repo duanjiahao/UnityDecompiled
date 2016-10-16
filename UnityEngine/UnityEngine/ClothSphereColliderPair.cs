@@ -1,10 +1,15 @@
 using System;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct ClothSphereColliderPair
 	{
 		private SphereCollider m_First;
+
 		private SphereCollider m_Second;
+
 		public SphereCollider first
 		{
 			get
@@ -16,6 +21,7 @@ namespace UnityEngine
 				this.m_First = value;
 			}
 		}
+
 		public SphereCollider second
 		{
 			get
@@ -27,6 +33,7 @@ namespace UnityEngine
 				this.m_Second = value;
 			}
 		}
+
 		public ClothSphereColliderPair(SphereCollider a)
 		{
 			this.m_First = null;
@@ -34,6 +41,7 @@ namespace UnityEngine
 			this.first = a;
 			this.second = null;
 		}
+
 		public ClothSphereColliderPair(SphereCollider a, SphereCollider b)
 		{
 			this.m_First = null;

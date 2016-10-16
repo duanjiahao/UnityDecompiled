@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 using UnityEngine.Rendering;
+
 namespace UnityEngine
 {
 	public sealed class ReflectionProbe : Behaviour
@@ -15,6 +16,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool hdr
 		{
 			[WrapperlessIcall]
@@ -24,6 +26,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Vector3 size
 		{
 			get
@@ -37,6 +40,7 @@ namespace UnityEngine
 				this.INTERNAL_set_size(ref value);
 			}
 		}
+
 		public Vector3 center
 		{
 			get
@@ -50,6 +54,7 @@ namespace UnityEngine
 				this.INTERNAL_set_center(ref value);
 			}
 		}
+
 		public extern float nearClipPlane
 		{
 			[WrapperlessIcall]
@@ -59,6 +64,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float farClipPlane
 		{
 			[WrapperlessIcall]
@@ -68,6 +74,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float shadowDistance
 		{
 			[WrapperlessIcall]
@@ -77,6 +84,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int resolution
 		{
 			[WrapperlessIcall]
@@ -86,6 +94,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int cullingMask
 		{
 			[WrapperlessIcall]
@@ -95,6 +104,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ReflectionProbeClearFlags clearFlags
 		{
 			[WrapperlessIcall]
@@ -104,6 +114,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Color backgroundColor
 		{
 			get
@@ -117,6 +128,7 @@ namespace UnityEngine
 				this.INTERNAL_set_backgroundColor(ref value);
 			}
 		}
+
 		public extern float intensity
 		{
 			[WrapperlessIcall]
@@ -126,6 +138,17 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern float blendDistance
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern bool boxProjection
 		{
 			[WrapperlessIcall]
@@ -135,6 +158,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Bounds bounds
 		{
 			get
@@ -144,6 +168,7 @@ namespace UnityEngine
 				return result;
 			}
 		}
+
 		public extern ReflectionProbeMode mode
 		{
 			[WrapperlessIcall]
@@ -153,6 +178,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int importance
 		{
 			[WrapperlessIcall]
@@ -162,6 +188,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ReflectionProbeRefreshMode refreshMode
 		{
 			[WrapperlessIcall]
@@ -171,6 +198,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ReflectionProbeTimeSlicingMode timeSlicingMode
 		{
 			[WrapperlessIcall]
@@ -180,6 +208,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Texture bakedTexture
 		{
 			[WrapperlessIcall]
@@ -189,6 +218,7 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Texture customBakedTexture
 		{
 			[WrapperlessIcall]
@@ -198,45 +228,71 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern Texture texture
 		{
 			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		public static extern int minBakedCubemapResolution
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern int maxBakedCubemapResolution
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_size(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_size(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_center(out Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_center(ref Vector3 value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_backgroundColor(out Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_backgroundColor(ref Color value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_bounds(out Bounds value);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int RenderProbe([DefaultValue("null")] RenderTexture targetTexture);
+
 		[ExcludeFromDocs]
 		public int RenderProbe()
 		{
 			RenderTexture targetTexture = null;
 			return this.RenderProbe(targetTexture);
 		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsFinishedRendering(int renderId);
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BlendCubemap(Texture src, Texture dst, float blend, RenderTexture target);

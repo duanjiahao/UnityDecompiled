@@ -1,17 +1,26 @@
 using System;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class HostView : GUIView
 	{
 		internal static Color kViewColor = new Color(0.76f, 0.76f, 0.76f, 1f);
+
 		internal static PrefColor kPlayModeDarken = new PrefColor("Playmode tint", 0.8f, 0.8f, 0.8f, 1f);
+
 		internal GUIStyle background;
+
 		[SerializeField]
 		protected EditorWindow m_ActualView;
+
 		[NonSerialized]
 		private Rect m_BackgroundClearRect = new Rect(0f, 0f, 0f, 0f);
+
+		[NonSerialized]
+		protected readonly RectOffset m_BorderSize = new RectOffset();
+
 		internal EditorWindow actualView
 		{
 			get
@@ -29,6 +38,7 @@ namespace UnityEditor
 				this.RegisterSelectedPane();
 			}
 		}
+
 		internal RectOffset borderSize
 		{
 			get
@@ -36,6 +46,7 @@ namespace UnityEditor
 				return this.GetBorderSize();
 			}
 		}
+
 		protected override void SetPosition(Rect newPos)
 		{
 			base.SetPosition(newPos);
@@ -45,15 +56,18 @@ namespace UnityEditor
 				this.m_ActualView.OnResized();
 			}
 		}
+
 		public void OnEnable()
 		{
 			this.background = null;
 			this.RegisterSelectedPane();
 		}
+
 		private void OnDisable()
 		{
 			this.DeregisterSelectedPane(false);
 		}
+
 		private void OnGUI()
 		{
 			EditorGUIUtility.ResetGUIState();
@@ -78,6 +92,7 @@ namespace UnityEditor
 			base.DoWindowDecorationEnd();
 			EditorGUI.ShowRepaints();
 		}
+
 		protected override bool OnFocus()
 		{
 			this.Invoke("OnFocus");
@@ -88,11 +103,13 @@ namespace UnityEditor
 			base.Repaint();
 			return true;
 		}
+
 		private void OnLostFocus()
 		{
 			this.Invoke("OnLostFocus");
 			base.Repaint();
 		}
+
 		public new void OnDestroy()
 		{
 			if (this.m_ActualView)
@@ -101,6 +118,7 @@ namespace UnityEditor
 			}
 			base.OnDestroy();
 		}
+
 		protected Type[] GetPaneTypes()
 		{
 			return new Type[]
@@ -114,30 +132,37 @@ namespace UnityEditor
 				typeof(AnimationWindow)
 			};
 		}
+
 		internal void OnProjectChange()
 		{
 			this.Invoke("OnProjectChange");
 		}
+
 		internal void OnSelectionChange()
 		{
 			this.Invoke("OnSelectionChange");
 		}
+
 		internal void OnDidOpenScene()
 		{
 			this.Invoke("OnDidOpenScene");
 		}
+
 		internal void OnInspectorUpdate()
 		{
 			this.Invoke("OnInspectorUpdate");
 		}
+
 		internal void OnHierarchyChange()
 		{
 			this.Invoke("OnHierarchyChange");
 		}
+
 		private MethodInfo GetPaneMethod(string methodName)
 		{
 			return this.GetPaneMethod(methodName, this.m_ActualView);
 		}
+
 		private MethodInfo GetPaneMethod(string methodName, object obj)
 		{
 			if (obj == null)
@@ -154,10 +179,12 @@ namespace UnityEditor
 			}
 			return null;
 		}
+
 		protected void Invoke(string methodName)
 		{
 			this.Invoke(methodName, this.m_ActualView);
 		}
+
 		protected void Invoke(string methodName, object obj)
 		{
 			MethodInfo paneMethod = this.GetPaneMethod(methodName, obj);
@@ -166,6 +193,7 @@ namespace UnityEditor
 				paneMethod.Invoke(obj, null);
 			}
 		}
+
 		protected void RegisterSelectedPane()
 		{
 			if (!this.m_ActualView)
@@ -196,6 +224,7 @@ namespace UnityEditor
 				Debug.LogError(ex.InnerException.GetType().Name + ":" + ex.InnerException.Message);
 			}
 		}
+
 		protected void DeregisterSelectedPane(bool clearActualView)
 		{
 			if (!this.m_ActualView)
@@ -222,18 +251,22 @@ namespace UnityEditor
 				this.Invoke("OnBecameInvisible", actualView);
 			}
 		}
+
 		private void SendUpdate()
 		{
 			this.Invoke("Update");
 		}
+
 		private void SendModKeysChanged()
 		{
 			this.Invoke("ModifierKeysChanged");
 		}
+
 		protected virtual RectOffset GetBorderSize()
 		{
-			return new RectOffset();
+			return this.m_BorderSize;
 		}
+
 		protected void ShowGenericMenu()
 		{
 			GUIStyle gUIStyle = "PaneOptions";
@@ -252,6 +285,7 @@ namespace UnityEditor
 				paneMethod.Invoke(this.m_ActualView, parameters);
 			}
 		}
+
 		public void PopupGenericMenu(EditorWindow view, Rect pos)
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -264,9 +298,11 @@ namespace UnityEditor
 			genericMenu.DropDown(pos);
 			Event.current.Use();
 		}
+
 		protected virtual void AddDefaultItemsToMenu(GenericMenu menu, EditorWindow view)
 		{
 		}
+
 		protected void ClearBackground()
 		{
 			if (Event.current.type != EventType.Repaint)

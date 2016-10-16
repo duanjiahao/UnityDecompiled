@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal static class SpriteEditorUtility
@@ -33,10 +34,12 @@ namespace UnityEditorInternal
 				return Vector2.zero;
 			}
 		}
+
 		public static Rect RoundedRect(Rect rect)
 		{
 			return new Rect((float)Mathf.RoundToInt(rect.xMin), (float)Mathf.RoundToInt(rect.yMin), (float)Mathf.RoundToInt(rect.width), (float)Mathf.RoundToInt(rect.height));
 		}
+
 		public static Rect RoundToInt(Rect r)
 		{
 			r.xMin = (float)Mathf.RoundToInt(r.xMin);
@@ -45,6 +48,7 @@ namespace UnityEditorInternal
 			r.yMax = (float)Mathf.RoundToInt(r.yMax);
 			return r;
 		}
+
 		public static Rect ClampedRect(Rect rect, Rect clamp, bool maintainSize)
 		{
 			Rect result = new Rect(rect);
@@ -96,6 +100,7 @@ namespace UnityEditorInternal
 			result.height = Mathf.Abs(result.height);
 			return result;
 		}
+
 		public static void DrawBox(Rect position)
 		{
 			Vector3[] array = new Vector3[5];
@@ -109,11 +114,13 @@ namespace UnityEditorInternal
 			SpriteEditorUtility.DrawLine(array[2], array[3]);
 			SpriteEditorUtility.DrawLine(array[3], array[0]);
 		}
+
 		public static void DrawLine(Vector3 p1, Vector3 p2)
 		{
 			GL.Vertex(p1);
 			GL.Vertex(p2);
 		}
+
 		public static void BeginLines(Color color)
 		{
 			HandleUtility.ApplyWireMaterial();
@@ -122,6 +129,7 @@ namespace UnityEditorInternal
 			GL.Begin(1);
 			GL.Color(color);
 		}
+
 		public static void EndLines()
 		{
 			GL.End();

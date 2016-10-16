@@ -1,4 +1,5 @@
 using System;
+
 namespace JetBrains.Annotations
 {
 	[AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = true)]
@@ -9,9 +10,11 @@ namespace JetBrains.Annotations
 			get;
 			private set;
 		}
+
 		public LocalizationRequiredAttribute() : this(true)
 		{
 		}
+
 		public LocalizationRequiredAttribute(bool required)
 		{
 			this.Required = required;

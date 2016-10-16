@@ -1,17 +1,25 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class GradientPicker : EditorWindow
 	{
 		private const int k_DefaultNumSteps = 0;
+
 		private static GradientPicker s_GradientPicker;
+
 		private GradientEditor m_GradientEditor;
+
 		private PresetLibraryEditor<GradientPresetLibrary> m_GradientLibraryEditor;
+
 		[SerializeField]
 		private PresetLibraryEditorState m_GradientLibraryEditorState;
+
 		private Gradient m_Gradient;
+
 		private GUIView m_DelegateView;
+
 		public static string presetsEditorPrefID
 		{
 			get
@@ -19,11 +27,13 @@ namespace UnityEditor
 				return "Gradient";
 			}
 		}
+
 		private bool gradientChanged
 		{
 			get;
 			set;
 		}
+
 		public static GradientPicker instance
 		{
 			get
@@ -35,6 +45,7 @@ namespace UnityEditor
 				return GradientPicker.s_GradientPicker;
 			}
 		}
+
 		public string currentPresetLibrary
 		{
 			get
@@ -48,6 +59,7 @@ namespace UnityEditor
 				this.m_GradientLibraryEditor.currentLibraryWithoutExtension = value;
 			}
 		}
+
 		public static bool visible
 		{
 			get
@@ -55,6 +67,7 @@ namespace UnityEditor
 				return GradientPicker.s_GradientPicker != null;
 			}
 		}
+
 		public static Gradient gradient
 		{
 			get
@@ -66,10 +79,7 @@ namespace UnityEditor
 				return null;
 			}
 		}
-		private GradientPicker()
-		{
-			base.hideFlags = HideFlags.DontSave;
-		}
+
 		public static void Show(Gradient newGradient)
 		{
 			GUIView current = GUIView.current;
@@ -90,6 +100,7 @@ namespace UnityEditor
 			GradientPicker.s_GradientPicker.m_DelegateView = current;
 			GradientPicker.s_GradientPicker.Init(newGradient);
 		}
+
 		private void Init(Gradient newGradient)
 		{
 			this.m_Gradient = newGradient;
@@ -99,35 +110,38 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		private void SetGradientData(Gradient gradient)
 		{
 			this.m_Gradient.colorKeys = gradient.colorKeys;
 			this.m_Gradient.alphaKeys = gradient.alphaKeys;
 			this.Init(this.m_Gradient);
 		}
+
 		public void OnEnable()
 		{
+			base.hideFlags = HideFlags.DontSave;
 		}
+
 		public void OnDisable()
 		{
 			if (this.m_GradientLibraryEditorState != null)
 			{
 				this.m_GradientLibraryEditorState.TransferEditorPrefsState(false);
 			}
-			if (this.m_GradientEditor != null)
-			{
-				this.m_GradientEditor.Clear();
-			}
 			GradientPicker.s_GradientPicker = null;
 		}
+
 		public void OnDestroy()
 		{
 			this.m_GradientLibraryEditor.UnloadUsedLibraries();
 		}
+
 		private void OnPlayModeStateChanged()
 		{
 			base.Close();
 		}
+
 		private void InitIfNeeded()
 		{
 			if (this.m_GradientEditor == null)
@@ -148,6 +162,7 @@ namespace UnityEditor
 				this.m_GradientLibraryEditor.minMaxPreviewHeight = new Vector2(14f, 14f);
 			}
 		}
+
 		private void PresetClickedCallback(int clickCount, object presetObject)
 		{
 			Gradient gradient = presetObject as Gradient;
@@ -158,6 +173,7 @@ namespace UnityEditor
 			GradientPicker.SetCurrentGradient(gradient);
 			this.gradientChanged = true;
 		}
+
 		public void OnGUI()
 		{
 			if (this.m_Gradient == null)
@@ -185,6 +201,7 @@ namespace UnityEditor
 				this.SendEvent(true);
 			}
 		}
+
 		private void SendEvent(bool exitGUI)
 		{
 			if (this.m_DelegateView)
@@ -198,6 +215,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static void SetCurrentGradient(Gradient gradient)
 		{
 			if (GradientPicker.s_GradientPicker == null)
@@ -207,6 +225,7 @@ namespace UnityEditor
 			GradientPicker.s_GradientPicker.SetGradientData(gradient);
 			GUI.changed = true;
 		}
+
 		public static void CloseWindow()
 		{
 			if (GradientPicker.s_GradientPicker == null)
@@ -216,6 +235,7 @@ namespace UnityEditor
 			GradientPicker.s_GradientPicker.Close();
 			GUIUtility.ExitGUI();
 		}
+
 		public static void RepaintWindow()
 		{
 			if (GradientPicker.s_GradientPicker == null)

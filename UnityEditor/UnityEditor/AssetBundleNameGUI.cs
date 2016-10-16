@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetBundleNameGUI
@@ -9,20 +10,31 @@ namespace UnityEditor
 		private class Styles
 		{
 			private static GUISkin s_DarkSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene);
+
 			public static GUIStyle label = AssetBundleNameGUI.Styles.GetStyle("ControlLabel");
+
 			public static GUIStyle popup = AssetBundleNameGUI.Styles.GetStyle("MiniPopup");
+
 			public static GUIStyle textField = AssetBundleNameGUI.Styles.GetStyle("textField");
+
 			public static Color cursorColor = AssetBundleNameGUI.Styles.s_DarkSkin.settings.cursorColor;
+
 			private static GUIStyle GetStyle(string name)
 			{
 				return new GUIStyle(AssetBundleNameGUI.Styles.s_DarkSkin.GetStyle(name));
 			}
 		}
+
 		private static readonly GUIContent kAssetBundleName = new GUIContent("AssetBundle");
+
 		private static readonly int kAssetBundleNameFieldIdHash = "AssetBundleNameFieldHash".GetHashCode();
+
 		private static readonly int kAssetBundleVariantFieldIdHash = "AssetBundleVariantFieldHash".GetHashCode();
+
 		private bool m_ShowAssetBundleNameTextField;
+
 		private bool m_ShowAssetBundleVariantTextField;
+
 		public void OnAssetBundleNameGUI(IEnumerable<UnityEngine.Object> assets)
 		{
 			EditorGUIUtility.labelWidth = 90f;
@@ -50,18 +62,20 @@ namespace UnityEditor
 				this.AssetBundlePopup(rect2, controlID, assets, true);
 			}
 		}
+
 		private void ShowNewAssetBundleField(bool isVariant)
 		{
 			this.m_ShowAssetBundleNameTextField = !isVariant;
 			this.m_ShowAssetBundleVariantTextField = isVariant;
 			EditorGUIUtility.editingTextField = true;
 		}
+
 		private void AssetBundleTextField(Rect rect, int id, IEnumerable<UnityEngine.Object> assets, bool isVariant)
 		{
 			Color cursorColor = GUI.skin.settings.cursorColor;
 			GUI.skin.settings.cursorColor = AssetBundleNameGUI.Styles.cursorColor;
 			EditorGUI.BeginChangeCheck();
-			string name = EditorGUI.DelayedTextField(rect, id, string.Empty, null, AssetBundleNameGUI.Styles.textField);
+			string name = EditorGUI.DelayedTextFieldInternal(rect, id, GUIContent.none, string.Empty, null, AssetBundleNameGUI.Styles.textField);
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.SetAssetBundleForAssets(assets, name, isVariant);
@@ -73,11 +87,13 @@ namespace UnityEditor
 				this.ShowAssetBundlePopup();
 			}
 		}
+
 		private void ShowAssetBundlePopup()
 		{
 			this.m_ShowAssetBundleNameTextField = false;
 			this.m_ShowAssetBundleVariantTextField = false;
 		}
+
 		private void AssetBundlePopup(Rect rect, int id, IEnumerable<UnityEngine.Object> assets, bool isVariant)
 		{
 			List<string> list = new List<string>();
@@ -118,40 +134,31 @@ namespace UnityEditor
 				{
 					this.SetAssetBundleForAssets(assets, null, isVariant);
 				}
+				else if (num3 == count)
+				{
+					this.ShowNewAssetBundleField(isVariant);
+				}
+				else if (num3 == num)
+				{
+					AssetDatabase.RemoveUnusedAssetBundleNames();
+				}
+				else if (num3 == num2)
+				{
+					this.FilterSelected(assetBundlesFromAssets);
+				}
 				else
 				{
-					if (num3 == count)
-					{
-						this.ShowNewAssetBundleField(isVariant);
-					}
-					else
-					{
-						if (num3 == num)
-						{
-							AssetDatabase.RemoveUnusedAssetBundleNames();
-						}
-						else
-						{
-							if (num3 == num2)
-							{
-								this.FilterSelected(assetBundlesFromAssets);
-							}
-							else
-							{
-								this.SetAssetBundleForAssets(assets, list[num3], isVariant);
-							}
-						}
-					}
+					this.SetAssetBundleForAssets(assets, list[num3], isVariant);
 				}
 			}
 		}
+
 		private void FilterSelected(IEnumerable<string> assetBundleNames)
 		{
 			SearchFilter searchFilter = new SearchFilter();
-			searchFilter.assetBundleNames = (
-				from name in assetBundleNames
-				where !string.IsNullOrEmpty(name)
-				select name).ToArray<string>();
+			searchFilter.assetBundleNames = (from name in assetBundleNames
+			where !string.IsNullOrEmpty(name)
+			select name).ToArray<string>();
 			if (ProjectBrowser.s_LastInteractedProjectBrowser != null)
 			{
 				ProjectBrowser.s_LastInteractedProjectBrowser.SetSearch(searchFilter);
@@ -161,6 +168,7 @@ namespace UnityEditor
 				Debug.LogWarning("No Project Browser found to apply AssetBundle filter.");
 			}
 		}
+
 		private IEnumerable<string> GetAssetBundlesFromAssets(IEnumerable<UnityEngine.Object> assets, bool isVariant, out bool isMixed)
 		{
 			HashSet<string> hashSet = new HashSet<string>();
@@ -188,8 +196,10 @@ namespace UnityEditor
 			}
 			return hashSet;
 		}
+
 		private void SetAssetBundleForAssets(IEnumerable<UnityEngine.Object> assets, string name, bool isVariant)
 		{
+			bool flag = false;
 			foreach (UnityEngine.Object current in assets)
 			{
 				if (!(current is MonoScript))
@@ -205,8 +215,13 @@ namespace UnityEditor
 						{
 							atPath.assetBundleName = name;
 						}
+						flag = true;
 					}
 				}
+			}
+			if (flag)
+			{
+				EditorApplication.Internal_CallAssetBundleNameChanged();
 			}
 		}
 	}

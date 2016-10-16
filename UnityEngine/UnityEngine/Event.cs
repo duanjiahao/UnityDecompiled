@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	[StructLayout(LayoutKind.Sequential)]
@@ -8,23 +10,11 @@ namespace UnityEngine
 	{
 		[NonSerialized]
 		internal IntPtr m_Ptr;
+
 		private static Event s_Current;
+
 		private static Event s_MasterEvent;
-		public extern EventType rawType
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern EventType type
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+
 		public Vector2 mousePosition
 		{
 			get
@@ -38,6 +28,7 @@ namespace UnityEngine
 				this.Internal_SetMousePosition(value);
 			}
 		}
+
 		public Vector2 delta
 		{
 			get
@@ -51,6 +42,7 @@ namespace UnityEngine
 				this.Internal_SetMouseDelta(value);
 			}
 		}
+
 		[Obsolete("Use HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);", true)]
 		public Ray mouseRay
 		{
@@ -62,69 +54,7 @@ namespace UnityEngine
 			{
 			}
 		}
-		public extern int button
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public extern EventModifiers modifiers
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public extern float pressure
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public extern int clickCount
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public extern char character
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public extern string commandName
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public extern KeyCode keyCode
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+
 		public bool shift
 		{
 			get
@@ -143,6 +73,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public bool control
 		{
 			get
@@ -161,6 +92,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public bool alt
 		{
 			get
@@ -179,6 +111,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public bool command
 		{
 			get
@@ -197,6 +130,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public bool capsLock
 		{
 			get
@@ -215,6 +149,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public bool numeric
 		{
 			get
@@ -233,6 +168,7 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public bool functionKey
 		{
 			get
@@ -240,6 +176,7 @@ namespace UnityEngine
 				return (this.modifiers & EventModifiers.FunctionKey) != EventModifiers.None;
 			}
 		}
+
 		public static Event current
 		{
 			get
@@ -263,6 +200,7 @@ namespace UnityEngine
 				Event.Internal_SetNativeEvent(Event.s_Current.m_Ptr);
 			}
 		}
+
 		public bool isKey
 		{
 			get
@@ -271,6 +209,7 @@ namespace UnityEngine
 				return type == EventType.KeyDown || type == EventType.KeyUp;
 			}
 		}
+
 		public bool isMouse
 		{
 			get
@@ -279,10 +218,114 @@ namespace UnityEngine
 				return type == EventType.MouseMove || type == EventType.MouseDown || type == EventType.MouseUp || type == EventType.MouseDrag;
 			}
 		}
+
+		public extern EventType rawType
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern EventType type
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int button
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern EventModifiers modifiers
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern float pressure
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int clickCount
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern char character
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern string commandName
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern KeyCode keyCode
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int displayIndex
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public Event()
 		{
-			this.Init();
+			this.Init(0);
 		}
+
+		public Event(int displayIndex)
+		{
+			this.Init(displayIndex);
+		}
+
 		public Event(Event other)
 		{
 			if (other == null)
@@ -291,75 +334,40 @@ namespace UnityEngine
 			}
 			this.InitCopy(other);
 		}
+
 		private Event(IntPtr ptr)
 		{
 			this.InitPtr(ptr);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Init();
+
 		~Event()
 		{
 			this.Cleanup();
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Cleanup();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InitCopy(Event other);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InitPtr(IntPtr ptr);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern EventType GetTypeForControl(int controlID);
-		private void Internal_SetMousePosition(Vector2 value)
+
+		internal static void CleanupRoots()
 		{
-			Event.INTERNAL_CALL_Internal_SetMousePosition(this, ref value);
+			Event.s_Current = null;
+			Event.s_MasterEvent = null;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_SetMousePosition(Event self, ref Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_GetMousePosition(out Vector2 value);
-		private void Internal_SetMouseDelta(Vector2 value)
-		{
-			Event.INTERNAL_CALL_Internal_SetMouseDelta(this, ref value);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_SetMouseDelta(Event self, ref Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_GetMouseDelta(out Vector2 value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_SetNativeEvent(IntPtr ptr);
-		private static void Internal_MakeMasterEventCurrent()
+
+		[RequiredByNativeCode]
+		private static void Internal_MakeMasterEventCurrent(int displayIndex)
 		{
 			if (Event.s_MasterEvent == null)
 			{
-				Event.s_MasterEvent = new Event();
+				Event.s_MasterEvent = new Event(displayIndex);
 			}
+			Event.s_MasterEvent.displayIndex = displayIndex;
 			Event.s_Current = Event.s_MasterEvent;
 			Event.Internal_SetNativeEvent(Event.s_MasterEvent.m_Ptr);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void Use();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool PopEvent(Event outEvent);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int GetEventCount();
+
 		public static Event KeyboardEvent(string key)
 		{
-			Event @event = new Event();
+			Event @event = new Event(0);
 			@event.type = EventType.KeyDown;
-			if (key == null || key == string.Empty)
+			if (string.IsNullOrEmpty(key))
 			{
 				return @event;
 			}
@@ -378,28 +386,28 @@ namespace UnityEngine
 				case '#':
 					@event.modifiers |= EventModifiers.Shift;
 					num++;
-					goto IL_D2;
+					goto IL_C8;
 				case '$':
-					IL_61:
+					IL_57:
 					if (c != '^')
 					{
 						flag = false;
-						goto IL_D2;
+						goto IL_C8;
 					}
 					@event.modifiers |= EventModifiers.Control;
 					num++;
-					goto IL_D2;
+					goto IL_C8;
 				case '%':
 					@event.modifiers |= EventModifiers.Command;
 					num++;
-					goto IL_D2;
+					goto IL_C8;
 				case '&':
 					@event.modifiers |= EventModifiers.Alt;
 					num++;
-					goto IL_D2;
+					goto IL_C8;
 				}
-				goto IL_61;
-				IL_D2:;
+				goto IL_57;
+				IL_C8:;
 			}
 			while (flag);
 			string text = key.Substring(num, key.Length - num).ToLower();
@@ -628,6 +636,7 @@ namespace UnityEngine
 			}
 			return @event;
 		}
+
 		public override int GetHashCode()
 		{
 			int num = 1;
@@ -641,6 +650,7 @@ namespace UnityEngine
 			}
 			return num * 37 | (int)this.modifiers;
 		}
+
 		public override bool Equals(object obj)
 		{
 			if (obj == null)
@@ -666,6 +676,7 @@ namespace UnityEngine
 			}
 			return this.isMouse && this.mousePosition == @event.mousePosition;
 		}
+
 		public override string ToString()
 		{
 			if (this.isKey)
@@ -679,7 +690,7 @@ namespace UnityEngine
 						this.keyCode
 					});
 				}
-				return UnityString.Format(string.Concat(new object[]
+				return string.Concat(new object[]
 				{
 					"Event:",
 					this.type,
@@ -689,7 +700,7 @@ namespace UnityEngine
 					this.modifiers,
 					"   KeyCode:",
 					this.keyCode
-				}), new object[0]);
+				});
 			}
 			else
 			{
@@ -713,5 +724,67 @@ namespace UnityEngine
 				return string.Empty + this.type;
 			}
 		}
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Init(int displayIndex);
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Cleanup();
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void InitCopy(Event other);
+
+		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void InitPtr(IntPtr ptr);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern EventType GetTypeForControl(int controlID);
+
+		private void Internal_SetMousePosition(Vector2 value)
+		{
+			Event.INTERNAL_CALL_Internal_SetMousePosition(this, ref value);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_SetMousePosition(Event self, ref Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_GetMousePosition(out Vector2 value);
+
+		private void Internal_SetMouseDelta(Vector2 value)
+		{
+			Event.INTERNAL_CALL_Internal_SetMouseDelta(this, ref value);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_SetMouseDelta(Event self, ref Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_GetMouseDelta(out Vector2 value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_SetNativeEvent(IntPtr ptr);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Use();
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool PopEvent(Event outEvent);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetEventCount();
 	}
 }

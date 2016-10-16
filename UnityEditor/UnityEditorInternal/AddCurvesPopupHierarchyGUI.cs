@@ -1,54 +1,73 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AddCurvesPopupHierarchyGUI : TreeViewGUI
 	{
 		private const float plusButtonWidth = 17f;
+
 		public EditorWindow owner;
+
 		private GUIStyle plusButtonStyle = new GUIStyle("OL Plus");
+
 		private GUIStyle plusButtonBackgroundStyle = new GUIStyle("Tag MenuItem");
-		public AnimationWindowState state
+
+		public IAnimationRecordingState state
 		{
 			get;
 			set;
 		}
+
 		public bool showPlusButton
 		{
 			get;
 			set;
 		}
-		public AddCurvesPopupHierarchyGUI(TreeView treeView, AnimationWindowState state, EditorWindow owner) : base(treeView, true)
+
+		public AddCurvesPopupHierarchyGUI(TreeView treeView, IAnimationRecordingState state, EditorWindow owner) : base(treeView, true)
 		{
 			this.owner = owner;
 			this.state = state;
 		}
-		public override Rect OnRowGUI(TreeViewItem node, int row, float rowWidth, bool selected, bool focused)
+
+		public override void OnRowGUI(Rect rowRect, TreeViewItem node, int row, bool selected, bool focused)
 		{
-			Rect result = base.OnRowGUI(node, row, rowWidth, selected, focused);
-			Rect position = new Rect(rowWidth - 17f, result.yMin, 17f, this.plusButtonStyle.fixedHeight);
+			base.OnRowGUI(rowRect, node, row, selected, focused);
 			AddCurvesPopupPropertyNode addCurvesPopupPropertyNode = node as AddCurvesPopupPropertyNode;
 			if (addCurvesPopupPropertyNode == null || addCurvesPopupPropertyNode.curveBindings == null || addCurvesPopupPropertyNode.curveBindings.Length == 0)
 			{
-				return result;
+				return;
 			}
+			Rect position = new Rect(rowRect.width - 17f, rowRect.yMin, 17f, this.plusButtonStyle.fixedHeight);
 			GUI.Box(position, GUIContent.none, this.plusButtonBackgroundStyle);
 			if (GUI.Button(position, GUIContent.none, this.plusButtonStyle))
 			{
 				AddCurvesPopup.AddNewCurve(addCurvesPopupPropertyNode);
 				this.owner.Close();
-				this.m_TreeView.ReloadData();
 			}
-			return result;
 		}
+
 		protected override void SyncFakeItem()
 		{
 		}
+
 		protected override void RenameEnded()
 		{
 		}
-		protected override Texture GetIconForNode(TreeViewItem item)
+
+		protected override bool IsRenaming(int id)
+		{
+			return false;
+		}
+
+		public override bool BeginRename(TreeViewItem item, float delay)
+		{
+			return false;
+		}
+
+		protected override Texture GetIconForItem(TreeViewItem item)
 		{
 			if (item != null)
 			{

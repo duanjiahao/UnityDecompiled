@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+
 namespace UnityEngine
 {
 	public enum TextureFormat
@@ -21,7 +23,9 @@ namespace UnityEngine
 		RGFloat,
 		RGBAFloat,
 		YUY2,
-		PVRTC_RGB2 = 30,
+		DXT1Crunched = 28,
+		DXT5Crunched,
+		PVRTC_RGB2,
 		PVRTC_RGBA2,
 		PVRTC_RGB4,
 		PVRTC_RGBA4,
@@ -47,9 +51,15 @@ namespace UnityEngine
 		ASTC_RGBA_8x8,
 		ASTC_RGBA_10x10,
 		ASTC_RGBA_12x12,
+		ETC_RGB4_3DS,
+		ETC_RGBA8_3DS,
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Enum member TextureFormat.PVRTC_2BPP_RGB has been deprecated. Use PVRTC_RGB2 instead (UnityUpgradable) -> PVRTC_RGB2", true)]
 		PVRTC_2BPP_RGB = -127,
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Enum member TextureFormat.PVRTC_2BPP_RGBA has been deprecated. Use PVRTC_RGBA2 instead (UnityUpgradable) -> PVRTC_RGBA2", true)]
 		PVRTC_2BPP_RGBA = -127,
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Enum member TextureFormat.PVRTC_4BPP_RGB has been deprecated. Use PVRTC_RGB4 instead (UnityUpgradable) -> PVRTC_RGB4", true)]
 		PVRTC_4BPP_RGB = -127,
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Enum member TextureFormat.PVRTC_4BPP_RGBA has been deprecated. Use PVRTC_RGBA4 instead (UnityUpgradable) -> PVRTC_RGBA4", true)]
 		PVRTC_4BPP_RGBA = -127
 	}
 }

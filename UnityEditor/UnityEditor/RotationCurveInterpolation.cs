@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RotationCurveInterpolation
@@ -9,16 +10,23 @@ namespace UnityEditor
 		public struct State
 		{
 			public bool allAreNonBaked;
+
 			public bool allAreBaked;
+
+			public bool allAreRaw;
+
 			public bool allAreRotations;
 		}
+
 		public enum Mode
 		{
 			Baked,
 			NonBaked,
 			RawQuaternions,
+			RawEuler,
 			Undefined
 		}
+
 		public static char[] kPostFix = new char[]
 		{
 			'x',
@@ -26,6 +34,7 @@ namespace UnityEditor
 			'z',
 			'w'
 		};
+
 		public static RotationCurveInterpolation.Mode GetModeFromCurveData(EditorCurveBinding data)
 		{
 			if (AnimationWindowUtility.IsTransformType(data.type) && data.propertyName.StartsWith("localEulerAngles"))
@@ -33,6 +42,10 @@ namespace UnityEditor
 				if (data.propertyName.StartsWith("localEulerAnglesBaked"))
 				{
 					return RotationCurveInterpolation.Mode.Baked;
+				}
+				if (data.propertyName.StartsWith("localEulerAnglesRaw"))
+				{
+					return RotationCurveInterpolation.Mode.RawEuler;
 				}
 				return RotationCurveInterpolation.Mode.NonBaked;
 			}
@@ -45,42 +58,36 @@ namespace UnityEditor
 				return RotationCurveInterpolation.Mode.Undefined;
 			}
 		}
+
 		public static RotationCurveInterpolation.State GetCurveState(AnimationClip clip, EditorCurveBinding[] selection)
 		{
 			RotationCurveInterpolation.State result;
+			result.allAreRaw = true;
 			result.allAreNonBaked = true;
-			result.allAreBaked = false;
-			result.allAreRotations = false;
+			result.allAreBaked = true;
+			result.allAreRotations = true;
 			for (int i = 0; i < selection.Length; i++)
 			{
 				EditorCurveBinding data = selection[i];
 				RotationCurveInterpolation.Mode modeFromCurveData = RotationCurveInterpolation.GetModeFromCurveData(data);
-				if (modeFromCurveData == RotationCurveInterpolation.Mode.NonBaked)
-				{
-					result.allAreNonBaked = false;
-				}
-				else
-				{
-					if (modeFromCurveData == RotationCurveInterpolation.Mode.Baked)
-					{
-						result.allAreBaked = false;
-					}
-					else
-					{
-						result.allAreRotations = false;
-					}
-				}
+				result.allAreBaked &= (modeFromCurveData == RotationCurveInterpolation.Mode.Baked);
+				result.allAreNonBaked &= (modeFromCurveData == RotationCurveInterpolation.Mode.NonBaked);
+				result.allAreRaw &= (modeFromCurveData == RotationCurveInterpolation.Mode.RawEuler);
+				result.allAreRotations &= (modeFromCurveData != RotationCurveInterpolation.Mode.Undefined);
 			}
 			return result;
 		}
+
 		public static int GetCurveIndexFromName(string name)
 		{
 			return (int)(RotationCurveInterpolation.ExtractComponentCharacter(name) - 'x');
 		}
+
 		public static char ExtractComponentCharacter(string name)
 		{
 			return name[name.Length - 1];
 		}
+
 		public static string GetPrefixForInterpolation(RotationCurveInterpolation.Mode newInterpolationMode)
 		{
 			if (newInterpolationMode == RotationCurveInterpolation.Mode.Baked)
@@ -91,16 +98,23 @@ namespace UnityEditor
 			{
 				return "localEulerAngles";
 			}
+			if (newInterpolationMode == RotationCurveInterpolation.Mode.RawEuler)
+			{
+				return "localEulerAnglesRaw";
+			}
 			if (newInterpolationMode == RotationCurveInterpolation.Mode.RawQuaternions)
 			{
 				return "m_LocalRotation";
 			}
 			return null;
 		}
+
 		internal static EditorCurveBinding[] ConvertRotationPropertiesToDefaultInterpolation(AnimationClip clip, EditorCurveBinding[] selection)
 		{
-			return RotationCurveInterpolation.ConvertRotationPropertiesToInterpolationType(selection, RotationCurveInterpolation.Mode.Baked);
+			RotationCurveInterpolation.Mode newInterpolationMode = (!clip.legacy) ? RotationCurveInterpolation.Mode.RawEuler : RotationCurveInterpolation.Mode.Baked;
+			return RotationCurveInterpolation.ConvertRotationPropertiesToInterpolationType(selection, newInterpolationMode);
 		}
+
 		internal static EditorCurveBinding[] ConvertRotationPropertiesToInterpolationType(EditorCurveBinding[] selection, RotationCurveInterpolation.Mode newInterpolationMode)
 		{
 			if (selection.Length != 4)
@@ -123,6 +137,7 @@ namespace UnityEditor
 			}
 			return selection;
 		}
+
 		private static EditorCurveBinding[] GenerateTransformCurveBindingArray(string path, string property, Type type, int count)
 		{
 			EditorCurveBinding[] array = new EditorCurveBinding[count];
@@ -132,6 +147,7 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		public static EditorCurveBinding[] RemapAnimationBindingForAddKey(EditorCurveBinding binding, AnimationClip clip)
 		{
 			if (!AnimationWindowUtility.IsTransformType(binding.type))
@@ -152,19 +168,48 @@ namespace UnityEditor
 				{
 					return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "m_LocalScale.", binding.type, 3);
 				}
-				if (!binding.propertyName.StartsWith("m_LocalRotation"))
+				if (binding.propertyName.StartsWith("m_LocalRotation"))
 				{
-					return null;
+					return RotationCurveInterpolation.SelectRotationBindingForAddKey(binding, clip);
 				}
-				EditorCurveBinding binding2 = binding;
-				binding2.propertyName = "localEulerAngles.x";
-				if (AnimationUtility.GetEditorCurve(clip, binding2) != null)
-				{
-					return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "localEulerAngles.", binding.type, 3);
-				}
-				return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "localEulerAnglesBaked.", binding.type, 3);
+				return null;
 			}
 		}
+
+		public static EditorCurveBinding[] RemapAnimationBindingForRotationAddKey(EditorCurveBinding binding, AnimationClip clip)
+		{
+			if (!AnimationWindowUtility.IsTransformType(binding.type))
+			{
+				return null;
+			}
+			if (binding.propertyName.StartsWith("m_LocalRotation"))
+			{
+				return RotationCurveInterpolation.SelectRotationBindingForAddKey(binding, clip);
+			}
+			return null;
+		}
+
+		private static EditorCurveBinding[] SelectRotationBindingForAddKey(EditorCurveBinding binding, AnimationClip clip)
+		{
+			EditorCurveBinding binding2 = binding;
+			binding2.propertyName = "localEulerAnglesBaked.x";
+			if (AnimationUtility.GetEditorCurve(clip, binding2) != null)
+			{
+				return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "localEulerAnglesBaked.", binding.type, 3);
+			}
+			binding2.propertyName = "localEulerAngles.x";
+			if (AnimationUtility.GetEditorCurve(clip, binding2) != null)
+			{
+				return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "localEulerAngles.", binding.type, 3);
+			}
+			binding2.propertyName = "localEulerAnglesRaw.x";
+			if (clip.legacy && AnimationUtility.GetEditorCurve(clip, binding2) == null)
+			{
+				return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "localEulerAnglesBaked.", binding.type, 3);
+			}
+			return RotationCurveInterpolation.GenerateTransformCurveBindingArray(binding.path, "localEulerAnglesRaw.", binding.type, 3);
+		}
+
 		public static EditorCurveBinding RemapAnimationBindingForRotationCurves(EditorCurveBinding curveBinding, AnimationClip clip)
 		{
 			if (!AnimationWindowUtility.IsTransformType(curveBinding.type))
@@ -192,11 +237,22 @@ namespace UnityEditor
 			{
 				return editorCurveBinding;
 			}
+			editorCurveBinding.propertyName = "localEulerAnglesRaw." + str;
+			editorCurve = AnimationUtility.GetEditorCurve(clip, editorCurveBinding);
+			if (editorCurve != null)
+			{
+				return editorCurveBinding;
+			}
 			return curveBinding;
 		}
+
 		internal static void SetInterpolation(AnimationClip clip, EditorCurveBinding[] curveBindings, RotationCurveInterpolation.Mode newInterpolationMode)
 		{
 			Undo.RegisterCompleteObjectUndo(clip, "Rotation Interpolation");
+			if (clip.legacy && newInterpolationMode == RotationCurveInterpolation.Mode.RawEuler)
+			{
+				Debug.LogWarning("Warning, Euler Angles interpolation mode is not fully supported for Legacy animation clips. If you mix clips using Euler Angles interpolation with clips using other interpolation modes (using Animation.CrossFade, Animation.Blend or other methods), you will get erroneous results. Use with caution.", clip);
+			}
 			List<EditorCurveBinding> list = new List<EditorCurveBinding>();
 			List<AnimationCurve> list2 = new List<AnimationCurve>();
 			List<EditorCurveBinding> list3 = new List<EditorCurveBinding>();

@@ -1,25 +1,38 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class SplitterState
 	{
 		private const int defaultSplitSize = 6;
+
 		public int ID;
+
 		public int splitterInitialOffset;
+
 		public int currentActiveSplitter = -1;
+
 		public int[] realSizes;
+
 		public float[] relativeSizes;
+
 		public int[] minSizes;
+
 		public int[] maxSizes;
+
 		public int lastTotalSize;
+
 		public int splitSize;
+
 		public float xOffset;
+
 		public SplitterState(params float[] relativeSizes)
 		{
 			this.Init(relativeSizes, null, null, 0);
 		}
+
 		public SplitterState(int[] realSizes, int[] minSizes, int[] maxSizes)
 		{
 			this.realSizes = realSizes;
@@ -29,14 +42,17 @@ namespace UnityEditor
 			this.splitSize = ((this.splitSize != 0) ? this.splitSize : 6);
 			this.RealToRelativeSizes();
 		}
+
 		public SplitterState(float[] relativeSizes, int[] minSizes, int[] maxSizes)
 		{
 			this.Init(relativeSizes, minSizes, maxSizes, 0);
 		}
+
 		public SplitterState(float[] relativeSizes, int[] minSizes, int[] maxSizes, int splitSize)
 		{
 			this.Init(relativeSizes, minSizes, maxSizes, splitSize);
 		}
+
 		private void Init(float[] relativeSizes, int[] minSizes, int[] maxSizes, int splitSize)
 		{
 			this.relativeSizes = relativeSizes;
@@ -46,6 +62,7 @@ namespace UnityEditor
 			this.splitSize = ((splitSize != 0) ? splitSize : 6);
 			this.NormalizeRelativeSizes();
 		}
+
 		public void NormalizeRelativeSizes()
 		{
 			float num = 1f;
@@ -61,6 +78,7 @@ namespace UnityEditor
 			}
 			this.relativeSizes[this.relativeSizes.Length - 1] += num;
 		}
+
 		public void RealToRelativeSizes()
 		{
 			float num = 1f;
@@ -79,6 +97,7 @@ namespace UnityEditor
 				this.relativeSizes[this.relativeSizes.Length - 1] += num;
 			}
 		}
+
 		public void RelativeToRealSizes(int totalSpace)
 		{
 			int num = totalSpace;
@@ -118,6 +137,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public void DoSplitter(int i1, int i2, int diff)
 		{
 			int num = this.realSizes[i1];
@@ -150,23 +170,20 @@ namespace UnityEditor
 				}
 				flag = true;
 			}
-			else
+			else if (num2 - diff < num4)
 			{
-				if (num2 - diff < num4)
+				diff -= num2 - num4;
+				this.realSizes[i1] += this.realSizes[i2] - num4;
+				this.realSizes[i2] = num4;
+				if (i2 != this.realSizes.Length - 1)
 				{
-					diff -= num2 - num4;
-					this.realSizes[i1] += this.realSizes[i2] - num4;
-					this.realSizes[i2] = num4;
-					if (i2 != this.realSizes.Length - 1)
-					{
-						this.DoSplitter(i1, i2 + 1, diff);
-					}
-					else
-					{
-						this.splitterInitialOffset -= diff;
-					}
-					flag = true;
+					this.DoSplitter(i1, i2 + 1, diff);
 				}
+				else
+				{
+					this.splitterInitialOffset -= diff;
+				}
+				flag = true;
 			}
 			if (!flag)
 			{
@@ -185,23 +202,20 @@ namespace UnityEditor
 					}
 					flag = true;
 				}
-				else
+				else if (num6 != 0 && num2 - diff > num6)
 				{
-					if (num6 != 0 && num2 - diff > num6)
+					diff -= num2 - num6;
+					this.realSizes[i1] += this.realSizes[i2] - num6;
+					this.realSizes[i2] = num6;
+					if (i2 != this.realSizes.Length - 1)
 					{
-						diff -= num2 - num6;
-						this.realSizes[i1] += this.realSizes[i2] - num6;
-						this.realSizes[i2] = num6;
-						if (i2 != this.realSizes.Length - 1)
-						{
-							this.DoSplitter(i1, i2 + 1, diff);
-						}
-						else
-						{
-							this.splitterInitialOffset -= diff;
-						}
-						flag = true;
+						this.DoSplitter(i1, i2 + 1, diff);
 					}
+					else
+					{
+						this.splitterInitialOffset -= diff;
+					}
+					flag = true;
 				}
 			}
 			if (!flag)

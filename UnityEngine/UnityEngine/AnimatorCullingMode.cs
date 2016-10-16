@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum AnimatorCullingMode
@@ -6,6 +7,7 @@ namespace UnityEngine
 		AlwaysAnimate,
 		CullUpdateTransforms,
 		CullCompletely,
+		[Obsolete("Enum member AnimatorCullingMode.BasedOnRenderers has been deprecated. Use AnimatorCullingMode.CullUpdateTransforms instead (UnityUpgradable) -> CullUpdateTransforms", true)]
 		BasedOnRenderers = 1
 	}
 }

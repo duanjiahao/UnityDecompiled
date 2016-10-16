@@ -1,7 +1,14 @@
+using Mono.Cecil;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.UNetWeaver;
+using UnityEditor.Modules;
 using UnityEditor.Utils;
+using UnityEditorInternal;
+using UnityEngine;
+
 namespace UnityEditor.Scripting.Serialization
 {
 	internal static class Weaver
@@ -10,149 +17,123 @@ namespace UnityEditor.Scripting.Serialization
 		{
 			return !name.Contains("Boo.") && !name.Contains("Mono.") && !name.Contains("System") && name.EndsWith(".dll");
 		}
-		public static void WeaveAssembliesInFolder(string folder, string playerPackage)
-		{
-			string unityEngine = Path.Combine(folder, "UnityEngine.dll");
-			foreach (string current in 
-				from f in Directory.GetFiles(folder)
-				where Weaver.ShouldWeave(Path.GetFileName(f))
-				select f)
-			{
-				Weaver.WeaveInto(current, current, unityEngine, playerPackage);
-			}
-		}
-		public static bool WeaveUnetFromEditor(string assemblyPath, string destPath, string unityEngine, string unityUNet)
-		{
-			Console.WriteLine("WeaveUnetFromEditor " + assemblyPath);
-			return Weaver.WeaveUNetInto(assemblyPath, assemblyPath, unityEngine, unityUNet);
-		}
-		public static void WeaveInto(string assemblyPath, string destPath, string unityEngine, string playerPackage)
-		{
-			string arguments = Weaver.CommandLineArgsFor(assemblyPath, destPath, unityEngine);
-			using (ManagedProgram managedProgram = Weaver.SerializationWeaverProgramWith(arguments, playerPackage))
-			{
-				try
-				{
-					managedProgram.Start();
-				}
-				catch
-				{
-					managedProgram.LogProcessStartInfo();
-					throw new Exception("Could not start SerializationWeaver.exe");
-				}
-				managedProgram.WaitForExit();
-				if (managedProgram.ExitCode != 0)
-				{
-					throw new Exception("Failed running SerializationWeaver. output was: " + managedProgram.GetAllOutput());
-				}
-			}
-		}
-		public static bool WeaveUNetInto(string assemblyPath, string destPath, string unityEngine, string unityUNet)
-		{
-			string text = Weaver.CommandLineArgsFor(assemblyPath, destPath, unityEngine);
-			text = text + " -unity-unet=" + unityUNet;
-			string frameWorksFolder = MonoInstallationFinder.GetFrameWorksFolder();
-			Console.Write(string.Concat(new string[]
-			{
-				"WeaveUNetInto ",
-				assemblyPath,
-				" using ",
-				frameWorksFolder,
-				"/UNetWeaver/UNetWeaver.exe ",
-				text
-			}));
-			bool result;
-			using (ManagedProgram managedProgram = Weaver.UNetWeaverProgramWith(text, frameWorksFolder))
-			{
-				try
-				{
-					managedProgram.Start();
-				}
-				catch
-				{
-					managedProgram.LogProcessStartInfo();
-					throw new Exception("Could not start UNetWeaver.exe");
-				}
-				managedProgram.WaitForExit();
-				Console.Write(managedProgram.GetAllOutput());
-				if (managedProgram.ExitCode == 0)
-				{
-					string allOutput = managedProgram.GetAllOutput();
-					string text2 = "COMPILE_WARNING ";
-					string[] array = allOutput.Split(new char[]
-					{
-						'\n'
-					});
-					string[] array2 = array;
-					for (int i = 0; i < array2.Length; i++)
-					{
-						string text3 = array2[i];
-						if (text3.Length >= text2.Length)
-						{
-							if (text3.Substring(0, text2.Length) == text2)
-							{
-								string msg = text3.Substring(text2.Length);
-								EditorApplication.ReportUNetWeaver("file", msg, false);
-							}
-						}
-					}
-					result = true;
-				}
-				else
-				{
-					string allOutput2 = managedProgram.GetAllOutput();
-					string text4 = "COMPILE_ERROR ";
-					string text5 = "COMPILE_WARNING ";
-					string[] array3 = allOutput2.Split(new char[]
-					{
-						'\n'
-					});
-					string[] array4 = array3;
-					for (int j = 0; j < array4.Length; j++)
-					{
-						string text6 = array4[j];
-						if (text6.Length >= text5.Length)
-						{
-							if (text6.Substring(0, text4.Length) == text4)
-							{
-								string msg2 = text6.Substring(text4.Length);
-								EditorApplication.ReportUNetWeaver("file", msg2, true);
-							}
-							if (text6.Substring(0, text5.Length) == text5)
-							{
-								string msg3 = text6.Substring(text5.Length);
-								EditorApplication.ReportUNetWeaver("file", msg3, false);
-							}
-						}
-					}
-					result = false;
-				}
-			}
-			return result;
-		}
-		private static string CommandLineArgsFor(string assemblyPath, string destPath, string unityEngine)
-		{
-			return string.Concat(new string[]
-			{
-				assemblyPath,
-				" ",
-				Path.GetDirectoryName(destPath),
-				" -unity-engine=\"",
-				unityEngine,
-				"\""
-			});
-		}
+
 		private static ManagedProgram SerializationWeaverProgramWith(string arguments, string playerPackage)
 		{
 			return Weaver.ManagedProgramFor(playerPackage + "/SerializationWeaver/SerializationWeaver.exe", arguments);
 		}
-		private static ManagedProgram UNetWeaverProgramWith(string arguments, string playerPackage)
-		{
-			return Weaver.ManagedProgramFor(playerPackage + "/UNetWeaver/UNetWeaver.exe", arguments);
-		}
+
 		private static ManagedProgram ManagedProgramFor(string exe, string arguments)
 		{
-			return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, arguments);
+			return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, arguments, null);
+		}
+
+		private static ICompilationExtension GetCompilationExtension()
+		{
+			string targetStringFromBuildTarget = ModuleManager.GetTargetStringFromBuildTarget(EditorUserBuildSettings.activeBuildTarget);
+			return ModuleManager.GetCompilationExtension(targetStringFromBuildTarget);
+		}
+
+		private static void QueryAssemblyPathsAndResolver(ICompilationExtension compilationExtension, string file, bool editor, out string[] assemblyPaths, out IAssemblyResolver assemblyResolver)
+		{
+			assemblyResolver = compilationExtension.GetAssemblyResolver(editor, file, null);
+			assemblyPaths = compilationExtension.GetCompilerExtraAssemblyPaths(editor, file).ToArray<string>();
+		}
+
+		public static void WeaveAssembliesInFolder(string folder, string playerPackage)
+		{
+			ICompilationExtension compilationExtension = Weaver.GetCompilationExtension();
+			string unityEngine = Path.Combine(folder, "UnityEngine.dll");
+			foreach (string current in from f in Directory.GetFiles(folder)
+			where Weaver.ShouldWeave(Path.GetFileName(f))
+			select f)
+			{
+				string[] extraAssemblyPaths;
+				IAssemblyResolver assemblyResolver;
+				Weaver.QueryAssemblyPathsAndResolver(compilationExtension, current, false, out extraAssemblyPaths, out assemblyResolver);
+				Weaver.WeaveInto(current, current, unityEngine, playerPackage, extraAssemblyPaths, assemblyResolver);
+			}
+		}
+
+		public static bool WeaveUnetFromEditor(string assemblyPath, string destPath, string unityEngine, string unityUNet, bool buildingForEditor)
+		{
+			Console.WriteLine("WeaveUnetFromEditor " + assemblyPath);
+			ICompilationExtension compilationExtension = Weaver.GetCompilationExtension();
+			string[] extraAssemblyPaths;
+			IAssemblyResolver assemblyResolver;
+			Weaver.QueryAssemblyPathsAndResolver(compilationExtension, assemblyPath, buildingForEditor, out extraAssemblyPaths, out assemblyResolver);
+			return Weaver.WeaveInto(unityUNet, destPath, unityEngine, assemblyPath, extraAssemblyPaths, assemblyResolver);
+		}
+
+		public static bool WeaveInto(string unityUNet, string destPath, string unityEngine, string assemblyPath, string[] extraAssemblyPaths, IAssemblyResolver assemblyResolver)
+		{
+			IEnumerable<MonoIsland> enumerable = from i in InternalEditorUtility.GetMonoIslands()
+			where 0 < i._files.Length
+			select i;
+			string fullName = Directory.GetParent(Application.dataPath).FullName;
+			string[] array = null;
+			foreach (MonoIsland current in enumerable)
+			{
+				if (destPath.Equals(current._output))
+				{
+					array = Weaver.GetReferences(current, fullName);
+					break;
+				}
+			}
+			if (array == null)
+			{
+				Debug.LogError("Weaver failure: unable to locate assemblies (no matching project) for: " + destPath);
+				return false;
+			}
+			List<string> list = new List<string>();
+			string[] array2 = array;
+			for (int j = 0; j < array2.Length; j++)
+			{
+				string path = array2[j];
+				list.Add(Path.GetDirectoryName(path));
+			}
+			if (extraAssemblyPaths != null)
+			{
+				list.AddRange(extraAssemblyPaths);
+			}
+			try
+			{
+				if (!Unity.UNetWeaver.Program.Process(unityEngine, unityUNet, Path.GetDirectoryName(destPath), new string[]
+				{
+					assemblyPath
+				}, list.ToArray(), assemblyResolver, new Action<string>(Debug.LogWarning), new Action<string>(Debug.LogError)))
+				{
+					Debug.LogError("Failure generating network code.");
+					return false;
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError("Exception generating network code: " + ex.ToString() + " " + ex.StackTrace);
+			}
+			return true;
+		}
+
+		public static string[] GetReferences(MonoIsland island, string projectDirectory)
+		{
+			List<string> list = new List<string>();
+			List<string> first = new List<string>();
+			foreach (string current in first.Union(island._references))
+			{
+				string fileName = Path.GetFileName(current);
+				if (string.IsNullOrEmpty(fileName) || (!fileName.Contains("UnityEditor.dll") && !fileName.Contains("UnityEngine.dll")))
+				{
+					string text = (!Path.IsPathRooted(current)) ? Path.Combine(projectDirectory, current) : current;
+					if (AssemblyHelper.IsManagedAssembly(text))
+					{
+						if (!AssemblyHelper.IsInternalAssembly(text))
+						{
+							list.Add(text);
+						}
+					}
+				}
+			}
+			return list.ToArray();
 		}
 	}
 }

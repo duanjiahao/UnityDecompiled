@@ -1,16 +1,36 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Mesh))]
 	internal class ModelInspector : Editor
 	{
 		private PreviewRenderUtility m_PreviewUtility;
+
 		private Material m_Material;
+
 		private Material m_WireMaterial;
+
 		public Vector2 previewDir = new Vector2(-120f, 20f);
-		internal static readonly string WireframeShaderSource = "Shader \"Hidden/ModelInspectorWireframe\" {\nSubShader {\n\tTags { \"ForceSupported\" = \"True\" }\n\tColor (0,0,0,0.3) Blend SrcAlpha OneMinusSrcAlpha\n\tZTest LEqual ZWrite Off\n\tOffset -1, -1\n\tPass { Cull Off }\n}}";
+
+		internal static Material CreateWireframeMaterial()
+		{
+			Shader shader = Shader.FindBuiltin("Internal-Colored.shader");
+			if (!shader)
+			{
+				Debug.LogWarning("Could not find Colored builtin shader");
+				return null;
+			}
+			Material material = new Material(shader);
+			material.hideFlags = HideFlags.HideAndDontSave;
+			material.SetColor("_Color", new Color(0f, 0f, 0f, 0.3f));
+			material.SetInt("_ZWrite", 0);
+			material.SetFloat("_ZBias", -1f);
+			return material;
+		}
+
 		private void Init()
 		{
 			if (this.m_PreviewUtility == null)
@@ -18,11 +38,10 @@ namespace UnityEditor
 				this.m_PreviewUtility = new PreviewRenderUtility();
 				this.m_PreviewUtility.m_CameraFieldOfView = 30f;
 				this.m_Material = (EditorGUIUtility.GetBuiltinExtraResource(typeof(Material), "Default-Material.mat") as Material);
-				this.m_WireMaterial = new Material(ModelInspector.WireframeShaderSource);
-				this.m_WireMaterial.hideFlags = HideFlags.HideAndDontSave;
-				this.m_WireMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
+				this.m_WireMaterial = ModelInspector.CreateWireframeMaterial();
 			}
 		}
+
 		public override void OnPreviewSettings()
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -32,6 +51,7 @@ namespace UnityEditor
 			GUI.enabled = true;
 			this.Init();
 		}
+
 		internal static void RenderMeshPreview(Mesh mesh, PreviewRenderUtility previewUtility, Material litMaterial, Material wireMaterial, Vector2 direction, int meshSubset)
 		{
 			if (mesh == null || previewUtility == null)
@@ -53,6 +73,7 @@ namespace UnityEditor
 			ModelInspector.RenderMeshPreviewSkipCameraAndLighting(mesh, bounds, previewUtility, litMaterial, wireMaterial, null, direction, meshSubset);
 			InternalEditorUtility.RemoveCustomLighting();
 		}
+
 		internal static void RenderMeshPreviewSkipCameraAndLighting(Mesh mesh, Bounds bounds, PreviewRenderUtility previewUtility, Material litMaterial, Material wireMaterial, MaterialPropertyBlock customProperties, Vector2 direction, int meshSubset)
 		{
 			if (mesh == null || previewUtility == null)
@@ -100,10 +121,12 @@ namespace UnityEditor
 			}
 			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
 		}
+
 		private void DoRenderPreview()
 		{
 			ModelInspector.RenderMeshPreview(this.target as Mesh, this.m_PreviewUtility, this.m_Material, this.m_WireMaterial, this.previewDir, -1);
 		}
+
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -115,10 +138,12 @@ namespace UnityEditor
 			this.DoRenderPreview();
 			return this.m_PreviewUtility.EndStaticPreview();
 		}
+
 		public override bool HasPreviewGUI()
 		{
 			return this.target != null;
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
@@ -137,13 +162,14 @@ namespace UnityEditor
 			}
 			this.m_PreviewUtility.BeginPreview(r, background);
 			this.DoRenderPreview();
-			Texture image = this.m_PreviewUtility.EndPreview();
-			GUI.DrawTexture(r, image, ScaleMode.StretchToFill, false);
+			this.m_PreviewUtility.EndAndDrawPreview(r);
 		}
+
 		internal override void OnAssetStoreInspectorGUI()
 		{
 			this.OnInspectorGUI();
 		}
+
 		public void OnDestroy()
 		{
 			if (this.m_PreviewUtility != null)
@@ -153,10 +179,10 @@ namespace UnityEditor
 			}
 			if (this.m_WireMaterial)
 			{
-				UnityEngine.Object.DestroyImmediate(this.m_WireMaterial.shader, true);
 				UnityEngine.Object.DestroyImmediate(this.m_WireMaterial, true);
 			}
 		}
+
 		public override string GetInfoString()
 		{
 			Mesh mesh = this.target as Mesh;

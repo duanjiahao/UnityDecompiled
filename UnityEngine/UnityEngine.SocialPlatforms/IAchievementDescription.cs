@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.SocialPlatforms
 {
 	public interface IAchievementDescription
@@ -8,26 +9,32 @@ namespace UnityEngine.SocialPlatforms
 			get;
 			set;
 		}
+
 		string title
 		{
 			get;
 		}
+
 		Texture2D image
 		{
 			get;
 		}
+
 		string achievedDescription
 		{
 			get;
 		}
+
 		string unachievedDescription
 		{
 			get;
 		}
+
 		bool hidden
 		{
 			get;
 		}
+
 		int points
 		{
 			get;

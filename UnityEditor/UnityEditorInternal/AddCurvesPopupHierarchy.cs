@@ -1,28 +1,35 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AddCurvesPopupHierarchy
 	{
 		private TreeView m_TreeView;
+
 		private TreeViewState m_TreeViewState;
+
 		private AddCurvesPopupHierarchyDataSource m_TreeViewDataSource;
-		private AnimationWindowState state
+
+		private IAnimationRecordingState state
 		{
 			get;
 			set;
 		}
-		public AddCurvesPopupHierarchy(AnimationWindowState state)
+
+		public AddCurvesPopupHierarchy(IAnimationRecordingState state)
 		{
 			this.state = state;
 		}
+
 		public void OnGUI(Rect position, EditorWindow owner)
 		{
 			this.InitIfNeeded(owner, position);
 			this.m_TreeView.OnEvent();
 			this.m_TreeView.OnGUI(position, GUIUtility.GetControlID(FocusType.Keyboard));
 		}
+
 		public void InitIfNeeded(EditorWindow owner, Rect rect)
 		{
 			if (this.m_TreeViewState == null)
@@ -32,11 +39,12 @@ namespace UnityEditorInternal
 				this.m_TreeView.deselectOnUnhandledMouseDown = true;
 				this.m_TreeViewDataSource = new AddCurvesPopupHierarchyDataSource(this.m_TreeView, this.state);
 				TreeViewGUI gui = new AddCurvesPopupHierarchyGUI(this.m_TreeView, this.state, owner);
-				this.m_TreeView.Init(rect, this.m_TreeViewDataSource, gui, new GameObjectsTreeViewDragging(this.m_TreeView));
+				this.m_TreeView.Init(rect, this.m_TreeViewDataSource, gui, null);
 				this.m_TreeViewDataSource.UpdateData();
 				return;
 			}
 		}
+
 		internal virtual bool IsRenamingNodeAllowed(TreeViewItem node)
 		{
 			return false;

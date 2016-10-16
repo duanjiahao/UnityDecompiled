@@ -4,14 +4,16 @@ using System.IO;
 using UnityEditor.Scripting.Compilers;
 using UnityEditor.Utils;
 using UnityEngine;
+
 namespace UnityEditor.Scripting
 {
 	internal class ManagedProgram : Program
 	{
-		public ManagedProgram(string monodistribution, string profile, string executable, string arguments) : this(monodistribution, profile, executable, arguments, true)
+		public ManagedProgram(string monodistribution, string profile, string executable, string arguments, Action<ProcessStartInfo> setupStartInfo) : this(monodistribution, profile, executable, arguments, true, setupStartInfo)
 		{
 		}
-		public ManagedProgram(string monodistribution, string profile, string executable, string arguments, bool setMonoEnvironmentVariables)
+
+		public ManagedProgram(string monodistribution, string profile, string executable, string arguments, bool setMonoEnvironmentVariables, Action<ProcessStartInfo> setupStartInfo)
 		{
 			string text = ManagedProgram.PathCombine(new string[]
 			{
@@ -49,8 +51,13 @@ namespace UnityEditor.Scripting
 					"etc"
 				});
 			}
+			if (setupStartInfo != null)
+			{
+				setupStartInfo(processStartInfo);
+			}
 			this._process.StartInfo = processStartInfo;
 		}
+
 		private static string PathCombine(params string[] parts)
 		{
 			string text = parts[0];

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SceneFXWindow : PopupWindowContent
@@ -8,20 +9,27 @@ namespace UnityEditor
 		{
 			public readonly GUIStyle menuItem = "MenuItem";
 		}
+
 		private const float kFrameWidth = 1f;
+
 		private static SceneFXWindow s_SceneFXWindow;
+
 		private static SceneFXWindow.Styles s_Styles;
+
 		private readonly SceneView m_SceneView;
+
 		public SceneFXWindow(SceneView sceneView)
 		{
 			this.m_SceneView = sceneView;
 		}
+
 		public override Vector2 GetWindowSize()
 		{
-			float y = 66f;
+			float y = 82f;
 			Vector2 result = new Vector2(160f, y);
 			return result;
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			if (this.m_SceneView == null || this.m_SceneView.m_SceneViewState == null)
@@ -47,6 +55,7 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
+
 		private void Draw(Rect rect)
 		{
 			if (this.m_SceneView == null || this.m_SceneView.m_SceneViewState == null)
@@ -75,7 +84,13 @@ namespace UnityEditor
 				state.showMaterialUpdate = value;
 			});
 			rect2.y += 16f;
+			this.DrawListElement(rect2, "Image Effects", state.showImageEffects, delegate(bool value)
+			{
+				state.showImageEffects = value;
+			});
+			rect2.y += 16f;
 		}
+
 		private void DrawListElement(Rect rect, string toggleName, bool value, Action<bool> setValue)
 		{
 			EditorGUI.BeginChangeCheck();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class PresetLibraryLocations
@@ -14,6 +15,7 @@ namespace UnityEditor
 				return PresetLibraryLocations.GetDefaultFilePathForFileLocation(PresetFileLocation.PreferencesFolder);
 			}
 		}
+
 		public static string defaultPresetLibraryPath
 		{
 			get
@@ -21,6 +23,7 @@ namespace UnityEditor
 				return Path.Combine(PresetLibraryLocations.defaultLibraryLocation, PresetLibraryLocations.defaultLibraryName);
 			}
 		}
+
 		public static string defaultLibraryName
 		{
 			get
@@ -28,6 +31,7 @@ namespace UnityEditor
 				return "Default";
 			}
 		}
+
 		public static List<string> GetAvailableFilesWithExtensionOnTheHDD(PresetFileLocation fileLocation, string fileExtensionWithoutDot)
 		{
 			List<string> directoryPaths = PresetLibraryLocations.GetDirectoryPaths(fileLocation);
@@ -38,6 +42,7 @@ namespace UnityEditor
 			}
 			return filesWithExentionFromFolders;
 		}
+
 		public static string GetDefaultFilePathForFileLocation(PresetFileLocation fileLocation)
 		{
 			if (fileLocation == PresetFileLocation.PreferencesFolder)
@@ -51,6 +56,7 @@ namespace UnityEditor
 			}
 			return "Assets/Editor/";
 		}
+
 		private static List<string> GetDirectoryPaths(PresetFileLocation fileLocation)
 		{
 			List<string> list = new List<string>();
@@ -72,6 +78,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		private static List<string> GetFilesWithExentionFromFolders(List<string> folderPaths, string fileExtensionWithoutDot)
 		{
 			List<string> list = new List<string>();
@@ -82,6 +89,7 @@ namespace UnityEditor
 			}
 			return list;
 		}
+
 		public static PresetFileLocation GetFileLocationFromPath(string path)
 		{
 			if (path.Contains(InternalEditorUtility.unityPreferencesFolder))
@@ -95,10 +103,12 @@ namespace UnityEditor
 			Debug.LogError("Could not determine preset file location type " + path);
 			return PresetFileLocation.ProjectFolder;
 		}
+
 		private static string ConvertToUnitySeperators(string path)
 		{
 			return path.Replace('\\', '/');
 		}
+
 		public static string GetParticleCurveLibraryExtension(bool singleCurve, bool signedRange)
 		{
 			string text = "particle";
@@ -120,6 +130,7 @@ namespace UnityEditor
 			}
 			return text;
 		}
+
 		public static string GetCurveLibraryExtension(bool normalized)
 		{
 			if (normalized)

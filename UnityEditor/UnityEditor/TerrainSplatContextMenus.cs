@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TerrainSplatContextMenus
@@ -9,6 +10,7 @@ namespace UnityEditor
 		{
 			TerrainSplatEditor.ShowTerrainSplatEditor("Add Terrain Texture", "Add", (Terrain)item.context, -1);
 		}
+
 		[MenuItem("CONTEXT/TerrainEngineSplats/Edit Texture...")]
 		internal static void EditSplat(MenuCommand item)
 		{
@@ -31,18 +33,21 @@ namespace UnityEditor
 			}
 			TerrainSplatEditor.ShowTerrainSplatEditor(text, "Apply", (Terrain)item.context, item.userData);
 		}
+
 		[MenuItem("CONTEXT/TerrainEngineSplats/Edit Texture...", true)]
 		internal static bool EditSplatCheck(MenuCommand item)
 		{
 			Terrain terrain = (Terrain)item.context;
 			return item.userData >= 0 && item.userData < terrain.terrainData.splatPrototypes.Length;
 		}
+
 		[MenuItem("CONTEXT/TerrainEngineSplats/Remove Texture")]
 		internal static void RemoveSplat(MenuCommand item)
 		{
 			Terrain terrain = (Terrain)item.context;
 			TerrainEditorUtility.RemoveSplatTexture(terrain.terrainData, item.userData);
 		}
+
 		[MenuItem("CONTEXT/TerrainEngineSplats/Remove Texture", true)]
 		internal static bool RemoveSplatCheck(MenuCommand item)
 		{

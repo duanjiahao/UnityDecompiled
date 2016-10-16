@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class PopupLocationHelper
@@ -12,6 +13,7 @@ namespace UnityEditor
 			Left,
 			Right
 		}
+
 		private static float k_SpaceFromBottom
 		{
 			get
@@ -23,10 +25,12 @@ namespace UnityEditor
 				return 0f;
 			}
 		}
+
 		public static Rect GetDropDownRect(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow)
 		{
 			return PopupLocationHelper.GetDropDownRect(buttonRect, minSize, maxSize, popupContainerWindow, null);
 		}
+
 		public static Rect GetDropDownRect(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
 			if (locationPriorityOrder == null)
@@ -87,6 +91,7 @@ namespace UnityEditor
 			}
 			return PopupLocationHelper.GetLargestRect(list);
 		}
+
 		private static Rect FitRect(Rect rect, ContainerWindow popupContainerWindow)
 		{
 			if (popupContainerWindow)
@@ -95,6 +100,7 @@ namespace UnityEditor
 			}
 			return ContainerWindow.FitRectToScreen(rect, true, true);
 		}
+
 		private static bool PopupRight(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, out Rect resultRect)
 		{
 			Rect rect = new Rect(buttonRect.xMax, buttonRect.y, maxSize.x, maxSize.y);
@@ -107,6 +113,7 @@ namespace UnityEditor
 			resultRect = new Rect(rect.x, rect.y, width, rect.height - PopupLocationHelper.k_SpaceFromBottom);
 			return num2 >= minSize.x;
 		}
+
 		private static bool PopupLeft(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, out Rect resultRect)
 		{
 			Rect rect = new Rect(buttonRect.x - maxSize.x, buttonRect.y, maxSize.x, maxSize.y);
@@ -119,6 +126,7 @@ namespace UnityEditor
 			resultRect = new Rect(rect.x, rect.y, width, rect.height - PopupLocationHelper.k_SpaceFromBottom);
 			return num2 >= minSize.x;
 		}
+
 		private static bool PopupAbove(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, out Rect resultRect)
 		{
 			Rect rect = new Rect(buttonRect.x, buttonRect.y - maxSize.y, maxSize.x, maxSize.y);
@@ -135,6 +143,7 @@ namespace UnityEditor
 			resultRect = new Rect(rect.x, buttonRect.y - num2, rect.width, num2);
 			return false;
 		}
+
 		private static bool PopupBelow(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, out Rect resultRect)
 		{
 			Rect rect = new Rect(buttonRect.x, buttonRect.yMax, maxSize.x, maxSize.y);
@@ -150,6 +159,7 @@ namespace UnityEditor
 			resultRect = new Rect(rect.x, buttonRect.yMax, rect.width, num);
 			return false;
 		}
+
 		private static Rect GetLargestRect(List<Rect> rects)
 		{
 			Rect result = default(Rect);

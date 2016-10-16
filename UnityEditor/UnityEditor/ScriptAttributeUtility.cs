@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ScriptAttributeUtility
@@ -10,15 +11,24 @@ namespace UnityEditor
 		private struct DrawerKeySet
 		{
 			public Type drawer;
+
 			public Type type;
 		}
+
 		internal static Stack<PropertyDrawer> s_DrawerStack = new Stack<PropertyDrawer>();
+
 		private static Dictionary<Type, ScriptAttributeUtility.DrawerKeySet> s_DrawerTypeForType = null;
+
 		private static Dictionary<string, List<PropertyAttribute>> s_BuiltinAttributes = null;
+
 		private static PropertyHandler s_SharedNullHandler = new PropertyHandler();
+
 		private static PropertyHandler s_NextHandler = new PropertyHandler();
+
 		private static PropertyHandlerCache s_GlobalCache = new PropertyHandlerCache();
+
 		private static PropertyHandlerCache s_CurrentCache = null;
+
 		internal static PropertyHandlerCache propertyHandlerCache
 		{
 			get
@@ -30,16 +40,19 @@ namespace UnityEditor
 				ScriptAttributeUtility.s_CurrentCache = value;
 			}
 		}
+
 		internal static void ClearGlobalCache()
 		{
 			ScriptAttributeUtility.s_GlobalCache.Clear();
 		}
+
 		private static void PopulateBuiltinAttributes()
 		{
 			ScriptAttributeUtility.s_BuiltinAttributes = new Dictionary<string, List<PropertyAttribute>>();
 			ScriptAttributeUtility.AddBuiltinAttribute("GUIText", "m_Text", new MultilineAttribute());
 			ScriptAttributeUtility.AddBuiltinAttribute("TextMesh", "m_Text", new MultilineAttribute());
 		}
+
 		private static void AddBuiltinAttribute(string componentTypeName, string propertyPath, PropertyAttribute attr)
 		{
 			string key = componentTypeName + "_" + propertyPath;
@@ -49,6 +62,7 @@ namespace UnityEditor
 			}
 			ScriptAttributeUtility.s_BuiltinAttributes[key].Add(attr);
 		}
+
 		private static List<PropertyAttribute> GetBuiltinAttributes(SerializedProperty property)
 		{
 			if (property.serializedObject.targetObject == null)
@@ -65,6 +79,7 @@ namespace UnityEditor
 			ScriptAttributeUtility.s_BuiltinAttributes.TryGetValue(key, out result);
 			return result;
 		}
+
 		private static void BuildDrawerTypeForTypeDictionary()
 		{
 			ScriptAttributeUtility.s_DrawerTypeForType = new Dictionary<Type, ScriptAttributeUtility.DrawerKeySet>();
@@ -84,10 +99,9 @@ namespace UnityEditor
 					};
 					if (editor.m_UseForChildren)
 					{
-						IEnumerable<Type> enumerable = 
-							from x in source
-							where x.IsSubclassOf(editor.m_Type)
-							select x;
+						IEnumerable<Type> enumerable = from x in source
+						where x.IsSubclassOf(editor.m_Type)
+						select x;
 						foreach (Type current2 in enumerable)
 						{
 							if (!ScriptAttributeUtility.s_DrawerTypeForType.ContainsKey(current2) || !editor.m_Type.IsAssignableFrom(ScriptAttributeUtility.s_DrawerTypeForType[current2].type))
@@ -103,6 +117,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static Type GetDrawerTypeForType(Type type)
 		{
 			if (ScriptAttributeUtility.s_DrawerTypeForType == null)
@@ -121,6 +136,7 @@ namespace UnityEditor
 			}
 			return drawerKeySet.drawer;
 		}
+
 		private static List<PropertyAttribute> GetFieldAttributes(FieldInfo field)
 		{
 			if (field == null)
@@ -130,14 +146,14 @@ namespace UnityEditor
 			object[] customAttributes = field.GetCustomAttributes(typeof(PropertyAttribute), true);
 			if (customAttributes != null && customAttributes.Length > 0)
 			{
-				return new List<PropertyAttribute>(
-					from e in customAttributes
-					select e as PropertyAttribute into e
-					orderby -e.order
-					select e);
+				return new List<PropertyAttribute>(from e in customAttributes
+				select e as PropertyAttribute into e
+				orderby -e.order
+				select e);
 			}
 			return null;
 		}
+
 		private static FieldInfo GetFieldInfoFromProperty(SerializedProperty property, out Type type)
 		{
 			Type scriptTypeFromProperty = ScriptAttributeUtility.GetScriptTypeFromProperty(property);
@@ -148,6 +164,7 @@ namespace UnityEditor
 			}
 			return ScriptAttributeUtility.GetFieldInfoFromPropertyPath(scriptTypeFromProperty, property.propertyPath, out type);
 		}
+
 		private static Type GetScriptTypeFromProperty(SerializedProperty property)
 		{
 			SerializedProperty serializedProperty = property.serializedObject.FindProperty("m_Script");
@@ -162,6 +179,7 @@ namespace UnityEditor
 			}
 			return monoScript.GetClass();
 		}
+
 		private static FieldInfo GetFieldInfoFromPropertyPath(Type host, string path, out Type type)
 		{
 			FieldInfo fieldInfo = null;
@@ -201,6 +219,7 @@ namespace UnityEditor
 			}
 			return fieldInfo;
 		}
+
 		internal static PropertyHandler GetHandler(SerializedProperty property)
 		{
 			if (property == null)

@@ -2,24 +2,30 @@ using System;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class SceneViewGrid
 	{
 		private static PrefColor kViewGridColor = new PrefColor("Scene/Grid", 0.5f, 0.5f, 0.5f, 0.4f);
+
 		[SerializeField]
 		private AnimBool xGrid = new AnimBool();
+
 		[SerializeField]
 		private AnimBool yGrid = new AnimBool();
+
 		[SerializeField]
 		private AnimBool zGrid = new AnimBool();
+
 		public void Register(SceneView source)
 		{
 			this.xGrid.valueChanged.AddListener(new UnityAction(source.Repaint));
 			this.yGrid.valueChanged.AddListener(new UnityAction(source.Repaint));
 			this.zGrid.valueChanged.AddListener(new UnityAction(source.Repaint));
 		}
+
 		public DrawGridParameters PrepareGridRender(Camera camera, Vector3 pivot, Quaternion rotation, float size, bool orthoMode, bool gridVisible)
 		{
 			bool target = false;
@@ -34,19 +40,13 @@ namespace UnityEditor
 					{
 						target2 = true;
 					}
-					else
+					else if (lhs == Vector3.left || lhs == Vector3.right)
 					{
-						if (lhs == Vector3.left || lhs == Vector3.right)
-						{
-							target = true;
-						}
-						else
-						{
-							if (lhs == Vector3.forward || lhs == Vector3.back)
-							{
-								target3 = true;
-							}
-						}
+						target = true;
+					}
+					else if (lhs == Vector3.forward || lhs == Vector3.back)
+					{
+						target3 = true;
 					}
 				}
 				else

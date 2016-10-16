@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.iOS
 {
 	public enum DeviceGeneration
@@ -23,12 +24,19 @@ namespace UnityEngine.iOS
 		iPhone5C,
 		iPhone5S,
 		iPadAir1,
+		[Obsolete("Please use iPadAir1 instead.")]
 		iPad5Gen = 19,
 		iPadMini2Gen,
 		iPhone6,
 		iPhone6Plus,
 		iPadMini3Gen,
 		iPadAir2,
+		iPhone6S,
+		iPhone6SPlus,
+		iPadPro1Gen,
+		iPadMini4Gen,
+		iPhoneSE1Gen,
+		iPadPro10Inch1Gen,
 		iPhoneUnknown = 10001,
 		iPadUnknown,
 		iPodTouchUnknown

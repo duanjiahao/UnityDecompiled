@@ -1,31 +1,53 @@
 using System;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor.VersionControl
 {
+	[EditorWindowTitle(title = "Versioning", icon = "UnityEditor.VersionControl")]
 	internal class WindowPending : EditorWindow
 	{
 		internal class Styles
 		{
 			public GUIStyle box = "CN Box";
+
 			public GUIStyle bottomBarBg = "ProjectBrowserBottomBarBg";
 		}
+
 		private const float k_ResizerHeight = 17f;
+
 		private const float k_MinIncomingAreaHeight = 50f;
+
 		private const float k_BottomBarHeight = 17f;
+
 		private static WindowPending.Styles s_Styles;
+
 		private static Texture2D changeIcon;
+
 		private Texture2D syncIcon;
+
 		private Texture2D refreshIcon;
+
 		private GUIStyle header;
+
 		[SerializeField]
 		private ListControl pendingList;
+
 		[SerializeField]
 		private ListControl incomingList;
+
 		private bool m_ShowIncoming;
+
 		private float s_ToolbarButtonsWidth;
+
+		private float s_SettingsButtonWidth;
+
+		private float s_DeleteChangesetsButtonWidth;
+
 		private static GUIContent[] sStatusWheel;
+
 		private static bool s_DidReload;
+
 		internal static GUIContent StatusWheel
 		{
 			get
@@ -46,6 +68,7 @@ namespace UnityEditor.VersionControl
 				return WindowPending.sStatusWheel[num];
 			}
 		}
+
 		private void InitStyles()
 		{
 			if (WindowPending.s_Styles == null)
@@ -53,17 +76,18 @@ namespace UnityEditor.VersionControl
 				WindowPending.s_Styles = new WindowPending.Styles();
 			}
 		}
+
 		private void OnEnable()
 		{
-			base.title = "UnityEditor.VersionControl";
+			base.titleContent = base.GetLocalizedTitleContent();
 			if (this.pendingList == null)
 			{
 				this.pendingList = new ListControl();
 			}
-			ListControl expr_27 = this.pendingList;
-			expr_27.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_27.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpand));
-			ListControl expr_4E = this.pendingList;
-			expr_4E.DragEvent = (ListControl.DragDelegate)Delegate.Combine(expr_4E.DragEvent, new ListControl.DragDelegate(this.OnDrop));
+			ListControl expr_28 = this.pendingList;
+			expr_28.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_28.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpand));
+			ListControl expr_4F = this.pendingList;
+			expr_4F.DragEvent = (ListControl.DragDelegate)Delegate.Combine(expr_4F.DragEvent, new ListControl.DragDelegate(this.OnDrop));
 			this.pendingList.MenuDefault = "CONTEXT/Pending";
 			this.pendingList.MenuFolder = "CONTEXT/Change";
 			this.pendingList.DragAcceptOnly = true;
@@ -71,10 +95,11 @@ namespace UnityEditor.VersionControl
 			{
 				this.incomingList = new ListControl();
 			}
-			ListControl expr_B7 = this.incomingList;
-			expr_B7.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_B7.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpandIncoming));
+			ListControl expr_B8 = this.incomingList;
+			expr_B8.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_B8.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpandIncoming));
 			this.UpdateWindow();
 		}
+
 		public void OnSelectionChange()
 		{
 			if (!base.hasFocus)
@@ -83,12 +108,25 @@ namespace UnityEditor.VersionControl
 				base.Repaint();
 			}
 		}
+
 		private void OnDrop(ChangeSet targetItem)
 		{
 			AssetList selectedAssets = this.pendingList.SelectedAssets;
 			Task task = Provider.ChangeSetMove(selectedAssets, targetItem);
 			task.SetCompletionAction(CompletionAction.UpdatePendingWindow);
 		}
+
+		public static void ExpandLatestChangeSet()
+		{
+			WindowPending[] array = Resources.FindObjectsOfTypeAll(typeof(WindowPending)) as WindowPending[];
+			WindowPending[] array2 = array;
+			for (int i = 0; i < array2.Length; i++)
+			{
+				WindowPending windowPending = array2[i];
+				windowPending.pendingList.ExpandLastItem();
+			}
+		}
+
 		private void OnExpand(ChangeSet change, ListItem item)
 		{
 			if (!Provider.isActive)
@@ -107,6 +145,7 @@ namespace UnityEditor.VersionControl
 				base.Repaint();
 			}
 		}
+
 		private void OnExpandIncoming(ChangeSet change, ListItem item)
 		{
 			if (!Provider.isActive)
@@ -125,23 +164,30 @@ namespace UnityEditor.VersionControl
 				base.Repaint();
 			}
 		}
+
 		private void UpdateWindow()
 		{
 			if (!Provider.isActive)
 			{
 				this.pendingList.Clear();
+				Provider.UpdateSettings();
 				base.Repaint();
 				return;
 			}
-			Task task = Provider.ChangeSets();
-			task.SetCompletionAction(CompletionAction.OnChangeSetsPendingWindow);
-			Task task2 = Provider.Incoming();
-			task2.SetCompletionAction(CompletionAction.OnIncomingPendingWindow);
+			if (Provider.onlineState == OnlineState.Online)
+			{
+				Task task = Provider.ChangeSets();
+				task.SetCompletionAction(CompletionAction.OnChangeSetsPendingWindow);
+				Task task2 = Provider.Incoming();
+				task2.SetCompletionAction(CompletionAction.OnIncomingPendingWindow);
+			}
 		}
+
 		private void OnGotLatest(Task t)
 		{
 			this.UpdateWindow();
 		}
+
 		private static void OnVCTaskCompletedEvent(Task task, CompletionAction completionAction)
 		{
 			WindowPending[] array = Resources.FindObjectsOfTypeAll(typeof(WindowPending)) as WindowPending[];
@@ -149,55 +195,49 @@ namespace UnityEditor.VersionControl
 			for (int i = 0; i < array2.Length; i++)
 			{
 				WindowPending windowPending = array2[i];
-				if (completionAction == CompletionAction.UpdatePendingWindow)
+				switch (completionAction)
 				{
+				case CompletionAction.UpdatePendingWindow:
+				case CompletionAction.OnCheckoutCompleted:
 					windowPending.UpdateWindow();
-				}
-				else
-				{
-					if (completionAction == CompletionAction.OnChangeContentsPendingWindow)
-					{
-						windowPending.OnChangeContents(task);
-					}
-					else
-					{
-						if (completionAction == CompletionAction.OnIncomingPendingWindow)
-						{
-							windowPending.OnIncoming(task);
-						}
-						else
-						{
-							if (completionAction == CompletionAction.OnChangeSetsPendingWindow)
-							{
-								windowPending.OnChangeSets(task);
-							}
-							else
-							{
-								if (completionAction == CompletionAction.OnGotLatestPendingWindow)
-								{
-									windowPending.OnGotLatest(task);
-								}
-							}
-						}
-					}
+					break;
+				case CompletionAction.OnChangeContentsPendingWindow:
+					windowPending.OnChangeContents(task);
+					break;
+				case CompletionAction.OnIncomingPendingWindow:
+					windowPending.OnIncoming(task);
+					break;
+				case CompletionAction.OnChangeSetsPendingWindow:
+					windowPending.OnChangeSets(task);
+					break;
+				case CompletionAction.OnGotLatestPendingWindow:
+					windowPending.OnGotLatest(task);
+					break;
 				}
 			}
-			if (completionAction == CompletionAction.OnSubmittedChangeWindow)
+			switch (completionAction)
 			{
+			case CompletionAction.OnSubmittedChangeWindow:
 				WindowChange.OnSubmitted(task);
-			}
-			else
-			{
-				if (completionAction == CompletionAction.OnAddedChangeWindow)
+				break;
+			case CompletionAction.OnAddedChangeWindow:
+				WindowChange.OnAdded(task);
+				break;
+			case CompletionAction.OnCheckoutCompleted:
+				if (EditorUserSettings.showFailedCheckout)
 				{
-					WindowChange.OnAdded(task);
+					WindowCheckoutFailure.OpenIfCheckoutFailed(task.assetList);
 				}
+				break;
 			}
 			task.Dispose();
 		}
+
 		public static void OnStatusUpdated()
 		{
+			WindowPending.UpdateAllWindows();
 		}
+
 		public static void UpdateAllWindows()
 		{
 			WindowPending[] array = Resources.FindObjectsOfTypeAll(typeof(WindowPending)) as WindowPending[];
@@ -208,6 +248,7 @@ namespace UnityEditor.VersionControl
 				windowPending.UpdateWindow();
 			}
 		}
+
 		public static void CloseAllWindows()
 		{
 			WindowPending[] array = Resources.FindObjectsOfTypeAll(typeof(WindowPending)) as WindowPending[];
@@ -217,16 +258,19 @@ namespace UnityEditor.VersionControl
 				windowPending.Close();
 			}
 		}
+
 		private void OnIncoming(Task task)
 		{
 			this.CreateStaticResources();
 			this.PopulateListControl(this.incomingList, task, this.syncIcon);
 		}
+
 		private void OnChangeSets(Task task)
 		{
 			this.CreateStaticResources();
 			this.PopulateListControl(this.pendingList, task, WindowPending.changeIcon);
 		}
+
 		private void PopulateListControl(ListControl list, Task task, Texture2D icon)
 		{
 			ChangeSets changeSets = task.changeSets;
@@ -251,6 +295,7 @@ namespace UnityEditor.VersionControl
 				if (listItem3 != null)
 				{
 					listItem3.Item = current;
+					listItem3.Name = current.description;
 				}
 				else
 				{
@@ -263,6 +308,7 @@ namespace UnityEditor.VersionControl
 			list.Refresh();
 			base.Repaint();
 		}
+
 		private void OnChangeContents(Task task)
 		{
 			ListItem listItem = this.pendingList.FindItemWithIdentifier(task.userIdentifier);
@@ -289,6 +335,31 @@ namespace UnityEditor.VersionControl
 			listControl.Refresh(false);
 			base.Repaint();
 		}
+
+		private ChangeSets GetEmptyChangeSetsCandidates()
+		{
+			ListControl listControl = this.pendingList;
+			ChangeSets emptyChangeSets = listControl.EmptyChangeSets;
+			ChangeSets toDelete = new ChangeSets();
+			emptyChangeSets.FindAll((ChangeSet item) => item.id != ChangeSet.defaultID).ForEach(delegate(ChangeSet s)
+			{
+				toDelete.Add(s);
+			});
+			return toDelete;
+		}
+
+		private bool HasEmptyPendingChangesets()
+		{
+			ChangeSets emptyChangeSetsCandidates = this.GetEmptyChangeSetsCandidates();
+			return Provider.DeleteChangeSetsIsValid(emptyChangeSetsCandidates);
+		}
+
+		private void DeleteEmptyPendingChangesets()
+		{
+			ChangeSets emptyChangeSetsCandidates = this.GetEmptyChangeSetsCandidates();
+			Provider.DeleteChangeSets(emptyChangeSetsCandidates).SetCompletionAction(CompletionAction.UpdatePendingWindow);
+		}
+
 		private void OnGUI()
 		{
 			this.InitStyles();
@@ -300,26 +371,38 @@ namespace UnityEditor.VersionControl
 			this.CreateResources();
 			Event current = Event.current;
 			float fixedHeight = EditorStyles.toolbar.fixedHeight;
+			bool flag = false;
 			GUILayout.BeginArea(new Rect(0f, 0f, base.position.width, fixedHeight));
 			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
+			EditorGUI.BeginChangeCheck();
 			int num = (this.incomingList.Root != null) ? this.incomingList.Root.ChildCount : 0;
 			this.m_ShowIncoming = !GUILayout.Toggle(!this.m_ShowIncoming, "Outgoing", EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			GUIContent content = GUIContent.Temp("Incoming" + ((num != 0) ? (" (" + num.ToString() + ")") : string.Empty));
 			this.m_ShowIncoming = GUILayout.Toggle(this.m_ShowIncoming, content, EditorStyles.toolbarButton, new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			EditorGUI.BeginDisabledGroup(Provider.activeTask != null);
-			CustomCommand[] customCommands = Provider.customCommands;
-			for (int i = 0; i < customCommands.Length; i++)
+			if (EditorGUI.EndChangeCheck())
 			{
-				CustomCommand customCommand = customCommands[i];
-				if (customCommand.context == CommandContext.Global && GUILayout.Button(customCommand.label, EditorStyles.toolbarButton, new GUILayoutOption[0]))
+				flag = true;
+			}
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(Provider.activeTask != null))
+			{
+				CustomCommand[] customCommands = Provider.customCommands;
+				for (int i = 0; i < customCommands.Length; i++)
 				{
-					customCommand.StartTask();
+					CustomCommand customCommand = customCommands[i];
+					if (customCommand.context == CommandContext.Global && GUILayout.Button(customCommand.label, EditorStyles.toolbarButton, new GUILayoutOption[0]))
+					{
+						customCommand.StartTask();
+					}
 				}
 			}
-			EditorGUI.EndDisabledGroup();
-			bool flag = Mathf.FloorToInt(base.position.width - this.s_ToolbarButtonsWidth) > 0;
-			if (flag && GUILayout.Button("Settings", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			bool flag2 = Mathf.FloorToInt(base.position.width - this.s_ToolbarButtonsWidth - this.s_SettingsButtonWidth - this.s_DeleteChangesetsButtonWidth) > 0 && this.HasEmptyPendingChangesets();
+			if (flag2 && GUILayout.Button("Delete Empty Changesets", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			{
+				this.DeleteEmptyPendingChangesets();
+			}
+			bool flag3 = Mathf.FloorToInt(base.position.width - this.s_ToolbarButtonsWidth - this.s_SettingsButtonWidth) > 0;
+			if (flag3 && GUILayout.Button("Settings", EditorStyles.toolbarButton, new GUILayoutOption[0]))
 			{
 				EditorApplication.ExecuteMenuItem("Edit/Project Settings/Editor");
 				EditorWindow.FocusWindowIfItsOpen<InspectorWindow>();
@@ -327,31 +410,25 @@ namespace UnityEditor.VersionControl
 			}
 			Color color = GUI.color;
 			GUI.color = new Color(1f, 1f, 1f, 0.5f);
-			bool flag2 = GUILayout.Button(this.refreshIcon, EditorStyles.toolbarButton, new GUILayoutOption[0]);
+			bool flag4 = GUILayout.Button(this.refreshIcon, EditorStyles.toolbarButton, new GUILayoutOption[0]);
+			flag = (flag || flag4);
 			GUI.color = color;
 			if (current.isKey && GUIUtility.keyboardControl == 0 && current.type == EventType.KeyDown && current.keyCode == KeyCode.F5)
 			{
-				flag2 = true;
+				flag = true;
 				current.Use();
 			}
-			if (flag2)
+			if (flag)
 			{
-				Provider.InvalidateCache();
-				if (Provider.isActive && Provider.onlineState == OnlineState.Online)
+				if (flag4)
 				{
-					Task task = Provider.ChangeSets();
-					task.SetCompletionAction(CompletionAction.OnChangeSetsPendingWindow);
-					Task task2 = Provider.Incoming();
-					task2.SetCompletionAction(CompletionAction.OnIncomingPendingWindow);
+					Provider.InvalidateCache();
 				}
-				else
-				{
-					Provider.UpdateSettings();
-				}
+				this.UpdateWindow();
 			}
 			GUILayout.EndArea();
 			Rect rect = new Rect(0f, fixedHeight, base.position.width, base.position.height - fixedHeight - 17f);
-			bool flag3 = false;
+			bool flag5 = false;
 			GUILayout.EndHorizontal();
 			if (!Provider.isActive)
 			{
@@ -384,17 +461,17 @@ namespace UnityEditor.VersionControl
 					GUI.Label(rect, Provider.offlineReason);
 				}
 				GUI.color = color2;
-				flag3 = false;
+				flag5 = false;
 			}
 			else
 			{
 				if (this.m_ShowIncoming)
 				{
-					flag3 |= this.incomingList.OnGUI(rect, base.hasFocus);
+					flag5 |= this.incomingList.OnGUI(rect, base.hasFocus);
 				}
 				else
 				{
-					flag3 |= this.pendingList.OnGUI(rect, base.hasFocus);
+					flag5 |= this.pendingList.OnGUI(rect, base.hasFocus);
 				}
 				rect.y += rect.height;
 				rect.height = 17f;
@@ -410,24 +487,26 @@ namespace UnityEditor.VersionControl
 					position.height = vector.y;
 					position.y = rect.y + 2f;
 					position.x = base.position.width - vector.x - 5f;
-					EditorGUI.BeginDisabledGroup(this.incomingList.Size == 0);
-					if (GUI.Button(position, content2, EditorStyles.miniButton))
+					using (new EditorGUI.DisabledScope(this.incomingList.Size == 0))
 					{
-						Asset item = new Asset(string.Empty);
-						Task latest = Provider.GetLatest(new AssetList
+						if (GUI.Button(position, content2, EditorStyles.miniButton))
 						{
-							item
-						});
-						latest.SetCompletionAction(CompletionAction.OnGotLatestPendingWindow);
+							Asset item = new Asset(string.Empty);
+							Task latest = Provider.GetLatest(new AssetList
+							{
+								item
+							});
+							latest.SetCompletionAction(CompletionAction.OnGotLatestPendingWindow);
+						}
 					}
-					EditorGUI.EndDisabledGroup();
 				}
 			}
-			if (flag3)
+			if (flag5)
 			{
 				base.Repaint();
 			}
 		}
+
 		internal static bool ProgressGUI(Rect rect, Task activeTask, bool descriptionTextFirst)
 		{
 			if (activeTask != null && (activeTask.progressPct != -1 || activeTask.secondsSpent != -1 || activeTask.progressMessage.Length != 0))
@@ -456,6 +535,7 @@ namespace UnityEditor.VersionControl
 			}
 			return false;
 		}
+
 		private void CreateResources()
 		{
 			if (this.refreshIcon == null)
@@ -473,10 +553,12 @@ namespace UnityEditor.VersionControl
 			{
 				this.s_ToolbarButtonsWidth = EditorStyles.toolbarButton.CalcSize(new GUIContent("Incoming (xx)")).x;
 				this.s_ToolbarButtonsWidth += EditorStyles.toolbarButton.CalcSize(new GUIContent("Outgoing")).x;
-				this.s_ToolbarButtonsWidth += EditorStyles.toolbarButton.CalcSize(new GUIContent("Settings")).x;
 				this.s_ToolbarButtonsWidth += EditorStyles.toolbarButton.CalcSize(new GUIContent(this.refreshIcon)).x;
+				this.s_SettingsButtonWidth = EditorStyles.toolbarButton.CalcSize(new GUIContent("Settings")).x;
+				this.s_DeleteChangesetsButtonWidth = EditorStyles.toolbarButton.CalcSize(new GUIContent("Delete Empty Changesets")).x;
 			}
 		}
+
 		private void CreateStaticResources()
 		{
 			if (this.syncIcon == null)

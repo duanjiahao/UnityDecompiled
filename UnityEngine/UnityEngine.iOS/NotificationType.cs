@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine.iOS
 {
 	public enum NotificationType

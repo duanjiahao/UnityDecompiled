@@ -1,15 +1,18 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class GradientContextMenu
 	{
 		private SerializedProperty m_Prop1;
+
 		private GradientContextMenu(SerializedProperty prop1)
 		{
 			this.m_Prop1 = prop1;
 		}
+
 		internal static void Show(SerializedProperty prop)
 		{
 			GUIContent content = new GUIContent("Copy");
@@ -26,11 +29,13 @@ namespace UnityEditor
 			}
 			genericMenu.ShowAsContext();
 		}
+
 		private void Copy()
 		{
 			Gradient gradient = (this.m_Prop1 == null) ? null : this.m_Prop1.gradientValue;
 			ParticleSystemClipboard.CopyGradient(gradient, null);
 		}
+
 		private void Paste()
 		{
 			ParticleSystemClipboard.PasteGradient(this.m_Prop1, null);

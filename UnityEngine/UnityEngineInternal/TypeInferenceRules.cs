@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngineInternal
 {
 	public enum TypeInferenceRules

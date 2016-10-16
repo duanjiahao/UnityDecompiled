@@ -2,20 +2,31 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using UnityEngine;
+
 namespace UnityEditor.NScreen
 {
 	internal class RemoteGame : EditorWindow, IHasCustomMenu
 	{
 		private const float kMaxWidth = 1280f;
+
 		private const float kMaxHeight = 720f;
+
 		private Process remoteProcess;
+
 		public NScreenBridge bridge;
+
 		public bool shouldExit = true;
+
 		public bool shouldBuild;
+
 		public int id;
+
 		private int oldWidth;
+
 		private int oldHeight;
+
 		private Rect remoteViewRect;
+
 		private int ToolBarHeight
 		{
 			get
@@ -23,6 +34,7 @@ namespace UnityEditor.NScreen
 				return 17;
 			}
 		}
+
 		internal void StartGame()
 		{
 			this.DoExitGame();
@@ -48,39 +60,39 @@ namespace UnityEditor.NScreen
 			this.bridge.StartWatchdogForPid(this.remoteProcess.Id);
 			this.shouldExit = false;
 		}
+
 		internal bool IsRunning()
 		{
 			return !this.shouldExit;
 		}
+
 		internal void StopGame()
 		{
 			this.shouldExit = true;
 		}
+
 		private void Update()
 		{
 			if (this.shouldExit)
 			{
 				this.DoExitGame();
 			}
-			else
+			else if (this.bridge != null)
 			{
-				if (this.bridge != null)
+				if (this.oldWidth != (int)base.position.width || this.oldHeight != (int)base.position.height)
 				{
-					if (this.oldWidth != (int)base.position.width || this.oldHeight != (int)base.position.height)
-					{
-						int num = (int)Mathf.Clamp(base.position.width, base.minSize.x, 1280f);
-						int num2 = (int)Mathf.Clamp(base.position.height, base.minSize.y, 720f);
-						bool flag = true;
-						this.remoteViewRect = GameViewSizes.GetConstrainedRect(new Rect(0f, 0f, (float)num, (float)num2), ScriptableSingleton<GameViewSizes>.instance.currentGroupType, ScriptableSingleton<NScreenManager>.instance.SelectedSizeIndex, out flag);
-						this.remoteViewRect.y = this.remoteViewRect.y + (float)this.ToolBarHeight;
-						this.remoteViewRect.height = this.remoteViewRect.height - (float)this.ToolBarHeight;
-						this.bridge.SetResolution((int)this.remoteViewRect.width, (int)this.remoteViewRect.height);
-						this.oldWidth = (int)base.position.width;
-						this.oldHeight = (int)base.position.height;
-					}
-					this.bridge.Update();
-					base.Repaint();
+					int num = (int)Mathf.Clamp(base.position.width, base.minSize.x, 1280f);
+					int num2 = (int)Mathf.Clamp(base.position.height, base.minSize.y, 720f);
+					bool flag = true;
+					this.remoteViewRect = GameViewSizes.GetConstrainedRect(new Rect(0f, 0f, (float)num, (float)num2), ScriptableSingleton<GameViewSizes>.instance.currentGroupType, ScriptableSingleton<NScreenManager>.instance.SelectedSizeIndex, out flag);
+					this.remoteViewRect.y = this.remoteViewRect.y + (float)this.ToolBarHeight;
+					this.remoteViewRect.height = this.remoteViewRect.height - (float)this.ToolBarHeight;
+					this.bridge.SetResolution((int)this.remoteViewRect.width, (int)this.remoteViewRect.height);
+					this.oldWidth = (int)base.position.width;
+					this.oldHeight = (int)base.position.height;
 				}
+				this.bridge.Update();
+				base.Repaint();
 			}
 			if (this.shouldBuild)
 			{
@@ -88,6 +100,7 @@ namespace UnityEditor.NScreen
 				NScreenManager.Build();
 			}
 		}
+
 		private void SelectionCallback(int indexClicked, object objectSelected)
 		{
 			if (indexClicked != ScriptableSingleton<NScreenManager>.instance.SelectedSizeIndex)
@@ -96,11 +109,13 @@ namespace UnityEditor.NScreen
 				NScreenManager.RepaintAllGameViews();
 			}
 		}
+
 		internal void GameViewAspectWasChanged()
 		{
 			this.oldWidth = 0;
 			this.oldHeight = 0;
 		}
+
 		private void OnGUI()
 		{
 			GUI.color = Color.white;
@@ -144,10 +159,12 @@ namespace UnityEditor.NScreen
 				GUILayout.Label("Game Stopped", new GUILayoutOption[0]);
 			}
 		}
+
 		private void HandleExited(object sender, EventArgs e)
 		{
 			this.shouldExit = true;
 		}
+
 		internal void DoExitGame()
 		{
 			if (this.remoteProcess != null && !this.remoteProcess.HasExited)
@@ -166,14 +183,17 @@ namespace UnityEditor.NScreen
 			base.wantsMouseMove = false;
 			this.shouldExit = true;
 		}
+
 		private void OnEnable()
 		{
-			base.title = "Remote Game";
+			base.titleContent = new GUIContent("Remote Game");
 		}
+
 		private void OnDestroy()
 		{
 			this.DoExitGame();
 		}
+
 		public void AddItemsToMenu(GenericMenu menu)
 		{
 			menu.AddItem(new GUIContent("Add Tab/Remote Game"), false, new GenericMenu.MenuFunction(NScreenManager.OpenAnotherWindow));

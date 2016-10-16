@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal abstract class TreeViewDragging : ITreeViewDragging
@@ -9,40 +10,65 @@ namespace UnityEditor
 		protected class DropData
 		{
 			public int[] expandedArrayBeforeDrag;
+
 			public int lastControlID;
+
 			public int dropTargetControlID;
+
 			public int rowMarkerControlID;
+
 			public double expandItemBeginTimer;
+
 			public Vector2 expandItemBeginPosition;
 		}
+
 		public enum DropPosition
 		{
 			Upon,
 			Below,
 			Above
 		}
+
 		private const double k_DropExpandTimeout = 0.7;
+
 		protected TreeView m_TreeView;
+
 		protected TreeViewDragging.DropData m_DropData = new TreeViewDragging.DropData();
+
 		public bool drawRowMarkerAbove
 		{
 			get;
 			set;
 		}
+
 		public TreeViewDragging(TreeView treeView)
 		{
 			this.m_TreeView = treeView;
 		}
+
+		public virtual void OnInitialize()
+		{
+		}
+
 		public int GetDropTargetControlID()
 		{
 			return this.m_DropData.dropTargetControlID;
 		}
+
 		public int GetRowMarkerControlID()
 		{
 			return this.m_DropData.rowMarkerControlID;
 		}
+
+		public virtual bool CanStartDrag(TreeViewItem targetItem, List<int> draggedItemIDs, Vector2 mouseDownPosition)
+		{
+			return true;
+		}
+
 		public abstract void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs);
+
 		public abstract DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPosition);
+
 		public virtual bool DragElement(TreeViewItem targetItem, Rect targetItemRect, bool firstItem)
 		{
 			if (targetItem == null)
@@ -74,20 +100,17 @@ namespace UnityEditor
 				return false;
 			}
 			TreeViewDragging.DropPosition dropPosition;
-			if (!flag2 || mousePosition.y >= targetItemRect.yMax - num)
+			if (mousePosition.y >= targetItemRect.yMax - num)
 			{
 				dropPosition = TreeViewDragging.DropPosition.Below;
 			}
+			else if (firstItem && mousePosition.y <= targetItemRect.yMin + num)
+			{
+				dropPosition = TreeViewDragging.DropPosition.Above;
+			}
 			else
 			{
-				if (!flag2 || (firstItem && mousePosition.y <= targetItemRect.yMin + num))
-				{
-					dropPosition = TreeViewDragging.DropPosition.Above;
-				}
-				else
-				{
-					dropPosition = TreeViewDragging.DropPosition.Upon;
-				}
+				dropPosition = ((!flag2) ? TreeViewDragging.DropPosition.Above : TreeViewDragging.DropPosition.Upon);
 			}
 			TreeViewItem treeViewItem;
 			if (this.m_TreeView.data.IsExpanded(targetItem) && targetItem.hasChildren)
@@ -138,31 +161,29 @@ namespace UnityEditor
 					this.m_DropData.dropTargetControlID = itemControlID;
 					DragAndDrop.visualMode = dragAndDropVisualMode;
 				}
-				else
+				else if (targetItem != null && treeViewItem != null)
 				{
-					if (targetItem != null && treeViewItem != null)
+					dragAndDropVisualMode = this.DoDrag(treeViewItem, targetItem, false, dropPosition);
+					if (dragAndDropVisualMode != DragAndDropVisualMode.None)
 					{
-						dragAndDropVisualMode = this.DoDrag(treeViewItem, targetItem, false, dropPosition);
-						if (dragAndDropVisualMode != DragAndDropVisualMode.None)
-						{
-							this.drawRowMarkerAbove = (dropPosition == TreeViewDragging.DropPosition.Above);
-							this.m_DropData.rowMarkerControlID = itemControlID;
-							this.m_DropData.dropTargetControlID = ((!this.drawRowMarkerAbove) ? TreeView.GetItemControlID(treeViewItem) : 0);
-							DragAndDrop.visualMode = dragAndDropVisualMode;
-						}
+						this.drawRowMarkerAbove = (dropPosition == TreeViewDragging.DropPosition.Above);
+						this.m_DropData.rowMarkerControlID = itemControlID;
+						this.m_DropData.dropTargetControlID = ((!this.drawRowMarkerAbove) ? TreeView.GetItemControlID(treeViewItem) : 0);
+						DragAndDrop.visualMode = dragAndDropVisualMode;
 					}
 				}
 			}
 			Event.current.Use();
 			return true;
 		}
+
 		private void FinalizeDragPerformed(bool revertExpanded)
 		{
 			this.DragCleanup(revertExpanded);
 			DragAndDrop.AcceptDrag();
 			List<UnityEngine.Object> list = new List<UnityEngine.Object>(DragAndDrop.objectReferences);
 			bool draggedItemsFromOwnTreeView = true;
-			if (list.Count > 0 && list[0] != null && TreeViewUtility.FindItemInList<TreeViewItem>(list[0].GetInstanceID(), this.m_TreeView.data.GetVisibleRows()) == null)
+			if (list.Count > 0 && list[0] != null && TreeViewUtility.FindItemInList<TreeViewItem>(list[0].GetInstanceID(), this.m_TreeView.data.GetRows()) == null)
 			{
 				draggedItemsFromOwnTreeView = false;
 			}
@@ -176,6 +197,7 @@ namespace UnityEditor
 			}
 			this.m_TreeView.NotifyListenersThatDragEnded(array, draggedItemsFromOwnTreeView);
 		}
+
 		protected virtual void HandleAutoExpansion(int itemControlID, TreeViewItem targetItem, Rect targetItemRect, float betweenHalfHeight, Vector2 currentMousePos)
 		{
 			float contentIndent = this.m_TreeView.gui.GetContentIndent(targetItem);
@@ -201,6 +223,7 @@ namespace UnityEditor
 				this.m_DropData.lastControlID = 0;
 			}
 		}
+
 		public virtual void DragCleanup(bool revertExpanded)
 		{
 			if (this.m_DropData != null)
@@ -212,18 +235,19 @@ namespace UnityEditor
 				this.m_DropData = new TreeViewDragging.DropData();
 			}
 		}
+
 		public List<int> GetCurrentExpanded()
 		{
-			List<TreeViewItem> visibleRows = this.m_TreeView.data.GetVisibleRows();
-			return (
-				from item in visibleRows
-				where this.m_TreeView.data.IsExpanded(item)
-				select item.id).ToList<int>();
+			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			return (from item in rows
+			where this.m_TreeView.data.IsExpanded(item)
+			select item.id).ToList<int>();
 		}
+
 		public void RestoreExpanded(List<int> ids)
 		{
-			List<TreeViewItem> visibleRows = this.m_TreeView.data.GetVisibleRows();
-			foreach (TreeViewItem current in visibleRows)
+			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			foreach (TreeViewItem current in rows)
 			{
 				this.m_TreeView.data.SetExpanded(current, ids.Contains(current.id));
 			}

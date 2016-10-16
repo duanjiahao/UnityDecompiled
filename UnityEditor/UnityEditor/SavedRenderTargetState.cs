@@ -1,12 +1,16 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SavedRenderTargetState
 	{
 		private RenderTexture renderTexture;
+
 		private Rect viewport;
+
 		private Rect scissor;
+
 		internal SavedRenderTargetState()
 		{
 			GL.PushMatrix();
@@ -17,6 +21,7 @@ namespace UnityEditor
 			this.viewport = ShaderUtil.rawViewportRect;
 			this.scissor = ShaderUtil.rawScissorRect;
 		}
+
 		internal void Restore()
 		{
 			if (ShaderUtil.hardwareSupportsRectRenderTexture)
