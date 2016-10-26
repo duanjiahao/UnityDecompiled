@@ -40,31 +40,18 @@ namespace UnityEditor.Scripting.Compilers
 		public static string[] GetReferences()
 		{
 			string text;
-			Version version;
-			UWPReferences.GetWindowsKit10(out text, out version);
-			string text2 = version.ToString();
-			if (version.Minor == -1)
-			{
-				text2 += ".0";
-			}
-			if (version.Build == -1)
-			{
-				text2 += ".0";
-			}
-			if (version.Revision == -1)
-			{
-				text2 += ".0";
-			}
+			string version;
+			UWPReferences.GetSDKFolderAndVersion(out text, out version);
 			HashSet<string> hashSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 			string item = Path.Combine(text, "UnionMetadata\\Facade\\Windows.winmd");
 			hashSet.Add(item);
-			string[] platform = UWPReferences.GetPlatform(text, text2);
+			string[] platform = UWPReferences.GetPlatform(text, version);
 			for (int i = 0; i < platform.Length; i++)
 			{
 				string item2 = platform[i];
 				hashSet.Add(item2);
 			}
-			UWPReferences.UWPExtension[] extensions = UWPReferences.GetExtensions(text, text2);
+			UWPReferences.UWPExtension[] extensions = UWPReferences.GetExtensions(text, version);
 			for (int j = 0; j < extensions.Length; j++)
 			{
 				UWPReferences.UWPExtension uWPExtension = extensions[j];
@@ -76,6 +63,33 @@ namespace UnityEditor.Scripting.Compilers
 				}
 			}
 			return hashSet.ToArray<string>();
+		}
+
+		public static IEnumerable<UWPExtensionSDK> GetExtensionSDKs()
+		{
+			string sdkFolder;
+			string sdkVersion;
+			UWPReferences.GetSDKFolderAndVersion(out sdkFolder, out sdkVersion);
+			return UWPReferences.GetExtensionSDKs(sdkFolder, sdkVersion);
+		}
+
+		private static void GetSDKFolderAndVersion(out string sdkFolder, out string sdkVersion)
+		{
+			Version version;
+			UWPReferences.GetWindowsKit10(out sdkFolder, out version);
+			sdkVersion = version.ToString();
+			if (version.Minor == -1)
+			{
+				sdkVersion += ".0";
+			}
+			if (version.Build == -1)
+			{
+				sdkVersion += ".0";
+			}
+			if (version.Revision == -1)
+			{
+				sdkVersion += ".0";
+			}
 		}
 
 		private static string[] GetPlatform(string folder, string version)
@@ -98,31 +112,60 @@ namespace UnityEditor.Scripting.Compilers
 			return UWPReferences.GetReferences(referencesFolder, containedApiContractsElement);
 		}
 
-		private static UWPReferences.UWPExtension[] GetExtensions(string folder, string version)
+		private static string CombinePaths(params string[] paths)
 		{
-			string path = Path.Combine(folder, "Extension SDKs");
-			string referencesFolder = Path.Combine(folder, "References");
-			List<UWPReferences.UWPExtension> list = new List<UWPReferences.UWPExtension>();
+			return FileUtil.CombinePaths(paths);
+		}
+
+		private static IEnumerable<UWPExtensionSDK> GetExtensionSDKs(string sdkFolder, string sdkVersion)
+		{
+			List<UWPExtensionSDK> list = new List<UWPExtensionSDK>();
+			string path = Path.Combine(sdkFolder, "Extension SDKs");
 			string[] directories = Directory.GetDirectories(path);
 			for (int i = 0; i < directories.Length; i++)
 			{
 				string text = directories[i];
-				string text2 = FileUtil.CombinePaths(new string[]
+				string text2 = UWPReferences.CombinePaths(new string[]
 				{
 					text,
-					version,
+					sdkVersion,
 					"SDKManifest.xml"
 				});
+				string fileName = Path.GetFileName(text);
 				if (File.Exists(text2))
 				{
-					try
+					list.Add(new UWPExtensionSDK(fileName, sdkVersion, text2));
+				}
+				else if (fileName == "XboxLive")
+				{
+					text2 = UWPReferences.CombinePaths(new string[]
 					{
-						UWPReferences.UWPExtension item = new UWPReferences.UWPExtension(text2, referencesFolder);
-						list.Add(item);
-					}
-					catch
+						text,
+						"1.0",
+						"SDKManifest.xml"
+					});
+					if (File.Exists(text2))
 					{
+						list.Add(new UWPExtensionSDK(fileName, "1.0", text2));
 					}
+				}
+			}
+			return list;
+		}
+
+		private static UWPReferences.UWPExtension[] GetExtensions(string folder, string version)
+		{
+			List<UWPReferences.UWPExtension> list = new List<UWPReferences.UWPExtension>();
+			string referencesFolder = Path.Combine(folder, "References");
+			foreach (UWPExtensionSDK current in UWPReferences.GetExtensionSDKs(folder, version))
+			{
+				try
+				{
+					UWPReferences.UWPExtension item = new UWPReferences.UWPExtension(current.ManifestPath, referencesFolder);
+					list.Add(item);
+				}
+				catch
+				{
 				}
 			}
 			return list.ToArray();

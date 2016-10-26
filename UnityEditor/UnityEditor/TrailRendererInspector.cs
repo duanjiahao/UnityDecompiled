@@ -12,13 +12,9 @@ namespace UnityEditor
 		public override void OnEnable()
 		{
 			base.OnEnable();
-			this.m_ExcludedProperties = new List<string>
-			{
-				"m_LightProbeUsage",
-				"m_LightProbeVolumeOverride",
-				"m_ReflectionProbeUsage",
-				"m_ProbeAnchor"
-			}.ToArray();
+			List<string> list = new List<string>();
+			list.AddRange(RendererEditorBase.Probes.GetFieldsStringArray());
+			this.m_ExcludedProperties = list.ToArray();
 			base.InitializeProbeFields();
 		}
 
@@ -26,7 +22,7 @@ namespace UnityEditor
 		{
 			base.serializedObject.Update();
 			Editor.DrawPropertiesExcluding(this.m_SerializedObject, this.m_ExcludedProperties);
-			base.RenderCommonProbeFields(false);
+			base.RenderProbeFields();
 			base.serializedObject.ApplyModifiedProperties();
 		}
 	}

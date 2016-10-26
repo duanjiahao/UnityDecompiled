@@ -165,6 +165,27 @@ namespace UnityEditor
 
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasInstancing(Shader s);
+
+		internal static bool MaterialsUseInstancingShader(SerializedProperty materialsArray)
+		{
+			if (materialsArray.hasMultipleDifferentValues)
+			{
+				return false;
+			}
+			for (int i = 0; i < materialsArray.arraySize; i++)
+			{
+				Material material = materialsArray.GetArrayElementAtIndex(i).objectReferenceValue as Material;
+				if (material != null && material.shader != null && ShaderUtil.HasInstancing(material.shader))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasShadowCasterPass(Shader s);
 
 		[WrapperlessIcall]

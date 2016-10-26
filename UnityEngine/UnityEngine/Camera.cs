@@ -10,6 +10,12 @@ namespace UnityEngine
 	[UsedByNativeCode]
 	public sealed class Camera : Behaviour
 	{
+		public enum StereoscopicEye
+		{
+			Left,
+			Right
+		}
+
 		public delegate void CameraCallback(Camera cam);
 
 		public static Camera.CameraCallback onPreCull;
@@ -642,12 +648,29 @@ namespace UnityEngine
 
 		public void SetStereoViewMatrices(Matrix4x4 leftMatrix, Matrix4x4 rightMatrix)
 		{
-			Camera.INTERNAL_CALL_SetStereoViewMatrices(this, ref leftMatrix, ref rightMatrix);
+			this.SetStereoViewMatrix(Camera.StereoscopicEye.Left, leftMatrix);
+			this.SetStereoViewMatrix(Camera.StereoscopicEye.Right, rightMatrix);
+		}
+
+		public Matrix4x4 GetStereoViewMatrix(Camera.StereoscopicEye eye)
+		{
+			Matrix4x4 result;
+			Camera.INTERNAL_CALL_GetStereoViewMatrix(this, eye, out result);
+			return result;
 		}
 
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetStereoViewMatrices(Camera self, ref Matrix4x4 leftMatrix, ref Matrix4x4 rightMatrix);
+		private static extern void INTERNAL_CALL_GetStereoViewMatrix(Camera self, Camera.StereoscopicEye eye, out Matrix4x4 value);
+
+		public void SetStereoViewMatrix(Camera.StereoscopicEye eye, Matrix4x4 matrix)
+		{
+			Camera.INTERNAL_CALL_SetStereoViewMatrix(this, eye, ref matrix);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetStereoViewMatrix(Camera self, Camera.StereoscopicEye eye, ref Matrix4x4 matrix);
 
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -655,12 +678,29 @@ namespace UnityEngine
 
 		public void SetStereoProjectionMatrices(Matrix4x4 leftMatrix, Matrix4x4 rightMatrix)
 		{
-			Camera.INTERNAL_CALL_SetStereoProjectionMatrices(this, ref leftMatrix, ref rightMatrix);
+			this.SetStereoProjectionMatrix(Camera.StereoscopicEye.Left, leftMatrix);
+			this.SetStereoProjectionMatrix(Camera.StereoscopicEye.Right, rightMatrix);
+		}
+
+		public Matrix4x4 GetStereoProjectionMatrix(Camera.StereoscopicEye eye)
+		{
+			Matrix4x4 result;
+			Camera.INTERNAL_CALL_GetStereoProjectionMatrix(this, eye, out result);
+			return result;
 		}
 
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetStereoProjectionMatrices(Camera self, ref Matrix4x4 leftMatrix, ref Matrix4x4 rightMatrix);
+		private static extern void INTERNAL_CALL_GetStereoProjectionMatrix(Camera self, Camera.StereoscopicEye eye, out Matrix4x4 value);
+
+		public void SetStereoProjectionMatrix(Camera.StereoscopicEye eye, Matrix4x4 matrix)
+		{
+			Camera.INTERNAL_CALL_SetStereoProjectionMatrix(this, eye, ref matrix);
+		}
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetStereoProjectionMatrix(Camera self, Camera.StereoscopicEye eye, ref Matrix4x4 matrix);
 
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]

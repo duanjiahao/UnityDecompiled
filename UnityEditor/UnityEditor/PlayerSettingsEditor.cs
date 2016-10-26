@@ -78,6 +78,8 @@ namespace UnityEditor
 			BuildTargetGroup.PS4
 		};
 
+		public static readonly GUIContent defaultIsFullScreen = EditorGUIUtility.TextContent("Default Is Full Screen*");
+
 		private SavedInt m_SelectedSection = new SavedInt("PlayerSettings.ShownSection", -1);
 
 		private BuildPlayerWindow.BuildPlatform[] validPlatforms;
@@ -766,7 +768,7 @@ namespace UnityEditor
 				if (targetGroup == BuildTargetGroup.Standalone)
 				{
 					GUILayout.Label(EditorGUIUtility.TextContent("Resolution"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_DefaultIsFullScreen, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_DefaultIsFullScreen, PlayerSettingsEditor.defaultIsFullScreen, new GUILayoutOption[0]);
 					this.m_ShowDefaultIsNativeResolution.target = this.m_DefaultIsFullScreen.boolValue;
 					if (EditorGUILayout.BeginFadeGroup(this.m_ShowDefaultIsNativeResolution.faded))
 					{
@@ -1401,9 +1403,8 @@ namespace UnityEditor
 				ScriptingImplementation[] array = scriptingImplementations.Enabled();
 				int num = 0;
 				PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref num, targetGroup);
-				bool flag = this.m_tvOSSdkVersion.intValue == 0;
 				int num2;
-				if (targetGroup == BuildTargetGroup.tvOS && flag)
+				if (targetGroup == BuildTargetGroup.tvOS)
 				{
 					num2 = 1;
 					PlayerSettingsEditor.BuildDisabledEnumPopup(new GUIContent("IL2CPP"), EditorGUIUtility.TextContent("Scripting Backend"));
@@ -1417,8 +1418,8 @@ namespace UnityEditor
 					PlayerSettings.SetPropertyInt("ScriptingBackend", num2, targetGroup);
 				}
 			}
-			bool flag2 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.Metro;
-			if (flag2)
+			bool flag = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.Metro;
+			if (flag)
 			{
 				if (targetGroup == BuildTargetGroup.iPhone)
 				{
@@ -1439,8 +1440,8 @@ namespace UnityEditor
 						this.m_IPhoneTargetOSVersion.intValue = 40;
 					}
 				}
-				bool flag3 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Metro;
-				if (flag3)
+				bool flag2 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Metro;
+				if (flag2)
 				{
 					EditorGUILayout.PropertyField(this.m_AccelerometerFrequency, EditorGUIUtility.TextContent("Accelerometer Frequency"), new GUILayoutOption[0]);
 				}
@@ -1463,11 +1464,11 @@ namespace UnityEditor
 			}
 			using (new EditorGUI.DisabledScope(!Application.HasProLicense()))
 			{
-				bool flag4 = !this.m_SubmitAnalytics.boolValue;
-				bool flag5 = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Disable HW Statistics|Disables HW Statistics (Pro Only)"), flag4, new GUILayoutOption[0]);
-				if (flag4 != flag5)
+				bool flag3 = !this.m_SubmitAnalytics.boolValue;
+				bool flag4 = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Disable HW Statistics|Disables HW Statistics (Pro Only)"), flag3, new GUILayoutOption[0]);
+				if (flag3 != flag4)
 				{
-					this.m_SubmitAnalytics.boolValue = !flag5;
+					this.m_SubmitAnalytics.boolValue = !flag4;
 				}
 				if (!Application.HasProLicense())
 				{

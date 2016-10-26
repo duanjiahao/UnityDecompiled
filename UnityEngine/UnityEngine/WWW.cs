@@ -12,6 +12,7 @@ namespace UnityEngine
 	[UsedByNativeCode]
 	public sealed class WWW : IDisposable
 	{
+		[RequiredByNativeCode]
 		internal IntPtr m_Ptr;
 
 		private static readonly char[] forbiddenCharacters = new char[]

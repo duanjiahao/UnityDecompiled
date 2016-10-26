@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{E2651256-D9E3-4D67-9ED1-B03FCD3658E3}</ProjectGuid>
+    <ProjectGuid>{A9B9AC78-5CA5-4779-BF81-BA5FCF6BA4F9}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
@@ -243,6 +243,7 @@
     <Compile Include="UnityEditor.Scripting.Compilers\UnityScriptCompiler.cs" />
     <Compile Include="UnityEditor.Scripting.Compilers\UnityScriptCompilerOutputParser.cs" />
     <Compile Include="UnityEditor.Scripting.Compilers\UnityScriptLanguage.cs" />
+    <Compile Include="UnityEditor.Scripting.Compilers\UWPExtensionSDK.cs" />
     <Compile Include="UnityEditor.Scripting.Compilers\UWPReferences.cs" />
     <Compile Include="UnityEditor.Scripting.Serialization\Weaver.cs" />
     <Compile Include="UnityEditor.Scripting\APIUpdaterHelper.cs" />
@@ -1368,6 +1369,7 @@
     <Compile Include="UnityEditor\TimeControl.cs" />
     <Compile Include="UnityEditor\TimeHelper.cs" />
     <Compile Include="UnityEditor\Timeline.cs" />
+    <Compile Include="UnityEditor\TizenOSVersion.cs" />
     <Compile Include="UnityEditor\Tool.cs" />
     <Compile Include="UnityEditor\Toolbar.cs" />
     <Compile Include="UnityEditor\Tools.cs" />
@@ -1450,6 +1452,7 @@
     <Compile Include="UnityEditor\XboxBuildSubtarget.cs" />
     <Compile Include="UnityEditor\XboxOneDeployMethod.cs" />
     <Compile Include="UnityEditor\XboxOneEncryptionLevel.cs" />
+    <Compile Include="UnityEditor\XboxOneLoggingLevel.cs" />
     <Compile Include="UnityEditor\XboxOnePackageUpdateGranularity.cs" />
     <Compile Include="UnityEditor\XboxRunMethod.cs" />
     <Compile Include="UnityEditor\ZoomableArea.cs" />

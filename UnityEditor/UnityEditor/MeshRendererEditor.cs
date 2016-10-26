@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace UnityEditor
@@ -14,6 +15,10 @@ namespace UnityEditor
 
 		private SerializedProperty m_Materials;
 
+		private SerializedObject m_GameObjectsSerializedObject;
+
+		private SerializedProperty m_GameObjectStaticFlags;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
@@ -21,6 +26,9 @@ namespace UnityEditor
 			this.m_ReceiveShadows = base.serializedObject.FindProperty("m_ReceiveShadows");
 			this.m_MotionVectors = base.serializedObject.FindProperty("m_MotionVectors");
 			this.m_Materials = base.serializedObject.FindProperty("m_Materials");
+			this.m_GameObjectsSerializedObject = new SerializedObject((from t in base.targets
+			select ((MeshRenderer)t).gameObject).ToArray<GameObject>());
+			this.m_GameObjectStaticFlags = this.m_GameObjectsSerializedObject.FindProperty("m_StaticEditorFlags");
 			base.InitializeProbeFields();
 		}
 
@@ -45,6 +53,14 @@ namespace UnityEditor
 			if (!this.m_Materials.hasMultipleDifferentValues && flag)
 			{
 				EditorGUILayout.HelpBox("This renderer has more materials than the Mesh has submeshes. Multiple materials will be applied to the same submesh, which costs performance. Consider using multiple shader passes.", MessageType.Warning, true);
+			}
+			if (ShaderUtil.MaterialsUseInstancingShader(serializedProperty))
+			{
+				this.m_GameObjectsSerializedObject.Update();
+				if (!this.m_GameObjectStaticFlags.hasMultipleDifferentValues && (this.m_GameObjectStaticFlags.intValue & 4) != 0)
+				{
+					EditorGUILayout.HelpBox("This renderer is statically batched and uses an instanced shader at the same time. Instancing will be disabled in such a case. Consider disabling static batching if you want it to be instanced.", MessageType.Warning, true);
+				}
 			}
 			base.RenderProbeFields();
 			base.serializedObject.ApplyModifiedProperties();

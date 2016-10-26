@@ -3745,6 +3745,16 @@ namespace UnityEngine
 			set;
 		}
 
+		public extern bool useAutoRandomSeed
+		{
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public ParticleSystem.EmissionModule emission
 		{
 			get
@@ -4120,5 +4130,9 @@ namespace UnityEngine
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool CountSubEmitterParticles(ref int count);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern int GenerateRandomSeed();
 	}
 }

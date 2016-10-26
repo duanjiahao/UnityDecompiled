@@ -341,22 +341,29 @@ namespace UnityEditor
 							}
 							if ((prefabType == PrefabType.DisconnectedModelPrefabInstance || prefabType == PrefabType.DisconnectedPrefabInstance) && GUI.Button(position3, "Revert", "MiniButtonMid"))
 							{
+								List<UnityEngine.Object> hierarchy = new List<UnityEngine.Object>();
+								this.GetObjectListFromHierarchy(hierarchy, gameObject);
 								Undo.RegisterFullObjectHierarchyUndo(gameObject, "Revert to prefab");
 								PrefabUtility.ReconnectToLastPrefab(gameObject);
+								Undo.RegisterCreatedObjectUndo(PrefabUtility.GetPrefabObject(gameObject), "Revert to prefab");
 								PrefabUtility.RevertPrefabInstance(gameObject);
 								this.CalculatePrefabStatus();
-								Undo.RegisterCreatedObjectUndo(gameObject, "Reconnect prefab");
-								GUIUtility.ExitGUI();
+								List<UnityEngine.Object> list = new List<UnityEngine.Object>();
+								this.GetObjectListFromHierarchy(list, gameObject);
+								this.RegisterNewComponents(list, hierarchy);
 							}
 							using (new EditorGUI.DisabledScope(AnimationMode.InAnimationMode()))
 							{
 								if ((prefabType == PrefabType.ModelPrefabInstance || prefabType == PrefabType.PrefabInstance) && GUI.Button(position3, "Revert", "MiniButtonMid"))
 								{
+									List<UnityEngine.Object> hierarchy2 = new List<UnityEngine.Object>();
+									this.GetObjectListFromHierarchy(hierarchy2, gameObject);
 									Undo.RegisterFullObjectHierarchyUndo(gameObject, "Revert Prefab Instance");
 									PrefabUtility.RevertPrefabInstance(gameObject);
 									this.CalculatePrefabStatus();
-									Undo.RegisterCreatedObjectUndo(gameObject, "Revert prefab");
-									GUIUtility.ExitGUI();
+									List<UnityEngine.Object> list2 = new List<UnityEngine.Object>();
+									this.GetObjectListFromHierarchy(list2, gameObject);
+									this.RegisterNewComponents(list2, hierarchy2);
 								}
 								if (prefabType == PrefabType.PrefabInstance || prefabType == PrefabType.DisconnectedPrefabInstance)
 								{
@@ -391,6 +398,53 @@ namespace UnityEditor
 			}
 			base.serializedObject.ApplyModifiedProperties();
 			return true;
+		}
+
+		private void GetObjectListFromHierarchy(List<UnityEngine.Object> hierarchy, GameObject gameObject)
+		{
+			Transform transform = null;
+			List<Component> list = new List<Component>();
+			gameObject.GetComponents<Component>(list);
+			foreach (Component current in list)
+			{
+				if (current is Transform)
+				{
+					transform = (current as Transform);
+				}
+				else
+				{
+					hierarchy.Add(current);
+				}
+			}
+			if (transform != null)
+			{
+				int childCount = transform.childCount;
+				for (int i = 0; i < childCount; i++)
+				{
+					this.GetObjectListFromHierarchy(hierarchy, transform.GetChild(i).gameObject);
+				}
+			}
+		}
+
+		private void RegisterNewComponents(List<UnityEngine.Object> newHierarchy, List<UnityEngine.Object> hierarchy)
+		{
+			for (int i = newHierarchy.Count - 1; i >= 0; i--)
+			{
+				bool flag = false;
+				UnityEngine.Object @object = newHierarchy[i];
+				for (int j = 0; j < hierarchy.Count; j++)
+				{
+					if (hierarchy[j].GetInstanceID() == @object.GetInstanceID())
+					{
+						flag = true;
+						break;
+					}
+				}
+				if (!flag)
+				{
+					Undo.RegisterCreatedObjectUndo(newHierarchy[i], "Dangly component");
+				}
+			}
 		}
 
 		private UnityEngine.Object[] GetObjects(bool includeChildren)
