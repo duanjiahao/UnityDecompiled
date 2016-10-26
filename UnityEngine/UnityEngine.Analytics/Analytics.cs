@@ -113,6 +113,10 @@ namespace UnityEngine.Analytics
 			{
 				return AnalyticsResult.NotInitialized;
 			}
+			if (eventData == null)
+			{
+				return unityAnalyticsHandler.CustomEvent(customEventName);
+			}
 			CustomEventData customEventData = new CustomEventData(customEventName);
 			customEventData.Add(eventData);
 			return unityAnalyticsHandler.CustomEvent(customEventData);

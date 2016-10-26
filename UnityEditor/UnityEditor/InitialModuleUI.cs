@@ -33,13 +33,17 @@ namespace UnityEditor
 
 			public GUIContent randomizeRotationDirection = EditorGUIUtility.TextContent("Randomize Rotation Direction|Cause some particles to spin in the opposite direction. (Set between 0 and 1, where a higher value causes more to flip)");
 
-			public GUIContent autoplay = EditorGUIUtility.TextContent("Play On Awake*|If enabled, the system will start playing automatically. Note that this setting is shared between all particle systems in the current particle effect.");
+			public GUIContent autoplay = EditorGUIUtility.TextContent("Play On Awake*|If enabled, the system will start playing automatically. Note that this setting is shared between all Particle Systems in the current particle effect.");
 
 			public GUIContent gravity = EditorGUIUtility.TextContent("Gravity Modifier|Scales the gravity defined in Physics Manager");
 
 			public GUIContent scalingMode = EditorGUIUtility.TextContent("Scaling Mode|Should we use the combined scale from our entire hierarchy, just this particle node, or just apply scale to the shape module?");
 
 			public GUIContent simulationSpace = EditorGUIUtility.TextContent("Simulation Space|Makes particle positions simulate in worldspace or local space. In local space they stay relative to the Transform.");
+
+			public GUIContent autoRandomSeed = EditorGUIUtility.TextContent("Auto Random Seed|Simulate differently each time the effect is played.");
+
+			public GUIContent randomSeed = EditorGUIUtility.TextContent("Random Seed|Randomize the look of the Particle System. Using the same seed will make the Particle System play identically each time.");
 
 			public GUIContent x = EditorGUIUtility.TextContent("X");
 
@@ -96,6 +100,10 @@ namespace UnityEditor
 
 		public SerializedProperty m_MaxNumParticles;
 
+		public SerializedProperty m_AutoRandomSeed;
+
+		public SerializedProperty m_RandomSeed;
+
 		private static InitialModuleUI.Texts s_Texts;
 
 		public InitialModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "InitialModule", displayName, ModuleUI.VisibilityState.VisibleAndFoldedOut)
@@ -126,6 +134,8 @@ namespace UnityEditor
 			this.m_PlayOnAwake = base.GetProperty0("playOnAwake");
 			this.m_SimulationSpace = base.GetProperty0("moveWithTransform");
 			this.m_ScalingMode = base.GetProperty0("scalingMode");
+			this.m_AutoRandomSeed = base.GetProperty0("autoRandomSeed");
+			this.m_RandomSeed = base.GetProperty0("randomSeed");
 			this.m_LifeTime = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.lifetime, "startLifetime");
 			this.m_Speed = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.speed, "startSpeed", ModuleUI.kUseSignedRange);
 			this.m_Color = new SerializedMinMaxGradient(this, "startColor");
@@ -239,6 +249,31 @@ namespace UnityEditor
 				this.m_ParticleSystemUI.m_ParticleEffectUI.PlayOnAwakeChanged(flag3);
 			}
 			ModuleUI.GUIInt(InitialModuleUI.s_Texts.maxParticles, this.m_MaxNumParticles);
+			if (!ModuleUI.GUIToggle(InitialModuleUI.s_Texts.autoRandomSeed, this.m_AutoRandomSeed))
+			{
+				bool flag4 = this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner is ParticleSystemInspector;
+				if (flag4)
+				{
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					ModuleUI.GUIInt(InitialModuleUI.s_Texts.randomSeed, this.m_RandomSeed);
+					if (GUILayout.Button("Reseed", EditorStyles.miniButton, new GUILayoutOption[]
+					{
+						GUILayout.Width(60f)
+					}))
+					{
+						this.m_RandomSeed.intValue = this.m_ParticleSystemUI.m_ParticleSystem.GenerateRandomSeed();
+					}
+					GUILayout.EndHorizontal();
+				}
+				else
+				{
+					ModuleUI.GUIInt(InitialModuleUI.s_Texts.randomSeed, this.m_RandomSeed);
+					if (GUILayout.Button("Reseed", EditorStyles.miniButton, new GUILayoutOption[0]))
+					{
+						this.m_RandomSeed.intValue = this.m_ParticleSystemUI.m_ParticleSystem.GenerateRandomSeed();
+					}
+				}
+			}
 		}
 
 		public override void UpdateCullingSupportedString(ref string text)

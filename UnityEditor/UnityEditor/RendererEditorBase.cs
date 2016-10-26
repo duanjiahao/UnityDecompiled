@@ -293,13 +293,5 @@ namespace UnityEditor
 		{
 			this.m_Probes.OnGUI(base.targets, (Renderer)this.target, false);
 		}
-
-		protected void RenderCommonProbeFields(bool useMiniStyle)
-		{
-			bool flag = SceneView.IsUsingDeferredRenderingPath();
-			bool isDeferredReflections = flag && UnityEngine.Rendering.GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
-			this.m_Probes.RenderReflectionProbeUsage(useMiniStyle, flag, isDeferredReflections);
-			this.m_Probes.RenderProbeAnchor(useMiniStyle);
-		}
 	}
 }

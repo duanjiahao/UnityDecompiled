@@ -15,8 +15,22 @@ namespace UnityEngine.Tizen
 			}
 		}
 
+		public static IntPtr evasGL
+		{
+			get
+			{
+				IntPtr result;
+				Window.INTERNAL_get_evasGL(out result);
+				return result;
+			}
+		}
+
 		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_windowHandle(out IntPtr value);
+
+		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_get_evasGL(out IntPtr value);
 	}
 }

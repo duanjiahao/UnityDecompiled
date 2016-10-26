@@ -1198,6 +1198,16 @@ namespace UnityEditor
 				set;
 			}
 
+			public static extern bool patchDayOne
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
 			public static extern string PatchPkgPath
 			{
 				[WrapperlessIcall]
@@ -2021,6 +2031,16 @@ namespace UnityEditor
 			}
 
 			public static extern string signingProfileName
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern TizenOSVersion minOSVersion
 			{
 				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -3419,6 +3439,16 @@ namespace UnityEditor
 
 		public sealed class XboxOne
 		{
+			public static extern XboxOneLoggingLevel defaultLoggingLevel
+			{
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[WrapperlessIcall]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
 			public static extern string ProductId
 			{
 				[WrapperlessIcall]

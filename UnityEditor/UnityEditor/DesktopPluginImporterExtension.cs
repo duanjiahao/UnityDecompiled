@@ -104,8 +104,8 @@ namespace UnityEditor
 			{
 				return true;
 			}
-			string extension = Path.GetExtension(imp.assetPath);
-			return extension == ".dll";
+			string a = Path.GetExtension(imp.assetPath).ToLower();
+			return a == ".dll";
 		}
 
 		private bool IsUsableOnOSX(PluginImporter imp)
@@ -114,8 +114,8 @@ namespace UnityEditor
 			{
 				return true;
 			}
-			string extension = Path.GetExtension(imp.assetPath);
-			return extension == ".so" || extension == ".bundle";
+			string a = Path.GetExtension(imp.assetPath).ToLower();
+			return a == ".so" || a == ".bundle";
 		}
 
 		private bool IsUsableOnLinux(PluginImporter imp)
@@ -124,8 +124,8 @@ namespace UnityEditor
 			{
 				return true;
 			}
-			string extension = Path.GetExtension(imp.assetPath);
-			return extension == ".so";
+			string a = Path.GetExtension(imp.assetPath).ToLower();
+			return a == ".so";
 		}
 
 		public override void OnPlatformSettingsGUI(PluginImporterInspector inspector)

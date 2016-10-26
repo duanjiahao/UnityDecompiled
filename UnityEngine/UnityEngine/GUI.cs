@@ -638,7 +638,9 @@ namespace UnityEngine
 				internalDrawTextureArguments.mat = mat;
 				internalDrawTextureArguments.screenRect = position;
 				internalDrawTextureArguments.sourceRect = texCoords;
+				GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
 				Graphics.DrawTexture(ref internalDrawTextureArguments);
+				GL.sRGBWrite = false;
 			}
 		}
 

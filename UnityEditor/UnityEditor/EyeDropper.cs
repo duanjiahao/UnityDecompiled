@@ -92,6 +92,7 @@ namespace UnityEditor
 			{
 				EyeDropper.styles = new EyeDropper.Styles();
 			}
+			GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
 			Texture2D texture2D = EyeDropper.get.m_Preview;
 			int num = (int)Mathf.Ceil(position.width / 10f);
 			int num2 = (int)Mathf.Ceil(position.height / 10f);
@@ -125,6 +126,7 @@ namespace UnityEditor
 			}
 			Rect position4 = new Rect((a.x - pixelPos.x) * num3 + position.x, (a.y - pixelPos.y) * num5 + position.y, num3, num5);
 			EyeDropper.styles.eyeDropperPickedPixel.Draw(position4, false, false, false, false);
+			GL.sRGBWrite = false;
 		}
 
 		private void OnGUI()

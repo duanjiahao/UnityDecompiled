@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{95FB3598-7068-4757-9A66-97B7341E39A1}</ProjectGuid>
+    <ProjectGuid>{942679A0-4D11-4DFA-82BC-A0DDC9FE0940}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
@@ -111,6 +111,15 @@
     <Compile Include="UnityEngine.Experimental.Director\Playables.cs" />
     <Compile Include="UnityEngine.Experimental.Director\PlayState.cs" />
     <Compile Include="UnityEngine.Experimental.Director\ScriptPlayable.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\DownloadHandler.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\DownloadHandlerAssetBundle.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\DownloadHandlerAudioClip.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\DownloadHandlerBuffer.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\DownloadHandlerScript.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\DownloadHandlerTexture.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\UnityWebRequest.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\UploadHandler.cs" />
+    <Compile Include="UnityEngine.Experimental.Networking\UploadHandlerRaw.cs" />
     <Compile Include="UnityEngine.Internal\DefaultValueAttribute.cs" />
     <Compile Include="UnityEngine.Internal\ExcludeFromDocsAttribute.cs" />
     <Compile Include="UnityEngine.iOS\ActivityIndicatorStyle.cs" />
