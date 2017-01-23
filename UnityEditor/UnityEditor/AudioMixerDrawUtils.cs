@@ -16,7 +16,7 @@ namespace UnityEditor
 
 			public GUIStyle channelStripVUMeterBg = AudioMixerDrawUtils.Styles.GetStyle("ChannelStripVUMeterBg");
 
-			public GUIStyle channelStripAreaBackground = "AnimationCurveEditorBackground";
+			public GUIStyle channelStripAreaBackground = "CurveEditorBackground";
 
 			public GUIStyle channelStripBg = AudioMixerDrawUtils.Styles.GetStyle("ChannelStripBg");
 
@@ -54,27 +54,27 @@ namespace UnityEditor
 
 			public Texture2D leftToRightShadowTexture = EditorGUIUtility.FindTexture("LeftToRightShadow");
 
-			public GUIContent soloGUIContent = new GUIContent(string.Empty, "Adds this group to set of soloed groups");
+			public GUIContent soloGUIContent = new GUIContent("", "Adds this group to set of soloed groups");
 
-			public GUIContent muteGUIContent = new GUIContent(string.Empty, "Mutes this group");
+			public GUIContent muteGUIContent = new GUIContent("", "Mutes this group");
 
-			public GUIContent bypassGUIContent = new GUIContent(string.Empty, "Bypasses the effects on this group");
+			public GUIContent bypassGUIContent = new GUIContent("", "Bypasses the effects on this group");
 
-			public GUIContent effectSlotGUIContent = new GUIContent(string.Empty, "Drag horizontally to change wet mix levels or vertically to change order of effects. Note: Enable wet mixing in the context menu.");
+			public GUIContent effectSlotGUIContent = new GUIContent("", "Drag horizontally to change wet mix levels or vertically to change order of effects. Note: Enable wet mixing in the context menu.");
 
-			public GUIContent attenuationSlotGUIContent = new GUIContent(string.Empty, "Place the attenuation slot in the effect stack where attenuation should take effect");
+			public GUIContent attenuationSlotGUIContent = new GUIContent("", "Place the attenuation slot in the effect stack where attenuation should take effect");
 
-			public GUIContent emptySendSlotGUIContent = new GUIContent(string.Empty, "Connect to a Receive in the context menu or in the inspector");
+			public GUIContent emptySendSlotGUIContent = new GUIContent("", "Connect to a Receive in the context menu or in the inspector");
 
-			public GUIContent returnSlotGUIContent = new GUIContent(string.Empty, "Connect a Send to this Receive");
+			public GUIContent returnSlotGUIContent = new GUIContent("", "Connect a Send to this Receive");
 
-			public GUIContent duckVolumeSlotGUIContent = new GUIContent(string.Empty, "Connect a Send to this Duck Volume");
+			public GUIContent duckVolumeSlotGUIContent = new GUIContent("", "Connect a Send to this Duck Volume");
 
-			public GUIContent duckingFaderGUIContent = new GUIContent(string.Empty, "Ducking Fader");
+			public GUIContent duckingFaderGUIContent = new GUIContent("", "Ducking Fader");
 
-			public GUIContent attenuationFader = new GUIContent(string.Empty, "Attenuation fader");
+			public GUIContent attenuationFader = new GUIContent("", "Attenuation fader");
 
-			public GUIContent vuMeterGUIContent = new GUIContent(string.Empty, "The VU meter shows the current level of the mix of all sounds and subgroups.");
+			public GUIContent vuMeterGUIContent = new GUIContent("", "The VU meter shows the current level of the mix of all sounds and subgroups.");
 
 			public GUIContent referencedGroups = new GUIContent("Referenced groups", "Mixer groups that are hidden but are referenced by the visible mixer groups are shown here for convenience");
 
@@ -91,10 +91,10 @@ namespace UnityEditor
 				this.reorderableListLabel.onHover.background = background;
 				this.reorderableListLabel.onActive.background = background;
 				this.reorderableListLabel.onFocused.background = background;
-				RectOffset arg_32A_0 = this.reorderableListLabel.padding;
+				RectOffset arg_32B_0 = this.reorderableListLabel.padding;
 				int num = 0;
 				this.reorderableListLabel.padding.right = num;
-				arg_32A_0.left = num;
+				arg_32B_0.left = num;
 				this.reorderableListLabel.alignment = TextAnchor.MiddleLeft;
 				this.scrollShadowTexture = EditorGUIUtility.FindTexture("ScrollShadow");
 				this.channelStripHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
@@ -135,10 +135,6 @@ namespace UnityEditor
 			}
 		}
 
-		internal const float kSectionHeaderHeight = 22f;
-
-		internal const float kSpaceBetweenSections = 10f;
-
 		private static float vertexOffset = -1f;
 
 		private static readonly Color kAttenuationColor = AudioCurveRendering.kAudioOrange;
@@ -161,6 +157,10 @@ namespace UnityEditor
 
 		private static AudioMixerDrawUtils.Styles s_Styles;
 
+		internal const float kSectionHeaderHeight = 22f;
+
+		internal const float kSpaceBetweenSections = 10f;
+
 		public static AudioMixerDrawUtils.Styles styles
 		{
 			get
@@ -176,23 +176,28 @@ namespace UnityEditor
 
 		public static Color GetEffectColor(AudioMixerEffectController effect)
 		{
+			Color result;
 			if (effect.IsSend())
 			{
-				return (!(effect.sendTarget != null)) ? Color.gray : AudioMixerDrawUtils.kSendColor;
+				result = ((!(effect.sendTarget != null)) ? Color.gray : AudioMixerDrawUtils.kSendColor);
 			}
-			if (effect.IsReceive())
+			else if (effect.IsReceive())
 			{
-				return AudioMixerDrawUtils.kReceiveColor;
+				result = AudioMixerDrawUtils.kReceiveColor;
 			}
-			if (effect.IsDuckVolume())
+			else if (effect.IsDuckVolume())
 			{
-				return AudioMixerDrawUtils.kDuckVolumeColor;
+				result = AudioMixerDrawUtils.kDuckVolumeColor;
 			}
-			if (effect.IsAttenuation())
+			else if (effect.IsAttenuation())
 			{
-				return AudioMixerDrawUtils.kAttenuationColor;
+				result = AudioMixerDrawUtils.kAttenuationColor;
 			}
-			return AudioMixerDrawUtils.kEffectColor;
+			else
+			{
+				result = AudioMixerDrawUtils.kEffectColor;
+			}
+			return result;
 		}
 
 		public static void InitStyles()
@@ -226,50 +231,47 @@ namespace UnityEditor
 
 		public static void DrawLine(float x1, float y1, float x2, float y2, Color c)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(1);
+				GL.Color(new Color(c.r, c.g, c.b, c.a * AudioMixerDrawUtils.GetAlpha()));
+				AudioMixerDrawUtils.Vertex(x1, y1);
+				AudioMixerDrawUtils.Vertex(x2, y2);
+				GL.End();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(1);
-			GL.Color(new Color(c.r, c.g, c.b, c.a * AudioMixerDrawUtils.GetAlpha()));
-			AudioMixerDrawUtils.Vertex(x1, y1);
-			AudioMixerDrawUtils.Vertex(x2, y2);
-			GL.End();
 		}
 
 		public static void DrawGradientRect(Rect r, Color c1, Color c2)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(7);
+				GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * AudioMixerDrawUtils.GetAlpha()));
+				AudioMixerDrawUtils.Vertex(r.x, r.y);
+				AudioMixerDrawUtils.Vertex(r.x + r.width, r.y);
+				GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * AudioMixerDrawUtils.GetAlpha()));
+				AudioMixerDrawUtils.Vertex(r.x + r.width, r.y + r.height);
+				AudioMixerDrawUtils.Vertex(r.x, r.y + r.height);
+				GL.End();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(7);
-			GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * AudioMixerDrawUtils.GetAlpha()));
-			AudioMixerDrawUtils.Vertex(r.x, r.y);
-			AudioMixerDrawUtils.Vertex(r.x + r.width, r.y);
-			GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * AudioMixerDrawUtils.GetAlpha()));
-			AudioMixerDrawUtils.Vertex(r.x + r.width, r.y + r.height);
-			AudioMixerDrawUtils.Vertex(r.x, r.y + r.height);
-			GL.End();
 		}
 
 		public static void DrawGradientRectHorizontal(Rect r, Color c1, Color c2)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(7);
+				GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * AudioMixerDrawUtils.GetAlpha()));
+				AudioMixerDrawUtils.Vertex(r.x + r.width, r.y);
+				AudioMixerDrawUtils.Vertex(r.x + r.width, r.y + r.height);
+				GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * AudioMixerDrawUtils.GetAlpha()));
+				AudioMixerDrawUtils.Vertex(r.x, r.y + r.height);
+				AudioMixerDrawUtils.Vertex(r.x, r.y);
+				GL.End();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(7);
-			GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * AudioMixerDrawUtils.GetAlpha()));
-			AudioMixerDrawUtils.Vertex(r.x + r.width, r.y);
-			AudioMixerDrawUtils.Vertex(r.x + r.width, r.y + r.height);
-			GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * AudioMixerDrawUtils.GetAlpha()));
-			AudioMixerDrawUtils.Vertex(r.x, r.y + r.height);
-			AudioMixerDrawUtils.Vertex(r.x, r.y);
-			GL.End();
 		}
 
 		public static void DrawRegionBg(Rect rect, out Rect headerRect, out Rect contentRect)
@@ -328,47 +330,46 @@ namespace UnityEditor
 
 		public static void DrawConnection(Color col, float mixLevel, float srcX, float srcY, float dstX, float dstY, float width)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				float num = dstX - srcX;
+				float num2 = dstY - srcY;
+				float num3 = width / Mathf.Sqrt(num * num + num2 * num2);
+				num *= num3;
+				num2 *= num3;
+				float num4 = 2f;
+				float num5 = 1.2f;
+				Vector3[] array = new Vector3[4];
+				array[0] = new Vector3(dstX, dstY);
+				array[1] = new Vector3(dstX - num4 * num + num5 * num2, dstY - num4 * num2 - num5 * num);
+				array[2] = new Vector3(dstX - num4 * num - num5 * num2, dstY - num4 * num2 + num5 * num);
+				array[3] = array[0];
+				Color color = new Color(col.r, col.g, col.b, mixLevel * 0.3f + 0.3f);
+				Shader.SetGlobalColor("_HandleColor", color);
+				GL.Begin(4);
+				GL.Color(color);
+				GL.Vertex(array[0]);
+				GL.Vertex(array[1]);
+				GL.Vertex(array[2]);
+				GL.End();
+				Handles.DrawAAPolyLine(width, new Color[]
+				{
+					color,
+					color,
+					color,
+					color
+				}, array);
+				Handles.DrawAAPolyLine(width, new Color[]
+				{
+					new Color(col.r, col.g, col.b, mixLevel),
+					new Color(col.r, col.g, col.b, mixLevel)
+				}, new Vector3[]
+				{
+					new Vector3(srcX, srcY, 0f),
+					new Vector3(dstX, dstY, 0f)
+				});
 			}
-			HandleUtility.ApplyWireMaterial();
-			float num = dstX - srcX;
-			float num2 = dstY - srcY;
-			float num3 = width / Mathf.Sqrt(num * num + num2 * num2);
-			num *= num3;
-			num2 *= num3;
-			float num4 = 2f;
-			float num5 = 1.2f;
-			Vector3[] array = new Vector3[4];
-			array[0] = new Vector3(dstX, dstY);
-			array[1] = new Vector3(dstX - num4 * num + num5 * num2, dstY - num4 * num2 - num5 * num);
-			array[2] = new Vector3(dstX - num4 * num - num5 * num2, dstY - num4 * num2 + num5 * num);
-			array[3] = array[0];
-			Color color = new Color(col.r, col.g, col.b, mixLevel * 0.3f + 0.3f);
-			Shader.SetGlobalColor("_HandleColor", color);
-			GL.Begin(4);
-			GL.Color(color);
-			GL.Vertex(array[0]);
-			GL.Vertex(array[1]);
-			GL.Vertex(array[2]);
-			GL.End();
-			Handles.DrawAAPolyLine(width, new Color[]
-			{
-				color,
-				color,
-				color,
-				color
-			}, array);
-			Handles.DrawAAPolyLine(width, new Color[]
-			{
-				new Color(col.r, col.g, col.b, mixLevel),
-				new Color(col.r, col.g, col.b, mixLevel)
-			}, new Vector3[]
-			{
-				new Vector3(srcX, srcY, 0f),
-				new Vector3(dstX, dstY, 0f)
-			});
 		}
 
 		public static void DrawVerticalShow(Rect rect, bool fadeToTheRight)
@@ -381,37 +382,36 @@ namespace UnityEditor
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				if (contentHeight <= scrollViewRect.height)
+				if (contentHeight > scrollViewRect.height)
 				{
-					return;
-				}
-				Color color = GUI.color;
-				float num = (scrollY <= 10f) ? (scrollY / 10f) : 1f;
-				if (num < 1f)
-				{
-					GUI.color = new Color(1f, 1f, 1f, num);
-				}
-				if (num > 0f)
-				{
-					GUI.DrawTexture(new Rect(scrollViewRect.x, scrollViewRect.y, scrollViewRect.width, 20f), AudioMixerDrawUtils.styles.scrollShadowTexture);
-				}
-				if (num < 1f)
-				{
-					GUI.color = color;
-				}
-				float num2 = Mathf.Max(contentHeight - scrollViewRect.height, 0f);
-				float num3 = (num2 - scrollY <= 10f) ? ((num2 - scrollY) / 10f) : 1f;
-				if (num3 < 1f)
-				{
-					GUI.color = new Color(1f, 1f, 1f, num3);
-				}
-				if (num3 > 0f)
-				{
-					GUI.DrawTextureWithTexCoords(new Rect(scrollViewRect.x, scrollViewRect.yMax - 10f, scrollViewRect.width, 10f), AudioMixerDrawUtils.styles.scrollShadowTexture, new Rect(1f, 1f, -1f, -1f));
-				}
-				if (num3 < 1f)
-				{
-					GUI.color = color;
+					Color color = GUI.color;
+					float num = (scrollY <= 10f) ? (scrollY / 10f) : 1f;
+					if (num < 1f)
+					{
+						GUI.color = new Color(1f, 1f, 1f, num);
+					}
+					if (num > 0f)
+					{
+						GUI.DrawTexture(new Rect(scrollViewRect.x, scrollViewRect.y, scrollViewRect.width, 20f), AudioMixerDrawUtils.styles.scrollShadowTexture);
+					}
+					if (num < 1f)
+					{
+						GUI.color = color;
+					}
+					float num2 = Mathf.Max(contentHeight - scrollViewRect.height, 0f);
+					float num3 = (num2 - scrollY <= 10f) ? ((num2 - scrollY) / 10f) : 1f;
+					if (num3 < 1f)
+					{
+						GUI.color = new Color(1f, 1f, 1f, num3);
+					}
+					if (num3 > 0f)
+					{
+						GUI.DrawTextureWithTexCoords(new Rect(scrollViewRect.x, scrollViewRect.yMax - 10f, scrollViewRect.width, 10f), AudioMixerDrawUtils.styles.scrollShadowTexture, new Rect(1f, 1f, -1f, -1f));
+					}
+					if (num3 < 1f)
+					{
+						GUI.color = color;
+					}
 				}
 			}
 		}

@@ -37,6 +37,8 @@ namespace UnityEngine.iOS
 		iPadMini4Gen,
 		iPhoneSE1Gen,
 		iPadPro10Inch1Gen,
+		iPhone7,
+		iPhone7Plus,
 		iPhoneUnknown = 10001,
 		iPadUnknown,
 		iPodTouchUnknown

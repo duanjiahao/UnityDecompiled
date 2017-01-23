@@ -64,63 +64,72 @@ namespace UnityEditor
 
 		private void ApplyTerrainSplat()
 		{
-			if (this.m_Terrain == null || this.m_Terrain.terrainData == null)
+			if (!(this.m_Terrain == null) && !(this.m_Terrain.terrainData == null))
 			{
-				return;
+				SplatPrototype[] array = this.m_Terrain.terrainData.splatPrototypes;
+				if (this.m_Index == -1)
+				{
+					SplatPrototype[] array2 = new SplatPrototype[array.Length + 1];
+					Array.Copy(array, 0, array2, 0, array.Length);
+					this.m_Index = array.Length;
+					array = array2;
+					array[this.m_Index] = new SplatPrototype();
+				}
+				array[this.m_Index].texture = this.m_Texture;
+				array[this.m_Index].normalMap = this.m_NormalMap;
+				array[this.m_Index].tileSize = this.m_TileSize;
+				array[this.m_Index].tileOffset = this.m_TileOffset;
+				array[this.m_Index].specular = this.m_Specular;
+				array[this.m_Index].metallic = this.m_Metallic;
+				array[this.m_Index].smoothness = this.m_Smoothness;
+				this.m_Terrain.terrainData.splatPrototypes = array;
+				EditorUtility.SetDirty(this.m_Terrain);
 			}
-			SplatPrototype[] array = this.m_Terrain.terrainData.splatPrototypes;
-			if (this.m_Index == -1)
-			{
-				SplatPrototype[] array2 = new SplatPrototype[array.Length + 1];
-				Array.Copy(array, 0, array2, 0, array.Length);
-				this.m_Index = array.Length;
-				array = array2;
-				array[this.m_Index] = new SplatPrototype();
-			}
-			array[this.m_Index].texture = this.m_Texture;
-			array[this.m_Index].normalMap = this.m_NormalMap;
-			array[this.m_Index].tileSize = this.m_TileSize;
-			array[this.m_Index].tileOffset = this.m_TileOffset;
-			array[this.m_Index].specular = this.m_Specular;
-			array[this.m_Index].metallic = this.m_Metallic;
-			array[this.m_Index].smoothness = this.m_Smoothness;
-			this.m_Terrain.terrainData.splatPrototypes = array;
-			EditorUtility.SetDirty(this.m_Terrain);
 		}
 
 		private bool ValidateTerrain()
 		{
+			bool result;
 			if (this.m_Terrain == null || this.m_Terrain.terrainData == null)
 			{
 				EditorGUILayout.HelpBox("Terrain does not exist", MessageType.Error);
-				return false;
+				result = false;
 			}
-			return true;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		private bool ValidateMainTexture(Texture2D tex)
 		{
+			bool result;
 			if (tex == null)
 			{
 				EditorGUILayout.HelpBox("Assign a tiling texture", MessageType.Warning);
-				return false;
+				result = false;
 			}
-			if (tex.wrapMode != TextureWrapMode.Repeat)
+			else if (tex.wrapMode != TextureWrapMode.Repeat)
 			{
 				EditorGUILayout.HelpBox("Texture wrap mode must be set to Repeat", MessageType.Warning);
-				return false;
+				result = false;
 			}
-			if (tex.width != Mathf.ClosestPowerOfTwo(tex.width) || tex.height != Mathf.ClosestPowerOfTwo(tex.height))
+			else if (tex.width != Mathf.ClosestPowerOfTwo(tex.width) || tex.height != Mathf.ClosestPowerOfTwo(tex.height))
 			{
 				EditorGUILayout.HelpBox("Texture size must be power of two", MessageType.Warning);
-				return false;
+				result = false;
 			}
-			if (tex.mipmapCount <= 1)
+			else if (tex.mipmapCount <= 1)
 			{
 				EditorGUILayout.HelpBox("Texture must have mip maps", MessageType.Warning);
-				return false;
+				result = false;
 			}
-			return true;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		private static void TextureFieldGUI(string label, ref Texture2D texture, float alignmentOffset)
@@ -137,7 +146,7 @@ namespace UnityEditor
 				GUILayout.MaxWidth(64f)
 			});
 			rect.x += alignmentOffset;
-			texture = (EditorGUI.DoObjectField(rect, rect, GUIUtility.GetControlID(12354, EditorGUIUtility.native, rect), texture, typeFromHandle, null, null, false) as Texture2D);
+			texture = (EditorGUI.DoObjectField(rect, rect, GUIUtility.GetControlID(12354, FocusType.Keyboard, rect), texture, typeFromHandle, null, null, false) as Texture2D);
 			GUILayout.EndVertical();
 		}
 
@@ -148,7 +157,7 @@ namespace UnityEditor
 			GUILayout.Space(6f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Label(string.Empty, EditorStyles.miniLabel, new GUILayoutOption[]
+			GUILayout.Label("", EditorStyles.miniLabel, new GUILayoutOption[]
 			{
 				gUILayoutOption
 			});
@@ -209,7 +218,7 @@ namespace UnityEditor
 			flag &= this.ValidateTerrain();
 			EditorGUI.BeginChangeCheck();
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			string label = string.Empty;
+			string label = "";
 			float alignmentOffset = 0f;
 			switch (this.m_Terrain.materialType)
 			{

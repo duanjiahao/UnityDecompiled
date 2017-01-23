@@ -5,11 +5,11 @@ namespace UnityEngine
 	[AddComponentMenu("")]
 	internal class UserAuthorizationDialog : MonoBehaviour
 	{
+		private Rect windowRect;
+
 		private const int width = 385;
 
 		private const int height = 155;
-
-		private Rect windowRect;
 
 		private Texture warningIcon;
 

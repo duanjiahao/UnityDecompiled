@@ -50,29 +50,34 @@ namespace UnityEngine.Networking.Match
 
 		internal Coroutine CreateMatch(CreateMatchRequest req, NetworkMatch.DataResponseDelegate<MatchInfo> callback)
 		{
+			Coroutine result;
 			if (callback == null)
 			{
 				UnityEngine.Debug.Log("callback supplied is null, aborting CreateMatch Request.");
-				return null;
+				result = null;
 			}
-			Uri uri = new Uri(this.baseUri, "/json/reply/CreateMatchRequest");
-			UnityEngine.Debug.Log("MatchMakingClient Create :" + uri);
-			WWWForm wWWForm = new WWWForm();
-			wWWForm.AddField("version", Request.currentVersion);
-			wWWForm.AddField("projectId", Application.cloudProjectId);
-			wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
-			wWWForm.AddField("accessTokenString", 0);
-			wWWForm.AddField("domain", req.domain);
-			wWWForm.AddField("name", req.name);
-			wWWForm.AddField("size", req.size.ToString());
-			wWWForm.AddField("advertise", req.advertise.ToString());
-			wWWForm.AddField("password", req.password);
-			wWWForm.AddField("publicAddress", req.publicAddress);
-			wWWForm.AddField("privateAddress", req.privateAddress);
-			wWWForm.AddField("eloScore", req.eloScore.ToString());
-			wWWForm.headers["Accept"] = "application/json";
-			WWW client = new WWW(uri.ToString(), wWWForm);
-			return base.StartCoroutine(this.ProcessMatchResponse<CreateMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(client, new NetworkMatch.InternalResponseDelegate<CreateMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(this.OnMatchCreate), callback));
+			else
+			{
+				Uri uri = new Uri(this.baseUri, "/json/reply/CreateMatchRequest");
+				UnityEngine.Debug.Log("MatchMakingClient Create :" + uri);
+				WWWForm wWWForm = new WWWForm();
+				wWWForm.AddField("version", Request.currentVersion);
+				wWWForm.AddField("projectId", Application.cloudProjectId);
+				wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
+				wWWForm.AddField("accessTokenString", 0);
+				wWWForm.AddField("domain", req.domain);
+				wWWForm.AddField("name", req.name);
+				wWWForm.AddField("size", req.size.ToString());
+				wWWForm.AddField("advertise", req.advertise.ToString());
+				wWWForm.AddField("password", req.password);
+				wWWForm.AddField("publicAddress", req.publicAddress);
+				wWWForm.AddField("privateAddress", req.privateAddress);
+				wWWForm.AddField("eloScore", req.eloScore.ToString());
+				wWWForm.headers["Accept"] = "application/json";
+				WWW client = new WWW(uri.ToString(), wWWForm);
+				result = base.StartCoroutine(this.ProcessMatchResponse<CreateMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(client, new NetworkMatch.InternalResponseDelegate<CreateMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(this.OnMatchCreate), callback));
+			}
+			return result;
 		}
 
 		internal virtual void OnMatchCreate(CreateMatchResponse response, NetworkMatch.DataResponseDelegate<MatchInfo> userCallback)
@@ -99,27 +104,32 @@ namespace UnityEngine.Networking.Match
 
 		internal Coroutine JoinMatch(JoinMatchRequest req, NetworkMatch.DataResponseDelegate<MatchInfo> callback)
 		{
+			Coroutine result;
 			if (callback == null)
 			{
 				UnityEngine.Debug.Log("callback supplied is null, aborting JoinMatch Request.");
-				return null;
+				result = null;
 			}
-			Uri uri = new Uri(this.baseUri, "/json/reply/JoinMatchRequest");
-			UnityEngine.Debug.Log("MatchMakingClient Join :" + uri);
-			WWWForm wWWForm = new WWWForm();
-			wWWForm.AddField("version", Request.currentVersion);
-			wWWForm.AddField("projectId", Application.cloudProjectId);
-			wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
-			wWWForm.AddField("accessTokenString", 0);
-			wWWForm.AddField("domain", req.domain);
-			wWWForm.AddField("networkId", req.networkId.ToString());
-			wWWForm.AddField("password", req.password);
-			wWWForm.AddField("publicAddress", req.publicAddress);
-			wWWForm.AddField("privateAddress", req.privateAddress);
-			wWWForm.AddField("eloScore", req.eloScore.ToString());
-			wWWForm.headers["Accept"] = "application/json";
-			WWW client = new WWW(uri.ToString(), wWWForm);
-			return base.StartCoroutine(this.ProcessMatchResponse<JoinMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(client, new NetworkMatch.InternalResponseDelegate<JoinMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(this.OnMatchJoined), callback));
+			else
+			{
+				Uri uri = new Uri(this.baseUri, "/json/reply/JoinMatchRequest");
+				UnityEngine.Debug.Log("MatchMakingClient Join :" + uri);
+				WWWForm wWWForm = new WWWForm();
+				wWWForm.AddField("version", Request.currentVersion);
+				wWWForm.AddField("projectId", Application.cloudProjectId);
+				wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
+				wWWForm.AddField("accessTokenString", 0);
+				wWWForm.AddField("domain", req.domain);
+				wWWForm.AddField("networkId", req.networkId.ToString());
+				wWWForm.AddField("password", req.password);
+				wWWForm.AddField("publicAddress", req.publicAddress);
+				wWWForm.AddField("privateAddress", req.privateAddress);
+				wWWForm.AddField("eloScore", req.eloScore.ToString());
+				wWWForm.headers["Accept"] = "application/json";
+				WWW client = new WWW(uri.ToString(), wWWForm);
+				result = base.StartCoroutine(this.ProcessMatchResponse<JoinMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(client, new NetworkMatch.InternalResponseDelegate<JoinMatchResponse, NetworkMatch.DataResponseDelegate<MatchInfo>>(this.OnMatchJoined), callback));
+			}
+			return result;
 		}
 
 		internal void OnMatchJoined(JoinMatchResponse response, NetworkMatch.DataResponseDelegate<MatchInfo> userCallback)
@@ -142,23 +152,28 @@ namespace UnityEngine.Networking.Match
 
 		internal Coroutine DestroyMatch(DestroyMatchRequest req, NetworkMatch.BasicResponseDelegate callback)
 		{
+			Coroutine result;
 			if (callback == null)
 			{
 				UnityEngine.Debug.Log("callback supplied is null, aborting DestroyMatch Request.");
-				return null;
+				result = null;
 			}
-			Uri uri = new Uri(this.baseUri, "/json/reply/DestroyMatchRequest");
-			UnityEngine.Debug.Log("MatchMakingClient Destroy :" + uri.ToString());
-			WWWForm wWWForm = new WWWForm();
-			wWWForm.AddField("version", Request.currentVersion);
-			wWWForm.AddField("projectId", Application.cloudProjectId);
-			wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
-			wWWForm.AddField("accessTokenString", Utility.GetAccessTokenForNetwork(req.networkId).GetByteString());
-			wWWForm.AddField("domain", req.domain);
-			wWWForm.AddField("networkId", req.networkId.ToString());
-			wWWForm.headers["Accept"] = "application/json";
-			WWW client = new WWW(uri.ToString(), wWWForm);
-			return base.StartCoroutine(this.ProcessMatchResponse<BasicResponse, NetworkMatch.BasicResponseDelegate>(client, new NetworkMatch.InternalResponseDelegate<BasicResponse, NetworkMatch.BasicResponseDelegate>(this.OnMatchDestroyed), callback));
+			else
+			{
+				Uri uri = new Uri(this.baseUri, "/json/reply/DestroyMatchRequest");
+				UnityEngine.Debug.Log("MatchMakingClient Destroy :" + uri.ToString());
+				WWWForm wWWForm = new WWWForm();
+				wWWForm.AddField("version", Request.currentVersion);
+				wWWForm.AddField("projectId", Application.cloudProjectId);
+				wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
+				wWWForm.AddField("accessTokenString", Utility.GetAccessTokenForNetwork(req.networkId).GetByteString());
+				wWWForm.AddField("domain", req.domain);
+				wWWForm.AddField("networkId", req.networkId.ToString());
+				wWWForm.headers["Accept"] = "application/json";
+				WWW client = new WWW(uri.ToString(), wWWForm);
+				result = base.StartCoroutine(this.ProcessMatchResponse<BasicResponse, NetworkMatch.BasicResponseDelegate>(client, new NetworkMatch.InternalResponseDelegate<BasicResponse, NetworkMatch.BasicResponseDelegate>(this.OnMatchDestroyed), callback));
+			}
+			return result;
 		}
 
 		internal void OnMatchDestroyed(BasicResponse response, NetworkMatch.BasicResponseDelegate userCallback)
@@ -178,24 +193,29 @@ namespace UnityEngine.Networking.Match
 
 		internal Coroutine DropConnection(DropConnectionRequest req, NetworkMatch.BasicResponseDelegate callback)
 		{
+			Coroutine result;
 			if (callback == null)
 			{
 				UnityEngine.Debug.Log("callback supplied is null, aborting DropConnection Request.");
-				return null;
+				result = null;
 			}
-			Uri uri = new Uri(this.baseUri, "/json/reply/DropConnectionRequest");
-			UnityEngine.Debug.Log("MatchMakingClient DropConnection :" + uri);
-			WWWForm wWWForm = new WWWForm();
-			wWWForm.AddField("version", Request.currentVersion);
-			wWWForm.AddField("projectId", Application.cloudProjectId);
-			wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
-			wWWForm.AddField("accessTokenString", Utility.GetAccessTokenForNetwork(req.networkId).GetByteString());
-			wWWForm.AddField("domain", req.domain);
-			wWWForm.AddField("networkId", req.networkId.ToString());
-			wWWForm.AddField("nodeId", req.nodeId.ToString());
-			wWWForm.headers["Accept"] = "application/json";
-			WWW client = new WWW(uri.ToString(), wWWForm);
-			return base.StartCoroutine(this.ProcessMatchResponse<DropConnectionResponse, NetworkMatch.BasicResponseDelegate>(client, new NetworkMatch.InternalResponseDelegate<DropConnectionResponse, NetworkMatch.BasicResponseDelegate>(this.OnDropConnection), callback));
+			else
+			{
+				Uri uri = new Uri(this.baseUri, "/json/reply/DropConnectionRequest");
+				UnityEngine.Debug.Log("MatchMakingClient DropConnection :" + uri);
+				WWWForm wWWForm = new WWWForm();
+				wWWForm.AddField("version", Request.currentVersion);
+				wWWForm.AddField("projectId", Application.cloudProjectId);
+				wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
+				wWWForm.AddField("accessTokenString", Utility.GetAccessTokenForNetwork(req.networkId).GetByteString());
+				wWWForm.AddField("domain", req.domain);
+				wWWForm.AddField("networkId", req.networkId.ToString());
+				wWWForm.AddField("nodeId", req.nodeId.ToString());
+				wWWForm.headers["Accept"] = "application/json";
+				WWW client = new WWW(uri.ToString(), wWWForm);
+				result = base.StartCoroutine(this.ProcessMatchResponse<DropConnectionResponse, NetworkMatch.BasicResponseDelegate>(client, new NetworkMatch.InternalResponseDelegate<DropConnectionResponse, NetworkMatch.BasicResponseDelegate>(this.OnDropConnection), callback));
+			}
+			return result;
 		}
 
 		internal void OnDropConnection(DropConnectionResponse response, NetworkMatch.BasicResponseDelegate userCallback)
@@ -218,27 +238,32 @@ namespace UnityEngine.Networking.Match
 
 		internal Coroutine ListMatches(ListMatchRequest req, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>> callback)
 		{
+			Coroutine result;
 			if (callback == null)
 			{
 				UnityEngine.Debug.Log("callback supplied is null, aborting ListMatch Request.");
-				return null;
+				result = null;
 			}
-			Uri uri = new Uri(this.baseUri, "/json/reply/ListMatchRequest");
-			UnityEngine.Debug.Log("MatchMakingClient ListMatches :" + uri);
-			WWWForm wWWForm = new WWWForm();
-			wWWForm.AddField("version", Request.currentVersion);
-			wWWForm.AddField("projectId", Application.cloudProjectId);
-			wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
-			wWWForm.AddField("accessTokenString", 0);
-			wWWForm.AddField("domain", req.domain);
-			wWWForm.AddField("pageSize", req.pageSize);
-			wWWForm.AddField("pageNum", req.pageNum);
-			wWWForm.AddField("nameFilter", req.nameFilter);
-			wWWForm.AddField("filterOutPrivateMatches", req.filterOutPrivateMatches.ToString());
-			wWWForm.AddField("eloScore", req.eloScore.ToString());
-			wWWForm.headers["Accept"] = "application/json";
-			WWW client = new WWW(uri.ToString(), wWWForm);
-			return base.StartCoroutine(this.ProcessMatchResponse<ListMatchResponse, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>>>(client, new NetworkMatch.InternalResponseDelegate<ListMatchResponse, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>>>(this.OnMatchList), callback));
+			else
+			{
+				Uri uri = new Uri(this.baseUri, "/json/reply/ListMatchRequest");
+				UnityEngine.Debug.Log("MatchMakingClient ListMatches :" + uri);
+				WWWForm wWWForm = new WWWForm();
+				wWWForm.AddField("version", Request.currentVersion);
+				wWWForm.AddField("projectId", Application.cloudProjectId);
+				wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
+				wWWForm.AddField("accessTokenString", 0);
+				wWWForm.AddField("domain", req.domain);
+				wWWForm.AddField("pageSize", req.pageSize);
+				wWWForm.AddField("pageNum", req.pageNum);
+				wWWForm.AddField("nameFilter", req.nameFilter);
+				wWWForm.AddField("filterOutPrivateMatches", req.filterOutPrivateMatches.ToString());
+				wWWForm.AddField("eloScore", req.eloScore.ToString());
+				wWWForm.headers["Accept"] = "application/json";
+				WWW client = new WWW(uri.ToString(), wWWForm);
+				result = base.StartCoroutine(this.ProcessMatchResponse<ListMatchResponse, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>>>(client, new NetworkMatch.InternalResponseDelegate<ListMatchResponse, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>>>(this.OnMatchList), callback));
+			}
+			return result;
 		}
 
 		internal void OnMatchList(ListMatchResponse response, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>> userCallback)
@@ -263,24 +288,29 @@ namespace UnityEngine.Networking.Match
 
 		internal Coroutine SetMatchAttributes(SetMatchAttributesRequest req, NetworkMatch.BasicResponseDelegate callback)
 		{
+			Coroutine result;
 			if (callback == null)
 			{
 				UnityEngine.Debug.Log("callback supplied is null, aborting SetMatchAttributes Request.");
-				return null;
+				result = null;
 			}
-			Uri uri = new Uri(this.baseUri, "/json/reply/SetMatchAttributesRequest");
-			UnityEngine.Debug.Log("MatchMakingClient SetMatchAttributes :" + uri);
-			WWWForm wWWForm = new WWWForm();
-			wWWForm.AddField("version", Request.currentVersion);
-			wWWForm.AddField("projectId", Application.cloudProjectId);
-			wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
-			wWWForm.AddField("accessTokenString", Utility.GetAccessTokenForNetwork(req.networkId).GetByteString());
-			wWWForm.AddField("domain", req.domain);
-			wWWForm.AddField("networkId", req.networkId.ToString());
-			wWWForm.AddField("isListed", req.isListed.ToString());
-			wWWForm.headers["Accept"] = "application/json";
-			WWW client = new WWW(uri.ToString(), wWWForm);
-			return base.StartCoroutine(this.ProcessMatchResponse<BasicResponse, NetworkMatch.BasicResponseDelegate>(client, new NetworkMatch.InternalResponseDelegate<BasicResponse, NetworkMatch.BasicResponseDelegate>(this.OnSetMatchAttributes), callback));
+			else
+			{
+				Uri uri = new Uri(this.baseUri, "/json/reply/SetMatchAttributesRequest");
+				UnityEngine.Debug.Log("MatchMakingClient SetMatchAttributes :" + uri);
+				WWWForm wWWForm = new WWWForm();
+				wWWForm.AddField("version", Request.currentVersion);
+				wWWForm.AddField("projectId", Application.cloudProjectId);
+				wWWForm.AddField("sourceId", Utility.GetSourceID().ToString());
+				wWWForm.AddField("accessTokenString", Utility.GetAccessTokenForNetwork(req.networkId).GetByteString());
+				wWWForm.AddField("domain", req.domain);
+				wWWForm.AddField("networkId", req.networkId.ToString());
+				wWWForm.AddField("isListed", req.isListed.ToString());
+				wWWForm.headers["Accept"] = "application/json";
+				WWW client = new WWW(uri.ToString(), wWWForm);
+				result = base.StartCoroutine(this.ProcessMatchResponse<BasicResponse, NetworkMatch.BasicResponseDelegate>(client, new NetworkMatch.InternalResponseDelegate<BasicResponse, NetworkMatch.BasicResponseDelegate>(this.OnSetMatchAttributes), callback));
+			}
+			return result;
 		}
 
 		internal void OnSetMatchAttributes(BasicResponse response, NetworkMatch.BasicResponseDelegate userCallback)
@@ -295,9 +325,6 @@ namespace UnityEngine.Networking.Match
 			<ProcessMatchResponse>c__Iterator.client = client;
 			<ProcessMatchResponse>c__Iterator.internalCallback = internalCallback;
 			<ProcessMatchResponse>c__Iterator.userCallback = userCallback;
-			<ProcessMatchResponse>c__Iterator.<$>client = client;
-			<ProcessMatchResponse>c__Iterator.<$>internalCallback = internalCallback;
-			<ProcessMatchResponse>c__Iterator.<$>userCallback = userCallback;
 			return <ProcessMatchResponse>c__Iterator;
 		}
 	}

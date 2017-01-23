@@ -62,9 +62,9 @@ internal class PreviewGUI
 				if (flag2)
 				{
 					GUIStyle gUIStyle = "PreHorizontalScrollbar";
-					GUIStyle thumb = "PreHorizontalScrollbarThumb";
+					GUIStyle thumbStyle = "PreHorizontalScrollbarThumb";
 					float num = (rect3.width - rect.width) * 0.5f;
-					result.x = GUI.Slider(new Rect(rect2.x, rect2.yMax - gUIStyle.fixedHeight, rect.width - ((!flag) ? 0f : gUIStyle.fixedHeight), gUIStyle.fixedHeight), result.x, rect.width + num, -num, rect3.width, gUIStyle, thumb, true, controlID);
+					result.x = GUI.Slider(new Rect(rect2.x, rect2.yMax - gUIStyle.fixedHeight, rect.width - ((!flag) ? 0f : gUIStyle.fixedHeight), gUIStyle.fixedHeight), result.x, rect.width + num, -num, rect3.width, gUIStyle, thumbStyle, true, controlID);
 				}
 				else
 				{
@@ -74,9 +74,9 @@ internal class PreviewGUI
 				if (flag)
 				{
 					GUIStyle gUIStyle2 = "PreVerticalScrollbar";
-					GUIStyle thumb2 = "PreVerticalScrollbarThumb";
+					GUIStyle thumbStyle2 = "PreVerticalScrollbarThumb";
 					float num2 = (rect3.height - rect.height) * 0.5f;
-					result.y = GUI.Slider(new Rect(rect.xMax - gUIStyle2.fixedWidth, rect.y, gUIStyle2.fixedWidth, rect.height), result.y, rect.height + num2, -num2, rect3.height, gUIStyle2, thumb2, false, controlID);
+					result.y = GUI.Slider(new Rect(rect.xMax - gUIStyle2.fixedWidth, rect.y, gUIStyle2.fixedWidth, rect.height), result.y, rect.height + num2, -num2, rect3.height, gUIStyle2, thumbStyle2, false, controlID);
 				}
 				else
 				{
@@ -96,32 +96,33 @@ internal class PreviewGUI
 	{
 		int controlID = GUIUtility.GetControlID(PreviewGUI.sliderHash, FocusType.Passive);
 		Event current = Event.current;
-		switch (current.GetTypeForControl(controlID))
+		EventType typeForControl = current.GetTypeForControl(controlID);
+		if (typeForControl != EventType.MouseDown)
 		{
-		case EventType.MouseDown:
-			if (position.Contains(current.mousePosition) && position.width > 50f)
+			if (typeForControl != EventType.MouseDrag)
 			{
-				GUIUtility.hotControl = controlID;
-				current.Use();
-				EditorGUIUtility.SetWantsMouseJumping(1);
+				if (typeForControl == EventType.MouseUp)
+				{
+					if (GUIUtility.hotControl == controlID)
+					{
+						GUIUtility.hotControl = 0;
+					}
+					EditorGUIUtility.SetWantsMouseJumping(0);
+				}
 			}
-			break;
-		case EventType.MouseUp:
-			if (GUIUtility.hotControl == controlID)
-			{
-				GUIUtility.hotControl = 0;
-			}
-			EditorGUIUtility.SetWantsMouseJumping(0);
-			break;
-		case EventType.MouseDrag:
-			if (GUIUtility.hotControl == controlID)
+			else if (GUIUtility.hotControl == controlID)
 			{
 				scrollPosition -= current.delta * (float)((!current.shift) ? 1 : 3) / Mathf.Min(position.width, position.height) * 140f;
 				scrollPosition.y = Mathf.Clamp(scrollPosition.y, -90f, 90f);
 				current.Use();
 				GUI.changed = true;
 			}
-			break;
+		}
+		else if (position.Contains(current.mousePosition) && position.width > 50f)
+		{
+			GUIUtility.hotControl = controlID;
+			current.Use();
+			EditorGUIUtility.SetWantsMouseJumping(1);
 		}
 		return scrollPosition;
 	}

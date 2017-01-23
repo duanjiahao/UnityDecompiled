@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditor.Audio;
 using UnityEngine;
 
@@ -52,6 +53,30 @@ namespace UnityEditor
 
 		private const string kExposedParameterUnicodeChar = " ➔";
 
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache1;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache2;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache3;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache4;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache5;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache6;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache7;
+
 		private static AudioMixerDrawUtils.Styles styles
 		{
 			get
@@ -84,36 +109,100 @@ namespace UnityEditor
 			EditorGUI.s_UnitString = null;
 			EditorGUI.kFloatFieldFormatString = kFloatFieldFormatString;
 			EditorGUIUtility.fieldWidth = fieldWidth;
-			if (Event.current.type == EventType.ContextClick && GUILayoutUtility.topLevel.GetLast().Contains(Event.current.mousePosition))
+			if (Event.current.type == EventType.ContextClick)
 			{
-				Event.current.Use();
-				GenericMenu genericMenu = new GenericMenu();
-				if (!flag)
+				if (GUILayoutUtility.topLevel.GetLast().Contains(Event.current.mousePosition))
 				{
-					genericMenu.AddItem(new GUIContent("Expose '" + path.ResolveStringPath(false) + "' to script"), false, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ExposePopupCallback), new AudioMixerEffectGUI.ExposedParamContext(controller, path));
+					Event.current.Use();
+					GenericMenu genericMenu = new GenericMenu();
+					if (!flag)
+					{
+						GenericMenu arg_11E_0 = genericMenu;
+						GUIContent arg_11E_1 = new GUIContent("Expose '" + path.ResolveStringPath(false) + "' to script");
+						bool arg_11E_2 = false;
+						if (AudioMixerEffectGUI.<>f__mg$cache0 == null)
+						{
+							AudioMixerEffectGUI.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ExposePopupCallback);
+						}
+						arg_11E_0.AddItem(arg_11E_1, arg_11E_2, AudioMixerEffectGUI.<>f__mg$cache0, new AudioMixerEffectGUI.ExposedParamContext(controller, path));
+					}
+					else
+					{
+						GenericMenu arg_15B_0 = genericMenu;
+						GUIContent arg_15B_1 = new GUIContent("Unexpose");
+						bool arg_15B_2 = false;
+						if (AudioMixerEffectGUI.<>f__mg$cache1 == null)
+						{
+							AudioMixerEffectGUI.<>f__mg$cache1 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.UnexposePopupCallback);
+						}
+						arg_15B_0.AddItem(arg_15B_1, arg_15B_2, AudioMixerEffectGUI.<>f__mg$cache1, new AudioMixerEffectGUI.ExposedParamContext(controller, path));
+					}
+					ParameterTransitionType parameterTransitionType;
+					bool transitionTypeOverride = controller.TargetSnapshot.GetTransitionTypeOverride(path.parameter, out parameterTransitionType);
+					genericMenu.AddSeparator(string.Empty);
+					GenericMenu arg_1C0_0 = genericMenu;
+					GUIContent arg_1C0_1 = new GUIContent("Linear Snapshot Transition");
+					bool arg_1C0_2 = parameterTransitionType == ParameterTransitionType.Lerp;
+					if (AudioMixerEffectGUI.<>f__mg$cache2 == null)
+					{
+						AudioMixerEffectGUI.<>f__mg$cache2 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback);
+					}
+					arg_1C0_0.AddItem(arg_1C0_1, arg_1C0_2, AudioMixerEffectGUI.<>f__mg$cache2, new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.Lerp));
+					GenericMenu arg_202_0 = genericMenu;
+					GUIContent arg_202_1 = new GUIContent("Smoothstep Snapshot Transition");
+					bool arg_202_2 = parameterTransitionType == ParameterTransitionType.Smoothstep;
+					if (AudioMixerEffectGUI.<>f__mg$cache3 == null)
+					{
+						AudioMixerEffectGUI.<>f__mg$cache3 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback);
+					}
+					arg_202_0.AddItem(arg_202_1, arg_202_2, AudioMixerEffectGUI.<>f__mg$cache3, new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.Smoothstep));
+					GenericMenu arg_244_0 = genericMenu;
+					GUIContent arg_244_1 = new GUIContent("Squared Snapshot Transition");
+					bool arg_244_2 = parameterTransitionType == ParameterTransitionType.Squared;
+					if (AudioMixerEffectGUI.<>f__mg$cache4 == null)
+					{
+						AudioMixerEffectGUI.<>f__mg$cache4 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback);
+					}
+					arg_244_0.AddItem(arg_244_1, arg_244_2, AudioMixerEffectGUI.<>f__mg$cache4, new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.Squared));
+					GenericMenu arg_286_0 = genericMenu;
+					GUIContent arg_286_1 = new GUIContent("SquareRoot Snapshot Transition");
+					bool arg_286_2 = parameterTransitionType == ParameterTransitionType.SquareRoot;
+					if (AudioMixerEffectGUI.<>f__mg$cache5 == null)
+					{
+						AudioMixerEffectGUI.<>f__mg$cache5 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback);
+					}
+					arg_286_0.AddItem(arg_286_1, arg_286_2, AudioMixerEffectGUI.<>f__mg$cache5, new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.SquareRoot));
+					GenericMenu arg_2C8_0 = genericMenu;
+					GUIContent arg_2C8_1 = new GUIContent("BrickwallStart Snapshot Transition");
+					bool arg_2C8_2 = parameterTransitionType == ParameterTransitionType.BrickwallStart;
+					if (AudioMixerEffectGUI.<>f__mg$cache6 == null)
+					{
+						AudioMixerEffectGUI.<>f__mg$cache6 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback);
+					}
+					arg_2C8_0.AddItem(arg_2C8_1, arg_2C8_2, AudioMixerEffectGUI.<>f__mg$cache6, new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.BrickwallStart));
+					GenericMenu arg_30A_0 = genericMenu;
+					GUIContent arg_30A_1 = new GUIContent("BrickwallEnd Snapshot Transition");
+					bool arg_30A_2 = parameterTransitionType == ParameterTransitionType.BrickwallEnd;
+					if (AudioMixerEffectGUI.<>f__mg$cache7 == null)
+					{
+						AudioMixerEffectGUI.<>f__mg$cache7 = new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback);
+					}
+					arg_30A_0.AddItem(arg_30A_1, arg_30A_2, AudioMixerEffectGUI.<>f__mg$cache7, new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.BrickwallEnd));
+					genericMenu.AddSeparator(string.Empty);
+					genericMenu.ShowAsContext();
 				}
-				else
-				{
-					genericMenu.AddItem(new GUIContent("Unexpose"), false, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.UnexposePopupCallback), new AudioMixerEffectGUI.ExposedParamContext(controller, path));
-				}
-				ParameterTransitionType parameterTransitionType;
-				bool transitionTypeOverride = controller.TargetSnapshot.GetTransitionTypeOverride(path.parameter, out parameterTransitionType);
-				genericMenu.AddSeparator(string.Empty);
-				genericMenu.AddItem(new GUIContent("Linear Snapshot Transition"), parameterTransitionType == ParameterTransitionType.Lerp, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback), new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.Lerp));
-				genericMenu.AddItem(new GUIContent("Smoothstep Snapshot Transition"), parameterTransitionType == ParameterTransitionType.Smoothstep, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback), new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.Smoothstep));
-				genericMenu.AddItem(new GUIContent("Squared Snapshot Transition"), parameterTransitionType == ParameterTransitionType.Squared, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback), new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.Squared));
-				genericMenu.AddItem(new GUIContent("SquareRoot Snapshot Transition"), parameterTransitionType == ParameterTransitionType.SquareRoot, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback), new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.SquareRoot));
-				genericMenu.AddItem(new GUIContent("BrickwallStart Snapshot Transition"), parameterTransitionType == ParameterTransitionType.BrickwallStart, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback), new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.BrickwallStart));
-				genericMenu.AddItem(new GUIContent("BrickwallEnd Snapshot Transition"), parameterTransitionType == ParameterTransitionType.BrickwallEnd, new GenericMenu.MenuFunction2(AudioMixerEffectGUI.ParameterTransitionOverrideCallback), new AudioMixerEffectGUI.ParameterTransitionOverrideContext(controller, path.parameter, ParameterTransitionType.BrickwallEnd));
-				genericMenu.AddSeparator(string.Empty);
-				genericMenu.ShowAsContext();
 			}
+			bool result;
 			if (EditorGUI.EndChangeCheck())
 			{
 				value = num / displayScale;
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public static void ExposePopupCallback(object obj)
@@ -151,7 +240,7 @@ namespace UnityEditor
 			if (label != null)
 			{
 				Rect rect = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, style, options);
-				int controlID = GUIUtility.GetControlID("EditorPopup".GetHashCode(), EditorGUIUtility.native, rect);
+				int controlID = GUIUtility.GetControlID("EditorPopup".GetHashCode(), FocusType.Keyboard, rect);
 				buttonRect = EditorGUI.PrefixLabel(rect, controlID, label);
 			}
 			else

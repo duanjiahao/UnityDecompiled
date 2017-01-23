@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Audio;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -25,7 +26,7 @@ namespace UnityEditor
 
 		private TreeViewState m_AudioGroupTreeState;
 
-		private TreeView m_AudioGroupTree;
+		private TreeViewController m_AudioGroupTree;
 
 		private int m_TreeViewKeyboardControlID;
 
@@ -54,17 +55,17 @@ namespace UnityEditor
 		public AudioMixerGroupTreeView(AudioMixerWindow mixerWindow, TreeViewState treeState)
 		{
 			this.m_AudioGroupTreeState = treeState;
-			this.m_AudioGroupTree = new TreeView(mixerWindow, this.m_AudioGroupTreeState);
+			this.m_AudioGroupTree = new TreeViewController(mixerWindow, this.m_AudioGroupTreeState);
 			this.m_AudioGroupTree.deselectOnUnhandledMouseDown = false;
-			TreeView expr_31 = this.m_AudioGroupTree;
-			expr_31.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_31.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
-			TreeView expr_58 = this.m_AudioGroupTree;
-			expr_58.contextClickItemCallback = (Action<int>)Delegate.Combine(expr_58.contextClickItemCallback, new Action<int>(this.OnTreeViewContextClick));
-			TreeView expr_7F = this.m_AudioGroupTree;
-			expr_7F.expandedStateChanged = (Action)Delegate.Combine(expr_7F.expandedStateChanged, new Action(this.SaveExpandedState));
+			TreeViewController expr_32 = this.m_AudioGroupTree;
+			expr_32.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_32.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
+			TreeViewController expr_59 = this.m_AudioGroupTree;
+			expr_59.contextClickItemCallback = (Action<int>)Delegate.Combine(expr_59.contextClickItemCallback, new Action<int>(this.OnTreeViewContextClick));
+			TreeViewController expr_80 = this.m_AudioGroupTree;
+			expr_80.expandedStateChanged = (Action)Delegate.Combine(expr_80.expandedStateChanged, new Action(this.SaveExpandedState));
 			this.m_TreeViewGUI = new AudioGroupTreeViewGUI(this.m_AudioGroupTree);
-			AudioGroupTreeViewGUI expr_B7 = this.m_TreeViewGUI;
-			expr_B7.NodeWasToggled = (Action<AudioMixerTreeViewNode, bool>)Delegate.Combine(expr_B7.NodeWasToggled, new Action<AudioMixerTreeViewNode, bool>(this.OnNodeToggled));
+			AudioGroupTreeViewGUI expr_B8 = this.m_TreeViewGUI;
+			expr_B8.NodeWasToggled = (Action<AudioMixerTreeViewNode, bool>)Delegate.Combine(expr_B8.NodeWasToggled, new Action<AudioMixerTreeViewNode, bool>(this.OnNodeToggled));
 			this.m_AudioGroupTreeDataSource = new AudioGroupDataSource(this.m_AudioGroupTree, this.m_Controller);
 			this.m_AudioGroupTree.Init(mixerWindow.position, this.m_AudioGroupTreeDataSource, this.m_TreeViewGUI, new AudioGroupTreeViewDragging(this.m_AudioGroupTree, this));
 			this.m_AudioGroupTree.ReloadData();
@@ -115,34 +116,33 @@ namespace UnityEditor
 
 		public void AddAudioMixerGroup(AudioMixerGroupController parent)
 		{
-			if (parent == null || this.m_Controller == null)
+			if (!(parent == null) && !(this.m_Controller == null))
 			{
-				return;
+				Undo.RecordObjects(new UnityEngine.Object[]
+				{
+					this.m_Controller,
+					parent
+				}, "Add Child Group");
+				AudioMixerGroupController audioMixerGroupController = this.m_Controller.CreateNewGroup("New Group", true);
+				this.m_Controller.AddChildToParent(audioMixerGroupController, parent);
+				this.m_Controller.AddGroupToCurrentView(audioMixerGroupController);
+				Selection.objects = new AudioMixerGroupController[]
+				{
+					audioMixerGroupController
+				};
+				this.m_Controller.OnUnitySelectionChanged();
+				this.m_AudioGroupTree.SetSelection(new int[]
+				{
+					audioMixerGroupController.GetInstanceID()
+				}, true);
+				this.ReloadTree();
+				this.m_AudioGroupTree.BeginNameEditing(0f);
 			}
-			Undo.RecordObjects(new UnityEngine.Object[]
-			{
-				this.m_Controller,
-				parent
-			}, "Add Child Group");
-			AudioMixerGroupController audioMixerGroupController = this.m_Controller.CreateNewGroup("New Group", true);
-			this.m_Controller.AddChildToParent(audioMixerGroupController, parent);
-			this.m_Controller.AddGroupToCurrentView(audioMixerGroupController);
-			Selection.objects = new AudioMixerGroupController[]
-			{
-				audioMixerGroupController
-			};
-			this.m_Controller.OnUnitySelectionChanged();
-			this.m_AudioGroupTree.SetSelection(new int[]
-			{
-				audioMixerGroupController.GetInstanceID()
-			}, true);
-			this.ReloadTree();
-			this.m_AudioGroupTree.BeginNameEditing(0f);
 		}
 
 		private static string PluralIfNeeded(int count)
 		{
-			return (count <= 1) ? string.Empty : "s";
+			return (count <= 1) ? "" : "s";
 		}
 
 		public void DeleteGroups(List<AudioMixerGroupController> groups, bool recordUndo)
@@ -227,7 +227,7 @@ namespace UnityEditor
 						if (audioMixerTreeViewNode.group != this.m_Controller.masterGroup)
 						{
 							genericMenu.AddItem(new GUIContent("Add sibling group"), false, new GenericMenu.MenuFunction2(this.AddSiblingGroupPopupCallback), new AudioMixerGroupPopupContext(this.m_Controller, audioMixerTreeViewNode.group));
-							genericMenu.AddSeparator(string.Empty);
+							genericMenu.AddSeparator("");
 							genericMenu.AddItem(new GUIContent("Rename"), false, new GenericMenu.MenuFunction2(this.RenameGroupCallback), treeViewItem);
 							AudioMixerGroupController[] array = this.GetGroupSelectionWithoutMasterGroup().ToArray();
 							genericMenu.AddItem(new GUIContent((array.Length <= 1) ? "Duplicate group (and children)" : "Duplicate groups (and children)"), false, new GenericMenu.MenuFunction2(this.DuplicateGroupPopupCallback), this);
@@ -305,22 +305,26 @@ namespace UnityEditor
 
 		public void InitSelection(bool revealSelectionAndFrameLastSelected)
 		{
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
+				List<AudioMixerGroupController> cachedSelection = this.m_Controller.CachedSelection;
+				this.m_AudioGroupTree.SetSelection((from x in cachedSelection
+				select x.GetInstanceID()).ToArray<int>(), revealSelectionAndFrameLastSelected);
 			}
-			List<AudioMixerGroupController> cachedSelection = this.m_Controller.CachedSelection;
-			this.m_AudioGroupTree.SetSelection((from x in cachedSelection
-			select x.GetInstanceID()).ToArray<int>(), revealSelectionAndFrameLastSelected);
 		}
 
 		public float GetTotalHeight()
 		{
+			float result;
 			if (this.m_Controller == null)
 			{
-				return 0f;
+				result = 0f;
 			}
-			return this.m_AudioGroupTree.gui.GetTotalSize().y + 22f;
+			else
+			{
+				result = this.m_AudioGroupTree.gui.GetTotalSize().y + 22f;
+			}
+			return result;
 		}
 
 		public void OnGUI(Rect rect)
@@ -358,29 +362,28 @@ namespace UnityEditor
 
 		private void HandleCommandEvents(int treeViewKeyboardControlID)
 		{
-			if (GUIUtility.keyboardControl != treeViewKeyboardControlID)
+			if (GUIUtility.keyboardControl == treeViewKeyboardControlID)
 			{
-				return;
-			}
-			EventType type = Event.current.type;
-			if (type == EventType.ExecuteCommand || type == EventType.ValidateCommand)
-			{
-				bool flag = type == EventType.ExecuteCommand;
-				if (Event.current.commandName == "Delete" || Event.current.commandName == "SoftDelete")
+				EventType type = Event.current.type;
+				if (type == EventType.ExecuteCommand || type == EventType.ValidateCommand)
 				{
-					Event.current.Use();
-					if (flag)
+					bool flag = type == EventType.ExecuteCommand;
+					if (Event.current.commandName == "Delete" || Event.current.commandName == "SoftDelete")
 					{
-						this.DeleteGroups(this.GetGroupSelectionWithoutMasterGroup(), true);
-						GUIUtility.ExitGUI();
+						Event.current.Use();
+						if (flag)
+						{
+							this.DeleteGroups(this.GetGroupSelectionWithoutMasterGroup(), true);
+							GUIUtility.ExitGUI();
+						}
 					}
-				}
-				else if (Event.current.commandName == "Duplicate")
-				{
-					Event.current.Use();
-					if (flag)
+					else if (Event.current.commandName == "Duplicate")
 					{
-						this.DuplicateGroups(this.GetGroupSelectionWithoutMasterGroup(), true);
+						Event.current.Use();
+						if (flag)
+						{
+							this.DuplicateGroups(this.GetGroupSelectionWithoutMasterGroup(), true);
+						}
 					}
 				}
 			}
@@ -388,20 +391,19 @@ namespace UnityEditor
 
 		private void HandleKeyboardEvents(int treeViewKeyboardControlID)
 		{
-			if (GUIUtility.keyboardControl != treeViewKeyboardControlID)
+			if (GUIUtility.keyboardControl == treeViewKeyboardControlID)
 			{
-				return;
-			}
-			Event current = Event.current;
-			if (current.keyCode == KeyCode.Space && current.type == EventType.KeyDown)
-			{
-				int[] selection = this.m_AudioGroupTree.GetSelection();
-				if (selection.Length > 0)
+				Event current = Event.current;
+				if (current.keyCode == KeyCode.Space && current.type == EventType.KeyDown)
 				{
-					AudioMixerTreeViewNode audioMixerTreeViewNode = this.m_AudioGroupTree.FindItem(selection[0]) as AudioMixerTreeViewNode;
-					bool flag = this.m_Controller.CurrentViewContainsGroup(audioMixerTreeViewNode.group.groupID);
-					this.OnNodeToggled(audioMixerTreeViewNode, !flag);
-					current.Use();
+					int[] selection = this.m_AudioGroupTree.GetSelection();
+					if (selection.Length > 0)
+					{
+						AudioMixerTreeViewNode audioMixerTreeViewNode = this.m_AudioGroupTree.FindItem(selection[0]) as AudioMixerTreeViewNode;
+						bool flag = this.m_Controller.CurrentViewContainsGroup(audioMixerTreeViewNode.group.groupID);
+						this.OnNodeToggled(audioMixerTreeViewNode, !flag);
+						current.Use();
+					}
 				}
 			}
 		}

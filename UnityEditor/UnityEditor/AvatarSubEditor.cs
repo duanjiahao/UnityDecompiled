@@ -69,7 +69,7 @@ namespace UnityEditor
 					EditorUtility.SetDirty(@object);
 				}
 			}
-			EditorApplication.SaveAssets();
+			AssetDatabase.SaveAssets();
 		}
 
 		public virtual void Enable(AvatarEditor inspector)

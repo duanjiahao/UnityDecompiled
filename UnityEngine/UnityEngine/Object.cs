@@ -22,29 +22,23 @@ namespace UnityEngine
 
 		public extern string name
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern HideFlags hideFlags
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object Internal_CloneSingle(Object data);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object Internal_CloneSingleWithParent(Object data, Transform parent, bool worldPositionStays);
 
@@ -54,29 +48,25 @@ namespace UnityEngine
 			return Object.INTERNAL_CALL_Internal_InstantiateSingle(data, ref pos, ref rot);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object INTERNAL_CALL_Internal_InstantiateSingle(Object data, ref Vector3 pos, ref Quaternion rot);
 
-		[ThreadAndSerializationSafe]
 		private static Object Internal_InstantiateSingleWithParent(Object data, Transform parent, Vector3 pos, Quaternion rot)
 		{
 			return Object.INTERNAL_CALL_Internal_InstantiateSingleWithParent(data, parent, ref pos, ref rot);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object INTERNAL_CALL_Internal_InstantiateSingleWithParent(Object data, Transform parent, ref Vector3 pos, ref Quaternion rot);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetOffsetOfInstanceIDInCPlusPlusObject();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void EnsureRunningOnMainThread();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Destroy(Object obj, [DefaultValue("0.0F")] float t);
 
@@ -87,7 +77,6 @@ namespace UnityEngine
 			Object.Destroy(obj, t);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DestroyImmediate(Object obj, [DefaultValue("false")] bool allowDestroyingAssets);
 
@@ -98,15 +87,13 @@ namespace UnityEngine
 			Object.DestroyImmediate(obj, allowDestroyingAssets);
 		}
 
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
+		[TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindObjectsOfType(Type type);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DontDestroyOnLoad(Object target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DestroyObject(Object obj, [DefaultValue("0.0F")] float t);
 
@@ -117,11 +104,11 @@ namespace UnityEngine
 			Object.DestroyObject(obj, t);
 		}
 
-		[Obsolete("use Object.FindObjectsOfType instead."), WrapperlessIcall]
+		[Obsolete("use Object.FindObjectsOfType instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindSceneObjectsOfType(Type type);
 
-		[Obsolete("use Resources.FindObjectsOfTypeAll instead."), WrapperlessIcall]
+		[Obsolete("use Resources.FindObjectsOfTypeAll instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindObjectsOfTypeIncludingAssets(Type type);
 
@@ -131,11 +118,10 @@ namespace UnityEngine
 			return Resources.FindObjectsOfTypeAll(type);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public override extern string ToString();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool DoesObjectWithInstanceIDExist(int instanceID);
 
@@ -151,28 +137,39 @@ namespace UnityEngine
 			return this.m_InstanceID;
 		}
 
-		public override bool Equals(object o)
+		public override bool Equals(object other)
 		{
-			return Object.CompareBaseObjects(this, o as Object);
+			Object @object = other as Object;
+			return (!(@object == null) || other == null || other is Object) && Object.CompareBaseObjects(this, @object);
+		}
+
+		public static implicit operator bool(Object exists)
+		{
+			return !Object.CompareBaseObjects(exists, null);
 		}
 
 		private static bool CompareBaseObjects(Object lhs, Object rhs)
 		{
 			bool flag = lhs == null;
 			bool flag2 = rhs == null;
+			bool result;
 			if (flag2 && flag)
 			{
-				return true;
+				result = true;
 			}
-			if (flag2)
+			else if (flag2)
 			{
-				return !Object.IsNativeObjectAlive(lhs);
+				result = !Object.IsNativeObjectAlive(lhs);
 			}
-			if (flag)
+			else if (flag)
 			{
-				return !Object.IsNativeObjectAlive(rhs);
+				result = !Object.IsNativeObjectAlive(rhs);
 			}
-			return lhs.m_InstanceID == rhs.m_InstanceID;
+			else
+			{
+				result = (lhs.m_InstanceID == rhs.m_InstanceID);
+			}
+			return result;
 		}
 
 		private static bool IsNativeObjectAlive(Object o)
@@ -189,18 +186,27 @@ namespace UnityEngine
 		public static Object Instantiate(Object original, Vector3 position, Quaternion rotation)
 		{
 			Object.CheckNullArgument(original, "The Object you want to instantiate is null.");
+			if (original is ScriptableObject)
+			{
+				throw new ArgumentException("Cannot instantiate a ScriptableObject with a position and rotation");
+			}
 			return Object.Internal_InstantiateSingle(original, position, rotation);
 		}
 
 		[TypeInferenceRule(TypeInferenceRules.TypeOfFirstArgument)]
 		public static Object Instantiate(Object original, Vector3 position, Quaternion rotation, Transform parent)
 		{
+			Object result;
 			if (parent == null)
 			{
-				return Object.Internal_InstantiateSingle(original, position, rotation);
+				result = Object.Internal_InstantiateSingle(original, position, rotation);
 			}
-			Object.CheckNullArgument(original, "The Object you want to instantiate is null.");
-			return Object.Internal_InstantiateSingleWithParent(original, parent, position, rotation);
+			else
+			{
+				Object.CheckNullArgument(original, "The Object you want to instantiate is null.");
+				result = Object.Internal_InstantiateSingleWithParent(original, parent, position, rotation);
+			}
+			return result;
 		}
 
 		[TypeInferenceRule(TypeInferenceRules.TypeOfFirstArgument)]
@@ -213,24 +219,59 @@ namespace UnityEngine
 		[TypeInferenceRule(TypeInferenceRules.TypeOfFirstArgument)]
 		public static Object Instantiate(Object original, Transform parent)
 		{
-			return Object.Instantiate(original, parent, true);
+			return Object.Instantiate(original, parent, false);
 		}
 
 		[TypeInferenceRule(TypeInferenceRules.TypeOfFirstArgument)]
-		public static Object Instantiate(Object original, Transform parent, bool worldPositionStays)
+		public static Object Instantiate(Object original, Transform parent, bool instantiateInWorldSpace)
 		{
+			Object result;
 			if (parent == null)
 			{
-				return Object.Internal_CloneSingle(original);
+				result = Object.Internal_CloneSingle(original);
 			}
-			Object.CheckNullArgument(original, "The Object you want to instantiate is null.");
-			return Object.Internal_CloneSingleWithParent(original, parent, worldPositionStays);
+			else
+			{
+				Object.CheckNullArgument(original, "The Object you want to instantiate is null.");
+				result = Object.Internal_CloneSingleWithParent(original, parent, instantiateInWorldSpace);
+			}
+			return result;
 		}
 
 		public static T Instantiate<T>(T original) where T : Object
 		{
 			Object.CheckNullArgument(original, "The Object you want to instantiate is null.");
 			return (T)((object)Object.Internal_CloneSingle(original));
+		}
+
+		public static T Instantiate<T>(T original, Vector3 position, Quaternion rotation) where T : Object
+		{
+			return (T)((object)Object.Instantiate(original, position, rotation));
+		}
+
+		public static T Instantiate<T>(T original, Vector3 position, Quaternion rotation, Transform parent) where T : Object
+		{
+			return (T)((object)Object.Instantiate(original, position, rotation, parent));
+		}
+
+		public static T Instantiate<T>(T original, Transform parent) where T : Object
+		{
+			return Object.Instantiate<T>(original, parent, true);
+		}
+
+		public static T Instantiate<T>(T original, Transform parent, bool worldPositionStays) where T : Object
+		{
+			return (T)((object)Object.Instantiate(original, parent, worldPositionStays));
+		}
+
+		public static T[] FindObjectsOfType<T>() where T : Object
+		{
+			return Resources.ConvertObjects<T>(Object.FindObjectsOfType(typeof(T)));
+		}
+
+		public static T FindObjectOfType<T>() where T : Object
+		{
+			return (T)((object)Object.FindObjectOfType(typeof(T)));
 		}
 
 		private static void CheckNullArgument(object arg, string message)
@@ -241,30 +282,20 @@ namespace UnityEngine
 			}
 		}
 
-		public static T[] FindObjectsOfType<T>() where T : Object
-		{
-			return Resources.ConvertObjects<T>(Object.FindObjectsOfType(typeof(T)));
-		}
-
 		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		public static Object FindObjectOfType(Type type)
 		{
 			Object[] array = Object.FindObjectsOfType(type);
+			Object result;
 			if (array.Length > 0)
 			{
-				return array[0];
+				result = array[0];
 			}
-			return null;
-		}
-
-		public static T FindObjectOfType<T>() where T : Object
-		{
-			return (T)((object)Object.FindObjectOfType(typeof(T)));
-		}
-
-		public static implicit operator bool(Object exists)
-		{
-			return !Object.CompareBaseObjects(exists, null);
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public static bool operator ==(Object x, Object y)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 
 namespace UnityEditor
@@ -15,6 +16,18 @@ namespace UnityEditor
 			Other
 		}
 
+		[CompilerGenerated]
+		private static Comparison<MemoryElement> <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static Comparison<MemoryElement> <>f__mg$cache1;
+
+		[CompilerGenerated]
+		private static Comparison<ObjectInfo> <>f__mg$cache2;
+
+		[CompilerGenerated]
+		private static Comparison<MemoryElement> <>f__mg$cache3;
+
 		private static int SortByMemoryClassName(ObjectInfo x, ObjectInfo y)
 		{
 			return y.className.CompareTo(x.className);
@@ -27,32 +40,41 @@ namespace UnityEditor
 
 		private static MemoryElementDataManager.ObjectTypeFilter GetObjectTypeFilter(ObjectInfo info)
 		{
+			MemoryElementDataManager.ObjectTypeFilter result;
 			switch (info.reason)
 			{
 			case 1:
-				return MemoryElementDataManager.ObjectTypeFilter.BuiltinResource;
+				result = MemoryElementDataManager.ObjectTypeFilter.BuiltinResource;
+				return result;
 			case 2:
-				return MemoryElementDataManager.ObjectTypeFilter.DontSave;
+				result = MemoryElementDataManager.ObjectTypeFilter.DontSave;
+				return result;
 			case 3:
 			case 8:
 			case 9:
-				return MemoryElementDataManager.ObjectTypeFilter.Asset;
+				result = MemoryElementDataManager.ObjectTypeFilter.Asset;
+				return result;
 			case 10:
-				return MemoryElementDataManager.ObjectTypeFilter.Other;
+				result = MemoryElementDataManager.ObjectTypeFilter.Other;
+				return result;
 			}
-			return MemoryElementDataManager.ObjectTypeFilter.Scene;
+			result = MemoryElementDataManager.ObjectTypeFilter.Scene;
+			return result;
 		}
 
 		private static bool HasValidNames(List<MemoryElement> memory)
 		{
+			bool result;
 			for (int i = 0; i < memory.Count; i++)
 			{
 				if (!string.IsNullOrEmpty(memory[i].name))
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static List<MemoryElement> GenerateObjectTypeGroups(ObjectInfo[] memory, MemoryElementDataManager.ObjectTypeFilter filter)
@@ -72,10 +94,20 @@ namespace UnityEditor
 					memoryElement.AddChild(new MemoryElement(objectInfo, true));
 				}
 			}
-			list.Sort(new Comparison<MemoryElement>(MemoryElementDataManager.SortByMemorySize));
+			List<MemoryElement> arg_98_0 = list;
+			if (MemoryElementDataManager.<>f__mg$cache0 == null)
+			{
+				MemoryElementDataManager.<>f__mg$cache0 = new Comparison<MemoryElement>(MemoryElementDataManager.SortByMemorySize);
+			}
+			arg_98_0.Sort(MemoryElementDataManager.<>f__mg$cache0);
 			foreach (MemoryElement current in list)
 			{
-				current.children.Sort(new Comparison<MemoryElement>(MemoryElementDataManager.SortByMemorySize));
+				List<MemoryElement> arg_D9_0 = current.children;
+				if (MemoryElementDataManager.<>f__mg$cache1 == null)
+				{
+					MemoryElementDataManager.<>f__mg$cache1 = new Comparison<MemoryElement>(MemoryElementDataManager.SortByMemorySize);
+				}
+				arg_D9_0.Sort(MemoryElementDataManager.<>f__mg$cache1);
 				if (filter == MemoryElementDataManager.ObjectTypeFilter.Other && !MemoryElementDataManager.HasValidNames(current.children))
 				{
 					current.children.Clear();
@@ -113,13 +145,23 @@ namespace UnityEditor
 				num += memoryObjectList[j].count;
 			}
 			MemoryElement memoryElement = new MemoryElement();
-			Array.Sort<ObjectInfo>(array, new Comparison<ObjectInfo>(MemoryElementDataManager.SortByMemoryClassName));
+			ObjectInfo[] arg_113_0 = array;
+			if (MemoryElementDataManager.<>f__mg$cache2 == null)
+			{
+				MemoryElementDataManager.<>f__mg$cache2 = new Comparison<ObjectInfo>(MemoryElementDataManager.SortByMemoryClassName);
+			}
+			Array.Sort<ObjectInfo>(arg_113_0, MemoryElementDataManager.<>f__mg$cache2);
 			memoryElement.AddChild(new MemoryElement("Scene Memory", MemoryElementDataManager.GenerateObjectTypeGroups(array, MemoryElementDataManager.ObjectTypeFilter.Scene)));
 			memoryElement.AddChild(new MemoryElement("Assets", MemoryElementDataManager.GenerateObjectTypeGroups(array, MemoryElementDataManager.ObjectTypeFilter.Asset)));
 			memoryElement.AddChild(new MemoryElement("Builtin Resources", MemoryElementDataManager.GenerateObjectTypeGroups(array, MemoryElementDataManager.ObjectTypeFilter.BuiltinResource)));
 			memoryElement.AddChild(new MemoryElement("Not Saved", MemoryElementDataManager.GenerateObjectTypeGroups(array, MemoryElementDataManager.ObjectTypeFilter.DontSave)));
 			memoryElement.AddChild(new MemoryElement("Other", MemoryElementDataManager.GenerateObjectTypeGroups(array, MemoryElementDataManager.ObjectTypeFilter.Other)));
-			memoryElement.children.Sort(new Comparison<MemoryElement>(MemoryElementDataManager.SortByMemorySize));
+			List<MemoryElement> arg_1B4_0 = memoryElement.children;
+			if (MemoryElementDataManager.<>f__mg$cache3 == null)
+			{
+				MemoryElementDataManager.<>f__mg$cache3 = new Comparison<MemoryElement>(MemoryElementDataManager.SortByMemorySize);
+			}
+			arg_1B4_0.Sort(MemoryElementDataManager.<>f__mg$cache3);
 			return memoryElement;
 		}
 	}

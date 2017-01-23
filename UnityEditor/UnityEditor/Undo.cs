@@ -20,7 +20,6 @@ namespace UnityEditor
 
 		public static Undo.PostprocessModifications postprocessModifications;
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRecordsInternal(object undoRecords, object redoRecords);
 
@@ -46,11 +45,9 @@ namespace UnityEditor
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void RegisterCompleteObjectUndoMultiple(UnityEngine.Object identifier, UnityEngine.Object[] objectsToUndo, string name, int namePriority);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetTransformParent(Transform transform, Transform newParent, string name);
 
@@ -59,19 +56,15 @@ namespace UnityEditor
 			Undo.INTERNAL_CALL_MoveGameObjectToScene(go, ref scene, name);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MoveGameObjectToScene(GameObject go, ref Scene scene, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RegisterCreatedObjectUndo(UnityEngine.Object objectToUndo, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DestroyObjectImmediate(UnityEngine.Object objectToUndo);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Component AddComponent(GameObject gameObject, Type type);
 
@@ -80,7 +73,6 @@ namespace UnityEditor
 			return Undo.AddComponent(gameObject, typeof(T)) as T;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RegisterFullObjectHierarchyUndo(UnityEngine.Object objectToUndo, string name);
 
@@ -90,77 +82,69 @@ namespace UnityEditor
 			Undo.RegisterFullObjectHierarchyUndo(objectToUndo, "Full Object Hierarchy");
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RecordObject(UnityEngine.Object objectToUndo, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RecordObjects(UnityEngine.Object[] objectsToUndo, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearUndo(UnityEngine.Object identifier);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PerformUndo();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PerformRedo();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void IncrementCurrentGroup();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetCurrentGroup();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetCurrentGroupName();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetCurrentGroupName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevertAllInCurrentGroup();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevertAllDownToGroup(int group);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CollapseUndoOperations(int groupIndex);
 
-		[Obsolete("Use Undo.RecordObject instead")]
+		[Obsolete("Use Undo.RegisterCompleteObjectUndo instead")]
 		public static void RegisterUndo(UnityEngine.Object objectToUndo, string name)
 		{
 			Undo.RegisterCompleteObjectUndo(objectToUndo, name);
 		}
 
-		[Obsolete("Use Undo.RecordObjects instead")]
+		[Obsolete("Use Undo.RegisterCompleteObjectUndo instead")]
 		public static void RegisterUndo(UnityEngine.Object[] objectsToUndo, string name)
 		{
 			Undo.RegisterCompleteObjectUndo(objectsToUndo, name);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FlushUndoRecordObjects();
 
 		private static UndoPropertyModification[] InvokePostprocessModifications(UndoPropertyModification[] modifications)
 		{
+			UndoPropertyModification[] result;
 			if (Undo.postprocessModifications != null)
 			{
-				return Undo.postprocessModifications(modifications);
+				result = Undo.postprocessModifications(modifications);
 			}
-			return modifications;
+			else
+			{
+				result = modifications;
+			}
+			return result;
 		}
 
 		private static void Internal_CallWillFlushUndoRecord()

@@ -5,16 +5,6 @@ namespace UnityEditor
 {
 	internal class StructPropertyGUILayout
 	{
-		internal static void JointSpring(SerializedProperty property, params GUILayoutOption[] options)
-		{
-			StructPropertyGUILayout.GenericStruct(property, options);
-		}
-
-		internal static void WheelFrictionCurve(SerializedProperty property, params GUILayoutOption[] options)
-		{
-			StructPropertyGUILayout.GenericStruct(property, options);
-		}
-
 		internal static void GenericStruct(SerializedProperty property, params GUILayoutOption[] options)
 		{
 			float num = 16f + 16f * (float)StructPropertyGUILayout.GetChildrenCount(property);
@@ -24,17 +14,13 @@ namespace UnityEditor
 
 		internal static int GetChildrenCount(SerializedProperty property)
 		{
-			int depth = property.depth;
-			SerializedProperty serializedProperty = property.Copy();
-			serializedProperty.NextVisible(true);
 			int num = 0;
-			while (serializedProperty.depth == depth + 1)
+			SerializedProperty serializedProperty = property.Copy();
+			SerializedProperty endProperty = serializedProperty.GetEndProperty();
+			while (!SerializedProperty.EqualContents(serializedProperty, endProperty))
 			{
 				num++;
-				if (!serializedProperty.NextVisible(false))
-				{
-					break;
-				}
+				serializedProperty.NextVisible(true);
 			}
 			return num;
 		}

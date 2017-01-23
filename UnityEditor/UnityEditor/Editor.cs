@@ -27,31 +27,31 @@ namespace UnityEditor
 			}
 		}
 
-		internal const float kLineHeight = 16f;
-
-		private const float kImageSectionWidth = 44f;
-
 		private UnityEngine.Object[] m_Targets;
 
 		private int m_IsDirty;
 
-		private int m_ReferenceTargetIndex;
+		private int m_ReferenceTargetIndex = 0;
 
 		private PropertyHandlerCache m_PropertyHandlerCache = new PropertyHandlerCache();
 
 		private IPreviewable m_DummyPreview;
 
-		internal SerializedObject m_SerializedObject;
+		internal SerializedObject m_SerializedObject = null;
 
 		private OptimizedGUIBlock m_OptimizedBlock;
 
-		internal InspectorMode m_InspectorMode;
+		internal InspectorMode m_InspectorMode = InspectorMode.Normal;
 
-		internal bool hideInspector;
+		internal const float kLineHeight = 16f;
+
+		internal bool hideInspector = false;
 
 		internal static bool m_AllowMultiObjectAccess = true;
 
 		private static Editor.Styles s_Styles;
+
+		private const float kImageSectionWidth = 44f;
 
 		internal bool canEditMultipleObjects
 		{
@@ -101,17 +101,22 @@ namespace UnityEditor
 		{
 			get
 			{
+				string result;
 				if (this.m_Targets.Length == 1 || !Editor.m_AllowMultiObjectAccess)
 				{
-					return this.target.name;
+					result = this.target.name;
 				}
-				return string.Concat(new object[]
+				else
 				{
-					this.m_Targets.Length,
-					" ",
-					ObjectNames.NicifyVariableName(ObjectNames.GetClassName(this.target)),
-					"s"
-				});
+					result = string.Concat(new object[]
+					{
+						this.m_Targets.Length,
+						" ",
+						ObjectNames.NicifyVariableName(ObjectNames.GetClassName(this.target)),
+						"s"
+					});
+				}
+				return result;
 			}
 		}
 
@@ -175,7 +180,6 @@ namespace UnityEditor
 			}, editorType);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Editor CreateEditor(UnityEngine.Object[] targetObjects, [DefaultValue("null")] Type editorType);
 
@@ -188,28 +192,26 @@ namespace UnityEditor
 
 		public static void CreateCachedEditor(UnityEngine.Object targetObject, Type editorType, ref Editor previousEditor)
 		{
-			if (previousEditor != null && previousEditor.m_Targets.Length == 1 && previousEditor.m_Targets[0] == targetObject)
+			if (!(previousEditor != null) || previousEditor.m_Targets.Length != 1 || !(previousEditor.m_Targets[0] == targetObject))
 			{
-				return;
+				if (previousEditor != null)
+				{
+					UnityEngine.Object.DestroyImmediate(previousEditor);
+				}
+				previousEditor = Editor.CreateEditor(targetObject, editorType);
 			}
-			if (previousEditor != null)
-			{
-				UnityEngine.Object.DestroyImmediate(previousEditor);
-			}
-			previousEditor = Editor.CreateEditor(targetObject, editorType);
 		}
 
 		public static void CreateCachedEditor(UnityEngine.Object[] targetObjects, Type editorType, ref Editor previousEditor)
 		{
-			if (previousEditor != null && ArrayUtility.ArrayEquals<UnityEngine.Object>(previousEditor.m_Targets, targetObjects))
+			if (!(previousEditor != null) || !ArrayUtility.ArrayEquals<UnityEngine.Object>(previousEditor.m_Targets, targetObjects))
 			{
-				return;
+				if (previousEditor != null)
+				{
+					UnityEngine.Object.DestroyImmediate(previousEditor);
+				}
+				previousEditor = Editor.CreateEditor(targetObjects, editorType);
 			}
-			if (previousEditor != null)
-			{
-				UnityEngine.Object.DestroyImmediate(previousEditor);
-			}
-			previousEditor = Editor.CreateEditor(targetObjects, editorType);
 		}
 
 		internal virtual SerializedObject GetSerializedObjectInternal()
@@ -255,33 +257,38 @@ namespace UnityEditor
 				this.m_OptimizedBlock = new OptimizedGUIBlock();
 			}
 			block = this.m_OptimizedBlock;
+			bool result;
 			if (!isVisible)
 			{
 				height = 0f;
-				return true;
-			}
-			if (this.m_SerializedObject == null)
-			{
-				this.m_SerializedObject = new SerializedObject(this.targets);
+				result = true;
 			}
 			else
 			{
-				this.m_SerializedObject.Update();
+				if (this.m_SerializedObject == null)
+				{
+					this.m_SerializedObject = new SerializedObject(this.targets);
+				}
+				else
+				{
+					this.m_SerializedObject.Update();
+				}
+				this.m_SerializedObject.inspectorMode = this.m_InspectorMode;
+				SerializedProperty iterator = this.m_SerializedObject.GetIterator();
+				height = 2f;
+				bool enterChildren = true;
+				while (iterator.NextVisible(enterChildren))
+				{
+					height += EditorGUI.GetPropertyHeight(iterator, null, true) + 2f;
+					enterChildren = false;
+				}
+				if (height == 2f)
+				{
+					height = 0f;
+				}
+				result = true;
 			}
-			this.m_SerializedObject.inspectorMode = this.m_InspectorMode;
-			SerializedProperty iterator = this.m_SerializedObject.GetIterator();
-			height = 2f;
-			bool enterChildren = true;
-			while (iterator.NextVisible(enterChildren))
-			{
-				height += EditorGUI.GetPropertyHeight(iterator, null, true) + 2f;
-				enterChildren = false;
-			}
-			if (height == 2f)
-			{
-				height = 0f;
-			}
-			return true;
+			return result;
 		}
 
 		internal bool OptimizedInspectorGUIImplementation(Rect contentRect)
@@ -464,17 +471,20 @@ namespace UnityEditor
 					flag = false;
 				}
 			}
-			if (flag && GUILayout.Button("Open", EditorStyles.miniButton, new GUILayoutOption[0]))
+			if (flag)
 			{
-				if (this is AssetImporterInspector)
+				if (GUILayout.Button("Open", EditorStyles.miniButton, new GUILayoutOption[0]))
 				{
-					AssetDatabase.OpenAsset((this as AssetImporterInspector).assetEditor.targets);
+					if (this is AssetImporterInspector)
+					{
+						AssetDatabase.OpenAsset((this as AssetImporterInspector).assetEditor.targets);
+					}
+					else
+					{
+						AssetDatabase.OpenAsset(this.targets);
+					}
+					GUIUtility.ExitGUI();
 				}
-				else
-				{
-					AssetDatabase.OpenAsset(this.targets);
-				}
-				GUIUtility.ExitGUI();
 			}
 		}
 
@@ -518,22 +528,20 @@ namespace UnityEditor
 		internal virtual void DrawHeaderHelpAndSettingsGUI(Rect r)
 		{
 			UnityEngine.Object target = this.target;
-			float num = 18f;
-			if (this.IsEnabled())
+			Vector2 vector = EditorStyles.iconButton.CalcSize(EditorGUI.GUIContents.titleSettingsIcon);
+			float num = vector.x;
+			Rect position = new Rect(r.xMax - num, r.y + 5f, vector.x, vector.y);
+			if (EditorGUI.ButtonMouseDown(position, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.iconButton))
 			{
-				Rect position = new Rect(r.xMax - num, r.y + 5f, 14f, 14f);
-				if (EditorGUI.ButtonMouseDown(position, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText))
-				{
-					EditorUtility.DisplayObjectContextMenu(position, this.targets, 0);
-				}
-				num += 18f;
+				EditorUtility.DisplayObjectContextMenu(position, this.targets, 0);
 			}
-			EditorGUI.HelpIconButton(new Rect(r.xMax - num, r.y + 5f, 14f, 14f), target);
+			num += vector.x;
+			EditorGUI.HelpIconButton(new Rect(r.xMax - num, r.y + 5f, vector.x, vector.y), target);
 		}
 
 		private void DrawHeaderFromInsideHierarchy()
 		{
-			GUIStyle style = GUILayoutUtility.current.topLevel.style;
+			GUIStyle style = GUILayoutUtility.topLevel.style;
 			EditorGUILayout.EndVertical();
 			this.OnHeaderGUI();
 			EditorGUILayout.BeginVertical(style, new GUILayoutOption[0]);
@@ -595,7 +603,7 @@ namespace UnityEditor
 				editor.DrawHeaderHelpAndSettingsGUI(r);
 			}
 			Event current = Event.current;
-			if (editor != null && !editor.IsEnabled() && current.type == EventType.MouseDown && current.button == 1 && r.Contains(current.mousePosition))
+			if (editor != null && current.type == EventType.MouseDown && current.button == 1 && r.Contains(current.mousePosition))
 			{
 				EditorUtility.DisplayObjectContextMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), editor.targets, 0);
 				current.Use();
@@ -621,15 +629,18 @@ namespace UnityEditor
 			this.m_SerializedObject.inspectorMode = this.m_InspectorMode;
 			SerializedProperty iterator = this.m_SerializedObject.GetIterator();
 			bool enterChildren = true;
+			bool result;
 			while (iterator.NextVisible(enterChildren))
 			{
 				if (EditorGUI.GetPropertyHeight(iterator, null, true) > 0f)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 				enterChildren = false;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		internal static bool IsAppropriateFileOpenForEdit(UnityEngine.Object assetObject)
@@ -641,36 +652,52 @@ namespace UnityEditor
 		internal static bool IsAppropriateFileOpenForEdit(UnityEngine.Object assetObject, out string message)
 		{
 			message = string.Empty;
+			bool result;
 			if (AssetDatabase.IsNativeAsset(assetObject))
 			{
 				if (!AssetDatabase.IsOpenForEdit(assetObject, out message))
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
-			else if (AssetDatabase.IsForeignAsset(assetObject) && !AssetDatabase.IsMetaFileOpenForEdit(assetObject, out message))
+			else if (AssetDatabase.IsForeignAsset(assetObject))
 			{
-				return false;
+				if (!AssetDatabase.IsMetaFileOpenForEdit(assetObject, out message))
+				{
+					result = false;
+					return result;
+				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		internal virtual bool IsEnabled()
 		{
 			UnityEngine.Object[] targets = this.targets;
-			for (int i = 0; i < targets.Length; i++)
+			int i = 0;
+			bool result;
+			while (i < targets.Length)
 			{
 				UnityEngine.Object @object = targets[i];
 				if ((@object.hideFlags & HideFlags.NotEditable) != HideFlags.None)
 				{
-					return false;
+					result = false;
 				}
-				if (EditorUtility.IsPersistent(@object) && !Editor.IsAppropriateFileOpenForEdit(@object))
+				else
 				{
-					return false;
+					if (!EditorUtility.IsPersistent(@object) || Editor.IsAppropriateFileOpenForEdit(@object))
+					{
+						i++;
+						continue;
+					}
+					result = false;
 				}
+				return result;
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		internal bool IsOpenForEdit()
@@ -681,17 +708,20 @@ namespace UnityEditor
 
 		internal bool IsOpenForEdit(out string message)
 		{
-			message = string.Empty;
+			message = "";
 			UnityEngine.Object[] targets = this.targets;
+			bool result;
 			for (int i = 0; i < targets.Length; i++)
 			{
 				UnityEngine.Object @object = targets[i];
 				if (EditorUtility.IsPersistent(@object) && !Editor.IsAppropriateFileOpenForEdit(@object))
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		public virtual bool UseDefaultMargins()

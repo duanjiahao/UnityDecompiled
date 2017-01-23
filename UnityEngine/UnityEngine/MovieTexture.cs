@@ -7,38 +7,32 @@ namespace UnityEngine
 	{
 		public extern AudioClip audioClip
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool loop
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isPlaying
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isReadyToPlay
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float duration
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -48,7 +42,6 @@ namespace UnityEngine
 			MovieTexture.INTERNAL_CALL_Play(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Play(MovieTexture self);
 
@@ -57,7 +50,6 @@ namespace UnityEngine
 			MovieTexture.INTERNAL_CALL_Stop(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Stop(MovieTexture self);
 
@@ -66,7 +58,6 @@ namespace UnityEngine
 			MovieTexture.INTERNAL_CALL_Pause(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Pause(MovieTexture self);
 	}

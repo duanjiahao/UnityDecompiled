@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace UnityEditor
 {
@@ -8,10 +7,8 @@ namespace UnityEditor
 	{
 		public static extern EditorBuildSettingsScene[] scenes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}

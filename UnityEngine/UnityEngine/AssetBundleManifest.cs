@@ -5,11 +5,9 @@ namespace UnityEngine
 {
 	public sealed class AssetBundleManifest : Object
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string[] GetAllAssetBundles();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string[] GetAllAssetBundlesWithVariant();
 
@@ -20,15 +18,12 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetAssetBundleHash(AssetBundleManifest self, string assetBundleName, out Hash128 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string[] GetDirectDependencies(string assetBundleName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string[] GetAllDependencies(string assetBundleName);
 	}

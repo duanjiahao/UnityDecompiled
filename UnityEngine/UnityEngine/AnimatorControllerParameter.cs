@@ -1,10 +1,12 @@
 using System;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public sealed class AnimatorControllerParameter
 	{
-		internal string m_Name = string.Empty;
+		internal string m_Name = "";
 
 		internal AnimatorControllerParameterType m_Type;
 

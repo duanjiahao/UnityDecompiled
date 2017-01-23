@@ -29,11 +29,13 @@ namespace UnityEditor
 
 		private int m_HoverEvent = -1;
 
-		private string m_InstantTooltipText;
+		private string m_InstantTooltipText = null;
 
 		private Vector2 m_InstantTooltipPoint = Vector2.zero;
 
 		private bool[] m_EventsSelected;
+
+		private AnimationWindowEvent m_Event = null;
 
 		private TimeArea m_Timeline;
 
@@ -46,7 +48,15 @@ namespace UnityEditor
 		{
 			this.m_EventsSelected = new bool[events.Length];
 			this.m_EventsSelected[index] = true;
-			AnimationEventPopup.Edit(clipInfo, index);
+			this.m_Event = AnimationWindowEvent.Edit(clipInfo, index);
+		}
+
+		public void UpdateEvent(AnimationClipInfoProperties info)
+		{
+			if (this.m_Event != null)
+			{
+				this.m_Event.clipInfo = info;
+			}
 		}
 
 		public bool HandleEventManipulation(Rect rect, ref AnimationEvent[] events, AnimationClipInfoProperties clipInfo)
@@ -89,7 +99,7 @@ namespace UnityEditor
 			if (this.m_EventsSelected == null || this.m_EventsSelected.Length != events.Length || this.m_EventsSelected.Length == 0)
 			{
 				this.m_EventsSelected = new bool[events.Length];
-				AnimationEventPopup.ClosePopup();
+				this.m_Event = null;
 			}
 			Vector2 zero = Vector2.zero;
 			int num6;
@@ -148,14 +158,7 @@ namespace UnityEditor
 					result = this.DeleteEvents(ref events, this.m_EventsSelected);
 					break;
 				case HighLevelEvent.SelectionChanged:
-					if (num6 >= 0)
-					{
-						AnimationEventPopup.Edit(clipInfo, num6);
-					}
-					else
-					{
-						AnimationEventPopup.ClosePopup();
-					}
+					this.m_Event = ((num6 < 0) ? null : AnimationWindowEvent.Edit(clipInfo, num6));
 					break;
 				}
 			}
@@ -180,7 +183,7 @@ namespace UnityEditor
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
 			bool flag = false;
-			this.m_InstantTooltipText = string.Empty;
+			this.m_InstantTooltipText = "";
 			if (events.Length == hitRects.Length)
 			{
 				for (int i = hitRects.Length - 1; i >= 0; i--)
@@ -203,9 +206,19 @@ namespace UnityEditor
 			}
 		}
 
-		public void DrawInstantTooltip(Rect window)
+		public void Draw(Rect window)
 		{
-			if (this.m_InstantTooltipText != null && this.m_InstantTooltipText != string.Empty)
+			EditorGUI.indentLevel++;
+			if (this.m_Event != null)
+			{
+				AnimationWindowEventInspector.OnEditAnimationEvent(this.m_Event);
+			}
+			else
+			{
+				AnimationWindowEventInspector.OnDisabledAnimationEvent();
+			}
+			EditorGUI.indentLevel--;
+			if (this.m_InstantTooltipText != null && this.m_InstantTooltipText != "")
 			{
 				GUIStyle gUIStyle = "AnimationEventTooltip";
 				Vector2 vector = gUIStyle.CalcSize(new GUIContent(this.m_InstantTooltipText));
@@ -231,8 +244,8 @@ namespace UnityEditor
 			}
 			if (flag)
 			{
-				AnimationEventPopup.ClosePopup();
 				this.m_EventsSelected = new bool[eventList.Length];
+				this.m_Event = null;
 			}
 			return flag;
 		}

@@ -5,9 +5,9 @@ namespace UnityEngine
 {
 	public class AndroidJavaObject : IDisposable
 	{
-		private static bool enableDebugPrints;
+		private static bool enableDebugPrints = false;
 
-		private bool m_disposed;
+		private bool m_disposed = false;
 
 		protected IntPtr m_jobject;
 
@@ -105,36 +105,34 @@ namespace UnityEngine
 
 		protected void DebugPrint(string msg)
 		{
-			if (!AndroidJavaObject.enableDebugPrints)
+			if (AndroidJavaObject.enableDebugPrints)
 			{
-				return;
+				Debug.Log(msg);
 			}
-			Debug.Log(msg);
 		}
 
 		protected void DebugPrint(string call, string methodName, string signature, object[] args)
 		{
-			if (!AndroidJavaObject.enableDebugPrints)
+			if (AndroidJavaObject.enableDebugPrints)
 			{
-				return;
+				StringBuilder stringBuilder = new StringBuilder();
+				for (int i = 0; i < args.Length; i++)
+				{
+					object obj = args[i];
+					stringBuilder.Append(", ");
+					stringBuilder.Append((obj != null) ? obj.GetType().ToString() : "<null>");
+				}
+				Debug.Log(string.Concat(new string[]
+				{
+					call,
+					"(\"",
+					methodName,
+					"\"",
+					stringBuilder.ToString(),
+					") = ",
+					signature
+				}));
 			}
-			StringBuilder stringBuilder = new StringBuilder();
-			for (int i = 0; i < args.Length; i++)
-			{
-				object obj = args[i];
-				stringBuilder.Append(", ");
-				stringBuilder.Append((obj != null) ? obj.GetType().ToString() : "<null>");
-			}
-			Debug.Log(string.Concat(new string[]
-			{
-				call,
-				"(\"",
-				methodName,
-				"\"",
-				stringBuilder.ToString(),
-				") = ",
-				signature
-			}));
 		}
 
 		private void _AndroidJavaObject(string className, params object[] args)
@@ -169,13 +167,12 @@ namespace UnityEngine
 
 		protected virtual void Dispose(bool disposing)
 		{
-			if (this.m_disposed)
+			if (!this.m_disposed)
 			{
-				return;
+				this.m_disposed = true;
+				AndroidJNISafe.DeleteGlobalRef(this.m_jobject);
+				AndroidJNISafe.DeleteGlobalRef(this.m_jclass);
 			}
-			this.m_disposed = true;
-			AndroidJNISafe.DeleteGlobalRef(this.m_jobject);
-			AndroidJNISafe.DeleteGlobalRef(this.m_jclass);
 		}
 
 		protected void _Dispose()
@@ -286,65 +283,70 @@ namespace UnityEngine
 		protected FieldType _Get<FieldType>(string fieldName)
 		{
 			IntPtr fieldID = AndroidJNIHelper.GetFieldID<FieldType>(this.m_jclass, fieldName, false);
+			FieldType result;
 			if (AndroidReflection.IsPrimitive(typeof(FieldType)))
 			{
 				if (typeof(FieldType) == typeof(int))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetIntField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetIntField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(bool))
+				else if (typeof(FieldType) == typeof(bool))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetBooleanField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetBooleanField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(byte))
+				else if (typeof(FieldType) == typeof(byte))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetByteField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetByteField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(short))
+				else if (typeof(FieldType) == typeof(short))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetShortField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetShortField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(long))
+				else if (typeof(FieldType) == typeof(long))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetLongField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetLongField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(float))
+				else if (typeof(FieldType) == typeof(float))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetFloatField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetFloatField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(double))
+				else if (typeof(FieldType) == typeof(double))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetDoubleField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetDoubleField(this.m_jobject, fieldID));
 				}
-				if (typeof(FieldType) == typeof(char))
+				else if (typeof(FieldType) == typeof(char))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetCharField(this.m_jobject, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetCharField(this.m_jobject, fieldID));
 				}
-				return default(FieldType);
+				else
+				{
+					result = default(FieldType);
+				}
+			}
+			else if (typeof(FieldType) == typeof(string))
+			{
+				result = (FieldType)((object)AndroidJNISafe.GetStringField(this.m_jobject, fieldID));
+			}
+			else if (typeof(FieldType) == typeof(AndroidJavaClass))
+			{
+				IntPtr objectField = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
+				result = (FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(objectField));
+			}
+			else if (typeof(FieldType) == typeof(AndroidJavaObject))
+			{
+				IntPtr objectField2 = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
+				result = (FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(objectField2));
 			}
 			else
 			{
-				if (typeof(FieldType) == typeof(string))
+				if (!AndroidReflection.IsAssignableFrom(typeof(Array), typeof(FieldType)))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStringField(this.m_jobject, fieldID));
+					throw new Exception("JNI: Unknown field type '" + typeof(FieldType) + "'");
 				}
-				if (typeof(FieldType) == typeof(AndroidJavaClass))
-				{
-					IntPtr objectField = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
-					return (FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(objectField));
-				}
-				if (typeof(FieldType) == typeof(AndroidJavaObject))
-				{
-					IntPtr objectField2 = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
-					return (FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(objectField2));
-				}
-				if (AndroidReflection.IsAssignableFrom(typeof(Array), typeof(FieldType)))
-				{
-					IntPtr objectField3 = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
-					return (FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(objectField3));
-				}
-				throw new Exception("JNI: Unknown field type '" + typeof(FieldType) + "'");
+				IntPtr objectField3 = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
+				result = (FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(objectField3));
 			}
+			return result;
 		}
 
 		protected void _Set<FieldType>(string fieldName, FieldType val)
@@ -510,65 +512,70 @@ namespace UnityEngine
 		protected FieldType _GetStatic<FieldType>(string fieldName)
 		{
 			IntPtr fieldID = AndroidJNIHelper.GetFieldID<FieldType>(this.m_jclass, fieldName, true);
+			FieldType result;
 			if (AndroidReflection.IsPrimitive(typeof(FieldType)))
 			{
 				if (typeof(FieldType) == typeof(int))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticIntField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticIntField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(bool))
+				else if (typeof(FieldType) == typeof(bool))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticBooleanField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticBooleanField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(byte))
+				else if (typeof(FieldType) == typeof(byte))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticByteField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticByteField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(short))
+				else if (typeof(FieldType) == typeof(short))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticShortField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticShortField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(long))
+				else if (typeof(FieldType) == typeof(long))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticLongField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticLongField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(float))
+				else if (typeof(FieldType) == typeof(float))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticFloatField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticFloatField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(double))
+				else if (typeof(FieldType) == typeof(double))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticDoubleField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticDoubleField(this.m_jclass, fieldID));
 				}
-				if (typeof(FieldType) == typeof(char))
+				else if (typeof(FieldType) == typeof(char))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticCharField(this.m_jclass, fieldID));
+					result = (FieldType)((object)AndroidJNISafe.GetStaticCharField(this.m_jclass, fieldID));
 				}
-				return default(FieldType);
+				else
+				{
+					result = default(FieldType);
+				}
+			}
+			else if (typeof(FieldType) == typeof(string))
+			{
+				result = (FieldType)((object)AndroidJNISafe.GetStaticStringField(this.m_jclass, fieldID));
+			}
+			else if (typeof(FieldType) == typeof(AndroidJavaClass))
+			{
+				IntPtr staticObjectField = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
+				result = (FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(staticObjectField));
+			}
+			else if (typeof(FieldType) == typeof(AndroidJavaObject))
+			{
+				IntPtr staticObjectField2 = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
+				result = (FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(staticObjectField2));
 			}
 			else
 			{
-				if (typeof(FieldType) == typeof(string))
+				if (!AndroidReflection.IsAssignableFrom(typeof(Array), typeof(FieldType)))
 				{
-					return (FieldType)((object)AndroidJNISafe.GetStaticStringField(this.m_jclass, fieldID));
+					throw new Exception("JNI: Unknown field type '" + typeof(FieldType) + "'");
 				}
-				if (typeof(FieldType) == typeof(AndroidJavaClass))
-				{
-					IntPtr staticObjectField = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
-					return (FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(staticObjectField));
-				}
-				if (typeof(FieldType) == typeof(AndroidJavaObject))
-				{
-					IntPtr staticObjectField2 = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
-					return (FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(staticObjectField2));
-				}
-				if (AndroidReflection.IsAssignableFrom(typeof(Array), typeof(FieldType)))
-				{
-					IntPtr staticObjectField3 = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
-					return (FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(staticObjectField3));
-				}
-				throw new Exception("JNI: Unknown field type '" + typeof(FieldType) + "'");
+				IntPtr staticObjectField3 = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
+				result = (FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(staticObjectField3));
 			}
+			return result;
 		}
 
 		protected void _SetStatic<FieldType>(string fieldName, FieldType val)

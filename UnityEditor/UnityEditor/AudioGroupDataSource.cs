@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor.Audio;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -9,7 +10,7 @@ namespace UnityEditor
 	{
 		public AudioMixerController m_Controller;
 
-		public AudioGroupDataSource(TreeView treeView, AudioMixerController controller) : base(treeView)
+		public AudioGroupDataSource(TreeViewController treeView, AudioMixerController controller) : base(treeView)
 		{
 			this.m_Controller = controller;
 		}
@@ -38,18 +39,19 @@ namespace UnityEditor
 			if (this.m_Controller == null)
 			{
 				this.m_RootItem = null;
-				return;
 			}
-			if (this.m_Controller.masterGroup == null)
+			else if (this.m_Controller.masterGroup == null)
 			{
 				Debug.LogError("The Master group is missing !!!");
 				this.m_RootItem = null;
-				return;
 			}
-			int uniqueNodeID = AudioGroupDataSource.GetUniqueNodeID(this.m_Controller.masterGroup);
-			this.m_RootItem = new AudioMixerTreeViewNode(uniqueNodeID, 0, null, this.m_Controller.masterGroup.name, this.m_Controller.masterGroup);
-			this.AddNodesRecursively(this.m_Controller.masterGroup, this.m_RootItem, 1);
-			this.m_NeedRefreshVisibleFolders = true;
+			else
+			{
+				int uniqueNodeID = AudioGroupDataSource.GetUniqueNodeID(this.m_Controller.masterGroup);
+				this.m_RootItem = new AudioMixerTreeViewNode(uniqueNodeID, 0, null, this.m_Controller.masterGroup.name, this.m_Controller.masterGroup);
+				this.AddNodesRecursively(this.m_Controller.masterGroup, this.m_RootItem, 1);
+				this.m_NeedRefreshRows = true;
+			}
 		}
 
 		public override bool IsRenamingItemAllowed(TreeViewItem node)

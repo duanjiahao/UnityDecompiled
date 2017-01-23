@@ -10,11 +10,11 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "Unity Build";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/build";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/build";
 
 		static BuildAccess()
 		{
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("Build", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/build", new BuildAccess(), "unity/project/cloud/build");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("Build", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/build", new BuildAccess(), "unity/project/cloud/build");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 

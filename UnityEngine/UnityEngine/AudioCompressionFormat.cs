@@ -12,6 +12,7 @@ namespace UnityEngine
 		HEVAG,
 		XMA,
 		AAC,
-		GCADPCM
+		GCADPCM,
+		ATRAC9
 	}
 }

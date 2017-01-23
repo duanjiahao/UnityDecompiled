@@ -57,6 +57,10 @@ namespace UnityEditor.Modules
 
 		IUserAssembliesValidator CreateUserAssembliesValidatorExtension();
 
+		IProjectGeneratorExtension CreateProjectGeneratorExtension();
+
+		void RegisterAdditionalUnityExtensions();
+
 		IDevice CreateDevice(string id);
 
 		void OnActivate();

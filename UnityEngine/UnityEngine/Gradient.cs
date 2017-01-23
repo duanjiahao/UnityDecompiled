@@ -13,20 +13,24 @@ namespace UnityEngine
 
 		public extern GradientColorKey[] colorKeys
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern GradientAlphaKey[] alphaKeys
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern GradientMode mode
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -51,11 +55,11 @@ namespace UnityEngine
 			this.Init();
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Init();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Cleanup();
 
@@ -71,19 +75,15 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Evaluate(Gradient self, float time, out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_constantColor(out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_constantColor(ref Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetKeys(GradientColorKey[] colorKeys, GradientAlphaKey[] alphaKeys);
 	}

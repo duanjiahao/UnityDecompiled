@@ -62,7 +62,7 @@ namespace UnityEditor
 			EditorGUILayout.IntPopup(this.m_AntiAliasing, RenderTextureInspector.kRenderTextureAntiAliasing, RenderTextureInspector.kRenderTextureAntiAliasingValues, EditorGUIUtility.TempContent("Anti-Aliasing"), new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_ColorFormat, EditorGUIUtility.TempContent("Color Format"), new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_DepthFormat, EditorGUIUtility.TempContent("Depth Buffer"), new GUILayoutOption[0]);
-			RenderTexture renderTexture = this.target as RenderTexture;
+			RenderTexture renderTexture = base.target as RenderTexture;
 			if (GUI.changed && renderTexture != null)
 			{
 				renderTexture.Release();
@@ -90,7 +90,7 @@ namespace UnityEditor
 
 		public override string GetInfoString()
 		{
-			RenderTexture renderTexture = this.target as RenderTexture;
+			RenderTexture renderTexture = base.target as RenderTexture;
 			string text = renderTexture.width + "x" + renderTexture.height;
 			if (!renderTexture.isPowerOfTwo)
 			{

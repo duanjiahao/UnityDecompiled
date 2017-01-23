@@ -23,16 +23,19 @@ namespace UnityEditor
 		{
 			base.BeginColliderInspector();
 			base.OnInspectorGUI();
-			GUI.enabled = !base.editingCollider;
-			EditorGUILayout.PropertyField(this.m_Points, true, new GUILayoutOption[0]);
-			GUI.enabled = true;
+			if (base.targets.Length == 1)
+			{
+				EditorGUI.BeginDisabledGroup(base.editingCollider);
+				EditorGUILayout.PropertyField(this.m_Points, true, new GUILayoutOption[0]);
+				EditorGUI.EndDisabledGroup();
+			}
 			base.EndColliderInspector();
-			base.CheckAllErrorsAndWarnings();
+			base.FinalizeInspectorGUI();
 		}
 
 		protected override void OnEditStart()
 		{
-			this.m_PolyUtility.StartEditing(this.target as Collider2D);
+			this.m_PolyUtility.StartEditing(base.target as Collider2D);
 		}
 
 		protected override void OnEditEnd()
@@ -42,11 +45,10 @@ namespace UnityEditor
 
 		public void OnSceneGUI()
 		{
-			if (!base.editingCollider)
+			if (base.editingCollider)
 			{
-				return;
+				this.m_PolyUtility.OnSceneGUI();
 			}
-			this.m_PolyUtility.OnSceneGUI();
 		}
 	}
 }

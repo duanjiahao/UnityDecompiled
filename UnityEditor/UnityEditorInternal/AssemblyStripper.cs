@@ -3,16 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
-using System.Xml;
 using UnityEditor;
-using UnityEditor.BuildReporting;
 using UnityEditor.Utils;
 
 namespace UnityEditorInternal
 {
 	internal class AssemblyStripper
 	{
+		[CompilerGenerated]
+		private static Func<string, bool> <>f__mg$cache0;
+
 		private static string[] Il2CppBlacklistPaths
 		{
 			get
@@ -71,8 +73,13 @@ namespace UnityEditorInternal
 			{
 				Directory.CreateDirectory(outputFolder);
 			}
-			additionalBlacklist = (from s in additionalBlacklist
-			select (!Path.IsPathRooted(s)) ? Path.Combine(workingDirectory, s) : s).Where(new Func<string, bool>(File.Exists));
+			IEnumerable<string> arg_50_0 = from s in additionalBlacklist
+			select (!Path.IsPathRooted(s)) ? Path.Combine(workingDirectory, s) : s;
+			if (AssemblyStripper.<>f__mg$cache0 == null)
+			{
+				AssemblyStripper.<>f__mg$cache0 = new Func<string, bool>(File.Exists);
+			}
+			additionalBlacklist = arg_50_0.Where(AssemblyStripper.<>f__mg$cache0);
 			IEnumerable<string> userBlacklistFiles = AssemblyStripper.GetUserBlacklistFiles();
 			foreach (string current in userBlacklistFiles)
 			{
@@ -81,6 +88,7 @@ namespace UnityEditorInternal
 			additionalBlacklist = additionalBlacklist.Concat(userBlacklistFiles);
 			List<string> list = new List<string>
 			{
+				"--api " + PlayerSettings.apiCompatibilityLevel.ToString(),
 				"-out \"" + outputFolder + "\"",
 				"-l none",
 				"-c link",
@@ -102,8 +110,8 @@ namespace UnityEditorInternal
 			string text = args.Aggregate((string buff, string s) => buff + " " + s);
 			Console.WriteLine("Invoking UnusedByteCodeStripper2 with arguments: " + text);
 			Runner.RunManagedProgram(linkerPath, text, workingDirectory, null, null);
-			@out = string.Empty;
-			err = string.Empty;
+			@out = "";
+			err = "";
 			return true;
 		}
 
@@ -126,29 +134,22 @@ namespace UnityEditorInternal
 			AssemblyStripper.RunAssemblyStripper(stagingAreaData, userAssemblies, fullPath, assembliesToStrip, searchDirs, AssemblyStripper.MonoLinker2Path, platformProvider, rcr, developmentBuild);
 		}
 
+		internal static void GenerateInternalCallSummaryFile(string icallSummaryPath, string managedAssemblyFolderPath, string strippedDLLPath)
+		{
+			string exe = Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "Tools/InternalCallRegistrationWriter/InternalCallRegistrationWriter.exe");
+			string args = string.Format("-assembly=\"{0}\" -output=\"{1}\" -summary=\"{2}\"", Path.Combine(strippedDLLPath, "UnityEngine.dll"), Path.Combine(managedAssemblyFolderPath, "UnityICallRegistration.cpp"), icallSummaryPath);
+			Runner.RunManagedProgram(exe, args);
+		}
+
 		internal static IEnumerable<string> GetUserBlacklistFiles()
 		{
 			return from s in Directory.GetFiles("Assets", "link.xml", SearchOption.AllDirectories)
 			select Path.Combine(Directory.GetCurrentDirectory(), s);
 		}
 
-		private static List<string> GetDependentModules(string moduleXml)
+		private static bool AddWhiteListsForModules(IEnumerable<string> nativeModules, ref IEnumerable<string> blacklists, string moduleStrippingInformationFolder)
 		{
-			XmlDocument xmlDocument = new XmlDocument();
-			xmlDocument.Load(moduleXml);
-			List<string> list = new List<string>();
-			XmlNodeList xmlNodeList = xmlDocument.DocumentElement.SelectNodes("/linker/dependencies/module");
-			foreach (XmlNode xmlNode in xmlNodeList)
-			{
-				list.Add(xmlNode.Attributes["name"].Value);
-			}
-			return list;
-		}
-
-		private static bool AddWhiteListsForModules(IEnumerable<string> nativeModules, ref IEnumerable<string> blacklists, string moduleStrippingInformationFolder, BuildReport buildReport)
-		{
-			StrippingInfo buildReportData = StrippingInfo.GetBuildReportData(buildReport);
-			bool flag = false;
+			bool result = false;
 			foreach (string current in nativeModules)
 			{
 				string moduleWhitelist = AssemblyStripper.GetModuleWhitelist(current, moduleStrippingInformationFolder);
@@ -160,20 +161,11 @@ namespace UnityEditorInternal
 						{
 							moduleWhitelist
 						});
-						flag = true;
+						result = true;
 					}
-					List<string> dependentModules = AssemblyStripper.GetDependentModules(moduleWhitelist);
-					if (buildReportData != null)
-					{
-						foreach (string current2 in dependentModules)
-						{
-							buildReportData.RegisterDependency(current2, current);
-						}
-					}
-					flag = (flag || AssemblyStripper.AddWhiteListsForModules(dependentModules, ref blacklists, moduleStrippingInformationFolder, buildReport));
 				}
 			}
-			return flag;
+			return result;
 		}
 
 		private static void RunAssemblyStripper(string stagingAreaData, IEnumerable assemblies, string managedAssemblyFolderPath, string[] assembliesToStrip, string[] searchDirs, string monoLinkerPath, IIl2CppPlatformProvider platformProvider, RuntimeClassRegistry rcr, bool developmentBuild)
@@ -215,15 +207,13 @@ namespace UnityEditorInternal
 					goto Block_6;
 				}
 				string text4 = Path.Combine(managedAssemblyFolderPath, "ICallSummary.txt");
-				string exe = Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "Tools/InternalCallRegistrationWriter/InternalCallRegistrationWriter.exe");
-				string args = string.Format("-assembly=\"{0}\" -output=\"{1}\" -summary=\"{2}\"", Path.Combine(fullPath, "UnityEngine.dll"), Path.Combine(managedAssemblyFolderPath, "UnityICallRegistration.cpp"), text4);
-				Runner.RunManagedProgram(exe, args);
+				AssemblyStripper.GenerateInternalCallSummaryFile(text4, managedAssemblyFolderPath, fullPath);
 				if (flag)
 				{
-					HashSet<string> hashSet;
+					HashSet<UnityType> hashSet;
 					HashSet<string> nativeModules;
-					CodeStrippingUtils.GenerateDependencies(fullPath, text4, rcr, out hashSet, out nativeModules, platformProvider.buildReport);
-					flag2 = AssemblyStripper.AddWhiteListsForModules(nativeModules, ref enumerable, platformProvider.moduleStrippingInformationFolder, platformProvider.buildReport);
+					CodeStrippingUtils.GenerateDependencies(fullPath, text4, rcr, flag, out hashSet, out nativeModules, platformProvider);
+					flag2 = AssemblyStripper.AddWhiteListsForModules(nativeModules, ref enumerable, platformProvider.moduleStrippingInformationFolder);
 				}
 				if (!flag2)
 				{
@@ -263,7 +253,7 @@ namespace UnityEditorInternal
 
 		private static string WriteMethodsToPreserveBlackList(string stagingAreaData, RuntimeClassRegistry rcr)
 		{
-			string text = (!Path.IsPathRooted(stagingAreaData)) ? (Directory.GetCurrentDirectory() + "/") : string.Empty;
+			string text = (!Path.IsPathRooted(stagingAreaData)) ? (Directory.GetCurrentDirectory() + "/") : "";
 			text = text + stagingAreaData + "/methods_pointedto_by_uievents.xml";
 			File.WriteAllText(text, AssemblyStripper.GetMethodPreserveBlacklistContents(rcr));
 			return text;

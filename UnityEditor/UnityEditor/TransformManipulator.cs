@@ -288,75 +288,71 @@ namespace UnityEditor
 
 		public static void SetScaleDelta(Vector3 scaleDelta, Quaternion pivotRotation)
 		{
-			if (TransformManipulator.s_MouseDownState == null)
+			if (TransformManipulator.s_MouseDownState != null)
 			{
-				return;
-			}
-			TransformManipulator.SetLocalHandleOffsetScaleDelta(scaleDelta, pivotRotation);
-			for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
-			{
-				TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
-				Undo.RecordObject(transformData.transform, "Scale");
-			}
-			Vector3 scalePivot = Tools.handlePosition;
-			for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
-			{
-				if (Tools.pivotMode == PivotMode.Pivot)
+				TransformManipulator.SetLocalHandleOffsetScaleDelta(scaleDelta, pivotRotation);
+				for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
 				{
-					scalePivot = TransformManipulator.s_MouseDownState[j].position;
+					TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
+					Undo.RecordObject(transformData.transform, "Scale");
 				}
-				if (TransformManipulator.individualSpace)
+				Vector3 scalePivot = Tools.handlePosition;
+				for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
 				{
-					pivotRotation = TransformManipulator.s_MouseDownState[j].rotation;
+					if (Tools.pivotMode == PivotMode.Pivot)
+					{
+						scalePivot = TransformManipulator.s_MouseDownState[j].position;
+					}
+					if (TransformManipulator.individualSpace)
+					{
+						pivotRotation = TransformManipulator.s_MouseDownState[j].rotation;
+					}
+					TransformManipulator.s_MouseDownState[j].SetScaleDelta(scaleDelta, scalePivot, pivotRotation, false);
 				}
-				TransformManipulator.s_MouseDownState[j].SetScaleDelta(scaleDelta, scalePivot, pivotRotation, false);
 			}
 		}
 
 		public static void SetResizeDelta(Vector3 scaleDelta, Vector3 pivotPosition, Quaternion pivotRotation)
 		{
-			if (TransformManipulator.s_MouseDownState == null)
+			if (TransformManipulator.s_MouseDownState != null)
 			{
-				return;
-			}
-			TransformManipulator.SetLocalHandleOffsetScaleDelta(scaleDelta, pivotRotation);
-			for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
-			{
-				TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
-				Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Resize");
-			}
-			for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
-			{
-				TransformManipulator.s_MouseDownState[j].SetScaleDelta(scaleDelta, pivotPosition, pivotRotation, true);
+				TransformManipulator.SetLocalHandleOffsetScaleDelta(scaleDelta, pivotRotation);
+				for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
+				{
+					TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
+					Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Resize");
+				}
+				for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
+				{
+					TransformManipulator.s_MouseDownState[j].SetScaleDelta(scaleDelta, pivotPosition, pivotRotation, true);
+				}
 			}
 		}
 
 		public static void SetPositionDelta(Vector3 positionDelta)
 		{
-			if (TransformManipulator.s_MouseDownState == null)
+			if (TransformManipulator.s_MouseDownState != null)
 			{
-				return;
-			}
-			for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
-			{
-				TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
-				Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Move");
-			}
-			for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
-			{
-				TransformManipulator.s_MouseDownState[j].SetPositionDelta(positionDelta);
+				for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
+				{
+					TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
+					Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Move");
+				}
+				for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
+				{
+					TransformManipulator.s_MouseDownState[j].SetPositionDelta(positionDelta);
+				}
 			}
 		}
 
 		public static void DebugAlignment(Quaternion targetRotation)
 		{
-			if (TransformManipulator.s_MouseDownState == null)
+			if (TransformManipulator.s_MouseDownState != null)
 			{
-				return;
-			}
-			for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
-			{
-				TransformManipulator.s_MouseDownState[i].DebugAlignment(targetRotation);
+				for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
+				{
+					TransformManipulator.s_MouseDownState[i].DebugAlignment(targetRotation);
+				}
 			}
 		}
 	}

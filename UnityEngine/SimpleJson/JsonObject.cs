@@ -7,7 +7,7 @@ using System.ComponentModel;
 namespace SimpleJson
 {
 	[GeneratedCode("simple-json", "1.0.0"), EditorBrowsable(EditorBrowsableState.Never)]
-	internal class JsonObject : IDictionary<string, object>, IEnumerable, IEnumerable<KeyValuePair<string, object>>, ICollection<KeyValuePair<string, object>>
+	internal class JsonObject : IDictionary<string, object>, ICollection<KeyValuePair<string, object>>, IEnumerable<KeyValuePair<string, object>>, IEnumerable
 	{
 		private readonly Dictionary<string, object> _members;
 
@@ -73,11 +73,6 @@ namespace SimpleJson
 			this._members = new Dictionary<string, object>(comparer);
 		}
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return this._members.GetEnumerator();
-		}
-
 		internal static object GetAtIndex(IDictionary<string, object> obj, int index)
 		{
 			if (obj == null)
@@ -89,14 +84,17 @@ namespace SimpleJson
 				throw new ArgumentOutOfRangeException("index");
 			}
 			int num = 0;
+			object result;
 			foreach (KeyValuePair<string, object> current in obj)
 			{
 				if (num++ == index)
 				{
-					return current.Value;
+					result = current.Value;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public void Add(string key, object value)
@@ -157,6 +155,11 @@ namespace SimpleJson
 		}
 
 		public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+		{
+			return this._members.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return this._members.GetEnumerator();
 		}

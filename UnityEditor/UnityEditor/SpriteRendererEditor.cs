@@ -114,43 +114,54 @@ namespace UnityEditor
 
 		private bool IsMaterialTextureAtlasConflict()
 		{
-			Material sharedMaterial = (this.target as SpriteRenderer).sharedMaterial;
+			Material sharedMaterial = (base.target as SpriteRenderer).sharedMaterial;
+			bool result;
 			if (sharedMaterial == null)
 			{
-				return false;
+				result = false;
 			}
-			string tag = sharedMaterial.GetTag("CanUseSpriteAtlas", false);
-			if (tag.ToLower() == "false")
+			else
 			{
-				Sprite assetObject = this.m_Sprite.objectReferenceValue as Sprite;
-				TextureImporter textureImporter = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(assetObject)) as TextureImporter;
-				if (textureImporter != null && textureImporter.spritePackingTag != null && textureImporter.spritePackingTag.Length > 0)
+				string tag = sharedMaterial.GetTag("CanUseSpriteAtlas", false);
+				if (tag.ToLower() == "false")
 				{
-					return true;
+					Sprite assetObject = this.m_Sprite.objectReferenceValue as Sprite;
+					TextureImporter textureImporter = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(assetObject)) as TextureImporter;
+					if (textureImporter != null && textureImporter.spritePackingTag != null && textureImporter.spritePackingTag.Length > 0)
+					{
+						result = true;
+						return result;
+					}
 				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
 
 		private bool DoesMaterialHaveSpriteTexture(out bool tiled)
 		{
 			tiled = false;
-			Material sharedMaterial = (this.target as SpriteRenderer).sharedMaterial;
+			Material sharedMaterial = (base.target as SpriteRenderer).sharedMaterial;
+			bool result;
 			if (sharedMaterial == null)
 			{
-				return true;
+				result = true;
 			}
-			bool flag = sharedMaterial.HasProperty("_MainTex");
-			if (flag)
+			else
 			{
-				Vector2 textureOffset = sharedMaterial.GetTextureOffset("_MainTex");
-				Vector2 textureScale = sharedMaterial.GetTextureScale("_MainTex");
-				if (textureOffset.x != 0f || textureOffset.y != 0f || textureScale.x != 1f || textureScale.y != 1f)
+				bool flag = sharedMaterial.HasProperty("_MainTex");
+				if (flag)
 				{
-					tiled = true;
+					Vector2 textureOffset = sharedMaterial.GetTextureOffset("_MainTex");
+					Vector2 textureScale = sharedMaterial.GetTextureScale("_MainTex");
+					if (textureOffset.x != 0f || textureOffset.y != 0f || textureScale.x != 1f || textureScale.y != 1f)
+					{
+						tiled = true;
+					}
 				}
+				result = sharedMaterial.HasProperty("_MainTex");
 			}
-			return sharedMaterial.HasProperty("_MainTex");
+			return result;
 		}
 
 		private static void ShowError(string error)

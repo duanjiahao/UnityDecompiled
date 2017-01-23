@@ -63,15 +63,20 @@ namespace UnityEditor
 
 		public void Load()
 		{
-			if (this.m_Loaded)
+			if (!this.m_Loaded)
 			{
-				return;
+				this.m_Loaded = true;
+				this.m_event = Event.KeyboardEvent(this.m_Shortcut);
+				PrefKey prefKey = Settings.Get<PrefKey>(this.m_name, this);
+				this.m_name = prefKey.Name;
+				this.m_event = prefKey.KeyboardEvent;
 			}
-			this.m_Loaded = true;
-			this.m_event = Event.KeyboardEvent(this.m_Shortcut);
-			PrefKey prefKey = Settings.Get<PrefKey>(this.m_name, this);
-			this.m_name = prefKey.Name;
-			this.m_event = prefKey.KeyboardEvent;
+		}
+
+		public static implicit operator Event(PrefKey pkey)
+		{
+			pkey.Load();
+			return pkey.m_event;
 		}
 
 		public string ToUniqueString()
@@ -81,10 +86,10 @@ namespace UnityEditor
 			{
 				this.m_name,
 				";",
-				(!this.m_event.alt) ? string.Empty : "&",
-				(!this.m_event.command) ? string.Empty : "%",
-				(!this.m_event.shift) ? string.Empty : "#",
-				(!this.m_event.control) ? string.Empty : "^",
+				(!this.m_event.alt) ? "" : "&",
+				(!this.m_event.command) ? "" : "%",
+				(!this.m_event.shift) ? "" : "#",
+				(!this.m_event.control) ? "" : "^",
 				this.m_event.keyCode
 			});
 		}
@@ -96,22 +101,18 @@ namespace UnityEditor
 			if (num < 0)
 			{
 				Debug.LogError("Malformed string in Keyboard preferences");
-				return;
 			}
-			this.m_name = s.Substring(0, num);
-			this.m_event = Event.KeyboardEvent(s.Substring(num + 1));
+			else
+			{
+				this.m_name = s.Substring(0, num);
+				this.m_event = Event.KeyboardEvent(s.Substring(num + 1));
+			}
 		}
 
 		internal void ResetToDefault()
 		{
 			this.Load();
 			this.m_event = Event.KeyboardEvent(this.m_DefaultShortcut);
-		}
-
-		public static implicit operator Event(PrefKey pkey)
-		{
-			pkey.Load();
-			return pkey.m_event;
 		}
 	}
 }

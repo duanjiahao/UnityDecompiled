@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -92,7 +93,7 @@ namespace UnityEditor
 
 			public List<AvatarAutoMapper.BoneMatch> children = new List<AvatarAutoMapper.BoneMatch>();
 
-			public bool doMap;
+			public bool doMap = false;
 
 			public AvatarAutoMapper.BoneMappingItem item;
 
@@ -134,11 +135,16 @@ namespace UnityEditor
 
 			public int CompareTo(AvatarAutoMapper.BoneMatch other)
 			{
+				int result;
 				if (other == null)
 				{
-					return 1;
+					result = 1;
 				}
-				return other.totalSiblingScore.CompareTo(this.totalSiblingScore);
+				else
+				{
+					result = other.totalSiblingScore.CompareTo(this.totalSiblingScore);
+				}
+				return result;
 			}
 		}
 
@@ -154,10 +160,6 @@ namespace UnityEditor
 				this.level = level;
 			}
 		}
-
-		private const string kLeftMatch = "(^|.*[ \\.:_-])[lL]($|[ \\.:_-].*)";
-
-		private const string kRightMatch = "(^|.*[ \\.:_-])[rR]($|[ \\.:_-].*)";
 
 		private static bool kDebug = false;
 
@@ -368,11 +370,11 @@ namespace UnityEditor
 
 		private Dictionary<Transform, bool> m_ValidBones;
 
-		private bool m_TreatDummyBonesAsReal;
+		private bool m_TreatDummyBonesAsReal = false;
 
 		private Quaternion m_Orientation;
 
-		private int m_MappingIndexOffset;
+		private int m_MappingIndexOffset = 0;
 
 		private AvatarAutoMapper.BoneMappingItem[] m_MappingData;
 
@@ -381,6 +383,10 @@ namespace UnityEditor
 		private Dictionary<string, int> m_BoneHasBadKeywordDict;
 
 		private Dictionary<int, AvatarAutoMapper.BoneMatch> m_BoneMatchDict;
+
+		private const string kLeftMatch = "(^|.*[ \\.:_-])[lL]($|[ \\.:_-].*)";
+
+		private const string kRightMatch = "(^|.*[ \\.:_-])[rR]($|[ \\.:_-].*)";
 
 		public AvatarAutoMapper(Dictionary<Transform, bool> validBones)
 		{
@@ -392,51 +398,55 @@ namespace UnityEditor
 
 		private static int GetLeftBoneIndexFromRight(int rightIndex)
 		{
+			int result;
 			if (rightIndex < 0)
 			{
-				return rightIndex;
+				result = rightIndex;
 			}
-			if (rightIndex < 54)
+			else if (rightIndex < 54)
 			{
 				string text = Enum.GetName(typeof(HumanBodyBones), rightIndex);
 				text = text.Replace("Right", "Left");
-				return (int)Enum.Parse(typeof(HumanBodyBones), text);
+				result = (int)((HumanBodyBones)Enum.Parse(typeof(HumanBodyBones), text));
 			}
-			return rightIndex + 24 - 39;
+			else
+			{
+				result = rightIndex + 24 - 39;
+			}
+			return result;
 		}
 
 		public static void InitGlobalMappingData()
 		{
-			if (AvatarAutoMapper.s_DidPerformInit)
+			if (!AvatarAutoMapper.s_DidPerformInit)
 			{
-				return;
-			}
-			List<AvatarAutoMapper.BoneMappingItem> list = new List<AvatarAutoMapper.BoneMappingItem>(AvatarAutoMapper.s_MappingDataBody);
-			int count = list.Count;
-			for (int i = 0; i < count; i++)
-			{
-				AvatarAutoMapper.BoneMappingItem boneMappingItem = list[i];
-				if (boneMappingItem.side == AvatarAutoMapper.Side.Right)
+				List<AvatarAutoMapper.BoneMappingItem> list = new List<AvatarAutoMapper.BoneMappingItem>(AvatarAutoMapper.s_MappingDataBody);
+				int count = list.Count;
+				for (int i = 0; i < count; i++)
 				{
-					int leftBoneIndexFromRight = AvatarAutoMapper.GetLeftBoneIndexFromRight(boneMappingItem.bone);
-					int leftBoneIndexFromRight2 = AvatarAutoMapper.GetLeftBoneIndexFromRight(boneMappingItem.parent);
-					list.Add(new AvatarAutoMapper.BoneMappingItem(leftBoneIndexFromRight2, leftBoneIndexFromRight, boneMappingItem.minStep, boneMappingItem.maxStep, boneMappingItem.lengthRatio, new Vector3(-boneMappingItem.dir.x, boneMappingItem.dir.y, boneMappingItem.dir.z), AvatarAutoMapper.Side.Left, boneMappingItem.optional, boneMappingItem.alwaysInclude, boneMappingItem.keywords));
+					AvatarAutoMapper.BoneMappingItem boneMappingItem = list[i];
+					if (boneMappingItem.side == AvatarAutoMapper.Side.Right)
+					{
+						int leftBoneIndexFromRight = AvatarAutoMapper.GetLeftBoneIndexFromRight(boneMappingItem.bone);
+						int leftBoneIndexFromRight2 = AvatarAutoMapper.GetLeftBoneIndexFromRight(boneMappingItem.parent);
+						list.Add(new AvatarAutoMapper.BoneMappingItem(leftBoneIndexFromRight2, leftBoneIndexFromRight, boneMappingItem.minStep, boneMappingItem.maxStep, boneMappingItem.lengthRatio, new Vector3(-boneMappingItem.dir.x, boneMappingItem.dir.y, boneMappingItem.dir.z), AvatarAutoMapper.Side.Left, boneMappingItem.optional, boneMappingItem.alwaysInclude, boneMappingItem.keywords));
+					}
 				}
+				AvatarAutoMapper.s_MappingDataBody = list.ToArray();
+				for (int j = 0; j < AvatarAutoMapper.s_MappingDataBody.Length; j++)
+				{
+					AvatarAutoMapper.s_MappingDataBody[j].GetChildren(AvatarAutoMapper.s_MappingDataBody);
+				}
+				for (int k = 0; k < AvatarAutoMapper.s_LeftMappingDataHand.Length; k++)
+				{
+					AvatarAutoMapper.s_LeftMappingDataHand[k].GetChildren(AvatarAutoMapper.s_LeftMappingDataHand);
+				}
+				for (int l = 0; l < AvatarAutoMapper.s_RightMappingDataHand.Length; l++)
+				{
+					AvatarAutoMapper.s_RightMappingDataHand[l].GetChildren(AvatarAutoMapper.s_RightMappingDataHand);
+				}
+				AvatarAutoMapper.s_DidPerformInit = true;
 			}
-			AvatarAutoMapper.s_MappingDataBody = list.ToArray();
-			for (int j = 0; j < AvatarAutoMapper.s_MappingDataBody.Length; j++)
-			{
-				AvatarAutoMapper.s_MappingDataBody[j].GetChildren(AvatarAutoMapper.s_MappingDataBody);
-			}
-			for (int k = 0; k < AvatarAutoMapper.s_LeftMappingDataHand.Length; k++)
-			{
-				AvatarAutoMapper.s_LeftMappingDataHand[k].GetChildren(AvatarAutoMapper.s_LeftMappingDataHand);
-			}
-			for (int l = 0; l < AvatarAutoMapper.s_RightMappingDataHand.Length; l++)
-			{
-				AvatarAutoMapper.s_RightMappingDataHand[l].GetChildren(AvatarAutoMapper.s_RightMappingDataHand);
-			}
-			AvatarAutoMapper.s_DidPerformInit = true;
 		}
 
 		public static Dictionary<int, Transform> MapBones(Transform root, Dictionary<Transform, bool> validBones)
@@ -570,63 +580,76 @@ namespace UnityEditor
 		private int BoneHasBadKeyword(Transform bone, params string[] keywords)
 		{
 			string key = bone.GetInstanceID() + ":" + string.Concat(keywords);
+			int result;
 			if (this.m_BoneHasBadKeywordDict.ContainsKey(key))
 			{
-				return this.m_BoneHasBadKeywordDict[key];
+				result = this.m_BoneHasBadKeywordDict[key];
 			}
-			int num = 0;
-			Transform parent = bone.parent;
-			while (parent.parent != null && this.m_ValidBones.ContainsKey(parent) && !this.m_ValidBones[parent])
+			else
 			{
-				parent = parent.parent;
-			}
-			string text = this.GetStrippedAndNiceBoneName(parent).ToLower();
-			for (int i = 0; i < keywords.Length; i++)
-			{
-				string text2 = keywords[i];
-				if (text2[0] != '!' && text.Contains(text2))
+				int num = 0;
+				Transform parent = bone.parent;
+				while (parent.parent != null && this.m_ValidBones.ContainsKey(parent) && !this.m_ValidBones[parent])
 				{
-					num = -20;
-					this.m_BoneHasBadKeywordDict[key] = num;
-					return num;
+					parent = parent.parent;
 				}
-			}
-			text = this.GetStrippedAndNiceBoneName(bone).ToLower();
-			for (int j = 0; j < keywords.Length; j++)
-			{
-				string text3 = keywords[j];
-				if (text3[0] == '!' && text.Contains(text3.Substring(1)))
+				string text = this.GetStrippedAndNiceBoneName(parent).ToLower();
+				for (int i = 0; i < keywords.Length; i++)
 				{
-					num = -1000;
-					this.m_BoneHasBadKeywordDict[key] = num;
-					return num;
+					string text2 = keywords[i];
+					if (text2[0] != '!' && text.Contains(text2))
+					{
+						num = -20;
+						this.m_BoneHasBadKeywordDict[key] = num;
+						result = num;
+						return result;
+					}
 				}
+				text = this.GetStrippedAndNiceBoneName(bone).ToLower();
+				for (int j = 0; j < keywords.Length; j++)
+				{
+					string text3 = keywords[j];
+					if (text3[0] == '!' && text.Contains(text3.Substring(1)))
+					{
+						num = -1000;
+						this.m_BoneHasBadKeywordDict[key] = num;
+						result = num;
+						return result;
+					}
+				}
+				this.m_BoneHasBadKeywordDict[key] = num;
+				result = num;
 			}
-			this.m_BoneHasBadKeywordDict[key] = num;
-			return num;
+			return result;
 		}
 
 		private int BoneHasKeyword(Transform bone, params string[] keywords)
 		{
 			string key = bone.GetInstanceID() + ":" + string.Concat(keywords);
+			int result;
 			if (this.m_BoneHasKeywordDict.ContainsKey(key))
 			{
-				return this.m_BoneHasKeywordDict[key];
+				result = this.m_BoneHasKeywordDict[key];
 			}
-			int num = 0;
-			string text = this.GetStrippedAndNiceBoneName(bone).ToLower();
-			for (int i = 0; i < keywords.Length; i++)
+			else
 			{
-				string text2 = keywords[i];
-				if (text2[0] != '!' && text.Contains(text2))
+				int num = 0;
+				string text = this.GetStrippedAndNiceBoneName(bone).ToLower();
+				for (int i = 0; i < keywords.Length; i++)
 				{
-					num = 20;
-					this.m_BoneHasKeywordDict[key] = num;
-					return num;
+					string text2 = keywords[i];
+					if (text2[0] != '!' && text.Contains(text2))
+					{
+						num = 20;
+						this.m_BoneHasKeywordDict[key] = num;
+						result = num;
+						return result;
+					}
 				}
+				this.m_BoneHasKeywordDict[key] = num;
+				result = num;
 			}
-			this.m_BoneHasKeywordDict[key] = num;
-			return num;
+			return result;
 		}
 
 		private bool MatchesSideKeywords(string boneName, bool left)
@@ -637,20 +660,28 @@ namespace UnityEditor
 		private int GetBoneSideMatchPoints(AvatarAutoMapper.BoneMatch match)
 		{
 			string name = match.bone.name;
+			int result;
 			if (match.item.side == AvatarAutoMapper.Side.None && (this.MatchesSideKeywords(name, false) || this.MatchesSideKeywords(name, true)))
 			{
-				return -1000;
+				result = -1000;
 			}
-			bool flag = match.item.side == AvatarAutoMapper.Side.Left;
-			if (this.MatchesSideKeywords(name, flag))
+			else
 			{
-				return 15;
+				bool flag = match.item.side == AvatarAutoMapper.Side.Left;
+				if (this.MatchesSideKeywords(name, flag))
+				{
+					result = 15;
+				}
+				else if (this.MatchesSideKeywords(name, !flag))
+				{
+					result = -1000;
+				}
+				else
+				{
+					result = 0;
+				}
 			}
-			if (this.MatchesSideKeywords(name, !flag))
-			{
-				return -1000;
-			}
-			return 0;
+			return result;
 		}
 
 		private int GetMatchKey(AvatarAutoMapper.BoneMatch parentMatch, Transform t, AvatarAutoMapper.BoneMappingItem goalItem)
@@ -698,50 +729,76 @@ namespace UnityEditor
 				}
 				if (queuedBone.level < goalItem.maxStep)
 				{
-					foreach (Transform transform in bone)
+					IEnumerator enumerator = bone.GetEnumerator();
+					try
 					{
-						if (this.m_ValidBones == null || this.m_ValidBones.ContainsKey(transform))
+						while (enumerator.MoveNext())
 						{
-							if (!this.m_TreatDummyBonesAsReal && this.m_ValidBones != null && !this.m_ValidBones[transform])
+							Transform transform = (Transform)enumerator.Current;
+							if (this.m_ValidBones == null || this.m_ValidBones.ContainsKey(transform))
 							{
-								queue.Enqueue(new AvatarAutoMapper.QueuedBone(transform, queuedBone.level));
+								if (!this.m_TreatDummyBonesAsReal && this.m_ValidBones != null && !this.m_ValidBones[transform])
+								{
+									queue.Enqueue(new AvatarAutoMapper.QueuedBone(transform, queuedBone.level));
+								}
+								else
+								{
+									queue.Enqueue(new AvatarAutoMapper.QueuedBone(transform, queuedBone.level + 1));
+								}
 							}
-							else
-							{
-								queue.Enqueue(new AvatarAutoMapper.QueuedBone(transform, queuedBone.level + 1));
-							}
+						}
+					}
+					finally
+					{
+						IDisposable disposable;
+						if ((disposable = (enumerator as IDisposable)) != null)
+						{
+							disposable.Dispose();
 						}
 					}
 				}
 			}
+			List<AvatarAutoMapper.BoneMatch> result;
 			if (list.Count == 0)
 			{
-				return null;
+				result = null;
 			}
-			list.Sort();
-			if (list[0].score <= 0f)
+			else
 			{
-				return null;
+				list.Sort();
+				if (list[0].score <= 0f)
+				{
+					result = null;
+				}
+				else
+				{
+					if (AvatarAutoMapper.kDebug && confirmedChoice)
+					{
+						this.DebugMatchChoice(list);
+					}
+					while (list.Count > 3)
+					{
+						list.RemoveAt(list.Count - 1);
+					}
+					list.TrimExcess();
+					result = list;
+				}
 			}
-			if (AvatarAutoMapper.kDebug && confirmedChoice)
-			{
-				this.DebugMatchChoice(list);
-			}
-			while (list.Count > 3)
-			{
-				list.RemoveAt(list.Count - 1);
-			}
-			list.TrimExcess();
-			return list;
+			return result;
 		}
 
 		private string GetNameOfBone(int boneIndex)
 		{
+			string result;
 			if (boneIndex < 0)
 			{
-				return string.Empty + boneIndex;
+				result = "" + boneIndex;
 			}
-			return string.Empty + (HumanBodyBones)boneIndex;
+			else
+			{
+				result = "" + (HumanBodyBones)boneIndex;
+			}
+			return result;
 		}
 
 		private string GetMatchString(AvatarAutoMapper.BoneMatch match)
@@ -791,33 +848,43 @@ namespace UnityEditor
 		private AvatarAutoMapper.BoneMappingItem GetBoneMappingItem(int bone)
 		{
 			AvatarAutoMapper.BoneMappingItem[] mappingData = this.m_MappingData;
+			AvatarAutoMapper.BoneMappingItem result;
 			for (int i = 0; i < mappingData.Length; i++)
 			{
-				AvatarAutoMapper.BoneMappingItem result = mappingData[i];
-				if (result.bone == bone)
+				AvatarAutoMapper.BoneMappingItem boneMappingItem = mappingData[i];
+				if (boneMappingItem.bone == bone)
 				{
+					result = boneMappingItem;
 					return result;
 				}
 			}
-			return default(AvatarAutoMapper.BoneMappingItem);
+			result = default(AvatarAutoMapper.BoneMappingItem);
+			return result;
 		}
 
 		private bool IsParentOfOther(Transform knownCommonParent, Transform potentialParent, Transform potentialChild)
 		{
 			Transform transform = potentialChild;
+			bool result;
 			while (transform != knownCommonParent)
 			{
 				if (transform == potentialParent)
 				{
-					return true;
+					result = true;
 				}
-				if (transform == knownCommonParent)
+				else
 				{
-					return false;
+					if (!(transform == knownCommonParent))
+					{
+						transform = transform.parent;
+						continue;
+					}
+					result = false;
 				}
-				transform = transform.parent;
+				return result;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private bool ShareTransformPath(Transform commonParent, Transform childA, Transform childB)
@@ -828,22 +895,27 @@ namespace UnityEditor
 		private List<AvatarAutoMapper.BoneMatch> GetBestChildMatches(AvatarAutoMapper.BoneMatch parentMatch, List<List<AvatarAutoMapper.BoneMatch>> childMatchesLists)
 		{
 			List<AvatarAutoMapper.BoneMatch> list = new List<AvatarAutoMapper.BoneMatch>();
+			List<AvatarAutoMapper.BoneMatch> result;
 			if (childMatchesLists.Count == 1)
 			{
 				list.Add(childMatchesLists[0][0]);
-				return list;
+				result = list;
 			}
-			int[] array = new int[childMatchesLists.Count];
-			float num;
-			array = this.GetBestChildMatchChoices(parentMatch, childMatchesLists, array, out num);
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				if (array[i] >= 0)
+				int[] array = new int[childMatchesLists.Count];
+				float num;
+				array = this.GetBestChildMatchChoices(parentMatch, childMatchesLists, array, out num);
+				for (int i = 0; i < array.Length; i++)
 				{
-					list.Add(childMatchesLists[i][array[i]]);
+					if (array[i] >= 0)
+					{
+						list.Add(childMatchesLists[i][array[i]]);
+					}
 				}
+				result = list;
 			}
-			return list;
+			return result;
 		}
 
 		private int[] GetBestChildMatchChoices(AvatarAutoMapper.BoneMatch parentMatch, List<List<AvatarAutoMapper.BoneMatch>> childMatchesLists, int[] choices, out float score)
@@ -871,6 +943,7 @@ namespace UnityEditor
 					}
 				}
 			}
+			int[] result;
 			if (list.Count <= 1)
 			{
 				score = 0f;
@@ -881,59 +954,63 @@ namespace UnityEditor
 						score += childMatchesLists[k][choices[k]].totalSiblingScore;
 					}
 				}
-				return choices;
+				result = choices;
 			}
-			float num = 0f;
-			int[] result = choices;
-			for (int l = 0; l < list.Count; l++)
+			else
 			{
-				int[] array = new int[choices.Length];
-				Array.Copy(choices, array, choices.Length);
-				for (int m = 0; m < list.Count; m++)
+				float num = 0f;
+				int[] array = choices;
+				for (int l = 0; l < list.Count; l++)
 				{
-					if (l != m)
+					int[] array2 = new int[choices.Length];
+					Array.Copy(choices, array2, choices.Length);
+					for (int m = 0; m < list.Count; m++)
 					{
-						if (list[m] >= array.Length)
+						if (l != m)
 						{
-							Debug.LogError(string.Concat(new object[]
+							if (list[m] >= array2.Length)
 							{
-								"sharedIndices[j] (",
-								list[m],
-								") >= altChoices.Length (",
-								array.Length,
-								")"
-							}));
-						}
-						if (list[m] >= childMatchesLists.Count)
-						{
-							Debug.LogError(string.Concat(new object[]
+								Debug.LogError(string.Concat(new object[]
+								{
+									"sharedIndices[j] (",
+									list[m],
+									") >= altChoices.Length (",
+									array2.Length,
+									")"
+								}));
+							}
+							if (list[m] >= childMatchesLists.Count)
 							{
-								"sharedIndices[j] (",
-								list[m],
-								") >= childMatchesLists.Count (",
-								childMatchesLists.Count,
-								")"
-							}));
-						}
-						if (array[list[m]] < childMatchesLists[list[m]].Count - 1)
-						{
-							array[list[m]]++;
-						}
-						else
-						{
-							array[list[m]] = -1;
+								Debug.LogError(string.Concat(new object[]
+								{
+									"sharedIndices[j] (",
+									list[m],
+									") >= childMatchesLists.Count (",
+									childMatchesLists.Count,
+									")"
+								}));
+							}
+							if (array2[list[m]] < childMatchesLists[list[m]].Count - 1)
+							{
+								array2[list[m]]++;
+							}
+							else
+							{
+								array2[list[m]] = -1;
+							}
 						}
 					}
+					float num2;
+					array2 = this.GetBestChildMatchChoices(parentMatch, childMatchesLists, array2, out num2);
+					if (num2 > num)
+					{
+						num = num2;
+						array = array2;
+					}
 				}
-				float num2;
-				array = this.GetBestChildMatchChoices(parentMatch, childMatchesLists, array, out num2);
-				if (num2 > num)
-				{
-					num = num2;
-					result = array;
-				}
+				score = num;
+				result = array;
 			}
-			score = num;
 			return result;
 		}
 
@@ -944,7 +1021,8 @@ namespace UnityEditor
 			List<List<AvatarAutoMapper.BoneMatch>> list = new List<List<AvatarAutoMapper.BoneMatch>>();
 			int num = 0;
 			int[] children = match.item.GetChildren(this.m_MappingData);
-			for (int i = 0; i < children.Length; i++)
+			int i = 0;
+			while (i < children.Length)
 			{
 				int num2 = children[i];
 				AvatarAutoMapper.BoneMappingItem goalItem = this.m_MappingData[num2];
@@ -957,6 +1035,10 @@ namespace UnityEditor
 						list.Add(list2);
 					}
 				}
+				IL_9D:
+				i++;
+				continue;
+				goto IL_9D;
 			}
 			bool flag = match.bone == match.humanBoneParent.bone;
 			int num3 = 0;
@@ -1148,34 +1230,33 @@ namespace UnityEditor
 					" matched bad keywords"
 				}));
 			}
-			if (num < 0)
+			if (num >= 0)
 			{
-				return;
-			}
-			int num2 = this.BoneHasKeyword(match.bone, match.item.keywords);
-			match.score += (float)num2;
-			if (AvatarAutoMapper.kDebug && num2 != 0)
-			{
-				match.debugTracker.Add(string.Concat(new object[]
-				{
-					num2,
-					": ",
-					this.GetMatchString(match),
-					" matched keywords"
-				}));
-			}
-			if (match.item.keywords.Length == 0 && match.item.alwaysInclude)
-			{
-				match.score += 1f;
-				if (AvatarAutoMapper.kDebug)
+				int num2 = this.BoneHasKeyword(match.bone, match.item.keywords);
+				match.score += (float)num2;
+				if (AvatarAutoMapper.kDebug && num2 != 0)
 				{
 					match.debugTracker.Add(string.Concat(new object[]
 					{
-						1,
+						num2,
 						": ",
 						this.GetMatchString(match),
-						" always-include point"
+						" matched keywords"
 					}));
+				}
+				if (match.item.keywords.Length == 0 && match.item.alwaysInclude)
+				{
+					match.score += 1f;
+					if (AvatarAutoMapper.kDebug)
+					{
+						match.debugTracker.Add(string.Concat(new object[]
+						{
+							1,
+							": ",
+							this.GetMatchString(match),
+							" always-include point"
+						}));
+					}
 				}
 			}
 		}

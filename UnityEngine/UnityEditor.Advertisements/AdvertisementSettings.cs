@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using UnityEngine.Advertisements;
+using UnityEngine.Connect;
 
 namespace UnityEditor.Advertisements
 {
@@ -10,11 +10,11 @@ namespace UnityEditor.Advertisements
 		{
 			get
 			{
-				return UnityAdsManager.enabled;
+				return UnityAdsSettings.enabled;
 			}
 			set
 			{
-				UnityAdsManager.enabled = value;
+				UnityAdsSettings.enabled = value;
 			}
 		}
 
@@ -22,11 +22,11 @@ namespace UnityEditor.Advertisements
 		{
 			get
 			{
-				return UnityAdsManager.initializeOnStartup;
+				return UnityAdsSettings.initializeOnStartup;
 			}
 			set
 			{
-				UnityAdsManager.initializeOnStartup = value;
+				UnityAdsSettings.initializeOnStartup = value;
 			}
 		}
 
@@ -34,32 +34,32 @@ namespace UnityEditor.Advertisements
 		{
 			get
 			{
-				return UnityAdsManager.testMode;
+				return UnityAdsSettings.testMode;
 			}
 			set
 			{
-				UnityAdsManager.testMode = value;
+				UnityAdsSettings.testMode = value;
 			}
 		}
 
 		public static bool IsPlatformEnabled(RuntimePlatform platform)
 		{
-			return UnityAdsManager.IsPlatformEnabled(platform);
+			return UnityAdsSettings.IsPlatformEnabled(platform);
 		}
 
 		public static void SetPlatformEnabled(RuntimePlatform platform, bool value)
 		{
-			UnityAdsManager.SetPlatformEnabled(platform, value);
+			UnityAdsSettings.SetPlatformEnabled(platform, value);
 		}
 
 		public static string GetGameId(RuntimePlatform platform)
 		{
-			return UnityAdsManager.GetGameId(platform);
+			return UnityAdsSettings.GetGameId(platform);
 		}
 
 		public static void SetGameId(RuntimePlatform platform, string gameId)
 		{
-			UnityAdsManager.SetGameId(platform, gameId);
+			UnityAdsSettings.SetGameId(platform, gameId);
 		}
 	}
 }

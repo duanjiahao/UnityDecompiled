@@ -46,17 +46,22 @@ namespace UnityEditorInternal
 
 		public static bool Intersection(Rect r1, Rect r2, out Rect intersection)
 		{
+			bool result;
 			if (!r1.Overlaps(r2) && !r2.Overlaps(r1))
 			{
 				intersection = new Rect(0f, 0f, 0f, 0f);
-				return false;
+				result = false;
 			}
-			float num = Mathf.Max(r1.xMin, r2.xMin);
-			float num2 = Mathf.Max(r1.yMin, r2.yMin);
-			float num3 = Mathf.Min(r1.xMax, r2.xMax);
-			float num4 = Mathf.Min(r1.yMax, r2.yMax);
-			intersection = new Rect(num, num2, num3 - num, num4 - num2);
-			return true;
+			else
+			{
+				float num = Mathf.Max(r1.xMin, r2.xMin);
+				float num2 = Mathf.Max(r1.yMin, r2.yMin);
+				float num3 = Mathf.Min(r1.xMax, r2.xMax);
+				float num4 = Mathf.Min(r1.yMax, r2.yMax);
+				intersection = new Rect(num, num2, num3 - num, num4 - num2);
+				result = true;
+			}
+			return result;
 		}
 
 		public static bool IntersectsSegment(Rect rect, Vector2 p1, Vector2 p2)
@@ -71,35 +76,40 @@ namespace UnityEditorInternal
 			{
 				num = rect.xMin;
 			}
+			bool result;
 			if (num > num2)
 			{
-				return false;
+				result = false;
 			}
-			float num3 = Mathf.Min(p1.y, p2.y);
-			float num4 = Mathf.Max(p1.y, p2.y);
-			float num5 = p2.x - p1.x;
-			if (Mathf.Abs(num5) > 1E-07f)
+			else
 			{
-				float num6 = (p2.y - p1.y) / num5;
-				float num7 = p1.y - num6 * p1.x;
-				num3 = num6 * num + num7;
-				num4 = num6 * num2 + num7;
+				float num3 = Mathf.Min(p1.y, p2.y);
+				float num4 = Mathf.Max(p1.y, p2.y);
+				float num5 = p2.x - p1.x;
+				if (Mathf.Abs(num5) > 1E-07f)
+				{
+					float num6 = (p2.y - p1.y) / num5;
+					float num7 = p1.y - num6 * p1.x;
+					num3 = num6 * num + num7;
+					num4 = num6 * num2 + num7;
+				}
+				if (num3 > num4)
+				{
+					float num8 = num4;
+					num4 = num3;
+					num3 = num8;
+				}
+				if (num4 > rect.yMax)
+				{
+					num4 = rect.yMax;
+				}
+				if (num3 < rect.yMin)
+				{
+					num3 = rect.yMin;
+				}
+				result = (num3 <= num4);
 			}
-			if (num3 > num4)
-			{
-				float num8 = num4;
-				num4 = num3;
-				num3 = num8;
-			}
-			if (num4 > rect.yMax)
-			{
-				num4 = rect.yMax;
-			}
-			if (num3 < rect.yMin)
-			{
-				num3 = rect.yMin;
-			}
-			return num3 <= num4;
+			return result;
 		}
 
 		public static Rect OffsetX(Rect r, float offsetX)

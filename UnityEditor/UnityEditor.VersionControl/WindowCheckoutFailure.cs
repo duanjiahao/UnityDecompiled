@@ -104,7 +104,7 @@ namespace UnityEditor.VersionControl
 			GUILayout.Label("Some files could not be checked out:", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			Rect screenRect = new Rect(6f, 40f, base.position.width - 12f, num);
 			GUILayout.BeginArea(screenRect);
-			GUILayout.Box(string.Empty, new GUILayoutOption[]
+			GUILayout.Box("", new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true),
 				GUILayout.ExpandHeight(true)
@@ -115,7 +115,7 @@ namespace UnityEditor.VersionControl
 			GUILayout.Label("The following files were successfully checked out:", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			Rect screenRect2 = new Rect(6f, 40f + num + 40f, base.position.width - 12f, num);
 			GUILayout.BeginArea(screenRect2);
-			GUILayout.Box(string.Empty, new GUILayoutOption[]
+			GUILayout.Box("", new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true),
 				GUILayout.ExpandHeight(true)

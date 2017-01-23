@@ -55,24 +55,24 @@ namespace UnityEngine.WSA
 
 		public SecondaryTileData(string id, string displayName)
 		{
-			this.arguments = string.Empty;
+			this.arguments = "";
 			this.background = new Color32(0, 0, 0, 0);
 			this.backgroundColorSet = false;
 			this.displayName = displayName;
 			this.foregroundText = TileForegroundText.Default;
-			this.lockScreenBadgeLogo = string.Empty;
+			this.lockScreenBadgeLogo = "";
 			this.lockScreenDisplayBadgeAndTileText = false;
-			this.phoneticName = string.Empty;
+			this.phoneticName = "";
 			this.roamingEnabled = true;
 			this.showNameOnSquare150x150Logo = true;
 			this.showNameOnSquare310x310Logo = false;
 			this.showNameOnWide310x150Logo = false;
-			this.square150x150Logo = string.Empty;
-			this.square30x30Logo = string.Empty;
-			this.square310x310Logo = string.Empty;
-			this.square70x70Logo = string.Empty;
+			this.square150x150Logo = "";
+			this.square30x30Logo = "";
+			this.square310x310Logo = "";
+			this.square70x70Logo = "";
 			this.tileId = id;
-			this.wide310x150Logo = string.Empty;
+			this.wide310x150Logo = "";
 		}
 	}
 }

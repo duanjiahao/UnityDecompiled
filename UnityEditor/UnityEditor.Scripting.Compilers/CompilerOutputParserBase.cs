@@ -9,7 +9,7 @@ namespace UnityEditor.Scripting.Compilers
 		protected static CompilerMessage CreateInternalCompilerErrorMessage(string[] compileroutput)
 		{
 			CompilerMessage result;
-			result.file = string.Empty;
+			result.file = "";
 			result.message = string.Join("\n", compileroutput);
 			result.type = CompilerMessageType.Error;
 			result.line = 0;
@@ -40,21 +40,37 @@ namespace UnityEditor.Scripting.Compilers
 			bool flag = false;
 			List<CompilerMessage> list = new List<CompilerMessage>();
 			Regex outputRegex = this.GetOutputRegex();
-			for (int i = 0; i < errorOutput.Length; i++)
+			Regex internalErrorOutputRegex = this.GetInternalErrorOutputRegex();
+			int i = 0;
+			while (i < errorOutput.Length)
 			{
 				string text = errorOutput[i];
 				string input = (text.Length <= 1000) ? text : text.Substring(0, 100);
 				Match match = outputRegex.Match(input);
 				if (match.Success)
 				{
-					CompilerMessage item = CompilerOutputParserBase.CreateCompilerMessageFromMatchedRegex(text, match, this.GetErrorIdentifier());
-					item.normalizedStatus = this.NormalizedStatusFor(match);
-					if (item.type == CompilerMessageType.Error)
-					{
-						flag = true;
-					}
-					list.Add(item);
+					goto IL_88;
 				}
+				if (internalErrorOutputRegex != null)
+				{
+					match = internalErrorOutputRegex.Match(input);
+				}
+				if (match.Success)
+				{
+					goto IL_88;
+				}
+				IL_BF:
+				i++;
+				continue;
+				IL_88:
+				CompilerMessage item = CompilerOutputParserBase.CreateCompilerMessageFromMatchedRegex(text, match, this.GetErrorIdentifier());
+				item.normalizedStatus = this.NormalizedStatusFor(match);
+				if (item.type == CompilerMessageType.Error)
+				{
+					flag = true;
+				}
+				list.Add(item);
+				goto IL_BF;
 			}
 			if (compilationHadFailure && !flag)
 			{
@@ -72,17 +88,51 @@ namespace UnityEditor.Scripting.Compilers
 
 		protected abstract Regex GetOutputRegex();
 
-		protected static NormalizedCompilerStatus TryNormalizeCompilerStatus(Match match, string memberNotFoundError, Regex missingMemberRegex)
+		protected virtual Regex GetInternalErrorOutputRegex()
+		{
+			return null;
+		}
+
+		protected static NormalizedCompilerStatus TryNormalizeCompilerStatus(Match match, string idToCheck, Regex messageParser, Func<string, Regex, NormalizedCompilerStatus> normalizer)
 		{
 			string value = match.Groups["id"].Value;
-			NormalizedCompilerStatus result = default(NormalizedCompilerStatus);
-			if (value != memberNotFoundError)
+			NormalizedCompilerStatus normalizedCompilerStatus = default(NormalizedCompilerStatus);
+			NormalizedCompilerStatus result;
+			if (value != idToCheck)
 			{
-				return result;
+				result = normalizedCompilerStatus;
 			}
+			else
+			{
+				result = normalizer(match.Groups["message"].Value, messageParser);
+			}
+			return result;
+		}
+
+		protected static NormalizedCompilerStatus NormalizeMemberNotFoundError(string errorMsg, Regex messageParser)
+		{
+			NormalizedCompilerStatus result;
 			result.code = NormalizedCompilerStatusCode.MemberNotFound;
-			Match match2 = missingMemberRegex.Match(match.Groups["message"].Value);
-			result.details = match2.Groups["type_name"].Value + "%" + match2.Groups["member_name"].Value;
+			Match match = messageParser.Match(errorMsg);
+			result.details = match.Groups["type_name"].Value + "%" + match.Groups["member_name"].Value;
+			return result;
+		}
+
+		protected static NormalizedCompilerStatus NormalizeSimpleUnknownTypeOfNamespaceError(string errorMsg, Regex messageParser)
+		{
+			NormalizedCompilerStatus result;
+			result.code = NormalizedCompilerStatusCode.UnknownTypeOrNamespace;
+			Match match = messageParser.Match(errorMsg);
+			result.details = match.Groups["type_name"].Value;
+			return result;
+		}
+
+		protected static NormalizedCompilerStatus NormalizeUnknownTypeMemberOfNamespaceError(string errorMsg, Regex messageParser)
+		{
+			NormalizedCompilerStatus result;
+			result.code = NormalizedCompilerStatusCode.UnknownTypeOrNamespace;
+			Match match = messageParser.Match(errorMsg);
+			result.details = match.Groups["namespace"].Value + "." + match.Groups["type_name"].Value;
 			return result;
 		}
 	}

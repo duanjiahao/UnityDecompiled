@@ -25,6 +25,14 @@ namespace UnityEngine.Windows.Speech
 			{
 				throw new ArgumentException("At least one keyword must be specified.", "keywords");
 			}
+			int num = keywords.Length;
+			for (int i = 0; i < num; i++)
+			{
+				if (keywords[i] == null)
+				{
+					throw new ArgumentNullException(string.Format("Keyword at index {0} is null.", i));
+				}
+			}
 			this.Keywords = keywords;
 			this.m_Recognizer = base.CreateFromKeywords(keywords, minimumConfidence);
 		}

@@ -12,7 +12,6 @@ namespace UnityEngine.VR
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetLocalPosition(VRNode node, out Vector3 value);
 
@@ -23,11 +22,9 @@ namespace UnityEngine.VR
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetLocalRotation(VRNode node, out Quaternion value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Recenter();
 	}

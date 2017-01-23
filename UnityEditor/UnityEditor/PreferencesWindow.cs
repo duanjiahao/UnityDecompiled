@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor.Collaboration;
 using UnityEditor.Connect;
 using UnityEditor.Modules;
 using UnityEditor.VisualStudioIntegration;
+using UnityEditor.Web;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -33,6 +35,8 @@ namespace UnityEditor
 			public GUIStyle selected = "ServerUpdateChangesetOn";
 
 			public GUIStyle keysElement = "PreferencesKeysElement";
+
+			public GUIStyle warningIcon = "CN EntryWarn";
 
 			public GUIStyle sectionHeader = new GUIStyle(EditorStyles.largeLabel);
 
@@ -83,6 +87,8 @@ namespace UnityEditor
 			public static readonly GUIContent spriteMaxCacheSize = EditorGUIUtility.TextContent("Max Sprite Atlas Cache Size (GB)|The size of the Sprite Atlas Cache folder will be kept below this maximum value when possible. Change requires Editor restart");
 		}
 
+		private delegate void OnGUIDelegate();
+
 		private class Section
 		{
 			public GUIContent content;
@@ -128,14 +134,14 @@ namespace UnityEditor
 				this.str = s;
 			}
 
-			public override string ToString()
-			{
-				return this.str;
-			}
-
 			public static implicit operator string(PreferencesWindow.RefString s)
 			{
 				return s.str;
+			}
+
+			public override string ToString()
+			{
+				return this.str;
 			}
 		}
 
@@ -154,18 +160,6 @@ namespace UnityEditor
 				this.onChanged = onChanged;
 			}
 		}
-
-		private delegate void OnGUIDelegate();
-
-		private const int k_LangListMenuOffset = 2;
-
-		private const string kRecentScriptAppsKey = "RecentlyUsedScriptApp";
-
-		private const string kRecentImageAppsKey = "RecentlyUsedImageApp";
-
-		private const string m_ExpressNotSupportedMessage = "Unfortunately Visual Studio Express does not allow itself to be controlled by external applications. You can still use it by manually opening the Visual Studio project file, but Unity cannot automatically open files for you when you doubleclick them. \n(This does work with Visual Studio Pro)";
-
-		private const int kRecentAppsCount = 10;
 
 		private List<PreferencesWindow.Section> m_Sections;
 
@@ -195,21 +189,23 @@ namespace UnityEditor
 
 		private PreferencesWindow.GICacheSettings m_GICacheSettings;
 
-		private PreferencesWindow.RefString m_ScriptEditorPath = new PreferencesWindow.RefString(string.Empty);
+		private PreferencesWindow.RefString m_ScriptEditorPath = new PreferencesWindow.RefString("");
 
-		private string m_ScriptEditorArgs = string.Empty;
+		private string m_ScriptEditorArgs = "";
 
 		private bool m_ExternalEditorSupportsUnityProj;
 
-		private PreferencesWindow.RefString m_ImageAppPath = new PreferencesWindow.RefString(string.Empty);
+		private PreferencesWindow.RefString m_ImageAppPath = new PreferencesWindow.RefString("");
 
 		private int m_DiffToolIndex;
+
+		private const int k_LangListMenuOffset = 2;
 
 		private SystemLanguage m_SelectedLanguage = SystemLanguage.English;
 
 		private string[] m_EditorLanguageNames;
 
-		private bool m_AllowAlphaNumericHierarchy;
+		private bool m_AllowAlphaNumericHierarchy = false;
 
 		private string[] m_ScriptApps;
 
@@ -229,9 +225,17 @@ namespace UnityEditor
 
 		private Vector2 m_SectionScrollPos;
 
-		private PrefKey m_SelectedKey;
+		private PrefKey m_SelectedKey = null;
 
-		private SortedDictionary<string, List<KeyValuePair<string, PrefColor>>> s_CachedColors;
+		private const string kRecentScriptAppsKey = "RecentlyUsedScriptApp";
+
+		private const string kRecentImageAppsKey = "RecentlyUsedImageApp";
+
+		private const string m_ExpressNotSupportedMessage = "Unfortunately Visual Studio Express does not allow itself to be controlled by external applications. You can still use it by manually opening the Visual Studio project file, but Unity cannot automatically open files for you when you doubleclick them. \n(This does work with Visual Studio Pro)";
+
+		private const int kRecentAppsCount = 10;
+
+		private SortedDictionary<string, List<KeyValuePair<string, PrefColor>>> s_CachedColors = null;
 
 		private static Vector2 s_ColorScrollPos = Vector2.zero;
 
@@ -243,6 +247,10 @@ namespace UnityEditor
 
 		private static int kMaxSpriteCacheSizeInGigabytes = 200;
 
+		private bool m_ValidKeyChange = true;
+
+		private string m_InvalidKeyMessage = string.Empty;
+
 		private static int s_KeysControlHash = "KeysControlHash".GetHashCode();
 
 		private int selectedSectionIndex
@@ -253,6 +261,10 @@ namespace UnityEditor
 			}
 			set
 			{
+				if (this.m_SelectedSectionIndex != value)
+				{
+					this.m_ValidKeyChange = true;
+				}
 				this.m_SelectedSectionIndex = value;
 				if (this.m_SelectedSectionIndex >= this.m_Sections.Count)
 				{
@@ -360,9 +372,9 @@ namespace UnityEditor
 					PreferencesWindow.constants.selected.Draw(rect, false, false, false, false);
 				}
 				EditorGUI.BeginChangeCheck();
-				if (GUI.Toggle(rect, this.m_SelectedSectionIndex == i, section.content, PreferencesWindow.constants.sectionElement))
+				if (GUI.Toggle(rect, this.selectedSectionIndex == i, section.content, PreferencesWindow.constants.sectionElement))
 				{
-					this.m_SelectedSectionIndex = i;
+					this.selectedSectionIndex = i;
 				}
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -382,23 +394,22 @@ namespace UnityEditor
 
 		private void HandleKeys()
 		{
-			if (Event.current.type != EventType.KeyDown || GUIUtility.keyboardControl != 0)
+			if (Event.current.type == EventType.KeyDown && GUIUtility.keyboardControl == 0)
 			{
-				return;
-			}
-			KeyCode keyCode = Event.current.keyCode;
-			if (keyCode != KeyCode.UpArrow)
-			{
-				if (keyCode == KeyCode.DownArrow)
+				KeyCode keyCode = Event.current.keyCode;
+				if (keyCode != KeyCode.UpArrow)
 				{
-					this.selectedSectionIndex++;
+					if (keyCode == KeyCode.DownArrow)
+					{
+						this.selectedSectionIndex++;
+						Event.current.Use();
+					}
+				}
+				else
+				{
+					this.selectedSectionIndex--;
 					Event.current.Use();
 				}
-			}
-			else
-			{
-				this.selectedSectionIndex--;
-				Event.current.Use();
 			}
 		}
 
@@ -406,7 +417,7 @@ namespace UnityEditor
 		{
 			GUILayout.Space(10f);
 			this.FilePopup("External Script Editor", this.m_ScriptEditorPath, ref this.m_ScriptAppDisplayNames, ref this.m_ScriptApps, this.m_ScriptEditorPath, "internal", new Action(this.OnScriptEditorChanged));
-			if (!this.IsSelectedScriptEditorSpecial() && Application.platform != RuntimePlatform.OSXEditor)
+			if (!this.IsSelectedScriptEditorSpecial())
 			{
 				string scriptEditorArgs = this.m_ScriptEditorArgs;
 				this.m_ScriptEditorArgs = EditorGUILayout.TextField("External Script Editor Args", this.m_ScriptEditorArgs, new GUILayoutOption[0]);
@@ -426,10 +437,10 @@ namespace UnityEditor
 			{
 				GUILayout.Label("Changing this setting requires a restart to take effect.", EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
-			if (this.m_ScriptEditorPath.str.Contains("VCSExpress"))
+			if (this.GetSelectedScriptEditor() == InternalEditorUtility.ScriptEditor.VisualStudioExpress)
 			{
 				GUILayout.BeginHorizontal(EditorStyles.helpBox, new GUILayoutOption[0]);
-				GUILayout.Label(string.Empty, "CN EntryWarn", new GUILayoutOption[0]);
+				GUILayout.Label("", PreferencesWindow.constants.warningIcon, new GUILayoutOption[0]);
 				GUILayout.Label("Unfortunately Visual Studio Express does not allow itself to be controlled by external applications. You can still use it by manually opening the Visual Studio project file, but Unity cannot automatically open files for you when you doubleclick them. \n(This does work with Visual Studio Pro)", PreferencesWindow.constants.errorLabel, new GUILayoutOption[0]);
 				GUILayout.EndHorizontal();
 			}
@@ -443,7 +454,7 @@ namespace UnityEditor
 			if (this.m_noDiffToolsMessage != string.Empty)
 			{
 				GUILayout.BeginHorizontal(EditorStyles.helpBox, new GUILayoutOption[0]);
-				GUILayout.Label(string.Empty, "CN EntryWarn", new GUILayoutOption[0]);
+				GUILayout.Label("", PreferencesWindow.constants.warningIcon, new GUILayoutOption[0]);
 				GUILayout.Label(this.m_noDiffToolsMessage, PreferencesWindow.constants.errorLabel, new GUILayoutOption[0]);
 				GUILayout.EndHorizontal();
 			}
@@ -463,11 +474,12 @@ namespace UnityEditor
 		{
 			bool flag = false;
 			bool flag2 = false;
-			if (this.IsInternalMonoDevelop())
+			InternalEditorUtility.ScriptEditor selectedScriptEditor = this.GetSelectedScriptEditor();
+			if (selectedScriptEditor == InternalEditorUtility.ScriptEditor.Internal)
 			{
 				flag2 = true;
 			}
-			else if (this.IsExternalMonoDevelopOrXamarinStudio())
+			else if (selectedScriptEditor == InternalEditorUtility.ScriptEditor.MonoDevelop)
 			{
 				flag = true;
 				flag2 = this.m_ExternalEditorSupportsUnityProj;
@@ -482,45 +494,26 @@ namespace UnityEditor
 			}
 		}
 
-		private bool IsInternalMonoDevelop()
-		{
-			return this.m_ScriptEditorPath.str == "internal";
-		}
-
-		private bool IsExternalMonoDevelopOrXamarinStudio()
-		{
-			return new string[]
-			{
-				"Xamarin Studio",
-				"xamarinstudio",
-				"monodevelop"
-			}.Any((string s) => this.m_ScriptEditorPath.str.IndexOf(s, StringComparison.InvariantCultureIgnoreCase) != -1);
-		}
-
 		private bool IsSelectedScriptEditorSpecial()
 		{
-			string text = this.m_ScriptEditorPath.str.ToLower();
-			return text == string.Empty || text == "internal" || text.EndsWith("monodevelop.exe") || text.EndsWith("devenv.exe") || text.EndsWith("vcsexpress.exe");
+			return InternalEditorUtility.IsScriptEditorSpecial(this.m_ScriptEditorPath.str);
+		}
+
+		private InternalEditorUtility.ScriptEditor GetSelectedScriptEditor()
+		{
+			return InternalEditorUtility.GetScriptEditorFromPath(this.m_ScriptEditorPath.str);
 		}
 
 		private void OnScriptEditorChanged()
 		{
-			if (this.IsSelectedScriptEditorSpecial())
-			{
-				this.m_ScriptEditorArgs = string.Empty;
-			}
-			else
-			{
-				this.m_ScriptEditorArgs = EditorPrefs.GetString("kScriptEditorArgs" + this.m_ScriptEditorPath.str, "\"$(File)\"");
-			}
-			EditorPrefs.SetString("kScriptEditorArgs", this.m_ScriptEditorArgs);
+			InternalEditorUtility.SetExternalScriptEditor(this.m_ScriptEditorPath);
+			this.m_ScriptEditorArgs = InternalEditorUtility.GetExternalScriptEditorArgs();
 			UnityVSSupport.ScriptEditorChanged(this.m_ScriptEditorPath.str);
 		}
 
 		private void OnScriptEditorArgsChanged()
 		{
-			EditorPrefs.SetString("kScriptEditorArgs" + this.m_ScriptEditorPath.str, this.m_ScriptEditorArgs);
-			EditorPrefs.SetString("kScriptEditorArgs", this.m_ScriptEditorArgs);
+			InternalEditorUtility.SetExternalScriptEditorArgs(this.m_ScriptEditorArgs);
 		}
 
 		private void ShowUnityConnectPrefs()
@@ -532,11 +525,19 @@ namespace UnityEditor
 		private void ShowGeneral()
 		{
 			GUILayout.Space(10f);
-			using (new EditorGUI.DisabledScope(Collab.instance.IsConnected()))
+			bool flag = Collab.instance.GetCollabInfo().whitelisted && CollabAccess.Instance.IsServiceEnabled();
+			using (new EditorGUI.DisabledScope(flag))
 			{
-				this.m_AutoRefresh = EditorGUILayout.Toggle("Auto Refresh", this.m_AutoRefresh || Collab.instance.IsConnected(), new GUILayoutOption[0]);
+				if (flag)
+				{
+					this.m_AutoRefresh = EditorGUILayout.Toggle("Auto Refresh", true, new GUILayoutOption[0]);
+				}
+				else
+				{
+					this.m_AutoRefresh = EditorGUILayout.Toggle("Auto Refresh", this.m_AutoRefresh, new GUILayoutOption[0]);
+				}
 			}
-			if (Collab.instance.IsConnected())
+			if (flag)
 			{
 				EditorGUILayout.HelpBox("Auto Refresh must be set when using Collaboration feature.", MessageType.Warning);
 			}
@@ -551,24 +552,24 @@ namespace UnityEditor
 			{
 				this.m_UseOSColorPicker = EditorGUILayout.Toggle("OS X Color Picker", this.m_UseOSColorPicker, new GUILayoutOption[0]);
 			}
-			bool flag = Application.HasProLicense();
-			using (new EditorGUI.DisabledScope(!flag))
+			bool flag2 = Application.HasProLicense();
+			using (new EditorGUI.DisabledScope(!flag2))
 			{
 				this.m_EnableEditorAnalytics = !EditorGUILayout.Toggle("Disable Editor Analytics (Pro Only)", !this.m_EnableEditorAnalytics, new GUILayoutOption[0]);
-				if (!flag && !this.m_EnableEditorAnalytics)
+				if (!flag2 && !this.m_EnableEditorAnalytics)
 				{
 					this.m_EnableEditorAnalytics = true;
 				}
 			}
-			bool flag2 = false;
+			bool flag3 = false;
 			EditorGUI.BeginChangeCheck();
 			this.m_ShowAssetStoreSearchHits = EditorGUILayout.Toggle("Show Asset Store search hits", this.m_ShowAssetStoreSearchHits, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
-				flag2 = true;
+				flag3 = true;
 			}
 			this.m_VerifySavingAssets = EditorGUILayout.Toggle("Verify Saving Assets", this.m_VerifySavingAssets, new GUILayoutOption[0]);
-			using (new EditorGUI.DisabledScope(!flag))
+			using (new EditorGUI.DisabledScope(!flag2))
 			{
 				int num = EditorGUILayout.Popup("Editor Skin", EditorGUIUtility.isProSkin ? 1 : 0, new string[]
 				{
@@ -582,7 +583,7 @@ namespace UnityEditor
 			}
 			bool allowAlphaNumericHierarchy = this.m_AllowAlphaNumericHierarchy;
 			this.m_AllowAlphaNumericHierarchy = EditorGUILayout.Toggle("Enable Alpha Numeric Sorting", this.m_AllowAlphaNumericHierarchy, new GUILayoutOption[0]);
-			bool flag3 = false;
+			bool flag4 = false;
 			SystemLanguage selectedLanguage = this.m_SelectedLanguage;
 			SystemLanguage[] availableEditorLanguages = LocalizationDatabase.GetAvailableEditorLanguages();
 			if (availableEditorLanguages.Length > 1)
@@ -595,7 +596,7 @@ namespace UnityEditor
 						this.m_EditorLanguageNames[i] = availableEditorLanguages[i].ToString();
 					}
 					string item = string.Format("Default ( {0} )", LocalizationDatabase.GetDefaultEditorLanguage().ToString());
-					ArrayUtility.Insert<string>(ref this.m_EditorLanguageNames, 0, string.Empty);
+					ArrayUtility.Insert<string>(ref this.m_EditorLanguageNames, 0, "");
 					ArrayUtility.Insert<string>(ref this.m_EditorLanguageNames, 0, item);
 				}
 				EditorGUI.BeginChangeCheck();
@@ -605,11 +606,11 @@ namespace UnityEditor
 				this.m_SelectedLanguage = ((num2 != 0) ? availableEditorLanguages[num2 - 2] : LocalizationDatabase.GetDefaultEditorLanguage());
 				if (EditorGUI.EndChangeCheck() && selectedLanguage != this.m_SelectedLanguage)
 				{
-					flag3 = true;
+					flag4 = true;
 				}
 			}
 			this.ApplyChangesToPrefs();
-			if (flag3)
+			if (flag4)
 			{
 				EditorGUIUtility.NotifyLanguageChanged(this.m_SelectedLanguage);
 				InternalEditorUtility.RequestScriptReload();
@@ -618,7 +619,7 @@ namespace UnityEditor
 			{
 				EditorApplication.DirtyHierarchyWindowSorting();
 			}
-			if (flag2)
+			if (flag3)
 			{
 				ProjectBrowser.ShowAssetStoreHitsWhileSearchingLocalAssetsChanged();
 			}
@@ -713,6 +714,10 @@ namespace UnityEditor
 				EditorGUI.BeginChangeCheck();
 				if (GUILayout.Toggle(current.Value == this.m_SelectedKey, current.Key, PreferencesWindow.constants.keysElement, new GUILayoutOption[0]))
 				{
+					if (this.m_SelectedKey != current.Value)
+					{
+						this.m_ValidKeyChange = true;
+					}
 					this.m_SelectedKey = current.Value;
 				}
 				if (EditorGUI.EndChangeCheck())
@@ -748,12 +753,49 @@ namespace UnityEditor
 				@event.control = GUILayout.Toggle(@event.control, "Control", new GUILayoutOption[0]);
 				@event.shift = GUILayout.Toggle(@event.shift, "Shift", new GUILayoutOption[0]);
 				@event.alt = GUILayout.Toggle(@event.alt, "Alt", new GUILayoutOption[0]);
-				GUILayout.EndVertical();
-				GUILayout.EndHorizontal();
 				if (GUI.changed)
 				{
-					this.m_SelectedKey.KeyboardEvent = @event;
-					Settings.Set<PrefKey>(this.m_SelectedKey.Name, this.m_SelectedKey);
+					this.m_ValidKeyChange = true;
+					string b = this.m_SelectedKey.Name.Split(new char[]
+					{
+						'/'
+					})[0];
+					foreach (KeyValuePair<string, PrefKey> current2 in Settings.Prefs<PrefKey>())
+					{
+						string a = current2.Key.Split(new char[]
+						{
+							'/'
+						})[0];
+						if (current2.Value.KeyboardEvent.Equals(@event) && a == b && current2.Key != this.m_SelectedKey.Name)
+						{
+							this.m_ValidKeyChange = false;
+							StringBuilder stringBuilder = new StringBuilder();
+							if (Application.platform == RuntimePlatform.OSXEditor && @event.command)
+							{
+								stringBuilder.Append("Command+");
+							}
+							if (@event.control)
+							{
+								stringBuilder.Append("Ctrl+");
+							}
+							if (@event.shift)
+							{
+								stringBuilder.Append("Shift+");
+							}
+							if (@event.alt)
+							{
+								stringBuilder.Append("Alt+");
+							}
+							stringBuilder.Append(@event.keyCode);
+							this.m_InvalidKeyMessage = string.Format("Key {0} can't be used for action \"{1}\" because it's already used for action \"{2}\"", stringBuilder, this.m_SelectedKey.Name, current2.Key);
+							break;
+						}
+					}
+					if (this.m_ValidKeyChange)
+					{
+						this.m_SelectedKey.KeyboardEvent = @event;
+						Settings.Set<PrefKey>(this.m_SelectedKey.Name, this.m_SelectedKey);
+					}
 				}
 				else if (GUIUtility.keyboardControl == controlID && Event.current.type == EventType.KeyDown)
 				{
@@ -762,21 +804,32 @@ namespace UnityEditor
 					{
 						if (keyCode == KeyCode.DownArrow)
 						{
-							if (prefKey2 != null)
+							if (prefKey2 != null && prefKey2 != this.m_SelectedKey)
 							{
 								this.m_SelectedKey = prefKey2;
+								this.m_ValidKeyChange = true;
 							}
 							Event.current.Use();
 						}
 					}
 					else
 					{
-						if (prefKey != null)
+						if (prefKey != null && prefKey != this.m_SelectedKey)
 						{
 							this.m_SelectedKey = prefKey;
+							this.m_ValidKeyChange = true;
 						}
 						Event.current.Use();
 					}
+				}
+				GUILayout.EndVertical();
+				GUILayout.EndHorizontal();
+				if (!this.m_ValidKeyChange)
+				{
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.Label("", PreferencesWindow.constants.warningIcon, new GUILayoutOption[0]);
+					GUILayout.Label(this.m_InvalidKeyMessage, PreferencesWindow.constants.errorLabel, new GUILayoutOption[0]);
+					GUILayout.EndHorizontal();
 				}
 			}
 			GUILayout.EndVertical();
@@ -788,6 +841,7 @@ namespace UnityEditor
 				GUILayout.Width(120f)
 			}))
 			{
+				this.m_ValidKeyChange = true;
 				this.RevertKeys();
 			}
 		}
@@ -830,7 +884,7 @@ namespace UnityEditor
 					Settings.Set<PrefColor>(prefColor.Name, prefColor);
 				}
 			}
-			GUILayout.EndScrollView();
+			EditorGUILayout.EndScrollView();
 			GUILayout.Space(5f);
 			if (GUILayout.Button("Use Defaults", new GUILayoutOption[]
 			{
@@ -877,10 +931,10 @@ namespace UnityEditor
 					EditorGUILayout.PrefixLabel(PreferencesWindow.Styles.cacheFolderLocation, popup);
 					Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
 					GUIContent content = (!string.IsNullOrEmpty(this.m_GICacheSettings.m_CachePath)) ? new GUIContent(this.m_GICacheSettings.m_CachePath) : PreferencesWindow.Styles.browse;
-					if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, popup))
+					if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, popup))
 					{
 						string cachePath = this.m_GICacheSettings.m_CachePath;
-						string text = EditorUtility.OpenFolderPanel(PreferencesWindow.Styles.browseGICacheLocation.text, cachePath, string.Empty);
+						string text = EditorUtility.OpenFolderPanel(PreferencesWindow.Styles.browseGICacheLocation.text, cachePath, "");
 						if (!string.IsNullOrEmpty(text))
 						{
 							this.m_GICacheSettings.m_CachePath = text;
@@ -891,7 +945,7 @@ namespace UnityEditor
 				}
 				else
 				{
-					this.m_GICacheSettings.m_CachePath = string.Empty;
+					this.m_GICacheSettings.m_CachePath = "";
 				}
 				this.m_GICacheSettings.m_CompressionLevel = ((!EditorGUILayout.Toggle(PreferencesWindow.Styles.cacheCompression, this.m_GICacheSettings.m_CompressionLevel == 1, new GUILayoutOption[0])) ? 0 : 1);
 				if (GUILayout.Button(PreferencesWindow.Styles.cleanCache, new GUILayoutOption[]
@@ -945,11 +999,11 @@ namespace UnityEditor
 
 		private void WritePreferences()
 		{
-			EditorPrefs.SetString("kScriptsDefaultApp", this.m_ScriptEditorPath);
-			EditorPrefs.SetString("kScriptEditorArgs", this.m_ScriptEditorArgs);
+			InternalEditorUtility.SetExternalScriptEditor(this.m_ScriptEditorPath);
+			InternalEditorUtility.SetExternalScriptEditorArgs(this.m_ScriptEditorArgs);
 			EditorPrefs.SetBool("kExternalEditorSupportsUnityProj", this.m_ExternalEditorSupportsUnityProj);
 			EditorPrefs.SetString("kImagesDefaultApp", this.m_ImageAppPath);
-			EditorPrefs.SetString("kDiffsDefaultApp", (this.m_DiffTools.Length != 0) ? this.m_DiffTools[this.m_DiffToolIndex] : string.Empty);
+			EditorPrefs.SetString("kDiffsDefaultApp", (this.m_DiffTools.Length != 0) ? this.m_DiffTools[this.m_DiffToolIndex] : "");
 			this.WriteRecentAppsList(this.m_ScriptApps, this.m_ScriptEditorPath, "RecentlyUsedScriptApp");
 			this.WriteRecentAppsList(this.m_ImageApps, this.m_ImageAppPath, "RecentlyUsedImageApp");
 			EditorPrefs.SetBool("kAutoRefresh", this.m_AutoRefresh);
@@ -984,17 +1038,22 @@ namespace UnityEditor
 		private static string GetProgramFilesFolder()
 		{
 			string environmentVariable = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
+			string result;
 			if (environmentVariable != null)
 			{
-				return environmentVariable;
+				result = environmentVariable;
 			}
-			return Environment.GetEnvironmentVariable("ProgramFiles");
+			else
+			{
+				result = Environment.GetEnvironmentVariable("ProgramFiles");
+			}
+			return result;
 		}
 
 		private void ReadPreferences()
 		{
-			this.m_ScriptEditorPath.str = EditorPrefs.GetString("kScriptsDefaultApp");
-			this.m_ScriptEditorArgs = EditorPrefs.GetString("kScriptEditorArgs", "\"$(File)\"");
+			this.m_ScriptEditorPath.str = InternalEditorUtility.GetExternalScriptEditor();
+			this.m_ScriptEditorArgs = InternalEditorUtility.GetExternalScriptEditorArgs();
 			this.m_ExternalEditorSupportsUnityProj = EditorPrefs.GetBool("kExternalEditorSupportsUnityProj", false);
 			this.m_ImageAppPath.str = EditorPrefs.GetString("kImagesDefaultApp");
 			this.m_ScriptApps = this.BuildAppPathList(this.m_ScriptEditorPath, "RecentlyUsedScriptApp", "internal");
@@ -1015,7 +1074,7 @@ namespace UnityEditor
 					}
 				}
 			}
-			this.m_ImageApps = this.BuildAppPathList(this.m_ImageAppPath, "RecentlyUsedImageApp", string.Empty);
+			this.m_ImageApps = this.BuildAppPathList(this.m_ImageAppPath, "RecentlyUsedImageApp", "");
 			this.m_ScriptAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ScriptApps, "MonoDevelop (built-in)");
 			this.m_ImageAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ImageApps, "Open by file extension");
 			this.m_DiffTools = InternalEditorUtility.GetAvailableDiffTools();
@@ -1052,15 +1111,20 @@ namespace UnityEditor
 
 		private string StripMicrosoftFromVisualStudioName(string arg)
 		{
+			string result;
 			if (!arg.Contains("Visual Studio"))
 			{
-				return arg;
+				result = arg;
 			}
-			if (!arg.StartsWith("Microsoft"))
+			else if (!arg.StartsWith("Microsoft"))
 			{
-				return arg;
+				result = arg;
 			}
-			return arg.Substring("Microsoft ".Length);
+			else
+			{
+				result = arg.Substring("Microsoft ".Length);
+			}
+			return result;
 		}
 
 		private void AppsListClick(object userData, string[] options, int selected)
@@ -1068,7 +1132,7 @@ namespace UnityEditor
 			PreferencesWindow.AppsListUserData appsListUserData = (PreferencesWindow.AppsListUserData)userData;
 			if (options[selected] == "Browse...")
 			{
-				string text = EditorUtility.OpenFilePanel("Browse for application", string.Empty, (Application.platform != RuntimePlatform.OSXEditor) ? "exe" : "app");
+				string text = EditorUtility.OpenFilePanel("Browse for application", "", InternalEditorUtility.GetApplicationExtensionForRuntimePlatform(Application.platform));
 				if (text.Length != 0)
 				{
 					appsListUserData.str.str = text;
@@ -1106,7 +1170,7 @@ namespace UnityEditor
 			GUIContent content = new GUIContent((array.Length != 0) ? names[array[0]] : defaultString);
 			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
 			PreferencesWindow.AppsListUserData userData = new PreferencesWindow.AppsListUserData(paths, outString, onChanged);
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Native, popup))
+			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, popup))
 			{
 				ArrayUtility.Add<string>(ref names, "Browse...");
 				EditorUtility.DisplayCustomMenu(rect, names, array, new EditorUtility.SelectMenuItemFunction(this.AppsListClick), userData);
@@ -1129,7 +1193,7 @@ namespace UnityEditor
 				string text = EditorPrefs.GetString(recentAppsKey + i);
 				if (!File.Exists(text))
 				{
-					text = string.Empty;
+					text = "";
 					EditorPrefs.SetString(recentAppsKey + i, text);
 				}
 				if (text.Length != 0 && Array.IndexOf<string>(array, text) == -1)
@@ -1146,7 +1210,7 @@ namespace UnityEditor
 			for (int i = 0; i < appPathList.Length; i++)
 			{
 				string text = appPathList[i];
-				if (text == "internal" || text == string.Empty)
+				if (text == "internal" || text == "")
 				{
 					list.Add(defaultBuiltIn);
 				}

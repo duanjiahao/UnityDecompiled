@@ -74,17 +74,17 @@ namespace UnityEditor.RestService
 				ScriptEditorSettings.Name = ((!jSONValue.ContainsKey("name")) ? null : jSONValue["name"].AsString());
 				ScriptEditorSettings.ServerURL = ((!jSONValue.ContainsKey("serverurl")) ? null : jSONValue["serverurl"].AsString());
 				ScriptEditorSettings.ProcessId = ((!jSONValue.ContainsKey("processid")) ? -1 : ((int)jSONValue["processid"].AsFloat()));
-				List<string> arg_101_0;
+				List<string> arg_102_0;
 				if (jSONValue.ContainsKey("opendocuments"))
 				{
-					arg_101_0 = (from d in jSONValue["opendocuments"].AsList()
+					arg_102_0 = (from d in jSONValue["opendocuments"].AsList()
 					select d.AsString()).ToList<string>();
 				}
 				else
 				{
-					arg_101_0 = new List<string>();
+					arg_102_0 = new List<string>();
 				}
-				ScriptEditorSettings.OpenDocuments = arg_101_0;
+				ScriptEditorSettings.OpenDocuments = arg_102_0;
 				if (ScriptEditorSettings.ProcessId >= 0)
 				{
 					Process.GetProcessById(ScriptEditorSettings.ProcessId);

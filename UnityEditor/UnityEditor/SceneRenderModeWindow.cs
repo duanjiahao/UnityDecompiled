@@ -47,7 +47,17 @@ namespace UnityEditor
 			};
 		}
 
+		private readonly float m_WindowHeight = (float)SceneRenderModeWindow.sMenuRowCount * 16f + 9f + 22f;
+
 		private const float m_WindowWidth = 205f;
+
+		private static readonly int sRenderModeCount = SceneRenderModeWindow.Styles.sRenderModeOptions.Length;
+
+		private static readonly int sMenuRowCount = SceneRenderModeWindow.sRenderModeCount + 4;
+
+		private SerializedProperty m_EnableRealtimeGI;
+
+		private SerializedProperty m_EnableBakedGI;
 
 		private const int kMenuHeaderCount = 4;
 
@@ -62,16 +72,6 @@ namespace UnityEditor
 		private const float kShowLightmapResolutionHeight = 22f;
 
 		private const float kTogglePadding = 7f;
-
-		private readonly float m_WindowHeight = (float)SceneRenderModeWindow.sMenuRowCount * 16f + 9f + 22f;
-
-		private static readonly int sRenderModeCount = SceneRenderModeWindow.Styles.sRenderModeOptions.Length;
-
-		private static readonly int sMenuRowCount = SceneRenderModeWindow.sRenderModeCount + 4;
-
-		private SerializedProperty m_EnableRealtimeGI;
-
-		private SerializedProperty m_EnableBakedGI;
 
 		private readonly SceneView m_SceneView;
 
@@ -94,23 +94,21 @@ namespace UnityEditor
 
 		public override void OnGUI(Rect rect)
 		{
-			if (this.m_SceneView == null || this.m_SceneView.m_SceneViewState == null)
+			if (!(this.m_SceneView == null) && this.m_SceneView.m_SceneViewState != null)
 			{
-				return;
-			}
-			if (Event.current.type == EventType.Layout)
-			{
-				return;
-			}
-			this.Draw(base.editorWindow, rect.width);
-			if (Event.current.type == EventType.MouseMove)
-			{
-				Event.current.Use();
-			}
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-			{
-				base.editorWindow.Close();
-				GUIUtility.ExitGUI();
+				if (Event.current.type != EventType.Layout)
+				{
+					this.Draw(base.editorWindow, rect.width);
+					if (Event.current.type == EventType.MouseMove)
+					{
+						Event.current.Use();
+					}
+					if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+					{
+						base.editorWindow.Close();
+						GUIUtility.ExitGUI();
+					}
+				}
 			}
 		}
 
@@ -143,12 +141,11 @@ namespace UnityEditor
 			for (int i = 0; i < SceneRenderModeWindow.sRenderModeCount; i++)
 			{
 				DrawCameraMode drawCameraMode = (DrawCameraMode)i;
-				DrawCameraMode drawCameraMode2 = drawCameraMode;
-				if (drawCameraMode2 != DrawCameraMode.ShadowCascades)
+				if (drawCameraMode != DrawCameraMode.ShadowCascades)
 				{
-					if (drawCameraMode2 != DrawCameraMode.DeferredDiffuse)
+					if (drawCameraMode != DrawCameraMode.DeferredDiffuse)
 					{
-						if (drawCameraMode2 == DrawCameraMode.Charting)
+						if (drawCameraMode == DrawCameraMode.Charting)
 						{
 							this.DrawSeparator(ref rect);
 							this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sGlobalIlluminationHeader);
@@ -181,7 +178,7 @@ namespace UnityEditor
 
 		private void DoResolutionToggle(Rect rect, bool disabled)
 		{
-			GUI.Label(new Rect(1f, rect.y, 203f, 22f), string.Empty, EditorStyles.inspectorBig);
+			GUI.Label(new Rect(1f, rect.y, 203f, 22f), "", EditorStyles.inspectorBig);
 			rect.y += 3f;
 			rect.x += 7f;
 			using (new EditorGUI.DisabledScope(disabled))

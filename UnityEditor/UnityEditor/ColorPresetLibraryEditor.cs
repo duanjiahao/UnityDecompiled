@@ -10,7 +10,7 @@ namespace UnityEditor
 
 		public void OnEnable()
 		{
-			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<ColorPresetLibrary>(this.target, "Color Preset Library", new Action<string>(this.OnEditButtonClicked));
+			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<ColorPresetLibrary>(base.target, "Color Preset Library", new Action<string>(this.OnEditButtonClicked));
 			this.m_GenericPresetLibraryInspector.useOnePixelOverlappedGrid = true;
 			this.m_GenericPresetLibraryInspector.maxShowNumPresets = 2000;
 		}

@@ -124,17 +124,22 @@ namespace UnityEditor.RestService
 
 		private static JSONValue JsonForIsland(ProjectStateRestHandler.Island island)
 		{
+			JSONValue result;
 			if (island.Name == "UnityEngine" || island.Name == "UnityEditor")
 			{
-				return null;
+				result = null;
 			}
-			JSONValue result = default(JSONValue);
-			result["name"] = island.Name;
-			result["language"] = ((!island.Name.Contains("Boo")) ? ((!island.Name.Contains("UnityScript")) ? "C#" : "UnityScript") : "Boo");
-			result["files"] = Handler.ToJSON(island.MonoIsland._files);
-			result["defines"] = Handler.ToJSON(island.MonoIsland._defines);
-			result["references"] = Handler.ToJSON(island.MonoIsland._references);
-			result["basedirectory"] = ProjectStateRestHandler.ProjectPath;
+			else
+			{
+				JSONValue jSONValue = default(JSONValue);
+				jSONValue["name"] = island.Name;
+				jSONValue["language"] = ((!island.Name.Contains("Boo")) ? ((!island.Name.Contains("UnityScript")) ? "C#" : "UnityScript") : "Boo");
+				jSONValue["files"] = Handler.ToJSON(island.MonoIsland._files);
+				jSONValue["defines"] = Handler.ToJSON(island.MonoIsland._defines);
+				jSONValue["references"] = Handler.ToJSON(island.MonoIsland._references);
+				jSONValue["basedirectory"] = ProjectStateRestHandler.ProjectPath;
+				result = jSONValue;
+			}
 			return result;
 		}
 
@@ -144,13 +149,15 @@ namespace UnityEditor.RestService
 			if (directories.Length == 0)
 			{
 				result.Add(path.Replace('\\', '/'));
-				return;
 			}
-			string[] array = directories;
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				string path2 = array[i];
-				ProjectStateRestHandler.FindPotentialEmptyDirectories(path2, result);
+				string[] array = directories;
+				for (int i = 0; i < array.Length; i++)
+				{
+					string path2 = array[i];
+					ProjectStateRestHandler.FindPotentialEmptyDirectories(path2, result);
+				}
 			}
 		}
 

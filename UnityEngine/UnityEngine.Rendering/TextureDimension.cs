@@ -6,10 +6,11 @@ namespace UnityEngine.Rendering
 	{
 		Unknown = -1,
 		None,
-		Tex2D = 2,
+		Any,
+		Tex2D,
 		Tex3D,
 		Cube,
 		Tex2DArray,
-		Any
+		CubeArray
 	}
 }

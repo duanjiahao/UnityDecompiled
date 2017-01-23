@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.Internal;
 using UnityEngine.Scripting;
 
 namespace UnityEngine
@@ -7,25 +6,30 @@ namespace UnityEngine
 	[UsedByNativeCode]
 	public struct Vector2
 	{
-		public const float kEpsilon = 1E-05f;
-
 		public float x;
 
 		public float y;
+
+		public const float kEpsilon = 1E-05f;
 
 		public float this[int index]
 		{
 			get
 			{
-				if (index == 0)
+				float result;
+				if (index != 0)
 				{
-					return this.x;
+					if (index != 1)
+					{
+						throw new IndexOutOfRangeException("Invalid Vector2 index!");
+					}
+					result = this.y;
 				}
-				if (index != 1)
+				else
 				{
-					throw new IndexOutOfRangeException("Invalid Vector2 index!");
+					result = this.x;
 				}
-				return this.y;
+				return result;
 			}
 			set
 			{
@@ -124,10 +128,10 @@ namespace UnityEngine
 			this.y = y;
 		}
 
-		public void Set(float new_x, float new_y)
+		public void Set(float newX, float newY)
 		{
-			this.x = new_x;
-			this.y = new_y;
+			this.x = newX;
+			this.y = newY;
 		}
 
 		public static Vector2 Lerp(Vector2 a, Vector2 b, float t)
@@ -145,11 +149,16 @@ namespace UnityEngine
 		{
 			Vector2 a = target - current;
 			float magnitude = a.magnitude;
+			Vector2 result;
 			if (magnitude <= maxDistanceDelta || magnitude == 0f)
 			{
-				return target;
+				result = target;
 			}
-			return current + a / magnitude * maxDistanceDelta;
+			else
+			{
+				result = current + a / magnitude * maxDistanceDelta;
+			}
+			return result;
 		}
 
 		public static Vector2 Scale(Vector2 a, Vector2 b)
@@ -201,12 +210,17 @@ namespace UnityEngine
 
 		public override bool Equals(object other)
 		{
+			bool result;
 			if (!(other is Vector2))
 			{
-				return false;
+				result = false;
 			}
-			Vector2 vector = (Vector2)other;
-			return this.x.Equals(vector.x) && this.y.Equals(vector.y);
+			else
+			{
+				Vector2 vector = (Vector2)other;
+				result = (this.x.Equals(vector.x) && this.y.Equals(vector.y));
+			}
+			return result;
 		}
 
 		public static Vector2 Reflect(Vector2 inDirection, Vector2 inNormal)
@@ -231,11 +245,16 @@ namespace UnityEngine
 
 		public static Vector2 ClampMagnitude(Vector2 vector, float maxLength)
 		{
+			Vector2 result;
 			if (vector.sqrMagnitude > maxLength * maxLength)
 			{
-				return vector.normalized * maxLength;
+				result = vector.normalized * maxLength;
 			}
-			return vector;
+			else
+			{
+				result = vector;
+			}
+			return result;
 		}
 
 		public static float SqrMagnitude(Vector2 a)
@@ -258,22 +277,7 @@ namespace UnityEngine
 			return new Vector2(Mathf.Max(lhs.x, rhs.x), Mathf.Max(lhs.y, rhs.y));
 		}
 
-		[ExcludeFromDocs]
-		public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime, float maxSpeed)
-		{
-			float deltaTime = Time.deltaTime;
-			return Vector2.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
-		}
-
-		[ExcludeFromDocs]
-		public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime)
-		{
-			float deltaTime = Time.deltaTime;
-			float maxSpeed = float.PositiveInfinity;
-			return Vector2.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
-		}
-
-		public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime, [DefaultValue("Mathf.Infinity")] float maxSpeed, [DefaultValue("Time.deltaTime")] float deltaTime)
+		public static Vector2 SmoothDamp(Vector2 current, Vector2 target, ref Vector2 currentVelocity, float smoothTime, float maxSpeed, float deltaTime)
 		{
 			smoothTime = Mathf.Max(0.0001f, smoothTime);
 			float num = 2f / smoothTime;
@@ -327,12 +331,12 @@ namespace UnityEngine
 
 		public static bool operator ==(Vector2 lhs, Vector2 rhs)
 		{
-			return Vector2.SqrMagnitude(lhs - rhs) < 9.99999944E-11f;
+			return (lhs - rhs).sqrMagnitude < 9.99999944E-11f;
 		}
 
 		public static bool operator !=(Vector2 lhs, Vector2 rhs)
 		{
-			return Vector2.SqrMagnitude(lhs - rhs) >= 9.99999944E-11f;
+			return (lhs - rhs).sqrMagnitude >= 9.99999944E-11f;
 		}
 
 		public static implicit operator Vector2(Vector3 v)

@@ -16,7 +16,6 @@ namespace UnityEditor
 
 		internal GUISkin skin;
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetupSavedGUIState(out IntPtr state, out Vector2 screenManagerSize);
 
@@ -25,11 +24,9 @@ namespace UnityEditor
 			SavedGUIState.INTERNAL_CALL_Internal_ApplySavedGUIState(state, ref screenManagerSize);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_ApplySavedGUIState(IntPtr state, ref Vector2 screenManagerSize);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int Internal_GetGUIDepth();
 

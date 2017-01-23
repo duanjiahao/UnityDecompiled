@@ -14,104 +14,54 @@ namespace UnityEditor
 			Count
 		}
 
-		[NonSerialized]
-		internal CurveEditor m_Host;
+		[SerializeField]
+		public int curveID = 0;
 
-		private int m_CurveID;
+		[SerializeField]
+		public int key = -1;
 
-		private int m_Key = -1;
+		[SerializeField]
+		public bool semiSelected = false;
 
-		internal bool semiSelected;
+		[SerializeField]
+		public CurveSelection.SelectionType type;
 
-		internal CurveSelection.SelectionType type;
-
-		internal CurveWrapper curveWrapper
+		internal CurveSelection(int curveID, int key)
 		{
-			get
-			{
-				return this.m_Host.GetCurveFromID(this.m_CurveID);
-			}
-		}
-
-		internal AnimationCurve curve
-		{
-			get
-			{
-				return (this.curveWrapper == null) ? null : this.curveWrapper.curve;
-			}
-		}
-
-		public int curveID
-		{
-			get
-			{
-				return this.m_CurveID;
-			}
-			set
-			{
-				this.m_CurveID = value;
-			}
-		}
-
-		public int key
-		{
-			get
-			{
-				return this.m_Key;
-			}
-			set
-			{
-				this.m_Key = value;
-			}
-		}
-
-		internal Keyframe keyframe
-		{
-			get
-			{
-				if (this.validKey())
-				{
-					return this.curve[this.m_Key];
-				}
-				return default(Keyframe);
-			}
-		}
-
-		internal CurveSelection(int curveID, CurveEditor host, int keyIndex)
-		{
-			this.m_CurveID = curveID;
-			this.m_Host = host;
-			this.m_Key = keyIndex;
+			this.curveID = curveID;
+			this.key = key;
 			this.type = CurveSelection.SelectionType.Key;
 		}
 
-		internal CurveSelection(int curveID, CurveEditor host, int keyIndex, CurveSelection.SelectionType t)
+		internal CurveSelection(int curveID, int key, CurveSelection.SelectionType type)
 		{
-			this.m_CurveID = curveID;
-			this.m_Host = host;
-			this.m_Key = keyIndex;
-			this.type = t;
-		}
-
-		internal bool validKey()
-		{
-			return this.curve != null && this.m_Key >= 0 && this.m_Key < this.curve.length;
+			this.curveID = curveID;
+			this.key = key;
+			this.type = type;
 		}
 
 		public int CompareTo(object _other)
 		{
 			CurveSelection curveSelection = (CurveSelection)_other;
 			int num = this.curveID - curveSelection.curveID;
+			int result;
 			if (num != 0)
 			{
-				return num;
+				result = num;
 			}
-			num = this.key - curveSelection.key;
-			if (num != 0)
+			else
 			{
-				return num;
+				num = this.key - curveSelection.key;
+				if (num != 0)
+				{
+					result = num;
+				}
+				else
+				{
+					result = this.type - curveSelection.type;
+				}
 			}
-			return this.type - curveSelection.type;
+			return result;
 		}
 
 		public override bool Equals(object _other)

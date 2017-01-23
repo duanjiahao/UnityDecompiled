@@ -12,22 +12,55 @@ using UnityEditor.Modules;
 using UnityEditor.Scripting.Compilers;
 using UnityEditor.Utils;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace UnityEditor.Scripting
 {
 	internal class APIUpdaterHelper
 	{
+		private static string[] _ignoredAssemblies = new string[]
+		{
+			"^UnityScript$",
+			"^System\\..*",
+			"^mscorlib$"
+		};
+
 		public static bool IsReferenceToMissingObsoleteMember(string namespaceName, string className)
 		{
 			bool result;
 			try
 			{
-				Type type = AppDomain.CurrentDomain.GetAssemblies().SelectMany((Assembly a) => a.GetTypes()).FirstOrDefault((Type t) => t.Name == className && t.Namespace == namespaceName && APIUpdaterHelper.IsUpdateable(t));
+				Type type = APIUpdaterHelper.FindTypeInLoadedAssemblies((Type t) => t.Name == className && t.Namespace == namespaceName && APIUpdaterHelper.IsUpdateable(t));
 				result = (type != null);
 			}
 			catch (ReflectionTypeLoadException ex)
 			{
-				throw new Exception(ex.Message + ex.LoaderExceptions.Aggregate(string.Empty, (string acc, Exception curr) => acc + "\r\n\t" + curr.Message));
+				throw new Exception(ex.Message + ex.LoaderExceptions.Aggregate("", (string acc, Exception curr) => acc + "\r\n\t" + curr.Message));
+			}
+			return result;
+		}
+
+		public static bool IsReferenceToTypeWithChangedNamespace(string simpleOrQualifiedName)
+		{
+			bool result;
+			try
+			{
+				Match match = Regex.Match(simpleOrQualifiedName, "^(?:(?<namespace>.*)(?=\\.)\\.)?(?<typename>[a-zA-Z_0-9]+)$");
+				if (!match.Success)
+				{
+					result = false;
+				}
+				else
+				{
+					string typename = match.Groups["typename"].Value;
+					string namespaceName = match.Groups["namespace"].Value;
+					Type type = APIUpdaterHelper.FindTypeInLoadedAssemblies((Type t) => t.Name == typename && APIUpdaterHelper.NamespaceHasChanged(t, namespaceName));
+					result = (type != null);
+				}
+			}
+			catch (ReflectionTypeLoadException ex)
+			{
+				throw new Exception(ex.Message + ex.LoaderExceptions.Aggregate("", (string acc, Exception curr) => acc + "\r\n\t" + curr.Message));
 			}
 			return result;
 		}
@@ -69,7 +102,7 @@ namespace UnityEditor.Scripting
 							text3
 						});
 					}
-					if (num < 0)
+					if (APIUpdaterHelper.IsError(num))
 					{
 						APIUpdaterLogger.WriteErrorToConsole("Error {0} running AssemblyUpdater. Its output is: `{1}`", new object[]
 						{
@@ -85,6 +118,11 @@ namespace UnityEditor.Scripting
 			});
 		}
 
+		private static bool IsError(int exitCode)
+		{
+			return (exitCode & 128) != 0;
+		}
+
 		private static string ResolveAssemblyPath(string assemblyPath)
 		{
 			return CommandLineFormatter.PrepareFileName(assemblyPath);
@@ -92,41 +130,49 @@ namespace UnityEditor.Scripting
 
 		public static bool DoesAssemblyRequireUpgrade(string assemblyFullPath)
 		{
+			bool result;
 			if (!File.Exists(assemblyFullPath))
 			{
-				return false;
+				result = false;
 			}
-			if (!AssemblyHelper.IsManagedAssembly(assemblyFullPath))
+			else if (!AssemblyHelper.IsManagedAssembly(assemblyFullPath))
 			{
-				return false;
+				result = false;
 			}
-			if (!APIUpdaterHelper.MayContainUpdatableReferences(assemblyFullPath))
+			else if (!APIUpdaterHelper.MayContainUpdatableReferences(assemblyFullPath))
 			{
-				return false;
+				result = false;
 			}
-			string text;
-			string text2;
-			int num = APIUpdaterHelper.RunUpdatingProgram("AssemblyUpdater.exe", string.Concat(new string[]
+			else
 			{
-				APIUpdaterHelper.TimeStampArgument(),
-				APIUpdaterHelper.APIVersionArgument(),
-				"--check-update-required -a ",
-				CommandLineFormatter.PrepareFileName(assemblyFullPath),
-				APIUpdaterHelper.AssemblySearchPathArgument(),
-				APIUpdaterHelper.ConfigurationProviderAssembliesPathArgument()
-			}), out text, out text2);
-			Console.WriteLine("{0}{1}", text, text2);
-			switch (num)
-			{
-			case 0:
-			case 1:
-				return false;
-			case 2:
-				return true;
-			default:
-				UnityEngine.Debug.LogError(text + Environment.NewLine + text2);
-				return false;
+				string text;
+				string text2;
+				int num = APIUpdaterHelper.RunUpdatingProgram("AssemblyUpdater.exe", string.Concat(new string[]
+				{
+					APIUpdaterHelper.TimeStampArgument(),
+					APIUpdaterHelper.APIVersionArgument(),
+					"--check-update-required -a ",
+					CommandLineFormatter.PrepareFileName(assemblyFullPath),
+					APIUpdaterHelper.AssemblySearchPathArgument(),
+					APIUpdaterHelper.ConfigurationProviderAssembliesPathArgument()
+				}), out text, out text2);
+				Console.WriteLine("{0}{1}", text, text2);
+				switch (num)
+				{
+				case 0:
+				case 1:
+					result = false;
+					break;
+				case 2:
+					result = true;
+					break;
+				default:
+					UnityEngine.Debug.LogError(text + Environment.NewLine + text2);
+					result = false;
+					break;
+				}
 			}
+			return result;
 		}
 
 		private static string AssemblySearchPathArgument()
@@ -145,10 +191,10 @@ namespace UnityEditor.Scripting
 		private static string ConfigurationProviderAssembliesPathArgument()
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			foreach (Unity.DataContract.PackageInfo current in ModuleManager.packageManager.unityExtensions)
+			foreach (PackageInfo current in ModuleManager.packageManager.get_unityExtensions())
 			{
-				foreach (string current2 in from f in current.files
-				where f.Value.type == PackageFileType.Dll
+				foreach (string current2 in from f in current.get_files()
+				where f.Value.type == 3
 				select f into pi
 				select pi.Key)
 				{
@@ -169,7 +215,7 @@ namespace UnityEditor.Scripting
 		private static int RunUpdatingProgram(string executable, string arguments, out string stdOut, out string stdErr)
 		{
 			string executable2 = EditorApplication.applicationContentsPath + "/Tools/ScriptUpdater/" + executable;
-			ManagedProgram managedProgram = new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", executable2, arguments, null);
+			ManagedProgram managedProgram = new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), null, executable2, arguments, false, null);
 			managedProgram.LogProcessStartInfo();
 			managedProgram.Start();
 			managedProgram.WaitForExit();
@@ -191,64 +237,110 @@ namespace UnityEditor.Scripting
 		private static bool IsUpdateable(Type type)
 		{
 			object[] customAttributes = type.GetCustomAttributes(typeof(ObsoleteAttribute), false);
+			bool result;
 			if (customAttributes.Length != 1)
 			{
-				return false;
+				result = false;
 			}
-			ObsoleteAttribute obsoleteAttribute = (ObsoleteAttribute)customAttributes[0];
-			return obsoleteAttribute.Message.Contains("UnityUpgradable");
+			else
+			{
+				ObsoleteAttribute obsoleteAttribute = (ObsoleteAttribute)customAttributes[0];
+				result = obsoleteAttribute.Message.Contains("UnityUpgradable");
+			}
+			return result;
+		}
+
+		private static bool NamespaceHasChanged(Type type, string namespaceName)
+		{
+			object[] customAttributes = type.GetCustomAttributes(typeof(MovedFromAttribute), false);
+			bool result;
+			if (customAttributes.Length != 1)
+			{
+				result = false;
+			}
+			else if (string.IsNullOrEmpty(namespaceName))
+			{
+				result = true;
+			}
+			else
+			{
+				MovedFromAttribute movedFromAttribute = (MovedFromAttribute)customAttributes[0];
+				result = (movedFromAttribute.Namespace == namespaceName);
+			}
+			return result;
+		}
+
+		private static Type FindTypeInLoadedAssemblies(Func<Type, bool> predicate)
+		{
+			return (from assembly in AppDomain.CurrentDomain.GetAssemblies()
+			where !APIUpdaterHelper.IsIgnoredAssembly(assembly.GetName())
+			select assembly).SelectMany((Assembly a) => a.GetTypes()).FirstOrDefault(predicate);
+		}
+
+		private static bool IsIgnoredAssembly(AssemblyName assemblyName)
+		{
+			string name = assemblyName.Name;
+			return APIUpdaterHelper._ignoredAssemblies.Any((string candidate) => Regex.IsMatch(name, candidate));
 		}
 
 		internal static bool MayContainUpdatableReferences(string assemblyPath)
 		{
+			bool result;
 			using (FileStream fileStream = File.Open(assemblyPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 			{
 				AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(fileStream);
-				if (assemblyDefinition.Name.IsWindowsRuntime)
+				if (assemblyDefinition.get_Name().get_IsWindowsRuntime())
 				{
-					bool result = false;
+					result = false;
 					return result;
 				}
 				if (!APIUpdaterHelper.IsTargetFrameworkValidOnCurrentOS(assemblyDefinition))
 				{
-					bool result = false;
+					result = false;
 					return result;
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		private static bool IsTargetFrameworkValidOnCurrentOS(AssemblyDefinition assembly)
 		{
-			bool arg_4C_0;
+			bool arg_4D_0;
 			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
 			{
-				int arg_47_0;
-				if (assembly.HasCustomAttributes)
+				int arg_48_0;
+				if (assembly.get_HasCustomAttributes())
 				{
-					arg_47_0 = (assembly.CustomAttributes.Any((CustomAttribute attr) => APIUpdaterHelper.TargetsWindowsSpecificFramework(attr)) ? 1 : 0);
+					arg_48_0 = (assembly.get_CustomAttributes().Any((CustomAttribute attr) => APIUpdaterHelper.TargetsWindowsSpecificFramework(attr)) ? 1 : 0);
 				}
 				else
 				{
-					arg_47_0 = 0;
+					arg_48_0 = 0;
 				}
-				arg_4C_0 = (arg_47_0 == 0);
+				arg_4D_0 = (arg_48_0 == 0);
 			}
 			else
 			{
-				arg_4C_0 = true;
+				arg_4D_0 = true;
 			}
-			return arg_4C_0;
+			return arg_4D_0;
 		}
 
 		private static bool TargetsWindowsSpecificFramework(CustomAttribute targetFrameworkAttr)
 		{
-			if (!targetFrameworkAttr.AttributeType.FullName.Contains("System.Runtime.Versioning.TargetFrameworkAttribute"))
+			bool result;
+			if (!targetFrameworkAttr.get_AttributeType().get_FullName().Contains("System.Runtime.Versioning.TargetFrameworkAttribute"))
 			{
-				return false;
+				result = false;
 			}
-			Regex regex = new Regex("\\.NETCore|\\.NETPortable");
-			return targetFrameworkAttr.ConstructorArguments.Any((CustomAttributeArgument arg) => arg.Type.FullName == typeof(string).FullName && regex.IsMatch((string)arg.Value));
+			else
+			{
+				Regex regex = new Regex("\\.NETCore|\\.NETPortable");
+				bool flag = targetFrameworkAttr.get_ConstructorArguments().Any((CustomAttributeArgument arg) => arg.get_Type().get_FullName() == typeof(string).FullName && regex.IsMatch((string)arg.get_Value()));
+				result = flag;
+			}
+			return result;
 		}
 	}
 }

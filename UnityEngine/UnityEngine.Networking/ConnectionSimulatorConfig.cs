@@ -7,11 +7,10 @@ namespace UnityEngine.Networking
 	{
 		internal IntPtr m_Ptr;
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern ConnectionSimulatorConfig(int outMinDelay, int outAvgDelay, int inMinDelay, int inAvgDelay, float packetLossPercentage);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 

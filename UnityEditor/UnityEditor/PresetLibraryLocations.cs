@@ -45,16 +45,24 @@ namespace UnityEditor
 
 		public static string GetDefaultFilePathForFileLocation(PresetFileLocation fileLocation)
 		{
-			if (fileLocation == PresetFileLocation.PreferencesFolder)
+			string result;
+			if (fileLocation != PresetFileLocation.PreferencesFolder)
 			{
-				return InternalEditorUtility.unityPreferencesFolder + "/Presets/";
+				if (fileLocation != PresetFileLocation.ProjectFolder)
+				{
+					Debug.LogError("Enum not handled!");
+					result = "";
+				}
+				else
+				{
+					result = "Assets/Editor/";
+				}
 			}
-			if (fileLocation != PresetFileLocation.ProjectFolder)
+			else
 			{
-				Debug.LogError("Enum not handled!");
-				return string.Empty;
+				result = InternalEditorUtility.unityPreferencesFolder + "/Presets/";
 			}
-			return "Assets/Editor/";
+			return result;
 		}
 
 		private static List<string> GetDirectoryPaths(PresetFileLocation fileLocation)
@@ -92,16 +100,21 @@ namespace UnityEditor
 
 		public static PresetFileLocation GetFileLocationFromPath(string path)
 		{
+			PresetFileLocation result;
 			if (path.Contains(InternalEditorUtility.unityPreferencesFolder))
 			{
-				return PresetFileLocation.PreferencesFolder;
+				result = PresetFileLocation.PreferencesFolder;
 			}
-			if (path.Contains("Assets/"))
+			else if (path.Contains("Assets/"))
 			{
-				return PresetFileLocation.ProjectFolder;
+				result = PresetFileLocation.ProjectFolder;
 			}
-			Debug.LogError("Could not determine preset file location type " + path);
-			return PresetFileLocation.ProjectFolder;
+			else
+			{
+				Debug.LogError("Could not determine preset file location type " + path);
+				result = PresetFileLocation.ProjectFolder;
+			}
+			return result;
 		}
 
 		private static string ConvertToUnitySeperators(string path)
@@ -126,18 +139,23 @@ namespace UnityEditor
 			}
 			else
 			{
-				text += string.Empty;
+				text += "";
 			}
 			return text;
 		}
 
 		public static string GetCurveLibraryExtension(bool normalized)
 		{
+			string result;
 			if (normalized)
 			{
-				return "curvesNormalized";
+				result = "curvesNormalized";
 			}
-			return "curves";
+			else
+			{
+				result = "curves";
+			}
+			return result;
 		}
 	}
 }

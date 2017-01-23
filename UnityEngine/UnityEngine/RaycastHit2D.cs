@@ -99,34 +99,44 @@ namespace UnityEngine
 			get
 			{
 				Rigidbody2D rigidbody = this.rigidbody;
+				Transform result;
 				if (rigidbody != null)
 				{
-					return rigidbody.transform;
+					result = rigidbody.transform;
 				}
-				if (this.collider != null)
+				else if (this.collider != null)
 				{
-					return this.collider.transform;
+					result = this.collider.transform;
 				}
-				return null;
+				else
+				{
+					result = null;
+				}
+				return result;
 			}
-		}
-
-		public int CompareTo(RaycastHit2D other)
-		{
-			if (this.collider == null)
-			{
-				return 1;
-			}
-			if (other.collider == null)
-			{
-				return -1;
-			}
-			return this.fraction.CompareTo(other.fraction);
 		}
 
 		public static implicit operator bool(RaycastHit2D hit)
 		{
 			return hit.collider != null;
+		}
+
+		public int CompareTo(RaycastHit2D other)
+		{
+			int result;
+			if (this.collider == null)
+			{
+				result = 1;
+			}
+			else if (other.collider == null)
+			{
+				result = -1;
+			}
+			else
+			{
+				result = this.fraction.CompareTo(other.fraction);
+			}
+			return result;
 		}
 	}
 }

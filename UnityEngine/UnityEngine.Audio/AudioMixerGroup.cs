@@ -7,7 +7,6 @@ namespace UnityEngine.Audio
 	{
 		public extern AudioMixer audioMixer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}

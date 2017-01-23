@@ -5,8 +5,8 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using UnityEditor.Connect;
+using UnityEditor.Purchasing;
 using UnityEngine;
-using UnityEngine.Connect;
 
 namespace UnityEditor.Web
 {
@@ -17,7 +17,7 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "In App Purchasing";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/purchasing";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/purchasing";
 
 		private const string kETagPath = "Assets/Plugins/UnityPurchasing/ETag";
 
@@ -30,7 +30,7 @@ namespace UnityEditor.Web
 		static PurchasingAccess()
 		{
 			PurchasingAccess.kPackageUri = new Uri("https://public-cdn.cloud.unity3d.com/UnityEngine.Cloud.Purchasing.unitypackage");
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("Purchasing", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/purchasing", new PurchasingAccess(), "unity/project/cloud/purchasing");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("Purchasing", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/purchasing", new PurchasingAccess(), "unity/project/cloud/purchasing");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 
@@ -46,64 +46,68 @@ namespace UnityEditor.Web
 
 		public override bool IsServiceEnabled()
 		{
-			return UnityPurchasingSettings.enabled;
+			return PurchasingSettings.enabled;
 		}
 
 		public override void EnableService(bool enabled)
 		{
-			UnityPurchasingSettings.enabled = enabled;
+			PurchasingSettings.enabled = enabled;
 		}
 
 		public void InstallUnityPackage()
 		{
-			if (this.m_InstallInProgress)
+			if (!this.m_InstallInProgress)
 			{
-				return;
-			}
-			RemoteCertificateValidationCallback originalCallback = ServicePointManager.ServerCertificateValidationCallback;
-			if (Application.platform != RuntimePlatform.OSXEditor)
-			{
-				ServicePointManager.ServerCertificateValidationCallback = ((object a, X509Certificate b, X509Chain c, SslPolicyErrors d) => true);
-			}
-			this.m_InstallInProgress = true;
-			string location = FileUtil.GetUniqueTempPathInProject();
-			location = Path.ChangeExtension(location, ".unitypackage");
-			WebClient client = new WebClient();
-			client.DownloadFileCompleted += delegate(object sender, AsyncCompletedEventArgs args)
-			{
-				EditorApplication.CallbackFunction handler = null;
-				handler = delegate
+				RemoteCertificateValidationCallback originalCallback = ServicePointManager.ServerCertificateValidationCallback;
+				if (Application.platform != RuntimePlatform.OSXEditor)
 				{
-					ServicePointManager.ServerCertificateValidationCallback = originalCallback;
-					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, handler);
-					this.m_InstallInProgress = false;
-					if (args.Error == null)
+					ServicePointManager.ServerCertificateValidationCallback = ((object a, X509Certificate b, X509Chain c, SslPolicyErrors d) => true);
+				}
+				this.m_InstallInProgress = true;
+				string location = FileUtil.GetUniqueTempPathInProject();
+				location = Path.ChangeExtension(location, ".unitypackage");
+				WebClient client = new WebClient();
+				client.DownloadFileCompleted += delegate(object sender, AsyncCompletedEventArgs args)
+				{
+					EditorApplication.CallbackFunction handler = null;
+					handler = delegate
 					{
-						this.SaveETag(client);
-						AssetDatabase.ImportPackage(location, false);
-					}
-					else
-					{
-						Debug.LogWarning("Failed to download IAP package. Please check connectivity and retry.");
-						Debug.LogException(args.Error);
-					}
+						ServicePointManager.ServerCertificateValidationCallback = originalCallback;
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, handler);
+						this.m_InstallInProgress = false;
+						if (args.Error == null)
+						{
+							this.SaveETag(client);
+							AssetDatabase.ImportPackage(location, false);
+						}
+						else
+						{
+							Debug.LogWarning("Failed to download IAP package. Please check connectivity and retry.");
+							Debug.LogException(args.Error);
+						}
+					};
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, handler);
 				};
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, handler);
-			};
-			client.DownloadFileAsync(PurchasingAccess.kPackageUri, location);
+				client.DownloadFileAsync(PurchasingAccess.kPackageUri, location);
+			}
 		}
 
 		public string GetInstalledETag()
 		{
+			string result;
 			if (File.Exists("Assets/Plugins/UnityPurchasing/ETag"))
 			{
-				return File.ReadAllText("Assets/Plugins/UnityPurchasing/ETag");
+				result = File.ReadAllText("Assets/Plugins/UnityPurchasing/ETag");
 			}
-			if (Directory.Exists(Path.GetDirectoryName("Assets/Plugins/UnityPurchasing/ETag")))
+			else if (Directory.Exists(Path.GetDirectoryName("Assets/Plugins/UnityPurchasing/ETag")))
 			{
-				return "unknown";
+				result = "unknown";
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private void SaveETag(WebClient client)

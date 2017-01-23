@@ -10,17 +10,25 @@ namespace UnityEditor
 	{
 		internal static bool MainActionKeyForControl(this Event evt, int controlId)
 		{
+			bool result;
 			if (GUIUtility.keyboardControl != controlId)
 			{
-				return false;
+				result = false;
 			}
-			bool flag = evt.alt || evt.shift || evt.command || evt.control;
-			if (evt.type == EventType.KeyDown && evt.character == ' ' && !flag)
+			else
 			{
-				evt.Use();
-				return false;
+				bool flag = evt.alt || evt.shift || evt.command || evt.control;
+				if (evt.type == EventType.KeyDown && evt.character == ' ' && !flag)
+				{
+					evt.Use();
+					result = false;
+				}
+				else
+				{
+					result = (evt.type == EventType.KeyDown && (evt.keyCode == KeyCode.Space || evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter) && !flag);
+				}
 			}
-			return evt.type == EventType.KeyDown && (evt.keyCode == KeyCode.Space || evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter) && !flag;
+			return result;
 		}
 
 		internal static bool IsArrayOrList(this Type listType)
@@ -30,15 +38,20 @@ namespace UnityEditor
 
 		internal static Type GetArrayOrListElementType(this Type listType)
 		{
+			Type result;
 			if (listType.IsArray)
 			{
-				return listType.GetElementType();
+				result = listType.GetElementType();
 			}
-			if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>))
+			else if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>))
 			{
-				return listType.GetGenericArguments()[0];
+				result = listType.GetGenericArguments()[0];
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		internal static List<Enum> EnumGetNonObsoleteValues(this Type type)

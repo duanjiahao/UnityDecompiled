@@ -11,39 +11,34 @@ namespace UnityEditor.Animations
 {
 	public sealed class AnimatorController : RuntimeAnimatorController
 	{
-		private const string kControllerExtension = "controller";
-
 		internal Action OnAnimatorControllerDirty;
 
-		internal static AnimatorController lastActiveController;
+		internal static AnimatorController lastActiveController = null;
 
-		internal static int lastActiveLayerIndex;
+		internal static int lastActiveLayerIndex = 0;
+
+		private const string kControllerExtension = "controller";
 
 		internal PushUndoIfNeeded undoHandler = new PushUndoIfNeeded(true);
 
 		public extern AnimatorControllerLayer[] layers
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern UnityEngine.AnimatorControllerParameter[] parameters
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal extern bool isAssetBundled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -79,11 +74,9 @@ namespace UnityEditor.Animations
 			AnimatorController.Internal_Create(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorController mono);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern AnimatorController GetEffectiveAnimatorController(Animator animator);
 
@@ -94,27 +87,21 @@ namespace UnityEditor.Animations
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void FindAnimatorControllerPlayableInternal(ref AnimatorControllerPlayable ret, Animator animator, AnimatorController controller);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetAnimatorController(Animator behavior, AnimatorController controller);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int IndexOfParameter(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RenameParameter(string prevName, string newName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string MakeUniqueParameterName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string MakeUniqueLayerName(string name);
 
@@ -123,19 +110,15 @@ namespace UnityEditor.Animations
 			return AnimatorController.Internal_FindStateMachineBehaviourContext(behaviour);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int CreateStateMachineBehaviour(MonoScript script);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CanAddStateMachineBehaviours();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern MonoScript GetBehaviourMonoScript(AnimatorState state, int layerIndex, int behaviourIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern ScriptableObject Internal_AddStateMachineBehaviourWithType(Type stateMachineBehaviourType, AnimatorState state, int layerIndex);
 
@@ -155,59 +138,60 @@ namespace UnityEditor.Animations
 			return AnimatorController.ConvertStateMachineBehaviour<T>(this.GetBehaviours(typeof(T)));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern ScriptableObject[] GetBehaviours(Type type);
 
 		internal static T[] ConvertStateMachineBehaviour<T>(ScriptableObject[] rawObjects) where T : StateMachineBehaviour
 		{
+			T[] result;
 			if (rawObjects == null)
 			{
-				return null;
+				result = null;
 			}
-			T[] array = new T[rawObjects.Length];
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				array[i] = (T)((object)rawObjects[i]);
+				T[] array = new T[rawObjects.Length];
+				for (int i = 0; i < array.Length; i++)
+				{
+					array[i] = (T)((object)rawObjects[i]);
+				}
+				result = array;
 			}
-			return array;
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern UnityEngine.Object[] CollectObjectsUsingParameter(string parameterName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddStateEffectiveBehaviour(AnimatorState state, int layerIndex, int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveStateEffectiveBehaviour(AnimatorState state, int layerIndex, int behaviourIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern StateMachineBehaviour[] Internal_GetEffectiveBehaviours(AnimatorState state, int layerIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void Internal_SetEffectiveBehaviours(AnimatorState state, int layerIndex, StateMachineBehaviour[] behaviours);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern StateMachineBehaviourContext[] Internal_FindStateMachineBehaviourContext(ScriptableObject scriptableObject);
 
 		internal string GetDefaultBlendTreeParameter()
 		{
+			string result;
 			for (int i = 0; i < this.parameters.Length; i++)
 			{
 				if (this.parameters[i].type == UnityEngine.AnimatorControllerParameterType.Float)
 				{
-					return this.parameters[i].name;
+					result = this.parameters[i].name;
+					return result;
 				}
 			}
 			this.AddParameter("Blend", UnityEngine.AnimatorControllerParameterType.Float);
-			return "Blend";
+			result = "Blend";
+			return result;
 		}
 
 		internal static void OnInvalidateAnimatorController(AnimatorController controller)
@@ -235,7 +219,7 @@ namespace UnityEditor.Animations
 			animatorControllerLayer.stateMachine = new AnimatorStateMachine();
 			animatorControllerLayer.stateMachine.name = animatorControllerLayer.name;
 			animatorControllerLayer.stateMachine.hideFlags = HideFlags.HideInHierarchy;
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorControllerLayer.stateMachine, AssetDatabase.GetAssetPath(this));
 			}
@@ -337,11 +321,11 @@ namespace UnityEditor.Animations
 		{
 			tree = new BlendTree();
 			tree.name = name;
-			BlendTree arg_21_0 = tree;
+			BlendTree arg_22_0 = tree;
 			string defaultBlendTreeParameter = this.GetDefaultBlendTreeParameter();
 			tree.blendParameterY = defaultBlendTreeParameter;
-			arg_21_0.blendParameter = defaultBlendTreeParameter;
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			arg_22_0.blendParameter = defaultBlendTreeParameter;
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(tree, AssetDatabase.GetAssetPath(this));
 			}
@@ -371,17 +355,25 @@ namespace UnityEditor.Animations
 		internal static AnimatorController CreateAnimatorControllerForClip(AnimationClip clip, GameObject animatedObject)
 		{
 			string text = AssetDatabase.GetAssetPath(clip);
+			AnimatorController result;
 			if (string.IsNullOrEmpty(text))
 			{
-				return null;
+				result = null;
 			}
-			text = Path.Combine(FileUtil.DeleteLastPathNameComponent(text), animatedObject.name + ".controller");
-			text = AssetDatabase.GenerateUniqueAssetPath(text);
-			if (string.IsNullOrEmpty(text))
+			else
 			{
-				return null;
+				text = Path.Combine(FileUtil.DeleteLastPathNameComponent(text), animatedObject.name + ".controller");
+				text = AssetDatabase.GenerateUniqueAssetPath(text);
+				if (string.IsNullOrEmpty(text))
+				{
+					result = null;
+				}
+				else
+				{
+					result = AnimatorController.CreateAnimatorControllerAtPathWithClip(text, clip);
+				}
 			}
-			return AnimatorController.CreateAnimatorControllerAtPathWithClip(text, clip);
+			return result;
 		}
 
 		public static AnimatorController CreateAnimatorControllerAtPathWithClip(string path, AnimationClip clip)
@@ -419,11 +411,16 @@ namespace UnityEditor.Animations
 
 		public Motion GetStateEffectiveMotion(AnimatorState state, int layerIndex)
 		{
+			Motion result;
 			if (this.layers[layerIndex].syncedLayerIndex == -1)
 			{
-				return state.motion;
+				result = state.motion;
 			}
-			return this.layers[layerIndex].GetOverrideMotion(state);
+			else
+			{
+				result = this.layers[layerIndex].GetOverrideMotion(state);
+			}
+			return result;
 		}
 
 		public void SetStateEffectiveBehaviours(AnimatorState state, int layerIndex, StateMachineBehaviour[] behaviours)

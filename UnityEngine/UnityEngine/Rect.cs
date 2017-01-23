@@ -14,6 +14,14 @@ namespace UnityEngine
 
 		private float m_Height;
 
+		public static Rect zero
+		{
+			get
+			{
+				return new Rect(0f, 0f, 0f, 0f);
+			}
+		}
+
 		public float x
 		{
 			get
@@ -127,42 +135,6 @@ namespace UnityEngine
 			}
 		}
 
-		[Obsolete("use xMin")]
-		public float left
-		{
-			get
-			{
-				return this.m_XMin;
-			}
-		}
-
-		[Obsolete("use xMax")]
-		public float right
-		{
-			get
-			{
-				return this.m_XMin + this.m_Width;
-			}
-		}
-
-		[Obsolete("use yMin")]
-		public float top
-		{
-			get
-			{
-				return this.m_YMin;
-			}
-		}
-
-		[Obsolete("use yMax")]
-		public float bottom
-		{
-			get
-			{
-				return this.m_YMin + this.m_Height;
-			}
-		}
-
 		public float xMin
 		{
 			get
@@ -215,6 +187,42 @@ namespace UnityEngine
 			}
 		}
 
+		[Obsolete("use xMin")]
+		public float left
+		{
+			get
+			{
+				return this.m_XMin;
+			}
+		}
+
+		[Obsolete("use xMax")]
+		public float right
+		{
+			get
+			{
+				return this.m_XMin + this.m_Width;
+			}
+		}
+
+		[Obsolete("use yMin")]
+		public float top
+		{
+			get
+			{
+				return this.m_YMin;
+			}
+		}
+
+		[Obsolete("use yMax")]
+		public float bottom
+		{
+			get
+			{
+				return this.m_YMin + this.m_Height;
+			}
+		}
+
 		public Rect(float x, float y, float width, float height)
 		{
 			this.m_XMin = x;
@@ -252,28 +260,6 @@ namespace UnityEngine
 			this.m_Height = height;
 		}
 
-		public override string ToString()
-		{
-			return UnityString.Format("(x:{0:F2}, y:{1:F2}, width:{2:F2}, height:{3:F2})", new object[]
-			{
-				this.x,
-				this.y,
-				this.width,
-				this.height
-			});
-		}
-
-		public string ToString(string format)
-		{
-			return UnityString.Format("(x:{0}, y:{1}, width:{2}, height:{3})", new object[]
-			{
-				this.x.ToString(format),
-				this.y.ToString(format),
-				this.width.ToString(format),
-				this.height.ToString(format)
-			});
-		}
-
 		public bool Contains(Vector2 point)
 		{
 			return point.x >= this.xMin && point.x < this.xMax && point.y >= this.yMin && point.y < this.yMax;
@@ -286,16 +272,21 @@ namespace UnityEngine
 
 		public bool Contains(Vector3 point, bool allowInverse)
 		{
+			bool result;
 			if (!allowInverse)
 			{
-				return this.Contains(point);
+				result = this.Contains(point);
 			}
-			bool flag = false;
-			if ((this.width < 0f && point.x <= this.xMin && point.x > this.xMax) || (this.width >= 0f && point.x >= this.xMin && point.x < this.xMax))
+			else
 			{
-				flag = true;
+				bool flag = false;
+				if ((this.width < 0f && point.x <= this.xMin && point.x > this.xMax) || (this.width >= 0f && point.x >= this.xMin && point.x < this.xMax))
+				{
+					flag = true;
+				}
+				result = (flag && ((this.height < 0f && point.y <= this.yMin && point.y > this.yMax) || (this.height >= 0f && point.y >= this.yMin && point.y < this.yMax)));
 			}
-			return flag && ((this.height < 0f && point.y <= this.yMin && point.y > this.yMax) || (this.height >= 0f && point.y >= this.yMin && point.y < this.yMax));
+			return result;
 		}
 
 		private static Rect OrderMinMax(Rect rect)
@@ -341,21 +332,6 @@ namespace UnityEngine
 			return new Vector2(Mathf.InverseLerp(rectangle.x, rectangle.xMax, point.x), Mathf.InverseLerp(rectangle.y, rectangle.yMax, point.y));
 		}
 
-		public override int GetHashCode()
-		{
-			return this.x.GetHashCode() ^ this.width.GetHashCode() << 2 ^ this.y.GetHashCode() >> 2 ^ this.height.GetHashCode() >> 1;
-		}
-
-		public override bool Equals(object other)
-		{
-			if (!(other is Rect))
-			{
-				return false;
-			}
-			Rect rect = (Rect)other;
-			return this.x.Equals(rect.x) && this.y.Equals(rect.y) && this.width.Equals(rect.width) && this.height.Equals(rect.height);
-		}
-
 		public static bool operator !=(Rect lhs, Rect rhs)
 		{
 			return lhs.x != rhs.x || lhs.y != rhs.y || lhs.width != rhs.width || lhs.height != rhs.height;
@@ -364,6 +340,48 @@ namespace UnityEngine
 		public static bool operator ==(Rect lhs, Rect rhs)
 		{
 			return lhs.x == rhs.x && lhs.y == rhs.y && lhs.width == rhs.width && lhs.height == rhs.height;
+		}
+
+		public override int GetHashCode()
+		{
+			return this.x.GetHashCode() ^ this.width.GetHashCode() << 2 ^ this.y.GetHashCode() >> 2 ^ this.height.GetHashCode() >> 1;
+		}
+
+		public override bool Equals(object other)
+		{
+			bool result;
+			if (!(other is Rect))
+			{
+				result = false;
+			}
+			else
+			{
+				Rect rect = (Rect)other;
+				result = (this.x.Equals(rect.x) && this.y.Equals(rect.y) && this.width.Equals(rect.width) && this.height.Equals(rect.height));
+			}
+			return result;
+		}
+
+		public override string ToString()
+		{
+			return UnityString.Format("(x:{0:F2}, y:{1:F2}, width:{2:F2}, height:{3:F2})", new object[]
+			{
+				this.x,
+				this.y,
+				this.width,
+				this.height
+			});
+		}
+
+		public string ToString(string format)
+		{
+			return UnityString.Format("(x:{0}, y:{1}, width:{2}, height:{3})", new object[]
+			{
+				this.x.ToString(format),
+				this.y.ToString(format),
+				this.width.ToString(format),
+				this.height.ToString(format)
+			});
 		}
 	}
 }

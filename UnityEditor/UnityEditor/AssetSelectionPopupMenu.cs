@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	internal class AssetSelectionPopupMenu
 	{
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
 		public static void Show(Rect buttonRect, string[] classNames, int initialSelectedInstanceID)
 		{
 			GenericMenu genericMenu = new GenericMenu();
@@ -16,9 +20,16 @@ namespace UnityEditor
 				list.Sort((UnityEngine.Object result1, UnityEngine.Object result2) => EditorUtility.NaturalCompare(result1.name, result2.name));
 				foreach (UnityEngine.Object current in list)
 				{
-					GUIContent content = new GUIContent(current.name);
-					bool on = current.GetInstanceID() == initialSelectedInstanceID;
-					genericMenu.AddItem(content, on, new GenericMenu.MenuFunction2(AssetSelectionPopupMenu.SelectCallback), current);
+					GUIContent gUIContent = new GUIContent(current.name);
+					bool flag = current.GetInstanceID() == initialSelectedInstanceID;
+					GenericMenu arg_8E_0 = genericMenu;
+					GUIContent arg_8E_1 = gUIContent;
+					bool arg_8E_2 = flag;
+					if (AssetSelectionPopupMenu.<>f__mg$cache0 == null)
+					{
+						AssetSelectionPopupMenu.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AssetSelectionPopupMenu.SelectCallback);
+					}
+					arg_8E_0.AddItem(arg_8E_1, arg_8E_2, AssetSelectionPopupMenu.<>f__mg$cache0, current);
 				}
 			}
 			else

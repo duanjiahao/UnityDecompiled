@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Windows.Speech
@@ -12,15 +13,27 @@ namespace UnityEngine.Windows.Speech
 
 		public event PhraseRecognizer.PhraseRecognizedDelegate OnPhraseRecognized
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.OnPhraseRecognized = (PhraseRecognizer.PhraseRecognizedDelegate)Delegate.Combine(this.OnPhraseRecognized, value);
+				PhraseRecognizer.PhraseRecognizedDelegate phraseRecognizedDelegate = this.OnPhraseRecognized;
+				PhraseRecognizer.PhraseRecognizedDelegate phraseRecognizedDelegate2;
+				do
+				{
+					phraseRecognizedDelegate2 = phraseRecognizedDelegate;
+					phraseRecognizedDelegate = Interlocked.CompareExchange<PhraseRecognizer.PhraseRecognizedDelegate>(ref this.OnPhraseRecognized, (PhraseRecognizer.PhraseRecognizedDelegate)Delegate.Combine(phraseRecognizedDelegate2, value), phraseRecognizedDelegate);
+				}
+				while (phraseRecognizedDelegate != phraseRecognizedDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.OnPhraseRecognized = (PhraseRecognizer.PhraseRecognizedDelegate)Delegate.Remove(this.OnPhraseRecognized, value);
+				PhraseRecognizer.PhraseRecognizedDelegate phraseRecognizedDelegate = this.OnPhraseRecognized;
+				PhraseRecognizer.PhraseRecognizedDelegate phraseRecognizedDelegate2;
+				do
+				{
+					phraseRecognizedDelegate2 = phraseRecognizedDelegate;
+					phraseRecognizedDelegate = Interlocked.CompareExchange<PhraseRecognizer.PhraseRecognizedDelegate>(ref this.OnPhraseRecognized, (PhraseRecognizer.PhraseRecognizedDelegate)Delegate.Remove(phraseRecognizedDelegate2, value), phraseRecognizedDelegate);
+				}
+				while (phraseRecognizedDelegate != phraseRecognizedDelegate2);
 			}
 		}
 
@@ -43,7 +56,6 @@ namespace UnityEngine.Windows.Speech
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_CreateFromKeywords(PhraseRecognizer self, string[] keywords, ConfidenceLevel minimumConfidence, out IntPtr value);
 
@@ -54,27 +66,22 @@ namespace UnityEngine.Windows.Speech
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_CreateFromGrammarFile(PhraseRecognizer self, string grammarFilePath, ConfidenceLevel minimumConfidence, out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Start_Internal(IntPtr recognizer);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Stop_Internal(IntPtr recognizer);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool IsRunning_Internal(IntPtr recognizer);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Destroy(IntPtr recognizer);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void DestroyThreaded(IntPtr recognizer);
 
@@ -90,20 +97,18 @@ namespace UnityEngine.Windows.Speech
 
 		public void Start()
 		{
-			if (this.m_Recognizer == IntPtr.Zero)
+			if (!(this.m_Recognizer == IntPtr.Zero))
 			{
-				return;
+				PhraseRecognizer.Start_Internal(this.m_Recognizer);
 			}
-			PhraseRecognizer.Start_Internal(this.m_Recognizer);
 		}
 
 		public void Stop()
 		{
-			if (this.m_Recognizer == IntPtr.Zero)
+			if (!(this.m_Recognizer == IntPtr.Zero))
 			{
-				return;
+				PhraseRecognizer.Stop_Internal(this.m_Recognizer);
 			}
-			PhraseRecognizer.Stop_Internal(this.m_Recognizer);
 		}
 
 		public void Dispose()
@@ -133,16 +138,16 @@ namespace UnityEngine.Windows.Speech
 			int num = 0;
 			for (int i = 0; i < valueCount; i++)
 			{
-				uint num2 = *(uint*)((byte*)((void*)valueSizes) + i * 4);
+				uint num2 = *(uint*)((byte*)((void*)valueSizes) + (IntPtr)i * 4);
 				SemanticMeaning semanticMeaning = new SemanticMeaning
 				{
-					key = new string(*(IntPtr*)((byte*)((void*)keys) + i * sizeof(char*))),
+					key = new string(*(IntPtr*)((byte*)((void*)keys) + (IntPtr)i * (IntPtr)sizeof(char*))),
 					values = new string[num2]
 				};
 				int num3 = 0;
 				while ((long)num3 < (long)((ulong)num2))
 				{
-					semanticMeaning.values[num3] = new string(*(IntPtr*)((byte*)((void*)values) + (num + num3) * sizeof(char*)));
+					semanticMeaning.values[num3] = new string(*(IntPtr*)((byte*)((void*)values) + (IntPtr)(num + num3) * (IntPtr)sizeof(char*)));
 					num3++;
 				}
 				array[i] = semanticMeaning;

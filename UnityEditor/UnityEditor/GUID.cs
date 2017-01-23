@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Scripting;
 
 namespace UnityEditor
@@ -25,6 +24,16 @@ namespace UnityEditor
 			this.ParseExact(hexRepresentation);
 		}
 
+		public static bool operator ==(GUID x, GUID y)
+		{
+			return x.m_Value0 == y.m_Value0 && x.m_Value1 == y.m_Value1 && x.m_Value2 == y.m_Value2 && x.m_Value3 == y.m_Value3;
+		}
+
+		public static bool operator !=(GUID x, GUID y)
+		{
+			return !(x == y);
+		}
+
 		public override bool Equals(object obj)
 		{
 			GUID x = (GUID)obj;
@@ -47,18 +56,7 @@ namespace UnityEditor
 			return !this.Empty();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void HexToGUIDInternal(string hex, ref GUID guid);
-
-		public static bool operator ==(GUID x, GUID y)
-		{
-			return x.m_Value0 == y.m_Value0 && x.m_Value1 == y.m_Value1 && x.m_Value2 == y.m_Value2 && x.m_Value3 == y.m_Value3;
-		}
-
-		public static bool operator !=(GUID x, GUID y)
-		{
-			return !(x == y);
-		}
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -10,7 +11,7 @@ namespace UnityEditor
 
 		private float m_MaxWidthOfRows;
 
-		protected readonly TreeView m_TreeView;
+		protected readonly TreeViewController m_TreeView;
 
 		protected float m_BaseIndent = 2f;
 
@@ -46,7 +47,7 @@ namespace UnityEditor
 			}
 		}
 
-		public TreeViewGUIWithCustomItemsHeights(TreeView treeView)
+		public TreeViewGUIWithCustomItemsHeights(TreeViewController treeView)
 		{
 			this.m_TreeView = treeView;
 		}
@@ -57,12 +58,22 @@ namespace UnityEditor
 
 		public Rect GetRowRect(int row, float rowWidth)
 		{
+			Rect result;
 			if (this.m_RowRects.Count == 0)
 			{
 				Debug.LogError("Ensure precalc rects");
-				return default(Rect);
+				result = default(Rect);
 			}
-			return this.m_RowRects[row];
+			else
+			{
+				result = this.m_RowRects[row];
+			}
+			return result;
+		}
+
+		public Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
+		{
+			return default(Rect);
 		}
 
 		public Rect GetRectForFraming(int row)
@@ -84,36 +95,40 @@ namespace UnityEditor
 
 		public void CalculateRowRects()
 		{
-			if (this.m_TreeView.isSearching)
+			if (!this.m_TreeView.isSearching)
 			{
-				return;
-			}
-			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
-			this.m_RowRects = new List<Rect>(rows.Count);
-			float num = 2f;
-			this.m_MaxWidthOfRows = 1f;
-			for (int i = 0; i < rows.Count; i++)
-			{
-				TreeViewItem item = rows[i];
-				float num2 = this.AddSpaceBefore(item);
-				num += num2;
-				Vector2 sizeOfRow = this.GetSizeOfRow(item);
-				this.m_RowRects.Add(new Rect(0f, num, sizeOfRow.x, sizeOfRow.y));
-				num += sizeOfRow.y;
-				if (sizeOfRow.x > this.m_MaxWidthOfRows)
+				IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+				this.m_RowRects = new List<Rect>(rows.Count);
+				float num = 2f;
+				this.m_MaxWidthOfRows = 1f;
+				for (int i = 0; i < rows.Count; i++)
 				{
-					this.m_MaxWidthOfRows = sizeOfRow.x;
+					TreeViewItem item = rows[i];
+					float num2 = this.AddSpaceBefore(item);
+					num += num2;
+					Vector2 sizeOfRow = this.GetSizeOfRow(item);
+					this.m_RowRects.Add(new Rect(0f, num, sizeOfRow.x, sizeOfRow.y));
+					num += sizeOfRow.y;
+					if (sizeOfRow.x > this.m_MaxWidthOfRows)
+					{
+						this.m_MaxWidthOfRows = sizeOfRow.x;
+					}
 				}
 			}
 		}
 
 		public Vector2 GetTotalSize()
 		{
+			Vector2 result;
 			if (this.m_RowRects.Count == 0)
 			{
-				return new Vector2(0f, 0f);
+				result = new Vector2(0f, 0f);
 			}
-			return new Vector2(this.m_MaxWidthOfRows, this.m_RowRects[this.m_RowRects.Count - 1].yMax);
+			else
+			{
+				result = new Vector2(this.m_MaxWidthOfRows, this.m_RowRects[this.m_RowRects.Count - 1].yMax);
+			}
+			return result;
 		}
 
 		public int GetNumRowsOnPageUpDown(TreeViewItem fromItem, bool pageUp, float heightOfTreeView)
@@ -188,11 +203,16 @@ namespace UnityEditor
 
 		public virtual float GetFoldoutIndent(TreeViewItem item)
 		{
+			float result;
 			if (this.m_TreeView.isSearching)
 			{
-				return this.m_BaseIndent;
+				result = this.m_BaseIndent;
 			}
-			return this.m_BaseIndent + (float)item.depth * this.indentWidth;
+			else
+			{
+				result = this.m_BaseIndent + (float)item.depth * this.indentWidth;
+			}
+			return result;
 		}
 
 		public virtual float GetContentIndent(TreeViewItem item)

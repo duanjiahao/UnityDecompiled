@@ -95,31 +95,29 @@ namespace UnityEngine.Events
 
 		private void TidyAssemblyTypeName()
 		{
-			if (string.IsNullOrEmpty(this.m_ObjectArgumentAssemblyTypeName))
+			if (!string.IsNullOrEmpty(this.m_ObjectArgumentAssemblyTypeName))
 			{
-				return;
+				int num = 2147483647;
+				int num2 = this.m_ObjectArgumentAssemblyTypeName.IndexOf(", Version=");
+				if (num2 != -1)
+				{
+					num = Math.Min(num2, num);
+				}
+				num2 = this.m_ObjectArgumentAssemblyTypeName.IndexOf(", Culture=");
+				if (num2 != -1)
+				{
+					num = Math.Min(num2, num);
+				}
+				num2 = this.m_ObjectArgumentAssemblyTypeName.IndexOf(", PublicKeyToken=");
+				if (num2 != -1)
+				{
+					num = Math.Min(num2, num);
+				}
+				if (num != 2147483647)
+				{
+					this.m_ObjectArgumentAssemblyTypeName = this.m_ObjectArgumentAssemblyTypeName.Substring(0, num);
+				}
 			}
-			int num = 2147483647;
-			int num2 = this.m_ObjectArgumentAssemblyTypeName.IndexOf(", Version=");
-			if (num2 != -1)
-			{
-				num = Math.Min(num2, num);
-			}
-			num2 = this.m_ObjectArgumentAssemblyTypeName.IndexOf(", Culture=");
-			if (num2 != -1)
-			{
-				num = Math.Min(num2, num);
-			}
-			num2 = this.m_ObjectArgumentAssemblyTypeName.IndexOf(", PublicKeyToken=");
-			if (num2 != -1)
-			{
-				num = Math.Min(num2, num);
-			}
-			if (num == 2147483647)
-			{
-				return;
-			}
-			this.m_ObjectArgumentAssemblyTypeName = this.m_ObjectArgumentAssemblyTypeName.Substring(0, num);
 		}
 
 		public void OnBeforeSerialize()

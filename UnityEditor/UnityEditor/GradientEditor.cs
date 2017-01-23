@@ -17,6 +17,8 @@ namespace UnityEditor
 
 			public GUIStyle downSwatchOverlay = "Grad Down Swatch Overlay";
 
+			public GUIContent modeText = new GUIContent("Mode");
+
 			public GUIContent alphaText = new GUIContent("Alpha");
 
 			public GUIContent colorText = new GUIContent("Color");
@@ -48,15 +50,17 @@ namespace UnityEditor
 			}
 		}
 
-		private const int k_MaxNumKeys = 8;
-
 		private static GradientEditor.Styles s_Styles;
 
 		private static Texture2D s_BackgroundTexture;
 
+		private const int k_MaxNumKeys = 8;
+
 		private List<GradientEditor.Swatch> m_RGBSwatches;
 
 		private List<GradientEditor.Swatch> m_AlphaSwatches;
+
+		private GradientMode m_GradientMode;
 
 		[NonSerialized]
 		private GradientEditor.Swatch m_SelectedSwatch;
@@ -87,35 +91,40 @@ namespace UnityEditor
 		private float GetTime(float actualTime)
 		{
 			actualTime = Mathf.Clamp01(actualTime);
+			float result;
 			if (this.m_NumSteps > 1)
 			{
 				float num = 1f / (float)(this.m_NumSteps - 1);
 				int num2 = Mathf.RoundToInt(actualTime / num);
-				return (float)num2 / (float)(this.m_NumSteps - 1);
+				result = (float)num2 / (float)(this.m_NumSteps - 1);
 			}
-			return actualTime;
+			else
+			{
+				result = actualTime;
+			}
+			return result;
 		}
 
 		private void BuildArrays()
 		{
-			if (this.m_Gradient == null)
+			if (this.m_Gradient != null)
 			{
-				return;
-			}
-			GradientColorKey[] colorKeys = this.m_Gradient.colorKeys;
-			this.m_RGBSwatches = new List<GradientEditor.Swatch>(colorKeys.Length);
-			for (int i = 0; i < colorKeys.Length; i++)
-			{
-				Color color = colorKeys[i].color;
-				color.a = 1f;
-				this.m_RGBSwatches.Add(new GradientEditor.Swatch(colorKeys[i].time, color, false));
-			}
-			GradientAlphaKey[] alphaKeys = this.m_Gradient.alphaKeys;
-			this.m_AlphaSwatches = new List<GradientEditor.Swatch>(alphaKeys.Length);
-			for (int j = 0; j < alphaKeys.Length; j++)
-			{
-				float alpha = alphaKeys[j].alpha;
-				this.m_AlphaSwatches.Add(new GradientEditor.Swatch(alphaKeys[j].time, new Color(alpha, alpha, alpha, 1f), true));
+				GradientColorKey[] colorKeys = this.m_Gradient.colorKeys;
+				this.m_RGBSwatches = new List<GradientEditor.Swatch>(colorKeys.Length);
+				for (int i = 0; i < colorKeys.Length; i++)
+				{
+					Color color = colorKeys[i].color;
+					color.a = 1f;
+					this.m_RGBSwatches.Add(new GradientEditor.Swatch(colorKeys[i].time, color, false));
+				}
+				GradientAlphaKey[] alphaKeys = this.m_Gradient.alphaKeys;
+				this.m_AlphaSwatches = new List<GradientEditor.Swatch>(alphaKeys.Length);
+				for (int j = 0; j < alphaKeys.Length; j++)
+				{
+					float alpha = alphaKeys[j].alpha;
+					this.m_AlphaSwatches.Add(new GradientEditor.Swatch(alphaKeys[j].time, new Color(alpha, alpha, alpha, 1f), true));
+				}
+				this.m_GradientMode = this.m_Gradient.mode;
 			}
 		}
 
@@ -138,44 +147,52 @@ namespace UnityEditor
 			{
 				GradientEditor.s_Styles = new GradientEditor.Styles();
 			}
-			float num = 16f;
-			float num2 = 30f;
-			float num3 = position.height - 2f * num - num2;
+			float num = 24f;
+			float num2 = 16f;
+			float num3 = 26f;
+			float num4 = position.height - 2f * num2 - num3 - num;
 			position.height = num;
-			this.ShowSwatchArray(position, this.m_AlphaSwatches, true);
+			this.m_GradientMode = (GradientMode)EditorGUI.EnumPopup(position, GradientEditor.s_Styles.modeText, this.m_GradientMode);
+			if (this.m_GradientMode != this.m_Gradient.mode)
+			{
+				this.AssignBack();
+			}
 			position.y += num;
+			position.height = num2;
+			this.ShowSwatchArray(position, this.m_AlphaSwatches, true);
+			position.y += num2;
 			if (Event.current.type == EventType.Repaint)
 			{
-				position.height = num3;
+				position.height = num4;
 				GradientEditor.DrawGradientWithBackground(position, GradientPreviewCache.GetGradientPreview(this.m_Gradient));
 			}
-			position.y += num3;
-			position.height = num;
+			position.y += num4;
+			position.height = num2;
 			this.ShowSwatchArray(position, this.m_RGBSwatches, false);
 			if (this.m_SelectedSwatch != null)
 			{
-				position.y += num;
-				position.height = num2;
+				position.y += num2;
+				position.height = num3;
 				position.y += 10f;
-				float num4 = 45f;
-				float num5 = 60f;
-				float num6 = 20f;
+				float num5 = 45f;
+				float num6 = 60f;
+				float num7 = 20f;
 				float labelWidth = 50f;
-				float num7 = num5 + num6 + num5 + num4;
+				float num8 = num6 + num7 + num6 + num5;
 				Rect position2 = position;
 				position2.height = 18f;
 				position2.x += 17f;
-				position2.width -= num7;
+				position2.width -= num8;
 				EditorGUIUtility.labelWidth = labelWidth;
 				if (this.m_SelectedSwatch.m_IsAlpha)
 				{
 					EditorGUIUtility.fieldWidth = 30f;
 					EditorGUI.BeginChangeCheck();
-					float num8 = (float)EditorGUI.IntSlider(position2, GradientEditor.s_Styles.alphaText, (int)(this.m_SelectedSwatch.m_Value.r * 255f), 0, 255) / 255f;
+					float num9 = (float)EditorGUI.IntSlider(position2, GradientEditor.s_Styles.alphaText, (int)(this.m_SelectedSwatch.m_Value.r * 255f), 0, 255) / 255f;
 					if (EditorGUI.EndChangeCheck())
 					{
-						num8 = Mathf.Clamp01(num8);
-						this.m_SelectedSwatch.m_Value.r = (this.m_SelectedSwatch.m_Value.g = (this.m_SelectedSwatch.m_Value.b = num8));
+						num9 = Mathf.Clamp01(num9);
+						this.m_SelectedSwatch.m_Value.r = (this.m_SelectedSwatch.m_Value.g = (this.m_SelectedSwatch.m_Value.b = num9));
 						this.AssignBack();
 						HandleUtility.Repaint();
 					}
@@ -190,9 +207,9 @@ namespace UnityEditor
 						HandleUtility.Repaint();
 					}
 				}
-				position2.x += position2.width + num6;
-				position2.width = num4 + num5;
-				EditorGUIUtility.labelWidth = num5;
+				position2.x += position2.width + num7;
+				position2.width = num5 + num6;
+				EditorGUIUtility.labelWidth = num6;
 				string kFloatFieldFormatString = EditorGUI.kFloatFieldFormatString;
 				EditorGUI.kFloatFieldFormatString = "f1";
 				EditorGUI.BeginChangeCheck();
@@ -296,7 +313,7 @@ namespace UnityEditor
 			case EventType.MouseMove:
 			case EventType.KeyUp:
 			case EventType.ScrollWheel:
-				IL_9B:
+				IL_9C:
 				if (typeForControl == EventType.ValidateCommand)
 				{
 					if (current.commandName == "Delete")
@@ -316,11 +333,14 @@ namespace UnityEditor
 					this.AssignBack();
 					HandleUtility.Repaint();
 				}
-				else if (current.commandName == "Delete" && swatches.Count > 1)
+				else if (current.commandName == "Delete")
 				{
-					swatches.Remove(this.m_SelectedSwatch);
-					this.AssignBack();
-					HandleUtility.Repaint();
+					if (swatches.Count > 1)
+					{
+						swatches.Remove(this.m_SelectedSwatch);
+						this.AssignBack();
+						HandleUtility.Repaint();
+					}
 				}
 				return;
 			case EventType.MouseDrag:
@@ -389,7 +409,7 @@ namespace UnityEditor
 				return;
 			}
 			}
-			goto IL_9B;
+			goto IL_9C;
 		}
 
 		private void DrawSwatch(Rect totalPos, GradientEditor.Swatch s, bool upwards)
@@ -412,15 +432,20 @@ namespace UnityEditor
 
 		private int SwatchSort(GradientEditor.Swatch lhs, GradientEditor.Swatch rhs)
 		{
+			int result;
 			if (lhs.m_Time == rhs.m_Time && lhs == this.m_SelectedSwatch)
 			{
-				return -1;
+				result = -1;
 			}
-			if (lhs.m_Time == rhs.m_Time && rhs == this.m_SelectedSwatch)
+			else if (lhs.m_Time == rhs.m_Time && rhs == this.m_SelectedSwatch)
 			{
-				return 1;
+				result = 1;
 			}
-			return lhs.m_Time.CompareTo(rhs.m_Time);
+			else
+			{
+				result = lhs.m_Time.CompareTo(rhs.m_Time);
+			}
+			return result;
 		}
 
 		private void AssignBack()
@@ -441,6 +466,7 @@ namespace UnityEditor
 			}
 			this.m_Gradient.colorKeys = array;
 			this.m_Gradient.alphaKeys = array2;
+			this.m_Gradient.mode = this.m_GradientMode;
 			GUI.changed = true;
 		}
 
@@ -484,7 +510,7 @@ namespace UnityEditor
 		{
 			int num = numRows * cellPixelWidth;
 			int num2 = numCols * cellPixelWidth;
-			Texture2D texture2D = new Texture2D(num2, num, TextureFormat.ARGB32, false);
+			Texture2D texture2D = new Texture2D(num2, num, TextureFormat.RGBA32, false);
 			texture2D.hideFlags = HideFlags.HideAndDontSave;
 			Color[] array = new Color[num2 * num];
 			for (int i = 0; i < numRows; i++)
@@ -517,35 +543,36 @@ namespace UnityEditor
 
 		private static void DrawGradientSwatchInternal(Rect position, Gradient gradient, SerializedProperty property, Color bgColor)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				Texture2D backgroundTexture = GradientEditor.GetBackgroundTexture();
+				if (backgroundTexture != null)
+				{
+					Color color = GUI.color;
+					GUI.color = bgColor;
+					GUIStyle basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(backgroundTexture);
+					basicTextureStyle.Draw(position, false, false, false, false);
+					GUI.color = color;
+				}
+				Texture2D texture2D;
+				if (property != null)
+				{
+					texture2D = GradientPreviewCache.GetPropertyPreview(property);
+				}
+				else
+				{
+					texture2D = GradientPreviewCache.GetGradientPreview(gradient);
+				}
+				if (texture2D == null)
+				{
+					Debug.Log("Warning: Could not create preview for gradient");
+				}
+				else
+				{
+					GUIStyle basicTextureStyle2 = EditorGUIUtility.GetBasicTextureStyle(texture2D);
+					basicTextureStyle2.Draw(position, false, false, false, false);
+				}
 			}
-			Texture2D backgroundTexture = GradientEditor.GetBackgroundTexture();
-			if (backgroundTexture != null)
-			{
-				Color color = GUI.color;
-				GUI.color = bgColor;
-				GUIStyle basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(backgroundTexture);
-				basicTextureStyle.Draw(position, false, false, false, false);
-				GUI.color = color;
-			}
-			Texture2D texture2D;
-			if (property != null)
-			{
-				texture2D = GradientPreviewCache.GetPropertyPreview(property);
-			}
-			else
-			{
-				texture2D = GradientPreviewCache.GetGradientPreview(gradient);
-			}
-			if (texture2D == null)
-			{
-				Debug.Log("Warning: Could not create preview for gradient");
-				return;
-			}
-			GUIStyle basicTextureStyle2 = EditorGUIUtility.GetBasicTextureStyle(texture2D);
-			basicTextureStyle2.Draw(position, false, false, false, false);
 		}
 	}
 }

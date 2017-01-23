@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -16,43 +17,49 @@ namespace UnityEditor
 			public GUIStyle timeScrubber = "TimeScrubber";
 		}
 
+		public float currentTime = float.NegativeInfinity;
+
+		private bool m_NextCurrentTimeSet = false;
+
+		public float startTime = 0f;
+
+		public float stopTime = 1f;
+
+		public bool playSelection = false;
+
+		public bool loop = true;
+
+		public float playbackSpeed = 1f;
+
+		private float m_DeltaTime = 0f;
+
+		private bool m_DeltaTimeSet = false;
+
+		private double m_LastFrameEditorTime = 0.0;
+
+		private bool m_Playing = false;
+
+		private bool m_ResetOnPlay = false;
+
+		private float m_MouseDrag = 0f;
+
+		private bool m_WrapForwardDrag = false;
+
 		private const float kStepTime = 0.01f;
 
 		private const float kScrubberHeight = 21f;
 
 		private const float kPlayButtonWidth = 33f;
 
-		public float currentTime = float.NegativeInfinity;
-
-		private bool m_NextCurrentTimeSet;
-
-		public float startTime;
-
-		public float stopTime = 1f;
-
-		public bool playSelection;
-
-		public bool loop = true;
-
-		public float playbackSpeed = 1f;
-
-		private float m_DeltaTime;
-
-		private bool m_DeltaTimeSet;
-
-		private double m_LastFrameEditorTime;
-
-		private bool m_Playing;
-
-		private bool m_ResetOnPlay;
-
-		private float m_MouseDrag;
-
-		private bool m_WrapForwardDrag;
-
 		private static TimeControl.Styles s_Styles;
 
 		private static readonly int kScrubberIDHash = "ScrubberIDHash".GetHashCode();
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache1;
 
 		public float nextCurrentTime
 		{
@@ -100,7 +107,12 @@ namespace UnityEditor
 				{
 					if (value)
 					{
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors));
+						Delegate arg_37_0 = EditorApplication.update;
+						if (TimeControl.<>f__mg$cache0 == null)
+						{
+							TimeControl.<>f__mg$cache0 = new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_37_0, TimeControl.<>f__mg$cache0);
 						this.m_LastFrameEditorTime = EditorApplication.timeSinceStartup;
 						if (this.m_ResetOnPlay)
 						{
@@ -110,7 +122,12 @@ namespace UnityEditor
 					}
 					else
 					{
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors));
+						Delegate arg_9A_0 = EditorApplication.update;
+						if (TimeControl.<>f__mg$cache1 == null)
+						{
+							TimeControl.<>f__mg$cache1 = new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_9A_0, TimeControl.<>f__mg$cache1);
 					}
 				}
 				this.m_Playing = value;

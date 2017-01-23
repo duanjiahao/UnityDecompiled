@@ -15,12 +15,11 @@ namespace UnityEditor.Scripting.Compilers
 		[DebuggerHidden]
 		public override IEnumerable<CompilerMessage> Parse(string[] errorOutput, string[] standardOutput, bool compilationHadFailure)
 		{
-			GendarmeOutputParser.<Parse>c__IteratorB <Parse>c__IteratorB = new GendarmeOutputParser.<Parse>c__IteratorB();
-			<Parse>c__IteratorB.standardOutput = standardOutput;
-			<Parse>c__IteratorB.<$>standardOutput = standardOutput;
-			GendarmeOutputParser.<Parse>c__IteratorB expr_15 = <Parse>c__IteratorB;
-			expr_15.$PC = -2;
-			return expr_15;
+			GendarmeOutputParser.<Parse>c__Iterator0 <Parse>c__Iterator = new GendarmeOutputParser.<Parse>c__Iterator0();
+			<Parse>c__Iterator.standardOutput = standardOutput;
+			GendarmeOutputParser.<Parse>c__Iterator0 expr_0E = <Parse>c__Iterator;
+			expr_0E.$PC = -2;
+			return expr_0E;
 		}
 
 		private static CompilerMessage CompilerErrorFor(GendarmeRuleData gendarmeRuleData)
@@ -87,22 +86,32 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			int num = currentLine.LastIndexOf("* Source:") + "* Source:".Length;
 			int num2 = currentLine.IndexOf("(");
+			string result;
 			if (num != -1 && num2 != -1)
 			{
-				return currentLine.Substring(num, num2 - num).Trim();
+				result = currentLine.Substring(num, num2 - num).Trim();
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		private static int GetLineNumberFrom(string currentLine)
 		{
 			int num = currentLine.IndexOf("(") + 2;
 			int num2 = currentLine.IndexOf(")");
+			int result;
 			if (num != -1 && num2 != -1)
 			{
-				return int.Parse(currentLine.Substring(num, num2 - num));
+				result = int.Parse(currentLine.Substring(num, num2 - num));
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 	}
 }

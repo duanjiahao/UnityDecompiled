@@ -2,6 +2,7 @@ using System;
 
 namespace UnityEditor
 {
+	[Obsolete("targetOSVersion is obsolete, use targetOSVersionString", false)]
 	public enum iOSTargetOSVersion
 	{
 		iOS_4_0 = 10,

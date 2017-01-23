@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Windows.Speech
@@ -12,52 +13,72 @@ namespace UnityEngine.Windows.Speech
 
 		public static event PhraseRecognitionSystem.ErrorDelegate OnError
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				PhraseRecognitionSystem.OnError = (PhraseRecognitionSystem.ErrorDelegate)Delegate.Combine(PhraseRecognitionSystem.OnError, value);
+				PhraseRecognitionSystem.ErrorDelegate errorDelegate = PhraseRecognitionSystem.OnError;
+				PhraseRecognitionSystem.ErrorDelegate errorDelegate2;
+				do
+				{
+					errorDelegate2 = errorDelegate;
+					errorDelegate = Interlocked.CompareExchange<PhraseRecognitionSystem.ErrorDelegate>(ref PhraseRecognitionSystem.OnError, (PhraseRecognitionSystem.ErrorDelegate)Delegate.Combine(errorDelegate2, value), errorDelegate);
+				}
+				while (errorDelegate != errorDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				PhraseRecognitionSystem.OnError = (PhraseRecognitionSystem.ErrorDelegate)Delegate.Remove(PhraseRecognitionSystem.OnError, value);
+				PhraseRecognitionSystem.ErrorDelegate errorDelegate = PhraseRecognitionSystem.OnError;
+				PhraseRecognitionSystem.ErrorDelegate errorDelegate2;
+				do
+				{
+					errorDelegate2 = errorDelegate;
+					errorDelegate = Interlocked.CompareExchange<PhraseRecognitionSystem.ErrorDelegate>(ref PhraseRecognitionSystem.OnError, (PhraseRecognitionSystem.ErrorDelegate)Delegate.Remove(errorDelegate2, value), errorDelegate);
+				}
+				while (errorDelegate != errorDelegate2);
 			}
 		}
 
 		public static event PhraseRecognitionSystem.StatusDelegate OnStatusChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				PhraseRecognitionSystem.OnStatusChanged = (PhraseRecognitionSystem.StatusDelegate)Delegate.Combine(PhraseRecognitionSystem.OnStatusChanged, value);
+				PhraseRecognitionSystem.StatusDelegate statusDelegate = PhraseRecognitionSystem.OnStatusChanged;
+				PhraseRecognitionSystem.StatusDelegate statusDelegate2;
+				do
+				{
+					statusDelegate2 = statusDelegate;
+					statusDelegate = Interlocked.CompareExchange<PhraseRecognitionSystem.StatusDelegate>(ref PhraseRecognitionSystem.OnStatusChanged, (PhraseRecognitionSystem.StatusDelegate)Delegate.Combine(statusDelegate2, value), statusDelegate);
+				}
+				while (statusDelegate != statusDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				PhraseRecognitionSystem.OnStatusChanged = (PhraseRecognitionSystem.StatusDelegate)Delegate.Remove(PhraseRecognitionSystem.OnStatusChanged, value);
+				PhraseRecognitionSystem.StatusDelegate statusDelegate = PhraseRecognitionSystem.OnStatusChanged;
+				PhraseRecognitionSystem.StatusDelegate statusDelegate2;
+				do
+				{
+					statusDelegate2 = statusDelegate;
+					statusDelegate = Interlocked.CompareExchange<PhraseRecognitionSystem.StatusDelegate>(ref PhraseRecognitionSystem.OnStatusChanged, (PhraseRecognitionSystem.StatusDelegate)Delegate.Remove(statusDelegate2, value), statusDelegate);
+				}
+				while (statusDelegate != statusDelegate2);
 			}
 		}
 
 		[ThreadAndSerializationSafe]
 		public static extern bool isSupported
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern SpeechSystemStatus Status
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Restart();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Shutdown();
 

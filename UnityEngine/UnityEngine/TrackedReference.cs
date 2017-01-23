@@ -12,6 +12,33 @@ namespace UnityEngine
 		{
 		}
 
+		public static bool operator ==(TrackedReference x, TrackedReference y)
+		{
+			bool result;
+			if (y == null && x == null)
+			{
+				result = true;
+			}
+			else if (y == null)
+			{
+				result = (x.m_Ptr == IntPtr.Zero);
+			}
+			else if (x == null)
+			{
+				result = (y.m_Ptr == IntPtr.Zero);
+			}
+			else
+			{
+				result = (x.m_Ptr == y.m_Ptr);
+			}
+			return result;
+		}
+
+		public static bool operator !=(TrackedReference x, TrackedReference y)
+		{
+			return !(x == y);
+		}
+
 		public override bool Equals(object o)
 		{
 			return o as TrackedReference == this;
@@ -20,28 +47,6 @@ namespace UnityEngine
 		public override int GetHashCode()
 		{
 			return (int)this.m_Ptr;
-		}
-
-		public static bool operator ==(TrackedReference x, TrackedReference y)
-		{
-			if (y == null && x == null)
-			{
-				return true;
-			}
-			if (y == null)
-			{
-				return x.m_Ptr == IntPtr.Zero;
-			}
-			if (x == null)
-			{
-				return y.m_Ptr == IntPtr.Zero;
-			}
-			return x.m_Ptr == y.m_Ptr;
-		}
-
-		public static bool operator !=(TrackedReference x, TrackedReference y)
-		{
-			return !(x == y);
 		}
 
 		public static implicit operator bool(TrackedReference exists)

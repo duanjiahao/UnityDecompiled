@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
 
@@ -13,58 +14,76 @@ namespace UnityEngine
 
 		public static event Action<Font> textureRebuilt
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				Font.textureRebuilt = (Action<Font>)Delegate.Combine(Font.textureRebuilt, value);
+				Action<Font> action = Font.textureRebuilt;
+				Action<Font> action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action<Font>>(ref Font.textureRebuilt, (Action<Font>)Delegate.Combine(action2, value), action);
+				}
+				while (action != action2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				Font.textureRebuilt = (Action<Font>)Delegate.Remove(Font.textureRebuilt, value);
+				Action<Font> action = Font.textureRebuilt;
+				Action<Font> action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action<Font>>(ref Font.textureRebuilt, (Action<Font>)Delegate.Remove(action2, value), action);
+				}
+				while (action != action2);
 			}
 		}
 
 		private event Font.FontTextureRebuildCallback m_FontTextureRebuildCallback
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.m_FontTextureRebuildCallback = (Font.FontTextureRebuildCallback)Delegate.Combine(this.m_FontTextureRebuildCallback, value);
+				Font.FontTextureRebuildCallback fontTextureRebuildCallback = this.m_FontTextureRebuildCallback;
+				Font.FontTextureRebuildCallback fontTextureRebuildCallback2;
+				do
+				{
+					fontTextureRebuildCallback2 = fontTextureRebuildCallback;
+					fontTextureRebuildCallback = Interlocked.CompareExchange<Font.FontTextureRebuildCallback>(ref this.m_FontTextureRebuildCallback, (Font.FontTextureRebuildCallback)Delegate.Combine(fontTextureRebuildCallback2, value), fontTextureRebuildCallback);
+				}
+				while (fontTextureRebuildCallback != fontTextureRebuildCallback2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.m_FontTextureRebuildCallback = (Font.FontTextureRebuildCallback)Delegate.Remove(this.m_FontTextureRebuildCallback, value);
+				Font.FontTextureRebuildCallback fontTextureRebuildCallback = this.m_FontTextureRebuildCallback;
+				Font.FontTextureRebuildCallback fontTextureRebuildCallback2;
+				do
+				{
+					fontTextureRebuildCallback2 = fontTextureRebuildCallback;
+					fontTextureRebuildCallback = Interlocked.CompareExchange<Font.FontTextureRebuildCallback>(ref this.m_FontTextureRebuildCallback, (Font.FontTextureRebuildCallback)Delegate.Remove(fontTextureRebuildCallback2, value), fontTextureRebuildCallback);
+				}
+				while (fontTextureRebuildCallback != fontTextureRebuildCallback2);
 			}
 		}
 
 		public extern Material material
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string[] fontNames
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern CharacterInfo[] characterInfo
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -84,28 +103,24 @@ namespace UnityEngine
 
 		public extern bool dynamic
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int ascent
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int lineHeight
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int fontSize
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -125,15 +140,12 @@ namespace UnityEngine
 			Font.Internal_CreateDynamicFont(this, names, size);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetOSInstalledFontNames();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateFont([Writable] Font _font, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateDynamicFont([Writable] Font _font, string[] _names, int size);
 
@@ -150,11 +162,9 @@ namespace UnityEngine
 			return new Font(fontnames, size);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasCharacter(char c);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RequestCharactersInTexture(string characters, [UnityEngine.Internal.DefaultValue("0")] int size, [UnityEngine.Internal.DefaultValue("FontStyle.Normal")] FontStyle style);
 
@@ -192,7 +202,6 @@ namespace UnityEngine
 			return str.Length * 4 + 4;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetCharacterInfo(char ch, out CharacterInfo info, [UnityEngine.Internal.DefaultValue("0")] int size, [UnityEngine.Internal.DefaultValue("FontStyle.Normal")] FontStyle style);
 

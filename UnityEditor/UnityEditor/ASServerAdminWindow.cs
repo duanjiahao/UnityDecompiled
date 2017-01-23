@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace UnityEditor
 
 		private const int listLenghts = 20;
 
-		private static ASMainWindow.Constants constants;
+		private static ASMainWindow.Constants constants = null;
 
 		private ListViewState lv;
 
@@ -44,11 +45,11 @@ namespace UnityEditor
 
 		private ASMainWindow parentWin;
 
-		private bool splittersOk;
+		private bool splittersOk = false;
 
-		private bool resetKeyboardControl;
+		private bool resetKeyboardControl = false;
 
-		private ASServerAdminWindow.Action currAction;
+		private ASServerAdminWindow.Action currAction = ASServerAdminWindow.Action.Main;
 
 		private string[] servers;
 
@@ -72,11 +73,11 @@ namespace UnityEditor
 
 		private string nEmail = string.Empty;
 
-		private bool projectSelected;
+		private bool projectSelected = false;
 
-		private bool userSelected;
+		private bool userSelected = false;
 
-		private bool isConnected;
+		private bool isConnected = false;
 
 		public ASServerAdminWindow(ASMainWindow parentWin)
 		{
@@ -121,10 +122,12 @@ namespace UnityEditor
 
 		private bool CanPerformCurrentAction()
 		{
+			bool result;
 			switch (this.currAction)
 			{
 			case ASServerAdminWindow.Action.Main:
-				return this.server != string.Empty && this.user != string.Empty;
+				result = (this.server != string.Empty && this.user != string.Empty);
+				break;
 			case ASServerAdminWindow.Action.CreateUser:
 			{
 				bool flag = true;
@@ -137,17 +140,23 @@ namespace UnityEditor
 						break;
 					}
 				}
-				return this.nFullName != string.Empty && this.nUserName != string.Empty && this.nPassword1 != string.Empty && this.nPassword1 == this.nPassword2 && flag;
+				result = (this.nFullName != string.Empty && this.nUserName != string.Empty && this.nPassword1 != string.Empty && this.nPassword1 == this.nPassword2 && flag);
+				break;
 			}
 			case ASServerAdminWindow.Action.SetPassword:
-				return this.nPassword1 != string.Empty && this.nPassword1 == this.nPassword2;
+				result = (this.nPassword1 != string.Empty && this.nPassword1 == this.nPassword2);
+				break;
 			case ASServerAdminWindow.Action.CreateProject:
-				return this.nProjectName != string.Empty;
+				result = (this.nProjectName != string.Empty);
+				break;
 			case ASServerAdminWindow.Action.ModifyUser:
-				return this.nFullName != string.Empty;
+				result = (this.nFullName != string.Empty);
+				break;
 			default:
-				return false;
+				result = false;
+				break;
 			}
+			return result;
 		}
 
 		private void PerformCurrentAction()
@@ -214,8 +223,8 @@ namespace UnityEditor
 				}
 				if (this.WordWrappedLabelButton("Want to create a new project?", "Create"))
 				{
-					this.nProjectName = string.Empty;
-					this.nTemplateProjectName = string.Empty;
+					this.nProjectName = "";
+					this.nTemplateProjectName = "";
 					this.currAction = ASServerAdminWindow.Action.CreateProject;
 				}
 				if (this.WordWrappedLabelButton("Want to create a new user?", "New User"))
@@ -239,23 +248,35 @@ namespace UnityEditor
 				GUI.enabled = (this.isConnected && this.projectSelected && enabled);
 				if (this.WordWrappedLabelButton("Duplicate selected project", "Copy Project"))
 				{
-					this.nProjectName = string.Empty;
+					this.nProjectName = "";
 					this.nTemplateProjectName = this.databases[this.lv.row].name;
 					this.currAction = ASServerAdminWindow.Action.CreateProject;
 				}
-				if (this.WordWrappedLabelButton("Delete selected project", "Delete Project") && EditorUtility.DisplayDialog("Delete project", "Are you sure you want to delete project " + this.databases[this.lv.row].name + "? This operation cannot be undone!", "Delete", "Cancel") && AssetServer.AdminDeleteDB(this.databases[this.lv.row].name) != 0)
+				if (this.WordWrappedLabelButton("Delete selected project", "Delete Project"))
 				{
-					this.DoRefreshDatabases();
-					GUIUtility.ExitGUI();
+					if (EditorUtility.DisplayDialog("Delete project", "Are you sure you want to delete project " + this.databases[this.lv.row].name + "? This operation cannot be undone!", "Delete", "Cancel"))
+					{
+						if (AssetServer.AdminDeleteDB(this.databases[this.lv.row].name) != 0)
+						{
+							this.DoRefreshDatabases();
+							GUIUtility.ExitGUI();
+						}
+					}
 				}
 				GUI.enabled = (this.isConnected && this.userSelected && enabled);
-				if (this.WordWrappedLabelButton("Delete selected user", "Delete User") && EditorUtility.DisplayDialog("Delete user", "Are you sure you want to delete user " + this.users[this.lv2.row].userName + "? This operation cannot be undone!", "Delete", "Cancel") && AssetServer.AdminDeleteUser(this.users[this.lv2.row].userName) != 0)
+				if (this.WordWrappedLabelButton("Delete selected user", "Delete User"))
 				{
-					if (this.lv.row > -1)
+					if (EditorUtility.DisplayDialog("Delete user", "Are you sure you want to delete user " + this.users[this.lv2.row].userName + "? This operation cannot be undone!", "Delete", "Cancel"))
 					{
-						this.DoGetUsers();
+						if (AssetServer.AdminDeleteUser(this.users[this.lv2.row].userName) != 0)
+						{
+							if (this.lv.row > -1)
+							{
+								this.DoGetUsers();
+							}
+							GUIUtility.ExitGUI();
+						}
 					}
-					GUIUtility.ExitGUI();
 				}
 				GUI.enabled = enabled;
 				break;
@@ -306,7 +327,7 @@ namespace UnityEditor
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 				GUILayout.FlexibleSpace();
 				GUI.enabled = (this.CanPerformCurrentAction() && enabled);
-				if (GUILayout.Button((!(this.nTemplateProjectName == string.Empty)) ? ("Copy " + this.nTemplateProjectName) : "Create Project", ASServerAdminWindow.constants.smallButton, new GUILayoutOption[0]))
+				if (GUILayout.Button((!(this.nTemplateProjectName == "")) ? ("Copy " + this.nTemplateProjectName) : "Create Project", ASServerAdminWindow.constants.smallButton, new GUILayoutOption[0]))
 				{
 					this.PerformCurrentAction();
 				}
@@ -415,9 +436,12 @@ namespace UnityEditor
 			GUILayout.Box("Server Connection", ASServerAdminWindow.constants.title, new GUILayoutOption[0]);
 			GUILayout.BeginVertical(ASServerAdminWindow.constants.contentBox, new GUILayoutOption[0]);
 			Event current = Event.current;
-			if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Return && this.CanPerformCurrentAction())
+			if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Return)
 			{
-				this.PerformCurrentAction();
+				if (this.CanPerformCurrentAction())
+				{
+					this.PerformCurrentAction();
+				}
 			}
 			if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape && this.currAction != ASServerAdminWindow.Action.Main)
 			{
@@ -455,13 +479,26 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.BeginVertical(ASServerAdminWindow.constants.groupBox, new GUILayoutOption[0]);
 			GUILayout.Box("Project", ASServerAdminWindow.constants.title, new GUILayoutOption[0]);
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv, ASServerAdminWindow.constants.background, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.lv, ASServerAdminWindow.constants.background, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (listViewElement.row == this.lv.row && Event.current.type == EventType.Repaint)
+				while (enumerator.MoveNext())
 				{
-					ASServerAdminWindow.constants.entrySelected.Draw(listViewElement.position, false, false, false, false);
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (listViewElement.row == this.lv.row && Event.current.type == EventType.Repaint)
+					{
+						ASServerAdminWindow.constants.entrySelected.Draw(listViewElement.position, false, false, false, false);
+					}
+					GUILayout.Label(this.databases[listViewElement.row].name, new GUILayoutOption[0]);
 				}
-				GUILayout.Label(this.databases[listViewElement.row].name, new GUILayoutOption[0]);
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			if (this.lv.selectionChanged)
 			{
@@ -475,34 +512,50 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.BeginVertical(ASServerAdminWindow.constants.groupBox, new GUILayoutOption[0]);
 			SplitterGUILayout.BeginHorizontalSplit(this.lvSplit, new GUILayoutOption[0]);
-			GUILayout.Box(string.Empty, ASServerAdminWindow.constants.columnHeader, new GUILayoutOption[0]);
+			GUILayout.Box("", ASServerAdminWindow.constants.columnHeader, new GUILayoutOption[0]);
 			GUILayout.Box("User", ASServerAdminWindow.constants.columnHeader, new GUILayoutOption[0]);
 			GUILayout.Box("Full Name", ASServerAdminWindow.constants.columnHeader, new GUILayoutOption[0]);
 			GUILayout.Box("Email", ASServerAdminWindow.constants.columnHeader, new GUILayoutOption[0]);
 			SplitterGUILayout.EndHorizontalSplit();
 			int left = EditorStyles.label.margin.left;
-			foreach (ListViewElement listViewElement2 in ListViewGUILayout.ListView(this.lv2, ASServerAdminWindow.constants.background, new GUILayoutOption[0]))
+			IEnumerator enumerator2 = ListViewGUILayout.ListView(this.lv2, ASServerAdminWindow.constants.background, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (listViewElement2.row == this.lv2.row && Event.current.type == EventType.Repaint)
+				while (enumerator2.MoveNext())
 				{
-					ASServerAdminWindow.constants.entrySelected.Draw(listViewElement2.position, false, false, false, false);
+					ListViewElement listViewElement2 = (ListViewElement)enumerator2.Current;
+					if (listViewElement2.row == this.lv2.row && Event.current.type == EventType.Repaint)
+					{
+						ASServerAdminWindow.constants.entrySelected.Draw(listViewElement2.position, false, false, false, false);
+					}
+					bool flag = this.users[listViewElement2.row].enabled != 0;
+					bool flag2 = GUI.Toggle(new Rect(listViewElement2.position.x + 2f, listViewElement2.position.y - 1f, ASServerAdminWindow.constants.toggleSize.x, ASServerAdminWindow.constants.toggleSize.y), flag, "");
+					GUILayout.Space(ASServerAdminWindow.constants.toggleSize.x);
+					if (flag != flag2)
+					{
+						if (AssetServer.AdminSetUserEnabled(this.databases[this.lv.row].dbName, this.users[listViewElement2.row].userName, this.users[listViewElement2.row].fullName, this.users[listViewElement2.row].email, (!flag2) ? 0 : 1))
+						{
+							this.users[listViewElement2.row].enabled = ((!flag2) ? 0 : 1);
+						}
+					}
+					GUILayout.Label(this.users[listViewElement2.row].userName, new GUILayoutOption[]
+					{
+						GUILayout.Width((float)(this.lvSplit.realSizes[1] - left))
+					});
+					GUILayout.Label(this.users[listViewElement2.row].fullName, new GUILayoutOption[]
+					{
+						GUILayout.Width((float)(this.lvSplit.realSizes[2] - left))
+					});
+					GUILayout.Label(this.users[listViewElement2.row].email, new GUILayoutOption[0]);
 				}
-				bool flag = this.users[listViewElement2.row].enabled != 0;
-				bool flag2 = GUI.Toggle(new Rect(listViewElement2.position.x + 2f, listViewElement2.position.y - 1f, ASServerAdminWindow.constants.toggleSize.x, ASServerAdminWindow.constants.toggleSize.y), flag, string.Empty);
-				GUILayout.Space(ASServerAdminWindow.constants.toggleSize.x);
-				if (flag != flag2 && AssetServer.AdminSetUserEnabled(this.databases[this.lv.row].dbName, this.users[listViewElement2.row].userName, this.users[listViewElement2.row].fullName, this.users[listViewElement2.row].email, (!flag2) ? 0 : 1))
+			}
+			finally
+			{
+				IDisposable disposable2;
+				if ((disposable2 = (enumerator2 as IDisposable)) != null)
 				{
-					this.users[listViewElement2.row].enabled = ((!flag2) ? 0 : 1);
+					disposable2.Dispose();
 				}
-				GUILayout.Label(this.users[listViewElement2.row].userName, new GUILayoutOption[]
-				{
-					GUILayout.Width((float)(this.lvSplit.realSizes[1] - left))
-				});
-				GUILayout.Label(this.users[listViewElement2.row].fullName, new GUILayoutOption[]
-				{
-					GUILayout.Width((float)(this.lvSplit.realSizes[2] - left))
-				});
-				GUILayout.Label(this.users[listViewElement2.row].email, new GUILayoutOption[0]);
 			}
 			if (this.lv2.selectionChanged)
 			{

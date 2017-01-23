@@ -24,7 +24,6 @@ namespace UnityEngine.Experimental.Director
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void InternalCreate(ref GenericMixerPlayable playable);
 

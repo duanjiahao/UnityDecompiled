@@ -24,13 +24,13 @@ namespace UnityEditor
 
 		internal override bool HasModified()
 		{
-			MovieImporter movieImporter = this.target as MovieImporter;
+			MovieImporter movieImporter = base.target as MovieImporter;
 			return movieImporter.quality != this.m_quality || movieImporter.linearTexture != this.m_linearTexture;
 		}
 
 		internal override void ResetValues()
 		{
-			MovieImporter movieImporter = this.target as MovieImporter;
+			MovieImporter movieImporter = base.target as MovieImporter;
 			this.m_quality = movieImporter.quality;
 			this.m_linearTexture = movieImporter.linearTexture;
 			this.m_duration = movieImporter.duration;
@@ -38,14 +38,14 @@ namespace UnityEditor
 
 		internal override void Apply()
 		{
-			MovieImporter movieImporter = this.target as MovieImporter;
+			MovieImporter movieImporter = base.target as MovieImporter;
 			movieImporter.quality = this.m_quality;
 			movieImporter.linearTexture = this.m_linearTexture;
 		}
 
 		public override void OnInspectorGUI()
 		{
-			MovieImporter x = this.target as MovieImporter;
+			MovieImporter x = base.target as MovieImporter;
 			if (x != null)
 			{
 				GUILayout.BeginVertical(new GUILayoutOption[0]);

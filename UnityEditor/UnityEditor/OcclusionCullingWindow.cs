@@ -45,7 +45,7 @@ namespace UnityEditor
 			Visualization
 		}
 
-		private static bool s_IsVisible;
+		private static bool s_IsVisible = false;
 
 		private bool m_PreVis;
 
@@ -57,20 +57,19 @@ namespace UnityEditor
 
 		private Vector2 m_ScrollPosition = Vector2.zero;
 
-		private OcclusionCullingWindow.Mode m_Mode;
+		private OcclusionCullingWindow.Mode m_Mode = OcclusionCullingWindow.Mode.AreaSettings;
 
 		private static OcclusionCullingWindow.Styles s_Styles;
 
 		private void OnBecameVisible()
 		{
-			if (OcclusionCullingWindow.s_IsVisible)
+			if (!OcclusionCullingWindow.s_IsVisible)
 			{
-				return;
+				OcclusionCullingWindow.s_IsVisible = true;
+				SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Combine(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneViewGUI));
+				StaticOcclusionCullingVisualization.showOcclusionCulling = true;
+				SceneView.RepaintAll();
 			}
-			OcclusionCullingWindow.s_IsVisible = true;
-			SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Combine(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneViewGUI));
-			StaticOcclusionCullingVisualization.showOcclusionCulling = true;
-			SceneView.RepaintAll();
 		}
 
 		private void OnBecameInvisible()
@@ -332,26 +331,33 @@ namespace UnityEditor
 			this.ModeToggle();
 			EditorGUILayout.Space();
 			this.m_ScrollPosition = EditorGUILayout.BeginScrollView(this.m_ScrollPosition, new GUILayoutOption[0]);
-			switch (this.m_Mode)
+			OcclusionCullingWindow.Mode mode = this.m_Mode;
+			if (mode != OcclusionCullingWindow.Mode.AreaSettings)
 			{
-			case OcclusionCullingWindow.Mode.AreaSettings:
-				this.AreaSelectionGUI();
-				break;
-			case OcclusionCullingWindow.Mode.BakeSettings:
-				this.BakeSettings();
-				break;
-			case OcclusionCullingWindow.Mode.Visualization:
-				if (StaticOcclusionCulling.umbraDataSize > 0)
+				if (mode != OcclusionCullingWindow.Mode.BakeSettings)
 				{
-					this.CameraSelectionGUI();
-					GUILayout.FlexibleSpace();
-					GUILayout.Label(OcclusionCullingWindow.s_Styles.visualizationNote, EditorStyles.helpBox, new GUILayoutOption[0]);
+					if (mode == OcclusionCullingWindow.Mode.Visualization)
+					{
+						if (StaticOcclusionCulling.umbraDataSize > 0)
+						{
+							this.CameraSelectionGUI();
+							GUILayout.FlexibleSpace();
+							GUILayout.Label(OcclusionCullingWindow.s_Styles.visualizationNote, EditorStyles.helpBox, new GUILayoutOption[0]);
+						}
+						else
+						{
+							GUILayout.Label(OcclusionCullingWindow.s_Styles.noOcclusionData, EditorStyles.helpBox, new GUILayoutOption[0]);
+						}
+					}
 				}
 				else
 				{
-					GUILayout.Label(OcclusionCullingWindow.s_Styles.noOcclusionData, EditorStyles.helpBox, new GUILayoutOption[0]);
+					this.BakeSettings();
 				}
-				break;
+			}
+			else
+			{
+				this.AreaSelectionGUI();
 			}
 			EditorGUILayout.EndScrollView();
 			EditorGUILayout.Space();
@@ -362,11 +368,10 @@ namespace UnityEditor
 
 		public void OnSceneViewGUI(SceneView sceneView)
 		{
-			if (!OcclusionCullingWindow.s_IsVisible)
+			if (OcclusionCullingWindow.s_IsVisible)
 			{
-				return;
+				SceneViewOverlay.Window(new GUIContent("Occlusion Culling"), new SceneViewOverlay.WindowFunction(this.DisplayControls), 100, SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget);
 			}
-			SceneViewOverlay.Window(new GUIContent("Occlusion Culling"), new SceneViewOverlay.WindowFunction(this.DisplayControls), 100, SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget);
 		}
 
 		private void OnDidOpenScene()
@@ -436,90 +441,88 @@ namespace UnityEditor
 
 		private void DisplayControls(UnityEngine.Object target, SceneView sceneView)
 		{
-			if (!sceneView)
+			if (sceneView)
 			{
-				return;
-			}
-			if (!OcclusionCullingWindow.s_IsVisible)
-			{
-				return;
-			}
-			bool flag = this.ShowModePopup(GUILayoutUtility.GetRect(170f, EditorGUIUtility.singleLineHeight));
-			if (Event.current.type == EventType.Layout)
-			{
-				this.m_Warning = string.Empty;
-				if (!flag)
+				if (OcclusionCullingWindow.s_IsVisible)
 				{
-					if (StaticOcclusionCullingVisualization.previewOcclucionCamera == null)
+					bool flag = this.ShowModePopup(GUILayoutUtility.GetRect(170f, EditorGUIUtility.singleLineHeight));
+					if (Event.current.type == EventType.Layout)
 					{
-						this.m_Warning = "No camera selected for occlusion preview.";
+						this.m_Warning = "";
+						if (!flag)
+						{
+							if (StaticOcclusionCullingVisualization.previewOcclucionCamera == null)
+							{
+								this.m_Warning = "No camera selected for occlusion preview.";
+							}
+							else if (!StaticOcclusionCullingVisualization.isPreviewOcclusionCullingCameraInPVS)
+							{
+								this.m_Warning = "Camera is not inside an Occlusion View Area.";
+							}
+						}
 					}
-					else if (!StaticOcclusionCullingVisualization.isPreviewOcclusionCullingCameraInPVS)
+					int num = 12;
+					if (!string.IsNullOrEmpty(this.m_Warning))
 					{
-						this.m_Warning = "Camera is not inside an Occlusion View Area.";
+						Rect rect = GUILayoutUtility.GetRect(100f, (float)(num + 19));
+						rect.x += EditorGUI.indent;
+						rect.width -= EditorGUI.indent;
+						GUI.Label(rect, this.m_Warning, EditorStyles.helpBox);
 					}
-				}
-			}
-			int num = 12;
-			if (!string.IsNullOrEmpty(this.m_Warning))
-			{
-				Rect rect = GUILayoutUtility.GetRect(100f, (float)(num + 19));
-				rect.x += EditorGUI.indent;
-				rect.width -= EditorGUI.indent;
-				GUI.Label(rect, this.m_Warning, EditorStyles.helpBox);
-			}
-			else
-			{
-				Rect rect2 = GUILayoutUtility.GetRect(200f, (float)num);
-				rect2.x += EditorGUI.indent;
-				rect2.width -= EditorGUI.indent;
-				Rect position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
-				if (flag)
-				{
-					EditorGUI.DrawLegend(position, Color.white, "View Volumes", StaticOcclusionCullingVisualization.showViewVolumes);
-				}
-				else
-				{
-					EditorGUI.DrawLegend(position, Color.white, "Camera Volumes", StaticOcclusionCullingVisualization.showViewVolumes);
-				}
-				bool flag2 = GUI.Toggle(position, StaticOcclusionCullingVisualization.showViewVolumes, string.Empty, GUIStyle.none);
-				if (flag2 != StaticOcclusionCullingVisualization.showViewVolumes)
-				{
-					StaticOcclusionCullingVisualization.showViewVolumes = flag2;
-					SceneView.RepaintAll();
-				}
-				if (!flag)
-				{
-					rect2 = GUILayoutUtility.GetRect(100f, (float)num);
-					rect2.x += EditorGUI.indent;
-					rect2.width -= EditorGUI.indent;
-					position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
-					EditorGUI.DrawLegend(position, Color.green, "Visibility Lines", StaticOcclusionCullingVisualization.showVisibilityLines);
-					flag2 = GUI.Toggle(position, StaticOcclusionCullingVisualization.showVisibilityLines, string.Empty, GUIStyle.none);
-					if (flag2 != StaticOcclusionCullingVisualization.showVisibilityLines)
+					else
 					{
-						StaticOcclusionCullingVisualization.showVisibilityLines = flag2;
-						SceneView.RepaintAll();
-					}
-					rect2 = GUILayoutUtility.GetRect(100f, (float)num);
-					rect2.x += EditorGUI.indent;
-					rect2.width -= EditorGUI.indent;
-					position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
-					EditorGUI.DrawLegend(position, Color.grey, "Portals", StaticOcclusionCullingVisualization.showPortals);
-					flag2 = GUI.Toggle(position, StaticOcclusionCullingVisualization.showPortals, string.Empty, GUIStyle.none);
-					if (flag2 != StaticOcclusionCullingVisualization.showPortals)
-					{
-						StaticOcclusionCullingVisualization.showPortals = flag2;
-						SceneView.RepaintAll();
-					}
-				}
-				if (!flag)
-				{
-					flag2 = GUILayout.Toggle(StaticOcclusionCullingVisualization.showGeometryCulling, "Occlusion culling", new GUILayoutOption[0]);
-					if (flag2 != StaticOcclusionCullingVisualization.showGeometryCulling)
-					{
-						StaticOcclusionCullingVisualization.showGeometryCulling = flag2;
-						SceneView.RepaintAll();
+						Rect rect2 = GUILayoutUtility.GetRect(200f, (float)num);
+						rect2.x += EditorGUI.indent;
+						rect2.width -= EditorGUI.indent;
+						Rect position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
+						if (flag)
+						{
+							EditorGUI.DrawLegend(position, Color.white, "View Volumes", StaticOcclusionCullingVisualization.showViewVolumes);
+						}
+						else
+						{
+							EditorGUI.DrawLegend(position, Color.white, "Camera Volumes", StaticOcclusionCullingVisualization.showViewVolumes);
+						}
+						bool flag2 = GUI.Toggle(position, StaticOcclusionCullingVisualization.showViewVolumes, "", GUIStyle.none);
+						if (flag2 != StaticOcclusionCullingVisualization.showViewVolumes)
+						{
+							StaticOcclusionCullingVisualization.showViewVolumes = flag2;
+							SceneView.RepaintAll();
+						}
+						if (!flag)
+						{
+							rect2 = GUILayoutUtility.GetRect(100f, (float)num);
+							rect2.x += EditorGUI.indent;
+							rect2.width -= EditorGUI.indent;
+							position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
+							EditorGUI.DrawLegend(position, Color.green, "Visibility Lines", StaticOcclusionCullingVisualization.showVisibilityLines);
+							flag2 = GUI.Toggle(position, StaticOcclusionCullingVisualization.showVisibilityLines, "", GUIStyle.none);
+							if (flag2 != StaticOcclusionCullingVisualization.showVisibilityLines)
+							{
+								StaticOcclusionCullingVisualization.showVisibilityLines = flag2;
+								SceneView.RepaintAll();
+							}
+							rect2 = GUILayoutUtility.GetRect(100f, (float)num);
+							rect2.x += EditorGUI.indent;
+							rect2.width -= EditorGUI.indent;
+							position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
+							EditorGUI.DrawLegend(position, Color.grey, "Portals", StaticOcclusionCullingVisualization.showPortals);
+							flag2 = GUI.Toggle(position, StaticOcclusionCullingVisualization.showPortals, "", GUIStyle.none);
+							if (flag2 != StaticOcclusionCullingVisualization.showPortals)
+							{
+								StaticOcclusionCullingVisualization.showPortals = flag2;
+								SceneView.RepaintAll();
+							}
+						}
+						if (!flag)
+						{
+							flag2 = GUILayout.Toggle(StaticOcclusionCullingVisualization.showGeometryCulling, "Occlusion culling", new GUILayoutOption[0]);
+							if (flag2 != StaticOcclusionCullingVisualization.showGeometryCulling)
+							{
+								StaticOcclusionCullingVisualization.showGeometryCulling = flag2;
+								SceneView.RepaintAll();
+							}
+						}
 					}
 				}
 			}

@@ -7,6 +7,8 @@ namespace UnityEngine.VR
 		LeftEye,
 		RightEye,
 		CenterEye,
-		Head
+		Head,
+		LeftHand,
+		RightHand
 	}
 }

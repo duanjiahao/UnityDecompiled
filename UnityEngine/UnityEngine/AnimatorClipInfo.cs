@@ -27,7 +27,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimationClip ClipInstanceToScriptingObject(int instanceID);
 	}

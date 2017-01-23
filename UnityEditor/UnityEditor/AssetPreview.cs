@@ -10,11 +10,16 @@ namespace UnityEditor
 
 		public static Texture2D GetAssetPreview(UnityEngine.Object asset)
 		{
+			Texture2D result;
 			if (asset != null)
 			{
-				return AssetPreview.GetAssetPreview(asset.GetInstanceID());
+				result = AssetPreview.GetAssetPreview(asset.GetInstanceID());
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		internal static Texture2D GetAssetPreview(int instanceID)
@@ -22,7 +27,6 @@ namespace UnityEditor
 			return AssetPreview.GetAssetPreview(instanceID, 0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D GetAssetPreview(int instanceID, int clientID);
 
@@ -31,7 +35,6 @@ namespace UnityEditor
 			return AssetPreview.IsLoadingAssetPreview(instanceID, 0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsLoadingAssetPreview(int instanceID, int clientID);
 
@@ -40,7 +43,6 @@ namespace UnityEditor
 			return AssetPreview.IsLoadingAssetPreviews(0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsLoadingAssetPreviews(int clientID);
 
@@ -49,7 +51,6 @@ namespace UnityEditor
 			return AssetPreview.HasAnyNewPreviewTexturesAvailable(0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasAnyNewPreviewTexturesAvailable(int clientID);
 
@@ -58,19 +59,15 @@ namespace UnityEditor
 			AssetPreview.SetPreviewTextureCacheSize(size, 0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetPreviewTextureCacheSize(int size, int clientID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ClearTemporaryAssetPreviews();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void DeletePreviewTextureManagerByID(int clientID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D GetMiniThumbnail(UnityEngine.Object obj);
 
@@ -93,16 +90,13 @@ namespace UnityEditor
 			return AssetPreview.INTERNAL_GetMiniTypeThumbnailFromObject(obj);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D GetMiniTypeThumbnailFromClassID(int classID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D INTERNAL_GetMiniTypeThumbnailFromObject(UnityEngine.Object monoObj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Texture2D INTERNAL_GetMiniTypeThumbnailFromType(Type type);
+		internal static extern Texture2D INTERNAL_GetMiniTypeThumbnailFromType(Type managedType);
 	}
 }

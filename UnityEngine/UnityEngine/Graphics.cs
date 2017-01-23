@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
@@ -8,6 +9,8 @@ namespace UnityEngine
 {
 	public sealed class Graphics
 	{
+		internal static readonly int kMaxDrawMeshInstanceCount = Graphics.Internal_GetMaxDrawMeshInstanceCount();
+
 		public static RenderBuffer activeColorBuffer
 		{
 			get
@@ -26,6 +29,14 @@ namespace UnityEngine
 				Graphics.GetActiveDepthBuffer(out result);
 				return result;
 			}
+		}
+
+		public static extern GraphicsTier activeTier
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
 		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property deviceName has been deprecated. Use SystemInfo.graphicsDeviceName instead (UnityUpgradable) -> UnityEngine.SystemInfo.graphicsDeviceName", true)]
@@ -143,16 +154,7 @@ namespace UnityEngine
 
 		public static void DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Material material, int layer, Camera camera, int submeshIndex, MaterialPropertyBlock properties, ShadowCastingMode castShadows, [UnityEngine.Internal.DefaultValue("true")] bool receiveShadows, [UnityEngine.Internal.DefaultValue("null")] Transform probeAnchor, [UnityEngine.Internal.DefaultValue("true")] bool useLightProbes)
 		{
-			Internal_DrawMeshTRArguments internal_DrawMeshTRArguments = default(Internal_DrawMeshTRArguments);
-			internal_DrawMeshTRArguments.position = position;
-			internal_DrawMeshTRArguments.rotation = rotation;
-			internal_DrawMeshTRArguments.layer = layer;
-			internal_DrawMeshTRArguments.submeshIndex = submeshIndex;
-			internal_DrawMeshTRArguments.castShadows = (int)castShadows;
-			internal_DrawMeshTRArguments.receiveShadows = ((!receiveShadows) ? 0 : 1);
-			internal_DrawMeshTRArguments.reflectionProbeAnchorInstanceID = ((!(probeAnchor != null)) ? 0 : probeAnchor.GetInstanceID());
-			internal_DrawMeshTRArguments.useLightProbes = useLightProbes;
-			Graphics.Internal_DrawMeshTR(ref internal_DrawMeshTRArguments, properties, material, mesh, camera);
+			Graphics.DrawMesh(mesh, Matrix4x4.TRS(position, rotation, Vector3.one), material, layer, camera, submeshIndex, properties, castShadows, receiveShadows, probeAnchor, useLightProbes);
 		}
 
 		[ExcludeFromDocs]
@@ -254,11 +256,6 @@ namespace UnityEngine
 			Graphics.Internal_DrawMeshMatrix(ref internal_DrawMeshMatrixArguments, properties, material, mesh, camera);
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_DrawMeshTR(ref Internal_DrawMeshTRArguments arguments, MaterialPropertyBlock properties, Material material, Mesh mesh, Camera camera);
-
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_DrawMeshMatrix(ref Internal_DrawMeshMatrixArguments arguments, MaterialPropertyBlock properties, Material material, Mesh mesh, Camera camera);
 
@@ -287,7 +284,6 @@ namespace UnityEngine
 			Graphics.INTERNAL_CALL_Internal_DrawMeshNow1(mesh, ref position, ref rotation, materialIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawMeshNow1(Mesh mesh, ref Vector3 position, ref Quaternion rotation, int materialIndex);
 
@@ -296,11 +292,9 @@ namespace UnityEngine
 			Graphics.INTERNAL_CALL_Internal_DrawMeshNow2(mesh, ref matrix, materialIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawMeshNow2(Mesh mesh, ref Matrix4x4 matrix, int materialIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DrawProcedural(MeshTopology topology, int vertexCount, [UnityEngine.Internal.DefaultValue("1")] int instanceCount);
 
@@ -311,7 +305,6 @@ namespace UnityEngine
 			Graphics.DrawProcedural(topology, vertexCount, instanceCount);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DrawProceduralIndirect(MeshTopology topology, ComputeBuffer bufferWithArgs, [UnityEngine.Internal.DefaultValue("0")] int argsOffset);
 
@@ -322,38 +315,237 @@ namespace UnityEngine
 			Graphics.DrawProceduralIndirect(topology, bufferWithArgs, argsOffset);
 		}
 
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMaxDrawMeshInstanceCount();
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties, ShadowCastingMode castShadows, bool receiveShadows, int layer)
+		{
+			Camera camera = null;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties, ShadowCastingMode castShadows, bool receiveShadows)
+		{
+			Camera camera = null;
+			int layer = 0;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties, ShadowCastingMode castShadows)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			ShadowCastingMode castShadows = ShadowCastingMode.On;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, int count)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			ShadowCastingMode castShadows = ShadowCastingMode.On;
+			MaterialPropertyBlock properties = null;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			ShadowCastingMode castShadows = ShadowCastingMode.On;
+			MaterialPropertyBlock properties = null;
+			int count = matrices.Length;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, [UnityEngine.Internal.DefaultValue("matrices.Length")] int count, [UnityEngine.Internal.DefaultValue("null")] MaterialPropertyBlock properties, [UnityEngine.Internal.DefaultValue("ShadowCastingMode.On")] ShadowCastingMode castShadows, [UnityEngine.Internal.DefaultValue("true")] bool receiveShadows, [UnityEngine.Internal.DefaultValue("0")] int layer, [UnityEngine.Internal.DefaultValue("null")] Camera camera)
+		{
+			if (!SystemInfo.supportsInstancing)
+			{
+				throw new InvalidOperationException("Instancing is not supported.");
+			}
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
+			if (submeshIndex < 0 || submeshIndex >= mesh.subMeshCount)
+			{
+				throw new ArgumentOutOfRangeException("submeshIndex", "submeshIndex out of range.");
+			}
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			if (matrices == null)
+			{
+				throw new ArgumentNullException("matrices");
+			}
+			if (count < 0 || count > Mathf.Min(Graphics.kMaxDrawMeshInstanceCount, matrices.Length))
+			{
+				throw new ArgumentOutOfRangeException("count", string.Format("Count must be in the range of 0 to {0}.", Mathf.Min(Graphics.kMaxDrawMeshInstanceCount, matrices.Length)));
+			}
+			if (count > 0)
+			{
+				Graphics.Internal_DrawMeshInstanced(mesh, submeshIndex, material, matrices, count, properties, castShadows, receiveShadows, layer, camera);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties, ShadowCastingMode castShadows, bool receiveShadows, int layer, Camera camera);
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, List<Matrix4x4> matrices, MaterialPropertyBlock properties, ShadowCastingMode castShadows, bool receiveShadows, int layer)
+		{
+			Camera camera = null;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, List<Matrix4x4> matrices, MaterialPropertyBlock properties, ShadowCastingMode castShadows, bool receiveShadows)
+		{
+			Camera camera = null;
+			int layer = 0;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, List<Matrix4x4> matrices, MaterialPropertyBlock properties, ShadowCastingMode castShadows)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, List<Matrix4x4> matrices, MaterialPropertyBlock properties)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			ShadowCastingMode castShadows = ShadowCastingMode.On;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, List<Matrix4x4> matrices)
+		{
+			Camera camera = null;
+			int layer = 0;
+			bool receiveShadows = true;
+			ShadowCastingMode castShadows = ShadowCastingMode.On;
+			MaterialPropertyBlock properties = null;
+			Graphics.DrawMeshInstanced(mesh, submeshIndex, material, matrices, properties, castShadows, receiveShadows, layer, camera);
+		}
+
+		public static void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, List<Matrix4x4> matrices, [UnityEngine.Internal.DefaultValue("null")] MaterialPropertyBlock properties, [UnityEngine.Internal.DefaultValue("ShadowCastingMode.On")] ShadowCastingMode castShadows, [UnityEngine.Internal.DefaultValue("true")] bool receiveShadows, [UnityEngine.Internal.DefaultValue("0")] int layer, [UnityEngine.Internal.DefaultValue("null")] Camera camera)
+		{
+			if (!SystemInfo.supportsInstancing)
+			{
+				throw new InvalidOperationException("Instancing is not supported.");
+			}
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
+			if (submeshIndex < 0 || submeshIndex >= mesh.subMeshCount)
+			{
+				throw new ArgumentOutOfRangeException("submeshIndex", "submeshIndex out of range.");
+			}
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			if (matrices == null)
+			{
+				throw new ArgumentNullException("matrices");
+			}
+			if (matrices.Count > Graphics.kMaxDrawMeshInstanceCount)
+			{
+				throw new ArgumentOutOfRangeException("matrices", string.Format("Matrix list count must be in the range of 0 to {0}.", Graphics.kMaxDrawMeshInstanceCount));
+			}
+			if (matrices.Count > 0)
+			{
+				Graphics.Internal_DrawMeshInstancedList(mesh, submeshIndex, material, matrices, properties, castShadows, receiveShadows, layer, camera);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_DrawMeshInstancedList(Mesh mesh, int submeshIndex, Material material, object matrixList, MaterialPropertyBlock properties, ShadowCastingMode castShadows, bool receiveShadows, int layer, Camera camera);
+
+		[ExcludeFromDocs]
+		public static void DrawTexture(Rect screenRect, Texture texture, Material mat)
+		{
+			int pass = -1;
+			Graphics.DrawTexture(screenRect, texture, mat, pass);
+		}
+
 		[ExcludeFromDocs]
 		public static void DrawTexture(Rect screenRect, Texture texture)
 		{
+			int pass = -1;
 			Material mat = null;
-			Graphics.DrawTexture(screenRect, texture, mat);
+			Graphics.DrawTexture(screenRect, texture, mat, pass);
 		}
 
-		public static void DrawTexture(Rect screenRect, Texture texture, [UnityEngine.Internal.DefaultValue("null")] Material mat)
+		public static void DrawTexture(Rect screenRect, Texture texture, [UnityEngine.Internal.DefaultValue("null")] Material mat, [UnityEngine.Internal.DefaultValue("-1")] int pass)
 		{
-			Graphics.DrawTexture(screenRect, texture, 0, 0, 0, 0, mat);
+			Graphics.DrawTexture(screenRect, texture, 0, 0, 0, 0, mat, pass);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawTexture(Rect screenRect, Texture texture, int leftBorder, int rightBorder, int topBorder, int bottomBorder, Material mat)
+		{
+			int pass = -1;
+			Graphics.DrawTexture(screenRect, texture, leftBorder, rightBorder, topBorder, bottomBorder, mat, pass);
 		}
 
 		[ExcludeFromDocs]
 		public static void DrawTexture(Rect screenRect, Texture texture, int leftBorder, int rightBorder, int topBorder, int bottomBorder)
 		{
+			int pass = -1;
 			Material mat = null;
-			Graphics.DrawTexture(screenRect, texture, leftBorder, rightBorder, topBorder, bottomBorder, mat);
+			Graphics.DrawTexture(screenRect, texture, leftBorder, rightBorder, topBorder, bottomBorder, mat, pass);
 		}
 
-		public static void DrawTexture(Rect screenRect, Texture texture, int leftBorder, int rightBorder, int topBorder, int bottomBorder, [UnityEngine.Internal.DefaultValue("null")] Material mat)
+		public static void DrawTexture(Rect screenRect, Texture texture, int leftBorder, int rightBorder, int topBorder, int bottomBorder, [UnityEngine.Internal.DefaultValue("null")] Material mat, [UnityEngine.Internal.DefaultValue("-1")] int pass)
 		{
-			Graphics.DrawTexture(screenRect, texture, new Rect(0f, 0f, 1f, 1f), leftBorder, rightBorder, topBorder, bottomBorder, mat);
+			Graphics.DrawTexture(screenRect, texture, new Rect(0f, 0f, 1f, 1f), leftBorder, rightBorder, topBorder, bottomBorder, mat, pass);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, Material mat)
+		{
+			int pass = -1;
+			Graphics.DrawTexture(screenRect, texture, sourceRect, leftBorder, rightBorder, topBorder, bottomBorder, mat, pass);
 		}
 
 		[ExcludeFromDocs]
 		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder)
 		{
+			int pass = -1;
 			Material mat = null;
-			Graphics.DrawTexture(screenRect, texture, sourceRect, leftBorder, rightBorder, topBorder, bottomBorder, mat);
+			Graphics.DrawTexture(screenRect, texture, sourceRect, leftBorder, rightBorder, topBorder, bottomBorder, mat, pass);
 		}
 
-		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, [UnityEngine.Internal.DefaultValue("null")] Material mat)
+		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, [UnityEngine.Internal.DefaultValue("null")] Material mat, [UnityEngine.Internal.DefaultValue("-1")] int pass)
 		{
 			InternalDrawTextureArguments internalDrawTextureArguments = default(InternalDrawTextureArguments);
 			internalDrawTextureArguments.screenRect = screenRect;
@@ -367,17 +559,26 @@ namespace UnityEngine
 			color.r = (color.g = (color.b = (color.a = 128)));
 			internalDrawTextureArguments.color = color;
 			internalDrawTextureArguments.mat = mat;
+			internalDrawTextureArguments.pass = pass;
 			Graphics.DrawTexture(ref internalDrawTextureArguments);
+		}
+
+		[ExcludeFromDocs]
+		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, Color color, Material mat)
+		{
+			int pass = -1;
+			Graphics.DrawTexture(screenRect, texture, sourceRect, leftBorder, rightBorder, topBorder, bottomBorder, color, mat, pass);
 		}
 
 		[ExcludeFromDocs]
 		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, Color color)
 		{
+			int pass = -1;
 			Material mat = null;
-			Graphics.DrawTexture(screenRect, texture, sourceRect, leftBorder, rightBorder, topBorder, bottomBorder, color, mat);
+			Graphics.DrawTexture(screenRect, texture, sourceRect, leftBorder, rightBorder, topBorder, bottomBorder, color, mat, pass);
 		}
 
-		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, Color color, [UnityEngine.Internal.DefaultValue("null")] Material mat)
+		public static void DrawTexture(Rect screenRect, Texture texture, Rect sourceRect, int leftBorder, int rightBorder, int topBorder, int bottomBorder, Color color, [UnityEngine.Internal.DefaultValue("null")] Material mat, [UnityEngine.Internal.DefaultValue("-1")] int pass)
 		{
 			InternalDrawTextureArguments internalDrawTextureArguments = default(InternalDrawTextureArguments);
 			internalDrawTextureArguments.screenRect = screenRect;
@@ -389,18 +590,16 @@ namespace UnityEngine
 			internalDrawTextureArguments.bottomBorder = bottomBorder;
 			internalDrawTextureArguments.color = color;
 			internalDrawTextureArguments.mat = mat;
+			internalDrawTextureArguments.pass = pass;
 			Graphics.DrawTexture(ref internalDrawTextureArguments);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void DrawTexture(ref InternalDrawTextureArguments arguments);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ExecuteCommandBuffer(CommandBuffer buffer);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Blit(Texture source, RenderTexture dest);
 
@@ -428,7 +627,6 @@ namespace UnityEngine
 			Graphics.Internal_BlitMaterial(source, null, mat, pass, false);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_BlitMaterial(Texture source, RenderTexture dest, Material mat, int pass, bool setRT);
 
@@ -437,7 +635,6 @@ namespace UnityEngine
 			Graphics.Internal_BlitMultiTap(source, dest, mat, offsets);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_BlitMultiTap(Texture source, RenderTexture dest, Material mat, Vector2[] offsets);
 
@@ -456,39 +653,30 @@ namespace UnityEngine
 			Graphics.CopyTexture_Region(src, srcElement, srcMip, srcX, srcY, srcWidth, srcHeight, dst, dstElement, dstMip, dstX, dstY);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void CopyTexture_Full(Texture src, Texture dst);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void CopyTexture_Slice(Texture src, int srcElement, int srcMip, Texture dst, int dstElement, int dstMip);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void CopyTexture_Region(Texture src, int srcElement, int srcMip, int srcX, int srcY, int srcWidth, int srcHeight, Texture dst, int dstElement, int dstMip, int dstX, int dstY);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetNullRT();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetRTSimple(out RenderBuffer color, out RenderBuffer depth, int mip, CubemapFace face, int depthSlice);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetMRTFullSetup(RenderBuffer[] colorSA, out RenderBuffer depth, int mip, CubemapFace face, int depthSlice, RenderBufferLoadAction[] colorLoadSA, RenderBufferStoreAction[] colorStoreSA, RenderBufferLoadAction depthLoad, RenderBufferStoreAction depthStore);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetMRTSimple(RenderBuffer[] colorSA, out RenderBuffer depth, int mip, CubemapFace face, int depthSlice);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetActiveColorBuffer(out RenderBuffer res);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetActiveDepthBuffer(out RenderBuffer res);
 
@@ -517,19 +705,15 @@ namespace UnityEngine
 			Graphics.Internal_SetRandomWriteTargetBuffer(index, uav, preserveCounterValue);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearRandomWriteTargets();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetRandomWriteTargetRT(int index, RenderTexture uav);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetRandomWriteTargetBuffer(int index, ComputeBuffer uav, bool preserveCounterValue);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetupVertexLights(Light[] lights);
 

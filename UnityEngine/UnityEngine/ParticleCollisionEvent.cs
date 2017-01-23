@@ -56,11 +56,9 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Collider InstanceIDToCollider(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Component InstanceIDToColliderComponent(int instanceID);
 	}

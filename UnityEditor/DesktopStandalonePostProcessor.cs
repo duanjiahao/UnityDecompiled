@@ -20,15 +20,20 @@ internal abstract class DesktopStandalonePostProcessor
 
 		public ScriptingImplementation[] Enabled()
 		{
+			ScriptingImplementation[] result;
 			if (Unsupported.IsDeveloperBuild())
 			{
-				return new ScriptingImplementation[]
+				result = new ScriptingImplementation[]
 				{
 					ScriptingImplementation.Mono2x,
 					ScriptingImplementation.IL2CPP
 				};
 			}
-			return new ScriptingImplementation[1];
+			else
+			{
+				result = new ScriptingImplementation[1];
+			}
+			return result;
 		}
 	}
 
@@ -56,8 +61,7 @@ internal abstract class DesktopStandalonePostProcessor
 	{
 		get
 		{
-			int num = 0;
-			return PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref num, BuildTargetGroup.Standalone) && num == 1;
+			return PlayerSettings.GetScriptingBackend(BuildTargetGroup.Standalone) == ScriptingImplementation.IL2CPP;
 		}
 	}
 
@@ -93,7 +97,7 @@ internal abstract class DesktopStandalonePostProcessor
 		}
 	}
 
-	protected string DestinationFolder
+	protected virtual string DestinationFolder
 	{
 		get
 		{
@@ -154,50 +158,59 @@ internal abstract class DesktopStandalonePostProcessor
 					}
 					bool flag4 = Directory.Exists(pluginImporter.assetPath);
 					string platformData = pluginImporter.GetPlatformData(target, "CPU");
-					string text = platformData;
-					switch (text)
+					if (platformData != null)
 					{
-					case "x86":
-						if (target == BuildTarget.StandaloneOSXIntel64 || target == BuildTarget.StandaloneWindows64 || target == BuildTarget.StandaloneLinux64)
+						if (!(platformData == "x86"))
 						{
-							goto IL_22F;
-						}
-						if (!flag2)
-						{
-							Directory.CreateDirectory(path);
-							flag2 = true;
-						}
-						break;
-					case "x86_64":
-						if (target != BuildTarget.StandaloneOSXIntel64 && target != BuildTarget.StandaloneOSXUniversal && target != BuildTarget.StandaloneWindows64 && target != BuildTarget.StandaloneLinux64 && target != BuildTarget.StandaloneLinuxUniversal)
-						{
-							goto IL_22F;
-						}
-						if (!flag3)
-						{
-							Directory.CreateDirectory(path2);
-							flag3 = true;
-						}
-						break;
-					case "None":
-						goto IL_22F;
-					}
-					string text2 = pluginImporterExtension.CalculateFinalPluginPath(buildTargetName, pluginImporter);
-					if (!string.IsNullOrEmpty(text2))
-					{
-						string text3 = Path.Combine(stagingAreaPluginsFolder, text2);
-						if (flag4)
-						{
-							FileUtil.CopyDirectoryRecursive(pluginImporter.assetPath, text3);
+							if (!(platformData == "x86_64"))
+							{
+								if (platformData == "None")
+								{
+									goto IL_20A;
+								}
+							}
+							else
+							{
+								if (target != BuildTarget.StandaloneOSXIntel64 && target != BuildTarget.StandaloneOSXUniversal && target != BuildTarget.StandaloneWindows64 && target != BuildTarget.StandaloneLinux64 && target != BuildTarget.StandaloneLinuxUniversal)
+								{
+									goto IL_20A;
+								}
+								if (!flag3)
+								{
+									Directory.CreateDirectory(path2);
+									flag3 = true;
+								}
+							}
 						}
 						else
 						{
-							FileUtil.UnityFileCopy(pluginImporter.assetPath, text3);
+							if (target == BuildTarget.StandaloneOSXIntel64 || target == BuildTarget.StandaloneWindows64 || target == BuildTarget.StandaloneLinux64)
+							{
+								goto IL_20A;
+							}
+							if (!flag2)
+							{
+								Directory.CreateDirectory(path);
+								flag2 = true;
+							}
+						}
+					}
+					string text = pluginImporterExtension.CalculateFinalPluginPath(buildTargetName, pluginImporter);
+					if (!string.IsNullOrEmpty(text))
+					{
+						string text2 = Path.Combine(stagingAreaPluginsFolder, text);
+						if (flag4)
+						{
+							FileUtil.CopyDirectoryRecursive(pluginImporter.assetPath, text2);
+						}
+						else
+						{
+							FileUtil.UnityFileCopy(pluginImporter.assetPath, text2);
 						}
 					}
 				}
 			}
-			IL_22F:;
+			IL_20A:;
 		}
 		foreach (PluginDesc current in PluginImporter.GetExtensionPlugins(this.m_PostProcessArgs.target))
 		{
@@ -206,16 +219,16 @@ internal abstract class DesktopStandalonePostProcessor
 				Directory.CreateDirectory(stagingAreaPluginsFolder);
 				flag = true;
 			}
-			string text4 = Path.Combine(stagingAreaPluginsFolder, Path.GetFileName(current.pluginPath));
-			if (!Directory.Exists(text4) && !File.Exists(text4))
+			string text3 = Path.Combine(stagingAreaPluginsFolder, Path.GetFileName(current.pluginPath));
+			if (!Directory.Exists(text3) && !File.Exists(text3))
 			{
 				if (Directory.Exists(current.pluginPath))
 				{
-					FileUtil.CopyDirectoryRecursive(current.pluginPath, text4);
+					FileUtil.CopyDirectoryRecursive(current.pluginPath, text3);
 				}
 				else
 				{
-					FileUtil.CopyFileIfExists(current.pluginPath, text4, false);
+					FileUtil.CopyFileIfExists(current.pluginPath, text3, false);
 				}
 			}
 		}
@@ -244,20 +257,22 @@ internal abstract class DesktopStandalonePostProcessor
 			IL2CPPUtils.CopyEmbeddedResourceFiles(text, text3);
 			FileUtil.CreateOrCleanDirectory(text4);
 			IL2CPPUtils.CopyMetadataFiles(text, text4);
-			IL2CPPUtils.CopySymmapFile(text + "/Native", text2);
+			IL2CPPUtils.CopySymmapFile(text + "/Native/Data", text2);
 		}
 		if (this.InstallingIntoBuildsFolder)
 		{
 			this.CopyDataForBuildsFolder();
-			return;
 		}
-		if (!this.UseIl2Cpp)
+		else
 		{
-			this.CopyVariationFolderIntoStagingArea();
+			if (!this.UseIl2Cpp)
+			{
+				this.CopyVariationFolderIntoStagingArea();
+			}
+			this.RenameFilesInStagingArea();
+			this.m_PostProcessArgs.report.AddFilesRecursive(this.StagingArea, "");
+			this.m_PostProcessArgs.report.RelocateFiles(this.StagingArea, "");
 		}
-		this.RenameFilesInStagingArea();
-		this.m_PostProcessArgs.report.AddFilesRecursive(this.StagingArea, string.Empty);
-		this.m_PostProcessArgs.report.RelocateFiles(this.StagingArea, string.Empty);
 	}
 
 	protected void CreateApplicationData()
@@ -269,14 +284,10 @@ internal abstract class DesktopStandalonePostProcessor
 		}));
 	}
 
-	private bool CopyFilter(string path)
+	protected virtual bool CopyFilter(string path)
 	{
 		bool flag = !path.Contains("UnityEngine.mdb");
-		if (!DesktopStandaloneSettings.CopyPDBFiles)
-		{
-			flag &= (Path.GetExtension(path).ToLower() != ".pdb");
-		}
-		return flag;
+		return flag & !path.Contains("UnityEngine.xml");
 	}
 
 	protected virtual void CopyVariationFolderIntoStagingArea()
@@ -287,18 +298,20 @@ internal abstract class DesktopStandalonePostProcessor
 
 	protected void CopyStagingAreaIntoDestination()
 	{
-		if (!this.InstallingIntoBuildsFolder)
+		if (this.InstallingIntoBuildsFolder)
+		{
+			string text = Unsupported.GetBaseUnityDeveloperFolder() + "/" + this.DestinationFolderForInstallingIntoBuildsFolder;
+			if (!Directory.Exists(Path.GetDirectoryName(text)))
+			{
+				throw new Exception("Installing in builds folder failed because the player has not been built (You most likely want to enable 'Development build').");
+			}
+			FileUtil.CopyDirectoryFiltered(this.DataFolder, text, true, (string f) => true, true);
+		}
+		else
 		{
 			this.DeleteDestination();
 			FileUtil.CopyDirectoryFiltered(this.StagingArea, this.DestinationFolder, true, (string f) => true, true);
-			return;
 		}
-		string text = Unsupported.GetBaseUnityDeveloperFolder() + "/" + this.DestinationFolderForInstallingIntoBuildsFolder;
-		if (!Directory.Exists(Path.GetDirectoryName(text)))
-		{
-			throw new Exception("Installing in builds folder failed because the player has not been built (You most likely want to enable 'Development build').");
-		}
-		FileUtil.CopyDirectoryFiltered(this.DataFolder, text, true, (string f) => true, true);
 	}
 
 	protected abstract void DeleteDestination();

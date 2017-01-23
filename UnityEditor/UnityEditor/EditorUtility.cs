@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEditor.Scripting.Compilers;
 using UnityEngine;
@@ -12,42 +13,33 @@ namespace UnityEditor
 
 		public static extern bool audioMasterMute
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool audioProfilingEnabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevealInFinder(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetDirty(UnityEngine.Object target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void LoadPlatformSupportModuleNativeDllInternal(string target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void LoadPlatformSupportNativeLibrary(string nativeLibrary);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetDirtyIndex(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsDirty(int instanceID);
 
@@ -57,54 +49,43 @@ namespace UnityEditor
 			return WindowLayout.LoadWindowLayout(path, newProjectLayoutWasCreated);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsPersistent(UnityEngine.Object target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DisplayDialog(string title, string message, string ok, [DefaultValue("\"\"")] string cancel);
 
 		[ExcludeFromDocs]
 		public static bool DisplayDialog(string title, string message, string ok)
 		{
-			string empty = string.Empty;
-			return EditorUtility.DisplayDialog(title, message, ok, empty);
+			string cancel = "";
+			return EditorUtility.DisplayDialog(title, message, ok, cancel);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int DisplayDialogComplex(string title, string message, string ok, string cancel, string alt);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string OpenFilePanel(string title, string directory, string extension);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string OpenFilePanelWithFilters(string title, string directory, string[] filters);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SaveFilePanel(string title, string directory, string defaultName, string extension);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string SaveBuildPanel(BuildTarget target, string title, string directory, string defaultName, string extension, out bool updateExistingBuild);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int NaturalCompare(string a, string b);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int NaturalCompareObjectNames(UnityEngine.Object a, UnityEngine.Object b);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string OpenFolderPanel(string title, string folder, string defaultName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SaveFolderPanel(string title, string folder, string defaultName);
 
@@ -118,23 +99,19 @@ namespace UnityEditor
 			return EditorUtility.Internal_SaveFilePanelInProject(title, defaultName, extension, message, path);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string Internal_SaveFilePanelInProject(string title, string defaultName, string extension, string message, string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool WarnPrefab(UnityEngine.Object target, string title, string warning, string okButton);
 
-		[Obsolete("use AssetDatabase.LoadAssetAtPath"), WrapperlessIcall]
+		[Obsolete("use AssetDatabase.LoadAssetAtPath")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object FindAsset(string path, Type type);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object InstanceIDToObject(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CompressTexture(Texture2D texture, TextureFormat format, int quality);
 
@@ -148,11 +125,9 @@ namespace UnityEditor
 			EditorUtility.CompressTexture(texture, format, TextureCompressionQuality.Normal);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string InvokeDiffTool(string leftTitle, string leftFile, string rightTitle, string rightFile, string ancestorTitle, string ancestorFile);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopySerialized(UnityEngine.Object source, UnityEngine.Object dest);
 
@@ -169,7 +144,6 @@ namespace UnityEditor
 			EditorUtility.InternalCopySerializedIfDifferent(source, dest);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void InternalCopySerializedIfDifferent(UnityEngine.Object source, UnityEngine.Object dest);
 
@@ -179,11 +153,9 @@ namespace UnityEditor
 			return AssetDatabase.GetAssetPath(asset);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] CollectDependencies(UnityEngine.Object[] roots);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] CollectDeepHierarchy(UnityEngine.Object[] roots);
 
@@ -191,9 +163,22 @@ namespace UnityEditor
 		{
 			go.hideFlags = HideFlags.HideAndDontSave;
 			go.layer = Camera.PreviewCullingLayer;
-			foreach (Transform transform in go.transform)
+			IEnumerator enumerator = go.transform.GetEnumerator();
+			try
 			{
-				EditorUtility.InitInstantiatedPreviewRecursive(transform.gameObject);
+				while (enumerator.MoveNext())
+				{
+					Transform transform = (Transform)enumerator.Current;
+					EditorUtility.InitInstantiatedPreviewRecursive(transform.gameObject);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
@@ -207,13 +192,22 @@ namespace UnityEditor
 			gameObject.name += "AnimatorPreview";
 			gameObject.tag = "Untagged";
 			EditorUtility.InitInstantiatedPreviewRecursive(gameObject);
-			Animator component = gameObject.GetComponent<Animator>();
-			if (component)
+			Animator[] componentsInChildren = gameObject.GetComponentsInChildren<Animator>();
+			for (int i = 0; i < componentsInChildren.Length; i++)
 			{
-				component.enabled = false;
-				component.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-				component.logWarnings = false;
-				component.fireEvents = false;
+				Animator animator = componentsInChildren[i];
+				animator.enabled = false;
+				animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+				animator.logWarnings = false;
+				animator.fireEvents = false;
+			}
+			if (componentsInChildren.Length == 0)
+			{
+				Animator animator2 = gameObject.AddComponent<Animator>();
+				animator2.enabled = false;
+				animator2.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+				animator2.logWarnings = false;
+				animator2.fireEvents = false;
 			}
 			return gameObject;
 		}
@@ -232,15 +226,14 @@ namespace UnityEditor
 			return EditorUtility.INTERNAL_CALL_Internal_InstantiateRemoveAllNonAnimationComponentsSingle(data, ref pos, ref rot);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern UnityEngine.Object INTERNAL_CALL_Internal_InstantiateRemoveAllNonAnimationComponentsSingle(UnityEngine.Object data, ref Vector3 pos, ref Quaternion rot);
 
-		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead"), WrapperlessIcall]
+		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadUnusedAssets();
 
-		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead"), WrapperlessIcall]
+		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadUnusedAssetsIgnoreManagedReferences();
 
@@ -254,7 +247,6 @@ namespace UnityEditor
 			EditorUtility.UnloadUnusedAssetsImmediateInternal(includeMonoReferencesAsRoots);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void UnloadUnusedAssetsImmediateInternal(bool includeMonoReferencesAsRoots);
 
@@ -266,18 +258,20 @@ namespace UnityEditor
 
 		internal static void Internal_DisplayPopupMenu(Rect position, string menuItemPath, UnityEngine.Object context, int contextUserData)
 		{
-			EditorUtility.INTERNAL_CALL_Internal_DisplayPopupMenu(ref position, menuItemPath, context, contextUserData);
+			EditorUtility.Private_DisplayPopupMenu(position, menuItemPath, context, contextUserData);
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DisplayPopupMenu(ref Rect position, string menuItemPath, UnityEngine.Object context, int contextUserData);
+		private static void Private_DisplayPopupMenu(Rect position, string menuItemPath, UnityEngine.Object context, int contextUserData)
+		{
+			EditorUtility.INTERNAL_CALL_Private_DisplayPopupMenu(ref position, menuItemPath, context, contextUserData);
+		}
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Private_DisplayPopupMenu(ref Rect position, string menuItemPath, UnityEngine.Object context, int contextUserData);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_UpdateMenuTitleForLanguage(SystemLanguage newloc);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_UpdateAllMenus();
 
@@ -329,7 +323,6 @@ namespace UnityEditor
 			EditorUtility.INTERNAL_CALL_Internal_DisplayObjectContextMenu(ref position, context, contextUserData);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DisplayObjectContextMenu(ref Rect position, UnityEngine.Object[] context, int contextUserData);
 
@@ -418,12 +411,16 @@ namespace UnityEditor
 
 		private static void Internal_DisplayCustomMenu(Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData, bool showHotkey)
 		{
-			EditorUtility.INTERNAL_CALL_Internal_DisplayCustomMenu(ref screenPosition, options, enabled, separator, selected, callback, userData, showHotkey);
+			EditorUtility.Private_DisplayCustomMenu(screenPosition, options, enabled, separator, selected, callback, userData, showHotkey);
 		}
 
-		[WrapperlessIcall]
+		private static void Private_DisplayCustomMenu(Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData, bool showHotkey)
+		{
+			EditorUtility.INTERNAL_CALL_Private_DisplayCustomMenu(ref screenPosition, options, enabled, separator, selected, callback, userData, showHotkey);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_DisplayCustomMenu(ref Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData, bool showHotkey);
+		private static extern void INTERNAL_CALL_Private_DisplayCustomMenu(ref Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData, bool showHotkey);
 
 		internal static void ResetMouseDown()
 		{
@@ -431,7 +428,6 @@ namespace UnityEditor
 			GUIUtility.hotControl = 0;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FocusProjectWindow();
 
@@ -440,43 +436,39 @@ namespace UnityEditor
 			return EditorUtility.FormatBytes((long)bytes);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string FormatBytes(long bytes);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DisplayProgressBar(string title, string info, float progress);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DisplayCancelableProgressBar(string title, string info, float progress);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearProgressBar();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetObjectEnabled(UnityEngine.Object target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetObjectEnabled(UnityEngine.Object target, bool enabled);
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetSelectedWireframeHidden(Renderer renderer, bool enabled);
+		[Obsolete("Use EditorUtility.SetSelectedRenderState")]
+		public static void SetSelectedWireframeHidden(Renderer renderer, bool enabled)
+		{
+			EditorUtility.SetSelectedRenderState(renderer, (!enabled) ? (EditorSelectedRenderState.Wireframe | EditorSelectedRenderState.Highlight) : EditorSelectedRenderState.Hidden);
+		}
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetSelectedRenderState(Renderer renderer, EditorSelectedRenderState renderState);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ForceReloadInspectors();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ForceRebuildInspectors();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool ExtractOggFile(UnityEngine.Object obj, string path);
 
@@ -492,7 +484,6 @@ namespace UnityEditor
 			return gameObject;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern GameObject Internal_CreateGameObjectWithHideFlags(string name, HideFlags flags);
 
@@ -501,11 +492,9 @@ namespace UnityEditor
 			return MonoCSharpCompiler.Compile(sources, references, defines, outputFile);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenWithDefaultApp(string fileName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool WSACreateTestCertificate(string path, string publisher, string password, bool overwrite);
 
@@ -563,15 +552,12 @@ namespace UnityEditor
 			return PrefabUtility.ResetToPrefabState(source);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetCameraAnimateMaterials(Camera camera, bool animate);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetInvalidFilenameChars();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetActiveNativePlatformSupportModuleName();
 	}

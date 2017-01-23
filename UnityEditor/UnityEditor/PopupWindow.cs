@@ -26,12 +26,17 @@ namespace UnityEditor
 
 		internal static void Show(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
+			PopupWindow.Show(activatorRect, windowContent, locationPriorityOrder, ShowMode.PopupMenu);
+		}
+
+		internal static void Show(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder, ShowMode showMode)
+		{
 			if (PopupWindow.ShouldShowWindow(activatorRect))
 			{
 				PopupWindow popupWindow = ScriptableObject.CreateInstance<PopupWindow>();
 				if (popupWindow != null)
 				{
-					popupWindow.Init(activatorRect, windowContent, locationPriorityOrder);
+					popupWindow.Init(activatorRect, windowContent, locationPriorityOrder, showMode);
 				}
 				GUIUtility.ExitGUI();
 			}
@@ -40,15 +45,25 @@ namespace UnityEditor
 		private static bool ShouldShowWindow(Rect activatorRect)
 		{
 			bool flag = EditorApplication.timeSinceStartup - PopupWindow.s_LastClosedTime < 0.2;
+			bool result;
 			if (!flag || activatorRect != PopupWindow.s_LastActivatorRect)
 			{
 				PopupWindow.s_LastActivatorRect = activatorRect;
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void Init(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
+		{
+			this.Init(activatorRect, windowContent, locationPriorityOrder, ShowMode.PopupMenu);
+		}
+
+		private void Init(Rect activatorRect, PopupWindowContent windowContent, PopupLocationHelper.PopupLocation[] locationPriorityOrder, ShowMode showMode)
 		{
 			base.hideFlags = HideFlags.DontSave;
 			base.wantsMouseMove = true;
@@ -56,7 +71,7 @@ namespace UnityEditor
 			this.m_WindowContent.editorWindow = this;
 			this.m_WindowContent.OnOpen();
 			this.m_ActivatorRect = GUIUtility.GUIToScreenRect(activatorRect);
-			base.ShowAsDropDown(this.m_ActivatorRect, this.m_WindowContent.GetWindowSize(), locationPriorityOrder);
+			base.ShowAsDropDown(this.m_ActivatorRect, this.m_WindowContent.GetWindowSize(), locationPriorityOrder, showMode);
 		}
 
 		internal void OnGUI()

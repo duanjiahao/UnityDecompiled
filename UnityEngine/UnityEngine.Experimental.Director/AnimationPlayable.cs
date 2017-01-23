@@ -95,15 +95,20 @@ namespace UnityEngine.Experimental.Director
 
 		public bool SetInput(Playable source, int index)
 		{
+			bool result;
 			if (!this.node.CheckInputBounds(index))
 			{
-				return false;
+				result = false;
 			}
-			if (this.GetInput(index).IsValid())
+			else
 			{
-				Playable.Disconnect(this, index);
+				if (this.GetInput(index).IsValid())
+				{
+					Playable.Disconnect(this, index);
+				}
+				result = Playable.Connect(source, this, -1, index);
 			}
-			return Playable.Connect(source, this, -1, index);
+			return result;
 		}
 
 		public bool SetInputs(IEnumerable<Playable> sources)
@@ -136,25 +141,33 @@ namespace UnityEngine.Experimental.Director
 
 		public bool RemoveInput(int index)
 		{
+			bool result;
 			if (!Playables.CheckInputBounds(this, index))
 			{
-				return false;
+				result = false;
 			}
-			Playable.Disconnect(this, index);
-			return true;
+			else
+			{
+				Playable.Disconnect(this, index);
+				result = true;
+			}
+			return result;
 		}
 
 		public bool RemoveInput(Playable playable)
 		{
+			bool result;
 			for (int i = 0; i < this.inputCount; i++)
 			{
 				if (this.GetInput(i) == playable)
 				{
 					Playable.Disconnect(this, i);
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public bool RemoveAllInputs()
@@ -167,6 +180,16 @@ namespace UnityEngine.Experimental.Director
 			return true;
 		}
 
+		public static bool operator ==(AnimationPlayable x, Playable y)
+		{
+			return Playables.Equals(x, y);
+		}
+
+		public static bool operator !=(AnimationPlayable x, Playable y)
+		{
+			return !Playables.Equals(x, y);
+		}
+
 		public override bool Equals(object p)
 		{
 			return Playables.Equals(this, p);
@@ -175,6 +198,11 @@ namespace UnityEngine.Experimental.Director
 		public override int GetHashCode()
 		{
 			return this.node.GetHashCode();
+		}
+
+		public static implicit operator Playable(AnimationPlayable b)
+		{
+			return b.node;
 		}
 
 		public bool IsValid()
@@ -205,21 +233,6 @@ namespace UnityEngine.Experimental.Director
 		public void SetInputWeight(int inputIndex, float weight)
 		{
 			Playables.SetInputWeightValidated(this, inputIndex, weight, base.GetType());
-		}
-
-		public static bool operator ==(AnimationPlayable x, Playable y)
-		{
-			return Playables.Equals(x, y);
-		}
-
-		public static bool operator !=(AnimationPlayable x, Playable y)
-		{
-			return !Playables.Equals(x, y);
-		}
-
-		public static implicit operator Playable(AnimationPlayable b)
-		{
-			return b.node;
 		}
 	}
 }

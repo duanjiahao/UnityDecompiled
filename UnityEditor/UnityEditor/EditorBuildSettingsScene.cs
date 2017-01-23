@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace UnityEditor
@@ -52,6 +53,13 @@ namespace UnityEditor
 				return editorBuildSettingsScene.m_Path.CompareTo(this.m_Path);
 			}
 			throw new ArgumentException("object is not a EditorBuildSettingsScene");
+		}
+
+		public static string[] GetActiveSceneList(EditorBuildSettingsScene[] scenes)
+		{
+			return (from scene in scenes
+			where scene.enabled
+			select scene.path).ToArray<string>();
 		}
 	}
 }

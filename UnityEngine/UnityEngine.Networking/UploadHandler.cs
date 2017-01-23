@@ -42,11 +42,10 @@ namespace UnityEngine.Networking
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateRaw(byte[] data);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalDestroy();
 

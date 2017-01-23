@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	internal class SketchUpDataSource : TreeViewDataSource
 	{
-		private const int k_ProgressUpdateStep = 50;
-
 		private SketchUpNodeInfo[] m_Nodes;
 
-		public SketchUpDataSource(TreeView treeView, SketchUpNodeInfo[] nodes) : base(treeView)
+		private const int k_ProgressUpdateStep = 50;
+
+		public SketchUpDataSource(TreeViewController treeView, SketchUpNodeInfo[] nodes) : base(treeView)
 		{
 			this.m_Nodes = nodes;
 			this.FetchData();
@@ -70,7 +71,7 @@ namespace UnityEditor
 				}
 			}
 			EditorUtility.ClearProgressBar();
-			this.m_NeedRefreshVisibleFolders = true;
+			this.m_NeedRefreshRows = true;
 		}
 
 		public override bool CanBeParent(TreeViewItem item)

@@ -6,62 +6,104 @@ namespace UnityEngine
 {
 	public sealed class ComputeShader : Object
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int FindKernel(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasKernel(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void GetKernelThreadGroupSizes(int kernelIndex, out uint x, out uint y, out uint z);
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetFloat(string name, float val);
+		public void SetFloat(string name, float val)
+		{
+			this.SetFloat(Shader.PropertyToID(name), val);
+		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetInt(string name, int val);
+		public extern void SetFloat(int nameID, float val);
+
+		public void SetInt(string name, int val)
+		{
+			this.SetInt(Shader.PropertyToID(name), val);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetInt(int nameID, int val);
+
+		public void SetBool(string name, bool val)
+		{
+			this.SetInt(name, (!val) ? 0 : 1);
+		}
+
+		public void SetBool(int nameID, bool val)
+		{
+			this.SetInt(nameID, (!val) ? 0 : 1);
+		}
 
 		public void SetVector(string name, Vector4 val)
 		{
-			ComputeShader.INTERNAL_CALL_SetVector(this, name, ref val);
+			this.SetVector(Shader.PropertyToID(name), val);
 		}
 
-		[WrapperlessIcall]
+		public void SetVector(int nameID, Vector4 val)
+		{
+			ComputeShader.INTERNAL_CALL_SetVector(this, nameID, ref val);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetVector(ComputeShader self, string name, ref Vector4 val);
+		private static extern void INTERNAL_CALL_SetVector(ComputeShader self, int nameID, ref Vector4 val);
 
 		public void SetFloats(string name, params float[] values)
 		{
-			this.Internal_SetFloats(name, values);
+			this.Internal_SetFloats(Shader.PropertyToID(name), values);
 		}
 
-		[WrapperlessIcall]
+		public void SetFloats(int nameID, params float[] values)
+		{
+			this.Internal_SetFloats(nameID, values);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_SetFloats(string name, float[] values);
+		private extern void Internal_SetFloats(int nameID, float[] values);
 
 		public void SetInts(string name, params int[] values)
 		{
-			this.Internal_SetInts(name, values);
+			this.Internal_SetInts(Shader.PropertyToID(name), values);
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_SetInts(string name, int[] values);
+		public void SetInts(int nameID, params int[] values)
+		{
+			this.Internal_SetInts(nameID, values);
+		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetTexture(int kernelIndex, string name, Texture texture);
+		private extern void Internal_SetInts(int nameID, int[] values);
 
-		[WrapperlessIcall]
+		public void SetTexture(int kernelIndex, string name, Texture texture)
+		{
+			this.SetTexture(kernelIndex, Shader.PropertyToID(name), texture);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetBuffer(int kernelIndex, string name, ComputeBuffer buffer);
+		public extern void SetTexture(int kernelIndex, int nameID, Texture texture);
 
-		[WrapperlessIcall]
+		public void SetTextureFromGlobal(int kernelIndex, string name, string globalTextureName)
+		{
+			this.SetTextureFromGlobal(kernelIndex, Shader.PropertyToID(name), Shader.PropertyToID(globalTextureName));
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetTextureFromGlobal(int kernelIndex, int nameID, int globalTextureNameID);
+
+		public void SetBuffer(int kernelIndex, string name, ComputeBuffer buffer)
+		{
+			this.SetBuffer(kernelIndex, Shader.PropertyToID(name), buffer);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetBuffer(int kernelIndex, int nameID, ComputeBuffer buffer);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispatch(int kernelIndex, int threadGroupsX, int threadGroupsY, int threadGroupsZ);
 
@@ -85,7 +127,6 @@ namespace UnityEngine
 			this.Internal_DispatchIndirect(kernelIndex, argsBuffer, argsOffset);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_DispatchIndirect(int kernelIndex, ComputeBuffer argsBuffer, uint argsOffset);
 	}

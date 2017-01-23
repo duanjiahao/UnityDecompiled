@@ -48,9 +48,9 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(this.m_Center, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
-			StructPropertyGUILayout.JointSpring(this.m_SuspensionSpring, new GUILayoutOption[0]);
-			StructPropertyGUILayout.WheelFrictionCurve(this.m_ForwardFriction, new GUILayoutOption[0]);
-			StructPropertyGUILayout.WheelFrictionCurve(this.m_SidewaysFriction, new GUILayoutOption[0]);
+			StructPropertyGUILayout.GenericStruct(this.m_SuspensionSpring, new GUILayoutOption[0]);
+			StructPropertyGUILayout.GenericStruct(this.m_ForwardFriction, new GUILayoutOption[0]);
+			StructPropertyGUILayout.GenericStruct(this.m_SidewaysFriction, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
 	}

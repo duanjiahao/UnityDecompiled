@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace UnityEditor.Audio
 {
@@ -9,23 +8,18 @@ namespace UnityEditor.Audio
 	{
 		private static readonly List<MixerEffectDefinition> s_MixerEffectDefinitions = new List<MixerEffectDefinition>();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ClearDefinitionsRuntime();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AddDefinitionRuntime(string name, MixerParameterDefinition[] parameters);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAudioEffectNames();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern MixerParameterDefinition[] GetAudioEffectParameterDesc(string effectName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool EffectCanBeSidechainTarget(AudioMixerEffectController effect);
 
@@ -129,14 +123,17 @@ namespace UnityEditor.Audio
 
 		public static bool EffectExists(string name)
 		{
+			bool result;
 			foreach (MixerEffectDefinition current in MixerEffectDefinitions.s_MixerEffectDefinitions)
 			{
 				if (current.name == name)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public static string[] GetEffectList()
@@ -157,23 +154,28 @@ namespace UnityEditor.Audio
 
 		public static MixerParameterDefinition[] GetEffectParameters(string effect)
 		{
+			MixerParameterDefinition[] result;
 			foreach (MixerEffectDefinition current in MixerEffectDefinitions.s_MixerEffectDefinitions)
 			{
 				if (current.name == effect)
 				{
-					return current.parameters;
+					result = current.parameters;
+					return result;
 				}
 			}
-			return new MixerParameterDefinition[0];
+			result = new MixerParameterDefinition[0];
+			return result;
 		}
 
 		public static bool RegisterAudioMixerEffect(string name, MixerParameterDefinition[] definitions)
 		{
+			bool result;
 			foreach (MixerEffectDefinition current in MixerEffectDefinitions.s_MixerEffectDefinitions)
 			{
 				if (current.name == name)
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
 			MixerEffectDefinition item = new MixerEffectDefinition(name, definitions);
@@ -183,7 +185,8 @@ namespace UnityEditor.Audio
 			{
 				MixerEffectDefinitions.AddDefinitionRuntime(current2.name, current2.parameters);
 			}
-			return true;
+			result = true;
+			return result;
 		}
 	}
 }

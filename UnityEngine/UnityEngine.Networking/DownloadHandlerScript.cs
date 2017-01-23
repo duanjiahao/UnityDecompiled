@@ -22,7 +22,6 @@ namespace UnityEngine.Networking
 			this.InternalSetPreallocatedBuffer(preallocatedBuffer);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalSetPreallocatedBuffer(byte[] buffer);
 	}

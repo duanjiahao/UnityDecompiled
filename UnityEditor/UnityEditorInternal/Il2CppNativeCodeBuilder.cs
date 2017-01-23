@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 namespace UnityEditorInternal
 {
@@ -56,14 +58,24 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public virtual IEnumerable<string> AdditionalIl2CPPArguments
+		{
+			get
+			{
+				return new string[0];
+			}
+		}
+
 		public virtual IEnumerable<string> ConvertIncludesToFullPaths(IEnumerable<string> relativeIncludePaths)
 		{
-			return relativeIncludePaths;
+			string workingDirectory = Directory.GetCurrentDirectory();
+			return from path in relativeIncludePaths
+			select Path.Combine(workingDirectory, path);
 		}
 
 		public virtual string ConvertOutputFileToFullPath(string outputFileRelativePath)
 		{
-			return outputFileRelativePath;
+			return Path.Combine(Directory.GetCurrentDirectory(), outputFileRelativePath);
 		}
 
 		public void SetupStartInfo(ProcessStartInfo startInfo)

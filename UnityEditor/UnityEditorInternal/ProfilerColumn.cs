@@ -4,6 +4,7 @@ namespace UnityEditorInternal
 {
 	public enum ProfilerColumn
 	{
+		DontSort = -1,
 		FunctionName,
 		TotalPercent,
 		SelfPercent,

@@ -5,54 +5,168 @@ namespace UnityEngine
 {
 	public sealed class LineRenderer : Renderer
 	{
-		public extern bool useWorldSpace
+		public extern float startWidth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
+		public extern float endWidth
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern AnimationCurve widthCurve
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern float widthMultiplier
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public Color startColor
+		{
+			get
+			{
+				Color result;
+				this.INTERNAL_get_startColor(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_startColor(ref value);
+			}
+		}
+
+		public Color endColor
+		{
+			get
+			{
+				Color result;
+				this.INTERNAL_get_endColor(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_endColor(ref value);
+			}
+		}
+
+		public extern Gradient colorGradient
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int numPositions
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool useWorldSpace
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int numCornerVertices
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int numCapVertices
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern LineTextureMode textureMode
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[Obsolete("SetWidth has been deprecated. Please use the startWidth, endWidth, or widthCurve properties instead.")]
 		public void SetWidth(float start, float end)
 		{
-			LineRenderer.INTERNAL_CALL_SetWidth(this, start, end);
+			this.startWidth = start;
+			this.endWidth = end;
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetWidth(LineRenderer self, float start, float end);
-
+		[Obsolete("SetColors has been deprecated. Please use the startColor, endColor, or colorGradient properties instead.")]
 		public void SetColors(Color start, Color end)
 		{
-			LineRenderer.INTERNAL_CALL_SetColors(this, ref start, ref end);
+			this.startColor = start;
+			this.endColor = end;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetColors(LineRenderer self, ref Color start, ref Color end);
+		private extern void INTERNAL_get_startColor(out Color value);
 
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_startColor(ref Color value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_endColor(out Color value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_endColor(ref Color value);
+
+		[Obsolete("SetVertexCount has been deprecated. Please use the numPositions property instead.")]
 		public void SetVertexCount(int count)
 		{
-			LineRenderer.INTERNAL_CALL_SetVertexCount(this, count);
+			this.numPositions = count;
 		}
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetVertexCount(LineRenderer self, int count);
 
 		public void SetPosition(int index, Vector3 position)
 		{
 			LineRenderer.INTERNAL_CALL_SetPosition(this, index, ref position);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPosition(LineRenderer self, int index, ref Vector3 position);
 
-		[WrapperlessIcall]
+		public Vector3 GetPosition(int index)
+		{
+			Vector3 result;
+			LineRenderer.INTERNAL_CALL_GetPosition(this, index, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetPosition(LineRenderer self, int index, out Vector3 value);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPositions(Vector3[] positions);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern int GetPositions(Vector3[] positions);
 	}
 }

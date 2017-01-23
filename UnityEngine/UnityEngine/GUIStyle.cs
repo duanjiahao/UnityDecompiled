@@ -304,50 +304,40 @@ namespace UnityEngine
 
 		public extern string name
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern ImagePosition imagePosition
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern TextAnchor alignment
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool wordWrap
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern TextClipping clipping
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -382,70 +372,56 @@ namespace UnityEngine
 
 		public extern float fixedWidth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float fixedHeight
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool stretchWidth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool stretchHeight
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int fontSize
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern FontStyle fontStyle
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool richText
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -500,9 +476,11 @@ namespace UnityEngine
 			if (Event.current.type != EventType.Repaint)
 			{
 				Debug.LogError("Style.Draw may not be called if it is not a repaint event");
-				return;
 			}
-			GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.none, isHover, isActive, on, hasKeyboardFocus);
+			else
+			{
+				GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.none, isHover, isActive, on, hasKeyboardFocus);
+			}
 		}
 
 		public void Draw(Rect position, string text, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
@@ -510,9 +488,11 @@ namespace UnityEngine
 			if (Event.current.type != EventType.Repaint)
 			{
 				Debug.LogError("Style.Draw may not be called if it is not a repaint event");
-				return;
 			}
-			GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.Temp(text), isHover, isActive, on, hasKeyboardFocus);
+			else
+			{
+				GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.Temp(text), isHover, isActive, on, hasKeyboardFocus);
+			}
 		}
 
 		public void Draw(Rect position, Texture image, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
@@ -520,9 +500,11 @@ namespace UnityEngine
 			if (Event.current.type != EventType.Repaint)
 			{
 				Debug.LogError("Style.Draw may not be called if it is not a repaint event");
-				return;
 			}
-			GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.Temp(image), isHover, isActive, on, hasKeyboardFocus);
+			else
+			{
+				GUIStyle.Internal_Draw(this.m_Ptr, position, GUIContent.Temp(image), isHover, isActive, on, hasKeyboardFocus);
+			}
 		}
 
 		public void Draw(Rect position, GUIContent content, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
@@ -530,9 +512,11 @@ namespace UnityEngine
 			if (Event.current.type != EventType.Repaint)
 			{
 				Debug.LogError("Style.Draw may not be called if it is not a repaint event");
-				return;
 			}
-			GUIStyle.Internal_Draw(this.m_Ptr, position, content, isHover, isActive, on, hasKeyboardFocus);
+			else
+			{
+				GUIStyle.Internal_Draw(this.m_Ptr, position, content, isHover, isActive, on, hasKeyboardFocus);
+			}
 		}
 
 		public void Draw(Rect position, GUIContent content, int controlID)
@@ -545,9 +529,8 @@ namespace UnityEngine
 			if (Event.current.type != EventType.Repaint)
 			{
 				Debug.LogError("Style.Draw may not be called if it is not a repaint event.");
-				return;
 			}
-			if (content != null)
+			else if (content != null)
 			{
 				GUIStyle.Internal_Draw2(this.m_Ptr, position, content, controlID, on);
 			}
@@ -590,34 +573,51 @@ namespace UnityEngine
 			if (Event.current.type != EventType.Repaint)
 			{
 				Debug.LogError("Style.Draw may not be called if it is not a repaint event");
-				return;
 			}
-			Event current = Event.current;
-			Color cursorColor = new Color(0f, 0f, 0f, 0f);
-			float cursorFlashSpeed = GUI.skin.settings.cursorFlashSpeed;
-			float num = (Time.realtimeSinceStartup - GUIStyle.Internal_GetCursorFlashOffset()) % cursorFlashSpeed / cursorFlashSpeed;
-			if (cursorFlashSpeed == 0f || num < 0.5f)
+			else
 			{
-				cursorColor = GUI.skin.settings.cursorColor;
+				Event current = Event.current;
+				Color cursorColor = new Color(0f, 0f, 0f, 0f);
+				float cursorFlashSpeed = GUI.skin.settings.cursorFlashSpeed;
+				float num = (Time.realtimeSinceStartup - GUIStyle.Internal_GetCursorFlashOffset()) % cursorFlashSpeed / cursorFlashSpeed;
+				if (cursorFlashSpeed == 0f || num < 0.5f)
+				{
+					cursorColor = GUI.skin.settings.cursorColor;
+				}
+				Internal_DrawWithTextSelectionArguments internal_DrawWithTextSelectionArguments = default(Internal_DrawWithTextSelectionArguments);
+				internal_DrawWithTextSelectionArguments.target = this.m_Ptr;
+				internal_DrawWithTextSelectionArguments.position = position;
+				internal_DrawWithTextSelectionArguments.firstPos = firstSelectedCharacter;
+				internal_DrawWithTextSelectionArguments.lastPos = lastSelectedCharacter;
+				internal_DrawWithTextSelectionArguments.cursorColor = cursorColor;
+				internal_DrawWithTextSelectionArguments.selectionColor = GUI.skin.settings.selectionColor;
+				internal_DrawWithTextSelectionArguments.isHover = ((!position.Contains(current.mousePosition)) ? 0 : 1);
+				internal_DrawWithTextSelectionArguments.isActive = ((controlID != GUIUtility.hotControl) ? 0 : 1);
+				internal_DrawWithTextSelectionArguments.on = 0;
+				internal_DrawWithTextSelectionArguments.hasKeyboardFocus = ((controlID != GUIUtility.keyboardControl || !GUIStyle.showKeyboardFocus) ? 0 : 1);
+				internal_DrawWithTextSelectionArguments.drawSelectionAsComposition = ((!drawSelectionAsComposition) ? 0 : 1);
+				GUIStyle.Internal_DrawWithTextSelection(content, ref internal_DrawWithTextSelectionArguments);
 			}
-			Internal_DrawWithTextSelectionArguments internal_DrawWithTextSelectionArguments = default(Internal_DrawWithTextSelectionArguments);
-			internal_DrawWithTextSelectionArguments.target = this.m_Ptr;
-			internal_DrawWithTextSelectionArguments.position = position;
-			internal_DrawWithTextSelectionArguments.firstPos = firstSelectedCharacter;
-			internal_DrawWithTextSelectionArguments.lastPos = lastSelectedCharacter;
-			internal_DrawWithTextSelectionArguments.cursorColor = cursorColor;
-			internal_DrawWithTextSelectionArguments.selectionColor = GUI.skin.settings.selectionColor;
-			internal_DrawWithTextSelectionArguments.isHover = ((!position.Contains(current.mousePosition)) ? 0 : 1);
-			internal_DrawWithTextSelectionArguments.isActive = ((controlID != GUIUtility.hotControl) ? 0 : 1);
-			internal_DrawWithTextSelectionArguments.on = 0;
-			internal_DrawWithTextSelectionArguments.hasKeyboardFocus = ((controlID != GUIUtility.keyboardControl || !GUIStyle.showKeyboardFocus) ? 0 : 1);
-			internal_DrawWithTextSelectionArguments.drawSelectionAsComposition = ((!drawSelectionAsComposition) ? 0 : 1);
-			GUIStyle.Internal_DrawWithTextSelection(content, ref internal_DrawWithTextSelectionArguments);
 		}
 
 		public void DrawWithTextSelection(Rect position, GUIContent content, int controlID, int firstSelectedCharacter, int lastSelectedCharacter)
 		{
 			this.DrawWithTextSelection(position, content, controlID, firstSelectedCharacter, lastSelectedCharacter, false);
+		}
+
+		public static implicit operator GUIStyle(string str)
+		{
+			GUIStyle result;
+			if (GUISkin.current == null)
+			{
+				Debug.LogError("Unable to use a named GUIStyle without a current skin. Most likely you need to move your GUIStyle initialization code to OnGUI");
+				result = GUISkin.error;
+			}
+			else
+			{
+				result = GUISkin.current.GetStyle(str);
+			}
+			return result;
 		}
 
 		public Vector2 GetCursorPixelPosition(Rect position, GUIContent content, int cursorStringIndex)
@@ -674,15 +674,15 @@ namespace UnityEngine
 			});
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Init();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InitCopy(GUIStyle other);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Cleanup();
 
@@ -694,11 +694,9 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetStyleStatePtr(GUIStyle self, int idx, out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void AssignStyleState(int idx, IntPtr srcStyleState);
 
@@ -709,47 +707,37 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetRectOffsetPtr(GUIStyle self, int idx, out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void AssignRectOffset(int idx, IntPtr srcRectOffset);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_contentOffset(out Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_contentOffset(ref Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_Internal_clipOffset(out Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_Internal_clipOffset(ref Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_GetLineHeight(IntPtr target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetFontInternal(Font value);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Font GetFontInternalDuringLoadingThread();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Font GetFontInternal();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Draw(GUIContent content, ref Internal_DrawArguments arguments);
 
@@ -758,20 +746,25 @@ namespace UnityEngine
 			GUIStyle.INTERNAL_CALL_Internal_Draw2(style, ref position, content, controlID, on);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_Draw2(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
+
+		internal void SetMouseTooltip(string tooltip, Rect screenRect)
+		{
+			GUIStyle.INTERNAL_CALL_SetMouseTooltip(this, tooltip, ref screenRect);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetMouseTooltip(GUIStyle self, string tooltip, ref Rect screenRect);
 
 		private static void Internal_DrawPrefixLabel(IntPtr style, Rect position, GUIContent content, int controlID, bool on)
 		{
 			GUIStyle.INTERNAL_CALL_Internal_DrawPrefixLabel(style, ref position, content, controlID, on);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawPrefixLabel(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_GetCursorFlashOffset();
 
@@ -780,15 +773,12 @@ namespace UnityEngine
 			GUIStyle.INTERNAL_CALL_Internal_DrawCursor(target, ref position, content, pos, ref cursorColor);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawCursor(IntPtr target, ref Rect position, GUIContent content, int pos, ref Color cursorColor);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_DrawWithTextSelection(GUIContent content, ref Internal_DrawWithTextSelectionArguments arguments);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetDefaultFont(Font font);
 
@@ -797,7 +787,6 @@ namespace UnityEngine
 			GUIStyle.INTERNAL_CALL_Internal_GetCursorPixelPosition(target, ref position, content, cursorStringIndex, out ret);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_GetCursorPixelPosition(IntPtr target, ref Rect position, GUIContent content, int cursorStringIndex, out Vector2 ret);
 
@@ -806,15 +795,12 @@ namespace UnityEngine
 			return GUIStyle.INTERNAL_CALL_Internal_GetCursorStringIndex(target, ref position, content, ref cursorPixelPosition);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int INTERNAL_CALL_Internal_GetCursorStringIndex(IntPtr target, ref Rect position, GUIContent content, ref Vector2 cursorPixelPosition);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int Internal_GetNumCharactersThatFitWithinWidth(IntPtr target, string text, float width);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_CalcSize(IntPtr target, GUIContent content, out Vector2 ret);
 
@@ -823,26 +809,13 @@ namespace UnityEngine
 			GUIStyle.INTERNAL_CALL_Internal_CalcSizeWithConstraints(target, content, ref maxSize, out ret);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_CalcSizeWithConstraints(IntPtr target, GUIContent content, ref Vector2 maxSize, out Vector2 ret);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_CalcHeight(IntPtr target, GUIContent content, float width);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CalcMinMaxWidth(IntPtr target, GUIContent content, out float minWidth, out float maxWidth);
-
-		public static implicit operator GUIStyle(string str)
-		{
-			if (GUISkin.current == null)
-			{
-				Debug.LogError("Unable to use a named GUIStyle without a current skin. Most likely you need to move your GUIStyle initialization code to OnGUI");
-				return GUISkin.error;
-			}
-			return GUISkin.current.GetStyle(str);
-		}
 	}
 }

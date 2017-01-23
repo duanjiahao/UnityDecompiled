@@ -39,20 +39,25 @@ namespace UnityEditor
 
 		protected void InspectorEditButtonGUI()
 		{
-			EditMode.DoEditModeInspectorModeButton(EditMode.SceneViewEditMode.Collider, "Edit Collider", EditorGUIUtility.IconContent("EditCollider"), ColliderEditorBase.GetColliderBounds(this.target), this);
+			EditMode.DoEditModeInspectorModeButton(EditMode.SceneViewEditMode.Collider, "Edit Collider", EditorGUIUtility.IconContent("EditCollider"), ColliderEditorBase.GetColliderBounds(base.target), this);
 		}
 
 		private static Bounds GetColliderBounds(UnityEngine.Object collider)
 		{
+			Bounds result;
 			if (collider is Collider2D)
 			{
-				return (collider as Collider2D).bounds;
+				result = (collider as Collider2D).bounds;
 			}
-			if (collider is Collider)
+			else if (collider is Collider)
 			{
-				return (collider as Collider).bounds;
+				result = (collider as Collider).bounds;
 			}
-			return default(Bounds);
+			else
+			{
+				result = default(Bounds);
+			}
+			return result;
 		}
 
 		protected void OnEditModeStart(Editor editor, EditMode.SceneViewEditMode mode)

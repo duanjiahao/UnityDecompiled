@@ -9,7 +9,6 @@ namespace UnityEngine.Networking
 	{
 		public extern AudioClip audioClip
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -29,7 +28,6 @@ namespace UnityEngine.Networking
 			throw new NotSupportedException("String access is not supported for audio clips");
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern byte[] InternalGetData();
 

@@ -27,14 +27,13 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_Gradient != null)
+			if (this.m_Gradient == null)
 			{
-				return;
+				this.m_Gradient = new SerializedMinMaxGradient(this);
+				this.m_Gradient.m_AllowColor = false;
+				this.m_Gradient.m_AllowRandomBetweenTwoColors = false;
+				this.m_Range = base.GetProperty("range");
 			}
-			this.m_Gradient = new SerializedMinMaxGradient(this);
-			this.m_Gradient.m_AllowColor = false;
-			this.m_Gradient.m_AllowRandomBetweenTwoColors = false;
-			this.m_Range = base.GetProperty("range");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -43,8 +42,8 @@ namespace UnityEditor
 			{
 				ColorByVelocityModuleUI.s_Texts = new ColorByVelocityModuleUI.Texts();
 			}
-			base.GUIMinMaxGradient(ColorByVelocityModuleUI.s_Texts.color, this.m_Gradient);
-			ModuleUI.GUIMinMaxRange(ColorByVelocityModuleUI.s_Texts.velocityRange, this.m_Range);
+			base.GUIMinMaxGradient(ColorByVelocityModuleUI.s_Texts.color, this.m_Gradient, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxRange(ColorByVelocityModuleUI.s_Texts.velocityRange, this.m_Range, new GUILayoutOption[0]);
 		}
 	}
 }

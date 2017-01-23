@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -12,7 +13,7 @@ namespace UnityEditor
 
 		private Action m_SavedFiltersChanged;
 
-		private bool m_AllowHierarchy;
+		private bool m_AllowHierarchy = false;
 
 		public static int AddSavedFilter(string displayName, SearchFilter filter, float previewSize)
 		{
@@ -42,38 +43,53 @@ namespace UnityEditor
 		public static SearchFilter GetFilter(int instanceID)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
+			SearchFilter result;
 			if (savedFilter != null && savedFilter.m_Filter != null)
 			{
-				return ObjectCopier.DeepClone<SearchFilter>(savedFilter.m_Filter);
+				result = ObjectCopier.DeepClone<SearchFilter>(savedFilter.m_Filter);
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public static float GetPreviewSize(int instanceID)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
+			float result;
 			if (savedFilter != null)
 			{
-				return savedFilter.m_PreviewSize;
+				result = savedFilter.m_PreviewSize;
 			}
-			return -1f;
+			else
+			{
+				result = -1f;
+			}
+			return result;
 		}
 
 		public static string GetName(int instanceID)
 		{
 			SavedFilter savedFilter = ScriptableSingleton<SavedSearchFilters>.instance.Find(instanceID);
+			string result;
 			if (savedFilter != null)
 			{
-				return savedFilter.m_Name;
+				result = savedFilter.m_Name;
 			}
-			Debug.LogError(string.Concat(new object[]
+			else
 			{
-				"Could not find saved filter ",
-				instanceID,
-				" ",
-				ScriptableSingleton<SavedSearchFilters>.instance.ToString()
-			}));
-			return string.Empty;
+				Debug.LogError(string.Concat(new object[]
+				{
+					"Could not find saved filter ",
+					instanceID,
+					" ",
+					ScriptableSingleton<SavedSearchFilters>.instance.ToString()
+				}));
+				result = "";
+			}
+			return result;
 		}
 
 		public static void SetName(int instanceID, string name)
@@ -108,10 +124,10 @@ namespace UnityEditor
 
 		public static void AddChangeListener(Action callback)
 		{
-			SavedSearchFilters expr_05 = ScriptableSingleton<SavedSearchFilters>.instance;
-			expr_05.m_SavedFiltersChanged = (Action)Delegate.Remove(expr_05.m_SavedFiltersChanged, callback);
-			SavedSearchFilters expr_20 = ScriptableSingleton<SavedSearchFilters>.instance;
-			expr_20.m_SavedFiltersChanged = (Action)Delegate.Combine(expr_20.m_SavedFiltersChanged, callback);
+			SavedSearchFilters expr_06 = ScriptableSingleton<SavedSearchFilters>.instance;
+			expr_06.m_SavedFiltersChanged = (Action)Delegate.Remove(expr_06.m_SavedFiltersChanged, callback);
+			SavedSearchFilters expr_21 = ScriptableSingleton<SavedSearchFilters>.instance;
+			expr_21.m_SavedFiltersChanged = (Action)Delegate.Combine(expr_21.m_SavedFiltersChanged, callback);
 		}
 
 		public static void MoveSavedFilter(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
@@ -134,6 +150,7 @@ namespace UnityEditor
 			int num = this.IndexOf(instanceID);
 			int num2 = this.IndexOf(parentInstanceID);
 			int num3 = this.IndexOf(targetInstanceID);
+			bool result;
 			if (num < 0 || num2 < 0 || num3 < 0)
 			{
 				Debug.LogError(string.Concat(new object[]
@@ -145,54 +162,62 @@ namespace UnityEditor
 					" ",
 					num3
 				}));
-				return false;
+				result = false;
 			}
-			if (instanceID == targetInstanceID)
+			else if (instanceID == targetInstanceID)
 			{
-				return false;
+				result = false;
 			}
-			for (int i = num + 1; i < this.m_SavedFilters.Count; i++)
+			else
 			{
-				if (this.m_SavedFilters[i].m_Depth <= this.m_SavedFilters[num].m_Depth)
+				for (int i = num + 1; i < this.m_SavedFilters.Count; i++)
 				{
-					break;
+					if (this.m_SavedFilters[i].m_Depth <= this.m_SavedFilters[num].m_Depth)
+					{
+						break;
+					}
+					if (i == num3 || i == num2)
+					{
+						result = false;
+						return result;
+					}
 				}
-				if (i == num3 || i == num2)
-				{
-					return false;
-				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private void Move(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
 		{
-			if (!this.IsValidMove(instanceID, parentInstanceID, targetInstanceID, after))
+			if (this.IsValidMove(instanceID, parentInstanceID, targetInstanceID, after))
 			{
-				return;
+				int index = this.IndexOf(instanceID);
+				int index2 = this.IndexOf(parentInstanceID);
+				int num = this.IndexOf(targetInstanceID);
+				SavedFilter savedFilter = this.m_SavedFilters[index];
+				SavedFilter savedFilter2 = this.m_SavedFilters[index2];
+				int num2 = 0;
+				if (this.m_AllowHierarchy)
+				{
+					num2 = savedFilter2.m_Depth + 1 - savedFilter.m_Depth;
+				}
+				List<SavedFilter> savedFilterAndChildren = this.GetSavedFilterAndChildren(instanceID);
+				this.m_SavedFilters.RemoveRange(index, savedFilterAndChildren.Count);
+				foreach (SavedFilter current in savedFilterAndChildren)
+				{
+					current.m_Depth += num2;
+				}
+				num = this.IndexOf(targetInstanceID);
+				if (num != -1)
+				{
+					if (after)
+					{
+						num++;
+					}
+					this.m_SavedFilters.InsertRange(num, savedFilterAndChildren);
+				}
+				this.Changed();
 			}
-			int index = this.IndexOf(instanceID);
-			int index2 = this.IndexOf(parentInstanceID);
-			int num = this.IndexOf(targetInstanceID);
-			SavedFilter savedFilter = this.m_SavedFilters[index];
-			SavedFilter savedFilter2 = this.m_SavedFilters[index2];
-			int num2 = 0;
-			if (this.m_AllowHierarchy)
-			{
-				num2 = savedFilter2.m_Depth + 1 - savedFilter.m_Depth;
-			}
-			List<SavedFilter> savedFilterAndChildren = this.GetSavedFilterAndChildren(instanceID);
-			this.m_SavedFilters.RemoveRange(index, savedFilterAndChildren.Count);
-			foreach (SavedFilter current in savedFilterAndChildren)
-			{
-				current.m_Depth += num2;
-			}
-			num = this.IndexOf(targetInstanceID);
-			if (num != -1)
-			{
-				this.m_SavedFilters.InsertRange(num + 1, savedFilterAndChildren);
-			}
-			this.Changed();
 		}
 
 		private void UpdateFilter(int instanceID, SearchFilter filter, float previewSize)
@@ -232,11 +257,13 @@ namespace UnityEditor
 			}
 			list.Sort();
 			int num = ProjectWindowUtil.k_FavoritesStartInstanceID;
+			int result;
 			for (int i = 0; i < 1000; i++)
 			{
 				if (list.BinarySearch(num) < 0)
 				{
-					return num;
+					result = num;
+					return result;
 				}
 				num++;
 			}
@@ -247,7 +274,8 @@ namespace UnityEditor
 				" ",
 				num
 			}));
-			return ProjectWindowUtil.k_FavoritesStartInstanceID + 1000;
+			result = ProjectWindowUtil.k_FavoritesStartInstanceID + 1000;
+			return result;
 		}
 
 		private int Add(string displayName, SearchFilter filter, float previewSize, int insertAfterInstanceID, bool addAsChild)
@@ -262,13 +290,15 @@ namespace UnityEditor
 				searchFilter.folders = new string[0];
 			}
 			int num = 0;
+			int result;
 			if (insertAfterInstanceID != 0)
 			{
 				num = this.IndexOf(insertAfterInstanceID);
 				if (num == -1)
 				{
 					Debug.LogError("Invalid insert position");
-					return 0;
+					result = 0;
+					return result;
 				}
 			}
 			int depth = this.m_SavedFilters[num].m_Depth + ((!addAsChild) ? 0 : 1);
@@ -283,7 +313,8 @@ namespace UnityEditor
 				this.m_SavedFilters.Insert(num + 1, savedFilter);
 			}
 			this.Changed();
-			return savedFilter.m_ID;
+			result = savedFilter.m_ID;
+			return result;
 		}
 
 		private List<SavedFilter> GetSavedFilterAndChildren(int instanceID)
@@ -321,24 +352,32 @@ namespace UnityEditor
 
 		private int IndexOf(int instanceID)
 		{
+			int result;
 			for (int i = 0; i < this.m_SavedFilters.Count; i++)
 			{
 				if (this.m_SavedFilters[i].m_ID == instanceID)
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 
 		private SavedFilter Find(int instanceID)
 		{
 			int num = this.IndexOf(instanceID);
+			SavedFilter result;
 			if (num >= 0)
 			{
-				return this.m_SavedFilters[num];
+				result = this.m_SavedFilters[num];
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private void Init()
@@ -372,41 +411,51 @@ namespace UnityEditor
 
 		private int GetRoot()
 		{
+			int result;
 			if (this.m_SavedFilters != null && this.m_SavedFilters.Count > 0)
 			{
-				return this.m_SavedFilters[0].m_ID;
+				result = this.m_SavedFilters[0].m_ID;
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 
 		private TreeViewItem BuildTreeView()
 		{
 			this.Init();
+			TreeViewItem result;
 			if (this.m_SavedFilters.Count == 0)
 			{
 				Debug.LogError("BuildTreeView: No saved filters! We should at least have a root");
-				return null;
+				result = null;
 			}
-			TreeViewItem treeViewItem = null;
-			List<TreeViewItem> list = new List<TreeViewItem>();
-			for (int i = 0; i < this.m_SavedFilters.Count; i++)
+			else
 			{
-				SavedFilter savedFilter = this.m_SavedFilters[i];
-				int iD = savedFilter.m_ID;
-				int depth = savedFilter.m_Depth;
-				bool isFolder = savedFilter.m_Filter.GetState() == SearchFilter.State.FolderBrowsing;
-				TreeViewItem treeViewItem2 = new SearchFilterTreeItem(iD, depth, null, savedFilter.m_Name, isFolder);
-				if (i == 0)
+				TreeViewItem treeViewItem = null;
+				List<TreeViewItem> list = new List<TreeViewItem>();
+				for (int i = 0; i < this.m_SavedFilters.Count; i++)
 				{
-					treeViewItem = treeViewItem2;
+					SavedFilter savedFilter = this.m_SavedFilters[i];
+					int iD = savedFilter.m_ID;
+					int depth = savedFilter.m_Depth;
+					bool isFolder = savedFilter.m_Filter.GetState() == SearchFilter.State.FolderBrowsing;
+					TreeViewItem treeViewItem2 = new SearchFilterTreeItem(iD, depth, null, savedFilter.m_Name, isFolder);
+					if (i == 0)
+					{
+						treeViewItem = treeViewItem2;
+					}
+					else
+					{
+						list.Add(treeViewItem2);
+					}
 				}
-				else
-				{
-					list.Add(treeViewItem2);
-				}
+				TreeViewUtility.SetChildParentReferences(list, treeViewItem);
+				result = treeViewItem;
 			}
-			TreeViewUtility.SetChildParentReferences(list, treeViewItem);
-			return treeViewItem;
+			return result;
 		}
 
 		private void Changed()

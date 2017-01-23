@@ -7,7 +7,10 @@ namespace UnityEngine.SocialPlatforms.GameCenter
 		public static void ResetAllAchievements(Action<bool> callback)
 		{
 			Debug.Log("ResetAllAchievements - no effect in editor");
-			callback(true);
+			if (callback != null)
+			{
+				callback(true);
+			}
 		}
 
 		public static void ShowDefaultAchievementCompletionBanner(bool value)

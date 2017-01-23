@@ -1,5 +1,6 @@
 using System;
 using UnityEditor.Audio;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -12,9 +13,9 @@ namespace UnityEditor
 
 		public Action<AudioMixerTreeViewNode, bool> NodeWasToggled;
 
-		public AudioMixerController m_Controller;
+		public AudioMixerController m_Controller = null;
 
-		public AudioGroupTreeViewGUI(TreeView treeView) : base(treeView)
+		public AudioGroupTreeViewGUI(TreeViewController treeView) : base(treeView)
 		{
 			this.k_BaseIndent = this.column1Width;
 			this.k_IconWidth = 0f;
@@ -52,47 +53,54 @@ namespace UnityEditor
 		{
 			Event current = Event.current;
 			this.DoItemGUI(rowRect, row, node, selected, focused, false);
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
-			}
-			AudioMixerTreeViewNode audioMixerTreeViewNode = node as AudioMixerTreeViewNode;
-			if (audioMixerTreeViewNode != null)
-			{
-				bool flag = this.m_Controller.CurrentViewContainsGroup(audioMixerTreeViewNode.group.groupID);
-				float num = 3f;
-				Rect position = new Rect(rowRect.x + num, rowRect.y, 16f, 16f);
-				Rect rect = new Rect(position.x + 1f, position.y + 1f, position.width - 2f, position.height - 2f);
-				int userColorIndex = audioMixerTreeViewNode.group.userColorIndex;
-				if (userColorIndex > 0)
+				AudioMixerTreeViewNode audioMixerTreeViewNode = node as AudioMixerTreeViewNode;
+				if (audioMixerTreeViewNode != null)
 				{
-					EditorGUI.DrawRect(new Rect(rowRect.x, rect.y, 2f, rect.height), AudioMixerColorCodes.GetColor(userColorIndex));
-				}
-				EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 0.2f));
-				if (flag)
-				{
-					GUI.DrawTexture(position, this.k_VisibleON);
-				}
-				Rect rect2 = new Rect(2f, rowRect.y, rowRect.height, rowRect.height);
-				if (current.type == EventType.MouseUp && current.button == 0 && rect2.Contains(current.mousePosition) && this.NodeWasToggled != null)
-				{
-					this.NodeWasToggled(audioMixerTreeViewNode, !flag);
-				}
-				if (current.type == EventType.ContextClick && position.Contains(current.mousePosition))
-				{
-					this.OpenGroupContextMenu(audioMixerTreeViewNode, flag);
-					current.Use();
+					bool flag = this.m_Controller.CurrentViewContainsGroup(audioMixerTreeViewNode.group.groupID);
+					float num = 3f;
+					Rect position = new Rect(rowRect.x + num, rowRect.y, 16f, 16f);
+					Rect rect = new Rect(position.x + 1f, position.y + 1f, position.width - 2f, position.height - 2f);
+					int userColorIndex = audioMixerTreeViewNode.group.userColorIndex;
+					if (userColorIndex > 0)
+					{
+						EditorGUI.DrawRect(new Rect(rowRect.x, rect.y, 2f, rect.height), AudioMixerColorCodes.GetColor(userColorIndex));
+					}
+					EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 0.2f));
+					if (flag)
+					{
+						GUI.DrawTexture(position, this.k_VisibleON);
+					}
+					Rect rect2 = new Rect(2f, rowRect.y, rowRect.height, rowRect.height);
+					if (current.type == EventType.MouseUp && current.button == 0 && rect2.Contains(current.mousePosition))
+					{
+						if (this.NodeWasToggled != null)
+						{
+							this.NodeWasToggled(audioMixerTreeViewNode, !flag);
+						}
+					}
+					if (current.type == EventType.ContextClick && position.Contains(current.mousePosition))
+					{
+						this.OpenGroupContextMenu(audioMixerTreeViewNode, flag);
+						current.Use();
+					}
 				}
 			}
 		}
 
 		protected override Texture GetIconForItem(TreeViewItem node)
 		{
+			Texture result;
 			if (node != null && node.icon != null)
 			{
-				return node.icon;
+				result = node.icon;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		protected override void SyncFakeItem()

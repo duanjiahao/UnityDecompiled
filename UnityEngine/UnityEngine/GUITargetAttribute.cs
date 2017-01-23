@@ -37,6 +37,7 @@ namespace UnityEngine
 		private static int GetGUITargetAttrValue(Type klass, string methodName)
 		{
 			MethodInfo method = klass.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			int result;
 			if (method != null)
 			{
 				object[] customAttributes = method.GetCustomAttributes(true);
@@ -47,12 +48,14 @@ namespace UnityEngine
 						if (customAttributes[i].GetType() == typeof(GUITargetAttribute))
 						{
 							GUITargetAttribute gUITargetAttribute = customAttributes[i] as GUITargetAttribute;
-							return gUITargetAttribute.displayMask;
+							result = gUITargetAttribute.displayMask;
+							return result;
 						}
 					}
 				}
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace UnityEditorInternal
 
 			public GUIStyle notice;
 
-			public static readonly GUIContent[] spriteAlignmentOptions = new GUIContent[]
+			public readonly GUIContent[] spriteAlignmentOptions = new GUIContent[]
 			{
 				EditorGUIUtility.TextContent("Center"),
 				EditorGUIUtility.TextContent("Top Left"),
@@ -20,46 +20,46 @@ namespace UnityEditorInternal
 				EditorGUIUtility.TextContent("Top Right"),
 				EditorGUIUtility.TextContent("Left"),
 				EditorGUIUtility.TextContent("Right"),
-				EditorGUIUtility.TextContent("Bottom Left"),
+				EditorGUIUtility.TextContent("sBottom Left"),
 				EditorGUIUtility.TextContent("Bottom"),
 				EditorGUIUtility.TextContent("Bottom Right"),
 				EditorGUIUtility.TextContent("Custom")
 			};
 
-			public static readonly GUIContent[] slicingMethodOptions = new GUIContent[]
+			public readonly GUIContent[] slicingMethodOptions = new GUIContent[]
 			{
 				EditorGUIUtility.TextContent("Delete Existing|Delete all existing sprite assets before the slicing operation"),
 				EditorGUIUtility.TextContent("Smart|Try to match existing sprite rects to sliced rects from the slicing operation"),
 				EditorGUIUtility.TextContent("Safe|Keep existing sprite rects intact")
 			};
 
-			public static readonly GUIContent methodLabel = EditorGUIUtility.TextContent("Method");
+			public readonly GUIContent methodLabel = EditorGUIUtility.TextContent("Method");
 
-			public static readonly GUIContent pivotLabel = EditorGUIUtility.TextContent("Pivot");
+			public readonly GUIContent pivotLabel = EditorGUIUtility.TextContent("Pivot");
 
-			public static readonly GUIContent typeLabel = EditorGUIUtility.TextContent("Type");
+			public readonly GUIContent typeLabel = EditorGUIUtility.TextContent("Type");
 
-			public static readonly GUIContent sliceButtonLabel = EditorGUIUtility.TextContent("Slice");
+			public readonly GUIContent sliceButtonLabel = EditorGUIUtility.TextContent("Slice");
 
-			public static readonly GUIContent columnAndRowLabel = EditorGUIUtility.TextContent("Column & Row");
+			public readonly GUIContent columnAndRowLabel = EditorGUIUtility.TextContent("Column & Row");
 
-			public static readonly GUIContent columnLabel = EditorGUIUtility.TextContent("C");
+			public readonly GUIContent columnLabel = EditorGUIUtility.TextContent("C");
 
-			public static readonly GUIContent rowLabel = EditorGUIUtility.TextContent("R");
+			public readonly GUIContent rowLabel = EditorGUIUtility.TextContent("R");
 
-			public static readonly GUIContent pixelSizeLabel = EditorGUIUtility.TextContent("Pixel Size");
+			public readonly GUIContent pixelSizeLabel = EditorGUIUtility.TextContent("Pixel Size");
 
-			public static readonly GUIContent xLabel = EditorGUIUtility.TextContent("X");
+			public readonly GUIContent xLabel = EditorGUIUtility.TextContent("X");
 
-			public static readonly GUIContent yLabel = EditorGUIUtility.TextContent("Y");
+			public readonly GUIContent yLabel = EditorGUIUtility.TextContent("Y");
 
-			public static readonly GUIContent offsetLabel = EditorGUIUtility.TextContent("Offset");
+			public readonly GUIContent offsetLabel = EditorGUIUtility.TextContent("Offset");
 
-			public static readonly GUIContent paddingLabel = EditorGUIUtility.TextContent("Padding");
+			public readonly GUIContent paddingLabel = EditorGUIUtility.TextContent("Padding");
 
-			public static readonly GUIContent automaticSlicingHintLabel = EditorGUIUtility.TextContent("To obtain more accurate slicing results, manual slicing is recommended!");
+			public readonly GUIContent automaticSlicingHintLabel = EditorGUIUtility.TextContent("To obtain more accurate slicing results, manual slicing is recommended!");
 
-			public static readonly GUIContent customPivotLabel = EditorGUIUtility.TextContent("Custom Pivot");
+			public readonly GUIContent customPivotLabel = EditorGUIUtility.TextContent("Custom Pivot");
 
 			public Styles()
 			{
@@ -90,7 +90,7 @@ namespace UnityEditorInternal
 			buttonRect = GUIUtility.GUIToScreenRect(buttonRect);
 			float y = 145f;
 			Vector2 windowSize = new Vector2(300f, y);
-			base.ShowAsDropDown(buttonRect, windowSize);
+			base.ShowAsDropDown(buttonRect, windowSize, null, ShowMode.PopupMenuWithKeyboardFocus);
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
 
@@ -109,6 +109,7 @@ namespace UnityEditorInternal
 		internal static bool ShowAtPosition(Rect buttonRect)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num >= SpriteEditorMenu.s_LastClosedTime + 50L)
 			{
 				if (Event.current != null)
@@ -120,9 +121,13 @@ namespace UnityEditorInternal
 					SpriteEditorMenu.s_SpriteEditorMenu = ScriptableObject.CreateInstance<SpriteEditorMenu>();
 				}
 				SpriteEditorMenu.s_SpriteEditorMenu.Init(buttonRect);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void OnGUI()
@@ -137,25 +142,26 @@ namespace UnityEditorInternal
 			GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, SpriteEditorMenu.s_Styles.background);
 			EditorGUI.BeginChangeCheck();
 			SpriteEditorMenuSetting.SlicingType slicingType = SpriteEditorMenu.s_Setting.slicingType;
-			slicingType = (SpriteEditorMenuSetting.SlicingType)EditorGUILayout.EnumPopup(SpriteEditorMenu.Styles.typeLabel, slicingType, new GUILayoutOption[0]);
+			slicingType = (SpriteEditorMenuSetting.SlicingType)EditorGUILayout.EnumPopup(SpriteEditorMenu.s_Styles.typeLabel, slicingType, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change slicing type");
 				SpriteEditorMenu.s_Setting.slicingType = slicingType;
 			}
-			switch (slicingType)
+			if (slicingType != SpriteEditorMenuSetting.SlicingType.GridByCellSize && slicingType != SpriteEditorMenuSetting.SlicingType.GridByCellCount)
 			{
-			case SpriteEditorMenuSetting.SlicingType.Automatic:
-				this.OnAutomaticGUI();
-				break;
-			case SpriteEditorMenuSetting.SlicingType.GridByCellSize:
-			case SpriteEditorMenuSetting.SlicingType.GridByCellCount:
+				if (slicingType == SpriteEditorMenuSetting.SlicingType.Automatic)
+				{
+					this.OnAutomaticGUI();
+				}
+			}
+			else
+			{
 				this.OnGridGUI();
-				break;
 			}
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(EditorGUIUtility.labelWidth + 4f);
-			if (GUILayout.Button(SpriteEditorMenu.Styles.sliceButtonLabel, new GUILayoutOption[0]))
+			if (GUILayout.Button(SpriteEditorMenu.s_Styles.sliceButtonLabel, new GUILayoutOption[0]))
 			{
 				this.DoSlicing();
 			}
@@ -165,38 +171,40 @@ namespace UnityEditorInternal
 		private void DoSlicing()
 		{
 			this.DoAnalytics();
-			switch (SpriteEditorMenu.s_Setting.slicingType)
+			SpriteEditorMenuSetting.SlicingType slicingType = SpriteEditorMenu.s_Setting.slicingType;
+			if (slicingType != SpriteEditorMenuSetting.SlicingType.GridByCellCount && slicingType != SpriteEditorMenuSetting.SlicingType.GridByCellSize)
 			{
-			case SpriteEditorMenuSetting.SlicingType.Automatic:
-				this.DoAutomaticSlicing();
-				break;
-			case SpriteEditorMenuSetting.SlicingType.GridByCellSize:
-			case SpriteEditorMenuSetting.SlicingType.GridByCellCount:
+				if (slicingType == SpriteEditorMenuSetting.SlicingType.Automatic)
+				{
+					this.DoAutomaticSlicing();
+				}
+			}
+			else
+			{
 				this.DoGridSlicing();
-				break;
 			}
 		}
 
 		private void DoAnalytics()
 		{
-			Analytics.Event("Sprite Editor", "Slice", "Type", (int)SpriteEditorMenu.s_Setting.slicingType);
+			UsabilityAnalytics.Event("Sprite Editor", "Slice", "Type", (int)SpriteEditorMenu.s_Setting.slicingType);
 			if (SpriteEditorMenu.s_SpriteEditor.originalTexture != null)
 			{
-				Analytics.Event("Sprite Editor", "Slice", "Texture Width", SpriteEditorMenu.s_SpriteEditor.originalTexture.width);
-				Analytics.Event("Sprite Editor", "Slice", "Texture Height", SpriteEditorMenu.s_SpriteEditor.originalTexture.height);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Texture Width", SpriteEditorMenu.s_SpriteEditor.originalTexture.width);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Texture Height", SpriteEditorMenu.s_SpriteEditor.originalTexture.height);
 			}
 			if (SpriteEditorMenu.s_Setting.slicingType == SpriteEditorMenuSetting.SlicingType.Automatic)
 			{
-				Analytics.Event("Sprite Editor", "Slice", "Auto Slicing Method", SpriteEditorMenu.s_Setting.autoSlicingMethod);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Auto Slicing Method", SpriteEditorMenu.s_Setting.autoSlicingMethod);
 			}
 			else
 			{
-				Analytics.Event("Sprite Editor", "Slice", "Grid Slicing Size X", (int)SpriteEditorMenu.s_Setting.gridSpriteSize.x);
-				Analytics.Event("Sprite Editor", "Slice", "Grid Slicing Size Y", (int)SpriteEditorMenu.s_Setting.gridSpriteSize.y);
-				Analytics.Event("Sprite Editor", "Slice", "Grid Slicing Offset X", (int)SpriteEditorMenu.s_Setting.gridSpriteOffset.x);
-				Analytics.Event("Sprite Editor", "Slice", "Grid Slicing Offset Y", (int)SpriteEditorMenu.s_Setting.gridSpriteOffset.y);
-				Analytics.Event("Sprite Editor", "Slice", "Grid Slicing Padding X", (int)SpriteEditorMenu.s_Setting.gridSpritePadding.x);
-				Analytics.Event("Sprite Editor", "Slice", "Grid Slicing Padding Y", (int)SpriteEditorMenu.s_Setting.gridSpritePadding.y);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Grid Slicing Size X", (int)SpriteEditorMenu.s_Setting.gridSpriteSize.x);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Grid Slicing Size Y", (int)SpriteEditorMenu.s_Setting.gridSpriteSize.y);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Grid Slicing Offset X", (int)SpriteEditorMenu.s_Setting.gridSpriteOffset.x);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Grid Slicing Offset Y", (int)SpriteEditorMenu.s_Setting.gridSpriteOffset.y);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Grid Slicing Padding X", (int)SpriteEditorMenu.s_Setting.gridSpritePadding.x);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Grid Slicing Padding Y", (int)SpriteEditorMenu.s_Setting.gridSpritePadding.y);
 			}
 		}
 
@@ -230,7 +238,7 @@ namespace UnityEditorInternal
 				int value = (int)SpriteEditorMenu.s_Setting.gridCellCount.x;
 				int value2 = (int)SpriteEditorMenu.s_Setting.gridCellCount.y;
 				EditorGUI.BeginChangeCheck();
-				this.TwoIntFields(SpriteEditorMenu.Styles.columnAndRowLabel, SpriteEditorMenu.Styles.columnLabel, SpriteEditorMenu.Styles.rowLabel, ref value, ref value2);
+				this.TwoIntFields(SpriteEditorMenu.s_Styles.columnAndRowLabel, SpriteEditorMenu.s_Styles.columnLabel, SpriteEditorMenu.s_Styles.rowLabel, ref value, ref value2);
 				if (EditorGUI.EndChangeCheck())
 				{
 					Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change column & row");
@@ -243,7 +251,7 @@ namespace UnityEditorInternal
 				int value3 = (int)SpriteEditorMenu.s_Setting.gridSpriteSize.x;
 				int value4 = (int)SpriteEditorMenu.s_Setting.gridSpriteSize.y;
 				EditorGUI.BeginChangeCheck();
-				this.TwoIntFields(SpriteEditorMenu.Styles.pixelSizeLabel, SpriteEditorMenu.Styles.xLabel, SpriteEditorMenu.Styles.yLabel, ref value3, ref value4);
+				this.TwoIntFields(SpriteEditorMenu.s_Styles.pixelSizeLabel, SpriteEditorMenu.s_Styles.xLabel, SpriteEditorMenu.s_Styles.yLabel, ref value3, ref value4);
 				if (EditorGUI.EndChangeCheck())
 				{
 					Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change grid size");
@@ -254,7 +262,7 @@ namespace UnityEditorInternal
 			int num3 = (int)SpriteEditorMenu.s_Setting.gridSpriteOffset.x;
 			int num4 = (int)SpriteEditorMenu.s_Setting.gridSpriteOffset.y;
 			EditorGUI.BeginChangeCheck();
-			this.TwoIntFields(SpriteEditorMenu.Styles.offsetLabel, SpriteEditorMenu.Styles.xLabel, SpriteEditorMenu.Styles.yLabel, ref num3, ref num4);
+			this.TwoIntFields(SpriteEditorMenu.s_Styles.offsetLabel, SpriteEditorMenu.s_Styles.xLabel, SpriteEditorMenu.s_Styles.yLabel, ref num3, ref num4);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change grid offset");
@@ -264,7 +272,7 @@ namespace UnityEditorInternal
 			int value5 = (int)SpriteEditorMenu.s_Setting.gridSpritePadding.x;
 			int value6 = (int)SpriteEditorMenu.s_Setting.gridSpritePadding.y;
 			EditorGUI.BeginChangeCheck();
-			this.TwoIntFields(SpriteEditorMenu.Styles.paddingLabel, SpriteEditorMenu.Styles.xLabel, SpriteEditorMenu.Styles.yLabel, ref value5, ref value6);
+			this.TwoIntFields(SpriteEditorMenu.s_Styles.paddingLabel, SpriteEditorMenu.s_Styles.xLabel, SpriteEditorMenu.s_Styles.yLabel, ref value5, ref value6);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change grid padding");
@@ -280,13 +288,13 @@ namespace UnityEditorInternal
 			float num = 38f;
 			if (SpriteEditorMenu.s_SpriteEditor.originalTexture != null && TextureUtil.IsCompressedTextureFormat(SpriteEditorMenu.s_SpriteEditor.originalTexture.format))
 			{
-				EditorGUILayout.LabelField(SpriteEditorMenu.Styles.automaticSlicingHintLabel, SpriteEditorMenu.s_Styles.notice, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(SpriteEditorMenu.s_Styles.automaticSlicingHintLabel, SpriteEditorMenu.s_Styles.notice, new GUILayoutOption[0]);
 				num -= 31f;
 			}
 			this.DoPivotGUI();
 			EditorGUI.BeginChangeCheck();
 			int num2 = SpriteEditorMenu.s_Setting.autoSlicingMethod;
-			num2 = EditorGUILayout.Popup(SpriteEditorMenu.Styles.methodLabel, num2, SpriteEditorMenu.Styles.slicingMethodOptions, new GUILayoutOption[0]);
+			num2 = EditorGUILayout.Popup(SpriteEditorMenu.s_Styles.methodLabel, num2, SpriteEditorMenu.s_Styles.slicingMethodOptions, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change Slicing Method");
@@ -299,7 +307,7 @@ namespace UnityEditorInternal
 		{
 			EditorGUI.BeginChangeCheck();
 			int num = SpriteEditorMenu.s_Setting.spriteAlignment;
-			num = EditorGUILayout.Popup(SpriteEditorMenu.Styles.pivotLabel, num, SpriteEditorMenu.Styles.spriteAlignmentOptions, new GUILayoutOption[0]);
+			num = EditorGUILayout.Popup(SpriteEditorMenu.s_Styles.pivotLabel, num, SpriteEditorMenu.s_Styles.spriteAlignmentOptions, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RegisterCompleteObjectUndo(SpriteEditorMenu.s_Setting, "Change Alignment");
@@ -310,7 +318,7 @@ namespace UnityEditorInternal
 			EditorGUI.BeginChangeCheck();
 			using (new EditorGUI.DisabledScope(num != 9))
 			{
-				vector = EditorGUILayout.Vector2Field(SpriteEditorMenu.Styles.customPivotLabel, vector, new GUILayoutOption[0]);
+				vector = EditorGUILayout.Vector2Field(SpriteEditorMenu.s_Styles.customPivotLabel, vector, new GUILayoutOption[0]);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{

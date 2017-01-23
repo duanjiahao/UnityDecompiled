@@ -12,16 +12,16 @@ namespace UnityEditorInternal
 		public Action onSelectionChanged;
 
 		[SerializeField]
-		private bool m_Locked;
+		private bool m_Locked = false;
 
 		[SerializeField]
 		private List<AnimationWindowSelectionItem> m_Selection = new List<AnimationWindowSelectionItem>();
 
-		private bool m_BatchOperations;
+		private bool m_BatchOperations = false;
 
-		private bool m_SelectionChanged;
+		private bool m_SelectionChanged = false;
 
-		private List<AnimationWindowCurve> m_CurvesCache;
+		private List<AnimationWindowCurve> m_CurvesCache = null;
 
 		public int count
 		{
@@ -55,10 +55,7 @@ namespace UnityEditorInternal
 			}
 			set
 			{
-				if (!this.disabled)
-				{
-					this.m_Locked = value;
-				}
+				this.m_Locked = value;
 			}
 		}
 
@@ -66,18 +63,54 @@ namespace UnityEditorInternal
 		{
 			get
 			{
+				bool result;
 				if (this.m_Selection.Count > 0)
 				{
 					foreach (AnimationWindowSelectionItem current in this.m_Selection)
 					{
 						if (current.animationClip != null)
 						{
-							return false;
+							result = false;
+							return result;
 						}
 					}
-					return true;
 				}
-				return true;
+				result = true;
+				return result;
+			}
+		}
+
+		public bool canRecord
+		{
+			get
+			{
+				bool result;
+				if (this.m_Selection.Count > 0)
+				{
+					result = !this.m_Selection.Any((AnimationWindowSelectionItem item) => !item.canRecord);
+				}
+				else
+				{
+					result = false;
+				}
+				return result;
+			}
+		}
+
+		public bool canAddCurves
+		{
+			get
+			{
+				bool result;
+				if (this.m_Selection.Count > 0)
+				{
+					result = !this.m_Selection.Any((AnimationWindowSelectionItem item) => !item.canAddCurves);
+				}
+				else
+				{
+					result = false;
+				}
+				return result;
 			}
 		}
 
@@ -93,10 +126,12 @@ namespace UnityEditorInternal
 			if (this.m_BatchOperations)
 			{
 				Debug.LogWarning("AnimationWindowSelection: Already inside a BeginOperations/EndOperations block");
-				return;
 			}
-			this.m_BatchOperations = true;
-			this.m_SelectionChanged = false;
+			else
+			{
+				this.m_BatchOperations = true;
+				this.m_SelectionChanged = false;
+			}
 		}
 
 		public void EndOperations()
@@ -126,48 +161,45 @@ namespace UnityEditorInternal
 
 		public void Set(AnimationWindowSelectionItem newItem)
 		{
-			if (this.locked)
+			if (!this.locked)
 			{
-				return;
+				this.BeginOperations();
+				this.Clear();
+				this.Add(newItem);
+				this.EndOperations();
 			}
-			this.BeginOperations();
-			this.Clear();
-			this.Add(newItem);
-			this.EndOperations();
 		}
 
 		public void Add(AnimationWindowSelectionItem newItem)
 		{
-			if (this.locked)
+			if (!this.locked)
 			{
-				return;
-			}
-			if (!this.m_Selection.Contains(newItem))
-			{
-				this.m_Selection.Add(newItem);
-				this.Notify();
+				if (!this.m_Selection.Contains(newItem))
+				{
+					this.m_Selection.Add(newItem);
+					this.Notify();
+				}
 			}
 		}
 
 		public void RangeAdd(AnimationWindowSelectionItem[] newItemArray)
 		{
-			if (this.locked)
+			if (!this.locked)
 			{
-				return;
-			}
-			bool flag = false;
-			for (int i = 0; i < newItemArray.Length; i++)
-			{
-				AnimationWindowSelectionItem item = newItemArray[i];
-				if (!this.m_Selection.Contains(item))
+				bool flag = false;
+				for (int i = 0; i < newItemArray.Length; i++)
 				{
-					this.m_Selection.Add(item);
-					flag = true;
+					AnimationWindowSelectionItem item = newItemArray[i];
+					if (!this.m_Selection.Contains(item))
+					{
+						this.m_Selection.Add(item);
+						flag = true;
+					}
 				}
-			}
-			if (flag)
-			{
-				this.Notify();
+				if (flag)
+				{
+					this.Notify();
+				}
 			}
 		}
 
@@ -234,24 +266,38 @@ namespace UnityEditorInternal
 
 		public void Clear()
 		{
-			if (this.locked)
+			if (!this.locked)
 			{
-				return;
-			}
-			if (this.m_Selection.Count > 0)
-			{
-				foreach (AnimationWindowSelectionItem current in this.m_Selection)
+				if (this.m_Selection.Count > 0)
 				{
-					UnityEngine.Object.DestroyImmediate(current);
+					foreach (AnimationWindowSelectionItem current in this.m_Selection)
+					{
+						UnityEngine.Object.DestroyImmediate(current);
+					}
+					this.m_Selection.Clear();
+					this.Notify();
 				}
-				this.m_Selection.Clear();
-				this.Notify();
 			}
 		}
 
 		public void ClearCache()
 		{
 			this.m_CurvesCache = null;
+		}
+
+		public void Synchronize()
+		{
+			if (this.m_Selection.Count > 0)
+			{
+				foreach (AnimationWindowSelectionItem current in this.m_Selection)
+				{
+					current.Synchronize();
+				}
+			}
+			if (this.disabled)
+			{
+				this.m_Locked = false;
+			}
 		}
 	}
 }

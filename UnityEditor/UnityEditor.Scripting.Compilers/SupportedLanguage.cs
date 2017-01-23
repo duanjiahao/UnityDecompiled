@@ -10,7 +10,7 @@ namespace UnityEditor.Scripting.Compilers
 
 		public abstract ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater);
 
-		public virtual string GetNamespace(string fileName)
+		public virtual string GetNamespace(string fileName, string definedSymbols)
 		{
 			return string.Empty;
 		}

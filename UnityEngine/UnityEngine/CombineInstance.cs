@@ -47,7 +47,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Mesh InternalGetMesh(int instanceID);
 	}

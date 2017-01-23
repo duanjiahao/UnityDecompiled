@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 
 namespace UnityEditor.BuildReporting
@@ -8,119 +9,123 @@ namespace UnityEditor.BuildReporting
 	{
 		public event Action<BuildReport> Changed
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.Changed = (Action<BuildReport>)Delegate.Combine(this.Changed, value);
+				Action<BuildReport> action = this.Changed;
+				Action<BuildReport> action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action<BuildReport>>(ref this.Changed, (Action<BuildReport>)Delegate.Combine(action2, value), action);
+				}
+				while (action != action2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.Changed = (Action<BuildReport>)Delegate.Remove(this.Changed, value);
+				Action<BuildReport> action = this.Changed;
+				Action<BuildReport> action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action<BuildReport>>(ref this.Changed, (Action<BuildReport>)Delegate.Remove(action2, value), action);
+				}
+				while (action != action2);
 			}
 		}
 
 		public extern uint crc
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern long totalTimeMS
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern long totalSize
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern BuildTarget buildTarget
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern BuildOptions buildOptions
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern string outputPath
 		{
-			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern bool succeeded
+		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int totalErrors
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int totalWarnings
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RelocateFiles(string originalPathPrefix, string newPathPrefix);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void AddFile(string path, string role);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void AddFilesRecursive(string rootDir, string role);
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void DeleteFile(string path);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void DeleteFilesRecursive(string rootDir);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string SummarizeErrors();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void AddMessage(LogType messageType, string message);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void BeginBuildStepNoTiming(string stepName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void BeginBuildStep(string stepName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void AddAppendix(UnityEngine.Object obj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern UnityEngine.Object[] GetAppendicesByClassID(int classID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern UnityEngine.Object[] GetAppendices(Type type);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern UnityEngine.Object[] GetAllAppendices();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern BuildReport GetLatestReport();
 

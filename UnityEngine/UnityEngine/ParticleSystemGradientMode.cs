@@ -7,6 +7,7 @@ namespace UnityEngine
 		Color,
 		Gradient,
 		TwoColors,
-		TwoGradients
+		TwoGradients,
+		RandomColor
 	}
 }

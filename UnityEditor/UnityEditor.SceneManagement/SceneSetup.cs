@@ -9,13 +9,13 @@ namespace UnityEditor.SceneManagement
 	public class SceneSetup
 	{
 		[SerializeField]
-		private string m_Path;
+		private string m_Path = null;
 
 		[SerializeField]
-		private bool m_IsLoaded;
+		private bool m_IsLoaded = false;
 
 		[SerializeField]
-		private bool m_IsActive;
+		private bool m_IsActive = false;
 
 		public string path
 		{

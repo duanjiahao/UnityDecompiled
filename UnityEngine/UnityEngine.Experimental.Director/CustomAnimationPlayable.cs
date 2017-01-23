@@ -97,6 +97,20 @@ namespace UnityEngine.Experimental.Director
 			this.node.Destroy();
 		}
 
+		public static implicit operator Playable(CustomAnimationPlayable s)
+		{
+			return new Playable
+			{
+				m_Handle = s.node.m_Handle,
+				m_Version = s.node.m_Version
+			};
+		}
+
+		public static implicit operator AnimationPlayable(CustomAnimationPlayable s)
+		{
+			return s.handle;
+		}
+
 		public virtual void PrepareFrame(FrameData info)
 		{
 		}
@@ -157,20 +171,6 @@ namespace UnityEngine.Experimental.Director
 		public bool RemoveAllInputs()
 		{
 			return AnimationPlayableUtilities.RemoveAllInputsValidated(this, base.GetType());
-		}
-
-		public static implicit operator Playable(CustomAnimationPlayable s)
-		{
-			return new Playable
-			{
-				m_Handle = s.node.m_Handle,
-				m_Version = s.node.m_Version
-			};
-		}
-
-		public static implicit operator AnimationPlayable(CustomAnimationPlayable s)
-		{
-			return s.handle;
 		}
 	}
 }

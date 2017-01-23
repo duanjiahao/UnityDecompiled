@@ -29,7 +29,7 @@ namespace UnityEditor
 
 		private static Vector2 s_PickCoordinates = Vector2.zero;
 
-		private bool m_Focused;
+		private bool m_Focused = false;
 
 		private static EyeDropper.Styles styles;
 
@@ -62,7 +62,7 @@ namespace UnityEditor
 			containerWindow.m_DontSaveToLayout = true;
 			containerWindow.title = "EyeDropper";
 			containerWindow.hideFlags = HideFlags.DontSave;
-			containerWindow.mainView = this;
+			containerWindow.rootView = this;
 			containerWindow.Show(ShowMode.PopupMenu, true, false);
 			base.AddToAuxWindowList();
 			containerWindow.SetInvisible();
@@ -84,76 +84,79 @@ namespace UnityEditor
 
 		public static void DrawPreview(Rect position)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				if (EyeDropper.styles == null)
+				{
+					EyeDropper.styles = new EyeDropper.Styles();
+				}
+				GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
+				Texture2D texture2D = EyeDropper.get.m_Preview;
+				int num = (int)Mathf.Ceil(position.width / 10f);
+				int num2 = (int)Mathf.Ceil(position.height / 10f);
+				if (texture2D == null)
+				{
+					texture2D = (EyeDropper.get.m_Preview = ColorPicker.MakeTexture(num, num2));
+					texture2D.filterMode = FilterMode.Point;
+				}
+				if (texture2D.width != num || texture2D.height != num2)
+				{
+					texture2D.Resize(num, num2);
+				}
+				Vector2 a = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+				Vector2 pixelPos = a - new Vector2((float)(num / 2), (float)(num2 / 2));
+				texture2D.SetPixels(InternalEditorUtility.ReadScreenPixel(pixelPos, num, num2), 0);
+				texture2D.Apply(true);
+				Graphics.DrawTexture(position, texture2D);
+				float num3 = position.width / (float)num;
+				GUIStyle gUIStyle = EyeDropper.styles.eyeDropperVerticalLine;
+				for (float num4 = position.x; num4 < position.xMax; num4 += num3)
+				{
+					Rect position2 = new Rect(Mathf.Round(num4), position.y, num3, position.height);
+					gUIStyle.Draw(position2, false, false, false, false);
+				}
+				float num5 = position.height / (float)num2;
+				gUIStyle = EyeDropper.styles.eyeDropperHorizontalLine;
+				for (float num6 = position.y; num6 < position.yMax; num6 += num5)
+				{
+					Rect position3 = new Rect(position.x, Mathf.Floor(num6), position.width, num5);
+					gUIStyle.Draw(position3, false, false, false, false);
+				}
+				Rect position4 = new Rect((a.x - pixelPos.x) * num3 + position.x, (a.y - pixelPos.y) * num5 + position.y, num3, num5);
+				EyeDropper.styles.eyeDropperPickedPixel.Draw(position4, false, false, false, false);
+				GL.sRGBWrite = false;
 			}
-			if (EyeDropper.styles == null)
-			{
-				EyeDropper.styles = new EyeDropper.Styles();
-			}
-			GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
-			Texture2D texture2D = EyeDropper.get.m_Preview;
-			int num = (int)Mathf.Ceil(position.width / 10f);
-			int num2 = (int)Mathf.Ceil(position.height / 10f);
-			if (texture2D == null)
-			{
-				texture2D = (EyeDropper.get.m_Preview = ColorPicker.MakeTexture(num, num2));
-				texture2D.filterMode = FilterMode.Point;
-			}
-			if (texture2D.width != num || texture2D.height != num2)
-			{
-				texture2D.Resize(num, num2);
-			}
-			Vector2 a = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			Vector2 pixelPos = a - new Vector2((float)(num / 2), (float)(num2 / 2));
-			texture2D.SetPixels(InternalEditorUtility.ReadScreenPixel(pixelPos, num, num2), 0);
-			texture2D.Apply(true);
-			Graphics.DrawTexture(position, texture2D);
-			float num3 = position.width / (float)num;
-			GUIStyle gUIStyle = EyeDropper.styles.eyeDropperVerticalLine;
-			for (float num4 = position.x; num4 < position.xMax; num4 += num3)
-			{
-				Rect position2 = new Rect(Mathf.Round(num4), position.y, num3, position.height);
-				gUIStyle.Draw(position2, false, false, false, false);
-			}
-			float num5 = position.height / (float)num2;
-			gUIStyle = EyeDropper.styles.eyeDropperHorizontalLine;
-			for (float num6 = position.y; num6 < position.yMax; num6 += num5)
-			{
-				Rect position3 = new Rect(position.x, Mathf.Floor(num6), position.width, num5);
-				gUIStyle.Draw(position3, false, false, false, false);
-			}
-			Rect position4 = new Rect((a.x - pixelPos.x) * num3 + position.x, (a.y - pixelPos.y) * num5 + position.y, num3, num5);
-			EyeDropper.styles.eyeDropperPickedPixel.Draw(position4, false, false, false, false);
-			GL.sRGBWrite = false;
 		}
 
 		private void OnGUI()
 		{
-			switch (Event.current.type)
+			EventType type = Event.current.type;
+			if (type != EventType.MouseMove)
 			{
-			case EventType.MouseDown:
-				if (Event.current.button == 0)
+				if (type != EventType.MouseDown)
+				{
+					if (type == EventType.KeyDown)
+					{
+						if (Event.current.keyCode == KeyCode.Escape)
+						{
+							base.window.Close();
+							this.SendEvent("EyeDropperCancelled", true);
+						}
+					}
+				}
+				else if (Event.current.button == 0)
 				{
 					EyeDropper.s_PickCoordinates = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 					base.window.Close();
 					EyeDropper.s_LastPickedColor = EyeDropper.GetPickedColor();
 					this.SendEvent("EyeDropperClicked", true);
 				}
-				break;
-			case EventType.MouseMove:
+			}
+			else
+			{
 				EyeDropper.s_PickCoordinates = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 				base.StealMouseCapture();
 				this.SendEvent("EyeDropperUpdate", true);
-				break;
-			case EventType.KeyDown:
-				if (Event.current.keyCode == KeyCode.Escape)
-				{
-					base.window.Close();
-					this.SendEvent("EyeDropperCancelled", true);
-				}
-				break;
 			}
 		}
 

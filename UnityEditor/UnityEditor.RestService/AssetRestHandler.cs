@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEditorInternal;
@@ -29,48 +28,29 @@ namespace UnityEditor.RestService
 			protected override JSONValue HandlePost(Request request, JSONValue payload)
 			{
 				string text = payload.Get("action").AsString();
-				string text2 = text;
-				if (text2 != null)
+				if (text != null)
 				{
-					if (AssetRestHandler.AssetHandler.<>f__switch$map9 == null)
+					if (!(text == "move"))
 					{
-						AssetRestHandler.AssetHandler.<>f__switch$map9 = new Dictionary<string, int>(2)
+						if (!(text == "create"))
 						{
-							{
-								"move",
-								0
-							},
-							{
-								"create",
-								1
-							}
-						};
+							goto IL_CF;
+						}
+						string assetPath = request.Url.Substring("/unity/".Length);
+						string text2 = payload.Get("contents").AsString();
+						byte[] bytes = Convert.FromBase64String(text2);
+						text2 = Encoding.UTF8.GetString(bytes);
+						this.CreateAsset(assetPath, text2);
 					}
-					int num;
-					if (AssetRestHandler.AssetHandler.<>f__switch$map9.TryGetValue(text2, out num))
+					else
 					{
-						if (num != 0)
-						{
-							if (num != 1)
-							{
-								goto IL_106;
-							}
-							string assetPath = request.Url.Substring("/unity/".Length);
-							string text3 = payload.Get("contents").AsString();
-							byte[] bytes = Convert.FromBase64String(text3);
-							text3 = Encoding.UTF8.GetString(bytes);
-							this.CreateAsset(assetPath, text3);
-						}
-						else
-						{
-							string from = request.Url.Substring("/unity/".Length);
-							string to = payload.Get("newpath").AsString();
-							this.MoveAsset(from, to);
-						}
-						return default(JSONValue);
+						string from = request.Url.Substring("/unity/".Length);
+						string to = payload.Get("newpath").AsString();
+						this.MoveAsset(from, to);
 					}
+					return default(JSONValue);
 				}
-				IL_106:
+				IL_CF:
 				throw new RestRequestException
 				{
 					HttpStatusCode = HttpStatusCode.BadRequest,
@@ -131,7 +111,7 @@ namespace UnityEditor.RestService
 			protected override JSONValue HandleGet(Request request, JSONValue payload)
 			{
 				JSONValue result = default(JSONValue);
-				result["assets"] = Handler.ToJSON(AssetDatabase.FindAssets(string.Empty, new string[]
+				result["assets"] = Handler.ToJSON(AssetDatabase.FindAssets("", new string[]
 				{
 					"Assets"
 				}));

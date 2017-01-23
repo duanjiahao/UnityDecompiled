@@ -284,7 +284,7 @@ namespace UnityEngine.Networking
 			}
 			set
 			{
-				if (value && Application.platform != RuntimePlatform.PS4)
+				if (value && Application.platform != RuntimePlatform.PS4 && Application.platform != RuntimePlatform.PSP2)
 				{
 					throw new ArgumentOutOfRangeException("Platform specific protocols are not supported on this platform");
 				}

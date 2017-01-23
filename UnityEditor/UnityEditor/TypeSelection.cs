@@ -17,7 +17,7 @@ namespace UnityEditor
 				objects.Length,
 				" ",
 				ObjectNames.NicifyVariableName(typeName),
-				(objects.Length <= 1) ? string.Empty : "s"
+				(objects.Length <= 1) ? "" : "s"
 			}));
 			this.label.image = AssetPreview.GetMiniTypeThumbnail(objects[0]);
 		}
@@ -25,11 +25,16 @@ namespace UnityEditor
 		public int CompareTo(object o)
 		{
 			TypeSelection typeSelection = (TypeSelection)o;
+			int result;
 			if (typeSelection.objects.Length != this.objects.Length)
 			{
-				return typeSelection.objects.Length.CompareTo(this.objects.Length);
+				result = typeSelection.objects.Length.CompareTo(this.objects.Length);
 			}
-			return this.label.text.CompareTo(typeSelection.label.text);
+			else
+			{
+				result = this.label.text.CompareTo(typeSelection.label.text);
+			}
+			return result;
 		}
 	}
 }

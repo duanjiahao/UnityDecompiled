@@ -5,13 +5,13 @@ namespace UnityEditor
 {
 	internal class ParamEqGUI : IAudioEffectPluginGUI
 	{
-		private const bool useLogScale = true;
-
 		public static string kCenterFreqName = "Center freq";
 
 		public static string kOctaveRangeName = "Octave range";
 
 		public static string kFrequencyGainName = "Frequency gain";
+
+		private const bool useLogScale = true;
 
 		public static GUIStyle textStyle10 = ParamEqGUI.BuildGUIStyleForLabel(Color.grey, 10, false, FontStyle.Normal, TextAnchor.MiddleCenter);
 
@@ -79,15 +79,23 @@ namespace UnityEditor
 		private static double MapNormalizedFrequency(double f, double sr, bool useLogScale, bool forward)
 		{
 			double num = 0.5 * sr;
-			if (!useLogScale)
+			double result;
+			if (useLogScale)
 			{
-				return (!forward) ? (f / num) : (f * num);
+				if (forward)
+				{
+					result = 10.0 * Math.Pow(num / 10.0, f);
+				}
+				else
+				{
+					result = Math.Log(f / 10.0) / Math.Log(num / 10.0);
+				}
 			}
-			if (forward)
+			else
 			{
-				return 10.0 * Math.Pow(num / 10.0, f);
+				result = ((!forward) ? (f / num) : (f * num));
 			}
-			return Math.Log(f / 10.0) / Math.Log(num / 10.0);
+			return result;
 		}
 
 		private static bool ParamEqualizerCurveEditor(IAudioEffectPlugin plugin, Rect r, ref float centerFreq, ref float bandwidth, ref float gain, float blend)
@@ -108,41 +116,42 @@ namespace UnityEditor
 			float num3;
 			plugin.GetFloatParameterInfo(ParamEqGUI.kFrequencyGainName, out min3, out max3, out num3);
 			bool result = false;
-			switch (current.GetTypeForControl(controlID))
+			EventType typeForControl = current.GetTypeForControl(controlID);
+			if (typeForControl != EventType.MouseDown)
 			{
-			case EventType.MouseDown:
-				if (r.Contains(Event.current.mousePosition) && current.button == 0)
+				if (typeForControl != EventType.MouseUp)
 				{
-					GUIUtility.hotControl = controlID;
-					EditorGUIUtility.SetWantsMouseJumping(1);
-					current.Use();
+					if (typeForControl == EventType.MouseDrag)
+					{
+						if (GUIUtility.hotControl == controlID)
+						{
+							float num4 = (!Event.current.alt) ? 1f : 0.25f;
+							centerFreq = Mathf.Clamp((float)ParamEqGUI.MapNormalizedFrequency(ParamEqGUI.MapNormalizedFrequency((double)centerFreq, (double)plugin.GetSampleRate(), true, false) + (double)(current.delta.x / r.width), (double)plugin.GetSampleRate(), true, true), min, max);
+							if (Event.current.shift)
+							{
+								bandwidth = Mathf.Clamp(bandwidth - current.delta.y * 0.02f * num4, min2, max2);
+							}
+							else
+							{
+								gain = Mathf.Clamp(gain - current.delta.y * 0.01f * num4, min3, max3);
+							}
+							result = true;
+							current.Use();
+						}
+					}
 				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == controlID && current.button == 0)
+				else if (GUIUtility.hotControl == controlID && current.button == 0)
 				{
 					GUIUtility.hotControl = 0;
 					EditorGUIUtility.SetWantsMouseJumping(0);
 					current.Use();
 				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == controlID)
-				{
-					float num4 = (!Event.current.alt) ? 1f : 0.25f;
-					centerFreq = Mathf.Clamp((float)ParamEqGUI.MapNormalizedFrequency(ParamEqGUI.MapNormalizedFrequency((double)centerFreq, (double)plugin.GetSampleRate(), true, false) + (double)(current.delta.x / r.width), (double)plugin.GetSampleRate(), true, true), min, max);
-					if (Event.current.shift)
-					{
-						bandwidth = Mathf.Clamp(bandwidth - current.delta.y * 0.02f * num4, min2, max2);
-					}
-					else
-					{
-						gain = Mathf.Clamp(gain - current.delta.y * 0.01f * num4, min3, max3);
-					}
-					result = true;
-					current.Use();
-				}
-				break;
+			}
+			else if (r.Contains(Event.current.mousePosition) && current.button == 0)
+			{
+				GUIUtility.hotControl = controlID;
+				EditorGUIUtility.SetWantsMouseJumping(1);
+				current.Use();
 			}
 			if (Event.current.type == EventType.Repaint)
 			{

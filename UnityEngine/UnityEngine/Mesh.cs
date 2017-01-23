@@ -28,21 +28,24 @@ namespace UnityEngine
 
 		public extern bool isReadable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern bool canAccess
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int blendShapeCount
 		{
-			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern int vertexBufferCount
+		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -63,37 +66,30 @@ namespace UnityEngine
 
 		public extern int vertexCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int subMeshCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern BoneWeight[] boneWeights
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern Matrix4x4[] bindposes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -222,12 +218,17 @@ namespace UnityEngine
 		{
 			get
 			{
+				int[] result;
 				if (this.canAccess)
 				{
-					return this.GetTrianglesImpl(-1);
+					result = this.GetTrianglesImpl(-1);
 				}
-				this.PrintErrorCantAccessMeshForIndices();
-				return new int[0];
+				else
+				{
+					this.PrintErrorCantAccessMeshForIndices();
+					result = new int[0];
+				}
+				return result;
 			}
 			set
 			{
@@ -247,11 +248,9 @@ namespace UnityEngine
 			Mesh.Internal_Create(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] Mesh mono);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear([UnityEngine.Internal.DefaultValue("true")] bool keepVertexLayout);
 
@@ -262,55 +261,42 @@ namespace UnityEngine
 			this.Clear(keepVertexLayout);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void PrintErrorCantAccessMesh(Mesh.InternalShaderChannel channel);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void PrintErrorCantAccessMeshForIndices();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void PrintErrorBadSubmeshIndexTriangles();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void PrintErrorBadSubmeshIndexIndices();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetArrayForChannelImpl(Mesh.InternalShaderChannel channel, Mesh.InternalVertexChannelType format, int dim, Array values, int arraySize);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Array GetAllocArrayFromChannelImpl(Mesh.InternalShaderChannel channel, Mesh.InternalVertexChannelType format, int dim);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void GetArrayFromChannelImpl(Mesh.InternalShaderChannel channel, Mesh.InternalVertexChannelType format, int dim, Array values);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool HasChannel(Mesh.InternalShaderChannel channel);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ResizeList(object list, int size);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Array ExtractArrayFromList(object list);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern int[] GetTrianglesImpl(int submesh);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern int[] GetIndicesImpl(int submesh);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetTrianglesImpl(int submesh, Array triangles, int arraySize, [UnityEngine.Internal.DefaultValue("true")] bool calculateBounds);
 
@@ -321,7 +307,6 @@ namespace UnityEngine
 			this.SetTrianglesImpl(submesh, triangles, arraySize, calculateBounds);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetIndicesImpl(int submesh, MeshTopology topology, Array indices, int arraySize, [UnityEngine.Internal.DefaultValue("true")] bool calculateBounds);
 
@@ -377,55 +362,63 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ClearBlendShapes();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetBlendShapeName(int shapeIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetBlendShapeFrameCount(int shapeIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetBlendShapeFrameWeight(int shapeIndex, int frameIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void GetBlendShapeFrameVertices(int shapeIndex, int frameIndex, Vector3[] deltaVertices, Vector3[] deltaNormals, Vector3[] deltaTangents);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void AddBlendShapeFrame(string shapeName, float frameWeight, Vector3[] deltaVertices, Vector3[] deltaNormals, Vector3[] deltaTangents);
 
-		[WrapperlessIcall]
+		public IntPtr GetNativeVertexBufferPtr(int bufferIndex)
+		{
+			IntPtr result;
+			Mesh.INTERNAL_CALL_GetNativeVertexBufferPtr(this, bufferIndex, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetNativeVertexBufferPtr(Mesh self, int bufferIndex, out IntPtr value);
+
+		public IntPtr GetNativeIndexBufferPtr()
+		{
+			IntPtr result;
+			Mesh.INTERNAL_CALL_GetNativeIndexBufferPtr(this, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetNativeIndexBufferPtr(Mesh self, out IntPtr value);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_bounds(out Bounds value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_bounds(ref Bounds value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RecalculateBounds();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RecalculateNormals();
 
-		[WrapperlessIcall]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("This method is no longer supported (UnityUpgradable)", true)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Optimize();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern MeshTopology GetTopology(int submesh);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CombineMeshes(CombineInstance[] combine, [UnityEngine.Internal.DefaultValue("true")] bool mergeSubMeshes, [UnityEngine.Internal.DefaultValue("true")] bool useMatrices);
 
@@ -444,15 +437,12 @@ namespace UnityEngine
 			this.CombineMeshes(combine, mergeSubMeshes, useMatrices);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void MarkDynamic();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void UploadMeshData(bool markNoLogerReadable);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetBlendShapeIndex(string blendShapeName);
 
@@ -467,35 +457,43 @@ namespace UnityEngine
 
 		internal static int DefaultDimensionForChannel(Mesh.InternalShaderChannel channel)
 		{
+			int result;
 			if (channel == Mesh.InternalShaderChannel.Vertex || channel == Mesh.InternalShaderChannel.Normal)
 			{
-				return 3;
+				result = 3;
 			}
-			if (channel >= Mesh.InternalShaderChannel.TexCoord0 && channel <= Mesh.InternalShaderChannel.TexCoord3)
+			else if (channel >= Mesh.InternalShaderChannel.TexCoord0 && channel <= Mesh.InternalShaderChannel.TexCoord3)
 			{
-				return 2;
+				result = 2;
 			}
-			if (channel == Mesh.InternalShaderChannel.Tangent || channel == Mesh.InternalShaderChannel.Color)
+			else
 			{
-				return 4;
+				if (channel != Mesh.InternalShaderChannel.Tangent && channel != Mesh.InternalShaderChannel.Color)
+				{
+					throw new ArgumentException("DefaultDimensionForChannel called for bad channel", "channel");
+				}
+				result = 4;
 			}
-			throw new ArgumentException("DefaultDimensionForChannel called for bad channel", "channel");
+			return result;
 		}
 
 		private T[] GetAllocArrayFromChannel<T>(Mesh.InternalShaderChannel channel, Mesh.InternalVertexChannelType format, int dim)
 		{
+			T[] result;
 			if (this.canAccess)
 			{
 				if (this.HasChannel(channel))
 				{
-					return (T[])this.GetAllocArrayFromChannelImpl(channel, format, dim);
+					result = (T[])this.GetAllocArrayFromChannelImpl(channel, format, dim);
+					return result;
 				}
 			}
 			else
 			{
 				this.PrintErrorCantAccessMesh(channel);
 			}
-			return new T[0];
+			result = new T[0];
+			return result;
 		}
 
 		private T[] GetAllocArrayFromChannel<T>(Mesh.InternalShaderChannel channel)
@@ -575,9 +573,11 @@ namespace UnityEngine
 			if (uvIndex < 0 || uvIndex > 3)
 			{
 				Debug.LogError("The uv index is invalid (must be in [0..3]");
-				return;
 			}
-			this.SetListForChannel<T>(this.GetUVChannel(uvIndex), Mesh.InternalVertexChannelType.Float, dim, uvs);
+			else
+			{
+				this.SetListForChannel<T>(this.GetUVChannel(uvIndex), Mesh.InternalVertexChannelType.Float, dim, uvs);
+			}
 		}
 
 		public void SetUVs(int channel, List<Vector2> uvs)
@@ -617,17 +617,15 @@ namespace UnityEngine
 			if (!this.canAccess)
 			{
 				this.PrintErrorCantAccessMesh(uVChannel);
-				return;
 			}
-			if (!this.HasChannel(uVChannel))
+			else if (this.HasChannel(uVChannel))
 			{
-				return;
+				if (this.vertexCount > uvs.Capacity)
+				{
+					uvs.Capacity = this.vertexCount;
+				}
+				this.GetUVsInternal<T>(uvs, uvIndex, dim);
 			}
-			if (this.vertexCount > uvs.Capacity)
-			{
-				uvs.Capacity = this.vertexCount;
-			}
-			this.GetUVsInternal<T>(uvs, uvIndex, dim);
 		}
 
 		public void GetUVs(int channel, List<Vector2> uvs)
@@ -647,12 +645,13 @@ namespace UnityEngine
 
 		private bool CheckCanAccessSubmesh(int submesh, bool errorAboutTriangles)
 		{
+			bool result;
 			if (!this.canAccess)
 			{
 				this.PrintErrorCantAccessMeshForIndices();
-				return false;
+				result = false;
 			}
-			if (submesh < 0 || submesh >= this.subMeshCount)
+			else if (submesh < 0 || submesh >= this.subMeshCount)
 			{
 				if (errorAboutTriangles)
 				{
@@ -662,9 +661,13 @@ namespace UnityEngine
 				{
 					this.PrintErrorBadSubmeshIndexIndices();
 				}
-				return false;
+				result = false;
 			}
-			return true;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		private bool CheckCanAccessSubmeshTriangles(int submesh)

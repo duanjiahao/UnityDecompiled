@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
@@ -12,17 +13,14 @@ namespace UnityEngine.Rendering
 
 		public extern string name
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int sizeInBytes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -50,11 +48,10 @@ namespace UnityEngine.Rendering
 			this.m_Ptr = IntPtr.Zero;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void InitBuffer(CommandBuffer buf);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void ReleaseBuffer();
 
@@ -63,20 +60,14 @@ namespace UnityEngine.Rendering
 			this.Dispose();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear();
-
-		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material material, [DefaultValue("0")] int submeshIndex, [DefaultValue("-1")] int shaderPass, [DefaultValue("null")] MaterialPropertyBlock properties)
-		{
-			CommandBuffer.INTERNAL_CALL_DrawMesh(this, mesh, ref matrix, material, submeshIndex, shaderPass, properties);
-		}
 
 		[ExcludeFromDocs]
 		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material material, int submeshIndex, int shaderPass)
 		{
 			MaterialPropertyBlock properties = null;
-			CommandBuffer.INTERNAL_CALL_DrawMesh(this, mesh, ref matrix, material, submeshIndex, shaderPass, properties);
+			this.DrawMesh(mesh, matrix, material, submeshIndex, shaderPass, properties);
 		}
 
 		[ExcludeFromDocs]
@@ -84,7 +75,7 @@ namespace UnityEngine.Rendering
 		{
 			MaterialPropertyBlock properties = null;
 			int shaderPass = -1;
-			CommandBuffer.INTERNAL_CALL_DrawMesh(this, mesh, ref matrix, material, submeshIndex, shaderPass, properties);
+			this.DrawMesh(mesh, matrix, material, submeshIndex, shaderPass, properties);
 		}
 
 		[ExcludeFromDocs]
@@ -93,16 +84,34 @@ namespace UnityEngine.Rendering
 			MaterialPropertyBlock properties = null;
 			int shaderPass = -1;
 			int submeshIndex = 0;
-			CommandBuffer.INTERNAL_CALL_DrawMesh(this, mesh, ref matrix, material, submeshIndex, shaderPass, properties);
+			this.DrawMesh(mesh, matrix, material, submeshIndex, shaderPass, properties);
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_DrawMesh(CommandBuffer self, Mesh mesh, ref Matrix4x4 matrix, Material material, int submeshIndex, int shaderPass, MaterialPropertyBlock properties);
+		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material material, [DefaultValue("0")] int submeshIndex, [DefaultValue("-1")] int shaderPass, [DefaultValue("null")] MaterialPropertyBlock properties)
+		{
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
+			if (submeshIndex < 0 || submeshIndex >= mesh.subMeshCount)
+			{
+				submeshIndex = Mathf.Clamp(submeshIndex, 0, mesh.subMeshCount - 1);
+				Debug.LogWarning(string.Format("submeshIndex out of range. Clampped to {0}.", submeshIndex));
+			}
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			this.Internal_DrawMesh(mesh, matrix, material, submeshIndex, shaderPass, properties);
+		}
 
-		[WrapperlessIcall]
+		private void Internal_DrawMesh(Mesh mesh, Matrix4x4 matrix, Material material, int submeshIndex, int shaderPass, MaterialPropertyBlock properties)
+		{
+			CommandBuffer.INTERNAL_CALL_Internal_DrawMesh(this, mesh, ref matrix, material, submeshIndex, shaderPass, properties);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void DrawRenderer(Renderer renderer, Material material, [DefaultValue("0")] int submeshIndex, [DefaultValue("-1")] int shaderPass);
+		private static extern void INTERNAL_CALL_Internal_DrawMesh(CommandBuffer self, Mesh mesh, ref Matrix4x4 matrix, Material material, int submeshIndex, int shaderPass, MaterialPropertyBlock properties);
 
 		[ExcludeFromDocs]
 		public void DrawRenderer(Renderer renderer, Material material, int submeshIndex)
@@ -119,16 +128,47 @@ namespace UnityEngine.Rendering
 			this.DrawRenderer(renderer, material, submeshIndex, shaderPass);
 		}
 
-		public void DrawProcedural(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, [DefaultValue("1")] int instanceCount, [DefaultValue("null")] MaterialPropertyBlock properties)
+		public void DrawRenderer(Renderer renderer, Material material, [DefaultValue("0")] int submeshIndex, [DefaultValue("-1")] int shaderPass)
 		{
-			CommandBuffer.INTERNAL_CALL_DrawProcedural(this, ref matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
+			if (renderer == null)
+			{
+				throw new ArgumentNullException("renderer");
+			}
+			if (submeshIndex < 0)
+			{
+				submeshIndex = Mathf.Max(submeshIndex, 0);
+				Debug.LogWarning(string.Format("submeshIndex out of range. Clampped to {0}.", submeshIndex));
+			}
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			this.Internal_DrawRenderer(renderer, material, submeshIndex, shaderPass);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_DrawRenderer(Renderer renderer, Material material, [DefaultValue("0")] int submeshIndex, [DefaultValue("-1")] int shaderPass);
+
+		[ExcludeFromDocs]
+		private void Internal_DrawRenderer(Renderer renderer, Material material, int submeshIndex)
+		{
+			int shaderPass = -1;
+			this.Internal_DrawRenderer(renderer, material, submeshIndex, shaderPass);
+		}
+
+		[ExcludeFromDocs]
+		private void Internal_DrawRenderer(Renderer renderer, Material material)
+		{
+			int shaderPass = -1;
+			int submeshIndex = 0;
+			this.Internal_DrawRenderer(renderer, material, submeshIndex, shaderPass);
 		}
 
 		[ExcludeFromDocs]
 		public void DrawProcedural(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount)
 		{
 			MaterialPropertyBlock properties = null;
-			CommandBuffer.INTERNAL_CALL_DrawProcedural(this, ref matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
+			this.DrawProcedural(matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
 		}
 
 		[ExcludeFromDocs]
@@ -136,23 +176,31 @@ namespace UnityEngine.Rendering
 		{
 			MaterialPropertyBlock properties = null;
 			int instanceCount = 1;
-			CommandBuffer.INTERNAL_CALL_DrawProcedural(this, ref matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
+			this.DrawProcedural(matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_DrawProcedural(CommandBuffer self, ref Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount, MaterialPropertyBlock properties);
-
-		public void DrawProceduralIndirect(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, [DefaultValue("0")] int argsOffset, [DefaultValue("null")] MaterialPropertyBlock properties)
+		public void DrawProcedural(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, [DefaultValue("1")] int instanceCount, [DefaultValue("null")] MaterialPropertyBlock properties)
 		{
-			CommandBuffer.INTERNAL_CALL_DrawProceduralIndirect(this, ref matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			this.Internal_DrawProcedural(matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
 		}
+
+		private void Internal_DrawProcedural(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount, MaterialPropertyBlock properties)
+		{
+			CommandBuffer.INTERNAL_CALL_Internal_DrawProcedural(this, ref matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_DrawProcedural(CommandBuffer self, ref Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount, MaterialPropertyBlock properties);
 
 		[ExcludeFromDocs]
 		public void DrawProceduralIndirect(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, int argsOffset)
 		{
 			MaterialPropertyBlock properties = null;
-			CommandBuffer.INTERNAL_CALL_DrawProceduralIndirect(this, ref matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
+			this.DrawProceduralIndirect(matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
 		}
 
 		[ExcludeFromDocs]
@@ -160,12 +208,79 @@ namespace UnityEngine.Rendering
 		{
 			MaterialPropertyBlock properties = null;
 			int argsOffset = 0;
-			CommandBuffer.INTERNAL_CALL_DrawProceduralIndirect(this, ref matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
+			this.DrawProceduralIndirect(matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
 		}
 
-		[WrapperlessIcall]
+		public void DrawProceduralIndirect(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, [DefaultValue("0")] int argsOffset, [DefaultValue("null")] MaterialPropertyBlock properties)
+		{
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			if (bufferWithArgs == null)
+			{
+				throw new ArgumentNullException("bufferWithArgs");
+			}
+			this.Internal_DrawProceduralIndirect(matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
+		}
+
+		private void Internal_DrawProceduralIndirect(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, int argsOffset, MaterialPropertyBlock properties)
+		{
+			CommandBuffer.INTERNAL_CALL_Internal_DrawProceduralIndirect(this, ref matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_DrawProceduralIndirect(CommandBuffer self, ref Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, int argsOffset, MaterialPropertyBlock properties);
+		private static extern void INTERNAL_CALL_Internal_DrawProceduralIndirect(CommandBuffer self, ref Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, int argsOffset, MaterialPropertyBlock properties);
+
+		[ExcludeFromDocs]
+		public void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, int shaderPass, Matrix4x4[] matrices, int count)
+		{
+			MaterialPropertyBlock properties = null;
+			this.DrawMeshInstanced(mesh, submeshIndex, material, shaderPass, matrices, count, properties);
+		}
+
+		[ExcludeFromDocs]
+		public void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, int shaderPass, Matrix4x4[] matrices)
+		{
+			MaterialPropertyBlock properties = null;
+			int count = matrices.Length;
+			this.DrawMeshInstanced(mesh, submeshIndex, material, shaderPass, matrices, count, properties);
+		}
+
+		public void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, int shaderPass, Matrix4x4[] matrices, [DefaultValue("matrices.Length")] int count, [DefaultValue("null")] MaterialPropertyBlock properties)
+		{
+			if (!SystemInfo.supportsInstancing)
+			{
+				throw new InvalidOperationException("DrawMeshInstanced is not supported.");
+			}
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
+			if (submeshIndex < 0 || submeshIndex >= mesh.subMeshCount)
+			{
+				throw new ArgumentOutOfRangeException("submeshIndex", "submeshIndex out of range.");
+			}
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			if (matrices == null)
+			{
+				throw new ArgumentNullException("matrices");
+			}
+			if (count < 0 || count > Mathf.Min(Graphics.kMaxDrawMeshInstanceCount, matrices.Length))
+			{
+				throw new ArgumentOutOfRangeException("count", string.Format("Count must be in the range of 0 to {0}.", Mathf.Min(Graphics.kMaxDrawMeshInstanceCount, matrices.Length)));
+			}
+			if (count > 0)
+			{
+				this.Internal_DrawMeshInstanced(mesh, submeshIndex, material, shaderPass, matrices, count, properties);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, int shaderPass, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties);
 
 		public void SetRenderTarget(RenderTargetIdentifier rt)
 		{
@@ -212,15 +327,12 @@ namespace UnityEngine.Rendering
 			this.SetRenderTarget_Multiple(colors, ref depth);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetRenderTarget_Single(ref RenderTargetIdentifier rt, int mipLevel, CubemapFace cubemapFace, int depthSlice);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetRenderTarget_ColDepth(ref RenderTargetIdentifier color, ref RenderTargetIdentifier depth, int mipLevel, CubemapFace cubemapFace, int depthSlice);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetRenderTarget_Multiple(RenderTargetIdentifier[] color, ref RenderTargetIdentifier depth);
 
@@ -239,7 +351,6 @@ namespace UnityEngine.Rendering
 			this.Blit_Texture(source, ref dest, mat, pass);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Blit_Texture(Texture source, ref RenderTargetIdentifier dest, Material mat, int pass);
 
@@ -258,7 +369,6 @@ namespace UnityEngine.Rendering
 			this.Blit_Identifier(ref source, ref dest, mat, pass);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Blit_Identifier(ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, [DefaultValue("null")] Material mat, [DefaultValue("-1")] int pass);
 
@@ -277,7 +387,6 @@ namespace UnityEngine.Rendering
 			this.Blit_Identifier(ref source, ref dest, mat, pass);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void GetTemporaryRT(int nameID, int width, int height, [DefaultValue("0")] int depthBuffer, [DefaultValue("FilterMode.Point")] FilterMode filter, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing);
 
@@ -326,7 +435,6 @@ namespace UnityEngine.Rendering
 			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ReleaseTemporaryRT(int nameID);
 
@@ -342,7 +450,6 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_ClearRenderTarget(this, clearDepth, clearColor, ref backgroundColor, depth);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ClearRenderTarget(CommandBuffer self, bool clearDepth, bool clearColor, ref Color backgroundColor, float depth);
 
@@ -351,7 +458,6 @@ namespace UnityEngine.Rendering
 			this.SetGlobalFloat(Shader.PropertyToID(name), value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalFloat(int nameID, float value);
 
@@ -365,7 +471,6 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_SetGlobalVector(this, nameID, ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalVector(CommandBuffer self, int nameID, ref Vector4 value);
 
@@ -379,7 +484,6 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_SetGlobalColor(this, nameID, ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalColor(CommandBuffer self, int nameID, ref Color value);
 
@@ -393,75 +497,87 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_SetGlobalMatrix(this, nameID, ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalMatrix(CommandBuffer self, int nameID, ref Matrix4x4 value);
+
+		public void SetGlobalFloatArray(string propertyName, List<float> values)
+		{
+			this.SetGlobalFloatArray(Shader.PropertyToID(propertyName), values);
+		}
+
+		public void SetGlobalFloatArray(int nameID, List<float> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Count == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetGlobalFloatArrayListImpl(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetGlobalFloatArrayListImpl(int nameID, object values);
 
 		public void SetGlobalFloatArray(string propertyName, float[] values)
 		{
 			this.SetGlobalFloatArray(Shader.PropertyToID(propertyName), values);
 		}
 
-		public void SetGlobalFloatArray(int nameID, float[] values)
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetGlobalFloatArray(int nameID, float[] values);
+
+		public void SetGlobalVectorArray(string propertyName, List<Vector4> values)
+		{
+			this.SetGlobalVectorArray(Shader.PropertyToID(propertyName), values);
+		}
+
+		public void SetGlobalVectorArray(int nameID, List<Vector4> values)
 		{
 			if (values == null)
 			{
 				throw new ArgumentNullException("values");
 			}
-			if (values.Length == 0)
+			if (values.Count == 0)
 			{
 				throw new ArgumentException("Zero-sized array is not allowed.");
 			}
-			this.SetGlobalFloatArrayInternal(nameID, values);
+			this.SetGlobalVectorArrayListImpl(nameID, values);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetGlobalFloatArrayInternal(int nameID, float[] values);
+		private extern void SetGlobalVectorArrayListImpl(int nameID, object values);
 
 		public void SetGlobalVectorArray(string propertyName, Vector4[] values)
 		{
 			this.SetGlobalVectorArray(Shader.PropertyToID(propertyName), values);
 		}
 
-		public void SetGlobalVectorArray(int nameID, Vector4[] values)
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetGlobalVectorArray(int nameID, Vector4[] values);
+
+		public void SetGlobalMatrixArray(string propertyName, List<Matrix4x4> values)
 		{
-			if (values == null)
-			{
-				throw new ArgumentNullException("values");
-			}
-			if (values.Length == 0)
-			{
-				throw new ArgumentException("Zero-sized array is not allowed.");
-			}
-			this.SetGlobalVectorArrayInternal(nameID, values);
+			this.SetGlobalMatrixArray(Shader.PropertyToID(propertyName), values);
 		}
 
-		[WrapperlessIcall]
+		public void SetGlobalMatrixArray(int nameID, List<Matrix4x4> values)
+		{
+			this.SetGlobalMatrixArrayListImpl(nameID, values);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetGlobalVectorArrayInternal(int nameID, Vector4[] values);
+		private extern void SetGlobalMatrixArrayListImpl(int nameID, object values);
 
 		public void SetGlobalMatrixArray(string propertyName, Matrix4x4[] values)
 		{
 			this.SetGlobalMatrixArray(Shader.PropertyToID(propertyName), values);
 		}
 
-		public void SetGlobalMatrixArray(int nameID, Matrix4x4[] values)
-		{
-			if (values == null)
-			{
-				throw new ArgumentNullException("values");
-			}
-			if (values.Length == 0)
-			{
-				throw new ArgumentException("Zero-sized array is not allowed.");
-			}
-			this.SetGlobalMatrixArrayInternal(nameID, values);
-		}
-
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetGlobalMatrixArrayInternal(int nameID, Matrix4x4[] values);
+		public extern void SetGlobalMatrixArray(int nameID, Matrix4x4[] values);
 
 		public void SetGlobalTexture(string name, RenderTargetIdentifier value)
 		{
@@ -473,16 +589,22 @@ namespace UnityEngine.Rendering
 			this.SetGlobalTexture_Impl(nameID, ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetGlobalTexture_Impl(int nameID, ref RenderTargetIdentifier rt);
+
+		public void SetGlobalBuffer(string name, ComputeBuffer value)
+		{
+			this.SetGlobalBuffer(Shader.PropertyToID(name), value);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetGlobalBuffer(int nameID, ComputeBuffer value);
 
 		public void SetShadowSamplingMode(RenderTargetIdentifier shadowmap, ShadowSamplingMode mode)
 		{
 			this.SetShadowSamplingMode_Impl(ref shadowmap, mode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetShadowSamplingMode_Impl(ref RenderTargetIdentifier shadowmap, ShadowSamplingMode mode);
 
@@ -495,7 +617,6 @@ namespace UnityEngine.Rendering
 			this.IssuePluginEventInternal(callback, eventID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void IssuePluginEventInternal(IntPtr callback, int eventID);
 	}

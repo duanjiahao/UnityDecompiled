@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -216,43 +217,59 @@ namespace UnityEditor
 			if (GUIUtility.keyboardControl == listView.ID && Event.current.type == EventType.KeyDown && !this.isSearching)
 			{
 				KeyCode keyCode = Event.current.keyCode;
-				if (keyCode != KeyCode.RightArrow)
+				if (keyCode != KeyCode.LeftArrow)
 				{
-					if (keyCode == KeyCode.LeftArrow)
+					if (keyCode == KeyCode.RightArrow)
 					{
-						this.m_ColumnToFocusKeyboard = columnIndex - 1;
+						this.m_ColumnToFocusKeyboard = columnIndex + 1;
 						Event.current.Use();
 					}
 				}
 				else
 				{
-					this.m_ColumnToFocusKeyboard = columnIndex + 1;
+					this.m_ColumnToFocusKeyboard = columnIndex - 1;
 					Event.current.Use();
 				}
 			}
-			foreach (ListViewElement element in ListViewGUILayout.ListView(listView, ColumnView.s_Styles.background, new GUILayoutOption[]
+			IEnumerator enumerator = ListViewGUILayout.ListView(listView, ColumnView.s_Styles.background, new GUILayoutOption[]
 			{
 				GUILayout.Width(this.columnWidth)
-			}))
+			}).GetEnumerator();
+			try
 			{
-				ColumnViewElement columnViewElement = columnViewElements[element.row];
-				if (element.row == listView.row && Event.current.type == EventType.Repaint)
+				while (enumerator.MoveNext())
 				{
-					Rect position = element.position;
-					position.x += 1f;
-					position.y += 1f;
-					ColumnView.s_Styles.selected.Draw(position, false, true, true, GUIUtility.keyboardControl == listView.ID);
+					ListViewElement element = (ListViewElement)enumerator.Current;
+					ColumnViewElement columnViewElement = columnViewElements[element.row];
+					if (element.row == listView.row)
+					{
+						if (Event.current.type == EventType.Repaint)
+						{
+							Rect position = element.position;
+							position.x += 1f;
+							position.y += 1f;
+							ColumnView.s_Styles.selected.Draw(position, false, true, true, GUIUtility.keyboardControl == listView.ID);
+						}
+					}
+					GUILayout.Label(columnViewElement.name, new GUILayoutOption[0]);
+					if (columnViewElement.value is List<ColumnViewElement>)
+					{
+						Rect position2 = element.position;
+						position2.x = position2.xMax - (float)ColumnView.s_Styles.categoryArrowIcon.width - 5f;
+						position2.y += 2f;
+						GUI.Label(position2, ColumnView.s_Styles.categoryArrowIcon);
+					}
+					this.DoDoubleClick(element, columnViewElement, selectedSearchItemFunction, selectedRegularItemFunction);
+					ColumnView.DoDragAndDrop(listView, element, columnViewElements, getDataForDraggingFunction);
 				}
-				GUILayout.Label(columnViewElement.name, new GUILayoutOption[0]);
-				if (columnViewElement.value is List<ColumnViewElement>)
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					Rect position2 = element.position;
-					position2.x = position2.xMax - (float)ColumnView.s_Styles.categoryArrowIcon.width - 5f;
-					position2.y += 2f;
-					GUI.Label(position2, ColumnView.s_Styles.categoryArrowIcon);
+					disposable.Dispose();
 				}
-				this.DoDoubleClick(element, columnViewElement, selectedSearchItemFunction, selectedRegularItemFunction);
-				ColumnView.DoDragAndDrop(listView, element, columnViewElements, getDataForDraggingFunction);
 			}
 			if (Event.current.type == EventType.Layout)
 			{
@@ -274,16 +291,15 @@ namespace UnityEditor
 				if (dragAndDropDelay2.CanStartDrag())
 				{
 					object obj = (getDataForDraggingFunction != null) ? getDataForDraggingFunction(columnViewElements[listView.row].value) : null;
-					if (obj == null)
+					if (obj != null)
 					{
-						return;
+						DragAndDrop.PrepareStartDrag();
+						DragAndDrop.objectReferences = new UnityEngine.Object[0];
+						DragAndDrop.paths = null;
+						DragAndDrop.SetGenericData("CustomDragData", obj);
+						DragAndDrop.StartDrag(columnViewElements[listView.row].name);
+						Event.current.Use();
 					}
-					DragAndDrop.PrepareStartDrag();
-					DragAndDrop.objectReferences = new UnityEngine.Object[0];
-					DragAndDrop.paths = null;
-					DragAndDrop.SetGenericData("CustomDragData", obj);
-					DragAndDrop.StartDrag(columnViewElements[listView.row].name);
-					Event.current.Use();
 				}
 			}
 		}
@@ -305,16 +321,19 @@ namespace UnityEditor
 
 		private static KeyCode StealImportantListviewKeys()
 		{
+			KeyCode result;
 			if (Event.current.type == EventType.KeyDown)
 			{
 				KeyCode keyCode = Event.current.keyCode;
 				if (keyCode == KeyCode.UpArrow || keyCode == KeyCode.DownArrow || keyCode == KeyCode.PageUp || keyCode == KeyCode.PageDown)
 				{
 					Event.current.Use();
-					return keyCode;
+					result = keyCode;
+					return result;
 				}
 			}
-			return KeyCode.None;
+			result = KeyCode.None;
+			return result;
 		}
 	}
 }

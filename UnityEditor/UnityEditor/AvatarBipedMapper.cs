@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,9 +30,9 @@ namespace UnityEditor
 			"R Hand",
 			"L Toe0",
 			"R Toe0",
-			string.Empty,
-			string.Empty,
-			string.Empty,
+			"",
+			"",
+			"",
 			"L Finger0",
 			"L Finger01",
 			"L Finger02",
@@ -93,6 +94,7 @@ namespace UnityEditor
 
 		private static bool MapBipedBones(Transform root, ref Transform[] humanToTransform, List<string> report)
 		{
+			bool result;
 			for (int i = 0; i < HumanTrait.BoneCount; i++)
 			{
 				string a = AvatarBipedMapper.kBipedHumanBoneNames[i];
@@ -105,16 +107,18 @@ namespace UnityEditor
 					parentBone = HumanTrait.GetParentBone(parentBone);
 					transform = ((parentBone == -1) ? null : humanToTransform[parentBone]);
 				}
-				if (a != string.Empty)
+				if (a != "")
 				{
 					humanToTransform[i] = AvatarBipedMapper.MapBipedBone(i, transform, transform, report);
 					if (humanToTransform[i] == null && flag)
 					{
-						return false;
+						result = false;
+						return result;
 					}
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		private static Transform MapBipedBone(int boneIndex, Transform transform, Transform parentTransform, List<string> report)
@@ -224,9 +228,22 @@ namespace UnityEditor
 			{
 				t.localRotation = Quaternion.identity;
 			}
-			foreach (Transform t2 in t)
+			IEnumerator enumerator = t.GetEnumerator();
+			try
 			{
-				AvatarBipedMapper.BipedPose(t2, ignore);
+				while (enumerator.MoveNext())
+				{
+					Transform t2 = (Transform)enumerator.Current;
+					AvatarBipedMapper.BipedPose(t2, ignore);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 	}

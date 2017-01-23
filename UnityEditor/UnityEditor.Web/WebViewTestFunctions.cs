@@ -46,7 +46,7 @@ namespace UnityEditor.Web
 			return new bool[]
 			{
 				true,
-				default(bool),
+				false,
 				true
 			};
 		}

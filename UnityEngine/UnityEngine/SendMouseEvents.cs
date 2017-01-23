@@ -16,14 +16,14 @@ namespace UnityEngine
 				this.target.SendMessage(name, null, SendMessageOptions.DontRequireReceiver);
 			}
 
-			public static bool Compare(SendMouseEvents.HitInfo lhs, SendMouseEvents.HitInfo rhs)
-			{
-				return lhs.target == rhs.target && lhs.camera == rhs.camera;
-			}
-
 			public static implicit operator bool(SendMouseEvents.HitInfo exists)
 			{
 				return exists.target != null && exists.camera != null;
+			}
+
+			public static bool Compare(SendMouseEvents.HitInfo lhs, SendMouseEvents.HitInfo rhs)
+			{
+				return lhs.target == rhs.target && lhs.camera == rhs.camera;
 			}
 		}
 

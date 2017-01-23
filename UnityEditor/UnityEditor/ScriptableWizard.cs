@@ -16,9 +16,9 @@ namespace UnityEditor
 
 		private GenericInspector m_Inspector;
 
-		private string m_HelpString = string.Empty;
+		private string m_HelpString = "";
 
-		private string m_ErrorString = string.Empty;
+		private string m_ErrorString = "";
 
 		private bool m_IsValid = true;
 
@@ -26,7 +26,7 @@ namespace UnityEditor
 
 		private string m_CreateButton = "Create";
 
-		private string m_OtherButton = string.Empty;
+		private string m_OtherButton = "";
 
 		public string helpString
 		{
@@ -152,7 +152,7 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
 			GUI.enabled = this.m_IsValid;
-			if (this.m_OtherButton != string.Empty && GUILayout.Button(this.m_OtherButton, new GUILayoutOption[]
+			if (this.m_OtherButton != "" && GUILayout.Button(this.m_OtherButton, new GUILayoutOption[]
 			{
 				GUILayout.MinWidth(100f)
 			}))
@@ -168,7 +168,7 @@ namespace UnityEditor
 					Debug.LogError("OnWizardOtherButton has not been implemented in script");
 				}
 			}
-			if (this.m_CreateButton != string.Empty && GUILayout.Button(this.m_CreateButton, new GUILayoutOption[]
+			if (this.m_CreateButton != "" && GUILayout.Button(this.m_CreateButton, new GUILayoutOption[]
 			{
 				GUILayout.MinWidth(100f)
 			}))
@@ -210,12 +210,12 @@ namespace UnityEditor
 
 		public static T DisplayWizard<T>(string title) where T : ScriptableWizard
 		{
-			return ScriptableWizard.DisplayWizard<T>(title, "Create", string.Empty);
+			return ScriptableWizard.DisplayWizard<T>(title, "Create", "");
 		}
 
 		public static T DisplayWizard<T>(string title, string createButtonName) where T : ScriptableWizard
 		{
-			return ScriptableWizard.DisplayWizard<T>(title, createButtonName, string.Empty);
+			return ScriptableWizard.DisplayWizard<T>(title, createButtonName, "");
 		}
 
 		public static T DisplayWizard<T>(string title, string createButtonName, string otherButtonName) where T : ScriptableWizard
@@ -226,16 +226,16 @@ namespace UnityEditor
 		[ExcludeFromDocs]
 		public static ScriptableWizard DisplayWizard(string title, Type klass, string createButtonName)
 		{
-			string empty = string.Empty;
-			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, empty);
+			string otherButtonName = "";
+			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, otherButtonName);
 		}
 
 		[ExcludeFromDocs]
 		public static ScriptableWizard DisplayWizard(string title, Type klass)
 		{
-			string empty = string.Empty;
+			string otherButtonName = "";
 			string createButtonName = "Create";
-			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, empty);
+			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, otherButtonName);
 		}
 
 		public static ScriptableWizard DisplayWizard(string title, Type klass, [DefaultValue("\"Create\"")] string createButtonName, [DefaultValue("\"\"")] string otherButtonName)

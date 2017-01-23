@@ -29,7 +29,7 @@ namespace UnityEditorInternal
 		public Vector2 pivot = Vector2.zero;
 
 		[SerializeField]
-		public int autoSlicingMethod;
+		public int autoSlicingMethod = 0;
 
 		[SerializeField]
 		public int spriteAlignment;

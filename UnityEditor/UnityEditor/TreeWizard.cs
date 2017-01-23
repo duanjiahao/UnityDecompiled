@@ -11,7 +11,7 @@ namespace UnityEditor
 
 		private int m_PrototypeIndex = -1;
 
-		private bool m_IsValidTree;
+		private bool m_IsValidTree = false;
 
 		public void OnEnable()
 		{
@@ -20,19 +20,25 @@ namespace UnityEditor
 
 		private static bool IsValidTree(GameObject tree, int prototypeIndex, Terrain terrain)
 		{
+			bool result;
 			if (tree == null)
 			{
-				return false;
+				result = false;
 			}
-			TreePrototype[] treePrototypes = terrain.terrainData.treePrototypes;
-			for (int i = 0; i < treePrototypes.Length; i++)
+			else
 			{
-				if (i != prototypeIndex && treePrototypes[i].m_Prefab == tree)
+				TreePrototype[] treePrototypes = terrain.terrainData.treePrototypes;
+				for (int i = 0; i < treePrototypes.Length; i++)
 				{
-					return false;
+					if (i != prototypeIndex && treePrototypes[i].m_Prefab == tree)
+					{
+						result = false;
+						return result;
+					}
 				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		internal void InitializeDefaults(Terrain terrain, int index)
@@ -55,33 +61,32 @@ namespace UnityEditor
 
 		private void DoApply()
 		{
-			if (base.terrainData == null)
+			if (!(base.terrainData == null))
 			{
-				return;
-			}
-			TreePrototype[] treePrototypes = this.m_Terrain.terrainData.treePrototypes;
-			if (this.m_PrototypeIndex == -1)
-			{
-				TreePrototype[] array = new TreePrototype[treePrototypes.Length + 1];
-				for (int i = 0; i < treePrototypes.Length; i++)
+				TreePrototype[] treePrototypes = this.m_Terrain.terrainData.treePrototypes;
+				if (this.m_PrototypeIndex == -1)
 				{
-					array[i] = treePrototypes[i];
+					TreePrototype[] array = new TreePrototype[treePrototypes.Length + 1];
+					for (int i = 0; i < treePrototypes.Length; i++)
+					{
+						array[i] = treePrototypes[i];
+					}
+					array[treePrototypes.Length] = new TreePrototype();
+					array[treePrototypes.Length].prefab = this.m_Tree;
+					array[treePrototypes.Length].bendFactor = this.m_BendFactor;
+					this.m_PrototypeIndex = treePrototypes.Length;
+					this.m_Terrain.terrainData.treePrototypes = array;
+					TreePainter.selectedTree = this.m_PrototypeIndex;
 				}
-				array[treePrototypes.Length] = new TreePrototype();
-				array[treePrototypes.Length].prefab = this.m_Tree;
-				array[treePrototypes.Length].bendFactor = this.m_BendFactor;
-				this.m_PrototypeIndex = treePrototypes.Length;
-				this.m_Terrain.terrainData.treePrototypes = array;
-				TreePainter.selectedTree = this.m_PrototypeIndex;
+				else
+				{
+					treePrototypes[this.m_PrototypeIndex].prefab = this.m_Tree;
+					treePrototypes[this.m_PrototypeIndex].bendFactor = this.m_BendFactor;
+					this.m_Terrain.terrainData.treePrototypes = treePrototypes;
+				}
+				this.m_Terrain.Flush();
+				EditorUtility.SetDirty(this.m_Terrain);
 			}
-			else
-			{
-				treePrototypes[this.m_PrototypeIndex].prefab = this.m_Tree;
-				treePrototypes[this.m_PrototypeIndex].bendFactor = this.m_BendFactor;
-				this.m_Terrain.terrainData.treePrototypes = treePrototypes;
-			}
-			this.m_Terrain.Flush();
-			EditorUtility.SetDirty(this.m_Terrain);
 		}
 
 		private void OnWizardCreate()

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditor.Collaboration;
 using UnityEditor.Connect;
 using UnityEditor.Web;
@@ -10,15 +11,18 @@ namespace UnityEditor
 	{
 		private const string kWindowName = "Unity Collab Toolbar";
 
-		private const int kWindowWidth = 320;
-
-		private const int kWindowHeight = 350;
-
 		private static long s_LastClosedTime;
 
 		private static CollabToolbarWindow s_CollabToolbarWindow;
 
-		public static bool s_ToolbarIsVisible;
+		public static bool s_ToolbarIsVisible = false;
+
+		private const int kWindowWidth = 320;
+
+		private const int kWindowHeight = 350;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
 
 		internal override WebView webView
 		{
@@ -34,17 +38,24 @@ namespace UnityEditor
 
 		public static void CloseToolbarWindows()
 		{
-			CollabToolbarWindow[] array = Resources.FindObjectsOfTypeAll(typeof(CollabToolbarWindow)) as CollabToolbarWindow[];
-			if (array != null)
+			if (CollabToolbarWindow.<>f__mg$cache0 == null)
 			{
-				for (int i = 0; i < array.Length; i++)
-				{
-					array[i].Close();
-				}
+				CollabToolbarWindow.<>f__mg$cache0 = new EditorApplication.CallbackFunction(CollabToolbarWindow.CloseToolbarWindowsImmediately);
+			}
+			EditorApplication.CallDelayed(CollabToolbarWindow.<>f__mg$cache0, 1f);
+		}
+
+		public static void CloseToolbarWindowsImmediately()
+		{
+			CollabToolbarWindow[] array = Resources.FindObjectsOfTypeAll<CollabToolbarWindow>();
+			for (int i = 0; i < array.Length; i++)
+			{
+				CollabToolbarWindow collabToolbarWindow = array[i];
+				collabToolbarWindow.Close();
 			}
 		}
 
-		[MenuItem("Window/Collab Toolbar", false, 3001, true)]
+		[MenuItem("Window/Collab Toolbar", false, 2011, true)]
 		public static CollabToolbarWindow ShowToolbarWindow()
 		{
 			return EditorWindow.GetWindow<CollabToolbarWindow>(false, "Unity Collab Toolbar");
@@ -60,9 +71,13 @@ namespace UnityEditor
 		{
 			buttonRect.x -= 160f;
 			long num = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num >= CollabToolbarWindow.s_LastClosedTime + 50L)
 			{
-				Event.current.Use();
+				if (Event.current.type != EventType.Layout)
+				{
+					Event.current.Use();
+				}
 				if (CollabToolbarWindow.s_CollabToolbarWindow == null)
 				{
 					CollabToolbarWindow.s_CollabToolbarWindow = ScriptableObject.CreateInstance<CollabToolbarWindow>();
@@ -72,9 +87,13 @@ namespace UnityEditor
 				CollabToolbarWindow.s_CollabToolbarWindow.initialOpenUrl = "file:///" + EditorApplication.userJavascriptPackagesPath + "unityeditor-collab-toolbar/dist/index.html";
 				CollabToolbarWindow.s_CollabToolbarWindow.Init();
 				CollabToolbarWindow.s_CollabToolbarWindow.ShowAsDropDown(buttonRect, windowSize);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public void OnReceiveTitle(string title)

@@ -37,9 +37,9 @@ namespace UnityEditor
 
 			public readonly GUIStyle m_LODLevelNotifyText = "LODLevelNotifyText";
 
-			public readonly GUIContent m_IconRendererPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add New Renderers");
+			public readonly GUIContent m_IconRendererPlus = EditorGUIUtility.IconContent("Toolbar Plus", "|Add New Renderers");
 
-			public readonly GUIContent m_IconRendererMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove Renderer");
+			public readonly GUIContent m_IconRendererMinus = EditorGUIUtility.IconContent("Toolbar Minus", "|Remove Renderer");
 
 			public readonly GUIContent m_CameraIcon = EditorGUIUtility.IconContent("Camera Icon");
 
@@ -47,9 +47,11 @@ namespace UnityEditor
 
 			public readonly GUIContent m_UploadToImporterDisabled = EditorGUIUtility.TextContent("Upload to Importer|Number of LOD's in the scene instance differ from the number of LOD's in the imported model.");
 
-			public readonly GUIContent m_RecalculateBounds = EditorGUIUtility.TextContent("Bounds|Recalculate bounds for the current LOD group.");
+			public readonly GUIContent m_RecalculateBounds = EditorGUIUtility.TextContent("Recalculate Bounds|Recalculate bounds to encapsulate all child renderers.");
 
-			public readonly GUIContent m_LightmapScale = EditorGUIUtility.TextContent("Lightmap Scale|Set the lightmap scale to match the LOD percentages.");
+			public readonly GUIContent m_RecalculateBoundsDisabled = EditorGUIUtility.TextContent("Recalculate Bounds|Bounds are already up-to-date.");
+
+			public readonly GUIContent m_LightmapScale = EditorGUIUtility.TextContent("Recalculate Lightmap Scale|Set the lightmap scale to match the LOD percentages.");
 
 			public readonly GUIContent m_RendersTitle = EditorGUIUtility.TextContent("Renderers:");
 
@@ -104,6 +106,20 @@ namespace UnityEditor
 			}
 		}
 
+		public static readonly Color[] kLODColors = new Color[]
+		{
+			new Color(0.4831376f, 0.6211768f, 0.0219608f, 1f),
+			new Color(0.279216f, 0.4078432f, 0.5835296f, 1f),
+			new Color(0.2070592f, 0.5333336f, 0.6556864f, 1f),
+			new Color(0.5333336f, 0.16f, 0.0282352f, 1f),
+			new Color(0.3827448f, 0.2886272f, 0.5239216f, 1f),
+			new Color(0.8f, 0.4423528f, 0f, 1f),
+			new Color(0.4486272f, 0.4078432f, 0.050196f, 1f),
+			new Color(0.7749016f, 0.6368624f, 0.0250984f, 1f)
+		};
+
+		public static readonly Color kCulledLODColor = new Color(0.4f, 0f, 0f, 1f);
+
 		public const int kSceneLabelHalfWidth = 100;
 
 		public const int kSceneLabelHeight = 45;
@@ -126,20 +142,6 @@ namespace UnityEditor
 
 		public const int kRenderAreaForegroundPadding = 3;
 
-		public static readonly Color[] kLODColors = new Color[]
-		{
-			new Color(0.4831376f, 0.6211768f, 0.0219608f, 1f),
-			new Color(0.279216f, 0.4078432f, 0.5835296f, 1f),
-			new Color(0.2070592f, 0.5333336f, 0.6556864f, 1f),
-			new Color(0.5333336f, 0.16f, 0.0282352f, 1f),
-			new Color(0.3827448f, 0.2886272f, 0.5239216f, 1f),
-			new Color(0.8f, 0.4423528f, 0f, 1f),
-			new Color(0.4486272f, 0.4078432f, 0.050196f, 1f),
-			new Color(0.7749016f, 0.6368624f, 0.0250984f, 1f)
-		};
-
-		public static readonly Color kCulledLODColor = new Color(0.4f, 0f, 0f, 1f);
-
 		private static LODGroupGUI.GUIStyles s_Styles;
 
 		public static LODGroupGUI.GUIStyles Styles
@@ -156,11 +158,16 @@ namespace UnityEditor
 
 		public static float DelinearizeScreenPercentage(float percentage)
 		{
+			float result;
 			if (Mathf.Approximately(0f, percentage))
 			{
-				return 0f;
+				result = 0f;
 			}
-			return Mathf.Sqrt(percentage);
+			else
+			{
+				result = Mathf.Sqrt(percentage);
+			}
+			return result;
 		}
 
 		public static float LinearizeScreenPercentage(float percentage)
@@ -196,23 +203,29 @@ namespace UnityEditor
 			return list;
 		}
 
+		public static float GetCameraPercent(Vector2 position, Rect sliderRect)
+		{
+			float percentage = Mathf.Clamp(1f - (position.x - sliderRect.x) / sliderRect.width, 0.01f, 1f);
+			return LODGroupGUI.LinearizeScreenPercentage(percentage);
+		}
+
 		public static void SetSelectedLODLevelPercentage(float newScreenPercentage, int lod, List<LODGroupGUI.LODInfo> lods)
 		{
 			float num = 0f;
 			LODGroupGUI.LODInfo lODInfo = lods.FirstOrDefault((LODGroupGUI.LODInfo x) => x.LODLevel == lods[lod].LODLevel + 1);
 			if (lODInfo != null)
 			{
-				num = lODInfo.ScreenPercent;
+				num = lODInfo.RawScreenPercent;
 			}
 			float num2 = 1f;
 			LODGroupGUI.LODInfo lODInfo2 = lods.FirstOrDefault((LODGroupGUI.LODInfo x) => x.LODLevel == lods[lod].LODLevel - 1);
 			if (lODInfo2 != null)
 			{
-				num2 = lODInfo2.ScreenPercent;
+				num2 = lODInfo2.RawScreenPercent;
 			}
 			num2 = Mathf.Clamp01(num2);
 			num = Mathf.Clamp01(num);
-			lods[lod].ScreenPercent = Mathf.Clamp(newScreenPercentage, num, num2);
+			lods[lod].RawScreenPercent = Mathf.Clamp(newScreenPercentage, num, num2);
 		}
 
 		public static void DrawLODSlider(Rect area, IList<LODGroupGUI.LODInfo> lods, int selectedLevel)
@@ -284,17 +297,16 @@ namespace UnityEditor
 
 		private static void DrawCulledRange(Rect totalRect, float previousLODPercentage)
 		{
-			if (Mathf.Approximately(previousLODPercentage, 0f))
+			if (!Mathf.Approximately(previousLODPercentage, 0f))
 			{
-				return;
+				Rect culledBox = LODGroupGUI.GetCulledBox(totalRect, LODGroupGUI.DelinearizeScreenPercentage(previousLODPercentage));
+				Color color = GUI.color;
+				GUI.color = LODGroupGUI.kCulledLODColor;
+				LODGroupGUI.Styles.m_LODSliderRange.Draw(culledBox, GUIContent.none, false, false, false, false);
+				GUI.color = color;
+				string text = string.Format("Culled\n{0:0}%", previousLODPercentage * 100f);
+				LODGroupGUI.Styles.m_LODSliderText.Draw(culledBox, text, false, false, false, false);
 			}
-			Rect culledBox = LODGroupGUI.GetCulledBox(totalRect, LODGroupGUI.DelinearizeScreenPercentage(previousLODPercentage));
-			Color color = GUI.color;
-			GUI.color = LODGroupGUI.kCulledLODColor;
-			LODGroupGUI.Styles.m_LODSliderRange.Draw(culledBox, GUIContent.none, false, false, false, false);
-			GUI.color = color;
-			string text = string.Format("Culled\n{0:0}%", previousLODPercentage * 100f);
-			LODGroupGUI.Styles.m_LODSliderText.Draw(culledBox, text, false, false, false, false);
 		}
 	}
 }

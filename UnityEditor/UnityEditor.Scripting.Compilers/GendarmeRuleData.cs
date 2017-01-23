@@ -4,11 +4,11 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal class GendarmeRuleData
 	{
-		public int LastIndex;
+		public int LastIndex = 0;
 
-		public int Line;
+		public int Line = 0;
 
-		public string File = string.Empty;
+		public string File = "";
 
 		public string Problem;
 

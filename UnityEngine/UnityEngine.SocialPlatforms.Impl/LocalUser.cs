@@ -46,6 +46,11 @@ namespace UnityEngine.SocialPlatforms.Impl
 			ActivePlatform.Instance.Authenticate(this, callback);
 		}
 
+		public void Authenticate(Action<bool, string> callback)
+		{
+			ActivePlatform.Instance.Authenticate(this, callback);
+		}
+
 		public void LoadFriends(Action<bool> callback)
 		{
 			ActivePlatform.Instance.LoadFriends(this, callback);

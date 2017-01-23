@@ -55,8 +55,8 @@ namespace UnityEditor
 					if (this.m_LegacyContentCache == null)
 					{
 						this.m_LegacyContentCache = new GUIContent(this.content);
-						GUIContent expr_22 = this.m_LegacyContentCache;
-						expr_22.text += " (Legacy)";
+						GUIContent expr_24 = this.m_LegacyContentCache;
+						expr_24.text += " (Legacy)";
 					}
 					return this.m_LegacyContentCache;
 				}
@@ -65,7 +65,7 @@ namespace UnityEditor
 			public ComponentElement(int level, string name, string menuPath, string commandString)
 			{
 				this.level = level;
-				this.typeName = name.Replace(" ", string.Empty);
+				this.typeName = name.Replace(" ", "");
 				this.menuPath = menuPath;
 				this.isLegacy = menuPath.Contains("Legacy");
 				if (commandString.StartsWith("SCRIPT"))
@@ -84,19 +84,23 @@ namespace UnityEditor
 
 			public override int CompareTo(object o)
 			{
+				int result;
 				if (o is AddComponentWindow.ComponentElement)
 				{
 					AddComponentWindow.ComponentElement componentElement = (AddComponentWindow.ComponentElement)o;
 					if (this.isLegacy && !componentElement.isLegacy)
 					{
-						return 1;
+						result = 1;
+						return result;
 					}
 					if (!this.isLegacy && componentElement.isLegacy)
 					{
-						return -1;
+						result = -1;
+						return result;
 					}
 				}
-				return base.CompareTo(o);
+				result = base.CompareTo(o);
+				return result;
 			}
 		}
 
@@ -105,7 +109,7 @@ namespace UnityEditor
 		{
 			public Vector2 scroll;
 
-			public int selectedIndex;
+			public int selectedIndex = 0;
 
 			public GroupElement(int level, string name)
 			{
@@ -116,8 +120,6 @@ namespace UnityEditor
 
 		private class NewScriptElement : AddComponentWindow.GroupElement
 		{
-			private const string kResourcesTemplatePath = "Resources/ScriptTemplates";
-
 			private char[] kInvalidPathChars = new char[]
 			{
 				'<',
@@ -136,6 +138,8 @@ namespace UnityEditor
 				'\\'
 			};
 
+			private const string kResourcesTemplatePath = "Resources/ScriptTemplates";
+
 			private string m_Directory = string.Empty;
 
 			private string extension
@@ -143,15 +147,20 @@ namespace UnityEditor
 				get
 				{
 					AddComponentWindow.Language s_Lang = AddComponentWindow.s_Lang;
-					if (s_Lang == AddComponentWindow.Language.CSharp)
+					string result;
+					if (s_Lang != AddComponentWindow.Language.CSharp)
 					{
-						return "cs";
+						if (s_Lang != AddComponentWindow.Language.JavaScript)
+						{
+							throw new ArgumentOutOfRangeException();
+						}
+						result = "js";
 					}
-					if (s_Lang != AddComponentWindow.Language.JavaScript)
+					else
 					{
-						throw new ArgumentOutOfRangeException();
+						result = "cs";
 					}
-					return "js";
+					return result;
 				}
 			}
 
@@ -161,15 +170,20 @@ namespace UnityEditor
 				{
 					string path = Path.Combine(EditorApplication.applicationContentsPath, "Resources/ScriptTemplates");
 					AddComponentWindow.Language s_Lang = AddComponentWindow.s_Lang;
-					if (s_Lang == AddComponentWindow.Language.CSharp)
-					{
-						return Path.Combine(path, "81-C# Script-NewBehaviourScript.cs.txt");
-					}
+					string result;
 					if (s_Lang != AddComponentWindow.Language.JavaScript)
 					{
-						throw new ArgumentOutOfRangeException();
+						if (s_Lang != AddComponentWindow.Language.CSharp)
+						{
+							throw new ArgumentOutOfRangeException();
+						}
+						result = Path.Combine(path, "81-C# Script-NewBehaviourScript.cs.txt");
 					}
-					return Path.Combine(path, "82-Javascript-NewBehaviourScript.js.txt");
+					else
+					{
+						result = Path.Combine(path, "82-Javascript-NewBehaviourScript.js.txt");
+					}
+					return result;
 				}
 			}
 
@@ -192,7 +206,7 @@ namespace UnityEditor
 				}
 				EditorGUILayout.Space();
 				bool flag = this.CanCreate();
-				if (!flag && AddComponentWindow.className != string.Empty)
+				if (!flag && AddComponentWindow.className != "")
 				{
 					GUILayout.Label(this.GetError(), EditorStyles.helpBox, new GUILayoutOption[0]);
 				}
@@ -239,20 +253,19 @@ namespace UnityEditor
 
 			public void Create()
 			{
-				if (!this.CanCreate())
+				if (this.CanCreate())
 				{
-					return;
+					this.CreateScript();
+					GameObject[] gameObjects = AddComponentWindow.gameObjects;
+					for (int i = 0; i < gameObjects.Length; i++)
+					{
+						GameObject gameObject = gameObjects[i];
+						MonoScript monoScript = AssetDatabase.LoadAssetAtPath(this.TargetPath(), typeof(MonoScript)) as MonoScript;
+						monoScript.SetScriptTypeWasJustCreatedFromComponentMenu();
+						InternalEditorUtility.AddScriptComponentUncheckedUndoable(gameObject, monoScript);
+					}
+					AddComponentWindow.s_AddComponentWindow.Close();
 				}
-				this.CreateScript();
-				GameObject[] gameObjects = AddComponentWindow.gameObjects;
-				for (int i = 0; i < gameObjects.Length; i++)
-				{
-					GameObject gameObject = gameObjects[i];
-					MonoScript monoScript = AssetDatabase.LoadAssetAtPath(this.TargetPath(), typeof(MonoScript)) as MonoScript;
-					monoScript.SetScriptTypeWasJustCreatedFromComponentMenu();
-					InternalEditorUtility.AddScriptComponentUncheckedUndoable(gameObject, monoScript);
-				}
-				AddComponentWindow.s_AddComponentWindow.Close();
 			}
 
 			private bool InvalidTargetPath()
@@ -341,8 +354,6 @@ namespace UnityEditor
 
 		private const string kComponentSearch = "ComponentSearchString";
 
-		private const string kSearchHeader = "Search";
-
 		private static AddComponentWindow.Styles s_Styles;
 
 		private static AddComponentWindow s_AddComponentWindow;
@@ -353,7 +364,7 @@ namespace UnityEditor
 
 		private static bool s_DirtyList;
 
-		private string m_ClassName = string.Empty;
+		private string m_ClassName = "";
 
 		private GameObject[] m_GameObjects;
 
@@ -367,13 +378,15 @@ namespace UnityEditor
 
 		private int m_AnimTarget = 1;
 
-		private long m_LastTime;
+		private long m_LastTime = 0L;
 
-		private bool m_ScrollToSelected;
+		private bool m_ScrollToSelected = false;
 
-		private string m_DelayedSearch;
+		private string m_DelayedSearch = null;
 
-		private string m_Search = string.Empty;
+		private string m_Search = "";
+
+		private const string kSearchHeader = "Search";
 
 		internal static string className
 		{
@@ -423,16 +436,24 @@ namespace UnityEditor
 		{
 			get
 			{
+				AddComponentWindow.Element result;
 				if (this.activeTree == null)
 				{
-					return null;
+					result = null;
 				}
-				List<AddComponentWindow.Element> children = this.GetChildren(this.activeTree, this.activeParent);
-				if (children.Count == 0)
+				else
 				{
-					return null;
+					List<AddComponentWindow.Element> children = this.GetChildren(this.activeTree, this.activeParent);
+					if (children.Count == 0)
+					{
+						result = null;
+					}
+					else
+					{
+						result = children[this.activeParent.selectedIndex];
+					}
 				}
-				return children[this.activeParent.selectedIndex];
+				return result;
 			}
 		}
 
@@ -446,6 +467,8 @@ namespace UnityEditor
 
 		static AddComponentWindow()
 		{
+			AddComponentWindow.s_AddComponentWindow = null;
+			AddComponentWindow.s_DirtyList = false;
 			AddComponentWindow.s_DirtyList = true;
 		}
 
@@ -458,7 +481,7 @@ namespace UnityEditor
 				EditorPrefs.SetInt("NewScriptLanguage", 0);
 				AddComponentWindow.s_Lang = AddComponentWindow.Language.CSharp;
 			}
-			this.m_Search = EditorPrefs.GetString("ComponentSearchString", string.Empty);
+			this.m_Search = EditorPrefs.GetString("ComponentSearchString", "");
 		}
 
 		private void OnDisable()
@@ -469,14 +492,17 @@ namespace UnityEditor
 
 		private static InspectorWindow FirstInspectorWithGameObject()
 		{
+			InspectorWindow result;
 			foreach (InspectorWindow current in InspectorWindow.GetInspectors())
 			{
 				if (current.GetInspectedObject() is GameObject)
 				{
-					return current;
+					result = current;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		internal static bool ValidateAddComponentMenuItem()
@@ -496,31 +522,39 @@ namespace UnityEditor
 		internal static bool Show(Rect rect, GameObject[] gos)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(AddComponentWindow));
+			bool result;
 			if (array.Length > 0)
 			{
 				((EditorWindow)array[0]).Close();
-				return false;
+				result = false;
 			}
-			long num = DateTime.Now.Ticks / 10000L;
-			if (num >= AddComponentWindow.s_LastClosedTime + 50L)
+			else
 			{
-				Event.current.Use();
-				if (AddComponentWindow.s_AddComponentWindow == null)
+				long num = DateTime.Now.Ticks / 10000L;
+				if (num >= AddComponentWindow.s_LastClosedTime + 50L)
 				{
-					AddComponentWindow.s_AddComponentWindow = ScriptableObject.CreateInstance<AddComponentWindow>();
+					Event.current.Use();
+					if (AddComponentWindow.s_AddComponentWindow == null)
+					{
+						AddComponentWindow.s_AddComponentWindow = ScriptableObject.CreateInstance<AddComponentWindow>();
+					}
+					AddComponentWindow.s_AddComponentWindow.Init(rect);
+					AddComponentWindow.s_AddComponentWindow.m_GameObjects = gos;
+					result = true;
 				}
-				AddComponentWindow.s_AddComponentWindow.Init(rect);
-				AddComponentWindow.s_AddComponentWindow.m_GameObjects = gos;
-				return true;
+				else
+				{
+					result = false;
+				}
 			}
-			return false;
+			return result;
 		}
 
 		private void Init(Rect buttonRect)
 		{
 			buttonRect = GUIUtility.GUIToScreenRect(buttonRect);
 			this.CreateComponentTree();
-			base.ShowAsDropDown(buttonRect, new Vector2(buttonRect.width, 320f));
+			base.ShowAsDropDown(buttonRect, new Vector2(buttonRect.width, 320f), null, ShowMode.PopupMenuWithKeyboardFocus);
 			base.Focus();
 			this.m_Parent.AddToAuxWindowList();
 			base.wantsMouseMove = true;
@@ -732,78 +766,85 @@ namespace UnityEditor
 				this.m_AnimTarget = 1;
 				this.m_LastTime = DateTime.Now.Ticks;
 				this.m_ClassName = "NewBehaviourScript";
-				return;
-			}
-			this.m_ClassName = this.m_Search;
-			string[] array = this.m_Search.ToLower().Split(new char[]
-			{
-				' '
-			});
-			List<AddComponentWindow.Element> list = new List<AddComponentWindow.Element>();
-			List<AddComponentWindow.Element> list2 = new List<AddComponentWindow.Element>();
-			AddComponentWindow.Element[] tree = this.m_Tree;
-			for (int i = 0; i < tree.Length; i++)
-			{
-				AddComponentWindow.Element element = tree[i];
-				if (element is AddComponentWindow.ComponentElement)
-				{
-					string text = element.name.ToLower().Replace(" ", string.Empty);
-					bool flag = true;
-					bool flag2 = false;
-					for (int j = 0; j < array.Length; j++)
-					{
-						string value = array[j];
-						if (!text.Contains(value))
-						{
-							flag = false;
-							break;
-						}
-						if (j == 0 && text.StartsWith(value))
-						{
-							flag2 = true;
-						}
-					}
-					if (flag)
-					{
-						if (flag2)
-						{
-							list.Add(element);
-						}
-						else
-						{
-							list2.Add(element);
-						}
-					}
-				}
-			}
-			list.Sort();
-			list2.Sort();
-			List<AddComponentWindow.Element> list3 = new List<AddComponentWindow.Element>();
-			list3.Add(new AddComponentWindow.GroupElement(0, "Search"));
-			list3.AddRange(list);
-			list3.AddRange(list2);
-			list3.Add(this.m_Tree[this.m_Tree.Length - 1]);
-			this.m_SearchResultTree = list3.ToArray();
-			this.m_Stack.Clear();
-			this.m_Stack.Add(this.m_SearchResultTree[0] as AddComponentWindow.GroupElement);
-			if (this.GetChildren(this.activeTree, this.activeParent).Count >= 1)
-			{
-				this.activeParent.selectedIndex = 0;
 			}
 			else
 			{
-				this.activeParent.selectedIndex = -1;
+				this.m_ClassName = this.m_Search;
+				string[] array = this.m_Search.ToLower().Split(new char[]
+				{
+					' '
+				});
+				List<AddComponentWindow.Element> list = new List<AddComponentWindow.Element>();
+				List<AddComponentWindow.Element> list2 = new List<AddComponentWindow.Element>();
+				AddComponentWindow.Element[] tree = this.m_Tree;
+				for (int i = 0; i < tree.Length; i++)
+				{
+					AddComponentWindow.Element element = tree[i];
+					if (element is AddComponentWindow.ComponentElement)
+					{
+						string text = element.name.ToLower().Replace(" ", "");
+						bool flag = true;
+						bool flag2 = false;
+						for (int j = 0; j < array.Length; j++)
+						{
+							string value = array[j];
+							if (!text.Contains(value))
+							{
+								flag = false;
+								break;
+							}
+							if (j == 0 && text.StartsWith(value))
+							{
+								flag2 = true;
+							}
+						}
+						if (flag)
+						{
+							if (flag2)
+							{
+								list.Add(element);
+							}
+							else
+							{
+								list2.Add(element);
+							}
+						}
+					}
+				}
+				list.Sort();
+				list2.Sort();
+				List<AddComponentWindow.Element> list3 = new List<AddComponentWindow.Element>();
+				list3.Add(new AddComponentWindow.GroupElement(0, "Search"));
+				list3.AddRange(list);
+				list3.AddRange(list2);
+				list3.Add(this.m_Tree[this.m_Tree.Length - 1]);
+				this.m_SearchResultTree = list3.ToArray();
+				this.m_Stack.Clear();
+				this.m_Stack.Add(this.m_SearchResultTree[0] as AddComponentWindow.GroupElement);
+				if (this.GetChildren(this.activeTree, this.activeParent).Count >= 1)
+				{
+					this.activeParent.selectedIndex = 0;
+				}
+				else
+				{
+					this.activeParent.selectedIndex = -1;
+				}
 			}
 		}
 
 		private AddComponentWindow.GroupElement GetElementRelative(int rel)
 		{
 			int num = this.m_Stack.Count + rel - 1;
+			AddComponentWindow.GroupElement result;
 			if (num < 0)
 			{
-				return null;
+				result = null;
 			}
-			return this.m_Stack[num];
+			else
+			{
+				result = this.m_Stack[num];
+			}
+			return result;
 		}
 
 		private void GoToParent()
@@ -817,10 +858,13 @@ namespace UnityEditor
 
 		private void GoToChild(AddComponentWindow.Element e, bool addIfComponent)
 		{
-			if (e is AddComponentWindow.NewScriptElement && !this.hasSearch)
+			if (e is AddComponentWindow.NewScriptElement)
 			{
-				this.m_ClassName = AssetDatabase.GenerateUniqueAssetPath((e as AddComponentWindow.NewScriptElement).TargetPath());
-				this.m_ClassName = Path.GetFileNameWithoutExtension(this.m_ClassName);
+				if (!this.hasSearch)
+				{
+					this.m_ClassName = AssetDatabase.GenerateUniqueAssetPath((e as AddComponentWindow.NewScriptElement).TargetPath());
+					this.m_ClassName = Path.GetFileNameWithoutExtension(this.m_ClassName);
+				}
 			}
 			if (e is AddComponentWindow.ComponentElement)
 			{
@@ -894,10 +938,13 @@ namespace UnityEditor
 				{
 					GUILayout.ExpandWidth(true)
 				});
-				if ((Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDown) && parent.selectedIndex != i && rect2.Contains(Event.current.mousePosition))
+				if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDown)
 				{
-					parent.selectedIndex = i;
-					base.Repaint();
+					if (parent.selectedIndex != i && rect2.Contains(Event.current.mousePosition))
+					{
+						parent.selectedIndex = i;
+						base.Repaint();
+					}
 				}
 				bool flag = false;
 				if (i == parent.selectedIndex)
@@ -966,24 +1013,29 @@ namespace UnityEditor
 					break;
 				}
 			}
+			List<AddComponentWindow.Element> result;
 			if (num == -1)
 			{
-				return list;
+				result = list;
 			}
-			while (i < tree.Length)
+			else
 			{
-				AddComponentWindow.Element element = tree[i];
-				if (element.level < num)
+				while (i < tree.Length)
 				{
-					break;
+					AddComponentWindow.Element element = tree[i];
+					if (element.level < num)
+					{
+						break;
+					}
+					if (element.level <= num || this.hasSearch)
+					{
+						list.Add(element);
+					}
+					i++;
 				}
-				if (element.level <= num || this.hasSearch)
-				{
-					list.Add(element);
-				}
-				i++;
+				result = list;
 			}
-			return list;
+			return result;
 		}
 	}
 }

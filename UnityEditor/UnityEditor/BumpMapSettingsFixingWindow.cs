@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace UnityEditor
 			public GUIContent overviewText = EditorGUIUtility.TextContent("A Material is using the texture as a normal map.\nThe texture must be marked as a normal map in the import settings.");
 		}
 
-		private static BumpMapSettingsFixingWindow.Styles s_Styles;
+		private static BumpMapSettingsFixingWindow.Styles s_Styles = null;
 
 		private ListViewState m_LV = new ListViewState();
 
@@ -54,13 +55,26 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(10f);
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.m_LV, BumpMapSettingsFixingWindow.s_Styles.box, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.m_LV, BumpMapSettingsFixingWindow.s_Styles.box, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (listViewElement.row == this.m_LV.row && Event.current.type == EventType.Repaint)
+				while (enumerator.MoveNext())
 				{
-					BumpMapSettingsFixingWindow.s_Styles.selected.Draw(listViewElement.position, false, false, false, false);
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (listViewElement.row == this.m_LV.row && Event.current.type == EventType.Repaint)
+					{
+						BumpMapSettingsFixingWindow.s_Styles.selected.Draw(listViewElement.position, false, false, false, false);
+					}
+					GUILayout.Label(this.m_Paths[listViewElement.row], new GUILayoutOption[0]);
 				}
-				GUILayout.Label(this.m_Paths[listViewElement.row], new GUILayoutOption[0]);
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			GUILayout.Space(10f);
 			GUILayout.EndHorizontal();

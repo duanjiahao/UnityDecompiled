@@ -6,6 +6,10 @@ namespace UnityEditor.Scripting
 	{
 		public readonly BuildTarget _target;
 
+		public readonly bool _development_player;
+
+		public readonly bool _editor;
+
 		public readonly string _classlib_profile;
 
 		public readonly string[] _files;
@@ -19,6 +23,8 @@ namespace UnityEditor.Scripting
 		public MonoIsland(BuildTarget target, string classlib_profile, string[] files, string[] references, string[] defines, string output)
 		{
 			this._target = target;
+			this._development_player = false;
+			this._editor = false;
 			this._classlib_profile = classlib_profile;
 			this._files = files;
 			this._references = references;

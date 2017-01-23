@@ -83,13 +83,18 @@ namespace UnityEngine
 		{
 			float num = Vector3.Dot(ray.direction, this.normal);
 			float num2 = -Vector3.Dot(ray.origin, this.normal) - this.distance;
+			bool result;
 			if (Mathf.Approximately(num, 0f))
 			{
 				enter = 0f;
-				return false;
+				result = false;
 			}
-			enter = num2 / num;
-			return enter > 0f;
+			else
+			{
+				enter = num2 / num;
+				result = (enter > 0f);
+			}
+			return result;
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ namespace UnityEditor
 {
 	internal class RectTool : ManipulationTool
 	{
+		private static RectTool s_Instance;
+
 		internal const string kChangingLeft = "ChangingLeft";
 
 		internal const string kChangingRight = "ChangingRight";
@@ -25,8 +28,6 @@ namespace UnityEditor
 		internal const string kChangingPivot = "ChangingPivot";
 
 		private const float kMinVisibleSize = 0.2f;
-
-		private static RectTool s_Instance;
 
 		private static int s_ResizeHandlesHash = "ResizeHandles".GetHashCode();
 
@@ -52,6 +53,12 @@ namespace UnityEditor
 
 		private static int s_LockAxis = -1;
 
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache1;
+
 		public static void OnGUI(SceneView view)
 		{
 			if (RectTool.s_Instance == null)
@@ -63,19 +70,26 @@ namespace UnityEditor
 
 		public static Vector2 GetLocalRectPoint(Rect rect, int index)
 		{
+			Vector2 result;
 			switch (index)
 			{
 			case 0:
-				return new Vector2(rect.xMin, rect.yMax);
+				result = new Vector2(rect.xMin, rect.yMax);
+				break;
 			case 1:
-				return new Vector2(rect.xMax, rect.yMax);
+				result = new Vector2(rect.xMax, rect.yMax);
+				break;
 			case 2:
-				return new Vector2(rect.xMax, rect.yMin);
+				result = new Vector2(rect.xMax, rect.yMin);
+				break;
 			case 3:
-				return new Vector2(rect.xMin, rect.yMin);
+				result = new Vector2(rect.xMin, rect.yMin);
+				break;
 			default:
-				return Vector3.zero;
+				result = Vector3.zero;
+				break;
 			}
+			return result;
 		}
 
 		public override void ToolGUI(SceneView view, Vector3 handlePosition, bool isStatic)
@@ -233,9 +247,19 @@ namespace UnityEditor
 							}
 							else
 							{
-								Vector3 outwardsDir = rotation * Vector3.right * (float)(i - 1);
-								Vector3 outwardsDir2 = rotation * Vector3.up * (float)(j - 1);
-								vector = RectHandles.CornerSlider(controlID, rectPointInWorld2, rotation * Vector3.forward, outwardsDir, outwardsDir2, num, new Handles.DrawCapFunction(RectHandles.RectScalingCap), Vector2.zero);
+								Vector3 vector2 = rotation * Vector3.right * (float)(i - 1);
+								Vector3 vector3 = rotation * Vector3.up * (float)(j - 1);
+								int arg_1AB_0 = controlID;
+								Vector3 arg_1AB_1 = rectPointInWorld2;
+								Vector3 arg_1AB_2 = rotation * Vector3.forward;
+								Vector3 arg_1AB_3 = vector2;
+								Vector3 arg_1AB_4 = vector3;
+								float arg_1AB_5 = num;
+								if (RectTool.<>f__mg$cache0 == null)
+								{
+									RectTool.<>f__mg$cache0 = new Handles.CapFunction(RectHandles.RectScalingHandleCap);
+								}
+								vector = RectHandles.CornerSlider(arg_1AB_0, arg_1AB_1, arg_1AB_2, arg_1AB_3, arg_1AB_4, arg_1AB_5, RectTool.<>f__mg$cache0, Vector2.zero);
 							}
 							bool flag = Selection.transforms.Length == 1 && InternalEditorUtility.SupportsRectLayout(Selection.activeTransform) && Selection.activeTransform.parent.rotation == rotation;
 							if (flag)
@@ -259,10 +283,10 @@ namespace UnityEditor
 									Vector2 snapDistance = Vector2.one * HandleUtility.GetHandleSize(vector) * 0.05f;
 									snapDistance.x /= (rotation2 * parent2.TransformVector(Vector3.right)).x;
 									snapDistance.y /= (rotation2 * parent2.TransformVector(Vector3.up)).y;
-									Vector3 vector2 = parent2.InverseTransformPoint(vector) - component3.rect.min;
-									Vector3 vector3 = RectTransformSnapping.SnapToGuides(vector2, snapDistance) + Vector3.forward * vector2.z;
-									ManipulationToolUtility.DisableMinDragDifferenceBasedOnSnapping(vector2, vector3);
-									vector = parent2.TransformPoint(vector3 + component3.rect.min);
+									Vector3 vector4 = parent2.InverseTransformPoint(vector) - component3.rect.min;
+									Vector3 vector5 = RectTransformSnapping.SnapToGuides(vector4, snapDistance) + Vector3.forward * vector4.z;
+									ManipulationToolUtility.DisableMinDragDifferenceBasedOnSnapping(vector4, vector5);
+									vector = parent2.TransformPoint(vector5 + component3.rect.min);
 								}
 								bool alt = Event.current.alt;
 								bool actionKey = EditorGUI.actionKey;
@@ -275,15 +299,15 @@ namespace UnityEditor
 								{
 									vector = Vector3.Project(vector - scalePivot, rectPointInWorld - scalePivot) + scalePivot;
 								}
-								Vector3 vector4 = rotation2 * (rectPointInWorld - scalePivot);
-								Vector3 vector5 = rotation2 * (vector - scalePivot);
+								Vector3 vector6 = rotation2 * (rectPointInWorld - scalePivot);
+								Vector3 vector7 = rotation2 * (vector - scalePivot);
 								if (i != 1)
 								{
-									result.x = vector5.x / vector4.x;
+									result.x = vector7.x / vector6.x;
 								}
 								if (j != 1)
 								{
-									result.y = vector5.y / vector4.y;
+									result.y = vector7.y / vector6.y;
 								}
 								if (flag2)
 								{
@@ -490,7 +514,7 @@ namespace UnityEditor
 			case EventType.Repaint:
 				if (Tools.vertexDragging)
 				{
-					RectHandles.RectScalingCap(controlID, pivot, rotation, 1f);
+					RectHandles.RectScalingHandleCap(controlID, pivot, rotation, 1f, EventType.Repaint);
 				}
 				else
 				{
@@ -515,12 +539,17 @@ namespace UnityEditor
 			Plane plane = new Plane(normal, center);
 			Ray ray = HandleUtility.GUIPointToWorldRay(mousePos);
 			float distance;
+			float result;
 			if (plane.Raycast(ray, out distance))
 			{
 				Vector3 point = ray.GetPoint(distance);
-				return Mathf.Max(0f, (point - center).magnitude - radius);
+				result = Mathf.Max(0f, (point - center).magnitude - radius);
 			}
-			return float.PositiveInfinity;
+			else
+			{
+				result = float.PositiveInfinity;
+			}
+			return result;
 		}
 
 		private static float SceneViewDistanceToRectangle(Vector3[] worldPoints, Vector2 mousePos)
@@ -536,21 +565,29 @@ namespace UnityEditor
 		private static float DistancePointToLineSegment(Vector2 point, Vector2 a, Vector2 b)
 		{
 			float sqrMagnitude = (b - a).sqrMagnitude;
+			float magnitude;
 			if (sqrMagnitude == 0f)
 			{
-				return (point - a).magnitude;
+				magnitude = (point - a).magnitude;
 			}
-			float num = Vector2.Dot(point - a, b - a) / sqrMagnitude;
-			if (num < 0f)
+			else
 			{
-				return (point - a).magnitude;
+				float num = Vector2.Dot(point - a, b - a) / sqrMagnitude;
+				if (num < 0f)
+				{
+					magnitude = (point - a).magnitude;
+				}
+				else if (num > 1f)
+				{
+					magnitude = (point - b).magnitude;
+				}
+				else
+				{
+					Vector2 b2 = a + num * (b - a);
+					magnitude = (point - b2).magnitude;
+				}
 			}
-			if (num > 1f)
-			{
-				return (point - b).magnitude;
-			}
-			Vector2 b2 = a + num * (b - a);
-			return (point - b2).magnitude;
+			return magnitude;
 		}
 
 		private static float DistanceToRectangle(Vector2[] screenPoints, Vector2 mousePos)
@@ -561,12 +598,16 @@ namespace UnityEditor
 			{
 				Vector3 vector = screenPoints[i % 4];
 				Vector3 vector2 = screenPoints[num % 4];
-				if (vector.y > mousePos.y != vector2.y > mousePos.y && mousePos.x < (vector2.x - vector.x) * (mousePos.y - vector.y) / (vector2.y - vector.y) + vector.x)
+				if (vector.y > mousePos.y != vector2.y > mousePos.y)
 				{
-					flag = !flag;
+					if (mousePos.x < (vector2.x - vector.x) * (mousePos.y - vector.y) / (vector2.y - vector.y) + vector.x)
+					{
+						flag = !flag;
+					}
 				}
 				num = i;
 			}
+			float result;
 			if (!flag)
 			{
 				float num2 = -1f;
@@ -580,9 +621,13 @@ namespace UnityEditor
 						num2 = num3;
 					}
 				}
-				return num2;
+				result = num2;
 			}
-			return 0f;
+			else
+			{
+				result = 0f;
+			}
+			return result;
 		}
 
 		private static Quaternion RotationHandlesGUI(Rect rect, Vector3 pivot, Quaternion rotation)
@@ -624,7 +669,17 @@ namespace UnityEditor
 			{
 				EventType eventType = typeForControl;
 				EditorGUI.BeginChangeCheck();
-				Vector3 a = Handles.Slider2D(controlID, pivot, rotation * Vector3.forward, rotation * Vector3.right, rotation * Vector3.up, HandleUtility.GetHandleSize(pivot) * 0.1f, new Handles.DrawCapFunction(RectHandles.PivotCap), Vector2.zero);
+				int arg_94_0 = controlID;
+				Vector3 arg_94_1 = pivot;
+				Vector3 arg_94_2 = rotation * Vector3.forward;
+				Vector3 arg_94_3 = rotation * Vector3.right;
+				Vector3 arg_94_4 = rotation * Vector3.up;
+				float arg_94_5 = HandleUtility.GetHandleSize(pivot) * 0.1f;
+				if (RectTool.<>f__mg$cache1 == null)
+				{
+					RectTool.<>f__mg$cache1 = new Handles.CapFunction(RectHandles.PivotHandleCap);
+				}
+				Vector3 a = Handles.Slider2D(arg_94_0, arg_94_1, arg_94_2, arg_94_3, arg_94_4, arg_94_5, RectTool.<>f__mg$cache1, Vector2.zero);
 				if (eventType == EventType.MouseDown && GUIUtility.hotControl == controlID)
 				{
 					RectTransformSnapping.CalculatePivotSnapValues(rect, pivot, rotation);

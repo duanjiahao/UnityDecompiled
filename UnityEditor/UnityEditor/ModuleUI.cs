@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ namespace UnityEditor
 			VisibleAndFolded,
 			VisibleAndFoldedOut
 		}
+
+		public delegate bool CurveFieldMouseDownCallback(int button, Rect drawRect, Rect curveRanges);
 
 		private class CurveStateCallbackData
 		{
@@ -53,7 +56,25 @@ namespace UnityEditor
 			}
 		}
 
-		public delegate bool CurveFieldMouseDownCallback(int button, Rect drawRect, Rect curveRanges);
+		public ParticleSystemUI m_ParticleSystemUI;
+
+		private string m_DisplayName;
+
+		protected string m_ToolTip = "";
+
+		private SerializedProperty m_Enabled;
+
+		private ModuleUI.VisibilityState m_VisibilityState;
+
+		public List<SerializedProperty> m_ModuleCurves = new List<SerializedProperty>();
+
+		private List<SerializedProperty> m_CurvesRemovedWhenFolded = new List<SerializedProperty>();
+
+		protected static readonly bool kUseSignedRange = true;
+
+		protected static readonly Rect kUnsignedRange = new Rect(0f, 0f, 1f, 1f);
+
+		protected static readonly Rect kSignedRange = new Rect(0f, -1f, 1f, 2f);
 
 		protected const int kSingleLineHeight = 13;
 
@@ -73,27 +94,7 @@ namespace UnityEditor
 
 		protected const string kFormatString = "g7";
 
-		public ParticleSystemUI m_ParticleSystemUI;
-
-		private string m_DisplayName;
-
-		protected string m_ToolTip = string.Empty;
-
-		private SerializedProperty m_Enabled;
-
-		private ModuleUI.VisibilityState m_VisibilityState;
-
-		public List<SerializedProperty> m_ModuleCurves = new List<SerializedProperty>();
-
-		private List<SerializedProperty> m_CurvesRemovedWhenFolded = new List<SerializedProperty>();
-
-		protected static readonly bool kUseSignedRange = true;
-
-		protected static readonly Rect kUnsignedRange = new Rect(0f, 0f, 1f, 1f);
-
-		protected static readonly Rect kSignedRange = new Rect(0f, -1f, 1f, 2f);
-
-		public static float k_CompactFixedModuleWidth = 195f;
+		public static float k_CompactFixedModuleWidth = 295f;
 
 		public static float k_SpaceBetweenModules = 5f;
 
@@ -101,6 +102,15 @@ namespace UnityEditor
 		{
 			margin = new RectOffset(0, 0, 2, 2)
 		};
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache1;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache2;
 
 		public bool visibleUI
 		{
@@ -305,16 +315,25 @@ namespace UnityEditor
 			GUI.Label(rect, guiContent, ParticleSystemStyles.Get().label);
 		}
 
-		protected static Rect GetControlRect(int height)
+		protected static Rect GetControlRect(int height, params GUILayoutOption[] layoutOptions)
 		{
-			return GUILayoutUtility.GetRect(0f, (float)height, ModuleUI.s_ControlRectStyle);
+			return GUILayoutUtility.GetRect(0f, (float)height, ModuleUI.s_ControlRectStyle, layoutOptions);
 		}
 
 		private static Rect PrefixLabel(Rect totalPosition, GUIContent label)
 		{
-			Rect labelPosition = new Rect(totalPosition.x + EditorGUI.indent, totalPosition.y, EditorGUIUtility.labelWidth - EditorGUI.indent, 13f);
-			Rect result = new Rect(totalPosition.x + EditorGUIUtility.labelWidth, totalPosition.y, totalPosition.width - EditorGUIUtility.labelWidth, totalPosition.height);
-			EditorGUI.HandlePrefixLabel(totalPosition, labelPosition, label, 0, ParticleSystemStyles.Get().label);
+			Rect result;
+			if (!EditorGUI.LabelHasContent(label))
+			{
+				result = EditorGUI.IndentedRect(totalPosition);
+			}
+			else
+			{
+				Rect labelPosition = new Rect(totalPosition.x + EditorGUI.indent, totalPosition.y, EditorGUIUtility.labelWidth - EditorGUI.indent, 13f);
+				Rect rect = new Rect(totalPosition.x + EditorGUIUtility.labelWidth, totalPosition.y, totalPosition.width - EditorGUIUtility.labelWidth, totalPosition.height);
+				EditorGUI.HandlePrefixLabel(totalPosition, labelPosition, label, 0, ParticleSystemStyles.Get().label);
+				result = rect;
+			}
 			return result;
 		}
 
@@ -372,9 +391,9 @@ namespace UnityEditor
 			return num;
 		}
 
-		public static Vector3 GUIVector3Field(GUIContent guiContent, SerializedProperty vecProp)
+		public static Vector3 GUIVector3Field(GUIContent guiContent, SerializedProperty vecProp, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			GUIContent[] array = new GUIContent[]
 			{
@@ -395,26 +414,26 @@ namespace UnityEditor
 			return vector3Value;
 		}
 
-		public static float GUIFloat(string label, SerializedProperty floatProp)
+		public static float GUIFloat(string label, SerializedProperty floatProp, params GUILayoutOption[] layoutOptions)
 		{
-			return ModuleUI.GUIFloat(GUIContent.Temp(label), floatProp);
+			return ModuleUI.GUIFloat(GUIContent.Temp(label), floatProp, layoutOptions);
 		}
 
-		public static float GUIFloat(GUIContent guiContent, SerializedProperty floatProp)
+		public static float GUIFloat(GUIContent guiContent, SerializedProperty floatProp, params GUILayoutOption[] layoutOptions)
 		{
-			return ModuleUI.GUIFloat(guiContent, floatProp, "g7");
+			return ModuleUI.GUIFloat(guiContent, floatProp, "g7", layoutOptions);
 		}
 
-		public static float GUIFloat(GUIContent guiContent, SerializedProperty floatProp, string formatString)
+		public static float GUIFloat(GUIContent guiContent, SerializedProperty floatProp, string formatString, params GUILayoutOption[] layoutOptions)
 		{
-			Rect controlRect = ModuleUI.GetControlRect(13);
+			Rect controlRect = ModuleUI.GetControlRect(13, layoutOptions);
 			ModuleUI.PrefixLabel(controlRect, guiContent);
 			return ModuleUI.FloatDraggable(controlRect, floatProp, 1f, EditorGUIUtility.labelWidth, formatString);
 		}
 
-		public static float GUIFloat(GUIContent guiContent, float floatValue, string formatString)
+		public static float GUIFloat(GUIContent guiContent, float floatValue, string formatString, params GUILayoutOption[] layoutOptions)
 		{
-			Rect controlRect = ModuleUI.GetControlRect(13);
+			Rect controlRect = ModuleUI.GetControlRect(13, layoutOptions);
 			ModuleUI.PrefixLabel(controlRect, guiContent);
 			return ModuleUI.FloatDraggable(controlRect, floatValue, 1f, EditorGUIUtility.labelWidth, formatString);
 		}
@@ -436,41 +455,41 @@ namespace UnityEditor
 			return flag;
 		}
 
-		public static bool GUIToggle(string label, SerializedProperty boolProp)
+		public static bool GUIToggle(string label, SerializedProperty boolProp, params GUILayoutOption[] layoutOptions)
 		{
-			return ModuleUI.GUIToggle(GUIContent.Temp(label), boolProp);
+			return ModuleUI.GUIToggle(GUIContent.Temp(label), boolProp, layoutOptions);
 		}
 
-		public static bool GUIToggle(GUIContent guiContent, SerializedProperty boolProp)
+		public static bool GUIToggle(GUIContent guiContent, SerializedProperty boolProp, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			return ModuleUI.Toggle(rect, boolProp);
 		}
 
-		public static void GUILayerMask(GUIContent guiContent, SerializedProperty boolProp)
+		public static void GUILayerMask(GUIContent guiContent, SerializedProperty boolProp, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			EditorGUI.LayerMaskField(rect, boolProp, GUIContent.none, ParticleSystemStyles.Get().popup);
 		}
 
-		public static bool GUIToggle(GUIContent guiContent, bool boolValue)
+		public static bool GUIToggle(GUIContent guiContent, bool boolValue, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			boolValue = EditorGUI.Toggle(rect, boolValue, ParticleSystemStyles.Get().toggle);
 			return boolValue;
 		}
 
-		public static void GUIToggleWithFloatField(string name, SerializedProperty boolProp, SerializedProperty floatProp, bool invertToggle)
+		public static void GUIToggleWithFloatField(string name, SerializedProperty boolProp, SerializedProperty floatProp, bool invertToggle, params GUILayoutOption[] layoutOptions)
 		{
-			ModuleUI.GUIToggleWithFloatField(EditorGUIUtility.TempContent(name), boolProp, floatProp, invertToggle);
+			ModuleUI.GUIToggleWithFloatField(EditorGUIUtility.TempContent(name), boolProp, floatProp, invertToggle, layoutOptions);
 		}
 
-		public static void GUIToggleWithFloatField(GUIContent guiContent, SerializedProperty boolProp, SerializedProperty floatProp, bool invertToggle)
+		public static void GUIToggleWithFloatField(GUIContent guiContent, SerializedProperty boolProp, SerializedProperty floatProp, bool invertToggle, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = GUILayoutUtility.GetRect(0f, 13f);
+			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			Rect rect2 = rect;
 			rect2.xMax = rect2.x + 9f;
@@ -484,15 +503,15 @@ namespace UnityEditor
 			}
 		}
 
-		public static void GUIToggleWithIntField(string name, SerializedProperty boolProp, SerializedProperty floatProp, bool invertToggle)
+		public static void GUIToggleWithIntField(string name, SerializedProperty boolProp, SerializedProperty floatProp, bool invertToggle, params GUILayoutOption[] layoutOptions)
 		{
-			ModuleUI.GUIToggleWithIntField(EditorGUIUtility.TempContent(name), boolProp, floatProp, invertToggle);
+			ModuleUI.GUIToggleWithIntField(EditorGUIUtility.TempContent(name), boolProp, floatProp, invertToggle, layoutOptions);
 		}
 
-		public static void GUIToggleWithIntField(GUIContent guiContent, SerializedProperty boolProp, SerializedProperty intProp, bool invertToggle)
+		public static void GUIToggleWithIntField(GUIContent guiContent, SerializedProperty boolProp, SerializedProperty intProp, bool invertToggle, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
-			rect = ModuleUI.PrefixLabel(rect, guiContent);
+			Rect controlRect = ModuleUI.GetControlRect(13, layoutOptions);
+			Rect rect = ModuleUI.PrefixLabel(controlRect, guiContent);
 			Rect rect2 = rect;
 			rect2.xMax = rect2.x + 9f;
 			bool flag = ModuleUI.Toggle(rect2, boolProp);
@@ -500,21 +519,21 @@ namespace UnityEditor
 			if (flag)
 			{
 				float dragWidth = 25f;
-				Rect rect3 = new Rect(rect.x + EditorGUIUtility.labelWidth + 9f, rect.y, rect.width - 9f, rect.height);
+				Rect rect3 = new Rect(rect2.xMax, controlRect.y, controlRect.width - rect2.xMax + 9f, controlRect.height);
 				intProp.intValue = ModuleUI.IntDraggable(rect3, null, intProp.intValue, dragWidth);
 			}
 		}
 
-		public static void GUIObject(GUIContent label, SerializedProperty objectProp)
+		public static void GUIObject(GUIContent label, SerializedProperty objectProp, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			EditorGUI.ObjectField(rect, objectProp, null, GUIContent.none, ParticleSystemStyles.Get().objectField);
 		}
 
-		public static void GUIObjectFieldAndToggle(GUIContent label, SerializedProperty objectProp, SerializedProperty boolProp)
+		public static void GUIObjectFieldAndToggle(GUIContent label, SerializedProperty objectProp, SerializedProperty boolProp, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			rect.xMax -= 19f;
 			EditorGUI.ObjectField(rect, objectProp, GUIContent.none);
@@ -528,6 +547,7 @@ namespace UnityEditor
 
 		internal UnityEngine.Object ParticleSystemValidator(UnityEngine.Object[] references, Type objType, SerializedProperty property)
 		{
+			UnityEngine.Object result;
 			for (int i = 0; i < references.Length; i++)
 			{
 				UnityEngine.Object @object = references[i];
@@ -539,19 +559,21 @@ namespace UnityEditor
 						ParticleSystem component = gameObject.GetComponent<ParticleSystem>();
 						if (component)
 						{
-							return component;
+							result = component;
+							return result;
 						}
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
-		public int GUIListOfFloatObjectToggleFields(GUIContent label, SerializedProperty[] objectProps, EditorGUI.ObjectFieldValidator validator, GUIContent buttonTooltip, bool allowCreation)
+		public int GUIListOfFloatObjectToggleFields(GUIContent label, SerializedProperty[] objectProps, EditorGUI.ObjectFieldValidator validator, GUIContent buttonTooltip, bool allowCreation, params GUILayoutOption[] layoutOptions)
 		{
 			int result = -1;
 			int num = objectProps.Length;
-			Rect rect = GUILayoutUtility.GetRect(0f, (float)(15 * num));
+			Rect rect = GUILayoutUtility.GetRect(0f, (float)(15 * num), layoutOptions);
 			rect.height = 13f;
 			float num2 = 10f;
 			float num3 = 35f;
@@ -562,7 +584,7 @@ namespace UnityEditor
 			{
 				SerializedProperty serializedProperty = objectProps[i];
 				Rect rect2 = new Rect(rect.x + num2 + num3 + num4, rect.y, width, rect.height);
-				int controlID = GUIUtility.GetControlID(1235498, EditorGUIUtility.native, rect2);
+				int controlID = GUIUtility.GetControlID(1235498, FocusType.Keyboard, rect2);
 				EditorGUI.DoObjectField(rect2, rect2, controlID, null, null, serializedProperty, validator, true, ParticleSystemStyles.Get().objectField);
 				if (serializedProperty.objectReferenceValue == null)
 				{
@@ -577,20 +599,20 @@ namespace UnityEditor
 			return result;
 		}
 
-		public static int GUIIntDraggable(GUIContent label, SerializedProperty intProp)
+		public static int GUIIntDraggable(GUIContent label, SerializedProperty intProp, params GUILayoutOption[] layoutOptions)
 		{
-			return ModuleUI.GUIIntDraggable(label, intProp.intValue);
+			return ModuleUI.GUIIntDraggable(label, intProp.intValue, layoutOptions);
 		}
 
-		public static int GUIIntDraggable(GUIContent label, int intValue)
+		public static int GUIIntDraggable(GUIContent label, int intValue, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = GUILayoutUtility.GetRect(0f, 13f);
+			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
 			return ModuleUI.IntDraggable(rect, label, intValue, EditorGUIUtility.labelWidth);
 		}
 
-		public static void GUIIntDraggableX2(GUIContent mainLabel, GUIContent label1, SerializedProperty intProp1, GUIContent label2, SerializedProperty intProp2)
+		public static void GUIIntDraggableX2(GUIContent mainLabel, GUIContent label1, SerializedProperty intProp1, GUIContent label2, SerializedProperty intProp2, params GUILayoutOption[] layoutOptions)
 		{
-			Rect totalPosition = ModuleUI.GetControlRect(13);
+			Rect totalPosition = ModuleUI.GetControlRect(13, layoutOptions);
 			totalPosition = ModuleUI.PrefixLabel(totalPosition, mainLabel);
 			float num = (totalPosition.width - 4f) * 0.5f;
 			Rect rect = new Rect(totalPosition.x, totalPosition.y, num, totalPosition.height);
@@ -605,16 +627,17 @@ namespace UnityEditor
 			return intProp.intValue;
 		}
 
-		public static int GUIInt(GUIContent guiContent, int intValue)
+		public static int GUIInt(GUIContent guiContent, int intValue, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = GUILayoutUtility.GetRect(0f, 13f);
+			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
 			ModuleUI.PrefixLabel(rect, guiContent);
 			return ModuleUI.IntDraggable(rect, null, intValue, EditorGUIUtility.labelWidth);
 		}
 
-		public static void GUIInt(GUIContent guiContent, SerializedProperty intProp)
+		public static int GUIInt(GUIContent guiContent, SerializedProperty intProp, params GUILayoutOption[] layoutOptions)
 		{
-			intProp.intValue = ModuleUI.GUIInt(guiContent, intProp.intValue);
+			intProp.intValue = ModuleUI.GUIInt(guiContent, intProp.intValue, layoutOptions);
+			return intProp.intValue;
 		}
 
 		public static int IntDraggable(Rect rect, GUIContent label, int value, float dragWidth)
@@ -636,9 +659,9 @@ namespace UnityEditor
 			return (int)EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position, rect3, controlID, (float)value, EditorGUI.kIntFieldFormatString, ParticleSystemStyles.Get().numberField, true, dragSensitivity);
 		}
 
-		public static void GUIMinMaxRange(GUIContent label, SerializedProperty vec2Prop)
+		public static void GUIMinMaxRange(GUIContent label, SerializedProperty vec2Prop, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			float num = (rect.width - 20f) * 0.5f;
@@ -655,7 +678,7 @@ namespace UnityEditor
 
 		public static void GUISlider(SerializedProperty floatProp, float a, float b, float remap)
 		{
-			ModuleUI.GUISlider(string.Empty, floatProp, a, b, remap);
+			ModuleUI.GUISlider("", floatProp, a, b, remap);
 		}
 
 		public static void GUISlider(string name, SerializedProperty floatProp, float a, float b, float remap)
@@ -666,9 +689,9 @@ namespace UnityEditor
 			}) / remap;
 		}
 
-		public static void GUIMinMaxSlider(GUIContent label, SerializedProperty vec2Prop, float a, float b)
+		public static void GUIMinMaxSlider(GUIContent label, SerializedProperty vec2Prop, float a, float b, params GUILayoutOption[] layoutOptions)
 		{
-			Rect controlRect = ModuleUI.GetControlRect(26);
+			Rect controlRect = ModuleUI.GetControlRect(26, layoutOptions);
 			Rect rect = controlRect;
 			rect.height = 13f;
 			rect.y += 3f;
@@ -679,9 +702,9 @@ namespace UnityEditor
 			vec2Prop.vector2Value = vector2Value;
 		}
 
-		public static bool GUIBoolAsPopup(GUIContent label, SerializedProperty boolProp, string[] options)
+		public static bool GUIBoolAsPopup(GUIContent label, SerializedProperty boolProp, string[] options, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			int num = (!boolProp.boolValue) ? 0 : 1;
 			int num2 = EditorGUI.Popup(rect, num, options, ParticleSystemStyles.Get().popup);
@@ -692,29 +715,36 @@ namespace UnityEditor
 			return num2 > 0;
 		}
 
-		public static Enum GUIEnumMask(GUIContent label, Enum enumValue)
+		public static Enum GUIEnumMask(GUIContent label, Enum enumValue, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			return EditorGUI.EnumMaskField(rect, enumValue, ParticleSystemStyles.Get().popup);
 		}
 
-		public static int GUIPopup(string name, SerializedProperty intProp, string[] options)
+		public static int GUIMask(GUIContent label, int intValue, string[] options, params GUILayoutOption[] layoutOptions)
 		{
-			return ModuleUI.GUIPopup(GUIContent.Temp(name), intProp, options);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
+			rect = ModuleUI.PrefixLabel(rect, label);
+			return EditorGUI.MaskField(rect, label, intValue, options, ParticleSystemStyles.Get().popup);
 		}
 
-		public static int GUIPopup(GUIContent label, SerializedProperty intProp, string[] options)
+		public static int GUIPopup(string name, SerializedProperty intProp, string[] options, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			return ModuleUI.GUIPopup(GUIContent.Temp(name), intProp, options, layoutOptions);
+		}
+
+		public static int GUIPopup(GUIContent label, SerializedProperty intProp, string[] options, params GUILayoutOption[] layoutOptions)
+		{
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			intProp.intValue = EditorGUI.Popup(rect, intProp.intValue, options, ParticleSystemStyles.Get().popup);
 			return intProp.intValue;
 		}
 
-		public static int GUIPopup(GUIContent label, int intValue, string[] options)
+		public static int GUIPopup(GUIContent label, int intValue, string[] options, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			return EditorGUI.Popup(rect, intValue, options, ParticleSystemStyles.Get().popup);
 		}
@@ -726,49 +756,52 @@ namespace UnityEditor
 
 		private static void GUICurveField(Rect position, SerializedProperty maxCurve, SerializedProperty minCurve, Color color, Rect ranges, ModuleUI.CurveFieldMouseDownCallback mouseDownCallback)
 		{
-			int controlID = GUIUtility.GetControlID(1321321231, EditorGUIUtility.native, position);
+			int controlID = GUIUtility.GetControlID(1321321231, FocusType.Keyboard, position);
 			Event current = Event.current;
 			EventType typeForControl = current.GetTypeForControl(controlID);
-			if (typeForControl != EventType.MouseDown)
+			if (typeForControl != EventType.Repaint)
 			{
-				if (typeForControl != EventType.Repaint)
+				if (typeForControl != EventType.ValidateCommand)
 				{
-					if (typeForControl == EventType.ValidateCommand)
+					if (typeForControl == EventType.MouseDown)
 					{
-						if (current.commandName == "UndoRedoPerformed")
+						if (position.Contains(current.mousePosition))
 						{
-							AnimationCurvePreviewCache.ClearCache();
+							if (mouseDownCallback != null && mouseDownCallback(current.button, position, ranges))
+							{
+								current.Use();
+							}
 						}
 					}
 				}
-				else
+				else if (current.commandName == "UndoRedoPerformed")
 				{
-					Rect position2 = position;
-					if (minCurve == null)
-					{
-						EditorGUIUtility.DrawCurveSwatch(position2, null, maxCurve, color, EditorGUI.kCurveBGColor, ranges);
-					}
-					else
-					{
-						EditorGUIUtility.DrawRegionSwatch(position2, maxCurve, minCurve, color, EditorGUI.kCurveBGColor, ranges);
-					}
-					EditorStyles.colorPickerBox.Draw(position2, GUIContent.none, controlID, false);
+					AnimationCurvePreviewCache.ClearCache();
 				}
 			}
-			else if (position.Contains(current.mousePosition) && mouseDownCallback != null && mouseDownCallback(current.button, position, ranges))
+			else
 			{
-				current.Use();
+				Rect position2 = position;
+				if (minCurve == null)
+				{
+					EditorGUIUtility.DrawCurveSwatch(position2, null, maxCurve, color, EditorGUI.kCurveBGColor, ranges);
+				}
+				else
+				{
+					EditorGUIUtility.DrawRegionSwatch(position2, maxCurve, minCurve, color, EditorGUI.kCurveBGColor, ranges);
+				}
+				EditorStyles.colorPickerBox.Draw(position2, GUIContent.none, controlID, false);
 			}
 		}
 
-		public static void GUIMinMaxCurve(string label, SerializedMinMaxCurve mmCurve)
+		public static void GUIMinMaxCurve(string label, SerializedMinMaxCurve mmCurve, params GUILayoutOption[] layoutOptions)
 		{
-			ModuleUI.GUIMinMaxCurve(GUIContent.Temp(label), mmCurve);
+			ModuleUI.GUIMinMaxCurve(GUIContent.Temp(label), mmCurve, layoutOptions);
 		}
 
-		public static void GUIMinMaxCurve(GUIContent label, SerializedMinMaxCurve mmCurve)
+		public static void GUIMinMaxCurve(GUIContent label, SerializedMinMaxCurve mmCurve, params GUILayoutOption[] layoutOptions)
 		{
-			Rect rect = ModuleUI.GetControlRect(13);
+			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			Rect popupRect = ModuleUI.GetPopupRect(rect);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			Rect rect2 = ModuleUI.PrefixLabel(rect, label);
@@ -812,11 +845,11 @@ namespace UnityEditor
 			ModuleUI.GUIMMCurveStateList(popupRect, mmCurve);
 		}
 
-		public void GUIMinMaxGradient(GUIContent label, SerializedMinMaxGradient minMaxGradient)
+		public void GUIMinMaxGradient(GUIContent label, SerializedMinMaxGradient minMaxGradient, params GUILayoutOption[] layoutOptions)
 		{
 			MinMaxGradientState state = minMaxGradient.state;
-			bool flag = state >= MinMaxGradientState.k_RandomBetweenTwoColors;
-			Rect rect = GUILayoutUtility.GetRect(0f, (float)((!flag) ? 13 : 26));
+			bool flag = state == MinMaxGradientState.k_RandomBetweenTwoColors || state == MinMaxGradientState.k_RandomBetweenTwoGradients;
+			Rect rect = GUILayoutUtility.GetRect(0f, (float)((!flag) ? 13 : 26), layoutOptions);
 			Rect popupRect = ModuleUI.GetPopupRect(rect);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			Rect rect2 = ModuleUI.PrefixLabel(rect, label);
@@ -827,6 +860,7 @@ namespace UnityEditor
 				ModuleUI.GUIColor(rect2, minMaxGradient.m_MaxColor);
 				break;
 			case MinMaxGradientState.k_Gradient:
+			case MinMaxGradientState.k_RandomColor:
 				EditorGUI.GradientField(rect2, minMaxGradient.m_MaxGradient);
 				break;
 			case MinMaxGradientState.k_RandomBetweenTwoColors:
@@ -861,9 +895,9 @@ namespace UnityEditor
 			colorProp.colorValue = EditorGUI.ColorField(rect, colorProp.colorValue, false, true);
 		}
 
-		public void GUIMinMaxColor(GUIContent label, SerializedMinMaxColor minMaxColor)
+		public void GUIMinMaxColor(GUIContent label, SerializedMinMaxColor minMaxColor, params GUILayoutOption[] layoutOptions)
 		{
-			Rect totalPosition = ModuleUI.GetControlRect(13);
+			Rect totalPosition = ModuleUI.GetControlRect(13, layoutOptions);
 			totalPosition = ModuleUI.PrefixLabel(totalPosition, label);
 			float num = totalPosition.width - 13f - 5f;
 			if (!minMaxColor.minMax.boolValue)
@@ -882,7 +916,7 @@ namespace UnityEditor
 			ModuleUI.GUIMMColorPopUp(rect3, minMaxColor.minMax);
 		}
 
-		public void GUITripleMinMaxCurve(GUIContent label, GUIContent x, SerializedMinMaxCurve xCurve, GUIContent y, SerializedMinMaxCurve yCurve, GUIContent z, SerializedMinMaxCurve zCurve, SerializedProperty randomizePerFrame)
+		public void GUITripleMinMaxCurve(GUIContent label, GUIContent x, SerializedMinMaxCurve xCurve, GUIContent y, SerializedMinMaxCurve yCurve, GUIContent z, SerializedMinMaxCurve zCurve, SerializedProperty randomizePerFrame, params GUILayoutOption[] layoutOptions)
 		{
 			MinMaxCurveState state = xCurve.state;
 			bool flag = label != GUIContent.none;
@@ -891,7 +925,7 @@ namespace UnityEditor
 			{
 				num++;
 			}
-			Rect rect = ModuleUI.GetControlRect(13 * num);
+			Rect rect = ModuleUI.GetControlRect(13 * num, layoutOptions);
 			Rect popupRect = ModuleUI.GetPopupRect(rect);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			Rect rect2 = rect;
@@ -996,41 +1030,47 @@ namespace UnityEditor
 		{
 			if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
 			{
-				if (minMaxCurves.Length == 0)
+				if (minMaxCurves.Length != 0)
 				{
-					return;
-				}
-				GUIContent[] array = new GUIContent[]
-				{
-					new GUIContent("Constant"),
-					new GUIContent("Curve"),
-					new GUIContent("Random Between Two Constants"),
-					new GUIContent("Random Between Two Curves")
-				};
-				MinMaxCurveState[] array2 = new MinMaxCurveState[]
-				{
-					MinMaxCurveState.k_Scalar,
-					MinMaxCurveState.k_Curve,
-					MinMaxCurveState.k_TwoScalars,
-					MinMaxCurveState.k_TwoCurves
-				};
-				bool[] array3 = new bool[]
-				{
-					minMaxCurves[0].m_AllowConstant,
-					minMaxCurves[0].m_AllowCurves,
-					minMaxCurves[0].m_AllowRandom,
-					minMaxCurves[0].m_AllowRandom && minMaxCurves[0].m_AllowCurves
-				};
-				GenericMenu genericMenu = new GenericMenu();
-				for (int i = 0; i < array.Length; i++)
-				{
-					if (array3[i])
+					GUIContent[] array = new GUIContent[]
 					{
-						genericMenu.AddItem(array[i], minMaxCurves[0].state == array2[i], new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxCurveStateCallback), new ModuleUI.CurveStateCallbackData(array2[i], minMaxCurves));
+						new GUIContent("Constant"),
+						new GUIContent("Curve"),
+						new GUIContent("Random Between Two Constants"),
+						new GUIContent("Random Between Two Curves")
+					};
+					MinMaxCurveState[] array2 = new MinMaxCurveState[]
+					{
+						MinMaxCurveState.k_Scalar,
+						MinMaxCurveState.k_Curve,
+						MinMaxCurveState.k_TwoScalars,
+						MinMaxCurveState.k_TwoCurves
+					};
+					bool[] array3 = new bool[]
+					{
+						minMaxCurves[0].m_AllowConstant,
+						minMaxCurves[0].m_AllowCurves,
+						minMaxCurves[0].m_AllowRandom,
+						minMaxCurves[0].m_AllowRandom && minMaxCurves[0].m_AllowCurves
+					};
+					GenericMenu genericMenu = new GenericMenu();
+					for (int i = 0; i < array.Length; i++)
+					{
+						if (array3[i])
+						{
+							GenericMenu arg_10C_0 = genericMenu;
+							GUIContent arg_10C_1 = array[i];
+							bool arg_10C_2 = minMaxCurves[0].state == array2[i];
+							if (ModuleUI.<>f__mg$cache0 == null)
+							{
+								ModuleUI.<>f__mg$cache0 = new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxCurveStateCallback);
+							}
+							arg_10C_0.AddItem(arg_10C_1, arg_10C_2, ModuleUI.<>f__mg$cache0, new ModuleUI.CurveStateCallbackData(array2[i], minMaxCurves));
+						}
 					}
+					genericMenu.DropDown(rect);
+					Event.current.Use();
 				}
-				genericMenu.DropDown(rect);
-				Event.current.Use();
 			}
 		}
 
@@ -1049,28 +1089,38 @@ namespace UnityEditor
 					new GUIContent("Color"),
 					new GUIContent("Gradient"),
 					new GUIContent("Random Between Two Colors"),
-					new GUIContent("Random Between Two Gradients")
+					new GUIContent("Random Between Two Gradients"),
+					new GUIContent("Random Color")
 				};
 				MinMaxGradientState[] array2 = new MinMaxGradientState[]
 				{
 					MinMaxGradientState.k_Color,
 					MinMaxGradientState.k_Gradient,
 					MinMaxGradientState.k_RandomBetweenTwoColors,
-					MinMaxGradientState.k_RandomBetweenTwoGradients
+					MinMaxGradientState.k_RandomBetweenTwoGradients,
+					MinMaxGradientState.k_RandomColor
 				};
 				bool[] array3 = new bool[]
 				{
 					gradientProp.m_AllowColor,
 					gradientProp.m_AllowGradient,
 					gradientProp.m_AllowRandomBetweenTwoColors,
-					gradientProp.m_AllowRandomBetweenTwoGradients
+					gradientProp.m_AllowRandomBetweenTwoGradients,
+					gradientProp.m_AllowRandomColor
 				};
 				GenericMenu genericMenu = new GenericMenu();
 				for (int i = 0; i < array.Length; i++)
 				{
 					if (array3[i])
 					{
-						genericMenu.AddItem(array[i], gradientProp.state == array2[i], new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxGradientStateCallback), new ModuleUI.GradientCallbackData(array2[i], gradientProp));
+						GenericMenu arg_FB_0 = genericMenu;
+						GUIContent arg_FB_1 = array[i];
+						bool arg_FB_2 = gradientProp.state == array2[i];
+						if (ModuleUI.<>f__mg$cache1 == null)
+						{
+							ModuleUI.<>f__mg$cache1 = new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxGradientStateCallback);
+						}
+						arg_FB_0.AddItem(arg_FB_1, arg_FB_2, ModuleUI.<>f__mg$cache1, new ModuleUI.GradientCallbackData(array2[i], gradientProp));
 					}
 				}
 				genericMenu.ShowAsContext();
@@ -1101,7 +1151,14 @@ namespace UnityEditor
 				};
 				for (int i = 0; i < array.Length; i++)
 				{
-					genericMenu.AddItem(array[i], boolProp.boolValue == array2[i], new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxColorStateCallback), new ModuleUI.ColorCallbackData(array2[i], boolProp));
+					GenericMenu arg_8C_0 = genericMenu;
+					GUIContent arg_8C_1 = array[i];
+					bool arg_8C_2 = boolProp.boolValue == array2[i];
+					if (ModuleUI.<>f__mg$cache2 == null)
+					{
+						ModuleUI.<>f__mg$cache2 = new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxColorStateCallback);
+					}
+					arg_8C_0.AddItem(arg_8C_1, arg_8C_2, ModuleUI.<>f__mg$cache2, new ModuleUI.ColorCallbackData(array2[i], boolProp));
 				}
 				genericMenu.ShowAsContext();
 				Event.current.Use();

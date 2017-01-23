@@ -1,17 +1,23 @@
 using Mono.Cecil;
+using Mono.Collections.Generic;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml;
+using UnityEditor.Analytics;
 using UnityEditor.BuildReporting;
+using UnityEditor.Utils;
 using UnityEditorInternal;
 
 namespace UnityEditor
 {
 	internal class CodeStrippingUtils
 	{
-		private static int s_GameManagerClassId = -1;
+		private static UnityType s_GameManagerTypeInfo = null;
 
-		public static readonly string[] NativeClassBlackList = new string[]
+		private static string[] s_blackListNativeClassNames = new string[]
 		{
 			"PreloadData",
 			"Material",
@@ -19,16 +25,21 @@ namespace UnityEditor
 			"Texture3D",
 			"Texture2DArray",
 			"RenderTexture",
-			"Mesh"
+			"Mesh",
+			"Sprite"
 		};
 
-		public static readonly Dictionary<string, string> NativeClassDependencyBlackList = new Dictionary<string, string>
+		private static UnityType[] s_blackListNativeClasses;
+
+		private static readonly Dictionary<string, string> s_blackListNativeClassesDependencyNames = new Dictionary<string, string>
 		{
 			{
 				"ParticleSystemRenderer",
 				"ParticleSystem"
 			}
 		};
+
+		private static Dictionary<UnityType, UnityType> s_blackListNativeClassesDependency;
 
 		private static readonly string[] s_UserAssemblies = new string[]
 		{
@@ -39,15 +50,44 @@ namespace UnityEditor
 			"UnityEngine.Analytics.dll"
 		};
 
-		private static int gameManagerClassId
+		private static UnityType GameManagerTypeInfo
 		{
 			get
 			{
-				if (CodeStrippingUtils.s_GameManagerClassId == -1)
+				if (CodeStrippingUtils.s_GameManagerTypeInfo == null)
 				{
-					CodeStrippingUtils.s_GameManagerClassId = BaseObjectTools.StringToClassID("GameManager");
+					CodeStrippingUtils.s_GameManagerTypeInfo = CodeStrippingUtils.FindTypeByNameChecked("GameManager", "initializing code stripping utils");
 				}
-				return CodeStrippingUtils.s_GameManagerClassId;
+				return CodeStrippingUtils.s_GameManagerTypeInfo;
+			}
+		}
+
+		public static UnityType[] BlackListNativeClasses
+		{
+			get
+			{
+				if (CodeStrippingUtils.s_blackListNativeClasses == null)
+				{
+					CodeStrippingUtils.s_blackListNativeClasses = (from typeName in CodeStrippingUtils.s_blackListNativeClassNames
+					select CodeStrippingUtils.FindTypeByNameChecked(typeName, "code stripping blacklist native class")).ToArray<UnityType>();
+				}
+				return CodeStrippingUtils.s_blackListNativeClasses;
+			}
+		}
+
+		public static Dictionary<UnityType, UnityType> BlackListNativeClassesDependency
+		{
+			get
+			{
+				if (CodeStrippingUtils.s_blackListNativeClassesDependency == null)
+				{
+					CodeStrippingUtils.s_blackListNativeClassesDependency = new Dictionary<UnityType, UnityType>();
+					foreach (KeyValuePair<string, string> current in CodeStrippingUtils.s_blackListNativeClassesDependencyNames)
+					{
+						CodeStrippingUtils.BlackListNativeClassesDependency.Add(CodeStrippingUtils.FindTypeByNameChecked(current.Key, "code stripping blacklist native class dependency key"), CodeStrippingUtils.FindTypeByNameChecked(current.Value, "code stripping blacklist native class dependency value"));
+					}
+				}
+				return CodeStrippingUtils.s_blackListNativeClassesDependency;
 			}
 		}
 
@@ -55,8 +95,27 @@ namespace UnityEditor
 		{
 			get
 			{
-				return CodeStrippingUtils.s_UserAssemblies;
+				string[] assembliesWithSuffix;
+				try
+				{
+					assembliesWithSuffix = CodeStrippingUtils.GetAssembliesWithSuffix();
+				}
+				catch
+				{
+					assembliesWithSuffix = CodeStrippingUtils.s_UserAssemblies;
+				}
+				return assembliesWithSuffix;
 			}
+		}
+
+		private static UnityType FindTypeByNameChecked(string name, string msg)
+		{
+			UnityType unityType = UnityType.FindTypeByName(name);
+			if (unityType == null)
+			{
+				throw new ArgumentException(string.Format("Could not map typename '{0}' to type info ({1})", name, msg ?? "no context"));
+			}
+			return unityType;
 		}
 
 		public static HashSet<string> GetModulesFromICalls(string icallsListFile)
@@ -76,77 +135,155 @@ namespace UnityEditor
 			return hashSet;
 		}
 
-		public static void GenerateDependencies(string strippedAssemblyDir, string icallsListFile, RuntimeClassRegistry rcr, out HashSet<string> nativeClasses, out HashSet<string> nativeModules, BuildReport buildReport)
+		public static void InjectCustomDependencies(StrippingInfo strippingInfo, HashSet<UnityType> nativeClasses)
 		{
-			StrippingInfo buildReportData = StrippingInfo.GetBuildReportData(buildReport);
+			UnityType item = UnityType.FindTypeByName("UnityAnalyticsManager");
+			if (nativeClasses.Contains(item))
+			{
+				if (PlayerSettings.submitAnalytics)
+				{
+					strippingInfo.RegisterDependency("UnityAnalyticsManager", "Required by HW Statistics (See Player Settings)");
+					strippingInfo.SetIcon("Required by HW Statistics (See Player Settings)", "class/PlayerSettings");
+				}
+				if (AnalyticsSettings.enabled)
+				{
+					strippingInfo.RegisterDependency("UnityAnalyticsManager", "Required by Unity Analytics (See Services Window)");
+					strippingInfo.SetIcon("Required by Unity Analytics (See Services Window)", "class/PlayerSettings");
+				}
+			}
+		}
+
+		public static void GenerateDependencies(string strippedAssemblyDir, string icallsListFile, RuntimeClassRegistry rcr, bool doStripping, out HashSet<UnityType> nativeClasses, out HashSet<string> nativeModules, IIl2CppPlatformProvider platformProvider)
+		{
+			StrippingInfo strippingInfo = (platformProvider != null) ? StrippingInfo.GetBuildReportData(platformProvider.buildReport) : null;
 			string[] userAssemblies = CodeStrippingUtils.GetUserAssemblies(strippedAssemblyDir);
-			nativeClasses = ((!PlayerSettings.stripEngineCode) ? null : CodeStrippingUtils.GenerateNativeClassList(rcr, strippedAssemblyDir, userAssemblies, buildReportData));
+			nativeClasses = ((!doStripping) ? null : CodeStrippingUtils.GenerateNativeClassList(rcr, strippedAssemblyDir, userAssemblies, strippingInfo));
 			if (nativeClasses != null)
 			{
 				CodeStrippingUtils.ExcludeModuleManagers(ref nativeClasses);
 			}
-			nativeModules = CodeStrippingUtils.GetNativeModulesToRegister(nativeClasses, buildReportData);
+			nativeModules = CodeStrippingUtils.GetNativeModulesToRegister(nativeClasses, strippingInfo);
 			if (nativeClasses != null && icallsListFile != null)
 			{
 				HashSet<string> modulesFromICalls = CodeStrippingUtils.GetModulesFromICalls(icallsListFile);
 				foreach (string current in modulesFromICalls)
 				{
-					if (!nativeModules.Contains(current) && buildReportData != null)
+					if (!nativeModules.Contains(current))
 					{
-						buildReportData.RegisterDependency(current, "Required by Scripts");
+						if (strippingInfo != null)
+						{
+							strippingInfo.RegisterDependency(StrippingInfo.ModuleName(current), "Required by Scripts");
+						}
 					}
-					int[] moduleClasses = ModuleMetadata.GetModuleClasses(current);
-					int[] array = moduleClasses;
+					UnityType[] moduleTypes = ModuleMetadata.GetModuleTypes(current);
+					UnityType[] array = moduleTypes;
 					for (int i = 0; i < array.Length; i++)
 					{
-						int num = array[i];
-						if (BaseObjectTools.IsDerivedFromClassID(num, CodeStrippingUtils.gameManagerClassId))
+						UnityType unityType = array[i];
+						if (unityType.IsDerivedFrom(CodeStrippingUtils.GameManagerTypeInfo))
 						{
-							string text = BaseObjectTools.ClassIDToString(num);
-							nativeClasses.Add(text);
-							if (buildReportData != null)
-							{
-								buildReportData.RegisterDependency(text, "Required by Module");
-							}
+							nativeClasses.Add(unityType);
 						}
 					}
 				}
 				nativeModules.UnionWith(modulesFromICalls);
 			}
+			bool flag = true;
+			if (platformProvider != null)
+			{
+				while (flag)
+				{
+					flag = false;
+					foreach (string current2 in nativeModules.ToList<string>())
+					{
+						string moduleWhitelist = CodeStrippingUtils.GetModuleWhitelist(current2, platformProvider.moduleStrippingInformationFolder);
+						if (File.Exists(moduleWhitelist))
+						{
+							foreach (string current3 in CodeStrippingUtils.GetDependentModules(moduleWhitelist))
+							{
+								if (!nativeModules.Contains(current3))
+								{
+									nativeModules.Add(current3);
+									flag = true;
+								}
+								if (strippingInfo != null)
+								{
+									string text = StrippingInfo.ModuleName(current2);
+									strippingInfo.RegisterDependency(StrippingInfo.ModuleName(current3), "Required by " + text);
+									if (strippingInfo.icons.ContainsKey(text))
+									{
+										strippingInfo.SetIcon("Required by " + text, strippingInfo.icons[text]);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 			AssemblyReferenceChecker assemblyReferenceChecker = new AssemblyReferenceChecker();
 			assemblyReferenceChecker.CollectReferencesFromRoots(strippedAssemblyDir, userAssemblies, true, 0f, true);
-			if (buildReportData != null)
+			if (strippingInfo != null)
 			{
-				foreach (string current2 in nativeModules)
+				foreach (string current4 in nativeModules)
 				{
-					buildReportData.AddModule(current2);
+					strippingInfo.AddModule(StrippingInfo.ModuleName(current4));
 				}
-				buildReportData.AddModule("Core");
+				strippingInfo.AddModule(StrippingInfo.ModuleName("Core"));
+			}
+			if (nativeClasses != null && strippingInfo != null)
+			{
+				CodeStrippingUtils.InjectCustomDependencies(strippingInfo, nativeClasses);
 			}
 		}
 
-		public static void WriteModuleAndClassRegistrationFile(string strippedAssemblyDir, string icallsListFile, string outputDir, RuntimeClassRegistry rcr, IEnumerable<string> classesToSkip)
+		public static string GetModuleWhitelist(string module, string moduleStrippingInformationFolder)
 		{
-			HashSet<string> nativeClasses;
-			HashSet<string> nativeModules;
-			CodeStrippingUtils.GenerateDependencies(strippedAssemblyDir, icallsListFile, rcr, out nativeClasses, out nativeModules, null);
-			string file = Path.Combine(outputDir, "UnityClassRegistration.cpp");
-			CodeStrippingUtils.WriteModuleAndClassRegistrationFile(file, nativeModules, nativeClasses, new HashSet<string>(classesToSkip));
+			return Paths.Combine(new string[]
+			{
+				moduleStrippingInformationFolder,
+				module + ".xml"
+			});
 		}
 
-		public static HashSet<string> GetNativeModulesToRegister(HashSet<string> nativeClasses, StrippingInfo strippingInfo)
+		public static List<string> GetDependentModules(string moduleXml)
+		{
+			XmlDocument xmlDocument = new XmlDocument();
+			xmlDocument.Load(moduleXml);
+			List<string> list = new List<string>();
+			XmlNodeList xmlNodeList = xmlDocument.DocumentElement.SelectNodes("/linker/dependencies/module");
+			IEnumerator enumerator = xmlNodeList.GetEnumerator();
+			try
+			{
+				while (enumerator.MoveNext())
+				{
+					XmlNode xmlNode = (XmlNode)enumerator.Current;
+					list.Add(xmlNode.Attributes["name"].Value);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			return list;
+		}
+
+		public static void WriteModuleAndClassRegistrationFile(string strippedAssemblyDir, string icallsListFile, string outputDir, RuntimeClassRegistry rcr, IEnumerable<UnityType> classesToSkip, IIl2CppPlatformProvider platformProvider)
+		{
+			bool stripEngineCode = PlayerSettings.stripEngineCode;
+			HashSet<UnityType> nativeClasses;
+			HashSet<string> nativeModules;
+			CodeStrippingUtils.GenerateDependencies(strippedAssemblyDir, icallsListFile, rcr, stripEngineCode, out nativeClasses, out nativeModules, platformProvider);
+			string file = Path.Combine(outputDir, "UnityClassRegistration.cpp");
+			CodeStrippingUtils.WriteModuleAndClassRegistrationFile(file, nativeModules, nativeClasses, new HashSet<UnityType>(classesToSkip));
+		}
+
+		public static HashSet<string> GetNativeModulesToRegister(HashSet<UnityType> nativeClasses, StrippingInfo strippingInfo)
 		{
 			return (nativeClasses != null) ? CodeStrippingUtils.GetRequiredStrippableModules(nativeClasses, strippingInfo) : CodeStrippingUtils.GetAllStrippableModules();
-		}
-
-		private static HashSet<string> GetClassNames(IEnumerable<int> classIds)
-		{
-			HashSet<string> hashSet = new HashSet<string>();
-			foreach (int current in classIds)
-			{
-				hashSet.Add(BaseObjectTools.ClassIDToString(current));
-			}
-			return hashSet;
 		}
 
 		private static HashSet<string> GetAllStrippableModules()
@@ -164,9 +301,9 @@ namespace UnityEditor
 			return hashSet;
 		}
 
-		private static HashSet<string> GetRequiredStrippableModules(HashSet<string> nativeClasses, StrippingInfo strippingInfo)
+		private static HashSet<string> GetRequiredStrippableModules(HashSet<UnityType> nativeClasses, StrippingInfo strippingInfo)
 		{
-			HashSet<string> hashSet = new HashSet<string>();
+			HashSet<UnityType> hashSet = new HashSet<UnityType>();
 			HashSet<string> hashSet2 = new HashSet<string>();
 			string[] moduleNames = ModuleMetadata.GetModuleNames();
 			for (int i = 0; i < moduleNames.Length; i++)
@@ -174,21 +311,17 @@ namespace UnityEditor
 				string text = moduleNames[i];
 				if (ModuleMetadata.GetModuleStrippable(text))
 				{
-					HashSet<string> classNames = CodeStrippingUtils.GetClassNames(ModuleMetadata.GetModuleClasses(text));
-					if (nativeClasses.Overlaps(classNames))
+					HashSet<UnityType> hashSet3 = new HashSet<UnityType>(ModuleMetadata.GetModuleTypes(text));
+					if (nativeClasses.Overlaps(hashSet3))
 					{
 						hashSet2.Add(text);
 						if (strippingInfo != null)
 						{
-							foreach (string current in classNames)
+							foreach (UnityType current in hashSet3)
 							{
 								if (nativeClasses.Contains(current))
 								{
-									strippingInfo.RegisterDependency(text, current);
-									if (BaseObjectTools.IsDerivedFromClassID(BaseObjectTools.StringToClassID(current), CodeStrippingUtils.gameManagerClassId))
-									{
-										strippingInfo.RegisterDependency(current, "Required by Module");
-									}
+									strippingInfo.RegisterDependency(StrippingInfo.ModuleName(text), current.name);
 									hashSet.Add(current);
 								}
 							}
@@ -198,18 +331,18 @@ namespace UnityEditor
 			}
 			if (strippingInfo != null)
 			{
-				foreach (string current2 in nativeClasses)
+				foreach (UnityType current2 in nativeClasses)
 				{
 					if (!hashSet.Contains(current2))
 					{
-						strippingInfo.RegisterDependency("Core", current2);
+						strippingInfo.RegisterDependency(StrippingInfo.ModuleName("Core"), current2.name);
 					}
 				}
 			}
 			return hashSet2;
 		}
 
-		private static void ExcludeModuleManagers(ref HashSet<string> nativeClasses)
+		private static void ExcludeModuleManagers(ref HashSet<UnityType> nativeClasses)
 		{
 			string[] moduleNames = ModuleMetadata.GetModuleNames();
 			string[] array = moduleNames;
@@ -218,36 +351,36 @@ namespace UnityEditor
 				string moduleName = array[i];
 				if (ModuleMetadata.GetModuleStrippable(moduleName))
 				{
-					int[] moduleClasses = ModuleMetadata.GetModuleClasses(moduleName);
-					HashSet<int> hashSet = new HashSet<int>();
-					HashSet<string> hashSet2 = new HashSet<string>();
-					int[] array2 = moduleClasses;
+					UnityType[] moduleTypes = ModuleMetadata.GetModuleTypes(moduleName);
+					HashSet<UnityType> hashSet = new HashSet<UnityType>();
+					HashSet<UnityType> hashSet2 = new HashSet<UnityType>();
+					UnityType[] array2 = moduleTypes;
 					for (int j = 0; j < array2.Length; j++)
 					{
-						int num = array2[j];
-						if (BaseObjectTools.IsDerivedFromClassID(num, CodeStrippingUtils.gameManagerClassId))
+						UnityType unityType = array2[j];
+						if (unityType.IsDerivedFrom(CodeStrippingUtils.GameManagerTypeInfo))
 						{
-							hashSet.Add(num);
+							hashSet.Add(unityType);
 						}
 						else
 						{
-							hashSet2.Add(BaseObjectTools.ClassIDToString(num));
+							hashSet2.Add(unityType);
 						}
 					}
 					if (hashSet2.Count != 0)
 					{
 						if (!nativeClasses.Overlaps(hashSet2))
 						{
-							foreach (int current in hashSet)
+							foreach (UnityType current in hashSet)
 							{
-								nativeClasses.Remove(BaseObjectTools.ClassIDToString(current));
+								nativeClasses.Remove(current);
 							}
 						}
 						else
 						{
-							foreach (int current2 in hashSet)
+							foreach (UnityType current2 in hashSet)
 							{
-								nativeClasses.Add(BaseObjectTools.ClassIDToString(current2));
+								nativeClasses.Add(current2);
 							}
 						}
 					}
@@ -255,105 +388,108 @@ namespace UnityEditor
 			}
 		}
 
-		private static HashSet<string> GenerateNativeClassList(RuntimeClassRegistry rcr, string directory, string[] rootAssemblies, StrippingInfo strippingInfo)
+		private static HashSet<UnityType> GenerateNativeClassList(RuntimeClassRegistry rcr, string directory, string[] rootAssemblies, StrippingInfo strippingInfo)
 		{
-			HashSet<string> hashSet = CodeStrippingUtils.CollectNativeClassListFromRoots(directory, rootAssemblies, strippingInfo);
-			string[] nativeClassBlackList = CodeStrippingUtils.NativeClassBlackList;
-			for (int i = 0; i < nativeClassBlackList.Length; i++)
+			HashSet<UnityType> hashSet = CodeStrippingUtils.CollectNativeClassListFromRoots(directory, rootAssemblies, strippingInfo);
+			UnityType[] blackListNativeClasses = CodeStrippingUtils.BlackListNativeClasses;
+			for (int i = 0; i < blackListNativeClasses.Length; i++)
 			{
-				string text = nativeClassBlackList[i];
-				hashSet.Add(text);
-				if (strippingInfo != null)
-				{
-					strippingInfo.RegisterDependency(text, "Blacklisted");
-				}
+				UnityType item = blackListNativeClasses[i];
+				hashSet.Add(item);
 			}
-			foreach (string current in CodeStrippingUtils.NativeClassDependencyBlackList.Keys)
+			foreach (UnityType current in CodeStrippingUtils.BlackListNativeClassesDependency.Keys)
 			{
 				if (hashSet.Contains(current))
 				{
-					string text2 = CodeStrippingUtils.NativeClassDependencyBlackList[current];
-					hashSet.Add(text2);
-					if (strippingInfo != null)
-					{
-						strippingInfo.RegisterDependency(text2, string.Format("Blacklisted due to dependent class '{0}'", current));
-					}
+					UnityType item2 = CodeStrippingUtils.BlackListNativeClassesDependency[current];
+					hashSet.Add(item2);
 				}
 			}
 			foreach (string current2 in rcr.GetAllNativeClassesIncludingManagersAsString())
 			{
-				int num = BaseObjectTools.StringToClassID(current2);
-				if (num != -1 && !BaseObjectTools.IsBaseObject(num))
+				UnityType unityType = UnityType.FindTypeByName(current2);
+				if (unityType != null && unityType.baseClass != null)
 				{
-					hashSet.Add(current2);
-					if (strippingInfo != null && !BaseObjectTools.IsDerivedFromClassID(num, CodeStrippingUtils.gameManagerClassId))
+					hashSet.Add(unityType);
+					if (strippingInfo != null)
 					{
-						strippingInfo.RegisterDependency(current2, "Used in Scenes");
+						if (!unityType.IsDerivedFrom(CodeStrippingUtils.GameManagerTypeInfo))
+						{
+							List<string> scenesForClass = rcr.GetScenesForClass(unityType.persistentTypeID);
+							if (scenesForClass != null)
+							{
+								foreach (string current3 in scenesForClass)
+								{
+									strippingInfo.RegisterDependency(current2, current3);
+									if (current3.EndsWith(".unity"))
+									{
+										strippingInfo.SetIcon(current3, "class/SceneAsset");
+									}
+									else
+									{
+										strippingInfo.SetIcon(current3, "class/AssetBundle");
+									}
+								}
+							}
+						}
 					}
 				}
 			}
-			HashSet<string> hashSet2 = new HashSet<string>();
-			foreach (string current3 in hashSet)
+			HashSet<UnityType> hashSet2 = new HashSet<UnityType>();
+			foreach (UnityType current4 in hashSet)
 			{
-				int iD = BaseObjectTools.StringToClassID(current3);
-				while (!BaseObjectTools.IsBaseObject(iD))
+				UnityType unityType2 = current4;
+				while (unityType2.baseClass != null)
 				{
-					hashSet2.Add(BaseObjectTools.ClassIDToString(iD));
-					int superClassID = BaseObjectTools.GetSuperClassID(iD);
-					if (strippingInfo != null)
-					{
-						strippingInfo.RegisterDependency(BaseObjectTools.ClassIDToString(superClassID), BaseObjectTools.ClassIDToString(iD));
-					}
-					iD = BaseObjectTools.GetSuperClassID(iD);
+					hashSet2.Add(unityType2);
+					unityType2 = unityType2.baseClass;
 				}
 			}
 			return hashSet2;
 		}
 
-		private static HashSet<string> CollectNativeClassListFromRoots(string directory, string[] rootAssemblies, StrippingInfo strippingInfo)
+		private static HashSet<UnityType> CollectNativeClassListFromRoots(string directory, string[] rootAssemblies, StrippingInfo strippingInfo)
 		{
-			HashSet<string> hashSet = new HashSet<string>();
-			HashSet<string> hashSet2 = CodeStrippingUtils.CollectManagedTypeReferencesFromRoots(directory, rootAssemblies, strippingInfo);
-			foreach (string current in hashSet2)
-			{
-				int num = BaseObjectTools.StringToClassID(current);
-				if (num != -1 && !BaseObjectTools.IsBaseObject(num))
-				{
-					hashSet.Add(current);
-				}
-			}
-			return hashSet;
+			HashSet<string> source = CodeStrippingUtils.CollectManagedTypeReferencesFromRoots(directory, rootAssemblies, strippingInfo);
+			IEnumerable<UnityType> collection = from name in source
+			select UnityType.FindTypeByName(name) into klass
+			where klass != null && klass.baseClass != null
+			select klass;
+			return new HashSet<UnityType>(collection);
 		}
 
 		private static HashSet<string> CollectManagedTypeReferencesFromRoots(string directory, string[] rootAssemblies, StrippingInfo strippingInfo)
 		{
 			HashSet<string> hashSet = new HashSet<string>();
 			AssemblyReferenceChecker assemblyReferenceChecker = new AssemblyReferenceChecker();
-			bool withMethods = false;
+			bool collectMethods = false;
 			bool ignoreSystemDlls = false;
-			assemblyReferenceChecker.CollectReferencesFromRoots(directory, rootAssemblies, withMethods, 0f, ignoreSystemDlls);
+			assemblyReferenceChecker.CollectReferencesFromRoots(directory, rootAssemblies, collectMethods, 0f, ignoreSystemDlls);
 			string[] assemblyFileNames = assemblyReferenceChecker.GetAssemblyFileNames();
 			AssemblyDefinition[] assemblyDefinitions = assemblyReferenceChecker.GetAssemblyDefinitions();
 			AssemblyDefinition[] array = assemblyDefinitions;
 			for (int i = 0; i < array.Length; i++)
 			{
 				AssemblyDefinition assemblyDefinition = array[i];
-				foreach (TypeDefinition current in assemblyDefinition.MainModule.Types)
+				using (Collection<TypeDefinition>.Enumerator enumerator = assemblyDefinition.get_MainModule().get_Types().GetEnumerator())
 				{
-					if (current.Namespace.StartsWith("UnityEngine") && (current.Fields.Count > 0 || current.Methods.Count > 0 || current.Properties.Count > 0))
+					while (enumerator.MoveNext())
 					{
-						string name = current.Name;
-						hashSet.Add(name);
-						if (strippingInfo != null)
+						TypeDefinition current = enumerator.get_Current();
+						if (current.get_Namespace().StartsWith("UnityEngine"))
 						{
-							string name2 = assemblyDefinition.Name.Name;
-							if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name2))
+							if (current.get_Fields().get_Count() > 0 || current.get_Methods().get_Count() > 0 || current.get_Properties().get_Count() > 0)
 							{
-								strippingInfo.RegisterDependency(name, "Required by Scripts");
-							}
-							else
-							{
-								strippingInfo.RegisterDependency(name, "Required by Module");
+								string name = current.get_Name();
+								hashSet.Add(name);
+								if (strippingInfo != null)
+								{
+									string name2 = assemblyDefinition.get_Name().get_Name();
+									if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name2))
+									{
+										strippingInfo.RegisterDependency(name, "Required by Scripts");
+									}
+								}
 							}
 						}
 					}
@@ -373,22 +509,18 @@ namespace UnityEditor
 				AssemblyDefinition assemblyDefinition3 = array2[k];
 				if (assemblyDefinition3 != assemblyDefinition2)
 				{
-					foreach (TypeReference current2 in assemblyDefinition3.MainModule.GetTypeReferences())
+					foreach (TypeReference current2 in assemblyDefinition3.get_MainModule().GetTypeReferences())
 					{
-						if (current2.Namespace.StartsWith("UnityEngine"))
+						if (current2.get_Namespace().StartsWith("UnityEngine"))
 						{
-							string name3 = current2.Name;
+							string name3 = current2.get_Name();
 							hashSet.Add(name3);
 							if (strippingInfo != null)
 							{
-								string name4 = assemblyDefinition3.Name.Name;
+								string name4 = assemblyDefinition3.get_Name().get_Name();
 								if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name4))
 								{
 									strippingInfo.RegisterDependency(name3, "Required by Scripts");
-								}
-								else
-								{
-									strippingInfo.RegisterDependency(name3, "Required by Module");
 								}
 							}
 						}
@@ -398,15 +530,14 @@ namespace UnityEditor
 			return hashSet;
 		}
 
-		private static void WriteStaticallyLinkedModuleRegistration(TextWriter w, HashSet<string> nativeModules, HashSet<string> nativeClasses)
+		private static void WriteStaticallyLinkedModuleRegistration(TextWriter w, HashSet<string> nativeModules, HashSet<UnityType> nativeClasses)
 		{
-			w.WriteLine("struct ClassRegistrationContext;");
-			w.WriteLine("void InvokeRegisterStaticallyLinkedModuleClasses(ClassRegistrationContext& context)");
+			w.WriteLine("void InvokeRegisterStaticallyLinkedModuleClasses()");
 			w.WriteLine("{");
 			if (nativeClasses == null)
 			{
-				w.WriteLine("\tvoid RegisterStaticallyLinkedModuleClasses(ClassRegistrationContext&);");
-				w.WriteLine("\tRegisterStaticallyLinkedModuleClasses(context);");
+				w.WriteLine("\tvoid RegisterStaticallyLinkedModuleClasses();");
+				w.WriteLine("\tRegisterStaticallyLinkedModuleClasses();");
 			}
 			else
 			{
@@ -425,12 +556,41 @@ namespace UnityEditor
 			w.WriteLine("}");
 		}
 
-		private static void WriteModuleAndClassRegistrationFile(string file, HashSet<string> nativeModules, HashSet<string> nativeClasses, HashSet<string> classesToSkip)
+		private static void WriteModuleAndClassRegistrationFile(string file, HashSet<string> nativeModules, HashSet<UnityType> nativeClasses, HashSet<UnityType> classesToSkip)
 		{
 			using (TextWriter textWriter = new StreamWriter(file))
 			{
+				textWriter.WriteLine("template <typename T> void RegisterClass();");
+				textWriter.WriteLine("template <typename T> void RegisterStrippedTypeInfo(int, const char*, const char*);");
+				textWriter.WriteLine();
 				CodeStrippingUtils.WriteStaticallyLinkedModuleRegistration(textWriter, nativeModules, nativeClasses);
 				textWriter.WriteLine();
+				if (nativeClasses != null)
+				{
+					foreach (UnityType current in UnityType.GetTypes())
+					{
+						if (current.baseClass != null && !current.isEditorOnly && !classesToSkip.Contains(current))
+						{
+							if (current.hasNativeNamespace)
+							{
+								textWriter.Write("namespace {0} {{ class {1}; }} ", current.nativeNamespace, current.name);
+							}
+							else
+							{
+								textWriter.Write("class {0}; ", current.name);
+							}
+							if (nativeClasses.Contains(current))
+							{
+								textWriter.WriteLine("template <> void RegisterClass<{0}>();", current.qualifiedName);
+							}
+							else
+							{
+								textWriter.WriteLine();
+							}
+						}
+					}
+					textWriter.WriteLine();
+				}
 				textWriter.WriteLine("void RegisterAllClasses()");
 				textWriter.WriteLine("{");
 				if (nativeClasses == null)
@@ -440,36 +600,55 @@ namespace UnityEditor
 				}
 				else
 				{
-					textWriter.WriteLine("\t//Total: {0} classes", nativeClasses.Count);
+					textWriter.WriteLine("void RegisterBuiltinTypes();");
+					textWriter.WriteLine("RegisterBuiltinTypes();");
+					textWriter.WriteLine("\t//Total: {0} non stripped classes", nativeClasses.Count);
 					int num = 0;
-					foreach (string current in nativeClasses)
+					foreach (UnityType current2 in nativeClasses)
 					{
-						textWriter.WriteLine("\t//{0}. {1}", num, current);
-						if (classesToSkip.Contains(current))
+						textWriter.WriteLine("\t//{0}. {1}", num, current2.qualifiedName);
+						if (classesToSkip.Contains(current2))
 						{
-							textWriter.WriteLine("\t//Skipping {0}", current);
+							textWriter.WriteLine("\t//Skipping {0}", current2.qualifiedName);
 						}
 						else
 						{
-							textWriter.WriteLine("\tvoid RegisterClass_{0}();", current);
-							textWriter.WriteLine("\tRegisterClass_{0}();", current);
+							textWriter.WriteLine("\tRegisterClass<{0}>();", current2.qualifiedName);
 						}
-						textWriter.WriteLine();
 						num++;
 					}
+					textWriter.WriteLine();
 				}
 				textWriter.WriteLine("}");
 				textWriter.Close();
 			}
 		}
 
+		private static string[] GetAssembliesWithSuffix()
+		{
+			string suffix = EditorSettings.Internal_UserGeneratedProjectSuffix;
+			return CodeStrippingUtils.s_UserAssemblies.Select(delegate(string a)
+			{
+				string result;
+				if (a.StartsWith("Assembly-"))
+				{
+					result = a.Substring(0, a.Length - ".dll".Length) + suffix + ".dll";
+				}
+				else
+				{
+					result = a;
+				}
+				return result;
+			}).ToArray<string>();
+		}
+
 		private static string[] GetUserAssemblies(string strippedAssemblyDir)
 		{
 			List<string> list = new List<string>();
-			string[] array = CodeStrippingUtils.s_UserAssemblies;
-			for (int i = 0; i < array.Length; i++)
+			string[] userAssemblies = CodeStrippingUtils.UserAssemblies;
+			for (int i = 0; i < userAssemblies.Length; i++)
 			{
-				string assemblyName = array[i];
+				string assemblyName = userAssemblies[i];
 				list.AddRange(CodeStrippingUtils.GetAssembliesInDirectory(strippedAssemblyDir, assemblyName));
 			}
 			return list.ToArray();

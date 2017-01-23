@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace UnityEditor
 {
@@ -12,7 +11,6 @@ namespace UnityEditor
 
 		public string iconURL;
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern PackageInfo[] GetPackageList();
 	}

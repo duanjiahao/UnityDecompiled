@@ -59,10 +59,6 @@ namespace UnityEditor
 			}
 		}
 
-		internal const float kPickDistance = 5f;
-
-		private const float kHandleSize = 80f;
-
 		private static bool s_UseYSign = false;
 
 		private static bool s_UseYSignZoom = false;
@@ -80,7 +76,11 @@ namespace UnityEditor
 
 		private static float s_NearestDistance;
 
+		internal const float kPickDistance = 5f;
+
 		internal static float s_CustomPickDistance = 5f;
+
+		private const float kHandleSize = 80f;
 
 		private static Material s_HandleMaterial;
 
@@ -129,11 +129,16 @@ namespace UnityEditor
 						HandleUtility.s_UseYSign = true;
 					}
 				}
+				float result;
 				if (HandleUtility.s_UseYSign)
 				{
-					return Mathf.Sign(delta.y) * delta.magnitude * HandleUtility.acceleration;
+					result = Mathf.Sign(delta.y) * delta.magnitude * HandleUtility.acceleration;
 				}
-				return Mathf.Sign(delta.x) * delta.magnitude * HandleUtility.acceleration;
+				else
+				{
+					result = Mathf.Sign(delta.x) * delta.magnitude * HandleUtility.acceleration;
+				}
+				return result;
 			}
 		}
 
@@ -153,11 +158,16 @@ namespace UnityEditor
 						HandleUtility.s_UseYSignZoom = true;
 					}
 				}
+				float result;
 				if (HandleUtility.s_UseYSignZoom)
 				{
-					return Mathf.Sign(vector.y) * vector.magnitude * HandleUtility.acceleration;
+					result = Mathf.Sign(vector.y) * vector.magnitude * HandleUtility.acceleration;
 				}
-				return Mathf.Sign(vector.x) * vector.magnitude * HandleUtility.acceleration;
+				else
+				{
+					result = Mathf.Sign(vector.x) * vector.magnitude * HandleUtility.acceleration;
+				}
+				return result;
 			}
 		}
 
@@ -220,15 +230,21 @@ namespace UnityEditor
 			Vector2 vector3 = EditorGUIUtility.PixelsToPoints(current.WorldToScreenPoint(srcPosition + constraintDir * num));
 			Vector2 x = dest;
 			Vector2 x2 = src;
+			float result;
 			if (vector2 == vector3)
 			{
-				return 0f;
+				result = 0f;
 			}
-			x.y = -x.y;
-			x2.y = -x2.y;
-			float parametrization = HandleUtility.GetParametrization(x2, vector2, vector3);
-			float parametrization2 = HandleUtility.GetParametrization(x, vector2, vector3);
-			return (parametrization2 - parametrization) * num;
+			else
+			{
+				x.y = -x.y;
+				x2.y = -x2.y;
+				float parametrization = HandleUtility.GetParametrization(x2, vector2, vector3);
+				float parametrization2 = HandleUtility.GetParametrization(x, vector2, vector3);
+				float num2 = (parametrization2 - parametrization) * num;
+				result = num2;
+			}
+			return result;
 		}
 
 		internal static float GetParametrization(Vector2 x0, Vector2 x1, Vector2 x2)
@@ -266,7 +282,6 @@ namespace UnityEditor
 			return HandleUtility.INTERNAL_CALL_DistancePointBezier(ref point, ref startPosition, ref endPosition, ref startTangent, ref endTangent);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float INTERNAL_CALL_DistancePointBezier(ref Vector3 point, ref Vector3 startPosition, ref Vector3 endPosition, ref Vector3 startTangent, ref Vector3 endTangent);
 
@@ -294,17 +309,27 @@ namespace UnityEditor
 				radius = (a - b).magnitude;
 			}
 			float magnitude = (a - Event.current.mousePosition).magnitude;
+			float result;
 			if (magnitude < radius)
 			{
-				return 0f;
+				result = 0f;
 			}
-			return magnitude - radius;
+			else
+			{
+				result = magnitude - radius;
+			}
+			return result;
 		}
 
 		public static float DistanceToRectangle(Vector3 position, Quaternion rotation, float size)
 		{
-			Vector3 b = rotation * new Vector3(size, 0f, 0f);
-			Vector3 b2 = rotation * new Vector3(0f, size, 0f);
+			return HandleUtility.DistanceToRectangleInternal(position, rotation, new Vector2(size, size));
+		}
+
+		internal static float DistanceToRectangleInternal(Vector3 position, Quaternion rotation, Vector2 size)
+		{
+			Vector3 b = rotation * new Vector3(size.x, 0f, 0f);
+			Vector3 b2 = rotation * new Vector3(0f, size.y, 0f);
 			HandleUtility.points[0] = HandleUtility.WorldToGUIPoint(position + b + b2);
 			HandleUtility.points[1] = HandleUtility.WorldToGUIPoint(position + b - b2);
 			HandleUtility.points[2] = HandleUtility.WorldToGUIPoint(position - b - b2);
@@ -315,12 +340,16 @@ namespace UnityEditor
 			int num = 4;
 			for (int i = 0; i < 5; i++)
 			{
-				if (HandleUtility.points[i].y > mousePosition.y != HandleUtility.points[num].y > mousePosition.y && mousePosition.x < (HandleUtility.points[num].x - HandleUtility.points[i].x) * (mousePosition.y - HandleUtility.points[i].y) / (HandleUtility.points[num].y - HandleUtility.points[i].y) + HandleUtility.points[i].x)
+				if (HandleUtility.points[i].y > mousePosition.y != HandleUtility.points[num].y > mousePosition.y)
 				{
-					flag = !flag;
+					if (mousePosition.x < (HandleUtility.points[num].x - HandleUtility.points[i].x) * (mousePosition.y - HandleUtility.points[i].y) / (HandleUtility.points[num].y - HandleUtility.points[i].y) + HandleUtility.points[i].x)
+					{
+						flag = !flag;
+					}
 				}
 				num = i;
 			}
+			float result;
 			if (!flag)
 			{
 				float num2 = -1f;
@@ -333,9 +362,63 @@ namespace UnityEditor
 						num2 = num3;
 					}
 				}
-				return num2;
+				result = num2;
 			}
-			return 0f;
+			else
+			{
+				result = 0f;
+			}
+			return result;
+		}
+
+		internal static float DistanceToDiamond(Vector3 position, Quaternion rotation, float size)
+		{
+			return HandleUtility.DistanceToDiamondInternal(position, rotation, size, Event.current.mousePosition);
+		}
+
+		internal static float DistanceToDiamondInternal(Vector3 position, Quaternion rotation, float size, Vector2 mousePosition)
+		{
+			Vector3 b = rotation * new Vector3(size, 0f, 0f);
+			Vector3 b2 = rotation * new Vector3(0f, size, 0f);
+			HandleUtility.points[0] = HandleUtility.WorldToGUIPoint(position + b);
+			HandleUtility.points[1] = HandleUtility.WorldToGUIPoint(position - b2);
+			HandleUtility.points[2] = HandleUtility.WorldToGUIPoint(position - b);
+			HandleUtility.points[3] = HandleUtility.WorldToGUIPoint(position + b2);
+			HandleUtility.points[4] = HandleUtility.points[0];
+			Vector2 p = mousePosition;
+			bool flag = false;
+			int num = 4;
+			for (int i = 0; i < 5; i++)
+			{
+				if (HandleUtility.points[i].y > p.y != HandleUtility.points[num].y > p.y)
+				{
+					if (p.x < (HandleUtility.points[num].x - HandleUtility.points[i].x) * (p.y - HandleUtility.points[i].y) / (HandleUtility.points[num].y - HandleUtility.points[i].y) + HandleUtility.points[i].x)
+					{
+						flag = !flag;
+					}
+				}
+				num = i;
+			}
+			float result;
+			if (!flag)
+			{
+				float num2 = -1f;
+				num = 1;
+				for (int j = 0; j < 4; j++)
+				{
+					float num3 = HandleUtility.DistancePointToLineSegment(p, HandleUtility.points[j], HandleUtility.points[num++]);
+					if (num3 < num2 || num2 < 0f)
+					{
+						num2 = num3;
+					}
+				}
+				result = num2;
+			}
+			else
+			{
+				result = 0f;
+			}
+			return result;
 		}
 
 		public static float DistancePointToLine(Vector2 p, Vector2 a, Vector2 b)
@@ -346,21 +429,29 @@ namespace UnityEditor
 		public static float DistancePointToLineSegment(Vector2 p, Vector2 a, Vector2 b)
 		{
 			float sqrMagnitude = (b - a).sqrMagnitude;
+			float magnitude;
 			if ((double)sqrMagnitude == 0.0)
 			{
-				return (p - a).magnitude;
+				magnitude = (p - a).magnitude;
 			}
-			float num = Vector2.Dot(p - a, b - a) / sqrMagnitude;
-			if ((double)num < 0.0)
+			else
 			{
-				return (p - a).magnitude;
+				float num = Vector2.Dot(p - a, b - a) / sqrMagnitude;
+				if ((double)num < 0.0)
+				{
+					magnitude = (p - a).magnitude;
+				}
+				else if ((double)num > 1.0)
+				{
+					magnitude = (p - b).magnitude;
+				}
+				else
+				{
+					Vector2 b2 = a + num * (b - a);
+					magnitude = (p - b2).magnitude;
+				}
 			}
-			if ((double)num > 1.0)
-			{
-				return (p - b).magnitude;
-			}
-			Vector2 b2 = a + num * (b - a);
-			return (p - b2).magnitude;
+			return magnitude;
 		}
 
 		public static float DistanceToDisc(Vector3 center, Vector3 normal, float radius)
@@ -456,7 +547,6 @@ namespace UnityEditor
 			HandleUtility.AddControl(controlId, 5f);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CameraNeedsToRenderIntoRT(Camera camera);
 
@@ -499,6 +589,7 @@ namespace UnityEditor
 		{
 			Camera current = Camera.current;
 			position = Handles.matrix.MultiplyPoint(position);
+			float result;
 			if (current)
 			{
 				Transform transform = current.transform;
@@ -507,37 +598,51 @@ namespace UnityEditor
 				Vector3 a = current.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(0f, 0f, z)));
 				Vector3 b = current.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(1f, 0f, z)));
 				float magnitude = (a - b).magnitude;
-				return 80f / Mathf.Max(magnitude, 0.0001f) * EditorGUIUtility.pixelsPerPoint;
+				result = 80f / Mathf.Max(magnitude, 0.0001f) * EditorGUIUtility.pixelsPerPoint;
 			}
-			return 20f;
+			else
+			{
+				result = 20f;
+			}
+			return result;
 		}
 
 		public static Vector2 WorldToGUIPoint(Vector3 world)
 		{
 			world = Handles.matrix.MultiplyPoint(world);
 			Camera current = Camera.current;
+			Vector2 result;
 			if (current)
 			{
 				Vector2 vector = current.WorldToScreenPoint(world);
 				vector.y = (float)Screen.height - vector.y;
 				vector = EditorGUIUtility.PixelsToPoints(vector);
-				return GUIClip.Clip(vector);
+				result = GUIClip.Clip(vector);
 			}
-			return new Vector2(world.x, world.y);
+			else
+			{
+				result = new Vector2(world.x, world.y);
+			}
+			return result;
 		}
 
 		public static Ray GUIPointToWorldRay(Vector2 position)
 		{
+			Ray result;
 			if (!Camera.current)
 			{
 				Debug.LogError("Unable to convert GUI point to world ray if a camera has not been set up!");
-				return new Ray(Vector3.zero, Vector3.forward);
+				result = new Ray(Vector3.zero, Vector3.forward);
 			}
-			Vector2 position2 = GUIClip.Unclip(position);
-			Vector2 vector = EditorGUIUtility.PointsToPixels(position2);
-			vector.y = (float)Screen.height - vector.y;
-			Camera current = Camera.current;
-			return current.ScreenPointToRay(new Vector2(vector.x, vector.y));
+			else
+			{
+				Vector2 position2 = GUIClip.Unclip(position);
+				Vector2 vector = EditorGUIUtility.PointsToPixels(position2);
+				vector.y = (float)Screen.height - vector.y;
+				Camera current = Camera.current;
+				result = current.ScreenPointToRay(new Vector2(vector.x, vector.y));
+			}
+			return result;
 		}
 
 		public static Rect WorldPointToSizedRect(Vector3 position, GUIContent content, GUIStyle style)
@@ -600,7 +705,6 @@ namespace UnityEditor
 			return HandleUtility.INTERNAL_CALL_Internal_PickRectObjects(cam, ref rect, selectPrefabRoots);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern GameObject[] INTERNAL_CALL_Internal_PickRectObjects(Camera cam, ref Rect rect, bool selectPrefabRoots);
 
@@ -617,7 +721,6 @@ namespace UnityEditor
 			return HandleUtility.INTERNAL_CALL_Internal_FindNearestVertex(cam, ref screenPoint, objectsToSearch, ignoreObjects, out vertex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Internal_FindNearestVertex(Camera cam, ref Vector2 screenPoint, Transform[] objectsToSearch, Transform[] ignoreObjects, out Vector3 vertex);
 
@@ -655,46 +758,61 @@ namespace UnityEditor
 		{
 			int num;
 			GameObject gameObject = HandleUtility.PickGameObject(position, ignore, filter, out num);
-			if (!gameObject || !selectPrefabRoot)
+			GameObject result;
+			if (gameObject && selectPrefabRoot)
 			{
-				return gameObject;
+				GameObject gameObject2 = HandleUtility.FindSelectionBase(gameObject) ?? gameObject;
+				Transform activeTransform = Selection.activeTransform;
+				GameObject y = (!activeTransform) ? null : (HandleUtility.FindSelectionBase(activeTransform.gameObject) ?? activeTransform.gameObject);
+				if (gameObject2 == y)
+				{
+					result = gameObject;
+				}
+				else
+				{
+					result = gameObject2;
+				}
 			}
-			GameObject gameObject2 = HandleUtility.FindSelectionBase(gameObject) ?? gameObject;
-			Transform activeTransform = Selection.activeTransform;
-			GameObject y = (!activeTransform) ? null : (HandleUtility.FindSelectionBase(activeTransform.gameObject) ?? activeTransform.gameObject);
-			if (gameObject2 == y)
+			else
 			{
-				return gameObject;
+				result = gameObject;
 			}
-			return gameObject2;
+			return result;
 		}
 
 		internal static GameObject FindSelectionBase(GameObject go)
 		{
+			GameObject result;
 			if (go == null)
 			{
-				return null;
+				result = null;
 			}
-			Transform y = null;
-			PrefabType prefabType = PrefabUtility.GetPrefabType(go);
-			if (prefabType == PrefabType.PrefabInstance || prefabType == PrefabType.ModelPrefabInstance)
+			else
 			{
-				y = PrefabUtility.FindPrefabRoot(go).transform;
-			}
-			Transform transform = go.transform;
-			while (transform != null)
-			{
-				if (transform == y)
+				Transform y = null;
+				PrefabType prefabType = PrefabUtility.GetPrefabType(go);
+				if (prefabType == PrefabType.PrefabInstance || prefabType == PrefabType.ModelPrefabInstance)
 				{
-					return transform.gameObject;
+					y = PrefabUtility.FindPrefabRoot(go).transform;
 				}
-				if (AttributeHelper.GameObjectContainsAttribute(transform.gameObject, typeof(SelectionBaseAttribute)))
+				Transform transform = go.transform;
+				while (transform != null)
 				{
-					return transform.gameObject;
+					if (transform == y)
+					{
+						result = transform.gameObject;
+						return result;
+					}
+					if (AttributeHelper.GameObjectContainsAttribute(transform.gameObject, typeof(SelectionBaseAttribute)))
+					{
+						result = transform.gameObject;
+						return result;
+					}
+					transform = transform.parent;
 				}
-				transform = transform.parent;
+				result = null;
 			}
-			return null;
+			return result;
 		}
 
 		internal static GameObject Internal_PickClosestGO(Camera cam, int layers, Vector2 position, GameObject[] ignore, GameObject[] filter, out int materialIndex)
@@ -702,7 +820,6 @@ namespace UnityEditor
 			return HandleUtility.INTERNAL_CALL_Internal_PickClosestGO(cam, layers, ref position, ignore, filter, out materialIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern GameObject INTERNAL_CALL_Internal_PickClosestGO(Camera cam, int layers, ref Vector2 position, GameObject[] ignore, GameObject[] filter, out int materialIndex);
 
@@ -737,7 +854,6 @@ namespace UnityEditor
 			HandleUtility.Internal_SetHandleWireTextureIndex(textureIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetHandleWireTextureIndex(int textureIndex);
 
@@ -791,11 +907,16 @@ namespace UnityEditor
 					}
 				}
 			}
+			object result;
 			if (num2 >= 0)
 			{
-				return array[num2];
+				result = array[num2];
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		internal static float CalcRayPlaceOffset(Transform[] objects, Vector3 normal)
@@ -803,7 +924,6 @@ namespace UnityEditor
 			return HandleUtility.INTERNAL_CALL_CalcRayPlaceOffset(objects, ref normal);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float INTERNAL_CALL_CalcRayPlaceOffset(Transform[] objects, ref Vector3 normal);
 
@@ -812,7 +932,6 @@ namespace UnityEditor
 			HandleUtility.Internal_Repaint();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Repaint();
 
@@ -821,7 +940,6 @@ namespace UnityEditor
 			return HandleUtility.INTERNAL_CALL_IntersectRayMesh(ref ray, mesh, ref matrix, out hit);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_IntersectRayMesh(ref Ray ray, Mesh mesh, ref Matrix4x4 matrix, out RaycastHit hit);
 	}

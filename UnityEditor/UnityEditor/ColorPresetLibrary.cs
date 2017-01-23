@@ -52,10 +52,6 @@ namespace UnityEditor
 			}
 		}
 
-		public const int kSwatchSize = 14;
-
-		public const int kMiniSwatchSize = 8;
-
 		[SerializeField]
 		private List<ColorPresetLibrary.ColorPreset> m_Presets = new List<ColorPresetLibrary.ColorPreset>();
 
@@ -66,6 +62,10 @@ namespace UnityEditor
 		private Texture2D m_MiniColorSwatchTriangular;
 
 		private Texture2D m_CheckerBoard;
+
+		public const int kSwatchSize = 14;
+
+		public const int kMiniSwatchSize = 8;
 
 		private void OnDestroy()
 		{
@@ -218,7 +218,7 @@ namespace UnityEditor
 
 		private static Texture2D CreateColorSwatchWithBorder(int width, int height, bool triangular)
 		{
-			Texture2D texture2D = new Texture2D(width, height, TextureFormat.ARGB32, false);
+			Texture2D texture2D = new Texture2D(width, height, TextureFormat.RGBA32, false);
 			texture2D.hideFlags = HideFlags.HideAndDontSave;
 			Color[] array = new Color[width * height];
 			Color color = new Color(1f, 1f, 1f, 0f);

@@ -63,40 +63,51 @@ namespace UnityEditor
 		public static EditorWrapper Make(UnityEngine.Object obj, EditorFeatures requirements)
 		{
 			EditorWrapper editorWrapper = new EditorWrapper();
+			EditorWrapper result;
 			if (editorWrapper.Init(obj, requirements))
 			{
-				return editorWrapper;
+				result = editorWrapper;
 			}
-			editorWrapper.Dispose();
-			return null;
+			else
+			{
+				editorWrapper.Dispose();
+				result = null;
+			}
+			return result;
 		}
 
 		private bool Init(UnityEngine.Object obj, EditorFeatures requirements)
 		{
 			this.editor = Editor.CreateEditor(obj);
+			bool result;
 			if (this.editor == null)
 			{
-				return false;
+				result = false;
 			}
-			if ((requirements & EditorFeatures.PreviewGUI) > EditorFeatures.None && !this.editor.HasPreviewGUI())
+			else if ((requirements & EditorFeatures.PreviewGUI) > EditorFeatures.None && !this.editor.HasPreviewGUI())
 			{
-				return false;
-			}
-			Type type = this.editor.GetType();
-			MethodInfo method = type.GetMethod("OnSceneDrag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-			if (method != null)
-			{
-				this.OnSceneDrag = (EditorWrapper.VoidDelegate)Delegate.CreateDelegate(typeof(EditorWrapper.VoidDelegate), this.editor, method);
+				result = false;
 			}
 			else
 			{
-				if ((requirements & EditorFeatures.OnSceneDrag) > EditorFeatures.None)
+				Type type = this.editor.GetType();
+				MethodInfo method = type.GetMethod("OnSceneDrag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				if (method != null)
 				{
-					return false;
+					this.OnSceneDrag = (EditorWrapper.VoidDelegate)Delegate.CreateDelegate(typeof(EditorWrapper.VoidDelegate), this.editor, method);
 				}
-				this.OnSceneDrag = new EditorWrapper.VoidDelegate(this.DefaultOnSceneDrag);
+				else
+				{
+					if ((requirements & EditorFeatures.OnSceneDrag) > EditorFeatures.None)
+					{
+						result = false;
+						return result;
+					}
+					this.OnSceneDrag = new EditorWrapper.VoidDelegate(this.DefaultOnSceneDrag);
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private void DefaultOnSceneDrag(SceneView sceneView)

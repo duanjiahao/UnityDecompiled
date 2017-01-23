@@ -23,11 +23,16 @@ namespace UnityEditor
 			{
 				get
 				{
+					Color result;
 					if (EditorGUIUtility.isProSkin)
 					{
-						return this.proColor;
+						result = this.proColor;
 					}
-					return this.normalColor;
+					else
+					{
+						result = this.normalColor;
+					}
+					return result;
 				}
 				set
 				{
@@ -102,7 +107,11 @@ namespace UnityEditor
 
 		private static float s_FieldWidth;
 
+		[Obsolete("This field is no longer used by any builtin controls. If passing this field to GetControlID, explicitly use the FocusType enum instead.", false)]
 		public static FocusType native;
+
+		[CompilerGenerated]
+		private static GUISkin.SkinChangedDelegate <>f__mg$cache0;
 
 		public static float singleLineHeight
 		{
@@ -130,17 +139,14 @@ namespace UnityEditor
 
 		internal static extern int skinIndex
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern Texture2D whiteTexture
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -242,11 +248,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				float result;
 				if (EditorGUIUtility.s_ContextWidth > 0f)
 				{
-					return EditorGUIUtility.s_ContextWidth;
+					result = EditorGUIUtility.s_ContextWidth;
 				}
-				return EditorGUIUtility.CalcContextWidth();
+				else
+				{
+					result = EditorGUIUtility.CalcContextWidth();
+				}
+				return result;
 			}
 		}
 
@@ -262,15 +273,20 @@ namespace UnityEditor
 		{
 			get
 			{
+				float result;
 				if (EditorGUIUtility.s_LabelWidth > 0f)
 				{
-					return EditorGUIUtility.s_LabelWidth;
+					result = EditorGUIUtility.s_LabelWidth;
 				}
-				if (EditorGUIUtility.s_HierarchyMode)
+				else if (EditorGUIUtility.s_HierarchyMode)
 				{
-					return Mathf.Max(EditorGUIUtility.contextWidth * 0.45f - 40f, 120f);
+					result = Mathf.Max(EditorGUIUtility.contextWidth * 0.45f - 40f, 120f);
 				}
-				return 150f;
+				else
+				{
+					result = 150f;
+				}
+				return result;
 			}
 			set
 			{
@@ -282,11 +298,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				float result;
 				if (EditorGUIUtility.s_FieldWidth > 0f)
 				{
-					return EditorGUIUtility.s_FieldWidth;
+					result = EditorGUIUtility.s_FieldWidth;
 				}
-				return 50f;
+				else
+				{
+					result = 50f;
+				}
+				return result;
 			}
 			set
 			{
@@ -296,10 +317,8 @@ namespace UnityEditor
 
 		public new static extern string systemCopyBuffer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -355,14 +374,17 @@ namespace UnityEditor
 			EditorGUIUtility.s_LabelWidth = 0f;
 			EditorGUIUtility.s_FieldWidth = 0f;
 			EditorGUIUtility.native = FocusType.Keyboard;
-			GUISkin.m_SkinChanged = (GUISkin.SkinChangedDelegate)Delegate.Combine(GUISkin.m_SkinChanged, new GUISkin.SkinChangedDelegate(EditorGUIUtility.SkinChanged));
+			Delegate arg_D6_0 = GUISkin.m_SkinChanged;
+			if (EditorGUIUtility.<>f__mg$cache0 == null)
+			{
+				EditorGUIUtility.<>f__mg$cache0 = new GUISkin.SkinChangedDelegate(EditorGUIUtility.SkinChanged);
+			}
+			GUISkin.m_SkinChanged = (GUISkin.SkinChangedDelegate)Delegate.Combine(arg_D6_0, EditorGUIUtility.<>f__mg$cache0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SerializeMainMenuToString();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetMenuLocalizationTestMode(bool onoff);
 
@@ -370,7 +392,7 @@ namespace UnityEditor
 		{
 			if (textAndTooltip == null)
 			{
-				textAndTooltip = string.Empty;
+				textAndTooltip = "";
 			}
 			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_TextGUIContents[textAndTooltip];
 			if (gUIContent == null)
@@ -390,7 +412,7 @@ namespace UnityEditor
 		{
 			if (textAndTooltip == null)
 			{
-				textAndTooltip = string.Empty;
+				textAndTooltip = "";
 			}
 			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_TextGUIContents[textAndTooltip];
 			if (gUIContent == null)
@@ -418,8 +440,8 @@ namespace UnityEditor
 			switch (array2.Length)
 			{
 			case 0:
-				array[0] = string.Empty;
-				array[1] = string.Empty;
+				array[0] = "";
+				array[1] = "";
 				break;
 			case 1:
 				array[0] = array2[0].Trim();
@@ -472,54 +494,64 @@ namespace UnityEditor
 
 		internal static Texture2D LoadIconForSkin(string name, int skinIndex)
 		{
+			Texture2D result;
 			if (string.IsNullOrEmpty(name))
 			{
-				return null;
+				result = null;
 			}
-			if (skinIndex == 0)
+			else if (skinIndex == 0)
 			{
-				return EditorGUIUtility.LoadGeneratedIconOrNormalIcon(name);
+				result = EditorGUIUtility.LoadGeneratedIconOrNormalIcon(name);
 			}
-			string text = "d_" + Path.GetFileName(name);
-			string directoryName = Path.GetDirectoryName(name);
-			if (!string.IsNullOrEmpty(directoryName))
+			else
 			{
-				text = string.Format("{0}/{1}", directoryName, text);
+				string text = "d_" + Path.GetFileName(name);
+				string directoryName = Path.GetDirectoryName(name);
+				if (!string.IsNullOrEmpty(directoryName))
+				{
+					text = string.Format("{0}/{1}", directoryName, text);
+				}
+				Texture2D texture2D = EditorGUIUtility.LoadGeneratedIconOrNormalIcon(text);
+				if (!texture2D)
+				{
+					texture2D = EditorGUIUtility.LoadGeneratedIconOrNormalIcon(name);
+				}
+				result = texture2D;
 			}
-			Texture2D texture2D = EditorGUIUtility.LoadGeneratedIconOrNormalIcon(text);
-			if (!texture2D)
-			{
-				texture2D = EditorGUIUtility.LoadGeneratedIconOrNormalIcon(name);
-			}
-			return texture2D;
+			return result;
 		}
 
 		[ExcludeFromDocs]
 		public static GUIContent IconContent(string name)
 		{
-			string tooltip = null;
-			return EditorGUIUtility.IconContent(name, tooltip);
+			string text = null;
+			return EditorGUIUtility.IconContent(name, text);
 		}
 
-		public static GUIContent IconContent(string name, [DefaultValue("null")] string tooltip)
+		public static GUIContent IconContent(string name, [DefaultValue("null")] string text)
 		{
 			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_IconGUIContents[name];
+			GUIContent result;
 			if (gUIContent != null)
 			{
-				return gUIContent;
+				result = gUIContent;
 			}
-			gUIContent = new GUIContent();
-			if (tooltip != null)
+			else
 			{
-				string[] nameAndTooltipString = EditorGUIUtility.GetNameAndTooltipString(tooltip);
-				if (nameAndTooltipString[2] != null)
+				gUIContent = new GUIContent();
+				if (text != null)
 				{
-					gUIContent.tooltip = nameAndTooltipString[2];
+					string[] nameAndTooltipString = EditorGUIUtility.GetNameAndTooltipString(text);
+					if (nameAndTooltipString[2] != null)
+					{
+						gUIContent.tooltip = nameAndTooltipString[2];
+					}
 				}
+				gUIContent.image = EditorGUIUtility.LoadIconRequired(name);
+				EditorGUIUtility.s_IconGUIContents[name] = gUIContent;
+				result = gUIContent;
 			}
-			gUIContent.image = EditorGUIUtility.LoadIconRequired(name);
-			EditorGUIUtility.s_IconGUIContents[name] = gUIContent;
-			return gUIContent;
+			return result;
 		}
 
 		internal static void Internal_SwitchSkin()
@@ -527,11 +559,9 @@ namespace UnityEditor
 			EditorGUIUtility.skinIndex = 1 - EditorGUIUtility.skinIndex;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetObjectNameWithInfo(UnityEngine.Object obj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetTypeNameWithInfo(string typeName);
 
@@ -599,7 +629,6 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_SetIconSize(ref size);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetIconSize(ref Vector2 size);
 
@@ -610,35 +639,44 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetIconSize(out Vector2 size);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object GetScript(string scriptClass);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetIconForObject(UnityEngine.Object obj, Texture2D icon);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D GetIconForObject(UnityEngine.Object obj);
 
 		internal static Texture2D GetHelpIcon(MessageType type)
 		{
-			switch (type)
+			Texture2D result;
+			if (type != MessageType.Info)
 			{
-			case MessageType.Info:
-				return EditorGUIUtility.infoIcon;
-			case MessageType.Warning:
-				return EditorGUIUtility.warningIcon;
-			case MessageType.Error:
-				return EditorGUIUtility.errorIcon;
-			default:
-				return null;
+				if (type != MessageType.Warning)
+				{
+					if (type != MessageType.Error)
+					{
+						result = null;
+					}
+					else
+					{
+						result = EditorGUIUtility.errorIcon;
+					}
+				}
+				else
+				{
+					result = EditorGUIUtility.warningIcon;
+				}
 			}
+			else
+			{
+				result = EditorGUIUtility.infoIcon;
+			}
+			return result;
 		}
 
 		internal static GUIStyle GetBasicTextureStyle(Texture2D tex)
@@ -659,7 +697,6 @@ namespace UnityEditor
 			EditorApplication.RequestRepaintAllViews();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D FindTexture(string name);
 
@@ -687,35 +724,41 @@ namespace UnityEditor
 		private static UnityEngine.Object Load(string filename, Type type)
 		{
 			UnityEngine.Object @object = AssetDatabase.LoadAssetAtPath("Assets/Editor Default Resources/" + filename, type);
+			UnityEngine.Object result;
 			if (@object != null)
 			{
-				return @object;
-			}
-			AssetBundle editorAssetBundle = EditorGUIUtility.GetEditorAssetBundle();
-			if (editorAssetBundle == null)
-			{
-				if (Application.isBatchmode)
-				{
-					return null;
-				}
-				throw new NullReferenceException("Failure to load editor resource asset bundle.");
+				result = @object;
 			}
 			else
 			{
-				@object = editorAssetBundle.LoadAsset(filename, type);
-				if (@object != null)
+				AssetBundle editorAssetBundle = EditorGUIUtility.GetEditorAssetBundle();
+				if (editorAssetBundle == null)
 				{
-					return @object;
+					if (!Application.isBatchmode)
+					{
+						throw new NullReferenceException("Failure to load editor resource asset bundle.");
+					}
+					result = null;
 				}
-				return AssetDatabase.LoadAssetAtPath(filename, type);
+				else
+				{
+					@object = editorAssetBundle.LoadAsset(filename, type);
+					if (@object != null)
+					{
+						result = @object;
+					}
+					else
+					{
+						result = AssetDatabase.LoadAssetAtPath(filename, type);
+					}
+				}
 			}
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object GetBuiltinExtraResource(Type type, string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern BuiltinResource[] GetBuiltinResourceList(int classID);
 
@@ -753,53 +796,43 @@ namespace UnityEditor
 
 		internal static void RefreshScrollPosition()
 		{
-			GUI.ScrollViewState topScrollView = GUI.GetTopScrollView();
 			Rect position;
-			if (topScrollView != null && EditorGUIUtility.Internal_GetKeyboardRect(GUIUtility.keyboardControl, out position))
+			if (EditorGUIUtility.Internal_GetKeyboardRect(GUIUtility.keyboardControl, out position))
 			{
-				topScrollView.ScrollTo(position);
+				GUI.ScrollTo(position);
 			}
 		}
 
 		internal static void ScrollForTabbing(bool forward)
 		{
-			GUI.ScrollViewState topScrollView = GUI.GetTopScrollView();
 			Rect position;
-			if (topScrollView != null && EditorGUIUtility.Internal_GetKeyboardRect(EditorGUIUtility.Internal_GetNextKeyboardControlID(forward), out position))
+			if (EditorGUIUtility.Internal_GetKeyboardRect(EditorGUIUtility.Internal_GetNextKeyboardControlID(forward), out position))
 			{
-				topScrollView.ScrollTo(position);
+				GUI.ScrollTo(position);
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_GetKeyboardRect(int id, out Rect rect);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_MoveKeyboardFocus(bool forward);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetNextKeyboardControlID(bool forward);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern AssetBundle GetEditorAssetBundle();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetRenderTextureNoViewport(RenderTexture rt);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetVisibleLayers(int layers);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetLockedLayers(int layers);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsGizmosAllowedForObject(UnityEngine.Object obj);
 
@@ -828,7 +861,6 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_RenderGameViewCamerasInternal(target, targetDisplay, ref screenRect, ref mousePosition, gizmos);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RenderGameViewCamerasInternal(RenderTexture target, int targetDisplay, ref Rect screenRect, ref Vector2 mousePosition, bool gizmos);
 
@@ -838,7 +870,6 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_RenderGameViewCameras(target, targetDisplay, ref screenRect, ref mousePosition, gizmos);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RenderGameViewCameras(RenderTexture target, int targetDisplay, ref Rect screenRect, ref Vector2 mousePosition, bool gizmos);
 
@@ -852,15 +883,12 @@ namespace UnityEditor
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsDisplayReferencedByCameras(int displayIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void QueueGameViewInputEvent(Event evt);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetDefaultFont(Font font);
 
@@ -883,10 +911,7 @@ namespace UnityEditor
 		internal static void HandleControlID(int id)
 		{
 			EditorGUIUtility.s_LastControlID = id;
-			if (EditorGUI.s_PrefixLabel.text != null)
-			{
-				EditorGUI.HandlePrefixLabel(EditorGUI.s_PrefixTotalRect, EditorGUI.s_PrefixRect, EditorGUI.s_PrefixLabel, EditorGUIUtility.s_LastControlID, EditorGUI.s_PrefixStyle);
-			}
+			EditorGUI.PrepareCurrentPrefixLabel(EditorGUIUtility.s_LastControlID);
 		}
 
 		private static float CalcContextWidth()
@@ -972,7 +997,6 @@ namespace UnityEditor
 			return @event;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetupEventValues(object evt);
 
@@ -988,56 +1012,55 @@ namespace UnityEditor
 
 		internal static void DrawColorSwatch(Rect position, Color color, bool showAlpha, bool hdr)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			Color color2 = GUI.color;
-			float a = (float)((!GUI.enabled) ? 2 : 1);
-			GUI.color = ((!EditorGUI.showMixedValue) ? new Color(color.r, color.g, color.b, a) : (new Color(0.82f, 0.82f, 0.82f, a) * color2));
-			GUIStyle whiteTextureStyle = EditorGUIUtility.whiteTextureStyle;
-			whiteTextureStyle.Draw(position, false, false, false, false);
-			float maxColorComponent = GUI.color.maxColorComponent;
-			if (hdr && maxColorComponent > 1f)
-			{
-				float num = position.width / 3f;
-				Rect position2 = new Rect(position.x, position.y, num, position.height);
-				Rect position3 = new Rect(position.xMax - num, position.y, num, position.height);
-				Color color3 = GUI.color.RGBMultiplied(1f / maxColorComponent);
-				Color color4 = GUI.color;
-				GUI.color = color3;
-				GUIStyle basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(EditorGUIUtility.whiteTexture);
-				basicTextureStyle.Draw(position2, false, false, false, false);
-				basicTextureStyle.Draw(position3, false, false, false, false);
-				GUI.color = color4;
-				basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(ColorPicker.GetGradientTextureWithAlpha0To1());
-				basicTextureStyle.Draw(position2, false, false, false, false);
-				basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(ColorPicker.GetGradientTextureWithAlpha1To0());
-				basicTextureStyle.Draw(position3, false, false, false, false);
-			}
-			if (!EditorGUI.showMixedValue)
-			{
-				if (showAlpha)
+				Color color2 = GUI.color;
+				float a = (float)((!GUI.enabled) ? 2 : 1);
+				GUI.color = ((!EditorGUI.showMixedValue) ? new Color(color.r, color.g, color.b, a) : (new Color(0.82f, 0.82f, 0.82f, a) * color2));
+				GUIStyle whiteTextureStyle = EditorGUIUtility.whiteTextureStyle;
+				whiteTextureStyle.Draw(position, false, false, false, false);
+				float maxColorComponent = GUI.color.maxColorComponent;
+				if (hdr && maxColorComponent > 1f)
 				{
-					GUI.color = new Color(0f, 0f, 0f, a);
-					float num2 = Mathf.Clamp(position.height * 0.2f, 2f, 20f);
-					Rect position4 = new Rect(position.x, position.yMax - num2, position.width, num2);
-					whiteTextureStyle.Draw(position4, false, false, false, false);
-					GUI.color = new Color(1f, 1f, 1f, a);
-					position4.width *= Mathf.Clamp01(color.a);
-					whiteTextureStyle.Draw(position4, false, false, false, false);
+					float num = position.width / 3f;
+					Rect position2 = new Rect(position.x, position.y, num, position.height);
+					Rect position3 = new Rect(position.xMax - num, position.y, num, position.height);
+					Color color3 = GUI.color.RGBMultiplied(1f / maxColorComponent);
+					Color color4 = GUI.color;
+					GUI.color = color3;
+					GUIStyle basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(EditorGUIUtility.whiteTexture);
+					basicTextureStyle.Draw(position2, false, false, false, false);
+					basicTextureStyle.Draw(position3, false, false, false, false);
+					GUI.color = color4;
+					basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(ColorPicker.GetGradientTextureWithAlpha0To1());
+					basicTextureStyle.Draw(position2, false, false, false, false);
+					basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(ColorPicker.GetGradientTextureWithAlpha1To0());
+					basicTextureStyle.Draw(position3, false, false, false, false);
 				}
-			}
-			else
-			{
-				EditorGUI.BeginHandleMixedValueContentColor();
-				whiteTextureStyle.Draw(position, EditorGUI.mixedValueContent, false, false, false, false);
-				EditorGUI.EndHandleMixedValueContentColor();
-			}
-			GUI.color = color2;
-			if (hdr && maxColorComponent > 1f)
-			{
-				GUI.Label(new Rect(position.x, position.y, position.width - 3f, position.height), "HDR", EditorStyles.centeredGreyMiniLabel);
+				if (!EditorGUI.showMixedValue)
+				{
+					if (showAlpha)
+					{
+						GUI.color = new Color(0f, 0f, 0f, a);
+						float num2 = Mathf.Clamp(position.height * 0.2f, 2f, 20f);
+						Rect position4 = new Rect(position.x, position.yMax - num2, position.width, num2);
+						whiteTextureStyle.Draw(position4, false, false, false, false);
+						GUI.color = new Color(1f, 1f, 1f, a);
+						position4.width *= Mathf.Clamp01(color.a);
+						whiteTextureStyle.Draw(position4, false, false, false, false);
+					}
+				}
+				else
+				{
+					EditorGUI.BeginHandleMixedValueContentColor();
+					whiteTextureStyle.Draw(position, EditorGUI.mixedValueContent, false, false, false, false);
+					EditorGUI.EndHandleMixedValueContentColor();
+				}
+				GUI.color = color2;
+				if (hdr && maxColorComponent > 1f)
+				{
+					GUI.Label(new Rect(position.x, position.y, position.width - 3f, position.height), "HDR", EditorStyles.centeredGreyMiniLabel);
+				}
 			}
 		}
 
@@ -1073,69 +1096,68 @@ namespace UnityEditor
 
 		private static void DrawCurveSwatchInternal(Rect position, AnimationCurve curve, AnimationCurve curve2, SerializedProperty property, SerializedProperty property2, Color color, Color bgColor, bool useCurveRanges, Rect curveRanges, Color topFillColor, Color bottomFillColor)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			int num = (int)position.width;
-			int num2 = (int)position.height;
-			int maxTextureSize = SystemInfo.maxTextureSize;
-			bool flag = num > maxTextureSize;
-			bool flag2 = num2 > maxTextureSize;
-			if (flag)
-			{
-				num = Mathf.Min(num, maxTextureSize);
-			}
-			if (flag2)
-			{
-				num2 = Mathf.Min(num2, maxTextureSize);
-			}
-			Color color2 = GUI.color;
-			GUI.color = bgColor;
-			GUIStyle gUIStyle = EditorGUIUtility.whiteTextureStyle;
-			gUIStyle.Draw(position, false, false, false, false);
-			GUI.color = color2;
-			if (property != null && property.hasMultipleDifferentValues)
-			{
-				EditorGUI.BeginHandleMixedValueContentColor();
-				GUI.Label(position, EditorGUI.mixedValueContent, "PreOverlayLabel");
-				EditorGUI.EndHandleMixedValueContentColor();
-			}
-			else
-			{
-				Texture2D texture2D = null;
-				if (property != null)
+				int num = (int)position.width;
+				int num2 = (int)position.height;
+				int maxTextureSize = SystemInfo.maxTextureSize;
+				bool flag = num > maxTextureSize;
+				bool flag2 = num2 > maxTextureSize;
+				if (flag)
 				{
-					if (property2 == null)
-					{
-						texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, property, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, property, color, topFillColor, bottomFillColor, curveRanges));
-					}
-					else
-					{
-						texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, property, property2, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, property, property2, color, topFillColor, bottomFillColor, curveRanges));
-					}
+					num = Mathf.Min(num, maxTextureSize);
 				}
-				else if (curve != null)
+				if (flag2)
 				{
-					if (curve2 == null)
-					{
-						texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, curve, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, curve, color, topFillColor, bottomFillColor, curveRanges));
-					}
-					else
-					{
-						texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, curve, curve2, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, curve, curve2, color, topFillColor, bottomFillColor, curveRanges));
-					}
+					num2 = Mathf.Min(num2, maxTextureSize);
 				}
-				gUIStyle = EditorGUIUtility.GetBasicTextureStyle(texture2D);
-				if (!flag)
-				{
-					position.width = (float)texture2D.width;
-				}
-				if (!flag2)
-				{
-					position.height = (float)texture2D.height;
-				}
+				Color color2 = GUI.color;
+				GUI.color = bgColor;
+				GUIStyle gUIStyle = EditorGUIUtility.whiteTextureStyle;
 				gUIStyle.Draw(position, false, false, false, false);
+				GUI.color = color2;
+				if (property != null && property.hasMultipleDifferentValues)
+				{
+					EditorGUI.BeginHandleMixedValueContentColor();
+					GUI.Label(position, EditorGUI.mixedValueContent, "PreOverlayLabel");
+					EditorGUI.EndHandleMixedValueContentColor();
+				}
+				else
+				{
+					Texture2D texture2D = null;
+					if (property != null)
+					{
+						if (property2 == null)
+						{
+							texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, property, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, property, color, topFillColor, bottomFillColor, curveRanges));
+						}
+						else
+						{
+							texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, property, property2, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, property, property2, color, topFillColor, bottomFillColor, curveRanges));
+						}
+					}
+					else if (curve != null)
+					{
+						if (curve2 == null)
+						{
+							texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, curve, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, curve, color, topFillColor, bottomFillColor, curveRanges));
+						}
+						else
+						{
+							texture2D = ((!useCurveRanges) ? AnimationCurvePreviewCache.GetPreview(num, num2, curve, curve2, color, topFillColor, bottomFillColor) : AnimationCurvePreviewCache.GetPreview(num, num2, curve, curve2, color, topFillColor, bottomFillColor, curveRanges));
+						}
+					}
+					gUIStyle = EditorGUIUtility.GetBasicTextureStyle(texture2D);
+					if (!flag)
+					{
+						position.width = (float)texture2D.width;
+					}
+					if (!flag2)
+					{
+						position.height = (float)texture2D.height;
+					}
+					gUIStyle.Draw(position, false, false, false, false);
+				}
 			}
 		}
 
@@ -1162,11 +1184,9 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_SetPasteboardColor(ref color);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPasteboardColor(ref Color color);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasPasteboardColor();
 
@@ -1177,7 +1197,6 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetPasteboardColor(out Color value);
 
@@ -1193,11 +1212,10 @@ namespace UnityEditor
 				Rect rect = GUIClip.Unclip(position);
 				Rect topmostRect = GUIClip.topmostRect;
 				Rect r = Rect.MinMaxRect(Mathf.Max(rect.x, topmostRect.x), Mathf.Max(rect.y, topmostRect.y), Mathf.Min(rect.xMax, topmostRect.xMax), Mathf.Min(rect.yMax, topmostRect.yMax));
-				if (r.width <= 0f || r.height <= 0f)
+				if (r.width > 0f && r.height > 0f)
 				{
-					return;
+					EditorGUIUtility.Internal_AddCursorRect(r, mouse, controlID);
 				}
-				EditorGUIUtility.Internal_AddCursorRect(r, mouse, controlID);
 			}
 		}
 
@@ -1206,7 +1224,6 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_Internal_AddCursorRect(ref r, m, controlID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_AddCursorRect(ref Rect r, MouseCursor m, int controlID);
 
@@ -1236,35 +1253,29 @@ namespace UnityEditor
 
 		internal static void DrawHorizontalSplitter(Rect dragRect)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				Color color = GUI.color;
+				Color b = (!EditorGUIUtility.isProSkin) ? new Color(0.6f, 0.6f, 0.6f, 1.333f) : new Color(0.12f, 0.12f, 0.12f, 1.333f);
+				GUI.color *= b;
+				Rect position = new Rect(dragRect.x - 1f, dragRect.y, 1f, dragRect.height);
+				GUI.DrawTexture(position, EditorGUIUtility.whiteTexture);
+				GUI.color = color;
 			}
-			Color color = GUI.color;
-			Color b = (!EditorGUIUtility.isProSkin) ? new Color(0.6f, 0.6f, 0.6f, 1.333f) : new Color(0.12f, 0.12f, 0.12f, 1.333f);
-			GUI.color *= b;
-			Rect position = new Rect(dragRect.x - 1f, dragRect.y, 1f, dragRect.height);
-			GUI.DrawTexture(position, EditorGUIUtility.whiteTexture);
-			GUI.color = color;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CleanCache(string text);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSearchIndexOfControlIDList(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetSearchIndexOfControlIDList();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CanHaveKeyboardFocus(int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetWantsMouseJumping(int wantz);
 
@@ -1284,6 +1295,18 @@ namespace UnityEditor
 		public static int GetObjectPickerControlID()
 		{
 			return ObjectSelector.get.objectSelectorID;
+		}
+
+		internal static void RepaintCurrentWindow()
+		{
+			GUIUtility.CheckOnGUI();
+			GUIView.current.Repaint();
+		}
+
+		internal static bool HasCurrentWindowKeyFocus()
+		{
+			GUIUtility.CheckOnGUI();
+			return GUIView.current.hasFocus;
 		}
 
 		public static Rect PointsToPixels(Rect rect)

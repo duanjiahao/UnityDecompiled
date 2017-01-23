@@ -22,11 +22,9 @@ namespace UnityEngine.Networking
 			return this.InternalGetText();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern byte[] InternalGetData();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern string InternalGetText();
 

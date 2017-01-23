@@ -16,15 +16,15 @@ namespace UnityEditor
 		[MenuItem("Window/Screenshot/Set Window Size %&l", false, 1000, true)]
 		public static void SetMainWindowSize()
 		{
-			MainWindow mainWindow = Resources.FindObjectsOfTypeAll(typeof(MainWindow))[0] as MainWindow;
-			mainWindow.window.position = new Rect(0f, 0f, 1024f, 768f);
+			MainView mainView = Resources.FindObjectsOfTypeAll<MainView>()[0];
+			mainView.window.position = new Rect(0f, 0f, 1024f, 768f);
 		}
 
 		[MenuItem("Window/Screenshot/Set Window Size Small", false, 1000, true)]
 		public static void SetMainWindowSizeSmall()
 		{
-			MainWindow mainWindow = Resources.FindObjectsOfTypeAll(typeof(MainWindow))[0] as MainWindow;
-			mainWindow.window.position = new Rect(0f, 0f, 762f, 600f);
+			MainView mainView = Resources.FindObjectsOfTypeAll<MainView>()[0];
+			mainView.window.position = new Rect(0f, 0f, 762f, 600f);
 		}
 
 		[MenuItem("Window/Screenshot/Snap View %&j", false, 1000, true)]
@@ -63,9 +63,9 @@ namespace UnityEditor
 			if (mouseOverView != null)
 			{
 				string name = ScreenShots.GetGUIViewName(mouseOverView) + "Extended";
-				MainWindow mainWindow = Resources.FindObjectsOfTypeAll(typeof(MainWindow))[0] as MainWindow;
+				MainView mainView = Resources.FindObjectsOfTypeAll<MainView>()[0];
 				Rect screenPosition = mouseOverView.screenPosition;
-				screenPosition.xMax = mainWindow.window.position.xMax;
+				screenPosition.xMax = mainView.window.position.xMax;
 				screenPosition.y -= 1f;
 				screenPosition.height += 2f;
 				ScreenShots.SaveScreenShot(screenPosition, name);
@@ -116,11 +116,16 @@ namespace UnityEditor
 		private static string GetGUIViewName(GUIView view)
 		{
 			HostView hostView = view as HostView;
+			string result;
 			if (hostView != null)
 			{
-				return hostView.actualView.GetType().Name;
+				result = hostView.actualView.GetType().Name;
 			}
-			return "Window";
+			else
+			{
+				result = "Window";
+			}
+			return result;
 		}
 
 		public static void SaveScreenShot(Rect r, string name)

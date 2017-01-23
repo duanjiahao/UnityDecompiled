@@ -9,15 +9,15 @@ namespace UnityEditor
 {
 	internal class AttachProfilerUI
 	{
-		private const int PLAYER_DIRECT_IP_CONNECT_GUID = 65261;
-
-		private const int PLAYER_DIRECT_URL_CONNECT_GUID = 65262;
-
 		private GUIContent m_CurrentProfiler;
 
 		private static string kEnterIPText = "<Enter IP>";
 
 		private static GUIContent ms_NotificationMessage;
+
+		private const int PLAYER_DIRECT_IP_CONNECT_GUID = 65261;
+
+		private const int PLAYER_DIRECT_URL_CONNECT_GUID = 65262;
 
 		private void SelectProfilerClick(object userData, string[] options, int selected)
 		{
@@ -78,19 +78,18 @@ namespace UnityEditor
 		private static void AddLastIPProfiler(List<ProfilerChoise> profilers)
 		{
 			string lastIP = ProfilerIPWindow.GetLastIPString();
-			if (string.IsNullOrEmpty(lastIP))
+			if (!string.IsNullOrEmpty(lastIP))
 			{
-				return;
+				ProfilerChoise item = default(ProfilerChoise);
+				item.Name = lastIP;
+				item.Enabled = true;
+				item.IsSelected = (() => ProfilerDriver.connectedProfiler == 65261);
+				item.ConnectTo = delegate
+				{
+					AttachProfilerUI.DirectIPConnect(lastIP);
+				};
+				profilers.Add(item);
 			}
-			ProfilerChoise item = default(ProfilerChoise);
-			item.Name = lastIP;
-			item.Enabled = true;
-			item.IsSelected = (() => ProfilerDriver.connectedProfiler == 65261);
-			item.ConnectTo = delegate
-			{
-				AttachProfilerUI.DirectIPConnect(lastIP);
-			};
-			profilers.Add(item);
 		}
 
 		private static void AddPlayerProfilers(List<ProfilerChoise> profilers)
@@ -165,34 +164,48 @@ namespace UnityEditor
 
 		public void OnGUI(Rect connectRect, GUIContent profilerLabel)
 		{
-			if (!EditorGUI.ButtonMouseDown(connectRect, profilerLabel, FocusType.Native, EditorStyles.toolbarDropDown))
+			if (EditorGUI.ButtonMouseDown(connectRect, profilerLabel, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
-				return;
-			}
-			List<ProfilerChoise> list = new List<ProfilerChoise>();
-			list.Clear();
-			AttachProfilerUI.AddPlayerProfilers(list);
-			AttachProfilerUI.AddDeviceProfilers(list);
-			AttachProfilerUI.AddLastIPProfiler(list);
-			this.AddEnterIPProfiler(list, GUIUtility.GUIToScreenRect(connectRect));
-			string[] options = (from p in list
-			select p.Name).ToArray<string>();
-			bool[] enabled = (from p in list
-			select p.Enabled).ToArray<bool>();
-			int num = list.FindIndex((ProfilerChoise p) => p.IsSelected());
-			int[] selected;
-			if (num == -1)
-			{
-				selected = new int[0];
-			}
-			else
-			{
-				selected = new int[]
+				List<ProfilerChoise> list = new List<ProfilerChoise>();
+				list.Clear();
+				AttachProfilerUI.AddPlayerProfilers(list);
+				AttachProfilerUI.AddDeviceProfilers(list);
+				AttachProfilerUI.AddLastIPProfiler(list);
+				if (!ProfilerDriver.IsConnectionEditor())
 				{
-					num
-				};
+					if (!list.Any((ProfilerChoise p) => p.IsSelected()))
+					{
+						List<ProfilerChoise> arg_D2_0 = list;
+						ProfilerChoise item = default(ProfilerChoise);
+						item.Name = "(Autoconnected Player)";
+						item.Enabled = false;
+						item.IsSelected = (() => true);
+						item.ConnectTo = delegate
+						{
+						};
+						arg_D2_0.Add(item);
+					}
+				}
+				this.AddEnterIPProfiler(list, GUIUtility.GUIToScreenRect(connectRect));
+				string[] options = (from p in list
+				select p.Name).ToArray<string>();
+				bool[] enabled = (from p in list
+				select p.Enabled).ToArray<bool>();
+				int num = list.FindIndex((ProfilerChoise p) => p.IsSelected());
+				int[] selected;
+				if (num == -1)
+				{
+					selected = new int[0];
+				}
+				else
+				{
+					selected = new int[]
+					{
+						num
+					};
+				}
+				EditorUtility.DisplayCustomMenu(connectRect, options, enabled, selected, new EditorUtility.SelectMenuItemFunction(this.SelectProfilerClick), list);
 			}
-			EditorUtility.DisplayCustomMenu(connectRect, options, enabled, selected, new EditorUtility.SelectMenuItemFunction(this.SelectProfilerClick), list);
 		}
 	}
 }

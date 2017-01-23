@@ -19,7 +19,7 @@ namespace UnityEditor
 			}
 			bool enabled = GUI.enabled;
 			GUI.enabled = true;
-			TextAsset textAsset = this.target as TextAsset;
+			TextAsset textAsset = base.target as TextAsset;
 			if (textAsset != null)
 			{
 				string text;

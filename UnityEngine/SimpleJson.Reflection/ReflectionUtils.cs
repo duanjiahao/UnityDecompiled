@@ -10,7 +10,15 @@ namespace SimpleJson.Reflection
 	[GeneratedCode("reflection-utils", "1.0.0")]
 	internal class ReflectionUtils
 	{
-		public sealed class ThreadSafeDictionary<TKey, TValue> : IEnumerable, IDictionary<TKey, TValue>, ICollection<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>
+		public delegate object GetDelegate(object source);
+
+		public delegate void SetDelegate(object source, object value);
+
+		public delegate object ConstructorDelegate(params object[] args);
+
+		public delegate TValue ThreadSafeDictionaryValueFactory<TKey, TValue>(TKey key);
+
+		public sealed class ThreadSafeDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ICollection<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable
 		{
 			private readonly object _lock = new object();
 
@@ -67,21 +75,21 @@ namespace SimpleJson.Reflection
 				this._valueFactory = valueFactory;
 			}
 
-			IEnumerator IEnumerable.GetEnumerator()
-			{
-				return this._dictionary.GetEnumerator();
-			}
-
 			private TValue Get(TKey key)
 			{
+				TValue result;
+				TValue tValue;
 				if (this._dictionary == null)
 				{
-					return this.AddValue(key);
+					result = this.AddValue(key);
 				}
-				TValue result;
-				if (!this._dictionary.TryGetValue(key, out result))
+				else if (!this._dictionary.TryGetValue(key, out tValue))
 				{
-					return this.AddValue(key);
+					result = this.AddValue(key);
+				}
+				else
+				{
+					result = tValue;
 				}
 				return result;
 			}
@@ -90,6 +98,7 @@ namespace SimpleJson.Reflection
 			{
 				TValue tValue = this._valueFactory(key);
 				object @lock = this._lock;
+				TValue result;
 				lock (@lock)
 				{
 					if (this._dictionary == null)
@@ -99,9 +108,10 @@ namespace SimpleJson.Reflection
 					}
 					else
 					{
-						TValue result;
-						if (this._dictionary.TryGetValue(key, out result))
+						TValue tValue2;
+						if (this._dictionary.TryGetValue(key, out tValue2))
 						{
+							result = tValue2;
 							return result;
 						}
 						Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>(this._dictionary);
@@ -109,7 +119,8 @@ namespace SimpleJson.Reflection
 						this._dictionary = dictionary;
 					}
 				}
-				return tValue;
+				result = tValue;
+				return result;
 			}
 
 			public void Add(TKey key, TValue value)
@@ -162,34 +173,41 @@ namespace SimpleJson.Reflection
 			{
 				return this._dictionary.GetEnumerator();
 			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return this._dictionary.GetEnumerator();
+			}
 		}
-
-		public delegate object GetDelegate(object source);
-
-		public delegate void SetDelegate(object source, object value);
-
-		public delegate object ConstructorDelegate(params object[] args);
-
-		public delegate TValue ThreadSafeDictionaryValueFactory<TKey, TValue>(TKey key);
 
 		private static readonly object[] EmptyObjects = new object[0];
 
 		public static Attribute GetAttribute(MemberInfo info, Type type)
 		{
+			Attribute result;
 			if (info == null || type == null || !Attribute.IsDefined(info, type))
 			{
-				return null;
+				result = null;
 			}
-			return Attribute.GetCustomAttribute(info, type);
+			else
+			{
+				result = Attribute.GetCustomAttribute(info, type);
+			}
+			return result;
 		}
 
 		public static Attribute GetAttribute(Type objectType, Type attributeType)
 		{
+			Attribute result;
 			if (objectType == null || attributeType == null || !Attribute.IsDefined(objectType, attributeType))
 			{
-				return null;
+				result = null;
 			}
-			return Attribute.GetCustomAttribute(objectType, attributeType);
+			else
+			{
+				result = Attribute.GetCustomAttribute(objectType, attributeType);
+			}
+			return result;
 		}
 
 		public static Type[] GetGenericTypeArguments(Type type)
@@ -199,12 +217,17 @@ namespace SimpleJson.Reflection
 
 		public static bool IsTypeGenericeCollectionInterface(Type type)
 		{
+			bool result;
 			if (!type.IsGenericType)
 			{
-				return false;
+				result = false;
 			}
-			Type genericTypeDefinition = type.GetGenericTypeDefinition();
-			return genericTypeDefinition == typeof(IList<>) || genericTypeDefinition == typeof(ICollection<>) || genericTypeDefinition == typeof(IEnumerable<>);
+			else
+			{
+				Type genericTypeDefinition = type.GetGenericTypeDefinition();
+				result = (genericTypeDefinition == typeof(IList<>) || genericTypeDefinition == typeof(ICollection<>) || genericTypeDefinition == typeof(IEnumerable<>));
+			}
+			return result;
 		}
 
 		public static bool IsAssignableFrom(Type type1, Type type2)
@@ -214,16 +237,21 @@ namespace SimpleJson.Reflection
 
 		public static bool IsTypeDictionary(Type type)
 		{
+			bool result;
 			if (typeof(IDictionary).IsAssignableFrom(type))
 			{
-				return true;
+				result = true;
 			}
-			if (!type.IsGenericType)
+			else if (!type.IsGenericType)
 			{
-				return false;
+				result = false;
 			}
-			Type genericTypeDefinition = type.GetGenericTypeDefinition();
-			return genericTypeDefinition == typeof(IDictionary<, >);
+			else
+			{
+				Type genericTypeDefinition = type.GetGenericTypeDefinition();
+				result = (genericTypeDefinition == typeof(IDictionary<, >));
+			}
+			return result;
 		}
 
 		public static bool IsNullableType(Type type)
@@ -249,6 +277,7 @@ namespace SimpleJson.Reflection
 		public static ConstructorInfo GetConstructorInfo(Type type, params Type[] argsType)
 		{
 			IEnumerable<ConstructorInfo> constructors = ReflectionUtils.GetConstructors(type);
+			ConstructorInfo result;
 			foreach (ConstructorInfo current in constructors)
 			{
 				ParameterInfo[] parameters = current.GetParameters();
@@ -268,11 +297,13 @@ namespace SimpleJson.Reflection
 					}
 					if (flag)
 					{
-						return current;
+						result = current;
+						return result;
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public static IEnumerable<PropertyInfo> GetProperties(Type type)

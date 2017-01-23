@@ -59,13 +59,13 @@ namespace UnityEditor
 
 		private static bool OSX = Application.platform == RuntimePlatform.OSXEditor;
 
-		private ASHistoryFileView.SelectionType m_SelType;
+		private ASHistoryFileView.SelectionType m_SelType = ASHistoryFileView.SelectionType.None;
 
-		private bool m_DeletedItemsToggle;
+		private bool m_DeletedItemsToggle = false;
 
-		private DeletedAsset[] m_DeletedItems;
+		private DeletedAsset[] m_DeletedItems = null;
 
-		private bool m_DeletedItemsInitialized;
+		private bool m_DeletedItemsInitialized = false;
 
 		private ParentViewState m_DelPVstate = new ParentViewState();
 
@@ -155,7 +155,7 @@ namespace UnityEditor
 				{
 					this.m_DelPVstate.selectedItems[num] = true;
 					this.ScrollToDeletedItem(num);
-					return;
+					break;
 				}
 				for (int j = 0; j < parentViewFolder.files.Length; j++)
 				{
@@ -251,11 +251,16 @@ namespace UnityEditor
 
 		private int ControlIDForProperty(HierarchyProperty property)
 		{
+			int result;
 			if (property != null)
 			{
-				return property.row + 10000000;
+				result = property.row + 10000000;
 			}
-			return -1;
+			else
+			{
+				result = -1;
+			}
+			return result;
 		}
 
 		private void SetExpanded(int instanceID, bool expand)
@@ -277,10 +282,23 @@ namespace UnityEditor
 				}
 				this.m_ExpandedArray = new int[hashtable.Count];
 				int num = 0;
-				foreach (int num2 in hashtable.Keys)
+				IEnumerator enumerator = hashtable.Keys.GetEnumerator();
+				try
 				{
-					this.m_ExpandedArray[num] = num2;
-					num++;
+					while (enumerator.MoveNext())
+					{
+						int num2 = (int)enumerator.Current;
+						this.m_ExpandedArray[num] = num2;
+						num++;
+					}
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
 				}
 			}
 			InternalEditorUtility.expandedProjectWindowItems = this.m_ExpandedArray;
@@ -385,21 +403,31 @@ namespace UnityEditor
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
 			int count = hierarchyProperty.CountRemaining(this.m_ExpandedArray);
 			hierarchyProperty.Reset();
+			HierarchyProperty result;
 			if (hierarchyProperty.Skip(count, this.m_ExpandedArray))
 			{
-				return hierarchyProperty;
+				result = hierarchyProperty;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private HierarchyProperty GetFirst()
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
+			HierarchyProperty result;
 			if (hierarchyProperty.Next(this.m_ExpandedArray))
 			{
-				return hierarchyProperty;
+				result = hierarchyProperty;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private void OpenAssetSelection()
@@ -454,15 +482,15 @@ namespace UnityEditor
 			switch (keyCode)
 			{
 			case KeyCode.KeypadEnter:
-				goto IL_1B4;
+				goto IL_1C6;
 			case KeyCode.KeypadEquals:
 			case KeyCode.Insert:
-				IL_45:
+				IL_44:
 				if (keyCode != KeyCode.Return)
 				{
 					return;
 				}
-				goto IL_1B4;
+				goto IL_1C6;
 			case KeyCode.UpArrow:
 			{
 				Event.current.Use();
@@ -482,7 +510,7 @@ namespace UnityEditor
 						this.FrameObject(pptrValue);
 					}
 				}
-				goto IL_3F9;
+				goto IL_430;
 			}
 			case KeyCode.DownArrow:
 			{
@@ -508,7 +536,7 @@ namespace UnityEditor
 						this.FrameObject(pptrValue2);
 					}
 				}
-				goto IL_3F9;
+				goto IL_430;
 			}
 			case KeyCode.RightArrow:
 			{
@@ -517,7 +545,7 @@ namespace UnityEditor
 				{
 					this.SetExpanded(activeSelected.instanceID, true);
 				}
-				goto IL_3F9;
+				goto IL_430;
 			}
 			case KeyCode.LeftArrow:
 			{
@@ -526,7 +554,7 @@ namespace UnityEditor
 				{
 					this.SetExpanded(activeSelected2.instanceID, false);
 				}
-				goto IL_3F9;
+				goto IL_430;
 			}
 			case KeyCode.Home:
 				if (this.GetFirst() != null)
@@ -534,14 +562,14 @@ namespace UnityEditor
 					Selection.activeObject = this.GetFirst().pptrValue;
 					this.FrameObject(Selection.activeObject);
 				}
-				goto IL_3F9;
+				goto IL_430;
 			case KeyCode.End:
 				if (this.GetLast() != null)
 				{
 					Selection.activeObject = this.GetLast().pptrValue;
 					this.FrameObject(Selection.activeObject);
 				}
-				goto IL_3F9;
+				goto IL_430;
 			case KeyCode.PageUp:
 				Event.current.Use();
 				if (ASHistoryFileView.OSX)
@@ -577,7 +605,7 @@ namespace UnityEditor
 						this.FrameObject(Selection.activeObject);
 					}
 				}
-				goto IL_3F9;
+				goto IL_430;
 			case KeyCode.PageDown:
 				Event.current.Use();
 				if (ASHistoryFileView.OSX)
@@ -609,16 +637,16 @@ namespace UnityEditor
 						this.FrameObject(Selection.activeObject);
 					}
 				}
-				goto IL_3F9;
+				goto IL_430;
 			}
-			goto IL_45;
-			IL_1B4:
+			goto IL_44;
+			IL_1C6:
 			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
 				this.OpenAssetSelection();
 				GUIUtility.ExitGUI();
 			}
-			IL_3F9:
+			IL_430:
 			Event.current.Use();
 		}
 
@@ -663,78 +691,77 @@ namespace UnityEditor
 		{
 			int row = this.m_DelPVstate.lv.row;
 			int num = row;
-			if (!this.DeletedItemsToggle)
+			if (this.DeletedItemsToggle)
 			{
-				return;
-			}
-			switch (Event.current.keyCode)
-			{
-			case KeyCode.UpArrow:
-				if (num > 0)
+				switch (Event.current.keyCode)
 				{
-					num--;
+				case KeyCode.UpArrow:
+					if (num > 0)
+					{
+						num--;
+					}
+					else
+					{
+						this.SelType = ASHistoryFileView.SelectionType.DeletedItemsRoot;
+						this.ScrollToDeletedItem(-1);
+						parentWin.DoLocalSelectionChange();
+					}
+					goto IL_1C9;
+				case KeyCode.DownArrow:
+					if (num < this.m_DelPVstate.lv.totalRows - 1)
+					{
+						num++;
+					}
+					goto IL_1C9;
+				case KeyCode.Home:
+					num = 0;
+					goto IL_1C9;
+				case KeyCode.End:
+					num = this.m_DelPVstate.lv.totalRows - 1;
+					goto IL_1C9;
+				case KeyCode.PageUp:
+					if (ASHistoryFileView.OSX)
+					{
+						this.m_ScrollPosition.y = this.m_ScrollPosition.y - this.m_ScreenRect.height;
+						if (this.m_ScrollPosition.y < 0f)
+						{
+							this.m_ScrollPosition.y = 0f;
+						}
+					}
+					else
+					{
+						num -= (int)(this.m_ScreenRect.height / ASHistoryFileView.m_RowHeight);
+						if (num < 0)
+						{
+							num = 0;
+						}
+					}
+					goto IL_1C9;
+				case KeyCode.PageDown:
+					if (ASHistoryFileView.OSX)
+					{
+						this.m_ScrollPosition.y = this.m_ScrollPosition.y + this.m_ScreenRect.height;
+					}
+					else
+					{
+						num += (int)(this.m_ScreenRect.height / ASHistoryFileView.m_RowHeight);
+						if (num > this.m_DelPVstate.lv.totalRows - 1)
+						{
+							num = this.m_DelPVstate.lv.totalRows - 1;
+						}
+					}
+					goto IL_1C9;
 				}
-				else
+				return;
+				IL_1C9:
+				Event.current.Use();
+				if (num != row)
 				{
-					this.SelType = ASHistoryFileView.SelectionType.DeletedItemsRoot;
-					this.ScrollToDeletedItem(-1);
+					this.m_DelPVstate.lv.row = num;
+					ListViewShared.MultiSelection(null, row, num, ref this.m_DelPVstate.initialSelectedItem, ref this.m_DelPVstate.selectedItems);
+					this.ScrollToDeletedItem(num);
 					parentWin.DoLocalSelectionChange();
 				}
-				goto IL_1AE;
-			case KeyCode.DownArrow:
-				if (num < this.m_DelPVstate.lv.totalRows - 1)
-				{
-					num++;
-				}
-				goto IL_1AE;
-			case KeyCode.Home:
-				num = 0;
-				goto IL_1AE;
-			case KeyCode.End:
-				num = this.m_DelPVstate.lv.totalRows - 1;
-				goto IL_1AE;
-			case KeyCode.PageUp:
-				if (ASHistoryFileView.OSX)
-				{
-					this.m_ScrollPosition.y = this.m_ScrollPosition.y - this.m_ScreenRect.height;
-					if (this.m_ScrollPosition.y < 0f)
-					{
-						this.m_ScrollPosition.y = 0f;
-					}
-				}
-				else
-				{
-					num -= (int)(this.m_ScreenRect.height / ASHistoryFileView.m_RowHeight);
-					if (num < 0)
-					{
-						num = 0;
-					}
-				}
-				goto IL_1AE;
-			case KeyCode.PageDown:
-				if (ASHistoryFileView.OSX)
-				{
-					this.m_ScrollPosition.y = this.m_ScrollPosition.y + this.m_ScreenRect.height;
-				}
-				else
-				{
-					num += (int)(this.m_ScreenRect.height / ASHistoryFileView.m_RowHeight);
-					if (num > this.m_DelPVstate.lv.totalRows - 1)
-					{
-						num = this.m_DelPVstate.lv.totalRows - 1;
-					}
-				}
-				goto IL_1AE;
-			}
-			return;
-			IL_1AE:
-			Event.current.Use();
-			if (num != row)
-			{
-				this.m_DelPVstate.lv.row = num;
-				ListViewShared.MultiSelection(null, row, num, ref this.m_DelPVstate.initialSelectedItem, ref this.m_DelPVstate.selectedItems);
-				this.ScrollToDeletedItem(num);
-				parentWin.DoLocalSelectionChange();
 			}
 		}
 
@@ -754,48 +781,55 @@ namespace UnityEditor
 
 		private void KeyboardGUI(ASHistoryWindow parentWin)
 		{
-			if (Event.current.GetTypeForControl(this.m_FileViewControlID) != EventType.KeyDown || this.m_FileViewControlID != GUIUtility.keyboardControl)
+			if (Event.current.GetTypeForControl(this.m_FileViewControlID) == EventType.KeyDown && this.m_FileViewControlID == GUIUtility.keyboardControl)
 			{
-				return;
-			}
-			switch (this.SelType)
-			{
-			case ASHistoryFileView.SelectionType.All:
-				this.AllProjectKeyboard();
-				break;
-			case ASHistoryFileView.SelectionType.Items:
-				this.AssetViewKeyboard();
-				break;
-			case ASHistoryFileView.SelectionType.DeletedItemsRoot:
-				this.DeletedItemsRootKeyboard(parentWin);
-				break;
-			case ASHistoryFileView.SelectionType.DeletedItems:
-				this.DeletedItemsKeyboard(parentWin);
-				break;
+				switch (this.SelType)
+				{
+				case ASHistoryFileView.SelectionType.All:
+					this.AllProjectKeyboard();
+					break;
+				case ASHistoryFileView.SelectionType.Items:
+					this.AssetViewKeyboard();
+					break;
+				case ASHistoryFileView.SelectionType.DeletedItemsRoot:
+					this.DeletedItemsRootKeyboard(parentWin);
+					break;
+				case ASHistoryFileView.SelectionType.DeletedItems:
+					this.DeletedItemsKeyboard(parentWin);
+					break;
+				}
 			}
 		}
 
 		private bool FrameObject(UnityEngine.Object target)
 		{
+			bool result;
 			if (target == null)
 			{
-				return false;
+				result = false;
 			}
-			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			if (hierarchyProperty.Find(target.GetInstanceID(), null))
+			else
 			{
-				while (hierarchyProperty.Parent())
+				HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
+				if (hierarchyProperty.Find(target.GetInstanceID(), null))
 				{
-					this.SetExpanded(hierarchyProperty.instanceID, true);
+					while (hierarchyProperty.Parent())
+					{
+						this.SetExpanded(hierarchyProperty.instanceID, true);
+					}
+				}
+				hierarchyProperty.Reset();
+				if (hierarchyProperty.Find(target.GetInstanceID(), this.m_ExpandedArray))
+				{
+					this.ScrollTo(ASHistoryFileView.m_RowHeight * (float)hierarchyProperty.row + this.m_SpaceAtTheTop);
+					result = true;
+				}
+				else
+				{
+					result = false;
 				}
 			}
-			hierarchyProperty.Reset();
-			if (hierarchyProperty.Find(target.GetInstanceID(), this.m_ExpandedArray))
-			{
-				this.ScrollTo(ASHistoryFileView.m_RowHeight * (float)hierarchyProperty.row + this.m_SpaceAtTheTop);
-				return true;
-			}
-			return false;
+			return result;
 		}
 
 		private void ScrollTo(float scrollTop)
@@ -833,66 +867,65 @@ namespace UnityEditor
 				this.DeletedItemsToggle = GUI.Toggle(position2, this.DeletedItemsToggle, GUIContent.none, ASHistoryFileView.ms_Styles.foldout);
 			}
 			offset += ASHistoryFileView.m_RowHeight;
-			if (!this.DeletedItemsToggle)
+			if (this.DeletedItemsToggle)
 			{
-				return;
-			}
-			int row = this.m_DelPVstate.lv.row;
-			int num = 0;
-			int num2 = -1;
-			int num3 = -1;
-			int num4 = 0;
-			while (offset <= endOffset && num4 < this.m_DelPVstate.lv.totalRows)
-			{
-				if (offset + ASHistoryFileView.m_RowHeight >= 0f)
+				int row = this.m_DelPVstate.lv.row;
+				int num = 0;
+				int num2 = -1;
+				int num3 = -1;
+				int num4 = 0;
+				while (offset <= endOffset && num4 < this.m_DelPVstate.lv.totalRows)
 				{
-					if (num2 == -1)
+					if (offset + ASHistoryFileView.m_RowHeight >= 0f)
 					{
-						this.m_DelPVstate.IndexToFolderAndFile(num4, ref num2, ref num3);
-					}
-					position = new Rect(0f, offset, (float)Screen.width, ASHistoryFileView.m_RowHeight);
-					ParentViewFolder parentViewFolder = this.m_DelPVstate.folders[num2];
-					if (current.type == EventType.MouseDown && position.Contains(current.mousePosition))
-					{
-						if (current.button != 1 || this.SelType != ASHistoryFileView.SelectionType.DeletedItems || !this.m_DelPVstate.selectedItems[num])
+						if (num2 == -1)
 						{
-							GUIUtility.keyboardControl = this.m_FileViewControlID;
-							this.SelType = ASHistoryFileView.SelectionType.DeletedItems;
-							this.m_DelPVstate.lv.row = num;
-							ListViewShared.MultiSelection(null, row, this.m_DelPVstate.lv.row, ref this.m_DelPVstate.initialSelectedItem, ref this.m_DelPVstate.selectedItems);
-							this.ScrollToDeletedItem(num);
-							parentWin.DoLocalSelectionChange();
+							this.m_DelPVstate.IndexToFolderAndFile(num4, ref num2, ref num3);
 						}
-						if (current.button == 1 && this.SelType == ASHistoryFileView.SelectionType.DeletedItems)
+						position = new Rect(0f, offset, (float)Screen.width, ASHistoryFileView.m_RowHeight);
+						ParentViewFolder parentViewFolder = this.m_DelPVstate.folders[num2];
+						if (current.type == EventType.MouseDown && position.Contains(current.mousePosition))
 						{
-							GUIUtility.hotControl = 0;
-							Rect position3 = new Rect(current.mousePosition.x, current.mousePosition.y, 1f, 1f);
-							EditorUtility.DisplayCustomMenu(position3, this.dropDownMenuItems, -1, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+							if (current.button != 1 || this.SelType != ASHistoryFileView.SelectionType.DeletedItems || !this.m_DelPVstate.selectedItems[num])
+							{
+								GUIUtility.keyboardControl = this.m_FileViewControlID;
+								this.SelType = ASHistoryFileView.SelectionType.DeletedItems;
+								this.m_DelPVstate.lv.row = num;
+								ListViewShared.MultiSelection(null, row, this.m_DelPVstate.lv.row, ref this.m_DelPVstate.initialSelectedItem, ref this.m_DelPVstate.selectedItems);
+								this.ScrollToDeletedItem(num);
+								parentWin.DoLocalSelectionChange();
+							}
+							if (current.button == 1 && this.SelType == ASHistoryFileView.SelectionType.DeletedItems)
+							{
+								GUIUtility.hotControl = 0;
+								Rect position3 = new Rect(current.mousePosition.x, current.mousePosition.y, 1f, 1f);
+								EditorUtility.DisplayCustomMenu(position3, this.dropDownMenuItems, -1, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+							}
+							Event.current.Use();
 						}
-						Event.current.Use();
+						if (num3 != -1)
+						{
+							gUIContent.text = parentViewFolder.files[num3].name;
+							gUIContent.image = InternalEditorUtility.GetIconForFile(parentViewFolder.files[num3].name);
+							left = (int)(this.m_BaseIndent + this.m_Indent * 2f);
+						}
+						else
+						{
+							gUIContent.text = parentViewFolder.name;
+							gUIContent.image = image;
+							left = (int)(this.m_BaseIndent + this.m_Indent);
+						}
+						s.padding.left = left;
+						if (Event.current.type == EventType.Repaint)
+						{
+							s.Draw(position, gUIContent, false, false, this.m_DelPVstate.selectedItems[num], focused);
+						}
+						this.m_DelPVstate.NextFileFolder(ref num2, ref num3);
+						num++;
 					}
-					if (num3 != -1)
-					{
-						gUIContent.text = parentViewFolder.files[num3].name;
-						gUIContent.image = InternalEditorUtility.GetIconForFile(parentViewFolder.files[num3].name);
-						left = (int)(this.m_BaseIndent + this.m_Indent * 2f);
-					}
-					else
-					{
-						gUIContent.text = parentViewFolder.name;
-						gUIContent.image = image;
-						left = (int)(this.m_BaseIndent + this.m_Indent);
-					}
-					s.padding.left = left;
-					if (Event.current.type == EventType.Repaint)
-					{
-						s.Draw(position, gUIContent, false, false, this.m_DelPVstate.selectedItems[num], focused);
-					}
-					this.m_DelPVstate.NextFileFolder(ref num2, ref num3);
-					num++;
+					num4++;
+					offset += ASHistoryFileView.m_RowHeight;
 				}
-				num4++;
-				offset += ASHistoryFileView.m_RowHeight;
 			}
 		}
 
@@ -910,7 +943,7 @@ namespace UnityEditor
 				UnityEngine.Object @object = objects[i];
 				hashtable.Add(@object.GetInstanceID(), null);
 			}
-			this.m_FileViewControlID = GUIUtility.GetControlID(ASHistoryFileView.ms_FileViewHash, FocusType.Native);
+			this.m_FileViewControlID = GUIUtility.GetControlID(ASHistoryFileView.ms_FileViewHash, FocusType.Passive);
 			this.KeyboardGUI(parentWin);
 			focused &= (GUIUtility.keyboardControl == this.m_FileViewControlID);
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
@@ -1107,25 +1140,30 @@ namespace UnityEditor
 		{
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
 			bool flag = false;
+			string[] result;
 			if (!hierarchyProperty.Next(null))
 			{
-				return new string[0];
+				result = new string[0];
 			}
-			Hashtable hashtable = new Hashtable();
-			UnityEngine.Object[] objects = Selection.objects;
-			for (int i = 0; i < objects.Length; i++)
+			else
 			{
-				UnityEngine.Object @object = objects[i];
-				hashtable.Add(@object.GetInstanceID(), null);
+				Hashtable hashtable = new Hashtable();
+				UnityEngine.Object[] objects = Selection.objects;
+				for (int i = 0; i < objects.Length; i++)
+				{
+					UnityEngine.Object @object = objects[i];
+					hashtable.Add(@object.GetInstanceID(), null);
+				}
+				bool flag2;
+				List<int> oneFolderImplicitSelection = this.GetOneFolderImplicitSelection(hierarchyProperty, hashtable, false, ref flag, out flag2);
+				string[] array = new string[oneFolderImplicitSelection.Count];
+				for (int j = 0; j < array.Length; j++)
+				{
+					array[j] = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(oneFolderImplicitSelection[j]));
+				}
+				result = array;
 			}
-			bool flag2;
-			List<int> oneFolderImplicitSelection = this.GetOneFolderImplicitSelection(hierarchyProperty, hashtable, false, ref flag, out flag2);
-			string[] array = new string[oneFolderImplicitSelection.Count];
-			for (int j = 0; j < array.Length; j++)
-			{
-				array[j] = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(oneFolderImplicitSelection[j]));
-			}
-			return array;
+			return result;
 		}
 	}
 }

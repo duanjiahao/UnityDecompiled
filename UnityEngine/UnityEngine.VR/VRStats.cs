@@ -7,7 +7,6 @@ namespace UnityEngine.VR
 	{
 		public static extern float gpuTimeLastFrame
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}

@@ -28,7 +28,7 @@ namespace UnityEditor
 
 			public ManualResetEvent m_doneEvent = new ManualResetEvent(false);
 
-			public Exception m_Exception;
+			public Exception m_Exception = null;
 
 			public JobCompileAOT(BuildTarget target, string crossCompilerAbsolutePath, string assembliesAbsoluteDirectory, CrossCompileOptions crossCompileOptions, string input, string output, string additionalOptions)
 			{
@@ -55,11 +55,11 @@ namespace UnityEditor
 			}
 		}
 
-		public static string ArtifactsPath;
+		public static string ArtifactsPath = null;
 
 		public static void CrossCompileAOTDirectory(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string additionalOptions)
 		{
-			MonoCrossCompile.CrossCompileAOTDirectory(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, string.Empty, additionalOptions);
+			MonoCrossCompile.CrossCompileAOTDirectory(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, "", additionalOptions);
 		}
 
 		public static void CrossCompileAOTDirectory(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string pathExtension, string additionalOptions)
@@ -94,7 +94,7 @@ namespace UnityEditor
 
 		public static bool CrossCompileAOTDirectoryParallel(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string additionalOptions)
 		{
-			return MonoCrossCompile.CrossCompileAOTDirectoryParallel(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, string.Empty, additionalOptions);
+			return MonoCrossCompile.CrossCompileAOTDirectoryParallel(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, "", additionalOptions);
 		}
 
 		public static bool CrossCompileAOTDirectoryParallel(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string pathExtension, string additionalOptions)
@@ -116,17 +116,22 @@ namespace UnityEditor
 			long num = DateTime.Now.Ticks / 10000L;
 			int num2 = WaitHandle.WaitAny(events.ToArray(), (int)timeout);
 			long num3 = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num2 == 258)
 			{
-				return false;
+				result = false;
 			}
-			events.RemoveAt(num2);
-			timeout -= num3 - num;
-			if (timeout < 0L)
+			else
 			{
-				timeout = 0L;
+				events.RemoveAt(num2);
+				timeout -= num3 - num;
+				if (timeout < 0L)
+				{
+					timeout = 0L;
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		public static void DisplayAOTProgressBar(int totalFiles, int filesFinished)
@@ -204,7 +209,7 @@ namespace UnityEditor
 
 		private static void CrossCompileAOT(BuildTarget target, string crossCompilerAbsolutePath, string assembliesAbsoluteDirectory, CrossCompileOptions crossCompileOptions, string input, string output, string additionalOptions)
 		{
-			string text = string.Empty;
+			string text = "";
 			if (!MonoCrossCompile.IsDebugableAssembly(input))
 			{
 				crossCompileOptions &= ~CrossCompileOptions.Debugging;

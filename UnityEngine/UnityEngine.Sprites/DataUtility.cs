@@ -12,7 +12,6 @@ namespace UnityEngine.Sprites
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetInnerUV(Sprite sprite, out Vector4 value);
 
@@ -23,7 +22,6 @@ namespace UnityEngine.Sprites
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetOuterUV(Sprite sprite, out Vector4 value);
 
@@ -34,7 +32,6 @@ namespace UnityEngine.Sprites
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetPadding(Sprite sprite, out Vector4 value);
 
@@ -45,7 +42,6 @@ namespace UnityEngine.Sprites
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetMinSize(Sprite sprite, out Vector2 output);
 	}

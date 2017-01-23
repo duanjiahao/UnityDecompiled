@@ -41,37 +41,30 @@ namespace UnityEngine
 
 		public extern AnimationClip clip
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool playAutomatically
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern WrapMode wrapMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isPlaying
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -86,10 +79,8 @@ namespace UnityEngine
 
 		public extern bool animatePhysics
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -97,20 +88,16 @@ namespace UnityEngine
 		[Obsolete("Use cullingType instead")]
 		public extern bool animateOnlyIfVisible
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AnimationCullingType cullingType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -134,7 +121,6 @@ namespace UnityEngine
 			Animation.INTERNAL_CALL_Stop(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Stop(Animation self);
 
@@ -143,7 +129,6 @@ namespace UnityEngine
 			this.Internal_StopByName(name);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_StopByName(string name);
 
@@ -152,7 +137,6 @@ namespace UnityEngine
 			this.Internal_RewindByName(name);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_RewindByName(string name);
 
@@ -161,7 +145,6 @@ namespace UnityEngine
 			Animation.INTERNAL_CALL_Rewind(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Rewind(Animation self);
 
@@ -170,11 +153,9 @@ namespace UnityEngine
 			Animation.INTERNAL_CALL_Sample(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Sample(Animation self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsPlaying(string name);
 
@@ -190,7 +171,6 @@ namespace UnityEngine
 			return this.PlayDefaultAnimation(mode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool Play(string animation, [DefaultValue("PlayMode.StopSameLayer")] PlayMode mode);
 
@@ -201,7 +181,6 @@ namespace UnityEngine
 			return this.Play(animation, mode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CrossFade(string animation, [DefaultValue("0.3F")] float fadeLength, [DefaultValue("PlayMode.StopSameLayer")] PlayMode mode);
 
@@ -220,7 +199,6 @@ namespace UnityEngine
 			this.CrossFade(animation, fadeLength, mode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Blend(string animation, [DefaultValue("1.0F")] float targetWeight, [DefaultValue("0.3F")] float fadeLength);
 
@@ -239,7 +217,6 @@ namespace UnityEngine
 			this.Blend(animation, targetWeight, fadeLength);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnimationState CrossFadeQueued(string animation, [DefaultValue("0.3F")] float fadeLength, [DefaultValue("QueueMode.CompleteOthers")] QueueMode queue, [DefaultValue("PlayMode.StopSameLayer")] PlayMode mode);
 
@@ -267,7 +244,6 @@ namespace UnityEngine
 			return this.CrossFadeQueued(animation, fadeLength, queue, mode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnimationState PlayQueued(string animation, [DefaultValue("QueueMode.CompleteOthers")] QueueMode queue, [DefaultValue("PlayMode.StopSameLayer")] PlayMode mode);
 
@@ -291,7 +267,6 @@ namespace UnityEngine
 			this.AddClip(clip, newName, -2147483648, 2147483647);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void AddClip(AnimationClip clip, string newName, int firstFrame, int lastFrame, [DefaultValue("false")] bool addLoopFrame);
 
@@ -302,7 +277,6 @@ namespace UnityEngine
 			this.AddClip(clip, newName, firstFrame, lastFrame, addLoopFrame);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RemoveClip(AnimationClip clip);
 
@@ -311,15 +285,12 @@ namespace UnityEngine
 			this.RemoveClip2(clipName);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetClipCount();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void RemoveClip2(string clipName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool PlayDefaultAnimation(PlayMode mode);
 
@@ -340,7 +311,6 @@ namespace UnityEngine
 			Animation.INTERNAL_CALL_SyncLayer(this, layer);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SyncLayer(Animation self, int layer);
 
@@ -349,33 +319,33 @@ namespace UnityEngine
 			return new Animation.Enumerator(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AnimationState GetState(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AnimationState GetStateAtIndex(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int GetStateCount();
 
 		public AnimationClip GetClip(string name)
 		{
 			AnimationState state = this.GetState(name);
+			AnimationClip result;
 			if (state)
 			{
-				return state.clip;
+				result = state.clip;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_localBounds(out Bounds value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_localBounds(ref Bounds value);
 	}

@@ -10,7 +10,7 @@ namespace UnityEditor
 	{
 		internal string m_LayoutName = Toolbar.lastLoadedLayoutName;
 
-		internal bool didFocus;
+		internal bool didFocus = false;
 
 		private void OnEnable()
 		{

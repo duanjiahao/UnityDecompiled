@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Internal;
@@ -7,310 +8,338 @@ namespace UnityEditor
 {
 	public sealed class TextureImporter : AssetImporter
 	{
+		[Obsolete("textureFormat is not longer accessible at the TextureImporter level. For old 'simple' formats use the textureCompression property for the equivalent automatic choice (Uncompressed for TrueColor, Compressed and HQCommpressed for 16 bits). For platform specific formats use the [[PlatformTextureSettings]] API. Using this setter will setup various parameters to match the new automatic system as well possible. Getter will return the last value set.")]
 		public extern TextureImporterFormat textureFormat
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		public extern int maxTextureSize
+		internal static extern string defaultPlatformName
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+		}
+
+		public extern int maxTextureSize
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int compressionQuality
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		public extern bool grayscaleToAlpha
+		public extern bool crunchedCompression
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+
+		public extern bool allowAlphaSplitting
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern TextureImporterCompression textureCompression
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern TextureImporterAlphaSource alphaSource
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[Obsolete("Use UnityEditor.TextureImporter.alphaSource instead.")]
+		public bool grayscaleToAlpha
+		{
+			get
+			{
+				return this.alphaSource == TextureImporterAlphaSource.FromGrayScale;
+			}
+			set
+			{
+				if (value)
+				{
+					this.alphaSource = TextureImporterAlphaSource.FromGrayScale;
+				}
+				else
+				{
+					this.alphaSource = TextureImporterAlphaSource.FromInput;
+				}
+			}
 		}
 
 		public extern TextureImporterGenerateCubemap generateCubemap
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern TextureImporterNPOTScale npotScale
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isReadable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool mipmapEnabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool borderMipmap
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		public extern bool linearTexture
+		public extern bool sRGBTexture
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern TextureImporterMipFilter mipmapFilter
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool fadeout
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int mipmapFadeDistanceStart
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int mipmapFadeDistanceEnd
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
+		[Obsolete("generateMipsInLinearSpace Property deprecated. Mipmaps are always generated in linear space.")]
 		public extern bool generateMipsInLinearSpace
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[Obsolete("correctGamma Property deprecated. Use generateMipsInLinearSpace instead.")]
+		[Obsolete("correctGamma Property deprecated. Mipmaps are always generated in linear space.")]
 		public extern bool correctGamma
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+
+		[Obsolete("linearTexture Property deprecated. Use sRGBTexture instead.")]
+		public bool linearTexture
+		{
+			get
+			{
+				return !this.sRGBTexture;
+			}
+			set
+			{
+				this.sRGBTexture = !value;
+			}
+		}
+
+		[Obsolete("normalmap Property deprecated. Check [[TextureImporterSettings.textureType]] instead. Getter will work as expected. Setter will set textureType to NormalMap if true, nothing otherwise.")]
+		public bool normalmap
+		{
+			get
+			{
+				return this.textureType == TextureImporterType.NormalMap;
+			}
+			set
+			{
+				if (value)
+				{
+					this.textureType = TextureImporterType.NormalMap;
+				}
+				else
+				{
+					this.textureType = TextureImporterType.Default;
+				}
+			}
+		}
+
+		[Obsolete("lightmap Property deprecated. Check [[TextureImporterSettings.textureType]] instead. Getter will work as expected. Setter will set textureType to Lightmap if true, nothing otherwise.")]
+		public bool lightmap
+		{
+			get
+			{
+				return this.textureType == TextureImporterType.Lightmap;
+			}
+			set
+			{
+				if (value)
+				{
+					this.textureType = TextureImporterType.Lightmap;
+				}
+				else
+				{
+					this.textureType = TextureImporterType.Default;
+				}
+			}
 		}
 
 		public extern bool convertToNormalmap
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-
-		public extern bool normalmap
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern TextureImporterNormalFilter normalmapFilter
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float heightmapScale
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-
-		public extern bool lightmap
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int anisoLevel
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern FilterMode filterMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern TextureWrapMode wrapMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float mipMapBias
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool alphaIsTransparency
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool qualifiesForSpritePacking
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern SpriteImportMode spriteImportMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern SpriteMetaData[] spritesheet
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string spritePackingTag
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float spritePixelsPerUnit
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -318,10 +347,8 @@ namespace UnityEditor
 		[Obsolete("Use spritePixelsPerUnit property instead.")]
 		public extern float spritePixelsToUnits
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -356,109 +383,159 @@ namespace UnityEditor
 
 		public extern TextureImporterType textureType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
+		public extern TextureImporterShape textureShape
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[Obsolete("Use UnityEditor.TextureImporter.GetPlatformTextureSettings() instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetAllowsAlphaSplitting();
 
-		[WrapperlessIcall]
+		[Obsolete("Use UnityEditor.TextureImporter.SetPlatformTextureSettings() instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAllowsAlphaSplitting(bool flag);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetPlatformTextureSettings(string platform, out int maxTextureSize, out TextureImporterFormat textureFormat, out int compressionQuality);
+		public extern bool GetPlatformTextureSettings(string platform, out int maxTextureSize, out TextureImporterFormat textureFormat, out int compressionQuality, out bool etc1AlphaSplitEnabled);
+
+		public bool GetPlatformTextureSettings(string platform, out int maxTextureSize, out TextureImporterFormat textureFormat, out int compressionQuality)
+		{
+			bool flag = false;
+			return this.GetPlatformTextureSettings(platform, out maxTextureSize, out textureFormat, out compressionQuality, out flag);
+		}
 
 		public bool GetPlatformTextureSettings(string platform, out int maxTextureSize, out TextureImporterFormat textureFormat)
 		{
 			int num = 0;
-			return this.GetPlatformTextureSettings(platform, out maxTextureSize, out textureFormat, out num);
+			bool flag = false;
+			return this.GetPlatformTextureSettings(platform, out maxTextureSize, out textureFormat, out num, out flag);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetPlatformTextureSettings(string platform, int maxTextureSize, TextureImporterFormat textureFormat, int compressionQuality, bool allowsAlphaSplit);
+		internal extern void Internal_GetPlatformTextureSettings(string platform, TextureImporterPlatformSettings dest);
 
-		[ExcludeFromDocs]
+		public TextureImporterPlatformSettings GetPlatformTextureSettings(string platform)
+		{
+			TextureImporterPlatformSettings textureImporterPlatformSettings = new TextureImporterPlatformSettings();
+			this.Internal_GetPlatformTextureSettings(platform, textureImporterPlatformSettings);
+			return textureImporterPlatformSettings;
+		}
+
+		public TextureImporterPlatformSettings GetDefaultPlatformTextureSettings()
+		{
+			return this.GetPlatformTextureSettings(TextureImporterInspector.s_DefaultPlatformName);
+		}
+
+		public TextureImporterFormat GetAutomaticFormat(string platform)
+		{
+			TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
+			this.ReadTextureSettings(textureImporterSettings);
+			TextureImporterPlatformSettings platformTextureSettings = this.GetPlatformTextureSettings(platform);
+			List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+			TextureImporterFormat result;
+			foreach (BuildPlayerWindow.BuildPlatform current in validPlatforms)
+			{
+				if (current.name == platform)
+				{
+					result = TextureImporter.FormatFromTextureParameters(textureImporterSettings, platformTextureSettings, this.DoesSourceTextureHaveAlpha(), this.IsSourceTextureHDR(), current.DefaultTarget);
+					return result;
+				}
+			}
+			result = TextureImporterFormat.Automatic;
+			return result;
+		}
+
+		[Obsolete("Use UnityEditor.TextureImporter.SetPlatformTextureSettings(TextureImporterPlatformSettings) instead.")]
+		public void SetPlatformTextureSettings(string platform, int maxTextureSize, TextureImporterFormat textureFormat, int compressionQuality, bool allowsAlphaSplit)
+		{
+			TextureImporterPlatformSettings textureImporterPlatformSettings = new TextureImporterPlatformSettings();
+			this.Internal_GetPlatformTextureSettings(platform, textureImporterPlatformSettings);
+			textureImporterPlatformSettings.overridden = true;
+			textureImporterPlatformSettings.maxTextureSize = maxTextureSize;
+			textureImporterPlatformSettings.format = textureFormat;
+			textureImporterPlatformSettings.compressionQuality = compressionQuality;
+			textureImporterPlatformSettings.allowsAlphaSplitting = allowsAlphaSplit;
+			this.SetPlatformTextureSettings(textureImporterPlatformSettings);
+		}
+
+		[Obsolete("Use UnityEditor.TextureImporter.SetPlatformTextureSettings(TextureImporterPlatformSettings) instead."), ExcludeFromDocs]
 		public void SetPlatformTextureSettings(string platform, int maxTextureSize, TextureImporterFormat textureFormat)
 		{
 			bool allowsAlphaSplit = false;
 			this.SetPlatformTextureSettings(platform, maxTextureSize, textureFormat, allowsAlphaSplit);
 		}
 
+		[Obsolete("Use UnityEditor.TextureImporter.SetPlatformTextureSettings(TextureImporterPlatformSettings) instead.")]
 		public void SetPlatformTextureSettings(string platform, int maxTextureSize, TextureImporterFormat textureFormat, [DefaultValue("false")] bool allowsAlphaSplit)
 		{
-			this.SetPlatformTextureSettings(platform, maxTextureSize, textureFormat, 50, allowsAlphaSplit);
+			TextureImporterPlatformSettings textureImporterPlatformSettings = new TextureImporterPlatformSettings();
+			this.Internal_GetPlatformTextureSettings(platform, textureImporterPlatformSettings);
+			textureImporterPlatformSettings.overridden = true;
+			textureImporterPlatformSettings.maxTextureSize = maxTextureSize;
+			textureImporterPlatformSettings.format = textureFormat;
+			textureImporterPlatformSettings.allowsAlphaSplitting = allowsAlphaSplit;
+			this.SetPlatformTextureSettings(textureImporterPlatformSettings);
 		}
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetPlatformTextureSettings(TextureImporterPlatformSettings platformSettings);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ClearPlatformTextureSettings(string platform);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern TextureImporterFormat FullToSimpleTextureFormat(TextureImporterFormat format);
+		internal static extern TextureImporterFormat FormatFromTextureParameters(TextureImporterSettings settings, TextureImporterPlatformSettings platformSettings, bool doesTextureContainAlpha, bool sourceWasHDR, BuildTarget destinationPlatform);
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern TextureImporterFormat SimpleToFullTextureFormat2(TextureImporterFormat simpleFormat, TextureImporterType tType, TextureImporterSettings settings, bool doesTextureContainAlpha, bool sourceWasHDR, BuildTarget destinationPlatform);
-
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_spritePivot(out Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_spritePivot(ref Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_spriteBorder(out Vector4 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_spriteBorder(ref Vector4 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void GetWidthAndHeight(ref int width, ref int height);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool IsSourceTextureHDR();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsTextureFormatETC1Compression(TextureFormat fmt);
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsETC1SupportedByBuildTarget(BuildTarget target);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool DoesSourceTextureHaveAlpha();
 
-		[Obsolete("DoesSourceTextureHaveColor always returns true in Unity."), WrapperlessIcall]
+		[Obsolete("DoesSourceTextureHaveColor always returns true in Unity.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool DoesSourceTextureHaveColor();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ReadTextureSettings(TextureImporterSettings dest);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTextureSettings(TextureImporterSettings src);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string GetImportWarnings();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ReadTextureImportInstructions(BuildTarget target, out TextureFormat desiredFormat, out ColorSpace colorSpace, out int compressionQuality);
 	}

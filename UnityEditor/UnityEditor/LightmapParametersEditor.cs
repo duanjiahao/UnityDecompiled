@@ -8,6 +8,8 @@ namespace UnityEditor
 	{
 		private class Styles
 		{
+			public static readonly GUIContent generalGIContent = EditorGUIUtility.TextContent("General GI|Settings used in both Precomputed Realtime Global Illumination and Baked Global Illumination.");
+
 			public static readonly GUIContent precomputedRealtimeGIContent = EditorGUIUtility.TextContent("Precomputed Realtime GI|Settings used in Precomputed Realtime Global Illumination where it is precomputed how indirect light can bounce between static objects, but the final lighting is done at runtime. Lights, ambient lighting in addition to the materials and emission of static objects can still be changed at runtime. Only static objects can affect GI by blocking and bouncing light, but non-static objects can receive bounced light via light probes.");
 
 			public static readonly GUIContent resolutionContent = EditorGUIUtility.TextContent("Resolution|Realtime lightmap resolution in texels per world unit. This value is multiplied by the realtime resolution in the Lighting window to give the output lightmap resolution. This should generally be an order of magnitude less than what is common for baked lightmaps to keep the precompute time manageable and the performance at runtime acceptable. Note that if this is made more fine-grained, then the Irradiance Budget will often need to be increased too, to fully take advantage of this increased detail.");
@@ -107,7 +109,6 @@ namespace UnityEditor
 			EditorGUILayout.Slider(this.m_ClusterResolution, 0.1f, 1f, LightmapParametersEditor.Styles.clusterResolutionContent, new GUILayoutOption[0]);
 			EditorGUILayout.IntSlider(this.m_IrradianceBudget, 32, 2048, LightmapParametersEditor.Styles.irradianceBudgetContent, new GUILayoutOption[0]);
 			EditorGUILayout.IntSlider(this.m_IrradianceQuality, 512, 131072, LightmapParametersEditor.Styles.irradianceQualityContent, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_BackFaceTolerance, 0f, 1f, LightmapParametersEditor.Styles.backFaceToleranceContent, new GUILayoutOption[0]);
 			EditorGUILayout.Slider(this.m_ModellingTolerance, 0f, 1f, LightmapParametersEditor.Styles.modellingToleranceContent, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_EdgeStitching, LightmapParametersEditor.Styles.edgeStitchingContent, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_IsTransparent, LightmapParametersEditor.Styles.isTransparent, new GUILayoutOption[0]);
@@ -123,6 +124,8 @@ namespace UnityEditor
 			GUILayout.Label(LightmapParametersEditor.Styles.bakedAOContent, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_AOQuality, LightmapParametersEditor.Styles.aoQualityContent, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_AOAntiAliasingSamples, LightmapParametersEditor.Styles.aoAntiAliasingSamplesContent, new GUILayoutOption[0]);
+			GUILayout.Label(LightmapParametersEditor.Styles.generalGIContent, EditorStyles.boldLabel, new GUILayoutOption[0]);
+			EditorGUILayout.Slider(this.m_BackFaceTolerance, 0f, 1f, LightmapParametersEditor.Styles.backFaceToleranceContent, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
 	}

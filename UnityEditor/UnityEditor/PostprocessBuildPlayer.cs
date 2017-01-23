@@ -35,67 +35,92 @@ namespace UnityEditor
 
 		internal static bool InstallPluginsByExtension(string pluginSourceFolder, string extension, string debugExtension, string destPluginFolder, bool copyDirectories)
 		{
-			bool result = false;
+			bool flag = false;
+			bool result;
 			if (!Directory.Exists(pluginSourceFolder))
 			{
-				return result;
+				result = flag;
 			}
-			string[] fileSystemEntries = Directory.GetFileSystemEntries(pluginSourceFolder);
-			string[] array = fileSystemEntries;
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				string text = array[i];
-				string fileName = Path.GetFileName(text);
-				string extension2 = Path.GetExtension(text);
-				bool flag = extension2.Equals(extension, StringComparison.OrdinalIgnoreCase) || fileName.Equals(extension, StringComparison.OrdinalIgnoreCase);
-				bool flag2 = debugExtension != null && debugExtension.Length != 0 && (extension2.Equals(debugExtension, StringComparison.OrdinalIgnoreCase) || fileName.Equals(debugExtension, StringComparison.OrdinalIgnoreCase));
-				if (flag || flag2)
+				string[] fileSystemEntries = Directory.GetFileSystemEntries(pluginSourceFolder);
+				string[] array = fileSystemEntries;
+				for (int i = 0; i < array.Length; i++)
 				{
-					if (!Directory.Exists(destPluginFolder))
+					string text = array[i];
+					string fileName = Path.GetFileName(text);
+					string extension2 = Path.GetExtension(text);
+					bool flag2 = extension2.Equals(extension, StringComparison.OrdinalIgnoreCase) || fileName.Equals(extension, StringComparison.OrdinalIgnoreCase);
+					bool flag3 = debugExtension != null && debugExtension.Length != 0 && (extension2.Equals(debugExtension, StringComparison.OrdinalIgnoreCase) || fileName.Equals(debugExtension, StringComparison.OrdinalIgnoreCase));
+					if (flag2 || flag3)
 					{
-						Directory.CreateDirectory(destPluginFolder);
+						if (!Directory.Exists(destPluginFolder))
+						{
+							Directory.CreateDirectory(destPluginFolder);
+						}
+						string text2 = Path.Combine(destPluginFolder, fileName);
+						if (copyDirectories)
+						{
+							FileUtil.CopyDirectoryRecursive(text, text2);
+						}
+						else if (!Directory.Exists(text))
+						{
+							FileUtil.UnityFileCopy(text, text2);
+						}
+						flag = true;
 					}
-					string text2 = Path.Combine(destPluginFolder, fileName);
-					if (copyDirectories)
-					{
-						FileUtil.CopyDirectoryRecursive(text, text2);
-					}
-					else if (!Directory.Exists(text))
-					{
-						FileUtil.UnityFileCopy(text, text2);
-					}
-					result = true;
 				}
+				result = flag;
 			}
 			return result;
 		}
 
 		internal static void InstallStreamingAssets(string stagingAreaDataPath)
 		{
+			PostprocessBuildPlayer.InstallStreamingAssets(stagingAreaDataPath, null);
+		}
+
+		internal static void InstallStreamingAssets(string stagingAreaDataPath, BuildReport report)
+		{
 			if (Directory.Exists("Assets/StreamingAssets"))
 			{
-				FileUtil.CopyDirectoryRecursiveForPostprocess("Assets/StreamingAssets", Path.Combine(stagingAreaDataPath, "StreamingAssets"), true);
+				string text = Path.Combine(stagingAreaDataPath, "StreamingAssets");
+				FileUtil.CopyDirectoryRecursiveForPostprocess("Assets/StreamingAssets", text, true);
+				if (report != null)
+				{
+					report.AddFilesRecursive(text, "Streaming Assets");
+				}
 			}
 		}
 
 		public static string GetScriptLayoutFileFromBuild(BuildOptions options, BuildTarget target, string installPath, string fileName)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			string result;
 			if (buildPostProcessor != null)
 			{
-				return buildPostProcessor.GetScriptLayoutFileFromBuild(options, installPath, fileName);
+				result = buildPostProcessor.GetScriptLayoutFileFromBuild(options, installPath, fileName);
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		public static string PrepareForBuild(BuildOptions options, BuildTarget target)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			string result;
 			if (buildPostProcessor == null)
 			{
-				return null;
+				result = null;
 			}
-			return buildPostProcessor.PrepareForBuild(options, target);
+			else
+			{
+				result = buildPostProcessor.PrepareForBuild(options, target);
+			}
+			return result;
 		}
 
 		public static bool SupportsScriptsOnlyBuild(BuildTarget target)
@@ -107,44 +132,47 @@ namespace UnityEditor
 		public static string GetExtensionForBuildTarget(BuildTarget target, BuildOptions options)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			string result;
 			if (buildPostProcessor == null)
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			return buildPostProcessor.GetExtension(target, options);
+			else
+			{
+				result = buildPostProcessor.GetExtension(target, options);
+			}
+			return result;
 		}
 
 		public static bool SupportsInstallInBuildFolder(BuildTarget target)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(target);
+			bool result;
 			if (buildPostProcessor != null)
 			{
-				return buildPostProcessor.SupportsInstallInBuildFolder();
+				result = buildPostProcessor.SupportsInstallInBuildFolder();
 			}
-			switch (target)
+			else
 			{
-			case BuildTarget.PS3:
-			case BuildTarget.Android:
-				return true;
-			case BuildTarget.XBOX360:
-			case (BuildTarget)12:
-				IL_2F:
 				switch (target)
 				{
 				case BuildTarget.PSP2:
 				case BuildTarget.PSM:
-					return true;
+					goto IL_45;
 				case BuildTarget.PS4:
-					IL_44:
-					if (target != BuildTarget.WSAPlayer)
+					IL_30:
+					if (target != BuildTarget.Android && target != BuildTarget.WSAPlayer)
 					{
-						return false;
+						result = false;
+						return result;
 					}
-					return true;
+					goto IL_45;
 				}
-				goto IL_44;
+				goto IL_30;
+				IL_45:
+				result = true;
 			}
-			goto IL_2F;
+			return result;
 		}
 
 		public static void Launch(BuildTarget target, string path, string productName, BuildOptions options)
@@ -218,33 +246,36 @@ namespace UnityEditor
 
 		internal static string GetArchitectureForTarget(BuildTarget target)
 		{
-			switch (target)
+			string result;
+			if (target != BuildTarget.StandaloneOSXIntel && target != BuildTarget.StandaloneWindows)
 			{
-			case BuildTarget.StandaloneLinux:
-				goto IL_40;
-			case (BuildTarget)18:
-				IL_17:
-				if (target == BuildTarget.StandaloneOSXIntel || target == BuildTarget.StandaloneWindows)
+				switch (target)
 				{
-					goto IL_40;
+				case BuildTarget.StandaloneLinux:
+					goto IL_44;
+				case (BuildTarget)18:
+					IL_24:
+					if (target == BuildTarget.StandaloneLinux64)
+					{
+						goto IL_39;
+					}
+					if (target != BuildTarget.StandaloneLinuxUniversal)
+					{
+						result = string.Empty;
+						return result;
+					}
+					goto IL_44;
+				case BuildTarget.StandaloneWindows64:
+					goto IL_39;
 				}
-				if (target == BuildTarget.StandaloneLinux64)
-				{
-					goto IL_3A;
-				}
-				if (target != BuildTarget.StandaloneLinuxUniversal)
-				{
-					return string.Empty;
-				}
-				goto IL_40;
-			case BuildTarget.StandaloneWindows64:
-				goto IL_3A;
+				goto IL_24;
+				IL_39:
+				result = "x86_64";
+				return result;
 			}
-			goto IL_17;
-			IL_3A:
-			return "x86_64";
-			IL_40:
-			return "x86";
+			IL_44:
+			result = "x86";
+			return result;
 		}
 	}
 }

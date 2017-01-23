@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Internal;
 
@@ -227,11 +228,14 @@ namespace UnityEditor
 			}
 		}
 
-		internal const float kPlatformTabWidth = 30f;
-
 		internal static Rect s_LastRect;
 
+		internal const float kPlatformTabWidth = 30f;
+
 		internal static SavedBool s_SelectedDefault = new SavedBool("Platform.ShownDefaultTab", true);
+
+		[CompilerGenerated]
+		private static TargetChoiceHandler.TargetChoiceMenuFunction <>f__mg$cache0;
 
 		internal static float kLabelFloatMinW
 		{
@@ -258,7 +262,7 @@ namespace UnityEditor
 
 		public static bool Foldout(bool foldout, string content, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
 		{
-			return EditorGUILayout.Foldout(foldout, EditorGUIUtility.TempContent(content), style);
+			return EditorGUILayout.Foldout(foldout, EditorGUIUtility.TempContent(content), false, style);
 		}
 
 		[ExcludeFromDocs]
@@ -270,7 +274,31 @@ namespace UnityEditor
 
 		public static bool Foldout(bool foldout, GUIContent content, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
 		{
-			return EditorGUILayout.FoldoutInternal(foldout, content, style);
+			return EditorGUILayout.Foldout(foldout, content, false, style);
+		}
+
+		[ExcludeFromDocs]
+		public static bool Foldout(bool foldout, string content, bool toggleOnLabelClick)
+		{
+			GUIStyle foldout2 = EditorStyles.foldout;
+			return EditorGUILayout.Foldout(foldout, content, toggleOnLabelClick, foldout2);
+		}
+
+		public static bool Foldout(bool foldout, string content, bool toggleOnLabelClick, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
+		{
+			return EditorGUILayout.Foldout(foldout, EditorGUIUtility.TempContent(content), toggleOnLabelClick, style);
+		}
+
+		[ExcludeFromDocs]
+		public static bool Foldout(bool foldout, GUIContent content, bool toggleOnLabelClick)
+		{
+			GUIStyle foldout2 = EditorStyles.foldout;
+			return EditorGUILayout.Foldout(foldout, content, toggleOnLabelClick, foldout2);
+		}
+
+		public static bool Foldout(bool foldout, GUIContent content, bool toggleOnLabelClick, [DefaultValue("EditorStyles.foldout")] GUIStyle style)
+		{
+			return EditorGUILayout.FoldoutInternal(foldout, content, toggleOnLabelClick, style);
 		}
 
 		[ExcludeFromDocs]
@@ -955,10 +983,16 @@ namespace UnityEditor
 			EditorGUI.MinMaxSlider(position, ref minValue, ref maxValue, minLimit, maxLimit);
 		}
 
+		public static void MinMaxSlider(string label, ref float minValue, ref float maxValue, float minLimit, float maxLimit, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetSliderRect(true, options);
+			EditorGUI.MinMaxSlider(position, label, ref minValue, ref maxValue, minLimit, maxLimit);
+		}
+
 		public static void MinMaxSlider(GUIContent label, ref float minValue, ref float maxValue, float minLimit, float maxLimit, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetSliderRect(true, options);
-			EditorGUI.MinMaxSlider(label, position, ref minValue, ref maxValue, minLimit, maxLimit);
+			EditorGUI.MinMaxSlider(position, label, ref minValue, ref maxValue, minLimit, maxLimit);
 		}
 
 		public static int Popup(int selectedIndex, string[] displayedOptions, params GUILayoutOption[] options)
@@ -1049,17 +1083,47 @@ namespace UnityEditor
 			return EditorGUI.EnumPopup(position, label, selected, style);
 		}
 
+		public static Enum EnumMaskPopup(string label, Enum selected, params GUILayoutOption[] options)
+		{
+			int num;
+			bool flag;
+			return EditorGUILayout.EnumMaskPopup(EditorGUIUtility.TempContent(label), selected, out num, out flag, options);
+		}
+
+		public static Enum EnumMaskPopup(string label, Enum selected, GUIStyle style, params GUILayoutOption[] options)
+		{
+			int num;
+			bool flag;
+			return EditorGUILayout.EnumMaskPopup(EditorGUIUtility.TempContent(label), selected, out num, out flag, style, options);
+		}
+
 		public static Enum EnumMaskPopup(GUIContent label, Enum selected, params GUILayoutOption[] options)
 		{
 			int num;
 			bool flag;
-			return EditorGUILayout.EnumMaskPopup(label, selected, out num, out flag, new GUILayoutOption[0]);
+			return EditorGUILayout.EnumMaskPopup(label, selected, out num, out flag, options);
+		}
+
+		public static Enum EnumMaskPopup(GUIContent label, Enum selected, GUIStyle style, params GUILayoutOption[] options)
+		{
+			int num;
+			bool flag;
+			return EditorGUILayout.EnumMaskPopup(label, selected, out num, out flag, style, options);
+		}
+
+		internal static Enum EnumMaskPopup(string label, Enum selected, out int changedFlags, out bool changedToValue, params GUILayoutOption[] options)
+		{
+			return EditorGUILayout.EnumMaskPopup(EditorGUIUtility.TempContent(label), selected, out changedFlags, out changedToValue, options);
+		}
+
+		internal static Enum EnumMaskPopup(string label, Enum selected, out int changedFlags, out bool changedToValue, GUIStyle style, params GUILayoutOption[] options)
+		{
+			return EditorGUILayout.EnumMaskPopup(EditorGUIUtility.TempContent(label), selected, out changedFlags, out changedToValue, style, options);
 		}
 
 		internal static Enum EnumMaskPopup(GUIContent label, Enum selected, out int changedFlags, out bool changedToValue, params GUILayoutOption[] options)
 		{
-			GUIStyle popup = EditorStyles.popup;
-			return EditorGUILayout.EnumMaskPopup(label, selected, out changedFlags, out changedToValue, popup, new GUILayoutOption[0]);
+			return EditorGUILayout.EnumMaskPopup(label, selected, out changedFlags, out changedToValue, EditorStyles.popup, options);
 		}
 
 		internal static Enum EnumMaskPopup(GUIContent label, Enum selected, out int changedFlags, out bool changedToValue, GUIStyle style, params GUILayoutOption[] options)
@@ -1309,6 +1373,28 @@ namespace UnityEditor
 			return EditorGUI.ObjectField(position, label, obj, objType, allowSceneObjects);
 		}
 
+		public static void ObjectField(SerializedProperty property, params GUILayoutOption[] options)
+		{
+			EditorGUILayout.ObjectField(property, null, options);
+		}
+
+		public static void ObjectField(SerializedProperty property, GUIContent label, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.objectField, options);
+			EditorGUI.ObjectField(position, property, label);
+		}
+
+		public static void ObjectField(SerializedProperty property, Type objType, params GUILayoutOption[] options)
+		{
+			EditorGUILayout.ObjectField(property, objType, null, options);
+		}
+
+		public static void ObjectField(SerializedProperty property, Type objType, GUIContent label, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.objectField, options);
+			EditorGUI.ObjectField(position, property, objType, label);
+		}
+
 		internal static UnityEngine.Object MiniThumbnailObjectField(GUIContent label, UnityEngine.Object obj, Type objType, EditorGUI.ObjectFieldValidator validator, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, options);
@@ -1389,7 +1475,7 @@ namespace UnityEditor
 		internal static void PropertiesField(GUIContent label, SerializedProperty[] properties, GUIContent[] propertyLabels, float propertyLabelsWidth, params GUILayoutOption[] options)
 		{
 			bool hasLabel = EditorGUI.LabelHasContent(label);
-			float height = 16f * (float)properties.Length;
+			float height = 16f * (float)properties.Length + (float)(0 * (properties.Length - 1));
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(hasLabel, height, EditorStyles.numberField, options);
 			EditorGUI.PropertiesField(position, label, properties, propertyLabels, propertyLabelsWidth);
 		}
@@ -1467,10 +1553,15 @@ namespace UnityEditor
 			return EditorGUI.CurveField(position, label, value, color, ranges);
 		}
 
-		internal static void CurveField(SerializedProperty value, Color color, Rect ranges, params GUILayoutOption[] options)
+		public static void CurveField(SerializedProperty property, Color color, Rect ranges, params GUILayoutOption[] options)
+		{
+			EditorGUILayout.CurveField(property, color, ranges, null, options);
+		}
+
+		public static void CurveField(SerializedProperty property, Color color, Rect ranges, GUIContent label, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, EditorStyles.colorField, options);
-			EditorGUI.CurveField(position, value, color, ranges);
+			EditorGUI.CurveField(position, property, color, ranges, label);
 		}
 
 		public static bool InspectorTitlebar(bool foldout, UnityEngine.Object targetObj)
@@ -1520,16 +1611,10 @@ namespace UnityEditor
 			return EditorGUI.FoldoutTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), label, foldout);
 		}
 
-		internal static bool FoldoutInternal(bool foldout, GUIContent content, GUIStyle style)
+		internal static bool FoldoutInternal(bool foldout, GUIContent content, bool toggleOnLabelClick, GUIStyle style)
 		{
 			Rect position = EditorGUILayout.s_LastRect = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 16f, 16f, style);
-			return EditorGUI.Foldout(position, foldout, content, style);
-		}
-
-		internal static void ObjectField(SerializedProperty property, GUIContent label, params GUILayoutOption[] options)
-		{
-			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.objectField, options);
-			EditorGUI.ObjectField(position, property, label);
+			return EditorGUI.Foldout(position, foldout, content, toggleOnLabelClick, style);
 		}
 
 		internal static void LayerMaskField(SerializedProperty property, GUIContent label, params GUILayoutOption[] options)
@@ -1557,14 +1642,16 @@ namespace UnityEditor
 				{
 					GUILayout.ExpandWidth(false)
 				});
-				return;
 			}
-			Rect rect = GUILayoutUtility.GetRect(EditorGUIUtility.labelWidth - num, 16f, followingStyle, new GUILayoutOption[]
+			else
 			{
-				GUILayout.ExpandWidth(false)
-			});
-			rect.xMin += EditorGUI.indent;
-			EditorGUI.HandlePrefixLabel(rect, rect, label, 0, labelStyle);
+				Rect rect = GUILayoutUtility.GetRect(EditorGUIUtility.labelWidth - num, 16f, followingStyle, new GUILayoutOption[]
+				{
+					GUILayout.ExpandWidth(false)
+				});
+				rect.xMin += EditorGUI.indent;
+				EditorGUI.HandlePrefixLabel(rect, rect, label, 0, labelStyle);
+			}
 		}
 
 		public static void Space()
@@ -1608,7 +1695,6 @@ namespace UnityEditor
 
 		internal static Rect BeginHorizontal(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
 		{
-			GUILayoutUtility.BeginGroup("GUILayout.EndVertical");
 			GUILayoutGroup gUILayoutGroup = GUILayoutUtility.BeginLayoutGroup(style, options, typeof(GUILayoutGroup));
 			gUILayoutGroup.isVertical = false;
 			if (style != GUIStyle.none || content != GUIContent.none)
@@ -1635,7 +1721,6 @@ namespace UnityEditor
 
 		internal static Rect BeginVertical(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
 		{
-			GUILayoutUtility.BeginGroup("GUILayout.EndVertical");
 			GUILayoutGroup gUILayoutGroup = GUILayoutUtility.BeginLayoutGroup(style, options, typeof(GUILayoutGroup));
 			gUILayoutGroup.isVertical = true;
 			if (style != GUIStyle.none || content != GUIContent.none)
@@ -1813,27 +1898,32 @@ namespace UnityEditor
 
 		public static bool BeginFadeGroup(float value)
 		{
+			bool result;
 			if (value == 0f)
 			{
-				return false;
+				result = false;
 			}
-			if (value == 1f)
+			else if (value == 1f)
 			{
-				return true;
+				result = true;
 			}
-			GUILayoutFadeGroup gUILayoutFadeGroup = (GUILayoutFadeGroup)GUILayoutUtility.BeginLayoutGroup(GUIStyle.none, null, typeof(GUILayoutFadeGroup));
-			gUILayoutFadeGroup.isVertical = true;
-			gUILayoutFadeGroup.resetCoords = true;
-			gUILayoutFadeGroup.fadeValue = value;
-			gUILayoutFadeGroup.wasGUIEnabled = GUI.enabled;
-			gUILayoutFadeGroup.guiColor = GUI.color;
-			if (value != 0f && value != 1f && Event.current.type == EventType.MouseDown)
+			else
 			{
-				Event.current.Use();
+				GUILayoutFadeGroup gUILayoutFadeGroup = (GUILayoutFadeGroup)GUILayoutUtility.BeginLayoutGroup(GUIStyle.none, null, typeof(GUILayoutFadeGroup));
+				gUILayoutFadeGroup.isVertical = true;
+				gUILayoutFadeGroup.resetCoords = true;
+				gUILayoutFadeGroup.fadeValue = value;
+				gUILayoutFadeGroup.wasGUIEnabled = GUI.enabled;
+				gUILayoutFadeGroup.guiColor = GUI.color;
+				if (value != 0f && value != 1f && Event.current.type == EventType.MouseDown)
+				{
+					Event.current.Use();
+				}
+				EditorGUIUtility.LockContextWidth();
+				GUI.BeginGroup(gUILayoutFadeGroup.rect);
+				result = (value != 0f);
 			}
-			EditorGUIUtility.LockContextWidth();
-			GUI.BeginGroup(gUILayoutFadeGroup.rect);
-			return value != 0f;
+			return result;
 		}
 
 		public static void EndFadeGroup()
@@ -1845,12 +1935,16 @@ namespace UnityEditor
 				EditorGUIUtility.UnlockContextWidth();
 				GUI.enabled = gUILayoutFadeGroup.wasGUIEnabled;
 				GUI.color = gUILayoutFadeGroup.guiColor;
-				GUILayoutUtility.EndGroup("GUILayout.EndVertical");
 				GUILayoutUtility.EndLayoutGroup();
 			}
 		}
 
 		internal static int BeginPlatformGrouping(BuildPlayerWindow.BuildPlatform[] platforms, GUIContent defaultTab)
+		{
+			return EditorGUILayout.BeginPlatformGrouping(platforms, defaultTab, GUI.skin.box);
+		}
+
+		internal static int BeginPlatformGrouping(BuildPlayerWindow.BuildPlatform[] platforms, GUIContent defaultTab, GUIStyle style)
 		{
 			int num = -1;
 			for (int i = 0; i < platforms.Length; i++)
@@ -1869,14 +1963,17 @@ namespace UnityEditor
 			bool enabled = GUI.enabled;
 			GUI.enabled = true;
 			EditorGUI.BeginChangeCheck();
-			Rect rect = EditorGUILayout.BeginVertical(GUI.skin.box, new GUILayoutOption[0]);
+			Rect rect = EditorGUILayout.BeginVertical(style, new GUILayoutOption[0]);
 			rect.width -= 1f;
 			int num3 = platforms.Length;
 			int num4 = 18;
 			GUIStyle toolbarButton = EditorStyles.toolbarButton;
-			if (defaultTab != null && GUI.Toggle(new Rect(rect.x, rect.y, rect.width - (float)num3 * 30f, (float)num4), num2 == -1, defaultTab, toolbarButton))
+			if (defaultTab != null)
 			{
-				num2 = -1;
+				if (GUI.Toggle(new Rect(rect.x, rect.y, rect.width - (float)num3 * 30f, (float)num4), num2 == -1, defaultTab, toolbarButton))
+				{
+					num2 = -1;
+				}
 			}
 			for (int j = 0; j < num3; j++)
 			{
@@ -1943,7 +2040,7 @@ namespace UnityEditor
 					" and ",
 					objects.Length - 1,
 					" other",
-					(objects.Length <= 2) ? string.Empty : "s"
+					(objects.Length <= 2) ? "" : "s"
 				});
 			}
 			GUILayoutOption[] options = new GUILayoutOption[]
@@ -2075,10 +2172,10 @@ namespace UnityEditor
 			return EditorGUI.IconButton(id, EditorGUILayout.s_LastRect, content, style);
 		}
 
-		internal static void GameViewSizePopup(GameViewSizeGroupType groupType, int selectedIndex, Action<int, object> itemClickedCallback, GUIStyle style, params GUILayoutOption[] options)
+		internal static void GameViewSizePopup(GameViewSizeGroupType groupType, int selectedIndex, IGameViewSizeMenuUser gameView, GUIStyle style, params GUILayoutOption[] options)
 		{
 			EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, 16f, style, options);
-			EditorGUI.GameViewSizePopup(EditorGUILayout.s_LastRect, groupType, selectedIndex, itemClickedCallback, style);
+			EditorGUI.GameViewSizePopup(EditorGUILayout.s_LastRect, groupType, selectedIndex, gameView, style);
 		}
 
 		internal static void SortingLayerField(GUIContent label, SerializedProperty layerID, GUIStyle style, GUIStyle labelStyle)
@@ -2090,12 +2187,16 @@ namespace UnityEditor
 		public static float Knob(Vector2 knobSize, float value, float minValue, float maxValue, string unit, Color backgroundColor, Color activeColor, bool showValue, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(false, knobSize.y, options);
-			return EditorGUI.Knob(position, knobSize, value, minValue, maxValue, unit, backgroundColor, activeColor, showValue, GUIUtility.GetControlID("Knob".GetHashCode(), FocusType.Native, position));
+			return EditorGUI.Knob(position, knobSize, value, minValue, maxValue, unit, backgroundColor, activeColor, showValue, GUIUtility.GetControlID("Knob".GetHashCode(), FocusType.Passive, position));
 		}
 
 		internal static void TargetChoiceField(SerializedProperty property, GUIContent label, params GUILayoutOption[] options)
 		{
-			EditorGUILayout.TargetChoiceField(property, label, new TargetChoiceHandler.TargetChoiceMenuFunction(TargetChoiceHandler.SetToValueOfTarget), options);
+			if (EditorGUILayout.<>f__mg$cache0 == null)
+			{
+				EditorGUILayout.<>f__mg$cache0 = new TargetChoiceHandler.TargetChoiceMenuFunction(TargetChoiceHandler.SetToValueOfTarget);
+			}
+			EditorGUILayout.TargetChoiceField(property, label, EditorGUILayout.<>f__mg$cache0, options);
 		}
 
 		internal static void TargetChoiceField(SerializedProperty property, GUIContent label, TargetChoiceHandler.TargetChoiceMenuFunction func, params GUILayoutOption[] options)

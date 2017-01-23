@@ -26,8 +26,8 @@ namespace UnityEditor
 
 		internal static void ImportRaw()
 		{
-			string text = EditorUtility.OpenFilePanel("Import Raw Heightmap", string.Empty, "raw");
-			if (text != string.Empty)
+			string text = EditorUtility.OpenFilePanel("Import Raw Heightmap", "", "raw");
+			if (text != "")
 			{
 				ImportRawHeightmap importRawHeightmap = TerrainWizard.DisplayTerrainWizard<ImportRawHeightmap>("Import Heightmap", "Import");
 				importRawHeightmap.InitializeImportRaw(TerrainMenus.GetActiveTerrain(), text);
@@ -67,20 +67,30 @@ namespace UnityEditor
 		private static Terrain GetActiveTerrain()
 		{
 			UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(Terrain), SelectionMode.Editable);
+			Terrain result;
 			if (filtered.Length != 0)
 			{
-				return filtered[0] as Terrain;
+				result = (filtered[0] as Terrain);
 			}
-			return Terrain.activeTerrain;
+			else
+			{
+				result = Terrain.activeTerrain;
+			}
+			return result;
 		}
 
 		private static TerrainData GetActiveTerrainData()
 		{
+			TerrainData result;
 			if (TerrainMenus.GetActiveTerrain())
 			{
-				return TerrainMenus.GetActiveTerrain().terrainData;
+				result = TerrainMenus.GetActiveTerrain().terrainData;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 	}
 }

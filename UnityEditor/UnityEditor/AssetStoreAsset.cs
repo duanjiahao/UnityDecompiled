@@ -68,11 +68,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				UnityEngine.Object result;
 				if (this.previewAsset != null)
 				{
-					return this.previewAsset;
+					result = this.previewAsset;
 				}
-				return this.previewImage;
+				else
+				{
+					result = this.previewImage;
+				}
+				return result;
 			}
 		}
 

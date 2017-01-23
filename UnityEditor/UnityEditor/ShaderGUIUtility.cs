@@ -9,6 +9,7 @@ namespace UnityEditor
 		{
 			string value = "UnityEditor." + customEditorName;
 			Assembly[] loadedAssemblies = EditorAssemblies.loadedAssemblies;
+			ShaderGUI result;
 			for (int i = loadedAssemblies.Length - 1; i >= 0; i--)
 			{
 				Assembly assembly = loadedAssemblies[i];
@@ -22,9 +23,12 @@ namespace UnityEditor
 					{
 						if (typeof(ShaderGUI).IsAssignableFrom(type))
 						{
-							return Activator.CreateInstance(type) as ShaderGUI;
+							ShaderGUI shaderGUI = Activator.CreateInstance(type) as ShaderGUI;
+							result = shaderGUI;
+							return result;
 						}
-						return null;
+						result = null;
+						return result;
 					}
 					else
 					{
@@ -32,7 +36,8 @@ namespace UnityEditor
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 	}
 }

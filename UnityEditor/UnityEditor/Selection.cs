@@ -12,88 +12,72 @@ namespace UnityEditor
 
 		public static extern Transform[] transforms
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern Transform activeTransform
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern GameObject[] gameObjects
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern GameObject activeGameObject
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern UnityEngine.Object activeObject
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int activeInstanceID
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern UnityEngine.Object[] objects
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int[] instanceIDs
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern string[] assetGUIDsDeepSelection
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string[] assetGUIDs
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -141,7 +125,6 @@ namespace UnityEditor
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Transform[] GetTransforms(SelectionMode mode);
 
@@ -179,16 +162,18 @@ namespace UnityEditor
 				for (int k = 0; k < array3.Length; k++)
 				{
 					UnityEngine.Object @object = array3[k];
-					if (@object != null && (@object.GetType() == type || @object.GetType().IsSubclassOf(type)))
+					if (@object != null)
 					{
-						arrayList.Add(@object);
+						if (@object.GetType() == type || @object.GetType().IsSubclassOf(type))
+						{
+							arrayList.Add(@object);
+						}
 					}
 				}
 			}
 			return (UnityEngine.Object[])arrayList.ToArray(typeof(UnityEngine.Object));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object[] GetObjectsMode(SelectionMode mode);
 

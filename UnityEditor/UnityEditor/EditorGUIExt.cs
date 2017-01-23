@@ -13,17 +13,17 @@ namespace UnityEditor
 
 		private class MinMaxSliderState
 		{
-			public float dragStartPos;
+			public float dragStartPos = 0f;
 
-			public float dragStartValue;
+			public float dragStartValue = 0f;
 
-			public float dragStartSize;
+			public float dragStartSize = 0f;
 
-			public float dragStartValuesPerPixel;
+			public float dragStartValuesPerPixel = 0f;
 
-			public float dragStartLimit;
+			public float dragStartLimit = 0f;
 
-			public float dragEndLimit;
+			public float dragEndLimit = 0f;
 
 			public int whereWeDrag = -1;
 		}
@@ -77,34 +77,42 @@ namespace UnityEditor
 		{
 			int controlID = GUIUtility.GetControlID(EditorGUIExt.repeatButtonHash, focusType, position);
 			EventType typeForControl = Event.current.GetTypeForControl(controlID);
-			if (typeForControl == EventType.MouseDown)
+			bool result;
+			if (typeForControl != EventType.MouseDown)
+			{
+				if (typeForControl != EventType.MouseUp)
+				{
+					if (typeForControl != EventType.Repaint)
+					{
+						result = false;
+					}
+					else
+					{
+						style.Draw(position, content, controlID);
+						result = (controlID == GUIUtility.hotControl && position.Contains(Event.current.mousePosition));
+					}
+				}
+				else if (GUIUtility.hotControl == controlID)
+				{
+					GUIUtility.hotControl = 0;
+					Event.current.Use();
+					result = position.Contains(Event.current.mousePosition);
+				}
+				else
+				{
+					result = false;
+				}
+			}
+			else
 			{
 				if (position.Contains(Event.current.mousePosition))
 				{
 					GUIUtility.hotControl = controlID;
 					Event.current.Use();
 				}
-				return false;
+				result = false;
 			}
-			if (typeForControl != EventType.MouseUp)
-			{
-				if (typeForControl != EventType.Repaint)
-				{
-					return false;
-				}
-				style.Draw(position, content, controlID);
-				return controlID == GUIUtility.hotControl && position.Contains(Event.current.mousePosition);
-			}
-			else
-			{
-				if (GUIUtility.hotControl == controlID)
-				{
-					GUIUtility.hotControl = 0;
-					Event.current.Use();
-					return position.Contains(Event.current.mousePosition);
-				}
-				return false;
-			}
+			return result;
 		}
 
 		private static bool ScrollerRepeatButton(int scrollerID, Rect rect, GUIStyle style)
@@ -213,225 +221,219 @@ namespace UnityEditor
 			float num6 = Mathf.Clamp(value, num, num2);
 			float num7 = Mathf.Clamp(value + size, num, num2) - num6;
 			float num8 = (float)((visualStart <= visualEnd) ? 1 : -1);
-			if (slider == null || thumb == null)
+			if (slider != null && thumb != null)
 			{
-				return;
-			}
-			float num10;
-			Rect position2;
-			Rect rect;
-			Rect rect2;
-			float num11;
-			if (horiz)
-			{
-				float num9 = (thumb.fixedWidth == 0f) ? ((float)thumb.padding.horizontal) : thumb.fixedWidth;
-				num10 = (position.width - (float)slider.padding.horizontal - num9) / (num2 - num);
-				position2 = new Rect((num6 - num) * num10 + position.x + (float)slider.padding.left, position.y + (float)slider.padding.top, num7 * num10 + num9, position.height - (float)slider.padding.vertical);
-				rect = new Rect(position2.x, position2.y, (float)thumb.padding.left, position2.height);
-				rect2 = new Rect(position2.xMax - (float)thumb.padding.right, position2.y, (float)thumb.padding.right, position2.height);
-				num11 = current.mousePosition.x - position.x;
-			}
-			else
-			{
-				float num12 = (thumb.fixedHeight == 0f) ? ((float)thumb.padding.vertical) : thumb.fixedHeight;
-				num10 = (position.height - (float)slider.padding.vertical - num12) / (num2 - num);
-				position2 = new Rect(position.x + (float)slider.padding.left, (num6 - num) * num10 + position.y + (float)slider.padding.top, position.width - (float)slider.padding.horizontal, num7 * num10 + num12);
-				rect = new Rect(position2.x, position2.y, position2.width, (float)thumb.padding.top);
-				rect2 = new Rect(position2.x, position2.yMax - (float)thumb.padding.bottom, position2.width, (float)thumb.padding.bottom);
-				num11 = current.mousePosition.y - position.y;
-			}
-			switch (current.GetTypeForControl(id))
-			{
-			case EventType.MouseDown:
-				if (!position.Contains(current.mousePosition) || num - num2 == 0f)
+				float num10;
+				Rect position2;
+				Rect rect;
+				Rect rect2;
+				float num11;
+				if (horiz)
 				{
-					return;
-				}
-				if (minMaxSliderState == null)
-				{
-					minMaxSliderState = (EditorGUIExt.s_MinMaxSliderState = new EditorGUIExt.MinMaxSliderState());
-				}
-				minMaxSliderState.dragStartLimit = startLimit;
-				minMaxSliderState.dragEndLimit = endLimit;
-				if (position2.Contains(current.mousePosition))
-				{
-					minMaxSliderState.dragStartPos = num11;
-					minMaxSliderState.dragStartValue = value;
-					minMaxSliderState.dragStartSize = size;
-					minMaxSliderState.dragStartValuesPerPixel = num10;
-					if (rect.Contains(current.mousePosition))
-					{
-						minMaxSliderState.whereWeDrag = 1;
-					}
-					else if (rect2.Contains(current.mousePosition))
-					{
-						minMaxSliderState.whereWeDrag = 2;
-					}
-					else
-					{
-						minMaxSliderState.whereWeDrag = 0;
-					}
-					GUIUtility.hotControl = id;
-					current.Use();
-					return;
-				}
-				if (slider == GUIStyle.none)
-				{
-					return;
-				}
-				if (size != 0f && flag)
-				{
-					if (horiz)
-					{
-						if (num11 > position2.xMax - position.x)
-						{
-							value += size * num8 * 0.9f;
-						}
-						else
-						{
-							value -= size * num8 * 0.9f;
-						}
-					}
-					else if (num11 > position2.yMax - position.y)
-					{
-						value += size * num8 * 0.9f;
-					}
-					else
-					{
-						value -= size * num8 * 0.9f;
-					}
-					minMaxSliderState.whereWeDrag = 0;
-					GUI.changed = true;
-					EditorGUIExt.s_NextScrollStepTime = DateTime.Now.AddMilliseconds((double)EditorGUIExt.kFirstScrollWait);
-					float num13 = (!horiz) ? current.mousePosition.y : current.mousePosition.x;
-					float num14 = (!horiz) ? position2.y : position2.x;
-					minMaxSliderState.whereWeDrag = ((num13 <= num14) ? 3 : 4);
+					float num9 = (thumb.fixedWidth == 0f) ? ((float)thumb.padding.horizontal) : thumb.fixedWidth;
+					num10 = (position.width - (float)slider.padding.horizontal - num9) / (num2 - num);
+					position2 = new Rect((num6 - num) * num10 + position.x + (float)slider.padding.left, position.y + (float)slider.padding.top, num7 * num10 + num9, position.height - (float)slider.padding.vertical);
+					rect = new Rect(position2.x, position2.y, (float)thumb.padding.left, position2.height);
+					rect2 = new Rect(position2.xMax - (float)thumb.padding.right, position2.y, (float)thumb.padding.right, position2.height);
+					num11 = current.mousePosition.x - position.x;
 				}
 				else
 				{
-					if (horiz)
+					float num12 = (thumb.fixedHeight == 0f) ? ((float)thumb.padding.vertical) : thumb.fixedHeight;
+					num10 = (position.height - (float)slider.padding.vertical - num12) / (num2 - num);
+					position2 = new Rect(position.x + (float)slider.padding.left, (num6 - num) * num10 + position.y + (float)slider.padding.top, position.width - (float)slider.padding.horizontal, num7 * num10 + num12);
+					rect = new Rect(position2.x, position2.y, position2.width, (float)thumb.padding.top);
+					rect2 = new Rect(position2.x, position2.yMax - (float)thumb.padding.bottom, position2.width, (float)thumb.padding.bottom);
+					num11 = current.mousePosition.y - position.y;
+				}
+				switch (current.GetTypeForControl(id))
+				{
+				case EventType.MouseDown:
+					if (position.Contains(current.mousePosition) && num - num2 != 0f)
 					{
-						value = (num11 - position2.width * 0.5f) / num10 + num - size * 0.5f;
+						if (minMaxSliderState == null)
+						{
+							minMaxSliderState = (EditorGUIExt.s_MinMaxSliderState = new EditorGUIExt.MinMaxSliderState());
+						}
+						minMaxSliderState.dragStartLimit = startLimit;
+						minMaxSliderState.dragEndLimit = endLimit;
+						if (position2.Contains(current.mousePosition))
+						{
+							minMaxSliderState.dragStartPos = num11;
+							minMaxSliderState.dragStartValue = value;
+							minMaxSliderState.dragStartSize = size;
+							minMaxSliderState.dragStartValuesPerPixel = num10;
+							if (rect.Contains(current.mousePosition))
+							{
+								minMaxSliderState.whereWeDrag = 1;
+							}
+							else if (rect2.Contains(current.mousePosition))
+							{
+								minMaxSliderState.whereWeDrag = 2;
+							}
+							else
+							{
+								minMaxSliderState.whereWeDrag = 0;
+							}
+							GUIUtility.hotControl = id;
+							current.Use();
+						}
+						else if (slider != GUIStyle.none)
+						{
+							if (size != 0f && flag)
+							{
+								if (horiz)
+								{
+									if (num11 > position2.xMax - position.x)
+									{
+										value += size * num8 * 0.9f;
+									}
+									else
+									{
+										value -= size * num8 * 0.9f;
+									}
+								}
+								else if (num11 > position2.yMax - position.y)
+								{
+									value += size * num8 * 0.9f;
+								}
+								else
+								{
+									value -= size * num8 * 0.9f;
+								}
+								minMaxSliderState.whereWeDrag = 0;
+								GUI.changed = true;
+								EditorGUIExt.s_NextScrollStepTime = DateTime.Now.AddMilliseconds((double)EditorGUIExt.kFirstScrollWait);
+								float num13 = (!horiz) ? current.mousePosition.y : current.mousePosition.x;
+								float num14 = (!horiz) ? position2.y : position2.x;
+								minMaxSliderState.whereWeDrag = ((num13 <= num14) ? 3 : 4);
+							}
+							else
+							{
+								if (horiz)
+								{
+									value = (num11 - position2.width * 0.5f) / num10 + num - size * 0.5f;
+								}
+								else
+								{
+									value = (num11 - position2.height * 0.5f) / num10 + num - size * 0.5f;
+								}
+								minMaxSliderState.dragStartPos = num11;
+								minMaxSliderState.dragStartValue = value;
+								minMaxSliderState.dragStartSize = size;
+								minMaxSliderState.dragStartValuesPerPixel = num10;
+								minMaxSliderState.whereWeDrag = 0;
+								GUI.changed = true;
+							}
+							GUIUtility.hotControl = id;
+							value = Mathf.Clamp(value, num3, num4 - size);
+							current.Use();
+						}
 					}
-					else
-					{
-						value = (num11 - position2.height * 0.5f) / num10 + num - size * 0.5f;
-					}
-					minMaxSliderState.dragStartPos = num11;
-					minMaxSliderState.dragStartValue = value;
-					minMaxSliderState.dragStartSize = size;
-					minMaxSliderState.dragStartValuesPerPixel = num10;
-					minMaxSliderState.whereWeDrag = 0;
-					GUI.changed = true;
-				}
-				GUIUtility.hotControl = id;
-				value = Mathf.Clamp(value, num3, num4 - size);
-				current.Use();
-				return;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == id)
-				{
-					current.Use();
-					GUIUtility.hotControl = 0;
-				}
-				break;
-			case EventType.MouseDrag:
-			{
-				if (GUIUtility.hotControl != id)
-				{
-					return;
-				}
-				float num15 = (num11 - minMaxSliderState.dragStartPos) / minMaxSliderState.dragStartValuesPerPixel;
-				switch (minMaxSliderState.whereWeDrag)
-				{
-				case 0:
-					value = Mathf.Clamp(minMaxSliderState.dragStartValue + num15, num3, num4 - size);
 					break;
-				case 1:
-					value = minMaxSliderState.dragStartValue + num15;
-					size = minMaxSliderState.dragStartSize - num15;
-					if (value < num3)
+				case EventType.MouseUp:
+					if (GUIUtility.hotControl == id)
 					{
-						size -= num3 - value;
-						value = num3;
-					}
-					if (size < num5)
-					{
-						value -= num5 - size;
-						size = num5;
-					}
-					break;
-				case 2:
-					size = minMaxSliderState.dragStartSize + num15;
-					if (value + size > num4)
-					{
-						size = num4 - value;
-					}
-					if (size < num5)
-					{
-						size = num5;
-					}
-					break;
-				}
-				GUI.changed = true;
-				current.Use();
-				break;
-			}
-			case EventType.Repaint:
-			{
-				slider.Draw(position, GUIContent.none, id);
-				thumb.Draw(position2, GUIContent.none, id);
-				if (GUIUtility.hotControl != id || !position.Contains(current.mousePosition) || num - num2 == 0f)
-				{
-					return;
-				}
-				if (position2.Contains(current.mousePosition))
-				{
-					if (minMaxSliderState != null && (minMaxSliderState.whereWeDrag == 3 || minMaxSliderState.whereWeDrag == 4))
-					{
+						current.Use();
 						GUIUtility.hotControl = 0;
 					}
-					return;
-				}
-				if (DateTime.Now < EditorGUIExt.s_NextScrollStepTime)
-				{
-					return;
-				}
-				float num13 = (!horiz) ? current.mousePosition.y : current.mousePosition.x;
-				float num14 = (!horiz) ? position2.y : position2.x;
-				int num16 = (num13 <= num14) ? 3 : 4;
-				if (num16 != minMaxSliderState.whereWeDrag)
-				{
-					return;
-				}
-				if (size != 0f && flag)
-				{
-					if (horiz)
+					break;
+				case EventType.MouseDrag:
+					if (GUIUtility.hotControl == id)
 					{
-						if (num11 > position2.xMax - position.x)
+						float num15 = (num11 - minMaxSliderState.dragStartPos) / minMaxSliderState.dragStartValuesPerPixel;
+						int whereWeDrag = minMaxSliderState.whereWeDrag;
+						if (whereWeDrag != 0)
 						{
-							value += size * num8 * 0.9f;
+							if (whereWeDrag != 1)
+							{
+								if (whereWeDrag == 2)
+								{
+									size = minMaxSliderState.dragStartSize + num15;
+									if (value + size > num4)
+									{
+										size = num4 - value;
+									}
+									if (size < num5)
+									{
+										size = num5;
+									}
+								}
+							}
+							else
+							{
+								value = minMaxSliderState.dragStartValue + num15;
+								size = minMaxSliderState.dragStartSize - num15;
+								if (value < num3)
+								{
+									size -= num3 - value;
+									value = num3;
+								}
+								if (size < num5)
+								{
+									value -= num5 - size;
+									size = num5;
+								}
+							}
 						}
 						else
 						{
-							value -= size * num8 * 0.9f;
+							value = Mathf.Clamp(minMaxSliderState.dragStartValue + num15, num3, num4 - size);
+						}
+						GUI.changed = true;
+						current.Use();
+					}
+					break;
+				case EventType.Repaint:
+					slider.Draw(position, GUIContent.none, id);
+					thumb.Draw(position2, GUIContent.none, id);
+					if (GUIUtility.hotControl == id && position.Contains(current.mousePosition) && num - num2 != 0f)
+					{
+						if (position2.Contains(current.mousePosition))
+						{
+							if (minMaxSliderState != null && (minMaxSliderState.whereWeDrag == 3 || minMaxSliderState.whereWeDrag == 4))
+							{
+								GUIUtility.hotControl = 0;
+							}
+						}
+						else if (!(DateTime.Now < EditorGUIExt.s_NextScrollStepTime))
+						{
+							float num13 = (!horiz) ? current.mousePosition.y : current.mousePosition.x;
+							float num14 = (!horiz) ? position2.y : position2.x;
+							int num16 = (num13 <= num14) ? 3 : 4;
+							if (num16 == minMaxSliderState.whereWeDrag)
+							{
+								if (size != 0f && flag)
+								{
+									if (horiz)
+									{
+										if (num11 > position2.xMax - position.x)
+										{
+											value += size * num8 * 0.9f;
+										}
+										else
+										{
+											value -= size * num8 * 0.9f;
+										}
+									}
+									else if (num11 > position2.yMax - position.y)
+									{
+										value += size * num8 * 0.9f;
+									}
+									else
+									{
+										value -= size * num8 * 0.9f;
+									}
+									minMaxSliderState.whereWeDrag = -1;
+									GUI.changed = true;
+								}
+								value = Mathf.Clamp(value, num3, num4 - size);
+								EditorGUIExt.s_NextScrollStepTime = DateTime.Now.AddMilliseconds((double)EditorGUIExt.kScrollWait);
+							}
 						}
 					}
-					else if (num11 > position2.yMax - position.y)
-					{
-						value += size * num8 * 0.9f;
-					}
-					else
-					{
-						value -= size * num8 * 0.9f;
-					}
-					minMaxSliderState.whereWeDrag = -1;
-					GUI.changed = true;
+					break;
 				}
-				value = Mathf.Clamp(value, num3, num4 - size);
-				EditorGUIExt.s_NextScrollStepTime = DateTime.Now.AddMilliseconds((double)EditorGUIExt.kScrollWait);
-				break;
-			}
 			}
 		}
 
@@ -448,6 +450,7 @@ namespace UnityEditor
 					break;
 				}
 			}
+			bool result;
 			switch (current.GetTypeForControl(controlID))
 			{
 			case EventType.MouseDown:
@@ -493,7 +496,8 @@ namespace UnityEditor
 					selections[num] = (!flag && EditorGUIExt.adding);
 					GUIUtility.hotControl = controlID;
 					current.Use();
-					return true;
+					result = true;
+					return result;
 				}
 				break;
 			case EventType.MouseUp:
@@ -503,40 +507,45 @@ namespace UnityEditor
 				}
 				break;
 			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == controlID && current.button == 0)
+				if (GUIUtility.hotControl == controlID)
 				{
-					if (num < 0)
+					if (current.button == 0)
 					{
-						Rect rect = new Rect(positions[0].x, positions[0].y - 200f, positions[0].width, 200f);
-						if (rect.Contains(current.mousePosition))
+						if (num < 0)
 						{
-							num = 0;
+							Rect rect = new Rect(positions[0].x, positions[0].y - 200f, positions[0].width, 200f);
+							if (rect.Contains(current.mousePosition))
+							{
+								num = 0;
+							}
+							rect.y = positions[positions.Length - 1].yMax;
+							if (rect.Contains(current.mousePosition))
+							{
+								num = selections.Length - 1;
+							}
 						}
-						rect.y = positions[positions.Length - 1].yMax;
-						if (rect.Contains(current.mousePosition))
+						if (num < 0)
 						{
-							num = selections.Length - 1;
+							result = false;
+							return result;
 						}
+						int num3 = Mathf.Min(EditorGUIExt.initIndex, num);
+						int num4 = Mathf.Max(EditorGUIExt.initIndex, num);
+						for (int l = 0; l < selections.Length; l++)
+						{
+							if (l >= num3 && l <= num4)
+							{
+								selections[l] = EditorGUIExt.adding;
+							}
+							else
+							{
+								selections[l] = EditorGUIExt.initSelections[l];
+							}
+						}
+						current.Use();
+						result = true;
+						return result;
 					}
-					if (num < 0)
-					{
-						return false;
-					}
-					int num3 = Mathf.Min(EditorGUIExt.initIndex, num);
-					int num4 = Mathf.Max(EditorGUIExt.initIndex, num);
-					for (int l = 0; l < selections.Length; l++)
-					{
-						if (l >= num3 && l <= num4)
-						{
-							selections[l] = EditorGUIExt.adding;
-						}
-						else
-						{
-							selections[l] = EditorGUIExt.initSelections[l];
-						}
-					}
-					current.Use();
-					return true;
 				}
 				break;
 			case EventType.Repaint:
@@ -546,19 +555,23 @@ namespace UnityEditor
 				}
 				break;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static bool Any(bool[] selections)
 		{
+			bool result;
 			for (int i = 0; i < selections.Length; i++)
 			{
 				if (selections[i])
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public static HighLevelEvent MultiSelection(Rect rect, Rect[] positions, GUIContent content, Rect[] hitPositions, ref bool[] selections, bool[] readOnly, out int clickedIndex, out Vector2 offset, out float startSelect, out float endSelect, GUIStyle style)
@@ -568,267 +581,279 @@ namespace UnityEditor
 			offset = Vector2.zero;
 			clickedIndex = -1;
 			startSelect = (endSelect = 0f);
+			HighLevelEvent result;
 			if (current.type == EventType.Used)
 			{
-				return HighLevelEvent.None;
+				result = HighLevelEvent.None;
 			}
-			bool flag = false;
-			if (Event.current.type != EventType.Layout)
+			else
 			{
-				if (GUIUtility.keyboardControl == controlID)
+				bool flag = false;
+				if (Event.current.type != EventType.Layout)
 				{
-					flag = true;
-				}
-				else
-				{
-					selections = new bool[selections.Length];
-				}
-			}
-			EventType typeForControl = current.GetTypeForControl(controlID);
-			EventType eventType = typeForControl;
-			switch (eventType)
-			{
-			case EventType.MouseDown:
-			{
-				if (current.button != 0)
-				{
-					return HighLevelEvent.None;
-				}
-				GUIUtility.hotControl = controlID;
-				GUIUtility.keyboardControl = controlID;
-				EditorGUIExt.s_StartSelectPos = current.mousePosition;
-				int indexUnderMouse = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
-				if (Event.current.clickCount == 2 && indexUnderMouse >= 0)
-				{
-					for (int i = 0; i < selections.Length; i++)
+					if (GUIUtility.keyboardControl == controlID)
 					{
-						selections[i] = false;
-					}
-					selections[indexUnderMouse] = true;
-					current.Use();
-					clickedIndex = indexUnderMouse;
-					return HighLevelEvent.DoubleClick;
-				}
-				if (indexUnderMouse >= 0)
-				{
-					if (!current.shift && !EditorGUI.actionKey && !selections[indexUnderMouse])
-					{
-						for (int j = 0; j < hitPositions.Length; j++)
-						{
-							selections[j] = false;
-						}
-					}
-					if (current.shift || EditorGUI.actionKey)
-					{
-						selections[indexUnderMouse] = !selections[indexUnderMouse];
+						flag = true;
 					}
 					else
 					{
-						selections[indexUnderMouse] = true;
-					}
-					EditorGUIExt.s_MouseDownPos = current.mousePosition;
-					EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.None;
-					current.Use();
-					clickedIndex = indexUnderMouse;
-					return HighLevelEvent.SelectionChanged;
-				}
-				bool flag2;
-				if (!current.shift && !EditorGUI.actionKey)
-				{
-					for (int k = 0; k < hitPositions.Length; k++)
-					{
-						selections[k] = false;
-					}
-					flag2 = true;
-				}
-				else
-				{
-					flag2 = false;
-				}
-				EditorGUIExt.s_SelectionBackup = new List<bool>(selections);
-				EditorGUIExt.s_LastFrameSelections = new List<bool>(selections);
-				EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.DragSelecting;
-				current.Use();
-				return (!flag2) ? HighLevelEvent.None : HighLevelEvent.SelectionChanged;
-			}
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == controlID)
-				{
-					GUIUtility.hotControl = 0;
-					if (EditorGUIExt.s_StartSelectPos != current.mousePosition)
-					{
-						current.Use();
-					}
-					if (EditorGUIExt.s_MultiSelectDragSelection != EditorGUIExt.DragSelectionState.None)
-					{
-						EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.None;
-						EditorGUIExt.s_SelectionBackup = null;
-						EditorGUIExt.s_LastFrameSelections = null;
-						return HighLevelEvent.EndDrag;
-					}
-					clickedIndex = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
-					if (current.clickCount == 1)
-					{
-						return HighLevelEvent.Click;
+						selections = new bool[selections.Length];
 					}
 				}
-				return HighLevelEvent.None;
-			case EventType.MouseMove:
-			case EventType.KeyUp:
-			case EventType.ScrollWheel:
-				IL_A6:
-				switch (eventType)
+				EventType typeForControl = current.GetTypeForControl(controlID);
+				switch (typeForControl)
 				{
-				case EventType.ValidateCommand:
-				case EventType.ExecuteCommand:
-					if (flag)
+				case EventType.MouseDown:
+				{
+					if (current.button != 0)
 					{
-						bool flag3 = current.type == EventType.ExecuteCommand;
-						string commandName = current.commandName;
-						if (commandName != null)
+						goto IL_6B4;
+					}
+					GUIUtility.hotControl = controlID;
+					GUIUtility.keyboardControl = controlID;
+					EditorGUIExt.s_StartSelectPos = current.mousePosition;
+					int indexUnderMouse = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
+					if (Event.current.clickCount == 2)
+					{
+						if (indexUnderMouse >= 0)
 						{
-							if (EditorGUIExt.<>f__switch$mapE == null)
+							for (int i = 0; i < selections.Length; i++)
 							{
-								EditorGUIExt.<>f__switch$mapE = new Dictionary<string, int>(1)
-								{
-									{
-										"Delete",
-										0
-									}
-								};
+								selections[i] = false;
 							}
-							int num;
-							if (EditorGUIExt.<>f__switch$mapE.TryGetValue(commandName, out num))
+							selections[indexUnderMouse] = true;
+							current.Use();
+							clickedIndex = indexUnderMouse;
+							result = HighLevelEvent.DoubleClick;
+							return result;
+						}
+					}
+					if (indexUnderMouse >= 0)
+					{
+						if (!current.shift && !EditorGUI.actionKey && !selections[indexUnderMouse])
+						{
+							for (int j = 0; j < hitPositions.Length; j++)
 							{
-								if (num == 0)
+								selections[j] = false;
+							}
+						}
+						if (current.shift || EditorGUI.actionKey)
+						{
+							selections[indexUnderMouse] = !selections[indexUnderMouse];
+						}
+						else
+						{
+							selections[indexUnderMouse] = true;
+						}
+						EditorGUIExt.s_MouseDownPos = current.mousePosition;
+						EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.None;
+						current.Use();
+						clickedIndex = indexUnderMouse;
+						result = HighLevelEvent.SelectionChanged;
+						return result;
+					}
+					bool flag2;
+					if (!current.shift && !EditorGUI.actionKey)
+					{
+						for (int k = 0; k < hitPositions.Length; k++)
+						{
+							selections[k] = false;
+						}
+						flag2 = true;
+					}
+					else
+					{
+						flag2 = false;
+					}
+					EditorGUIExt.s_SelectionBackup = new List<bool>(selections);
+					EditorGUIExt.s_LastFrameSelections = new List<bool>(selections);
+					EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.DragSelecting;
+					current.Use();
+					result = ((!flag2) ? HighLevelEvent.None : HighLevelEvent.SelectionChanged);
+					return result;
+				}
+				case EventType.MouseUp:
+					if (GUIUtility.hotControl == controlID)
+					{
+						GUIUtility.hotControl = 0;
+						if (EditorGUIExt.s_StartSelectPos != current.mousePosition)
+						{
+							current.Use();
+						}
+						if (EditorGUIExt.s_MultiSelectDragSelection != EditorGUIExt.DragSelectionState.None)
+						{
+							EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.None;
+							EditorGUIExt.s_SelectionBackup = null;
+							EditorGUIExt.s_LastFrameSelections = null;
+							result = HighLevelEvent.EndDrag;
+							return result;
+						}
+						clickedIndex = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
+						if (current.clickCount == 1)
+						{
+							result = HighLevelEvent.Click;
+							return result;
+						}
+					}
+					goto IL_6B4;
+				case EventType.MouseMove:
+				case EventType.KeyUp:
+				case EventType.ScrollWheel:
+					IL_AA:
+					switch (typeForControl)
+					{
+					case EventType.ValidateCommand:
+					case EventType.ExecuteCommand:
+						if (flag)
+						{
+							bool flag3 = current.type == EventType.ExecuteCommand;
+							string commandName = current.commandName;
+							if (commandName != null)
+							{
+								if (commandName == "Delete")
 								{
 									current.Use();
 									if (flag3)
 									{
-										return HighLevelEvent.Delete;
+										result = HighLevelEvent.Delete;
+										return result;
 									}
 								}
 							}
 						}
-					}
-					return HighLevelEvent.None;
-				case EventType.DragExited:
-					return HighLevelEvent.None;
-				case EventType.ContextClick:
-				{
-					int indexUnderMouse = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
-					if (indexUnderMouse >= 0)
+						goto IL_6B4;
+					case EventType.DragExited:
+						goto IL_6B4;
+					case EventType.ContextClick:
 					{
-						clickedIndex = indexUnderMouse;
-						GUIUtility.keyboardControl = controlID;
-						current.Use();
-						return HighLevelEvent.ContextClick;
-					}
-					return HighLevelEvent.None;
-				}
-				default:
-					return HighLevelEvent.None;
-				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl != controlID)
-				{
-					return HighLevelEvent.None;
-				}
-				if (EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.DragSelecting)
-				{
-					float num2 = Mathf.Min(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
-					float num3 = Mathf.Max(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
-					EditorGUIExt.s_SelectionBackup.CopyTo(selections);
-					for (int l = 0; l < hitPositions.Length; l++)
-					{
-						if (!selections[l])
+						int indexUnderMouse = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
+						if (indexUnderMouse >= 0)
 						{
-							float num4 = hitPositions[l].x + hitPositions[l].width * 0.5f;
-							if (num4 >= num2 && num4 <= num3)
+							clickedIndex = indexUnderMouse;
+							GUIUtility.keyboardControl = controlID;
+							current.Use();
+							result = HighLevelEvent.ContextClick;
+							return result;
+						}
+						goto IL_6B4;
+					}
+					default:
+						goto IL_6B4;
+					}
+					break;
+				case EventType.MouseDrag:
+					if (GUIUtility.hotControl != controlID)
+					{
+						goto IL_6B4;
+					}
+					if (EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.DragSelecting)
+					{
+						float num = Mathf.Min(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
+						float num2 = Mathf.Max(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
+						EditorGUIExt.s_SelectionBackup.CopyTo(selections);
+						for (int l = 0; l < hitPositions.Length; l++)
+						{
+							if (!selections[l])
 							{
-								selections[l] = true;
+								float num3 = hitPositions[l].x + hitPositions[l].width * 0.5f;
+								if (num3 >= num && num3 <= num2)
+								{
+									selections[l] = true;
+								}
 							}
 						}
-					}
-					current.Use();
-					startSelect = num2;
-					endSelect = num3;
-					bool flag4 = false;
-					for (int m = 0; m < selections.Length; m++)
-					{
-						if (selections[m] != EditorGUIExt.s_LastFrameSelections[m])
+						current.Use();
+						startSelect = num;
+						endSelect = num2;
+						bool flag4 = false;
+						for (int m = 0; m < selections.Length; m++)
 						{
-							flag4 = true;
-							EditorGUIExt.s_LastFrameSelections[m] = selections[m];
+							if (selections[m] != EditorGUIExt.s_LastFrameSelections[m])
+							{
+								flag4 = true;
+								EditorGUIExt.s_LastFrameSelections[m] = selections[m];
+							}
+						}
+						result = ((!flag4) ? HighLevelEvent.None : HighLevelEvent.SelectionChanged);
+						return result;
+					}
+					offset = current.mousePosition - EditorGUIExt.s_MouseDownPos;
+					current.Use();
+					if (EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.None)
+					{
+						EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.Dragging;
+						result = HighLevelEvent.BeginDrag;
+						return result;
+					}
+					result = HighLevelEvent.Drag;
+					return result;
+				case EventType.KeyDown:
+					if (flag)
+					{
+						if (current.keyCode == KeyCode.Backspace || current.keyCode == KeyCode.Delete)
+						{
+							current.Use();
+							result = HighLevelEvent.Delete;
+							return result;
 						}
 					}
-					return (!flag4) ? HighLevelEvent.None : HighLevelEvent.SelectionChanged;
-				}
-				offset = current.mousePosition - EditorGUIExt.s_MouseDownPos;
-				current.Use();
-				if (EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.None)
+					goto IL_6B4;
+				case EventType.Repaint:
 				{
-					EditorGUIExt.s_MultiSelectDragSelection = EditorGUIExt.DragSelectionState.Dragging;
-					return HighLevelEvent.BeginDrag;
-				}
-				return HighLevelEvent.Drag;
-			case EventType.KeyDown:
-				if (flag && (current.keyCode == KeyCode.Backspace || current.keyCode == KeyCode.Delete))
-				{
-					current.Use();
-					return HighLevelEvent.Delete;
-				}
-				return HighLevelEvent.None;
-			case EventType.Repaint:
-			{
-				if (GUIUtility.hotControl == controlID && EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.DragSelecting)
-				{
-					float num5 = Mathf.Min(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
-					float num6 = Mathf.Max(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
-					Rect position = new Rect(0f, 0f, rect.width, rect.height);
-					position.x = num5;
-					position.width = num6 - num5;
-					if (position.width != 0f)
+					if (GUIUtility.hotControl == controlID && EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.DragSelecting)
 					{
-						GUI.Box(position, string.Empty, EditorGUIExt.ms_Styles.selectionRect);
+						float num4 = Mathf.Min(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
+						float num5 = Mathf.Max(EditorGUIExt.s_StartSelectPos.x, current.mousePosition.x);
+						Rect position = new Rect(0f, 0f, rect.width, rect.height);
+						position.x = num4;
+						position.width = num5 - num4;
+						if (position.width != 0f)
+						{
+							GUI.Box(position, "", EditorGUIExt.ms_Styles.selectionRect);
+						}
 					}
+					Color color = GUI.color;
+					for (int n = 0; n < positions.Length; n++)
+					{
+						if (readOnly != null && readOnly[n])
+						{
+							GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 0.5f);
+						}
+						else if (selections[n])
+						{
+							GUI.color = color * new Color(0.3f, 0.55f, 0.95f, 1f);
+						}
+						else
+						{
+							GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 1f);
+						}
+						style.Draw(positions[n], content, controlID, selections[n]);
+					}
+					GUI.color = color;
+					goto IL_6B4;
 				}
-				Color color = GUI.color;
-				for (int n = 0; n < positions.Length; n++)
-				{
-					if (readOnly != null && readOnly[n])
-					{
-						GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 0.5f);
-					}
-					else if (selections[n])
-					{
-						GUI.color = color * new Color(0.3f, 0.55f, 0.95f, 1f);
-					}
-					else
-					{
-						GUI.color = color * new Color(0.9f, 0.9f, 0.9f, 1f);
-					}
-					style.Draw(positions[n], content, controlID, selections[n]);
 				}
-				GUI.color = color;
-				return HighLevelEvent.None;
+				goto IL_AA;
+				IL_6B4:
+				result = HighLevelEvent.None;
 			}
-			}
-			goto IL_A6;
+			return result;
 		}
 
 		private static int GetIndexUnderMouse(Rect[] hitPositions, bool[] readOnly)
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
+			int result;
 			for (int i = hitPositions.Length - 1; i >= 0; i--)
 			{
 				if ((readOnly == null || !readOnly[i]) && hitPositions[i].Contains(mousePosition))
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 
 		internal static Rect FromToRect(Vector2 start, Vector2 end)

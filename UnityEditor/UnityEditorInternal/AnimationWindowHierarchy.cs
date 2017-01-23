@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditorInternal
@@ -9,12 +10,22 @@ namespace UnityEditorInternal
 	{
 		private AnimationWindowState m_State;
 
-		private TreeView m_TreeView;
+		private TreeViewController m_TreeView;
 
 		public AnimationWindowHierarchy(AnimationWindowState state, EditorWindow owner, Rect position)
 		{
 			this.m_State = state;
 			this.Init(owner, position);
+		}
+
+		public Vector2 GetContentSize()
+		{
+			return this.m_TreeView.GetContentSize();
+		}
+
+		public Rect GetTotalRect()
+		{
+			return this.m_TreeView.GetTotalRect();
 		}
 
 		public void OnGUI(Rect position)
@@ -29,12 +40,12 @@ namespace UnityEditorInternal
 			{
 				this.m_State.hierarchyState = new AnimationWindowHierarchyState();
 			}
-			this.m_TreeView = new TreeView(owner, this.m_State.hierarchyState);
+			this.m_TreeView = new TreeViewController(owner, this.m_State.hierarchyState);
 			this.m_State.hierarchyData = new AnimationWindowHierarchyDataSource(this.m_TreeView, this.m_State);
 			this.m_TreeView.Init(rect, this.m_State.hierarchyData, new AnimationWindowHierarchyGUI(this.m_TreeView, this.m_State), null);
 			this.m_TreeView.deselectOnUnhandledMouseDown = true;
-			TreeView expr_8E = this.m_TreeView;
-			expr_8E.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_8E.selectionChangedCallback, new Action<int[]>(this.m_State.OnHierarchySelectionChanged));
+			TreeViewController expr_8F = this.m_TreeView;
+			expr_8F.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_8F.selectionChangedCallback, new Action<int[]>(this.m_State.OnHierarchySelectionChanged));
 			this.m_TreeView.ReloadData();
 		}
 
@@ -45,12 +56,17 @@ namespace UnityEditorInternal
 
 		public bool IsIDVisible(int id)
 		{
+			bool result;
 			if (this.m_TreeView == null)
 			{
-				return false;
+				result = false;
 			}
-			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
-			return TreeView.GetIndexOfID(rows, id) >= 0;
+			else
+			{
+				IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+				result = (TreeViewController.GetIndexOfID(rows, id) >= 0);
+			}
+			return result;
 		}
 
 		public void EndNameEditing(bool acceptChanges)

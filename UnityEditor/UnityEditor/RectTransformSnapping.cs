@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,12 +32,11 @@ namespace UnityEditor
 
 		internal static void DrawGuides()
 		{
-			if (EditorGUI.actionKey)
+			if (!EditorGUI.actionKey)
 			{
-				return;
+				RectTransformSnapping.s_SnapGuides[0].DrawGuides();
+				RectTransformSnapping.s_SnapGuides[1].DrawGuides();
 			}
-			RectTransformSnapping.s_SnapGuides[0].DrawGuides();
-			RectTransformSnapping.s_SnapGuides[1].DrawGuides();
 		}
 
 		private static Vector3 GetInterpolatedCorner(Vector3[] corners, int mainAxis, float alongMainAxis, float alongOtherAxis)
@@ -78,16 +78,29 @@ namespace UnityEditor
 						RectTransformSnapping.GetInterpolatedCorner(RectTransformSnapping.s_Corners, i, num, 1f)
 					}));
 				}
-				foreach (Transform transform in parentSpace)
+				IEnumerator enumerator = parentSpace.GetEnumerator();
+				try
 				{
-					if (!(transform == self))
+					while (enumerator.MoveNext())
 					{
-						RectTransform component2 = transform.GetComponent<RectTransform>();
-						if (component2)
+						Transform transform = (Transform)enumerator.Current;
+						if (!(transform == self))
 						{
-							RectTransformSnapping.s_SnapGuides[i].AddGuide(new SnapGuide(component2.anchorMin[i], new Vector3[0]));
-							RectTransformSnapping.s_SnapGuides[i].AddGuide(new SnapGuide(component2.anchorMax[i], new Vector3[0]));
+							RectTransform component2 = transform.GetComponent<RectTransform>();
+							if (component2)
+							{
+								RectTransformSnapping.s_SnapGuides[i].AddGuide(new SnapGuide(component2.anchorMin[i], new Vector3[0]));
+								RectTransformSnapping.s_SnapGuides[i].AddGuide(new SnapGuide(component2.anchorMax[i], new Vector3[0]));
+							}
 						}
+					}
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
 					}
 				}
 				int num2 = (i != 0) ? minmaxY : minmaxX;
@@ -108,19 +121,18 @@ namespace UnityEditor
 			{
 				RectTransformSnapping.s_SnapGuides[i].Clear();
 			}
-			if (parentSpace == null)
+			if (!(parentSpace == null))
 			{
-				return;
-			}
-			for (int j = 0; j < 2; j++)
-			{
-				int num = (j != 0) ? yHandle : xHandle;
-				if (num != 1)
+				for (int j = 0; j < 2; j++)
 				{
-					List<SnapGuide> snapGuides = RectTransformSnapping.GetSnapGuides(parentSpace, self, parentRect, rect, j, num);
-					foreach (SnapGuide current in snapGuides)
+					int num = (j != 0) ? yHandle : xHandle;
+					if (num != 1)
 					{
-						RectTransformSnapping.s_SnapGuides[j].AddGuide(current);
+						List<SnapGuide> snapGuides = RectTransformSnapping.GetSnapGuides(parentSpace, self, parentRect, rect, j, num);
+						foreach (SnapGuide current in snapGuides)
+						{
+							RectTransformSnapping.s_SnapGuides[j].AddGuide(current);
+						}
 					}
 				}
 			}
@@ -132,19 +144,18 @@ namespace UnityEditor
 			{
 				RectTransformSnapping.s_SnapGuides[i].Clear();
 			}
-			if (parentSpace == null)
+			if (!(parentSpace == null))
 			{
-				return;
-			}
-			for (int j = 0; j < 2; j++)
-			{
-				for (int k = 0; k < RectTransformSnapping.kSidesAndMiddle.Length; k++)
+				for (int j = 0; j < 2; j++)
 				{
-					List<SnapGuide> snapGuides = RectTransformSnapping.GetSnapGuides(parentSpace, self, parentRect, rect, j, k);
-					foreach (SnapGuide current in snapGuides)
+					for (int k = 0; k < RectTransformSnapping.kSidesAndMiddle.Length; k++)
 					{
-						current.value = RectTransformSnapping.GetGuideValueForRect(rect, current.value, j, RectTransformSnapping.kSidesAndMiddle[k]);
-						RectTransformSnapping.s_SnapGuides[j].AddGuide(current);
+						List<SnapGuide> snapGuides = RectTransformSnapping.GetSnapGuides(parentSpace, self, parentRect, rect, j, k);
+						foreach (SnapGuide current in snapGuides)
+						{
+							current.value = RectTransformSnapping.GetGuideValueForRect(rect, current.value, j, RectTransformSnapping.kSidesAndMiddle[k]);
+							RectTransformSnapping.s_SnapGuides[j].AddGuide(current);
+						}
 					}
 				}
 			}
@@ -164,33 +175,46 @@ namespace UnityEditor
 					list.Add(new SnapGuide(num * parentRect.rect.size[axis], false, RectTransformSnapping.GetGuideLineForRect(parentRect, axis, num)));
 				}
 			}
-			foreach (Transform transform in parentSpace)
+			IEnumerator enumerator = parentSpace.GetEnumerator();
+			try
 			{
-				if (!(transform == self))
+				while (enumerator.MoveNext())
 				{
-					RectTransform component = transform.GetComponent<RectTransform>();
-					if (component)
+					Transform transform = (Transform)enumerator.Current;
+					if (!(transform == self))
 					{
-						if (side == 0)
+						RectTransform component = transform.GetComponent<RectTransform>();
+						if (component)
 						{
-							bool safe = component.anchorMin[axis] == rect.anchorMin[axis];
-							list.Add(new SnapGuide(component.GetRectInParentSpace().min[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 0f)));
-							safe = (component.anchorMax[axis] == rect.anchorMin[axis]);
-							list.Add(new SnapGuide(component.GetRectInParentSpace().max[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 1f)));
-						}
-						if (side == 2)
-						{
-							bool safe = component.anchorMax[axis] == rect.anchorMax[axis];
-							list.Add(new SnapGuide(component.GetRectInParentSpace().max[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 1f)));
-							safe = (component.anchorMin[axis] == rect.anchorMax[axis]);
-							list.Add(new SnapGuide(component.GetRectInParentSpace().min[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 0f)));
-						}
-						if (side == 1)
-						{
-							bool safe = component.anchorMin[axis] - rect.anchorMin[axis] == -(component.anchorMax[axis] - rect.anchorMax[axis]);
-							list.Add(new SnapGuide(component.GetRectInParentSpace().center[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 0.5f)));
+							if (side == 0)
+							{
+								bool safe = component.anchorMin[axis] == rect.anchorMin[axis];
+								list.Add(new SnapGuide(component.GetRectInParentSpace().min[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 0f)));
+								safe = (component.anchorMax[axis] == rect.anchorMin[axis]);
+								list.Add(new SnapGuide(component.GetRectInParentSpace().max[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 1f)));
+							}
+							if (side == 2)
+							{
+								bool safe = component.anchorMax[axis] == rect.anchorMax[axis];
+								list.Add(new SnapGuide(component.GetRectInParentSpace().max[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 1f)));
+								safe = (component.anchorMin[axis] == rect.anchorMax[axis]);
+								list.Add(new SnapGuide(component.GetRectInParentSpace().min[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 0f)));
+							}
+							if (side == 1)
+							{
+								bool safe = component.anchorMin[axis] - rect.anchorMin[axis] == -(component.anchorMax[axis] - rect.anchorMax[axis]);
+								list.Add(new SnapGuide(component.GetRectInParentSpace().center[axis], safe, RectTransformSnapping.GetGuideLineForRect(component, axis, 0.5f)));
+							}
 						}
 					}
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
 				}
 			}
 			return list;
@@ -236,12 +260,17 @@ namespace UnityEditor
 
 		internal static float SnapToGuides(float value, float snapDistance, int axis)
 		{
+			float result;
 			if (EditorGUI.actionKey)
 			{
-				return value;
+				result = value;
 			}
-			SnapGuideCollection snapGuideCollection = (axis != 0) ? RectTransformSnapping.s_SnapGuides[1] : RectTransformSnapping.s_SnapGuides[0];
-			return snapGuideCollection.SnapToGuides(value, snapDistance);
+			else
+			{
+				SnapGuideCollection snapGuideCollection = (axis != 0) ? RectTransformSnapping.s_SnapGuides[1] : RectTransformSnapping.s_SnapGuides[0];
+				result = snapGuideCollection.SnapToGuides(value, snapDistance);
+			}
+			return result;
 		}
 	}
 }

@@ -24,6 +24,8 @@ namespace UnityEditor
 
 		public bool m_AllowRandomBetweenTwoGradients;
 
+		public bool m_AllowRandomColor;
+
 		public MinMaxGradientState state
 		{
 			get
@@ -57,15 +59,15 @@ namespace UnityEditor
 			this.m_AllowGradient = true;
 			this.m_AllowRandomBetweenTwoColors = true;
 			this.m_AllowRandomBetweenTwoGradients = true;
+			this.m_AllowRandomColor = false;
 		}
 
 		private void SetMinMaxState(MinMaxGradientState newState)
 		{
-			if (newState == this.state)
+			if (newState != this.state)
 			{
-				return;
+				this.m_MinMaxState.intValue = (int)newState;
 			}
-			this.m_MinMaxState.intValue = (int)newState;
 		}
 
 		public static Color GetGradientAsColor(SerializedProperty gradientProp)

@@ -7,6 +7,8 @@ namespace UnityEditor
 {
 	internal class PopupList : PopupWindowContent
 	{
+		public delegate void OnSelectCallback(PopupList.ListElement element);
+
 		public enum Gravity
 		{
 			Top,
@@ -170,13 +172,18 @@ namespace UnityEditor
 
 			public virtual IEnumerable<PopupList.ListElement> BuildQuery(string prefix)
 			{
-				if (prefix == string.Empty)
+				IEnumerable<PopupList.ListElement> result;
+				if (prefix == "")
 				{
-					return this.m_ListElements;
+					result = this.m_ListElements;
 				}
-				return from element in this.m_ListElements
-				where element.m_Content.text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-				select element;
+				else
+				{
+					result = from element in this.m_ListElements
+					where element.m_Content.text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+					select element;
+				}
+				return result;
 			}
 
 			public IEnumerable<PopupList.ListElement> GetFilteredList(string prefix)
@@ -188,13 +195,18 @@ namespace UnityEditor
 					orderby element.filterScore descending
 					select element).Take(this.m_MaxCount);
 				}
+				IEnumerable<PopupList.ListElement> result;
 				if (this.m_SortAlphabetically)
 				{
-					return from element in enumerable
+					result = from element in enumerable
 					orderby element.text.ToLower()
 					select element;
 				}
-				return enumerable;
+				else
+				{
+					result = enumerable;
+				}
+				return result;
 			}
 
 			public int GetFilteredCount(string prefix)
@@ -209,16 +221,19 @@ namespace UnityEditor
 
 			public PopupList.ListElement NewOrMatchingElement(string label)
 			{
+				PopupList.ListElement result;
 				foreach (PopupList.ListElement current in this.m_ListElements)
 				{
 					if (current.text.Equals(label, StringComparison.OrdinalIgnoreCase))
 					{
-						return current;
+						result = current;
+						return result;
 					}
 				}
 				PopupList.ListElement listElement = new PopupList.ListElement(label, false, -1f);
 				this.m_ListElements.Add(listElement);
-				return listElement;
+				result = listElement;
+				return result;
 			}
 		}
 
@@ -246,7 +261,15 @@ namespace UnityEditor
 			}
 		}
 
-		public delegate void OnSelectCallback(PopupList.ListElement element);
+		private static EditorGUI.RecycledTextEditor s_RecycledEditor = new EditorGUI.RecycledTextEditor();
+
+		private static string s_TextFieldName = "ProjectBrowserPopupsTextField";
+
+		private static int s_TextFieldHash = PopupList.s_TextFieldName.GetHashCode();
+
+		private static PopupList.Styles s_Styles;
+
+		private PopupList.InputData m_Data;
 
 		private const float scrollBarWidth = 14f;
 
@@ -264,27 +287,17 @@ namespace UnityEditor
 
 		private const float k_Margin = 10f;
 
-		private static EditorGUI.RecycledTextEditor s_RecycledEditor = new EditorGUI.RecycledTextEditor();
-
-		private static string s_TextFieldName = "ProjectBrowserPopupsTextField";
-
-		private static int s_TextFieldHash = PopupList.s_TextFieldName.GetHashCode();
-
-		private static PopupList.Styles s_Styles;
-
-		private PopupList.InputData m_Data;
-
 		private Vector2 m_ScrollPosition;
 
 		private Vector2 m_ScreenPos;
 
 		private PopupList.Gravity m_Gravity;
 
-		private string m_EnteredTextCompletion = string.Empty;
+		private string m_EnteredTextCompletion = "";
 
-		private string m_EnteredText = string.Empty;
+		private string m_EnteredText = "";
 
-		private int m_SelectedCompletionIndex;
+		private int m_SelectedCompletionIndex = 0;
 
 		public PopupList(PopupList.InputData inputData) : this(inputData, null)
 		{
@@ -330,193 +343,190 @@ namespace UnityEditor
 		public override void OnGUI(Rect windowRect)
 		{
 			Event current = Event.current;
-			if (current.type == EventType.Layout)
+			if (current.type != EventType.Layout)
 			{
-				return;
-			}
-			if (PopupList.s_Styles == null)
-			{
-				PopupList.s_Styles = new PopupList.Styles();
-			}
-			if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape)
-			{
-				base.editorWindow.Close();
-				GUIUtility.ExitGUI();
-			}
-			if (this.m_Gravity == PopupList.Gravity.Bottom)
-			{
-				this.DrawList(base.editorWindow, windowRect);
-				this.DrawCustomTextField(base.editorWindow, windowRect);
-			}
-			else
-			{
-				this.DrawCustomTextField(base.editorWindow, windowRect);
-				this.DrawList(base.editorWindow, windowRect);
-			}
-			if (current.type == EventType.Repaint)
-			{
-				PopupList.s_Styles.background.Draw(new Rect(windowRect.x, windowRect.y, windowRect.width, windowRect.height), false, false, false, false);
+				if (PopupList.s_Styles == null)
+				{
+					PopupList.s_Styles = new PopupList.Styles();
+				}
+				if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape)
+				{
+					base.editorWindow.Close();
+					GUIUtility.ExitGUI();
+				}
+				if (this.m_Gravity == PopupList.Gravity.Bottom)
+				{
+					this.DrawList(base.editorWindow, windowRect);
+					this.DrawCustomTextField(base.editorWindow, windowRect);
+				}
+				else
+				{
+					this.DrawCustomTextField(base.editorWindow, windowRect);
+					this.DrawList(base.editorWindow, windowRect);
+				}
+				if (current.type == EventType.Repaint)
+				{
+					PopupList.s_Styles.background.Draw(new Rect(windowRect.x, windowRect.y, windowRect.width, windowRect.height), false, false, false, false);
+				}
 			}
 		}
 
 		private void DrawCustomTextField(EditorWindow editorWindow, Rect windowRect)
 		{
-			if (!this.m_Data.m_AllowCustom)
+			if (this.m_Data.m_AllowCustom)
 			{
-				return;
-			}
-			Event current = Event.current;
-			bool flag = this.m_Data.m_EnableAutoCompletion;
-			bool flag2 = false;
-			bool flag3 = false;
-			bool flag4 = false;
-			string text = this.CurrentDisplayedText();
-			if (current.type == EventType.KeyDown)
-			{
-				KeyCode keyCode = current.keyCode;
-				switch (keyCode)
+				Event current = Event.current;
+				bool flag = this.m_Data.m_EnableAutoCompletion;
+				bool flag2 = false;
+				bool flag3 = false;
+				bool flag4 = false;
+				string text = this.CurrentDisplayedText();
+				if (current.type == EventType.KeyDown)
 				{
-				case KeyCode.Backspace:
-					goto IL_136;
-				case KeyCode.Tab:
-					goto IL_B5;
-				case (KeyCode)10:
-				case (KeyCode)11:
-				case KeyCode.Clear:
-					IL_67:
-					if (keyCode == KeyCode.UpArrow)
+					KeyCode keyCode = current.keyCode;
+					switch (keyCode)
 					{
-						this.ChangeSelectedCompletion(-1);
-						flag3 = true;
-						goto IL_17A;
-					}
-					if (keyCode == KeyCode.DownArrow)
-					{
-						this.ChangeSelectedCompletion(1);
-						flag3 = true;
-						goto IL_17A;
-					}
-					if (keyCode == KeyCode.None)
-					{
-						if (current.character == ' ' || current.character == ',')
+					case KeyCode.Backspace:
+						goto IL_13E;
+					case KeyCode.Tab:
+						goto IL_BB;
+					case (KeyCode)10:
+					case (KeyCode)11:
+					case KeyCode.Clear:
+						IL_6D:
+						if (keyCode == KeyCode.UpArrow)
 						{
+							this.ChangeSelectedCompletion(-1);
 							flag3 = true;
+							goto IL_182;
 						}
-						goto IL_17A;
+						if (keyCode == KeyCode.DownArrow)
+						{
+							this.ChangeSelectedCompletion(1);
+							flag3 = true;
+							goto IL_182;
+						}
+						if (keyCode == KeyCode.None)
+						{
+							if (current.character == ' ' || current.character == ',')
+							{
+								flag3 = true;
+							}
+							goto IL_182;
+						}
+						if (keyCode == KeyCode.Space)
+						{
+							goto IL_BB;
+						}
+						if (keyCode == KeyCode.Comma)
+						{
+							goto IL_BB;
+						}
+						if (keyCode != KeyCode.Delete)
+						{
+							goto IL_182;
+						}
+						goto IL_13E;
+					case KeyCode.Return:
+						goto IL_BB;
 					}
-					if (keyCode == KeyCode.Space)
+					goto IL_6D;
+					IL_BB:
+					if (text != "")
 					{
-						goto IL_B5;
+						if (this.m_Data.m_OnSelectCallback != null)
+						{
+							this.m_Data.m_OnSelectCallback(this.m_Data.NewOrMatchingElement(text));
+						}
+						if (current.keyCode == KeyCode.Tab || current.keyCode == KeyCode.Comma)
+						{
+							flag4 = true;
+						}
+						if (this.m_Data.m_CloseOnSelection || current.keyCode == KeyCode.Return)
+						{
+							flag2 = true;
+						}
 					}
-					if (keyCode == KeyCode.Comma)
-					{
-						goto IL_B5;
-					}
-					if (keyCode != KeyCode.Delete)
-					{
-						goto IL_17A;
-					}
-					goto IL_136;
-				case KeyCode.Return:
-					goto IL_B5;
+					flag3 = true;
+					goto IL_182;
+					IL_13E:
+					flag = false;
+					IL_182:;
 				}
-				goto IL_67;
-				IL_B5:
-				if (text != string.Empty)
+				bool flag5 = false;
+				Rect rect = new Rect(windowRect.x + 5f, windowRect.y + ((this.m_Gravity != PopupList.Gravity.Top) ? (windowRect.height - 16f - 5f) : 5f), windowRect.width - 10f - 14f, 16f);
+				GUI.SetNextControlName(PopupList.s_TextFieldName);
+				EditorGUI.FocusTextInControl(PopupList.s_TextFieldName);
+				int controlID = GUIUtility.GetControlID(PopupList.s_TextFieldHash, FocusType.Keyboard, rect);
+				if (flag3)
 				{
-					if (this.m_Data.m_OnSelectCallback != null)
-					{
-						this.m_Data.m_OnSelectCallback(this.m_Data.NewOrMatchingElement(text));
-					}
-					if (current.keyCode == KeyCode.Tab || current.keyCode == KeyCode.Comma)
-					{
-						flag4 = true;
-					}
-					if (this.m_Data.m_CloseOnSelection || current.keyCode == KeyCode.Return)
-					{
-						flag2 = true;
-					}
+					current.Use();
 				}
-				flag3 = true;
-				goto IL_17A;
-				IL_136:
-				flag = false;
-			}
-			IL_17A:
-			bool flag5 = false;
-			Rect rect = new Rect(windowRect.x + 5f, windowRect.y + ((this.m_Gravity != PopupList.Gravity.Top) ? (windowRect.height - 16f - 5f) : 5f), windowRect.width - 10f - 14f, 16f);
-			GUI.SetNextControlName(PopupList.s_TextFieldName);
-			EditorGUI.FocusTextInControl(PopupList.s_TextFieldName);
-			int controlID = GUIUtility.GetControlID(PopupList.s_TextFieldHash, FocusType.Keyboard, rect);
-			if (flag3)
-			{
-				current.Use();
-			}
-			if (GUIUtility.keyboardControl == 0)
-			{
-				GUIUtility.keyboardControl = controlID;
-			}
-			string text2 = EditorGUI.DoTextField(PopupList.s_RecycledEditor, controlID, rect, text, PopupList.s_Styles.customTextField, null, out flag5, false, false, false);
-			Rect position = rect;
-			position.x += rect.width;
-			position.width = 14f;
-			if ((GUI.Button(position, GUIContent.none, (!(text2 != string.Empty)) ? PopupList.s_Styles.customTextFieldCancelButtonEmpty : PopupList.s_Styles.customTextFieldCancelButton) && text2 != string.Empty) || flag4)
-			{
-				string empty = string.Empty;
-				PopupList.s_RecycledEditor.text = empty;
-				text2 = (EditorGUI.s_OriginalText = empty);
-				PopupList.s_RecycledEditor.cursorIndex = 0;
-				PopupList.s_RecycledEditor.selectIndex = 0;
-				flag = false;
-			}
-			if (text != text2)
-			{
-				this.m_EnteredText = ((0 > PopupList.s_RecycledEditor.cursorIndex || PopupList.s_RecycledEditor.cursorIndex >= text2.Length) ? text2 : text2.Substring(0, PopupList.s_RecycledEditor.cursorIndex));
-				if (flag)
+				if (GUIUtility.keyboardControl == 0)
 				{
-					this.UpdateCompletion();
+					GUIUtility.keyboardControl = controlID;
 				}
-				else
+				string text2 = EditorGUI.DoTextField(PopupList.s_RecycledEditor, controlID, rect, text, PopupList.s_Styles.customTextField, null, out flag5, false, false, false);
+				Rect position = rect;
+				position.x += rect.width;
+				position.width = 14f;
+				if ((GUI.Button(position, GUIContent.none, (!(text2 != "")) ? PopupList.s_Styles.customTextFieldCancelButtonEmpty : PopupList.s_Styles.customTextFieldCancelButton) && text2 != "") || flag4)
 				{
-					this.SelectNoCompletion();
+					string text3 = "";
+					PopupList.s_RecycledEditor.text = text3;
+					text2 = (EditorGUI.s_OriginalText = text3);
+					PopupList.s_RecycledEditor.cursorIndex = 0;
+					PopupList.s_RecycledEditor.selectIndex = 0;
+					flag = false;
 				}
-			}
-			if (flag2)
-			{
-				editorWindow.Close();
+				if (text != text2)
+				{
+					this.m_EnteredText = ((0 > PopupList.s_RecycledEditor.cursorIndex || PopupList.s_RecycledEditor.cursorIndex >= text2.Length) ? text2 : text2.Substring(0, PopupList.s_RecycledEditor.cursorIndex));
+					if (flag)
+					{
+						this.UpdateCompletion();
+					}
+					else
+					{
+						this.SelectNoCompletion();
+					}
+				}
+				if (flag2)
+				{
+					editorWindow.Close();
+				}
 			}
 		}
 
 		private string CurrentDisplayedText()
 		{
-			return (!(this.m_EnteredTextCompletion != string.Empty)) ? this.m_EnteredText : this.m_EnteredTextCompletion;
+			return (!(this.m_EnteredTextCompletion != "")) ? this.m_EnteredText : this.m_EnteredTextCompletion;
 		}
 
 		private void UpdateCompletion()
 		{
-			if (!this.m_Data.m_EnableAutoCompletion)
+			if (this.m_Data.m_EnableAutoCompletion)
 			{
-				return;
-			}
-			IEnumerable<string> source = from element in this.m_Data.GetFilteredList(this.m_EnteredText)
-			select element.text;
-			if (this.m_EnteredTextCompletion != string.Empty && this.m_EnteredTextCompletion.StartsWith(this.m_EnteredText, StringComparison.OrdinalIgnoreCase))
-			{
-				this.m_SelectedCompletionIndex = source.TakeWhile((string element) => element != this.m_EnteredTextCompletion).Count<string>();
-			}
-			else
-			{
-				if (this.m_SelectedCompletionIndex < 0)
+				IEnumerable<string> source = from element in this.m_Data.GetFilteredList(this.m_EnteredText)
+				select element.text;
+				if (this.m_EnteredTextCompletion != "" && this.m_EnteredTextCompletion.StartsWith(this.m_EnteredText, StringComparison.OrdinalIgnoreCase))
 				{
-					this.m_SelectedCompletionIndex = 0;
+					this.m_SelectedCompletionIndex = source.TakeWhile((string element) => element != this.m_EnteredTextCompletion).Count<string>();
 				}
-				else if (this.m_SelectedCompletionIndex >= source.Count<string>())
+				else
 				{
-					this.m_SelectedCompletionIndex = source.Count<string>() - 1;
+					if (this.m_SelectedCompletionIndex < 0)
+					{
+						this.m_SelectedCompletionIndex = 0;
+					}
+					else if (this.m_SelectedCompletionIndex >= source.Count<string>())
+					{
+						this.m_SelectedCompletionIndex = source.Count<string>() - 1;
+					}
+					this.m_EnteredTextCompletion = source.Skip(this.m_SelectedCompletionIndex).DefaultIfEmpty("").FirstOrDefault<string>();
 				}
-				this.m_EnteredTextCompletion = source.Skip(this.m_SelectedCompletionIndex).DefaultIfEmpty(string.Empty).FirstOrDefault<string>();
+				this.AdjustRecycledEditorSelectionToCompletion();
 			}
-			this.AdjustRecycledEditorSelectionToCompletion();
 		}
 
 		private void ChangeSelectedCompletion(int change)
@@ -533,20 +543,20 @@ namespace UnityEditor
 		private void SelectCompletionWithIndex(int index)
 		{
 			this.m_SelectedCompletionIndex = index;
-			this.m_EnteredTextCompletion = string.Empty;
+			this.m_EnteredTextCompletion = "";
 			this.UpdateCompletion();
 		}
 
 		private void SelectNoCompletion()
 		{
 			this.m_SelectedCompletionIndex = -1;
-			this.m_EnteredTextCompletion = string.Empty;
+			this.m_EnteredTextCompletion = "";
 			this.AdjustRecycledEditorSelectionToCompletion();
 		}
 
 		private void AdjustRecycledEditorSelectionToCompletion()
 		{
-			if (this.m_EnteredTextCompletion != string.Empty)
+			if (this.m_EnteredTextCompletion != "")
 			{
 				PopupList.s_RecycledEditor.text = this.m_EnteredTextCompletion;
 				EditorGUI.s_OriginalText = this.m_EnteredTextCompletion;
@@ -564,10 +574,20 @@ namespace UnityEditor
 				num++;
 				Rect position = new Rect(windowRect.x, windowRect.y + 10f + (float)num * 16f + ((this.m_Gravity != PopupList.Gravity.Top || !this.m_Data.m_AllowCustom) ? 0f : 16f), windowRect.width, 16f);
 				EventType type = current.type;
-				switch (type)
+				if (type != EventType.Repaint)
 				{
-				case EventType.MouseDown:
-					if (Event.current.button == 0 && position.Contains(Event.current.mousePosition) && current2.enabled)
+					if (type != EventType.MouseDown)
+					{
+						if (type == EventType.MouseMove)
+						{
+							if (position.Contains(Event.current.mousePosition))
+							{
+								this.SelectCompletionWithIndex(num);
+								current.Use();
+							}
+						}
+					}
+					else if (Event.current.button == 0 && position.Contains(Event.current.mousePosition) && current2.enabled)
 					{
 						if (this.m_Data.m_OnSelectCallback != null)
 						{
@@ -579,14 +599,9 @@ namespace UnityEditor
 							editorWindow.Close();
 						}
 					}
-					continue;
-				case EventType.MouseUp:
+				}
+				else
 				{
-					IL_A5:
-					if (type != EventType.Repaint)
-					{
-						continue;
-					}
 					GUIStyle gUIStyle = (!current2.partiallySelected) ? PopupList.s_Styles.menuItem : PopupList.s_Styles.menuItemMixed;
 					bool flag = current2.selected || current2.partiallySelected;
 					bool hasKeyboardFocus = false;
@@ -597,17 +612,7 @@ namespace UnityEditor
 						GUIContent content = current2.m_Content;
 						gUIStyle.Draw(position, content, isHover, isActive, flag, hasKeyboardFocus);
 					}
-					continue;
 				}
-				case EventType.MouseMove:
-					if (position.Contains(Event.current.mousePosition))
-					{
-						this.SelectCompletionWithIndex(num);
-						current.Use();
-					}
-					continue;
-				}
-				goto IL_A5;
 			}
 		}
 	}

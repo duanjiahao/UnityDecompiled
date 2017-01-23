@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -49,6 +50,9 @@ namespace UnityEditor
 
 			private static ExposablePopupMenu m_Caller;
 
+			[CompilerGenerated]
+			private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
 			internal static void Show(Rect activatorRect, List<ExposablePopupMenu.ItemData> buttonData, ExposablePopupMenu caller)
 			{
 				ExposablePopupMenu.PopUpMenu.m_Data = buttonData;
@@ -58,7 +62,14 @@ namespace UnityEditor
 				{
 					if (current.m_Enabled)
 					{
-						genericMenu.AddItem(current.m_GUIContent, current.m_On, new GenericMenu.MenuFunction2(ExposablePopupMenu.PopUpMenu.SelectionCallback), current);
+						GenericMenu arg_62_0 = genericMenu;
+						GUIContent arg_62_1 = current.m_GUIContent;
+						bool arg_62_2 = current.m_On;
+						if (ExposablePopupMenu.PopUpMenu.<>f__mg$cache0 == null)
+						{
+							ExposablePopupMenu.PopUpMenu.<>f__mg$cache0 = new GenericMenu.MenuFunction2(ExposablePopupMenu.PopUpMenu.SelectionCallback);
+						}
+						arg_62_0.AddItem(arg_62_1, arg_62_2, ExposablePopupMenu.PopUpMenu.<>f__mg$cache0, current);
 					}
 					else
 					{
@@ -89,7 +100,7 @@ namespace UnityEditor
 
 		private float m_MinWidthOfPopup;
 
-		private Action<ExposablePopupMenu.ItemData> m_SelectionChangedCallback;
+		private Action<ExposablePopupMenu.ItemData> m_SelectionChangedCallback = null;
 
 		public void Init(List<ExposablePopupMenu.ItemData> items, float itemSpacing, float minWidthOfPopup, ExposablePopupMenu.PopupButtonData popupButtonData, Action<ExposablePopupMenu.ItemData> selectionChangedCallback)
 		{
@@ -103,6 +114,7 @@ namespace UnityEditor
 
 		public float OnGUI(Rect rect)
 		{
+			float result;
 			if (rect.width >= this.m_WidthOfButtons && rect.width > this.m_MinWidthOfPopup)
 			{
 				Rect position = rect;
@@ -121,17 +133,21 @@ namespace UnityEditor
 					}
 					position.x += current.m_Width + this.m_ItemSpacing;
 				}
-				return this.m_WidthOfButtons;
+				result = this.m_WidthOfButtons;
 			}
-			if (this.m_WidthOfPopup < rect.width)
+			else
 			{
-				rect.width = this.m_WidthOfPopup;
+				if (this.m_WidthOfPopup < rect.width)
+				{
+					rect.width = this.m_WidthOfPopup;
+				}
+				if (EditorGUI.ButtonMouseDown(rect, this.m_PopupButtonData.m_GUIContent, FocusType.Passive, this.m_PopupButtonData.m_Style))
+				{
+					ExposablePopupMenu.PopUpMenu.Show(rect, this.m_Items, this);
+				}
+				result = this.m_WidthOfPopup;
 			}
-			if (EditorGUI.ButtonMouseDown(rect, this.m_PopupButtonData.m_GUIContent, FocusType.Passive, this.m_PopupButtonData.m_Style))
-			{
-				ExposablePopupMenu.PopUpMenu.Show(rect, this.m_Items, this);
-			}
-			return this.m_WidthOfPopup;
+			return result;
 		}
 
 		private void CalcWidths()

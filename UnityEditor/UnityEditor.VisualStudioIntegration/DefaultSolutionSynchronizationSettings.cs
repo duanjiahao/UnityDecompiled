@@ -20,7 +20,7 @@ namespace UnityEditor.VisualStudioIntegration
 				{
 					"Microsoft Visual Studio Solution File, Format Version {0}",
 					"# Visual Studio 2008",
-					string.Empty,
+					"",
 					"{1}",
 					"Global",
 					"    GlobalSection(SolutionConfigurationPlatforms) = preSolution",
@@ -35,7 +35,7 @@ namespace UnityEditor.VisualStudioIntegration
 					"    EndGlobalSection",
 					"{3}",
 					"EndGlobal",
-					string.Empty
+					""
 				}).Replace("    ", "\t");
 			}
 		}
@@ -140,6 +140,7 @@ namespace UnityEditor.VisualStudioIntegration
 				"    <Reference Include=\"System\" />",
 				"    <Reference Include=\"System.XML\" />",
 				"    <Reference Include=\"System.Core\" />",
+				"    <Reference Include=\"System.Runtime.Serialization\" />",
 				"    <Reference Include=\"System.Xml.Linq\" />",
 				"    <Reference Include=\"UnityEngine\">",
 				"      <HintPath>{3}</HintPath>",
@@ -149,7 +150,7 @@ namespace UnityEditor.VisualStudioIntegration
 				"    </Reference>",
 				"  </ItemGroup>",
 				"  <ItemGroup>",
-				string.Empty
+				""
 			});
 		}
 
@@ -168,7 +169,7 @@ namespace UnityEditor.VisualStudioIntegration
 				"  -->",
 				"  {0}",
 				"</Project>",
-				string.Empty
+				""
 			});
 		}
 

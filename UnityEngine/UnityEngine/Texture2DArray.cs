@@ -8,14 +8,12 @@ namespace UnityEngine
 	{
 		public extern int depth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern TextureFormat format
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -30,7 +28,6 @@ namespace UnityEngine
 			Texture2DArray.Internal_Create(this, width, height, depth, format, mipmap, linear);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Apply([DefaultValue("true")] bool updateMipmaps, [DefaultValue("false")] bool makeNoLongerReadable);
 
@@ -49,11 +46,9 @@ namespace UnityEngine
 			this.Apply(updateMipmaps, makeNoLongerReadable);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] Texture2DArray mono, int width, int height, int depth, TextureFormat format, bool mipmap, bool linear);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPixels(Color[] colors, int arrayElement, [DefaultValue("0")] int miplevel);
 
@@ -64,7 +59,6 @@ namespace UnityEngine
 			this.SetPixels(colors, arrayElement, miplevel);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPixels32(Color32[] colors, int arrayElement, [DefaultValue("0")] int miplevel);
 
@@ -75,7 +69,6 @@ namespace UnityEngine
 			this.SetPixels32(colors, arrayElement, miplevel);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Color[] GetPixels(int arrayElement, [DefaultValue("0")] int miplevel);
 
@@ -86,7 +79,6 @@ namespace UnityEngine
 			return this.GetPixels(arrayElement, miplevel);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Color32[] GetPixels32(int arrayElement, [DefaultValue("0")] int miplevel);
 

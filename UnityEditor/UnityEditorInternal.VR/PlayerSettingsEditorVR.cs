@@ -8,6 +8,8 @@ namespace UnityEditorInternal.VR
 {
 	internal class PlayerSettingsEditorVR
 	{
+		private SerializedProperty m_VREditorSettings;
+
 		private Dictionary<BuildTargetGroup, VRDeviceInfoEditor[]> m_AllVRDevicesForBuildTarget = new Dictionary<BuildTargetGroup, VRDeviceInfoEditor[]>();
 
 		private Dictionary<BuildTargetGroup, ReorderableList> m_VRDeviceActiveUI = new Dictionary<BuildTargetGroup, ReorderableList>();
@@ -15,6 +17,13 @@ namespace UnityEditorInternal.VR
 		private Dictionary<string, string> m_MapVRDeviceKeyToUIString = new Dictionary<string, string>();
 
 		private Dictionary<string, string> m_MapVRUIStringToDeviceKey = new Dictionary<string, string>();
+
+		private Dictionary<string, VRCustomOptions> m_CustomOptions = new Dictionary<string, VRCustomOptions>();
+
+		public PlayerSettingsEditorVR(SerializedProperty settingsEditor)
+		{
+			this.m_VREditorSettings = settingsEditor;
+		}
 
 		private void RefreshVRDeviceList(BuildTargetGroup targetGroup)
 		{
@@ -25,6 +34,21 @@ namespace UnityEditorInternal.VR
 				VRDeviceInfoEditor vRDeviceInfoEditor = allVRDeviceInfo[i];
 				this.m_MapVRDeviceKeyToUIString[vRDeviceInfoEditor.deviceNameKey] = vRDeviceInfoEditor.deviceNameUI;
 				this.m_MapVRUIStringToDeviceKey[vRDeviceInfoEditor.deviceNameUI] = vRDeviceInfoEditor.deviceNameKey;
+				VRCustomOptions vRCustomOptions;
+				if (!this.m_CustomOptions.TryGetValue(vRDeviceInfoEditor.deviceNameKey, out vRCustomOptions))
+				{
+					Type type = Type.GetType("UnityEditorInternal.VR.VRCustomOptions" + vRDeviceInfoEditor.deviceNameKey, false, true);
+					if (type != null)
+					{
+						vRCustomOptions = (VRCustomOptions)Activator.CreateInstance(type);
+					}
+					else
+					{
+						vRCustomOptions = new VRCustomOptionsNone();
+					}
+					vRCustomOptions.Initialize(this.m_VREditorSettings);
+					this.m_CustomOptions.Add(vRDeviceInfoEditor.deviceNameKey, vRCustomOptions);
+				}
 			}
 		}
 
@@ -42,12 +66,12 @@ namespace UnityEditorInternal.VR
 		{
 			if (this.TargetGroupSupportsVirtualReality(targetGroup))
 			{
-				bool flag = VREditor.GetVREnabled(targetGroup);
+				bool flag = VREditor.GetVREnabledOnTargetGroup(targetGroup);
 				EditorGUI.BeginChangeCheck();
 				flag = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Virtual Reality Supported"), flag, new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck())
 				{
-					VREditor.SetVREnabled(targetGroup, flag);
+					VREditor.SetVREnabledOnTargetGroup(targetGroup, flag);
 				}
 				if (flag)
 				{
@@ -58,8 +82,8 @@ namespace UnityEditorInternal.VR
 
 		private void AddVRDeviceMenuSelected(object userData, string[] options, int selected)
 		{
-			BuildTargetGroup buildTargetGroup = (BuildTargetGroup)((int)userData);
-			List<string> list = VREditor.GetVREnabledDevices(buildTargetGroup).ToList<string>();
+			BuildTargetGroup buildTargetGroup = (BuildTargetGroup)userData;
+			List<string> list = VREditor.GetVREnabledDevicesOnTargetGroup(buildTargetGroup).ToList<string>();
 			string item;
 			if (!this.m_MapVRUIStringToDeviceKey.TryGetValue(options[selected], out item))
 			{
@@ -72,7 +96,7 @@ namespace UnityEditorInternal.VR
 		private void AddVRDeviceElement(BuildTargetGroup target, Rect rect, ReorderableList list)
 		{
 			VRDeviceInfoEditor[] source = this.m_AllVRDevicesForBuildTarget[target];
-			List<string> enabledDevices = VREditor.GetVREnabledDevices(target).ToList<string>();
+			List<string> enabledDevices = VREditor.GetVREnabledDevicesOnTargetGroup(target).ToList<string>();
 			string[] options = (from d in source
 			select d.deviceNameUI).ToArray<string>();
 			bool[] enabled = (from d in source
@@ -82,7 +106,7 @@ namespace UnityEditorInternal.VR
 
 		private void RemoveVRDeviceElement(BuildTargetGroup target, ReorderableList list)
 		{
-			List<string> list2 = VREditor.GetVREnabledDevices(target).ToList<string>();
+			List<string> list2 = VREditor.GetVREnabledDevicesOnTargetGroup(target).ToList<string>();
 			list2.RemoveAt(list.index);
 			this.ApplyChangedVRDeviceList(target, list2.ToArray());
 		}
@@ -95,12 +119,11 @@ namespace UnityEditorInternal.VR
 
 		private void ApplyChangedVRDeviceList(BuildTargetGroup target, string[] devices)
 		{
-			if (!this.m_VRDeviceActiveUI.ContainsKey(target))
+			if (this.m_VRDeviceActiveUI.ContainsKey(target))
 			{
-				return;
+				VREditor.SetVREnabledDevicesOnTargetGroup(target, devices);
+				this.m_VRDeviceActiveUI[target].list = devices;
 			}
-			VREditor.SetVREnabledDevices(target, devices);
-			this.m_VRDeviceActiveUI[target].list = devices;
 		}
 
 		private void DrawVRDeviceElement(BuildTargetGroup target, Rect rect, int index, bool selected, bool focused)
@@ -111,14 +134,57 @@ namespace UnityEditorInternal.VR
 			{
 				text2 = text + " (missing from build)";
 			}
+			VRCustomOptions vRCustomOptions;
+			if (this.m_CustomOptions.TryGetValue(text, out vRCustomOptions))
+			{
+				if (!(vRCustomOptions is VRCustomOptionsNone))
+				{
+					Rect position = new Rect(rect);
+					position.width = (float)EditorStyles.foldout.border.left;
+					position.height = (float)EditorStyles.foldout.border.top;
+					bool hierarchyMode = EditorGUIUtility.hierarchyMode;
+					EditorGUIUtility.hierarchyMode = false;
+					vRCustomOptions.IsExpanded = EditorGUI.Foldout(position, vRCustomOptions.IsExpanded, "", false, EditorStyles.foldout);
+					EditorGUIUtility.hierarchyMode = hierarchyMode;
+				}
+			}
+			rect.xMin += (float)EditorStyles.foldout.border.left;
 			GUI.Label(rect, text2, EditorStyles.label);
+			rect.y += EditorGUIUtility.singleLineHeight + 2f;
+			if (vRCustomOptions != null && vRCustomOptions.IsExpanded)
+			{
+				vRCustomOptions.Draw(rect);
+			}
+		}
+
+		private float GetVRDeviceElementHeight(BuildTargetGroup target, int index)
+		{
+			ReorderableList reorderableList = this.m_VRDeviceActiveUI[target];
+			string key = (string)reorderableList.list[index];
+			float num = 0f;
+			VRCustomOptions vRCustomOptions;
+			if (this.m_CustomOptions.TryGetValue(key, out vRCustomOptions))
+			{
+				num = ((!vRCustomOptions.IsExpanded) ? 0f : (vRCustomOptions.GetHeight() + 2f));
+			}
+			return reorderableList.elementHeight + num;
+		}
+
+		private void SelectVRDeviceElement(BuildTargetGroup target, ReorderableList list)
+		{
+			string key = (string)this.m_VRDeviceActiveUI[target].list[list.index];
+			VRCustomOptions vRCustomOptions;
+			if (this.m_CustomOptions.TryGetValue(key, out vRCustomOptions))
+			{
+				vRCustomOptions.IsExpanded = false;
+			}
 		}
 
 		private void VRDevicesGUIOneBuildTarget(BuildTargetGroup targetGroup)
 		{
 			if (!this.m_VRDeviceActiveUI.ContainsKey(targetGroup))
 			{
-				ReorderableList reorderableList = new ReorderableList(VREditor.GetVREnabledDevices(targetGroup), typeof(VRDeviceInfoEditor), true, true, true, true);
+				ReorderableList reorderableList = new ReorderableList(VREditor.GetVREnabledDevicesOnTargetGroup(targetGroup), typeof(VRDeviceInfoEditor), true, true, true, true);
 				reorderableList.onAddDropdownCallback = delegate(Rect rect, ReorderableList list)
 				{
 					this.AddVRDeviceElement(targetGroup, rect, list);
@@ -138,6 +204,11 @@ namespace UnityEditorInternal.VR
 				reorderableList.drawHeaderCallback = delegate(Rect rect)
 				{
 					GUI.Label(rect, "Virtual Reality SDKs", EditorStyles.label);
+				};
+				reorderableList.elementHeightCallback = ((int index) => this.GetVRDeviceElementHeight(targetGroup, index));
+				reorderableList.onSelectCallback = delegate(ReorderableList list)
+				{
+					this.SelectVRDeviceElement(targetGroup, list);
 				};
 				this.m_VRDeviceActiveUI.Add(targetGroup, reorderableList);
 			}

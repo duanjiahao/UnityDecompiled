@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -9,15 +10,16 @@ namespace UnityEditor
 	{
 		private static string kProjectBrowserString = "ProjectBrowser";
 
-		public ProjectBrowserColumnOneTreeViewDataSource(TreeView treeView) : base(treeView)
+		public ProjectBrowserColumnOneTreeViewDataSource(TreeViewController treeView) : base(treeView)
 		{
 			base.showRootItem = false;
 			base.rootIsCollapsable = false;
-			SavedSearchFilters.AddChangeListener(new Action(this.ReloadData));
+			SavedSearchFilters.AddChangeListener(new Action(base.ReloadData));
 		}
 
 		public override bool SetExpanded(int id, bool expand)
 		{
+			bool result;
 			if (base.SetExpanded(id, expand))
 			{
 				InternalEditorUtility.expandedProjectWindowItems = base.expandedIDs.ToArray();
@@ -31,9 +33,13 @@ namespace UnityEditor
 						}
 					}
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public override bool IsExpandable(TreeViewItem item)
@@ -88,7 +94,7 @@ namespace UnityEditor
 				bool @bool = EditorPrefs.GetBool(ProjectBrowserColumnOneTreeViewDataSource.kProjectBrowserString + current.displayName, true);
 				this.SetExpanded(current, @bool);
 			}
-			this.m_NeedRefreshVisibleFolders = true;
+			this.m_NeedRefreshRows = true;
 		}
 
 		private void ReadAssetDatabase(TreeViewItem parent, int baseDepth)

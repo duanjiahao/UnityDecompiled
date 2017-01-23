@@ -115,62 +115,67 @@ namespace UnityEditor
 			}
 			GUI.color = color;
 			GUI.backgroundColor = backgroundColor;
-			switch (current.GetTypeForControl(controlID))
+			EventType typeForControl = current.GetTypeForControl(controlID);
+			if (typeForControl != EventType.MouseDown)
 			{
-			case EventType.MouseDown:
-				if (num4 >= 0)
+				if (typeForControl != EventType.MouseUp)
 				{
-					ShadowCascadeSplitGUI.s_DragCache = new ShadowCascadeSplitGUI.DragCache(num4, normalizedCascadePartitions[num4], current.mousePosition);
-					if (GUIUtility.hotControl == 0)
+					if (typeForControl == EventType.MouseDrag)
 					{
-						GUIUtility.hotControl = controlID;
-					}
-					current.Use();
-					if (ShadowCascadeSplitGUI.s_RestoreSceneView == null)
-					{
-						ShadowCascadeSplitGUI.s_RestoreSceneView = SceneView.lastActiveSceneView;
-						if (ShadowCascadeSplitGUI.s_RestoreSceneView != null)
+						if (GUIUtility.hotControl == controlID)
 						{
-							ShadowCascadeSplitGUI.s_OldSceneDrawMode = ShadowCascadeSplitGUI.s_RestoreSceneView.renderMode;
-							ShadowCascadeSplitGUI.s_OldSceneLightingMode = ShadowCascadeSplitGUI.s_RestoreSceneView.m_SceneLighting;
-							ShadowCascadeSplitGUI.s_RestoreSceneView.renderMode = DrawCameraMode.ShadowCascades;
+							float num7 = (current.mousePosition - ShadowCascadeSplitGUI.s_DragCache.m_LastCachedMousePosition).x / num2;
+							bool flag = array[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition] + num7 > 0f;
+							bool flag2 = array[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition + 1] - num7 > 0f;
+							if (flag && flag2)
+							{
+								ShadowCascadeSplitGUI.s_DragCache.m_NormalizedPartitionSize += num7;
+								normalizedCascadePartitions[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition] = ShadowCascadeSplitGUI.s_DragCache.m_NormalizedPartitionSize;
+								if (ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition < normalizedCascadePartitions.Length - 1)
+								{
+									normalizedCascadePartitions[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition + 1] -= num7;
+								}
+								GUI.changed = true;
+							}
+							ShadowCascadeSplitGUI.s_DragCache.m_LastCachedMousePosition = current.mousePosition;
+							current.Use();
 						}
 					}
 				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == controlID)
+				else
 				{
-					GUIUtility.hotControl = 0;
-					current.Use();
-				}
-				ShadowCascadeSplitGUI.s_DragCache = null;
-				if (ShadowCascadeSplitGUI.s_RestoreSceneView != null)
-				{
-					ShadowCascadeSplitGUI.s_RestoreSceneView.renderMode = ShadowCascadeSplitGUI.s_OldSceneDrawMode;
-					ShadowCascadeSplitGUI.s_RestoreSceneView.m_SceneLighting = ShadowCascadeSplitGUI.s_OldSceneLightingMode;
-					ShadowCascadeSplitGUI.s_RestoreSceneView = null;
-				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == controlID)
-				{
-					float num7 = (current.mousePosition - ShadowCascadeSplitGUI.s_DragCache.m_LastCachedMousePosition).x / num2;
-					bool flag = array[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition] + num7 > 0f;
-					bool flag2 = array[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition + 1] - num7 > 0f;
-					if (flag && flag2)
+					if (GUIUtility.hotControl == controlID)
 					{
-						ShadowCascadeSplitGUI.s_DragCache.m_NormalizedPartitionSize += num7;
-						normalizedCascadePartitions[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition] = ShadowCascadeSplitGUI.s_DragCache.m_NormalizedPartitionSize;
-						if (ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition < normalizedCascadePartitions.Length - 1)
-						{
-							normalizedCascadePartitions[ShadowCascadeSplitGUI.s_DragCache.m_ActivePartition + 1] -= num7;
-						}
+						GUIUtility.hotControl = 0;
+						current.Use();
 					}
-					ShadowCascadeSplitGUI.s_DragCache.m_LastCachedMousePosition = current.mousePosition;
-					current.Use();
+					ShadowCascadeSplitGUI.s_DragCache = null;
+					if (ShadowCascadeSplitGUI.s_RestoreSceneView != null)
+					{
+						ShadowCascadeSplitGUI.s_RestoreSceneView.renderMode = ShadowCascadeSplitGUI.s_OldSceneDrawMode;
+						ShadowCascadeSplitGUI.s_RestoreSceneView.m_SceneLighting = ShadowCascadeSplitGUI.s_OldSceneLightingMode;
+						ShadowCascadeSplitGUI.s_RestoreSceneView = null;
+					}
 				}
-				break;
+			}
+			else if (num4 >= 0)
+			{
+				ShadowCascadeSplitGUI.s_DragCache = new ShadowCascadeSplitGUI.DragCache(num4, normalizedCascadePartitions[num4], current.mousePosition);
+				if (GUIUtility.hotControl == 0)
+				{
+					GUIUtility.hotControl = controlID;
+				}
+				current.Use();
+				if (ShadowCascadeSplitGUI.s_RestoreSceneView == null)
+				{
+					ShadowCascadeSplitGUI.s_RestoreSceneView = SceneView.lastActiveSceneView;
+					if (ShadowCascadeSplitGUI.s_RestoreSceneView != null)
+					{
+						ShadowCascadeSplitGUI.s_OldSceneDrawMode = ShadowCascadeSplitGUI.s_RestoreSceneView.renderMode;
+						ShadowCascadeSplitGUI.s_OldSceneLightingMode = ShadowCascadeSplitGUI.s_RestoreSceneView.m_SceneLighting;
+						ShadowCascadeSplitGUI.s_RestoreSceneView.renderMode = DrawCameraMode.ShadowCascades;
+					}
+				}
 			}
 		}
 	}

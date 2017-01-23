@@ -4,6 +4,7 @@ namespace UnityEditor
 {
 	public enum TextureImporterGenerateCubemap
 	{
+		[Obsolete("This value is deprecated (use TextureImporter.textureShape instead).")]
 		None,
 		Spheremap,
 		Cylindrical,

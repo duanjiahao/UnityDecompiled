@@ -53,7 +53,7 @@ namespace UnityEditor
 		{
 			base.DrawDefaultInspector();
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			this.m_Constraints.isExpanded = EditorGUILayout.Foldout(this.m_Constraints.isExpanded, "Constraints");
+			this.m_Constraints.isExpanded = EditorGUILayout.Foldout(this.m_Constraints.isExpanded, "Constraints", true);
 			GUILayout.EndHorizontal();
 			base.serializedObject.Update();
 			RigidbodyConstraints intValue = (RigidbodyConstraints)this.m_Constraints.intValue;

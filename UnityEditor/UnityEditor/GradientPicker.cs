@@ -1,12 +1,11 @@
 using System;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	internal class GradientPicker : EditorWindow
 	{
-		private const int k_DefaultNumSteps = 0;
-
 		private static GradientPicker s_GradientPicker;
 
 		private GradientEditor m_GradientEditor;
@@ -17,6 +16,8 @@ namespace UnityEditor
 		private PresetLibraryEditorState m_GradientLibraryEditorState;
 
 		private Gradient m_Gradient;
+
+		private const int k_DefaultNumSteps = 0;
 
 		private GUIView m_DelegateView;
 
@@ -72,11 +73,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				Gradient result;
 				if (GradientPicker.s_GradientPicker != null)
 				{
-					return GradientPicker.s_GradientPicker.m_Gradient;
+					result = GradientPicker.s_GradientPicker.m_Gradient;
 				}
-				return null;
+				else
+				{
+					result = null;
+				}
+				return result;
 			}
 		}
 
@@ -99,6 +105,7 @@ namespace UnityEditor
 			}
 			GradientPicker.s_GradientPicker.m_DelegateView = current;
 			GradientPicker.s_GradientPicker.Init(newGradient);
+			GradientPreviewCache.ClearCache();
 		}
 
 		private void Init(Gradient newGradient)
@@ -115,6 +122,7 @@ namespace UnityEditor
 		{
 			this.m_Gradient.colorKeys = gradient.colorKeys;
 			this.m_Gradient.alphaKeys = gradient.alphaKeys;
+			this.m_Gradient.mode = gradient.mode;
 			this.Init(this.m_Gradient);
 		}
 
@@ -176,29 +184,28 @@ namespace UnityEditor
 
 		public void OnGUI()
 		{
-			if (this.m_Gradient == null)
+			if (this.m_Gradient != null)
 			{
-				return;
-			}
-			this.InitIfNeeded();
-			float num = Mathf.Min(base.position.height, 120f);
-			float num2 = 10f;
-			float height = base.position.height - num - num2;
-			Rect position = new Rect(10f, 10f, base.position.width - 20f, num - 20f);
-			Rect rect = new Rect(0f, num + num2, base.position.width, height);
-			EditorGUI.DrawRect(new Rect(rect.x, rect.y - 1f, rect.width, 1f), new Color(0f, 0f, 0f, 0.3f));
-			EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, 1f), new Color(1f, 1f, 1f, 0.1f));
-			EditorGUI.BeginChangeCheck();
-			this.m_GradientEditor.OnGUI(position);
-			if (EditorGUI.EndChangeCheck())
-			{
-				this.gradientChanged = true;
-			}
-			this.m_GradientLibraryEditor.OnGUI(rect, this.m_Gradient);
-			if (this.gradientChanged)
-			{
-				this.gradientChanged = false;
-				this.SendEvent(true);
+				this.InitIfNeeded();
+				float num = Mathf.Min(base.position.height, 146f);
+				float num2 = 10f;
+				float height = base.position.height - num - num2;
+				Rect position = new Rect(10f, 10f, base.position.width - 20f, num - 20f);
+				Rect rect = new Rect(0f, num + num2, base.position.width, height);
+				EditorGUI.DrawRect(new Rect(rect.x, rect.y - 1f, rect.width, 1f), new Color(0f, 0f, 0f, 0.3f));
+				EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, 1f), new Color(1f, 1f, 1f, 0.1f));
+				EditorGUI.BeginChangeCheck();
+				this.m_GradientEditor.OnGUI(position);
+				if (EditorGUI.EndChangeCheck())
+				{
+					this.gradientChanged = true;
+				}
+				this.m_GradientLibraryEditor.OnGUI(rect, this.m_Gradient);
+				if (this.gradientChanged)
+				{
+					this.gradientChanged = false;
+					this.SendEvent(true);
+				}
 			}
 		}
 
@@ -218,31 +225,28 @@ namespace UnityEditor
 
 		public static void SetCurrentGradient(Gradient gradient)
 		{
-			if (GradientPicker.s_GradientPicker == null)
+			if (!(GradientPicker.s_GradientPicker == null))
 			{
-				return;
+				GradientPicker.s_GradientPicker.SetGradientData(gradient);
+				GUI.changed = true;
 			}
-			GradientPicker.s_GradientPicker.SetGradientData(gradient);
-			GUI.changed = true;
 		}
 
 		public static void CloseWindow()
 		{
-			if (GradientPicker.s_GradientPicker == null)
+			if (!(GradientPicker.s_GradientPicker == null))
 			{
-				return;
+				GradientPicker.s_GradientPicker.Close();
+				GUIUtility.ExitGUI();
 			}
-			GradientPicker.s_GradientPicker.Close();
-			GUIUtility.ExitGUI();
 		}
 
 		public static void RepaintWindow()
 		{
-			if (GradientPicker.s_GradientPicker == null)
+			if (!(GradientPicker.s_GradientPicker == null))
 			{
-				return;
+				GradientPicker.s_GradientPicker.Repaint();
 			}
-			GradientPicker.s_GradientPicker.Repaint();
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -58,43 +59,79 @@ namespace UnityEditor
 
 		public event Action scrollPositionChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.scrollPositionChanged = (Action)Delegate.Combine(this.scrollPositionChanged, value);
+				Action action = this.scrollPositionChanged;
+				Action action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action>(ref this.scrollPositionChanged, (Action)Delegate.Combine(action2, value), action);
+				}
+				while (action != action2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.scrollPositionChanged = (Action)Delegate.Remove(this.scrollPositionChanged, value);
+				Action action = this.scrollPositionChanged;
+				Action action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action>(ref this.scrollPositionChanged, (Action)Delegate.Remove(action2, value), action);
+				}
+				while (action != action2);
 			}
 		}
 
 		public event Action scrollHeightChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.scrollHeightChanged = (Action)Delegate.Combine(this.scrollHeightChanged, value);
+				Action action = this.scrollHeightChanged;
+				Action action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action>(ref this.scrollHeightChanged, (Action)Delegate.Combine(action2, value), action);
+				}
+				while (action != action2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.scrollHeightChanged = (Action)Delegate.Remove(this.scrollHeightChanged, value);
+				Action action = this.scrollHeightChanged;
+				Action action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action>(ref this.scrollHeightChanged, (Action)Delegate.Remove(action2, value), action);
+				}
+				while (action != action2);
 			}
 		}
 
 		public event Action mouseAndKeyboardInput
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.mouseAndKeyboardInput = (Action)Delegate.Combine(this.mouseAndKeyboardInput, value);
+				Action action = this.mouseAndKeyboardInput;
+				Action action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action>(ref this.mouseAndKeyboardInput, (Action)Delegate.Combine(action2, value), action);
+				}
+				while (action != action2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.mouseAndKeyboardInput = (Action)Delegate.Remove(this.mouseAndKeyboardInput, value);
+				Action action = this.mouseAndKeyboardInput;
+				Action action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action>(ref this.mouseAndKeyboardInput, (Action)Delegate.Remove(action2, value), action);
+				}
+				while (action != action2);
 			}
 		}
 
@@ -106,7 +143,7 @@ namespace UnityEditor
 			}
 		}
 
-		public GameObjectTreeViewGUI(TreeView treeView, bool useHorizontalScroll) : base(treeView, useHorizontalScroll)
+		public GameObjectTreeViewGUI(TreeViewController treeView, bool useHorizontalScroll) : base(treeView, useHorizontalScroll)
 		{
 			this.k_TopRowMargin = 0f;
 		}
@@ -148,16 +185,15 @@ namespace UnityEditor
 
 		private void DetectMouseDownInTreeViewRect()
 		{
-			if (this.mouseAndKeyboardInput == null)
+			if (this.mouseAndKeyboardInput != null)
 			{
-				return;
-			}
-			Event current = Event.current;
-			bool flag = current.type == EventType.MouseDown || current.type == EventType.MouseUp;
-			bool flag2 = current.type == EventType.KeyDown || current.type == EventType.KeyUp;
-			if ((flag && this.m_TreeView.GetTotalRect().Contains(current.mousePosition)) || flag2)
-			{
-				this.mouseAndKeyboardInput();
+				Event current = Event.current;
+				bool flag = current.type == EventType.MouseDown || current.type == EventType.MouseUp;
+				bool flag2 = current.type == EventType.KeyDown || current.type == EventType.KeyUp;
+				if ((flag && this.m_TreeView.GetTotalRect().Contains(current.mousePosition)) || flag2)
+				{
+					this.mouseAndKeyboardInput();
+				}
 			}
 		}
 
@@ -169,36 +205,34 @@ namespace UnityEditor
 			if (num >= 0 && num2 >= 0)
 			{
 				float y = this.m_TreeView.state.scrollPos.y;
-				if (num == 0 && y <= this.topRowMargin)
+				if (num != 0 || y > this.topRowMargin)
 				{
-					return;
-				}
-				GameObjectTreeViewItem firstItem = (GameObjectTreeViewItem)this.m_TreeView.data.GetItem(num);
-				GameObjectTreeViewItem gameObjectTreeViewItem = (GameObjectTreeViewItem)this.m_TreeView.data.GetItem(num + 1);
-				bool flag = firstItem.scene != gameObjectTreeViewItem.scene;
-				float width = GUIClip.visibleRect.width;
-				Rect rowRect = this.GetRowRect(num, width);
-				if (firstItem.isSceneHeader && Mathf.Approximately(y, rowRect.y))
-				{
-					return;
-				}
-				if (!flag)
-				{
-					rowRect.y = y;
-				}
-				GameObjectTreeViewItem gameObjectTreeViewItem2 = ((GameObjectTreeViewDataSource)this.m_TreeView.data).sceneHeaderItems.FirstOrDefault((GameObjectTreeViewItem p) => p.scene == firstItem.scene);
-				if (gameObjectTreeViewItem2 != null)
-				{
-					bool selected = this.m_TreeView.IsItemDragSelectedOrSelected(gameObjectTreeViewItem2);
-					bool focused = this.m_TreeView.HasFocus();
-					bool useBoldFont = gameObjectTreeViewItem2.scene == SceneManager.GetActiveScene();
-					this.DoItemGUI(rowRect, num, gameObjectTreeViewItem2, selected, focused, useBoldFont);
-					if (GUI.Button(new Rect(rowRect.x, rowRect.y, rowRect.height, rowRect.height), GUIContent.none, GUIStyle.none))
+					GameObjectTreeViewItem firstItem = (GameObjectTreeViewItem)this.m_TreeView.data.GetItem(num);
+					GameObjectTreeViewItem gameObjectTreeViewItem = (GameObjectTreeViewItem)this.m_TreeView.data.GetItem(num + 1);
+					bool flag = firstItem.scene != gameObjectTreeViewItem.scene;
+					float width = GUIClip.visibleRect.width;
+					Rect rowRect = this.GetRowRect(num, width);
+					if (!firstItem.isSceneHeader || !Mathf.Approximately(y, rowRect.y))
 					{
-						this.m_TreeView.Frame(gameObjectTreeViewItem2.id, true, false);
+						if (!flag)
+						{
+							rowRect.y = y;
+						}
+						GameObjectTreeViewItem gameObjectTreeViewItem2 = ((GameObjectTreeViewDataSource)this.m_TreeView.data).sceneHeaderItems.FirstOrDefault((GameObjectTreeViewItem p) => p.scene == firstItem.scene);
+						if (gameObjectTreeViewItem2 != null)
+						{
+							bool selected = this.m_TreeView.IsItemDragSelectedOrSelected(gameObjectTreeViewItem2);
+							bool focused = this.m_TreeView.HasFocus();
+							bool useBoldFont = gameObjectTreeViewItem2.scene == SceneManager.GetActiveScene();
+							this.DoItemGUI(rowRect, num, gameObjectTreeViewItem2, selected, focused, useBoldFont);
+							if (GUI.Button(new Rect(rowRect.x, rowRect.y, rowRect.height, rowRect.height), GUIContent.none, GUIStyle.none))
+							{
+								this.m_TreeView.Frame(gameObjectTreeViewItem2.id, true, false);
+							}
+							this.m_TreeView.HandleUnusedMouseEventsForItem(rowRect, gameObjectTreeViewItem2, num);
+							this.HandleStickyHeaderContextClick(rowRect, gameObjectTreeViewItem2);
+						}
 					}
-					this.m_TreeView.HandleUnusedMouseEventsForItem(rowRect, gameObjectTreeViewItem2, false);
-					this.HandleStickyHeaderContextClick(rowRect, gameObjectTreeViewItem2);
 				}
 			}
 		}
@@ -215,9 +249,12 @@ namespace UnityEditor
 					this.m_TreeView.contextClickItemCallback(sceneHeaderItem.id);
 				}
 			}
-			else if (Application.platform == RuntimePlatform.WindowsEditor && current.type == EventType.MouseDown && current.button == 1 && rect.Contains(Event.current.mousePosition))
+			else if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
-				current.Use();
+				if (current.type == EventType.MouseDown && current.button == 1 && rect.Contains(Event.current.mousePosition))
+				{
+					current.Use();
+				}
 			}
 		}
 
@@ -260,21 +297,29 @@ namespace UnityEditor
 		public override bool BeginRename(TreeViewItem item, float delay)
 		{
 			GameObjectTreeViewItem gameObjectTreeViewItem = item as GameObjectTreeViewItem;
+			bool result;
 			if (gameObjectTreeViewItem == null)
 			{
-				return false;
+				result = false;
 			}
-			if (gameObjectTreeViewItem.isSceneHeader)
+			else if (gameObjectTreeViewItem.isSceneHeader)
 			{
-				return false;
+				result = false;
 			}
-			UnityEngine.Object objectPPTR = gameObjectTreeViewItem.objectPPTR;
-			if ((objectPPTR.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+			else
 			{
-				Debug.LogWarning("Unable to rename a GameObject with HideFlags.NotEditable.");
-				return false;
+				UnityEngine.Object objectPPTR = gameObjectTreeViewItem.objectPPTR;
+				if ((objectPPTR.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+				{
+					Debug.LogWarning("Unable to rename a GameObject with HideFlags.NotEditable.");
+					result = false;
+				}
+				else
+				{
+					result = base.BeginRename(item, delay);
+				}
 			}
-			return base.BeginRename(item, delay);
+			return result;
 		}
 
 		protected override void RenameEnded()
@@ -297,32 +342,31 @@ namespace UnityEditor
 		protected override void DoItemGUI(Rect rect, int row, TreeViewItem item, bool selected, bool focused, bool useBoldFont)
 		{
 			GameObjectTreeViewItem gameObjectTreeViewItem = item as GameObjectTreeViewItem;
-			if (gameObjectTreeViewItem == null)
+			if (gameObjectTreeViewItem != null)
 			{
-				return;
-			}
-			if (gameObjectTreeViewItem.isSceneHeader)
-			{
-				Color color = GUI.color;
-				GUI.color *= new Color(1f, 1f, 1f, 0.9f);
-				GUI.Label(rect, GUIContent.none, GameObjectTreeViewGUI.s_GOStyles.sceneHeaderBg);
-				GUI.color = color;
-			}
-			base.DoItemGUI(rect, row, item, selected, focused, useBoldFont);
-			if (gameObjectTreeViewItem.isSceneHeader)
-			{
-				this.DoAdditionalSceneHeaderGUI(gameObjectTreeViewItem, rect);
-			}
-			if (SceneHierarchyWindow.s_Debug)
-			{
-				GUI.Label(new Rect(rect.xMax - 70f, rect.y, 70f, rect.height), string.Concat(new object[]
+				if (gameObjectTreeViewItem.isSceneHeader)
 				{
-					string.Empty,
-					row,
-					" (",
-					gameObjectTreeViewItem.id,
-					")"
-				}), EditorStyles.boldLabel);
+					Color color = GUI.color;
+					GUI.color *= new Color(1f, 1f, 1f, 0.9f);
+					GUI.Label(rect, GUIContent.none, GameObjectTreeViewGUI.s_GOStyles.sceneHeaderBg);
+					GUI.color = color;
+				}
+				base.DoItemGUI(rect, row, item, selected, focused, useBoldFont);
+				if (gameObjectTreeViewItem.isSceneHeader)
+				{
+					this.DoAdditionalSceneHeaderGUI(gameObjectTreeViewItem, rect);
+				}
+				if (SceneHierarchyWindow.s_Debug)
+				{
+					GUI.Label(new Rect(rect.xMax - 70f, rect.y, 70f, rect.height), string.Concat(new object[]
+					{
+						"",
+						row,
+						" (",
+						gameObjectTreeViewItem.id,
+						")"
+					}), EditorStyles.boldLabel);
+				}
 			}
 		}
 
@@ -343,68 +387,89 @@ namespace UnityEditor
 			}
 		}
 
-		protected override void DrawIconAndLabel(Rect rect, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
+		protected override void OnContentGUI(Rect rect, int row, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
 		{
-			GameObjectTreeViewItem gameObjectTreeViewItem = item as GameObjectTreeViewItem;
-			if (gameObjectTreeViewItem == null)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			if (gameObjectTreeViewItem.isSceneHeader)
-			{
-				if (gameObjectTreeViewItem.scene.isDirty)
+				GameObjectTreeViewItem gameObjectTreeViewItem = item as GameObjectTreeViewItem;
+				if (gameObjectTreeViewItem != null)
 				{
-					label += "*";
+					if (gameObjectTreeViewItem.isSceneHeader)
+					{
+						if (gameObjectTreeViewItem.scene.isDirty)
+						{
+							label += "*";
+						}
+						Scene.LoadingState loadingState = gameObjectTreeViewItem.scene.loadingState;
+						if (loadingState != Scene.LoadingState.NotLoaded)
+						{
+							if (loadingState == Scene.LoadingState.Loading)
+							{
+								label += " (is loading)";
+							}
+						}
+						else
+						{
+							label += " (not loaded)";
+						}
+						bool useBoldFont2 = gameObjectTreeViewItem.scene == SceneManager.GetActiveScene();
+						using (new EditorGUI.DisabledScope(!gameObjectTreeViewItem.scene.isLoaded))
+						{
+							base.OnContentGUI(rect, row, item, label, selected, focused, useBoldFont2, isPinging);
+						}
+					}
+					else
+					{
+						if (!isPinging)
+						{
+							float contentIndent = this.GetContentIndent(item);
+							rect.x += contentIndent;
+							rect.width -= contentIndent;
+						}
+						int colorCode = gameObjectTreeViewItem.colorCode;
+						if (string.IsNullOrEmpty(item.displayName))
+						{
+							if (gameObjectTreeViewItem.objectPPTR != null)
+							{
+								gameObjectTreeViewItem.displayName = gameObjectTreeViewItem.objectPPTR.name;
+							}
+							else
+							{
+								gameObjectTreeViewItem.displayName = "deleted gameobject";
+							}
+							label = gameObjectTreeViewItem.displayName;
+						}
+						GUIStyle gUIStyle = TreeViewGUI.s_Styles.lineStyle;
+						if (!gameObjectTreeViewItem.shouldDisplay)
+						{
+							gUIStyle = GameObjectTreeViewGUI.s_GOStyles.disabledLabel;
+						}
+						else if ((colorCode & 3) == 0)
+						{
+							gUIStyle = ((colorCode >= 4) ? GameObjectTreeViewGUI.s_GOStyles.disabledLabel : TreeViewGUI.s_Styles.lineStyle);
+						}
+						else if ((colorCode & 3) == 1)
+						{
+							gUIStyle = ((colorCode >= 4) ? GameObjectTreeViewGUI.s_GOStyles.disabledPrefabLabel : GameObjectTreeViewGUI.s_GOStyles.prefabLabel);
+						}
+						else if ((colorCode & 3) == 2)
+						{
+							gUIStyle = ((colorCode >= 4) ? GameObjectTreeViewGUI.s_GOStyles.disabledBrokenPrefabLabel : GameObjectTreeViewGUI.s_GOStyles.brokenPrefabLabel);
+						}
+						Texture iconForItem = this.GetIconForItem(item);
+						rect.xMin += (float)gUIStyle.margin.left;
+						gUIStyle.padding.left = 0;
+						if (iconForItem != null)
+						{
+							gUIStyle.padding.left = (int)(base.iconTotalPadding + this.k_IconWidth + this.k_SpaceBetweenIconAndText);
+							Rect position = rect;
+							position.width = this.k_IconWidth;
+							GUI.DrawTexture(position, iconForItem, ScaleMode.ScaleToFit);
+						}
+						gUIStyle.Draw(rect, label, false, false, selected, focused);
+					}
 				}
-				if (!gameObjectTreeViewItem.scene.isLoaded)
-				{
-					label += " (not loaded)";
-				}
-				bool useBoldFont2 = gameObjectTreeViewItem.scene == SceneManager.GetActiveScene();
-				using (new EditorGUI.DisabledScope(!gameObjectTreeViewItem.scene.isLoaded))
-				{
-					base.DrawIconAndLabel(rect, item, label, selected, focused, useBoldFont2, isPinging);
-				}
-				return;
 			}
-			if (!isPinging)
-			{
-				float contentIndent = this.GetContentIndent(item);
-				rect.x += contentIndent;
-				rect.width -= contentIndent;
-			}
-			int colorCode = gameObjectTreeViewItem.colorCode;
-			if (string.IsNullOrEmpty(item.displayName))
-			{
-				if (gameObjectTreeViewItem.objectPPTR != null)
-				{
-					gameObjectTreeViewItem.displayName = gameObjectTreeViewItem.objectPPTR.name;
-				}
-				else
-				{
-					gameObjectTreeViewItem.displayName = "deleted gameobject";
-				}
-				label = gameObjectTreeViewItem.displayName;
-			}
-			GUIStyle gUIStyle = TreeViewGUI.s_Styles.lineStyle;
-			if (!gameObjectTreeViewItem.shouldDisplay)
-			{
-				gUIStyle = GameObjectTreeViewGUI.s_GOStyles.disabledLabel;
-			}
-			else if ((colorCode & 3) == 0)
-			{
-				gUIStyle = ((colorCode >= 4) ? GameObjectTreeViewGUI.s_GOStyles.disabledLabel : TreeViewGUI.s_Styles.lineStyle);
-			}
-			else if ((colorCode & 3) == 1)
-			{
-				gUIStyle = ((colorCode >= 4) ? GameObjectTreeViewGUI.s_GOStyles.disabledPrefabLabel : GameObjectTreeViewGUI.s_GOStyles.prefabLabel);
-			}
-			else if ((colorCode & 3) == 2)
-			{
-				gUIStyle = ((colorCode >= 4) ? GameObjectTreeViewGUI.s_GOStyles.disabledBrokenPrefabLabel : GameObjectTreeViewGUI.s_GOStyles.brokenPrefabLabel);
-			}
-			gUIStyle.padding.left = (int)this.k_SpaceBetweenIconAndText;
-			gUIStyle.Draw(rect, label, false, false, selected, focused);
 		}
 	}
 }

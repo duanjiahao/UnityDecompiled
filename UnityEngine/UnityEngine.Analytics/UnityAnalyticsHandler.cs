@@ -15,11 +15,10 @@ namespace UnityEngine.Analytics
 			this.InternalCreate();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreate();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalDestroy();
 
@@ -34,23 +33,27 @@ namespace UnityEngine.Analytics
 			GC.SuppressFinalize(this);
 		}
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern AnalyticsResult FlushEvents();
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnalyticsResult SetUserId(string userId);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnalyticsResult SetUserGender(Gender gender);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnalyticsResult SetUserBirthYear(int birthYear);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnalyticsResult Transaction(string productId, double amount, string currency);
 
 		public AnalyticsResult Transaction(string productId, double amount, string currency, string receiptPurchaseData, string signature)
+		{
+			return this.Transaction(productId, amount, currency, receiptPurchaseData, signature, false);
+		}
+
+		internal AnalyticsResult Transaction(string productId, double amount, string currency, string receiptPurchaseData, string signature, bool usingIAPService)
 		{
 			if (receiptPurchaseData == null)
 			{
@@ -60,12 +63,11 @@ namespace UnityEngine.Analytics
 			{
 				signature = string.Empty;
 			}
-			return this.InternalTransaction(productId, amount, currency, receiptPurchaseData, signature);
+			return this.InternalTransaction(productId, amount, currency, receiptPurchaseData, signature, usingIAPService);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern AnalyticsResult InternalTransaction(string productId, double amount, string currency, string receiptPurchaseData, string signature);
+		private extern AnalyticsResult InternalTransaction(string productId, double amount, string currency, string receiptPurchaseData, string signature, bool usingIAPService);
 
 		public AnalyticsResult CustomEvent(string customEventName)
 		{
@@ -77,11 +79,9 @@ namespace UnityEngine.Analytics
 			return this.SendCustomEvent(eventData);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AnalyticsResult SendCustomEventName(string customEventName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AnalyticsResult SendCustomEvent(CustomEventData eventData);
 	}

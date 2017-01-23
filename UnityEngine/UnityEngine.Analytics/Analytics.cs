@@ -16,6 +16,21 @@ namespace UnityEngine.Analytics
 			return Analytics.s_UnityAnalyticsHandler;
 		}
 
+		public static AnalyticsResult FlushEvents()
+		{
+			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
+			if (unityAnalyticsHandler == null)
+			{
+				result = AnalyticsResult.NotInitialized;
+			}
+			else
+			{
+				result = unityAnalyticsHandler.FlushEvents();
+			}
+			return result;
+		}
+
 		public static AnalyticsResult SetUserId(string userId)
 		{
 			if (string.IsNullOrEmpty(userId))
@@ -23,51 +38,91 @@ namespace UnityEngine.Analytics
 				throw new ArgumentException("Cannot set userId to an empty or null string");
 			}
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			return unityAnalyticsHandler.SetUserId(userId);
+			else
+			{
+				result = unityAnalyticsHandler.SetUserId(userId);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult SetUserGender(Gender gender)
 		{
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			return unityAnalyticsHandler.SetUserGender(gender);
+			else
+			{
+				result = unityAnalyticsHandler.SetUserGender(gender);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult SetUserBirthYear(int birthYear)
 		{
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (Analytics.s_UnityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			return unityAnalyticsHandler.SetUserBirthYear(birthYear);
+			else
+			{
+				result = unityAnalyticsHandler.SetUserBirthYear(birthYear);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult Transaction(string productId, decimal amount, string currency)
 		{
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			return unityAnalyticsHandler.Transaction(productId, Convert.ToDouble(amount), currency, null, null);
+			else
+			{
+				result = unityAnalyticsHandler.Transaction(productId, Convert.ToDouble(amount), currency, null, null);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult Transaction(string productId, decimal amount, string currency, string receiptPurchaseData, string signature)
 		{
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			return unityAnalyticsHandler.Transaction(productId, Convert.ToDouble(amount), currency, receiptPurchaseData, signature);
+			else
+			{
+				result = unityAnalyticsHandler.Transaction(productId, Convert.ToDouble(amount), currency, receiptPurchaseData, signature);
+			}
+			return result;
+		}
+
+		internal static AnalyticsResult Transaction(string productId, decimal amount, string currency, string receiptPurchaseData, string signature, bool usingIAPService)
+		{
+			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
+			if (unityAnalyticsHandler == null)
+			{
+				result = AnalyticsResult.NotInitialized;
+			}
+			else
+			{
+				result = unityAnalyticsHandler.Transaction(productId, Convert.ToDouble(amount), currency, receiptPurchaseData, signature, usingIAPService);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult CustomEvent(string customEventName)
@@ -77,11 +132,16 @@ namespace UnityEngine.Analytics
 				throw new ArgumentException("Cannot set custom event name to an empty or null string");
 			}
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			return unityAnalyticsHandler.CustomEvent(customEventName);
+			else
+			{
+				result = unityAnalyticsHandler.CustomEvent(customEventName);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult CustomEvent(string customEventName, Vector3 position)
@@ -91,15 +151,20 @@ namespace UnityEngine.Analytics
 				throw new ArgumentException("Cannot set custom event name to an empty or null string");
 			}
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			CustomEventData customEventData = new CustomEventData(customEventName);
-			customEventData.Add("x", (double)Convert.ToDecimal(position.x));
-			customEventData.Add("y", (double)Convert.ToDecimal(position.y));
-			customEventData.Add("z", (double)Convert.ToDecimal(position.z));
-			return unityAnalyticsHandler.CustomEvent(customEventData);
+			else
+			{
+				CustomEventData customEventData = new CustomEventData(customEventName);
+				customEventData.Add("x", (double)Convert.ToDecimal(position.x));
+				customEventData.Add("y", (double)Convert.ToDecimal(position.y));
+				customEventData.Add("z", (double)Convert.ToDecimal(position.z));
+				result = unityAnalyticsHandler.CustomEvent(customEventData);
+			}
+			return result;
 		}
 
 		public static AnalyticsResult CustomEvent(string customEventName, IDictionary<string, object> eventData)
@@ -109,17 +174,22 @@ namespace UnityEngine.Analytics
 				throw new ArgumentException("Cannot set custom event name to an empty or null string");
 			}
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+			AnalyticsResult result;
 			if (unityAnalyticsHandler == null)
 			{
-				return AnalyticsResult.NotInitialized;
+				result = AnalyticsResult.NotInitialized;
 			}
-			if (eventData == null)
+			else if (eventData == null)
 			{
-				return unityAnalyticsHandler.CustomEvent(customEventName);
+				result = unityAnalyticsHandler.CustomEvent(customEventName);
 			}
-			CustomEventData customEventData = new CustomEventData(customEventName);
-			customEventData.Add(eventData);
-			return unityAnalyticsHandler.CustomEvent(customEventData);
+			else
+			{
+				CustomEventData customEventData = new CustomEventData(customEventName);
+				customEventData.Add(eventData);
+				result = unityAnalyticsHandler.CustomEvent(customEventData);
+			}
+			return result;
 		}
 	}
 }

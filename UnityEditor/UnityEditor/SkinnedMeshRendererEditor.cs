@@ -80,47 +80,45 @@ namespace UnityEditor
 
 		public void OnBlendShapeUI()
 		{
-			SkinnedMeshRenderer skinnedMeshRenderer = (SkinnedMeshRenderer)this.target;
+			SkinnedMeshRenderer skinnedMeshRenderer = (SkinnedMeshRenderer)base.target;
 			int num = (!(skinnedMeshRenderer.sharedMesh == null)) ? skinnedMeshRenderer.sharedMesh.blendShapeCount : 0;
-			if (num == 0)
+			if (num != 0)
 			{
-				return;
-			}
-			GUIContent gUIContent = new GUIContent();
-			gUIContent.text = "BlendShapes";
-			EditorGUILayout.PropertyField(this.m_BlendShapeWeights, gUIContent, false, new GUILayoutOption[0]);
-			if (!this.m_BlendShapeWeights.isExpanded)
-			{
-				return;
-			}
-			EditorGUI.indentLevel++;
-			Mesh sharedMesh = skinnedMeshRenderer.sharedMesh;
-			int num2 = this.m_BlendShapeWeights.arraySize;
-			for (int i = 0; i < num; i++)
-			{
-				gUIContent.text = sharedMesh.GetBlendShapeName(i);
-				if (i < num2)
+				GUIContent gUIContent = new GUIContent();
+				gUIContent.text = "BlendShapes";
+				EditorGUILayout.PropertyField(this.m_BlendShapeWeights, gUIContent, false, new GUILayoutOption[0]);
+				if (this.m_BlendShapeWeights.isExpanded)
 				{
-					EditorGUILayout.PropertyField(this.m_BlendShapeWeights.GetArrayElementAtIndex(i), gUIContent, new GUILayoutOption[0]);
-				}
-				else
-				{
-					EditorGUI.BeginChangeCheck();
-					float floatValue = EditorGUILayout.FloatField(gUIContent, 0f, new GUILayoutOption[0]);
-					if (EditorGUI.EndChangeCheck())
+					EditorGUI.indentLevel++;
+					Mesh sharedMesh = skinnedMeshRenderer.sharedMesh;
+					int num2 = this.m_BlendShapeWeights.arraySize;
+					for (int i = 0; i < num; i++)
 					{
-						this.m_BlendShapeWeights.arraySize = num;
-						num2 = num;
-						this.m_BlendShapeWeights.GetArrayElementAtIndex(i).floatValue = floatValue;
+						gUIContent.text = sharedMesh.GetBlendShapeName(i);
+						if (i < num2)
+						{
+							EditorGUILayout.PropertyField(this.m_BlendShapeWeights.GetArrayElementAtIndex(i), gUIContent, new GUILayoutOption[0]);
+						}
+						else
+						{
+							EditorGUI.BeginChangeCheck();
+							float floatValue = EditorGUILayout.FloatField(gUIContent, 0f, new GUILayoutOption[0]);
+							if (EditorGUI.EndChangeCheck())
+							{
+								this.m_BlendShapeWeights.arraySize = num;
+								num2 = num;
+								this.m_BlendShapeWeights.GetArrayElementAtIndex(i).floatValue = floatValue;
+							}
+						}
 					}
+					EditorGUI.indentLevel--;
 				}
 			}
-			EditorGUI.indentLevel--;
 		}
 
 		public void OnSceneGUI()
 		{
-			SkinnedMeshRenderer skinnedMeshRenderer = (SkinnedMeshRenderer)this.target;
+			SkinnedMeshRenderer skinnedMeshRenderer = (SkinnedMeshRenderer)base.target;
 			if (skinnedMeshRenderer.updateWhenOffscreen)
 			{
 				Bounds bounds = skinnedMeshRenderer.bounds;

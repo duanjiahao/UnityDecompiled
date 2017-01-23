@@ -9,9 +9,9 @@ namespace UnityEditor
 	[EditorWindowTitle(title = "Delete Layout")]
 	internal class DeleteWindowLayout : EditorWindow
 	{
-		private const int kMaxLayoutNameLength = 15;
-
 		internal string[] m_Paths;
+
+		private const int kMaxLayoutNameLength = 15;
 
 		private Vector2 m_ScrollPos;
 

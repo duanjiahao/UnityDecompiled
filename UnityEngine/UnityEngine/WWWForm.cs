@@ -18,7 +18,7 @@ namespace UnityEngine
 
 		private byte[] boundary;
 
-		private bool containsFiles;
+		private bool containsFiles = false;
 
 		public Dictionary<string, string> headers
 		{
@@ -63,37 +63,37 @@ namespace UnityEngine
 							memoryStream.Write(bytes7, 0, bytes7.Length);
 							memoryStream.Write(bytes2, 0, bytes2.Length);
 							memoryStream.Write(bytes4, 0, bytes4.Length);
-							string empty = string.Empty;
-							string text = this.fieldNames[i];
-							if (!WWWTranscoder.SevenBitClean(text, Encoding.UTF8) || text.IndexOf("=?") > -1)
+							string text = "";
+							string text2 = this.fieldNames[i];
+							if (!WWWTranscoder.SevenBitClean(text2, Encoding.UTF8) || text2.IndexOf("=?") > -1)
 							{
-								text = string.Concat(new string[]
+								text2 = string.Concat(new string[]
 								{
 									"=?",
-									empty,
+									text,
 									"?Q?",
-									WWWTranscoder.QPEncode(text, Encoding.UTF8),
+									WWWTranscoder.QPEncode(text2, Encoding.UTF8),
 									"?="
 								});
 							}
-							byte[] bytes8 = Encoding.UTF8.GetBytes(text);
+							byte[] bytes8 = Encoding.UTF8.GetBytes(text2);
 							memoryStream.Write(bytes8, 0, bytes8.Length);
 							memoryStream.Write(bytes5, 0, bytes5.Length);
 							if (this.fileNames[i] != null)
 							{
-								string text2 = this.fileNames[i];
-								if (!WWWTranscoder.SevenBitClean(text2, Encoding.UTF8) || text2.IndexOf("=?") > -1)
+								string text3 = this.fileNames[i];
+								if (!WWWTranscoder.SevenBitClean(text3, Encoding.UTF8) || text3.IndexOf("=?") > -1)
 								{
-									text2 = string.Concat(new string[]
+									text3 = string.Concat(new string[]
 									{
 										"=?",
-										empty,
+										text,
 										"?Q?",
-										WWWTranscoder.QPEncode(text2, Encoding.UTF8),
+										WWWTranscoder.QPEncode(text3, Encoding.UTF8),
 										"?="
 									});
 								}
-								byte[] bytes9 = Encoding.UTF8.GetBytes(text2);
+								byte[] bytes9 = Encoding.UTF8.GetBytes(text3);
 								memoryStream.Write(bytes6, 0, bytes6.Length);
 								memoryStream.Write(bytes9, 0, bytes9.Length);
 								memoryStream.Write(bytes5, 0, bytes5.Length);

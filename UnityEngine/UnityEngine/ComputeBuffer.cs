@@ -11,14 +11,12 @@ namespace UnityEngine
 
 		public extern int count
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int stride
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -29,6 +27,14 @@ namespace UnityEngine
 
 		public ComputeBuffer(int count, int stride, ComputeBufferType type)
 		{
+			if (count <= 0)
+			{
+				throw new ArgumentException("Attempting to create a zero length compute buffer", "count");
+			}
+			if (stride < 0)
+			{
+				throw new ArgumentException("Attempting to create a compute buffer with a negative stride", "stride");
+			}
 			this.m_Ptr = IntPtr.Zero;
 			ComputeBuffer.InitBuffer(this, count, stride, type);
 		}
@@ -50,11 +56,9 @@ namespace UnityEngine
 			this.m_Ptr = IntPtr.Zero;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void InitBuffer(ComputeBuffer buf, int count, int stride, ComputeBufferType type);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void DestroyBuffer(ComputeBuffer buf);
 
@@ -69,11 +73,10 @@ namespace UnityEngine
 			this.InternalSetData(data, Marshal.SizeOf(data.GetType().GetElementType()));
 		}
 
-		[SecurityCritical, WrapperlessIcall]
+		[SecurityCritical]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalSetData(Array data, int elemSize);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetCounterValue(uint counterValue);
 
@@ -83,12 +86,21 @@ namespace UnityEngine
 			this.InternalGetData(data, Marshal.SizeOf(data.GetType().GetElementType()));
 		}
 
-		[SecurityCritical, WrapperlessIcall]
+		[SecurityCritical]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalGetData(Array data, int elemSize);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyCount(ComputeBuffer src, ComputeBuffer dst, int dstOffset);
+
+		public IntPtr GetNativeBufferPtr()
+		{
+			IntPtr result;
+			ComputeBuffer.INTERNAL_CALL_GetNativeBufferPtr(this, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetNativeBufferPtr(ComputeBuffer self, out IntPtr value);
 	}
 }

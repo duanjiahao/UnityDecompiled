@@ -18,17 +18,22 @@ namespace UnityEditor
 		internal static Material CreateWireframeMaterial()
 		{
 			Shader shader = Shader.FindBuiltin("Internal-Colored.shader");
+			Material result;
 			if (!shader)
 			{
 				Debug.LogWarning("Could not find Colored builtin shader");
-				return null;
+				result = null;
 			}
-			Material material = new Material(shader);
-			material.hideFlags = HideFlags.HideAndDontSave;
-			material.SetColor("_Color", new Color(0f, 0f, 0f, 0.3f));
-			material.SetInt("_ZWrite", 0);
-			material.SetFloat("_ZBias", -1f);
-			return material;
+			else
+			{
+				Material material = new Material(shader);
+				material.hideFlags = HideFlags.HideAndDontSave;
+				material.SetColor("_Color", new Color(0f, 0f, 0f, 0.3f));
+				material.SetInt("_ZWrite", 0);
+				material.SetFloat("_ZBias", -1f);
+				result = material;
+			}
+			return result;
 		}
 
 		private void Init()
@@ -44,104 +49,106 @@ namespace UnityEditor
 
 		public override void OnPreviewSettings()
 		{
-			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
+			if (ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
-				return;
+				GUI.enabled = true;
+				this.Init();
 			}
-			GUI.enabled = true;
-			this.Init();
 		}
 
 		internal static void RenderMeshPreview(Mesh mesh, PreviewRenderUtility previewUtility, Material litMaterial, Material wireMaterial, Vector2 direction, int meshSubset)
 		{
-			if (mesh == null || previewUtility == null)
+			if (!(mesh == null) && previewUtility != null)
 			{
-				return;
+				Bounds bounds = mesh.bounds;
+				float magnitude = bounds.extents.magnitude;
+				float num = 4f * magnitude;
+				previewUtility.m_Camera.transform.position = -Vector3.forward * num;
+				previewUtility.m_Camera.transform.rotation = Quaternion.identity;
+				previewUtility.m_Camera.nearClipPlane = num - magnitude * 1.1f;
+				previewUtility.m_Camera.farClipPlane = num + magnitude * 1.1f;
+				previewUtility.m_Light[0].intensity = 1.4f;
+				previewUtility.m_Light[0].transform.rotation = Quaternion.Euler(40f, 40f, 0f);
+				previewUtility.m_Light[1].intensity = 1.4f;
+				Color ambient = new Color(0.1f, 0.1f, 0.1f, 0f);
+				InternalEditorUtility.SetCustomLighting(previewUtility.m_Light, ambient);
+				ModelInspector.RenderMeshPreviewSkipCameraAndLighting(mesh, bounds, previewUtility, litMaterial, wireMaterial, null, direction, meshSubset);
+				InternalEditorUtility.RemoveCustomLighting();
 			}
-			Bounds bounds = mesh.bounds;
-			float magnitude = bounds.extents.magnitude;
-			float num = 4f * magnitude;
-			previewUtility.m_Camera.transform.position = -Vector3.forward * num;
-			previewUtility.m_Camera.transform.rotation = Quaternion.identity;
-			previewUtility.m_Camera.nearClipPlane = num - magnitude * 1.1f;
-			previewUtility.m_Camera.farClipPlane = num + magnitude * 1.1f;
-			previewUtility.m_Light[0].intensity = 1.4f;
-			previewUtility.m_Light[0].transform.rotation = Quaternion.Euler(40f, 40f, 0f);
-			previewUtility.m_Light[1].intensity = 1.4f;
-			Color ambient = new Color(0.1f, 0.1f, 0.1f, 0f);
-			InternalEditorUtility.SetCustomLighting(previewUtility.m_Light, ambient);
-			ModelInspector.RenderMeshPreviewSkipCameraAndLighting(mesh, bounds, previewUtility, litMaterial, wireMaterial, null, direction, meshSubset);
-			InternalEditorUtility.RemoveCustomLighting();
 		}
 
 		internal static void RenderMeshPreviewSkipCameraAndLighting(Mesh mesh, Bounds bounds, PreviewRenderUtility previewUtility, Material litMaterial, Material wireMaterial, MaterialPropertyBlock customProperties, Vector2 direction, int meshSubset)
 		{
-			if (mesh == null || previewUtility == null)
+			if (!(mesh == null) && previewUtility != null)
 			{
-				return;
-			}
-			Quaternion quaternion = Quaternion.Euler(direction.y, 0f, 0f) * Quaternion.Euler(0f, direction.x, 0f);
-			Vector3 pos = quaternion * -bounds.center;
-			bool fog = RenderSettings.fog;
-			Unsupported.SetRenderSettingsUseFogNoDirty(false);
-			int subMeshCount = mesh.subMeshCount;
-			if (litMaterial != null)
-			{
-				previewUtility.m_Camera.clearFlags = CameraClearFlags.Nothing;
-				if (meshSubset < 0 || meshSubset >= subMeshCount)
+				Quaternion quaternion = Quaternion.Euler(direction.y, 0f, 0f) * Quaternion.Euler(0f, direction.x, 0f);
+				Vector3 pos = quaternion * -bounds.center;
+				bool fog = RenderSettings.fog;
+				Unsupported.SetRenderSettingsUseFogNoDirty(false);
+				int subMeshCount = mesh.subMeshCount;
+				if (litMaterial != null)
 				{
-					for (int i = 0; i < subMeshCount; i++)
+					previewUtility.m_Camera.clearFlags = CameraClearFlags.Nothing;
+					if (meshSubset < 0 || meshSubset >= subMeshCount)
 					{
-						previewUtility.DrawMesh(mesh, pos, quaternion, litMaterial, i, customProperties);
+						for (int i = 0; i < subMeshCount; i++)
+						{
+							previewUtility.DrawMesh(mesh, pos, quaternion, litMaterial, i, customProperties);
+						}
 					}
-				}
-				else
-				{
-					previewUtility.DrawMesh(mesh, pos, quaternion, litMaterial, meshSubset, customProperties);
-				}
-				previewUtility.m_Camera.Render();
-			}
-			if (wireMaterial != null)
-			{
-				previewUtility.m_Camera.clearFlags = CameraClearFlags.Nothing;
-				GL.wireframe = true;
-				if (meshSubset < 0 || meshSubset >= subMeshCount)
-				{
-					for (int j = 0; j < subMeshCount; j++)
+					else
 					{
-						previewUtility.DrawMesh(mesh, pos, quaternion, wireMaterial, j, customProperties);
+						previewUtility.DrawMesh(mesh, pos, quaternion, litMaterial, meshSubset, customProperties);
 					}
+					previewUtility.m_Camera.Render();
 				}
-				else
+				if (wireMaterial != null)
 				{
-					previewUtility.DrawMesh(mesh, pos, quaternion, wireMaterial, meshSubset, customProperties);
+					previewUtility.m_Camera.clearFlags = CameraClearFlags.Nothing;
+					GL.wireframe = true;
+					if (meshSubset < 0 || meshSubset >= subMeshCount)
+					{
+						for (int j = 0; j < subMeshCount; j++)
+						{
+							previewUtility.DrawMesh(mesh, pos, quaternion, wireMaterial, j, customProperties);
+						}
+					}
+					else
+					{
+						previewUtility.DrawMesh(mesh, pos, quaternion, wireMaterial, meshSubset, customProperties);
+					}
+					previewUtility.m_Camera.Render();
+					GL.wireframe = false;
 				}
-				previewUtility.m_Camera.Render();
-				GL.wireframe = false;
+				Unsupported.SetRenderSettingsUseFogNoDirty(fog);
 			}
-			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
 		}
 
 		private void DoRenderPreview()
 		{
-			ModelInspector.RenderMeshPreview(this.target as Mesh, this.m_PreviewUtility, this.m_Material, this.m_WireMaterial, this.previewDir, -1);
+			ModelInspector.RenderMeshPreview(base.target as Mesh, this.m_PreviewUtility, this.m_Material, this.m_WireMaterial, this.previewDir, -1);
 		}
 
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
+			Texture2D result;
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
-				return null;
+				result = null;
 			}
-			this.Init();
-			this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
-			this.DoRenderPreview();
-			return this.m_PreviewUtility.EndStaticPreview();
+			else
+			{
+				this.Init();
+				this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
+				this.DoRenderPreview();
+				result = this.m_PreviewUtility.EndStaticPreview();
+			}
+			return result;
 		}
 
 		public override bool HasPreviewGUI()
 		{
-			return this.target != null;
+			return base.target != null;
 		}
 
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
@@ -152,17 +159,18 @@ namespace UnityEditor
 				{
 					EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 40f), "Mesh preview requires\nrender texture support");
 				}
-				return;
 			}
-			this.Init();
-			this.previewDir = PreviewGUI.Drag2D(this.previewDir, r);
-			if (Event.current.type != EventType.Repaint)
+			else
 			{
-				return;
+				this.Init();
+				this.previewDir = PreviewGUI.Drag2D(this.previewDir, r);
+				if (Event.current.type == EventType.Repaint)
+				{
+					this.m_PreviewUtility.BeginPreview(r, background);
+					this.DoRenderPreview();
+					this.m_PreviewUtility.EndAndDrawPreview(r);
+				}
 			}
-			this.m_PreviewUtility.BeginPreview(r, background);
-			this.DoRenderPreview();
-			this.m_PreviewUtility.EndAndDrawPreview(r);
 		}
 
 		internal override void OnAssetStoreInspectorGUI()
@@ -185,7 +193,7 @@ namespace UnityEditor
 
 		public override string GetInfoString()
 		{
-			Mesh mesh = this.target as Mesh;
+			Mesh mesh = base.target as Mesh;
 			string text = string.Concat(new object[]
 			{
 				mesh.vertexCount,

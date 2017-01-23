@@ -63,9 +63,11 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			else
+			{
+				base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			}
 		}
 	}
 	[Serializable]
@@ -130,9 +132,11 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			else
+			{
+				base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			}
 		}
 	}
 	[Serializable]
@@ -199,9 +203,11 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			else
+			{
+				base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			}
 		}
 	}
 	[Serializable]
@@ -270,9 +276,11 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			else
+			{
+				base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			}
 		}
 	}
 	[Serializable]
@@ -343,9 +351,11 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			else
+			{
+				base.RegisterPersistentListener(index, call.Target as UnityEngine.Object, call.Method);
+			}
 		}
 	}
 }

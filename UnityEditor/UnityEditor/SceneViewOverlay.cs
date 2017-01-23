@@ -64,33 +64,31 @@ namespace UnityEditor
 
 		public void Begin()
 		{
-			if (!this.m_SceneView.m_ShowSceneViewWindows)
+			if (this.m_SceneView.m_ShowSceneViewWindows)
 			{
-				return;
+				if (Event.current.type == EventType.Layout)
+				{
+					SceneViewOverlay.m_Windows.Clear();
+				}
+				this.m_SceneView.BeginWindows();
 			}
-			if (Event.current.type == EventType.Layout)
-			{
-				SceneViewOverlay.m_Windows.Clear();
-			}
-			this.m_SceneView.BeginWindows();
 		}
 
 		public void End()
 		{
-			if (!this.m_SceneView.m_ShowSceneViewWindows)
+			if (this.m_SceneView.m_ShowSceneViewWindows)
 			{
-				return;
+				SceneViewOverlay.m_Windows.Sort();
+				if (SceneViewOverlay.m_Windows.Count > 0)
+				{
+					this.m_WindowRect.x = 0f;
+					this.m_WindowRect.y = 0f;
+					this.m_WindowRect.width = this.m_SceneView.position.width;
+					this.m_WindowRect.height = this.m_SceneView.position.height;
+					this.m_WindowRect = GUILayout.Window("SceneViewOverlay".GetHashCode(), this.m_WindowRect, new GUI.WindowFunction(this.WindowTrampoline), "", "SceneViewOverlayTransparentBackground", new GUILayoutOption[0]);
+				}
+				this.m_SceneView.EndWindows();
 			}
-			SceneViewOverlay.m_Windows.Sort();
-			if (SceneViewOverlay.m_Windows.Count > 0)
-			{
-				this.m_WindowRect.x = 0f;
-				this.m_WindowRect.y = 0f;
-				this.m_WindowRect.width = this.m_SceneView.position.width;
-				this.m_WindowRect.height = this.m_SceneView.position.height;
-				this.m_WindowRect = GUILayout.Window("SceneViewOverlay".GetHashCode(), this.m_WindowRect, new GUI.WindowFunction(this.WindowTrampoline), string.Empty, "SceneViewOverlayTransparentBackground", new GUILayoutOption[0]);
-			}
-			this.m_SceneView.EndWindows();
 		}
 
 		private void WindowTrampoline(int id)
@@ -123,7 +121,7 @@ namespace UnityEditor
 		private void EatMouseInput(Rect position)
 		{
 			SceneView.AddCursorRect(position, MouseCursor.Arrow);
-			int controlID = GUIUtility.GetControlID("SceneViewOverlay".GetHashCode(), FocusType.Native, position);
+			int controlID = GUIUtility.GetControlID("SceneViewOverlay".GetHashCode(), FocusType.Passive, position);
 			switch (Event.current.GetTypeForControl(controlID))
 			{
 			case EventType.MouseDown:
@@ -162,28 +160,27 @@ namespace UnityEditor
 
 		public static void Window(GUIContent title, SceneViewOverlay.WindowFunction sceneViewFunc, int order, UnityEngine.Object target, SceneViewOverlay.WindowDisplayOption option)
 		{
-			if (Event.current.type != EventType.Layout)
+			if (Event.current.type == EventType.Layout)
 			{
-				return;
-			}
-			foreach (SceneViewOverlay.OverlayWindow current in SceneViewOverlay.m_Windows)
-			{
-				if (option == SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget && current.m_Target == target && target != null)
+				foreach (SceneViewOverlay.OverlayWindow current in SceneViewOverlay.m_Windows)
 				{
-					return;
+					if (option == SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget && current.m_Target == target && target != null)
+					{
+						return;
+					}
+					if (option == SceneViewOverlay.WindowDisplayOption.OneWindowPerTitle && (current.m_Title == title || current.m_Title.text == title.text))
+					{
+						return;
+					}
 				}
-				if (option == SceneViewOverlay.WindowDisplayOption.OneWindowPerTitle && (current.m_Title == title || current.m_Title.text == title.text))
-				{
-					return;
-				}
+				SceneViewOverlay.OverlayWindow overlayWindow = new SceneViewOverlay.OverlayWindow();
+				overlayWindow.m_Title = title;
+				overlayWindow.m_SceneViewFunc = sceneViewFunc;
+				overlayWindow.m_PrimaryOrder = order;
+				overlayWindow.m_SecondaryOrder = SceneViewOverlay.m_Windows.Count;
+				overlayWindow.m_Target = target;
+				SceneViewOverlay.m_Windows.Add(overlayWindow);
 			}
-			SceneViewOverlay.OverlayWindow overlayWindow = new SceneViewOverlay.OverlayWindow();
-			overlayWindow.m_Title = title;
-			overlayWindow.m_SceneViewFunc = sceneViewFunc;
-			overlayWindow.m_PrimaryOrder = order;
-			overlayWindow.m_SecondaryOrder = SceneViewOverlay.m_Windows.Count;
-			overlayWindow.m_Target = target;
-			SceneViewOverlay.m_Windows.Add(overlayWindow);
 		}
 	}
 }

@@ -5,11 +5,11 @@ namespace UnityEditor
 {
 	internal abstract class AssetImporterTabbedEditor : AssetImporterInspector
 	{
-		protected Type[] m_SubEditorTypes;
+		protected Type[] m_SubEditorTypes = null;
 
-		protected string[] m_SubEditorNames;
+		protected string[] m_SubEditorNames = null;
 
-		private int m_ActiveEditorIndex;
+		private int m_ActiveEditorIndex = 0;
 
 		private AssetImporterInspector m_ActiveEditor;
 

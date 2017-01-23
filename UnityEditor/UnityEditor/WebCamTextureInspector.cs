@@ -12,7 +12,7 @@ namespace UnityEditor
 
 		public override void OnInspectorGUI()
 		{
-			WebCamTexture webCamTexture = this.target as WebCamTexture;
+			WebCamTexture webCamTexture = base.target as WebCamTexture;
 			EditorGUILayout.LabelField("Requested FPS", webCamTexture.requestedFPS.ToString(), new GUILayoutOption[0]);
 			EditorGUILayout.LabelField("Requested Width", webCamTexture.requestedWidth.ToString(), new GUILayoutOption[0]);
 			EditorGUILayout.LabelField("Requested Height", webCamTexture.requestedHeight.ToString(), new GUILayoutOption[0]);
@@ -27,14 +27,14 @@ namespace UnityEditor
 
 		public override bool HasPreviewGUI()
 		{
-			return this.target != null;
+			return base.target != null;
 		}
 
 		public override void OnPreviewSettings()
 		{
 			WebCamTextureInspector.Init();
 			GUI.enabled = !Application.isPlaying;
-			WebCamTexture webCamTexture = this.target as WebCamTexture;
+			WebCamTexture webCamTexture = base.target as WebCamTexture;
 			bool flag = PreviewGUI.CycleButton((!webCamTexture.isPlaying) ? 0 : 1, WebCamTextureInspector.s_PlayIcons) != 0;
 			if (flag != webCamTexture.isPlaying)
 			{
@@ -57,7 +57,7 @@ namespace UnityEditor
 			{
 				background.Draw(r, false, false, false, false);
 			}
-			WebCamTexture webCamTexture = this.target as WebCamTexture;
+			WebCamTexture webCamTexture = base.target as WebCamTexture;
 			float num = Mathf.Min(Mathf.Min(r.width / (float)webCamTexture.width, r.height / (float)webCamTexture.height), 1f);
 			Rect rect = new Rect(r.x, r.y, (float)webCamTexture.width * num, (float)webCamTexture.height * num);
 			PreviewGUI.BeginScrollView(r, this.m_Pos, rect, "PreHorizontalScrollbar", "PreHorizontalScrollbarThumb");
@@ -82,7 +82,7 @@ namespace UnityEditor
 
 		public void OnDisable()
 		{
-			WebCamTexture webCamTexture = this.target as WebCamTexture;
+			WebCamTexture webCamTexture = base.target as WebCamTexture;
 			if (!Application.isPlaying && webCamTexture != null)
 			{
 				webCamTexture.Stop();
@@ -91,7 +91,7 @@ namespace UnityEditor
 
 		public override string GetInfoString()
 		{
-			Texture texture = this.target as Texture;
+			Texture texture = base.target as Texture;
 			string str = texture.width.ToString() + "x" + texture.height.ToString();
 			TextureFormat textureFormat = TextureUtil.GetTextureFormat(texture);
 			return str + "  " + TextureUtil.GetTextureFormatString(textureFormat);

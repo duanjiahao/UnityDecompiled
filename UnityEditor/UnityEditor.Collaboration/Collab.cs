@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEditor.Connect;
 using UnityEditor.Web;
 using UnityEditorInternal;
@@ -41,6 +42,13 @@ namespace UnityEditor.Collaboration
 			kCollabInvalidState = 4194304uL
 		}
 
+		internal enum CollabStateID
+		{
+			None,
+			Uninitialized,
+			Initialized
+		}
+
 		private static Collab s_Instance;
 
 		private static bool s_IsFirstStateChange;
@@ -51,23 +59,37 @@ namespace UnityEditor.Collaboration
 
 		internal static string editorPrefCollabClientType;
 
+		[CompilerGenerated]
+		private static UnityEditor.Connect.StateChangedDelegate <>f__mg$cache0;
+
 		public event StateChangedDelegate StateChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.StateChanged = (StateChangedDelegate)Delegate.Combine(this.StateChanged, value);
+				StateChangedDelegate stateChangedDelegate = this.StateChanged;
+				StateChangedDelegate stateChangedDelegate2;
+				do
+				{
+					stateChangedDelegate2 = stateChangedDelegate;
+					stateChangedDelegate = Interlocked.CompareExchange<StateChangedDelegate>(ref this.StateChanged, (StateChangedDelegate)Delegate.Combine(stateChangedDelegate2, value), stateChangedDelegate);
+				}
+				while (stateChangedDelegate != stateChangedDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.StateChanged = (StateChangedDelegate)Delegate.Remove(this.StateChanged, value);
+				StateChangedDelegate stateChangedDelegate = this.StateChanged;
+				StateChangedDelegate stateChangedDelegate2;
+				do
+				{
+					stateChangedDelegate2 = stateChangedDelegate;
+					stateChangedDelegate = Interlocked.CompareExchange<StateChangedDelegate>(ref this.StateChanged, (StateChangedDelegate)Delegate.Remove(stateChangedDelegate2, value), stateChangedDelegate);
+				}
+				while (stateChangedDelegate != stateChangedDelegate2);
 			}
 		}
 
 		public extern CollabInfo collabInfo
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -107,126 +129,139 @@ namespace UnityEditor.Collaboration
 			JSProxyMgr.GetInstance().AddGlobalObject("unity/collab", Collab.s_Instance);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetProjectPath();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsConnected();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool JobRunning(int a_jobID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Disconnect();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern ProgressInfo GetJobProgress(int jobID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CancelJob(int jobID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern long GetAssetStateInternal(string guid);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern long GetSelectedAssetStateInternal();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Publish(string comment);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Update(string revisionID, bool updateToRevision);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RevertFile(string path, bool forceOverwrite);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Change[] GetCollabConflicts();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool SetConflictResolvedMine(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool SetConflictsResolvedMine(string[] paths);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool SetConflictResolvedTheirs(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool SetConflictsResolvedTheirs(string[] paths);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool ClearConflictResolved(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool ClearConflictsResolved(string[] paths);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void LaunchConflictExternalMerge(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ShowConflictDifferences(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ShowDifferences(string path);
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern Collab.CollabStateID GetCollabState();
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Change[] GetChangesToPublish();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ResyncSnapshot();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void GoBackToRevision(string revisionID, bool updateToRevision);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SendNotification();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ResyncToRevision(string revisionID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ClearErrors();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetCollabEnabledForCurrentProject(bool enabled);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void OnPostprocessAssetbundleNameChanged(string assetPath, string previousAssetBundleName, string newAssetBundleName);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern SoftLock[] GetSoftLocks(string assetGuid);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool WasWhitelistedRequestSent();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern Revision[] GetRevisions();
 
 		public static string GetProjectClientType()
 		{
 			string configValue = EditorUserSettings.GetConfigValue(Collab.editorPrefCollabClientType);
 			return (!string.IsNullOrEmpty(configValue)) ? configValue : Collab.clientType[0];
+		}
+
+		[MenuItem("Window/Collab/Get Revisions", false, 1000, true)]
+		public static void TestGetRevisions()
+		{
+			Revision[] revisions = Collab.instance.GetRevisions();
+			if (revisions.Length == 0)
+			{
+				Debug.Log("No revisions");
+			}
+			else
+			{
+				int num = revisions.Length;
+				Revision[] array = revisions;
+				for (int i = 0; i < array.Length; i++)
+				{
+					Revision revision = array[i];
+					Debug.Log(string.Concat(new object[]
+					{
+						"Revision #",
+						num,
+						": ",
+						revision.revisionID
+					}));
+					num--;
+				}
+			}
 		}
 
 		public void CancelJobWithoutException(int jobId)
@@ -284,12 +319,27 @@ namespace UnityEditor.Collaboration
 			AssetDatabase.SaveAssets();
 		}
 
+		public static void SwitchToDefaultMode()
+		{
+			bool flag = EditorSettings.defaultBehaviorMode == EditorBehaviorMode.Mode2D;
+			SceneView lastActiveSceneView = SceneView.lastActiveSceneView;
+			if (lastActiveSceneView != null && lastActiveSceneView.in2DMode != flag)
+			{
+				lastActiveSceneView.in2DMode = flag;
+			}
+		}
+
 		private static void OnStateChanged()
 		{
 			if (Collab.s_IsFirstStateChange)
 			{
 				Collab.s_IsFirstStateChange = false;
-				UnityConnect.instance.StateChanged += new UnityEditor.Connect.StateChangedDelegate(Collab.OnUnityConnectStateChanged);
+				UnityConnect arg_34_0 = UnityConnect.instance;
+				if (Collab.<>f__mg$cache0 == null)
+				{
+					Collab.<>f__mg$cache0 = new UnityEditor.Connect.StateChangedDelegate(Collab.OnUnityConnectStateChanged);
+				}
+				arg_34_0.StateChanged += Collab.<>f__mg$cache0;
 			}
 			StateChangedDelegate stateChanged = Collab.instance.StateChanged;
 			if (stateChanged != null)

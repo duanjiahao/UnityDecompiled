@@ -12,7 +12,9 @@ namespace UnityEditor
 		[Obsolete("WebPlayerStreamed has been removed in 5.4")]
 		WebPlayerStreamed,
 		iOS = 9,
+		[Obsolete("PS3 has been removed in >=5.5")]
 		PS3,
+		[Obsolete("XBOX360 has been removed in 5.5")]
 		XBOX360,
 		Android = 13,
 		StandaloneLinux = 17,
@@ -21,7 +23,7 @@ namespace UnityEditor
 		WSAPlayer,
 		StandaloneLinux64 = 24,
 		StandaloneLinuxUniversal,
-		[Obsolete("Windows Phone 8 was removed in 5.3")]
+		[Obsolete("Use WSAPlayer with Windows Phone 8.1 selected")]
 		WP8Player,
 		StandaloneOSXIntel64,
 		[Obsolete("BlackBerry has been removed in 5.4")]
@@ -32,7 +34,7 @@ namespace UnityEditor
 		PSM,
 		XboxOne,
 		SamsungTV,
-		Nintendo3DS,
+		N3DS,
 		WiiU,
 		tvOS,
 		[Obsolete("Use iOS instead (UnityUpgradable) -> iOS", true)]
@@ -40,6 +42,7 @@ namespace UnityEditor
 		[Obsolete("BlackBerry has been removed in 5.4")]
 		BB10 = -1,
 		[Obsolete("Use WSAPlayer instead (UnityUpgradable) -> WSAPlayer", true)]
-		MetroPlayer = -1
+		MetroPlayer = -1,
+		NoTarget = -2
 	}
 }

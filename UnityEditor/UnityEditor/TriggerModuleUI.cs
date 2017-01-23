@@ -55,9 +55,7 @@ namespace UnityEditor
 
 		private SerializedProperty[] m_ShownCollisionShapes;
 
-		private bool m_VisualizeBounds;
-
-		private static TriggerModuleUI s_LastInteractedEditor;
+		private static bool s_VisualizeBounds = false;
 
 		private static TriggerModuleUI.Texts s_Texts;
 
@@ -87,7 +85,7 @@ namespace UnityEditor
 			this.m_Enter = base.GetProperty("enter");
 			this.m_Exit = base.GetProperty("exit");
 			this.m_RadiusScale = base.GetProperty("radiusScale");
-			this.m_VisualizeBounds = EditorPrefs.GetBool("VisualizeTriggerBounds", false);
+			TriggerModuleUI.s_VisualizeBounds = EditorPrefs.GetBool("VisualizeTriggerBounds", false);
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -97,23 +95,23 @@ namespace UnityEditor
 				TriggerModuleUI.s_Texts = new TriggerModuleUI.Texts();
 			}
 			this.DoListOfCollisionShapesGUI();
-			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.inside, this.m_Inside, TriggerModuleUI.s_Texts.overlapOptions);
-			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.outside, this.m_Outside, TriggerModuleUI.s_Texts.overlapOptions);
-			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.enter, this.m_Enter, TriggerModuleUI.s_Texts.overlapOptions);
-			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.exit, this.m_Exit, TriggerModuleUI.s_Texts.overlapOptions);
-			ModuleUI.GUIFloat(TriggerModuleUI.s_Texts.radiusScale, this.m_RadiusScale);
+			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.inside, this.m_Inside, TriggerModuleUI.s_Texts.overlapOptions, new GUILayoutOption[0]);
+			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.outside, this.m_Outside, TriggerModuleUI.s_Texts.overlapOptions, new GUILayoutOption[0]);
+			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.enter, this.m_Enter, TriggerModuleUI.s_Texts.overlapOptions, new GUILayoutOption[0]);
+			ModuleUI.GUIPopup(TriggerModuleUI.s_Texts.exit, this.m_Exit, TriggerModuleUI.s_Texts.overlapOptions, new GUILayoutOption[0]);
+			ModuleUI.GUIFloat(TriggerModuleUI.s_Texts.radiusScale, this.m_RadiusScale, new GUILayoutOption[0]);
 			EditorGUI.BeginChangeCheck();
-			this.m_VisualizeBounds = ModuleUI.GUIToggle(TriggerModuleUI.s_Texts.visualizeBounds, this.m_VisualizeBounds);
+			TriggerModuleUI.s_VisualizeBounds = ModuleUI.GUIToggle(TriggerModuleUI.s_Texts.visualizeBounds, TriggerModuleUI.s_VisualizeBounds, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
-				EditorPrefs.SetBool("VisualizeTriggerBounds", this.m_VisualizeBounds);
+				EditorPrefs.SetBool("VisualizeTriggerBounds", TriggerModuleUI.s_VisualizeBounds);
 			}
-			TriggerModuleUI.s_LastInteractedEditor = this;
 		}
 
 		private static GameObject CreateDefaultCollider(string name, ParticleSystem parentOfGameObject)
 		{
 			GameObject gameObject = new GameObject(name);
+			GameObject result;
 			if (gameObject)
 			{
 				if (parentOfGameObject)
@@ -121,14 +119,18 @@ namespace UnityEditor
 					gameObject.transform.parent = parentOfGameObject.transform;
 				}
 				gameObject.AddComponent<SphereCollider>();
-				return gameObject;
+				result = gameObject;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private void DoListOfCollisionShapesGUI()
 		{
-			int num = base.GUIListOfFloatObjectToggleFields(TriggerModuleUI.s_Texts.collisionShapes, this.m_ShownCollisionShapes, null, TriggerModuleUI.s_Texts.createCollisionShape, true);
+			int num = base.GUIListOfFloatObjectToggleFields(TriggerModuleUI.s_Texts.collisionShapes, this.m_ShownCollisionShapes, null, TriggerModuleUI.s_Texts.createCollisionShape, true, new GUILayoutOption[0]);
 			if (num >= 0)
 			{
 				GameObject gameObject = TriggerModuleUI.CreateDefaultCollider("Collider " + (num + 1), this.m_ParticleSystemUI.m_ParticleSystem);
@@ -138,12 +140,15 @@ namespace UnityEditor
 			Rect rect = GUILayoutUtility.GetRect(0f, 16f);
 			rect.x = rect.xMax - 24f - 5f;
 			rect.width = 12f;
-			if (this.m_ShownCollisionShapes.Length > 1 && ModuleUI.MinusButton(rect))
+			if (this.m_ShownCollisionShapes.Length > 1)
 			{
-				this.m_ShownCollisionShapes[this.m_ShownCollisionShapes.Length - 1].objectReferenceValue = null;
-				List<SerializedProperty> list = new List<SerializedProperty>(this.m_ShownCollisionShapes);
-				list.RemoveAt(list.Count - 1);
-				this.m_ShownCollisionShapes = list.ToArray();
+				if (ModuleUI.MinusButton(rect))
+				{
+					this.m_ShownCollisionShapes[this.m_ShownCollisionShapes.Length - 1].objectReferenceValue = null;
+					List<SerializedProperty> list = new List<SerializedProperty>(this.m_ShownCollisionShapes);
+					list.RemoveAt(list.Count - 1);
+					this.m_ShownCollisionShapes = list.ToArray();
+				}
 			}
 			if (this.m_ShownCollisionShapes.Length < 6)
 			{
@@ -160,41 +165,31 @@ namespace UnityEditor
 		[DrawGizmo(GizmoType.Active)]
 		private static void RenderCollisionBounds(ParticleSystem system, GizmoType gizmoType)
 		{
-			if (TriggerModuleUI.s_LastInteractedEditor == null)
+			if (system.trigger.enabled)
 			{
-				return;
+				if (TriggerModuleUI.s_VisualizeBounds)
+				{
+					ParticleSystem.Particle[] array = new ParticleSystem.Particle[system.particleCount];
+					int particles = system.GetParticles(array);
+					Color color = Gizmos.color;
+					Gizmos.color = Color.green;
+					Matrix4x4 matrix = Matrix4x4.identity;
+					if (system.main.simulationSpace == ParticleSystemSimulationSpace.Local)
+					{
+						matrix = system.GetLocalToWorldMatrix();
+					}
+					Matrix4x4 matrix2 = Gizmos.matrix;
+					Gizmos.matrix = matrix;
+					for (int i = 0; i < particles; i++)
+					{
+						ParticleSystem.Particle particle = array[i];
+						Vector3 currentSize3D = particle.GetCurrentSize3D(system);
+						Gizmos.DrawWireSphere(particle.position, Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.5f * system.trigger.radiusScale);
+					}
+					Gizmos.color = color;
+					Gizmos.matrix = matrix2;
+				}
 			}
-			if (!TriggerModuleUI.s_LastInteractedEditor.enabled)
-			{
-				return;
-			}
-			if (!TriggerModuleUI.s_LastInteractedEditor.m_VisualizeBounds)
-			{
-				return;
-			}
-			if (TriggerModuleUI.s_LastInteractedEditor.m_ParticleSystemUI.m_ParticleSystem != system)
-			{
-				return;
-			}
-			ParticleSystem.Particle[] array = new ParticleSystem.Particle[system.particleCount];
-			int particles = system.GetParticles(array);
-			Color color = Gizmos.color;
-			Gizmos.color = Color.green;
-			Matrix4x4 matrix = Matrix4x4.identity;
-			if (system.simulationSpace == ParticleSystemSimulationSpace.Local)
-			{
-				matrix = system.GetLocalToWorldMatrix();
-			}
-			Matrix4x4 matrix2 = Gizmos.matrix;
-			Gizmos.matrix = matrix;
-			for (int i = 0; i < particles; i++)
-			{
-				ParticleSystem.Particle particle = array[i];
-				Vector3 currentSize3D = particle.GetCurrentSize3D(system);
-				Gizmos.DrawWireSphere(particle.position, Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.5f * TriggerModuleUI.s_LastInteractedEditor.m_RadiusScale.floatValue);
-			}
-			Gizmos.color = color;
-			Gizmos.matrix = matrix2;
 		}
 	}
 }

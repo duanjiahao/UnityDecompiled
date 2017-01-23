@@ -12,35 +12,28 @@ namespace UnityEngine
 
 		public extern bool isReading
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isWriting
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializeb(ref int value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializec(ref char value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializes(ref short value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializei(ref int value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializef(ref float value, float maximumDelta);
 
@@ -49,7 +42,6 @@ namespace UnityEngine
 			BitStream.INTERNAL_CALL_Serializeq(this, ref value, maximumDelta);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Serializeq(BitStream self, ref Quaternion value, float maximumDelta);
 
@@ -58,7 +50,6 @@ namespace UnityEngine
 			BitStream.INTERNAL_CALL_Serializev(this, ref value, maximumDelta);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Serializev(BitStream self, ref Vector3 value, float maximumDelta);
 
@@ -67,7 +58,6 @@ namespace UnityEngine
 			BitStream.INTERNAL_CALL_Serializen(this, ref viewID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Serializen(BitStream self, ref NetworkViewID viewID);
 
@@ -141,7 +131,6 @@ namespace UnityEngine
 			this.Serializen(ref viewID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serialize(ref string value);
 	}

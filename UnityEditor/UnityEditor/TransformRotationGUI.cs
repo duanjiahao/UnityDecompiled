@@ -55,10 +55,10 @@ namespace UnityEditor
 			GUIContent gUIContent = EditorGUI.BeginProperty(rect, this.rotationContent, this.m_Rotation);
 			EditorGUI.showMixedValue = flag;
 			EditorGUI.BeginChangeCheck();
-			int controlID = GUIUtility.GetControlID(TransformRotationGUI.s_FoldoutHash, EditorGUIUtility.native, rect);
-			string text = string.Empty;
+			int controlID = GUIUtility.GetControlID(TransformRotationGUI.s_FoldoutHash, FocusType.Keyboard, rect);
 			if (AnimationMode.InAnimationMode() && transform.rotationOrder != RotationOrder.OrderZXY)
 			{
+				string text;
 				if (flag2)
 				{
 					text = "Mixed";

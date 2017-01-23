@@ -29,7 +29,7 @@ namespace UnityEditor.Scripting.Compilers
 			public override object VisitNamespaceDeclaration(NamespaceDeclaration namespaceDeclaration, object data)
 			{
 				CSharpLanguage.VisitorData visitorData = (CSharpLanguage.VisitorData)data;
-				visitorData.CurrentNamespaces.Push(namespaceDeclaration.Name);
+				visitorData.CurrentNamespaces.Push(namespaceDeclaration.get_Name());
 				namespaceDeclaration.AcceptChildren(this, visitorData);
 				visitorData.CurrentNamespaces.Pop();
 				return null;
@@ -38,7 +38,7 @@ namespace UnityEditor.Scripting.Compilers
 			public override object VisitTypeDeclaration(TypeDeclaration typeDeclaration, object data)
 			{
 				CSharpLanguage.VisitorData visitorData = (CSharpLanguage.VisitorData)data;
-				if (typeDeclaration.Name == visitorData.TargetClassName)
+				if (typeDeclaration.get_Name() == visitorData.TargetClassName)
 				{
 					string text = string.Empty;
 					foreach (string current in visitorData.CurrentNamespaces)
@@ -78,36 +78,53 @@ namespace UnityEditor.Scripting.Compilers
 		public override ScriptCompilerBase CreateCompiler(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
 			CSharpCompiler cSharpCompiler = CSharpLanguage.GetCSharpCompiler(targetPlatform, buildingForEditor, island._output);
-			if (cSharpCompiler != CSharpCompiler.Mono)
+			ScriptCompilerBase result;
+			if (cSharpCompiler != CSharpCompiler.Microsoft)
 			{
-				if (cSharpCompiler == CSharpCompiler.Microsoft)
+				if (cSharpCompiler != CSharpCompiler.Mono)
 				{
-					return new MicrosoftCSharpCompiler(island, runUpdater);
 				}
+				result = new MonoCSharpCompiler(island, runUpdater);
 			}
-			return new MonoCSharpCompiler(island, runUpdater);
+			else
+			{
+				result = new MicrosoftCSharpCompiler(island, runUpdater);
+			}
+			return result;
 		}
 
-		public override string GetNamespace(string fileName)
+		public override string GetNamespace(string fileName, string definedSymbols)
 		{
+			string result;
 			using (IParser parser = ParserFactory.CreateParser(fileName))
 			{
+				HashSet<string> hashSet = new HashSet<string>(definedSymbols.Split(new char[]
+				{
+					','
+				}, StringSplitOptions.RemoveEmptyEntries));
+				foreach (string current in hashSet)
+				{
+					parser.get_Lexer().get_ConditionalCompilationSymbols().Add(current, string.Empty);
+				}
+				parser.get_Lexer().set_EvaluateConditionalCompilation(true);
 				parser.Parse();
 				try
 				{
-					CSharpLanguage.NamespaceVisitor visitor = new CSharpLanguage.NamespaceVisitor();
+					CSharpLanguage.NamespaceVisitor namespaceVisitor = new CSharpLanguage.NamespaceVisitor();
 					CSharpLanguage.VisitorData visitorData = new CSharpLanguage.VisitorData
 					{
 						TargetClassName = Path.GetFileNameWithoutExtension(fileName)
 					};
-					parser.CompilationUnit.AcceptVisitor(visitor, visitorData);
-					return (!string.IsNullOrEmpty(visitorData.DiscoveredNamespace)) ? visitorData.DiscoveredNamespace : string.Empty;
+					parser.get_CompilationUnit().AcceptVisitor(namespaceVisitor, visitorData);
+					result = ((!string.IsNullOrEmpty(visitorData.DiscoveredNamespace)) ? visitorData.DiscoveredNamespace : string.Empty);
+					return result;
 				}
 				catch
 				{
 				}
 			}
-			return string.Empty;
+			result = string.Empty;
+			return result;
 		}
 	}
 }

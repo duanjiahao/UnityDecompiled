@@ -99,6 +99,7 @@ namespace UnityEditor
 		internal static bool ShowAtPosition(Rect buttonRect)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num >= LayerVisibilityWindow.s_LastClosedTime + 50L)
 			{
 				Event.current.Use();
@@ -107,9 +108,13 @@ namespace UnityEditor
 					LayerVisibilityWindow.s_LayerVisibilityWindow = ScriptableObject.CreateInstance<LayerVisibilityWindow>();
 				}
 				LayerVisibilityWindow.s_LayerVisibilityWindow.Init(buttonRect);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void Init(Rect buttonRect)
@@ -133,34 +138,33 @@ namespace UnityEditor
 
 		internal void OnGUI()
 		{
-			if (Event.current.type == EventType.Layout)
+			if (Event.current.type != EventType.Layout)
 			{
-				return;
-			}
-			if (LayerVisibilityWindow.s_Styles == null)
-			{
-				LayerVisibilityWindow.s_Styles = new LayerVisibilityWindow.Styles();
-			}
-			Rect position = new Rect(1f, 1f, base.position.width - 2f, base.position.height - 2f);
-			Rect viewRect = new Rect(0f, 0f, 1f, this.m_ContentHeight);
-			bool flag = this.m_ContentHeight > position.height;
-			float num = position.width;
-			if (flag)
-			{
-				num -= 14f;
-			}
-			this.m_ScrollPosition = GUI.BeginScrollView(position, this.m_ScrollPosition, viewRect);
-			this.Draw(num);
-			GUI.EndScrollView();
-			GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, LayerVisibilityWindow.s_Styles.background);
-			if (Event.current.type == EventType.MouseMove)
-			{
-				Event.current.Use();
-			}
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-			{
-				base.Close();
-				GUIUtility.ExitGUI();
+				if (LayerVisibilityWindow.s_Styles == null)
+				{
+					LayerVisibilityWindow.s_Styles = new LayerVisibilityWindow.Styles();
+				}
+				Rect position = new Rect(1f, 1f, base.position.width - 2f, base.position.height - 2f);
+				Rect viewRect = new Rect(0f, 0f, 1f, this.m_ContentHeight);
+				bool flag = this.m_ContentHeight > position.height;
+				float num = position.width;
+				if (flag)
+				{
+					num -= 14f;
+				}
+				this.m_ScrollPosition = GUI.BeginScrollView(position, this.m_ScrollPosition, viewRect);
+				this.Draw(num);
+				GUI.EndScrollView();
+				GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, LayerVisibilityWindow.s_Styles.background);
+				if (Event.current.type == EventType.MouseMove)
+				{
+					Event.current.Use();
+				}
+				if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+				{
+					base.Close();
+					GUIUtility.ExitGUI();
+				}
 			}
 		}
 

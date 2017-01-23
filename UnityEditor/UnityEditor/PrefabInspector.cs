@@ -9,28 +9,27 @@ namespace UnityEditor
 		{
 			GUI.enabled = true;
 			UnityEngine.Object prefabObject = PrefabUtility.GetPrefabObject(gameObject);
-			if (prefabObject == null)
+			if (!(prefabObject == null))
 			{
-				return;
-			}
-			EditorGUIUtility.labelWidth = 200f;
-			if (PrefabUtility.GetPrefabType(gameObject) == PrefabType.PrefabInstance)
-			{
-				PropertyModification[] propertyModifications = PrefabUtility.GetPropertyModifications(gameObject);
-				if (propertyModifications != null && propertyModifications.Length != 0)
+				EditorGUIUtility.labelWidth = 200f;
+				if (PrefabUtility.GetPrefabType(gameObject) == PrefabType.PrefabInstance)
 				{
-					GUI.changed = false;
-					for (int i = 0; i < propertyModifications.Length; i++)
+					PropertyModification[] propertyModifications = PrefabUtility.GetPropertyModifications(gameObject);
+					if (propertyModifications != null && propertyModifications.Length != 0)
 					{
-						propertyModifications[i].value = EditorGUILayout.TextField(propertyModifications[i].propertyPath, propertyModifications[i].value, new GUILayoutOption[0]);
-					}
-					if (GUI.changed)
-					{
-						PrefabUtility.SetPropertyModifications(gameObject, propertyModifications);
+						GUI.changed = false;
+						for (int i = 0; i < propertyModifications.Length; i++)
+						{
+							propertyModifications[i].value = EditorGUILayout.TextField(propertyModifications[i].propertyPath, propertyModifications[i].value, new GUILayoutOption[0]);
+						}
+						if (GUI.changed)
+						{
+							PrefabUtility.SetPropertyModifications(gameObject, propertyModifications);
+						}
 					}
 				}
+				PrefabInspector.AddComponentGUI(prefabObject);
 			}
-			PrefabInspector.AddComponentGUI(prefabObject);
 		}
 
 		private static void AddComponentGUI(UnityEngine.Object prefab)

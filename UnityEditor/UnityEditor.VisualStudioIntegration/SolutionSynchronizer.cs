@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace UnityEditor.VisualStudioIntegration
 		private enum Mode
 		{
 			UnityScriptAsUnityProj,
-			UntiyScriptAsPrecompiledAssembly
+			UnityScriptAsPrecompiledAssembly
 		}
 
 		public static readonly ISolutionSynchronizationSettings DefaultSynchronizationSettings = new DefaultSolutionSynchronizationSettings();
@@ -135,15 +136,20 @@ namespace UnityEditor.VisualStudioIntegration
 
 		private static ScriptingLanguage ScriptingLanguageFor(string extension)
 		{
+			ScriptingLanguage scriptingLanguage;
 			ScriptingLanguage result;
 			if (SolutionSynchronizer.BuiltinSupportedExtensions.TryGetValue(extension.TrimStart(new char[]
 			{
 				'.'
-			}), out result))
+			}), out scriptingLanguage))
 			{
-				return result;
+				result = scriptingLanguage;
 			}
-			return ScriptingLanguage.None;
+			else
+			{
+				result = ScriptingLanguage.None;
+			}
+			return result;
 		}
 
 		public bool ProjectExists(MonoIsland island)
@@ -163,18 +169,23 @@ namespace UnityEditor.VisualStudioIntegration
 			Console.WriteLine(string.Join("\n", island._files));
 			Console.WriteLine("References: ");
 			Console.WriteLine(string.Join("\n", island._references));
-			Console.WriteLine(string.Empty);
+			Console.WriteLine("");
 		}
 
 		public bool SyncIfNeeded(IEnumerable<string> affectedFiles)
 		{
 			this.SetupProjectSupportedExtensions();
+			bool result;
 			if (this.SolutionExists() && affectedFiles.Any(new Func<string, bool>(this.ShouldFileBePartOfSolution)))
 			{
 				this.Sync();
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public void Sync()
@@ -190,6 +201,10 @@ namespace UnityEditor.VisualStudioIntegration
 				foreach (MonoIsland current in SolutionSynchronizer.RelevantIslandsForMode(islands, SolutionSynchronizer.ModeForCurrentExternalEditor()))
 				{
 					this.SyncProject(current, otherAssetsProjectPart);
+				}
+				if (InternalEditorUtility.GetScriptEditorFromPreferences() == InternalEditorUtility.ScriptEditor.VisualStudioCode)
+				{
+					this.WriteVSCodeSettingsFiles();
 				}
 			}
 			AssetPostprocessingInternal.CallOnGeneratedCSProjectFiles();
@@ -218,14 +233,27 @@ namespace UnityEditor.VisualStudioIntegration
 
 		private static void SyncFileIfNotChanged(string filename, string newContents)
 		{
-			if (File.Exists(filename) && newContents == File.ReadAllText(filename))
+			if (!File.Exists(filename) || !(newContents == File.ReadAllText(filename)))
 			{
-				return;
+				File.WriteAllText(filename, newContents);
 			}
-			File.WriteAllText(filename, newContents);
 		}
 
-		private static bool IsInternalAssemblyThatShouldBeReferenced(bool isBuildingEditorProject, string reference)
+		private void WriteVSCodeSettingsFiles()
+		{
+			string text = Path.Combine(this._projectDirectory, ".vscode");
+			if (!Directory.Exists(text))
+			{
+				Directory.CreateDirectory(text);
+			}
+			string path = Path.Combine(text, "settings.json");
+			if (!File.Exists(path))
+			{
+				File.WriteAllText(path, VSCodeTemplates.SettingsJson);
+			}
+		}
+
+		private static bool IsAdditionalInternalAssemblyReference(bool isBuildingEditorProject, string reference)
 		{
 			return isBuildingEditorProject && ModuleUtils.GetAdditionalReferencesForEditorCsharpProject().Contains(reference);
 		}
@@ -235,6 +263,7 @@ namespace UnityEditor.VisualStudioIntegration
 			StringBuilder stringBuilder = new StringBuilder(this.ProjectHeader(island));
 			List<string> list = new List<string>();
 			List<Match> list2 = new List<Match>();
+			bool isBuildingEditorProject = island._output.EndsWith("-Editor.dll");
 			string[] files = island._files;
 			for (int i = 0; i < files.Length; i++)
 			{
@@ -252,29 +281,41 @@ namespace UnityEditor.VisualStudioIntegration
 				}
 			}
 			stringBuilder.Append(allAssetsProject);
+			List<string> list3 = new List<string>();
 			foreach (string current in list.Union(island._references))
 			{
 				if (!current.EndsWith("/UnityEditor.dll") && !current.EndsWith("/UnityEngine.dll") && !current.EndsWith("\\UnityEditor.dll") && !current.EndsWith("\\UnityEngine.dll"))
 				{
 					Match match = SolutionSynchronizer.scriptReferenceExpression.Match(current);
-					if (match.Success && (mode == SolutionSynchronizer.Mode.UnityScriptAsUnityProj || (int)Enum.Parse(typeof(ScriptingLanguage), match.Groups["language"].Value, true) == 2))
+					if (match.Success)
 					{
-						list2.Add(match);
-					}
-					else
-					{
-						string text3 = (!Path.IsPathRooted(current)) ? Path.Combine(this._projectDirectory, current) : current;
-						if (AssemblyHelper.IsManagedAssembly(text3))
+						if (mode == SolutionSynchronizer.Mode.UnityScriptAsUnityProj || (ScriptingLanguage)Enum.Parse(typeof(ScriptingLanguage), match.Groups["language"].Value, true) == ScriptingLanguage.CSharp)
 						{
-							if (!AssemblyHelper.IsInternalAssembly(text3))
-							{
-								text3 = text3.Replace("\\", "/");
-								text3 = text3.Replace("\\\\", "/");
-								stringBuilder.AppendFormat(" <Reference Include=\"{0}\">{1}", Path.GetFileNameWithoutExtension(text3), SolutionSynchronizer.WindowsNewline);
-								stringBuilder.AppendFormat(" <HintPath>{0}</HintPath>{1}", text3, SolutionSynchronizer.WindowsNewline);
-								stringBuilder.AppendFormat(" </Reference>{0}", SolutionSynchronizer.WindowsNewline);
-							}
+							list2.Add(match);
+							continue;
 						}
+					}
+					string text3 = (!Path.IsPathRooted(current)) ? Path.Combine(this._projectDirectory, current) : current;
+					if (AssemblyHelper.IsManagedAssembly(text3))
+					{
+						if (AssemblyHelper.IsInternalAssembly(text3))
+						{
+							if (!SolutionSynchronizer.IsAdditionalInternalAssemblyReference(isBuildingEditorProject, text3))
+							{
+								continue;
+							}
+							string fileName = Path.GetFileName(text3);
+							if (list3.Contains(fileName))
+							{
+								continue;
+							}
+							list3.Add(fileName);
+						}
+						text3 = text3.Replace("\\", "/");
+						text3 = text3.Replace("\\\\", "/");
+						stringBuilder.AppendFormat(" <Reference Include=\"{0}\">{1}", Path.GetFileNameWithoutExtension(text3), SolutionSynchronizer.WindowsNewline);
+						stringBuilder.AppendFormat(" <HintPath>{0}</HintPath>{1}", text3, SolutionSynchronizer.WindowsNewline);
+						stringBuilder.AppendFormat(" </Reference>{0}", SolutionSynchronizer.WindowsNewline);
 					}
 				}
 			}
@@ -285,7 +326,7 @@ namespace UnityEditor.VisualStudioIntegration
 				foreach (Match current2 in list2)
 				{
 					string value = current2.Groups["project"].Value;
-					stringBuilder.AppendFormat("    <ProjectReference Include=\"{0}{1}\">{2}", value, SolutionSynchronizer.GetProjectExtension((ScriptingLanguage)((int)Enum.Parse(typeof(ScriptingLanguage), current2.Groups["language"].Value, true))), SolutionSynchronizer.WindowsNewline);
+					stringBuilder.AppendFormat("    <ProjectReference Include=\"{0}{1}\">{2}", value, SolutionSynchronizer.GetProjectExtension((ScriptingLanguage)Enum.Parse(typeof(ScriptingLanguage), current2.Groups["language"].Value, true)), SolutionSynchronizer.WindowsNewline);
 					stringBuilder.AppendFormat("      <Project>{{{0}}}</Project>", this.ProjectGuid(Path.Combine("Temp", current2.Groups["project"].Value + ".dll")), SolutionSynchronizer.WindowsNewline);
 					stringBuilder.AppendFormat("      <Name>{0}</Name>", value, SolutionSynchronizer.WindowsNewline);
 					stringBuilder.AppendLine("    </ProjectReference>");
@@ -351,26 +392,21 @@ namespace UnityEditor.VisualStudioIntegration
 
 		private static SolutionSynchronizer.Mode ModeForCurrentExternalEditor()
 		{
-			if (SolutionSynchronizer.IsSelectedEditorVisualStudio())
+			InternalEditorUtility.ScriptEditor scriptEditorFromPreferences = InternalEditorUtility.GetScriptEditorFromPreferences();
+			SolutionSynchronizer.Mode result;
+			if (scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.VisualStudio || scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.VisualStudioExpress || scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.VisualStudioCode)
 			{
-				return SolutionSynchronizer.Mode.UntiyScriptAsPrecompiledAssembly;
+				result = SolutionSynchronizer.Mode.UnityScriptAsPrecompiledAssembly;
 			}
-			if (SolutionSynchronizer.IsSelectedEditorInternalMonoDevelop())
+			else if (scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.Internal)
 			{
-				return SolutionSynchronizer.Mode.UnityScriptAsUnityProj;
+				result = SolutionSynchronizer.Mode.UnityScriptAsUnityProj;
 			}
-			return (!EditorPrefs.GetBool("kExternalEditorSupportsUnityProj", false)) ? SolutionSynchronizer.Mode.UntiyScriptAsPrecompiledAssembly : SolutionSynchronizer.Mode.UnityScriptAsUnityProj;
-		}
-
-		private static bool IsSelectedEditorVisualStudio()
-		{
-			string externalScriptEditor = InternalEditorUtility.GetExternalScriptEditor();
-			return externalScriptEditor.EndsWith("devenv.exe") || externalScriptEditor.EndsWith("vcsexpress.exe");
-		}
-
-		private static bool IsSelectedEditorInternalMonoDevelop()
-		{
-			return InternalEditorUtility.GetExternalScriptEditor() == "internal";
+			else
+			{
+				result = ((!EditorPrefs.GetBool("kExternalEditorSupportsUnityProj", false)) ? SolutionSynchronizer.Mode.UnityScriptAsPrecompiledAssembly : SolutionSynchronizer.Mode.UnityScriptAsUnityProj);
+			}
+			return result;
 		}
 
 		private string SolutionText(IEnumerable<MonoIsland> islands, SolutionSynchronizer.Mode mode)
@@ -442,84 +478,113 @@ namespace UnityEditor.VisualStudioIntegration
 
 		private string ReadExistingMonoDevelopSolutionProperties()
 		{
+			string result;
 			if (!this.SolutionExists())
 			{
-				return SolutionSynchronizer.DefaultMonoDevelopSolutionProperties;
+				result = SolutionSynchronizer.DefaultMonoDevelopSolutionProperties;
 			}
-			string[] array;
-			try
+			else
 			{
-				array = File.ReadAllLines(this.SolutionFile());
-			}
-			catch (IOException)
-			{
-				string defaultMonoDevelopSolutionProperties = SolutionSynchronizer.DefaultMonoDevelopSolutionProperties;
-				return defaultMonoDevelopSolutionProperties;
-			}
-			StringBuilder stringBuilder = new StringBuilder();
-			bool flag = false;
-			string[] array2 = array;
-			for (int i = 0; i < array2.Length; i++)
-			{
-				string text = array2[i];
-				if (SolutionSynchronizer._MonoDevelopPropertyHeader.IsMatch(text))
+				string[] array;
+				try
 				{
-					flag = true;
+					array = File.ReadAllLines(this.SolutionFile());
 				}
-				if (flag)
+				catch (IOException)
 				{
-					if (text.Contains("EndGlobalSection"))
+					result = SolutionSynchronizer.DefaultMonoDevelopSolutionProperties;
+					return result;
+				}
+				StringBuilder stringBuilder = new StringBuilder();
+				bool flag = false;
+				string[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
+				{
+					string text = array2[i];
+					if (SolutionSynchronizer._MonoDevelopPropertyHeader.IsMatch(text))
 					{
-						stringBuilder.Append(text);
-						flag = false;
+						flag = true;
 					}
-					else
+					if (flag)
 					{
-						stringBuilder.AppendFormat("{0}{1}", text, SolutionSynchronizer.WindowsNewline);
+						if (text.Contains("EndGlobalSection"))
+						{
+							stringBuilder.Append(text);
+							flag = false;
+						}
+						else
+						{
+							stringBuilder.AppendFormat("{0}{1}", text, SolutionSynchronizer.WindowsNewline);
+						}
 					}
 				}
+				if (0 < stringBuilder.Length)
+				{
+					result = stringBuilder.ToString();
+				}
+				else
+				{
+					result = SolutionSynchronizer.DefaultMonoDevelopSolutionProperties;
+				}
 			}
-			if (0 < stringBuilder.Length)
-			{
-				return stringBuilder.ToString();
-			}
-			return SolutionSynchronizer.DefaultMonoDevelopSolutionProperties;
+			return result;
 		}
 
 		private string ReadExistingMonoDevelopProjectProperties(MonoIsland island)
 		{
+			string result;
 			if (!this.ProjectExists(island))
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			XmlDocument xmlDocument = new XmlDocument();
-			XmlNamespaceManager xmlNamespaceManager;
-			try
+			else
 			{
-				xmlDocument.Load(this.ProjectFile(island));
-				xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
-				xmlNamespaceManager.AddNamespace("msb", SolutionSynchronizer.MSBuildNamespaceUri);
-			}
-			catch (Exception ex)
-			{
-				if (ex is IOException || ex is XmlException)
+				XmlDocument xmlDocument = new XmlDocument();
+				XmlNamespaceManager xmlNamespaceManager;
+				try
 				{
-					string empty = string.Empty;
-					return empty;
+					xmlDocument.Load(this.ProjectFile(island));
+					xmlNamespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
+					xmlNamespaceManager.AddNamespace("msb", SolutionSynchronizer.MSBuildNamespaceUri);
 				}
-				throw;
+				catch (Exception ex)
+				{
+					if (ex is IOException || ex is XmlException)
+					{
+						result = string.Empty;
+						return result;
+					}
+					throw;
+				}
+				XmlNodeList xmlNodeList = xmlDocument.SelectNodes("/msb:Project/msb:ProjectExtensions", xmlNamespaceManager);
+				if (xmlNodeList.Count == 0)
+				{
+					result = string.Empty;
+				}
+				else
+				{
+					StringBuilder stringBuilder = new StringBuilder();
+					IEnumerator enumerator = xmlNodeList.GetEnumerator();
+					try
+					{
+						while (enumerator.MoveNext())
+						{
+							XmlNode xmlNode = (XmlNode)enumerator.Current;
+							stringBuilder.AppendLine(xmlNode.OuterXml);
+						}
+					}
+					finally
+					{
+						IDisposable disposable;
+						if ((disposable = (enumerator as IDisposable)) != null)
+						{
+							disposable.Dispose();
+						}
+					}
+					result = stringBuilder.ToString();
+				}
 			}
-			XmlNodeList xmlNodeList = xmlDocument.SelectNodes("/msb:Project/msb:ProjectExtensions", xmlNamespaceManager);
-			if (xmlNodeList.Count == 0)
-			{
-				return string.Empty;
-			}
-			StringBuilder stringBuilder = new StringBuilder();
-			foreach (XmlNode xmlNode in xmlNodeList)
-			{
-				stringBuilder.AppendLine(xmlNode.OuterXml);
-			}
-			return stringBuilder.ToString();
+			return result;
 		}
 
 		[Obsolete("Use AssemblyHelper.IsManagedAssembly")]

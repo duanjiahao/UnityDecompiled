@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 
@@ -7,44 +8,46 @@ namespace UnityEditor
 {
 	internal class AudioMixersTreeViewGUI : TreeViewGUI
 	{
-		public AudioMixersTreeViewGUI(TreeView treeView) : base(treeView)
+		public AudioMixersTreeViewGUI(TreeViewController treeView) : base(treeView)
 		{
 			this.k_IconWidth = 0f;
 			this.k_TopRowMargin = (this.k_BottomRowMargin = 2f);
 		}
 
-		protected override void DrawIconAndLabel(Rect rect, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
+		protected override void OnContentGUI(Rect rect, int row, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
 		{
-			if (!isPinging)
+			if (Event.current.type == EventType.Repaint)
 			{
-				float contentIndent = this.GetContentIndent(item);
-				rect.x += contentIndent;
-				rect.width -= contentIndent;
-			}
-			AudioMixerItem audioMixerItem = item as AudioMixerItem;
-			if (audioMixerItem == null)
-			{
-				return;
-			}
-			GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.s_Styles.lineStyle : TreeViewGUI.s_Styles.lineBoldStyle;
-			gUIStyle.padding.left = (int)(this.k_IconWidth + base.iconTotalPadding + this.k_SpaceBetweenIconAndText);
-			gUIStyle.Draw(rect, label, false, false, selected, focused);
-			audioMixerItem.UpdateSuspendedString(false);
-			if (audioMixerItem.labelWidth <= 0f)
-			{
-				audioMixerItem.labelWidth = gUIStyle.CalcSize(GUIContent.Temp(label)).x;
-			}
-			Rect position = rect;
-			position.x += audioMixerItem.labelWidth + 8f;
-			using (new EditorGUI.DisabledScope(true))
-			{
-				gUIStyle.Draw(position, audioMixerItem.infoText, false, false, false, false);
-			}
-			if (base.iconOverlayGUI != null)
-			{
-				Rect arg = rect;
-				arg.width = this.k_IconWidth + base.iconTotalPadding;
-				base.iconOverlayGUI(item, arg);
+				if (!isPinging)
+				{
+					float contentIndent = this.GetContentIndent(item);
+					rect.x += contentIndent;
+					rect.width -= contentIndent;
+				}
+				AudioMixerItem audioMixerItem = item as AudioMixerItem;
+				if (audioMixerItem != null)
+				{
+					GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.s_Styles.lineStyle : TreeViewGUI.s_Styles.lineBoldStyle;
+					gUIStyle.padding.left = (int)(this.k_IconWidth + base.iconTotalPadding + this.k_SpaceBetweenIconAndText);
+					gUIStyle.Draw(rect, label, false, false, selected, focused);
+					audioMixerItem.UpdateSuspendedString(false);
+					if (audioMixerItem.labelWidth <= 0f)
+					{
+						audioMixerItem.labelWidth = gUIStyle.CalcSize(GUIContent.Temp(label)).x;
+					}
+					Rect position = rect;
+					position.x += audioMixerItem.labelWidth + 8f;
+					using (new EditorGUI.DisabledScope(true))
+					{
+						gUIStyle.Draw(position, audioMixerItem.infoText, false, false, false, false);
+					}
+					if (base.iconOverlayGUI != null)
+					{
+						Rect arg = rect;
+						arg.width = this.k_IconWidth + base.iconTotalPadding;
+						base.iconOverlayGUI(item, arg);
+					}
+				}
 			}
 		}
 

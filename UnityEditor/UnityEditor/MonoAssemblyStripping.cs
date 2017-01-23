@@ -14,12 +14,12 @@ namespace UnityEditor
 		{
 			public bool Equals(AssemblyDefinition x, AssemblyDefinition y)
 			{
-				return x.FullName == y.FullName;
+				return x.get_FullName() == y.get_FullName();
 			}
 
 			public int GetHashCode(AssemblyDefinition obj)
 			{
-				return obj.FullName.GetHashCode();
+				return obj.get_FullName().GetHashCode();
 			}
 		}
 
@@ -42,9 +42,9 @@ namespace UnityEditor
 				Process process = MonoProcessUtility.PrepareMonoProcess(buildTarget, managedLibrariesDirectory);
 				string text2 = text + ".out";
 				process.StartInfo.Arguments = "\"" + str + "\"";
-				ProcessStartInfo expr_5B = process.StartInfo;
-				string arguments = expr_5B.Arguments;
-				expr_5B.Arguments = string.Concat(new string[]
+				ProcessStartInfo expr_5E = process.StartInfo;
+				string arguments = expr_5E.Arguments;
+				expr_5E.Arguments = string.Concat(new string[]
 				{
 					arguments,
 					" \"",
@@ -77,19 +77,20 @@ namespace UnityEditor
 				for (int i = 0; i < allAssemblies.Length; i++)
 				{
 					string path = allAssemblies[i];
-					AssemblyDefinition assemblyDefinition = defaultAssemblyResolver.Resolve(Path.GetFileNameWithoutExtension(path), new ReaderParameters
-					{
-						AssemblyResolver = defaultAssemblyResolver
-					});
-					textWriter.WriteLine("<assembly fullname=\"{0}\">", assemblyDefinition.Name.Name);
-					if (assemblyDefinition.Name.Name.StartsWith("UnityEngine."))
+					BaseAssemblyResolver arg_CB_0 = defaultAssemblyResolver;
+					string arg_CB_1 = Path.GetFileNameWithoutExtension(path);
+					ReaderParameters readerParameters = new ReaderParameters();
+					readerParameters.set_AssemblyResolver(defaultAssemblyResolver);
+					AssemblyDefinition assemblyDefinition = arg_CB_0.Resolve(arg_CB_1, readerParameters);
+					textWriter.WriteLine("<assembly fullname=\"{0}\">", assemblyDefinition.get_Name().get_Name());
+					if (assemblyDefinition.get_Name().get_Name().StartsWith("UnityEngine."))
 					{
 						foreach (string current2 in usedClasses.GetAllManagedClassesAsString())
 						{
 							textWriter.WriteLine(string.Format("<type fullname=\"UnityEngine.{0}\" preserve=\"{1}\"/>", current2, usedClasses.GetRetentionLevel(current2)));
 						}
 					}
-					MonoAssemblyStripping.GenerateBlackListTypeXML(textWriter, assemblyDefinition.MainModule.Types, usedClasses.GetAllManagedBaseClassesAsString());
+					MonoAssemblyStripping.GenerateBlackListTypeXML(textWriter, assemblyDefinition.get_MainModule().get_Types(), usedClasses.GetAllManagedBaseClassesAsString());
 					textWriter.WriteLine("</assembly>");
 				}
 				textWriter.WriteLine("</linker>");
@@ -105,24 +106,27 @@ namespace UnityEditor
 			using (TextWriter textWriter = new StreamWriter(fullPath))
 			{
 				textWriter.WriteLine("<linker>");
-				foreach (AssemblyDefinition current in MonoAssemblyStripping.CollectAssembliesRecursive(from s in usedClasses.GetUserAssemblies()
+				foreach (AssemblyDefinition current in MonoAssemblyStripping.CollectAssembliesRecursive((from s in usedClasses.GetUserAssemblies()
 				where usedClasses.IsDLLUsed(s)
-				select s into file
-				select resolver.Resolve(Path.GetFileNameWithoutExtension(file), new ReaderParameters
+				select s).Select(delegate(string file)
 				{
-					AssemblyResolver = resolver
+					BaseAssemblyResolver arg_1F_0 = resolver;
+					string arg_1F_1 = Path.GetFileNameWithoutExtension(file);
+					ReaderParameters readerParameters = new ReaderParameters();
+					readerParameters.set_AssemblyResolver(resolver);
+					return arg_1F_0.Resolve(arg_1F_1, readerParameters);
 				})))
 				{
-					if (!(current.Name.Name == "UnityEngine"))
+					if (!(current.get_Name().get_Name() == "UnityEngine"))
 					{
 						HashSet<TypeDefinition> hashSet = new HashSet<TypeDefinition>();
-						MonoAssemblyStripping.CollectBlackListTypes(hashSet, current.MainModule.Types, usedClasses.GetAllManagedBaseClassesAsString());
+						MonoAssemblyStripping.CollectBlackListTypes(hashSet, current.get_MainModule().get_Types(), usedClasses.GetAllManagedBaseClassesAsString());
 						if (hashSet.Count != 0)
 						{
-							textWriter.WriteLine("<assembly fullname=\"{0}\">", current.Name.Name);
+							textWriter.WriteLine("<assembly fullname=\"{0}\">", current.get_Name().get_Name());
 							foreach (TypeDefinition current2 in hashSet)
 							{
-								textWriter.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current2.FullName);
+								textWriter.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current2.get_FullName());
 							}
 							textWriter.WriteLine("</assembly>");
 						}
@@ -140,31 +144,30 @@ namespace UnityEditor
 			while (hashSet.Count > num)
 			{
 				num = hashSet.Count;
-				hashSet.UnionWith(hashSet.ToArray<AssemblyDefinition>().SelectMany((AssemblyDefinition assembly) => from a in assembly.MainModule.AssemblyReferences
-				select assembly.MainModule.AssemblyResolver.Resolve(a)));
+				hashSet.UnionWith(hashSet.ToArray<AssemblyDefinition>().SelectMany((AssemblyDefinition assembly) => from a in assembly.get_MainModule().get_AssemblyReferences()
+				select assembly.get_MainModule().get_AssemblyResolver().Resolve(a)));
 			}
 			return hashSet;
 		}
 
 		private static void CollectBlackListTypes(HashSet<TypeDefinition> typesToPreserve, IList<TypeDefinition> types, List<string> baseTypes)
 		{
-			if (types == null)
+			if (types != null)
 			{
-				return;
-			}
-			foreach (TypeDefinition current in types)
-			{
-				if (current != null)
+				foreach (TypeDefinition current in types)
 				{
-					foreach (string current2 in baseTypes)
+					if (current != null)
 					{
-						if (MonoAssemblyStripping.DoesTypeEnheritFrom(current, current2))
+						foreach (string current2 in baseTypes)
 						{
-							typesToPreserve.Add(current);
-							break;
+							if (MonoAssemblyStripping.DoesTypeEnheritFrom(current, current2))
+							{
+								typesToPreserve.Add(current);
+								break;
+							}
 						}
+						MonoAssemblyStripping.CollectBlackListTypes(typesToPreserve, current.get_NestedTypes(), baseTypes);
 					}
-					MonoAssemblyStripping.CollectBlackListTypes(typesToPreserve, current.NestedTypes, baseTypes);
 				}
 			}
 		}
@@ -175,26 +178,33 @@ namespace UnityEditor
 			MonoAssemblyStripping.CollectBlackListTypes(hashSet, types, baseTypes);
 			foreach (TypeDefinition current in hashSet)
 			{
-				w.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current.FullName);
+				w.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current.get_FullName());
 			}
 		}
 
 		private static bool DoesTypeEnheritFrom(TypeReference type, string typeName)
 		{
+			bool result;
 			while (type != null)
 			{
-				if (type.FullName == typeName)
+				if (type.get_FullName() == typeName)
 				{
-					return true;
+					result = true;
 				}
-				TypeDefinition typeDefinition = type.Resolve();
-				if (typeDefinition == null)
+				else
 				{
-					return false;
+					TypeDefinition typeDefinition = type.Resolve();
+					if (typeDefinition != null)
+					{
+						type = typeDefinition.get_BaseType();
+						continue;
+					}
+					result = false;
 				}
-				type = typeDefinition.BaseType;
+				return result;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static string StripperExe()
@@ -216,12 +226,12 @@ namespace UnityEditor
 			for (int i = 0; i < input.Length; i++)
 			{
 				string str = input[i];
-				ProcessStartInfo expr_80 = process.StartInfo;
-				expr_80.Arguments = expr_80.Arguments + " -a \"" + str + "\"";
+				ProcessStartInfo expr_82 = process.StartInfo;
+				expr_82.Arguments = expr_82.Arguments + " -a \"" + str + "\"";
 			}
-			ProcessStartInfo expr_B3 = process.StartInfo;
-			string arguments = expr_B3.Arguments;
-			expr_B3.Arguments = string.Concat(new string[]
+			ProcessStartInfo expr_B5 = process.StartInfo;
+			string arguments = expr_B5.Arguments;
+			expr_B5.Arguments = string.Concat(new string[]
 			{
 				arguments,
 				" -out output -x \"",
@@ -233,36 +243,36 @@ namespace UnityEditor
 			string text5 = Path.Combine(buildToolsDirectory, "link.xml");
 			if (File.Exists(text5))
 			{
-				ProcessStartInfo expr_110 = process.StartInfo;
-				expr_110.Arguments = expr_110.Arguments + " -x \"" + text5 + "\"";
+				ProcessStartInfo expr_112 = process.StartInfo;
+				expr_112.Arguments = expr_112.Arguments + " -x \"" + text5 + "\"";
 			}
 			string text6 = Path.Combine(Path.GetDirectoryName(text2), "Core.xml");
 			if (File.Exists(text6))
 			{
-				ProcessStartInfo expr_151 = process.StartInfo;
-				expr_151.Arguments = expr_151.Arguments + " -x \"" + text6 + "\"";
+				ProcessStartInfo expr_153 = process.StartInfo;
+				expr_153.Arguments = expr_153.Arguments + " -x \"" + text6 + "\"";
 			}
 			string[] files = Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "Assets"), "link.xml", SearchOption.AllDirectories);
 			string[] array = files;
 			for (int j = 0; j < array.Length; j++)
 			{
 				string str2 = array[j];
-				ProcessStartInfo expr_1A2 = process.StartInfo;
-				expr_1A2.Arguments = expr_1A2.Arguments + " -x \"" + str2 + "\"";
+				ProcessStartInfo expr_1A5 = process.StartInfo;
+				expr_1A5.Arguments = expr_1A5.Arguments + " -x \"" + str2 + "\"";
 			}
 			if (usedClasses != null)
 			{
 				text = MonoAssemblyStripping.GenerateBlackList(managedLibrariesDirectory, usedClasses, allAssemblies);
-				ProcessStartInfo expr_1E6 = process.StartInfo;
-				expr_1E6.Arguments = expr_1E6.Arguments + " -x \"" + text + "\"";
+				ProcessStartInfo expr_1EA = process.StartInfo;
+				expr_1EA.Arguments = expr_1EA.Arguments + " -x \"" + text + "\"";
 			}
 			string path = Path.Combine(BuildPipeline.GetPlaybackEngineDirectory(EditorUserBuildSettings.activeBuildTarget, BuildOptions.None), "Whitelists");
 			string[] files2 = Directory.GetFiles(path, "*.xml");
 			for (int k = 0; k < files2.Length; k++)
 			{
 				string str3 = files2[k];
-				ProcessStartInfo expr_23B = process.StartInfo;
-				expr_23B.Arguments = expr_23B.Arguments + " -x \"" + str3 + "\"";
+				ProcessStartInfo expr_241 = process.StartInfo;
+				expr_241.Arguments = expr_241.Arguments + " -x \"" + str3 + "\"";
 			}
 			MonoProcessUtility.RunMonoProcess(process, "assemblies stripper", Path.Combine(text4, "mscorlib.dll"));
 			MonoAssemblyStripping.DeleteAllDllsFrom(managedLibrariesDirectory);
@@ -273,7 +283,7 @@ namespace UnityEditor
 				string text7 = files3[l];
 				if (text7.Contains(".mdb"))
 				{
-					string path2 = text7.Replace(".mdb", string.Empty);
+					string path2 = text7.Replace(".mdb", "");
 					if (!File.Exists(path2))
 					{
 						FileUtil.DeleteFileOrDirectory(text7);

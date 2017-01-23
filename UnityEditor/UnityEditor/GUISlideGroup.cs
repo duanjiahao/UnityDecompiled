@@ -42,22 +42,24 @@ namespace UnityEditor
 			}
 		}
 
+		internal static GUISlideGroup current = null;
+
+		private Dictionary<int, Rect> animIDs = new Dictionary<int, Rect>();
+
 		private const float kLerp = 0.1f;
 
 		private const float kSnap = 0.5f;
-
-		internal static GUISlideGroup current;
-
-		private Dictionary<int, Rect> animIDs = new Dictionary<int, Rect>();
 
 		public void Begin()
 		{
 			if (GUISlideGroup.current != null)
 			{
 				Debug.LogError("You cannot nest animGroups");
-				return;
 			}
-			GUISlideGroup.current = this;
+			else
+			{
+				GUISlideGroup.current = this;
+			}
 		}
 
 		public void End()
@@ -86,51 +88,61 @@ namespace UnityEditor
 
 		public Rect GetRect(int id, Rect r)
 		{
+			Rect result;
 			if (Event.current.type != EventType.Repaint)
 			{
-				return r;
+				result = r;
 			}
-			bool flag;
-			return this.GetRect(id, r, out flag);
+			else
+			{
+				bool flag;
+				result = this.GetRect(id, r, out flag);
+			}
+			return result;
 		}
 
 		private Rect GetRect(int id, Rect r, out bool changed)
 		{
+			Rect result;
 			if (!this.animIDs.ContainsKey(id))
 			{
 				this.animIDs.Add(id, r);
 				changed = false;
-				return r;
-			}
-			Rect rect = this.animIDs[id];
-			if (rect.y != r.y || rect.height != r.height || rect.x != r.x || rect.width != r.width)
-			{
-				float t = 0.1f;
-				if (Mathf.Abs(rect.y - r.y) > 0.5f)
-				{
-					r.y = Mathf.Lerp(rect.y, r.y, t);
-				}
-				if (Mathf.Abs(rect.height - r.height) > 0.5f)
-				{
-					r.height = Mathf.Lerp(rect.height, r.height, t);
-				}
-				if (Mathf.Abs(rect.x - r.x) > 0.5f)
-				{
-					r.x = Mathf.Lerp(rect.x, r.x, t);
-				}
-				if (Mathf.Abs(rect.width - r.width) > 0.5f)
-				{
-					r.width = Mathf.Lerp(rect.width, r.width, t);
-				}
-				this.animIDs[id] = r;
-				changed = true;
-				HandleUtility.Repaint();
+				result = r;
 			}
 			else
 			{
-				changed = false;
+				Rect rect = this.animIDs[id];
+				if (rect.y != r.y || rect.height != r.height || rect.x != r.x || rect.width != r.width)
+				{
+					float t = 0.1f;
+					if (Mathf.Abs(rect.y - r.y) > 0.5f)
+					{
+						r.y = Mathf.Lerp(rect.y, r.y, t);
+					}
+					if (Mathf.Abs(rect.height - r.height) > 0.5f)
+					{
+						r.height = Mathf.Lerp(rect.height, r.height, t);
+					}
+					if (Mathf.Abs(rect.x - r.x) > 0.5f)
+					{
+						r.x = Mathf.Lerp(rect.x, r.x, t);
+					}
+					if (Mathf.Abs(rect.width - r.width) > 0.5f)
+					{
+						r.width = Mathf.Lerp(rect.width, r.width, t);
+					}
+					this.animIDs[id] = r;
+					changed = true;
+					HandleUtility.Repaint();
+				}
+				else
+				{
+					changed = false;
+				}
+				result = r;
 			}
-			return r;
+			return result;
 		}
 	}
 }

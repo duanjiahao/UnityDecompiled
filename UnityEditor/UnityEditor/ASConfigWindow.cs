@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace UnityEditor
 	{
 		private const int listLenghts = 20;
 
-		private static ASMainWindow.Constants constants;
+		private static ASMainWindow.Constants constants = null;
 
 		private ListViewState serversLv = new ListViewState(0);
 
@@ -26,7 +26,7 @@ namespace UnityEditor
 
 		private string port = string.Empty;
 
-		private bool resetKeyboardControl;
+		private bool resetKeyboardControl = false;
 
 		private string[] projectsList;
 
@@ -79,12 +79,12 @@ namespace UnityEditor
 		private void GetDefaultPListConfig()
 		{
 			this.plc = new PListConfig("Library/ServerPreferences.plist");
-			this.plc["Maint Server"] = string.Empty;
-			this.plc["Maint UserName"] = string.Empty;
-			this.plc["Maint database name"] = string.Empty;
-			this.plc["Maint port number"] = string.Empty;
-			this.plc["Maint project name"] = string.Empty;
-			this.plc["Maint Password"] = string.Empty;
+			this.plc["Maint Server"] = "";
+			this.plc["Maint UserName"] = "";
+			this.plc["Maint database name"] = "";
+			this.plc["Maint port number"] = "";
+			this.plc["Maint project name"] = "";
+			this.plc["Maint Password"] = "";
 			if (this.plc["Maint settings type"] == string.Empty)
 			{
 				this.plc["Maint settings type"] = "manual";
@@ -95,7 +95,7 @@ namespace UnityEditor
 			}
 			if (this.plc["Maint Connection Settings"] == string.Empty)
 			{
-				this.plc["Maint Connection Settings"] = string.Empty;
+				this.plc["Maint Connection Settings"] = "";
 			}
 		}
 
@@ -233,39 +233,21 @@ namespace UnityEditor
 					string nameOfFocusedControl = GUI.GetNameOfFocusedControl();
 					if (nameOfFocusedControl != null)
 					{
-						if (ASConfigWindow.<>f__switch$map10 == null)
+						if (nameOfFocusedControl == "password")
 						{
-							ASConfigWindow.<>f__switch$map10 = new Dictionary<string, int>(2)
-							{
-								{
-									"password",
-									0
-								},
-								{
-									"project",
-									1
-								}
-							};
+							flag = true;
+							goto IL_115;
 						}
-						int num;
-						if (ASConfigWindow.<>f__switch$map10.TryGetValue(nameOfFocusedControl, out num))
+						if (nameOfFocusedControl == "project")
 						{
-							if (num == 0)
-							{
-								flag = true;
-								goto IL_141;
-							}
-							if (num == 1)
-							{
-								flag2 = true;
-								goto IL_141;
-							}
+							flag2 = true;
+							goto IL_115;
 						}
 					}
 					current.Use();
+					IL_115:;
 				}
 			}
-			IL_141:
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			this.serverAddress = EditorGUILayout.TextField("Server", this.serverAddress, new GUILayoutOption[0]);
 			this.ServersPopup();
@@ -287,7 +269,7 @@ namespace UnityEditor
 			}) || (flag && GUI.enabled))
 			{
 				this.DoShowProjects();
-				this.projectName = string.Empty;
+				this.projectName = "";
 				EditorGUI.FocusTextInControl("project");
 			}
 			bool enabled2 = GUI.enabled;
@@ -322,13 +304,26 @@ namespace UnityEditor
 		{
 			GUILayout.BeginVertical(ASConfigWindow.constants.groupBox, new GUILayoutOption[0]);
 			GUILayout.Label("Projects on Server", ASConfigWindow.constants.title, new GUILayoutOption[0]);
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.projectsLv, ASConfigWindow.constants.background, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.projectsLv, ASConfigWindow.constants.background, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (listViewElement.row == this.projectsLv.row && Event.current.type == EventType.Repaint)
+				while (enumerator.MoveNext())
 				{
-					ASConfigWindow.constants.entrySelected.Draw(listViewElement.position, false, false, false, false);
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (listViewElement.row == this.projectsLv.row && Event.current.type == EventType.Repaint)
+					{
+						ASConfigWindow.constants.entrySelected.Draw(listViewElement.position, false, false, false, false);
+					}
+					GUILayout.Label(this.projectsList[listViewElement.row], ASConfigWindow.constants.element, new GUILayoutOption[0]);
 				}
-				GUILayout.Label(this.projectsList[listViewElement.row], ASConfigWindow.constants.element, new GUILayoutOption[0]);
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			if (this.projectsLv.selectionChanged)
 			{

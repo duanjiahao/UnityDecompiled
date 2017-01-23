@@ -101,6 +101,12 @@ namespace UnityEditor
 
 		private SerializedProperty m_RootMotionBoneName;
 
+		private SerializedProperty m_RootMotionBoneRotation;
+
+		private SerializedProperty m_SrcHasExtraRoot;
+
+		private SerializedProperty m_DstHasExtraRoot;
+
 		private GUIContent[] m_RootMotionBoneList;
 
 		private ExposeTransformEditor m_ExposeTransformEditor;
@@ -109,9 +115,9 @@ namespace UnityEditor
 
 		private bool m_CanMultiEditTransformList;
 
-		private bool m_IsBiped;
+		private bool m_IsBiped = false;
 
-		private List<string> m_BipedMappingReport;
+		private List<string> m_BipedMappingReport = null;
 
 		private static ModelImporterRigEditor.Styles styles;
 
@@ -146,6 +152,7 @@ namespace UnityEditor
 			get
 			{
 				InspectorWindow[] allInspectorWindows = InspectorWindow.GetAllInspectorWindows();
+				bool result;
 				for (int i = 0; i < allInspectorWindows.Length; i++)
 				{
 					InspectorWindow inspectorWindow = allInspectorWindows[i];
@@ -156,11 +163,13 @@ namespace UnityEditor
 						Editor x = activeEditors[j];
 						if (x == this)
 						{
-							return inspectorWindow.isLocked;
+							result = inspectorWindow.isLocked;
+							return result;
 						}
 					}
 				}
-				return false;
+				result = false;
+				return result;
 			}
 		}
 
@@ -170,6 +179,7 @@ namespace UnityEditor
 			this.m_AvatarSource = base.serializedObject.FindProperty("m_LastHumanDescriptionAvatarSource");
 			this.m_OptimizeGameObjects = base.serializedObject.FindProperty("m_OptimizeGameObjects");
 			this.m_RootMotionBoneName = base.serializedObject.FindProperty("m_HumanDescription.m_RootMotionBoneName");
+			this.m_RootMotionBoneRotation = base.serializedObject.FindProperty("m_HumanDescription.m_RootMotionBoneRotation");
 			this.m_ExposeTransformEditor = new ExposeTransformEditor();
 			string[] transformPaths = this.singleImporter.transformPaths;
 			this.m_RootMotionBoneList = new GUIContent[transformPaths.Length];
@@ -183,6 +193,8 @@ namespace UnityEditor
 			}
 			this.rootIndex = ArrayUtility.FindIndex<GUIContent>(this.m_RootMotionBoneList, (GUIContent content) => FileUtil.GetLastPathNameComponent(content.text) == this.m_RootMotionBoneName.stringValue);
 			this.rootIndex = ((this.rootIndex >= 1) ? this.rootIndex : 0);
+			this.m_SrcHasExtraRoot = base.serializedObject.FindProperty("m_HasExtraRoot");
+			this.m_DstHasExtraRoot = base.serializedObject.FindProperty("m_HumanDescription.m_HasExtraRoot");
 			this.m_CopyAvatar = base.serializedObject.FindProperty("m_CopyAvatar");
 			this.m_LegacyGenerateAnimations = base.serializedObject.FindProperty("m_LegacyGenerateAnimations");
 			this.m_AnimationCompression = base.serializedObject.FindProperty("m_AnimationCompression");
@@ -201,15 +213,18 @@ namespace UnityEditor
 		private bool CanMultiEditTransformList()
 		{
 			string[] transformPaths = this.singleImporter.transformPaths;
+			bool result;
 			for (int i = 1; i < base.targets.Length; i++)
 			{
 				ModelImporter modelImporter = base.targets[i] as ModelImporter;
 				if (!ArrayUtility.ArrayEquals<string>(transformPaths, modelImporter.transformPaths))
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		private void CheckIfAvatarCopyIsUpToDate()
@@ -217,17 +232,19 @@ namespace UnityEditor
 			if ((this.animationType != ModelImporterAnimationType.Human && this.animationType != ModelImporterAnimationType.Generic) || this.m_AvatarSource.objectReferenceValue == null)
 			{
 				this.m_AvatarCopyIsUpToDate = true;
-				return;
 			}
-			string assetPath = AssetDatabase.GetAssetPath(this.m_AvatarSource.objectReferenceValue);
-			ModelImporter otherImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
-			this.m_AvatarCopyIsUpToDate = ModelImporterRigEditor.DoesHumanDescriptionMatch(this.singleImporter, otherImporter);
+			else
+			{
+				string assetPath = AssetDatabase.GetAssetPath(this.m_AvatarSource.objectReferenceValue);
+				ModelImporter otherImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+				this.m_AvatarCopyIsUpToDate = ModelImporterRigEditor.DoesHumanDescriptionMatch(this.singleImporter, otherImporter);
+			}
 		}
 
 		internal override void ResetValues()
 		{
 			base.ResetValues();
-			this.m_Avatar = (AssetDatabase.LoadAssetAtPath((this.target as ModelImporter).assetPath, typeof(Avatar)) as Avatar);
+			this.m_Avatar = (AssetDatabase.LoadAssetAtPath((base.target as ModelImporter).assetPath, typeof(Avatar)) as Avatar);
 		}
 
 		private void LegacyGUI()
@@ -272,7 +289,7 @@ namespace UnityEditor
 						}
 						else
 						{
-							this.m_RootMotionBoneName.stringValue = string.Empty;
+							this.m_RootMotionBoneName.stringValue = "";
 						}
 					}
 				}
@@ -321,48 +338,49 @@ namespace UnityEditor
 			if (base.targets.Length > 1)
 			{
 				GUILayout.Label("Can't configure avatar in multi-editing mode", EditorStyles.helpBox, new GUILayoutOption[0]);
-				return;
-			}
-			if (this.singleImporter.transformPaths.Length <= HumanTrait.RequiredBoneCount)
-			{
-				GUILayout.Label("Not enough bones to create human avatar (requires " + HumanTrait.RequiredBoneCount + ")", EditorStyles.helpBox, new GUILayoutOption[0]);
-				return;
-			}
-			GUIContent content;
-			if (this.m_Avatar && !this.HasModified())
-			{
-				if (this.m_Avatar.isHuman)
-				{
-					content = ModelImporterRigEditor.styles.avatarValid;
-				}
-				else
-				{
-					content = ModelImporterRigEditor.styles.avatarInvalid;
-				}
 			}
 			else
 			{
-				content = ModelImporterRigEditor.styles.avatarPending;
-				GUILayout.Label("The avatar can be configured after settings have been applied.", EditorStyles.helpBox, new GUILayoutOption[0]);
-			}
-			Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
-			GUI.Label(new Rect(controlRect.xMax - 75f - 18f, controlRect.y, 18f, controlRect.height), content, EditorStyles.label);
-			using (new EditorGUI.DisabledScope(this.m_Avatar == null))
-			{
-				if (GUI.Button(new Rect(controlRect.xMax - 75f, controlRect.y + 1f, 75f, controlRect.height - 1f), ModelImporterRigEditor.styles.configureAvatar, EditorStyles.miniButton))
+				if (this.singleImporter.transformPaths.Length <= HumanTrait.RequiredBoneCount)
 				{
-					if (!this.isLocked)
+					GUILayout.Label("Not enough bones to create human avatar (requires " + HumanTrait.RequiredBoneCount + ")", EditorStyles.helpBox, new GUILayoutOption[0]);
+				}
+				GUIContent content;
+				if (this.m_Avatar && !this.HasModified())
+				{
+					if (this.m_Avatar.isHuman)
 					{
-						if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-						{
-							Selection.activeObject = this.m_Avatar;
-							AvatarEditor.s_EditImmediatelyOnNextOpen = true;
-						}
-						GUIUtility.ExitGUI();
+						content = ModelImporterRigEditor.styles.avatarValid;
 					}
 					else
 					{
-						Debug.Log("Cannot configure avatar, inspector is locked");
+						content = ModelImporterRigEditor.styles.avatarInvalid;
+					}
+				}
+				else
+				{
+					content = ModelImporterRigEditor.styles.avatarPending;
+					GUILayout.Label("The avatar can be configured after settings have been applied.", EditorStyles.helpBox, new GUILayoutOption[0]);
+				}
+				Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
+				GUI.Label(new Rect(controlRect.xMax - 75f - 18f, controlRect.y, 18f, controlRect.height), content, EditorStyles.label);
+				using (new EditorGUI.DisabledScope(this.m_Avatar == null))
+				{
+					if (GUI.Button(new Rect(controlRect.xMax - 75f, controlRect.y + 1f, 75f, controlRect.height - 1f), ModelImporterRigEditor.styles.configureAvatar, EditorStyles.miniButton))
+					{
+						if (!this.isLocked)
+						{
+							if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+							{
+								Selection.activeObject = this.m_Avatar;
+								AvatarEditor.s_EditImmediatelyOnNextOpen = true;
+							}
+							GUIUtility.ExitGUI();
+						}
+						else
+						{
+							Debug.Log("Cannot configure avatar, inspector is locked");
+						}
 					}
 				}
 			}
@@ -414,56 +432,58 @@ namespace UnityEditor
 				}
 				this.m_AvatarCopyIsUpToDate = true;
 			}
-			if (avatar != null && !this.m_AvatarSource.hasMultipleDifferentValues && !this.m_AvatarCopyIsUpToDate && GUILayout.Button(ModelImporterRigEditor.styles.UpdateMuscleDefinitionFromSource, EditorStyles.miniButton, new GUILayoutOption[0]))
+			if (avatar != null && !this.m_AvatarSource.hasMultipleDifferentValues && !this.m_AvatarCopyIsUpToDate)
 			{
-				AvatarSetupTool.ClearAll(base.serializedObject);
-				this.CopyHumanDescriptionFromOtherModel(avatar);
-				this.m_AvatarCopyIsUpToDate = true;
+				if (GUILayout.Button(ModelImporterRigEditor.styles.UpdateMuscleDefinitionFromSource, EditorStyles.miniButton, new GUILayoutOption[0]))
+				{
+					AvatarSetupTool.ClearAll(base.serializedObject);
+					this.CopyHumanDescriptionFromOtherModel(avatar);
+					this.m_AvatarCopyIsUpToDate = true;
+				}
 			}
 			EditorGUILayout.EndHorizontal();
 		}
 
 		private void ShowUpdateReferenceClip()
 		{
-			if (base.targets.Length > 1 || this.animationType != ModelImporterAnimationType.Human || this.m_CopyAvatar.boolValue)
+			if (base.targets.Length <= 1 && this.animationType == ModelImporterAnimationType.Human && !this.m_CopyAvatar.boolValue)
 			{
-				return;
-			}
-			string[] array = new string[0];
-			ModelImporter modelImporter = this.target as ModelImporter;
-			if (modelImporter.referencedClips.Length > 0)
-			{
-				string[] referencedClips = modelImporter.referencedClips;
-				for (int i = 0; i < referencedClips.Length; i++)
+				string[] array = new string[0];
+				ModelImporter modelImporter = base.target as ModelImporter;
+				if (modelImporter.referencedClips.Length > 0)
 				{
-					string guid = referencedClips[i];
-					ArrayUtility.Add<string>(ref array, AssetDatabase.GUIDToAssetPath(guid));
-				}
-			}
-			if (array.Length > 0 && GUILayout.Button(ModelImporterRigEditor.styles.UpdateReferenceClips, new GUILayoutOption[]
-			{
-				GUILayout.Width(150f)
-			}))
-			{
-				string[] array2 = array;
-				for (int j = 0; j < array2.Length; j++)
-				{
-					string otherModelImporterPath = array2[j];
-					this.SetupReferencedClip(otherModelImporterPath);
-				}
-				try
-				{
-					AssetDatabase.StartAssetEditing();
-					string[] array3 = array;
-					for (int k = 0; k < array3.Length; k++)
+					string[] referencedClips = modelImporter.referencedClips;
+					for (int i = 0; i < referencedClips.Length; i++)
 					{
-						string path = array3[k];
-						AssetDatabase.ImportAsset(path);
+						string guid = referencedClips[i];
+						ArrayUtility.Add<string>(ref array, AssetDatabase.GUIDToAssetPath(guid));
 					}
 				}
-				finally
+				if (array.Length > 0 && GUILayout.Button(ModelImporterRigEditor.styles.UpdateReferenceClips, new GUILayoutOption[]
 				{
-					AssetDatabase.StopAssetEditing();
+					GUILayout.Width(150f)
+				}))
+				{
+					string[] array2 = array;
+					for (int j = 0; j < array2.Length; j++)
+					{
+						string otherModelImporterPath = array2[j];
+						this.SetupReferencedClip(otherModelImporterPath);
+					}
+					try
+					{
+						AssetDatabase.StartAssetEditing();
+						string[] array3 = array;
+						for (int k = 0; k < array3.Length; k++)
+						{
+							string path = array3[k];
+							AssetDatabase.ImportAsset(path);
+						}
+					}
+					finally
+					{
+						AssetDatabase.StopAssetEditing();
+					}
 				}
 			}
 		}
@@ -487,6 +507,7 @@ namespace UnityEditor
 				{
 					this.m_AnimationCompression.intValue = 3;
 				}
+				this.m_DstHasExtraRoot.boolValue = this.m_SrcHasExtraRoot.boolValue;
 			}
 			EditorGUILayout.Space();
 			if (!this.m_AnimationType.hasMultipleDifferentValues)
@@ -535,11 +556,16 @@ namespace UnityEditor
 		private static SerializedObject GetModelImporterSerializedObject(string assetPath)
 		{
 			ModelImporter modelImporter = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+			SerializedObject result;
 			if (modelImporter == null)
 			{
-				return null;
+				result = null;
 			}
-			return new SerializedObject(modelImporter);
+			else
+			{
+				result = new SerializedObject(modelImporter);
+			}
+			return result;
 		}
 
 		private static bool DoesHumanDescriptionMatch(ModelImporter importer, ModelImporter otherImporter)
@@ -549,6 +575,7 @@ namespace UnityEditor
 				importer,
 				otherImporter
 			});
+			serializedObject.maxArraySizeForMultiEditing = Math.Max(importer.transformPaths.Length, otherImporter.transformPaths.Length);
 			SerializedProperty serializedProperty = serializedObject.FindProperty("m_HumanDescription");
 			bool result = !serializedProperty.hasMultipleDifferentValues;
 			serializedObject.Dispose();
@@ -618,20 +645,15 @@ namespace UnityEditor
 			base.serializedObject.ApplyModifiedProperties();
 			for (int k = 0; k < base.targets.Length; k++)
 			{
-				if (array[k].usesOwnAvatar && !array2[k].usesOwnAvatar)
+				if (array[k].usesOwnAvatar && !array2[k].usesOwnAvatar && !array2[k].copyAvatar)
 				{
 					SerializedObject serializedObject2 = new SerializedObject(base.targets[k]);
 					AvatarSetupTool.ClearAll(serializedObject2);
 					serializedObject2.ApplyModifiedProperties();
 				}
-				if (!array[k].usesOwnAvatar && array2[k].usesOwnAvatar)
+				if (!this.m_CopyAvatar.boolValue && !array2[k].humanoid && this.rootIndex > 0)
 				{
 					ModelImporter modelImporter = base.targets[k] as ModelImporter;
-					if (array[k].hasNoAnimation)
-					{
-						AssetDatabase.ImportAsset(modelImporter.assetPath);
-					}
-					SerializedObject serializedObject3 = new SerializedObject(base.targets[k]);
 					GameObject gameObject = AssetDatabase.LoadMainAssetAtPath(modelImporter.assetPath) as GameObject;
 					Animator component = gameObject.GetComponent<Animator>();
 					bool flag = component && !component.hasTransformHierarchy;
@@ -640,13 +662,37 @@ namespace UnityEditor
 						gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject);
 						AnimatorUtility.DeoptimizeTransformHierarchy(gameObject);
 					}
-					AvatarSetupTool.AutoSetupOnInstance(gameObject, serializedObject3);
-					this.m_IsBiped = AvatarBipedMapper.IsBiped(gameObject.transform, this.m_BipedMappingReport);
-					if (flag)
+					Transform transform = gameObject.transform.Find(this.m_RootMotionBoneList[this.rootIndex].text);
+					if (transform != null)
 					{
-						UnityEngine.Object.DestroyImmediate(gameObject);
+						this.m_RootMotionBoneRotation.quaternionValue = transform.rotation;
 					}
+					SerializedObject serializedObject3 = new SerializedObject(base.targets[k]);
 					serializedObject3.ApplyModifiedProperties();
+				}
+				if (!array[k].usesOwnAvatar && array2[k].usesOwnAvatar)
+				{
+					ModelImporter modelImporter2 = base.targets[k] as ModelImporter;
+					if (array[k].hasNoAnimation)
+					{
+						AssetDatabase.ImportAsset(modelImporter2.assetPath);
+					}
+					SerializedObject serializedObject4 = new SerializedObject(base.targets[k]);
+					GameObject gameObject2 = AssetDatabase.LoadMainAssetAtPath(modelImporter2.assetPath) as GameObject;
+					Animator component2 = gameObject2.GetComponent<Animator>();
+					bool flag2 = component2 && !component2.hasTransformHierarchy;
+					if (flag2)
+					{
+						gameObject2 = UnityEngine.Object.Instantiate<GameObject>(gameObject2);
+						AnimatorUtility.DeoptimizeTransformHierarchy(gameObject2);
+					}
+					AvatarSetupTool.AutoSetupOnInstance(gameObject2, serializedObject4);
+					this.m_IsBiped = AvatarBipedMapper.IsBiped(gameObject2.transform, this.m_BipedMappingReport);
+					if (flag2)
+					{
+						UnityEngine.Object.DestroyImmediate(gameObject2);
+					}
+					serializedObject4.ApplyModifiedProperties();
 				}
 			}
 		}

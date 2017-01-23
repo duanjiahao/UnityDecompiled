@@ -90,7 +90,7 @@ namespace UnityEditor
 
 			public GUIContent AOMaxDistance = EditorGUIUtility.TextContent("Max Distance|Beyond this distance a ray is considered to be unoccluded. 0 for infinitely long rays.");
 
-			public GUIContent DirectionalMode = EditorGUIUtility.TextContent("Directional Mode|Lightmaps encode incoming dominant light direction. More expensive in terms of memory and fill rate.");
+			public GUIContent DirectionalMode = EditorGUIUtility.TextContent("Directional Mode|Lightmaps encode incoming dominant light direction. Directional lightmaps are more expensive in terms of memory and fill rate than non-directional lightmaps.");
 
 			public GUIContent NoDirectionalSpecularInSM2AndGLES2 = EditorGUIUtility.TextContent("Directional Specular lightmaps cannot be decoded on SM2.0 hardware nor when using GLES2.0. There is currently no fallback.");
 
@@ -119,16 +119,6 @@ namespace UnityEditor
 			public GUIStyle labelStyle = EditorStyles.wordWrappedMiniLabel;
 		}
 
-		private const string kGlobalIlluminationUnityManualPage = "file:///unity/Manual/GlobalIllumination.html";
-
-		private const string kShowRealtimeSettingsKey = "ShowRealtimeLightingSettings";
-
-		private const string kShowBakeSettingsKey = "ShowBakedLightingSettings";
-
-		private const string kShowGeneralSettingsKey = "ShowGeneralLightingSettings";
-
-		private const float kToolbarPadding = 38f;
-
 		private GUIContent[] kConcurrentJobsTypeStrings = new GUIContent[]
 		{
 			new GUIContent("Min"),
@@ -149,7 +139,7 @@ namespace UnityEditor
 		{
 			new GUIContent("Non-Directional"),
 			new GUIContent("Directional"),
-			new GUIContent("Directional Specular")
+			new GUIContent("Directional Specular (deprecated)")
 		};
 
 		private int[] kModeValues = new int[]
@@ -189,6 +179,8 @@ namespace UnityEditor
 			"Clear Baked Data"
 		};
 
+		private const string kGlobalIlluminationUnityManualPage = "file:///unity/Manual/GlobalIllumination.html";
+
 		private LightingWindow.Mode m_Mode = LightingWindow.Mode.BakeSettings;
 
 		private Vector2 m_ScrollPosition = Vector2.zero;
@@ -199,7 +191,7 @@ namespace UnityEditor
 
 		private AnimBool m_ShowIndirectResolution = new AnimBool();
 
-		private bool m_ShowDevOptions;
+		private bool m_ShowDevOptions = false;
 
 		private PreviewResizer m_PreviewResizer = new PreviewResizer();
 
@@ -213,9 +205,17 @@ namespace UnityEditor
 
 		private bool m_ShowRealtimeSettings;
 
+		private const string kShowRealtimeSettingsKey = "ShowRealtimeLightingSettings";
+
 		private bool m_ShowBakeSettings;
 
+		private const string kShowBakeSettingsKey = "ShowBakedLightingSettings";
+
 		private bool m_ShowGeneralSettings;
+
+		private const string kShowGeneralSettingsKey = "ShowGeneralLightingSettings";
+
+		private float m_ToolbarPadding = -1f;
 
 		private static LightingWindow.Styles s_Styles;
 
@@ -223,12 +223,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				LightingWindow.Styles arg_17_0;
-				if ((arg_17_0 = LightingWindow.s_Styles) == null)
+				LightingWindow.Styles arg_18_0;
+				if ((arg_18_0 = LightingWindow.s_Styles) == null)
 				{
-					arg_17_0 = (LightingWindow.s_Styles = new LightingWindow.Styles());
+					arg_18_0 = (LightingWindow.s_Styles = new LightingWindow.Styles());
 				}
-				return arg_17_0;
+				return arg_18_0;
 			}
 		}
 
@@ -265,6 +265,18 @@ namespace UnityEditor
 			{
 				Editor.CreateCachedEditor(this.renderSettings, typeof(OtherRenderingEditor), ref this.m_OtherRenderingEditor);
 				return this.m_OtherRenderingEditor;
+			}
+		}
+
+		private float toolbarPadding
+		{
+			get
+			{
+				if (this.m_ToolbarPadding == -1f)
+				{
+					this.m_ToolbarPadding = EditorStyles.iconButton.CalcSize(EditorGUI.GUIContents.helpIcon).x * 2f + 6f;
+				}
+				return this.m_ToolbarPadding;
 			}
 		}
 
@@ -324,13 +336,12 @@ namespace UnityEditor
 
 		private void OnBecameVisible()
 		{
-			if (LightingWindow.s_IsVisible)
+			if (!LightingWindow.s_IsVisible)
 			{
-				return;
+				LightingWindow.s_IsVisible = true;
+				LightmapVisualization.enabled = true;
+				LightingWindow.RepaintSceneAndGameViews();
 			}
-			LightingWindow.s_IsVisible = true;
-			LightmapVisualization.enabled = true;
-			LightingWindow.RepaintSceneAndGameViews();
 		}
 
 		private void OnBecameInvisible()
@@ -361,7 +372,7 @@ namespace UnityEditor
 			EditorGUIUtility.labelWidth = 130f;
 			EditorGUILayout.Space();
 			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(38f);
+			GUILayout.Space(this.toolbarPadding);
 			this.ModeToggle();
 			GUILayout.FlexibleSpace();
 			this.DrawHelpGUI();
@@ -372,20 +383,27 @@ namespace UnityEditor
 			EditorGUILayout.EndHorizontal();
 			EditorGUILayout.Space();
 			this.m_ScrollPosition = EditorGUILayout.BeginScrollView(this.m_ScrollPosition, new GUILayoutOption[0]);
-			switch (this.m_Mode)
+			LightingWindow.Mode mode = this.m_Mode;
+			if (mode != LightingWindow.Mode.ObjectSettings)
 			{
-			case LightingWindow.Mode.ObjectSettings:
+				if (mode != LightingWindow.Mode.BakeSettings)
+				{
+					if (mode == LightingWindow.Mode.Maps)
+					{
+						this.m_LightmapPreviewTab.Maps();
+					}
+				}
+				else
+				{
+					this.lightingEditor.OnInspectorGUI();
+					this.EnlightenBakeSettings();
+					this.fogEditor.OnInspectorGUI();
+					this.otherRenderingEditor.OnInspectorGUI();
+				}
+			}
+			else
+			{
 				this.m_ObjectTab.ObjectSettings();
-				break;
-			case LightingWindow.Mode.BakeSettings:
-				this.lightingEditor.OnInspectorGUI();
-				this.EnlightenBakeSettings();
-				this.fogEditor.OnInspectorGUI();
-				this.otherRenderingEditor.OnInspectorGUI();
-				break;
-			case LightingWindow.Mode.Maps:
-				this.m_LightmapPreviewTab.Maps();
-				break;
 			}
 			EditorGUILayout.EndScrollView();
 			EditorGUILayout.Space();
@@ -399,9 +417,9 @@ namespace UnityEditor
 
 		private void DrawHelpGUI()
 		{
-			Rect rect = GUILayoutUtility.GetRect(16f, 16f);
-			GUIContent content = new GUIContent(EditorGUI.GUIContents.helpIcon);
-			if (GUI.Button(rect, content, GUIStyle.none))
+			Vector2 vector = EditorStyles.iconButton.CalcSize(EditorGUI.GUIContents.helpIcon);
+			Rect rect = GUILayoutUtility.GetRect(vector.x, vector.y);
+			if (GUI.Button(rect, EditorGUI.GUIContents.helpIcon, EditorStyles.iconButton))
 			{
 				Help.ShowHelpPage("file:///unity/Manual/GlobalIllumination.html");
 			}
@@ -409,8 +427,9 @@ namespace UnityEditor
 
 		private void DrawSettingsGUI()
 		{
-			Rect rect = GUILayoutUtility.GetRect(16f, 16f);
-			if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, GUIStyle.none))
+			Vector2 vector = EditorStyles.iconButton.CalcSize(EditorGUI.GUIContents.titleSettingsIcon);
+			Rect rect = GUILayoutUtility.GetRect(vector.x, vector.y);
+			if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.iconButton))
 			{
 				EditorUtility.DisplayCustomMenu(rect, new GUIContent[]
 				{
@@ -437,26 +456,29 @@ namespace UnityEditor
 			EditorGUILayout.EndHorizontal();
 			float num = this.m_PreviewResizer.ResizeHandle(base.position, 100f, 250f, 17f);
 			Rect r = new Rect(0f, base.position.height - num, base.position.width, num);
-			switch (this.m_Mode)
+			LightingWindow.Mode mode = this.m_Mode;
+			if (mode != LightingWindow.Mode.ObjectSettings)
 			{
-			case LightingWindow.Mode.ObjectSettings:
-				if (Selection.activeGameObject)
+				if (mode != LightingWindow.Mode.BakeSettings)
 				{
-					this.m_ObjectTab.ObjectPreview(r);
+					if (mode == LightingWindow.Mode.Maps)
+					{
+						if (num > 0f)
+						{
+							this.m_LightmapPreviewTab.LightmapPreview(r);
+						}
+					}
 				}
-				break;
-			case LightingWindow.Mode.Maps:
-				if (num > 0f)
-				{
-					this.m_LightmapPreviewTab.LightmapPreview(r);
-				}
-				break;
+			}
+			else if (Selection.activeGameObject)
+			{
+				this.m_ObjectTab.ObjectPreview(r);
 			}
 		}
 
 		private void ModeToggle()
 		{
-			float width = base.position.width - 76f;
+			float width = base.position.width - this.toolbarPadding * 2f;
 			this.m_Mode = (LightingWindow.Mode)GUILayout.Toolbar((int)this.m_Mode, LightingWindow.styles.ModeToggles, "LargeButton", new GUILayoutOption[]
 			{
 				GUILayout.Width(width)
@@ -465,52 +487,51 @@ namespace UnityEditor
 
 		private void DeveloperBuildEnlightenSettings(SerializedObject so)
 		{
-			if (!Unsupported.IsDeveloperBuild())
+			if (Unsupported.IsDeveloperBuild())
 			{
-				return;
-			}
-			this.m_ShowDevOptions = EditorGUILayout.Foldout(this.m_ShowDevOptions, "Debug [internal]");
-			if (this.m_ShowDevOptions)
-			{
-				SerializedProperty property = so.FindProperty("m_GISettings.m_BounceScale");
-				SerializedProperty property2 = so.FindProperty("m_GISettings.m_TemporalCoherenceThreshold");
-				EditorGUI.indentLevel++;
-				Lightmapping.concurrentJobsType = (Lightmapping.ConcurrentJobsType)EditorGUILayout.IntPopup(LightingWindow.styles.ConcurrentJobs, (int)Lightmapping.concurrentJobsType, this.kConcurrentJobsTypeStrings, this.kConcurrentJobsTypeValues, new GUILayoutOption[0]);
-				Lightmapping.enlightenForceUpdates = EditorGUILayout.Toggle(LightingWindow.styles.ForceUpdates, Lightmapping.enlightenForceUpdates, new GUILayoutOption[0]);
-				Lightmapping.enlightenForceWhiteAlbedo = EditorGUILayout.Toggle(LightingWindow.styles.ForceWhiteAlbedo, Lightmapping.enlightenForceWhiteAlbedo, new GUILayoutOption[0]);
-				Lightmapping.filterMode = (FilterMode)EditorGUILayout.EnumPopup(EditorGUIUtility.TempContent("Filter Mode"), Lightmapping.filterMode, new GUILayoutOption[0]);
-				EditorGUILayout.Slider(property, 0f, 10f, LightingWindow.styles.BounceScale, new GUILayoutOption[0]);
-				EditorGUILayout.Slider(property2, 0f, 1f, LightingWindow.styles.UpdateThreshold, new GUILayoutOption[0]);
-				if (GUILayout.Button("Clear disk cache", new GUILayoutOption[]
+				this.m_ShowDevOptions = EditorGUILayout.Foldout(this.m_ShowDevOptions, "Debug [internal]", true);
+				if (this.m_ShowDevOptions)
 				{
-					GUILayout.Width(this.kButtonWidth)
-				}))
-				{
-					Lightmapping.Clear();
-					Lightmapping.ClearDiskCache();
+					SerializedProperty property = so.FindProperty("m_GISettings.m_BounceScale");
+					SerializedProperty property2 = so.FindProperty("m_GISettings.m_TemporalCoherenceThreshold");
+					EditorGUI.indentLevel++;
+					Lightmapping.concurrentJobsType = (Lightmapping.ConcurrentJobsType)EditorGUILayout.IntPopup(LightingWindow.styles.ConcurrentJobs, (int)Lightmapping.concurrentJobsType, this.kConcurrentJobsTypeStrings, this.kConcurrentJobsTypeValues, new GUILayoutOption[0]);
+					Lightmapping.enlightenForceUpdates = EditorGUILayout.Toggle(LightingWindow.styles.ForceUpdates, Lightmapping.enlightenForceUpdates, new GUILayoutOption[0]);
+					Lightmapping.enlightenForceWhiteAlbedo = EditorGUILayout.Toggle(LightingWindow.styles.ForceWhiteAlbedo, Lightmapping.enlightenForceWhiteAlbedo, new GUILayoutOption[0]);
+					Lightmapping.filterMode = (FilterMode)EditorGUILayout.EnumPopup(EditorGUIUtility.TempContent("Filter Mode"), Lightmapping.filterMode, new GUILayoutOption[0]);
+					EditorGUILayout.Slider(property, 0f, 10f, LightingWindow.styles.BounceScale, new GUILayoutOption[0]);
+					EditorGUILayout.Slider(property2, 0f, 1f, LightingWindow.styles.UpdateThreshold, new GUILayoutOption[0]);
+					if (GUILayout.Button("Clear disk cache", new GUILayoutOption[]
+					{
+						GUILayout.Width(this.kButtonWidth)
+					}))
+					{
+						Lightmapping.Clear();
+						Lightmapping.ClearDiskCache();
+					}
+					if (GUILayout.Button("Print state to console", new GUILayoutOption[]
+					{
+						GUILayout.Width(this.kButtonWidth)
+					}))
+					{
+						Lightmapping.PrintStateToConsole();
+					}
+					if (GUILayout.Button("Reset albedo/emissive", new GUILayoutOption[]
+					{
+						GUILayout.Width(this.kButtonWidth)
+					}))
+					{
+						GIDebugVisualisation.ResetRuntimeInputTextures();
+					}
+					if (GUILayout.Button("Reset environment", new GUILayoutOption[]
+					{
+						GUILayout.Width(this.kButtonWidth)
+					}))
+					{
+						DynamicGI.UpdateEnvironment();
+					}
+					EditorGUI.indentLevel--;
 				}
-				if (GUILayout.Button("Print state to console", new GUILayoutOption[]
-				{
-					GUILayout.Width(this.kButtonWidth)
-				}))
-				{
-					Lightmapping.PrintStateToConsole();
-				}
-				if (GUILayout.Button("Reset albedo/emissive", new GUILayoutOption[]
-				{
-					GUILayout.Width(this.kButtonWidth)
-				}))
-				{
-					GIDebugVisualisation.ResetRuntimeInputTextures();
-				}
-				if (GUILayout.Button("Reset environment", new GUILayoutOption[]
-				{
-					GUILayout.Width(this.kButtonWidth)
-				}))
-				{
-					DynamicGI.UpdateEnvironment();
-				}
-				EditorGUI.indentLevel--;
 			}
 		}
 
@@ -533,123 +554,125 @@ namespace UnityEditor
 		private void GeneralSettingsGUI(SerializedObject so, bool enableRealtimeGI, bool enableBakedGI)
 		{
 			this.m_ShowGeneralSettings = EditorGUILayout.FoldoutTitlebar(this.m_ShowGeneralSettings, LightingWindow.styles.GeneralGILabel);
-			if (!this.m_ShowGeneralSettings)
+			if (this.m_ShowGeneralSettings)
 			{
-				return;
+				SerializedProperty serializedProperty = so.FindProperty("m_GISettings.m_AlbedoBoost");
+				SerializedProperty property = so.FindProperty("m_GISettings.m_IndirectOutputScale");
+				SerializedProperty prop = so.FindProperty("m_LightmapEditorSettings.m_LightmapParameters");
+				SerializedProperty serializedProperty2 = so.FindProperty("m_LightmapEditorSettings.m_LightmapsBakeMode");
+				bool flag = enableBakedGI || enableRealtimeGI;
+				EditorGUI.indentLevel++;
+				using (new EditorGUI.DisabledScope(!flag))
+				{
+					EditorGUILayout.IntPopup(serializedProperty2, this.kModeStrings, this.kModeValues, LightingWindow.s_Styles.DirectionalMode, new GUILayoutOption[0]);
+					if (serializedProperty2.intValue == 1)
+					{
+						EditorGUILayout.HelpBox(LightingWindow.s_Styles.NoDirectionalInSM2AndGLES2.text, MessageType.Warning);
+					}
+					if (serializedProperty2.intValue == 2)
+					{
+						EditorGUILayout.HelpBox(LightingWindow.s_Styles.NoDirectionalSpecularInSM2AndGLES2.text, MessageType.Warning);
+					}
+					EditorGUILayout.Slider(property, 0f, 5f, LightingWindow.styles.IndirectOutputScale, new GUILayoutOption[0]);
+					EditorGUI.BeginChangeCheck();
+					EditorGUILayout.Slider(serializedProperty, 1f, 10f, LightingWindow.styles.AlbedoBoost, new GUILayoutOption[0]);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Lightmapping.bounceBoost = serializedProperty.floatValue;
+					}
+					if (LightingWindowObjectTab.LightmapParametersGUI(prop, LightingWindow.styles.DefaultLightmapParameters, false))
+					{
+						this.m_Mode = LightingWindow.Mode.ObjectSettings;
+					}
+					this.DeveloperBuildEnlightenSettings(so);
+				}
+				EditorGUI.indentLevel--;
 			}
-			SerializedProperty property = so.FindProperty("m_GISettings.m_AlbedoBoost");
-			SerializedProperty property2 = so.FindProperty("m_GISettings.m_IndirectOutputScale");
-			SerializedProperty prop = so.FindProperty("m_LightmapEditorSettings.m_LightmapParameters");
-			SerializedProperty serializedProperty = so.FindProperty("m_LightmapEditorSettings.m_LightmapsBakeMode");
-			bool flag = enableBakedGI || enableRealtimeGI;
-			EditorGUI.indentLevel++;
-			using (new EditorGUI.DisabledScope(!flag))
-			{
-				EditorGUILayout.IntPopup(serializedProperty, this.kModeStrings, this.kModeValues, LightingWindow.s_Styles.DirectionalMode, new GUILayoutOption[0]);
-				if (serializedProperty.intValue == 1)
-				{
-					EditorGUILayout.HelpBox(LightingWindow.s_Styles.NoDirectionalInSM2AndGLES2.text, MessageType.Warning);
-				}
-				if (serializedProperty.intValue == 2)
-				{
-					EditorGUILayout.HelpBox(LightingWindow.s_Styles.NoDirectionalSpecularInSM2AndGLES2.text, MessageType.Warning);
-				}
-				EditorGUILayout.Slider(property2, 0f, 5f, LightingWindow.styles.IndirectOutputScale, new GUILayoutOption[0]);
-				EditorGUILayout.Slider(property, 1f, 10f, LightingWindow.styles.AlbedoBoost, new GUILayoutOption[0]);
-				if (LightingWindowObjectTab.LightmapParametersGUI(prop, LightingWindow.styles.DefaultLightmapParameters, false))
-				{
-					this.m_Mode = LightingWindow.Mode.ObjectSettings;
-				}
-				this.DeveloperBuildEnlightenSettings(so);
-			}
-			EditorGUI.indentLevel--;
 		}
 
 		private void BakedGUI(SerializedObject so, bool enableRealtimeGI, SerializedProperty enableBakedGI)
 		{
 			this.m_ShowBakeSettings = EditorGUILayout.ToggleTitlebar(this.m_ShowBakeSettings, LightingWindow.styles.BakedGILabel, enableBakedGI);
-			if (!this.m_ShowBakeSettings)
+			if (this.m_ShowBakeSettings)
 			{
-				return;
-			}
-			SerializedProperty resolution = so.FindProperty("m_LightmapEditorSettings.m_Resolution");
-			SerializedProperty resolution2 = so.FindProperty("m_LightmapEditorSettings.m_BakeResolution");
-			SerializedProperty property = so.FindProperty("m_LightmapEditorSettings.m_Padding");
-			SerializedProperty serializedProperty = so.FindProperty("m_LightmapEditorSettings.m_AO");
-			SerializedProperty serializedProperty2 = so.FindProperty("m_LightmapEditorSettings.m_AOMaxDistance");
-			SerializedProperty property2 = so.FindProperty("m_LightmapEditorSettings.m_CompAOExponent");
-			SerializedProperty property3 = so.FindProperty("m_LightmapEditorSettings.m_CompAOExponentDirect");
-			SerializedProperty property4 = so.FindProperty("m_LightmapEditorSettings.m_TextureCompression");
-			SerializedProperty property5 = so.FindProperty("m_LightmapEditorSettings.m_DirectLightInLightProbes");
-			SerializedProperty serializedProperty3 = so.FindProperty("m_LightmapEditorSettings.m_FinalGather");
-			SerializedProperty property6 = so.FindProperty("m_LightmapEditorSettings.m_FinalGatherRayCount");
-			SerializedProperty property7 = so.FindProperty("m_LightmapEditorSettings.m_FinalGatherFiltering");
-			SerializedProperty property8 = so.FindProperty("m_LightmapEditorSettings.m_TextureWidth");
-			EditorGUI.indentLevel++;
-			using (new EditorGUI.DisabledScope(!enableBakedGI.boolValue))
-			{
-				LightingWindow.DrawLightmapResolutionField(resolution2, LightingWindow.styles.BakeResolution);
-				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(property, LightingWindow.styles.Padding, new GUILayoutOption[0]);
-				GUILayout.Label(" texels", LightingWindow.styles.labelStyle, new GUILayoutOption[0]);
-				GUILayout.EndHorizontal();
-				EditorGUILayout.PropertyField(property4, LightingWindow.s_Styles.TextureCompression, new GUILayoutOption[0]);
-				this.m_ShowIndirectResolution.target = !enableRealtimeGI;
-				if (EditorGUILayout.BeginFadeGroup(this.m_ShowIndirectResolution.faded))
-				{
-					EditorGUILayout.Space();
-					LightingWindow.DrawLightmapResolutionField(resolution, LightingWindow.styles.IndirectResolution);
-					EditorGUILayout.Space();
-				}
-				EditorGUILayout.EndFadeGroup();
-				EditorGUILayout.PropertyField(serializedProperty, LightingWindow.s_Styles.AO, new GUILayoutOption[0]);
-				if (serializedProperty.boolValue)
-				{
-					EditorGUI.indentLevel++;
-					EditorGUILayout.PropertyField(serializedProperty2, LightingWindow.styles.AOMaxDistance, new GUILayoutOption[0]);
-					if (serializedProperty2.floatValue < 0f)
-					{
-						serializedProperty2.floatValue = 0f;
-					}
-					EditorGUILayout.Slider(property2, 0f, 10f, LightingWindow.styles.AmbientOcclusion, new GUILayoutOption[0]);
-					EditorGUILayout.Slider(property3, 0f, 10f, LightingWindow.styles.AmbientOcclusionDirect, new GUILayoutOption[0]);
-					EditorGUI.indentLevel--;
-				}
-				EditorGUILayout.PropertyField(serializedProperty3, LightingWindow.s_Styles.FinalGather, new GUILayoutOption[0]);
-				if (serializedProperty3.boolValue)
-				{
-					EditorGUI.indentLevel++;
-					EditorGUILayout.PropertyField(property6, LightingWindow.styles.FinalGatherRayCount, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(property7, LightingWindow.styles.FinalGatherFiltering, new GUILayoutOption[0]);
-					EditorGUI.indentLevel--;
-				}
-				EditorGUILayout.IntPopup(property8, this.kMaxAtlasSizeStrings, this.kMaxAtlasSizeValues, LightingWindow.styles.MaxAtlasSize, new GUILayoutOption[0]);
-				EditorGUILayout.Space();
-				EditorGUILayout.LabelField(LightingWindow.styles.LightProbesTitle, new GUILayoutOption[0]);
+				SerializedProperty resolution = so.FindProperty("m_LightmapEditorSettings.m_Resolution");
+				SerializedProperty resolution2 = so.FindProperty("m_LightmapEditorSettings.m_BakeResolution");
+				SerializedProperty property = so.FindProperty("m_LightmapEditorSettings.m_Padding");
+				SerializedProperty serializedProperty = so.FindProperty("m_LightmapEditorSettings.m_AO");
+				SerializedProperty serializedProperty2 = so.FindProperty("m_LightmapEditorSettings.m_AOMaxDistance");
+				SerializedProperty property2 = so.FindProperty("m_LightmapEditorSettings.m_CompAOExponent");
+				SerializedProperty property3 = so.FindProperty("m_LightmapEditorSettings.m_CompAOExponentDirect");
+				SerializedProperty property4 = so.FindProperty("m_LightmapEditorSettings.m_TextureCompression");
+				SerializedProperty property5 = so.FindProperty("m_LightmapEditorSettings.m_DirectLightInLightProbes");
+				SerializedProperty serializedProperty3 = so.FindProperty("m_LightmapEditorSettings.m_FinalGather");
+				SerializedProperty property6 = so.FindProperty("m_LightmapEditorSettings.m_FinalGatherRayCount");
+				SerializedProperty property7 = so.FindProperty("m_LightmapEditorSettings.m_FinalGatherFiltering");
+				SerializedProperty property8 = so.FindProperty("m_LightmapEditorSettings.m_TextureWidth");
 				EditorGUI.indentLevel++;
-				EditorGUILayout.PropertyField(property5, LightingWindow.s_Styles.DirectLightInLightProbes, new GUILayoutOption[0]);
+				using (new EditorGUI.DisabledScope(!enableBakedGI.boolValue))
+				{
+					LightingWindow.DrawLightmapResolutionField(resolution2, LightingWindow.styles.BakeResolution);
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(property, LightingWindow.styles.Padding, new GUILayoutOption[0]);
+					GUILayout.Label(" texels", LightingWindow.styles.labelStyle, new GUILayoutOption[0]);
+					GUILayout.EndHorizontal();
+					EditorGUILayout.PropertyField(property4, LightingWindow.s_Styles.TextureCompression, new GUILayoutOption[0]);
+					this.m_ShowIndirectResolution.target = !enableRealtimeGI;
+					if (EditorGUILayout.BeginFadeGroup(this.m_ShowIndirectResolution.faded))
+					{
+						EditorGUILayout.Space();
+						LightingWindow.DrawLightmapResolutionField(resolution, LightingWindow.styles.IndirectResolution);
+						EditorGUILayout.Space();
+					}
+					EditorGUILayout.EndFadeGroup();
+					EditorGUILayout.PropertyField(serializedProperty, LightingWindow.s_Styles.AO, new GUILayoutOption[0]);
+					if (serializedProperty.boolValue)
+					{
+						EditorGUI.indentLevel++;
+						EditorGUILayout.PropertyField(serializedProperty2, LightingWindow.styles.AOMaxDistance, new GUILayoutOption[0]);
+						if (serializedProperty2.floatValue < 0f)
+						{
+							serializedProperty2.floatValue = 0f;
+						}
+						EditorGUILayout.Slider(property2, 0f, 10f, LightingWindow.styles.AmbientOcclusion, new GUILayoutOption[0]);
+						EditorGUILayout.Slider(property3, 0f, 10f, LightingWindow.styles.AmbientOcclusionDirect, new GUILayoutOption[0]);
+						EditorGUI.indentLevel--;
+					}
+					EditorGUILayout.PropertyField(serializedProperty3, LightingWindow.s_Styles.FinalGather, new GUILayoutOption[0]);
+					if (serializedProperty3.boolValue)
+					{
+						EditorGUI.indentLevel++;
+						EditorGUILayout.PropertyField(property6, LightingWindow.styles.FinalGatherRayCount, new GUILayoutOption[0]);
+						EditorGUILayout.PropertyField(property7, LightingWindow.styles.FinalGatherFiltering, new GUILayoutOption[0]);
+						EditorGUI.indentLevel--;
+					}
+					EditorGUILayout.IntPopup(property8, this.kMaxAtlasSizeStrings, this.kMaxAtlasSizeValues, LightingWindow.styles.MaxAtlasSize, new GUILayoutOption[0]);
+					EditorGUILayout.Space();
+					EditorGUILayout.LabelField(LightingWindow.styles.LightProbesTitle, new GUILayoutOption[0]);
+					EditorGUI.indentLevel++;
+					EditorGUILayout.PropertyField(property5, LightingWindow.s_Styles.DirectLightInLightProbes, new GUILayoutOption[0]);
+					EditorGUI.indentLevel--;
+					EditorGUILayout.Space();
+				}
 				EditorGUI.indentLevel--;
-				EditorGUILayout.Space();
 			}
-			EditorGUI.indentLevel--;
 		}
 
 		private void RealtimeGUI(SerializedObject so, SerializedProperty enableRealtimeGI)
 		{
 			this.m_ShowRealtimeSettings = EditorGUILayout.ToggleTitlebar(this.m_ShowRealtimeSettings, LightingWindow.styles.RealtimeGILabel, enableRealtimeGI);
-			if (!this.m_ShowRealtimeSettings)
+			if (this.m_ShowRealtimeSettings)
 			{
-				return;
+				SerializedProperty property = so.FindProperty("m_RuntimeCPUUsage");
+				SerializedProperty resolution = so.FindProperty("m_LightmapEditorSettings.m_Resolution");
+				EditorGUI.indentLevel++;
+				using (new EditorGUI.DisabledScope(!enableRealtimeGI.boolValue))
+				{
+					LightingWindow.DrawLightmapResolutionField(resolution, LightingWindow.styles.Resolution);
+					EditorGUILayout.IntPopup(property, LightingWindow.styles.RuntimeCPUUsageStrings, LightingWindow.styles.RuntimeCPUUsageValues, LightingWindow.styles.RuntimeCPUUsage, new GUILayoutOption[0]);
+				}
+				EditorGUI.indentLevel--;
 			}
-			SerializedProperty property = so.FindProperty("m_RuntimeCPUUsage");
-			SerializedProperty resolution = so.FindProperty("m_LightmapEditorSettings.m_Resolution");
-			EditorGUI.indentLevel++;
-			using (new EditorGUI.DisabledScope(!enableRealtimeGI.boolValue))
-			{
-				LightingWindow.DrawLightmapResolutionField(resolution, LightingWindow.styles.Resolution);
-				EditorGUILayout.IntPopup(property, LightingWindow.styles.RuntimeCPUUsageStrings, LightingWindow.styles.RuntimeCPUUsageValues, LightingWindow.styles.RuntimeCPUUsage, new GUILayoutOption[0]);
-			}
-			EditorGUI.indentLevel--;
 		}
 
 		private static void DrawLightmapResolutionField(SerializedProperty resolution, GUIContent label)
@@ -662,18 +685,17 @@ namespace UnityEditor
 
 		private void BakeDropDownCallback(object data)
 		{
-			LightingWindow.BakeMode bakeMode = (LightingWindow.BakeMode)((int)data);
-			LightingWindow.BakeMode bakeMode2 = bakeMode;
-			if (bakeMode2 != LightingWindow.BakeMode.BakeReflectionProbes)
+			LightingWindow.BakeMode bakeMode = (LightingWindow.BakeMode)data;
+			if (bakeMode != LightingWindow.BakeMode.Clear)
 			{
-				if (bakeMode2 == LightingWindow.BakeMode.Clear)
+				if (bakeMode == LightingWindow.BakeMode.BakeReflectionProbes)
 				{
-					this.DoClear();
+					this.DoBakeReflectionProbes();
 				}
 			}
 			else
 			{
-				this.DoBakeReflectionProbes();
+				this.DoClear();
 			}
 		}
 
@@ -717,7 +739,7 @@ namespace UnityEditor
 				}))
 				{
 					Lightmapping.Cancel();
-					Analytics.Track("/LightMapper/Cancel");
+					UsabilityAnalytics.Track("/LightMapper/Cancel");
 				}
 			}
 			GUILayout.EndHorizontal();
@@ -725,9 +747,9 @@ namespace UnityEditor
 
 		private void DoBake()
 		{
-			Analytics.Track("/LightMapper/Start");
-			Analytics.Event("LightMapper", "Mode", LightmapSettings.lightmapsMode.ToString(), 1);
-			Analytics.Event("LightMapper", "Button", "BakeScene", 1);
+			UsabilityAnalytics.Track("/LightMapper/Start");
+			UsabilityAnalytics.Event("LightMapper", "Mode", LightmapSettings.lightmapsMode.ToString(), 1);
+			UsabilityAnalytics.Event("LightMapper", "Button", "BakeScene", 1);
 			Lightmapping.BakeAsync();
 		}
 
@@ -735,13 +757,13 @@ namespace UnityEditor
 		{
 			Lightmapping.ClearLightingDataAsset();
 			Lightmapping.Clear();
-			Analytics.Track("/LightMapper/Clear");
+			UsabilityAnalytics.Track("/LightMapper/Clear");
 		}
 
 		private void DoBakeReflectionProbes()
 		{
 			Lightmapping.BakeAllReflectionProbesSnapshots();
-			Analytics.Track("/LightMapper/BakeAllReflectionProbesSnapshots");
+			UsabilityAnalytics.Track("/LightMapper/BakeAllReflectionProbesSnapshots");
 		}
 
 		private void Summary()
@@ -755,27 +777,24 @@ namespace UnityEditor
 			for (int i = 0; i < lightmaps.Length; i++)
 			{
 				LightmapData lightmapData = lightmaps[i];
-				if (!(lightmapData.lightmapFar == null))
+				if (!(lightmapData.lightmapLight == null))
 				{
 					num2++;
-					Vector2 vector = new Vector2((float)lightmapData.lightmapFar.width, (float)lightmapData.lightmapFar.height);
+					Vector2 vector = new Vector2((float)lightmapData.lightmapLight.width, (float)lightmapData.lightmapLight.height);
 					if (dictionary.ContainsKey(vector))
 					{
 						Dictionary<Vector2, int> dictionary2;
-						Dictionary<Vector2, int> expr_7C = dictionary2 = dictionary;
 						Vector2 key;
-						Vector2 expr_81 = key = vector;
-						int num3 = dictionary2[key];
-						expr_7C[expr_81] = num3 + 1;
+						(dictionary2 = dictionary)[key = vector] = dictionary2[key] + 1;
 					}
 					else
 					{
 						dictionary.Add(vector, 1);
 					}
-					num += TextureUtil.GetStorageMemorySize(lightmapData.lightmapFar);
-					if (lightmapData.lightmapNear)
+					num += TextureUtil.GetStorageMemorySize(lightmapData.lightmapLight);
+					if (lightmapData.lightmapDir)
 					{
-						num += TextureUtil.GetStorageMemorySize(lightmapData.lightmapNear);
+						num += TextureUtil.GetStorageMemorySize(lightmapData.lightmapDir);
 						flag = true;
 					}
 				}
@@ -785,7 +804,7 @@ namespace UnityEditor
 				num2,
 				(!flag) ? " non-directional" : " directional",
 				" lightmap",
-				(num2 != 1) ? "s" : string.Empty
+				(num2 != 1) ? "s" : ""
 			});
 			bool flag2 = true;
 			foreach (KeyValuePair<Vector2, int> current in dictionary)
@@ -812,7 +831,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.Label(EditorUtility.FormatBytes(num), LightingWindow.styles.labelStyle, new GUILayoutOption[0]);
-			GUILayout.Label((num2 != 0) ? string.Empty : "No Lightmaps", LightingWindow.styles.labelStyle, new GUILayoutOption[0]);
+			GUILayout.Label((num2 != 0) ? "" : "No Lightmaps", LightingWindow.styles.labelStyle, new GUILayoutOption[0]);
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 			GUILayout.EndVertical();

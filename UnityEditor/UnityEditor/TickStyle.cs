@@ -16,10 +16,10 @@ namespace UnityEditor
 
 		public int distLabel = 50;
 
-		public bool stubs;
+		public bool stubs = false;
 
-		public bool centerLabel;
+		public bool centerLabel = false;
 
-		public string unit = string.Empty;
+		public string unit = "";
 	}
 }

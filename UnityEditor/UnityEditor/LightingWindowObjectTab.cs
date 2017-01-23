@@ -109,11 +109,11 @@ namespace UnityEditor
 
 		private int m_PreviousSelection;
 
-		private bool m_ShowBakedLM;
+		private bool m_ShowBakedLM = false;
 
-		private bool m_ShowRealtimeLM;
+		private bool m_ShowRealtimeLM = false;
 
-		private bool m_HasSeparateIndirectUV;
+		private bool m_HasSeparateIndirectUV = false;
 
 		private AnimBool m_ShowClampedSize = new AnimBool();
 
@@ -147,206 +147,219 @@ namespace UnityEditor
 
 		public void ObjectPreview(Rect r)
 		{
-			if (r.height <= 0f)
+			if (r.height > 0f)
 			{
-				return;
-			}
-			if (LightingWindowObjectTab.s_Styles == null)
-			{
-				LightingWindowObjectTab.s_Styles = new LightingWindowObjectTab.Styles();
-			}
-			List<Texture2D> list = new List<Texture2D>();
-			GITextureType[] array = this.kObjectPreviewTextureTypes;
-			for (int i = 0; i < array.Length; i++)
-			{
-				GITextureType textureType = array[i];
-				list.Add(LightmapVisualizationUtility.GetGITexture(textureType));
-			}
-			if (list.Count == 0)
-			{
-				return;
-			}
-			if (this.m_ZoomablePreview == null)
-			{
-				this.m_ZoomablePreview = new ZoomableArea(true);
-				this.m_ZoomablePreview.hRangeMin = 0f;
-				this.m_ZoomablePreview.vRangeMin = 0f;
-				this.m_ZoomablePreview.hRangeMax = 1f;
-				this.m_ZoomablePreview.vRangeMax = 1f;
-				this.m_ZoomablePreview.SetShownHRange(0f, 1f);
-				this.m_ZoomablePreview.SetShownVRange(0f, 1f);
-				this.m_ZoomablePreview.uniformScale = true;
-				this.m_ZoomablePreview.scaleWithWindow = true;
-			}
-			GUI.Box(r, string.Empty, "PreBackground");
-			Rect position = new Rect(r);
-			position.y += 1f;
-			position.height = 18f;
-			GUI.Box(position, string.Empty, EditorStyles.toolbar);
-			Rect rect = new Rect(r);
-			rect.y += 1f;
-			rect.height = 18f;
-			rect.width = 120f;
-			Rect rect2 = new Rect(r);
-			rect2.yMin += rect.height;
-			rect2.yMax -= 14f;
-			rect2.width -= 11f;
-			int num = Array.IndexOf<GUIContent>(LightingWindowObjectTab.kObjectPreviewTextureOptions, this.m_SelectedObjectPreviewTexture);
-			if (num < 0)
-			{
-				num = 0;
-			}
-			num = EditorGUI.Popup(rect, num, LightingWindowObjectTab.kObjectPreviewTextureOptions, EditorStyles.toolbarPopup);
-			if (num >= LightingWindowObjectTab.kObjectPreviewTextureOptions.Length)
-			{
-				num = 0;
-			}
-			this.m_SelectedObjectPreviewTexture = LightingWindowObjectTab.kObjectPreviewTextureOptions[num];
-			LightmapType lightmapType = (this.kObjectPreviewTextureTypes[num] != GITextureType.Baked && this.kObjectPreviewTextureTypes[num] != GITextureType.BakedDirectional) ? LightmapType.DynamicLightmap : LightmapType.StaticLightmap;
-			bool flag = (this.kObjectPreviewTextureTypes[num] == GITextureType.Baked || this.kObjectPreviewTextureTypes[num] == GITextureType.BakedDirectional) && LightmapSettings.lightmapsMode == LightmapsMode.SeparateDirectional;
-			if (flag)
-			{
-				GUIContent gUIContent = GUIContent.Temp("Indirect");
-				Rect position2 = rect;
-				position2.x += rect.width;
-				position2.width = EditorStyles.toolbarButton.CalcSize(gUIContent).x;
-				this.m_HasSeparateIndirectUV = GUI.Toggle(position2, this.m_HasSeparateIndirectUV, gUIContent.text, EditorStyles.toolbarButton);
-			}
-			Event current = Event.current;
-			EventType type = current.type;
-			if (type != EventType.ValidateCommand && type != EventType.ExecuteCommand)
-			{
-				if (type == EventType.Repaint)
+				if (LightingWindowObjectTab.s_Styles == null)
 				{
-					Texture2D texture2D = list[num];
-					if (texture2D && Event.current.type == EventType.Repaint)
+					LightingWindowObjectTab.s_Styles = new LightingWindowObjectTab.Styles();
+				}
+				List<Texture2D> list = new List<Texture2D>();
+				GITextureType[] array = this.kObjectPreviewTextureTypes;
+				for (int i = 0; i < array.Length; i++)
+				{
+					GITextureType textureType = array[i];
+					list.Add(LightmapVisualizationUtility.GetGITexture(textureType));
+				}
+				if (list.Count != 0)
+				{
+					if (this.m_ZoomablePreview == null)
 					{
-						Rect rect3 = new Rect(0f, 0f, (float)texture2D.width, (float)texture2D.height);
-						rect3 = this.ResizeRectToFit(rect3, rect2);
-						rect3 = this.CenterToRect(rect3, rect2);
-						rect3 = this.ScaleRectByZoomableArea(rect3, this.m_ZoomablePreview);
-						Rect position3 = new Rect(rect3);
-						position3.x += 3f;
-						position3.y += rect2.y + 20f;
-						Rect drawableArea = new Rect(rect2);
-						drawableArea.y += rect.height + 3f;
-						float num2 = drawableArea.y - 14f;
-						position3.y -= num2;
-						drawableArea.y -= num2;
-						FilterMode filterMode = texture2D.filterMode;
-						texture2D.filterMode = FilterMode.Point;
-						GITextureType textureType2 = this.kObjectPreviewTextureTypes[num];
-						bool drawSpecularUV = flag && this.m_HasSeparateIndirectUV;
-						LightmapVisualizationUtility.DrawTextureWithUVOverlay(texture2D, Selection.activeGameObject, drawableArea, position3, textureType2, drawSpecularUV);
-						texture2D.filterMode = filterMode;
+						this.m_ZoomablePreview = new ZoomableArea(true);
+						this.m_ZoomablePreview.hRangeMin = 0f;
+						this.m_ZoomablePreview.vRangeMin = 0f;
+						this.m_ZoomablePreview.hRangeMax = 1f;
+						this.m_ZoomablePreview.vRangeMax = 1f;
+						this.m_ZoomablePreview.SetShownHRange(0f, 1f);
+						this.m_ZoomablePreview.SetShownVRange(0f, 1f);
+						this.m_ZoomablePreview.uniformScale = true;
+						this.m_ZoomablePreview.scaleWithWindow = true;
 					}
+					GUI.Box(r, "", "PreBackground");
+					Rect position = new Rect(r);
+					position.y += 1f;
+					position.height = 18f;
+					GUI.Box(position, "", EditorStyles.toolbar);
+					Rect rect = new Rect(r);
+					rect.y += 1f;
+					rect.height = 18f;
+					rect.width = 120f;
+					Rect rect2 = new Rect(r);
+					rect2.yMin += rect.height;
+					rect2.yMax -= 14f;
+					rect2.width -= 11f;
+					int num = Array.IndexOf<GUIContent>(LightingWindowObjectTab.kObjectPreviewTextureOptions, this.m_SelectedObjectPreviewTexture);
+					if (num < 0)
+					{
+						num = 0;
+					}
+					num = EditorGUI.Popup(rect, num, LightingWindowObjectTab.kObjectPreviewTextureOptions, EditorStyles.toolbarPopup);
+					if (num >= LightingWindowObjectTab.kObjectPreviewTextureOptions.Length)
+					{
+						num = 0;
+					}
+					this.m_SelectedObjectPreviewTexture = LightingWindowObjectTab.kObjectPreviewTextureOptions[num];
+					LightmapType lightmapType = (this.kObjectPreviewTextureTypes[num] != GITextureType.Baked && this.kObjectPreviewTextureTypes[num] != GITextureType.BakedDirectional) ? LightmapType.DynamicLightmap : LightmapType.StaticLightmap;
+					bool flag = (this.kObjectPreviewTextureTypes[num] == GITextureType.Baked || this.kObjectPreviewTextureTypes[num] == GITextureType.BakedDirectional) && LightmapSettings.lightmapsMode == LightmapsMode.SeparateDirectional;
+					if (flag)
+					{
+						GUIContent gUIContent = GUIContent.Temp("Indirect");
+						Rect position2 = rect;
+						position2.x += rect.width;
+						position2.width = EditorStyles.toolbarButton.CalcSize(gUIContent).x;
+						this.m_HasSeparateIndirectUV = GUI.Toggle(position2, this.m_HasSeparateIndirectUV, gUIContent.text, EditorStyles.toolbarButton);
+					}
+					Event current = Event.current;
+					EventType type = current.type;
+					if (type != EventType.ValidateCommand && type != EventType.ExecuteCommand)
+					{
+						if (type == EventType.Repaint)
+						{
+							Texture2D texture2D = list[num];
+							if (texture2D && Event.current.type == EventType.Repaint)
+							{
+								Rect rect3 = new Rect(0f, 0f, (float)texture2D.width, (float)texture2D.height);
+								rect3 = this.ResizeRectToFit(rect3, rect2);
+								rect3 = this.CenterToRect(rect3, rect2);
+								rect3 = this.ScaleRectByZoomableArea(rect3, this.m_ZoomablePreview);
+								Rect position3 = new Rect(rect3);
+								position3.x += 3f;
+								position3.y += rect2.y + 20f;
+								Rect drawableArea = new Rect(rect2);
+								drawableArea.y += rect.height + 3f;
+								float num2 = drawableArea.y - 14f;
+								position3.y -= num2;
+								drawableArea.y -= num2;
+								FilterMode filterMode = texture2D.filterMode;
+								texture2D.filterMode = FilterMode.Point;
+								GITextureType textureType2 = this.kObjectPreviewTextureTypes[num];
+								bool drawSpecularUV = flag && this.m_HasSeparateIndirectUV;
+								LightmapVisualizationUtility.DrawTextureWithUVOverlay(texture2D, Selection.activeGameObject, drawableArea, position3, textureType2, drawSpecularUV);
+								texture2D.filterMode = filterMode;
+							}
+						}
+					}
+					else if (Event.current.commandName == "FrameSelected")
+					{
+						Vector4 lightmapTilingOffset = LightmapVisualizationUtility.GetLightmapTilingOffset(lightmapType);
+						Vector2 vector = new Vector2(lightmapTilingOffset.z, lightmapTilingOffset.w);
+						Vector2 lhs = vector + new Vector2(lightmapTilingOffset.x, lightmapTilingOffset.y);
+						vector = Vector2.Max(vector, Vector2.zero);
+						lhs = Vector2.Min(lhs, Vector2.one);
+						float y = 1f - vector.y;
+						vector.y = 1f - lhs.y;
+						lhs.y = y;
+						Rect shownArea = new Rect(vector.x, vector.y, lhs.x - vector.x, lhs.y - vector.y);
+						shownArea.x -= Mathf.Clamp(shownArea.height - shownArea.width, 0f, 3.40282347E+38f) / 2f;
+						shownArea.y -= Mathf.Clamp(shownArea.width - shownArea.height, 0f, 3.40282347E+38f) / 2f;
+						float num3 = Mathf.Max(shownArea.width, shownArea.height);
+						shownArea.height = num3;
+						shownArea.width = num3;
+						if (flag && this.m_HasSeparateIndirectUV)
+						{
+							shownArea.x += 0.5f;
+						}
+						this.m_ZoomablePreview.shownArea = shownArea;
+						Event.current.Use();
+					}
+					if (this.m_PreviousSelection != Selection.activeInstanceID)
+					{
+						this.m_PreviousSelection = Selection.activeInstanceID;
+						this.m_ZoomablePreview.SetShownHRange(0f, 1f);
+						this.m_ZoomablePreview.SetShownVRange(0f, 1f);
+					}
+					Rect rect4 = new Rect(r);
+					rect4.yMin += rect.height;
+					this.m_ZoomablePreview.rect = rect4;
+					this.m_ZoomablePreview.BeginViewGUI();
+					this.m_ZoomablePreview.EndViewGUI();
+					GUILayoutUtility.GetRect(r.width, r.height);
 				}
 			}
-			else if (Event.current.commandName == "FrameSelected")
-			{
-				Vector4 lightmapTilingOffset = LightmapVisualizationUtility.GetLightmapTilingOffset(lightmapType);
-				Vector2 vector = new Vector2(lightmapTilingOffset.z, lightmapTilingOffset.w);
-				Vector2 lhs = vector + new Vector2(lightmapTilingOffset.x, lightmapTilingOffset.y);
-				vector = Vector2.Max(vector, Vector2.zero);
-				lhs = Vector2.Min(lhs, Vector2.one);
-				float y = 1f - vector.y;
-				vector.y = 1f - lhs.y;
-				lhs.y = y;
-				Rect shownArea = new Rect(vector.x, vector.y, lhs.x - vector.x, lhs.y - vector.y);
-				shownArea.x -= Mathf.Clamp(shownArea.height - shownArea.width, 0f, 3.40282347E+38f) / 2f;
-				shownArea.y -= Mathf.Clamp(shownArea.width - shownArea.height, 0f, 3.40282347E+38f) / 2f;
-				float num3 = Mathf.Max(shownArea.width, shownArea.height);
-				shownArea.height = num3;
-				shownArea.width = num3;
-				if (flag && this.m_HasSeparateIndirectUV)
-				{
-					shownArea.x += 0.5f;
-				}
-				this.m_ZoomablePreview.shownArea = shownArea;
-				Event.current.Use();
-			}
-			if (this.m_PreviousSelection != Selection.activeInstanceID)
-			{
-				this.m_PreviousSelection = Selection.activeInstanceID;
-				this.m_ZoomablePreview.SetShownHRange(0f, 1f);
-				this.m_ZoomablePreview.SetShownVRange(0f, 1f);
-			}
-			Rect rect4 = new Rect(r);
-			rect4.yMin += rect.height;
-			this.m_ZoomablePreview.rect = rect4;
-			this.m_ZoomablePreview.BeginViewGUI();
-			this.m_ZoomablePreview.EndViewGUI();
-			GUILayoutUtility.GetRect(r.width, r.height);
 		}
 
 		public bool EditLights()
 		{
 			GameObject[] array;
 			Light[] selectedObjectsOfType = SceneModeUtility.GetSelectedObjectsOfType<Light>(out array, new Type[0]);
+			bool result;
 			if (array.Length == 0)
 			{
-				return false;
+				result = false;
 			}
-			EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
-			this.GetLightEditor(selectedObjectsOfType).OnInspectorGUI();
-			GUILayout.Space(10f);
-			return true;
+			else
+			{
+				EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
+				this.GetLightEditor(selectedObjectsOfType).OnInspectorGUI();
+				GUILayout.Space(10f);
+				result = true;
+			}
+			return result;
 		}
 
 		public bool EditLightmapParameters()
 		{
 			UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(LightmapParameters), SelectionMode.Unfiltered);
+			bool result;
 			if (filtered.Length == 0)
 			{
-				return false;
+				result = false;
 			}
-			EditorGUILayout.MultiSelectionObjectTitleBar(filtered);
-			this.GetLightmapParametersEditor(filtered).OnInspectorGUI();
-			GUILayout.Space(10f);
-			return true;
+			else
+			{
+				EditorGUILayout.MultiSelectionObjectTitleBar(filtered);
+				this.GetLightmapParametersEditor(filtered).OnInspectorGUI();
+				GUILayout.Space(10f);
+				result = true;
+			}
+			return result;
 		}
 
 		public bool EditTerrains()
 		{
 			GameObject[] array;
 			Terrain[] selectedObjectsOfType = SceneModeUtility.GetSelectedObjectsOfType<Terrain>(out array, new Type[0]);
+			bool result;
 			if (array.Length == 0)
 			{
-				return false;
+				result = false;
 			}
-			EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
-			SerializedObject serializedObject = new SerializedObject(array);
-			using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1)))
+			else
 			{
-				if (GUI.enabled)
+				EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
+				SerializedObject serializedObject = new SerializedObject(array);
+				using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1)))
 				{
-					this.ShowTerrainChunks(selectedObjectsOfType);
+					if (GUI.enabled)
+					{
+						this.ShowTerrainChunks(selectedObjectsOfType);
+					}
+					SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType.ToArray<Terrain>());
+					float lightmapScale = this.LightmapScaleGUI(serializedObject2, 1f);
+					TerrainData terrainData = selectedObjectsOfType[0].terrainData;
+					float cachedSurfaceArea = (!(terrainData != null)) ? 0f : (terrainData.size.x * terrainData.size.z);
+					this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
+					LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters, true);
+					if (GUI.enabled && selectedObjectsOfType.Length == 1 && selectedObjectsOfType[0].terrainData != null)
+					{
+						this.ShowBakePerformanceWarning(serializedObject2, selectedObjectsOfType[0]);
+					}
+					this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
+					if (this.m_ShowBakedLM)
+					{
+						this.ShowAtlasGUI(serializedObject2);
+					}
+					this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
+					if (this.m_ShowRealtimeLM)
+					{
+						this.ShowRealtimeLMGUI(selectedObjectsOfType[0]);
+					}
+					serializedObject.ApplyModifiedProperties();
+					serializedObject2.ApplyModifiedProperties();
 				}
-				SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType.ToArray<Terrain>());
-				float lightmapScale = this.LightmapScaleGUI(serializedObject2, 1f);
-				TerrainData terrainData = selectedObjectsOfType[0].terrainData;
-				float cachedSurfaceArea = (!(terrainData != null)) ? 0f : (terrainData.size.x * terrainData.size.z);
-				this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
-				LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters, true);
-				if (GUI.enabled && selectedObjectsOfType.Length == 1 && selectedObjectsOfType[0].terrainData != null)
-				{
-					this.ShowBakePerformanceWarning(serializedObject2, selectedObjectsOfType[0]);
-				}
-				this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
-				if (this.m_ShowBakedLM)
-				{
-					this.ShowAtlasGUI(serializedObject2);
-				}
-				this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
-				if (this.m_ShowRealtimeLM)
-				{
-					this.ShowRealtimeLMGUI(selectedObjectsOfType[0]);
-				}
-				serializedObject.ApplyModifiedProperties();
-				serializedObject2.ApplyModifiedProperties();
+				GUILayout.Space(10f);
+				result = true;
 			}
-			GUILayout.Space(10f);
-			return true;
+			return result;
 		}
 
 		public bool EditRenderers()
@@ -357,58 +370,63 @@ namespace UnityEditor
 				typeof(MeshRenderer),
 				typeof(SkinnedMeshRenderer)
 			});
+			bool result;
 			if (array.Length == 0)
 			{
-				return false;
+				result = false;
 			}
-			EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
-			SerializedObject serializedObject = new SerializedObject(array);
-			using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1)))
+			else
 			{
-				SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType);
-				float num = LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
-				for (int i = 1; i < selectedObjectsOfType.Length; i++)
+				EditorGUILayout.InspectorTitlebar(selectedObjectsOfType);
+				SerializedObject serializedObject = new SerializedObject(array);
+				using (new EditorGUI.DisabledScope(!SceneModeUtility.StaticFlagField("Lightmap Static", serializedObject.FindProperty("m_StaticEditorFlags"), 1)))
 				{
-					if (!Mathf.Approximately(num, LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[i])))
+					SerializedObject serializedObject2 = new SerializedObject(selectedObjectsOfType);
+					float num = LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
+					for (int i = 1; i < selectedObjectsOfType.Length; i++)
 					{
-						num = 1f;
+						if (!Mathf.Approximately(num, LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[i])))
+						{
+							num = 1f;
+						}
 					}
+					float lightmapScale = this.LightmapScaleGUI(serializedObject2, num) * LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
+					float cachedSurfaceArea = (!(selectedObjectsOfType[0] is MeshRenderer)) ? InternalMeshUtil.GetCachedSkinnedMeshSurfaceArea(selectedObjectsOfType[0] as SkinnedMeshRenderer) : InternalMeshUtil.GetCachedMeshSurfaceArea(selectedObjectsOfType[0] as MeshRenderer);
+					this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
+					EditorGUILayout.PropertyField(serializedObject2.FindProperty("m_ImportantGI"), LightingWindowObjectTab.s_Styles.ImportantGI, new GUILayoutOption[0]);
+					LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters, true);
+					GUILayout.Space(10f);
+					this.RendererUVSettings(serializedObject2);
+					GUILayout.Space(10f);
+					this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas, true);
+					if (this.m_ShowBakedLM)
+					{
+						this.ShowAtlasGUI(serializedObject2);
+					}
+					this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM, true);
+					if (this.m_ShowRealtimeLM)
+					{
+						this.ShowRealtimeLMGUI(serializedObject2, selectedObjectsOfType[0]);
+					}
+					if (LightmapEditorSettings.HasZeroAreaMesh(selectedObjectsOfType[0]))
+					{
+						EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ZeroAreaPackingMesh.text, MessageType.Warning);
+					}
+					if (LightmapEditorSettings.HasClampedResolution(selectedObjectsOfType[0]))
+					{
+						EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ClampedPackingResolution.text, MessageType.Warning);
+					}
+					if (!LightingWindowObjectTab.HasNormals(selectedObjectsOfType[0]))
+					{
+						EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.NoNormalsNoLightmapping.text, MessageType.Warning);
+					}
+					serializedObject.ApplyModifiedProperties();
+					serializedObject2.ApplyModifiedProperties();
 				}
-				float lightmapScale = this.LightmapScaleGUI(serializedObject2, num) * LightmapVisualization.GetLightmapLODLevelScale(selectedObjectsOfType[0]);
-				float cachedSurfaceArea = (!(selectedObjectsOfType[0] is MeshRenderer)) ? InternalMeshUtil.GetCachedSkinnedMeshSurfaceArea(selectedObjectsOfType[0] as SkinnedMeshRenderer) : InternalMeshUtil.GetCachedMeshSurfaceArea(selectedObjectsOfType[0] as MeshRenderer);
-				this.ShowClampedSizeInLightmapGUI(lightmapScale, cachedSurfaceArea);
-				EditorGUILayout.PropertyField(serializedObject2.FindProperty("m_ImportantGI"), LightingWindowObjectTab.s_Styles.ImportantGI, new GUILayoutOption[0]);
-				LightingWindowObjectTab.LightmapParametersGUI(serializedObject2.FindProperty("m_LightmapParameters"), LightingWindowObjectTab.s_Styles.LightmapParameters, true);
 				GUILayout.Space(10f);
-				this.RendererUVSettings(serializedObject2);
-				GUILayout.Space(10f);
-				this.m_ShowBakedLM = EditorGUILayout.Foldout(this.m_ShowBakedLM, LightingWindowObjectTab.s_Styles.Atlas);
-				if (this.m_ShowBakedLM)
-				{
-					this.ShowAtlasGUI(serializedObject2);
-				}
-				this.m_ShowRealtimeLM = EditorGUILayout.Foldout(this.m_ShowRealtimeLM, LightingWindowObjectTab.s_Styles.RealtimeLM);
-				if (this.m_ShowRealtimeLM)
-				{
-					this.ShowRealtimeLMGUI(serializedObject2, selectedObjectsOfType[0]);
-				}
-				if (LightmapEditorSettings.HasZeroAreaMesh(selectedObjectsOfType[0]))
-				{
-					EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ZeroAreaPackingMesh.text, MessageType.Warning);
-				}
-				if (LightmapEditorSettings.HasClampedResolution(selectedObjectsOfType[0]))
-				{
-					EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.ClampedPackingResolution.text, MessageType.Warning);
-				}
-				if (!LightingWindowObjectTab.HasNormals(selectedObjectsOfType[0]))
-				{
-					EditorGUILayout.HelpBox(LightingWindowObjectTab.s_Styles.NoNormalsNoLightmapping.text, MessageType.Warning);
-				}
-				serializedObject.ApplyModifiedProperties();
-				serializedObject2.ApplyModifiedProperties();
+				result = true;
 			}
-			GUILayout.Space(10f);
-			return true;
+			return result;
 		}
 
 		public void ObjectSettings()
@@ -603,8 +621,8 @@ namespace UnityEditor
 			float x = terrain.terrainData.size.x;
 			float z = terrain.terrainData.size.z;
 			LightmapParameters lightmapParameters = ((LightmapParameters)so.FindProperty("m_LightmapParameters").objectReferenceValue) ?? new LightmapParameters();
-			float num = x * lightmapParameters.resolution * LightmapEditorSettings.resolution;
-			float num2 = z * lightmapParameters.resolution * LightmapEditorSettings.resolution;
+			float num = x * lightmapParameters.resolution * LightmapEditorSettings.realtimeResolution;
+			float num2 = z * lightmapParameters.resolution * LightmapEditorSettings.realtimeResolution;
 			if (num > 512f || num2 > 512f)
 			{
 				EditorGUILayout.HelpBox("Baking resolution for this terrain probably is TOO HIGH. Try use a lower resolution parameter set otherwise it may take long or even infinite time to bake and memory consumption during baking may get greatly increased as well.", MessageType.Warning);
@@ -640,12 +658,17 @@ namespace UnityEditor
 
 		private static bool isBuiltIn(SerializedProperty prop)
 		{
+			bool result;
 			if (prop.objectReferenceValue != null)
 			{
 				LightmapParameters lightmapParameters = prop.objectReferenceValue as LightmapParameters;
-				return lightmapParameters.hideFlags == HideFlags.NotEditable;
+				result = (lightmapParameters.hideFlags == HideFlags.NotEditable);
 			}
-			return false;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		public static bool LightmapParametersGUI(SerializedProperty prop, GUIContent content, bool advancedParameters)
@@ -667,14 +690,16 @@ namespace UnityEditor
 			bool result = false;
 			if (prop.objectReferenceValue == null)
 			{
-				using (new EditorGUI.DisabledScope(true))
+				SerializedObject serializedObject = new SerializedObject(LightmapEditorSettings.GetLightmapSettings());
+				SerializedProperty serializedProperty = serializedObject.FindProperty("m_LightmapEditorSettings.m_LightmapParameters");
+				using (new EditorGUI.DisabledScope(serializedProperty == null))
 				{
 					if (GUILayout.Button(text, EditorStyles.miniButton, new GUILayoutOption[]
 					{
 						GUILayout.ExpandWidth(false)
 					}))
 					{
-						Selection.activeObject = null;
+						Selection.activeObject = serializedProperty.objectReferenceValue;
 						result = true;
 					}
 				}

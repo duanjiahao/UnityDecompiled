@@ -28,15 +28,15 @@ namespace UnityEditor.Connect
 			}
 		}
 
-		private const string kDrawerContainerTitle = "Services";
-
 		private static UnityConnectServiceCollection s_UnityConnectEditor;
 
 		private static UnityConnectEditorWindow s_UnityConnectEditorWindow;
 
-		private string m_CurrentServiceName = string.Empty;
+		private const string kDrawerContainerTitle = "Services";
 
-		private string m_CurrentPageName = string.Empty;
+		private string m_CurrentServiceName = "";
+
+		private string m_CurrentPageName = "";
 
 		private readonly Dictionary<string, UnityConnectServiceData> m_Services;
 
@@ -45,16 +45,16 @@ namespace UnityEditor.Connect
 			get
 			{
 				UnityConnectEditorWindow[] array = Resources.FindObjectsOfTypeAll(typeof(UnityConnectEditorWindow)) as UnityConnectEditorWindow[];
-				bool arg_41_0;
+				bool arg_42_0;
 				if (array != null)
 				{
-					arg_41_0 = array.Any((UnityConnectEditorWindow win) => win != null);
+					arg_42_0 = array.Any((UnityConnectEditorWindow win) => win != null);
 				}
 				else
 				{
-					arg_41_0 = false;
+					arg_42_0 = false;
 				}
-				return arg_41_0;
+				return arg_42_0;
 			}
 		}
 
@@ -115,7 +115,7 @@ namespace UnityEditor.Connect
 				text2 = text2 + "/#/" + this.m_CurrentPageName;
 			}
 			UnityConnectServiceCollection.s_UnityConnectEditorWindow.currentUrl = text2;
-			UnityConnectServiceCollection.s_UnityConnectEditorWindow.Show();
+			UnityConnectServiceCollection.s_UnityConnectEditorWindow.ShowTab();
 			if (InternalEditorUtility.isApplicationActive && forceFocus)
 			{
 				UnityConnectServiceCollection.s_UnityConnectEditorWindow.Focus();
@@ -129,6 +129,7 @@ namespace UnityEditor.Connect
 				UnityConnectServiceCollection.s_UnityConnectEditorWindow.Close();
 				UnityConnectServiceCollection.s_UnityConnectEditorWindow = null;
 			}
+			UnityConnect.instance.ClearCache();
 		}
 
 		public void ReloadServices()
@@ -146,12 +147,17 @@ namespace UnityEditor.Connect
 
 		public bool AddService(UnityConnectServiceData cloudService)
 		{
+			bool result;
 			if (this.m_Services.ContainsKey(cloudService.serviceName))
 			{
-				return false;
+				result = false;
 			}
-			this.m_Services[cloudService.serviceName] = cloudService;
-			return true;
+			else
+			{
+				this.m_Services[cloudService.serviceName] = cloudService;
+				result = true;
+			}
+			return result;
 		}
 
 		public bool RemoveService(string serviceName)
@@ -166,58 +172,67 @@ namespace UnityEditor.Connect
 
 		public bool ShowService(string serviceName, bool forceFocus)
 		{
-			return this.ShowService(serviceName, string.Empty, forceFocus);
+			return this.ShowService(serviceName, "", forceFocus);
 		}
 
 		public bool ShowService(string serviceName, string atPage, bool forceFocus)
 		{
+			bool result;
 			if (!this.m_Services.ContainsKey(serviceName))
 			{
-				return false;
+				result = false;
 			}
-			ConnectInfo connectInfo = UnityConnect.instance.connectInfo;
-			this.m_CurrentServiceName = this.GetActualServiceName(serviceName, connectInfo);
-			this.m_CurrentPageName = atPage;
-			this.EnsureDrawerIsVisible(forceFocus);
-			return true;
+			else
+			{
+				ConnectInfo connectInfo = UnityConnect.instance.connectInfo;
+				this.m_CurrentServiceName = this.GetActualServiceName(serviceName, connectInfo);
+				this.m_CurrentPageName = atPage;
+				this.EnsureDrawerIsVisible(forceFocus);
+				result = true;
+			}
+			return result;
 		}
 
 		private string GetActualServiceName(string desiredServiceName, ConnectInfo state)
 		{
+			string result;
 			if (!state.online)
 			{
-				return "ErrorHub";
+				result = "ErrorHub";
 			}
-			if (!state.ready)
+			else if (!state.ready)
 			{
-				return "Hub";
+				result = "Hub";
 			}
-			if (state.maintenance)
+			else if (state.maintenance)
 			{
-				return "ErrorHub";
+				result = "ErrorHub";
 			}
-			if (desiredServiceName != "Hub" && state.online && !state.loggedIn)
+			else if (desiredServiceName != "Hub" && state.online && !state.loggedIn)
 			{
-				return "Hub";
+				result = "Hub";
 			}
-			if (desiredServiceName == "ErrorHub" && state.online)
+			else if (desiredServiceName == "ErrorHub" && state.online)
 			{
-				return "Hub";
+				result = "Hub";
 			}
-			if (string.IsNullOrEmpty(desiredServiceName))
+			else if (string.IsNullOrEmpty(desiredServiceName))
 			{
-				return "Hub";
+				result = "Hub";
 			}
-			return desiredServiceName;
+			else
+			{
+				result = desiredServiceName;
+			}
+			return result;
 		}
 
 		public void EnableService(string name, bool enabled)
 		{
-			if (!this.m_Services.ContainsKey(name))
+			if (this.m_Services.ContainsKey(name))
 			{
-				return;
+				this.m_Services[name].EnableService(enabled);
 			}
-			this.m_Services[name].EnableService(enabled);
 		}
 
 		public string GetUrlForService(string serviceName)
@@ -249,18 +264,31 @@ namespace UnityEditor.Connect
 
 		public WebView GetWebViewFromServiceName(string serviceName)
 		{
+			WebView result;
 			if (UnityConnectServiceCollection.s_UnityConnectEditorWindow == null || !UnityConnectServiceCollection.s_UnityConnectEditorWindow.UrlsMatch(this.GetAllServiceUrls()))
 			{
-				return null;
+				result = null;
 			}
-			if (!this.m_Services.ContainsKey(serviceName))
+			else if (!this.m_Services.ContainsKey(serviceName))
 			{
-				return null;
+				result = null;
 			}
-			ConnectInfo connectInfo = UnityConnect.instance.connectInfo;
-			string actualServiceName = this.GetActualServiceName(serviceName, connectInfo);
-			string serviceUrl = this.m_Services[actualServiceName].serviceUrl;
-			return UnityConnectServiceCollection.s_UnityConnectEditorWindow.GetWebViewFromURL(serviceUrl);
+			else
+			{
+				ConnectInfo connectInfo = UnityConnect.instance.connectInfo;
+				string actualServiceName = this.GetActualServiceName(serviceName, connectInfo);
+				string serviceUrl = this.m_Services[actualServiceName].serviceUrl;
+				result = UnityConnectServiceCollection.s_UnityConnectEditorWindow.GetWebViewFromURL(serviceUrl);
+			}
+			return result;
+		}
+
+		public void UnbindAllServices()
+		{
+			foreach (UnityConnectServiceData current in this.m_Services.Values)
+			{
+				current.OnProjectUnbound();
+			}
 		}
 	}
 }

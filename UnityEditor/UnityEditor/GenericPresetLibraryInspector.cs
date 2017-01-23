@@ -113,9 +113,12 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Label(this.m_Header, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
-			if (flag && this.m_EditButtonClickedCallback != null && GUILayout.Button("Edit...", GenericPresetLibraryInspector<T>.s_EditButtonStyle, new GUILayoutOption[0]) && this.m_EditButtonClickedCallback != null)
+			if (flag && this.m_EditButtonClickedCallback != null && GUILayout.Button("Edit...", GenericPresetLibraryInspector<T>.s_EditButtonStyle, new GUILayoutOption[0]))
 			{
-				this.m_EditButtonClickedCallback(text);
+				if (this.m_EditButtonClickedCallback != null)
+				{
+					this.m_EditButtonClickedCallback(text);
+				}
 			}
 			GUILayout.EndHorizontal();
 			GUILayout.Space(6f);
@@ -137,36 +140,40 @@ namespace UnityEditor
 			{
 				GUILayoutUtility.GetRect(1f, 1f);
 				HandleUtility.Repaint();
-				return;
 			}
-			PresetLibrary presetLibrary = ScriptableSingleton<PresetLibraryManager>.instance.GetLibrary<T>(this.m_SaveLoadHelper, libraryPath) as PresetLibrary;
-			if (presetLibrary == null)
+			else
 			{
-				Debug.Log("Could not load preset library '" + libraryPath + "'");
-				return;
-			}
-			this.SetupGrid(this.m_LastRepaintedWidth, presetLibrary.Count(), this.itemViewMode);
-			int num = Mathf.Min(presetLibrary.Count(), this.maxShowNumPresets);
-			int num2 = presetLibrary.Count() - num;
-			float num3 = this.m_Grid.CalcRect(num - 1, 0f).yMax + ((num2 <= 0) ? 0f : 20f);
-			Rect rect = GUILayoutUtility.GetRect(1f, num3);
-			float num4 = this.presetSize.x + 6f;
-			for (int i = 0; i < num; i++)
-			{
-				Rect rect2 = this.m_Grid.CalcRect(i, rect.y);
-				Rect rect3 = new Rect(rect2.x, rect2.y, this.presetSize.x, this.presetSize.y);
-				presetLibrary.Draw(rect3, i);
-				if (this.itemViewMode == PresetLibraryEditorState.ItemViewMode.List)
+				PresetLibrary presetLibrary = ScriptableSingleton<PresetLibraryManager>.instance.GetLibrary<T>(this.m_SaveLoadHelper, libraryPath) as PresetLibrary;
+				if (presetLibrary == null)
 				{
-					Rect position = new Rect(rect2.x + num4, rect2.y, rect2.width - num4, rect2.height);
-					string name = presetLibrary.GetName(i);
-					GUI.Label(position, name);
+					Debug.Log("Could not load preset library '" + libraryPath + "'");
 				}
-			}
-			if (num2 > 0)
-			{
-				Rect position2 = new Rect(this.m_Grid.CalcRect(0, 0f).x, rect.y + num3 - 20f, rect.width, 20f);
-				GUI.Label(position2, string.Format("+ {0} more...", num2));
+				else
+				{
+					this.SetupGrid(this.m_LastRepaintedWidth, presetLibrary.Count(), this.itemViewMode);
+					int num = Mathf.Min(presetLibrary.Count(), this.maxShowNumPresets);
+					int num2 = presetLibrary.Count() - num;
+					float num3 = this.m_Grid.CalcRect(num - 1, 0f).yMax + ((num2 <= 0) ? 0f : 20f);
+					Rect rect = GUILayoutUtility.GetRect(1f, num3);
+					float num4 = this.presetSize.x + 6f;
+					for (int i = 0; i < num; i++)
+					{
+						Rect rect2 = this.m_Grid.CalcRect(i, rect.y);
+						Rect rect3 = new Rect(rect2.x, rect2.y, this.presetSize.x, this.presetSize.y);
+						presetLibrary.Draw(rect3, i);
+						if (this.itemViewMode == PresetLibraryEditorState.ItemViewMode.List)
+						{
+							Rect position = new Rect(rect2.x + num4, rect2.y, rect2.width - num4, rect2.height);
+							string name = presetLibrary.GetName(i);
+							GUI.Label(position, name);
+						}
+					}
+					if (num2 > 0)
+					{
+						Rect position2 = new Rect(this.m_Grid.CalcRect(0, 0f).x, rect.y + num3 - 20f, rect.width, 20f);
+						GUI.Label(position2, string.Format("+ {0} more...", num2));
+					}
+				}
 			}
 		}
 

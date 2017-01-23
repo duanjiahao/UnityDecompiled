@@ -16,12 +16,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				Editor arg_2B_0;
-				if ((arg_2B_0 = this.m_LightingEditor) == null)
+				Editor arg_2C_0;
+				if ((arg_2C_0 = this.m_LightingEditor) == null)
 				{
-					arg_2B_0 = (this.m_LightingEditor = Editor.CreateEditor(this.target, typeof(LightingEditor)));
+					arg_2C_0 = (this.m_LightingEditor = Editor.CreateEditor(base.target, typeof(LightingEditor)));
 				}
-				return arg_2B_0;
+				return arg_2C_0;
 			}
 		}
 
@@ -29,12 +29,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				Editor arg_2B_0;
-				if ((arg_2B_0 = this.m_FogEditor) == null)
+				Editor arg_2C_0;
+				if ((arg_2C_0 = this.m_FogEditor) == null)
 				{
-					arg_2B_0 = (this.m_FogEditor = Editor.CreateEditor(this.target, typeof(FogEditor)));
+					arg_2C_0 = (this.m_FogEditor = Editor.CreateEditor(base.target, typeof(FogEditor)));
 				}
-				return arg_2B_0;
+				return arg_2C_0;
 			}
 		}
 
@@ -42,12 +42,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				Editor arg_2B_0;
-				if ((arg_2B_0 = this.m_OtherRenderingEditor) == null)
+				Editor arg_2C_0;
+				if ((arg_2C_0 = this.m_OtherRenderingEditor) == null)
 				{
-					arg_2B_0 = (this.m_OtherRenderingEditor = Editor.CreateEditor(this.target, typeof(OtherRenderingEditor)));
+					arg_2C_0 = (this.m_OtherRenderingEditor = Editor.CreateEditor(base.target, typeof(OtherRenderingEditor)));
 				}
-				return arg_2B_0;
+				return arg_2C_0;
 			}
 		}
 

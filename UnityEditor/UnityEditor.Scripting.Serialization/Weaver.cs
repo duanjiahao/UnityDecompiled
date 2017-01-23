@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Unity.UNetWeaver;
 using UnityEditor.Modules;
 using UnityEditor.Utils;
@@ -13,6 +14,12 @@ namespace UnityEditor.Scripting.Serialization
 {
 	internal static class Weaver
 	{
+		[CompilerGenerated]
+		private static Action<string> <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static Action<string> <>f__mg$cache1;
+
 		public static bool ShouldWeave(string name)
 		{
 			return !name.Contains("Boo.") && !name.Contains("Mono.") && !name.Contains("System") && name.EndsWith(".dll");
@@ -25,7 +32,7 @@ namespace UnityEditor.Scripting.Serialization
 
 		private static ManagedProgram ManagedProgramFor(string exe, string arguments)
 		{
-			return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, arguments, null);
+			return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), null, exe, arguments, false, null);
 		}
 
 		private static ICompilationExtension GetCompilationExtension()
@@ -80,38 +87,56 @@ namespace UnityEditor.Scripting.Serialization
 					break;
 				}
 			}
+			bool result;
 			if (array == null)
 			{
 				Debug.LogError("Weaver failure: unable to locate assemblies (no matching project) for: " + destPath);
-				return false;
+				result = false;
 			}
-			List<string> list = new List<string>();
-			string[] array2 = array;
-			for (int j = 0; j < array2.Length; j++)
+			else
 			{
-				string path = array2[j];
-				list.Add(Path.GetDirectoryName(path));
-			}
-			if (extraAssemblyPaths != null)
-			{
-				list.AddRange(extraAssemblyPaths);
-			}
-			try
-			{
-				if (!Unity.UNetWeaver.Program.Process(unityEngine, unityUNet, Path.GetDirectoryName(destPath), new string[]
+				List<string> list = new List<string>();
+				string[] array2 = array;
+				for (int j = 0; j < array2.Length; j++)
 				{
-					assemblyPath
-				}, list.ToArray(), assemblyResolver, new Action<string>(Debug.LogWarning), new Action<string>(Debug.LogError)))
-				{
-					Debug.LogError("Failure generating network code.");
-					return false;
+					string path = array2[j];
+					list.Add(Path.GetDirectoryName(path));
 				}
+				if (extraAssemblyPaths != null)
+				{
+					list.AddRange(extraAssemblyPaths);
+				}
+				try
+				{
+					string arg_151_2 = Path.GetDirectoryName(destPath);
+					string[] expr_10A = new string[]
+					{
+						assemblyPath
+					};
+					string[] arg_151_4 = list.ToArray();
+					if (Weaver.<>f__mg$cache0 == null)
+					{
+						Weaver.<>f__mg$cache0 = new Action<string>(Debug.LogWarning);
+					}
+					Action<string> arg_151_6 = Weaver.<>f__mg$cache0;
+					if (Weaver.<>f__mg$cache1 == null)
+					{
+						Weaver.<>f__mg$cache1 = new Action<string>(Debug.LogError);
+					}
+					if (!Program.Process(unityEngine, unityUNet, arg_151_2, expr_10A, arg_151_4, assemblyResolver, arg_151_6, Weaver.<>f__mg$cache1))
+					{
+						Debug.LogError("Failure generating network code.");
+						result = false;
+						return result;
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError("Exception generating network code: " + ex.ToString() + " " + ex.StackTrace);
+				}
+				result = true;
 			}
-			catch (Exception ex)
-			{
-				Debug.LogError("Exception generating network code: " + ex.ToString() + " " + ex.StackTrace);
-			}
-			return true;
+			return result;
 		}
 
 		public static string[] GetReferences(MonoIsland island, string projectDirectory)

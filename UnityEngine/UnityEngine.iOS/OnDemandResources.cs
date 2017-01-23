@@ -7,7 +7,6 @@ namespace UnityEngine.iOS
 	{
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -17,7 +16,6 @@ namespace UnityEngine.iOS
 			return OnDemandResources.PreloadAsyncInternal(tags);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern OnDemandResourcesRequest PreloadAsyncInternal(string[] tags);
 	}

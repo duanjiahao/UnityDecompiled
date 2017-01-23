@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor.Audio;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -10,31 +11,36 @@ namespace UnityEditor
 	{
 		private class GroupTreeViewGUI : TreeViewGUI
 		{
-			private const float k_SpaceBetween = 25f;
-
-			private const float k_HeaderHeight = 20f;
-
 			private readonly Texture2D k_AudioGroupIcon = EditorGUIUtility.FindTexture("AudioMixerGroup Icon");
 
 			private readonly Texture2D k_AudioListenerIcon = EditorGUIUtility.FindTexture("AudioListener Icon");
 
+			private const float k_SpaceBetween = 25f;
+
+			private const float k_HeaderHeight = 20f;
+
 			private List<Rect> m_RowRects = new List<Rect>();
 
-			public GroupTreeViewGUI(TreeView treeView) : base(treeView)
+			public GroupTreeViewGUI(TreeViewController treeView) : base(treeView)
 			{
 			}
 
 			public override Rect GetRowRect(int row, float rowWidth)
 			{
+				Rect result;
 				if (this.m_TreeView.isSearching)
 				{
-					return base.GetRowRect(row, rowWidth);
+					result = base.GetRowRect(row, rowWidth);
 				}
-				if (this.m_TreeView.data.rowCount != this.m_RowRects.Count)
+				else
 				{
-					this.CalculateRowRects();
+					if (this.m_TreeView.data.rowCount != this.m_RowRects.Count)
+					{
+						this.CalculateRowRects();
+					}
+					result = this.m_RowRects[row];
 				}
-				return this.m_RowRects[row];
+				return result;
 			}
 
 			public override void OnRowGUI(Rect rowRect, TreeViewItem item, int row, bool selected, bool focused)
@@ -42,29 +48,36 @@ namespace UnityEditor
 				if (this.m_TreeView.isSearching)
 				{
 					base.OnRowGUI(rowRect, item, row, selected, focused);
-					return;
 				}
-				this.DoItemGUI(rowRect, row, item, selected, focused, false);
-				bool flag = item.parent == this.m_TreeView.data.root;
-				bool flag2 = item.id == TreeViewForAudioMixerGroup.kNoneItemID;
-				if (flag && !flag2)
+				else
 				{
-					AudioMixerController controller = (item.userData as AudioMixerGroupController).controller;
-					GUI.Label(new Rect(rowRect.x + 2f, rowRect.y - 18f, rowRect.width, 18f), GUIContent.Temp(controller.name), EditorStyles.boldLabel);
+					this.DoItemGUI(rowRect, row, item, selected, focused, false);
+					bool flag = item.parent == this.m_TreeView.data.root;
+					bool flag2 = item.id == TreeViewForAudioMixerGroup.kNoneItemID;
+					if (flag && !flag2)
+					{
+						AudioMixerController controller = (item.userData as AudioMixerGroupController).controller;
+						GUI.Label(new Rect(rowRect.x + 2f, rowRect.y - 18f, rowRect.width, 18f), GUIContent.Temp(controller.name), EditorStyles.boldLabel);
+					}
 				}
 			}
 
 			protected override Texture GetIconForItem(TreeViewItem item)
 			{
+				Texture icon;
 				if (item != null && item.icon != null)
 				{
-					return item.icon;
+					icon = item.icon;
 				}
-				if (item.id == TreeViewForAudioMixerGroup.kNoneItemID)
+				else if (item.id == TreeViewForAudioMixerGroup.kNoneItemID)
 				{
-					return this.k_AudioListenerIcon;
+					icon = this.k_AudioListenerIcon;
 				}
-				return this.k_AudioGroupIcon;
+				else
+				{
+					icon = this.k_AudioGroupIcon;
+				}
+				return icon;
 			}
 
 			protected override void SyncFakeItem()
@@ -82,47 +95,56 @@ namespace UnityEditor
 
 			public void CalculateRowRects()
 			{
-				if (this.m_TreeView.isSearching)
+				if (!this.m_TreeView.isSearching)
 				{
-					return;
-				}
-				float width = GUIClip.visibleRect.width;
-				List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
-				this.m_RowRects = new List<Rect>(rows.Count);
-				float num = 2f;
-				for (int i = 0; i < rows.Count; i++)
-				{
-					bool flag = this.IsController(rows[i]);
-					float num2 = (!flag) ? 0f : 25f;
-					num += num2;
-					float k_LineHeight = this.k_LineHeight;
-					this.m_RowRects.Add(new Rect(0f, num, width, k_LineHeight));
-					num += k_LineHeight;
+					float width = GUIClip.visibleRect.width;
+					IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+					this.m_RowRects = new List<Rect>(rows.Count);
+					float num = 2f;
+					for (int i = 0; i < rows.Count; i++)
+					{
+						bool flag = this.IsController(rows[i]);
+						float num2 = (!flag) ? 0f : 25f;
+						num += num2;
+						float k_LineHeight = this.k_LineHeight;
+						this.m_RowRects.Add(new Rect(0f, num, width, k_LineHeight));
+						num += k_LineHeight;
+					}
 				}
 			}
 
 			public override Vector2 GetTotalSize()
 			{
+				Vector2 result;
 				if (this.m_TreeView.isSearching)
 				{
 					Vector2 totalSize = base.GetTotalSize();
 					totalSize.x = 1f;
-					return totalSize;
+					result = totalSize;
 				}
-				if (this.m_RowRects.Count == 0)
+				else if (this.m_RowRects.Count == 0)
 				{
-					return new Vector2(1f, 1f);
+					result = new Vector2(1f, 1f);
 				}
-				return new Vector2(1f, this.m_RowRects[this.m_RowRects.Count - 1].yMax);
+				else
+				{
+					result = new Vector2(1f, this.m_RowRects[this.m_RowRects.Count - 1].yMax);
+				}
+				return result;
 			}
 
 			public override int GetNumRowsOnPageUpDown(TreeViewItem fromItem, bool pageUp, float heightOfTreeView)
 			{
+				int result;
 				if (this.m_TreeView.isSearching)
 				{
-					return base.GetNumRowsOnPageUpDown(fromItem, pageUp, heightOfTreeView);
+					result = base.GetNumRowsOnPageUpDown(fromItem, pageUp, heightOfTreeView);
 				}
-				return (int)Mathf.Floor(heightOfTreeView / this.k_LineHeight);
+				else
+				{
+					result = (int)Mathf.Floor(heightOfTreeView / this.k_LineHeight);
+				}
+				return result;
 			}
 
 			public override void GetFirstAndLastRowVisible(out int firstRowVisible, out int lastRowVisible)
@@ -130,38 +152,40 @@ namespace UnityEditor
 				if (this.m_TreeView.isSearching)
 				{
 					base.GetFirstAndLastRowVisible(out firstRowVisible, out lastRowVisible);
-					return;
-				}
-				int rowCount = this.m_TreeView.data.rowCount;
-				if (rowCount != this.m_RowRects.Count)
-				{
-					Debug.LogError("Mismatch in state: rows vs cached rects");
-				}
-				int num = -1;
-				int num2 = -1;
-				float y = this.m_TreeView.state.scrollPos.y;
-				float height = this.m_TreeView.GetTotalRect().height;
-				for (int i = 0; i < this.m_RowRects.Count; i++)
-				{
-					bool flag = (this.m_RowRects[i].y > y && this.m_RowRects[i].y < y + height) || (this.m_RowRects[i].yMax > y && this.m_RowRects[i].yMax < y + height);
-					if (flag)
-					{
-						if (num == -1)
-						{
-							num = i;
-						}
-						num2 = i;
-					}
-				}
-				if (num != -1 && num2 != -1)
-				{
-					firstRowVisible = num;
-					lastRowVisible = num2;
 				}
 				else
 				{
-					firstRowVisible = 0;
-					lastRowVisible = rowCount - 1;
+					int rowCount = this.m_TreeView.data.rowCount;
+					if (rowCount != this.m_RowRects.Count)
+					{
+						Debug.LogError("Mismatch in state: rows vs cached rects");
+					}
+					int num = -1;
+					int num2 = -1;
+					float y = this.m_TreeView.state.scrollPos.y;
+					float height = this.m_TreeView.GetTotalRect().height;
+					for (int i = 0; i < this.m_RowRects.Count; i++)
+					{
+						bool flag = (this.m_RowRects[i].y > y && this.m_RowRects[i].y < y + height) || (this.m_RowRects[i].yMax > y && this.m_RowRects[i].yMax < y + height);
+						if (flag)
+						{
+							if (num == -1)
+							{
+								num = i;
+							}
+							num2 = i;
+						}
+					}
+					if (num != -1 && num2 != -1)
+					{
+						firstRowVisible = num;
+						lastRowVisible = num2;
+					}
+					else
+					{
+						firstRowVisible = 0;
+						lastRowVisible = rowCount - 1;
+					}
 				}
 			}
 		}
@@ -174,7 +198,7 @@ namespace UnityEditor
 				private set;
 			}
 
-			public TreeViewDataSourceForMixers(TreeView treeView, AudioMixerController ignoreController) : base(treeView)
+			public TreeViewDataSourceForMixers(TreeViewController treeView, AudioMixerController ignoreController) : base(treeView)
 			{
 				base.showRootItem = false;
 				base.rootIsCollapsable = false;
@@ -221,7 +245,7 @@ namespace UnityEditor
 				{
 					this.m_TreeView.data.SetExpandedWithChildren(this.m_RootItem, true);
 				}
-				this.m_NeedRefreshVisibleFolders = true;
+				this.m_NeedRefreshRows = true;
 			}
 
 			private TreeViewItem BuildSubTree(AudioMixerController controller)
@@ -255,21 +279,21 @@ namespace UnityEditor
 			}
 		}
 
-		private static readonly int kNoneItemID;
+		private static readonly int kNoneItemID = 0;
 
 		private static string s_NoneText = "None";
 
 		public static void CreateAndSetTreeView(ObjectTreeForSelector.TreeSelectorData data)
 		{
 			AudioMixerController ignoreController = InternalEditorUtility.GetObjectFromInstanceID(data.userData) as AudioMixerController;
-			TreeView treeView = new TreeView(data.editorWindow, data.state);
-			TreeViewForAudioMixerGroup.GroupTreeViewGUI groupTreeViewGUI = new TreeViewForAudioMixerGroup.GroupTreeViewGUI(treeView);
-			TreeViewForAudioMixerGroup.TreeViewDataSourceForMixers treeViewDataSourceForMixers = new TreeViewForAudioMixerGroup.TreeViewDataSourceForMixers(treeView, ignoreController);
-			TreeViewForAudioMixerGroup.TreeViewDataSourceForMixers expr_33 = treeViewDataSourceForMixers;
-			expr_33.onVisibleRowsChanged = (Action)Delegate.Combine(expr_33.onVisibleRowsChanged, new Action(groupTreeViewGUI.CalculateRowRects));
-			treeView.deselectOnUnhandledMouseDown = false;
-			treeView.Init(data.treeViewRect, treeViewDataSourceForMixers, groupTreeViewGUI, null);
-			data.objectTreeForSelector.SetTreeView(treeView);
+			TreeViewController treeViewController = new TreeViewController(data.editorWindow, data.state);
+			TreeViewForAudioMixerGroup.GroupTreeViewGUI groupTreeViewGUI = new TreeViewForAudioMixerGroup.GroupTreeViewGUI(treeViewController);
+			TreeViewForAudioMixerGroup.TreeViewDataSourceForMixers treeViewDataSourceForMixers = new TreeViewForAudioMixerGroup.TreeViewDataSourceForMixers(treeViewController, ignoreController);
+			TreeViewForAudioMixerGroup.TreeViewDataSourceForMixers expr_34 = treeViewDataSourceForMixers;
+			expr_34.onVisibleRowsChanged = (Action)Delegate.Combine(expr_34.onVisibleRowsChanged, new Action(groupTreeViewGUI.CalculateRowRects));
+			treeViewController.deselectOnUnhandledMouseDown = false;
+			treeViewController.Init(data.treeViewRect, treeViewDataSourceForMixers, groupTreeViewGUI, null);
+			data.objectTreeForSelector.SetTreeView(treeViewController);
 		}
 	}
 }

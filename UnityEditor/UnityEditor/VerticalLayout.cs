@@ -11,15 +11,15 @@ namespace UnityEditor
 		{
 		}
 
-		void IDisposable.Dispose()
-		{
-			GUILayout.EndVertical();
-		}
-
 		public static IDisposable DoLayout()
 		{
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			return VerticalLayout.instance;
+		}
+
+		void IDisposable.Dispose()
+		{
+			GUILayout.EndVertical();
 		}
 	}
 }

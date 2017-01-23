@@ -40,15 +40,18 @@ namespace UnityEditorInternal
 		public static JSONValue SimpleParse(string jsondata)
 		{
 			JSONParser jSONParser = new JSONParser(jsondata);
+			JSONValue result;
 			try
 			{
-				return jSONParser.Parse();
+				result = jSONParser.Parse();
+				return result;
 			}
 			catch (JSONParseException ex)
 			{
 				Debug.LogError(ex.Message);
 			}
-			return new JSONValue(null);
+			result = new JSONValue(null);
+			return result;
 		}
 
 		public JSONValue Parse()
@@ -99,34 +102,6 @@ namespace UnityEditorInternal
 			char c = this.cur;
 			switch (c)
 			{
-			case '"':
-				return this.ParseString();
-			case '#':
-			case '$':
-			case '%':
-			case '&':
-			case '\'':
-			case '(':
-			case ')':
-			case '*':
-			case '+':
-			case ',':
-			case '.':
-			case '/':
-				IL_76:
-				if (c == '[')
-				{
-					return this.ParseArray();
-				}
-				if (c == 'f' || c == 'n' || c == 't')
-				{
-					return this.ParseConstant();
-				}
-				if (c != '{')
-				{
-					throw new JSONParseException("Cannot parse json value starting with '" + this.json.Substring(this.idx, 5) + "' at " + this.PosMsg());
-				}
-				return this.ParseDict();
 			case '-':
 			case '0':
 			case '1':
@@ -138,9 +113,39 @@ namespace UnityEditorInternal
 			case '7':
 			case '8':
 			case '9':
-				return this.ParseNumber();
+			{
+				JSONValue result = this.ParseNumber();
+				return result;
 			}
-			goto IL_76;
+			case '.':
+			case '/':
+			{
+				IL_4B:
+				JSONValue result;
+				if (c == '"')
+				{
+					result = this.ParseString();
+					return result;
+				}
+				if (c == '[')
+				{
+					result = this.ParseArray();
+					return result;
+				}
+				if (c == 'f' || c == 'n' || c == 't')
+				{
+					result = this.ParseConstant();
+					return result;
+				}
+				if (c != '{')
+				{
+					throw new JSONParseException("Cannot parse json value starting with '" + this.json.Substring(this.idx, 5) + "' at " + this.PosMsg());
+				}
+				result = this.ParseDict();
+				return result;
+			}
+			}
+			goto IL_4B;
 		}
 
 		private JSONValue ParseArray()
@@ -194,7 +199,7 @@ namespace UnityEditorInternal
 
 		private JSONValue ParseString()
 		{
-			string text = string.Empty;
+			string text = "";
 			this.Next();
 			while (this.idx < this.len)
 			{
@@ -216,29 +221,30 @@ namespace UnityEditorInternal
 					throw new JSONParseException("End of json while parsing while parsing string at " + this.PosMsg());
 				}
 				char c = this.json[num];
-				char c2 = c;
-				switch (c2)
+				switch (c)
 				{
-				case 'n':
-					text += '\n';
-					goto IL_2AE;
-				case 'o':
-				case 'p':
-				case 'q':
+				case 'r':
+					text += '\r';
+					goto IL_29E;
 				case 's':
-					IL_F7:
-					if (c2 != '"')
+					IL_E6:
+					if (c != '"')
 					{
-						if (c2 != '/')
+						if (c != '/')
 						{
-							if (c2 != '\\')
+							if (c != '\\')
 							{
-								if (c2 == 'b')
+								if (c == 'b')
 								{
 									text += '\b';
-									goto IL_2AE;
+									goto IL_29E;
 								}
-								if (c2 != 'f')
+								if (c == 'f')
+								{
+									text += '\f';
+									goto IL_29E;
+								}
+								if (c != 'n')
 								{
 									throw new JSONParseException(string.Concat(new object[]
 									{
@@ -248,22 +254,19 @@ namespace UnityEditorInternal
 										this.PosMsg()
 									}));
 								}
-								text += '\f';
-								goto IL_2AE;
+								text += '\n';
+								goto IL_29E;
 							}
 						}
 					}
 					text += c;
-					goto IL_2AE;
-				case 'r':
-					text += '\r';
-					goto IL_2AE;
+					goto IL_29E;
 				case 't':
 					text += '\t';
-					goto IL_2AE;
+					goto IL_29E;
 				case 'u':
 				{
-					string text2 = string.Empty;
+					string text2 = "";
 					if (num + 4 >= this.len)
 					{
 						throw new JSONParseException("End of json while parsing while parsing unicode char near " + this.PosMsg());
@@ -282,11 +285,11 @@ namespace UnityEditorInternal
 						throw new JSONParseException("Invalid unicode escape char near " + this.PosMsg());
 					}
 					num += 4;
-					goto IL_2AE;
+					goto IL_29E;
 				}
 				}
-				goto IL_F7;
-				IL_2AE:
+				goto IL_E6;
+				IL_29E:
 				this.idx = num + 1;
 			}
 			if (this.idx >= this.len)
@@ -300,7 +303,7 @@ namespace UnityEditorInternal
 
 		private JSONValue ParseNumber()
 		{
-			string text = string.Empty;
+			string text = "";
 			if (this.cur == '-')
 			{
 				text = "-";
@@ -330,12 +333,8 @@ namespace UnityEditorInternal
 					text += this.cur;
 					this.Next();
 				}
-				while (this.cur >= '0')
+				while (this.cur >= '0' && this.cur <= '9')
 				{
-					if (this.cur > '9')
-					{
-						break;
-					}
 					text += this.cur;
 					this.Next();
 				}
@@ -355,33 +354,36 @@ namespace UnityEditorInternal
 
 		private JSONValue ParseConstant()
 		{
-			string a = string.Empty;
-			a = string.Concat(new object[]
+			string a = string.Concat(new object[]
 			{
-				string.Empty,
+				"",
 				this.cur,
 				this.Next(),
 				this.Next(),
 				this.Next()
 			});
 			this.Next();
-			if (a == "true")
+			JSONValue result;
+			if (!(a == "true"))
 			{
-				return new JSONValue(true);
-			}
-			if (a == "fals")
-			{
-				if (this.cur == 'e')
+				if (a == "fals")
 				{
-					this.Next();
-					return new JSONValue(false);
+					if (this.cur == 'e')
+					{
+						this.Next();
+						result = new JSONValue(false);
+						return result;
+					}
 				}
+				else if (a == "null")
+				{
+					result = new JSONValue(null);
+					return result;
+				}
+				throw new JSONParseException("Invalid token at " + this.PosMsg());
 			}
-			else if (a == "null")
-			{
-				return new JSONValue(null);
-			}
-			throw new JSONParseException("Invalid token at " + this.PosMsg());
+			result = new JSONValue(true);
+			return result;
 		}
 	}
 }

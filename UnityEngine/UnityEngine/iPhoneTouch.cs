@@ -1,8 +1,10 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace UnityEngine
 {
 	[Obsolete("iPhoneTouch struct is deprecated. Please use Touch instead (UnityUpgradable) -> Touch", true)]
+	[StructLayout(LayoutKind.Sequential, Size = 1)]
 	public struct iPhoneTouch
 	{
 		[Obsolete("positionDelta property is deprecated. Please use Touch.deltaPosition instead (UnityUpgradable) -> Touch.deltaPosition", true)]

@@ -29,13 +29,12 @@ namespace UnityEditor
 		{
 			Undo.GetRecords(this.newUndos, this.newRedos);
 			bool flag = this.undos.SequenceEqual(this.newUndos) && this.redos.SequenceEqual(this.newRedos);
-			if (flag)
+			if (!flag)
 			{
-				return;
+				this.undos = new List<string>(this.newUndos);
+				this.redos = new List<string>(this.newRedos);
+				base.Repaint();
 			}
-			this.undos = new List<string>(this.newUndos);
-			this.redos = new List<string>(this.newRedos);
-			base.Repaint();
 		}
 
 		private void OnGUI()

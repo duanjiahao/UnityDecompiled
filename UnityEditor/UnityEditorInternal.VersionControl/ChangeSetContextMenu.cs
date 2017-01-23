@@ -7,11 +7,16 @@ namespace UnityEditorInternal.VersionControl
 	{
 		private static ChangeSet GetChangeSet(ChangeSets changes)
 		{
+			ChangeSet result;
 			if (changes.Count == 0)
 			{
-				return null;
+				result = null;
 			}
-			return changes[0];
+			else
+			{
+				result = changes[0];
+			}
+			return result;
 		}
 
 		private static bool SubmitTest(int userData)
@@ -87,12 +92,17 @@ namespace UnityEditorInternal.VersionControl
 		private static bool EditChangeSetTest(int userData)
 		{
 			ChangeSets selectedChangeSets = ListControl.FromID(userData).SelectedChangeSets;
+			bool result;
 			if (selectedChangeSets.Count == 0)
 			{
-				return false;
+				result = false;
 			}
-			ChangeSet changeSet = ChangeSetContextMenu.GetChangeSet(selectedChangeSets);
-			return changeSet.id != "-1" && Provider.SubmitIsValid(selectedChangeSets[0], null);
+			else
+			{
+				ChangeSet changeSet = ChangeSetContextMenu.GetChangeSet(selectedChangeSets);
+				result = (changeSet.id != "-1" && Provider.SubmitIsValid(selectedChangeSets[0], null));
+			}
+			return result;
 		}
 
 		private static void EditChangeSet(int userData)
@@ -109,24 +119,32 @@ namespace UnityEditorInternal.VersionControl
 		{
 			ListControl listControl = ListControl.FromID(userData);
 			ChangeSets selectedChangeSets = listControl.SelectedChangeSets;
+			bool result;
 			if (selectedChangeSets.Count == 0)
 			{
-				return false;
+				result = false;
 			}
-			ChangeSet changeSet = ChangeSetContextMenu.GetChangeSet(selectedChangeSets);
-			if (changeSet.id == "-1")
+			else
 			{
-				return false;
+				ChangeSet changeSet = ChangeSetContextMenu.GetChangeSet(selectedChangeSets);
+				if (changeSet.id == "-1")
+				{
+					result = false;
+				}
+				else
+				{
+					ListItem changeSetItem = listControl.GetChangeSetItem(changeSet);
+					bool flag = changeSetItem != null && changeSetItem.HasChildren && changeSetItem.FirstChild.Asset != null && changeSetItem.FirstChild.Name != "Empty change list";
+					if (!flag)
+					{
+						Task task = Provider.ChangeSetStatus(changeSet);
+						task.Wait();
+						flag = (task.assetList.Count != 0);
+					}
+					result = (!flag && Provider.DeleteChangeSetsIsValid(selectedChangeSets));
+				}
 			}
-			ListItem changeSetItem = listControl.GetChangeSetItem(changeSet);
-			bool flag = changeSetItem != null && changeSetItem.HasChildren && changeSetItem.FirstChild.Asset != null && changeSetItem.FirstChild.Name != "Empty change list";
-			if (!flag)
-			{
-				Task task = Provider.ChangeSetStatus(changeSet);
-				task.Wait();
-				flag = (task.assetList.Count != 0);
-			}
-			return !flag && Provider.DeleteChangeSetsIsValid(selectedChangeSets);
+			return result;
 		}
 
 		private static void DeleteChangeSet(int userData)

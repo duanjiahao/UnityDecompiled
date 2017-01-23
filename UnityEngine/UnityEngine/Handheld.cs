@@ -10,10 +10,8 @@ namespace UnityEngine
 		[Obsolete("Property Handheld.use32BitDisplayBuffer has been deprecated. Modifying it has no effect, use PlayerSettings instead.")]
 		public static extern bool use32BitDisplayBuffer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -47,15 +45,12 @@ namespace UnityEngine
 			return Handheld.INTERNAL_CALL_PlayFullScreenMovie(path, ref black, controlMode, scalingMode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_PlayFullScreenMovie(string path, ref Color bgColor, FullScreenMovieControlMode controlMode, FullScreenMovieScalingMode scalingMode);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Vibrate();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetActivityIndicatorStyleImpl(int style);
 
@@ -69,19 +64,20 @@ namespace UnityEngine
 			Handheld.SetActivityIndicatorStyleImpl((int)style);
 		}
 
-		[WrapperlessIcall]
+		public static void SetActivityIndicatorStyle(TizenActivityIndicatorStyle style)
+		{
+			Handheld.SetActivityIndicatorStyleImpl((int)style);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetActivityIndicatorStyle();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StartActivityIndicator();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopActivityIndicator();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearShaderCache();
 	}

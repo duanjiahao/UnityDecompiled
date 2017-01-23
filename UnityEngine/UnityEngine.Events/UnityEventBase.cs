@@ -50,40 +50,50 @@ namespace UnityEngine.Events
 
 		internal MethodInfo FindMethod(string name, object listener, PersistentListenerMode mode, Type argumentType)
 		{
+			MethodInfo result;
 			switch (mode)
 			{
 			case PersistentListenerMode.EventDefined:
-				return this.FindMethod_Impl(name, listener);
+				result = this.FindMethod_Impl(name, listener);
+				break;
 			case PersistentListenerMode.Void:
-				return UnityEventBase.GetValidMethodInfo(listener, name, new Type[0]);
+				result = UnityEventBase.GetValidMethodInfo(listener, name, new Type[0]);
+				break;
 			case PersistentListenerMode.Object:
-				return UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
+				result = UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
 				{
 					argumentType ?? typeof(UnityEngine.Object)
 				});
+				break;
 			case PersistentListenerMode.Int:
-				return UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
+				result = UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
 				{
 					typeof(int)
 				});
+				break;
 			case PersistentListenerMode.Float:
-				return UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
+				result = UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
 				{
 					typeof(float)
 				});
+				break;
 			case PersistentListenerMode.String:
-				return UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
+				result = UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
 				{
 					typeof(string)
 				});
+				break;
 			case PersistentListenerMode.Bool:
-				return UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
+				result = UnityEventBase.GetValidMethodInfo(listener, name, new Type[]
 				{
 					typeof(bool)
 				});
+				break;
 			default:
-				return null;
+				result = null;
+				break;
 			}
+			return result;
 		}
 
 		public int GetPersistentEventCount()
@@ -162,6 +172,7 @@ namespace UnityEngine.Events
 		public static MethodInfo GetValidMethodInfo(object obj, string functionName, Type[] argumentTypes)
 		{
 			Type type = obj.GetType();
+			MethodInfo result;
 			while (type != typeof(object) && type != null)
 			{
 				MethodInfo method = type.GetMethod(functionName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, argumentTypes, null);
@@ -185,12 +196,14 @@ namespace UnityEngine.Events
 					}
 					if (flag)
 					{
-						return method;
+						result = method;
+						return result;
 					}
 				}
 				type = type.BaseType;
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		protected bool ValidateRegistration(MethodInfo method, object targetObj, PersistentListenerMode mode)
@@ -225,6 +238,7 @@ namespace UnityEngine.Events
 					base.GetType()
 				}));
 			}
+			bool result;
 			if (this.FindMethod(method.Name, targetObj, mode, argumentType) == null)
 			{
 				Debug.LogWarning(UnityString.Format("Could not register listener {0}.{1} on {2} the method could not be found.", new object[]
@@ -233,9 +247,13 @@ namespace UnityEngine.Events
 					method,
 					base.GetType()
 				}));
-				return false;
+				result = false;
 			}
-			return true;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		internal void AddPersistentListener()
@@ -245,22 +263,20 @@ namespace UnityEngine.Events
 
 		protected void RegisterPersistentListener(int index, object targetObj, MethodInfo method)
 		{
-			if (!this.ValidateRegistration(method, targetObj, PersistentListenerMode.EventDefined))
+			if (this.ValidateRegistration(method, targetObj, PersistentListenerMode.EventDefined))
 			{
-				return;
+				this.m_PersistentCalls.RegisterEventPersistentListener(index, targetObj as UnityEngine.Object, method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterEventPersistentListener(index, targetObj as UnityEngine.Object, method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void RemovePersistentListener(UnityEngine.Object target, MethodInfo method)
 		{
-			if (method == null || method.IsStatic || target == null || target.GetInstanceID() == 0)
+			if (method != null && !method.IsStatic && !(target == null) && target.GetInstanceID() != 0)
 			{
-				return;
+				this.m_PersistentCalls.RemoveListeners(target, method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RemoveListeners(target, method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void RemovePersistentListener(int index)
@@ -287,14 +303,12 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			if (!this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Void))
+			else if (this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Void))
 			{
-				return;
+				this.m_PersistentCalls.RegisterVoidPersistentListener(index, call.Target as UnityEngine.Object, call.Method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterVoidPersistentListener(index, call.Target as UnityEngine.Object, call.Method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void AddIntPersistentListener(UnityAction<int> call, int argument)
@@ -309,14 +323,12 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			if (!this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Int))
+			else if (this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Int))
 			{
-				return;
+				this.m_PersistentCalls.RegisterIntPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterIntPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void AddFloatPersistentListener(UnityAction<float> call, float argument)
@@ -331,14 +343,12 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			if (!this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Float))
+			else if (this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Float))
 			{
-				return;
+				this.m_PersistentCalls.RegisterFloatPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterFloatPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void AddBoolPersistentListener(UnityAction<bool> call, bool argument)
@@ -353,14 +363,12 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			if (!this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Bool))
+			else if (this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Bool))
 			{
-				return;
+				this.m_PersistentCalls.RegisterBoolPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterBoolPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void AddStringPersistentListener(UnityAction<string> call, string argument)
@@ -375,14 +383,12 @@ namespace UnityEngine.Events
 			if (call == null)
 			{
 				Debug.LogWarning("Registering a Listener requires an action");
-				return;
 			}
-			if (!this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.String))
+			else if (this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.String))
 			{
-				return;
+				this.m_PersistentCalls.RegisterStringPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterStringPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
-			this.DirtyPersistentCalls();
 		}
 
 		internal void AddObjectPersistentListener<T>(UnityAction<T> call, T argument) where T : UnityEngine.Object
@@ -398,12 +404,11 @@ namespace UnityEngine.Events
 			{
 				throw new ArgumentNullException("call", "Registering a Listener requires a non null call");
 			}
-			if (!this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Object, (!(argument == null)) ? argument.GetType() : typeof(UnityEngine.Object)))
+			if (this.ValidateRegistration(call.Method, call.Target, PersistentListenerMode.Object, (!(argument == null)) ? argument.GetType() : typeof(UnityEngine.Object)))
 			{
-				return;
+				this.m_PersistentCalls.RegisterObjectPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
+				this.DirtyPersistentCalls();
 			}
-			this.m_PersistentCalls.RegisterObjectPersistentListener(index, call.Target as UnityEngine.Object, argument, call.Method.Name);
-			this.DirtyPersistentCalls();
 		}
 	}
 }

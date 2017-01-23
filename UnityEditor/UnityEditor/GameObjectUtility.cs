@@ -16,27 +16,24 @@ namespace UnityEditor
 			Cancel
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern StaticEditorFlags GetStaticEditorFlags(GameObject go);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool AreStaticEditorFlagsSet(GameObject go, StaticEditorFlags flags);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetStaticEditorFlags(GameObject go, StaticEditorFlags flags);
 
-		[Obsolete("GetNavMeshArea instead."), WrapperlessIcall]
+		[Obsolete("GetNavMeshArea instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetNavMeshLayer(GameObject go);
 
-		[Obsolete("GetNavMeshAreaFromName instead."), WrapperlessIcall]
+		[Obsolete("GetNavMeshAreaFromName instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetNavMeshLayerFromName(string name);
 
-		[Obsolete("SetNavMeshArea instead."), WrapperlessIcall]
+		[Obsolete("SetNavMeshArea instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetNavMeshLayer(GameObject go, int areaIndex);
 
@@ -46,19 +43,15 @@ namespace UnityEditor
 			return GameObjectUtility.GetNavMeshAreaNames();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetNavMeshArea(GameObject go);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetNavMeshAreaFromName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetNavMeshArea(GameObject go, int areaIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetNavMeshAreaNames();
 
@@ -74,24 +67,29 @@ namespace UnityEditor
 			AnimatorUtility.DeoptimizeTransformHierarchy(go);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUniqueNameForSibling(Transform parent, string name);
 
 		internal static bool ContainsStatic(GameObject[] objects)
 		{
+			bool result;
 			if (objects == null || objects.Length == 0)
 			{
-				return false;
+				result = false;
 			}
-			for (int i = 0; i < objects.Length; i++)
+			else
 			{
-				if (objects[i] != null && objects[i].isStatic)
+				for (int i = 0; i < objects.Length; i++)
 				{
-					return true;
+					if (objects[i] != null && objects[i].isStatic)
+					{
+						result = true;
+						return result;
+					}
 				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
 
 		internal static bool HasChildren(IEnumerable<GameObject> gameObjects)
@@ -101,35 +99,39 @@ namespace UnityEditor
 
 		internal static GameObjectUtility.ShouldIncludeChildren DisplayUpdateChildrenDialogIfNeeded(IEnumerable<GameObject> gameObjects, string title, string message)
 		{
+			GameObjectUtility.ShouldIncludeChildren result;
 			if (!GameObjectUtility.HasChildren(gameObjects))
 			{
-				return GameObjectUtility.ShouldIncludeChildren.HasNoChildren;
+				result = GameObjectUtility.ShouldIncludeChildren.HasNoChildren;
 			}
-			return (GameObjectUtility.ShouldIncludeChildren)EditorUtility.DisplayDialogComplex(title, message, "Yes, change children", "No, this object only", "Cancel");
+			else
+			{
+				result = (GameObjectUtility.ShouldIncludeChildren)EditorUtility.DisplayDialogComplex(title, message, "Yes, change children", "No, this object only", "Cancel");
+			}
+			return result;
 		}
 
 		public static void SetParentAndAlign(GameObject child, GameObject parent)
 		{
-			if (parent == null)
+			if (!(parent == null))
 			{
-				return;
+				child.transform.SetParent(parent.transform, false);
+				RectTransform rectTransform = child.transform as RectTransform;
+				if (rectTransform)
+				{
+					rectTransform.anchoredPosition = Vector2.zero;
+					Vector3 localPosition = rectTransform.localPosition;
+					localPosition.z = 0f;
+					rectTransform.localPosition = localPosition;
+				}
+				else
+				{
+					child.transform.localPosition = Vector3.zero;
+				}
+				child.transform.localRotation = Quaternion.identity;
+				child.transform.localScale = Vector3.one;
+				GameObjectUtility.SetLayerRecursively(child, parent.layer);
 			}
-			child.transform.SetParent(parent.transform, false);
-			RectTransform rectTransform = child.transform as RectTransform;
-			if (rectTransform)
-			{
-				rectTransform.anchoredPosition = Vector2.zero;
-				Vector3 localPosition = rectTransform.localPosition;
-				localPosition.z = 0f;
-				rectTransform.localPosition = localPosition;
-			}
-			else
-			{
-				child.transform.localPosition = Vector3.zero;
-			}
-			child.transform.localRotation = Quaternion.identity;
-			child.transform.localScale = Vector3.one;
-			GameObjectUtility.SetLayerRecursively(child, parent.layer);
 		}
 
 		private static void SetLayerRecursively(GameObject go, int layer)

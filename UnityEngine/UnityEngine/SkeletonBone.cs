@@ -8,12 +8,24 @@ namespace UnityEngine
 	{
 		public string name;
 
+		internal string parentName;
+
 		public Vector3 position;
 
 		public Quaternion rotation;
 
 		public Vector3 scale;
 
-		public int transformModified;
+		[Obsolete("transformModified is no longer used and has been deprecated.", true)]
+		public int transformModified
+		{
+			get
+			{
+				return 0;
+			}
+			set
+			{
+			}
+		}
 	}
 }

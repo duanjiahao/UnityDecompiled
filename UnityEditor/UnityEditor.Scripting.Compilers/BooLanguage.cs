@@ -22,16 +22,19 @@ namespace UnityEditor.Scripting.Compilers
 			return new BooCompiler(island, runUpdater);
 		}
 
-		public override string GetNamespace(string fileName)
+		public override string GetNamespace(string fileName, string definedSymbols)
 		{
+			string result;
 			try
 			{
-				return BooParser.ParseFile(fileName).get_Modules().First<Module>().get_Namespace().get_Name();
+				result = BooParser.ParseFile(fileName).get_Modules().First<Module>().get_Namespace().get_Name();
+				return result;
 			}
 			catch
 			{
 			}
-			return base.GetNamespace(fileName);
+			result = base.GetNamespace(fileName, definedSymbols);
+			return result;
 		}
 	}
 }

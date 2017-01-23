@@ -5,11 +5,9 @@ namespace UnityEngine.Experimental.Director
 {
 	internal sealed class Playables
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern object CastToInternal(Type castType, IntPtr handle, int version);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Type GetTypeOfInternal(IntPtr handle, int version);
 
@@ -18,7 +16,6 @@ namespace UnityEngine.Experimental.Director
 			Playables.INTERNAL_CALL_InternalDestroy(ref playable);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InternalDestroy(ref Playable playable);
 
@@ -27,7 +24,6 @@ namespace UnityEngine.Experimental.Director
 			return Playables.INTERNAL_CALL_ConnectInternal(ref source, ref target, sourceOutputPort, targetInputPort);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_ConnectInternal(ref Playable source, ref Playable target, int sourceOutputPort, int targetInputPort);
 
@@ -36,7 +32,6 @@ namespace UnityEngine.Experimental.Director
 			Playables.INTERNAL_CALL_DisconnectInternal(ref target, inputPort);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DisconnectInternal(ref Playable target, int inputPort);
 
@@ -45,15 +40,12 @@ namespace UnityEngine.Experimental.Director
 			Playables.INTERNAL_CALL_SetPlayableDeleteOnDisconnect(ref target, value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPlayableDeleteOnDisconnect(ref Playable target, bool value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void BeginIgnoreAllocationTracker();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void EndIgnoreAllocationTracker();
 

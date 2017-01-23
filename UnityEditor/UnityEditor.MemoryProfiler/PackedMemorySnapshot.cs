@@ -7,25 +7,25 @@ namespace UnityEditor.MemoryProfiler
 	public class PackedMemorySnapshot
 	{
 		[SerializeField]
-		internal PackedNativeType[] m_NativeTypes;
+		internal PackedNativeType[] m_NativeTypes = null;
 
 		[SerializeField]
-		internal PackedNativeUnityEngineObject[] m_NativeObjects;
+		internal PackedNativeUnityEngineObject[] m_NativeObjects = null;
 
 		[SerializeField]
-		internal PackedGCHandle[] m_GcHandles;
+		internal PackedGCHandle[] m_GcHandles = null;
 
 		[SerializeField]
-		internal Connection[] m_Connections;
+		internal Connection[] m_Connections = null;
 
 		[SerializeField]
-		internal MemorySection[] m_ManagedHeapSections;
+		internal MemorySection[] m_ManagedHeapSections = null;
 
 		[SerializeField]
-		internal MemorySection[] m_ManagedStacks;
+		internal MemorySection[] m_ManagedStacks = null;
 
 		[SerializeField]
-		internal TypeDescription[] m_TypeDescriptions;
+		internal TypeDescription[] m_TypeDescriptions = null;
 
 		[SerializeField]
 		internal VirtualMachineInformation m_VirtualMachineInformation = default(VirtualMachineInformation);

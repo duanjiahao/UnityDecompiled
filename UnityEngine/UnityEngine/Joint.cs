@@ -7,10 +7,8 @@ namespace UnityEngine
 	{
 		public extern Rigidbody connectedBody
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -59,76 +57,86 @@ namespace UnityEngine
 
 		public extern bool autoConfigureConnectedAnchor
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float breakForce
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float breakTorque
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool enableCollision
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool enablePreprocessing
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
+		public Vector3 currentForce
+		{
+			get
+			{
+				Vector3 result;
+				this.INTERNAL_get_currentForce(out result);
+				return result;
+			}
+		}
+
+		public Vector3 currentTorque
+		{
+			get
+			{
+				Vector3 result;
+				this.INTERNAL_get_currentTorque(out result);
+				return result;
+			}
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_axis(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_axis(ref Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anchor(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anchor(ref Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_connectedAnchor(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_connectedAnchor(ref Vector3 value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_currentForce(out Vector3 value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_currentTorque(out Vector3 value);
 	}
 }

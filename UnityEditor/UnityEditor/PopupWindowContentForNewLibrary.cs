@@ -26,11 +26,11 @@ namespace UnityEditor
 			};
 		}
 
-		private string m_NewLibraryName = string.Empty;
+		private string m_NewLibraryName = "";
 
-		private int m_SelectedIndexInPopup;
+		private int m_SelectedIndexInPopup = 0;
 
-		private string m_ErrorString;
+		private string m_ErrorString = null;
 
 		private Rect m_WantedSize;
 
@@ -110,20 +110,17 @@ namespace UnityEditor
 			if (type == EventType.KeyDown)
 			{
 				KeyCode keyCode = current.keyCode;
-				if (keyCode != KeyCode.Return)
+				if (keyCode != KeyCode.KeypadEnter && keyCode != KeyCode.Return)
 				{
 					if (keyCode == KeyCode.Escape)
 					{
 						editorWindow.Close();
-						goto IL_57;
-					}
-					if (keyCode != KeyCode.KeypadEnter)
-					{
-						goto IL_57;
 					}
 				}
-				this.CreateLibraryAndCloseWindow(editorWindow);
-				IL_57:;
+				else
+				{
+					this.CreateLibraryAndCloseWindow(editorWindow);
+				}
 			}
 		}
 

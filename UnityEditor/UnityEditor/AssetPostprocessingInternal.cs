@@ -21,12 +21,14 @@ namespace UnityEditor
 
 		internal class PostprocessStack
 		{
-			internal ArrayList m_ImportProcessors;
+			internal ArrayList m_ImportProcessors = null;
 		}
 
-		private static ArrayList m_PostprocessStack;
+		private static ArrayList m_PostprocessStack = null;
 
-		private static ArrayList m_ImportProcessors;
+		private static ArrayList m_ImportProcessors = null;
+
+		private static ArrayList m_PostprocessorClasses = null;
 
 		private static void LogPostProcessorMissingDefaultConstructor(Type type)
 		{
@@ -58,12 +60,25 @@ namespace UnityEditor
 
 		private static void PreprocessAssembly(string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAssembly", new string[]
+				while (enumerator.MoveNext())
 				{
-					pathName
-				});
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAssembly", new string[]
+					{
+						pathName
+					});
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
@@ -99,24 +114,50 @@ namespace UnityEditor
 			select method;
 		}
 
+		private static ArrayList GetCachedAssetPostprocessorClasses()
+		{
+			if (AssetPostprocessingInternal.m_PostprocessorClasses == null)
+			{
+				AssetPostprocessingInternal.m_PostprocessorClasses = new ArrayList();
+				foreach (Type current in EditorAssemblies.SubclassesOf(typeof(AssetPostprocessor)))
+				{
+					AssetPostprocessingInternal.m_PostprocessorClasses.Add(current);
+				}
+			}
+			return AssetPostprocessingInternal.m_PostprocessorClasses;
+		}
+
 		private static void InitPostprocessors(string pathName)
 		{
 			AssetPostprocessingInternal.m_ImportProcessors = new ArrayList();
-			foreach (Type current in EditorAssemblies.SubclassesOf(typeof(AssetPostprocessor)))
+			IEnumerator enumerator = AssetPostprocessingInternal.GetCachedAssetPostprocessorClasses().GetEnumerator();
+			try
 			{
-				try
+				while (enumerator.MoveNext())
 				{
-					AssetPostprocessor assetPostprocessor = Activator.CreateInstance(current) as AssetPostprocessor;
-					assetPostprocessor.assetPath = pathName;
-					AssetPostprocessingInternal.m_ImportProcessors.Add(assetPostprocessor);
+					Type type = (Type)enumerator.Current;
+					try
+					{
+						AssetPostprocessor assetPostprocessor = Activator.CreateInstance(type) as AssetPostprocessor;
+						assetPostprocessor.assetPath = pathName;
+						AssetPostprocessingInternal.m_ImportProcessors.Add(assetPostprocessor);
+					}
+					catch (MissingMethodException)
+					{
+						AssetPostprocessingInternal.LogPostProcessorMissingDefaultConstructor(type);
+					}
+					catch (Exception exception)
+					{
+						Debug.LogException(exception);
+					}
 				}
-				catch (MissingMethodException)
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					AssetPostprocessingInternal.LogPostProcessorMissingDefaultConstructor(current);
-				}
-				catch (Exception exception)
-				{
-					Debug.LogException(exception);
+					disposable.Dispose();
 				}
 			}
 			AssetPostprocessingInternal.m_ImportProcessors.Sort(new AssetPostprocessingInternal.CompareAssetImportPriority());
@@ -174,93 +215,203 @@ namespace UnityEditor
 
 		private static void PreprocessMesh(string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessModel", null);
+				while (enumerator.MoveNext())
+				{
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessModel", null);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PreprocessSpeedTree(string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessSpeedTree", null);
+				while (enumerator.MoveNext())
+				{
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessSpeedTree", null);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PreprocessAnimation(string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAnimation", null);
+				while (enumerator.MoveNext())
+				{
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAnimation", null);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static Material ProcessMeshAssignMaterial(Renderer renderer, Material material)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			Material result;
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					material,
-					renderer
-				};
-				object obj = AttributeHelper.InvokeMemberIfAvailable(target, "OnAssignMaterialModel", args);
-				if (obj as Material)
-				{
-					return obj as Material;
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						material,
+						renderer
+					};
+					object obj = AttributeHelper.InvokeMemberIfAvailable(target, "OnAssignMaterialModel", args);
+					if (obj as Material)
+					{
+						result = (obj as Material);
+						return result;
+					}
 				}
 			}
-			return null;
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			result = null;
+			return result;
 		}
 
 		private static bool ProcessMeshHasAssignMaterial()
 		{
-			foreach (AssetPostprocessor assetPostprocessor in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			bool result;
+			try
 			{
-				if (assetPostprocessor.GetType().GetMethod("OnAssignMaterialModel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) != null)
+				while (enumerator.MoveNext())
 				{
-					return true;
+					AssetPostprocessor assetPostprocessor = (AssetPostprocessor)enumerator.Current;
+					if (assetPostprocessor.GetType().GetMethod("OnAssignMaterialModel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) != null)
+					{
+						result = true;
+						return result;
+					}
 				}
 			}
-			return false;
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			result = false;
+			return result;
 		}
 
 		private static void PostprocessMesh(GameObject gameObject)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					gameObject
-				};
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessModel", args);
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						gameObject
+					};
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessModel", args);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PostprocessSpeedTree(GameObject gameObject)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					gameObject
-				};
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSpeedTree", args);
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						gameObject
+					};
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSpeedTree", args);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PostprocessGameObjectWithUserProperties(GameObject go, string[] prop_names, object[] prop_values)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					go,
-					prop_names,
-					prop_values
-				};
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessGameObjectWithUserProperties", args);
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						go,
+						prop_names,
+						prop_values
+					};
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessGameObjectWithUserProperties", args);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
@@ -295,34 +446,73 @@ namespace UnityEditor
 
 		private static void PreprocessTexture(string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessTexture", null);
+				while (enumerator.MoveNext())
+				{
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessTexture", null);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PostprocessTexture(Texture2D tex, string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					tex
-				};
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessTexture", args);
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						tex
+					};
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessTexture", args);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PostprocessSprites(Texture2D tex, string pathName, Sprite[] sprites)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					tex,
-					sprites
-				};
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSprites", args);
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						tex,
+						sprites
+					};
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessSprites", args);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
@@ -357,21 +547,47 @@ namespace UnityEditor
 
 		private static void PreprocessAudio(string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAudio", null);
+				while (enumerator.MoveNext())
+				{
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPreprocessAudio", null);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		private static void PostprocessAudio(AudioClip tex, string pathName)
 		{
-			foreach (AssetPostprocessor target in AssetPostprocessingInternal.m_ImportProcessors)
+			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
+			try
 			{
-				object[] args = new object[]
+				while (enumerator.MoveNext())
 				{
-					tex
-				};
-				AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessAudio", args);
+					AssetPostprocessor target = (AssetPostprocessor)enumerator.Current;
+					object[] args = new object[]
+					{
+						tex
+					};
+					AttributeHelper.InvokeMemberIfAvailable(target, "OnPostprocessAudio", args);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 

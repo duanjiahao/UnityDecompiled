@@ -6,15 +6,12 @@ namespace UnityEngine
 {
 	public sealed class PlayerPrefs
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool TrySetInt(string key, int value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool TrySetFloat(string key, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool TrySetSetString(string key, string value);
 
@@ -26,7 +23,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetInt(string key, [DefaultValue("0")] int defaultValue);
 
@@ -45,7 +41,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetFloat(string key, [DefaultValue("0.0F")] float defaultValue);
 
@@ -64,30 +59,25 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetString(string key, [DefaultValue("\"\"")] string defaultValue);
 
 		[ExcludeFromDocs]
 		public static string GetString(string key)
 		{
-			string empty = string.Empty;
-			return PlayerPrefs.GetString(key, empty);
+			string defaultValue = "";
+			return PlayerPrefs.GetString(key, defaultValue);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasKey(string key);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DeleteKey(string key);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DeleteAll();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Save();
 	}

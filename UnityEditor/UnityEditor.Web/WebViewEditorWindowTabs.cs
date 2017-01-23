@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace UnityEditor.Web
 {
-	internal class WebViewEditorWindowTabs : WebViewEditorWindow, ISerializationCallbackReceiver, IHasCustomMenu
+	internal class WebViewEditorWindowTabs : WebViewEditorWindow, IHasCustomMenu, ISerializationCallbackReceiver
 	{
-		protected object m_GlobalObject;
+		protected object m_GlobalObject = null;
 
 		internal WebView m_WebView;
 
@@ -103,11 +103,16 @@ namespace UnityEditor.Web
 				text = webViewUrl;
 			}
 			num = text.LastIndexOf("/");
+			string result;
 			if (num == text.Length - 1)
 			{
-				return text.Substring(0, num);
+				result = text.Substring(0, num);
 			}
-			return text;
+			else
+			{
+				result = text;
+			}
+			return result;
 		}
 
 		protected void UnregisterWebviewUrl(string webViewUrl)
@@ -151,33 +156,32 @@ namespace UnityEditor.Web
 
 		protected override void LoadPage()
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
-			}
-			WebView webView;
-			if (!this.FindWebView(this.m_InitialOpenURL, out webView) || webView == null)
-			{
-				base.NotifyVisibility(false);
-				this.webView.SetHostView(null);
-				this.webView = null;
-				Rect webViewRect = GUIClip.Unclip(new Rect(0f, 0f, base.position.width, base.position.height));
-				this.InitWebView(webViewRect);
-				this.RegisterWebviewUrl(this.m_InitialOpenURL, this.webView);
-				base.NotifyVisibility(true);
-			}
-			else
-			{
-				if (webView != this.webView)
+				WebView webView;
+				if (!this.FindWebView(this.m_InitialOpenURL, out webView) || webView == null)
 				{
 					base.NotifyVisibility(false);
-					webView.SetHostView(this.m_Parent);
 					this.webView.SetHostView(null);
-					this.webView = webView;
+					this.webView = null;
+					Rect webViewRect = GUIClip.Unclip(new Rect(0f, 0f, base.position.width, base.position.height));
+					this.InitWebView(webViewRect);
+					this.RegisterWebviewUrl(this.m_InitialOpenURL, this.webView);
 					base.NotifyVisibility(true);
-					this.webView.Show();
 				}
-				base.LoadUri();
+				else
+				{
+					if (webView != this.webView)
+					{
+						base.NotifyVisibility(false);
+						webView.SetHostView(this.m_Parent);
+						this.webView.SetHostView(null);
+						this.webView = webView;
+						base.NotifyVisibility(true);
+						this.webView.Show();
+					}
+					base.LoadUri();
+				}
 			}
 		}
 	}

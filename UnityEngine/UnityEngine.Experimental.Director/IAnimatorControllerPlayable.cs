@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityEngine.Experimental.Director
 {
@@ -67,6 +68,14 @@ namespace UnityEngine.Experimental.Director
 		AnimatorClipInfo[] GetCurrentAnimatorClipInfo(int layerIndex);
 
 		AnimatorClipInfo[] GetNextAnimatorClipInfo(int layerIndex);
+
+		int GetCurrentAnimatorClipInfoCount(int layerIndex);
+
+		void GetCurrentAnimatorClipInfo(int layerIndex, List<AnimatorClipInfo> clips);
+
+		int GetNextAnimatorClipInfoCount(int layerIndex);
+
+		void GetNextAnimatorClipInfo(int layerIndex, List<AnimatorClipInfo> clips);
 
 		bool IsInTransition(int layerIndex);
 

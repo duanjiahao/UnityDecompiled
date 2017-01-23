@@ -6,7 +6,7 @@ namespace UnityEditorInternal
 {
 	internal class QuadTree<T> where T : IBounds
 	{
-		private QuadTreeNode<T> m_Root;
+		private QuadTreeNode<T> m_Root = null;
 
 		private Rect m_Rectangle;
 

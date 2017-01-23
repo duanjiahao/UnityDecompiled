@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
@@ -39,31 +40,21 @@ namespace UnityEditor
 			public SceneView.SceneViewState state;
 		}
 
-		private const int sMappingTab = 0;
-
-		private const int sMuscleTab = 1;
-
-		private const int sHandleTab = 2;
-
-		private const int sColliderTab = 3;
-
-		private const int sDefaultTab = 0;
-
 		private static AvatarEditor.Styles s_Styles;
 
 		protected int m_TabIndex;
 
 		internal GameObject m_GameObject;
 
-		internal Dictionary<Transform, bool> m_ModelBones;
+		internal Dictionary<Transform, bool> m_ModelBones = null;
 
-		private AvatarEditor.EditMode m_EditMode;
+		private AvatarEditor.EditMode m_EditMode = AvatarEditor.EditMode.NotEditing;
 
-		internal bool m_CameFromImportSettings;
+		internal bool m_CameFromImportSettings = false;
 
-		private bool m_SwitchToEditMode;
+		private bool m_SwitchToEditMode = false;
 
-		internal static bool s_EditImmediatelyOnNextOpen;
+		internal static bool s_EditImmediatelyOnNextOpen = false;
 
 		private SceneSetup[] sceneSetup;
 
@@ -78,6 +69,16 @@ namespace UnityEditor
 		private AvatarColliderEditor m_ColliderEditor;
 
 		private AvatarMappingEditor m_MappingEditor;
+
+		private const int sMappingTab = 0;
+
+		private const int sMuscleTab = 1;
+
+		private const int sHandleTab = 2;
+
+		private const int sColliderTab = 3;
+
+		private const int sDefaultTab = 0;
 
 		private GameObject m_PrefabInstance;
 
@@ -97,7 +98,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.target as Avatar;
+				return base.target as Avatar;
 			}
 		}
 
@@ -105,16 +106,21 @@ namespace UnityEditor
 		{
 			get
 			{
+				AvatarSubEditor result;
 				switch (this.m_TabIndex)
 				{
 				case 1:
-					return this.m_MuscleEditor;
+					result = this.m_MuscleEditor;
+					return result;
 				case 2:
-					return this.m_HandleEditor;
+					result = this.m_HandleEditor;
+					return result;
 				case 3:
-					return this.m_ColliderEditor;
+					result = this.m_ColliderEditor;
+					return result;
 				}
-				return this.m_MappingEditor;
+				result = this.m_MappingEditor;
+				return result;
 			}
 			set
 			{
@@ -138,7 +144,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				string assetPath = AssetDatabase.GetAssetPath(this.target);
+				string assetPath = AssetDatabase.GetAssetPath(base.target);
 				return AssetDatabase.LoadMainAssetAtPath(assetPath) as GameObject;
 			}
 		}
@@ -151,7 +157,7 @@ namespace UnityEditor
 			}
 			if (this.m_SerializedObject == null)
 			{
-				this.m_SerializedObject = new SerializedObject(AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(this.target)));
+				this.m_SerializedObject = new SerializedObject(AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(base.target)));
 			}
 			return this.m_SerializedObject;
 		}
@@ -203,12 +209,12 @@ namespace UnityEditor
 			UnityEngine.Object activeObject;
 			if (this.m_CameFromImportSettings)
 			{
-				string assetPath = AssetDatabase.GetAssetPath(this.target);
+				string assetPath = AssetDatabase.GetAssetPath(base.target);
 				activeObject = AssetDatabase.LoadMainAssetAtPath(assetPath);
 			}
 			else
 			{
-				activeObject = this.target;
+				activeObject = base.target;
 			}
 			Selection.activeObject = activeObject;
 		}
@@ -219,16 +225,16 @@ namespace UnityEditor
 			{
 			case 1:
 				this.editor = ScriptableObject.CreateInstance<AvatarMuscleEditor>();
-				goto IL_62;
+				goto IL_63;
 			case 2:
 				this.editor = ScriptableObject.CreateInstance<AvatarHandleEditor>();
-				goto IL_62;
+				goto IL_63;
 			case 3:
 				this.editor = ScriptableObject.CreateInstance<AvatarColliderEditor>();
-				goto IL_62;
+				goto IL_63;
 			}
 			this.editor = ScriptableObject.CreateInstance<AvatarMappingEditor>();
-			IL_62:
+			IL_63:
 			this.editor.hideFlags = HideFlags.HideAndDontSave;
 			this.editor.Enable(this);
 		}
@@ -265,28 +271,26 @@ namespace UnityEditor
 
 		private void EditButtonGUI()
 		{
-			if (this.avatar == null || !this.avatar.isHuman)
+			if (!(this.avatar == null) && this.avatar.isHuman)
 			{
-				return;
+				string assetPath = AssetDatabase.GetAssetPath(this.avatar);
+				ModelImporter x = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+				if (!(x == null))
+				{
+					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.FlexibleSpace();
+					if (GUILayout.Button(AvatarEditor.styles.editCharacter, new GUILayoutOption[]
+					{
+						GUILayout.Width(120f)
+					}) && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+					{
+						this.SwitchToEditMode();
+						GUIUtility.ExitGUI();
+					}
+					GUILayout.FlexibleSpace();
+					EditorGUILayout.EndHorizontal();
+				}
 			}
-			string assetPath = AssetDatabase.GetAssetPath(this.avatar);
-			ModelImporter x = AssetImporter.GetAtPath(assetPath) as ModelImporter;
-			if (x == null)
-			{
-				return;
-			}
-			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button(AvatarEditor.styles.editCharacter, new GUILayoutOption[]
-			{
-				GUILayout.Width(120f)
-			}) && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-			{
-				this.SwitchToEditMode();
-				GUIUtility.ExitGUI();
-			}
-			GUILayout.FlexibleSpace();
-			EditorGUILayout.EndHorizontal();
 		}
 
 		private void EditingGUI()
@@ -351,19 +355,32 @@ namespace UnityEditor
 			this.CreateEditor();
 			this.m_EditMode = AvatarEditor.EditMode.Editing;
 			this.m_SceneStates = new List<AvatarEditor.SceneStateCache>();
-			foreach (SceneView sceneView in SceneView.sceneViews)
+			IEnumerator enumerator = SceneView.sceneViews.GetEnumerator();
+			try
 			{
-				this.m_SceneStates.Add(new AvatarEditor.SceneStateCache
+				while (enumerator.MoveNext())
 				{
-					state = new SceneView.SceneViewState(sceneView.m_SceneViewState),
-					view = sceneView
-				});
-				sceneView.m_SceneViewState.showFlares = false;
-				sceneView.m_SceneViewState.showMaterialUpdate = false;
-				sceneView.m_SceneViewState.showFog = false;
-				sceneView.m_SceneViewState.showSkybox = false;
-				sceneView.m_SceneViewState.showImageEffects = false;
-				sceneView.FrameSelected();
+					SceneView sceneView = (SceneView)enumerator.Current;
+					this.m_SceneStates.Add(new AvatarEditor.SceneStateCache
+					{
+						state = new SceneView.SceneViewState(sceneView.m_SceneViewState),
+						view = sceneView
+					});
+					sceneView.m_SceneViewState.showFlares = false;
+					sceneView.m_SceneViewState.showMaterialUpdate = false;
+					sceneView.m_SceneViewState.showFog = false;
+					sceneView.m_SceneViewState.showSkybox = false;
+					sceneView.m_SceneViewState.showImageEffects = false;
+					sceneView.FrameSelected();
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
@@ -484,27 +501,42 @@ namespace UnityEditor
 
 		public bool HasFrameBounds()
 		{
+			bool result;
 			if (this.m_ModelBones != null)
 			{
 				foreach (KeyValuePair<Transform, bool> current in this.m_ModelBones)
 				{
 					if (current.Key == Selection.activeTransform)
 					{
-						return true;
+						result = true;
+						return result;
 					}
 				}
-				return false;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public Bounds OnGetFrameBounds()
 		{
 			Transform activeTransform = Selection.activeTransform;
 			Bounds result = new Bounds(activeTransform.position, new Vector3(0f, 0f, 0f));
-			foreach (Transform transform in activeTransform)
+			IEnumerator enumerator = activeTransform.GetEnumerator();
+			try
 			{
-				result.Encapsulate(transform.position);
+				while (enumerator.MoveNext())
+				{
+					Transform transform = (Transform)enumerator.Current;
+					result.Encapsulate(transform.position);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			if (activeTransform.parent)
 			{

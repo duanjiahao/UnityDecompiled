@@ -17,9 +17,9 @@ namespace UnityEngine
 
 			public Vector2 scrollPosition;
 
-			public bool apply;
+			public bool apply = false;
 
-			public bool hasScrollTo;
+			public bool hasScrollTo = false;
 
 			[RequiredByNativeCode]
 			public ScrollViewState()
@@ -34,21 +34,26 @@ namespace UnityEngine
 			internal bool ScrollTowards(Rect position, float maxDelta)
 			{
 				Vector2 b = this.ScrollNeeded(position);
+				bool result;
 				if (b.sqrMagnitude < 0.0001f)
 				{
-					return false;
+					result = false;
 				}
-				if (maxDelta == 0f)
+				else if (maxDelta == 0f)
 				{
-					return true;
+					result = true;
 				}
-				if (b.magnitude > maxDelta)
+				else
 				{
-					b = b.normalized * maxDelta;
+					if (b.magnitude > maxDelta)
+					{
+						b = b.normalized * maxDelta;
+					}
+					this.scrollPosition += b;
+					this.apply = true;
+					result = true;
 				}
-				this.scrollPosition += b;
-				this.apply = true;
-				return true;
+				return result;
 			}
 
 			internal Vector2 ScrollNeeded(Rect position)
@@ -94,6 +99,8 @@ namespace UnityEngine
 			}
 		}
 
+		public delegate void WindowFunction(int id);
+
 		public abstract class Scope : IDisposable
 		{
 			private bool m_Disposed;
@@ -110,14 +117,13 @@ namespace UnityEngine
 
 			public void Dispose()
 			{
-				if (this.m_Disposed)
+				if (!this.m_Disposed)
 				{
-					return;
-				}
-				this.m_Disposed = true;
-				if (!GUIUtility.guiIsExiting)
-				{
-					this.CloseScope();
+					this.m_Disposed = true;
+					if (!GUIUtility.guiIsExiting)
+					{
+						this.CloseScope();
+					}
 				}
 			}
 		}
@@ -228,8 +234,6 @@ namespace UnityEngine
 			}
 		}
 
-		public delegate void WindowFunction(int id);
-
 		private static float s_ScrollStepSize;
 
 		private static int s_ScrollControlId;
@@ -299,11 +303,16 @@ namespace UnityEngine
 			get
 			{
 				string text = GUI.Internal_GetTooltip();
+				string result;
 				if (text != null)
 				{
-					return text;
+					result = text;
 				}
-				return string.Empty;
+				else
+				{
+					result = "";
+				}
+				return result;
 			}
 			set
 			{
@@ -375,51 +384,42 @@ namespace UnityEngine
 
 		public static extern bool changed
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int depth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		private static extern Material blendMaterial
+		internal static extern Material blendMaterial
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		private static extern Material blitMaterial
+		internal static extern Material blitMaterial
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern bool usePageScrollbars
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -452,6 +452,7 @@ namespace UnityEngine
 		internal static void CleanupRoots()
 		{
 			GUI.s_Skin = null;
+			GUIUtility.CleanupRoots();
 			GUILayoutUtility.CleanupRoots();
 			GUISkin.CleanupRoots();
 			GUIStyle.CleanupRoots();
@@ -511,61 +512,24 @@ namespace UnityEngine
 				if (image == null)
 				{
 					Debug.LogWarning("null texture passed to GUI.DrawTexture");
-					return;
 				}
-				if (imageAspect == 0f)
+				else
 				{
-					imageAspect = (float)image.width / (float)image.height;
-				}
-				Material mat = (!alphaBlend) ? GUI.blitMaterial : GUI.blendMaterial;
-				float num = position.width / position.height;
-				InternalDrawTextureArguments internalDrawTextureArguments = default(InternalDrawTextureArguments);
-				internalDrawTextureArguments.texture = image;
-				internalDrawTextureArguments.leftBorder = 0;
-				internalDrawTextureArguments.rightBorder = 0;
-				internalDrawTextureArguments.topBorder = 0;
-				internalDrawTextureArguments.bottomBorder = 0;
-				internalDrawTextureArguments.color = GUI.color;
-				internalDrawTextureArguments.mat = mat;
-				switch (scaleMode)
-				{
-				case ScaleMode.StretchToFill:
-					internalDrawTextureArguments.screenRect = position;
-					internalDrawTextureArguments.sourceRect = new Rect(0f, 0f, 1f, 1f);
+					if (imageAspect == 0f)
+					{
+						imageAspect = (float)image.width / (float)image.height;
+					}
+					Material mat = (!alphaBlend) ? GUI.blitMaterial : GUI.blendMaterial;
+					InternalDrawTextureArguments internalDrawTextureArguments = default(InternalDrawTextureArguments);
+					internalDrawTextureArguments.texture = image;
+					internalDrawTextureArguments.leftBorder = 0;
+					internalDrawTextureArguments.rightBorder = 0;
+					internalDrawTextureArguments.topBorder = 0;
+					internalDrawTextureArguments.bottomBorder = 0;
+					internalDrawTextureArguments.color = GUI.color;
+					internalDrawTextureArguments.mat = mat;
+					GUI.CalculateScaledTextureRects(position, scaleMode, imageAspect, ref internalDrawTextureArguments.screenRect, ref internalDrawTextureArguments.sourceRect);
 					Graphics.DrawTexture(ref internalDrawTextureArguments);
-					break;
-				case ScaleMode.ScaleAndCrop:
-					if (num > imageAspect)
-					{
-						float num2 = imageAspect / num;
-						internalDrawTextureArguments.screenRect = position;
-						internalDrawTextureArguments.sourceRect = new Rect(0f, (1f - num2) * 0.5f, 1f, num2);
-						Graphics.DrawTexture(ref internalDrawTextureArguments);
-					}
-					else
-					{
-						float num3 = num / imageAspect;
-						internalDrawTextureArguments.screenRect = position;
-						internalDrawTextureArguments.sourceRect = new Rect(0.5f - num3 * 0.5f, 0f, num3, 1f);
-						Graphics.DrawTexture(ref internalDrawTextureArguments);
-					}
-					break;
-				case ScaleMode.ScaleToFit:
-					if (num > imageAspect)
-					{
-						float num4 = imageAspect / num;
-						internalDrawTextureArguments.screenRect = new Rect(position.xMin + position.width * (1f - num4) * 0.5f, position.yMin, num4 * position.width, position.height);
-						internalDrawTextureArguments.sourceRect = new Rect(0f, 0f, 1f, 1f);
-						Graphics.DrawTexture(ref internalDrawTextureArguments);
-					}
-					else
-					{
-						float num5 = num / imageAspect;
-						internalDrawTextureArguments.screenRect = new Rect(position.xMin, position.yMin + position.height * (1f - num5) * 0.5f, position.width, num5 * position.height);
-						internalDrawTextureArguments.sourceRect = new Rect(0f, 0f, 1f, 1f);
-						Graphics.DrawTexture(ref internalDrawTextureArguments);
-					}
-					break;
 				}
 			}
 		}
@@ -574,45 +538,48 @@ namespace UnityEngine
 		{
 			float num = position.width / position.height;
 			bool result = false;
-			switch (scaleMode)
+			if (scaleMode != ScaleMode.StretchToFill)
 			{
-			case ScaleMode.StretchToFill:
-				outScreenRect = position;
-				outSourceRect = new Rect(0f, 0f, 1f, 1f);
-				result = true;
-				break;
-			case ScaleMode.ScaleAndCrop:
-				if (num > imageAspect)
+				if (scaleMode != ScaleMode.ScaleAndCrop)
 				{
-					float num2 = imageAspect / num;
-					outScreenRect = position;
-					outSourceRect = new Rect(0f, (1f - num2) * 0.5f, 1f, num2);
-					result = true;
+					if (scaleMode == ScaleMode.ScaleToFit)
+					{
+						if (num > imageAspect)
+						{
+							float num2 = imageAspect / num;
+							outScreenRect = new Rect(position.xMin + position.width * (1f - num2) * 0.5f, position.yMin, num2 * position.width, position.height);
+							outSourceRect = new Rect(0f, 0f, 1f, 1f);
+							result = true;
+						}
+						else
+						{
+							float num3 = num / imageAspect;
+							outScreenRect = new Rect(position.xMin, position.yMin + position.height * (1f - num3) * 0.5f, position.width, num3 * position.height);
+							outSourceRect = new Rect(0f, 0f, 1f, 1f);
+							result = true;
+						}
+					}
 				}
-				else
-				{
-					float num3 = num / imageAspect;
-					outScreenRect = position;
-					outSourceRect = new Rect(0.5f - num3 * 0.5f, 0f, num3, 1f);
-					result = true;
-				}
-				break;
-			case ScaleMode.ScaleToFit:
-				if (num > imageAspect)
+				else if (num > imageAspect)
 				{
 					float num4 = imageAspect / num;
-					outScreenRect = new Rect(position.xMin + position.width * (1f - num4) * 0.5f, position.yMin, num4 * position.width, position.height);
-					outSourceRect = new Rect(0f, 0f, 1f, 1f);
+					outScreenRect = position;
+					outSourceRect = new Rect(0f, (1f - num4) * 0.5f, 1f, num4);
 					result = true;
 				}
 				else
 				{
 					float num5 = num / imageAspect;
-					outScreenRect = new Rect(position.xMin, position.yMin + position.height * (1f - num5) * 0.5f, position.width, num5 * position.height);
-					outSourceRect = new Rect(0f, 0f, 1f, 1f);
+					outScreenRect = position;
+					outSourceRect = new Rect(0.5f - num5 * 0.5f, 0f, num5, 1f);
 					result = true;
 				}
-				break;
+			}
+			else
+			{
+				outScreenRect = position;
+				outSourceRect = new Rect(0f, 0f, 1f, 1f);
+				result = true;
 			}
 			return result;
 		}
@@ -638,9 +605,7 @@ namespace UnityEngine
 				internalDrawTextureArguments.mat = mat;
 				internalDrawTextureArguments.screenRect = position;
 				internalDrawTextureArguments.sourceRect = texCoords;
-				GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
 				Graphics.DrawTexture(ref internalDrawTextureArguments);
-				GL.sRGBWrite = false;
 			}
 		}
 
@@ -681,32 +646,27 @@ namespace UnityEngine
 
 		public static bool Button(Rect position, string text)
 		{
-			GUIUtility.CheckOnGUI();
-			return GUI.DoButton(position, GUIContent.Temp(text), GUI.s_Skin.button.m_Ptr);
+			return GUI.Button(position, GUIContent.Temp(text), GUI.s_Skin.button);
 		}
 
 		public static bool Button(Rect position, Texture image)
 		{
-			GUIUtility.CheckOnGUI();
-			return GUI.DoButton(position, GUIContent.Temp(image), GUI.s_Skin.button.m_Ptr);
+			return GUI.Button(position, GUIContent.Temp(image), GUI.s_Skin.button);
 		}
 
 		public static bool Button(Rect position, GUIContent content)
 		{
-			GUIUtility.CheckOnGUI();
-			return GUI.DoButton(position, content, GUI.s_Skin.button.m_Ptr);
+			return GUI.Button(position, content, GUI.s_Skin.button);
 		}
 
 		public static bool Button(Rect position, string text, GUIStyle style)
 		{
-			GUIUtility.CheckOnGUI();
-			return GUI.DoButton(position, GUIContent.Temp(text), style.m_Ptr);
+			return GUI.Button(position, GUIContent.Temp(text), style);
 		}
 
 		public static bool Button(Rect position, Texture image, GUIStyle style)
 		{
-			GUIUtility.CheckOnGUI();
-			return GUI.DoButton(position, GUIContent.Temp(image), style.m_Ptr);
+			return GUI.Button(position, GUIContent.Temp(image), style);
 		}
 
 		public static bool Button(Rect position, GUIContent content, GUIStyle style)
@@ -717,32 +677,32 @@ namespace UnityEngine
 
 		public static bool RepeatButton(Rect position, string text)
 		{
-			return GUI.DoRepeatButton(position, GUIContent.Temp(text), GUI.s_Skin.button, FocusType.Native);
+			return GUI.DoRepeatButton(position, GUIContent.Temp(text), GUI.s_Skin.button, FocusType.Passive);
 		}
 
 		public static bool RepeatButton(Rect position, Texture image)
 		{
-			return GUI.DoRepeatButton(position, GUIContent.Temp(image), GUI.s_Skin.button, FocusType.Native);
+			return GUI.DoRepeatButton(position, GUIContent.Temp(image), GUI.s_Skin.button, FocusType.Passive);
 		}
 
 		public static bool RepeatButton(Rect position, GUIContent content)
 		{
-			return GUI.DoRepeatButton(position, content, GUI.s_Skin.button, FocusType.Native);
+			return GUI.DoRepeatButton(position, content, GUI.s_Skin.button, FocusType.Passive);
 		}
 
 		public static bool RepeatButton(Rect position, string text, GUIStyle style)
 		{
-			return GUI.DoRepeatButton(position, GUIContent.Temp(text), style, FocusType.Native);
+			return GUI.DoRepeatButton(position, GUIContent.Temp(text), style, FocusType.Passive);
 		}
 
 		public static bool RepeatButton(Rect position, Texture image, GUIStyle style)
 		{
-			return GUI.DoRepeatButton(position, GUIContent.Temp(image), style, FocusType.Native);
+			return GUI.DoRepeatButton(position, GUIContent.Temp(image), style, FocusType.Passive);
 		}
 
 		public static bool RepeatButton(Rect position, GUIContent content, GUIStyle style)
 		{
-			return GUI.DoRepeatButton(position, content, style, FocusType.Native);
+			return GUI.DoRepeatButton(position, content, style, FocusType.Passive);
 		}
 
 		private static bool DoRepeatButton(Rect position, GUIContent content, GUIStyle style, FocusType focusType)
@@ -750,34 +710,42 @@ namespace UnityEngine
 			GUIUtility.CheckOnGUI();
 			int controlID = GUIUtility.GetControlID(GUI.s_RepeatButtonHash, focusType, position);
 			EventType typeForControl = Event.current.GetTypeForControl(controlID);
-			if (typeForControl == EventType.MouseDown)
+			bool result;
+			if (typeForControl != EventType.MouseDown)
+			{
+				if (typeForControl != EventType.MouseUp)
+				{
+					if (typeForControl != EventType.Repaint)
+					{
+						result = false;
+					}
+					else
+					{
+						style.Draw(position, content, controlID);
+						result = (controlID == GUIUtility.hotControl && position.Contains(Event.current.mousePosition));
+					}
+				}
+				else if (GUIUtility.hotControl == controlID)
+				{
+					GUIUtility.hotControl = 0;
+					Event.current.Use();
+					result = position.Contains(Event.current.mousePosition);
+				}
+				else
+				{
+					result = false;
+				}
+			}
+			else
 			{
 				if (position.Contains(Event.current.mousePosition))
 				{
 					GUIUtility.hotControl = controlID;
 					Event.current.Use();
 				}
-				return false;
+				result = false;
 			}
-			if (typeForControl != EventType.MouseUp)
-			{
-				if (typeForControl != EventType.Repaint)
-				{
-					return false;
-				}
-				style.Draw(position, content, controlID);
-				return controlID == GUIUtility.hotControl && position.Contains(Event.current.mousePosition);
-			}
-			else
-			{
-				if (GUIUtility.hotControl == controlID)
-				{
-					GUIUtility.hotControl = 0;
-					Event.current.Use();
-					return position.Contains(Event.current.mousePosition);
-				}
-				return false;
-			}
+			return result;
 		}
 
 		public static string TextField(Rect position, string text)
@@ -845,7 +813,7 @@ namespace UnityEngine
 
 		internal static string PasswordFieldGetStrToShow(string password, char maskChar)
 		{
-			return (Event.current.type != EventType.Repaint && Event.current.type != EventType.MouseDown) ? password : string.Empty.PadRight(password.Length, maskChar);
+			return (Event.current.type != EventType.Repaint && Event.current.type != EventType.MouseDown) ? password : "".PadRight(password.Length, maskChar);
 		}
 
 		public static string TextArea(Rect position, string text)
@@ -895,11 +863,11 @@ namespace UnityEngine
 
 		internal static void DoTextField(Rect position, int id, GUIContent content, bool multiline, int maxLength, GUIStyle style, string secureText, char maskChar)
 		{
+			GUIUtility.CheckOnGUI();
 			if (maxLength >= 0 && content.text.Length > maxLength)
 			{
 				content.text = content.text.Substring(0, maxLength);
 			}
-			GUIUtility.CheckOnGUI();
 			TextEditor textEditor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), id);
 			textEditor.text = content.text;
 			textEditor.SaveBackup();
@@ -916,7 +884,7 @@ namespace UnityEngine
 			{
 				GUI.HandleTextFieldEventForDesktop(position, id, content, multiline, maxLength, style, textEditor);
 			}
-			textEditor.UpdateScrollOffsetIfNeeded();
+			textEditor.UpdateScrollOffsetIfNeeded(Event.current);
 		}
 
 		private static void HandleTextFieldEventForTouchscreen(Rect position, int id, GUIContent content, bool multiline, int maxLength, GUIStyle style, string secureText, char maskChar, TextEditor editor)
@@ -1053,7 +1021,7 @@ namespace UnityEngine
 					{
 						if (Input.compositionString.Length > 0)
 						{
-							editor.ReplaceSelection(string.Empty);
+							editor.ReplaceSelection("");
 							flag = true;
 						}
 						current.Use();
@@ -1115,7 +1083,7 @@ namespace UnityEngine
 		public static bool Toggle(Rect position, bool value, GUIContent content, GUIStyle style)
 		{
 			GUIUtility.CheckOnGUI();
-			return GUI.DoToggle(position, GUIUtility.GetControlID(GUI.s_ToggleHash, FocusType.Native, position), value, content, style.m_Ptr);
+			return GUI.DoToggle(position, GUIUtility.GetControlID(GUI.s_ToggleHash, FocusType.Passive, position), value, content, style.m_Ptr);
 		}
 
 		public static bool Toggle(Rect position, int id, bool value, GUIContent content, GUIStyle style)
@@ -1219,129 +1187,140 @@ namespace UnityEngine
 
 		internal static int CalcTotalHorizSpacing(int xCount, GUIStyle style, GUIStyle firstStyle, GUIStyle midStyle, GUIStyle lastStyle)
 		{
+			int result;
 			if (xCount < 2)
 			{
-				return 0;
+				result = 0;
 			}
-			if (xCount == 2)
+			else if (xCount == 2)
 			{
-				return Mathf.Max(firstStyle.margin.right, lastStyle.margin.left);
+				result = Mathf.Max(firstStyle.margin.right, lastStyle.margin.left);
 			}
-			int num = Mathf.Max(midStyle.margin.left, midStyle.margin.right);
-			return Mathf.Max(firstStyle.margin.right, midStyle.margin.left) + Mathf.Max(midStyle.margin.right, lastStyle.margin.left) + num * (xCount - 3);
+			else
+			{
+				int num = Mathf.Max(midStyle.margin.left, midStyle.margin.right);
+				result = Mathf.Max(firstStyle.margin.right, midStyle.margin.left) + Mathf.Max(midStyle.margin.right, lastStyle.margin.left) + num * (xCount - 3);
+			}
+			return result;
 		}
 
 		private static int DoButtonGrid(Rect position, int selected, GUIContent[] contents, int xCount, GUIStyle style, GUIStyle firstStyle, GUIStyle midStyle, GUIStyle lastStyle)
 		{
 			GUIUtility.CheckOnGUI();
 			int num = contents.Length;
+			int result;
 			if (num == 0)
 			{
-				return selected;
+				result = selected;
 			}
-			if (xCount <= 0)
+			else if (xCount <= 0)
 			{
 				Debug.LogWarning("You are trying to create a SelectionGrid with zero or less elements to be displayed in the horizontal direction. Set xCount to a positive value.");
-				return selected;
+				result = selected;
 			}
-			int controlID = GUIUtility.GetControlID(GUI.s_ButtonGridHash, FocusType.Native, position);
-			int num2 = num / xCount;
-			if (num % xCount != 0)
+			else
 			{
-				num2++;
-			}
-			float num3 = (float)GUI.CalcTotalHorizSpacing(xCount, style, firstStyle, midStyle, lastStyle);
-			float num4 = (float)(Mathf.Max(style.margin.top, style.margin.bottom) * (num2 - 1));
-			float elemWidth = (position.width - num3) / (float)xCount;
-			float elemHeight = (position.height - num4) / (float)num2;
-			if (style.fixedWidth != 0f)
-			{
-				elemWidth = style.fixedWidth;
-			}
-			if (style.fixedHeight != 0f)
-			{
-				elemHeight = style.fixedHeight;
-			}
-			switch (Event.current.GetTypeForControl(controlID))
-			{
-			case EventType.MouseDown:
-				if (position.Contains(Event.current.mousePosition))
+				int controlID = GUIUtility.GetControlID(GUI.s_ButtonGridHash, FocusType.Passive, position);
+				int num2 = num / xCount;
+				if (num % xCount != 0)
 				{
-					Rect[] array = GUI.CalcMouseRects(position, num, xCount, elemWidth, elemHeight, style, firstStyle, midStyle, lastStyle, false);
-					if (GUI.GetButtonGridMouseSelection(array, Event.current.mousePosition, true) != -1)
+					num2++;
+				}
+				float num3 = (float)GUI.CalcTotalHorizSpacing(xCount, style, firstStyle, midStyle, lastStyle);
+				float num4 = (float)(Mathf.Max(style.margin.top, style.margin.bottom) * (num2 - 1));
+				float elemWidth = (position.width - num3) / (float)xCount;
+				float elemHeight = (position.height - num4) / (float)num2;
+				if (style.fixedWidth != 0f)
+				{
+					elemWidth = style.fixedWidth;
+				}
+				if (style.fixedHeight != 0f)
+				{
+					elemHeight = style.fixedHeight;
+				}
+				switch (Event.current.GetTypeForControl(controlID))
+				{
+				case EventType.MouseDown:
+					if (position.Contains(Event.current.mousePosition))
 					{
-						GUIUtility.hotControl = controlID;
+						Rect[] array = GUI.CalcMouseRects(position, num, xCount, elemWidth, elemHeight, style, firstStyle, midStyle, lastStyle, false);
+						if (GUI.GetButtonGridMouseSelection(array, Event.current.mousePosition, true) != -1)
+						{
+							GUIUtility.hotControl = controlID;
+							Event.current.Use();
+						}
+					}
+					break;
+				case EventType.MouseUp:
+					if (GUIUtility.hotControl == controlID)
+					{
+						GUIUtility.hotControl = 0;
+						Event.current.Use();
+						Rect[] array = GUI.CalcMouseRects(position, num, xCount, elemWidth, elemHeight, style, firstStyle, midStyle, lastStyle, false);
+						int buttonGridMouseSelection = GUI.GetButtonGridMouseSelection(array, Event.current.mousePosition, true);
+						GUI.changed = true;
+						result = buttonGridMouseSelection;
+						return result;
+					}
+					break;
+				case EventType.MouseDrag:
+					if (GUIUtility.hotControl == controlID)
+					{
 						Event.current.Use();
 					}
-				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == controlID)
+					break;
+				case EventType.Repaint:
 				{
-					GUIUtility.hotControl = 0;
-					Event.current.Use();
+					GUIStyle gUIStyle = null;
+					GUIClip.Push(position, Vector2.zero, Vector2.zero, false);
+					position = new Rect(0f, 0f, position.width, position.height);
 					Rect[] array = GUI.CalcMouseRects(position, num, xCount, elemWidth, elemHeight, style, firstStyle, midStyle, lastStyle, false);
-					int buttonGridMouseSelection = GUI.GetButtonGridMouseSelection(array, Event.current.mousePosition, true);
-					GUI.changed = true;
-					return buttonGridMouseSelection;
+					int buttonGridMouseSelection2 = GUI.GetButtonGridMouseSelection(array, Event.current.mousePosition, controlID == GUIUtility.hotControl);
+					bool flag = position.Contains(Event.current.mousePosition);
+					GUIUtility.mouseUsed |= flag;
+					for (int i = 0; i < num; i++)
+					{
+						GUIStyle gUIStyle2;
+						if (i != 0)
+						{
+							gUIStyle2 = midStyle;
+						}
+						else
+						{
+							gUIStyle2 = firstStyle;
+						}
+						if (i == num - 1)
+						{
+							gUIStyle2 = lastStyle;
+						}
+						if (num == 1)
+						{
+							gUIStyle2 = style;
+						}
+						if (i != selected)
+						{
+							gUIStyle2.Draw(array[i], contents[i], i == buttonGridMouseSelection2 && (GUI.enabled || controlID == GUIUtility.hotControl) && (controlID == GUIUtility.hotControl || GUIUtility.hotControl == 0), controlID == GUIUtility.hotControl && GUI.enabled, false, false);
+						}
+						else
+						{
+							gUIStyle = gUIStyle2;
+						}
+					}
+					if (selected < num && selected > -1)
+					{
+						gUIStyle.Draw(array[selected], contents[selected], selected == buttonGridMouseSelection2 && (GUI.enabled || controlID == GUIUtility.hotControl) && (controlID == GUIUtility.hotControl || GUIUtility.hotControl == 0), controlID == GUIUtility.hotControl, true, false);
+					}
+					if (buttonGridMouseSelection2 >= 0)
+					{
+						GUI.tooltip = contents[buttonGridMouseSelection2].tooltip;
+					}
+					GUIClip.Pop();
+					break;
 				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == controlID)
-				{
-					Event.current.Use();
 				}
-				break;
-			case EventType.Repaint:
-			{
-				GUIStyle gUIStyle = null;
-				GUIClip.Push(position, Vector2.zero, Vector2.zero, false);
-				position = new Rect(0f, 0f, position.width, position.height);
-				Rect[] array = GUI.CalcMouseRects(position, num, xCount, elemWidth, elemHeight, style, firstStyle, midStyle, lastStyle, false);
-				int buttonGridMouseSelection2 = GUI.GetButtonGridMouseSelection(array, Event.current.mousePosition, controlID == GUIUtility.hotControl);
-				bool flag = position.Contains(Event.current.mousePosition);
-				GUIUtility.mouseUsed |= flag;
-				for (int i = 0; i < num; i++)
-				{
-					GUIStyle gUIStyle2;
-					if (i != 0)
-					{
-						gUIStyle2 = midStyle;
-					}
-					else
-					{
-						gUIStyle2 = firstStyle;
-					}
-					if (i == num - 1)
-					{
-						gUIStyle2 = lastStyle;
-					}
-					if (num == 1)
-					{
-						gUIStyle2 = style;
-					}
-					if (i != selected)
-					{
-						gUIStyle2.Draw(array[i], contents[i], i == buttonGridMouseSelection2 && (GUI.enabled || controlID == GUIUtility.hotControl) && (controlID == GUIUtility.hotControl || GUIUtility.hotControl == 0), controlID == GUIUtility.hotControl && GUI.enabled, false, false);
-					}
-					else
-					{
-						gUIStyle = gUIStyle2;
-					}
-				}
-				if (selected < num && selected > -1)
-				{
-					gUIStyle.Draw(array[selected], contents[selected], selected == buttonGridMouseSelection2 && (GUI.enabled || controlID == GUIUtility.hotControl) && (controlID == GUIUtility.hotControl || GUIUtility.hotControl == 0), controlID == GUIUtility.hotControl, true, false);
-				}
-				if (buttonGridMouseSelection2 >= 0)
-				{
-					GUI.tooltip = contents[buttonGridMouseSelection2].tooltip;
-				}
-				GUIClip.Pop();
-				break;
+				result = selected;
 			}
-			}
-			return selected;
+			return result;
 		}
 
 		private static Rect[] CalcMouseRects(Rect position, int count, int xCount, float elemWidth, float elemHeight, GUIStyle style, GUIStyle firstStyle, GUIStyle midStyle, GUIStyle lastStyle, bool addBorders)
@@ -1388,19 +1367,22 @@ namespace UnityEngine
 
 		private static int GetButtonGridMouseSelection(Rect[] buttonRects, Vector2 mousePos, bool findNearest)
 		{
+			int result;
 			for (int i = 0; i < buttonRects.Length; i++)
 			{
 				if (buttonRects[i].Contains(mousePos))
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
 			if (!findNearest)
 			{
-				return -1;
+				result = -1;
+				return result;
 			}
 			float num = 1E+07f;
-			int result = -1;
+			int num2 = -1;
 			for (int j = 0; j < buttonRects.Length; j++)
 			{
 				Rect rect = buttonRects[j];
@@ -1408,37 +1390,42 @@ namespace UnityEngine
 				float sqrMagnitude = (mousePos - b).sqrMagnitude;
 				if (sqrMagnitude < num)
 				{
-					result = j;
+					num2 = j;
 					num = sqrMagnitude;
 				}
 			}
+			result = num2;
 			return result;
 		}
 
 		public static float HorizontalSlider(Rect position, float value, float leftValue, float rightValue)
 		{
-			return GUI.Slider(position, value, 0f, leftValue, rightValue, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, GUIUtility.GetControlID(GUI.s_SliderHash, FocusType.Native, position));
+			return GUI.Slider(position, value, 0f, leftValue, rightValue, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, 0);
 		}
 
 		public static float HorizontalSlider(Rect position, float value, float leftValue, float rightValue, GUIStyle slider, GUIStyle thumb)
 		{
-			return GUI.Slider(position, value, 0f, leftValue, rightValue, slider, thumb, true, GUIUtility.GetControlID(GUI.s_SliderHash, FocusType.Native, position));
+			return GUI.Slider(position, value, 0f, leftValue, rightValue, slider, thumb, true, 0);
 		}
 
 		public static float VerticalSlider(Rect position, float value, float topValue, float bottomValue)
 		{
-			return GUI.Slider(position, value, 0f, topValue, bottomValue, GUI.skin.verticalSlider, GUI.skin.verticalSliderThumb, false, GUIUtility.GetControlID(GUI.s_SliderHash, FocusType.Native, position));
+			return GUI.Slider(position, value, 0f, topValue, bottomValue, GUI.skin.verticalSlider, GUI.skin.verticalSliderThumb, false, 0);
 		}
 
 		public static float VerticalSlider(Rect position, float value, float topValue, float bottomValue, GUIStyle slider, GUIStyle thumb)
 		{
-			return GUI.Slider(position, value, 0f, topValue, bottomValue, slider, thumb, false, GUIUtility.GetControlID(GUI.s_SliderHash, FocusType.Native, position));
+			return GUI.Slider(position, value, 0f, topValue, bottomValue, slider, thumb, false, 0);
 		}
 
-		public static float Slider(Rect position, float value, float size, float start, float end, GUIStyle slider, GUIStyle thumb, bool horiz, int id)
+		public static float Slider(Rect position, float value, float size, float start, float end, GUIStyle sliderStyle, GUIStyle thumbStyle, bool horiz, int id)
 		{
 			GUIUtility.CheckOnGUI();
-			SliderHandler sliderHandler = new SliderHandler(position, value, size, start, end, slider, thumb, horiz, id);
+			if (id == 0)
+			{
+				id = GUIUtility.GetControlID(GUI.s_SliderHash, FocusType.Passive, position);
+			}
+			SliderHandler sliderHandler = new SliderHandler(position, value, size, start, end, sliderStyle, thumbStyle, horiz, id);
 			return sliderHandler.Handle();
 		}
 
@@ -1773,11 +1760,16 @@ namespace UnityEngine
 
 		internal static GUI.ScrollViewState GetTopScrollView()
 		{
+			GUI.ScrollViewState result;
 			if (GUI.s_ScrollViewStates.Count != 0)
 			{
-				return (GUI.ScrollViewState)GUI.s_ScrollViewStates.Peek();
+				result = (GUI.ScrollViewState)GUI.s_ScrollViewStates.Peek();
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public static void ScrollTo(Rect position)
@@ -1888,6 +1880,10 @@ namespace UnityEngine
 					GUILayoutUtility.BeginWindow(id, style, null);
 				}
 			}
+			else
+			{
+				GUILayoutUtility.BeginWindow(id, GUIStyle.none, null);
+			}
 			GUI.skin = _skin;
 			func(id);
 			if (Event.current.type == EventType.Layout)
@@ -1926,39 +1922,30 @@ namespace UnityEngine
 			GUILayoutUtility.current.windows = windows;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_color(out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_color(ref Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_backgroundColor(out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_backgroundColor(ref Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_contentColor(out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_contentColor(ref Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string Internal_GetTooltip();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetTooltip(string value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string Internal_GetMouseTooltip();
 
@@ -1967,11 +1954,9 @@ namespace UnityEngine
 			GUI.INTERNAL_CALL_DoLabel(ref position, content, style);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DoLabel(ref Rect position, GUIContent content, IntPtr style);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void InitializeGUIClipTexture();
 
@@ -1980,19 +1965,15 @@ namespace UnityEngine
 			return GUI.INTERNAL_CALL_DoButton(ref position, content, style);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_DoButton(ref Rect position, GUIContent content, IntPtr style);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetNextControlName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetNameOfFocusedControl();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FocusControl(string name);
 
@@ -2001,11 +1982,9 @@ namespace UnityEngine
 			return GUI.INTERNAL_CALL_DoToggle(ref position, id, value, content, style);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_DoToggle(ref Rect position, int id, bool value, GUIContent content, IntPtr style);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void InternalRepaintEditorWindow();
 
@@ -2016,7 +1995,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DoModalWindow(int id, ref Rect clientRect, GUI.WindowFunction func, GUIContent content, GUIStyle style, GUISkin skin, out Rect value);
 
@@ -2027,7 +2005,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DoWindow(int id, ref Rect clientRect, GUI.WindowFunction func, GUIContent title, GUIStyle style, GUISkin skin, bool forceRectOnLayout, out Rect value);
 
@@ -2036,31 +2013,24 @@ namespace UnityEngine
 			GUI.INTERNAL_CALL_DragWindow(ref position);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DragWindow(ref Rect position);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void BringWindowToFront(int windowID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void BringWindowToBack(int windowID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FocusWindow(int windowID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnfocusWindow();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_BeginWindows();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_EndWindows();
 	}

@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Scripting;
 
 namespace UnityEngine
@@ -11,66 +12,75 @@ namespace UnityEngine
 
 		public static event AudioSettings.AudioConfigurationChangeHandler OnAudioConfigurationChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				AudioSettings.OnAudioConfigurationChanged = (AudioSettings.AudioConfigurationChangeHandler)Delegate.Combine(AudioSettings.OnAudioConfigurationChanged, value);
+				AudioSettings.AudioConfigurationChangeHandler audioConfigurationChangeHandler = AudioSettings.OnAudioConfigurationChanged;
+				AudioSettings.AudioConfigurationChangeHandler audioConfigurationChangeHandler2;
+				do
+				{
+					audioConfigurationChangeHandler2 = audioConfigurationChangeHandler;
+					audioConfigurationChangeHandler = Interlocked.CompareExchange<AudioSettings.AudioConfigurationChangeHandler>(ref AudioSettings.OnAudioConfigurationChanged, (AudioSettings.AudioConfigurationChangeHandler)Delegate.Combine(audioConfigurationChangeHandler2, value), audioConfigurationChangeHandler);
+				}
+				while (audioConfigurationChangeHandler != audioConfigurationChangeHandler2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				AudioSettings.OnAudioConfigurationChanged = (AudioSettings.AudioConfigurationChangeHandler)Delegate.Remove(AudioSettings.OnAudioConfigurationChanged, value);
+				AudioSettings.AudioConfigurationChangeHandler audioConfigurationChangeHandler = AudioSettings.OnAudioConfigurationChanged;
+				AudioSettings.AudioConfigurationChangeHandler audioConfigurationChangeHandler2;
+				do
+				{
+					audioConfigurationChangeHandler2 = audioConfigurationChangeHandler;
+					audioConfigurationChangeHandler = Interlocked.CompareExchange<AudioSettings.AudioConfigurationChangeHandler>(ref AudioSettings.OnAudioConfigurationChanged, (AudioSettings.AudioConfigurationChangeHandler)Delegate.Remove(audioConfigurationChangeHandler2, value), audioConfigurationChangeHandler);
+				}
+				while (audioConfigurationChangeHandler != audioConfigurationChangeHandler2);
 			}
 		}
 
 		public static extern AudioSpeakerMode driverCapabilities
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern AudioSpeakerMode speakerMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+
+		internal static extern int profilerCaptureFlags
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 
 		[ThreadAndSerializationSafe]
 		public static extern double dspTime
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int outputSampleRate
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool editingInPlaymode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool unityAudioDisabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -84,11 +94,10 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void GetDSPBufferSize(out int bufferLength, out int numBuffers);
 
-		[Obsolete("AudioSettings.SetDSPBufferSize is deprecated and has been replaced by audio project settings and the AudioSettings.GetConfiguration/AudioSettings.Reset API."), WrapperlessIcall]
+		[Obsolete("AudioSettings.SetDSPBufferSize is deprecated and has been replaced by audio project settings and the AudioSettings.GetConfiguration/AudioSettings.Reset API.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetDSPBufferSize(int bufferLength, int numBuffers);
 
@@ -99,7 +108,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetConfiguration(out AudioConfiguration value);
 
@@ -108,7 +116,6 @@ namespace UnityEngine
 			return AudioSettings.INTERNAL_CALL_Reset(ref config);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Reset(ref AudioConfiguration config);
 

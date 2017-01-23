@@ -10,7 +10,6 @@ namespace UnityEditor
 		[SerializeField]
 		private IntPtr m_thisDummy;
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Callback(string result);
 
@@ -19,7 +18,6 @@ namespace UnityEditor
 			this.DestroyCallBack();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void DestroyCallBack();
 	}

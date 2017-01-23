@@ -30,6 +30,7 @@ namespace UnityEngineInternal
 		private static Type ResolveType(string name, Assembly callingAssembly, string sourceInfo)
 		{
 			Type type = APIUpdaterRuntimeServices.ComponentsFromUnityEngine.FirstOrDefault((Type t) => (t.Name == name || t.FullName == name) && !APIUpdaterRuntimeServices.IsMarkedAsObsolete(t));
+			Type result;
 			if (type != null)
 			{
 				Debug.LogWarningFormat("[{1}] Type '{0}' found in UnityEngine, consider replacing with go.AddComponent<{0}>();", new object[]
@@ -37,35 +38,45 @@ namespace UnityEngineInternal
 					name,
 					sourceInfo
 				});
-				return type;
+				result = type;
 			}
-			Type type2 = callingAssembly.GetType(name);
-			if (type2 != null)
+			else
 			{
-				Debug.LogWarningFormat("[{1}] Component type '{0}' found on caller assembly. Consider replacing the call method call with: AddComponent<{0}>()", new object[]
+				Type type2 = callingAssembly.GetType(name);
+				if (type2 != null)
 				{
-					type2.FullName,
-					sourceInfo
-				});
-				return type2;
-			}
-			type2 = AppDomain.CurrentDomain.GetAssemblies().SelectMany((Assembly a) => a.GetTypes()).SingleOrDefault((Type t) => t.Name == name && typeof(Component).IsAssignableFrom(t));
-			if (type2 != null)
-			{
-				Debug.LogWarningFormat("[{2}] Component type '{0}' found on assembly {1}. Consider replacing the call method with: AddComponent<{0}>()", new object[]
+					Debug.LogWarningFormat("[{1}] Component type '{0}' found on caller assembly. Consider replacing the call method call with: AddComponent<{0}>()", new object[]
+					{
+						type2.FullName,
+						sourceInfo
+					});
+					result = type2;
+				}
+				else
 				{
-					type2.FullName,
-					type2.Assembly.Location,
-					sourceInfo
-				});
-				return type2;
+					type2 = AppDomain.CurrentDomain.GetAssemblies().SelectMany((Assembly a) => a.GetTypes()).SingleOrDefault((Type t) => t.Name == name && typeof(Component).IsAssignableFrom(t));
+					if (type2 != null)
+					{
+						Debug.LogWarningFormat("[{2}] Component type '{0}' found on assembly {1}. Consider replacing the call method with: AddComponent<{0}>()", new object[]
+						{
+							type2.FullName,
+							type2.Assembly.Location,
+							sourceInfo
+						});
+						result = type2;
+					}
+					else
+					{
+						Debug.LogErrorFormat("[{1}] Component Type '{0}' not found.", new object[]
+						{
+							name,
+							sourceInfo
+						});
+						result = null;
+					}
+				}
 			}
-			Debug.LogErrorFormat("[{1}] Component Type '{0}' not found.", new object[]
-			{
-				name,
-				sourceInfo
-			});
-			return null;
+			return result;
 		}
 
 		private static bool IsMarkedAsObsolete(Type t)

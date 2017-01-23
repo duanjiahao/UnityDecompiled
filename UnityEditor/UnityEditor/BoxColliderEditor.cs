@@ -42,23 +42,22 @@ namespace UnityEditor
 
 		public void OnSceneGUI()
 		{
-			if (!base.editingCollider)
+			if (base.editingCollider)
 			{
-				return;
-			}
-			BoxCollider boxCollider = (BoxCollider)this.target;
-			Vector3 center = boxCollider.center;
-			Vector3 size = boxCollider.size;
-			Color color = Handles.s_ColliderHandleColor;
-			if (!boxCollider.enabled)
-			{
-				color = Handles.s_ColliderHandleColorDisabled;
-			}
-			if (this.m_BoxEditor.OnSceneGUI(boxCollider.transform, color, ref center, ref size))
-			{
-				Undo.RecordObject(boxCollider, "Modify Box Collider");
-				boxCollider.center = center;
-				boxCollider.size = size;
+				BoxCollider boxCollider = (BoxCollider)base.target;
+				Vector3 center = boxCollider.center;
+				Vector3 size = boxCollider.size;
+				Color color = Handles.s_ColliderHandleColor;
+				if (!boxCollider.enabled)
+				{
+					color = Handles.s_ColliderHandleColorDisabled;
+				}
+				if (this.m_BoxEditor.OnSceneGUI(boxCollider.transform, color, ref center, ref size))
+				{
+					Undo.RecordObject(boxCollider, "Modify Box Collider");
+					boxCollider.center = center;
+					boxCollider.size = size;
+				}
 			}
 		}
 	}

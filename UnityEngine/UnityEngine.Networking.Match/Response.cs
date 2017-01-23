@@ -20,7 +20,7 @@ namespace UnityEngine.Networking.Match
 		public void SetSuccess()
 		{
 			this.success = true;
-			this.extendedInfo = string.Empty;
+			this.extendedInfo = "";
 		}
 
 		public void SetFailure(string info)

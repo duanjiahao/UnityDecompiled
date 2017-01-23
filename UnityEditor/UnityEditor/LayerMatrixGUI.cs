@@ -14,14 +14,14 @@ namespace UnityEditor
 			int num = 0;
 			for (int i = 0; i < 32; i++)
 			{
-				if (LayerMask.LayerToName(i) != string.Empty)
+				if (LayerMask.LayerToName(i) != "")
 				{
 					num++;
 				}
 			}
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(0f);
-			show = EditorGUILayout.Foldout(show, title);
+			show = EditorGUILayout.Foldout(show, title, true);
 			GUILayout.EndHorizontal();
 			if (show)
 			{
@@ -36,7 +36,7 @@ namespace UnityEditor
 				int num2 = 0;
 				for (int j = 0; j < 32; j++)
 				{
-					if (LayerMask.LayerToName(j) != string.Empty)
+					if (LayerMask.LayerToName(j) != "")
 					{
 						float num3 = (float)(130 + (num - num2) * 16) - (topmostRect.width + scrollPos.x);
 						if (num3 < 0f)
@@ -57,18 +57,18 @@ namespace UnityEditor
 				num2 = 0;
 				for (int k = 0; k < 32; k++)
 				{
-					if (LayerMask.LayerToName(k) != string.Empty)
+					if (LayerMask.LayerToName(k) != "")
 					{
 						int num4 = 0;
 						Rect rect2 = GUILayoutUtility.GetRect((float)(30 + 16 * num + 100), 16f);
 						GUI.Label(new Rect(rect2.x + 30f, rect2.y, 100f, 16f), LayerMask.LayerToName(k), "RightLabel");
 						for (int l = 31; l >= 0; l--)
 						{
-							if (LayerMask.LayerToName(l) != string.Empty)
+							if (LayerMask.LayerToName(l) != "")
 							{
 								if (num4 < num - num2)
 								{
-									GUIContent content = new GUIContent(string.Empty, LayerMask.LayerToName(k) + "/" + LayerMask.LayerToName(l));
+									GUIContent content = new GUIContent("", LayerMask.LayerToName(k) + "/" + LayerMask.LayerToName(l));
 									bool flag = getValue(k, l);
 									bool flag2 = GUI.Toggle(new Rect(130f + rect2.x + (float)(num4 * 16), rect2.y, 16f, 16f), flag, content);
 									if (flag2 != flag)

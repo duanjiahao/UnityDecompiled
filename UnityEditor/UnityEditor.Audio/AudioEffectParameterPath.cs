@@ -13,24 +13,30 @@ namespace UnityEditor.Audio
 
 		public override string ResolveStringPath(bool getOnlyBasePath)
 		{
+			string result;
 			if (getOnlyBasePath)
 			{
-				return base.GetBasePath(this.group.GetDisplayString(), this.effect.effectName);
+				result = base.GetBasePath(this.group.GetDisplayString(), this.effect.effectName);
 			}
-			if (this.effect.GetGUIDForMixLevel() == this.parameter)
+			else if (this.effect.GetGUIDForMixLevel() == this.parameter)
 			{
-				return "Mix Level" + base.GetBasePath(this.group.GetDisplayString(), this.effect.effectName);
+				result = "Mix Level" + base.GetBasePath(this.group.GetDisplayString(), this.effect.effectName);
 			}
-			MixerParameterDefinition[] effectParameters = MixerEffectDefinitions.GetEffectParameters(this.effect.effectName);
-			for (int i = 0; i < effectParameters.Length; i++)
+			else
 			{
-				GUID gUIDForParameter = this.effect.GetGUIDForParameter(effectParameters[i].name);
-				if (gUIDForParameter == this.parameter)
+				MixerParameterDefinition[] effectParameters = MixerEffectDefinitions.GetEffectParameters(this.effect.effectName);
+				for (int i = 0; i < effectParameters.Length; i++)
 				{
-					return effectParameters[i].name + base.GetBasePath(this.group.GetDisplayString(), this.effect.effectName);
+					GUID gUIDForParameter = this.effect.GetGUIDForParameter(effectParameters[i].name);
+					if (gUIDForParameter == this.parameter)
+					{
+						result = effectParameters[i].name + base.GetBasePath(this.group.GetDisplayString(), this.effect.effectName);
+						return result;
+					}
 				}
+				result = "Error finding Parameter path.";
 			}
-			return "Error finding Parameter path.";
+			return result;
 		}
 	}
 }

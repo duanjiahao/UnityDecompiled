@@ -18,7 +18,7 @@ namespace UnityEngine
 
 		internal Vector4 m_SpecularMetallic = new Vector4(0f, 0f, 0f, 0f);
 
-		internal float m_Smoothness;
+		internal float m_Smoothness = 0f;
 
 		public Texture2D texture
 		{

@@ -10,11 +10,11 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "Multiplayer";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/unet";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/unet";
 
 		static UnetAccess()
 		{
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("UNet", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/unet", new UnetAccess(), "unity/project/cloud/networking");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("UNet", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/unet", new UnetAccess(), "unity/project/cloud/networking");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 

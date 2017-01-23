@@ -46,11 +46,16 @@ namespace UnityEditor
 
 		public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
+			float result;
 			if (!MaterialToggleDrawer.IsPropertyTypeSuitable(prop))
 			{
-				return 40f;
+				result = 40f;
 			}
-			return base.GetPropertyHeight(prop, label, editor);
+			else
+			{
+				result = base.GetPropertyHeight(prop, label, editor);
+			}
+			return result;
 		}
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -59,32 +64,32 @@ namespace UnityEditor
 			{
 				GUIContent label2 = EditorGUIUtility.TempContent("Toggle used on a non-float property: " + prop.name, EditorGUIUtility.GetHelpIcon(MessageType.Warning));
 				EditorGUI.LabelField(position, label2, EditorStyles.helpBox);
-				return;
 			}
-			EditorGUI.BeginChangeCheck();
-			bool flag = Math.Abs(prop.floatValue) > 0.001f;
-			EditorGUI.showMixedValue = prop.hasMixedValue;
-			flag = EditorGUI.Toggle(position, label, flag);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
+			else
 			{
-				prop.floatValue = ((!flag) ? 0f : 1f);
-				this.SetKeyword(prop, flag);
+				EditorGUI.BeginChangeCheck();
+				bool flag = Math.Abs(prop.floatValue) > 0.001f;
+				EditorGUI.showMixedValue = prop.hasMixedValue;
+				flag = EditorGUI.Toggle(position, label, flag);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					prop.floatValue = ((!flag) ? 0f : 1f);
+					this.SetKeyword(prop, flag);
+				}
 			}
 		}
 
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (!MaterialToggleDrawer.IsPropertyTypeSuitable(prop))
+			if (MaterialToggleDrawer.IsPropertyTypeSuitable(prop))
 			{
-				return;
+				if (!prop.hasMixedValue)
+				{
+					this.SetKeyword(prop, Math.Abs(prop.floatValue) > 0.001f);
+				}
 			}
-			if (prop.hasMixedValue)
-			{
-				return;
-			}
-			this.SetKeyword(prop, Math.Abs(prop.floatValue) > 0.001f);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -13,9 +14,20 @@ namespace UnityEditor
 
 		private static int s_PreviousPrefixHash;
 
+		[CompilerGenerated]
+		private static Action <>f__mg$cache0;
+
 		static SceneViewPicking()
 		{
-			Selection.selectionChanged = (Action)Delegate.Combine(Selection.selectionChanged, new Action(SceneViewPicking.ResetHashes));
+			SceneViewPicking.s_RetainHashes = false;
+			SceneViewPicking.s_PreviousTopmostHash = 0;
+			SceneViewPicking.s_PreviousPrefixHash = 0;
+			Delegate arg_35_0 = Selection.selectionChanged;
+			if (SceneViewPicking.<>f__mg$cache0 == null)
+			{
+				SceneViewPicking.<>f__mg$cache0 = new Action(SceneViewPicking.ResetHashes);
+			}
+			Selection.selectionChanged = (Action)Delegate.Combine(arg_35_0, SceneViewPicking.<>f__mg$cache0);
 		}
 
 		private static void ResetHashes()
@@ -32,89 +44,104 @@ namespace UnityEditor
 		{
 			SceneViewPicking.s_RetainHashes = true;
 			IEnumerator<GameObject> enumerator = SceneViewPicking.GetAllOverlapping(mousePosition).GetEnumerator();
+			GameObject result;
 			if (!enumerator.MoveNext())
 			{
-				return null;
-			}
-			GameObject current = enumerator.Current;
-			GameObject gameObject = HandleUtility.FindSelectionBase(current);
-			GameObject gameObject2 = (!(gameObject == null)) ? gameObject : current;
-			int hashCode = current.GetHashCode();
-			int num = hashCode;
-			if (Selection.activeGameObject == null)
-			{
-				SceneViewPicking.s_PreviousTopmostHash = hashCode;
-				SceneViewPicking.s_PreviousPrefixHash = num;
-				return gameObject2;
-			}
-			if (hashCode != SceneViewPicking.s_PreviousTopmostHash)
-			{
-				SceneViewPicking.s_PreviousTopmostHash = hashCode;
-				SceneViewPicking.s_PreviousPrefixHash = num;
-				return (!(Selection.activeGameObject == gameObject)) ? gameObject2 : current;
-			}
-			SceneViewPicking.s_PreviousTopmostHash = hashCode;
-			if (Selection.activeGameObject == gameObject)
-			{
-				if (num == SceneViewPicking.s_PreviousPrefixHash)
-				{
-					return current;
-				}
-				SceneViewPicking.s_PreviousPrefixHash = num;
-				return gameObject;
+				result = null;
 			}
 			else
 			{
-				GameObject x = HandleUtility.PickGameObject(mousePosition, false, null, new GameObject[]
+				GameObject current = enumerator.Current;
+				GameObject gameObject = HandleUtility.FindSelectionBase(current);
+				GameObject gameObject2 = (!(gameObject == null)) ? gameObject : current;
+				int hashCode = current.GetHashCode();
+				int num = hashCode;
+				if (Selection.activeGameObject == null)
 				{
-					Selection.activeGameObject
-				});
-				if (x == Selection.activeGameObject)
+					SceneViewPicking.s_PreviousTopmostHash = hashCode;
+					SceneViewPicking.s_PreviousPrefixHash = num;
+					result = gameObject2;
+				}
+				else if (hashCode != SceneViewPicking.s_PreviousTopmostHash)
 				{
-					while (enumerator.Current != Selection.activeGameObject)
+					SceneViewPicking.s_PreviousTopmostHash = hashCode;
+					SceneViewPicking.s_PreviousPrefixHash = num;
+					result = ((!(Selection.activeGameObject == gameObject)) ? gameObject2 : current);
+				}
+				else
+				{
+					SceneViewPicking.s_PreviousTopmostHash = hashCode;
+					if (Selection.activeGameObject == gameObject)
 					{
-						if (!enumerator.MoveNext())
+						if (num == SceneViewPicking.s_PreviousPrefixHash)
+						{
+							result = current;
+						}
+						else
+						{
+							SceneViewPicking.s_PreviousPrefixHash = num;
+							result = gameObject;
+						}
+					}
+					else
+					{
+						GameObject x = HandleUtility.PickGameObject(mousePosition, false, null, new GameObject[]
+						{
+							Selection.activeGameObject
+						});
+						if (x == Selection.activeGameObject)
+						{
+							while (enumerator.Current != Selection.activeGameObject)
+							{
+								if (!enumerator.MoveNext())
+								{
+									SceneViewPicking.s_PreviousPrefixHash = hashCode;
+									result = gameObject2;
+									return result;
+								}
+								SceneViewPicking.UpdateHash(ref num, enumerator.Current);
+							}
+						}
+						if (num != SceneViewPicking.s_PreviousPrefixHash)
 						{
 							SceneViewPicking.s_PreviousPrefixHash = hashCode;
-							return gameObject2;
+							result = gameObject2;
 						}
-						SceneViewPicking.UpdateHash(ref num, enumerator.Current);
+						else if (!enumerator.MoveNext())
+						{
+							SceneViewPicking.s_PreviousPrefixHash = hashCode;
+							result = gameObject2;
+						}
+						else
+						{
+							SceneViewPicking.UpdateHash(ref num, enumerator.Current);
+							if (enumerator.Current == gameObject)
+							{
+								if (!enumerator.MoveNext())
+								{
+									SceneViewPicking.s_PreviousPrefixHash = hashCode;
+									result = gameObject2;
+									return result;
+								}
+								SceneViewPicking.UpdateHash(ref num, enumerator.Current);
+							}
+							SceneViewPicking.s_PreviousPrefixHash = num;
+							result = enumerator.Current;
+						}
 					}
 				}
-				if (num != SceneViewPicking.s_PreviousPrefixHash)
-				{
-					SceneViewPicking.s_PreviousPrefixHash = hashCode;
-					return gameObject2;
-				}
-				if (!enumerator.MoveNext())
-				{
-					SceneViewPicking.s_PreviousPrefixHash = hashCode;
-					return gameObject2;
-				}
-				SceneViewPicking.UpdateHash(ref num, enumerator.Current);
-				if (enumerator.Current == gameObject)
-				{
-					if (!enumerator.MoveNext())
-					{
-						SceneViewPicking.s_PreviousPrefixHash = hashCode;
-						return gameObject2;
-					}
-					SceneViewPicking.UpdateHash(ref num, enumerator.Current);
-				}
-				SceneViewPicking.s_PreviousPrefixHash = num;
-				return enumerator.Current;
 			}
+			return result;
 		}
 
 		[DebuggerHidden]
 		private static IEnumerable<GameObject> GetAllOverlapping(Vector2 position)
 		{
-			SceneViewPicking.<GetAllOverlapping>c__Iterator8 <GetAllOverlapping>c__Iterator = new SceneViewPicking.<GetAllOverlapping>c__Iterator8();
+			SceneViewPicking.<GetAllOverlapping>c__Iterator0 <GetAllOverlapping>c__Iterator = new SceneViewPicking.<GetAllOverlapping>c__Iterator0();
 			<GetAllOverlapping>c__Iterator.position = position;
-			<GetAllOverlapping>c__Iterator.<$>position = position;
-			SceneViewPicking.<GetAllOverlapping>c__Iterator8 expr_15 = <GetAllOverlapping>c__Iterator;
-			expr_15.$PC = -2;
-			return expr_15;
+			SceneViewPicking.<GetAllOverlapping>c__Iterator0 expr_0E = <GetAllOverlapping>c__Iterator;
+			expr_0E.$PC = -2;
+			return expr_0E;
 		}
 
 		private static void UpdateHash(ref int hash, object obj)

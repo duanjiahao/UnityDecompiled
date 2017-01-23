@@ -30,11 +30,9 @@ namespace UnityEngine.Networking
 			return this.InternalGetData();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Texture2D InternalGetTexture();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern byte[] InternalGetData();
 

@@ -6,55 +6,118 @@ namespace UnityEngine.Apple.ReplayKit
 {
 	public static class ReplayKit
 	{
+		public delegate void BroadcastStatusCallback(bool hasStarted, string errorMessage);
+
 		public static extern bool APIAvailable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool recordingAvailable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string lastError
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isRecording
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
+		public static extern bool broadcastingAPIAvailable
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern bool isBroadcasting
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string broadcastURL
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern bool cameraEnabled
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern bool microphoneEnabled
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool StartRecording([DefaultValue("false")] bool enableMicrophone);
+		public static extern bool StartRecording([DefaultValue("false")] bool enableMicrophone, [DefaultValue("false")] bool enableCamera);
+
+		[ExcludeFromDocs]
+		public static bool StartRecording(bool enableMicrophone)
+		{
+			bool enableCamera = false;
+			return ReplayKit.StartRecording(enableMicrophone, enableCamera);
+		}
 
 		[ExcludeFromDocs]
 		public static bool StartRecording()
 		{
+			bool enableCamera = false;
 			bool enableMicrophone = false;
-			return ReplayKit.StartRecording(enableMicrophone);
+			return ReplayKit.StartRecording(enableMicrophone, enableCamera);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool StopRecording();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Preview();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Discard();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void StartBroadcasting(ReplayKit.BroadcastStatusCallback callback, [DefaultValue("false")] bool enableMicrophone, [DefaultValue("false")] bool enableCamera);
+
+		[ExcludeFromDocs]
+		public static void StartBroadcasting(ReplayKit.BroadcastStatusCallback callback, bool enableMicrophone)
+		{
+			bool enableCamera = false;
+			ReplayKit.StartBroadcasting(callback, enableMicrophone, enableCamera);
+		}
+
+		[ExcludeFromDocs]
+		public static void StartBroadcasting(ReplayKit.BroadcastStatusCallback callback)
+		{
+			bool enableCamera = false;
+			bool enableMicrophone = false;
+			ReplayKit.StartBroadcasting(callback, enableMicrophone, enableCamera);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void StopBroadcasting();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool ShowCameraPreviewAt(float posX, float posY);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void HideCameraPreview();
 	}
 }

@@ -6,9 +6,9 @@ namespace UnityEditor
 {
 	internal abstract class AssetImporterInspector : Editor
 	{
-		private ulong m_AssetTimeStamp;
+		private ulong m_AssetTimeStamp = 0uL;
 
-		private bool m_MightHaveModified;
+		private bool m_MightHaveModified = false;
 
 		private Editor m_AssetEditor;
 
@@ -52,11 +52,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				IPreviewable result;
 				if (this.useAssetDrawPreview && this.assetEditor != null)
 				{
-					return this.assetEditor;
+					result = this.assetEditor;
 				}
-				return base.preview;
+				else
+				{
+					result = base.preview;
+				}
+				return result;
 			}
 		}
 
@@ -99,7 +104,7 @@ namespace UnityEditor
 
 		public virtual void OnDisable()
 		{
-			AssetImporter assetImporter = this.target as AssetImporter;
+			AssetImporter assetImporter = base.target as AssetImporter;
 			if (Unsupported.IsDestroyScriptableObject(this) && this.m_MightHaveModified && assetImporter != null && !InternalEditorUtility.ignoreInspectorChanges && this.HasModified() && !this.AssetWasUpdated())
 			{
 				string message = "Unapplied import settings for '" + assetImporter.assetPath + "'";
@@ -157,7 +162,7 @@ namespace UnityEditor
 
 		internal bool AssetWasUpdated()
 		{
-			AssetImporter assetImporter = this.target as AssetImporter;
+			AssetImporter assetImporter = base.target as AssetImporter;
 			if (this.m_AssetTimeStamp == 0uL)
 			{
 				this.ResetTimeStamp();
@@ -167,7 +172,7 @@ namespace UnityEditor
 
 		internal void ResetTimeStamp()
 		{
-			AssetImporter assetImporter = this.target as AssetImporter;
+			AssetImporter assetImporter = base.target as AssetImporter;
 			if (assetImporter != null)
 			{
 				this.m_AssetTimeStamp = assetImporter.assetTimeStamp;
@@ -230,12 +235,17 @@ namespace UnityEditor
 
 		protected bool ApplyButton(string buttonText)
 		{
+			bool result;
 			if (GUILayout.Button(buttonText, new GUILayoutOption[0]))
 			{
 				this.ApplyAndImport();
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		protected virtual bool ApplyRevertGUIButtons()

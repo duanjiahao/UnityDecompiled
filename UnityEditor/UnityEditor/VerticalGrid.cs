@@ -137,22 +137,32 @@ namespace UnityEditor
 		public int CalcRows(int itemCount)
 		{
 			int num = (int)Mathf.Ceil((float)itemCount / (float)this.CalcColumns());
+			int result;
 			if (num < 0)
 			{
-				return 2147483647;
+				result = 2147483647;
 			}
-			return num;
+			else
+			{
+				result = num;
+			}
+			return result;
 		}
 
 		public Rect CalcRect(int itemIdx, float yOffset)
 		{
 			float num = Mathf.Floor((float)(itemIdx / this.columns));
 			float num2 = (float)itemIdx - num * (float)this.columns;
+			Rect result;
 			if (this.useFixedHorizontalSpacing)
 			{
-				return new Rect(this.leftMargin + num2 * (this.itemSize.x + this.fixedHorizontalSpacing), num * (this.itemSize.y + this.verticalSpacing) + this.topMargin + yOffset, this.itemSize.x, this.itemSize.y);
+				result = new Rect(this.leftMargin + num2 * (this.itemSize.x + this.fixedHorizontalSpacing), num * (this.itemSize.y + this.verticalSpacing) + this.topMargin + yOffset, this.itemSize.x, this.itemSize.y);
 			}
-			return new Rect(this.leftMargin + this.horizontalSpacing * 0.5f + num2 * (this.itemSize.x + this.horizontalSpacing), num * (this.itemSize.y + this.verticalSpacing) + this.topMargin + yOffset, this.itemSize.x, this.itemSize.y);
+			else
+			{
+				result = new Rect(this.leftMargin + this.horizontalSpacing * 0.5f + num2 * (this.itemSize.x + this.horizontalSpacing), num * (this.itemSize.y + this.verticalSpacing) + this.topMargin + yOffset, this.itemSize.x, this.itemSize.y);
+			}
+			return result;
 		}
 
 		public int GetMaxVisibleItems(float height)
@@ -166,22 +176,27 @@ namespace UnityEditor
 			startIndex = (endIndex = 0);
 			float num = scrollPos + scrollViewHeight;
 			float num2 = gridStartY + this.topMargin;
+			bool result;
 			if (num2 > num)
 			{
-				return false;
+				result = false;
 			}
-			if (num2 + this.height < scrollPos)
+			else if (num2 + this.height < scrollPos)
 			{
-				return false;
+				result = false;
 			}
-			float num3 = this.itemSize.y + this.verticalSpacing;
-			int num4 = Mathf.FloorToInt((scrollPos - num2) / num3);
-			startIndex = num4 * this.columns;
-			startIndex = Mathf.Clamp(startIndex, 0, maxIndex);
-			int num5 = Mathf.FloorToInt((num - num2) / num3);
-			endIndex = (num5 + 1) * this.columns - 1;
-			endIndex = Mathf.Clamp(endIndex, 0, maxIndex);
-			return true;
+			else
+			{
+				float num3 = this.itemSize.y + this.verticalSpacing;
+				int num4 = Mathf.FloorToInt((scrollPos - num2) / num3);
+				startIndex = num4 * this.columns;
+				startIndex = Mathf.Clamp(startIndex, 0, maxIndex);
+				int num5 = Mathf.FloorToInt((num - num2) / num3);
+				endIndex = (num5 + 1) * this.columns - 1;
+				endIndex = Mathf.Clamp(endIndex, 0, maxIndex);
+				result = true;
+			}
+			return result;
 		}
 
 		public override string ToString()

@@ -1,8 +1,11 @@
 using Mono.Cecil;
+using Mono.Collections.Generic;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor.Utils;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -13,20 +16,24 @@ namespace UnityEditor
 		{
 			foreach (TypeDefinition current in types)
 			{
-				foreach (MethodDefinition current2 in current.Methods)
+				using (Collection<MethodDefinition>.Enumerator enumerator2 = current.get_Methods().GetEnumerator())
 				{
-					if (current2.IsStatic && current2.IsPInvokeImpl && current2.PInvokeInfo.Module.Name.Equals("__Internal"))
+					while (enumerator2.MoveNext())
 					{
-						if (res.Contains(current2.Name))
+						MethodDefinition current2 = enumerator2.get_Current();
+						if (current2.get_IsStatic() && current2.get_IsPInvokeImpl() && current2.get_PInvokeInfo().get_Module().get_Name().Equals("__Internal"))
 						{
-							throw new SystemException("Duplicate native method found : " + current2.Name + ". Please check your source carefully.");
+							if (res.Contains(current2.get_Name()))
+							{
+								throw new SystemException("Duplicate native method found : " + current2.get_Name() + ". Please check your source carefully.");
+							}
+							res.Add(current2.get_Name());
 						}
-						res.Add(current2.Name);
 					}
 				}
-				if (current.HasNestedTypes)
+				if (current.get_HasNestedTypes())
 				{
-					MonoAOTRegistration.ExtractNativeMethodsFromTypes(current.NestedTypes, res);
+					MonoAOTRegistration.ExtractNativeMethodsFromTypes(current.get_NestedTypes(), res);
 				}
 			}
 		}
@@ -37,9 +44,9 @@ namespace UnityEditor
 			for (int i = 0; i < assemblies.Length; i++)
 			{
 				AssemblyDefinition assemblyDefinition = assemblies[i];
-				if (!"System".Equals(assemblyDefinition.Name.Name))
+				if (!"System".Equals(assemblyDefinition.get_Name().get_Name()))
 				{
-					MonoAOTRegistration.ExtractNativeMethodsFromTypes(assemblyDefinition.MainModule.Types, arrayList);
+					MonoAOTRegistration.ExtractNativeMethodsFromTypes(assemblyDefinition.get_MainModule().get_Types(), arrayList);
 				}
 			}
 			return arrayList;
@@ -51,19 +58,26 @@ namespace UnityEditor
 			for (int i = 0; i < assemblies.Length; i++)
 			{
 				AssemblyDefinition assemblyDefinition = assemblies[i];
-				if (!assemblyDefinition.Name.Name.StartsWith("System") && !assemblyDefinition.Name.Name.Equals("UnityEngine"))
+				if (!assemblyDefinition.get_Name().get_Name().StartsWith("System") && !assemblyDefinition.get_Name().get_Name().Equals("UnityEngine"))
 				{
-					foreach (TypeReference current in assemblyDefinition.MainModule.GetTypeReferences())
+					foreach (TypeReference current in assemblyDefinition.get_MainModule().GetTypeReferences())
 					{
-						hashSet.Add(current.FullName);
+						hashSet.Add(current.get_FullName());
 					}
 				}
 			}
 			return hashSet;
 		}
 
-		public static void WriteCPlusPlusFileForStaticAOTModuleRegistration(BuildTarget buildTarget, string file, CrossCompileOptions crossCompileOptions, bool advancedLic, string targetDevice, bool stripping, RuntimeClassRegistry usedClassRegistry, AssemblyReferenceChecker checker)
+		public static void WriteCPlusPlusFileForStaticAOTModuleRegistration(BuildTarget buildTarget, string file, CrossCompileOptions crossCompileOptions, bool advancedLic, string targetDevice, bool stripping, RuntimeClassRegistry usedClassRegistry, AssemblyReferenceChecker checker, string stagingAreaDataManaged)
 		{
+			string text = Path.Combine(stagingAreaDataManaged, "ICallSummary.txt");
+			string exe = Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "Tools/InternalCallRegistrationWriter/InternalCallRegistrationWriter.exe");
+			string args = string.Format("-assembly=\"{0}\" -summary=\"{1}\"", Path.Combine(stagingAreaDataManaged, "UnityEngine.dll"), text);
+			Runner.RunManagedProgram(exe, args);
+			HashSet<UnityType> hashSet;
+			HashSet<string> nativeModules;
+			CodeStrippingUtils.GenerateDependencies(Path.GetDirectoryName(stagingAreaDataManaged), text, usedClassRegistry, stripping, out hashSet, out nativeModules, null);
 			using (TextWriter textWriter = new StreamWriter(file))
 			{
 				string[] assemblyFileNames = checker.GetAssemblyFileNames();
@@ -75,7 +89,7 @@ namespace UnityEditor
 					textWriter.WriteLine("#include \"RegisterMonoModules.h\"");
 					textWriter.WriteLine("#include <stdio.h>");
 				}
-				textWriter.WriteLine(string.Empty);
+				textWriter.WriteLine("");
 				textWriter.WriteLine("#if defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR");
 				textWriter.WriteLine("    #define DECL_USER_FUNC(f) void f() __attribute__((weak_import))");
 				textWriter.WriteLine("    #define REGISTER_USER_FUNC(f)\\");
@@ -115,16 +129,29 @@ namespace UnityEditor
 				for (int i = 0; i < assemblyFileNames.Length; i++)
 				{
 					string arg = assemblyFileNames[i];
-					string text = assemblyDefinitions[i].Name.Name;
-					text = text.Replace(".", "_");
-					text = text.Replace("-", "_");
-					text = text.Replace(" ", "_");
-					textWriter.WriteLine("    extern gpointer*    mono_aot_module_{0}_info; // {1}", text, arg);
+					string text2 = assemblyDefinitions[i].get_Name().get_Name();
+					text2 = text2.Replace(".", "_");
+					text2 = text2.Replace("-", "_");
+					text2 = text2.Replace(" ", "_");
+					textWriter.WriteLine("    extern gpointer*    mono_aot_module_{0}_info; // {1}", text2, arg);
 				}
 				textWriter.WriteLine("#endif // !(TARGET_IPHONE_SIMULATOR)");
-				foreach (string arg2 in arrayList)
+				IEnumerator enumerator = arrayList.GetEnumerator();
+				try
 				{
-					textWriter.WriteLine("    DECL_USER_FUNC({0});", arg2);
+					while (enumerator.MoveNext())
+					{
+						string arg2 = (string)enumerator.Current;
+						textWriter.WriteLine("    DECL_USER_FUNC({0});", arg2);
+					}
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
 				}
 				textWriter.WriteLine("}");
 				textWriter.WriteLine("DLL_EXPORT void RegisterMonoModules()");
@@ -139,23 +166,36 @@ namespace UnityEditor
 				for (int j = 0; j < array.Length; j++)
 				{
 					AssemblyDefinition assemblyDefinition = array[j];
-					string text2 = assemblyDefinition.Name.Name;
-					text2 = text2.Replace(".", "_");
-					text2 = text2.Replace("-", "_");
-					text2 = text2.Replace(" ", "_");
-					textWriter.WriteLine("    mono_aot_register_module(mono_aot_module_{0}_info);", text2);
+					string text3 = assemblyDefinition.get_Name().get_Name();
+					text3 = text3.Replace(".", "_");
+					text3 = text3.Replace("-", "_");
+					text3 = text3.Replace(" ", "_");
+					textWriter.WriteLine("    mono_aot_register_module(mono_aot_module_{0}_info);", text3);
 				}
 				textWriter.WriteLine("#endif // !(TARGET_IPHONE_SIMULATOR) && !defined(__arm64__)");
-				textWriter.WriteLine(string.Empty);
+				textWriter.WriteLine("");
 				if (buildTarget == BuildTarget.iOS)
 				{
-					foreach (string arg3 in arrayList)
+					IEnumerator enumerator2 = arrayList.GetEnumerator();
+					try
 					{
-						textWriter.WriteLine("    REGISTER_USER_FUNC({0});", arg3);
+						while (enumerator2.MoveNext())
+						{
+							string arg3 = (string)enumerator2.Current;
+							textWriter.WriteLine("    REGISTER_USER_FUNC({0});", arg3);
+						}
+					}
+					finally
+					{
+						IDisposable disposable2;
+						if ((disposable2 = (enumerator2 as IDisposable)) != null)
+						{
+							disposable2.Dispose();
+						}
 					}
 				}
 				textWriter.WriteLine("}");
-				textWriter.WriteLine(string.Empty);
+				textWriter.WriteLine("");
 				AssemblyDefinition assemblyDefinition2 = null;
 				for (int k = 0; k < assemblyFileNames.Length; k++)
 				{
@@ -173,14 +213,14 @@ namespace UnityEditor
 					MonoAOTRegistration.GenerateRegisterInternalCalls(assemblies, textWriter);
 					MonoAOTRegistration.ResolveDefinedNativeClassesFromMono(assemblies, usedClassRegistry);
 					MonoAOTRegistration.ResolveReferencedUnityEngineClassesFromMono(assemblyDefinitions, assemblyDefinition2, usedClassRegistry);
-					MonoAOTRegistration.GenerateRegisterModules(usedClassRegistry, textWriter, stripping);
+					MonoAOTRegistration.GenerateRegisterModules(hashSet, nativeModules, textWriter, stripping);
 					if (stripping && usedClassRegistry != null)
 					{
-						MonoAOTRegistration.GenerateRegisterClassesForStripping(usedClassRegistry, textWriter);
+						MonoAOTRegistration.GenerateRegisterClassesForStripping(hashSet, textWriter);
 					}
 					else
 					{
-						MonoAOTRegistration.GenerateRegisterClasses(usedClassRegistry, textWriter);
+						MonoAOTRegistration.GenerateRegisterClasses(hashSet, textWriter);
 					}
 				}
 				textWriter.Close();
@@ -189,21 +229,20 @@ namespace UnityEditor
 
 		public static void ResolveReferencedUnityEngineClassesFromMono(AssemblyDefinition[] assemblies, AssemblyDefinition unityEngine, RuntimeClassRegistry res)
 		{
-			if (res == null)
+			if (res != null)
 			{
-				return;
-			}
-			for (int i = 0; i < assemblies.Length; i++)
-			{
-				AssemblyDefinition assemblyDefinition = assemblies[i];
-				if (assemblyDefinition != unityEngine)
+				for (int i = 0; i < assemblies.Length; i++)
 				{
-					foreach (TypeReference current in assemblyDefinition.MainModule.GetTypeReferences())
+					AssemblyDefinition assemblyDefinition = assemblies[i];
+					if (assemblyDefinition != unityEngine)
 					{
-						if (current.Namespace.StartsWith("UnityEngine"))
+						foreach (TypeReference current in assemblyDefinition.get_MainModule().GetTypeReferences())
 						{
-							string name = current.Name;
-							res.AddMonoClass(name);
+							if (current.get_Namespace().StartsWith("UnityEngine"))
+							{
+								string name = current.get_Name();
+								res.AddMonoClass(name);
+							}
 						}
 					}
 				}
@@ -212,59 +251,94 @@ namespace UnityEditor
 
 		public static void ResolveDefinedNativeClassesFromMono(AssemblyDefinition[] assemblies, RuntimeClassRegistry res)
 		{
-			if (res == null)
+			if (res != null)
 			{
-				return;
-			}
-			for (int i = 0; i < assemblies.Length; i++)
-			{
-				AssemblyDefinition assemblyDefinition = assemblies[i];
-				foreach (TypeDefinition current in assemblyDefinition.MainModule.Types)
+				for (int i = 0; i < assemblies.Length; i++)
 				{
-					if (current.Fields.Count > 0 || current.Methods.Count > 0 || current.Properties.Count > 0)
+					AssemblyDefinition assemblyDefinition = assemblies[i];
+					using (Collection<TypeDefinition>.Enumerator enumerator = assemblyDefinition.get_MainModule().get_Types().GetEnumerator())
 					{
-						string name = current.Name;
-						res.AddMonoClass(name);
+						while (enumerator.MoveNext())
+						{
+							TypeDefinition current = enumerator.get_Current();
+							if (current.get_Fields().get_Count() > 0 || current.get_Methods().get_Count() > 0 || current.get_Properties().get_Count() > 0)
+							{
+								string name = current.get_Name();
+								res.AddMonoClass(name);
+							}
+						}
 					}
 				}
 			}
 		}
 
-		public static void GenerateRegisterModules(RuntimeClassRegistry allClasses, TextWriter output, bool strippingEnabled)
+		public static void GenerateRegisterModules(HashSet<UnityType> nativeClasses, HashSet<string> nativeModules, TextWriter output, bool strippingEnabled)
 		{
-			allClasses.SynchronizeClasses();
-			HashSet<string> nativeClasses = (!strippingEnabled) ? null : new HashSet<string>(allClasses.GetAllNativeClassesAsString());
-			HashSet<string> nativeModulesToRegister = CodeStrippingUtils.GetNativeModulesToRegister(nativeClasses, null);
-			nativeModulesToRegister.Add("IMGUI");
-			foreach (string current in nativeModulesToRegister)
-			{
-				output.WriteLine("\textern \"C\" void RegisterModule_" + current + "();");
-			}
-			output.WriteLine("void RegisterStaticallyLinkedModules()");
+			output.WriteLine("void InvokeRegisterStaticallyLinkedModuleClasses()");
 			output.WriteLine("{");
-			foreach (string current2 in nativeModulesToRegister)
+			if (nativeClasses == null)
 			{
-				output.WriteLine("\tRegisterModule_" + current2 + "();");
+				output.WriteLine("\tvoid RegisterStaticallyLinkedModuleClasses();");
+				output.WriteLine("\tRegisterStaticallyLinkedModuleClasses();");
+			}
+			else
+			{
+				output.WriteLine("\t// Do nothing (we're in stripping mode)");
 			}
 			output.WriteLine("}");
-		}
-
-		public static void GenerateRegisterClassesForStripping(RuntimeClassRegistry allClasses, TextWriter output)
-		{
-			output.Write("void RegisterAllClasses() \n{\n");
-			allClasses.SynchronizeClasses();
-			foreach (string current in allClasses.GetAllNativeClassesAsString())
+			output.WriteLine();
+			output.WriteLine("void RegisterStaticallyLinkedModulesGranular()");
+			output.WriteLine("{");
+			foreach (string current in nativeModules)
 			{
-				output.WriteLine(string.Format("extern int RegisterClass_{0}();\nRegisterClass_{0}();", current));
+				output.WriteLine("\tvoid RegisterModule_" + current + "();");
+				output.WriteLine("\tRegisterModule_" + current + "();");
+				output.WriteLine();
 			}
+			output.WriteLine("}\n");
+		}
+
+		public static void GenerateRegisterClassesForStripping(HashSet<UnityType> nativeClassesAndBaseClasses, TextWriter output)
+		{
+			output.WriteLine("template <typename T> void RegisterClass();");
+			output.WriteLine("template <typename T> void RegisterStrippedTypeInfo(int, const char*, const char*);");
+			output.WriteLine();
+			foreach (UnityType current in UnityType.GetTypes())
+			{
+				if (current.baseClass != null && !current.isEditorOnly)
+				{
+					if (current.hasNativeNamespace)
+					{
+						output.WriteLine("class {0};", current.name);
+					}
+					else
+					{
+						output.WriteLine("namespace {0} {{ class {1}; }}", current.nativeNamespace, current.name);
+					}
+					output.WriteLine();
+				}
+			}
+			output.Write("void RegisterAllClasses() \n{\n");
+			output.WriteLine("\tvoid RegisterBuiltinTypes();");
+			output.WriteLine("\tRegisterBuiltinTypes();");
+			output.WriteLine("\t// Non stripped classes");
+			foreach (UnityType current2 in UnityType.GetTypes())
+			{
+				if (current2.baseClass != null && !current2.isEditorOnly && nativeClassesAndBaseClasses.Contains(current2))
+				{
+					output.WriteLine("\tRegisterClass<{0}>();", current2.qualifiedName);
+				}
+			}
+			output.WriteLine();
 			output.Write("\n}\n");
 		}
 
-		public static void GenerateRegisterClasses(RuntimeClassRegistry allClasses, TextWriter output)
+		public static void GenerateRegisterClasses(HashSet<UnityType> allClasses, TextWriter output)
 		{
-			output.Write("void RegisterAllClasses() \n{\n");
-			output.Write("void RegisterAllClassesIPhone();\nRegisterAllClassesIPhone();\n");
-			output.Write("\n}\n");
+			output.WriteLine("void RegisterAllClasses() \n{");
+			output.WriteLine("\tvoid RegisterAllClassesGranular();");
+			output.WriteLine("\tRegisterAllClassesGranular();");
+			output.WriteLine("}");
 		}
 
 		public static void GenerateRegisterInternalCalls(AssemblyDefinition[] assemblies, TextWriter output)
@@ -273,38 +347,40 @@ namespace UnityEditor
 			for (int i = 0; i < assemblies.Length; i++)
 			{
 				AssemblyDefinition assemblyDefinition = assemblies[i];
-				MonoAOTRegistration.GenerateRegisterInternalCallsForTypes(assemblyDefinition.MainModule.Types, output);
+				MonoAOTRegistration.GenerateRegisterInternalCallsForTypes(assemblyDefinition.get_MainModule().get_Types(), output);
 			}
-			output.Write("\n}\n");
+			output.Write("}\n\n");
 		}
 
 		private static void GenerateRegisterInternalCallsForTypes(IEnumerable<TypeDefinition> types, TextWriter output)
 		{
 			foreach (TypeDefinition current in types)
 			{
-				foreach (MethodDefinition current2 in current.Methods)
+				using (Collection<MethodDefinition>.Enumerator enumerator2 = current.get_Methods().GetEnumerator())
 				{
-					MonoAOTRegistration.GenerateInternalCallMethod(current, current2, output);
+					while (enumerator2.MoveNext())
+					{
+						MethodDefinition current2 = enumerator2.get_Current();
+						MonoAOTRegistration.GenerateInternalCallMethod(current, current2, output);
+					}
 				}
-				MonoAOTRegistration.GenerateRegisterInternalCallsForTypes(current.NestedTypes, output);
+				MonoAOTRegistration.GenerateRegisterInternalCallsForTypes(current.get_NestedTypes(), output);
 			}
 		}
 
 		private static void GenerateInternalCallMethod(TypeDefinition typeDefinition, MethodDefinition method, TextWriter output)
 		{
-			if (!method.IsInternalCall)
+			if (method.get_IsInternalCall())
 			{
-				return;
+				string text = typeDefinition.get_FullName() + "_" + method.get_Name();
+				text = text.Replace('/', '_');
+				text = text.Replace('.', '_');
+				if (!text.Contains("UnityEngine_Serialization"))
+				{
+					output.WriteLine("\tvoid Register_{0} ();", text);
+					output.WriteLine("\tRegister_{0} ();", text);
+				}
 			}
-			string text = typeDefinition.FullName + "_" + method.Name;
-			text = text.Replace('/', '_');
-			text = text.Replace('.', '_');
-			if (text.Contains("UnityEngine_Serialization"))
-			{
-				return;
-			}
-			output.WriteLine("\tvoid Register_{0} ();", text);
-			output.WriteLine("\tRegister_{0} ();", text);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,6 +8,10 @@ namespace UnityEditorInternal
 	[InitializeOnLoad]
 	public class EditMode
 	{
+		public delegate void OnEditModeStopFunc(Editor editor);
+
+		public delegate void OnEditModeStartFunc(Editor editor, EditMode.SceneViewEditMode mode);
+
 		public enum SceneViewEditMode
 		{
 			None,
@@ -19,27 +24,23 @@ namespace UnityEditorInternal
 			LightProbeGroup
 		}
 
-		public delegate void OnEditModeStopFunc(Editor editor);
-
-		public delegate void OnEditModeStartFunc(Editor editor, EditMode.SceneViewEditMode mode);
-
 		private const string kEditModeStringKey = "EditModeState";
 
 		private const string kPrevToolStringKey = "EditModePrevTool";
 
 		private const string kOwnerStringKey = "EditModeOwner";
 
-		private const float k_EditColliderbuttonWidth = 33f;
-
-		private const float k_EditColliderbuttonHeight = 23f;
-
-		private const float k_SpaceBetweenLabelAndButton = 5f;
-
 		private static bool s_Debug;
 
 		private static GUIStyle s_ToolbarBaseStyle;
 
 		private static GUIStyle s_EditColliderButtonStyle;
+
+		private const float k_EditColliderbuttonWidth = 33f;
+
+		private const float k_EditColliderbuttonHeight = 23f;
+
+		private const float k_SpaceBetweenLabelAndButton = 5f;
 
 		public static EditMode.OnEditModeStopFunc onEditModeEndDelegate;
 
@@ -50,6 +51,9 @@ namespace UnityEditorInternal
 		private static int s_OwnerID;
 
 		private static EditMode.SceneViewEditMode s_EditMode;
+
+		[CompilerGenerated]
+		private static Action <>f__mg$cache0;
 
 		private static Tool toolBeforeEnteringEditMode
 		{
@@ -113,11 +117,17 @@ namespace UnityEditorInternal
 
 		static EditMode()
 		{
+			EditMode.s_Debug = false;
 			EditMode.s_ToolBeforeEnteringEditMode = Tool.Move;
 			EditMode.ownerID = SessionState.GetInt("EditModeOwner", EditMode.ownerID);
 			EditMode.editMode = (EditMode.SceneViewEditMode)SessionState.GetInt("EditModeState", (int)EditMode.editMode);
 			EditMode.toolBeforeEnteringEditMode = (Tool)SessionState.GetInt("EditModePrevTool", (int)EditMode.toolBeforeEnteringEditMode);
-			Selection.selectionChanged = (Action)Delegate.Combine(Selection.selectionChanged, new Action(EditMode.OnSelectionChange));
+			Delegate arg_6B_0 = Selection.selectionChanged;
+			if (EditMode.<>f__mg$cache0 == null)
+			{
+				EditMode.<>f__mg$cache0 = new Action(EditMode.OnSelectionChange);
+			}
+			Selection.selectionChanged = (Action)Delegate.Combine(arg_6B_0, EditMode.<>f__mg$cache0);
 			if (EditMode.s_Debug)
 			{
 				Debug.Log(string.Concat(new object[]
@@ -174,56 +184,54 @@ namespace UnityEditorInternal
 
 		public static void DoEditModeInspectorModeButton(EditMode.SceneViewEditMode mode, string label, GUIContent icon, Bounds bounds, Editor caller)
 		{
-			if (EditorUtility.IsPersistent(caller.target))
+			if (!EditorUtility.IsPersistent(caller.target))
 			{
-				return;
-			}
-			EditMode.DetectMainToolChange();
-			if (EditMode.s_EditColliderButtonStyle == null)
-			{
-				EditMode.s_EditColliderButtonStyle = new GUIStyle("Button");
-				EditMode.s_EditColliderButtonStyle.padding = new RectOffset(0, 0, 0, 0);
-				EditMode.s_EditColliderButtonStyle.margin = new RectOffset(0, 0, 0, 0);
-			}
-			Rect controlRect = EditorGUILayout.GetControlRect(true, 23f, new GUILayoutOption[0]);
-			Rect position = new Rect(controlRect.xMin + EditorGUIUtility.labelWidth, controlRect.yMin, 33f, 23f);
-			GUIContent content = new GUIContent(label);
-			Vector2 vector = GUI.skin.label.CalcSize(content);
-			Rect position2 = new Rect(position.xMax + 5f, controlRect.yMin + (controlRect.height - vector.y) * 0.5f, vector.x, controlRect.height);
-			int instanceID = caller.GetInstanceID();
-			bool value = EditMode.editMode == mode && EditMode.ownerID == instanceID;
-			EditorGUI.BeginChangeCheck();
-			bool flag = GUI.Toggle(position, value, icon, EditMode.s_EditColliderButtonStyle);
-			GUI.Label(position2, label);
-			if (EditorGUI.EndChangeCheck())
-			{
-				EditMode.ChangeEditMode((!flag) ? EditMode.SceneViewEditMode.None : mode, bounds, caller);
+				EditMode.DetectMainToolChange();
+				if (EditMode.s_EditColliderButtonStyle == null)
+				{
+					EditMode.s_EditColliderButtonStyle = new GUIStyle("Button");
+					EditMode.s_EditColliderButtonStyle.padding = new RectOffset(0, 0, 0, 0);
+					EditMode.s_EditColliderButtonStyle.margin = new RectOffset(0, 0, 0, 0);
+				}
+				Rect controlRect = EditorGUILayout.GetControlRect(true, 23f, new GUILayoutOption[0]);
+				Rect position = new Rect(controlRect.xMin + EditorGUIUtility.labelWidth, controlRect.yMin, 33f, 23f);
+				GUIContent content = new GUIContent(label);
+				Vector2 vector = GUI.skin.label.CalcSize(content);
+				Rect position2 = new Rect(position.xMax + 5f, controlRect.yMin + (controlRect.height - vector.y) * 0.5f, vector.x, controlRect.height);
+				int instanceID = caller.GetInstanceID();
+				bool value = EditMode.editMode == mode && EditMode.ownerID == instanceID;
+				EditorGUI.BeginChangeCheck();
+				bool flag = GUI.Toggle(position, value, icon, EditMode.s_EditColliderButtonStyle);
+				GUI.Label(position2, label);
+				if (EditorGUI.EndChangeCheck())
+				{
+					EditMode.ChangeEditMode((!flag) ? EditMode.SceneViewEditMode.None : mode, bounds, caller);
+				}
 			}
 		}
 
 		public static void DoInspectorToolbar(EditMode.SceneViewEditMode[] modes, GUIContent[] guiContents, Bounds bounds, Editor caller)
 		{
-			if (EditorUtility.IsPersistent(caller.target))
+			if (!EditorUtility.IsPersistent(caller.target))
 			{
-				return;
-			}
-			EditMode.DetectMainToolChange();
-			if (EditMode.s_ToolbarBaseStyle == null)
-			{
-				EditMode.s_ToolbarBaseStyle = "Command";
-			}
-			int instanceID = caller.GetInstanceID();
-			int num = ArrayUtility.IndexOf<EditMode.SceneViewEditMode>(modes, EditMode.editMode);
-			if (EditMode.ownerID != instanceID)
-			{
-				num = -1;
-			}
-			EditorGUI.BeginChangeCheck();
-			int num2 = GUILayout.Toolbar(num, guiContents, EditMode.s_ToolbarBaseStyle, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
-			{
-				EditMode.SceneViewEditMode mode = (num2 != num) ? modes[num2] : EditMode.SceneViewEditMode.None;
-				EditMode.ChangeEditMode(mode, bounds, caller);
+				EditMode.DetectMainToolChange();
+				if (EditMode.s_ToolbarBaseStyle == null)
+				{
+					EditMode.s_ToolbarBaseStyle = "Command";
+				}
+				int instanceID = caller.GetInstanceID();
+				int num = ArrayUtility.IndexOf<EditMode.SceneViewEditMode>(modes, EditMode.editMode);
+				if (EditMode.ownerID != instanceID)
+				{
+					num = -1;
+				}
+				EditorGUI.BeginChangeCheck();
+				int num2 = GUILayout.Toolbar(num, guiContents, EditMode.s_ToolbarBaseStyle, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
+				{
+					EditMode.SceneViewEditMode mode = (num2 != num) ? modes[num2] : EditMode.SceneViewEditMode.None;
+					EditMode.ChangeEditMode(mode, bounds, caller);
+				}
 			}
 		}
 
@@ -280,15 +288,18 @@ namespace UnityEditorInternal
 
 		private static bool AnyPointSeenByCamera(Camera camera, Vector3[] points)
 		{
+			bool result;
 			for (int i = 0; i < points.Length; i++)
 			{
 				Vector3 point = points[i];
 				if (EditMode.PointSeenByCamera(camera, point))
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static bool PointSeenByCamera(Camera camera, Vector3 point)

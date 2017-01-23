@@ -36,9 +36,9 @@ namespace UnityEditor
 
 		private Vector3 refEuler;
 
-		private float m_CustomRangeStart;
+		private float m_CustomRangeStart = 0f;
 
-		private float m_CustomRangeEnd;
+		private float m_CustomRangeEnd = 0f;
 
 		private WrapMode preWrapMode = WrapMode.Once;
 
@@ -73,17 +73,23 @@ namespace UnityEditor
 
 		public AnimationCurve GetCurveOfComponent(int component)
 		{
+			AnimationCurve result;
 			switch (component)
 			{
 			case 0:
-				return this.eulerX;
+				result = this.eulerX;
+				break;
 			case 1:
-				return this.eulerY;
+				result = this.eulerY;
+				break;
 			case 2:
-				return this.eulerZ;
+				result = this.eulerZ;
+				break;
 			default:
-				return null;
+				result = null;
+				break;
 			}
+			return result;
 		}
 
 		public float RangeStart()
@@ -185,39 +191,38 @@ namespace UnityEditor
 			{
 				animationCurve = this.eulerX;
 			}
-			if (animationCurve.length == 0)
+			if (animationCurve.length != 0)
 			{
-				return;
-			}
-			if (animationCurve[0].time >= minTime)
-			{
-				Vector3 values = this.GetValues(animationCurve[0].time, true);
-				this.points[this.rangeStart] = values;
-				this.points[animationCurve[0].time] = values;
-			}
-			if (animationCurve[animationCurve.length - 1].time <= maxTime)
-			{
-				Vector3 values2 = this.GetValues(animationCurve[animationCurve.length - 1].time, true);
-				this.points[animationCurve[animationCurve.length - 1].time] = values2;
-				this.points[this.rangeEnd] = values2;
-			}
-			for (int i = 0; i < animationCurve.length - 1; i++)
-			{
-				if (animationCurve[i + 1].time >= minTime && animationCurve[i].time <= maxTime)
+				if (animationCurve[0].time >= minTime)
 				{
-					float num = animationCurve[i].time;
-					this.points[num] = this.GetValues(num, true);
-					for (float num2 = 1f; num2 <= 20f; num2 += 1f)
+					Vector3 values = this.GetValues(animationCurve[0].time, true);
+					this.points[this.rangeStart] = values;
+					this.points[animationCurve[0].time] = values;
+				}
+				if (animationCurve[animationCurve.length - 1].time <= maxTime)
+				{
+					Vector3 values2 = this.GetValues(animationCurve[animationCurve.length - 1].time, true);
+					this.points[animationCurve[animationCurve.length - 1].time] = values2;
+					this.points[this.rangeEnd] = values2;
+				}
+				for (int i = 0; i < animationCurve.length - 1; i++)
+				{
+					if (animationCurve[i + 1].time >= minTime && animationCurve[i].time <= maxTime)
 					{
-						num = Mathf.Lerp(animationCurve[i].time, animationCurve[i + 1].time, (num2 - 0.001f) / 40f);
-						this.points[num] = this.GetValues(num, false);
-					}
-					num = animationCurve[i + 1].time;
-					this.points[num] = this.GetValues(num, true);
-					for (float num3 = 1f; num3 <= 20f; num3 += 1f)
-					{
-						num = Mathf.Lerp(animationCurve[i].time, animationCurve[i + 1].time, 1f - (num3 - 0.001f) / 40f);
-						this.points[num] = this.GetValues(num, false);
+						float num = animationCurve[i].time;
+						this.points[num] = this.GetValues(num, true);
+						for (float num2 = 1f; num2 <= 20f; num2 += 1f)
+						{
+							num = Mathf.Lerp(animationCurve[i].time, animationCurve[i + 1].time, (num2 - 0.001f) / 40f);
+							this.points[num] = this.GetValues(num, false);
+						}
+						num = animationCurve[i + 1].time;
+						this.points[num] = this.GetValues(num, true);
+						for (float num3 = 1f; num3 <= 20f; num3 += 1f)
+						{
+							num = Mathf.Lerp(animationCurve[i].time, animationCurve[i + 1].time, 1f - (num3 - 0.001f) / 40f);
+							this.points[num] = this.GetValues(num, false);
+						}
 					}
 				}
 			}
@@ -225,54 +230,68 @@ namespace UnityEditor
 
 		public float EvaluateCurveDeltaSlow(float time, int component)
 		{
+			float result;
 			if (this.quaternionX == null)
 			{
-				return 0f;
+				result = 0f;
 			}
-			return (this.EvaluateCurveSlow(time + 0.001f, component) - this.EvaluateCurveSlow(time - 0.001f, component)) / 0.002f;
+			else
+			{
+				result = (this.EvaluateCurveSlow(time + 0.001f, component) - this.EvaluateCurveSlow(time - 0.001f, component)) / 0.002f;
+			}
+			return result;
 		}
 
 		public float EvaluateCurveSlow(float time, int component)
 		{
+			float result;
 			if (this.GetCurveOfComponent(component).length == 1)
 			{
-				return this.GetCurveOfComponent(component)[0].value;
+				result = this.GetCurveOfComponent(component)[0].value;
 			}
-			if (time == this.cachedEvaluationTime)
+			else if (time == this.cachedEvaluationTime)
 			{
-				return this.cachedEvaluationValue[component];
+				result = this.cachedEvaluationValue[component];
 			}
-			if (time < this.cachedRangeStart || time > this.cachedRangeEnd)
+			else
 			{
-				this.CalculateCurves(this.rangeStart, this.rangeEnd);
-				this.cachedRangeStart = float.NegativeInfinity;
-				this.cachedRangeEnd = float.PositiveInfinity;
-			}
-			float[] array = new float[this.points.Count];
-			Vector3[] array2 = new Vector3[this.points.Count];
-			int num = 0;
-			foreach (KeyValuePair<float, Vector3> current in this.points)
-			{
-				array[num] = current.Key;
-				array2[num] = current.Value;
-				num++;
-			}
-			for (int i = 0; i < array.Length - 1; i++)
-			{
-				if (time < array[i + 1])
+				if (time < this.cachedRangeStart || time > this.cachedRangeEnd)
 				{
-					float t = Mathf.InverseLerp(array[i], array[i + 1], time);
-					this.cachedEvaluationValue = Vector3.Lerp(array2[i], array2[i + 1], t);
-					this.cachedEvaluationTime = time;
-					return this.cachedEvaluationValue[component];
+					this.CalculateCurves(this.rangeStart, this.rangeEnd);
+					this.cachedRangeStart = float.NegativeInfinity;
+					this.cachedRangeEnd = float.PositiveInfinity;
+				}
+				float[] array = new float[this.points.Count];
+				Vector3[] array2 = new Vector3[this.points.Count];
+				int num = 0;
+				foreach (KeyValuePair<float, Vector3> current in this.points)
+				{
+					array[num] = current.Key;
+					array2[num] = current.Value;
+					num++;
+				}
+				for (int i = 0; i < array.Length - 1; i++)
+				{
+					if (time < array[i + 1])
+					{
+						float t = Mathf.InverseLerp(array[i], array[i + 1], time);
+						this.cachedEvaluationValue = Vector3.Lerp(array2[i], array2[i + 1], t);
+						this.cachedEvaluationTime = time;
+						result = this.cachedEvaluationValue[component];
+						return result;
+					}
+				}
+				if (array2.Length > 0)
+				{
+					result = array2[array2.Length - 1][component];
+				}
+				else
+				{
+					Debug.LogError("List of euler curve points is empty, probably caused by lack of euler curve key synching");
+					result = 0f;
 				}
 			}
-			if (array2.Length > 0)
-			{
-				return array2[array2.Length - 1][component];
-			}
-			Debug.LogError("List of euler curve points is empty, probably caused by lack of euler curve key synching");
-			return 0f;
+			return result;
 		}
 
 		public void DrawCurve(float minTime, float maxTime, Color color, Matrix4x4 transform, int component, Color wrapColor)

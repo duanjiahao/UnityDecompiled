@@ -127,7 +127,7 @@ namespace UnityEditor
 			int num = 0;
 			int num2 = 0;
 			ListViewShared.InternalLayoutedListViewState ilvState = state.ilvState;
-			int controlID = GUIUtility.GetControlID(ListViewGUILayout.listViewHash, FocusType.Native);
+			int controlID = GUIUtility.GetControlID(ListViewGUILayout.listViewHash, FocusType.Passive);
 			state.ID = controlID;
 			state.selectionChanged = false;
 			ilvState.state = state;
@@ -170,7 +170,7 @@ namespace UnityEditor
 			ListViewGUILayout.GUILayoutedListViewGroup gUILayoutedListViewGroup = (ListViewGUILayout.GUILayoutedListViewGroup)GUILayoutUtility.BeginLayoutGroup(style, null, typeof(ListViewGUILayout.GUILayoutedListViewGroup));
 			gUILayoutedListViewGroup.state = state;
 			state.ilvState.group = gUILayoutedListViewGroup;
-			GUIUtility.GetControlID(ListViewGUILayout.layoutedListViewHash, FocusType.Native);
+			GUIUtility.GetControlID(ListViewGUILayout.layoutedListViewHash, FocusType.Passive);
 			EventType type = Event.current.type;
 			if (type == EventType.Layout)
 			{

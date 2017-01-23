@@ -21,15 +21,14 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_Multiplier != null)
+			if (this.m_Multiplier == null)
 			{
-				return;
+				if (ExternalForcesModuleUI.s_Texts == null)
+				{
+					ExternalForcesModuleUI.s_Texts = new ExternalForcesModuleUI.Texts();
+				}
+				this.m_Multiplier = base.GetProperty("multiplier");
 			}
-			if (ExternalForcesModuleUI.s_Texts == null)
-			{
-				ExternalForcesModuleUI.s_Texts = new ExternalForcesModuleUI.Texts();
-			}
-			this.m_Multiplier = base.GetProperty("multiplier");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -38,7 +37,7 @@ namespace UnityEditor
 			{
 				ExternalForcesModuleUI.s_Texts = new ExternalForcesModuleUI.Texts();
 			}
-			ModuleUI.GUIFloat(ExternalForcesModuleUI.s_Texts.multiplier, this.m_Multiplier);
+			ModuleUI.GUIFloat(ExternalForcesModuleUI.s_Texts.multiplier, this.m_Multiplier, new GUILayoutOption[0]);
 		}
 
 		public override void UpdateCullingSupportedString(ref string text)

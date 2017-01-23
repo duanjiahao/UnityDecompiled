@@ -77,12 +77,17 @@ namespace UnityEditor
 		{
 			get
 			{
+				Rect result;
 				if (this.m_Parent == null)
 				{
-					return this.position;
+					result = this.position;
 				}
-				Rect windowPosition = this.parent.windowPosition;
-				return new Rect(windowPosition.x + this.position.x, windowPosition.y + this.position.y, this.position.width, this.position.height);
+				else
+				{
+					Rect windowPosition = this.parent.windowPosition;
+					result = new Rect(windowPosition.x + this.position.x, windowPosition.y + this.position.y, this.position.width, this.position.height);
+				}
+				return result;
 			}
 		}
 
@@ -137,8 +142,8 @@ namespace UnityEditor
 
 		internal string DebugHierarchy(int level)
 		{
-			string text = string.Empty;
-			string text2 = string.Empty;
+			string text = "";
+			string text2 = "";
 			for (int i = 0; i < level; i++)
 			{
 				text += "  ";
@@ -183,19 +188,18 @@ namespace UnityEditor
 
 		internal void SetMinMaxSizes(Vector2 min, Vector2 max)
 		{
-			if (this.minSize == min && this.maxSize == max)
+			if (!(this.minSize == min) || !(this.maxSize == max))
 			{
-				return;
-			}
-			this.m_MinSize = min;
-			this.m_MaxSize = max;
-			if (this.m_Parent)
-			{
-				this.m_Parent.ChildrenMinMaxChanged();
-			}
-			if (this.window && this.window.mainView == this)
-			{
-				this.window.SetMinMaxSizes(min, max);
+				this.m_MinSize = min;
+				this.m_MaxSize = max;
+				if (this.m_Parent)
+				{
+					this.m_Parent.ChildrenMinMaxChanged();
+				}
+				if (this.window && this.window.rootView == this)
+				{
+					this.window.SetMinMaxSizes(min, max);
+				}
 			}
 		}
 
@@ -222,16 +226,19 @@ namespace UnityEditor
 		{
 			int num = 0;
 			View[] children = this.m_Children;
+			int result;
 			for (int i = 0; i < children.Length; i++)
 			{
 				View x = children[i];
 				if (x == child)
 				{
-					return num;
+					result = num;
+					return result;
 				}
 				num++;
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 
 		public void OnDestroy()

@@ -58,15 +58,15 @@ namespace UnityEditor
 
 		private AnimBool m_SortingOverride;
 
-		private bool m_AllNested;
+		private bool m_AllNested = false;
 
-		private bool m_AllRoot;
+		private bool m_AllRoot = false;
 
-		private bool m_AllOverlay;
+		private bool m_AllOverlay = false;
 
-		private bool m_NoneOverlay;
+		private bool m_NoneOverlay = false;
 
-		private CanvasEditor.PixelPerfect pixelPerfect;
+		private CanvasEditor.PixelPerfect pixelPerfect = CanvasEditor.PixelPerfect.Inherit;
 
 		private void OnEnable()
 		{
@@ -167,7 +167,7 @@ namespace UnityEditor
 					EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.m_SortingOrderStyle, new GUILayoutOption[0]);
 					if (this.m_Camera.objectReferenceValue == null)
 					{
-						EditorGUILayout.HelpBox("Screen Space - Camera with no specified camera acts like a Overlay Canvas", MessageType.Warning);
+						EditorGUILayout.HelpBox("Screen Space - A canvas with no specified camera acts like a Overlay Canvas. Please assign a camera to it in the 'Render Camera' field.", MessageType.Warning);
 					}
 				}
 				EditorGUILayout.EndFadeGroup();

@@ -8,10 +8,6 @@ namespace UnityEditor
 {
 	public class EditorWindow : ScriptableObject
 	{
-		private const double kWarningFadeoutWait = 4.0;
-
-		private const double kWarningFadeoutTime = 1.0;
-
 		[HideInInspector, SerializeField]
 		private bool m_AutoRepaintOnSceneChange;
 
@@ -25,10 +21,10 @@ namespace UnityEditor
 		internal GUIContent m_TitleContent;
 
 		[HideInInspector, SerializeField]
-		private int m_DepthBufferBits;
+		private int m_DepthBufferBits = 0;
 
 		[HideInInspector, SerializeField]
-		private int m_AntiAlias;
+		private int m_AntiAlias = 0;
 
 		[HideInInspector, SerializeField]
 		internal Rect m_Pos = new Rect(0f, 0f, 320f, 240f);
@@ -46,11 +42,15 @@ namespace UnityEditor
 		[NonSerialized]
 		internal HostView m_Parent;
 
-		internal GUIContent m_Notification;
+		private const double kWarningFadeoutWait = 4.0;
+
+		private const double kWarningFadeoutTime = 1.0;
+
+		internal GUIContent m_Notification = null;
 
 		private Vector2 m_NotificationSize;
 
-		internal float m_FadeoutTime;
+		internal float m_FadeoutTime = 0f;
 
 		public bool wantsMouseMove
 		{
@@ -138,11 +138,16 @@ namespace UnityEditor
 			get
 			{
 				HostView hostView = GUIView.focusedView as HostView;
+				EditorWindow result;
 				if (hostView != null)
 				{
-					return hostView.actualView;
+					result = hostView.actualView;
 				}
-				return null;
+				else
+				{
+					result = null;
+				}
+				return result;
 			}
 		}
 
@@ -151,11 +156,16 @@ namespace UnityEditor
 			get
 			{
 				HostView hostView = GUIView.mouseOverView as HostView;
+				EditorWindow result;
 				if (hostView != null)
 				{
-					return hostView.actualView;
+					result = hostView.actualView;
 				}
-				return null;
+				else
+				{
+					result = null;
+				}
+				return result;
 			}
 		}
 
@@ -202,17 +212,17 @@ namespace UnityEditor
 		{
 			get
 			{
-				GUIContent arg_1B_0;
-				if ((arg_1B_0 = this.m_TitleContent) == null)
+				GUIContent arg_1C_0;
+				if ((arg_1C_0 = this.m_TitleContent) == null)
 				{
-					arg_1B_0 = (this.m_TitleContent = new GUIContent());
+					arg_1C_0 = (this.m_TitleContent = new GUIContent());
 				}
-				return arg_1B_0;
+				return arg_1C_0;
 			}
 			set
 			{
 				this.m_TitleContent = value;
-				if (this.m_TitleContent != null && this.m_Parent && this.m_Parent.window && this.m_Parent.window.mainView == this.m_Parent)
+				if (this.m_TitleContent != null && this.m_Parent && this.m_Parent.window && this.m_Parent.window.rootView == this.m_Parent)
 				{
 					this.m_Parent.window.title = this.m_TitleContent.text;
 				}
@@ -277,7 +287,6 @@ namespace UnityEditor
 			this.titleContent.text = base.GetType().ToString();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void MakeModal(ContainerWindow win);
 
@@ -347,16 +356,17 @@ namespace UnityEditor
 		internal void CheckForWindowRepaint()
 		{
 			double timeSinceStartup = EditorApplication.timeSinceStartup;
-			if (timeSinceStartup < (double)this.m_FadeoutTime)
+			if (timeSinceStartup >= (double)this.m_FadeoutTime)
 			{
-				return;
+				if (timeSinceStartup > (double)this.m_FadeoutTime + 1.0)
+				{
+					this.RemoveNotification();
+				}
+				else
+				{
+					this.Repaint();
+				}
 			}
-			if (timeSinceStartup > (double)this.m_FadeoutTime + 1.0)
-			{
-				this.RemoveNotification();
-				return;
-			}
-			this.Repaint();
 		}
 
 		internal GUIContent GetLocalizedTitleContent()
@@ -367,40 +377,51 @@ namespace UnityEditor
 		internal static GUIContent GetLocalizedTitleContentFromType(Type t)
 		{
 			EditorWindowTitleAttribute editorWindowTitleAttribute = EditorWindow.GetEditorWindowTitleAttribute(t);
-			if (editorWindowTitleAttribute == null)
+			GUIContent result;
+			if (editorWindowTitleAttribute != null)
 			{
-				return new GUIContent(t.ToString());
+				string text = "";
+				if (!string.IsNullOrEmpty(editorWindowTitleAttribute.icon))
+				{
+					text = editorWindowTitleAttribute.icon;
+				}
+				else if (editorWindowTitleAttribute.useTypeNameAsIconName)
+				{
+					text = t.ToString();
+				}
+				if (!string.IsNullOrEmpty(text))
+				{
+					result = EditorGUIUtility.TextContentWithIcon(editorWindowTitleAttribute.title, text);
+				}
+				else
+				{
+					result = EditorGUIUtility.TextContent(editorWindowTitleAttribute.title);
+				}
 			}
-			string text = string.Empty;
-			if (!string.IsNullOrEmpty(editorWindowTitleAttribute.icon))
+			else
 			{
-				text = editorWindowTitleAttribute.icon;
+				result = new GUIContent(t.ToString());
 			}
-			else if (editorWindowTitleAttribute.useTypeNameAsIconName)
-			{
-				text = t.ToString();
-			}
-			if (!string.IsNullOrEmpty(text))
-			{
-				return EditorGUIUtility.TextContentWithIcon(editorWindowTitleAttribute.title, text);
-			}
-			return EditorGUIUtility.TextContent(editorWindowTitleAttribute.title);
+			return result;
 		}
 
 		private static EditorWindowTitleAttribute GetEditorWindowTitleAttribute(Type t)
 		{
 			object[] customAttributes = t.GetCustomAttributes(true);
 			object[] array = customAttributes;
+			EditorWindowTitleAttribute result;
 			for (int i = 0; i < array.Length; i++)
 			{
 				object obj = array[i];
 				Attribute attribute = (Attribute)obj;
 				if (attribute.TypeId == typeof(EditorWindowTitleAttribute))
 				{
-					return (EditorWindowTitleAttribute)obj;
+					result = (EditorWindowTitleAttribute)obj;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public void ShowNotification(GUIContent notification)
@@ -415,13 +436,12 @@ namespace UnityEditor
 
 		public void RemoveNotification()
 		{
-			if (this.m_FadeoutTime == 0f)
+			if (this.m_FadeoutTime != 0f)
 			{
-				return;
+				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.CheckForWindowRepaint));
+				this.m_Notification = null;
+				this.m_FadeoutTime = 0f;
 			}
-			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.CheckForWindowRepaint));
-			this.m_Notification = null;
-			this.m_FadeoutTime = 0f;
 		}
 
 		internal void DrawNotification()
@@ -454,16 +474,22 @@ namespace UnityEditor
 		internal int GetNumTabs()
 		{
 			DockArea dockArea = this.m_Parent as DockArea;
+			int result;
 			if (dockArea)
 			{
-				return dockArea.m_Panes.Count;
+				result = dockArea.m_Panes.Count;
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 
 		internal bool ShowNextTabIfPossible()
 		{
 			DockArea dockArea = this.m_Parent as DockArea;
+			bool result;
 			if (dockArea)
 			{
 				int num = dockArea.m_Panes.IndexOf(this);
@@ -472,10 +498,12 @@ namespace UnityEditor
 				{
 					dockArea.selected = num;
 					dockArea.Repaint();
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public void ShowTab()
@@ -503,22 +531,21 @@ namespace UnityEditor
 
 		internal void MakeParentsSettingsMatchMe()
 		{
-			if (!this.m_Parent || this.m_Parent.actualView != this)
+			if (this.m_Parent && !(this.m_Parent.actualView != this))
 			{
-				return;
-			}
-			this.m_Parent.SetTitle(base.GetType().FullName);
-			this.m_Parent.autoRepaintOnSceneChange = this.m_AutoRepaintOnSceneChange;
-			bool flag = this.m_Parent.antiAlias != this.m_AntiAlias || this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
-			this.m_Parent.antiAlias = this.m_AntiAlias;
-			this.m_Parent.depthBufferBits = this.m_DepthBufferBits;
-			this.m_Parent.SetInternalGameViewDimensions(this.m_GameViewRect, this.m_GameViewClippedRect, this.m_GameViewTargetSize);
-			this.m_Parent.wantsMouseMove = this.m_WantsMouseMove;
-			Vector2 b = new Vector2((float)(this.m_Parent.borderSize.left + this.m_Parent.borderSize.right), (float)(this.m_Parent.borderSize.top + this.m_Parent.borderSize.bottom));
-			this.m_Parent.SetMinMaxSizes(this.minSize + b, this.maxSize + b);
-			if (flag)
-			{
-				this.m_Parent.RecreateContext();
+				this.m_Parent.SetTitle(base.GetType().FullName);
+				this.m_Parent.autoRepaintOnSceneChange = this.m_AutoRepaintOnSceneChange;
+				bool flag = this.m_Parent.antiAlias != this.m_AntiAlias || this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
+				this.m_Parent.antiAlias = this.m_AntiAlias;
+				this.m_Parent.depthBufferBits = this.m_DepthBufferBits;
+				this.m_Parent.SetInternalGameViewDimensions(this.m_GameViewRect, this.m_GameViewClippedRect, this.m_GameViewTargetSize);
+				this.m_Parent.wantsMouseMove = this.m_WantsMouseMove;
+				Vector2 b = new Vector2((float)(this.m_Parent.borderSize.left + this.m_Parent.borderSize.right), (float)(this.m_Parent.borderSize.top + this.m_Parent.borderSize.bottom));
+				this.m_Parent.SetMinMaxSizes(this.minSize + b, this.maxSize + b);
+				if (flag)
+				{
+					this.m_Parent.RecreateContext();
+				}
 			}
 		}
 
@@ -537,7 +564,7 @@ namespace UnityEditor
 				hostView.actualView = this;
 				Rect position = this.m_Parent.borderSize.Add(new Rect(this.position.x, this.position.y, this.position.width, this.position.height));
 				containerWindow.position = position;
-				containerWindow.mainView = hostView;
+				containerWindow.rootView = hostView;
 				this.MakeParentsSettingsMatchMe();
 				containerWindow.ShowPopup();
 			}
@@ -554,7 +581,7 @@ namespace UnityEditor
 				hostView.actualView = this;
 				Rect position = this.m_Parent.borderSize.Add(new Rect(this.position.x, this.position.y, this.position.width, this.position.height));
 				containerWindow.position = position;
-				containerWindow.mainView = hostView;
+				containerWindow.rootView = hostView;
 				this.MakeParentsSettingsMatchMe();
 				containerWindow.Show(mode, true, false);
 				savedGUIState.ApplyAndForget();
@@ -568,8 +595,13 @@ namespace UnityEditor
 
 		internal void ShowAsDropDown(Rect buttonRect, Vector2 windowSize, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
+			this.ShowAsDropDown(buttonRect, windowSize, locationPriorityOrder, ShowMode.PopupMenu);
+		}
+
+		internal void ShowAsDropDown(Rect buttonRect, Vector2 windowSize, PopupLocationHelper.PopupLocation[] locationPriorityOrder, ShowMode mode)
+		{
 			this.position = this.ShowAsDropDownFitToScreen(buttonRect, windowSize, locationPriorityOrder);
-			this.ShowWithMode(ShowMode.PopupMenu);
+			this.ShowWithMode(mode);
 			this.position = this.ShowAsDropDownFitToScreen(buttonRect, windowSize, locationPriorityOrder);
 			this.minSize = new Vector2(this.position.width, this.position.height);
 			this.maxSize = new Vector2(this.position.width, this.position.height);
@@ -583,11 +615,16 @@ namespace UnityEditor
 
 		internal Rect ShowAsDropDownFitToScreen(Rect buttonRect, Vector2 windowSize, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
 		{
+			Rect result;
 			if (this.m_Parent == null)
 			{
-				return new Rect(buttonRect.x, buttonRect.yMax, windowSize.x, windowSize.y);
+				result = new Rect(buttonRect.x, buttonRect.yMax, windowSize.x, windowSize.y);
 			}
-			return this.m_Parent.window.GetDropDownRect(buttonRect, windowSize, windowSize, locationPriorityOrder);
+			else
+			{
+				result = this.m_Parent.window.GetDropDownRect(buttonRect, windowSize, windowSize, locationPriorityOrder);
+			}
+			return result;
 		}
 
 		public void Show()
@@ -688,46 +725,51 @@ namespace UnityEditor
 		{
 			T[] array = Resources.FindObjectsOfTypeAll(typeof(T)) as T[];
 			T t = (array.Length <= 0) ? ((T)((object)null)) : array[0];
+			T result;
 			if (t != null)
 			{
 				if (focus)
 				{
 					t.Focus();
 				}
-				return t;
+				result = t;
 			}
-			t = ScriptableObject.CreateInstance<T>();
-			if (title != null)
+			else
 			{
-				t.titleContent = new GUIContent(title);
-			}
-			Type desired;
-			for (int i = 0; i < desiredDockNextTo.Length; i++)
-			{
-				desired = desiredDockNextTo[i];
-				ContainerWindow[] windows = ContainerWindow.windows;
-				ContainerWindow[] array2 = windows;
-				for (int j = 0; j < array2.Length; j++)
+				t = ScriptableObject.CreateInstance<T>();
+				if (title != null)
 				{
-					ContainerWindow containerWindow = array2[j];
-					View[] allChildren = containerWindow.mainView.allChildren;
-					for (int k = 0; k < allChildren.Length; k++)
+					t.titleContent = new GUIContent(title);
+				}
+				for (int i = 0; i < desiredDockNextTo.Length; i++)
+				{
+					Type desired = desiredDockNextTo[i];
+					ContainerWindow[] windows = ContainerWindow.windows;
+					ContainerWindow[] array2 = windows;
+					for (int j = 0; j < array2.Length; j++)
 					{
-						View view = allChildren[k];
-						DockArea dockArea = view as DockArea;
-						if (!(dockArea == null))
+						ContainerWindow containerWindow = array2[j];
+						View[] allChildren = containerWindow.rootView.allChildren;
+						for (int k = 0; k < allChildren.Length; k++)
 						{
-							if (dockArea.m_Panes.Any((EditorWindow pane) => pane.GetType() == desired))
+							View view = allChildren[k];
+							DockArea dockArea = view as DockArea;
+							if (!(dockArea == null))
 							{
-								dockArea.AddTab(t);
-								return t;
+								if (dockArea.m_Panes.Any((EditorWindow pane) => pane.GetType() == desired))
+								{
+									dockArea.AddTab(t);
+									result = t;
+									return result;
+								}
 							}
 						}
 					}
 				}
+				t.Show();
+				result = t;
 			}
-			t.Show();
-			return t;
+			return result;
 		}
 
 		public static void FocusWindowIfItsOpen(Type t)
@@ -900,7 +942,7 @@ namespace UnityEditor
 		{
 			ContainerWindow containerWindow = ScriptableObject.CreateInstance<ContainerWindow>();
 			SplitView splitView = ScriptableObject.CreateInstance<SplitView>();
-			containerWindow.mainView = splitView;
+			containerWindow.rootView = splitView;
 			DockArea dockArea = ScriptableObject.CreateInstance<DockArea>();
 			splitView.AddChild(dockArea);
 			dockArea.AddTab(window);

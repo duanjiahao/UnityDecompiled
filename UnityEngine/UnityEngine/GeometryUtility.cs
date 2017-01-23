@@ -22,7 +22,6 @@ namespace UnityEngine
 			GeometryUtility.INTERNAL_CALL_Internal_ExtractPlanes(planes, ref worldToProjectionMatrix);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_ExtractPlanes(Plane[] planes, ref Matrix4x4 worldToProjectionMatrix);
 
@@ -31,8 +30,17 @@ namespace UnityEngine
 			return GeometryUtility.INTERNAL_CALL_TestPlanesAABB(planes, ref bounds);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_TestPlanesAABB(Plane[] planes, ref Bounds bounds);
+
+		public static Bounds CalculateBounds(Vector3[] positions, Matrix4x4 transform)
+		{
+			Bounds result;
+			GeometryUtility.INTERNAL_CALL_CalculateBounds(positions, ref transform, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_CalculateBounds(Vector3[] positions, ref Matrix4x4 transform, out Bounds value);
 	}
 }

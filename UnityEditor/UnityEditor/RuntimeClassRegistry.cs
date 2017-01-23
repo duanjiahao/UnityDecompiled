@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Advertisements;
 using UnityEngine.Audio;
 
 namespace UnityEditor
@@ -28,6 +26,10 @@ namespace UnityEditor
 
 		protected Dictionary<string, string[]> m_UsedTypesPerUserAssembly = new Dictionary<string, string[]>();
 
+		protected Dictionary<int, List<string>> classScenes = new Dictionary<int, List<string>>();
+
+		protected UnityType objectUnityType = null;
+
 		protected Dictionary<int, string> allNativeClasses = new Dictionary<int, string>();
 
 		internal List<RuntimeClassRegistry.MethodDescription> m_MethodsToPreserve = new List<RuntimeClassRegistry.MethodDescription>();
@@ -50,15 +52,29 @@ namespace UnityEditor
 			}
 		}
 
+		public List<string> GetScenesForClass(int ID)
+		{
+			List<string> result;
+			if (!this.classScenes.ContainsKey(ID))
+			{
+				result = null;
+			}
+			else
+			{
+				result = this.classScenes[ID];
+			}
+			return result;
+		}
+
 		public void AddNativeClassID(int ID)
 		{
-			string text = BaseObjectTools.ClassIDToString(ID);
-			if (text.Length > 0)
+			string name = UnityType.FindTypeByPersistentTypeID(ID).name;
+			if (name.Length > 0)
 			{
-				this.allNativeClasses[ID] = text;
-				if (!this.functionalityGroups.ContainsValue(text))
+				this.allNativeClasses[ID] = name;
+				if (!this.functionalityGroups.ContainsValue(name))
 				{
-					this.nativeClasses[ID] = text;
+					this.nativeClasses[ID] = name;
 				}
 			}
 		}
@@ -93,10 +109,14 @@ namespace UnityEditor
 
 		protected void AddNativeClassFromName(string className)
 		{
-			int num = BaseObjectTools.StringToClassID(className);
-			if (num != -1 && !BaseObjectTools.IsBaseObject(num))
+			if (this.objectUnityType == null)
 			{
-				this.nativeClasses[num] = className;
+				this.objectUnityType = UnityType.FindTypeByName("Object");
+			}
+			UnityType unityType = UnityType.FindTypeByName(className);
+			if (unityType != null && unityType.persistentTypeID != this.objectUnityType.persistentTypeID)
+			{
+				this.nativeClasses[unityType.persistentTypeID] = className;
 			}
 		}
 
@@ -160,12 +180,26 @@ namespace UnityEditor
 			}
 		}
 
+		public void SetSceneClasses(int[] nativeClassIDs, string scene)
+		{
+			for (int i = 0; i < nativeClassIDs.Length; i++)
+			{
+				int num = nativeClassIDs[i];
+				this.AddNativeClassID(num);
+				if (!this.classScenes.ContainsKey(num))
+				{
+					this.classScenes[num] = new List<string>();
+				}
+				this.classScenes[num].Add(scene);
+			}
+		}
+
 		internal void AddMethodToPreserve(string assembly, string @namespace, string klassName, string methodName)
 		{
 			this.m_MethodsToPreserve.Add(new RuntimeClassRegistry.MethodDescription
 			{
 				assembly = assembly,
-				fullTypeName = @namespace + ((@namespace.Length <= 0) ? string.Empty : ".") + klassName,
+				fullTypeName = @namespace + ((@namespace.Length <= 0) ? "" : ".") + klassName,
 				methodName = methodName
 			});
 		}
@@ -263,11 +297,16 @@ namespace UnityEditor
 
 		public string GetRetentionLevel(string className)
 		{
+			string result;
 			if (this.retentionLevel.ContainsKey(className))
 			{
-				return this.retentionLevel[className];
+				result = this.retentionLevel[className];
 			}
-			return "fields";
+			else
+			{
+				result = "fields";
+			}
+			return result;
 		}
 
 		protected void InitRuntimeClassRegistry()
@@ -401,7 +440,7 @@ namespace UnityEditor
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SocialPlatforms.GameCenter.GameCenterPlatform", "all");
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SocialPlatforms.GameCenter.GcLeaderboard", "all");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iPhone || buildTargetGroup == BuildTargetGroup.Android || buildTargetGroup == BuildTargetGroup.Metro || buildTargetGroup == BuildTargetGroup.Tizen)
+			if (buildTargetGroup == BuildTargetGroup.iPhone || buildTargetGroup == BuildTargetGroup.Android || buildTargetGroup == BuildTargetGroup.WP8 || buildTargetGroup == BuildTargetGroup.WSA || buildTargetGroup == BuildTargetGroup.Tizen)
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "TouchScreenKeyboard");
 			}
@@ -435,9 +474,6 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Physics2D", typeof(JointAngleLimits2D));
 			this.AddManagedDependenciesForFunctionalityGroup("Physics2D", typeof(JointTranslationLimits2D));
 			this.AddManagedDependenciesForFunctionalityGroup("Physics2D", typeof(JointSuspension2D));
-			this.AddFunctionalityGroup("UnityAds", "UnityAdsSettings");
-			this.AddNativeDependenciesForFunctionalityGroup("UnityAds", "UnityAdsSettings");
-			this.AddManagedDependenciesForFunctionalityGroup("UnityAds", typeof(UnityAdsManager), "all");
 			this.AddFunctionalityGroup("Terrain", "Terrain");
 			this.AddManagedDependenciesForFunctionalityGroup("Terrain", typeof(Terrain), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Terrain", typeof(TerrainData), "all");

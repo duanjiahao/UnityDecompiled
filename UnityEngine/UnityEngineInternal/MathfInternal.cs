@@ -1,7 +1,9 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace UnityEngineInternal
 {
+	[StructLayout(LayoutKind.Sequential, Size = 1)]
 	public struct MathfInternal
 	{
 		public static volatile float FloatMinNormal = 1.17549435E-38f;

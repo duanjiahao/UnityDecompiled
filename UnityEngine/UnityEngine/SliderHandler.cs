@@ -37,67 +37,95 @@ namespace UnityEngine
 
 		public float Handle()
 		{
+			float result;
 			if (this.slider == null || this.thumb == null)
 			{
-				return this.currentValue;
+				result = this.currentValue;
 			}
-			switch (this.CurrentEventType())
+			else
 			{
-			case EventType.MouseDown:
-				return this.OnMouseDown();
-			case EventType.MouseUp:
-				return this.OnMouseUp();
-			case EventType.MouseDrag:
-				return this.OnMouseDrag();
-			case EventType.Repaint:
-				return this.OnRepaint();
+				switch (this.CurrentEventType())
+				{
+				case EventType.MouseDown:
+					result = this.OnMouseDown();
+					return result;
+				case EventType.MouseUp:
+					result = this.OnMouseUp();
+					return result;
+				case EventType.MouseDrag:
+					result = this.OnMouseDrag();
+					return result;
+				case EventType.Repaint:
+					result = this.OnRepaint();
+					return result;
+				}
+				result = this.currentValue;
 			}
-			return this.currentValue;
+			return result;
 		}
 
 		private float OnMouseDown()
 		{
+			float result;
 			if (!this.position.Contains(this.CurrentEvent().mousePosition) || this.IsEmptySlider())
 			{
-				return this.currentValue;
+				result = this.currentValue;
 			}
-			GUI.scrollTroughSide = 0;
-			GUIUtility.hotControl = this.id;
-			this.CurrentEvent().Use();
-			if (this.ThumbSelectionRect().Contains(this.CurrentEvent().mousePosition))
+			else
 			{
-				this.StartDraggingWithValue(this.ClampedCurrentValue());
-				return this.currentValue;
+				GUI.scrollTroughSide = 0;
+				GUIUtility.hotControl = this.id;
+				this.CurrentEvent().Use();
+				if (this.ThumbSelectionRect().Contains(this.CurrentEvent().mousePosition))
+				{
+					this.StartDraggingWithValue(this.ClampedCurrentValue());
+					result = this.currentValue;
+				}
+				else
+				{
+					GUI.changed = true;
+					if (this.SupportsPageMovements())
+					{
+						this.SliderState().isDragging = false;
+						GUI.nextScrollStepTime = SystemClock.now.AddMilliseconds(250.0);
+						GUI.scrollTroughSide = this.CurrentScrollTroughSide();
+						result = this.PageMovementValue();
+					}
+					else
+					{
+						float num = this.ValueForCurrentMousePosition();
+						this.StartDraggingWithValue(num);
+						result = this.Clamp(num);
+					}
+				}
 			}
-			GUI.changed = true;
-			if (this.SupportsPageMovements())
-			{
-				this.SliderState().isDragging = false;
-				GUI.nextScrollStepTime = SystemClock.now.AddMilliseconds(250.0);
-				GUI.scrollTroughSide = this.CurrentScrollTroughSide();
-				return this.PageMovementValue();
-			}
-			float num = this.ValueForCurrentMousePosition();
-			this.StartDraggingWithValue(num);
-			return this.Clamp(num);
+			return result;
 		}
 
 		private float OnMouseDrag()
 		{
+			float result;
 			if (GUIUtility.hotControl != this.id)
 			{
-				return this.currentValue;
+				result = this.currentValue;
 			}
-			SliderState sliderState = this.SliderState();
-			if (!sliderState.isDragging)
+			else
 			{
-				return this.currentValue;
+				SliderState sliderState = this.SliderState();
+				if (!sliderState.isDragging)
+				{
+					result = this.currentValue;
+				}
+				else
+				{
+					GUI.changed = true;
+					this.CurrentEvent().Use();
+					float num = this.MousePosition() - sliderState.dragStartPos;
+					float value = sliderState.dragStartValue + num / this.ValuesPerPixel();
+					result = this.Clamp(value);
+				}
 			}
-			GUI.changed = true;
-			this.CurrentEvent().Use();
-			float num = this.MousePosition() - sliderState.dragStartPos;
-			float value = sliderState.dragStartValue + num / this.ValuesPerPixel();
-			return this.Clamp(value);
+			return result;
 		}
 
 		private float OnMouseUp()
@@ -117,35 +145,46 @@ namespace UnityEngine
 			{
 				this.thumb.Draw(this.ThumbRect(), GUIContent.none, this.id);
 			}
+			float result;
 			if (GUIUtility.hotControl != this.id || !this.position.Contains(this.CurrentEvent().mousePosition) || this.IsEmptySlider())
 			{
-				return this.currentValue;
+				result = this.currentValue;
 			}
-			if (this.ThumbRect().Contains(this.CurrentEvent().mousePosition))
+			else if (this.ThumbRect().Contains(this.CurrentEvent().mousePosition))
 			{
 				if (GUI.scrollTroughSide != 0)
 				{
 					GUIUtility.hotControl = 0;
 				}
-				return this.currentValue;
+				result = this.currentValue;
 			}
-			GUI.InternalRepaintEditorWindow();
-			if (SystemClock.now < GUI.nextScrollStepTime)
+			else
 			{
-				return this.currentValue;
+				GUI.InternalRepaintEditorWindow();
+				if (SystemClock.now < GUI.nextScrollStepTime)
+				{
+					result = this.currentValue;
+				}
+				else if (this.CurrentScrollTroughSide() != GUI.scrollTroughSide)
+				{
+					result = this.currentValue;
+				}
+				else
+				{
+					GUI.nextScrollStepTime = SystemClock.now.AddMilliseconds(30.0);
+					if (this.SupportsPageMovements())
+					{
+						this.SliderState().isDragging = false;
+						GUI.changed = true;
+						result = this.PageMovementValue();
+					}
+					else
+					{
+						result = this.ClampedCurrentValue();
+					}
+				}
 			}
-			if (this.CurrentScrollTroughSide() != GUI.scrollTroughSide)
-			{
-				return this.currentValue;
-			}
-			GUI.nextScrollStepTime = SystemClock.now.AddMilliseconds(30.0);
-			if (this.SupportsPageMovements())
-			{
-				this.SliderState().isDragging = false;
-				GUI.changed = true;
-				return this.PageMovementValue();
-			}
-			return this.ClampedCurrentValue();
+			return result;
 		}
 
 		private EventType CurrentEventType()
@@ -187,11 +226,16 @@ namespace UnityEngine
 
 		private float PageUpMovementBound()
 		{
+			float result;
 			if (this.horiz)
 			{
-				return this.ThumbRect().xMax - this.position.x;
+				result = this.ThumbRect().xMax - this.position.x;
 			}
-			return this.ThumbRect().yMax - this.position.y;
+			else
+			{
+				result = this.ThumbRect().yMax - this.position.y;
+			}
+			return result;
 		}
 
 		private Event CurrentEvent()
@@ -201,11 +245,16 @@ namespace UnityEngine
 
 		private float ValueForCurrentMousePosition()
 		{
+			float result;
 			if (this.horiz)
 			{
-				return (this.MousePosition() - this.ThumbRect().width * 0.5f) / this.ValuesPerPixel() + this.start - this.size * 0.5f;
+				result = (this.MousePosition() - this.ThumbRect().width * 0.5f) / this.ValuesPerPixel() + this.start - this.size * 0.5f;
 			}
-			return (this.MousePosition() - this.ThumbRect().height * 0.5f) / this.ValuesPerPixel() + this.start - this.size * 0.5f;
+			else
+			{
+				result = (this.MousePosition() - this.ThumbRect().height * 0.5f) / this.ValuesPerPixel() + this.start - this.size * 0.5f;
+			}
+			return result;
 		}
 
 		private float Clamp(float value)
@@ -239,21 +288,31 @@ namespace UnityEngine
 		private Rect VerticalThumbRect()
 		{
 			float num = this.ValuesPerPixel();
+			Rect result;
 			if (this.start < this.end)
 			{
-				return new Rect(this.position.x + (float)this.slider.padding.left, (this.ClampedCurrentValue() - this.start) * num + this.position.y + (float)this.slider.padding.top, this.position.width - (float)this.slider.padding.horizontal, this.size * num + this.ThumbSize());
+				result = new Rect(this.position.x + (float)this.slider.padding.left, (this.ClampedCurrentValue() - this.start) * num + this.position.y + (float)this.slider.padding.top, this.position.width - (float)this.slider.padding.horizontal, this.size * num + this.ThumbSize());
 			}
-			return new Rect(this.position.x + (float)this.slider.padding.left, (this.ClampedCurrentValue() + this.size - this.start) * num + this.position.y + (float)this.slider.padding.top, this.position.width - (float)this.slider.padding.horizontal, this.size * -num + this.ThumbSize());
+			else
+			{
+				result = new Rect(this.position.x + (float)this.slider.padding.left, (this.ClampedCurrentValue() + this.size - this.start) * num + this.position.y + (float)this.slider.padding.top, this.position.width - (float)this.slider.padding.horizontal, this.size * -num + this.ThumbSize());
+			}
+			return result;
 		}
 
 		private Rect HorizontalThumbRect()
 		{
 			float num = this.ValuesPerPixel();
+			Rect result;
 			if (this.start < this.end)
 			{
-				return new Rect((this.ClampedCurrentValue() - this.start) * num + this.position.x + (float)this.slider.padding.left, this.position.y + (float)this.slider.padding.top, this.size * num + this.ThumbSize(), this.position.height - (float)this.slider.padding.vertical);
+				result = new Rect((this.ClampedCurrentValue() - this.start) * num + this.position.x + (float)this.slider.padding.left, this.position.y + (float)this.slider.padding.top, this.size * num + this.ThumbSize(), this.position.height - (float)this.slider.padding.vertical);
 			}
-			return new Rect((this.ClampedCurrentValue() + this.size - this.start) * num + this.position.x + (float)this.slider.padding.left, this.position.y, this.size * -num + this.ThumbSize(), this.position.height);
+			else
+			{
+				result = new Rect((this.ClampedCurrentValue() + this.size - this.start) * num + this.position.x + (float)this.slider.padding.left, this.position.y, this.size * -num + this.ThumbSize(), this.position.height);
+			}
+			return result;
 		}
 
 		private float ClampedCurrentValue()
@@ -263,29 +322,44 @@ namespace UnityEngine
 
 		private float MousePosition()
 		{
+			float result;
 			if (this.horiz)
 			{
-				return this.CurrentEvent().mousePosition.x - this.position.x;
+				result = this.CurrentEvent().mousePosition.x - this.position.x;
 			}
-			return this.CurrentEvent().mousePosition.y - this.position.y;
+			else
+			{
+				result = this.CurrentEvent().mousePosition.y - this.position.y;
+			}
+			return result;
 		}
 
 		private float ValuesPerPixel()
 		{
+			float result;
 			if (this.horiz)
 			{
-				return (this.position.width - (float)this.slider.padding.horizontal - this.ThumbSize()) / (this.end - this.start);
+				result = (this.position.width - (float)this.slider.padding.horizontal - this.ThumbSize()) / (this.end - this.start);
 			}
-			return (this.position.height - (float)this.slider.padding.vertical - this.ThumbSize()) / (this.end - this.start);
+			else
+			{
+				result = (this.position.height - (float)this.slider.padding.vertical - this.ThumbSize()) / (this.end - this.start);
+			}
+			return result;
 		}
 
 		private float ThumbSize()
 		{
+			float result;
 			if (this.horiz)
 			{
-				return (this.thumb.fixedWidth == 0f) ? ((float)this.thumb.padding.horizontal) : this.thumb.fixedWidth;
+				result = ((this.thumb.fixedWidth == 0f) ? ((float)this.thumb.padding.horizontal) : this.thumb.fixedWidth);
 			}
-			return (this.thumb.fixedHeight == 0f) ? ((float)this.thumb.padding.vertical) : this.thumb.fixedHeight;
+			else
+			{
+				result = ((this.thumb.fixedHeight == 0f) ? ((float)this.thumb.padding.vertical) : this.thumb.fixedHeight);
+			}
+			return result;
 		}
 
 		private float MaxValue()

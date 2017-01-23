@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEditor.Connect;
 using UnityEditor.SceneManagement;
-using UnityEngine;
 
 namespace UnityEditor.Web
 {
@@ -19,9 +18,11 @@ namespace UnityEditor.Web
 			JSProxyMgr.GetInstance().AddGlobalObject("unity/project", new EditorProjectAccess());
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetProjectEditorVersion();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetRESTServiceURI();
 
 		public void OpenLink(string link)
 		{
@@ -66,11 +67,16 @@ namespace UnityEditor.Web
 		public string GetProjectName()
 		{
 			string projectName = UnityConnect.instance.projectInfo.projectName;
-			if (projectName != string.Empty)
+			string result;
+			if (projectName != "")
 			{
-				return projectName;
+				result = projectName;
 			}
-			return PlayerSettings.productName;
+			else
+			{
+				result = PlayerSettings.productName;
+			}
+			return result;
 		}
 
 		public string GetProjectGUID()
@@ -133,9 +139,23 @@ namespace UnityEditor.Web
 			CollabHistoryWindow.ShowHistoryWindow().Focus();
 		}
 
+		public void ShowToolbarDropdown()
+		{
+			Toolbar.requestShowCollabToolbar = true;
+			if (Toolbar.get)
+			{
+				Toolbar.get.Repaint();
+			}
+		}
+
 		public void CloseToolbarWindow()
 		{
 			CollabToolbarWindow.CloseToolbarWindows();
+		}
+
+		public void CloseToolbarWindowImmediately()
+		{
+			CollabToolbarWindow.CloseToolbarWindowsImmediately();
 		}
 	}
 }

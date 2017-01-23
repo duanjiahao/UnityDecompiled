@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Reflection;
 using UnityEditor.Utils;
 using UnityEditorInternal;
@@ -31,6 +32,28 @@ namespace UnityEditor
 			public static string lightmapEmissiveLabel = "Global Illumination";
 
 			public static string propBlockWarning = EditorGUIUtility.TextContent("MaterialPropertyBlock is used to modify these values").text;
+
+			public static int kCustomQueueValue = -2;
+
+			public static readonly GUIContent queueLabel = EditorGUIUtility.TextContent("Render Queue");
+
+			public static readonly GUIContent[] queueNames = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("From Shader"),
+				EditorGUIUtility.TextContent("Geometry|Queue 2000"),
+				EditorGUIUtility.TextContent("AlphaTest|Queue 2450"),
+				EditorGUIUtility.TextContent("Transparent|Queue 3000"),
+				EditorGUIUtility.TextContent("Custom")
+			};
+
+			public static readonly int[] queueValues = new int[]
+			{
+				-1,
+				2000,
+				2450,
+				3000,
+				0
+			};
 		}
 
 		private enum PreviewType
@@ -71,7 +94,7 @@ namespace UnityEditor
 			{
 				EditorGUILayout.LabelField("Select Reflection Probe", EditorStyles.boldLabel, new GUILayoutOption[0]);
 				EditorGUILayout.Space();
-				this.m_SelectedReflectionProbe = (EditorGUILayout.ObjectField(string.Empty, this.m_SelectedReflectionProbe, typeof(ReflectionProbe), true, new GUILayoutOption[0]) as ReflectionProbe);
+				this.m_SelectedReflectionProbe = (EditorGUILayout.ObjectField("", this.m_SelectedReflectionProbe, typeof(ReflectionProbe), true, new GUILayoutOption[0]) as ReflectionProbe);
 			}
 		}
 
@@ -94,21 +117,17 @@ namespace UnityEditor
 			}
 		}
 
-		private const float kSpacingUnderTexture = 6f;
-
-		private const float kWarningMessageHeight = 33f;
-
-		private const float kMiniWarningMessageHeight = 27f;
-
-		public const int kMiniTextureFieldLabelIndentLevel = 2;
-
-		private const float kSpaceBetweenFlexibleAreaAndField = 5f;
-
 		private bool m_IsVisible;
 
 		private bool m_CheckSetup;
 
 		private static int s_ControlHash = "EditorTextField".GetHashCode();
+
+		private const float kSpacingUnderTexture = 6f;
+
+		private const float kWarningMessageHeight = 33f;
+
+		private const float kMiniWarningMessageHeight = 27f;
 
 		private MaterialPropertyBlock m_PropertyBlock;
 
@@ -155,6 +174,12 @@ namespace UnityEditor
 
 		private static readonly GUIContent[] s_TimeIcons = new GUIContent[2];
 
+		public const int kMiniTextureFieldLabelIndentLevel = 2;
+
+		private const float kSpaceBetweenFlexibleAreaAndField = 5f;
+
+		private const float kQueuePopupWidth = 100f;
+
 		internal bool forceVisible
 		{
 			get;
@@ -171,24 +196,32 @@ namespace UnityEditor
 
 		private static MaterialEditor.PreviewType GetPreviewType(Material mat)
 		{
+			MaterialEditor.PreviewType result;
 			if (mat == null)
 			{
-				return MaterialEditor.PreviewType.Mesh;
+				result = MaterialEditor.PreviewType.Mesh;
 			}
-			string a = mat.GetTag("PreviewType", false, string.Empty).ToLower();
-			if (a == "plane")
+			else
 			{
-				return MaterialEditor.PreviewType.Plane;
+				string a = mat.GetTag("PreviewType", false, string.Empty).ToLower();
+				if (a == "plane")
+				{
+					result = MaterialEditor.PreviewType.Plane;
+				}
+				else if (a == "skybox")
+				{
+					result = MaterialEditor.PreviewType.Skybox;
+				}
+				else if (mat.shader != null && mat.shader.name.Contains("Skybox"))
+				{
+					result = MaterialEditor.PreviewType.Skybox;
+				}
+				else
+				{
+					result = MaterialEditor.PreviewType.Mesh;
+				}
 			}
-			if (a == "skybox")
-			{
-				return MaterialEditor.PreviewType.Skybox;
-			}
-			if (mat.shader != null && mat.shader.name.Contains("Skybox"))
-			{
-				return MaterialEditor.PreviewType.Skybox;
-			}
-			return MaterialEditor.PreviewType.Mesh;
+			return result;
 		}
 
 		private static bool DoesPreviewAllowRotation(MaterialEditor.PreviewType type)
@@ -272,11 +305,11 @@ namespace UnityEditor
 			rect = EditorGUI.PrefixLabel(rect, 47385, EditorGUIUtility.TempContent("Shader"));
 			EditorGUI.showMixedValue = this.HasMultipleMixedShaderValues();
 			GUIContent content = EditorGUIUtility.TempContent((!(this.m_Shader != null)) ? "No Shader Selected" : this.m_Shader.name);
-			if (EditorGUI.ButtonMouseDown(rect, content, EditorGUIUtility.native, style))
+			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Keyboard, style))
 			{
 				EditorGUI.showMixedValue = false;
 				Vector2 vector = GUIUtility.GUIToScreenPoint(new Vector2(rect.x, rect.y));
-				InternalEditorUtility.SetupShaderMenu(this.target as Material);
+				InternalEditorUtility.SetupShaderMenu(base.target as Material);
 				EditorUtility.Internal_DisplayPopupMenu(new Rect(vector.x, vector.y, rect.width, rect.height), "CONTEXT/ShaderPopup", this, 0);
 				Event.current.Use();
 			}
@@ -286,8 +319,8 @@ namespace UnityEditor
 
 		public virtual void Awake()
 		{
-			this.m_IsVisible = InternalEditorUtility.GetIsInspectorExpanded(this.target);
-			if (MaterialEditor.GetPreviewType(this.target as Material) == MaterialEditor.PreviewType.Skybox)
+			this.m_IsVisible = InternalEditorUtility.GetIsInspectorExpanded(base.target);
+			if (MaterialEditor.GetPreviewType(base.target as Material) == MaterialEditor.PreviewType.Skybox)
 			{
 				this.m_PreviewDir = new Vector2(0f, 50f);
 			}
@@ -295,7 +328,7 @@ namespace UnityEditor
 
 		private void DetectShaderChanged()
 		{
-			Material material = this.target as Material;
+			Material material = base.target as Material;
 			if (material.shader != this.m_Shader)
 			{
 				string oldEditorName = (!(this.m_Shader != null)) ? string.Empty : this.m_Shader.customEditor;
@@ -310,26 +343,28 @@ namespace UnityEditor
 			base.serializedObject.Update();
 			this.CheckSetup();
 			this.DetectShaderChanged();
-			if (this.isVisible && this.m_Shader != null && !this.HasMultipleMixedShaderValues() && this.PropertiesGUI())
+			if (this.isVisible && this.m_Shader != null && !this.HasMultipleMixedShaderValues())
 			{
-				this.PropertiesChanged();
+				if (this.PropertiesGUI())
+				{
+					this.PropertiesChanged();
+				}
 			}
 		}
 
 		private void CheckSetup()
 		{
-			if (!this.m_CheckSetup || this.m_Shader == null)
+			if (this.m_CheckSetup && !(this.m_Shader == null))
 			{
-				return;
-			}
-			this.m_CheckSetup = false;
-			if (this.m_CustomShaderGUI == null && !this.IsMaterialEditor(this.m_Shader.customEditor))
-			{
-				Debug.LogWarningFormat("Could not create a custom UI for the shader '{0}'. The shader has the following: 'CustomEditor = {1}'. Does the custom editor specified include its namespace? And does the class either derive from ShaderGUI or MaterialEditor?", new object[]
+				this.m_CheckSetup = false;
+				if (this.m_CustomShaderGUI == null && !this.IsMaterialEditor(this.m_Shader.customEditor))
 				{
-					this.m_Shader.name,
-					this.m_Shader.customEditor
-				});
+					Debug.LogWarningFormat("Could not create a custom UI for the shader '{0}'. The shader has the following: 'CustomEditor = {1}'. Does the custom editor specified include its namespace? And does the class either derive from ShaderGUI or MaterialEditor?", new object[]
+					{
+						this.m_Shader.name,
+						this.m_Shader.customEditor
+					});
+				}
 			}
 		}
 
@@ -343,7 +378,7 @@ namespace UnityEditor
 			this.m_InfoMessage = null;
 			if (base.targets.Length == 1)
 			{
-				this.m_InfoMessage = PerformanceChecks.CheckMaterial(this.target as Material, EditorUserBuildSettings.activeBuildTarget);
+				this.m_InfoMessage = PerformanceChecks.CheckMaterial(base.target as Material, EditorUserBuildSettings.activeBuildTarget);
 			}
 		}
 
@@ -359,7 +394,7 @@ namespace UnityEditor
 				if (flag != this.m_IsVisible)
 				{
 					this.m_IsVisible = flag;
-					InternalEditorUtility.SetIsInspectorExpanded(this.target, flag);
+					InternalEditorUtility.SetIsInspectorExpanded(base.target, flag);
 				}
 			}
 		}
@@ -371,12 +406,15 @@ namespace UnityEditor
 			{
 				EditorGUIUtility.labelWidth = 50f;
 				this.ShaderPopup("MiniPulldown");
-				if (this.m_Shader != null && this.HasMultipleMixedShaderValues() && (this.m_Shader.hideFlags & HideFlags.DontSave) == HideFlags.None && GUILayout.Button("Edit...", EditorStyles.miniButton, new GUILayoutOption[]
+				if (this.m_Shader != null && this.HasMultipleMixedShaderValues() && (this.m_Shader.hideFlags & HideFlags.DontSave) == HideFlags.None)
 				{
-					GUILayout.ExpandWidth(false)
-				}))
-				{
-					AssetDatabase.OpenAsset(this.m_Shader);
+					if (GUILayout.Button("Edit...", EditorStyles.miniButton, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					}))
+					{
+						AssetDatabase.OpenAsset(this.m_Shader);
+					}
 				}
 			}
 		}
@@ -741,7 +779,7 @@ namespace UnityEditor
 				GUI.enabled = false;
 			}
 			EditorGUI.showMixedValue = prop.hasMixedValue;
-			int controlID = GUIUtility.GetControlID(12354, EditorGUIUtility.native, position);
+			int controlID = GUIUtility.GetControlID(12354, FocusType.Keyboard, position);
 			Texture textureValue = EditorGUI.DoObjectField(position, position, controlID, prop.textureValue, textureTypeFromDimension, null, new EditorGUI.ObjectFieldValidator(this.TextureValidator), false) as Texture;
 			EditorGUI.showMixedValue = false;
 			if (EditorGUI.EndChangeCheck())
@@ -776,23 +814,11 @@ namespace UnityEditor
 
 		public void TextureCompatibilityWarning(MaterialProperty prop)
 		{
-			if (InternalEditorUtility.BumpMapTextureNeedsFixing(prop) && this.HelpBoxWithButton(EditorGUIUtility.TextContent("This texture is not marked as a normal map"), EditorGUIUtility.TextContent("Fix Now")))
+			if (InternalEditorUtility.BumpMapTextureNeedsFixing(prop))
 			{
-				InternalEditorUtility.FixNormalmapTexture(prop);
-			}
-			bool flag = false;
-			if (InternalEditorUtility.HDRTextureNeedsFixing(prop, out flag))
-			{
-				if (flag)
+				if (this.HelpBoxWithButton(EditorGUIUtility.TextContent("This texture is not marked as a normal map"), EditorGUIUtility.TextContent("Fix Now")))
 				{
-					if (this.HelpBoxWithButton(EditorGUIUtility.TextContent("This texture contains alpha, but is not RGBM (incompatible with HDR)"), EditorGUIUtility.TextContent("Fix Now")))
-					{
-						InternalEditorUtility.FixHDRTexture(prop);
-					}
-				}
-				else
-				{
-					EditorGUILayout.HelpBox(EditorGUIUtility.TextContent("This texture contains alpha, but is not RGBM (incompatible with HDR)").text, MessageType.Warning);
+					InternalEditorUtility.FixNormalmapTexture(prop);
 				}
 			}
 		}
@@ -896,16 +922,19 @@ namespace UnityEditor
 		public float GetPropertyHeight(MaterialProperty prop, string label)
 		{
 			float num = 0f;
-			MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(((Material)this.target).shader, prop.name);
+			MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(((Material)base.target).shader, prop.name);
+			float result;
 			if (handler != null)
 			{
 				num = handler.GetPropertyHeight(prop, label ?? prop.displayName, this);
 				if (handler.propertyDrawer != null)
 				{
-					return num;
+					result = num;
+					return result;
 				}
 			}
-			return num + MaterialEditor.GetDefaultPropertyHeight(prop);
+			result = num + MaterialEditor.GetDefaultPropertyHeight(prop);
+			return result;
 		}
 
 		private static float GetTextureFieldHeight()
@@ -915,15 +944,20 @@ namespace UnityEditor
 
 		public static float GetDefaultPropertyHeight(MaterialProperty prop)
 		{
+			float result;
 			if (prop.type == MaterialProperty.PropType.Vector)
 			{
-				return 32f;
+				result = 32f;
 			}
-			if (prop.type == MaterialProperty.PropType.Texture)
+			else if (prop.type == MaterialProperty.PropType.Texture)
 			{
-				return MaterialEditor.GetTextureFieldHeight() + 6f;
+				result = MaterialEditor.GetTextureFieldHeight() + 6f;
 			}
-			return 16f;
+			else
+			{
+				result = 16f;
+			}
+			return result;
 		}
 
 		private Rect GetPropertyRect(MaterialProperty prop, GUIContent label, bool ignoreDrawer)
@@ -934,41 +968,42 @@ namespace UnityEditor
 		private Rect GetPropertyRect(MaterialProperty prop, string label, bool ignoreDrawer)
 		{
 			float num = 0f;
+			Rect controlRect;
 			if (!ignoreDrawer)
 			{
-				MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(((Material)this.target).shader, prop.name);
+				MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(((Material)base.target).shader, prop.name);
 				if (handler != null)
 				{
 					num = handler.GetPropertyHeight(prop, label ?? prop.displayName, this);
 					if (handler.propertyDrawer != null)
 					{
-						return EditorGUILayout.GetControlRect(true, num, EditorStyles.layerMaskField, new GUILayoutOption[0]);
+						controlRect = EditorGUILayout.GetControlRect(true, num, EditorStyles.layerMaskField, new GUILayoutOption[0]);
+						return controlRect;
 					}
 				}
 			}
-			return EditorGUILayout.GetControlRect(true, num + MaterialEditor.GetDefaultPropertyHeight(prop), EditorStyles.layerMaskField, new GUILayoutOption[0]);
+			controlRect = EditorGUILayout.GetControlRect(true, num + MaterialEditor.GetDefaultPropertyHeight(prop), EditorStyles.layerMaskField, new GUILayoutOption[0]);
+			return controlRect;
 		}
 
 		public void BeginAnimatedCheck(MaterialProperty prop)
 		{
-			if (this.m_RendererForAnimationMode == null)
+			if (!(this.m_RendererForAnimationMode == null))
 			{
-				return;
-			}
-			this.m_PreviousGUIColor = GUI.color;
-			if (MaterialAnimationUtility.IsAnimated(prop, this.m_RendererForAnimationMode))
-			{
-				GUI.color = AnimationMode.animatedPropertyColor;
+				this.m_PreviousGUIColor = GUI.color;
+				if (MaterialAnimationUtility.IsAnimated(prop, this.m_RendererForAnimationMode))
+				{
+					GUI.color = AnimationMode.animatedPropertyColor;
+				}
 			}
 		}
 
 		public void EndAnimatedCheck()
 		{
-			if (this.m_RendererForAnimationMode == null)
+			if (!(this.m_RendererForAnimationMode == null))
 			{
-				return;
+				GUI.color = this.m_PreviousGUIColor;
 			}
-			GUI.color = this.m_PreviousGUIColor;
 		}
 
 		public void ShaderProperty(MaterialProperty prop, string label)
@@ -1045,7 +1080,7 @@ namespace UnityEditor
 		{
 			EditorGUI.indentLevel += labelIndent;
 			UnityEngine.Object[] targets = base.targets;
-			Material material = (Material)this.target;
+			Material material = (Material)base.target;
 			MaterialGlobalIlluminationFlags materialGlobalIlluminationFlags = MaterialEditor.GetGlobalIlluminationInt(material.globalIlluminationFlags);
 			bool showMixedValue = false;
 			for (int i = 1; i < targets.Length; i++)
@@ -1077,7 +1112,7 @@ namespace UnityEditor
 
 		private void ShaderPropertyInternal(Rect position, MaterialProperty prop, GUIContent label)
 		{
-			MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(((Material)this.target).shader, prop.name);
+			MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(((Material)base.target).shader, prop.name);
 			if (handler != null)
 			{
 				handler.OnGUI(ref position, prop, (label.text == null) ? new GUIContent(prop.displayName) : label, this);
@@ -1226,6 +1261,7 @@ namespace UnityEditor
 
 		private static Renderer GetAssociatedRenderFromInspector()
 		{
+			Renderer result;
 			if (InspectorWindow.s_CurrentInspectorWindow)
 			{
 				Editor[] activeEditors = InspectorWindow.s_CurrentInspectorWindow.GetTracker().activeEditors;
@@ -1236,11 +1272,13 @@ namespace UnityEditor
 					Renderer renderer = editor.target as Renderer;
 					if (renderer)
 					{
-						return renderer;
+						result = renderer;
+						return result;
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public static Renderer PrepareMaterialPropertiesForAnimationMode(MaterialProperty[] properties, bool isMaterialEditable)
@@ -1262,11 +1300,16 @@ namespace UnityEditor
 					}
 				}
 			}
+			Renderer result;
 			if (flag)
 			{
-				return associatedRenderFromInspector;
+				result = associatedRenderFromInspector;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public void SetDefaultGUIWidths()
@@ -1279,6 +1322,7 @@ namespace UnityEditor
 		{
 			string value = "UnityEditor." + customEditorName;
 			Assembly[] loadedAssemblies = EditorAssemblies.loadedAssemblies;
+			bool result;
 			for (int i = 0; i < loadedAssemblies.Length; i++)
 			{
 				Assembly assembly = loadedAssemblies[i];
@@ -1287,13 +1331,18 @@ namespace UnityEditor
 				for (int j = 0; j < array.Length; j++)
 				{
 					Type type = array[j];
-					if ((type.FullName.Equals(customEditorName, StringComparison.Ordinal) || type.FullName.Equals(value, StringComparison.Ordinal)) && typeof(MaterialEditor).IsAssignableFrom(type))
+					if (type.FullName.Equals(customEditorName, StringComparison.Ordinal) || type.FullName.Equals(value, StringComparison.Ordinal))
 					{
-						return true;
+						if (typeof(MaterialEditor).IsAssignableFrom(type))
+						{
+							result = true;
+							return result;
+						}
 					}
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private void CreateCustomShaderGUI(Shader shader, string oldEditorName)
@@ -1301,66 +1350,69 @@ namespace UnityEditor
 			if (shader == null || string.IsNullOrEmpty(shader.customEditor))
 			{
 				this.m_CustomShaderGUI = null;
-				return;
 			}
-			if (oldEditorName == shader.customEditor)
+			else if (!(oldEditorName == shader.customEditor))
 			{
-				return;
+				this.m_CustomShaderGUI = ShaderGUIUtility.CreateShaderGUI(shader.customEditor);
+				this.m_CheckSetup = true;
 			}
-			this.m_CustomShaderGUI = ShaderGUIUtility.CreateShaderGUI(shader.customEditor);
-			this.m_CheckSetup = true;
 		}
 
 		public bool PropertiesGUI()
 		{
+			bool result;
 			if (this.m_InsidePropertiesGUI)
 			{
-				Debug.LogWarning("PropertiesGUI() is being called recursivly. If you want to render the default gui for shader properties then call PropertiesDefaultGUI() instead");
-				return false;
+				Debug.LogWarning("PropertiesGUI() is being called recursively. If you want to render the default gui for shader properties then call PropertiesDefaultGUI() instead");
+				result = false;
 			}
-			EditorGUI.BeginChangeCheck();
-			MaterialProperty[] materialProperties = MaterialEditor.GetMaterialProperties(base.targets);
-			this.m_RendererForAnimationMode = MaterialEditor.PrepareMaterialPropertiesForAnimationMode(materialProperties, GUI.enabled);
-			bool enabled = GUI.enabled;
-			if (this.m_RendererForAnimationMode != null)
+			else
 			{
-				GUI.enabled = true;
-			}
-			this.m_InsidePropertiesGUI = true;
-			try
-			{
-				if (this.m_CustomShaderGUI != null)
+				EditorGUI.BeginChangeCheck();
+				MaterialProperty[] materialProperties = MaterialEditor.GetMaterialProperties(base.targets);
+				this.m_RendererForAnimationMode = MaterialEditor.PrepareMaterialPropertiesForAnimationMode(materialProperties, GUI.enabled);
+				bool enabled = GUI.enabled;
+				if (this.m_RendererForAnimationMode != null)
 				{
-					this.m_CustomShaderGUI.OnGUI(this, materialProperties);
+					GUI.enabled = true;
 				}
-				else
+				this.m_InsidePropertiesGUI = true;
+				try
 				{
-					this.PropertiesDefaultGUI(materialProperties);
-				}
-				Renderer associatedRenderFromInspector = MaterialEditor.GetAssociatedRenderFromInspector();
-				if (associatedRenderFromInspector != null)
-				{
-					if (Event.current.type == EventType.Layout)
+					if (this.m_CustomShaderGUI != null)
 					{
-						associatedRenderFromInspector.GetPropertyBlock(this.m_PropertyBlock);
+						this.m_CustomShaderGUI.OnGUI(this, materialProperties);
 					}
-					if (this.m_PropertyBlock != null && !this.m_PropertyBlock.isEmpty)
+					else
 					{
-						EditorGUILayout.HelpBox(MaterialEditor.Styles.propBlockWarning, MessageType.Warning);
+						this.PropertiesDefaultGUI(materialProperties);
+					}
+					Renderer associatedRenderFromInspector = MaterialEditor.GetAssociatedRenderFromInspector();
+					if (associatedRenderFromInspector != null)
+					{
+						if (Event.current.type == EventType.Layout)
+						{
+							associatedRenderFromInspector.GetPropertyBlock(this.m_PropertyBlock);
+						}
+						if (this.m_PropertyBlock != null && !this.m_PropertyBlock.isEmpty)
+						{
+							EditorGUILayout.HelpBox(MaterialEditor.Styles.propBlockWarning, MessageType.Warning);
+						}
 					}
 				}
-			}
-			catch (Exception)
-			{
+				catch (Exception)
+				{
+					GUI.enabled = enabled;
+					this.m_InsidePropertiesGUI = false;
+					this.m_RendererForAnimationMode = null;
+					throw;
+				}
 				GUI.enabled = enabled;
 				this.m_InsidePropertiesGUI = false;
 				this.m_RendererForAnimationMode = null;
-				throw;
+				result = EditorGUI.EndChangeCheck();
 			}
-			GUI.enabled = enabled;
-			this.m_InsidePropertiesGUI = false;
-			this.m_RendererForAnimationMode = null;
-			return EditorGUI.EndChangeCheck();
+			return result;
 		}
 
 		public void PropertiesDefaultGUI(MaterialProperty[] props)
@@ -1383,6 +1435,7 @@ namespace UnityEditor
 					this.ShaderProperty(controlRect, props[i], props[i].displayName);
 				}
 			}
+			this.RenderQueueField();
 		}
 
 		public static void ApplyMaterialPropertyDrawers(Material material)
@@ -1396,23 +1449,21 @@ namespace UnityEditor
 
 		public static void ApplyMaterialPropertyDrawers(UnityEngine.Object[] targets)
 		{
-			if (targets == null || targets.Length == 0)
+			if (targets != null && targets.Length != 0)
 			{
-				return;
-			}
-			Material material = targets[0] as Material;
-			if (material == null)
-			{
-				return;
-			}
-			Shader shader = material.shader;
-			MaterialProperty[] materialProperties = MaterialEditor.GetMaterialProperties(targets);
-			for (int i = 0; i < materialProperties.Length; i++)
-			{
-				MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(shader, materialProperties[i].name);
-				if (handler != null && handler.propertyDrawer != null)
+				Material material = targets[0] as Material;
+				if (!(material == null))
 				{
-					handler.propertyDrawer.Apply(materialProperties[i]);
+					Shader shader = material.shader;
+					MaterialProperty[] materialProperties = MaterialEditor.GetMaterialProperties(targets);
+					for (int i = 0; i < materialProperties.Length; i++)
+					{
+						MaterialPropertyHandler handler = MaterialPropertyHandler.GetHandler(shader, materialProperties[i].name);
+						if (handler != null && handler.propertyDrawer != null)
+						{
+							handler.propertyDrawer.Apply(materialProperties[i]);
+						}
+					}
 				}
 			}
 		}
@@ -1424,16 +1475,22 @@ namespace UnityEditor
 
 		private UnityEngine.Object TextureValidator(UnityEngine.Object[] references, Type objType, SerializedProperty property)
 		{
+			UnityEngine.Object result;
 			for (int i = 0; i < references.Length; i++)
 			{
 				UnityEngine.Object @object = references[i];
 				Texture texture = @object as Texture;
-				if (texture && (texture.dimension == this.m_DesiredTexdim || this.m_DesiredTexdim == TextureDimension.Any))
+				if (texture)
 				{
-					return texture;
+					if (texture.dimension == this.m_DesiredTexdim || this.m_DesiredTexdim == TextureDimension.Any)
+					{
+						result = texture;
+						return result;
+					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		private void Init()
@@ -1447,26 +1504,56 @@ namespace UnityEditor
 			{
 				GameObject gameObject = (GameObject)EditorGUIUtility.LoadRequired("Previews/PreviewMaterials.fbx");
 				gameObject.SetActive(false);
-				foreach (Transform transform in gameObject.transform)
+				IEnumerator enumerator = gameObject.transform.GetEnumerator();
+				try
 				{
-					MeshFilter component = transform.GetComponent<MeshFilter>();
-					string name = transform.name;
-					switch (name)
+					while (enumerator.MoveNext())
 					{
-					case "sphere":
-						MaterialEditor.s_Meshes[0] = component.sharedMesh;
+						Transform transform = (Transform)enumerator.Current;
+						MeshFilter component = transform.GetComponent<MeshFilter>();
+						string name = transform.name;
+						if (name == null)
+						{
+							goto IL_11A;
+						}
+						if (!(name == "sphere"))
+						{
+							if (!(name == "cube"))
+							{
+								if (!(name == "cylinder"))
+								{
+									if (!(name == "torus"))
+									{
+										goto IL_11A;
+									}
+									MaterialEditor.s_Meshes[3] = component.sharedMesh;
+								}
+								else
+								{
+									MaterialEditor.s_Meshes[2] = component.sharedMesh;
+								}
+							}
+							else
+							{
+								MaterialEditor.s_Meshes[1] = component.sharedMesh;
+							}
+						}
+						else
+						{
+							MaterialEditor.s_Meshes[0] = component.sharedMesh;
+						}
 						continue;
-					case "cube":
-						MaterialEditor.s_Meshes[1] = component.sharedMesh;
-						continue;
-					case "cylinder":
-						MaterialEditor.s_Meshes[2] = component.sharedMesh;
-						continue;
-					case "torus":
-						MaterialEditor.s_Meshes[3] = component.sharedMesh;
-						continue;
+						IL_11A:
+						Debug.Log("Something is wrong, weird object found: " + transform.name);
 					}
-					Debug.Log("Something is wrong, weird object found: " + transform.name);
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
 				}
 				MaterialEditor.s_MeshIcons[0] = EditorGUIUtility.IconContent("PreMatSphere");
 				MaterialEditor.s_MeshIcons[1] = EditorGUIUtility.IconContent("PreMatCube");
@@ -1508,101 +1595,110 @@ namespace UnityEditor
 
 		public void DefaultPreviewSettingsGUI()
 		{
-			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
+			if (ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
-				return;
-			}
-			this.Init();
-			Material mat = this.target as Material;
-			MaterialEditor.PreviewType previewType = MaterialEditor.GetPreviewType(mat);
-			if (base.targets.Length > 1 || previewType == MaterialEditor.PreviewType.Mesh)
-			{
-				this.m_TimeUpdate = PreviewGUI.CycleButton(this.m_TimeUpdate, MaterialEditor.s_TimeIcons);
-				this.m_SelectedMesh = PreviewGUI.CycleButton(this.m_SelectedMesh, MaterialEditor.s_MeshIcons);
-				this.m_LightMode = PreviewGUI.CycleButton(this.m_LightMode, MaterialEditor.s_LightIcons);
-				Rect activatorRect;
-				if (this.PreviewSettingsMenuButton(out activatorRect))
+				this.Init();
+				Material mat = base.target as Material;
+				MaterialEditor.PreviewType previewType = MaterialEditor.GetPreviewType(mat);
+				if (base.targets.Length > 1 || previewType == MaterialEditor.PreviewType.Mesh)
 				{
-					PopupWindow.Show(activatorRect, this.m_ReflectionProbePicker);
+					this.m_TimeUpdate = PreviewGUI.CycleButton(this.m_TimeUpdate, MaterialEditor.s_TimeIcons);
+					this.m_SelectedMesh = PreviewGUI.CycleButton(this.m_SelectedMesh, MaterialEditor.s_MeshIcons);
+					this.m_LightMode = PreviewGUI.CycleButton(this.m_LightMode, MaterialEditor.s_LightIcons);
+					Rect activatorRect;
+					if (this.PreviewSettingsMenuButton(out activatorRect))
+					{
+						PopupWindow.Show(activatorRect, this.m_ReflectionProbePicker);
+					}
 				}
 			}
 		}
 
 		public sealed override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
 		{
+			Texture2D result;
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
-				return null;
+				result = null;
 			}
-			this.Init();
-			this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
-			this.DoRenderPreview();
-			return this.m_PreviewUtility.EndStaticPreview();
+			else
+			{
+				this.Init();
+				this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
+				this.DoRenderPreview();
+				result = this.m_PreviewUtility.EndStaticPreview();
+			}
+			return result;
 		}
 
 		private void DoRenderPreview()
 		{
-			if (this.m_PreviewUtility.m_RenderTexture.width <= 0 || this.m_PreviewUtility.m_RenderTexture.height <= 0)
+			if (this.m_PreviewUtility.m_RenderTexture.width > 0 && this.m_PreviewUtility.m_RenderTexture.height > 0)
 			{
-				return;
+				Material mat = base.target as Material;
+				MaterialEditor.PreviewType previewType = MaterialEditor.GetPreviewType(mat);
+				this.m_PreviewUtility.m_Camera.transform.position = -Vector3.forward * 5f;
+				this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.identity;
+				Color ambient;
+				if (this.m_LightMode == 0)
+				{
+					this.m_PreviewUtility.m_Light[0].intensity = 1f;
+					this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(30f, 30f, 0f);
+					this.m_PreviewUtility.m_Light[1].intensity = 0f;
+					ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
+				}
+				else
+				{
+					this.m_PreviewUtility.m_Light[0].intensity = 1f;
+					this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
+					this.m_PreviewUtility.m_Light[1].intensity = 1f;
+					ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
+				}
+				InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);
+				Quaternion quaternion = Quaternion.identity;
+				if (MaterialEditor.DoesPreviewAllowRotation(previewType))
+				{
+					quaternion = Quaternion.Euler(this.m_PreviewDir.y, 0f, 0f) * Quaternion.Euler(0f, this.m_PreviewDir.x, 0f);
+				}
+				Mesh mesh = MaterialEditor.s_Meshes[this.m_SelectedMesh];
+				if (previewType != MaterialEditor.PreviewType.Plane)
+				{
+					if (previewType != MaterialEditor.PreviewType.Mesh)
+					{
+						if (previewType == MaterialEditor.PreviewType.Skybox)
+						{
+							mesh = null;
+							this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.Inverse(quaternion);
+							this.m_PreviewUtility.m_Camera.fieldOfView = 120f;
+						}
+					}
+					else
+					{
+						this.m_PreviewUtility.m_Camera.transform.position = Quaternion.Inverse(quaternion) * this.m_PreviewUtility.m_Camera.transform.position;
+						this.m_PreviewUtility.m_Camera.transform.LookAt(Vector3.zero);
+						quaternion = Quaternion.identity;
+					}
+				}
+				else
+				{
+					mesh = MaterialEditor.s_PlaneMesh;
+				}
+				if (mesh != null)
+				{
+					this.m_PreviewUtility.DrawMesh(mesh, Vector3.zero, quaternion, mat, 0, null, this.m_ReflectionProbePicker.Target);
+				}
+				bool fog = RenderSettings.fog;
+				Unsupported.SetRenderSettingsUseFogNoDirty(false);
+				this.m_PreviewUtility.m_Camera.Render();
+				if (previewType == MaterialEditor.PreviewType.Skybox)
+				{
+					GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
+					InternalEditorUtility.DrawSkyboxMaterial(mat, this.m_PreviewUtility.m_Camera);
+					GL.sRGBWrite = false;
+				}
+				Unsupported.SetRenderSettingsUseFogNoDirty(fog);
+				InternalEditorUtility.RemoveCustomLighting();
 			}
-			Material mat = this.target as Material;
-			MaterialEditor.PreviewType previewType = MaterialEditor.GetPreviewType(mat);
-			this.m_PreviewUtility.m_Camera.transform.position = -Vector3.forward * 5f;
-			this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.identity;
-			Color ambient;
-			if (this.m_LightMode == 0)
-			{
-				this.m_PreviewUtility.m_Light[0].intensity = 1f;
-				this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(30f, 30f, 0f);
-				this.m_PreviewUtility.m_Light[1].intensity = 0f;
-				ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
-			}
-			else
-			{
-				this.m_PreviewUtility.m_Light[0].intensity = 1f;
-				this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
-				this.m_PreviewUtility.m_Light[1].intensity = 1f;
-				ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
-			}
-			InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);
-			Quaternion quaternion = Quaternion.identity;
-			if (MaterialEditor.DoesPreviewAllowRotation(previewType))
-			{
-				quaternion = Quaternion.Euler(this.m_PreviewDir.y, 0f, 0f) * Quaternion.Euler(0f, this.m_PreviewDir.x, 0f);
-			}
-			Mesh mesh = MaterialEditor.s_Meshes[this.m_SelectedMesh];
-			switch (previewType)
-			{
-			case MaterialEditor.PreviewType.Mesh:
-				this.m_PreviewUtility.m_Camera.transform.position = Quaternion.Inverse(quaternion) * this.m_PreviewUtility.m_Camera.transform.position;
-				this.m_PreviewUtility.m_Camera.transform.LookAt(Vector3.zero);
-				quaternion = Quaternion.identity;
-				break;
-			case MaterialEditor.PreviewType.Plane:
-				mesh = MaterialEditor.s_PlaneMesh;
-				break;
-			case MaterialEditor.PreviewType.Skybox:
-				mesh = null;
-				this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.Inverse(quaternion);
-				this.m_PreviewUtility.m_Camera.fieldOfView = 120f;
-				break;
-			}
-			if (mesh != null)
-			{
-				this.m_PreviewUtility.DrawMesh(mesh, Vector3.zero, quaternion, mat, 0, null, this.m_ReflectionProbePicker.Target);
-			}
-			bool fog = RenderSettings.fog;
-			Unsupported.SetRenderSettingsUseFogNoDirty(false);
-			this.m_PreviewUtility.m_Camera.Render();
-			if (previewType == MaterialEditor.PreviewType.Skybox)
-			{
-				GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
-				InternalEditorUtility.DrawSkyboxMaterial(mat, this.m_PreviewUtility.m_Camera);
-				GL.sRGBWrite = false;
-			}
-			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
-			InternalEditorUtility.RemoveCustomLighting();
 		}
 
 		public sealed override bool HasPreviewGUI()
@@ -1647,28 +1743,29 @@ namespace UnityEditor
 				{
 					EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 40f), "Material preview \nnot available");
 				}
-				return;
 			}
-			this.Init();
-			Material mat = this.target as Material;
-			MaterialEditor.PreviewType previewType = MaterialEditor.GetPreviewType(mat);
-			if (MaterialEditor.DoesPreviewAllowRotation(previewType))
+			else
 			{
-				this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, r);
+				this.Init();
+				Material mat = base.target as Material;
+				MaterialEditor.PreviewType previewType = MaterialEditor.GetPreviewType(mat);
+				if (MaterialEditor.DoesPreviewAllowRotation(previewType))
+				{
+					this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, r);
+				}
+				if (Event.current.type == EventType.Repaint)
+				{
+					this.m_PreviewUtility.BeginPreview(r, background);
+					this.DoRenderPreview();
+					this.m_PreviewUtility.EndAndDrawPreview(r);
+				}
 			}
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			this.m_PreviewUtility.BeginPreview(r, background);
-			this.DoRenderPreview();
-			this.m_PreviewUtility.EndAndDrawPreview(r);
 		}
 
 		public virtual void OnEnable()
 		{
 			this.m_Shader = (base.serializedObject.FindProperty("m_Shader").objectReferenceValue as Shader);
-			this.CreateCustomShaderGUI(this.m_Shader, string.Empty);
+			this.CreateCustomShaderGUI(this.m_Shader, "");
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			this.PropertiesChanged();
 			this.m_PropertyBlock = new MaterialPropertyBlock();
@@ -1698,19 +1795,18 @@ namespace UnityEditor
 		internal void OnSceneDrag(SceneView sceneView)
 		{
 			Event current = Event.current;
-			if (current.type == EventType.Repaint)
+			if (current.type != EventType.Repaint)
 			{
-				return;
-			}
-			int materialIndex = -1;
-			GameObject gameObject = HandleUtility.PickGameObject(current.mousePosition, out materialIndex);
-			if (EditorMaterialUtility.IsBackgroundMaterial(this.target as Material))
-			{
-				this.HandleSkybox(gameObject, current);
-			}
-			else if (gameObject && gameObject.GetComponent<Renderer>())
-			{
-				this.HandleRenderer(gameObject.GetComponent<Renderer>(), materialIndex, current);
+				int materialIndex = -1;
+				GameObject gameObject = HandleUtility.PickGameObject(current.mousePosition, out materialIndex);
+				if (EditorMaterialUtility.IsBackgroundMaterial(base.target as Material))
+				{
+					this.HandleSkybox(gameObject, current);
+				}
+				else if (gameObject && gameObject.GetComponent<Renderer>())
+				{
+					this.HandleRenderer(gameObject.GetComponent<Renderer>(), materialIndex, current);
+				}
 			}
 		}
 
@@ -1742,7 +1838,7 @@ namespace UnityEditor
 			if (flag2)
 			{
 				Undo.RecordObject(UnityEngine.Object.FindObjectOfType<RenderSettings>(), "Assign Skybox Material");
-				RenderSettings.skybox = (this.target as Material);
+				RenderSettings.skybox = (base.target as Material);
 				evt.Use();
 			}
 		}
@@ -1772,18 +1868,82 @@ namespace UnityEditor
 				bool flag2 = materialIndex >= 0 && materialIndex < r.sharedMaterials.Length;
 				if (!alt && flag2)
 				{
-					sharedMaterials[materialIndex] = (this.target as Material);
+					sharedMaterials[materialIndex] = (base.target as Material);
 				}
 				else
 				{
 					for (int i = 0; i < sharedMaterials.Length; i++)
 					{
-						sharedMaterials[i] = (this.target as Material);
+						sharedMaterials[i] = (base.target as Material);
 					}
 				}
 				r.sharedMaterials = sharedMaterials;
 				evt.Use();
 			}
+		}
+
+		private bool HasMultipleMixedQueueValues()
+		{
+			int materialRawRenderQueue = ShaderUtil.GetMaterialRawRenderQueue(base.targets[0] as Material);
+			bool result;
+			for (int i = 1; i < base.targets.Length; i++)
+			{
+				if (materialRawRenderQueue != ShaderUtil.GetMaterialRawRenderQueue(base.targets[i] as Material))
+				{
+					result = true;
+					return result;
+				}
+			}
+			result = false;
+			return result;
+		}
+
+		public void RenderQueueField()
+		{
+			EditorGUILayout.Space();
+			EditorGUILayout.Space();
+			Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
+			this.RenderQueueField(controlRectForSingleLine);
+		}
+
+		public void RenderQueueField(Rect r)
+		{
+			bool showMixedValue = this.HasMultipleMixedQueueValues();
+			EditorGUI.showMixedValue = showMixedValue;
+			float labelWidth = EditorGUIUtility.labelWidth;
+			float fieldWidth = EditorGUIUtility.fieldWidth;
+			this.SetDefaultGUIWidths();
+			EditorGUIUtility.labelWidth -= 100f;
+			Rect position = r;
+			position.width -= EditorGUIUtility.fieldWidth + 2f;
+			Rect position2 = r;
+			position2.xMin = position2.xMax - EditorGUIUtility.fieldWidth;
+			Material material = base.targets[0] as Material;
+			int materialRawRenderQueue = ShaderUtil.GetMaterialRawRenderQueue(material);
+			int renderQueue = material.renderQueue;
+			bool flag = Array.IndexOf<int>(MaterialEditor.Styles.queueValues, materialRawRenderQueue) < 0;
+			int num = (!flag) ? materialRawRenderQueue : MaterialEditor.Styles.kCustomQueueValue;
+			int num2 = EditorGUI.IntPopup(position, MaterialEditor.Styles.queueLabel, num, MaterialEditor.Styles.queueNames, MaterialEditor.Styles.queueValues);
+			int num3 = EditorGUI.DelayedIntField(position2, renderQueue);
+			if (num != num2 || renderQueue != num3)
+			{
+				this.RegisterPropertyChangeUndo("Render Queue");
+				int num4 = num3;
+				if (num2 != num && num2 != MaterialEditor.Styles.kCustomQueueValue)
+				{
+					num4 = num2;
+				}
+				num4 = Mathf.Clamp(num4, -1, 5000);
+				UnityEngine.Object[] targets = base.targets;
+				for (int i = 0; i < targets.Length; i++)
+				{
+					UnityEngine.Object @object = targets[i];
+					((Material)@object).renderQueue = num4;
+				}
+			}
+			EditorGUIUtility.labelWidth = labelWidth;
+			EditorGUIUtility.fieldWidth = fieldWidth;
+			EditorGUI.showMixedValue = false;
 		}
 
 		public Rect TexturePropertySingleLine(GUIContent label, MaterialProperty textureProp)
@@ -1800,87 +1960,102 @@ namespace UnityEditor
 		{
 			Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
 			this.TexturePropertyMiniThumbnail(controlRectForSingleLine, textureProp, label.text, label.tooltip);
+			Rect result;
 			if (extraProperty1 == null && extraProperty2 == null)
 			{
-				return controlRectForSingleLine;
-			}
-			if (extraProperty1 == null || extraProperty2 == null)
-			{
-				MaterialProperty materialProperty = extraProperty1 ?? extraProperty2;
-				if (materialProperty.type == MaterialProperty.PropType.Color)
-				{
-					this.ExtraPropertyAfterTexture(MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine), materialProperty);
-				}
-				else
-				{
-					this.ExtraPropertyAfterTexture(MaterialEditor.GetRectAfterLabelWidth(controlRectForSingleLine), materialProperty);
-				}
-			}
-			else if (extraProperty1.type == MaterialProperty.PropType.Color)
-			{
-				this.ExtraPropertyAfterTexture(MaterialEditor.GetFlexibleRectBetweenFieldAndRightEdge(controlRectForSingleLine), extraProperty2);
-				this.ExtraPropertyAfterTexture(MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine), extraProperty1);
+				result = controlRectForSingleLine;
 			}
 			else
 			{
-				this.ExtraPropertyAfterTexture(MaterialEditor.GetRightAlignedFieldRect(controlRectForSingleLine), extraProperty2);
-				this.ExtraPropertyAfterTexture(MaterialEditor.GetFlexibleRectBetweenLabelAndField(controlRectForSingleLine), extraProperty1);
+				if (extraProperty1 == null || extraProperty2 == null)
+				{
+					MaterialProperty materialProperty = extraProperty1 ?? extraProperty2;
+					if (materialProperty.type == MaterialProperty.PropType.Color)
+					{
+						this.ExtraPropertyAfterTexture(MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine), materialProperty);
+					}
+					else
+					{
+						this.ExtraPropertyAfterTexture(MaterialEditor.GetRectAfterLabelWidth(controlRectForSingleLine), materialProperty);
+					}
+				}
+				else if (extraProperty1.type == MaterialProperty.PropType.Color)
+				{
+					this.ExtraPropertyAfterTexture(MaterialEditor.GetFlexibleRectBetweenFieldAndRightEdge(controlRectForSingleLine), extraProperty2);
+					this.ExtraPropertyAfterTexture(MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine), extraProperty1);
+				}
+				else
+				{
+					this.ExtraPropertyAfterTexture(MaterialEditor.GetRightAlignedFieldRect(controlRectForSingleLine), extraProperty2);
+					this.ExtraPropertyAfterTexture(MaterialEditor.GetFlexibleRectBetweenLabelAndField(controlRectForSingleLine), extraProperty1);
+				}
+				result = controlRectForSingleLine;
 			}
-			return controlRectForSingleLine;
+			return result;
 		}
 
 		public Rect TexturePropertyWithHDRColor(GUIContent label, MaterialProperty textureProp, MaterialProperty colorProperty, ColorPickerHDRConfig hdrConfig, bool showAlpha)
 		{
 			Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
 			this.TexturePropertyMiniThumbnail(controlRectForSingleLine, textureProp, label.text, label.tooltip);
+			Rect result;
 			if (colorProperty.type != MaterialProperty.PropType.Color)
 			{
 				Debug.LogError("Assuming MaterialProperty.PropType.Color (was " + colorProperty.type + ")");
-				return controlRectForSingleLine;
+				result = controlRectForSingleLine;
 			}
-			this.BeginAnimatedCheck(colorProperty);
-			ColorPickerHDRConfig colorPickerHDRConfig = hdrConfig ?? ColorPicker.defaultHDRConfig;
-			Rect leftAlignedFieldRect = MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine);
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = colorProperty.hasMixedValue;
-			Color colorValue = EditorGUI.ColorField(leftAlignedFieldRect, GUIContent.none, colorProperty.colorValue, true, showAlpha, true, colorPickerHDRConfig);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
+			else
 			{
-				colorProperty.colorValue = colorValue;
+				this.BeginAnimatedCheck(colorProperty);
+				ColorPickerHDRConfig colorPickerHDRConfig = hdrConfig ?? ColorPicker.defaultHDRConfig;
+				Rect leftAlignedFieldRect = MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine);
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = colorProperty.hasMixedValue;
+				Color colorValue = EditorGUI.ColorField(leftAlignedFieldRect, GUIContent.none, colorProperty.colorValue, true, showAlpha, true, colorPickerHDRConfig);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					colorProperty.colorValue = colorValue;
+				}
+				Rect flexibleRectBetweenFieldAndRightEdge = MaterialEditor.GetFlexibleRectBetweenFieldAndRightEdge(controlRectForSingleLine);
+				float labelWidth = EditorGUIUtility.labelWidth;
+				EditorGUIUtility.labelWidth = flexibleRectBetweenFieldAndRightEdge.width - EditorGUIUtility.fieldWidth;
+				EditorGUI.BeginChangeCheck();
+				colorValue = EditorGUI.ColorBrightnessField(flexibleRectBetweenFieldAndRightEdge, GUIContent.Temp(" "), colorProperty.colorValue, colorPickerHDRConfig.minBrightness, colorPickerHDRConfig.maxBrightness);
+				if (EditorGUI.EndChangeCheck())
+				{
+					colorProperty.colorValue = colorValue;
+				}
+				EditorGUIUtility.labelWidth = labelWidth;
+				this.EndAnimatedCheck();
+				result = controlRectForSingleLine;
 			}
-			Rect flexibleRectBetweenFieldAndRightEdge = MaterialEditor.GetFlexibleRectBetweenFieldAndRightEdge(controlRectForSingleLine);
-			float labelWidth = EditorGUIUtility.labelWidth;
-			EditorGUIUtility.labelWidth = flexibleRectBetweenFieldAndRightEdge.width - EditorGUIUtility.fieldWidth;
-			EditorGUI.BeginChangeCheck();
-			colorValue = EditorGUI.ColorBrightnessField(flexibleRectBetweenFieldAndRightEdge, GUIContent.Temp(" "), colorProperty.colorValue, colorPickerHDRConfig.minBrightness, colorPickerHDRConfig.maxBrightness);
-			if (EditorGUI.EndChangeCheck())
-			{
-				colorProperty.colorValue = colorValue;
-			}
-			EditorGUIUtility.labelWidth = labelWidth;
-			this.EndAnimatedCheck();
-			return controlRectForSingleLine;
+			return result;
 		}
 
 		public Rect TexturePropertyTwoLines(GUIContent label, MaterialProperty textureProp, MaterialProperty extraProperty1, GUIContent label2, MaterialProperty extraProperty2)
 		{
+			Rect result;
 			if (extraProperty2 == null)
 			{
-				return this.TexturePropertySingleLine(label, textureProp, extraProperty1);
+				result = this.TexturePropertySingleLine(label, textureProp, extraProperty1);
 			}
-			Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
-			this.TexturePropertyMiniThumbnail(controlRectForSingleLine, textureProp, label.text, label.tooltip);
-			Rect r = MaterialEditor.GetRectAfterLabelWidth(controlRectForSingleLine);
-			if (extraProperty1.type == MaterialProperty.PropType.Color)
+			else
 			{
-				r = MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine);
+				Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
+				this.TexturePropertyMiniThumbnail(controlRectForSingleLine, textureProp, label.text, label.tooltip);
+				Rect r = MaterialEditor.GetRectAfterLabelWidth(controlRectForSingleLine);
+				if (extraProperty1.type == MaterialProperty.PropType.Color)
+				{
+					r = MaterialEditor.GetLeftAlignedFieldRect(controlRectForSingleLine);
+				}
+				this.ExtraPropertyAfterTexture(r, extraProperty1);
+				Rect controlRectForSingleLine2 = this.GetControlRectForSingleLine();
+				this.ShaderProperty(controlRectForSingleLine2, extraProperty2, label2.text, 3);
+				controlRectForSingleLine.height += controlRectForSingleLine2.height;
+				result = controlRectForSingleLine;
 			}
-			this.ExtraPropertyAfterTexture(r, extraProperty1);
-			Rect controlRectForSingleLine2 = this.GetControlRectForSingleLine();
-			this.ShaderProperty(controlRectForSingleLine2, extraProperty2, label2.text, 3);
-			controlRectForSingleLine.height += controlRectForSingleLine2.height;
-			return controlRectForSingleLine;
+			return result;
 		}
 
 		private Rect GetControlRectForSingleLine()
@@ -1896,9 +2071,11 @@ namespace UnityEditor
 				EditorGUIUtility.labelWidth = r.width - EditorGUIUtility.fieldWidth;
 				this.ShaderProperty(r, property, " ");
 				EditorGUIUtility.labelWidth = labelWidth;
-				return;
 			}
-			this.ShaderProperty(r, property, string.Empty);
+			else
+			{
+				this.ShaderProperty(r, property, string.Empty);
+			}
 		}
 
 		public static Rect GetRightAlignedFieldRect(Rect r)
@@ -1930,21 +2107,32 @@ namespace UnityEditor
 
 		internal static Type GetTextureTypeFromDimension(TextureDimension dim)
 		{
+			Type result;
 			switch (dim)
 			{
-			case TextureDimension.Tex2D:
-				return typeof(Texture);
-			case TextureDimension.Tex3D:
-				return typeof(Texture3D);
-			case TextureDimension.Cube:
-				return typeof(Cubemap);
-			case TextureDimension.Tex2DArray:
-				return typeof(Texture2DArray);
 			case TextureDimension.Any:
-				return typeof(Texture);
+				result = typeof(Texture);
+				break;
+			case TextureDimension.Tex2D:
+				result = typeof(Texture);
+				break;
+			case TextureDimension.Tex3D:
+				result = typeof(Texture3D);
+				break;
+			case TextureDimension.Cube:
+				result = typeof(Cubemap);
+				break;
+			case TextureDimension.Tex2DArray:
+				result = typeof(Texture2DArray);
+				break;
+			case TextureDimension.CubeArray:
+				result = typeof(CubemapArray);
+				break;
 			default:
-				return null;
+				result = null;
+				break;
 			}
+			return result;
 		}
 	}
 }

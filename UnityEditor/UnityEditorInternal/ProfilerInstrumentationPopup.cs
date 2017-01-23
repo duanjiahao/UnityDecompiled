@@ -12,13 +12,18 @@ namespace UnityEditorInternal
 		{
 			public override IEnumerable<PopupList.ListElement> BuildQuery(string prefix)
 			{
-				if (prefix == string.Empty)
+				IEnumerable<PopupList.ListElement> result;
+				if (prefix == "")
 				{
-					return this.m_ListElements;
+					result = this.m_ListElements;
 				}
-				return from element in this.m_ListElements
-				where element.m_Content.text.Contains(prefix)
-				select element;
+				else
+				{
+					result = from element in this.m_ListElements
+					where element.m_Content.text.Contains(prefix)
+					select element;
+				}
+				return result;
 			}
 		}
 
@@ -146,28 +151,27 @@ namespace UnityEditorInternal
 
 		public void UpdateAllCheckbox()
 		{
-			if (this.m_AllCheckbox == null)
+			if (this.m_AllCheckbox != null)
 			{
-				return;
-			}
-			bool flag = false;
-			bool flag2 = true;
-			foreach (PopupList.ListElement current in this.m_FunctionsListInputData.m_ListElements)
-			{
-				if (current != this.m_AllCheckbox)
+				bool flag = false;
+				bool flag2 = true;
+				foreach (PopupList.ListElement current in this.m_FunctionsListInputData.m_ListElements)
 				{
-					if (current.selected)
+					if (current != this.m_AllCheckbox)
 					{
-						flag = true;
-					}
-					else
-					{
-						flag2 = false;
+						if (current.selected)
+						{
+							flag = true;
+						}
+						else
+						{
+							flag2 = false;
+						}
 					}
 				}
+				this.m_AllCheckbox.selected = flag2;
+				this.m_AllCheckbox.partiallySelected = (flag && !flag2);
 			}
-			this.m_AllCheckbox.selected = flag2;
-			this.m_AllCheckbox.partiallySelected = (flag && !flag2);
 		}
 
 		private static void SetFunctionNamesFromUnity(bool allFunction, string[] functionNames, int[] isInstrumentedFlags)

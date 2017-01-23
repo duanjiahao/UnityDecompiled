@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor.NScreen
@@ -8,13 +9,16 @@ namespace UnityEditor.NScreen
 	internal class NScreenManager : ScriptableSingleton<NScreenManager>
 	{
 		[SerializeField]
-		private int m_LatestId;
+		private int m_LatestId = 0;
 
 		[SerializeField]
 		private bool m_BuildOnPlay = true;
 
 		[SerializeField]
 		private int m_SelectedSizeIndex;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
 
 		internal bool BuildOnPlay
 		{
@@ -50,7 +54,12 @@ namespace UnityEditor.NScreen
 
 		static NScreenManager()
 		{
-			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(NScreenManager.PlayModeStateChanged));
+			Delegate arg_23_0 = EditorApplication.playmodeStateChanged;
+			if (NScreenManager.<>f__mg$cache0 == null)
+			{
+				NScreenManager.<>f__mg$cache0 = new EditorApplication.CallbackFunction(NScreenManager.PlayModeStateChanged);
+			}
+			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(arg_23_0, NScreenManager.<>f__mg$cache0);
 		}
 
 		internal void ResetIds()
@@ -65,25 +74,24 @@ namespace UnityEditor.NScreen
 
 		internal static void PlayModeStateChanged()
 		{
-			if (EditorApplication.isPaused)
+			if (!EditorApplication.isPaused)
 			{
-				return;
-			}
-			if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode && Resources.FindObjectsOfTypeAll<RemoteGame>().Length > 0 && ScriptableSingleton<NScreenManager>.instance.BuildOnPlay)
-			{
-				NScreenManager.Build();
-			}
-			if (EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
-			{
-				NScreenManager.StartAll();
-			}
-			else if (EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
-			{
-				NScreenManager.StopAll();
-			}
-			else if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
-			{
-				NScreenManager.RepaintAllGameViews();
+				if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode && Resources.FindObjectsOfTypeAll<RemoteGame>().Length > 0 && ScriptableSingleton<NScreenManager>.instance.BuildOnPlay)
+				{
+					NScreenManager.Build();
+				}
+				if (EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
+				{
+					NScreenManager.StartAll();
+				}
+				else if (EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+				{
+					NScreenManager.StopAll();
+				}
+				else if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+				{
+					NScreenManager.RepaintAllGameViews();
+				}
 			}
 		}
 
@@ -104,7 +112,7 @@ namespace UnityEditor.NScreen
 			for (int i = 0; i < windows.Length; i++)
 			{
 				ContainerWindow containerWindow = windows[i];
-				View[] allChildren = containerWindow.mainView.allChildren;
+				View[] allChildren = containerWindow.rootView.allChildren;
 				for (int j = 0; j < allChildren.Length; j++)
 				{
 					View view = allChildren[j];
@@ -182,14 +190,19 @@ namespace UnityEditor.NScreen
 			PlayerSettings.defaultIsFullScreen = false;
 			try
 			{
+				BuildPlayerOptions buildPlayerOptions = default(BuildPlayerOptions);
+				buildPlayerOptions.scenes = array;
+				buildPlayerOptions.options = BuildOptions.None;
+				buildPlayerOptions.locationPathName = "Temp/NScreen/NScreen.app";
 				if (IntPtr.Size == 4)
 				{
-					BuildPipeline.BuildPlayer(array, "Temp/NScreen/NScreen.app", BuildTarget.StandaloneOSXIntel, BuildOptions.None);
+					buildPlayerOptions.target = BuildTarget.StandaloneOSXIntel;
 				}
 				else
 				{
-					BuildPipeline.BuildPlayer(array, "Temp/NScreen/NScreen.app", BuildTarget.StandaloneOSXIntel64, BuildOptions.None);
+					buildPlayerOptions.target = BuildTarget.StandaloneOSXIntel64;
 				}
+				BuildPipeline.BuildPlayer(buildPlayerOptions);
 			}
 			finally
 			{

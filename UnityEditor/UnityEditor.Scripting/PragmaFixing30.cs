@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,17 +15,16 @@ namespace UnityEditor.Scripting
 		private static void FixJavaScriptPragmas()
 		{
 			string[] array = PragmaFixing30.CollectBadFiles();
-			if (array.Length == 0)
+			if (array.Length != 0)
 			{
-				return;
-			}
-			if (!InternalEditorUtility.inBatchMode)
-			{
-				PragmaFixingWindow.ShowWindow(array);
-			}
-			else
-			{
-				PragmaFixing30.FixFiles(array);
+				if (!InternalEditorUtility.inBatchMode)
+				{
+					PragmaFixingWindow.ShowWindow(array);
+				}
+				else
+				{
+					PragmaFixing30.FixFiles(array);
+				}
 			}
 		}
 
@@ -60,21 +60,29 @@ namespace UnityEditor.Scripting
 			StringBuilder sb = new StringBuilder(text);
 			PragmaFixing30.LooseComments(sb);
 			Match match = PragmaFixing30.PragmaMatch(sb, "strict");
+			bool result;
 			if (!match.Success)
 			{
-				return false;
+				result = false;
 			}
-			bool success = PragmaFixing30.PragmaMatch(sb, "downcast").Success;
-			bool success2 = PragmaFixing30.PragmaMatch(sb, "implicit").Success;
-			if (success && success2)
+			else
 			{
-				return false;
+				bool success = PragmaFixing30.PragmaMatch(sb, "downcast").Success;
+				bool success2 = PragmaFixing30.PragmaMatch(sb, "implicit").Success;
+				if (success && success2)
+				{
+					result = false;
+				}
+				else
+				{
+					if (!onlyCheck)
+					{
+						PragmaFixing30.DoFixPragmasInFile(fileName, text, match.Index + match.Length, success, success2);
+					}
+					result = true;
+				}
 			}
-			if (!onlyCheck)
-			{
-				PragmaFixing30.DoFixPragmasInFile(fileName, text, match.Index + match.Length, success, success2);
-			}
-			return true;
+			return result;
 		}
 
 		private static void DoFixPragmasInFile(string fileName, string oldText, int fixPos, bool hasDowncast, bool hasImplicit)
@@ -100,25 +108,36 @@ namespace UnityEditor.Scripting
 		[DebuggerHidden]
 		private static IEnumerable<string> SearchRecursive(string dir, string mask)
 		{
-			PragmaFixing30.<SearchRecursive>c__Iterator9 <SearchRecursive>c__Iterator = new PragmaFixing30.<SearchRecursive>c__Iterator9();
+			PragmaFixing30.<SearchRecursive>c__Iterator0 <SearchRecursive>c__Iterator = new PragmaFixing30.<SearchRecursive>c__Iterator0();
 			<SearchRecursive>c__Iterator.dir = dir;
 			<SearchRecursive>c__Iterator.mask = mask;
-			<SearchRecursive>c__Iterator.<$>dir = dir;
-			<SearchRecursive>c__Iterator.<$>mask = mask;
-			PragmaFixing30.<SearchRecursive>c__Iterator9 expr_23 = <SearchRecursive>c__Iterator;
-			expr_23.$PC = -2;
-			return expr_23;
+			PragmaFixing30.<SearchRecursive>c__Iterator0 expr_15 = <SearchRecursive>c__Iterator;
+			expr_15.$PC = -2;
+			return expr_15;
 		}
 
 		private static void LooseComments(StringBuilder sb)
 		{
 			Regex regex = new Regex("//");
-			foreach (Match match in regex.Matches(sb.ToString()))
+			IEnumerator enumerator = regex.Matches(sb.ToString()).GetEnumerator();
+			try
 			{
-				int index = match.Index;
-				while (index < sb.Length && sb[index] != '\n' && sb[index] != '\r')
+				while (enumerator.MoveNext())
 				{
-					sb[index++] = ' ';
+					Match match = (Match)enumerator.Current;
+					int index = match.Index;
+					while (index < sb.Length && sb[index] != '\n' && sb[index] != '\r')
+					{
+						sb[index++] = ' ';
+					}
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
 				}
 			}
 		}

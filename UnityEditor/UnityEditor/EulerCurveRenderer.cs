@@ -69,5 +69,9 @@ namespace UnityEditor
 		{
 			return this.renderer.GetBounds(minTime, maxTime, this.component);
 		}
+
+		public void FlushCache()
+		{
+		}
 	}
 }

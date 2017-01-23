@@ -22,6 +22,27 @@ namespace UnityEngine
 			this.a = a;
 		}
 
+		public static implicit operator Color32(Color c)
+		{
+			return new Color32((byte)(Mathf.Clamp01(c.r) * 255f), (byte)(Mathf.Clamp01(c.g) * 255f), (byte)(Mathf.Clamp01(c.b) * 255f), (byte)(Mathf.Clamp01(c.a) * 255f));
+		}
+
+		public static implicit operator Color(Color32 c)
+		{
+			return new Color((float)c.r / 255f, (float)c.g / 255f, (float)c.b / 255f, (float)c.a / 255f);
+		}
+
+		public static Color32 Lerp(Color32 a, Color32 b, float t)
+		{
+			t = Mathf.Clamp01(t);
+			return new Color32((byte)((float)a.r + (float)(b.r - a.r) * t), (byte)((float)a.g + (float)(b.g - a.g) * t), (byte)((float)a.b + (float)(b.b - a.b) * t), (byte)((float)a.a + (float)(b.a - a.a) * t));
+		}
+
+		public static Color32 LerpUnclamped(Color32 a, Color32 b, float t)
+		{
+			return new Color32((byte)((float)a.r + (float)(b.r - a.r) * t), (byte)((float)a.g + (float)(b.g - a.g) * t), (byte)((float)a.b + (float)(b.b - a.b) * t), (byte)((float)a.a + (float)(b.a - a.a) * t));
+		}
+
 		public override string ToString()
 		{
 			return UnityString.Format("RGBA({0}, {1}, {2}, {3})", new object[]
@@ -42,27 +63,6 @@ namespace UnityEngine
 				this.b.ToString(format),
 				this.a.ToString(format)
 			});
-		}
-
-		public static Color32 Lerp(Color32 a, Color32 b, float t)
-		{
-			t = Mathf.Clamp01(t);
-			return new Color32((byte)((float)a.r + (float)(b.r - a.r) * t), (byte)((float)a.g + (float)(b.g - a.g) * t), (byte)((float)a.b + (float)(b.b - a.b) * t), (byte)((float)a.a + (float)(b.a - a.a) * t));
-		}
-
-		public static Color32 LerpUnclamped(Color32 a, Color32 b, float t)
-		{
-			return new Color32((byte)((float)a.r + (float)(b.r - a.r) * t), (byte)((float)a.g + (float)(b.g - a.g) * t), (byte)((float)a.b + (float)(b.b - a.b) * t), (byte)((float)a.a + (float)(b.a - a.a) * t));
-		}
-
-		public static implicit operator Color32(Color c)
-		{
-			return new Color32((byte)(Mathf.Clamp01(c.r) * 255f), (byte)(Mathf.Clamp01(c.g) * 255f), (byte)(Mathf.Clamp01(c.b) * 255f), (byte)(Mathf.Clamp01(c.a) * 255f));
-		}
-
-		public static implicit operator Color(Color32 c)
-		{
-			return new Color((float)c.r / 255f, (float)c.g / 255f, (float)c.b / 255f, (float)c.a / 255f);
 		}
 	}
 }

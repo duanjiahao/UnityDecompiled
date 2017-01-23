@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditorInternal
@@ -26,7 +27,7 @@ namespace UnityEditorInternal
 		{
 			private const float kSmallMargin = 4f;
 
-			public FDTreeViewGUI(TreeView treeView) : base(treeView)
+			public FDTreeViewGUI(TreeViewController treeView) : base(treeView)
 			{
 			}
 
@@ -35,40 +36,43 @@ namespace UnityEditorInternal
 				return null;
 			}
 
-			protected override void DrawIconAndLabel(Rect rect, TreeViewItem itemRaw, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
+			protected override void OnContentGUI(Rect rect, int row, TreeViewItem itemRaw, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
 			{
-				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = (FrameDebuggerTreeView.FDTreeViewItem)itemRaw;
-				float contentIndent = this.GetContentIndent(fDTreeViewItem);
-				rect.x += contentIndent;
-				rect.width -= contentIndent;
-				string text;
-				GUIContent content;
-				GUIStyle gUIStyle;
-				if (fDTreeViewItem.m_ChildEventCount > 0)
+				if (Event.current.type == EventType.Repaint)
 				{
-					Rect position = rect;
-					position.width -= 4f;
-					text = fDTreeViewItem.m_ChildEventCount.ToString(CultureInfo.InvariantCulture);
+					FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = (FrameDebuggerTreeView.FDTreeViewItem)itemRaw;
+					float contentIndent = this.GetContentIndent(fDTreeViewItem);
+					rect.x += contentIndent;
+					rect.width -= contentIndent;
+					string text;
+					GUIContent content;
+					GUIStyle gUIStyle;
+					if (fDTreeViewItem.m_ChildEventCount > 0)
+					{
+						Rect position = rect;
+						position.width -= 4f;
+						text = fDTreeViewItem.m_ChildEventCount.ToString(CultureInfo.InvariantCulture);
+						content = EditorGUIUtility.TempContent(text);
+						gUIStyle = FrameDebuggerWindow.styles.rowTextRight;
+						gUIStyle.Draw(position, content, false, false, false, false);
+						rect.width -= gUIStyle.CalcSize(content).x + 8f;
+					}
+					if (fDTreeViewItem.id <= 0)
+					{
+						text = fDTreeViewItem.displayName;
+					}
+					else
+					{
+						text = FrameDebuggerWindow.s_FrameEventTypeNames[(int)fDTreeViewItem.m_FrameEvent.type] + fDTreeViewItem.displayName;
+					}
+					if (string.IsNullOrEmpty(text))
+					{
+						text = "<unknown scope>";
+					}
 					content = EditorGUIUtility.TempContent(text);
-					gUIStyle = FrameDebuggerWindow.styles.rowTextRight;
-					gUIStyle.Draw(position, content, false, false, false, false);
-					rect.width -= gUIStyle.CalcSize(content).x + 8f;
+					gUIStyle = FrameDebuggerWindow.styles.rowText;
+					gUIStyle.Draw(rect, content, false, false, false, selected && focused);
 				}
-				if (fDTreeViewItem.id <= 0)
-				{
-					text = fDTreeViewItem.displayName;
-				}
-				else
-				{
-					text = FrameDebuggerWindow.s_FrameEventTypeNames[(int)fDTreeViewItem.m_FrameEvent.type] + fDTreeViewItem.displayName;
-				}
-				if (string.IsNullOrEmpty(text))
-				{
-					text = "<unknown scope>";
-				}
-				content = EditorGUIUtility.TempContent(text);
-				gUIStyle = FrameDebuggerWindow.styles.rowText;
-				gUIStyle.Draw(rect, content, false, false, false, selected && focused);
 			}
 
 			protected override void RenameEnded()
@@ -93,7 +97,7 @@ namespace UnityEditorInternal
 
 			private FrameDebuggerEvent[] m_FrameEvents;
 
-			public FDTreeViewDataSource(TreeView treeView, FrameDebuggerEvent[] frameEvents) : base(treeView)
+			public FDTreeViewDataSource(TreeViewController treeView, FrameDebuggerEvent[] frameEvents) : base(treeView)
 			{
 				this.m_FrameEvents = frameEvents;
 				base.rootIsCollapsable = false;
@@ -104,8 +108,8 @@ namespace UnityEditorInternal
 			{
 				bool flag = this.m_FrameEvents == null || this.m_FrameEvents.Length < 1;
 				this.m_FrameEvents = frameEvents;
-				this.m_NeedRefreshVisibleFolders = true;
-				this.ReloadData();
+				this.m_NeedRefreshRows = true;
+				base.ReloadData();
 				if (flag)
 				{
 					this.SetExpandedWithChildren(this.m_RootItem, true);
@@ -184,7 +188,7 @@ namespace UnityEditorInternal
 			}
 		}
 
-		internal readonly TreeView m_TreeView;
+		internal readonly TreeViewController m_TreeView;
 
 		internal FrameDebuggerTreeView.FDTreeViewDataSource m_DataSource;
 
@@ -193,36 +197,34 @@ namespace UnityEditorInternal
 		public FrameDebuggerTreeView(FrameDebuggerEvent[] frameEvents, TreeViewState treeViewState, FrameDebuggerWindow window, Rect startRect)
 		{
 			this.m_FrameDebugger = window;
-			this.m_TreeView = new TreeView(window, treeViewState);
+			this.m_TreeView = new TreeViewController(window, treeViewState);
 			this.m_DataSource = new FrameDebuggerTreeView.FDTreeViewDataSource(this.m_TreeView, frameEvents);
 			FrameDebuggerTreeView.FDTreeViewGUI gui = new FrameDebuggerTreeView.FDTreeViewGUI(this.m_TreeView);
 			this.m_TreeView.Init(startRect, this.m_DataSource, gui, null);
 			this.m_TreeView.ReloadData();
-			TreeView expr_5E = this.m_TreeView;
-			expr_5E.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_5E.selectionChangedCallback, new Action<int[]>(this.SelectionChanged));
+			TreeViewController expr_5F = this.m_TreeView;
+			expr_5F.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_5F.selectionChangedCallback, new Action<int[]>(this.SelectionChanged));
 		}
 
 		private void SelectionChanged(int[] selectedIDs)
 		{
-			if (selectedIDs.Length < 1)
+			if (selectedIDs.Length >= 1)
 			{
-				return;
-			}
-			int num = selectedIDs[0];
-			int num2 = num;
-			if (num2 <= 0)
-			{
-				FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = this.m_TreeView.FindItem(num) as FrameDebuggerTreeView.FDTreeViewItem;
-				if (fDTreeViewItem != null)
+				int num = selectedIDs[0];
+				int num2 = num;
+				if (num2 <= 0)
 				{
-					num2 = fDTreeViewItem.m_EventIndex;
+					FrameDebuggerTreeView.FDTreeViewItem fDTreeViewItem = this.m_TreeView.FindItem(num) as FrameDebuggerTreeView.FDTreeViewItem;
+					if (fDTreeViewItem != null)
+					{
+						num2 = fDTreeViewItem.m_EventIndex;
+					}
+				}
+				if (num2 > 0)
+				{
+					this.m_FrameDebugger.ChangeFrameEventLimit(num2);
 				}
 			}
-			if (num2 <= 0)
-			{
-				return;
-			}
-			this.m_FrameDebugger.ChangeFrameEventLimit(num2);
 		}
 
 		public void SelectFrameEventIndex(int eventIndex)

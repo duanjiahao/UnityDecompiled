@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{F7CDA827-F65F-486A-80A6-948FDDD88300}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <AssemblyName>UnityEngine.UI</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine" />
+    <Reference Include="System.Core" />
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine.EventSystems\AbstractEventData.cs" />
+    <Compile Include="UnityEngine.EventSystems\AxisEventData.cs" />
+    <Compile Include="UnityEngine.EventSystems\BaseEventData.cs" />
+    <Compile Include="UnityEngine.EventSystems\BaseInput.cs" />
+    <Compile Include="UnityEngine.EventSystems\BaseInputModule.cs" />
+    <Compile Include="UnityEngine.EventSystems\BaseRaycaster.cs" />
+    <Compile Include="UnityEngine.EventSystems\EventHandle.cs" />
+    <Compile Include="UnityEngine.EventSystems\EventSystem.cs" />
+    <Compile Include="UnityEngine.EventSystems\EventTrigger.cs" />
+    <Compile Include="UnityEngine.EventSystems\EventTriggerType.cs" />
+    <Compile Include="UnityEngine.EventSystems\ExecuteEvents.cs" />
+    <Compile Include="UnityEngine.EventSystems\IBeginDragHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\ICancelHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IDeselectHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IDragHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IDropHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IEndDragHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IEventSystemHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IInitializePotentialDragHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IMoveHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IPointerClickHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IPointerDownHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IPointerEnterHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IPointerExitHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IPointerUpHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IScrollHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\ISelectHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\ISubmitHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\IUpdateSelectedHandler.cs" />
+    <Compile Include="UnityEngine.EventSystems\MoveDirection.cs" />
+    <Compile Include="UnityEngine.EventSystems\Physics2DRaycaster.cs" />
+    <Compile Include="UnityEngine.EventSystems\PhysicsRaycaster.cs" />
+    <Compile Include="UnityEngine.EventSystems\PointerEventData.cs" />
+    <Compile Include="UnityEngine.EventSystems\PointerInputModule.cs" />
+    <Compile Include="UnityEngine.EventSystems\RaycasterManager.cs" />
+    <Compile Include="UnityEngine.EventSystems\RaycastResult.cs" />
+    <Compile Include="UnityEngine.EventSystems\StandaloneInputModule.cs" />
+    <Compile Include="UnityEngine.EventSystems\TouchInputModule.cs" />
+    <Compile Include="UnityEngine.EventSystems\UIBehaviour.cs" />
+    <Compile Include="UnityEngine.UI.Collections\IndexedSet.cs" />
+    <Compile Include="UnityEngine.UI.CoroutineTween\ColorTween.cs" />
+    <Compile Include="UnityEngine.UI.CoroutineTween\FloatTween.cs" />
+    <Compile Include="UnityEngine.UI.CoroutineTween\ITweenValue.cs" />
+    <Compile Include="UnityEngine.UI.CoroutineTween\TweenRunner.cs" />
+    <Compile Include="UnityEngine.UI\AnimationTriggers.cs" />
+    <Compile Include="UnityEngine.UI\AspectRatioFitter.cs" />
+    <Compile Include="UnityEngine.UI\BaseMeshEffect.cs" />
+    <Compile Include="UnityEngine.UI\BaseVertexEffect.cs" />
+    <Compile Include="UnityEngine.UI\Button.cs" />
+    <Compile Include="UnityEngine.UI\CanvasScaler.cs" />
+    <Compile Include="UnityEngine.UI\CanvasUpdate.cs" />
+    <Compile Include="UnityEngine.UI\CanvasUpdateRegistry.cs" />
+    <Compile Include="UnityEngine.UI\ClipperRegistry.cs" />
+    <Compile Include="UnityEngine.UI\Clipping.cs" />
+    <Compile Include="UnityEngine.UI\ColorBlock.cs" />
+    <Compile Include="UnityEngine.UI\ContentSizeFitter.cs" />
+    <Compile Include="UnityEngine.UI\DefaultControls.cs" />
+    <Compile Include="UnityEngine.UI\Dropdown.cs" />
+    <Compile Include="UnityEngine.UI\FontData.cs" />
+    <Compile Include="UnityEngine.UI\FontUpdateTracker.cs" />
+    <Compile Include="UnityEngine.UI\Graphic.cs" />
+    <Compile Include="UnityEngine.UI\GraphicRaycaster.cs" />
+    <Compile Include="UnityEngine.UI\GraphicRegistry.cs" />
+    <Compile Include="UnityEngine.UI\GridLayoutGroup.cs" />
+    <Compile Include="UnityEngine.UI\HorizontalLayoutGroup.cs" />
+    <Compile Include="UnityEngine.UI\HorizontalOrVerticalLayoutGroup.cs" />
+    <Compile Include="UnityEngine.UI\ICanvasElement.cs" />
+    <Compile Include="UnityEngine.UI\IClippable.cs" />
+    <Compile Include="UnityEngine.UI\IClipper.cs" />
+    <Compile Include="UnityEngine.UI\IGraphicEnabledDisabled.cs" />
+    <Compile Include="UnityEngine.UI\ILayoutController.cs" />
+    <Compile Include="UnityEngine.UI\ILayoutElement.cs" />
+    <Compile Include="UnityEngine.UI\ILayoutGroup.cs" />
+    <Compile Include="UnityEngine.UI\ILayoutIgnorer.cs" />
+    <Compile Include="UnityEngine.UI\ILayoutSelfController.cs" />
+    <Compile Include="UnityEngine.UI\Image.cs" />
+    <Compile Include="UnityEngine.UI\IMask.cs" />
+    <Compile Include="UnityEngine.UI\IMaskable.cs" />
+    <Compile Include="UnityEngine.UI\IMaterialModifier.cs" />
+    <Compile Include="UnityEngine.UI\IMeshModifier.cs" />
+    <Compile Include="UnityEngine.UI\InputField.cs" />
+    <Compile Include="UnityEngine.UI\IVertexModifier.cs" />
+    <Compile Include="UnityEngine.UI\LayoutElement.cs" />
+    <Compile Include="UnityEngine.UI\LayoutGroup.cs" />
+    <Compile Include="UnityEngine.UI\LayoutRebuilder.cs" />
+    <Compile Include="UnityEngine.UI\LayoutUtility.cs" />
+    <Compile Include="UnityEngine.UI\ListPool.cs" />
+    <Compile Include="UnityEngine.UI\Mask.cs" />
+    <Compile Include="UnityEngine.UI\MaskableGraphic.cs" />
+    <Compile Include="UnityEngine.UI\MaskUtilities.cs" />
+    <Compile Include="UnityEngine.UI\Misc.cs" />
+    <Compile Include="UnityEngine.UI\Navigation.cs" />
+    <Compile Include="UnityEngine.UI\ObjectPool.cs" />
+    <Compile Include="UnityEngine.UI\Outline.cs" />
+    <Compile Include="UnityEngine.UI\PositionAsUV1.cs" />
+    <Compile Include="UnityEngine.UI\RawImage.cs" />
+    <Compile Include="UnityEngine.UI\RectangularVertexClipper.cs" />
+    <Compile Include="UnityEngine.UI\RectMask2D.cs" />
+    <Compile Include="UnityEngine.UI\ReflectionMethodsCache.cs" />
+    <Compile Include="UnityEngine.UI\Scrollbar.cs" />
+    <Compile Include="UnityEngine.UI\ScrollRect.cs" />
+    <Compile Include="UnityEngine.UI\Selectable.cs" />
+    <Compile Include="UnityEngine.UI\SetPropertyUtility.cs" />
+    <Compile Include="UnityEngine.UI\Shadow.cs" />
+    <Compile Include="UnityEngine.UI\Slider.cs" />
+    <Compile Include="UnityEngine.UI\SpriteState.cs" />
+    <Compile Include="UnityEngine.UI\StencilMaterial.cs" />
+    <Compile Include="UnityEngine.UI\Text.cs" />
+    <Compile Include="UnityEngine.UI\Toggle.cs" />
+    <Compile Include="UnityEngine.UI\ToggleGroup.cs" />
+    <Compile Include="UnityEngine.UI\VertexHelper.cs" />
+    <Compile Include="UnityEngine.UI\VerticalLayoutGroup.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

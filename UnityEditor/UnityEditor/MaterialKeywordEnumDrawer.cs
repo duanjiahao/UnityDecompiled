@@ -143,11 +143,16 @@ namespace UnityEditor
 
 		public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
+			float result;
 			if (!MaterialKeywordEnumDrawer.IsPropertyTypeSuitable(prop))
 			{
-				return 40f;
+				result = 40f;
 			}
-			return base.GetPropertyHeight(prop, label, editor);
+			else
+			{
+				result = base.GetPropertyHeight(prop, label, editor);
+			}
+			return result;
 		}
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -156,32 +161,32 @@ namespace UnityEditor
 			{
 				GUIContent label2 = EditorGUIUtility.TempContent("KeywordEnum used on a non-float property: " + prop.name, EditorGUIUtility.GetHelpIcon(MessageType.Warning));
 				EditorGUI.LabelField(position, label2, EditorStyles.helpBox);
-				return;
 			}
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = prop.hasMixedValue;
-			int num = (int)prop.floatValue;
-			num = EditorGUI.Popup(position, label, num, this.keywords);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
+			else
 			{
-				prop.floatValue = (float)num;
-				this.SetKeyword(prop, num);
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = prop.hasMixedValue;
+				int num = (int)prop.floatValue;
+				num = EditorGUI.Popup(position, label, num, this.keywords);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					prop.floatValue = (float)num;
+					this.SetKeyword(prop, num);
+				}
 			}
 		}
 
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (!MaterialKeywordEnumDrawer.IsPropertyTypeSuitable(prop))
+			if (MaterialKeywordEnumDrawer.IsPropertyTypeSuitable(prop))
 			{
-				return;
+				if (!prop.hasMixedValue)
+				{
+					this.SetKeyword(prop, (int)prop.floatValue);
+				}
 			}
-			if (prop.hasMixedValue)
-			{
-				return;
-			}
-			this.SetKeyword(prop, (int)prop.floatValue);
 		}
 
 		private static string GetKeywordName(string propName, string name)

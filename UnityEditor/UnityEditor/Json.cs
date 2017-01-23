@@ -71,78 +71,92 @@ namespace UnityEditor
 				get
 				{
 					this.EatWhitespace();
-					if (this.json.Peek() == -1)
+					Json.Parser.TOKEN result;
+					if (this.json.Peek() != -1)
 					{
-						return Json.Parser.TOKEN.NONE;
-					}
-					char peekChar = this.PeekChar;
-					switch (peekChar)
-					{
-					case '"':
-						return Json.Parser.TOKEN.STRING;
-					case '#':
-					case '$':
-					case '%':
-					case '&':
-					case '\'':
-					case '(':
-					case ')':
-					case '*':
-					case '+':
-					case '.':
-					case '/':
-						IL_8D:
+						char peekChar = this.PeekChar;
 						switch (peekChar)
 						{
-						case '[':
-							return Json.Parser.TOKEN.SQUARED_OPEN;
-						case '\\':
-						{
-							IL_A2:
+						case ',':
+							this.json.Read();
+							result = Json.Parser.TOKEN.COMMA;
+							return result;
+						case '-':
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
+						case '8':
+						case '9':
+							result = Json.Parser.TOKEN.NUMBER;
+							return result;
+						case '.':
+						case '/':
+							IL_6C:
 							switch (peekChar)
 							{
-							case '{':
-								return Json.Parser.TOKEN.CURLY_OPEN;
-							case '}':
+							case '[':
+								result = Json.Parser.TOKEN.SQUARED_OPEN;
+								return result;
+							case '\\':
+								IL_81:
+								switch (peekChar)
+								{
+								case '{':
+									result = Json.Parser.TOKEN.CURLY_OPEN;
+									return result;
+								case '|':
+									IL_96:
+									if (peekChar != '"')
+									{
+										string nextWord = this.NextWord;
+										if (nextWord != null)
+										{
+											if (nextWord == "false")
+											{
+												result = Json.Parser.TOKEN.FALSE;
+												return result;
+											}
+											if (nextWord == "true")
+											{
+												result = Json.Parser.TOKEN.TRUE;
+												return result;
+											}
+											if (nextWord == "null")
+											{
+												result = Json.Parser.TOKEN.NULL;
+												return result;
+											}
+										}
+										result = Json.Parser.TOKEN.NONE;
+										return result;
+									}
+									result = Json.Parser.TOKEN.STRING;
+									return result;
+								case '}':
+									this.json.Read();
+									result = Json.Parser.TOKEN.CURLY_CLOSE;
+									return result;
+								}
+								goto IL_96;
+							case ']':
 								this.json.Read();
-								return Json.Parser.TOKEN.CURLY_CLOSE;
+								result = Json.Parser.TOKEN.SQUARED_CLOSE;
+								return result;
 							}
-							string nextWord = this.NextWord;
-							switch (nextWord)
-							{
-							case "false":
-								return Json.Parser.TOKEN.FALSE;
-							case "true":
-								return Json.Parser.TOKEN.TRUE;
-							case "null":
-								return Json.Parser.TOKEN.NULL;
-							}
-							return Json.Parser.TOKEN.NONE;
+							goto IL_81;
+						case ':':
+							result = Json.Parser.TOKEN.COLON;
+							return result;
 						}
-						case ']':
-							this.json.Read();
-							return Json.Parser.TOKEN.SQUARED_CLOSE;
-						}
-						goto IL_A2;
-					case ',':
-						this.json.Read();
-						return Json.Parser.TOKEN.COMMA;
-					case '-':
-					case '0':
-					case '1':
-					case '2':
-					case '3':
-					case '4':
-					case '5':
-					case '6':
-					case '7':
-					case '8':
-					case '9':
-						return Json.Parser.TOKEN.NUMBER;
-					case ':':
-						return Json.Parser.TOKEN.COLON;
+						goto IL_6C;
 					}
-					goto IL_8D;
+					result = Json.Parser.TOKEN.NONE;
+					return result;
 				}
 			}
 
@@ -182,10 +196,10 @@ namespace UnityEditor
 					switch (nextToken)
 					{
 					case Json.Parser.TOKEN.NONE:
-						goto IL_37;
+						goto IL_3A;
 					case Json.Parser.TOKEN.CURLY_OPEN:
 					{
-						IL_2B:
+						IL_2E:
 						if (nextToken == Json.Parser.TOKEN.COMMA)
 						{
 							continue;
@@ -204,16 +218,22 @@ namespace UnityEditor
 						continue;
 					}
 					case Json.Parser.TOKEN.CURLY_CLOSE:
-						return dictionary;
+						goto IL_46;
 					}
-					goto IL_2B;
+					goto IL_2E;
 				}
-				IL_37:
-				return null;
+				IL_3A:
+				Dictionary<string, object> result = null;
+				return result;
+				IL_46:
+				result = dictionary;
+				return result;
 				Block_2:
-				return null;
+				result = null;
+				return result;
 				Block_3:
-				return null;
+				result = null;
+				return result;
 			}
 
 			private List<object> ParseArray()
@@ -221,30 +241,32 @@ namespace UnityEditor
 				List<object> list = new List<object>();
 				this.json.Read();
 				bool flag = true;
+				List<object> result;
 				while (flag)
 				{
 					Json.Parser.TOKEN nextToken = this.NextToken;
-					Json.Parser.TOKEN tOKEN = nextToken;
-					switch (tOKEN)
+					switch (nextToken)
 					{
 					case Json.Parser.TOKEN.SQUARED_CLOSE:
 						flag = false;
 						continue;
 					case Json.Parser.TOKEN.COLON:
-						IL_38:
-						if (tOKEN != Json.Parser.TOKEN.NONE)
+						IL_36:
+						if (nextToken != Json.Parser.TOKEN.NONE)
 						{
 							object item = this.ParseByToken(nextToken);
 							list.Add(item);
 							continue;
 						}
-						return null;
+						result = null;
+						return result;
 					case Json.Parser.TOKEN.COMMA:
 						continue;
 					}
-					goto IL_38;
+					goto IL_36;
 				}
-				return list;
+				result = list;
+				return result;
 			}
 
 			private object ParseValue()
@@ -255,24 +277,38 @@ namespace UnityEditor
 
 			private object ParseByToken(Json.Parser.TOKEN token)
 			{
+				object result;
 				switch (token)
 				{
-				case Json.Parser.TOKEN.CURLY_OPEN:
-					return this.ParseObject();
-				case Json.Parser.TOKEN.SQUARED_OPEN:
-					return this.ParseArray();
 				case Json.Parser.TOKEN.STRING:
-					return this.ParseString();
+					result = this.ParseString();
+					break;
 				case Json.Parser.TOKEN.NUMBER:
-					return this.ParseNumber();
+					result = this.ParseNumber();
+					break;
 				case Json.Parser.TOKEN.TRUE:
-					return true;
+					result = true;
+					break;
 				case Json.Parser.TOKEN.FALSE:
-					return false;
+					result = false;
+					break;
 				case Json.Parser.TOKEN.NULL:
-					return null;
+					result = null;
+					break;
+				default:
+					switch (token)
+					{
+					case Json.Parser.TOKEN.CURLY_OPEN:
+						result = this.ParseObject();
+						return result;
+					case Json.Parser.TOKEN.SQUARED_OPEN:
+						result = this.ParseArray();
+						return result;
+					}
+					result = null;
+					break;
 				}
-				return null;
+				return result;
 			}
 
 			private string ParseString()
@@ -287,10 +323,9 @@ namespace UnityEditor
 						break;
 					}
 					char nextChar = this.NextChar;
-					char c = nextChar;
-					if (c != '"')
+					if (nextChar != '"')
 					{
-						if (c != '\\')
+						if (nextChar != '\\')
 						{
 							stringBuilder.Append(nextChar);
 						}
@@ -299,35 +334,33 @@ namespace UnityEditor
 							if (this.json.Peek() != -1)
 							{
 								nextChar = this.NextChar;
-								char c2 = nextChar;
-								switch (c2)
+								switch (nextChar)
 								{
-								case 'n':
-									stringBuilder.Append('\n');
+								case 'r':
+									stringBuilder.Append('\r');
 									continue;
-								case 'o':
-								case 'p':
-								case 'q':
 								case 's':
-									IL_A5:
-									if (c2 == '"' || c2 == '/' || c2 == '\\')
+									IL_90:
+									if (nextChar == '"' || nextChar == '/' || nextChar == '\\')
 									{
 										stringBuilder.Append(nextChar);
 										continue;
 									}
-									if (c2 == 'b')
+									if (nextChar == 'b')
 									{
 										stringBuilder.Append('\b');
 										continue;
 									}
-									if (c2 != 'f')
+									if (nextChar == 'f')
+									{
+										stringBuilder.Append('\f');
+										continue;
+									}
+									if (nextChar != 'n')
 									{
 										continue;
 									}
-									stringBuilder.Append('\f');
-									continue;
-								case 'r':
-									stringBuilder.Append('\r');
+									stringBuilder.Append('\n');
 									continue;
 								case 't':
 									stringBuilder.Append('\t');
@@ -343,7 +376,7 @@ namespace UnityEditor
 									continue;
 								}
 								}
-								goto IL_A5;
+								goto IL_90;
 							}
 							flag = false;
 						}
@@ -359,15 +392,20 @@ namespace UnityEditor
 			private object ParseNumber()
 			{
 				string nextWord = this.NextWord;
+				object result;
 				if (nextWord.IndexOf('.') == -1)
 				{
 					long num;
 					long.TryParse(nextWord, NumberStyles.Any, CultureInfo.InvariantCulture, out num);
-					return num;
+					result = num;
 				}
-				double num2;
-				double.TryParse(nextWord, NumberStyles.Any, CultureInfo.InvariantCulture, out num2);
-				return num2;
+				else
+				{
+					double num2;
+					double.TryParse(nextWord, NumberStyles.Any, CultureInfo.InvariantCulture, out num2);
+					result = num2;
+				}
+				return result;
 			}
 
 			private void EatWhitespace()
@@ -438,16 +476,29 @@ namespace UnityEditor
 			{
 				bool flag = true;
 				this.builder.Append('{');
-				foreach (object current in obj.Keys)
+				IEnumerator enumerator = obj.Keys.GetEnumerator();
+				try
 				{
-					if (!flag)
+					while (enumerator.MoveNext())
 					{
-						this.builder.Append(',');
+						object current = enumerator.Current;
+						if (!flag)
+						{
+							this.builder.Append(',');
+						}
+						this.SerializeString(current.ToString());
+						this.builder.Append(':');
+						this.SerializeValue(obj[current]);
+						flag = false;
 					}
-					this.SerializeString(current.ToString());
-					this.builder.Append(':');
-					this.SerializeValue(obj[current]);
-					flag = false;
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
 				}
 				this.builder.Append('}');
 			}
@@ -456,14 +507,27 @@ namespace UnityEditor
 			{
 				this.builder.Append('[');
 				bool flag = true;
-				foreach (object current in anArray)
+				IEnumerator enumerator = anArray.GetEnumerator();
+				try
 				{
-					if (!flag)
+					while (enumerator.MoveNext())
 					{
-						this.builder.Append(',');
+						object current = enumerator.Current;
+						if (!flag)
+						{
+							this.builder.Append(',');
+						}
+						this.SerializeValue(current);
+						flag = false;
 					}
-					this.SerializeValue(current);
-					flag = false;
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
 				}
 				this.builder.Append(']');
 			}
@@ -476,26 +540,25 @@ namespace UnityEditor
 				for (int i = 0; i < array2.Length; i++)
 				{
 					char c = array2[i];
-					char c2 = c;
-					switch (c2)
+					switch (c)
 					{
 					case '\b':
 						this.builder.Append("\\b");
-						goto IL_151;
+						goto IL_152;
 					case '\t':
 						this.builder.Append("\\t");
-						goto IL_151;
+						goto IL_152;
 					case '\n':
 						this.builder.Append("\\n");
-						goto IL_151;
+						goto IL_152;
 					case '\v':
-						IL_46:
-						if (c2 == '"')
+						IL_45:
+						if (c == '"')
 						{
 							this.builder.Append("\\\"");
-							goto IL_151;
+							goto IL_152;
 						}
-						if (c2 != '\\')
+						if (c != '\\')
 						{
 							int num = Convert.ToInt32(c);
 							if (num >= 32 && num <= 126)
@@ -507,19 +570,19 @@ namespace UnityEditor
 								this.builder.Append("\\u");
 								this.builder.Append(num.ToString("x4"));
 							}
-							goto IL_151;
+							goto IL_152;
 						}
 						this.builder.Append("\\\\");
-						goto IL_151;
+						goto IL_152;
 					case '\f':
 						this.builder.Append("\\f");
-						goto IL_151;
+						goto IL_152;
 					case '\r':
 						this.builder.Append("\\r");
-						goto IL_151;
+						goto IL_152;
 					}
-					goto IL_46;
-					IL_151:;
+					goto IL_45;
+					IL_152:;
 				}
 				this.builder.Append('"');
 			}
@@ -558,11 +621,16 @@ namespace UnityEditor
 
 		public static object Deserialize(string json)
 		{
+			object result;
 			if (json == null)
 			{
-				return null;
+				result = null;
 			}
-			return Json.Parser.Parse(json);
+			else
+			{
+				result = Json.Parser.Parse(json);
+			}
+			return result;
 		}
 
 		public static string Serialize(object obj)

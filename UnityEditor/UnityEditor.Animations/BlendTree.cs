@@ -8,77 +8,62 @@ namespace UnityEditor.Animations
 	{
 		public extern string blendParameter
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string blendParameterY
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern BlendTreeType blendType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern ChildMotion[] children
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool useAutomaticThresholds
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float minThreshold
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float maxThreshold
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal extern int recursiveBlendParameterCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -88,51 +73,39 @@ namespace UnityEditor.Animations
 			BlendTree.Internal_Create(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(BlendTree mono);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetDirectBlendTreeParameter(int index, string parameter);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string GetDirectBlendTreeParameter(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int GetChildCount();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern Motion GetChildMotion(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SortChildren();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string GetRecursiveBlendParameter(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern float GetRecursiveBlendParameterMin(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern float GetRecursiveBlendParameterMax(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetInputBlendValue(string blendValueName, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern float GetInputBlendValue(string blendValueName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AnimationClip[] GetAnimationClipsFlattened();
 
@@ -187,19 +160,28 @@ namespace UnityEditor.Animations
 		internal bool HasChild(BlendTree childTree, bool recursive)
 		{
 			ChildMotion[] children = this.children;
-			for (int i = 0; i < children.Length; i++)
+			int i = 0;
+			bool result;
+			while (i < children.Length)
 			{
 				ChildMotion childMotion = children[i];
 				if (childMotion.motion == childTree)
 				{
-					return true;
+					result = true;
 				}
-				if (recursive && childMotion.motion is BlendTree && (childMotion.motion as BlendTree).HasChild(childTree, true))
+				else
 				{
-					return true;
+					if (!recursive || !(childMotion.motion is BlendTree) || !(childMotion.motion as BlendTree).HasChild(childTree, true))
+					{
+						i++;
+						continue;
+					}
+					result = true;
 				}
+				return result;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		internal BlendTree CreateBlendTreeChild(Vector2 position, float threshold)
@@ -208,7 +190,7 @@ namespace UnityEditor.Animations
 			BlendTree blendTree = new BlendTree();
 			blendTree.name = "BlendTree";
 			blendTree.hideFlags = HideFlags.HideInHierarchy;
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(blendTree, AssetDatabase.GetAssetPath(this));
 			}

@@ -17,14 +17,19 @@ namespace UnityEditor
 			get
 			{
 				this.m_UsedEditors[o] = true;
+				EditorWrapper result;
 				if (this.m_EditorCache.ContainsKey(o))
 				{
-					return this.m_EditorCache[o];
+					result = this.m_EditorCache[o];
 				}
-				EditorWrapper editorWrapper = EditorWrapper.Make(o, this.m_Requirements);
-				EditorWrapper editorWrapper2 = editorWrapper;
-				this.m_EditorCache[o] = editorWrapper2;
-				return editorWrapper2;
+				else
+				{
+					EditorWrapper editorWrapper = EditorWrapper.Make(o, this.m_Requirements);
+					EditorWrapper editorWrapper2 = editorWrapper;
+					this.m_EditorCache[o] = editorWrapper2;
+					result = editorWrapper2;
+				}
+				return result;
 			}
 		}
 

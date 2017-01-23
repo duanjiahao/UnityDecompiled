@@ -7,7 +7,7 @@ namespace UnityEditor
 	{
 		public static void SetColor(Color color)
 		{
-			EditorGUIUtility.systemCopyBuffer = string.Empty;
+			EditorGUIUtility.systemCopyBuffer = "";
 			EditorGUIUtility.SetPasteboardColor(color);
 		}
 
@@ -29,15 +29,20 @@ namespace UnityEditor
 				color = EditorGUIUtility.GetPasteboardColor();
 				flag = true;
 			}
+			bool result;
 			if (flag)
 			{
 				if (!allowHDR && color.maxColorComponent > 1f)
 				{
 					color = color.RGBMultiplied(1f / color.maxColorComponent);
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 	}
 }

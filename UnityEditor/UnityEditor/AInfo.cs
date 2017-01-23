@@ -30,7 +30,7 @@ namespace UnityEditor
 			this.m_ClassID = classID;
 			this.m_ScriptClass = scriptClass;
 			this.m_Flags = flags;
-			if (this.m_ScriptClass == string.Empty)
+			if (this.m_ScriptClass == "")
 			{
 				this.m_DisplayText = BaseObjectTools.ClassIDToString(this.m_ClassID);
 			}

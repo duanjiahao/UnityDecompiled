@@ -71,14 +71,17 @@ namespace UnityEditor
 
 		private int FindPluginStringIndex(string[] strs, string element)
 		{
+			int result;
 			for (int i = 1; i < strs.Length; i++)
 			{
 				if (element == strs[i])
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return 0;
+			result = 0;
+			return result;
 		}
 
 		public override void OnInspectorGUI()
@@ -109,7 +112,7 @@ namespace UnityEditor
 			{
 				if (num == 0)
 				{
-					this.m_SpatializerPlugin.stringValue = string.Empty;
+					this.m_SpatializerPlugin.stringValue = "";
 				}
 				else
 				{

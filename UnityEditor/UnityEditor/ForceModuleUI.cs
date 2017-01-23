@@ -43,19 +43,18 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_X != null)
+			if (this.m_X == null)
 			{
-				return;
+				if (ForceModuleUI.s_Texts == null)
+				{
+					ForceModuleUI.s_Texts = new ForceModuleUI.Texts();
+				}
+				this.m_X = new SerializedMinMaxCurve(this, ForceModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange);
+				this.m_Y = new SerializedMinMaxCurve(this, ForceModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange);
+				this.m_Z = new SerializedMinMaxCurve(this, ForceModuleUI.s_Texts.z, "z", ModuleUI.kUseSignedRange);
+				this.m_RandomizePerFrame = base.GetProperty("randomizePerFrame");
+				this.m_InWorldSpace = base.GetProperty("inWorldSpace");
 			}
-			if (ForceModuleUI.s_Texts == null)
-			{
-				ForceModuleUI.s_Texts = new ForceModuleUI.Texts();
-			}
-			this.m_X = new SerializedMinMaxCurve(this, ForceModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange);
-			this.m_Y = new SerializedMinMaxCurve(this, ForceModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange);
-			this.m_Z = new SerializedMinMaxCurve(this, ForceModuleUI.s_Texts.z, "z", ModuleUI.kUseSignedRange);
-			this.m_RandomizePerFrame = base.GetProperty("randomizePerFrame");
-			this.m_InWorldSpace = base.GetProperty("inWorldSpace");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -65,11 +64,11 @@ namespace UnityEditor
 				ForceModuleUI.s_Texts = new ForceModuleUI.Texts();
 			}
 			MinMaxCurveState state = this.m_X.state;
-			base.GUITripleMinMaxCurve(GUIContent.none, ForceModuleUI.s_Texts.x, this.m_X, ForceModuleUI.s_Texts.y, this.m_Y, ForceModuleUI.s_Texts.z, this.m_Z, this.m_RandomizePerFrame);
-			ModuleUI.GUIBoolAsPopup(ForceModuleUI.s_Texts.space, this.m_InWorldSpace, ForceModuleUI.s_Texts.spaces);
+			base.GUITripleMinMaxCurve(GUIContent.none, ForceModuleUI.s_Texts.x, this.m_X, ForceModuleUI.s_Texts.y, this.m_Y, ForceModuleUI.s_Texts.z, this.m_Z, this.m_RandomizePerFrame, new GUILayoutOption[0]);
+			ModuleUI.GUIBoolAsPopup(ForceModuleUI.s_Texts.space, this.m_InWorldSpace, ForceModuleUI.s_Texts.spaces, new GUILayoutOption[0]);
 			using (new EditorGUI.DisabledScope(state != MinMaxCurveState.k_TwoScalars && state != MinMaxCurveState.k_TwoCurves))
 			{
-				ModuleUI.GUIToggle(ForceModuleUI.s_Texts.randomizePerFrame, this.m_RandomizePerFrame);
+				ModuleUI.GUIToggle(ForceModuleUI.s_Texts.randomizePerFrame, this.m_RandomizePerFrame, new GUILayoutOption[0]);
 			}
 		}
 

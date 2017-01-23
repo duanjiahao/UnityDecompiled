@@ -94,17 +94,15 @@ namespace UnityEditor
 
 		private delegate float GetFloatFromMotion(Motion motion, float mirrorMultiplier);
 
-		private const int kVisResolution = 64;
-
 		private static BlendTreeInspector.Styles styles;
 
-		internal static UnityEditor.Animations.AnimatorController currentController;
+		internal static UnityEditor.Animations.AnimatorController currentController = null;
 
-		internal static Animator currentAnimator;
+		internal static Animator currentAnimator = null;
 
-		internal static UnityEditor.Animations.BlendTree parentBlendTree;
+		internal static UnityEditor.Animations.BlendTree parentBlendTree = null;
 
-		internal static Action<UnityEditor.Animations.BlendTree> blendParameterInputChanged;
+		internal static Action<UnityEditor.Animations.BlendTree> blendParameterInputChanged = null;
 
 		private readonly int m_BlendAnimationID = "BlendAnimationIDHash".GetHashCode();
 
@@ -138,21 +136,23 @@ namespace UnityEditor
 
 		private AnimBool m_ShowAdjust = new AnimBool();
 
-		private bool m_ShowGraphValue;
+		private bool m_ShowGraphValue = false;
 
 		private float[] m_Weights;
 
-		private Texture2D m_BlendTex;
+		private const int kVisResolution = 64;
+
+		private Texture2D m_BlendTex = null;
 
 		private List<Texture2D> m_WeightTexs = new List<Texture2D>();
 
-		private string m_WarningMessage;
+		private string m_WarningMessage = null;
 
 		private PreviewBlendTree m_PreviewBlendTree;
 
 		private VisualizationBlendTree m_VisBlendTree;
 
-		private GameObject m_VisInstance;
+		private GameObject m_VisInstance = null;
 
 		private static bool s_ClickDragFloatDragged;
 
@@ -162,7 +162,7 @@ namespace UnityEditor
 
 		private int m_SelectedPoint = -1;
 
-		private bool s_DraggingPoint;
+		private bool s_DraggingPoint = false;
 
 		private int kNumCirclePoints = 20;
 
@@ -199,11 +199,16 @@ namespace UnityEditor
 		internal static float GetParameterValue(Animator animator, UnityEditor.Animations.BlendTree blendTree, string parameterName)
 		{
 			bool flag = EditorApplication.isPlaying && animator != null && animator.enabled && animator.gameObject.activeInHierarchy;
+			float result;
 			if (flag)
 			{
-				return animator.GetFloat(parameterName);
+				result = animator.GetFloat(parameterName);
 			}
-			return blendTree.GetInputBlendValue(parameterName);
+			else
+			{
+				result = blendTree.GetInputBlendValue(parameterName);
+			}
+			return result;
 		}
 
 		public void OnEnable()
@@ -226,7 +231,7 @@ namespace UnityEditor
 			}
 			if (this.m_BlendTree == null)
 			{
-				this.m_BlendTree = (this.target as UnityEditor.Animations.BlendTree);
+				this.m_BlendTree = (base.target as UnityEditor.Animations.BlendTree);
 			}
 			if (BlendTreeInspector.styles == null)
 			{
@@ -285,7 +290,7 @@ namespace UnityEditor
 
 		internal override void OnHeaderIconGUI(Rect iconRect)
 		{
-			Texture2D miniThumbnail = AssetPreview.GetMiniThumbnail(this.target);
+			Texture2D miniThumbnail = AssetPreview.GetMiniThumbnail(base.target);
 			GUI.Label(iconRect, miniThumbnail);
 		}
 
@@ -505,10 +510,28 @@ namespace UnityEditor
 			string allowedletters = "inftynaeINFTYNAE0123456789.,-";
 			int controlID = GUIUtility.GetControlID(this.m_ClickDragFloatID, FocusType.Keyboard, position);
 			Event current = Event.current;
-			switch (current.type)
+			EventType type = current.type;
+			if (type != EventType.MouseUp)
 			{
-			case EventType.MouseDown:
-				if (GUIUtility.keyboardControl != controlID || !EditorGUIUtility.editingTextField)
+				if (type != EventType.MouseDown)
+				{
+					if (type == EventType.MouseDrag)
+					{
+						if (GUIUtility.hotControl == controlID && !EditorGUIUtility.editingTextField)
+						{
+							BlendTreeInspector.s_ClickDragFloatDistance += Mathf.Abs(HandleUtility.niceMouseDelta);
+							if (BlendTreeInspector.s_ClickDragFloatDistance >= 5f)
+							{
+								BlendTreeInspector.s_ClickDragFloatDragged = true;
+								value += HandleUtility.niceMouseDelta * 0.03f;
+								value = MathUtils.RoundBasedOnMinimumDifference(value, 0.03f);
+								GUI.changed = true;
+							}
+							current.Use();
+						}
+					}
+				}
+				else if (GUIUtility.keyboardControl != controlID || !EditorGUIUtility.editingTextField)
 				{
 					if (position.Contains(current.mousePosition))
 					{
@@ -520,39 +543,23 @@ namespace UnityEditor
 						EditorGUIUtility.editingTextField = false;
 					}
 				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == controlID)
+			}
+			else if (GUIUtility.hotControl == controlID)
+			{
+				current.Use();
+				if (position.Contains(current.mousePosition) && !BlendTreeInspector.s_ClickDragFloatDragged)
 				{
-					current.Use();
-					if (position.Contains(current.mousePosition) && !BlendTreeInspector.s_ClickDragFloatDragged)
-					{
-						EditorGUIUtility.editingTextField = true;
-					}
-					else
-					{
-						GUIUtility.keyboardControl = 0;
-						GUIUtility.hotControl = 0;
-						BlendTreeInspector.s_ClickDragFloatDragged = false;
-					}
+					EditorGUIUtility.editingTextField = true;
 				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == controlID && !EditorGUIUtility.editingTextField)
+				else
 				{
-					BlendTreeInspector.s_ClickDragFloatDistance += Mathf.Abs(HandleUtility.niceMouseDelta);
-					if (BlendTreeInspector.s_ClickDragFloatDistance >= 5f)
-					{
-						BlendTreeInspector.s_ClickDragFloatDragged = true;
-						value += HandleUtility.niceMouseDelta * 0.03f;
-						value = MathUtils.RoundBasedOnMinimumDifference(value, 0.03f);
-						GUI.changed = true;
-					}
-					current.Use();
+					GUIUtility.keyboardControl = 0;
+					GUIUtility.hotControl = 0;
+					BlendTreeInspector.s_ClickDragFloatDragged = false;
 				}
-				break;
 			}
 			GUIStyle style = (GUIUtility.keyboardControl != controlID || !EditorGUIUtility.editingTextField) ? ((!alignRight) ? BlendTreeInspector.styles.clickDragFloatLabelLeft : BlendTreeInspector.styles.clickDragFloatLabelRight) : ((!alignRight) ? BlendTreeInspector.styles.clickDragFloatFieldLeft : BlendTreeInspector.styles.clickDragFloatFieldRight);
+			float result;
 			if (GUIUtility.keyboardControl == controlID)
 			{
 				string text;
@@ -590,7 +597,8 @@ namespace UnityEditor
 						{
 							EditorGUI.s_RecycledCurrentEditingFloat = 0.0;
 							value = 0f;
-							return value;
+							result = value;
+							return result;
 						}
 						if (float.IsNaN(value))
 						{
@@ -606,7 +614,8 @@ namespace UnityEditor
 				bool flag;
 				text = EditorGUI.DoTextField(EditorGUI.s_RecycledEditor, controlID, position, text, style, allowedletters, out flag, false, false, false);
 			}
-			return value;
+			result = value;
+			return result;
 		}
 
 		private void BlendGraph(Rect area)
@@ -656,10 +665,13 @@ namespace UnityEditor
 					{
 						float num6 = (k != 0) ? array[k - 1] : array[k];
 						float num7 = (k != array.Length - 1) ? array[k + 1] : array[k];
-						if (Mathf.Abs(x - array[k]) < num5 && x < num7 && x > num6)
+						if (Mathf.Abs(x - array[k]) < num5)
 						{
-							num5 = Mathf.Abs(x - array[k]);
-							this.m_ReorderableList.index = k;
+							if (x < num7 && x > num6)
+							{
+								num5 = Mathf.Abs(x - array[k]);
+								this.m_ReorderableList.index = k;
+							}
 						}
 					}
 					this.m_UseAutomaticThresholds.boolValue = false;
@@ -844,40 +856,45 @@ namespace UnityEditor
 		{
 			Vector2 vector = Vector2.zero;
 			float num = 0f;
+			Rect result;
 			if (points.Length == 0)
 			{
-				return default(Rect);
-			}
-			if (this.m_BlendType.intValue == 3)
-			{
-				Vector2 a = points[0];
-				Vector2 b = points[0];
-				for (int i = 1; i < points.Length; i++)
-				{
-					b.x = Mathf.Max(b.x, points[i].x);
-					b.y = Mathf.Max(b.y, points[i].y);
-					a.x = Mathf.Min(a.x, points[i].x);
-					a.y = Mathf.Min(a.y, points[i].y);
-				}
-				vector = (a + b) * 0.5f;
-				num = Mathf.Max(b.x - a.x, b.y - a.y) * 0.5f;
+				result = default(Rect);
 			}
 			else
 			{
-				for (int j = 0; j < points.Length; j++)
+				if (this.m_BlendType.intValue == 3)
 				{
-					num = Mathf.Max(num, points[j].x);
-					num = Mathf.Max(num, -points[j].x);
-					num = Mathf.Max(num, points[j].y);
-					num = Mathf.Max(num, -points[j].y);
+					Vector2 a = points[0];
+					Vector2 b = points[0];
+					for (int i = 1; i < points.Length; i++)
+					{
+						b.x = Mathf.Max(b.x, points[i].x);
+						b.y = Mathf.Max(b.y, points[i].y);
+						a.x = Mathf.Min(a.x, points[i].x);
+						a.y = Mathf.Min(a.y, points[i].y);
+					}
+					vector = (a + b) * 0.5f;
+					num = Mathf.Max(b.x - a.x, b.y - a.y) * 0.5f;
 				}
+				else
+				{
+					for (int j = 0; j < points.Length; j++)
+					{
+						num = Mathf.Max(num, points[j].x);
+						num = Mathf.Max(num, -points[j].x);
+						num = Mathf.Max(num, points[j].y);
+						num = Mathf.Max(num, -points[j].y);
+					}
+				}
+				if (num == 0f)
+				{
+					num = 1f;
+				}
+				num *= 1.35f;
+				result = new Rect(vector.x - num, vector.y - num, num * 2f, num * 2f);
 			}
-			if (num == 0f)
-			{
-				num = 1f;
-			}
-			num *= 1.35f;
-			return new Rect(vector.x - num, vector.y - num, num * 2f, num * 2f);
+			return result;
 		}
 
 		private float ConvertFloat(float input, float fromMin, float fromMax, float toMin, float toMax)
@@ -915,7 +932,7 @@ namespace UnityEditor
 			num = area.x + Mathf.InverseLerp(vector.x, vector2.x, num) * area.width;
 			num2 = area.y + (1f - Mathf.InverseLerp(vector.y, vector2.y, num2)) * area.height;
 			Rect position = new Rect(num - 5f, num2 - 5f, 11f, 11f);
-			int controlID = GUIUtility.GetControlID(this.m_BlendAnimationID, FocusType.Native);
+			int controlID = GUIUtility.GetControlID(this.m_BlendAnimationID, FocusType.Passive);
 			Event current = Event.current;
 			switch (current.GetTypeForControl(controlID))
 			{
@@ -1084,9 +1101,8 @@ namespace UnityEditor
 			if (flag)
 			{
 				this.m_WarningMessage = "Two or more of the positions are too close to each other.";
-				return;
 			}
-			if (this.m_BlendType.intValue == 1)
+			else if (this.m_BlendType.intValue == 1)
 			{
 				List<float> list = (from e in motionPositions
 				where e != Vector2.zero
@@ -1140,29 +1156,28 @@ namespace UnityEditor
 
 		private void DrawWeightShape(Vector2 point, float weight, int pass)
 		{
-			if (weight <= 0f)
+			if (weight > 0f)
 			{
-				return;
-			}
-			point.x = Mathf.Round(point.x);
-			point.y = Mathf.Round(point.y);
-			float num = 20f * Mathf.Sqrt(weight);
-			Vector3[] array = new Vector3[this.kNumCirclePoints + 2];
-			for (int i = 0; i < this.kNumCirclePoints; i++)
-			{
-				float num2 = (float)i / (float)this.kNumCirclePoints;
-				array[i + 1] = new Vector3(point.x + 0.5f, point.y + 0.5f, 0f) + new Vector3(Mathf.Sin(num2 * 2f * 3.14159274f), Mathf.Cos(num2 * 2f * 3.14159274f), 0f) * num;
-			}
-			array[0] = (array[this.kNumCirclePoints + 1] = (array[1] + array[this.kNumCirclePoints]) * 0.5f);
-			if (pass == 0)
-			{
-				Handles.color = BlendTreeInspector.styles.visWeightShapeColor;
-				Handles.DrawSolidDisc(point + new Vector2(0.5f, 0.5f), -Vector3.forward, num);
-			}
-			else
-			{
-				Handles.color = BlendTreeInspector.styles.visWeightLineColor;
-				Handles.DrawAAPolyLine(array);
+				point.x = Mathf.Round(point.x);
+				point.y = Mathf.Round(point.y);
+				float num = 20f * Mathf.Sqrt(weight);
+				Vector3[] array = new Vector3[this.kNumCirclePoints + 2];
+				for (int i = 0; i < this.kNumCirclePoints; i++)
+				{
+					float num2 = (float)i / (float)this.kNumCirclePoints;
+					array[i + 1] = new Vector3(point.x + 0.5f, point.y + 0.5f, 0f) + new Vector3(Mathf.Sin(num2 * 2f * 3.14159274f), Mathf.Cos(num2 * 2f * 3.14159274f), 0f) * num;
+				}
+				array[0] = (array[this.kNumCirclePoints + 1] = (array[1] + array[this.kNumCirclePoints]) * 0.5f);
+				if (pass == 0)
+				{
+					Handles.color = BlendTreeInspector.styles.visWeightShapeColor;
+					Handles.DrawSolidDisc(point + new Vector2(0.5f, 0.5f), -Vector3.forward, num);
+				}
+				else
+				{
+					Handles.color = BlendTreeInspector.styles.visWeightLineColor;
+					Handles.DrawAAPolyLine(array);
+				}
 			}
 		}
 
@@ -1321,15 +1336,18 @@ namespace UnityEditor
 			Motion motion = this.m_BlendTree.children[index].motion;
 			EditorGUI.PropertyField(rowRects[num], serializedProperty, GUIContent.none);
 			num++;
-			if (EditorGUI.EndChangeCheck() && motion is UnityEditor.Animations.BlendTree && motion != serializedProperty.objectReferenceValue as Motion)
+			if (EditorGUI.EndChangeCheck())
 			{
-				if (EditorUtility.DisplayDialog("Changing BlendTree will delete previous BlendTree", "You cannot undo this action.", "Delete", "Cancel"))
+				if (motion is UnityEditor.Animations.BlendTree && motion != serializedProperty.objectReferenceValue as Motion)
 				{
-					MecanimUtilities.DestroyBlendTreeRecursive(motion as UnityEditor.Animations.BlendTree);
-				}
-				else
-				{
-					serializedProperty.objectReferenceValue = motion;
+					if (EditorUtility.DisplayDialog("Changing BlendTree will delete previous BlendTree", "You cannot undo this action.", "Delete", "Cancel"))
+					{
+						MecanimUtilities.DestroyBlendTreeRecursive(motion as UnityEditor.Animations.BlendTree);
+					}
+					else
+					{
+						serializedProperty.objectReferenceValue = motion;
+					}
 				}
 			}
 			if (this.m_BlendType.intValue == 0)
@@ -1341,13 +1359,16 @@ namespace UnityEditor
 					EditorGUI.BeginChangeCheck();
 					string s = EditorGUI.DelayedTextFieldInternal(rowRects[num], floatValue.ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.textField);
 					num++;
-					if (EditorGUI.EndChangeCheck() && float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out floatValue))
+					if (EditorGUI.EndChangeCheck())
 					{
-						serializedProperty2.floatValue = floatValue;
-						base.serializedObject.ApplyModifiedProperties();
-						this.m_BlendTree.SortChildren();
-						this.SetMinMaxThresholds();
-						GUI.changed = true;
+						if (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out floatValue))
+						{
+							serializedProperty2.floatValue = floatValue;
+							base.serializedObject.ApplyModifiedProperties();
+							this.m_BlendTree.SortChildren();
+							this.SetMinMaxThresholds();
+							GUI.changed = true;
+						}
 					}
 				}
 			}
@@ -1374,13 +1395,16 @@ namespace UnityEditor
 					EditorGUI.BeginChangeCheck();
 					string s2 = EditorGUI.DelayedTextFieldInternal(rowRects[num], vector2Value[i].ToString(), "inftynaeINFTYNAE0123456789.,-", EditorStyles.textField);
 					num++;
-					float value;
-					if (EditorGUI.EndChangeCheck() && float.TryParse(s2, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out value))
+					if (EditorGUI.EndChangeCheck())
 					{
-						vector2Value[i] = Mathf.Clamp(value, -10000f, 10000f);
-						serializedProperty3.vector2Value = vector2Value;
-						base.serializedObject.ApplyModifiedProperties();
-						GUI.changed = true;
+						float value;
+						if (float.TryParse(s2, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out value))
+						{
+							vector2Value[i] = Mathf.Clamp(value, -10000f, 10000f);
+							serializedProperty3.vector2Value = vector2Value;
+							base.serializedObject.ApplyModifiedProperties();
+							GUI.changed = true;
+						}
 					}
 				}
 			}
@@ -1492,37 +1516,37 @@ namespace UnityEditor
 
 		private void ComputeFromSpeed(object obj)
 		{
-			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
+			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)obj;
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.apparentSpeed, prop);
 		}
 
 		private void ComputeFromVelocityX(object obj)
 		{
-			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
+			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)obj;
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageSpeed.x * mirrorMultiplier, prop);
 		}
 
 		private void ComputeFromVelocityY(object obj)
 		{
-			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
+			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)obj;
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageSpeed.y, prop);
 		}
 
 		private void ComputeFromVelocityZ(object obj)
 		{
-			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
+			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)obj;
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageSpeed.z, prop);
 		}
 
 		private void ComputeFromAngularSpeedDegrees(object obj)
 		{
-			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
+			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)obj;
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageAngularSpeed * 180f / 3.14159274f * mirrorMultiplier, prop);
 		}
 
 		private void ComputeFromAngularSpeedRadians(object obj)
 		{
-			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)((int)obj);
+			BlendTreeInspector.ChildPropertyToCompute prop = (BlendTreeInspector.ChildPropertyToCompute)obj;
 			this.ComputeProperty((Motion m, float mirrorMultiplier) => m.averageAngularSpeed * mirrorMultiplier, prop);
 		}
 

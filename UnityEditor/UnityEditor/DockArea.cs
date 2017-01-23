@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -28,9 +29,9 @@ namespace UnityEditor
 
 		private static int s_DragMode;
 
-		internal static View s_IgnoreDockingForView;
+		internal static View s_IgnoreDockingForView = null;
 
-		private static DropInfo s_DropInfo;
+		private static DropInfo s_DropInfo = null;
 
 		[SerializeField]
 		internal List<EditorWindow> m_Panes = new List<EditorWindow>();
@@ -42,9 +43,15 @@ namespace UnityEditor
 		internal int m_LastSelected;
 
 		[NonSerialized]
-		internal GUIStyle tabStyle;
+		internal GUIStyle tabStyle = null;
 
 		private bool m_IsBeingDestroyed;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache1;
 
 		public int selected
 		{
@@ -54,9 +61,9 @@ namespace UnityEditor
 			}
 			set
 			{
-				if (this.m_Selected == value)
+				if (this.m_Selected != value)
 				{
-					return;
+					this.m_LastSelected = this.m_Selected;
 				}
 				this.m_Selected = value;
 				if (this.m_Selected >= 0 && this.m_Selected < this.m_Panes.Count)
@@ -152,57 +159,57 @@ namespace UnityEditor
 				base.DeregisterSelectedPane(true);
 			}
 			int num = this.m_Panes.IndexOf(pane);
-			if (num == -1)
+			if (num != -1)
 			{
-				return;
-			}
-			this.m_Panes.Remove(pane);
-			if (num == this.m_Selected)
-			{
-				if (this.m_LastSelected >= this.m_Panes.Count - 1)
+				this.m_Panes.Remove(pane);
+				if (num == this.m_LastSelected)
 				{
 					this.m_LastSelected = this.m_Panes.Count - 1;
 				}
-				this.m_Selected = this.m_LastSelected;
-				if (this.m_Selected > -1)
+				else if (num < this.m_LastSelected)
 				{
-					this.m_ActualView = this.m_Panes[this.m_Selected];
+					this.m_LastSelected--;
 				}
+				if (num == this.m_Selected)
+				{
+					this.selected = this.m_LastSelected;
+				}
+				else
+				{
+					this.m_Selected = this.m_Panes.IndexOf(this.m_ActualView);
+				}
+				base.Repaint();
+				pane.m_Parent = null;
+				if (killIfEmpty)
+				{
+					this.KillIfEmpty();
+				}
+				base.RegisterSelectedPane();
 			}
-			else if (num < this.m_Selected)
-			{
-				this.m_Selected--;
-			}
-			base.Repaint();
-			pane.m_Parent = null;
-			if (killIfEmpty)
-			{
-				this.KillIfEmpty();
-			}
-			base.RegisterSelectedPane();
 		}
 
 		private void KillIfEmpty()
 		{
-			if (this.m_Panes.Count != 0)
+			if (this.m_Panes.Count == 0)
 			{
-				return;
-			}
-			if (base.parent == null)
-			{
-				base.window.InternalCloseWindow();
-				return;
-			}
-			SplitView splitView = base.parent as SplitView;
-			ICleanuppable cleanuppable = base.parent as ICleanuppable;
-			splitView.RemoveChildNice(this);
-			if (!this.m_IsBeingDestroyed)
-			{
-				UnityEngine.Object.DestroyImmediate(this, true);
-			}
-			if (cleanuppable != null)
-			{
-				cleanuppable.Cleanup();
+				if (base.parent == null)
+				{
+					base.window.InternalCloseWindow();
+				}
+				else
+				{
+					SplitView splitView = base.parent as SplitView;
+					ICleanuppable cleanuppable = base.parent as ICleanuppable;
+					splitView.RemoveChildNice(this);
+					if (!this.m_IsBeingDestroyed)
+					{
+						UnityEngine.Object.DestroyImmediate(this, true);
+					}
+					if (cleanuppable != null)
+					{
+						cleanuppable.Cleanup();
+					}
+				}
 			}
 		}
 
@@ -210,6 +217,7 @@ namespace UnityEditor
 		{
 			Rect screenPosition = base.screenPosition;
 			screenPosition.height = 39f;
+			DropInfo result;
 			if (screenPosition.Contains(mouseScreenPosition))
 			{
 				if (this.background == null)
@@ -226,13 +234,17 @@ namespace UnityEditor
 					base.Repaint();
 					DockArea.s_PlaceholderPos = tabAtMousePos;
 				}
-				return new DropInfo(this)
+				result = new DropInfo(this)
 				{
 					type = DropInfo.Type.Tab,
 					rect = new Rect(mousePos.x - tabWidth * 0.25f + rect.x, tabRect.y + rect.y, tabWidth, tabRect.height)
 				};
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public bool PerformDrop(EditorWindow w, DropInfo info, Vector2 screenPos)
@@ -287,7 +299,7 @@ namespace UnityEditor
 				splitView = (base.parent as SplitView);
 			}
 			bool flag = false;
-			if (base.window.mainView.GetType() != typeof(MainWindow))
+			if (base.window.rootView.GetType() != typeof(MainView))
 			{
 				flag = true;
 				if (base.windowPosition.y == 0f)
@@ -313,69 +325,46 @@ namespace UnityEditor
 					Event.current.Use();
 				}
 			}
-			GUIStyle style = "dockareaoverlay";
-			Rect position = this.background.margin.Remove(new Rect(0f, 0f, base.position.width, base.position.height));
-			position.x = (float)this.background.margin.left;
-			position.y = (float)this.background.margin.top;
+			Rect rect = this.background.margin.Remove(new Rect(0f, 0f, base.position.width, base.position.height));
+			rect.x = (float)this.background.margin.left;
+			rect.y = (float)this.background.margin.top;
 			Rect windowPosition = base.windowPosition;
 			float num2 = 2f;
 			if (windowPosition.x == 0f)
 			{
-				position.x -= num2;
-				position.width += num2;
+				rect.x -= num2;
+				rect.width += num2;
 			}
 			if (windowPosition.xMax == base.window.position.width)
 			{
-				position.width += num2;
+				rect.width += num2;
 			}
 			if (windowPosition.yMax == base.window.position.height)
 			{
-				position.height += ((!flag) ? 2f : 2f);
+				rect.height += ((!flag) ? 2f : 2f);
 			}
-			GUI.Box(position, GUIContent.none, this.background);
+			GUI.Box(rect, GUIContent.none, this.background);
 			if (this.tabStyle == null)
 			{
 				this.tabStyle = "dragtab";
 			}
 			if (this.m_Panes.Count > 0)
 			{
-				DockArea.BeginOffsetArea(new Rect(position.x + 2f, position.y + 17f, position.width - 4f, position.height - 17f - 2f), GUIContent.none, "TabWindowBackground");
+				HostView.BeginOffsetArea(new Rect(rect.x + 2f, rect.y + 17f, rect.width - 4f, rect.height - 17f - 2f), GUIContent.none, "TabWindowBackground");
 				Vector2 vector = GUIUtility.GUIToScreenPoint(Vector2.zero);
 				Rect pos = base.borderSize.Remove(base.position);
 				pos.x = vector.x;
 				pos.y = vector.y;
 				this.m_Panes[this.selected].m_Pos = pos;
-				DockArea.EndOffsetArea();
+				HostView.EndOffsetArea();
 			}
-			this.DragTab(new Rect(position.x + 1f, position.y, position.width - 40f, 17f), this.tabStyle);
+			this.DragTab(new Rect(rect.x + 1f, rect.y, rect.width - 40f, 17f), this.tabStyle);
 			this.tabStyle = "dragtab";
 			base.ShowGenericMenu();
-			base.DoWindowDecorationStart();
 			if (this.m_Panes.Count > 0)
 			{
-				if (this.m_Panes[this.selected] is GameView)
-				{
-					GUI.Box(position, GUIContent.none, style);
-				}
-				DockArea.BeginOffsetArea(new Rect(position.x + 2f, position.y + 17f, position.width - 4f, position.height - 17f - 2f), GUIContent.none, "TabWindowBackground");
-				EditorGUIUtility.ResetGUIState();
-				try
-				{
-					base.Invoke("OnGUI");
-				}
-				catch (TargetInvocationException ex)
-				{
-					throw ex.InnerException;
-				}
-				EditorGUIUtility.ResetGUIState();
-				if (base.actualView != null && base.actualView.m_FadeoutTime != 0f && Event.current != null && Event.current.type == EventType.Repaint)
-				{
-					base.actualView.DrawNotification();
-				}
-				DockArea.EndOffsetArea();
+				base.InvokeOnGUI(rect);
 			}
-			base.DoWindowDecorationEnd();
-			GUI.Box(position, GUIContent.none, style);
 			EditorGUI.ShowRepaints();
 			Highlighter.ControlHighlightGUI(this);
 		}
@@ -403,11 +392,31 @@ namespace UnityEditor
 			}
 		}
 
+		private int GetMainWindowPaneCount()
+		{
+			int num = 0;
+			ContainerWindow containerWindow = ContainerWindow.windows.First((ContainerWindow e) => e.showMode == ShowMode.MainWindow);
+			if (containerWindow != null)
+			{
+				View[] allChildren = containerWindow.rootView.allChildren;
+				for (int i = 0; i < allChildren.Length; i++)
+				{
+					View view = allChildren[i];
+					DockArea dockArea = view as DockArea;
+					if (dockArea != null)
+					{
+						num += dockArea.m_Panes.Count;
+					}
+				}
+			}
+			return num;
+		}
+
 		protected override void AddDefaultItemsToMenu(GenericMenu menu, EditorWindow view)
 		{
 			if (menu.GetItemCount() != 0)
 			{
-				menu.AddSeparator(string.Empty);
+				menu.AddSeparator("");
 			}
 			if (base.parent.window.showMode == ShowMode.MainWindow)
 			{
@@ -417,8 +426,16 @@ namespace UnityEditor
 			{
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Maximize"));
 			}
-			menu.AddItem(EditorGUIUtility.TextContent("Close Tab"), false, new GenericMenu.MenuFunction2(this.Close), view);
-			menu.AddSeparator(string.Empty);
+			bool flag = base.window.showMode != ShowMode.MainWindow || this.GetMainWindowPaneCount() > 1;
+			if (flag)
+			{
+				menu.AddItem(EditorGUIUtility.TextContent("Close Tab"), false, new GenericMenu.MenuFunction2(this.Close), view);
+			}
+			else
+			{
+				menu.AddDisabledItem(EditorGUIUtility.TextContent("Close Tab"));
+			}
+			menu.AddSeparator("");
 			Type[] paneTypes = base.GetPaneTypes();
 			GUIContent gUIContent = EditorGUIUtility.TextContent("Add Tab");
 			Type[] array = paneTypes;
@@ -438,30 +455,6 @@ namespace UnityEditor
 		{
 			EditorWindow pane = (EditorWindow)ScriptableObject.CreateInstance((Type)userData);
 			this.AddTab(pane);
-		}
-
-		public static void EndOffsetArea()
-		{
-			if (Event.current.type == EventType.Used)
-			{
-				return;
-			}
-			GUILayoutUtility.EndLayoutGroup();
-			GUI.EndGroup();
-		}
-
-		public static void BeginOffsetArea(Rect screenRect, GUIContent content, GUIStyle style)
-		{
-			GUILayoutGroup gUILayoutGroup = EditorGUILayoutUtilityInternal.BeginLayoutArea(style, typeof(GUILayoutGroup));
-			EventType type = Event.current.type;
-			if (type == EventType.Layout)
-			{
-				gUILayoutGroup.resetCoords = false;
-				gUILayoutGroup.minWidth = (gUILayoutGroup.maxWidth = screenRect.width + 1f);
-				gUILayoutGroup.minHeight = (gUILayoutGroup.maxHeight = screenRect.height + 2f);
-				gUILayoutGroup.rect = Rect.MinMaxRect(-1f, -1f, gUILayoutGroup.rect.xMax, gUILayoutGroup.rect.yMax - 10f);
-			}
-			GUI.BeginGroup(screenRect, content, style);
 		}
 
 		private float GetTabWidth(float width)
@@ -524,9 +517,17 @@ namespace UnityEditor
 					int tabAtMousePos = this.GetTabAtMousePos(current.mousePosition, pos);
 					if (tabAtMousePos < this.m_Panes.Count)
 					{
-						switch (current.button)
+						int button = current.button;
+						if (button != 0)
 						{
-						case 0:
+							if (button == 2)
+							{
+								this.m_Panes[tabAtMousePos].Close();
+								current.Use();
+							}
+						}
+						else
+						{
 							if (tabAtMousePos != this.selected)
 							{
 								this.selected = tabAtMousePos;
@@ -535,15 +536,10 @@ namespace UnityEditor
 							DockArea.s_StartDragPosition = current.mousePosition;
 							DockArea.s_DragMode = 0;
 							current.Use();
-							break;
-						case 2:
-							this.m_Panes[tabAtMousePos].Close();
-							current.Use();
-							break;
 						}
 					}
 				}
-				goto IL_6B9;
+				goto IL_744;
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == controlID)
 				{
@@ -552,7 +548,12 @@ namespace UnityEditor
 					{
 						DockArea.s_DragMode = 0;
 						PaneDragTab.get.Close();
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(DockArea.CheckDragWindowExists));
+						Delegate arg_49D_0 = EditorApplication.update;
+						if (DockArea.<>f__mg$cache1 == null)
+						{
+							DockArea.<>f__mg$cache1 = new EditorApplication.CallbackFunction(DockArea.CheckDragWindowExists);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_49D_0, DockArea.<>f__mg$cache1);
 						if (DockArea.s_DropInfo != null && DockArea.s_DropInfo.dropArea != null)
 						{
 							DockArea.s_DropInfo.dropArea.PerformDrop(DockArea.s_DragPane, DockArea.s_DropInfo, vector);
@@ -579,15 +580,15 @@ namespace UnityEditor
 					GUIUtility.hotControl = 0;
 					current.Use();
 				}
-				goto IL_6B9;
+				goto IL_744;
 			case EventType.MouseMove:
 			case EventType.KeyDown:
 			case EventType.KeyUp:
 			case EventType.ScrollWheel:
-				IL_6E:
+				IL_6F:
 				if (typeForControl != EventType.ContextClick)
 				{
-					goto IL_6B9;
+					goto IL_744;
 				}
 				if (pos.Contains(current.mousePosition) && GUIUtility.hotControl == 0)
 				{
@@ -597,14 +598,15 @@ namespace UnityEditor
 						base.PopupGenericMenu(this.m_Panes[tabAtMousePos2], new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f));
 					}
 				}
-				goto IL_6B9;
+				goto IL_744;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == controlID)
 				{
 					Vector2 vector2 = current.mousePosition - DockArea.s_StartDragPosition;
 					current.Use();
 					Rect screenPosition = base.screenPosition;
-					if (DockArea.s_DragMode == 0 && vector2.sqrMagnitude > 99f)
+					bool flag = base.window.showMode != ShowMode.MainWindow || this.GetMainWindowPaneCount() > 1;
+					if (DockArea.s_DragMode == 0 && vector2.sqrMagnitude > 99f && flag)
 					{
 						DockArea.s_DragMode = 1;
 						DockArea.s_PlaceholderPos = this.selected;
@@ -618,11 +620,13 @@ namespace UnityEditor
 							DockArea.s_IgnoreDockingForView = null;
 						}
 						DockArea.s_OriginalDragSource = this;
-						PaneDragTab.get.content = DockArea.s_DragPane.titleContent;
-						base.Internal_SetAsActiveWindow();
-						PaneDragTab.get.GrabThumbnail();
-						PaneDragTab.get.Show(new Rect(pos.x + screenPosition.x + tabWidth * (float)this.selected, pos.y + screenPosition.y, tabWidth, pos.height), GUIUtility.GUIToScreenPoint(current.mousePosition));
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(DockArea.CheckDragWindowExists));
+						PaneDragTab.get.Show(new Rect(pos.x + screenPosition.x + tabWidth * (float)this.selected, pos.y + screenPosition.y, tabWidth, pos.height), DockArea.s_DragPane.titleContent, base.position.size, GUIUtility.GUIToScreenPoint(current.mousePosition));
+						Delegate arg_2F8_0 = EditorApplication.update;
+						if (DockArea.<>f__mg$cache0 == null)
+						{
+							DockArea.<>f__mg$cache0 = new EditorApplication.CallbackFunction(DockArea.CheckDragWindowExists);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_2F8_0, DockArea.<>f__mg$cache0);
 						GUIUtility.ExitGUI();
 					}
 					if (DockArea.s_DragMode == 1)
@@ -635,18 +639,26 @@ namespace UnityEditor
 						for (int i = 0; i < array.Length; i++)
 						{
 							ContainerWindow containerWindow = array[i];
-							View[] allChildren = containerWindow.mainView.allChildren;
-							for (int j = 0; j < allChildren.Length; j++)
+							SplitView rootSplitView = containerWindow.rootSplitView;
+							if (rootSplitView != null)
 							{
-								View view = allChildren[j];
-								IDropArea dropArea = view as IDropArea;
-								if (dropArea != null)
+								dropInfo = rootSplitView.DragOverRootView(vector3);
+							}
+							if (dropInfo == null)
+							{
+								View[] allChildren = containerWindow.rootView.allChildren;
+								for (int j = 0; j < allChildren.Length; j++)
 								{
-									dropInfo = dropArea.DragOver(DockArea.s_DragPane, vector3);
-								}
-								if (dropInfo != null)
-								{
-									break;
+									View view = allChildren[j];
+									IDropArea dropArea = view as IDropArea;
+									if (dropArea != null)
+									{
+										dropInfo = dropArea.DragOver(DockArea.s_DragPane, vector3);
+									}
+									if (dropInfo != null)
+									{
+										break;
+									}
 								}
 							}
 							if (dropInfo != null)
@@ -670,7 +682,7 @@ namespace UnityEditor
 						}
 					}
 				}
-				goto IL_6B9;
+				goto IL_744;
 			case EventType.Repaint:
 			{
 				float num = pos.xMin;
@@ -701,50 +713,55 @@ namespace UnityEditor
 					Rect position3 = new Rect(num4, rect2.y, Mathf.Round(rect2.x + rect2.width) - num4, rect2.height);
 					tabStyle.Draw(position3, "Failed to load", false, false, true, false);
 				}
-				goto IL_6B9;
+				goto IL_744;
 			}
 			}
-			goto IL_6E;
-			IL_6B9:
+			goto IL_6F;
+			IL_744:
 			this.selected = Mathf.Clamp(this.selected, 0, this.m_Panes.Count - 1);
 		}
 
 		protected override RectOffset GetBorderSize()
 		{
+			RectOffset borderSize;
 			if (!base.window)
 			{
-				return this.m_BorderSize;
+				borderSize = this.m_BorderSize;
 			}
-			RectOffset arg_48_0 = this.m_BorderSize;
-			int num = 0;
-			this.m_BorderSize.bottom = num;
-			num = num;
-			this.m_BorderSize.top = num;
-			num = num;
-			this.m_BorderSize.right = num;
-			arg_48_0.left = num;
-			Rect windowPosition = base.windowPosition;
-			if (windowPosition.xMin != 0f)
+			else
 			{
-				this.m_BorderSize.left += 2;
+				RectOffset arg_4E_0 = this.m_BorderSize;
+				int num = 0;
+				this.m_BorderSize.bottom = num;
+				num = num;
+				this.m_BorderSize.top = num;
+				num = num;
+				this.m_BorderSize.right = num;
+				arg_4E_0.left = num;
+				Rect windowPosition = base.windowPosition;
+				if (windowPosition.xMin != 0f)
+				{
+					this.m_BorderSize.left += 2;
+				}
+				if (windowPosition.xMax != base.window.position.width)
+				{
+					this.m_BorderSize.right += 2;
+				}
+				this.m_BorderSize.top = 17;
+				bool flag = base.windowPosition.y == 0f;
+				bool flag2 = windowPosition.yMax == base.window.position.height;
+				this.m_BorderSize.bottom = 4;
+				if (flag2)
+				{
+					this.m_BorderSize.bottom -= 2;
+				}
+				if (flag)
+				{
+					this.m_BorderSize.bottom += 3;
+				}
+				borderSize = this.m_BorderSize;
 			}
-			if (windowPosition.xMax != base.window.position.width)
-			{
-				this.m_BorderSize.right += 2;
-			}
-			this.m_BorderSize.top = 17;
-			bool flag = base.windowPosition.y == 0f;
-			bool flag2 = windowPosition.yMax == base.window.position.height;
-			this.m_BorderSize.bottom = 4;
-			if (flag2)
-			{
-				this.m_BorderSize.bottom -= 2;
-			}
-			if (flag)
-			{
-				this.m_BorderSize.bottom += 3;
-			}
-			return this.m_BorderSize;
+			return borderSize;
 		}
 
 		private static void ResetDragVars()

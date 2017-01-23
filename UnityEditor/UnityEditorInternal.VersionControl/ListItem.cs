@@ -44,11 +44,16 @@ namespace UnityEditorInternal.VersionControl
 			get
 			{
 				Asset asset = this.item as Asset;
+				Texture cachedIcon;
 				if (this.icon == null && asset != null)
 				{
-					return AssetDatabase.GetCachedIcon(asset.path);
+					cachedIcon = AssetDatabase.GetCachedIcon(asset.path);
 				}
-				return this.icon;
+				else
+				{
+					cachedIcon = this.icon;
+				}
+				return cachedIcon;
 			}
 			set
 			{
@@ -228,20 +233,25 @@ namespace UnityEditorInternal.VersionControl
 		{
 			get
 			{
+				int result;
 				if (!this.Expanded)
 				{
-					return 0;
+					result = 0;
 				}
-				int num = 0;
-				for (ListItem listItem = this.firstChild; listItem != null; listItem = listItem.next)
+				else
 				{
-					if (!listItem.Hidden)
+					int num = 0;
+					for (ListItem listItem = this.firstChild; listItem != null; listItem = listItem.next)
 					{
-						num++;
-						num += listItem.OpenCount;
+						if (!listItem.Hidden)
+						{
+							num++;
+							num += listItem.OpenCount;
+						}
 					}
+					result = num;
 				}
-				return num;
+				return result;
 			}
 		}
 
@@ -302,18 +312,22 @@ namespace UnityEditorInternal.VersionControl
 		{
 			get
 			{
+				ListItem result;
 				for (ListItem listItem = this.prev; listItem != null; listItem = listItem.lastChild)
 				{
 					if (listItem.lastChild == null || !listItem.Expanded)
 					{
-						return listItem;
+						result = listItem;
+						return result;
 					}
 				}
 				if (this.parent != null && this.parent.parent != null)
 				{
-					return this.parent;
+					result = this.parent;
+					return result;
 				}
-				return null;
+				result = null;
+				return result;
 			}
 		}
 
@@ -321,22 +335,28 @@ namespace UnityEditorInternal.VersionControl
 		{
 			get
 			{
+				ListItem result;
 				if (this.Expanded && this.firstChild != null)
 				{
-					return this.firstChild;
+					result = this.firstChild;
 				}
-				if (this.next != null)
+				else if (this.next != null)
 				{
-					return this.next;
+					result = this.next;
 				}
-				for (ListItem listItem = this.parent; listItem != null; listItem = listItem.parent)
+				else
 				{
-					if (listItem.Next != null)
+					for (ListItem listItem = this.parent; listItem != null; listItem = listItem.parent)
 					{
-						return listItem.Next;
+						if (listItem.Next != null)
+						{
+							result = listItem.Next;
+							return result;
+						}
 					}
+					result = null;
 				}
-				return null;
+				return result;
 			}
 		}
 
@@ -411,14 +431,17 @@ namespace UnityEditorInternal.VersionControl
 
 		public bool IsChildOf(ListItem listItem)
 		{
+			bool result;
 			for (ListItem listItem2 = this.Parent; listItem2 != null; listItem2 = listItem2.Parent)
 			{
 				if (listItem2 == listItem)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public void Clear()
@@ -457,34 +480,39 @@ namespace UnityEditorInternal.VersionControl
 
 		public bool Remove(ListItem listItem)
 		{
+			bool result;
 			if (listItem == null)
 			{
-				return false;
+				result = false;
 			}
-			if (listItem.parent != this)
+			else if (listItem.parent != this)
 			{
-				return false;
+				result = false;
 			}
-			if (listItem == this.firstChild)
+			else
 			{
-				this.firstChild = listItem.next;
+				if (listItem == this.firstChild)
+				{
+					this.firstChild = listItem.next;
+				}
+				if (listItem == this.lastChild)
+				{
+					this.lastChild = listItem.prev;
+				}
+				if (listItem.prev != null)
+				{
+					listItem.prev.next = listItem.next;
+				}
+				if (listItem.next != null)
+				{
+					listItem.next.prev = listItem.prev;
+				}
+				listItem.parent = null;
+				listItem.prev = null;
+				listItem.next = null;
+				result = true;
 			}
-			if (listItem == this.lastChild)
-			{
-				this.lastChild = listItem.prev;
-			}
-			if (listItem.prev != null)
-			{
-				listItem.prev.next = listItem.next;
-			}
-			if (listItem.next != null)
-			{
-				listItem.next.prev = listItem.prev;
-			}
-			listItem.parent = null;
-			listItem.prev = null;
-			listItem.next = null;
-			return true;
+			return result;
 		}
 
 		public void RemoveAll()
@@ -499,19 +527,25 @@ namespace UnityEditorInternal.VersionControl
 
 		public ListItem FindWithIdentifierRecurse(int inIdentifier)
 		{
+			ListItem result;
 			if (this.Identifier == inIdentifier)
 			{
-				return this;
+				result = this;
 			}
-			for (ListItem listItem = this.firstChild; listItem != null; listItem = listItem.next)
+			else
 			{
-				ListItem listItem2 = listItem.FindWithIdentifierRecurse(inIdentifier);
-				if (listItem2 != null)
+				for (ListItem listItem = this.firstChild; listItem != null; listItem = listItem.next)
 				{
-					return listItem2;
+					ListItem listItem2 = listItem.FindWithIdentifierRecurse(inIdentifier);
+					if (listItem2 != null)
+					{
+						result = listItem2;
+						return result;
+					}
 				}
+				result = null;
 			}
-			return null;
+			return result;
 		}
 
 		private void SetIntent(ListItem listItem, int indent)

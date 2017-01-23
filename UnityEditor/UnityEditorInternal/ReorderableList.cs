@@ -8,19 +8,35 @@ namespace UnityEditorInternal
 {
 	public class ReorderableList
 	{
+		public delegate void HeaderCallbackDelegate(Rect rect);
+
+		public delegate void FooterCallbackDelegate(Rect rect);
+
+		public delegate void ElementCallbackDelegate(Rect rect, int index, bool isActive, bool isFocused);
+
+		public delegate float ElementHeightCallbackDelegate(int index);
+
+		public delegate void ReorderCallbackDelegate(ReorderableList list);
+
+		public delegate void SelectCallbackDelegate(ReorderableList list);
+
+		public delegate void AddCallbackDelegate(ReorderableList list);
+
+		public delegate void AddDropdownCallbackDelegate(Rect buttonRect, ReorderableList list);
+
+		public delegate void RemoveCallbackDelegate(ReorderableList list);
+
+		public delegate void ChangedCallbackDelegate(ReorderableList list);
+
+		public delegate bool CanRemoveCallbackDelegate(ReorderableList list);
+
 		public class Defaults
 		{
-			private const int buttonWidth = 25;
+			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "|Add to list");
 
-			public const int padding = 6;
+			public GUIContent iconToolbarPlusMore = EditorGUIUtility.IconContent("Toolbar Plus More", "|Choose to add to list");
 
-			public const int dragHandleWidth = 20;
-
-			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add to list");
-
-			public GUIContent iconToolbarPlusMore = EditorGUIUtility.IconContent("Toolbar Plus More", "Choose to add to list");
-
-			public GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove selection from list");
+			public GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "|Remove selection from list");
 
 			public readonly GUIStyle draggingHandle = "RL DragHandle";
 
@@ -33,6 +49,12 @@ namespace UnityEditorInternal
 			public readonly GUIStyle preButton = "RL FooterButton";
 
 			public GUIStyle elementBackground = new GUIStyle("RL Element");
+
+			private const int buttonWidth = 25;
+
+			public const int padding = 6;
+
+			public const int dragHandleWidth = 20;
 
 			public void DrawFooter(Rect rect, ReorderableList list)
 			{
@@ -53,23 +75,26 @@ namespace UnityEditorInternal
 				{
 					this.footerBackground.Draw(rect, false, false, false, false);
 				}
-				if (list.displayAdd && GUI.Button(rect2, (list.onAddDropdownCallback == null) ? this.iconToolbarPlus : this.iconToolbarPlusMore, this.preButton))
+				if (list.displayAdd)
 				{
-					if (list.onAddDropdownCallback != null)
+					if (GUI.Button(rect2, (list.onAddDropdownCallback == null) ? this.iconToolbarPlus : this.iconToolbarPlusMore, this.preButton))
 					{
-						list.onAddDropdownCallback(rect2, list);
-					}
-					else if (list.onAddCallback != null)
-					{
-						list.onAddCallback(list);
-					}
-					else
-					{
-						this.DoAddButton(list);
-					}
-					if (list.onChangedCallback != null)
-					{
-						list.onChangedCallback(list);
+						if (list.onAddDropdownCallback != null)
+						{
+							list.onAddDropdownCallback(rect2, list);
+						}
+						else if (list.onAddCallback != null)
+						{
+							list.onAddCallback(list);
+						}
+						else
+						{
+							this.DoAddButton(list);
+						}
+						if (list.onChangedCallback != null)
+						{
+							list.onChangedCallback(list);
+						}
 					}
 				}
 				if (list.displayRemove)
@@ -107,7 +132,7 @@ namespace UnityEditorInternal
 					Type elementType = list.list.GetType().GetElementType();
 					if (elementType == typeof(string))
 					{
-						list.index = list.list.Add(string.Empty);
+						list.index = list.list.Add("");
 					}
 					else if (elementType != null && elementType.GetConstructor(Type.EmptyTypes) == null)
 					{
@@ -171,9 +196,12 @@ namespace UnityEditorInternal
 
 			public void DrawElementDraggingHandle(Rect rect, int index, bool selected, bool focused, bool draggable)
 			{
-				if (Event.current.type == EventType.Repaint && draggable)
+				if (Event.current.type == EventType.Repaint)
 				{
-					this.draggingHandle.Draw(new Rect(rect.x + 5f, rect.y + 7f, 10f, rect.height - (rect.height - 7f)), false, false, false, false);
+					if (draggable)
+					{
+						this.draggingHandle.Draw(new Rect(rect.x + 5f, rect.y + 7f, 10f, rect.height - (rect.height - 7f)), false, false, false, false);
+					}
 				}
 			}
 
@@ -188,31 +216,9 @@ namespace UnityEditorInternal
 			}
 		}
 
-		public delegate void HeaderCallbackDelegate(Rect rect);
-
-		public delegate void FooterCallbackDelegate(Rect rect);
-
-		public delegate void ElementCallbackDelegate(Rect rect, int index, bool isActive, bool isFocused);
-
-		public delegate float ElementHeightCallbackDelegate(int index);
-
-		public delegate void ReorderCallbackDelegate(ReorderableList list);
-
-		public delegate void SelectCallbackDelegate(ReorderableList list);
-
-		public delegate void AddCallbackDelegate(ReorderableList list);
-
-		public delegate void AddDropdownCallbackDelegate(Rect buttonRect, ReorderableList list);
-
-		public delegate void RemoveCallbackDelegate(ReorderableList list);
-
-		public delegate void ChangedCallbackDelegate(ReorderableList list);
-
-		public delegate bool CanRemoveCallbackDelegate(ReorderableList list);
-
 		public ReorderableList.HeaderCallbackDelegate drawHeaderCallback;
 
-		public ReorderableList.FooterCallbackDelegate drawFooterCallback;
+		public ReorderableList.FooterCallbackDelegate drawFooterCallback = null;
 
 		public ReorderableList.ElementCallbackDelegate drawElementCallback;
 
@@ -238,7 +244,7 @@ namespace UnityEditorInternal
 
 		private int m_ActiveElement = -1;
 
-		private float m_DragOffset;
+		private float m_DragOffset = 0f;
 
 		private GUISlideGroup m_SlideGroup;
 
@@ -334,24 +340,32 @@ namespace UnityEditorInternal
 		{
 			get
 			{
-				if (this.m_Elements == null)
+				int result;
+				if (this.m_Elements != null)
 				{
-					return this.m_ElementList.Count;
+					if (!this.m_Elements.hasMultipleDifferentValues)
+					{
+						result = this.m_Elements.arraySize;
+					}
+					else
+					{
+						int num = this.m_Elements.arraySize;
+						UnityEngine.Object[] targetObjects = this.m_Elements.serializedObject.targetObjects;
+						for (int i = 0; i < targetObjects.Length; i++)
+						{
+							UnityEngine.Object obj = targetObjects[i];
+							SerializedObject serializedObject = new SerializedObject(obj);
+							SerializedProperty serializedProperty = serializedObject.FindProperty(this.m_Elements.propertyPath);
+							num = Math.Min(serializedProperty.arraySize, num);
+						}
+						result = num;
+					}
 				}
-				if (!this.m_Elements.hasMultipleDifferentValues)
+				else
 				{
-					return this.m_Elements.arraySize;
+					result = this.m_ElementList.Count;
 				}
-				int num = this.m_Elements.arraySize;
-				UnityEngine.Object[] targetObjects = this.m_Elements.serializedObject.targetObjects;
-				for (int i = 0; i < targetObjects.Length; i++)
-				{
-					UnityEngine.Object obj = targetObjects[i];
-					SerializedObject serializedObject = new SerializedObject(obj);
-					SerializedProperty serializedProperty = serializedObject.FindProperty(this.m_Elements.propertyPath);
-					num = Math.Min(serializedProperty.arraySize, num);
-				}
-				return num;
+				return result;
 			}
 		}
 
@@ -414,25 +428,43 @@ namespace UnityEditorInternal
 
 		private float GetElementYOffset(int index)
 		{
+			return this.GetElementYOffset(index, -1);
+		}
+
+		private float GetElementYOffset(int index, int skipIndex)
+		{
+			float result;
 			if (this.elementHeightCallback == null)
 			{
-				return (float)index * this.elementHeight;
+				result = (float)index * this.elementHeight;
 			}
-			float num = 0f;
-			for (int i = 0; i < index; i++)
+			else
 			{
-				num += this.elementHeightCallback(i);
+				float num = 0f;
+				for (int i = 0; i < index; i++)
+				{
+					if (i != skipIndex)
+					{
+						num += this.elementHeightCallback(i);
+					}
+				}
+				result = num;
 			}
-			return num;
+			return result;
 		}
 
 		private float GetElementHeight(int index)
 		{
+			float result;
 			if (this.elementHeightCallback == null)
 			{
-				return this.elementHeight;
+				result = this.elementHeight;
 			}
-			return this.elementHeightCallback(index);
+			else
+			{
+				result = this.elementHeightCallback(index);
+			}
+			return result;
 		}
 
 		private Rect GetRowRect(int index, Rect listRect)
@@ -488,15 +520,20 @@ namespace UnityEditorInternal
 		private float GetListElementHeight()
 		{
 			int count = this.count;
+			float result;
 			if (count == 0)
 			{
-				return this.elementHeight + 7f;
+				result = this.elementHeight + 7f;
 			}
-			if (this.elementHeightCallback != null)
+			else if (this.elementHeightCallback != null)
 			{
-				return this.GetElementYOffset(count - 1) + this.GetElementHeight(count - 1) + 7f;
+				result = this.GetElementYOffset(count - 1) + this.GetElementHeight(count - 1) + 7f;
 			}
-			return this.elementHeight * (float)count + 7f;
+			else
+			{
+				result = this.elementHeight * (float)count + 7f;
+			}
+			return result;
 		}
 
 		private void DoListElements(Rect listRect)
@@ -525,11 +562,23 @@ namespace UnityEditorInternal
 						}
 					}
 					this.m_NonDragTargetIndices.Insert(index, -1);
+					bool flag = false;
 					for (int j = 0; j < this.m_NonDragTargetIndices.Count; j++)
 					{
 						if (this.m_NonDragTargetIndices[j] != -1)
 						{
-							rect.y = listRect.y + this.GetElementYOffset(j);
+							if (this.elementHeightCallback == null)
+							{
+								rect.y = listRect.y + this.GetElementYOffset(j, this.m_ActiveElement);
+							}
+							else
+							{
+								rect.y = listRect.y + this.GetElementYOffset(this.m_NonDragTargetIndices[j], this.m_ActiveElement);
+								if (flag)
+								{
+									rect.y += this.elementHeightCallback(this.m_ActiveElement);
+								}
+							}
 							rect = this.m_SlideGroup.GetRect(this.m_NonDragTargetIndices[j], rect);
 							if (this.drawElementBackgroundCallback == null)
 							{
@@ -556,6 +605,10 @@ namespace UnityEditorInternal
 							{
 								this.drawElementCallback(rect2, this.m_NonDragTargetIndices[j], false, false);
 							}
+						}
+						else
+						{
+							flag = true;
 						}
 					}
 					rect.y = this.m_DraggedY - this.m_DragOffset + listRect.y;
@@ -589,33 +642,33 @@ namespace UnityEditorInternal
 				{
 					for (int k = 0; k < count; k++)
 					{
-						bool flag = k == this.m_ActiveElement;
-						bool flag2 = k == this.m_ActiveElement && this.HasKeyboardControl();
+						bool flag2 = k == this.m_ActiveElement;
+						bool flag3 = k == this.m_ActiveElement && this.HasKeyboardControl();
 						rect.y = listRect.y + this.GetElementYOffset(k);
 						if (this.drawElementBackgroundCallback == null)
 						{
-							ReorderableList.s_Defaults.DrawElementBackground(rect, k, flag, flag2, this.m_Draggable);
+							ReorderableList.s_Defaults.DrawElementBackground(rect, k, flag2, flag3, this.m_Draggable);
 						}
 						else
 						{
-							this.drawElementBackgroundCallback(rect, k, flag, flag2);
+							this.drawElementBackgroundCallback(rect, k, flag2, flag3);
 						}
-						ReorderableList.s_Defaults.DrawElementDraggingHandle(rect, k, flag, flag2, this.m_Draggable);
+						ReorderableList.s_Defaults.DrawElementDraggingHandle(rect, k, flag2, flag3, this.m_Draggable);
 						rect2 = this.GetContentRect(rect);
 						if (this.drawElementCallback == null)
 						{
 							if (this.m_Elements != null)
 							{
-								ReorderableList.s_Defaults.DrawElement(rect2, this.m_Elements.GetArrayElementAtIndex(k), null, flag, flag2, this.m_Draggable);
+								ReorderableList.s_Defaults.DrawElement(rect2, this.m_Elements.GetArrayElementAtIndex(k), null, flag2, flag3, this.m_Draggable);
 							}
 							else
 							{
-								ReorderableList.s_Defaults.DrawElement(rect2, null, this.m_ElementList[k], flag, flag2, this.m_Draggable);
+								ReorderableList.s_Defaults.DrawElement(rect2, null, this.m_ElementList[k], flag2, flag3, this.m_Draggable);
 							}
 						}
 						else
 						{
-							this.drawElementCallback(rect2, k, flag, flag2);
+							this.drawElementCallback(rect2, k, flag2, flag3);
 						}
 					}
 				}
@@ -709,50 +762,56 @@ namespace UnityEditorInternal
 				{
 					current.Use();
 					this.m_Dragging = false;
-					int num = this.CalculateRowIndex();
-					if (this.m_ActiveElement != num)
+					try
 					{
-						if (this.m_SerializedObject != null && this.m_Elements != null)
+						int num = this.CalculateRowIndex();
+						if (this.m_ActiveElement != num)
 						{
-							this.m_Elements.MoveArrayElement(this.m_ActiveElement, num);
-							this.m_SerializedObject.ApplyModifiedProperties();
-							this.m_SerializedObject.Update();
-						}
-						else if (this.m_ElementList != null)
-						{
-							object value = this.m_ElementList[this.m_ActiveElement];
-							for (int i = 0; i < this.m_ElementList.Count - 1; i++)
+							if (this.m_SerializedObject != null && this.m_Elements != null)
 							{
-								if (i >= this.m_ActiveElement)
-								{
-									this.m_ElementList[i] = this.m_ElementList[i + 1];
-								}
+								this.m_Elements.MoveArrayElement(this.m_ActiveElement, num);
+								this.m_SerializedObject.ApplyModifiedProperties();
+								this.m_SerializedObject.Update();
 							}
-							for (int j = this.m_ElementList.Count - 1; j > 0; j--)
+							else if (this.m_ElementList != null)
 							{
-								if (j > num)
+								object value = this.m_ElementList[this.m_ActiveElement];
+								for (int i = 0; i < this.m_ElementList.Count - 1; i++)
 								{
-									this.m_ElementList[j] = this.m_ElementList[j - 1];
+									if (i >= this.m_ActiveElement)
+									{
+										this.m_ElementList[i] = this.m_ElementList[i + 1];
+									}
 								}
+								for (int j = this.m_ElementList.Count - 1; j > 0; j--)
+								{
+									if (j > num)
+									{
+										this.m_ElementList[j] = this.m_ElementList[j - 1];
+									}
+								}
+								this.m_ElementList[num] = value;
 							}
-							this.m_ElementList[num] = value;
+							this.m_ActiveElement = num;
+							if (this.onReorderCallback != null)
+							{
+								this.onReorderCallback(this);
+							}
+							if (this.onChangedCallback != null)
+							{
+								this.onChangedCallback(this);
+							}
 						}
-						this.m_ActiveElement = num;
-						if (this.onReorderCallback != null)
+						else if (this.onMouseUpCallback != null)
 						{
-							this.onReorderCallback(this);
-						}
-						if (this.onChangedCallback != null)
-						{
-							this.onChangedCallback(this);
+							this.onMouseUpCallback(this);
 						}
 					}
-					else if (this.onMouseUpCallback != null)
+					finally
 					{
-						this.onMouseUpCallback(this);
+						GUIUtility.hotControl = 0;
+						this.m_NonDragTargetIndices = null;
 					}
-					GUIUtility.hotControl = 0;
-					this.m_NonDragTargetIndices = null;
 				}
 				break;
 			case EventType.MouseDrag:
@@ -811,22 +870,28 @@ namespace UnityEditorInternal
 
 		private int GetRowIndex(float localY)
 		{
+			int result;
 			if (this.elementHeightCallback == null)
 			{
-				return Mathf.Clamp(Mathf.FloorToInt(localY / this.elementHeight), 0, this.count - 1);
+				result = Mathf.Clamp(Mathf.FloorToInt(localY / this.elementHeight), 0, this.count - 1);
 			}
-			float num = 0f;
-			for (int i = 0; i < this.count; i++)
+			else
 			{
-				float num2 = this.elementHeightCallback(i);
-				float num3 = num + num2;
-				if (localY >= num && localY < num3)
+				float num = 0f;
+				for (int i = 0; i < this.count; i++)
 				{
-					return i;
+					float num2 = this.elementHeightCallback(i);
+					float num3 = num + num2;
+					if (localY >= num && localY < num3)
+					{
+						result = i;
+						return result;
+					}
+					num += num2;
 				}
-				num += num2;
+				result = this.count - 1;
 			}
-			return this.count - 1;
+			return result;
 		}
 
 		private bool IsDragging()

@@ -38,12 +38,17 @@ namespace UnityEngine.Events
 		protected static bool AllowInvoke(Delegate @delegate)
 		{
 			object target = @delegate.Target;
+			bool result;
 			if (target == null)
 			{
-				return true;
+				result = true;
 			}
-			UnityEngine.Object @object = target as UnityEngine.Object;
-			return object.ReferenceEquals(@object, null) || @object != null;
+			else
+			{
+				UnityEngine.Object @object = target as UnityEngine.Object;
+				result = (object.ReferenceEquals(@object, null) || @object != null);
+			}
+			return result;
 		}
 
 		public abstract bool Find(object targetObj, MethodInfo method);

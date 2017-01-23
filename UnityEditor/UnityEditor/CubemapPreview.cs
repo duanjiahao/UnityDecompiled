@@ -1,4 +1,5 @@
 using System;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -31,10 +32,10 @@ namespace UnityEditor
 		}
 
 		[SerializeField]
-		private CubemapPreview.PreviewType m_PreviewType;
+		private CubemapPreview.PreviewType m_PreviewType = CubemapPreview.PreviewType.RGB;
 
 		[SerializeField]
-		private float m_MipLevel;
+		private float m_MipLevel = 0f;
 
 		private float m_Intensity = 1f;
 
@@ -77,127 +78,135 @@ namespace UnityEditor
 
 		private void InitPreview()
 		{
-			if (this.m_PreviewUtility != null)
+			if (this.m_PreviewUtility == null)
 			{
-				return;
+				this.m_PreviewUtility = new PreviewRenderUtility
+				{
+					m_CameraFieldOfView = 15f
+				};
+				this.m_Mesh = PreviewRenderUtility.GetPreviewSphere();
 			}
-			this.m_PreviewUtility = new PreviewRenderUtility
-			{
-				m_CameraFieldOfView = 15f
-			};
-			this.m_Mesh = PreviewRenderUtility.GetPreviewSphere();
 		}
 
 		public void OnPreviewSettings(UnityEngine.Object[] targets)
 		{
-			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
+			if (ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
-				return;
-			}
-			GUI.enabled = true;
-			this.InitPreview();
-			bool flag = true;
-			bool flag2 = true;
-			bool flag3 = false;
-			int num = 8;
-			for (int i = 0; i < targets.Length; i++)
-			{
-				Texture texture = (Texture)targets[i];
-				num = Mathf.Max(num, TextureUtil.GetMipmapCount(texture));
-				Cubemap cubemap = texture as Cubemap;
-				if (cubemap)
+				GUI.enabled = true;
+				this.InitPreview();
+				bool flag = true;
+				bool flag2 = true;
+				bool flag3 = false;
+				int num = 8;
+				for (int i = 0; i < targets.Length; i++)
 				{
-					TextureFormat format = cubemap.format;
-					if (!TextureUtil.IsAlphaOnlyTextureFormat(format))
+					Texture texture = (Texture)targets[i];
+					num = Mathf.Max(num, TextureUtil.GetMipmapCount(texture));
+					Cubemap cubemap = texture as Cubemap;
+					if (cubemap)
 					{
-						flag2 = false;
+						TextureFormat format = cubemap.format;
+						if (!TextureUtil.IsAlphaOnlyTextureFormat(format))
+						{
+							flag2 = false;
+						}
+						if (TextureUtil.HasAlphaTextureFormat(format))
+						{
+							if (TextureUtil.GetUsageMode(texture) == TextureUsageMode.Default)
+							{
+								flag3 = true;
+							}
+						}
 					}
-					if (TextureUtil.HasAlphaTextureFormat(format) && TextureUtil.GetUsageMode(texture) == TextureUsageMode.Default)
+					else
 					{
 						flag3 = true;
+						flag2 = false;
 					}
 				}
-				else
+				if (flag2)
 				{
-					flag3 = true;
-					flag2 = false;
+					this.m_PreviewType = CubemapPreview.PreviewType.Alpha;
+					flag = false;
 				}
-			}
-			if (flag2)
-			{
-				this.m_PreviewType = CubemapPreview.PreviewType.Alpha;
-				flag = false;
-			}
-			else if (!flag3)
-			{
-				this.m_PreviewType = CubemapPreview.PreviewType.RGB;
-				flag = false;
-			}
-			if (flag)
-			{
-				GUIContent[] array = new GUIContent[]
+				else if (!flag3)
 				{
-					CubemapPreview.Styles.RGBIcon,
-					CubemapPreview.Styles.alphaIcon
-				};
-				int previewType = (int)this.m_PreviewType;
-				if (GUILayout.Button(array[previewType], CubemapPreview.Styles.preButton, new GUILayoutOption[0]))
-				{
-					this.m_PreviewType = (previewType + CubemapPreview.PreviewType.Alpha) % (CubemapPreview.PreviewType)array.Length;
+					this.m_PreviewType = CubemapPreview.PreviewType.RGB;
+					flag = false;
 				}
+				if (flag)
+				{
+					GUIContent[] array = new GUIContent[]
+					{
+						CubemapPreview.Styles.RGBIcon,
+						CubemapPreview.Styles.alphaIcon
+					};
+					int previewType = (int)this.m_PreviewType;
+					if (GUILayout.Button(array[previewType], CubemapPreview.Styles.preButton, new GUILayoutOption[0]))
+					{
+						this.m_PreviewType = (previewType + CubemapPreview.PreviewType.Alpha) % (CubemapPreview.PreviewType)array.Length;
+					}
+				}
+				GUI.enabled = (num != 1);
+				GUILayout.Box(CubemapPreview.Styles.smallZoom, CubemapPreview.Styles.preLabel, new GUILayoutOption[0]);
+				GUI.changed = false;
+				this.m_MipLevel = Mathf.Round(GUILayout.HorizontalSlider(this.m_MipLevel, (float)(num - 1), 0f, CubemapPreview.Styles.preSlider, CubemapPreview.Styles.preSliderThumb, new GUILayoutOption[]
+				{
+					GUILayout.MaxWidth(64f)
+				}));
+				GUILayout.Box(CubemapPreview.Styles.largeZoom, CubemapPreview.Styles.preLabel, new GUILayoutOption[0]);
+				GUI.enabled = true;
 			}
-			GUI.enabled = (num != 1);
-			GUILayout.Box(CubemapPreview.Styles.smallZoom, CubemapPreview.Styles.preLabel, new GUILayoutOption[0]);
-			GUI.changed = false;
-			this.m_MipLevel = Mathf.Round(GUILayout.HorizontalSlider(this.m_MipLevel, (float)(num - 1), 0f, CubemapPreview.Styles.preSlider, CubemapPreview.Styles.preSliderThumb, new GUILayoutOption[]
-			{
-				GUILayout.MaxWidth(64f)
-			}));
-			GUILayout.Box(CubemapPreview.Styles.largeZoom, CubemapPreview.Styles.preLabel, new GUILayoutOption[0]);
-			GUI.enabled = true;
 		}
 
 		public void OnPreviewGUI(Texture t, Rect r, GUIStyle background)
 		{
-			if (t == null)
+			if (!(t == null))
 			{
-				return;
-			}
-			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
-			{
-				if (Event.current.type == EventType.Repaint)
+				if (!ShaderUtil.hardwareSupportsRectRenderTexture)
 				{
-					EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 40f), "Cubemap preview requires\nrender texture support");
+					if (Event.current.type == EventType.Repaint)
+					{
+						EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 40f), "Cubemap preview requires\nrender texture support");
+					}
 				}
-				return;
-			}
-			this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, r);
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			this.InitPreview();
-			this.m_PreviewUtility.BeginPreview(r, background);
-			this.RenderCubemap(t, this.m_PreviewDir, 6f);
-			Texture image = this.m_PreviewUtility.EndPreview();
-			GUI.DrawTexture(r, image, ScaleMode.StretchToFill, false);
-			if (this.mipLevel != 0f)
-			{
-				EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + this.mipLevel);
+				else
+				{
+					this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, r);
+					if (Event.current.type == EventType.Repaint)
+					{
+						this.InitPreview();
+						this.m_PreviewUtility.BeginPreview(r, background);
+						this.RenderCubemap(t, this.m_PreviewDir, 6f);
+						Texture image = this.m_PreviewUtility.EndPreview();
+						GUI.DrawTexture(r, image, ScaleMode.StretchToFill, false);
+						if (this.mipLevel != 0f)
+						{
+							EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + this.mipLevel);
+						}
+					}
+				}
 			}
 		}
 
 		public Texture2D RenderStaticPreview(Texture t, int width, int height)
 		{
+			Texture2D result;
 			if (!ShaderUtil.hardwareSupportsRectRenderTexture)
 			{
-				return null;
+				result = null;
 			}
-			this.InitPreview();
-			this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
-			Vector2 previewDir = new Vector2(0f, 0f);
-			this.RenderCubemap(t, previewDir, 5.3f);
-			return this.m_PreviewUtility.EndStaticPreview();
+			else
+			{
+				this.InitPreview();
+				this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
+				Vector2 previewDir = new Vector2(0f, 0f);
+				InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, new Color(0f, 0f, 0f, 0f));
+				this.RenderCubemap(t, previewDir, 5.3f);
+				InternalEditorUtility.RemoveCustomLighting();
+				result = this.m_PreviewUtility.EndStaticPreview();
+			}
+			return result;
 		}
 
 		private void RenderCubemap(Texture t, Vector2 previewDir, float previewDistance)

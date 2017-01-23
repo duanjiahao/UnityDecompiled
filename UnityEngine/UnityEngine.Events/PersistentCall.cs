@@ -14,7 +14,7 @@ namespace UnityEngine.Events
 		private string m_MethodName;
 
 		[FormerlySerializedAs("mode"), SerializeField]
-		private PersistentListenerMode m_Mode;
+		private PersistentListenerMode m_Mode = PersistentListenerMode.EventDefined;
 
 		[FormerlySerializedAs("arguments"), SerializeField]
 		private ArgumentCache m_Arguments = new ArgumentCache();
@@ -77,38 +77,54 @@ namespace UnityEngine.Events
 
 		public BaseInvokableCall GetRuntimeCall(UnityEventBase theEvent)
 		{
+			BaseInvokableCall result;
 			if (this.m_CallState == UnityEventCallState.RuntimeOnly && !Application.isPlaying)
 			{
-				return null;
+				result = null;
 			}
-			if (this.m_CallState == UnityEventCallState.Off || theEvent == null)
+			else if (this.m_CallState == UnityEventCallState.Off || theEvent == null)
 			{
-				return null;
+				result = null;
 			}
-			MethodInfo methodInfo = theEvent.FindMethod(this);
-			if (methodInfo == null)
+			else
 			{
-				return null;
+				MethodInfo methodInfo = theEvent.FindMethod(this);
+				if (methodInfo == null)
+				{
+					result = null;
+				}
+				else
+				{
+					switch (this.m_Mode)
+					{
+					case PersistentListenerMode.EventDefined:
+						result = theEvent.GetDelegate(this.target, methodInfo);
+						break;
+					case PersistentListenerMode.Void:
+						result = new InvokableCall(this.target, methodInfo);
+						break;
+					case PersistentListenerMode.Object:
+						result = PersistentCall.GetObjectCall(this.target, methodInfo, this.m_Arguments);
+						break;
+					case PersistentListenerMode.Int:
+						result = new CachedInvokableCall<int>(this.target, methodInfo, this.m_Arguments.intArgument);
+						break;
+					case PersistentListenerMode.Float:
+						result = new CachedInvokableCall<float>(this.target, methodInfo, this.m_Arguments.floatArgument);
+						break;
+					case PersistentListenerMode.String:
+						result = new CachedInvokableCall<string>(this.target, methodInfo, this.m_Arguments.stringArgument);
+						break;
+					case PersistentListenerMode.Bool:
+						result = new CachedInvokableCall<bool>(this.target, methodInfo, this.m_Arguments.boolArgument);
+						break;
+					default:
+						result = null;
+						break;
+					}
+				}
 			}
-			switch (this.m_Mode)
-			{
-			case PersistentListenerMode.EventDefined:
-				return theEvent.GetDelegate(this.target, methodInfo);
-			case PersistentListenerMode.Void:
-				return new InvokableCall(this.target, methodInfo);
-			case PersistentListenerMode.Object:
-				return PersistentCall.GetObjectCall(this.target, methodInfo, this.m_Arguments);
-			case PersistentListenerMode.Int:
-				return new CachedInvokableCall<int>(this.target, methodInfo, this.m_Arguments.intArgument);
-			case PersistentListenerMode.Float:
-				return new CachedInvokableCall<float>(this.target, methodInfo, this.m_Arguments.floatArgument);
-			case PersistentListenerMode.String:
-				return new CachedInvokableCall<string>(this.target, methodInfo, this.m_Arguments.stringArgument);
-			case PersistentListenerMode.Bool:
-				return new CachedInvokableCall<bool>(this.target, methodInfo, this.m_Arguments.boolArgument);
-			default:
-				return null;
-			}
+			return result;
 		}
 
 		private static BaseInvokableCall GetObjectCall(UnityEngine.Object target, MethodInfo method, ArgumentCache arguments)

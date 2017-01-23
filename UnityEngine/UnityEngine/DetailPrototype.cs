@@ -8,9 +8,9 @@ namespace UnityEngine
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class DetailPrototype
 	{
-		private GameObject m_Prototype;
+		private GameObject m_Prototype = null;
 
-		private Texture2D m_PrototypeTexture;
+		private Texture2D m_PrototypeTexture = null;
 
 		private Color m_HealthyColor = new Color(0.2627451f, 0.9764706f, 0.164705887f, 1f);
 
@@ -30,7 +30,7 @@ namespace UnityEngine
 
 		private int m_RenderMode = 2;
 
-		private int m_UsePrototypeMesh;
+		private int m_UsePrototypeMesh = 0;
 
 		public GameObject prototype
 		{

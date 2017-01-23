@@ -1,6 +1,6 @@
 using System;
+using UnityEditor.Analytics;
 using UnityEditor.Connect;
-using UnityEngine.Connect;
 
 namespace UnityEditor.Web
 {
@@ -11,11 +11,11 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "Analytics";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/analytics";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/analytics";
 
 		static AnalyticsAccess()
 		{
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("Analytics", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/analytics", new AnalyticsAccess(), "unity/project/cloud/analytics");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("Analytics", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/analytics", new AnalyticsAccess(), "unity/project/cloud/analytics");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 
@@ -31,12 +31,22 @@ namespace UnityEditor.Web
 
 		public override bool IsServiceEnabled()
 		{
-			return UnityAnalyticsSettings.enabled;
+			return AnalyticsSettings.enabled;
 		}
 
 		public override void EnableService(bool enabled)
 		{
-			UnityAnalyticsSettings.enabled = enabled;
+			AnalyticsSettings.enabled = enabled;
+		}
+
+		public bool IsTestModeEnabled()
+		{
+			return AnalyticsSettings.testMode;
+		}
+
+		public void SetTestModeEnabled(bool enabled)
+		{
+			AnalyticsSettings.testMode = enabled;
 		}
 	}
 }

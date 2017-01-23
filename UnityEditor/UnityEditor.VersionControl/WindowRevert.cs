@@ -73,7 +73,7 @@ namespace UnityEditor.VersionControl
 			GUILayout.FlexibleSpace();
 			Rect screenRect = new Rect(6f, 40f, base.position.width - 12f, base.position.height - 82f);
 			GUILayout.BeginArea(screenRect);
-			GUILayout.Box(string.Empty, new GUILayoutOption[]
+			GUILayout.Box("", new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true),
 				GUILayout.ExpandHeight(true)
@@ -89,7 +89,7 @@ namespace UnityEditor.VersionControl
 			}
 			if (this.assetList.Count > 0 && GUILayout.Button("Revert", new GUILayoutOption[0]))
 			{
-				string text = string.Empty;
+				string text = "";
 				foreach (Asset current in this.assetList)
 				{
 					Scene sceneByPath = SceneManager.GetSceneByPath(current.path);
@@ -98,10 +98,13 @@ namespace UnityEditor.VersionControl
 						text = text + sceneByPath.path + "\n";
 					}
 				}
-				if (text.Length > 0 && !EditorUtility.DisplayDialog("Revert open scene(s)?", "You are about to revert your currently open scene(s):\n\n" + text + "\nContinuing will remove all unsaved changes.", "Continue", "Cancel"))
+				if (text.Length > 0)
 				{
-					base.Close();
-					return;
+					if (!EditorUtility.DisplayDialog("Revert open scene(s)?", "You are about to revert your currently open scene(s):\n\n" + text + "\nContinuing will remove all unsaved changes.", "Continue", "Cancel"))
+					{
+						base.Close();
+						return;
+					}
 				}
 				Provider.Revert(this.assetList, RevertMode.Normal).Wait();
 				WindowPending.UpdateAllWindows();

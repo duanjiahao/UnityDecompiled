@@ -7,10 +7,8 @@ namespace UnityEngine
 	{
 		public extern Vector3[] probePositions
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}

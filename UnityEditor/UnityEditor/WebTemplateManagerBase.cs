@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -15,6 +16,12 @@ namespace UnityEditor
 			public GUIStyle thumbnailLabel = "IN ThumbnailSelection";
 		}
 
+		private static WebTemplateManagerBase.Styles s_Styles;
+
+		private WebTemplate[] s_Templates = null;
+
+		private GUIContent[] s_TemplateGUIThumbnails = null;
+
 		private const float kWebTemplateGridPadding = 15f;
 
 		private const float kThumbnailSize = 80f;
@@ -22,12 +29,6 @@ namespace UnityEditor
 		private const float kThumbnailLabelHeight = 20f;
 
 		private const float kThumbnailPadding = 5f;
-
-		private static WebTemplateManagerBase.Styles s_Styles;
-
-		private WebTemplate[] s_Templates;
-
-		private GUIContent[] s_TemplateGUIThumbnails;
 
 		public abstract string customTemplatesFolder
 		{
@@ -70,14 +71,17 @@ namespace UnityEditor
 
 		public int GetTemplateIndex(string path)
 		{
+			int result;
 			for (int i = 0; i < this.Templates.Length; i++)
 			{
 				if (path.Equals(this.Templates[i].ToString()))
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return 0;
+			result = 0;
+			return result;
 		}
 
 		public void ClearTemplates()
@@ -111,45 +115,63 @@ namespace UnityEditor
 
 		private WebTemplate Load(string path)
 		{
+			WebTemplate result;
 			if (!Directory.Exists(path) || Directory.GetFiles(path, "index.*").Length < 1)
 			{
-				return null;
-			}
-			string[] array = path.Split(new char[]
-			{
-				'/',
-				'\\'
-			});
-			WebTemplate webTemplate = new WebTemplate();
-			webTemplate.m_Name = array[array.Length - 1];
-			if (array.Length > 3 && array[array.Length - 3].Equals("Assets"))
-			{
-				webTemplate.m_Path = "PROJECT:" + webTemplate.m_Name;
+				result = null;
 			}
 			else
 			{
-				webTemplate.m_Path = "APPLICATION:" + webTemplate.m_Name;
-			}
-			string[] files = Directory.GetFiles(path, "thumbnail.*");
-			if (files.Length > 0)
-			{
-				webTemplate.m_Thumbnail = new Texture2D(2, 2);
-				webTemplate.m_Thumbnail.LoadImage(File.ReadAllBytes(files[0]));
-			}
-			List<string> list = new List<string>();
-			Regex regex = new Regex("\\%UNITY_CUSTOM_([A-Z_]+)\\%");
-			MatchCollection matchCollection = regex.Matches(File.ReadAllText(Directory.GetFiles(path, "index.*")[0]));
-			foreach (Match match in matchCollection)
-			{
-				string text = match.Value.Substring("%UNITY_CUSTOM_".Length);
-				text = text.Substring(0, text.Length - 1);
-				if (!list.Contains(text))
+				string[] array = path.Split(new char[]
 				{
-					list.Add(text);
+					'/',
+					'\\'
+				});
+				WebTemplate webTemplate = new WebTemplate();
+				webTemplate.m_Name = array[array.Length - 1];
+				if (array.Length > 3 && array[array.Length - 3].Equals("Assets"))
+				{
+					webTemplate.m_Path = "PROJECT:" + webTemplate.m_Name;
 				}
+				else
+				{
+					webTemplate.m_Path = "APPLICATION:" + webTemplate.m_Name;
+				}
+				string[] files = Directory.GetFiles(path, "thumbnail.*");
+				if (files.Length > 0)
+				{
+					webTemplate.m_Thumbnail = new Texture2D(2, 2);
+					webTemplate.m_Thumbnail.LoadImage(File.ReadAllBytes(files[0]));
+				}
+				List<string> list = new List<string>();
+				Regex regex = new Regex("\\%UNITY_CUSTOM_([A-Z_]+)\\%");
+				MatchCollection matchCollection = regex.Matches(File.ReadAllText(Directory.GetFiles(path, "index.*")[0]));
+				IEnumerator enumerator = matchCollection.GetEnumerator();
+				try
+				{
+					while (enumerator.MoveNext())
+					{
+						Match match = (Match)enumerator.Current;
+						string text = match.Value.Substring("%UNITY_CUSTOM_".Length);
+						text = text.Substring(0, text.Length - 1);
+						if (!list.Contains(text))
+						{
+							list.Add(text);
+						}
+					}
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
+				}
+				webTemplate.m_CustomKeys = list.ToArray();
+				result = webTemplate;
 			}
-			webTemplate.m_CustomKeys = list.ToArray();
-			return webTemplate;
+			return result;
 		}
 
 		private List<WebTemplate> ListTemplates(string path)
@@ -276,11 +298,16 @@ namespace UnityEditor
 
 		private static string UppercaseFirst(string target)
 		{
+			string result;
 			if (string.IsNullOrEmpty(target))
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			return char.ToUpper(target[0]) + target.Substring(1);
+			else
+			{
+				result = char.ToUpper(target[0]) + target.Substring(1);
+			}
+			return result;
 		}
 	}
 }

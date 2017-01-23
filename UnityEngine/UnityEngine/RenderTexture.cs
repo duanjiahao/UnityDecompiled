@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 using UnityEngine.Rendering;
@@ -35,57 +36,46 @@ namespace UnityEngine
 
 		public extern int depth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isPowerOfTwo
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool sRGB
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern RenderTextureFormat format
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool useMipMap
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		public extern bool generateMips
+		public extern bool autoGenerateMips
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -105,10 +95,8 @@ namespace UnityEngine
 		[Obsolete("Use RenderTexture.dimension instead.")]
 		public extern bool isCubemap
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -116,40 +104,32 @@ namespace UnityEngine
 		[Obsolete("Use RenderTexture.dimension instead.")]
 		public extern bool isVolume
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int volumeDepth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int antiAliasing
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool enableRandomWrite
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -176,23 +156,32 @@ namespace UnityEngine
 
 		public static extern RenderTexture active
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[Obsolete("Use SystemInfo.supportsRenderTextures instead.")]
+		[Obsolete("RenderTexture.enabled is always now, no need to use it")]
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
+		}
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use RenderTexture.autoGenerateMips instead (UnityUpgradable) -> autoGenerateMips", false)]
+		public bool generateMips
+		{
+			get
+			{
+				return this.autoGenerateMips;
+			}
+			set
+			{
+				this.autoGenerateMips = value;
+			}
 		}
 
 		public RenderTexture(int width, int height, int depth, RenderTextureFormat format, RenderTextureReadWrite readWrite)
@@ -230,13 +219,11 @@ namespace UnityEngine
 			RenderTexture.Internal_SetSRGBReadWrite(this, QualitySettings.activeColorSpace == ColorSpace.Linear);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateRenderTexture([Writable] RenderTexture rt);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern RenderTexture GetTemporary(int width, int height, [DefaultValue("0")] int depthBuffer, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing);
+		public static extern RenderTexture GetTemporary(int width, int height, [UnityEngine.Internal.DefaultValue("0")] int depthBuffer, [UnityEngine.Internal.DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [UnityEngine.Internal.DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [UnityEngine.Internal.DefaultValue("1")] int antiAliasing);
 
 		[ExcludeFromDocs]
 		public static RenderTexture GetTemporary(int width, int height, int depthBuffer, RenderTextureFormat format, RenderTextureReadWrite readWrite)
@@ -272,35 +259,27 @@ namespace UnityEngine
 			return RenderTexture.GetTemporary(width, height, depthBuffer, format, readWrite, antiAliasing);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ReleaseTemporary(RenderTexture temp);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetWidth(RenderTexture mono);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetWidth(RenderTexture mono, int width);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetHeight(RenderTexture mono);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetHeight(RenderTexture mono, int width);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetSRGBReadWrite(RenderTexture mono, bool sRGB);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern TextureDimension Internal_GetDimension(RenderTexture rt);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetDimension(RenderTexture rt, TextureDimension dim);
 
@@ -309,7 +288,6 @@ namespace UnityEngine
 			return RenderTexture.INTERNAL_CALL_Create(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Create(RenderTexture self);
 
@@ -318,7 +296,6 @@ namespace UnityEngine
 			RenderTexture.INTERNAL_CALL_Release(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Release(RenderTexture self);
 
@@ -327,7 +304,6 @@ namespace UnityEngine
 			return RenderTexture.INTERNAL_CALL_IsCreated(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_IsCreated(RenderTexture self);
 
@@ -336,11 +312,9 @@ namespace UnityEngine
 			RenderTexture.INTERNAL_CALL_DiscardContents(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DiscardContents(RenderTexture self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DiscardContents(bool discardColor, bool discardDepth);
 
@@ -349,15 +323,20 @@ namespace UnityEngine
 			RenderTexture.INTERNAL_CALL_MarkRestoreExpected(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MarkRestoreExpected(RenderTexture self);
 
-		[WrapperlessIcall]
+		public void GenerateMips()
+		{
+			RenderTexture.INTERNAL_CALL_GenerateMips(this);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GenerateMips(RenderTexture self);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void GetColorBuffer(out RenderBuffer res);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void GetDepthBuffer(out RenderBuffer res);
 
@@ -368,26 +347,18 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetNativeDepthBufferPtr(RenderTexture self, out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalShaderProperty(string propertyName);
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_GetTexelOffset(RenderTexture tex, out Vector2 output);
-
+		[Obsolete("GetTexelOffset always returns zero now, no point in using it.")]
 		public Vector2 GetTexelOffset()
 		{
-			Vector2 result;
-			RenderTexture.Internal_GetTexelOffset(this, out result);
-			return result;
+			return Vector2.zero;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SupportsStencil(RenderTexture rt);
 

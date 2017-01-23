@@ -7,7 +7,6 @@ namespace UnityEngine.VR
 	{
 		public static extern bool isPresent
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -15,21 +14,18 @@ namespace UnityEngine.VR
 		[Obsolete("family is deprecated.  Use VRSettings.loadedDeviceName instead.")]
 		public static extern string family
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string model
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern float refreshRate
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -41,7 +37,6 @@ namespace UnityEngine.VR
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetNativePtr(out IntPtr value);
 	}

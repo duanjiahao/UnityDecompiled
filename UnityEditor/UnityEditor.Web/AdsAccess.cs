@@ -12,11 +12,11 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "Ads";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/ads";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/ads";
 
 		static AdsAccess()
 		{
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("Unity Ads", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/ads", new AdsAccess(), "unity/project/cloud/ads");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("Unity Ads", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/ads", new AdsAccess(), "unity/project/cloud/ads");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 
@@ -38,6 +38,17 @@ namespace UnityEditor.Web
 		public override void EnableService(bool enabled)
 		{
 			AdvertisementSettings.enabled = enabled;
+		}
+
+		public override void OnProjectUnbound()
+		{
+			AdvertisementSettings.enabled = false;
+			AdvertisementSettings.initializeOnStartup = false;
+			AdvertisementSettings.SetPlatformEnabled(RuntimePlatform.IPhonePlayer, false);
+			AdvertisementSettings.SetPlatformEnabled(RuntimePlatform.Android, false);
+			AdvertisementSettings.SetGameId(RuntimePlatform.IPhonePlayer, "");
+			AdvertisementSettings.SetGameId(RuntimePlatform.Android, "");
+			AdvertisementSettings.testMode = false;
 		}
 
 		public bool IsInitializedOnStartup()

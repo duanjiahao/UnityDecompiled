@@ -157,6 +157,7 @@ namespace UnityEditor
 
 		public bool UpdateSplitAnimationOnGUI()
 		{
+			bool result;
 			if (this.m_SplitAfterRow != -1)
 			{
 				float num = Time.realtimeSinceStartup - this.m_LastSplitUpdate;
@@ -169,10 +170,12 @@ namespace UnityEditor
 					{
 						this.ResetSplit();
 					}
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 	}
 }

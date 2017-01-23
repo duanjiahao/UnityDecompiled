@@ -21,10 +21,6 @@ namespace UnityEditor.BuildReporting
 
 		public const string RequiredByScripts = "Required by Scripts";
 
-		public const string RequiredByScenes = "Used in Scenes";
-
-		public const string RequiredByModule = "Required by Module";
-
 		public List<StrippingInfo.SerializedDependency> serializedDependencies;
 
 		public List<string> modules = new List<string>();
@@ -37,25 +33,26 @@ namespace UnityEditor.BuildReporting
 
 		public Dictionary<string, string> icons = new Dictionary<string, string>();
 
-		public int totalSize;
+		public int totalSize = 0;
 
 		private void OnEnable()
 		{
 			this.SetIcon("Required by Scripts", "class/MonoScript");
-			this.SetIcon("Used in Scenes", "class/SceneAsset");
-			this.SetIcon("AI", "class/NavMeshAgent");
-			this.SetIcon("Animation", "class/Animation");
-			this.SetIcon("Audio", "class/AudioSource");
-			this.SetIcon("Core", "class/GameManager");
-			this.SetIcon("IMGUI", "class/GUILayer");
-			this.SetIcon("ParticleSystem", "class/ParticleSystem");
-			this.SetIcon("ParticlesLegacy", "class/EllipsoidParticleEmitter");
-			this.SetIcon("Physics", "class/PhysicMaterial");
-			this.SetIcon("Physics2D", "class/PhysicsMaterial2D");
-			this.SetIcon("TextRendering", "class/Font");
-			this.SetIcon("UI", "class/CanvasGroup");
-			this.SetIcon("Umbra", "class/SceneSettings");
-			this.SetIcon("UNET", "class/NetworkTransform");
+			this.SetIcon(StrippingInfo.ModuleName("AI"), "class/NavMeshAgent");
+			this.SetIcon(StrippingInfo.ModuleName("Animation"), "class/Animation");
+			this.SetIcon(StrippingInfo.ModuleName("Audio"), "class/AudioSource");
+			this.SetIcon(StrippingInfo.ModuleName("Core"), "class/GameManager");
+			this.SetIcon(StrippingInfo.ModuleName("IMGUI"), "class/GUILayer");
+			this.SetIcon(StrippingInfo.ModuleName("ParticleSystem"), "class/ParticleSystem");
+			this.SetIcon(StrippingInfo.ModuleName("ParticlesLegacy"), "class/EllipsoidParticleEmitter");
+			this.SetIcon(StrippingInfo.ModuleName("Physics"), "class/PhysicMaterial");
+			this.SetIcon(StrippingInfo.ModuleName("Physics2D"), "class/PhysicsMaterial2D");
+			this.SetIcon(StrippingInfo.ModuleName("TextRendering"), "class/Font");
+			this.SetIcon(StrippingInfo.ModuleName("UI"), "class/CanvasGroup");
+			this.SetIcon(StrippingInfo.ModuleName("Umbra"), "class/OcclusionCullingSettings");
+			this.SetIcon(StrippingInfo.ModuleName("UNET"), "class/NetworkTransform");
+			this.SetIcon(StrippingInfo.ModuleName("Vehicles"), "class/WheelCollider");
+			this.SetIcon(StrippingInfo.ModuleName("Cloth"), "class/Cloth");
 		}
 
 		public void OnBeforeSerialize()
@@ -125,9 +122,13 @@ namespace UnityEditor.BuildReporting
 			{
 				this.sizes[module] = 0;
 			}
+			if (!this.icons.ContainsKey(module))
+			{
+				this.SetIcon(module, "class/DefaultAsset");
+			}
 		}
 
-		private void SetIcon(string dependency, string icon)
+		public void SetIcon(string dependency, string icon)
 		{
 			this.icons[dependency] = icon;
 			if (!this.dependencies.ContainsKey(dependency))
@@ -146,18 +147,31 @@ namespace UnityEditor.BuildReporting
 
 		public static StrippingInfo GetBuildReportData(BuildReport report)
 		{
+			StrippingInfo result;
 			if (report == null)
 			{
-				return null;
+				result = null;
 			}
-			StrippingInfo[] array = (StrippingInfo[])report.GetAppendices(typeof(StrippingInfo));
-			if (array.Length > 0)
+			else
 			{
-				return array[0];
+				StrippingInfo[] array = (StrippingInfo[])report.GetAppendices(typeof(StrippingInfo));
+				if (array.Length > 0)
+				{
+					result = array[0];
+				}
+				else
+				{
+					StrippingInfo strippingInfo = ScriptableObject.CreateInstance<StrippingInfo>();
+					report.AddAppendix(strippingInfo);
+					result = strippingInfo;
+				}
 			}
-			StrippingInfo strippingInfo = ScriptableObject.CreateInstance<StrippingInfo>();
-			report.AddAppendix(strippingInfo);
-			return strippingInfo;
+			return result;
+		}
+
+		public static string ModuleName(string module)
+		{
+			return module + " Module";
 		}
 	}
 }

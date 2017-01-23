@@ -26,7 +26,7 @@ namespace UnityEditor
 
 		public ImportRawHeightmap.ByteOrder m_ByteOrder = ImportRawHeightmap.ByteOrder.Windows;
 
-		public bool m_FlipVertically;
+		public bool m_FlipVertically = false;
 
 		public Vector3 m_TerrainSize = new Vector3(2000f, 600f, 2000f);
 
@@ -60,19 +60,23 @@ namespace UnityEditor
 				{
 					this.m_Width = num3;
 					this.m_Height = num4;
-					return;
 				}
-				this.m_Depth = ImportRawHeightmap.Depth.Bit8;
-				num2 = num / (int)this.m_Depth;
-				num3 = Mathf.RoundToInt(Mathf.Sqrt((float)num2));
-				num4 = Mathf.RoundToInt(Mathf.Sqrt((float)num2));
-				if (num3 * num4 * (int)this.m_Depth == num)
+				else
 				{
-					this.m_Width = num3;
-					this.m_Height = num4;
-					return;
+					this.m_Depth = ImportRawHeightmap.Depth.Bit8;
+					num2 = num / (int)this.m_Depth;
+					num3 = Mathf.RoundToInt(Mathf.Sqrt((float)num2));
+					num4 = Mathf.RoundToInt(Mathf.Sqrt((float)num2));
+					if (num3 * num4 * (int)this.m_Depth == num)
+					{
+						this.m_Width = num3;
+						this.m_Height = num4;
+					}
+					else
+					{
+						this.m_Depth = ImportRawHeightmap.Depth.Bit16;
+					}
 				}
-				this.m_Depth = ImportRawHeightmap.Depth.Bit16;
 			}
 		}
 

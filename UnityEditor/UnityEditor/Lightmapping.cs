@@ -27,138 +27,112 @@ namespace UnityEditor
 
 		public static extern Lightmapping.GIWorkflowMode giWorkflowMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool realtimeGI
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool bakedGI
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern float indirectOutputScale
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern float bounceBoost
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool openRLEnabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern Lightmapping.ConcurrentJobsType concurrentJobsType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern long diskCacheSize
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern string diskCachePath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern bool enlightenForceWhiteAlbedo
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool enlightenForceUpdates
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern FilterMode filterMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isRunning
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern float buildProgress
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern LightingDataAsset lightingDataAsset
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -175,47 +149,24 @@ namespace UnityEditor
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ClearPrecompSetIsDone();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearDiskCache();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateCachePath();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void PrintStateToConsole();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BakeAsync();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Bake();
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool BakeSelectedAsync();
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool BakeSelected();
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool BakeLightProbesOnlyAsync();
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool BakeLightProbesOnly();
-
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Cancel();
 
@@ -227,63 +178,78 @@ namespace UnityEditor
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Clear();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearLightingDataAsset();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Tetrahedralize(Vector3[] positions, out int[] outIndices, out Vector3[] outPositions);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BakeReflectionProbe(ReflectionProbe probe, string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool BakeReflectionProbeSnapshot(ReflectionProbe probe);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool BakeAllReflectionProbesSnapshots();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void GetTerrainGIChunks(Terrain terrain, ref int numChunksX, ref int numChunksY);
 
 		public static void BakeMultipleScenes(string[] paths)
 		{
-			if (paths.Length == 0)
+			if (paths.Length != 0)
 			{
-				return;
-			}
-			for (int i = 0; i < paths.Length; i++)
-			{
-				for (int j = i + 1; j < paths.Length; j++)
+				for (int i = 0; i < paths.Length; i++)
 				{
-					if (paths[i] == paths[j])
+					for (int j = i + 1; j < paths.Length; j++)
 					{
-						throw new Exception("no duplication of scenes is allowed");
+						if (paths[i] == paths[j])
+						{
+							throw new Exception("no duplication of scenes is allowed");
+						}
 					}
 				}
+				if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+				{
+					SceneSetup[] sceneManagerSetup = EditorSceneManager.GetSceneManagerSetup();
+					EditorSceneManager.OpenScene(paths[0]);
+					for (int k = 1; k < paths.Length; k++)
+					{
+						EditorSceneManager.OpenScene(paths[k], OpenSceneMode.Additive);
+					}
+					Lightmapping.Bake();
+					EditorSceneManager.SaveOpenScenes();
+					EditorSceneManager.RestoreSceneManagerSetup(sceneManagerSetup);
+				}
 			}
-			if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-			{
-				return;
-			}
-			SceneSetup[] sceneManagerSetup = EditorSceneManager.GetSceneManagerSetup();
-			EditorSceneManager.OpenScene(paths[0]);
-			for (int k = 1; k < paths.Length; k++)
-			{
-				EditorSceneManager.OpenScene(paths[k], OpenSceneMode.Additive);
-			}
-			Lightmapping.Bake();
-			EditorSceneManager.SaveOpenScenes();
-			EditorSceneManager.RestoreSceneManagerSetup(sceneManagerSetup);
+		}
+
+		[Obsolete("BakeSelectedAsync has been deprecated. Use BakeAsync instead (UnityUpgradable) -> BakeAsync()", true)]
+		public static bool BakeSelectedAsync()
+		{
+			return false;
+		}
+
+		[Obsolete("BakeSelected has been deprecated. Use Bake instead (UnityUpgradable) -> Bake()", true)]
+		public static bool BakeSelected()
+		{
+			return false;
+		}
+
+		[Obsolete("BakeLightProbesOnlyAsync has been deprecated. Use BakeAsync instead (UnityUpgradable) -> BakeAsync()", true)]
+		public static bool BakeLightProbesOnlyAsync()
+		{
+			return false;
+		}
+
+		[Obsolete("BakeLightProbesOnly has been deprecated. Use Bake instead (UnityUpgradable) -> Bake()", true)]
+		public static bool BakeLightProbesOnly()
+		{
+			return false;
 		}
 	}
 }

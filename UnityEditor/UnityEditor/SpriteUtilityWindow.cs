@@ -91,6 +91,8 @@ namespace UnityEditor
 			}
 		}
 
+		protected static SpriteUtilityWindow.Styles s_Styles;
+
 		protected const float k_BorderMargin = 10f;
 
 		protected const float k_ScrollbarMargin = 16f;
@@ -107,8 +109,6 @@ namespace UnityEditor
 
 		protected const float k_MouseZoomSpeed = 0.005f;
 
-		protected static SpriteUtilityWindow.Styles s_Styles;
-
 		protected Texture2D m_Texture;
 
 		protected Texture2D m_TextureAlphaOverride;
@@ -117,11 +117,11 @@ namespace UnityEditor
 
 		protected Rect m_TextureRect;
 
-		protected bool m_ShowAlpha;
+		protected bool m_ShowAlpha = false;
 
 		protected float m_Zoom = -1f;
 
-		protected float m_MipLevel;
+		protected float m_MipLevel = 0f;
 
 		protected Vector2 m_ScrollPosition = default(Vector2);
 
@@ -159,16 +159,21 @@ namespace UnityEditor
 
 		protected float GetMinZoom()
 		{
+			float result;
 			if (this.m_Texture == null)
 			{
-				return 1f;
+				result = 1f;
 			}
-			return Mathf.Min(new float[]
+			else
 			{
-				this.m_TextureViewRect.width / (float)this.m_Texture.width,
-				this.m_TextureViewRect.height / (float)this.m_Texture.height,
-				50f
-			}) * 0.9f;
+				result = Mathf.Min(new float[]
+				{
+					this.m_TextureViewRect.width / (float)this.m_Texture.width,
+					this.m_TextureViewRect.height / (float)this.m_Texture.height,
+					50f
+				}) * 0.9f;
+			}
+			return result;
 		}
 
 		protected void HandleZoom()
@@ -320,29 +325,28 @@ namespace UnityEditor
 
 		protected void DoTextureGUI()
 		{
-			if (this.m_Texture == null)
+			if (!(this.m_Texture == null))
 			{
-				return;
+				if (this.m_Zoom < 0f)
+				{
+					this.m_Zoom = this.GetMinZoom();
+				}
+				this.m_TextureRect = new Rect(this.m_TextureViewRect.width / 2f - (float)this.m_Texture.width * this.m_Zoom / 2f, this.m_TextureViewRect.height / 2f - (float)this.m_Texture.height * this.m_Zoom / 2f, (float)this.m_Texture.width * this.m_Zoom, (float)this.m_Texture.height * this.m_Zoom);
+				this.HandleScrollbars();
+				this.SetupHandlesMatrix();
+				this.HandleZoom();
+				this.HandlePanning();
+				this.DrawScreenspaceBackground();
+				GUIClip.Push(this.m_TextureViewRect, -this.m_ScrollPosition, Vector2.zero, false);
+				if (Event.current.type == EventType.Repaint)
+				{
+					this.DrawTexturespaceBackground();
+					this.DrawTexture();
+					this.DrawGizmos();
+				}
+				this.DoTextureGUIExtras();
+				GUIClip.Pop();
 			}
-			if (this.m_Zoom < 0f)
-			{
-				this.m_Zoom = this.GetMinZoom();
-			}
-			this.m_TextureRect = new Rect(this.m_TextureViewRect.width / 2f - (float)this.m_Texture.width * this.m_Zoom / 2f, this.m_TextureViewRect.height / 2f - (float)this.m_Texture.height * this.m_Zoom / 2f, (float)this.m_Texture.width * this.m_Zoom, (float)this.m_Texture.height * this.m_Zoom);
-			this.HandleScrollbars();
-			this.SetupHandlesMatrix();
-			this.HandleZoom();
-			this.HandlePanning();
-			this.DrawScreenspaceBackground();
-			GUIClip.Push(this.m_TextureViewRect, -this.m_ScrollPosition, Vector2.zero, false);
-			if (Event.current.type == EventType.Repaint)
-			{
-				this.DrawTexturespaceBackground();
-				this.DrawTexture();
-				this.DrawGizmos();
-			}
-			this.DoTextureGUIExtras();
-			GUIClip.Pop();
 		}
 
 		protected virtual void DoTextureGUIExtras()

@@ -70,7 +70,7 @@ namespace UnityEditor
 
 		public string GetUniqueModuleName()
 		{
-			return SerializedModule.Concat(string.Empty + this.m_Object.targetObject.GetInstanceID(), this.m_ModuleName);
+			return SerializedModule.Concat("" + this.m_Object.targetObject.GetInstanceID(), this.m_ModuleName);
 		}
 	}
 }

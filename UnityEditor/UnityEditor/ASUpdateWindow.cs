@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
@@ -41,9 +42,9 @@ namespace UnityEditor
 			public GUIStyle entryOdd = "CN EntryBackOdd";
 		}
 
-		private ASUpdateWindow.Constants constants;
+		private ASUpdateWindow.Constants constants = null;
 
-		private ASUpdateConflictResolveWindow asResolveWin;
+		private ASUpdateConflictResolveWindow asResolveWin = null;
 
 		private ASMainWindow parentWin;
 
@@ -63,7 +64,7 @@ namespace UnityEditor
 
 		private string selectedGUID = string.Empty;
 
-		private bool isDirSelected;
+		private bool isDirSelected = false;
 
 		private ListViewState lv;
 
@@ -91,7 +92,7 @@ namespace UnityEditor
 
 		private string totalUpdates;
 
-		private bool showingConflicts;
+		private bool showingConflicts = false;
 
 		public bool ShowingConflicts
 		{
@@ -133,34 +134,16 @@ namespace UnityEditor
 				string text = this.dropDownMenuItems[selected];
 				if (text != null)
 				{
-					if (ASUpdateWindow.<>f__switch$map14 == null)
+					if (!(text == "Compare"))
 					{
-						ASUpdateWindow.<>f__switch$map14 = new Dictionary<string, int>(2)
+						if (text == "Compare Binary")
 						{
-							{
-								"Compare",
-								0
-							},
-							{
-								"Compare Binary",
-								1
-							}
-						};
+							this.DoShowDiff(true);
+						}
 					}
-					int num;
-					if (ASUpdateWindow.<>f__switch$map14.TryGetValue(text, out num))
+					else
 					{
-						if (num != 0)
-						{
-							if (num == 1)
-							{
-								this.DoShowDiff(true);
-							}
-						}
-						else
-						{
-							this.DoShowDiff(false);
-						}
+						this.DoShowDiff(false);
 					}
 				}
 			}
@@ -186,7 +169,7 @@ namespace UnityEditor
 						if (parentViewFolder.guid == this.selectedGUID)
 						{
 							this.pv.lv.row = num;
-							return;
+							break;
 						}
 						num++;
 						ParentViewFile[] files = parentViewFolder.files;
@@ -257,34 +240,44 @@ namespace UnityEditor
 		public string[] GetGUIDs()
 		{
 			List<string> list = new List<string>();
+			string[] result;
 			if (this.lv.row < 0)
 			{
-				return null;
+				result = null;
 			}
-			for (int i = this.lv.row; i < this.lv.totalRows; i++)
+			else
 			{
-				for (int j = 0; j < this.changesets[i].items.Length; j++)
+				for (int i = this.lv.row; i < this.lv.totalRows; i++)
 				{
-					if (!list.Contains(this.changesets[i].items[j].guid))
+					for (int j = 0; j < this.changesets[i].items.Length; j++)
 					{
-						list.Add(this.changesets[i].items[j].guid);
+						if (!list.Contains(this.changesets[i].items[j].guid))
+						{
+							list.Add(this.changesets[i].items[j].guid);
+						}
 					}
 				}
+				result = list.ToArray();
 			}
-			return list.ToArray();
+			return result;
 		}
 
 		public bool DoUpdate(bool afterResolvingConflicts)
 		{
 			AssetServer.RemoveMaintErrorsFromConsole();
+			bool result;
 			if (!ASEditorBackend.SettingsIfNeeded())
 			{
-				return true;
+				result = true;
 			}
-			this.showingConflicts = false;
-			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitOnSuccess");
-			AssetServer.DoUpdateOnNextTick(!afterResolvingConflicts, "ShowASConflictResolutionsWindow");
-			return true;
+			else
+			{
+				this.showingConflicts = false;
+				AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitOnSuccess");
+				AssetServer.DoUpdateOnNextTick(!afterResolvingConflicts, "ShowASConflictResolutionsWindow");
+				result = true;
+			}
+			return result;
 		}
 
 		public void ShowConflictResolutions(string[] conflicting)
@@ -329,38 +322,51 @@ namespace UnityEditor
 			SplitterGUILayout.BeginHorizontalSplit(this.horSplit, new GUILayoutOption[0]);
 			GUILayout.BeginVertical(this.constants.box, new GUILayoutOption[0]);
 			GUILayout.Label(this.totalUpdates, this.constants.title, new GUILayoutOption[0]);
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv, GUIStyle.none, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.lv, GUIStyle.none, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				Rect position = listViewElement.position;
-				position.x += 1f;
-				position.y += 1f;
-				if (Event.current.type == EventType.Repaint)
+				while (enumerator.MoveNext())
 				{
-					if (listViewElement.row % 2 == 0)
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					Rect position = listViewElement.position;
+					position.x += 1f;
+					position.y += 1f;
+					if (Event.current.type == EventType.Repaint)
 					{
-						this.constants.entryEven.Draw(position, false, false, false, false);
+						if (listViewElement.row % 2 == 0)
+						{
+							this.constants.entryEven.Draw(position, false, false, false, false);
+						}
+						else
+						{
+							this.constants.entryOdd.Draw(position, false, false, false, false);
+						}
 					}
-					else
+					GUILayout.BeginVertical((listViewElement.row != this.lv.row) ? this.constants.entryNormal : this.constants.entrySelected, new GUILayoutOption[0]);
+					GUILayout.Label(this.messageFirstLines[listViewElement.row], this.constants.serverUpdateLog, new GUILayoutOption[]
 					{
-						this.constants.entryOdd.Draw(position, false, false, false, false);
-					}
+						GUILayout.MinWidth(50f)
+					});
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.Label(this.changesets[listViewElement.row].changeset.ToString() + " " + this.changesets[listViewElement.row].date, this.constants.serverUpdateInfo, new GUILayoutOption[]
+					{
+						GUILayout.MinWidth(100f)
+					});
+					GUILayout.Label(this.changesets[listViewElement.row].owner, this.constants.serverUpdateInfo, new GUILayoutOption[]
+					{
+						GUILayout.Width((float)this.maxNickLength)
+					});
+					GUILayout.EndHorizontal();
+					GUILayout.EndVertical();
 				}
-				GUILayout.BeginVertical((listViewElement.row != this.lv.row) ? this.constants.entryNormal : this.constants.entrySelected, new GUILayoutOption[0]);
-				GUILayout.Label(this.messageFirstLines[listViewElement.row], this.constants.serverUpdateLog, new GUILayoutOption[]
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					GUILayout.MinWidth(50f)
-				});
-				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				GUILayout.Label(this.changesets[listViewElement.row].changeset.ToString() + " " + this.changesets[listViewElement.row].date, this.constants.serverUpdateInfo, new GUILayoutOption[]
-				{
-					GUILayout.MinWidth(100f)
-				});
-				GUILayout.Label(this.changesets[listViewElement.row].owner, this.constants.serverUpdateInfo, new GUILayoutOption[]
-				{
-					GUILayout.Width((float)this.maxNickLength)
-				});
-				GUILayout.EndHorizontal();
-				GUILayout.EndVertical();
+					disposable.Dispose();
+				}
 			}
 			if (this.lv.selectionChanged)
 			{
@@ -372,84 +378,97 @@ namespace UnityEditor
 			GUILayout.Label("Changeset", this.constants.title, new GUILayoutOption[0]);
 			int num = -1;
 			int num2 = -1;
-			foreach (ListViewElement listViewElement2 in ListViewGUILayout.ListView(this.pv.lv, GUIStyle.none, new GUILayoutOption[0]))
+			IEnumerator enumerator2 = ListViewGUILayout.ListView(this.pv.lv, GUIStyle.none, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (num == -1 && !this.pv.IndexToFolderAndFile(listViewElement2.row, ref num, ref num2))
+				while (enumerator2.MoveNext())
 				{
-					return;
-				}
-				ParentViewFolder parentViewFolder = this.pv.folders[num];
-				if (ListViewGUILayout.HasMouseDown(listViewElement2.position))
-				{
-					if (Event.current.clickCount == 2)
+					ListViewElement listViewElement2 = (ListViewElement)enumerator2.Current;
+					if (num == -1 && !this.pv.IndexToFolderAndFile(listViewElement2.row, ref num, ref num2))
 					{
+						return;
+					}
+					ParentViewFolder parentViewFolder = this.pv.folders[num];
+					if (ListViewGUILayout.HasMouseDown(listViewElement2.position))
+					{
+						if (Event.current.clickCount == 2)
+						{
+							if (!this.isDirSelected && this.selectedGUID != string.Empty)
+							{
+								this.DoShowDiff(false);
+								GUIUtility.ExitGUI();
+							}
+						}
+						else
+						{
+							this.pv.lv.scrollPos = ListViewShared.ListViewScrollToRow(this.pv.lv.ilvState, listViewElement2.row);
+							this.DoSelect(num, num2, listViewElement2.row);
+						}
+					}
+					else if (ListViewGUILayout.HasMouseDown(listViewElement2.position, 1))
+					{
+						if (this.lv.row != listViewElement2.row)
+						{
+							this.DoSelect(num, num2, listViewElement2.row);
+						}
 						if (!this.isDirSelected && this.selectedGUID != string.Empty)
 						{
-							this.DoShowDiff(false);
-							GUIUtility.ExitGUI();
+							GUIUtility.hotControl = 0;
+							Rect position2 = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+							EditorUtility.DisplayCustomMenu(position2, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+							Event.current.Use();
 						}
+					}
+					if (listViewElement2.row == this.pv.lv.row && Event.current.type == EventType.Repaint)
+					{
+						this.constants.entrySelected.Draw(listViewElement2.position, false, false, false, false);
+					}
+					ChangeFlags changeFlags;
+					if (num2 != -1)
+					{
+						Texture2D texture2D = AssetDatabase.GetCachedIcon(parentViewFolder.name + "/" + parentViewFolder.files[num2].name) as Texture2D;
+						if (texture2D == null)
+						{
+							texture2D = InternalEditorUtility.GetIconForFile(parentViewFolder.files[num2].name);
+						}
+						GUILayout.Label(new GUIContent(parentViewFolder.files[num2].name, texture2D), this.constants.element, new GUILayoutOption[0]);
+						changeFlags = parentViewFolder.files[num2].changeFlags;
 					}
 					else
 					{
-						this.pv.lv.scrollPos = ListViewShared.ListViewScrollToRow(this.pv.lv.ilvState, listViewElement2.row);
-						this.DoSelect(num, num2, listViewElement2.row);
+						GUILayout.Label(parentViewFolder.name, this.constants.header, new GUILayoutOption[0]);
+						changeFlags = parentViewFolder.changeFlags;
 					}
-				}
-				else if (ListViewGUILayout.HasMouseDown(listViewElement2.position, 1))
-				{
-					if (this.lv.row != listViewElement2.row)
+					GUIContent gUIContent = null;
+					if (this.HasFlag(changeFlags, ChangeFlags.Undeleted) || this.HasFlag(changeFlags, ChangeFlags.Created))
 					{
-						this.DoSelect(num, num2, listViewElement2.row);
+						gUIContent = ASMainWindow.constants.badgeNew;
 					}
-					if (!this.isDirSelected && this.selectedGUID != string.Empty)
+					else if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
 					{
-						GUIUtility.hotControl = 0;
-						Rect position2 = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-						EditorUtility.DisplayCustomMenu(position2, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
-						Event.current.Use();
+						gUIContent = ASMainWindow.constants.badgeDelete;
 					}
-				}
-				if (listViewElement2.row == this.pv.lv.row && Event.current.type == EventType.Repaint)
-				{
-					this.constants.entrySelected.Draw(listViewElement2.position, false, false, false, false);
-				}
-				ChangeFlags changeFlags;
-				if (num2 != -1)
-				{
-					Texture2D texture2D = AssetDatabase.GetCachedIcon(parentViewFolder.name + "/" + parentViewFolder.files[num2].name) as Texture2D;
-					if (texture2D == null)
+					else if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
 					{
-						texture2D = InternalEditorUtility.GetIconForFile(parentViewFolder.files[num2].name);
+						gUIContent = ASMainWindow.constants.badgeMove;
 					}
-					GUILayout.Label(new GUIContent(parentViewFolder.files[num2].name, texture2D), this.constants.element, new GUILayoutOption[0]);
-					changeFlags = parentViewFolder.files[num2].changeFlags;
+					if (gUIContent != null && Event.current.type == EventType.Repaint)
+					{
+						Rect position3 = new Rect(listViewElement2.position.x + listViewElement2.position.width - (float)gUIContent.image.width - 5f, listViewElement2.position.y + listViewElement2.position.height / 2f - (float)(gUIContent.image.height / 2), (float)gUIContent.image.width, (float)gUIContent.image.height);
+						EditorGUIUtility.SetIconSize(Vector2.zero);
+						GUIStyle.none.Draw(position3, gUIContent, false, false, false, false);
+						EditorGUIUtility.SetIconSize(this.iconSize);
+					}
+					this.pv.NextFileFolder(ref num, ref num2);
 				}
-				else
+			}
+			finally
+			{
+				IDisposable disposable2;
+				if ((disposable2 = (enumerator2 as IDisposable)) != null)
 				{
-					GUILayout.Label(parentViewFolder.name, this.constants.header, new GUILayoutOption[0]);
-					changeFlags = parentViewFolder.changeFlags;
+					disposable2.Dispose();
 				}
-				GUIContent gUIContent = null;
-				if (this.HasFlag(changeFlags, ChangeFlags.Undeleted) || this.HasFlag(changeFlags, ChangeFlags.Created))
-				{
-					gUIContent = ASMainWindow.constants.badgeNew;
-				}
-				else if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
-				{
-					gUIContent = ASMainWindow.constants.badgeDelete;
-				}
-				else if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
-				{
-					gUIContent = ASMainWindow.constants.badgeMove;
-				}
-				if (gUIContent != null && Event.current.type == EventType.Repaint)
-				{
-					Rect position3 = new Rect(listViewElement2.position.x + listViewElement2.position.width - (float)gUIContent.image.width - 5f, listViewElement2.position.y + listViewElement2.position.height / 2f - (float)(gUIContent.image.height / 2), (float)gUIContent.image.width, (float)gUIContent.image.height);
-					EditorGUIUtility.SetIconSize(Vector2.zero);
-					GUIStyle.none.Draw(position3, gUIContent, false, false, false, false);
-					EditorGUIUtility.SetIconSize(this.iconSize);
-				}
-				this.pv.NextFileFolder(ref num, ref num2);
 			}
 			if (this.pv.lv.selectionChanged && this.selectedGUID != string.Empty)
 			{
@@ -462,15 +481,18 @@ namespace UnityEditor
 					AssetServer.SetSelectionFromGUID(string.Empty);
 				}
 			}
-			if (GUIUtility.keyboardControl == this.pv.lv.ID && Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && !this.isDirSelected && this.selectedGUID != string.Empty)
+			if (GUIUtility.keyboardControl == this.pv.lv.ID)
 			{
-				this.DoShowDiff(false);
-				GUIUtility.ExitGUI();
+				if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && !this.isDirSelected && this.selectedGUID != string.Empty)
+				{
+					this.DoShowDiff(false);
+					GUIUtility.ExitGUI();
+				}
 			}
 			GUILayout.EndVertical();
 			GUILayout.BeginVertical(this.constants.box, new GUILayoutOption[0]);
 			GUILayout.Label("Update Message", this.constants.title, new GUILayoutOption[0]);
-			GUILayout.TextArea((this.lv.row < 0) ? string.Empty : this.changesets[this.lv.row].message, this.constants.wwText, new GUILayoutOption[0]);
+			GUILayout.TextArea((this.lv.row < 0) ? "" : this.changesets[this.lv.row].message, this.constants.wwText, new GUILayoutOption[0]);
 			GUILayout.EndVertical();
 			SplitterGUILayout.EndVerticalSplit();
 			SplitterGUILayout.EndHorizontalSplit();
@@ -494,12 +516,17 @@ namespace UnityEditor
 			int ver = (serverItemChangeset != -1) ? serverItemChangeset : -2;
 			list.Add(this.selectedGUID);
 			list2.Add(new CompareInfo(num, ver, (!binary) ? 0 : 1, (!binary) ? 1 : 0));
+			bool result;
 			if (list.Count != 0)
 			{
 				AssetServer.CompareFiles(list.ToArray(), list2.ToArray());
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public void Repaint()

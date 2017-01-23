@@ -31,6 +31,8 @@ namespace UnityEngine.SocialPlatforms
 
 		void Authenticate(ILocalUser user, Action<bool> callback);
 
+		void Authenticate(ILocalUser user, Action<bool, string> callback);
+
 		void LoadFriends(ILocalUser user, Action<bool> callback);
 
 		void LoadScores(ILeaderboard board, Action<bool> callback);

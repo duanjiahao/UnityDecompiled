@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.AnimatedValues;
@@ -39,8 +40,8 @@ namespace UnityEditor
 
 			public Styles()
 			{
-				this.rawEditContent = EditorGUIUtility.IconContent("RectTransformRaw", "Raw edit mode. When enabled, editing pivot and anchor values will not counter-adjust the position and size of the rectangle in order to make it stay in place.");
-				this.blueprintContent = EditorGUIUtility.IconContent("RectTransformBlueprint", "Blueprint mode. Edit RectTransforms as if they were not rotated and scaled. This enables snapping too.");
+				this.rawEditContent = EditorGUIUtility.IconContent("RectTransformRaw", "|Raw edit mode. When enabled, editing pivot and anchor values will not counter-adjust the position and size of the rectangle in order to make it stay in place.");
+				this.blueprintContent = EditorGUIUtility.IconContent("RectTransformBlueprint", "|Blueprint mode. Edit RectTransforms as if they were not rotated and scaled. This enables snapping too.");
 			}
 		}
 
@@ -60,11 +61,11 @@ namespace UnityEditor
 
 		private const string kLockRectPrefName = "RectTransformEditor.lockRect";
 
-		private const float kDottedLineSize = 5f;
-
 		private static Vector2 kShadowOffset = new Vector2(1f, -1f);
 
 		private static Color kShadowColor = new Color(0f, 0f, 0f, 0.5f);
+
+		private const float kDottedLineSize = 5f;
 
 		private static float kDropdownSize = 49f;
 
@@ -133,11 +134,11 @@ namespace UnityEditor
 
 		private TransformRotationGUI m_RotationGUI;
 
-		private bool m_ShowLayoutOptions;
+		private bool m_ShowLayoutOptions = false;
 
-		private bool m_RawEditMode;
+		private bool m_RawEditMode = false;
 
-		private int m_TargetCount;
+		private int m_TargetCount = 0;
 
 		private Dictionary<int, AnimBool> m_KeyboardControlIDs = new Dictionary<int, AnimBool>();
 
@@ -241,34 +242,34 @@ namespace UnityEditor
 			{
 			case "ChangingLeft":
 				animBool = this.m_ChangingLeft;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingRight":
 				animBool = this.m_ChangingRight;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingPosY":
 				animBool = this.m_ChangingPosY;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingWidth":
 				animBool = this.m_ChangingWidth;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingBottom":
 				animBool = this.m_ChangingBottom;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingTop":
 				animBool = this.m_ChangingTop;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingPosX":
 				animBool = this.m_ChangingPosX;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingHeight":
 				animBool = this.m_ChangingHeight;
-				goto IL_140;
+				goto IL_143;
 			case "ChangingPivot":
 				animBool = this.m_ChangingPivot;
-				goto IL_140;
+				goto IL_143;
 			}
 			animBool = null;
-			IL_140:
+			IL_143:
 			if (animBool != null)
 			{
 				animBool.target = dragging;
@@ -353,7 +354,7 @@ namespace UnityEditor
 			{
 				if (base.targets.Length == 1)
 				{
-					EditorGUILayout.HelpBox("Some values driven by " + (this.target as RectTransform).drivenByObject.GetType().Name + ".", MessageType.None);
+					EditorGUILayout.HelpBox("Some values driven by " + (base.target as RectTransform).drivenByObject.GetType().Name + ".", MessageType.None);
 				}
 				else
 				{
@@ -376,7 +377,7 @@ namespace UnityEditor
 
 		private static void Vector3FieldWithDisabledMash(Rect position, SerializedProperty property, GUIContent label, bool[] disabledMask)
 		{
-			int controlID = GUIUtility.GetControlID(RectTransformEditor.s_FoldoutHash, EditorGUIUtility.native, position);
+			int controlID = GUIUtility.GetControlID(RectTransformEditor.s_FoldoutHash, FocusType.Keyboard, position);
 			position = EditorGUI.MultiFieldPrefixLabel(position, controlID, label, 3);
 			position.height = EditorGUIUtility.singleLineHeight;
 			SerializedProperty serializedProperty = property.Copy();
@@ -539,28 +540,27 @@ namespace UnityEditor
 			{
 				EditorPrefs.SetBool("RectTransformEditor.showAnchorProperties", this.m_ShowLayoutOptions);
 			}
-			if (!this.m_ShowLayoutOptions)
+			if (this.m_ShowLayoutOptions)
 			{
-				return;
+				EditorGUI.indentLevel++;
+				controlRect.y += EditorGUIUtility.singleLineHeight;
+				this.Vector2Field(controlRect, (RectTransform rectTransform) => rectTransform.anchorMin.x, delegate(RectTransform rectTransform, float val)
+				{
+					RectTransformEditor.SetAnchorSmart(rectTransform, val, 0, false, !this.m_RawEditMode, true);
+				}, (RectTransform rectTransform) => rectTransform.anchorMin.y, delegate(RectTransform rectTransform, float val)
+				{
+					RectTransformEditor.SetAnchorSmart(rectTransform, val, 1, false, !this.m_RawEditMode, true);
+				}, DrivenTransformProperties.AnchorMinX, DrivenTransformProperties.AnchorMinY, this.m_AnchorMin.FindPropertyRelative("x"), this.m_AnchorMin.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMinContent);
+				controlRect.y += EditorGUIUtility.singleLineHeight;
+				this.Vector2Field(controlRect, (RectTransform rectTransform) => rectTransform.anchorMax.x, delegate(RectTransform rectTransform, float val)
+				{
+					RectTransformEditor.SetAnchorSmart(rectTransform, val, 0, true, !this.m_RawEditMode, true);
+				}, (RectTransform rectTransform) => rectTransform.anchorMax.y, delegate(RectTransform rectTransform, float val)
+				{
+					RectTransformEditor.SetAnchorSmart(rectTransform, val, 1, true, !this.m_RawEditMode, true);
+				}, DrivenTransformProperties.AnchorMaxX, DrivenTransformProperties.AnchorMaxY, this.m_AnchorMax.FindPropertyRelative("x"), this.m_AnchorMax.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMaxContent);
+				EditorGUI.indentLevel--;
 			}
-			EditorGUI.indentLevel++;
-			controlRect.y += EditorGUIUtility.singleLineHeight;
-			this.Vector2Field(controlRect, (RectTransform rectTransform) => rectTransform.anchorMin.x, delegate(RectTransform rectTransform, float val)
-			{
-				RectTransformEditor.SetAnchorSmart(rectTransform, val, 0, false, !this.m_RawEditMode, true);
-			}, (RectTransform rectTransform) => rectTransform.anchorMin.y, delegate(RectTransform rectTransform, float val)
-			{
-				RectTransformEditor.SetAnchorSmart(rectTransform, val, 1, false, !this.m_RawEditMode, true);
-			}, DrivenTransformProperties.AnchorMinX, DrivenTransformProperties.AnchorMinY, this.m_AnchorMin.FindPropertyRelative("x"), this.m_AnchorMin.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMinContent);
-			controlRect.y += EditorGUIUtility.singleLineHeight;
-			this.Vector2Field(controlRect, (RectTransform rectTransform) => rectTransform.anchorMax.x, delegate(RectTransform rectTransform, float val)
-			{
-				RectTransformEditor.SetAnchorSmart(rectTransform, val, 0, true, !this.m_RawEditMode, true);
-			}, (RectTransform rectTransform) => rectTransform.anchorMax.y, delegate(RectTransform rectTransform, float val)
-			{
-				RectTransformEditor.SetAnchorSmart(rectTransform, val, 1, true, !this.m_RawEditMode, true);
-			}, DrivenTransformProperties.AnchorMaxX, DrivenTransformProperties.AnchorMaxY, this.m_AnchorMax.FindPropertyRelative("x"), this.m_AnchorMax.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMaxContent);
-			EditorGUI.indentLevel--;
 		}
 
 		private void SmartPivotField()
@@ -599,7 +599,7 @@ namespace UnityEditor
 		{
 			using (new EditorGUI.DisabledScope(base.targets.Any((UnityEngine.Object x) => ((x as RectTransform).drivenProperties & driven) != DrivenTransformProperties.None)))
 			{
-				float value = getter(this.target as RectTransform);
+				float value = getter(base.target as RectTransform);
 				EditorGUI.showMixedValue = ((from x in base.targets
 				select getter(x as RectTransform)).Distinct<float>().Count<float>() >= 2);
 				EditorGUI.BeginChangeCheck();
@@ -644,7 +644,7 @@ namespace UnityEditor
 		{
 			using (new EditorGUI.DisabledScope(base.targets.Any((UnityEngine.Object x) => ((x as RectTransform).drivenProperties & driven) != DrivenTransformProperties.None)))
 			{
-				float value = getter(this.target as RectTransform);
+				float value = getter(base.target as RectTransform);
 				EditorGUI.showMixedValue = ((from x in base.targets
 				select getter(x as RectTransform)).Distinct<float>().Count<float>() >= 2);
 				EditorGUI.BeginChangeCheck();
@@ -703,7 +703,7 @@ namespace UnityEditor
 
 		private void OnSceneGUI()
 		{
-			RectTransform rectTransform = this.target as RectTransform;
+			RectTransform rectTransform = base.target as RectTransform;
 			Rect rect = rectTransform.rect;
 			Rect rectInUserSpace = rect;
 			Rect rect2 = rect;
@@ -759,58 +759,57 @@ namespace UnityEditor
 
 		private void ParentRectPreviewDragHandles(RectTransform gui, Transform space)
 		{
-			if (gui == null)
+			if (!(gui == null))
 			{
-				return;
-			}
-			float size = 0.05f * HandleUtility.GetHandleSize(space.position);
-			Rect rect = gui.rect;
-			for (int i = 0; i <= 2; i++)
-			{
-				for (int j = 0; j <= 2; j++)
+				float size = 0.05f * HandleUtility.GetHandleSize(space.position);
+				Rect rect = gui.rect;
+				for (int i = 0; i <= 2; i++)
 				{
-					if (i == 1 != (j == 1))
+					for (int j = 0; j <= 2; j++)
 					{
-						Vector3 position = Vector2.zero;
-						for (int k = 0; k < 2; k++)
+						if (i == 1 != (j == 1))
 						{
-							position[k] = Mathf.Lerp(rect.min[k], rect.max[k], (float)((k != 0) ? j : i) * 0.5f);
-						}
-						position = space.TransformPoint(position);
-						int controlID = GUIUtility.GetControlID(RectTransformEditor.s_ParentRectPreviewHandlesHash, FocusType.Native);
-						Vector3 sideVector = (i != 1) ? (space.up * rect.height) : (space.right * rect.width);
-						Vector3 direction = (i != 1) ? space.right : space.up;
-						EditorGUI.BeginChangeCheck();
-						Vector3 position2 = RectHandles.SideSlider(controlID, position, sideVector, direction, size, null, 0f, -3f);
-						if (EditorGUI.EndChangeCheck())
-						{
-							Vector2 b = space.InverseTransformPoint(position);
-							Vector2 a = space.InverseTransformPoint(position2);
-							Rect rect2 = rect;
-							Vector2 vector = a - b;
-							if (i == 0)
+							Vector3 position = Vector2.zero;
+							for (int k = 0; k < 2; k++)
 							{
-								rect2.min = new Vector2(rect2.min.x + vector.x, rect2.min.y);
+								position[k] = Mathf.Lerp(rect.min[k], rect.max[k], (float)((k != 0) ? j : i) * 0.5f);
 							}
-							if (i == 2)
+							position = space.TransformPoint(position);
+							int controlID = GUIUtility.GetControlID(RectTransformEditor.s_ParentRectPreviewHandlesHash, FocusType.Passive);
+							Vector3 sideVector = (i != 1) ? (space.up * rect.height) : (space.right * rect.width);
+							Vector3 direction = (i != 1) ? space.right : space.up;
+							EditorGUI.BeginChangeCheck();
+							Vector3 position2 = RectHandles.SideSlider(controlID, position, sideVector, direction, size, null, 0f, -3f);
+							if (EditorGUI.EndChangeCheck())
 							{
-								rect2.max = new Vector2(rect2.max.x + vector.x, rect2.max.y);
+								Vector2 b = space.InverseTransformPoint(position);
+								Vector2 a = space.InverseTransformPoint(position2);
+								Rect rect2 = rect;
+								Vector2 vector = a - b;
+								if (i == 0)
+								{
+									rect2.min = new Vector2(rect2.min.x + vector.x, rect2.min.y);
+								}
+								if (i == 2)
+								{
+									rect2.max = new Vector2(rect2.max.x + vector.x, rect2.max.y);
+								}
+								if (j == 0)
+								{
+									rect2.min = new Vector2(rect2.min.x, rect2.min.y + vector.y);
+								}
+								if (j == 2)
+								{
+									rect2.max = new Vector2(rect2.max.x, rect2.max.y + vector.y);
+								}
+								this.SetTemporaryRect(gui, rect2, controlID);
 							}
-							if (j == 0)
+							if (GUIUtility.hotControl == controlID)
 							{
-								rect2.min = new Vector2(rect2.min.x, rect2.min.y + vector.y);
+								Handles.BeginGUI();
+								EditorGUI.DropShadowLabel(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 60f, 16f), "Preview");
+								Handles.EndGUI();
 							}
-							if (j == 2)
-							{
-								rect2.max = new Vector2(rect2.max.x, rect2.max.y + vector.y);
-							}
-							this.SetTemporaryRect(gui, rect2, controlID);
-						}
-						if (GUIUtility.hotControl == controlID)
-						{
-							Handles.BeginGUI();
-							EditorGUI.DropShadowLabel(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 60f, 16f), "Preview");
-							Handles.EndGUI();
 						}
 					}
 				}
@@ -838,35 +837,36 @@ namespace UnityEditor
 
 		private void UpdateTemporaryRect()
 		{
-			if (RectTransformEditor.s_ParentDragRectTransform == null)
+			if (!(RectTransformEditor.s_ParentDragRectTransform == null))
 			{
-				return;
+				if ((float)GUIUtility.hotControl == RectTransformEditor.s_ParentDragId)
+				{
+					RectTransformEditor.s_ParentDragTime = Time.realtimeSinceStartup;
+					Canvas.ForceUpdateCanvases();
+					GameView.RepaintAll();
+				}
+				else
+				{
+					float num = Time.realtimeSinceStartup - RectTransformEditor.s_ParentDragTime;
+					float num2 = Mathf.Clamp01(1f - num * 8f);
+					if (num2 > 0f)
+					{
+						Rect rect = default(Rect);
+						rect.position = Vector2.Lerp(RectTransformEditor.s_ParentDragOrigRect.position, RectTransformEditor.s_ParentDragPreviewRect.position, num2);
+						rect.size = Vector2.Lerp(RectTransformEditor.s_ParentDragOrigRect.size, RectTransformEditor.s_ParentDragPreviewRect.size, num2);
+						InternalEditorUtility.SetRectTransformTemporaryRect(RectTransformEditor.s_ParentDragRectTransform, rect);
+					}
+					else
+					{
+						InternalEditorUtility.SetRectTransformTemporaryRect(RectTransformEditor.s_ParentDragRectTransform, default(Rect));
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.UpdateTemporaryRect));
+						RectTransformEditor.s_ParentDragRectTransform = null;
+					}
+					Canvas.ForceUpdateCanvases();
+					SceneView.RepaintAll();
+					GameView.RepaintAll();
+				}
 			}
-			if ((float)GUIUtility.hotControl == RectTransformEditor.s_ParentDragId)
-			{
-				RectTransformEditor.s_ParentDragTime = Time.realtimeSinceStartup;
-				Canvas.ForceUpdateCanvases();
-				GameView.RepaintAll();
-				return;
-			}
-			float num = Time.realtimeSinceStartup - RectTransformEditor.s_ParentDragTime;
-			float num2 = Mathf.Clamp01(1f - num * 8f);
-			if (num2 > 0f)
-			{
-				Rect rect = default(Rect);
-				rect.position = Vector2.Lerp(RectTransformEditor.s_ParentDragOrigRect.position, RectTransformEditor.s_ParentDragPreviewRect.position, num2);
-				rect.size = Vector2.Lerp(RectTransformEditor.s_ParentDragOrigRect.size, RectTransformEditor.s_ParentDragPreviewRect.size, num2);
-				InternalEditorUtility.SetRectTransformTemporaryRect(RectTransformEditor.s_ParentDragRectTransform, rect);
-			}
-			else
-			{
-				InternalEditorUtility.SetRectTransformTemporaryRect(RectTransformEditor.s_ParentDragRectTransform, default(Rect));
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.UpdateTemporaryRect));
-				RectTransformEditor.s_ParentDragRectTransform = null;
-			}
-			Canvas.ForceUpdateCanvases();
-			SceneView.RepaintAll();
-			GameView.RepaintAll();
 		}
 
 		private void AllAnchorsSceneGUI(RectTransform gui, RectTransform guiParent, Transform parentSpace, Transform transform)
@@ -874,22 +874,35 @@ namespace UnityEditor
 			Handles.color = RectTransformEditor.kParentColor;
 			this.DrawRect(guiParent.rect, parentSpace, false);
 			Handles.color = RectTransformEditor.kSiblingColor;
-			foreach (Transform transform2 in parentSpace)
+			IEnumerator enumerator = parentSpace.GetEnumerator();
+			try
 			{
-				if (transform2.gameObject.activeInHierarchy)
+				while (enumerator.MoveNext())
 				{
-					RectTransform component = transform2.GetComponent<RectTransform>();
-					if (component)
+					Transform transform2 = (Transform)enumerator.Current;
+					if (transform2.gameObject.activeInHierarchy)
 					{
-						Rect rect = component.rect;
-						rect.x += component.transform.localPosition.x;
-						rect.y += component.transform.localPosition.y;
-						this.DrawRect(component.rect, component, false);
-						if (component != transform)
+						RectTransform component = transform2.GetComponent<RectTransform>();
+						if (component)
 						{
-							this.AnchorsSceneGUI(component, guiParent, parentSpace, false);
+							Rect rect = component.rect;
+							rect.x += component.transform.localPosition.x;
+							rect.y += component.transform.localPosition.y;
+							this.DrawRect(component.rect, component, false);
+							if (component != transform)
+							{
+								this.AnchorsSceneGUI(component, guiParent, parentSpace, false);
+							}
 						}
 					}
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
 				}
 			}
 			Handles.color = RectTransformEditor.kAnchorColor;
@@ -908,12 +921,17 @@ namespace UnityEditor
 
 		private static bool AnchorAllowedOutsideParent(int axis, int minmax)
 		{
+			bool result;
 			if (EditorGUI.actionKey || GUIUtility.hotControl == 0)
 			{
-				return true;
+				result = true;
 			}
-			float num = (minmax != 0) ? RectTransformEditor.s_StartDragAnchorMax[axis] : RectTransformEditor.s_StartDragAnchorMin[axis];
-			return num < -0.001f || num > 1.001f;
+			else
+			{
+				float num = (minmax != 0) ? RectTransformEditor.s_StartDragAnchorMax[axis] : RectTransformEditor.s_StartDragAnchorMin[axis];
+				result = (num < -0.001f || num > 1.001f);
+			}
+			return result;
 		}
 
 		private void AnchorsSceneGUI(RectTransform gui, RectTransform guiParent, Transform parentSpace, bool interactive)
@@ -938,28 +956,27 @@ namespace UnityEditor
 			this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 0, 1, GUIUtility.GetControlID(FocusType.Passive));
 			this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 1, 0, GUIUtility.GetControlID(FocusType.Passive));
 			this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 1, 1, GUIUtility.GetControlID(FocusType.Passive));
-			if (!interactive)
+			if (interactive)
 			{
-				return;
-			}
-			int controlID = GUIUtility.GetControlID(FocusType.Passive);
-			int controlID2 = GUIUtility.GetControlID(FocusType.Passive);
-			int controlID3 = GUIUtility.GetControlID(FocusType.Passive);
-			int controlID4 = GUIUtility.GetControlID(FocusType.Passive);
-			int controlID5 = GUIUtility.GetControlID(FocusType.Passive);
-			if (RectTransformEditor.s_AnchorFusedState == RectTransformEditor.AnchorFusedState.All)
-			{
-				this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 2, 2, controlID);
-			}
-			if (RectTransformEditor.s_AnchorFusedState == RectTransformEditor.AnchorFusedState.Horizontal)
-			{
-				this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 2, 0, controlID2);
-				this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 2, 1, controlID3);
-			}
-			if (RectTransformEditor.s_AnchorFusedState == RectTransformEditor.AnchorFusedState.Vertical)
-			{
-				this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 0, 2, controlID4);
-				this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 1, 2, controlID5);
+				int controlID = GUIUtility.GetControlID(FocusType.Passive);
+				int controlID2 = GUIUtility.GetControlID(FocusType.Passive);
+				int controlID3 = GUIUtility.GetControlID(FocusType.Passive);
+				int controlID4 = GUIUtility.GetControlID(FocusType.Passive);
+				int controlID5 = GUIUtility.GetControlID(FocusType.Passive);
+				if (RectTransformEditor.s_AnchorFusedState == RectTransformEditor.AnchorFusedState.All)
+				{
+					this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 2, 2, controlID);
+				}
+				if (RectTransformEditor.s_AnchorFusedState == RectTransformEditor.AnchorFusedState.Horizontal)
+				{
+					this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 2, 0, controlID2);
+					this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 2, 1, controlID3);
+				}
+				if (RectTransformEditor.s_AnchorFusedState == RectTransformEditor.AnchorFusedState.Vertical)
+				{
+					this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 0, 2, controlID4);
+					this.AnchorSceneGUI(gui, guiParent, parentSpace, interactive, 1, 2, controlID5);
+				}
 			}
 		}
 
@@ -983,69 +1000,66 @@ namespace UnityEditor
 			{
 				this.DrawAnchor(vector, parentSpace.right * num * 2f * (float)(minmaxX * 2 - 1), parentSpace.up * num * 2f * (float)(minmaxY * 2 - 1));
 			}
-			if (!interactive)
+			if (interactive)
 			{
-				return;
-			}
-			Event @event = new Event(Event.current);
-			EditorGUI.BeginChangeCheck();
-			Vector3 vector2 = Handles.Slider2D(id, vector, parentSpace.forward, parentSpace.right, parentSpace.up, num, null, Vector2.zero);
-			if (@event.type == EventType.MouseDown && GUIUtility.hotControl == id)
-			{
-				RectTransformEditor.s_DragAnchorsTogether = EditorGUI.actionKey;
-				RectTransformEditor.s_StartDragAnchorMin = gui.anchorMin;
-				RectTransformEditor.s_StartDragAnchorMax = gui.anchorMax;
-				RectTransformSnapping.CalculateAnchorSnapValues(parentSpace, gui.transform, gui, minmaxX, minmaxY);
-			}
-			if (EditorGUI.EndChangeCheck())
-			{
-				Undo.RecordObject(gui, "Move Rectangle Anchors");
-				Vector2 vector3 = parentSpace.InverseTransformVector(vector2 - vector);
-				for (int i = 0; i <= 1; i++)
+				Event @event = new Event(Event.current);
+				EditorGUI.BeginChangeCheck();
+				Vector3 vector2 = Handles.Slider2D(id, vector, parentSpace.forward, parentSpace.right, parentSpace.up, num, null, Vector2.zero);
+				if (@event.type == EventType.MouseDown && GUIUtility.hotControl == id)
 				{
-					int index;
-					int expr_1F8 = index = i;
-					float num2 = vector3[index];
-					vector3[expr_1F8] = num2 / guiParent.rect.size[i];
-					int num3 = (i != 0) ? minmaxY : minmaxX;
-					bool flag = num3 == 1;
-					float num4 = (!flag) ? gui.anchorMin[i] : gui.anchorMax[i];
-					float num5 = num4 + vector3[i];
-					float num6 = num5;
-					if (!RectTransformEditor.AnchorAllowedOutsideParent(i, num3))
+					RectTransformEditor.s_DragAnchorsTogether = EditorGUI.actionKey;
+					RectTransformEditor.s_StartDragAnchorMin = gui.anchorMin;
+					RectTransformEditor.s_StartDragAnchorMax = gui.anchorMax;
+					RectTransformSnapping.CalculateAnchorSnapValues(parentSpace, gui.transform, gui, minmaxX, minmaxY);
+				}
+				if (EditorGUI.EndChangeCheck())
+				{
+					Undo.RecordObject(gui, "Move Rectangle Anchors");
+					Vector2 vector3 = parentSpace.InverseTransformVector(vector2 - vector);
+					for (int i = 0; i <= 1; i++)
 					{
-						num6 = Mathf.Clamp01(num6);
-					}
-					if (num3 == 0)
-					{
-						num6 = Mathf.Min(num6, gui.anchorMax[i]);
-					}
-					if (num3 == 1)
-					{
-						num6 = Mathf.Max(num6, gui.anchorMin[i]);
-					}
-					float num7 = HandleUtility.GetHandleSize(vector2) * 0.05f / guiParent.rect.size[i];
-					num7 *= parentSpace.InverseTransformVector((i != 0) ? Vector3.up : Vector3.right)[i];
-					num6 = RectTransformSnapping.SnapToGuides(num6, num7, i);
-					bool enforceExactValue = num6 != num5;
-					num5 = num6;
-					if (num3 == 2)
-					{
-						RectTransformEditor.SetAnchorSmart(gui, num5, i, false, !@event.shift, enforceExactValue, false, RectTransformEditor.s_DragAnchorsTogether);
-						RectTransformEditor.SetAnchorSmart(gui, num5, i, true, !@event.shift, enforceExactValue, false, RectTransformEditor.s_DragAnchorsTogether);
-					}
-					else
-					{
-						RectTransformEditor.SetAnchorSmart(gui, num5, i, flag, !@event.shift, enforceExactValue, true, RectTransformEditor.s_DragAnchorsTogether);
-					}
-					EditorUtility.SetDirty(gui);
-					if (gui.drivenByObject != null)
-					{
-						RectTransform.SendReapplyDrivenProperties(gui);
+						int index;
+						vector3[index = i] = vector3[index] / guiParent.rect.size[i];
+						int num2 = (i != 0) ? minmaxY : minmaxX;
+						bool flag = num2 == 1;
+						float num3 = (!flag) ? gui.anchorMin[i] : gui.anchorMax[i];
+						float num4 = num3 + vector3[i];
+						float num5 = num4;
+						if (!RectTransformEditor.AnchorAllowedOutsideParent(i, num2))
+						{
+							num5 = Mathf.Clamp01(num5);
+						}
+						if (num2 == 0)
+						{
+							num5 = Mathf.Min(num5, gui.anchorMax[i]);
+						}
+						if (num2 == 1)
+						{
+							num5 = Mathf.Max(num5, gui.anchorMin[i]);
+						}
+						float num6 = HandleUtility.GetHandleSize(vector2) * 0.05f / guiParent.rect.size[i];
+						num6 *= parentSpace.InverseTransformVector((i != 0) ? Vector3.up : Vector3.right)[i];
+						num5 = RectTransformSnapping.SnapToGuides(num5, num6, i);
+						bool enforceExactValue = num5 != num4;
+						num4 = num5;
+						if (num2 == 2)
+						{
+							RectTransformEditor.SetAnchorSmart(gui, num4, i, false, !@event.shift, enforceExactValue, false, RectTransformEditor.s_DragAnchorsTogether);
+							RectTransformEditor.SetAnchorSmart(gui, num4, i, true, !@event.shift, enforceExactValue, false, RectTransformEditor.s_DragAnchorsTogether);
+						}
+						else
+						{
+							RectTransformEditor.SetAnchorSmart(gui, num4, i, flag, !@event.shift, enforceExactValue, true, RectTransformEditor.s_DragAnchorsTogether);
+						}
+						EditorUtility.SetDirty(gui);
+						if (gui.drivenByObject != null)
+						{
+							RectTransform.SendReapplyDrivenProperties(gui);
+						}
 					}
 				}
+				this.SetFadingBasedOnMouseDownUp(ref this.m_ChangingAnchors, @event);
 			}
-			this.SetFadingBasedOnMouseDownUp(ref this.m_ChangingAnchors, @event);
 		}
 
 		private static float Round(float value)
@@ -1104,78 +1118,76 @@ namespace UnityEditor
 
 		private void DrawSizeDistances(Transform userSpace, Rect rectInParentSpace, Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, int axis, float alpha)
 		{
-			if (alpha <= 0f)
+			if (alpha > 0f)
 			{
-				return;
-			}
-			Color color = RectTransformEditor.kAnchorColor;
-			color.a *= alpha;
-			GUI.color = color;
-			if (userSpace == gui.transform)
-			{
-				gui.GetWorldCorners(RectTransformEditor.s_Corners);
-			}
-			else
-			{
-				gui.GetLocalCorners(RectTransformEditor.s_Corners);
-				for (int i = 0; i < 4; i++)
+				Color color = RectTransformEditor.kAnchorColor;
+				color.a *= alpha;
+				GUI.color = color;
+				if (userSpace == gui.transform)
 				{
-					RectTransformEditor.s_Corners[i] += gui.transform.localPosition;
-					RectTransformEditor.s_Corners[i] = userSpace.TransformPoint(RectTransformEditor.s_Corners[i]);
+					gui.GetWorldCorners(RectTransformEditor.s_Corners);
 				}
+				else
+				{
+					gui.GetLocalCorners(RectTransformEditor.s_Corners);
+					for (int i = 0; i < 4; i++)
+					{
+						RectTransformEditor.s_Corners[i] += gui.transform.localPosition;
+						RectTransformEditor.s_Corners[i] = userSpace.TransformPoint(RectTransformEditor.s_Corners[i]);
+					}
+				}
+				string text = gui.sizeDelta[axis].ToString();
+				GUIContent label = new GUIContent(text);
+				Vector3 b = ((axis != 0) ? userSpace.right : userSpace.up) * size * 2f;
+				this.DrawLabelBetweenPoints(RectTransformEditor.s_Corners[0] + b, RectTransformEditor.s_Corners[(axis != 0) ? 1 : 3] + b, label);
 			}
-			string text = gui.sizeDelta[axis].ToString();
-			GUIContent label = new GUIContent(text);
-			Vector3 b = ((axis != 0) ? userSpace.right : userSpace.up) * size * 2f;
-			this.DrawLabelBetweenPoints(RectTransformEditor.s_Corners[0] + b, RectTransformEditor.s_Corners[(axis != 0) ? 1 : 3] + b, label);
 		}
 
 		private void DrawPositionDistances(Transform userSpace, Rect rectInParentSpace, Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, int axis, int side, float alpha)
 		{
-			if (guiParent == null || alpha <= 0f)
+			if (!(guiParent == null) && alpha > 0f)
 			{
-				return;
-			}
-			Color color = RectTransformEditor.kAnchorLineColor;
-			color.a *= alpha;
-			Handles.color = color;
-			color = RectTransformEditor.kAnchorColor;
-			color.a *= alpha;
-			GUI.color = color;
-			Vector3 vector;
-			Vector3 vector2;
-			float num;
-			if (side == 0)
-			{
-				Vector2 v = Rect.NormalizedToPoint(rectInParentSpace, gui.pivot);
-				vector = v;
-				vector2 = v;
-				vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
-				num = gui.anchoredPosition[axis];
-			}
-			else
-			{
-				Vector2 center = rectInParentSpace.center;
-				vector = center;
-				vector2 = center;
-				if (side == 1)
+				Color color = RectTransformEditor.kAnchorLineColor;
+				color.a *= alpha;
+				Handles.color = color;
+				color = RectTransformEditor.kAnchorColor;
+				color.a *= alpha;
+				GUI.color = color;
+				Vector3 vector;
+				Vector3 vector2;
+				float num;
+				if (side == 0)
 				{
+					Vector2 v = Rect.NormalizedToPoint(rectInParentSpace, gui.pivot);
+					vector = v;
+					vector2 = v;
 					vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
-					vector2[axis] = rectInParentSpace.min[axis];
-					num = gui.offsetMin[axis];
+					num = gui.anchoredPosition[axis];
 				}
 				else
 				{
-					vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMax[axis]);
-					vector2[axis] = rectInParentSpace.max[axis];
-					num = -gui.offsetMax[axis];
+					Vector2 center = rectInParentSpace.center;
+					vector = center;
+					vector2 = center;
+					if (side == 1)
+					{
+						vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMin[axis]);
+						vector2[axis] = rectInParentSpace.min[axis];
+						num = gui.offsetMin[axis];
+					}
+					else
+					{
+						vector[axis] = Mathf.LerpUnclamped(guiParent.rect.min[axis], guiParent.rect.max[axis], gui.anchorMax[axis]);
+						vector2[axis] = rectInParentSpace.max[axis];
+						num = -gui.offsetMax[axis];
+					}
 				}
+				vector = parentSpace.TransformPoint(vector);
+				vector2 = parentSpace.TransformPoint(vector2);
+				RectHandles.DrawDottedLineWithShadow(RectTransformEditor.kShadowColor, RectTransformEditor.kShadowOffset, vector, vector2, 5f);
+				GUIContent label = new GUIContent(num.ToString());
+				this.DrawLabelBetweenPoints(vector, vector2, label);
 			}
-			vector = parentSpace.TransformPoint(vector);
-			vector2 = parentSpace.TransformPoint(vector2);
-			RectHandles.DrawDottedLineWithShadow(RectTransformEditor.kShadowColor, RectTransformEditor.kShadowOffset, vector, vector2, 5f);
-			GUIContent label = new GUIContent(num.ToString());
-			this.DrawLabelBetweenPoints(vector, vector2, label);
 		}
 
 		private float LerpUnclamped(float a, float b, float t)
@@ -1185,122 +1197,127 @@ namespace UnityEditor
 
 		private void DrawAnchorDistances(Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, float alpha)
 		{
-			if (guiParent == null || alpha <= 0f)
+			if (!(guiParent == null) && alpha > 0f)
 			{
-				return;
-			}
-			Color color = RectTransformEditor.kAnchorColor;
-			color.a *= alpha;
-			GUI.color = color;
-			Vector3[,] array = new Vector3[2, 4];
-			for (int i = 0; i < 2; i++)
-			{
-				for (int j = 0; j < 4; j++)
+				Color color = RectTransformEditor.kAnchorColor;
+				color.a *= alpha;
+				GUI.color = color;
+				Vector3[,] array = new Vector3[2, 4];
+				for (int i = 0; i < 2; i++)
 				{
-					Vector3 vector = Vector3.zero;
-					switch (j)
+					for (int j = 0; j < 4; j++)
 					{
-					case 0:
-						vector = Vector3.zero;
-						break;
-					case 1:
-						vector = gui.anchorMin;
-						break;
-					case 2:
-						vector = gui.anchorMax;
-						break;
-					case 3:
-						vector = Vector3.one;
-						break;
+						Vector3 vector = Vector3.zero;
+						switch (j)
+						{
+						case 0:
+							vector = Vector3.zero;
+							break;
+						case 1:
+							vector = gui.anchorMin;
+							break;
+						case 2:
+							vector = gui.anchorMax;
+							break;
+						case 3:
+							vector = Vector3.one;
+							break;
+						}
+						vector[i] = gui.anchorMin[i];
+						vector = parentSpace.TransformPoint(this.GetAnchorLocal(guiParent, vector));
+						array[i, j] = vector;
 					}
-					vector[i] = gui.anchorMin[i];
-					vector = parentSpace.TransformPoint(this.GetAnchorLocal(guiParent, vector));
-					array[i, j] = vector;
 				}
-			}
-			for (int k = 0; k < 2; k++)
-			{
-				Vector3 b = ((k != 0) ? parentSpace.up : parentSpace.right) * size * 2f;
-				int num = RectTransformEditor.RoundToInt(gui.anchorMin[1 - k] * 100f);
-				int num2 = RectTransformEditor.RoundToInt((gui.anchorMax[1 - k] - gui.anchorMin[1 - k]) * 100f);
-				int num3 = RectTransformEditor.RoundToInt((1f - gui.anchorMax[1 - k]) * 100f);
-				if (num > 0)
+				for (int k = 0; k < 2; k++)
 				{
-					this.DrawLabelBetweenPoints(array[k, 0] - b, array[k, 1] - b, GUIContent.Temp(num.ToString() + "%"));
-				}
-				if (num2 > 0)
-				{
-					this.DrawLabelBetweenPoints(array[k, 1] - b, array[k, 2] - b, GUIContent.Temp(num2.ToString() + "%"));
-				}
-				if (num3 > 0)
-				{
-					this.DrawLabelBetweenPoints(array[k, 2] - b, array[k, 3] - b, GUIContent.Temp(num3.ToString() + "%"));
+					Vector3 b = ((k != 0) ? parentSpace.up : parentSpace.right) * size * 2f;
+					int num = RectTransformEditor.RoundToInt(gui.anchorMin[1 - k] * 100f);
+					int num2 = RectTransformEditor.RoundToInt((gui.anchorMax[1 - k] - gui.anchorMin[1 - k]) * 100f);
+					int num3 = RectTransformEditor.RoundToInt((1f - gui.anchorMax[1 - k]) * 100f);
+					if (num > 0)
+					{
+						this.DrawLabelBetweenPoints(array[k, 0] - b, array[k, 1] - b, GUIContent.Temp(num.ToString() + "%"));
+					}
+					if (num2 > 0)
+					{
+						this.DrawLabelBetweenPoints(array[k, 1] - b, array[k, 2] - b, GUIContent.Temp(num2.ToString() + "%"));
+					}
+					if (num3 > 0)
+					{
+						this.DrawLabelBetweenPoints(array[k, 2] - b, array[k, 3] - b, GUIContent.Temp(num3.ToString() + "%"));
+					}
 				}
 			}
 		}
 
 		private void DrawAnchorRect(Transform parentSpace, RectTransform gui, RectTransform guiParent, int axis, float alpha)
 		{
-			if (guiParent == null || alpha <= 0f)
+			if (!(guiParent == null) && alpha > 0f)
 			{
-				return;
-			}
-			Color color = RectTransformEditor.kAnchorLineColor;
-			color.a *= alpha;
-			Handles.color = color;
-			Vector3[,] array = new Vector3[2, 2];
-			for (int i = 0; i < 2; i++)
-			{
-				if (i != 1 || gui.anchorMin[axis] != gui.anchorMax[axis])
+				Color color = RectTransformEditor.kAnchorLineColor;
+				color.a *= alpha;
+				Handles.color = color;
+				Vector3[,] array = new Vector3[2, 2];
+				for (int i = 0; i < 2; i++)
 				{
-					array[i, 0][1 - axis] = Mathf.Min(0f, gui.anchorMin[1 - axis]);
-					array[i, 1][1 - axis] = Mathf.Max(1f, gui.anchorMax[1 - axis]);
-					for (int j = 0; j < 2; j++)
+					if (i != 1 || gui.anchorMin[axis] != gui.anchorMax[axis])
 					{
-						array[i, j][axis] = ((i != 0) ? gui.anchorMax[axis] : gui.anchorMin[axis]);
-						array[i, j] = parentSpace.TransformPoint(this.GetAnchorLocal(guiParent, array[i, j]));
+						array[i, 0][1 - axis] = Mathf.Min(0f, gui.anchorMin[1 - axis]);
+						array[i, 1][1 - axis] = Mathf.Max(1f, gui.anchorMax[1 - axis]);
+						for (int j = 0; j < 2; j++)
+						{
+							array[i, j][axis] = ((i != 0) ? gui.anchorMax[axis] : gui.anchorMin[axis]);
+							array[i, j] = parentSpace.TransformPoint(this.GetAnchorLocal(guiParent, array[i, j]));
+						}
+						RectHandles.DrawDottedLineWithShadow(RectTransformEditor.kShadowColor, RectTransformEditor.kShadowOffset, array[i, 0], array[i, 1], 5f);
 					}
-					RectHandles.DrawDottedLineWithShadow(RectTransformEditor.kShadowColor, RectTransformEditor.kShadowOffset, array[i, 0], array[i, 1], 5f);
 				}
 			}
 		}
 
 		private void DrawLabelBetweenPoints(Vector3 pA, Vector3 pB, GUIContent label)
 		{
-			if (pA == pB)
+			if (!(pA == pB))
 			{
-				return;
+				Vector2 a = HandleUtility.WorldToGUIPoint(pA);
+				Vector2 b = HandleUtility.WorldToGUIPoint(pB);
+				Vector2 pivotPoint = (a + b) * 0.5f;
+				pivotPoint.x = RectTransformEditor.Round(pivotPoint.x);
+				pivotPoint.y = RectTransformEditor.Round(pivotPoint.y);
+				float num = Mathf.Atan2(b.y - a.y, b.x - a.x) * 57.29578f;
+				num = Mathf.Repeat(num + 89f, 180f) - 89f;
+				Handles.BeginGUI();
+				Matrix4x4 matrix = GUI.matrix;
+				GUIStyle measuringLabelStyle = RectTransformEditor.styles.measuringLabelStyle;
+				measuringLabelStyle.alignment = TextAnchor.MiddleCenter;
+				GUIUtility.RotateAroundPivot(num, pivotPoint);
+				EditorGUI.DropShadowLabel(new Rect(pivotPoint.x - 50f, pivotPoint.y - 9f, 100f, 16f), label, measuringLabelStyle);
+				GUI.matrix = matrix;
+				Handles.EndGUI();
 			}
-			Vector2 a = HandleUtility.WorldToGUIPoint(pA);
-			Vector2 b = HandleUtility.WorldToGUIPoint(pB);
-			Vector2 pivotPoint = (a + b) * 0.5f;
-			pivotPoint.x = RectTransformEditor.Round(pivotPoint.x);
-			pivotPoint.y = RectTransformEditor.Round(pivotPoint.y);
-			float num = Mathf.Atan2(b.y - a.y, b.x - a.x) * 57.29578f;
-			num = Mathf.Repeat(num + 89f, 180f) - 89f;
-			Handles.BeginGUI();
-			Matrix4x4 matrix = GUI.matrix;
-			GUIStyle measuringLabelStyle = RectTransformEditor.styles.measuringLabelStyle;
-			measuringLabelStyle.alignment = TextAnchor.MiddleCenter;
-			GUIUtility.RotateAroundPivot(num, pivotPoint);
-			EditorGUI.DropShadowLabel(new Rect(pivotPoint.x - 50f, pivotPoint.y - 9f, 100f, 16f), label, measuringLabelStyle);
-			GUI.matrix = matrix;
-			Handles.EndGUI();
 		}
 
 		private static Vector3 GetRectReferenceCorner(RectTransform gui, bool worldSpace)
 		{
-			if (!worldSpace)
+			Vector3 result;
+			if (worldSpace)
 			{
-				return gui.rect.min + gui.transform.localPosition;
+				Transform transform = gui.transform;
+				gui.GetWorldCorners(RectTransformEditor.s_Corners);
+				if (transform.parent)
+				{
+					result = transform.parent.InverseTransformPoint(RectTransformEditor.s_Corners[0]);
+				}
+				else
+				{
+					result = RectTransformEditor.s_Corners[0];
+				}
 			}
-			Transform transform = gui.transform;
-			gui.GetWorldCorners(RectTransformEditor.s_Corners);
-			if (transform.parent)
+			else
 			{
-				return transform.parent.InverseTransformPoint(RectTransformEditor.s_Corners[0]);
+				result = gui.rect.min + gui.transform.localPosition;
 			}
-			return RectTransformEditor.s_Corners[0];
+			return result;
 		}
 
 		private void DrawAnchor(Vector3 pos, Vector3 right, Vector3 up)
@@ -1447,14 +1464,12 @@ namespace UnityEditor
 			if (smart)
 			{
 				Vector2 anchoredPosition = rect.anchoredPosition;
-				float num5 = anchoredPosition[axis];
-				anchoredPosition[axis] = num5 - num2;
+				anchoredPosition[axis] -= num2;
 				rect.anchoredPosition = anchoredPosition;
 				if (!moveTogether)
 				{
 					Vector2 sizeDelta = rect.sizeDelta;
-					num5 = sizeDelta[axis];
-					sizeDelta[axis] = num5 + num * (float)((!isMax) ? 1 : -1);
+					sizeDelta[axis] += num * (float)((!isMax) ? 1 : -1);
 					rect.sizeDelta = sizeDelta;
 				}
 			}

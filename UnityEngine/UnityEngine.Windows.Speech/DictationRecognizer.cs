@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Windows.Speech
@@ -18,57 +19,105 @@ namespace UnityEngine.Windows.Speech
 
 		public event DictationRecognizer.DictationHypothesisDelegate DictationHypothesis
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.DictationHypothesis = (DictationRecognizer.DictationHypothesisDelegate)Delegate.Combine(this.DictationHypothesis, value);
+				DictationRecognizer.DictationHypothesisDelegate dictationHypothesisDelegate = this.DictationHypothesis;
+				DictationRecognizer.DictationHypothesisDelegate dictationHypothesisDelegate2;
+				do
+				{
+					dictationHypothesisDelegate2 = dictationHypothesisDelegate;
+					dictationHypothesisDelegate = Interlocked.CompareExchange<DictationRecognizer.DictationHypothesisDelegate>(ref this.DictationHypothesis, (DictationRecognizer.DictationHypothesisDelegate)Delegate.Combine(dictationHypothesisDelegate2, value), dictationHypothesisDelegate);
+				}
+				while (dictationHypothesisDelegate != dictationHypothesisDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.DictationHypothesis = (DictationRecognizer.DictationHypothesisDelegate)Delegate.Remove(this.DictationHypothesis, value);
+				DictationRecognizer.DictationHypothesisDelegate dictationHypothesisDelegate = this.DictationHypothesis;
+				DictationRecognizer.DictationHypothesisDelegate dictationHypothesisDelegate2;
+				do
+				{
+					dictationHypothesisDelegate2 = dictationHypothesisDelegate;
+					dictationHypothesisDelegate = Interlocked.CompareExchange<DictationRecognizer.DictationHypothesisDelegate>(ref this.DictationHypothesis, (DictationRecognizer.DictationHypothesisDelegate)Delegate.Remove(dictationHypothesisDelegate2, value), dictationHypothesisDelegate);
+				}
+				while (dictationHypothesisDelegate != dictationHypothesisDelegate2);
 			}
 		}
 
 		public event DictationRecognizer.DictationResultDelegate DictationResult
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.DictationResult = (DictationRecognizer.DictationResultDelegate)Delegate.Combine(this.DictationResult, value);
+				DictationRecognizer.DictationResultDelegate dictationResultDelegate = this.DictationResult;
+				DictationRecognizer.DictationResultDelegate dictationResultDelegate2;
+				do
+				{
+					dictationResultDelegate2 = dictationResultDelegate;
+					dictationResultDelegate = Interlocked.CompareExchange<DictationRecognizer.DictationResultDelegate>(ref this.DictationResult, (DictationRecognizer.DictationResultDelegate)Delegate.Combine(dictationResultDelegate2, value), dictationResultDelegate);
+				}
+				while (dictationResultDelegate != dictationResultDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.DictationResult = (DictationRecognizer.DictationResultDelegate)Delegate.Remove(this.DictationResult, value);
+				DictationRecognizer.DictationResultDelegate dictationResultDelegate = this.DictationResult;
+				DictationRecognizer.DictationResultDelegate dictationResultDelegate2;
+				do
+				{
+					dictationResultDelegate2 = dictationResultDelegate;
+					dictationResultDelegate = Interlocked.CompareExchange<DictationRecognizer.DictationResultDelegate>(ref this.DictationResult, (DictationRecognizer.DictationResultDelegate)Delegate.Remove(dictationResultDelegate2, value), dictationResultDelegate);
+				}
+				while (dictationResultDelegate != dictationResultDelegate2);
 			}
 		}
 
 		public event DictationRecognizer.DictationCompletedDelegate DictationComplete
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.DictationComplete = (DictationRecognizer.DictationCompletedDelegate)Delegate.Combine(this.DictationComplete, value);
+				DictationRecognizer.DictationCompletedDelegate dictationCompletedDelegate = this.DictationComplete;
+				DictationRecognizer.DictationCompletedDelegate dictationCompletedDelegate2;
+				do
+				{
+					dictationCompletedDelegate2 = dictationCompletedDelegate;
+					dictationCompletedDelegate = Interlocked.CompareExchange<DictationRecognizer.DictationCompletedDelegate>(ref this.DictationComplete, (DictationRecognizer.DictationCompletedDelegate)Delegate.Combine(dictationCompletedDelegate2, value), dictationCompletedDelegate);
+				}
+				while (dictationCompletedDelegate != dictationCompletedDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.DictationComplete = (DictationRecognizer.DictationCompletedDelegate)Delegate.Remove(this.DictationComplete, value);
+				DictationRecognizer.DictationCompletedDelegate dictationCompletedDelegate = this.DictationComplete;
+				DictationRecognizer.DictationCompletedDelegate dictationCompletedDelegate2;
+				do
+				{
+					dictationCompletedDelegate2 = dictationCompletedDelegate;
+					dictationCompletedDelegate = Interlocked.CompareExchange<DictationRecognizer.DictationCompletedDelegate>(ref this.DictationComplete, (DictationRecognizer.DictationCompletedDelegate)Delegate.Remove(dictationCompletedDelegate2, value), dictationCompletedDelegate);
+				}
+				while (dictationCompletedDelegate != dictationCompletedDelegate2);
 			}
 		}
 
 		public event DictationRecognizer.DictationErrorHandler DictationError
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.DictationError = (DictationRecognizer.DictationErrorHandler)Delegate.Combine(this.DictationError, value);
+				DictationRecognizer.DictationErrorHandler dictationErrorHandler = this.DictationError;
+				DictationRecognizer.DictationErrorHandler dictationErrorHandler2;
+				do
+				{
+					dictationErrorHandler2 = dictationErrorHandler;
+					dictationErrorHandler = Interlocked.CompareExchange<DictationRecognizer.DictationErrorHandler>(ref this.DictationError, (DictationRecognizer.DictationErrorHandler)Delegate.Combine(dictationErrorHandler2, value), dictationErrorHandler);
+				}
+				while (dictationErrorHandler != dictationErrorHandler2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.DictationError = (DictationRecognizer.DictationErrorHandler)Delegate.Remove(this.DictationError, value);
+				DictationRecognizer.DictationErrorHandler dictationErrorHandler = this.DictationError;
+				DictationRecognizer.DictationErrorHandler dictationErrorHandler2;
+				do
+				{
+					dictationErrorHandler2 = dictationErrorHandler;
+					dictationErrorHandler = Interlocked.CompareExchange<DictationRecognizer.DictationErrorHandler>(ref this.DictationError, (DictationRecognizer.DictationErrorHandler)Delegate.Remove(dictationErrorHandler2, value), dictationErrorHandler);
+				}
+				while (dictationErrorHandler != dictationErrorHandler2);
 			}
 		}
 
@@ -84,19 +133,23 @@ namespace UnityEngine.Windows.Speech
 		{
 			get
 			{
+				float result;
 				if (this.m_Recognizer == IntPtr.Zero)
 				{
-					return 0f;
+					result = 0f;
 				}
-				return DictationRecognizer.GetAutoSilenceTimeoutSeconds(this.m_Recognizer);
+				else
+				{
+					result = DictationRecognizer.GetAutoSilenceTimeoutSeconds(this.m_Recognizer);
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Recognizer == IntPtr.Zero)
+				if (!(this.m_Recognizer == IntPtr.Zero))
 				{
-					return;
+					DictationRecognizer.SetAutoSilenceTimeoutSeconds(this.m_Recognizer, value);
 				}
-				DictationRecognizer.SetAutoSilenceTimeoutSeconds(this.m_Recognizer, value);
 			}
 		}
 
@@ -104,19 +157,23 @@ namespace UnityEngine.Windows.Speech
 		{
 			get
 			{
+				float result;
 				if (this.m_Recognizer == IntPtr.Zero)
 				{
-					return 0f;
+					result = 0f;
 				}
-				return DictationRecognizer.GetInitialSilenceTimeoutSeconds(this.m_Recognizer);
+				else
+				{
+					result = DictationRecognizer.GetInitialSilenceTimeoutSeconds(this.m_Recognizer);
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Recognizer == IntPtr.Zero)
+				if (!(this.m_Recognizer == IntPtr.Zero))
 				{
-					return;
+					DictationRecognizer.SetInitialSilenceTimeoutSeconds(this.m_Recognizer, value);
 				}
-				DictationRecognizer.SetInitialSilenceTimeoutSeconds(this.m_Recognizer, value);
 			}
 		}
 
@@ -144,43 +201,34 @@ namespace UnityEngine.Windows.Speech
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Create(DictationRecognizer self, ConfidenceLevel minimumConfidence, DictationTopicConstraint topicConstraint, out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Start(IntPtr self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Stop(IntPtr self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Destroy(IntPtr self);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void DestroyThreaded(IntPtr self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern SpeechSystemStatus GetStatus(IntPtr self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetAutoSilenceTimeoutSeconds(IntPtr self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetAutoSilenceTimeoutSeconds(IntPtr self, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetInitialSilenceTimeoutSeconds(IntPtr self);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetInitialSilenceTimeoutSeconds(IntPtr self, float value);
 
@@ -196,20 +244,18 @@ namespace UnityEngine.Windows.Speech
 
 		public void Start()
 		{
-			if (this.m_Recognizer == IntPtr.Zero)
+			if (!(this.m_Recognizer == IntPtr.Zero))
 			{
-				return;
+				DictationRecognizer.Start(this.m_Recognizer);
 			}
-			DictationRecognizer.Start(this.m_Recognizer);
 		}
 
 		public void Stop()
 		{
-			if (this.m_Recognizer == IntPtr.Zero)
+			if (!(this.m_Recognizer == IntPtr.Zero))
 			{
-				return;
+				DictationRecognizer.Stop(this.m_Recognizer);
 			}
-			DictationRecognizer.Stop(this.m_Recognizer);
 		}
 
 		public void Dispose()

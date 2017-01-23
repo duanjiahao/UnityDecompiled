@@ -10,12 +10,11 @@ namespace UnityEditor.Scripting.Compilers
 		[DebuggerHidden]
 		public override IEnumerable<CompilerMessage> Parse(string[] errorOutput, string[] standardOutput, bool compilationHadFailure)
 		{
-			Cil2AsOutputParser.<Parse>c__IteratorA <Parse>c__IteratorA = new Cil2AsOutputParser.<Parse>c__IteratorA();
-			<Parse>c__IteratorA.errorOutput = errorOutput;
-			<Parse>c__IteratorA.<$>errorOutput = errorOutput;
-			Cil2AsOutputParser.<Parse>c__IteratorA expr_15 = <Parse>c__IteratorA;
-			expr_15.$PC = -2;
-			return expr_15;
+			Cil2AsOutputParser.<Parse>c__Iterator0 <Parse>c__Iterator = new Cil2AsOutputParser.<Parse>c__Iterator0();
+			<Parse>c__Iterator.errorOutput = errorOutput;
+			Cil2AsOutputParser.<Parse>c__Iterator0 expr_0E = <Parse>c__Iterator;
+			expr_0E.$PC = -2;
+			return expr_0E;
 		}
 
 		private static CompilerMessage CompilerErrorFor(StringBuilder currentErrorBuffer)

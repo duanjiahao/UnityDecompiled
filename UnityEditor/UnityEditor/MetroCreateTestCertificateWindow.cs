@@ -6,6 +6,10 @@ namespace UnityEditor
 {
 	internal class MetroCreateTestCertificateWindow : EditorWindow
 	{
+		private static readonly GUILayoutOption kLabelWidth = GUILayout.Width(110f);
+
+		private static readonly GUILayoutOption kButtonWidth = GUILayout.Width(110f);
+
 		private const float kSpace = 5f;
 
 		private const char kPasswordChar = '●';
@@ -15,10 +19,6 @@ namespace UnityEditor
 		private const string kPasswordId = "password";
 
 		private const string kConfirmId = "confirm";
-
-		private static readonly GUILayoutOption kLabelWidth = GUILayout.Width(110f);
-
-		private static readonly GUILayoutOption kButtonWidth = GUILayout.Width(110f);
 
 		private string path;
 

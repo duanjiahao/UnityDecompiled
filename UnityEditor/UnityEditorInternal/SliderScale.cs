@@ -116,13 +116,16 @@ namespace UnityEditorInternal
 				}
 				break;
 			case EventType.KeyDown:
-				if (GUIUtility.hotControl == id && current.keyCode == KeyCode.Escape)
+				if (GUIUtility.hotControl == id)
 				{
-					value = SliderScale.s_StartScale;
-					SliderScale.s_ScaleDrawLength = 1f;
-					GUIUtility.hotControl = 0;
-					GUI.changed = true;
-					current.Use();
+					if (current.keyCode == KeyCode.Escape)
+					{
+						value = SliderScale.s_StartScale;
+						SliderScale.s_ScaleDrawLength = 1f;
+						GUIUtility.hotControl = 0;
+						GUI.changed = true;
+						current.Use();
+					}
 				}
 				break;
 			case EventType.Repaint:
@@ -142,6 +145,76 @@ namespace UnityEditorInternal
 			}
 			case EventType.Layout:
 				HandleUtility.AddControl(id, HandleUtility.DistanceToCircle(position, size * 0.15f));
+				break;
+			}
+			return value;
+		}
+
+		public static float DoCenter(int id, float value, Vector3 position, Quaternion rotation, float size, Handles.CapFunction capFunction, float snap)
+		{
+			Event current = Event.current;
+			switch (current.GetTypeForControl(id))
+			{
+			case EventType.MouseDown:
+				if ((HandleUtility.nearestControl == id && current.button == 0) || (GUIUtility.keyboardControl == id && current.button == 2))
+				{
+					GUIUtility.keyboardControl = id;
+					GUIUtility.hotControl = id;
+					SliderScale.s_StartScale = value;
+					SliderScale.s_ValueDrag = 0f;
+					current.Use();
+					EditorGUIUtility.SetWantsMouseJumping(1);
+				}
+				break;
+			case EventType.MouseUp:
+				if (GUIUtility.hotControl == id && (current.button == 0 || current.button == 2))
+				{
+					GUIUtility.hotControl = 0;
+					SliderScale.s_ScaleDrawLength = 1f;
+					current.Use();
+					EditorGUIUtility.SetWantsMouseJumping(0);
+				}
+				break;
+			case EventType.MouseDrag:
+				if (GUIUtility.hotControl == id)
+				{
+					SliderScale.s_ValueDrag += HandleUtility.niceMouseDelta * 0.01f;
+					value = (Handles.SnapValue(SliderScale.s_ValueDrag, snap) + 1f) * SliderScale.s_StartScale;
+					SliderScale.s_ScaleDrawLength = value / SliderScale.s_StartScale;
+					GUI.changed = true;
+					current.Use();
+				}
+				break;
+			case EventType.KeyDown:
+				if (GUIUtility.hotControl == id)
+				{
+					if (current.keyCode == KeyCode.Escape)
+					{
+						value = SliderScale.s_StartScale;
+						SliderScale.s_ScaleDrawLength = 1f;
+						GUIUtility.hotControl = 0;
+						GUI.changed = true;
+						current.Use();
+					}
+				}
+				break;
+			case EventType.Repaint:
+			{
+				Color color = Color.white;
+				if (id == GUIUtility.keyboardControl)
+				{
+					color = Handles.color;
+					Handles.color = Handles.selectedColor;
+				}
+				capFunction(id, position, rotation, size * 0.15f, EventType.Repaint);
+				if (id == GUIUtility.keyboardControl)
+				{
+					Handles.color = color;
+				}
+				break;
+			}
+			case EventType.Layout:
+				capFunction(id, position, rotation, size * 0.15f, EventType.Layout);
 				break;
 			}
 			return value;

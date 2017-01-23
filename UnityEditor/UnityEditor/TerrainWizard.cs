@@ -13,18 +13,23 @@ namespace UnityEditor
 		{
 			get
 			{
+				TerrainData result;
 				if (this.m_Terrain != null)
 				{
-					return this.m_Terrain.terrainData;
+					result = this.m_Terrain.terrainData;
 				}
-				return null;
+				else
+				{
+					result = null;
+				}
+				return result;
 			}
 		}
 
 		internal virtual void OnWizardUpdate()
 		{
 			base.isValid = true;
-			base.errorString = string.Empty;
+			base.errorString = "";
 			if (this.m_Terrain == null || this.m_Terrain.terrainData == null)
 			{
 				base.isValid = false;
@@ -46,16 +51,21 @@ namespace UnityEditor
 		internal static T DisplayTerrainWizard<T>(string title, string button) where T : TerrainWizard
 		{
 			T[] array = Resources.FindObjectsOfTypeAll<T>();
+			T result;
 			if (array.Length > 0)
 			{
-				T result = array[0];
-				result.titleContent = EditorGUIUtility.TextContent(title);
-				result.createButtonName = button;
-				result.otherButtonName = string.Empty;
-				result.Focus();
-				return result;
+				T t = array[0];
+				t.titleContent = EditorGUIUtility.TextContent(title);
+				t.createButtonName = button;
+				t.otherButtonName = "";
+				t.Focus();
+				result = t;
 			}
-			return ScriptableWizard.DisplayWizard<T>(title, button);
+			else
+			{
+				result = ScriptableWizard.DisplayWizard<T>(title, button);
+			}
+			return result;
 		}
 	}
 }

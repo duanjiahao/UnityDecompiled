@@ -31,11 +31,11 @@ namespace UnityEngine.Rendering
 			this.m_InstanceID = 0;
 		}
 
-		public RenderTargetIdentifier(RenderTexture rt)
+		public RenderTargetIdentifier(Texture tex)
 		{
-			this.m_Type = BuiltinRenderTextureType.None;
+			this.m_Type = ((!(tex == null) && !(tex is RenderTexture)) ? BuiltinRenderTextureType.BindableTexture : BuiltinRenderTextureType.None);
 			this.m_NameID = -1;
-			this.m_InstanceID = ((!rt) ? 0 : rt.GetInstanceID());
+			this.m_InstanceID = ((!tex) ? 0 : tex.GetInstanceID());
 		}
 
 		public static implicit operator RenderTargetIdentifier(BuiltinRenderTextureType type)
@@ -53,9 +53,9 @@ namespace UnityEngine.Rendering
 			return new RenderTargetIdentifier(nameID);
 		}
 
-		public static implicit operator RenderTargetIdentifier(RenderTexture rt)
+		public static implicit operator RenderTargetIdentifier(Texture tex)
 		{
-			return new RenderTargetIdentifier(rt);
+			return new RenderTargetIdentifier(tex);
 		}
 	}
 }

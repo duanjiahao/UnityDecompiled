@@ -7,7 +7,6 @@ namespace UnityEngine
 	{
 		public extern AnimationClip[] animationClips
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}

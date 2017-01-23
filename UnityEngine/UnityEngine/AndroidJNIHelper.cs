@@ -10,10 +10,8 @@ namespace UnityEngine
 	{
 		public static extern bool debug
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -25,8 +23,8 @@ namespace UnityEngine
 		[ExcludeFromDocs]
 		public static IntPtr GetConstructorID(IntPtr javaClass)
 		{
-			string empty = string.Empty;
-			return AndroidJNIHelper.GetConstructorID(javaClass, empty);
+			string signature = "";
+			return AndroidJNIHelper.GetConstructorID(javaClass, signature);
 		}
 
 		public static IntPtr GetConstructorID(IntPtr javaClass, [DefaultValue("\"\"")] string signature)
@@ -45,8 +43,8 @@ namespace UnityEngine
 		public static IntPtr GetMethodID(IntPtr javaClass, string methodName)
 		{
 			bool isStatic = false;
-			string empty = string.Empty;
-			return AndroidJNIHelper.GetMethodID(javaClass, methodName, empty, isStatic);
+			string signature = "";
+			return AndroidJNIHelper.GetMethodID(javaClass, methodName, signature, isStatic);
 		}
 
 		public static IntPtr GetMethodID(IntPtr javaClass, string methodName, [DefaultValue("\"\"")] string signature, [DefaultValue("false")] bool isStatic)
@@ -65,8 +63,8 @@ namespace UnityEngine
 		public static IntPtr GetFieldID(IntPtr javaClass, string fieldName)
 		{
 			bool isStatic = false;
-			string empty = string.Empty;
-			return AndroidJNIHelper.GetFieldID(javaClass, fieldName, empty, isStatic);
+			string signature = "";
+			return AndroidJNIHelper.GetFieldID(javaClass, fieldName, signature, isStatic);
 		}
 
 		public static IntPtr GetFieldID(IntPtr javaClass, string fieldName, [DefaultValue("\"\"")] string signature, [DefaultValue("false")] bool isStatic)
@@ -87,7 +85,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_CreateJavaProxy(AndroidJavaProxy proxy, out IntPtr value);
 

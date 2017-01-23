@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -11,15 +12,15 @@ namespace UnityEditor.Audio
 	{
 		public class ConnectionNode
 		{
-			public bool visited;
+			public bool visited = false;
 
-			public object groupTail;
+			public object groupTail = null;
 
 			public List<object> targets = new List<object>();
 
-			public AudioMixerGroupController group;
+			public AudioMixerGroupController group = null;
 
-			public AudioMixerEffectController effect;
+			public AudioMixerEffectController effect = null;
 
 			public string GetDisplayString()
 			{
@@ -36,11 +37,11 @@ namespace UnityEditor.Audio
 		public int m_HighlightEffectIndex = -1;
 
 		[NonSerialized]
-		private List<AudioMixerGroupController> m_CachedSelection;
+		private List<AudioMixerGroupController> m_CachedSelection = null;
 
 		public static float kMinVolume = -80f;
 
-		public static float kMaxEffect;
+		public static float kMaxEffect = 0f;
 
 		public static float kVolumeWarp = 1.7f;
 
@@ -51,15 +52,27 @@ namespace UnityEditor.Audio
 
 		public event ChangedExposedParameterHandler ChangedExposedParameter
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.ChangedExposedParameter = (ChangedExposedParameterHandler)Delegate.Combine(this.ChangedExposedParameter, value);
+				ChangedExposedParameterHandler changedExposedParameterHandler = this.ChangedExposedParameter;
+				ChangedExposedParameterHandler changedExposedParameterHandler2;
+				do
+				{
+					changedExposedParameterHandler2 = changedExposedParameterHandler;
+					changedExposedParameterHandler = Interlocked.CompareExchange<ChangedExposedParameterHandler>(ref this.ChangedExposedParameter, (ChangedExposedParameterHandler)Delegate.Combine(changedExposedParameterHandler2, value), changedExposedParameterHandler);
+				}
+				while (changedExposedParameterHandler != changedExposedParameterHandler2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.ChangedExposedParameter = (ChangedExposedParameterHandler)Delegate.Remove(this.ChangedExposedParameter, value);
+				ChangedExposedParameterHandler changedExposedParameterHandler = this.ChangedExposedParameter;
+				ChangedExposedParameterHandler changedExposedParameterHandler2;
+				do
+				{
+					changedExposedParameterHandler2 = changedExposedParameterHandler;
+					changedExposedParameterHandler = Interlocked.CompareExchange<ChangedExposedParameterHandler>(ref this.ChangedExposedParameter, (ChangedExposedParameterHandler)Delegate.Remove(changedExposedParameterHandler2, value), changedExposedParameterHandler);
+				}
+				while (changedExposedParameterHandler != changedExposedParameterHandler2);
 			}
 		}
 
@@ -75,57 +88,46 @@ namespace UnityEditor.Audio
 
 		public extern int numExposedParameters
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ExposedAudioParameter[] exposedParameters
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AudioMixerGroupController masterGroup
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AudioMixerSnapshot startSnapshot
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AudioMixerSnapshotController TargetSnapshot
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AudioMixerSnapshotController[] snapshots
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -144,27 +146,22 @@ namespace UnityEditor.Audio
 
 		public extern int currentViewIndex
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern MixerGroupView[] views
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isSuspended
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -186,7 +183,6 @@ namespace UnityEditor.Audio
 			AudioMixerController.Internal_CreateAudioMixerController(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateAudioMixerController(AudioMixerController mono);
 
@@ -200,35 +196,27 @@ namespace UnityEditor.Audio
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetGroupVUInfo(GUID group, bool fader, ref float[] vuLevel, ref float[] vuPeak);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void UpdateMuteSolo();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void UpdateBypass();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool CurrentViewContainsGroup(GUID group);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CheckForCyclicReferences(AudioMixer mixer, AudioMixerGroup group);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern float GetMaxVolume();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern float GetVolumeSplitPoint();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool EditingTargetSnapshot();
 
@@ -248,7 +236,7 @@ namespace UnityEditor.Audio
 				for (int i = 0; i < invocationList.Length; i++)
 				{
 					Delegate @delegate = invocationList[i];
-					this.ChangedExposedParameter = (ChangedExposedParameterHandler)Delegate.Remove(this.ChangedExposedParameter, (ChangedExposedParameterHandler)@delegate);
+					this.ChangedExposedParameter -= (ChangedExposedParameterHandler)@delegate;
 				}
 			}
 		}
@@ -317,39 +305,44 @@ namespace UnityEditor.Audio
 
 		public string ResolveExposedParameterPath(GUID parameter, bool getOnlyBasePath)
 		{
+			string result;
 			if (this.exposedParamCache.ContainsKey(parameter))
 			{
 				AudioParameterPath audioParameterPath = this.exposedParamCache[parameter];
-				return audioParameterPath.ResolveStringPath(getOnlyBasePath);
+				result = audioParameterPath.ResolveStringPath(getOnlyBasePath);
 			}
-			List<AudioMixerGroupController> allAudioGroupsSlow = this.GetAllAudioGroupsSlow();
-			foreach (AudioMixerGroupController current in allAudioGroupsSlow)
+			else
 			{
-				if (current.GetGUIDForVolume() == parameter || current.GetGUIDForPitch() == parameter)
+				List<AudioMixerGroupController> allAudioGroupsSlow = this.GetAllAudioGroupsSlow();
+				foreach (AudioMixerGroupController current in allAudioGroupsSlow)
 				{
-					AudioGroupParameterPath audioGroupParameterPath = new AudioGroupParameterPath(current, parameter);
-					this.exposedParamCache[parameter] = audioGroupParameterPath;
-					string result = audioGroupParameterPath.ResolveStringPath(getOnlyBasePath);
-					return result;
-				}
-				for (int i = 0; i < current.effects.Length; i++)
-				{
-					AudioMixerEffectController audioMixerEffectController = current.effects[i];
-					MixerParameterDefinition[] effectParameters = MixerEffectDefinitions.GetEffectParameters(audioMixerEffectController.effectName);
-					for (int j = 0; j < effectParameters.Length; j++)
+					if (current.GetGUIDForVolume() == parameter || current.GetGUIDForPitch() == parameter)
 					{
-						GUID gUIDForParameter = audioMixerEffectController.GetGUIDForParameter(effectParameters[j].name);
-						if (gUIDForParameter == parameter)
+						AudioGroupParameterPath audioGroupParameterPath = new AudioGroupParameterPath(current, parameter);
+						this.exposedParamCache[parameter] = audioGroupParameterPath;
+						result = audioGroupParameterPath.ResolveStringPath(getOnlyBasePath);
+						return result;
+					}
+					for (int i = 0; i < current.effects.Length; i++)
+					{
+						AudioMixerEffectController audioMixerEffectController = current.effects[i];
+						MixerParameterDefinition[] effectParameters = MixerEffectDefinitions.GetEffectParameters(audioMixerEffectController.effectName);
+						for (int j = 0; j < effectParameters.Length; j++)
 						{
-							AudioEffectParameterPath audioEffectParameterPath = new AudioEffectParameterPath(current, audioMixerEffectController, parameter);
-							this.exposedParamCache[parameter] = audioEffectParameterPath;
-							string result = audioEffectParameterPath.ResolveStringPath(getOnlyBasePath);
-							return result;
+							GUID gUIDForParameter = audioMixerEffectController.GetGUIDForParameter(effectParameters[j].name);
+							if (gUIDForParameter == parameter)
+							{
+								AudioEffectParameterPath audioEffectParameterPath = new AudioEffectParameterPath(current, audioMixerEffectController, parameter);
+								this.exposedParamCache[parameter] = audioEffectParameterPath;
+								result = audioEffectParameterPath.ResolveStringPath(getOnlyBasePath);
+								return result;
+							}
 						}
 					}
 				}
+				result = "Error finding Parameter path";
 			}
-			return "Error finding Parameter path";
+			return result;
 		}
 
 		public static AudioMixerController CreateMixerControllerAtPath(string path)
@@ -394,7 +387,7 @@ namespace UnityEditor.Audio
 				this.AddChildToParent(audioMixerGroupController, parent);
 				if (++numGroups >= maxGroups)
 				{
-					return;
+					break;
 				}
 				this.BuildTestSetup(r, audioMixerGroupController, minSpan, (maxSpan <= minSpan) ? minSpan : (maxSpan - 1), maxGroups, text, ref numGroups);
 			}
@@ -435,15 +428,18 @@ namespace UnityEditor.Audio
 
 		private bool IsChildOf(AudioMixerGroupController child, List<AudioMixerGroupController> groups)
 		{
+			bool result;
 			while (child != null)
 			{
 				child = this.FindParentGroup(this.masterGroup, child);
 				if (groups.Contains(child))
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public bool AreAnyOfTheGroupsInTheListAncestors(List<AudioMixerGroupController> groups)
@@ -558,38 +554,36 @@ namespace UnityEditor.Audio
 			AssetDatabase.AddObjectToAsset(audioMixerSnapshotController2, this);
 			if (storeUndoState)
 			{
-				Undo.RegisterCreatedObjectUndo(audioMixerSnapshotController2, string.Empty);
+				Undo.RegisterCreatedObjectUndo(audioMixerSnapshotController2, "");
 			}
 			this.OnSubAssetChanged();
 		}
 
 		public void RemoveTargetSnapshot()
 		{
-			if (this.snapshots.Length < 2)
+			if (this.snapshots.Length >= 2)
 			{
-				return;
+				AudioMixerSnapshotController targetSnapshot = this.TargetSnapshot;
+				Undo.RecordObject(this, "Remove Snapshot");
+				List<AudioMixerSnapshotController> list = new List<AudioMixerSnapshotController>(this.snapshots);
+				list.Remove(targetSnapshot);
+				this.snapshots = list.ToArray();
+				Undo.DestroyObjectImmediate(targetSnapshot);
+				this.OnSubAssetChanged();
 			}
-			AudioMixerSnapshotController targetSnapshot = this.TargetSnapshot;
-			Undo.RecordObject(this, "Remove Snapshot");
-			List<AudioMixerSnapshotController> list = new List<AudioMixerSnapshotController>(this.snapshots);
-			list.Remove(targetSnapshot);
-			this.snapshots = list.ToArray();
-			Undo.DestroyObjectImmediate(targetSnapshot);
-			this.OnSubAssetChanged();
 		}
 
 		public void RemoveSnapshot(AudioMixerSnapshotController snapshot)
 		{
-			if (this.snapshots.Length < 2)
+			if (this.snapshots.Length >= 2)
 			{
-				return;
+				Undo.RecordObject(this, "Remove Snapshot");
+				List<AudioMixerSnapshotController> list = new List<AudioMixerSnapshotController>(this.snapshots);
+				list.Remove(snapshot);
+				this.snapshots = list.ToArray();
+				Undo.DestroyObjectImmediate(snapshot);
+				this.OnSubAssetChanged();
 			}
-			Undo.RecordObject(this, "Remove Snapshot");
-			List<AudioMixerSnapshotController> list = new List<AudioMixerSnapshotController>(this.snapshots);
-			list.Remove(snapshot);
-			this.snapshots = list.ToArray();
-			Undo.DestroyObjectImmediate(snapshot);
-			this.OnSubAssetChanged();
 		}
 
 		public AudioMixerGroupController CreateNewGroup(string name, bool storeUndoState)
@@ -622,7 +616,7 @@ namespace UnityEditor.Audio
 			AssetDatabase.AddObjectToAsset(obj, this);
 			if (storeUndoState)
 			{
-				Undo.RegisterCreatedObjectUndo(obj, string.Empty);
+				Undo.RegisterCreatedObjectUndo(obj, "");
 			}
 		}
 
@@ -654,19 +648,28 @@ namespace UnityEditor.Audio
 
 		public AudioMixerGroupController FindParentGroup(AudioMixerGroupController node, AudioMixerGroupController group)
 		{
-			for (int i = 0; i < node.children.Length; i++)
+			int i = 0;
+			AudioMixerGroupController result;
+			while (i < node.children.Length)
 			{
 				if (node.children[i] == group)
 				{
-					return node;
+					result = node;
 				}
-				AudioMixerGroupController audioMixerGroupController = this.FindParentGroup(node.children[i], group);
-				if (audioMixerGroupController != null)
+				else
 				{
-					return audioMixerGroupController;
+					AudioMixerGroupController audioMixerGroupController = this.FindParentGroup(node.children[i], group);
+					if (!(audioMixerGroupController != null))
+					{
+						i++;
+						continue;
+					}
+					result = audioMixerGroupController;
 				}
+				return result;
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public AudioMixerEffectController CopyEffect(AudioMixerEffectController sourceEffect)
@@ -829,8 +832,12 @@ namespace UnityEditor.Audio
 			}
 		}
 
-		public void ReparentSelection(AudioMixerGroupController newParent, AudioMixerGroupController insertAfterThisNode, List<AudioMixerGroupController> selection)
+		public void ReparentSelection(AudioMixerGroupController newParent, int insertionIndex, List<AudioMixerGroupController> selection)
 		{
+			if (insertionIndex >= 0)
+			{
+				insertionIndex -= newParent.children.ToList<AudioMixerGroupController>().GetRange(0, insertionIndex).Count(new Func<AudioMixerGroupController, bool>(selection.Contains));
+			}
 			Undo.RecordObject(newParent, "Change Audio Mixer Group Parent");
 			List<AudioMixerGroupController> allAudioGroupsSlow = this.GetAllAudioGroupsSlow();
 			foreach (AudioMixerGroupController current in allAudioGroupsSlow)
@@ -846,14 +853,18 @@ namespace UnityEditor.Audio
 					current.children = list.ToArray();
 				}
 			}
+			if (insertionIndex == -1)
+			{
+				insertionIndex = 0;
+			}
 			List<AudioMixerGroupController> list2 = new List<AudioMixerGroupController>(newParent.children);
-			int index = list2.IndexOf(insertAfterThisNode) + 1;
-			list2.InsertRange(index, selection);
+			list2.InsertRange(insertionIndex, selection);
 			newParent.children = list2.ToArray();
 		}
 
 		public static bool InsertEffect(AudioMixerEffectController effect, ref List<AudioMixerEffectController> targetEffects, int targetIndex)
 		{
+			bool result;
 			if (targetIndex < 0 || targetIndex > targetEffects.Count)
 			{
 				Debug.LogError(string.Concat(new object[]
@@ -863,14 +874,19 @@ namespace UnityEditor.Audio
 					" at index: ",
 					targetIndex
 				}));
-				return false;
+				result = false;
 			}
-			targetEffects.Insert(targetIndex, effect);
-			return true;
+			else
+			{
+				targetEffects.Insert(targetIndex, effect);
+				result = true;
+			}
+			return result;
 		}
 
 		public static bool MoveEffect(ref List<AudioMixerEffectController> sourceEffects, int sourceIndex, ref List<AudioMixerEffectController> targetEffects, int targetIndex)
 		{
+			bool result;
 			if (sourceEffects == targetEffects)
 			{
 				if (targetIndex > sourceIndex)
@@ -879,21 +895,26 @@ namespace UnityEditor.Audio
 				}
 				if (sourceIndex == targetIndex)
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
 			if (sourceIndex < 0 || sourceIndex >= sourceEffects.Count)
 			{
-				return false;
+				result = false;
 			}
-			if (targetIndex < 0 || targetIndex > targetEffects.Count)
+			else if (targetIndex < 0 || targetIndex > targetEffects.Count)
 			{
-				return false;
+				result = false;
 			}
-			AudioMixerEffectController item = sourceEffects[sourceIndex];
-			sourceEffects.RemoveAt(sourceIndex);
-			targetEffects.Insert(targetIndex, item);
-			return true;
+			else
+			{
+				AudioMixerEffectController item = sourceEffects[sourceIndex];
+				sourceEffects.RemoveAt(sourceIndex);
+				targetEffects.Insert(targetIndex, item);
+				result = true;
+			}
+			return result;
 		}
 
 		public static string FixNameForPopupMenu(string s)
@@ -982,6 +1003,7 @@ namespace UnityEditor.Audio
 		private static bool CheckForCycle(object curr, Dictionary<object, AudioMixerController.ConnectionNode> graph, List<AudioMixerController.ConnectionNode> identifiedLoop)
 		{
 			AudioMixerController.ConnectionNode connectionNode = graph[curr];
+			bool result;
 			if (connectionNode.visited)
 			{
 				if (identifiedLoop != null)
@@ -989,27 +1011,33 @@ namespace UnityEditor.Audio
 					identifiedLoop.Clear();
 					identifiedLoop.Add(connectionNode);
 				}
-				return true;
+				result = true;
 			}
-			connectionNode.visited = true;
-			foreach (object current in connectionNode.targets)
+			else
 			{
-				if (AudioMixerController.CheckForCycle(current, graph, identifiedLoop))
+				connectionNode.visited = true;
+				foreach (object current in connectionNode.targets)
 				{
-					connectionNode.visited = false;
-					if (identifiedLoop != null)
+					if (AudioMixerController.CheckForCycle(current, graph, identifiedLoop))
 					{
-						identifiedLoop.Add(connectionNode);
+						connectionNode.visited = false;
+						if (identifiedLoop != null)
+						{
+							identifiedLoop.Add(connectionNode);
+						}
+						result = true;
+						return result;
 					}
-					return true;
 				}
+				connectionNode.visited = false;
+				result = false;
 			}
-			connectionNode.visited = false;
-			return false;
+			return result;
 		}
 
 		public static bool DoesTheTemporaryGraphHaveAnyCycles(List<AudioMixerGroupController> allGroups, List<AudioMixerController.ConnectionNode> identifiedLoop, Dictionary<object, AudioMixerController.ConnectionNode> graph)
 		{
+			bool result;
 			foreach (AudioMixerGroupController current in allGroups)
 			{
 				if (AudioMixerController.CheckForCycle(current, graph, identifiedLoop))
@@ -1028,10 +1056,12 @@ namespace UnityEditor.Audio
 						identifiedLoop.RemoveRange(i, identifiedLoop.Count - i);
 						identifiedLoop.Reverse();
 					}
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public static bool WillChangeOfEffectTargetCauseFeedback(List<AudioMixerGroupController> allGroups, AudioMixerGroupController groupWhoseEffectIsChanged, int effectWhoseTargetIsChanged, AudioMixerEffectController targetToTest, List<AudioMixerController.ConnectionNode> identifiedLoop)
@@ -1075,13 +1105,15 @@ namespace UnityEditor.Audio
 
 		public static bool WillMovingEffectCauseFeedback(List<AudioMixerGroupController> allGroups, AudioMixerGroupController sourceGroup, int sourceIndex, AudioMixerGroupController targetGroup, int targetIndex, List<AudioMixerController.ConnectionNode> identifiedLoop)
 		{
+			bool result;
 			Dictionary<object, AudioMixerController.ConnectionNode> dictionary;
 			if (sourceGroup == targetGroup)
 			{
 				List<AudioMixerEffectController> modifiedGroupEffects = sourceGroup.effects.ToList<AudioMixerEffectController>();
 				if (!AudioMixerController.MoveEffect(ref modifiedGroupEffects, sourceIndex, ref modifiedGroupEffects, targetIndex))
 				{
-					return false;
+					result = false;
+					return result;
 				}
 				dictionary = AudioMixerController.BuildTemporaryGraph(allGroups, null, null, null, sourceGroup, modifiedGroupEffects, null, null);
 			}
@@ -1091,7 +1123,8 @@ namespace UnityEditor.Audio
 				List<AudioMixerEffectController> modifiedGroupEffects3 = targetGroup.effects.ToList<AudioMixerEffectController>();
 				if (!AudioMixerController.MoveEffect(ref modifiedGroupEffects2, sourceIndex, ref modifiedGroupEffects3, targetIndex))
 				{
-					return false;
+					result = false;
+					return result;
 				}
 				dictionary = AudioMixerController.BuildTemporaryGraph(allGroups, null, null, null, sourceGroup, modifiedGroupEffects2, targetGroup, modifiedGroupEffects3);
 			}
@@ -1108,16 +1141,22 @@ namespace UnityEditor.Audio
 					}
 				}
 			}
-			return AudioMixerController.DoesTheTemporaryGraphHaveAnyCycles(allGroups, identifiedLoop, dictionary);
+			result = AudioMixerController.DoesTheTemporaryGraphHaveAnyCycles(allGroups, identifiedLoop, dictionary);
+			return result;
 		}
 
 		public static float DbToLin(float x)
 		{
+			float result;
 			if (x < AudioMixerController.kMinVolume)
 			{
-				return 0f;
+				result = 0f;
 			}
-			return Mathf.Pow(10f, x * 0.05f);
+			else
+			{
+				result = Mathf.Pow(10f, x * 0.05f);
+			}
+			return result;
 		}
 
 		public void CloneViewFromCurrent()
@@ -1206,11 +1245,16 @@ namespace UnityEditor.Audio
 		{
 			float num = AudioMixerController.GetVolumeSplitPoint() * screenRange;
 			float num2 = screenRange - num;
+			float result;
 			if (forward)
 			{
-				return (value <= 0f) ? (Mathf.Pow(value / AudioMixerController.kMinVolume, 1f / AudioMixerController.kVolumeWarp) * num2 + num) : (num - Mathf.Pow(value / AudioMixerController.GetMaxVolume(), 1f / AudioMixerController.kVolumeWarp) * num);
+				result = ((value <= 0f) ? (Mathf.Pow(value / AudioMixerController.kMinVolume, 1f / AudioMixerController.kVolumeWarp) * num2 + num) : (num - Mathf.Pow(value / AudioMixerController.GetMaxVolume(), 1f / AudioMixerController.kVolumeWarp) * num));
 			}
-			return (value >= num) ? (Mathf.Pow((value - num) / num2, AudioMixerController.kVolumeWarp) * AudioMixerController.kMinVolume) : (Mathf.Pow(1f - value / num, AudioMixerController.kVolumeWarp) * AudioMixerController.GetMaxVolume());
+			else
+			{
+				result = ((value >= num) ? (Mathf.Pow((value - num) / num2, AudioMixerController.kVolumeWarp) * AudioMixerController.kMinVolume) : (Mathf.Pow(1f - value / num, AudioMixerController.kVolumeWarp) * AudioMixerController.GetMaxVolume()));
+			}
+			return result;
 		}
 
 		public void OnUnitySelectionChanged()

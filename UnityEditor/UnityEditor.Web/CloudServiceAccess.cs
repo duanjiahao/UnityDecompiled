@@ -5,13 +5,8 @@ namespace UnityEditor.Web
 {
 	internal abstract class CloudServiceAccess
 	{
-		private const string kServiceEnabled = "ServiceEnabled";
-
 		public CloudServiceAccess()
 		{
-			string value = false.ToString();
-			string name = this.GetSafeServiceName() + "_ServiceEnabled";
-			PlayerSettings.InitializePropertyString(name, value);
 		}
 
 		public abstract string GetServiceName();
@@ -33,32 +28,16 @@ namespace UnityEditor.Web
 
 		public virtual bool IsServiceEnabled()
 		{
-			bool result;
-			bool.TryParse(this.GetServiceConfig("ServiceEnabled"), out result);
-			return result;
+			return PlayerSettings.GetCloudServiceEnabled(this.GetServiceName());
 		}
 
 		public virtual void EnableService(bool enabled)
 		{
-			this.SetServiceConfig("ServiceEnabled", enabled.ToString());
+			PlayerSettings.SetCloudServiceEnabled(this.GetServiceName(), enabled);
 		}
 
-		public string GetServiceConfig(string key)
+		public virtual void OnProjectUnbound()
 		{
-			string name = this.GetSafeServiceName() + "_" + key;
-			string empty = string.Empty;
-			if (PlayerSettings.GetPropertyOptionalString(name, ref empty))
-			{
-				return empty;
-			}
-			return string.Empty;
-		}
-
-		public void SetServiceConfig(string key, string value)
-		{
-			string name = this.GetSafeServiceName() + "_" + key;
-			PlayerSettings.SetPropertyString(name, value);
-			PlayerSettings.SetDirty();
 		}
 
 		public void ShowServicePage()

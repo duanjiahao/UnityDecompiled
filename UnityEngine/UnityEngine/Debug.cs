@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
@@ -7,7 +8,7 @@ namespace UnityEngine
 {
 	public sealed class Debug
 	{
-		internal static Logger s_Logger = new Logger(new DebugLogHandler());
+		internal static ILogger s_Logger = new Logger(new DebugLogHandler());
 
 		public static ILogger logger
 		{
@@ -19,17 +20,14 @@ namespace UnityEngine
 
 		public static extern bool developerConsoleVisible
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isDebugBuild
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -63,7 +61,6 @@ namespace UnityEngine
 			Debug.INTERNAL_CALL_DrawLine(ref start, ref end, ref white, duration, depthTest);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DrawLine(ref Vector3 start, ref Vector3 end, ref Color color, float duration, bool depthTest);
 
@@ -96,11 +93,9 @@ namespace UnityEngine
 			Debug.DrawLine(start, start + dir, color, duration, depthTest);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Break();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DebugBreak();
 
@@ -144,7 +139,6 @@ namespace UnityEngine
 			Debug.logger.LogFormat(LogType.Error, context, format, args);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearDeveloperConsole();
 
@@ -158,7 +152,6 @@ namespace UnityEngine
 			Debug.logger.LogException(exception, context);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void LogPlayerBuildError(string message, string file, int line, int column);
 
@@ -278,9 +271,14 @@ namespace UnityEngine
 			Debug.logger.LogFormat(LogType.Assert, context, format, args);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void OpenConsoleFile();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void GetDiagnosticSwitches(List<DiagnosticSwitch> results);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetDiagnosticSwitch(string name, object value, bool setPersistent);
 
 		[Conditional("UNITY_ASSERTIONS"), Obsolete("Assert(bool, string, params object[]) is obsolete. Use AssertFormat(bool, string, params object[]) (UnityUpgradable) -> AssertFormat(*)", true)]
 		public static void Assert(bool condition, string format, params object[] args)

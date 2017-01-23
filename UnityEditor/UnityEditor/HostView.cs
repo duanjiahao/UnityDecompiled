@@ -29,13 +29,12 @@ namespace UnityEditor
 			}
 			set
 			{
-				if (this.m_ActualView == value)
+				if (!(this.m_ActualView == value))
 				{
-					return;
+					this.DeregisterSelectedPane(true);
+					this.m_ActualView = value;
+					this.RegisterSelectedPane();
 				}
-				this.DeregisterSelectedPane(true);
-				this.m_ActualView = value;
-				this.RegisterSelectedPane();
 			}
 		}
 
@@ -96,12 +95,17 @@ namespace UnityEditor
 		protected override bool OnFocus()
 		{
 			this.Invoke("OnFocus");
+			bool result;
 			if (this == null)
 			{
-				return false;
+				result = false;
 			}
-			base.Repaint();
-			return true;
+			else
+			{
+				base.Repaint();
+				result = true;
+			}
+			return result;
 		}
 
 		private void OnLostFocus()
@@ -165,19 +169,87 @@ namespace UnityEditor
 
 		private MethodInfo GetPaneMethod(string methodName, object obj)
 		{
+			MethodInfo result;
 			if (obj == null)
 			{
-				return null;
+				result = null;
 			}
-			for (Type type = obj.GetType(); type != null; type = type.BaseType)
+			else
 			{
-				MethodInfo method = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-				if (method != null)
+				for (Type type = obj.GetType(); type != null; type = type.BaseType)
 				{
-					return method;
+					MethodInfo method = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+					if (method != null)
+					{
+						result = method;
+						return result;
+					}
+				}
+				result = null;
+			}
+			return result;
+		}
+
+		public static void EndOffsetArea()
+		{
+			if (Event.current.type != EventType.Used)
+			{
+				GUILayoutUtility.EndLayoutGroup();
+				GUI.EndGroup();
+			}
+		}
+
+		public static void BeginOffsetArea(Rect screenRect, GUIContent content, GUIStyle style)
+		{
+			GUILayoutGroup gUILayoutGroup = EditorGUILayoutUtilityInternal.BeginLayoutArea(style, typeof(GUILayoutGroup));
+			EventType type = Event.current.type;
+			if (type == EventType.Layout)
+			{
+				gUILayoutGroup.resetCoords = false;
+				gUILayoutGroup.minWidth = (gUILayoutGroup.maxWidth = screenRect.width + 1f);
+				gUILayoutGroup.minHeight = (gUILayoutGroup.maxHeight = screenRect.height + 2f);
+				gUILayoutGroup.rect = Rect.MinMaxRect(-1f, -1f, gUILayoutGroup.rect.xMax, gUILayoutGroup.rect.yMax - 10f);
+			}
+			GUI.BeginGroup(screenRect, content, style);
+		}
+
+		public void InvokeOnGUI(Rect onGUIPosition)
+		{
+			base.DoWindowDecorationStart();
+			GUIStyle style = "dockareaoverlay";
+			if (this.actualView is GameView)
+			{
+				GUI.Box(onGUIPosition, GUIContent.none, style);
+			}
+			HostView.BeginOffsetArea(new Rect(onGUIPosition.x + 2f, onGUIPosition.y + 17f, onGUIPosition.width - 4f, onGUIPosition.height - 17f - 2f), GUIContent.none, "TabWindowBackground");
+			EditorGUIUtility.ResetGUIState();
+			bool flag = false;
+			try
+			{
+				this.Invoke("OnGUI");
+			}
+			catch (TargetInvocationException ex)
+			{
+				if (ex.InnerException is ExitGUIException)
+				{
+					flag = true;
+				}
+				throw ex.InnerException;
+			}
+			finally
+			{
+				if (!flag)
+				{
+					if (this.actualView != null && this.actualView.m_FadeoutTime != 0f && Event.current != null && Event.current.type == EventType.Repaint)
+					{
+						this.actualView.DrawNotification();
+					}
+					HostView.EndOffsetArea();
+					EditorGUIUtility.ResetGUIState();
+					base.DoWindowDecorationEnd();
+					GUI.Box(onGUIPosition, GUIContent.none, style);
 				}
 			}
-			return null;
 		}
 
 		protected void Invoke(string methodName)
@@ -196,59 +268,57 @@ namespace UnityEditor
 
 		protected void RegisterSelectedPane()
 		{
-			if (!this.m_ActualView)
+			if (this.m_ActualView)
 			{
-				return;
-			}
-			this.m_ActualView.m_Parent = this;
-			if (this.GetPaneMethod("Update") != null)
-			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.SendUpdate));
-			}
-			if (this.GetPaneMethod("ModifierKeysChanged") != null)
-			{
-				EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.SendModKeysChanged));
-			}
-			this.m_ActualView.MakeParentsSettingsMatchMe();
-			if (this.m_ActualView.m_FadeoutTime != 0f)
-			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
-			}
-			try
-			{
-				this.Invoke("OnBecameVisible");
-				this.Invoke("OnFocus");
-			}
-			catch (TargetInvocationException ex)
-			{
-				Debug.LogError(ex.InnerException.GetType().Name + ":" + ex.InnerException.Message);
+				this.m_ActualView.m_Parent = this;
+				if (this.GetPaneMethod("Update") != null)
+				{
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.SendUpdate));
+				}
+				if (this.GetPaneMethod("ModifierKeysChanged") != null)
+				{
+					EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.SendModKeysChanged));
+				}
+				this.m_ActualView.MakeParentsSettingsMatchMe();
+				if (this.m_ActualView.m_FadeoutTime != 0f)
+				{
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
+				}
+				try
+				{
+					this.Invoke("OnBecameVisible");
+					this.Invoke("OnFocus");
+				}
+				catch (TargetInvocationException ex)
+				{
+					Debug.LogError(ex.InnerException.GetType().Name + ":" + ex.InnerException.Message);
+				}
 			}
 		}
 
 		protected void DeregisterSelectedPane(bool clearActualView)
 		{
-			if (!this.m_ActualView)
+			if (this.m_ActualView)
 			{
-				return;
-			}
-			if (this.GetPaneMethod("Update") != null)
-			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.SendUpdate));
-			}
-			if (this.GetPaneMethod("ModifierKeysChanged") != null)
-			{
-				EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.SendModKeysChanged));
-			}
-			if (this.m_ActualView.m_FadeoutTime != 0f)
-			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
-			}
-			if (clearActualView)
-			{
-				EditorWindow actualView = this.m_ActualView;
-				this.m_ActualView = null;
-				this.Invoke("OnLostFocus", actualView);
-				this.Invoke("OnBecameInvisible", actualView);
+				if (this.GetPaneMethod("Update") != null)
+				{
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.SendUpdate));
+				}
+				if (this.GetPaneMethod("ModifierKeysChanged") != null)
+				{
+					EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.SendModKeysChanged));
+				}
+				if (this.m_ActualView.m_FadeoutTime != 0f)
+				{
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
+				}
+				if (clearActualView)
+				{
+					EditorWindow actualView = this.m_ActualView;
+					this.m_ActualView = null;
+					this.Invoke("OnLostFocus", actualView);
+					this.Invoke("OnBecameInvisible", actualView);
+				}
 			}
 		}
 
@@ -305,19 +375,21 @@ namespace UnityEditor
 
 		protected void ClearBackground()
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				EditorWindow actualView = this.actualView;
+				if (actualView != null && actualView.dontClearBackground)
+				{
+					if (base.backgroundValid && base.position == this.m_BackgroundClearRect)
+					{
+						return;
+					}
+				}
+				Color color = (!EditorGUIUtility.isProSkin) ? HostView.kViewColor : EditorGUIUtility.kDarkViewBackground;
+				GL.Clear(true, true, (!EditorApplication.isPlayingOrWillChangePlaymode) ? color : (color * HostView.kPlayModeDarken));
+				base.backgroundValid = true;
+				this.m_BackgroundClearRect = base.position;
 			}
-			EditorWindow actualView = this.actualView;
-			if (actualView != null && actualView.dontClearBackground && base.backgroundValid && base.position == this.m_BackgroundClearRect)
-			{
-				return;
-			}
-			Color color = (!EditorGUIUtility.isProSkin) ? HostView.kViewColor : EditorGUIUtility.kDarkViewBackground;
-			GL.Clear(true, true, (!EditorApplication.isPlayingOrWillChangePlaymode) ? color : (color * HostView.kPlayModeDarken));
-			base.backgroundValid = true;
-			this.m_BackgroundClearRect = base.position;
 		}
 	}
 }

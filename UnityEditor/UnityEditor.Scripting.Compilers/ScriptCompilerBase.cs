@@ -11,7 +11,7 @@ namespace UnityEditor.Scripting.Compilers
 	{
 		private Program process;
 
-		private string _responseFile;
+		private string _responseFile = null;
 
 		protected MonoIsland _island;
 
@@ -67,14 +67,20 @@ namespace UnityEditor.Scripting.Compilers
 			return this.process == null || this.process.HasExited;
 		}
 
-		protected void AddCustomResponseFileIfPresent(List<string> arguments, string responseFileName)
+		protected bool AddCustomResponseFileIfPresent(List<string> arguments, string responseFileName)
 		{
 			string text = Path.Combine("Assets", responseFileName);
+			bool result;
 			if (!File.Exists(text))
 			{
-				return;
+				result = false;
 			}
-			arguments.Add("@" + text);
+			else
+			{
+				arguments.Add("@" + text);
+				result = true;
+			}
+			return result;
 		}
 
 		protected string GenerateResponseFile(List<string> arguments)
@@ -118,7 +124,7 @@ namespace UnityEditor.Scripting.Compilers
 			string[] errorOutput = this.GetErrorOutput();
 			if (flag || errorOutput.Length != 0)
 			{
-				Console.WriteLine(string.Empty);
+				Console.WriteLine("");
 				Console.WriteLine("-----Compiler Commandline Arguments:");
 				this.process.LogProcessStartInfo();
 				string[] standardOutput = this.GetStandardOutput();

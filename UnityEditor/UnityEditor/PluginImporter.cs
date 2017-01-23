@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEditor.Modules;
 using UnityEditorInternal;
-using UnityEngine;
 
 namespace UnityEditor
 {
@@ -12,41 +12,64 @@ namespace UnityEditor
 	{
 		public extern bool isNativePlugin
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern DllType dllType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void ClearSettings();
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetCompatibleWithAnyPlatform(bool enable);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetCompatibleWithAnyPlatform();
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetExcludeFromAnyPlatform(string platformName, bool excludedFromAny);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetExcludeFromAnyPlatform(string platformName);
+
+		public void SetExcludeFromAnyPlatform(BuildTarget platform, bool excludedFromAny)
+		{
+			this.SetExcludeFromAnyPlatform(BuildPipeline.GetBuildTargetName(platform), excludedFromAny);
+		}
+
+		public bool GetExcludeFromAnyPlatform(BuildTarget platform)
+		{
+			return this.GetExcludeFromAnyPlatform(BuildPipeline.GetBuildTargetName(platform));
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetExcludeEditorFromAnyPlatform(bool excludedFromAny);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetExcludeEditorFromAnyPlatform();
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetCompatibleWithEditor(bool enable);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetCompatibleWithEditor();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetIsPreloaded(bool isPreloaded);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool GetIsPreloaded();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetIsOverridable();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool ShouldIncludeInBuild();
 
 		public void SetCompatibleWithPlatform(BuildTarget platform, bool enable)
 		{
@@ -58,11 +81,9 @@ namespace UnityEditor
 			return this.GetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(platform));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetCompatibleWithPlatform(string platformName, bool enable);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetCompatibleWithPlatform(string platformName);
 
@@ -76,36 +97,79 @@ namespace UnityEditor
 			return this.GetPlatformData(BuildPipeline.GetBuildTargetName(platform), key);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPlatformData(string platformName, string key, string value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetPlatformData(string platformName, string key);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetEditorData(string key, string value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetEditorData(string key);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern PluginImporter[] GetAllImporters();
 
 		private static bool IsCompatible(PluginImporter imp, string platformName)
 		{
-			return !string.IsNullOrEmpty(imp.assetPath) && (imp.GetCompatibleWithPlatform(platformName) || imp.GetCompatibleWithAnyPlatform());
+			return !string.IsNullOrEmpty(imp.assetPath) && (imp.GetCompatibleWithPlatform(platformName) || (imp.GetCompatibleWithAnyPlatform() && !imp.GetExcludeFromAnyPlatform(platformName))) && imp.ShouldIncludeInBuild();
 		}
 
 		public static PluginImporter[] GetImporters(string platformName)
 		{
-			return (from imp in PluginImporter.GetAllImporters()
+			List<PluginImporter> list = new List<PluginImporter>();
+			Dictionary<string, PluginImporter> dictionary = new Dictionary<string, PluginImporter>();
+			PluginImporter[] array = (from imp in PluginImporter.GetAllImporters()
 			where PluginImporter.IsCompatible(imp, platformName)
 			select imp).ToArray<PluginImporter>();
+			IPluginImporterExtension pluginImporterExtension = ModuleManager.GetPluginImporterExtension(platformName);
+			if (pluginImporterExtension == null)
+			{
+				pluginImporterExtension = ModuleManager.GetPluginImporterExtension(BuildPipeline.GetBuildTargetByName(platformName));
+			}
+			PluginImporter[] result;
+			if (pluginImporterExtension == null)
+			{
+				result = array;
+			}
+			else
+			{
+				int i = 0;
+				while (i < array.Length)
+				{
+					PluginImporter pluginImporter = array[i];
+					string text = pluginImporterExtension.CalculateFinalPluginPath(platformName, pluginImporter);
+					if (!string.IsNullOrEmpty(text))
+					{
+						PluginImporter pluginImporter2;
+						if (!dictionary.TryGetValue(text, out pluginImporter2))
+						{
+							dictionary.Add(text, pluginImporter);
+						}
+						else if (pluginImporter2.GetIsOverridable() && !pluginImporter.GetIsOverridable())
+						{
+							dictionary[text] = pluginImporter;
+							list.Remove(pluginImporter2);
+						}
+						else if (pluginImporter.GetIsOverridable())
+						{
+							goto IL_106;
+						}
+						goto IL_FD;
+					}
+					goto IL_FD;
+					IL_106:
+					i++;
+					continue;
+					IL_FD:
+					list.Add(pluginImporter);
+					goto IL_106;
+				}
+				result = list.ToArray();
+			}
+			return result;
 		}
 
 		public static PluginImporter[] GetImporters(BuildTarget platform)
@@ -118,10 +182,9 @@ namespace UnityEditor
 		{
 			PluginImporter.<GetExtensionPlugins>c__Iterator0 <GetExtensionPlugins>c__Iterator = new PluginImporter.<GetExtensionPlugins>c__Iterator0();
 			<GetExtensionPlugins>c__Iterator.target = target;
-			<GetExtensionPlugins>c__Iterator.<$>target = target;
-			PluginImporter.<GetExtensionPlugins>c__Iterator0 expr_15 = <GetExtensionPlugins>c__Iterator;
-			expr_15.$PC = -2;
-			return expr_15;
+			PluginImporter.<GetExtensionPlugins>c__Iterator0 expr_0E = <GetExtensionPlugins>c__Iterator;
+			expr_0E.$PC = -2;
+			return expr_0E;
 		}
 	}
 }

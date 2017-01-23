@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -80,11 +81,32 @@ namespace UnityEditor
 			}
 		}
 
-		private void InitPreview(Rect r)
+		private void BeginPreview(Rect r, GUIStyle previewBackground, bool hdr)
+		{
+			this.InitPreview(r, hdr);
+			if (previewBackground != null && previewBackground != GUIStyle.none)
+			{
+				Graphics.DrawTexture(previewBackground.overflow.Add(new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height)), previewBackground.normal.background, new Rect(0f, 0f, 1f, 1f), previewBackground.border.left, previewBackground.border.right, previewBackground.border.top, previewBackground.border.bottom, new Color(0.5f, 0.5f, 0.5f, 1f), null);
+			}
+		}
+
+		private void BeginStaticPreview(Rect r, bool hdr)
+		{
+			this.InitPreview(r, hdr);
+			Color color = new Color(0.321568638f, 0.321568638f, 0.321568638f, 1f);
+			Texture2D texture2D = new Texture2D(1, 1, TextureFormat.RGBA32, true, true);
+			texture2D.SetPixel(0, 0, color);
+			texture2D.Apply();
+			Graphics.DrawTexture(new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height), texture2D);
+			UnityEngine.Object.DestroyImmediate(texture2D);
+		}
+
+		private void InitPreview(Rect r, bool hdr)
 		{
 			this.m_TargetRect = r;
-			int num = (int)r.width;
-			int num2 = (int)r.height;
+			float scaleFactor = this.GetScaleFactor(r.width, r.height);
+			int num = (int)(r.width * scaleFactor);
+			int num2 = (int)(r.height * scaleFactor);
 			if (!this.m_RenderTexture || this.m_RenderTexture.width != num || this.m_RenderTexture.height != num2)
 			{
 				if (this.m_RenderTexture)
@@ -92,8 +114,7 @@ namespace UnityEditor
 					UnityEngine.Object.DestroyImmediate(this.m_RenderTexture);
 					this.m_RenderTexture = null;
 				}
-				float scaleFactor = this.GetScaleFactor((float)num, (float)num2);
-				this.m_RenderTexture = new RenderTexture((int)((float)num * scaleFactor), (int)((float)num2 * scaleFactor), 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+				this.m_RenderTexture = new RenderTexture(num, num2, 16, (!hdr) ? RenderTextureFormat.ARGB32 : RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Default);
 				this.m_RenderTexture.hideFlags = HideFlags.HideAndDontSave;
 				this.m_Camera.targetTexture = this.m_RenderTexture;
 			}
@@ -117,23 +138,22 @@ namespace UnityEditor
 
 		public void BeginStaticPreview(Rect r)
 		{
-			this.InitPreview(r);
-			Color color = new Color(0.321568638f, 0.321568638f, 0.321568638f, 1f);
-			Texture2D texture2D = new Texture2D(1, 1, TextureFormat.ARGB32, true, true);
-			texture2D.SetPixel(0, 0, color);
-			texture2D.Apply();
-			Graphics.DrawTexture(new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height), texture2D);
-			UnityEngine.Object.DestroyImmediate(texture2D);
+			this.BeginStaticPreview(r, false);
+		}
+
+		public void BeginStaticPreviewHDR(Rect r)
+		{
+			this.BeginStaticPreview(r, true);
 		}
 
 		public void BeginPreview(Rect r, GUIStyle previewBackground)
 		{
-			this.InitPreview(r);
-			if (previewBackground == null || previewBackground == GUIStyle.none)
-			{
-				return;
-			}
-			Graphics.DrawTexture(previewBackground.overflow.Add(new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height)), previewBackground.normal.background, new Rect(0f, 0f, 1f, 1f), previewBackground.border.left, previewBackground.border.right, previewBackground.border.top, previewBackground.border.bottom, new Color(0.5f, 0.5f, 0.5f, 1f), null);
+			this.BeginPreview(r, previewBackground, false);
+		}
+
+		public void BeginPreviewHDR(Rect r, GUIStyle previewBackground)
+		{
+			this.BeginPreview(r, previewBackground, true);
 		}
 
 		public Texture EndPreview()
@@ -194,14 +214,30 @@ namespace UnityEditor
 		{
 			GameObject gameObject = (GameObject)EditorGUIUtility.LoadRequired("Previews/PreviewMaterials.fbx");
 			gameObject.SetActive(false);
-			foreach (Transform transform in gameObject.transform)
+			IEnumerator enumerator = gameObject.transform.GetEnumerator();
+			Mesh result;
+			try
 			{
-				if (transform.name == "sphere")
+				while (enumerator.MoveNext())
 				{
-					return transform.GetComponent<MeshFilter>().sharedMesh;
+					Transform transform = (Transform)enumerator.Current;
+					if (transform.name == "sphere")
+					{
+						result = transform.GetComponent<MeshFilter>().sharedMesh;
+						return result;
+					}
 				}
 			}
-			return null;
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			result = null;
+			return result;
 		}
 	}
 }

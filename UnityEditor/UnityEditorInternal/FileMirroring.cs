@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace UnityEditorInternal
 {
@@ -14,33 +15,48 @@ namespace UnityEditorInternal
 			NotExisting
 		}
 
+		[CompilerGenerated]
+		private static Func<string, string, bool> <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static Func<string, string, bool> <>f__mg$cache1;
+
 		public static void MirrorFile(string from, string to)
 		{
-			FileMirroring.MirrorFile(from, to, new Func<string, string, bool>(FileMirroring.CanSkipCopy));
+			if (FileMirroring.<>f__mg$cache0 == null)
+			{
+				FileMirroring.<>f__mg$cache0 = new Func<string, string, bool>(FileMirroring.CanSkipCopy);
+			}
+			FileMirroring.MirrorFile(from, to, FileMirroring.<>f__mg$cache0);
 		}
 
 		public static void MirrorFile(string from, string to, Func<string, string, bool> comparer)
 		{
-			if (comparer(from, to))
+			if (!comparer(from, to))
 			{
-				return;
+				if (!File.Exists(from))
+				{
+					FileMirroring.DeleteFileOrDirectory(to);
+				}
+				else
+				{
+					string directoryName = Path.GetDirectoryName(to);
+					if (!Directory.Exists(directoryName))
+					{
+						Directory.CreateDirectory(directoryName);
+					}
+					File.Copy(from, to, true);
+				}
 			}
-			if (!File.Exists(from))
-			{
-				FileMirroring.DeleteFileOrDirectory(to);
-				return;
-			}
-			string directoryName = Path.GetDirectoryName(to);
-			if (!Directory.Exists(directoryName))
-			{
-				Directory.CreateDirectory(directoryName);
-			}
-			File.Copy(from, to, true);
 		}
 
 		public static void MirrorFolder(string from, string to)
 		{
-			FileMirroring.MirrorFolder(from, to, new Func<string, string, bool>(FileMirroring.CanSkipCopy));
+			if (FileMirroring.<>f__mg$cache1 == null)
+			{
+				FileMirroring.<>f__mg$cache1 = new Func<string, string, bool>(FileMirroring.CanSkipCopy);
+			}
+			FileMirroring.MirrorFolder(from, to, FileMirroring.<>f__mg$cache1);
 		}
 
 		public static void MirrorFolder(string from, string to, Func<string, string, bool> comparer)
@@ -53,46 +69,48 @@ namespace UnityEditorInternal
 				{
 					Directory.Delete(to, true);
 				}
-				return;
 			}
-			if (!Directory.Exists(to))
+			else
 			{
-				Directory.CreateDirectory(to);
-			}
-			IEnumerable<string> first = from s in Directory.GetFileSystemEntries(to)
-			select FileMirroring.StripPrefix(s, to);
-			IEnumerable<string> enumerable = from s in Directory.GetFileSystemEntries(@from)
-			select FileMirroring.StripPrefix(s, @from);
-			IEnumerable<string> enumerable2 = first.Except(enumerable);
-			foreach (string current in enumerable2)
-			{
-				FileMirroring.DeleteFileOrDirectory(Path.Combine(to, current));
-			}
-			foreach (string current2 in enumerable)
-			{
-				string text = Path.Combine(from, current2);
-				string text2 = Path.Combine(to, current2);
-				FileMirroring.FileEntryType fileEntryType = FileMirroring.FileEntryTypeFor(text);
-				FileMirroring.FileEntryType fileEntryType2 = FileMirroring.FileEntryTypeFor(text2);
-				if (fileEntryType == FileMirroring.FileEntryType.File && fileEntryType2 == FileMirroring.FileEntryType.Directory)
+				if (!Directory.Exists(to))
 				{
-					FileMirroring.DeleteFileOrDirectory(text2);
+					Directory.CreateDirectory(to);
 				}
-				if (fileEntryType == FileMirroring.FileEntryType.Directory)
+				IEnumerable<string> first = from s in Directory.GetFileSystemEntries(to)
+				select FileMirroring.StripPrefix(s, to);
+				IEnumerable<string> enumerable = from s in Directory.GetFileSystemEntries(@from)
+				select FileMirroring.StripPrefix(s, @from);
+				IEnumerable<string> enumerable2 = first.Except(enumerable);
+				foreach (string current in enumerable2)
 				{
-					if (fileEntryType2 == FileMirroring.FileEntryType.File)
+					FileMirroring.DeleteFileOrDirectory(Path.Combine(to, current));
+				}
+				foreach (string current2 in enumerable)
+				{
+					string text = Path.Combine(from, current2);
+					string text2 = Path.Combine(to, current2);
+					FileMirroring.FileEntryType fileEntryType = FileMirroring.FileEntryTypeFor(text);
+					FileMirroring.FileEntryType fileEntryType2 = FileMirroring.FileEntryTypeFor(text2);
+					if (fileEntryType == FileMirroring.FileEntryType.File && fileEntryType2 == FileMirroring.FileEntryType.Directory)
 					{
 						FileMirroring.DeleteFileOrDirectory(text2);
 					}
-					if (fileEntryType2 != FileMirroring.FileEntryType.Directory)
+					if (fileEntryType == FileMirroring.FileEntryType.Directory)
 					{
-						Directory.CreateDirectory(text2);
+						if (fileEntryType2 == FileMirroring.FileEntryType.File)
+						{
+							FileMirroring.DeleteFileOrDirectory(text2);
+						}
+						if (fileEntryType2 != FileMirroring.FileEntryType.Directory)
+						{
+							Directory.CreateDirectory(text2);
+						}
+						FileMirroring.MirrorFolder(text, text2);
 					}
-					FileMirroring.MirrorFolder(text, text2);
-				}
-				if (fileEntryType == FileMirroring.FileEntryType.File)
-				{
-					FileMirroring.MirrorFile(text, text2, comparer);
+					if (fileEntryType == FileMirroring.FileEntryType.File)
+					{
+						FileMirroring.MirrorFile(text, text2, comparer);
+					}
 				}
 			}
 		}
@@ -102,9 +120,8 @@ namespace UnityEditorInternal
 			if (File.Exists(path))
 			{
 				File.Delete(path);
-				return;
 			}
-			if (Directory.Exists(path))
+			else if (Directory.Exists(path))
 			{
 				Directory.Delete(path, true);
 			}
@@ -117,15 +134,20 @@ namespace UnityEditorInternal
 
 		private static FileMirroring.FileEntryType FileEntryTypeFor(string fileEntry)
 		{
+			FileMirroring.FileEntryType result;
 			if (File.Exists(fileEntry))
 			{
-				return FileMirroring.FileEntryType.File;
+				result = FileMirroring.FileEntryType.File;
 			}
-			if (Directory.Exists(fileEntry))
+			else if (Directory.Exists(fileEntry))
 			{
-				return FileMirroring.FileEntryType.Directory;
+				result = FileMirroring.FileEntryType.Directory;
 			}
-			return FileMirroring.FileEntryType.NotExisting;
+			else
+			{
+				result = FileMirroring.FileEntryType.NotExisting;
+			}
+			return result;
 		}
 
 		public static bool CanSkipCopy(string from, string to)
@@ -135,13 +157,14 @@ namespace UnityEditorInternal
 
 		private static bool AreFilesIdentical(string filePath1, string filePath2)
 		{
+			bool result;
 			using (FileStream fileStream = File.OpenRead(filePath1))
 			{
 				using (FileStream fileStream2 = File.OpenRead(filePath2))
 				{
 					if (fileStream.Length != fileStream2.Length)
 					{
-						bool result = false;
+						result = false;
 						return result;
 					}
 					byte[] array = new byte[65536];
@@ -154,14 +177,15 @@ namespace UnityEditorInternal
 						{
 							if (array[i] != array2[i])
 							{
-								bool result = false;
+								result = false;
 								return result;
 							}
 						}
 					}
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 	}
 }

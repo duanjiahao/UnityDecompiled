@@ -80,17 +80,7 @@ namespace UnityEditor.Modules
 
 		public virtual ITextureImportSettingsExtension CreateTextureImportSettingsExtension()
 		{
-			ITextureImportSettingsExtension arg_26_0;
-			if (this.textureSettingsExtension != null)
-			{
-				ITextureImportSettingsExtension textureImportSettingsExtension = this.textureSettingsExtension;
-				arg_26_0 = textureImportSettingsExtension;
-			}
-			else
-			{
-				arg_26_0 = (this.textureSettingsExtension = new DefaultTextureImportSettingsExtension());
-			}
-			return arg_26_0;
+			return (this.textureSettingsExtension == null) ? (this.textureSettingsExtension = new DefaultTextureImportSettingsExtension()) : this.textureSettingsExtension;
 		}
 
 		public virtual IBuildWindowExtension CreateBuildWindowExtension()
@@ -100,17 +90,7 @@ namespace UnityEditor.Modules
 
 		public virtual ICompilationExtension CreateCompilationExtension()
 		{
-			ICompilationExtension arg_26_0;
-			if (this.compilationExtension != null)
-			{
-				ICompilationExtension compilationExtension = this.compilationExtension;
-				arg_26_0 = compilationExtension;
-			}
-			else
-			{
-				arg_26_0 = (this.compilationExtension = new DefaultCompilationExtension());
-			}
-			return arg_26_0;
+			return (this.compilationExtension == null) ? (this.compilationExtension = new DefaultCompilationExtension()) : this.compilationExtension;
 		}
 
 		public virtual IPluginImporterExtension CreatePluginImporterExtension()
@@ -121,6 +101,15 @@ namespace UnityEditor.Modules
 		public virtual IUserAssembliesValidator CreateUserAssembliesValidatorExtension()
 		{
 			return null;
+		}
+
+		public virtual IProjectGeneratorExtension CreateProjectGeneratorExtension()
+		{
+			return null;
+		}
+
+		public virtual void RegisterAdditionalUnityExtensions()
+		{
 		}
 
 		public virtual IDevice CreateDevice(string id)

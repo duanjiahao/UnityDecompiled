@@ -50,12 +50,17 @@ namespace UnityEditor.Macros
 
 		public static string Eval(string macro)
 		{
+			string result;
 			if (macro.StartsWith("ExecuteMethod: "))
 			{
-				return MacroEvaluator.ExecuteMethodThroughReflection(macro);
+				result = MacroEvaluator.ExecuteMethodThroughReflection(macro);
 			}
-			object obj = Evaluator.Eval(MacroEvaluator.EditorEvaluationContext, macro);
-			return (obj != null) ? obj.ToString() : "Null";
+			else
+			{
+				object obj = Evaluator.Eval(MacroEvaluator.EditorEvaluationContext, macro);
+				result = ((obj != null) ? obj.ToString() : "Null");
+			}
+			return result;
 		}
 
 		private static string ExecuteMethodThroughReflection(string macro)

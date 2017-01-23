@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEditor.Utils;
 using UnityEditor.VisualStudioIntegration;
 using UnityEditorInternal;
@@ -21,11 +22,16 @@ namespace UnityEditor
 				get
 				{
 					string externalScriptEditor = InternalEditorUtility.GetExternalScriptEditor();
+					int result;
 					if (SyncVS.InstalledVisualStudios.ContainsKey(UnityEditor.VisualStudioVersion.VisualStudio2008) && externalScriptEditor != string.Empty && SyncVS.PathsAreEquivalent(SyncVS.InstalledVisualStudios[UnityEditor.VisualStudioVersion.VisualStudio2008], externalScriptEditor))
 					{
-						return 9;
+						result = 9;
 					}
-					return 10;
+					else
+					{
+						result = 10;
+					}
+					return result;
 				}
 			}
 
@@ -97,6 +103,9 @@ namespace UnityEditor
 
 		private static readonly SolutionSynchronizer Synchronizer;
 
+		[CompilerGenerated]
+		private static Action <>f__mg$cache0;
+
 		internal static Dictionary<VisualStudioVersion, string> InstalledVisualStudios
 		{
 			get;
@@ -106,7 +115,12 @@ namespace UnityEditor
 		static SyncVS()
 		{
 			SyncVS.Synchronizer = new SolutionSynchronizer(Directory.GetParent(Application.dataPath).FullName, new SyncVS.SolutionSynchronizationSettings());
-			EditorUserBuildSettings.activeBuildTargetChanged = (Action)Delegate.Combine(EditorUserBuildSettings.activeBuildTargetChanged, new Action(SyncVS.SyncVisualStudioProjectIfItAlreadyExists));
+			Delegate arg_41_0 = EditorUserBuildSettings.activeBuildTargetChanged;
+			if (SyncVS.<>f__mg$cache0 == null)
+			{
+				SyncVS.<>f__mg$cache0 = new Action(SyncVS.SyncVisualStudioProjectIfItAlreadyExists);
+			}
+			EditorUserBuildSettings.activeBuildTargetChanged = (Action)Delegate.Combine(arg_41_0, SyncVS.<>f__mg$cache0);
 			try
 			{
 				SyncVS.InstalledVisualStudios = (SyncVS.GetInstalledVisualStudios() as Dictionary<VisualStudioVersion, string>);
@@ -124,7 +138,7 @@ namespace UnityEditor
 		{
 			string @string = EditorPrefs.GetString("kScriptsDefaultApp");
 			string text = SyncVS.FindBestVisualStudio();
-			if (@string == string.Empty && text != null)
+			if (@string == "" && text != null)
 			{
 				EditorPrefs.SetString("kScriptsDefaultApp", text);
 			}
@@ -179,21 +193,19 @@ namespace UnityEditor
 
 		public static void SyncIfFirstFileOpenSinceDomainLoad()
 		{
-			if (SyncVS.s_AlreadySyncedThisDomainReload)
+			if (!SyncVS.s_AlreadySyncedThisDomainReload)
 			{
-				return;
+				SyncVS.s_AlreadySyncedThisDomainReload = true;
+				SyncVS.Synchronizer.Sync();
 			}
-			SyncVS.s_AlreadySyncedThisDomainReload = true;
-			SyncVS.Synchronizer.Sync();
 		}
 
 		private static void OpenProjectFileUnlessInBatchMode()
 		{
-			if (InternalEditorUtility.inBatchMode)
+			if (!InternalEditorUtility.inBatchMode)
 			{
-				return;
+				InternalEditorUtility.OpenFileAtLineExternal("", -1);
 			}
-			InternalEditorUtility.OpenFileAtLineExternal(string.Empty, -1);
 		}
 
 		private static IDictionary<VisualStudioVersion, string> GetInstalledVisualStudios()
@@ -201,11 +213,12 @@ namespace UnityEditor
 			Dictionary<VisualStudioVersion, string> dictionary = new Dictionary<VisualStudioVersion, string>();
 			if (SyncVS.SolutionSynchronizationSettings.IsWindows)
 			{
-				using (IEnumerator enumerator = Enum.GetValues(typeof(VisualStudioVersion)).GetEnumerator())
+				IEnumerator enumerator = Enum.GetValues(typeof(VisualStudioVersion)).GetEnumerator();
+				try
 				{
 					while (enumerator.MoveNext())
 					{
-						VisualStudioVersion visualStudioVersion = (VisualStudioVersion)((int)enumerator.Current);
+						VisualStudioVersion visualStudioVersion = (VisualStudioVersion)enumerator.Current;
 						try
 						{
 							string text = Environment.GetEnvironmentVariable(string.Format("VS{0}0COMNTOOLS", (int)visualStudioVersion));
@@ -257,6 +270,14 @@ namespace UnityEditor
 						}
 					}
 				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
+				}
 			}
 			return dictionary;
 		}
@@ -270,7 +291,7 @@ namespace UnityEditor
 			}
 			catch (Exception)
 			{
-				result = string.Empty;
+				result = "";
 			}
 			return result;
 		}
@@ -318,6 +339,7 @@ namespace UnityEditor
 				Path.DirectorySeparatorChar,
 				Path.AltDirectorySeparatorChar
 			}).LastOrDefault<string>();
+			string result;
 			if (!string.IsNullOrEmpty(text))
 			{
 				int num = text.LastIndexOf("(x86)");
@@ -325,96 +347,126 @@ namespace UnityEditor
 				{
 					text = text.Remove(num);
 				}
-				return text.TrimEnd(new char[0]);
+				result = text.TrimEnd(new char[0]);
 			}
-			return "Program Files";
+			else
+			{
+				result = "Program Files";
+			}
+			return result;
 		}
 
 		private static bool PathsAreEquivalent(string aPath, string zPath)
 		{
+			bool result;
 			if (aPath == null && zPath == null)
 			{
-				return true;
+				result = true;
 			}
-			if (string.IsNullOrEmpty(aPath) || string.IsNullOrEmpty(zPath))
+			else if (string.IsNullOrEmpty(aPath) || string.IsNullOrEmpty(zPath))
 			{
-				return false;
+				result = false;
 			}
-			aPath = Path.GetFullPath(aPath);
-			zPath = Path.GetFullPath(zPath);
-			StringComparison comparisonType = StringComparison.OrdinalIgnoreCase;
-			if (!SyncVS.SolutionSynchronizationSettings.IsOSX && !SyncVS.SolutionSynchronizationSettings.IsWindows)
+			else
 			{
-				comparisonType = StringComparison.Ordinal;
+				aPath = Path.GetFullPath(aPath);
+				zPath = Path.GetFullPath(zPath);
+				StringComparison comparisonType = StringComparison.OrdinalIgnoreCase;
+				if (!SyncVS.SolutionSynchronizationSettings.IsOSX && !SyncVS.SolutionSynchronizationSettings.IsWindows)
+				{
+					comparisonType = StringComparison.Ordinal;
+				}
+				aPath = aPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+				zPath = zPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+				result = string.Equals(aPath, zPath, comparisonType);
 			}
-			aPath = aPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-			zPath = zPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-			return string.Equals(aPath, zPath, comparisonType);
+			return result;
 		}
 
 		internal static bool CheckVisualStudioVersion(int major, int minor, int build)
 		{
 			int num = -1;
 			int num2 = -1;
+			bool result;
 			if (major != 11)
 			{
-				return false;
+				result = false;
 			}
-			RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Wow6432Node\\Microsoft\\DevDiv\\vc\\Servicing");
-			if (registryKey == null)
+			else
 			{
-				return false;
-			}
-			string[] subKeyNames = registryKey.GetSubKeyNames();
-			for (int i = 0; i < subKeyNames.Length; i++)
-			{
-				string text = subKeyNames[i];
-				if (text.StartsWith("11.") && text.Length > 3)
+				RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Wow6432Node\\Microsoft\\DevDiv\\vc\\Servicing");
+				if (registryKey == null)
 				{
-					try
+					result = false;
+				}
+				else
+				{
+					string[] subKeyNames = registryKey.GetSubKeyNames();
+					for (int i = 0; i < subKeyNames.Length; i++)
 					{
-						int num3 = Convert.ToInt32(text.Substring(3));
-						if (num3 > num)
+						string text = subKeyNames[i];
+						if (text.StartsWith("11.") && text.Length > 3)
 						{
-							num = num3;
+							try
+							{
+								int num3 = Convert.ToInt32(text.Substring(3));
+								if (num3 > num)
+								{
+									num = num3;
+								}
+							}
+							catch (Exception)
+							{
+							}
 						}
 					}
-					catch (Exception)
+					if (num < 0)
 					{
+						result = false;
+					}
+					else
+					{
+						RegistryKey registryKey2 = registryKey.OpenSubKey(string.Format("11.{0}\\RuntimeDebug", num));
+						if (registryKey2 == null)
+						{
+							result = false;
+						}
+						else
+						{
+							string text2 = registryKey2.GetValue("Version", null) as string;
+							if (text2 == null)
+							{
+								result = false;
+							}
+							else
+							{
+								string[] array = text2.Split(new char[]
+								{
+									'.'
+								});
+								if (array == null || array.Length < 3)
+								{
+									result = false;
+								}
+								else
+								{
+									try
+									{
+										num2 = Convert.ToInt32(array[2]);
+									}
+									catch (Exception)
+									{
+										result = false;
+										return result;
+									}
+									result = (num > minor || (num == minor && num2 >= build));
+								}
+							}
+						}
 					}
 				}
 			}
-			if (num < 0)
-			{
-				return false;
-			}
-			RegistryKey registryKey2 = registryKey.OpenSubKey(string.Format("11.{0}\\RuntimeDebug", num));
-			if (registryKey2 == null)
-			{
-				return false;
-			}
-			string text2 = registryKey2.GetValue("Version", null) as string;
-			if (text2 == null)
-			{
-				return false;
-			}
-			string[] array = text2.Split(new char[]
-			{
-				'.'
-			});
-			if (array == null || array.Length < 3)
-			{
-				return false;
-			}
-			try
-			{
-				num2 = Convert.ToInt32(array[2]);
-			}
-			catch (Exception)
-			{
-				return false;
-			}
-			return num > minor || (num == minor && num2 >= build);
+			return result;
 		}
 	}
 }

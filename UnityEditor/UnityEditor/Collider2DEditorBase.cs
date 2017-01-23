@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
@@ -10,6 +11,8 @@ namespace UnityEditor
 		private SerializedProperty m_Density;
 
 		private readonly AnimBool m_ShowDensity = new AnimBool();
+
+		private readonly AnimBool m_ShowInfo = new AnimBool();
 
 		private SerializedProperty m_Material;
 
@@ -23,9 +26,9 @@ namespace UnityEditor
 		{
 			base.OnEnable();
 			this.m_Density = base.serializedObject.FindProperty("m_Density");
-			Collider2D collider2D = this.target as Collider2D;
-			this.m_ShowDensity.value = (collider2D.attachedRigidbody && collider2D.attachedRigidbody.useAutoMass);
+			this.m_ShowDensity.value = this.ShouldShowDensity();
 			this.m_ShowDensity.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ShowInfo.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_Material = base.serializedObject.FindProperty("m_Material");
 			this.m_IsTrigger = base.serializedObject.FindProperty("m_IsTrigger");
 			this.m_UsedByEffector = base.serializedObject.FindProperty("m_UsedByEffector");
@@ -35,14 +38,14 @@ namespace UnityEditor
 		public override void OnDisable()
 		{
 			this.m_ShowDensity.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+			this.m_ShowInfo.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			base.OnDisable();
 		}
 
 		public override void OnInspectorGUI()
 		{
-			Collider2D collider2D = this.target as Collider2D;
 			base.serializedObject.Update();
-			this.m_ShowDensity.target = (collider2D.attachedRigidbody && collider2D.attachedRigidbody.useAutoMass);
+			this.m_ShowDensity.target = this.ShouldShowDensity();
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowDensity.faded))
 			{
 				EditorGUILayout.PropertyField(this.m_Density, new GUILayoutOption[0]);
@@ -55,10 +58,55 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Offset, new GUILayoutOption[0]);
 		}
 
-		public void CheckAllErrorsAndWarnings()
+		public void FinalizeInspectorGUI()
 		{
+			this.ShowColliderInfoProperties();
 			this.CheckColliderErrorState();
-			Effector2DEditor.CheckEffectorWarnings(this.target as Collider2D);
+			Effector2DEditor.CheckEffectorWarnings(base.target as Collider2D);
+		}
+
+		private void ShowColliderInfoProperties()
+		{
+			this.m_ShowInfo.target = EditorGUILayout.Foldout(this.m_ShowInfo.target, "Info", true);
+			if (EditorGUILayout.BeginFadeGroup(this.m_ShowInfo.faded))
+			{
+				if (base.targets.Length == 1)
+				{
+					Collider2D collider2D = base.targets[0] as Collider2D;
+					EditorGUI.BeginDisabledGroup(true);
+					EditorGUILayout.ObjectField("Attached Body", collider2D.attachedRigidbody, typeof(Rigidbody2D), false, new GUILayoutOption[0]);
+					EditorGUILayout.FloatField("Friction", collider2D.friction, new GUILayoutOption[0]);
+					EditorGUILayout.FloatField("Bounciness", collider2D.bounciness, new GUILayoutOption[0]);
+					EditorGUILayout.FloatField("Shape Count", (float)collider2D.shapeCount, new GUILayoutOption[0]);
+					if (collider2D.isActiveAndEnabled)
+					{
+						EditorGUILayout.BoundsField("Bounds", collider2D.bounds, new GUILayoutOption[0]);
+					}
+					EditorGUI.EndDisabledGroup();
+					base.Repaint();
+				}
+				else
+				{
+					EditorGUILayout.HelpBox("Cannot show Info properties when multiple colliders are selected.", MessageType.Info);
+				}
+			}
+			EditorGUILayout.EndFadeGroup();
+		}
+
+		private bool ShouldShowDensity()
+		{
+			bool result;
+			if ((from x in base.targets
+			select (x as Collider2D).attachedRigidbody).Distinct<Rigidbody2D>().Count<Rigidbody2D>() > 1)
+			{
+				result = false;
+			}
+			else
+			{
+				Rigidbody2D attachedRigidbody = (base.target as Collider2D).attachedRigidbody;
+				result = (attachedRigidbody && attachedRigidbody.useAutoMass && attachedRigidbody.bodyType == RigidbodyType2D.Dynamic);
+			}
+			return result;
 		}
 
 		internal override void OnForceReloadInspector()
@@ -72,7 +120,7 @@ namespace UnityEditor
 
 		protected void CheckColliderErrorState()
 		{
-			ColliderErrorState2D errorState = (this.target as Collider2D).errorState;
+			ColliderErrorState2D errorState = (base.target as Collider2D).errorState;
 			if (errorState != ColliderErrorState2D.NoShapes)
 			{
 				if (errorState == ColliderErrorState2D.RemovedShapes)

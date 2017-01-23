@@ -125,22 +125,27 @@ namespace UnityEngine
 
 		public override bool Equals(object other)
 		{
+			bool result;
 			if (!(other is BoneWeight))
 			{
-				return false;
-			}
-			BoneWeight boneWeight = (BoneWeight)other;
-			bool arg_CC_0;
-			if (this.boneIndex0.Equals(boneWeight.boneIndex0) && this.boneIndex1.Equals(boneWeight.boneIndex1) && this.boneIndex2.Equals(boneWeight.boneIndex2) && this.boneIndex3.Equals(boneWeight.boneIndex3))
-			{
-				Vector4 vector = new Vector4(this.weight0, this.weight1, this.weight2, this.weight3);
-				arg_CC_0 = vector.Equals(new Vector4(boneWeight.weight0, boneWeight.weight1, boneWeight.weight2, boneWeight.weight3));
+				result = false;
 			}
 			else
 			{
-				arg_CC_0 = false;
+				BoneWeight boneWeight = (BoneWeight)other;
+				bool arg_D9_0;
+				if (this.boneIndex0.Equals(boneWeight.boneIndex0) && this.boneIndex1.Equals(boneWeight.boneIndex1) && this.boneIndex2.Equals(boneWeight.boneIndex2) && this.boneIndex3.Equals(boneWeight.boneIndex3))
+				{
+					Vector4 vector = new Vector4(this.weight0, this.weight1, this.weight2, this.weight3);
+					arg_D9_0 = vector.Equals(new Vector4(boneWeight.weight0, boneWeight.weight1, boneWeight.weight2, boneWeight.weight3));
+				}
+				else
+				{
+					arg_D9_0 = false;
+				}
+				result = arg_D9_0;
 			}
-			return arg_CC_0;
+			return result;
 		}
 
 		public static bool operator ==(BoneWeight lhs, BoneWeight rhs)

@@ -13,30 +13,24 @@ namespace UnityEditor.Animations
 
 		public extern ChildAnimatorState[] states
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern ChildAnimatorStateMachine[] stateMachines
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AnimatorState defaultState
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -99,37 +93,30 @@ namespace UnityEditor.Animations
 
 		public extern AnimatorStateTransition[] anyStateTransitions
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AnimatorTransition[] entryTransitions
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern StateMachineBehaviour[] behaviours
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal extern int transitionCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -218,63 +205,48 @@ namespace UnityEditor.Animations
 			AnimatorStateMachine.Internal_Create(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorStateMachine mono);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anyStatePosition(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anyStatePosition(ref Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_entryPosition(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_entryPosition(ref Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_exitPosition(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_exitPosition(ref Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_parentStateMachinePosition(out Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_parentStateMachinePosition(ref Vector3 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AnimatorTransition[] GetStateMachineTransitions(AnimatorStateMachine sourceStateMachine);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetStateMachineTransitions(AnimatorStateMachine sourceStateMachine, AnimatorTransition[] transitions);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddBehaviour(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveBehaviour(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern MonoScript GetBehaviourMonoScript(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern ScriptableObject Internal_AddStateMachineBehaviourWithType(Type stateMachineBehaviourType);
 
@@ -289,53 +261,47 @@ namespace UnityEditor.Animations
 			return this.AddStateMachineBehaviour(typeof(T)) as T;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string MakeUniqueStateName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string MakeUniqueStateMachineName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void Clear();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveStateInternal(AnimatorState state);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveStateMachineInternal(AnimatorStateMachine stateMachine);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void MoveState(AnimatorState state, AnimatorStateMachine target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void MoveStateMachine(AnimatorStateMachine stateMachine, AnimatorStateMachine target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool HasState(AnimatorState state, bool recursive);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool HasStateMachine(AnimatorStateMachine state, bool recursive);
 
 		internal Vector3 GetStatePosition(AnimatorState state)
 		{
 			ChildAnimatorState[] states = this.states;
+			Vector3 result;
 			for (int i = 0; i < states.Length; i++)
 			{
 				if (state == states[i].state)
 				{
-					return states[i].position;
+					result = states[i].position;
+					return result;
 				}
 			}
-			return Vector3.zero;
+			result = Vector3.zero;
+			return result;
 		}
 
 		internal void SetStatePosition(AnimatorState state, Vector3 position)
@@ -347,7 +313,7 @@ namespace UnityEditor.Animations
 				{
 					states[i].position = position;
 					this.states = states;
-					return;
+					break;
 				}
 			}
 		}
@@ -355,14 +321,17 @@ namespace UnityEditor.Animations
 		internal Vector3 GetStateMachinePosition(AnimatorStateMachine stateMachine)
 		{
 			ChildAnimatorStateMachine[] stateMachines = this.stateMachines;
+			Vector3 result;
 			for (int i = 0; i < stateMachines.Length; i++)
 			{
 				if (stateMachine == stateMachines[i].stateMachine)
 				{
-					return stateMachines[i].position;
+					result = stateMachines[i].position;
+					return result;
 				}
 			}
-			return Vector3.zero;
+			result = Vector3.zero;
+			return result;
 		}
 
 		internal void SetStateMachinePosition(AnimatorStateMachine stateMachine, Vector3 position)
@@ -374,7 +343,7 @@ namespace UnityEditor.Animations
 				{
 					stateMachines[i].position = position;
 					this.stateMachines = stateMachines;
-					return;
+					break;
 				}
 			}
 		}
@@ -389,7 +358,7 @@ namespace UnityEditor.Animations
 			AnimatorState animatorState = new AnimatorState();
 			animatorState.hideFlags = HideFlags.HideInHierarchy;
 			animatorState.name = this.MakeUniqueStateName(name);
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorState, AssetDatabase.GetAssetPath(this));
 			}
@@ -426,7 +395,7 @@ namespace UnityEditor.Animations
 			animatorStateMachine.hideFlags = HideFlags.HideInHierarchy;
 			animatorStateMachine.name = this.MakeUniqueStateMachineName(name);
 			this.AddStateMachine(animatorStateMachine, position);
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorStateMachine, AssetDatabase.GetAssetPath(this));
 			}
@@ -458,7 +427,7 @@ namespace UnityEditor.Animations
 			AnimatorStateTransition animatorStateTransition = new AnimatorStateTransition();
 			animatorStateTransition.hasExitTime = false;
 			animatorStateTransition.hasFixedDuration = true;
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorStateTransition, AssetDatabase.GetAssetPath(this));
 			}
@@ -484,6 +453,7 @@ namespace UnityEditor.Animations
 
 		public bool RemoveAnyStateTransition(AnimatorStateTransition transition)
 		{
+			bool result;
 			if (new List<AnimatorStateTransition>(this.anyStateTransitions).Any((AnimatorStateTransition t) => t == transition))
 			{
 				this.undoHandler.DoUndo(this, "AnyState Transition Removed");
@@ -494,23 +464,26 @@ namespace UnityEditor.Animations
 				{
 					Undo.DestroyObjectImmediate(transition);
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		internal void RemoveAnyStateTransitionRecursive(AnimatorStateTransition transition)
 		{
-			if (this.RemoveAnyStateTransition(transition))
+			if (!this.RemoveAnyStateTransition(transition))
 			{
-				return;
-			}
-			List<ChildAnimatorStateMachine> stateMachinesRecursive = this.stateMachinesRecursive;
-			foreach (ChildAnimatorStateMachine current in stateMachinesRecursive)
-			{
-				if (current.stateMachine.RemoveAnyStateTransition(transition))
+				List<ChildAnimatorStateMachine> stateMachinesRecursive = this.stateMachinesRecursive;
+				foreach (ChildAnimatorStateMachine current in stateMachinesRecursive)
 				{
-					break;
+					if (current.stateMachine.RemoveAnyStateTransition(transition))
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -530,7 +503,7 @@ namespace UnityEditor.Animations
 			{
 				animatorTransition.destinationStateMachine = destinationStateMachine;
 			}
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorTransition, AssetDatabase.GetAssetPath(this));
 			}
@@ -573,7 +546,7 @@ namespace UnityEditor.Animations
 			this.undoHandler.DoUndo(this, "Entry Transition Added");
 			AnimatorTransition[] entryTransitions = this.entryTransitions;
 			AnimatorTransition animatorTransition = new AnimatorTransition();
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorTransition, AssetDatabase.GetAssetPath(this));
 			}
@@ -599,6 +572,7 @@ namespace UnityEditor.Animations
 
 		public bool RemoveEntryTransition(AnimatorTransition transition)
 		{
+			bool result;
 			if (new List<AnimatorTransition>(this.entryTransitions).Any((AnimatorTransition t) => t == transition))
 			{
 				this.undoHandler.DoUndo(this, "Entry Transition Removed");
@@ -609,9 +583,13 @@ namespace UnityEditor.Animations
 				{
 					Undo.DestroyObjectImmediate(transition);
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		internal ChildAnimatorState FindState(int nameHash)
@@ -646,16 +624,21 @@ namespace UnityEditor.Animations
 
 		internal AnimatorStateMachine FindParent(AnimatorStateMachine stateMachine)
 		{
+			AnimatorStateMachine result;
 			if (this.stateMachines.Any((ChildAnimatorStateMachine childSM) => childSM.stateMachine == stateMachine))
 			{
-				return this;
+				result = this;
 			}
-			return this.stateMachinesRecursive.Find((ChildAnimatorStateMachine sm) => sm.stateMachine.stateMachines.Any((ChildAnimatorStateMachine childSM) => childSM.stateMachine == stateMachine)).stateMachine;
+			else
+			{
+				result = this.stateMachinesRecursive.Find((ChildAnimatorStateMachine sm) => sm.stateMachine.stateMachines.Any((ChildAnimatorStateMachine childSM) => childSM.stateMachine == stateMachine)).stateMachine;
+			}
+			return result;
 		}
 
 		internal AnimatorStateMachine FindStateMachine(string path)
 		{
-			AnimatorStateMachine.<FindStateMachine>c__AnonStorey23 <FindStateMachine>c__AnonStorey = new AnimatorStateMachine.<FindStateMachine>c__AnonStorey23();
+			AnimatorStateMachine.<FindStateMachine>c__AnonStorey9 <FindStateMachine>c__AnonStorey = new AnimatorStateMachine.<FindStateMachine>c__AnonStorey9();
 			<FindStateMachine>c__AnonStorey.smNames = path.Split(new char[]
 			{
 				'.'
@@ -673,13 +656,18 @@ namespace UnityEditor.Animations
 
 		internal AnimatorStateMachine FindStateMachine(AnimatorState state)
 		{
+			AnimatorStateMachine result;
 			if (this.HasState(state, false))
 			{
-				return this;
+				result = this;
 			}
-			List<ChildAnimatorStateMachine> stateMachinesRecursive = this.stateMachinesRecursive;
-			int num = stateMachinesRecursive.FindIndex((ChildAnimatorStateMachine sm) => sm.stateMachine.HasState(state, false));
-			return (num < 0) ? null : stateMachinesRecursive[num].stateMachine;
+			else
+			{
+				List<ChildAnimatorStateMachine> stateMachinesRecursive = this.stateMachinesRecursive;
+				int num = stateMachinesRecursive.FindIndex((ChildAnimatorStateMachine sm) => sm.stateMachine.HasState(state, false));
+				result = ((num < 0) ? null : stateMachinesRecursive[num].stateMachine);
+			}
+			return result;
 		}
 
 		internal AnimatorStateTransition FindTransition(AnimatorState destinationState)

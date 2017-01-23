@@ -195,7 +195,7 @@ namespace UnityEditor
 			}
 		}
 
-		private bool m_SecondaryUVAdvancedOptions;
+		private bool m_SecondaryUVAdvancedOptions = false;
 
 		private bool m_ShowAllMaterialNameOptions = true;
 
@@ -318,7 +318,7 @@ namespace UnityEditor
 			if (this.m_GenerateSecondaryUV.boolValue)
 			{
 				EditorGUI.indentLevel++;
-				this.m_SecondaryUVAdvancedOptions = EditorGUILayout.Foldout(this.m_SecondaryUVAdvancedOptions, ModelImporterModelEditor.styles.GenerateSecondaryUVAdvanced, EditorStyles.foldout);
+				this.m_SecondaryUVAdvancedOptions = EditorGUILayout.Foldout(this.m_SecondaryUVAdvancedOptions, ModelImporterModelEditor.styles.GenerateSecondaryUVAdvanced, true, EditorStyles.foldout);
 				if (this.m_SecondaryUVAdvancedOptions)
 				{
 					EditorGUI.BeginChangeCheck();
@@ -428,28 +428,26 @@ namespace UnityEditor
 
 		private void ScaleAvatar()
 		{
-			if (this.m_GlobalScale.hasMultipleDifferentValues)
+			if (!this.m_GlobalScale.hasMultipleDifferentValues)
 			{
-				return;
-			}
-			if (base.targets.Length != 1)
-			{
-				return;
-			}
-			UnityEngine.Object[] targets = base.targets;
-			for (int i = 0; i < targets.Length; i++)
-			{
-				object obj = targets[i];
-				float globalScale = (obj as ModelImporter).globalScale;
-				float floatValue = this.m_GlobalScale.floatValue;
-				if (globalScale != floatValue && floatValue != 0f && globalScale != 0f)
+				if (base.targets.Length == 1)
 				{
-					float d = floatValue / globalScale;
-					SerializedProperty serializedProperty = base.serializedObject.FindProperty(AvatarSetupTool.sSkeleton);
-					for (int j = 0; j < serializedProperty.arraySize; j++)
+					UnityEngine.Object[] targets = base.targets;
+					for (int i = 0; i < targets.Length; i++)
 					{
-						SerializedProperty arrayElementAtIndex = serializedProperty.GetArrayElementAtIndex(j);
-						arrayElementAtIndex.FindPropertyRelative(AvatarSetupTool.sPosition).vector3Value = arrayElementAtIndex.FindPropertyRelative(AvatarSetupTool.sPosition).vector3Value * d;
+						object obj = targets[i];
+						float globalScale = (obj as ModelImporter).globalScale;
+						float floatValue = this.m_GlobalScale.floatValue;
+						if (globalScale != floatValue && floatValue != 0f && globalScale != 0f)
+						{
+							float d = floatValue / globalScale;
+							SerializedProperty serializedProperty = base.serializedObject.FindProperty(AvatarSetupTool.sSkeleton);
+							for (int j = 0; j < serializedProperty.arraySize; j++)
+							{
+								SerializedProperty arrayElementAtIndex = serializedProperty.GetArrayElementAtIndex(j);
+								arrayElementAtIndex.FindPropertyRelative(AvatarSetupTool.sPosition).vector3Value = arrayElementAtIndex.FindPropertyRelative(AvatarSetupTool.sPosition).vector3Value * d;
+							}
+						}
 					}
 				}
 			}

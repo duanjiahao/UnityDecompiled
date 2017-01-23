@@ -8,13 +8,13 @@ namespace UnityEditor
 {
 	internal class AboutWindow : EditorWindow
 	{
-		private const string kSpecialThanksNames = "Thanks to Forest 'Yoggy' Johnson, Graham McAllister, David Janik-Jones, Raimund Schumacher, Alan J. Dickins and Emil 'Humus' Persson";
-
 		private static GUIContent s_MonoLogo;
 
 		private static GUIContent s_AgeiaLogo;
 
 		private static GUIContent s_Header;
+
+		private const string kSpecialThanksNames = "Thanks to Forest 'Yoggy' Johnson, Graham McAllister, David Janik-Jones, Raimund Schumacher, Alan J. Dickins and Emil 'Humus' Persson";
 
 		private float m_TextYPos = 120f;
 
@@ -22,9 +22,9 @@ namespace UnityEditor
 
 		private float m_TotalCreditsHeight = float.PositiveInfinity;
 
-		private double m_LastScrollUpdate;
+		private double m_LastScrollUpdate = 0.0;
 
-		private bool m_ShowDetailedVersion;
+		private bool m_ShowDetailedVersion = false;
 
 		private int m_InternalCodeProgress;
 
@@ -37,13 +37,12 @@ namespace UnityEditor
 
 		private static void LoadLogos()
 		{
-			if (AboutWindow.s_MonoLogo != null)
+			if (AboutWindow.s_MonoLogo == null)
 			{
-				return;
+				AboutWindow.s_MonoLogo = EditorGUIUtility.IconContent("MonoLogo");
+				AboutWindow.s_AgeiaLogo = EditorGUIUtility.IconContent("AgeiaLogo");
+				AboutWindow.s_Header = EditorGUIUtility.IconContent("AboutWindow.MainHeader");
 			}
-			AboutWindow.s_MonoLogo = EditorGUIUtility.IconContent("MonoLogo");
-			AboutWindow.s_AgeiaLogo = EditorGUIUtility.IconContent("AgeiaLogo");
-			AboutWindow.s_Header = EditorGUIUtility.IconContent("AboutWindow.MainHeader");
 		}
 
 		public void OnEnable()
@@ -79,7 +78,7 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			GUILayout.Label(AboutWindow.s_Header, GUIStyle.none, new GUILayoutOption[0]);
 			this.ListenForSecretCodes();
-			string text = string.Empty;
+			string text = "";
 			if (InternalEditorUtility.HasFreeLicense())
 			{
 				text = " Personal";
@@ -97,7 +96,7 @@ namespace UnityEditor
 				int unityVersionDate = InternalEditorUtility.GetUnityVersionDate();
 				DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 				string unityBuildBranch = InternalEditorUtility.GetUnityBuildBranch();
-				string text3 = string.Empty;
+				string text3 = "";
 				if (unityBuildBranch.Length > 0)
 				{
 					text3 = "Branch: " + unityBuildBranch;
@@ -120,61 +119,60 @@ namespace UnityEditor
 			{
 				GUILayout.Label(string.Format("Version {0}{1}{2}", Application.unityVersion, text, text2), new GUILayoutOption[0]);
 			}
-			if (Event.current.type == EventType.ValidateCommand)
+			if (Event.current.type != EventType.ValidateCommand)
 			{
-				return;
+				GUILayout.EndHorizontal();
+				GUILayout.Space(4f);
+				GUILayout.EndVertical();
+				GUILayout.EndHorizontal();
+				GUILayout.FlexibleSpace();
+				float creditsWidth = base.position.width - 10f;
+				float num = this.m_TextYPos;
+				GUI.BeginGroup(GUILayoutUtility.GetRect(10f, this.m_TextInitialYPos));
+				string[] nameChunks = AboutWindowNames.nameChunks;
+				for (int i = 0; i < nameChunks.Length; i++)
+				{
+					string nameChunk = nameChunks[i];
+					num = AboutWindow.DoCreditsNameChunk(nameChunk, creditsWidth, num);
+				}
+				num = AboutWindow.DoCreditsNameChunk("Thanks to Forest 'Yoggy' Johnson, Graham McAllister, David Janik-Jones, Raimund Schumacher, Alan J. Dickins and Emil 'Humus' Persson", creditsWidth, num);
+				this.m_TotalCreditsHeight = num - this.m_TextYPos;
+				GUI.EndGroup();
+				GUILayout.FlexibleSpace();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Label(AboutWindow.s_MonoLogo, new GUILayoutOption[0]);
+				GUILayout.Label("Scripting powered by The Mono Project.\n\n(c) 2011 Novell, Inc.", "MiniLabel", new GUILayoutOption[]
+				{
+					GUILayout.Width(200f)
+				});
+				GUILayout.Label(AboutWindow.s_AgeiaLogo, new GUILayoutOption[0]);
+				GUILayout.Label("Physics powered by PhysX.\n\n(c) 2011 NVIDIA Corporation.", "MiniLabel", new GUILayoutOption[]
+				{
+					GUILayout.Width(200f)
+				});
+				GUILayout.EndHorizontal();
+				GUILayout.FlexibleSpace();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Space(5f);
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				string aboutWindowLabel = UnityVSSupport.GetAboutWindowLabel();
+				if (aboutWindowLabel.Length > 0)
+				{
+					GUILayout.Label(aboutWindowLabel, "MiniLabel", new GUILayoutOption[0]);
+				}
+				GUILayout.Label(InternalEditorUtility.GetUnityCopyright(), "MiniLabel", new GUILayoutOption[0]);
+				GUILayout.EndVertical();
+				GUILayout.Space(10f);
+				GUILayout.FlexibleSpace();
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				GUILayout.Label(InternalEditorUtility.GetLicenseInfo(), "AboutWindowLicenseLabel", new GUILayoutOption[0]);
+				GUILayout.EndVertical();
+				GUILayout.Space(5f);
+				GUILayout.EndHorizontal();
+				GUILayout.Space(5f);
 			}
-			GUILayout.EndHorizontal();
-			GUILayout.Space(4f);
-			GUILayout.EndVertical();
-			GUILayout.EndHorizontal();
-			GUILayout.FlexibleSpace();
-			float creditsWidth = base.position.width - 10f;
-			float num = this.m_TextYPos;
-			GUI.BeginGroup(GUILayoutUtility.GetRect(10f, this.m_TextInitialYPos));
-			string[] nameChunks = AboutWindowNames.nameChunks;
-			for (int i = 0; i < nameChunks.Length; i++)
-			{
-				string nameChunk = nameChunks[i];
-				num = AboutWindow.DoCreditsNameChunk(nameChunk, creditsWidth, num);
-			}
-			num = AboutWindow.DoCreditsNameChunk("Thanks to Forest 'Yoggy' Johnson, Graham McAllister, David Janik-Jones, Raimund Schumacher, Alan J. Dickins and Emil 'Humus' Persson", creditsWidth, num);
-			this.m_TotalCreditsHeight = num - this.m_TextYPos;
-			GUI.EndGroup();
-			GUILayout.FlexibleSpace();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Label(AboutWindow.s_MonoLogo, new GUILayoutOption[0]);
-			GUILayout.Label("Scripting powered by The Mono Project.\n\n(c) 2011 Novell, Inc.", "MiniLabel", new GUILayoutOption[]
-			{
-				GUILayout.Width(200f)
-			});
-			GUILayout.Label(AboutWindow.s_AgeiaLogo, new GUILayoutOption[0]);
-			GUILayout.Label("Physics powered by PhysX.\n\n(c) 2011 NVIDIA Corporation.", "MiniLabel", new GUILayoutOption[]
-			{
-				GUILayout.Width(200f)
-			});
-			GUILayout.EndHorizontal();
-			GUILayout.FlexibleSpace();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(5f);
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			string aboutWindowLabel = UnityVSSupport.GetAboutWindowLabel();
-			if (aboutWindowLabel.Length > 0)
-			{
-				GUILayout.Label(aboutWindowLabel, "MiniLabel", new GUILayoutOption[0]);
-			}
-			GUILayout.Label(InternalEditorUtility.GetUnityCopyright(), "MiniLabel", new GUILayoutOption[0]);
-			GUILayout.EndVertical();
-			GUILayout.Space(10f);
-			GUILayout.FlexibleSpace();
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			GUILayout.Label(InternalEditorUtility.GetLicenseInfo(), "AboutWindowLicenseLabel", new GUILayoutOption[0]);
-			GUILayout.EndVertical();
-			GUILayout.Space(5f);
-			GUILayout.EndHorizontal();
-			GUILayout.Space(5f);
 		}
 
 		private static float DoCreditsNameChunk(string nameChunk, float creditsWidth, float creditsChunkYOffset)
@@ -187,16 +185,15 @@ namespace UnityEditor
 
 		private void ListenForSecretCodes()
 		{
-			if (Event.current.type != EventType.KeyDown || Event.current.character == '\0')
+			if (Event.current.type == EventType.KeyDown && Event.current.character != '\0')
 			{
-				return;
-			}
-			if (this.SecretCodeHasBeenTyped("internal", ref this.m_InternalCodeProgress))
-			{
-				bool flag = !EditorPrefs.GetBool("InternalMode", false);
-				EditorPrefs.SetBool("InternalMode", flag);
-				base.ShowNotification(new GUIContent("Internal Mode " + ((!flag) ? "Off" : "On")));
-				InternalEditorUtility.RequestScriptReload();
+				if (this.SecretCodeHasBeenTyped("internal", ref this.m_InternalCodeProgress))
+				{
+					bool flag = !EditorPrefs.GetBool("InternalMode", false);
+					EditorPrefs.SetBool("InternalMode", flag);
+					base.ShowNotification(new GUIContent("Internal Mode " + ((!flag) ? "Off" : "On")));
+					InternalEditorUtility.RequestScriptReload();
+				}
 			}
 		}
 
@@ -206,25 +203,29 @@ namespace UnityEditor
 			{
 				characterProgress = 0;
 			}
+			bool result;
 			if (code[characterProgress] == Event.current.character)
 			{
 				characterProgress++;
 				if (characterProgress >= code.Length)
 				{
 					characterProgress = 0;
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private string FormatExtensionVersionString()
 		{
 			string text = EditorUserBuildSettings.selectedBuildTargetGroup.ToString();
 			string extensionVersion = ModuleManager.GetExtensionVersion(text);
+			string result;
 			if (!string.IsNullOrEmpty(extensionVersion))
 			{
-				return string.Concat(new string[]
+				result = string.Concat(new string[]
 				{
 					" [",
 					text,
@@ -233,7 +234,11 @@ namespace UnityEditor
 					"]"
 				});
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 	}
 }

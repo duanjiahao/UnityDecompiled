@@ -7,53 +7,55 @@ namespace UnityEditor
 {
 	public sealed class ObjectNames
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string NicifyVariableName(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetInspectorTitle(UnityEngine.Object obj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetClassName(UnityEngine.Object obj);
 
 		internal static string GetTypeName(UnityEngine.Object obj)
 		{
+			string result;
 			if (obj == null)
 			{
-				return "Object";
+				result = "Object";
 			}
-			string text = AssetDatabase.GetAssetPath(obj).ToLower();
-			if (text.EndsWith(".unity"))
+			else
 			{
-				return "Scene";
+				string text = AssetDatabase.GetAssetPath(obj).ToLower();
+				if (text.EndsWith(".unity"))
+				{
+					result = "Scene";
+				}
+				else if (text.EndsWith(".guiskin"))
+				{
+					result = "GUI Skin";
+				}
+				else if (Directory.Exists(AssetDatabase.GetAssetPath(obj)))
+				{
+					result = "Folder";
+				}
+				else if (obj.GetType() == typeof(UnityEngine.Object))
+				{
+					result = Path.GetExtension(text) + " File";
+				}
+				else
+				{
+					result = ObjectNames.GetClassName(obj);
+				}
 			}
-			if (text.EndsWith(".guiskin"))
-			{
-				return "GUI Skin";
-			}
-			if (Directory.Exists(AssetDatabase.GetAssetPath(obj)))
-			{
-				return "Folder";
-			}
-			if (obj.GetType() == typeof(UnityEngine.Object))
-			{
-				return Path.GetExtension(text) + " File";
-			}
-			return ObjectNames.GetClassName(obj);
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetDragAndDropTitle(UnityEngine.Object obj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetNameSmart(UnityEngine.Object obj, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetNameSmartWithInstanceID(int instanceID, string name);
 
@@ -68,5 +70,8 @@ namespace UnityEditor
 		{
 			return ObjectNames.GetInspectorTitle(obj);
 		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetUniqueName(string[] existingNames, string name);
 	}
 }

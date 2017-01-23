@@ -19,77 +19,83 @@ namespace UnityEditor
 
 		private const int kStandardHeight = 160;
 
+		private static GUIContent s_AssetStoreLogo;
+
+		private string m_Password = "";
+
+		private AssetStoreAsset m_Asset = null;
+
+		private string m_Message = "";
+
+		private AssetStoreInstaBuyWindow.PurchaseStatus m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.Init;
+
+		private double m_NextAllowedBuildRequestTime = 0.0;
+
 		private const double kBuildPollInterval = 2.0;
 
 		private const int kMaxPolls = 150;
 
-		private static GUIContent s_AssetStoreLogo;
+		private int m_BuildAttempts = 0;
 
-		private string m_Password = string.Empty;
+		private string m_PurchaseMessage = null;
 
-		private AssetStoreAsset m_Asset;
+		private string m_PaymentMethodCard = null;
 
-		private string m_Message = string.Empty;
+		private string m_PaymentMethodExpire = null;
 
-		private AssetStoreInstaBuyWindow.PurchaseStatus m_Purchasing;
-
-		private double m_NextAllowedBuildRequestTime;
-
-		private int m_BuildAttempts;
-
-		private string m_PurchaseMessage;
-
-		private string m_PaymentMethodCard;
-
-		private string m_PaymentMethodExpire;
-
-		private string m_PriceText;
+		private string m_PriceText = null;
 
 		public static AssetStoreInstaBuyWindow ShowAssetStoreInstaBuyWindow(AssetStoreAsset asset, string purchaseMessage, string paymentMethodCard, string paymentMethodExpire, string priceText)
 		{
 			AssetStoreInstaBuyWindow windowWithRect = EditorWindow.GetWindowWithRect<AssetStoreInstaBuyWindow>(new Rect(100f, 100f, 400f, 160f), true, "Buy package from Asset Store");
+			AssetStoreInstaBuyWindow result;
 			if (windowWithRect.m_Purchasing != AssetStoreInstaBuyWindow.PurchaseStatus.Init)
 			{
 				EditorUtility.DisplayDialog("Download in progress", "There is already a package download in progress. You can only have one download running at a time", "Close");
-				return windowWithRect;
+				result = windowWithRect;
 			}
-			windowWithRect.position = new Rect(100f, 100f, 400f, 160f);
-			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
-			windowWithRect.m_Asset = asset;
-			windowWithRect.m_Password = string.Empty;
-			windowWithRect.m_Message = string.Empty;
-			windowWithRect.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.Init;
-			windowWithRect.m_NextAllowedBuildRequestTime = 0.0;
-			windowWithRect.m_BuildAttempts = 0;
-			windowWithRect.m_PurchaseMessage = purchaseMessage;
-			windowWithRect.m_PaymentMethodCard = paymentMethodCard;
-			windowWithRect.m_PaymentMethodExpire = paymentMethodExpire;
-			windowWithRect.m_PriceText = priceText;
-			Analytics.Track(string.Format("/AssetStore/ShowInstaBuy/{0}/{1}", windowWithRect.m_Asset.packageID, windowWithRect.m_Asset.id));
-			return windowWithRect;
+			else
+			{
+				windowWithRect.position = new Rect(100f, 100f, 400f, 160f);
+				windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
+				windowWithRect.m_Asset = asset;
+				windowWithRect.m_Password = "";
+				windowWithRect.m_Message = "";
+				windowWithRect.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.Init;
+				windowWithRect.m_NextAllowedBuildRequestTime = 0.0;
+				windowWithRect.m_BuildAttempts = 0;
+				windowWithRect.m_PurchaseMessage = purchaseMessage;
+				windowWithRect.m_PaymentMethodCard = paymentMethodCard;
+				windowWithRect.m_PaymentMethodExpire = paymentMethodExpire;
+				windowWithRect.m_PriceText = priceText;
+				UsabilityAnalytics.Track(string.Format("/AssetStore/ShowInstaBuy/{0}/{1}", windowWithRect.m_Asset.packageID, windowWithRect.m_Asset.id));
+				result = windowWithRect;
+			}
+			return result;
 		}
 
 		public static void ShowAssetStoreInstaBuyWindowBuilding(AssetStoreAsset asset)
 		{
-			AssetStoreInstaBuyWindow assetStoreInstaBuyWindow = AssetStoreInstaBuyWindow.ShowAssetStoreInstaBuyWindow(asset, string.Empty, string.Empty, string.Empty, string.Empty);
+			AssetStoreInstaBuyWindow assetStoreInstaBuyWindow = AssetStoreInstaBuyWindow.ShowAssetStoreInstaBuyWindow(asset, "", "", "", "");
 			if (assetStoreInstaBuyWindow.m_Purchasing != AssetStoreInstaBuyWindow.PurchaseStatus.Init)
 			{
 				EditorUtility.DisplayDialog("Download in progress", "There is already a package download in progress. You can only have one download running at a time", "Close");
-				return;
 			}
-			assetStoreInstaBuyWindow.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild;
-			assetStoreInstaBuyWindow.m_BuildAttempts = 1;
-			asset.previewInfo.buildProgress = 0f;
-			Analytics.Track(string.Format("/AssetStore/ShowInstaFree/{0}/{1}", assetStoreInstaBuyWindow.m_Asset.packageID, assetStoreInstaBuyWindow.m_Asset.id));
+			else
+			{
+				assetStoreInstaBuyWindow.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild;
+				assetStoreInstaBuyWindow.m_BuildAttempts = 1;
+				asset.previewInfo.buildProgress = 0f;
+				UsabilityAnalytics.Track(string.Format("/AssetStore/ShowInstaFree/{0}/{1}", assetStoreInstaBuyWindow.m_Asset.packageID, assetStoreInstaBuyWindow.m_Asset.id));
+			}
 		}
 
 		private static void LoadLogos()
 		{
-			if (AssetStoreInstaBuyWindow.s_AssetStoreLogo != null)
+			if (AssetStoreInstaBuyWindow.s_AssetStoreLogo == null)
 			{
-				return;
+				AssetStoreInstaBuyWindow.s_AssetStoreLogo = EditorGUIUtility.IconContent("WelcomeScreen.AssetStoreLogo");
 			}
-			AssetStoreInstaBuyWindow.s_AssetStoreLogo = EditorGUIUtility.IconContent("WelcomeScreen.AssetStoreLogo");
 		}
 
 		public void OnInspectorUpdate()
@@ -121,55 +127,53 @@ namespace UnityEditor
 		public void OnDownloadProgress(string id, string message, int bytes, int total)
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = (this.m_Asset != null) ? this.m_Asset.previewInfo : null;
-			if (previewInfo == null || this.m_Asset.packageID.ToString() != id)
+			if (previewInfo != null && !(this.m_Asset.packageID.ToString() != id))
 			{
-				return;
+				if (message == "downloading" || message == "connecting")
+				{
+					previewInfo.downloadProgress = (float)bytes / (float)total;
+				}
+				else
+				{
+					previewInfo.downloadProgress = -1f;
+				}
+				base.Repaint();
 			}
-			if (message == "downloading" || message == "connecting")
-			{
-				previewInfo.downloadProgress = (float)bytes / (float)total;
-			}
-			else
-			{
-				previewInfo.downloadProgress = -1f;
-			}
-			base.Repaint();
 		}
 
 		public void OnGUI()
 		{
 			AssetStoreInstaBuyWindow.LoadLogos();
-			if (this.m_Asset == null)
+			if (this.m_Asset != null)
 			{
-				return;
-			}
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Space(10f);
-			switch (this.m_Purchasing)
-			{
-			case AssetStoreInstaBuyWindow.PurchaseStatus.Init:
-				this.PasswordGUI();
-				break;
-			case AssetStoreInstaBuyWindow.PurchaseStatus.InProgress:
-				if (this.m_Purchasing == AssetStoreInstaBuyWindow.PurchaseStatus.InProgress)
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				GUILayout.Space(10f);
+				switch (this.m_Purchasing)
 				{
-					GUI.enabled = false;
+				case AssetStoreInstaBuyWindow.PurchaseStatus.Init:
+					this.PasswordGUI();
+					break;
+				case AssetStoreInstaBuyWindow.PurchaseStatus.InProgress:
+					if (this.m_Purchasing == AssetStoreInstaBuyWindow.PurchaseStatus.InProgress)
+					{
+						GUI.enabled = false;
+					}
+					this.PasswordGUI();
+					break;
+				case AssetStoreInstaBuyWindow.PurchaseStatus.Declined:
+					this.PurchaseDeclinedGUI();
+					break;
+				case AssetStoreInstaBuyWindow.PurchaseStatus.Complete:
+					this.PurchaseSuccessGUI();
+					break;
+				case AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild:
+				case AssetStoreInstaBuyWindow.PurchaseStatus.Building:
+				case AssetStoreInstaBuyWindow.PurchaseStatus.Downloading:
+					this.DownloadingGUI();
+					break;
 				}
-				this.PasswordGUI();
-				break;
-			case AssetStoreInstaBuyWindow.PurchaseStatus.Declined:
-				this.PurchaseDeclinedGUI();
-				break;
-			case AssetStoreInstaBuyWindow.PurchaseStatus.Complete:
-				this.PurchaseSuccessGUI();
-				break;
-			case AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild:
-			case AssetStoreInstaBuyWindow.PurchaseStatus.Building:
-			case AssetStoreInstaBuyWindow.PurchaseStatus.Downloading:
-				this.DownloadingGUI();
-				break;
+				GUILayout.EndVertical();
 			}
-			GUILayout.EndVertical();
 		}
 
 		private void PasswordGUI()
@@ -183,8 +187,8 @@ namespace UnityEditor
 			});
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.Label("Complete purchase by entering your AssetStore password", EditorStyles.boldLabel, new GUILayoutOption[0]);
-			bool flag = this.m_PurchaseMessage != null && this.m_PurchaseMessage != string.Empty;
-			bool flag2 = this.m_Message != null && this.m_Message != string.Empty;
+			bool flag = this.m_PurchaseMessage != null && this.m_PurchaseMessage != "";
+			bool flag2 = this.m_Message != null && this.m_Message != "";
 			float num = (float)(160 + ((!flag) ? 0 : 20) + ((!flag2) ? 0 : 20));
 			if (num != base.position.height)
 			{
@@ -216,7 +220,7 @@ namespace UnityEditor
 			if (GUILayout.Button("Just put to basket...", new GUILayoutOption[0]))
 			{
 				AssetStore.Open(string.Format("content/{0}/basketpurchase", this.m_Asset.packageID));
-				Analytics.Track(string.Format("/AssetStore/PutToBasket/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/PutToBasket/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 				this.m_Asset = null;
 				base.Close();
 				GUIUtility.ExitGUI();
@@ -224,7 +228,7 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("Cancel", new GUILayoutOption[0]))
 			{
-				Analytics.Track(string.Format("/AssetStore/CancelInstaBuy/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/CancelInstaBuy/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 				this.m_Asset = null;
 				base.Close();
 				GUIUtility.ExitGUI();
@@ -251,7 +255,7 @@ namespace UnityEditor
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.Label("Purchase completed succesfully", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			GUILayout.Label("You will receive a receipt in your email soon.", new GUILayoutOption[0]);
-			bool flag = this.m_Message != null && this.m_Message != string.Empty;
+			bool flag = this.m_Message != null && this.m_Message != "";
 			float num = (float)(160 + ((!flag) ? 0 : 20));
 			if (num != base.position.height)
 			{
@@ -271,14 +275,14 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("Close", new GUILayoutOption[0]))
 			{
-				Analytics.Track(string.Format("/AssetStore/PurchaseOk/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/PurchaseOk/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 				this.m_Asset = null;
 				base.Close();
 			}
 			GUILayout.Space(5f);
 			if (GUILayout.Button("Import package", new GUILayoutOption[0]))
 			{
-				Analytics.Track(string.Format("/AssetStore/PurchaseOkImport/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/PurchaseOkImport/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 				this.m_BuildAttempts = 1;
 				this.m_Asset.previewInfo.buildProgress = 0f;
 				this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild;
@@ -336,7 +340,7 @@ namespace UnityEditor
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.Label("Purchase declined", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			GUILayout.Label("No money has been drawn from you credit card", new GUILayoutOption[0]);
-			bool flag = this.m_Message != null && this.m_Message != string.Empty;
+			bool flag = this.m_Message != null && this.m_Message != "";
 			float num = (float)(160 + ((!flag) ? 0 : 20));
 			if (num != base.position.height)
 			{
@@ -356,7 +360,7 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button("Close", new GUILayoutOption[0]))
 			{
-				Analytics.Track(string.Format("/AssetStore/DeclinedAbort/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/DeclinedAbort/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 				this.m_Asset = null;
 				base.Close();
 			}
@@ -364,7 +368,7 @@ namespace UnityEditor
 			if (GUILayout.Button("Put to basket", new GUILayoutOption[0]))
 			{
 				AssetStore.Open(string.Format("content/{0}/basketpurchase", this.m_Asset.packageID));
-				Analytics.Track(string.Format("/AssetStore/DeclinedPutToBasket/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/DeclinedPutToBasket/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 				this.m_Asset = null;
 				base.Close();
 			}
@@ -375,9 +379,9 @@ namespace UnityEditor
 
 		private void CompletePurchase()
 		{
-			this.m_Message = string.Empty;
+			this.m_Message = "";
 			string password = this.m_Password;
-			this.m_Password = string.Empty;
+			this.m_Password = "";
 			this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.InProgress;
 			AssetStoreClient.DirectPurchase(this.m_Asset.packageID, password, delegate(PurchaseResult result)
 			{
@@ -433,54 +437,56 @@ namespace UnityEditor
 					EditorUtility.DisplayDialog("Purchase failed", text + " This purchase has been cancelled.", "Add this item to basket", "Cancel");
 				}
 			});
-			Analytics.Track(string.Format("/AssetStore/InstaBuy/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
+			UsabilityAnalytics.Track(string.Format("/AssetStore/InstaBuy/{0}/{1}", this.m_Asset.packageID, this.m_Asset.id));
 		}
 
 		private void BuildPackage()
 		{
 			AssetStoreAsset.PreviewInfo previewInfo = this.m_Asset.previewInfo;
-			if (previewInfo == null)
+			if (previewInfo != null)
 			{
-				return;
-			}
-			if (this.m_BuildAttempts++ > 150)
-			{
-				EditorUtility.DisplayDialog("Building timed out", "Timed out during building of package", "Close");
-				base.Close();
-				return;
-			}
-			previewInfo.downloadProgress = -1f;
-			this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.Building;
-			AssetStoreClient.BuildPackage(this.m_Asset, delegate(BuildPackageResult result)
-			{
-				if (this == null)
+				if (this.m_BuildAttempts++ > 150)
 				{
-					return;
-				}
-				if (result.error != null)
-				{
-					Debug.Log(result.error);
-					if (EditorUtility.DisplayDialog("Error building package", "The server was unable to build the package. Please re-import.", "Ok"))
-					{
-						base.Close();
-					}
-					return;
-				}
-				if (this.m_Asset == null || this.m_Purchasing != AssetStoreInstaBuyWindow.PurchaseStatus.Building || result.packageID != this.m_Asset.packageID)
-				{
+					EditorUtility.DisplayDialog("Building timed out", "Timed out during building of package", "Close");
 					base.Close();
-				}
-				string packageUrl = result.asset.previewInfo.packageUrl;
-				if (packageUrl != null && packageUrl != string.Empty)
-				{
-					this.DownloadPackage();
 				}
 				else
 				{
-					this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild;
+					previewInfo.downloadProgress = -1f;
+					this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.Building;
+					AssetStoreClient.BuildPackage(this.m_Asset, delegate(BuildPackageResult result)
+					{
+						if (!(this == null))
+						{
+							if (result.error != null)
+							{
+								Debug.Log(result.error);
+								if (EditorUtility.DisplayDialog("Error building package", "The server was unable to build the package. Please re-import.", "Ok"))
+								{
+									base.Close();
+								}
+							}
+							else
+							{
+								if (this.m_Asset == null || this.m_Purchasing != AssetStoreInstaBuyWindow.PurchaseStatus.Building || result.packageID != this.m_Asset.packageID)
+								{
+									base.Close();
+								}
+								string packageUrl = result.asset.previewInfo.packageUrl;
+								if (packageUrl != null && packageUrl != "")
+								{
+									this.DownloadPackage();
+								}
+								else
+								{
+									this.m_Purchasing = AssetStoreInstaBuyWindow.PurchaseStatus.StartBuild;
+								}
+								base.Repaint();
+							}
+						}
+					});
 				}
-				base.Repaint();
-			});
+			}
 		}
 
 		private void DownloadPackage()
@@ -491,35 +497,36 @@ namespace UnityEditor
 			item.buildProgress = -1f;
 			AssetStoreContext.Download(this.m_Asset.packageID.ToString(), item.packageUrl, item.encryptionKey, item.packageName, item.publisherName, item.categoryName, delegate(string id, string status, int bytes, int total)
 			{
-				if (this == null)
+				if (!(this == null))
 				{
-					return;
-				}
-				item.downloadProgress = -1f;
-				if (status != "ok")
-				{
-					Debug.LogErrorFormat("Error downloading package {0} ({1})", new object[]
+					item.downloadProgress = -1f;
+					if (status != "ok")
 					{
-						item.packageName,
-						id
-					});
-					Debug.LogError(status);
-					this.Close();
-					return;
-				}
-				if (this.m_Asset == null || this.m_Purchasing != AssetStoreInstaBuyWindow.PurchaseStatus.Downloading || id != this.m_Asset.packageID.ToString())
-				{
-					this.Close();
-				}
-				if (!AssetStoreContext.OpenPackageInternal(id))
-				{
-					Debug.LogErrorFormat("Error importing package {0} ({1})", new object[]
+						Debug.LogErrorFormat("Error downloading package {0} ({1})", new object[]
+						{
+							item.packageName,
+							id
+						});
+						Debug.LogError(status);
+						this.Close();
+					}
+					else
 					{
-						item.packageName,
-						id
-					});
+						if (this.m_Asset == null || this.m_Purchasing != AssetStoreInstaBuyWindow.PurchaseStatus.Downloading || id != this.m_Asset.packageID.ToString())
+						{
+							this.Close();
+						}
+						if (!AssetStoreContext.OpenPackageInternal(id))
+						{
+							Debug.LogErrorFormat("Error importing package {0} ({1})", new object[]
+							{
+								item.packageName,
+								id
+							});
+						}
+						this.Close();
+					}
 				}
-				this.Close();
 			});
 		}
 	}

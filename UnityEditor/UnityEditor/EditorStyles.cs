@@ -117,6 +117,8 @@ namespace UnityEditor
 
 		private GUIStyle m_FoldoutSelected;
 
+		private GUIStyle m_IconButton;
+
 		private GUIStyle m_Tooltip;
 
 		private GUIStyle m_NotificationText;
@@ -612,6 +614,14 @@ namespace UnityEditor
 			}
 		}
 
+		internal static GUIStyle iconButton
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_IconButton;
+			}
+		}
+
 		internal static GUIStyle tooltip
 		{
 			get
@@ -755,18 +765,17 @@ namespace UnityEditor
 
 		internal static void UpdateSkinCache(int skinIndex)
 		{
-			if (GUIUtility.s_SkinMode == 0)
+			if (GUIUtility.s_SkinMode != 0)
 			{
-				return;
+				if (EditorStyles.s_CachedStyles[skinIndex] == null)
+				{
+					EditorStyles.s_CachedStyles[skinIndex] = new EditorStyles();
+					EditorStyles.s_CachedStyles[skinIndex].InitSharedStyles();
+				}
+				EditorStyles.s_Current = EditorStyles.s_CachedStyles[skinIndex];
+				EditorGUIUtility.s_FontIsBold = -1;
+				EditorGUIUtility.SetBoldDefaultFont(false);
 			}
-			if (EditorStyles.s_CachedStyles[skinIndex] == null)
-			{
-				EditorStyles.s_CachedStyles[skinIndex] = new EditorStyles();
-				EditorStyles.s_CachedStyles[skinIndex].InitSharedStyles();
-			}
-			EditorStyles.s_Current = EditorStyles.s_CachedStyles[skinIndex];
-			EditorGUIUtility.s_FontIsBold = -1;
-			EditorGUIUtility.SetBoldDefaultFont(false);
 		}
 
 		private void InitSharedStyles()
@@ -833,6 +842,7 @@ namespace UnityEditor
 			this.m_ColorField = this.GetStyle("ColorField");
 			this.m_Foldout = this.GetStyle("Foldout");
 			this.m_FoldoutSelected = GUIStyle.none;
+			this.m_IconButton = this.GetStyle("IconButton");
 			this.m_TextFieldDropDown = this.GetStyle("TextFieldDropDown");
 			this.m_TextFieldDropDownText = this.GetStyle("TextFieldDropDownText");
 			this.m_LinkLabel = new GUIStyle(this.m_Label);

@@ -2,21 +2,28 @@ using System;
 
 namespace UnityEngine
 {
+	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 	public sealed class ContextMenu : Attribute
 	{
-		private string m_ItemName;
+		public readonly string menuItem;
 
-		public string menuItem
+		public readonly bool validate;
+
+		public readonly int priority;
+
+		public ContextMenu(string itemName) : this(itemName, false)
 		{
-			get
-			{
-				return this.m_ItemName;
-			}
 		}
 
-		public ContextMenu(string name)
+		public ContextMenu(string itemName, bool isValidateFunction) : this(itemName, isValidateFunction, 1000000)
 		{
-			this.m_ItemName = name;
+		}
+
+		public ContextMenu(string itemName, bool isValidateFunction, int priority)
+		{
+			this.menuItem = itemName;
+			this.validate = isValidateFunction;
+			this.priority = priority;
 		}
 	}
 }

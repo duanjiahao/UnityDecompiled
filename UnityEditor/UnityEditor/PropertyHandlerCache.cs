@@ -10,12 +10,17 @@ namespace UnityEditor
 		internal PropertyHandler GetHandler(SerializedProperty property)
 		{
 			int propertyHash = PropertyHandlerCache.GetPropertyHash(property);
+			PropertyHandler propertyHandler;
 			PropertyHandler result;
-			if (this.m_PropertyHandlers.TryGetValue(propertyHash, out result))
+			if (this.m_PropertyHandlers.TryGetValue(propertyHash, out propertyHandler))
 			{
-				return result;
+				result = propertyHandler;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		internal void SetHandler(SerializedProperty property, PropertyHandler handler)
@@ -26,16 +31,21 @@ namespace UnityEditor
 
 		private static int GetPropertyHash(SerializedProperty property)
 		{
+			int result;
 			if (property.serializedObject.targetObject == null)
 			{
-				return 0;
+				result = 0;
 			}
-			int num = property.serializedObject.targetObject.GetInstanceID() ^ property.hashCodeForPropertyPathWithoutArrayIndex;
-			if (property.propertyType == SerializedPropertyType.ObjectReference)
+			else
 			{
-				num ^= property.objectReferenceInstanceIDValue;
+				int num = property.serializedObject.targetObject.GetInstanceID() ^ property.hashCodeForPropertyPathWithoutArrayIndex;
+				if (property.propertyType == SerializedPropertyType.ObjectReference)
+				{
+					num ^= property.objectReferenceInstanceIDValue;
+				}
+				result = num;
 			}
-			return num;
+			return result;
 		}
 
 		public void Clear()

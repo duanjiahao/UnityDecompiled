@@ -16,19 +16,18 @@ namespace UnityEditor.Scripting.Compilers
 
 		protected ManagedProgram StartCompiler(BuildTarget target, string compiler, List<string> arguments)
 		{
-			return this.StartCompiler(target, compiler, arguments, true);
+			base.AddCustomResponseFileIfPresent(arguments, Path.GetFileNameWithoutExtension(compiler) + ".rsp");
+			return this.StartCompiler(target, compiler, arguments, true, MonoInstallationFinder.GetMonoInstallation());
 		}
 
-		protected ManagedProgram StartCompiler(BuildTarget target, string compiler, List<string> arguments, bool setMonoEnvironmentVariables)
+		protected ManagedProgram StartCompiler(BuildTarget target, string compiler, List<string> arguments, bool setMonoEnvironmentVariables, string monodistro)
 		{
-			base.AddCustomResponseFileIfPresent(arguments, Path.GetFileNameWithoutExtension(compiler) + ".rsp");
 			string text = CommandLineFormatter.GenerateResponseFile(arguments);
 			if (this.runUpdater)
 			{
 				APIUpdaterHelper.UpdateScripts(text, this._island.GetExtensionOfSourceFiles());
 			}
-			string monoInstallation = MonoInstallationFinder.GetMonoInstallation();
-			ManagedProgram managedProgram = new ManagedProgram(monoInstallation, this._island._classlib_profile, compiler, " @" + text, setMonoEnvironmentVariables, null);
+			ManagedProgram managedProgram = new ManagedProgram(monodistro, this._island._classlib_profile, compiler, " @" + text, setMonoEnvironmentVariables, null);
 			managedProgram.Start();
 			return managedProgram;
 		}

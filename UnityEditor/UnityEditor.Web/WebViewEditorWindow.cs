@@ -8,8 +8,6 @@ namespace UnityEditor.Web
 {
 	internal abstract class WebViewEditorWindow : EditorWindow, IHasCustomMenu
 	{
-		private const int k_RepaintTimerDelay = 30;
-
 		[SerializeField]
 		protected string m_InitialOpenURL;
 
@@ -23,6 +21,8 @@ namespace UnityEditor.Web
 		protected bool m_HasDelayedRefresh;
 
 		private Timer m_PostLoadTimer;
+
+		private const int k_RepaintTimerDelay = 30;
 
 		public string initialOpenUrl
 		{
@@ -51,7 +51,7 @@ namespace UnityEditor.Web
 		{
 			T t = ScriptableObject.CreateInstance<T>();
 			t.m_GlobalObjectTypeName = typeof(T).FullName;
-			WebViewEditorWindow.CreateWindowCommon<T>((T)((object)t), title, sourcesPath, minWidth, minHeight, maxWidth, maxHeight);
+			WebViewEditorWindow.CreateWindowCommon<T>(t, title, sourcesPath, minWidth, minHeight, maxWidth, maxHeight);
 			t.Show();
 			return t;
 		}
@@ -60,7 +60,7 @@ namespace UnityEditor.Web
 		{
 			T t = ScriptableObject.CreateInstance<T>();
 			t.m_GlobalObjectTypeName = typeof(T).FullName;
-			WebViewEditorWindow.CreateWindowCommon<T>((T)((object)t), title, sourcesPath, minWidth, minHeight, maxWidth, maxHeight);
+			WebViewEditorWindow.CreateWindowCommon<T>(t, title, sourcesPath, minWidth, minHeight, maxWidth, maxHeight);
 			t.ShowUtility();
 			return t;
 		}
@@ -68,7 +68,7 @@ namespace UnityEditor.Web
 		public static T CreateBase<T>(string title, string sourcesPath, int minWidth, int minHeight, int maxWidth, int maxHeight) where T : WebViewEditorWindow
 		{
 			T window = EditorWindow.GetWindow<T>(title);
-			WebViewEditorWindow.CreateWindowCommon<T>((T)((object)window), title, sourcesPath, minWidth, minHeight, maxWidth, maxHeight);
+			WebViewEditorWindow.CreateWindowCommon<T>(window, title, sourcesPath, minWidth, minHeight, maxWidth, maxHeight);
 			window.Show();
 			return window;
 		}
@@ -84,27 +84,24 @@ namespace UnityEditor.Web
 
 		public void Reload()
 		{
-			if (this.webView == null)
+			if (!(this.webView == null))
 			{
-				return;
+				this.webView.Reload();
 			}
-			this.webView.Reload();
 		}
 
 		public void About()
 		{
-			if (this.webView == null)
+			if (!(this.webView == null))
 			{
-				return;
+				this.webView.LoadURL("chrome://version");
 			}
-			this.webView.LoadURL("chrome://version");
 		}
 
 		public void OnLoadError(string url)
 		{
 			if (!this.webView)
 			{
-				return;
 			}
 		}
 
@@ -121,21 +118,35 @@ namespace UnityEditor.Web
 
 		public void OnGUI()
 		{
-			Rect webViewRect = GUIClip.Unclip(new Rect(0f, 0f, base.position.width, base.position.height));
-			if (Event.current.type == EventType.Repaint && this.m_HasDelayedRefresh)
+			Rect rect = GUIClip.Unclip(new Rect(0f, 0f, base.position.width, base.position.height));
+			GUILayout.BeginArea(rect);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.FlexibleSpace();
+			GUILayout.BeginVertical(new GUILayoutOption[0]);
+			GUILayout.FlexibleSpace();
+			GUILayout.Label("Loading...", EditorStyles.label, new GUILayoutOption[0]);
+			GUILayout.FlexibleSpace();
+			GUILayout.EndVertical();
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+			GUILayout.EndArea();
+			if (Event.current.type == EventType.Repaint)
 			{
-				this.Refresh();
-				this.m_HasDelayedRefresh = false;
+				if (this.m_HasDelayedRefresh)
+				{
+					this.Refresh();
+					this.m_HasDelayedRefresh = false;
+				}
 			}
 			if (this.m_InitialOpenURL != null)
 			{
 				if (!this.webView)
 				{
-					this.InitWebView(webViewRect);
+					this.InitWebView(rect);
 				}
 				if (Event.current.type == EventType.Repaint)
 				{
-					this.webView.SetSizeAndPosition((int)webViewRect.x, (int)webViewRect.y, (int)webViewRect.width, (int)webViewRect.height);
+					this.webView.SetSizeAndPosition((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 				}
 			}
 		}
@@ -143,20 +154,22 @@ namespace UnityEditor.Web
 		public void OnBatchMode()
 		{
 			Rect webViewRect = GUIClip.Unclip(new Rect(0f, 0f, base.position.width, base.position.height));
-			if (this.m_InitialOpenURL != null && !this.webView)
+			if (this.m_InitialOpenURL != null)
 			{
-				this.InitWebView(webViewRect);
+				if (!this.webView)
+				{
+					this.InitWebView(webViewRect);
+				}
 			}
 		}
 
 		public void Refresh()
 		{
-			if (this.webView == null)
+			if (!(this.webView == null))
 			{
-				return;
+				this.webView.Hide();
+				this.webView.Show();
 			}
-			this.webView.Hide();
-			this.webView.Show();
 		}
 
 		public void OnFocus()
@@ -176,11 +189,10 @@ namespace UnityEditor.Web
 
 		public void OnBecameInvisible()
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				this.webView.SetHostView(null);
 			}
-			this.webView.SetHostView(null);
 		}
 
 		public virtual void OnDestroy()
@@ -249,35 +261,32 @@ namespace UnityEditor.Web
 
 		protected void NotifyVisibility(bool visible)
 		{
-			if (this.webView == null)
+			if (!(this.webView == null))
 			{
-				return;
+				string text = "document.dispatchEvent(new CustomEvent('showWebView',{ detail: { visible:";
+				text += ((!visible) ? "false" : "true");
+				text += "}, bubbles: true, cancelable: false }));";
+				this.webView.ExecuteJavascript(text);
 			}
-			string text = "document.dispatchEvent(new CustomEvent('showWebView',{ detail: { visible:";
-			text += ((!visible) ? "false" : "true");
-			text += "}, bubbles: true, cancelable: false }));";
-			this.webView.ExecuteJavascript(text);
 		}
 
 		protected virtual void LoadPage()
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				this.NotifyVisibility(false);
+				this.LoadUri();
+				this.webView.Show();
 			}
-			this.NotifyVisibility(false);
-			this.LoadUri();
-			this.webView.Show();
 		}
 
 		protected void SetScriptObject()
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				this.CreateScriptObject();
+				this.webView.DefineScriptObject("window.webScriptObject", this.scriptObject);
 			}
-			this.CreateScriptObject();
-			this.webView.DefineScriptObject("window.webScriptObject", this.scriptObject);
 		}
 
 		private static void CreateWindowCommon<T>(T window, string title, string sourcesPath, int minWidth, int minHeight, int maxWidth, int maxHeight) where T : WebViewEditorWindow
@@ -291,75 +300,72 @@ namespace UnityEditor.Web
 
 		private void CreateScriptObject()
 		{
-			if (this.scriptObject != null)
+			if (!(this.scriptObject != null))
 			{
-				return;
+				this.scriptObject = ScriptableObject.CreateInstance<WebScriptObject>();
+				this.scriptObject.hideFlags = HideFlags.HideAndDontSave;
+				this.scriptObject.webView = this.webView;
 			}
-			this.scriptObject = ScriptableObject.CreateInstance<WebScriptObject>();
-			this.scriptObject.hideFlags = HideFlags.HideAndDontSave;
-			this.scriptObject.webView = this.webView;
 		}
 
 		private void InvokeJSMethod(string objectName, string name, params object[] args)
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.Append(objectName);
+				stringBuilder.Append('.');
+				stringBuilder.Append(name);
+				stringBuilder.Append('(');
+				bool flag = true;
+				for (int i = 0; i < args.Length; i++)
+				{
+					object obj = args[i];
+					if (!flag)
+					{
+						stringBuilder.Append(',');
+					}
+					bool flag2 = obj is string;
+					if (flag2)
+					{
+						stringBuilder.Append('"');
+					}
+					stringBuilder.Append(obj);
+					if (flag2)
+					{
+						stringBuilder.Append('"');
+					}
+					flag = false;
+				}
+				stringBuilder.Append(");");
+				this.webView.ExecuteJavascript(stringBuilder.ToString());
 			}
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(objectName);
-			stringBuilder.Append('.');
-			stringBuilder.Append(name);
-			stringBuilder.Append('(');
-			bool flag = true;
-			for (int i = 0; i < args.Length; i++)
-			{
-				object obj = args[i];
-				if (!flag)
-				{
-					stringBuilder.Append(',');
-				}
-				bool flag2 = obj is string;
-				if (flag2)
-				{
-					stringBuilder.Append('"');
-				}
-				stringBuilder.Append(obj);
-				if (flag2)
-				{
-					stringBuilder.Append('"');
-				}
-				flag = false;
-			}
-			stringBuilder.Append(");");
-			this.webView.ExecuteJavascript(stringBuilder.ToString());
 		}
 
 		private void SetFocus(bool value)
 		{
-			if (this.m_SyncingFocus)
+			if (!this.m_SyncingFocus)
 			{
-				return;
-			}
-			this.m_SyncingFocus = true;
-			if (this.webView != null)
-			{
-				if (value)
+				this.m_SyncingFocus = true;
+				if (this.webView != null)
 				{
-					this.webView.SetHostView(this.m_Parent);
-					if (Application.platform != RuntimePlatform.WindowsEditor)
+					if (value)
 					{
-						this.m_HasDelayedRefresh = true;
+						this.webView.SetHostView(this.m_Parent);
+						if (Application.platform != RuntimePlatform.WindowsEditor)
+						{
+							this.m_HasDelayedRefresh = true;
+						}
+						else
+						{
+							this.webView.Show();
+						}
 					}
-					else
-					{
-						this.webView.Show();
-					}
+					this.webView.SetApplicationFocus(this.m_Parent != null && this.m_Parent.hasFocus && base.hasFocus);
+					this.webView.SetFocus(value);
 				}
-				this.webView.SetApplicationFocus(this.m_Parent != null && this.m_Parent.hasFocus && base.hasFocus);
-				this.webView.SetFocus(value);
+				this.m_SyncingFocus = false;
 			}
-			this.m_SyncingFocus = false;
 		}
 	}
 }

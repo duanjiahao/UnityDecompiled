@@ -32,7 +32,7 @@ namespace UnityEngine.Assertions
 		{
 			return AssertionMessageUtil.GetMessage(UnityString.Format("Values are {0}equal.", new object[]
 			{
-				(!expectEqual) ? string.Empty : "not "
+				(!expectEqual) ? "" : "not "
 			}), UnityString.Format("{0} {2} {1}", new object[]
 			{
 				actual,
@@ -45,10 +45,10 @@ namespace UnityEngine.Assertions
 		{
 			return AssertionMessageUtil.GetMessage(UnityString.Format("Value was {0}Null", new object[]
 			{
-				(!expectNull) ? string.Empty : "not "
+				(!expectNull) ? "" : "not "
 			}), UnityString.Format("Value was {0}Null", new object[]
 			{
-				(!expectNull) ? "not " : string.Empty
+				(!expectNull) ? "not " : ""
 			}));
 		}
 

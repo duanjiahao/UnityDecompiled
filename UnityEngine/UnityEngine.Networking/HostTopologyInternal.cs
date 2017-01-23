@@ -20,7 +20,6 @@ namespace UnityEngine.Networking
 			this.InitOtherParameters(topology);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitWrapper(ConnectionConfigInternal config, int maxDefaultConnections);
 
@@ -29,7 +28,6 @@ namespace UnityEngine.Networking
 			return this.AddSpecialConnectionConfigWrapper(config);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int AddSpecialConnectionConfigWrapper(ConnectionConfigInternal config);
 
@@ -40,19 +38,16 @@ namespace UnityEngine.Networking
 			this.InitMessagePoolSizeGrowthFactor(topology.MessagePoolSizeGrowthFactor);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitReceivedPoolSize(ushort pool);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitSentMessagePoolSize(ushort pool);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitMessagePoolSizeGrowthFactor(float factor);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 

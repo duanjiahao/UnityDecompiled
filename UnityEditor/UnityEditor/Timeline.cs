@@ -79,7 +79,7 @@ namespace UnityEditor
 
 		private float m_Time = float.PositiveInfinity;
 
-		private float m_StartTime;
+		private float m_StartTime = 0f;
 
 		private float m_StopTime = 1f;
 
@@ -87,11 +87,11 @@ namespace UnityEditor
 
 		private string m_DstName = "Right";
 
-		private bool m_SrcLoop;
+		private bool m_SrcLoop = false;
 
-		private bool m_DstLoop;
+		private bool m_DstLoop = false;
 
-		private float m_SrcStartTime;
+		private float m_SrcStartTime = 0f;
 
 		private float m_SrcStopTime = 0.75f;
 
@@ -99,7 +99,7 @@ namespace UnityEditor
 
 		private float m_DstStopTime = 1f;
 
-		private bool m_HasExitTime;
+		private bool m_HasExitTime = false;
 
 		private float m_TransitionStartTime = float.PositiveInfinity;
 
@@ -107,13 +107,13 @@ namespace UnityEditor
 
 		private float m_SampleStopTime = float.PositiveInfinity;
 
-		private float m_DstDragOffset;
+		private float m_DstDragOffset = 0f;
 
-		private float m_LeftThumbOffset;
+		private float m_LeftThumbOffset = 0f;
 
-		private float m_RightThumbOffset;
+		private float m_RightThumbOffset = 0f;
 
-		private Timeline.DragStates m_DragState;
+		private Timeline.DragStates m_DragState = Timeline.DragStates.None;
 
 		private int id = -1;
 
@@ -395,44 +395,49 @@ namespace UnityEditor
 		private List<Vector3> GetControls(List<Vector3> segmentPoints, float scale)
 		{
 			List<Vector3> list = new List<Vector3>();
+			List<Vector3> result;
 			if (segmentPoints.Count < 2)
 			{
-				return list;
+				result = list;
 			}
-			for (int i = 0; i < segmentPoints.Count; i++)
+			else
 			{
-				if (i == 0)
+				for (int i = 0; i < segmentPoints.Count; i++)
 				{
-					Vector3 vector = segmentPoints[i];
-					Vector3 a = segmentPoints[i + 1];
-					Vector3 a2 = a - vector;
-					Vector3 item = vector + scale * a2;
-					list.Add(vector);
-					list.Add(item);
+					if (i == 0)
+					{
+						Vector3 vector = segmentPoints[i];
+						Vector3 a = segmentPoints[i + 1];
+						Vector3 a2 = a - vector;
+						Vector3 item = vector + scale * a2;
+						list.Add(vector);
+						list.Add(item);
+					}
+					else if (i == segmentPoints.Count - 1)
+					{
+						Vector3 b = segmentPoints[i - 1];
+						Vector3 vector2 = segmentPoints[i];
+						Vector3 a3 = vector2 - b;
+						Vector3 item2 = vector2 - scale * a3;
+						list.Add(item2);
+						list.Add(vector2);
+					}
+					else
+					{
+						Vector3 b2 = segmentPoints[i - 1];
+						Vector3 vector3 = segmentPoints[i];
+						Vector3 a4 = segmentPoints[i + 1];
+						Vector3 normalized = (a4 - b2).normalized;
+						Vector3 item3 = vector3 - scale * normalized * (vector3 - b2).magnitude;
+						Vector3 item4 = vector3 + scale * normalized * (a4 - vector3).magnitude;
+						list.Add(item3);
+						list.Add(vector3);
+						list.Add(item4);
+					}
 				}
-				else if (i == segmentPoints.Count - 1)
-				{
-					Vector3 b = segmentPoints[i - 1];
-					Vector3 vector2 = segmentPoints[i];
-					Vector3 a3 = vector2 - b;
-					Vector3 item2 = vector2 - scale * a3;
-					list.Add(item2);
-					list.Add(vector2);
-				}
-				else
-				{
-					Vector3 b2 = segmentPoints[i - 1];
-					Vector3 vector3 = segmentPoints[i];
-					Vector3 a4 = segmentPoints[i + 1];
-					Vector3 normalized = (a4 - b2).normalized;
-					Vector3 item3 = vector3 - scale * normalized * (vector3 - b2).magnitude;
-					Vector3 item4 = vector3 + scale * normalized * (a4 - vector3).magnitude;
-					list.Add(item3);
-					list.Add(vector3);
-					list.Add(item4);
-				}
+				result = list;
 			}
-			return list;
+			return result;
 		}
 
 		private Vector3 CalculatePoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
@@ -478,66 +483,71 @@ namespace UnityEditor
 
 		private Vector3[] GetPivotVectors(Timeline.PivotSample[] samples, float width, Rect rect, float height, bool loop)
 		{
+			Vector3[] result;
 			if (samples.Length == 0 || width < 0.33f)
 			{
-				return new Vector3[0];
+				result = new Vector3[0];
 			}
-			List<Vector3> list = new List<Vector3>();
-			for (int i = 0; i < samples.Length; i++)
+			else
 			{
-				Timeline.PivotSample pivotSample = samples[i];
-				Vector3 zero = Vector3.zero;
-				zero.x = this.m_TimeArea.TimeToPixel(pivotSample.m_Time, rect);
-				zero.y = height / 16f + pivotSample.m_Weight * 12f * height / 16f;
-				list.Add(zero);
-			}
-			if (loop && list[list.Count - 1].x <= rect.width)
-			{
-				float x = list[list.Count - 1].x;
-				int num = 0;
-				int num2 = 1;
-				List<Vector3> list2 = new List<Vector3>();
-				while (x < rect.width)
+				List<Vector3> list = new List<Vector3>();
+				for (int i = 0; i < samples.Length; i++)
 				{
-					if (num > list.Count - 1)
+					Timeline.PivotSample pivotSample = samples[i];
+					Vector3 zero = Vector3.zero;
+					zero.x = this.m_TimeArea.TimeToPixel(pivotSample.m_Time, rect);
+					zero.y = height / 16f + pivotSample.m_Weight * 12f * height / 16f;
+					list.Add(zero);
+				}
+				if (loop && list[list.Count - 1].x <= rect.width)
+				{
+					float x = list[list.Count - 1].x;
+					int num = 0;
+					int num2 = 1;
+					List<Vector3> list2 = new List<Vector3>();
+					while (x < rect.width)
 					{
-						num = 0;
-						num2++;
+						if (num > list.Count - 1)
+						{
+							num = 0;
+							num2++;
+						}
+						Vector3 item = list[num];
+						item.x += (float)num2 * width;
+						x = item.x;
+						list2.Add(item);
+						num++;
 					}
-					Vector3 item = list[num];
-					item.x += (float)num2 * width;
-					x = item.x;
-					list2.Add(item);
-					num++;
+					list.AddRange(list2);
 				}
-				list.AddRange(list2);
-			}
-			List<Vector3> controls = this.GetControls(list, 0.5f);
-			list.Clear();
-			for (int j = 0; j < controls.Count - 3; j += 3)
-			{
-				Vector3 p = controls[j];
-				Vector3 p2 = controls[j + 1];
-				Vector3 p3 = controls[j + 2];
-				Vector3 p4 = controls[j + 3];
-				if (j == 0)
+				List<Vector3> controls = this.GetControls(list, 0.5f);
+				list.Clear();
+				for (int j = 0; j < controls.Count - 3; j += 3)
 				{
-					list.Add(this.CalculatePoint(0f, p, p2, p3, p4));
+					Vector3 p = controls[j];
+					Vector3 p2 = controls[j + 1];
+					Vector3 p3 = controls[j + 2];
+					Vector3 p4 = controls[j + 3];
+					if (j == 0)
+					{
+						list.Add(this.CalculatePoint(0f, p, p2, p3, p4));
+					}
+					for (int k = 1; k <= 10; k++)
+					{
+						list.Add(this.CalculatePoint((float)k / 10f, p, p2, p3, p4));
+					}
 				}
-				for (int k = 1; k <= 10; k++)
-				{
-					list.Add(this.CalculatePoint((float)k / 10f, p, p2, p3, p4));
-				}
+				result = list.ToArray();
 			}
-			return list.ToArray();
+			return result;
 		}
 
 		private Vector3[] OffsetPivotVectors(Vector3[] vectors, float offset)
 		{
 			for (int i = 0; i < vectors.Length; i++)
 			{
-				int expr_0E_cp_1 = i;
-				vectors[expr_0E_cp_1].x = vectors[expr_0E_cp_1].x + offset;
+				int expr_0F_cp_1 = i;
+				vectors[expr_0F_cp_1].x = vectors[expr_0F_cp_1].x + offset;
 			}
 			return vectors;
 		}
@@ -659,113 +669,122 @@ namespace UnityEditor
 					this.m_RightThumbOffset = 0f;
 				}
 			}
-			if (current.type == EventType.MouseDown && rect.Contains(current.mousePosition))
+			if (current.type == EventType.MouseDown)
 			{
-				GUIUtility.hotControl = this.id;
-				GUIUtility.keyboardControl = this.id;
-				if (position7.Contains(current.mousePosition))
+				if (rect.Contains(current.mousePosition))
 				{
-					this.m_DragState = Timeline.DragStates.Playhead;
-				}
-				else if (rect2.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.Source;
-				}
-				else if (rect3.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.Destination;
-				}
-				else if (position5.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.LeftSelection;
-				}
-				else if (position6.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.RightSelection;
-				}
-				else if (position3.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.FullSelection;
-				}
-				else if (position.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.TimeArea;
-				}
-				else if (position2.Contains(current.mousePosition))
-				{
-					this.m_DragState = Timeline.DragStates.TimeArea;
-				}
-				else
-				{
-					this.m_DragState = Timeline.DragStates.None;
-				}
-				current.Use();
-			}
-			if (current.type == EventType.MouseDrag && GUIUtility.hotControl == this.id)
-			{
-				switch (this.m_DragState)
-				{
-				case Timeline.DragStates.LeftSelection:
-					if ((current.delta.x > 0f && current.mousePosition.x > num3) || (current.delta.x < 0f && current.mousePosition.x < num8))
+					GUIUtility.hotControl = this.id;
+					GUIUtility.keyboardControl = this.id;
+					if (position7.Contains(current.mousePosition))
 					{
-						this.m_LeftThumbOffset += current.delta.x;
+						this.m_DragState = Timeline.DragStates.Playhead;
 					}
-					this.EnforceConstraints();
-					break;
-				case Timeline.DragStates.RightSelection:
-					if ((current.delta.x > 0f && current.mousePosition.x > num7) || current.delta.x < 0f)
+					else if (rect2.Contains(current.mousePosition))
 					{
+						this.m_DragState = Timeline.DragStates.Source;
+					}
+					else if (rect3.Contains(current.mousePosition))
+					{
+						this.m_DragState = Timeline.DragStates.Destination;
+					}
+					else if (position5.Contains(current.mousePosition))
+					{
+						this.m_DragState = Timeline.DragStates.LeftSelection;
+					}
+					else if (position6.Contains(current.mousePosition))
+					{
+						this.m_DragState = Timeline.DragStates.RightSelection;
+					}
+					else if (position3.Contains(current.mousePosition))
+					{
+						this.m_DragState = Timeline.DragStates.FullSelection;
+					}
+					else if (position.Contains(current.mousePosition))
+					{
+						this.m_DragState = Timeline.DragStates.TimeArea;
+					}
+					else if (position2.Contains(current.mousePosition))
+					{
+						this.m_DragState = Timeline.DragStates.TimeArea;
+					}
+					else
+					{
+						this.m_DragState = Timeline.DragStates.None;
+					}
+					current.Use();
+				}
+			}
+			if (current.type == EventType.MouseDrag)
+			{
+				if (GUIUtility.hotControl == this.id)
+				{
+					switch (this.m_DragState)
+					{
+					case Timeline.DragStates.LeftSelection:
+						if ((current.delta.x > 0f && current.mousePosition.x > num3) || (current.delta.x < 0f && current.mousePosition.x < num8))
+						{
+							this.m_LeftThumbOffset += current.delta.x;
+						}
+						this.EnforceConstraints();
+						break;
+					case Timeline.DragStates.RightSelection:
+						if ((current.delta.x > 0f && current.mousePosition.x > num7) || current.delta.x < 0f)
+						{
+							this.m_RightThumbOffset += current.delta.x;
+						}
+						this.EnforceConstraints();
+						break;
+					case Timeline.DragStates.FullSelection:
 						this.m_RightThumbOffset += current.delta.x;
-					}
-					this.EnforceConstraints();
-					break;
-				case Timeline.DragStates.FullSelection:
-					this.m_RightThumbOffset += current.delta.x;
-					this.m_LeftThumbOffset += current.delta.x;
-					this.EnforceConstraints();
-					break;
-				case Timeline.DragStates.Destination:
-					this.m_DstDragOffset += current.delta.x;
-					this.EnforceConstraints();
-					break;
-				case Timeline.DragStates.Source:
-				{
-					TimeArea expr_499_cp_0 = this.m_TimeArea;
-					expr_499_cp_0.m_Translation.x = expr_499_cp_0.m_Translation.x + current.delta.x;
-					break;
-				}
-				case Timeline.DragStates.Playhead:
-					if ((current.delta.x > 0f && current.mousePosition.x > num3) || (current.delta.x < 0f && current.mousePosition.x <= this.m_TimeArea.TimeToPixel(this.SampleStopTime, rect)))
+						this.m_LeftThumbOffset += current.delta.x;
+						this.EnforceConstraints();
+						break;
+					case Timeline.DragStates.Destination:
+						this.m_DstDragOffset += current.delta.x;
+						this.EnforceConstraints();
+						break;
+					case Timeline.DragStates.Source:
 					{
-						this.Time = this.m_TimeArea.PixelToTime(num9 + current.delta.x, rect);
+						TimeArea expr_4A8_cp_0 = this.m_TimeArea;
+						expr_4A8_cp_0.m_Translation.x = expr_4A8_cp_0.m_Translation.x + current.delta.x;
+						break;
 					}
-					break;
-				case Timeline.DragStates.TimeArea:
-				{
-					TimeArea expr_4C4_cp_0 = this.m_TimeArea;
-					expr_4C4_cp_0.m_Translation.x = expr_4C4_cp_0.m_Translation.x + current.delta.x;
-					break;
+					case Timeline.DragStates.Playhead:
+						if ((current.delta.x > 0f && current.mousePosition.x > num3) || (current.delta.x < 0f && current.mousePosition.x <= this.m_TimeArea.TimeToPixel(this.SampleStopTime, rect)))
+						{
+							this.Time = this.m_TimeArea.PixelToTime(num9 + current.delta.x, rect);
+						}
+						break;
+					case Timeline.DragStates.TimeArea:
+					{
+						TimeArea expr_4D3_cp_0 = this.m_TimeArea;
+						expr_4D3_cp_0.m_Translation.x = expr_4D3_cp_0.m_Translation.x + current.delta.x;
+						break;
+					}
+					}
+					current.Use();
+					GUI.changed = true;
 				}
-				}
-				current.Use();
-				GUI.changed = true;
 			}
-			if (current.type == EventType.MouseUp && GUIUtility.hotControl == this.id)
+			if (current.type == EventType.MouseUp)
 			{
-				this.SrcStartTime = this.m_TimeArea.PixelToTime(num3, rect);
-				this.SrcStopTime = this.m_TimeArea.PixelToTime(num4, rect);
-				this.DstStartTime = this.m_TimeArea.PixelToTime(num5, rect);
-				this.DstStopTime = this.m_TimeArea.PixelToTime(num6, rect);
-				this.TransitionStartTime = this.m_TimeArea.PixelToTime(num7, rect);
-				this.TransitionStopTime = this.m_TimeArea.PixelToTime(num8, rect);
-				GUI.changed = true;
-				this.m_DragState = Timeline.DragStates.None;
-				result = this.WasDraggingData();
-				this.m_LeftThumbOffset = 0f;
-				this.m_RightThumbOffset = 0f;
-				this.m_DstDragOffset = 0f;
-				GUIUtility.hotControl = 0;
-				current.Use();
+				if (GUIUtility.hotControl == this.id)
+				{
+					this.SrcStartTime = this.m_TimeArea.PixelToTime(num3, rect);
+					this.SrcStopTime = this.m_TimeArea.PixelToTime(num4, rect);
+					this.DstStartTime = this.m_TimeArea.PixelToTime(num5, rect);
+					this.DstStopTime = this.m_TimeArea.PixelToTime(num6, rect);
+					this.TransitionStartTime = this.m_TimeArea.PixelToTime(num7, rect);
+					this.TransitionStopTime = this.m_TimeArea.PixelToTime(num8, rect);
+					GUI.changed = true;
+					this.m_DragState = Timeline.DragStates.None;
+					result = this.WasDraggingData();
+					this.m_LeftThumbOffset = 0f;
+					this.m_RightThumbOffset = 0f;
+					this.m_DstDragOffset = 0f;
+					GUIUtility.hotControl = 0;
+					current.Use();
+				}
 			}
 			GUI.Box(position, GUIContent.none, this.styles.header);
 			GUI.Box(position2, GUIContent.none, this.styles.background);

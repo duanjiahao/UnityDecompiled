@@ -27,7 +27,7 @@ namespace UnityEditor
 			base.OnInspectorGUI();
 			EditorGUILayout.PropertyField(this.m_Size, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
-			base.CheckAllErrorsAndWarnings();
+			base.FinalizeInspectorGUI();
 		}
 
 		public override void OnDisable()
@@ -38,18 +38,17 @@ namespace UnityEditor
 
 		public void OnSceneGUI()
 		{
-			if (!base.editingCollider)
+			if (base.editingCollider)
 			{
-				return;
-			}
-			BoxCollider2D boxCollider2D = (BoxCollider2D)this.target;
-			Vector3 v = boxCollider2D.offset;
-			Vector3 v2 = boxCollider2D.size;
-			if (this.m_BoxEditor.OnSceneGUI(boxCollider2D.transform, Handles.s_ColliderHandleColor, ref v, ref v2))
-			{
-				Undo.RecordObject(boxCollider2D, "Modify collider");
-				boxCollider2D.offset = v;
-				boxCollider2D.size = v2;
+				BoxCollider2D boxCollider2D = (BoxCollider2D)base.target;
+				Vector3 v = boxCollider2D.offset;
+				Vector3 v2 = boxCollider2D.size;
+				if (this.m_BoxEditor.OnSceneGUI(boxCollider2D.transform, Handles.s_ColliderHandleColor, ref v, ref v2))
+				{
+					Undo.RecordObject(boxCollider2D, "Modify collider");
+					boxCollider2D.offset = v;
+					boxCollider2D.size = v2;
+				}
 			}
 		}
 	}

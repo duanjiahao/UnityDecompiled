@@ -57,7 +57,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Collider ColliderFromInstanceId(int instanceID);
 	}

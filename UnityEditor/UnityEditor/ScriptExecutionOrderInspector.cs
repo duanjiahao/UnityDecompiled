@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEditor.VersionControl;
 using UnityEngine;
 
@@ -19,17 +20,25 @@ namespace UnityEditor
 
 			public int Compare(MonoScript x, MonoScript y)
 			{
-				if (!(x != null) || !(y != null))
+				int result;
+				if (x != null && y != null)
 				{
-					return -1;
+					int executionOrder = this.inspector.GetExecutionOrder(x);
+					int executionOrder2 = this.inspector.GetExecutionOrder(y);
+					if (executionOrder == executionOrder2)
+					{
+						result = x.name.CompareTo(y.name);
+					}
+					else
+					{
+						result = executionOrder.CompareTo(executionOrder2);
+					}
 				}
-				int executionOrder = this.inspector.GetExecutionOrder(x);
-				int executionOrder2 = this.inspector.GetExecutionOrder(y);
-				if (executionOrder == executionOrder2)
+				else
 				{
-					return x.name.CompareTo(y.name);
+					result = -1;
 				}
-				return executionOrder.CompareTo(executionOrder2);
+				return result;
 			}
 		}
 
@@ -37,11 +46,16 @@ namespace UnityEditor
 		{
 			public int Compare(MonoScript x, MonoScript y)
 			{
+				int result;
 				if (x != null && y != null)
 				{
-					return x.name.CompareTo(y.name);
+					result = x.name.CompareTo(y.name);
 				}
-				return -1;
+				else
+				{
+					result = -1;
+				}
+				return result;
 			}
 		}
 
@@ -49,9 +63,9 @@ namespace UnityEditor
 		{
 			public GUIContent helpText = EditorGUIUtility.TextContent("Add scripts to the custom order and drag them to reorder.\n\nScripts in the custom order can execute before or after the default time and are executed from top to bottom. All other scripts execute at the default time in the order they are loaded.\n\n(Changing the order of a script may modify the meta data for more than one script.)");
 
-			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add script to custom order");
+			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "|Add script to custom order");
 
-			public GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove script from custom order");
+			public GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "|Remove script from custom order");
 
 			public GUIContent defaultTimeContent = EditorGUIUtility.TextContent("Default Time|All scripts not in the custom order are executed at the default time.");
 
@@ -264,7 +278,7 @@ namespace UnityEditor
 			1
 		};
 
-		private MonoScript m_Edited;
+		private MonoScript m_Edited = null;
 
 		private List<MonoScript> m_CustomTimeScripts;
 
@@ -278,11 +292,14 @@ namespace UnityEditor
 
 		private int[] m_AllOrders;
 
-		private bool m_DirtyOrders;
+		private bool m_DirtyOrders = false;
 
 		private static int s_DropFieldHash = "DropField".GetHashCode();
 
 		public static ScriptExecutionOrderInspector.Styles m_Styles;
+
+		[CompilerGenerated]
+		private static EditorGUI.ObjectFieldValidator <>f__mg$cache0;
 
 		internal override string targetTitle
 		{
@@ -306,31 +323,39 @@ namespace UnityEditor
 
 		private static UnityEngine.Object MonoScriptValidatorCallback(UnityEngine.Object[] references, Type objType, SerializedProperty property)
 		{
+			UnityEngine.Object result;
 			for (int i = 0; i < references.Length; i++)
 			{
 				UnityEngine.Object @object = references[i];
 				MonoScript monoScript = @object as MonoScript;
 				if (monoScript != null && ScriptExecutionOrderInspector.IsValidScript(monoScript))
 				{
-					return monoScript;
+					result = monoScript;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		private static bool IsValidScript(MonoScript script)
 		{
+			bool result;
 			if (script == null)
 			{
-				return false;
+				result = false;
 			}
-			if (script.GetClass() == null)
+			else if (script.GetClass() == null)
 			{
-				return false;
+				result = false;
 			}
-			bool flag = typeof(MonoBehaviour).IsAssignableFrom(script.GetClass());
-			bool flag2 = typeof(ScriptableObject).IsAssignableFrom(script.GetClass());
-			return (flag || flag2) && AssetDatabase.GetAssetPath(script).IndexOf("Assets/") == 0;
+			else
+			{
+				bool flag = typeof(MonoBehaviour).IsAssignableFrom(script.GetClass());
+				bool flag2 = typeof(ScriptableObject).IsAssignableFrom(script.GetClass());
+				result = ((flag || flag2) && AssetDatabase.GetAssetPath(script).IndexOf("Assets/") == 0);
+			}
+			return result;
 		}
 
 		private void PopulateScriptArray()
@@ -366,11 +391,16 @@ namespace UnityEditor
 		private int GetExecutionOrder(MonoScript script)
 		{
 			int num = Array.IndexOf<MonoScript>(this.m_AllScripts, script);
+			int result;
 			if (num >= 0)
 			{
-				return this.m_AllOrders[num];
+				result = this.m_AllOrders[num];
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 
 		private void SetExecutionOrder(MonoScript script, int order)
@@ -423,9 +453,12 @@ namespace UnityEditor
 
 		private void OnDestroy()
 		{
-			if (this.m_DirtyOrders && EditorUtility.DisplayDialog("Unapplied execution order", "Unapplied script execution order", "Apply", "Revert"))
+			if (this.m_DirtyOrders)
 			{
-				this.Apply();
+				if (EditorUtility.DisplayDialog("Unapplied execution order", "Unapplied script execution order", "Apply", "Revert"))
+				{
+					this.Apply();
+				}
 			}
 		}
 
@@ -455,18 +488,16 @@ namespace UnityEditor
 
 		private void AddScriptToCustomOrder(MonoScript script)
 		{
-			if (!ScriptExecutionOrderInspector.IsValidScript(script))
+			if (ScriptExecutionOrderInspector.IsValidScript(script))
 			{
-				return;
+				if (!this.m_CustomTimeScripts.Contains(script))
+				{
+					int order = this.RoundByAmount(this.GetExecutionOrderAtIndex(this.m_CustomTimeScripts.Count - 1) + 100, 100);
+					this.SetExecutionOrder(script, order);
+					this.m_CustomTimeScripts.Add(script);
+					this.m_DefaultTimeScripts.Remove(script);
+				}
 			}
-			if (this.m_CustomTimeScripts.Contains(script))
-			{
-				return;
-			}
-			int order = this.RoundByAmount(this.GetExecutionOrderAtIndex(this.m_CustomTimeScripts.Count - 1) + 100, 100);
-			this.SetExecutionOrder(script, order);
-			this.m_CustomTimeScripts.Add(script);
-			this.m_DefaultTimeScripts.Remove(script);
 		}
 
 		private void ShowScriptPopup(Rect r)
@@ -487,15 +518,18 @@ namespace UnityEditor
 			int num = Mathf.Max(0, (upperBound - lowerBound) / 6);
 			lowerBound += num;
 			upperBound -= num;
+			int result;
 			for (int i = 0; i < this.kRoundingAmounts.Length; i++)
 			{
 				int num2 = this.RoundByAmount(val, this.kRoundingAmounts[i]);
 				if (num2 > lowerBound && num2 < upperBound)
 				{
-					return num2;
+					result = num2;
+					return result;
 				}
 			}
-			return val;
+			result = val;
+			return result;
 		}
 
 		private int RoundByAmount(int val, int rounding)
@@ -505,48 +539,53 @@ namespace UnityEditor
 
 		private int GetAverageRoundedAwayFromZero(int a, int b)
 		{
+			int result;
 			if ((a + b) % 2 == 0)
 			{
-				return (a + b) / 2;
+				result = (a + b) / 2;
 			}
-			return (a + b + Math.Sign(a + b)) / 2;
+			else
+			{
+				result = (a + b + Math.Sign(a + b)) / 2;
+			}
+			return result;
 		}
 
 		private void SetExecutionOrderAtIndexAccordingToNeighbors(int indexOfChangedItem, int pushDirection)
 		{
-			if (indexOfChangedItem < 0 || indexOfChangedItem >= this.m_CustomTimeScripts.Count)
+			if (indexOfChangedItem >= 0 && indexOfChangedItem < this.m_CustomTimeScripts.Count)
 			{
-				return;
-			}
-			if (indexOfChangedItem == 0)
-			{
-				this.SetExecutionOrderAtIndex(indexOfChangedItem, this.RoundByAmount(this.GetExecutionOrderAtIndex(indexOfChangedItem + 1) - 100, 100));
-				return;
-			}
-			if (indexOfChangedItem == this.m_CustomTimeScripts.Count - 1)
-			{
-				this.SetExecutionOrderAtIndex(indexOfChangedItem, this.RoundByAmount(this.GetExecutionOrderAtIndex(indexOfChangedItem - 1) + 100, 100));
-				return;
-			}
-			int executionOrderAtIndex = this.GetExecutionOrderAtIndex(indexOfChangedItem - 1);
-			int executionOrderAtIndex2 = this.GetExecutionOrderAtIndex(indexOfChangedItem + 1);
-			int num = this.RoundBasedOnContext(this.GetAverageRoundedAwayFromZero(executionOrderAtIndex, executionOrderAtIndex2), executionOrderAtIndex, executionOrderAtIndex2);
-			if (num != 0)
-			{
-				if (pushDirection == 0)
+				if (indexOfChangedItem == 0)
 				{
-					pushDirection = this.GetBestPushDirectionForOrderValue(num);
+					this.SetExecutionOrderAtIndex(indexOfChangedItem, this.RoundByAmount(this.GetExecutionOrderAtIndex(indexOfChangedItem + 1) - 100, 100));
 				}
-				if (pushDirection > 0)
+				else if (indexOfChangedItem == this.m_CustomTimeScripts.Count - 1)
 				{
-					num = Mathf.Max(num, executionOrderAtIndex + 1);
+					this.SetExecutionOrderAtIndex(indexOfChangedItem, this.RoundByAmount(this.GetExecutionOrderAtIndex(indexOfChangedItem - 1) + 100, 100));
 				}
 				else
 				{
-					num = Mathf.Min(num, executionOrderAtIndex2 - 1);
+					int executionOrderAtIndex = this.GetExecutionOrderAtIndex(indexOfChangedItem - 1);
+					int executionOrderAtIndex2 = this.GetExecutionOrderAtIndex(indexOfChangedItem + 1);
+					int num = this.RoundBasedOnContext(this.GetAverageRoundedAwayFromZero(executionOrderAtIndex, executionOrderAtIndex2), executionOrderAtIndex, executionOrderAtIndex2);
+					if (num != 0)
+					{
+						if (pushDirection == 0)
+						{
+							pushDirection = this.GetBestPushDirectionForOrderValue(num);
+						}
+						if (pushDirection > 0)
+						{
+							num = Mathf.Max(num, executionOrderAtIndex + 1);
+						}
+						else
+						{
+							num = Mathf.Min(num, executionOrderAtIndex2 - 1);
+						}
+					}
+					this.SetExecutionOrderAtIndex(indexOfChangedItem, num);
 				}
 			}
-			this.SetExecutionOrderAtIndex(indexOfChangedItem, num);
 		}
 
 		private void UpdateOrder(MonoScript changedScript)
@@ -557,34 +596,38 @@ namespace UnityEditor
 			{
 				this.m_DefaultTimeScripts.Add(changedScript);
 				this.m_DefaultTimeScripts.Sort(new ScriptExecutionOrderInspector.SortMonoScriptNameOrder());
-				return;
-			}
-			int num = -1;
-			for (int i = 0; i < this.m_CustomTimeScripts.Count; i++)
-			{
-				if (this.GetExecutionOrderAtIndex(i) == executionOrder)
-				{
-					num = i;
-					break;
-				}
-			}
-			if (num == -1)
-			{
-				this.m_CustomTimeScripts.Add(changedScript);
-				this.m_CustomTimeScripts.Sort(new ScriptExecutionOrderInspector.SortMonoScriptExecutionOrder(this));
-				return;
-			}
-			int bestPushDirectionForOrderValue = this.GetBestPushDirectionForOrderValue(executionOrder);
-			if (bestPushDirectionForOrderValue == 1)
-			{
-				this.m_CustomTimeScripts.Insert(num, changedScript);
-				num++;
 			}
 			else
 			{
-				this.m_CustomTimeScripts.Insert(num + 1, changedScript);
+				int num = -1;
+				for (int i = 0; i < this.m_CustomTimeScripts.Count; i++)
+				{
+					if (this.GetExecutionOrderAtIndex(i) == executionOrder)
+					{
+						num = i;
+						break;
+					}
+				}
+				if (num == -1)
+				{
+					this.m_CustomTimeScripts.Add(changedScript);
+					this.m_CustomTimeScripts.Sort(new ScriptExecutionOrderInspector.SortMonoScriptExecutionOrder(this));
+				}
+				else
+				{
+					int bestPushDirectionForOrderValue = this.GetBestPushDirectionForOrderValue(executionOrder);
+					if (bestPushDirectionForOrderValue == 1)
+					{
+						this.m_CustomTimeScripts.Insert(num, changedScript);
+						num++;
+					}
+					else
+					{
+						this.m_CustomTimeScripts.Insert(num + 1, changedScript);
+					}
+					this.PushAwayToAvoidConflicts(num, bestPushDirectionForOrderValue);
+				}
 			}
-			this.PushAwayToAvoidConflicts(num, bestPushDirectionForOrderValue);
 		}
 
 		private void PushAwayToAvoidConflicts(int startIndex, int pushDirection)
@@ -630,20 +673,27 @@ namespace UnityEditor
 			EditorGUILayout.BeginVertical(EditorStyles.inspectorFullWidthMargins, new GUILayoutOption[0]);
 			GUILayout.Label(ScriptExecutionOrderInspector.m_Styles.helpText, EditorStyles.helpBox, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
-			Rect position = EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
-			int controlID = GUIUtility.GetControlID(ScriptExecutionOrderInspector.s_DropFieldHash, FocusType.Passive, position);
-			MonoScript monoScript = EditorGUI.DoDropField(position, controlID, typeof(MonoScript), new EditorGUI.ObjectFieldValidator(ScriptExecutionOrderInspector.MonoScriptValidatorCallback), false, ScriptExecutionOrderInspector.m_Styles.dropField) as MonoScript;
+			Rect rect = EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
+			int controlID = GUIUtility.GetControlID(ScriptExecutionOrderInspector.s_DropFieldHash, FocusType.Passive, rect);
+			Rect arg_B9_0 = rect;
+			int arg_B9_1 = controlID;
+			Type arg_B9_2 = typeof(MonoScript);
+			if (ScriptExecutionOrderInspector.<>f__mg$cache0 == null)
+			{
+				ScriptExecutionOrderInspector.<>f__mg$cache0 = new EditorGUI.ObjectFieldValidator(ScriptExecutionOrderInspector.MonoScriptValidatorCallback);
+			}
+			MonoScript monoScript = EditorGUI.DoDropField(arg_B9_0, arg_B9_1, arg_B9_2, ScriptExecutionOrderInspector.<>f__mg$cache0, false, ScriptExecutionOrderInspector.m_Styles.dropField) as MonoScript;
 			if (monoScript)
 			{
 				this.AddScriptToCustomOrder(monoScript);
 			}
 			EditorGUILayout.BeginVertical(ScriptExecutionOrderInspector.m_Styles.boxBackground, new GUILayoutOption[0]);
 			this.m_Scroll = EditorGUILayout.BeginVerticalScrollView(this.m_Scroll, new GUILayoutOption[0]);
-			Rect rect = GUILayoutUtility.GetRect(10f, (float)(21 * this.m_CustomTimeScripts.Count), new GUILayoutOption[]
+			Rect rect2 = GUILayoutUtility.GetRect(10f, (float)(21 * this.m_CustomTimeScripts.Count), new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true)
 			});
-			int num = ScriptExecutionOrderInspector.DragReorderGUI.DragReorder(rect, 21, this.m_CustomTimeScripts, new ScriptExecutionOrderInspector.DragReorderGUI.DrawElementDelegate(this.DrawElement));
+			int num = ScriptExecutionOrderInspector.DragReorderGUI.DragReorder(rect2, 21, this.m_CustomTimeScripts, new ScriptExecutionOrderInspector.DragReorderGUI.DrawElementDelegate(this.DrawElement));
 			if (num >= 0)
 			{
 				this.SetExecutionOrderAtIndexAccordingToNeighbors(num, 0);
@@ -655,10 +705,10 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(ScriptExecutionOrderInspector.m_Styles.toolbar, new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
 			GUIContent iconToolbarPlus = ScriptExecutionOrderInspector.m_Styles.iconToolbarPlus;
-			Rect rect2 = GUILayoutUtility.GetRect(iconToolbarPlus, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown);
-			if (EditorGUI.ButtonMouseDown(rect2, iconToolbarPlus, FocusType.Native, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown))
+			Rect rect3 = GUILayoutUtility.GetRect(iconToolbarPlus, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown);
+			if (EditorGUI.ButtonMouseDown(rect3, iconToolbarPlus, FocusType.Passive, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown))
 			{
-				this.ShowScriptPopup(rect2);
+				this.ShowScriptPopup(rect3);
 			}
 			GUILayout.EndHorizontal();
 			GUILayout.EndVertical();

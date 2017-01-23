@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityEngine
 {
@@ -30,6 +31,15 @@ namespace UnityEngine
 			public int subMeshIndex;
 
 			public Matrix4x4 transform;
+		}
+
+		public struct MeshContainer
+		{
+			public GameObject gameObject;
+
+			public MeshSubsetCombineUtility.MeshInstance instance;
+
+			public List<MeshSubsetCombineUtility.SubMeshInstance> subMeshInstances;
 		}
 	}
 }

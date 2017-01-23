@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnityEditor
@@ -20,6 +21,10 @@ namespace UnityEditor
 			public GUIStyle foldout = "IN foldout";
 		}
 
+		private static MemoryTreeList.Styles m_Styles;
+
+		private bool m_RequiresRefresh;
+
 		private const float kIndentPx = 16f;
 
 		private const float kBaseIndent = 4f;
@@ -34,11 +39,9 @@ namespace UnityEditor
 
 		protected const float kFoldoutSize = 14f;
 
-		private static MemoryTreeList.Styles m_Styles;
-
 		public MemoryElementSelection m_MemorySelection;
 
-		protected MemoryElement m_Root;
+		protected MemoryElement m_Root = null;
 
 		protected EditorWindow m_EditorWindow;
 
@@ -58,12 +61,24 @@ namespace UnityEditor
 		{
 			get
 			{
-				MemoryTreeList.Styles arg_17_0;
-				if ((arg_17_0 = MemoryTreeList.m_Styles) == null)
+				MemoryTreeList.Styles arg_18_0;
+				if ((arg_18_0 = MemoryTreeList.m_Styles) == null)
 				{
-					arg_17_0 = (MemoryTreeList.m_Styles = new MemoryTreeList.Styles());
+					arg_18_0 = (MemoryTreeList.m_Styles = new MemoryTreeList.Styles());
 				}
-				return arg_17_0;
+				return arg_18_0;
+			}
+		}
+
+		public bool RequiresRefresh
+		{
+			get
+			{
+				return this.m_RequiresRefresh;
+			}
+			set
+			{
+				this.m_RequiresRefresh = value;
 			}
 		}
 
@@ -94,26 +109,28 @@ namespace UnityEditor
 			if (this.m_Root == null)
 			{
 				GUILayout.EndVertical();
-				return;
 			}
-			this.HandleKeyboard();
-			this.m_ScrollPosition = GUILayout.BeginScrollView(this.m_ScrollPosition, MemoryTreeList.styles.background);
-			int num = 0;
-			foreach (MemoryElement current in this.m_Root.children)
+			else
 			{
-				this.DrawItem(current, ref num, 1);
-				num++;
+				this.HandleKeyboard();
+				this.m_ScrollPosition = GUILayout.BeginScrollView(this.m_ScrollPosition, MemoryTreeList.styles.background);
+				int num = 0;
+				foreach (MemoryElement current in this.m_Root.children)
+				{
+					this.DrawItem(current, ref num, 1);
+					num++;
+				}
+				GUILayoutUtility.GetRect(0f, (float)num * 16f, new GUILayoutOption[]
+				{
+					GUILayout.ExpandWidth(true)
+				});
+				if (Event.current.type == EventType.Repaint)
+				{
+					this.m_VisibleHeight = GUIClip.visibleRect.height;
+				}
+				GUILayout.EndScrollView();
+				GUILayout.EndVertical();
 			}
-			GUILayoutUtility.GetRect(0f, (float)num * 16f, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(true)
-			});
-			if (Event.current.type == EventType.Repaint)
-			{
-				this.m_VisibleHeight = GUIClip.visibleRect.height;
-			}
-			GUILayout.EndScrollView();
-			GUILayout.EndVertical();
 		}
 
 		private static float Clamp(float value, float min, float max)
@@ -121,8 +138,46 @@ namespace UnityEditor
 			return (value >= min) ? ((value <= max) ? value : max) : min;
 		}
 
+		private bool FindNamedChild(string name, List<MemoryElement> list, out MemoryElement outChild)
+		{
+			bool result;
+			foreach (MemoryElement current in list)
+			{
+				if (current.name == name)
+				{
+					outChild = current;
+					result = true;
+					return result;
+				}
+			}
+			outChild = null;
+			result = false;
+			return result;
+		}
+
+		private void RestoreViewState(MemoryElement oldRoot, MemoryElement newRoot)
+		{
+			foreach (MemoryElement current in newRoot.children)
+			{
+				current.ExpandChildren();
+				if (current.ChildCount() != 0)
+				{
+					MemoryElement memoryElement = null;
+					if (this.FindNamedChild(current.name, oldRoot.children, out memoryElement))
+					{
+						current.expanded = memoryElement.expanded;
+						if (current.expanded)
+						{
+							this.RestoreViewState(memoryElement, current);
+						}
+					}
+				}
+			}
+		}
+
 		public void SetRoot(MemoryElement root)
 		{
+			MemoryElement root2 = this.m_Root;
 			this.m_Root = root;
 			if (this.m_Root != null)
 			{
@@ -131,6 +186,10 @@ namespace UnityEditor
 			if (this.m_DetailView != null)
 			{
 				this.m_DetailView.SetRoot(null);
+			}
+			if (root2 != null && this.m_Root != null)
+			{
+				this.RestoreViewState(root2, this.m_Root);
 			}
 		}
 
@@ -162,25 +221,23 @@ namespace UnityEditor
 
 		protected virtual void DrawData(Rect rect, MemoryElement memoryElement, int indent, int row, bool selected)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				string text = memoryElement.name + "(" + memoryElement.memoryInfo.className + ")";
+				MemoryTreeList.styles.numberLabel.Draw(rect, text, false, false, false, selected);
 			}
-			string text = memoryElement.name + "(" + memoryElement.memoryInfo.className + ")";
-			MemoryTreeList.styles.numberLabel.Draw(rect, text, false, false, false, selected);
 		}
 
 		protected void DrawRecursiveData(MemoryElement element, ref int row, int indent)
 		{
-			if (element.ChildCount() == 0)
+			if (element.ChildCount() != 0)
 			{
-				return;
-			}
-			element.ExpandChildren();
-			foreach (MemoryElement current in element.children)
-			{
-				row++;
-				this.DrawItem(current, ref row, indent);
+				element.ExpandChildren();
+				foreach (MemoryElement current in element.children)
+				{
+					row++;
+					this.DrawItem(current, ref row, indent);
+				}
 			}
 		}
 
@@ -236,81 +293,79 @@ namespace UnityEditor
 		protected void HandleKeyboard()
 		{
 			Event current = Event.current;
-			if (current.GetTypeForControl(this.m_ControlID) != EventType.KeyDown || this.m_ControlID != GUIUtility.keyboardControl)
+			if (current.GetTypeForControl(this.m_ControlID) == EventType.KeyDown && this.m_ControlID == GUIUtility.keyboardControl)
 			{
-				return;
+				if (this.m_MemorySelection.Selected != null)
+				{
+					KeyCode keyCode = current.keyCode;
+					switch (keyCode)
+					{
+					case KeyCode.UpArrow:
+						this.m_MemorySelection.MoveUp();
+						goto IL_1E0;
+					case KeyCode.DownArrow:
+						this.m_MemorySelection.MoveDown();
+						goto IL_1E0;
+					case KeyCode.RightArrow:
+						if (this.m_MemorySelection.Selected.ChildCount() > 0)
+						{
+							this.m_MemorySelection.Selected.expanded = true;
+						}
+						goto IL_1E0;
+					case KeyCode.LeftArrow:
+						if (this.m_MemorySelection.Selected.expanded)
+						{
+							this.m_MemorySelection.Selected.expanded = false;
+						}
+						else
+						{
+							this.m_MemorySelection.MoveParent();
+						}
+						goto IL_1E0;
+					case KeyCode.Insert:
+						IL_7A:
+						if (keyCode != KeyCode.Return)
+						{
+							return;
+						}
+						if (this.m_MemorySelection.Selected.memoryInfo != null)
+						{
+							Selection.instanceIDs = new int[0];
+							Selection.activeInstanceID = this.m_MemorySelection.Selected.memoryInfo.instanceId;
+						}
+						goto IL_1E0;
+					case KeyCode.Home:
+						this.m_MemorySelection.MoveFirst();
+						goto IL_1E0;
+					case KeyCode.End:
+						this.m_MemorySelection.MoveLast();
+						goto IL_1E0;
+					case KeyCode.PageUp:
+					{
+						int num = Mathf.RoundToInt(this.m_VisibleHeight / 16f);
+						for (int i = 0; i < num; i++)
+						{
+							this.m_MemorySelection.MoveUp();
+						}
+						goto IL_1E0;
+					}
+					case KeyCode.PageDown:
+					{
+						int num = Mathf.RoundToInt(this.m_VisibleHeight / 16f);
+						for (int j = 0; j < num; j++)
+						{
+							this.m_MemorySelection.MoveDown();
+						}
+						goto IL_1E0;
+					}
+					}
+					goto IL_7A;
+					IL_1E0:
+					this.RowClicked(current, this.m_MemorySelection.Selected);
+					this.EnsureVisible();
+					this.m_EditorWindow.Repaint();
+				}
 			}
-			if (this.m_MemorySelection.Selected == null)
-			{
-				return;
-			}
-			KeyCode keyCode = current.keyCode;
-			switch (keyCode)
-			{
-			case KeyCode.UpArrow:
-				this.m_MemorySelection.MoveUp();
-				goto IL_1D0;
-			case KeyCode.DownArrow:
-				this.m_MemorySelection.MoveDown();
-				goto IL_1D0;
-			case KeyCode.RightArrow:
-				if (this.m_MemorySelection.Selected.ChildCount() > 0)
-				{
-					this.m_MemorySelection.Selected.expanded = true;
-				}
-				goto IL_1D0;
-			case KeyCode.LeftArrow:
-				if (this.m_MemorySelection.Selected.expanded)
-				{
-					this.m_MemorySelection.Selected.expanded = false;
-				}
-				else
-				{
-					this.m_MemorySelection.MoveParent();
-				}
-				goto IL_1D0;
-			case KeyCode.Insert:
-				IL_73:
-				if (keyCode != KeyCode.Return)
-				{
-					return;
-				}
-				if (this.m_MemorySelection.Selected.memoryInfo != null)
-				{
-					Selection.instanceIDs = new int[0];
-					Selection.activeInstanceID = this.m_MemorySelection.Selected.memoryInfo.instanceId;
-				}
-				goto IL_1D0;
-			case KeyCode.Home:
-				this.m_MemorySelection.MoveFirst();
-				goto IL_1D0;
-			case KeyCode.End:
-				this.m_MemorySelection.MoveLast();
-				goto IL_1D0;
-			case KeyCode.PageUp:
-			{
-				int num = Mathf.RoundToInt(this.m_VisibleHeight / 16f);
-				for (int i = 0; i < num; i++)
-				{
-					this.m_MemorySelection.MoveUp();
-				}
-				goto IL_1D0;
-			}
-			case KeyCode.PageDown:
-			{
-				int num = Mathf.RoundToInt(this.m_VisibleHeight / 16f);
-				for (int j = 0; j < num; j++)
-				{
-					this.m_MemorySelection.MoveDown();
-				}
-				goto IL_1D0;
-			}
-			}
-			goto IL_73;
-			IL_1D0:
-			this.RowClicked(current, this.m_MemorySelection.Selected);
-			this.EnsureVisible();
-			this.m_EditorWindow.Repaint();
 		}
 
 		private void RecursiveFindSelected(MemoryElement element, ref int row)
@@ -320,14 +375,13 @@ namespace UnityEditor
 				this.m_SelectionOffset = (float)row * 16f;
 			}
 			row++;
-			if (!element.expanded || element.ChildCount() == 0)
+			if (element.expanded && element.ChildCount() != 0)
 			{
-				return;
-			}
-			element.ExpandChildren();
-			foreach (MemoryElement current in element.children)
-			{
-				this.RecursiveFindSelected(current, ref row);
+				element.ExpandChildren();
+				foreach (MemoryElement current in element.children)
+				{
+					this.RecursiveFindSelected(current, ref row);
+				}
 			}
 		}
 

@@ -7,6 +7,33 @@ namespace UnityEditor
 {
 	internal class CacheServerPreferences
 	{
+		internal class Styles
+		{
+			public static readonly GUIContent browse = EditorGUIUtility.TextContent("Browse...");
+
+			public static readonly GUIContent maxCacheSize = EditorGUIUtility.TextContent("Maximum Cache Size (GB)|The size of the local asset cache server folder will be kept below this maximum value.");
+
+			public static readonly GUIContent customCacheLocation = EditorGUIUtility.TextContent("Custom cache location|Specify the local asset cache server folder location.");
+
+			public static readonly GUIContent cacheFolderLocation = EditorGUIUtility.TextContent("Cache Folder Location|The local asset cache server folder is shared between all projects.");
+
+			public static readonly GUIContent cleanCache = EditorGUIUtility.TextContent("Clean Cache");
+
+			public static readonly GUIContent browseCacheLocation = EditorGUIUtility.TextContent("Browse for local asset cache server location");
+
+			public static readonly GUIContent cacheSizeIs = EditorGUIUtility.TextContent("Cache size is");
+		}
+
+		internal class Constants
+		{
+			public GUIStyle cacheFolderLocation = new GUIStyle(GUI.skin.label);
+
+			public Constants()
+			{
+				this.cacheFolderLocation.wordWrap = true;
+			}
+		}
+
 		private enum ConnectionState
 		{
 			Unknown,
@@ -14,7 +41,22 @@ namespace UnityEditor
 			Failure
 		}
 
+		public enum CacheServerMode
+		{
+			Local,
+			Remote,
+			Disabled
+		}
+
+		private const string kIPAddressKey = "CacheServerIPAddress";
+
+		private const string kModeKey = "CacheServerMode";
+
+		private const string kDeprecatedEnabledKey = "CacheServerEnabled";
+
 		private static bool s_PrefsLoaded;
+
+		private static bool s_HasPendingChanges = false;
 
 		private static CacheServerPreferences.ConnectionState s_ConnectionState;
 
@@ -22,29 +64,91 @@ namespace UnityEditor
 
 		private static string s_CollabCacheIPAddress;
 
-		private static bool s_CacheServerEnabled;
+		private static bool s_EnableCollabCacheConfiguration = false;
+
+		private static CacheServerPreferences.CacheServerMode s_CacheServerMode;
 
 		private static string s_CacheServerIPAddress;
+
+		private static int s_LocalCacheServerSize;
+
+		private static long s_LocalCacheServerUsedSize = -1L;
+
+		private static bool s_EnableCustomPath;
+
+		private static string s_CachePath;
+
+		private static CacheServerPreferences.Constants s_Constants = null;
+
+		private static bool IsCollabCacheEnabled()
+		{
+			return CacheServerPreferences.s_EnableCollabCacheConfiguration || Application.HasARGV("enableCacheServer");
+		}
 
 		public static void ReadPreferences()
 		{
 			CacheServerPreferences.s_CacheServerIPAddress = EditorPrefs.GetString("CacheServerIPAddress", CacheServerPreferences.s_CacheServerIPAddress);
-			CacheServerPreferences.s_CacheServerEnabled = EditorPrefs.GetBool("CacheServerEnabled");
-			CacheServerPreferences.s_CollabCacheIPAddress = EditorPrefs.GetString("CollabCacheIPAddress", CacheServerPreferences.s_CollabCacheIPAddress);
-			CacheServerPreferences.s_CollabCacheEnabled = EditorPrefs.GetBool("CollabCacheEnabled");
+			CacheServerPreferences.s_CacheServerMode = (CacheServerPreferences.CacheServerMode)EditorPrefs.GetInt("CacheServerMode", (!EditorPrefs.GetBool("CacheServerEnabled")) ? 2 : 1);
+			CacheServerPreferences.s_LocalCacheServerSize = EditorPrefs.GetInt("LocalCacheServerSize", 10);
+			CacheServerPreferences.s_CachePath = EditorPrefs.GetString("LocalCacheServerPath");
+			CacheServerPreferences.s_EnableCustomPath = EditorPrefs.GetBool("LocalCacheServerCustomPath");
+			if (CacheServerPreferences.IsCollabCacheEnabled())
+			{
+				CacheServerPreferences.s_CollabCacheIPAddress = EditorPrefs.GetString("CollabCacheIPAddress", CacheServerPreferences.s_CollabCacheIPAddress);
+				CacheServerPreferences.s_CollabCacheEnabled = EditorPrefs.GetBool("CollabCacheEnabled");
+			}
 		}
 
 		public static void WritePreferences()
 		{
+			CacheServerPreferences.CacheServerMode @int = (CacheServerPreferences.CacheServerMode)EditorPrefs.GetInt("CacheServerMode");
+			string @string = EditorPrefs.GetString("LocalCacheServerPath");
+			bool @bool = EditorPrefs.GetBool("LocalCacheServerCustomPath");
+			bool flag = false;
+			if (@int != CacheServerPreferences.s_CacheServerMode && @int == CacheServerPreferences.CacheServerMode.Local)
+			{
+				flag = true;
+			}
+			if (CacheServerPreferences.s_EnableCustomPath && @string != CacheServerPreferences.s_CachePath)
+			{
+				flag = true;
+			}
+			if (CacheServerPreferences.s_EnableCustomPath != @bool && CacheServerPreferences.s_CachePath != LocalCacheServer.GetCacheLocation() && CacheServerPreferences.s_CachePath != "")
+			{
+				flag = true;
+			}
+			if (flag)
+			{
+				CacheServerPreferences.s_LocalCacheServerUsedSize = -1L;
+				string text = (CacheServerPreferences.s_CacheServerMode != CacheServerPreferences.CacheServerMode.Local) ? "You have disabled the local cache." : "You have changed the location of the local cache storage.";
+				text = text + " Do you want to delete the old locally cached data at " + LocalCacheServer.GetCacheLocation() + "?";
+				if (EditorUtility.DisplayDialog("Delete old Cache", text, "Delete", "Don't Delete"))
+				{
+					LocalCacheServer.Clear();
+					CacheServerPreferences.s_LocalCacheServerUsedSize = 0L;
+				}
+			}
 			EditorPrefs.SetString("CacheServerIPAddress", CacheServerPreferences.s_CacheServerIPAddress);
-			EditorPrefs.SetBool("CacheServerEnabled", CacheServerPreferences.s_CacheServerEnabled);
-			EditorPrefs.SetString("CollabCacheIPAddress", CacheServerPreferences.s_CollabCacheIPAddress);
-			EditorPrefs.SetBool("CollabCacheEnabled", CacheServerPreferences.s_CollabCacheEnabled);
+			EditorPrefs.SetInt("CacheServerMode", (int)CacheServerPreferences.s_CacheServerMode);
+			EditorPrefs.SetInt("LocalCacheServerSize", CacheServerPreferences.s_LocalCacheServerSize);
+			EditorPrefs.SetString("LocalCacheServerPath", CacheServerPreferences.s_CachePath);
+			EditorPrefs.SetBool("LocalCacheServerCustomPath", CacheServerPreferences.s_EnableCustomPath);
+			if (CacheServerPreferences.IsCollabCacheEnabled())
+			{
+				EditorPrefs.SetString("CollabCacheIPAddress", CacheServerPreferences.s_CollabCacheIPAddress);
+				EditorPrefs.SetBool("CollabCacheEnabled", CacheServerPreferences.s_CollabCacheEnabled);
+			}
+			LocalCacheServer.Setup();
 		}
 
 		[PreferenceItem("Cache Server")]
 		public static void OnGUI()
 		{
+			EventType type = Event.current.type;
+			if (CacheServerPreferences.s_Constants == null)
+			{
+				CacheServerPreferences.s_Constants = new CacheServerPreferences.Constants();
+			}
 			GUILayout.Space(10f);
 			if (!InternalEditorUtility.HasTeamLicense())
 			{
@@ -55,7 +159,7 @@ namespace UnityEditor
 				if (!CacheServerPreferences.s_PrefsLoaded)
 				{
 					CacheServerPreferences.ReadPreferences();
-					if (CacheServerPreferences.s_CacheServerEnabled && CacheServerPreferences.s_ConnectionState == CacheServerPreferences.ConnectionState.Unknown)
+					if (CacheServerPreferences.s_CacheServerMode != CacheServerPreferences.CacheServerMode.Disabled && CacheServerPreferences.s_ConnectionState == CacheServerPreferences.ConnectionState.Unknown)
 					{
 						if (InternalEditorUtility.CanConnectToCacheServer())
 						{
@@ -69,7 +173,7 @@ namespace UnityEditor
 					CacheServerPreferences.s_PrefsLoaded = true;
 				}
 				EditorGUI.BeginChangeCheck();
-				if (Collab.instance.collabInfo.whitelisted)
+				if (Collab.instance.collabInfo.whitelisted && CacheServerPreferences.IsCollabCacheEnabled())
 				{
 					CacheServerPreferences.s_CollabCacheEnabled = EditorGUILayout.Toggle("Use Collab Cache", CacheServerPreferences.s_CollabCacheEnabled, new GUILayoutOption[0]);
 					using (new EditorGUI.DisabledScope(!CacheServerPreferences.s_CollabCacheEnabled))
@@ -77,16 +181,13 @@ namespace UnityEditor
 						CacheServerPreferences.s_CollabCacheIPAddress = EditorGUILayout.TextField("Collab Cache IP Address", CacheServerPreferences.s_CollabCacheIPAddress, new GUILayoutOption[0]);
 					}
 				}
-				CacheServerPreferences.s_CacheServerEnabled = EditorGUILayout.Toggle("Use Cache Server", CacheServerPreferences.s_CacheServerEnabled, new GUILayoutOption[0]);
-				using (new EditorGUI.DisabledScope(!CacheServerPreferences.s_CacheServerEnabled))
+				CacheServerPreferences.s_CacheServerMode = (CacheServerPreferences.CacheServerMode)EditorGUILayout.EnumPopup("Cache Server Mode", CacheServerPreferences.s_CacheServerMode, new GUILayoutOption[0]);
+				if (CacheServerPreferences.s_CacheServerMode == CacheServerPreferences.CacheServerMode.Remote)
 				{
-					Rect controlRect = EditorGUILayout.GetControlRect(true, new GUILayoutOption[0]);
-					int controlID = GUIUtility.GetControlID(FocusType.Keyboard, controlRect);
-					CacheServerPreferences.s_CacheServerIPAddress = EditorGUI.DelayedTextFieldInternal(controlRect, controlID, GUIContent.Temp("IP Address"), CacheServerPreferences.s_CacheServerIPAddress, null, EditorStyles.textField);
+					CacheServerPreferences.s_CacheServerIPAddress = EditorGUILayout.DelayedTextField("IP Address", CacheServerPreferences.s_CacheServerIPAddress, new GUILayoutOption[0]);
 					if (GUI.changed)
 					{
 						CacheServerPreferences.s_ConnectionState = CacheServerPreferences.ConnectionState.Unknown;
-						CacheServerPreferences.WritePreferences();
 					}
 					GUILayout.Space(5f);
 					if (GUILayout.Button("Check Connection", new GUILayoutOption[]
@@ -94,16 +195,6 @@ namespace UnityEditor
 						GUILayout.Width(150f)
 					}))
 					{
-						if (EditorGUI.s_DelayedTextEditor.IsEditingControl(controlID))
-						{
-							string text = EditorGUI.s_DelayedTextEditor.text;
-							EditorGUI.s_DelayedTextEditor.EndEditing();
-							if (text != CacheServerPreferences.s_CacheServerIPAddress)
-							{
-								CacheServerPreferences.s_CacheServerIPAddress = text;
-								CacheServerPreferences.WritePreferences();
-							}
-						}
 						if (InternalEditorUtility.CanConnectToCacheServer())
 						{
 							CacheServerPreferences.s_ConnectionState = CacheServerPreferences.ConnectionState.Success;
@@ -114,23 +205,85 @@ namespace UnityEditor
 						}
 					}
 					GUILayout.Space(-25f);
-					switch (CacheServerPreferences.s_ConnectionState)
+					CacheServerPreferences.ConnectionState connectionState = CacheServerPreferences.s_ConnectionState;
+					if (connectionState != CacheServerPreferences.ConnectionState.Success)
 					{
-					case CacheServerPreferences.ConnectionState.Unknown:
-						GUILayout.Space(44f);
-						break;
-					case CacheServerPreferences.ConnectionState.Success:
-						EditorGUILayout.HelpBox("Connection successful.", MessageType.Info, false);
-						break;
-					case CacheServerPreferences.ConnectionState.Failure:
-						EditorGUILayout.HelpBox("Connection failed.", MessageType.Warning, false);
-						break;
+						if (connectionState != CacheServerPreferences.ConnectionState.Failure)
+						{
+							if (connectionState == CacheServerPreferences.ConnectionState.Unknown)
+							{
+								GUILayout.Space(44f);
+							}
+						}
+						else
+						{
+							EditorGUILayout.HelpBox("Connection failed.", MessageType.Warning, false);
+						}
 					}
+					else
+					{
+						EditorGUILayout.HelpBox("Connection successful.", MessageType.Info, false);
+					}
+				}
+				else if (CacheServerPreferences.s_CacheServerMode == CacheServerPreferences.CacheServerMode.Local)
+				{
+					CacheServerPreferences.s_LocalCacheServerSize = EditorGUILayout.IntSlider(CacheServerPreferences.Styles.maxCacheSize, CacheServerPreferences.s_LocalCacheServerSize, 1, 200, new GUILayoutOption[0]);
+					CacheServerPreferences.s_EnableCustomPath = EditorGUILayout.Toggle(CacheServerPreferences.Styles.customCacheLocation, CacheServerPreferences.s_EnableCustomPath, new GUILayoutOption[0]);
+					if (CacheServerPreferences.s_EnableCustomPath)
+					{
+						GUIStyle popup = EditorStyles.popup;
+						GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+						EditorGUILayout.PrefixLabel(CacheServerPreferences.Styles.cacheFolderLocation, popup);
+						Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
+						GUIContent content = (!string.IsNullOrEmpty(CacheServerPreferences.s_CachePath)) ? new GUIContent(CacheServerPreferences.s_CachePath) : CacheServerPreferences.Styles.browse;
+						if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, popup))
+						{
+							string folder = CacheServerPreferences.s_CachePath;
+							string text = EditorUtility.OpenFolderPanel(CacheServerPreferences.Styles.browseCacheLocation.text, folder, "");
+							if (!string.IsNullOrEmpty(text))
+							{
+								if (LocalCacheServer.CheckValidCacheLocation(text))
+								{
+									CacheServerPreferences.s_CachePath = text;
+									CacheServerPreferences.WritePreferences();
+								}
+								else
+								{
+									EditorUtility.DisplayDialog("Invalid Cache Location", "The directory " + text + " contains some files which don't look like Unity Cache server files. Please delete the directory contents or choose another directory.", "OK");
+								}
+							}
+						}
+						GUILayout.EndHorizontal();
+					}
+					else
+					{
+						CacheServerPreferences.s_CachePath = "";
+					}
+					if (GUILayout.Button(CacheServerPreferences.Styles.cleanCache, new GUILayoutOption[]
+					{
+						GUILayout.Width(120f)
+					}))
+					{
+						LocalCacheServer.Clear();
+						CacheServerPreferences.s_LocalCacheServerUsedSize = 0L;
+					}
+					if (CacheServerPreferences.s_LocalCacheServerUsedSize == -1L)
+					{
+						CacheServerPreferences.s_LocalCacheServerUsedSize = FileUtil.GetDirectorySize(LocalCacheServer.GetCacheLocation());
+					}
+					GUILayout.Label(CacheServerPreferences.Styles.cacheSizeIs.text + " " + EditorUtility.FormatBytes(CacheServerPreferences.s_LocalCacheServerUsedSize), new GUILayoutOption[0]);
+					GUILayout.Label(CacheServerPreferences.Styles.cacheFolderLocation.text + ":", new GUILayoutOption[0]);
+					GUILayout.Label(LocalCacheServer.GetCacheLocation(), CacheServerPreferences.s_Constants.cacheFolderLocation, new GUILayoutOption[0]);
 				}
 				if (EditorGUI.EndChangeCheck())
 				{
+					CacheServerPreferences.s_HasPendingChanges = true;
+				}
+				if ((CacheServerPreferences.s_HasPendingChanges && type == EventType.MouseUp) || type == EventType.KeyDown)
+				{
 					CacheServerPreferences.WritePreferences();
 					CacheServerPreferences.ReadPreferences();
+					CacheServerPreferences.s_HasPendingChanges = false;
 				}
 			}
 		}

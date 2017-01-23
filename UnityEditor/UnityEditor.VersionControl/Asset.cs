@@ -34,7 +34,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern Asset.States state
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -42,7 +41,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string path
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -50,7 +48,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool isFolder
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -58,7 +55,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool readOnly
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -66,7 +62,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool isMeta
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -74,7 +69,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool locked
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -82,7 +76,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string name
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -90,7 +83,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string fullName
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -98,7 +90,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool isInCurrentProject
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -124,11 +115,11 @@ namespace UnityEditor.VersionControl
 			this.InternalCreateFromString(clientPath);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalCreateFromString(string clientPath);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 
@@ -137,7 +128,7 @@ namespace UnityEditor.VersionControl
 			this.Dispose();
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsChildOf(Asset other);
 
@@ -153,15 +144,18 @@ namespace UnityEditor.VersionControl
 
 		public bool IsOneOfStates(Asset.States[] states)
 		{
+			bool result;
 			for (int i = 0; i < states.Length; i++)
 			{
 				Asset.States states2 = states[i];
 				if ((this.state & states2) != Asset.States.None)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public void Edit()
@@ -175,60 +169,70 @@ namespace UnityEditor.VersionControl
 
 		public UnityEngine.Object Load()
 		{
+			UnityEngine.Object result;
 			if (this.state == Asset.States.DeletedLocal || this.isMeta)
 			{
-				return null;
+				result = null;
 			}
-			return AssetDatabase.LoadAssetAtPath(this.path, typeof(UnityEngine.Object));
+			else
+			{
+				result = AssetDatabase.LoadAssetAtPath(this.path, typeof(UnityEngine.Object));
+			}
+			return result;
 		}
 
 		internal static string StateToString(Asset.States state)
 		{
+			string result;
 			if (Asset.IsState(state, Asset.States.AddedLocal))
 			{
-				return "Added Local";
+				result = "Added Local";
 			}
-			if (Asset.IsState(state, Asset.States.AddedRemote))
+			else if (Asset.IsState(state, Asset.States.AddedRemote))
 			{
-				return "Added Remote";
+				result = "Added Remote";
 			}
-			if (Asset.IsState(state, Asset.States.CheckedOutLocal) && !Asset.IsState(state, Asset.States.LockedLocal))
+			else if (Asset.IsState(state, Asset.States.CheckedOutLocal) && !Asset.IsState(state, Asset.States.LockedLocal))
 			{
-				return "Checked Out Local";
+				result = "Checked Out Local";
 			}
-			if (Asset.IsState(state, Asset.States.CheckedOutRemote) && !Asset.IsState(state, Asset.States.LockedRemote))
+			else if (Asset.IsState(state, Asset.States.CheckedOutRemote) && !Asset.IsState(state, Asset.States.LockedRemote))
 			{
-				return "Checked Out Remote";
+				result = "Checked Out Remote";
 			}
-			if (Asset.IsState(state, Asset.States.Conflicted))
+			else if (Asset.IsState(state, Asset.States.Conflicted))
 			{
-				return "Conflicted";
+				result = "Conflicted";
 			}
-			if (Asset.IsState(state, Asset.States.DeletedLocal))
+			else if (Asset.IsState(state, Asset.States.DeletedLocal))
 			{
-				return "Deleted Local";
+				result = "Deleted Local";
 			}
-			if (Asset.IsState(state, Asset.States.DeletedRemote))
+			else if (Asset.IsState(state, Asset.States.DeletedRemote))
 			{
-				return "Deleted Remote";
+				result = "Deleted Remote";
 			}
-			if (Asset.IsState(state, Asset.States.Local))
+			else if (Asset.IsState(state, Asset.States.Local))
 			{
-				return "Local";
+				result = "Local";
 			}
-			if (Asset.IsState(state, Asset.States.LockedLocal))
+			else if (Asset.IsState(state, Asset.States.LockedLocal))
 			{
-				return "Locked Local";
+				result = "Locked Local";
 			}
-			if (Asset.IsState(state, Asset.States.LockedRemote))
+			else if (Asset.IsState(state, Asset.States.LockedRemote))
 			{
-				return "Locked Remote";
+				result = "Locked Remote";
 			}
-			if (Asset.IsState(state, Asset.States.OutOfSync))
+			else if (Asset.IsState(state, Asset.States.OutOfSync))
 			{
-				return "Out Of Sync";
+				result = "Out Of Sync";
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		internal static string AllStateToString(Asset.States state)

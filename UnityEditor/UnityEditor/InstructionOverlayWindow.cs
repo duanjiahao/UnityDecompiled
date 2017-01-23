@@ -27,7 +27,7 @@ namespace UnityEditor
 		private RenderTexture m_RenderTexture;
 
 		[NonSerialized]
-		private bool m_RenderTextureNeedsRefresh;
+		private bool m_RenderTextureNeedsRefresh = false;
 
 		private InstructionOverlayWindow.Styles styles
 		{

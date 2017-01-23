@@ -22,7 +22,7 @@ namespace UnityEditor
 
 		public ExportRawHeightmap.ByteOrder m_ByteOrder = ExportRawHeightmap.ByteOrder.Windows;
 
-		public bool m_FlipVertically;
+		public bool m_FlipVertically = false;
 
 		public void OnEnable()
 		{
@@ -36,8 +36,8 @@ namespace UnityEditor
 				base.isValid = false;
 				base.errorString = "Terrain does not exist";
 			}
-			string text = EditorUtility.SaveFilePanel("Save Raw Heightmap", string.Empty, "terrain", "raw");
-			if (text != string.Empty)
+			string text = EditorUtility.SaveFilePanel("Save Raw Heightmap", "", "terrain", "raw");
+			if (text != "")
 			{
 				this.WriteRaw(text);
 			}

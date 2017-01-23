@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEngine
 {
-	[Obsolete("ADInterstitialAd class is deprecated. Please use iOS.ADInterstitialAd instead (UnityUpgradable) -> UnityEngine.iOS.ADInterstitialAd", true)]
+	[Obsolete("ADInterstitialAd class is obsolete, Apple iAD service discontinued", true)]
 	public sealed class ADInterstitialAd
 	{
 		public delegate void InterstitialWasLoadedDelegate();

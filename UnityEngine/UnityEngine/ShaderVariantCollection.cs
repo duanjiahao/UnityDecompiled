@@ -22,28 +22,24 @@ namespace UnityEngine
 				ShaderVariantCollection.ShaderVariant.Internal_CheckVariant(shader, passType, keywords);
 			}
 
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void Internal_CheckVariant(Shader shader, PassType passType, string[] keywords);
 		}
 
 		public extern int shaderCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int variantCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isWarmedUp
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -53,7 +49,6 @@ namespace UnityEngine
 			ShaderVariantCollection.Internal_Create(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] ShaderVariantCollection mono);
 
@@ -62,7 +57,6 @@ namespace UnityEngine
 			return this.AddInternal(variant.shader, variant.passType, variant.keywords);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool AddInternal(Shader shader, PassType passType, string[] keywords);
 
@@ -71,7 +65,6 @@ namespace UnityEngine
 			return this.RemoveInternal(variant.shader, variant.passType, variant.keywords);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool RemoveInternal(Shader shader, PassType passType, string[] keywords);
 
@@ -80,15 +73,12 @@ namespace UnityEngine
 			return this.ContainsInternal(variant.shader, variant.passType, variant.keywords);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool ContainsInternal(Shader shader, PassType passType, string[] keywords);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void WarmUp();
 	}

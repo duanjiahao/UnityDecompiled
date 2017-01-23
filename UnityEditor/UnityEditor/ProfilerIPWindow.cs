@@ -11,7 +11,7 @@ namespace UnityEditor
 
 		internal string m_IPString = ProfilerIPWindow.GetLastIPString();
 
-		internal bool didFocus;
+		internal bool didFocus = false;
 
 		public static void Show(Rect buttonScreenRect)
 		{
@@ -23,7 +23,7 @@ namespace UnityEditor
 
 		public static string GetLastIPString()
 		{
-			return EditorPrefs.GetString("ProfilerLastIP", string.Empty);
+			return EditorPrefs.GetString("ProfilerLastIP", "");
 		}
 
 		private void OnGUI()

@@ -74,17 +74,17 @@ namespace UnityEngine
 			ScrollPageDown
 		}
 
-		public TouchScreenKeyboard keyboardOnScreen;
+		public TouchScreenKeyboard keyboardOnScreen = null;
 
-		public int controlID;
+		public int controlID = 0;
 
 		public GUIStyle style = GUIStyle.none;
 
-		public bool multiline;
+		public bool multiline = false;
 
-		public bool hasHorizontalCursorPos;
+		public bool hasHorizontalCursorPos = false;
 
-		public bool isPasswordField;
+		public bool isPasswordField = false;
 
 		internal bool m_HasFocus;
 
@@ -94,23 +94,23 @@ namespace UnityEngine
 
 		private Rect m_Position;
 
-		private int m_CursorIndex;
+		private int m_CursorIndex = 0;
 
-		private int m_SelectIndex;
+		private int m_SelectIndex = 0;
 
-		private bool m_RevealCursor;
+		private bool m_RevealCursor = false;
 
 		public Vector2 graphicalCursorPos;
 
 		public Vector2 graphicalSelectCursorPos;
 
-		private bool m_MouseDragSelectsWholeWords;
+		private bool m_MouseDragSelectsWholeWords = false;
 
-		private int m_DblClickInitPos;
+		private int m_DblClickInitPos = 0;
 
-		private TextEditor.DblClickSnapping m_DblClickSnap;
+		private TextEditor.DblClickSnapping m_DblClickSnap = TextEditor.DblClickSnapping.WORDS;
 
-		private bool m_bJustSelected;
+		private bool m_bJustSelected = false;
 
 		private int m_iAltCursorPos = -1;
 
@@ -157,12 +157,11 @@ namespace UnityEngine
 			}
 			set
 			{
-				if (this.m_Position == value)
+				if (!(this.m_Position == value))
 				{
-					return;
+					this.m_Position = value;
+					this.UpdateScrollOffset();
 				}
-				this.m_Position = value;
-				this.UpdateScrollOffset();
 			}
 		}
 
@@ -209,15 +208,20 @@ namespace UnityEngine
 		{
 			get
 			{
+				string result;
 				if (this.cursorIndex == this.selectIndex)
 				{
-					return string.Empty;
+					result = "";
 				}
-				if (this.cursorIndex < this.selectIndex)
+				else if (this.cursorIndex < this.selectIndex)
 				{
-					return this.text.Substring(this.cursorIndex, this.selectIndex - this.cursorIndex);
+					result = this.text.Substring(this.cursorIndex, this.selectIndex - this.cursorIndex);
 				}
-				return this.text.Substring(this.selectIndex, this.cursorIndex - this.selectIndex);
+				else
+				{
+					result = this.text.Substring(this.selectIndex, this.cursorIndex - this.selectIndex);
+				}
+				return result;
 			}
 		}
 
@@ -268,97 +272,131 @@ namespace UnityEngine
 			this.InitKeyActions();
 			EventModifiers modifiers = e.modifiers;
 			e.modifiers &= ~EventModifiers.CapsLock;
+			bool result;
 			if (TextEditor.s_Keyactions.ContainsKey(e))
 			{
 				TextEditor.TextEditOp operation = TextEditor.s_Keyactions[e];
 				this.PerformOperation(operation);
 				e.modifiers = modifiers;
-				return true;
+				result = true;
 			}
-			e.modifiers = modifiers;
-			return false;
+			else
+			{
+				e.modifiers = modifiers;
+				result = false;
+			}
+			return result;
 		}
 
 		public bool DeleteLineBack()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			int num = this.cursorIndex;
-			int num2 = num;
-			while (num2-- != 0)
+			else
 			{
-				if (this.text[num2] == '\n')
+				int num = this.cursorIndex;
+				int num2 = num;
+				while (num2-- != 0)
 				{
-					num = num2 + 1;
-					break;
+					if (this.text[num2] == '\n')
+					{
+						num = num2 + 1;
+						break;
+					}
+				}
+				if (num2 == -1)
+				{
+					num = 0;
+				}
+				if (this.cursorIndex != num)
+				{
+					this.m_Content.text = this.text.Remove(num, this.cursorIndex - num);
+					int num3 = num;
+					this.cursorIndex = num3;
+					this.selectIndex = num3;
+					result = true;
+				}
+				else
+				{
+					result = false;
 				}
 			}
-			if (num2 == -1)
-			{
-				num = 0;
-			}
-			if (this.cursorIndex != num)
-			{
-				this.m_Content.text = this.text.Remove(num, this.cursorIndex - num);
-				int num3 = num;
-				this.cursorIndex = num3;
-				this.selectIndex = num3;
-				return true;
-			}
-			return false;
+			return result;
 		}
 
 		public bool DeleteWordBack()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			int num = this.FindEndOfPreviousWord(this.cursorIndex);
-			if (this.cursorIndex != num)
+			else
 			{
-				this.m_Content.text = this.text.Remove(num, this.cursorIndex - num);
-				int num2 = num;
-				this.cursorIndex = num2;
-				this.selectIndex = num2;
-				return true;
+				int num = this.FindEndOfPreviousWord(this.cursorIndex);
+				if (this.cursorIndex != num)
+				{
+					this.m_Content.text = this.text.Remove(num, this.cursorIndex - num);
+					int num2 = num;
+					this.cursorIndex = num2;
+					this.selectIndex = num2;
+					result = true;
+				}
+				else
+				{
+					result = false;
+				}
 			}
-			return false;
+			return result;
 		}
 
 		public bool DeleteWordForward()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			int num = this.FindStartOfNextWord(this.cursorIndex);
-			if (this.cursorIndex < this.text.Length)
+			else
 			{
-				this.m_Content.text = this.text.Remove(this.cursorIndex, num - this.cursorIndex);
-				return true;
+				int num = this.FindStartOfNextWord(this.cursorIndex);
+				if (this.cursorIndex < this.text.Length)
+				{
+					this.m_Content.text = this.text.Remove(this.cursorIndex, num - this.cursorIndex);
+					result = true;
+				}
+				else
+				{
+					result = false;
+				}
 			}
-			return false;
+			return result;
 		}
 
 		public bool Delete()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			if (this.cursorIndex < this.text.Length)
+			else if (this.cursorIndex < this.text.Length)
 			{
 				this.m_Content.text = this.text.Remove(this.cursorIndex, 1);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public bool CanPaste()
@@ -368,21 +406,26 @@ namespace UnityEngine
 
 		public bool Backspace()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			if (this.cursorIndex > 0)
+			else if (this.cursorIndex > 0)
 			{
 				this.m_Content.text = this.text.Remove(this.cursorIndex - 1, 1);
 				int num = this.cursorIndex - 1;
 				this.cursorIndex = num;
 				this.selectIndex = num;
 				this.ClearCursorPos();
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public void SelectAll()
@@ -400,22 +443,27 @@ namespace UnityEngine
 
 		public bool DeleteSelection()
 		{
+			bool result;
 			if (this.cursorIndex == this.selectIndex)
 			{
-				return false;
-			}
-			if (this.cursorIndex < this.selectIndex)
-			{
-				this.m_Content.text = this.text.Substring(0, this.cursorIndex) + this.text.Substring(this.selectIndex, this.text.Length - this.selectIndex);
-				this.selectIndex = this.cursorIndex;
+				result = false;
 			}
 			else
 			{
-				this.m_Content.text = this.text.Substring(0, this.selectIndex) + this.text.Substring(this.cursorIndex, this.text.Length - this.cursorIndex);
-				this.cursorIndex = this.selectIndex;
+				if (this.cursorIndex < this.selectIndex)
+				{
+					this.m_Content.text = this.text.Substring(0, this.cursorIndex) + this.text.Substring(this.selectIndex, this.text.Length - this.selectIndex);
+					this.selectIndex = this.cursorIndex;
+				}
+				else
+				{
+					this.m_Content.text = this.text.Substring(0, this.selectIndex) + this.text.Substring(this.cursorIndex, this.text.Length - this.cursorIndex);
+					this.cursorIndex = this.selectIndex;
+				}
+				this.ClearCursorPos();
+				result = true;
 			}
-			this.ClearCursorPos();
-			return true;
+			return result;
 		}
 
 		public void ReplaceSelection(string replace)
@@ -433,23 +481,22 @@ namespace UnityEngine
 
 		public void MoveSelectionToAltCursor()
 		{
-			if (this.m_iAltCursorPos == -1)
+			if (this.m_iAltCursorPos != -1)
 			{
-				return;
+				int iAltCursorPos = this.m_iAltCursorPos;
+				string selectedText = this.SelectedText;
+				this.m_Content.text = this.text.Insert(iAltCursorPos, selectedText);
+				if (iAltCursorPos < this.cursorIndex)
+				{
+					this.cursorIndex += selectedText.Length;
+					this.selectIndex += selectedText.Length;
+				}
+				this.DeleteSelection();
+				int num = iAltCursorPos;
+				this.cursorIndex = num;
+				this.selectIndex = num;
+				this.ClearCursorPos();
 			}
-			int iAltCursorPos = this.m_iAltCursorPos;
-			string selectedText = this.SelectedText;
-			this.m_Content.text = this.text.Insert(iAltCursorPos, selectedText);
-			if (iAltCursorPos < this.cursorIndex)
-			{
-				this.cursorIndex += selectedText.Length;
-				this.selectIndex += selectedText.Length;
-			}
-			this.DeleteSelection();
-			int num = iAltCursorPos;
-			this.cursorIndex = num;
-			this.selectIndex = num;
-			this.ClearCursorPos();
 		}
 
 		public void MoveRight()
@@ -832,11 +879,13 @@ namespace UnityEngine
 			if (this.cursorIndex != this.selectIndex)
 			{
 				this.MoveRight();
-				return;
 			}
-			int num = this.FindStartOfNextWord(this.cursorIndex);
-			this.selectIndex = num;
-			this.cursorIndex = num;
+			else
+			{
+				int num = this.FindStartOfNextWord(this.cursorIndex);
+				this.selectIndex = num;
+				this.cursorIndex = num;
+			}
 		}
 
 		public void MoveToEndOfPreviousWord()
@@ -845,11 +894,13 @@ namespace UnityEngine
 			if (this.cursorIndex != this.selectIndex)
 			{
 				this.MoveLeft();
-				return;
 			}
-			int num = this.FindEndOfPreviousWord(this.cursorIndex);
-			this.selectIndex = num;
-			this.cursorIndex = num;
+			else
+			{
+				int num = this.FindEndOfPreviousWord(this.cursorIndex);
+				this.selectIndex = num;
+				this.cursorIndex = num;
+			}
 		}
 
 		public void SelectToStartOfNextWord()
@@ -866,77 +917,97 @@ namespace UnityEngine
 
 		private TextEditor.CharacterType ClassifyChar(char c)
 		{
+			TextEditor.CharacterType result;
 			if (char.IsWhiteSpace(c))
 			{
-				return TextEditor.CharacterType.WhiteSpace;
+				result = TextEditor.CharacterType.WhiteSpace;
 			}
-			if (char.IsLetterOrDigit(c) || c == '\'')
+			else if (char.IsLetterOrDigit(c) || c == '\'')
 			{
-				return TextEditor.CharacterType.LetterLike;
+				result = TextEditor.CharacterType.LetterLike;
 			}
-			return TextEditor.CharacterType.Symbol;
+			else
+			{
+				result = TextEditor.CharacterType.Symbol;
+			}
+			return result;
 		}
 
 		public int FindStartOfNextWord(int p)
 		{
 			int length = this.text.Length;
+			int result;
 			if (p == length)
 			{
-				return p;
+				result = p;
 			}
-			char c = this.text[p];
-			TextEditor.CharacterType characterType = this.ClassifyChar(c);
-			if (characterType != TextEditor.CharacterType.WhiteSpace)
+			else
 			{
-				p++;
-				while (p < length && this.ClassifyChar(this.text[p]) == characterType)
+				char c = this.text[p];
+				TextEditor.CharacterType characterType = this.ClassifyChar(c);
+				if (characterType != TextEditor.CharacterType.WhiteSpace)
 				{
 					p++;
+					while (p < length && this.ClassifyChar(this.text[p]) == characterType)
+					{
+						p++;
+					}
 				}
-			}
-			else if (c == '\t' || c == '\n')
-			{
-				return p + 1;
-			}
-			if (p == length)
-			{
-				return p;
-			}
-			c = this.text[p];
-			if (c == ' ')
-			{
-				while (p < length && char.IsWhiteSpace(this.text[p]))
+				else if (c == '\t' || c == '\n')
 				{
-					p++;
+					result = p + 1;
+					return result;
+				}
+				if (p == length)
+				{
+					result = p;
+				}
+				else
+				{
+					c = this.text[p];
+					if (c == ' ')
+					{
+						while (p < length && char.IsWhiteSpace(this.text[p]))
+						{
+							p++;
+						}
+					}
+					else if (c == '\t' || c == '\n')
+					{
+						result = p;
+						return result;
+					}
+					result = p;
 				}
 			}
-			else if (c == '\t' || c == '\n')
-			{
-				return p;
-			}
-			return p;
+			return result;
 		}
 
 		private int FindEndOfPreviousWord(int p)
 		{
+			int result;
 			if (p == 0)
 			{
-				return p;
+				result = p;
 			}
-			p--;
-			while (p > 0 && this.text[p] == ' ')
+			else
 			{
 				p--;
-			}
-			TextEditor.CharacterType characterType = this.ClassifyChar(this.text[p]);
-			if (characterType != TextEditor.CharacterType.WhiteSpace)
-			{
-				while (p > 0 && this.ClassifyChar(this.text[p - 1]) == characterType)
+				while (p > 0 && this.text[p] == ' ')
 				{
 					p--;
 				}
+				TextEditor.CharacterType characterType = this.ClassifyChar(this.text[p]);
+				if (characterType != TextEditor.CharacterType.WhiteSpace)
+				{
+					while (p > 0 && this.ClassifyChar(this.text[p - 1]) == characterType)
+					{
+						p--;
+					}
+				}
+				result = p;
 			}
-			return p;
+			return result;
 		}
 
 		public void MoveWordLeft()
@@ -956,11 +1027,13 @@ namespace UnityEngine
 				this.MoveWordRight();
 				this.selectIndex = selectIndex;
 				this.cursorIndex = ((this.cursorIndex >= this.selectIndex) ? this.selectIndex : this.cursorIndex);
-				return;
 			}
-			this.selectIndex = this.cursorIndex;
-			this.MoveWordRight();
-			this.selectIndex = selectIndex;
+			else
+			{
+				this.selectIndex = this.cursorIndex;
+				this.MoveWordRight();
+				this.selectIndex = selectIndex;
+			}
 		}
 
 		public void SelectWordLeft()
@@ -973,11 +1046,13 @@ namespace UnityEngine
 				this.MoveWordLeft();
 				this.selectIndex = selectIndex;
 				this.cursorIndex = ((this.cursorIndex <= this.selectIndex) ? this.selectIndex : this.cursorIndex);
-				return;
 			}
-			this.selectIndex = this.cursorIndex;
-			this.MoveWordLeft();
-			this.selectIndex = selectIndex;
+			else
+			{
+				this.selectIndex = this.cursorIndex;
+				this.MoveWordLeft();
+				this.selectIndex = selectIndex;
+			}
 		}
 
 		public void ExpandSelectGraphicalLineStart()
@@ -1061,62 +1136,73 @@ namespace UnityEngine
 			this.ClearCursorPos();
 			int length = this.text.Length;
 			this.selectIndex = this.cursorIndex;
-			if (length == 0)
+			if (length != 0)
 			{
-				return;
+				if (this.cursorIndex >= length)
+				{
+					this.cursorIndex = length - 1;
+				}
+				if (this.selectIndex >= length)
+				{
+					this.selectIndex--;
+				}
+				if (this.cursorIndex < this.selectIndex)
+				{
+					this.cursorIndex = this.FindEndOfClassification(this.cursorIndex, -1);
+					this.selectIndex = this.FindEndOfClassification(this.selectIndex, 1);
+				}
+				else
+				{
+					this.cursorIndex = this.FindEndOfClassification(this.cursorIndex, 1);
+					this.selectIndex = this.FindEndOfClassification(this.selectIndex, -1);
+				}
+				this.m_bJustSelected = true;
 			}
-			if (this.cursorIndex >= length)
-			{
-				this.cursorIndex = length - 1;
-			}
-			if (this.selectIndex >= length)
-			{
-				this.selectIndex--;
-			}
-			if (this.cursorIndex < this.selectIndex)
-			{
-				this.cursorIndex = this.FindEndOfClassification(this.cursorIndex, -1);
-				this.selectIndex = this.FindEndOfClassification(this.selectIndex, 1);
-			}
-			else
-			{
-				this.cursorIndex = this.FindEndOfClassification(this.cursorIndex, 1);
-				this.selectIndex = this.FindEndOfClassification(this.selectIndex, -1);
-			}
-			this.m_bJustSelected = true;
 		}
 
 		private int FindEndOfClassification(int p, int dir)
 		{
 			int length = this.text.Length;
+			int result;
 			if (p >= length || p < 0)
 			{
-				return p;
+				result = p;
 			}
-			TextEditor.CharacterType characterType = this.ClassifyChar(this.text[p]);
-			while (true)
+			else
 			{
-				p += dir;
-				if (p < 0)
+				TextEditor.CharacterType characterType = this.ClassifyChar(this.text[p]);
+				while (true)
 				{
-					break;
+					p += dir;
+					if (p < 0)
+					{
+						break;
+					}
+					if (p >= length)
+					{
+						goto Block_3;
+					}
+					if (this.ClassifyChar(this.text[p]) != characterType)
+					{
+						goto Block_4;
+					}
 				}
-				if (p >= length)
+				result = 0;
+				return result;
+				Block_3:
+				result = length;
+				return result;
+				Block_4:
+				if (dir == 1)
 				{
-					return length;
+					result = p;
 				}
-				if (this.ClassifyChar(this.text[p]) != characterType)
+				else
 				{
-					goto Block_4;
+					result = p + 1;
 				}
 			}
-			return 0;
-			Block_4:
-			if (dir == 1)
-			{
-				return p;
-			}
-			return p + 1;
+			return result;
 		}
 
 		public void SelectCurrentParagraph()
@@ -1133,9 +1219,9 @@ namespace UnityEngine
 			}
 		}
 
-		public void UpdateScrollOffsetIfNeeded()
+		public void UpdateScrollOffsetIfNeeded(Event evt)
 		{
-			if (Event.current.type != EventType.Repaint && Event.current.type != EventType.Layout)
+			if (evt.type != EventType.Repaint && evt.type != EventType.Layout)
 			{
 				this.UpdateScrollOffset();
 			}
@@ -1223,130 +1309,140 @@ namespace UnityEngine
 		private bool PerformOperation(TextEditor.TextEditOp operation)
 		{
 			this.m_RevealCursor = true;
+			bool result;
 			switch (operation)
 			{
 			case TextEditor.TextEditOp.MoveLeft:
 				this.MoveLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveRight:
 				this.MoveRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveUp:
 				this.MoveUp();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveDown:
 				this.MoveDown();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveLineStart:
 				this.MoveLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveLineEnd:
 				this.MoveLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveTextStart:
 				this.MoveTextStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveTextEnd:
 				this.MoveTextEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveGraphicalLineStart:
 				this.MoveGraphicalLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveGraphicalLineEnd:
 				this.MoveGraphicalLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveWordLeft:
 				this.MoveWordLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveWordRight:
 				this.MoveWordRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveParagraphForward:
 				this.MoveParagraphForward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveParagraphBackward:
 				this.MoveParagraphBackward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveToStartOfNextWord:
 				this.MoveToStartOfNextWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveToEndOfPreviousWord:
 				this.MoveToEndOfPreviousWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectLeft:
 				this.SelectLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectRight:
 				this.SelectRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectUp:
 				this.SelectUp();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectDown:
 				this.SelectDown();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectTextStart:
 				this.SelectTextStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectTextEnd:
 				this.SelectTextEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.ExpandSelectGraphicalLineStart:
 				this.ExpandSelectGraphicalLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd:
 				this.ExpandSelectGraphicalLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectGraphicalLineStart:
 				this.SelectGraphicalLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectGraphicalLineEnd:
 				this.SelectGraphicalLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectWordLeft:
 				this.SelectWordLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectWordRight:
 				this.SelectWordRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectToEndOfPreviousWord:
 				this.SelectToEndOfPreviousWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectToStartOfNextWord:
 				this.SelectToStartOfNextWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectParagraphBackward:
 				this.SelectParagraphBackward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectParagraphForward:
 				this.SelectParagraphForward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.Delete:
-				return this.Delete();
+				result = this.Delete();
+				return result;
 			case TextEditor.TextEditOp.Backspace:
-				return this.Backspace();
+				result = this.Backspace();
+				return result;
 			case TextEditor.TextEditOp.DeleteWordBack:
-				return this.DeleteWordBack();
+				result = this.DeleteWordBack();
+				return result;
 			case TextEditor.TextEditOp.DeleteWordForward:
-				return this.DeleteWordForward();
+				result = this.DeleteWordForward();
+				return result;
 			case TextEditor.TextEditOp.DeleteLineBack:
-				return this.DeleteLineBack();
+				result = this.DeleteLineBack();
+				return result;
 			case TextEditor.TextEditOp.Cut:
-				return this.Cut();
+				result = this.Cut();
+				return result;
 			case TextEditor.TextEditOp.Copy:
 				this.Copy();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.Paste:
-				return this.Paste();
+				result = this.Paste();
+				return result;
 			case TextEditor.TextEditOp.SelectAll:
 				this.SelectAll();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectNone:
 				this.SelectNone();
-				return false;
+				goto IL_2BA;
 			}
 			Debug.Log("Unimplemented: " + operation);
-			return false;
+			IL_2BA:
+			result = false;
+			return result;
 		}
 
 		public void SaveBackup()
@@ -1365,34 +1461,37 @@ namespace UnityEngine
 
 		public bool Cut()
 		{
+			bool result;
 			if (this.isPasswordField)
 			{
-				return false;
+				result = false;
 			}
-			this.Copy();
-			return this.DeleteSelection();
+			else
+			{
+				this.Copy();
+				result = this.DeleteSelection();
+			}
+			return result;
 		}
 
 		public void Copy()
 		{
-			if (this.selectIndex == this.cursorIndex)
+			if (this.selectIndex != this.cursorIndex)
 			{
-				return;
+				if (!this.isPasswordField)
+				{
+					string systemCopyBuffer;
+					if (this.cursorIndex < this.selectIndex)
+					{
+						systemCopyBuffer = this.text.Substring(this.cursorIndex, this.selectIndex - this.cursorIndex);
+					}
+					else
+					{
+						systemCopyBuffer = this.text.Substring(this.selectIndex, this.cursorIndex - this.selectIndex);
+					}
+					GUIUtility.systemCopyBuffer = systemCopyBuffer;
+				}
 			}
-			if (this.isPasswordField)
-			{
-				return;
-			}
-			string systemCopyBuffer;
-			if (this.cursorIndex < this.selectIndex)
-			{
-				systemCopyBuffer = this.text.Substring(this.cursorIndex, this.selectIndex - this.cursorIndex);
-			}
-			else
-			{
-				systemCopyBuffer = this.text.Substring(this.selectIndex, this.cursorIndex - this.selectIndex);
-			}
-			GUIUtility.systemCopyBuffer = systemCopyBuffer;
 		}
 
 		private static string ReplaceNewlinesWithSpaces(string value)
@@ -1406,16 +1505,21 @@ namespace UnityEngine
 		public bool Paste()
 		{
 			string text = GUIUtility.systemCopyBuffer;
-			if (text != string.Empty)
+			bool result;
+			if (text != "")
 			{
 				if (!this.multiline)
 				{
 					text = TextEditor.ReplaceNewlinesWithSpaces(text);
 				}
 				this.ReplaceSelection(text);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private static void MapKey(string key, TextEditor.TextEditOp action)
@@ -1425,90 +1529,89 @@ namespace UnityEngine
 
 		private void InitKeyActions()
 		{
-			if (TextEditor.s_Keyactions != null)
+			if (TextEditor.s_Keyactions == null)
 			{
-				return;
-			}
-			TextEditor.s_Keyactions = new Dictionary<Event, TextEditor.TextEditOp>();
-			TextEditor.MapKey("left", TextEditor.TextEditOp.MoveLeft);
-			TextEditor.MapKey("right", TextEditor.TextEditOp.MoveRight);
-			TextEditor.MapKey("up", TextEditor.TextEditOp.MoveUp);
-			TextEditor.MapKey("down", TextEditor.TextEditOp.MoveDown);
-			TextEditor.MapKey("#left", TextEditor.TextEditOp.SelectLeft);
-			TextEditor.MapKey("#right", TextEditor.TextEditOp.SelectRight);
-			TextEditor.MapKey("#up", TextEditor.TextEditOp.SelectUp);
-			TextEditor.MapKey("#down", TextEditor.TextEditOp.SelectDown);
-			TextEditor.MapKey("delete", TextEditor.TextEditOp.Delete);
-			TextEditor.MapKey("backspace", TextEditor.TextEditOp.Backspace);
-			TextEditor.MapKey("#backspace", TextEditor.TextEditOp.Backspace);
-			if (Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.OSXDashboardPlayer || Application.platform == RuntimePlatform.OSXEditor || (Application.platform == RuntimePlatform.WebGLPlayer && SystemInfo.operatingSystem.StartsWith("Mac")))
-			{
-				TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveGraphicalLineStart);
-				TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
-				TextEditor.MapKey("&left", TextEditor.TextEditOp.MoveWordLeft);
-				TextEditor.MapKey("&right", TextEditor.TextEditOp.MoveWordRight);
-				TextEditor.MapKey("&up", TextEditor.TextEditOp.MoveParagraphBackward);
-				TextEditor.MapKey("&down", TextEditor.TextEditOp.MoveParagraphForward);
-				TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveGraphicalLineStart);
-				TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
-				TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveTextStart);
-				TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveTextEnd);
-				TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectTextStart);
-				TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectTextEnd);
-				TextEditor.MapKey("#^left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
-				TextEditor.MapKey("#^right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
-				TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
-				TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
-				TextEditor.MapKey("#&left", TextEditor.TextEditOp.SelectWordLeft);
-				TextEditor.MapKey("#&right", TextEditor.TextEditOp.SelectWordRight);
-				TextEditor.MapKey("#&up", TextEditor.TextEditOp.SelectParagraphBackward);
-				TextEditor.MapKey("#&down", TextEditor.TextEditOp.SelectParagraphForward);
-				TextEditor.MapKey("#%left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
-				TextEditor.MapKey("#%right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
-				TextEditor.MapKey("#%up", TextEditor.TextEditOp.SelectTextStart);
-				TextEditor.MapKey("#%down", TextEditor.TextEditOp.SelectTextEnd);
-				TextEditor.MapKey("%a", TextEditor.TextEditOp.SelectAll);
-				TextEditor.MapKey("%x", TextEditor.TextEditOp.Cut);
-				TextEditor.MapKey("%c", TextEditor.TextEditOp.Copy);
-				TextEditor.MapKey("%v", TextEditor.TextEditOp.Paste);
-				TextEditor.MapKey("^d", TextEditor.TextEditOp.Delete);
-				TextEditor.MapKey("^h", TextEditor.TextEditOp.Backspace);
-				TextEditor.MapKey("^b", TextEditor.TextEditOp.MoveLeft);
-				TextEditor.MapKey("^f", TextEditor.TextEditOp.MoveRight);
-				TextEditor.MapKey("^a", TextEditor.TextEditOp.MoveLineStart);
-				TextEditor.MapKey("^e", TextEditor.TextEditOp.MoveLineEnd);
-				TextEditor.MapKey("&delete", TextEditor.TextEditOp.DeleteWordForward);
-				TextEditor.MapKey("&backspace", TextEditor.TextEditOp.DeleteWordBack);
-				TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
-			}
-			else
-			{
-				TextEditor.MapKey("home", TextEditor.TextEditOp.MoveGraphicalLineStart);
-				TextEditor.MapKey("end", TextEditor.TextEditOp.MoveGraphicalLineEnd);
-				TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveWordLeft);
-				TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveWordRight);
-				TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveParagraphBackward);
-				TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveParagraphForward);
-				TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveToEndOfPreviousWord);
-				TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveToStartOfNextWord);
-				TextEditor.MapKey("^up", TextEditor.TextEditOp.MoveParagraphBackward);
-				TextEditor.MapKey("^down", TextEditor.TextEditOp.MoveParagraphForward);
-				TextEditor.MapKey("#^left", TextEditor.TextEditOp.SelectToEndOfPreviousWord);
-				TextEditor.MapKey("#^right", TextEditor.TextEditOp.SelectToStartOfNextWord);
-				TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
-				TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
-				TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectGraphicalLineStart);
-				TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectGraphicalLineEnd);
-				TextEditor.MapKey("^delete", TextEditor.TextEditOp.DeleteWordForward);
-				TextEditor.MapKey("^backspace", TextEditor.TextEditOp.DeleteWordBack);
-				TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
-				TextEditor.MapKey("^a", TextEditor.TextEditOp.SelectAll);
-				TextEditor.MapKey("^x", TextEditor.TextEditOp.Cut);
-				TextEditor.MapKey("^c", TextEditor.TextEditOp.Copy);
-				TextEditor.MapKey("^v", TextEditor.TextEditOp.Paste);
-				TextEditor.MapKey("#delete", TextEditor.TextEditOp.Cut);
-				TextEditor.MapKey("^insert", TextEditor.TextEditOp.Copy);
-				TextEditor.MapKey("#insert", TextEditor.TextEditOp.Paste);
+				TextEditor.s_Keyactions = new Dictionary<Event, TextEditor.TextEditOp>();
+				TextEditor.MapKey("left", TextEditor.TextEditOp.MoveLeft);
+				TextEditor.MapKey("right", TextEditor.TextEditOp.MoveRight);
+				TextEditor.MapKey("up", TextEditor.TextEditOp.MoveUp);
+				TextEditor.MapKey("down", TextEditor.TextEditOp.MoveDown);
+				TextEditor.MapKey("#left", TextEditor.TextEditOp.SelectLeft);
+				TextEditor.MapKey("#right", TextEditor.TextEditOp.SelectRight);
+				TextEditor.MapKey("#up", TextEditor.TextEditOp.SelectUp);
+				TextEditor.MapKey("#down", TextEditor.TextEditOp.SelectDown);
+				TextEditor.MapKey("delete", TextEditor.TextEditOp.Delete);
+				TextEditor.MapKey("backspace", TextEditor.TextEditOp.Backspace);
+				TextEditor.MapKey("#backspace", TextEditor.TextEditOp.Backspace);
+				if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX)
+				{
+					TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveGraphicalLineStart);
+					TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
+					TextEditor.MapKey("&left", TextEditor.TextEditOp.MoveWordLeft);
+					TextEditor.MapKey("&right", TextEditor.TextEditOp.MoveWordRight);
+					TextEditor.MapKey("&up", TextEditor.TextEditOp.MoveParagraphBackward);
+					TextEditor.MapKey("&down", TextEditor.TextEditOp.MoveParagraphForward);
+					TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveGraphicalLineStart);
+					TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
+					TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveTextStart);
+					TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveTextEnd);
+					TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectTextStart);
+					TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectTextEnd);
+					TextEditor.MapKey("#^left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
+					TextEditor.MapKey("#^right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
+					TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
+					TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
+					TextEditor.MapKey("#&left", TextEditor.TextEditOp.SelectWordLeft);
+					TextEditor.MapKey("#&right", TextEditor.TextEditOp.SelectWordRight);
+					TextEditor.MapKey("#&up", TextEditor.TextEditOp.SelectParagraphBackward);
+					TextEditor.MapKey("#&down", TextEditor.TextEditOp.SelectParagraphForward);
+					TextEditor.MapKey("#%left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
+					TextEditor.MapKey("#%right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
+					TextEditor.MapKey("#%up", TextEditor.TextEditOp.SelectTextStart);
+					TextEditor.MapKey("#%down", TextEditor.TextEditOp.SelectTextEnd);
+					TextEditor.MapKey("%a", TextEditor.TextEditOp.SelectAll);
+					TextEditor.MapKey("%x", TextEditor.TextEditOp.Cut);
+					TextEditor.MapKey("%c", TextEditor.TextEditOp.Copy);
+					TextEditor.MapKey("%v", TextEditor.TextEditOp.Paste);
+					TextEditor.MapKey("^d", TextEditor.TextEditOp.Delete);
+					TextEditor.MapKey("^h", TextEditor.TextEditOp.Backspace);
+					TextEditor.MapKey("^b", TextEditor.TextEditOp.MoveLeft);
+					TextEditor.MapKey("^f", TextEditor.TextEditOp.MoveRight);
+					TextEditor.MapKey("^a", TextEditor.TextEditOp.MoveLineStart);
+					TextEditor.MapKey("^e", TextEditor.TextEditOp.MoveLineEnd);
+					TextEditor.MapKey("&delete", TextEditor.TextEditOp.DeleteWordForward);
+					TextEditor.MapKey("&backspace", TextEditor.TextEditOp.DeleteWordBack);
+					TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
+				}
+				else
+				{
+					TextEditor.MapKey("home", TextEditor.TextEditOp.MoveGraphicalLineStart);
+					TextEditor.MapKey("end", TextEditor.TextEditOp.MoveGraphicalLineEnd);
+					TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveWordLeft);
+					TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveWordRight);
+					TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveParagraphBackward);
+					TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveParagraphForward);
+					TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveToEndOfPreviousWord);
+					TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveToStartOfNextWord);
+					TextEditor.MapKey("^up", TextEditor.TextEditOp.MoveParagraphBackward);
+					TextEditor.MapKey("^down", TextEditor.TextEditOp.MoveParagraphForward);
+					TextEditor.MapKey("#^left", TextEditor.TextEditOp.SelectToEndOfPreviousWord);
+					TextEditor.MapKey("#^right", TextEditor.TextEditOp.SelectToStartOfNextWord);
+					TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
+					TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
+					TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectGraphicalLineStart);
+					TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectGraphicalLineEnd);
+					TextEditor.MapKey("^delete", TextEditor.TextEditOp.DeleteWordForward);
+					TextEditor.MapKey("^backspace", TextEditor.TextEditOp.DeleteWordBack);
+					TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
+					TextEditor.MapKey("^a", TextEditor.TextEditOp.SelectAll);
+					TextEditor.MapKey("^x", TextEditor.TextEditOp.Cut);
+					TextEditor.MapKey("^c", TextEditor.TextEditOp.Copy);
+					TextEditor.MapKey("^v", TextEditor.TextEditOp.Paste);
+					TextEditor.MapKey("#delete", TextEditor.TextEditOp.Cut);
+					TextEditor.MapKey("^insert", TextEditor.TextEditOp.Copy);
+					TextEditor.MapKey("#insert", TextEditor.TextEditOp.Paste);
+				}
 			}
 		}
 

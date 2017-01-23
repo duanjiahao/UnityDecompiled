@@ -21,7 +21,15 @@ namespace UnityEditor
 		{
 			public static readonly GUIStyle categoryBox;
 
-			public static readonly GUIContent colorSpaceWarning;
+			public static readonly GUIContent colorSpaceWindowsWarning;
+
+			public static readonly GUIContent colorSpaceAndroidWarning;
+
+			public static readonly GUIContent colorSpaceWebGLWarning;
+
+			public static readonly GUIContent colorSpaceIOSWarning;
+
+			public static readonly GUIContent colorSpaceTVOSWarning;
 
 			public static readonly GUIContent cursorHotspot;
 
@@ -31,22 +39,31 @@ namespace UnityEditor
 
 			public static readonly GUIContent vertexChannelCompressionMask;
 
-			public static readonly GUIContent[] kRenderPaths;
+			public static readonly GUIContent require31;
+
+			public static readonly GUIContent requireAEP;
+
+			public static readonly GUIContent[] kStereoRenderingMethodsAll;
 
 			static Styles()
 			{
 				PlayerSettingsEditor.Styles.categoryBox = new GUIStyle(EditorStyles.helpBox);
-				PlayerSettingsEditor.Styles.colorSpaceWarning = EditorGUIUtility.TextContent("Selected color space is not supported on this hardware.");
+				PlayerSettingsEditor.Styles.colorSpaceWindowsWarning = EditorGUIUtility.TextContent("On Windows, linear colorspace with OpenGL ES 2.0 and OpenGL ES 3.x is not supported, consider using OpenGL Core API instead by unchecking 'Automatic Graphics API'");
+				PlayerSettingsEditor.Styles.colorSpaceAndroidWarning = EditorGUIUtility.TextContent("On Android, linear colorspace requires OpenGL ES 3.0 only, uncheck 'Automatic Graphics API' to remove OpenGL ES 2 API and 'Minimum API Level' must be at least Android 4.3");
+				PlayerSettingsEditor.Styles.colorSpaceWebGLWarning = EditorGUIUtility.TextContent("On WebGL, linear colorspace is not supported");
+				PlayerSettingsEditor.Styles.colorSpaceIOSWarning = EditorGUIUtility.TextContent("Linear colorspace requires Metal API only. Uncheck 'Automatic Graphics API' and remove OpenGL ES 2 API. Additionally, 'minimum iOS version' set to 8.0 at least");
+				PlayerSettingsEditor.Styles.colorSpaceTVOSWarning = EditorGUIUtility.TextContent("Linear colorspace requires Metal API only. Uncheck 'Automatic Graphics API' and remove OpenGL ES 2 API.");
 				PlayerSettingsEditor.Styles.cursorHotspot = EditorGUIUtility.TextContent("Cursor Hotspot");
 				PlayerSettingsEditor.Styles.defaultCursor = EditorGUIUtility.TextContent("Default Cursor");
 				PlayerSettingsEditor.Styles.defaultIcon = EditorGUIUtility.TextContent("Default Icon");
 				PlayerSettingsEditor.Styles.vertexChannelCompressionMask = EditorGUIUtility.TextContent("Vertex Compression|Select which vertex channels should be compressed. Compression can save memory and bandwidth but precision will be lower.");
-				PlayerSettingsEditor.Styles.kRenderPaths = new GUIContent[]
+				PlayerSettingsEditor.Styles.require31 = EditorGUIUtility.TextContent("Require ES3.1");
+				PlayerSettingsEditor.Styles.requireAEP = EditorGUIUtility.TextContent("Require ES3.1+AEP");
+				PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll = new GUIContent[]
 				{
-					new GUIContent("Forward"),
-					new GUIContent("Deferred"),
-					new GUIContent("Legacy Vertex Lit"),
-					new GUIContent("Legacy Deferred (light prepass)")
+					new GUIContent("Multi pass (Slow)"),
+					new GUIContent("Single Pass (Fast)"),
+					new GUIContent("Single Pass Instanced (Fastest)")
 				};
 				PlayerSettingsEditor.Styles.categoryBox.padding.left = 14;
 			}
@@ -64,11 +81,10 @@ namespace UnityEditor
 
 		private const int kIconSpacing = 6;
 
-		private static int[] kRenderPathValues = new int[]
+		private static int[] kStereoRenderingMethodValues = new int[]
 		{
-			1,
-			3,
 			0,
+			1,
 			2
 		};
 
@@ -77,6 +93,13 @@ namespace UnityEditor
 			BuildTargetGroup.Standalone,
 			BuildTargetGroup.PS4
 		};
+
+		private static BuildTargetGroup[] kStereoInstancingRenderingTargetGroups = new BuildTargetGroup[]
+		{
+			BuildTargetGroup.WSA
+		};
+
+		private PlayerSettingsSplashScreenEditor m_SplashScreenEditor;
 
 		public static readonly GUIContent defaultIsFullScreen = EditorGUIUtility.TextContent("Default Is Full Screen*");
 
@@ -94,7 +117,13 @@ namespace UnityEditor
 
 		private SerializedProperty m_IPhoneBuildNumber;
 
+		private SerializedProperty m_AppleDeveloperTeamID;
+
+		private SerializedProperty m_CameraUsageDescription;
+
 		private SerializedProperty m_LocationUsageDescription;
+
+		private SerializedProperty m_MicrophoneUsageDescription;
 
 		private SerializedProperty m_ApiCompatibilityLevel;
 
@@ -124,6 +153,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_androidShowActivityIndicatorOnLoading;
 
+		private SerializedProperty m_tizenShowActivityIndicatorOnLoading;
+
 		private SerializedProperty m_IPhoneSdkVersion;
 
 		private SerializedProperty m_IPhoneTargetOSVersion;
@@ -144,8 +175,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_UIStatusBarStyle;
 
-		private SerializedProperty m_IOSAppInBackgroundBehavior;
-
 		private SerializedProperty m_IOSAllowHTTPDownload;
 
 		private SerializedProperty m_SubmitAnalytics;
@@ -158,7 +187,7 @@ namespace UnityEditor
 
 		private SerializedProperty m_useOnDemandResources;
 
-		private SerializedProperty m_OverrideIPodMusic;
+		private SerializedProperty m_MuteOtherAudioSources;
 
 		private SerializedProperty m_PrepareIOSForRecording;
 
@@ -170,19 +199,7 @@ namespace UnityEditor
 
 		private SerializedProperty m_EnableCrashReportAPI;
 
-		private SerializedProperty m_XboxTitleId;
-
-		private SerializedProperty m_XboxImageXexPath;
-
-		private SerializedProperty m_XboxSpaPath;
-
-		private SerializedProperty m_XboxGenerateSpa;
-
 		private SerializedProperty m_XboxDeployKinectResources;
-
-		private SerializedProperty m_XboxPIXTextureCapture;
-
-		private SerializedProperty m_XboxEnableAvatar;
 
 		private SerializedProperty m_XboxEnableKinect;
 
@@ -194,21 +211,13 @@ namespace UnityEditor
 
 		private SerializedProperty m_XboxDeployKinectHeadPosition;
 
-		private SerializedProperty m_XboxSplashScreen;
-
 		private SerializedProperty m_XboxEnableSpeech;
 
 		private SerializedProperty m_XboxSpeechDB;
 
 		private SerializedProperty m_XboxEnableFitness;
 
-		private SerializedProperty m_XboxAdditionalTitleMemorySize;
-
-		private SerializedProperty m_XboxEnableGuest;
-
 		private SerializedProperty m_VideoMemoryForVertexBuffers;
-
-		private SerializedProperty m_ps3SplashScreen;
 
 		private SerializedProperty m_CompanyName;
 
@@ -218,17 +227,11 @@ namespace UnityEditor
 
 		private SerializedProperty m_CursorHotspot;
 
-		private SerializedProperty m_ShowUnitySplashScreen;
-
-		private SerializedProperty m_SplashScreenStyle;
-
 		private SerializedProperty m_DefaultScreenWidth;
 
 		private SerializedProperty m_DefaultScreenHeight;
 
-		private SerializedProperty m_RenderingPath;
-
-		private SerializedProperty m_MobileRenderingPath;
+		private SerializedProperty m_StereoRenderingPath;
 
 		private SerializedProperty m_ActiveColorSpace;
 
@@ -239,6 +242,8 @@ namespace UnityEditor
 		private SerializedProperty m_StripUnusedMeshComponents;
 
 		private SerializedProperty m_VertexChannelCompressionMask;
+
+		private SerializedProperty m_MetalForceHardShadows;
 
 		private SerializedProperty m_DisplayResolutionDialog;
 
@@ -274,23 +279,25 @@ namespace UnityEditor
 
 		private SerializedProperty m_CaptureSingleScreen;
 
-		private SerializedProperty m_ResolutionDialogBanner;
-
-		private SerializedProperty m_VirtualRealitySplashScreen;
-
 		private SerializedProperty m_SupportedAspectRatios;
 
 		private SerializedProperty m_SkinOnGPU;
 
 		private SerializedProperty m_GraphicsJobs;
 
+		private SerializedProperty m_VREditorSettings;
+
+		private SerializedProperty m_RequireES31;
+
+		private SerializedProperty m_RequireES31AEP;
+
 		private Dictionary<BuildTarget, ReorderableList> m_GraphicsDeviceLists = new Dictionary<BuildTarget, ReorderableList>();
 
-		private PlayerSettingsEditorVR m_VRSettings = new PlayerSettingsEditorVR();
+		public PlayerSettingsEditorVR m_VRSettings;
 
-		private int selectedPlatform;
+		private int selectedPlatform = 0;
 
-		private int scriptingDefinesControlID;
+		private int scriptingDefinesControlID = 0;
 
 		private ISettingEditorExtension[] m_SettingsExtensions;
 
@@ -302,7 +309,21 @@ namespace UnityEditor
 
 		private static Texture2D s_WarningIcon;
 
+		private Dictionary<string, Texture2D[]> m_PlatformIcons = new Dictionary<string, Texture2D[]>();
+
 		private static Dictionary<ScriptingImplementation, GUIContent> m_NiceScriptingBackendNames;
+
+		private PlayerSettingsSplashScreenEditor splashScreenEditor
+		{
+			get
+			{
+				if (this.m_SplashScreenEditor == null)
+				{
+					this.m_SplashScreenEditor = new PlayerSettingsSplashScreenEditor(this);
+				}
+				return this.m_SplashScreenEditor;
+			}
+		}
 
 		private bool IsMobileTarget(BuildTargetGroup targetGroup)
 		{
@@ -323,33 +344,30 @@ namespace UnityEditor
 		{
 			this.validPlatforms = BuildPlayerWindow.GetValidPlatforms().ToArray();
 			this.m_IPhoneSdkVersion = this.FindPropertyAssert("iPhoneSdkVersion");
-			this.m_IPhoneTargetOSVersion = this.FindPropertyAssert("iPhoneTargetOSVersion");
+			this.m_IPhoneTargetOSVersion = this.FindPropertyAssert("iOSTargetOSVersionString");
 			this.m_IPhoneStrippingLevel = this.FindPropertyAssert("iPhoneStrippingLevel");
 			this.m_IPhoneBuildNumber = this.FindPropertyAssert("iPhoneBuildNumber");
 			this.m_StripEngineCode = this.FindPropertyAssert("stripEngineCode");
 			this.m_tvOSSdkVersion = this.FindPropertyAssert("tvOSSdkVersion");
-			this.m_tvOSTargetOSVersion = this.FindPropertyAssert("tvOSTargetOSVersion");
+			this.m_tvOSTargetOSVersion = this.FindPropertyAssert("tvOSTargetOSVersionString");
 			this.m_IPhoneScriptCallOptimization = this.FindPropertyAssert("iPhoneScriptCallOptimization");
 			this.m_AndroidProfiler = this.FindPropertyAssert("AndroidProfiler");
 			this.m_CompanyName = this.FindPropertyAssert("companyName");
 			this.m_ProductName = this.FindPropertyAssert("productName");
 			this.m_DefaultCursor = this.FindPropertyAssert("defaultCursor");
 			this.m_CursorHotspot = this.FindPropertyAssert("cursorHotspot");
-			this.m_ShowUnitySplashScreen = this.FindPropertyAssert("m_ShowUnitySplashScreen");
-			this.m_SplashScreenStyle = this.FindPropertyAssert("m_SplashScreenStyle");
 			this.m_UIPrerenderedIcon = this.FindPropertyAssert("uIPrerenderedIcon");
-			this.m_ResolutionDialogBanner = this.FindPropertyAssert("resolutionDialogBanner");
-			this.m_VirtualRealitySplashScreen = this.FindPropertyAssert("m_VirtualRealitySplashScreen");
 			this.m_UIRequiresFullScreen = this.FindPropertyAssert("uIRequiresFullScreen");
 			this.m_UIStatusBarHidden = this.FindPropertyAssert("uIStatusBarHidden");
 			this.m_UIStatusBarStyle = this.FindPropertyAssert("uIStatusBarStyle");
-			this.m_RenderingPath = this.FindPropertyAssert("m_RenderingPath");
-			this.m_MobileRenderingPath = this.FindPropertyAssert("m_MobileRenderingPath");
+			this.m_StereoRenderingPath = this.FindPropertyAssert("m_StereoRenderingPath");
 			this.m_ActiveColorSpace = this.FindPropertyAssert("m_ActiveColorSpace");
 			this.m_MTRendering = this.FindPropertyAssert("m_MTRendering");
 			this.m_MobileMTRendering = this.FindPropertyAssert("m_MobileMTRendering");
 			this.m_StripUnusedMeshComponents = this.FindPropertyAssert("StripUnusedMeshComponents");
 			this.m_VertexChannelCompressionMask = this.FindPropertyAssert("VertexChannelCompressionMask");
+			this.m_MetalForceHardShadows = this.FindPropertyAssert("iOSMetalForceHardShadows");
+			this.m_AppleDeveloperTeamID = this.FindPropertyAssert("appleDeveloperTeamID");
 			this.m_ApplicationBundleIdentifier = base.serializedObject.FindProperty("bundleIdentifier");
 			if (this.m_ApplicationBundleIdentifier == null)
 			{
@@ -362,16 +380,17 @@ namespace UnityEditor
 			}
 			this.m_useOnDemandResources = this.FindPropertyAssert("useOnDemandResources");
 			this.m_AccelerometerFrequency = this.FindPropertyAssert("accelerometerFrequency");
-			this.m_OverrideIPodMusic = this.FindPropertyAssert("Override IPod Music");
+			this.m_MuteOtherAudioSources = this.FindPropertyAssert("muteOtherAudioSources");
 			this.m_PrepareIOSForRecording = this.FindPropertyAssert("Prepare IOS For Recording");
 			this.m_UIRequiresPersistentWiFi = this.FindPropertyAssert("uIRequiresPersistentWiFi");
-			this.m_IOSAppInBackgroundBehavior = this.FindPropertyAssert("iosAppInBackgroundBehavior");
 			this.m_IOSAllowHTTPDownload = this.FindPropertyAssert("iosAllowHTTPDownload");
 			this.m_SubmitAnalytics = this.FindPropertyAssert("submitAnalytics");
 			this.m_IOSURLSchemes = this.FindPropertyAssert("iOSURLSchemes");
 			this.m_ApiCompatibilityLevel = this.FindPropertyAssert("apiCompatibilityLevel");
 			this.m_AotOptions = this.FindPropertyAssert("aotOptions");
+			this.m_CameraUsageDescription = this.FindPropertyAssert("cameraUsageDescription");
 			this.m_LocationUsageDescription = this.FindPropertyAssert("locationUsageDescription");
+			this.m_MicrophoneUsageDescription = this.FindPropertyAssert("microphoneUsageDescription");
 			this.m_EnableInternalProfiler = this.FindPropertyAssert("enableInternalProfiler");
 			this.m_ActionOnDotNetUnhandledException = this.FindPropertyAssert("actionOnDotNetUnhandledException");
 			this.m_LogObjCUncaughtExceptions = this.FindPropertyAssert("logObjCUncaughtExceptions");
@@ -389,6 +408,7 @@ namespace UnityEditor
 			this.m_DisableDepthAndStencilBuffers = this.FindPropertyAssert("disableDepthAndStencilBuffers");
 			this.m_iosShowActivityIndicatorOnLoading = this.FindPropertyAssert("iosShowActivityIndicatorOnLoading");
 			this.m_androidShowActivityIndicatorOnLoading = this.FindPropertyAssert("androidShowActivityIndicatorOnLoading");
+			this.m_tizenShowActivityIndicatorOnLoading = this.FindPropertyAssert("tizenShowActivityIndicatorOnLoading");
 			this.m_DefaultIsFullScreen = this.FindPropertyAssert("defaultIsFullScreen");
 			this.m_DefaultIsNativeResolution = this.FindPropertyAssert("defaultIsNativeResolution");
 			this.m_CaptureSingleScreen = this.FindPropertyAssert("captureSingleScreen");
@@ -409,26 +429,18 @@ namespace UnityEditor
 			this.m_SkinOnGPU = this.FindPropertyAssert("gpuSkinning");
 			this.m_GraphicsJobs = this.FindPropertyAssert("graphicsJobs");
 			this.m_ForceSingleInstance = this.FindPropertyAssert("forceSingleInstance");
-			this.m_XboxTitleId = this.FindPropertyAssert("XboxTitleId");
-			this.m_XboxImageXexPath = this.FindPropertyAssert("XboxImageXexPath");
-			this.m_XboxSpaPath = this.FindPropertyAssert("XboxSpaPath");
-			this.m_XboxGenerateSpa = this.FindPropertyAssert("XboxGenerateSpa");
+			this.m_RequireES31 = this.FindPropertyAssert("openGLRequireES31");
+			this.m_RequireES31AEP = this.FindPropertyAssert("openGLRequireES31AEP");
 			this.m_XboxDeployKinectResources = this.FindPropertyAssert("XboxDeployKinectResources");
-			this.m_XboxPIXTextureCapture = this.FindPropertyAssert("xboxPIXTextureCapture");
-			this.m_XboxEnableAvatar = this.FindPropertyAssert("xboxEnableAvatar");
 			this.m_XboxEnableKinect = this.FindPropertyAssert("xboxEnableKinect");
 			this.m_XboxEnableKinectAutoTracking = this.FindPropertyAssert("xboxEnableKinectAutoTracking");
-			this.m_XboxSplashScreen = this.FindPropertyAssert("XboxSplashScreen");
 			this.m_XboxEnableSpeech = this.FindPropertyAssert("xboxEnableSpeech");
 			this.m_XboxSpeechDB = this.FindPropertyAssert("xboxSpeechDB");
 			this.m_XboxEnableFitness = this.FindPropertyAssert("xboxEnableFitness");
-			this.m_XboxAdditionalTitleMemorySize = this.FindPropertyAssert("xboxAdditionalTitleMemorySize");
 			this.m_XboxEnableHeadOrientation = this.FindPropertyAssert("xboxEnableHeadOrientation");
 			this.m_XboxDeployHeadOrientation = this.FindPropertyAssert("xboxDeployKinectHeadOrientation");
 			this.m_XboxDeployKinectHeadPosition = this.FindPropertyAssert("xboxDeployKinectHeadPosition");
-			this.m_XboxEnableGuest = this.FindPropertyAssert("xboxEnableGuest");
 			this.m_VideoMemoryForVertexBuffers = this.FindPropertyAssert("videoMemoryForVertexBuffers");
-			this.m_ps3SplashScreen = this.FindPropertyAssert("ps3SplashScreen");
 			this.m_SettingsExtensions = new ISettingEditorExtension[this.validPlatforms.Length];
 			for (int i = 0; i < this.validPlatforms.Length; i++)
 			{
@@ -447,6 +459,9 @@ namespace UnityEditor
 			this.m_ShowResolution.value = (!this.m_DefaultIsFullScreen.boolValue || !this.m_DefaultIsNativeResolution.boolValue);
 			this.m_ShowDefaultIsNativeResolution.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowResolution.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_VREditorSettings = this.FindPropertyAssert("vrEditorSettings");
+			this.m_VRSettings = new PlayerSettingsEditorVR(this.m_VREditorSettings);
+			this.splashScreenEditor.OnEnable();
 		}
 
 		private void OnDisable()
@@ -476,7 +491,7 @@ namespace UnityEditor
 					GUIUtility.keyboardControl = 0;
 					PlayerSettings.SetScriptingDefineSymbolsForGroup(this.validPlatforms[num].targetGroup, EditorGUI.s_DelayedTextEditor.text);
 				}
-				GUI.FocusControl(string.Empty);
+				GUI.FocusControl("");
 			}
 			GUILayout.Label("Settings for " + this.validPlatforms[this.selectedPlatform].title.text, new GUILayoutOption[0]);
 			EditorGUIUtility.labelWidth = Mathf.Max(150f, EditorGUIUtility.labelWidth - 8f);
@@ -484,7 +499,7 @@ namespace UnityEditor
 			BuildTargetGroup targetGroup = buildPlatform.targetGroup;
 			this.ResolutionSectionGUI(targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
 			this.IconSectionGUI(targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
-			this.SplashSectionGUI(buildPlatform, targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
+			this.m_SplashScreenEditor.SplashSectionGUI(buildPlatform, targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
 			this.DebugAndCrashReportingGUI(buildPlatform, targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
 			this.OtherSectionGUI(buildPlatform, targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
 			this.PublishSectionGUI(targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
@@ -498,18 +513,22 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_ProductName, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
 			GUI.changed = false;
-			string empty = string.Empty;
-			Texture2D[] array = PlayerSettings.GetIconsForPlatform(empty);
-			int[] iconWidthsForPlatform = PlayerSettings.GetIconWidthsForPlatform(empty);
+			string text = "";
+			Texture2D[] array;
+			if (!this.m_PlatformIcons.TryGetValue(text, out array))
+			{
+				array = (this.m_PlatformIcons[text] = PlayerSettings.GetIconsForPlatform(text));
+			}
+			int[] iconWidthsForPlatform = PlayerSettings.GetIconWidthsForPlatform(text);
 			if (array.Length != iconWidthsForPlatform.Length)
 			{
 				array = new Texture2D[iconWidthsForPlatform.Length];
-				PlayerSettings.SetIconsForPlatform(empty, array);
+				this.m_PlatformIcons[text] = array;
 			}
 			array[0] = (Texture2D)EditorGUILayout.ObjectField(PlayerSettingsEditor.Styles.defaultIcon, array[0], typeof(Texture2D), false, new GUILayoutOption[0]);
 			if (GUI.changed)
 			{
-				PlayerSettings.SetIconsForPlatform(empty, array);
+				PlayerSettings.SetIconsForPlatform(text, array);
 			}
 			GUILayout.Space(3f);
 			this.m_DefaultCursor.objectReferenceValue = EditorGUILayout.ObjectField(PlayerSettingsEditor.Styles.defaultCursor, this.m_DefaultCursor.objectReferenceValue, typeof(Texture2D), false, new GUILayoutOption[0]);
@@ -518,7 +537,7 @@ namespace UnityEditor
 			EditorGUI.PropertyField(rect, this.m_CursorHotspot, GUIContent.none);
 		}
 
-		private bool BeginSettingsBox(int nr, GUIContent header)
+		public bool BeginSettingsBox(int nr, GUIContent header)
 		{
 			bool enabled = GUI.enabled;
 			GUI.enabled = true;
@@ -526,8 +545,9 @@ namespace UnityEditor
 			Rect rect = GUILayoutUtility.GetRect(20f, 18f);
 			rect.x += 3f;
 			rect.width += 6f;
+			EditorGUI.BeginChangeCheck();
 			bool flag = GUI.Toggle(rect, this.m_SelectedSection.value == nr, header, EditorStyles.inspectorTitlebarText);
-			if (GUI.changed)
+			if (EditorGUI.EndChangeCheck())
 			{
 				this.m_SelectedSection.value = ((!flag) ? -1 : nr);
 				GUIUtility.keyboardControl = 0;
@@ -537,7 +557,7 @@ namespace UnityEditor
 			return EditorGUILayout.BeginFadeGroup(this.m_SectionAnimators[nr].faded);
 		}
 
-		private void EndSettingsBox()
+		public void EndSettingsBox()
 		{
 			EditorGUILayout.EndFadeGroup();
 			EditorGUILayout.EndVertical();
@@ -548,14 +568,13 @@ namespace UnityEditor
 			GUILayout.Label(EditorGUIUtility.TextContent("Not applicable for this platform."), EditorStyles.miniLabel, new GUILayoutOption[0]);
 		}
 
-		private void ShowSharedNote()
+		public void ShowSharedNote()
 		{
 			GUILayout.Label(EditorGUIUtility.TextContent("* Shared setting between multiple platforms."), EditorStyles.miniLabel, new GUILayoutOption[0]);
 		}
 
 		private void IconSectionGUI(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
-			GUI.changed = false;
 			if (this.BeginSettingsBox(1, EditorGUIUtility.TextContent("Icon")))
 			{
 				bool flag = true;
@@ -568,34 +587,30 @@ namespace UnityEditor
 					bool flag2 = this.selectedPlatform < 0;
 					BuildPlayerWindow.BuildPlatform buildPlatform = null;
 					targetGroup = BuildTargetGroup.Standalone;
-					string platform = string.Empty;
+					string text = "";
 					if (!flag2)
 					{
 						buildPlatform = this.validPlatforms[this.selectedPlatform];
 						targetGroup = buildPlatform.targetGroup;
-						platform = buildPlatform.name;
+						text = buildPlatform.name;
 					}
 					bool enabled = GUI.enabled;
-					if (targetGroup == BuildTargetGroup.XBOX360 || targetGroup == BuildTargetGroup.SamsungTV || targetGroup == BuildTargetGroup.WebGL)
+					if (targetGroup == BuildTargetGroup.SamsungTV || targetGroup == BuildTargetGroup.WebGL)
 					{
 						this.ShowNoSettings();
 						EditorGUILayout.Space();
 					}
-					else if (targetGroup != BuildTargetGroup.Metro)
+					else if (targetGroup != BuildTargetGroup.WSA)
 					{
-						Texture2D[] array = PlayerSettings.GetIconsForPlatform(platform);
-						int[] iconWidthsForPlatform = PlayerSettings.GetIconWidthsForPlatform(platform);
-						int[] iconHeightsForPlatform = PlayerSettings.GetIconHeightsForPlatform(platform);
-						bool flag3 = true;
-						if (flag2)
+						Texture2D[] array;
+						if (!this.m_PlatformIcons.TryGetValue(text, out array))
 						{
-							if (array.Length != iconWidthsForPlatform.Length)
-							{
-								array = new Texture2D[iconWidthsForPlatform.Length];
-								PlayerSettings.SetIconsForPlatform(platform, array);
-							}
+							array = (this.m_PlatformIcons[text] = PlayerSettings.GetIconsForPlatform(text));
 						}
-						else
+						int[] iconWidthsForPlatform = PlayerSettings.GetIconWidthsForPlatform(text);
+						int[] iconHeightsForPlatform = PlayerSettings.GetIconHeightsForPlatform(text);
+						bool flag3 = true;
+						if (!flag2)
 						{
 							GUI.changed = false;
 							flag3 = (array.Length == iconWidthsForPlatform.Length);
@@ -611,7 +626,11 @@ namespace UnityEditor
 								{
 									array = new Texture2D[0];
 								}
-								PlayerSettings.SetIconsForPlatform(platform, array);
+								this.m_PlatformIcons[text] = array;
+								if (GUI.changed)
+								{
+									PlayerSettings.SetIconsForPlatform(text, array);
+								}
 							}
 						}
 						GUI.changed = false;
@@ -621,8 +640,8 @@ namespace UnityEditor
 							int num2 = (int)((float)iconHeightsForPlatform[i] * (float)num / (float)iconWidthsForPlatform[i]);
 							Rect rect = GUILayoutUtility.GetRect(64f, (float)(Mathf.Max(64, num2) + 6));
 							float num3 = Mathf.Min(rect.width, EditorGUIUtility.labelWidth + 4f + 64f + 6f + 96f);
-							string text = iconWidthsForPlatform[i] + "x" + iconHeightsForPlatform[i];
-							GUI.Label(new Rect(rect.x, rect.y, num3 - 96f - 64f - 12f, 20f), text);
+							string text2 = iconWidthsForPlatform[i] + "x" + iconHeightsForPlatform[i];
+							GUI.Label(new Rect(rect.x, rect.y, num3 - 96f - 64f - 12f, 20f), text2);
 							if (flag3)
 							{
 								int num4 = 64;
@@ -630,19 +649,19 @@ namespace UnityEditor
 								array[i] = (Texture2D)EditorGUI.ObjectField(new Rect(rect.x + num3 - 96f - 64f - 6f, rect.y, (float)num4, (float)num5), array[i], typeof(Texture2D), false);
 							}
 							Rect position = new Rect(rect.x + num3 - 96f, rect.y, (float)num, (float)num2);
-							Texture2D iconForPlatformAtSize = PlayerSettings.GetIconForPlatformAtSize(platform, iconWidthsForPlatform[i], iconHeightsForPlatform[i]);
+							Texture2D iconForPlatformAtSize = PlayerSettings.GetIconForPlatformAtSize(text, iconWidthsForPlatform[i], iconHeightsForPlatform[i]);
 							if (iconForPlatformAtSize != null)
 							{
 								GUI.DrawTexture(position, iconForPlatformAtSize);
 							}
 							else
 							{
-								GUI.Box(position, string.Empty);
+								GUI.Box(position, "");
 							}
 						}
 						if (GUI.changed)
 						{
-							PlayerSettings.SetIconsForPlatform(platform, array);
+							PlayerSettings.SetIconsForPlatform(text, array);
 						}
 						GUI.enabled = enabled;
 						if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
@@ -662,11 +681,16 @@ namespace UnityEditor
 
 		private static bool TargetSupportsOptionalBuiltinSplashScreen(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
+			bool result;
 			if (settingsExtension != null)
 			{
-				return settingsExtension.CanShowUnitySplashScreen();
+				result = settingsExtension.CanShowUnitySplashScreen();
 			}
-			return targetGroup == BuildTargetGroup.Standalone;
+			else
+			{
+				result = (targetGroup == BuildTargetGroup.Standalone);
+			}
+			return result;
 		}
 
 		private static bool TargetSupportsSinglePassStereoRendering(BuildTargetGroup targetGroup)
@@ -674,88 +698,18 @@ namespace UnityEditor
 			return PlayerSettingsEditor.kSinglePassStereoRenderingTargetGroups.Contains(targetGroup);
 		}
 
+		private static bool TargetSupportsStereoInstancingRendering(BuildTargetGroup targetGroup)
+		{
+			return PlayerSettingsEditor.kStereoInstancingRenderingTargetGroups.Contains(targetGroup);
+		}
+
 		private static bool TargetSupportsProtectedGraphicsMem(BuildTargetGroup targetGroup)
 		{
 			return targetGroup == BuildTargetGroup.Android;
 		}
 
-		private void SplashSectionGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
-		{
-			GUI.changed = false;
-			if (this.BeginSettingsBox(2, EditorGUIUtility.TextContent("Splash Image")))
-			{
-				if (targetGroup == BuildTargetGroup.Standalone)
-				{
-					this.m_ResolutionDialogBanner.objectReferenceValue = EditorGUILayout.ObjectField(EditorGUIUtility.TextContent("Config Dialog Banner"), (Texture2D)this.m_ResolutionDialogBanner.objectReferenceValue, typeof(Texture2D), false, new GUILayoutOption[0]);
-					EditorGUILayout.Space();
-				}
-				if (targetGroup == BuildTargetGroup.XBOX360)
-				{
-					this.m_XboxSplashScreen.objectReferenceValue = EditorGUILayout.ObjectField(EditorGUIUtility.TextContent("Xbox 360 splash screen"), (Texture2D)this.m_XboxSplashScreen.objectReferenceValue, typeof(Texture2D), false, new GUILayoutOption[0]);
-					EditorGUILayout.Space();
-				}
-				bool flag = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android;
-				if (targetGroup == BuildTargetGroup.PS3)
-				{
-					this.BuiltinSplashScreenField();
-					flag = true;
-					if (this.m_ShowUnitySplashScreen.boolValue && this.m_ps3SplashScreen.objectReferenceValue != null)
-					{
-						this.m_ps3SplashScreen.objectReferenceValue = null;
-					}
-					using (new EditorGUI.DisabledScope(this.m_ShowUnitySplashScreen.boolValue))
-					{
-						EditorGUI.indentLevel++;
-						this.m_ps3SplashScreen.objectReferenceValue = EditorGUILayout.ObjectField(EditorGUIUtility.TextContent("Splash Screen Image for PS3"), (Texture2D)this.m_ps3SplashScreen.objectReferenceValue, typeof(Texture2D), false, new GUILayoutOption[0]);
-						EditorGUI.indentLevel--;
-					}
-					EditorGUILayout.Space();
-				}
-				bool flag2 = InternalEditorUtility.HasAdvancedLicenseOnBuildTarget(platform.DefaultTarget) || targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.XboxOne;
-				using (new EditorGUI.DisabledScope(!flag2))
-				{
-					if (this.m_VRSettings.TargetGroupSupportsVirtualReality(targetGroup))
-					{
-						this.m_VirtualRealitySplashScreen.objectReferenceValue = EditorGUILayout.ObjectField(EditorGUIUtility.TextContent("Virtual Reality Splash Image"), (Texture2D)this.m_VirtualRealitySplashScreen.objectReferenceValue, typeof(Texture2D), false, new GUILayoutOption[0]);
-					}
-					if (PlayerSettingsEditor.TargetSupportsOptionalBuiltinSplashScreen(targetGroup, settingsExtension))
-					{
-						this.BuiltinSplashScreenField();
-						if (Application.HasProLicense() && this.m_ShowUnitySplashScreen.boolValue)
-						{
-							this.BuiltinSplashScreenStyleField();
-						}
-						flag = true;
-					}
-					if (settingsExtension != null)
-					{
-						settingsExtension.SplashSectionGUI();
-					}
-				}
-				if (flag)
-				{
-					this.ShowSharedNote();
-				}
-			}
-			this.EndSettingsBox();
-		}
-
-		private void BuiltinSplashScreenField()
-		{
-			using (new EditorGUI.DisabledScope(!Application.HasProLicense()))
-			{
-				EditorGUILayout.PropertyField(this.m_ShowUnitySplashScreen, EditorGUIUtility.TextContent("Show Unity Splash Screen*"), new GUILayoutOption[0]);
-			}
-		}
-
-		public void BuiltinSplashScreenStyleField()
-		{
-			EditorGUILayout.PropertyField(this.m_SplashScreenStyle, EditorGUIUtility.TextContent("Unity Splash Screen Style*"), new GUILayoutOption[0]);
-		}
-
 		public void ResolutionSectionGUI(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
-			GUI.changed = false;
 			if (this.BeginSettingsBox(0, EditorGUIUtility.TextContent("Resolution and Presentation")))
 			{
 				if (settingsExtension != null)
@@ -799,11 +753,6 @@ namespace UnityEditor
 						EditorGUILayout.EndFadeGroup();
 					}
 				}
-				if (targetGroup == BuildTargetGroup.XBOX360)
-				{
-					this.ShowNoSettings();
-					EditorGUILayout.Space();
-				}
 				if (targetGroup == BuildTargetGroup.Standalone)
 				{
 					EditorGUILayout.PropertyField(this.m_RunInBackground, EditorGUIUtility.TextContent("Run In Background*"), new GUILayoutOption[0]);
@@ -832,7 +781,7 @@ namespace UnityEditor
 								Debug.LogError("All orientations are disabled. Allowing portrait");
 							}
 							EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToPortrait, EditorGUIUtility.TextContent("Portrait"), new GUILayoutOption[0]);
-							if (targetGroup != BuildTargetGroup.Metro || EditorUserBuildSettings.wsaSDK != WSASDK.PhoneSDK81)
+							if (targetGroup != BuildTargetGroup.WSA || EditorUserBuildSettings.wsaSDK != WSASDK.PhoneSDK81)
 							{
 								EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToPortraitUpsideDown, EditorGUIUtility.TextContent("Portrait Upside Down"), new GUILayoutOption[0]);
 							}
@@ -897,7 +846,11 @@ namespace UnityEditor
 				{
 					EditorGUILayout.PropertyField(this.m_androidShowActivityIndicatorOnLoading, EditorGUIUtility.TextContent("Show Loading Indicator"), new GUILayoutOption[0]);
 				}
-				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.Android)
+				if (targetGroup == BuildTargetGroup.Tizen)
+				{
+					EditorGUILayout.PropertyField(this.m_tizenShowActivityIndicatorOnLoading, EditorGUIUtility.TextContent("Show Loading Indicator"), new GUILayoutOption[0]);
+				}
+				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.Tizen)
 				{
 					EditorGUILayout.Space();
 				}
@@ -919,52 +872,43 @@ namespace UnityEditor
 
 		private void SyncPlatformAPIsList(BuildTarget target)
 		{
-			if (!this.m_GraphicsDeviceLists.ContainsKey(target))
+			if (this.m_GraphicsDeviceLists.ContainsKey(target))
 			{
-				return;
+				GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(target);
+				List<GraphicsDeviceType> list = (graphicsAPIs == null) ? new List<GraphicsDeviceType>() : graphicsAPIs.ToList<GraphicsDeviceType>();
+				this.m_GraphicsDeviceLists[target].list = list;
 			}
-			GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(target);
-			List<GraphicsDeviceType> list = (graphicsAPIs == null) ? new List<GraphicsDeviceType>() : graphicsAPIs.ToList<GraphicsDeviceType>();
-			this.m_GraphicsDeviceLists[target].list = list;
 		}
 
 		private void AddGraphicsDeviceMenuSelected(object userData, string[] options, int selected)
 		{
-			BuildTarget buildTarget = (BuildTarget)((int)userData);
+			BuildTarget buildTarget = (BuildTarget)userData;
 			GraphicsDeviceType[] array = PlayerSettings.GetGraphicsAPIs(buildTarget);
-			if (array == null)
+			if (array != null)
 			{
-				return;
+				GraphicsDeviceType item = (GraphicsDeviceType)Enum.Parse(typeof(GraphicsDeviceType), options[selected], true);
+				List<GraphicsDeviceType> list = array.ToList<GraphicsDeviceType>();
+				list.Add(item);
+				array = list.ToArray();
+				PlayerSettings.SetGraphicsAPIs(buildTarget, array);
+				this.SyncPlatformAPIsList(buildTarget);
 			}
-			GraphicsDeviceType item = (GraphicsDeviceType)((int)Enum.Parse(typeof(GraphicsDeviceType), options[selected], true));
-			List<GraphicsDeviceType> list = array.ToList<GraphicsDeviceType>();
-			list.Add(item);
-			array = list.ToArray();
-			PlayerSettings.SetGraphicsAPIs(buildTarget, array);
-			this.SyncPlatformAPIsList(buildTarget);
 		}
 
 		private void AddGraphicsDeviceElement(BuildTarget target, Rect rect, ReorderableList list)
 		{
-			GraphicsDeviceType[] array = PlayerSettings.GetSupportedGraphicsAPIs(target);
-			if (target == BuildTarget.StandaloneWindows)
+			GraphicsDeviceType[] supportedGraphicsAPIs = PlayerSettings.GetSupportedGraphicsAPIs(target);
+			if (supportedGraphicsAPIs != null && supportedGraphicsAPIs.Length != 0)
 			{
-				array = (from x in array
-				where x != GraphicsDeviceType.OpenGL2
-				select x).ToArray<GraphicsDeviceType>();
+				string[] array = new string[supportedGraphicsAPIs.Length];
+				bool[] array2 = new bool[supportedGraphicsAPIs.Length];
+				for (int i = 0; i < supportedGraphicsAPIs.Length; i++)
+				{
+					array[i] = supportedGraphicsAPIs[i].ToString();
+					array2[i] = !list.list.Contains(supportedGraphicsAPIs[i]);
+				}
+				EditorUtility.DisplayCustomMenu(rect, array, array2, null, new EditorUtility.SelectMenuItemFunction(this.AddGraphicsDeviceMenuSelected), target);
 			}
-			if (array == null || array.Length == 0)
-			{
-				return;
-			}
-			string[] array2 = new string[array.Length];
-			bool[] array3 = new bool[array.Length];
-			for (int i = 0; i < array.Length; i++)
-			{
-				array2[i] = array[i].ToString();
-				array3[i] = !list.list.Contains(array[i]);
-			}
-			EditorUtility.DisplayCustomMenu(rect, array2, array3, null, new EditorUtility.SelectMenuItemFunction(this.AddGraphicsDeviceMenuSelected), target);
 		}
 
 		private bool CanRemoveGraphicsDeviceElement(ReorderableList list)
@@ -975,19 +919,20 @@ namespace UnityEditor
 		private void RemoveGraphicsDeviceElement(BuildTarget target, ReorderableList list)
 		{
 			GraphicsDeviceType[] array = PlayerSettings.GetGraphicsAPIs(target);
-			if (array == null)
+			if (array != null)
 			{
-				return;
+				if (array.Length < 2)
+				{
+					EditorApplication.Beep();
+				}
+				else
+				{
+					List<GraphicsDeviceType> list2 = array.ToList<GraphicsDeviceType>();
+					list2.RemoveAt(list.index);
+					array = list2.ToArray();
+					this.ApplyChangedGraphicsAPIList(target, array, list.index == 0);
+				}
 			}
-			if (array.Length < 2)
-			{
-				EditorApplication.Beep();
-				return;
-			}
-			List<GraphicsDeviceType> list2 = array.ToList<GraphicsDeviceType>();
-			list2.RemoveAt(list.index);
-			array = list2.ToArray();
-			this.ApplyChangedGraphicsAPIList(target, array, list.index == 0);
 		}
 
 		private void ReorderGraphicsDeviceElement(BuildTarget target, ReorderableList list)
@@ -1006,10 +951,13 @@ namespace UnityEditor
 			if (firstEntryChanged && PlayerSettingsEditor.WillEditorUseFirstGraphicsAPI(target))
 			{
 				flag = false;
-				if (EditorUtility.DisplayDialog("Changing editor graphics device", "Changing active graphics API requires reloading all graphics objects, it might take a while", "Apply", "Cancel") && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+				if (EditorUtility.DisplayDialog("Changing editor graphics device", "Changing active graphics API requires reloading all graphics objects, it might take a while", "Apply", "Cancel"))
 				{
-					flag = true;
-					flag2 = true;
+					if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+					{
+						flag = true;
+						flag2 = true;
+					}
 				}
 			}
 			if (flag)
@@ -1036,9 +984,13 @@ namespace UnityEditor
 			{
 				text = "Direct3D12 (Experimental)";
 			}
+			if (text == "Vulkan")
+			{
+				text = "Vulkan (Experimental)";
+			}
 			if (target == BuildTarget.StandaloneOSXUniversal && text == "Metal")
 			{
-				text = "Metal (Experimental)";
+				text = "Metal (Experimental, Player Only)";
 			}
 			if (target == BuildTarget.WebGL)
 			{
@@ -1061,88 +1013,73 @@ namespace UnityEditor
 
 		private void OpenGLES31OptionsGUI(BuildTargetGroup targetGroup, BuildTarget targetPlatform)
 		{
-			if (targetGroup != BuildTargetGroup.Android)
+			if (targetGroup == BuildTargetGroup.Android)
 			{
-				return;
-			}
-			GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(targetPlatform);
-			if (!graphicsAPIs.Contains(GraphicsDeviceType.OpenGLES3) || graphicsAPIs.Contains(GraphicsDeviceType.OpenGLES2))
-			{
-				return;
-			}
-			bool value = false;
-			bool value2 = false;
-			PlayerSettings.GetPropertyOptionalBool("RequireES31", ref value, targetGroup);
-			PlayerSettings.GetPropertyOptionalBool("RequireES31AEP", ref value2, targetGroup);
-			EditorGUI.BeginChangeCheck();
-			value = EditorGUILayout.Toggle("Require ES3.1", value, new GUILayoutOption[0]);
-			value2 = EditorGUILayout.Toggle("Require ES3.1+AEP", value2, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
-			{
-				PlayerSettings.InitializePropertyBool("RequireES31", false, targetGroup);
-				PlayerSettings.InitializePropertyBool("RequireES31AEP", false, targetGroup);
-				PlayerSettings.SetPropertyBool("RequireES31", value, targetGroup);
-				PlayerSettings.SetPropertyBool("RequireES31AEP", value2, targetGroup);
+				GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(targetPlatform);
+				if (graphicsAPIs.Contains(GraphicsDeviceType.OpenGLES3) && !graphicsAPIs.Contains(GraphicsDeviceType.OpenGLES2))
+				{
+					EditorGUILayout.PropertyField(this.m_RequireES31, PlayerSettingsEditor.Styles.require31, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_RequireES31AEP, PlayerSettingsEditor.Styles.requireAEP, new GUILayoutOption[0]);
+				}
 			}
 		}
 
 		private void GraphicsAPIsGUIOnePlatform(BuildTargetGroup targetGroup, BuildTarget targetPlatform, string platformTitle)
 		{
 			GraphicsDeviceType[] supportedGraphicsAPIs = PlayerSettings.GetSupportedGraphicsAPIs(targetPlatform);
-			if (supportedGraphicsAPIs == null || supportedGraphicsAPIs.Length < 2)
+			if (supportedGraphicsAPIs != null && supportedGraphicsAPIs.Length >= 2)
 			{
-				return;
-			}
-			EditorGUI.BeginChangeCheck();
-			bool flag = PlayerSettings.GetUseDefaultGraphicsAPIs(targetPlatform);
-			flag = EditorGUILayout.Toggle("Auto Graphics API" + (platformTitle ?? string.Empty), flag, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
-			{
-				Undo.RecordObject(this.target, "Changed Graphics API Settings");
-				PlayerSettings.SetUseDefaultGraphicsAPIs(targetPlatform, flag);
-			}
-			if (!flag)
-			{
-				if (PlayerSettingsEditor.WillEditorUseFirstGraphicsAPI(targetPlatform))
+				EditorGUI.BeginChangeCheck();
+				bool flag = PlayerSettings.GetUseDefaultGraphicsAPIs(targetPlatform);
+				flag = EditorGUILayout.Toggle("Auto Graphics API" + (platformTitle ?? string.Empty), flag, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
 				{
-					EditorGUILayout.HelpBox("Reordering the list will switch editor to the first available platform", MessageType.Info, true);
+					Undo.RecordObject(base.target, "Changed Graphics API Settings");
+					PlayerSettings.SetUseDefaultGraphicsAPIs(targetPlatform, flag);
 				}
-				string displayTitle = "Graphics APIs";
-				if (platformTitle != null)
+				if (!flag)
 				{
-					displayTitle += platformTitle;
+					if (PlayerSettingsEditor.WillEditorUseFirstGraphicsAPI(targetPlatform))
+					{
+						EditorGUILayout.HelpBox("Reordering the list will switch editor to the first available platform", MessageType.Info, true);
+					}
+					string displayTitle = "Graphics APIs";
+					if (platformTitle != null)
+					{
+						displayTitle += platformTitle;
+					}
+					if (!this.m_GraphicsDeviceLists.ContainsKey(targetPlatform))
+					{
+						GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(targetPlatform);
+						List<GraphicsDeviceType> elements = (graphicsAPIs == null) ? new List<GraphicsDeviceType>() : graphicsAPIs.ToList<GraphicsDeviceType>();
+						ReorderableList reorderableList = new ReorderableList(elements, typeof(GraphicsDeviceType), true, true, true, true);
+						reorderableList.onAddDropdownCallback = delegate(Rect rect, ReorderableList list)
+						{
+							this.AddGraphicsDeviceElement(targetPlatform, rect, list);
+						};
+						reorderableList.onCanRemoveCallback = new ReorderableList.CanRemoveCallbackDelegate(this.CanRemoveGraphicsDeviceElement);
+						reorderableList.onRemoveCallback = delegate(ReorderableList list)
+						{
+							this.RemoveGraphicsDeviceElement(targetPlatform, list);
+						};
+						reorderableList.onReorderCallback = delegate(ReorderableList list)
+						{
+							this.ReorderGraphicsDeviceElement(targetPlatform, list);
+						};
+						reorderableList.drawElementCallback = delegate(Rect rect, int index, bool isActive, bool isFocused)
+						{
+							this.DrawGraphicsDeviceElement(targetPlatform, rect, index, isActive, isFocused);
+						};
+						reorderableList.drawHeaderCallback = delegate(Rect rect)
+						{
+							GUI.Label(rect, displayTitle, EditorStyles.label);
+						};
+						reorderableList.elementHeight = 16f;
+						this.m_GraphicsDeviceLists.Add(targetPlatform, reorderableList);
+					}
+					this.m_GraphicsDeviceLists[targetPlatform].DoLayoutList();
+					this.OpenGLES31OptionsGUI(targetGroup, targetPlatform);
 				}
-				if (!this.m_GraphicsDeviceLists.ContainsKey(targetPlatform))
-				{
-					GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(targetPlatform);
-					List<GraphicsDeviceType> elements = (graphicsAPIs == null) ? new List<GraphicsDeviceType>() : graphicsAPIs.ToList<GraphicsDeviceType>();
-					ReorderableList reorderableList = new ReorderableList(elements, typeof(GraphicsDeviceType), true, true, true, true);
-					reorderableList.onAddDropdownCallback = delegate(Rect rect, ReorderableList list)
-					{
-						this.AddGraphicsDeviceElement(targetPlatform, rect, list);
-					};
-					reorderableList.onCanRemoveCallback = new ReorderableList.CanRemoveCallbackDelegate(this.CanRemoveGraphicsDeviceElement);
-					reorderableList.onRemoveCallback = delegate(ReorderableList list)
-					{
-						this.RemoveGraphicsDeviceElement(targetPlatform, list);
-					};
-					reorderableList.onReorderCallback = delegate(ReorderableList list)
-					{
-						this.ReorderGraphicsDeviceElement(targetPlatform, list);
-					};
-					reorderableList.drawElementCallback = delegate(Rect rect, int index, bool isActive, bool isFocused)
-					{
-						this.DrawGraphicsDeviceElement(targetPlatform, rect, index, isActive, isFocused);
-					};
-					reorderableList.drawHeaderCallback = delegate(Rect rect)
-					{
-						GUI.Label(rect, displayTitle, EditorStyles.label);
-					};
-					reorderableList.elementHeight = 16f;
-					this.m_GraphicsDeviceLists.Add(targetPlatform, reorderableList);
-				}
-				this.m_GraphicsDeviceLists[targetPlatform].DoLayoutList();
-				this.OpenGLES31OptionsGUI(targetGroup, targetPlatform);
 			}
 		}
 
@@ -1162,23 +1099,21 @@ namespace UnityEditor
 
 		public void DebugAndCrashReportingGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
-			if (targetGroup != BuildTargetGroup.iPhone && targetGroup != BuildTargetGroup.tvOS)
+			if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 			{
-				return;
+				if (this.BeginSettingsBox(3, EditorGUIUtility.TextContent("Debugging and crash reporting")))
+				{
+					GUILayout.Label(EditorGUIUtility.TextContent("Debugging"), EditorStyles.boldLabel, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_EnableInternalProfiler, EditorGUIUtility.TextContent("Enable Internal Profiler"), new GUILayoutOption[0]);
+					EditorGUILayout.Space();
+					GUILayout.Label(EditorGUIUtility.TextContent("Crash Reporting"), EditorStyles.boldLabel, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_ActionOnDotNetUnhandledException, EditorGUIUtility.TextContent("On .Net UnhandledException"), new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_LogObjCUncaughtExceptions, EditorGUIUtility.TextContent("Log Obj-C Uncaught Exceptions"), new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_EnableCrashReportAPI, EditorGUIUtility.TextContent("Enable CrashReport API"), new GUILayoutOption[0]);
+					EditorGUILayout.Space();
+				}
+				this.EndSettingsBox();
 			}
-			GUI.changed = false;
-			if (this.BeginSettingsBox(3, EditorGUIUtility.TextContent("Debugging and crash reporting")))
-			{
-				GUILayout.Label(EditorGUIUtility.TextContent("Debugging"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_EnableInternalProfiler, EditorGUIUtility.TextContent("Enable Internal Profiler"), new GUILayoutOption[0]);
-				EditorGUILayout.Space();
-				GUILayout.Label(EditorGUIUtility.TextContent("Crash Reporting"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_ActionOnDotNetUnhandledException, EditorGUIUtility.TextContent("On .Net UnhandledException"), new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_LogObjCUncaughtExceptions, EditorGUIUtility.TextContent("Log Obj-C Uncaught Exceptions"), new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_EnableCrashReportAPI, EditorGUIUtility.TextContent("Enable CrashReport API"), new GUILayoutOption[0]);
-				EditorGUILayout.Space();
-			}
-			this.EndSettingsBox();
 		}
 
 		public static void BuildDisabledEnumPopup(GUIContent selected, GUIContent uiString)
@@ -1219,19 +1154,8 @@ namespace UnityEditor
 			return (int)((object)options[num]);
 		}
 
-		public static int BuildEnumPopup<T>(GUIContent uiString, BuildTargetGroup targetGroup, string propertyName, T[] options, GUIContent[] optionNames)
-		{
-			int selected = 0;
-			if (!PlayerSettings.GetPropertyOptionalInt(propertyName, ref selected, targetGroup))
-			{
-				selected = (int)((object)default(T));
-			}
-			return PlayerSettingsEditor.BuildEnumPopup<T>(uiString, selected, options, optionNames);
-		}
-
 		public void OtherSectionGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
-			GUI.changed = false;
 			if (this.BeginSettingsBox(4, EditorGUIUtility.TextContent("Other Settings")))
 			{
 				this.OtherSectionRenderingGUI(platform, targetGroup, settingsExtension);
@@ -1247,12 +1171,7 @@ namespace UnityEditor
 		private void OtherSectionRenderingGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			GUILayout.Label(EditorGUIUtility.TextContent("Rendering"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-			if (targetGroup == BuildTargetGroup.Standalone || this.IsMobileTarget(targetGroup) || targetGroup == BuildTargetGroup.WebGL || targetGroup == BuildTargetGroup.PS3 || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.Metro || targetGroup == BuildTargetGroup.WiiU)
-			{
-				bool flag = this.IsMobileTarget(targetGroup);
-				EditorGUILayout.IntPopup((!flag) ? this.m_RenderingPath : this.m_MobileRenderingPath, PlayerSettingsEditor.Styles.kRenderPaths, PlayerSettingsEditor.kRenderPathValues, EditorGUIUtility.TextContent("Rendering Path*"), new GUILayoutOption[0]);
-			}
-			if (targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.PS3 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.Metro || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.XBOX360)
+			if (targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.WSA || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.WebGL)
 			{
 				using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
 				{
@@ -1264,13 +1183,57 @@ namespace UnityEditor
 						GUIUtility.ExitGUI();
 					}
 				}
-				if (QualitySettings.activeColorSpace != QualitySettings.desiredColorSpace)
+				if (PlayerSettings.colorSpace == ColorSpace.Linear)
 				{
-					EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.colorSpaceWarning.text, MessageType.Warning);
+					if (targetGroup == BuildTargetGroup.iPhone)
+					{
+						GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(BuildTarget.iOS);
+						bool flag = !graphicsAPIs.Contains(GraphicsDeviceType.OpenGLES3) && !graphicsAPIs.Contains(GraphicsDeviceType.OpenGLES2);
+						Version v = new Version(8, 0);
+						Version version = new Version(6, 0);
+						Version v2 = (!string.IsNullOrEmpty(PlayerSettings.iOS.targetOSVersionString)) ? new Version(PlayerSettings.iOS.targetOSVersionString) : version;
+						if (!flag || v2 < v)
+						{
+							EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.colorSpaceIOSWarning.text, MessageType.Warning);
+						}
+					}
+					if (targetGroup == BuildTargetGroup.tvOS)
+					{
+						GraphicsDeviceType[] graphicsAPIs2 = PlayerSettings.GetGraphicsAPIs(BuildTarget.tvOS);
+						if (graphicsAPIs2.Contains(GraphicsDeviceType.OpenGLES3) || graphicsAPIs2.Contains(GraphicsDeviceType.OpenGLES2))
+						{
+							EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.colorSpaceTVOSWarning.text, MessageType.Warning);
+						}
+					}
+					if (targetGroup == BuildTargetGroup.Android)
+					{
+						GraphicsDeviceType[] graphicsAPIs3 = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
+						bool flag2 = graphicsAPIs3.Contains(GraphicsDeviceType.OpenGLES3) && !graphicsAPIs3.Contains(GraphicsDeviceType.OpenGLES2);
+						if (!flag2 || PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel18)
+						{
+							EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.colorSpaceAndroidWarning.text, MessageType.Warning);
+						}
+					}
+					if (targetGroup == BuildTargetGroup.Standalone)
+					{
+						GraphicsDeviceType[] graphicsAPIs4 = PlayerSettings.GetGraphicsAPIs(BuildTarget.StandaloneWindows);
+						if (graphicsAPIs4.Contains(GraphicsDeviceType.OpenGLES3) || graphicsAPIs4.Contains(GraphicsDeviceType.OpenGLES2))
+						{
+							EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.colorSpaceWindowsWarning.text, MessageType.Warning);
+						}
+					}
+					if (targetGroup == BuildTargetGroup.WebGL)
+					{
+						EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.colorSpaceWebGLWarning.text, MessageType.Error);
+					}
 				}
 			}
 			this.GraphicsAPIsGUI(targetGroup, platform.DefaultTarget);
-			if (targetGroup == BuildTargetGroup.XBOX360 || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.SamsungTV)
+			if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
+			{
+				this.m_MetalForceHardShadows.boolValue = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Force hard shadows on Metal*"), this.m_MetalForceHardShadows.boolValue, new GUILayoutOption[0]);
+			}
+			if (targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.SamsungTV)
 			{
 				if (this.IsMobileTarget(targetGroup))
 				{
@@ -1292,33 +1255,33 @@ namespace UnityEditor
 					this.m_MTRendering.boolValue = true;
 				}
 			}
-			bool flag2 = targetGroup != BuildTargetGroup.PS3;
-			bool flag3 = targetGroup != BuildTargetGroup.PS3 && targetGroup != BuildTargetGroup.XBOX360;
+			bool flag3 = true;
+			bool flag4 = true;
 			if (settingsExtension != null)
 			{
-				flag2 = settingsExtension.SupportsStaticBatching();
-				flag3 = settingsExtension.SupportsDynamicBatching();
+				flag3 = settingsExtension.SupportsStaticBatching();
+				flag4 = settingsExtension.SupportsDynamicBatching();
 			}
 			int num;
 			int num2;
 			PlayerSettings.GetBatchingForPlatform(platform.DefaultTarget, out num, out num2);
-			bool flag4 = false;
-			if (!flag2 && num == 1)
+			bool flag5 = false;
+			if (!flag3 && num == 1)
 			{
 				num = 0;
-				flag4 = true;
+				flag5 = true;
 			}
-			if (!flag3 && num2 == 1)
+			if (!flag4 && num2 == 1)
 			{
 				num2 = 0;
-				flag4 = true;
+				flag5 = true;
 			}
-			if (flag4)
+			if (flag5)
 			{
 				PlayerSettings.SetBatchingForPlatform(platform.DefaultTarget, num, num2);
 			}
 			EditorGUI.BeginChangeCheck();
-			using (new EditorGUI.DisabledScope(!flag2))
+			using (new EditorGUI.DisabledScope(!flag3))
 			{
 				if (GUI.enabled)
 				{
@@ -1329,16 +1292,16 @@ namespace UnityEditor
 					EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Static Batching"), false, new GUILayoutOption[0]);
 				}
 			}
-			using (new EditorGUI.DisabledScope(!flag3))
+			using (new EditorGUI.DisabledScope(!flag4))
 			{
 				num2 = ((!EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Dynamic Batching"), num2 != 0, new GUILayoutOption[0])) ? 0 : 1);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
-				Undo.RecordObject(this.target, "Changed Batching Settings");
+				Undo.RecordObject(base.target, "Changed Batching Settings");
 				PlayerSettings.SetBatchingForPlatform(platform.DefaultTarget, num, num2);
 			}
-			if (targetGroup == BuildTargetGroup.XBOX360 || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.Metro)
+			if (targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.WSA)
 			{
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(this.m_SkinOnGPU, (targetGroup == BuildTargetGroup.PS4) ? EditorGUIUtility.TextContent("Compute Skinning*|Use Compute pipeline for Skinning") : EditorGUIUtility.TextContent("GPU Skinning*|Use DX11/ES3 GPU Skinning"), new GUILayoutOption[0]);
@@ -1348,17 +1311,38 @@ namespace UnityEditor
 				}
 			}
 			EditorGUILayout.PropertyField(this.m_GraphicsJobs, EditorGUIUtility.TextContent("Graphics Jobs (Experimental)"), new GUILayoutOption[0]);
-			if (targetGroup == BuildTargetGroup.XBOX360)
-			{
-				this.m_XboxPIXTextureCapture.boolValue = EditorGUILayout.Toggle("Enable PIX texture capture", this.m_XboxPIXTextureCapture.boolValue, new GUILayoutOption[0]);
-			}
 			if (this.m_VRSettings.TargetGroupSupportsVirtualReality(targetGroup))
 			{
 				this.m_VRSettings.DevicesGUI(targetGroup);
-				if (PlayerSettingsEditor.TargetSupportsSinglePassStereoRendering(targetGroup) && PlayerSettings.virtualRealitySupported)
+				bool flag6 = PlayerSettingsEditor.TargetSupportsSinglePassStereoRendering(targetGroup);
+				bool flag7 = PlayerSettingsEditor.TargetSupportsStereoInstancingRendering(targetGroup);
+				if (PlayerSettings.virtualRealitySupported)
 				{
-					bool singlePassStereoRendering = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Single-Pass Stereo Rendering"), PlayerSettings.singlePassStereoRendering, new GUILayoutOption[0]);
-					PlayerSettings.singlePassStereoRendering = singlePassStereoRendering;
+					int num3 = 1 + ((!flag6) ? 0 : 1) + ((!flag7) ? 0 : 1);
+					GUIContent[] array = new GUIContent[num3];
+					int[] array2 = new int[num3];
+					int num4 = 0;
+					array[num4] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[0];
+					array2[num4++] = PlayerSettingsEditor.kStereoRenderingMethodValues[0];
+					if (flag6)
+					{
+						array[num4] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[1];
+						array2[num4++] = PlayerSettingsEditor.kStereoRenderingMethodValues[1];
+					}
+					if (flag7)
+					{
+						array[num4] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[2];
+						array2[num4++] = PlayerSettingsEditor.kStereoRenderingMethodValues[2];
+					}
+					if (!flag7 && this.m_StereoRenderingPath.intValue == 2)
+					{
+						this.m_StereoRenderingPath.intValue = 1;
+					}
+					if (!flag6 && this.m_StereoRenderingPath.intValue == 1)
+					{
+						this.m_StereoRenderingPath.intValue = 0;
+					}
+					EditorGUILayout.IntPopup(this.m_StereoRenderingPath, array, array2, EditorGUIUtility.TextContent("Stereo Rendering Method*"), new GUILayoutOption[0]);
 				}
 			}
 			if (PlayerSettingsEditor.TargetSupportsProtectedGraphicsMem(targetGroup))
@@ -1381,6 +1365,7 @@ namespace UnityEditor
 				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 				{
 					EditorGUILayout.PropertyField(this.m_IPhoneBuildNumber, EditorGUIUtility.TextContent("Build"), new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_AppleDeveloperTeamID, new GUIContent("iOS Developer Team ID", "Developers can retrieve their Team ID by visiting the Apple Developer site under Account > Membership."), new GUILayoutOption[0]);
 				}
 				if (settingsExtension != null)
 				{
@@ -1388,6 +1373,20 @@ namespace UnityEditor
 				}
 				EditorGUILayout.Space();
 			}
+		}
+
+		private Version ParseIosVersion(string text)
+		{
+			Version result;
+			try
+			{
+				result = new Version(text);
+			}
+			catch
+			{
+				result = new Version();
+			}
+			return result;
 		}
 
 		private void OtherSectionConfigurationGUI(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
@@ -1401,24 +1400,23 @@ namespace UnityEditor
 			else
 			{
 				ScriptingImplementation[] array = scriptingImplementations.Enabled();
-				int num = 0;
-				PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref num, targetGroup);
-				int num2;
+				int scriptingBackend = (int)PlayerSettings.GetScriptingBackend(targetGroup);
+				int num;
 				if (targetGroup == BuildTargetGroup.tvOS)
 				{
-					num2 = 1;
+					num = 1;
 					PlayerSettingsEditor.BuildDisabledEnumPopup(new GUIContent("IL2CPP"), EditorGUIUtility.TextContent("Scripting Backend"));
 				}
 				else
 				{
-					num2 = PlayerSettingsEditor.BuildEnumPopup<ScriptingImplementation>(EditorGUIUtility.TextContent("Scripting Backend"), targetGroup, "ScriptingBackend", array, PlayerSettingsEditor.GetNiceScriptingBackendNames(array));
+					num = PlayerSettingsEditor.BuildEnumPopup<ScriptingImplementation>(EditorGUIUtility.TextContent("Scripting Backend"), scriptingBackend, array, PlayerSettingsEditor.GetNiceScriptingBackendNames(array));
 				}
-				if (num2 != num)
+				if (num != scriptingBackend)
 				{
-					PlayerSettings.SetPropertyInt("ScriptingBackend", num2, targetGroup);
+					PlayerSettings.SetScriptingBackend(targetGroup, (ScriptingImplementation)num);
 				}
 			}
-			bool flag = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.Metro;
+			bool flag = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.WSA;
 			if (flag)
 			{
 				if (targetGroup == BuildTargetGroup.iPhone)
@@ -1426,38 +1424,50 @@ namespace UnityEditor
 					EditorGUILayout.PropertyField(this.m_TargetDevice, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_IPhoneSdkVersion, EditorGUIUtility.TextContent("Target SDK"), new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_IPhoneTargetOSVersion, EditorGUIUtility.TextContent("Target minimum iOS Version"), new GUILayoutOption[0]);
+					if (this.ParseIosVersion(this.m_IPhoneTargetOSVersion.stringValue).Major == 0)
+					{
+						this.m_IPhoneTargetOSVersion.stringValue = "7.0";
+					}
 				}
 				if (targetGroup == BuildTargetGroup.tvOS)
 				{
 					EditorGUILayout.PropertyField(this.m_tvOSSdkVersion, EditorGUIUtility.TextContent("Target SDK"), new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_tvOSTargetOSVersion, EditorGUIUtility.TextContent("Target minimum tvOS Version"), new GUILayoutOption[0]);
+					if (this.ParseIosVersion(this.m_tvOSTargetOSVersion.stringValue).Major == 0)
+					{
+						this.m_tvOSTargetOSVersion.stringValue = "9.0";
+					}
 				}
 				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 				{
 					EditorGUILayout.PropertyField(this.m_useOnDemandResources, EditorGUIUtility.TextContent("Use on demand resources"), new GUILayoutOption[0]);
-					if (this.m_useOnDemandResources.boolValue && this.m_IPhoneTargetOSVersion.intValue < 40)
+					if (this.m_useOnDemandResources.boolValue && this.ParseIosVersion(this.m_IPhoneTargetOSVersion.stringValue).Major < 9)
 					{
-						this.m_IPhoneTargetOSVersion.intValue = 40;
+						this.m_IPhoneTargetOSVersion.stringValue = "9.0";
 					}
 				}
-				bool flag2 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Metro;
+				bool flag2 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.WSA;
 				if (flag2)
 				{
 					EditorGUILayout.PropertyField(this.m_AccelerometerFrequency, EditorGUIUtility.TextContent("Accelerometer Frequency"), new GUILayoutOption[0]);
 				}
 				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 				{
+					EditorGUILayout.PropertyField(this.m_CameraUsageDescription, EditorGUIUtility.TextContent("Camera Usage Description"), new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_LocationUsageDescription, EditorGUIUtility.TextContent("Location Usage Description"), new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_MicrophoneUsageDescription, EditorGUIUtility.TextContent("Microphone Usage Description"), new GUILayoutOption[0]);
+				}
+				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android)
+				{
+					EditorGUILayout.PropertyField(this.m_MuteOtherAudioSources, EditorGUIUtility.TextContent("Mute Other Audio Sources*"), new GUILayoutOption[0]);
 				}
 				if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 				{
-					EditorGUILayout.PropertyField(this.m_OverrideIPodMusic, EditorGUIUtility.TextContent("Override iPod Music"), new GUILayoutOption[0]);
 					if (targetGroup == BuildTargetGroup.iPhone)
 					{
 						EditorGUILayout.PropertyField(this.m_PrepareIOSForRecording, EditorGUIUtility.TextContent("Prepare iOS for Recording"), new GUILayoutOption[0]);
 					}
 					EditorGUILayout.PropertyField(this.m_UIRequiresPersistentWiFi, EditorGUIUtility.TextContent("Requires Persistent WiFi"), new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_IOSAppInBackgroundBehavior, EditorGUIUtility.TextContent("Behavior in Background"), new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_IOSAllowHTTPDownload, EditorGUIUtility.TextContent("Allow downloads over HTTP (nonsecure)"), new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_IOSURLSchemes, EditorGUIUtility.TextContent("Supported URL schemes"), true, new GUILayoutOption[0]);
 				}
@@ -1497,7 +1507,7 @@ namespace UnityEditor
 			{
 				this.ShowDisabledFakeEnumPopup(PlayerSettingsEditor.FakeEnum.WiiUSubset);
 			}
-			else if (targetGroup == BuildTargetGroup.Metro)
+			else if (targetGroup == BuildTargetGroup.WSA)
 			{
 				this.ShowDisabledFakeEnumPopup(PlayerSettingsEditor.FakeEnum.WSASubset);
 			}
@@ -1513,21 +1523,20 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_BakeCollisionMeshes, EditorGUIUtility.TextContent("Prebake Collision Meshes|Bake collision data into the meshes on build time"), new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_PreloadShaders, EditorGUIUtility.TextContent("Preload Shaders"), new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_PreloadedAssets, EditorGUIUtility.TextContent("Preloaded Assets|Assets to load at start up in the player"), true, new GUILayoutOption[0]);
-			bool flag = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.XBOX360 || targetGroup == BuildTargetGroup.XboxOne || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.PS3 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.PSP2;
+			bool flag = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.XboxOne || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.PSP2;
 			if (flag)
 			{
 				EditorGUILayout.PropertyField(this.m_AotOptions, EditorGUIUtility.TextContent("AOT Compilation Options"), new GUILayoutOption[0]);
 			}
-			bool flag2 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.Tizen || targetGroup == BuildTargetGroup.WebGL || targetGroup == BuildTargetGroup.PS3 || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.XBOX360 || targetGroup == BuildTargetGroup.XboxOne || targetGroup == BuildTargetGroup.Metro;
+			bool flag2 = targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.Tizen || targetGroup == BuildTargetGroup.WebGL || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.XboxOne || targetGroup == BuildTargetGroup.WSA;
 			if (flag2)
 			{
-				int num = -1;
-				PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref num, targetGroup);
-				if (targetGroup == BuildTargetGroup.WebGL || num == 1)
+				ScriptingImplementation scriptingBackend = PlayerSettings.GetScriptingBackend(targetGroup);
+				if (targetGroup == BuildTargetGroup.WebGL || scriptingBackend == ScriptingImplementation.IL2CPP)
 				{
 					EditorGUILayout.PropertyField(this.m_StripEngineCode, EditorGUIUtility.TextContent("Strip Engine Code*|Strip Unused Engine Code - Note that byte code stripping of managed assemblies is always enabled for the IL2CPP scripting backend."), new GUILayoutOption[0]);
 				}
-				else if (num != 2)
+				else if (scriptingBackend != ScriptingImplementation.WinRTDotNET)
 				{
 					EditorGUILayout.PropertyField(this.m_IPhoneStrippingLevel, EditorGUIUtility.TextContent("Stripping Level*"), new GUILayoutOption[0]);
 				}
@@ -1548,7 +1557,7 @@ namespace UnityEditor
 			{
 				EditorGUILayout.PropertyField(this.m_StripUnusedMeshComponents, EditorGUIUtility.TextContent("Optimize Mesh Data*|Remove unused mesh components"), new GUILayoutOption[0]);
 			}
-			if (targetGroup == BuildTargetGroup.PS3 || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM)
+			if (targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM)
 			{
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(this.m_VideoMemoryForVertexBuffers, EditorGUIUtility.TextContent("Mesh Video Mem*|How many megabytes of video memory to use for mesh data before we use main memory"), new GUILayoutOption[0]);
@@ -1573,30 +1582,41 @@ namespace UnityEditor
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Label("Log Type", new GUILayoutOption[0]);
-			using (IEnumerator enumerator = Enum.GetValues(typeof(StackTraceLogType)).GetEnumerator())
+			IEnumerator enumerator = Enum.GetValues(typeof(StackTraceLogType)).GetEnumerator();
+			try
 			{
 				while (enumerator.MoveNext())
 				{
-					StackTraceLogType stackTraceLogType = (StackTraceLogType)((int)enumerator.Current);
+					StackTraceLogType stackTraceLogType = (StackTraceLogType)enumerator.Current;
 					GUILayout.Label(stackTraceLogType.ToString(), new GUILayoutOption[]
 					{
 						GUILayout.Width(70f)
 					});
 				}
 			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
 			GUILayout.EndHorizontal();
-			using (IEnumerator enumerator2 = Enum.GetValues(typeof(LogType)).GetEnumerator())
+			IEnumerator enumerator2 = Enum.GetValues(typeof(LogType)).GetEnumerator();
+			try
 			{
 				while (enumerator2.MoveNext())
 				{
-					LogType logType = (LogType)((int)enumerator2.Current);
+					LogType logType = (LogType)enumerator2.Current;
 					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					GUILayout.Label(logType.ToString(), new GUILayoutOption[0]);
-					using (IEnumerator enumerator3 = Enum.GetValues(typeof(StackTraceLogType)).GetEnumerator())
+					IEnumerator enumerator3 = Enum.GetValues(typeof(StackTraceLogType)).GetEnumerator();
+					try
 					{
 						while (enumerator3.MoveNext())
 						{
-							StackTraceLogType stackTraceLogType2 = (StackTraceLogType)((int)enumerator3.Current);
+							StackTraceLogType stackTraceLogType2 = (StackTraceLogType)enumerator3.Current;
 							StackTraceLogType stackTraceLogType3 = PlayerSettings.GetStackTraceLogType(logType);
 							EditorGUI.BeginChangeCheck();
 							bool flag = EditorGUILayout.ToggleLeft(" ", stackTraceLogType3 == stackTraceLogType2, new GUILayoutOption[]
@@ -1609,7 +1629,23 @@ namespace UnityEditor
 							}
 						}
 					}
+					finally
+					{
+						IDisposable disposable2;
+						if ((disposable2 = (enumerator3 as IDisposable)) != null)
+						{
+							disposable2.Dispose();
+						}
+					}
 					GUILayout.EndHorizontal();
+				}
+			}
+			finally
+			{
+				IDisposable disposable3;
+				if ((disposable3 = (enumerator2 as IDisposable)) != null)
+				{
+					disposable3.Dispose();
 				}
 			}
 			GUILayout.EndVertical();
@@ -1670,13 +1706,13 @@ namespace UnityEditor
 				GUILayout.MaxWidth(vector.x)
 			}))
 			{
-				GUI.FocusControl(string.Empty);
+				GUI.FocusControl("");
 				string text = EditorGUIUtility.TextContent(browsePanelTitle).text;
 				string text2 = (!string.IsNullOrEmpty(dir)) ? (dir.Replace('\\', '/') + "/") : (Directory.GetCurrentDirectory().Replace('\\', '/') + "/");
-				string text3 = string.Empty;
+				string text3;
 				if (string.IsNullOrEmpty(extension))
 				{
-					text3 = EditorUtility.OpenFolderPanel(text, text2, string.Empty);
+					text3 = EditorUtility.OpenFolderPanel(text, text2, "");
 				}
 				else
 				{
@@ -1712,12 +1748,15 @@ namespace UnityEditor
 					GUILayout.ExpandWidth(true)
 				};
 				string value = EditorGUILayout.TextArea(gUIContent.text, options);
-				if (EditorGUI.EndChangeCheck() && string.IsNullOrEmpty(value))
+				if (EditorGUI.EndChangeCheck())
 				{
-					property.stringValue = string.Empty;
-					base.serializedObject.ApplyModifiedProperties();
-					GUI.FocusControl(string.Empty);
-					GUIUtility.ExitGUI();
+					if (string.IsNullOrEmpty(value))
+					{
+						property.stringValue = "";
+						base.serializedObject.ApplyModifiedProperties();
+						GUI.FocusControl("");
+						GUIUtility.ExitGUI();
+					}
 				}
 			}
 			EditorGUILayout.EndHorizontal();
@@ -1756,64 +1795,23 @@ namespace UnityEditor
 
 		public void PublishSectionGUI(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
-			if (targetGroup != BuildTargetGroup.Metro && targetGroup != BuildTargetGroup.XBOX360 && targetGroup != BuildTargetGroup.PS3 && targetGroup != BuildTargetGroup.PSP2 && targetGroup != BuildTargetGroup.PSM && (settingsExtension == null || !settingsExtension.HasPublishSection()))
+			if (targetGroup == BuildTargetGroup.WSA || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM || (settingsExtension != null && settingsExtension.HasPublishSection()))
 			{
-				return;
-			}
-			GUI.changed = false;
-			if (this.BeginSettingsBox(5, EditorGUIUtility.TextContent("Publishing Settings")))
-			{
-				string directory = FileUtil.DeleteLastPathNameComponent(Application.dataPath);
-				float h = 16f;
-				float midWidth = 80f + EditorGUIUtility.fieldWidth + 5f;
-				float maxWidth = 80f + EditorGUIUtility.fieldWidth + 5f;
-				if (settingsExtension != null)
+				if (this.BeginSettingsBox(5, EditorGUIUtility.TextContent("Publishing Settings")))
 				{
-					settingsExtension.PublishSectionGUI(h, midWidth, maxWidth);
-				}
-				if (targetGroup == BuildTargetGroup.PSM)
-				{
-				}
-				if (targetGroup == BuildTargetGroup.XBOX360)
-				{
-					this.m_XboxAdditionalTitleMemorySize = base.serializedObject.FindProperty("xboxAdditionalTitleMemorySize");
-					this.m_XboxAdditionalTitleMemorySize.intValue = (int)EditorGUILayout.Slider(EditorGUIUtility.TextContent("Extra title memory (1GB)"), (float)this.m_XboxAdditionalTitleMemorySize.intValue, 0f, 416f, new GUILayoutOption[0]);
-					if (this.m_XboxAdditionalTitleMemorySize.intValue > 0)
+					float h = 16f;
+					float midWidth = 80f + EditorGUIUtility.fieldWidth + 5f;
+					float maxWidth = 80f + EditorGUIUtility.fieldWidth + 5f;
+					if (settingsExtension != null)
 					{
-						PlayerSettingsEditor.ShowWarning(EditorGUIUtility.TextContent("If the target is a retail console, or a standard 512MB XDK, the executable produced may fail to run."));
+						settingsExtension.PublishSectionGUI(h, midWidth, maxWidth);
 					}
-					GUILayout.Label(EditorGUIUtility.TextContent("Submission"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_XboxTitleId, EditorGUIUtility.TextContent("Title Id"), new GUILayoutOption[0]);
-					EditorGUILayout.Space();
-					GUILayout.Label(EditorGUIUtility.TextContent("Image Conversion"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-					PlayerSettingsEditor.BuildFileBoxButton(this.m_XboxImageXexPath, "ImageXEX config override", directory, "cfg", null);
-					EditorGUILayout.Space();
-					GUILayout.Label(EditorGUIUtility.TextContent("Xbox Live"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-					Action onSelect = delegate
+					if (targetGroup == BuildTargetGroup.PSM)
 					{
-						if (this.m_XboxTitleId.stringValue.Length == 0)
-						{
-							Debug.LogWarning("Title id must be present when using a SPA file.");
-						}
-					};
-					PlayerSettingsEditor.BuildFileBoxButton(this.m_XboxSpaPath, "SPA config", directory, "spa", onSelect);
-					if (this.m_XboxSpaPath.stringValue.Length > 0)
-					{
-						bool boolValue = this.m_XboxGenerateSpa.boolValue;
-						this.m_XboxGenerateSpa.boolValue = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Generate _SPAConfig.cs"), boolValue, new GUILayoutOption[0]);
-						if (!boolValue && this.m_XboxGenerateSpa.boolValue)
-						{
-							InternalEditorUtility.Xbox360GenerateSPAConfig(this.m_XboxSpaPath.stringValue);
-						}
 					}
-					this.m_XboxEnableGuest.boolValue = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Enable Guest accounts"), this.m_XboxEnableGuest.boolValue, new GUILayoutOption[0]);
-					EditorGUILayout.Space();
-					GUILayout.Label(EditorGUIUtility.TextContent("Services"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-					this.m_XboxEnableAvatar.boolValue = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Enable Avatar rendering"), this.m_XboxEnableAvatar.boolValue, new GUILayoutOption[0]);
-					this.KinectGUI();
 				}
+				this.EndSettingsBox();
 			}
-			this.EndSettingsBox();
 		}
 
 		private void KinectGUI()

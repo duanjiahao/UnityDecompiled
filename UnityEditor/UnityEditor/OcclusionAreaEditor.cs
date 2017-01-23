@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -12,9 +13,12 @@ namespace UnityEditor
 
 		private SerializedProperty m_Center;
 
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache0;
+
 		private void OnEnable()
 		{
-			this.m_Object = new SerializedObject(this.target);
+			this.m_Object = new SerializedObject(base.target);
 			this.m_Size = base.serializedObject.FindProperty("m_Size");
 			this.m_Center = base.serializedObject.FindProperty("m_Center");
 		}
@@ -28,7 +32,7 @@ namespace UnityEditor
 		private void OnSceneGUI()
 		{
 			this.m_Object.Update();
-			OcclusionArea occlusionArea = (OcclusionArea)this.target;
+			OcclusionArea occlusionArea = (OcclusionArea)base.target;
 			Color color = Handles.color;
 			Handles.color = new Color(145f, 244f, 139f, 255f) / 255f;
 			Vector3 p = occlusionArea.transform.TransformPoint(this.m_Center.vector3Value);
@@ -68,7 +72,13 @@ namespace UnityEditor
 			float handleSize = HandleUtility.GetHandleSize(vector);
 			bool changed = GUI.changed;
 			GUI.changed = false;
-			vector = Handles.Slider(vector, d, handleSize * 0.1f, new Handles.DrawCapFunction(Handles.CylinderCap), 0f);
+			Vector3 arg_C1_0 = vector;
+			float arg_C1_2 = handleSize * 0.1f;
+			if (OcclusionAreaEditor.<>f__mg$cache0 == null)
+			{
+				OcclusionAreaEditor.<>f__mg$cache0 = new Handles.CapFunction(Handles.CylinderHandleCap);
+			}
+			vector = Handles.Slider(arg_C1_0, d, arg_C1_2, OcclusionAreaEditor.<>f__mg$cache0, 0f);
 			if (GUI.changed)
 			{
 				r = Vector3.Dot(vector - p, d);

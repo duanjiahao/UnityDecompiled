@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace UnityEditor
 {
@@ -42,19 +41,15 @@ namespace UnityEditor
 			this.m_VariantName = variantName;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetDeviceRequirementForVariantNameImpl(string name, int index, out string[] keys, out string[] values);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetOrAddDeviceRequirementForVariantNameImpl(string name, int index, string[] keys, string[] values);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetCountForVariantImpl(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void RemoveAtImpl(string name, int index);
 

@@ -59,8 +59,6 @@ namespace UnityEditor
 			public static GUIContent Regenerate = EditorGUIUtility.TextContent("Regenerate Materials|Regenerate materials from the current importer settings.");
 		}
 
-		private const float kFeetToMetersRatio = 0.3048f;
-
 		private SerializedProperty m_LODSettings;
 
 		private SerializedProperty m_EnableSmoothLOD;
@@ -79,9 +77,11 @@ namespace UnityEditor
 
 		private SerializedProperty m_ScaleFactor;
 
+		private const float kFeetToMetersRatio = 0.3048f;
+
 		private int m_SelectedLODSlider = -1;
 
-		private int m_SelectedLODRange;
+		private int m_SelectedLODRange = 0;
 
 		private readonly AnimBool m_ShowSmoothLODOptions = new AnimBool();
 
@@ -196,22 +196,28 @@ namespace UnityEditor
 
 		public bool HasSameLODConfig()
 		{
+			bool result;
 			if (base.serializedObject.FindProperty("m_HasBillboard").hasMultipleDifferentValues)
 			{
-				return false;
+				result = false;
 			}
-			if (this.m_LODSettings.FindPropertyRelative("Array.size").hasMultipleDifferentValues)
+			else if (this.m_LODSettings.FindPropertyRelative("Array.size").hasMultipleDifferentValues)
 			{
-				return false;
+				result = false;
 			}
-			for (int i = 0; i < this.m_LODSettings.arraySize; i++)
+			else
 			{
-				if (this.m_LODSettings.GetArrayElementAtIndex(i).FindPropertyRelative("height").hasMultipleDifferentValues)
+				for (int i = 0; i < this.m_LODSettings.arraySize; i++)
 				{
-					return false;
+					if (this.m_LODSettings.GetArrayElementAtIndex(i).FindPropertyRelative("height").hasMultipleDifferentValues)
+					{
+						result = false;
+						return result;
+					}
 				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		public bool CanUnifyLODConfig()
@@ -396,8 +402,8 @@ namespace UnityEditor
 				if (GUIUtility.hotControl == controlID && this.m_SelectedLODSlider >= 0 && lods[this.m_SelectedLODSlider] != null)
 				{
 					current.Use();
-					float num = Mathf.Clamp01(1f - (current.mousePosition.x - sliderPosition.x) / sliderPosition.width);
-					LODGroupGUI.SetSelectedLODLevelPercentage(num - 0.001f, this.m_SelectedLODSlider, lods);
+					float cameraPercent = LODGroupGUI.GetCameraPercent(current.mousePosition, sliderPosition);
+					LODGroupGUI.SetSelectedLODLevelPercentage(cameraPercent - 0.001f, this.m_SelectedLODSlider, lods);
 					this.m_LODSettings.GetArrayElementAtIndex(this.m_SelectedLODSlider).FindPropertyRelative("height").floatValue = lods[this.m_SelectedLODSlider].RawScreenPercent;
 				}
 				break;

@@ -12,15 +12,15 @@ namespace UnityEditor
 			GUIViewDebuggerHelper.GetViewsInternal(views);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetViewsInternal(object views);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void DebugWindow(GUIView view);
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void StopDebugging();
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetInstructionCount();
 
@@ -31,11 +31,9 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetRectFromInstruction(int instructionIndex, out Rect value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern GUIStyle GetStyleFromInstruction(int instructionIndex);
 
@@ -48,16 +46,37 @@ namespace UnityEditor
 			};
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetContentTextFromInstruction(int instructionIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Texture GetContentImageFromInstruction(int instructionIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern StackFrame[] GetManagedStackTrace(int instructionIndex);
+
+		internal static void GetClipInstructions(List<IMGUIClipInstruction> clipInstructions)
+		{
+			GUIViewDebuggerHelper.GetClipInstructionsInternal(clipInstructions);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetClipInstructionsInternal(object clipInstructions);
+
+		internal static void GetLayoutInstructions(List<IMGUILayoutInstruction> layoutInstructions)
+		{
+			GUIViewDebuggerHelper.GetLayoutInstructionsInternal(layoutInstructions);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetLayoutInstructionsInternal(object layoutInstructions);
+
+		internal static void GetUnifiedInstructions(List<IMGUIInstruction> layoutInstructions)
+		{
+			GUIViewDebuggerHelper.GetUnifiedInstructionsInternal(layoutInstructions);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetUnifiedInstructionsInternal(object instructions);
 	}
 }

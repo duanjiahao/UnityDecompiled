@@ -5,15 +5,15 @@ namespace UnityEditor
 {
 	internal class MetroCertificatePasswordWindow : EditorWindow
 	{
+		private static readonly GUILayoutOption kLabelWidth = GUILayout.Width(110f);
+
+		private static readonly GUILayoutOption kButtonWidth = GUILayout.Width(110f);
+
 		private const float kSpace = 5f;
 
 		private const char kPasswordChar = '●';
 
 		private const string kPasswordId = "password";
-
-		private static readonly GUILayoutOption kLabelWidth = GUILayout.Width(110f);
-
-		private static readonly GUILayoutOption kButtonWidth = GUILayout.Width(110f);
 
 		private string path;
 

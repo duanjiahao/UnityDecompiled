@@ -66,12 +66,15 @@ namespace UnityEditor
 			if (gradient == null)
 			{
 				Debug.LogError("Wrong type used in GradientPresetLibrary");
-				return;
 			}
-			Gradient gradient2 = new Gradient();
-			gradient2.alphaKeys = gradient.alphaKeys;
-			gradient2.colorKeys = gradient.colorKeys;
-			this.m_Presets.Add(new GradientPresetLibrary.GradientPreset(gradient2, presetName));
+			else
+			{
+				Gradient gradient2 = new Gradient();
+				gradient2.alphaKeys = gradient.alphaKeys;
+				gradient2.colorKeys = gradient.colorKeys;
+				gradient2.mode = gradient.mode;
+				this.m_Presets.Add(new GradientPresetLibrary.GradientPreset(gradient2, presetName));
+			}
 		}
 
 		public override void Replace(int index, object newPresetObject)
@@ -80,12 +83,15 @@ namespace UnityEditor
 			if (gradient == null)
 			{
 				Debug.LogError("Wrong type used in GradientPresetLibrary");
-				return;
 			}
-			Gradient gradient2 = new Gradient();
-			gradient2.alphaKeys = gradient.alphaKeys;
-			gradient2.colorKeys = gradient.colorKeys;
-			this.m_Presets[index].gradient = gradient2;
+			else
+			{
+				Gradient gradient2 = new Gradient();
+				gradient2.alphaKeys = gradient.alphaKeys;
+				gradient2.colorKeys = gradient.colorKeys;
+				gradient2.mode = gradient.mode;
+				this.m_Presets[index].gradient = gradient2;
+			}
 		}
 
 		public override void Remove(int index)
@@ -110,11 +116,10 @@ namespace UnityEditor
 
 		private void DrawInternal(Rect rect, Gradient gradient)
 		{
-			if (gradient == null)
+			if (gradient != null)
 			{
-				return;
+				GradientEditor.DrawGradientWithBackground(rect, GradientPreviewCache.GetGradientPreview(gradient));
 			}
-			GradientEditor.DrawGradientWithBackground(rect, GradientPreviewCache.GetGradientPreview(gradient));
 		}
 
 		public override string GetName(int index)

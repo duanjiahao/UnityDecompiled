@@ -7,9 +7,9 @@ namespace UnityEngine
 	{
 		public readonly bool showAlpha = true;
 
-		public readonly bool hdr;
+		public readonly bool hdr = false;
 
-		public readonly float minBrightness;
+		public readonly float minBrightness = 0f;
 
 		public readonly float maxBrightness = 8f;
 

@@ -112,19 +112,27 @@ namespace UnityEditor.Collaboration
 		{
 			get
 			{
+				int result;
 				if (this.m_ProgressType == ProgressInfo.ProgressType.Percent || this.m_ProgressType == ProgressInfo.ProgressType.Both)
 				{
-					return this.m_Percentage;
+					result = this.m_Percentage;
 				}
-				if (this.m_ProgressType != ProgressInfo.ProgressType.Count)
+				else if (this.m_ProgressType == ProgressInfo.ProgressType.Count)
 				{
-					return 0;
+					if (this.m_TotalCount == 0)
+					{
+						result = 0;
+					}
+					else
+					{
+						result = this.m_CurrentCount * 100 / this.m_TotalCount;
+					}
 				}
-				if (this.m_TotalCount == 0)
+				else
 				{
-					return 0;
+					result = 0;
 				}
-				return this.m_CurrentCount * 100 / this.m_TotalCount;
+				return result;
 			}
 		}
 

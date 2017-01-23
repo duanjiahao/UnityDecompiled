@@ -1,6 +1,6 @@
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngineInternal;
 
 namespace UnityEngine.Events
@@ -9,26 +9,38 @@ namespace UnityEngine.Events
 	{
 		private event UnityAction Delegate
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.Delegate = (UnityAction)System.Delegate.Combine(this.Delegate, value);
+				UnityAction unityAction = this.Delegate;
+				UnityAction unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction>(ref this.Delegate, (UnityAction)System.Delegate.Combine(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.Delegate = (UnityAction)System.Delegate.Remove(this.Delegate, value);
+				UnityAction unityAction = this.Delegate;
+				UnityAction unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction>(ref this.Delegate, (UnityAction)System.Delegate.Remove(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
 		}
 
 		public InvokableCall(object target, MethodInfo theFunction) : base(target, theFunction)
 		{
-			this.Delegate = (UnityAction)System.Delegate.Combine(this.Delegate, (UnityAction)theFunction.CreateDelegate(typeof(UnityAction), target));
+			this.Delegate += (UnityAction)theFunction.CreateDelegate(typeof(UnityAction), target);
 		}
 
 		public InvokableCall(UnityAction action)
 		{
-			this.Delegate = (UnityAction)System.Delegate.Combine(this.Delegate, action);
+			this.Delegate += action;
 		}
 
 		public override void Invoke(object[] args)
@@ -41,33 +53,45 @@ namespace UnityEngine.Events
 
 		public override bool Find(object targetObj, MethodInfo method)
 		{
-			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo() == method;
+			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo().Equals(method);
 		}
 	}
 	internal class InvokableCall<T1> : BaseInvokableCall
 	{
 		protected event UnityAction<T1> Delegate
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.Delegate = (UnityAction<T1>)System.Delegate.Combine(this.Delegate, value);
+				UnityAction<T1> unityAction = this.Delegate;
+				UnityAction<T1> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1>>(ref this.Delegate, (UnityAction<T1>)System.Delegate.Combine(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.Delegate = (UnityAction<T1>)System.Delegate.Remove(this.Delegate, value);
+				UnityAction<T1> unityAction = this.Delegate;
+				UnityAction<T1> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1>>(ref this.Delegate, (UnityAction<T1>)System.Delegate.Remove(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
 		}
 
 		public InvokableCall(object target, MethodInfo theFunction) : base(target, theFunction)
 		{
-			this.Delegate = (UnityAction<T1>)System.Delegate.Combine(this.Delegate, (UnityAction<T1>)theFunction.CreateDelegate(typeof(UnityAction<T1>), target));
+			this.Delegate += (UnityAction<T1>)theFunction.CreateDelegate(typeof(UnityAction<T1>), target);
 		}
 
 		public InvokableCall(UnityAction<T1> action)
 		{
-			this.Delegate = (UnityAction<T1>)System.Delegate.Combine(this.Delegate, action);
+			this.Delegate += action;
 		}
 
 		public override void Invoke(object[] args)
@@ -85,22 +109,34 @@ namespace UnityEngine.Events
 
 		public override bool Find(object targetObj, MethodInfo method)
 		{
-			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo() == method;
+			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo().Equals(method);
 		}
 	}
 	internal class InvokableCall<T1, T2> : BaseInvokableCall
 	{
 		protected event UnityAction<T1, T2> Delegate
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.Delegate = (UnityAction<T1, T2>)System.Delegate.Combine(this.Delegate, value);
+				UnityAction<T1, T2> unityAction = this.Delegate;
+				UnityAction<T1, T2> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1, T2>>(ref this.Delegate, (UnityAction<T1, T2>)System.Delegate.Combine(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.Delegate = (UnityAction<T1, T2>)System.Delegate.Remove(this.Delegate, value);
+				UnityAction<T1, T2> unityAction = this.Delegate;
+				UnityAction<T1, T2> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1, T2>>(ref this.Delegate, (UnityAction<T1, T2>)System.Delegate.Remove(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
 		}
 
@@ -111,7 +147,7 @@ namespace UnityEngine.Events
 
 		public InvokableCall(UnityAction<T1, T2> action)
 		{
-			this.Delegate = (UnityAction<T1, T2>)System.Delegate.Combine(this.Delegate, action);
+			this.Delegate += action;
 		}
 
 		public override void Invoke(object[] args)
@@ -130,22 +166,34 @@ namespace UnityEngine.Events
 
 		public override bool Find(object targetObj, MethodInfo method)
 		{
-			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo() == method;
+			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo().Equals(method);
 		}
 	}
 	internal class InvokableCall<T1, T2, T3> : BaseInvokableCall
 	{
 		protected event UnityAction<T1, T2, T3> Delegate
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.Delegate = (UnityAction<T1, T2, T3>)System.Delegate.Combine(this.Delegate, value);
+				UnityAction<T1, T2, T3> unityAction = this.Delegate;
+				UnityAction<T1, T2, T3> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1, T2, T3>>(ref this.Delegate, (UnityAction<T1, T2, T3>)System.Delegate.Combine(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.Delegate = (UnityAction<T1, T2, T3>)System.Delegate.Remove(this.Delegate, value);
+				UnityAction<T1, T2, T3> unityAction = this.Delegate;
+				UnityAction<T1, T2, T3> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1, T2, T3>>(ref this.Delegate, (UnityAction<T1, T2, T3>)System.Delegate.Remove(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
 		}
 
@@ -156,7 +204,7 @@ namespace UnityEngine.Events
 
 		public InvokableCall(UnityAction<T1, T2, T3> action)
 		{
-			this.Delegate = (UnityAction<T1, T2, T3>)System.Delegate.Combine(this.Delegate, action);
+			this.Delegate += action;
 		}
 
 		public override void Invoke(object[] args)
@@ -176,22 +224,34 @@ namespace UnityEngine.Events
 
 		public override bool Find(object targetObj, MethodInfo method)
 		{
-			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo() == method;
+			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo().Equals(method);
 		}
 	}
 	internal class InvokableCall<T1, T2, T3, T4> : BaseInvokableCall
 	{
 		protected event UnityAction<T1, T2, T3, T4> Delegate
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.Delegate = (UnityAction<T1, T2, T3, T4>)System.Delegate.Combine(this.Delegate, value);
+				UnityAction<T1, T2, T3, T4> unityAction = this.Delegate;
+				UnityAction<T1, T2, T3, T4> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1, T2, T3, T4>>(ref this.Delegate, (UnityAction<T1, T2, T3, T4>)System.Delegate.Combine(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.Delegate = (UnityAction<T1, T2, T3, T4>)System.Delegate.Remove(this.Delegate, value);
+				UnityAction<T1, T2, T3, T4> unityAction = this.Delegate;
+				UnityAction<T1, T2, T3, T4> unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction<T1, T2, T3, T4>>(ref this.Delegate, (UnityAction<T1, T2, T3, T4>)System.Delegate.Remove(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
 		}
 
@@ -202,7 +262,7 @@ namespace UnityEngine.Events
 
 		public InvokableCall(UnityAction<T1, T2, T3, T4> action)
 		{
-			this.Delegate = (UnityAction<T1, T2, T3, T4>)System.Delegate.Combine(this.Delegate, action);
+			this.Delegate += action;
 		}
 
 		public override void Invoke(object[] args)
@@ -223,7 +283,7 @@ namespace UnityEngine.Events
 
 		public override bool Find(object targetObj, MethodInfo method)
 		{
-			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo() == method;
+			return this.Delegate.Target == targetObj && this.Delegate.GetMethodInfo().Equals(method);
 		}
 	}
 }

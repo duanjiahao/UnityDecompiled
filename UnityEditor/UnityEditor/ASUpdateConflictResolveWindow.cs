@@ -46,9 +46,9 @@ namespace UnityEditor
 
 		private int initialSelectedLV2Item = -1;
 
-		private bool lv1HasSelection;
+		private bool lv1HasSelection = false;
 
-		private bool lv2HasSelection;
+		private bool lv2HasSelection = false;
 
 		private SplitterState lvHeaderSplit1 = new SplitterState(new float[]
 		{
@@ -103,23 +103,23 @@ namespace UnityEditor
 
 		private NameConflictResolution[] namingResolutions = new NameConflictResolution[0];
 
-		private int downloadConflictsToResolve;
+		private int downloadConflictsToResolve = 0;
 
 		private bool showDownloadConflicts;
 
 		private bool showNamingConflicts;
 
-		private bool mySelection;
+		private bool mySelection = false;
 
-		private bool enableContinueButton;
+		private bool enableContinueButton = false;
 
 		private bool enableMergeButton = true;
 
-		private bool splittersOk;
+		private bool splittersOk = false;
 
 		private Vector2 iconSize = new Vector2(16f, 16f);
 
-		private ASUpdateConflictResolveWindow.Constants constants;
+		private ASUpdateConflictResolveWindow.Constants constants = null;
 
 		private string[] downloadResolutionString = new string[]
 		{
@@ -224,34 +224,16 @@ namespace UnityEditor
 				string text = this.dropDownMenuItems[selected];
 				if (text != null)
 				{
-					if (ASUpdateConflictResolveWindow.<>f__switch$map13 == null)
+					if (!(text == "Compare"))
 					{
-						ASUpdateConflictResolveWindow.<>f__switch$map13 = new Dictionary<string, int>(2)
+						if (text == "Compare Binary")
 						{
-							{
-								"Compare",
-								0
-							},
-							{
-								"Compare Binary",
-								1
-							}
-						};
+							this.DoShowDiff(true);
+						}
 					}
-					int num;
-					if (ASUpdateConflictResolveWindow.<>f__switch$map13.TryGetValue(text, out num))
+					else
 					{
-						if (num != 0)
-						{
-							if (num == 1)
-							{
-								this.DoShowDiff(true);
-							}
-						}
-						else
-						{
-							this.DoShowDiff(false);
-						}
+						this.DoShowDiff(false);
 					}
 				}
 			}
@@ -261,7 +243,8 @@ namespace UnityEditor
 		{
 			int num = -1;
 			bool flag = false;
-			for (int i = 0; i < this.downloadConflicts.Length; i++)
+			int i = 0;
+			while (i < this.downloadConflicts.Length)
 			{
 				if (this.selectedLV1Items[i])
 				{
@@ -288,6 +271,10 @@ namespace UnityEditor
 						num = ((num != -1) ? -2 : i);
 					}
 				}
+				IL_9F:
+				i++;
+				continue;
+				goto IL_9F;
 			}
 			this.enableContinueButton = (this.downloadConflictsToResolve == 0);
 			if (num >= 0)
@@ -340,12 +327,17 @@ namespace UnityEditor
 					list2.Add(new CompareInfo(serverItemChangeset, ver, (!binary) ? 0 : 1, (!binary) ? 1 : 0));
 				}
 			}
+			bool result;
 			if (list.Count != 0)
 			{
 				AssetServer.CompareFiles(list.ToArray(), list2.ToArray());
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private string[] GetSelectedGUIDs()
@@ -376,14 +368,17 @@ namespace UnityEditor
 
 		private bool HasTrue(ref bool[] array)
 		{
+			bool result;
 			for (int i = 0; i < array.Length; i++)
 			{
 				if (array[i])
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private void DoSelectionChange()
@@ -427,14 +422,20 @@ namespace UnityEditor
 
 		private bool AtLeastOneSelectedAssetCanBeMerged()
 		{
+			bool result;
 			for (int i = 0; i < this.downloadConflicts.Length; i++)
 			{
-				if (this.selectedLV1Items[i] && !AssetServer.AssetIsBinaryByGUID(this.downloadConflicts[i]) && !AssetServer.IsItemDeleted(this.downloadConflicts[i]))
+				if (this.selectedLV1Items[i])
 				{
-					return true;
+					if (!AssetServer.AssetIsBinaryByGUID(this.downloadConflicts[i]) && !AssetServer.IsItemDeleted(this.downloadConflicts[i]))
+					{
+						result = true;
+						return result;
+					}
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private void DoDownloadConflictsGUI()
@@ -477,75 +478,88 @@ namespace UnityEditor
 			SplitterGUILayout.EndHorizontalSplit();
 			int row = this.lv1.row;
 			bool flag = false;
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv1, this.constants.background, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.lv1, this.constants.background, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (GUIUtility.keyboardControl == this.lv1.ID && Event.current.type == EventType.KeyDown && actionKey)
+				while (enumerator.MoveNext())
 				{
-					Event.current.Use();
-				}
-				if (this.selectedLV1Items[listViewElement.row] && Event.current.type == EventType.Repaint)
-				{
-					this.constants.selected.Draw(listViewElement.position, false, false, false, false);
-				}
-				if (ListViewGUILayout.HasMouseUp(listViewElement.position))
-				{
-					if (!shift && !actionKey)
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (GUIUtility.keyboardControl == this.lv1.ID && Event.current.type == EventType.KeyDown && actionKey)
 					{
-						flag |= ListViewGUILayout.MultiSelection(row, this.lv1.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
+						Event.current.Use();
 					}
-				}
-				else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
-				{
-					if (Event.current.clickCount == 2 && !AssetServer.AssetIsDir(this.downloadConflicts[listViewElement.row]))
+					if (this.selectedLV1Items[listViewElement.row] && Event.current.type == EventType.Repaint)
 					{
-						this.DoShowDiff(false);
-						GUIUtility.ExitGUI();
+						this.constants.selected.Draw(listViewElement.position, false, false, false, false);
 					}
-					else
+					if (ListViewGUILayout.HasMouseUp(listViewElement.position))
 					{
-						if (!this.selectedLV1Items[listViewElement.row] || shift || actionKey)
+						if (!shift && !actionKey)
 						{
-							flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
+							flag |= ListViewGUILayout.MultiSelection(row, this.lv1.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
 						}
-						this.lv1.row = listViewElement.row;
 					}
-				}
-				else if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
-				{
-					if (!this.selectedLV1Items[listViewElement.row])
+					else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 					{
-						flag = true;
-						for (int i = 0; i < this.selectedLV1Items.Length; i++)
+						if (Event.current.clickCount == 2 && !AssetServer.AssetIsDir(this.downloadConflicts[listViewElement.row]))
 						{
-							this.selectedLV1Items[i] = false;
+							this.DoShowDiff(false);
+							GUIUtility.ExitGUI();
 						}
-						this.lv1.selectionChanged = true;
-						this.selectedLV1Items[listViewElement.row] = true;
-						this.lv1.row = listViewElement.row;
+						else
+						{
+							if (!this.selectedLV1Items[listViewElement.row] || shift || actionKey)
+							{
+								flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV1Item, ref this.selectedLV1Items);
+							}
+							this.lv1.row = listViewElement.row;
+						}
 					}
-					GUIUtility.hotControl = 0;
-					Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-					EditorUtility.DisplayCustomMenu(position, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
-					Event.current.Use();
+					else if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+					{
+						if (!this.selectedLV1Items[listViewElement.row])
+						{
+							flag = true;
+							for (int i = 0; i < this.selectedLV1Items.Length; i++)
+							{
+								this.selectedLV1Items[i] = false;
+							}
+							this.lv1.selectionChanged = true;
+							this.selectedLV1Items[listViewElement.row] = true;
+							this.lv1.row = listViewElement.row;
+						}
+						GUIUtility.hotControl = 0;
+						Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+						EditorUtility.DisplayCustomMenu(position, this.dropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+						Event.current.Use();
+					}
+					GUILayout.Label(this.downloadResolutionString[(int)this.downloadResolutions[listViewElement.row]], new GUILayoutOption[]
+					{
+						GUILayout.Width((float)this.lvHeaderSplit1.realSizes[0]),
+						GUILayout.Height(18f)
+					});
+					if (this.deletionConflict[listViewElement.row] && Event.current.type == EventType.Repaint)
+					{
+						GUIContent badgeDelete = ASMainWindow.constants.badgeDelete;
+						Rect position2 = new Rect(listViewElement.position.x + (float)this.lvHeaderSplit1.realSizes[0] - (float)badgeDelete.image.width - 5f, listViewElement.position.y + listViewElement.position.height / 2f - (float)(badgeDelete.image.height / 2), (float)badgeDelete.image.width, (float)badgeDelete.image.height);
+						EditorGUIUtility.SetIconSize(Vector2.zero);
+						GUIStyle.none.Draw(position2, badgeDelete, false, false, false, false);
+						EditorGUIUtility.SetIconSize(this.iconSize);
+					}
+					GUILayout.Label(new GUIContent(this.dConflictPaths[listViewElement.row], (!AssetServer.AssetIsDir(this.downloadConflicts[listViewElement.row])) ? InternalEditorUtility.GetIconForFile(this.dConflictPaths[listViewElement.row]) : EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName)), new GUILayoutOption[]
+					{
+						GUILayout.Width((float)this.lvHeaderSplit1.realSizes[1]),
+						GUILayout.Height(18f)
+					});
 				}
-				GUILayout.Label(this.downloadResolutionString[(int)this.downloadResolutions[listViewElement.row]], new GUILayoutOption[]
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					GUILayout.Width((float)this.lvHeaderSplit1.realSizes[0]),
-					GUILayout.Height(18f)
-				});
-				if (this.deletionConflict[listViewElement.row] && Event.current.type == EventType.Repaint)
-				{
-					GUIContent badgeDelete = ASMainWindow.constants.badgeDelete;
-					Rect position2 = new Rect(listViewElement.position.x + (float)this.lvHeaderSplit1.realSizes[0] - (float)badgeDelete.image.width - 5f, listViewElement.position.y + listViewElement.position.height / 2f - (float)(badgeDelete.image.height / 2), (float)badgeDelete.image.width, (float)badgeDelete.image.height);
-					EditorGUIUtility.SetIconSize(Vector2.zero);
-					GUIStyle.none.Draw(position2, badgeDelete, false, false, false, false);
-					EditorGUIUtility.SetIconSize(this.iconSize);
+					disposable.Dispose();
 				}
-				GUILayout.Label(new GUIContent(this.dConflictPaths[listViewElement.row], (!AssetServer.AssetIsDir(this.downloadConflicts[listViewElement.row])) ? InternalEditorUtility.GetIconForFile(this.dConflictPaths[listViewElement.row]) : EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName)), new GUILayoutOption[]
-				{
-					GUILayout.Width((float)this.lvHeaderSplit1.realSizes[1]),
-					GUILayout.Height(18f)
-				});
 			}
 			GUILayout.EndVertical();
 			if (GUIUtility.keyboardControl == this.lv1.ID)
@@ -611,41 +625,54 @@ namespace UnityEditor
 			SplitterGUILayout.EndHorizontalSplit();
 			int row = this.lv2.row;
 			bool flag = false;
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv2, this.constants.background, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.lv2, this.constants.background, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (GUIUtility.keyboardControl == this.lv2.ID && Event.current.type == EventType.KeyDown && actionKey)
+				while (enumerator.MoveNext())
 				{
-					Event.current.Use();
-				}
-				if (this.selectedLV2Items[listViewElement.row] && Event.current.type == EventType.Repaint)
-				{
-					this.constants.selected.Draw(listViewElement.position, false, false, false, false);
-				}
-				if (ListViewGUILayout.HasMouseUp(listViewElement.position))
-				{
-					if (!shift && !actionKey)
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (GUIUtility.keyboardControl == this.lv2.ID && Event.current.type == EventType.KeyDown && actionKey)
 					{
-						flag |= ListViewGUILayout.MultiSelection(row, this.lv2.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
+						Event.current.Use();
 					}
-				}
-				else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
-				{
-					if (!this.selectedLV2Items[listViewElement.row] || shift || actionKey)
+					if (this.selectedLV2Items[listViewElement.row] && Event.current.type == EventType.Repaint)
 					{
-						flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
+						this.constants.selected.Draw(listViewElement.position, false, false, false, false);
 					}
-					this.lv2.row = listViewElement.row;
+					if (ListViewGUILayout.HasMouseUp(listViewElement.position))
+					{
+						if (!shift && !actionKey)
+						{
+							flag |= ListViewGUILayout.MultiSelection(row, this.lv2.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
+						}
+					}
+					else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+					{
+						if (!this.selectedLV2Items[listViewElement.row] || shift || actionKey)
+						{
+							flag |= ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.initialSelectedLV2Item, ref this.selectedLV2Items);
+						}
+						this.lv2.row = listViewElement.row;
+					}
+					GUILayout.Label(this.namingResolutionString[(int)this.namingResolutions[listViewElement.row]], new GUILayoutOption[]
+					{
+						GUILayout.Width((float)this.lvHeaderSplit2.realSizes[0]),
+						GUILayout.Height(18f)
+					});
+					GUILayout.Label(new GUIContent(this.dNamingPaths[listViewElement.row], (!AssetServer.AssetIsDir(this.nameConflicts[listViewElement.row])) ? InternalEditorUtility.GetIconForFile(this.dNamingPaths[listViewElement.row]) : EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName)), new GUILayoutOption[]
+					{
+						GUILayout.Width((float)this.lvHeaderSplit2.realSizes[1]),
+						GUILayout.Height(18f)
+					});
 				}
-				GUILayout.Label(this.namingResolutionString[(int)this.namingResolutions[listViewElement.row]], new GUILayoutOption[]
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					GUILayout.Width((float)this.lvHeaderSplit2.realSizes[0]),
-					GUILayout.Height(18f)
-				});
-				GUILayout.Label(new GUIContent(this.dNamingPaths[listViewElement.row], (!AssetServer.AssetIsDir(this.nameConflicts[listViewElement.row])) ? InternalEditorUtility.GetIconForFile(this.dNamingPaths[listViewElement.row]) : EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName)), new GUILayoutOption[]
-				{
-					GUILayout.Width((float)this.lvHeaderSplit2.realSizes[1]),
-					GUILayout.Height(18f)
-				});
+					disposable.Dispose();
+				}
 			}
 			GUILayout.EndVertical();
 			if (GUIUtility.keyboardControl == this.lv2.ID)
@@ -708,29 +735,37 @@ namespace UnityEditor
 			GUI.enabled = enabled;
 			GUILayout.FlexibleSpace();
 			GUI.enabled = (parentWin.CanContinue && enabled);
+			bool result;
 			if (GUILayout.Button("Continue", this.constants.bigButton, new GUILayoutOption[]
 			{
 				GUILayout.MinWidth(100f)
 			}))
 			{
 				parentWin.DoUpdate(true);
-				return false;
+				result = false;
 			}
-			GUI.enabled = enabled;
-			if (GUILayout.Button("Cancel", this.constants.bigButton, new GUILayoutOption[]
+			else
 			{
-				GUILayout.MinWidth(100f)
-			}))
-			{
-				return false;
+				GUI.enabled = enabled;
+				if (GUILayout.Button("Cancel", this.constants.bigButton, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(100f)
+				}))
+				{
+					result = false;
+				}
+				else
+				{
+					GUILayout.EndHorizontal();
+					if (!this.splittersOk && Event.current.type == EventType.Repaint)
+					{
+						this.splittersOk = true;
+						parentWin.Repaint();
+					}
+					result = true;
+				}
 			}
-			GUILayout.EndHorizontal();
-			if (!this.splittersOk && Event.current.type == EventType.Repaint)
-			{
-				this.splittersOk = true;
-				parentWin.Repaint();
-			}
-			return true;
+			return result;
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -23,6 +24,9 @@ namespace UnityEditor
 		private SerializedProperty m_Direction;
 
 		private int m_HandleControlID;
+
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache0;
 
 		public void OnEnable()
 		{
@@ -56,7 +60,7 @@ namespace UnityEditor
 		public void OnSceneGUI()
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
-			CharacterController characterController = (CharacterController)this.target;
+			CharacterController characterController = (CharacterController)base.target;
 			Color color = Handles.color;
 			if (characterController.enabled)
 			{
@@ -147,7 +151,14 @@ namespace UnityEditor
 			{
 				Handles.color = new Color(Handles.color.r, Handles.color.g, Handles.color.b, Handles.color.a * Handles.backfaceAlphaMultiplier);
 			}
-			Vector3 point = Handles.Slider(vector2, vector, handleSize * 0.03f, new Handles.DrawCapFunction(Handles.DotCap), 0f);
+			Vector3 arg_119_0 = vector2;
+			Vector3 arg_119_1 = vector;
+			float arg_119_2 = handleSize * 0.03f;
+			if (CharacterControllerEditor.<>f__mg$cache0 == null)
+			{
+				CharacterControllerEditor.<>f__mg$cache0 = new Handles.CapFunction(Handles.DotHandleCap);
+			}
+			Vector3 point = Handles.Slider(arg_119_0, arg_119_1, arg_119_2, CharacterControllerEditor.<>f__mg$cache0, 0f);
 			float result = 0f;
 			if (GUI.changed)
 			{

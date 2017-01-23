@@ -136,11 +136,16 @@ namespace UnityEditor
 
 		public static IHierarchyProperty CreateHierarchyPropertyForFilter(FilteredHierarchy filteredHierarchy)
 		{
+			IHierarchyProperty result;
 			if (filteredHierarchy.searchFilter.GetState() != SearchFilter.State.EmptySearchFilter)
 			{
-				return new FilteredHierarchyProperty(filteredHierarchy);
+				result = new FilteredHierarchyProperty(filteredHierarchy);
 			}
-			return new HierarchyProperty(filteredHierarchy.hierarchyType);
+			else
+			{
+				result = new HierarchyProperty(filteredHierarchy.hierarchyType);
+			}
+			return result;
 		}
 
 		public void Reset()
@@ -178,14 +183,17 @@ namespace UnityEditor
 		public bool Find(int _instanceID, int[] expanded)
 		{
 			this.Reset();
+			bool result;
 			while (this.Next(expanded))
 			{
 				if (this.instanceID == _instanceID)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public int[] FindAllAncestors(int[] instanceIDs)

@@ -13,18 +13,21 @@ namespace UnityEditor
 			{
 				throw new ArgumentException("The type must be serializable.", "source");
 			}
+			T result;
 			if (object.ReferenceEquals(source, null))
 			{
-				return default(T);
+				result = default(T);
 			}
-			IFormatter formatter = new BinaryFormatter();
-			Stream stream = new MemoryStream();
-			T result;
-			using (stream)
+			else
 			{
-				formatter.Serialize(stream, source);
-				stream.Seek(0L, SeekOrigin.Begin);
-				result = (T)((object)formatter.Deserialize(stream));
+				IFormatter formatter = new BinaryFormatter();
+				Stream stream = new MemoryStream();
+				using (stream)
+				{
+					formatter.Serialize(stream, source);
+					stream.Seek(0L, SeekOrigin.Begin);
+					result = (T)((object)formatter.Deserialize(stream));
+				}
 			}
 			return result;
 		}

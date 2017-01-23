@@ -30,35 +30,28 @@ namespace UnityEngine
 
 		public static extern bool wireframe
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool sRGBWrite
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool invertCulling
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Vertex3(float x, float y, float z);
 
@@ -67,7 +60,6 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_Vertex(ref v);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Vertex(ref Vector3 v);
 
@@ -76,7 +68,6 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_Color(ref c);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Color(ref Color c);
 
@@ -85,23 +76,18 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_TexCoord(ref v);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_TexCoord(ref Vector3 v);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void TexCoord2(float x, float y);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void TexCoord3(float x, float y, float z);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void MultiTexCoord2(int unit, float x, float y);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void MultiTexCoord3(int unit, float x, float y, float z);
 
@@ -110,11 +96,9 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_MultiTexCoord(unit, ref v);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MultiTexCoord(int unit, ref Vector3 v);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void BeginInternal(int mode);
 
@@ -123,19 +107,15 @@ namespace UnityEngine
 			GL.BeginInternal(mode);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void End();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadOrtho();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadPixelMatrix();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void LoadPixelMatrixArgs(float left, float right, float bottom, float top);
 
@@ -149,7 +129,6 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_Viewport(ref pixelRect);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Viewport(ref Rect pixelRect);
 
@@ -158,19 +137,15 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_LoadProjectionMatrix(ref mat);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_LoadProjectionMatrix(ref Matrix4x4 mat);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadIdentity();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_modelview(out Matrix4x4 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_modelview(ref Matrix4x4 value);
 
@@ -179,15 +154,12 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_MultMatrix(ref mat);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MultMatrix(ref Matrix4x4 mat);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PushMatrix();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PopMatrix();
 
@@ -198,11 +170,10 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetGPUProjectionMatrix(ref Matrix4x4 proj, bool renderIntoTexture, out Matrix4x4 value);
 
-		[Obsolete("Use invertCulling property"), WrapperlessIcall]
+		[Obsolete("Use invertCulling property")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetRevertBackfacing(bool revertBackFaces);
 
@@ -223,23 +194,19 @@ namespace UnityEngine
 			GL.INTERNAL_CALL_Internal_Clear(clearDepth, clearColor, ref backgroundColor, depth);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_Clear(bool clearDepth, bool clearColor, ref Color backgroundColor, float depth);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearWithSkybox(bool clearDepth, Camera camera);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Flush();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void InvalidateState();
 
-		[Obsolete("IssuePluginEvent(eventID) is deprecated. Use IssuePluginEvent(callback, eventID) instead."), WrapperlessIcall]
+		[Obsolete("IssuePluginEvent(eventID) is deprecated. Use IssuePluginEvent(callback, eventID) instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void IssuePluginEvent(int eventID);
 
@@ -252,11 +219,9 @@ namespace UnityEngine
 			GL.IssuePluginEventInternal(callback, eventID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void IssuePluginEventInternal(IntPtr callback, int eventID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RenderTargetBarrier();
 	}

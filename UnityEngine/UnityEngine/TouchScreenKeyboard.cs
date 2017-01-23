@@ -14,87 +14,86 @@ namespace UnityEngine
 			get
 			{
 				RuntimePlatform platform = Application.platform;
-				RuntimePlatform runtimePlatform = platform;
-				switch (runtimePlatform)
+				bool result;
+				switch (platform)
 				{
 				case RuntimePlatform.MetroPlayerX86:
 				case RuntimePlatform.MetroPlayerX64:
 				case RuntimePlatform.MetroPlayerARM:
-					return false;
+					result = false;
+					return result;
 				case RuntimePlatform.WP8Player:
-				case RuntimePlatform.TizenPlayer:
-				case RuntimePlatform.PSM:
-				case RuntimePlatform.WiiU:
-					return true;
 				case RuntimePlatform.BB10Player:
 				case RuntimePlatform.PSP2:
 				case RuntimePlatform.PS4:
-				case RuntimePlatform.XboxOne:
-				case RuntimePlatform.SamsungTVPlayer:
-				case (RuntimePlatform)29:
-					IL_45:
-					switch (runtimePlatform)
+					IL_34:
+					switch (platform)
 					{
 					case RuntimePlatform.IPhonePlayer:
 					case RuntimePlatform.Android:
-						return true;
+						goto IL_61;
+					case RuntimePlatform.PS3:
+					case RuntimePlatform.XBOX360:
+						IL_4C:
+						if (platform != RuntimePlatform.WiiU && platform != RuntimePlatform.tvOS)
+						{
+							result = false;
+							return result;
+						}
+						goto IL_61;
 					}
-					return false;
+					goto IL_4C;
+				case RuntimePlatform.TizenPlayer:
+				case RuntimePlatform.PSM:
+					goto IL_61;
 				}
-				goto IL_45;
+				goto IL_34;
+				IL_61:
+				result = true;
+				return result;
 			}
 		}
 
 		public extern string text
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool hideInput
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool active
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool done
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool wasCanceled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int targetDisplay
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -111,7 +110,6 @@ namespace UnityEngine
 
 		public static extern bool visible
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -127,7 +125,7 @@ namespace UnityEngine
 			this.TouchScreenKeyboard_InternalConstructorHelper(ref touchScreenKeyboard_InternalConstructorHelperArguments, text, textPlaceholder);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Destroy();
 
@@ -136,65 +134,64 @@ namespace UnityEngine
 			this.Destroy();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void TouchScreenKeyboard_InternalConstructorHelper(ref TouchScreenKeyboard_InternalConstructorHelperArguments arguments, string text, string textPlaceholder);
 
 		[ExcludeFromDocs]
 		public static TouchScreenKeyboard Open(string text, TouchScreenKeyboardType keyboardType, bool autocorrection, bool multiline, bool secure, bool alert)
 		{
-			string empty = string.Empty;
-			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, empty);
+			string textPlaceholder = "";
+			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
 		[ExcludeFromDocs]
 		public static TouchScreenKeyboard Open(string text, TouchScreenKeyboardType keyboardType, bool autocorrection, bool multiline, bool secure)
 		{
-			string empty = string.Empty;
+			string textPlaceholder = "";
 			bool alert = false;
-			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, empty);
+			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
 		[ExcludeFromDocs]
 		public static TouchScreenKeyboard Open(string text, TouchScreenKeyboardType keyboardType, bool autocorrection, bool multiline)
 		{
-			string empty = string.Empty;
+			string textPlaceholder = "";
 			bool alert = false;
 			bool secure = false;
-			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, empty);
+			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
 		[ExcludeFromDocs]
 		public static TouchScreenKeyboard Open(string text, TouchScreenKeyboardType keyboardType, bool autocorrection)
 		{
-			string empty = string.Empty;
+			string textPlaceholder = "";
 			bool alert = false;
 			bool secure = false;
 			bool multiline = false;
-			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, empty);
+			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
 		[ExcludeFromDocs]
 		public static TouchScreenKeyboard Open(string text, TouchScreenKeyboardType keyboardType)
 		{
-			string empty = string.Empty;
+			string textPlaceholder = "";
 			bool alert = false;
 			bool secure = false;
 			bool multiline = false;
 			bool autocorrection = true;
-			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, empty);
+			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
 		[ExcludeFromDocs]
 		public static TouchScreenKeyboard Open(string text)
 		{
-			string empty = string.Empty;
+			string textPlaceholder = "";
 			bool alert = false;
 			bool secure = false;
 			bool multiline = false;
 			bool autocorrection = true;
 			TouchScreenKeyboardType keyboardType = TouchScreenKeyboardType.Default;
-			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, empty);
+			return TouchScreenKeyboard.Open(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
 		public static TouchScreenKeyboard Open(string text, [DefaultValue("TouchScreenKeyboardType.Default")] TouchScreenKeyboardType keyboardType, [DefaultValue("true")] bool autocorrection, [DefaultValue("false")] bool multiline, [DefaultValue("false")] bool secure, [DefaultValue("false")] bool alert, [DefaultValue("\"\"")] string textPlaceholder)
@@ -202,7 +199,6 @@ namespace UnityEngine
 			return new TouchScreenKeyboard(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_area(out Rect value);
 	}

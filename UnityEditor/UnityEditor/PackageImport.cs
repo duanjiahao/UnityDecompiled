@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -27,10 +28,10 @@ namespace UnityEditor
 			{
 				this.lineColor = ((!EditorGUIUtility.isProSkin) ? new Color(0.4f, 0.4f, 0.4f) : new Color(0.1f, 0.1f, 0.1f));
 				this.topBarBg.fixedHeight = 0f;
-				RectOffset arg_D7_0 = this.topBarBg.border;
+				RectOffset arg_D8_0 = this.topBarBg.border;
 				int num = 2;
 				this.topBarBg.border.bottom = num;
-				arg_D7_0.top = num;
+				arg_D8_0.top = num;
 				this.title.fontStyle = FontStyle.Bold;
 				this.title.alignment = TextAnchor.MiddleLeft;
 			}
@@ -96,12 +97,11 @@ namespace UnityEditor
 
 		public static void ShowImportPackage(string packagePath, ImportPackageItem[] items, string packageIconPath, bool allowReInstall)
 		{
-			if (!PackageImport.ValidateInput(items))
+			if (PackageImport.ValidateInput(items))
 			{
-				return;
+				PackageImport window = EditorWindow.GetWindow<PackageImport>(true, "Import Unity Package");
+				window.Init(packagePath, items, packageIconPath, allowReInstall);
 			}
-			PackageImport window = EditorWindow.GetWindow<PackageImport>(true, "Import Unity Package");
-			window.Init(packagePath, items, packageIconPath, allowReInstall);
 		}
 
 		private void OnDisable()
@@ -139,22 +139,28 @@ namespace UnityEditor
 
 		private bool ShowTreeGUI(bool reInstalling, ImportPackageItem[] items)
 		{
+			bool result;
 			if (reInstalling)
 			{
-				return true;
+				result = true;
 			}
-			if (items.Length == 0)
+			else if (items.Length == 0)
 			{
-				return false;
+				result = false;
 			}
-			for (int i = 0; i < items.Length; i++)
+			else
 			{
-				if (!items[i].isFolder && items[i].assetChanged)
+				for (int i = 0; i < items.Length; i++)
 				{
-					return true;
+					if (!items[i].isFolder && items[i].assetChanged)
+					{
+						result = true;
+						return result;
+					}
 				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
 
 		public void OnGUI()
@@ -275,7 +281,7 @@ namespace UnityEditor
 				{
 					if (this.m_ImportPackageItems != null)
 					{
-						PackageUtility.ImportPackageAssets(this.m_ImportPackageItems, this.doReInstall);
+						PackageUtility.ImportPackageAssets(this.m_PackageName, this.m_ImportPackageItems, this.doReInstall);
 					}
 					PopupWindowWithoutFocus.Hide();
 					base.Close();
@@ -302,7 +308,7 @@ namespace UnityEditor
 			catch
 			{
 			}
-			if (filepath == string.Empty || array == null || !texture.LoadImage(array))
+			if (filepath == "" || array == null || !texture.LoadImage(array))
 			{
 				Color[] pixels = texture.GetPixels();
 				for (int i = 0; i < pixels.Length; i++)
@@ -316,31 +322,30 @@ namespace UnityEditor
 
 		public static void DrawTexture(Rect r, Texture2D tex, bool useDropshadow)
 		{
-			if (tex == null)
+			if (!(tex == null))
 			{
-				return;
+				float num = (float)tex.width;
+				float num2 = (float)tex.height;
+				if (num >= num2 && num > r.width)
+				{
+					num2 = num2 * r.width / num;
+					num = r.width;
+				}
+				else if (num2 > num && num2 > r.height)
+				{
+					num = num * r.height / num2;
+					num2 = r.height;
+				}
+				float x = r.x + Mathf.Round((r.width - num) / 2f);
+				float y = r.y + Mathf.Round((r.height - num2) / 2f);
+				r = new Rect(x, y, num, num2);
+				if (useDropshadow && Event.current.type == EventType.Repaint)
+				{
+					Rect position = new RectOffset(1, 1, 1, 1).Remove(PackageImport.ms_Constants.textureIconDropShadow.border.Add(r));
+					PackageImport.ms_Constants.textureIconDropShadow.Draw(position, GUIContent.none, false, false, false, false);
+				}
+				GUI.DrawTexture(r, tex, ScaleMode.ScaleToFit, true);
 			}
-			float num = (float)tex.width;
-			float num2 = (float)tex.height;
-			if (num >= num2 && num > r.width)
-			{
-				num2 = num2 * r.width / num;
-				num = r.width;
-			}
-			else if (num2 > num && num2 > r.height)
-			{
-				num = num * r.height / num2;
-				num2 = r.height;
-			}
-			float x = r.x + Mathf.Round((r.width - num) / 2f);
-			float y = r.y + Mathf.Round((r.height - num2) / 2f);
-			r = new Rect(x, y, num, num2);
-			if (useDropshadow && Event.current.type == EventType.Repaint)
-			{
-				Rect position = new RectOffset(1, 1, 1, 1).Remove(PackageImport.ms_Constants.textureIconDropShadow.border.Add(r));
-				PackageImport.ms_Constants.textureIconDropShadow.Draw(position, GUIContent.none, false, false, false, false);
-			}
-			GUI.DrawTexture(r, tex, ScaleMode.ScaleToFit, true);
 		}
 
 		public static Texture2D GetPreview(string previewPath)
@@ -356,16 +361,22 @@ namespace UnityEditor
 		private static bool ValidateInput(ImportPackageItem[] items)
 		{
 			string text;
+			bool result;
 			if (!PackageImport.IsAllFilePathsValid(items, out text))
 			{
 				text += "\nDo you want to import the valid file paths of the package or cancel importing?";
-				return EditorUtility.DisplayDialog("Invalid file path found", text, "Import", "Cancel importing");
+				result = EditorUtility.DisplayDialog("Invalid file path found", text, "Import", "Cancel importing");
 			}
-			return true;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		private static bool IsAllFilePathsValid(ImportPackageItem[] assetItems, out string errorMessage)
 		{
+			bool result;
 			for (int i = 0; i < assetItems.Length; i++)
 			{
 				ImportPackageItem importPackageItem = assetItems[i];
@@ -376,16 +387,19 @@ namespace UnityEditor
 					if (PackageImport.HasInvalidCharInFilePath(importPackageItem.destinationAssetPath, out c, out num))
 					{
 						errorMessage = string.Format("Invalid character found in file path: '{0}'. Invalid ascii value: {1} (at character index {2}).", importPackageItem.destinationAssetPath, (int)c, num);
-						return false;
+						result = false;
+						return result;
 					}
 				}
 			}
-			errorMessage = string.Empty;
-			return true;
+			errorMessage = "";
+			result = true;
+			return result;
 		}
 
 		private static bool HasInvalidCharInFilePath(string filePath, out char invalidChar, out int invalidCharIndex)
 		{
+			bool result;
 			for (int i = 0; i < filePath.Length; i++)
 			{
 				char c = filePath[i];
@@ -393,12 +407,14 @@ namespace UnityEditor
 				{
 					invalidChar = c;
 					invalidCharIndex = i;
-					return true;
+					result = true;
+					return result;
 				}
 			}
 			invalidChar = ' ';
 			invalidCharIndex = -1;
-			return false;
+			result = false;
+			return result;
 		}
 
 		public static bool HasInvalidCharInFilePath(string filePath)

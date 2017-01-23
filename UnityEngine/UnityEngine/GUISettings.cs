@@ -61,11 +61,16 @@ namespace UnityEngine
 		{
 			get
 			{
+				float result;
 				if (this.m_CursorFlashSpeed >= 0f)
 				{
-					return this.m_CursorFlashSpeed;
+					result = this.m_CursorFlashSpeed;
 				}
-				return GUISettings.Internal_GetCursorFlashSpeed();
+				else
+				{
+					result = GUISettings.Internal_GetCursorFlashSpeed();
+				}
+				return result;
 			}
 			set
 			{
@@ -85,7 +90,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_GetCursorFlashSpeed();
 	}

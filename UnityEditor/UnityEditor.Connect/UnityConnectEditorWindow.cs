@@ -41,6 +41,7 @@ namespace UnityEditor.Connect
 		public static UnityConnectEditorWindow Create(string title, List<string> serviceUrls)
 		{
 			UnityConnectEditorWindow[] array = Resources.FindObjectsOfTypeAll(typeof(UnityConnectEditorWindow)) as UnityConnectEditorWindow[];
+			UnityConnectEditorWindow result;
 			if (array != null)
 			{
 				using (IEnumerator<UnityConnectEditorWindow> enumerator = (from win in array
@@ -51,7 +52,8 @@ namespace UnityEditor.Connect
 					{
 						UnityConnectEditorWindow current = enumerator.Current;
 						current.titleContent = new GUIContent(title);
-						return current;
+						result = current;
+						return result;
 					}
 				}
 			}
@@ -62,7 +64,8 @@ namespace UnityEditor.Connect
 			window.m_ClearInitialOpenURL = false;
 			window.initialOpenUrl = serviceUrls[0];
 			window.Init();
-			return window;
+			result = window;
+			return result;
 		}
 
 		public bool UrlsMatch(List<string> referenceUrls)
@@ -88,14 +91,13 @@ namespace UnityEditor.Connect
 
 		public new void OnLoadError(string url)
 		{
-			if (this.webView == null)
+			if (!(this.webView == null))
 			{
-				return;
-			}
-			this.webView.LoadFile(EditorApplication.userJavascriptPackagesPath + "unityeditor-cloud-hub/dist/index.html?failure=load_error&reload_url=" + WWW.EscapeURL(url));
-			if (url.StartsWith("http://") || url.StartsWith("https://"))
-			{
-				base.UnregisterWebviewUrl(url);
+				this.webView.LoadFile(EditorApplication.userJavascriptPackagesPath + "unityeditor-cloud-hub/dist/index.html?failure=load_error&reload_url=" + WWW.EscapeURL(url));
+				if (url.StartsWith("http://") || url.StartsWith("https://"))
+				{
+					base.UnregisterWebviewUrl(url);
+				}
 			}
 		}
 

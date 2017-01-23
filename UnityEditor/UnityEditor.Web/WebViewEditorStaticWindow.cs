@@ -4,7 +4,7 @@ namespace UnityEditor.Web
 {
 	internal abstract class WebViewEditorStaticWindow : WebViewEditorWindow, IHasCustomMenu
 	{
-		protected object m_GlobalObject;
+		protected object m_GlobalObject = null;
 
 		protected WebViewEditorStaticWindow()
 		{

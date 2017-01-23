@@ -23,19 +23,27 @@ namespace UnityEditor
 			{
 				throw new ArgumentException("default can not be null", "defaultValue");
 			}
+			T result;
 			if (Settings.m_Prefs.ContainsKey(name))
 			{
-				return (T)((object)Settings.m_Prefs[name]);
+				result = (T)((object)Settings.m_Prefs[name]);
 			}
-			string @string = EditorPrefs.GetString(name, string.Empty);
-			if (@string == string.Empty)
+			else
 			{
-				Settings.Set<T>(name, defaultValue);
-				return defaultValue;
+				string @string = EditorPrefs.GetString(name, "");
+				if (@string == "")
+				{
+					Settings.Set<T>(name, defaultValue);
+					result = defaultValue;
+				}
+				else
+				{
+					defaultValue.FromUniqueString(@string);
+					Settings.Set<T>(name, defaultValue);
+					result = defaultValue;
+				}
 			}
-			defaultValue.FromUniqueString(@string);
-			Settings.Set<T>(name, defaultValue);
-			return defaultValue;
+			return result;
 		}
 
 		internal static void Set<T>(string name, T value) where T : IPrefType
@@ -48,23 +56,22 @@ namespace UnityEditor
 		[DebuggerHidden]
 		internal static IEnumerable<KeyValuePair<string, T>> Prefs<T>() where T : IPrefType
 		{
-			Settings.<Prefs>c__Iterator4<T> <Prefs>c__Iterator = new Settings.<Prefs>c__Iterator4<T>();
-			Settings.<Prefs>c__Iterator4<T> expr_07 = <Prefs>c__Iterator;
+			Settings.<Prefs>c__Iterator0<T> <Prefs>c__Iterator = new Settings.<Prefs>c__Iterator0<T>();
+			Settings.<Prefs>c__Iterator0<T> expr_07 = <Prefs>c__Iterator;
 			expr_07.$PC = -2;
 			return expr_07;
 		}
 
 		private static void Load()
 		{
-			if (!Settings.m_AddedPrefs.Any<IPrefType>())
+			if (Settings.m_AddedPrefs.Any<IPrefType>())
 			{
-				return;
-			}
-			List<IPrefType> list = new List<IPrefType>(Settings.m_AddedPrefs);
-			Settings.m_AddedPrefs.Clear();
-			foreach (IPrefType current in list)
-			{
-				current.Load();
+				List<IPrefType> list = new List<IPrefType>(Settings.m_AddedPrefs);
+				Settings.m_AddedPrefs.Clear();
+				foreach (IPrefType current in list)
+				{
+					current.Load();
+				}
 			}
 		}
 	}

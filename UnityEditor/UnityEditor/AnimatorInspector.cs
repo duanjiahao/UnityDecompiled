@@ -53,7 +53,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return (this.m_WarningMessage == null) ? string.Empty : this.m_WarningMessage.stringValue;
+				return (this.m_WarningMessage == null) ? "" : this.m_WarningMessage.stringValue;
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace UnityEditor
 		public override void OnInspectorGUI()
 		{
 			bool flag = base.targets.Length > 1;
-			Animator animator = this.target as Animator;
+			Animator animator = base.target as Animator;
 			base.serializedObject.UpdateIfDirtyOrScript();
 			this.UpdateShowOptions();
 			EditorGUI.BeginChangeCheck();

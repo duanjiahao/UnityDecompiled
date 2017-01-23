@@ -1,9 +1,11 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class LightmapData
 	{
@@ -11,7 +13,7 @@ namespace UnityEngine
 
 		internal Texture2D m_Dir;
 
-		public Texture2D lightmapFar
+		public Texture2D lightmapLight
 		{
 			get
 			{
@@ -23,7 +25,7 @@ namespace UnityEngine
 			}
 		}
 
-		public Texture2D lightmapNear
+		public Texture2D lightmapDir
 		{
 			get
 			{
@@ -35,8 +37,32 @@ namespace UnityEngine
 			}
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property LightmapData.lightmap has been deprecated. Use LightmapData.lightmapFar instead (UnityUpgradable) -> lightmapFar", true)]
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property LightmapData.lightmap has been deprecated. Use LightmapData.lightmapLight instead (UnityUpgradable) -> lightmapLight", true)]
 		public Texture2D lightmap
+		{
+			get
+			{
+				return null;
+			}
+			set
+			{
+			}
+		}
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property LightmapData.lightmapFar has been deprecated. Use LightmapData.lightmapLight instead (UnityUpgradable) -> lightmapLight", true)]
+		public Texture2D lightmapFar
+		{
+			get
+			{
+				return null;
+			}
+			set
+			{
+			}
+		}
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property LightmapData.lightmapNear has been deprecated. Use LightmapData.lightmapDir instead (UnityUpgradable) -> lightmapDir", true)]
+		public Texture2D lightmapNear
 		{
 			get
 			{

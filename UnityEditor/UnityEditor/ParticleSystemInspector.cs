@@ -34,7 +34,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				GameObject gameObject = (this.target as ParticleSystem).gameObject;
+				GameObject gameObject = (base.target as ParticleSystem).gameObject;
 				GameObject x;
 				if (ParticleSystemEditorUtils.lockedParticleSystem == null)
 				{
@@ -86,19 +86,18 @@ namespace UnityEditor
 
 		private void Init(bool forceInit)
 		{
-			ParticleSystem particleSystem = this.target as ParticleSystem;
-			if (particleSystem == null)
+			ParticleSystem particleSystem = base.target as ParticleSystem;
+			if (!(particleSystem == null))
 			{
-				return;
-			}
-			if (this.m_ParticleEffectUI == null)
-			{
-				this.m_ParticleEffectUI = new ParticleEffectUI(this);
-				this.m_ParticleEffectUI.InitializeIfNeeded(particleSystem);
-			}
-			else if (forceInit)
-			{
-				this.m_ParticleEffectUI.InitializeIfNeeded(particleSystem);
+				if (this.m_ParticleEffectUI == null)
+				{
+					this.m_ParticleEffectUI = new ParticleEffectUI(this);
+					this.m_ParticleEffectUI.InitializeIfNeeded(particleSystem);
+				}
+				else if (forceInit)
+				{
+					this.m_ParticleEffectUI.InitializeIfNeeded(particleSystem);
+				}
 			}
 		}
 
@@ -107,7 +106,7 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
 			bool selectedInParticleSystemWindow = this.selectedInParticleSystemWindow;
-			GameObject gameObject = (this.target as ParticleSystem).gameObject;
+			GameObject gameObject = (base.target as ParticleSystem).gameObject;
 			ParticleSystemWindow instance = ParticleSystemWindow.GetInstance();
 			GUIContent content;
 			if (instance && instance.IsVisible() && selectedInParticleSystemWindow)
@@ -208,9 +207,12 @@ namespace UnityEditor
 
 		public void OnSceneGUI()
 		{
-			if (this.ShouldShowInspector() && this.m_ParticleEffectUI != null)
+			if (this.ShouldShowInspector())
 			{
-				this.m_ParticleEffectUI.OnSceneGUI();
+				if (this.m_ParticleEffectUI != null)
+				{
+					this.m_ParticleEffectUI.OnSceneGUI();
+				}
 			}
 		}
 
@@ -246,11 +248,6 @@ namespace UnityEditor
 
 		public override void OnPreviewSettings()
 		{
-		}
-
-		virtual void Repaint()
-		{
-			base.Repaint();
 		}
 	}
 }

@@ -13,15 +13,20 @@ namespace UnityEditor
 
 		public AnimationCurve GetCurve(int index)
 		{
+			AnimationCurve result;
 			if (index == 0)
 			{
-				return this.eulerX;
+				result = this.eulerX;
 			}
-			if (index == 1)
+			else if (index == 1)
 			{
-				return this.eulerY;
+				result = this.eulerY;
 			}
-			return this.eulerZ;
+			else
+			{
+				result = this.eulerZ;
+			}
+			return result;
 		}
 
 		public void SetCurve(int index, AnimationCurve curve)
@@ -60,68 +65,79 @@ namespace UnityEditor
 			Quaternion b = Quaternion.Euler(euler);
 			Quaternion q = Quaternion.Slerp(a, b, num);
 			Vector3 eulerFromQuaternion = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q, vector);
+			float result;
 			switch (component)
 			{
 			case 0:
-				return (eulerFromQuaternion.x - vector.x) / num / -(to.time - from.time);
+				result = (eulerFromQuaternion.x - vector.x) / num / -(to.time - from.time);
+				break;
 			case 1:
-				return (eulerFromQuaternion.y - vector.y) / num / -(to.time - from.time);
+				result = (eulerFromQuaternion.y - vector.y) / num / -(to.time - from.time);
+				break;
 			case 2:
-				return (eulerFromQuaternion.z - vector.z) / num / -(to.time - from.time);
+				result = (eulerFromQuaternion.z - vector.z) / num / -(to.time - from.time);
+				break;
 			default:
-				return 0f;
+				result = 0f;
+				break;
 			}
+			return result;
 		}
 
 		public float CalculateSmoothTangent(int index, int component)
 		{
 			AnimationCurve curve = this.GetCurve(component);
+			float result;
 			if (curve.length < 2)
 			{
-				return 0f;
+				result = 0f;
 			}
-			if (index <= 0)
+			else if (index <= 0)
 			{
-				return this.CalculateLinearTangent(curve[0], curve[1], component);
+				result = this.CalculateLinearTangent(curve[0], curve[1], component);
 			}
-			if (index >= curve.length - 1)
+			else if (index >= curve.length - 1)
 			{
-				return this.CalculateLinearTangent(curve[curve.length - 1], curve[curve.length - 2], component);
+				result = this.CalculateLinearTangent(curve[curve.length - 1], curve[curve.length - 2], component);
 			}
-			float time = curve[index - 1].time;
-			float time2 = curve[index].time;
-			float time3 = curve[index + 1].time;
-			Vector3 euler = this.EvaluateEulerCurvesDirectly(time);
-			Vector3 vector = this.EvaluateEulerCurvesDirectly(time2);
-			Vector3 euler2 = this.EvaluateEulerCurvesDirectly(time3);
-			Quaternion quaternion = Quaternion.Euler(euler);
-			Quaternion quaternion2 = Quaternion.Euler(vector);
-			Quaternion quaternion3 = Quaternion.Euler(euler2);
-			if (quaternion.x * quaternion2.x + quaternion.y * quaternion2.y + quaternion.z * quaternion2.z + quaternion.w * quaternion2.w < 0f)
+			else
 			{
-				quaternion = new Quaternion(-quaternion.x, -quaternion.y, -quaternion.z, -quaternion.w);
+				float time = curve[index - 1].time;
+				float time2 = curve[index].time;
+				float time3 = curve[index + 1].time;
+				Vector3 euler = this.EvaluateEulerCurvesDirectly(time);
+				Vector3 vector = this.EvaluateEulerCurvesDirectly(time2);
+				Vector3 euler2 = this.EvaluateEulerCurvesDirectly(time3);
+				Quaternion quaternion = Quaternion.Euler(euler);
+				Quaternion quaternion2 = Quaternion.Euler(vector);
+				Quaternion quaternion3 = Quaternion.Euler(euler2);
+				if (quaternion.x * quaternion2.x + quaternion.y * quaternion2.y + quaternion.z * quaternion2.z + quaternion.w * quaternion2.w < 0f)
+				{
+					quaternion = new Quaternion(-quaternion.x, -quaternion.y, -quaternion.z, -quaternion.w);
+				}
+				if (quaternion3.x * quaternion2.x + quaternion3.y * quaternion2.y + quaternion3.z * quaternion2.z + quaternion3.w * quaternion2.w < 0f)
+				{
+					quaternion3 = new Quaternion(-quaternion3.x, -quaternion3.y, -quaternion3.z, -quaternion3.w);
+				}
+				Quaternion quaternion4 = default(Quaternion);
+				float dx = time2 - time;
+				float dx2 = time3 - time2;
+				for (int i = 0; i < 4; i++)
+				{
+					float dy = quaternion2[i] - quaternion[i];
+					float dy2 = quaternion3[i] - quaternion2[i];
+					float num = QuaternionCurveTangentCalculation.SafeDeltaDivide(dy, dx);
+					float num2 = QuaternionCurveTangentCalculation.SafeDeltaDivide(dy2, dx2);
+					quaternion4[i] = 0.5f * num + 0.5f * num2;
+				}
+				float num3 = Mathf.Abs(time3 - time) * 0.01f;
+				Quaternion q = new Quaternion(quaternion2.x - quaternion4.x * num3, quaternion2.y - quaternion4.y * num3, quaternion2.z - quaternion4.z * num3, quaternion2.w - quaternion4.w * num3);
+				Quaternion q2 = new Quaternion(quaternion2.x + quaternion4.x * num3, quaternion2.y + quaternion4.y * num3, quaternion2.z + quaternion4.z * num3, quaternion2.w + quaternion4.w * num3);
+				Vector3 eulerFromQuaternion = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q, vector);
+				Vector3 eulerFromQuaternion2 = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q2, vector);
+				result = ((eulerFromQuaternion2 - eulerFromQuaternion) / (num3 * 2f))[component];
 			}
-			if (quaternion3.x * quaternion2.x + quaternion3.y * quaternion2.y + quaternion3.z * quaternion2.z + quaternion3.w * quaternion2.w < 0f)
-			{
-				quaternion3 = new Quaternion(-quaternion3.x, -quaternion3.y, -quaternion3.z, -quaternion3.w);
-			}
-			Quaternion quaternion4 = default(Quaternion);
-			float dx = time2 - time;
-			float dx2 = time3 - time2;
-			for (int i = 0; i < 4; i++)
-			{
-				float dy = quaternion2[i] - quaternion[i];
-				float dy2 = quaternion3[i] - quaternion2[i];
-				float num = QuaternionCurveTangentCalculation.SafeDeltaDivide(dy, dx);
-				float num2 = QuaternionCurveTangentCalculation.SafeDeltaDivide(dy2, dx2);
-				quaternion4[i] = 0.5f * num + 0.5f * num2;
-			}
-			float num3 = Mathf.Abs(time3 - time) * 0.01f;
-			Quaternion q = new Quaternion(quaternion2.x - quaternion4.x * num3, quaternion2.y - quaternion4.y * num3, quaternion2.z - quaternion4.z * num3, quaternion2.w - quaternion4.w * num3);
-			Quaternion q2 = new Quaternion(quaternion2.x + quaternion4.x * num3, quaternion2.y + quaternion4.y * num3, quaternion2.z + quaternion4.z * num3, quaternion2.w + quaternion4.w * num3);
-			Vector3 eulerFromQuaternion = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q, vector);
-			Vector3 eulerFromQuaternion2 = QuaternionCurveTangentCalculation.GetEulerFromQuaternion(q2, vector);
-			return ((eulerFromQuaternion2 - eulerFromQuaternion) / (num3 * 2f))[component];
+			return result;
 		}
 
 		public static Vector3[] GetEquivalentEulerAngles(Quaternion quat)
@@ -174,11 +190,16 @@ namespace UnityEditor
 
 		public static float SafeDeltaDivide(float dy, float dx)
 		{
+			float result;
 			if (dx == 0f)
 			{
-				return 0f;
+				result = 0f;
 			}
-			return dy / dx;
+			else
+			{
+				result = dy / dx;
+			}
+			return result;
 		}
 
 		public void UpdateTangentsFromMode(int componentIndex)
@@ -193,33 +214,32 @@ namespace UnityEditor
 		public void UpdateTangentsFromMode(int index, int componentIndex)
 		{
 			AnimationCurve curve = this.GetCurve(componentIndex);
-			if (index < 0 || index >= curve.length)
+			if (index >= 0 && index < curve.length)
 			{
-				return;
-			}
-			Keyframe key = curve[index];
-			if (CurveUtility.GetKeyTangentMode(key, 0) == TangentMode.Linear && index >= 1)
-			{
-				key.inTangent = this.CalculateLinearTangent(index, index - 1, componentIndex);
-				curve.MoveKey(index, key);
-			}
-			if (CurveUtility.GetKeyTangentMode(key, 1) == TangentMode.Linear && index + 1 < curve.length)
-			{
-				key.outTangent = this.CalculateLinearTangent(index, index + 1, componentIndex);
-				curve.MoveKey(index, key);
-			}
-			if (CurveUtility.GetKeyTangentMode(key, 0) == TangentMode.Smooth || CurveUtility.GetKeyTangentMode(key, 1) == TangentMode.Smooth)
-			{
-				float num = this.CalculateSmoothTangent(index, componentIndex);
-				key.outTangent = num;
-				key.inTangent = num;
-				curve.MoveKey(index, key);
+				Keyframe key = curve[index];
+				if (AnimationUtility.GetKeyLeftTangentMode(key) == AnimationUtility.TangentMode.Linear && index >= 1)
+				{
+					key.inTangent = this.CalculateLinearTangent(index, index - 1, componentIndex);
+					curve.MoveKey(index, key);
+				}
+				if (AnimationUtility.GetKeyRightTangentMode(key) == AnimationUtility.TangentMode.Linear && index + 1 < curve.length)
+				{
+					key.outTangent = this.CalculateLinearTangent(index, index + 1, componentIndex);
+					curve.MoveKey(index, key);
+				}
+				if (AnimationUtility.GetKeyLeftTangentMode(key) == AnimationUtility.TangentMode.ClampedAuto || AnimationUtility.GetKeyRightTangentMode(key) == AnimationUtility.TangentMode.ClampedAuto)
+				{
+					float num = this.CalculateSmoothTangent(index, componentIndex);
+					key.outTangent = num;
+					key.inTangent = num;
+					curve.MoveKey(index, key);
+				}
 			}
 		}
 
 		public static void UpdateTangentsFromMode(AnimationCurve curve, AnimationClip clip, EditorCurveBinding curveBinding)
 		{
-			CurveUtility.UpdateTangentsFromMode(curve);
+			AnimationUtility.UpdateTangentsFromMode(curve);
 		}
 	}
 }

@@ -6,14 +6,6 @@ namespace UnityEditor
 	[Serializable]
 	internal class GameViewSize
 	{
-		private const int kMaxBaseTextLength = 40;
-
-		private const int kMinResolution = 10;
-
-		private const int kMinAspect = 0;
-
-		private const int kMaxResolutionOrAspect = 99999;
-
 		[SerializeField]
 		private string m_BaseText;
 
@@ -28,6 +20,14 @@ namespace UnityEditor
 
 		[NonSerialized]
 		private string m_CachedDisplayText;
+
+		private const int kMaxBaseTextLength = 40;
+
+		private const int kMinResolution = 10;
+
+		private const int kMinAspect = 0;
+
+		private const int kMaxResolutionOrAspect = 99999;
 
 		public string baseText
 		{
@@ -100,11 +100,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				float result;
 				if (this.height == 0)
 				{
-					return 0f;
+					result = 0f;
 				}
-				return (float)this.width / (float)this.height;
+				else
+				{
+					result = (float)this.width / (float)this.height;
+				}
+				return result;
 			}
 		}
 
@@ -112,12 +117,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				string arg_1C_0;
-				if ((arg_1C_0 = this.m_CachedDisplayText) == null)
+				string arg_1D_0;
+				if ((arg_1D_0 = this.m_CachedDisplayText) == null)
 				{
-					arg_1C_0 = (this.m_CachedDisplayText = this.ComposeDisplayString());
+					arg_1D_0 = (this.m_CachedDisplayText = this.ComposeDisplayString());
 				}
-				return arg_1C_0;
+				return arg_1D_0;
 			}
 		}
 
@@ -125,16 +130,21 @@ namespace UnityEditor
 		{
 			get
 			{
+				string result;
 				if (this.sizeType == GameViewSizeType.AspectRatio)
 				{
-					return string.Format("{0}:{1}", this.width, this.height);
+					result = string.Format("{0}:{1}", this.width, this.height);
 				}
-				if (this.sizeType == GameViewSizeType.FixedResolution)
+				else if (this.sizeType == GameViewSizeType.FixedResolution)
 				{
-					return string.Format("{0}x{1}", this.width, this.height);
+					result = string.Format("{0}x{1}", this.width, this.height);
 				}
-				Debug.LogError("Unhandled game view size type");
-				return string.Empty;
+				else
+				{
+					Debug.LogError("Unhandled game view size type");
+					result = "";
+				}
+				return result;
 			}
 		}
 
@@ -191,15 +201,20 @@ namespace UnityEditor
 
 		private string ComposeDisplayString()
 		{
+			string result;
 			if (this.width == 0 && this.height == 0)
 			{
-				return this.baseText;
+				result = this.baseText;
 			}
-			if (string.IsNullOrEmpty(this.baseText))
+			else if (string.IsNullOrEmpty(this.baseText))
 			{
-				return this.sizeText;
+				result = this.sizeText;
 			}
-			return this.baseText + " (" + this.sizeText + ")";
+			else
+			{
+				result = this.baseText + " (" + this.sizeText + ")";
+			}
+			return result;
 		}
 
 		private void Changed()

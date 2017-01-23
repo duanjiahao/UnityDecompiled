@@ -8,7 +8,7 @@ internal class ParticleSystemCurveEditor
 {
 	internal class Styles
 	{
-		public GUIStyle curveEditorBackground = "AnimationCurveEditorBackground";
+		public GUIStyle curveEditorBackground = "CurveEditorBackground";
 
 		public GUIStyle curveSwatch = "PopupCurveEditorSwatch";
 
@@ -20,11 +20,11 @@ internal class ParticleSystemCurveEditor
 
 		public GUIStyle yAxisHeader = new GUIStyle(ParticleSystemStyles.Get().label);
 
-		public GUIContent optimizeCurveText = new GUIContent(string.Empty, "Click to optimize curve. Optimized curves are defined by having at most 3 keys, with a key at both ends");
+		public GUIContent optimizeCurveText = new GUIContent("", "Click to optimize curve. Optimized curves are defined by having at most 3 keys, with a key at both ends, and do not support loop or ping pong wrapping.");
 
-		public GUIContent removeCurveText = new GUIContent(string.Empty, "Remove selected curve(s)");
+		public GUIContent removeCurveText = new GUIContent("", "Remove selected curve(s)");
 
-		public GUIContent curveLibraryPopup = new GUIContent(string.Empty, "Open curve library");
+		public GUIContent curveLibraryPopup = new GUIContent("", "Open curve library");
 
 		public GUIContent presetTooltip = new GUIContent();
 	}
@@ -86,8 +86,6 @@ internal class ParticleSystemCurveEditor
 		}
 	}
 
-	public const float k_PresetsHeight = 30f;
-
 	private List<ParticleSystemCurveEditor.CurveData> m_AddedCurves;
 
 	private CurveEditor m_CurveEditor;
@@ -99,6 +97,8 @@ internal class ParticleSystemCurveEditor
 	private List<Color> m_AvailableColors;
 
 	private DoubleCurvePresetsContentsForPopupWindow m_DoubleCurvePresets;
+
+	public const float k_PresetsHeight = 30f;
 
 	internal static ParticleSystemCurveEditor.Styles s_Styles;
 
@@ -123,58 +123,58 @@ internal class ParticleSystemCurveEditor
 
 	public void Init()
 	{
-		if (this.m_AddedCurves != null)
+		if (this.m_AddedCurves == null)
 		{
-			return;
+			this.m_AddedCurves = new List<ParticleSystemCurveEditor.CurveData>();
+			this.m_Colors = new Color[]
+			{
+				new Color(1f, 0.619607866f, 0.129411772f),
+				new Color(0.8745098f, 0.211764708f, 0.5803922f),
+				new Color(0f, 0.6862745f, 1f),
+				new Color(1f, 0.921568632f, 0f),
+				new Color(0.196078435f, 1f, 0.266666681f),
+				new Color(0.980392158f, 0f, 0f)
+			};
+			this.m_AvailableColors = new List<Color>(this.m_Colors);
+			ParticleSystemCurveEditor.m_CurveEditorSettings.useFocusColors = true;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.showAxisLabels = false;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMin = 0f;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.vRangeMin = 0f;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.vRangeMax = 1f;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMax = 1f;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.vSlider = false;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.hSlider = false;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.showWrapperPopups = true;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.rectangleToolFlags = CurveEditorSettings.RectangleToolFlags.MiniRectangleTool;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.hTickLabelOffset = 5f;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.allowDraggingCurvesAndRegions = true;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.allowDeleteLastKeyInCurve = false;
+			TickStyle tickStyle = new TickStyle();
+			tickStyle.tickColor.color = new Color(0f, 0f, 0f, 0.2f);
+			tickStyle.distLabel = 30;
+			tickStyle.stubs = false;
+			tickStyle.centerLabel = true;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.hTickStyle = tickStyle;
+			TickStyle tickStyle2 = new TickStyle();
+			tickStyle2.tickColor.color = new Color(0f, 0f, 0f, 0.2f);
+			tickStyle2.distLabel = 20;
+			tickStyle2.stubs = false;
+			tickStyle2.centerLabel = true;
+			ParticleSystemCurveEditor.m_CurveEditorSettings.vTickStyle = tickStyle2;
+			this.m_CurveEditor = new CurveEditor(new Rect(0f, 0f, 1000f, 100f), this.CreateCurveWrapperArray(), false);
+			this.m_CurveEditor.settings = ParticleSystemCurveEditor.m_CurveEditorSettings;
+			this.m_CurveEditor.leftmargin = 40f;
+			ZoomableArea arg_2A4_0 = this.m_CurveEditor;
+			float num = 25f;
+			this.m_CurveEditor.bottommargin = num;
+			num = num;
+			this.m_CurveEditor.topmargin = num;
+			arg_2A4_0.rightmargin = num;
+			this.m_CurveEditor.SetShownHRangeInsideMargins(ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMin, ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMax);
+			this.m_CurveEditor.SetShownVRangeInsideMargins(ParticleSystemCurveEditor.m_CurveEditorSettings.vRangeMin, ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMax);
+			this.m_CurveEditor.ignoreScrollWheelUntilClicked = false;
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
-		this.m_AddedCurves = new List<ParticleSystemCurveEditor.CurveData>();
-		this.m_Colors = new Color[]
-		{
-			new Color(1f, 0.619607866f, 0.129411772f),
-			new Color(0.8745098f, 0.211764708f, 0.5803922f),
-			new Color(0f, 0.6862745f, 1f),
-			new Color(1f, 0.921568632f, 0f),
-			new Color(0.196078435f, 1f, 0.266666681f),
-			new Color(0.980392158f, 0f, 0f)
-		};
-		this.m_AvailableColors = new List<Color>(this.m_Colors);
-		ParticleSystemCurveEditor.m_CurveEditorSettings.useFocusColors = true;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.showAxisLabels = false;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMin = 0f;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.vRangeMin = 0f;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.vRangeMax = 1f;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMax = 1f;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.vSlider = false;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.hSlider = false;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.wrapColor.color = new Color(0f, 0f, 0f, 0f);
-		ParticleSystemCurveEditor.m_CurveEditorSettings.hTickLabelOffset = 5f;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.allowDraggingCurvesAndRegions = true;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.allowDeleteLastKeyInCurve = false;
-		TickStyle tickStyle = new TickStyle();
-		tickStyle.tickColor.color = new Color(0f, 0f, 0f, 0.2f);
-		tickStyle.distLabel = 30;
-		tickStyle.stubs = false;
-		tickStyle.centerLabel = true;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.hTickStyle = tickStyle;
-		TickStyle tickStyle2 = new TickStyle();
-		tickStyle2.tickColor.color = new Color(0f, 0f, 0f, 0.2f);
-		tickStyle2.distLabel = 20;
-		tickStyle2.stubs = false;
-		tickStyle2.centerLabel = true;
-		ParticleSystemCurveEditor.m_CurveEditorSettings.vTickStyle = tickStyle2;
-		this.m_CurveEditor = new CurveEditor(new Rect(0f, 0f, 1000f, 100f), this.CreateCurveWrapperArray(), false);
-		this.m_CurveEditor.settings = ParticleSystemCurveEditor.m_CurveEditorSettings;
-		this.m_CurveEditor.leftmargin = 40f;
-		ZoomableArea arg_2B1_0 = this.m_CurveEditor;
-		float num = 25f;
-		this.m_CurveEditor.bottommargin = num;
-		num = num;
-		this.m_CurveEditor.topmargin = num;
-		arg_2B1_0.rightmargin = num;
-		this.m_CurveEditor.SetShownHRangeInsideMargins(ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMin, ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMax);
-		this.m_CurveEditor.SetShownVRangeInsideMargins(ParticleSystemCurveEditor.m_CurveEditorSettings.vRangeMin, ParticleSystemCurveEditor.m_CurveEditorSettings.hRangeMax);
-		this.m_CurveEditor.ignoreScrollWheelUntilClicked = false;
-		Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 	}
 
 	private void UndoRedoPerformed()
@@ -230,11 +230,16 @@ internal class ParticleSystemCurveEditor
 	public Color GetCurveColor(SerializedProperty max)
 	{
 		int num = this.FindIndex(max);
+		Color result;
 		if (num >= 0 && num < this.m_AddedCurves.Count)
 		{
-			return this.m_AddedCurves[num].m_Color;
+			result = this.m_AddedCurves[num].m_Color;
 		}
-		return new Color(0.8f, 0.8f, 0.8f, 0.7f);
+		else
+		{
+			result = new Color(0.8f, 0.8f, 0.8f, 0.7f);
+		}
+		return result;
 	}
 
 	public void AddCurveDataIfNeeded(string curveName, ParticleSystemCurveEditor.CurveData curveData)
@@ -277,31 +282,38 @@ internal class ParticleSystemCurveEditor
 
 	private int FindIndex(SerializedProperty min, SerializedProperty max)
 	{
+		int result;
 		if (max == null)
 		{
-			return -1;
-		}
-		if (min == null)
-		{
-			for (int i = 0; i < this.m_AddedCurves.Count; i++)
-			{
-				if (this.m_AddedCurves[i].m_Max == max)
-				{
-					return i;
-				}
-			}
+			result = -1;
 		}
 		else
 		{
-			for (int j = 0; j < this.m_AddedCurves.Count; j++)
+			if (min == null)
 			{
-				if (this.m_AddedCurves[j].m_Max == max && this.m_AddedCurves[j].m_Min == min)
+				for (int i = 0; i < this.m_AddedCurves.Count; i++)
 				{
-					return j;
+					if (this.m_AddedCurves[i].m_Max == max)
+					{
+						result = i;
+						return result;
+					}
 				}
 			}
+			else
+			{
+				for (int j = 0; j < this.m_AddedCurves.Count; j++)
+				{
+					if (this.m_AddedCurves[j].m_Max == max && this.m_AddedCurves[j].m_Min == min)
+					{
+						result = j;
+						return result;
+					}
+				}
+			}
+			result = -1;
 		}
-		return -1;
+		return result;
 	}
 
 	private void Add(ParticleSystemCurveEditor.CurveData cd)
@@ -315,6 +327,7 @@ internal class ParticleSystemCurveEditor
 
 	private bool Remove(int index)
 	{
+		bool result;
 		if (index >= 0 && index < this.m_AddedCurves.Count)
 		{
 			Color color = this.m_AddedCurves[index].m_Color;
@@ -326,10 +339,14 @@ internal class ParticleSystemCurveEditor
 			{
 				this.m_AvailableColors = new List<Color>(this.m_Colors);
 			}
-			return true;
+			result = true;
 		}
-		Debug.Log("Invalid index in ParticleSystemCurveEditor::Remove");
-		return false;
+		else
+		{
+			Debug.Log("Invalid index in ParticleSystemCurveEditor::Remove");
+			result = false;
+		}
+		return result;
 	}
 
 	private void RemoveTopMost()
@@ -345,7 +362,7 @@ internal class ParticleSystemCurveEditor
 					this.Remove(i);
 					this.ContentChanged();
 					this.UpdateRangeBasedOnShownCurves();
-					return;
+					break;
 				}
 			}
 		}
@@ -442,16 +459,19 @@ internal class ParticleSystemCurveEditor
 
 	private void DoLabelForTopMostCurve(Rect rect)
 	{
-		int num;
-		if ((this.m_CurveEditor.IsDraggingCurveOrRegion() || this.m_CurveEditor.selectedCurves.Count <= 1) && this.m_CurveEditor.GetTopMostCurveID(out num))
+		if (this.m_CurveEditor.IsDraggingCurveOrRegion() || this.m_CurveEditor.selectedCurves.Count <= 1)
 		{
-			for (int i = 0; i < this.m_AddedCurves.Count; i++)
+			int num;
+			if (this.m_CurveEditor.GetTopMostCurveID(out num))
 			{
-				if (this.m_AddedCurves[i].m_MaxId == num || this.m_AddedCurves[i].m_MinId == num)
+				for (int i = 0; i < this.m_AddedCurves.Count; i++)
 				{
-					ParticleSystemCurveEditor.s_Styles.yAxisHeader.normal.textColor = this.m_AddedCurves[i].m_Color;
-					GUI.Label(rect, this.m_AddedCurves[i].m_DisplayName, ParticleSystemCurveEditor.s_Styles.yAxisHeader);
-					return;
+					if (this.m_AddedCurves[i].m_MaxId == num || this.m_AddedCurves[i].m_MinId == num)
+					{
+						ParticleSystemCurveEditor.s_Styles.yAxisHeader.normal.textColor = this.m_AddedCurves[i].m_Color;
+						GUI.Label(rect, this.m_AddedCurves[i].m_DisplayName, ParticleSystemCurveEditor.s_Styles.yAxisHeader);
+						break;
+					}
 				}
 			}
 		}
@@ -507,6 +527,7 @@ internal class ParticleSystemCurveEditor
 	private DoubleCurve CreateDoubleCurveFromTopMostCurve()
 	{
 		int num;
+		DoubleCurve result;
 		if (this.m_CurveEditor.GetTopMostCurveID(out num))
 		{
 			for (int i = 0; i < this.m_AddedCurves.Count; i++)
@@ -524,16 +545,18 @@ internal class ParticleSystemCurveEditor
 					{
 						maxCurve = curveData.m_Max.animationCurveValue;
 					}
-					return new DoubleCurve(minCurve, maxCurve, curveData.m_SignedRange);
+					result = new DoubleCurve(minCurve, maxCurve, curveData.m_SignedRange);
+					return result;
 				}
 			}
 		}
-		return null;
+		result = null;
+		return result;
 	}
 
 	private void PresetDropDown(Rect rect)
 	{
-		if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Native, EditorStyles.inspectorTitlebarText))
+		if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.inspectorTitlebarText))
 		{
 			DoubleCurve doubleCurve = this.CreateDoubleCurveFromTopMostCurve();
 			if (doubleCurve != null)
@@ -551,140 +574,161 @@ internal class ParticleSystemCurveEditor
 	private void InitDoubleCurvePresets()
 	{
 		int num;
-		if (this.m_CurveEditor.GetTopMostCurveID(out num) && (this.m_DoubleCurvePresets == null || this.m_LastTopMostCurveID != num))
+		if (this.m_CurveEditor.GetTopMostCurveID(out num))
 		{
-			this.m_LastTopMostCurveID = num;
-			Action<DoubleCurve> presetSelectedCallback = delegate(DoubleCurve presetDoubleCurve)
+			if (this.m_DoubleCurvePresets == null || this.m_LastTopMostCurveID != num)
 			{
-				this.SetTopMostCurve(presetDoubleCurve);
-				InternalEditorUtility.RepaintAllViews();
-			};
-			DoubleCurve doubleCurveToSave = this.CreateDoubleCurveFromTopMostCurve();
-			this.m_DoubleCurvePresets = new DoubleCurvePresetsContentsForPopupWindow(doubleCurveToSave, presetSelectedCallback);
-			this.m_DoubleCurvePresets.InitIfNeeded();
+				this.m_LastTopMostCurveID = num;
+				Action<DoubleCurve> presetSelectedCallback = delegate(DoubleCurve presetDoubleCurve)
+				{
+					this.SetTopMostCurve(presetDoubleCurve);
+					InternalEditorUtility.RepaintAllViews();
+				};
+				DoubleCurve doubleCurveToSave = this.CreateDoubleCurveFromTopMostCurve();
+				this.m_DoubleCurvePresets = new DoubleCurvePresetsContentsForPopupWindow(doubleCurveToSave, presetSelectedCallback);
+				this.m_DoubleCurvePresets.InitIfNeeded();
+			}
 		}
 	}
 
 	private void PresetCurveButtons(Rect position, Rect curveEditorRect)
 	{
-		if (this.m_CurveEditor.animationCurves.Length == 0)
+		if (this.m_CurveEditor.animationCurves.Length != 0)
 		{
-			return;
-		}
-		this.InitDoubleCurvePresets();
-		if (this.m_DoubleCurvePresets == null)
-		{
-			return;
-		}
-		DoubleCurvePresetLibrary currentLib = this.m_DoubleCurvePresets.GetPresetLibraryEditor().GetCurrentLib();
-		int a = (!(currentLib != null)) ? 0 : currentLib.Count();
-		int num = Mathf.Min(a, 9);
-		float num2 = 30f;
-		float num3 = 15f;
-		float num4 = 10f;
-		float num5 = (float)num * num2 + (float)(num - 1) * num4;
-		float num6 = (position.width - num5) * 0.5f;
-		float num7 = (position.height - num3) * 0.5f;
-		float num8 = 3f;
-		if (num6 > 0f)
-		{
-			num8 = num6;
-		}
-		this.PresetDropDown(new Rect(num8 - 20f + position.x, num7 + position.y, 16f, 16f));
-		GUI.BeginGroup(position);
-		Color color;
-		Color.white.a = color.a * 0.6f;
-		for (int i = 0; i < num; i++)
-		{
-			if (i > 0)
+			this.InitDoubleCurvePresets();
+			if (this.m_DoubleCurvePresets != null)
 			{
-				num8 += num4;
-			}
-			Rect rect = new Rect(num8, num7, num2, num3);
-			ParticleSystemCurveEditor.s_Styles.presetTooltip.tooltip = currentLib.GetName(i);
-			if (GUI.Button(rect, ParticleSystemCurveEditor.s_Styles.presetTooltip, GUIStyle.none))
-			{
-				DoubleCurve doubleCurve = currentLib.GetPreset(i) as DoubleCurve;
-				if (doubleCurve != null)
+				DoubleCurvePresetLibrary currentLib = this.m_DoubleCurvePresets.GetPresetLibraryEditor().GetCurrentLib();
+				int a = (!(currentLib != null)) ? 0 : currentLib.Count();
+				int num = Mathf.Min(a, 9);
+				float num2 = 30f;
+				float num3 = 15f;
+				float num4 = 10f;
+				float num5 = (float)num * num2 + (float)(num - 1) * num4;
+				float num6 = (position.width - num5) * 0.5f;
+				float num7 = (position.height - num3) * 0.5f;
+				float num8 = 3f;
+				if (num6 > 0f)
 				{
-					this.SetTopMostCurve(doubleCurve);
-					this.m_CurveEditor.ClearSelection();
+					num8 = num6;
 				}
+				this.PresetDropDown(new Rect(num8 - 20f + position.x, num7 + position.y, 16f, 16f));
+				GUI.BeginGroup(position);
+				Color color;
+				Color.white.a = color.a * 0.6f;
+				for (int i = 0; i < num; i++)
+				{
+					if (i > 0)
+					{
+						num8 += num4;
+					}
+					Rect rect = new Rect(num8, num7, num2, num3);
+					ParticleSystemCurveEditor.s_Styles.presetTooltip.tooltip = currentLib.GetName(i);
+					if (GUI.Button(rect, ParticleSystemCurveEditor.s_Styles.presetTooltip, GUIStyle.none))
+					{
+						DoubleCurve doubleCurve = currentLib.GetPreset(i) as DoubleCurve;
+						if (doubleCurve != null)
+						{
+							this.SetTopMostCurve(doubleCurve);
+							this.m_CurveEditor.ClearSelection();
+						}
+					}
+					if (Event.current.type == EventType.Repaint)
+					{
+						currentLib.Draw(rect, i);
+					}
+					num8 += num2;
+				}
+				GUI.EndGroup();
 			}
-			if (Event.current.type == EventType.Repaint)
-			{
-				currentLib.Draw(rect, i);
-			}
-			num8 += num2;
 		}
-		GUI.EndGroup();
 	}
 
 	private void DoOptimizeCurveButton(Rect rect)
 	{
-		if (this.m_CurveEditor.IsDraggingCurveOrRegion())
+		if (!this.m_CurveEditor.IsDraggingCurveOrRegion())
 		{
-			return;
-		}
-		Rect position = new Rect(rect.xMax - 10f - 14f, rect.y + (rect.height - 14f) * 0.5f, 14f, 14f);
-		int num = 0;
-		List<CurveSelection> selectedCurves = this.m_CurveEditor.selectedCurves;
-		int id;
-		if (selectedCurves.Count > 0)
-		{
-			for (int i = 0; i < selectedCurves.Count; i++)
+			Rect position = new Rect(rect.xMax - 10f - 14f, rect.y + (rect.height - 14f) * 0.5f, 14f, 14f);
+			int num = 0;
+			List<CurveSelection> selectedCurves = this.m_CurveEditor.selectedCurves;
+			int curveID;
+			if (selectedCurves.Count > 0)
 			{
-				CurveWrapper curveWrapper = selectedCurves[i].curveWrapper;
-				num += ((!AnimationUtility.IsValidPolynomialCurve(curveWrapper.curve)) ? 0 : 1);
-			}
-			if (selectedCurves.Count != num && GUI.Button(position, ParticleSystemCurveEditor.s_Styles.optimizeCurveText, ParticleSystemCurveEditor.s_Styles.plus))
-			{
-				for (int j = 0; j < selectedCurves.Count; j++)
+				for (int i = 0; i < selectedCurves.Count; i++)
 				{
-					CurveWrapper curveWrapper2 = selectedCurves[j].curveWrapper;
-					if (!AnimationUtility.IsValidPolynomialCurve(curveWrapper2.curve))
+					CurveWrapper curveWrapperFromSelection = this.m_CurveEditor.GetCurveWrapperFromSelection(selectedCurves[i]);
+					num += ((!AnimationUtility.IsValidPolynomialCurve(curveWrapperFromSelection.curve)) ? 0 : 1);
+				}
+				if (selectedCurves.Count != num)
+				{
+					if (GUI.Button(position, ParticleSystemCurveEditor.s_Styles.optimizeCurveText, ParticleSystemCurveEditor.s_Styles.plus))
 					{
-						AnimationUtility.ConstrainToPolynomialCurve(curveWrapper2.curve);
-						curveWrapper2.changed = true;
+						for (int j = 0; j < selectedCurves.Count; j++)
+						{
+							CurveWrapper curveWrapperFromSelection2 = this.m_CurveEditor.GetCurveWrapperFromSelection(selectedCurves[j]);
+							if (!AnimationUtility.IsValidPolynomialCurve(curveWrapperFromSelection2.curve))
+							{
+								curveWrapperFromSelection2.curve.preWrapMode = WrapMode.Once;
+								curveWrapperFromSelection2.curve.postWrapMode = WrapMode.Once;
+								curveWrapperFromSelection2.renderer.SetWrap(WrapMode.Once, WrapMode.Once);
+								AnimationUtility.ConstrainToPolynomialCurve(curveWrapperFromSelection2.curve);
+								curveWrapperFromSelection2.changed = true;
+							}
+						}
+						this.m_CurveEditor.SelectNone();
 					}
 				}
-				this.m_CurveEditor.SelectNone();
 			}
-		}
-		else if (this.m_CurveEditor.GetTopMostCurveID(out id))
-		{
-			CurveWrapper curveWrapperById = this.m_CurveEditor.getCurveWrapperById(id);
-			if (!AnimationUtility.IsValidPolynomialCurve(curveWrapperById.curve) && GUI.Button(position, ParticleSystemCurveEditor.s_Styles.optimizeCurveText, ParticleSystemCurveEditor.s_Styles.plus))
+			else if (this.m_CurveEditor.GetTopMostCurveID(out curveID))
 			{
-				AnimationUtility.ConstrainToPolynomialCurve(curveWrapperById.curve);
-				curveWrapperById.changed = true;
+				CurveWrapper curveWrapperFromID = this.m_CurveEditor.GetCurveWrapperFromID(curveID);
+				if (!AnimationUtility.IsValidPolynomialCurve(curveWrapperFromID.curve))
+				{
+					if (GUI.Button(position, ParticleSystemCurveEditor.s_Styles.optimizeCurveText, ParticleSystemCurveEditor.s_Styles.plus))
+					{
+						curveWrapperFromID.curve.preWrapMode = WrapMode.Once;
+						curveWrapperFromID.curve.postWrapMode = WrapMode.Once;
+						curveWrapperFromID.renderer.SetWrap(WrapMode.Once, WrapMode.Once);
+						AnimationUtility.ConstrainToPolynomialCurve(curveWrapperFromID.curve);
+						curveWrapperFromID.changed = true;
+					}
+				}
 			}
 		}
 	}
 
 	private void DoRemoveSelectedButton(Rect rect)
 	{
-		if (this.m_CurveEditor.animationCurves.Length == 0)
+		if (this.m_CurveEditor.animationCurves.Length != 0)
 		{
-			return;
-		}
-		float num = 14f;
-		Rect position = new Rect(rect.x + rect.width - num - 10f, rect.y + (rect.height - num) * 0.5f, num, num);
-		if (GUI.Button(position, ParticleSystemCurveEditor.s_Styles.removeCurveText, ParticleSystemCurveEditor.s_Styles.minus))
-		{
-			if (this.m_CurveEditor.selectedCurves.Count > 0)
+			float num = 14f;
+			Rect position = new Rect(rect.x + rect.width - num - 10f, rect.y + (rect.height - num) * 0.5f, num, num);
+			if (GUI.Button(position, ParticleSystemCurveEditor.s_Styles.removeCurveText, ParticleSystemCurveEditor.s_Styles.minus))
 			{
-				this.RemoveSelected();
-			}
-			else
-			{
-				this.RemoveTopMost();
+				if (this.m_CurveEditor.selectedCurves.Count > 0)
+				{
+					this.RemoveSelected();
+				}
+				else
+				{
+					this.RemoveTopMost();
+				}
 			}
 		}
 	}
 
 	private void SaveCurve(SerializedProperty prop, CurveWrapper cw)
 	{
+		if (cw.curve.keys.Length == 1)
+		{
+			cw.renderer.SetCustomRange(0f, 1f);
+			cw.wrapColorMultiplier = Color.clear;
+		}
+		else
+		{
+			cw.renderer.SetCustomRange(0f, 0f);
+			cw.wrapColorMultiplier = cw.color;
+		}
 		prop.animationCurveValue = cw.curve;
 		cw.changed = false;
 	}
@@ -723,13 +767,22 @@ internal class ParticleSystemCurveEditor
 
 	private CurveWrapper CreateCurveWrapper(SerializedProperty curve, int id, int regionId, Color color, bool signedRange, CurveWrapper.GetAxisScalarsCallback getAxisScalarsCallback, CurveWrapper.SetAxisScalarsCallback setAxisScalarsCallback)
 	{
-		float end = 1f;
 		CurveWrapper curveWrapper = new CurveWrapper();
 		curveWrapper.id = id;
 		curveWrapper.regionId = regionId;
 		curveWrapper.color = color;
 		curveWrapper.renderer = new NormalCurveRenderer(curve.animationCurveValue);
-		curveWrapper.renderer.SetCustomRange(0f, end);
+		curveWrapper.renderer.SetWrap(curve.animationCurveValue.preWrapMode, curve.animationCurveValue.postWrapMode);
+		if (curveWrapper.curve.keys.Length == 1)
+		{
+			curveWrapper.renderer.SetCustomRange(0f, 1f);
+			curveWrapper.wrapColorMultiplier = Color.clear;
+		}
+		else
+		{
+			curveWrapper.renderer.SetCustomRange(0f, 0f);
+			curveWrapper.wrapColorMultiplier = color;
+		}
 		curveWrapper.vRangeMin = ((!signedRange) ? 0f : -1f);
 		curveWrapper.getAxisUiScalarsCallback = getAxisScalarsCallback;
 		curveWrapper.setAxisUiScalarsCallback = setAxisScalarsCallback;

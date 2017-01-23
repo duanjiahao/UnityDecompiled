@@ -7,7 +7,6 @@ namespace UnityEngine.Audio
 	{
 		public extern AudioMixer audioMixer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -16,7 +15,6 @@ namespace UnityEngine.Audio
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void TransitionTo(float timeToReach);
 	}

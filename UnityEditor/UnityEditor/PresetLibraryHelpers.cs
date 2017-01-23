@@ -11,23 +11,21 @@ namespace UnityEditor
 			if (index < 0 || destIndex < 0)
 			{
 				Debug.LogError("Invalid preset move");
-				return;
 			}
-			if (index == destIndex)
+			else if (index != destIndex)
 			{
-				return;
+				if (destIndex > index)
+				{
+					destIndex--;
+				}
+				if (insertAfterDestIndex && destIndex < list.Count - 1)
+				{
+					destIndex++;
+				}
+				T item = list[index];
+				list.RemoveAt(index);
+				list.Insert(destIndex, item);
 			}
-			if (destIndex > index)
-			{
-				destIndex--;
-			}
-			if (insertAfterDestIndex && destIndex < list.Count - 1)
-			{
-				destIndex++;
-			}
-			T item = list[index];
-			list.RemoveAt(index);
-			list.Insert(destIndex, item);
 		}
 	}
 }

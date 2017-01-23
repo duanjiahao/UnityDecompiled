@@ -6,6 +6,13 @@ namespace UnityEngine.SceneManagement
 {
 	public struct Scene
 	{
+		internal enum LoadingState
+		{
+			NotLoaded,
+			Loading,
+			Loaded
+		}
+
 		private int m_Handle;
 
 		internal int handle
@@ -13,6 +20,14 @@ namespace UnityEngine.SceneManagement
 			get
 			{
 				return this.m_Handle;
+			}
+		}
+
+		internal Scene.LoadingState loadingState
+		{
+			get
+			{
+				return Scene.GetLoadingStateInternal(this.handle);
 			}
 		}
 
@@ -95,63 +110,11 @@ namespace UnityEngine.SceneManagement
 			{
 				throw new ArgumentException("The scene is not loaded.");
 			}
-			if (this.rootCount == 0)
+			if (this.rootCount != 0)
 			{
-				return;
+				Scene.GetRootGameObjectsInternal(this.handle, rootGameObjects);
 			}
-			Scene.GetRootGameObjectsInternal(this.handle, rootGameObjects);
 		}
-
-		public override int GetHashCode()
-		{
-			return this.m_Handle;
-		}
-
-		public override bool Equals(object other)
-		{
-			if (!(other is Scene))
-			{
-				return false;
-			}
-			Scene scene = (Scene)other;
-			return this.handle == scene.handle;
-		}
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool IsValidInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern string GetPathInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern string GetNameInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetNameInternal(int sceneHandle, string name);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool GetIsLoadedInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool GetIsDirtyInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern int GetBuildIndexInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern int GetRootCountInternal(int sceneHandle);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void GetRootGameObjectsInternal(int sceneHandle, object resultRootList);
 
 		public static bool operator ==(Scene lhs, Scene rhs)
 		{
@@ -162,5 +125,55 @@ namespace UnityEngine.SceneManagement
 		{
 			return lhs.handle != rhs.handle;
 		}
+
+		public override int GetHashCode()
+		{
+			return this.m_Handle;
+		}
+
+		public override bool Equals(object other)
+		{
+			bool result;
+			if (!(other is Scene))
+			{
+				result = false;
+			}
+			else
+			{
+				Scene scene = (Scene)other;
+				result = (this.handle == scene.handle);
+			}
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool IsValidInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern string GetPathInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern string GetNameInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetNameInternal(int sceneHandle, string name);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool GetIsLoadedInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Scene.LoadingState GetLoadingStateInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool GetIsDirtyInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int GetBuildIndexInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int GetRootCountInternal(int sceneHandle);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetRootGameObjectsInternal(int sceneHandle, object resultRootList);
 	}
 }

@@ -20,19 +20,25 @@ namespace UnityEngine
 		{
 			get
 			{
+				float result;
 				switch (index)
 				{
 				case 0:
-					return this.x;
+					result = this.x;
+					break;
 				case 1:
-					return this.y;
+					result = this.y;
+					break;
 				case 2:
-					return this.z;
+					result = this.z;
+					break;
 				case 3:
-					return this.w;
+					result = this.w;
+					break;
 				default:
 					throw new IndexOutOfRangeException("Invalid Vector4 index!");
 				}
+				return result;
 			}
 			set
 			{
@@ -143,11 +149,16 @@ namespace UnityEngine
 		{
 			Vector4 a = target - current;
 			float magnitude = a.magnitude;
+			Vector4 result;
 			if (magnitude <= maxDistanceDelta || magnitude == 0f)
 			{
-				return target;
+				result = target;
 			}
-			return current + a / magnitude * maxDistanceDelta;
+			else
+			{
+				result = current + a / magnitude * maxDistanceDelta;
+			}
+			return result;
 		}
 
 		public static Vector4 Scale(Vector4 a, Vector4 b)
@@ -170,22 +181,32 @@ namespace UnityEngine
 
 		public override bool Equals(object other)
 		{
+			bool result;
 			if (!(other is Vector4))
 			{
-				return false;
+				result = false;
 			}
-			Vector4 vector = (Vector4)other;
-			return this.x.Equals(vector.x) && this.y.Equals(vector.y) && this.z.Equals(vector.z) && this.w.Equals(vector.w);
+			else
+			{
+				Vector4 vector = (Vector4)other;
+				result = (this.x.Equals(vector.x) && this.y.Equals(vector.y) && this.z.Equals(vector.z) && this.w.Equals(vector.w));
+			}
+			return result;
 		}
 
 		public static Vector4 Normalize(Vector4 a)
 		{
 			float num = Vector4.Magnitude(a);
+			Vector4 result;
 			if (num > 1E-05f)
 			{
-				return a / num;
+				result = a / num;
 			}
-			return Vector4.zero;
+			else
+			{
+				result = Vector4.zero;
+			}
+			return result;
 		}
 
 		public void Normalize()
@@ -199,28 +220,6 @@ namespace UnityEngine
 			{
 				this = Vector4.zero;
 			}
-		}
-
-		public override string ToString()
-		{
-			return UnityString.Format("({0:F1}, {1:F1}, {2:F1}, {3:F1})", new object[]
-			{
-				this.x,
-				this.y,
-				this.z,
-				this.w
-			});
-		}
-
-		public string ToString(string format)
-		{
-			return UnityString.Format("({0}, {1}, {2}, {3})", new object[]
-			{
-				this.x.ToString(format),
-				this.y.ToString(format),
-				this.z.ToString(format),
-				this.w.ToString(format)
-			});
 		}
 
 		public static float Dot(Vector4 a, Vector4 b)
@@ -241,16 +240,6 @@ namespace UnityEngine
 		public static float Magnitude(Vector4 a)
 		{
 			return Mathf.Sqrt(Vector4.Dot(a, a));
-		}
-
-		public static float SqrMagnitude(Vector4 a)
-		{
-			return Vector4.Dot(a, a);
-		}
-
-		public float SqrMagnitude()
-		{
-			return Vector4.Dot(this, this);
 		}
 
 		public static Vector4 Min(Vector4 lhs, Vector4 rhs)
@@ -321,6 +310,38 @@ namespace UnityEngine
 		public static implicit operator Vector2(Vector4 v)
 		{
 			return new Vector2(v.x, v.y);
+		}
+
+		public override string ToString()
+		{
+			return UnityString.Format("({0:F1}, {1:F1}, {2:F1}, {3:F1})", new object[]
+			{
+				this.x,
+				this.y,
+				this.z,
+				this.w
+			});
+		}
+
+		public string ToString(string format)
+		{
+			return UnityString.Format("({0}, {1}, {2}, {3})", new object[]
+			{
+				this.x.ToString(format),
+				this.y.ToString(format),
+				this.z.ToString(format),
+				this.w.ToString(format)
+			});
+		}
+
+		public static float SqrMagnitude(Vector4 a)
+		{
+			return Vector4.Dot(a, a);
+		}
+
+		public float SqrMagnitude()
+		{
+			return Vector4.Dot(this, this);
 		}
 	}
 }

@@ -95,7 +95,7 @@ namespace UnityEditor
 
 		private void OnSceneGUI()
 		{
-			AudioReverbZone audioReverbZone = (AudioReverbZone)this.target;
+			AudioReverbZone audioReverbZone = (AudioReverbZone)base.target;
 			Color color = Handles.color;
 			if (audioReverbZone.enabled)
 			{

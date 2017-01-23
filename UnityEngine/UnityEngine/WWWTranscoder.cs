@@ -26,6 +26,7 @@ namespace UnityEngine
 		private static byte Hex2Byte(byte[] b, int offset)
 		{
 			byte b2 = 0;
+			byte result;
 			for (int i = offset; i < offset + 2; i++)
 			{
 				b2 *= 16;
@@ -44,11 +45,13 @@ namespace UnityEngine
 				}
 				if (num > 15)
 				{
-					return 63;
+					result = 63;
+					return result;
 				}
 				b2 += (byte)num;
 			}
-			return b2;
+			result = b2;
+			return result;
 		}
 
 		private static byte[] Byte2Hex(byte b, byte[] hexChars)
@@ -125,14 +128,17 @@ namespace UnityEngine
 		private static bool ByteArrayContains(byte[] array, byte b)
 		{
 			int num = array.Length;
+			bool result;
 			for (int i = 0; i < num; i++)
 			{
 				if (array[i] == b)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		[ExcludeFromDocs]
@@ -211,14 +217,17 @@ namespace UnityEngine
 
 		public static bool SevenBitClean(byte[] input)
 		{
+			bool result;
 			for (int i = 0; i < input.Length; i++)
 			{
 				if (input[i] < 32 || input[i] > 126)
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 	}
 }

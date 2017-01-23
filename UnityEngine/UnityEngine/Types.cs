@@ -1,22 +1,13 @@
 using System;
-using System.Reflection;
 
 namespace UnityEngine
 {
 	public static class Types
 	{
+		[Obsolete("This was an internal method which is no longer used", true)]
 		public static Type GetType(string typeName, string assemblyName)
 		{
-			Type result;
-			try
-			{
-				result = Assembly.Load(assemblyName).GetType(typeName);
-			}
-			catch (Exception)
-			{
-				result = null;
-			}
-			return result;
+			return null;
 		}
 	}
 }

@@ -45,55 +45,58 @@ namespace UnityEditor
 						Console.WriteLine("Error downloading dynamic preview: " + client.text);
 						searchResult.dynamicPreviewURL = null;
 						AssetStoreAssetSelection.DownloadStaticPreview(searchResult);
-						return;
 					}
-					AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
-					if (searchResult.disposed || firstAsset == null || searchResult.id != firstAsset.id)
+					else
 					{
-						return;
-					}
-					try
-					{
-						AssetBundleCreateRequest cr = AssetBundle.LoadFromMemoryAsync(c.bytes);
-						cr.compatibilityChecks = AssetBundleCreateRequest.CompatibilityCheck.ClassVersion;
-						searchResult.previewBundleRequest = cr;
-						EditorApplication.CallbackFunction callback = null;
-						double startTime = EditorApplication.timeSinceStartup;
-						callback = delegate
+						AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
+						if (!searchResult.disposed && firstAsset != null && searchResult.id == firstAsset.id)
 						{
-							AssetStoreUtils.UpdatePreloading();
-							if (!cr.isDone)
+							try
 							{
-								double timeSinceStartup = EditorApplication.timeSinceStartup;
-								if (timeSinceStartup - startTime > 10.0)
+								AssetBundleCreateRequest cr = AssetBundle.LoadFromMemoryAsync(c.bytes);
+								cr.DisableCompatibilityChecks();
+								searchResult.previewBundleRequest = cr;
+								EditorApplication.CallbackFunction callback = null;
+								double startTime = EditorApplication.timeSinceStartup;
+								callback = delegate
 								{
-									EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, callback);
-									Console.WriteLine("Timed out fetch live preview bundle " + (searchResult.dynamicPreviewURL ?? "<n/a>"));
-								}
-								return;
+									AssetStoreUtils.UpdatePreloading();
+									if (!cr.isDone)
+									{
+										double timeSinceStartup = EditorApplication.timeSinceStartup;
+										if (timeSinceStartup - startTime > 10.0)
+										{
+											EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, callback);
+											Console.WriteLine("Timed out fetch live preview bundle " + (searchResult.dynamicPreviewURL ?? "<n/a>"));
+										}
+									}
+									else
+									{
+										EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, callback);
+										AssetStoreAsset firstAsset2 = AssetStoreAssetSelection.GetFirstAsset();
+										if (!searchResult.disposed && firstAsset2 != null && searchResult.id == firstAsset2.id)
+										{
+											searchResult.previewBundle = cr.assetBundle;
+											if (cr.assetBundle == null || cr.assetBundle.mainAsset == null)
+											{
+												searchResult.dynamicPreviewURL = null;
+												AssetStoreAssetSelection.DownloadStaticPreview(searchResult);
+											}
+											else
+											{
+												searchResult.previewAsset = searchResult.previewBundle.mainAsset;
+											}
+										}
+									}
+								};
+								EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, callback);
 							}
-							EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, callback);
-							AssetStoreAsset firstAsset2 = AssetStoreAssetSelection.GetFirstAsset();
-							if (!searchResult.disposed && firstAsset2 != null && searchResult.id == firstAsset2.id)
+							catch (Exception ex)
 							{
-								searchResult.previewBundle = cr.assetBundle;
-								if (cr.assetBundle == null || cr.assetBundle.mainAsset == null)
-								{
-									searchResult.dynamicPreviewURL = null;
-									AssetStoreAssetSelection.DownloadStaticPreview(searchResult);
-								}
-								else
-								{
-									searchResult.previewAsset = searchResult.previewBundle.mainAsset;
-								}
+								Console.Write(ex.Message);
+								Debug.Log(ex.Message);
 							}
-						};
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, callback);
-					}
-					catch (Exception ex)
-					{
-						Console.Write(ex.Message);
-						Debug.Log(ex.Message);
+						}
 					}
 				};
 				client.Begin();
@@ -123,96 +126,104 @@ namespace UnityEditor
 				if (!client.IsSuccess())
 				{
 					Console.WriteLine("Error downloading static preview: " + client.text);
-					return;
 				}
-				Texture2D texture = c.texture;
-				Texture2D texture2D = new Texture2D(texture.width, texture.height, TextureFormat.RGB24, false, true);
-				AssetStorePreviewManager.ScaleImage(texture2D.width, texture2D.height, texture, texture2D, null);
-				searchResult.previewImage = texture2D;
-				UnityEngine.Object.DestroyImmediate(texture);
-				AssetStoreAssetInspector.Instance.Repaint();
+				else
+				{
+					Texture2D texture = c.texture;
+					Texture2D texture2D = new Texture2D(texture.width, texture.height, TextureFormat.RGB24, false, true);
+					AssetStorePreviewManager.ScaleImage(texture2D.width, texture2D.height, texture, texture2D, null);
+					searchResult.previewImage = texture2D;
+					UnityEngine.Object.DestroyImmediate(texture);
+					AssetStoreAssetInspector.Instance.Repaint();
+				}
 			};
 			client.Begin();
 		}
 
 		public static void RefreshFromServer(AssetStoreAssetSelection.AssetsRefreshed callback)
 		{
-			if (AssetStoreAssetSelection.s_SelectedAssets.Count == 0)
+			if (AssetStoreAssetSelection.s_SelectedAssets.Count != 0)
 			{
-				return;
-			}
-			List<AssetStoreAsset> list = new List<AssetStoreAsset>();
-			foreach (KeyValuePair<int, AssetStoreAsset> current in AssetStoreAssetSelection.s_SelectedAssets)
-			{
-				list.Add(current.Value);
-			}
-			AssetStoreClient.AssetsInfo(list, delegate(AssetStoreAssetsInfo results)
-			{
-				AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.ServiceDisabled;
-				if (results.error != null && results.error != string.Empty)
+				List<AssetStoreAsset> list = new List<AssetStoreAsset>();
+				foreach (KeyValuePair<int, AssetStoreAsset> current in AssetStoreAssetSelection.s_SelectedAssets)
 				{
-					Console.WriteLine("Error performing Asset Store Info search: " + results.error);
-					AssetStoreAssetInspector.OfflineNoticeEnabled = true;
-					if (callback != null)
+					list.Add(current.Value);
+				}
+				AssetStoreClient.AssetsInfo(list, delegate(AssetStoreAssetsInfo results)
+				{
+					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.ServiceDisabled;
+					if (results.error != null && results.error != "")
 					{
-						callback();
+						Console.WriteLine("Error performing Asset Store Info search: " + results.error);
+						AssetStoreAssetInspector.OfflineNoticeEnabled = true;
+						if (callback != null)
+						{
+							callback();
+						}
 					}
-					return;
-				}
-				AssetStoreAssetInspector.OfflineNoticeEnabled = false;
-				if (results.status == AssetStoreAssetsInfo.Status.Ok)
-				{
-					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.Ok;
-				}
-				else if (results.status == AssetStoreAssetsInfo.Status.BasketNotEmpty)
-				{
-					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.BasketNotEmpty;
-				}
-				else if (results.status == AssetStoreAssetsInfo.Status.AnonymousUser)
-				{
-					AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.AnonymousUser;
-				}
-				AssetStoreAssetInspector.s_PurchaseMessage = results.message;
-				AssetStoreAssetInspector.s_PaymentMethodCard = results.paymentMethodCard;
-				AssetStoreAssetInspector.s_PaymentMethodExpire = results.paymentMethodExpire;
-				AssetStoreAssetInspector.s_PriceText = results.priceText;
-				AssetStoreAssetInspector.Instance.Repaint();
-				if (callback != null)
-				{
-					callback();
-				}
-			});
+					else
+					{
+						AssetStoreAssetInspector.OfflineNoticeEnabled = false;
+						if (results.status == AssetStoreAssetsInfo.Status.Ok)
+						{
+							AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.Ok;
+						}
+						else if (results.status == AssetStoreAssetsInfo.Status.BasketNotEmpty)
+						{
+							AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.BasketNotEmpty;
+						}
+						else if (results.status == AssetStoreAssetsInfo.Status.AnonymousUser)
+						{
+							AssetStoreAssetInspector.paymentAvailability = AssetStoreAssetInspector.PaymentAvailability.AnonymousUser;
+						}
+						AssetStoreAssetInspector.s_PurchaseMessage = results.message;
+						AssetStoreAssetInspector.s_PaymentMethodCard = results.paymentMethodCard;
+						AssetStoreAssetInspector.s_PaymentMethodExpire = results.paymentMethodExpire;
+						AssetStoreAssetInspector.s_PriceText = results.priceText;
+						AssetStoreAssetInspector.Instance.Repaint();
+						if (callback != null)
+						{
+							callback();
+						}
+					}
+				});
+			}
 		}
 
 		private static Texture2D ScaleImage(Texture2D source, int w, int h)
 		{
+			Texture2D result;
 			if (source.width % 4 != 0)
 			{
-				return null;
+				result = null;
 			}
-			Texture2D texture2D = new Texture2D(w, h, TextureFormat.RGB24, false, true);
-			Color[] pixels = texture2D.GetPixels(0);
-			double num = 1.0 / (double)w;
-			double num2 = 1.0 / (double)h;
-			double num3 = 0.0;
-			double num4 = 0.0;
-			int num5 = 0;
-			for (int i = 0; i < h; i++)
+			else
 			{
-				int j = 0;
-				while (j < w)
+				Texture2D texture2D = new Texture2D(w, h, TextureFormat.RGB24, false, true);
+				Color[] pixels = texture2D.GetPixels(0);
+				double num = 1.0 / (double)w;
+				double num2 = 1.0 / (double)h;
+				double num3 = 0.0;
+				double num4 = 0.0;
+				int num5 = 0;
+				for (int i = 0; i < h; i++)
 				{
-					pixels[num5] = source.GetPixelBilinear((float)num3, (float)num4);
-					num3 += num;
-					j++;
-					num5++;
+					int j = 0;
+					while (j < w)
+					{
+						pixels[num5] = source.GetPixelBilinear((float)num3, (float)num4);
+						num3 += num;
+						j++;
+						num5++;
+					}
+					num3 = 0.0;
+					num4 += num2;
 				}
-				num3 = 0.0;
-				num4 += num2;
+				texture2D.SetPixels(pixels, 0);
+				texture2D.Apply();
+				result = texture2D;
 			}
-			texture2D.SetPixels(pixels, 0);
-			texture2D.Apply();
-			return texture2D;
+			return result;
 		}
 
 		public static bool ContainsAsset(int id)
@@ -222,30 +233,37 @@ namespace UnityEditor
 
 		public static void Clear()
 		{
-			if (AssetStoreAssetSelection.s_SelectedAssets == null)
+			if (AssetStoreAssetSelection.s_SelectedAssets != null)
 			{
-				return;
+				foreach (KeyValuePair<int, AssetStoreAsset> current in AssetStoreAssetSelection.s_SelectedAssets)
+				{
+					current.Value.Dispose();
+				}
+				AssetStoreAssetSelection.s_SelectedAssets.Clear();
 			}
-			foreach (KeyValuePair<int, AssetStoreAsset> current in AssetStoreAssetSelection.s_SelectedAssets)
-			{
-				current.Value.Dispose();
-			}
-			AssetStoreAssetSelection.s_SelectedAssets.Clear();
 		}
 
 		public static AssetStoreAsset GetFirstAsset()
 		{
+			AssetStoreAsset result;
 			if (AssetStoreAssetSelection.s_SelectedAssets == null)
 			{
-				return null;
+				result = null;
 			}
-			Dictionary<int, AssetStoreAsset>.Enumerator enumerator = AssetStoreAssetSelection.s_SelectedAssets.GetEnumerator();
-			if (!enumerator.MoveNext())
+			else
 			{
-				return null;
+				Dictionary<int, AssetStoreAsset>.Enumerator enumerator = AssetStoreAssetSelection.s_SelectedAssets.GetEnumerator();
+				if (!enumerator.MoveNext())
+				{
+					result = null;
+				}
+				else
+				{
+					KeyValuePair<int, AssetStoreAsset> current = enumerator.Current;
+					result = current.Value;
+				}
 			}
-			KeyValuePair<int, AssetStoreAsset> current = enumerator.Current;
-			return current.Value;
+			return result;
 		}
 	}
 }

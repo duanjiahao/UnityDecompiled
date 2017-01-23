@@ -6,30 +6,89 @@ namespace UnityEditor
 {
 	internal class SplitView : View, ICleanuppable, IDropArea
 	{
-		private class ExtraDropInfo
+		[Flags]
+		internal enum ViewEdge
 		{
-			public Rect dropRect;
+			None = 0,
+			Left = 1,
+			Bottom = 2,
+			Top = 4,
+			Right = 8,
+			BottomLeft = 3,
+			BottomRight = 10,
+			TopLeft = 5,
+			TopRight = 12,
+			FitsVertical = 6,
+			FitsHorizontal = 9,
+			Before = 5,
+			After = 10
+		}
 
-			public int idx;
+		internal class ExtraDropInfo
+		{
+			public bool rootWindow;
 
-			public ExtraDropInfo(Rect _dropRect, int _idx)
+			public SplitView.ViewEdge edge;
+
+			public int index;
+
+			public ExtraDropInfo(bool rootWindow, SplitView.ViewEdge edge, int index)
 			{
-				this.dropRect = _dropRect;
-				this.idx = _idx;
+				this.rootWindow = rootWindow;
+				this.edge = edge;
+				this.index = index;
 			}
 		}
 
-		internal const float kGrabDist = 5f;
+		private const float kRootDropZoneThickness = 70f;
 
-		public bool vertical;
+		private const float kRootDropZoneOffset = 50f;
 
-		public int controlID;
+		private const float kRootDropDestinationThickness = 200f;
 
-		private SplitterState splitState;
+		private const float kMaxViewDropZoneThickness = 300f;
+
+		private const float kMinViewDropDestinationThickness = 100f;
+
+		public bool vertical = false;
+
+		public int controlID = 0;
+
+		private SplitterState splitState = null;
 
 		private static float[] s_StartDragPos;
 
 		private static float[] s_DragPos;
+
+		internal const float kGrabDist = 5f;
+
+		private Rect RectFromEdge(Rect rect, SplitView.ViewEdge edge, float thickness, float offset)
+		{
+			switch (edge)
+			{
+			case SplitView.ViewEdge.Left:
+			{
+				Rect result = new Rect(rect.x - offset, rect.y, thickness, rect.height);
+				return result;
+			}
+			case SplitView.ViewEdge.Bottom:
+			{
+				Rect result = new Rect(rect.x, rect.yMax - thickness + offset, rect.width, thickness);
+				return result;
+			}
+			case SplitView.ViewEdge.Top:
+			{
+				Rect result = new Rect(rect.x, rect.y - offset, rect.width, thickness);
+				return result;
+			}
+			case SplitView.ViewEdge.Right:
+			{
+				Rect result = new Rect(rect.xMax - thickness + offset, rect.y, thickness, rect.height);
+				return result;
+			}
+			}
+			throw new ArgumentException("Specify exactly one edge");
+		}
 
 		private void SetupSplitter()
 		{
@@ -47,35 +106,36 @@ namespace UnityEditor
 
 		private void SetupRectsFromSplitter()
 		{
-			if (base.children.Length == 0)
+			if (base.children.Length != 0)
 			{
-				return;
-			}
-			int num = 0;
-			int num2 = 0;
-			int[] realSizes = this.splitState.realSizes;
-			for (int i = 0; i < realSizes.Length; i++)
-			{
-				int num3 = realSizes[i];
-				num2 += num3;
-			}
-			float num4 = 1f;
-			if ((float)num2 > ((!this.vertical) ? base.position.width : base.position.height))
-			{
-				num4 = ((!this.vertical) ? base.position.width : base.position.height) / (float)num2;
-			}
-			for (int j = 0; j < base.children.Length; j++)
-			{
-				int num5 = (int)Mathf.Round((float)this.splitState.realSizes[j] * num4);
-				if (this.vertical)
+				int num = 0;
+				int num2 = 0;
+				int[] realSizes = this.splitState.realSizes;
+				for (int i = 0; i < realSizes.Length; i++)
 				{
-					base.children[j].position = new Rect(0f, (float)num, base.position.width, (float)num5);
+					int num3 = realSizes[i];
+					num2 += num3;
 				}
-				else
+				float num4 = 1f;
+				if ((float)num2 > ((!this.vertical) ? base.position.width : base.position.height))
 				{
-					base.children[j].position = new Rect((float)num, 0f, (float)num5, base.position.height);
+					num4 = ((!this.vertical) ? base.position.width : base.position.height) / (float)num2;
 				}
-				num += num5;
+				SavedGUIState savedGUIState = SavedGUIState.Create();
+				for (int j = 0; j < base.children.Length; j++)
+				{
+					int num5 = (int)Mathf.Round((float)this.splitState.realSizes[j] * num4);
+					if (this.vertical)
+					{
+						base.children[j].position = new Rect(0f, (float)num, base.position.width, (float)num5);
+					}
+					else
+					{
+						base.children[j].position = new Rect((float)num, 0f, (float)num5, base.position.height);
+					}
+					num += num5;
+				}
+				savedGUIState.ApplyAndForget();
 			}
 		}
 
@@ -218,55 +278,48 @@ namespace UnityEditor
 			base.RemoveChild(child);
 		}
 
-		private DropInfo DoDropZone(int idx, Vector2 mousePos, Rect sourceRect, Rect previewRect)
+		private DropInfo RootViewDropZone(SplitView.ViewEdge edge, Vector2 mousePos, Rect screenRect)
 		{
-			if (!sourceRect.Contains(mousePos))
+			float offset = ((edge & SplitView.ViewEdge.FitsVertical) == SplitView.ViewEdge.None) ? 50f : 70f;
+			DropInfo result;
+			if (!this.RectFromEdge(screenRect, edge, 70f, offset).Contains(mousePos))
 			{
-				return null;
+				result = null;
 			}
-			return new DropInfo(this)
+			else
 			{
-				type = DropInfo.Type.Pane,
-				userData = idx,
-				rect = previewRect
-			};
+				result = new DropInfo(this)
+				{
+					type = DropInfo.Type.Pane,
+					userData = new SplitView.ExtraDropInfo(true, edge, 0),
+					rect = this.RectFromEdge(screenRect, edge, 200f, 0f)
+				};
+			}
+			return result;
 		}
 
-		private DropInfo CheckRootWindowDropZones(Vector2 mouseScreenPosition)
+		public DropInfo DragOverRootView(Vector2 mouseScreenPosition)
 		{
-			DropInfo dropInfo = null;
-			if (!(base.parent is SplitView) && (base.children.Length != 1 || !(DockArea.s_IgnoreDockingForView == base.children[0])))
+			DropInfo result;
+			if (base.children.Length == 1 && DockArea.s_IgnoreDockingForView == base.children[0])
 			{
-				Rect screenPosition = base.screenPosition;
-				if (base.parent is MainWindow)
-				{
-					dropInfo = this.DoDropZone(-1, mouseScreenPosition, new Rect(screenPosition.x, screenPosition.yMax, screenPosition.width, 100f), new Rect(screenPosition.x, screenPosition.yMax - 200f, screenPosition.width, 200f));
-				}
-				else
-				{
-					dropInfo = this.DoDropZone(-1, mouseScreenPosition, new Rect(screenPosition.x, screenPosition.yMax - 20f, screenPosition.width, 100f), new Rect(screenPosition.x, screenPosition.yMax - 50f, screenPosition.width, 200f));
-				}
-				if (dropInfo != null)
-				{
-					return dropInfo;
-				}
-				dropInfo = this.DoDropZone(-2, mouseScreenPosition, new Rect(screenPosition.x - 30f, screenPosition.y, 50f, screenPosition.height), new Rect(screenPosition.x - 50f, screenPosition.y, 100f, screenPosition.height));
-				if (dropInfo != null)
-				{
-					return dropInfo;
-				}
-				dropInfo = this.DoDropZone(-3, mouseScreenPosition, new Rect(screenPosition.xMax - 20f, screenPosition.y, 50f, screenPosition.height), new Rect(screenPosition.xMax - 50f, screenPosition.y, 100f, screenPosition.height));
+				result = null;
 			}
-			return dropInfo;
+			else
+			{
+				DropInfo arg_7B_0;
+				if ((arg_7B_0 = this.RootViewDropZone(SplitView.ViewEdge.Bottom, mouseScreenPosition, base.screenPosition)) == null && (arg_7B_0 = this.RootViewDropZone(SplitView.ViewEdge.Top, mouseScreenPosition, base.screenPosition)) == null)
+				{
+					arg_7B_0 = (this.RootViewDropZone(SplitView.ViewEdge.Left, mouseScreenPosition, base.screenPosition) ?? this.RootViewDropZone(SplitView.ViewEdge.Right, mouseScreenPosition, base.screenPosition));
+				}
+				result = arg_7B_0;
+			}
+			return result;
 		}
 
 		public DropInfo DragOver(EditorWindow w, Vector2 mouseScreenPosition)
 		{
-			DropInfo dropInfo = this.CheckRootWindowDropZones(mouseScreenPosition);
-			if (dropInfo != null)
-			{
-				return dropInfo;
-			}
+			DropInfo result;
 			for (int i = 0; i < base.children.Length; i++)
 			{
 				View view = base.children[i];
@@ -274,115 +327,97 @@ namespace UnityEditor
 				{
 					if (!(view is SplitView))
 					{
+						SplitView.ViewEdge viewEdge = SplitView.ViewEdge.None;
 						Rect screenPosition = view.screenPosition;
-						int num = 0;
-						float num2 = Mathf.Round(Mathf.Min(screenPosition.width / 3f, 300f));
-						float num3 = Mathf.Round(Mathf.Min(screenPosition.height / 3f, 300f));
-						Rect rect = new Rect(screenPosition.x, screenPosition.y + 39f, num2, screenPosition.height - 39f);
-						if (rect.Contains(mouseScreenPosition))
-						{
-							num |= 1;
-						}
-						Rect rect2 = new Rect(screenPosition.x, screenPosition.yMax - num3, screenPosition.width, num3);
+						Rect rect = this.RectFromEdge(screenPosition, SplitView.ViewEdge.Bottom, screenPosition.height - 39f, 0f);
+						float num = Mathf.Min(Mathf.Round(rect.width / 3f), 300f);
+						float num2 = Mathf.Min(Mathf.Round(rect.height / 3f), 300f);
+						Rect rect2 = this.RectFromEdge(rect, SplitView.ViewEdge.Left, num, 0f);
+						Rect rect3 = this.RectFromEdge(rect, SplitView.ViewEdge.Right, num, 0f);
+						Rect rect4 = this.RectFromEdge(rect, SplitView.ViewEdge.Bottom, num2, 0f);
+						Rect rect5 = this.RectFromEdge(rect, SplitView.ViewEdge.Top, num2, 0f);
 						if (rect2.Contains(mouseScreenPosition))
 						{
-							num |= 2;
+							viewEdge |= SplitView.ViewEdge.Left;
 						}
-						Rect rect3 = new Rect(screenPosition.xMax - num2, screenPosition.y + 39f, num2, screenPosition.height - 39f);
 						if (rect3.Contains(mouseScreenPosition))
 						{
-							num |= 4;
+							viewEdge |= SplitView.ViewEdge.Right;
 						}
-						if (num == 3)
+						if (rect4.Contains(mouseScreenPosition))
 						{
-							Vector2 vector = new Vector2(screenPosition.x, screenPosition.yMax) - mouseScreenPosition;
-							Vector2 vector2 = new Vector2(num2, -num3);
-							if (vector.x * vector2.y - vector.y * vector2.x < 0f)
-							{
-								num = 1;
-							}
-							else
-							{
-								num = 2;
-							}
+							viewEdge |= SplitView.ViewEdge.Bottom;
 						}
-						else if (num == 6)
+						if (rect5.Contains(mouseScreenPosition))
 						{
-							Vector2 vector3 = new Vector2(screenPosition.xMax, screenPosition.yMax) - mouseScreenPosition;
-							Vector2 vector4 = new Vector2(-num2, -num3);
-							if (vector3.x * vector4.y - vector3.y * vector4.x < 0f)
-							{
-								num = 2;
-							}
-							else
-							{
-								num = 4;
-							}
+							viewEdge |= SplitView.ViewEdge.Top;
 						}
-						float num4 = Mathf.Round(Mathf.Max(screenPosition.width / 3f, 100f));
-						float num5 = Mathf.Round(Mathf.Max(screenPosition.height / 3f, 100f));
-						if (this.vertical)
+						Vector2 vector = Vector2.zero;
+						Vector2 zero = Vector2.zero;
+						SplitView.ViewEdge viewEdge2 = viewEdge;
+						SplitView.ViewEdge viewEdge3 = viewEdge;
+						switch (viewEdge)
 						{
-							switch (num)
+						case SplitView.ViewEdge.BottomLeft:
+							viewEdge2 = SplitView.ViewEdge.Bottom;
+							viewEdge3 = SplitView.ViewEdge.Left;
+							vector = new Vector2(rect.x, rect.yMax) - mouseScreenPosition;
+							zero = new Vector2(-num, num2);
+							goto IL_22E;
+						case SplitView.ViewEdge.Top:
+							IL_14C:
+							switch (viewEdge)
 							{
-							case 1:
-								return new DropInfo(this)
-								{
-									userData = i + 1000,
-									type = DropInfo.Type.Pane,
-									rect = new Rect(screenPosition.x, screenPosition.y, num4, screenPosition.height)
-								};
-							case 2:
-								return new DropInfo(this)
-								{
-									userData = i + 1,
-									type = DropInfo.Type.Pane,
-									rect = new Rect(screenPosition.x, screenPosition.yMax - num5, screenPosition.width, num5)
-								};
-							case 4:
-								return new DropInfo(this)
-								{
-									userData = i + 2000,
-									type = DropInfo.Type.Pane,
-									rect = new Rect(screenPosition.xMax - num4, screenPosition.y, num4, screenPosition.height)
-								};
+							case SplitView.ViewEdge.BottomRight:
+								viewEdge2 = SplitView.ViewEdge.Right;
+								viewEdge3 = SplitView.ViewEdge.Bottom;
+								vector = new Vector2(rect.xMax, rect.yMax) - mouseScreenPosition;
+								zero = new Vector2(num, num2);
+								goto IL_22E;
+							case SplitView.ViewEdge.Left | SplitView.ViewEdge.Bottom | SplitView.ViewEdge.Right:
+								goto IL_22E;
+							case SplitView.ViewEdge.TopRight:
+								viewEdge2 = SplitView.ViewEdge.Top;
+								viewEdge3 = SplitView.ViewEdge.Right;
+								vector = new Vector2(rect.xMax, rect.y) - mouseScreenPosition;
+								zero = new Vector2(num, -num2);
+								goto IL_22E;
+							default:
+								goto IL_22E;
 							}
+							break;
+						case SplitView.ViewEdge.TopLeft:
+							viewEdge2 = SplitView.ViewEdge.Left;
+							viewEdge3 = SplitView.ViewEdge.Top;
+							vector = new Vector2(rect.x, rect.y) - mouseScreenPosition;
+							zero = new Vector2(-num, -num2);
+							goto IL_22E;
 						}
-						else
+						goto IL_14C;
+						IL_22E:
+						viewEdge = ((vector.x * zero.y - vector.y * zero.x >= 0f) ? viewEdge3 : viewEdge2);
+						if (viewEdge != SplitView.ViewEdge.None)
 						{
-							switch (num)
+							float num3 = Mathf.Round((((viewEdge & SplitView.ViewEdge.FitsHorizontal) == SplitView.ViewEdge.None) ? screenPosition.height : screenPosition.width) / 3f);
+							num3 = Mathf.Max(num3, 100f);
+							result = new DropInfo(this)
 							{
-							case 1:
-								return new DropInfo(this)
-								{
-									userData = i,
-									type = DropInfo.Type.Pane,
-									rect = new Rect(screenPosition.x, screenPosition.y, num4, screenPosition.height)
-								};
-							case 2:
-								return new DropInfo(this)
-								{
-									userData = i + 2000,
-									type = DropInfo.Type.Pane,
-									rect = new Rect(screenPosition.x, screenPosition.yMax - num5, screenPosition.width, num5)
-								};
-							case 4:
-								return new DropInfo(this)
-								{
-									userData = i + 1,
-									type = DropInfo.Type.Pane,
-									rect = new Rect(screenPosition.xMax - num4, screenPosition.y, num4, screenPosition.height)
-								};
-							}
+								userData = new SplitView.ExtraDropInfo(false, viewEdge, i),
+								type = DropInfo.Type.Pane,
+								rect = this.RectFromEdge(screenPosition, viewEdge, num3, 0f)
+							};
+							return result;
 						}
 					}
 				}
 			}
 			if (base.screenPosition.Contains(mouseScreenPosition) && !(base.parent is SplitView))
 			{
-				return new DropInfo(null);
+				result = new DropInfo(null);
+				return result;
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		protected override void ChildrenMinMaxChanged()
@@ -422,94 +457,67 @@ namespace UnityEditor
 			return (!this.vertical) ? "SplitView (horiz)" : "SplitView (vert)";
 		}
 
-		public bool PerformDrop(EditorWindow w, DropInfo di, Vector2 screenPos)
+		public bool PerformDrop(EditorWindow dropWindow, DropInfo dropInfo, Vector2 screenPos)
 		{
-			int num = (int)di.userData;
-			DockArea dockArea = ScriptableObject.CreateInstance<DockArea>();
-			Rect rect = di.rect;
-			if (num == -1 || num == -2 || num == -3)
+			SplitView.ExtraDropInfo extraDropInfo = dropInfo.userData as SplitView.ExtraDropInfo;
+			bool rootWindow = extraDropInfo.rootWindow;
+			SplitView.ViewEdge edge = extraDropInfo.edge;
+			int num = extraDropInfo.index;
+			Rect rect = dropInfo.rect;
+			bool flag = (edge & SplitView.ViewEdge.TopLeft) != SplitView.ViewEdge.None;
+			bool flag2 = (edge & SplitView.ViewEdge.FitsVertical) != SplitView.ViewEdge.None;
+			SplitView splitView;
+			if (this.vertical == flag2 || base.children.Length < 2)
 			{
-				bool flag = num == -2;
-				bool flag2 = num == -1;
-				this.splitState = null;
-				if (this.vertical == flag2 || base.children.Length < 2)
+				if (!flag)
 				{
-					this.vertical = flag2;
-					rect.x -= base.screenPosition.x;
-					rect.y -= base.screenPosition.y;
-					this.MakeRoomForRect(rect);
-					this.AddChild(dockArea, (!flag) ? base.children.Length : 0);
-					dockArea.position = rect;
-				}
-				else
-				{
-					SplitView splitView = ScriptableObject.CreateInstance<SplitView>();
-					Rect position = base.position;
-					splitView.vertical = flag2;
-					splitView.position = new Rect(position.x, position.y, position.width, position.height);
-					if (base.window.mainView == this)
+					if (rootWindow)
 					{
-						base.window.mainView = splitView;
+						num = base.children.Length;
 					}
 					else
 					{
-						base.parent.AddChild(splitView, base.parent.IndexOfChild(this));
+						num++;
 					}
-					splitView.AddChild(this);
-					base.position = new Rect(0f, 0f, position.width, position.height);
-					Rect rect2 = rect;
-					rect2.x -= base.screenPosition.x;
-					rect2.y -= base.screenPosition.y;
-					splitView.MakeRoomForRect(rect2);
-					dockArea.position = rect2;
-					splitView.AddChild(dockArea, (!flag) ? 1 : 0);
 				}
+				splitView = this;
 			}
-			else if (num < 1000)
+			else if (rootWindow)
 			{
-				Rect rect3 = rect;
-				rect3.x -= base.screenPosition.x;
-				rect3.y -= base.screenPosition.y;
-				this.MakeRoomForRect(rect3);
-				this.AddChild(dockArea, num);
-				dockArea.position = rect3;
-			}
-			else
-			{
-				int num2 = num % 1000;
-				if (base.children.Length != 1)
+				SplitView splitView2 = ScriptableObject.CreateInstance<SplitView>();
+				splitView2.position = base.position;
+				if (base.window.rootView == this)
 				{
-					SplitView splitView2 = ScriptableObject.CreateInstance<SplitView>();
-					splitView2.vertical = !this.vertical;
-					Rect position2 = base.children[num2].position;
-					splitView2.AddChild(base.children[num2]);
-					this.AddChild(splitView2, num2);
-					splitView2.position = position2;
-					float num3 = 0f;
-					position2.y = num3;
-					position2.x = num3;
-					splitView2.children[0].position = position2;
-					Rect rect4 = rect;
-					rect4.x -= splitView2.screenPosition.x;
-					rect4.y -= splitView2.screenPosition.y;
-					splitView2.MakeRoomForRect(rect4);
-					splitView2.AddChild(dockArea, (num >= 2000) ? 1 : 0);
-					dockArea.position = rect4;
+					base.window.rootView = splitView2;
 				}
 				else
 				{
-					this.vertical = !this.vertical;
-					Rect rect5 = rect;
-					rect5.x -= base.screenPosition.x;
-					rect5.y -= base.screenPosition.y;
-					this.MakeRoomForRect(rect5);
-					this.AddChild(dockArea, (num != 1000) ? 1 : 0);
-					dockArea.position = rect5;
+					base.parent.AddChild(splitView2, base.parent.IndexOfChild(this));
 				}
+				splitView2.AddChild(this);
+				base.position = new Rect(Vector2.zero, base.position.size);
+				num = ((!flag) ? 1 : 0);
+				splitView = splitView2;
 			}
-			DockArea.s_OriginalDragSource.RemoveTab(w);
-			w.m_Parent = dockArea;
-			dockArea.AddTab(w);
+			else
+			{
+				SplitView splitView3 = ScriptableObject.CreateInstance<SplitView>();
+				splitView3.AddChild(base.children[num]);
+				this.AddChild(splitView3, num);
+				splitView3.position = splitView3.children[0].position;
+				splitView3.children[0].position = new Rect(Vector2.zero, splitView3.position.size);
+				num = ((!flag) ? 1 : 0);
+				splitView = splitView3;
+			}
+			rect.position -= base.screenPosition.position;
+			DockArea dockArea = ScriptableObject.CreateInstance<DockArea>();
+			splitView.vertical = flag2;
+			splitView.MakeRoomForRect(rect);
+			splitView.AddChild(dockArea, num);
+			dockArea.position = rect;
+			DockArea.s_OriginalDragSource.RemoveTab(dropWindow);
+			dropWindow.m_Parent = dockArea;
+			dockArea.AddTab(dropWindow);
 			this.Reflow();
 			SplitView.RecalcMinMaxAndReflowAll(this);
 			dockArea.MakeVistaDWMHappyDance();
@@ -526,7 +534,7 @@ namespace UnityEditor
 				text = string.Concat(new object[]
 				{
 					text2,
-					string.Empty,
+					"",
 					num,
 					", "
 				});
@@ -595,13 +603,13 @@ namespace UnityEditor
 				{
 					if (this.vertical)
 					{
-						int expr_20A_cp_1 = k;
-						sources[expr_20A_cp_1].y = sources[expr_20A_cp_1].y + num7;
+						int expr_215_cp_1 = k;
+						sources[expr_215_cp_1].y = sources[expr_215_cp_1].y + num7;
 					}
 					else
 					{
-						int expr_225_cp_1 = k;
-						sources[expr_225_cp_1].x = sources[expr_225_cp_1].x + num7;
+						int expr_230_cp_1 = k;
+						sources[expr_230_cp_1].x = sources[expr_230_cp_1].x + num7;
 					}
 				}
 				num2 += num7;
@@ -644,13 +652,13 @@ namespace UnityEditor
 				{
 					if (this.vertical)
 					{
-						int expr_402_cp_1 = m;
-						sources[expr_402_cp_1].y = sources[expr_402_cp_1].y + num9;
+						int expr_417_cp_1 = m;
+						sources[expr_417_cp_1].y = sources[expr_417_cp_1].y + num9;
 					}
 					else
 					{
-						int expr_41D_cp_1 = m;
-						sources[expr_41D_cp_1].x = sources[expr_41D_cp_1].x + num9;
+						int expr_432_cp_1 = m;
+						sources[expr_432_cp_1].x = sources[expr_432_cp_1].x + num9;
 					}
 				}
 				num2 += num9;
@@ -682,7 +690,7 @@ namespace UnityEditor
 				if (view is SplitView)
 				{
 					this.RemoveChild(view);
-					base.window.mainView = view;
+					base.window.rootView = view;
 					view.position = new Rect(0f, 0f, view.window.position.width, base.window.position.height);
 					view.Reflow();
 					if (!Unsupported.IsDestroyScriptableObject(this))
@@ -696,15 +704,18 @@ namespace UnityEditor
 			{
 				splitView.Cleanup();
 				splitView = (base.parent as SplitView);
-				if (splitView && splitView.vertical == this.vertical)
+				if (splitView)
 				{
-					int num = new List<View>(base.parent.children).IndexOf(this);
-					View[] children = base.children;
-					for (int i = 0; i < children.Length; i++)
+					if (splitView.vertical == this.vertical)
 					{
-						View view2 = children[i];
-						splitView.AddChild(view2, num++);
-						view2.position = new Rect(base.position.x + view2.position.x, base.position.y + view2.position.y, view2.position.width, view2.position.height);
+						int num = new List<View>(base.parent.children).IndexOf(this);
+						View[] children = base.children;
+						for (int i = 0; i < children.Length; i++)
+						{
+							View view2 = children[i];
+							splitView.AddChild(view2, num++);
+							view2.position = new Rect(base.position.x + view2.position.x, base.position.y + view2.position.y, view2.position.width, view2.position.height);
+						}
 					}
 				}
 			}
@@ -727,10 +738,12 @@ namespace UnityEditor
 					}
 					cleanuppable.Cleanup();
 				}
-				return;
 			}
-			this.splitState = null;
-			this.Reflow();
+			else
+			{
+				this.splitState = null;
+				this.Reflow();
+			}
 		}
 
 		public void SplitGUI(Event evt)
@@ -753,67 +766,68 @@ namespace UnityEditor
 			float num = (!this.vertical) ? evt.mousePosition.x : evt.mousePosition.y;
 			int num2 = GUIUtility.GetControlID(546739, FocusType.Passive);
 			this.controlID = num2;
-			switch (evt.GetTypeForControl(num2))
+			EventType typeForControl = evt.GetTypeForControl(num2);
+			if (typeForControl != EventType.MouseDown)
 			{
-			case EventType.MouseDown:
-				if (base.children.Length != 1)
+				if (typeForControl != EventType.MouseDrag)
 				{
-					int num3 = (!this.vertical) ? ((int)base.children[0].position.x) : ((int)base.children[0].position.y);
-					for (int i = 0; i < base.children.Length - 1; i++)
+					if (typeForControl == EventType.MouseUp)
 					{
-						if (i >= this.splitState.realSizes.Length)
+						if (GUIUtility.hotControl == num2)
 						{
-							DockArea dockArea = GUIView.current as DockArea;
-							string text = "Non-dock area " + GUIView.current.GetType();
-							if (dockArea && dockArea.m_Selected < dockArea.m_Panes.Count && dockArea.m_Panes[dockArea.m_Selected])
-							{
-								text = dockArea.m_Panes[dockArea.m_Selected].GetType().ToString();
-							}
-							if (Unsupported.IsDeveloperBuild())
-							{
-								Debug.LogError(string.Concat(new object[]
-								{
-									"Real sizes out of bounds for: ",
-									text,
-									" index: ",
-									i,
-									" RealSizes: ",
-									this.splitState.realSizes.Length
-								}));
-							}
-							this.SetupSplitter();
+							GUIUtility.hotControl = 0;
 						}
-						if (((!this.vertical) ? new Rect((float)(num3 + this.splitState.realSizes[i] - this.splitState.splitSize / 2), base.children[0].position.y, (float)this.splitState.splitSize, base.children[0].position.height) : new Rect(base.children[0].position.x, (float)(num3 + this.splitState.realSizes[i] - this.splitState.splitSize / 2), base.children[0].position.width, (float)this.splitState.splitSize)).Contains(evt.mousePosition))
-						{
-							this.splitState.splitterInitialOffset = (int)num;
-							this.splitState.currentActiveSplitter = i;
-							GUIUtility.hotControl = num2;
-							evt.Use();
-							break;
-						}
-						num3 += this.splitState.realSizes[i];
 					}
 				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == num2)
+				else if (base.children.Length > 1 && GUIUtility.hotControl == num2 && this.splitState.currentActiveSplitter >= 0)
 				{
-					GUIUtility.hotControl = 0;
-				}
-				break;
-			case EventType.MouseDrag:
-				if (base.children.Length > 1 && GUIUtility.hotControl == num2 && this.splitState.currentActiveSplitter >= 0)
-				{
-					int num4 = (int)num - this.splitState.splitterInitialOffset;
-					if (num4 != 0)
+					int num3 = (int)num - this.splitState.splitterInitialOffset;
+					if (num3 != 0)
 					{
 						this.splitState.splitterInitialOffset = (int)num;
-						this.splitState.DoSplitter(this.splitState.currentActiveSplitter, this.splitState.currentActiveSplitter + 1, num4);
+						this.splitState.DoSplitter(this.splitState.currentActiveSplitter, this.splitState.currentActiveSplitter + 1, num3);
 					}
 					this.SetupRectsFromSplitter();
 					evt.Use();
 				}
-				break;
+			}
+			else if (base.children.Length != 1)
+			{
+				int num4 = (!this.vertical) ? ((int)base.children[0].position.x) : ((int)base.children[0].position.y);
+				for (int i = 0; i < base.children.Length - 1; i++)
+				{
+					if (i >= this.splitState.realSizes.Length)
+					{
+						DockArea dockArea = GUIView.current as DockArea;
+						string text = "Non-dock area " + GUIView.current.GetType();
+						if (dockArea && dockArea.m_Selected < dockArea.m_Panes.Count && dockArea.m_Panes[dockArea.m_Selected])
+						{
+							text = dockArea.m_Panes[dockArea.m_Selected].GetType().ToString();
+						}
+						if (Unsupported.IsDeveloperBuild())
+						{
+							Debug.LogError(string.Concat(new object[]
+							{
+								"Real sizes out of bounds for: ",
+								text,
+								" index: ",
+								i,
+								" RealSizes: ",
+								this.splitState.realSizes.Length
+							}));
+						}
+						this.SetupSplitter();
+					}
+					if (((!this.vertical) ? new Rect((float)(num4 + this.splitState.realSizes[i] - this.splitState.splitSize / 2), base.children[0].position.y, (float)this.splitState.splitSize, base.children[0].position.height) : new Rect(base.children[0].position.x, (float)(num4 + this.splitState.realSizes[i] - this.splitState.splitSize / 2), base.children[0].position.width, (float)this.splitState.splitSize)).Contains(evt.mousePosition))
+					{
+						this.splitState.splitterInitialOffset = (int)num;
+						this.splitState.currentActiveSplitter = i;
+						GUIUtility.hotControl = num2;
+						evt.Use();
+						break;
+					}
+					num4 += this.splitState.realSizes[i];
+				}
 			}
 		}
 

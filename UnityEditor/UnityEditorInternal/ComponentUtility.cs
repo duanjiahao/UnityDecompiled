@@ -10,40 +10,41 @@ namespace UnityEditorInternal
 	{
 		public delegate bool IsDesiredComponent(Component c);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool MoveComponentUp(Component component);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool MoveComponentDown(Component component);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CopyComponent(Component component);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool PasteComponentValues(Component component);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool PasteComponentAsNew(GameObject go);
 
 		private static bool CompareComponentOrderAndTypes(List<Component> srcComponents, List<Component> dstComponents)
 		{
+			bool result;
 			if (srcComponents.Count != dstComponents.Count)
 			{
-				return false;
+				result = false;
 			}
-			for (int num = 0; num != srcComponents.Count; num++)
+			else
 			{
-				if (srcComponents[num].GetType() != dstComponents[num].GetType())
+				for (int num = 0; num != srcComponents.Count; num++)
 				{
-					return false;
+					if (srcComponents[num].GetType() != dstComponents[num].GetType())
+					{
+						result = false;
+						return result;
+					}
 				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private static void DestroyComponents(List<Component> components)

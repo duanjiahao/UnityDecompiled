@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Rendering;
 
 namespace UnityEditor
 {
@@ -79,8 +80,6 @@ namespace UnityEditor
 			};
 		}
 
-		private const string kShowLightingEditorKey = "ShowLightingEditor";
-
 		protected SerializedProperty m_Sun;
 
 		protected SerializedProperty m_AmbientMode;
@@ -112,6 +111,8 @@ namespace UnityEditor
 		protected SerializedProperty m_EnvironmentLightingMode;
 
 		private bool m_ShowEditor;
+
+		private const string kShowLightingEditorKey = "ShowLightingEditor";
 
 		private AnimBool m_ShowAmbientBakeMode = new AnimBool();
 
@@ -168,113 +169,114 @@ namespace UnityEditor
 			this.m_lightmapSettings.Update();
 			EditorGUILayout.Space();
 			this.m_ShowEditor = EditorGUILayout.FoldoutTitlebar(this.m_ShowEditor, LightingEditor.Styles.environmentHeader);
-			if (!this.m_ShowEditor)
+			if (this.m_ShowEditor)
 			{
-				return;
-			}
-			EditorGUI.indentLevel++;
-			EditorGUILayout.PropertyField(this.m_SkyboxMaterial, LightingEditor.Styles.skyboxLabel, new GUILayoutOption[0]);
-			Material material = this.m_SkyboxMaterial.objectReferenceValue as Material;
-			if (material && !EditorMaterialUtility.IsBackgroundMaterial(material))
-			{
-				EditorGUILayout.HelpBox(LightingEditor.Styles.skyboxWarning.text, MessageType.Warning);
-			}
-			EditorGUILayout.PropertyField(this.m_Sun, LightingEditor.Styles.sunLabel, new GUILayoutOption[0]);
-			EditorGUILayout.Space();
-			EditorGUILayout.IntPopup(this.m_AmbientMode, LightingEditor.Styles.kFullAmbientModes, LightingEditor.Styles.kFullAmbientModeValues, LightingEditor.Styles.ambientModeLabel, new GUILayoutOption[0]);
-			EditorGUI.indentLevel++;
-			switch (this.m_AmbientMode.intValue)
-			{
-			case 0:
-				if (material == null)
+				EditorGUI.indentLevel++;
+				EditorGUILayout.PropertyField(this.m_SkyboxMaterial, LightingEditor.Styles.skyboxLabel, new GUILayoutOption[0]);
+				Material material = this.m_SkyboxMaterial.objectReferenceValue as Material;
+				if (material && !EditorMaterialUtility.IsBackgroundMaterial(material))
 				{
-					EditorGUI.BeginChangeCheck();
-					Color colorValue = EditorGUILayout.ColorField(LightingEditor.Styles.ambient, this.m_AmbientSkyColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
-					if (EditorGUI.EndChangeCheck())
+					EditorGUILayout.HelpBox(LightingEditor.Styles.skyboxWarning.text, MessageType.Warning);
+				}
+				EditorGUILayout.PropertyField(this.m_Sun, LightingEditor.Styles.sunLabel, new GUILayoutOption[0]);
+				EditorGUILayout.Space();
+				EditorGUILayout.IntPopup(this.m_AmbientMode, LightingEditor.Styles.kFullAmbientModes, LightingEditor.Styles.kFullAmbientModeValues, LightingEditor.Styles.ambientModeLabel, new GUILayoutOption[0]);
+				EditorGUI.indentLevel++;
+				AmbientMode intValue = (AmbientMode)this.m_AmbientMode.intValue;
+				if (intValue != AmbientMode.Trilight)
+				{
+					if (intValue != AmbientMode.Flat)
 					{
-						this.m_AmbientSkyColor.colorValue = colorValue;
+						if (intValue == AmbientMode.Skybox)
+						{
+							if (material == null)
+							{
+								EditorGUI.BeginChangeCheck();
+								Color colorValue = EditorGUILayout.ColorField(LightingEditor.Styles.ambient, this.m_AmbientSkyColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
+								if (EditorGUI.EndChangeCheck())
+								{
+									this.m_AmbientSkyColor.colorValue = colorValue;
+								}
+							}
+							else
+							{
+								EditorGUILayout.Slider(this.m_AmbientIntensity, 0f, 8f, LightingEditor.Styles.ambientIntensity, new GUILayoutOption[0]);
+							}
+						}
+					}
+					else
+					{
+						EditorGUI.BeginChangeCheck();
+						Color colorValue2 = EditorGUILayout.ColorField(LightingEditor.Styles.ambient, this.m_AmbientSkyColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							this.m_AmbientSkyColor.colorValue = colorValue2;
+						}
 					}
 				}
 				else
 				{
-					EditorGUILayout.Slider(this.m_AmbientIntensity, 0f, 8f, LightingEditor.Styles.ambientIntensity, new GUILayoutOption[0]);
-				}
-				break;
-			case 1:
-			{
-				EditorGUI.BeginChangeCheck();
-				Color colorValue2 = EditorGUILayout.ColorField(LightingEditor.Styles.ambientUp, this.m_AmbientSkyColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
-				Color colorValue3 = EditorGUILayout.ColorField(LightingEditor.Styles.ambientMid, this.m_AmbientEquatorColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
-				Color colorValue4 = EditorGUILayout.ColorField(LightingEditor.Styles.ambientDown, this.m_AmbientGroundColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
-				{
-					this.m_AmbientSkyColor.colorValue = colorValue2;
-					this.m_AmbientEquatorColor.colorValue = colorValue3;
-					this.m_AmbientGroundColor.colorValue = colorValue4;
-				}
-				break;
-			}
-			case 3:
-			{
-				EditorGUI.BeginChangeCheck();
-				Color colorValue5 = EditorGUILayout.ColorField(LightingEditor.Styles.ambient, this.m_AmbientSkyColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
-				{
-					this.m_AmbientSkyColor.colorValue = colorValue5;
-				}
-				break;
-			}
-			}
-			EditorGUI.indentLevel--;
-			this.m_ShowAmbientBakeMode.target = LightingEditor.ShowAmbientField();
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowAmbientBakeMode.faded))
-			{
-				bool flag = Lightmapping.realtimeGI && Lightmapping.bakedGI;
-				using (new EditorGUI.DisabledScope(!flag))
-				{
-					if (flag)
+					EditorGUI.BeginChangeCheck();
+					Color colorValue3 = EditorGUILayout.ColorField(LightingEditor.Styles.ambientUp, this.m_AmbientSkyColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
+					Color colorValue4 = EditorGUILayout.ColorField(LightingEditor.Styles.ambientMid, this.m_AmbientEquatorColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
+					Color colorValue5 = EditorGUILayout.ColorField(LightingEditor.Styles.ambientDown, this.m_AmbientGroundColor.colorValue, true, false, true, ColorPicker.defaultHDRConfig, new GUILayoutOption[0]);
+					if (EditorGUI.EndChangeCheck())
 					{
-						EditorGUILayout.PropertyField(this.m_EnvironmentLightingMode, LightingEditor.Styles.SkyLightBaked, new GUILayoutOption[0]);
-					}
-					else
-					{
-						int num = (!Lightmapping.bakedGI) ? 0 : 1;
-						EditorGUILayout.LabelField(LightingEditor.Styles.SkyLightBaked, GUIContent.Temp(this.m_EnvironmentLightingMode.enumNames[num]), EditorStyles.popup, new GUILayoutOption[0]);
+						this.m_AmbientSkyColor.colorValue = colorValue3;
+						this.m_AmbientEquatorColor.colorValue = colorValue4;
+						this.m_AmbientGroundColor.colorValue = colorValue5;
 					}
 				}
-			}
-			EditorGUILayout.EndFadeGroup();
-			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(this.m_DefaultReflectionMode, LightingEditor.Styles.reflectionModeLabel, new GUILayoutOption[0]);
-			EditorGUI.indentLevel++;
-			Cubemap exists = this.m_CustomReflection.objectReferenceValue as Cubemap;
-			DefaultReflectionMode intValue = (DefaultReflectionMode)this.m_DefaultReflectionMode.intValue;
-			if ((!material && intValue == DefaultReflectionMode.FromSkybox) || (!exists && intValue == DefaultReflectionMode.Custom))
-			{
-				EditorGUILayout.HelpBox(LightingEditor.Styles.defReflectionWarning.text, MessageType.Warning);
-			}
-			DefaultReflectionMode defaultReflectionMode = intValue;
-			if (defaultReflectionMode != DefaultReflectionMode.FromSkybox)
-			{
-				if (defaultReflectionMode == DefaultReflectionMode.Custom)
+				EditorGUI.indentLevel--;
+				this.m_ShowAmbientBakeMode.target = LightingEditor.ShowAmbientField();
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowAmbientBakeMode.faded))
 				{
-					EditorGUILayout.PropertyField(this.m_CustomReflection, LightingEditor.Styles.customReflection, new GUILayoutOption[0]);
+					bool flag = Lightmapping.realtimeGI && Lightmapping.bakedGI;
+					using (new EditorGUI.DisabledScope(!flag))
+					{
+						if (flag)
+						{
+							EditorGUILayout.PropertyField(this.m_EnvironmentLightingMode, LightingEditor.Styles.SkyLightBaked, new GUILayoutOption[0]);
+						}
+						else
+						{
+							int num = (!Lightmapping.bakedGI) ? 0 : 1;
+							EditorGUILayout.LabelField(LightingEditor.Styles.SkyLightBaked, GUIContent.Temp(this.m_EnvironmentLightingMode.enumNames[num]), EditorStyles.popup, new GUILayoutOption[0]);
+						}
+					}
 				}
-			}
-			else
-			{
-				EditorGUILayout.IntPopup(this.m_DefaultReflectionResolution, LightingEditor.Styles.defaultReflectionSizes, LightingEditor.Styles.defaultReflectionSizesValues, LightingEditor.Styles.defaultReflectionResolution, new GUILayoutOption[]
+				EditorGUILayout.EndFadeGroup();
+				EditorGUILayout.Space();
+				EditorGUILayout.PropertyField(this.m_DefaultReflectionMode, LightingEditor.Styles.reflectionModeLabel, new GUILayoutOption[0]);
+				EditorGUI.indentLevel++;
+				Cubemap exists = this.m_CustomReflection.objectReferenceValue as Cubemap;
+				DefaultReflectionMode intValue2 = (DefaultReflectionMode)this.m_DefaultReflectionMode.intValue;
+				if ((!material && intValue2 == DefaultReflectionMode.FromSkybox) || (!exists && intValue2 == DefaultReflectionMode.Custom))
 				{
-					GUILayout.MinWidth(40f)
-				});
+					EditorGUILayout.HelpBox(LightingEditor.Styles.defReflectionWarning.text, MessageType.Warning);
+				}
+				if (intValue2 != DefaultReflectionMode.FromSkybox)
+				{
+					if (intValue2 == DefaultReflectionMode.Custom)
+					{
+						EditorGUILayout.PropertyField(this.m_CustomReflection, LightingEditor.Styles.customReflection, new GUILayoutOption[0]);
+					}
+				}
+				else
+				{
+					EditorGUILayout.IntPopup(this.m_DefaultReflectionResolution, LightingEditor.Styles.defaultReflectionSizes, LightingEditor.Styles.defaultReflectionSizesValues, LightingEditor.Styles.defaultReflectionResolution, new GUILayoutOption[]
+					{
+						GUILayout.MinWidth(40f)
+					});
+				}
+				EditorGUILayout.PropertyField(this.m_ReflectionCompression, LightingEditor.Styles.ReflectionCompression, new GUILayoutOption[0]);
+				EditorGUI.indentLevel--;
+				EditorGUILayout.Slider(this.m_ReflectionIntensity, 0f, 1f, LightingEditor.Styles.reflectionIntensity, new GUILayoutOption[0]);
+				EditorGUILayout.IntSlider(this.m_ReflectionBounces, 1, 5, LightingEditor.Styles.reflectionBounces, new GUILayoutOption[0]);
+				EditorGUI.indentLevel--;
+				base.serializedObject.ApplyModifiedProperties();
+				this.m_lightmapSettings.ApplyModifiedProperties();
 			}
-			EditorGUILayout.PropertyField(this.m_ReflectionCompression, LightingEditor.Styles.ReflectionCompression, new GUILayoutOption[0]);
-			EditorGUI.indentLevel--;
-			EditorGUILayout.Slider(this.m_ReflectionIntensity, 0f, 1f, LightingEditor.Styles.reflectionIntensity, new GUILayoutOption[0]);
-			EditorGUILayout.IntSlider(this.m_ReflectionBounces, 1, 5, LightingEditor.Styles.reflectionBounces, new GUILayoutOption[0]);
-			EditorGUI.indentLevel--;
-			base.serializedObject.ApplyModifiedProperties();
-			this.m_lightmapSettings.ApplyModifiedProperties();
 		}
 
 		private static bool ShowAmbientField()

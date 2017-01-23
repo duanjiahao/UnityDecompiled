@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using System.Threading;
 
 namespace UnityEditor.Hardware
 {
@@ -10,15 +10,27 @@ namespace UnityEditor.Hardware
 
 		public static event DevDeviceList.OnChangedHandler Changed
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				DevDeviceList.Changed = (DevDeviceList.OnChangedHandler)Delegate.Combine(DevDeviceList.Changed, value);
+				DevDeviceList.OnChangedHandler onChangedHandler = DevDeviceList.Changed;
+				DevDeviceList.OnChangedHandler onChangedHandler2;
+				do
+				{
+					onChangedHandler2 = onChangedHandler;
+					onChangedHandler = Interlocked.CompareExchange<DevDeviceList.OnChangedHandler>(ref DevDeviceList.Changed, (DevDeviceList.OnChangedHandler)Delegate.Combine(onChangedHandler2, value), onChangedHandler);
+				}
+				while (onChangedHandler != onChangedHandler2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				DevDeviceList.Changed = (DevDeviceList.OnChangedHandler)Delegate.Remove(DevDeviceList.Changed, value);
+				DevDeviceList.OnChangedHandler onChangedHandler = DevDeviceList.Changed;
+				DevDeviceList.OnChangedHandler onChangedHandler2;
+				do
+				{
+					onChangedHandler2 = onChangedHandler;
+					onChangedHandler = Interlocked.CompareExchange<DevDeviceList.OnChangedHandler>(ref DevDeviceList.Changed, (DevDeviceList.OnChangedHandler)Delegate.Remove(onChangedHandler2, value), onChangedHandler);
+				}
+				while (onChangedHandler != onChangedHandler2);
 			}
 		}
 
@@ -33,20 +45,22 @@ namespace UnityEditor.Hardware
 		public static bool FindDevice(string deviceId, out DevDevice device)
 		{
 			DevDevice[] devices = DevDeviceList.GetDevices();
+			bool result;
 			for (int i = 0; i < devices.Length; i++)
 			{
 				DevDevice devDevice = devices[i];
 				if (devDevice.id == deviceId)
 				{
 					device = devDevice;
-					return true;
+					result = true;
+					return result;
 				}
 			}
 			device = default(DevDevice);
-			return false;
+			result = false;
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern DevDevice[] GetDevices();
 
@@ -56,7 +70,6 @@ namespace UnityEditor.Hardware
 			DevDeviceList.OnChanged();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateInternal(string target, DevDevice[] devices);
 	}

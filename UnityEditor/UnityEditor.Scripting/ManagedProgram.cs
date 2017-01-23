@@ -21,13 +21,6 @@ namespace UnityEditor.Scripting
 				"bin",
 				"mono"
 			});
-			string value = ManagedProgram.PathCombine(new string[]
-			{
-				monodistribution,
-				"lib",
-				"mono",
-				profile
-			});
 			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
 				text = CommandLineFormatter.PrepareFileName(text + ".exe");
@@ -44,6 +37,13 @@ namespace UnityEditor.Scripting
 			};
 			if (setMonoEnvironmentVariables)
 			{
+				string value = ManagedProgram.PathCombine(new string[]
+				{
+					monodistribution,
+					"lib",
+					"mono",
+					profile
+				});
 				processStartInfo.EnvironmentVariables["MONO_PATH"] = value;
 				processStartInfo.EnvironmentVariables["MONO_CFG_DIR"] = ManagedProgram.PathCombine(new string[]
 				{

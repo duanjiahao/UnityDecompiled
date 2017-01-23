@@ -23,11 +23,21 @@ namespace UnityEngine
 		internal static object QueryStateObject(Type t, int controlID)
 		{
 			object obj = GUIStateObjects.s_StateCache[controlID];
+			object result;
 			if (t.IsInstanceOfType(obj))
 			{
-				return obj;
+				result = obj;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
+		}
+
+		internal static void Tests_ClearObjects()
+		{
+			GUIStateObjects.s_StateCache.Clear();
 		}
 	}
 }

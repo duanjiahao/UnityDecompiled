@@ -6,6 +6,8 @@ namespace UnityEditor
 {
 	internal class SceneHierarchySortingWindow : EditorWindow
 	{
+		public delegate void OnSelectCallback(SceneHierarchySortingWindow.InputData element);
+
 		private class Styles
 		{
 			public GUIStyle background = "grey_border";
@@ -22,10 +24,6 @@ namespace UnityEditor
 			public bool m_Selected;
 		}
 
-		public delegate void OnSelectCallback(SceneHierarchySortingWindow.InputData element);
-
-		private const float kFrameWidth = 1f;
-
 		private static SceneHierarchySortingWindow s_SceneHierarchySortingWindow;
 
 		private static long s_LastClosedTime;
@@ -35,6 +33,8 @@ namespace UnityEditor
 		private List<SceneHierarchySortingWindow.InputData> m_Data;
 
 		private SceneHierarchySortingWindow.OnSelectCallback m_Callback;
+
+		private const float kFrameWidth = 1f;
 
 		private float GetHeight()
 		{
@@ -69,6 +69,7 @@ namespace UnityEditor
 		internal static bool ShowAtPosition(Vector2 pos, List<SceneHierarchySortingWindow.InputData> data, SceneHierarchySortingWindow.OnSelectCallback callback)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num >= SceneHierarchySortingWindow.s_LastClosedTime + 50L)
 			{
 				Event.current.Use();
@@ -77,9 +78,13 @@ namespace UnityEditor
 					SceneHierarchySortingWindow.s_SceneHierarchySortingWindow = ScriptableObject.CreateInstance<SceneHierarchySortingWindow>();
 				}
 				SceneHierarchySortingWindow.s_SceneHierarchySortingWindow.Init(pos, data, callback);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void Init(Vector2 pos, List<SceneHierarchySortingWindow.InputData> data, SceneHierarchySortingWindow.OnSelectCallback callback)
@@ -101,16 +106,15 @@ namespace UnityEditor
 
 		internal void OnGUI()
 		{
-			if (Event.current.type == EventType.Layout)
+			if (Event.current.type != EventType.Layout)
 			{
-				return;
+				if (Event.current.type == EventType.MouseMove)
+				{
+					Event.current.Use();
+				}
+				this.Draw();
+				GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, SceneHierarchySortingWindow.s_Styles.background);
 			}
-			if (Event.current.type == EventType.MouseMove)
-			{
-				Event.current.Use();
-			}
-			this.Draw();
-			GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, SceneHierarchySortingWindow.s_Styles.background);
 		}
 
 		private void Draw()

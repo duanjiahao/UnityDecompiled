@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -23,18 +24,18 @@ namespace UnityEditor
 
 			public readonly GUIContent windowTitle = EditorGUIUtility.TextContent("SketchUp Node Selection Dialog|SketchUp Node Selection Dialog");
 
-			private static SketchUpImportDlg.Styles s_Styles;
+			private static SketchUpImportDlg.Styles s_Styles = null;
 
 			public static SketchUpImportDlg.Styles styles
 			{
 				get
 				{
-					SketchUpImportDlg.Styles arg_17_0;
-					if ((arg_17_0 = SketchUpImportDlg.Styles.s_Styles) == null)
+					SketchUpImportDlg.Styles arg_18_0;
+					if ((arg_18_0 = SketchUpImportDlg.Styles.s_Styles) == null)
 					{
-						arg_17_0 = (SketchUpImportDlg.Styles.s_Styles = new SketchUpImportDlg.Styles());
+						arg_18_0 = (SketchUpImportDlg.Styles.s_Styles = new SketchUpImportDlg.Styles());
 					}
-					return arg_17_0;
+					return arg_18_0;
 				}
 			}
 
@@ -50,11 +51,7 @@ namespace UnityEditor
 			}
 		}
 
-		private const float kHeaderHeight = 25f;
-
-		private const float kBottomHeight = 30f;
-
-		private TreeView m_TreeView;
+		private TreeViewController m_TreeView;
 
 		private SketchUpTreeViewGUI m_ImportGUI;
 
@@ -63,6 +60,10 @@ namespace UnityEditor
 		private int[] m_Selection;
 
 		private WeakReference m_ModelEditor;
+
+		private const float kHeaderHeight = 25f;
+
+		private const float kBottomHeight = 30f;
 
 		private readonly Vector2 m_WindowMinSize = new Vector2(350f, 350f);
 
@@ -80,12 +81,12 @@ namespace UnityEditor
 			base.minSize = this.m_WindowMinSize;
 			base.position = new Rect(base.position.x, base.position.y, base.minSize.x, base.minSize.y);
 			this.m_TreeViewState = new TreeViewState();
-			this.m_TreeView = new TreeView(this, this.m_TreeViewState);
+			this.m_TreeView = new TreeViewController(this, this.m_TreeViewState);
 			this.m_ImportGUI = new SketchUpTreeViewGUI(this.m_TreeView);
 			this.m_DataSource = new SketchUpDataSource(this.m_TreeView, nodes);
 			this.m_TreeView.Init(base.position, this.m_DataSource, this.m_ImportGUI, null);
-			TreeView expr_C3 = this.m_TreeView;
-			expr_C3.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_C3.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
+			TreeViewController expr_C4 = this.m_TreeView;
+			expr_C4.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_C4.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
 			this.m_ModelEditor = new WeakReference(suModelEditor);
 			this.isModal = false;
 		}
@@ -109,14 +110,17 @@ namespace UnityEditor
 		private void HandleKeyboardEvents()
 		{
 			Event current = Event.current;
-			if (current.type == EventType.KeyDown && (current.keyCode == KeyCode.Space || current.keyCode == KeyCode.Return || current.keyCode == KeyCode.KeypadEnter) && this.m_Selection != null && this.m_Selection.Length > 0)
+			if (current.type == EventType.KeyDown && (current.keyCode == KeyCode.Space || current.keyCode == KeyCode.Return || current.keyCode == KeyCode.KeypadEnter))
 			{
-				SketchUpNode sketchUpNode = this.m_TreeView.FindItem(this.m_Selection[0]) as SketchUpNode;
-				if (sketchUpNode != null && sketchUpNode != this.m_DataSource.root)
+				if (this.m_Selection != null && this.m_Selection.Length > 0)
 				{
-					sketchUpNode.Enabled = !sketchUpNode.Enabled;
-					current.Use();
-					base.Repaint();
+					SketchUpNode sketchUpNode = this.m_TreeView.FindItem(this.m_Selection[0]) as SketchUpNode;
+					if (sketchUpNode != null && sketchUpNode != this.m_DataSource.root)
+					{
+						sketchUpNode.Enabled = !sketchUpNode.Enabled;
+						current.Use();
+						base.Repaint();
+					}
 				}
 			}
 		}
@@ -135,7 +139,7 @@ namespace UnityEditor
 			GUI.Label(new Rect(10f, 2f, base.position.width, 25f), SketchUpImportDlg.Styles.styles.nodesLabel);
 			Rect screenRect = new Rect(rect.x, rect.yMax - 30f, rect.width, 30f);
 			GUILayout.BeginArea(screenRect);
-			GUILayout.Box(string.Empty, SketchUpImportDlg.Styles.styles.boxBackground, new GUILayoutOption[]
+			GUILayout.Box("", SketchUpImportDlg.Styles.styles.boxBackground, new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true),
 				GUILayout.Height(1f)

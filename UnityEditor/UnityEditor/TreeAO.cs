@@ -7,9 +7,9 @@ namespace UnityEditor
 	{
 		private const int kWorkLayer = 29;
 
-		private const float occlusion = 0.5f;
+		private static bool kDebug = false;
 
-		private static bool kDebug;
+		private const float occlusion = 0.5f;
 
 		private static Vector3[] directions;
 
@@ -91,9 +91,9 @@ namespace UnityEditor
 			num /= (float)vertices.Length;
 			for (int l = 0; l < vertices.Length; l++)
 			{
-				Vector4[] expr_1D4_cp_0 = array2;
-				int expr_1D4_cp_1 = l;
-				expr_1D4_cp_0[expr_1D4_cp_1].w = expr_1D4_cp_0[expr_1D4_cp_1].w - num;
+				Vector4[] expr_1DB_cp_0 = array2;
+				int expr_1DB_cp_1 = l;
+				expr_1DB_cp_0[expr_1DB_cp_1].w = expr_1DB_cp_0[expr_1DB_cp_1].w - num;
 			}
 			mesh.tangents = array2;
 			UnityEngine.Object.DestroyImmediate(gameObject);
@@ -102,44 +102,56 @@ namespace UnityEditor
 		private static int CountIntersections(Vector3 v, Vector3 dist, float length)
 		{
 			v += dist * 0.01f;
+			int result;
 			if (!TreeAO.kDebug)
 			{
-				return Physics.RaycastAll(v, dist, length, 536870912).Length + Physics.RaycastAll(v + dist * length, -dist, length, 536870912).Length;
+				result = Physics.RaycastAll(v, dist, length, 536870912).Length + Physics.RaycastAll(v + dist * length, -dist, length, 536870912).Length;
 			}
-			RaycastHit[] array = Physics.RaycastAll(v, dist, length, 536870912);
-			int num = array.Length;
-			float num2 = 0f;
-			if (num > 0)
+			else
 			{
-				num2 = array[array.Length - 1].distance;
-			}
-			array = Physics.RaycastAll(v + dist * length, -dist, length, 536870912);
-			if (array.Length > 0)
-			{
-				float num3 = length - array[0].distance;
-				if (num3 > num2)
+				RaycastHit[] array = Physics.RaycastAll(v, dist, length, 536870912);
+				int num = array.Length;
+				float num2 = 0f;
+				if (num > 0)
 				{
+					num2 = array[array.Length - 1].distance;
 				}
+				array = Physics.RaycastAll(v + dist * length, -dist, length, 536870912);
+				if (array.Length > 0)
+				{
+					float num3 = length - array[0].distance;
+					if (num3 > num2)
+					{
+					}
+				}
+				result = num + array.Length;
 			}
-			return num + array.Length;
+			return result;
 		}
 
 		private static float GetWeight(int coeff, Vector3 dir)
 		{
+			float result;
 			switch (coeff)
 			{
 			case 0:
-				return 0.5f;
+				result = 0.5f;
+				break;
 			case 1:
-				return 0.5f * dir.x;
+				result = 0.5f * dir.x;
+				break;
 			case 2:
-				return 0.5f * dir.y;
+				result = 0.5f * dir.y;
+				break;
 			case 3:
-				return 0.5f * dir.z;
+				result = 0.5f * dir.z;
+				break;
 			default:
 				Debug.Log("Only defined up to 3");
-				return 0f;
+				result = 0f;
+				break;
 			}
+			return result;
 		}
 	}
 }

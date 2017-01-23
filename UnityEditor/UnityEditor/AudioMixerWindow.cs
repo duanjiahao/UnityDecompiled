@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Audio;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -57,7 +58,7 @@ namespace UnityEditor
 				this.rms = new GUIContent("RMS", "Switches between RMS (Root Mean Square) metering and peak metering. RMS is closer to the energy level and perceived loudness of the sound (hence lower than the peak meter), while peak-metering is useful for monitoring spikes in the signal that can cause clipping.");
 				this.editSnapShots = new GUIContent("Edit in Play Mode", EditorGUIUtility.IconContent("Animation.Record", "|Are scene and inspector changes recorded into the animation curves?").image, "Edit in playmode and your changes are automatically saved. Note when editting is disabled then live values are shown.");
 				this.infoText = new GUIContent("Create an AudioMixer asset from the Project Browser to get started");
-				this.selectAudioMixer = new GUIContent(string.Empty, "Select an Audio Mixer");
+				this.selectAudioMixer = new GUIContent("", "Select an Audio Mixer");
 				this.output = new GUIContent("Output", "Select an Audio Mixer Group from another Audio Mixer to output to. If 'None' is selected then output is routed directly to the Audio Listener.");
 				this.toolbarLabel.alignment = TextAnchor.MiddleLeft;
 				this.toolbarObjectField.normal.textColor = this.toolbarLabel.normal.textColor;
@@ -94,8 +95,6 @@ namespace UnityEditor
 				}
 			}
 		}
-
-		private const float kToolbarHeight = 17f;
 
 		private static AudioMixerWindow s_Instance;
 
@@ -148,16 +147,16 @@ namespace UnityEditor
 		private AudioMixerWindow.LayoutMode m_LayoutMode = AudioMixerWindow.LayoutMode.Vertical;
 
 		[SerializeField]
-		private bool m_SortGroupsAlphabetically;
+		private bool m_SortGroupsAlphabetically = false;
 
 		[SerializeField]
 		private bool m_ShowReferencedBuses = true;
 
 		[SerializeField]
-		private bool m_ShowBusConnections;
+		private bool m_ShowBusConnections = false;
 
 		[SerializeField]
-		private bool m_ShowBusConnectionsOfSelection;
+		private bool m_ShowBusConnectionsOfSelection = false;
 
 		private Vector2 m_SectionsScrollPosition = Vector2.zero;
 
@@ -168,7 +167,7 @@ namespace UnityEditor
 		private bool m_GroupsRenderedAboveSections = true;
 
 		[NonSerialized]
-		private bool m_ShowDeveloperOverlays;
+		private bool m_ShowDeveloperOverlays = false;
 
 		private readonly TickTimerHelper m_Ticker = new TickTimerHelper(0.05);
 
@@ -197,29 +196,28 @@ namespace UnityEditor
 
 		private void UpdateAfterAssetChange()
 		{
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
+				this.m_Controller.SanitizeGroupViews();
+				this.m_Controller.OnUnitySelectionChanged();
+				if (this.m_GroupTree != null)
+				{
+					this.m_GroupTree.ReloadTreeData();
+				}
+				if (this.m_GroupViews != null)
+				{
+					this.m_GroupViews.RecreateListControl();
+				}
+				if (this.m_SnapshotListView != null)
+				{
+					this.m_SnapshotListView.LoadFromBackend();
+				}
+				if (this.m_MixersTree != null)
+				{
+					this.m_MixersTree.ReloadTree();
+				}
+				AudioMixerUtility.RepaintAudioMixerAndInspectors();
 			}
-			this.m_Controller.SanitizeGroupViews();
-			this.m_Controller.OnUnitySelectionChanged();
-			if (this.m_GroupTree != null)
-			{
-				this.m_GroupTree.ReloadTreeData();
-			}
-			if (this.m_GroupViews != null)
-			{
-				this.m_GroupViews.RecreateListControl();
-			}
-			if (this.m_SnapshotListView != null)
-			{
-				this.m_SnapshotListView.LoadFromBackend();
-			}
-			if (this.m_MixersTree != null)
-			{
-				this.m_MixersTree.ReloadTree();
-			}
-			AudioMixerUtility.RepaintAudioMixerAndInspectors();
 		}
 
 		public static void Create()
@@ -244,101 +242,100 @@ namespace UnityEditor
 
 		private void Init()
 		{
-			if (this.m_Initialized)
+			if (!this.m_Initialized)
 			{
-				return;
-			}
-			if (this.m_LayoutStripsOnTop == null)
-			{
-				this.m_LayoutStripsOnTop = new AudioMixerWindow.Layout();
-			}
-			if (this.m_LayoutStripsOnTop.m_VerticalSplitter == null || this.m_LayoutStripsOnTop.m_VerticalSplitter.realSizes.Length != 2)
-			{
-				this.m_LayoutStripsOnTop.m_VerticalSplitter = new SplitterState(new int[]
+				if (this.m_LayoutStripsOnTop == null)
 				{
-					65,
-					35
-				}, new int[]
+					this.m_LayoutStripsOnTop = new AudioMixerWindow.Layout();
+				}
+				if (this.m_LayoutStripsOnTop.m_VerticalSplitter == null || this.m_LayoutStripsOnTop.m_VerticalSplitter.realSizes.Length != 2)
 				{
-					85,
-					105
-				}, null);
-			}
-			if (this.m_LayoutStripsOnTop.m_HorizontalSplitter == null || this.m_LayoutStripsOnTop.m_HorizontalSplitter.realSizes.Length != 4)
-			{
-				this.m_LayoutStripsOnTop.m_HorizontalSplitter = new SplitterState(new int[]
+					this.m_LayoutStripsOnTop.m_VerticalSplitter = new SplitterState(new int[]
+					{
+						65,
+						35
+					}, new int[]
+					{
+						85,
+						105
+					}, null);
+				}
+				if (this.m_LayoutStripsOnTop.m_HorizontalSplitter == null || this.m_LayoutStripsOnTop.m_HorizontalSplitter.realSizes.Length != 4)
 				{
-					60,
-					60,
-					60,
-					60
-				}, new int[]
+					this.m_LayoutStripsOnTop.m_HorizontalSplitter = new SplitterState(new int[]
+					{
+						60,
+						60,
+						60,
+						60
+					}, new int[]
+					{
+						85,
+						85,
+						85,
+						85
+					}, null);
+				}
+				if (this.m_LayoutStripsOnRight == null)
 				{
-					85,
-					85,
-					85,
-					85
-				}, null);
-			}
-			if (this.m_LayoutStripsOnRight == null)
-			{
-				this.m_LayoutStripsOnRight = new AudioMixerWindow.Layout();
-			}
-			if (this.m_LayoutStripsOnRight.m_HorizontalSplitter == null || this.m_LayoutStripsOnRight.m_HorizontalSplitter.realSizes.Length != 2)
-			{
-				this.m_LayoutStripsOnRight.m_HorizontalSplitter = new SplitterState(new int[]
+					this.m_LayoutStripsOnRight = new AudioMixerWindow.Layout();
+				}
+				if (this.m_LayoutStripsOnRight.m_HorizontalSplitter == null || this.m_LayoutStripsOnRight.m_HorizontalSplitter.realSizes.Length != 2)
 				{
-					30,
-					70
-				}, new int[]
+					this.m_LayoutStripsOnRight.m_HorizontalSplitter = new SplitterState(new int[]
+					{
+						30,
+						70
+					}, new int[]
+					{
+						160,
+						160
+					}, null);
+				}
+				if (this.m_LayoutStripsOnRight.m_VerticalSplitter == null || this.m_LayoutStripsOnRight.m_VerticalSplitter.realSizes.Length != 4)
 				{
-					160,
-					160
-				}, null);
-			}
-			if (this.m_LayoutStripsOnRight.m_VerticalSplitter == null || this.m_LayoutStripsOnRight.m_VerticalSplitter.realSizes.Length != 4)
-			{
-				this.m_LayoutStripsOnRight.m_VerticalSplitter = new SplitterState(new int[]
+					this.m_LayoutStripsOnRight.m_VerticalSplitter = new SplitterState(new int[]
+					{
+						60,
+						60,
+						60,
+						60
+					}, new int[]
+					{
+						100,
+						85,
+						85,
+						85
+					}, null);
+				}
+				if (this.m_AudioGroupTreeState == null)
 				{
-					60,
-					60,
-					60,
-					60
-				}, new int[]
+					this.m_AudioGroupTreeState = new TreeViewState();
+				}
+				this.m_GroupTree = new AudioMixerGroupTreeView(this, this.m_AudioGroupTreeState);
+				if (this.m_MixersTreeState == null)
 				{
-					100,
-					85,
-					85,
-					85
-				}, null);
+					this.m_MixersTreeState = new TreeViewState();
+				}
+				this.m_MixersTree = new AudioMixersTreeView(this, this.m_MixersTreeState, new Func<List<AudioMixerController>>(this.GetAllControllers));
+				if (this.m_ViewsState == null)
+				{
+					this.m_ViewsState = new ReorderableListWithRenameAndScrollView.State();
+				}
+				this.m_GroupViews = new AudioMixerGroupViewList(this.m_ViewsState);
+				if (this.m_SnapshotState == null)
+				{
+					this.m_SnapshotState = new ReorderableListWithRenameAndScrollView.State();
+				}
+				this.m_SnapshotListView = new AudioMixerSnapshotListView(this.m_SnapshotState);
+				if (this.m_ChannelStripViewState == null)
+				{
+					this.m_ChannelStripViewState = new AudioMixerChannelStripView.State();
+				}
+				this.m_ChannelStripView = new AudioMixerChannelStripView(this.m_ChannelStripViewState);
+				this.OnMixerControllerChanged();
+				this.m_Initialized = true;
 			}
-			if (this.m_AudioGroupTreeState == null)
-			{
-				this.m_AudioGroupTreeState = new TreeViewState();
-			}
-			this.m_GroupTree = new AudioMixerGroupTreeView(this, this.m_AudioGroupTreeState);
-			if (this.m_MixersTreeState == null)
-			{
-				this.m_MixersTreeState = new TreeViewState();
-			}
-			this.m_MixersTree = new AudioMixersTreeView(this, this.m_MixersTreeState, new Func<List<AudioMixerController>>(this.GetAllControllers));
-			if (this.m_ViewsState == null)
-			{
-				this.m_ViewsState = new ReorderableListWithRenameAndScrollView.State();
-			}
-			this.m_GroupViews = new AudioMixerGroupViewList(this.m_ViewsState);
-			if (this.m_SnapshotState == null)
-			{
-				this.m_SnapshotState = new ReorderableListWithRenameAndScrollView.State();
-			}
-			this.m_SnapshotListView = new AudioMixerSnapshotListView(this.m_SnapshotState);
-			if (this.m_ChannelStripViewState == null)
-			{
-				this.m_ChannelStripViewState = new AudioMixerChannelStripView.State();
-			}
-			this.m_ChannelStripView = new AudioMixerChannelStripView(this.m_ChannelStripViewState);
-			this.OnMixerControllerChanged();
-			this.m_Initialized = true;
 		}
 
 		private List<AudioMixerController> GetAllControllers()
@@ -423,30 +420,29 @@ namespace UnityEditor
 
 		public void UndoRedoPerformed()
 		{
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
+				this.m_Controller.SanitizeGroupViews();
+				this.m_Controller.OnUnitySelectionChanged();
+				this.m_Controller.OnSubAssetChanged();
+				if (this.m_GroupTree != null)
+				{
+					this.m_GroupTree.OnUndoRedoPerformed();
+				}
+				if (this.m_GroupViews != null)
+				{
+					this.m_GroupViews.OnUndoRedoPerformed();
+				}
+				if (this.m_SnapshotListView != null)
+				{
+					this.m_SnapshotListView.OnUndoRedoPerformed();
+				}
+				if (this.m_MixersTree != null)
+				{
+					this.m_MixersTree.OnUndoRedoPerformed();
+				}
+				AudioMixerUtility.RepaintAudioMixerAndInspectors();
 			}
-			this.m_Controller.SanitizeGroupViews();
-			this.m_Controller.OnUnitySelectionChanged();
-			this.m_Controller.OnSubAssetChanged();
-			if (this.m_GroupTree != null)
-			{
-				this.m_GroupTree.OnUndoRedoPerformed();
-			}
-			if (this.m_GroupViews != null)
-			{
-				this.m_GroupViews.OnUndoRedoPerformed();
-			}
-			if (this.m_SnapshotListView != null)
-			{
-				this.m_SnapshotListView.OnUndoRedoPerformed();
-			}
-			if (this.m_MixersTree != null)
-			{
-				this.m_MixersTree.OnUndoRedoPerformed();
-			}
-			AudioMixerUtility.RepaintAudioMixerAndInspectors();
 		}
 
 		private void OnMixerControllerChanged()
@@ -478,9 +474,12 @@ namespace UnityEditor
 
 		public void Update()
 		{
-			if (this.m_Ticker.DoTick() && (EditorApplication.isPlaying || (this.m_ChannelStripView != null && this.m_ChannelStripView.requiresRepaint)))
+			if (this.m_Ticker.DoTick())
 			{
-				base.Repaint();
+				if (EditorApplication.isPlaying || (this.m_ChannelStripView != null && this.m_ChannelStripView.requiresRepaint))
+				{
+					base.Repaint();
+				}
 			}
 		}
 
@@ -634,21 +633,21 @@ namespace UnityEditor
 					num3 += array[i - 1].height;
 				}
 				array[i] = new Rect(0f, num3, rect.width, this.GetHeightOfSection(this.m_SectionOrder[i]));
-				Rect[] expr_155_cp_0 = array;
-				int expr_155_cp_1 = i;
-				expr_155_cp_0[expr_155_cp_1].x = expr_155_cp_0[expr_155_cp_1].x + 4f;
-				Rect[] expr_16F_cp_0 = array;
-				int expr_16F_cp_1 = i;
-				expr_16F_cp_0[expr_16F_cp_1].width = expr_16F_cp_0[expr_16F_cp_1].width - 8f;
+				Rect[] expr_157_cp_0 = array;
+				int expr_157_cp_1 = i;
+				expr_157_cp_0[expr_157_cp_1].x = expr_157_cp_0[expr_157_cp_1].x + 4f;
+				Rect[] expr_171_cp_0 = array;
+				int expr_171_cp_1 = i;
+				expr_171_cp_0[expr_171_cp_1].width = expr_171_cp_0[expr_171_cp_1].width - 8f;
 			}
 			Rect viewRect = new Rect(0f, 0f, 1f, array.Last<Rect>().yMax);
 			if (viewRect.height > rect.height)
 			{
 				for (int j = 0; j < array.Length; j++)
 				{
-					Rect[] expr_1DF_cp_0 = array;
-					int expr_1DF_cp_1 = j;
-					expr_1DF_cp_0[expr_1DF_cp_1].width = expr_1DF_cp_0[expr_1DF_cp_1].width - 14f;
+					Rect[] expr_1E3_cp_0 = array;
+					int expr_1E3_cp_1 = j;
+					expr_1E3_cp_0[expr_1E3_cp_1].width = expr_1E3_cp_0[expr_1E3_cp_1].width - 14f;
 				}
 			}
 			this.m_SectionsScrollPosition = GUI.BeginScrollView(rect, this.m_SectionsScrollPosition, viewRect);
@@ -684,9 +683,9 @@ namespace UnityEditor
 			}
 			SplitterGUILayout.EndHorizontalSplit();
 			SplitterGUILayout.EndVerticalSplit();
-			float y = (!this.m_GroupsRenderedAboveSections) ? (17f + (float)verticalSplitter.realSizes[0]) : 17f;
+			float y = (float)((!this.m_GroupsRenderedAboveSections) ? (17 + verticalSplitter.realSizes[0]) : 17);
 			float height = (float)((!this.m_GroupsRenderedAboveSections) ? verticalSplitter.realSizes[1] : verticalSplitter.realSizes[0]);
-			float y2 = this.m_GroupsRenderedAboveSections ? (17f + (float)verticalSplitter.realSizes[0]) : 17f;
+			float y2 = (float)(this.m_GroupsRenderedAboveSections ? (17 + verticalSplitter.realSizes[0]) : 17);
 			float num = (float)(this.m_GroupsRenderedAboveSections ? verticalSplitter.realSizes[1] : verticalSplitter.realSizes[0]);
 			Rect rect = new Rect(0f, y, base.position.width, height);
 			Rect totalRectOfSections = new Rect(0f, rect.yMax, base.position.width, base.position.height - rect.height);
@@ -696,48 +695,55 @@ namespace UnityEditor
 				float x = (i <= 0) ? 0f : array[i - 1].xMax;
 				array[i] = new Rect(x, y2, (float)horizontalSplitter.realSizes[i], num - 12f);
 			}
-			Rect[] expr_1F7_cp_0 = array;
-			int expr_1F7_cp_1 = 0;
-			expr_1F7_cp_0[expr_1F7_cp_1].x = expr_1F7_cp_0[expr_1F7_cp_1].x + 8f;
-			Rect[] expr_210_cp_0 = array;
-			int expr_210_cp_1 = 0;
-			expr_210_cp_0[expr_210_cp_1].width = expr_210_cp_0[expr_210_cp_1].width - 12f;
-			Rect[] expr_22E_cp_0 = array;
-			int expr_22E_cp_1 = array.Length - 1;
-			expr_22E_cp_0[expr_22E_cp_1].x = expr_22E_cp_0[expr_22E_cp_1].x + 4f;
-			Rect[] expr_24C_cp_0 = array;
-			int expr_24C_cp_1 = array.Length - 1;
-			expr_24C_cp_0[expr_24C_cp_1].width = expr_24C_cp_0[expr_24C_cp_1].width - 12f;
+			Rect[] expr_1F2_cp_0 = array;
+			int expr_1F2_cp_1 = 0;
+			expr_1F2_cp_0[expr_1F2_cp_1].x = expr_1F2_cp_0[expr_1F2_cp_1].x + 8f;
+			Rect[] expr_20B_cp_0 = array;
+			int expr_20B_cp_1 = 0;
+			expr_20B_cp_0[expr_20B_cp_1].width = expr_20B_cp_0[expr_20B_cp_1].width - 12f;
+			Rect[] expr_229_cp_0 = array;
+			int expr_229_cp_1 = array.Length - 1;
+			expr_229_cp_0[expr_229_cp_1].x = expr_229_cp_0[expr_229_cp_1].x + 4f;
+			Rect[] expr_247_cp_0 = array;
+			int expr_247_cp_1 = array.Length - 1;
+			expr_247_cp_0[expr_247_cp_1].width = expr_247_cp_0[expr_247_cp_1].width - 12f;
 			for (int j = 1; j < array.Length - 1; j++)
 			{
-				Rect[] expr_26E_cp_0 = array;
-				int expr_26E_cp_1 = j;
-				expr_26E_cp_0[expr_26E_cp_1].x = expr_26E_cp_0[expr_26E_cp_1].x + 4f;
-				Rect[] expr_288_cp_0 = array;
-				int expr_288_cp_1 = j;
-				expr_288_cp_0[expr_288_cp_1].width = expr_288_cp_0[expr_288_cp_1].width - 8f;
+				Rect[] expr_26A_cp_0 = array;
+				int expr_26A_cp_1 = j;
+				expr_26A_cp_0[expr_26A_cp_1].x = expr_26A_cp_0[expr_26A_cp_1].x + 4f;
+				Rect[] expr_284_cp_0 = array;
+				int expr_284_cp_1 = j;
+				expr_284_cp_0[expr_284_cp_1].width = expr_284_cp_0[expr_284_cp_1].width - 8f;
 			}
 			this.DoSections(totalRectOfSections, array, this.m_SectionOrder);
 			this.m_ChannelStripView.OnGUI(rect, this.m_ShowReferencedBuses, this.m_ShowBusConnections, this.m_ShowBusConnectionsOfSelection, allGroups, effectMap, this.m_SortGroupsAlphabetically, this.m_ShowDeveloperOverlays, this.m_GroupTree.ScrollToItem);
-			EditorGUI.DrawRect(new Rect(0f, 17f + (float)verticalSplitter.realSizes[0] - 1f, base.position.width, 1f), new Color(0f, 0f, 0f, 0.4f));
+			EditorGUI.DrawRect(new Rect(0f, (float)(17 + verticalSplitter.realSizes[0] - 1), base.position.width, 1f), new Color(0f, 0f, 0f, 0.4f));
 		}
 
 		private float GetHeightOfSection(AudioMixerWindow.SectionType sectionType)
 		{
+			float result;
 			switch (sectionType)
 			{
 			case AudioMixerWindow.SectionType.MixerTree:
-				return this.m_MixersTree.GetTotalHeight();
+				result = this.m_MixersTree.GetTotalHeight();
+				break;
 			case AudioMixerWindow.SectionType.GroupTree:
-				return this.m_GroupTree.GetTotalHeight();
+				result = this.m_GroupTree.GetTotalHeight();
+				break;
 			case AudioMixerWindow.SectionType.ViewList:
-				return this.m_GroupViews.GetTotalHeight();
+				result = this.m_GroupViews.GetTotalHeight();
+				break;
 			case AudioMixerWindow.SectionType.SnapshotList:
-				return this.m_SnapshotListView.GetTotalHeight();
+				result = this.m_SnapshotListView.GetTotalHeight();
+				break;
 			default:
 				Debug.LogError("Unhandled enum value");
-				return 0f;
+				result = 0f;
+				break;
 			}
+			return result;
 		}
 
 		private void DoSections(Rect totalRectOfSections, Rect[] sectionRects, AudioMixerWindow.SectionType[] sectionOrder)
@@ -860,7 +866,7 @@ namespace UnityEditor
 					this.m_ShowBusConnectionsOfSelection = !this.m_ShowBusConnectionsOfSelection;
 				});
 			}
-			menu.AddSeparator(string.Empty);
+			menu.AddSeparator("");
 			menu.AddItem(new GUIContent("Vertical layout"), this.layoutMode == AudioMixerWindow.LayoutMode.Vertical, delegate
 			{
 				this.layoutMode = AudioMixerWindow.LayoutMode.Vertical;
@@ -869,7 +875,7 @@ namespace UnityEditor
 			{
 				this.layoutMode = AudioMixerWindow.LayoutMode.Horizontal;
 			});
-			menu.AddSeparator(string.Empty);
+			menu.AddSeparator("");
 			menu.AddItem(new GUIContent("Use RMS metering for display"), EditorPrefs.GetBool(AudioMixerWindow.kAudioMixerUseRMSMetering, true), delegate
 			{
 				EditorPrefs.SetBool(AudioMixerWindow.kAudioMixerUseRMSMetering, true);
@@ -880,7 +886,7 @@ namespace UnityEditor
 			});
 			if (Unsupported.IsDeveloperBuild())
 			{
-				menu.AddSeparator(string.Empty);
+				menu.AddSeparator("");
 				menu.AddItem(new GUIContent("DEVELOPER/Groups Rendered Above"), this.m_GroupsRenderedAboveSections, delegate
 				{
 					this.m_GroupsRenderedAboveSections = !this.m_GroupsRenderedAboveSections;

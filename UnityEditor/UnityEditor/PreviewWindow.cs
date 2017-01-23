@@ -72,16 +72,18 @@ namespace UnityEditor
 			{
 				base.Close();
 				current.Use();
-				return;
 			}
-			Rect rect2 = GUILayoutUtility.GetRect(0f, 10240f, 64f, 10240f);
-			if (Event.current.type == EventType.Repaint)
+			else
 			{
-				InspectorWindow.styles.preBackground.Draw(rect2, false, false, false, false);
-			}
-			if (editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI())
-			{
-				editorThatControlsPreview.DrawPreview(rect2);
+				Rect rect2 = GUILayoutUtility.GetRect(0f, 10240f, 64f, 10240f);
+				if (Event.current.type == EventType.Repaint)
+				{
+					InspectorWindow.styles.preBackground.Draw(rect2, false, false, false, false);
+				}
+				if (editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI())
+				{
+					editorThatControlsPreview.DrawPreview(rect2);
+				}
 			}
 		}
 

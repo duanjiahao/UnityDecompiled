@@ -58,32 +58,31 @@ namespace UnityEditor
 
 		private void DoApply()
 		{
-			if (base.terrainData == null)
+			if (!(base.terrainData == null))
 			{
-				return;
+				DetailPrototype[] array = this.m_Terrain.terrainData.detailPrototypes;
+				if (this.m_PrototypeIndex == -1)
+				{
+					DetailPrototype[] array2 = new DetailPrototype[array.Length + 1];
+					Array.Copy(array, 0, array2, 0, array.Length);
+					this.m_PrototypeIndex = array.Length;
+					array = array2;
+					array[this.m_PrototypeIndex] = new DetailPrototype();
+				}
+				array[this.m_PrototypeIndex].prototype = null;
+				array[this.m_PrototypeIndex].prototypeTexture = this.m_DetailTexture;
+				array[this.m_PrototypeIndex].minWidth = this.m_MinWidth;
+				array[this.m_PrototypeIndex].maxWidth = this.m_MaxWidth;
+				array[this.m_PrototypeIndex].minHeight = this.m_MinHeight;
+				array[this.m_PrototypeIndex].maxHeight = this.m_MaxHeight;
+				array[this.m_PrototypeIndex].noiseSpread = this.m_NoiseSpread;
+				array[this.m_PrototypeIndex].healthyColor = this.m_HealthyColor;
+				array[this.m_PrototypeIndex].dryColor = this.m_DryColor;
+				array[this.m_PrototypeIndex].renderMode = ((!this.m_Billboard) ? DetailRenderMode.Grass : DetailRenderMode.GrassBillboard);
+				array[this.m_PrototypeIndex].usePrototypeMesh = false;
+				this.m_Terrain.terrainData.detailPrototypes = array;
+				EditorUtility.SetDirty(this.m_Terrain);
 			}
-			DetailPrototype[] array = this.m_Terrain.terrainData.detailPrototypes;
-			if (this.m_PrototypeIndex == -1)
-			{
-				DetailPrototype[] array2 = new DetailPrototype[array.Length + 1];
-				Array.Copy(array, 0, array2, 0, array.Length);
-				this.m_PrototypeIndex = array.Length;
-				array = array2;
-				array[this.m_PrototypeIndex] = new DetailPrototype();
-			}
-			array[this.m_PrototypeIndex].prototype = null;
-			array[this.m_PrototypeIndex].prototypeTexture = this.m_DetailTexture;
-			array[this.m_PrototypeIndex].minWidth = this.m_MinWidth;
-			array[this.m_PrototypeIndex].maxWidth = this.m_MaxWidth;
-			array[this.m_PrototypeIndex].minHeight = this.m_MinHeight;
-			array[this.m_PrototypeIndex].maxHeight = this.m_MaxHeight;
-			array[this.m_PrototypeIndex].noiseSpread = this.m_NoiseSpread;
-			array[this.m_PrototypeIndex].healthyColor = this.m_HealthyColor;
-			array[this.m_PrototypeIndex].dryColor = this.m_DryColor;
-			array[this.m_PrototypeIndex].renderMode = ((!this.m_Billboard) ? DetailRenderMode.Grass : DetailRenderMode.GrassBillboard);
-			array[this.m_PrototypeIndex].usePrototypeMesh = false;
-			this.m_Terrain.terrainData.detailPrototypes = array;
-			EditorUtility.SetDirty(this.m_Terrain);
 		}
 
 		private void OnWizardCreate()

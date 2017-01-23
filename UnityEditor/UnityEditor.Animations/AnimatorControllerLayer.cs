@@ -123,6 +123,7 @@ namespace UnityEditor.Animations
 
 		public Motion GetOverrideMotion(AnimatorState state)
 		{
+			Motion result;
 			if (this.m_Motions != null)
 			{
 				StateMotionPair[] motions = this.m_Motions;
@@ -131,11 +132,13 @@ namespace UnityEditor.Animations
 					StateMotionPair stateMotionPair = motions[i];
 					if (stateMotionPair.m_State == state)
 					{
-						return stateMotionPair.m_Motion;
+						result = stateMotionPair.m_Motion;
+						return result;
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public void SetOverrideMotion(AnimatorState state, Motion motion)
@@ -160,6 +163,7 @@ namespace UnityEditor.Animations
 
 		public StateMachineBehaviour[] GetOverrideBehaviours(AnimatorState state)
 		{
+			StateMachineBehaviour[] result;
 			if (this.m_Behaviours != null)
 			{
 				StateBehavioursPair[] behaviours = this.m_Behaviours;
@@ -168,11 +172,13 @@ namespace UnityEditor.Animations
 					StateBehavioursPair stateBehavioursPair = behaviours[i];
 					if (stateBehavioursPair.m_State == state)
 					{
-						return stateBehavioursPair.m_Behaviours;
+						result = stateBehavioursPair.m_Behaviours;
+						return result;
 					}
 				}
 			}
-			return new StateMachineBehaviour[0];
+			result = new StateMachineBehaviour[0];
+			return result;
 		}
 
 		public void SetOverrideBehaviours(AnimatorState state, StateMachineBehaviour[] behaviours)

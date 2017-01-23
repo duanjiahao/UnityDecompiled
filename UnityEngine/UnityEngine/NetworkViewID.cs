@@ -41,7 +41,6 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_unassigned(out NetworkViewID value);
 
@@ -50,7 +49,6 @@ namespace UnityEngine
 			return NetworkViewID.INTERNAL_CALL_Internal_IsMine(ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Internal_IsMine(ref NetworkViewID value);
 
@@ -59,7 +57,6 @@ namespace UnityEngine
 			NetworkViewID.INTERNAL_CALL_Internal_GetOwner(ref value, out player);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_GetOwner(ref NetworkViewID value, out NetworkPlayer player);
 
@@ -68,7 +65,6 @@ namespace UnityEngine
 			return NetworkViewID.INTERNAL_CALL_Internal_GetString(ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string INTERNAL_CALL_Internal_GetString(ref NetworkViewID value);
 
@@ -77,29 +73,8 @@ namespace UnityEngine
 			return NetworkViewID.INTERNAL_CALL_Internal_Compare(ref lhs, ref rhs);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Internal_Compare(ref NetworkViewID lhs, ref NetworkViewID rhs);
-
-		public override int GetHashCode()
-		{
-			return this.a ^ this.b ^ this.c;
-		}
-
-		public override bool Equals(object other)
-		{
-			if (!(other is NetworkViewID))
-			{
-				return false;
-			}
-			NetworkViewID rhs = (NetworkViewID)other;
-			return NetworkViewID.Internal_Compare(this, rhs);
-		}
-
-		public override string ToString()
-		{
-			return NetworkViewID.Internal_GetString(this);
-		}
 
 		public static bool operator ==(NetworkViewID lhs, NetworkViewID rhs)
 		{
@@ -109,6 +84,31 @@ namespace UnityEngine
 		public static bool operator !=(NetworkViewID lhs, NetworkViewID rhs)
 		{
 			return !NetworkViewID.Internal_Compare(lhs, rhs);
+		}
+
+		public override int GetHashCode()
+		{
+			return this.a ^ this.b ^ this.c;
+		}
+
+		public override bool Equals(object other)
+		{
+			bool result;
+			if (!(other is NetworkViewID))
+			{
+				result = false;
+			}
+			else
+			{
+				NetworkViewID rhs = (NetworkViewID)other;
+				result = NetworkViewID.Internal_Compare(this, rhs);
+			}
+			return result;
+		}
+
+		public override string ToString()
+		{
+			return NetworkViewID.Internal_GetString(this);
 		}
 	}
 }

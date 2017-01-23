@@ -60,6 +60,26 @@ namespace UnityEditorInternal
 			return this.data == null;
 		}
 
+		public static implicit operator JSONValue(string s)
+		{
+			return new JSONValue(s);
+		}
+
+		public static implicit operator JSONValue(float s)
+		{
+			return new JSONValue(s);
+		}
+
+		public static implicit operator JSONValue(bool s)
+		{
+			return new JSONValue(s);
+		}
+
+		public static implicit operator JSONValue(int s)
+		{
+			return new JSONValue((float)s);
+		}
+
 		public object AsObject()
 		{
 			return this.data;
@@ -67,15 +87,20 @@ namespace UnityEditorInternal
 
 		public string AsString(bool nothrow)
 		{
+			string result;
 			if (this.data is string)
 			{
-				return (string)this.data;
+				result = (string)this.data;
 			}
-			if (!nothrow)
+			else
 			{
-				throw new JSONTypeException("Tried to read non-string json value as string");
+				if (!nothrow)
+				{
+					throw new JSONTypeException("Tried to read non-string json value as string");
+				}
+				result = "";
 			}
-			return string.Empty;
+			return result;
 		}
 
 		public string AsString()
@@ -85,15 +110,20 @@ namespace UnityEditorInternal
 
 		public float AsFloat(bool nothrow)
 		{
+			float result;
 			if (this.data is float)
 			{
-				return (float)this.data;
+				result = (float)this.data;
 			}
-			if (!nothrow)
+			else
 			{
-				throw new JSONTypeException("Tried to read non-float json value as float");
+				if (!nothrow)
+				{
+					throw new JSONTypeException("Tried to read non-float json value as float");
+				}
+				result = 0f;
 			}
-			return 0f;
+			return result;
 		}
 
 		public float AsFloat()
@@ -103,15 +133,20 @@ namespace UnityEditorInternal
 
 		public bool AsBool(bool nothrow)
 		{
+			bool result;
 			if (this.data is bool)
 			{
-				return (bool)this.data;
+				result = (bool)this.data;
 			}
-			if (!nothrow)
+			else
 			{
-				throw new JSONTypeException("Tried to read non-bool json value as bool");
+				if (!nothrow)
+				{
+					throw new JSONTypeException("Tried to read non-bool json value as bool");
+				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
 
 		public bool AsBool()
@@ -121,15 +156,20 @@ namespace UnityEditorInternal
 
 		public List<JSONValue> AsList(bool nothrow)
 		{
+			List<JSONValue> result;
 			if (this.data is List<JSONValue>)
 			{
-				return (List<JSONValue>)this.data;
+				result = (List<JSONValue>)this.data;
 			}
-			if (!nothrow)
+			else
 			{
-				throw new JSONTypeException("Tried to read " + this.data.GetType().Name + " json value as list");
+				if (!nothrow)
+				{
+					throw new JSONTypeException("Tried to read " + this.data.GetType().Name + " json value as list");
+				}
+				result = null;
 			}
-			return null;
+			return result;
 		}
 
 		public List<JSONValue> AsList()
@@ -139,15 +179,20 @@ namespace UnityEditorInternal
 
 		public Dictionary<string, JSONValue> AsDict(bool nothrow)
 		{
+			Dictionary<string, JSONValue> result;
 			if (this.data is Dictionary<string, JSONValue>)
 			{
-				return (Dictionary<string, JSONValue>)this.data;
+				result = (Dictionary<string, JSONValue>)this.data;
 			}
-			if (!nothrow)
+			else
 			{
-				throw new JSONTypeException("Tried to read non-dictionary json value as dictionary");
+				if (!nothrow)
+				{
+					throw new JSONTypeException("Tried to read non-dictionary json value as dictionary");
+				}
+				result = null;
 			}
-			return null;
+			return result;
 		}
 
 		public Dictionary<string, JSONValue> AsDict()
@@ -192,23 +237,29 @@ namespace UnityEditorInternal
 
 		public JSONValue Get(string key)
 		{
+			JSONValue result;
 			if (!this.IsDict())
 			{
-				return new JSONValue(null);
+				result = new JSONValue(null);
 			}
-			JSONValue result = this;
-			string[] array = key.Split(new char[]
+			else
 			{
-				'.'
-			});
-			for (int i = 0; i < array.Length; i++)
-			{
-				string index = array[i];
-				if (!result.ContainsKey(index))
+				JSONValue jSONValue = this;
+				string[] array = key.Split(new char[]
 				{
-					return new JSONValue(null);
+					'.'
+				});
+				for (int i = 0; i < array.Length; i++)
+				{
+					string index = array[i];
+					if (!jSONValue.ContainsKey(index))
+					{
+						result = new JSONValue(null);
+						return result;
+					}
+					jSONValue = jSONValue[index];
 				}
-				result = result[index];
+				result = jSONValue;
 			}
 			return result;
 		}
@@ -218,9 +269,11 @@ namespace UnityEditorInternal
 			if (value == null)
 			{
 				this[key] = JSONValue.NewNull();
-				return;
 			}
-			this[key] = JSONValue.NewString(value);
+			else
+			{
+				this[key] = JSONValue.NewString(value);
+			}
 		}
 
 		public void Set(string key, float value)
@@ -239,9 +292,11 @@ namespace UnityEditorInternal
 			if (value == null)
 			{
 				list.Add(JSONValue.NewNull());
-				return;
 			}
-			list.Add(JSONValue.NewString(value));
+			else
+			{
+				list.Add(JSONValue.NewString(value));
+			}
 		}
 
 		public void Add(float value)
@@ -258,29 +313,30 @@ namespace UnityEditorInternal
 
 		public override string ToString()
 		{
+			string result;
 			if (this.IsString())
 			{
-				return "\"" + JSONValue.EncodeString(this.AsString()) + "\"";
+				result = "\"" + JSONValue.EncodeString(this.AsString()) + "\"";
 			}
-			if (this.IsFloat())
+			else if (this.IsFloat())
 			{
-				return this.AsFloat().ToString();
+				result = this.AsFloat().ToString();
 			}
-			if (this.IsList())
+			else if (this.IsList())
 			{
 				string str = "[";
-				string str2 = string.Empty;
+				string str2 = "";
 				foreach (JSONValue current in this.AsList())
 				{
 					str = str + str2 + current.ToString();
 					str2 = ", ";
 				}
-				return str + "]";
+				result = str + "]";
 			}
-			if (this.IsDict())
+			else if (this.IsDict())
 			{
 				string text = "{";
-				string text2 = string.Empty;
+				string text2 = "";
 				foreach (KeyValuePair<string, JSONValue> current2 in this.AsDict())
 				{
 					string text3 = text;
@@ -295,17 +351,21 @@ namespace UnityEditorInternal
 					});
 					text2 = ", ";
 				}
-				return text + "}";
+				result = text + "}";
 			}
-			if (this.IsBool())
+			else if (this.IsBool())
 			{
-				return (!this.AsBool()) ? "false" : "true";
+				result = ((!this.AsBool()) ? "false" : "true");
 			}
-			if (this.IsNull())
+			else
 			{
-				return "null";
+				if (!this.IsNull())
+				{
+					throw new JSONTypeException("Cannot serialize json value of unknown type");
+				}
+				result = "null";
 			}
-			throw new JSONTypeException("Cannot serialize json value of unknown type");
+			return result;
 		}
 
 		private static string EncodeString(string str)
@@ -318,26 +378,6 @@ namespace UnityEditorInternal
 			str = str.Replace("\r", "\\r");
 			str = str.Replace("\t", "\\t");
 			return str;
-		}
-
-		public static implicit operator JSONValue(string s)
-		{
-			return new JSONValue(s);
-		}
-
-		public static implicit operator JSONValue(float s)
-		{
-			return new JSONValue(s);
-		}
-
-		public static implicit operator JSONValue(bool s)
-		{
-			return new JSONValue(s);
-		}
-
-		public static implicit operator JSONValue(int s)
-		{
-			return new JSONValue((float)s);
 		}
 	}
 }

@@ -43,47 +43,38 @@ namespace UnityEngine
 
 		public static extern int keyboardControl
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern string systemCopyBuffer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool mouseUsed
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool hasModalWindow
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern bool textFieldInput
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -139,6 +130,10 @@ namespace UnityEngine
 			return GUIUtility.Internal_GetBuiltinSkin(skin) as GUISkin;
 		}
 
+		internal static void CleanupRoots()
+		{
+		}
+
 		[RequiredByNativeCode]
 		internal static void BeginGUI(int skinMode, int instanceID, int useGUILayout)
 		{
@@ -168,14 +163,19 @@ namespace UnityEngine
 			{
 				if (Event.current.type == EventType.Layout)
 				{
-					switch (layoutType)
+					if (layoutType != 0)
 					{
-					case 1:
-						GUILayoutUtility.Layout();
-						break;
-					case 2:
-						GUILayoutUtility.LayoutFromEditorWindow();
-						break;
+						if (layoutType != 1)
+						{
+							if (layoutType == 2)
+							{
+								GUILayoutUtility.LayoutFromEditorWindow();
+							}
+						}
+						else
+						{
+							GUILayoutUtility.Layout();
+						}
 					}
 				}
 				GUILayoutUtility.SelectIDList(GUIUtility.s_OriginalID, false);
@@ -190,20 +190,17 @@ namespace UnityEngine
 		[RequiredByNativeCode]
 		internal static bool EndGUIFromException(Exception exception)
 		{
-			if (exception == null)
+			bool result;
+			if (!GUIUtility.ShouldRethrowException(exception))
 			{
-				return false;
+				result = false;
 			}
-			while (exception is TargetInvocationException && exception.InnerException != null)
+			else
 			{
-				exception = exception.InnerException;
+				GUIUtility.Internal_ExitGUI();
+				result = true;
 			}
-			if (!(exception is ExitGUIException))
-			{
-				return false;
-			}
-			GUIUtility.Internal_ExitGUI();
-			return true;
+			return result;
 		}
 
 		internal static bool ShouldRethrowException(Exception exception)
@@ -266,11 +263,9 @@ namespace UnityEngine
 			GUI.matrix = lhs * matrix;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_GetPixelsPerPoint();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetControlID(int hint, FocusType focus);
 
@@ -279,43 +274,48 @@ namespace UnityEngine
 			return GUIUtility.INTERNAL_CALL_Internal_GetNextControlID2(hint, focusType, ref rect);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int INTERNAL_CALL_Internal_GetNextControlID2(int hint, FocusType focusType, ref Rect rect);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetPermanentControlID();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetHotControl();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetHotControl(int value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateUndoName();
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void GrabMouseControl(int id);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void ReleaseMouseControl();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasMouseControl(int id);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool GetChanged();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SetChanged(bool changed);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetDidGUIWindowsEatLastEvent(bool value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern GUISkin Internal_GetDefaultSkin(int skinMode);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object Internal_GetBuiltinSkin(int skin);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_ExitGUI();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int Internal_GetGUIDepth();
 	}

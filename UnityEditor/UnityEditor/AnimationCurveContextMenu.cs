@@ -55,6 +55,18 @@ namespace UnityEditor
 		private void Paste()
 		{
 			ParticleSystemClipboard.PasteAnimationCurves(this.m_Prop1, this.m_Prop2, this.m_Scalar, this.m_CurveRanges, this.m_ParticleSystemCurveEditor);
+			if (this.m_Prop1 != null)
+			{
+				this.m_Prop1.serializedObject.ApplyModifiedProperties();
+			}
+			if (this.m_Prop2 != null)
+			{
+				this.m_Prop2.serializedObject.ApplyModifiedProperties();
+			}
+			if (this.m_Scalar != null)
+			{
+				this.m_Scalar.serializedObject.ApplyModifiedProperties();
+			}
 		}
 	}
 }

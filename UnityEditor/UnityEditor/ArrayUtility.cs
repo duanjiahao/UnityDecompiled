@@ -14,18 +14,24 @@ namespace UnityEditor
 
 		public static bool ArrayEquals<T>(T[] lhs, T[] rhs)
 		{
+			bool result;
 			if (lhs.Length != rhs.Length)
 			{
-				return false;
+				result = false;
 			}
-			for (int i = 0; i < lhs.Length; i++)
+			else
 			{
-				if (!lhs[i].Equals(rhs[i]))
+				for (int i = 0; i < lhs.Length; i++)
 				{
-					return false;
+					if (!lhs[i].Equals(rhs[i]))
+					{
+						result = false;
+						return result;
+					}
 				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		public static void AddRange<T>(ref T[] array, T[] items)

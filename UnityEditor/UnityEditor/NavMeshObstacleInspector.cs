@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace UnityEditor
 {
@@ -39,7 +40,7 @@ namespace UnityEditor
 			if (EditorGUI.EndChangeCheck())
 			{
 				base.serializedObject.ApplyModifiedProperties();
-				(this.target as NavMeshObstacle).FitExtents();
+				(base.target as NavMeshObstacle).FitExtents();
 				base.serializedObject.Update();
 			}
 			EditorGUILayout.PropertyField(this.m_Center, new GUILayoutOption[0]);

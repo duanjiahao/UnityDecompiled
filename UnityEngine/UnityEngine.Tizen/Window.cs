@@ -25,11 +25,9 @@ namespace UnityEngine.Tizen
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_windowHandle(out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_evasGL(out IntPtr value);
 	}

@@ -5,13 +5,13 @@ namespace UnityEngine.Assertions.Comparers
 {
 	public class FloatComparer : IEqualityComparer<float>
 	{
-		public const float kEpsilon = 1E-05f;
-
 		private readonly float m_Error;
 
 		private readonly bool m_Relative;
 
 		public static readonly FloatComparer s_ComparerWithDefaultTolerance = new FloatComparer(1E-05f);
+
+		public const float kEpsilon = 1E-05f;
 
 		public FloatComparer() : this(1E-05f, false)
 		{
@@ -48,14 +48,19 @@ namespace UnityEngine.Assertions.Comparers
 
 		public static bool AreEqualRelative(float expected, float actual, float error)
 		{
+			bool result;
 			if (expected == actual)
 			{
-				return true;
+				result = true;
 			}
-			float num = Math.Abs(expected);
-			float num2 = Math.Abs(actual);
-			float num3 = Math.Abs((actual - expected) / ((num <= num2) ? num2 : num));
-			return num3 <= error;
+			else
+			{
+				float num = Math.Abs(expected);
+				float num2 = Math.Abs(actual);
+				float num3 = Math.Abs((actual - expected) / ((num <= num2) ? num2 : num));
+				result = (num3 <= error);
+			}
+			return result;
 		}
 	}
 }

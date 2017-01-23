@@ -8,9 +8,9 @@ namespace UnityEditor
 {
 	internal class MonoProcessRunner
 	{
-		public StringBuilder Output = new StringBuilder(string.Empty);
+		public StringBuilder Output = new StringBuilder("");
 
-		public StringBuilder Error = new StringBuilder(string.Empty);
+		public StringBuilder Error = new StringBuilder("");
 
 		public bool Run(Process process)
 		{

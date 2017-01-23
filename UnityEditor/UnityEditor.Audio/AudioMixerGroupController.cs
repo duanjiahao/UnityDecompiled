@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Audio;
 
 namespace UnityEditor.Audio
@@ -10,74 +9,60 @@ namespace UnityEditor.Audio
 	{
 		public extern GUID groupID
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int userColorIndex
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AudioMixerController controller
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern AudioMixerGroupController[] children
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AudioMixerEffectController[] effects
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool mute
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool solo
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool bypassEffects
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -87,39 +72,30 @@ namespace UnityEditor.Audio
 			AudioMixerGroupController.Internal_CreateAudioMixerGroupController(this, owner);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateAudioMixerGroupController(AudioMixerGroupController mono, AudioMixer owner);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void PreallocateGUIDs();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern GUID GetGUIDForVolume();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetValueForVolume(AudioMixerController controller, AudioMixerSnapshotController snapshot);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetValueForVolume(AudioMixerController controller, AudioMixerSnapshotController snapshot, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern GUID GetGUIDForPitch();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetValueForPitch(AudioMixerController controller, AudioMixerSnapshotController snapshot);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetValueForPitch(AudioMixerController controller, AudioMixerSnapshotController snapshot, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasDependentMixers();
 
@@ -138,24 +114,27 @@ namespace UnityEditor.Audio
 		public bool HasAttenuation()
 		{
 			AudioMixerEffectController[] effects = this.effects;
+			bool result;
 			for (int i = 0; i < effects.Length; i++)
 			{
 				AudioMixerEffectController audioMixerEffectController = effects[i];
 				if (audioMixerEffectController.IsAttenuation())
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public void DumpHierarchy(string title, int level)
 		{
-			if (title != string.Empty)
+			if (title != "")
 			{
 				Console.WriteLine(title);
 			}
-			string str = string.Empty;
+			string str = "";
 			int num = level;
 			while (num-- > 0)
 			{
@@ -173,7 +152,7 @@ namespace UnityEditor.Audio
 			for (int j = 0; j < children.Length; j++)
 			{
 				AudioMixerGroupController audioMixerGroupController = children[j];
-				audioMixerGroupController.DumpHierarchy(string.Empty, level + 1);
+				audioMixerGroupController.DumpHierarchy("", level + 1);
 			}
 		}
 

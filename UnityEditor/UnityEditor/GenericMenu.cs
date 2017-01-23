@@ -6,6 +6,10 @@ namespace UnityEditor
 {
 	public sealed class GenericMenu
 	{
+		public delegate void MenuFunction();
+
+		public delegate void MenuFunction2(object userData);
+
 		private sealed class MenuItem
 		{
 			public GUIContent content;
@@ -38,10 +42,6 @@ namespace UnityEditor
 			}
 		}
 
-		public delegate void MenuFunction();
-
-		public delegate void MenuFunction2(object userData);
-
 		private ArrayList menuItems = new ArrayList();
 
 		public void AddItem(GUIContent content, bool on, GenericMenu.MenuFunction func)
@@ -71,11 +71,10 @@ namespace UnityEditor
 
 		public void ShowAsContext()
 		{
-			if (Event.current == null)
+			if (Event.current != null)
 			{
-				return;
+				this.DropDown(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 0f, 0f));
 			}
-			this.DropDown(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 0f, 0f));
 		}
 
 		public void DropDown(Rect position)
@@ -103,9 +102,11 @@ namespace UnityEditor
 			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
 				this.DropDown(position);
-				return;
 			}
-			this.DropDown(position);
+			else
+			{
+				this.DropDown(position);
+			}
 		}
 
 		private void CatchMenu(object userData, string[] options, int selected)

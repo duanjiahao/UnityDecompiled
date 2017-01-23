@@ -10,7 +10,6 @@ namespace UnityEngine
 			return GUILayer.INTERNAL_CALL_HitTest(this, ref screenPosition);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern GUIElement INTERNAL_CALL_HitTest(GUILayer self, ref Vector3 screenPosition);
 	}

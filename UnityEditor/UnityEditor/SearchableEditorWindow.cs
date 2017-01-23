@@ -29,13 +29,13 @@ namespace UnityEditor
 
 		internal HierarchyType m_HierarchyType = HierarchyType.Assets;
 
-		internal string m_SearchFilter = string.Empty;
+		internal string m_SearchFilter = "";
 
-		internal SearchableEditorWindow.SearchMode m_SearchMode;
+		internal SearchableEditorWindow.SearchMode m_SearchMode = SearchableEditorWindow.SearchMode.All;
 
-		private bool m_FocusSearchField;
+		private bool m_FocusSearchField = false;
 
-		private bool m_HasSearchFilterFocus;
+		private bool m_HasSearchFilterFocus = false;
 
 		private int m_SearchFieldControlId;
 
@@ -43,7 +43,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_SearchFilter != string.Empty;
+				return this.m_SearchFilter != "";
 			}
 		}
 
@@ -74,54 +74,59 @@ namespace UnityEditor
 		internal static SearchFilter CreateFilter(string searchString, SearchableEditorWindow.SearchMode searchMode)
 		{
 			SearchFilter searchFilter = new SearchFilter();
+			SearchFilter result;
 			if (string.IsNullOrEmpty(searchString))
 			{
-				return searchFilter;
+				result = searchFilter;
 			}
-			switch (searchMode)
+			else
 			{
-			case SearchableEditorWindow.SearchMode.All:
-				if (!SearchUtility.ParseSearchString(searchString, searchFilter))
+				switch (searchMode)
 				{
+				case SearchableEditorWindow.SearchMode.All:
+					if (!SearchUtility.ParseSearchString(searchString, searchFilter))
+					{
+						searchFilter.nameFilter = searchString;
+						searchFilter.classNames = new string[]
+						{
+							searchString
+						};
+						searchFilter.assetLabels = new string[]
+						{
+							searchString
+						};
+						searchFilter.assetBundleNames = new string[]
+						{
+							searchString
+						};
+						searchFilter.showAllHits = true;
+					}
+					break;
+				case SearchableEditorWindow.SearchMode.Name:
 					searchFilter.nameFilter = searchString;
+					break;
+				case SearchableEditorWindow.SearchMode.Type:
 					searchFilter.classNames = new string[]
 					{
 						searchString
 					};
+					break;
+				case SearchableEditorWindow.SearchMode.Label:
 					searchFilter.assetLabels = new string[]
 					{
 						searchString
 					};
+					break;
+				case SearchableEditorWindow.SearchMode.AssetBundleName:
 					searchFilter.assetBundleNames = new string[]
 					{
 						searchString
 					};
-					searchFilter.showAllHits = true;
+					break;
 				}
-				break;
-			case SearchableEditorWindow.SearchMode.Name:
-				searchFilter.nameFilter = searchString;
-				break;
-			case SearchableEditorWindow.SearchMode.Type:
-				searchFilter.classNames = new string[]
-				{
-					searchString
-				};
-				break;
-			case SearchableEditorWindow.SearchMode.Label:
-				searchFilter.assetLabels = new string[]
-				{
-					searchString
-				};
-				break;
-			case SearchableEditorWindow.SearchMode.AssetBundleName:
-				searchFilter.assetBundleNames = new string[]
-				{
-					searchString
-				};
-				break;
+				result = searchFilter;
 			}
-			return searchFilter;
+			return result;
 		}
 
 		[MenuItem("Assets/Find References In Scene", false, 25)]
@@ -163,12 +168,18 @@ namespace UnityEditor
 		private static bool OnSearchForReferencesValidate()
 		{
 			UnityEngine.Object activeObject = Selection.activeObject;
-			if (activeObject != null && AssetDatabase.Contains(activeObject))
+			bool result;
+			if (activeObject != null)
 			{
-				string assetPath = AssetDatabase.GetAssetPath(activeObject);
-				return !Directory.Exists(assetPath);
+				if (AssetDatabase.Contains(activeObject))
+				{
+					string assetPath = AssetDatabase.GetAssetPath(activeObject);
+					result = !Directory.Exists(assetPath);
+					return result;
+				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public virtual void OnEnable()
@@ -188,7 +199,7 @@ namespace UnityEditor
 
 		internal void ClearSearchFilter()
 		{
-			this.SetSearchFilter(string.Empty, this.m_SearchMode, true);
+			this.SetSearchFilter("", this.m_SearchMode, true);
 			if (EditorGUI.s_RecycledEditor != null)
 			{
 				EditorGUI.s_RecycledEditor.controlID = 0;
@@ -265,7 +276,7 @@ namespace UnityEditor
 			int searchMode = (int)this.m_SearchMode;
 			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape && GUI.GetNameOfFocusedControl() == "SearchFilter")
 			{
-				this.SetSearchFilter(string.Empty, (SearchableEditorWindow.SearchMode)searchMode, true);
+				this.SetSearchFilter("", (SearchableEditorWindow.SearchMode)searchMode, true);
 			}
 			string[] names = Enum.GetNames((this.m_HierarchyType != HierarchyType.GameObjects) ? typeof(SearchableEditorWindow.SearchMode) : typeof(SearchableEditorWindow.SearchModeHierarchyWindow));
 			this.m_SearchFieldControlId = GUIUtility.GetControlID(SearchableEditorWindow.s_SearchableEditorWindowSearchField, FocusType.Keyboard, rect);
@@ -276,9 +287,9 @@ namespace UnityEditor
 				this.SetSearchFilter(searchFilter, (SearchableEditorWindow.SearchMode)searchMode, true);
 			}
 			this.m_HasSearchFilterFocus = (GUIUtility.keyboardControl == this.m_SearchFieldControlId);
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape && this.m_SearchFilter != string.Empty && GUIUtility.hotControl == 0)
+			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape && this.m_SearchFilter != "" && GUIUtility.hotControl == 0)
 			{
-				this.m_SearchFilter = string.Empty;
+				this.m_SearchFilter = "";
 				this.SetSearchFilter(searchFilter, (SearchableEditorWindow.SearchMode)searchMode, true);
 				Event.current.Use();
 				this.m_HasSearchFilterFocus = false;

@@ -12,9 +12,9 @@ namespace UnityEditor
 {
 	internal class WindowLayout
 	{
-		private const string kMaximizeRestoreFile = "CurrentMaximizeLayout.dwlt";
-
 		internal static PrefKey s_MaximizeKey = new PrefKey("Window/Maximize View", "# ");
+
+		private const string kMaximizeRestoreFile = "CurrentMaximizeLayout.dwlt";
 
 		internal static string layoutsPreferencesPath
 		{
@@ -40,18 +40,23 @@ namespace UnityEditor
 		internal static EditorWindow FindEditorWindowOfType(Type type)
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(type);
+			EditorWindow result;
 			if (array.Length > 0)
 			{
-				return array[0] as EditorWindow;
+				result = (array[0] as EditorWindow);
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		[DebuggerHidden]
 		private static IEnumerable<T> FindEditorWindowsOfType<T>() where T : class
 		{
-			WindowLayout.<FindEditorWindowsOfType>c__Iterator6<T> <FindEditorWindowsOfType>c__Iterator = new WindowLayout.<FindEditorWindowsOfType>c__Iterator6<T>();
-			WindowLayout.<FindEditorWindowsOfType>c__Iterator6<T> expr_07 = <FindEditorWindowsOfType>c__Iterator;
+			WindowLayout.<FindEditorWindowsOfType>c__Iterator0<T> <FindEditorWindowsOfType>c__Iterator = new WindowLayout.<FindEditorWindowsOfType>c__Iterator0<T>();
+			WindowLayout.<FindEditorWindowsOfType>c__Iterator0<T> expr_07 = <FindEditorWindowsOfType>c__Iterator;
 			expr_07.$PC = -2;
 			return expr_07;
 		}
@@ -74,11 +79,12 @@ namespace UnityEditor
 		{
 			Type type = null;
 			string lastWindowTypeInSameDock = WindowFocusState.instance.m_LastWindowTypeInSameDock;
-			if (lastWindowTypeInSameDock != string.Empty)
+			if (lastWindowTypeInSameDock != "")
 			{
 				type = Type.GetType(lastWindowTypeInSameDock);
 			}
 			GameView gameView = WindowLayout.FindEditorWindowOfType(typeof(GameView)) as GameView;
+			EditorWindow result;
 			if (type != null && gameView && gameView.m_Parent != null && gameView.m_Parent is DockArea)
 			{
 				object[] array = Resources.FindObjectsOfTypeAll(type);
@@ -88,11 +94,13 @@ namespace UnityEditor
 					EditorWindow editorWindow = array[i] as EditorWindow;
 					if (editorWindow && editorWindow.m_Parent == y)
 					{
-						return editorWindow;
+						result = editorWindow;
+						return result;
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		internal static void SaveCurrentFocusedWindowInSameDock(EditorWindow windowToBeFocused)
@@ -119,6 +127,7 @@ namespace UnityEditor
 
 		internal static EditorWindow TryFocusAppropriateWindow(bool enteringPlaymode)
 		{
+			EditorWindow result;
 			if (enteringPlaymode)
 			{
 				GameView gameView = (GameView)WindowLayout.FindEditorWindowOfType(typeof(GameView));
@@ -127,80 +136,98 @@ namespace UnityEditor
 					WindowLayout.SaveCurrentFocusedWindowInSameDock(gameView);
 					gameView.Focus();
 				}
-				return gameView;
+				result = gameView;
 			}
-			EditorWindow editorWindow = WindowLayout.TryGetLastFocusedWindowInSameDock();
-			if (editorWindow)
+			else
 			{
-				editorWindow.ShowTab();
+				EditorWindow editorWindow = WindowLayout.TryGetLastFocusedWindowInSameDock();
+				if (editorWindow)
+				{
+					editorWindow.ShowTab();
+				}
+				result = editorWindow;
 			}
-			return editorWindow;
+			return result;
 		}
 
 		internal static EditorWindow GetMaximizedWindow()
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(MaximizedHostView));
+			EditorWindow result;
 			if (array.Length != 0)
 			{
 				MaximizedHostView maximizedHostView = array[0] as MaximizedHostView;
 				if (maximizedHostView.actualView)
 				{
-					return maximizedHostView.actualView;
+					result = maximizedHostView.actualView;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		internal static EditorWindow ShowAppropriateViewOnEnterExitPlaymode(bool entering)
 		{
+			EditorWindow result;
 			if (WindowFocusState.instance.m_CurrentlyInPlayMode == entering)
 			{
-				return null;
+				result = null;
 			}
-			WindowFocusState.instance.m_CurrentlyInPlayMode = entering;
-			EditorWindow maximizedWindow = WindowLayout.GetMaximizedWindow();
-			if (entering)
+			else
 			{
-				WindowFocusState.instance.m_WasMaximizedBeforePlay = (maximizedWindow != null);
-				if (maximizedWindow != null)
+				WindowFocusState.instance.m_CurrentlyInPlayMode = entering;
+				EditorWindow maximizedWindow = WindowLayout.GetMaximizedWindow();
+				if (entering)
 				{
-					return maximizedWindow;
-				}
-			}
-			else if (WindowFocusState.instance.m_WasMaximizedBeforePlay)
-			{
-				return maximizedWindow;
-			}
-			if (maximizedWindow)
-			{
-				WindowLayout.Unmaximize(maximizedWindow);
-			}
-			EditorWindow editorWindow = WindowLayout.TryFocusAppropriateWindow(entering);
-			if (editorWindow)
-			{
-				return editorWindow;
-			}
-			if (entering)
-			{
-				EditorWindow editorWindow2 = WindowLayout.FindEditorWindowOfType(typeof(SceneView));
-				GameView gameView;
-				if (editorWindow2 && editorWindow2.m_Parent is DockArea)
-				{
-					DockArea dockArea = editorWindow2.m_Parent as DockArea;
-					if (dockArea)
+					WindowFocusState.instance.m_WasMaximizedBeforePlay = (maximizedWindow != null);
+					if (maximizedWindow != null)
 					{
-						WindowFocusState.instance.m_LastWindowTypeInSameDock = editorWindow2.GetType().ToString();
-						gameView = ScriptableObject.CreateInstance<GameView>();
-						dockArea.AddTab(gameView);
-						return gameView;
+						result = maximizedWindow;
+						return result;
 					}
 				}
-				gameView = ScriptableObject.CreateInstance<GameView>();
-				gameView.Show(true);
-				gameView.Focus();
-				return gameView;
+				else if (WindowFocusState.instance.m_WasMaximizedBeforePlay)
+				{
+					result = maximizedWindow;
+					return result;
+				}
+				if (maximizedWindow)
+				{
+					WindowLayout.Unmaximize(maximizedWindow);
+				}
+				EditorWindow editorWindow = WindowLayout.TryFocusAppropriateWindow(entering);
+				if (editorWindow)
+				{
+					result = editorWindow;
+				}
+				else if (entering)
+				{
+					EditorWindow editorWindow2 = WindowLayout.FindEditorWindowOfType(typeof(SceneView));
+					GameView gameView;
+					if (editorWindow2 && editorWindow2.m_Parent is DockArea)
+					{
+						DockArea dockArea = editorWindow2.m_Parent as DockArea;
+						if (dockArea)
+						{
+							WindowFocusState.instance.m_LastWindowTypeInSameDock = editorWindow2.GetType().ToString();
+							gameView = ScriptableObject.CreateInstance<GameView>();
+							dockArea.AddTab(gameView);
+							result = gameView;
+							return result;
+						}
+					}
+					gameView = ScriptableObject.CreateInstance<GameView>();
+					gameView.Show(true);
+					gameView.Focus();
+					result = gameView;
+				}
+				else
+				{
+					result = editorWindow;
+				}
 			}
-			return editorWindow;
+			return result;
 		}
 
 		internal static bool IsMaximized(EditorWindow window)
@@ -215,29 +242,35 @@ namespace UnityEditor
 				EventType type = Event.current.type;
 				Event.current.Use();
 				EditorWindow mouseOverWindow = EditorWindow.mouseOverWindow;
-				if (mouseOverWindow && !(mouseOverWindow is PreviewWindow))
+				if (mouseOverWindow)
 				{
-					if (type == EditorGUIUtility.magnifyGestureEventType)
+					if (!(mouseOverWindow is PreviewWindow))
 					{
-						if ((double)Event.current.delta.x < -0.05)
+						if (type == EditorGUIUtility.magnifyGestureEventType)
 						{
-							if (WindowLayout.IsMaximized(mouseOverWindow))
+							if ((double)Event.current.delta.x < -0.05)
 							{
-								WindowLayout.Unmaximize(mouseOverWindow);
+								if (WindowLayout.IsMaximized(mouseOverWindow))
+								{
+									WindowLayout.Unmaximize(mouseOverWindow);
+								}
+							}
+							else if ((double)Event.current.delta.x > 0.05)
+							{
+								if (!WindowLayout.IsMaximized(mouseOverWindow))
+								{
+									WindowLayout.Maximize(mouseOverWindow);
+								}
 							}
 						}
-						else if ((double)Event.current.delta.x > 0.05 && !WindowLayout.IsMaximized(mouseOverWindow))
+						else if (WindowLayout.IsMaximized(mouseOverWindow))
+						{
+							WindowLayout.Unmaximize(mouseOverWindow);
+						}
+						else
 						{
 							WindowLayout.Maximize(mouseOverWindow);
 						}
-					}
-					else if (WindowLayout.IsMaximized(mouseOverWindow))
-					{
-						WindowLayout.Unmaximize(mouseOverWindow);
-					}
-					else
-					{
-						WindowLayout.Maximize(mouseOverWindow);
 					}
 				}
 			}
@@ -250,88 +283,96 @@ namespace UnityEditor
 			{
 				UnityEngine.Debug.LogError("Host view was not found");
 				WindowLayout.RevertFactorySettings();
-				return;
 			}
-			UnityEngine.Object[] array = InternalEditorUtility.LoadSerializedFileAndForget(Path.Combine(WindowLayout.layoutsProjectPath, "CurrentMaximizeLayout.dwlt"));
-			if (array.Length < 2)
+			else
 			{
-				UnityEngine.Debug.Log("Maximized serialized file backup not found");
-				WindowLayout.RevertFactorySettings();
-				return;
-			}
-			SplitView splitView = array[0] as SplitView;
-			EditorWindow editorWindow = array[1] as EditorWindow;
-			if (splitView == null)
-			{
-				UnityEngine.Debug.Log("Maximization failed because the root split view was not found");
-				WindowLayout.RevertFactorySettings();
-				return;
-			}
-			ContainerWindow window = win.m_Parent.window;
-			if (window == null)
-			{
-				UnityEngine.Debug.Log("Maximization failed because the root split view has no container window");
-				WindowLayout.RevertFactorySettings();
-				return;
-			}
-			try
-			{
-				ContainerWindow.SetFreezeDisplay(true);
-				if (!parent.parent)
+				UnityEngine.Object[] array = InternalEditorUtility.LoadSerializedFileAndForget(Path.Combine(WindowLayout.layoutsProjectPath, "CurrentMaximizeLayout.dwlt"));
+				if (array.Length < 2)
 				{
-					throw new Exception();
+					UnityEngine.Debug.Log("Maximized serialized file backup not found");
+					WindowLayout.RevertFactorySettings();
 				}
-				int idx = parent.parent.IndexOfChild(parent);
-				Rect position = parent.position;
-				View parent2 = parent.parent;
-				parent2.RemoveChild(idx);
-				parent2.AddChild(splitView, idx);
-				splitView.position = position;
-				DockArea dockArea = editorWindow.m_Parent as DockArea;
-				int idx2 = dockArea.m_Panes.IndexOf(editorWindow);
-				parent.actualView = null;
-				win.m_Parent = null;
-				dockArea.AddTab(idx2, win);
-				dockArea.RemoveTab(editorWindow);
-				UnityEngine.Object.DestroyImmediate(editorWindow);
-				UnityEngine.Object[] array2 = array;
-				for (int i = 0; i < array2.Length; i++)
+				else
 				{
-					UnityEngine.Object @object = array2[i];
-					EditorWindow editorWindow2 = @object as EditorWindow;
-					if (editorWindow2 != null)
+					SplitView splitView = array[0] as SplitView;
+					EditorWindow editorWindow = array[1] as EditorWindow;
+					if (splitView == null)
 					{
-						editorWindow2.MakeParentsSettingsMatchMe();
+						UnityEngine.Debug.Log("Maximization failed because the root split view was not found");
+						WindowLayout.RevertFactorySettings();
+					}
+					else
+					{
+						ContainerWindow window = win.m_Parent.window;
+						if (window == null)
+						{
+							UnityEngine.Debug.Log("Maximization failed because the root split view has no container window");
+							WindowLayout.RevertFactorySettings();
+						}
+						else
+						{
+							try
+							{
+								ContainerWindow.SetFreezeDisplay(true);
+								if (!parent.parent)
+								{
+									throw new Exception();
+								}
+								int idx = parent.parent.IndexOfChild(parent);
+								Rect position = parent.position;
+								View parent2 = parent.parent;
+								parent2.RemoveChild(idx);
+								parent2.AddChild(splitView, idx);
+								splitView.position = position;
+								DockArea dockArea = editorWindow.m_Parent as DockArea;
+								int idx2 = dockArea.m_Panes.IndexOf(editorWindow);
+								parent.actualView = null;
+								win.m_Parent = null;
+								dockArea.AddTab(idx2, win);
+								dockArea.RemoveTab(editorWindow);
+								UnityEngine.Object.DestroyImmediate(editorWindow);
+								UnityEngine.Object[] array2 = array;
+								for (int i = 0; i < array2.Length; i++)
+								{
+									UnityEngine.Object @object = array2[i];
+									EditorWindow editorWindow2 = @object as EditorWindow;
+									if (editorWindow2 != null)
+									{
+										editorWindow2.MakeParentsSettingsMatchMe();
+									}
+								}
+								parent2.Initialize(parent2.window);
+								parent2.position = parent2.position;
+								splitView.Reflow();
+								UnityEngine.Object.DestroyImmediate(parent);
+								win.Focus();
+								window.DisplayAllViews();
+								win.m_Parent.MakeVistaDWMHappyDance();
+							}
+							catch (Exception arg)
+							{
+								UnityEngine.Debug.Log("Maximization failed: " + arg);
+								WindowLayout.RevertFactorySettings();
+							}
+							try
+							{
+								if (Application.platform == RuntimePlatform.OSXEditor && SystemInfo.operatingSystem.Contains("10.7") && SystemInfo.graphicsDeviceVendor.Contains("ATI"))
+								{
+									UnityEngine.Object[] array3 = Resources.FindObjectsOfTypeAll(typeof(GUIView));
+									for (int j = 0; j < array3.Length; j++)
+									{
+										GUIView gUIView = (GUIView)array3[j];
+										gUIView.Repaint();
+									}
+								}
+							}
+							finally
+							{
+								ContainerWindow.SetFreezeDisplay(false);
+							}
+						}
 					}
 				}
-				parent2.Initialize(parent2.window);
-				parent2.position = parent2.position;
-				splitView.Reflow();
-				UnityEngine.Object.DestroyImmediate(parent);
-				win.Focus();
-				window.DisplayAllViews();
-				win.m_Parent.MakeVistaDWMHappyDance();
-			}
-			catch (Exception arg)
-			{
-				UnityEngine.Debug.Log("Maximization failed: " + arg);
-				WindowLayout.RevertFactorySettings();
-			}
-			try
-			{
-				if (Application.platform == RuntimePlatform.OSXEditor && SystemInfo.operatingSystem.Contains("10.7") && SystemInfo.graphicsDeviceVendor.Contains("ATI"))
-				{
-					UnityEngine.Object[] array3 = Resources.FindObjectsOfTypeAll(typeof(GUIView));
-					for (int j = 0; j < array3.Length; j++)
-					{
-						GUIView gUIView = (GUIView)array3[j];
-						gUIView.Repaint();
-					}
-				}
-			}
-			finally
-			{
-				ContainerWindow.SetFreezeDisplay(false);
 			}
 		}
 
@@ -369,14 +410,14 @@ namespace UnityEditor
 
 		public static void Maximize(EditorWindow win)
 		{
-			View view = WindowLayout.MaximizePrepare(win);
-			if (view)
+			bool flag = WindowLayout.MaximizePrepare(win);
+			if (flag)
 			{
-				WindowLayout.MaximizePresent(win, view);
+				WindowLayout.MaximizePresent(win);
 			}
 		}
 
-		public static View MaximizePrepare(EditorWindow win)
+		public static bool MaximizePrepare(EditorWindow win)
 		{
 			View parent = win.m_Parent.parent;
 			View view = parent;
@@ -386,47 +427,61 @@ namespace UnityEditor
 				parent = parent.parent;
 			}
 			DockArea dockArea = win.m_Parent as DockArea;
+			bool result;
 			if (dockArea == null)
 			{
-				return null;
+				result = false;
 			}
-			if (parent == null)
+			else if (parent == null)
 			{
-				return null;
+				result = false;
 			}
-			MainWindow x = view.parent as MainWindow;
-			if (x == null)
+			else
 			{
-				return null;
+				MainView x = view.parent as MainView;
+				if (x == null)
+				{
+					result = false;
+				}
+				else
+				{
+					ContainerWindow window = win.m_Parent.window;
+					if (window == null)
+					{
+						result = false;
+					}
+					else
+					{
+						int num = dockArea.m_Panes.IndexOf(win);
+						if (num == -1)
+						{
+							result = false;
+						}
+						else
+						{
+							dockArea.selected = num;
+							WindowLayout.SaveSplitViewAndChildren(view, win, Path.Combine(WindowLayout.layoutsProjectPath, "CurrentMaximizeLayout.dwlt"));
+							dockArea.actualView = null;
+							dockArea.m_Panes[num] = null;
+							MaximizedHostView maximizedHostView = ScriptableObject.CreateInstance<MaximizedHostView>();
+							int idx = parent.IndexOfChild(view);
+							Rect position = view.position;
+							parent.RemoveChild(view);
+							parent.AddChild(maximizedHostView, idx);
+							maximizedHostView.actualView = win;
+							maximizedHostView.position = position;
+							UnityEngine.Object.DestroyImmediate(view, true);
+							result = true;
+						}
+					}
+				}
 			}
-			ContainerWindow window = win.m_Parent.window;
-			if (window == null)
-			{
-				return null;
-			}
-			int num = dockArea.m_Panes.IndexOf(win);
-			if (num == -1)
-			{
-				return null;
-			}
-			dockArea.selected = num;
-			WindowLayout.SaveSplitViewAndChildren(view, win, Path.Combine(WindowLayout.layoutsProjectPath, "CurrentMaximizeLayout.dwlt"));
-			dockArea.actualView = null;
-			dockArea.m_Panes[num] = null;
-			MaximizedHostView maximizedHostView = ScriptableObject.CreateInstance<MaximizedHostView>();
-			int idx = parent.IndexOfChild(view);
-			Rect position = view.position;
-			parent.RemoveChild(view);
-			parent.AddChild(maximizedHostView, idx);
-			maximizedHostView.actualView = win;
-			maximizedHostView.position = position;
-			return view;
+			return result;
 		}
 
-		public static void MaximizePresent(EditorWindow win, View rootSplit)
+		public static void MaximizePresent(EditorWindow win)
 		{
 			ContainerWindow.SetFreezeDisplay(true);
-			UnityEngine.Object.DestroyImmediate(rootSplit, true);
 			win.Focus();
 			WindowLayout.CheckWindowConsistency();
 			ContainerWindow window = win.m_Parent.window;
@@ -448,6 +503,7 @@ namespace UnityEditor
 					position = containerWindow.position;
 				}
 			}
+			bool result;
 			try
 			{
 				ContainerWindow.SetFreezeDisplay(true);
@@ -463,7 +519,7 @@ namespace UnityEditor
 					{
 						if (!(editorWindow.m_Parent == null))
 						{
-							goto IL_16F;
+							goto IL_17D;
 						}
 						UnityEngine.Object.DestroyImmediate(editorWindow, true);
 						UnityEngine.Debug.LogError(string.Concat(new object[]
@@ -481,7 +537,7 @@ namespace UnityEditor
 						DockArea dockArea = @object as DockArea;
 						if (!(dockArea != null) || dockArea.m_Panes.Count != 0)
 						{
-							goto IL_16F;
+							goto IL_17D;
 						}
 						dockArea.Close(null);
 						UnityEngine.Debug.LogError(string.Concat(new object[]
@@ -492,12 +548,12 @@ namespace UnityEditor
 							@object.GetInstanceID()
 						}));
 					}
-					IL_178:
+					IL_187:
 					j++;
 					continue;
-					IL_16F:
+					IL_17D:
 					list.Add(@object);
-					goto IL_178;
+					goto IL_187;
 				}
 				ContainerWindow containerWindow2 = null;
 				ContainerWindow containerWindow3 = null;
@@ -520,9 +576,8 @@ namespace UnityEditor
 					if (object2 == null)
 					{
 						UnityEngine.Debug.LogError("Error while reading window layout: window #" + l + " is null");
-						throw new Exception();
 					}
-					if (object2.GetType() == null)
+					else if (object2.GetType() == null)
 					{
 						UnityEngine.Debug.LogError(string.Concat(new object[]
 						{
@@ -531,9 +586,8 @@ namespace UnityEditor
 							" type is null, instanceID=",
 							object2.GetInstanceID()
 						}));
-						throw new Exception();
 					}
-					if (newProjectLayoutWasCreated)
+					else if (newProjectLayoutWasCreated)
 					{
 						MethodInfo method = object2.GetType().GetMethod("OnNewProjectLayoutWasCreated", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 						if (method != null)
@@ -586,19 +640,31 @@ namespace UnityEditor
 			catch (Exception arg)
 			{
 				UnityEngine.Debug.LogError("Failed to load window layout: " + arg);
-				switch (EditorUtility.DisplayDialogComplex("Failed to load window layout", "This can happen if layout contains custom windows and there are compile errors in the project.", "Load Default Layout", "Quit", "Revert Factory Settings"))
+				int num = 0;
+				if (!Application.isTestRun)
 				{
-				case 0:
-					WindowLayout.LoadDefaultLayout();
-					break;
-				case 1:
-					EditorApplication.Exit(0);
-					break;
-				case 2:
-					WindowLayout.RevertFactorySettings();
-					break;
+					num = EditorUtility.DisplayDialogComplex("Failed to load window layout", "This can happen if layout contains custom windows and there are compile errors in the project.", "Load Default Layout", "Quit", "Revert Factory Settings");
 				}
-				return false;
+				if (num != 0)
+				{
+					if (num != 1)
+					{
+						if (num == 2)
+						{
+							WindowLayout.RevertFactorySettings();
+						}
+					}
+					else
+					{
+						EditorApplication.Exit(0);
+					}
+				}
+				else
+				{
+					WindowLayout.LoadDefaultLayout();
+				}
+				result = false;
+				return result;
 			}
 			finally
 			{
@@ -612,7 +678,8 @@ namespace UnityEditor
 					Toolbar.lastLoadedLayoutName = null;
 				}
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		private static void LoadDefaultLayout()
@@ -645,7 +712,7 @@ namespace UnityEditor
 			UnityEngine.Object[] array3 = Resources.FindObjectsOfTypeAll(typeof(EditorWindow));
 			if (array3.Length != 0)
 			{
-				string text = string.Empty;
+				string text = "";
 				UnityEngine.Object[] array4 = array3;
 				for (int j = 0; j < array4.Length; j++)
 				{
@@ -658,7 +725,7 @@ namespace UnityEditor
 			UnityEngine.Object[] array5 = Resources.FindObjectsOfTypeAll(typeof(View));
 			if (array5.Length != 0)
 			{
-				string text2 = string.Empty;
+				string text2 = "";
 				UnityEngine.Object[] array6 = array5;
 				for (int k = 0; k < array6.Length; k++)
 				{
@@ -709,27 +776,32 @@ namespace UnityEditor
 
 		public static void EnsureMainWindowHasBeenLoaded()
 		{
-			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(MainWindow));
+			MainView[] array = Resources.FindObjectsOfTypeAll<MainView>();
 			if (array.Length == 0)
 			{
-				MainWindow.MakeMain();
+				MainView.MakeMain();
 			}
 		}
 
-		internal static MainWindow FindMainWindow()
+		internal static MainView FindMainView()
 		{
-			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(MainWindow));
+			MainView[] array = Resources.FindObjectsOfTypeAll<MainView>();
+			MainView result;
 			if (array.Length == 0)
 			{
-				UnityEngine.Debug.LogError("No Main Window found!");
-				return null;
+				UnityEngine.Debug.LogError("No Main View found!");
+				result = null;
 			}
-			return array[0] as MainWindow;
+			else
+			{
+				result = array[0];
+			}
+			return result;
 		}
 
 		public static void SaveGUI()
 		{
-			View view = WindowLayout.FindMainWindow();
+			View view = WindowLayout.FindMainView();
 			Rect screenPosition = view.screenPosition;
 			SaveWindowLayout windowWithRect = EditorWindow.GetWindowWithRect<SaveWindowLayout>(new Rect(screenPosition.xMax - 180f, screenPosition.y + 20f, 200f, 48f), true, "Save Window Layout");
 			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
@@ -742,7 +814,7 @@ namespace UnityEditor
 
 		public static void DeleteGUI()
 		{
-			View view = WindowLayout.FindMainWindow();
+			View view = WindowLayout.FindMainView();
 			Rect screenPosition = view.screenPosition;
 			DeleteWindowLayout windowWithRect = EditorWindow.GetWindowWithRect<DeleteWindowLayout>(new Rect(screenPosition.xMax - 180f, screenPosition.y + 20f, 200f, 150f), true, "Delete Window Layout");
 			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;

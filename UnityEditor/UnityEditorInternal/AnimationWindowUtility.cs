@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditorInternal
@@ -11,32 +12,31 @@ namespace UnityEditorInternal
 	{
 		internal static string s_LastPathUsedForNewClip;
 
-		public static void CreateDefaultCurves(IAnimationRecordingState state, EditorCurveBinding[] properties)
+		public static void CreateDefaultCurves(IAnimationRecordingState state, AnimationWindowSelectionItem selectionItem, EditorCurveBinding[] properties)
 		{
-			AnimationClip activeAnimationClip = state.activeAnimationClip;
-			GameObject activeRootGameObject = state.activeRootGameObject;
-			properties = RotationCurveInterpolation.ConvertRotationPropertiesToDefaultInterpolation(activeAnimationClip, properties);
+			properties = RotationCurveInterpolation.ConvertRotationPropertiesToDefaultInterpolation(selectionItem.animationClip, properties);
 			EditorCurveBinding[] array = properties;
 			for (int i = 0; i < array.Length; i++)
 			{
 				EditorCurveBinding binding = array[i];
-				state.SaveCurve(AnimationWindowUtility.CreateDefaultCurve(activeAnimationClip, activeRootGameObject, binding));
+				state.SaveCurve(AnimationWindowUtility.CreateDefaultCurve(selectionItem, binding));
 			}
 		}
 
-		public static AnimationWindowCurve CreateDefaultCurve(AnimationClip clip, GameObject rootGameObject, EditorCurveBinding binding)
+		public static AnimationWindowCurve CreateDefaultCurve(AnimationWindowSelectionItem selectionItem, EditorCurveBinding binding)
 		{
-			Type editorCurveValueType = CurveBindingUtility.GetEditorCurveValueType(rootGameObject, binding);
-			AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(clip, binding, editorCurveValueType);
-			object currentValue = CurveBindingUtility.GetCurrentValue(rootGameObject, binding);
-			if (clip.length == 0f)
+			AnimationClip animationClip = selectionItem.animationClip;
+			Type editorCurveValueType = selectionItem.GetEditorCurveValueType(binding);
+			AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(animationClip, binding, editorCurveValueType);
+			object currentValue = CurveBindingUtility.GetCurrentValue(selectionItem.rootGameObject, binding);
+			if (animationClip.length == 0f)
 			{
-				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, editorCurveValueType, AnimationKeyTime.Time(0f, clip.frameRate));
+				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, editorCurveValueType, AnimationKeyTime.Time(0f, animationClip.frameRate));
 			}
 			else
 			{
-				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, editorCurveValueType, AnimationKeyTime.Time(0f, clip.frameRate));
-				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, editorCurveValueType, AnimationKeyTime.Time(clip.length, clip.frameRate));
+				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, editorCurveValueType, AnimationKeyTime.Time(0f, animationClip.frameRate));
+				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, editorCurveValueType, AnimationKeyTime.Time(animationClip.length, animationClip.frameRate));
 			}
 			return animationWindowCurve;
 		}
@@ -46,17 +46,28 @@ namespace UnityEditorInternal
 			return !AnimationWindowUtility.IsTransformType(curveBinding.type) || !curveBinding.propertyName.EndsWith(".w");
 		}
 
-		public static bool IsNodeLeftOverCurve(AnimationWindowHierarchyNode node, GameObject rootGameObject)
+		public static bool IsNodeLeftOverCurve(AnimationWindowHierarchyNode node)
 		{
-			if (rootGameObject == null)
-			{
-				return false;
-			}
 			EditorCurveBinding? binding = node.binding;
+			bool result;
 			if (binding.HasValue)
 			{
-				EditorCurveBinding? binding2 = node.binding;
-				return AnimationUtility.GetEditorCurveValueType(rootGameObject, binding2.Value) == null;
+				if (node.curves.Length > 0)
+				{
+					AnimationWindowSelectionItem selectionBinding = node.curves[0].selectionBinding;
+					if (selectionBinding != null)
+					{
+						if (selectionBinding.rootGameObject == null && selectionBinding.scriptableObject == null)
+						{
+							result = false;
+							return result;
+						}
+						AnimationWindowSelectionItem arg_77_0 = selectionBinding;
+						EditorCurveBinding? binding2 = node.binding;
+						result = (arg_77_0.GetEditorCurveValueType(binding2.Value) == null);
+						return result;
+					}
+				}
 			}
 			if (node.hasChildren)
 			{
@@ -65,24 +76,33 @@ namespace UnityEditorInternal
 					if (enumerator.MoveNext())
 					{
 						TreeViewItem current = enumerator.Current;
-						return AnimationWindowUtility.IsNodeLeftOverCurve(current as AnimationWindowHierarchyNode, rootGameObject);
+						result = AnimationWindowUtility.IsNodeLeftOverCurve(current as AnimationWindowHierarchyNode);
+						return result;
 					}
 				}
-				return false;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
-		public static bool IsNodeAmbiguous(AnimationWindowHierarchyNode node, GameObject rootGameObject)
+		public static bool IsNodeAmbiguous(AnimationWindowHierarchyNode node)
 		{
-			if (rootGameObject == null)
-			{
-				return false;
-			}
 			EditorCurveBinding? binding = node.binding;
+			bool result;
 			if (binding.HasValue)
 			{
-				return AnimationUtility.AmbiguousBinding(node.binding.Value.path, node.binding.Value.m_ClassID, rootGameObject.transform);
+				if (node.curves.Length > 0)
+				{
+					AnimationWindowSelectionItem selectionBinding = node.curves[0].selectionBinding;
+					if (selectionBinding != null)
+					{
+						if (selectionBinding.rootGameObject != null)
+						{
+							result = AnimationUtility.AmbiguousBinding(node.binding.Value.path, node.binding.Value.m_ClassID, selectionBinding.rootGameObject.transform);
+							return result;
+						}
+					}
+				}
 			}
 			if (node.hasChildren)
 			{
@@ -91,78 +111,110 @@ namespace UnityEditorInternal
 					if (enumerator.MoveNext())
 					{
 						TreeViewItem current = enumerator.Current;
-						return AnimationWindowUtility.IsNodeAmbiguous(current as AnimationWindowHierarchyNode, rootGameObject);
+						result = AnimationWindowUtility.IsNodeAmbiguous(current as AnimationWindowHierarchyNode);
+						return result;
 					}
 				}
-				return false;
 			}
-			return false;
+			result = false;
+			return result;
+		}
+
+		public static bool IsNodePhantom(AnimationWindowHierarchyNode node)
+		{
+			EditorCurveBinding? binding = node.binding;
+			return binding.HasValue && node.binding.Value.isPhantom;
 		}
 
 		public static void AddSelectedKeyframes(AnimationWindowState state, AnimationKeyTime time)
 		{
 			List<AnimationWindowCurve> list = (state.activeCurves.Count <= 0) ? state.allCurves : state.activeCurves;
-			foreach (AnimationWindowCurve current in list)
+			AnimationWindowUtility.AddKeyframes(state, list.ToArray(), time);
+		}
+
+		public static void AddKeyframes(AnimationWindowState state, AnimationWindowCurve[] curves, AnimationKeyTime time)
+		{
+			string undoLabel = "Add Key";
+			state.SaveKeySelection(undoLabel);
+			state.ClearKeySelections();
+			for (int i = 0; i < curves.Length; i++)
 			{
-				if (current.animationIsEditable)
+				AnimationWindowCurve animationWindowCurve = curves[i];
+				if (animationWindowCurve.animationIsEditable)
 				{
-					AnimationWindowUtility.AddKeyframeToCurve(state, current, AnimationKeyTime.Time(time.time - current.timeOffset, time.frameRate));
+					AnimationKeyTime time2 = AnimationKeyTime.Time(time.time - animationWindowCurve.timeOffset, time.frameRate);
+					object currentValue = CurveBindingUtility.GetCurrentValue(state, animationWindowCurve);
+					AnimationWindowKeyframe keyframe = AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, animationWindowCurve.valueType, time2);
+					state.SaveCurve(animationWindowCurve, undoLabel);
+					state.SelectKey(keyframe);
 				}
 			}
 		}
 
-		public static AnimationWindowKeyframe AddKeyframeToCurve(AnimationWindowState state, AnimationWindowCurve curve, AnimationKeyTime time)
+		public static void RemoveKeyframes(AnimationWindowState state, AnimationWindowCurve[] curves, AnimationKeyTime time)
 		{
-			object currentValue = CurveBindingUtility.GetCurrentValue(state.activeRootGameObject, curve.binding);
-			Type editorCurveValueType = CurveBindingUtility.GetEditorCurveValueType(state.activeRootGameObject, curve.binding);
-			AnimationWindowKeyframe result = AnimationWindowUtility.AddKeyframeToCurve(curve, currentValue, editorCurveValueType, time);
-			state.SaveCurve(curve);
-			return result;
+			string undoLabel = "Remove Key";
+			state.SaveKeySelection(undoLabel);
+			for (int i = 0; i < curves.Length; i++)
+			{
+				AnimationWindowCurve animationWindowCurve = curves[i];
+				if (animationWindowCurve.animationIsEditable)
+				{
+					AnimationKeyTime time2 = AnimationKeyTime.Time(time.time - animationWindowCurve.timeOffset, time.frameRate);
+					animationWindowCurve.RemoveKeyframe(time2);
+					state.SaveCurve(animationWindowCurve, undoLabel);
+				}
+			}
 		}
 
 		public static AnimationWindowKeyframe AddKeyframeToCurve(AnimationWindowCurve curve, object value, Type type, AnimationKeyTime time)
 		{
 			AnimationWindowKeyframe animationWindowKeyframe = curve.FindKeyAtTime(time);
+			AnimationWindowKeyframe result;
 			if (animationWindowKeyframe != null)
 			{
 				animationWindowKeyframe.value = value;
-				return animationWindowKeyframe;
+				result = animationWindowKeyframe;
 			}
-			AnimationWindowKeyframe animationWindowKeyframe2 = new AnimationWindowKeyframe();
-			animationWindowKeyframe2.time = time.time;
-			if (curve.isPPtrCurve)
+			else
 			{
-				animationWindowKeyframe2.value = value;
-				animationWindowKeyframe2.curve = curve;
-				curve.AddKeyframe(animationWindowKeyframe2, time);
-			}
-			else if (type == typeof(bool) || type == typeof(float))
-			{
-				AnimationCurve animationCurve = curve.ToAnimationCurve();
-				Keyframe key = new Keyframe(time.time, (float)value);
-				if (type == typeof(bool))
+				AnimationWindowKeyframe animationWindowKeyframe2 = new AnimationWindowKeyframe();
+				animationWindowKeyframe2.time = time.time;
+				if (curve.isPPtrCurve)
 				{
-					CurveUtility.SetKeyTangentMode(ref key, 0, TangentMode.Stepped);
-					CurveUtility.SetKeyTangentMode(ref key, 1, TangentMode.Stepped);
-					CurveUtility.SetKeyBroken(ref key, true);
-					animationWindowKeyframe2.m_TangentMode = key.tangentMode;
-					animationWindowKeyframe2.m_InTangent = float.PositiveInfinity;
-					animationWindowKeyframe2.m_OutTangent = float.PositiveInfinity;
+					animationWindowKeyframe2.value = value;
+					animationWindowKeyframe2.curve = curve;
+					curve.AddKeyframe(animationWindowKeyframe2, time);
 				}
-				else
+				else if (type == typeof(bool) || type == typeof(float))
 				{
-					int num = animationCurve.AddKey(key);
-					if (num != -1)
+					AnimationCurve animationCurve = curve.ToAnimationCurve();
+					Keyframe key = new Keyframe(time.time, (float)value);
+					if (type == typeof(bool))
 					{
-						CurveUtility.SetKeyModeFromContext(animationCurve, num);
-						animationWindowKeyframe2.m_TangentMode = animationCurve[num].tangentMode;
+						AnimationUtility.SetKeyLeftTangentMode(ref key, AnimationUtility.TangentMode.Constant);
+						AnimationUtility.SetKeyRightTangentMode(ref key, AnimationUtility.TangentMode.Constant);
+						AnimationUtility.SetKeyBroken(ref key, true);
+						animationWindowKeyframe2.m_TangentMode = key.tangentMode;
+						animationWindowKeyframe2.m_InTangent = float.PositiveInfinity;
+						animationWindowKeyframe2.m_OutTangent = float.PositiveInfinity;
 					}
+					else
+					{
+						int num = animationCurve.AddKey(key);
+						if (num != -1)
+						{
+							CurveUtility.SetKeyModeFromContext(animationCurve, num);
+							animationWindowKeyframe2.m_TangentMode = animationCurve[num].tangentMode;
+						}
+					}
+					animationWindowKeyframe2.value = value;
+					animationWindowKeyframe2.curve = curve;
+					curve.AddKeyframe(animationWindowKeyframe2, time);
 				}
-				animationWindowKeyframe2.value = value;
-				animationWindowKeyframe2.curve = curve;
-				curve.AddKeyframe(animationWindowKeyframe2, time);
+				result = animationWindowKeyframe2;
 			}
-			return animationWindowKeyframe2;
+			return result;
 		}
 
 		public static List<AnimationWindowCurve> FilterCurves(AnimationWindowCurve[] curves, string path, bool entireHierarchy)
@@ -201,23 +253,32 @@ namespace UnityEditorInternal
 
 		public static bool IsCurveCreated(AnimationClip clip, EditorCurveBinding binding)
 		{
+			bool result;
 			if (binding.isPPtrCurve)
 			{
-				return AnimationUtility.GetObjectReferenceCurve(clip, binding) != null;
+				result = (AnimationUtility.GetObjectReferenceCurve(clip, binding) != null);
 			}
-			if (AnimationWindowUtility.IsRectTransformPosition(binding))
+			else
 			{
-				binding.propertyName = binding.propertyName.Replace(".x", ".z").Replace(".y", ".z");
+				if (AnimationWindowUtility.IsRectTransformPosition(binding))
+				{
+					binding.propertyName = binding.propertyName.Replace(".x", ".z").Replace(".y", ".z");
+				}
+				if (AnimationWindowUtility.IsRotationCurve(binding))
+				{
+					result = (AnimationUtility.GetEditorCurve(clip, binding) != null || AnimationWindowUtility.HasOtherRotationCurve(clip, binding));
+				}
+				else
+				{
+					result = (AnimationUtility.GetEditorCurve(clip, binding) != null);
+				}
 			}
-			if (AnimationWindowUtility.IsRotationCurve(binding))
-			{
-				return AnimationUtility.GetEditorCurve(clip, binding) != null || AnimationWindowUtility.HasOtherRotationCurve(clip, binding);
-			}
-			return AnimationUtility.GetEditorCurve(clip, binding) != null;
+			return result;
 		}
 
 		internal static bool HasOtherRotationCurve(AnimationClip clip, EditorCurveBinding rotationBinding)
 		{
+			bool result;
 			if (rotationBinding.propertyName.StartsWith("m_LocalRotation"))
 			{
 				EditorCurveBinding binding = rotationBinding;
@@ -226,17 +287,21 @@ namespace UnityEditorInternal
 				binding.propertyName = "localEulerAnglesRaw.x";
 				binding2.propertyName = "localEulerAnglesRaw.y";
 				binding3.propertyName = "localEulerAnglesRaw.z";
-				return AnimationUtility.GetEditorCurve(clip, binding) != null || AnimationUtility.GetEditorCurve(clip, binding2) != null || AnimationUtility.GetEditorCurve(clip, binding3) != null;
+				result = (AnimationUtility.GetEditorCurve(clip, binding) != null || AnimationUtility.GetEditorCurve(clip, binding2) != null || AnimationUtility.GetEditorCurve(clip, binding3) != null);
 			}
-			EditorCurveBinding binding4 = rotationBinding;
-			EditorCurveBinding binding5 = rotationBinding;
-			EditorCurveBinding binding6 = rotationBinding;
-			EditorCurveBinding binding7 = rotationBinding;
-			binding4.propertyName = "m_LocalRotation.x";
-			binding5.propertyName = "m_LocalRotation.y";
-			binding6.propertyName = "m_LocalRotation.z";
-			binding7.propertyName = "m_LocalRotation.w";
-			return AnimationUtility.GetEditorCurve(clip, binding4) != null || AnimationUtility.GetEditorCurve(clip, binding5) != null || AnimationUtility.GetEditorCurve(clip, binding6) != null || AnimationUtility.GetEditorCurve(clip, binding7) != null;
+			else
+			{
+				EditorCurveBinding binding4 = rotationBinding;
+				EditorCurveBinding binding5 = rotationBinding;
+				EditorCurveBinding binding6 = rotationBinding;
+				EditorCurveBinding binding7 = rotationBinding;
+				binding4.propertyName = "m_LocalRotation.x";
+				binding5.propertyName = "m_LocalRotation.y";
+				binding6.propertyName = "m_LocalRotation.z";
+				binding7.propertyName = "m_LocalRotation.w";
+				result = (AnimationUtility.GetEditorCurve(clip, binding4) != null || AnimationUtility.GetEditorCurve(clip, binding5) != null || AnimationUtility.GetEditorCurve(clip, binding6) != null || AnimationUtility.GetEditorCurve(clip, binding7) != null);
+			}
+			return result;
 		}
 
 		internal static bool IsRotationCurve(EditorCurveBinding curveBinding)
@@ -252,18 +317,24 @@ namespace UnityEditorInternal
 
 		public static bool ContainsFloatKeyframes(List<AnimationWindowKeyframe> keyframes)
 		{
+			bool result;
 			if (keyframes == null || keyframes.Count == 0)
 			{
-				return false;
+				result = false;
 			}
-			foreach (AnimationWindowKeyframe current in keyframes)
+			else
 			{
-				if (!current.isPPtrCurve)
+				foreach (AnimationWindowKeyframe current in keyframes)
 				{
-					return true;
+					if (!current.isPPtrCurve)
+					{
+						result = true;
+						return result;
+					}
 				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
 
 		public static List<AnimationWindowCurve> FilterCurves(AnimationWindowCurve[] curves, string path, Type animatableObjectType, string propertyName)
@@ -288,15 +359,20 @@ namespace UnityEditorInternal
 
 		public static object GetCurrentValue(GameObject rootGameObject, EditorCurveBinding curveBinding)
 		{
+			object result;
 			if (curveBinding.isPPtrCurve)
 			{
-				UnityEngine.Object result;
-				AnimationUtility.GetObjectReferenceValue(rootGameObject, curveBinding, out result);
-				return result;
+				UnityEngine.Object @object;
+				AnimationUtility.GetObjectReferenceValue(rootGameObject, curveBinding, out @object);
+				result = @object;
 			}
-			float num;
-			AnimationUtility.GetFloatValue(rootGameObject, curveBinding, out num);
-			return num;
+			else
+			{
+				float num;
+				AnimationUtility.GetFloatValue(rootGameObject, curveBinding, out num);
+				result = num;
+			}
+			return result;
 		}
 
 		public static List<EditorCurveBinding> GetAnimatableProperties(GameObject gameObject, GameObject root, Type valueType)
@@ -331,17 +407,36 @@ namespace UnityEditorInternal
 			return list;
 		}
 
+		public static List<EditorCurveBinding> GetAnimatableProperties(ScriptableObject scriptableObject, Type valueType)
+		{
+			EditorCurveBinding[] scriptableObjectAnimatableBindings = AnimationUtility.GetScriptableObjectAnimatableBindings(scriptableObject);
+			List<EditorCurveBinding> list = new List<EditorCurveBinding>();
+			EditorCurveBinding[] array = scriptableObjectAnimatableBindings;
+			for (int i = 0; i < array.Length; i++)
+			{
+				EditorCurveBinding editorCurveBinding = array[i];
+				if (AnimationUtility.GetScriptableObjectEditorCurveValueType(scriptableObject, editorCurveBinding) == valueType)
+				{
+					list.Add(editorCurveBinding);
+				}
+			}
+			return list;
+		}
+
 		public static bool CurveExists(EditorCurveBinding binding, AnimationWindowCurve[] curves)
 		{
+			bool result;
 			for (int i = 0; i < curves.Length; i++)
 			{
 				AnimationWindowCurve animationWindowCurve = curves[i];
 				if (binding.propertyName == animationWindowCurve.binding.propertyName && binding.type == animationWindowCurve.binding.type && binding.path == animationWindowCurve.binding.path)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public static EditorCurveBinding GetRenamedBinding(EditorCurveBinding binding, string newPath)
@@ -356,8 +451,16 @@ namespace UnityEditorInternal
 
 		public static void RenameCurvePath(AnimationWindowCurve curve, EditorCurveBinding newBinding, AnimationClip clip)
 		{
-			AnimationUtility.SetEditorCurve(clip, curve.binding, null);
-			AnimationUtility.SetEditorCurve(clip, newBinding, curve.ToAnimationCurve());
+			if (curve.isPPtrCurve)
+			{
+				AnimationUtility.SetObjectReferenceCurve(clip, curve.binding, null);
+				AnimationUtility.SetObjectReferenceCurve(clip, newBinding, curve.ToObjectCurve());
+			}
+			else
+			{
+				AnimationUtility.SetEditorCurve(clip, curve.binding, null);
+				AnimationUtility.SetEditorCurve(clip, newBinding, curve.ToAnimationCurve());
+			}
 		}
 
 		public static string GetPropertyDisplayName(string propertyName)
@@ -370,7 +473,7 @@ namespace UnityEditorInternal
 			propertyName = propertyName.Replace("localEulerAngles", "Rotation");
 			propertyName = propertyName.Replace("m_Materials.Array.data", "Material Reference");
 			propertyName = ObjectNames.NicifyVariableName(propertyName);
-			propertyName = propertyName.Replace("m_", string.Empty);
+			propertyName = propertyName.Replace("m_", "");
 			return propertyName;
 		}
 
@@ -381,20 +484,30 @@ namespace UnityEditorInternal
 
 		public static string GetNicePropertyDisplayName(Type animatableObjectType, string propertyName)
 		{
+			string result;
 			if (AnimationWindowUtility.ShouldPrefixWithTypeName(animatableObjectType, propertyName))
 			{
-				return ObjectNames.NicifyVariableName(animatableObjectType.Name) + "." + AnimationWindowUtility.GetPropertyDisplayName(propertyName);
+				result = ObjectNames.NicifyVariableName(animatableObjectType.Name) + "." + AnimationWindowUtility.GetPropertyDisplayName(propertyName);
 			}
-			return AnimationWindowUtility.GetPropertyDisplayName(propertyName);
+			else
+			{
+				result = AnimationWindowUtility.GetPropertyDisplayName(propertyName);
+			}
+			return result;
 		}
 
 		public static string GetNicePropertyGroupDisplayName(Type animatableObjectType, string propertyGroupName)
 		{
+			string result;
 			if (AnimationWindowUtility.ShouldPrefixWithTypeName(animatableObjectType, propertyGroupName))
 			{
-				return ObjectNames.NicifyVariableName(animatableObjectType.Name) + "." + AnimationWindowUtility.NicifyPropertyGroupName(animatableObjectType, propertyGroupName);
+				result = ObjectNames.NicifyVariableName(animatableObjectType.Name) + "." + AnimationWindowUtility.NicifyPropertyGroupName(animatableObjectType, propertyGroupName);
 			}
-			return AnimationWindowUtility.NicifyPropertyGroupName(animatableObjectType, propertyGroupName);
+			else
+			{
+				result = AnimationWindowUtility.NicifyPropertyGroupName(animatableObjectType, propertyGroupName);
+			}
+			return result;
 		}
 
 		public static string NicifyPropertyGroupName(Type animatableObjectType, string propertyGroupName)
@@ -409,53 +522,76 @@ namespace UnityEditorInternal
 
 		public static int GetComponentIndex(string name)
 		{
+			int result;
 			if (name == null || name.Length < 3 || name[name.Length - 2] != '.')
 			{
-				return -1;
+				result = -1;
 			}
-			char c = name[name.Length - 1];
-			char c2 = c;
-			switch (c2)
+			else
 			{
-			case 'r':
-				return 0;
-			case 's':
-			case 't':
-			case 'u':
-			case 'v':
-				IL_67:
-				if (c2 == 'a')
+				char c = name[name.Length - 1];
+				switch (c)
 				{
-					return 3;
+				case 'w':
+					result = 3;
+					break;
+				case 'x':
+					result = 0;
+					break;
+				case 'y':
+					result = 1;
+					break;
+				case 'z':
+					result = 2;
+					break;
+				default:
+					if (c != 'a')
+					{
+						if (c != 'b')
+						{
+							if (c != 'g')
+							{
+								if (c != 'r')
+								{
+									result = -1;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+							else
+							{
+								result = 1;
+							}
+						}
+						else
+						{
+							result = 2;
+						}
+					}
+					else
+					{
+						result = 3;
+					}
+					break;
 				}
-				if (c2 == 'b')
-				{
-					return 2;
-				}
-				if (c2 != 'g')
-				{
-					return -1;
-				}
-				return 1;
-			case 'w':
-				return 3;
-			case 'x':
-				return 0;
-			case 'y':
-				return 1;
-			case 'z':
-				return 2;
 			}
-			goto IL_67;
+			return result;
 		}
 
 		public static string GetPropertyGroupName(string propertyName)
 		{
+			string result;
 			if (AnimationWindowUtility.GetComponentIndex(propertyName) != -1)
 			{
-				return propertyName.Substring(0, propertyName.Length - 2);
+				result = propertyName.Substring(0, propertyName.Length - 2);
 			}
-			return propertyName;
+			else
+			{
+				result = propertyName;
+			}
+			return result;
 		}
 
 		public static float GetNextKeyframeTime(AnimationWindowCurve[] curves, float currentTime, float frameRate)
@@ -508,85 +644,116 @@ namespace UnityEditorInternal
 		public static bool InitializeGameobjectForAnimation(GameObject animatedObject)
 		{
 			Component component = AnimationWindowUtility.GetClosestAnimationPlayerComponentInParents(animatedObject.transform);
-			if (!(component == null))
+			bool result;
+			if (component == null)
 			{
-				return AnimationWindowUtility.EnsureAnimationPlayerHasClip(component);
+				AnimationClip animationClip = AnimationWindowUtility.CreateNewClip(animatedObject.name);
+				if (animationClip == null)
+				{
+					result = false;
+				}
+				else
+				{
+					component = AnimationWindowUtility.EnsureActiveAnimationPlayer(animatedObject);
+					bool flag = AnimationWindowUtility.AddClipToAnimationPlayerComponent(component, animationClip);
+					if (!flag)
+					{
+						UnityEngine.Object.DestroyImmediate(component);
+					}
+					result = flag;
+				}
 			}
-			AnimationClip animationClip = AnimationWindowUtility.CreateNewClip(animatedObject.name);
-			if (animationClip == null)
+			else
 			{
-				return false;
+				result = AnimationWindowUtility.EnsureAnimationPlayerHasClip(component);
 			}
-			component = AnimationWindowUtility.EnsureActiveAnimationPlayer(animatedObject);
-			bool flag = AnimationWindowUtility.AddClipToAnimationPlayerComponent(component, animationClip);
-			if (!flag)
-			{
-				UnityEngine.Object.DestroyImmediate(component);
-			}
-			return flag;
+			return result;
 		}
 
 		public static Component EnsureActiveAnimationPlayer(GameObject animatedObject)
 		{
 			Component closestAnimationPlayerComponentInParents = AnimationWindowUtility.GetClosestAnimationPlayerComponentInParents(animatedObject.transform);
+			Component result;
 			if (closestAnimationPlayerComponentInParents == null)
 			{
-				return Undo.AddComponent<Animator>(animatedObject);
+				result = Undo.AddComponent<Animator>(animatedObject);
 			}
-			return closestAnimationPlayerComponentInParents;
+			else
+			{
+				result = closestAnimationPlayerComponentInParents;
+			}
+			return result;
 		}
 
 		private static bool EnsureAnimationPlayerHasClip(Component animationPlayer)
 		{
+			bool result;
 			if (animationPlayer == null)
 			{
-				return false;
+				result = false;
 			}
-			if (AnimationUtility.GetAnimationClips(animationPlayer.gameObject).Length > 0)
+			else if (AnimationUtility.GetAnimationClips(animationPlayer.gameObject).Length > 0)
 			{
-				return true;
+				result = true;
 			}
-			AnimationClip animationClip = AnimationWindowUtility.CreateNewClip(animationPlayer.gameObject.name);
-			if (animationClip == null)
+			else
 			{
-				return false;
+				AnimationClip animationClip = AnimationWindowUtility.CreateNewClip(animationPlayer.gameObject.name);
+				if (animationClip == null)
+				{
+					result = false;
+				}
+				else
+				{
+					AnimationMode.StopAnimationMode();
+					result = AnimationWindowUtility.AddClipToAnimationPlayerComponent(animationPlayer, animationClip);
+				}
 			}
-			AnimationMode.StopAnimationMode();
-			return AnimationWindowUtility.AddClipToAnimationPlayerComponent(animationPlayer, animationClip);
+			return result;
 		}
 
 		public static bool AddClipToAnimationPlayerComponent(Component animationPlayer, AnimationClip newClip)
 		{
+			bool result;
 			if (animationPlayer is Animator)
 			{
-				return AnimationWindowUtility.AddClipToAnimatorComponent(animationPlayer as Animator, newClip);
+				result = AnimationWindowUtility.AddClipToAnimatorComponent(animationPlayer as Animator, newClip);
 			}
-			return animationPlayer is Animation && AnimationWindowUtility.AddClipToAnimationComponent(animationPlayer as Animation, newClip);
+			else
+			{
+				result = (animationPlayer is Animation && AnimationWindowUtility.AddClipToAnimationComponent(animationPlayer as Animation, newClip));
+			}
+			return result;
 		}
 
 		public static bool AddClipToAnimatorComponent(Animator animator, AnimationClip newClip)
 		{
 			UnityEditor.Animations.AnimatorController animatorController = UnityEditor.Animations.AnimatorController.GetEffectiveAnimatorController(animator);
+			bool result;
 			if (animatorController == null)
 			{
 				animatorController = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerForClip(newClip, animator.gameObject);
 				UnityEditor.Animations.AnimatorController.SetAnimatorController(animator, animatorController);
-				return animatorController != null;
+				result = (animatorController != null);
 			}
-			ChildAnimatorState childAnimatorState = animatorController.layers[0].stateMachine.FindState(newClip.name);
-			if (childAnimatorState.Equals(default(ChildAnimatorState)))
+			else
 			{
-				animatorController.AddMotion(newClip);
+				ChildAnimatorState childAnimatorState = animatorController.layers[0].stateMachine.FindState(newClip.name);
+				if (childAnimatorState.Equals(default(ChildAnimatorState)))
+				{
+					animatorController.AddMotion(newClip);
+				}
+				else if (childAnimatorState.state && childAnimatorState.state.motion == null)
+				{
+					childAnimatorState.state.motion = newClip;
+				}
+				else if (childAnimatorState.state && childAnimatorState.state.motion != newClip)
+				{
+					animatorController.AddMotion(newClip);
+				}
+				result = true;
 			}
-			else if (childAnimatorState.state && childAnimatorState.state.motion == null)
-			{
-				childAnimatorState.state.motion = newClip;
-			}
-			else if (childAnimatorState.state && childAnimatorState.state.motion != newClip)
-			{
-				animatorController.AddMotion(newClip);
-			}
-			return true;
+			return result;
 		}
 
 		public static bool AddClipToAnimationComponent(Animation animation, AnimationClip newClip)
@@ -609,11 +776,16 @@ namespace UnityEditorInternal
 				}
 			}
 			string text = EditorUtility.SaveFilePanelInProject("Create New Animation", "New Animation", "anim", message, path);
-			if (text == string.Empty)
+			AnimationClip result;
+			if (text == "")
 			{
-				return null;
+				result = null;
 			}
-			return AnimationWindowUtility.CreateNewClipAtPath(text);
+			else
+			{
+				result = AnimationWindowUtility.CreateNewClipAtPath(text);
+			}
+			return result;
 		}
 
 		internal static AnimationClip CreateNewClipAtPath(string clipPath)
@@ -624,15 +796,20 @@ namespace UnityEditorInternal
 			animationClipSettings.loopTime = true;
 			AnimationUtility.SetAnimationClipSettingsNoDirty(animationClip, animationClipSettings);
 			AnimationClip animationClip2 = AssetDatabase.LoadMainAssetAtPath(clipPath) as AnimationClip;
+			AnimationClip result;
 			if (animationClip2)
 			{
 				EditorUtility.CopySerialized(animationClip, animationClip2);
 				AssetDatabase.SaveAssets();
 				UnityEngine.Object.DestroyImmediate(animationClip);
-				return animationClip2;
+				result = animationClip2;
 			}
-			AssetDatabase.CreateAsset(animationClip, clipPath);
-			return animationClip;
+			else
+			{
+				AssetDatabase.CreateAsset(animationClip, clipPath);
+				result = animationClip;
+			}
+			return result;
 		}
 
 		private static void SetClipAsLegacy(AnimationClip clip)
@@ -662,42 +839,56 @@ namespace UnityEditorInternal
 		public static Component GetClosestAnimationPlayerComponentInParents(Transform tr)
 		{
 			Animator closestAnimatorInParents = AnimationWindowUtility.GetClosestAnimatorInParents(tr);
+			Component result;
 			if (closestAnimatorInParents != null)
 			{
-				return closestAnimatorInParents;
+				result = closestAnimatorInParents;
 			}
-			Animation closestAnimationInParents = AnimationWindowUtility.GetClosestAnimationInParents(tr);
-			if (closestAnimationInParents != null)
+			else
 			{
-				return closestAnimationInParents;
+				Animation closestAnimationInParents = AnimationWindowUtility.GetClosestAnimationInParents(tr);
+				if (closestAnimationInParents != null)
+				{
+					result = closestAnimationInParents;
+				}
+				else
+				{
+					result = null;
+				}
 			}
-			return null;
+			return result;
 		}
 
 		public static Animator GetClosestAnimatorInParents(Transform tr)
 		{
+			Animator result;
 			while (!(tr.GetComponent<Animator>() != null))
 			{
 				if (tr == tr.root)
 				{
-					return null;
+					result = null;
+					return result;
 				}
 				tr = tr.parent;
 			}
-			return tr.GetComponent<Animator>();
+			result = tr.GetComponent<Animator>();
+			return result;
 		}
 
 		public static Animation GetClosestAnimationInParents(Transform tr)
 		{
+			Animation result;
 			while (!(tr.GetComponent<Animation>() != null))
 			{
 				if (tr == tr.root)
 				{
-					return null;
+					result = null;
+					return result;
 				}
 				tr = tr.parent;
 			}
-			return tr.GetComponent<Animation>();
+			result = tr.GetComponent<Animation>();
+			return result;
 		}
 
 		public static void SyncTimeArea(TimeArea from, TimeArea to)
@@ -706,23 +897,6 @@ namespace UnityEditorInternal
 			to.m_Scale = new Vector2(from.m_Scale.x, to.m_Scale.y);
 			to.m_Translation = new Vector2(from.m_Translation.x, to.m_Translation.y);
 			to.EnforceScaleAndRange();
-		}
-
-		public static void DrawEndOfClip(Rect rect, float endOfClipPixel)
-		{
-			Rect rect2 = new Rect(Mathf.Max(endOfClipPixel, rect.xMin), rect.yMin, rect.width, rect.height);
-			Vector3[] array = new Vector3[]
-			{
-				new Vector3(rect2.xMin, rect2.yMin),
-				new Vector3(rect2.xMax, rect2.yMin),
-				new Vector3(rect2.xMax, rect2.yMax),
-				new Vector3(rect2.xMin, rect2.yMax)
-			};
-			Color color = (!EditorGUIUtility.isProSkin) ? Color.gray.AlphaMultiplied(0.32f) : Color.gray.RGBMultiplied(0.3f).AlphaMultiplied(0.5f);
-			Color color2 = (!EditorGUIUtility.isProSkin) ? Color.white.RGBMultiplied(0.4f) : Color.white.RGBMultiplied(0.4f);
-			AnimationWindowUtility.DrawRect(array, color);
-			TimeArea.DrawVerticalLine(array[0].x, array[0].y, array[3].y, color2);
-			AnimationWindowUtility.DrawLine(array[0], array[3] + new Vector3(0f, -1f, 0f), color2);
 		}
 
 		public static void DrawRangeOfClip(Rect rect, float startOfClipPixel, float endOfClipPixel)
@@ -741,7 +915,8 @@ namespace UnityEditorInternal
 				};
 				AnimationWindowUtility.DrawRect(array, color);
 				TimeArea.DrawVerticalLine(array[1].x, array[1].y, array[2].y, color2);
-				AnimationWindowUtility.DrawLine(array[1], array[2] + new Vector3(0f, -1f, 0f), color2);
+				Handles.color = color2;
+				Handles.DrawLine(array[1], array[2] + new Vector3(0f, -1f, 0f));
 			}
 			Rect rect3 = new Rect(Mathf.Max(endOfClipPixel, rect.xMin), rect.yMin, rect.width, rect.height);
 			Vector3[] array2 = new Vector3[]
@@ -753,17 +928,27 @@ namespace UnityEditorInternal
 			};
 			AnimationWindowUtility.DrawRect(array2, color);
 			TimeArea.DrawVerticalLine(array2[0].x, array2[0].y, array2[3].y, color2);
-			AnimationWindowUtility.DrawLine(array2[0], array2[3] + new Vector3(0f, -1f, 0f), color2);
+			Handles.color = color2;
+			Handles.DrawLine(array2[0], array2[3] + new Vector3(0f, -1f, 0f));
+		}
+
+		public static void DrawRangeOfSelection(Rect rect, float startPixel, float endPixel)
+		{
+			Color color = (!EditorGUIUtility.isProSkin) ? Color.gray.AlphaMultiplied(0.25f) : Color.white.AlphaMultiplied(0.1f);
+			startPixel = Mathf.Max(startPixel, rect.xMin);
+			endPixel = Mathf.Max(endPixel, rect.xMin);
+			AnimationWindowUtility.DrawRect(new Vector3[]
+			{
+				new Vector3(startPixel, rect.yMin),
+				new Vector3(endPixel, rect.yMin),
+				new Vector3(endPixel, rect.yMax),
+				new Vector3(startPixel, rect.yMax)
+			}, color);
 		}
 
 		public static void DrawPlayHead(float positionX, float minY, float maxY, float alpha)
 		{
 			TimeArea.DrawVerticalLine(positionX, minY, maxY, Color.red.AlphaMultiplied(alpha));
-		}
-
-		public static void DrawVerticalSplitLine(Vector2 start, Vector2 end)
-		{
-			TimeArea.DrawVerticalLine(start.x, start.y, end.y, (!EditorGUIUtility.isProSkin) ? Color.white.RGBMultiplied(0.6f) : Color.white.RGBMultiplied(0.15f));
 		}
 
 		public static CurveWrapper GetCurveWrapper(AnimationWindowCurve curve, AnimationClip clip)
@@ -773,60 +958,75 @@ namespace UnityEditorInternal
 			curveWrapper.renderer.SetWrap(WrapMode.Once, (!clip.isLooping) ? WrapMode.Once : WrapMode.Loop);
 			curveWrapper.renderer.SetCustomRange(clip.startTime, clip.stopTime);
 			curveWrapper.binding = curve.binding;
-			curveWrapper.id = curve.GetCurveID();
+			curveWrapper.id = curve.GetHashCode();
 			curveWrapper.color = CurveUtility.GetPropertyColor(curve.propertyName);
 			curveWrapper.hidden = false;
-			curveWrapper.selectionBindingInterface = curve.selectionBindingInterface;
+			curveWrapper.selectionBindingInterface = curve.selectionBinding;
 			return curveWrapper;
 		}
 
 		public static AnimationWindowKeyframe CurveSelectionToAnimationWindowKeyframe(CurveSelection curveSelection, List<AnimationWindowCurve> allCurves)
 		{
+			AnimationWindowKeyframe result;
 			foreach (AnimationWindowCurve current in allCurves)
 			{
-				int curveID = current.GetCurveID();
-				if (curveID == curveSelection.curveID && current.m_Keyframes.Count > curveSelection.key)
+				int hashCode = current.GetHashCode();
+				if (hashCode == curveSelection.curveID && current.m_Keyframes.Count > curveSelection.key)
 				{
-					return current.m_Keyframes[curveSelection.key];
+					result = current.m_Keyframes[curveSelection.key];
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public static CurveSelection AnimationWindowKeyframeToCurveSelection(AnimationWindowKeyframe keyframe, CurveEditor curveEditor)
 		{
-			int curveID = keyframe.curve.GetCurveID();
+			int hashCode = keyframe.curve.GetHashCode();
 			CurveWrapper[] animationCurves = curveEditor.animationCurves;
+			CurveSelection result;
 			for (int i = 0; i < animationCurves.Length; i++)
 			{
 				CurveWrapper curveWrapper = animationCurves[i];
-				if (curveWrapper.id == curveID && keyframe.GetIndex() >= 0)
+				if (curveWrapper.id == hashCode && keyframe.GetIndex() >= 0)
 				{
-					return new CurveSelection(curveWrapper.id, curveEditor, keyframe.GetIndex());
+					result = new CurveSelection(curveWrapper.id, keyframe.GetIndex());
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		public static AnimationWindowCurve BestMatchForPaste(EditorCurveBinding binding, List<AnimationWindowCurve> clipboardCurves, List<AnimationWindowCurve> targetCurves)
 		{
+			AnimationWindowCurve result;
 			foreach (AnimationWindowCurve current in targetCurves)
 			{
 				if (current.binding == binding)
 				{
-					AnimationWindowCurve result = current;
+					result = current;
 					return result;
 				}
 			}
-			foreach (AnimationWindowCurve targetCurve in targetCurves)
+			using (List<AnimationWindowCurve>.Enumerator enumerator2 = targetCurves.GetEnumerator())
 			{
-				if (targetCurve.binding.propertyName == binding.propertyName && !clipboardCurves.Exists((AnimationWindowCurve clipboardCurve) => clipboardCurve.binding == targetCurve.binding))
+				while (enumerator2.MoveNext())
 				{
-					AnimationWindowCurve result = targetCurve;
-					return result;
+					AnimationWindowCurve targetCurve = enumerator2.Current;
+					if (targetCurve.binding.propertyName == binding.propertyName)
+					{
+						if (!clipboardCurves.Exists((AnimationWindowCurve clipboardCurve) => clipboardCurve.binding == targetCurve.binding))
+						{
+							result = targetCurve;
+							return result;
+						}
+					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		internal static Rect FromToRect(Vector2 start, Vector2 end)
@@ -845,40 +1045,22 @@ namespace UnityEditorInternal
 			return result;
 		}
 
-		private static void DrawLine(Vector2 p1, Vector2 p2, Color color)
-		{
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			HandleUtility.ApplyWireMaterial();
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			GL.Begin(1);
-			GL.Color(color);
-			GL.Vertex(p1);
-			GL.Vertex(p2);
-			GL.End();
-			GL.PopMatrix();
-		}
-
 		private static void DrawRect(Vector3[] corners, Color color)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.PushMatrix();
+				GL.MultMatrix(Handles.matrix);
+				GL.Begin(7);
+				GL.Color(color);
+				GL.Vertex(corners[0]);
+				GL.Vertex(corners[1]);
+				GL.Vertex(corners[2]);
+				GL.Vertex(corners[3]);
+				GL.End();
+				GL.PopMatrix();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.PushMatrix();
-			GL.MultMatrix(Handles.matrix);
-			GL.Begin(7);
-			GL.Color(color);
-			GL.Vertex(corners[0]);
-			GL.Vertex(corners[1]);
-			GL.Vertex(corners[2]);
-			GL.Vertex(corners[3]);
-			GL.End();
-			GL.PopMatrix();
 		}
 
 		public static bool IsTransformType(Type type)
@@ -888,21 +1070,26 @@ namespace UnityEditorInternal
 
 		public static bool ForceGrouping(EditorCurveBinding binding)
 		{
+			bool result;
 			if (binding.type == typeof(Transform))
 			{
-				return true;
+				result = true;
 			}
-			if (binding.type == typeof(RectTransform))
+			else if (binding.type == typeof(RectTransform))
 			{
 				string propertyGroupName = AnimationWindowUtility.GetPropertyGroupName(binding.propertyName);
-				return propertyGroupName == "m_LocalPosition" || propertyGroupName == "m_LocalScale" || propertyGroupName == "m_LocalRotation" || propertyGroupName == "localEulerAnglesBaked" || propertyGroupName == "localEulerAngles" || propertyGroupName == "localEulerAnglesRaw";
+				result = (propertyGroupName == "m_LocalPosition" || propertyGroupName == "m_LocalScale" || propertyGroupName == "m_LocalRotation" || propertyGroupName == "localEulerAnglesBaked" || propertyGroupName == "localEulerAngles" || propertyGroupName == "localEulerAnglesRaw");
 			}
-			if (typeof(Renderer).IsAssignableFrom(binding.type))
+			else if (typeof(Renderer).IsAssignableFrom(binding.type))
 			{
 				string propertyGroupName2 = AnimationWindowUtility.GetPropertyGroupName(binding.propertyName);
-				return propertyGroupName2 == "material._Color";
+				result = (propertyGroupName2 == "material._Color");
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public static void ControllerChanged()

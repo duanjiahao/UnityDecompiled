@@ -17,20 +17,20 @@ internal abstract class GendarmeValidationRule : IValidationRule
 	public ValidationResult Validate(IEnumerable<string> userAssemblies, params object[] options)
 	{
 		string arguments = this.BuildGendarmeCommandLineArguments(userAssemblies);
-		ValidationResult validationResult = default(ValidationResult);
-		ValidationResult validationResult2 = validationResult;
-		validationResult2.Success = true;
-		validationResult2.Rule = this;
-		validationResult2.CompilerMessages = null;
-		validationResult = validationResult2;
+		ValidationResult result = new ValidationResult
+		{
+			Success = true,
+			Rule = this,
+			CompilerMessages = null
+		};
 		try
 		{
-			validationResult.Success = GendarmeValidationRule.StartManagedProgram(this._gendarmeExePath, arguments, new GendarmeOutputParser(), ref validationResult.CompilerMessages);
+			result.Success = GendarmeValidationRule.StartManagedProgram(this._gendarmeExePath, arguments, new GendarmeOutputParser(), ref result.CompilerMessages);
 		}
 		catch (Exception ex)
 		{
-			validationResult.Success = false;
-			validationResult.CompilerMessages = new CompilerMessage[]
+			result.Success = false;
+			result.CompilerMessages = new CompilerMessage[]
 			{
 				new CompilerMessage
 				{
@@ -42,7 +42,7 @@ internal abstract class GendarmeValidationRule : IValidationRule
 				}
 			};
 		}
-		return validationResult;
+		return result;
 	}
 
 	protected abstract GendarmeOptions ConfigureGendarme(IEnumerable<string> userAssemblies);
@@ -50,21 +50,27 @@ internal abstract class GendarmeValidationRule : IValidationRule
 	protected string BuildGendarmeCommandLineArguments(IEnumerable<string> userAssemblies)
 	{
 		GendarmeOptions gendarmeOptions = this.ConfigureGendarme(userAssemblies);
+		string result;
 		if (gendarmeOptions.UserAssemblies == null || gendarmeOptions.UserAssemblies.Length == 0)
 		{
-			return null;
+			result = null;
 		}
-		List<string> list = new List<string>
+		else
 		{
-			"--config " + gendarmeOptions.ConfigFilePath,
-			"--set " + gendarmeOptions.RuleSet
-		};
-		list.AddRange(gendarmeOptions.UserAssemblies);
-		return list.Aggregate((string agg, string i) => agg + " " + i);
+			List<string> list = new List<string>
+			{
+				"--config " + gendarmeOptions.ConfigFilePath,
+				"--set " + gendarmeOptions.RuleSet
+			};
+			list.AddRange(gendarmeOptions.UserAssemblies);
+			result = list.Aggregate((string agg, string i) => agg + " " + i);
+		}
+		return result;
 	}
 
 	private static bool StartManagedProgram(string exe, string arguments, CompilerOutputParserBase parser, ref IEnumerable<CompilerMessage> compilerMessages)
 	{
+		bool result;
 		using (ManagedProgram managedProgram = GendarmeValidationRule.ManagedProgramFor(exe, arguments))
 		{
 			managedProgram.LogProcessStartInfo();
@@ -79,15 +85,17 @@ internal abstract class GendarmeValidationRule : IValidationRule
 			managedProgram.WaitForExit();
 			if (managedProgram.ExitCode == 0)
 			{
-				return true;
+				result = true;
+				return result;
 			}
 			compilerMessages = parser.Parse(managedProgram.GetErrorOutput(), managedProgram.GetStandardOutput(), true);
 		}
-		return false;
+		result = false;
+		return result;
 	}
 
 	private static ManagedProgram ManagedProgramFor(string exe, string arguments)
 	{
-		return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, arguments, null);
+		return new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), null, exe, arguments, false, null);
 	}
 }

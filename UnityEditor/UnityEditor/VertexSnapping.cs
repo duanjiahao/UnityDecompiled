@@ -10,17 +10,36 @@ namespace UnityEditor
 		public static void HandleKeyAndMouseMove(int id)
 		{
 			Event current = Event.current;
-			switch (current.GetTypeForControl(id))
+			EventType typeForControl = current.GetTypeForControl(id);
+			if (typeForControl != EventType.MouseMove)
 			{
-			case EventType.MouseMove:
-				if (Tools.vertexDragging)
+				if (typeForControl != EventType.KeyDown)
 				{
-					VertexSnapping.EnableVertexSnapping(id);
-					current.Use();
+					if (typeForControl == EventType.KeyUp)
+					{
+						if (current.keyCode == KeyCode.V)
+						{
+							if (current.shift)
+							{
+								Tools.vertexDragging = !Tools.vertexDragging;
+							}
+							else if (Tools.vertexDragging)
+							{
+								Tools.vertexDragging = false;
+							}
+							if (Tools.vertexDragging)
+							{
+								VertexSnapping.EnableVertexSnapping(id);
+							}
+							else
+							{
+								VertexSnapping.DisableVertexSnapping(id);
+							}
+							current.Use();
+						}
+					}
 				}
-				break;
-			case EventType.KeyDown:
-				if (current.keyCode == KeyCode.V)
+				else if (current.keyCode == KeyCode.V)
 				{
 					if (!Tools.vertexDragging && !current.shift)
 					{
@@ -28,29 +47,11 @@ namespace UnityEditor
 					}
 					current.Use();
 				}
-				break;
-			case EventType.KeyUp:
-				if (current.keyCode == KeyCode.V)
-				{
-					if (current.shift)
-					{
-						Tools.vertexDragging = !Tools.vertexDragging;
-					}
-					else if (Tools.vertexDragging)
-					{
-						Tools.vertexDragging = false;
-					}
-					if (Tools.vertexDragging)
-					{
-						VertexSnapping.EnableVertexSnapping(id);
-					}
-					else
-					{
-						VertexSnapping.DisableVertexSnapping(id);
-					}
-					current.Use();
-				}
-				break;
+			}
+			else if (Tools.vertexDragging)
+			{
+				VertexSnapping.EnableVertexSnapping(id);
+				current.Use();
 			}
 		}
 

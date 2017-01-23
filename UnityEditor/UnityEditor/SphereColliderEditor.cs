@@ -34,7 +34,7 @@ namespace UnityEditor
 		public void OnSceneGUI()
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
-			SphereCollider sphereCollider = (SphereCollider)this.target;
+			SphereCollider sphereCollider = (SphereCollider)base.target;
 			Color color = Handles.color;
 			if (sphereCollider.enabled)
 			{

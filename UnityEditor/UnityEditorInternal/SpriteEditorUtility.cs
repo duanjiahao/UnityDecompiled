@@ -8,31 +8,44 @@ namespace UnityEditorInternal
 	{
 		public static Vector2 GetPivotValue(SpriteAlignment alignment, Vector2 customOffset)
 		{
+			Vector2 result;
 			switch (alignment)
 			{
 			case SpriteAlignment.Center:
-				return new Vector2(0.5f, 0.5f);
+				result = new Vector2(0.5f, 0.5f);
+				break;
 			case SpriteAlignment.TopLeft:
-				return new Vector2(0f, 1f);
+				result = new Vector2(0f, 1f);
+				break;
 			case SpriteAlignment.TopCenter:
-				return new Vector2(0.5f, 1f);
+				result = new Vector2(0.5f, 1f);
+				break;
 			case SpriteAlignment.TopRight:
-				return new Vector2(1f, 1f);
+				result = new Vector2(1f, 1f);
+				break;
 			case SpriteAlignment.LeftCenter:
-				return new Vector2(0f, 0.5f);
+				result = new Vector2(0f, 0.5f);
+				break;
 			case SpriteAlignment.RightCenter:
-				return new Vector2(1f, 0.5f);
+				result = new Vector2(1f, 0.5f);
+				break;
 			case SpriteAlignment.BottomLeft:
-				return new Vector2(0f, 0f);
+				result = new Vector2(0f, 0f);
+				break;
 			case SpriteAlignment.BottomCenter:
-				return new Vector2(0.5f, 0f);
+				result = new Vector2(0.5f, 0f);
+				break;
 			case SpriteAlignment.BottomRight:
-				return new Vector2(1f, 0f);
+				result = new Vector2(1f, 0f);
+				break;
 			case SpriteAlignment.Custom:
-				return customOffset;
+				result = customOffset;
+				break;
 			default:
-				return Vector2.zero;
+				result = Vector2.zero;
+				break;
 			}
+			return result;
 		}
 
 		public static Rect RoundedRect(Rect rect)

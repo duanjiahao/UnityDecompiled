@@ -33,16 +33,20 @@ namespace UnityEngine
 		{
 			get
 			{
+				NetworkView result;
 				if (this.m_ViewID == NetworkViewID.unassigned)
 				{
 					Debug.LogError("No NetworkView is assigned to this NetworkMessageInfo object. Note that this is expected in OnNetworkInstantiate().");
-					return this.NullNetworkView();
+					result = this.NullNetworkView();
 				}
-				return NetworkView.Find(this.m_ViewID);
+				else
+				{
+					result = NetworkView.Find(this.m_ViewID);
+				}
+				return result;
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern NetworkView NullNetworkView();
 	}

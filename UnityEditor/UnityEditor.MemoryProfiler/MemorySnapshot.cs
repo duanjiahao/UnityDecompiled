@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEditorInternal;
 
 namespace UnityEditor.MemoryProfiler
@@ -8,15 +8,27 @@ namespace UnityEditor.MemoryProfiler
 	{
 		public static event Action<PackedMemorySnapshot> OnSnapshotReceived
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				MemorySnapshot.OnSnapshotReceived = (Action<PackedMemorySnapshot>)Delegate.Combine(MemorySnapshot.OnSnapshotReceived, value);
+				Action<PackedMemorySnapshot> action = MemorySnapshot.OnSnapshotReceived;
+				Action<PackedMemorySnapshot> action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action<PackedMemorySnapshot>>(ref MemorySnapshot.OnSnapshotReceived, (Action<PackedMemorySnapshot>)Delegate.Combine(action2, value), action);
+				}
+				while (action != action2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				MemorySnapshot.OnSnapshotReceived = (Action<PackedMemorySnapshot>)Delegate.Remove(MemorySnapshot.OnSnapshotReceived, value);
+				Action<PackedMemorySnapshot> action = MemorySnapshot.OnSnapshotReceived;
+				Action<PackedMemorySnapshot> action2;
+				do
+				{
+					action2 = action;
+					action = Interlocked.CompareExchange<Action<PackedMemorySnapshot>>(ref MemorySnapshot.OnSnapshotReceived, (Action<PackedMemorySnapshot>)Delegate.Remove(action2, value), action);
+				}
+				while (action != action2);
 			}
 		}
 

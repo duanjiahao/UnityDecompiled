@@ -53,98 +53,105 @@ namespace UnityEditor
 			if (gameViewSize == null)
 			{
 				Debug.LogError("Invalid object");
-				return;
 			}
-			if (this.m_GameViewSize == null)
+			else
 			{
-				this.m_GameViewSize = new GameViewSize(gameViewSize);
-			}
-			bool flag = this.m_GameViewSize.width > 0 && this.m_GameViewSize.height > 0;
-			GUILayout.Space(3f);
-			GUILayout.Label((this.m_MenuType != FlexibleMenuModifyItemUI.MenuType.Add) ? GameViewSizesMenuModifyItemUI.s_Styles.headerEdit : GameViewSizesMenuModifyItemUI.s_Styles.headerAdd, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			Rect rect2 = GUILayoutUtility.GetRect(1f, 1f);
-			FlexibleMenu.DrawRect(rect2, (!EditorGUIUtility.isProSkin) ? new Color(0.6f, 0.6f, 0.6f, 1.333f) : new Color(0.32f, 0.32f, 0.32f, 1.333f));
-			GUILayout.Space(4f);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Label(GameViewSizesMenuModifyItemUI.s_Styles.optionalText, new GUILayoutOption[]
-			{
-				GUILayout.Width(90f)
-			});
-			GUILayout.Space(10f);
-			this.m_GameViewSize.baseText = EditorGUILayout.TextField(this.m_GameViewSize.baseText, new GUILayoutOption[0]);
-			GUILayout.EndHorizontal();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Label(GameViewSizesMenuModifyItemUI.s_Styles.typeName, new GUILayoutOption[]
-			{
-				GUILayout.Width(90f)
-			});
-			GUILayout.Space(10f);
-			this.m_GameViewSize.sizeType = (GameViewSizeType)EditorGUILayout.Popup((int)this.m_GameViewSize.sizeType, GameViewSizesMenuModifyItemUI.s_Styles.typeNames, new GUILayoutOption[0]);
-			GUILayout.EndHorizontal();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Label(GameViewSizesMenuModifyItemUI.s_Styles.widthHeightText, new GUILayoutOption[]
-			{
-				GUILayout.Width(90f)
-			});
-			GUILayout.Space(10f);
-			this.m_GameViewSize.width = EditorGUILayout.IntField(this.m_GameViewSize.width, new GUILayoutOption[0]);
-			GUILayout.Space(5f);
-			this.m_GameViewSize.height = EditorGUILayout.IntField(this.m_GameViewSize.height, new GUILayoutOption[0]);
-			GUILayout.EndHorizontal();
-			GUILayout.Space(10f);
-			float num = 10f;
-			float cropWidth = rect.width - 2f * num;
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(num);
-			GUILayout.FlexibleSpace();
-			string text = this.m_GameViewSize.displayText;
-			using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(text)))
-			{
-				if (string.IsNullOrEmpty(text))
+				if (this.m_GameViewSize == null)
 				{
-					text = "Result";
+					this.m_GameViewSize = new GameViewSize(gameViewSize);
 				}
-				else
+				bool flag = this.m_GameViewSize.width > 0 && this.m_GameViewSize.height > 0;
+				GUILayout.Space(3f);
+				GUILayout.Label((this.m_MenuType != FlexibleMenuModifyItemUI.MenuType.Add) ? GameViewSizesMenuModifyItemUI.s_Styles.headerEdit : GameViewSizesMenuModifyItemUI.s_Styles.headerAdd, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				Rect rect2 = GUILayoutUtility.GetRect(1f, 1f);
+				FlexibleMenu.DrawRect(rect2, (!EditorGUIUtility.isProSkin) ? new Color(0.6f, 0.6f, 0.6f, 1.333f) : new Color(0.32f, 0.32f, 0.32f, 1.333f));
+				GUILayout.Space(4f);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Label(GameViewSizesMenuModifyItemUI.s_Styles.optionalText, new GUILayoutOption[]
 				{
-					text = this.GetCroppedText(text, cropWidth, EditorStyles.label);
+					GUILayout.Width(90f)
+				});
+				GUILayout.Space(10f);
+				this.m_GameViewSize.baseText = EditorGUILayout.TextField(this.m_GameViewSize.baseText, new GUILayoutOption[0]);
+				GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Label(GameViewSizesMenuModifyItemUI.s_Styles.typeName, new GUILayoutOption[]
+				{
+					GUILayout.Width(90f)
+				});
+				GUILayout.Space(10f);
+				this.m_GameViewSize.sizeType = (GameViewSizeType)EditorGUILayout.Popup((int)this.m_GameViewSize.sizeType, GameViewSizesMenuModifyItemUI.s_Styles.typeNames, new GUILayoutOption[0]);
+				GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Label(GameViewSizesMenuModifyItemUI.s_Styles.widthHeightText, new GUILayoutOption[]
+				{
+					GUILayout.Width(90f)
+				});
+				GUILayout.Space(10f);
+				this.m_GameViewSize.width = EditorGUILayout.IntField(this.m_GameViewSize.width, new GUILayoutOption[0]);
+				GUILayout.Space(5f);
+				this.m_GameViewSize.height = EditorGUILayout.IntField(this.m_GameViewSize.height, new GUILayoutOption[0]);
+				GUILayout.EndHorizontal();
+				GUILayout.Space(10f);
+				float num = 10f;
+				float cropWidth = rect.width - 2f * num;
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Space(num);
+				GUILayout.FlexibleSpace();
+				string text = this.m_GameViewSize.displayText;
+				using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(text)))
+				{
+					if (string.IsNullOrEmpty(text))
+					{
+						text = "Result";
+					}
+					else
+					{
+						text = this.GetCroppedText(text, cropWidth, EditorStyles.label);
+					}
+					GUILayout.Label(GUIContent.Temp(text), EditorStyles.label, new GUILayoutOption[0]);
 				}
-				GUILayout.Label(GUIContent.Temp(text), EditorStyles.label, new GUILayoutOption[0]);
-			}
-			GUILayout.FlexibleSpace();
-			GUILayout.Space(num);
-			GUILayout.EndHorizontal();
-			GUILayout.Space(5f);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(10f);
-			if (GUILayout.Button(GameViewSizesMenuModifyItemUI.s_Styles.cancel, new GUILayoutOption[0]))
-			{
-				base.editorWindow.Close();
-			}
-			using (new EditorGUI.DisabledScope(!flag))
-			{
-				if (GUILayout.Button(GameViewSizesMenuModifyItemUI.s_Styles.ok, new GUILayoutOption[0]))
+				GUILayout.FlexibleSpace();
+				GUILayout.Space(num);
+				GUILayout.EndHorizontal();
+				GUILayout.Space(5f);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Space(10f);
+				if (GUILayout.Button(GameViewSizesMenuModifyItemUI.s_Styles.cancel, new GUILayoutOption[0]))
 				{
-					gameViewSize.Set(this.m_GameViewSize);
-					base.Accepted();
 					base.editorWindow.Close();
 				}
+				using (new EditorGUI.DisabledScope(!flag))
+				{
+					if (GUILayout.Button(GameViewSizesMenuModifyItemUI.s_Styles.ok, new GUILayoutOption[0]))
+					{
+						gameViewSize.Set(this.m_GameViewSize);
+						base.Accepted();
+						base.editorWindow.Close();
+					}
+				}
+				GUILayout.Space(10f);
+				GUILayout.EndHorizontal();
 			}
-			GUILayout.Space(10f);
-			GUILayout.EndHorizontal();
 		}
 
 		private string GetCroppedText(string fullText, float cropWidth, GUIStyle style)
 		{
 			int numCharactersThatFitWithinWidth = style.GetNumCharactersThatFitWithinWidth(fullText, cropWidth);
+			string result;
 			if (numCharactersThatFitWithinWidth == -1)
 			{
-				return fullText;
+				result = fullText;
 			}
-			if (numCharactersThatFitWithinWidth > 1 && numCharactersThatFitWithinWidth != fullText.Length)
+			else if (numCharactersThatFitWithinWidth > 1 && numCharactersThatFitWithinWidth != fullText.Length)
 			{
-				return fullText.Substring(0, numCharactersThatFitWithinWidth - 1) + "…";
+				result = fullText.Substring(0, numCharactersThatFitWithinWidth - 1) + "…";
 			}
-			return fullText;
+			else
+			{
+				result = fullText;
+			}
+			return result;
 		}
 	}
 }

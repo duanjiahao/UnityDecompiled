@@ -116,10 +116,6 @@ namespace UnityEditor
 			public GUIContent refresh = EditorGUIUtility.TextContent("Refresh");
 		}
 
-		private const float kHeightmapBrushScale = 0.01f;
-
-		private const float kMinBrushStrength = 0.00167849252f;
-
 		private static TerrainInspector.Styles styles;
 
 		internal static PrefKey[] s_ToolKeys = new PrefKey[]
@@ -144,11 +140,11 @@ namespace UnityEditor
 
 		private TerrainCollider m_TerrainCollider;
 
-		private Texture2D[] m_SplatIcons;
+		private Texture2D[] m_SplatIcons = null;
 
-		private GUIContent[] m_TreeContents;
+		private GUIContent[] m_TreeContents = null;
 
-		private GUIContent[] m_DetailContents;
+		private GUIContent[] m_DetailContents = null;
 
 		private SavedFloat m_TargetHeight = new SavedFloat("TerrainBrushTargetHeight", 0.2f);
 
@@ -162,15 +158,19 @@ namespace UnityEditor
 
 		private SavedFloat m_DetailStrength = new SavedFloat("TerrainDetailStrength", 0.8f);
 
+		private const float kHeightmapBrushScale = 0.01f;
+
+		private const float kMinBrushStrength = 0.00167849252f;
+
 		private Brush m_CachedBrush;
 
 		private static Texture2D[] s_BrushTextures = null;
 
-		private int m_SelectedBrush;
+		private int m_SelectedBrush = 0;
 
-		private int m_SelectedSplat;
+		private int m_SelectedSplat = 0;
 
-		private int m_SelectedDetail;
+		private int m_SelectedDetail = 0;
 
 		private static int s_TerrainEditorHash = "TerrainEditor".GetHashCode();
 
@@ -182,7 +182,7 @@ namespace UnityEditor
 
 		private AnimBool m_ShowReflectionProbesGUI = new AnimBool();
 
-		private bool m_LODTreePrototypePresent;
+		private bool m_LODTreePrototypePresent = false;
 
 		private SavedInt m_SelectedTool = new SavedInt("TerrainSelectedTool", 0);
 
@@ -190,11 +190,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				TerrainTool result;
 				if (Tools.current == Tool.None)
 				{
-					return (TerrainTool)this.m_SelectedTool.value;
+					result = (TerrainTool)this.m_SelectedTool.value;
 				}
-				return TerrainTool.None;
+				else
+				{
+					result = TerrainTool.None;
+				}
+				return result;
 			}
 			set
 			{
@@ -211,12 +216,17 @@ namespace UnityEditor
 			bool changed = GUI.changed;
 			GUI.changed = false;
 			float num = EditorGUILayout.Slider(content, Mathf.Round(valueInPercent * 100f), minVal * 100f, maxVal * 100f, new GUILayoutOption[0]);
+			float result;
 			if (GUI.changed)
 			{
-				return num / 100f;
+				result = num / 100f;
 			}
-			GUI.changed = changed;
-			return valueInPercent;
+			else
+			{
+				GUI.changed = changed;
+				result = valueInPercent;
+			}
+			return result;
 		}
 
 		private void CheckKeys()
@@ -261,34 +271,41 @@ namespace UnityEditor
 			}
 			if (num != 0)
 			{
-				switch (this.selectedTool)
+				TerrainTool selectedTool = this.selectedTool;
+				if (selectedTool != TerrainTool.PaintDetail)
 				{
-				case TerrainTool.PaintTexture:
-					this.m_SelectedSplat = (int)Mathf.Repeat((float)(this.m_SelectedSplat + num), (float)this.m_Terrain.terrainData.splatPrototypes.Length);
-					Event.current.Use();
-					base.Repaint();
-					break;
-				case TerrainTool.PlaceTree:
-					if (TreePainter.selectedTree >= 0)
+					if (selectedTool != TerrainTool.PlaceTree)
 					{
-						TreePainter.selectedTree = (int)Mathf.Repeat((float)(TreePainter.selectedTree + num), (float)this.m_TreeContents.Length);
+						if (selectedTool == TerrainTool.PaintTexture)
+						{
+							this.m_SelectedSplat = (int)Mathf.Repeat((float)(this.m_SelectedSplat + num), (float)this.m_Terrain.terrainData.splatPrototypes.Length);
+							Event.current.Use();
+							base.Repaint();
+						}
 					}
-					else if (num == -1 && this.m_TreeContents.Length > 0)
+					else
 					{
-						TreePainter.selectedTree = this.m_TreeContents.Length - 1;
+						if (TreePainter.selectedTree >= 0)
+						{
+							TreePainter.selectedTree = (int)Mathf.Repeat((float)(TreePainter.selectedTree + num), (float)this.m_TreeContents.Length);
+						}
+						else if (num == -1 && this.m_TreeContents.Length > 0)
+						{
+							TreePainter.selectedTree = this.m_TreeContents.Length - 1;
+						}
+						else if (num == 1 && this.m_TreeContents.Length > 0)
+						{
+							TreePainter.selectedTree = 0;
+						}
+						Event.current.Use();
+						base.Repaint();
 					}
-					else if (num == 1 && this.m_TreeContents.Length > 0)
-					{
-						TreePainter.selectedTree = 0;
-					}
-					Event.current.Use();
-					base.Repaint();
-					break;
-				case TerrainTool.PaintDetail:
+				}
+				else
+				{
 					this.m_SelectedDetail = (int)Mathf.Repeat((float)(this.m_SelectedDetail + num), (float)this.m_Terrain.terrainData.detailPrototypes.Length);
 					Event.current.Use();
 					base.Repaint();
-					break;
 				}
 			}
 		}
@@ -330,7 +347,7 @@ namespace UnityEditor
 
 		private void Initialize()
 		{
-			this.m_Terrain = (this.target as Terrain);
+			this.m_Terrain = (base.target as Terrain);
 			if (TerrainInspector.s_BrushTextures == null)
 			{
 				this.LoadBrushIcons();
@@ -342,17 +359,19 @@ namespace UnityEditor
 			this.m_ShowBuiltinSpecularSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowCustomMaterialSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowReflectionProbesGUI.valueChanged.AddListener(new UnityAction(base.Repaint));
-			Terrain terrain = this.target as Terrain;
+			Terrain terrain = base.target as Terrain;
 			if (terrain != null)
 			{
 				this.m_ShowBuiltinSpecularSettings.value = (terrain.materialType == Terrain.MaterialType.BuiltInLegacySpecular);
 				this.m_ShowCustomMaterialSettings.value = (terrain.materialType == Terrain.MaterialType.Custom);
 				this.m_ShowReflectionProbesGUI.value = (terrain.materialType == Terrain.MaterialType.BuiltInStandard || terrain.materialType == Terrain.MaterialType.Custom);
 			}
+			SceneView.onPreSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Combine(SceneView.onPreSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnPreSceneGUICallback));
 		}
 
 		public void OnDisable()
 		{
+			SceneView.onPreSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onPreSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnPreSceneGUICallback));
 			this.m_ShowReflectionProbesGUI.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowCustomMaterialSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowBuiltinSpecularSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
@@ -547,101 +566,100 @@ namespace UnityEditor
 			this.MenuButton(TerrainInspector.styles.editTrees, "CONTEXT/TerrainEngineTrees", TreePainter.selectedTree);
 			this.ShowRefreshPrototypes();
 			GUILayout.EndHorizontal();
-			if (TreePainter.selectedTree == -1)
+			if (TreePainter.selectedTree != -1)
 			{
-				return;
-			}
-			GUILayout.Label(TerrainInspector.styles.settings, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			TreePainter.brushSize = EditorGUILayout.Slider(TerrainInspector.styles.brushSize, TreePainter.brushSize, 1f, 100f, new GUILayoutOption[0]);
-			float num = (3.3f - TreePainter.spacing) / 3f;
-			float num2 = TerrainInspector.PercentSlider(TerrainInspector.styles.treeDensity, num, 0.1f, 1f);
-			if (num2 != num)
-			{
-				TreePainter.spacing = (1.1f - num2) * 3f;
-			}
-			GUILayout.Space(5f);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Label(TerrainInspector.styles.treeHeight, new GUILayoutOption[]
-			{
-				GUILayout.Width(EditorGUIUtility.labelWidth - 6f)
-			});
-			GUILayout.Label(TerrainInspector.styles.treeHeightRandomLabel, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			});
-			TreePainter.allowHeightVar = GUILayout.Toggle(TreePainter.allowHeightVar, TerrainInspector.styles.treeHeightRandomToggle, new GUILayoutOption[]
-			{
-				GUILayout.ExpandWidth(false)
-			});
-			if (TreePainter.allowHeightVar)
-			{
-				EditorGUI.BeginChangeCheck();
-				float num3 = TreePainter.treeHeight * (1f - TreePainter.treeHeightVariation);
-				float num4 = TreePainter.treeHeight * (1f + TreePainter.treeHeightVariation);
-				EditorGUILayout.MinMaxSlider(ref num3, ref num4, 0.01f, 2f, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
+				GUILayout.Label(TerrainInspector.styles.settings, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				TreePainter.brushSize = EditorGUILayout.Slider(TerrainInspector.styles.brushSize, TreePainter.brushSize, 1f, 100f, new GUILayoutOption[0]);
+				float num = (3.3f - TreePainter.spacing) / 3f;
+				float num2 = TerrainInspector.PercentSlider(TerrainInspector.styles.treeDensity, num, 0.1f, 1f);
+				if (num2 != num)
 				{
-					TreePainter.treeHeight = (num3 + num4) * 0.5f;
-					TreePainter.treeHeightVariation = (num4 - num3) / (num3 + num4);
+					TreePainter.spacing = (1.1f - num2) * 3f;
 				}
-			}
-			else
-			{
-				TreePainter.treeHeight = EditorGUILayout.Slider(TreePainter.treeHeight, 0.01f, 2f, new GUILayoutOption[0]);
-				TreePainter.treeHeightVariation = 0f;
-			}
-			GUILayout.EndHorizontal();
-			GUILayout.Space(5f);
-			TreePainter.lockWidthToHeight = EditorGUILayout.Toggle(TerrainInspector.styles.lockWidth, TreePainter.lockWidthToHeight, new GUILayoutOption[0]);
-			if (TreePainter.lockWidthToHeight)
-			{
-				TreePainter.treeWidth = TreePainter.treeHeight;
-				TreePainter.treeWidthVariation = TreePainter.treeHeightVariation;
-				TreePainter.allowWidthVar = TreePainter.allowHeightVar;
-			}
-			GUILayout.Space(5f);
-			using (new EditorGUI.DisabledScope(TreePainter.lockWidthToHeight))
-			{
+				GUILayout.Space(5f);
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				GUILayout.Label(TerrainInspector.styles.treeWidth, new GUILayoutOption[]
+				GUILayout.Label(TerrainInspector.styles.treeHeight, new GUILayoutOption[]
 				{
 					GUILayout.Width(EditorGUIUtility.labelWidth - 6f)
 				});
-				GUILayout.Label(TerrainInspector.styles.treeWidthRandomLabel, new GUILayoutOption[]
+				GUILayout.Label(TerrainInspector.styles.treeHeightRandomLabel, new GUILayoutOption[]
 				{
 					GUILayout.ExpandWidth(false)
 				});
-				TreePainter.allowWidthVar = GUILayout.Toggle(TreePainter.allowWidthVar, TerrainInspector.styles.treeWidthRandomToggle, new GUILayoutOption[]
+				TreePainter.allowHeightVar = GUILayout.Toggle(TreePainter.allowHeightVar, TerrainInspector.styles.treeHeightRandomToggle, new GUILayoutOption[]
 				{
 					GUILayout.ExpandWidth(false)
 				});
-				if (TreePainter.allowWidthVar)
+				if (TreePainter.allowHeightVar)
 				{
 					EditorGUI.BeginChangeCheck();
-					float num5 = TreePainter.treeWidth * (1f - TreePainter.treeWidthVariation);
-					float num6 = TreePainter.treeWidth * (1f + TreePainter.treeWidthVariation);
-					EditorGUILayout.MinMaxSlider(ref num5, ref num6, 0.01f, 2f, new GUILayoutOption[0]);
+					float num3 = TreePainter.treeHeight * (1f - TreePainter.treeHeightVariation);
+					float num4 = TreePainter.treeHeight * (1f + TreePainter.treeHeightVariation);
+					EditorGUILayout.MinMaxSlider(ref num3, ref num4, 0.01f, 2f, new GUILayoutOption[0]);
 					if (EditorGUI.EndChangeCheck())
 					{
-						TreePainter.treeWidth = (num5 + num6) * 0.5f;
-						TreePainter.treeWidthVariation = (num6 - num5) / (num5 + num6);
+						TreePainter.treeHeight = (num3 + num4) * 0.5f;
+						TreePainter.treeHeightVariation = (num4 - num3) / (num3 + num4);
 					}
 				}
 				else
 				{
-					TreePainter.treeWidth = EditorGUILayout.Slider(TreePainter.treeWidth, 0.01f, 2f, new GUILayoutOption[0]);
-					TreePainter.treeWidthVariation = 0f;
+					TreePainter.treeHeight = EditorGUILayout.Slider(TreePainter.treeHeight, 0.01f, 2f, new GUILayoutOption[0]);
+					TreePainter.treeHeightVariation = 0f;
 				}
 				GUILayout.EndHorizontal();
-			}
-			GUILayout.Space(5f);
-			if (TerrainEditorUtility.IsLODTreePrototype(this.m_Terrain.terrainData.treePrototypes[TreePainter.selectedTree].m_Prefab))
-			{
-				TreePainter.randomRotation = EditorGUILayout.Toggle(TerrainInspector.styles.treeRotation, TreePainter.randomRotation, new GUILayoutOption[0]);
-			}
-			else
-			{
-				TreePainter.treeColorAdjustment = EditorGUILayout.Slider(TerrainInspector.styles.treeColorVar, TreePainter.treeColorAdjustment, 0f, 1f, new GUILayoutOption[0]);
+				GUILayout.Space(5f);
+				TreePainter.lockWidthToHeight = EditorGUILayout.Toggle(TerrainInspector.styles.lockWidth, TreePainter.lockWidthToHeight, new GUILayoutOption[0]);
+				if (TreePainter.lockWidthToHeight)
+				{
+					TreePainter.treeWidth = TreePainter.treeHeight;
+					TreePainter.treeWidthVariation = TreePainter.treeHeightVariation;
+					TreePainter.allowWidthVar = TreePainter.allowHeightVar;
+				}
+				GUILayout.Space(5f);
+				using (new EditorGUI.DisabledScope(TreePainter.lockWidthToHeight))
+				{
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.Label(TerrainInspector.styles.treeWidth, new GUILayoutOption[]
+					{
+						GUILayout.Width(EditorGUIUtility.labelWidth - 6f)
+					});
+					GUILayout.Label(TerrainInspector.styles.treeWidthRandomLabel, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					});
+					TreePainter.allowWidthVar = GUILayout.Toggle(TreePainter.allowWidthVar, TerrainInspector.styles.treeWidthRandomToggle, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					});
+					if (TreePainter.allowWidthVar)
+					{
+						EditorGUI.BeginChangeCheck();
+						float num5 = TreePainter.treeWidth * (1f - TreePainter.treeWidthVariation);
+						float num6 = TreePainter.treeWidth * (1f + TreePainter.treeWidthVariation);
+						EditorGUILayout.MinMaxSlider(ref num5, ref num6, 0.01f, 2f, new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							TreePainter.treeWidth = (num5 + num6) * 0.5f;
+							TreePainter.treeWidthVariation = (num6 - num5) / (num5 + num6);
+						}
+					}
+					else
+					{
+						TreePainter.treeWidth = EditorGUILayout.Slider(TreePainter.treeWidth, 0.01f, 2f, new GUILayoutOption[0]);
+						TreePainter.treeWidthVariation = 0f;
+					}
+					GUILayout.EndHorizontal();
+				}
+				GUILayout.Space(5f);
+				if (TerrainEditorUtility.IsLODTreePrototype(this.m_Terrain.terrainData.treePrototypes[TreePainter.selectedTree].m_Prefab))
+				{
+					TreePainter.randomRotation = EditorGUILayout.Toggle(TerrainInspector.styles.treeRotation, TreePainter.randomRotation, new GUILayoutOption[0]);
+				}
+				else
+				{
+					TreePainter.treeColorAdjustment = EditorGUILayout.Slider(TerrainInspector.styles.treeColorVar, TreePainter.treeColorAdjustment, 0f, 1f, new GUILayoutOption[0]);
+				}
 			}
 		}
 
@@ -727,6 +745,10 @@ namespace UnityEditor
 			GUILayout.Label("Tree & Detail Objects", EditorStyles.boldLabel, new GUILayoutOption[0]);
 			this.m_Terrain.drawTreesAndFoliage = EditorGUILayout.Toggle("Draw", this.m_Terrain.drawTreesAndFoliage, new GUILayoutOption[0]);
 			this.m_Terrain.bakeLightProbesForTrees = EditorGUILayout.Toggle(TerrainInspector.styles.bakeLightProbesForTrees, this.m_Terrain.bakeLightProbesForTrees, new GUILayoutOption[0]);
+			if (this.m_Terrain.bakeLightProbesForTrees)
+			{
+				EditorGUILayout.HelpBox("GPU instancing is disabled for trees if light probes are used. Performance may be affected.", MessageType.Info);
+			}
 			this.m_Terrain.detailObjectDistance = EditorGUILayout.Slider("Detail Distance", this.m_Terrain.detailObjectDistance, 0f, 250f, new GUILayoutOption[0]);
 			this.m_Terrain.collectDetailPatches = EditorGUILayout.Toggle("Collect Detail Patches", this.m_Terrain.collectDetailPatches, new GUILayoutOption[0]);
 			this.m_Terrain.detailObjectDensity = EditorGUILayout.Slider("Detail Density", this.m_Terrain.detailObjectDensity, 0f, 1f, new GUILayoutOption[0]);
@@ -1036,77 +1058,82 @@ namespace UnityEditor
 				GUILayout.Label("Terrain Asset Missing", new GUILayoutOption[0]);
 				this.m_Terrain.terrainData = (EditorGUILayout.ObjectField("Assign:", this.m_Terrain.terrainData, typeof(TerrainData), false, new GUILayoutOption[0]) as TerrainData);
 				GUILayout.EndVertical();
-				return;
-			}
-			if (Event.current.type == EventType.Layout)
-			{
-				this.m_TerrainCollider = this.m_Terrain.gameObject.GetComponent<TerrainCollider>();
-			}
-			if (this.m_TerrainCollider && this.m_TerrainCollider.terrainData != this.m_Terrain.terrainData)
-			{
-				GUILayout.BeginVertical(EditorStyles.helpBox, new GUILayoutOption[0]);
-				GUILayout.Label(TerrainInspector.styles.mismatchedTerrainData, EditorStyles.wordWrappedLabel, new GUILayoutOption[0]);
-				GUILayout.Space(3f);
-				if (GUILayout.Button(TerrainInspector.styles.assign, new GUILayoutOption[]
-				{
-					GUILayout.ExpandWidth(false)
-				}))
-				{
-					Undo.RecordObject(this.m_TerrainCollider, "Assign TerrainData");
-					this.m_TerrainCollider.terrainData = this.m_Terrain.terrainData;
-				}
-				GUILayout.Space(3f);
-				GUILayout.EndVertical();
-			}
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			GUI.changed = false;
-			int selectedTool = (int)this.selectedTool;
-			this.selectedTool = (TerrainTool)GUILayout.Toolbar(selectedTool, TerrainInspector.styles.toolIcons, TerrainInspector.styles.command, new GUILayoutOption[0]);
-			if (this.selectedTool != (TerrainTool)selectedTool && Toolbar.get != null)
-			{
-				Toolbar.get.Repaint();
-			}
-			GUILayout.FlexibleSpace();
-			GUILayout.EndHorizontal();
-			this.CheckKeys();
-			GUILayout.BeginVertical(EditorStyles.helpBox, new GUILayoutOption[0]);
-			if (selectedTool >= 0 && selectedTool < TerrainInspector.styles.toolIcons.Length)
-			{
-				GUILayout.Label(TerrainInspector.styles.toolNames[selectedTool].text, new GUILayoutOption[0]);
-				GUILayout.Label(TerrainInspector.styles.toolNames[selectedTool].tooltip, EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
 			}
 			else
 			{
-				GUILayout.Label("No tool selected", new GUILayoutOption[0]);
-				GUILayout.Label("Please select a tool", EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
+				if (Event.current.type == EventType.Layout)
+				{
+					this.m_TerrainCollider = this.m_Terrain.gameObject.GetComponent<TerrainCollider>();
+				}
+				if (this.m_TerrainCollider && this.m_TerrainCollider.terrainData != this.m_Terrain.terrainData)
+				{
+					GUILayout.BeginVertical(EditorStyles.helpBox, new GUILayoutOption[0]);
+					GUILayout.Label(TerrainInspector.styles.mismatchedTerrainData, EditorStyles.wordWrappedLabel, new GUILayoutOption[0]);
+					GUILayout.Space(3f);
+					if (GUILayout.Button(TerrainInspector.styles.assign, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					}))
+					{
+						Undo.RecordObject(this.m_TerrainCollider, "Assign TerrainData");
+						this.m_TerrainCollider.terrainData = this.m_Terrain.terrainData;
+					}
+					GUILayout.Space(3f);
+					GUILayout.EndVertical();
+				}
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				GUI.changed = false;
+				int selectedTool = (int)this.selectedTool;
+				this.selectedTool = (TerrainTool)GUILayout.Toolbar(selectedTool, TerrainInspector.styles.toolIcons, TerrainInspector.styles.command, new GUILayoutOption[0]);
+				if (this.selectedTool != (TerrainTool)selectedTool)
+				{
+					if (Toolbar.get != null)
+					{
+						Toolbar.get.Repaint();
+					}
+				}
+				GUILayout.FlexibleSpace();
+				GUILayout.EndHorizontal();
+				this.CheckKeys();
+				GUILayout.BeginVertical(EditorStyles.helpBox, new GUILayoutOption[0]);
+				if (selectedTool >= 0 && selectedTool < TerrainInspector.styles.toolIcons.Length)
+				{
+					GUILayout.Label(TerrainInspector.styles.toolNames[selectedTool].text, new GUILayoutOption[0]);
+					GUILayout.Label(TerrainInspector.styles.toolNames[selectedTool].tooltip, EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
+				}
+				else
+				{
+					GUILayout.Label("No tool selected", new GUILayoutOption[0]);
+					GUILayout.Label("Please select a tool", EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
+				}
+				GUILayout.EndVertical();
+				switch (selectedTool)
+				{
+				case 0:
+					this.ShowRaiseHeight();
+					break;
+				case 1:
+					this.ShowSetHeight();
+					break;
+				case 2:
+					this.ShowSmoothHeight();
+					break;
+				case 3:
+					this.ShowTextures();
+					break;
+				case 4:
+					this.ShowTrees();
+					break;
+				case 5:
+					this.ShowDetails();
+					break;
+				case 6:
+					this.ShowSettings();
+					break;
+				}
+				GUILayout.Space(5f);
 			}
-			GUILayout.EndVertical();
-			switch (selectedTool)
-			{
-			case 0:
-				this.ShowRaiseHeight();
-				break;
-			case 1:
-				this.ShowSetHeight();
-				break;
-			case 2:
-				this.ShowSmoothHeight();
-				break;
-			case 3:
-				this.ShowTextures();
-				break;
-			case 4:
-				this.ShowTrees();
-				break;
-			case 5:
-				this.ShowDetails();
-				break;
-			case 6:
-				this.ShowSettings();
-				break;
-			}
-			GUILayout.Space(5f);
 		}
 
 		private Brush GetActiveBrush(int size)
@@ -1123,15 +1150,20 @@ namespace UnityEditor
 		{
 			Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 			RaycastHit raycastHit;
+			bool result;
 			if (this.m_Terrain.GetComponent<Collider>().Raycast(ray, out raycastHit, float.PositiveInfinity))
 			{
 				uv = raycastHit.textureCoord;
 				pos = raycastHit.point;
-				return true;
+				result = true;
 			}
-			uv = Vector2.zero;
-			pos = Vector3.zero;
-			return false;
+			else
+			{
+				uv = Vector2.zero;
+				pos = Vector3.zero;
+				result = false;
+			}
+			return result;
 		}
 
 		public bool HasFrameBounds()
@@ -1143,56 +1175,69 @@ namespace UnityEditor
 		{
 			Vector2 vector;
 			Vector3 center;
+			Bounds result;
 			if (Camera.current && this.m_Terrain.terrainData && this.Raycast(out vector, out center))
 			{
 				if (SceneView.lastActiveSceneView != null)
 				{
 					SceneView.lastActiveSceneView.viewIsLockedToObject = false;
 				}
-				Bounds result = default(Bounds);
+				Bounds bounds = default(Bounds);
 				float num = (this.selectedTool != TerrainTool.PlaceTree) ? ((float)this.m_Size) : TreePainter.brushSize;
 				Vector3 size;
 				size.x = num / (float)this.m_Terrain.terrainData.heightmapWidth * this.m_Terrain.terrainData.size.x;
 				size.z = num / (float)this.m_Terrain.terrainData.heightmapHeight * this.m_Terrain.terrainData.size.z;
 				size.y = (size.x + size.z) * 0.5f;
-				result.center = center;
-				result.size = size;
+				bounds.center = center;
+				bounds.size = size;
 				if (this.selectedTool == TerrainTool.PaintDetail && this.m_Terrain.terrainData.detailWidth != 0)
 				{
 					size.x = num / (float)this.m_Terrain.terrainData.detailWidth * this.m_Terrain.terrainData.size.x * 0.7f;
 					size.z = num / (float)this.m_Terrain.terrainData.detailHeight * this.m_Terrain.terrainData.size.z * 0.7f;
 					size.y = 0f;
-					result.size = size;
+					bounds.size = size;
 				}
-				return result;
+				result = bounds;
 			}
-			Vector3 position = this.m_Terrain.transform.position;
-			if (this.m_Terrain.terrainData == null)
+			else
 			{
-				return new Bounds(position, Vector3.zero);
-			}
-			Vector3 size2 = this.m_Terrain.terrainData.size;
-			float[,] heights = this.m_Terrain.terrainData.GetHeights(0, 0, this.m_Terrain.terrainData.heightmapWidth, this.m_Terrain.terrainData.heightmapHeight);
-			float num2 = -3.40282347E+38f;
-			for (int i = 0; i < this.m_Terrain.terrainData.heightmapHeight; i++)
-			{
-				for (int j = 0; j < this.m_Terrain.terrainData.heightmapWidth; j++)
+				Vector3 position = this.m_Terrain.transform.position;
+				if (this.m_Terrain.terrainData == null)
 				{
-					num2 = Mathf.Max(num2, heights[j, i]);
+					result = new Bounds(position, Vector3.zero);
+				}
+				else
+				{
+					Vector3 size2 = this.m_Terrain.terrainData.size;
+					float[,] heights = this.m_Terrain.terrainData.GetHeights(0, 0, this.m_Terrain.terrainData.heightmapWidth, this.m_Terrain.terrainData.heightmapHeight);
+					float num2 = -3.40282347E+38f;
+					for (int i = 0; i < this.m_Terrain.terrainData.heightmapHeight; i++)
+					{
+						for (int j = 0; j < this.m_Terrain.terrainData.heightmapWidth; j++)
+						{
+							num2 = Mathf.Max(num2, heights[j, i]);
+						}
+					}
+					size2.y = num2 * size2.y;
+					result = new Bounds(position + size2 * 0.5f, size2);
 				}
 			}
-			size2.y = num2 * size2.y;
-			return new Bounds(position + size2 * 0.5f, size2);
+			return result;
 		}
 
 		private bool IsModificationToolActive()
 		{
+			bool result;
 			if (!this.m_Terrain)
 			{
-				return false;
+				result = false;
 			}
-			TerrainTool selectedTool = this.selectedTool;
-			return selectedTool != TerrainTool.TerrainSettings && selectedTool >= TerrainTool.PaintHeight && selectedTool < TerrainTool.TerrainToolCount;
+			else
+			{
+				TerrainTool selectedTool = this.selectedTool;
+				result = (selectedTool != TerrainTool.TerrainSettings && selectedTool >= TerrainTool.PaintHeight && selectedTool < TerrainTool.TerrainToolCount);
+			}
+			return result;
 		}
 
 		private bool IsBrushPreviewVisible()
@@ -1215,257 +1260,247 @@ namespace UnityEditor
 			if (!this.IsModificationToolActive() || this.m_Terrain.terrainData == null)
 			{
 				this.DisableProjector();
-				return;
-			}
-			Projector previewProjector = this.GetActiveBrush(this.m_Size).GetPreviewProjector();
-			float num = 1f;
-			float num2 = this.m_Terrain.terrainData.size.x / this.m_Terrain.terrainData.size.z;
-			Transform transform = previewProjector.transform;
-			bool flag = true;
-			Vector2 vector;
-			Vector3 vector2;
-			if (this.Raycast(out vector, out vector2))
-			{
-				if (this.selectedTool == TerrainTool.PlaceTree)
-				{
-					previewProjector.material.mainTexture = (Texture2D)EditorGUIUtility.Load(EditorResourcesUtility.brushesPath + "builtin_brush_4.png");
-					num = TreePainter.brushSize / 0.8f;
-					num2 = 1f;
-				}
-				else if (this.selectedTool == TerrainTool.PaintHeight || this.selectedTool == TerrainTool.SetHeight || this.selectedTool == TerrainTool.SmoothHeight)
-				{
-					if (this.m_Size % 2 == 0)
-					{
-						float num3 = 0.5f;
-						vector.x = (Mathf.Floor(vector.x * (float)(this.m_Terrain.terrainData.heightmapWidth - 1)) + num3) / (float)(this.m_Terrain.terrainData.heightmapWidth - 1);
-						vector.y = (Mathf.Floor(vector.y * (float)(this.m_Terrain.terrainData.heightmapHeight - 1)) + num3) / (float)(this.m_Terrain.terrainData.heightmapHeight - 1);
-					}
-					else
-					{
-						vector.x = Mathf.Round(vector.x * (float)(this.m_Terrain.terrainData.heightmapWidth - 1)) / (float)(this.m_Terrain.terrainData.heightmapWidth - 1);
-						vector.y = Mathf.Round(vector.y * (float)(this.m_Terrain.terrainData.heightmapHeight - 1)) / (float)(this.m_Terrain.terrainData.heightmapHeight - 1);
-					}
-					vector2.x = vector.x * this.m_Terrain.terrainData.size.x;
-					vector2.z = vector.y * this.m_Terrain.terrainData.size.z;
-					vector2 += this.m_Terrain.transform.position;
-					num = (float)this.m_Size * 0.5f / (float)this.m_Terrain.terrainData.heightmapWidth * this.m_Terrain.terrainData.size.x;
-				}
-				else if (this.selectedTool == TerrainTool.PaintTexture || this.selectedTool == TerrainTool.PaintDetail)
-				{
-					float num4 = (this.m_Size % 2 != 0) ? 0.5f : 0f;
-					int num5;
-					int num6;
-					if (this.selectedTool == TerrainTool.PaintTexture)
-					{
-						num5 = this.m_Terrain.terrainData.alphamapWidth;
-						num6 = this.m_Terrain.terrainData.alphamapHeight;
-					}
-					else
-					{
-						num5 = this.m_Terrain.terrainData.detailWidth;
-						num6 = this.m_Terrain.terrainData.detailHeight;
-					}
-					if (num5 == 0 || num6 == 0)
-					{
-						flag = false;
-					}
-					vector.x = (Mathf.Floor(vector.x * (float)num5) + num4) / (float)num5;
-					vector.y = (Mathf.Floor(vector.y * (float)num6) + num4) / (float)num6;
-					vector2.x = vector.x * this.m_Terrain.terrainData.size.x;
-					vector2.z = vector.y * this.m_Terrain.terrainData.size.z;
-					vector2 += this.m_Terrain.transform.position;
-					num = (float)this.m_Size * 0.5f / (float)num5 * this.m_Terrain.terrainData.size.x;
-					num2 = (float)num5 / (float)num6;
-				}
 			}
 			else
 			{
-				flag = false;
+				Projector previewProjector = this.GetActiveBrush(this.m_Size).GetPreviewProjector();
+				float num = 1f;
+				float num2 = this.m_Terrain.terrainData.size.x / this.m_Terrain.terrainData.size.z;
+				Transform transform = previewProjector.transform;
+				bool flag = true;
+				Vector2 vector;
+				Vector3 vector2;
+				if (this.Raycast(out vector, out vector2))
+				{
+					if (this.selectedTool == TerrainTool.PlaceTree)
+					{
+						previewProjector.material.mainTexture = (Texture2D)EditorGUIUtility.Load(EditorResourcesUtility.brushesPath + "builtin_brush_4.png");
+						num = TreePainter.brushSize / 0.8f;
+						num2 = 1f;
+					}
+					else if (this.selectedTool == TerrainTool.PaintHeight || this.selectedTool == TerrainTool.SetHeight || this.selectedTool == TerrainTool.SmoothHeight)
+					{
+						if (this.m_Size % 2 == 0)
+						{
+							float num3 = 0.5f;
+							vector.x = (Mathf.Floor(vector.x * (float)(this.m_Terrain.terrainData.heightmapWidth - 1)) + num3) / (float)(this.m_Terrain.terrainData.heightmapWidth - 1);
+							vector.y = (Mathf.Floor(vector.y * (float)(this.m_Terrain.terrainData.heightmapHeight - 1)) + num3) / (float)(this.m_Terrain.terrainData.heightmapHeight - 1);
+						}
+						else
+						{
+							vector.x = Mathf.Round(vector.x * (float)(this.m_Terrain.terrainData.heightmapWidth - 1)) / (float)(this.m_Terrain.terrainData.heightmapWidth - 1);
+							vector.y = Mathf.Round(vector.y * (float)(this.m_Terrain.terrainData.heightmapHeight - 1)) / (float)(this.m_Terrain.terrainData.heightmapHeight - 1);
+						}
+						vector2.x = vector.x * this.m_Terrain.terrainData.size.x;
+						vector2.z = vector.y * this.m_Terrain.terrainData.size.z;
+						vector2 += this.m_Terrain.transform.position;
+						num = (float)this.m_Size * 0.5f / (float)this.m_Terrain.terrainData.heightmapWidth * this.m_Terrain.terrainData.size.x;
+					}
+					else if (this.selectedTool == TerrainTool.PaintTexture || this.selectedTool == TerrainTool.PaintDetail)
+					{
+						float num4 = (this.m_Size % 2 != 0) ? 0.5f : 0f;
+						int num5;
+						int num6;
+						if (this.selectedTool == TerrainTool.PaintTexture)
+						{
+							num5 = this.m_Terrain.terrainData.alphamapWidth;
+							num6 = this.m_Terrain.terrainData.alphamapHeight;
+						}
+						else
+						{
+							num5 = this.m_Terrain.terrainData.detailWidth;
+							num6 = this.m_Terrain.terrainData.detailHeight;
+						}
+						if (num5 == 0 || num6 == 0)
+						{
+							flag = false;
+						}
+						vector.x = (Mathf.Floor(vector.x * (float)num5) + num4) / (float)num5;
+						vector.y = (Mathf.Floor(vector.y * (float)num6) + num4) / (float)num6;
+						vector2.x = vector.x * this.m_Terrain.terrainData.size.x;
+						vector2.z = vector.y * this.m_Terrain.terrainData.size.z;
+						vector2 += this.m_Terrain.transform.position;
+						num = (float)this.m_Size * 0.5f / (float)num5 * this.m_Terrain.terrainData.size.x;
+						num2 = (float)num5 / (float)num6;
+					}
+				}
+				else
+				{
+					flag = false;
+				}
+				previewProjector.enabled = flag;
+				if (flag)
+				{
+					vector2.y = this.m_Terrain.SampleHeight(vector2);
+					transform.position = vector2 + new Vector3(0f, 50f, 0f);
+				}
+				previewProjector.orthographicSize = num / num2;
+				previewProjector.aspectRatio = num2;
 			}
-			previewProjector.enabled = flag;
-			if (flag)
-			{
-				vector2.y = this.m_Terrain.SampleHeight(vector2);
-				transform.position = vector2 + new Vector3(0f, 50f, 0f);
-			}
-			previewProjector.orthographicSize = num / num2;
-			previewProjector.aspectRatio = num2;
 		}
 
 		public void OnSceneGUI()
 		{
 			this.Initialize();
-			if (!this.m_Terrain.terrainData)
+			if (this.m_Terrain.terrainData)
 			{
-				return;
-			}
-			Event current = Event.current;
-			this.CheckKeys();
-			int controlID = GUIUtility.GetControlID(TerrainInspector.s_TerrainEditorHash, FocusType.Passive);
-			switch (current.GetTypeForControl(controlID))
-			{
-			case EventType.MouseDown:
-			case EventType.MouseDrag:
-			{
-				if (GUIUtility.hotControl != 0 && GUIUtility.hotControl != controlID)
+				Event current = Event.current;
+				this.CheckKeys();
+				int controlID = GUIUtility.GetControlID(TerrainInspector.s_TerrainEditorHash, FocusType.Passive);
+				switch (current.GetTypeForControl(controlID))
 				{
-					return;
-				}
-				if (current.GetTypeForControl(controlID) == EventType.MouseDrag && GUIUtility.hotControl != controlID)
-				{
-					return;
-				}
-				if (Event.current.alt)
-				{
-					return;
-				}
-				if (current.button != 0)
-				{
-					return;
-				}
-				if (!this.IsModificationToolActive())
-				{
-					return;
-				}
-				if (HandleUtility.nearestControl != controlID)
-				{
-					return;
-				}
-				if (current.type == EventType.MouseDown)
-				{
-					GUIUtility.hotControl = controlID;
-				}
-				Vector2 vector;
-				Vector3 vector2;
-				if (this.Raycast(out vector, out vector2))
-				{
-					if (this.selectedTool == TerrainTool.SetHeight && Event.current.shift)
+				case EventType.MouseDown:
+				case EventType.MouseDrag:
+					if (GUIUtility.hotControl == 0 || GUIUtility.hotControl == controlID)
 					{
-						this.m_TargetHeight.value = this.m_Terrain.terrainData.GetInterpolatedHeight(vector.x, vector.y) / this.m_Terrain.terrainData.size.y;
-						InspectorWindow.RepaintAllInspectors();
+						if (current.GetTypeForControl(controlID) != EventType.MouseDrag || GUIUtility.hotControl == controlID)
+						{
+							if (!Event.current.alt)
+							{
+								if (current.button == 0)
+								{
+									if (this.IsModificationToolActive())
+									{
+										if (HandleUtility.nearestControl == controlID)
+										{
+											if (current.type == EventType.MouseDown)
+											{
+												GUIUtility.hotControl = controlID;
+											}
+											Vector2 vector;
+											Vector3 vector2;
+											if (this.Raycast(out vector, out vector2))
+											{
+												if (this.selectedTool == TerrainTool.SetHeight && Event.current.shift)
+												{
+													this.m_TargetHeight.value = this.m_Terrain.terrainData.GetInterpolatedHeight(vector.x, vector.y) / this.m_Terrain.terrainData.size.y;
+													InspectorWindow.RepaintAllInspectors();
+												}
+												else if (this.selectedTool == TerrainTool.PlaceTree)
+												{
+													if (current.type == EventType.MouseDown)
+													{
+														Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Place Tree");
+													}
+													if (!Event.current.shift && !Event.current.control)
+													{
+														TreePainter.PlaceTrees(this.m_Terrain, vector.x, vector.y);
+													}
+													else
+													{
+														TreePainter.RemoveTrees(this.m_Terrain, vector.x, vector.y, Event.current.control);
+													}
+												}
+												else if (this.selectedTool == TerrainTool.PaintTexture)
+												{
+													if (current.type == EventType.MouseDown)
+													{
+														List<UnityEngine.Object> list = new List<UnityEngine.Object>();
+														list.Add(this.m_Terrain.terrainData);
+														list.AddRange(this.m_Terrain.terrainData.alphamapTextures);
+														Undo.RegisterCompleteObjectUndo(list.ToArray(), "Detail Edit");
+													}
+													SplatPainter splatPainter = new SplatPainter();
+													splatPainter.size = this.m_Size;
+													splatPainter.strength = this.m_Strength;
+													splatPainter.terrainData = this.m_Terrain.terrainData;
+													splatPainter.brush = this.GetActiveBrush(splatPainter.size);
+													splatPainter.target = this.m_SplatAlpha;
+													splatPainter.tool = this.selectedTool;
+													this.m_Terrain.editorRenderFlags = TerrainRenderFlags.heightmap;
+													splatPainter.Paint(vector.x, vector.y, this.m_SelectedSplat);
+													this.m_Terrain.terrainData.SetBasemapDirty(false);
+												}
+												else if (this.selectedTool == TerrainTool.PaintDetail)
+												{
+													if (current.type == EventType.MouseDown)
+													{
+														Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Detail Edit");
+													}
+													DetailPainter detailPainter = new DetailPainter();
+													detailPainter.size = this.m_Size;
+													detailPainter.targetStrength = this.m_DetailStrength * 16f;
+													detailPainter.opacity = this.m_DetailOpacity;
+													if (Event.current.shift || Event.current.control)
+													{
+														detailPainter.targetStrength *= -1f;
+													}
+													detailPainter.clearSelectedOnly = Event.current.control;
+													detailPainter.terrainData = this.m_Terrain.terrainData;
+													detailPainter.brush = this.GetActiveBrush(detailPainter.size);
+													detailPainter.tool = this.selectedTool;
+													detailPainter.randomizeDetails = true;
+													detailPainter.Paint(vector.x, vector.y, this.m_SelectedDetail);
+												}
+												else
+												{
+													if (current.type == EventType.MouseDown)
+													{
+														Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Heightmap Edit");
+													}
+													HeightmapPainter heightmapPainter = new HeightmapPainter();
+													heightmapPainter.size = this.m_Size;
+													heightmapPainter.strength = this.m_Strength * 0.01f;
+													if (this.selectedTool == TerrainTool.SmoothHeight)
+													{
+														heightmapPainter.strength = this.m_Strength;
+													}
+													heightmapPainter.terrainData = this.m_Terrain.terrainData;
+													heightmapPainter.brush = this.GetActiveBrush(this.m_Size);
+													heightmapPainter.targetHeight = this.m_TargetHeight;
+													heightmapPainter.tool = this.selectedTool;
+													this.m_Terrain.editorRenderFlags = TerrainRenderFlags.heightmap;
+													if (this.selectedTool == TerrainTool.PaintHeight && Event.current.shift)
+													{
+														heightmapPainter.strength = -heightmapPainter.strength;
+													}
+													heightmapPainter.PaintHeight(vector.x, vector.y);
+												}
+												current.Use();
+											}
+										}
+									}
+								}
+							}
+						}
 					}
-					else if (this.selectedTool == TerrainTool.PlaceTree)
+					break;
+				case EventType.MouseUp:
+					if (GUIUtility.hotControl == controlID)
 					{
-						if (current.type == EventType.MouseDown)
+						GUIUtility.hotControl = 0;
+						if (this.IsModificationToolActive())
 						{
-							Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Place Tree");
-						}
-						if (!Event.current.shift && !Event.current.control)
-						{
-							TreePainter.PlaceTrees(this.m_Terrain, vector.x, vector.y);
-						}
-						else
-						{
-							TreePainter.RemoveTrees(this.m_Terrain, vector.x, vector.y, Event.current.control);
+							if (this.selectedTool == TerrainTool.PaintTexture)
+							{
+								this.m_Terrain.terrainData.SetBasemapDirty(true);
+							}
+							this.m_Terrain.editorRenderFlags = TerrainRenderFlags.all;
+							this.m_Terrain.ApplyDelayedHeightmapModification();
+							current.Use();
 						}
 					}
-					else if (this.selectedTool == TerrainTool.PaintTexture)
+					break;
+				case EventType.MouseMove:
+					if (this.IsBrushPreviewVisible())
 					{
-						if (current.type == EventType.MouseDown)
-						{
-							List<UnityEngine.Object> list = new List<UnityEngine.Object>();
-							list.Add(this.m_Terrain.terrainData);
-							list.AddRange(this.m_Terrain.terrainData.alphamapTextures);
-							Undo.RegisterCompleteObjectUndo(list.ToArray(), "Detail Edit");
-						}
-						SplatPainter splatPainter = new SplatPainter();
-						splatPainter.size = this.m_Size;
-						splatPainter.strength = this.m_Strength;
-						splatPainter.terrainData = this.m_Terrain.terrainData;
-						splatPainter.brush = this.GetActiveBrush(splatPainter.size);
-						splatPainter.target = this.m_SplatAlpha;
-						splatPainter.tool = this.selectedTool;
-						this.m_Terrain.editorRenderFlags = TerrainRenderFlags.heightmap;
-						splatPainter.Paint(vector.x, vector.y, this.m_SelectedSplat);
-						this.m_Terrain.terrainData.SetBasemapDirty(false);
+						HandleUtility.Repaint();
 					}
-					else if (this.selectedTool == TerrainTool.PaintDetail)
+					break;
+				case EventType.Repaint:
+					this.DisableProjector();
+					break;
+				case EventType.Layout:
+					if (this.IsModificationToolActive())
 					{
-						if (current.type == EventType.MouseDown)
-						{
-							Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Detail Edit");
-						}
-						DetailPainter detailPainter = new DetailPainter();
-						detailPainter.size = this.m_Size;
-						detailPainter.targetStrength = this.m_DetailStrength * 16f;
-						detailPainter.opacity = this.m_DetailOpacity;
-						if (Event.current.shift || Event.current.control)
-						{
-							detailPainter.targetStrength *= -1f;
-						}
-						detailPainter.clearSelectedOnly = Event.current.control;
-						detailPainter.terrainData = this.m_Terrain.terrainData;
-						detailPainter.brush = this.GetActiveBrush(detailPainter.size);
-						detailPainter.tool = this.selectedTool;
-						detailPainter.randomizeDetails = true;
-						detailPainter.Paint(vector.x, vector.y, this.m_SelectedDetail);
+						HandleUtility.AddDefaultControl(controlID);
 					}
-					else
-					{
-						if (current.type == EventType.MouseDown)
-						{
-							Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Heightmap Edit");
-						}
-						HeightmapPainter heightmapPainter = new HeightmapPainter();
-						heightmapPainter.size = this.m_Size;
-						heightmapPainter.strength = this.m_Strength * 0.01f;
-						if (this.selectedTool == TerrainTool.SmoothHeight)
-						{
-							heightmapPainter.strength = this.m_Strength;
-						}
-						heightmapPainter.terrainData = this.m_Terrain.terrainData;
-						heightmapPainter.brush = this.GetActiveBrush(this.m_Size);
-						heightmapPainter.targetHeight = this.m_TargetHeight;
-						heightmapPainter.tool = this.selectedTool;
-						this.m_Terrain.editorRenderFlags = TerrainRenderFlags.heightmap;
-						if (this.selectedTool == TerrainTool.PaintHeight && Event.current.shift)
-						{
-							heightmapPainter.strength = -heightmapPainter.strength;
-						}
-						heightmapPainter.PaintHeight(vector.x, vector.y);
-					}
-					current.Use();
+					break;
 				}
-				break;
-			}
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl != controlID)
-				{
-					return;
-				}
-				GUIUtility.hotControl = 0;
-				if (!this.IsModificationToolActive())
-				{
-					return;
-				}
-				if (this.selectedTool == TerrainTool.PaintTexture)
-				{
-					this.m_Terrain.terrainData.SetBasemapDirty(true);
-				}
-				this.m_Terrain.editorRenderFlags = TerrainRenderFlags.all;
-				this.m_Terrain.ApplyDelayedHeightmapModification();
-				current.Use();
-				break;
-			case EventType.MouseMove:
-				if (this.IsBrushPreviewVisible())
-				{
-					HandleUtility.Repaint();
-				}
-				break;
-			case EventType.Repaint:
-				this.DisableProjector();
-				break;
-			case EventType.Layout:
-				if (!this.IsModificationToolActive())
-				{
-					return;
-				}
-				HandleUtility.AddDefaultControl(controlID);
-				break;
 			}
 		}
 
-		public void OnPreSceneGUI()
+		private void OnPreSceneGUICallback(SceneView sceneView)
 		{
 			if (Event.current.type == EventType.Repaint)
 			{

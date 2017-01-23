@@ -7,19 +7,19 @@ namespace UnityEditor
 {
 	internal class GameViewGUI
 	{
-		private static int m_FrameCounter;
+		private static int m_FrameCounter = 0;
 
-		private static float m_ClientTimeAccumulator;
+		private static float m_ClientTimeAccumulator = 0f;
 
-		private static float m_RenderTimeAccumulator;
+		private static float m_RenderTimeAccumulator = 0f;
 
-		private static float m_MaxTimeAccumulator;
+		private static float m_MaxTimeAccumulator = 0f;
 
-		private static float m_ClientFrameTime;
+		private static float m_ClientFrameTime = 0f;
 
-		private static float m_RenderFrameTime;
+		private static float m_RenderFrameTime = 0f;
 
-		private static float m_MaxFrameTime;
+		private static float m_MaxFrameTime = 0f;
 
 		private static GUIStyle s_SectionHeaderStyle;
 
@@ -52,53 +52,62 @@ namespace UnityEditor
 
 		private static string FormatNumber(int num)
 		{
+			string result;
 			if (num < 1000)
 			{
-				return num.ToString();
+				result = num.ToString();
 			}
-			if (num < 1000000)
+			else if (num < 1000000)
 			{
-				return ((double)num * 0.001).ToString("f1") + "k";
+				result = ((double)num * 0.001).ToString("f1") + "k";
 			}
-			return ((double)num * 1E-06).ToString("f1") + "M";
+			else
+			{
+				result = ((double)num * 1E-06).ToString("f1") + "M";
+			}
+			return result;
 		}
 
 		private static void UpdateFrameTime()
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			float frameTime = UnityStats.frameTime;
-			float renderTime = UnityStats.renderTime;
-			GameViewGUI.m_ClientTimeAccumulator += frameTime;
-			GameViewGUI.m_RenderTimeAccumulator += renderTime;
-			GameViewGUI.m_MaxTimeAccumulator += Mathf.Max(frameTime, renderTime);
-			GameViewGUI.m_FrameCounter++;
-			bool flag = GameViewGUI.m_ClientFrameTime == 0f && GameViewGUI.m_RenderFrameTime == 0f;
-			bool flag2 = GameViewGUI.m_FrameCounter > 30 || GameViewGUI.m_ClientTimeAccumulator > 0.3f || GameViewGUI.m_RenderTimeAccumulator > 0.3f;
-			if (flag || flag2)
-			{
-				GameViewGUI.m_ClientFrameTime = GameViewGUI.m_ClientTimeAccumulator / (float)GameViewGUI.m_FrameCounter;
-				GameViewGUI.m_RenderFrameTime = GameViewGUI.m_RenderTimeAccumulator / (float)GameViewGUI.m_FrameCounter;
-				GameViewGUI.m_MaxFrameTime = GameViewGUI.m_MaxTimeAccumulator / (float)GameViewGUI.m_FrameCounter;
-			}
-			if (flag2)
-			{
-				GameViewGUI.m_ClientTimeAccumulator = 0f;
-				GameViewGUI.m_RenderTimeAccumulator = 0f;
-				GameViewGUI.m_MaxTimeAccumulator = 0f;
-				GameViewGUI.m_FrameCounter = 0;
+				float frameTime = UnityStats.frameTime;
+				float renderTime = UnityStats.renderTime;
+				GameViewGUI.m_ClientTimeAccumulator += frameTime;
+				GameViewGUI.m_RenderTimeAccumulator += renderTime;
+				GameViewGUI.m_MaxTimeAccumulator += Mathf.Max(frameTime, renderTime);
+				GameViewGUI.m_FrameCounter++;
+				bool flag = GameViewGUI.m_ClientFrameTime == 0f && GameViewGUI.m_RenderFrameTime == 0f;
+				bool flag2 = GameViewGUI.m_FrameCounter > 30 || GameViewGUI.m_ClientTimeAccumulator > 0.3f || GameViewGUI.m_RenderTimeAccumulator > 0.3f;
+				if (flag || flag2)
+				{
+					GameViewGUI.m_ClientFrameTime = GameViewGUI.m_ClientTimeAccumulator / (float)GameViewGUI.m_FrameCounter;
+					GameViewGUI.m_RenderFrameTime = GameViewGUI.m_RenderTimeAccumulator / (float)GameViewGUI.m_FrameCounter;
+					GameViewGUI.m_MaxFrameTime = GameViewGUI.m_MaxTimeAccumulator / (float)GameViewGUI.m_FrameCounter;
+				}
+				if (flag2)
+				{
+					GameViewGUI.m_ClientTimeAccumulator = 0f;
+					GameViewGUI.m_RenderTimeAccumulator = 0f;
+					GameViewGUI.m_MaxTimeAccumulator = 0f;
+					GameViewGUI.m_FrameCounter = 0;
+				}
 			}
 		}
 
 		private static string FormatDb(float vol)
 		{
+			string result;
 			if (vol == 0f)
 			{
-				return "-∞ dB";
+				result = "-∞ dB";
 			}
-			return string.Format("{0:F1} dB", 20f * Mathf.Log10(vol));
+			else
+			{
+				result = string.Format("{0:F1} dB", 20f * Mathf.Log10(vol));
+			}
+			return result;
 		}
 
 		[RequiredByNativeCode]

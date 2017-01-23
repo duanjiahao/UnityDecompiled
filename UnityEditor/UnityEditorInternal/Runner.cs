@@ -36,7 +36,7 @@ namespace UnityEditorInternal
 			}
 			else
 			{
-				program = new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), "4.0", exe, args, setupStartInfo);
+				program = new ManagedProgram(MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"), null, exe, args, false, setupStartInfo);
 			}
 			using (program)
 			{

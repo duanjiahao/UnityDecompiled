@@ -5,7 +5,7 @@ namespace UnityEditor
 	[Serializable]
 	internal class MemoryElementSelection
 	{
-		private MemoryElement m_Selected;
+		private MemoryElement m_Selected = null;
 
 		public MemoryElement Selected
 		{
@@ -36,83 +36,72 @@ namespace UnityEditor
 
 		public void MoveUp()
 		{
-			if (this.m_Selected == null)
+			if (this.m_Selected != null)
 			{
-				return;
-			}
-			if (this.m_Selected.parent == null)
-			{
-				return;
-			}
-			MemoryElement prevNode = this.m_Selected.GetPrevNode();
-			if (prevNode.parent != null)
-			{
-				this.SetSelection(prevNode);
-			}
-			else
-			{
-				this.SetSelection(prevNode.FirstChild());
+				if (this.m_Selected.parent != null)
+				{
+					MemoryElement prevNode = this.m_Selected.GetPrevNode();
+					if (prevNode.parent != null)
+					{
+						this.SetSelection(prevNode);
+					}
+					else
+					{
+						this.SetSelection(prevNode.FirstChild());
+					}
+				}
 			}
 		}
 
 		public void MoveDown()
 		{
-			if (this.m_Selected == null)
+			if (this.m_Selected != null)
 			{
-				return;
-			}
-			if (this.m_Selected.parent == null)
-			{
-				return;
-			}
-			MemoryElement nextNode = this.m_Selected.GetNextNode();
-			if (nextNode != null)
-			{
-				this.SetSelection(nextNode);
+				if (this.m_Selected.parent != null)
+				{
+					MemoryElement nextNode = this.m_Selected.GetNextNode();
+					if (nextNode != null)
+					{
+						this.SetSelection(nextNode);
+					}
+				}
 			}
 		}
 
 		public void MoveFirst()
 		{
-			if (this.m_Selected == null)
+			if (this.m_Selected != null)
 			{
-				return;
+				if (this.m_Selected.parent != null)
+				{
+					this.SetSelection(this.m_Selected.GetRoot().FirstChild());
+				}
 			}
-			if (this.m_Selected.parent == null)
-			{
-				return;
-			}
-			this.SetSelection(this.m_Selected.GetRoot().FirstChild());
 		}
 
 		public void MoveLast()
 		{
-			if (this.m_Selected == null)
+			if (this.m_Selected != null)
 			{
-				return;
+				if (this.m_Selected.parent != null)
+				{
+					this.SetSelection(this.m_Selected.GetRoot().LastChild());
+				}
 			}
-			if (this.m_Selected.parent == null)
-			{
-				return;
-			}
-			this.SetSelection(this.m_Selected.GetRoot().LastChild());
 		}
 
 		public void MoveParent()
 		{
-			if (this.m_Selected == null)
+			if (this.m_Selected != null)
 			{
-				return;
+				if (this.m_Selected.parent != null)
+				{
+					if (this.m_Selected.parent.parent != null)
+					{
+						this.SetSelection(this.m_Selected.parent);
+					}
+				}
 			}
-			if (this.m_Selected.parent == null)
-			{
-				return;
-			}
-			if (this.m_Selected.parent.parent == null)
-			{
-				return;
-			}
-			this.SetSelection(this.m_Selected.parent);
 		}
 	}
 }

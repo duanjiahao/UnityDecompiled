@@ -10,40 +10,42 @@ namespace UnityEditor
 
 		public extern UnityEngine.Object targetObject
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern UnityEngine.Object[] targetObjects
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern bool hasModifiedProperties
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern InspectorMode inspectorMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isEditingMultipleObjects
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+		}
+
+		public extern int maxArraySizeForMultiEditing
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
 		public SerializedObject(UnityEngine.Object obj)
@@ -59,23 +61,19 @@ namespace UnityEditor
 			this.InternalCreate(objs);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalCreate(UnityEngine.Object[] monoObjs);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Update();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetIsDifferentCacheDirty();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void UpdateIfDirtyOrScript();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 
@@ -95,38 +93,36 @@ namespace UnityEditor
 		{
 			SerializedProperty iterator_Internal = this.GetIterator_Internal();
 			iterator_Internal.m_SerializedObject = this;
+			SerializedProperty result;
 			if (iterator_Internal.FindPropertyInternal(propertyPath))
 			{
-				return iterator_Internal;
+				result = iterator_Internal;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern SerializedProperty GetIterator_Internal();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void Cache(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern SerializedObject LoadFromCache(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern PropertyModification ExtractPropertyModification(string propertyPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool ApplyModifiedProperties();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool ApplyModifiedPropertiesWithoutUndo();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CopyFromSerializedProperty(SerializedProperty prop);
 	}

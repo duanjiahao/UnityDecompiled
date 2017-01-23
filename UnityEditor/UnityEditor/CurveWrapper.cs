@@ -5,16 +5,16 @@ namespace UnityEditor
 {
 	internal class CurveWrapper
 	{
+		public delegate Vector2 GetAxisScalarsCallback();
+
+		public delegate void SetAxisScalarsCallback(Vector2 newAxisScalars);
+
 		internal enum SelectionMode
 		{
 			None,
 			Selected,
 			SemiSelected
 		}
-
-		public delegate Vector2 GetAxisScalarsCallback();
-
-		public delegate void SetAxisScalarsCallback(Vector2 newAxisScalars);
 
 		private CurveRenderer m_Renderer;
 
@@ -30,6 +30,8 @@ namespace UnityEditor
 
 		public Color color;
 
+		public Color wrapColorMultiplier = Color.white;
+
 		public bool readOnly;
 
 		public bool hidden;
@@ -38,11 +40,11 @@ namespace UnityEditor
 
 		public CurveWrapper.SetAxisScalarsCallback setAxisUiScalarsCallback;
 
-		public bool changed;
-
 		public CurveWrapper.SelectionMode selected;
 
 		public int listIndex;
+
+		private bool m_Changed;
 
 		public float vRangeMin = float.NegativeInfinity;
 
@@ -65,6 +67,22 @@ namespace UnityEditor
 			get
 			{
 				return this.renderer.GetCurve();
+			}
+		}
+
+		public GameObject rootGameObjet
+		{
+			get
+			{
+				return (this.m_SelectionBinding == null) ? null : this.m_SelectionBinding.rootGameObject;
+			}
+		}
+
+		public AnimationClip animationClip
+		{
+			get
+			{
+				return (this.m_SelectionBinding == null) ? null : this.m_SelectionBinding.animationClip;
 			}
 		}
 
@@ -109,6 +127,22 @@ namespace UnityEditor
 			set
 			{
 				this.m_SelectionBinding = value;
+			}
+		}
+
+		public bool changed
+		{
+			get
+			{
+				return this.m_Changed;
+			}
+			set
+			{
+				this.m_Changed = value;
+				if (value && this.renderer != null)
+				{
+					this.renderer.FlushCache();
+				}
 			}
 		}
 

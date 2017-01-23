@@ -22,24 +22,10 @@ namespace UnityEditorInternal
 
 		private static AddCurvesPopup.OnNewCurveAdded NewCurveAddedCallback;
 
-		internal static UnityEngine.Object animatableObject
+		internal static AnimationWindowSelection selection
 		{
 			get;
 			set;
-		}
-
-		internal static GameObject gameObject
-		{
-			get;
-			set;
-		}
-
-		internal static string path
-		{
-			get
-			{
-				return AnimationUtility.CalculateTransformPath(AddCurvesPopup.gameObject.transform, AddCurvesPopup.s_State.activeRootGameObject.transform);
-			}
 		}
 
 		private void Init(Rect buttonRect)
@@ -60,7 +46,7 @@ namespace UnityEditorInternal
 
 		internal static void AddNewCurve(AddCurvesPopupPropertyNode node)
 		{
-			AnimationWindowUtility.CreateDefaultCurves(AddCurvesPopup.s_State, node.curveBindings);
+			AnimationWindowUtility.CreateDefaultCurves(AddCurvesPopup.s_State, node.selectionItem, node.curveBindings);
 			if (AddCurvesPopup.NewCurveAddedCallback != null)
 			{
 				AddCurvesPopup.NewCurveAddedCallback(node);
@@ -70,6 +56,7 @@ namespace UnityEditorInternal
 		internal static bool ShowAtPosition(Rect buttonRect, IAnimationRecordingState state, AddCurvesPopup.OnNewCurveAdded newCurveCallback)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num >= AddCurvesPopup.s_LastClosedTime + 50L)
 			{
 				Event.current.Use();
@@ -80,24 +67,27 @@ namespace UnityEditorInternal
 				AddCurvesPopup.NewCurveAddedCallback = newCurveCallback;
 				AddCurvesPopup.s_State = state;
 				AddCurvesPopup.s_AddCurvesPopup.Init(buttonRect);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		internal void OnGUI()
 		{
-			if (Event.current.type == EventType.Layout)
+			if (Event.current.type != EventType.Layout)
 			{
-				return;
+				if (AddCurvesPopup.s_Hierarchy == null)
+				{
+					AddCurvesPopup.s_Hierarchy = new AddCurvesPopupHierarchy();
+				}
+				Rect position = new Rect(1f, 1f, AddCurvesPopup.windowSize.x - 3f, AddCurvesPopup.windowSize.y - 3f);
+				GUI.Box(new Rect(0f, 0f, AddCurvesPopup.windowSize.x, AddCurvesPopup.windowSize.y), GUIContent.none, new GUIStyle("grey_border"));
+				AddCurvesPopup.s_Hierarchy.OnGUI(position, this);
 			}
-			if (AddCurvesPopup.s_Hierarchy == null)
-			{
-				AddCurvesPopup.s_Hierarchy = new AddCurvesPopupHierarchy(AddCurvesPopup.s_State);
-			}
-			Rect position = new Rect(1f, 1f, AddCurvesPopup.windowSize.x - 3f, AddCurvesPopup.windowSize.y - 3f);
-			GUI.Box(new Rect(0f, 0f, AddCurvesPopup.windowSize.x, AddCurvesPopup.windowSize.y), GUIContent.none, new GUIStyle("grey_border"));
-			AddCurvesPopup.s_Hierarchy.OnGUI(position, this);
 		}
 	}
 }

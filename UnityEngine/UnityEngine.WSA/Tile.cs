@@ -15,7 +15,7 @@ namespace UnityEngine.WSA
 			{
 				if (Tile.s_MainTile == null)
 				{
-					Tile.s_MainTile = new Tile(string.Empty);
+					Tile.s_MainTile = new Tile("");
 				}
 				return Tile.s_MainTile;
 			}
@@ -50,7 +50,7 @@ namespace UnityEngine.WSA
 			this.m_TileId = tileId;
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetTemplate(TileTemplate templ);
 
@@ -59,7 +59,7 @@ namespace UnityEngine.WSA
 			Tile.Update(this.m_TileId, xml);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Update(string tileId, string xml);
 
@@ -68,7 +68,7 @@ namespace UnityEngine.WSA
 			Tile.UpdateImageAndText(this.m_TileId, medium, wide, large, text);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void UpdateImageAndText(string tileId, string medium, string wide, string large, string text);
 
@@ -77,7 +77,7 @@ namespace UnityEngine.WSA
 			Tile.PeriodicUpdate(this.m_TileId, uri, interval);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void PeriodicUpdate(string tileId, string uri, float interval);
 
@@ -86,7 +86,7 @@ namespace UnityEngine.WSA
 			Tile.StopPeriodicUpdate(this.m_TileId);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void StopPeriodicUpdate(string tileId);
 
@@ -95,7 +95,7 @@ namespace UnityEngine.WSA
 			Tile.UpdateBadgeImage(this.m_TileId, image);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void UpdateBadgeImage(string tileId, string image);
 
@@ -104,7 +104,7 @@ namespace UnityEngine.WSA
 			Tile.UpdateBadgeNumber(this.m_TileId, number);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void UpdateBadgeNumber(string tileId, float number);
 
@@ -113,7 +113,7 @@ namespace UnityEngine.WSA
 			Tile.RemoveBadge(this.m_TileId);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void RemoveBadge(string tileId);
 
@@ -122,7 +122,7 @@ namespace UnityEngine.WSA
 			Tile.PeriodicBadgeUpdate(this.m_TileId, uri, interval);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void PeriodicBadgeUpdate(string tileId, string uri, float interval);
 
@@ -131,15 +131,15 @@ namespace UnityEngine.WSA
 			Tile.StopPeriodicBadgeUpdate(this.m_TileId);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void StopPeriodicBadgeUpdate(string tileId);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool HasUserConsent(string tileId);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Exists(string tileId);
 
@@ -179,11 +179,16 @@ namespace UnityEngine.WSA
 			bool[] bargs = Tile.MakeSecondaryTileBargs(data);
 			Color32 backgroundColor = data.backgroundColor;
 			string text = Tile.CreateOrUpdateSecondaryTile(sargs, bargs, ref backgroundColor, (int)data.foregroundText);
+			Tile result;
 			if (string.IsNullOrEmpty(text))
 			{
-				return null;
+				result = null;
 			}
-			return new Tile(text);
+			else
+			{
+				result = new Tile(text);
+			}
+			return result;
 		}
 
 		[ThreadAndSerializationSafe]
@@ -192,7 +197,6 @@ namespace UnityEngine.WSA
 			return Tile.INTERNAL_CALL_CreateOrUpdateSecondaryTile(sargs, bargs, ref backgroundColor, foregroundText);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string INTERNAL_CALL_CreateOrUpdateSecondaryTile(string[] sargs, bool[] bargs, ref Color32 backgroundColor, int foregroundText);
 
@@ -202,11 +206,16 @@ namespace UnityEngine.WSA
 			bool[] bargs = Tile.MakeSecondaryTileBargs(data);
 			Color32 backgroundColor = data.backgroundColor;
 			string text = Tile.CreateOrUpdateSecondaryTilePoint(sargs, bargs, ref backgroundColor, (int)data.foregroundText, pos);
+			Tile result;
 			if (string.IsNullOrEmpty(text))
 			{
-				return null;
+				result = null;
 			}
-			return new Tile(text);
+			else
+			{
+				result = new Tile(text);
+			}
+			return result;
 		}
 
 		[ThreadAndSerializationSafe]
@@ -215,7 +224,6 @@ namespace UnityEngine.WSA
 			return Tile.INTERNAL_CALL_CreateOrUpdateSecondaryTilePoint(sargs, bargs, ref backgroundColor, foregroundText, ref pos);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string INTERNAL_CALL_CreateOrUpdateSecondaryTilePoint(string[] sargs, bool[] bargs, ref Color32 backgroundColor, int foregroundText, ref Vector2 pos);
 
@@ -225,11 +233,16 @@ namespace UnityEngine.WSA
 			bool[] bargs = Tile.MakeSecondaryTileBargs(data);
 			Color32 backgroundColor = data.backgroundColor;
 			string text = Tile.CreateOrUpdateSecondaryTileArea(sargs, bargs, ref backgroundColor, (int)data.foregroundText, area);
+			Tile result;
 			if (string.IsNullOrEmpty(text))
 			{
-				return null;
+				result = null;
 			}
-			return new Tile(text);
+			else
+			{
+				result = new Tile(text);
+			}
+			return result;
 		}
 
 		[ThreadAndSerializationSafe]
@@ -238,17 +251,21 @@ namespace UnityEngine.WSA
 			return Tile.INTERNAL_CALL_CreateOrUpdateSecondaryTileArea(sargs, bargs, ref backgroundColor, foregroundText, ref area);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string INTERNAL_CALL_CreateOrUpdateSecondaryTileArea(string[] sargs, bool[] bargs, ref Color32 backgroundColor, int foregroundText, ref Rect area);
 
 		public static Tile GetSecondary(string tileId)
 		{
+			Tile result;
 			if (Tile.Exists(tileId))
 			{
-				return new Tile(tileId);
+				result = new Tile(tileId);
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public static Tile[] GetSecondaries()
@@ -262,7 +279,7 @@ namespace UnityEngine.WSA
 			return array;
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string[] GetAllSecondaryTiles();
 
@@ -271,7 +288,7 @@ namespace UnityEngine.WSA
 			Tile.DeleteSecondary(this.m_TileId);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DeleteSecondary(string tileId);
 
@@ -291,7 +308,6 @@ namespace UnityEngine.WSA
 			Tile.INTERNAL_CALL_DeleteSecondaryPos(tileId, ref pos);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DeleteSecondaryPos(string tileId, ref Vector2 pos);
 
@@ -311,7 +327,6 @@ namespace UnityEngine.WSA
 			Tile.INTERNAL_CALL_DeleteSecondaryArea(tileId, ref area);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DeleteSecondaryArea(string tileId, ref Rect area);
 	}

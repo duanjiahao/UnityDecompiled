@@ -10,6 +10,10 @@ namespace UnityEditor
 {
 	internal sealed class AsyncHTTPClient
 	{
+		private delegate void RequestProgressCallback(AsyncHTTPClient.State status, int downloaded, int totalSize);
+
+		private delegate void RequestDoneCallback(AsyncHTTPClient.State status, int httpStatus);
+
 		internal enum State
 		{
 			INIT,
@@ -23,10 +27,6 @@ namespace UnityEditor
 			ABORTED,
 			TIMEOUT
 		}
-
-		private delegate void RequestProgressCallback(AsyncHTTPClient.State status, int downloaded, int totalSize);
-
-		private delegate void RequestDoneCallback(AsyncHTTPClient.State status, int httpStatus);
 
 		public delegate void DoneCallback(AsyncHTTPClient client);
 
@@ -60,11 +60,16 @@ namespace UnityEditor
 			{
 				UTF8Encoding uTF8Encoding = new UTF8Encoding();
 				byte[] bytes = this.bytes;
+				string result;
 				if (bytes == null)
 				{
-					return null;
+					result = null;
 				}
-				return uTF8Encoding.GetString(bytes);
+				else
+				{
+					result = uTF8Encoding.GetString(bytes);
+				}
+				return result;
 			}
 		}
 
@@ -107,7 +112,7 @@ namespace UnityEditor
 			set
 			{
 				this.m_FromData = value;
-				if (this.m_Method == string.Empty)
+				if (this.m_Method == "")
 				{
 					this.m_Method = "POST";
 				}
@@ -131,11 +136,11 @@ namespace UnityEditor
 		{
 			this.m_ToUrl = _toUrl;
 			this.m_FromData = null;
-			this.m_Method = string.Empty;
+			this.m_Method = "";
 			this.state = AsyncHTTPClient.State.INIT;
 			this.header = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 			this.m_Handle = (IntPtr)0;
-			this.tag = string.Empty;
+			this.tag = "";
 			this.statusCallback = null;
 		}
 
@@ -147,7 +152,7 @@ namespace UnityEditor
 			this.state = AsyncHTTPClient.State.INIT;
 			this.header = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 			this.m_Handle = (IntPtr)0;
-			this.tag = string.Empty;
+			this.tag = "";
 			this.statusCallback = null;
 		}
 
@@ -167,27 +172,21 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SubmitClientRequest(string tag, string url, string[] headers, string method, string data, AsyncHTTPClient.RequestDoneCallback doneDelegate, AsyncHTTPClient.RequestProgressCallback progressDelegate, out IntPtr value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern byte[] GetBytesByHandle(IntPtr handle);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Texture2D GetTextureByHandle(IntPtr handle);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AbortByTag(string tag);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AbortByHandle(IntPtr handle);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CurlRequestCheck();
 
@@ -209,16 +208,20 @@ namespace UnityEditor
 
 		public static bool IsDone(AsyncHTTPClient.State state)
 		{
+			bool result;
 			switch (state)
 			{
 			case AsyncHTTPClient.State.DONE_OK:
 			case AsyncHTTPClient.State.DONE_FAILED:
 			case AsyncHTTPClient.State.ABORTED:
 			case AsyncHTTPClient.State.TIMEOUT:
-				return true;
+				result = true;
+				break;
 			default:
-				return false;
+				result = false;
+				break;
 			}
+			return result;
 		}
 
 		public bool IsSuccess()
@@ -236,15 +239,17 @@ namespace UnityEditor
 			if (this.IsAborted())
 			{
 				this.state = AsyncHTTPClient.State.ABORTED;
-				return;
 			}
-			if (this.m_Method == string.Empty)
+			else
 			{
-				this.m_Method = "GET";
+				if (this.m_Method == "")
+				{
+					this.m_Method = "GET";
+				}
+				string[] headers = (from kv in this.header
+				select string.Format("{0}: {1}", kv.Key, kv.Value)).ToArray<string>();
+				this.m_Handle = AsyncHTTPClient.SubmitClientRequest(this.tag, this.m_ToUrl, headers, this.m_Method, this.m_FromData, new AsyncHTTPClient.RequestDoneCallback(this.Done), new AsyncHTTPClient.RequestProgressCallback(this.Progress));
 			}
-			string[] headers = (from kv in this.header
-			select string.Format("{0}: {1}", kv.Key, kv.Value)).ToArray<string>();
-			this.m_Handle = AsyncHTTPClient.SubmitClientRequest(this.tag, this.m_ToUrl, headers, this.m_Method, this.m_FromData, new AsyncHTTPClient.RequestDoneCallback(this.Done), new AsyncHTTPClient.RequestProgressCallback(this.Progress));
 		}
 
 		private void Done(AsyncHTTPClient.State status, int i_ResponseCode)

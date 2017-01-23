@@ -8,6 +8,7 @@ namespace UnityEngine
 		Stretch,
 		HorizontalBillboard,
 		VerticalBillboard,
-		Mesh
+		Mesh,
+		None
 	}
 }

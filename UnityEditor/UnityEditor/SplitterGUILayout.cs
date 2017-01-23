@@ -118,7 +118,7 @@ namespace UnityEditor
 		public static void BeginSplit(SplitterState state, GUIStyle style, bool vertical, params GUILayoutOption[] options)
 		{
 			SplitterGUILayout.GUISplitterGroup gUISplitterGroup = (SplitterGUILayout.GUISplitterGroup)GUILayoutUtility.BeginLayoutGroup(style, null, typeof(SplitterGUILayout.GUISplitterGroup));
-			state.ID = GUIUtility.GetControlID(SplitterGUILayout.splitterHash, FocusType.Native);
+			state.ID = GUIUtility.GetControlID(SplitterGUILayout.splitterHash, FocusType.Passive);
 			switch (Event.current.GetTypeForControl(state.ID))
 			{
 			case EventType.MouseDown:

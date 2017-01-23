@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Scripting;
 
 namespace UnityEngine
@@ -20,15 +21,27 @@ namespace UnityEngine
 
 		public static event Display.DisplaysUpdatedDelegate onDisplaysUpdated
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				Display.onDisplaysUpdated = (Display.DisplaysUpdatedDelegate)Delegate.Combine(Display.onDisplaysUpdated, value);
+				Display.DisplaysUpdatedDelegate displaysUpdatedDelegate = Display.onDisplaysUpdated;
+				Display.DisplaysUpdatedDelegate displaysUpdatedDelegate2;
+				do
+				{
+					displaysUpdatedDelegate2 = displaysUpdatedDelegate;
+					displaysUpdatedDelegate = Interlocked.CompareExchange<Display.DisplaysUpdatedDelegate>(ref Display.onDisplaysUpdated, (Display.DisplaysUpdatedDelegate)Delegate.Combine(displaysUpdatedDelegate2, value), displaysUpdatedDelegate);
+				}
+				while (displaysUpdatedDelegate != displaysUpdatedDelegate2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				Display.onDisplaysUpdated = (Display.DisplaysUpdatedDelegate)Delegate.Remove(Display.onDisplaysUpdated, value);
+				Display.DisplaysUpdatedDelegate displaysUpdatedDelegate = Display.onDisplaysUpdated;
+				Display.DisplaysUpdatedDelegate displaysUpdatedDelegate2;
+				do
+				{
+					displaysUpdatedDelegate2 = displaysUpdatedDelegate;
+					displaysUpdatedDelegate = Interlocked.CompareExchange<Display.DisplaysUpdatedDelegate>(ref Display.onDisplaysUpdated, (Display.DisplaysUpdatedDelegate)Delegate.Remove(displaysUpdatedDelegate2, value), displaysUpdatedDelegate);
+				}
+				while (displaysUpdatedDelegate != displaysUpdatedDelegate2);
 			}
 		}
 
@@ -116,12 +129,6 @@ namespace UnityEngine
 			this.nativeDisplay = nativeDisplay;
 		}
 
-		static Display()
-		{
-			// Note: this type is marked as 'beforefieldinit'.
-			Display.onDisplaysUpdated = null;
-		}
-
 		public void Activate()
 		{
 			Display.ActivateDisplayImpl(this.nativeDisplay, 0, 0, 60);
@@ -181,32 +188,31 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetSystemExtImpl(IntPtr nativeDisplay, out int w, out int h);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRenderingExtImpl(IntPtr nativeDisplay, out int w, out int h);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRenderingBuffersImpl(IntPtr nativeDisplay, out RenderBuffer color, out RenderBuffer depth);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetRenderingResolutionImpl(IntPtr nativeDisplay, int w, int h);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ActivateDisplayImpl(IntPtr nativeDisplay, int width, int height, int refreshRate);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetParamsImpl(IntPtr nativeDisplay, int width, int height, int x, int y);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int RelativeMouseAtImpl(int x, int y, out int rx, out int ry);
+
+		static Display()
+		{
+			// Note: this type is marked as 'beforefieldinit'.
+			Display.onDisplaysUpdated = null;
+		}
 	}
 }

@@ -6,9 +6,9 @@ namespace UnityEditor
 	[Serializable]
 	internal class PreviewResizer
 	{
-		private static float s_DraggedPreviewSize;
+		private static float s_DraggedPreviewSize = 0f;
 
-		private static float s_CachedPreviewSizeWhileDragging;
+		private static float s_CachedPreviewSizeWhileDragging = 0f;
 
 		private static float s_MouseDownLocation;
 
@@ -25,7 +25,7 @@ namespace UnityEditor
 		[SerializeField]
 		private string m_PrefName;
 
-		private int m_Id;
+		private int m_Id = 0;
 
 		private int id
 		{
@@ -41,13 +41,12 @@ namespace UnityEditor
 
 		public void Init(string prefName)
 		{
-			if (this.m_ControlHash != 0 && !string.IsNullOrEmpty(this.m_PrefName))
+			if (this.m_ControlHash == 0 || string.IsNullOrEmpty(this.m_PrefName))
 			{
-				return;
+				this.m_ControlHash = prefName.GetHashCode();
+				this.m_PrefName = "Preview_" + prefName;
+				this.m_CachedPref = EditorPrefs.GetFloat(this.m_PrefName, 1f);
 			}
-			this.m_ControlHash = prefName.GetHashCode();
-			this.m_PrefName = "Preview_" + prefName;
-			this.m_CachedPref = EditorPrefs.GetFloat(this.m_PrefName, 1f);
 		}
 
 		public float ResizeHandle(Rect windowPosition, float minSize, float minRemainingSize, float resizerHeight)
@@ -108,20 +107,30 @@ namespace UnityEditor
 
 		public bool GetExpanded()
 		{
+			bool result;
 			if (GUIUtility.hotControl == this.id)
 			{
-				return PreviewResizer.s_CachedPreviewSizeWhileDragging > 0f;
+				result = (PreviewResizer.s_CachedPreviewSizeWhileDragging > 0f);
 			}
-			return this.m_CachedPref > 0f;
+			else
+			{
+				result = (this.m_CachedPref > 0f);
+			}
+			return result;
 		}
 
 		public float GetPreviewSize()
 		{
+			float result;
 			if (GUIUtility.hotControl == this.id)
 			{
-				return Mathf.Max(0f, PreviewResizer.s_CachedPreviewSizeWhileDragging);
+				result = Mathf.Max(0f, PreviewResizer.s_CachedPreviewSizeWhileDragging);
 			}
-			return Mathf.Max(0f, this.m_CachedPref);
+			else
+			{
+				result = Mathf.Max(0f, this.m_CachedPref);
+			}
+			return result;
 		}
 
 		public bool GetExpandedBeforeDragging()

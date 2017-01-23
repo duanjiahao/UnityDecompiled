@@ -8,8 +8,6 @@ namespace UnityEngine
 	[UsedByNativeCode]
 	public struct Quaternion
 	{
-		public const float kEpsilon = 1E-06f;
-
 		public float x;
 
 		public float y;
@@ -18,23 +16,43 @@ namespace UnityEngine
 
 		public float w;
 
+		public const float kEpsilon = 1E-06f;
+
+		public Vector3 eulerAngles
+		{
+			get
+			{
+				return Quaternion.Internal_MakePositive(Quaternion.Internal_ToEulerRad(this) * 57.29578f);
+			}
+			set
+			{
+				this = Quaternion.Internal_FromEulerRad(value * 0.0174532924f);
+			}
+		}
+
 		public float this[int index]
 		{
 			get
 			{
+				float result;
 				switch (index)
 				{
 				case 0:
-					return this.x;
+					result = this.x;
+					break;
 				case 1:
-					return this.y;
+					result = this.y;
+					break;
 				case 2:
-					return this.z;
+					result = this.z;
+					break;
 				case 3:
-					return this.w;
+					result = this.w;
+					break;
 				default:
 					throw new IndexOutOfRangeException("Invalid Quaternion index!");
 				}
+				return result;
 			}
 			set
 			{
@@ -66,37 +84,12 @@ namespace UnityEngine
 			}
 		}
 
-		public Vector3 eulerAngles
-		{
-			get
-			{
-				return Quaternion.Internal_MakePositive(Quaternion.Internal_ToEulerRad(this) * 57.29578f);
-			}
-			set
-			{
-				this = Quaternion.Internal_FromEulerRad(value * 0.0174532924f);
-			}
-		}
-
 		public Quaternion(float x, float y, float z, float w)
 		{
 			this.x = x;
 			this.y = y;
 			this.z = z;
 			this.w = w;
-		}
-
-		public void Set(float new_x, float new_y, float new_z, float new_w)
-		{
-			this.x = new_x;
-			this.y = new_y;
-			this.z = new_z;
-			this.w = new_w;
-		}
-
-		public static float Dot(Quaternion a, Quaternion b)
-		{
-			return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 		}
 
 		[ThreadAndSerializationSafe]
@@ -107,7 +100,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AngleAxis(float angle, ref Vector3 axis, out Quaternion value);
 
@@ -124,7 +116,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_FromToRotation(ref Vector3 fromDirection, ref Vector3 toDirection, out Quaternion value);
 
@@ -149,21 +140,8 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_LookRotation(ref Vector3 forward, ref Vector3 upwards, out Quaternion value);
-
-		[ExcludeFromDocs]
-		public void SetLookRotation(Vector3 view)
-		{
-			Vector3 up = Vector3.up;
-			this.SetLookRotation(view, up);
-		}
-
-		public void SetLookRotation(Vector3 view, [DefaultValue("Vector3.up")] Vector3 up)
-		{
-			this = Quaternion.LookRotation(view, up);
-		}
 
 		public static Quaternion Slerp(Quaternion a, Quaternion b, float t)
 		{
@@ -172,7 +150,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Slerp(ref Quaternion a, ref Quaternion b, float t, out Quaternion value);
 
@@ -183,7 +160,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SlerpUnclamped(ref Quaternion a, ref Quaternion b, float t, out Quaternion value);
 
@@ -194,7 +170,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Lerp(ref Quaternion a, ref Quaternion b, float t, out Quaternion value);
 
@@ -205,19 +180,23 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_LerpUnclamped(ref Quaternion a, ref Quaternion b, float t, out Quaternion value);
 
 		public static Quaternion RotateTowards(Quaternion from, Quaternion to, float maxDegreesDelta)
 		{
 			float num = Quaternion.Angle(from, to);
+			Quaternion result;
 			if (num == 0f)
 			{
-				return to;
+				result = to;
 			}
-			float t = Mathf.Min(1f, maxDegreesDelta / num);
-			return Quaternion.SlerpUnclamped(from, to, t);
+			else
+			{
+				float t = Mathf.Min(1f, maxDegreesDelta / num);
+				result = Quaternion.SlerpUnclamped(from, to, t);
+			}
+			return result;
 		}
 
 		public static Quaternion Inverse(Quaternion rotation)
@@ -227,37 +206,8 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Inverse(ref Quaternion rotation, out Quaternion value);
-
-		public override string ToString()
-		{
-			return UnityString.Format("({0:F1}, {1:F1}, {2:F1}, {3:F1})", new object[]
-			{
-				this.x,
-				this.y,
-				this.z,
-				this.w
-			});
-		}
-
-		public string ToString(string format)
-		{
-			return UnityString.Format("({0}, {1}, {2}, {3})", new object[]
-			{
-				this.x.ToString(format),
-				this.y.ToString(format),
-				this.z.ToString(format),
-				this.w.ToString(format)
-			});
-		}
-
-		public static float Angle(Quaternion a, Quaternion b)
-		{
-			float f = Quaternion.Dot(a, b);
-			return Mathf.Acos(Mathf.Min(Mathf.Abs(f), 1f)) * 2f * 57.29578f;
-		}
 
 		public static Quaternion Euler(float x, float y, float z)
 		{
@@ -269,37 +219,6 @@ namespace UnityEngine
 			return Quaternion.Internal_FromEulerRad(euler * 0.0174532924f);
 		}
 
-		private static Vector3 Internal_MakePositive(Vector3 euler)
-		{
-			float num = -0.005729578f;
-			float num2 = 360f + num;
-			if (euler.x < num)
-			{
-				euler.x += 360f;
-			}
-			else if (euler.x > num2)
-			{
-				euler.x -= 360f;
-			}
-			if (euler.y < num)
-			{
-				euler.y += 360f;
-			}
-			else if (euler.y > num2)
-			{
-				euler.y -= 360f;
-			}
-			if (euler.z < num)
-			{
-				euler.z += 360f;
-			}
-			else if (euler.z > num2)
-			{
-				euler.z -= 360f;
-			}
-			return euler;
-		}
-
 		private static Vector3 Internal_ToEulerRad(Quaternion rotation)
 		{
 			Vector3 result;
@@ -307,7 +226,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_ToEulerRad(ref Quaternion rotation, out Vector3 value);
 
@@ -318,7 +236,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_FromEulerRad(ref Vector3 euler, out Quaternion value);
 
@@ -327,7 +244,6 @@ namespace UnityEngine
 			Quaternion.INTERNAL_CALL_Internal_ToAxisAngleRad(ref q, out axis, out angle);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_ToAxisAngleRad(ref Quaternion q, out Vector3 axis, out float angle);
 
@@ -411,7 +327,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AxisAngle(ref Vector3 axis, float angle, out Quaternion value);
 
@@ -421,19 +336,12 @@ namespace UnityEngine
 			this = Quaternion.AxisAngle(axis, angle);
 		}
 
-		public override int GetHashCode()
+		public void Set(float new_x, float new_y, float new_z, float new_w)
 		{
-			return this.x.GetHashCode() ^ this.y.GetHashCode() << 2 ^ this.z.GetHashCode() >> 2 ^ this.w.GetHashCode() >> 1;
-		}
-
-		public override bool Equals(object other)
-		{
-			if (!(other is Quaternion))
-			{
-				return false;
-			}
-			Quaternion quaternion = (Quaternion)other;
-			return this.x.Equals(quaternion.x) && this.y.Equals(quaternion.y) && this.z.Equals(quaternion.z) && this.w.Equals(quaternion.w);
+			this.x = new_x;
+			this.y = new_y;
+			this.z = new_z;
+			this.w = new_w;
 		}
 
 		public static Quaternion operator *(Quaternion lhs, Quaternion rhs)
@@ -470,6 +378,102 @@ namespace UnityEngine
 		public static bool operator !=(Quaternion lhs, Quaternion rhs)
 		{
 			return Quaternion.Dot(lhs, rhs) <= 0.999999f;
+		}
+
+		public static float Dot(Quaternion a, Quaternion b)
+		{
+			return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+		}
+
+		[ExcludeFromDocs]
+		public void SetLookRotation(Vector3 view)
+		{
+			Vector3 up = Vector3.up;
+			this.SetLookRotation(view, up);
+		}
+
+		public void SetLookRotation(Vector3 view, [DefaultValue("Vector3.up")] Vector3 up)
+		{
+			this = Quaternion.LookRotation(view, up);
+		}
+
+		public static float Angle(Quaternion a, Quaternion b)
+		{
+			float f = Quaternion.Dot(a, b);
+			return Mathf.Acos(Mathf.Min(Mathf.Abs(f), 1f)) * 2f * 57.29578f;
+		}
+
+		private static Vector3 Internal_MakePositive(Vector3 euler)
+		{
+			float num = -0.005729578f;
+			float num2 = 360f + num;
+			if (euler.x < num)
+			{
+				euler.x += 360f;
+			}
+			else if (euler.x > num2)
+			{
+				euler.x -= 360f;
+			}
+			if (euler.y < num)
+			{
+				euler.y += 360f;
+			}
+			else if (euler.y > num2)
+			{
+				euler.y -= 360f;
+			}
+			if (euler.z < num)
+			{
+				euler.z += 360f;
+			}
+			else if (euler.z > num2)
+			{
+				euler.z -= 360f;
+			}
+			return euler;
+		}
+
+		public override int GetHashCode()
+		{
+			return this.x.GetHashCode() ^ this.y.GetHashCode() << 2 ^ this.z.GetHashCode() >> 2 ^ this.w.GetHashCode() >> 1;
+		}
+
+		public override bool Equals(object other)
+		{
+			bool result;
+			if (!(other is Quaternion))
+			{
+				result = false;
+			}
+			else
+			{
+				Quaternion quaternion = (Quaternion)other;
+				result = (this.x.Equals(quaternion.x) && this.y.Equals(quaternion.y) && this.z.Equals(quaternion.z) && this.w.Equals(quaternion.w));
+			}
+			return result;
+		}
+
+		public override string ToString()
+		{
+			return UnityString.Format("({0:F1}, {1:F1}, {2:F1}, {3:F1})", new object[]
+			{
+				this.x,
+				this.y,
+				this.z,
+				this.w
+			});
+		}
+
+		public string ToString(string format)
+		{
+			return UnityString.Format("({0}, {1}, {2}, {3})", new object[]
+			{
+				this.x.ToString(format),
+				this.y.ToString(format),
+				this.z.ToString(format),
+				this.w.ToString(format)
+			});
 		}
 	}
 }

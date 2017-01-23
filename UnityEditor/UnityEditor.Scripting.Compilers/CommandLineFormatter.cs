@@ -17,42 +17,57 @@ namespace UnityEditor.Scripting.Compilers
 
 		public static string EscapeCharsQuote(string input)
 		{
+			string result;
 			if (input.IndexOf('\'') == -1)
 			{
-				return "'" + input + "'";
+				result = "'" + input + "'";
 			}
-			if (input.IndexOf('"') == -1)
+			else if (input.IndexOf('"') == -1)
 			{
-				return "\"" + input + "\"";
+				result = "\"" + input + "\"";
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public static string PrepareFileName(string input)
 		{
+			string result;
 			if (Application.platform == RuntimePlatform.OSXEditor)
 			{
-				return CommandLineFormatter.EscapeCharsQuote(input);
+				result = CommandLineFormatter.EscapeCharsQuote(input);
 			}
-			return CommandLineFormatter.EscapeCharsWindows(input);
+			else
+			{
+				result = CommandLineFormatter.EscapeCharsWindows(input);
+			}
+			return result;
 		}
 
 		public static string EscapeCharsWindows(string input)
 		{
+			string result;
 			if (input.Length == 0)
 			{
-				return "\"\"";
+				result = "\"\"";
 			}
-			if (CommandLineFormatter.UnescapeableChars.IsMatch(input))
+			else if (CommandLineFormatter.UnescapeableChars.IsMatch(input))
 			{
 				Debug.LogWarning("Cannot escape control characters in string");
-				return "\"\"";
+				result = "\"\"";
 			}
-			if (CommandLineFormatter.UnsafeCharsWindows.IsMatch(input))
+			else if (CommandLineFormatter.UnsafeCharsWindows.IsMatch(input))
 			{
-				return "\"" + CommandLineFormatter.Quotes.Replace(input, "\"\"") + "\"";
+				result = "\"" + CommandLineFormatter.Quotes.Replace(input, "\"\"") + "\"";
 			}
-			return input;
+			else
+			{
+				result = input;
+			}
+			return result;
 		}
 
 		internal static string GenerateResponseFile(IEnumerable<string> arguments)

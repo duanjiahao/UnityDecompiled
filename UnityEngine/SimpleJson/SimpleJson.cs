@@ -4,7 +4,6 @@ using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
@@ -48,12 +47,12 @@ namespace SimpleJson
 		{
 			get
 			{
-				IJsonSerializerStrategy arg_17_0;
-				if ((arg_17_0 = SimpleJson._currentJsonSerializerStrategy) == null)
+				IJsonSerializerStrategy arg_18_0;
+				if ((arg_18_0 = SimpleJson._currentJsonSerializerStrategy) == null)
 				{
-					arg_17_0 = (SimpleJson._currentJsonSerializerStrategy = SimpleJson.PocoJsonSerializerStrategy);
+					arg_18_0 = (SimpleJson._currentJsonSerializerStrategy = SimpleJson.PocoJsonSerializerStrategy);
 				}
-				return arg_17_0;
+				return arg_18_0;
 			}
 			set
 			{
@@ -66,12 +65,12 @@ namespace SimpleJson
 		{
 			get
 			{
-				PocoJsonSerializerStrategy arg_17_0;
-				if ((arg_17_0 = SimpleJson._pocoJsonSerializerStrategy) == null)
+				PocoJsonSerializerStrategy arg_18_0;
+				if ((arg_18_0 = SimpleJson._pocoJsonSerializerStrategy) == null)
 				{
-					arg_17_0 = (SimpleJson._pocoJsonSerializerStrategy = new PocoJsonSerializerStrategy());
+					arg_18_0 = (SimpleJson._pocoJsonSerializerStrategy = new PocoJsonSerializerStrategy());
 				}
-				return arg_17_0;
+				return arg_18_0;
 			}
 		}
 
@@ -85,7 +84,6 @@ namespace SimpleJson
 			throw new SerializationException("Invalid JSON string");
 		}
 
-		[SuppressMessage("Microsoft.Design", "CA1007:UseGenericsWhereAppropriate", Justification = "Need to support .NET 2")]
 		public static bool TryDeserializeObject(string json, out object obj)
 		{
 			bool result = true;
@@ -137,59 +135,64 @@ namespace SimpleJson
 
 		public static string EscapeToJavascriptString(string jsonString)
 		{
+			string result;
 			if (string.IsNullOrEmpty(jsonString))
 			{
-				return jsonString;
+				result = jsonString;
 			}
-			StringBuilder stringBuilder = new StringBuilder();
-			int i = 0;
-			while (i < jsonString.Length)
+			else
 			{
-				char c = jsonString[i++];
-				if (c == '\\')
+				StringBuilder stringBuilder = new StringBuilder();
+				int i = 0;
+				while (i < jsonString.Length)
 				{
-					int num = jsonString.Length - i;
-					if (num >= 2)
+					char c = jsonString[i++];
+					if (c == '\\')
 					{
-						char c2 = jsonString[i];
-						if (c2 == '\\')
+						int num = jsonString.Length - i;
+						if (num >= 2)
 						{
-							stringBuilder.Append('\\');
-							i++;
-						}
-						else if (c2 == '"')
-						{
-							stringBuilder.Append("\"");
-							i++;
-						}
-						else if (c2 == 't')
-						{
-							stringBuilder.Append('\t');
-							i++;
-						}
-						else if (c2 == 'b')
-						{
-							stringBuilder.Append('\b');
-							i++;
-						}
-						else if (c2 == 'n')
-						{
-							stringBuilder.Append('\n');
-							i++;
-						}
-						else if (c2 == 'r')
-						{
-							stringBuilder.Append('\r');
-							i++;
+							char c2 = jsonString[i];
+							if (c2 == '\\')
+							{
+								stringBuilder.Append('\\');
+								i++;
+							}
+							else if (c2 == '"')
+							{
+								stringBuilder.Append("\"");
+								i++;
+							}
+							else if (c2 == 't')
+							{
+								stringBuilder.Append('\t');
+								i++;
+							}
+							else if (c2 == 'b')
+							{
+								stringBuilder.Append('\b');
+								i++;
+							}
+							else if (c2 == 'n')
+							{
+								stringBuilder.Append('\n');
+								i++;
+							}
+							else if (c2 == 'r')
+							{
+								stringBuilder.Append('\r');
+								i++;
+							}
 						}
 					}
+					else
+					{
+						stringBuilder.Append(c);
+					}
 				}
-				else
-				{
-					stringBuilder.Append(c);
-				}
+				result = stringBuilder.ToString();
 			}
-			return stringBuilder.ToString();
+			return result;
 		}
 
 		private static IDictionary<string, object> ParseObject(char[] json, ref int index, ref bool success)
@@ -197,47 +200,55 @@ namespace SimpleJson
 			IDictionary<string, object> dictionary = new JsonObject();
 			SimpleJson.NextToken(json, ref index);
 			bool flag = false;
+			IDictionary<string, object> result;
 			while (!flag)
 			{
 				int num = SimpleJson.LookAhead(json, index);
-				if (num == 0)
+				if (num != 0)
 				{
-					success = false;
-					return null;
-				}
-				if (num == 6)
-				{
-					SimpleJson.NextToken(json, ref index);
-				}
-				else
-				{
-					if (num == 2)
+					if (num == 6)
 					{
 						SimpleJson.NextToken(json, ref index);
-						return dictionary;
 					}
-					string key = SimpleJson.ParseString(json, ref index, ref success);
-					if (!success)
+					else
 					{
-						success = false;
-						return null;
+						if (num == 2)
+						{
+							SimpleJson.NextToken(json, ref index);
+							result = dictionary;
+							return result;
+						}
+						string key = SimpleJson.ParseString(json, ref index, ref success);
+						if (!success)
+						{
+							success = false;
+							result = null;
+							return result;
+						}
+						num = SimpleJson.NextToken(json, ref index);
+						if (num != 5)
+						{
+							success = false;
+							result = null;
+							return result;
+						}
+						object value = SimpleJson.ParseValue(json, ref index, ref success);
+						if (!success)
+						{
+							success = false;
+							result = null;
+							return result;
+						}
+						dictionary[key] = value;
 					}
-					num = SimpleJson.NextToken(json, ref index);
-					if (num != 5)
-					{
-						success = false;
-						return null;
-					}
-					object value = SimpleJson.ParseValue(json, ref index, ref success);
-					if (!success)
-					{
-						success = false;
-						return null;
-					}
-					dictionary[key] = value;
+					continue;
 				}
+				success = false;
+				result = null;
+				return result;
 			}
-			return dictionary;
+			result = dictionary;
+			return result;
 		}
 
 		private static JsonArray ParseArray(char[] json, ref int index, ref bool success)
@@ -245,60 +256,74 @@ namespace SimpleJson
 			JsonArray jsonArray = new JsonArray();
 			SimpleJson.NextToken(json, ref index);
 			bool flag = false;
+			JsonArray result;
 			while (!flag)
 			{
 				int num = SimpleJson.LookAhead(json, index);
-				if (num == 0)
+				if (num != 0)
 				{
-					success = false;
-					return null;
-				}
-				if (num == 6)
-				{
-					SimpleJson.NextToken(json, ref index);
-				}
-				else
-				{
-					if (num == 4)
+					if (num == 6)
 					{
 						SimpleJson.NextToken(json, ref index);
-						break;
 					}
-					object item = SimpleJson.ParseValue(json, ref index, ref success);
-					if (!success)
+					else
 					{
-						return null;
+						if (num == 4)
+						{
+							SimpleJson.NextToken(json, ref index);
+							break;
+						}
+						object item = SimpleJson.ParseValue(json, ref index, ref success);
+						if (!success)
+						{
+							result = null;
+							return result;
+						}
+						jsonArray.Add(item);
 					}
-					jsonArray.Add(item);
+					continue;
 				}
+				success = false;
+				result = null;
+				return result;
 			}
-			return jsonArray;
+			result = jsonArray;
+			return result;
 		}
 
 		private static object ParseValue(char[] json, ref int index, ref bool success)
 		{
+			object result;
 			switch (SimpleJson.LookAhead(json, index))
 			{
 			case 1:
-				return SimpleJson.ParseObject(json, ref index, ref success);
+				result = SimpleJson.ParseObject(json, ref index, ref success);
+				return result;
 			case 3:
-				return SimpleJson.ParseArray(json, ref index, ref success);
+				result = SimpleJson.ParseArray(json, ref index, ref success);
+				return result;
 			case 7:
-				return SimpleJson.ParseString(json, ref index, ref success);
+				result = SimpleJson.ParseString(json, ref index, ref success);
+				return result;
 			case 8:
-				return SimpleJson.ParseNumber(json, ref index, ref success);
+				result = SimpleJson.ParseNumber(json, ref index, ref success);
+				return result;
 			case 9:
 				SimpleJson.NextToken(json, ref index);
-				return true;
+				result = true;
+				return result;
 			case 10:
 				SimpleJson.NextToken(json, ref index);
-				return false;
+				result = false;
+				return result;
 			case 11:
 				SimpleJson.NextToken(json, ref index);
-				return null;
+				result = null;
+				return result;
 			}
 			success = false;
-			return null;
+			result = null;
+			return result;
 		}
 
 		private static string ParseString(char[] json, ref int index, ref bool success)
@@ -307,6 +332,7 @@ namespace SimpleJson
 			SimpleJson.EatWhitespace(json, ref index);
 			char c = json[index++];
 			bool flag = false;
+			string result;
 			while (!flag)
 			{
 				if (index == json.Length)
@@ -361,34 +387,43 @@ namespace SimpleJson
 					else if (c == 'u')
 					{
 						int num = json.Length - index;
-						if (num < 4)
+						if (num >= 4)
 						{
-							break;
-						}
-						uint num2;
-						if (!(success = uint.TryParse(new string(json, index, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out num2)))
-						{
-							return string.Empty;
-						}
-						if (55296u <= num2 && num2 <= 56319u)
-						{
-							index += 4;
-							num = json.Length - index;
-							uint num3;
-							if (num < 6 || !(new string(json, index, 2) == "\\u") || !uint.TryParse(new string(json, index + 2, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out num3) || 56320u > num3 || num3 > 57343u)
+							uint num2;
+							if (!(success = uint.TryParse(new string(json, index, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out num2)))
 							{
-								success = false;
-								return string.Empty;
+								result = "";
 							}
-							stringBuilder.Append((char)num2);
-							stringBuilder.Append((char)num3);
-							index += 6;
+							else
+							{
+								if (55296u > num2 || num2 > 56319u)
+								{
+									stringBuilder.Append(SimpleJson.ConvertFromUtf32((int)num2));
+									index += 4;
+									continue;
+								}
+								index += 4;
+								num = json.Length - index;
+								if (num >= 6)
+								{
+									uint num3;
+									if (new string(json, index, 2) == "\\u" && uint.TryParse(new string(json, index + 2, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out num3))
+									{
+										if (56320u <= num3 && num3 <= 57343u)
+										{
+											stringBuilder.Append((char)num2);
+											stringBuilder.Append((char)num3);
+											index += 6;
+											continue;
+										}
+									}
+								}
+								success = false;
+								result = "";
+							}
+							return result;
 						}
-						else
-						{
-							stringBuilder.Append(SimpleJson.ConvertFromUtf32((int)num2));
-							index += 4;
-						}
+						break;
 					}
 				}
 				else
@@ -399,9 +434,11 @@ namespace SimpleJson
 			if (!flag)
 			{
 				success = false;
-				return null;
+				result = null;
+				return result;
 			}
-			return stringBuilder.ToString();
+			result = stringBuilder.ToString();
+			return result;
 		}
 
 		private static string ConvertFromUtf32(int utf32)
@@ -414,16 +451,21 @@ namespace SimpleJson
 			{
 				throw new ArgumentOutOfRangeException("utf32", "The argument must not be in surrogate pair range.");
 			}
+			string result;
 			if (utf32 < 65536)
 			{
-				return new string((char)utf32, 1);
+				result = new string((char)utf32, 1);
 			}
-			utf32 -= 65536;
-			return new string(new char[]
+			else
 			{
-				(char)((utf32 >> 10) + 55296),
-				(char)(utf32 % 1024 + 56320)
-			});
+				utf32 -= 65536;
+				result = new string(new char[]
+				{
+					(char)((utf32 >> 10) + 55296),
+					(char)(utf32 % 1024 + 56320)
+				});
+			}
+			return result;
 		}
 
 		private static object ParseNumber(char[] json, ref int index, ref bool success)
@@ -480,88 +522,103 @@ namespace SimpleJson
 			return SimpleJson.NextToken(json, ref num);
 		}
 
-		[SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
 		private static int NextToken(char[] json, ref int index)
 		{
 			SimpleJson.EatWhitespace(json, ref index);
-			if (index == json.Length)
+			int result;
+			if (index != json.Length)
 			{
-				return 0;
-			}
-			char c = json[index];
-			index++;
-			char c2 = c;
-			switch (c2)
-			{
-			case '"':
-				return 7;
-			case '#':
-			case '$':
-			case '%':
-			case '&':
-			case '\'':
-			case '(':
-			case ')':
-			case '*':
-			case '+':
-			case '.':
-			case '/':
-				IL_8D:
-				switch (c2)
+				char c = json[index];
+				index++;
+				switch (c)
 				{
-				case '[':
-					return 3;
-				case '\\':
-				{
-					IL_A2:
-					switch (c2)
+				case ',':
+					result = 6;
+					return result;
+				case '-':
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					result = 8;
+					return result;
+				case '.':
+				case '/':
+					IL_69:
+					switch (c)
 					{
-					case '{':
-						return 1;
-					case '}':
-						return 2;
+					case '[':
+						result = 3;
+						return result;
+					case '\\':
+						IL_7E:
+						switch (c)
+						{
+						case '{':
+							result = 1;
+							return result;
+						case '|':
+							IL_93:
+							if (c != '"')
+							{
+								index--;
+								int num = json.Length - index;
+								if (num >= 5)
+								{
+									if (json[index] == 'f' && json[index + 1] == 'a' && json[index + 2] == 'l' && json[index + 3] == 's' && json[index + 4] == 'e')
+									{
+										index += 5;
+										result = 10;
+										return result;
+									}
+								}
+								if (num >= 4)
+								{
+									if (json[index] == 't' && json[index + 1] == 'r' && json[index + 2] == 'u' && json[index + 3] == 'e')
+									{
+										index += 4;
+										result = 9;
+										return result;
+									}
+								}
+								if (num >= 4)
+								{
+									if (json[index] == 'n' && json[index + 1] == 'u' && json[index + 2] == 'l' && json[index + 3] == 'l')
+									{
+										index += 4;
+										result = 11;
+										return result;
+									}
+								}
+								result = 0;
+								return result;
+							}
+							result = 7;
+							return result;
+						case '}':
+							result = 2;
+							return result;
+						}
+						goto IL_93;
+					case ']':
+						result = 4;
+						return result;
 					}
-					index--;
-					int num = json.Length - index;
-					if (num >= 5 && json[index] == 'f' && json[index + 1] == 'a' && json[index + 2] == 'l' && json[index + 3] == 's' && json[index + 4] == 'e')
-					{
-						index += 5;
-						return 10;
-					}
-					if (num >= 4 && json[index] == 't' && json[index + 1] == 'r' && json[index + 2] == 'u' && json[index + 3] == 'e')
-					{
-						index += 4;
-						return 9;
-					}
-					if (num >= 4 && json[index] == 'n' && json[index + 1] == 'u' && json[index + 2] == 'l' && json[index + 3] == 'l')
-					{
-						index += 4;
-						return 11;
-					}
-					return 0;
+					goto IL_7E;
+				case ':':
+					result = 5;
+					return result;
 				}
-				case ']':
-					return 4;
-				}
-				goto IL_A2;
-			case ',':
-				return 6;
-			case '-':
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				return 8;
-			case ':':
-				return 5;
+				goto IL_69;
 			}
-			goto IL_8D;
+			result = 0;
+			return result;
 		}
 
 		private static bool SerializeValue(IJsonSerializerStrategy jsonSerializerStrategy, object value, StringBuilder builder)
@@ -626,6 +683,7 @@ namespace SimpleJson
 			IEnumerator enumerator = keys.GetEnumerator();
 			IEnumerator enumerator2 = values.GetEnumerator();
 			bool flag = true;
+			bool result;
 			while (enumerator.MoveNext() && enumerator2.MoveNext())
 			{
 				object current = enumerator.Current;
@@ -641,37 +699,57 @@ namespace SimpleJson
 				}
 				else if (!SimpleJson.SerializeValue(jsonSerializerStrategy, current2, builder))
 				{
-					return false;
+					result = false;
+					return result;
 				}
 				builder.Append(":");
-				if (!SimpleJson.SerializeValue(jsonSerializerStrategy, current2, builder))
+				if (SimpleJson.SerializeValue(jsonSerializerStrategy, current2, builder))
 				{
-					return false;
+					flag = false;
+					continue;
 				}
-				flag = false;
+				result = false;
+				return result;
 			}
 			builder.Append("}");
-			return true;
+			result = true;
+			return result;
 		}
 
 		private static bool SerializeArray(IJsonSerializerStrategy jsonSerializerStrategy, IEnumerable anArray, StringBuilder builder)
 		{
 			builder.Append("[");
 			bool flag = true;
-			foreach (object current in anArray)
+			IEnumerator enumerator = anArray.GetEnumerator();
+			bool result;
+			try
 			{
-				if (!flag)
+				while (enumerator.MoveNext())
 				{
-					builder.Append(",");
+					object current = enumerator.Current;
+					if (!flag)
+					{
+						builder.Append(",");
+					}
+					if (!SimpleJson.SerializeValue(jsonSerializerStrategy, current, builder))
+					{
+						result = false;
+						return result;
+					}
+					flag = false;
 				}
-				if (!SimpleJson.SerializeValue(jsonSerializerStrategy, current, builder))
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					return false;
+					disposable.Dispose();
 				}
-				flag = false;
 			}
 			builder.Append("]");
-			return true;
+			result = true;
+			return result;
 		}
 
 		private static bool SerializeString(string aString, StringBuilder builder)

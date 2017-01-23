@@ -9,31 +9,28 @@ namespace UnityEditor
 	internal class TextureImportPlatformSettings
 	{
 		[SerializeField]
-		public string name;
+		private TextureImporterPlatformSettings m_PlatformSettings = new TextureImporterPlatformSettings();
 
 		[SerializeField]
-		private bool m_Overridden;
+		private bool m_OverriddenIsDifferent = false;
 
 		[SerializeField]
-		private bool m_OverriddenIsDifferent;
+		private bool m_MaxTextureSizeIsDifferent = false;
 
 		[SerializeField]
-		private int m_MaxTextureSize;
+		private bool m_TextureCompressionIsDifferent = false;
 
 		[SerializeField]
-		private bool m_MaxTextureSizeIsDifferent;
+		private bool m_CompressionQualityIsDifferent = false;
 
 		[SerializeField]
-		private int m_CompressionQuality;
+		private bool m_CrunchedCompressionIsDifferent = false;
 
 		[SerializeField]
-		private bool m_CompressionQualityIsDifferent;
+		private bool m_TextureFormatIsDifferent = false;
 
 		[SerializeField]
-		private TextureImporterFormat[] m_TextureFormatArray;
-
-		[SerializeField]
-		private bool m_TextureFormatIsDifferent;
+		private bool m_AlphaSplitIsDifferent = false;
 
 		[SerializeField]
 		public BuildTarget m_Target;
@@ -42,7 +39,7 @@ namespace UnityEditor
 		private TextureImporter[] m_Importers;
 
 		[SerializeField]
-		private bool m_HasChanged;
+		private bool m_HasChanged = false;
 
 		[SerializeField]
 		private TextureImporterInspector m_Inspector;
@@ -57,32 +54,7 @@ namespace UnityEditor
 			13
 		};
 
-		public static readonly int[] kTextureFormatsValueiPhone = new int[]
-		{
-			30,
-			31,
-			32,
-			33,
-			48,
-			49,
-			50,
-			51,
-			52,
-			53,
-			54,
-			55,
-			56,
-			57,
-			58,
-			59,
-			7,
-			3,
-			1,
-			13,
-			4
-		};
-
-		private static readonly int[] kTextureFormatsValuetvOS = new int[]
+		public static readonly int[] kTextureFormatsValueApplePVR = new int[]
 		{
 			30,
 			31,
@@ -162,15 +134,7 @@ namespace UnityEditor
 			4
 		};
 
-		public static readonly int[] kNormalFormatsValueWeb = new int[]
-		{
-			12,
-			29,
-			2,
-			5
-		};
-
-		public static readonly int[] kTextureFormatsValueWeb = new int[]
+		public static readonly int[] kTextureFormatsValueWebGL = new int[]
 		{
 			10,
 			12,
@@ -180,14 +144,62 @@ namespace UnityEditor
 			3,
 			1,
 			2,
-			5
+			4
 		};
+
+		public static readonly int[] kNormalFormatsValueDefault = new int[]
+		{
+			12,
+			29,
+			2,
+			4
+		};
+
+		public static readonly int[] kTextureFormatsValueDefault = new int[]
+		{
+			10,
+			12,
+			28,
+			29,
+			7,
+			3,
+			1,
+			2,
+			4,
+			17,
+			26,
+			27,
+			24,
+			25
+		};
+
+		public static readonly int[] kTextureFormatsValueSingleChannel = new int[]
+		{
+			1,
+			26
+		};
+
+		public TextureImporterPlatformSettings platformTextureSettings
+		{
+			get
+			{
+				return this.m_PlatformSettings;
+			}
+		}
+
+		public string name
+		{
+			get
+			{
+				return this.m_PlatformSettings.name;
+			}
+		}
 
 		public bool overridden
 		{
 			get
 			{
-				return this.m_Overridden;
+				return this.m_PlatformSettings.overridden;
 			}
 		}
 
@@ -203,7 +215,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.isDefault || (this.m_Overridden && !this.m_OverriddenIsDifferent);
+				return this.isDefault || (this.overridden && !this.m_OverriddenIsDifferent);
 			}
 		}
 
@@ -211,7 +223,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_MaxTextureSize;
+				return this.m_PlatformSettings.maxTextureSize;
 			}
 		}
 
@@ -223,11 +235,27 @@ namespace UnityEditor
 			}
 		}
 
+		public TextureImporterCompression textureCompression
+		{
+			get
+			{
+				return this.m_PlatformSettings.textureCompression;
+			}
+		}
+
+		public bool textureCompressionIsDifferent
+		{
+			get
+			{
+				return this.m_TextureCompressionIsDifferent;
+			}
+		}
+
 		public int compressionQuality
 		{
 			get
 			{
-				return this.m_CompressionQuality;
+				return this.m_PlatformSettings.compressionQuality;
 			}
 		}
 
@@ -239,11 +267,27 @@ namespace UnityEditor
 			}
 		}
 
-		public TextureImporterFormat[] textureFormats
+		public bool crunchedCompression
 		{
 			get
 			{
-				return this.m_TextureFormatArray;
+				return this.m_PlatformSettings.crunchedCompression;
+			}
+		}
+
+		public bool crunchedCompressionIsDifferent
+		{
+			get
+			{
+				return this.m_CrunchedCompressionIsDifferent;
+			}
+		}
+
+		public TextureImporterFormat format
+		{
+			get
+			{
+				return this.m_PlatformSettings.format;
 			}
 		}
 
@@ -252,6 +296,22 @@ namespace UnityEditor
 			get
 			{
 				return this.m_TextureFormatIsDifferent;
+			}
+		}
+
+		public bool allowsAlphaSplitting
+		{
+			get
+			{
+				return this.m_PlatformSettings.allowsAlphaSplitting;
+			}
+		}
+
+		public bool allowsAlphaSplitIsDifferent
+		{
+			get
+			{
+				return this.m_AlphaSplitIsDifferent;
 			}
 		}
 
@@ -267,61 +327,55 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.name == string.Empty;
+				return this.name == TextureImporterInspector.s_DefaultPlatformName;
 			}
 		}
 
 		public TextureImportPlatformSettings(string name, BuildTarget target, TextureImporterInspector inspector)
 		{
-			this.name = name;
+			this.m_PlatformSettings.name = name;
 			this.m_Target = target;
 			this.m_Inspector = inspector;
-			this.m_Overridden = false;
+			this.m_PlatformSettings.overridden = false;
 			this.m_Importers = (from x in inspector.targets
 			select x as TextureImporter).ToArray<TextureImporter>();
-			this.m_TextureFormatArray = new TextureImporterFormat[this.importers.Length];
 			for (int i = 0; i < this.importers.Length; i++)
 			{
 				TextureImporter textureImporter = this.importers[i];
-				int maxTextureSize;
-				TextureImporterFormat textureFormat;
-				int compressionQuality;
-				bool flag;
-				if (!this.isDefault)
-				{
-					flag = textureImporter.GetPlatformTextureSettings(name, out maxTextureSize, out textureFormat, out compressionQuality);
-				}
-				else
-				{
-					flag = true;
-					maxTextureSize = textureImporter.maxTextureSize;
-					textureFormat = textureImporter.textureFormat;
-					compressionQuality = textureImporter.compressionQuality;
-				}
-				this.m_TextureFormatArray[i] = textureFormat;
+				TextureImporterPlatformSettings platformTextureSettings = textureImporter.GetPlatformTextureSettings(name);
 				if (i == 0)
 				{
-					this.m_Overridden = flag;
-					this.m_MaxTextureSize = maxTextureSize;
-					this.m_CompressionQuality = compressionQuality;
+					this.m_PlatformSettings = platformTextureSettings;
 				}
 				else
 				{
-					if (flag != this.m_Overridden)
+					if (platformTextureSettings.overridden != this.m_PlatformSettings.overridden)
 					{
 						this.m_OverriddenIsDifferent = true;
 					}
-					if (maxTextureSize != this.m_MaxTextureSize)
+					if (platformTextureSettings.format != this.m_PlatformSettings.format)
+					{
+						this.m_TextureFormatIsDifferent = true;
+					}
+					if (platformTextureSettings.maxTextureSize != this.m_PlatformSettings.maxTextureSize)
 					{
 						this.m_MaxTextureSizeIsDifferent = true;
 					}
-					if (compressionQuality != this.m_CompressionQuality)
+					if (platformTextureSettings.textureCompression != this.m_PlatformSettings.textureCompression)
+					{
+						this.m_TextureCompressionIsDifferent = true;
+					}
+					if (platformTextureSettings.compressionQuality != this.m_PlatformSettings.compressionQuality)
 					{
 						this.m_CompressionQualityIsDifferent = true;
 					}
-					if (textureFormat != this.m_TextureFormatArray[0])
+					if (platformTextureSettings.crunchedCompression != this.m_PlatformSettings.crunchedCompression)
 					{
-						this.m_TextureFormatIsDifferent = true;
+						this.m_CrunchedCompressionIsDifferent = true;
+					}
+					if (platformTextureSettings.allowsAlphaSplitting != this.m_PlatformSettings.allowsAlphaSplitting)
+					{
+						this.m_AlphaSplitIsDifferent = true;
 					}
 				}
 			}
@@ -330,33 +384,51 @@ namespace UnityEditor
 
 		public void SetOverriddenForAll(bool overridden)
 		{
-			this.m_Overridden = overridden;
+			this.m_PlatformSettings.overridden = overridden;
 			this.m_OverriddenIsDifferent = false;
-			this.m_HasChanged = true;
+			this.SetChanged();
 		}
 
 		public void SetMaxTextureSizeForAll(int maxTextureSize)
 		{
-			this.m_MaxTextureSize = maxTextureSize;
+			this.m_PlatformSettings.maxTextureSize = maxTextureSize;
 			this.m_MaxTextureSizeIsDifferent = false;
+			this.SetChanged();
+		}
+
+		public void SetTextureCompressionForAll(TextureImporterCompression textureCompression)
+		{
+			this.m_PlatformSettings.textureCompression = textureCompression;
+			this.m_TextureCompressionIsDifferent = false;
 			this.m_HasChanged = true;
 		}
 
 		public void SetCompressionQualityForAll(int quality)
 		{
-			this.m_CompressionQuality = quality;
+			this.m_PlatformSettings.compressionQuality = quality;
 			this.m_CompressionQualityIsDifferent = false;
-			this.m_HasChanged = true;
+			this.SetChanged();
+		}
+
+		public void SetCrunchedCompressionForAll(bool crunched)
+		{
+			this.m_PlatformSettings.crunchedCompression = crunched;
+			this.m_CrunchedCompressionIsDifferent = false;
+			this.SetChanged();
 		}
 
 		public void SetTextureFormatForAll(TextureImporterFormat format)
 		{
-			for (int i = 0; i < this.m_TextureFormatArray.Length; i++)
-			{
-				this.m_TextureFormatArray[i] = format;
-			}
+			this.m_PlatformSettings.format = format;
 			this.m_TextureFormatIsDifferent = false;
-			this.m_HasChanged = true;
+			this.SetChanged();
+		}
+
+		public void SetAllowsAlphaSplitForAll(bool value)
+		{
+			this.m_PlatformSettings.allowsAlphaSplitting = value;
+			this.m_AlphaSplitIsDifferent = false;
+			this.SetChanged();
 		}
 
 		public bool SupportsFormat(TextureImporterFormat format, TextureImporter importer)
@@ -368,35 +440,35 @@ namespace UnityEditor
 			{
 			case BuildTarget.SamsungTV:
 				array = TextureImportPlatformSettings.kTextureFormatsValueSTV;
-				goto IL_A7;
-			case BuildTarget.Nintendo3DS:
-				IL_28:
+				goto IL_9E;
+			case BuildTarget.N3DS:
+				IL_29:
 				if (target == BuildTarget.iOS)
 				{
-					array = TextureImportPlatformSettings.kTextureFormatsValueiPhone;
-					goto IL_A7;
+					goto IL_51;
 				}
 				if (target == BuildTarget.Android)
 				{
 					array = TextureImportPlatformSettings.kTextureFormatsValueAndroid;
-					goto IL_A7;
+					goto IL_9E;
 				}
 				if (target != BuildTarget.Tizen)
 				{
-					array = ((!settings.normalMap) ? TextureImportPlatformSettings.kTextureFormatsValueWeb : TextureImportPlatformSettings.kNormalFormatsValueWeb);
-					goto IL_A7;
+					array = ((settings.textureType != TextureImporterType.NormalMap) ? TextureImportPlatformSettings.kTextureFormatsValueDefault : TextureImportPlatformSettings.kNormalFormatsValueDefault);
+					goto IL_9E;
 				}
 				array = TextureImportPlatformSettings.kTextureFormatsValueTizen;
-				goto IL_A7;
+				goto IL_9E;
 			case BuildTarget.WiiU:
 				array = TextureImportPlatformSettings.kTextureFormatsValueWiiU;
-				goto IL_A7;
+				goto IL_9E;
 			case BuildTarget.tvOS:
-				array = TextureImportPlatformSettings.kTextureFormatsValuetvOS;
-				goto IL_A7;
+				goto IL_51;
 			}
-			goto IL_28;
-			IL_A7:
+			goto IL_29;
+			IL_51:
+			array = TextureImportPlatformSettings.kTextureFormatsValueApplePVR;
+			IL_9E:
 			return ((IList)array).Contains((int)format);
 		}
 
@@ -420,78 +492,51 @@ namespace UnityEditor
 
 		public void Sync()
 		{
-			if (!this.isDefault && (!this.m_Overridden || this.m_OverriddenIsDifferent))
+			if (!this.isDefault && (!this.overridden || this.m_OverriddenIsDifferent))
 			{
 				TextureImportPlatformSettings textureImportPlatformSettings = this.m_Inspector.m_PlatformSettings[0];
-				this.m_MaxTextureSize = textureImportPlatformSettings.m_MaxTextureSize;
+				this.m_PlatformSettings.maxTextureSize = textureImportPlatformSettings.maxTextureSize;
 				this.m_MaxTextureSizeIsDifferent = textureImportPlatformSettings.m_MaxTextureSizeIsDifferent;
-				this.m_TextureFormatArray = (TextureImporterFormat[])textureImportPlatformSettings.m_TextureFormatArray.Clone();
+				this.m_PlatformSettings.textureCompression = textureImportPlatformSettings.textureCompression;
+				this.m_TextureCompressionIsDifferent = textureImportPlatformSettings.m_TextureCompressionIsDifferent;
+				this.m_PlatformSettings.format = textureImportPlatformSettings.format;
 				this.m_TextureFormatIsDifferent = textureImportPlatformSettings.m_TextureFormatIsDifferent;
-				this.m_CompressionQuality = textureImportPlatformSettings.m_CompressionQuality;
+				this.m_PlatformSettings.compressionQuality = textureImportPlatformSettings.compressionQuality;
 				this.m_CompressionQualityIsDifferent = textureImportPlatformSettings.m_CompressionQualityIsDifferent;
+				this.m_PlatformSettings.crunchedCompression = textureImportPlatformSettings.crunchedCompression;
+				this.m_CrunchedCompressionIsDifferent = textureImportPlatformSettings.m_CrunchedCompressionIsDifferent;
+				this.m_PlatformSettings.allowsAlphaSplitting = textureImportPlatformSettings.allowsAlphaSplitting;
+				this.m_AlphaSplitIsDifferent = textureImportPlatformSettings.m_AlphaSplitIsDifferent;
 			}
-			TextureImporterType textureType = this.m_Inspector.textureType;
-			int i = 0;
-			while (i < this.importers.Length)
+			if ((this.overridden || this.m_OverriddenIsDifferent) && this.m_PlatformSettings.format < (TextureImporterFormat)0)
 			{
-				TextureImporter textureImporter = this.importers[i];
-				TextureImporterSettings settings = this.GetSettings(textureImporter);
-				if (textureType == TextureImporterType.Advanced)
+				this.m_PlatformSettings.format = TextureImporter.FormatFromTextureParameters(this.GetSettings(this.importers[0]), this.m_PlatformSettings, this.importers[0].DoesSourceTextureHaveAlpha(), this.importers[0].IsSourceTextureHDR(), this.m_Target);
+				this.m_TextureFormatIsDifferent = false;
+				for (int i = 1; i < this.importers.Length; i++)
 				{
-					if (!this.isDefault)
+					TextureImporter textureImporter = this.importers[i];
+					TextureImporterSettings settings = this.GetSettings(textureImporter);
+					TextureImporterFormat textureImporterFormat = TextureImporter.FormatFromTextureParameters(settings, this.m_PlatformSettings, textureImporter.DoesSourceTextureHaveAlpha(), textureImporter.IsSourceTextureHDR(), this.m_Target);
+					if (textureImporterFormat != this.m_PlatformSettings.format)
 					{
-						if (!this.SupportsFormat(this.m_TextureFormatArray[i], textureImporter))
-						{
-							this.m_TextureFormatArray[i] = TextureImporter.FullToSimpleTextureFormat(this.m_TextureFormatArray[i]);
-						}
-						if (this.m_TextureFormatArray[i] < (TextureImporterFormat)0)
-						{
-							this.m_TextureFormatArray[i] = TextureImporter.SimpleToFullTextureFormat2(this.m_TextureFormatArray[i], textureType, settings, textureImporter.DoesSourceTextureHaveAlpha(), textureImporter.IsSourceTextureHDR(), this.m_Target);
-						}
-						goto IL_14A;
+						this.m_TextureFormatIsDifferent = true;
 					}
-				}
-				else
-				{
-					if (this.m_TextureFormatArray[i] >= (TextureImporterFormat)0)
-					{
-						this.m_TextureFormatArray[i] = TextureImporter.FullToSimpleTextureFormat(this.m_TextureFormatArray[i]);
-						goto IL_14A;
-					}
-					goto IL_14A;
-				}
-				IL_17B:
-				i++;
-				continue;
-				IL_14A:
-				if (settings.normalMap && !TextureImporterInspector.IsGLESMobileTargetPlatform(this.m_Target))
-				{
-					this.m_TextureFormatArray[i] = TextureImporterInspector.MakeTextureFormatHaveAlpha(this.m_TextureFormatArray[i]);
-					goto IL_17B;
-				}
-				goto IL_17B;
-			}
-			this.m_TextureFormatIsDifferent = false;
-			TextureImporterFormat[] textureFormatArray = this.m_TextureFormatArray;
-			for (int j = 0; j < textureFormatArray.Length; j++)
-			{
-				TextureImporterFormat textureImporterFormat = textureFormatArray[j];
-				if (textureImporterFormat != this.m_TextureFormatArray[0])
-				{
-					this.m_TextureFormatIsDifferent = true;
 				}
 			}
 		}
 
 		private bool GetOverridden(TextureImporter importer)
 		{
+			bool overridden;
 			if (!this.m_OverriddenIsDifferent)
 			{
-				return this.m_Overridden;
+				overridden = this.overridden;
 			}
-			int num;
-			TextureImporterFormat textureImporterFormat;
-			return importer.GetPlatformTextureSettings(this.name, out num, out textureImporterFormat);
+			else
+			{
+				overridden = importer.GetPlatformTextureSettings(this.name).overridden;
+			}
+			return overridden;
 		}
 
 		public void Apply()
@@ -499,52 +544,36 @@ namespace UnityEditor
 			for (int i = 0; i < this.importers.Length; i++)
 			{
 				TextureImporter textureImporter = this.importers[i];
-				int compressionQuality = -1;
-				bool flag = false;
-				int maxTextureSize;
-				if (this.isDefault)
+				TextureImporterPlatformSettings platformTextureSettings = textureImporter.GetPlatformTextureSettings(this.name);
+				if (!this.m_OverriddenIsDifferent)
 				{
-					maxTextureSize = textureImporter.maxTextureSize;
+					platformTextureSettings.overridden = this.m_PlatformSettings.overridden;
 				}
-				else
+				if (!this.m_TextureFormatIsDifferent)
 				{
-					TextureImporterFormat textureImporterFormat;
-					flag = textureImporter.GetPlatformTextureSettings(this.name, out maxTextureSize, out textureImporterFormat, out compressionQuality);
-				}
-				if (!flag)
-				{
-					maxTextureSize = textureImporter.maxTextureSize;
+					platformTextureSettings.format = this.m_PlatformSettings.format;
 				}
 				if (!this.m_MaxTextureSizeIsDifferent)
 				{
-					maxTextureSize = this.m_MaxTextureSize;
+					platformTextureSettings.maxTextureSize = this.m_PlatformSettings.maxTextureSize;
+				}
+				if (!this.m_TextureCompressionIsDifferent)
+				{
+					platformTextureSettings.textureCompression = this.m_PlatformSettings.textureCompression;
 				}
 				if (!this.m_CompressionQualityIsDifferent)
 				{
-					compressionQuality = this.m_CompressionQuality;
+					platformTextureSettings.compressionQuality = this.m_PlatformSettings.compressionQuality;
 				}
-				if (!this.isDefault)
+				if (!this.m_CrunchedCompressionIsDifferent)
 				{
-					if (!this.m_OverriddenIsDifferent)
-					{
-						flag = this.m_Overridden;
-					}
-					bool allowsAlphaSplitting = textureImporter.GetAllowsAlphaSplitting();
-					if (flag)
-					{
-						textureImporter.SetPlatformTextureSettings(this.name, maxTextureSize, this.m_TextureFormatArray[i], compressionQuality, allowsAlphaSplitting);
-					}
-					else
-					{
-						textureImporter.ClearPlatformTextureSettings(this.name);
-					}
+					platformTextureSettings.crunchedCompression = this.m_PlatformSettings.crunchedCompression;
 				}
-				else
+				if (!this.m_AlphaSplitIsDifferent)
 				{
-					textureImporter.maxTextureSize = maxTextureSize;
-					textureImporter.textureFormat = this.m_TextureFormatArray[i];
-					textureImporter.compressionQuality = compressionQuality;
+					platformTextureSettings.allowsAlphaSplitting = this.m_PlatformSettings.allowsAlphaSplitting;
 				}
+				textureImporter.SetPlatformTextureSettings(platformTextureSettings);
 			}
 		}
 	}

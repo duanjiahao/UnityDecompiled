@@ -30,7 +30,7 @@ namespace UnityEditor.Utils
 			while (i < list.Count)
 			{
 				list[i] = list[i].Trim();
-				if (list[i].Equals(string.Empty))
+				if (list[i].Equals(""))
 				{
 					list.RemoveAt(i);
 				}
@@ -71,16 +71,26 @@ namespace UnityEditor.Utils
 
 		public static string NormalizePath(this string path)
 		{
+			string result;
 			if (Path.DirectorySeparatorChar == '\\')
 			{
-				return path.Replace('/', Path.DirectorySeparatorChar);
+				result = path.Replace('/', Path.DirectorySeparatorChar);
 			}
-			return path.Replace('\\', Path.DirectorySeparatorChar);
+			else
+			{
+				result = path.Replace('\\', Path.DirectorySeparatorChar);
+			}
+			return result;
+		}
+
+		public static string UnifyDirectorySeparator(string path)
+		{
+			return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
 		}
 
 		public static bool AreEqual(string pathA, string pathB, bool ignoreCase)
 		{
-			return (pathA == string.Empty && pathB == string.Empty) || (!string.IsNullOrEmpty(pathA) && !string.IsNullOrEmpty(pathB) && string.Compare(Path.GetFullPath(pathA), Path.GetFullPath(pathB), (!ignoreCase) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) == 0);
+			return (pathA == "" && pathB == "") || (!string.IsNullOrEmpty(pathA) && !string.IsNullOrEmpty(pathB) && string.Compare(Path.GetFullPath(pathA), Path.GetFullPath(pathB), (!ignoreCase) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) == 0);
 		}
 	}
 }

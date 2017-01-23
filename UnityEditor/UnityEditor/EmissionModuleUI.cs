@@ -5,24 +5,20 @@ namespace UnityEditor
 {
 	internal class EmissionModuleUI : ModuleUI
 	{
-		private enum EmissionTypes
-		{
-			Time,
-			Distance
-		}
-
 		private class Texts
 		{
-			public GUIContent rate = EditorGUIUtility.TextContent("Rate|The number of particles emitted per second (Time) or per distance unit (Distance)");
+			public GUIContent rateOverTime = EditorGUIUtility.TextContent("Rate over Time|The number of particles emitted per second.");
+
+			public GUIContent rateOverDistance = EditorGUIUtility.TextContent("Rate over Distance|The number of particles emitted per distance unit.");
 
 			public GUIContent burst = EditorGUIUtility.TextContent("Bursts|Emission of extra particles at specific times during the duration of the system.");
 		}
 
+		public SerializedMinMaxCurve m_Time;
+
+		public SerializedMinMaxCurve m_Distance;
+
 		private const int k_MaxNumBursts = 4;
-
-		private SerializedProperty m_Type;
-
-		public SerializedMinMaxCurve m_Rate;
 
 		private SerializedProperty[] m_BurstTime = new SerializedProperty[4];
 
@@ -31,12 +27,6 @@ namespace UnityEditor
 		private SerializedProperty[] m_BurstParticleMaxCount = new SerializedProperty[4];
 
 		private SerializedProperty m_BurstCount;
-
-		private string[] m_GuiNames = new string[]
-		{
-			"Time",
-			"Distance"
-		};
 
 		private static EmissionModuleUI.Texts s_Texts;
 
@@ -51,41 +41,43 @@ namespace UnityEditor
 			{
 				EmissionModuleUI.s_Texts = new EmissionModuleUI.Texts();
 			}
-			if (this.m_BurstCount != null)
+			if (this.m_BurstCount == null)
 			{
-				return;
+				this.m_Time = new SerializedMinMaxCurve(this, EmissionModuleUI.s_Texts.rateOverTime, "rateOverTime");
+				this.m_Time.m_AllowRandom = false;
+				this.m_Distance = new SerializedMinMaxCurve(this, EmissionModuleUI.s_Texts.rateOverDistance, "rateOverDistance");
+				this.m_Distance.m_AllowRandom = false;
+				this.m_BurstTime[0] = base.GetProperty("time0");
+				this.m_BurstTime[1] = base.GetProperty("time1");
+				this.m_BurstTime[2] = base.GetProperty("time2");
+				this.m_BurstTime[3] = base.GetProperty("time3");
+				this.m_BurstParticleMinCount[0] = base.GetProperty("cnt0");
+				this.m_BurstParticleMinCount[1] = base.GetProperty("cnt1");
+				this.m_BurstParticleMinCount[2] = base.GetProperty("cnt2");
+				this.m_BurstParticleMinCount[3] = base.GetProperty("cnt3");
+				this.m_BurstParticleMaxCount[0] = base.GetProperty("cntmax0");
+				this.m_BurstParticleMaxCount[1] = base.GetProperty("cntmax1");
+				this.m_BurstParticleMaxCount[2] = base.GetProperty("cntmax2");
+				this.m_BurstParticleMaxCount[3] = base.GetProperty("cntmax3");
+				this.m_BurstCount = base.GetProperty("m_BurstCount");
 			}
-			this.m_Type = base.GetProperty("m_Type");
-			this.m_Rate = new SerializedMinMaxCurve(this, EmissionModuleUI.s_Texts.rate, "rate");
-			this.m_BurstTime[0] = base.GetProperty("time0");
-			this.m_BurstTime[1] = base.GetProperty("time1");
-			this.m_BurstTime[2] = base.GetProperty("time2");
-			this.m_BurstTime[3] = base.GetProperty("time3");
-			this.m_BurstParticleMinCount[0] = base.GetProperty("cnt0");
-			this.m_BurstParticleMinCount[1] = base.GetProperty("cnt1");
-			this.m_BurstParticleMinCount[2] = base.GetProperty("cnt2");
-			this.m_BurstParticleMinCount[3] = base.GetProperty("cnt3");
-			this.m_BurstParticleMaxCount[0] = base.GetProperty("cntmax0");
-			this.m_BurstParticleMaxCount[1] = base.GetProperty("cntmax1");
-			this.m_BurstParticleMaxCount[2] = base.GetProperty("cntmax2");
-			this.m_BurstParticleMaxCount[3] = base.GetProperty("cntmax3");
-			this.m_BurstCount = base.GetProperty("m_BurstCount");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
 		{
-			ModuleUI.GUIMinMaxCurve(EmissionModuleUI.s_Texts.rate, this.m_Rate);
-			ModuleUI.GUIPopup(GUIContent.none, this.m_Type, this.m_GuiNames);
-			if (this.m_Type.intValue != 1)
+			ModuleUI.GUIMinMaxCurve(EmissionModuleUI.s_Texts.rateOverTime, this.m_Time, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxCurve(EmissionModuleUI.s_Texts.rateOverDistance, this.m_Distance, new GUILayoutOption[0]);
+			this.DoBurstGUI(s);
+			if (s.main.simulationSpace != ParticleSystemSimulationSpace.World && this.m_Distance.scalar.floatValue > 0f)
 			{
-				this.DoBurstGUI(s);
+				EditorGUILayout.HelpBox("Distance-based emission only works when using World Space Simulation Space", MessageType.Warning, true);
 			}
 		}
 
 		private void DoBurstGUI(ParticleSystem s)
 		{
 			EditorGUILayout.Space();
-			Rect controlRect = ModuleUI.GetControlRect(13);
+			Rect controlRect = ModuleUI.GetControlRect(13, new GUILayoutOption[0]);
 			GUI.Label(controlRect, EmissionModuleUI.s_Texts.burst, ParticleSystemStyles.Get().label);
 			float num = 20f;
 			float num2 = 40f;
@@ -103,14 +95,15 @@ namespace UnityEditor
 			GUI.Label(controlRect2, "Max", ParticleSystemStyles.Get().label);
 			position.y += 12f;
 			GUI.Label(position, GUIContent.none, ParticleSystemStyles.Get().line);
-			float duration = s.duration;
+			float duration = s.main.duration;
 			int num6 = num5;
-			for (int i = 0; i < num5; i++)
+			int i = 0;
+			while (i < num5)
 			{
 				SerializedProperty serializedProperty = this.m_BurstTime[i];
 				SerializedProperty serializedProperty2 = this.m_BurstParticleMinCount[i];
 				SerializedProperty serializedProperty3 = this.m_BurstParticleMaxCount[i];
-				controlRect = ModuleUI.GetControlRect(13);
+				controlRect = ModuleUI.GetControlRect(13, new GUILayoutOption[0]);
 				controlRect2 = new Rect(controlRect.x + num4, controlRect.y, num + num2, controlRect.height);
 				float num7 = ModuleUI.FloatDraggable(controlRect2, serializedProperty, 1f, num, "n2");
 				if (num7 < 0f)
@@ -135,10 +128,14 @@ namespace UnityEditor
 						num5--;
 					}
 				}
+				IL_2A0:
+				i++;
+				continue;
+				goto IL_2A0;
 			}
 			if (num5 < 4)
 			{
-				controlRect2 = ModuleUI.GetControlRect(13);
+				controlRect2 = ModuleUI.GetControlRect(13, new GUILayoutOption[0]);
 				controlRect2.xMin = controlRect2.xMax - 12f;
 				if (ModuleUI.PlusButton(controlRect2))
 				{
@@ -154,7 +151,7 @@ namespace UnityEditor
 		public override void UpdateCullingSupportedString(ref string text)
 		{
 			this.Init();
-			if (this.m_Type.intValue == 1)
+			if (this.m_Distance.scalar.floatValue > 0f)
 			{
 				text += "\n\tEmission is distance based.";
 			}

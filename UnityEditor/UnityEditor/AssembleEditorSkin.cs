@@ -1,4 +1,5 @@
 using System;
+using UnityEditorInternal;
 
 namespace UnityEditor
 {
@@ -6,10 +7,7 @@ namespace UnityEditor
 	{
 		public static void DoIt()
 		{
-			GenerateIconsWithMipLevels.DeleteGeneratedFolder();
-			EditorApplication.ExecuteMenuItem("Tools/Regenerate All Gizmos Icons with Mips");
 			EditorApplication.ExecuteMenuItem("Tools/Regenerate Editor Skins Now");
-			AssembleEditorSkin.RegenerateAllIconsWithMipLevels();
 		}
 
 		private static void RegenerateAllIconsWithMipLevels()

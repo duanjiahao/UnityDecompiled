@@ -2,12 +2,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditorInternal
 {
 	internal class AnimationWindowHierarchyGUI : TreeViewGUI
 	{
+		private readonly GUIContent k_AnimatePropertyLabel = new GUIContent("Add Property");
+
+		private GUIStyle m_AnimationRowEvenStyle;
+
+		private GUIStyle m_AnimationRowOddStyle;
+
+		private GUIStyle m_AnimationSelectionTextField;
+
+		private GUIStyle m_AnimationLineStyle;
+
+		private GUIStyle m_AnimationCurveDropdown;
+
+		private AnimationWindowHierarchyNode m_RenamedNode;
+
+		private Color m_LightSkinPropertyTextColor = new Color(0.35f, 0.35f, 0.35f);
+
+		private Color m_PhantomCurveColor = new Color(0f, 0.6f, 0.6f);
+
+		private int[] m_HierarchyItemFoldControlIDs;
+
+		private int[] m_HierarchyItemValueControlIDs;
+
+		private int[] m_HierarchyItemButtonControlIDs;
+
 		private const float k_RowRightOffset = 10f;
 
 		private const float k_ValueFieldWidth = 50f;
@@ -24,27 +49,7 @@ namespace UnityEditorInternal
 
 		public const float k_RowBackgroundColorBrightness = 0.28f;
 
-		private readonly GUIContent k_AnimatePropertyLabel = new GUIContent("Add Property");
-
-		private GUIStyle m_PlusButtonStyle;
-
-		private GUIStyle m_AnimationRowEvenStyle;
-
-		private GUIStyle m_AnimationRowOddStyle;
-
-		private GUIStyle m_AnimationSelectionTextField;
-
-		private GUIStyle m_AnimationLineStyle;
-
-		private GUIStyle m_AnimationCurveDropdown;
-
-		private AnimationWindowHierarchyNode m_RenamedNode;
-
-		private Color m_LightSkinPropertyTextColor = new Color(0.35f, 0.35f, 0.35f);
-
-		private int[] m_HierarchyItemFoldControlIDs;
-
-		private int[] m_HierarchyItemButtonControlIDs;
+		private const float k_SelectedPhantomCurveColorMultiplier = 1.4f;
 
 		private static readonly Color k_KeyColorInDopesheetMode = new Color(0.7f, 0.7f, 0.7f, 1f);
 
@@ -60,7 +65,7 @@ namespace UnityEditorInternal
 			set;
 		}
 
-		public AnimationWindowHierarchyGUI(TreeView treeView, AnimationWindowState state) : base(treeView)
+		public AnimationWindowHierarchyGUI(TreeViewController treeView, AnimationWindowState state) : base(treeView)
 		{
 			this.state = state;
 		}
@@ -68,10 +73,6 @@ namespace UnityEditorInternal
 		protected override void InitStyles()
 		{
 			base.InitStyles();
-			if (this.m_PlusButtonStyle == null)
-			{
-				this.m_PlusButtonStyle = new GUIStyle("OL Plus");
-			}
 			if (this.m_AnimationRowEvenStyle == null)
 			{
 				this.m_AnimationRowEvenStyle = new GUIStyle("AnimationRowEven");
@@ -98,49 +99,47 @@ namespace UnityEditorInternal
 		protected void DoNodeGUI(Rect rect, AnimationWindowHierarchyNode node, bool selected, bool focused, int row)
 		{
 			this.InitStyles();
-			if (node is AnimationWindowHierarchyMasterNode)
+			if (!(node is AnimationWindowHierarchyMasterNode))
 			{
-				return;
-			}
-			float indent = this.k_BaseIndent + (float)(node.depth + node.indent) * this.k_IndentWidth;
-			if (node is AnimationWindowHierarchyAddButtonNode)
-			{
-				if (Event.current.type == EventType.MouseMove && AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame >= 0)
+				float indent = this.k_BaseIndent + (float)(node.depth + node.indent) * this.k_IndentWidth;
+				if (node is AnimationWindowHierarchyAddButtonNode)
 				{
-					if (AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame >= Time.frameCount - 1)
+					if (Event.current.type == EventType.MouseMove && AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame >= 0)
 					{
-						Event.current.Use();
+						if (AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame >= Time.frameCount - 1)
+						{
+							Event.current.Use();
+						}
+						else
+						{
+							AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame = -1;
+						}
 					}
-					else
+					using (new EditorGUI.DisabledScope(!this.state.selection.canAddCurves))
 					{
-						AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame = -1;
+						this.DoAddCurveButton(rect, node, row);
 					}
 				}
-				bool flag = this.state.activeGameObject && AnimationWindowUtility.GameObjectIsAnimatable(this.state.activeGameObject, this.state.activeAnimationClip);
-				using (new EditorGUI.DisabledScope(!flag))
+				else
 				{
-					this.DoAddCurveButton(rect, node, row);
+					this.DoRowBackground(rect, row);
+					this.DoIconAndName(rect, node, selected, focused, indent);
+					this.DoFoldout(node, rect, indent, row);
+					bool flag = false;
+					if (node.curves != null)
+					{
+						flag = !Array.Exists<AnimationWindowCurve>(node.curves, (AnimationWindowCurve curve) => !curve.animationIsEditable);
+					}
+					using (new EditorGUI.DisabledScope(!flag))
+					{
+						this.DoValueField(rect, node, row);
+					}
+					this.DoCurveDropdown(rect, node, row, flag);
+					this.HandleContextMenu(rect, node, flag);
+					this.DoCurveColorIndicator(rect, node);
 				}
+				EditorGUIUtility.SetIconSize(Vector2.zero);
 			}
-			else
-			{
-				this.DoRowBackground(rect, row);
-				this.DoIconAndName(rect, node, selected, focused, indent);
-				this.DoFoldout(node, rect, indent, row);
-				bool flag2 = false;
-				if (node.curves != null)
-				{
-					flag2 = !Array.Exists<AnimationWindowCurve>(node.curves, (AnimationWindowCurve curve) => !curve.animationIsEditable);
-				}
-				using (new EditorGUI.DisabledScope(!flag2))
-				{
-					this.DoValueField(rect, node, row);
-					this.HandleContextMenu(rect, node);
-					this.DoCurveDropdown(rect, node, row);
-				}
-				this.DoCurveColorIndicator(rect, node);
-			}
-			EditorGUIUtility.SetIconSize(Vector2.zero);
 		}
 
 		public override void BeginRowGUI()
@@ -149,10 +148,12 @@ namespace UnityEditorInternal
 			this.HandleDelete();
 			int rowCount = this.m_TreeView.data.rowCount;
 			this.m_HierarchyItemFoldControlIDs = new int[rowCount];
+			this.m_HierarchyItemValueControlIDs = new int[rowCount];
 			this.m_HierarchyItemButtonControlIDs = new int[rowCount];
 			for (int i = 0; i < rowCount; i++)
 			{
 				this.m_HierarchyItemFoldControlIDs[i] = GUIUtility.GetControlID(FocusType.Passive);
+				this.m_HierarchyItemValueControlIDs[i] = GUIUtility.GetControlID(FocusType.Passive);
 				this.m_HierarchyItemButtonControlIDs[i] = GUIUtility.GetControlID(FocusType.Passive);
 			}
 		}
@@ -164,7 +165,7 @@ namespace UnityEditorInternal
 			Rect rect2 = new Rect(rect.xMin + num, rect.yMin + num2, rect.width - num * 2f, rect.height - num2 * 2f);
 			if (this.DoTreeViewButton(this.m_HierarchyItemButtonControlIDs[row], rect2, this.k_AnimatePropertyLabel, GUI.skin.button))
 			{
-				AddCurvesPopup.gameObject = this.state.activeRootGameObject;
+				AddCurvesPopup.selection = this.state.selection;
 				AddCurvesPopupHierarchyDataSource.showEntireHierarchy = true;
 				if (AddCurvesPopup.ShowAtPosition(rect2, this.state, new AddCurvesPopup.OnNewCurveAdded(this.OnNewCurveAdded)))
 				{
@@ -175,26 +176,20 @@ namespace UnityEditorInternal
 
 		private void OnNewCurveAdded(AddCurvesPopupPropertyNode node)
 		{
-			TreeViewItem treeViewItem = (!(node.parent.displayName == "GameObject")) ? node.parent.parent : node.parent;
-			this.state.hierarchyState.selectedIDs.Clear();
-			this.state.hierarchyState.selectedIDs.Add(treeViewItem.id);
-			this.state.hierarchyData.SetExpanded(treeViewItem, true);
-			this.state.hierarchyData.SetExpanded(node.parent.id, true);
 		}
 
 		private void DoRowBackground(Rect rect, int row)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			if (row % 2 == 0)
-			{
-				this.m_AnimationRowEvenStyle.Draw(rect, false, false, false, false);
-			}
-			else
-			{
-				this.m_AnimationRowOddStyle.Draw(rect, false, false, false, false);
+				if (row % 2 == 0)
+				{
+					this.m_AnimationRowEvenStyle.Draw(rect, false, false, false, false);
+				}
+				else
+				{
+					this.m_AnimationRowOddStyle.Draw(rect, false, false, false, false);
+				}
 			}
 		}
 
@@ -204,22 +199,18 @@ namespace UnityEditorInternal
 			{
 				Rect position = rect;
 				position.x = indent;
-				position.width = this.k_FoldoutWidth;
+				position.width = TreeViewGUI.s_Styles.foldoutWidth;
 				EditorGUI.BeginChangeCheck();
-				bool flag = GUI.Toggle(position, this.m_HierarchyItemFoldControlIDs[row], this.m_TreeView.data.IsExpanded(node), GUIContent.none, TreeViewGUI.s_Styles.foldout);
+				bool expand = GUI.Toggle(position, this.m_HierarchyItemFoldControlIDs[row], this.m_TreeView.data.IsExpanded(node), GUIContent.none, TreeViewGUI.s_Styles.foldout);
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (Event.current.alt)
 					{
-						this.m_TreeView.data.SetExpandedWithChildren(node, flag);
+						this.m_TreeView.data.SetExpandedWithChildren(node, expand);
 					}
 					else
 					{
-						this.m_TreeView.data.SetExpanded(node, flag);
-					}
-					if (flag)
-					{
-						this.m_TreeView.UserExpandedItem(node);
+						this.m_TreeView.data.SetExpanded(node, expand);
 					}
 				}
 			}
@@ -231,13 +222,13 @@ namespace UnityEditorInternal
 				{
 					Rect position2 = rect;
 					position2.x = indent;
-					position2.width = this.k_FoldoutWidth;
+					position2.width = TreeViewGUI.s_Styles.foldoutWidth;
 					EditorGUI.BeginChangeCheck();
-					bool flag2 = animationWindowHierarchyState.GetTallMode(animationWindowHierarchyPropertyNode);
-					flag2 = GUI.Toggle(position2, this.m_HierarchyItemFoldControlIDs[row], flag2, GUIContent.none, TreeViewGUI.s_Styles.foldout);
+					bool flag = animationWindowHierarchyState.GetTallMode(animationWindowHierarchyPropertyNode);
+					flag = GUI.Toggle(position2, this.m_HierarchyItemFoldControlIDs[row], flag, GUIContent.none, TreeViewGUI.s_Styles.foldout);
 					if (EditorGUI.EndChangeCheck())
 					{
-						animationWindowHierarchyState.SetTallMode(animationWindowHierarchyPropertyNode, flag2);
+						animationWindowHierarchyState.SetTallMode(animationWindowHierarchyPropertyNode, flag);
 					}
 				}
 			}
@@ -256,10 +247,16 @@ namespace UnityEditorInternal
 				{
 					rect.width -= 77f;
 				}
-				bool flag = AnimationWindowUtility.IsNodeLeftOverCurve(node, this.state.activeRootGameObject);
-				bool flag2 = AnimationWindowUtility.IsNodeAmbiguous(node, this.state.activeRootGameObject);
-				string text = string.Empty;
-				string tooltip = string.Empty;
+				bool flag = AnimationWindowUtility.IsNodeLeftOverCurve(node);
+				bool flag2 = AnimationWindowUtility.IsNodeAmbiguous(node);
+				bool flag3 = AnimationWindowUtility.IsNodePhantom(node);
+				string text = "";
+				string tooltip = "";
+				if (flag3)
+				{
+					text = " (Default Value)";
+					tooltip = "Transform position, rotation and scale can't be partially animated. This value will be animated to the default value";
+				}
 				if (flag)
 				{
 					text = " (Missing!)";
@@ -270,38 +267,43 @@ namespace UnityEditorInternal
 					text = " (Duplicate GameObject name!)";
 					tooltip = "Target for curve is ambiguous since there are multiple GameObjects with same name (" + node.path + ")";
 				}
+				Color textColor = this.m_AnimationLineStyle.normal.textColor;
+				Color color;
 				if (node.depth == 0)
 				{
-					string str = string.Empty;
-					if (this.state.activeRootGameObject != null)
+					string str = "";
+					if (node.curves.Length > 0)
 					{
-						Transform x = this.state.activeRootGameObject.transform.Find(node.path);
-						if (x == null)
+						AnimationWindowSelectionItem selectionBinding = node.curves[0].selectionBinding;
+						if (selectionBinding != null)
 						{
-							flag = true;
+							if (selectionBinding.rootGameObject != null)
+							{
+								Transform x = selectionBinding.rootGameObject.transform.Find(node.path);
+								if (x == null)
+								{
+									flag = true;
+								}
+							}
 						}
-						str = this.GetGameObjectName(node.path) + " : ";
+						string gameObjectName = this.GetGameObjectName((!(selectionBinding != null)) ? null : selectionBinding.rootGameObject, node.path);
+						str = ((!string.IsNullOrEmpty(gameObjectName)) ? (gameObjectName + " : ") : "");
 					}
 					TreeViewGUI.s_Styles.content = new GUIContent(str + node.displayName + text, this.GetIconForItem(node), tooltip);
-					Color textColor = this.m_AnimationLineStyle.normal.textColor;
-					Color color = (!EditorGUIUtility.isProSkin) ? Color.black : (Color.gray * 1.35f);
-					color = ((!flag && !flag2) ? color : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
-					this.SetStyleTextColor(this.m_AnimationLineStyle, color);
-					rect.xMin += (float)((int)(indent + this.k_FoldoutWidth));
-					GUI.Label(rect, TreeViewGUI.s_Styles.content, this.m_AnimationLineStyle);
-					this.SetStyleTextColor(this.m_AnimationLineStyle, textColor);
+					color = ((!EditorGUIUtility.isProSkin) ? Color.black : (Color.gray * 1.35f));
 				}
 				else
 				{
 					TreeViewGUI.s_Styles.content = new GUIContent(node.displayName + text, this.GetIconForItem(node), tooltip);
-					Color textColor2 = this.m_AnimationLineStyle.normal.textColor;
-					Color color2 = (!EditorGUIUtility.isProSkin) ? this.m_LightSkinPropertyTextColor : Color.gray;
-					color2 = ((!flag && !flag2) ? color2 : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
-					this.SetStyleTextColor(this.m_AnimationLineStyle, color2);
-					rect.xMin += (float)((int)(indent + this.k_IndentWidth + this.k_FoldoutWidth));
-					GUI.Label(rect, TreeViewGUI.s_Styles.content, this.m_AnimationLineStyle);
-					this.SetStyleTextColor(this.m_AnimationLineStyle, textColor2);
+					color = ((!EditorGUIUtility.isProSkin) ? this.m_LightSkinPropertyTextColor : Color.gray);
+					Color color2 = (!selected) ? this.m_PhantomCurveColor : (this.m_PhantomCurveColor * 1.4f);
+					color = ((!flag3) ? color : color2);
 				}
+				color = ((!flag && !flag2) ? color : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
+				this.SetStyleTextColor(this.m_AnimationLineStyle, color);
+				rect.xMin += (float)((int)(indent + TreeViewGUI.s_Styles.foldoutWidth + (float)this.m_AnimationLineStyle.margin.left));
+				GUI.Label(rect, TreeViewGUI.s_Styles.content, this.m_AnimationLineStyle);
+				this.SetStyleTextColor(this.m_AnimationLineStyle, textColor);
 			}
 			if (this.IsRenaming(node.id) && Event.current.type != EventType.Layout)
 			{
@@ -309,36 +311,42 @@ namespace UnityEditorInternal
 			}
 		}
 
-		private string GetGameObjectName(string path)
+		private string GetGameObjectName(GameObject rootGameObject, string path)
 		{
-			if (string.IsNullOrEmpty(path) && this.state.activeRootGameObject != null)
+			string result;
+			if (string.IsNullOrEmpty(path))
 			{
-				return this.state.activeRootGameObject.name;
+				result = ((!(rootGameObject != null)) ? "" : rootGameObject.name);
 			}
-			string[] array = path.Split(new char[]
+			else
 			{
-				'/'
-			});
-			return array[array.Length - 1];
+				string[] array = path.Split(new char[]
+				{
+					'/'
+				});
+				result = array[array.Length - 1];
+			}
+			return result;
 		}
 
 		private string GetPathWithoutChildmostGameObject(string path)
 		{
+			string result;
 			if (string.IsNullOrEmpty(path))
 			{
-				return string.Empty;
+				result = "";
 			}
-			int num = path.LastIndexOf('/');
-			return path.Substring(0, num + 1);
+			else
+			{
+				int num = path.LastIndexOf('/');
+				result = path.Substring(0, num + 1);
+			}
+			return result;
 		}
 
 		private void DoValueField(Rect rect, AnimationWindowHierarchyNode node, int row)
 		{
 			bool flag = false;
-			if (!AnimationMode.InAnimationMode())
-			{
-				return;
-			}
 			if (node is AnimationWindowHierarchyPropertyNode)
 			{
 				AnimationWindowCurve[] curves = node.curves;
@@ -347,8 +355,7 @@ namespace UnityEditorInternal
 					return;
 				}
 				AnimationWindowCurve animationWindowCurve = curves[0];
-				object currentValue = CurveBindingUtility.GetCurrentValue(this.state.activeRootGameObject, animationWindowCurve.binding);
-				Type editorCurveValueType = CurveBindingUtility.GetEditorCurveValueType(this.state.activeRootGameObject, animationWindowCurve.binding);
+				object currentValue = CurveBindingUtility.GetCurrentValue(this.state, animationWindowCurve);
 				if (currentValue is float)
 				{
 					float num = (float)currentValue;
@@ -358,19 +365,19 @@ namespace UnityEditorInternal
 						AnimationWindowHierarchyGUI.s_WasInsideValueRectFrame = Time.frameCount;
 					}
 					EditorGUI.BeginChangeCheck();
-					if (editorCurveValueType == typeof(bool))
+					if (animationWindowCurve.valueType == typeof(bool))
 					{
-						num = (float)((!EditorGUI.Toggle(position, num != 0f)) ? 0 : 1);
+						num = (float)((!GUI.Toggle(position, this.m_HierarchyItemValueControlIDs[row], num != 0f, GUIContent.none, EditorStyles.toggle)) ? 0 : 1);
 					}
 					else
 					{
-						int controlID = GUIUtility.GetControlID(123456544, FocusType.Keyboard, position);
-						bool flag2 = GUIUtility.keyboardControl == controlID && EditorGUIUtility.editingTextField && Event.current.type == EventType.KeyDown && (Event.current.character == '\n' || Event.current.character == '\u0003');
-						if (EditorGUI.s_RecycledEditor.controlID == controlID && Event.current.type == EventType.MouseDown && position.Contains(Event.current.mousePosition))
+						int num2 = this.m_HierarchyItemValueControlIDs[row];
+						bool flag2 = GUIUtility.keyboardControl == num2 && EditorGUIUtility.editingTextField && Event.current.type == EventType.KeyDown && (Event.current.character == '\n' || Event.current.character == '\u0003');
+						if (EditorGUI.s_RecycledEditor.controlID == num2 && Event.current.type == EventType.MouseDown && position.Contains(Event.current.mousePosition))
 						{
-							GUIUtility.keyboardControl = controlID;
+							GUIUtility.keyboardControl = num2;
 						}
-						num = EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position, new Rect(0f, 0f, 0f, 0f), controlID, num, EditorGUI.kFloatFieldFormatString, this.m_AnimationSelectionTextField, false);
+						num = EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position, new Rect(0f, 0f, 0f, 0f), num2, num, EditorGUI.kFloatFieldFormatString, this.m_AnimationSelectionTextField, false);
 						if (flag2)
 						{
 							GUI.changed = true;
@@ -383,23 +390,26 @@ namespace UnityEditorInternal
 					}
 					if (EditorGUI.EndChangeCheck())
 					{
+						string undoLabel = "Edit Key";
+						float num3 = this.state.currentTime - animationWindowCurve.timeOffset;
+						AnimationKeyTime time = AnimationKeyTime.Time(num3, animationWindowCurve.clip.frameRate);
 						AnimationWindowKeyframe animationWindowKeyframe = null;
 						foreach (AnimationWindowKeyframe current in animationWindowCurve.m_Keyframes)
 						{
-							if (Mathf.Approximately(current.time, this.state.time.time))
+							if (Mathf.Approximately(current.time, num3))
 							{
 								animationWindowKeyframe = current;
 							}
 						}
 						if (animationWindowKeyframe == null)
 						{
-							AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, num, editorCurveValueType, this.state.time);
+							AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, num, animationWindowCurve.valueType, time);
 						}
 						else
 						{
 							animationWindowKeyframe.value = num;
 						}
-						this.state.SaveCurve(animationWindowCurve);
+						this.state.SaveCurve(animationWindowCurve, undoLabel);
 						flag = true;
 					}
 				}
@@ -414,35 +424,40 @@ namespace UnityEditorInternal
 		{
 			Event current = Event.current;
 			EventType typeForControl = current.GetTypeForControl(id);
-			EventType eventType = typeForControl;
-			if (eventType != EventType.MouseDown)
+			bool result;
+			if (typeForControl != EventType.Repaint)
 			{
-				if (eventType != EventType.MouseUp)
+				if (typeForControl != EventType.MouseDown)
 				{
-					if (eventType == EventType.Repaint)
+					if (typeForControl == EventType.MouseUp)
 					{
-						style.Draw(position, content, id, false);
+						if (GUIUtility.hotControl == id)
+						{
+							GUIUtility.hotControl = 0;
+							current.Use();
+							if (position.Contains(current.mousePosition))
+							{
+								result = true;
+								return result;
+							}
+						}
 					}
 				}
-				else if (GUIUtility.hotControl == id)
+				else if (position.Contains(current.mousePosition) && current.button == 0)
 				{
-					GUIUtility.hotControl = 0;
+					GUIUtility.hotControl = id;
 					current.Use();
-					if (position.Contains(current.mousePosition))
-					{
-						return true;
-					}
 				}
 			}
-			else if (position.Contains(current.mousePosition) && current.button == 0)
+			else
 			{
-				GUIUtility.hotControl = id;
-				current.Use();
+				style.Draw(position, content, id, false);
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
-		private void DoCurveDropdown(Rect rect, AnimationWindowHierarchyNode node, int row)
+		private void DoCurveDropdown(Rect rect, AnimationWindowHierarchyNode node, int row, bool enabled)
 		{
 			rect = new Rect(rect.xMax - 10f - 12f, rect.yMin + 2f, 22f, 12f);
 			if (this.DoTreeViewButton(this.m_HierarchyItemButtonControlIDs[row], rect, GUIContent.none, this.m_AnimationCurveDropdown))
@@ -451,7 +466,7 @@ namespace UnityEditorInternal
 				GenericMenu genericMenu = this.GenerateMenu(new AnimationWindowHierarchyNode[]
 				{
 					node
-				}.ToList<AnimationWindowHierarchyNode>());
+				}.ToList<AnimationWindowHierarchyNode>(), enabled);
 				genericMenu.DropDown(rect);
 				Event.current.Use();
 			}
@@ -459,40 +474,39 @@ namespace UnityEditorInternal
 
 		private void DoCurveColorIndicator(Rect rect, AnimationWindowHierarchyNode node)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			Color color = GUI.color;
-			if (!this.state.showCurveEditor)
-			{
-				GUI.color = AnimationWindowHierarchyGUI.k_KeyColorInDopesheetMode;
-			}
-			else if (node.curves.Length == 1 && !node.curves[0].isPPtrCurve)
-			{
-				GUI.color = CurveUtility.GetPropertyColor(node.curves[0].binding.propertyName);
-			}
-			else
-			{
-				GUI.color = AnimationWindowHierarchyGUI.k_KeyColorForNonCurves;
-			}
-			bool flag = false;
-			if (AnimationMode.InAnimationMode())
-			{
-				AnimationWindowCurve[] curves = node.curves;
-				for (int i = 0; i < curves.Length; i++)
+				Color color = GUI.color;
+				if (!this.state.showCurveEditor)
 				{
-					AnimationWindowCurve animationWindowCurve = curves[i];
-					if (animationWindowCurve.m_Keyframes.Any((AnimationWindowKeyframe key) => this.state.time.ContainsTime(key.time)))
+					GUI.color = AnimationWindowHierarchyGUI.k_KeyColorInDopesheetMode;
+				}
+				else if (node.curves.Length == 1 && !node.curves[0].isPPtrCurve)
+				{
+					GUI.color = CurveUtility.GetPropertyColor(node.curves[0].binding.propertyName);
+				}
+				else
+				{
+					GUI.color = AnimationWindowHierarchyGUI.k_KeyColorForNonCurves;
+				}
+				bool flag = false;
+				if (AnimationMode.InAnimationMode())
+				{
+					AnimationWindowCurve[] curves = node.curves;
+					for (int i = 0; i < curves.Length; i++)
 					{
-						flag = true;
+						AnimationWindowCurve animationWindowCurve = curves[i];
+						if (animationWindowCurve.m_Keyframes.Any((AnimationWindowKeyframe key) => this.state.time.ContainsTime(key.time)))
+						{
+							flag = true;
+						}
 					}
 				}
+				Texture texture = (!flag) ? CurveUtility.GetIconCurve() : CurveUtility.GetIconKey();
+				rect = new Rect(rect.xMax - 10f - (float)(texture.width / 2) - 5f, rect.yMin + 3f, (float)texture.width, (float)texture.height);
+				GUI.DrawTexture(rect, texture, ScaleMode.ScaleToFit, true, 1f);
+				GUI.color = color;
 			}
-			Texture texture = (!flag) ? CurveUtility.GetIconCurve() : CurveUtility.GetIconKey();
-			rect = new Rect(rect.xMax - 10f - (float)(texture.width / 2) - 5f, rect.yMin + 3f, (float)texture.width, (float)texture.height);
-			GUI.DrawTexture(rect, texture, ScaleMode.ScaleToFit, true, 1f);
-			GUI.color = color;
 		}
 
 		private void HandleDelete()
@@ -500,49 +514,56 @@ namespace UnityEditorInternal
 			if (this.m_TreeView.HasFocus())
 			{
 				EventType type = Event.current.type;
-				if (type != EventType.KeyDown)
+				if (type != EventType.ExecuteCommand)
 				{
-					if (type == EventType.ExecuteCommand)
+					if (type == EventType.KeyDown)
 					{
-						if (Event.current.commandName == "SoftDelete" || Event.current.commandName == "Delete")
+						if (Event.current.keyCode == KeyCode.Backspace || Event.current.keyCode == KeyCode.Delete)
 						{
-							if (Event.current.type == EventType.ExecuteCommand)
-							{
-								this.RemoveCurvesFromSelectedNodes();
-							}
+							this.RemoveCurvesFromSelectedNodes();
 							Event.current.Use();
 						}
 					}
 				}
-				else if (Event.current.keyCode == KeyCode.Backspace || Event.current.keyCode == KeyCode.Delete)
+				else if (Event.current.commandName == "SoftDelete" || Event.current.commandName == "Delete")
 				{
-					this.RemoveCurvesFromSelectedNodes();
+					if (Event.current.type == EventType.ExecuteCommand)
+					{
+						this.RemoveCurvesFromSelectedNodes();
+					}
 					Event.current.Use();
 				}
 			}
 		}
 
-		private void HandleContextMenu(Rect rect, AnimationWindowHierarchyNode node)
+		private void HandleContextMenu(Rect rect, AnimationWindowHierarchyNode node, bool enabled)
 		{
-			if (Event.current.type != EventType.ContextClick)
+			if (Event.current.type == EventType.ContextClick)
 			{
-				return;
-			}
-			if (rect.Contains(Event.current.mousePosition))
-			{
-				this.state.SelectHierarchyItem(node.id, true, true);
-				this.GenerateMenu(this.state.selectedHierarchyNodes).ShowAsContext();
-				Event.current.Use();
+				if (rect.Contains(Event.current.mousePosition))
+				{
+					this.state.SelectHierarchyItem(node.id, true, true);
+					this.GenerateMenu(this.state.selectedHierarchyNodes, enabled).ShowAsContext();
+					Event.current.Use();
+				}
 			}
 		}
 
-		private GenericMenu GenerateMenu(List<AnimationWindowHierarchyNode> interactedNodes)
+		private GenericMenu GenerateMenu(List<AnimationWindowHierarchyNode> interactedNodes, bool enabled)
 		{
 			List<AnimationWindowCurve> curvesAffectedByNodes = this.GetCurvesAffectedByNodes(interactedNodes, false);
 			List<AnimationWindowCurve> curvesAffectedByNodes2 = this.GetCurvesAffectedByNodes(interactedNodes, true);
 			bool flag = curvesAffectedByNodes.Count == 1 && AnimationWindowUtility.ForceGrouping(curvesAffectedByNodes[0].binding);
 			GenericMenu genericMenu = new GenericMenu();
-			genericMenu.AddItem(new GUIContent((curvesAffectedByNodes.Count <= 1 && !flag) ? "Remove Property" : "Remove Properties"), false, new GenericMenu.MenuFunction(this.RemoveCurvesFromSelectedNodes));
+			GUIContent content = new GUIContent((curvesAffectedByNodes.Count <= 1 && !flag) ? "Remove Property" : "Remove Properties");
+			if (!enabled)
+			{
+				genericMenu.AddDisabledItem(content);
+			}
+			else
+			{
+				genericMenu.AddItem(content, false, new GenericMenu.MenuFunction(this.RemoveCurvesFromSelectedNodes));
+			}
 			bool flag2 = true;
 			EditorCurveBinding[] array = new EditorCurveBinding[curvesAffectedByNodes2.Count];
 			for (int i = 0; i < curvesAffectedByNodes2.Count; i++)
@@ -566,14 +587,15 @@ namespace UnityEditorInternal
 			}
 			if (flag2)
 			{
-				string str = (!this.state.activeAnimationClip.legacy) ? string.Empty : " (Not fully supported in Legacy)";
-				genericMenu.AddItem(new GUIContent("Interpolation/Euler Angles" + str), rotationInterpolationMode == RotationCurveInterpolation.Mode.RawEuler, new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.RawEuler);
-				genericMenu.AddItem(new GUIContent("Interpolation/Euler Angles (Quaternion)"), rotationInterpolationMode == RotationCurveInterpolation.Mode.Baked, new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.Baked);
-				genericMenu.AddItem(new GUIContent("Interpolation/Quaternion"), rotationInterpolationMode == RotationCurveInterpolation.Mode.NonBaked, new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.NonBaked);
+				string str = (!this.state.activeAnimationClip.legacy) ? "" : " (Not fully supported in Legacy)";
+				GenericMenu.MenuFunction2 menuFunction = null;
+				genericMenu.AddItem(new GUIContent("Interpolation/Euler Angles" + str), rotationInterpolationMode == RotationCurveInterpolation.Mode.RawEuler, (!enabled) ? menuFunction : new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.RawEuler);
+				genericMenu.AddItem(new GUIContent("Interpolation/Euler Angles (Quaternion)"), rotationInterpolationMode == RotationCurveInterpolation.Mode.Baked, (!enabled) ? menuFunction : new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.Baked);
+				genericMenu.AddItem(new GUIContent("Interpolation/Quaternion"), rotationInterpolationMode == RotationCurveInterpolation.Mode.NonBaked, (!enabled) ? menuFunction : new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.NonBaked);
 			}
 			if (AnimationMode.InAnimationMode())
 			{
-				genericMenu.AddSeparator(string.Empty);
+				genericMenu.AddSeparator("");
 				bool flag3 = true;
 				bool flag4 = true;
 				foreach (AnimationWindowCurve current2 in curvesAffectedByNodes)
@@ -588,7 +610,7 @@ namespace UnityEditorInternal
 					}
 				}
 				string text = "Add Key";
-				if (flag3)
+				if (flag3 || !enabled)
 				{
 					genericMenu.AddDisabledItem(new GUIContent(text));
 				}
@@ -597,7 +619,7 @@ namespace UnityEditorInternal
 					genericMenu.AddItem(new GUIContent(text), false, new GenericMenu.MenuFunction2(this.AddKeysAtCurrentTime), curvesAffectedByNodes);
 				}
 				text = "Delete Key";
-				if (flag4)
+				if (flag4 || !enabled)
 				{
 					genericMenu.AddDisabledItem(new GUIContent(text));
 				}
@@ -616,10 +638,7 @@ namespace UnityEditorInternal
 
 		private void AddKeysAtCurrentTime(List<AnimationWindowCurve> curves)
 		{
-			foreach (AnimationWindowCurve current in curves)
-			{
-				AnimationWindowUtility.AddKeyframeToCurve(this.state, current, this.state.time);
-			}
+			AnimationWindowUtility.AddKeyframes(this.state, curves.ToArray(), this.state.time);
 		}
 
 		private void DeleteKeysAtCurrentTime(object obj)
@@ -629,16 +648,12 @@ namespace UnityEditorInternal
 
 		private void DeleteKeysAtCurrentTime(List<AnimationWindowCurve> curves)
 		{
-			foreach (AnimationWindowCurve current in curves)
-			{
-				current.RemoveKeyframe(this.state.time);
-				this.state.SaveCurve(current);
-			}
+			AnimationWindowUtility.RemoveKeyframes(this.state, curves.ToArray(), this.state.time);
 		}
 
 		private void ChangeRotationInterpolation(object interpolationMode)
 		{
-			RotationCurveInterpolation.Mode mode = (RotationCurveInterpolation.Mode)((int)interpolationMode);
+			RotationCurveInterpolation.Mode mode = (RotationCurveInterpolation.Mode)interpolationMode;
 			AnimationWindowCurve[] array = this.state.activeCurves.ToArray();
 			EditorCurveBinding[] array2 = new EditorCurveBinding[array.Length];
 			for (int i = 0; i < array.Length; i++)
@@ -657,6 +672,8 @@ namespace UnityEditorInternal
 
 		private void RemoveCurvesFromNodes(List<AnimationWindowHierarchyNode> nodes)
 		{
+			string undoLabel = "Remove Curve";
+			this.state.SaveKeySelection(undoLabel);
 			foreach (AnimationWindowHierarchyNode current in nodes)
 			{
 				AnimationWindowHierarchyNode animationWindowHierarchyNode = current;
@@ -685,7 +702,7 @@ namespace UnityEditorInternal
 					}
 					foreach (AnimationWindowCurve current2 in list)
 					{
-						this.state.RemoveCurve(current2);
+						this.state.RemoveCurve(current2, undoLabel);
 					}
 				}
 			}
@@ -706,15 +723,18 @@ namespace UnityEditorInternal
 				{
 					animationWindowHierarchyNode = (AnimationWindowHierarchyNode)animationWindowHierarchyNode.parent;
 				}
-				if (animationWindowHierarchyNode.curves.Length > 0)
+				if (animationWindowHierarchyNode.curves != null)
 				{
-					if (animationWindowHierarchyNode is AnimationWindowHierarchyPropertyGroupNode || animationWindowHierarchyNode is AnimationWindowHierarchyPropertyNode)
+					if (animationWindowHierarchyNode.curves.Length > 0)
 					{
-						list.AddRange(AnimationWindowUtility.FilterCurves(animationWindowHierarchyNode.curves, animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType, animationWindowHierarchyNode.propertyName));
-					}
-					else
-					{
-						list.AddRange(AnimationWindowUtility.FilterCurves(animationWindowHierarchyNode.curves, animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType));
+						if (animationWindowHierarchyNode is AnimationWindowHierarchyPropertyGroupNode || animationWindowHierarchyNode is AnimationWindowHierarchyPropertyNode)
+						{
+							list.AddRange(AnimationWindowUtility.FilterCurves(animationWindowHierarchyNode.curves, animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType, animationWindowHierarchyNode.propertyName));
+						}
+						else
+						{
+							list.AddRange(AnimationWindowUtility.FilterCurves(animationWindowHierarchyNode.curves, animationWindowHierarchyNode.path, animationWindowHierarchyNode.animatableObjectType));
+						}
 					}
 				}
 			}
@@ -764,20 +784,26 @@ namespace UnityEditorInternal
 
 		private RotationCurveInterpolation.Mode GetRotationInterpolationMode(EditorCurveBinding[] curves)
 		{
+			RotationCurveInterpolation.Mode result;
 			if (curves == null || curves.Length == 0)
 			{
-				return RotationCurveInterpolation.Mode.Undefined;
+				result = RotationCurveInterpolation.Mode.Undefined;
 			}
-			RotationCurveInterpolation.Mode modeFromCurveData = RotationCurveInterpolation.GetModeFromCurveData(curves[0]);
-			for (int i = 1; i < curves.Length; i++)
+			else
 			{
-				RotationCurveInterpolation.Mode modeFromCurveData2 = RotationCurveInterpolation.GetModeFromCurveData(curves[i]);
-				if (modeFromCurveData != modeFromCurveData2)
+				RotationCurveInterpolation.Mode modeFromCurveData = RotationCurveInterpolation.GetModeFromCurveData(curves[0]);
+				for (int i = 1; i < curves.Length; i++)
 				{
-					return RotationCurveInterpolation.Mode.Undefined;
+					RotationCurveInterpolation.Mode modeFromCurveData2 = RotationCurveInterpolation.GetModeFromCurveData(curves[i]);
+					if (modeFromCurveData != modeFromCurveData2)
+					{
+						result = RotationCurveInterpolation.Mode.Undefined;
+						return result;
+					}
 				}
+				result = modeFromCurveData;
 			}
-			return modeFromCurveData;
+			return result;
 		}
 
 		private void SetStyleTextColor(GUIStyle style, Color color)
@@ -796,17 +822,22 @@ namespace UnityEditorInternal
 
 		public float GetNodeHeight(AnimationWindowHierarchyNode node)
 		{
+			float result;
 			if (node is AnimationWindowHierarchyAddButtonNode)
 			{
-				return 40f;
+				result = 40f;
 			}
-			AnimationWindowHierarchyState animationWindowHierarchyState = this.m_TreeView.state as AnimationWindowHierarchyState;
-			return (!animationWindowHierarchyState.GetTallMode(node)) ? 16f : 32f;
+			else
+			{
+				AnimationWindowHierarchyState animationWindowHierarchyState = this.m_TreeView.state as AnimationWindowHierarchyState;
+				result = ((!animationWindowHierarchyState.GetTallMode(node)) ? 16f : 32f);
+			}
+			return result;
 		}
 
 		public override Vector2 GetTotalSize()
 		{
-			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
 			float num = 0f;
 			for (int i = 0; i < rows.Count; i++)
 			{
@@ -816,7 +847,7 @@ namespace UnityEditorInternal
 			return new Vector2(1f, num);
 		}
 
-		private float GetTopPixelOfRow(int row, List<TreeViewItem> rows)
+		private float GetTopPixelOfRow(int row, IList<TreeViewItem> rows)
 		{
 			float num = 0f;
 			int num2 = 0;
@@ -831,7 +862,7 @@ namespace UnityEditorInternal
 
 		public override Rect GetRowRect(int row, float rowWidth)
 		{
-			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
 			AnimationWindowHierarchyNode animationWindowHierarchyNode = rows[row] as AnimationWindowHierarchyNode;
 			float? topPixel = animationWindowHierarchyNode.topPixel;
 			if (!topPixel.HasValue)
@@ -839,9 +870,9 @@ namespace UnityEditorInternal
 				animationWindowHierarchyNode.topPixel = new float?(this.GetTopPixelOfRow(row, rows));
 			}
 			float nodeHeight = this.GetNodeHeight(animationWindowHierarchyNode);
-			float arg_65_0 = 0f;
+			float arg_66_0 = 0f;
 			float? topPixel2 = animationWindowHierarchyNode.topPixel;
-			return new Rect(arg_65_0, topPixel2.Value, rowWidth, nodeHeight);
+			return new Rect(arg_66_0, topPixel2.Value, rowWidth, nodeHeight);
 		}
 
 		public override void OnRowGUI(Rect rowRect, TreeViewItem node, int row, bool selected, bool focused)
@@ -853,7 +884,16 @@ namespace UnityEditorInternal
 		public override bool BeginRename(TreeViewItem item, float delay)
 		{
 			this.m_RenamedNode = (item as AnimationWindowHierarchyNode);
-			return base.GetRenameOverlay().BeginRename(this.GetGameObjectName(this.m_RenamedNode.path), item.id, delay);
+			GameObject rootGameObject = null;
+			if (this.m_RenamedNode.curves.Length > 0)
+			{
+				AnimationWindowSelectionItem selectionBinding = this.m_RenamedNode.curves[0].selectionBinding;
+				if (selectionBinding != null)
+				{
+					rootGameObject = selectionBinding.rootGameObject;
+				}
+			}
+			return base.GetRenameOverlay().BeginRename(this.GetGameObjectName(rootGameObject, this.m_RenamedNode.path), item.id, delay);
 		}
 
 		protected override void SyncFakeItem()
@@ -888,25 +928,31 @@ namespace UnityEditorInternal
 
 		private string RenamePath(string oldPath, string newGameObjectName)
 		{
+			string result;
 			if (oldPath.Length > 0)
 			{
-				string text = this.GetPathWithoutChildmostGameObject(oldPath);
-				if (text.Length > 0)
-				{
-					text += "/";
-				}
-				return text + newGameObjectName;
+				string pathWithoutChildmostGameObject = this.GetPathWithoutChildmostGameObject(oldPath);
+				result = pathWithoutChildmostGameObject + newGameObjectName;
 			}
-			return newGameObjectName;
+			else
+			{
+				result = newGameObjectName;
+			}
+			return result;
 		}
 
 		protected override Texture GetIconForItem(TreeViewItem item)
 		{
+			Texture result;
 			if (item != null)
 			{
-				return item.icon;
+				result = item.icon;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 	}
 }

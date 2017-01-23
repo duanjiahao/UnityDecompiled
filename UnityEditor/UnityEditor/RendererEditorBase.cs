@@ -20,7 +20,7 @@ namespace UnityEditor
 
 			private SerializedProperty m_ReceiveShadows;
 
-			private GUIContent m_LightProbeUsageStyle = EditorGUIUtility.TextContent("Light Probes");
+			private GUIContent m_LightProbeUsageStyle = EditorGUIUtility.TextContent("Light Probes|Probe-based lighting interpolation mode. This mode is disabled when the object has the lightmap static flag set.");
 
 			private GUIContent m_LightProbeVolumeOverrideStyle = EditorGUIUtility.TextContent("Proxy Volume Override|If set, the Renderer will use the Light Probe Proxy Volume component from another GameObject.");
 
@@ -109,11 +109,11 @@ namespace UnityEditor
 					}
 					else if (isDeferredReflections)
 					{
-						ModuleUI.GUIPopup(this.m_ReflectionProbeUsageStyle, 3, this.m_ReflectionProbeUsageNames);
+						ModuleUI.GUIPopup(this.m_ReflectionProbeUsageStyle, 3, this.m_ReflectionProbeUsageNames, new GUILayoutOption[0]);
 					}
 					else
 					{
-						ModuleUI.GUIPopup(this.m_ReflectionProbeUsageStyle, this.m_ReflectionProbeUsage, this.m_ReflectionProbeUsageNames);
+						ModuleUI.GUIPopup(this.m_ReflectionProbeUsageStyle, this.m_ReflectionProbeUsage, this.m_ReflectionProbeUsageNames, new GUILayoutOption[0]);
 					}
 				}
 			}
@@ -141,15 +141,15 @@ namespace UnityEditor
 					}
 					else if (usesLightMaps)
 					{
-						ModuleUI.GUIPopup(this.m_LightProbeUsageStyle, 0, this.m_LightProbeUsageNames);
+						ModuleUI.GUIPopup(this.m_LightProbeUsageStyle, 0, this.m_LightProbeUsageNames, new GUILayoutOption[0]);
 					}
 					else
 					{
-						ModuleUI.GUIPopup(this.m_LightProbeUsageStyle, this.m_LightProbeUsage, this.m_LightProbeUsageNames);
+						ModuleUI.GUIPopup(this.m_LightProbeUsageStyle, this.m_LightProbeUsage, this.m_LightProbeUsageNames, new GUILayoutOption[0]);
 						if (!this.m_LightProbeUsage.hasMultipleDifferentValues && this.m_LightProbeUsage.intValue == 2)
 						{
 							EditorGUI.indentLevel++;
-							ModuleUI.GUIObject(this.m_LightProbeVolumeOverrideStyle, this.m_LightProbeVolumeOverride);
+							ModuleUI.GUIObject(this.m_LightProbeVolumeOverrideStyle, this.m_LightProbeVolumeOverride, new GUILayoutOption[0]);
 							EditorGUI.indentLevel--;
 						}
 					}
@@ -176,7 +176,7 @@ namespace UnityEditor
 					}
 					else
 					{
-						ModuleUI.GUIObject(this.m_ProbeAnchorStyle, this.m_ProbeAnchor);
+						ModuleUI.GUIObject(this.m_ProbeAnchorStyle, this.m_ProbeAnchor, new GUILayoutOption[0]);
 					}
 				}
 				return flag3;
@@ -207,10 +207,13 @@ namespace UnityEditor
 				if (flag3)
 				{
 					bool flag4 = !this.m_ReflectionProbeUsage.hasMultipleDifferentValues && this.m_ReflectionProbeUsage.intValue != 0;
-					if (flag4 && !flag2)
+					if (flag4)
 					{
-						renderer.GetClosestReflectionProbes(this.m_BlendInfo);
-						RendererEditorBase.Probes.ShowClosestReflectionProbes(this.m_BlendInfo);
+						if (!flag2)
+						{
+							renderer.GetClosestReflectionProbes(this.m_BlendInfo);
+							RendererEditorBase.Probes.ShowClosestReflectionProbes(this.m_BlendInfo);
+						}
 					}
 				}
 				bool flag5 = !this.m_ReceiveShadows.hasMultipleDifferentValues && this.m_ReceiveShadows.boolValue;
@@ -224,7 +227,7 @@ namespace UnityEditor
 			internal static void ShowClosestReflectionProbes(List<ReflectionProbeBlendInfo> blendInfos)
 			{
 				float num = 20f;
-				float num2 = 60f;
+				float num2 = 70f;
 				using (new EditorGUI.DisabledScope(true))
 				{
 					for (int i = 0; i < blendInfos.Count; i++)
@@ -291,7 +294,15 @@ namespace UnityEditor
 
 		protected void RenderProbeFields()
 		{
-			this.m_Probes.OnGUI(base.targets, (Renderer)this.target, false);
+			this.m_Probes.OnGUI(base.targets, (Renderer)base.target, false);
+		}
+
+		protected void RenderCommonProbeFields(bool useMiniStyle)
+		{
+			bool flag = SceneView.IsUsingDeferredRenderingPath();
+			bool isDeferredReflections = flag && UnityEngine.Rendering.GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
+			this.m_Probes.RenderReflectionProbeUsage(useMiniStyle, flag, isDeferredReflections);
+			this.m_Probes.RenderProbeAnchor(useMiniStyle);
 		}
 	}
 }

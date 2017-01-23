@@ -4,11 +4,13 @@ namespace UnityEngine.Rendering
 {
 	public enum BuiltinRenderTextureType
 	{
+		BindableTexture = -1,
 		None,
 		CurrentActive,
 		CameraTarget,
 		Depth,
 		DepthNormals,
+		ResolvedDepth,
 		PrepassNormalsSpec = 7,
 		PrepassLight,
 		PrepassLightSpec,

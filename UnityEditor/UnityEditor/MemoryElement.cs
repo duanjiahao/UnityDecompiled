@@ -6,9 +6,9 @@ namespace UnityEditor
 	[Serializable]
 	internal class MemoryElement
 	{
-		public List<MemoryElement> children;
+		public List<MemoryElement> children = null;
 
-		public MemoryElement parent;
+		public MemoryElement parent = null;
 
 		public ObjectInfo memoryInfo;
 
@@ -32,7 +32,7 @@ namespace UnityEditor
 			this.expanded = false;
 			this.name = n;
 			this.children = new List<MemoryElement>();
-			this.description = string.Empty;
+			this.description = "";
 		}
 
 		public MemoryElement(ObjectInfo memInfo, bool finalize)
@@ -52,7 +52,7 @@ namespace UnityEditor
 		{
 			this.name = n;
 			this.expanded = false;
-			this.description = string.Empty;
+			this.description = "";
 			this.totalMemory = 0;
 			this.totalChildCount = 0;
 			this.children = new List<MemoryElement>();
@@ -64,14 +64,13 @@ namespace UnityEditor
 
 		public void ExpandChildren()
 		{
-			if (this.children != null)
+			if (this.children == null)
 			{
-				return;
-			}
-			this.children = new List<MemoryElement>();
-			for (int i = 0; i < this.ReferenceCount(); i++)
-			{
-				this.AddChild(new MemoryElement(this.memoryInfo.referencedBy[i], false));
+				this.children = new List<MemoryElement>();
+				for (int i = 0; i < this.ReferenceCount(); i++)
+				{
+					this.AddChild(new MemoryElement(this.memoryInfo.referencedBy[i], false));
+				}
 			}
 		}
 
@@ -82,11 +81,16 @@ namespace UnityEditor
 
 		public int ChildCount()
 		{
+			int result;
 			if (this.children != null)
 			{
-				return this.children.Count;
+				result = this.children.Count;
 			}
-			return this.ReferenceCount();
+			else
+			{
+				result = this.ReferenceCount();
+			}
+			return result;
 		}
 
 		public int ReferenceCount()
@@ -108,19 +112,23 @@ namespace UnityEditor
 
 		public int GetChildIndexInList()
 		{
+			int result;
 			for (int i = 0; i < this.parent.children.Count; i++)
 			{
 				if (this.parent.children[i] == this)
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return this.parent.children.Count;
+			result = this.parent.children.Count;
+			return result;
 		}
 
 		public MemoryElement GetPrevNode()
 		{
 			int num = this.GetChildIndexInList() - 1;
+			MemoryElement result;
 			if (num >= 0)
 			{
 				MemoryElement memoryElement = this.parent.children[num];
@@ -128,42 +136,60 @@ namespace UnityEditor
 				{
 					memoryElement = memoryElement.children[memoryElement.children.Count - 1];
 				}
-				return memoryElement;
+				result = memoryElement;
 			}
-			return this.parent;
+			else
+			{
+				result = this.parent;
+			}
+			return result;
 		}
 
 		public MemoryElement GetNextNode()
 		{
+			MemoryElement result;
 			if (this.expanded && this.children.Count > 0)
 			{
-				return this.children[0];
+				result = this.children[0];
 			}
-			int num = this.GetChildIndexInList() + 1;
-			if (num < this.parent.children.Count)
+			else
 			{
-				return this.parent.children[num];
-			}
-			MemoryElement memoryElement = this.parent;
-			while (memoryElement.parent != null)
-			{
-				int num2 = memoryElement.GetChildIndexInList() + 1;
-				if (num2 < memoryElement.parent.children.Count)
+				int num = this.GetChildIndexInList() + 1;
+				if (num < this.parent.children.Count)
 				{
-					return memoryElement.parent.children[num2];
+					result = this.parent.children[num];
 				}
-				memoryElement = memoryElement.parent;
+				else
+				{
+					MemoryElement memoryElement = this.parent;
+					while (memoryElement.parent != null)
+					{
+						int num2 = memoryElement.GetChildIndexInList() + 1;
+						if (num2 < memoryElement.parent.children.Count)
+						{
+							result = memoryElement.parent.children[num2];
+							return result;
+						}
+						memoryElement = memoryElement.parent;
+					}
+					result = null;
+				}
 			}
-			return null;
+			return result;
 		}
 
 		public MemoryElement GetRoot()
 		{
+			MemoryElement result;
 			if (this.parent != null)
 			{
-				return this.parent.GetRoot();
+				result = this.parent.GetRoot();
 			}
-			return this;
+			else
+			{
+				result = this;
+			}
+			return result;
 		}
 
 		public MemoryElement FirstChild()
@@ -173,11 +199,16 @@ namespace UnityEditor
 
 		public MemoryElement LastChild()
 		{
+			MemoryElement result;
 			if (!this.expanded)
 			{
-				return this;
+				result = this;
 			}
-			return this.children[this.children.Count - 1].LastChild();
+			else
+			{
+				result = this.children[this.children.Count - 1].LastChild();
+			}
+			return result;
 		}
 	}
 }

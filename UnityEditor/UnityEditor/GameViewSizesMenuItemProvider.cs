@@ -25,32 +25,38 @@ namespace UnityEditor
 		public int Add(object obj)
 		{
 			GameViewSize gameViewSize = GameViewSizesMenuItemProvider.CastToGameViewSize(obj);
+			int result;
 			if (gameViewSize == null)
 			{
-				return -1;
+				result = -1;
 			}
-			this.m_GameViewSizeGroup.AddCustomSize(gameViewSize);
-			ScriptableSingleton<GameViewSizes>.instance.SaveToHDD();
-			return this.Count() - 1;
+			else
+			{
+				this.m_GameViewSizeGroup.AddCustomSize(gameViewSize);
+				ScriptableSingleton<GameViewSizes>.instance.SaveToHDD();
+				result = this.Count() - 1;
+			}
+			return result;
 		}
 
 		public void Replace(int index, object obj)
 		{
 			GameViewSize gameViewSize = GameViewSizesMenuItemProvider.CastToGameViewSize(obj);
-			if (gameViewSize == null)
+			if (gameViewSize != null)
 			{
-				return;
-			}
-			if (index < this.m_GameViewSizeGroup.GetBuiltinCount())
-			{
-				Debug.LogError("Only custom game view sizes can be changed");
-				return;
-			}
-			GameViewSize gameViewSize2 = this.m_GameViewSizeGroup.GetGameViewSize(index);
-			if (gameViewSize2 != null)
-			{
-				gameViewSize2.Set(gameViewSize);
-				ScriptableSingleton<GameViewSizes>.instance.SaveToHDD();
+				if (index < this.m_GameViewSizeGroup.GetBuiltinCount())
+				{
+					Debug.LogError("Only custom game view sizes can be changed");
+				}
+				else
+				{
+					GameViewSize gameViewSize2 = this.m_GameViewSizeGroup.GetGameViewSize(index);
+					if (gameViewSize2 != null)
+					{
+						gameViewSize2.Set(gameViewSize);
+						ScriptableSingleton<GameViewSizes>.instance.SaveToHDD();
+					}
+				}
 			}
 		}
 
@@ -59,15 +65,17 @@ namespace UnityEditor
 			if (index < this.m_GameViewSizeGroup.GetBuiltinCount())
 			{
 				Debug.LogError("Only custom game view sizes can be changed");
-				return;
 			}
-			this.m_GameViewSizeGroup.RemoveCustomSize(index);
-			ScriptableSingleton<GameViewSizes>.instance.SaveToHDD();
+			else
+			{
+				this.m_GameViewSizeGroup.RemoveCustomSize(index);
+				ScriptableSingleton<GameViewSizes>.instance.SaveToHDD();
+			}
 		}
 
 		public object Create()
 		{
-			return new GameViewSize(GameViewSizeType.FixedResolution, 0, 0, string.Empty);
+			return new GameViewSize(GameViewSizeType.FixedResolution, 0, 0, "");
 		}
 
 		public void Move(int index, int destIndex, bool insertAfterDestIndex)
@@ -78,11 +86,16 @@ namespace UnityEditor
 		public string GetName(int index)
 		{
 			GameViewSize gameViewSize = this.m_GameViewSizeGroup.GetGameViewSize(index);
+			string result;
 			if (gameViewSize != null)
 			{
-				return gameViewSize.displayText;
+				result = gameViewSize.displayText;
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		public bool IsModificationAllowed(int index)
@@ -100,11 +113,16 @@ namespace UnityEditor
 
 		private static GameViewSize CastToGameViewSize(object obj)
 		{
-			GameViewSize result = obj as GameViewSize;
+			GameViewSize gameViewSize = obj as GameViewSize;
+			GameViewSize result;
 			if (obj == null)
 			{
 				Debug.LogError("Incorrect input");
-				return null;
+				result = null;
+			}
+			else
+			{
+				result = gameViewSize;
 			}
 			return result;
 		}

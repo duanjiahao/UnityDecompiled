@@ -6,7 +6,6 @@ namespace UnityEditorInternal
 {
 	public sealed class InternalSpriteUtility
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Rect[] GenerateAutomaticSpriteRectangles(Texture2D texture, int minRectSize, int extrudeSize);
 
@@ -15,7 +14,6 @@ namespace UnityEditorInternal
 			return InternalSpriteUtility.INTERNAL_CALL_GenerateGridSpriteRectangles(texture, ref offset, ref size, ref padding);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Rect[] INTERNAL_CALL_GenerateGridSpriteRectangles(Texture2D texture, ref Vector2 offset, ref Vector2 size, ref Vector2 padding);
 	}

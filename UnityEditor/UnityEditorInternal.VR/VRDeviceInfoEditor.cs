@@ -12,10 +12,6 @@ namespace UnityEditorInternal.VR
 
 		public string externalPluginName;
 
-		public string spatializerPluginName;
-
-		public string spatializerEffectName;
-
 		public bool supportsEditorMode;
 
 		public bool inListByDefault;

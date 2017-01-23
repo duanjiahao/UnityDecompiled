@@ -48,43 +48,48 @@ namespace UnityEngine.WSA
 			this.m_ToastId = id;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetTemplate(ToastTemplate templ);
 
 		public static Toast Create(string xml)
 		{
 			int num = Toast.CreateToastXml(xml);
+			Toast result;
 			if (num < 0)
 			{
-				return null;
+				result = null;
 			}
-			return new Toast(num);
+			else
+			{
+				result = new Toast(num);
+			}
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int CreateToastXml(string xml);
 
 		public static Toast Create(string image, string text)
 		{
 			int num = Toast.CreateToastImageAndText(image, text);
+			Toast result;
 			if (num < 0)
 			{
-				return null;
+				result = null;
 			}
-			return new Toast(num);
+			else
+			{
+				result = new Toast(num);
+			}
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int CreateToastImageAndText(string image, string text);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetArguments(int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetArguments(int id, string args);
 
@@ -93,7 +98,6 @@ namespace UnityEngine.WSA
 			Toast.Show(this.m_ToastId);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Show(int id);
 
@@ -102,15 +106,12 @@ namespace UnityEngine.WSA
 			Toast.Hide(this.m_ToastId);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Hide(int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetActivated(int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetDismissed(int id, bool byUser);
 	}

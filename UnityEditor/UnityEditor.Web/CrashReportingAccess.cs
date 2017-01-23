@@ -1,6 +1,6 @@
 using System;
 using UnityEditor.Connect;
-using UnityEngine.Connect;
+using UnityEditor.CrashReporting;
 
 namespace UnityEditor.Web
 {
@@ -11,11 +11,11 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "Game Performance";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/crash";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/crash";
 
 		static CrashReportingAccess()
 		{
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("Game Performance", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/crash", new CrashReportingAccess(), "unity/project/cloud/crashreporting");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("Game Performance", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/crash", new CrashReportingAccess(), "unity/project/cloud/crashreporting");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 
@@ -37,6 +37,16 @@ namespace UnityEditor.Web
 		public override void EnableService(bool enabled)
 		{
 			CrashReportingSettings.enabled = enabled;
+		}
+
+		public bool GetCaptureEditorExceptions()
+		{
+			return CrashReportingSettings.captureEditorExceptions;
+		}
+
+		public void SetCaptureEditorExceptions(bool captureEditorExceptions)
+		{
+			CrashReportingSettings.captureEditorExceptions = captureEditorExceptions;
 		}
 	}
 }

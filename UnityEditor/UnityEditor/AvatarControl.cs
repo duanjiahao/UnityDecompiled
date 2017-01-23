@@ -202,33 +202,37 @@ namespace UnityEditor
 		public static List<int> GetViewsThatContainBone(int bone)
 		{
 			List<int> list = new List<int>();
+			List<int> result;
 			if (bone < 0 || bone >= HumanTrait.BoneCount)
 			{
-				return list;
+				result = list;
 			}
-			for (int i = 0; i < 4; i++)
+			else
 			{
-				if (AvatarControl.s_BonePositions[i, bone] != Vector2.zero)
+				for (int i = 0; i < 4; i++)
 				{
-					list.Add(i);
+					if (AvatarControl.s_BonePositions[i, bone] != Vector2.zero)
+					{
+						list.Add(i);
+					}
 				}
+				result = list;
 			}
-			return list;
+			return result;
 		}
 
 		protected static void DrawBone(int shownBodyView, int i, Rect rect, AvatarSetupTool.BoneWrapper bone, SerializedObject serializedObject, AvatarMappingEditor editor)
 		{
-			if (AvatarControl.s_BonePositions[shownBodyView, i] == Vector2.zero)
+			if (!(AvatarControl.s_BonePositions[shownBodyView, i] == Vector2.zero))
 			{
-				return;
+				Vector2 b = AvatarControl.s_BonePositions[shownBodyView, i];
+				b.y *= -1f;
+				b.Scale(new Vector2(rect.width * 0.5f, rect.height * 0.5f));
+				b = rect.center + b;
+				int num = 19;
+				Rect rect2 = new Rect(b.x - (float)num * 0.5f, b.y - (float)num * 0.5f, (float)num, (float)num);
+				bone.BoneDotGUI(rect2, i, true, true, serializedObject, editor);
 			}
-			Vector2 b = AvatarControl.s_BonePositions[shownBodyView, i];
-			b.y *= -1f;
-			b.Scale(new Vector2(rect.width * 0.5f, rect.height * 0.5f));
-			b = rect.center + b;
-			int num = 19;
-			Rect rect2 = new Rect(b.x - (float)num * 0.5f, b.y - (float)num * 0.5f, (float)num, (float)num);
-			bone.BoneDotGUI(rect2, i, true, true, serializedObject, editor);
 		}
 	}
 }

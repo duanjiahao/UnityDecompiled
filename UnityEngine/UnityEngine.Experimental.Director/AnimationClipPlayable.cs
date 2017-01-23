@@ -112,13 +112,22 @@ namespace UnityEngine.Experimental.Director
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void InternalCreate(AnimationClip clip, ref AnimationClipPlayable that);
 
 		public void Destroy()
 		{
 			this.node.Destroy();
+		}
+
+		public static bool operator ==(AnimationClipPlayable x, Playable y)
+		{
+			return Playables.Equals(x, y);
+		}
+
+		public static bool operator !=(AnimationClipPlayable x, Playable y)
+		{
+			return !Playables.Equals(x, y);
 		}
 
 		public override bool Equals(object p)
@@ -129,6 +138,16 @@ namespace UnityEngine.Experimental.Director
 		public override int GetHashCode()
 		{
 			return this.node.GetHashCode();
+		}
+
+		public static implicit operator Playable(AnimationClipPlayable b)
+		{
+			return b.node;
+		}
+
+		public static implicit operator AnimationPlayable(AnimationClipPlayable b)
+		{
+			return b.handle;
 		}
 
 		public bool IsValid()
@@ -146,52 +165,25 @@ namespace UnityEngine.Experimental.Director
 			return this.handle.CastTo<T>();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimationClip GetAnimationClip(ref AnimationClipPlayable that);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetSpeed(ref AnimationClipPlayable that);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetSpeed(ref AnimationClipPlayable that, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetApplyFootIK(ref AnimationClipPlayable that);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetApplyFootIK(ref AnimationClipPlayable that, bool value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetRemoveStartOffset(ref AnimationClipPlayable that);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetRemoveStartOffset(ref AnimationClipPlayable that, bool value);
-
-		public static bool operator ==(AnimationClipPlayable x, Playable y)
-		{
-			return Playables.Equals(x, y);
-		}
-
-		public static bool operator !=(AnimationClipPlayable x, Playable y)
-		{
-			return !Playables.Equals(x, y);
-		}
-
-		public static implicit operator Playable(AnimationClipPlayable b)
-		{
-			return b.node;
-		}
-
-		public static implicit operator AnimationPlayable(AnimationClipPlayable b)
-		{
-			return b.handle;
-		}
 	}
 }

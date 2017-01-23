@@ -7,7 +7,7 @@ namespace UnityEditor
 	[CustomEditor(typeof(AudioMixerGroupController))]
 	internal class AudioMixerGroupEditor : Editor
 	{
-		private AudioMixerEffectView m_EffectView;
+		private AudioMixerEffectView m_EffectView = null;
 
 		private readonly TickTimerHelper m_Ticker = new TickTimerHelper(0.05);
 
@@ -38,7 +38,7 @@ namespace UnityEditor
 			{
 				this.m_EffectView = new AudioMixerEffectView();
 			}
-			AudioMixerGroupController group = this.target as AudioMixerGroupController;
+			AudioMixerGroupController group = base.target as AudioMixerGroupController;
 			this.m_EffectView.OnGUI(group);
 		}
 
@@ -49,14 +49,13 @@ namespace UnityEditor
 
 		internal override void DrawHeaderHelpAndSettingsGUI(Rect r)
 		{
-			if (this.m_EffectView == null)
+			if (this.m_EffectView != null)
 			{
-				return;
+				AudioMixerGroupController audioMixerGroupController = base.target as AudioMixerGroupController;
+				base.DrawHeaderHelpAndSettingsGUI(r);
+				Rect position = new Rect(r.x + 44f, r.yMax - 20f, r.width - 50f, 15f);
+				GUI.Label(position, GUIContent.Temp(audioMixerGroupController.controller.name), EditorStyles.miniLabel);
 			}
-			AudioMixerGroupController audioMixerGroupController = this.target as AudioMixerGroupController;
-			base.DrawHeaderHelpAndSettingsGUI(r);
-			Rect position = new Rect(r.x + 44f, r.yMax - 20f, r.width - 50f, 15f);
-			GUI.Label(position, GUIContent.Temp(audioMixerGroupController.controller.name), EditorStyles.miniLabel);
 		}
 
 		[MenuItem("CONTEXT/AudioMixerGroupController/Copy all effect settings to all snapshots")]
@@ -64,12 +63,11 @@ namespace UnityEditor
 		{
 			AudioMixerGroupController audioMixerGroupController = command.context as AudioMixerGroupController;
 			AudioMixerController controller = audioMixerGroupController.controller;
-			if (controller == null)
+			if (!(controller == null))
 			{
-				return;
+				Undo.RecordObject(controller, "Copy all effect settings to all snapshots");
+				controller.CopyAllSettingsToAllSnapshots(audioMixerGroupController, controller.TargetSnapshot);
 			}
-			Undo.RecordObject(controller, "Copy all effect settings to all snapshots");
-			controller.CopyAllSettingsToAllSnapshots(audioMixerGroupController, controller.TargetSnapshot);
 		}
 
 		[MenuItem("CONTEXT/AudioMixerGroupController/Toggle CPU usage display (only available on first editor instance)")]

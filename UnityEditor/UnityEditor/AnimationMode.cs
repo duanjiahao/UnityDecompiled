@@ -24,7 +24,6 @@ namespace UnityEditor
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsPropertyAnimated(UnityEngine.Object target, string propertyPath);
 
@@ -36,15 +35,12 @@ namespace UnityEditor
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopAnimationMode();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool InAnimationMode();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StartAnimationMode();
 
@@ -63,20 +59,21 @@ namespace UnityEditor
 			AnimationMode.s_InAnimationPlaybackMode = true;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void BeginSampling();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void EndSampling();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SampleAnimationClip(GameObject gameObject, AnimationClip clip, float time);
 
-		[WrapperlessIcall]
+		public static void AddPropertyModification(EditorCurveBinding binding, PropertyModification modification, bool keepPrefabOverride)
+		{
+			AnimationMode.INTERNAL_CALL_AddPropertyModification(ref binding, modification, keepPrefabOverride);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void AddPropertyModification(EditorCurveBinding binding, PropertyModification modification, bool keepPrefabOverride);
+		private static extern void INTERNAL_CALL_AddPropertyModification(ref EditorCurveBinding binding, PropertyModification modification, bool keepPrefabOverride);
 	}
 }

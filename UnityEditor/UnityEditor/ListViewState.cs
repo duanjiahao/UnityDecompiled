@@ -26,13 +26,13 @@ namespace UnityEditor
 
 		public int draggedTo;
 
-		public bool drawDropHere;
+		public bool drawDropHere = false;
 
 		public Rect dropHereRect = new Rect(0f, 0f, 0f, 0f);
 
-		public string[] fileNames;
+		public string[] fileNames = null;
 
-		public int customDraggedFromID;
+		public int customDraggedFromID = 0;
 
 		internal ListViewShared.InternalLayoutedListViewState ilvState = new ListViewShared.InternalLayoutedListViewState();
 

@@ -69,7 +69,7 @@ namespace UnityEditor
 
 		public static void DrawText(float x, float y, string text)
 		{
-			GUI.Label(new Rect(x, y - 5f, 200f, 10f), new GUIContent(text, string.Empty), DuckVolumeGUI.textStyle10);
+			GUI.Label(new Rect(x, y - 5f, 200f, 10f), new GUIContent(text, ""), DuckVolumeGUI.textStyle10);
 		}
 
 		public static void DrawLine(float x1, float y1, float x2, float y2, Color col)
@@ -137,66 +137,67 @@ namespace UnityEditor
 			float dbMin = -80f;
 			float num6 = r.width * (threshold - dbMin) / dbRange;
 			bool result = false;
-			switch (current.GetTypeForControl(controlID))
+			EventType typeForControl = current.GetTypeForControl(controlID);
+			if (typeForControl != EventType.MouseDown)
 			{
-			case EventType.MouseDown:
-				if (r.Contains(Event.current.mousePosition) && current.button == 0)
+				if (typeForControl != EventType.MouseUp)
 				{
-					DuckVolumeGUI.dragtype = DuckVolumeGUI.DragType.None;
-					GUIUtility.hotControl = controlID;
-					EditorGUIUtility.SetWantsMouseJumping(1);
-					current.Use();
-					if (Mathf.Abs(r.x + num6 - current.mousePosition.x) >= 10f)
+					if (typeForControl == EventType.MouseDrag)
 					{
-						DuckVolumeGUI.dragtype = ((current.mousePosition.x >= r.x + num6) ? DuckVolumeGUI.DragType.Ratio : DuckVolumeGUI.DragType.MakeupGain);
-					}
-					else
-					{
-						DuckVolumeGUI.dragtype = DuckVolumeGUI.DragType.ThresholdAndKnee;
+						if (GUIUtility.hotControl == controlID)
+						{
+							float num7 = (!current.alt) ? 1f : 0.25f;
+							if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.ThresholdAndKnee)
+							{
+								bool flag = Mathf.Abs(current.delta.x) < Mathf.Abs(current.delta.y);
+								if (flag)
+								{
+									knee = Mathf.Clamp(knee + current.delta.y * 0.5f * num7, min4, max4);
+								}
+								else
+								{
+									threshold = Mathf.Clamp(threshold + current.delta.x * 0.1f * num7, min, max);
+								}
+							}
+							else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.Ratio)
+							{
+								ratio = Mathf.Clamp(ratio + current.delta.y * ((ratio <= 1f) ? 0.003f : 0.05f) * num7, min2, max2);
+							}
+							else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.MakeupGain)
+							{
+								makeupGain = Mathf.Clamp(makeupGain - current.delta.y * 0.5f * num7, min3, max3);
+							}
+							else
+							{
+								Debug.LogError("Drag: Unhandled enum");
+							}
+							result = true;
+							current.Use();
+						}
 					}
 				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == controlID && current.button == 0)
+				else if (GUIUtility.hotControl == controlID && current.button == 0)
 				{
 					DuckVolumeGUI.dragtype = DuckVolumeGUI.DragType.None;
 					GUIUtility.hotControl = 0;
 					EditorGUIUtility.SetWantsMouseJumping(0);
 					current.Use();
 				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == controlID)
+			}
+			else if (r.Contains(Event.current.mousePosition) && current.button == 0)
+			{
+				DuckVolumeGUI.dragtype = DuckVolumeGUI.DragType.None;
+				GUIUtility.hotControl = controlID;
+				EditorGUIUtility.SetWantsMouseJumping(1);
+				current.Use();
+				if (Mathf.Abs(r.x + num6 - current.mousePosition.x) >= 10f)
 				{
-					float num7 = (!current.alt) ? 1f : 0.25f;
-					if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.ThresholdAndKnee)
-					{
-						bool flag = Mathf.Abs(current.delta.x) < Mathf.Abs(current.delta.y);
-						if (flag)
-						{
-							knee = Mathf.Clamp(knee + current.delta.y * 0.5f * num7, min4, max4);
-						}
-						else
-						{
-							threshold = Mathf.Clamp(threshold + current.delta.x * 0.1f * num7, min, max);
-						}
-					}
-					else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.Ratio)
-					{
-						ratio = Mathf.Clamp(ratio + current.delta.y * ((ratio <= 1f) ? 0.003f : 0.05f) * num7, min2, max2);
-					}
-					else if (DuckVolumeGUI.dragtype == DuckVolumeGUI.DragType.MakeupGain)
-					{
-						makeupGain = Mathf.Clamp(makeupGain - current.delta.y * 0.5f * num7, min3, max3);
-					}
-					else
-					{
-						Debug.LogError("Drag: Unhandled enum");
-					}
-					result = true;
-					current.Use();
+					DuckVolumeGUI.dragtype = ((current.mousePosition.x >= r.x + num6) ? DuckVolumeGUI.DragType.Ratio : DuckVolumeGUI.DragType.MakeupGain);
 				}
-				break;
+				else
+				{
+					DuckVolumeGUI.dragtype = DuckVolumeGUI.DragType.ThresholdAndKnee;
+				}
 			}
 			if (current.type == EventType.Repaint)
 			{

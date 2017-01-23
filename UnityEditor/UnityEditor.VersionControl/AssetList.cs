@@ -16,55 +16,69 @@ namespace UnityEditor.VersionControl
 		public AssetList Filter(bool includeFolder, params Asset.States[] states)
 		{
 			AssetList assetList = new AssetList();
+			AssetList result;
 			if (!includeFolder && (states == null || states.Length == 0))
 			{
-				return assetList;
+				result = assetList;
 			}
-			foreach (Asset current in this)
+			else
 			{
-				if (current.isFolder)
+				foreach (Asset current in this)
 				{
-					if (includeFolder)
+					if (current.isFolder)
+					{
+						if (includeFolder)
+						{
+							assetList.Add(current);
+						}
+					}
+					else if (current.IsOneOfStates(states))
 					{
 						assetList.Add(current);
 					}
 				}
-				else if (current.IsOneOfStates(states))
-				{
-					assetList.Add(current);
-				}
+				result = assetList;
 			}
-			return assetList;
+			return result;
 		}
 
 		public int FilterCount(bool includeFolder, params Asset.States[] states)
 		{
 			int num = 0;
+			int result;
 			if (!includeFolder && states == null)
 			{
-				return this.Count;
+				result = base.Count;
 			}
-			foreach (Asset current in this)
+			else
 			{
-				if (current.isFolder)
+				foreach (Asset current in this)
 				{
-					num++;
+					if (current.isFolder)
+					{
+						num++;
+					}
+					else if (current.IsOneOfStates(states))
+					{
+						num++;
+					}
 				}
-				else if (current.IsOneOfStates(states))
-				{
-					num++;
-				}
+				result = num;
 			}
-			return num;
+			return result;
 		}
 
 		public AssetList FilterChildren()
 		{
 			AssetList assetList = new AssetList();
 			assetList.AddRange(this);
-			foreach (Asset asset in this)
+			using (List<Asset>.Enumerator enumerator = base.GetEnumerator())
 			{
-				assetList.RemoveAll((Asset p) => p.IsChildOf(asset));
+				while (enumerator.MoveNext())
+				{
+					Asset asset = enumerator.Current;
+					assetList.RemoveAll((Asset p) => p.IsChildOf(asset));
+				}
 			}
 			return assetList;
 		}

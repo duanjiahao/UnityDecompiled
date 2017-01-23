@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -71,13 +72,15 @@ namespace UnityEditor
 
 			private PackageExportTreeView m_PackageExportView;
 
+			protected float k_FoldoutWidth = 12f;
+
 			public int showPreviewForID
 			{
 				get;
 				set;
 			}
 
-			public PackageExportTreeViewGUI(TreeView treeView, PackageExportTreeView view) : base(treeView)
+			public PackageExportTreeViewGUI(TreeViewController treeView, PackageExportTreeView view) : base(treeView)
 			{
 				this.m_PackageExportView = view;
 				this.k_BaseIndent = 4f;
@@ -164,16 +167,24 @@ namespace UnityEditor
 			{
 				PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = tItem as PackageExportTreeView.PackageExportTreeViewItem;
 				ExportPackageItem item = packageExportTreeViewItem.item;
+				Texture result;
 				if (item == null || item.isFolder)
 				{
-					return PackageExportTreeView.PackageExportTreeViewGUI.Constants.folderIcon;
+					result = PackageExportTreeView.PackageExportTreeViewGUI.Constants.folderIcon;
 				}
-				Texture cachedIcon = AssetDatabase.GetCachedIcon(item.assetPath);
-				if (cachedIcon != null)
+				else
 				{
-					return cachedIcon;
+					Texture cachedIcon = AssetDatabase.GetCachedIcon(item.assetPath);
+					if (cachedIcon != null)
+					{
+						result = cachedIcon;
+					}
+					else
+					{
+						result = InternalEditorUtility.GetIconForFile(item.assetPath);
+					}
 				}
-				return InternalEditorUtility.GetIconForFile(item.assetPath);
+				return result;
 			}
 
 			protected override void RenameEnded()
@@ -185,7 +196,7 @@ namespace UnityEditor
 		{
 			private PackageExportTreeView m_PackageExportView;
 
-			public PackageExportTreeViewDataSource(TreeView treeView, PackageExportTreeView view) : base(treeView)
+			public PackageExportTreeViewDataSource(TreeViewController treeView, PackageExportTreeView view) : base(treeView)
 			{
 				this.m_PackageExportView = view;
 				base.rootIsCollapsable = false;
@@ -245,58 +256,66 @@ namespace UnityEditor
 
 			private TreeViewItem EnsureFolderPath(string folderPath, Dictionary<string, PackageExportTreeView.PackageExportTreeViewItem> treeViewFolders, bool initExpandedState)
 			{
-				if (folderPath == string.Empty)
+				TreeViewItem result;
+				if (folderPath == "")
 				{
-					return this.m_RootItem;
+					result = this.m_RootItem;
 				}
-				int hashCode = folderPath.GetHashCode();
-				TreeViewItem treeViewItem = TreeViewUtility.FindItem(hashCode, this.m_RootItem);
-				if (treeViewItem != null)
+				else
 				{
-					return treeViewItem;
-				}
-				string[] array = folderPath.Split(new char[]
-				{
-					'/'
-				});
-				string text = string.Empty;
-				TreeViewItem treeViewItem2 = this.m_RootItem;
-				int num = -1;
-				for (int i = 0; i < array.Length; i++)
-				{
-					string text2 = array[i];
-					if (text != string.Empty)
+					int hashCode = folderPath.GetHashCode();
+					TreeViewItem treeViewItem = TreeViewUtility.FindItem(hashCode, this.m_RootItem);
+					if (treeViewItem != null)
 					{
-						text += '/';
+						result = treeViewItem;
 					}
-					text += text2;
-					if (i != 0 || !(text == "Assets"))
+					else
 					{
-						num++;
-						hashCode = text.GetHashCode();
-						PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem;
-						if (treeViewFolders.TryGetValue(text, out packageExportTreeViewItem))
+						string[] array = folderPath.Split(new char[]
 						{
-							treeViewItem2 = packageExportTreeViewItem;
-						}
-						else
+							'/'
+						});
+						string text = "";
+						TreeViewItem treeViewItem2 = this.m_RootItem;
+						int num = -1;
+						for (int i = 0; i < array.Length; i++)
 						{
-							PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem2 = new PackageExportTreeView.PackageExportTreeViewItem(null, hashCode, num, treeViewItem2, text2);
-							treeViewItem2.AddChild(packageExportTreeViewItem2);
-							treeViewItem2 = packageExportTreeViewItem2;
-							if (initExpandedState)
+							string text2 = array[i];
+							if (text != "")
 							{
-								this.m_TreeView.state.expandedIDs.Add(hashCode);
+								text += '/';
 							}
-							treeViewFolders[text] = packageExportTreeViewItem2;
+							text += text2;
+							if (i != 0 || !(text == "Assets"))
+							{
+								num++;
+								hashCode = text.GetHashCode();
+								PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem;
+								if (treeViewFolders.TryGetValue(text, out packageExportTreeViewItem))
+								{
+									treeViewItem2 = packageExportTreeViewItem;
+								}
+								else
+								{
+									PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem2 = new PackageExportTreeView.PackageExportTreeViewItem(null, hashCode, num, treeViewItem2, text2);
+									treeViewItem2.AddChild(packageExportTreeViewItem2);
+									treeViewItem2 = packageExportTreeViewItem2;
+									if (initExpandedState)
+									{
+										this.m_TreeView.state.expandedIDs.Add(hashCode);
+									}
+									treeViewFolders[text] = packageExportTreeViewItem2;
+								}
+							}
 						}
+						result = treeViewItem2;
 					}
 				}
-				return treeViewItem2;
+				return result;
 			}
 		}
 
-		private TreeView m_TreeView;
+		private TreeViewController m_TreeView;
 
 		private List<PackageExportTreeView.PackageExportTreeViewItem> m_Selection = new List<PackageExportTreeView.PackageExportTreeViewItem>();
 
@@ -315,15 +334,15 @@ namespace UnityEditor
 		public PackageExportTreeView(PackageExport packageExport, TreeViewState treeViewState, Rect startRect)
 		{
 			this.m_PackageExport = packageExport;
-			this.m_TreeView = new TreeView(this.m_PackageExport, treeViewState);
+			this.m_TreeView = new TreeViewController(this.m_PackageExport, treeViewState);
 			PackageExportTreeView.PackageExportTreeViewDataSource data = new PackageExportTreeView.PackageExportTreeViewDataSource(this.m_TreeView, this);
 			PackageExportTreeView.PackageExportTreeViewGUI packageExportTreeViewGUI = new PackageExportTreeView.PackageExportTreeViewGUI(this.m_TreeView, this);
 			this.m_TreeView.Init(startRect, data, packageExportTreeViewGUI, null);
 			this.m_TreeView.ReloadData();
-			TreeView expr_64 = this.m_TreeView;
-			expr_64.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_64.selectionChangedCallback, new Action<int[]>(this.SelectionChanged));
-			PackageExportTreeView.PackageExportTreeViewGUI expr_86 = packageExportTreeViewGUI;
-			expr_86.itemWasToggled = (Action<PackageExportTreeView.PackageExportTreeViewItem>)Delegate.Combine(expr_86.itemWasToggled, new Action<PackageExportTreeView.PackageExportTreeViewItem>(this.ItemWasToggled));
+			TreeViewController expr_65 = this.m_TreeView;
+			expr_65.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_65.selectionChangedCallback, new Action<int[]>(this.SelectionChanged));
+			PackageExportTreeView.PackageExportTreeViewGUI expr_87 = packageExportTreeViewGUI;
+			expr_87.itemWasToggled = (Action<PackageExportTreeView.PackageExportTreeViewItem>)Delegate.Combine(expr_87.itemWasToggled, new Action<PackageExportTreeView.PackageExportTreeViewItem>(this.ItemWasToggled));
 			this.ComputeEnabledStateForFolders();
 		}
 
@@ -338,30 +357,29 @@ namespace UnityEditor
 
 		private void RecursiveComputeEnabledStateForFolders(PackageExportTreeView.PackageExportTreeViewItem pitem, HashSet<PackageExportTreeView.PackageExportTreeViewItem> done)
 		{
-			if (!pitem.isFolder)
+			if (pitem.isFolder)
 			{
-				return;
-			}
-			if (pitem.hasChildren)
-			{
-				foreach (TreeViewItem current in pitem.children)
+				if (pitem.hasChildren)
 				{
-					this.RecursiveComputeEnabledStateForFolders(current as PackageExportTreeView.PackageExportTreeViewItem, done);
-				}
-			}
-			if (!done.Contains(pitem))
-			{
-				PackageExportTreeView.EnabledState folderChildrenEnabledState = this.GetFolderChildrenEnabledState(pitem);
-				pitem.enabledState = folderChildrenEnabledState;
-				if (folderChildrenEnabledState == PackageExportTreeView.EnabledState.Mixed)
-				{
-					done.Add(pitem);
-					for (PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = pitem.parent as PackageExportTreeView.PackageExportTreeViewItem; packageExportTreeViewItem != null; packageExportTreeViewItem = (packageExportTreeViewItem.parent as PackageExportTreeView.PackageExportTreeViewItem))
+					foreach (TreeViewItem current in pitem.children)
 					{
-						if (!done.Contains(packageExportTreeViewItem))
+						this.RecursiveComputeEnabledStateForFolders(current as PackageExportTreeView.PackageExportTreeViewItem, done);
+					}
+				}
+				if (!done.Contains(pitem))
+				{
+					PackageExportTreeView.EnabledState folderChildrenEnabledState = this.GetFolderChildrenEnabledState(pitem);
+					pitem.enabledState = folderChildrenEnabledState;
+					if (folderChildrenEnabledState == PackageExportTreeView.EnabledState.Mixed)
+					{
+						done.Add(pitem);
+						for (PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = pitem.parent as PackageExportTreeView.PackageExportTreeViewItem; packageExportTreeViewItem != null; packageExportTreeViewItem = (packageExportTreeViewItem.parent as PackageExportTreeView.PackageExportTreeViewItem))
 						{
-							packageExportTreeViewItem.enabledState = PackageExportTreeView.EnabledState.Mixed;
-							done.Add(packageExportTreeViewItem);
+							if (!done.Contains(packageExportTreeViewItem))
+							{
+								packageExportTreeViewItem.enabledState = PackageExportTreeView.EnabledState.Mixed;
+								done.Add(packageExportTreeViewItem);
+							}
 						}
 					}
 				}
@@ -374,33 +392,38 @@ namespace UnityEditor
 			{
 				Debug.LogError("Should be a folder item!");
 			}
+			PackageExportTreeView.EnabledState result;
 			if (!folder.hasChildren)
 			{
-				return PackageExportTreeView.EnabledState.None;
+				result = PackageExportTreeView.EnabledState.None;
 			}
-			PackageExportTreeView.EnabledState enabledState = PackageExportTreeView.EnabledState.NotSet;
-			PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = folder.children[0] as PackageExportTreeView.PackageExportTreeViewItem;
-			PackageExportTreeView.EnabledState enabledState2 = packageExportTreeViewItem.enabledState;
-			for (int i = 1; i < folder.children.Count; i++)
+			else
 			{
-				PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem2 = folder.children[i] as PackageExportTreeView.PackageExportTreeViewItem;
-				if (enabledState2 != packageExportTreeViewItem2.enabledState)
+				PackageExportTreeView.EnabledState enabledState = PackageExportTreeView.EnabledState.NotSet;
+				PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = folder.children[0] as PackageExportTreeView.PackageExportTreeViewItem;
+				PackageExportTreeView.EnabledState enabledState2 = packageExportTreeViewItem.enabledState;
+				for (int i = 1; i < folder.children.Count; i++)
 				{
-					enabledState = PackageExportTreeView.EnabledState.Mixed;
-					break;
+					PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem2 = folder.children[i] as PackageExportTreeView.PackageExportTreeViewItem;
+					if (enabledState2 != packageExportTreeViewItem2.enabledState)
+					{
+						enabledState = PackageExportTreeView.EnabledState.Mixed;
+						break;
+					}
 				}
+				if (enabledState == PackageExportTreeView.EnabledState.NotSet)
+				{
+					enabledState = ((enabledState2 != PackageExportTreeView.EnabledState.All) ? PackageExportTreeView.EnabledState.None : PackageExportTreeView.EnabledState.All);
+				}
+				result = enabledState;
 			}
-			if (enabledState == PackageExportTreeView.EnabledState.NotSet)
-			{
-				enabledState = ((enabledState2 != PackageExportTreeView.EnabledState.All) ? PackageExportTreeView.EnabledState.None : PackageExportTreeView.EnabledState.All);
-			}
-			return enabledState;
+			return result;
 		}
 
 		private void SelectionChanged(int[] selectedIDs)
 		{
 			this.m_Selection = new List<PackageExportTreeView.PackageExportTreeViewItem>();
-			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
 			foreach (TreeViewItem current in rows)
 			{
 				if (selectedIDs.Contains(current.id))
@@ -451,15 +474,14 @@ namespace UnityEditor
 
 		private void EnableChildrenRecursive(TreeViewItem parentItem, PackageExportTreeView.EnabledState enabled)
 		{
-			if (!parentItem.hasChildren)
+			if (parentItem.hasChildren)
 			{
-				return;
-			}
-			foreach (TreeViewItem current in parentItem.children)
-			{
-				PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = current as PackageExportTreeView.PackageExportTreeViewItem;
-				packageExportTreeViewItem.enabledState = enabled;
-				this.EnableChildrenRecursive(packageExportTreeViewItem, enabled);
+				foreach (TreeViewItem current in parentItem.children)
+				{
+					PackageExportTreeView.PackageExportTreeViewItem packageExportTreeViewItem = current as PackageExportTreeView.PackageExportTreeViewItem;
+					packageExportTreeViewItem.enabledState = enabled;
+					this.EnableChildrenRecursive(packageExportTreeViewItem, enabled);
+				}
 			}
 		}
 	}

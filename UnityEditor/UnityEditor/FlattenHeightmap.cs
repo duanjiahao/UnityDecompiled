@@ -4,7 +4,7 @@ namespace UnityEditor
 {
 	internal class FlattenHeightmap : TerrainWizard
 	{
-		public float height;
+		public float height = 0f;
 
 		internal override void OnWizardUpdate()
 		{

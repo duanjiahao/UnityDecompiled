@@ -87,7 +87,7 @@ namespace UnityEditor
 		{
 			if (BodyMaskEditor.styles.PickingTexture.image)
 			{
-				int controlID = GUIUtility.GetControlID(BodyMaskEditor.s_Hint, FocusType.Native, rect);
+				int controlID = GUIUtility.GetControlID(BodyMaskEditor.s_Hint, FocusType.Passive, rect);
 				Event current = Event.current;
 				EventType typeForControl = current.GetTypeForControl(controlID);
 				if (typeForControl == EventType.MouseDown)

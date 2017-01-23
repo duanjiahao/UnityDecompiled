@@ -76,5 +76,11 @@ namespace UnityEditor
 		{
 			EditorWindow.GetWindow<ConsoleWindow>();
 		}
+
+		[MenuItem("Window/Experimental/Look Dev", false, 2015)]
+		private static void ShowLookDevTool()
+		{
+			EditorWindow.GetWindow<LookDevView>();
+		}
 	}
 }

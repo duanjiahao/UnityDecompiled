@@ -62,7 +62,7 @@ namespace UnityEditor
 
 		private SketchUpImporter m_Target;
 
-		private float lengthToUnit;
+		private float lengthToUnit = 0f;
 
 		internal override void OnEnable()
 		{
@@ -74,48 +74,64 @@ namespace UnityEditor
 			this.m_Longitude = base.serializedObject.FindProperty("m_Longitude");
 			this.m_NorthCorrection = base.serializedObject.FindProperty("m_NorthCorrection");
 			this.m_SelectedNodes = base.serializedObject.FindProperty("m_SelectedNodes");
-			this.m_Target = (this.target as SketchUpImporter);
+			this.m_Target = (base.target as SketchUpImporter);
 			base.OnEnable();
 		}
 
 		private static float CovertUnitToGlobalScale(SketchUpImporterModelEditor.EFileUnit measurement, float unit)
 		{
+			float result;
 			switch (measurement)
 			{
 			case SketchUpImporterModelEditor.EFileUnit.Meters:
-				return 0.0254f * unit;
+				result = 0.0254f * unit;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Centimeters:
-				return 0.000253999984f * unit;
+				result = 0.000253999984f * unit;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Millimeters:
-				return unit * 2.54E-05f;
+				result = unit * 2.54E-05f;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Feet:
-				return unit * 0.00774192f;
+				result = unit * 0.00774192f;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Inches:
-				return unit;
+				result = unit;
+				break;
 			default:
 				Debug.LogError("File Unit value is invalid");
-				return 1f;
+				result = 1f;
+				break;
 			}
+			return result;
 		}
 
 		private static float ConvertGlobalScaleToUnit(SketchUpImporterModelEditor.EFileUnit measurement, float globalScale)
 		{
+			float result;
 			switch (measurement)
 			{
 			case SketchUpImporterModelEditor.EFileUnit.Meters:
-				return globalScale / 0.0254f;
+				result = globalScale / 0.0254f;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Centimeters:
-				return globalScale / 0.000253999984f;
+				result = globalScale / 0.000253999984f;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Millimeters:
-				return globalScale / 2.54E-05f;
+				result = globalScale / 2.54E-05f;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Feet:
-				return globalScale / 0.00774192f;
+				result = globalScale / 0.00774192f;
+				break;
 			case SketchUpImporterModelEditor.EFileUnit.Inches:
-				return globalScale;
+				result = globalScale;
+				break;
 			default:
 				Debug.LogError("File Unit value is invalid");
-				return 1f;
+				result = 1f;
+				break;
 			}
+			return result;
 		}
 
 		public override void OnInspectorGUI()
@@ -129,7 +145,7 @@ namespace UnityEditor
 				GUILayout.MinWidth(EditorGUIUtility.labelWidth)
 			});
 			GUILayout.Label("1", new GUILayoutOption[0]);
-			EditorGUILayout.Popup(this.m_FileUnit, SketchUpImporterModelEditor.Styles.measurementOptions, GUIContent.Temp(string.Empty), new GUILayoutOption[]
+			EditorGUILayout.Popup(this.m_FileUnit, SketchUpImporterModelEditor.Styles.measurementOptions, GUIContent.Temp(""), new GUILayoutOption[]
 			{
 				GUILayout.MaxWidth(100f)
 			});
@@ -158,16 +174,15 @@ namespace UnityEditor
 
 		public void SetSelectedNodes(int[] selectedNodes)
 		{
-			if (selectedNodes == null)
+			if (selectedNodes != null)
 			{
-				return;
-			}
-			this.m_SelectedNodes.ClearArray();
-			for (int i = 0; i < selectedNodes.Length; i++)
-			{
-				this.m_SelectedNodes.InsertArrayElementAtIndex(i);
-				SerializedProperty arrayElementAtIndex = this.m_SelectedNodes.GetArrayElementAtIndex(i);
-				arrayElementAtIndex.intValue = selectedNodes[i];
+				this.m_SelectedNodes.ClearArray();
+				for (int i = 0; i < selectedNodes.Length; i++)
+				{
+					this.m_SelectedNodes.InsertArrayElementAtIndex(i);
+					SerializedProperty arrayElementAtIndex = this.m_SelectedNodes.GetArrayElementAtIndex(i);
+					arrayElementAtIndex.intValue = selectedNodes[i];
+				}
 			}
 		}
 	}

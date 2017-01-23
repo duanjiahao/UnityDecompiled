@@ -5,13 +5,13 @@ namespace UnityEditor
 {
 	internal class ColliderEditorUtility
 	{
+		private static GUIStyle s_EditColliderButtonStyle;
+
 		private const float k_EditColliderbuttonWidth = 22f;
 
 		private const float k_EditColliderbuttonHeight = 22f;
 
 		private const float k_SpaceBetweenLabelAndButton = 5f;
-
-		private static GUIStyle s_EditColliderButtonStyle;
 
 		public static bool InspectorEditButtonGUI(bool editing)
 		{

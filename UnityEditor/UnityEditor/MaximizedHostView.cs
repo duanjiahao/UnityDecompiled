@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using UnityEngine;
 
 namespace UnityEditor
@@ -12,9 +11,7 @@ namespace UnityEditor
 			EditorGUIUtility.ResetGUIState();
 			Rect rect = new Rect(-2f, 0f, base.position.width + 4f, base.position.height);
 			this.background = "dockarea";
-			GUIStyle style = "dockareaoverlay";
 			rect = this.background.margin.Remove(rect);
-			base.DoWindowDecorationStart();
 			Rect position = new Rect(rect.x + 1f, rect.y, rect.width - 2f, 17f);
 			if (Event.current.type == EventType.Repaint)
 			{
@@ -30,24 +27,8 @@ namespace UnityEditor
 			if (base.actualView)
 			{
 				base.actualView.m_Pos = base.borderSize.Remove(base.screenPosition);
-				if (base.actualView is GameView)
-				{
-					GUI.Box(rect, GUIContent.none, style);
-				}
 			}
-			DockArea.BeginOffsetArea(new Rect(rect.x + 2f, rect.y + 17f, rect.width - 4f, rect.height - 17f - 2f), GUIContent.none, "TabWindowBackground");
-			try
-			{
-				base.Invoke("OnGUI");
-			}
-			catch (TargetInvocationException ex)
-			{
-				throw ex.InnerException;
-			}
-			EditorGUIUtility.ResetGUIState();
-			DockArea.EndOffsetArea();
-			base.DoWindowDecorationEnd();
-			GUI.Box(rect, GUIContent.none, style);
+			base.InvokeOnGUI(rect);
 		}
 
 		protected override RectOffset GetBorderSize()
@@ -69,11 +50,11 @@ namespace UnityEditor
 		{
 			if (menu.GetItemCount() != 0)
 			{
-				menu.AddSeparator(string.Empty);
+				menu.AddSeparator("");
 			}
 			menu.AddItem(EditorGUIUtility.TextContent("Maximize"), !(base.parent is SplitView), new GenericMenu.MenuFunction2(this.Unmaximize), view);
 			menu.AddDisabledItem(EditorGUIUtility.TextContent("Close Tab"));
-			menu.AddSeparator(string.Empty);
+			menu.AddSeparator("");
 			Type[] paneTypes = base.GetPaneTypes();
 			GUIContent gUIContent = EditorGUIUtility.TextContent("Add Tab");
 			Type[] array = paneTypes;

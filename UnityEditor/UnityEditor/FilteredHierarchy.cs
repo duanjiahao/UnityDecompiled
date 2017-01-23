@@ -33,6 +33,7 @@ namespace UnityEditor
 			{
 				get
 				{
+					Texture2D result;
 					if (this.m_Icon == null)
 					{
 						if (this.type == HierarchyType.Assets)
@@ -40,7 +41,8 @@ namespace UnityEditor
 							string assetPath = AssetDatabase.GetAssetPath(this.instanceID);
 							if (assetPath != null)
 							{
-								return AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
+								result = (AssetDatabase.GetCachedIcon(assetPath) as Texture2D);
+								return result;
 							}
 						}
 						else if (this.type == HierarchyType.GameObjects)
@@ -49,7 +51,8 @@ namespace UnityEditor
 							this.m_Icon = AssetPreview.GetMiniThumbnail(obj);
 						}
 					}
-					return this.m_Icon;
+					result = this.m_Icon;
+					return result;
 				}
 				set
 				{
@@ -61,15 +64,18 @@ namespace UnityEditor
 			{
 				get
 				{
+					string result;
 					if (this.type == HierarchyType.Assets)
 					{
 						string assetPath = AssetDatabase.GetAssetPath(this.instanceID);
 						if (assetPath != null)
 						{
-							return AssetDatabase.AssetPathToGUID(assetPath);
+							result = AssetDatabase.AssetPathToGUID(assetPath);
+							return result;
 						}
 					}
-					return null;
+					result = null;
+					return result;
 				}
 			}
 		}
@@ -94,11 +100,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				FilteredHierarchy.FilterResult[] result;
 				if (this.m_VisibleItems.Length > 0)
 				{
-					return this.m_VisibleItems;
+					result = this.m_VisibleItems;
 				}
-				return this.m_Results;
+				else
+				{
+					result = this.m_Results;
+				}
+				return result;
 			}
 		}
 
@@ -328,6 +339,7 @@ namespace UnityEditor
 
 		public List<int> GetSubAssetInstanceIDs(int mainAssetInstanceID)
 		{
+			List<int> result;
 			for (int i = 0; i < this.m_Results.Length; i++)
 			{
 				if (this.m_Results[i].instanceID == mainAssetInstanceID)
@@ -339,11 +351,13 @@ namespace UnityEditor
 						list.Add(this.m_Results[num].instanceID);
 						num++;
 					}
-					return list;
+					result = list;
+					return result;
 				}
 			}
 			Debug.LogError("Not main rep " + mainAssetInstanceID);
-			return new List<int>();
+			result = new List<int>();
+			return result;
 		}
 
 		public int AddSubItemsOfMainRepresentation(int mainRepresentionIndex, List<FilteredHierarchy.FilterResult> visibleItems)

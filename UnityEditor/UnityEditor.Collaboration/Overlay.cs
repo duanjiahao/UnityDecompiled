@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace UnityEditor.Collaboration
@@ -9,78 +8,65 @@ namespace UnityEditor.Collaboration
 	{
 		private static readonly Dictionary<Collab.CollabStates, Texture2D> s_Overlays = new Dictionary<Collab.CollabStates, Texture2D>();
 
-		protected static Texture2D LoadTextureFromApplicationContents(string path)
-		{
-			Texture2D texture2D = new Texture2D(2, 2);
-			string path2 = Path.Combine(Path.Combine(Path.Combine(EditorApplication.applicationContentsPath, "Resources"), "Collab"), "overlays");
-			path = Path.Combine(path2, path);
-			try
-			{
-				FileStream fileStream = File.OpenRead(path);
-				byte[] array = new byte[fileStream.Length];
-				fileStream.Read(array, 0, (int)fileStream.Length);
-				if (!texture2D.LoadImage(array))
-				{
-					Texture2D result = null;
-					return result;
-				}
-			}
-			catch (Exception)
-			{
-				Debug.LogWarning("Collab Overlay Texture load fail, path: " + path);
-				Texture2D result = null;
-				return result;
-			}
-			return texture2D;
-		}
-
 		protected static void LoadOverlays()
 		{
 			Overlay.s_Overlays.Clear();
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabConflicted, Overlay.LoadTextureFromApplicationContents("conflict.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabPendingMerge, Overlay.LoadTextureFromApplicationContents("conflict.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabChanges, Overlay.LoadTextureFromApplicationContents("changes.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal | Collab.CollabStates.kCollabMovedLocal, Overlay.LoadTextureFromApplicationContents("modif-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabAddedLocal, Overlay.LoadTextureFromApplicationContents("added-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal, Overlay.LoadTextureFromApplicationContents("modif-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabDeletedLocal, Overlay.LoadTextureFromApplicationContents("deleted-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabMovedLocal, Overlay.LoadTextureFromApplicationContents("modif-local.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabConflicted, TextureUtility.LoadTextureFromApplicationContents("conflict.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabPendingMerge, TextureUtility.LoadTextureFromApplicationContents("conflict.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabChanges, TextureUtility.LoadTextureFromApplicationContents("changes.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal | Collab.CollabStates.kCollabMovedLocal, TextureUtility.LoadTextureFromApplicationContents("modif-local.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabAddedLocal, TextureUtility.LoadTextureFromApplicationContents("added-local.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal, TextureUtility.LoadTextureFromApplicationContents("modif-local.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabDeletedLocal, TextureUtility.LoadTextureFromApplicationContents("deleted-local.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabMovedLocal, TextureUtility.LoadTextureFromApplicationContents("modif-local.png"));
 		}
 
 		protected static bool AreOverlaysLoaded()
 		{
+			bool result;
 			if (Overlay.s_Overlays.Count == 0)
 			{
-				return false;
+				result = false;
 			}
-			foreach (Texture2D current in Overlay.s_Overlays.Values)
+			else
 			{
-				if (current == null)
+				foreach (Texture2D current in Overlay.s_Overlays.Values)
 				{
-					return false;
+					if (current == null)
+					{
+						result = false;
+						return result;
+					}
 				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		protected static Collab.CollabStates GetOverlayStateForAsset(Collab.CollabStates assetStates)
 		{
+			Collab.CollabStates result;
 			foreach (Collab.CollabStates current in Overlay.s_Overlays.Keys)
 			{
 				if (Overlay.HasState(assetStates, current))
 				{
-					return current;
+					result = current;
+					return result;
 				}
 			}
-			return Collab.CollabStates.kCollabNone;
+			result = Collab.CollabStates.kCollabNone;
+			return result;
 		}
 
 		protected static void DrawOverlayElement(Collab.CollabStates singleState, Rect itemRect)
 		{
 			Texture2D texture2D;
-			if (Overlay.s_Overlays.TryGetValue(singleState, out texture2D) && texture2D != null)
+			if (Overlay.s_Overlays.TryGetValue(singleState, out texture2D))
 			{
-				GUI.DrawTexture(itemRect, texture2D);
+				if (texture2D != null)
+				{
+					GUI.DrawTexture(itemRect, texture2D);
+				}
 			}
 		}
 
@@ -91,20 +77,18 @@ namespace UnityEditor.Collaboration
 
 		public static void DrawOverlays(Collab.CollabStates assetState, Rect itemRect)
 		{
-			if (assetState == Collab.CollabStates.kCollabInvalidState || assetState == Collab.CollabStates.kCollabNone)
+			if (assetState != Collab.CollabStates.kCollabInvalidState && assetState != Collab.CollabStates.kCollabNone)
 			{
-				return;
+				if (Event.current.type == EventType.Repaint)
+				{
+					if (!Overlay.AreOverlaysLoaded())
+					{
+						Overlay.LoadOverlays();
+					}
+					Collab.CollabStates overlayStateForAsset = Overlay.GetOverlayStateForAsset(assetState);
+					Overlay.DrawOverlayElement(overlayStateForAsset, itemRect);
+				}
 			}
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			if (!Overlay.AreOverlaysLoaded())
-			{
-				Overlay.LoadOverlays();
-			}
-			Collab.CollabStates overlayStateForAsset = Overlay.GetOverlayStateForAsset(assetState);
-			Overlay.DrawOverlayElement(overlayStateForAsset, itemRect);
 		}
 	}
 }

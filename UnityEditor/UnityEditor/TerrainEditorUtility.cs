@@ -71,23 +71,21 @@ namespace UnityEditor
 		internal static void RemoveTree(Terrain terrain, int index)
 		{
 			TerrainData terrainData = terrain.terrainData;
-			if (terrainData == null)
+			if (!(terrainData == null))
 			{
-				return;
+				Undo.RegisterCompleteObjectUndo(terrainData, "Remove tree");
+				terrainData.RemoveTreePrototype(index);
 			}
-			Undo.RegisterCompleteObjectUndo(terrainData, "Remove tree");
-			terrainData.RemoveTreePrototype(index);
 		}
 
 		internal static void RemoveDetail(Terrain terrain, int index)
 		{
 			TerrainData terrainData = terrain.terrainData;
-			if (terrainData == null)
+			if (!(terrainData == null))
 			{
-				return;
+				Undo.RegisterCompleteObjectUndo(terrainData, "Remove detail object");
+				terrainData.RemoveDetailPrototype(index);
 			}
-			Undo.RegisterCompleteObjectUndo(terrainData, "Remove detail object");
-			terrainData.RemoveDetailPrototype(index);
 		}
 
 		internal static bool IsLODTreePrototype(GameObject prefab)

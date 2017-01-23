@@ -17,7 +17,7 @@ namespace UnityEditor
 		public AssetStoreResultBase(AssetStoreResultBase<Derived>.Callback cb)
 		{
 			this.callback = cb;
-			this.warnings = string.Empty;
+			this.warnings = "";
 		}
 
 		public void Parse(AssetStoreResponse response)

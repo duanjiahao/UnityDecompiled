@@ -8,31 +8,26 @@ namespace UnityEngine
 		[Obsolete("this API is not for public use.")]
 		public static extern CacheIndex[] index
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern long spaceFree
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern long maximumAvailableDiskSpace
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern long spaceOccupied
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -40,7 +35,6 @@ namespace UnityEngine
 		[Obsolete("Please use Caching.spaceFree instead")]
 		public static extern int spaceAvailable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -48,44 +42,36 @@ namespace UnityEngine
 		[Obsolete("Please use Caching.spaceOccupied instead")]
 		public static extern int spaceUsed
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int expirationDelay
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool compressionEnabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool ready
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -95,7 +81,6 @@ namespace UnityEngine
 			return Caching.Authorize(name, domain, size, -1, signature);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Authorize(string name, string domain, long size, int expiration, string signature);
 
@@ -111,19 +96,18 @@ namespace UnityEngine
 			return Caching.Authorize(name, domain, (long)size, signature);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CleanCache();
 
-		[Obsolete("this API is not for public use."), WrapperlessIcall]
+		[Obsolete("this API is not for public use.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CleanNamedCache(string name);
 
-		[Obsolete("This function is obsolete and has no effect."), WrapperlessIcall]
+		[Obsolete("This function is obsolete and has no effect.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DeleteFromCache(string url);
 
-		[Obsolete("This function is obsolete and will always return -1. Use IsVersionCached instead."), WrapperlessIcall]
+		[Obsolete("This function is obsolete and will always return -1. Use IsVersionCached instead.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetVersionFromCache(string url);
 
@@ -138,7 +122,6 @@ namespace UnityEngine
 			return Caching.INTERNAL_CALL_IsVersionCached(url, ref hash);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_IsVersionCached(string url, ref Hash128 hash);
 
@@ -153,7 +136,6 @@ namespace UnityEngine
 			return Caching.INTERNAL_CALL_MarkAsUsed(url, ref hash);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_MarkAsUsed(string url, ref Hash128 hash);
 
@@ -166,7 +148,6 @@ namespace UnityEngine
 			Caching.INTERNAL_CALL_SetNoBackupFlag(url, ref hash);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetNoBackupFlag(string url, ref Hash128 hash);
 
@@ -179,7 +160,6 @@ namespace UnityEngine
 			Caching.INTERNAL_CALL_ResetNoBackupFlag(url, ref hash);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ResetNoBackupFlag(string url, ref Hash128 hash);
 	}

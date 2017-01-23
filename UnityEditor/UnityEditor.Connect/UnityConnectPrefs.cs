@@ -32,6 +32,14 @@ namespace UnityEditor.Connect
 			}
 		}
 
+		public static string[] kEnvironmentFamilies = new string[]
+		{
+			"Production",
+			"Staging",
+			"Dev",
+			"Custom"
+		};
+
 		public const int kProductionEnv = 0;
 
 		public const int kCustomEnv = 3;
@@ -42,42 +50,45 @@ namespace UnityEditor.Connect
 
 		public const string kSvcCustomPortPref = "CloudPanelCustomPort";
 
-		public static string[] kEnvironmentFamilies = new string[]
-		{
-			"Production",
-			"Staging",
-			"Dev",
-			"Custom"
-		};
-
 		protected static Dictionary<string, UnityConnectPrefs.CloudPanelPref> m_CloudPanelPref = new Dictionary<string, UnityConnectPrefs.CloudPanelPref>();
 
 		protected static UnityConnectPrefs.CloudPanelPref GetPanelPref(string serviceName)
 		{
+			UnityConnectPrefs.CloudPanelPref result;
 			if (UnityConnectPrefs.m_CloudPanelPref.ContainsKey(serviceName))
 			{
-				return UnityConnectPrefs.m_CloudPanelPref[serviceName];
+				result = UnityConnectPrefs.m_CloudPanelPref[serviceName];
 			}
-			UnityConnectPrefs.CloudPanelPref cloudPanelPref = new UnityConnectPrefs.CloudPanelPref(serviceName);
-			UnityConnectPrefs.m_CloudPanelPref.Add(serviceName, cloudPanelPref);
-			return cloudPanelPref;
+			else
+			{
+				UnityConnectPrefs.CloudPanelPref cloudPanelPref = new UnityConnectPrefs.CloudPanelPref(serviceName);
+				UnityConnectPrefs.m_CloudPanelPref.Add(serviceName, cloudPanelPref);
+				result = cloudPanelPref;
+			}
+			return result;
 		}
 
 		public static int GetServiceEnv(string serviceName)
 		{
+			int result;
 			if (Unsupported.IsDeveloperBuild() || UnityConnect.preferencesEnabled)
 			{
-				return EditorPrefs.GetInt(UnityConnectPrefs.ServicePrefKey("CloudPanelServer", serviceName));
+				result = EditorPrefs.GetInt(UnityConnectPrefs.ServicePrefKey("CloudPanelServer", serviceName));
 			}
-			for (int i = 0; i < UnityConnectPrefs.kEnvironmentFamilies.Length; i++)
+			else
 			{
-				string text = UnityConnectPrefs.kEnvironmentFamilies[i];
-				if (text.Equals(UnityConnect.instance.configuration, StringComparison.InvariantCultureIgnoreCase))
+				for (int i = 0; i < UnityConnectPrefs.kEnvironmentFamilies.Length; i++)
 				{
-					return i;
+					string text = UnityConnectPrefs.kEnvironmentFamilies[i];
+					if (text.Equals(UnityConnect.instance.configuration, StringComparison.InvariantCultureIgnoreCase))
+					{
+						result = i;
+						return result;
+					}
 				}
+				result = 0;
 			}
-			return 0;
+			return result;
 		}
 
 		public static string ServicePrefKey(string baseKey, string serviceName)
@@ -88,6 +99,7 @@ namespace UnityEditor.Connect
 		public static string FixUrl(string url, string serviceName)
 		{
 			int serviceEnv = UnityConnectPrefs.GetServiceEnv(serviceName);
+			string result;
 			if (serviceEnv != 0)
 			{
 				if (url.StartsWith("http://") || url.StartsWith("https://"))
@@ -104,7 +116,8 @@ namespace UnityEditor.Connect
 						text = url.ToLower();
 						text = text.Replace("/" + UnityConnectPrefs.kEnvironmentFamilies[0].ToLower() + "/", "/" + UnityConnectPrefs.kEnvironmentFamilies[serviceEnv].ToLower() + "/");
 					}
-					return text;
+					result = text;
+					return result;
 				}
 				if (url.StartsWith("file://"))
 				{
@@ -115,14 +128,18 @@ namespace UnityEditor.Connect
 						int int2 = EditorPrefs.GetInt(UnityConnectPrefs.ServicePrefKey("CloudPanelCustomPort", serviceName));
 						text = string2 + ":" + int2;
 					}
-					return text;
+					result = text;
+					return result;
 				}
 				if (!url.StartsWith("file://") && !url.StartsWith("http://") && !url.StartsWith("https://"))
 				{
-					return "http://" + url;
+					string text = "http://" + url;
+					result = text;
+					return result;
 				}
 			}
-			return url;
+			result = url;
+			return result;
 		}
 
 		public static void ShowPanelPrefUI()
@@ -164,13 +181,12 @@ namespace UnityEditor.Connect
 
 		public static void StorePanelPrefs()
 		{
-			if (!Unsupported.IsDeveloperBuild() && !UnityConnect.preferencesEnabled)
+			if (Unsupported.IsDeveloperBuild() || UnityConnect.preferencesEnabled)
 			{
-				return;
-			}
-			foreach (KeyValuePair<string, UnityConnectPrefs.CloudPanelPref> current in UnityConnectPrefs.m_CloudPanelPref)
-			{
-				current.Value.StoreCloudServicePref();
+				foreach (KeyValuePair<string, UnityConnectPrefs.CloudPanelPref> current in UnityConnectPrefs.m_CloudPanelPref)
+				{
+					current.Value.StoreCloudServicePref();
+				}
 			}
 		}
 	}

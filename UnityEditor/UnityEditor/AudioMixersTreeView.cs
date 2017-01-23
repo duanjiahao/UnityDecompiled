@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Audio;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -20,26 +21,26 @@ namespace UnityEditor
 			public Texture2D audioMixerIcon = EditorGUIUtility.FindTexture("AudioMixerController Icon");
 		}
 
-		private const int kObjectSelectorID = 1212;
-
-		private const string kExpandedStateIdentifier = "AudioMixerWindowMixers";
-
-		private TreeView m_TreeView;
+		private TreeViewController m_TreeView;
 
 		private int m_TreeViewKeyboardControlID;
+
+		private const int kObjectSelectorID = 1212;
 
 		private List<AudioMixerController> m_DraggedMixers;
 
 		private static AudioMixersTreeView.Styles s_Styles;
 
+		private const string kExpandedStateIdentifier = "AudioMixerWindowMixers";
+
 		public AudioMixersTreeView(AudioMixerWindow mixerWindow, TreeViewState treeState, Func<List<AudioMixerController>> getAllControllersCallback)
 		{
-			this.m_TreeView = new TreeView(mixerWindow, treeState);
+			this.m_TreeView = new TreeViewController(mixerWindow, treeState);
 			this.m_TreeView.deselectOnUnhandledMouseDown = false;
-			TreeView expr_25 = this.m_TreeView;
-			expr_25.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_25.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
-			TreeView expr_4C = this.m_TreeView;
-			expr_4C.contextClickItemCallback = (Action<int>)Delegate.Combine(expr_4C.contextClickItemCallback, new Action<int>(this.OnTreeViewContextClick));
+			TreeViewController expr_26 = this.m_TreeView;
+			expr_26.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_26.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
+			TreeViewController expr_4D = this.m_TreeView;
+			expr_4D.contextClickItemCallback = (Action<int>)Delegate.Combine(expr_4D.contextClickItemCallback, new Action<int>(this.OnTreeViewContextClick));
 			AudioMixersTreeViewGUI gui = new AudioMixersTreeViewGUI(this.m_TreeView);
 			AudioMixersDataSource data = new AudioMixersDataSource(this.m_TreeView, getAllControllersCallback);
 			AudioMixerTreeViewDragging dragging = new AudioMixerTreeViewDragging(this.m_TreeView, new Action<List<AudioMixerController>, AudioMixerController>(this.OnMixersDroppedOnMixerCallback));
@@ -127,28 +128,27 @@ namespace UnityEditor
 
 		private void HandleCommandEvents(int treeViewKeyboardControlID)
 		{
-			if (GUIUtility.keyboardControl != treeViewKeyboardControlID)
+			if (GUIUtility.keyboardControl == treeViewKeyboardControlID)
 			{
-				return;
-			}
-			EventType type = Event.current.type;
-			if (type == EventType.ExecuteCommand || type == EventType.ValidateCommand)
-			{
-				bool flag = type == EventType.ExecuteCommand;
-				if (Event.current.commandName == "Delete" || Event.current.commandName == "SoftDelete")
+				EventType type = Event.current.type;
+				if (type == EventType.ExecuteCommand || type == EventType.ValidateCommand)
 				{
-					Event.current.Use();
-					if (flag)
+					bool flag = type == EventType.ExecuteCommand;
+					if (Event.current.commandName == "Delete" || Event.current.commandName == "SoftDelete")
 					{
-						ProjectBrowser.DeleteSelectedAssets(true);
+						Event.current.Use();
+						if (flag)
+						{
+							ProjectBrowser.DeleteSelectedAssets(true);
+						}
 					}
-				}
-				else if (Event.current.commandName == "Duplicate")
-				{
-					Event.current.Use();
-					if (flag)
+					else if (Event.current.commandName == "Duplicate")
 					{
-						ProjectWindowUtil.DuplicateSelectedAssets();
+						Event.current.Use();
+						if (flag)
+						{
+							ProjectWindowUtil.DuplicateSelectedAssets();
+						}
 					}
 				}
 			}
@@ -172,7 +172,7 @@ namespace UnityEditor
 			Selection.instanceIDs = array;
 			if (droppedUponMixer == null)
 			{
-				Undo.RecordObjects(draggedMixers.ToArray(), "Set output group for mixer" + ((draggedMixers.Count <= 1) ? string.Empty : "s"));
+				Undo.RecordObjects(draggedMixers.ToArray(), "Set output group for mixer" + ((draggedMixers.Count <= 1) ? "" : "s"));
 				foreach (AudioMixerController current in draggedMixers)
 				{
 					current.outputAudioMixerGroup = null;
@@ -207,7 +207,7 @@ namespace UnityEditor
 					}
 					UnityEngine.Object currentObject = ObjectSelector.GetCurrentObject();
 					AudioMixerGroup outputAudioMixerGroup = (!(currentObject != null)) ? null : (currentObject as AudioMixerGroup);
-					Undo.RecordObjects(this.m_DraggedMixers.ToArray(), "Set output group for mixer" + ((this.m_DraggedMixers.Count <= 1) ? string.Empty : "s"));
+					Undo.RecordObjects(this.m_DraggedMixers.ToArray(), "Set output group for mixer" + ((this.m_DraggedMixers.Count <= 1) ? "" : "s"));
 					foreach (AudioMixerController current2 in this.m_DraggedMixers)
 					{
 						if (current2 != null)

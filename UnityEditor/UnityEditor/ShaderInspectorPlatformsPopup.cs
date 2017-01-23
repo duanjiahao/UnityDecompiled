@@ -13,10 +13,6 @@ namespace UnityEditor
 			public static readonly GUIStyle separator = "sv_iconselector_sep";
 		}
 
-		private const float kFrameWidth = 1f;
-
-		private const float kSeparatorHeight = 6f;
-
 		internal static readonly string[] s_PlatformModes = new string[]
 		{
 			"Current graphics device",
@@ -28,6 +24,10 @@ namespace UnityEditor
 		private static string[] s_ShaderPlatformNames;
 
 		private static int[] s_ShaderPlatformIndices;
+
+		private const float kFrameWidth = 1f;
+
+		private const float kSeparatorHeight = 6f;
 
 		private readonly Shader m_Shader;
 
@@ -60,7 +60,7 @@ namespace UnityEditor
 			{
 				if (ShaderInspectorPlatformsPopup.s_CurrentPlatformMask < 0)
 				{
-					ShaderInspectorPlatformsPopup.s_CurrentPlatformMask = EditorPrefs.GetInt("ShaderInspectorPlatformMask", 262143);
+					ShaderInspectorPlatformsPopup.s_CurrentPlatformMask = EditorPrefs.GetInt("ShaderInspectorPlatformMask", 524287);
 				}
 				return ShaderInspectorPlatformsPopup.s_CurrentPlatformMask;
 			}
@@ -96,23 +96,24 @@ namespace UnityEditor
 
 		private static void InitializeShaderPlatforms()
 		{
-			if (ShaderInspectorPlatformsPopup.s_ShaderPlatformNames != null)
+			if (ShaderInspectorPlatformsPopup.s_ShaderPlatformNames == null)
 			{
-				return;
-			}
-			int availableShaderCompilerPlatforms = ShaderUtil.GetAvailableShaderCompilerPlatforms();
-			List<string> list = new List<string>();
-			List<int> list2 = new List<int>();
-			for (int i = 0; i < 32; i++)
-			{
-				if ((availableShaderCompilerPlatforms & 1 << i) != 0)
+				int availableShaderCompilerPlatforms = ShaderUtil.GetAvailableShaderCompilerPlatforms();
+				List<string> list = new List<string>();
+				List<int> list2 = new List<int>();
+				for (int i = 0; i < 32; i++)
 				{
-					list.Add(((ShaderUtil.ShaderCompilerPlatformType)i).ToString());
-					list2.Add(i);
+					if ((availableShaderCompilerPlatforms & 1 << i) != 0)
+					{
+						List<string> arg_4D_0 = list;
+						ShaderUtil.ShaderCompilerPlatformType shaderCompilerPlatformType = (ShaderUtil.ShaderCompilerPlatformType)i;
+						arg_4D_0.Add(shaderCompilerPlatformType.ToString());
+						list2.Add(i);
+					}
 				}
+				ShaderInspectorPlatformsPopup.s_ShaderPlatformNames = list.ToArray();
+				ShaderInspectorPlatformsPopup.s_ShaderPlatformIndices = list2.ToArray();
 			}
-			ShaderInspectorPlatformsPopup.s_ShaderPlatformNames = list.ToArray();
-			ShaderInspectorPlatformsPopup.s_ShaderPlatformIndices = list2.ToArray();
 		}
 
 		public override Vector2 GetWindowSize()
@@ -126,23 +127,21 @@ namespace UnityEditor
 
 		public override void OnGUI(Rect rect)
 		{
-			if (this.m_Shader == null)
+			if (!(this.m_Shader == null))
 			{
-				return;
-			}
-			if (Event.current.type == EventType.Layout)
-			{
-				return;
-			}
-			this.Draw(base.editorWindow, rect.width);
-			if (Event.current.type == EventType.MouseMove)
-			{
-				Event.current.Use();
-			}
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-			{
-				base.editorWindow.Close();
-				GUIUtility.ExitGUI();
+				if (Event.current.type != EventType.Layout)
+				{
+					this.Draw(base.editorWindow, rect.width);
+					if (Event.current.type == EventType.MouseMove)
+					{
+						Event.current.Use();
+					}
+					if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+					{
+						base.editorWindow.Close();
+						GUIUtility.ExitGUI();
+					}
+				}
 			}
 		}
 

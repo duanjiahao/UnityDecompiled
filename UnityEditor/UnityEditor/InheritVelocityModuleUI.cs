@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using UnityEngine;
 
 namespace UnityEditor
@@ -38,30 +37,15 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_Curve != null)
+			if (this.m_Curve == null)
 			{
-				return;
-			}
-			if (InheritVelocityModuleUI.s_Texts == null)
-			{
-				InheritVelocityModuleUI.s_Texts = new InheritVelocityModuleUI.Texts();
-			}
-			this.m_Mode = base.GetProperty("m_Mode");
-			this.m_Curve = new SerializedMinMaxCurve(this, GUIContent.none, "m_Curve", ModuleUI.kUseSignedRange);
-		}
-
-		private bool CanInheritVelocity(ParticleSystem s)
-		{
-			Rigidbody[] componentsInParent = s.GetComponentsInParent<Rigidbody>();
-			Rigidbody2D[] componentsInParent2 = s.GetComponentsInParent<Rigidbody2D>();
-			if (!componentsInParent.Any((Rigidbody o) => !o.isKinematic && o.interpolation == RigidbodyInterpolation.None))
-			{
-				if (!componentsInParent2.Any((Rigidbody2D o) => !o.isKinematic && o.interpolation == RigidbodyInterpolation2D.None))
+				if (InheritVelocityModuleUI.s_Texts == null)
 				{
-					return true;
+					InheritVelocityModuleUI.s_Texts = new InheritVelocityModuleUI.Texts();
 				}
+				this.m_Mode = base.GetProperty("m_Mode");
+				this.m_Curve = new SerializedMinMaxCurve(this, GUIContent.none, "m_Curve", ModuleUI.kUseSignedRange);
 			}
-			return false;
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -70,12 +54,20 @@ namespace UnityEditor
 			{
 				InheritVelocityModuleUI.s_Texts = new InheritVelocityModuleUI.Texts();
 			}
-			ModuleUI.GUIPopup(InheritVelocityModuleUI.s_Texts.mode, this.m_Mode, InheritVelocityModuleUI.s_Texts.modes);
-			ModuleUI.GUIMinMaxCurve(InheritVelocityModuleUI.s_Texts.velocity, this.m_Curve);
-			if (this.m_Curve.scalar.floatValue != 0f && !this.CanInheritVelocity(s))
+			ModuleUI.GUIPopup(InheritVelocityModuleUI.s_Texts.mode, this.m_Mode, InheritVelocityModuleUI.s_Texts.modes, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxCurve(InheritVelocityModuleUI.s_Texts.velocity, this.m_Curve, new GUILayoutOption[0]);
+			if (this.m_Curve.scalar.floatValue != 0f)
 			{
-				GUIContent gUIContent = EditorGUIUtility.TextContent("Inherit velocity requires interpolation enabled on the rigidbody to function correctly.");
-				EditorGUILayout.HelpBox(gUIContent.text, MessageType.Warning, true);
+				Rigidbody componentInParent = s.GetComponentInParent<Rigidbody>();
+				Rigidbody2D componentInParent2 = s.GetComponentInParent<Rigidbody2D>();
+				if (componentInParent != null && !componentInParent.isKinematic)
+				{
+					EditorGUILayout.HelpBox("Velocity is being driven by RigidBody(" + componentInParent.name + ")", MessageType.Info, true);
+				}
+				else if (componentInParent2 != null && componentInParent2.bodyType == RigidbodyType2D.Dynamic)
+				{
+					EditorGUILayout.HelpBox("Velocity is being driven by RigidBody2D(" + componentInParent.name + ")", MessageType.Info, true);
+				}
 			}
 		}
 

@@ -67,12 +67,7 @@ namespace UnityEditor.Scripting.Compilers
 
 		private static ScriptingImplementation GetCurrentScriptingBackend()
 		{
-			int result = 0;
-			if (!PlayerSettings.GetPropertyOptionalInt("ScriptingBackend", ref result, BuildTargetGroup.Metro))
-			{
-				result = 2;
-			}
-			return (ScriptingImplementation)result;
+			return PlayerSettings.GetScriptingBackend(BuildTargetGroup.WSA);
 		}
 
 		private static string[] GetReferencesFromMonoDistribution()
@@ -93,41 +88,52 @@ namespace UnityEditor.Scripting.Compilers
 
 		internal static string GetNETCoreFrameworkReferencesDirectory(WSASDK wsaSDK)
 		{
-			if (MicrosoftCSharpCompiler.GetCurrentScriptingBackend() == ScriptingImplementation.IL2CPP)
+			string result;
+			if (MicrosoftCSharpCompiler.GetCurrentScriptingBackend() != ScriptingImplementation.IL2CPP)
 			{
-				return BuildPipeline.GetMonoLibDirectory(BuildTarget.WSAPlayer);
+				switch (wsaSDK)
+				{
+				case WSASDK.SDK80:
+					result = MicrosoftCSharpCompiler.ProgramFilesDirectory + "\\Reference Assemblies\\Microsoft\\Framework\\.NETCore\\v4.5";
+					return result;
+				case WSASDK.SDK81:
+					result = MicrosoftCSharpCompiler.ProgramFilesDirectory + "\\Reference Assemblies\\Microsoft\\Framework\\.NETCore\\v4.5.1";
+					return result;
+				case WSASDK.PhoneSDK81:
+					result = MicrosoftCSharpCompiler.ProgramFilesDirectory + "\\Reference Assemblies\\Microsoft\\Framework\\WindowsPhoneApp\\v8.1";
+					return result;
+				case WSASDK.UWP:
+					result = null;
+					return result;
+				}
+				throw new Exception("Unknown Windows SDK: " + wsaSDK.ToString());
 			}
-			switch (wsaSDK)
-			{
-			case WSASDK.SDK80:
-				return MicrosoftCSharpCompiler.ProgramFilesDirectory + "\\Reference Assemblies\\Microsoft\\Framework\\.NETCore\\v4.5";
-			case WSASDK.SDK81:
-				return MicrosoftCSharpCompiler.ProgramFilesDirectory + "\\Reference Assemblies\\Microsoft\\Framework\\.NETCore\\v4.5.1";
-			case WSASDK.PhoneSDK81:
-				return MicrosoftCSharpCompiler.ProgramFilesDirectory + "\\Reference Assemblies\\Microsoft\\Framework\\WindowsPhoneApp\\v8.1";
-			case WSASDK.UWP:
-				return null;
-			}
-			throw new Exception("Unknown Windows SDK: " + wsaSDK.ToString());
+			result = BuildPipeline.GetMonoLibDirectory(BuildTarget.WSAPlayer);
+			return result;
 		}
 
 		private string[] GetNETWSAAssemblies(WSASDK wsaSDK)
 		{
+			string[] result;
 			if (MicrosoftCSharpCompiler.GetCurrentScriptingBackend() == ScriptingImplementation.IL2CPP)
 			{
 				string monoAssemblyDirectory = BuildPipeline.GetMonoLibDirectory(BuildTarget.WSAPlayer);
-				return (from dll in MicrosoftCSharpCompiler.GetReferencesFromMonoDistribution()
+				result = (from dll in MicrosoftCSharpCompiler.GetReferencesFromMonoDistribution()
 				select Path.Combine(monoAssemblyDirectory, dll)).ToArray<string>();
 			}
-			if (wsaSDK != WSASDK.UWP)
+			else if (wsaSDK != WSASDK.UWP)
 			{
-				return Directory.GetFiles(MicrosoftCSharpCompiler.GetNETCoreFrameworkReferencesDirectory(wsaSDK), "*.dll");
+				result = Directory.GetFiles(MicrosoftCSharpCompiler.GetNETCoreFrameworkReferencesDirectory(wsaSDK), "*.dll");
 			}
-			NuGetPackageResolver nuGetPackageResolver = new NuGetPackageResolver
+			else
 			{
-				ProjectLockFile = "UWP\\project.lock.json"
-			};
-			return nuGetPackageResolver.Resolve();
+				NuGetPackageResolver nuGetPackageResolver = new NuGetPackageResolver
+				{
+					ProjectLockFile = "UWP\\project.lock.json"
+				};
+				result = nuGetPackageResolver.Resolve();
+			}
+			return result;
 		}
 
 		private string GetNetWSAAssemblyInfoWindows80()
@@ -185,17 +191,17 @@ namespace UnityEditor.Scripting.Compilers
 			case WSASDK.SDK80:
 			{
 				string arg = "8.0";
-				goto IL_BE;
+				goto IL_BF;
 			}
 			case WSASDK.SDK81:
 			{
 				string arg = "8.1";
-				goto IL_BE;
+				goto IL_BF;
 			}
 			case WSASDK.PhoneSDK81:
 			{
 				string arg = "Phone 8.1";
-				goto IL_BE;
+				goto IL_BF;
 			}
 			case WSASDK.UWP:
 			{
@@ -204,11 +210,11 @@ namespace UnityEditor.Scripting.Compilers
 				{
 					arguments.Add("/define:WINDOWS_UWP");
 				}
-				goto IL_BE;
+				goto IL_BF;
 			}
 			}
 			throw new Exception("Unknown Windows SDK: " + EditorUserBuildSettings.wsaSDK.ToString());
-			IL_BE:
+			IL_BF:
 			if (!File.Exists(platformAssemblyPath))
 			{
 				string arg;
@@ -242,25 +248,25 @@ namespace UnityEditor.Scripting.Compilers
 					text = Path.Combine(Path.GetTempPath(), ".NETCore,Version=v4.5.AssemblyAttributes.cs");
 					contents = this.GetNetWSAAssemblyInfoWindows80();
 					text2 = "Managed\\WinRTLegacy.dll";
-					goto IL_257;
+					goto IL_263;
 				case WSASDK.SDK81:
 					text = Path.Combine(Path.GetTempPath(), ".NETCore,Version=v4.5.1.AssemblyAttributes.cs");
 					contents = this.GetNetWSAAssemblyInfoWindows81();
 					text2 = "Managed\\WinRTLegacy.dll";
-					goto IL_257;
+					goto IL_263;
 				case WSASDK.PhoneSDK81:
 					text = Path.Combine(Path.GetTempPath(), "WindowsPhoneApp,Version=v8.1.AssemblyAttributes.cs");
 					contents = this.GetNetWSAAssemblyInfoWindowsPhone81();
 					text2 = "Managed\\Phone\\WinRTLegacy.dll";
-					goto IL_257;
+					goto IL_263;
 				case WSASDK.UWP:
 					text = Path.Combine(Path.GetTempPath(), ".NETCore,Version=v5.0.AssemblyAttributes.cs");
 					contents = this.GetNetWSAAssemblyInfoUWP();
 					text2 = "Managed\\UAP\\WinRTLegacy.dll";
-					goto IL_257;
+					goto IL_263;
 				}
 				throw new Exception("Unknown Windows SDK: " + EditorUserBuildSettings.wsaSDK.ToString());
-				IL_257:
+				IL_263:
 				text2 = Path.Combine(BuildPipeline.GetPlaybackEngineDirectory(this._island._target, BuildOptions.None), text2);
 				arguments.Add("/reference:\"" + text2.Replace('/', '\\') + "\"");
 				if (File.Exists(text))
@@ -330,12 +336,12 @@ namespace UnityEditor.Scripting.Compilers
 				"/debug:pdbonly",
 				"/optimize+"
 			});
-			string empty = string.Empty;
+			string argsPrefix = "";
 			if (base.CompilingForWSA() && (PlayerSettings.WSA.compilationOverrides == PlayerSettings.WSACompilationOverrides.UseNetCore || PlayerSettings.WSA.compilationOverrides == PlayerSettings.WSACompilationOverrides.UseNetCorePartially))
 			{
-				this.FillNETCoreCompilerOptions(EditorUserBuildSettings.wsaSDK, list, ref empty);
+				this.FillNETCoreCompilerOptions(EditorUserBuildSettings.wsaSDK, list, ref argsPrefix);
 			}
-			return this.StartCompilerImpl(list, empty, EditorUserBuildSettings.wsaSDK == WSASDK.UWP);
+			return this.StartCompilerImpl(list, argsPrefix, EditorUserBuildSettings.wsaSDK == WSASDK.UWP);
 		}
 
 		protected override string[] GetStreamContainingCompilerMessages()
@@ -357,29 +363,29 @@ namespace UnityEditor.Scripting.Compilers
 			{
 				text = RegistryUtil.GetRegistryStringValue32("SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v8.0", "InstallationFolder", null);
 				string path = "Windows Kits\\8.0";
-				goto IL_AC;
+				goto IL_AD;
 			}
 			case WSASDK.SDK81:
 			{
 				text = RegistryUtil.GetRegistryStringValue32("SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v8.1", "InstallationFolder", null);
 				string path = "Windows Kits\\8.1";
-				goto IL_AC;
+				goto IL_AD;
 			}
 			case WSASDK.PhoneSDK81:
 			{
 				text = RegistryUtil.GetRegistryStringValue32("SOFTWARE\\Microsoft\\Microsoft SDKs\\WindowsPhoneApp\\v8.1", "InstallationFolder", null);
 				string path = "Windows Phone Kits\\8.1";
-				goto IL_AC;
+				goto IL_AD;
 			}
 			case WSASDK.UWP:
 			{
 				text = RegistryUtil.GetRegistryStringValue32("SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v10.0", "InstallationFolder", null);
 				string path = "Windows Kits\\10.0";
-				goto IL_AC;
+				goto IL_AD;
 			}
 			}
 			throw new Exception("Unknown Windows SDK: " + wsaSDK.ToString());
-			IL_AC:
+			IL_AD:
 			if (text == null)
 			{
 				string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -391,26 +397,36 @@ namespace UnityEditor.Scripting.Compilers
 
 		internal static string[] GetAdditionalReferences(WSASDK wsaSDK)
 		{
+			string[] result;
 			if (wsaSDK != WSASDK.UWP)
 			{
-				return null;
+				result = null;
 			}
-			if (MicrosoftCSharpCompiler._uwpReferences != null)
+			else if (MicrosoftCSharpCompiler._uwpReferences != null)
 			{
-				return MicrosoftCSharpCompiler._uwpReferences;
+				result = MicrosoftCSharpCompiler._uwpReferences;
 			}
-			MicrosoftCSharpCompiler._uwpReferences = UWPReferences.GetReferences();
-			return MicrosoftCSharpCompiler._uwpReferences;
+			else
+			{
+				MicrosoftCSharpCompiler._uwpReferences = UWPReferences.GetReferences();
+				result = MicrosoftCSharpCompiler._uwpReferences;
+			}
+			return result;
 		}
 
-		protected static string GetPlatformAssemblyPath(WSASDK wsaSDK)
+		internal static string GetPlatformAssemblyPath(WSASDK wsaSDK)
 		{
 			string windowsKitDirectory = MicrosoftCSharpCompiler.GetWindowsKitDirectory(wsaSDK);
+			string result;
 			if (wsaSDK == WSASDK.UWP)
 			{
-				return Path.Combine(windowsKitDirectory, "UnionMetadata\\Facade\\Windows.winmd");
+				result = Path.Combine(windowsKitDirectory, "UnionMetadata\\Facade\\Windows.winmd");
 			}
-			return Path.Combine(windowsKitDirectory, "References\\CommonConfiguration\\Neutral\\Windows.winmd");
+			else
+			{
+				result = Path.Combine(windowsKitDirectory, "References\\CommonConfiguration\\Neutral\\Windows.winmd");
+			}
+			return result;
 		}
 	}
 }

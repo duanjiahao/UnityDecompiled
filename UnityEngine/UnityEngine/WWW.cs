@@ -97,7 +97,6 @@ namespace UnityEngine
 
 		private extern string responseHeadersString
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -134,21 +133,18 @@ namespace UnityEngine
 
 		public extern byte[] bytes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int size
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern string error
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -179,35 +175,30 @@ namespace UnityEngine
 
 		public extern MovieTexture movie
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isDone
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float progress
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float uploadProgress
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int bytesDownloaded
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -223,24 +214,20 @@ namespace UnityEngine
 
 		public extern string url
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern AssetBundle assetBundle
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ThreadPriority threadPriority
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -290,15 +277,13 @@ namespace UnityEngine
 			this.DestroyWWW(false);
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void DestroyWWW(bool cancel);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitWWW(string url, byte[] postData, string[] iHeaders);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool enforceWebSecurityRestrictions();
 
@@ -311,19 +296,24 @@ namespace UnityEngine
 
 		public static string EscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
 		{
+			string result;
 			if (s == null)
 			{
-				return null;
+				result = null;
 			}
-			if (s == string.Empty)
+			else if (s == "")
 			{
-				return string.Empty;
+				result = "";
 			}
-			if (e == null)
+			else if (e == null)
 			{
-				return null;
+				result = null;
 			}
-			return WWWTranscoder.URLEncode(s, e);
+			else
+			{
+				result = WWWTranscoder.URLEncode(s, e);
+			}
+			return result;
 		}
 
 		[ExcludeFromDocs]
@@ -335,20 +325,26 @@ namespace UnityEngine
 
 		public static string UnEscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
 		{
+			string result;
 			if (s == null)
 			{
-				return null;
+				result = null;
 			}
-			if (s.IndexOf('%') == -1 && s.IndexOf('+') == -1)
+			else if (s.IndexOf('%') == -1 && s.IndexOf('+') == -1)
 			{
-				return s;
+				result = s;
 			}
-			return WWWTranscoder.URLDecode(s, e);
+			else
+			{
+				result = WWWTranscoder.URLDecode(s, e);
+			}
+			return result;
 		}
 
 		private Encoding GetTextEncoder()
 		{
 			string text = null;
+			Encoding result;
 			if (this.responseHeaders.TryGetValue("CONTENT-TYPE", out text))
 			{
 				int num = text.IndexOf("charset", StringComparison.OrdinalIgnoreCase);
@@ -369,7 +365,8 @@ namespace UnityEngine
 						}
 						try
 						{
-							return Encoding.GetEncoding(text2);
+							result = Encoding.GetEncoding(text2);
+							return result;
 						}
 						catch (Exception)
 						{
@@ -378,10 +375,10 @@ namespace UnityEngine
 					}
 				}
 			}
-			return Encoding.UTF8;
+			result = Encoding.UTF8;
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Texture2D GetTexture(bool markNonReadable);
 
@@ -415,15 +412,13 @@ namespace UnityEngine
 			return this.GetAudioClipInternal(threeD, false, true, audioType);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AudioClip GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void LoadImageIntoTexture(Texture2D tex);
 
-		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true), WrapperlessIcall]
+		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetURL(string url);
 
@@ -438,7 +433,6 @@ namespace UnityEngine
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_WWW(WWW self, string url, ref Hash128 hash, uint crc);
 
@@ -493,18 +487,23 @@ namespace UnityEngine
 
 		private static string[] FlattenedHeadersFrom(Dictionary<string, string> headers)
 		{
+			string[] result;
 			if (headers == null)
 			{
-				return null;
+				result = null;
 			}
-			string[] array = new string[headers.Count * 2];
-			int num = 0;
-			foreach (KeyValuePair<string, string> current in headers)
+			else
 			{
-				array[num++] = current.Key.ToString();
-				array[num++] = current.Value.ToString();
+				string[] array = new string[headers.Count * 2];
+				int num = 0;
+				foreach (KeyValuePair<string, string> current in headers)
+				{
+					array[num++] = current.Key.ToString();
+					array[num++] = current.Value.ToString();
+				}
+				result = array;
 			}
-			return array;
+			return result;
 		}
 
 		internal static Dictionary<string, string> ParseHTTPHeaderString(string input)
@@ -533,8 +532,13 @@ namespace UnityEngine
 					if (num2 != -1)
 					{
 						string key = text.Substring(0, num2).ToUpper();
-						string value = text.Substring(num2 + 2);
-						dictionary[key] = value;
+						string text2 = text.Substring(num2 + 2);
+						string str;
+						if (dictionary.TryGetValue(key, out str))
+						{
+							text2 = str + "," + text2;
+						}
+						dictionary[key] = text2;
 					}
 				}
 			}

@@ -82,7 +82,7 @@ namespace UnityEngine
 
 		internal static GUIStyle ms_Error;
 
-		private Dictionary<string, GUIStyle> m_Styles;
+		private Dictionary<string, GUIStyle> m_Styles = null;
 
 		internal static GUISkin.SkinChangedDelegate m_SkinChanged;
 
@@ -563,39 +563,52 @@ namespace UnityEngine
 		public GUIStyle GetStyle(string styleName)
 		{
 			GUIStyle gUIStyle = this.FindStyle(styleName);
+			GUIStyle result;
 			if (gUIStyle != null)
 			{
-				return gUIStyle;
+				result = gUIStyle;
 			}
-			Debug.LogWarning(string.Concat(new object[]
+			else
 			{
-				"Unable to find style '",
-				styleName,
-				"' in skin '",
-				base.name,
-				"' ",
-				Event.current.type
-			}));
-			return GUISkin.error;
+				Debug.LogWarning(string.Concat(new object[]
+				{
+					"Unable to find style '",
+					styleName,
+					"' in skin '",
+					base.name,
+					"' ",
+					Event.current.type
+				}));
+				result = GUISkin.error;
+			}
+			return result;
 		}
 
 		public GUIStyle FindStyle(string styleName)
 		{
+			GUIStyle result;
 			if (this == null)
 			{
 				Debug.LogError("GUISkin is NULL");
-				return null;
+				result = null;
 			}
-			if (this.m_Styles == null)
+			else
 			{
-				this.BuildStyleCache();
+				if (this.m_Styles == null)
+				{
+					this.BuildStyleCache();
+				}
+				GUIStyle gUIStyle;
+				if (this.m_Styles.TryGetValue(styleName, out gUIStyle))
+				{
+					result = gUIStyle;
+				}
+				else
+				{
+					result = null;
+				}
 			}
-			GUIStyle result;
-			if (this.m_Styles.TryGetValue(styleName, out result))
-			{
-				return result;
-			}
-			return null;
+			return result;
 		}
 
 		internal void MakeCurrent()

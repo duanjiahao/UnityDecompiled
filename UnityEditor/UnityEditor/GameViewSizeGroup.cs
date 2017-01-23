@@ -15,25 +15,33 @@ namespace UnityEditor
 
 		public GameViewSize GetGameViewSize(int index)
 		{
+			GameViewSize result;
 			if (index < this.m_Builtin.Count)
 			{
-				return this.m_Builtin[index];
+				result = this.m_Builtin[index];
 			}
-			index -= this.m_Builtin.Count;
-			if (index >= 0 && index < this.m_Custom.Count)
+			else
 			{
-				return this.m_Custom[index];
+				index -= this.m_Builtin.Count;
+				if (index >= 0 && index < this.m_Custom.Count)
+				{
+					result = this.m_Custom[index];
+				}
+				else
+				{
+					Debug.LogError(string.Concat(new object[]
+					{
+						"Invalid index ",
+						index + this.m_Builtin.Count,
+						" ",
+						this.m_Builtin.Count,
+						" ",
+						this.m_Custom.Count
+					}));
+					result = new GameViewSize(GameViewSizeType.AspectRatio, 0, 0, "");
+				}
 			}
-			Debug.LogError(string.Concat(new object[]
-			{
-				"Invalid index ",
-				index + this.m_Builtin.Count,
-				" ",
-				this.m_Builtin.Count,
-				" ",
-				this.m_Custom.Count
-			}));
-			return new GameViewSize(GameViewSizeType.AspectRatio, 0, 0, string.Empty);
+			return result;
 		}
 
 		public string[] GetDisplayTexts()
@@ -128,11 +136,16 @@ namespace UnityEditor
 		public int IndexOf(GameViewSize view)
 		{
 			int num = this.m_Builtin.IndexOf(view);
+			int result;
 			if (num >= 0)
 			{
-				return num;
+				result = num;
 			}
-			return this.m_Custom.IndexOf(view);
+			else
+			{
+				result = this.m_Custom.IndexOf(view);
+			}
+			return result;
 		}
 	}
 }

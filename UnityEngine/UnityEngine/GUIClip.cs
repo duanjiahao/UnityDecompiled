@@ -7,7 +7,6 @@ namespace UnityEngine
 	{
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -68,11 +67,9 @@ namespace UnityEngine
 			GUIClip.INTERNAL_CALL_Push(ref screenRect, ref scrollOffset, ref renderOffset, resetOffset);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Push(ref Rect screenRect, ref Vector2 scrollOffset, ref Vector2 renderOffset, bool resetOffset);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Pop();
 
@@ -83,7 +80,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetTopRect(out Rect value);
 
@@ -92,11 +88,9 @@ namespace UnityEngine
 			GUIClip.INTERNAL_CALL_Unclip_Vector2(ref pos);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Unclip_Vector2(ref Vector2 pos);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_topmostRect(out Rect value);
 
@@ -105,7 +99,6 @@ namespace UnityEngine
 			GUIClip.INTERNAL_CALL_Unclip_Rect(ref rect);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Unclip_Rect(ref Rect rect);
 
@@ -114,7 +107,6 @@ namespace UnityEngine
 			GUIClip.INTERNAL_CALL_Clip_Vector2(ref absolutePos);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Clip_Vector2(ref Vector2 absolutePos);
 
@@ -123,11 +115,9 @@ namespace UnityEngine
 			GUIClip.INTERNAL_CALL_Internal_Clip_Rect(ref absoluteRect);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_Clip_Rect(ref Rect absoluteRect);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Reapply();
 
@@ -138,7 +128,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetMatrix(out Matrix4x4 value);
 
@@ -147,15 +136,12 @@ namespace UnityEngine
 			GUIClip.INTERNAL_CALL_SetMatrix(ref m);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetMatrix(ref Matrix4x4 m);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_visibleRect(out Rect value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetAbsoluteMousePosition(out Vector2 output);
 	}

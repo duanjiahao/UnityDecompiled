@@ -94,15 +94,20 @@ namespace UnityEditor.Connect
 		{
 			get
 			{
+				COPPACompliance result;
 				if (this.m_COPPA == 1)
 				{
-					return COPPACompliance.COPPACompliant;
+					result = COPPACompliance.COPPACompliant;
 				}
-				if (this.m_COPPA == 2)
+				else if (this.m_COPPA == 2)
 				{
-					return COPPACompliance.COPPANotCompliant;
+					result = COPPACompliance.COPPANotCompliant;
 				}
-				return COPPACompliance.COPPAUndefined;
+				else
+				{
+					result = COPPACompliance.COPPAUndefined;
+				}
+				return result;
 			}
 		}
 

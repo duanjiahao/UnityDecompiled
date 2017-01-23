@@ -21,5 +21,7 @@ namespace UnityEngine
 		public Color32 color;
 
 		public Material mat;
+
+		public int pass;
 	}
 }

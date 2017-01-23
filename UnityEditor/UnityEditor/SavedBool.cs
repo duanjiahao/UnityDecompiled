@@ -20,12 +20,11 @@ namespace UnityEditor
 			set
 			{
 				this.Load();
-				if (this.m_Value == value)
+				if (this.m_Value != value)
 				{
-					return;
+					this.m_Value = value;
+					EditorPrefs.SetBool(this.m_Name, value);
 				}
-				this.m_Value = value;
-				EditorPrefs.SetBool(this.m_Name, value);
 			}
 		}
 
@@ -37,12 +36,11 @@ namespace UnityEditor
 
 		private void Load()
 		{
-			if (this.m_Loaded)
+			if (!this.m_Loaded)
 			{
-				return;
+				this.m_Loaded = true;
+				this.m_Value = EditorPrefs.GetBool(this.m_Name, this.value);
 			}
-			this.m_Loaded = true;
-			this.m_Value = EditorPrefs.GetBool(this.m_Name, this.value);
 		}
 
 		public static implicit operator bool(SavedBool s)

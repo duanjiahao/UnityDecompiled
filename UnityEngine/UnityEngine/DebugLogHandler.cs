@@ -5,11 +5,11 @@ namespace UnityEngine
 {
 	internal sealed class DebugLogHandler : ILogHandler
 	{
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_Log(LogType level, string msg, [Writable] Object obj);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_LogException(Exception exception, [Writable] Object obj);
 

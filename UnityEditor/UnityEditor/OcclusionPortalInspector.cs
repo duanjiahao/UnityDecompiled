@@ -27,7 +27,7 @@ namespace UnityEditor
 
 		private void OnSceneGUI()
 		{
-			OcclusionPortal occlusionPortal = this.target as OcclusionPortal;
+			OcclusionPortal occlusionPortal = base.target as OcclusionPortal;
 			Vector3 vector3Value = this.m_Center.vector3Value;
 			Vector3 vector3Value2 = this.m_Size.vector3Value;
 			Color s_ColliderHandleColor = Handles.s_ColliderHandleColor;

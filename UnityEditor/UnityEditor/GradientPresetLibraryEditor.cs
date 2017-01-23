@@ -10,7 +10,7 @@ namespace UnityEditor
 
 		public void OnEnable()
 		{
-			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<GradientPresetLibrary>(this.target, "Gradient Preset Library", new Action<string>(this.OnEditButtonClicked));
+			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<GradientPresetLibrary>(base.target, "Gradient Preset Library", new Action<string>(this.OnEditButtonClicked));
 			this.m_GenericPresetLibraryInspector.presetSize = new Vector2(72f, 16f);
 			this.m_GenericPresetLibraryInspector.lineSpacing = 4f;
 		}

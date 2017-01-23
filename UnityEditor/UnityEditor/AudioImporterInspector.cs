@@ -113,9 +113,9 @@ namespace UnityEditor
 		[DebuggerHidden]
 		private IEnumerable<AudioImporter> GetAllAudioImporterTargets()
 		{
-			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator7 <GetAllAudioImporterTargets>c__Iterator = new AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator7();
-			<GetAllAudioImporterTargets>c__Iterator.<>f__this = this;
-			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator7 expr_0E = <GetAllAudioImporterTargets>c__Iterator;
+			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator0 <GetAllAudioImporterTargets>c__Iterator = new AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator0();
+			<GetAllAudioImporterTargets>c__Iterator.$this = this;
+			AudioImporterInspector.<GetAllAudioImporterTargets>c__Iterator0 expr_0E = <GetAllAudioImporterTargets>c__Iterator;
 			expr_0E.$PC = -2;
 			return expr_0E;
 		}
@@ -248,6 +248,7 @@ namespace UnityEditor
 		public bool CurrentPlatformHasAutoTranslatedCompression()
 		{
 			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
+			bool result;
 			foreach (AudioImporter current in this.GetAllAudioImporterTargets())
 			{
 				AudioCompressionFormat compressionFormat = current.defaultSampleSettings.compressionFormat;
@@ -256,37 +257,45 @@ namespace UnityEditor
 					AudioCompressionFormat compressionFormat2 = current.Internal_GetOverrideSampleSettings(buildTargetGroup).compressionFormat;
 					if (compressionFormat != compressionFormat2)
 					{
-						return true;
+						result = true;
+						return result;
 					}
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public bool IsHardwareSound(AudioCompressionFormat format)
 		{
+			bool result;
 			switch (format)
 			{
 			case AudioCompressionFormat.VAG:
 			case AudioCompressionFormat.HEVAG:
 			case AudioCompressionFormat.XMA:
 			case AudioCompressionFormat.GCADPCM:
-				return true;
+				result = true;
+				return result;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public bool CurrentSelectionContainsHardwareSounds()
 		{
 			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
+			bool result;
 			foreach (AudioImporter current in this.GetAllAudioImporterTargets())
 			{
 				if (this.IsHardwareSound(current.Internal_GetOverrideSampleSettings(buildTargetGroup).compressionFormat))
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public void OnEnable()
@@ -419,65 +428,83 @@ namespace UnityEditor
 					flag2 |= flag3;
 				}
 			}
+			AudioImporterInspector.OverrideStatus result;
 			if (!flag2)
 			{
-				return AudioImporterInspector.OverrideStatus.NoOverrides;
+				result = AudioImporterInspector.OverrideStatus.NoOverrides;
 			}
-			if (flag)
+			else if (flag)
 			{
-				return AudioImporterInspector.OverrideStatus.MixedOverrides;
+				result = AudioImporterInspector.OverrideStatus.MixedOverrides;
 			}
-			return AudioImporterInspector.OverrideStatus.AllOverrides;
+			else
+			{
+				result = AudioImporterInspector.OverrideStatus.AllOverrides;
+			}
+			return result;
 		}
 
 		private AudioCompressionFormat[] GetFormatsForPlatform(BuildTargetGroup platform)
 		{
 			List<AudioCompressionFormat> list = new List<AudioCompressionFormat>();
+			AudioCompressionFormat[] result;
 			if (platform == BuildTargetGroup.WebGL)
 			{
 				list.Add(AudioCompressionFormat.AAC);
-				return list.ToArray();
+				result = list.ToArray();
 			}
-			list.Add(AudioCompressionFormat.PCM);
-			if (platform != BuildTargetGroup.PS3 && platform != BuildTargetGroup.PSM && platform != BuildTargetGroup.PSP2)
+			else
 			{
-				list.Add(AudioCompressionFormat.Vorbis);
+				list.Add(AudioCompressionFormat.PCM);
+				if (platform != BuildTargetGroup.PSM && platform != BuildTargetGroup.PSP2)
+				{
+					list.Add(AudioCompressionFormat.Vorbis);
+				}
+				list.Add(AudioCompressionFormat.ADPCM);
+				if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.WSA && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.XboxOne && platform != BuildTargetGroup.Unknown)
+				{
+					list.Add(AudioCompressionFormat.MP3);
+				}
+				if (platform == BuildTargetGroup.PSM)
+				{
+					list.Add(AudioCompressionFormat.VAG);
+				}
+				if (platform == BuildTargetGroup.PSP2)
+				{
+					list.Add(AudioCompressionFormat.HEVAG);
+					list.Add(AudioCompressionFormat.ATRAC9);
+				}
+				if (platform == BuildTargetGroup.PS4)
+				{
+					list.Add(AudioCompressionFormat.ATRAC9);
+				}
+				if (platform == BuildTargetGroup.WiiU)
+				{
+					list.Add(AudioCompressionFormat.GCADPCM);
+				}
+				if (platform == BuildTargetGroup.XboxOne)
+				{
+					list.Add(AudioCompressionFormat.XMA);
+				}
+				result = list.ToArray();
 			}
-			list.Add(AudioCompressionFormat.ADPCM);
-			if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.Metro && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.XboxOne && platform != BuildTargetGroup.XBOX360 && platform != BuildTargetGroup.Unknown)
-			{
-				list.Add(AudioCompressionFormat.MP3);
-			}
-			if (platform == BuildTargetGroup.PSM)
-			{
-				list.Add(AudioCompressionFormat.VAG);
-			}
-			if (platform == BuildTargetGroup.PSP2)
-			{
-				list.Add(AudioCompressionFormat.HEVAG);
-			}
-			if (platform == BuildTargetGroup.WiiU)
-			{
-				list.Add(AudioCompressionFormat.GCADPCM);
-			}
-			if (platform == BuildTargetGroup.XboxOne)
-			{
-				list.Add(AudioCompressionFormat.XMA);
-			}
-			return list.ToArray();
+			return result;
 		}
 
 		private bool CompressionFormatHasQuality(AudioCompressionFormat format)
 		{
+			bool result;
 			switch (format)
 			{
 			case AudioCompressionFormat.Vorbis:
 			case AudioCompressionFormat.MP3:
 			case AudioCompressionFormat.XMA:
 			case AudioCompressionFormat.AAC:
-				return true;
+				result = true;
+				return result;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private void OnSampleSettingGUI(BuildTargetGroup platform, AudioImporterInspector.MultiValueStatus status, bool selectionContainsTrackerFile, ref AudioImporterInspector.SampleSettingProperties properties, bool disablePreloadAudioDataOption)
@@ -523,23 +550,26 @@ namespace UnityEditor
 						properties.qualityChanged = true;
 					}
 				}
-				EditorGUI.showMixedValue = (status.multiSampleRateSetting && !properties.sampleRateSettingChanged);
-				EditorGUI.BeginChangeCheck();
-				AudioSampleRateSetting sampleRateSetting = (AudioSampleRateSetting)EditorGUILayout.EnumPopup("Sample Rate Setting", properties.settings.sampleRateSetting, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
+				if (platform != BuildTargetGroup.WebGL)
 				{
-					properties.settings.sampleRateSetting = sampleRateSetting;
-					properties.sampleRateSettingChanged = true;
-				}
-				if (properties.settings.sampleRateSetting == AudioSampleRateSetting.OverrideSampleRate)
-				{
-					EditorGUI.showMixedValue = (status.multiSampleRateOverride && !properties.sampleRateOverrideChanged);
+					EditorGUI.showMixedValue = (status.multiSampleRateSetting && !properties.sampleRateSettingChanged);
 					EditorGUI.BeginChangeCheck();
-					int sampleRateOverride = EditorGUILayout.IntPopup("Sample Rate", (int)properties.settings.sampleRateOverride, AudioImporterInspector.Styles.kSampleRateStrings, AudioImporterInspector.Styles.kSampleRateValues, new GUILayoutOption[0]);
+					AudioSampleRateSetting sampleRateSetting = (AudioSampleRateSetting)EditorGUILayout.EnumPopup("Sample Rate Setting", properties.settings.sampleRateSetting, new GUILayoutOption[0]);
 					if (EditorGUI.EndChangeCheck())
 					{
-						properties.settings.sampleRateOverride = (uint)sampleRateOverride;
-						properties.sampleRateOverrideChanged = true;
+						properties.settings.sampleRateSetting = sampleRateSetting;
+						properties.sampleRateSettingChanged = true;
+					}
+					if (properties.settings.sampleRateSetting == AudioSampleRateSetting.OverrideSampleRate)
+					{
+						EditorGUI.showMixedValue = (status.multiSampleRateOverride && !properties.sampleRateOverrideChanged);
+						EditorGUI.BeginChangeCheck();
+						int sampleRateOverride = EditorGUILayout.IntPopup("Sample Rate", (int)properties.settings.sampleRateOverride, AudioImporterInspector.Styles.kSampleRateStrings, AudioImporterInspector.Styles.kSampleRateValues, new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							properties.settings.sampleRateOverride = (uint)sampleRateOverride;
+							properties.sampleRateOverrideChanged = true;
+						}
 					}
 				}
 				EditorGUI.showMixedValue = false;
@@ -597,23 +627,29 @@ namespace UnityEditor
 
 		internal override bool HasModified()
 		{
+			bool result;
 			if (base.HasModified())
 			{
-				return true;
+				result = true;
 			}
-			if (this.m_DefaultSampleSettings.HasModified())
+			else if (this.m_DefaultSampleSettings.HasModified())
 			{
-				return true;
+				result = true;
 			}
-			Dictionary<BuildTargetGroup, AudioImporterInspector.SampleSettingProperties>.ValueCollection values = this.m_SampleSettingOverrides.Values;
-			foreach (AudioImporterInspector.SampleSettingProperties current in values)
+			else
 			{
-				if (current.HasModified())
+				Dictionary<BuildTargetGroup, AudioImporterInspector.SampleSettingProperties>.ValueCollection values = this.m_SampleSettingOverrides.Values;
+				foreach (AudioImporterInspector.SampleSettingProperties current in values)
 				{
-					return true;
+					if (current.HasModified())
+					{
+						result = true;
+						return result;
+					}
 				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
 
 		internal override void Apply()

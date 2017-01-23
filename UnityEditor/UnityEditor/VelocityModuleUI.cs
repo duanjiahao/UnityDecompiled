@@ -39,18 +39,17 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_X != null)
+			if (this.m_X == null)
 			{
-				return;
+				if (VelocityModuleUI.s_Texts == null)
+				{
+					VelocityModuleUI.s_Texts = new VelocityModuleUI.Texts();
+				}
+				this.m_X = new SerializedMinMaxCurve(this, VelocityModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange);
+				this.m_Y = new SerializedMinMaxCurve(this, VelocityModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange);
+				this.m_Z = new SerializedMinMaxCurve(this, VelocityModuleUI.s_Texts.z, "z", ModuleUI.kUseSignedRange);
+				this.m_InWorldSpace = base.GetProperty("inWorldSpace");
 			}
-			if (VelocityModuleUI.s_Texts == null)
-			{
-				VelocityModuleUI.s_Texts = new VelocityModuleUI.Texts();
-			}
-			this.m_X = new SerializedMinMaxCurve(this, VelocityModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange);
-			this.m_Y = new SerializedMinMaxCurve(this, VelocityModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange);
-			this.m_Z = new SerializedMinMaxCurve(this, VelocityModuleUI.s_Texts.z, "z", ModuleUI.kUseSignedRange);
-			this.m_InWorldSpace = base.GetProperty("inWorldSpace");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -59,8 +58,8 @@ namespace UnityEditor
 			{
 				VelocityModuleUI.s_Texts = new VelocityModuleUI.Texts();
 			}
-			base.GUITripleMinMaxCurve(GUIContent.none, VelocityModuleUI.s_Texts.x, this.m_X, VelocityModuleUI.s_Texts.y, this.m_Y, VelocityModuleUI.s_Texts.z, this.m_Z, null);
-			ModuleUI.GUIBoolAsPopup(VelocityModuleUI.s_Texts.space, this.m_InWorldSpace, VelocityModuleUI.s_Texts.spaces);
+			base.GUITripleMinMaxCurve(GUIContent.none, VelocityModuleUI.s_Texts.x, this.m_X, VelocityModuleUI.s_Texts.y, this.m_Y, VelocityModuleUI.s_Texts.z, this.m_Z, null, new GUILayoutOption[0]);
+			ModuleUI.GUIBoolAsPopup(VelocityModuleUI.s_Texts.space, this.m_InWorldSpace, VelocityModuleUI.s_Texts.spaces, new GUILayoutOption[0]);
 		}
 
 		public override void UpdateCullingSupportedString(ref string text)

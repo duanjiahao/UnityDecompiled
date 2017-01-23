@@ -6,18 +6,9 @@ namespace UnityEditorInternal
 	[Serializable]
 	internal class AnimationWindowPolicy
 	{
-		[Flags]
-		public enum Views
-		{
-			None = 0,
-			DopeSheet = 1,
-			CurveEditor = 2,
-			All = 3
-		}
-
 		public delegate bool SynchronizeGeometryDelegate(ref int[] sizes, ref int[] minSizes);
 
-		public delegate bool SynchronizeFrameRateDelegate(ref float frameRate, ref bool timeInFrame);
+		public delegate bool SynchronizeFrameRateDelegate(ref float frameRate);
 
 		public delegate bool SynchronizeCurrentTimeDelegate(ref float time);
 
@@ -30,16 +21,7 @@ namespace UnityEditorInternal
 		public delegate void OnZoomableAreaChangeDelegate(float horizontalScale, float horizontalTranslation);
 
 		[SerializeField]
-		public bool allowRecording = true;
-
-		[SerializeField]
-		public bool allowAddEvent = true;
-
-		[SerializeField]
 		public bool triggerFramingOnSelection = true;
-
-		[SerializeField]
-		public AnimationWindowPolicy.Views views = AnimationWindowPolicy.Views.All;
 
 		[NonSerialized]
 		public bool unitialized = true;
@@ -64,7 +46,7 @@ namespace UnityEditorInternal
 			{
 				return false;
 			}));
-			this.SynchronizeFrameRate = (AnimationWindowPolicy.SynchronizeFrameRateDelegate)Delegate.Combine(this.SynchronizeFrameRate, new AnimationWindowPolicy.SynchronizeFrameRateDelegate(delegate(ref float frameRate, ref bool timeInFrame)
+			this.SynchronizeFrameRate = (AnimationWindowPolicy.SynchronizeFrameRateDelegate)Delegate.Combine(this.SynchronizeFrameRate, new AnimationWindowPolicy.SynchronizeFrameRateDelegate(delegate(ref float frameRate)
 			{
 				return false;
 			}));

@@ -59,14 +59,34 @@ namespace UnityEditor
 			}
 		}
 
+		private static BuildTarget GetMonoExecTarget(BuildTarget buildTarget)
+		{
+			BuildTarget result = buildTarget;
+			switch (buildTarget)
+			{
+			case BuildTarget.PSP2:
+			case BuildTarget.PS4:
+			case BuildTarget.XboxOne:
+			case BuildTarget.WiiU:
+				result = BuildTarget.StandaloneWindows64;
+				break;
+			}
+			return result;
+		}
+
 		public static string GetMonoExec(BuildTarget buildTarget)
 		{
 			string monoBinDirectory = BuildPipeline.GetMonoBinDirectory(buildTarget);
-			if (Application.platform == RuntimePlatform.OSXEditor)
+			string result;
+			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
-				return Path.Combine(monoBinDirectory, "mono");
+				result = Path.Combine(monoBinDirectory, "mono.exe");
 			}
-			return Path.Combine(monoBinDirectory, "mono.exe");
+			else
+			{
+				result = Path.Combine(monoBinDirectory, "mono");
+			}
+			return result;
 		}
 
 		public static string GetMonoPath(BuildTarget buildTarget)
@@ -77,10 +97,11 @@ namespace UnityEditor
 
 		public static Process PrepareMonoProcess(BuildTarget target, string workDir)
 		{
+			BuildTarget monoExecTarget = MonoProcessUtility.GetMonoExecTarget(target);
 			Process process = new Process();
-			process.StartInfo.FileName = MonoProcessUtility.GetMonoExec(target);
+			process.StartInfo.FileName = MonoProcessUtility.GetMonoExec(monoExecTarget);
 			process.StartInfo.EnvironmentVariables["_WAPI_PROCESS_HANDLE_OFFSET"] = "5";
-			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoProcessUtility.GetMonoPath(target);
+			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoProcessUtility.GetMonoPath(monoExecTarget);
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;

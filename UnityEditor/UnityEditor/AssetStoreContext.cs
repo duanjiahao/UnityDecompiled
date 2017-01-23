@@ -189,19 +189,15 @@ namespace UnityEditor
 			AssetStoreContext.GetInstance();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SessionSetString(string key, string value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SessionGetString(string key);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SessionRemoveString(string key);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SessionHasString(string key);
 
@@ -217,13 +213,18 @@ namespace UnityEditor
 
 		public string GetInitialOpenURL()
 		{
+			string result;
 			if (this.initialOpenURL != null)
 			{
-				string result = this.initialOpenURL;
+				string text = this.initialOpenURL;
 				this.initialOpenURL = null;
-				return result;
+				result = text;
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		public string GetAuthToken()
@@ -299,28 +300,34 @@ namespace UnityEditor
 		public static bool OpenPackageInternal(string id)
 		{
 			Match match = AssetStoreContext.s_GeneratedIDRegExp.Match(id);
+			bool result;
 			if (match.Success && File.Exists(match.Groups[1].Value))
 			{
 				AssetDatabase.ImportPackage(match.Groups[1].Value, true);
-				return true;
+				result = true;
 			}
-			PackageInfo[] packageList = PackageInfo.GetPackageList();
-			for (int i = 0; i < packageList.Length; i++)
+			else
 			{
-				PackageInfo packageInfo = packageList[i];
-				if (packageInfo.jsonInfo != string.Empty)
+				PackageInfo[] packageList = PackageInfo.GetPackageList();
+				for (int i = 0; i < packageList.Length; i++)
 				{
-					JSONValue jSONValue = JSONParser.SimpleParse(packageInfo.jsonInfo);
-					string text = (!jSONValue.Get("id").IsNull()) ? jSONValue["id"].AsString(true) : null;
-					if (text != null && text == id && File.Exists(packageInfo.packagePath))
+					PackageInfo packageInfo = packageList[i];
+					if (packageInfo.jsonInfo != "")
 					{
-						AssetDatabase.ImportPackage(packageInfo.packagePath, true);
-						return true;
+						JSONValue jSONValue = JSONParser.SimpleParse(packageInfo.jsonInfo);
+						string text = (!jSONValue.Get("id").IsNull()) ? jSONValue["id"].AsString(true) : null;
+						if (text != null && text == id && File.Exists(packageInfo.packagePath))
+						{
+							AssetDatabase.ImportPackage(packageInfo.packagePath, true);
+							result = true;
+							return result;
+						}
 					}
 				}
+				Debug.LogError("Unknown package ID " + id);
+				result = false;
 			}
-			Debug.LogError("Unknown package ID " + id);
-			return false;
+			return result;
 		}
 
 		public void OpenBrowser(string url)
@@ -340,17 +347,19 @@ namespace UnityEditor
 			if (jSONValue.Get("in_progress").AsBool(true))
 			{
 				Debug.Log("Will not download " + package_name + ". Download is already in progress.");
-				return;
 			}
-			string a = jSONValue.Get("download.url").AsString(true);
-			string a2 = jSONValue.Get("download.key").AsString(true);
-			bool resumeOK = a == url && a2 == key;
-			JSONValue value = default(JSONValue);
-			value["url"] = url;
-			value["key"] = key;
-			JSONValue jSONValue2 = default(JSONValue);
-			jSONValue2["download"] = value;
-			AssetStoreUtils.Download(package_id, url, destination, key, jSONValue2.ToString(), resumeOK, doneCallback);
+			else
+			{
+				string a = jSONValue.Get("download.url").AsString(true);
+				string a2 = jSONValue.Get("download.key").AsString(true);
+				bool resumeOK = a == url && a2 == key;
+				JSONValue value = default(JSONValue);
+				value["url"] = url;
+				value["key"] = key;
+				JSONValue jSONValue2 = default(JSONValue);
+				jSONValue2["download"] = value;
+				AssetStoreUtils.Download(package_id, url, destination, key, jSONValue2.ToString(), resumeOK, doneCallback);
+			}
 		}
 
 		public static string[] PackageStorePath(string publisher_name, string category_name, string package_name, string package_id, string url)
@@ -363,15 +372,15 @@ namespace UnityEditor
 			};
 			for (int i = 0; i < 3; i++)
 			{
-				array[i] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(array[i], string.Empty);
+				array[i] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(array[i], "");
 			}
-			if (array[2] == string.Empty)
+			if (array[2] == "")
 			{
-				array[2] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(package_id, string.Empty);
+				array[2] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(package_id, "");
 			}
-			if (array[2] == string.Empty)
+			if (array[2] == "")
 			{
-				array[2] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(url, string.Empty);
+				array[2] = AssetStoreContext.s_InvalidPathCharsRegExp.Replace(url, "");
 			}
 			return array;
 		}
@@ -386,7 +395,7 @@ namespace UnityEditor
 			{
 				PackageInfo packageInfo = array[i];
 				AssetStoreContext.Package package = new AssetStoreContext.Package();
-				if (packageInfo.jsonInfo == string.Empty)
+				if (packageInfo.jsonInfo == "")
 				{
 					package.title = Path.GetFileNameWithoutExtension(packageInfo.packagePath);
 					package.id = packageInfo.packagePath;
@@ -404,37 +413,37 @@ namespace UnityEditor
 						};
 						package.version = "3.5.0.0";
 					}
-					goto IL_144;
+					goto IL_14F;
 				}
 				JSONValue json = JSONParser.SimpleParse(packageInfo.jsonInfo);
 				if (!json.IsNull())
 				{
 					package.Initialize(json);
-					if (package.id != null)
+					if (package.id == null)
 					{
-						goto IL_144;
+						JSONValue jSONValue = json.Get("link.id");
+						if (!jSONValue.IsNull())
+						{
+							package.id = jSONValue.AsString();
+						}
+						else
+						{
+							package.id = packageInfo.packagePath;
+						}
 					}
-					JSONValue jSONValue = json.Get("link.id");
-					if (!jSONValue.IsNull())
-					{
-						package.id = jSONValue.AsString();
-						goto IL_144;
-					}
-					package.id = packageInfo.packagePath;
-					goto IL_144;
+					goto IL_14F;
 				}
-				IL_203:
+				IL_211:
 				i++;
 				continue;
-				IL_144:
+				IL_14F:
 				package.local_icon = packageInfo.iconURL;
 				package.local_path = packageInfo.packagePath;
 				if (!dictionary.ContainsKey(package.id) || dictionary[package.id].version_id == null || dictionary[package.id].version_id == "-1" || (package.version_id != null && package.version_id != "-1" && int.Parse(dictionary[package.id].version_id) <= int.Parse(package.version_id)))
 				{
 					dictionary[package.id] = package;
-					goto IL_203;
 				}
-				goto IL_203;
+				goto IL_211;
 			}
 			AssetStoreContext.Package[] results = dictionary.Values.ToArray<AssetStoreContext.Package>();
 			return new AssetStoreContext.PackageList

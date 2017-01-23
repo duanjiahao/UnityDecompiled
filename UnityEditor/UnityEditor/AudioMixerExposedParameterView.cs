@@ -46,29 +46,28 @@ namespace UnityEditor
 				SerializedProperty elements = this.m_ControllerSerialized.FindProperty("m_ExposedParameters");
 				ReorderableList reorderableList = new ReorderableList(this.m_ControllerSerialized, elements, false, false, false, false);
 				reorderableList.onReorderCallback = new ReorderableList.ReorderCallbackDelegate(this.EndDragChild);
-				ReorderableList expr_57 = reorderableList;
-				expr_57.drawElementCallback = (ReorderableList.ElementCallbackDelegate)Delegate.Combine(expr_57.drawElementCallback, new ReorderableList.ElementCallbackDelegate(this.DrawElement));
+				ReorderableList expr_59 = reorderableList;
+				expr_59.drawElementCallback = (ReorderableList.ElementCallbackDelegate)Delegate.Combine(expr_59.drawElementCallback, new ReorderableList.ElementCallbackDelegate(this.DrawElement));
 				reorderableList.elementHeight = 16f;
 				reorderableList.headerHeight = 0f;
 				reorderableList.footerHeight = 0f;
 				reorderableList.showDefaultBackground = false;
 				this.m_ReorderableListWithRenameAndScrollView = new ReorderableListWithRenameAndScrollView(reorderableList, this.m_State);
-				ReorderableListWithRenameAndScrollView expr_B8 = this.m_ReorderableListWithRenameAndScrollView;
-				expr_B8.onNameChangedAtIndex = (Action<int, string>)Delegate.Combine(expr_B8.onNameChangedAtIndex, new Action<int, string>(this.NameChanged));
-				ReorderableListWithRenameAndScrollView expr_DF = this.m_ReorderableListWithRenameAndScrollView;
-				expr_DF.onDeleteItemAtIndex = (Action<int>)Delegate.Combine(expr_DF.onDeleteItemAtIndex, new Action<int>(this.Delete));
-				ReorderableListWithRenameAndScrollView expr_106 = this.m_ReorderableListWithRenameAndScrollView;
-				expr_106.onGetNameAtIndex = (Func<int, string>)Delegate.Combine(expr_106.onGetNameAtIndex, new Func<int, string>(this.GetNameOfElement));
+				ReorderableListWithRenameAndScrollView expr_BA = this.m_ReorderableListWithRenameAndScrollView;
+				expr_BA.onNameChangedAtIndex = (Action<int, string>)Delegate.Combine(expr_BA.onNameChangedAtIndex, new Action<int, string>(this.NameChanged));
+				ReorderableListWithRenameAndScrollView expr_E1 = this.m_ReorderableListWithRenameAndScrollView;
+				expr_E1.onDeleteItemAtIndex = (Action<int>)Delegate.Combine(expr_E1.onDeleteItemAtIndex, new Action<int>(this.Delete));
+				ReorderableListWithRenameAndScrollView expr_108 = this.m_ReorderableListWithRenameAndScrollView;
+				expr_108.onGetNameAtIndex = (Func<int, string>)Delegate.Combine(expr_108.onGetNameAtIndex, new Func<int, string>(this.GetNameOfElement));
 			}
 		}
 
 		public void OnGUI(Rect rect)
 		{
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
+				this.m_ReorderableListWithRenameAndScrollView.OnGUI(rect);
 			}
-			this.m_ReorderableListWithRenameAndScrollView.OnGUI(rect);
 		}
 
 		public void OnContextClick(int itemIndex)
@@ -93,13 +92,12 @@ namespace UnityEditor
 				this.OnContextClick(index);
 				current.Use();
 			}
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			using (new EditorGUI.DisabledScope(true))
-			{
-				this.m_ReorderableListWithRenameAndScrollView.elementStyleRightAligned.Draw(rect, this.GetInfoString(index), false, false, false, false);
+				using (new EditorGUI.DisabledScope(true))
+				{
+					this.m_ReorderableListWithRenameAndScrollView.elementStyleRightAligned.Draw(rect, this.GetInfoString(index), false, false, false, false);
+				}
 			}
 		}
 

@@ -92,15 +92,20 @@ namespace UnityEditor.AnimatedValues
 
 		private static T2 Clamp<T2>(T2 val, T2 min, T2 max) where T2 : IComparable<T2>
 		{
+			T2 result;
 			if (val.CompareTo(min) < 0)
 			{
-				return min;
+				result = min;
 			}
-			if (val.CompareTo(max) > 0)
+			else if (val.CompareTo(max) > 0)
 			{
-				return max;
+				result = max;
 			}
-			return val;
+			else
+			{
+				result = val;
+			}
+			return result;
 		}
 
 		protected void BeginAnimating(T newTarget, T newStart)
@@ -115,19 +120,18 @@ namespace UnityEditor.AnimatedValues
 
 		private void Update()
 		{
-			if (!this.m_Animating)
+			if (this.m_Animating)
 			{
-				return;
-			}
-			this.UpdateLerpPosition();
-			if (this.valueChanged != null)
-			{
-				this.valueChanged.Invoke();
-			}
-			if (this.lerpPosition >= 1f)
-			{
-				this.m_Animating = false;
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
+				this.UpdateLerpPosition();
+				if (this.valueChanged != null)
+				{
+					this.valueChanged.Invoke();
+				}
+				if (this.lerpPosition >= 1f)
+				{
+					this.m_Animating = false;
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
+				}
 			}
 		}
 

@@ -183,8 +183,8 @@ namespace UnityEngine
 		public AnimationEvent()
 		{
 			this.m_Time = 0f;
-			this.m_FunctionName = string.Empty;
-			this.m_StringParameter = string.Empty;
+			this.m_FunctionName = "";
+			this.m_StringParameter = "";
 			this.m_ObjectReferenceParameter = null;
 			this.m_FloatParameter = 0f;
 			this.m_IntParameter = 0;

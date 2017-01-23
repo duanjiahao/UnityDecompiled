@@ -26,5 +26,7 @@ namespace UnityEditor
 		Bounds GetBounds();
 
 		Bounds GetBounds(float minTime, float maxTime);
+
+		void FlushCache();
 	}
 }

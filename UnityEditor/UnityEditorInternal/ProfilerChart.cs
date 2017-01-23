@@ -24,7 +24,7 @@ namespace UnityEditorInternal
 
 		public GUIContent m_Icon;
 
-		private static string[] s_LocalizedChartNames;
+		private static string[] s_LocalizedChartNames = null;
 
 		public bool active
 		{
@@ -111,11 +111,16 @@ namespace UnityEditorInternal
 
 		private bool ReadActiveState()
 		{
+			bool @bool;
 			if (this.m_Area == ProfilerArea.GPU)
 			{
-				return SessionState.GetBool("ProfilerChart" + this.m_Area, false);
+				@bool = SessionState.GetBool("ProfilerChart" + this.m_Area, false);
 			}
-			return EditorPrefs.GetBool("ProfilerChart" + this.m_Area, true);
+			else
+			{
+				@bool = EditorPrefs.GetBool("ProfilerChart" + this.m_Area, true);
+			}
+			return @bool;
 		}
 
 		private void SaveActiveState()

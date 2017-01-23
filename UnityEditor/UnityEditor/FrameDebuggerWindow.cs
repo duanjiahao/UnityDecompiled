@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UnityEditor
 {
@@ -78,6 +80,32 @@ namespace UnityEditor
 			}
 		}
 
+		public static readonly string[] s_FrameEventTypeNames = new string[]
+		{
+			"Clear (nothing)",
+			"Clear (color)",
+			"Clear (Z)",
+			"Clear (color+Z)",
+			"Clear (stencil)",
+			"Clear (color+stencil)",
+			"Clear (Z+stencil)",
+			"Clear (color+Z+stencil)",
+			"SetRenderTarget",
+			"Resolve Color",
+			"Resolve Depth",
+			"Grab RenderTexture",
+			"Static Batch",
+			"Dynamic Batch",
+			"Draw Mesh",
+			"Draw Dynamic",
+			"Draw GL",
+			"GPU Skinning",
+			"Draw Procedural",
+			"Compute Shader",
+			"Plugin Event",
+			"Draw Mesh (instanced)"
+		};
+
 		private const float kScrollbarWidth = 16f;
 
 		private const float kResizerWidth = 5f;
@@ -107,32 +135,6 @@ namespace UnityEditor
 		private const float kPropertyValueWidth = 0.5f;
 
 		private const int kNeedToRepaintFrames = 4;
-
-		public static readonly string[] s_FrameEventTypeNames = new string[]
-		{
-			"Clear (nothing)",
-			"Clear (color)",
-			"Clear (Z)",
-			"Clear (color+Z)",
-			"Clear (stencil)",
-			"Clear (color+stencil)",
-			"Clear (Z+stencil)",
-			"Clear (color+Z+stencil)",
-			"SetRenderTarget",
-			"Resolve Color",
-			"Resolve Depth",
-			"Grab RenderTexture",
-			"Static Batch",
-			"Dynamic Batch",
-			"Draw Mesh",
-			"Draw Dynamic",
-			"Draw GL",
-			"GPU Skinning",
-			"Draw Procedural",
-			"Compute Shader",
-			"Plugin Event",
-			"Draw Mesh (instanced)"
-		};
 
 		[SerializeField]
 		private float m_ListWidth = 300f;
@@ -168,13 +170,13 @@ namespace UnityEditor
 		[NonSerialized]
 		private float m_RTWhiteLevel = 1f;
 
-		private int m_PrevEventsLimit;
+		private int m_PrevEventsLimit = 0;
 
-		private int m_PrevEventsCount;
+		private int m_PrevEventsCount = 0;
 
 		private Vector2 m_ScrollViewShaderProps = Vector2.zero;
 
-		private ShowAdditionalInfo m_AdditionalInfo;
+		private ShowAdditionalInfo m_AdditionalInfo = ShowAdditionalInfo.Preview;
 
 		private GUIContent[] m_AdditionalInfoGuiContents = (from m in Enum.GetNames(typeof(ShowAdditionalInfo))
 		select new GUIContent(m)).ToArray<GUIContent>();
@@ -189,12 +191,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				FrameDebuggerWindow.Styles arg_17_0;
-				if ((arg_17_0 = FrameDebuggerWindow.ms_Styles) == null)
+				FrameDebuggerWindow.Styles arg_18_0;
+				if ((arg_18_0 = FrameDebuggerWindow.ms_Styles) == null)
 				{
-					arg_17_0 = (FrameDebuggerWindow.ms_Styles = new FrameDebuggerWindow.Styles());
+					arg_18_0 = (FrameDebuggerWindow.ms_Styles = new FrameDebuggerWindow.Styles());
 				}
-				return arg_17_0;
+				return arg_18_0;
 			}
 		}
 
@@ -225,22 +227,21 @@ namespace UnityEditor
 
 		internal void ChangeFrameEventLimit(int newLimit)
 		{
-			if (newLimit <= 0 || newLimit > FrameDebuggerUtility.count)
+			if (newLimit > 0 && newLimit <= FrameDebuggerUtility.count)
 			{
-				return;
-			}
-			if (newLimit != FrameDebuggerUtility.limit && newLimit > 0)
-			{
-				GameObject frameEventGameObject = FrameDebuggerUtility.GetFrameEventGameObject(newLimit - 1);
-				if (frameEventGameObject != null)
+				if (newLimit != FrameDebuggerUtility.limit && newLimit > 0)
 				{
-					EditorGUIUtility.PingObject(frameEventGameObject);
+					GameObject frameEventGameObject = FrameDebuggerUtility.GetFrameEventGameObject(newLimit - 1);
+					if (frameEventGameObject != null)
+					{
+						EditorGUIUtility.PingObject(frameEventGameObject);
+					}
 				}
-			}
-			FrameDebuggerUtility.limit = newLimit;
-			if (this.m_Tree != null)
-			{
-				this.m_Tree.SelectFrameEventIndex(newLimit);
+				FrameDebuggerUtility.limit = newLimit;
+				if (this.m_Tree != null)
+				{
+					this.m_Tree.SelectFrameEventIndex(newLimit);
+				}
 			}
 		}
 
@@ -289,48 +290,49 @@ namespace UnityEditor
 
 		public void EnableIfNeeded()
 		{
-			if (FrameDebuggerUtility.IsLocalEnabled() || FrameDebuggerUtility.IsRemoteEnabled())
+			if (!FrameDebuggerUtility.IsLocalEnabled() && !FrameDebuggerUtility.IsRemoteEnabled())
 			{
-				return;
+				this.m_RTChannel = 0;
+				this.m_RTIndex = 0;
+				this.m_RTBlackLevel = 0f;
+				this.m_RTWhiteLevel = 1f;
+				this.ClickEnableFrameDebugger();
+				this.RepaintOnLimitChange();
 			}
-			this.m_RTChannel = 0;
-			this.m_RTIndex = 0;
-			this.m_RTBlackLevel = 0f;
-			this.m_RTWhiteLevel = 1f;
-			this.ClickEnableFrameDebugger();
-			this.RepaintOnLimitChange();
 		}
 
 		private void ClickEnableFrameDebugger()
 		{
 			bool flag = FrameDebuggerUtility.IsLocalEnabled() || FrameDebuggerUtility.IsRemoteEnabled();
 			bool flag2 = !flag && this.m_AttachProfilerUI.IsEditor();
-			if (flag2 && !FrameDebuggerUtility.locallySupported)
+			if (!flag2 || FrameDebuggerUtility.locallySupported)
 			{
-				return;
-			}
-			if (flag2 && EditorApplication.isPlaying && !EditorApplication.isPaused)
-			{
-				EditorApplication.isPaused = true;
-			}
-			if (!flag)
-			{
-				FrameDebuggerUtility.SetEnabled(true, ProfilerDriver.connectedProfiler);
-			}
-			else
-			{
-				FrameDebuggerUtility.SetEnabled(false, FrameDebuggerUtility.GetRemotePlayerGUID());
-			}
-			if (FrameDebuggerUtility.IsLocalEnabled())
-			{
-				GameView gameView = (GameView)WindowLayout.FindEditorWindowOfType(typeof(GameView));
-				if (gameView)
+				if (flag2)
 				{
-					gameView.ShowTab();
+					if (EditorApplication.isPlaying && !EditorApplication.isPaused)
+					{
+						EditorApplication.isPaused = true;
+					}
 				}
+				if (!flag)
+				{
+					FrameDebuggerUtility.SetEnabled(true, ProfilerDriver.connectedProfiler);
+				}
+				else
+				{
+					FrameDebuggerUtility.SetEnabled(false, FrameDebuggerUtility.GetRemotePlayerGUID());
+				}
+				if (FrameDebuggerUtility.IsLocalEnabled())
+				{
+					GameView gameView = (GameView)WindowLayout.FindEditorWindowOfType(typeof(GameView));
+					if (gameView)
+					{
+						gameView.ShowTab();
+					}
+				}
+				this.m_PrevEventsLimit = FrameDebuggerUtility.limit;
+				this.m_PrevEventsCount = FrameDebuggerUtility.count;
 			}
-			this.m_PrevEventsLimit = FrameDebuggerUtility.limit;
-			this.m_PrevEventsCount = FrameDebuggerUtility.count;
 		}
 
 		private bool DrawToolbar(FrameDebuggerEvent[] descs)
@@ -383,9 +385,12 @@ namespace UnityEditor
 				{
 					this.ChangeFrameEventLimit(num + 1);
 				}
-				if (this.m_PrevEventsLimit == this.m_PrevEventsCount && FrameDebuggerUtility.count != this.m_PrevEventsCount && FrameDebuggerUtility.limit == this.m_PrevEventsLimit)
+				if (this.m_PrevEventsLimit == this.m_PrevEventsCount)
 				{
-					this.ChangeFrameEventLimit(FrameDebuggerUtility.count);
+					if (FrameDebuggerUtility.count != this.m_PrevEventsCount && FrameDebuggerUtility.limit == this.m_PrevEventsLimit)
+					{
+						this.ChangeFrameEventLimit(FrameDebuggerUtility.count);
+					}
 				}
 				this.m_PrevEventsLimit = FrameDebuggerUtility.limit;
 				this.m_PrevEventsCount = FrameDebuggerUtility.count;
@@ -445,207 +450,213 @@ namespace UnityEditor
 		private bool DrawEventMesh(FrameDebuggerEventData curEventData)
 		{
 			Mesh mesh = curEventData.mesh;
+			bool result;
 			if (mesh == null)
 			{
-				return false;
+				result = false;
 			}
-			Rect rect = GUILayoutUtility.GetRect(10f, 10f, new GUILayoutOption[]
+			else
 			{
-				GUILayout.ExpandHeight(true)
-			});
-			if (rect.width < 64f || rect.height < 64f)
-			{
-				return true;
-			}
-			GameObject frameEventGameObject = FrameDebuggerUtility.GetFrameEventGameObject(curEventData.frameEventIndex);
-			Rect rect2 = rect;
-			rect2.yMin = rect2.yMax - EditorGUIUtility.singleLineHeight * 2f;
-			Rect position = rect2;
-			rect2.xMin = rect2.center.x;
-			position.xMax = position.center.x;
-			if (Event.current.type == EventType.MouseDown)
-			{
-				if (rect2.Contains(Event.current.mousePosition))
+				Rect rect = GUILayoutUtility.GetRect(10f, 10f, new GUILayoutOption[]
 				{
-					EditorGUIUtility.PingObject(mesh);
-					Event.current.Use();
-				}
-				if (frameEventGameObject != null && position.Contains(Event.current.mousePosition))
+					GUILayout.ExpandHeight(true)
+				});
+				if (rect.width < 64f || rect.height < 64f)
 				{
-					EditorGUIUtility.PingObject(frameEventGameObject.GetInstanceID());
-					Event.current.Use();
+					result = true;
+				}
+				else
+				{
+					GameObject frameEventGameObject = FrameDebuggerUtility.GetFrameEventGameObject(curEventData.frameEventIndex);
+					Rect rect2 = rect;
+					rect2.yMin = rect2.yMax - EditorGUIUtility.singleLineHeight * 2f;
+					Rect position = rect2;
+					rect2.xMin = rect2.center.x;
+					position.xMax = position.center.x;
+					if (Event.current.type == EventType.MouseDown)
+					{
+						if (rect2.Contains(Event.current.mousePosition))
+						{
+							EditorGUIUtility.PingObject(mesh);
+							Event.current.Use();
+						}
+						if (frameEventGameObject != null && position.Contains(Event.current.mousePosition))
+						{
+							EditorGUIUtility.PingObject(frameEventGameObject.GetInstanceID());
+							Event.current.Use();
+						}
+					}
+					this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, rect);
+					if (Event.current.type == EventType.Repaint)
+					{
+						int meshSubset = curEventData.meshSubset;
+						this.DrawMeshPreview(curEventData, rect, rect2, mesh, meshSubset);
+						if (frameEventGameObject != null)
+						{
+							EditorGUI.DropShadowLabel(position, frameEventGameObject.name);
+						}
+					}
+					result = true;
 				}
 			}
-			this.m_PreviewDir = PreviewGUI.Drag2D(this.m_PreviewDir, rect);
-			if (Event.current.type == EventType.Repaint)
-			{
-				int meshSubset = curEventData.meshSubset;
-				this.DrawMeshPreview(curEventData, rect, rect2, mesh, meshSubset);
-				if (frameEventGameObject != null)
-				{
-					EditorGUI.DropShadowLabel(position, frameEventGameObject.name);
-				}
-			}
-			return true;
+			return result;
 		}
 
 		private void DrawRenderTargetControls(FrameDebuggerEventData cur)
 		{
-			if (cur.rtWidth <= 0 || cur.rtHeight <= 0)
+			if (cur.rtWidth > 0 && cur.rtHeight > 0)
 			{
-				return;
-			}
-			bool disabled = cur.rtFormat == 1 || cur.rtFormat == 3;
-			bool flag = cur.rtHasDepthTexture != 0;
-			short num = cur.rtCount;
-			if (flag)
-			{
-				num += 1;
-			}
-			GUILayout.Label("RenderTarget: " + cur.rtName, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
-			EditorGUI.BeginChangeCheck();
-			bool flag2;
-			using (new EditorGUI.DisabledScope(num <= 1))
-			{
-				GUIContent[] array = new GUIContent[(int)num];
-				for (int i = 0; i < (int)cur.rtCount; i++)
-				{
-					array[i] = FrameDebuggerWindow.Styles.mrtLabels[i];
-				}
+				bool disabled = cur.rtFormat == 1 || cur.rtFormat == 3;
+				bool flag = cur.rtHasDepthTexture != 0;
+				short num = cur.rtCount;
 				if (flag)
 				{
-					array[(int)cur.rtCount] = FrameDebuggerWindow.Styles.depthLabel;
+					num += 1;
 				}
-				int num2 = Mathf.Clamp(this.m_RTIndex, 0, (int)(num - 1));
-				flag2 = (num2 != this.m_RTIndex);
-				this.m_RTIndex = num2;
-				this.m_RTIndex = EditorGUILayout.Popup(this.m_RTIndex, array, EditorStyles.toolbarPopup, new GUILayoutOption[]
+				GUILayout.Label("RenderTarget: " + cur.rtName, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
+				EditorGUI.BeginChangeCheck();
+				bool flag2;
+				using (new EditorGUI.DisabledScope(num <= 1))
 				{
-					GUILayout.Width(70f)
+					GUIContent[] array = new GUIContent[(int)num];
+					for (int i = 0; i < (int)cur.rtCount; i++)
+					{
+						array[i] = FrameDebuggerWindow.Styles.mrtLabels[i];
+					}
+					if (flag)
+					{
+						array[(int)cur.rtCount] = FrameDebuggerWindow.Styles.depthLabel;
+					}
+					int num2 = Mathf.Clamp(this.m_RTIndex, 0, (int)(num - 1));
+					flag2 = (num2 != this.m_RTIndex);
+					this.m_RTIndex = num2;
+					this.m_RTIndex = EditorGUILayout.Popup(this.m_RTIndex, array, EditorStyles.toolbarPopup, new GUILayoutOption[]
+					{
+						GUILayout.Width(70f)
+					});
+				}
+				GUILayout.Space(10f);
+				using (new EditorGUI.DisabledScope(disabled))
+				{
+					GUILayout.Label(FrameDebuggerWindow.Styles.channelHeader, EditorStyles.miniLabel, new GUILayoutOption[0]);
+					this.m_RTChannel = GUILayout.Toolbar(this.m_RTChannel, FrameDebuggerWindow.Styles.channelLabels, EditorStyles.toolbarButton, new GUILayoutOption[0]);
+				}
+				GUILayout.Space(10f);
+				GUILayout.Label(FrameDebuggerWindow.Styles.levelsHeader, EditorStyles.miniLabel, new GUILayoutOption[0]);
+				EditorGUILayout.MinMaxSlider(ref this.m_RTBlackLevel, ref this.m_RTWhiteLevel, 0f, 1f, new GUILayoutOption[]
+				{
+					GUILayout.MaxWidth(200f)
 				});
-			}
-			GUILayout.Space(10f);
-			using (new EditorGUI.DisabledScope(disabled))
-			{
-				GUILayout.Label(FrameDebuggerWindow.Styles.channelHeader, EditorStyles.miniLabel, new GUILayoutOption[0]);
-				this.m_RTChannel = GUILayout.Toolbar(this.m_RTChannel, FrameDebuggerWindow.Styles.channelLabels, EditorStyles.toolbarButton, new GUILayoutOption[0]);
-			}
-			GUILayout.Space(10f);
-			GUILayout.Label(FrameDebuggerWindow.Styles.levelsHeader, EditorStyles.miniLabel, new GUILayoutOption[0]);
-			EditorGUILayout.MinMaxSlider(ref this.m_RTBlackLevel, ref this.m_RTWhiteLevel, 0f, 1f, new GUILayoutOption[]
-			{
-				GUILayout.MaxWidth(200f)
-			});
-			if (EditorGUI.EndChangeCheck() || flag2)
-			{
-				Vector4 channels = Vector4.zero;
-				if (this.m_RTChannel == 1)
+				if (EditorGUI.EndChangeCheck() || flag2)
 				{
-					channels.x = 1f;
+					Vector4 channels = Vector4.zero;
+					if (this.m_RTChannel == 1)
+					{
+						channels.x = 1f;
+					}
+					else if (this.m_RTChannel == 2)
+					{
+						channels.y = 1f;
+					}
+					else if (this.m_RTChannel == 3)
+					{
+						channels.z = 1f;
+					}
+					else if (this.m_RTChannel == 4)
+					{
+						channels.w = 1f;
+					}
+					else
+					{
+						channels = Vector4.one;
+					}
+					int num3 = this.m_RTIndex;
+					if (num3 >= (int)cur.rtCount)
+					{
+						num3 = -1;
+					}
+					FrameDebuggerUtility.SetRenderTargetDisplayOptions(num3, channels, this.m_RTBlackLevel, this.m_RTWhiteLevel);
+					this.RepaintAllNeededThings();
 				}
-				else if (this.m_RTChannel == 2)
+				GUILayout.FlexibleSpace();
+				GUILayout.EndHorizontal();
+				GUILayout.Label(string.Format("{0}x{1} {2}", cur.rtWidth, cur.rtHeight, (RenderTextureFormat)cur.rtFormat), new GUILayoutOption[0]);
+				if (cur.rtDim == 4)
 				{
-					channels.y = 1f;
+					GUILayout.Label("Rendering into cubemap", new GUILayoutOption[0]);
 				}
-				else if (this.m_RTChannel == 3)
+				if (cur.rtFormat == 3 && SystemInfo.graphicsDeviceVersion.StartsWith("Direct3D 9"))
 				{
-					channels.z = 1f;
+					EditorGUILayout.HelpBox("Rendering into shadowmap on DX9, can't visualize it in the game view properly", MessageType.Info, true);
 				}
-				else if (this.m_RTChannel == 4)
-				{
-					channels.w = 1f;
-				}
-				else
-				{
-					channels = Vector4.one;
-				}
-				int num3 = this.m_RTIndex;
-				if (num3 >= (int)cur.rtCount)
-				{
-					num3 = -1;
-				}
-				FrameDebuggerUtility.SetRenderTargetDisplayOptions(num3, channels, this.m_RTBlackLevel, this.m_RTWhiteLevel);
-				this.RepaintAllNeededThings();
-			}
-			GUILayout.FlexibleSpace();
-			GUILayout.EndHorizontal();
-			GUILayout.Label(string.Format("{0}x{1} {2}", cur.rtWidth, cur.rtHeight, (RenderTextureFormat)cur.rtFormat), new GUILayoutOption[0]);
-			if (cur.rtDim == 4)
-			{
-				GUILayout.Label("Rendering into cubemap", new GUILayoutOption[0]);
-			}
-			if (cur.rtFormat == 3 && SystemInfo.graphicsDeviceVersion.StartsWith("Direct3D 9"))
-			{
-				EditorGUILayout.HelpBox("Rendering into shadowmap on DX9, can't visualize it in the game view properly", MessageType.Info, true);
 			}
 		}
 
 		private void DrawCurrentEvent(Rect rect, FrameDebuggerEvent[] descs)
 		{
 			int num = FrameDebuggerUtility.limit - 1;
-			if (num < 0 || num >= descs.Length)
+			if (num >= 0 && num < descs.Length)
 			{
-				return;
-			}
-			GUILayout.BeginArea(rect);
-			FrameDebuggerEvent frameDebuggerEvent = descs[num];
-			FrameDebuggerEventData frameDebuggerEventData;
-			bool frameEventData = FrameDebuggerUtility.GetFrameEventData(num, out frameDebuggerEventData);
-			if (frameEventData)
-			{
-				this.DrawRenderTargetControls(frameDebuggerEventData);
-			}
-			GUILayout.Label(string.Format("Event #{0}: {1}", num + 1, FrameDebuggerWindow.s_FrameEventTypeNames[(int)frameDebuggerEvent.type]), EditorStyles.boldLabel, new GUILayoutOption[0]);
-			if (FrameDebuggerUtility.IsRemoteEnabled() && FrameDebuggerUtility.receivingRemoteFrameEventData)
-			{
-				GUILayout.Label("Receiving frame event data...", new GUILayoutOption[0]);
-			}
-			else if (frameEventData && (frameDebuggerEventData.vertexCount > 0 || frameDebuggerEventData.indexCount > 0))
-			{
-				Shader shader = frameDebuggerEventData.shader;
-				int shaderPassIndex = frameDebuggerEventData.shaderPassIndex;
-				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				if (GUILayout.Button(string.Concat(new object[]
+				GUILayout.BeginArea(rect);
+				FrameDebuggerEvent frameDebuggerEvent = descs[num];
+				FrameDebuggerEventData frameDebuggerEventData;
+				bool frameEventData = FrameDebuggerUtility.GetFrameEventData(num, out frameDebuggerEventData);
+				if (frameEventData)
 				{
-					"Shader: ",
-					frameDebuggerEventData.shaderName,
-					" pass #",
-					shaderPassIndex
-				}), GUI.skin.label, new GUILayoutOption[]
-				{
-					GUILayout.ExpandWidth(false)
-				}))
-				{
-					EditorGUIUtility.PingObject(shader);
-					Event.current.Use();
+					this.DrawRenderTargetControls(frameDebuggerEventData);
 				}
-				GUILayout.Label(frameDebuggerEventData.shaderKeywords, EditorStyles.miniLabel, new GUILayoutOption[0]);
-				GUILayout.EndHorizontal();
-				this.DrawStates(frameDebuggerEventData);
-				GUILayout.Space(15f);
-				this.m_AdditionalInfo = (ShowAdditionalInfo)GUILayout.Toolbar((int)this.m_AdditionalInfo, this.m_AdditionalInfoGuiContents, new GUILayoutOption[0]);
-				ShowAdditionalInfo additionalInfo = this.m_AdditionalInfo;
-				if (additionalInfo != ShowAdditionalInfo.Preview)
+				GUILayout.Label(string.Format("Event #{0}: {1}", num + 1, FrameDebuggerWindow.s_FrameEventTypeNames[(int)frameDebuggerEvent.type]), EditorStyles.boldLabel, new GUILayoutOption[0]);
+				if (FrameDebuggerUtility.IsRemoteEnabled() && FrameDebuggerUtility.receivingRemoteFrameEventData)
 				{
-					if (additionalInfo == ShowAdditionalInfo.ShaderProperties)
+					GUILayout.Label("Receiving frame event data...", new GUILayoutOption[0]);
+				}
+				else if (frameEventData && (frameDebuggerEventData.vertexCount > 0 || frameDebuggerEventData.indexCount > 0))
+				{
+					Shader shader = frameDebuggerEventData.shader;
+					int shaderPassIndex = frameDebuggerEventData.shaderPassIndex;
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					if (GUILayout.Button(string.Concat(new object[]
 					{
-						if (frameEventData)
+						"Shader: ",
+						frameDebuggerEventData.shaderName,
+						" pass #",
+						shaderPassIndex
+					}), GUI.skin.label, new GUILayoutOption[]
+					{
+						GUILayout.ExpandWidth(false)
+					}))
+					{
+						EditorGUIUtility.PingObject(shader);
+						Event.current.Use();
+					}
+					GUILayout.Label(frameDebuggerEventData.shaderKeywords, EditorStyles.miniLabel, new GUILayoutOption[0]);
+					GUILayout.EndHorizontal();
+					this.DrawStates(frameDebuggerEventData);
+					GUILayout.Space(15f);
+					this.m_AdditionalInfo = (ShowAdditionalInfo)GUILayout.Toolbar((int)this.m_AdditionalInfo, this.m_AdditionalInfoGuiContents, new GUILayoutOption[0]);
+					ShowAdditionalInfo additionalInfo = this.m_AdditionalInfo;
+					if (additionalInfo != ShowAdditionalInfo.Preview)
+					{
+						if (additionalInfo == ShowAdditionalInfo.ShaderProperties)
 						{
-							this.DrawShaderProperties(frameDebuggerEventData.shaderProperties);
+							if (frameEventData)
+							{
+								this.DrawShaderProperties(frameDebuggerEventData.shaderProperties);
+							}
+						}
+					}
+					else if (frameEventData)
+					{
+						if (!this.DrawEventMesh(frameDebuggerEventData))
+						{
+							GUILayout.Label("Vertices: " + frameDebuggerEventData.vertexCount, new GUILayoutOption[0]);
+							GUILayout.Label("Indices: " + frameDebuggerEventData.indexCount, new GUILayoutOption[0]);
 						}
 					}
 				}
-				else if (frameEventData)
-				{
-					if (!this.DrawEventMesh(frameDebuggerEventData))
-					{
-						GUILayout.Label("Vertices: " + frameDebuggerEventData.vertexCount, new GUILayoutOption[0]);
-						GUILayout.Label("Indices: " + frameDebuggerEventData.indexCount, new GUILayoutOption[0]);
-					}
-				}
+				GUILayout.EndArea();
 			}
-			GUILayout.EndArea();
 		}
 
 		private void DrawShaderPropertyFlags(Rect flagsRect, int flags)
@@ -747,10 +758,13 @@ namespace UnityEditor
 				}
 				GUI.Label(position2, (!(t.value != null)) ? t.textureName : t.value.name);
 			}
-			else if (Event.current.type == EventType.MouseDown && valueRect.Contains(Event.current.mousePosition))
+			else if (Event.current.type == EventType.MouseDown)
 			{
-				EditorGUIUtility.PingObject(t.value);
-				Event.current.Use();
+				if (valueRect.Contains(Event.current.mousePosition))
+				{
+					EditorGUIUtility.PingObject(t.value);
+					Event.current.Use();
+				}
 			}
 		}
 
@@ -848,46 +862,56 @@ namespace UnityEditor
 			FrameDebuggerBlendState blendState = curEventData.blendState;
 			FrameDebuggerRasterState rasterState = curEventData.rasterState;
 			FrameDebuggerDepthState depthState = curEventData.depthState;
-			string text = string.Empty;
-			if (blendState.renderTargetWriteMask == 0u)
+			string text = string.Format("Blend {0} {1}", blendState.srcBlend, blendState.dstBlend);
+			if (blendState.srcBlendAlpha != blendState.srcBlend || blendState.dstBlendAlpha != blendState.dstBlend)
 			{
-				text = "0";
+				text += string.Format(", {0} {1}", blendState.srcBlendAlpha, blendState.dstBlendAlpha);
 			}
-			else
+			if (blendState.blendOp != BlendOp.Add || blendState.blendOpAlpha != BlendOp.Add)
 			{
-				if ((blendState.renderTargetWriteMask & 2u) != 0u)
+				if (blendState.blendOp == blendState.blendOpAlpha)
 				{
-					text += "R";
+					text += string.Format(" BlendOp {0}", blendState.blendOp);
 				}
-				if ((blendState.renderTargetWriteMask & 4u) != 0u)
+				else
 				{
-					text += "G";
-				}
-				if ((blendState.renderTargetWriteMask & 8u) != 0u)
-				{
-					text += "B";
-				}
-				if ((blendState.renderTargetWriteMask & 1u) != 0u)
-				{
-					text += "A";
+					text += string.Format(" BlendOp {0}, {1}", blendState.blendOp, blendState.blendOpAlpha);
 				}
 			}
-			GUILayout.Label(string.Format("Blend {0} {1}, {2} {3} ColorMask {4}", new object[]
+			if (blendState.writeMask != 15u)
 			{
-				blendState.srcBlend,
-				blendState.dstBlend,
-				blendState.srcBlendAlpha,
-				blendState.dstBlendAlpha,
-				text
-			}), EditorStyles.miniLabel, new GUILayoutOption[0]);
-			GUILayout.Label(string.Format("ZTest {0} ZWrite {1} Cull {2} Offset {3}, {4}", new object[]
+				text += " ColorMask ";
+				if (blendState.writeMask == 0u)
+				{
+					text += '0';
+				}
+				else
+				{
+					if ((blendState.writeMask & 2u) != 0u)
+					{
+						text += 'R';
+					}
+					if ((blendState.writeMask & 4u) != 0u)
+					{
+						text += 'G';
+					}
+					if ((blendState.writeMask & 8u) != 0u)
+					{
+						text += 'B';
+					}
+					if ((blendState.writeMask & 1u) != 0u)
+					{
+						text += 'A';
+					}
+				}
+			}
+			GUILayout.Label(text, EditorStyles.miniLabel, new GUILayoutOption[0]);
+			string text2 = string.Format("ZTest {0} ZWrite {1} Cull {2}", depthState.depthFunc, (depthState.depthWrite != 0) ? "On" : "Off", rasterState.cullMode);
+			if (rasterState.slopeScaledDepthBias != 0f || rasterState.depthBias != 0)
 			{
-				depthState.depthFunc,
-				(depthState.depthWrite != 0) ? "On" : "Off",
-				rasterState.cullMode,
-				rasterState.slopeScaledDepthBias,
-				rasterState.depthBias
-			}), EditorStyles.miniLabel, new GUILayoutOption[0]);
+				text2 += string.Format(" Offset {0}, {1}", rasterState.slopeScaledDepthBias, rasterState.depthBias);
+			}
+			GUILayout.Label(text2, EditorStyles.miniLabel, new GUILayoutOption[0]);
 		}
 
 		internal void OnGUI()

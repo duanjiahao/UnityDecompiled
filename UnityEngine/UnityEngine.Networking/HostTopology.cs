@@ -7,10 +7,10 @@ namespace UnityEngine.Networking
 	public class HostTopology
 	{
 		[SerializeField]
-		private ConnectionConfig m_DefConfig;
+		private ConnectionConfig m_DefConfig = null;
 
 		[SerializeField]
-		private int m_MaxDefConnections;
+		private int m_MaxDefConnections = 0;
 
 		[SerializeField]
 		private List<ConnectionConfig> m_SpecialConnections = new List<ConnectionConfig>();
@@ -104,11 +104,11 @@ namespace UnityEngine.Networking
 			}
 			if (maxDefaultConnections <= 0)
 			{
-				throw new ArgumentOutOfRangeException("maxDefaultConnections", "count connection should be > 0");
+				throw new ArgumentOutOfRangeException("maxDefaultConnections", "Number of connections should be > 0");
 			}
-			if (maxDefaultConnections > 65535)
+			if (maxDefaultConnections >= 65535)
 			{
-				throw new ArgumentOutOfRangeException("maxDefaultConnections", "count connection should be < 65535");
+				throw new ArgumentOutOfRangeException("maxDefaultConnections", "Number of connections should be < 65535");
 			}
 			ConnectionConfig.Validate(defaultConfig);
 			this.m_DefConfig = new ConnectionConfig(defaultConfig);

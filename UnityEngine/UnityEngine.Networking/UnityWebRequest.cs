@@ -4,11 +4,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using UnityEngine.Scripting;
 
 namespace UnityEngine.Networking
 {
-	[RequiredByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class UnityWebRequest : IDisposable
 	{
@@ -50,9 +48,11 @@ namespace UnityEngine.Networking
 			SSLCACertError,
 			UnrecognizedContentEncoding,
 			LoginFailed,
-			SSLShutdownFailed,
-			NoInternetConnection
+			SSLShutdownFailed
 		}
+
+		[NonSerialized]
+		internal IntPtr m_Ptr;
 
 		public const string kHttpVerbGET = "GET";
 
@@ -66,15 +66,11 @@ namespace UnityEngine.Networking
 
 		public const string kHttpVerbDELETE = "DELETE";
 
-		[NonSerialized]
-		internal IntPtr m_Ptr;
-
 		private static Regex domainRegex = new Regex("^\\s*\\w+(?:\\.\\w+)+\\s*$");
 
 		private static readonly string[] forbiddenHeaderKeys = new string[]
 		{
 			"accept-charset",
-			"accept-encoding",
 			"access-control-request-headers",
 			"access-control-request-method",
 			"connection",
@@ -111,19 +107,26 @@ namespace UnityEngine.Networking
 		{
 			get
 			{
+				string result;
 				switch (this.InternalGetMethod())
 				{
 				case 0:
-					return "GET";
+					result = "GET";
+					break;
 				case 1:
-					return "POST";
+					result = "POST";
+					break;
 				case 2:
-					return "PUT";
+					result = "PUT";
+					break;
 				case 3:
-					return "HEAD";
+					result = "HEAD";
+					break;
 				default:
-					return this.InternalGetCustomMethod();
+					result = this.InternalGetCustomMethod();
+					break;
 				}
+				return result;
 			}
 			set
 			{
@@ -132,20 +135,28 @@ namespace UnityEngine.Networking
 					throw new ArgumentException("Cannot set a UnityWebRequest's method to an empty or null string");
 				}
 				string text = value.ToUpper();
-				switch (text)
+				if (text != null)
 				{
-				case "GET":
-					this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Get);
-					return;
-				case "POST":
-					this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Post);
-					return;
-				case "PUT":
-					this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Put);
-					return;
-				case "HEAD":
-					this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Head);
-					return;
+					if (text == "GET")
+					{
+						this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Get);
+						return;
+					}
+					if (text == "POST")
+					{
+						this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Post);
+						return;
+					}
+					if (text == "PUT")
+					{
+						this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Put);
+						return;
+					}
+					if (text == "HEAD")
+					{
+						this.InternalSetMethod(UnityWebRequest.UnityWebRequestMethod.Head);
+						return;
+					}
 				}
 				this.InternalSetCustomMethod(value.ToUpper());
 			}
@@ -153,17 +164,14 @@ namespace UnityEngine.Networking
 
 		public extern string error
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool useHttpContinue
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -213,96 +221,80 @@ namespace UnityEngine.Networking
 
 		public extern long responseCode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float uploadProgress
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isModifiable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isDone
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isError
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float downloadProgress
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ulong uploadedBytes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ulong downloadedBytes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int redirectLimit
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool chunkedTransfer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern UploadHandler uploadHandler
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern DownloadHandler downloadHandler
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -515,7 +507,7 @@ namespace UnityEngine.Networking
 
 		public static byte[] SerializeSimpleForm(Dictionary<string, string> formFields)
 		{
-			string text = string.Empty;
+			string text = "";
 			foreach (KeyValuePair<string, string> current in formFields)
 			{
 				if (text.Length > 0)
@@ -527,11 +519,10 @@ namespace UnityEngine.Networking
 			return Encoding.UTF8.GetBytes(text);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreate();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalDestroy();
 
@@ -568,11 +559,9 @@ namespace UnityEngine.Networking
 			GC.SuppressFinalize(this);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AsyncOperation InternalBegin();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalAbort();
 
@@ -586,39 +575,30 @@ namespace UnityEngine.Networking
 			this.InternalAbort();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalSetMethod(UnityWebRequest.UnityWebRequestMethod methodType);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalSetCustomMethod(string customMethodName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int InternalGetMethod();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string InternalGetCustomMethod();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int InternalGetError();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern string InternalGetUrl();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalSetUrl(string url);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetRequestHeader(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalSetRequestHeader(string name, string value);
 
@@ -628,9 +608,9 @@ namespace UnityEngine.Networking
 			{
 				throw new ArgumentException("Cannot set a Request Header with a null or empty name");
 			}
-			if (string.IsNullOrEmpty(value))
+			if (value == null)
 			{
-				throw new ArgumentException("Cannot set a Request header with a null or empty value");
+				throw new ArgumentException("Cannot set a Request header with a null");
 			}
 			if (!UnityWebRequest.IsHeaderNameLegal(name))
 			{
@@ -643,135 +623,179 @@ namespace UnityEngine.Networking
 			this.InternalSetRequestHeader(name, value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetResponseHeader(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string[] InternalGetResponseHeaderKeys();
 
 		public Dictionary<string, string> GetResponseHeaders()
 		{
 			string[] array = this.InternalGetResponseHeaderKeys();
+			Dictionary<string, string> result;
 			if (array == null)
 			{
-				return null;
+				result = null;
 			}
-			Dictionary<string, string> dictionary = new Dictionary<string, string>(array.Length, StringComparer.OrdinalIgnoreCase);
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				string responseHeader = this.GetResponseHeader(array[i]);
-				dictionary.Add(array[i], responseHeader);
+				Dictionary<string, string> dictionary = new Dictionary<string, string>(array.Length, StringComparer.OrdinalIgnoreCase);
+				for (int i = 0; i < array.Length; i++)
+				{
+					string responseHeader = this.GetResponseHeader(array[i]);
+					dictionary.Add(array[i], responseHeader);
+				}
+				result = dictionary;
 			}
-			return dictionary;
+			return result;
 		}
 
 		private static bool ContainsForbiddenCharacters(string s, int firstAllowedCharCode)
 		{
+			bool result;
 			for (int i = 0; i < s.Length; i++)
 			{
 				char c = s[i];
 				if ((int)c < firstAllowedCharCode || c == '\u007f')
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static bool IsHeaderNameLegal(string headerName)
 		{
+			bool result;
 			if (string.IsNullOrEmpty(headerName))
 			{
-				return false;
+				result = false;
 			}
-			headerName = headerName.ToLower();
-			if (UnityWebRequest.ContainsForbiddenCharacters(headerName, 33))
+			else
 			{
-				return false;
-			}
-			if (headerName.StartsWith("sec-") || headerName.StartsWith("proxy-"))
-			{
-				return false;
-			}
-			string[] array = UnityWebRequest.forbiddenHeaderKeys;
-			for (int i = 0; i < array.Length; i++)
-			{
-				string b = array[i];
-				if (string.Equals(headerName, b))
+				headerName = headerName.ToLower();
+				if (UnityWebRequest.ContainsForbiddenCharacters(headerName, 33))
 				{
-					return false;
+					result = false;
+				}
+				else if (headerName.StartsWith("sec-") || headerName.StartsWith("proxy-"))
+				{
+					result = false;
+				}
+				else
+				{
+					string[] array = UnityWebRequest.forbiddenHeaderKeys;
+					for (int i = 0; i < array.Length; i++)
+					{
+						string b = array[i];
+						if (string.Equals(headerName, b))
+						{
+							result = false;
+							return result;
+						}
+					}
+					result = true;
 				}
 			}
-			return true;
+			return result;
 		}
 
 		private static bool IsHeaderValueLegal(string headerValue)
 		{
-			return !string.IsNullOrEmpty(headerValue) && !UnityWebRequest.ContainsForbiddenCharacters(headerValue, 32);
+			return !UnityWebRequest.ContainsForbiddenCharacters(headerValue, 32);
 		}
 
 		private static string GetErrorDescription(UnityWebRequest.UnityWebRequestError errorCode)
 		{
+			string result;
 			switch (errorCode)
 			{
 			case UnityWebRequest.UnityWebRequestError.OK:
-				return "No Error";
+				result = "No Error";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SDKError:
-				return "Internal Error With Transport Layer";
+				result = "Internal Error With Transport Layer";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.UnsupportedProtocol:
-				return "Specified Transport Protocol is Unsupported";
+				result = "Specified Transport Protocol is Unsupported";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.MalformattedUrl:
-				return "URL is Malformatted";
+				result = "URL is Malformatted";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.CannotResolveProxy:
-				return "Unable to resolve specified proxy server";
+				result = "Unable to resolve specified proxy server";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.CannotResolveHost:
-				return "Unable to resolve host specified in URL";
+				result = "Unable to resolve host specified in URL";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.CannotConnectToHost:
-				return "Unable to connect to host specified in URL";
+				result = "Unable to connect to host specified in URL";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.AccessDenied:
-				return "Remote server denied access to the specified URL";
+				result = "Remote server denied access to the specified URL";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.GenericHTTPError:
-				return "Unknown/Generic HTTP Error - Check HTTP Error code";
+				result = "Unknown/Generic HTTP Error - Check HTTP Error code";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.WriteError:
-				return "Error when transmitting request to remote server - transmission terminated prematurely";
+				result = "Error when transmitting request to remote server - transmission terminated prematurely";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.ReadError:
-				return "Error when reading response from remote server - transmission terminated prematurely";
+				result = "Error when reading response from remote server - transmission terminated prematurely";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.OutOfMemory:
-				return "Out of Memory";
+				result = "Out of Memory";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.Timeout:
-				return "Timeout occurred while waiting for response from remote server";
+				result = "Timeout occurred while waiting for response from remote server";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.HTTPPostError:
-				return "Error while transmitting HTTP POST body data";
+				result = "Error while transmitting HTTP POST body data";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SSLCannotConnect:
-				return "Unable to connect to SSL server at remote host";
+				result = "Unable to connect to SSL server at remote host";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.Aborted:
-				return "Request was manually aborted by local code";
+				result = "Request was manually aborted by local code";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.TooManyRedirects:
-				return "Redirect limit exceeded";
+				result = "Redirect limit exceeded";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.ReceivedNoData:
-				return "Received an empty response from remote host";
+				result = "Received an empty response from remote host";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SSLNotSupported:
-				return "SSL connections are not supported on the local machine";
+				result = "SSL connections are not supported on the local machine";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.FailedToSendData:
-				return "Failed to transmit body data";
+				result = "Failed to transmit body data";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.FailedToReceiveData:
-				return "Failed to receive response body data";
+				result = "Failed to receive response body data";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SSLCertificateError:
-				return "Failure to authenticate SSL certificate of remote host";
+				result = "Failure to authenticate SSL certificate of remote host";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SSLCipherNotAvailable:
-				return "SSL cipher received from remote host is not supported on the local machine";
+				result = "SSL cipher received from remote host is not supported on the local machine";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SSLCACertError:
-				return "Failure to authenticate Certificate Authority of the SSL certificate received from the remote host";
+				result = "Failure to authenticate Certificate Authority of the SSL certificate received from the remote host";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.UnrecognizedContentEncoding:
-				return "Remote host returned data with an unrecognized/unparseable content encoding";
+				result = "Remote host returned data with an unrecognized/unparseable content encoding";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.LoginFailed:
-				return "HTTP authentication failed";
+				result = "HTTP authentication failed";
+				return result;
 			case UnityWebRequest.UnityWebRequestError.SSLShutdownFailed:
-				return "Failure while shutting down SSL connection";
+				result = "Failure while shutting down SSL connection";
+				return result;
 			}
-			return "Unknown error";
+			result = "Unknown error";
+			return result;
 		}
 	}
 }

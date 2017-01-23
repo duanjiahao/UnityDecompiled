@@ -7,7 +7,6 @@ namespace UnityEditorInternal
 {
 	public sealed class AssetStoreToolUtils
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BuildAssetStoreAssetBundle(UnityEngine.Object targetObject, string targetPath);
 

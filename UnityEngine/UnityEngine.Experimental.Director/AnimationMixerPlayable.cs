@@ -77,7 +77,6 @@ namespace UnityEngine.Experimental.Director
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void InternalCreate(ref AnimationMixerPlayable that);
 
@@ -111,6 +110,16 @@ namespace UnityEngine.Experimental.Director
 			Playables.SetInputWeightValidated(this, inputIndex, weight, base.GetType());
 		}
 
+		public static bool operator ==(AnimationMixerPlayable x, Playable y)
+		{
+			return Playables.Equals(x, y);
+		}
+
+		public static bool operator !=(AnimationMixerPlayable x, Playable y)
+		{
+			return !Playables.Equals(x, y);
+		}
+
 		public override bool Equals(object p)
 		{
 			return Playables.Equals(this, p);
@@ -119,6 +128,16 @@ namespace UnityEngine.Experimental.Director
 		public override int GetHashCode()
 		{
 			return this.node.GetHashCode();
+		}
+
+		public static implicit operator Playable(AnimationMixerPlayable b)
+		{
+			return b.node;
+		}
+
+		public static implicit operator AnimationPlayable(AnimationMixerPlayable b)
+		{
+			return b.handle;
 		}
 
 		public bool IsValid()
@@ -154,26 +173,6 @@ namespace UnityEngine.Experimental.Director
 		public bool RemoveAllInputs()
 		{
 			return AnimationPlayableUtilities.RemoveAllInputsValidated(this, base.GetType());
-		}
-
-		public static bool operator ==(AnimationMixerPlayable x, Playable y)
-		{
-			return Playables.Equals(x, y);
-		}
-
-		public static bool operator !=(AnimationMixerPlayable x, Playable y)
-		{
-			return !Playables.Equals(x, y);
-		}
-
-		public static implicit operator Playable(AnimationMixerPlayable b)
-		{
-			return b.node;
-		}
-
-		public static implicit operator AnimationPlayable(AnimationMixerPlayable b)
-		{
-			return b.handle;
 		}
 	}
 }

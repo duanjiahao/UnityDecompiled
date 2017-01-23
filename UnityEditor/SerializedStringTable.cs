@@ -77,11 +77,16 @@ internal class SerializedStringTable
 	public int Get(string key)
 	{
 		this.SanityCheck();
+		int result;
 		if (!this.table.Contains(key))
 		{
-			return -1;
+			result = -1;
 		}
-		return (int)this.table[key];
+		else
+		{
+			result = (int)this.table[key];
+		}
+		return result;
 	}
 
 	public void Remove(string key)

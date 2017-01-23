@@ -6,6 +6,7 @@ namespace UnityEngine
 	{
 		View,
 		World,
-		Local
+		Local,
+		Facing
 	}
 }

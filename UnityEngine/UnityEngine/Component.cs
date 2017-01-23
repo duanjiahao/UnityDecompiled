@@ -13,14 +13,12 @@ namespace UnityEngine
 	{
 		public extern Transform transform
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern GameObject gameObject
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -196,7 +194,6 @@ namespace UnityEngine
 			return this.gameObject.GetComponent(type);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void GetComponentFastPath(Type type, IntPtr oneFurtherThanResultValue);
 
@@ -208,7 +205,6 @@ namespace UnityEngine
 			return castHelper.t;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Component GetComponent(string type);
 
@@ -311,7 +307,6 @@ namespace UnityEngine
 			return this.gameObject.GetComponents(type);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void GetComponentsForListInternal(Type searchType, object resultList);
 
@@ -330,11 +325,9 @@ namespace UnityEngine
 			return this.gameObject.GetComponents<T>();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool CompareTag(string tag);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SendMessageUpwards(string methodName, [DefaultValue("null")] object value, [DefaultValue("SendMessageOptions.RequireReceiver")] SendMessageOptions options);
 
@@ -358,7 +351,6 @@ namespace UnityEngine
 			this.SendMessageUpwards(methodName, null, options);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SendMessage(string methodName, [DefaultValue("null")] object value, [DefaultValue("SendMessageOptions.RequireReceiver")] SendMessageOptions options);
 
@@ -382,7 +374,6 @@ namespace UnityEngine
 			this.SendMessage(methodName, null, options);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void BroadcastMessage(string methodName, [DefaultValue("null")] object parameter, [DefaultValue("SendMessageOptions.RequireReceiver")] SendMessageOptions options);
 

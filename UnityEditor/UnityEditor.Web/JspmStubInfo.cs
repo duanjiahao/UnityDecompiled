@@ -4,11 +4,11 @@ namespace UnityEditor.Web
 {
 	internal class JspmStubInfo
 	{
-		public JspmPropertyInfo[] properties;
+		public JspmPropertyInfo[] properties = null;
 
-		public JspmMethodInfo[] methods;
+		public JspmMethodInfo[] methods = null;
 
-		public string[] events;
+		public string[] events = null;
 
 		public JspmStubInfo(JspmPropertyInfo[] properties, JspmMethodInfo[] methods, string[] events)
 		{

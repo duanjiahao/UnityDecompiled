@@ -80,7 +80,7 @@ namespace UnityEditor
 			{
 				LightingWindowLightmapPreviewTab.s_Styles = new LightingWindowLightmapPreviewTab.Styles();
 			}
-			GUI.Box(r, string.Empty, "PreBackground");
+			GUI.Box(r, "", "PreBackground");
 			this.m_ScrollPositionLightmaps = EditorGUILayout.BeginScrollView(this.m_ScrollPositionLightmaps, new GUILayoutOption[]
 			{
 				GUILayout.Height(r.height)
@@ -93,15 +93,15 @@ namespace UnityEditor
 			for (int i = 0; i < lightmaps.Length; i++)
 			{
 				LightmapData lightmapData = lightmaps[i];
-				if (lightmapData.lightmapFar == null && lightmapData.lightmapNear == null)
+				if (lightmapData.lightmapLight == null && lightmapData.lightmapDir == null)
 				{
 					num++;
 				}
 				else
 				{
-					int num3 = (!lightmapData.lightmapFar) ? -1 : Math.Max(lightmapData.lightmapFar.width, lightmapData.lightmapFar.height);
-					int num4 = (!lightmapData.lightmapNear) ? -1 : Math.Max(lightmapData.lightmapNear.width, lightmapData.lightmapNear.height);
-					Texture2D texture2D = (num3 <= num4) ? lightmapData.lightmapNear : lightmapData.lightmapFar;
+					int num3 = (!lightmapData.lightmapLight) ? -1 : Math.Max(lightmapData.lightmapLight.width, lightmapData.lightmapLight.height);
+					int num4 = (!lightmapData.lightmapDir) ? -1 : Math.Max(lightmapData.lightmapDir.width, lightmapData.lightmapDir.height);
+					Texture2D texture2D = (num3 <= num4) ? lightmapData.lightmapDir : lightmapData.lightmapLight;
 					GUILayoutOption[] options = new GUILayoutOption[]
 					{
 						GUILayout.MaxWidth(r.width),
@@ -113,12 +113,12 @@ namespace UnityEditor
 					Rect aspectRect = GUILayoutUtility.GetAspectRect(num2, options);
 					aspectRect.width -= 5f;
 					aspectRect.width /= num2;
-					EditorGUI.DrawPreviewTexture(aspectRect, lightmapData.lightmapFar);
+					EditorGUI.DrawPreviewTexture(aspectRect, lightmapData.lightmapLight);
 					this.MenuSelectLightmapUsers(aspectRect, num);
-					if (lightmapData.lightmapNear)
+					if (lightmapData.lightmapDir)
 					{
 						aspectRect.x += aspectRect.width + 5f;
-						EditorGUI.DrawPreviewTexture(aspectRect, lightmapData.lightmapNear);
+						EditorGUI.DrawPreviewTexture(aspectRect, lightmapData.lightmapDir);
 						this.MenuSelectLightmapUsers(aspectRect, num);
 					}
 					GUILayout.Space(10f);
@@ -135,9 +135,11 @@ namespace UnityEditor
 			if (Selection.activeGameObject == null || ((component = Selection.activeGameObject.GetComponent<MeshRenderer>()) == null && (terrain = Selection.activeGameObject.GetComponent<Terrain>()) == null))
 			{
 				this.m_SelectedLightmap = -1;
-				return;
 			}
-			this.m_SelectedLightmap = ((!(component != null)) ? terrain.lightmapIndex : component.lightmapIndex);
+			else
+			{
+				this.m_SelectedLightmap = ((!(component != null)) ? terrain.lightmapIndex : component.lightmapIndex);
+			}
 		}
 
 		public void Maps()
@@ -165,9 +167,9 @@ namespace UnityEditor
 					GUILayout.FlexibleSpace();
 					GUILayout.Label(i.ToString(), new GUILayoutOption[0]);
 					GUILayout.Space(5f);
-					lightmaps[i].lightmapFar = this.LightmapField(lightmaps[i].lightmapFar, i);
+					lightmaps[i].lightmapLight = this.LightmapField(lightmaps[i].lightmapLight, i);
 					GUILayout.Space(10f);
-					lightmaps[i].lightmapNear = this.LightmapField(lightmaps[i].lightmapNear, i);
+					lightmaps[i].lightmapDir = this.LightmapField(lightmaps[i].lightmapDir, i);
 					GUILayout.FlexibleSpace();
 					GUILayout.EndHorizontal();
 				}

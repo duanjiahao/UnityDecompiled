@@ -9,7 +9,6 @@ namespace UnityEngine.Networking
 	{
 		public extern AssetBundle assetBundle
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}

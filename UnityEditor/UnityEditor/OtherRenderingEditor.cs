@@ -11,8 +11,6 @@ namespace UnityEditor
 			public static readonly GUIContent otherHeader = EditorGUIUtility.TextContent("Other Settings");
 		}
 
-		private const string kShowEditorKey = "ShowOtherRenderingEditorFoldout";
-
 		protected SerializedProperty m_HaloStrength;
 
 		protected SerializedProperty m_FlareStrength;
@@ -24,6 +22,8 @@ namespace UnityEditor
 		protected SerializedProperty m_SpotCookie;
 
 		private bool m_ShowEditor;
+
+		private const string kShowEditorKey = "ShowOtherRenderingEditorFoldout";
 
 		public virtual void OnEnable()
 		{
@@ -45,20 +45,19 @@ namespace UnityEditor
 			base.serializedObject.Update();
 			EditorGUILayout.Space();
 			this.m_ShowEditor = EditorGUILayout.FoldoutTitlebar(this.m_ShowEditor, OtherRenderingEditor.Styles.otherHeader);
-			if (!this.m_ShowEditor)
+			if (this.m_ShowEditor)
 			{
-				return;
+				EditorGUI.indentLevel++;
+				EditorGUILayout.PropertyField(this.m_HaloTexture, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_HaloStrength, 0f, 1f, new GUILayoutOption[0]);
+				EditorGUILayout.Space();
+				EditorGUILayout.PropertyField(this.m_FlareFadeSpeed, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_FlareStrength, 0f, 1f, new GUILayoutOption[0]);
+				EditorGUILayout.Space();
+				EditorGUILayout.PropertyField(this.m_SpotCookie, new GUILayoutOption[0]);
+				EditorGUI.indentLevel--;
+				base.serializedObject.ApplyModifiedProperties();
 			}
-			EditorGUI.indentLevel++;
-			EditorGUILayout.PropertyField(this.m_HaloTexture, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_HaloStrength, 0f, 1f, new GUILayoutOption[0]);
-			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(this.m_FlareFadeSpeed, new GUILayoutOption[0]);
-			EditorGUILayout.Slider(this.m_FlareStrength, 0f, 1f, new GUILayoutOption[0]);
-			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(this.m_SpotCookie, new GUILayoutOption[0]);
-			EditorGUI.indentLevel--;
-			base.serializedObject.ApplyModifiedProperties();
 		}
 	}
 }

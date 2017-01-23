@@ -1,24 +1,19 @@
 using System;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditorInternal
 {
 	internal class AddCurvesPopupHierarchyGUI : TreeViewGUI
 	{
-		private const float plusButtonWidth = 17f;
-
 		public EditorWindow owner;
 
 		private GUIStyle plusButtonStyle = new GUIStyle("OL Plus");
 
 		private GUIStyle plusButtonBackgroundStyle = new GUIStyle("Tag MenuItem");
 
-		public IAnimationRecordingState state
-		{
-			get;
-			set;
-		}
+		private const float plusButtonWidth = 17f;
 
 		public bool showPlusButton
 		{
@@ -26,26 +21,24 @@ namespace UnityEditorInternal
 			set;
 		}
 
-		public AddCurvesPopupHierarchyGUI(TreeView treeView, IAnimationRecordingState state, EditorWindow owner) : base(treeView, true)
+		public AddCurvesPopupHierarchyGUI(TreeViewController treeView, EditorWindow owner) : base(treeView, true)
 		{
 			this.owner = owner;
-			this.state = state;
 		}
 
 		public override void OnRowGUI(Rect rowRect, TreeViewItem node, int row, bool selected, bool focused)
 		{
 			base.OnRowGUI(rowRect, node, row, selected, focused);
 			AddCurvesPopupPropertyNode addCurvesPopupPropertyNode = node as AddCurvesPopupPropertyNode;
-			if (addCurvesPopupPropertyNode == null || addCurvesPopupPropertyNode.curveBindings == null || addCurvesPopupPropertyNode.curveBindings.Length == 0)
+			if (addCurvesPopupPropertyNode != null && addCurvesPopupPropertyNode.curveBindings != null && addCurvesPopupPropertyNode.curveBindings.Length != 0)
 			{
-				return;
-			}
-			Rect position = new Rect(rowRect.width - 17f, rowRect.yMin, 17f, this.plusButtonStyle.fixedHeight);
-			GUI.Box(position, GUIContent.none, this.plusButtonBackgroundStyle);
-			if (GUI.Button(position, GUIContent.none, this.plusButtonStyle))
-			{
-				AddCurvesPopup.AddNewCurve(addCurvesPopupPropertyNode);
-				this.owner.Close();
+				Rect position = new Rect(rowRect.width - 17f, rowRect.yMin, 17f, this.plusButtonStyle.fixedHeight);
+				GUI.Box(position, GUIContent.none, this.plusButtonBackgroundStyle);
+				if (GUI.Button(position, GUIContent.none, this.plusButtonStyle))
+				{
+					AddCurvesPopup.AddNewCurve(addCurvesPopupPropertyNode);
+					this.owner.Close();
+				}
 			}
 		}
 
@@ -69,11 +62,16 @@ namespace UnityEditorInternal
 
 		protected override Texture GetIconForItem(TreeViewItem item)
 		{
+			Texture result;
 			if (item != null)
 			{
-				return item.icon;
+				result = item.icon;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 	}
 }

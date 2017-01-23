@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -24,15 +25,21 @@ namespace UnityEditor
 		{
 			public string menuItem;
 
-			public string execute;
-
-			public string validate;
+			public int index;
 
 			public int priority;
 
-			public int index;
+			public Type executeType;
 
-			public Type type;
+			public MethodInfo executeMethod;
+
+			public string executeName;
+
+			public Type validateType;
+
+			public MethodInfo validateMethod;
+
+			public string validateName;
 		}
 
 		internal class CompareMenuIndex : IComparer
@@ -41,11 +48,16 @@ namespace UnityEditor
 			{
 				AttributeHelper.MonoMenuItem monoMenuItem = (AttributeHelper.MonoMenuItem)xo;
 				AttributeHelper.MonoMenuItem monoMenuItem2 = (AttributeHelper.MonoMenuItem)yo;
+				int result;
 				if (monoMenuItem.priority != monoMenuItem2.priority)
 				{
-					return monoMenuItem.priority.CompareTo(monoMenuItem2.priority);
+					result = monoMenuItem.priority.CompareTo(monoMenuItem2.priority);
 				}
-				return monoMenuItem.index.CompareTo(monoMenuItem2.index);
+				else
+				{
+					result = monoMenuItem.index.CompareTo(monoMenuItem2.index);
+				}
+				return result;
 			}
 		}
 
@@ -60,6 +72,7 @@ namespace UnityEditor
 			public Type type;
 		}
 
+		[RequiredByNativeCode]
 		private static AttributeHelper.MonoGizmoMethod[] ExtractGizmos(Assembly assembly)
 		{
 			List<AttributeHelper.MonoGizmoMethod> list = new List<AttributeHelper.MonoGizmoMethod>();
@@ -94,7 +107,7 @@ namespace UnityEditor
 								if (!parameters[0].ParameterType.IsAssignableFrom(drawGizmo.drawnType))
 								{
 									UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but the component type it applies to could not be determined.", methodInfo.DeclaringType.FullName, methodInfo.Name));
-									goto IL_18E;
+									goto IL_198;
 								}
 								item.drawnType = drawGizmo.drawnType;
 							}
@@ -109,15 +122,72 @@ namespace UnityEditor
 								list.Add(item);
 							}
 						}
-						IL_18E:;
+						IL_198:;
 					}
 				}
 			}
 			return list.ToArray();
 		}
 
-		private static AttributeHelper.MonoMenuItem[] ExtractMenuCommands(Assembly assembly)
+		private static bool ValidateMethodForMenuCommand(MethodInfo mi, bool contextMenu)
 		{
+			bool result;
+			if (contextMenu)
+			{
+				if (mi.IsStatic)
+				{
+					UnityEngine.Debug.LogWarningFormat("Method {0}.{1} is static and cannot be used for context menu commands.", new object[]
+					{
+						mi.DeclaringType.FullName,
+						mi.Name
+					});
+					result = false;
+					return result;
+				}
+			}
+			else if (!mi.IsStatic)
+			{
+				UnityEngine.Debug.LogWarningFormat("Method {0}.{1} is not static and cannot be used for menu commands.", new object[]
+				{
+					mi.DeclaringType.FullName,
+					mi.Name
+				});
+				result = false;
+				return result;
+			}
+			if (mi.IsGenericMethod)
+			{
+				UnityEngine.Debug.LogWarningFormat("Method {0}.{1} is generic and cannot be used for menu commands.", new object[]
+				{
+					mi.DeclaringType.FullName,
+					mi.Name
+				});
+				result = false;
+			}
+			else if (mi.GetParameters().Length > 1 || (mi.GetParameters().Length == 1 && mi.GetParameters()[0].ParameterType != typeof(MenuCommand)))
+			{
+				UnityEngine.Debug.LogWarningFormat("Method {0}.{1} has invalid parameters. MenuCommand is the only optional supported parameter.", new object[]
+				{
+					mi.DeclaringType.FullName,
+					mi.Name
+				});
+				result = false;
+			}
+			else
+			{
+				result = true;
+			}
+			return result;
+		}
+
+		[RequiredByNativeCode]
+		private static AttributeHelper.MonoMenuItem[] ExtractMenuCommands(Assembly assembly, bool modifiedSinceLastReload)
+		{
+			BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+			if (modifiedSinceLastReload)
+			{
+				bindingFlags |= BindingFlags.Instance;
+			}
 			bool @bool = EditorPrefs.GetBool("InternalMode", false);
 			Dictionary<string, AttributeHelper.MonoMenuItem> dictionary = new Dictionary<string, AttributeHelper.MonoMenuItem>();
 			Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(assembly);
@@ -125,44 +195,62 @@ namespace UnityEditor
 			for (int i = 0; i < array.Length; i++)
 			{
 				Type type = array[i];
-				MethodInfo[] methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				MethodInfo[] methods = type.GetMethods(bindingFlags);
 				for (int j = 0; j < methods.GetLength(0); j++)
 				{
 					MethodInfo methodInfo = methods[j];
 					object[] customAttributes = methodInfo.GetCustomAttributes(typeof(MenuItem), false);
-					object[] array2 = customAttributes;
-					int k = 0;
-					while (k < array2.Length)
+					if (customAttributes.Length > 0 && type.IsGenericTypeDefinition)
 					{
-						MenuItem menuItem = (MenuItem)array2[k];
-						AttributeHelper.MonoMenuItem value = (!dictionary.ContainsKey(menuItem.menuItem)) ? default(AttributeHelper.MonoMenuItem) : dictionary[menuItem.menuItem];
-						if (!menuItem.menuItem.StartsWith("internal:", StringComparison.Ordinal))
+						UnityEngine.Debug.LogWarningFormat("Method {0}.{1} cannot be used for menu commands because class {0} is an open generic type.", new object[]
 						{
-							value.menuItem = menuItem.menuItem;
-							goto IL_E9;
-						}
-						if (@bool)
+							type.Name,
+							methodInfo.Name
+						});
+					}
+					else
+					{
+						object[] array2 = customAttributes;
+						int k = 0;
+						while (k < array2.Length)
 						{
-							value.menuItem = menuItem.menuItem.Substring(9);
-							goto IL_E9;
+							MenuItem menuItem = (MenuItem)array2[k];
+							AttributeHelper.MonoMenuItem value = (!dictionary.ContainsKey(menuItem.menuItem)) ? default(AttributeHelper.MonoMenuItem) : dictionary[menuItem.menuItem];
+							if (!AttributeHelper.ValidateMethodForMenuCommand(methodInfo, false))
+							{
+								break;
+							}
+							if (!menuItem.menuItem.StartsWith("internal:", StringComparison.Ordinal))
+							{
+								value.menuItem = menuItem.menuItem;
+								goto IL_154;
+							}
+							if (@bool)
+							{
+								value.menuItem = menuItem.menuItem.Substring(9);
+								goto IL_154;
+							}
+							IL_1D0:
+							k++;
+							continue;
+							IL_154:
+							if (menuItem.validate)
+							{
+								value.validateType = type;
+								value.validateMethod = methodInfo;
+								value.validateName = methodInfo.Name;
+							}
+							else
+							{
+								value.index = j;
+								value.priority = menuItem.priority;
+								value.executeType = type;
+								value.executeMethod = methodInfo;
+								value.executeName = methodInfo.Name;
+							}
+							dictionary[menuItem.menuItem] = value;
+							goto IL_1D0;
 						}
-						IL_144:
-						k++;
-						continue;
-						IL_E9:
-						value.type = type;
-						if (menuItem.validate)
-						{
-							value.validate = methodInfo.Name;
-						}
-						else
-						{
-							value.execute = methodInfo.Name;
-							value.index = j;
-							value.priority = menuItem.priority;
-						}
-						dictionary[menuItem.menuItem] = value;
-						goto IL_144;
 					}
 				}
 			}
@@ -171,10 +259,11 @@ namespace UnityEditor
 			return array3;
 		}
 
-		private static AttributeHelper.MonoMenuItem[] ExtractContextMenu(Type klass)
+		[RequiredByNativeCode]
+		private static AttributeHelper.MonoMenuItem[] ExtractContextMenu(Type type)
 		{
 			Dictionary<string, AttributeHelper.MonoMenuItem> dictionary = new Dictionary<string, AttributeHelper.MonoMenuItem>();
-			MethodInfo[] methods = klass.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 			for (int i = 0; i < methods.GetLength(0); i++)
 			{
 				MethodInfo methodInfo = methods[i];
@@ -184,37 +273,68 @@ namespace UnityEditor
 				{
 					ContextMenu contextMenu = (ContextMenu)array[j];
 					AttributeHelper.MonoMenuItem value = (!dictionary.ContainsKey(contextMenu.menuItem)) ? default(AttributeHelper.MonoMenuItem) : dictionary[contextMenu.menuItem];
+					if (!AttributeHelper.ValidateMethodForMenuCommand(methodInfo, true))
+					{
+						break;
+					}
 					value.menuItem = contextMenu.menuItem;
-					value.type = klass;
-					value.execute = methodInfo.Name;
+					if (contextMenu.validate)
+					{
+						value.validateType = type;
+						value.validateMethod = methodInfo;
+						value.validateName = methodInfo.Name;
+					}
+					else
+					{
+						value.index = i;
+						value.priority = contextMenu.priority;
+						value.executeType = type;
+						value.executeMethod = methodInfo;
+						value.executeName = methodInfo.Name;
+					}
 					dictionary[contextMenu.menuItem] = value;
 				}
 			}
-			return dictionary.Values.ToArray<AttributeHelper.MonoMenuItem>();
+			AttributeHelper.MonoMenuItem[] array2 = dictionary.Values.ToArray<AttributeHelper.MonoMenuItem>();
+			Array.Sort(array2, new AttributeHelper.CompareMenuIndex());
+			return array2;
 		}
 
-		private static string GetComponentMenuName(Type klass)
+		[RequiredByNativeCode]
+		private static string GetComponentMenuName(Type type)
 		{
-			object[] customAttributes = klass.GetCustomAttributes(typeof(AddComponentMenu), false);
+			object[] customAttributes = type.GetCustomAttributes(typeof(AddComponentMenu), false);
+			string result;
 			if (customAttributes.Length > 0)
 			{
 				AddComponentMenu addComponentMenu = (AddComponentMenu)customAttributes[0];
-				return addComponentMenu.componentMenu;
+				result = addComponentMenu.componentMenu;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
-		private static int GetComponentMenuOrdering(Type klass)
+		[RequiredByNativeCode]
+		private static int GetComponentMenuOrdering(Type type)
 		{
-			object[] customAttributes = klass.GetCustomAttributes(typeof(AddComponentMenu), false);
+			object[] customAttributes = type.GetCustomAttributes(typeof(AddComponentMenu), false);
+			int result;
 			if (customAttributes.Length > 0)
 			{
 				AddComponentMenu addComponentMenu = (AddComponentMenu)customAttributes[0];
-				return addComponentMenu.componentOrder;
+				result = addComponentMenu.componentOrder;
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 
+		[RequiredByNativeCode]
 		private static AttributeHelper.MonoCreateAssetItem[] ExtractCreateAssetMenuItems(Assembly assembly)
 		{
 			List<AttributeHelper.MonoCreateAssetItem> list = new List<AttributeHelper.MonoCreateAssetItem>();
@@ -254,32 +374,25 @@ namespace UnityEditor
 			return list.ToArray();
 		}
 
-		internal static ArrayList FindEditorClassesWithAttribute(Type attrib)
-		{
-			ArrayList arrayList = new ArrayList();
-			foreach (Type current in EditorAssemblies.loadedTypes)
-			{
-				if (current.GetCustomAttributes(attrib, false).Length != 0)
-				{
-					arrayList.Add(current);
-				}
-			}
-			return arrayList;
-		}
-
 		internal static object InvokeMemberIfAvailable(object target, string methodName, object[] args)
 		{
 			MethodInfo method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			object result;
 			if (method != null)
 			{
-				return method.Invoke(target, args);
+				result = method.Invoke(target, args);
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		internal static bool GameObjectContainsAttribute(GameObject go, Type attributeType)
 		{
 			Component[] components = go.GetComponents(typeof(Component));
+			bool result;
 			for (int i = 0; i < components.Length; i++)
 			{
 				Component component = components[i];
@@ -288,26 +401,27 @@ namespace UnityEditor
 					Type type = component.GetType();
 					if (type.GetCustomAttributes(attributeType, true).Length > 0)
 					{
-						return true;
+						result = true;
+						return result;
 					}
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		[DebuggerHidden]
 		internal static IEnumerable<T> CallMethodsWithAttribute<T>(Type attributeType, params object[] arguments)
 		{
-			AttributeHelper.<CallMethodsWithAttribute>c__Iterator3<T> <CallMethodsWithAttribute>c__Iterator = new AttributeHelper.<CallMethodsWithAttribute>c__Iterator3<T>();
+			AttributeHelper.<CallMethodsWithAttribute>c__Iterator0<T> <CallMethodsWithAttribute>c__Iterator = new AttributeHelper.<CallMethodsWithAttribute>c__Iterator0<T>();
 			<CallMethodsWithAttribute>c__Iterator.attributeType = attributeType;
 			<CallMethodsWithAttribute>c__Iterator.arguments = arguments;
-			<CallMethodsWithAttribute>c__Iterator.<$>attributeType = attributeType;
-			<CallMethodsWithAttribute>c__Iterator.<$>arguments = arguments;
-			AttributeHelper.<CallMethodsWithAttribute>c__Iterator3<T> expr_23 = <CallMethodsWithAttribute>c__Iterator;
-			expr_23.$PC = -2;
-			return expr_23;
+			AttributeHelper.<CallMethodsWithAttribute>c__Iterator0<T> expr_15 = <CallMethodsWithAttribute>c__Iterator;
+			expr_15.$PC = -2;
+			return expr_15;
 		}
 
+		[RequiredByNativeCode]
 		internal static string GetHelpURLFromAttribute(Type objectType)
 		{
 			HelpURLAttribute helpURLAttribute = (HelpURLAttribute)Attribute.GetCustomAttribute(objectType, typeof(HelpURLAttribute));

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor.Collaboration;
@@ -27,7 +28,7 @@ namespace UnityEditor
 		}
 
 		[SerializeField]
-		private string m_NameFilter = string.Empty;
+		private string m_NameFilter = "";
 
 		[SerializeField]
 		private string[] m_ClassNames = new string[0];
@@ -48,10 +49,10 @@ namespace UnityEditor
 		private string[] m_ScenePaths;
 
 		[SerializeField]
-		private bool m_ShowAllHits;
+		private bool m_ShowAllHits = false;
 
 		[SerializeField]
-		private SearchFilter.SearchArea m_SearchArea;
+		private SearchFilter.SearchArea m_SearchArea = SearchFilter.SearchArea.AllAssets;
 
 		[SerializeField]
 		private string[] m_Folders = new string[0];
@@ -178,7 +179,7 @@ namespace UnityEditor
 
 		public void ClearSearch()
 		{
-			this.m_NameFilter = string.Empty;
+			this.m_NameFilter = "";
 			this.m_ClassNames = new string[0];
 			this.m_AssetLabels = new string[0];
 			this.m_AssetBundleNames = new string[0];
@@ -188,39 +189,44 @@ namespace UnityEditor
 			this.m_ShowAllHits = false;
 		}
 
-		private bool IsNullOrEmtpy<T>(T[] list)
+		private bool IsNullOrEmpty<T>(T[] list)
 		{
 			return list == null || list.Length == 0;
 		}
 
 		public SearchFilter.State GetState()
 		{
-			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmtpy<string>(this.m_AssetLabels) || !this.IsNullOrEmtpy<string>(this.m_ClassNames) || !this.IsNullOrEmtpy<string>(this.m_AssetBundleNames) || !this.IsNullOrEmtpy<int>(this.m_ReferencingInstanceIDs);
+			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmpty<string>(this.m_AssetLabels) || !this.IsNullOrEmpty<string>(this.m_ClassNames) || !this.IsNullOrEmpty<string>(this.m_AssetBundleNames) || !this.IsNullOrEmpty<int>(this.m_ReferencingInstanceIDs);
 			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
 			{
-				flag = (flag || !this.IsNullOrEmtpy<string>(this.m_VersionControlStates));
+				flag = (flag || !this.IsNullOrEmpty<string>(this.m_VersionControlStates));
 			}
-			bool flag2 = !this.IsNullOrEmtpy<string>(this.m_Folders);
+			bool flag2 = !this.IsNullOrEmpty<string>(this.m_Folders);
+			SearchFilter.State result;
 			if (flag)
 			{
 				if (this.m_SearchArea == SearchFilter.SearchArea.AssetStore)
 				{
-					return SearchFilter.State.SearchingInAssetStore;
+					result = SearchFilter.State.SearchingInAssetStore;
 				}
-				if (flag2 && this.m_SearchArea == SearchFilter.SearchArea.SelectedFolders)
+				else if (flag2 && this.m_SearchArea == SearchFilter.SearchArea.SelectedFolders)
 				{
-					return SearchFilter.State.SearchingInFolders;
+					result = SearchFilter.State.SearchingInFolders;
 				}
-				return SearchFilter.State.SearchingInAllAssets;
+				else
+				{
+					result = SearchFilter.State.SearchingInAllAssets;
+				}
+			}
+			else if (flag2)
+			{
+				result = SearchFilter.State.FolderBrowsing;
 			}
 			else
 			{
-				if (flag2)
-				{
-					return SearchFilter.State.FolderBrowsing;
-				}
-				return SearchFilter.State.EmptySearchFilter;
+				result = SearchFilter.State.EmptySearchFilter;
 			}
+			return result;
 		}
 
 		public bool IsSearching()
@@ -247,10 +253,13 @@ namespace UnityEditor
 				this.m_Folders = newFilter.m_Folders;
 				result = true;
 			}
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted && newFilter.m_VersionControlStates != this.m_VersionControlStates)
+			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
 			{
-				this.m_VersionControlStates = newFilter.m_VersionControlStates;
-				result = true;
+				if (newFilter.m_VersionControlStates != this.m_VersionControlStates)
+				{
+					this.m_VersionControlStates = newFilter.m_VersionControlStates;
+					result = true;
+				}
 			}
 			if (newFilter.m_AssetLabels != this.m_AssetLabels)
 			{
@@ -293,9 +302,12 @@ namespace UnityEditor
 			{
 				text = text + "[Labels: " + this.m_AssetLabels[0] + "]";
 			}
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted && this.m_VersionControlStates != null && this.m_VersionControlStates.Length > 0)
+			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
 			{
-				text = text + "[VersionStates: " + this.m_VersionControlStates[0] + "]";
+				if (this.m_VersionControlStates != null && this.m_VersionControlStates.Length > 0)
+				{
+					text = text + "[VersionStates: " + this.m_VersionControlStates[0] + "]";
+				}
 			}
 			if (this.m_AssetBundleNames != null && this.m_AssetBundleNames.Length > 0)
 			{
@@ -342,7 +354,7 @@ namespace UnityEditor
 
 		internal string FilterToSearchFieldString()
 		{
-			string text = string.Empty;
+			string text = "";
 			if (!string.IsNullOrEmpty(this.m_NameFilter))
 			{
 				text += this.m_NameFilter;
@@ -359,33 +371,31 @@ namespace UnityEditor
 
 		private void AddToString<T>(string prefix, T[] list, ref string result)
 		{
-			if (list == null)
+			if (list != null)
 			{
-				return;
-			}
-			if (result == null)
-			{
-				result = string.Empty;
-			}
-			for (int i = 0; i < list.Length; i++)
-			{
-				T t = list[i];
-				if (!string.IsNullOrEmpty(result))
+				if (result == null)
 				{
-					result += " ";
+					result = "";
 				}
-				result = result + prefix + t;
+				for (int i = 0; i < list.Length; i++)
+				{
+					T t = list[i];
+					if (!string.IsNullOrEmpty(result))
+					{
+						result += " ";
+					}
+					result = result + prefix + t;
+				}
 			}
 		}
 
 		internal void SearchFieldStringToFilter(string searchString)
 		{
 			this.ClearSearch();
-			if (string.IsNullOrEmpty(searchString))
+			if (!string.IsNullOrEmpty(searchString))
 			{
-				return;
+				SearchUtility.ParseSearchString(searchString, this);
 			}
-			SearchUtility.ParseSearchString(searchString, this);
 		}
 
 		internal static SearchFilter CreateSearchFilterFromString(string searchText)
@@ -397,16 +407,34 @@ namespace UnityEditor
 
 		public static string[] Split(string text)
 		{
+			string[] result;
 			if (string.IsNullOrEmpty(text))
 			{
-				return new string[0];
+				result = new string[0];
 			}
-			List<string> list = new List<string>();
-			foreach (Match match in Regex.Matches(text, "\".+?\"|\\S+"))
+			else
 			{
-				list.Add(match.Value.Replace("\"", string.Empty));
+				List<string> list = new List<string>();
+				IEnumerator enumerator = Regex.Matches(text, "\".+?\"|\\S+").GetEnumerator();
+				try
+				{
+					while (enumerator.MoveNext())
+					{
+						Match match = (Match)enumerator.Current;
+						list.Add(match.Value.Replace("\"", ""));
+					}
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
+				}
+				result = list.ToArray();
 			}
-			return list.ToArray();
+			return result;
 		}
 	}
 }

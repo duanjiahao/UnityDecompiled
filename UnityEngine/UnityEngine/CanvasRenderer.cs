@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -10,93 +12,91 @@ namespace UnityEngine
 
 		public static event CanvasRenderer.OnRequestRebuild onRequestRebuild
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				CanvasRenderer.onRequestRebuild = (CanvasRenderer.OnRequestRebuild)Delegate.Combine(CanvasRenderer.onRequestRebuild, value);
+				CanvasRenderer.OnRequestRebuild onRequestRebuild = CanvasRenderer.onRequestRebuild;
+				CanvasRenderer.OnRequestRebuild onRequestRebuild2;
+				do
+				{
+					onRequestRebuild2 = onRequestRebuild;
+					onRequestRebuild = Interlocked.CompareExchange<CanvasRenderer.OnRequestRebuild>(ref CanvasRenderer.onRequestRebuild, (CanvasRenderer.OnRequestRebuild)Delegate.Combine(onRequestRebuild2, value), onRequestRebuild);
+				}
+				while (onRequestRebuild != onRequestRebuild2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				CanvasRenderer.onRequestRebuild = (CanvasRenderer.OnRequestRebuild)Delegate.Remove(CanvasRenderer.onRequestRebuild, value);
+				CanvasRenderer.OnRequestRebuild onRequestRebuild = CanvasRenderer.onRequestRebuild;
+				CanvasRenderer.OnRequestRebuild onRequestRebuild2;
+				do
+				{
+					onRequestRebuild2 = onRequestRebuild;
+					onRequestRebuild = Interlocked.CompareExchange<CanvasRenderer.OnRequestRebuild>(ref CanvasRenderer.onRequestRebuild, (CanvasRenderer.OnRequestRebuild)Delegate.Remove(onRequestRebuild2, value), onRequestRebuild);
+				}
+				while (onRequestRebuild != onRequestRebuild2);
 			}
 		}
 
 		[Obsolete("isMask is no longer supported. See EnableClipping for vertex clipping configuration")]
 		public extern bool isMask
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool hasRectClipping
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool hasPopInstruction
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int materialCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int popMaterialCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int relativeDepth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool cull
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int absoluteDepth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool hasMoved
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -106,7 +106,6 @@ namespace UnityEngine
 			CanvasRenderer.INTERNAL_CALL_SetColor(this, ref color);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetColor(CanvasRenderer self, ref Color color);
 
@@ -117,15 +116,12 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetColor(CanvasRenderer self, out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetAlpha();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAlpha(float alpha);
 
@@ -180,15 +176,12 @@ namespace UnityEngine
 			CanvasRenderer.INTERNAL_CALL_EnableRectClipping(this, ref rect);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_EnableRectClipping(CanvasRenderer self, ref Rect rect);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DisableRectClipping();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetMaterial(Material material, int index);
 
@@ -204,31 +197,24 @@ namespace UnityEngine
 			return this.GetMaterial(0);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Material GetMaterial(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPopMaterial(Material material, int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Material GetPopMaterial(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTexture(Texture texture);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAlphaTexture(Texture texture);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetMesh(Mesh mesh);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear();
 
@@ -238,11 +224,9 @@ namespace UnityEngine
 			CanvasRenderer.SplitIndiciesStreamsInternal(verts, indicies);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SplitUIVertexStreamsInternal(object verts, object positions, object colors, object uv0S, object uv1S, object normals, object tangents);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SplitIndiciesStreamsInternal(object verts, object indicies);
 
@@ -251,7 +235,6 @@ namespace UnityEngine
 			CanvasRenderer.CreateUIVertexStreamInternal(verts, positions, colors, uv0S, uv1S, normals, tangents, indicies);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void CreateUIVertexStreamInternal(object verts, object positions, object colors, object uv0S, object uv1S, object normals, object tangents, object indicies);
 
@@ -260,6 +243,7 @@ namespace UnityEngine
 			CanvasRenderer.SplitUIVertexStreamsInternal(verts, positions, colors, uv0S, uv1S, normals, tangents);
 		}
 
+		[RequiredByNativeCode]
 		private static void RequestRefresh()
 		{
 			if (CanvasRenderer.onRequestRebuild != null)

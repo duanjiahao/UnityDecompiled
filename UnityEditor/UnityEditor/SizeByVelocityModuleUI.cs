@@ -39,22 +39,21 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_X != null)
+			if (this.m_X == null)
 			{
-				return;
+				if (SizeByVelocityModuleUI.s_Texts == null)
+				{
+					SizeByVelocityModuleUI.s_Texts = new SizeByVelocityModuleUI.Texts();
+				}
+				this.m_X = new SerializedMinMaxCurve(this, SizeByVelocityModuleUI.s_Texts.x, "curve");
+				this.m_X.m_AllowConstant = false;
+				this.m_Y = new SerializedMinMaxCurve(this, SizeByVelocityModuleUI.s_Texts.y, "y");
+				this.m_Y.m_AllowConstant = false;
+				this.m_Z = new SerializedMinMaxCurve(this, SizeByVelocityModuleUI.s_Texts.z, "z");
+				this.m_Z.m_AllowConstant = false;
+				this.m_SeparateAxes = base.GetProperty("separateAxes");
+				this.m_Range = base.GetProperty("range");
 			}
-			if (SizeByVelocityModuleUI.s_Texts == null)
-			{
-				SizeByVelocityModuleUI.s_Texts = new SizeByVelocityModuleUI.Texts();
-			}
-			this.m_X = new SerializedMinMaxCurve(this, SizeByVelocityModuleUI.s_Texts.x, "curve");
-			this.m_X.m_AllowConstant = false;
-			this.m_Y = new SerializedMinMaxCurve(this, SizeByVelocityModuleUI.s_Texts.y, "y");
-			this.m_Y.m_AllowConstant = false;
-			this.m_Z = new SerializedMinMaxCurve(this, SizeByVelocityModuleUI.s_Texts.z, "z");
-			this.m_Z.m_AllowConstant = false;
-			this.m_SeparateAxes = base.GetProperty("separateAxes");
-			this.m_Range = base.GetProperty("range");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -64,7 +63,7 @@ namespace UnityEditor
 				SizeByVelocityModuleUI.s_Texts = new SizeByVelocityModuleUI.Texts();
 			}
 			EditorGUI.BeginChangeCheck();
-			bool flag = ModuleUI.GUIToggle(SizeByVelocityModuleUI.s_Texts.separateAxes, this.m_SeparateAxes);
+			bool flag = ModuleUI.GUIToggle(SizeByVelocityModuleUI.s_Texts.separateAxes, this.m_SeparateAxes, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				if (flag)
@@ -78,24 +77,24 @@ namespace UnityEditor
 					this.m_Z.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_8F_0 = this.m_Z;
+			SerializedMinMaxCurve arg_9C_0 = this.m_Z;
 			MinMaxCurveState state = this.m_X.state;
 			this.m_Y.state = state;
-			arg_8F_0.state = state;
+			arg_9C_0.state = state;
 			MinMaxCurveState state2 = this.m_Z.state;
 			if (flag)
 			{
 				this.m_X.m_DisplayName = SizeByVelocityModuleUI.s_Texts.x;
-				base.GUITripleMinMaxCurve(GUIContent.none, SizeByVelocityModuleUI.s_Texts.x, this.m_X, SizeByVelocityModuleUI.s_Texts.y, this.m_Y, SizeByVelocityModuleUI.s_Texts.z, this.m_Z, null);
+				base.GUITripleMinMaxCurve(GUIContent.none, SizeByVelocityModuleUI.s_Texts.x, this.m_X, SizeByVelocityModuleUI.s_Texts.y, this.m_Y, SizeByVelocityModuleUI.s_Texts.z, this.m_Z, null, new GUILayoutOption[0]);
 			}
 			else
 			{
 				this.m_X.m_DisplayName = SizeByVelocityModuleUI.s_Texts.size;
-				ModuleUI.GUIMinMaxCurve(SizeByVelocityModuleUI.s_Texts.size, this.m_X);
+				ModuleUI.GUIMinMaxCurve(SizeByVelocityModuleUI.s_Texts.size, this.m_X, new GUILayoutOption[0]);
 			}
 			using (new EditorGUI.DisabledScope(state2 == MinMaxCurveState.k_Scalar || state2 == MinMaxCurveState.k_TwoScalars))
 			{
-				ModuleUI.GUIMinMaxRange(SizeByVelocityModuleUI.s_Texts.velocityRange, this.m_Range);
+				ModuleUI.GUIMinMaxRange(SizeByVelocityModuleUI.s_Texts.velocityRange, this.m_Range, new GUILayoutOption[0]);
 			}
 		}
 	}

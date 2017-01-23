@@ -1,10 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Scripting;
 
 namespace UnityEditor.Rendering
 {
-	[RequiredByNativeCode]
+	[Obsolete("Use TierSettings instead (UnityUpgradable) -> UnityEditor.Rendering.TierSettings", false)]
 	public struct PlatformShaderSettings
 	{
 		[MarshalAs(UnmanagedType.I1)]

@@ -6,7 +6,6 @@ namespace UnityEditor.Sprites
 {
 	public sealed class SpriteUtility
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D GetSpriteTexture(Sprite sprite, bool getAtlasData);
 
@@ -16,7 +15,6 @@ namespace UnityEditor.Sprites
 			return sprite.vertices;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Vector2[] GetSpriteUVs(Sprite sprite, bool getAtlasData);
 
@@ -31,19 +29,15 @@ namespace UnityEditor.Sprites
 			SpriteUtility.INTERNAL_CALL_GenerateOutline(texture, ref rect, detail, alphaTolerance, holeDetection, out paths);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GenerateOutline(Texture2D texture, ref Rect rect, float detail, byte alphaTolerance, bool holeDetection, out Vector2[][] paths);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void GenerateOutlineFromSprite(Sprite sprite, float detail, byte alphaTolerance, bool holeDetection, out Vector2[][] paths);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Vector2[] GeneratePolygonOutlineVerticesOfSize(int sides, int width, int height);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CreateSpritePolygonAssetAtPath(string pathName, int sides);
 	}

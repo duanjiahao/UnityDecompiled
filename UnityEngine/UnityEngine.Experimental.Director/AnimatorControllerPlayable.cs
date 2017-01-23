@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
@@ -85,7 +86,6 @@ namespace UnityEngine.Experimental.Director
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void InternalCreate(RuntimeAnimatorController controller, ref AnimatorControllerPlayable that);
 
@@ -94,7 +94,16 @@ namespace UnityEngine.Experimental.Director
 			this.node.Destroy();
 		}
 
-		[WrapperlessIcall]
+		public static implicit operator Playable(AnimatorControllerPlayable s)
+		{
+			return s.node;
+		}
+
+		public static implicit operator AnimationPlayable(AnimatorControllerPlayable s)
+		{
+			return s.handle;
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern RuntimeAnimatorController GetAnimatorControllerInternal(ref AnimatorControllerPlayable that);
 
@@ -188,11 +197,9 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.IsParameterControlledByCurveID(ref this, id);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetLayerCountInternal(ref AnimatorControllerPlayable that);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetLayerNameInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -201,7 +208,6 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetLayerNameInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetLayerIndexInternal(ref AnimatorControllerPlayable that, string layerName);
 
@@ -210,7 +216,6 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetLayerIndexInternal(ref this, layerName);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetLayerWeightInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -219,7 +224,6 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetLayerWeightInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetLayerWeightInternal(ref AnimatorControllerPlayable that, int layerIndex, float weight);
 
@@ -228,7 +232,6 @@ namespace UnityEngine.Experimental.Director
 			AnimatorControllerPlayable.SetLayerWeightInternal(ref this, layerIndex, weight);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimatorStateInfo GetCurrentAnimatorStateInfoInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -237,7 +240,6 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetCurrentAnimatorStateInfoInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimatorStateInfo GetNextAnimatorStateInfoInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -246,7 +248,6 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetNextAnimatorStateInfoInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimatorTransitionInfo GetAnimatorTransitionInfoInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -255,7 +256,6 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetAnimatorTransitionInfoInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimatorClipInfo[] GetCurrentAnimatorClipInfoInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -264,7 +264,40 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.GetCurrentAnimatorClipInfoInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
+		public void GetCurrentAnimatorClipInfo(int layerIndex, List<AnimatorClipInfo> clips)
+		{
+			if (clips == null)
+			{
+				throw new ArgumentNullException("clips");
+			}
+			this.GetAnimatorClipInfoInternal(ref this, layerIndex, true, clips);
+		}
+
+		public void GetNextAnimatorClipInfo(int layerIndex, List<AnimatorClipInfo> clips)
+		{
+			if (clips == null)
+			{
+				throw new ArgumentNullException("clips");
+			}
+			this.GetAnimatorClipInfoInternal(ref this, layerIndex, false, clips);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetAnimatorClipInfoInternal(ref AnimatorControllerPlayable that, int layerIndex, bool isCurrent, object clips);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern int GetAnimatorClipInfoCountInternal(ref AnimatorControllerPlayable that, int layerIndex, bool current);
+
+		public int GetCurrentAnimatorClipInfoCount(int layerIndex)
+		{
+			return this.GetAnimatorClipInfoCountInternal(ref this, layerIndex, true);
+		}
+
+		public int GetNextAnimatorClipInfoCount(int layerIndex)
+		{
+			return this.GetAnimatorClipInfoCountInternal(ref this, layerIndex, false);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimatorClipInfo[] GetNextAnimatorClipInfoInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -278,11 +311,9 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.ResolveHashInternal(ref this, hash);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string ResolveHashInternal(ref AnimatorControllerPlayable that, int hash);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool IsInTransitionInternal(ref AnimatorControllerPlayable that, int layerIndex);
 
@@ -291,11 +322,9 @@ namespace UnityEngine.Experimental.Director
 			return AnimatorControllerPlayable.IsInTransitionInternal(ref this, layerIndex);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetParameterCountInternal(ref AnimatorControllerPlayable that);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimatorControllerParameter[] GetParametersArrayInternal(ref AnimatorControllerPlayable that);
 
@@ -309,7 +338,7 @@ namespace UnityEngine.Experimental.Director
 			return parametersArrayInternal[index];
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int StringToHash(string name);
 
@@ -353,7 +382,6 @@ namespace UnityEngine.Experimental.Director
 			AnimatorControllerPlayable.CrossFadeInFixedTimeInternal(ref this, stateNameHash, transitionDuration, layer, fixedTime);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void CrossFadeInFixedTimeInternal(ref AnimatorControllerPlayable that, int stateNameHash, float transitionDuration, [DefaultValue("-1")] int layer, [DefaultValue("0.0f")] float fixedTime);
 
@@ -412,7 +440,6 @@ namespace UnityEngine.Experimental.Director
 			AnimatorControllerPlayable.CrossFadeInternal(ref this, stateNameHash, transitionDuration, layer, normalizedTime);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void CrossFadeInternal(ref AnimatorControllerPlayable that, int stateNameHash, float transitionDuration, [DefaultValue("-1")] int layer, [DefaultValue("float.NegativeInfinity")] float normalizedTime);
 
@@ -471,7 +498,6 @@ namespace UnityEngine.Experimental.Director
 			AnimatorControllerPlayable.PlayInFixedTimeInternal(ref this, stateNameHash, layer, fixedTime);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void PlayInFixedTimeInternal(ref AnimatorControllerPlayable that, int stateNameHash, [DefaultValue("-1")] int layer, [DefaultValue("float.NegativeInfinity")] float fixedTime);
 
@@ -530,7 +556,6 @@ namespace UnityEngine.Experimental.Director
 			this.PlayInternal(ref this, stateNameHash, layer, normalizedTime);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void PlayInternal(ref AnimatorControllerPlayable that, int stateNameHash, [DefaultValue("-1")] int layer, [DefaultValue("float.NegativeInfinity")] float normalizedTime);
 
@@ -554,79 +579,60 @@ namespace UnityEngine.Experimental.Director
 			return this.HasStateInternal(ref this, layerIndex, stateID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool HasStateInternal(ref AnimatorControllerPlayable that, int layerIndex, int stateID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetFloatString(ref AnimatorControllerPlayable that, string name, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetFloatID(ref AnimatorControllerPlayable that, int id, float value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetFloatString(ref AnimatorControllerPlayable that, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetFloatID(ref AnimatorControllerPlayable that, int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetBoolString(ref AnimatorControllerPlayable that, string name, bool value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetBoolID(ref AnimatorControllerPlayable that, int id, bool value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetBoolString(ref AnimatorControllerPlayable that, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetBoolID(ref AnimatorControllerPlayable that, int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetIntegerString(ref AnimatorControllerPlayable that, string name, int value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetIntegerID(ref AnimatorControllerPlayable that, int id, int value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetIntegerString(ref AnimatorControllerPlayable that, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetIntegerID(ref AnimatorControllerPlayable that, int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetTriggerString(ref AnimatorControllerPlayable that, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetTriggerID(ref AnimatorControllerPlayable that, int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ResetTriggerString(ref AnimatorControllerPlayable that, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ResetTriggerID(ref AnimatorControllerPlayable that, int id);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool IsParameterControlledByCurveString(ref AnimatorControllerPlayable that, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool IsParameterControlledByCurveID(ref AnimatorControllerPlayable that, int id);
 
@@ -640,26 +646,6 @@ namespace UnityEngine.Experimental.Director
 			return this.handle.CastTo<T>();
 		}
 
-		public override bool Equals(object p)
-		{
-			return Playables.Equals(this, p);
-		}
-
-		public override int GetHashCode()
-		{
-			return this.node.GetHashCode();
-		}
-
-		public static implicit operator Playable(AnimatorControllerPlayable s)
-		{
-			return s.node;
-		}
-
-		public static implicit operator AnimationPlayable(AnimatorControllerPlayable s)
-		{
-			return s.handle;
-		}
-
 		public static bool operator ==(AnimatorControllerPlayable x, Playable y)
 		{
 			return Playables.Equals(x, y);
@@ -668,6 +654,16 @@ namespace UnityEngine.Experimental.Director
 		public static bool operator !=(AnimatorControllerPlayable x, Playable y)
 		{
 			return !Playables.Equals(x, y);
+		}
+
+		public override bool Equals(object p)
+		{
+			return Playables.Equals(this, p);
+		}
+
+		public override int GetHashCode()
+		{
+			return this.node.GetHashCode();
 		}
 	}
 }

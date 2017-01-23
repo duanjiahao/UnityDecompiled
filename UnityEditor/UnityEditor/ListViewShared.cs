@@ -19,17 +19,17 @@ namespace UnityEditor
 
 			public ListViewState state;
 
-			public bool beganHorizontal;
+			public bool beganHorizontal = false;
 
 			public Rect rect;
 
-			public bool wantsReordering;
+			public bool wantsReordering = false;
 
-			public bool wantsExternalFiles;
+			public bool wantsExternalFiles = false;
 
-			public bool wantsToStartCustomDrag;
+			public bool wantsToStartCustomDrag = false;
 
-			public bool wantsToAcceptCustomDrag;
+			public bool wantsToAcceptCustomDrag = false;
 
 			public int dragItem;
 		}
@@ -44,7 +44,7 @@ namespace UnityEditor
 			public static string insertion = "PR Insertion";
 		}
 
-		internal class ListViewElementsEnumerator : IDisposable, IEnumerator, IEnumerator<ListViewElement>
+		internal class ListViewElementsEnumerator : IEnumerator<ListViewElement>, IDisposable, IEnumerator
 		{
 			private int[] colWidths;
 
@@ -178,9 +178,12 @@ namespace UnityEditor
 				{
 					this.quiting = true;
 				}
-				if (this.isLayouted && Event.current.type == EventType.Layout && this.yFrom + 1 == this.yPos)
+				if (this.isLayouted && Event.current.type == EventType.Layout)
 				{
-					this.quiting = true;
+					if (this.yFrom + 1 == this.yPos)
+					{
+						this.quiting = true;
+					}
 				}
 				if (this.isLayouted && this.yPos != this.yFrom)
 				{
@@ -260,12 +263,12 @@ namespace UnityEditor
 					}
 					else if (this.ilvState.wantsExternalFiles)
 					{
-						EventType type = Event.current.type;
-						if (type != EventType.DragUpdated)
+						EventType type2 = Event.current.type;
+						if (type2 != EventType.DragUpdated)
 						{
-							if (type != EventType.DragPerform)
+							if (type2 != EventType.DragPerform)
 							{
-								if (type == EventType.DragExited)
+								if (type2 == EventType.DragExited)
 								{
 									this.ilvState.wantsExternalFiles = false;
 									this.ilvState.state.drawDropHere = false;
@@ -308,12 +311,12 @@ namespace UnityEditor
 					}
 					else if (this.ilvState.wantsToAcceptCustomDrag && ListViewShared.dragControlID != this.ilvState.state.ID)
 					{
-						EventType type = Event.current.type;
-						if (type != EventType.DragUpdated)
+						EventType type3 = Event.current.type;
+						if (type3 != EventType.DragUpdated)
 						{
-							if (type != EventType.DragPerform)
+							if (type3 != EventType.DragPerform)
 							{
-								if (type == EventType.DragExited)
+								if (type3 == EventType.DragExited)
 								{
 									GUIUtility.hotControl = 0;
 								}
@@ -403,6 +406,7 @@ namespace UnityEditor
 		private static bool DoLVPageUpDown(ListViewShared.InternalListViewState ilvState, ref int selectedRow, ref Vector2 scrollPos, bool up)
 		{
 			int num = ilvState.endRow - ilvState.invisibleRows;
+			bool result;
 			if (up)
 			{
 				if (!ListViewShared.OSX)
@@ -412,7 +416,8 @@ namespace UnityEditor
 					{
 						selectedRow = 0;
 					}
-					return true;
+					result = true;
+					return result;
 				}
 				scrollPos.y -= (float)(ilvState.state.rowHeight * num);
 				if (scrollPos.y < 0f)
@@ -429,11 +434,13 @@ namespace UnityEditor
 					{
 						selectedRow = ilvState.state.totalRows - 1;
 					}
-					return true;
+					result = true;
+					return result;
 				}
 				scrollPos.y += (float)(ilvState.state.rowHeight * num);
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		internal static bool ListViewKeyboard(ListViewShared.InternalListViewState ilvState, int totalCols)
@@ -450,6 +457,7 @@ namespace UnityEditor
 		internal static bool SendKey(ListViewShared.InternalListViewState ilvState, KeyCode keyCode, int totalCols)
 		{
 			ListViewState state = ilvState.state;
+			bool result;
 			switch (keyCode)
 			{
 			case KeyCode.UpArrow:
@@ -457,51 +465,55 @@ namespace UnityEditor
 				{
 					state.row--;
 				}
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.DownArrow:
 				if (state.row < state.totalRows - 1)
 				{
 					state.row++;
 				}
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.RightArrow:
 				if (state.column < totalCols - 1)
 				{
 					state.column++;
 				}
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.LeftArrow:
 				if (state.column > 0)
 				{
 					state.column--;
 				}
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.Home:
 				state.row = 0;
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.End:
 				state.row = state.totalRows - 1;
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.PageUp:
 				if (!ListViewShared.DoLVPageUpDown(ilvState, ref state.row, ref state.scrollPos, true))
 				{
 					Event.current.Use();
-					return false;
+					result = false;
+					return result;
 				}
-				goto IL_136;
+				goto IL_14C;
 			case KeyCode.PageDown:
 				if (!ListViewShared.DoLVPageUpDown(ilvState, ref state.row, ref state.scrollPos, false))
 				{
 					Event.current.Use();
-					return false;
+					result = false;
+					return result;
 				}
-				goto IL_136;
+				goto IL_14C;
 			}
-			return false;
-			IL_136:
+			result = false;
+			return result;
+			IL_14C:
 			state.scrollPos = ListViewShared.ListViewScrollToRow(ilvState, state.scrollPos, state.row);
 			Event.current.Use();
-			return true;
+			result = true;
+			return result;
 		}
 
 		internal static bool HasMouseDown(ListViewShared.InternalListViewState ilvState, Rect r)
@@ -511,14 +523,20 @@ namespace UnityEditor
 
 		internal static bool HasMouseDown(ListViewShared.InternalListViewState ilvState, Rect r, int button)
 		{
-			if (Event.current.type == EventType.MouseDown && Event.current.button == button && r.Contains(Event.current.mousePosition))
+			bool result;
+			if (Event.current.type == EventType.MouseDown && Event.current.button == button)
 			{
-				GUIUtility.hotControl = ilvState.state.ID;
-				GUIUtility.keyboardControl = ilvState.state.ID;
-				Event.current.Use();
-				return true;
+				if (r.Contains(Event.current.mousePosition))
+				{
+					GUIUtility.hotControl = ilvState.state.ID;
+					GUIUtility.keyboardControl = ilvState.state.ID;
+					Event.current.Use();
+					result = true;
+					return result;
+				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		internal static bool HasMouseUp(ListViewShared.InternalListViewState ilvState, Rect r)
@@ -528,13 +546,19 @@ namespace UnityEditor
 
 		internal static bool HasMouseUp(ListViewShared.InternalListViewState ilvState, Rect r, int button)
 		{
-			if (Event.current.type == EventType.MouseUp && Event.current.button == button && r.Contains(Event.current.mousePosition))
+			bool result;
+			if (Event.current.type == EventType.MouseUp && Event.current.button == button)
 			{
-				GUIUtility.hotControl = 0;
-				Event.current.Use();
-				return true;
+				if (r.Contains(Event.current.mousePosition))
+				{
+					GUIUtility.hotControl = 0;
+					Event.current.Use();
+					result = true;
+					return result;
+				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		internal static bool MultiSelection(ListViewShared.InternalListViewState ilvState, int prevSelected, int currSelected, ref int initialSelected, ref bool[] selectedItems)
@@ -624,27 +648,32 @@ namespace UnityEditor
 
 		internal static Vector2 ListViewScrollToRow(ListViewShared.InternalListViewState ilvState, Vector2 currPos, int row)
 		{
+			Vector2 result;
 			if (ilvState.invisibleRows < row && ilvState.endRow > row)
 			{
-				return currPos;
-			}
-			if (row <= ilvState.invisibleRows)
-			{
-				currPos.y = (float)(ilvState.state.rowHeight * row);
+				result = currPos;
 			}
 			else
 			{
-				currPos.y = (float)(ilvState.state.rowHeight * (row + 1) - ilvState.rectHeight);
+				if (row <= ilvState.invisibleRows)
+				{
+					currPos.y = (float)(ilvState.state.rowHeight * row);
+				}
+				else
+				{
+					currPos.y = (float)(ilvState.state.rowHeight * (row + 1) - ilvState.rectHeight);
+				}
+				if (currPos.y < 0f)
+				{
+					currPos.y = 0f;
+				}
+				else if (currPos.y > (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight))
+				{
+					currPos.y = (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight);
+				}
+				result = currPos;
 			}
-			if (currPos.y < 0f)
-			{
-				currPos.y = 0f;
-			}
-			else if (currPos.y > (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight))
-			{
-				currPos.y = (float)(ilvState.state.totalRows * ilvState.state.rowHeight - ilvState.rectHeight);
-			}
-			return currPos;
+			return result;
 		}
 	}
 }

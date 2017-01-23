@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 
 namespace UnityEditor
 {
 	internal class AssetsTreeViewDragging : TreeViewDragging
 	{
-		public AssetsTreeViewDragging(TreeView treeView) : base(treeView)
+		public AssetsTreeViewDragging(TreeViewController treeView) : base(treeView)
 		{
 		}
 

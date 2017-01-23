@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -37,10 +38,10 @@ namespace UnityEditor
 				PackageExport.Styles.includeDependenciesText = EditorGUIUtility.TextContent("Include dependencies");
 				PackageExport.Styles.header = new GUIContent("Items to Export");
 				PackageExport.Styles.topBarBg.fixedHeight = 0f;
-				RectOffset arg_A9_0 = PackageExport.Styles.topBarBg.border;
+				RectOffset arg_AA_0 = PackageExport.Styles.topBarBg.border;
 				int num = 2;
 				PackageExport.Styles.topBarBg.border.bottom = num;
-				arg_A9_0.top = num;
+				arg_AA_0.top = num;
 				PackageExport.Styles.title.fontStyle = FontStyle.Bold;
 				PackageExport.Styles.title.alignment = TextAnchor.MiddleLeft;
 				PackageExport.Styles.loadingTextStyle.alignment = TextAnchor.MiddleCenter;
@@ -114,6 +115,7 @@ namespace UnityEditor
 
 		private bool CheckAssetExportList()
 		{
+			bool result;
 			if (this.m_ExportPackageItems == null || this.m_ExportPackageItems.Length == 0)
 			{
 				GUILayout.Space(20f);
@@ -129,9 +131,13 @@ namespace UnityEditor
 				}
 				GUILayout.EndHorizontal();
 				GUILayout.EndVertical();
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		public void OnGUI()
@@ -150,18 +156,17 @@ namespace UnityEditor
 			{
 				showLoadingScreen = true;
 			}
-			if (this.CheckAssetExportList())
+			if (!this.CheckAssetExportList())
 			{
-				return;
-			}
-			using (new EditorGUI.DisabledScope(!this.HasValidAssetList()))
-			{
-				this.TopArea();
-			}
-			this.TreeViewArea(showLoadingScreen);
-			using (new EditorGUI.DisabledScope(!this.HasValidAssetList()))
-			{
-				this.BottomArea();
+				using (new EditorGUI.DisabledScope(!this.HasValidAssetList()))
+				{
+					this.TopArea();
+				}
+				this.TreeViewArea(showLoadingScreen);
+				using (new EditorGUI.DisabledScope(!this.HasValidAssetList()))
+				{
+					this.BottomArea();
+				}
 			}
 		}
 
@@ -219,9 +224,8 @@ namespace UnityEditor
 			if (showLoadingScreen)
 			{
 				GUI.Label(rect, "Loading...", PackageExport.Styles.loadingTextStyle);
-				return;
 			}
-			if (this.m_ExportPackageItems != null && this.m_ExportPackageItems.Length > 0)
+			else if (this.m_ExportPackageItems != null && this.m_ExportPackageItems.Length > 0)
 			{
 				if (this.m_TreeViewState == null)
 				{
@@ -237,8 +241,8 @@ namespace UnityEditor
 
 		private void Export()
 		{
-			string text = EditorUtility.SaveFilePanel("Export package ...", string.Empty, string.Empty, "unitypackage");
-			if (text != string.Empty)
+			string text = EditorUtility.SaveFilePanel("Export package ...", "", "", "unitypackage");
+			if (text != "")
 			{
 				List<string> list = new List<string>();
 				ExportPackageItem[] exportPackageItems = this.m_ExportPackageItems;

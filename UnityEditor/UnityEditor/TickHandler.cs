@@ -14,13 +14,13 @@ namespace UnityEditor
 		private float[] m_TickStrengths = new float[0];
 
 		[SerializeField]
-		private int m_SmallestTick;
+		private int m_SmallestTick = 0;
 
 		[SerializeField]
 		private int m_BiggestTick = -1;
 
 		[SerializeField]
-		private float m_MinValue;
+		private float m_MinValue = 0f;
 
 		[SerializeField]
 		private float m_MaxValue = 1f;
@@ -139,22 +139,27 @@ namespace UnityEditor
 
 		public float[] GetTicksAtLevel(int level, bool excludeTicksFromHigherlevels)
 		{
+			float[] result;
 			if (level < 0)
 			{
-				return new float[0];
+				result = new float[0];
 			}
-			int num = Mathf.Clamp(this.m_SmallestTick + level, 0, this.m_TickModulos.Length - 1);
-			List<float> list = new List<float>();
-			int num2 = Mathf.FloorToInt(this.m_MinValue / this.m_TickModulos[num]);
-			int num3 = Mathf.CeilToInt(this.m_MaxValue / this.m_TickModulos[num]);
-			for (int i = num2; i <= num3; i++)
+			else
 			{
-				if (!excludeTicksFromHigherlevels || num >= this.m_BiggestTick || i % Mathf.RoundToInt(this.m_TickModulos[num + 1] / this.m_TickModulos[num]) != 0)
+				int num = Mathf.Clamp(this.m_SmallestTick + level, 0, this.m_TickModulos.Length - 1);
+				List<float> list = new List<float>();
+				int num2 = Mathf.FloorToInt(this.m_MinValue / this.m_TickModulos[num]);
+				int num3 = Mathf.CeilToInt(this.m_MaxValue / this.m_TickModulos[num]);
+				for (int i = num2; i <= num3; i++)
 				{
-					list.Add((float)i * this.m_TickModulos[num]);
+					if (!excludeTicksFromHigherlevels || num >= this.m_BiggestTick || i % Mathf.RoundToInt(this.m_TickModulos[num + 1] / this.m_TickModulos[num]) != 0)
+					{
+						list.Add((float)i * this.m_TickModulos[num]);
+					}
 				}
+				result = list.ToArray();
 			}
-			return list.ToArray();
+			return result;
 		}
 
 		public float GetStrengthOfLevel(int level)
@@ -169,15 +174,18 @@ namespace UnityEditor
 
 		public int GetLevelWithMinSeparation(float pixelSeparation)
 		{
+			int result;
 			for (int i = 0; i < this.m_TickModulos.Length; i++)
 			{
 				float num = this.m_TickModulos[i] * this.m_PixelRange / (this.m_MaxValue - this.m_MinValue);
 				if (num >= pixelSeparation)
 				{
-					return i - this.m_SmallestTick;
+					result = i - this.m_SmallestTick;
+					return result;
 				}
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 
 		public void SetTickStrengths(float tickMinSpacing, float tickMaxSpacing, bool sqrt)

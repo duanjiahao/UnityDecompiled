@@ -81,12 +81,15 @@ namespace UnityEditorInternal
 				}
 				break;
 			case EventType.KeyDown:
-				if (GUIUtility.hotControl == id && current.keyCode == KeyCode.Escape)
+				if (GUIUtility.hotControl == id)
 				{
-					pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
-					GUIUtility.hotControl = 0;
-					GUI.changed = true;
-					current.Use();
+					if (current.keyCode == KeyCode.Escape)
+					{
+						pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
+						GUIUtility.hotControl = 0;
+						GUI.changed = true;
+						current.Use();
+					}
 				}
 				break;
 			case EventType.Repaint:
@@ -142,12 +145,15 @@ namespace UnityEditorInternal
 				}
 				break;
 			case EventType.KeyDown:
-				if (GUIUtility.hotControl == controlID && current.keyCode == KeyCode.Escape)
+				if (GUIUtility.hotControl == controlID)
 				{
-					pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
-					GUIUtility.hotControl = 0;
-					GUI.changed = true;
-					current.Use();
+					if (current.keyCode == KeyCode.Escape)
+					{
+						pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
+						GUIUtility.hotControl = 0;
+						GUI.changed = true;
+						current.Use();
+					}
 				}
 				break;
 			case EventType.Repaint:
@@ -206,12 +212,15 @@ namespace UnityEditorInternal
 				}
 				break;
 			case EventType.KeyDown:
-				if (GUIUtility.hotControl == controlID && current.keyCode == KeyCode.Escape)
+				if (GUIUtility.hotControl == controlID)
 				{
-					pos.center = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
-					GUIUtility.hotControl = 0;
-					GUI.changed = true;
-					current.Use();
+					if (current.keyCode == KeyCode.Escape)
+					{
+						pos.center = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
+						GUIUtility.hotControl = 0;
+						GUI.changed = true;
+						current.Use();
+					}
 				}
 				break;
 			case EventType.Repaint:
@@ -277,11 +286,14 @@ namespace UnityEditorInternal
 				}
 				break;
 			case EventType.KeyDown:
-				if (GUIUtility.hotControl == num && current.keyCode == KeyCode.Escape)
+				if (GUIUtility.hotControl == num)
 				{
-					GUIUtility.hotControl = 0;
-					GUI.changed = true;
-					current.Use();
+					if (current.keyCode == KeyCode.Escape)
+					{
+						GUIUtility.hotControl = 0;
+						GUI.changed = true;
+						current.Use();
+					}
 				}
 				break;
 			case EventType.Repaint:

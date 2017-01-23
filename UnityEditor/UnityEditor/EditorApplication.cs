@@ -44,56 +44,54 @@ namespace UnityEditor
 
 		private static EditorApplication.CallbackFunction delayedCallback;
 
-		private static float s_DelayedCallbackTime;
+		private static float s_DelayedCallbackTime = 0f;
 
 		internal static UnityAction projectWasLoaded;
 
 		internal static UnityAction editorApplicationQuit;
 
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache1;
+
 		public static extern bool isPlaying
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isPlayingOrWillChangePlaymode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isPaused
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isCompiling
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isUpdating
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isRemoteConnected
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -101,44 +99,46 @@ namespace UnityEditor
 		[ThreadAndSerializationSafe]
 		public static extern string applicationContentsPath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string applicationPath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern string userJavascriptPackagesPath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern UnityEngine.Object tagManager
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern UnityEngine.Object renderSettings
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern double timeSinceStartup
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+		}
+
+		internal static bool supportsHiDPI
+		{
+			get
+			{
+				return Application.platform == RuntimePlatform.OSXEditor;
+			}
 		}
 
 		[Obsolete("Use Scene.isDirty instead. Use EditorSceneManager.GetScene API to get each open scene")]
@@ -156,30 +156,31 @@ namespace UnityEditor
 			get
 			{
 				Scene activeScene = SceneManager.GetActiveScene();
+				string result;
 				if (activeScene.IsValid())
 				{
-					return activeScene.path;
+					result = activeScene.path;
 				}
-				return string.Empty;
+				else
+				{
+					result = "";
+				}
+				return result;
 			}
 			set
 			{
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadLevelInPlayMode(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadLevelAdditiveInPlayMode(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation LoadLevelAsyncInPlayMode(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation LoadLevelAdditiveAsyncInPlayMode(string path);
 
@@ -188,47 +189,37 @@ namespace UnityEditor
 			EditorApplication.OpenProjectInternal(projectPath, args);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void OpenProjectInternal(string projectPath, string[] args);
 
-		[WrapperlessIcall]
+		[Obsolete("Use AssetDatabase.SaveAssets instead (UnityUpgradable) -> AssetDatabase.SaveAssets()", true)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SaveAssets();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Step();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LockReloadAssemblies();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool ExecuteMenuItem(string menuItemPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool ExecuteMenuItemOnGameObjects(string menuItemPath, GameObject[] objects);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool ExecuteMenuItemWithTemporaryContext(string menuItemPath, UnityEngine.Object[] objects);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnlockReloadAssemblies();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Exit(int returnValue);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSceneRepaintDirty();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateSceneIfNeeded();
 
@@ -345,14 +336,24 @@ namespace UnityEditor
 		{
 			EditorApplication.delayedCallback = function;
 			EditorApplication.s_DelayedCallbackTime = Time.realtimeSinceStartup + timeFromNow;
-			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(EditorApplication.CheckCallDelayed));
+			Delegate arg_35_0 = EditorApplication.update;
+			if (EditorApplication.<>f__mg$cache0 == null)
+			{
+				EditorApplication.<>f__mg$cache0 = new EditorApplication.CallbackFunction(EditorApplication.CheckCallDelayed);
+			}
+			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_35_0, EditorApplication.<>f__mg$cache0);
 		}
 
 		private static void CheckCallDelayed()
 		{
 			if (Time.realtimeSinceStartup > EditorApplication.s_DelayedCallbackTime)
 			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(EditorApplication.CheckCallDelayed));
+				Delegate arg_33_0 = EditorApplication.update;
+				if (EditorApplication.<>f__mg$cache1 == null)
+				{
+					EditorApplication.<>f__mg$cache1 = new EditorApplication.CallbackFunction(EditorApplication.CheckCallDelayed);
+				}
+				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_33_0, EditorApplication.<>f__mg$cache1);
 				EditorApplication.delayedCallback();
 			}
 		}
@@ -392,11 +393,9 @@ namespace UnityEditor
 			Event.current = null;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Beep();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ReportUNetWeaver(string filename, string msg, bool isError);
 
@@ -453,7 +452,7 @@ namespace UnityEditor
 		[Obsolete("Use EditorSceneManager.SaveScene")]
 		public static bool SaveScene()
 		{
-			return EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), string.Empty, false);
+			return EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), "", false);
 		}
 
 		[Obsolete("Use EditorSceneManager.SaveScene")]

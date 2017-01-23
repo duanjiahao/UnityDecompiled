@@ -37,28 +37,24 @@ namespace UnityEngine
 
 			public static extern SamsungTV.OpenAPI.OpenAPIServerType serverType
 			{
-				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
 			}
 
 			public static extern string timeOnTV
 			{
-				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
 			}
 
 			public static extern string uid
 			{
-				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
 			}
 
 			public static extern string dUid
 			{
-				[WrapperlessIcall]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
 			}
@@ -81,47 +77,38 @@ namespace UnityEngine
 
 		public static extern SamsungTV.GestureMode gestureMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool airMouseConnected
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool gestureWorking
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern SamsungTV.GamePadMode gamePadMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern SamsungTV.TouchPadMode GetTouchPadMode();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool SetTouchPadMode(SamsungTV.TouchPadMode value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetSystemLanguage(SystemLanguage language);
 	}

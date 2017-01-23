@@ -7,10 +7,8 @@ namespace UnityEngine
 	{
 		public extern Mesh additionalVertexStreams
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}

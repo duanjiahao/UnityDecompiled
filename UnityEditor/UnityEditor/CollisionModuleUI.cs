@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -61,7 +62,7 @@ namespace UnityEditor
 			public string[] qualitySettings = new string[]
 			{
 				"High",
-				"Medium",
+				"Medium (Static Colliders)",
 				"Low (Static Colliders)"
 			};
 
@@ -118,13 +119,14 @@ namespace UnityEditor
 
 		private float m_ScaleGrid = 1f;
 
-		private bool m_VisualizeBounds;
+		private static bool s_VisualizeBounds = false;
 
-		private static Transform m_SelectedTransform;
-
-		private static CollisionModuleUI s_LastInteractedEditor;
+		private static Transform s_SelectedTransform;
 
 		private static CollisionModuleUI.Texts s_Texts;
+
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache0;
 
 		public CollisionModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "CollisionModule", displayName)
 		{
@@ -133,46 +135,45 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_Type != null)
+			if (this.m_Type == null)
 			{
-				return;
-			}
-			if (CollisionModuleUI.s_Texts == null)
-			{
-				CollisionModuleUI.s_Texts = new CollisionModuleUI.Texts();
-			}
-			this.m_Type = base.GetProperty("type");
-			List<SerializedProperty> list = new List<SerializedProperty>();
-			for (int i = 0; i < this.m_Planes.Length; i++)
-			{
-				this.m_Planes[i] = base.GetProperty("plane" + i);
-				if (i == 0 || this.m_Planes[i].objectReferenceValue != null)
+				if (CollisionModuleUI.s_Texts == null)
 				{
-					list.Add(this.m_Planes[i]);
+					CollisionModuleUI.s_Texts = new CollisionModuleUI.Texts();
 				}
+				this.m_Type = base.GetProperty("type");
+				List<SerializedProperty> list = new List<SerializedProperty>();
+				for (int i = 0; i < this.m_Planes.Length; i++)
+				{
+					this.m_Planes[i] = base.GetProperty("plane" + i);
+					if (i == 0 || this.m_Planes[i].objectReferenceValue != null)
+					{
+						list.Add(this.m_Planes[i]);
+					}
+				}
+				this.m_ShownPlanes = list.ToArray();
+				this.m_Dampen = new SerializedMinMaxCurve(this, CollisionModuleUI.s_Texts.dampen, "m_Dampen");
+				this.m_Dampen.m_AllowCurves = false;
+				this.m_Bounce = new SerializedMinMaxCurve(this, CollisionModuleUI.s_Texts.bounce, "m_Bounce");
+				this.m_Bounce.m_AllowCurves = false;
+				this.m_LifetimeLossOnCollision = new SerializedMinMaxCurve(this, CollisionModuleUI.s_Texts.lifetimeLoss, "m_EnergyLossOnCollision");
+				this.m_LifetimeLossOnCollision.m_AllowCurves = false;
+				this.m_MinKillSpeed = base.GetProperty("minKillSpeed");
+				this.m_MaxKillSpeed = base.GetProperty("maxKillSpeed");
+				this.m_RadiusScale = base.GetProperty("radiusScale");
+				this.m_PlaneVisualizationType = (CollisionModuleUI.PlaneVizType)EditorPrefs.GetInt("PlaneColisionVizType", 1);
+				this.m_ScaleGrid = EditorPrefs.GetFloat("ScalePlaneColision", 1f);
+				CollisionModuleUI.s_VisualizeBounds = EditorPrefs.GetBool("VisualizeBounds", false);
+				this.m_CollidesWith = base.GetProperty("collidesWith");
+				this.m_CollidesWithDynamic = base.GetProperty("collidesWithDynamic");
+				this.m_InteriorCollisions = base.GetProperty("interiorCollisions");
+				this.m_MaxCollisionShapes = base.GetProperty("maxCollisionShapes");
+				this.m_Quality = base.GetProperty("quality");
+				this.m_VoxelSize = base.GetProperty("voxelSize");
+				this.m_CollisionMessages = base.GetProperty("collisionMessages");
+				this.m_CollisionMode = base.GetProperty("collisionMode");
+				this.SyncVisualization();
 			}
-			this.m_ShownPlanes = list.ToArray();
-			this.m_Dampen = new SerializedMinMaxCurve(this, CollisionModuleUI.s_Texts.dampen, "m_Dampen");
-			this.m_Dampen.m_AllowCurves = false;
-			this.m_Bounce = new SerializedMinMaxCurve(this, CollisionModuleUI.s_Texts.bounce, "m_Bounce");
-			this.m_Bounce.m_AllowCurves = false;
-			this.m_LifetimeLossOnCollision = new SerializedMinMaxCurve(this, CollisionModuleUI.s_Texts.lifetimeLoss, "m_EnergyLossOnCollision");
-			this.m_LifetimeLossOnCollision.m_AllowCurves = false;
-			this.m_MinKillSpeed = base.GetProperty("minKillSpeed");
-			this.m_MaxKillSpeed = base.GetProperty("maxKillSpeed");
-			this.m_RadiusScale = base.GetProperty("radiusScale");
-			this.m_PlaneVisualizationType = (CollisionModuleUI.PlaneVizType)EditorPrefs.GetInt("PlaneColisionVizType", 1);
-			this.m_ScaleGrid = EditorPrefs.GetFloat("ScalePlaneColision", 1f);
-			this.m_VisualizeBounds = EditorPrefs.GetBool("VisualizeBounds", false);
-			this.m_CollidesWith = base.GetProperty("collidesWith");
-			this.m_CollidesWithDynamic = base.GetProperty("collidesWithDynamic");
-			this.m_InteriorCollisions = base.GetProperty("interiorCollisions");
-			this.m_MaxCollisionShapes = base.GetProperty("maxCollisionShapes");
-			this.m_Quality = base.GetProperty("quality");
-			this.m_VoxelSize = base.GetProperty("voxelSize");
-			this.m_CollisionMessages = base.GetProperty("collisionMessages");
-			this.m_CollisionMode = base.GetProperty("collisionMode");
-			this.SyncVisualization();
 		}
 
 		protected override void SetVisibilityState(ModuleUI.VisibilityState newState)
@@ -181,7 +182,7 @@ namespace UnityEditor
 			if (newState != ModuleUI.VisibilityState.VisibleAndFoldedOut)
 			{
 				Tools.s_Hidden = false;
-				CollisionModuleUI.m_SelectedTransform = null;
+				CollisionModuleUI.s_SelectedTransform = null;
 				ParticleEffectUtils.ClearPlanes();
 			}
 			else
@@ -202,14 +203,14 @@ namespace UnityEditor
 				"World"
 			};
 			EditorGUI.BeginChangeCheck();
-			CollisionModuleUI.CollisionTypes collisionTypes = (CollisionModuleUI.CollisionTypes)ModuleUI.GUIPopup(string.Empty, this.m_Type, options);
+			CollisionModuleUI.CollisionTypes collisionTypes = (CollisionModuleUI.CollisionTypes)ModuleUI.GUIPopup("", this.m_Type, options, new GUILayoutOption[0]);
 			bool flag = EditorGUI.EndChangeCheck();
 			CollisionModuleUI.CollisionModes collisionModes = CollisionModuleUI.CollisionModes.Mode3D;
 			if (collisionTypes == CollisionModuleUI.CollisionTypes.Plane)
 			{
 				this.DoListOfPlanesGUI();
 				EditorGUI.BeginChangeCheck();
-				this.m_PlaneVisualizationType = (CollisionModuleUI.PlaneVizType)ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.visualization, (int)this.m_PlaneVisualizationType, this.m_PlaneVizTypeNames);
+				this.m_PlaneVisualizationType = (CollisionModuleUI.PlaneVizType)ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.visualization, (int)this.m_PlaneVisualizationType, this.m_PlaneVizTypeNames, new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck() || flag)
 				{
 					EditorPrefs.SetInt("PlaneColisionVizType", (int)this.m_PlaneVisualizationType);
@@ -223,7 +224,7 @@ namespace UnityEditor
 					}
 				}
 				EditorGUI.BeginChangeCheck();
-				this.m_ScaleGrid = ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.scalePlane, this.m_ScaleGrid, "f2");
+				this.m_ScaleGrid = ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.scalePlane, this.m_ScaleGrid, "f2", new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck())
 				{
 					this.m_ScaleGrid = Mathf.Max(0f, this.m_ScaleGrid);
@@ -238,40 +239,39 @@ namespace UnityEditor
 				{
 					"3D",
 					"2D"
-				});
+				}, new GUILayoutOption[0]);
 			}
 			EditorGUI.BeginChangeCheck();
-			this.m_VisualizeBounds = ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.visualizeBounds, this.m_VisualizeBounds);
+			CollisionModuleUI.s_VisualizeBounds = ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.visualizeBounds, CollisionModuleUI.s_VisualizeBounds, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
-				EditorPrefs.SetBool("VisualizeBounds", this.m_VisualizeBounds);
+				EditorPrefs.SetBool("VisualizeBounds", CollisionModuleUI.s_VisualizeBounds);
 			}
-			CollisionModuleUI.s_LastInteractedEditor = this;
-			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.dampen, this.m_Dampen);
-			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.bounce, this.m_Bounce);
-			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.lifetimeLoss, this.m_LifetimeLossOnCollision);
-			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.minKillSpeed, this.m_MinKillSpeed);
-			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.maxKillSpeed, this.m_MaxKillSpeed);
-			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.radiusScale, this.m_RadiusScale);
+			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.dampen, this.m_Dampen, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.bounce, this.m_Bounce, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.lifetimeLoss, this.m_LifetimeLossOnCollision, new GUILayoutOption[0]);
+			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.minKillSpeed, this.m_MinKillSpeed, new GUILayoutOption[0]);
+			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.maxKillSpeed, this.m_MaxKillSpeed, new GUILayoutOption[0]);
+			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.radiusScale, this.m_RadiusScale, new GUILayoutOption[0]);
 			if (collisionTypes == CollisionModuleUI.CollisionTypes.World)
 			{
-				ModuleUI.GUILayerMask(CollisionModuleUI.s_Texts.collidesWith, this.m_CollidesWith);
+				ModuleUI.GUILayerMask(CollisionModuleUI.s_Texts.collidesWith, this.m_CollidesWith, new GUILayoutOption[0]);
 				if (collisionModes == CollisionModuleUI.CollisionModes.Mode3D)
 				{
-					ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.interiorCollisions, this.m_InteriorCollisions);
+					ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.interiorCollisions, this.m_InteriorCollisions, new GUILayoutOption[0]);
 				}
-				ModuleUI.GUIInt(CollisionModuleUI.s_Texts.maxCollisionShapes, this.m_MaxCollisionShapes);
-				ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.quality, this.m_Quality, CollisionModuleUI.s_Texts.qualitySettings);
-				if (this.m_Quality.intValue <= 1)
+				ModuleUI.GUIInt(CollisionModuleUI.s_Texts.maxCollisionShapes, this.m_MaxCollisionShapes, new GUILayoutOption[0]);
+				ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.quality, this.m_Quality, CollisionModuleUI.s_Texts.qualitySettings, new GUILayoutOption[0]);
+				if (this.m_Quality.intValue == 0)
 				{
-					ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.collidesWithDynamic, this.m_CollidesWithDynamic);
+					ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.collidesWithDynamic, this.m_CollidesWithDynamic, new GUILayoutOption[0]);
 				}
-				if (this.m_Quality.intValue > 0)
+				else
 				{
-					ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.voxelSize, this.m_VoxelSize);
+					ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.voxelSize, this.m_VoxelSize, new GUILayoutOption[0]);
 				}
 			}
-			ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.collisionMessages, this.m_CollisionMessages);
+			ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.collisionMessages, this.m_CollisionMessages, new GUILayoutOption[0]);
 		}
 
 		protected override void OnModuleEnable()
@@ -288,35 +288,33 @@ namespace UnityEditor
 
 		private void SyncVisualization()
 		{
-			if (!base.enabled)
+			if (base.enabled)
 			{
-				return;
-			}
-			if (this.m_PlaneVisualizationType != CollisionModuleUI.PlaneVizType.Solid)
-			{
-				return;
-			}
-			for (int i = 0; i < this.m_ShownPlanes.Length; i++)
-			{
-				UnityEngine.Object objectReferenceValue = this.m_ShownPlanes[i].objectReferenceValue;
-				if (objectReferenceValue == null)
+				if (this.m_PlaneVisualizationType == CollisionModuleUI.PlaneVizType.Solid)
 				{
-					ParticleEffectUtils.HidePlaneIfExists(i);
-				}
-				else
-				{
-					Transform transform = objectReferenceValue as Transform;
-					if (transform == null)
+					for (int i = 0; i < this.m_ShownPlanes.Length; i++)
 					{
-						ParticleEffectUtils.HidePlaneIfExists(i);
-					}
-					else
-					{
-						GameObject plane = ParticleEffectUtils.GetPlane(i);
-						plane.transform.position = transform.position;
-						plane.transform.rotation = transform.rotation;
-						plane.transform.localScale = new Vector3(this.m_ScaleGrid, this.m_ScaleGrid, this.m_ScaleGrid);
-						plane.transform.position += transform.up.normalized * 0.002f;
+						UnityEngine.Object objectReferenceValue = this.m_ShownPlanes[i].objectReferenceValue;
+						if (objectReferenceValue == null)
+						{
+							ParticleEffectUtils.HidePlaneIfExists(i);
+						}
+						else
+						{
+							Transform transform = objectReferenceValue as Transform;
+							if (transform == null)
+							{
+								ParticleEffectUtils.HidePlaneIfExists(i);
+							}
+							else
+							{
+								GameObject plane = ParticleEffectUtils.GetPlane(i);
+								plane.transform.position = transform.position;
+								plane.transform.rotation = transform.rotation;
+								plane.transform.localScale = new Vector3(this.m_ScaleGrid, this.m_ScaleGrid, this.m_ScaleGrid);
+								plane.transform.position += transform.up.normalized * 0.002f;
+							}
+						}
 					}
 				}
 			}
@@ -325,21 +323,26 @@ namespace UnityEditor
 		private static GameObject CreateEmptyGameObject(string name, ParticleSystem parentOfGameObject)
 		{
 			GameObject gameObject = new GameObject(name);
+			GameObject result;
 			if (gameObject)
 			{
 				if (parentOfGameObject)
 				{
 					gameObject.transform.parent = parentOfGameObject.transform;
 				}
-				return gameObject;
+				result = gameObject;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private void DoListOfPlanesGUI()
 		{
 			EditorGUI.BeginChangeCheck();
-			int num = base.GUIListOfFloatObjectToggleFields(CollisionModuleUI.s_Texts.planes, this.m_ShownPlanes, null, CollisionModuleUI.s_Texts.createPlane, true);
+			int num = base.GUIListOfFloatObjectToggleFields(CollisionModuleUI.s_Texts.planes, this.m_ShownPlanes, null, CollisionModuleUI.s_Texts.createPlane, true, new GUILayoutOption[0]);
 			bool flag = EditorGUI.EndChangeCheck();
 			if (num >= 0)
 			{
@@ -352,12 +355,15 @@ namespace UnityEditor
 			Rect rect = GUILayoutUtility.GetRect(0f, 16f);
 			rect.x = rect.xMax - 24f - 5f;
 			rect.width = 12f;
-			if (this.m_ShownPlanes.Length > 1 && ModuleUI.MinusButton(rect))
+			if (this.m_ShownPlanes.Length > 1)
 			{
-				this.m_ShownPlanes[this.m_ShownPlanes.Length - 1].objectReferenceValue = null;
-				List<SerializedProperty> list = new List<SerializedProperty>(this.m_ShownPlanes);
-				list.RemoveAt(list.Count - 1);
-				this.m_ShownPlanes = list.ToArray();
+				if (ModuleUI.MinusButton(rect))
+				{
+					this.m_ShownPlanes[this.m_ShownPlanes.Length - 1].objectReferenceValue = null;
+					List<SerializedProperty> list = new List<SerializedProperty>(this.m_ShownPlanes);
+					list.RemoveAt(list.Count - 1);
+					this.m_ShownPlanes = list.ToArray();
+				}
 			}
 			if (this.m_ShownPlanes.Length < 6)
 			{
@@ -401,7 +407,7 @@ namespace UnityEditor
 							Vector3 axis = rotation * Vector3.right;
 							Vector3 normal = rotation * Vector3.up;
 							Vector3 axis2 = rotation * Vector3.forward;
-							if (object.ReferenceEquals(CollisionModuleUI.m_SelectedTransform, transform))
+							if (object.ReferenceEquals(CollisionModuleUI.s_SelectedTransform, transform))
 							{
 								Tools.s_Hidden = true;
 								EditorGUI.BeginChangeCheck();
@@ -428,11 +434,19 @@ namespace UnityEditor
 							else
 							{
 								int keyboardControl = GUIUtility.keyboardControl;
-								float size = HandleUtility.GetHandleSize(position) * 0.06f;
-								Handles.FreeMoveHandle(position, Quaternion.identity, size, Vector3.zero, new Handles.DrawCapFunction(Handles.RectangleCap));
+								float num = HandleUtility.GetHandleSize(position) * 0.06f;
+								Vector3 arg_1EB_0 = position;
+								Quaternion arg_1EB_1 = Quaternion.identity;
+								float arg_1EB_2 = num;
+								Vector3 arg_1EB_3 = Vector3.zero;
+								if (CollisionModuleUI.<>f__mg$cache0 == null)
+								{
+									CollisionModuleUI.<>f__mg$cache0 = new Handles.CapFunction(Handles.RectangleHandleCap);
+								}
+								Handles.FreeMoveHandle(arg_1EB_0, arg_1EB_1, arg_1EB_2, arg_1EB_3, CollisionModuleUI.<>f__mg$cache0);
 								if (eventType == EventType.MouseDown && current.type == EventType.Used && keyboardControl != GUIUtility.keyboardControl)
 								{
-									CollisionModuleUI.m_SelectedTransform = transform;
+									CollisionModuleUI.s_SelectedTransform = transform;
 									eventType = EventType.Used;
 								}
 							}
@@ -463,41 +477,31 @@ namespace UnityEditor
 		[DrawGizmo(GizmoType.Active)]
 		private static void RenderCollisionBounds(ParticleSystem system, GizmoType gizmoType)
 		{
-			if (CollisionModuleUI.s_LastInteractedEditor == null)
+			if (system.collision.enabled)
 			{
-				return;
+				if (CollisionModuleUI.s_VisualizeBounds)
+				{
+					ParticleSystem.Particle[] array = new ParticleSystem.Particle[system.particleCount];
+					int particles = system.GetParticles(array);
+					Color color = Gizmos.color;
+					Gizmos.color = Color.green;
+					Matrix4x4 matrix = Matrix4x4.identity;
+					if (system.main.simulationSpace == ParticleSystemSimulationSpace.Local)
+					{
+						matrix = system.GetLocalToWorldMatrix();
+					}
+					Matrix4x4 matrix2 = Gizmos.matrix;
+					Gizmos.matrix = matrix;
+					for (int i = 0; i < particles; i++)
+					{
+						ParticleSystem.Particle particle = array[i];
+						Vector3 currentSize3D = particle.GetCurrentSize3D(system);
+						Gizmos.DrawWireSphere(particle.position, Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.5f * system.collision.radiusScale);
+					}
+					Gizmos.color = color;
+					Gizmos.matrix = matrix2;
+				}
 			}
-			if (!CollisionModuleUI.s_LastInteractedEditor.enabled)
-			{
-				return;
-			}
-			if (!CollisionModuleUI.s_LastInteractedEditor.m_VisualizeBounds)
-			{
-				return;
-			}
-			if (CollisionModuleUI.s_LastInteractedEditor.m_ParticleSystemUI.m_ParticleSystem != system)
-			{
-				return;
-			}
-			ParticleSystem.Particle[] array = new ParticleSystem.Particle[system.particleCount];
-			int particles = system.GetParticles(array);
-			Color color = Gizmos.color;
-			Gizmos.color = Color.green;
-			Matrix4x4 matrix = Matrix4x4.identity;
-			if (system.simulationSpace == ParticleSystemSimulationSpace.Local)
-			{
-				matrix = system.GetLocalToWorldMatrix();
-			}
-			Matrix4x4 matrix2 = Gizmos.matrix;
-			Gizmos.matrix = matrix;
-			for (int i = 0; i < particles; i++)
-			{
-				ParticleSystem.Particle particle = array[i];
-				Vector3 currentSize3D = particle.GetCurrentSize3D(system);
-				Gizmos.DrawWireSphere(particle.position, Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.5f * CollisionModuleUI.s_LastInteractedEditor.m_RadiusScale.floatValue);
-			}
-			Gizmos.color = color;
-			Gizmos.matrix = matrix2;
 		}
 
 		private void DrawSolidPlane(Vector3 pos, Quaternion rot, int planeIndex)
@@ -506,48 +510,47 @@ namespace UnityEditor
 
 		private void DrawGrid(Vector3 pos, Vector3 axis1, Vector3 axis2, Vector3 normal, Color color, int planeIndex)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			HandleUtility.ApplyWireMaterial();
-			if (color.a > 0f)
-			{
-				GL.Begin(1);
-				float num = 10f;
-				num *= this.m_ScaleGrid;
-				int num2 = (int)num;
-				num2 = Mathf.Clamp(num2, 10, 40);
-				if (num2 % 2 == 0)
+				HandleUtility.ApplyWireMaterial();
+				if (color.a > 0f)
 				{
-					num2++;
-				}
-				float d = num * 0.5f;
-				float d2 = num / (float)(num2 - 1);
-				Vector3 b = axis1 * num;
-				Vector3 b2 = axis2 * num;
-				Vector3 a = axis1 * d2;
-				Vector3 a2 = axis2 * d2;
-				Vector3 a3 = pos - axis1 * d - axis2 * d;
-				for (int i = 0; i < num2; i++)
-				{
-					if (i % 2 == 0)
+					GL.Begin(1);
+					float num = 10f;
+					num *= this.m_ScaleGrid;
+					int num2 = (int)num;
+					num2 = Mathf.Clamp(num2, 10, 40);
+					if (num2 % 2 == 0)
 					{
-						GL.Color(color * 0.7f);
+						num2++;
 					}
-					else
+					float d = num * 0.5f;
+					float d2 = num / (float)(num2 - 1);
+					Vector3 b = axis1 * num;
+					Vector3 b2 = axis2 * num;
+					Vector3 a = axis1 * d2;
+					Vector3 a2 = axis2 * d2;
+					Vector3 a3 = pos - axis1 * d - axis2 * d;
+					for (int i = 0; i < num2; i++)
 					{
-						GL.Color(color);
+						if (i % 2 == 0)
+						{
+							GL.Color(color * 0.7f);
+						}
+						else
+						{
+							GL.Color(color);
+						}
+						GL.Vertex(a3 + (float)i * a);
+						GL.Vertex(a3 + (float)i * a + b2);
+						GL.Vertex(a3 + (float)i * a2);
+						GL.Vertex(a3 + (float)i * a2 + b);
 					}
-					GL.Vertex(a3 + (float)i * a);
-					GL.Vertex(a3 + (float)i * a + b2);
-					GL.Vertex(a3 + (float)i * a2);
-					GL.Vertex(a3 + (float)i * a2 + b);
+					GL.Color(color);
+					GL.Vertex(pos);
+					GL.Vertex(pos + normal);
+					GL.End();
 				}
-				GL.Color(color);
-				GL.Vertex(pos);
-				GL.Vertex(pos + normal);
-				GL.End();
 			}
 		}
 

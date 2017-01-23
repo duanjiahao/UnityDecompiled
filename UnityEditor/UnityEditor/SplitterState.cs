@@ -22,7 +22,7 @@ namespace UnityEditor
 
 		public int[] maxSizes;
 
-		public int lastTotalSize;
+		public int lastTotalSize = 0;
 
 		public int splitSize;
 

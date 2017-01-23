@@ -8,9 +8,9 @@ namespace UnityEditor
 {
 	internal class BuildVerifier
 	{
-		private Dictionary<string, HashSet<string>> m_UnsupportedAssemblies;
+		private Dictionary<string, HashSet<string>> m_UnsupportedAssemblies = null;
 
-		private static BuildVerifier ms_Inst;
+		private static BuildVerifier ms_Inst = null;
 
 		protected BuildVerifier()
 		{
@@ -19,15 +19,15 @@ namespace UnityEditor
 			XPathDocument xPathDocument = new XPathDocument(text);
 			XPathNavigator xPathNavigator = xPathDocument.CreateNavigator();
 			xPathNavigator.MoveToFirstChild();
-			XPathNodeIterator xPathNodeIterator = xPathNavigator.SelectChildren("assembly", string.Empty);
+			XPathNodeIterator xPathNodeIterator = xPathNavigator.SelectChildren("assembly", "");
 			while (xPathNodeIterator.MoveNext())
 			{
-				string attribute = xPathNodeIterator.Current.GetAttribute("name", string.Empty);
+				string attribute = xPathNodeIterator.Current.GetAttribute("name", "");
 				if (attribute == null || attribute.Length < 1)
 				{
 					throw new ApplicationException(string.Format("Failed to load {0}, <assembly> name attribute is empty", text));
 				}
-				string text2 = xPathNodeIterator.Current.GetAttribute("platform", string.Empty);
+				string text2 = xPathNodeIterator.Current.GetAttribute("platform", "");
 				if (text2 == null || text2.Length < 1)
 				{
 					text2 = "*";

@@ -6,7 +6,7 @@ namespace UnityEditor.Web
 	{
 		public string name;
 
-		public object value;
+		public object value = null;
 
 		public JspmPropertyInfo(string name, object value)
 		{

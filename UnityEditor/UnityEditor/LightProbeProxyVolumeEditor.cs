@@ -122,8 +122,8 @@ namespace UnityEditor
 				LightProbeProxyVolumeEditor.Styles.baseSceneEditingToolText = "<color=grey>Light Probe Proxy Volume Scene Editing Mode:</color> ";
 				LightProbeProxyVolumeEditor.Styles.toolNames = new GUIContent[]
 				{
-					new GUIContent(LightProbeProxyVolumeEditor.Styles.baseSceneEditingToolText + "Box Bounds", string.Empty),
-					new GUIContent(LightProbeProxyVolumeEditor.Styles.baseSceneEditingToolText + "Box Origin", string.Empty)
+					new GUIContent(LightProbeProxyVolumeEditor.Styles.baseSceneEditingToolText + "Box Bounds", ""),
+					new GUIContent(LightProbeProxyVolumeEditor.Styles.baseSceneEditingToolText + "Box Origin", "")
 				};
 				LightProbeProxyVolumeEditor.Styles.richTextMiniLabel.richText = true;
 			}
@@ -215,7 +215,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				Renderer renderer = ((LightProbeProxyVolume)this.target).GetComponent(typeof(Renderer)) as Renderer;
+				Renderer renderer = ((LightProbeProxyVolume)base.target).GetComponent(typeof(Renderer)) as Renderer;
 				bool flag = renderer != null && LightmapEditorSettings.IsLightmappedOrDynamicLightmappedForRendering(renderer);
 				return renderer != null && base.targets.Length == 1 && (renderer.lightProbeUsage != LightProbeUsage.UseProxyVolume || flag);
 			}
@@ -225,7 +225,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				Renderer x = ((LightProbeProxyVolume)this.target).GetComponent(typeof(Renderer)) as Renderer;
+				Renderer x = ((LightProbeProxyVolume)base.target).GetComponent(typeof(Renderer)) as Renderer;
 				return x == null && base.targets.Length == 1;
 			}
 		}
@@ -283,12 +283,17 @@ namespace UnityEditor
 
 		private Bounds GetGlobalBounds()
 		{
-			if (this.target is LightProbeProxyVolume)
+			Bounds result;
+			if (base.target is LightProbeProxyVolume)
 			{
-				LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)this.target;
-				return lightProbeProxyVolume.boundsGlobal;
+				LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)base.target;
+				result = lightProbeProxyVolume.boundsGlobal;
 			}
-			return default(Bounds);
+			else
+			{
+				result = default(Bounds);
+			}
+			return result;
 		}
 
 		private void DoToolbar()
@@ -304,9 +309,12 @@ namespace UnityEditor
 				{
 					LightProbeProxyVolumeEditor.s_LastInteractedEditor = this;
 				}
-				if (editMode != EditMode.editMode && Toolbar.get != null)
+				if (editMode != EditMode.editMode)
 				{
-					Toolbar.get.Repaint();
+					if (Toolbar.get != null)
+					{
+						Toolbar.get.Repaint();
+					}
 				}
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
@@ -330,124 +338,124 @@ namespace UnityEditor
 		{
 			base.serializedObject.Update();
 			this.UpdateShowOptions(false);
-			Tree component = ((LightProbeProxyVolume)this.target).GetComponent<Tree>();
+			Tree component = ((LightProbeProxyVolume)base.target).GetComponent<Tree>();
 			if (component != null)
 			{
 				EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.componentUnsuportedOnTreesNote.text, MessageType.Info);
-				return;
 			}
-			EditorGUILayout.Space();
-			EditorGUILayout.Popup(this.m_RefreshMode, LightProbeProxyVolumeEditor.Styles.refreshMode, LightProbeProxyVolumeEditor.Styles.refreshModeText, new GUILayoutOption[0]);
-			EditorGUILayout.Popup(this.m_BoundingBoxMode, LightProbeProxyVolumeEditor.Styles.bbMode, LightProbeProxyVolumeEditor.Styles.bbModeText, new GUILayoutOption[0]);
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowBoundingBoxOptions.faded))
+			else
 			{
-				if (base.targets.Length == 1)
+				EditorGUILayout.Space();
+				EditorGUILayout.Popup(this.m_RefreshMode, LightProbeProxyVolumeEditor.Styles.refreshMode, LightProbeProxyVolumeEditor.Styles.refreshModeText, new GUILayoutOption[0]);
+				EditorGUILayout.Popup(this.m_BoundingBoxMode, LightProbeProxyVolumeEditor.Styles.bbMode, LightProbeProxyVolumeEditor.Styles.bbModeText, new GUILayoutOption[0]);
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowBoundingBoxOptions.faded))
 				{
-					this.DoToolbar();
+					if (base.targets.Length == 1)
+					{
+						this.DoToolbar();
+					}
+					GUILayout.Label(LightProbeProxyVolumeEditor.Styles.bbSettingsText, new GUILayoutOption[0]);
+					EditorGUI.indentLevel++;
+					EditorGUILayout.PropertyField(this.m_BoundingBoxSize, LightProbeProxyVolumeEditor.Styles.sizeText, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_BoundingBoxOrigin, LightProbeProxyVolumeEditor.Styles.originText, new GUILayoutOption[0]);
+					EditorGUI.indentLevel--;
 				}
-				GUILayout.Label(LightProbeProxyVolumeEditor.Styles.bbSettingsText, new GUILayoutOption[0]);
+				EditorGUILayout.EndFadeGroup();
+				EditorGUILayout.Space();
+				GUILayout.Label(LightProbeProxyVolumeEditor.Styles.volumeResolutionText, new GUILayoutOption[0]);
 				EditorGUI.indentLevel++;
-				EditorGUILayout.PropertyField(this.m_BoundingBoxSize, LightProbeProxyVolumeEditor.Styles.sizeText, new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_BoundingBoxOrigin, LightProbeProxyVolumeEditor.Styles.originText, new GUILayoutOption[0]);
+				EditorGUILayout.Popup(this.m_ResolutionMode, LightProbeProxyVolumeEditor.Styles.resMode, LightProbeProxyVolumeEditor.Styles.resModeText, new GUILayoutOption[0]);
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowResolutionXYZOptions.faded))
+				{
+					EditorGUILayout.IntPopup(this.m_ResolutionX, LightProbeProxyVolumeEditor.Styles.volTextureSizes, LightProbeProxyVolumeEditor.Styles.volTextureSizesValues, LightProbeProxyVolumeEditor.Styles.resolutionXText, new GUILayoutOption[]
+					{
+						GUILayout.MinWidth(40f)
+					});
+					EditorGUILayout.IntPopup(this.m_ResolutionY, LightProbeProxyVolumeEditor.Styles.volTextureSizes, LightProbeProxyVolumeEditor.Styles.volTextureSizesValues, LightProbeProxyVolumeEditor.Styles.resolutionYText, new GUILayoutOption[]
+					{
+						GUILayout.MinWidth(40f)
+					});
+					EditorGUILayout.IntPopup(this.m_ResolutionZ, LightProbeProxyVolumeEditor.Styles.volTextureSizes, LightProbeProxyVolumeEditor.Styles.volTextureSizesValues, LightProbeProxyVolumeEditor.Styles.resolutionZText, new GUILayoutOption[]
+					{
+						GUILayout.MinWidth(40f)
+					});
+				}
+				EditorGUILayout.EndFadeGroup();
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowResolutionProbesOption.faded))
+				{
+					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_ResolutionProbesPerUnit, LightProbeProxyVolumeEditor.Styles.resProbesPerUnit, new GUILayoutOption[0]);
+					GUILayout.Label(" probes per unit", EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
+					GUILayout.EndHorizontal();
+				}
+				EditorGUILayout.EndFadeGroup();
 				EditorGUI.indentLevel--;
-			}
-			EditorGUILayout.EndFadeGroup();
-			EditorGUILayout.Space();
-			GUILayout.Label(LightProbeProxyVolumeEditor.Styles.volumeResolutionText, new GUILayoutOption[0]);
-			EditorGUI.indentLevel++;
-			EditorGUILayout.Popup(this.m_ResolutionMode, LightProbeProxyVolumeEditor.Styles.resMode, LightProbeProxyVolumeEditor.Styles.resModeText, new GUILayoutOption[0]);
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowResolutionXYZOptions.faded))
-			{
-				EditorGUILayout.IntPopup(this.m_ResolutionX, LightProbeProxyVolumeEditor.Styles.volTextureSizes, LightProbeProxyVolumeEditor.Styles.volTextureSizesValues, LightProbeProxyVolumeEditor.Styles.resolutionXText, new GUILayoutOption[]
+				EditorGUILayout.Space();
+				EditorGUILayout.Popup(this.m_ProbePositionMode, LightProbeProxyVolumeEditor.Styles.probePositionMode, LightProbeProxyVolumeEditor.Styles.probePositionText, new GUILayoutOption[0]);
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowComponentUnusedWarning.faded) && LightProbeProxyVolume.isFeatureSupported)
 				{
-					GUILayout.MinWidth(40f)
-				});
-				EditorGUILayout.IntPopup(this.m_ResolutionY, LightProbeProxyVolumeEditor.Styles.volTextureSizes, LightProbeProxyVolumeEditor.Styles.volTextureSizesValues, LightProbeProxyVolumeEditor.Styles.resolutionYText, new GUILayoutOption[]
+					EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.componentUnusedNote.text, MessageType.Warning);
+				}
+				EditorGUILayout.EndFadeGroup();
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowNoRendererWarning.faded))
 				{
-					GUILayout.MinWidth(40f)
-				});
-				EditorGUILayout.IntPopup(this.m_ResolutionZ, LightProbeProxyVolumeEditor.Styles.volTextureSizes, LightProbeProxyVolumeEditor.Styles.volTextureSizesValues, LightProbeProxyVolumeEditor.Styles.resolutionZText, new GUILayoutOption[]
+					EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.noRendererNode.text, MessageType.Info);
+				}
+				EditorGUILayout.EndFadeGroup();
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowNoLightProbesWarning.faded))
 				{
-					GUILayout.MinWidth(40f)
-				});
+					EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.noLightProbes.text, MessageType.Info);
+				}
+				EditorGUILayout.EndFadeGroup();
+				base.serializedObject.ApplyModifiedProperties();
 			}
-			EditorGUILayout.EndFadeGroup();
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowResolutionProbesOption.faded))
-			{
-				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_ResolutionProbesPerUnit, LightProbeProxyVolumeEditor.Styles.resProbesPerUnit, new GUILayoutOption[0]);
-				GUILayout.Label(" probes per unit", EditorStyles.wordWrappedMiniLabel, new GUILayoutOption[0]);
-				GUILayout.EndHorizontal();
-			}
-			EditorGUILayout.EndFadeGroup();
-			EditorGUI.indentLevel--;
-			EditorGUILayout.Space();
-			EditorGUILayout.Popup(this.m_ProbePositionMode, LightProbeProxyVolumeEditor.Styles.probePositionMode, LightProbeProxyVolumeEditor.Styles.probePositionText, new GUILayoutOption[0]);
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowComponentUnusedWarning.faded) && LightProbeProxyVolume.isFeatureSupported)
-			{
-				EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.componentUnusedNote.text, MessageType.Warning);
-			}
-			EditorGUILayout.EndFadeGroup();
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowNoRendererWarning.faded))
-			{
-				EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.noRendererNode.text, MessageType.Info);
-			}
-			EditorGUILayout.EndFadeGroup();
-			if (EditorGUILayout.BeginFadeGroup(this.m_ShowNoLightProbesWarning.faded))
-			{
-				EditorGUILayout.HelpBox(LightProbeProxyVolumeEditor.Styles.noLightProbes.text, MessageType.Info);
-			}
-			EditorGUILayout.EndFadeGroup();
-			base.serializedObject.ApplyModifiedProperties();
 		}
 
 		[DrawGizmo(GizmoType.Active)]
 		private static void RenderBoxGizmo(LightProbeProxyVolume probeProxyVolume, GizmoType gizmoType)
 		{
-			if (LightProbeProxyVolumeEditor.s_LastInteractedEditor == null)
+			if (!(LightProbeProxyVolumeEditor.s_LastInteractedEditor == null))
 			{
-				return;
-			}
-			if (LightProbeProxyVolumeEditor.s_LastInteractedEditor.sceneViewEditing && EditMode.editMode == EditMode.SceneViewEditMode.LightProbeProxyVolumeBox)
-			{
-				Color color = Gizmos.color;
-				Gizmos.color = LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeColor;
-				Vector3 originCustom = probeProxyVolume.originCustom;
-				Matrix4x4 matrix = Gizmos.matrix;
-				Gizmos.matrix = probeProxyVolume.transform.localToWorldMatrix;
-				Gizmos.DrawCube(originCustom, -1f * probeProxyVolume.sizeCustom);
-				Gizmos.matrix = matrix;
-				Gizmos.color = color;
+				if (LightProbeProxyVolumeEditor.s_LastInteractedEditor.sceneViewEditing && EditMode.editMode == EditMode.SceneViewEditMode.LightProbeProxyVolumeBox)
+				{
+					Color color = Gizmos.color;
+					Gizmos.color = LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeColor;
+					Vector3 originCustom = probeProxyVolume.originCustom;
+					Matrix4x4 matrix = Gizmos.matrix;
+					Gizmos.matrix = probeProxyVolume.transform.localToWorldMatrix;
+					Gizmos.DrawCube(originCustom, -1f * probeProxyVolume.sizeCustom);
+					Gizmos.matrix = matrix;
+					Gizmos.color = color;
+				}
 			}
 		}
 
 		public void OnSceneGUI()
 		{
-			if (!this.sceneViewEditing)
+			if (this.sceneViewEditing)
 			{
-				return;
-			}
-			if (this.m_BoundingBoxMode.intValue != 2)
-			{
-				EditMode.QuitEditMode();
-			}
-			EditMode.SceneViewEditMode editMode = EditMode.editMode;
-			if (editMode != EditMode.SceneViewEditMode.LightProbeProxyVolumeBox)
-			{
-				if (editMode == EditMode.SceneViewEditMode.LightProbeProxyVolumeOrigin)
+				if (this.m_BoundingBoxMode.intValue != 2)
 				{
-					this.DoOriginEditing();
+					EditMode.QuitEditMode();
 				}
-			}
-			else
-			{
-				this.DoBoxEditing();
+				EditMode.SceneViewEditMode editMode = EditMode.editMode;
+				if (editMode != EditMode.SceneViewEditMode.LightProbeProxyVolumeBox)
+				{
+					if (editMode == EditMode.SceneViewEditMode.LightProbeProxyVolumeOrigin)
+					{
+						this.DoOriginEditing();
+					}
+				}
+				else
+				{
+					this.DoBoxEditing();
+				}
 			}
 		}
 
 		private void DoOriginEditing()
 		{
-			LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)this.target;
+			LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)base.target;
 			Vector3 position = lightProbeProxyVolume.transform.TransformPoint(lightProbeProxyVolume.originCustom);
 			EditorGUI.BeginChangeCheck();
 			Vector3 position2 = Handles.PositionHandle(position, lightProbeProxyVolume.transform.rotation);
@@ -455,13 +463,13 @@ namespace UnityEditor
 			{
 				Undo.RecordObject(lightProbeProxyVolume, "Modified Light Probe Proxy Volume Box Origin");
 				lightProbeProxyVolume.originCustom = lightProbeProxyVolume.transform.InverseTransformPoint(position2);
-				EditorUtility.SetDirty(this.target);
+				EditorUtility.SetDirty(base.target);
 			}
 		}
 
 		private void DoBoxEditing()
 		{
-			LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)this.target;
+			LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)base.target;
 			Vector3 sizeCustom = lightProbeProxyVolume.sizeCustom;
 			Vector3 originCustom = lightProbeProxyVolume.originCustom;
 			if (this.m_BoxEditor.OnSceneGUI(lightProbeProxyVolume.transform.localToWorldMatrix, LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeColor, LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeHandleColor, true, ref originCustom, ref sizeCustom))
@@ -470,7 +478,7 @@ namespace UnityEditor
 				Vector3 originCustom2 = originCustom;
 				lightProbeProxyVolume.sizeCustom = sizeCustom;
 				lightProbeProxyVolume.originCustom = originCustom2;
-				EditorUtility.SetDirty(this.target);
+				EditorUtility.SetDirty(base.target);
 			}
 		}
 	}

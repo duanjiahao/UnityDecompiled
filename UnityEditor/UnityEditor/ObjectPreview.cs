@@ -22,6 +22,8 @@ namespace UnityEditor
 			}
 		}
 
+		private static ObjectPreview.Styles s_Styles;
+
 		private const int kPreviewLabelHeight = 12;
 
 		private const int kPreviewMinSize = 55;
@@ -31,8 +33,6 @@ namespace UnityEditor
 		private const int kGridSpacing = 10;
 
 		private const int kPreviewLabelPadding = 5;
-
-		private static ObjectPreview.Styles s_Styles;
 
 		protected UnityEngine.Object[] m_Targets;
 
@@ -80,16 +80,16 @@ namespace UnityEditor
 				gUIContent.text = this.m_Targets.Length + " ";
 				if (this.target is MonoBehaviour)
 				{
-					GUIContent expr_58 = gUIContent;
-					expr_58.text += MonoScript.FromMonoBehaviour(this.target as MonoBehaviour).GetClass().Name;
+					GUIContent expr_5A = gUIContent;
+					expr_5A.text += MonoScript.FromMonoBehaviour(this.target as MonoBehaviour).GetClass().Name;
 				}
 				else
 				{
-					GUIContent expr_88 = gUIContent;
-					expr_88.text += ObjectNames.NicifyVariableName(ObjectNames.GetClassName(this.target));
+					GUIContent expr_8A = gUIContent;
+					expr_8A.text += ObjectNames.NicifyVariableName(ObjectNames.GetClassName(this.target));
 				}
-				GUIContent expr_A9 = gUIContent;
-				expr_A9.text += "s";
+				GUIContent expr_AB = gUIContent;
+				expr_AB.text += "s";
 			}
 			return gUIContent;
 		}
@@ -113,7 +113,7 @@ namespace UnityEditor
 
 		public virtual string GetInfoString()
 		{
-			return string.Empty;
+			return "";
 		}
 
 		public void DrawPreview(Rect previewArea)

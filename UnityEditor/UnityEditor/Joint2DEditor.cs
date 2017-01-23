@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -23,6 +24,12 @@ namespace UnityEditor
 
 		protected static Joint2DEditor.Styles s_Styles;
 
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache1;
+
 		public void OnEnable()
 		{
 			this.m_BreakForce = base.serializedObject.FindProperty("m_BreakForce");
@@ -33,7 +40,7 @@ namespace UnityEditor
 		{
 			base.OnInspectorGUI();
 			EditorGUILayout.PropertyField(this.m_BreakForce, new GUILayoutOption[0]);
-			Type type = this.target.GetType();
+			Type type = base.target.GetType();
 			if (type != typeof(DistanceJoint2D) && type != typeof(TargetJoint2D) && type != typeof(SpringJoint2D))
 			{
 				EditorGUILayout.PropertyField(this.m_BreakTorque, new GUILayoutOption[0]);
@@ -47,50 +54,73 @@ namespace UnityEditor
 			{
 				Joint2DEditor.s_Styles = new Joint2DEditor.Styles();
 			}
-			Handles.DrawCapFunction drawFunc = (!isConnectedAnchor) ? new Handles.DrawCapFunction(Joint2DEditor.AnchorCap) : new Handles.DrawCapFunction(Joint2DEditor.ConnectedAnchorCap);
-			int id = this.target.GetInstanceID() + ((!isConnectedAnchor) ? 0 : 1);
+			Handles.CapFunction arg_5A_0;
+			if (isConnectedAnchor)
+			{
+				if (Joint2DEditor.<>f__mg$cache0 == null)
+				{
+					Joint2DEditor.<>f__mg$cache0 = new Handles.CapFunction(Joint2DEditor.ConnectedAnchorHandleCap);
+				}
+				arg_5A_0 = Joint2DEditor.<>f__mg$cache0;
+			}
+			else
+			{
+				if (Joint2DEditor.<>f__mg$cache1 == null)
+				{
+					Joint2DEditor.<>f__mg$cache1 = new Handles.CapFunction(Joint2DEditor.AnchorHandleCap);
+				}
+				arg_5A_0 = Joint2DEditor.<>f__mg$cache1;
+			}
+			Handles.CapFunction capFunction = arg_5A_0;
+			int id = base.target.GetInstanceID() + ((!isConnectedAnchor) ? 0 : 1);
 			EditorGUI.BeginChangeCheck();
-			position = Handles.Slider2D(id, position, Vector3.back, Vector3.right, Vector3.up, 0f, drawFunc, Vector2.zero);
+			position = Handles.Slider2D(id, position, Vector3.back, Vector3.right, Vector3.up, 0f, capFunction, Vector2.zero);
 			return EditorGUI.EndChangeCheck();
 		}
 
-		public static void AnchorCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		public static void AnchorHandleCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (controlID == GUIUtility.keyboardControl)
 			{
-				Joint2DEditor.DrawCap(controlID, position, Joint2DEditor.s_Styles.anchorActive);
+				Joint2DEditor.HandleCap(controlID, position, Joint2DEditor.s_Styles.anchorActive, eventType);
 			}
 			else
 			{
-				Joint2DEditor.DrawCap(controlID, position, Joint2DEditor.s_Styles.anchor);
+				Joint2DEditor.HandleCap(controlID, position, Joint2DEditor.s_Styles.anchor, eventType);
 			}
 		}
 
-		public static void ConnectedAnchorCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		public static void ConnectedAnchorHandleCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (controlID == GUIUtility.keyboardControl)
 			{
-				Joint2DEditor.DrawCap(controlID, position, Joint2DEditor.s_Styles.connectedAnchorActive);
+				Joint2DEditor.HandleCap(controlID, position, Joint2DEditor.s_Styles.connectedAnchorActive, eventType);
 			}
 			else
 			{
-				Joint2DEditor.DrawCap(controlID, position, Joint2DEditor.s_Styles.connectedAnchor);
+				Joint2DEditor.HandleCap(controlID, position, Joint2DEditor.s_Styles.connectedAnchor, eventType);
 			}
 		}
 
-		private static void DrawCap(int controlID, Vector3 position, GUIStyle guiStyle)
+		private static void HandleCap(int controlID, Vector3 position, GUIStyle guiStyle, EventType eventType)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (eventType != EventType.Layout)
 			{
-				return;
+				if (eventType == EventType.Repaint)
+				{
+					Handles.BeginGUI();
+					position = HandleUtility.WorldToGUIPoint(position);
+					float fixedWidth = guiStyle.fixedWidth;
+					float fixedHeight = guiStyle.fixedHeight;
+					Rect position2 = new Rect(position.x - fixedWidth / 2f, position.y - fixedHeight / 2f, fixedWidth, fixedHeight);
+					guiStyle.Draw(position2, GUIContent.none, controlID);
+					Handles.EndGUI();
+				}
 			}
-			Handles.BeginGUI();
-			position = HandleUtility.WorldToGUIPoint(position);
-			float fixedWidth = guiStyle.fixedWidth;
-			float fixedHeight = guiStyle.fixedHeight;
-			Rect position2 = new Rect(position.x - fixedWidth / 2f, position.y - fixedHeight / 2f, fixedWidth, fixedHeight);
-			guiStyle.Draw(position2, GUIContent.none, controlID);
-			Handles.EndGUI();
+			else
+			{
+				HandleUtility.AddControl(controlID, HandleUtility.DistanceToRectangleInternal(position, Quaternion.identity, Vector2.zero));
+			}
 		}
 
 		public static void DrawAALine(Vector3 start, Vector3 end)
@@ -131,36 +161,42 @@ namespace UnityEditor
 
 		protected static Vector3 SnapToSprite(SpriteRenderer spriteRenderer, Vector3 position, float snapDistance)
 		{
+			Vector3 result;
 			if (spriteRenderer == null)
 			{
-				return position;
+				result = position;
 			}
-			snapDistance = HandleUtility.GetHandleSize(position) * snapDistance;
-			float num = spriteRenderer.sprite.bounds.size.x / 2f;
-			float num2 = spriteRenderer.sprite.bounds.size.y / 2f;
-			Vector2[] array = new Vector2[]
+			else
 			{
-				new Vector2(-num, -num2),
-				new Vector2(0f, -num2),
-				new Vector2(num, -num2),
-				new Vector2(-num, 0f),
-				new Vector2(0f, 0f),
-				new Vector2(num, 0f),
-				new Vector2(-num, num2),
-				new Vector2(0f, num2),
-				new Vector2(num, num2)
-			};
-			Vector2[] array2 = array;
-			for (int i = 0; i < array2.Length; i++)
-			{
-				Vector2 v = array2[i];
-				Vector3 vector = spriteRenderer.transform.TransformPoint(v);
-				if (Vector2.Distance(position, vector) <= snapDistance)
+				snapDistance = HandleUtility.GetHandleSize(position) * snapDistance;
+				float num = spriteRenderer.sprite.bounds.size.x / 2f;
+				float num2 = spriteRenderer.sprite.bounds.size.y / 2f;
+				Vector2[] array = new Vector2[]
 				{
-					return vector;
+					new Vector2(-num, -num2),
+					new Vector2(0f, -num2),
+					new Vector2(num, -num2),
+					new Vector2(-num, 0f),
+					new Vector2(0f, 0f),
+					new Vector2(num, 0f),
+					new Vector2(-num, num2),
+					new Vector2(0f, num2),
+					new Vector2(num, num2)
+				};
+				Vector2[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
+				{
+					Vector2 v = array2[i];
+					Vector3 vector = spriteRenderer.transform.TransformPoint(v);
+					if (Vector2.Distance(position, vector) <= snapDistance)
+					{
+						result = vector;
+						return result;
+					}
 				}
+				result = position;
 			}
-			return position;
+			return result;
 		}
 
 		protected static Vector3 SnapToPoint(Vector3 position, Vector3 snapPosition, float snapDistance)

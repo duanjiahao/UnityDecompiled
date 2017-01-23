@@ -5,7 +5,7 @@ namespace UnityEditorInternal
 {
 	internal struct FrameDebuggerBlendState
 	{
-		public uint renderTargetWriteMask;
+		public uint writeMask;
 
 		public BlendMode srcBlend;
 

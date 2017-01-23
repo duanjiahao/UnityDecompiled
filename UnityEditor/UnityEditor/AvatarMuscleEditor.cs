@@ -65,46 +65,6 @@ namespace UnityEditor
 			}
 		}
 
-		private const string sMinX = "m_Limit.m_Min.x";
-
-		private const string sMinY = "m_Limit.m_Min.y";
-
-		private const string sMinZ = "m_Limit.m_Min.z";
-
-		private const string sMaxX = "m_Limit.m_Max.x";
-
-		private const string sMaxY = "m_Limit.m_Max.y";
-
-		private const string sMaxZ = "m_Limit.m_Max.z";
-
-		private const string sModified = "m_Limit.m_Modified";
-
-		private const string sArmTwist = "m_HumanDescription.m_ArmTwist";
-
-		private const string sForeArmTwist = "m_HumanDescription.m_ForeArmTwist";
-
-		private const string sUpperLegTwist = "m_HumanDescription.m_UpperLegTwist";
-
-		private const string sLegTwist = "m_HumanDescription.m_LegTwist";
-
-		private const string sArmStretch = "m_HumanDescription.m_ArmStretch";
-
-		private const string sLegStretch = "m_HumanDescription.m_LegStretch";
-
-		private const string sFeetSpacing = "m_HumanDescription.m_FeetSpacing";
-
-		private const string sHasTranslationDoF = "m_HumanDescription.m_HasTranslationDoF";
-
-		private const float sMuscleMin = -180f;
-
-		private const float sMuscleMax = 180f;
-
-		private const float kPreviewWidth = 80f;
-
-		private const float kNumberWidth = 38f;
-
-		private const float kLineHeight = 16f;
-
 		private static AvatarMuscleEditor.Styles s_Styles;
 
 		protected int[][] m_Muscles = new int[][]
@@ -343,10 +303,10 @@ namespace UnityEditor
 		private int m_FocusedMuscle;
 
 		[SerializeField]
-		private float[] m_MuscleValue;
+		private float[] m_MuscleValue = null;
 
 		[SerializeField]
-		private float[] m_MuscleMasterValue;
+		private float[] m_MuscleMasterValue = null;
 
 		[SerializeField]
 		protected float m_ArmTwistFactor;
@@ -372,21 +332,21 @@ namespace UnityEditor
 		[SerializeField]
 		protected bool m_HasTranslationDoF;
 
-		private string[] m_MuscleName;
+		private string[] m_MuscleName = null;
 
-		private int m_MuscleCount;
+		private int m_MuscleCount = 0;
 
-		private SerializedProperty[] m_MuscleMin;
+		private SerializedProperty[] m_MuscleMin = null;
 
-		private SerializedProperty[] m_MuscleMax;
-
-		[SerializeField]
-		private float[] m_MuscleMinEdit;
+		private SerializedProperty[] m_MuscleMax = null;
 
 		[SerializeField]
-		private float[] m_MuscleMaxEdit;
+		private float[] m_MuscleMinEdit = null;
 
-		private SerializedProperty[] m_Modified;
+		[SerializeField]
+		private float[] m_MuscleMaxEdit = null;
+
+		private SerializedProperty[] m_Modified = null;
 
 		private SerializedProperty m_ArmTwistProperty;
 
@@ -403,6 +363,46 @@ namespace UnityEditor
 		private SerializedProperty m_FeetSpacingProperty;
 
 		private SerializedProperty m_HasTranslationDoFProperty;
+
+		private const string sMinX = "m_Limit.m_Min.x";
+
+		private const string sMinY = "m_Limit.m_Min.y";
+
+		private const string sMinZ = "m_Limit.m_Min.z";
+
+		private const string sMaxX = "m_Limit.m_Max.x";
+
+		private const string sMaxY = "m_Limit.m_Max.y";
+
+		private const string sMaxZ = "m_Limit.m_Max.z";
+
+		private const string sModified = "m_Limit.m_Modified";
+
+		private const string sArmTwist = "m_HumanDescription.m_ArmTwist";
+
+		private const string sForeArmTwist = "m_HumanDescription.m_ForeArmTwist";
+
+		private const string sUpperLegTwist = "m_HumanDescription.m_UpperLegTwist";
+
+		private const string sLegTwist = "m_HumanDescription.m_LegTwist";
+
+		private const string sArmStretch = "m_HumanDescription.m_ArmStretch";
+
+		private const string sLegStretch = "m_HumanDescription.m_LegStretch";
+
+		private const string sFeetSpacing = "m_HumanDescription.m_FeetSpacing";
+
+		private const string sHasTranslationDoF = "m_HumanDescription.m_HasTranslationDoF";
+
+		private const float sMuscleMin = -180f;
+
+		private const float sMuscleMax = 180f;
+
+		private const float kPreviewWidth = 80f;
+
+		private const float kNumberWidth = 38f;
+
+		private const float kLineHeight = 16f;
 
 		protected AvatarSetupTool.BoneWrapper[] m_Bones;
 
@@ -623,7 +623,7 @@ namespace UnityEditor
 
 		protected void DisplayMuscleButtons()
 		{
-			GUILayout.BeginHorizontal(string.Empty, AvatarMuscleEditor.styles.toolbar, new GUILayoutOption[]
+			GUILayout.BeginHorizontal("", AvatarMuscleEditor.styles.toolbar, new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true)
 			});
@@ -828,7 +828,7 @@ namespace UnityEditor
 		protected void PropertiesGUI()
 		{
 			bool flag = false;
-			this.HeaderGUI(string.Empty, "Additional Settings");
+			this.HeaderGUI("", "Additional Settings");
 			GUILayout.BeginVertical(AvatarMuscleEditor.styles.box, new GUILayoutOption[0]);
 			this.m_ArmTwistFactor = EditorGUI.Slider(AvatarMuscleEditor.GetSettingsRect(), AvatarMuscleEditor.styles.armTwist, this.m_ArmTwistFactor, 0f, 1f);
 			if (this.m_ArmTwistProperty.floatValue != this.m_ArmTwistFactor)
@@ -985,19 +985,17 @@ namespace UnityEditor
 		public override void OnSceneGUI()
 		{
 			AvatarSkeletonDrawer.DrawSkeleton(base.root, base.modelBones);
-			if (base.gameObject == null)
+			if (!(base.gameObject == null))
 			{
-				return;
-			}
-			Animator x = base.gameObject.GetComponent(typeof(Animator)) as Animator;
-			if (this.m_FocusedMuscle == -1 || x == null)
-			{
-				return;
-			}
-			int num = HumanTrait.BoneFromMuscle(this.m_FocusedMuscle);
-			if (num != -1)
-			{
-				this.DrawMuscleHandle(this.m_Bones[num].bone, num);
+				Animator x = base.gameObject.GetComponent(typeof(Animator)) as Animator;
+				if (this.m_FocusedMuscle != -1 && !(x == null))
+				{
+					int num = HumanTrait.BoneFromMuscle(this.m_FocusedMuscle);
+					if (num != -1)
+					{
+						this.DrawMuscleHandle(this.m_Bones[num].bone, num);
+					}
+				}
 			}
 		}
 	}

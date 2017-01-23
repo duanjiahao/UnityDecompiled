@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,103 +28,123 @@ namespace UnityEditor
 
 		public static void DrawSkeleton(Transform reference, Dictionary<Transform, bool> actualBones, AvatarSetupTool.BoneWrapper[] bones)
 		{
-			if (reference == null || actualBones == null)
+			if (!(reference == null) && actualBones != null)
 			{
-				return;
-			}
-			AvatarSkeletonDrawer.sPoseError = false;
-			Bounds bounds = default(Bounds);
-			Renderer[] componentsInChildren = reference.root.GetComponentsInChildren<Renderer>();
-			if (componentsInChildren != null)
-			{
-				Renderer[] array = componentsInChildren;
-				for (int i = 0; i < array.Length; i++)
+				AvatarSkeletonDrawer.sPoseError = false;
+				Bounds bounds = default(Bounds);
+				Renderer[] componentsInChildren = reference.root.GetComponentsInChildren<Renderer>();
+				if (componentsInChildren != null)
 				{
-					Renderer renderer = array[i];
-					bounds.Encapsulate(renderer.bounds.min);
-					bounds.Encapsulate(renderer.bounds.max);
+					Renderer[] array = componentsInChildren;
+					for (int i = 0; i < array.Length; i++)
+					{
+						Renderer renderer = array[i];
+						bounds.Encapsulate(renderer.bounds.min);
+						bounds.Encapsulate(renderer.bounds.max);
+					}
 				}
-			}
-			Quaternion orientation = Quaternion.identity;
-			if (bones != null)
-			{
-				orientation = AvatarSetupTool.AvatarComputeOrientation(bones);
-			}
-			AvatarSkeletonDrawer.DrawSkeletonSubTree(actualBones, bones, orientation, reference, bounds);
-			Camera current = Camera.current;
-			if (AvatarSkeletonDrawer.sPoseError && current != null)
-			{
-				GUIStyle gUIStyle = new GUIStyle(GUI.skin.label);
-				gUIStyle.normal.textColor = Color.red;
-				gUIStyle.wordWrap = false;
-				gUIStyle.alignment = TextAnchor.MiddleLeft;
-				gUIStyle.fontSize = 20;
-				GUIContent content = new GUIContent("Character is not in T pose");
-				Rect rect = GUILayoutUtility.GetRect(content, gUIStyle);
-				rect.x = 30f;
-				rect.y = 30f;
-				Handles.BeginGUI();
-				GUI.Label(rect, content, gUIStyle);
-				Handles.EndGUI();
+				Quaternion orientation = Quaternion.identity;
+				if (bones != null)
+				{
+					orientation = AvatarSetupTool.AvatarComputeOrientation(bones);
+				}
+				AvatarSkeletonDrawer.DrawSkeletonSubTree(actualBones, bones, orientation, reference, bounds);
+				Camera current = Camera.current;
+				if (AvatarSkeletonDrawer.sPoseError && current != null)
+				{
+					GUIStyle gUIStyle = new GUIStyle(GUI.skin.label);
+					gUIStyle.normal.textColor = Color.red;
+					gUIStyle.wordWrap = false;
+					gUIStyle.alignment = TextAnchor.MiddleLeft;
+					gUIStyle.fontSize = 20;
+					GUIContent content = new GUIContent("Character is not in T pose");
+					Rect rect = GUILayoutUtility.GetRect(content, gUIStyle);
+					rect.x = 30f;
+					rect.y = 30f;
+					Handles.BeginGUI();
+					GUI.Label(rect, content, gUIStyle);
+					Handles.EndGUI();
+				}
 			}
 		}
 
 		private static bool DrawSkeletonSubTree(Dictionary<Transform, bool> actualBones, AvatarSetupTool.BoneWrapper[] bones, Quaternion orientation, Transform tr, Bounds bounds)
 		{
+			bool result;
 			if (!actualBones.ContainsKey(tr))
 			{
-				return false;
-			}
-			int num = 0;
-			foreach (Transform tr2 in tr)
-			{
-				if (AvatarSkeletonDrawer.DrawSkeletonSubTree(actualBones, bones, orientation, tr2, bounds))
-				{
-					num++;
-				}
-			}
-			if (!actualBones[tr] && num <= 1)
-			{
-				return false;
-			}
-			int num2 = -1;
-			if (bones != null)
-			{
-				for (int i = 0; i < bones.Length; i++)
-				{
-					if (bones[i].bone == tr)
-					{
-						num2 = i;
-						break;
-					}
-				}
-			}
-			bool flag = AvatarSetupTool.GetBoneAlignmentError(bones, orientation, num2) > 0f;
-			AvatarSkeletonDrawer.sPoseError |= flag;
-			if (flag)
-			{
-				AvatarSkeletonDrawer.DrawPoseError(tr, bounds);
-				Handles.color = AvatarSkeletonDrawer.kErrorColor;
-			}
-			else if (num2 != -1)
-			{
-				Handles.color = AvatarSkeletonDrawer.kHumanColor;
-			}
-			else if (!actualBones[tr])
-			{
-				Handles.color = AvatarSkeletonDrawer.kDummyColor;
+				result = false;
 			}
 			else
 			{
-				Handles.color = AvatarSkeletonDrawer.kSkeletonColor;
+				int num = 0;
+				IEnumerator enumerator = tr.GetEnumerator();
+				try
+				{
+					while (enumerator.MoveNext())
+					{
+						Transform tr2 = (Transform)enumerator.Current;
+						if (AvatarSkeletonDrawer.DrawSkeletonSubTree(actualBones, bones, orientation, tr2, bounds))
+						{
+							num++;
+						}
+					}
+				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
+				}
+				if (!actualBones[tr] && num <= 1)
+				{
+					result = false;
+				}
+				else
+				{
+					int num2 = -1;
+					if (bones != null)
+					{
+						for (int i = 0; i < bones.Length; i++)
+						{
+							if (bones[i].bone == tr)
+							{
+								num2 = i;
+								break;
+							}
+						}
+					}
+					bool flag = AvatarSetupTool.GetBoneAlignmentError(bones, orientation, num2) > 0f;
+					AvatarSkeletonDrawer.sPoseError |= flag;
+					if (flag)
+					{
+						AvatarSkeletonDrawer.DrawPoseError(tr, bounds);
+						Handles.color = AvatarSkeletonDrawer.kErrorColor;
+					}
+					else if (num2 != -1)
+					{
+						Handles.color = AvatarSkeletonDrawer.kHumanColor;
+					}
+					else if (!actualBones[tr])
+					{
+						Handles.color = AvatarSkeletonDrawer.kDummyColor;
+					}
+					else
+					{
+						Handles.color = AvatarSkeletonDrawer.kSkeletonColor;
+					}
+					Handles.DoBoneHandle(tr, actualBones);
+					if (Selection.activeObject == tr)
+					{
+						Handles.color = AvatarSkeletonDrawer.kSelectedColor;
+						Handles.DoBoneHandle(tr, actualBones);
+					}
+					result = true;
+				}
 			}
-			Handles.DoBoneHandle(tr, actualBones);
-			if (Selection.activeObject == tr)
-			{
-				Handles.color = AvatarSkeletonDrawer.kSelectedColor;
-				Handles.DoBoneHandle(tr, actualBones);
-			}
-			return true;
+			return result;
 		}
 
 		private static void DrawPoseError(Transform node, Bounds bounds)

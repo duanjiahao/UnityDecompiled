@@ -37,49 +37,60 @@ namespace UnityEditor.RestService
 		[OnOpenAsset]
 		private static bool OnOpenAsset(int instanceID, int line)
 		{
+			bool result;
 			if (ScriptEditorSettings.ServerURL == null)
 			{
-				return false;
+				result = false;
 			}
-			string text = Path.GetFullPath(Application.dataPath + "/../" + AssetDatabase.GetAssetPath(instanceID)).Replace('\\', '/');
-			string text2 = text.ToLower();
-			if (!text2.EndsWith(".cs") && !text2.EndsWith(".js") && !text2.EndsWith(".boo"))
+			else
 			{
-				return false;
+				string text = Path.GetFullPath(Application.dataPath + "/../" + AssetDatabase.GetAssetPath(instanceID)).Replace('\\', '/');
+				string text2 = text.ToLower();
+				if (!text2.EndsWith(".cs") && !text2.EndsWith(".js") && !text2.EndsWith(".boo"))
+				{
+					result = false;
+				}
+				else if (!PairingRestHandler.IsScriptEditorRunning() || !RestRequest.Send("/openfile", string.Concat(new object[]
+				{
+					"{ \"file\" : \"",
+					text,
+					"\", \"line\" : ",
+					line,
+					" }"
+				}), 5000))
+				{
+					ScriptEditorSettings.ServerURL = null;
+					ScriptEditorSettings.Name = null;
+					ScriptEditorSettings.ProcessId = -1;
+					result = false;
+				}
+				else
+				{
+					result = true;
+				}
 			}
-			if (!PairingRestHandler.IsScriptEditorRunning() || !RestRequest.Send("/openfile", string.Concat(new object[]
-			{
-				"{ \"file\" : \"",
-				text,
-				"\", \"line\" : ",
-				line,
-				" }"
-			}), 5000))
-			{
-				ScriptEditorSettings.ServerURL = null;
-				ScriptEditorSettings.Name = null;
-				ScriptEditorSettings.ProcessId = -1;
-				return false;
-			}
-			return true;
+			return result;
 		}
 
 		private static bool IsScriptEditorRunning()
 		{
+			bool result;
 			if (ScriptEditorSettings.ProcessId < 0)
 			{
-				return false;
-			}
-			bool result;
-			try
-			{
-				Process processById = Process.GetProcessById(ScriptEditorSettings.ProcessId);
-				result = !processById.HasExited;
-			}
-			catch (Exception an_exception)
-			{
-				Logger.Log(an_exception);
 				result = false;
+			}
+			else
+			{
+				try
+				{
+					Process processById = Process.GetProcessById(ScriptEditorSettings.ProcessId);
+					result = !processById.HasExited;
+				}
+				catch (Exception an_exception)
+				{
+					Logger.Log(an_exception);
+					result = false;
+				}
 			}
 			return result;
 		}

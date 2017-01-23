@@ -19,11 +19,6 @@ namespace UnityEditor
 			this.m_Value = value;
 		}
 
-		public override string ToString()
-		{
-			return this.m_Value;
-		}
-
 		public static implicit operator string(ExternalVersionControl d)
 		{
 			return d.ToString();
@@ -32,6 +27,11 @@ namespace UnityEditor
 		public static implicit operator ExternalVersionControl(string d)
 		{
 			return new ExternalVersionControl(d);
+		}
+
+		public override string ToString()
+		{
+			return this.m_Value;
 		}
 	}
 }

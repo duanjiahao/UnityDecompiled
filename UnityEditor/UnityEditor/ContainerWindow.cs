@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UnityEditor
 {
@@ -20,18 +21,6 @@ namespace UnityEditor
 			public static GUIStyle buttonInactive = "WinBtnInactiveMac";
 		}
 
-		private const float kBorderSize = 4f;
-
-		private const float kTitleHeight = 24f;
-
-		private const float kButtonWidth = 13f;
-
-		private const float kButtonHeight = 13f;
-
-		private const float kButtonSpacing = 3f;
-
-		private const float kButtonTop = 0f;
-
 		[SerializeField]
 		private MonoReloadableIntPtr m_WindowPtr;
 
@@ -42,10 +31,10 @@ namespace UnityEditor
 		private int m_ShowMode;
 
 		[SerializeField]
-		private string m_Title = string.Empty;
+		private string m_Title = "";
 
-		[SerializeField]
-		private View m_MainView;
+		[FormerlySerializedAs("m_MainView"), SerializeField]
+		private View m_RootView;
 
 		[SerializeField]
 		private Vector2 m_MinSize = new Vector2(120f, 80f);
@@ -53,33 +42,32 @@ namespace UnityEditor
 		[SerializeField]
 		private Vector2 m_MaxSize = new Vector2(4000f, 4000f);
 
-		internal bool m_DontSaveToLayout;
+		internal bool m_DontSaveToLayout = false;
 
-		[SerializeField]
-		private SnapEdge m_Left;
+		private const float kBorderSize = 4f;
 
-		[SerializeField]
-		private SnapEdge m_Right;
-
-		[SerializeField]
-		private SnapEdge m_Top;
-
-		[SerializeField]
-		private SnapEdge m_Bottom;
-
-		private SnapEdge[] m_EdgesCache;
+		private const float kTitleHeight = 24f;
 
 		private int m_ButtonCount;
 
 		private float m_TitleBarWidth;
 
+		private const float kButtonWidth = 13f;
+
+		private const float kButtonHeight = 13f;
+
+		private const float kButtonSpacing = 3f;
+
+		private const float kButtonTop = 0f;
+
 		private static List<ContainerWindow> s_AllWindows = new List<ContainerWindow>();
 
 		private static Vector2 s_LastDragMousePos;
 
+		private static Rect dragPosition;
+
 		public extern bool maximized
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -98,24 +86,6 @@ namespace UnityEditor
 			}
 		}
 
-		private IEnumerable<SnapEdge> edges
-		{
-			get
-			{
-				if (this.m_EdgesCache == null)
-				{
-					this.m_EdgesCache = new SnapEdge[]
-					{
-						this.m_Left,
-						this.m_Right,
-						this.m_Top,
-						this.m_Bottom
-					};
-				}
-				return this.m_EdgesCache;
-			}
-		}
-
 		internal static bool macEditor
 		{
 			get
@@ -129,6 +99,22 @@ namespace UnityEditor
 			get
 			{
 				return (ShowMode)this.m_ShowMode;
+			}
+		}
+
+		internal bool isPopup
+		{
+			get
+			{
+				return ContainerWindow.IsPopup((ShowMode)this.m_ShowMode);
+			}
+		}
+
+		private static Color skinBackgroundColor
+		{
+			get
+			{
+				return (!EditorGUIUtility.isProSkin) ? Color.gray.AlphaMultiplied(0.32f) : Color.gray.RGBMultiplied(0.3f).AlphaMultiplied(0.5f);
 			}
 		}
 
@@ -155,19 +141,36 @@ namespace UnityEditor
 			}
 		}
 
-		public View mainView
+		public View rootView
 		{
 			get
 			{
-				return this.m_MainView;
+				return this.m_RootView;
 			}
 			set
 			{
-				this.m_MainView = value;
-				this.m_MainView.SetWindowRecurse(this);
-				this.m_MainView.position = new Rect(0f, 0f, this.position.width, this.position.height);
+				this.m_RootView = value;
+				this.m_RootView.SetWindowRecurse(this);
+				this.m_RootView.position = new Rect(0f, 0f, this.position.width, this.position.height);
 				this.m_MinSize = value.minSize;
 				this.m_MaxSize = value.maxSize;
+			}
+		}
+
+		public SplitView rootSplitView
+		{
+			get
+			{
+				SplitView result;
+				if (this.m_ShowMode == 4 && this.rootView && this.rootView.children.Length == 3)
+				{
+					result = (this.rootView.children[1] as SplitView);
+				}
+				else
+				{
+					result = (this.rootView as SplitView);
+				}
+				return result;
 			}
 		}
 
@@ -176,15 +179,12 @@ namespace UnityEditor
 			this.m_PixelRect = new Rect(0f, 0f, 400f, 300f);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAlpha(float alpha);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetInvisible();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsZoomed();
 
@@ -193,7 +193,6 @@ namespace UnityEditor
 			ContainerWindow.INTERNAL_CALL_Internal_SetMinMaxSizes(this, ref minSize, ref maxSize);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetMinMaxSizes(ContainerWindow self, ref Vector2 minSize, ref Vector2 maxSize);
 
@@ -202,63 +201,56 @@ namespace UnityEditor
 			ContainerWindow.INTERNAL_CALL_Internal_Show(this, ref r, showMode, ref minSize, ref maxSize);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_Show(ContainerWindow self, ref Rect r, int showMode, ref Vector2 minSize, ref Vector2 maxSize);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_BringLiveAfterCreation(bool displayImmediately, bool setFocus);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetFreezeDisplay(bool freeze);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DisplayAllViews();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Minimize();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ToggleMaximize();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void MoveInFrontOf(ContainerWindow other);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void MoveBehindOf(ContainerWindow other);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InternalClose();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void OnDestroy();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_position(out Rect value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_position(ref Rect value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetTitle(string title);
 
-		[WrapperlessIcall]
+		private void SetBackgroundColor(Color color)
+		{
+			ContainerWindow.INTERNAL_CALL_SetBackgroundColor(this, ref color);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetBackgroundColor(ContainerWindow self, ref Color color);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void GetOrderedWindowList();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_GetTopleftScreenPosition(out Vector2 pos);
 
@@ -269,7 +261,6 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_FitWindowRectToScreen(ContainerWindow self, ref Rect r, bool forceCompletelyVisible, bool useMouseScreen, out Rect value);
 
@@ -280,7 +271,6 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_FitRectToScreen(ref Rect defaultRect, bool forceCompletelyVisible, bool useMouseScreen, out Rect value);
 
@@ -289,13 +279,18 @@ namespace UnityEditor
 			base.hideFlags = HideFlags.DontSave;
 		}
 
+		internal static bool IsPopup(ShowMode mode)
+		{
+			return mode == ShowMode.PopupMenu || ShowMode.PopupMenuWithKeyboardFocus == mode;
+		}
+
 		internal void ShowPopup()
 		{
 			this.m_ShowMode = 1;
 			this.Internal_Show(this.m_PixelRect, this.m_ShowMode, this.m_MinSize, this.m_MaxSize);
-			if (this.m_MainView)
+			if (this.m_RootView)
 			{
-				this.m_MainView.SetWindowRecurse(this);
+				this.m_RootView.SetWindowRecurse(this);
 			}
 			this.Internal_SetTitle(this.m_Title);
 			this.Save();
@@ -308,38 +303,39 @@ namespace UnityEditor
 			{
 				showMode = ShowMode.Utility;
 			}
-			if (showMode == ShowMode.Utility || showMode == ShowMode.PopupMenu)
+			if (showMode == ShowMode.Utility || ContainerWindow.IsPopup(showMode))
 			{
 				this.m_DontSaveToLayout = true;
 			}
 			this.m_ShowMode = (int)showMode;
-			if (showMode != ShowMode.PopupMenu)
+			if (!this.isPopup)
 			{
 				this.Load(loadPosition);
 			}
 			this.Internal_Show(this.m_PixelRect, this.m_ShowMode, this.m_MinSize, this.m_MaxSize);
-			if (this.m_MainView)
+			if (this.m_RootView)
 			{
-				this.m_MainView.SetWindowRecurse(this);
+				this.m_RootView.SetWindowRecurse(this);
 			}
 			this.Internal_SetTitle(this.m_Title);
+			this.SetBackgroundColor(ContainerWindow.skinBackgroundColor);
 			this.Internal_BringLiveAfterCreation(displayImmediately, true);
-			if (this == null)
+			if (!(this == null))
 			{
-				return;
+				this.position = this.FitWindowRectToScreen(this.m_PixelRect, true, false);
+				this.rootView.position = new Rect(0f, 0f, this.m_PixelRect.width, this.m_PixelRect.height);
+				this.rootView.Reflow();
+				this.Save();
 			}
-			this.position = this.FitWindowRectToScreen(this.m_PixelRect, true, false);
-			this.mainView.position = new Rect(0f, 0f, this.m_PixelRect.width, this.m_PixelRect.height);
-			this.mainView.Reflow();
-			this.Save();
 		}
 
 		public void OnEnable()
 		{
-			if (this.m_MainView)
+			if (this.m_RootView)
 			{
-				this.m_MainView.Initialize(this);
+				this.m_RootView.Initialize(this);
 			}
+			this.SetBackgroundColor(ContainerWindow.skinBackgroundColor);
 		}
 
 		public void SetMinMaxSizes(Vector2 min, Vector2 max)
@@ -360,14 +356,14 @@ namespace UnityEditor
 		internal void InternalCloseWindow()
 		{
 			this.Save();
-			if (this.m_MainView)
+			if (this.m_RootView)
 			{
-				if (this.m_MainView is GUIView)
+				if (this.m_RootView is GUIView)
 				{
-					((GUIView)this.m_MainView).RemoveFromAuxWindowList();
+					((GUIView)this.m_RootView).RemoveFromAuxWindowList();
 				}
-				UnityEngine.Object.DestroyImmediate(this.m_MainView, true);
-				this.m_MainView = null;
+				UnityEngine.Object.DestroyImmediate(this.m_RootView, true);
+				this.m_RootView = null;
 			}
 			UnityEngine.Object.DestroyImmediate(this, true);
 		}
@@ -381,25 +377,31 @@ namespace UnityEditor
 
 		internal bool IsNotDocked()
 		{
-			return this.m_ShowMode == 2 || this.m_ShowMode == 5 || (this.mainView as SplitView != null && this.mainView.children.Length == 1 && this.mainView.children.Length == 1 && this.mainView.children[0] is DockArea && ((DockArea)this.mainView.children[0]).m_Panes.Count == 1);
+			return this.m_ShowMode == 2 || this.m_ShowMode == 5 || (this.rootView as SplitView != null && this.rootView.children.Length == 1 && this.rootView.children.Length == 1 && this.rootView.children[0] is DockArea && ((DockArea)this.rootView.children[0]).m_Panes.Count == 1);
 		}
 
 		private string NotDockedWindowID()
 		{
+			string result;
 			if (this.IsNotDocked())
 			{
-				HostView hostView = this.mainView as HostView;
+				HostView hostView = this.rootView as HostView;
 				if (hostView == null)
 				{
-					if (!(this.mainView is SplitView))
+					if (!(this.rootView is SplitView))
 					{
-						return this.mainView.GetType().ToString();
+						result = this.rootView.GetType().ToString();
+						return result;
 					}
-					hostView = (HostView)this.mainView.children[0];
+					hostView = (HostView)this.rootView.children[0];
 				}
-				return (this.m_ShowMode != 2 && this.m_ShowMode != 5) ? ((DockArea)this.mainView.children[0]).m_Panes[0].GetType().ToString() : hostView.actualView.GetType().ToString();
+				result = ((this.m_ShowMode != 2 && this.m_ShowMode != 5) ? ((DockArea)this.rootView.children[0]).m_Panes[0].GetType().ToString() : hostView.actualView.GetType().ToString());
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		public void Save()
@@ -435,12 +437,11 @@ namespace UnityEditor
 
 		internal void OnResize()
 		{
-			if (this.mainView == null)
+			if (!(this.rootView == null))
 			{
-				return;
+				this.rootView.position = new Rect(0f, 0f, this.position.width, this.position.height);
+				this.Save();
 			}
-			this.mainView.position = new Rect(0f, 0f, this.position.width, this.position.height);
-			this.Save();
 		}
 
 		internal void AddToWindowList()
@@ -457,7 +458,7 @@ namespace UnityEditor
 
 		internal string DebugHierarchy()
 		{
-			return this.mainView.DebugHierarchy(0);
+			return this.rootView.DebugHierarchy(0);
 		}
 
 		internal Rect GetDropDownRect(Rect buttonRect, Vector2 minSize, Vector2 maxSize, PopupLocationHelper.PopupLocation[] locationPriorityOrder)
@@ -494,36 +495,35 @@ namespace UnityEditor
 
 		public void HandleWindowDecorationStart(Rect windowPosition)
 		{
-			if (windowPosition.y != 0f || this.showMode == ShowMode.Utility || this.showMode == ShowMode.PopupMenu)
+			if (windowPosition.y == 0f && this.showMode != ShowMode.Utility && !this.isPopup)
 			{
-				return;
+				bool flag = Mathf.Abs(windowPosition.xMax - this.position.width) < 2f;
+				if (flag)
+				{
+					GUIStyle style = ContainerWindow.Styles.buttonClose;
+					GUIStyle style2 = ContainerWindow.Styles.buttonMin;
+					GUIStyle style3 = ContainerWindow.Styles.buttonMax;
+					if (ContainerWindow.macEditor && (GUIView.focusedView == null || GUIView.focusedView.window != this))
+					{
+						style2 = (style = (style3 = ContainerWindow.Styles.buttonInactive));
+					}
+					this.BeginTitleBarButtons(windowPosition);
+					if (this.TitleBarButton(style))
+					{
+						this.Close();
+					}
+					if (ContainerWindow.macEditor && this.TitleBarButton(style2))
+					{
+						this.Minimize();
+						GUIUtility.ExitGUI();
+					}
+					if (this.TitleBarButton(style3))
+					{
+						this.ToggleMaximize();
+					}
+				}
+				this.DragTitleBar(new Rect(0f, 0f, this.position.width, 24f));
 			}
-			bool flag = Mathf.Abs(windowPosition.xMax - this.position.width) < 2f;
-			if (flag)
-			{
-				GUIStyle style = ContainerWindow.Styles.buttonClose;
-				GUIStyle style2 = ContainerWindow.Styles.buttonMin;
-				GUIStyle style3 = ContainerWindow.Styles.buttonMax;
-				if (ContainerWindow.macEditor && (GUIView.focusedView == null || GUIView.focusedView.window != this))
-				{
-					style2 = (style = (style3 = ContainerWindow.Styles.buttonInactive));
-				}
-				this.BeginTitleBarButtons(windowPosition);
-				if (this.TitleBarButton(style))
-				{
-					this.Close();
-				}
-				if (ContainerWindow.macEditor && this.TitleBarButton(style2))
-				{
-					this.Minimize();
-					GUIUtility.ExitGUI();
-				}
-				if (this.TitleBarButton(style3))
-				{
-					this.ToggleMaximize();
-				}
-			}
-			this.HandleTitleBarDrag();
 		}
 
 		private void BeginTitleBarButtons(Rect windowPosition)
@@ -538,46 +538,6 @@ namespace UnityEditor
 			return GUI.Button(position, GUIContent.none, style);
 		}
 
-		private void SetupWindowEdges()
-		{
-			Rect position = this.position;
-			if (this.m_Left == null)
-			{
-				this.m_Left = new SnapEdge(this, SnapEdge.EdgeDir.Left, position.xMin, position.yMin, position.yMax);
-				this.m_Right = new SnapEdge(this, SnapEdge.EdgeDir.Right, position.xMax, position.yMin, position.yMax);
-				this.m_Top = new SnapEdge(this, SnapEdge.EdgeDir.Up, position.yMin, position.xMin, position.xMax);
-				this.m_Bottom = new SnapEdge(this, SnapEdge.EdgeDir.Down, position.yMax, position.xMin, position.xMax);
-			}
-			this.m_Left.pos = position.xMin;
-			this.m_Left.start = position.yMin;
-			this.m_Left.end = position.yMax;
-			this.m_Right.pos = position.xMax;
-			this.m_Right.start = position.yMin;
-			this.m_Right.end = position.yMax;
-			this.m_Top.pos = position.yMin;
-			this.m_Top.start = position.xMin;
-			this.m_Top.end = position.xMax;
-			this.m_Bottom.pos = position.yMax;
-			this.m_Bottom.start = position.xMin;
-			this.m_Bottom.end = position.xMax;
-		}
-
-		private void HandleTitleBarDrag()
-		{
-			this.SetupWindowEdges();
-			EditorGUI.BeginChangeCheck();
-			this.DragTitleBar(new Rect(0f, 0f, this.position.width, 24f));
-			if (EditorGUI.EndChangeCheck())
-			{
-				Rect rect = new Rect(this.m_Left.pos, this.m_Top.pos, this.m_Right.pos - this.m_Left.pos, this.m_Bottom.pos - this.m_Top.pos);
-				if (ContainerWindow.macEditor)
-				{
-					rect = this.FitWindowRectToScreen(rect, false, false);
-				}
-				this.position = rect;
-			}
-		}
-
 		private void DragTitleBar(Rect titleBarRect)
 		{
 			int controlID = GUIUtility.GetControlID(FocusType.Passive);
@@ -590,11 +550,7 @@ namespace UnityEditor
 					GUIUtility.hotControl = controlID;
 					Event.current.Use();
 					ContainerWindow.s_LastDragMousePos = GUIUtility.GUIToScreenPoint(current.mousePosition);
-					foreach (SnapEdge current2 in this.edges)
-					{
-						current2.startDragPos = current2.pos;
-						current2.startDragStart = current2.start;
-					}
+					ContainerWindow.dragPosition = this.position;
 				}
 				break;
 			case EventType.MouseUp:
@@ -608,13 +564,12 @@ namespace UnityEditor
 				if (GUIUtility.hotControl == controlID)
 				{
 					Vector2 a = GUIUtility.GUIToScreenPoint(current.mousePosition);
-					Vector2 offset = a - ContainerWindow.s_LastDragMousePos;
+					Vector2 vector = a - ContainerWindow.s_LastDragMousePos;
 					ContainerWindow.s_LastDragMousePos = a;
+					ContainerWindow.dragPosition.x = ContainerWindow.dragPosition.x + vector.x;
+					ContainerWindow.dragPosition.y = ContainerWindow.dragPosition.y + vector.y;
+					this.position = ContainerWindow.dragPosition;
 					GUI.changed = true;
-					foreach (SnapEdge current3 in this.edges)
-					{
-						current3.ApplyOffset(offset, true);
-					}
 				}
 				break;
 			case EventType.Repaint:

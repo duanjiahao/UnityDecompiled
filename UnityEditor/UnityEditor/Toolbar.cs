@@ -18,7 +18,8 @@ namespace UnityEditor
 			ServerHasChanges,
 			FilesToPush,
 			InProgress,
-			Disabled
+			Disabled,
+			Offline
 		}
 
 		private static class Styles
@@ -35,8 +36,6 @@ namespace UnityEditor
 
 			public static readonly GUIStyle appToolbar = "AppToolbar";
 		}
-
-		private const float kCollabButtonWidth = 78f;
 
 		private static GUIContent[] s_ToolIcons;
 
@@ -58,6 +57,8 @@ namespace UnityEditor
 
 		private static GUIContent[] s_CollabIcons;
 
+		private const float kCollabButtonWidth = 78f;
+
 		private ButtonWithAnimatedIconRotation m_CollabButton;
 
 		private string m_DynamicTooltip;
@@ -67,6 +68,8 @@ namespace UnityEditor
 		private static GUIContent[] s_ShownToolIcons = new GUIContent[5];
 
 		public static Toolbar get = null;
+
+		public static bool requestShowCollabToolbar = false;
 
 		[SerializeField]
 		private string m_LastLoadedLayoutName;
@@ -80,7 +83,7 @@ namespace UnityEditor
 				{
 					gUIContent.tooltip = null;
 				}
-				else if (this.m_DynamicTooltip != string.Empty)
+				else if (this.m_DynamicTooltip != "")
 				{
 					gUIContent.tooltip = this.m_DynamicTooltip;
 				}
@@ -103,71 +106,71 @@ namespace UnityEditor
 
 		private void InitializeToolIcons()
 		{
-			if (Toolbar.s_ToolIcons != null)
+			if (Toolbar.s_ToolIcons == null)
 			{
-				return;
+				Toolbar.s_ToolIcons = new GUIContent[]
+				{
+					EditorGUIUtility.IconContent("MoveTool", "|Move the selected objects."),
+					EditorGUIUtility.IconContent("RotateTool", "|Rotate the selected objects."),
+					EditorGUIUtility.IconContent("ScaleTool", "|Scale the selected objects."),
+					EditorGUIUtility.IconContent("RectTool"),
+					EditorGUIUtility.IconContent("MoveTool On"),
+					EditorGUIUtility.IconContent("RotateTool On"),
+					EditorGUIUtility.IconContent("ScaleTool On"),
+					EditorGUIUtility.IconContent("RectTool On")
+				};
+				Toolbar.s_ViewToolIcons = new GUIContent[]
+				{
+					EditorGUIUtility.IconContent("ViewToolOrbit", "|Orbit the Scene view."),
+					EditorGUIUtility.IconContent("ViewToolMove"),
+					EditorGUIUtility.IconContent("ViewToolZoom"),
+					EditorGUIUtility.IconContent("ViewToolOrbit", "|Orbit the Scene view."),
+					EditorGUIUtility.IconContent("ViewToolOrbit On"),
+					EditorGUIUtility.IconContent("ViewToolMove On"),
+					EditorGUIUtility.IconContent("ViewToolZoom On"),
+					EditorGUIUtility.IconContent("ViewToolOrbit On")
+				};
+				Toolbar.s_PivotIcons = new GUIContent[]
+				{
+					EditorGUIUtility.TextContentWithIcon("Center|The tool handle is placed at the center of the selection.", "ToolHandleCenter"),
+					EditorGUIUtility.TextContentWithIcon("Pivot|The tool handle is placed at the active object's pivot point.", "ToolHandlePivot")
+				};
+				Toolbar.s_PivotRotation = new GUIContent[]
+				{
+					EditorGUIUtility.TextContentWithIcon("Local|Tool handles are in active object's rotation.", "ToolHandleLocal"),
+					EditorGUIUtility.TextContentWithIcon("Global|Tool handles are in global rotation.", "ToolHandleGlobal")
+				};
+				Toolbar.s_LayerContent = EditorGUIUtility.TextContent("Layers|Which layers are visible in the Scene views.");
+				Toolbar.s_PlayIcons = new GUIContent[]
+				{
+					EditorGUIUtility.IconContent("PlayButton"),
+					EditorGUIUtility.IconContent("PauseButton"),
+					EditorGUIUtility.IconContent("StepButton"),
+					EditorGUIUtility.IconContent("PlayButtonProfile"),
+					EditorGUIUtility.IconContent("PlayButton On"),
+					EditorGUIUtility.IconContent("PauseButton On"),
+					EditorGUIUtility.IconContent("StepButton On"),
+					EditorGUIUtility.IconContent("PlayButtonProfile On"),
+					EditorGUIUtility.IconContent("PlayButton Anim"),
+					EditorGUIUtility.IconContent("PauseButton Anim"),
+					EditorGUIUtility.IconContent("StepButton Anim"),
+					EditorGUIUtility.IconContent("PlayButtonProfile Anim")
+				};
+				Toolbar.s_CloudIcon = EditorGUIUtility.IconContent("CloudConnect");
+				Toolbar.s_AccountContent = new GUIContent("Account");
+				Toolbar.s_CollabIcons = new GUIContent[]
+				{
+					EditorGUIUtility.TextContentWithIcon("Collab| You need to enable collab.", "CollabNew"),
+					EditorGUIUtility.TextContentWithIcon("Collab| You are up to date.", "Collab"),
+					EditorGUIUtility.TextContentWithIcon("Collab| Please fix your conflicts prior to publishing.", "CollabConflict"),
+					EditorGUIUtility.TextContentWithIcon("Collab| Last operation failed. Please retry later.", "CollabError"),
+					EditorGUIUtility.TextContentWithIcon("Collab| Please update, there are server changes.", "CollabPull"),
+					EditorGUIUtility.TextContentWithIcon("Collab| You have files to publish.", "CollabPush"),
+					EditorGUIUtility.TextContentWithIcon("Collab| Operation in progress.", "CollabProgress"),
+					EditorGUIUtility.TextContentWithIcon("Collab| Collab is disabled.", "CollabNew"),
+					EditorGUIUtility.TextContentWithIcon("Collab| Please check your network connection.", "CollabOffline")
+				};
 			}
-			Toolbar.s_ToolIcons = new GUIContent[]
-			{
-				EditorGUIUtility.IconContent("MoveTool", "|Move the selected objects."),
-				EditorGUIUtility.IconContent("RotateTool", "|Rotate the selected objects."),
-				EditorGUIUtility.IconContent("ScaleTool", "|Scale the selected objects."),
-				EditorGUIUtility.IconContent("RectTool"),
-				EditorGUIUtility.IconContent("MoveTool On"),
-				EditorGUIUtility.IconContent("RotateTool On"),
-				EditorGUIUtility.IconContent("ScaleTool On"),
-				EditorGUIUtility.IconContent("RectTool On")
-			};
-			Toolbar.s_ViewToolIcons = new GUIContent[]
-			{
-				EditorGUIUtility.IconContent("ViewToolOrbit", "|Orbit the Scene view."),
-				EditorGUIUtility.IconContent("ViewToolMove"),
-				EditorGUIUtility.IconContent("ViewToolZoom"),
-				EditorGUIUtility.IconContent("ViewToolOrbit", "|Orbit the Scene view."),
-				EditorGUIUtility.IconContent("ViewToolOrbit On"),
-				EditorGUIUtility.IconContent("ViewToolMove On"),
-				EditorGUIUtility.IconContent("ViewToolZoom On"),
-				EditorGUIUtility.IconContent("ViewToolOrbit On")
-			};
-			Toolbar.s_PivotIcons = new GUIContent[]
-			{
-				EditorGUIUtility.TextContentWithIcon("Center|The tool handle is placed at the center of the selection.", "ToolHandleCenter"),
-				EditorGUIUtility.TextContentWithIcon("Pivot|The tool handle is placed at the active object's pivot point.", "ToolHandlePivot")
-			};
-			Toolbar.s_PivotRotation = new GUIContent[]
-			{
-				EditorGUIUtility.TextContentWithIcon("Local|Tool handles are in active object's rotation.", "ToolHandleLocal"),
-				EditorGUIUtility.TextContentWithIcon("Global|Tool handles are in global rotation.", "ToolHandleGlobal")
-			};
-			Toolbar.s_LayerContent = EditorGUIUtility.TextContent("Layers|Which layers are visible in the Scene views.");
-			Toolbar.s_PlayIcons = new GUIContent[]
-			{
-				EditorGUIUtility.IconContent("PlayButton"),
-				EditorGUIUtility.IconContent("PauseButton"),
-				EditorGUIUtility.IconContent("StepButton"),
-				EditorGUIUtility.IconContent("PlayButtonProfile"),
-				EditorGUIUtility.IconContent("PlayButton On"),
-				EditorGUIUtility.IconContent("PauseButton On"),
-				EditorGUIUtility.IconContent("StepButton On"),
-				EditorGUIUtility.IconContent("PlayButtonProfile On"),
-				EditorGUIUtility.IconContent("PlayButton Anim"),
-				EditorGUIUtility.IconContent("PauseButton Anim"),
-				EditorGUIUtility.IconContent("StepButton Anim"),
-				EditorGUIUtility.IconContent("PlayButtonProfile Anim")
-			};
-			Toolbar.s_CloudIcon = EditorGUIUtility.IconContent("CloudConnect");
-			Toolbar.s_AccountContent = new GUIContent("Account");
-			Toolbar.s_CollabIcons = new GUIContent[]
-			{
-				EditorGUIUtility.TextContentWithIcon("Collab| You need to enable collab.", "CollabNew"),
-				EditorGUIUtility.TextContentWithIcon("Collab| You are up to date.", "Collab"),
-				EditorGUIUtility.TextContentWithIcon("Collab| Please fix your conflicts prior to publishing.", "CollabConflict"),
-				EditorGUIUtility.TextContentWithIcon("Collab| Last operation failed. Please retry later.", "CollabError"),
-				EditorGUIUtility.TextContentWithIcon("Collab| Please update, there are server changes.", "CollabPull"),
-				EditorGUIUtility.TextContentWithIcon("Collab| You have files to publish.", "CollabPush"),
-				EditorGUIUtility.TextContentWithIcon("Collab| Operation in progress.", "CollabProgress"),
-				EditorGUIUtility.TextContentWithIcon("Collab| Collab is disabled.", "CollabNew")
-			};
 		}
 
 		public void OnEnable()
@@ -276,7 +279,7 @@ namespace UnityEditor
 			this.ReserveWidthRight(num2 * 2f, ref pos);
 			this.DoPivotButtons(this.GetThinArea(pos));
 			float num3 = 100f;
-			pos = new Rect((base.position.width - num3) / 2f, 0f, 140f, 0f);
+			pos = new Rect((float)Mathf.RoundToInt((base.position.width - num3) / 2f), 0f, 140f, 0f);
 			GUILayout.BeginArea(this.GetThickArea(pos));
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			this.DoPlayButtons(isPlayingOrWillChangePlaymode);
@@ -320,7 +323,7 @@ namespace UnityEditor
 				genericMenu.AddDisabledItem(new GUIContent("Sign in..."));
 				if (!Application.HasProLicense())
 				{
-					genericMenu.AddSeparator(string.Empty);
+					genericMenu.AddSeparator("");
 					genericMenu.AddDisabledItem(new GUIContent("Upgrade to Pro"));
 				}
 			}
@@ -355,7 +358,7 @@ namespace UnityEditor
 				}
 				if (!Application.HasProLicense())
 				{
-					genericMenu.AddSeparator(string.Empty);
+					genericMenu.AddSeparator("");
 					genericMenu.AddItem(new GUIContent("Upgrade to Pro"), false, delegate
 					{
 						Application.OpenURL("https://store.unity3d.com/");
@@ -443,9 +446,12 @@ namespace UnityEditor
 		private void DoLayersDropDown(Rect rect)
 		{
 			GUIStyle style = "DropDown";
-			if (EditorGUI.ButtonMouseDown(rect, Toolbar.s_LayerContent, FocusType.Passive, style) && LayerVisibilityWindow.ShowAtPosition(rect))
+			if (EditorGUI.ButtonMouseDown(rect, Toolbar.s_LayerContent, FocusType.Passive, style))
 			{
-				GUIUtility.ExitGUI();
+				if (LayerVisibilityWindow.ShowAtPosition(rect))
+				{
+					GUIUtility.ExitGUI();
+				}
 			}
 		}
 
@@ -474,11 +480,11 @@ namespace UnityEditor
 		private void DoCollabDropDown(Rect rect)
 		{
 			this.UpdateCollabToolbarState();
-			bool flag = false;
-			bool flag2 = UnityConnect.instance.connectInfo.online && UnityConnect.instance.connectInfo.loggedIn;
+			bool flag = Toolbar.requestShowCollabToolbar;
+			Toolbar.requestShowCollabToolbar = false;
 			bool whitelisted = Collab.instance.collabInfo.whitelisted;
-			bool flag3 = whitelisted && flag2 && !EditorApplication.isPlaying;
-			using (new EditorGUI.DisabledScope(!flag3))
+			bool flag2 = whitelisted && !EditorApplication.isPlaying;
+			using (new EditorGUI.DisabledScope(!flag2))
 			{
 				bool animate = this.m_CollabToolbarState == Toolbar.CollabToolbarState.InProgress;
 				EditorGUIUtility.SetIconSize(new Vector2(12f, 12f));
@@ -501,54 +507,60 @@ namespace UnityEditor
 
 		public void UpdateCollabToolbarState()
 		{
-			Toolbar.CollabToolbarState collabToolbarState = Toolbar.CollabToolbarState.UpToDate;
-			Collab instance = Collab.instance;
-			bool flag = instance.JobRunning(0);
-			CollabInfo collabInfo = instance.collabInfo;
-			this.m_DynamicTooltip = string.Empty;
-			if (!Collab.instance.collabInfo.whitelisted)
+			if (Collab.instance.GetCollabInfo().whitelisted)
 			{
-				this.m_DynamicTooltip = "Please check that this project is part of an organization that has been accepted into the collaborate beta.\r\n\r\nGo to Services > Settings > Organization and change your project Organization to the one that has been accepted into the Collaborate beta.";
-				collabToolbarState = Toolbar.CollabToolbarState.Disabled;
-			}
-			else if (!collabInfo.ready)
-			{
-				collabToolbarState = Toolbar.CollabToolbarState.InProgress;
-			}
-			else if (collabInfo.error)
-			{
-				collabToolbarState = Toolbar.CollabToolbarState.OperationError;
-				this.m_DynamicTooltip = "Last operation failed. " + collabInfo.lastErrorMsg;
-			}
-			else if (flag)
-			{
-				collabToolbarState = Toolbar.CollabToolbarState.InProgress;
-			}
-			else
-			{
-				bool flag2 = CollabAccess.Instance.IsServiceEnabled();
-				if (!UnityConnect.instance.projectInfo.projectBound || !flag2)
+				Toolbar.CollabToolbarState collabToolbarState = Toolbar.CollabToolbarState.UpToDate;
+				bool flag = UnityConnect.instance.connectInfo.online && UnityConnect.instance.connectInfo.loggedIn;
+				this.m_DynamicTooltip = "";
+				if (flag)
 				{
-					collabToolbarState = Toolbar.CollabToolbarState.NeedToEnableCollab;
+					Collab instance = Collab.instance;
+					bool flag2 = instance.JobRunning(0);
+					CollabInfo collabInfo = instance.collabInfo;
+					if (!collabInfo.ready)
+					{
+						collabToolbarState = Toolbar.CollabToolbarState.InProgress;
+					}
+					else if (collabInfo.error)
+					{
+						collabToolbarState = Toolbar.CollabToolbarState.OperationError;
+						this.m_DynamicTooltip = "Last operation failed. " + collabInfo.lastErrorMsg;
+					}
+					else if (flag2)
+					{
+						collabToolbarState = Toolbar.CollabToolbarState.InProgress;
+					}
+					else
+					{
+						bool flag3 = CollabAccess.Instance.IsServiceEnabled();
+						if (!UnityConnect.instance.projectInfo.projectBound || !flag3)
+						{
+							collabToolbarState = Toolbar.CollabToolbarState.NeedToEnableCollab;
+						}
+						else if (collabInfo.update)
+						{
+							collabToolbarState = Toolbar.CollabToolbarState.ServerHasChanges;
+						}
+						else if (collabInfo.conflict)
+						{
+							collabToolbarState = Toolbar.CollabToolbarState.Conflict;
+						}
+						else if (collabInfo.publish)
+						{
+							collabToolbarState = Toolbar.CollabToolbarState.FilesToPush;
+						}
+					}
 				}
-				else if (collabInfo.update)
+				else
 				{
-					collabToolbarState = Toolbar.CollabToolbarState.ServerHasChanges;
+					collabToolbarState = Toolbar.CollabToolbarState.Offline;
 				}
-				else if (collabInfo.conflict)
+				if (collabToolbarState != this.m_CollabToolbarState || CollabToolbarWindow.s_ToolbarIsVisible == Toolbar.m_ShowCollabTooltip)
 				{
-					collabToolbarState = Toolbar.CollabToolbarState.Conflict;
+					this.m_CollabToolbarState = collabToolbarState;
+					Toolbar.m_ShowCollabTooltip = !CollabToolbarWindow.s_ToolbarIsVisible;
+					Toolbar.RepaintToolbar();
 				}
-				else if (collabInfo.publish)
-				{
-					collabToolbarState = Toolbar.CollabToolbarState.FilesToPush;
-				}
-			}
-			if (collabToolbarState != this.m_CollabToolbarState || CollabToolbarWindow.s_ToolbarIsVisible == Toolbar.m_ShowCollabTooltip)
-			{
-				this.m_CollabToolbarState = collabToolbarState;
-				Toolbar.m_ShowCollabTooltip = !CollabToolbarWindow.s_ToolbarIsVisible;
-				Toolbar.RepaintToolbar();
 			}
 		}
 

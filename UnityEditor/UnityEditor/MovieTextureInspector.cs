@@ -27,7 +27,7 @@ namespace UnityEditor
 			MovieTextureInspector.Init();
 			using (new EditorGUI.DisabledScope(Application.isPlaying || base.targets.Length > 1))
 			{
-				MovieTexture movieTexture = this.target as MovieTexture;
+				MovieTexture movieTexture = base.target as MovieTexture;
 				AudioClip audioClip = movieTexture.audioClip;
 				bool flag = PreviewGUI.CycleButton((!movieTexture.isPlaying) ? 0 : 1, MovieTextureInspector.s_PlayIcons) != 0;
 				if (flag != movieTexture.isPlaying)
@@ -59,7 +59,7 @@ namespace UnityEditor
 			{
 				background.Draw(r, false, false, false, false);
 			}
-			MovieTexture movieTexture = this.target as MovieTexture;
+			MovieTexture movieTexture = base.target as MovieTexture;
 			float num = Mathf.Min(Mathf.Min(r.width / (float)movieTexture.width, r.height / (float)movieTexture.height), 1f);
 			Rect rect = new Rect(r.x, r.y, (float)movieTexture.width * num, (float)movieTexture.height * num);
 			PreviewGUI.BeginScrollView(r, this.m_Pos, rect, "PreHorizontalScrollbar", "PreHorizontalScrollbarThumb");
@@ -85,7 +85,7 @@ namespace UnityEditor
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-			MovieTexture movieTexture = this.target as MovieTexture;
+			MovieTexture movieTexture = base.target as MovieTexture;
 			if (!Application.isPlaying && movieTexture != null)
 			{
 				AudioClip audioClip = movieTexture.audioClip;
@@ -100,7 +100,7 @@ namespace UnityEditor
 		public override string GetInfoString()
 		{
 			string text = base.GetInfoString();
-			MovieTexture movieTexture = this.target as MovieTexture;
+			MovieTexture movieTexture = base.target as MovieTexture;
 			if (!movieTexture.isReadyToPlay)
 			{
 				text += "/nNot ready to play yet.";

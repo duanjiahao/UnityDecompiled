@@ -18,6 +18,8 @@ namespace UnityEngine
 		CircleEdge,
 		SingleSidedEdge,
 		MeshRenderer,
-		SkinnedMeshRenderer
+		SkinnedMeshRenderer,
+		BoxShell,
+		BoxEdge
 	}
 }

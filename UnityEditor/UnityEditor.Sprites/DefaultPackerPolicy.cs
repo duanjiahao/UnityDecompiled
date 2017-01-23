@@ -54,16 +54,22 @@ namespace UnityEditor.Sprites
 		public void OnGroupAtlases(BuildTarget target, PackerJob job, int[] textureImporterInstanceIDs)
 		{
 			List<DefaultPackerPolicy.Entry> list = new List<DefaultPackerPolicy.Entry>();
+			string text = "";
+			if (target != BuildTarget.NoTarget)
+			{
+				text = BuildPipeline.GetBuildTargetName(target);
+			}
 			for (int i = 0; i < textureImporterInstanceIDs.Length; i++)
 			{
 				int instanceID = textureImporterInstanceIDs[i];
 				TextureImporter textureImporter = EditorUtility.InstanceIDToObject(instanceID) as TextureImporter;
-				TextureFormat format;
+				TextureFormat textureFormat;
 				ColorSpace colorSpace;
 				int num;
-				textureImporter.ReadTextureImportInstructions(target, out format, out colorSpace, out num);
+				textureImporter.ReadTextureImportInstructions(target, out textureFormat, out colorSpace, out num);
 				TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
 				textureImporter.ReadTextureSettings(textureImporterSettings);
+				bool flag = text != "" && this.HasPlatformEnabledAlphaSplittingForCompression(text, textureImporter);
 				Sprite[] array = (from x in AssetDatabase.LoadAllAssetRepresentationsAtPath(textureImporter.assetPath)
 				select x as Sprite into x
 				where x != null
@@ -74,15 +80,15 @@ namespace UnityEditor.Sprites
 					Sprite sprite = array2[j];
 					DefaultPackerPolicy.Entry entry = new DefaultPackerPolicy.Entry();
 					entry.sprite = sprite;
-					entry.settings.format = format;
+					entry.settings.format = textureFormat;
 					entry.settings.colorSpace = colorSpace;
-					entry.settings.compressionQuality = ((!TextureUtil.IsCompressedTextureFormat(format)) ? 0 : num);
+					entry.settings.compressionQuality = ((!TextureUtil.IsCompressedTextureFormat(textureFormat)) ? 0 : num);
 					entry.settings.filterMode = ((!Enum.IsDefined(typeof(FilterMode), textureImporter.filterMode)) ? FilterMode.Bilinear : textureImporter.filterMode);
 					entry.settings.maxWidth = 2048;
 					entry.settings.maxHeight = 2048;
 					entry.settings.generateMipMaps = textureImporter.mipmapEnabled;
 					entry.settings.enableRotation = this.AllowRotationFlipping;
-					entry.settings.allowsAlphaSplitting = textureImporter.GetAllowsAlphaSplitting();
+					entry.settings.allowsAlphaSplitting = (TextureImporter.IsTextureFormatETC1Compression(textureFormat) && flag);
 					if (textureImporter.mipmapEnabled)
 					{
 						entry.settings.paddingPower = 3u;
@@ -107,10 +113,10 @@ namespace UnityEditor.Sprites
 				group t by t.settings;
 				foreach (IGrouping<AtlasSettings, DefaultPackerPolicy.Entry> current2 in enumerable2)
 				{
-					string text = current.Key;
+					string text2 = current.Key;
 					if (enumerable2.Count<IGrouping<AtlasSettings, DefaultPackerPolicy.Entry>>() > 1)
 					{
-						text += string.Format(" (Group {0})", num2);
+						text2 += string.Format(" (Group {0})", num2);
 					}
 					AtlasSettings key = current2.Key;
 					key.anisoLevel = 1;
@@ -124,14 +130,20 @@ namespace UnityEditor.Sprites
 							}
 						}
 					}
-					job.AddAtlas(text, key);
+					job.AddAtlas(text2, key);
 					foreach (DefaultPackerPolicy.Entry current4 in current2)
 					{
-						job.AssignToAtlas(text, current4.sprite, current4.packingMode, SpritePackingRotation.None);
+						job.AssignToAtlas(text2, current4.sprite, current4.packingMode, SpritePackingRotation.None);
 					}
 					num2++;
 				}
 			}
+		}
+
+		protected bool HasPlatformEnabledAlphaSplittingForCompression(string targetName, TextureImporter ti)
+		{
+			TextureImporterPlatformSettings platformTextureSettings = ti.GetPlatformTextureSettings(targetName);
+			return platformTextureSettings.overridden && platformTextureSettings.allowsAlphaSplitting;
 		}
 
 		protected bool IsTagPrefixed(string packingTag)
@@ -152,11 +164,16 @@ namespace UnityEditor.Sprites
 
 		private SpritePackingMode GetPackingMode(string packingTag, SpriteMeshType meshType)
 		{
+			SpritePackingMode result;
 			if (meshType == SpriteMeshType.Tight && this.IsTagPrefixed(packingTag) == this.AllowTightWhenTagged)
 			{
-				return SpritePackingMode.Tight;
+				result = SpritePackingMode.Tight;
 			}
-			return SpritePackingMode.Rectangle;
+			else
+			{
+				result = SpritePackingMode.Rectangle;
+			}
+			return result;
 		}
 	}
 }

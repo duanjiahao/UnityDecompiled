@@ -5,12 +5,6 @@ namespace UnityEditor
 {
 	internal static class CurveUtility
 	{
-		private const int kBrokenMask = 1;
-
-		private const int kLeftTangentMask = 6;
-
-		private const int kRightTangentMask = 24;
-
 		private static Texture2D iconKey;
 
 		private static Texture2D iconCurve;
@@ -42,14 +36,17 @@ namespace UnityEditor
 
 		public static bool HaveKeysInRange(AnimationCurve curve, float beginTime, float endTime)
 		{
+			bool result;
 			for (int i = curve.length - 1; i >= 0; i--)
 			{
 				if (curve[i].time >= beginTime && curve[i].time < endTime)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public static void RemoveKeysInRange(AnimationCurve curve, float beginTime, float endTime)
@@ -61,51 +58,6 @@ namespace UnityEditor
 					curve.RemoveKey(i);
 				}
 			}
-		}
-
-		public static void UpdateTangentsFromMode(AnimationCurve curve)
-		{
-			for (int i = 0; i < curve.length; i++)
-			{
-				CurveUtility.UpdateTangentsFromMode(curve, i);
-			}
-		}
-
-		private static float CalculateLinearTangent(AnimationCurve curve, int index, int toIndex)
-		{
-			return (curve[index].value - curve[toIndex].value) / (curve[index].time - curve[toIndex].time);
-		}
-
-		private static void UpdateTangentsFromMode(AnimationCurve curve, int index)
-		{
-			if (index < 0 || index >= curve.length)
-			{
-				return;
-			}
-			Keyframe key = curve[index];
-			if (CurveUtility.GetKeyTangentMode(key, 0) == TangentMode.Linear && index >= 1)
-			{
-				key.inTangent = CurveUtility.CalculateLinearTangent(curve, index, index - 1);
-				curve.MoveKey(index, key);
-			}
-			if (CurveUtility.GetKeyTangentMode(key, 1) == TangentMode.Linear && index + 1 < curve.length)
-			{
-				key.outTangent = CurveUtility.CalculateLinearTangent(curve, index, index + 1);
-				curve.MoveKey(index, key);
-			}
-			if (CurveUtility.GetKeyTangentMode(key, 0) == TangentMode.Smooth || CurveUtility.GetKeyTangentMode(key, 1) == TangentMode.Smooth)
-			{
-				curve.SmoothTangents(index, 0f);
-			}
-		}
-
-		public static void UpdateTangentsFromModeSurrounding(AnimationCurve curve, int index)
-		{
-			CurveUtility.UpdateTangentsFromMode(curve, index - 2);
-			CurveUtility.UpdateTangentsFromMode(curve, index - 1);
-			CurveUtility.UpdateTangentsFromMode(curve, index);
-			CurveUtility.UpdateTangentsFromMode(curve, index + 1);
-			CurveUtility.UpdateTangentsFromMode(curve, index + 2);
 		}
 
 		public static float CalculateSmoothTangent(Keyframe key)
@@ -121,50 +73,6 @@ namespace UnityEditor
 			return (key.outTangent + key.inTangent) * 0.5f;
 		}
 
-		public static void SetKeyBroken(ref Keyframe key, bool broken)
-		{
-			if (broken)
-			{
-				key.tangentMode |= 1;
-			}
-			else
-			{
-				key.tangentMode &= -2;
-			}
-		}
-
-		public static bool GetKeyBroken(Keyframe key)
-		{
-			return (key.tangentMode & 1) != 0;
-		}
-
-		public static void SetKeyTangentMode(ref Keyframe key, int leftRight, TangentMode mode)
-		{
-			if (leftRight == 0)
-			{
-				key.tangentMode &= -7;
-				key.tangentMode |= (int)((int)mode << 1);
-			}
-			else
-			{
-				key.tangentMode &= -25;
-				key.tangentMode |= (int)((int)mode << 3);
-			}
-			if (CurveUtility.GetKeyTangentMode(key, leftRight) != mode)
-			{
-				Debug.Log("bug");
-			}
-		}
-
-		public static TangentMode GetKeyTangentMode(Keyframe key, int leftRight)
-		{
-			if (leftRight == 0)
-			{
-				return (TangentMode)((key.tangentMode & 6) >> 1);
-			}
-			return (TangentMode)((key.tangentMode & 24) >> 3);
-		}
-
 		public static void SetKeyModeFromContext(AnimationCurve curve, int keyIndex)
 		{
 			Keyframe key = curve[keyIndex];
@@ -172,67 +80,72 @@ namespace UnityEditor
 			bool flag2 = false;
 			if (keyIndex > 0)
 			{
-				if (CurveUtility.GetKeyBroken(curve[keyIndex - 1]))
+				if (AnimationUtility.GetKeyBroken(curve[keyIndex - 1]))
 				{
 					flag = true;
 				}
-				if (CurveUtility.GetKeyTangentMode(curve[keyIndex - 1], 1) == TangentMode.Smooth)
+				if (AnimationUtility.GetKeyRightTangentMode(curve[keyIndex - 1]) == AnimationUtility.TangentMode.ClampedAuto)
 				{
 					flag2 = true;
 				}
 			}
 			if (keyIndex < curve.length - 1)
 			{
-				if (CurveUtility.GetKeyBroken(curve[keyIndex + 1]))
+				if (AnimationUtility.GetKeyBroken(curve[keyIndex + 1]))
 				{
 					flag = true;
 				}
-				if (CurveUtility.GetKeyTangentMode(curve[keyIndex + 1], 0) == TangentMode.Smooth)
+				if (AnimationUtility.GetKeyLeftTangentMode(curve[keyIndex + 1]) == AnimationUtility.TangentMode.ClampedAuto)
 				{
 					flag2 = true;
 				}
 			}
-			CurveUtility.SetKeyBroken(ref key, flag);
+			AnimationUtility.SetKeyBroken(ref key, flag);
 			if (flag && !flag2)
 			{
 				if (keyIndex > 0)
 				{
-					CurveUtility.SetKeyTangentMode(ref key, 0, CurveUtility.GetKeyTangentMode(curve[keyIndex - 1], 1));
+					AnimationUtility.SetKeyLeftTangentMode(ref key, AnimationUtility.GetKeyRightTangentMode(curve[keyIndex - 1]));
 				}
 				if (keyIndex < curve.length - 1)
 				{
-					CurveUtility.SetKeyTangentMode(ref key, 1, CurveUtility.GetKeyTangentMode(curve[keyIndex + 1], 0));
+					AnimationUtility.SetKeyRightTangentMode(ref key, AnimationUtility.GetKeyLeftTangentMode(curve[keyIndex + 1]));
 				}
 			}
 			else
 			{
-				TangentMode mode = TangentMode.Smooth;
-				if (keyIndex > 0 && CurveUtility.GetKeyTangentMode(curve[keyIndex - 1], 1) != TangentMode.Smooth)
+				AnimationUtility.TangentMode tangentMode = AnimationUtility.TangentMode.Free;
+				if ((keyIndex == 0 || AnimationUtility.GetKeyRightTangentMode(curve[keyIndex - 1]) == AnimationUtility.TangentMode.ClampedAuto) && (keyIndex == curve.length - 1 || AnimationUtility.GetKeyLeftTangentMode(curve[keyIndex + 1]) == AnimationUtility.TangentMode.ClampedAuto))
 				{
-					mode = TangentMode.Editable;
+					tangentMode = AnimationUtility.TangentMode.ClampedAuto;
 				}
-				if (keyIndex < curve.length - 1 && CurveUtility.GetKeyTangentMode(curve[keyIndex + 1], 0) != TangentMode.Smooth)
+				else if ((keyIndex == 0 || AnimationUtility.GetKeyRightTangentMode(curve[keyIndex - 1]) == AnimationUtility.TangentMode.Auto) && (keyIndex == curve.length - 1 || AnimationUtility.GetKeyLeftTangentMode(curve[keyIndex + 1]) == AnimationUtility.TangentMode.Auto))
 				{
-					mode = TangentMode.Editable;
+					tangentMode = AnimationUtility.TangentMode.Auto;
 				}
-				CurveUtility.SetKeyTangentMode(ref key, 0, mode);
-				CurveUtility.SetKeyTangentMode(ref key, 1, mode);
+				AnimationUtility.SetKeyLeftTangentMode(ref key, tangentMode);
+				AnimationUtility.SetKeyRightTangentMode(ref key, tangentMode);
 			}
 			curve.MoveKey(keyIndex, key);
 		}
 
 		public static string GetClipName(AnimationClip clip)
 		{
+			string result;
 			if (clip == null)
 			{
-				return "[No Clip]";
+				result = "[No Clip]";
 			}
-			string text = clip.name;
-			if ((clip.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+			else
 			{
-				text += " (Read-Only)";
+				string text = clip.name;
+				if ((clip.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+				{
+					text += " (Read-Only)";
+				}
+				result = text;
 			}
-			return text;
+			return result;
 		}
 
 		public static Color GetBalancedColor(Color c)

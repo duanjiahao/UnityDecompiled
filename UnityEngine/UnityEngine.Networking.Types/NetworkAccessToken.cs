@@ -37,20 +37,25 @@ namespace UnityEngine.Networking.Types
 
 		public bool IsValid()
 		{
+			bool result;
 			if (this.array == null || this.array.Length != 64)
 			{
-				return false;
+				result = false;
 			}
-			bool result = false;
-			byte[] array = this.array;
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				byte b = array[i];
-				if (b != 0)
+				bool flag = false;
+				byte[] array = this.array;
+				for (int i = 0; i < array.Length; i++)
 				{
-					result = true;
-					break;
+					byte b = array[i];
+					if (b != 0)
+					{
+						flag = true;
+						break;
+					}
 				}
+				result = flag;
 			}
 			return result;
 		}

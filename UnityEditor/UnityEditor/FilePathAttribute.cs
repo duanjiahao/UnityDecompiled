@@ -24,19 +24,21 @@ namespace UnityEditor
 			if (string.IsNullOrEmpty(relativePath))
 			{
 				Debug.LogError("Invalid relative path! (its null or empty)");
-				return;
-			}
-			if (relativePath[0] == '/')
-			{
-				relativePath = relativePath.Substring(1);
-			}
-			if (location == FilePathAttribute.Location.PreferencesFolder)
-			{
-				this.filepath = InternalEditorUtility.unityPreferencesFolder + "/" + relativePath;
 			}
 			else
 			{
-				this.filepath = relativePath;
+				if (relativePath[0] == '/')
+				{
+					relativePath = relativePath.Substring(1);
+				}
+				if (location == FilePathAttribute.Location.PreferencesFolder)
+				{
+					this.filepath = InternalEditorUtility.unityPreferencesFolder + "/" + relativePath;
+				}
+				else
+				{
+					this.filepath = relativePath;
+				}
 			}
 		}
 	}

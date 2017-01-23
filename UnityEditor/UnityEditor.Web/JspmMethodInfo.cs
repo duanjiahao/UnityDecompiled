@@ -6,7 +6,7 @@ namespace UnityEditor.Web
 	{
 		public string name;
 
-		public string[] parameters;
+		public string[] parameters = null;
 
 		public JspmMethodInfo(string name, string[] parameters)
 		{

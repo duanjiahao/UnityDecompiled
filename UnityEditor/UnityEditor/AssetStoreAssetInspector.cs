@@ -35,13 +35,13 @@ namespace UnityEditor
 
 		private bool packageInfoShown = true;
 
-		internal static string s_PurchaseMessage = string.Empty;
+		internal static string s_PurchaseMessage = "";
 
-		internal static string s_PaymentMethodCard = string.Empty;
+		internal static string s_PaymentMethodCard = "";
 
-		internal static string s_PaymentMethodExpire = string.Empty;
+		internal static string s_PaymentMethodExpire = "";
 
-		internal static string s_PriceText = string.Empty;
+		internal static string s_PriceText = "";
 
 		private static GUIContent[] sStatusWheel;
 
@@ -100,25 +100,33 @@ namespace UnityEditor
 			get
 			{
 				AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
+				EditorWrapper result;
 				if (firstAsset == null)
 				{
-					return null;
+					result = null;
 				}
-				UnityEngine.Object preview = firstAsset.Preview;
-				if (preview == null)
+				else
 				{
-					return null;
-				}
-				if (preview != this.m_PreviewObject)
-				{
-					this.m_PreviewObject = preview;
-					if (this.m_PreviewEditor != null)
+					UnityEngine.Object preview = firstAsset.Preview;
+					if (preview == null)
 					{
-						this.m_PreviewEditor.Dispose();
+						result = null;
 					}
-					this.m_PreviewEditor = EditorWrapper.Make(this.m_PreviewObject, EditorFeatures.PreviewGUI);
+					else
+					{
+						if (preview != this.m_PreviewObject)
+						{
+							this.m_PreviewObject = preview;
+							if (this.m_PreviewEditor != null)
+							{
+								this.m_PreviewEditor.Dispose();
+							}
+							this.m_PreviewEditor = EditorWrapper.Make(this.m_PreviewObject, EditorFeatures.PreviewGUI);
+						}
+						result = this.m_PreviewEditor;
+					}
 				}
-				return this.m_PreviewEditor;
+				return result;
 			}
 		}
 
@@ -144,28 +152,25 @@ namespace UnityEditor
 		public void OnDownloadProgress(string id, string message, int bytes, int total)
 		{
 			AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
-			if (firstAsset == null)
+			if (firstAsset != null)
 			{
-				return;
+				AssetStoreAsset.PreviewInfo previewInfo = firstAsset.previewInfo;
+				if (previewInfo != null)
+				{
+					if (!(firstAsset.packageID.ToString() != id))
+					{
+						if ((message == "downloading" || message == "connecting") && !AssetStoreAssetInspector.OfflineNoticeEnabled)
+						{
+							previewInfo.downloadProgress = (float)bytes / (float)total;
+						}
+						else
+						{
+							previewInfo.downloadProgress = -1f;
+						}
+						base.Repaint();
+					}
+				}
 			}
-			AssetStoreAsset.PreviewInfo previewInfo = firstAsset.previewInfo;
-			if (previewInfo == null)
-			{
-				return;
-			}
-			if (firstAsset.packageID.ToString() != id)
-			{
-				return;
-			}
-			if ((message == "downloading" || message == "connecting") && !AssetStoreAssetInspector.OfflineNoticeEnabled)
-			{
-				previewInfo.downloadProgress = (float)bytes / (float)total;
-			}
-			else
-			{
-				previewInfo.downloadProgress = -1f;
-			}
-			base.Repaint();
 		}
 
 		public void Update()
@@ -200,11 +205,11 @@ namespace UnityEditor
 			}
 			if (firstAsset != null)
 			{
-				this.target.name = string.Format("Asset Store: {0}", firstAsset.name);
+				base.target.name = string.Format("Asset Store: {0}", firstAsset.name);
 			}
 			else
 			{
-				this.target.name = "Asset Store";
+				base.target.name = "Asset Store";
 			}
 			EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 			bool enabled = GUI.enabled;
@@ -221,7 +226,7 @@ namespace UnityEditor
 				string label = (firstAsset.className != null) ? firstAsset.className.Split(new char[]
 				{
 					' '
-				}, 2)[0] : string.Empty;
+				}, 2)[0] : "";
 				bool flag = firstAsset.id == -firstAsset.packageID;
 				if (flag)
 				{
@@ -239,13 +244,13 @@ namespace UnityEditor
 				else
 				{
 					EditorGUILayout.Separator();
-					this.packageInfoShown = EditorGUILayout.Foldout(this.packageInfoShown, "Part of package");
+					this.packageInfoShown = EditorGUILayout.Foldout(this.packageInfoShown, "Part of package", true);
 				}
 				if (this.packageInfoShown)
 				{
 					EditorGUILayout.LabelField("Name", (previewInfo != null) ? previewInfo.packageName : "-", new GUILayoutOption[0]);
 					EditorGUILayout.LabelField("Version", (previewInfo != null) ? previewInfo.packageVersion : "-", new GUILayoutOption[0]);
-					string label2 = (previewInfo != null) ? ((firstAsset.price == null || !(firstAsset.price != string.Empty)) ? "free" : firstAsset.price) : "-";
+					string label2 = (previewInfo != null) ? ((firstAsset.price == null || !(firstAsset.price != "")) ? "free" : firstAsset.price) : "-";
 					EditorGUILayout.LabelField("Price", label2, new GUILayoutOption[0]);
 					string label3 = (previewInfo == null || previewInfo.packageRating < 0) ? "-" : (previewInfo.packageRating.ToString() + " of 5");
 					EditorGUILayout.LabelField("Rating", label3, new GUILayoutOption[0]);
@@ -254,7 +259,7 @@ namespace UnityEditor
 					EditorGUILayout.LabelField("Asset count", label4, new GUILayoutOption[0]);
 					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					EditorGUILayout.PrefixLabel("Web page");
-					bool flag2 = previewInfo != null && previewInfo.packageShortUrl != null && previewInfo.packageShortUrl != string.Empty;
+					bool flag2 = previewInfo != null && previewInfo.packageShortUrl != null && previewInfo.packageShortUrl != "";
 					bool enabled2 = GUI.enabled;
 					GUI.enabled = flag2;
 					if (GUILayout.Button((!flag2) ? EditorGUIUtility.TempContent("-") : new GUIContent(previewInfo.packageShortUrl, "View in browser"), AssetStoreAssetInspector.styles.link, new GUILayoutOption[0]))
@@ -287,7 +292,7 @@ namespace UnityEditor
 					bool flag4 = previewInfo != null && previewInfo.downloadProgress >= 0f;
 					if (flag3 || flag4 || previewInfo == null)
 					{
-						text = string.Empty;
+						text = "";
 						GUI.enabled = false;
 					}
 					if (GUILayout.Button(text, new GUILayoutOption[]
@@ -351,41 +356,49 @@ namespace UnityEditor
 			if (activeAsset.id != 0)
 			{
 				AssetStore.Open(string.Format("content/{0}?assetID={1}", activeAsset.packageID, activeAsset.id));
-				Analytics.Track(string.Format("/AssetStore/ViewInStore/{0}/{1}", activeAsset.packageID, activeAsset.id));
+				UsabilityAnalytics.Track(string.Format("/AssetStore/ViewInStore/{0}/{1}", activeAsset.packageID, activeAsset.id));
 			}
 		}
 
 		private static string intToSizeString(int inValue)
 		{
+			string result;
 			if (inValue < 0)
 			{
-				return "unknown";
+				result = "unknown";
 			}
-			float num = (float)inValue;
-			string[] array = new string[]
+			else
 			{
-				"TB",
-				"GB",
-				"MB",
-				"KB",
-				"Bytes"
-			};
-			int num2 = array.Length - 1;
-			while (num > 1000f && num2 >= 0)
-			{
-				num /= 1000f;
-				num2--;
+				float num = (float)inValue;
+				string[] array = new string[]
+				{
+					"TB",
+					"GB",
+					"MB",
+					"KB",
+					"Bytes"
+				};
+				int num2 = array.Length - 1;
+				while (num > 1000f && num2 >= 0)
+				{
+					num /= 1000f;
+					num2--;
+				}
+				if (num2 < 0)
+				{
+					result = "<error>";
+				}
+				else
+				{
+					result = string.Format("{0:#.##} {1}", num, array[num2]);
+				}
 			}
-			if (num2 < 0)
-			{
-				return "<error>";
-			}
-			return string.Format("{0:#.##} {1}", num, array[num2]);
+			return result;
 		}
 
 		public override bool HasPreviewGUI()
 		{
-			return this.target != null && AssetStoreAssetSelection.Count != 0;
+			return base.target != null && AssetStoreAssetSelection.Count != 0;
 		}
 
 		public void OnEnable()
@@ -412,14 +425,13 @@ namespace UnityEditor
 		public override void OnPreviewSettings()
 		{
 			AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
-			if (firstAsset == null)
+			if (firstAsset != null)
 			{
-				return;
-			}
-			EditorWrapper previewEditor = this.previewEditor;
-			if (previewEditor != null && firstAsset.HasLivePreview)
-			{
-				previewEditor.OnPreviewSettings();
+				EditorWrapper previewEditor = this.previewEditor;
+				if (previewEditor != null && firstAsset.HasLivePreview)
+				{
+					previewEditor.OnPreviewSettings();
+				}
 			}
 		}
 
@@ -427,31 +439,35 @@ namespace UnityEditor
 		{
 			EditorWrapper previewEditor = this.previewEditor;
 			AssetStoreAsset firstAsset = AssetStoreAssetSelection.GetFirstAsset();
+			string result;
 			if (firstAsset == null)
 			{
-				return "No item selected";
+				result = "No item selected";
 			}
-			if (previewEditor != null && firstAsset.HasLivePreview)
+			else if (previewEditor != null && firstAsset.HasLivePreview)
 			{
-				return previewEditor.GetInfoString();
+				result = previewEditor.GetInfoString();
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
-			if (this.m_PreviewObject == null)
+			if (!(this.m_PreviewObject == null))
 			{
-				return;
-			}
-			EditorWrapper previewEditor = this.previewEditor;
-			if (previewEditor != null && this.m_PreviewObject is AnimationClip)
-			{
-				previewEditor.OnPreviewGUI(r, background);
-			}
-			else
-			{
-				this.OnInteractivePreviewGUI(r, background);
+				EditorWrapper previewEditor = this.previewEditor;
+				if (previewEditor != null && this.m_PreviewObject is AnimationClip)
+				{
+					previewEditor.OnPreviewGUI(r, background);
+				}
+				else
+				{
+					this.OnInteractivePreviewGUI(r, background);
+				}
 			}
 		}
 
@@ -501,28 +517,26 @@ namespace UnityEditor
 			}
 			else if (AssetStoreAssetInspector.paymentAvailability == AssetStoreAssetInspector.PaymentAvailability.ServiceDisabled)
 			{
-				if (firstAsset.previewInfo == null)
+				if (firstAsset.previewInfo != null)
 				{
-					return;
+					AssetStore.Open(string.Format("content/{0}/directpurchase", firstAsset.packageID));
 				}
-				AssetStore.Open(string.Format("content/{0}/directpurchase", firstAsset.packageID));
 			}
 			else if (AssetStoreAssetInspector.paymentAvailability == AssetStoreAssetInspector.PaymentAvailability.BasketNotEmpty)
 			{
-				if (firstAsset.previewInfo == null)
+				if (firstAsset.previewInfo != null)
 				{
-					return;
-				}
-				if (firstAttempt)
-				{
-					AssetStoreAssetSelection.RefreshFromServer(delegate
+					if (firstAttempt)
 					{
-						this.InitiateBuySelected(false);
-					});
-				}
-				else
-				{
-					AssetStore.Open(string.Format("content/{0}/basketpurchase", firstAsset.packageID));
+						AssetStoreAssetSelection.RefreshFromServer(delegate
+						{
+							this.InitiateBuySelected(false);
+						});
+					}
+					else
+					{
+						AssetStore.Open(string.Format("content/{0}/basketpurchase", firstAsset.packageID));
+					}
 				}
 			}
 			else
@@ -540,14 +554,13 @@ namespace UnityEditor
 		{
 			AssetStoreLoginWindow.Login("Please login to the Asset Store in order to get payment information about the package.", delegate(string errorMessage)
 			{
-				if (errorMessage != null)
+				if (errorMessage == null)
 				{
-					return;
+					AssetStoreAssetSelection.RefreshFromServer(delegate
+					{
+						this.InitiateBuySelected(false);
+					});
 				}
-				AssetStoreAssetSelection.RefreshFromServer(delegate
-				{
-					this.InitiateBuySelected(false);
-				});
 			});
 		}
 
@@ -567,14 +580,13 @@ namespace UnityEditor
 		{
 			AssetStoreLoginWindow.Login("Please login to the Asset Store in order to get download information for the package.", delegate(string errorMessage)
 			{
-				if (errorMessage != null)
+				if (errorMessage == null)
 				{
-					return;
+					AssetStoreAssetSelection.RefreshFromServer(delegate
+					{
+						AssetStoreInstaBuyWindow.ShowAssetStoreInstaBuyWindowBuilding(asset);
+					});
 				}
-				AssetStoreAssetSelection.RefreshFromServer(delegate
-				{
-					AssetStoreInstaBuyWindow.ShowAssetStoreInstaBuyWindowBuilding(asset);
-				});
 			});
 		}
 	}

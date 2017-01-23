@@ -26,8 +26,6 @@ namespace UnityEditor
 
 			public GUIStyle boldLabel = "BoldLabel";
 
-			public GUIStyle foldout = "IN Foldout";
-
 			public GUIStyle ping = new GUIStyle("PR Ping");
 
 			public Constants()
@@ -65,15 +63,15 @@ namespace UnityEditor
 			public int startShowingFrom;
 		}
 
+		private static ASHistoryWindow.Constants ms_Style = null;
+
+		private static int ms_HistoryControlHash = "HistoryControl".GetHashCode();
+
 		private const int kFirst = -999999;
 
 		private const int kLast = 999999;
 
 		private const int kUncollapsedItemsCount = 5;
-
-		private static ASHistoryWindow.Constants ms_Style = null;
-
-		private static int ms_HistoryControlHash = "HistoryControl".GetHashCode();
 
 		private SplitterState m_HorSplit = new SplitterState(new float[]
 		{
@@ -87,15 +85,15 @@ namespace UnityEditor
 
 		private static Vector2 ms_IconSize = new Vector2(16f, 16f);
 
-		private bool m_NextSelectionMine;
+		private bool m_NextSelectionMine = false;
 
 		private ASHistoryWindow.GUIHistoryListItem[] m_GUIItems;
 
-		private int m_TotalHeight;
+		private int m_TotalHeight = 0;
 
 		private Vector2 m_ScrollPos = Vector2.zero;
 
-		private bool m_SplittersOk;
+		private bool m_SplittersOk = false;
 
 		private int m_RowHeight = 16;
 
@@ -107,11 +105,11 @@ namespace UnityEditor
 
 		private int m_ChangeLogSelectionRev = -1;
 
-		private bool m_BinaryDiff;
+		private bool m_BinaryDiff = false;
 
 		private int m_Rev1ForCustomDiff = -1;
 
-		private int m_ScrollViewHeight;
+		private int m_ScrollViewHeight = 0;
 
 		private string m_ChangeLogSelectionGUID = string.Empty;
 
@@ -121,9 +119,9 @@ namespace UnityEditor
 
 		private string m_SelectedGUID = string.Empty;
 
-		private bool m_FolderSelected;
+		private bool m_FolderSelected = false;
 
-		private bool m_InRevisionSelectMode;
+		private bool m_InRevisionSelectMode = false;
 
 		private static GUIContent emptyGUIContent = new GUIContent();
 
@@ -145,7 +143,7 @@ namespace UnityEditor
 			EditorGUIUtility.TextContent("Revert Entire Project to This Changeset")
 		};
 
-		private EditorWindow m_ParentWindow;
+		private EditorWindow m_ParentWindow = null;
 
 		private Changeset[] m_Changesets;
 
@@ -207,20 +205,19 @@ namespace UnityEditor
 
 		private void DownloadFile()
 		{
-			if (this.ChangeLogSelectionRev < 0 || this.m_ChangeLogSelectionGUID == string.Empty)
+			if (this.ChangeLogSelectionRev >= 0 && !(this.m_ChangeLogSelectionGUID == string.Empty))
 			{
-				return;
-			}
-			if (EditorUtility.DisplayDialog("Download file", string.Concat(new string[]
-			{
-				"Are you sure you want to download '",
-				this.m_ChangeLogSelectionAssetName,
-				"' from revision ",
-				this.ChangeLogSelectionRev.ToString(),
-				" and lose all changes?"
-			}), "Download", "Cancel"))
-			{
-				AssetServer.DoRevertOnNextTick(this.ChangeLogSelectionRev, this.m_ChangeLogSelectionGUID);
+				if (EditorUtility.DisplayDialog("Download file", string.Concat(new string[]
+				{
+					"Are you sure you want to download '",
+					this.m_ChangeLogSelectionAssetName,
+					"' from revision ",
+					this.ChangeLogSelectionRev.ToString(),
+					" and lose all changes?"
+				}), "Download", "Cancel"))
+				{
+					AssetServer.DoRevertOnNextTick(this.ChangeLogSelectionRev, this.m_ChangeLogSelectionGUID);
+				}
 			}
 		}
 
@@ -267,31 +264,23 @@ namespace UnityEditor
 			ParentViewState assets = item.assets;
 			int num = -1;
 			int num2 = 0;
+			int result;
 			if (Selection.instanceIDs.Length == 0)
 			{
-				return 0;
+				result = 0;
 			}
-			int[] instanceIDs = Selection.instanceIDs;
-			for (int i = 0; i < instanceIDs.Length; i++)
+			else
 			{
-				int instanceID = instanceIDs[i];
-				list.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(instanceID)));
-			}
-			for (int j = 0; j < assets.folders.Length; j++)
-			{
-				ParentViewFolder parentViewFolder = assets.folders[j];
-				if (list.Contains(parentViewFolder.guid))
+				int[] instanceIDs = Selection.instanceIDs;
+				for (int i = 0; i < instanceIDs.Length; i++)
 				{
-					item.boldAssets[num2] = true;
-					if (num == -1)
-					{
-						num = num2;
-					}
+					int instanceID = instanceIDs[i];
+					list.Add(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(instanceID)));
 				}
-				num2++;
-				for (int k = 0; k < parentViewFolder.files.Length; k++)
+				for (int j = 0; j < assets.folders.Length; j++)
 				{
-					if (list.Contains(parentViewFolder.files[k].guid))
+					ParentViewFolder parentViewFolder = assets.folders[j];
+					if (list.Contains(parentViewFolder.guid))
 					{
 						item.boldAssets[num2] = true;
 						if (num == -1)
@@ -300,9 +289,22 @@ namespace UnityEditor
 						}
 					}
 					num2++;
+					for (int k = 0; k < parentViewFolder.files.Length; k++)
+					{
+						if (list.Contains(parentViewFolder.files[k].guid))
+						{
+							item.boldAssets[num2] = true;
+							if (num == -1)
+							{
+								num = num2;
+							}
+						}
+						num2++;
+					}
 				}
+				result = num;
 			}
-			return num;
+			return result;
 		}
 
 		private int CheckParentViewInFilterAndMarkBoldItems(ASHistoryWindow.GUIHistoryListItem item, string text)
@@ -372,51 +374,53 @@ namespace UnityEditor
 			if (this.m_Changesets == null || this.m_Changesets.Length == 0)
 			{
 				this.m_GUIItems = null;
-				return;
 			}
-			if (recreateGUIItems)
-			{
-				this.m_GUIItems = new ASHistoryWindow.GUIHistoryListItem[this.m_Changesets.Length];
-			}
-			string filterText = ((ASMainWindow)this.m_ParentWindow).m_SearchField.FilterText;
-			bool flag = filterText.Trim() == string.Empty;
-			for (int i = 0; i < this.m_Changesets.Length; i++)
+			else
 			{
 				if (recreateGUIItems)
 				{
-					this.m_GUIItems[i] = new ASHistoryWindow.GUIHistoryListItem();
-					this.m_GUIItems[i].colAuthor = new GUIContent(this.m_Changesets[i].owner);
-					this.m_GUIItems[i].colRevision = new GUIContent(this.m_Changesets[i].changeset.ToString());
-					this.m_GUIItems[i].colDate = new GUIContent(this.m_Changesets[i].date);
-					this.m_GUIItems[i].colDescription = new GUIContent(this.m_Changesets[i].message);
-					this.m_GUIItems[i].assets = new ParentViewState();
-					this.m_GUIItems[i].assets.AddAssetItems(this.m_Changesets[i]);
-					this.m_GUIItems[i].totalLineCount = this.m_GUIItems[i].assets.GetLineCount();
-					this.m_GUIItems[i].height = this.m_RowHeight * (1 + this.m_GUIItems[i].totalLineCount) + 20 + (int)ASHistoryWindow.ms_Style.descriptionLabel.CalcHeight(this.m_GUIItems[i].colDescription, 3.40282347E+38f);
+					this.m_GUIItems = new ASHistoryWindow.GUIHistoryListItem[this.m_Changesets.Length];
 				}
-				this.m_GUIItems[i].boldAssets = new bool[this.m_GUIItems[i].assets.GetLineCount()];
-				int num = (!flag) ? this.CheckParentViewInFilterAndMarkBoldItems(this.m_GUIItems[i], filterText) : this.MarkBoldItemsBySelection(this.m_GUIItems[i]);
-				this.m_GUIItems[i].inFilter = (flag || num != -1 || this.m_GUIItems[i].colDescription.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0 || this.m_GUIItems[i].colRevision.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0 || this.m_GUIItems[i].colAuthor.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0 || this.m_GUIItems[i].colDate.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0);
-				if (recreateGUIItems && this.m_GUIItems[i].totalLineCount > 5)
+				string filterText = ((ASMainWindow)this.m_ParentWindow).m_SearchField.FilterText;
+				bool flag = filterText.Trim() == string.Empty;
+				for (int i = 0; i < this.m_Changesets.Length; i++)
 				{
-					this.m_GUIItems[i].collapsedItemCount = this.m_GUIItems[i].totalLineCount - 5 + 1;
-					this.m_GUIItems[i].height = this.m_RowHeight * 6 + 20 + (int)ASHistoryWindow.ms_Style.descriptionLabel.CalcHeight(this.m_GUIItems[i].colDescription, 3.40282347E+38f);
-				}
-				this.m_GUIItems[i].startShowingFrom = 0;
-				if (this.m_GUIItems[i].collapsedItemCount != 0 && this.m_GUIItems[i].totalLineCount > 5 && num >= 4)
-				{
-					if (num + 5 - 1 > this.m_GUIItems[i].totalLineCount)
+					if (recreateGUIItems)
 					{
-						this.m_GUIItems[i].startShowingFrom = this.m_GUIItems[i].totalLineCount - 5 + 1;
+						this.m_GUIItems[i] = new ASHistoryWindow.GUIHistoryListItem();
+						this.m_GUIItems[i].colAuthor = new GUIContent(this.m_Changesets[i].owner);
+						this.m_GUIItems[i].colRevision = new GUIContent(this.m_Changesets[i].changeset.ToString());
+						this.m_GUIItems[i].colDate = new GUIContent(this.m_Changesets[i].date);
+						this.m_GUIItems[i].colDescription = new GUIContent(this.m_Changesets[i].message);
+						this.m_GUIItems[i].assets = new ParentViewState();
+						this.m_GUIItems[i].assets.AddAssetItems(this.m_Changesets[i]);
+						this.m_GUIItems[i].totalLineCount = this.m_GUIItems[i].assets.GetLineCount();
+						this.m_GUIItems[i].height = this.m_RowHeight * (1 + this.m_GUIItems[i].totalLineCount) + 20 + (int)ASHistoryWindow.ms_Style.descriptionLabel.CalcHeight(this.m_GUIItems[i].colDescription, 3.40282347E+38f);
 					}
-					else
+					this.m_GUIItems[i].boldAssets = new bool[this.m_GUIItems[i].assets.GetLineCount()];
+					int num = (!flag) ? this.CheckParentViewInFilterAndMarkBoldItems(this.m_GUIItems[i], filterText) : this.MarkBoldItemsBySelection(this.m_GUIItems[i]);
+					this.m_GUIItems[i].inFilter = (flag || num != -1 || this.m_GUIItems[i].colDescription.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0 || this.m_GUIItems[i].colRevision.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0 || this.m_GUIItems[i].colAuthor.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0 || this.m_GUIItems[i].colDate.text.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) >= 0);
+					if (recreateGUIItems && this.m_GUIItems[i].totalLineCount > 5)
 					{
-						this.m_GUIItems[i].startShowingFrom = num;
+						this.m_GUIItems[i].collapsedItemCount = this.m_GUIItems[i].totalLineCount - 5 + 1;
+						this.m_GUIItems[i].height = this.m_RowHeight * 6 + 20 + (int)ASHistoryWindow.ms_Style.descriptionLabel.CalcHeight(this.m_GUIItems[i].colDescription, 3.40282347E+38f);
 					}
-				}
-				if (this.m_GUIItems[i].inFilter)
-				{
-					this.m_TotalHeight += this.m_GUIItems[i].height;
+					this.m_GUIItems[i].startShowingFrom = 0;
+					if (this.m_GUIItems[i].collapsedItemCount != 0 && this.m_GUIItems[i].totalLineCount > 5 && num >= 4)
+					{
+						if (num + 5 - 1 > this.m_GUIItems[i].totalLineCount)
+						{
+							this.m_GUIItems[i].startShowingFrom = this.m_GUIItems[i].totalLineCount - 5 + 1;
+						}
+						else
+						{
+							this.m_GUIItems[i].startShowingFrom = num;
+						}
+					}
+					if (this.m_GUIItems[i].inFilter)
+					{
+						this.m_TotalHeight += this.m_GUIItems[i].height;
+					}
 				}
 			}
 		}
@@ -441,70 +445,72 @@ namespace UnityEditor
 			if (this.m_NextSelectionMine)
 			{
 				this.m_NextSelectionMine = false;
-				return;
-			}
-			UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
-			string[] array = new string[0];
-			switch (this.m_FileViewWin.SelType)
-			{
-			case ASHistoryFileView.SelectionType.All:
-				if (Selection.objects.Length != 0)
-				{
-					Selection.objects = new UnityEngine.Object[0];
-					this.m_NextSelectionMine = true;
-				}
-				this.m_SelectedPath = string.Empty;
-				this.m_SelectedGUID = string.Empty;
-				this.ClearLV();
-				break;
-			case ASHistoryFileView.SelectionType.Items:
-				if (filtered.Length < 1)
-				{
-					this.m_SelectedPath = string.Empty;
-					this.m_SelectedGUID = string.Empty;
-					this.ClearLV();
-					return;
-				}
-				this.m_SelectedPath = AssetDatabase.GetAssetPath(filtered[0]);
-				this.m_SelectedGUID = AssetDatabase.AssetPathToGUID(this.m_SelectedPath);
-				array = this.m_FileViewWin.GetImplicitProjectViewSelection();
-				break;
-			case ASHistoryFileView.SelectionType.DeletedItemsRoot:
-				if (Selection.objects.Length != 0)
-				{
-					Selection.objects = new UnityEngine.Object[0];
-					this.m_NextSelectionMine = true;
-				}
-				array = this.m_FileViewWin.GetAllDeletedItemGUIDs();
-				if (array.Length == 0)
-				{
-					this.ClearLV();
-					return;
-				}
-				break;
-			case ASHistoryFileView.SelectionType.DeletedItems:
-				if (Selection.objects.Length != 0)
-				{
-					Selection.objects = new UnityEngine.Object[0];
-					this.m_NextSelectionMine = true;
-				}
-				array = this.m_FileViewWin.GetSelectedDeletedItemGUIDs();
-				break;
-			}
-			this.m_Changesets = AssetServer.GetHistorySelected(array);
-			if (this.m_Changesets != null)
-			{
-				this.FilterItems(true);
 			}
 			else
 			{
-				this.ClearLV();
+				UnityEngine.Object[] filtered = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
+				string[] array = new string[0];
+				switch (this.m_FileViewWin.SelType)
+				{
+				case ASHistoryFileView.SelectionType.All:
+					if (Selection.objects.Length != 0)
+					{
+						Selection.objects = new UnityEngine.Object[0];
+						this.m_NextSelectionMine = true;
+					}
+					this.m_SelectedPath = "";
+					this.m_SelectedGUID = "";
+					this.ClearLV();
+					break;
+				case ASHistoryFileView.SelectionType.Items:
+					if (filtered.Length < 1)
+					{
+						this.m_SelectedPath = string.Empty;
+						this.m_SelectedGUID = string.Empty;
+						this.ClearLV();
+						return;
+					}
+					this.m_SelectedPath = AssetDatabase.GetAssetPath(filtered[0]);
+					this.m_SelectedGUID = AssetDatabase.AssetPathToGUID(this.m_SelectedPath);
+					array = this.m_FileViewWin.GetImplicitProjectViewSelection();
+					break;
+				case ASHistoryFileView.SelectionType.DeletedItemsRoot:
+					if (Selection.objects.Length != 0)
+					{
+						Selection.objects = new UnityEngine.Object[0];
+						this.m_NextSelectionMine = true;
+					}
+					array = this.m_FileViewWin.GetAllDeletedItemGUIDs();
+					if (array.Length == 0)
+					{
+						this.ClearLV();
+						return;
+					}
+					break;
+				case ASHistoryFileView.SelectionType.DeletedItems:
+					if (Selection.objects.Length != 0)
+					{
+						Selection.objects = new UnityEngine.Object[0];
+						this.m_NextSelectionMine = true;
+					}
+					array = this.m_FileViewWin.GetSelectedDeletedItemGUIDs();
+					break;
+				}
+				this.m_Changesets = AssetServer.GetHistorySelected(array);
+				if (this.m_Changesets != null)
+				{
+					this.FilterItems(true);
+				}
+				else
+				{
+					this.ClearLV();
+				}
+				if (array != null && this.m_GUIItems != null && array.Length == 1)
+				{
+					this.MarkBoldItemsByGUID(this.m_SelectedGUID);
+				}
+				this.m_ParentWindow.Repaint();
 			}
-			if (array != null && this.m_GUIItems != null && array.Length == 1)
-			{
-				this.MarkBoldItemsByGUID(this.m_SelectedGUID);
-			}
-			this.m_ParentWindow.Repaint();
 		}
 
 		public void OnSelectionChange()
@@ -522,21 +528,23 @@ namespace UnityEditor
 			List<CompareInfo> list2 = new List<CompareInfo>();
 			if (ver2 == -1 && AssetDatabase.GUIDToAssetPath(this.m_ChangeLogSelectionGUID) == string.Empty)
 			{
-				Debug.Log("Cannot compare asset " + this.m_ChangeLogSelectionAssetName + " to local version because it does not exists.");
-				return;
+				Debug.Log("Cannot compare asset " + this.m_ChangeLogSelectionAssetName + " to local version because it does not exist.");
 			}
-			list.Add(this.m_ChangeLogSelectionGUID);
-			list2.Add(new CompareInfo(ver1, ver2, (!binary) ? 0 : 1, (!binary) ? 1 : 0));
-			Debug.Log(string.Concat(new string[]
+			else
 			{
-				"Comparing asset ",
-				this.m_ChangeLogSelectionAssetName,
-				" revisions ",
-				ver1.ToString(),
-				" and ",
-				(ver2 != -1) ? ver2.ToString() : "Local"
-			}));
-			AssetServer.CompareFiles(list.ToArray(), list2.ToArray());
+				list.Add(this.m_ChangeLogSelectionGUID);
+				list2.Add(new CompareInfo(ver1, ver2, (!binary) ? 0 : 1, (!binary) ? 1 : 0));
+				Debug.Log(string.Concat(new string[]
+				{
+					"Comparing asset ",
+					this.m_ChangeLogSelectionAssetName,
+					" revisions ",
+					ver1.ToString(),
+					" and ",
+					(ver2 != -1) ? ver2.ToString() : "Local"
+				}));
+				AssetServer.CompareFiles(list.ToArray(), list2.ToArray());
+			}
 		}
 
 		private void DoShowCustomDiff(bool binary)
@@ -572,39 +580,38 @@ namespace UnityEditor
 
 		private void DrawBadge(Rect offset, ChangeFlags flags, GUIStyle style, GUIContent content, float textColWidth)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			GUIContent gUIContent = null;
-			if (this.HasFlag(flags, ChangeFlags.Undeleted) || this.HasFlag(flags, ChangeFlags.Created))
-			{
-				gUIContent = ASMainWindow.constants.badgeNew;
-			}
-			else if (this.HasFlag(flags, ChangeFlags.Deleted))
-			{
-				gUIContent = ASMainWindow.constants.badgeDelete;
-			}
-			else if (this.HasFlag(flags, ChangeFlags.Renamed) || this.HasFlag(flags, ChangeFlags.Moved))
-			{
-				gUIContent = ASMainWindow.constants.badgeMove;
-			}
-			if (gUIContent != null)
-			{
-				float x = style.CalcSize(content).x;
-				float x2;
-				if (x > textColWidth - (float)gUIContent.image.width)
+				GUIContent gUIContent = null;
+				if (this.HasFlag(flags, ChangeFlags.Undeleted) || this.HasFlag(flags, ChangeFlags.Created))
 				{
-					x2 = offset.xMax - (float)gUIContent.image.width - 5f;
+					gUIContent = ASMainWindow.constants.badgeNew;
 				}
-				else
+				else if (this.HasFlag(flags, ChangeFlags.Deleted))
 				{
-					x2 = textColWidth - (float)gUIContent.image.width;
+					gUIContent = ASMainWindow.constants.badgeDelete;
 				}
-				Rect position = new Rect(x2, offset.y + offset.height / 2f - (float)(gUIContent.image.height / 2), (float)gUIContent.image.width, (float)gUIContent.image.height);
-				EditorGUIUtility.SetIconSize(Vector2.zero);
-				GUIStyle.none.Draw(position, gUIContent, false, false, false, false);
-				EditorGUIUtility.SetIconSize(ASHistoryWindow.ms_IconSize);
+				else if (this.HasFlag(flags, ChangeFlags.Renamed) || this.HasFlag(flags, ChangeFlags.Moved))
+				{
+					gUIContent = ASMainWindow.constants.badgeMove;
+				}
+				if (gUIContent != null)
+				{
+					float x = style.CalcSize(content).x;
+					float x2;
+					if (x > textColWidth - (float)gUIContent.image.width)
+					{
+						x2 = offset.xMax - (float)gUIContent.image.width - 5f;
+					}
+					else
+					{
+						x2 = textColWidth - (float)gUIContent.image.width;
+					}
+					Rect position = new Rect(x2, offset.y + offset.height / 2f - (float)(gUIContent.image.height / 2), (float)gUIContent.image.width, (float)gUIContent.image.height);
+					EditorGUIUtility.SetIconSize(Vector2.zero);
+					GUIStyle.none.Draw(position, gUIContent, false, false, false, false);
+					EditorGUIUtility.SetIconSize(ASHistoryWindow.ms_IconSize);
+				}
 			}
 		}
 
@@ -770,7 +777,7 @@ namespace UnityEditor
 			if ((num == num2 || num2 >= item.totalLineCount) && item.collapsedItemCount != 0)
 			{
 				r.x += 19f;
-				if (GUI.Button(r, item.collapsedItemCount.ToString() + " more...", ASHistoryWindow.ms_Style.foldout))
+				if (GUI.Button(r, item.collapsedItemCount.ToString() + " more...", EditorStyles.foldout))
 				{
 					GUIUtility.keyboardControl = this.m_HistoryControlID;
 					this.UncollapseListItem(ref item);
@@ -781,15 +788,18 @@ namespace UnityEditor
 		private int FindFirstUnfilteredItem(int fromIndex, int direction)
 		{
 			int num = fromIndex;
+			int result;
 			while (num >= 0 && num < this.m_GUIItems.Length)
 			{
 				if (this.m_GUIItems[num].inFilter)
 				{
-					return num;
+					result = num;
+					return result;
 				}
 				num += direction;
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 
 		private void MoveSelection(int steps)
@@ -853,21 +863,21 @@ namespace UnityEditor
 				switch (keyCode)
 				{
 				case KeyCode.KeypadEnter:
-					goto IL_71;
+					goto IL_73;
 				case KeyCode.KeypadEquals:
 				case KeyCode.Insert:
-					IL_64:
+					IL_66:
 					if (keyCode != KeyCode.Return)
 					{
 						return;
 					}
-					goto IL_71;
+					goto IL_73;
 				case KeyCode.UpArrow:
 					this.MoveSelection(-1);
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.DownArrow:
 					this.MoveSelection(1);
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.RightArrow:
 					if (this.m_ChangeLogSelectionGUID == string.Empty && this.m_GUIItems.Length > 0)
 					{
@@ -876,10 +886,10 @@ namespace UnityEditor
 						this.m_FolderSelected = true;
 						this.m_AssetSelectionIndex = 0;
 					}
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.LeftArrow:
 					this.m_ChangeLogSelectionGUID = string.Empty;
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.Home:
 					if (this.m_ChangeLogSelectionGUID == string.Empty)
 					{
@@ -894,7 +904,7 @@ namespace UnityEditor
 					{
 						this.MoveSelection(-999999);
 					}
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.End:
 					if (this.m_ChangeLogSelectionGUID == string.Empty)
 					{
@@ -909,7 +919,7 @@ namespace UnityEditor
 					{
 						this.MoveSelection(999999);
 					}
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.PageUp:
 					if (Application.platform == RuntimePlatform.OSXEditor)
 					{
@@ -923,7 +933,7 @@ namespace UnityEditor
 					{
 						this.MoveSelection(-Mathf.RoundToInt((float)(this.m_ScrollViewHeight / this.m_RowHeight)));
 					}
-					goto IL_2A3;
+					goto IL_2BB;
 				case KeyCode.PageDown:
 					if (Application.platform == RuntimePlatform.OSXEditor)
 					{
@@ -933,15 +943,15 @@ namespace UnityEditor
 					{
 						this.MoveSelection(Mathf.RoundToInt((float)(this.m_ScrollViewHeight / this.m_RowHeight)));
 					}
-					goto IL_2A3;
+					goto IL_2BB;
 				}
-				goto IL_64;
-				IL_71:
+				goto IL_66;
+				IL_73:
 				if (this.IsComparableAssetSelected())
 				{
 					this.DoShowDiff(false, this.ChangeLogSelectionRev, -1);
 				}
-				IL_2A3:
+				IL_2BB:
 				this.DoScroll();
 				current.Use();
 			}
@@ -953,90 +963,91 @@ namespace UnityEditor
 			{
 				this.m_Changesets = new Changeset[0];
 			}
-			if (this.m_GUIItems == null)
+			if (this.m_GUIItems != null)
 			{
-				return;
-			}
-			this.m_HistoryControlID = GUIUtility.GetControlID(ASHistoryWindow.ms_HistoryControlHash, FocusType.Native);
-			this.HandleWebLikeKeyboard();
-			Event current = Event.current;
-			EventType typeForControl = current.GetTypeForControl(this.m_HistoryControlID);
-			if (typeForControl == EventType.ValidateCommand)
-			{
-				current.Use();
-				return;
-			}
-			GUILayout.Space(1f);
-			this.m_ScrollPos = GUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[0]);
-			int num = 0;
-			GUILayoutUtility.GetRect(1f, (float)(this.m_TotalHeight - 1));
-			if ((current.type == EventType.Repaint || current.type == EventType.MouseDown || current.type == EventType.MouseUp) && this.m_GUIItems != null)
-			{
-				for (int i = 0; i < this.m_Changesets.Length; i++)
+				this.m_HistoryControlID = GUIUtility.GetControlID(ASHistoryWindow.ms_HistoryControlHash, FocusType.Passive);
+				this.HandleWebLikeKeyboard();
+				Event current = Event.current;
+				EventType typeForControl = current.GetTypeForControl(this.m_HistoryControlID);
+				if (typeForControl == EventType.ValidateCommand)
 				{
-					if (this.m_GUIItems[i].inFilter)
+					current.Use();
+				}
+				else
+				{
+					GUILayout.Space(1f);
+					this.m_ScrollPos = GUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[0]);
+					int num = 0;
+					GUILayoutUtility.GetRect(1f, (float)(this.m_TotalHeight - 1));
+					if ((current.type == EventType.Repaint || current.type == EventType.MouseDown || current.type == EventType.MouseUp) && this.m_GUIItems != null)
 					{
-						if ((float)(num + this.m_GUIItems[i].height) > GUIClip.visibleRect.y && (float)num < GUIClip.visibleRect.yMax)
+						for (int i = 0; i < this.m_Changesets.Length; i++)
 						{
-							float num2 = ASHistoryWindow.ms_Style.descriptionLabel.CalcHeight(this.m_GUIItems[i].colDescription, 3.40282347E+38f);
-							Rect rect;
-							if (current.type == EventType.Repaint)
+							if (this.m_GUIItems[i].inFilter)
 							{
-								if (this.ChangeLogSelectionRev == this.m_Changesets[i].changeset && Event.current.type == EventType.Repaint)
+								if ((float)(num + this.m_GUIItems[i].height) > GUIClip.visibleRect.y && (float)num < GUIClip.visibleRect.yMax)
 								{
-									rect = new Rect(0f, (float)num, GUIClip.visibleRect.width, (float)(this.m_GUIItems[i].height - 10));
-									ASHistoryWindow.ms_Style.selected.Draw(rect, false, false, false, false);
-								}
-								rect = new Rect(0f, (float)(num + 3), GUIClip.visibleRect.width, (float)this.m_GUIItems[i].height);
-								GUI.Label(rect, this.m_GUIItems[i].colAuthor, ASHistoryWindow.ms_Style.boldLabel);
-								rect = new Rect(GUIClip.visibleRect.width - 160f, (float)(num + 3), 60f, (float)this.m_GUIItems[i].height);
-								GUI.Label(rect, this.m_GUIItems[i].colRevision, ASHistoryWindow.ms_Style.boldLabel);
-								rect.x += 60f;
-								rect.width = 100f;
-								GUI.Label(rect, this.m_GUIItems[i].colDate, ASHistoryWindow.ms_Style.boldLabel);
-								rect.x = (float)ASHistoryWindow.ms_Style.boldLabel.margin.left;
-								rect.y += (float)this.m_RowHeight;
-								rect.width = GUIClip.visibleRect.width;
-								rect.height = num2;
-								GUI.Label(rect, this.m_GUIItems[i].colDescription, ASHistoryWindow.ms_Style.descriptionLabel);
-								rect.y += num2;
-							}
-							rect = new Rect(0f, (float)num + num2 + (float)this.m_RowHeight, GUIClip.visibleRect.width, (float)this.m_GUIItems[i].height - num2 - (float)this.m_RowHeight);
-							this.DrawParentView(rect, ref this.m_GUIItems[i], i, hasFocus);
-							if (current.type == EventType.MouseDown)
-							{
-								rect = new Rect(0f, (float)num, GUIClip.visibleRect.width, (float)(this.m_GUIItems[i].height - 10));
-								if (rect.Contains(current.mousePosition))
-								{
-									this.ChangeLogSelectionRev = this.m_Changesets[i].changeset;
-									this.m_ChangesetSelectionIndex = i;
-									GUIUtility.keyboardControl = this.m_HistoryControlID;
-									((ASMainWindow)this.m_ParentWindow).m_SearchToShow = ASMainWindow.ShowSearchField.HistoryList;
-									if (current.button == 1)
+									float num2 = ASHistoryWindow.ms_Style.descriptionLabel.CalcHeight(this.m_GUIItems[i].colDescription, 3.40282347E+38f);
+									Rect rect;
+									if (current.type == EventType.Repaint)
 									{
-										GUIUtility.hotControl = 0;
-										rect = new Rect(current.mousePosition.x, current.mousePosition.y, 1f, 1f);
-										EditorUtility.DisplayCustomMenu(rect, this.m_DropDownChangesetMenuItems, -1, new EditorUtility.SelectMenuItemFunction(this.ChangesetContextMenuClick), null);
-										Event.current.Use();
+										if (this.ChangeLogSelectionRev == this.m_Changesets[i].changeset && Event.current.type == EventType.Repaint)
+										{
+											rect = new Rect(0f, (float)num, GUIClip.visibleRect.width, (float)(this.m_GUIItems[i].height - 10));
+											ASHistoryWindow.ms_Style.selected.Draw(rect, false, false, false, false);
+										}
+										rect = new Rect(0f, (float)(num + 3), GUIClip.visibleRect.width, (float)this.m_GUIItems[i].height);
+										GUI.Label(rect, this.m_GUIItems[i].colAuthor, ASHistoryWindow.ms_Style.boldLabel);
+										rect = new Rect(GUIClip.visibleRect.width - 160f, (float)(num + 3), 60f, (float)this.m_GUIItems[i].height);
+										GUI.Label(rect, this.m_GUIItems[i].colRevision, ASHistoryWindow.ms_Style.boldLabel);
+										rect.x += 60f;
+										rect.width = 100f;
+										GUI.Label(rect, this.m_GUIItems[i].colDate, ASHistoryWindow.ms_Style.boldLabel);
+										rect.x = (float)ASHistoryWindow.ms_Style.boldLabel.margin.left;
+										rect.y += (float)this.m_RowHeight;
+										rect.width = GUIClip.visibleRect.width;
+										rect.height = num2;
+										GUI.Label(rect, this.m_GUIItems[i].colDescription, ASHistoryWindow.ms_Style.descriptionLabel);
+										rect.y += num2;
 									}
-									this.DoScroll();
-									current.Use();
+									rect = new Rect(0f, (float)num + num2 + (float)this.m_RowHeight, GUIClip.visibleRect.width, (float)this.m_GUIItems[i].height - num2 - (float)this.m_RowHeight);
+									this.DrawParentView(rect, ref this.m_GUIItems[i], i, hasFocus);
+									if (current.type == EventType.MouseDown)
+									{
+										rect = new Rect(0f, (float)num, GUIClip.visibleRect.width, (float)(this.m_GUIItems[i].height - 10));
+										if (rect.Contains(current.mousePosition))
+										{
+											this.ChangeLogSelectionRev = this.m_Changesets[i].changeset;
+											this.m_ChangesetSelectionIndex = i;
+											GUIUtility.keyboardControl = this.m_HistoryControlID;
+											((ASMainWindow)this.m_ParentWindow).m_SearchToShow = ASMainWindow.ShowSearchField.HistoryList;
+											if (current.button == 1)
+											{
+												GUIUtility.hotControl = 0;
+												rect = new Rect(current.mousePosition.x, current.mousePosition.y, 1f, 1f);
+												EditorUtility.DisplayCustomMenu(rect, this.m_DropDownChangesetMenuItems, -1, new EditorUtility.SelectMenuItemFunction(this.ChangesetContextMenuClick), null);
+												Event.current.Use();
+											}
+											this.DoScroll();
+											current.Use();
+										}
+									}
 								}
+								num += this.m_GUIItems[i].height;
 							}
 						}
-						num += this.m_GUIItems[i].height;
 					}
+					else if (this.m_GUIItems == null)
+					{
+						GUILayout.Label(EditorGUIUtility.TextContent("This item is not yet committed to the Asset Server"), new GUILayoutOption[0]);
+					}
+					if (Event.current.type == EventType.Repaint)
+					{
+						this.m_ScrollViewHeight = (int)GUIClip.visibleRect.height;
+					}
+					GUILayout.EndScrollView();
 				}
 			}
-			else if (this.m_GUIItems == null)
-			{
-				GUILayout.Label(EditorGUIUtility.TextContent("This item is not yet committed to the Asset Server"), new GUILayoutOption[0]);
-			}
-			if (Event.current.type == EventType.Repaint)
-			{
-				this.m_ScrollViewHeight = (int)GUIClip.visibleRect.height;
-			}
-			GUILayout.EndScrollView();
 		}
 
 		private void DoScroll()

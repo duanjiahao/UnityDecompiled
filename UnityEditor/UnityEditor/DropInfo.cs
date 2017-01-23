@@ -14,7 +14,7 @@ namespace UnityEditor
 
 		public IDropArea dropArea;
 
-		public object userData;
+		public object userData = null;
 
 		public DropInfo.Type type = DropInfo.Type.Window;
 

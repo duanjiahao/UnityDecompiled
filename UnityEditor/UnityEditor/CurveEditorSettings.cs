@@ -6,6 +6,13 @@ namespace UnityEditor
 	[Serializable]
 	internal class CurveEditorSettings
 	{
+		internal enum RectangleToolFlags
+		{
+			NoRectangleTool,
+			MiniRectangleTool,
+			FullRectangleTool
+		}
+
 		private TickStyle m_HTickStyle = new TickStyle();
 
 		private TickStyle m_VTickStyle = new TickStyle();
@@ -22,17 +29,23 @@ namespace UnityEditor
 
 		private float m_VRangeMax = float.PositiveInfinity;
 
-		public float hTickLabelOffset;
+		public float hTickLabelOffset = 0f;
 
 		public EditorGUIUtility.SkinnedColor wrapColor = new EditorGUIUtility.SkinnedColor(new Color(1f, 1f, 1f, 0.5f), new Color(0.65f, 0.65f, 0.65f, 0.5f));
 
-		public bool useFocusColors;
+		public bool useFocusColors = false;
 
 		public bool showAxisLabels = true;
 
+		public bool showWrapperPopups = false;
+
 		public bool allowDraggingCurvesAndRegions = true;
 
-		public bool allowDeleteLastKeyInCurve;
+		public bool allowDeleteLastKeyInCurve = false;
+
+		public bool undoRedoSelection = false;
+
+		internal CurveEditorSettings.RectangleToolFlags rectangleToolFlags = CurveEditorSettings.RectangleToolFlags.NoRectangleTool;
 
 		private bool m_ScaleWithWindow = true;
 

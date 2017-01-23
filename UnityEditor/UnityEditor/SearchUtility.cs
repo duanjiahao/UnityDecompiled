@@ -15,53 +15,58 @@ namespace UnityEditor
 
 		internal static bool ParseSearchString(string searchText, SearchFilter filter)
 		{
+			bool result;
 			if (string.IsNullOrEmpty(searchText))
 			{
-				return false;
+				result = false;
 			}
-			filter.ClearSearch();
-			string text = string.Copy(searchText);
-			SearchUtility.RemoveUnwantedWhitespaces(ref text);
-			bool result = false;
-			int i = SearchUtility.FindFirstPositionNotOf(text, " \t,");
-			if (i == -1)
+			else
 			{
-				i = 0;
-			}
-			while (i < text.Length)
-			{
-				int num = text.IndexOfAny(" \t,".ToCharArray(), i);
-				int num2 = text.IndexOf('"', i);
-				int num3 = -1;
-				if (num2 != -1)
+				filter.ClearSearch();
+				string text = string.Copy(searchText);
+				SearchUtility.RemoveUnwantedWhitespaces(ref text);
+				bool flag = false;
+				int i = SearchUtility.FindFirstPositionNotOf(text, " \t,*?");
+				if (i == -1)
 				{
-					num3 = text.IndexOf('"', num2 + 1);
-					if (num3 != -1)
-					{
-						num = text.IndexOfAny(" \t,".ToCharArray(), num3);
-					}
-					else
-					{
-						num = -1;
-					}
+					i = 0;
 				}
-				if (num == -1)
+				while (i < text.Length)
 				{
-					num = text.Length;
-				}
-				if (num > i)
-				{
-					string text2 = text.Substring(i, num - i);
-					if (SearchUtility.CheckForKeyWords(text2, filter, num2, num3))
+					int num = text.IndexOfAny(" \t,*?".ToCharArray(), i);
+					int num2 = text.IndexOf('"', i);
+					int num3 = -1;
+					if (num2 != -1)
 					{
-						result = true;
+						num3 = text.IndexOf('"', num2 + 1);
+						if (num3 != -1)
+						{
+							num = text.IndexOfAny(" \t,*?".ToCharArray(), num3);
+						}
+						else
+						{
+							num = -1;
+						}
 					}
-					else
+					if (num == -1)
 					{
-						filter.nameFilter = filter.nameFilter + ((!string.IsNullOrEmpty(filter.nameFilter)) ? " " : string.Empty) + text2;
+						num = text.Length;
 					}
+					if (num > i)
+					{
+						string text2 = text.Substring(i, num - i);
+						if (SearchUtility.CheckForKeyWords(text2, filter, num2, num3))
+						{
+							flag = true;
+						}
+						else
+						{
+							filter.nameFilter = filter.nameFilter + ((!string.IsNullOrEmpty(filter.nameFilter)) ? " " : "") + text2;
+						}
+					}
+					i = num + 1;
 				}
-				i = num + 1;
+				result = flag;
 			}
 			return result;
 		}
@@ -161,30 +166,36 @@ namespace UnityEditor
 
 		private static int FindFirstPositionNotOf(string source, string chars)
 		{
+			int result;
 			if (source == null)
 			{
-				return -1;
+				result = -1;
 			}
-			if (chars == null)
+			else if (chars == null)
 			{
-				return 0;
+				result = 0;
 			}
-			if (source.Length == 0)
+			else if (source.Length == 0)
 			{
-				return -1;
+				result = -1;
 			}
-			if (chars.Length == 0)
+			else if (chars.Length == 0)
 			{
-				return 0;
+				result = 0;
 			}
-			for (int i = 0; i < source.Length; i++)
+			else
 			{
-				if (chars.IndexOf(source[i]) == -1)
+				for (int i = 0; i < source.Length; i++)
 				{
-					return i;
+					if (chars.IndexOf(source[i]) == -1)
+					{
+						result = i;
+						return result;
+					}
 				}
+				result = -1;
 			}
-			return -1;
+			return result;
 		}
 	}
 }

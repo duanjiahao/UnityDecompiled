@@ -65,65 +65,94 @@ namespace UnityEngine.Rendering
 		{
 			get
 			{
+				float result;
 				switch (rgb * 9 + coefficient)
 				{
 				case 0:
-					return this.shr0;
+					result = this.shr0;
+					break;
 				case 1:
-					return this.shr1;
+					result = this.shr1;
+					break;
 				case 2:
-					return this.shr2;
+					result = this.shr2;
+					break;
 				case 3:
-					return this.shr3;
+					result = this.shr3;
+					break;
 				case 4:
-					return this.shr4;
+					result = this.shr4;
+					break;
 				case 5:
-					return this.shr5;
+					result = this.shr5;
+					break;
 				case 6:
-					return this.shr6;
+					result = this.shr6;
+					break;
 				case 7:
-					return this.shr7;
+					result = this.shr7;
+					break;
 				case 8:
-					return this.shr8;
+					result = this.shr8;
+					break;
 				case 9:
-					return this.shg0;
+					result = this.shg0;
+					break;
 				case 10:
-					return this.shg1;
+					result = this.shg1;
+					break;
 				case 11:
-					return this.shg2;
+					result = this.shg2;
+					break;
 				case 12:
-					return this.shg3;
+					result = this.shg3;
+					break;
 				case 13:
-					return this.shg4;
+					result = this.shg4;
+					break;
 				case 14:
-					return this.shg5;
+					result = this.shg5;
+					break;
 				case 15:
-					return this.shg6;
+					result = this.shg6;
+					break;
 				case 16:
-					return this.shg7;
+					result = this.shg7;
+					break;
 				case 17:
-					return this.shg8;
+					result = this.shg8;
+					break;
 				case 18:
-					return this.shb0;
+					result = this.shb0;
+					break;
 				case 19:
-					return this.shb1;
+					result = this.shb1;
+					break;
 				case 20:
-					return this.shb2;
+					result = this.shb2;
+					break;
 				case 21:
-					return this.shb3;
+					result = this.shb3;
+					break;
 				case 22:
-					return this.shb4;
+					result = this.shb4;
+					break;
 				case 23:
-					return this.shb5;
+					result = this.shb5;
+					break;
 				case 24:
-					return this.shb6;
+					result = this.shb6;
+					break;
 				case 25:
-					return this.shb7;
+					result = this.shb7;
+					break;
 				case 26:
-					return this.shb8;
+					result = this.shb8;
+					break;
 				default:
 					throw new IndexOutOfRangeException("Invalid index!");
 				}
+				return result;
 			}
 			set
 			{
@@ -226,7 +255,6 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2.INTERNAL_CALL_ClearInternal(ref sh);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ClearInternal(ref SphericalHarmonicsL2 sh);
 
@@ -240,7 +268,6 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2.INTERNAL_CALL_AddAmbientLightInternal(ref color, ref sh);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AddAmbientLightInternal(ref Color color, ref SphericalHarmonicsL2 sh);
 
@@ -255,7 +282,6 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2.INTERNAL_CALL_AddDirectionalLightInternal(ref direction, ref color, ref sh);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AddDirectionalLightInternal(ref Vector3 direction, ref Color color, ref SphericalHarmonicsL2 sh);
 
@@ -293,12 +319,17 @@ namespace UnityEngine.Rendering
 
 		public override bool Equals(object other)
 		{
+			bool result;
 			if (!(other is SphericalHarmonicsL2))
 			{
-				return false;
+				result = false;
 			}
-			SphericalHarmonicsL2 rhs = (SphericalHarmonicsL2)other;
-			return this == rhs;
+			else
+			{
+				SphericalHarmonicsL2 rhs = (SphericalHarmonicsL2)other;
+				result = (this == rhs);
+			}
+			return result;
 		}
 
 		public static SphericalHarmonicsL2 operator *(SphericalHarmonicsL2 lhs, float rhs)

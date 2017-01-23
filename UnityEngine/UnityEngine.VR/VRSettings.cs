@@ -7,44 +7,42 @@ namespace UnityEngine.VR
 	{
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		public static extern bool showDeviceView
+		public static extern bool isDeviceActive
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+		}
+
+		public static extern bool showDeviceView
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern float renderScale
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int eyeTextureWidth
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int eyeTextureHeight
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -67,10 +65,8 @@ namespace UnityEngine.VR
 
 		internal static extern float renderViewportScaleInternal
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -83,7 +79,7 @@ namespace UnityEngine.VR
 				VRDeviceType result = VRDeviceType.Unknown;
 				try
 				{
-					result = (VRDeviceType)((int)Enum.Parse(typeof(VRDeviceType), VRSettings.loadedDeviceName, true));
+					result = (VRDeviceType)Enum.Parse(typeof(VRDeviceType), VRSettings.loadedDeviceName, true);
 				}
 				catch (Exception)
 				{
@@ -98,14 +94,12 @@ namespace UnityEngine.VR
 
 		public static extern string loadedDeviceName
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string[] supportedDevices
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -118,7 +112,6 @@ namespace UnityEngine.VR
 			});
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadDeviceByName(string[] prioritizedDeviceNameList);
 	}

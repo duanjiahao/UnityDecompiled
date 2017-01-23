@@ -52,18 +52,18 @@ namespace UnityEditorInternal
 
 			internal Styles()
 			{
-				GUIStyleState arg_C1_0 = this.bar.normal;
+				GUIStyleState arg_C2_0 = this.bar.normal;
 				Texture2D texture2D = EditorGUIUtility.whiteTexture;
 				this.bar.active.background = texture2D;
 				texture2D = texture2D;
 				this.bar.hover.background = texture2D;
-				arg_C1_0.background = texture2D;
-				GUIStyleState arg_FC_0 = this.bar.normal;
+				arg_C2_0.background = texture2D;
+				GUIStyleState arg_FD_0 = this.bar.normal;
 				Color color = Color.black;
 				this.bar.active.textColor = color;
 				color = color;
 				this.bar.hover.textColor = color;
-				arg_FC_0.textColor = color;
+				arg_FD_0.textColor = color;
 				this.profilerGraphBackground.overflow.left = -169;
 				this.leftPane.padding.left = 15;
 			}
@@ -83,7 +83,7 @@ namespace UnityEditorInternal
 
 		private float animationTime = 1f;
 
-		private double lastScrollUpdate;
+		private double lastScrollUpdate = 0.0;
 
 		private List<ProfilerTimelineGUI.GroupInfo> groups;
 
@@ -94,24 +94,32 @@ namespace UnityEditorInternal
 
 		private IProfilerWindowController m_Window;
 
-		private int m_SelectedThread;
+		private int m_SelectedFrameId = -1;
 
-		private int m_SelectedID = -1;
+		private int m_SelectedThreadId = 0;
 
-		private float m_SelectedTime;
+		private int m_SelectedInstanceId = -1;
 
-		private float m_SelectedDur;
+		private float m_SelectedTime = 0f;
+
+		private float m_SelectedDur = 0f;
+
+		private float m_SelectedY = 0f;
+
+		private string m_SelectedName = string.Empty;
+
+		private Rect m_SelectedRect = Rect.zero;
 
 		private static ProfilerTimelineGUI.Styles styles
 		{
 			get
 			{
-				ProfilerTimelineGUI.Styles arg_17_0;
-				if ((arg_17_0 = ProfilerTimelineGUI.ms_Styles) == null)
+				ProfilerTimelineGUI.Styles arg_18_0;
+				if ((arg_18_0 = ProfilerTimelineGUI.ms_Styles) == null)
 				{
-					arg_17_0 = (ProfilerTimelineGUI.ms_Styles = new ProfilerTimelineGUI.Styles());
+					arg_18_0 = (ProfilerTimelineGUI.ms_Styles = new ProfilerTimelineGUI.Styles());
 				}
-				return arg_17_0;
+				return arg_18_0;
 			}
 		}
 
@@ -142,7 +150,7 @@ namespace UnityEditorInternal
 					groupInfo.expanded = false;
 					groupInfo.threads = new List<ProfilerTimelineGUI.ThreadInfo>();
 					this.groups.Add(groupInfo);
-					if (groupname == string.Empty || groupname == "Unity Job System")
+					if (groupname == "" || groupname == "Unity Job System")
 					{
 						groupInfo.expanded = true;
 					}
@@ -218,13 +226,18 @@ namespace UnityEditorInternal
 					ProfilerTimelineGUI.styles.leftPane.padding.top += (int)(25f - height) / 2;
 				}
 			}
+			bool result;
 			if (group)
 			{
 				position.width -= 1f;
 				position.xMin += 1f;
-				return GUI.Toggle(position, expanded, GUIContent.Temp(name), ProfilerTimelineGUI.styles.foldout);
+				result = GUI.Toggle(position, expanded, GUIContent.Temp(name), ProfilerTimelineGUI.styles.foldout);
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void DrawBars(Rect r, int frameIndex)
@@ -232,7 +245,7 @@ namespace UnityEditorInternal
 			float num = r.y;
 			foreach (ProfilerTimelineGUI.GroupInfo current in this.groups)
 			{
-				bool flag = current.name == string.Empty;
+				bool flag = current.name == "";
 				if (!flag)
 				{
 					float height = current.height;
@@ -264,54 +277,52 @@ namespace UnityEditorInternal
 
 		private void DrawGrid(Rect r, int threadCount, float frameTime)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			float num = 16.66667f;
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(1);
-			GL.Color(new Color(1f, 1f, 1f, 0.2f));
-			float num3;
-			for (float num2 = num; num2 <= frameTime; num2 += num)
-			{
-				num3 = this.m_TimeArea.TimeToPixel(num2, r);
+				float num = 16.66667f;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(1);
+				GL.Color(new Color(1f, 1f, 1f, 0.2f));
+				float num3;
+				for (float num2 = num; num2 <= frameTime; num2 += num)
+				{
+					num3 = this.m_TimeArea.TimeToPixel(num2, r);
+					GL.Vertex3(num3, r.y, 0f);
+					GL.Vertex3(num3, r.y + r.height, 0f);
+				}
+				GL.Color(new Color(1f, 1f, 1f, 0.8f));
+				num3 = this.m_TimeArea.TimeToPixel(0f, r);
 				GL.Vertex3(num3, r.y, 0f);
 				GL.Vertex3(num3, r.y + r.height, 0f);
+				num3 = this.m_TimeArea.TimeToPixel(frameTime, r);
+				GL.Vertex3(num3, r.y, 0f);
+				GL.Vertex3(num3, r.y + r.height, 0f);
+				GL.End();
+				GUI.color = new Color(1f, 1f, 1f, 0.4f);
+				for (float num2 = 0f; num2 <= frameTime; num2 += num)
+				{
+					num3 = this.m_TimeArea.TimeToPixel(num2, r);
+					Chart.DoLabel(num3 + 2f, r.yMax - 12f, string.Format("{0:f1}ms", num2), 0f);
+				}
+				GUI.color = new Color(1f, 1f, 1f, 1f);
+				num3 = this.m_TimeArea.TimeToPixel(frameTime, r);
+				Chart.DoLabel(num3 + 2f, r.yMax - 12f, string.Format("{0:f1}ms ({1:f0}FPS)", frameTime, 1000f / frameTime), 0f);
 			}
-			GL.Color(new Color(1f, 1f, 1f, 0.8f));
-			num3 = this.m_TimeArea.TimeToPixel(0f, r);
-			GL.Vertex3(num3, r.y, 0f);
-			GL.Vertex3(num3, r.y + r.height, 0f);
-			num3 = this.m_TimeArea.TimeToPixel(frameTime, r);
-			GL.Vertex3(num3, r.y, 0f);
-			GL.Vertex3(num3, r.y + r.height, 0f);
-			GL.End();
-			GUI.color = new Color(1f, 1f, 1f, 0.4f);
-			for (float num2 = 0f; num2 <= frameTime; num2 += num)
-			{
-				num3 = this.m_TimeArea.TimeToPixel(num2, r);
-				Chart.DoLabel(num3 + 2f, r.yMax - 12f, string.Format("{0:f1}ms", num2), 0f);
-			}
-			GUI.color = new Color(1f, 1f, 1f, 1f);
-			num3 = this.m_TimeArea.TimeToPixel(frameTime, r);
-			Chart.DoLabel(num3 + 2f, r.yMax - 12f, string.Format("{0:f1}ms ({1:f0}FPS)", frameTime, 1000f / frameTime), 0f);
 		}
 
 		private void DrawSmallGroup(float x1, float x2, float y, float height, int size)
 		{
-			if (x2 - x1 < 1f)
+			if (x2 - x1 >= 1f)
 			{
-				return;
+				GUI.color = new Color(0.5f, 0.5f, 0.5f, 0.7f);
+				GUI.contentColor = Color.white;
+				GUIContent content = GUIContent.none;
+				if (x2 - x1 > 20f)
+				{
+					content = new GUIContent(size + " items");
+				}
+				GUI.Label(new Rect(x1, y, x2 - x1, height), content, ProfilerTimelineGUI.styles.bar);
 			}
-			GUI.color = new Color(0.5f, 0.5f, 0.5f, 0.7f);
-			GUI.contentColor = Color.white;
-			GUIContent content = GUIContent.none;
-			if (x2 - x1 > 20f)
-			{
-				content = new GUIContent(size + " items");
-			}
-			GUI.Label(new Rect(x1, y, x2 - x1, height), content, ProfilerTimelineGUI.styles.bar);
 		}
 
 		private static float TimeToPixelCached(float time, float rectWidthDivShownWidth, float shownX, float rectX)
@@ -319,7 +330,7 @@ namespace UnityEditorInternal
 			return (time - shownX) * rectWidthDivShownWidth + rectX;
 		}
 
-		private void DrawProfilingData(ProfilerFrameDataIterator iter, Rect r, int threadIdx, float timeOffset, bool ghost, bool includeSubSamples)
+		private void DrawProfilingData(ProfilerFrameDataIterator iter, Rect r, int frameIndex, int threadIndex, float timeOffset, bool ghost, bool includeSubSamples)
 		{
 			float num = (!ghost) ? 7f : 21f;
 			string selectedPropertyPath = ProfilerDriver.selectedPropertyPath;
@@ -331,16 +342,15 @@ namespace UnityEditorInternal
 			float num2 = -1f;
 			float num3 = -1f;
 			int num4 = 0;
-			float num5 = -1f;
-			string text = null;
-			float num6 = (!includeSubSamples) ? r.height : 16f;
-			float num7 = (float)((!includeSubSamples) ? 0 : 1);
-			float height = num6 - 2f * num7;
-			r.height -= num7;
+			float num5 = (!includeSubSamples) ? r.height : 16f;
+			float num6 = (float)((!includeSubSamples) ? 0 : 1);
+			float height = num5 - 2f * num6;
+			r.height -= num6;
 			GUI.BeginGroup(r);
-			float num8 = 0f;
-			r.y = num8;
-			r.x = num8;
+			float y = r.y;
+			float num7 = 0f;
+			r.y = num7;
+			r.x = num7;
 			bool flag2 = Event.current.clickCount == 1 && Event.current.type == EventType.MouseDown;
 			bool flag3 = Event.current.clickCount == 2 && Event.current.type == EventType.MouseDown;
 			Rect shownArea = this.m_TimeArea.shownArea;
@@ -351,32 +361,32 @@ namespace UnityEditorInternal
 			while (iter.Next(enterChildren))
 			{
 				enterChildren = includeSubSamples;
-				float num9 = iter.startTimeMS + timeOffset;
+				float num8 = iter.startTimeMS + timeOffset;
 				float durationMS = iter.durationMS;
-				float num10 = Mathf.Max(durationMS, 0.0003f);
-				float num11 = ProfilerTimelineGUI.TimeToPixelCached(num9, rectWidthDivShownWidth, x3, x2);
-				float num12 = ProfilerTimelineGUI.TimeToPixelCached(num9 + num10, rectWidthDivShownWidth, x3, x2) - 1f;
-				float num13 = num12 - num11;
-				if (num11 > r.x + r.width || num12 < r.x)
+				float num9 = Mathf.Max(durationMS, 0.0003f);
+				float num10 = ProfilerTimelineGUI.TimeToPixelCached(num8, rectWidthDivShownWidth, x3, x2);
+				float num11 = ProfilerTimelineGUI.TimeToPixelCached(num8 + num9, rectWidthDivShownWidth, x3, x2) - 1f;
+				float num12 = num11 - num10;
+				if (num10 > r.x + r.width || num11 < r.x)
 				{
 					enterChildren = false;
 				}
 				else
 				{
-					float num14 = (float)(iter.depth - 1);
-					float num15 = r.y + num14 * num6;
+					float num13 = (float)(iter.depth - 1);
+					float num14 = r.y + num13 * num5;
 					if (flag)
 					{
 						bool flag4 = false;
-						if (num13 >= num)
+						if (num12 >= num)
 						{
 							flag4 = true;
 						}
-						if (num3 != num15)
+						if (num3 != num14)
 						{
 							flag4 = true;
 						}
-						if (num11 - num2 > 6f)
+						if (num10 - num2 > 6f)
 						{
 							flag4 = true;
 						}
@@ -386,29 +396,29 @@ namespace UnityEditorInternal
 							flag = false;
 						}
 					}
-					if (num13 < num)
+					if (num12 < num)
 					{
 						enterChildren = false;
 						if (!flag)
 						{
 							flag = true;
-							num3 = num15;
-							x = num11;
+							num3 = num14;
+							x = num10;
 							num4 = 0;
 						}
-						num2 = num12;
+						num2 = num11;
 						num4++;
 					}
 					else
 					{
-						int id = iter.id;
+						int instanceId = iter.instanceId;
 						string path = iter.path;
 						bool flag5 = path == selectedPropertyPath && !ghost;
-						if (this.m_SelectedID >= 0)
+						if (this.m_SelectedInstanceId >= 0)
 						{
-							flag5 &= (id == this.m_SelectedID);
+							flag5 &= (instanceId == this.m_SelectedInstanceId);
 						}
-						flag5 &= (threadIdx == this.m_SelectedThread);
+						flag5 &= (threadIndex == this.m_SelectedThreadId);
 						Color white = Color.white;
 						Color color2 = colors[iter.group % colors.Length];
 						color2.a = ((!flag5) ? 0.75f : 1f);
@@ -417,57 +427,38 @@ namespace UnityEditorInternal
 							color2.a = 0.4f;
 							white.a = 0.5f;
 						}
-						string text2 = iter.name;
-						if (flag5)
+						string text = iter.name;
+						if (num12 < 20f || !includeSubSamples)
 						{
-							text = text2;
-							this.m_SelectedTime = num9;
-							this.m_SelectedDur = durationMS;
-							num5 = num15 + num6;
-						}
-						if (num13 < 20f || !includeSubSamples)
-						{
-							text2 = string.Empty;
+							text = string.Empty;
 						}
 						else
 						{
-							if (num13 < 50f && !flag5)
+							if (num12 < 50f && !flag5)
 							{
-								white.a *= (num13 - 20f) / 30f;
+								white.a *= (num12 - 20f) / 30f;
 							}
-							if (num13 > 200f)
+							if (num12 > 200f)
 							{
-								text2 += string.Format(" ({0:f2}ms)", durationMS);
+								text += string.Format(" ({0:f2}ms)", durationMS);
 							}
 						}
 						GUI.color = color2;
 						GUI.contentColor = white;
-						Rect position = new Rect(num11, num15, num13, height);
-						GUI.Label(position, text2, ProfilerTimelineGUI.styles.bar);
-						if ((flag2 || flag3) && position.Contains(Event.current.mousePosition))
+						Rect position = new Rect(num10, num14, num12, height);
+						GUI.Label(position, text, ProfilerTimelineGUI.styles.bar);
+						if ((flag2 || flag3) && position.Contains(Event.current.mousePosition) && includeSubSamples)
 						{
 							this.m_Window.SetSelectedPropertyPath(path);
-							this.m_SelectedThread = threadIdx;
-							this.m_SelectedID = id;
-							UnityEngine.Object @object = EditorUtility.InstanceIDToObject(iter.instanceId);
-							if (@object is Component)
-							{
-								@object = ((Component)@object).gameObject;
-							}
-							if (@object != null)
-							{
-								if (flag2)
-								{
-									EditorGUIUtility.PingObject(@object.GetInstanceID());
-								}
-								else if (flag3)
-								{
-									Selection.objects = new List<UnityEngine.Object>
-									{
-										@object
-									}.ToArray();
-								}
-							}
+							this.m_SelectedFrameId = frameIndex;
+							this.m_SelectedThreadId = threadIndex;
+							this.m_SelectedInstanceId = instanceId;
+							this.m_SelectedName = iter.name;
+							this.m_SelectedTime = num8;
+							this.m_SelectedDur = durationMS;
+							this.m_SelectedRect = r;
+							this.m_SelectedY = y + num14 + num5;
+							this.UpdateSelectedObject(flag2, flag3);
 							Event.current.Use();
 						}
 						flag = false;
@@ -480,57 +471,103 @@ namespace UnityEditorInternal
 			}
 			GUI.color = color;
 			GUI.contentColor = contentColor;
-			if (text != null && threadIdx == this.m_SelectedThread && includeSubSamples)
-			{
-				string text3 = string.Format(((double)this.m_SelectedDur < 1.0) ? "{0}\n{1:f3}ms" : "{0}\n{1:f2}ms", text, this.m_SelectedDur);
-				GUIContent content = new GUIContent(text3);
-				GUIStyle tooltip = ProfilerTimelineGUI.styles.tooltip;
-				Vector2 vector = tooltip.CalcSize(content);
-				float num16 = this.m_TimeArea.TimeToPixel(this.m_SelectedTime + this.m_SelectedDur * 0.5f, r);
-				if (num16 < r.x)
-				{
-					num16 = r.x + 20f;
-				}
-				if (num16 > r.xMax)
-				{
-					num16 = r.xMax - 20f;
-				}
-				Rect position2;
-				if (num5 + 6f + vector.y < r.yMax)
-				{
-					position2 = new Rect(num16 - 32f, num5, 50f, 7f);
-					GUI.Label(position2, GUIContent.none, ProfilerTimelineGUI.styles.tooltipArrow);
-				}
-				position2 = new Rect(num16, num5 + 6f, vector.x, vector.y);
-				if (position2.xMax > r.xMax + 20f)
-				{
-					position2.x = r.xMax - position2.width + 20f;
-				}
-				if (position2.yMax > r.yMax)
-				{
-					position2.y = r.yMax - position2.height;
-				}
-				if (position2.y < r.y)
-				{
-					position2.y = r.y;
-				}
-				GUI.Label(position2, content, tooltip);
-			}
 			if (Event.current.type == EventType.MouseDown && r.Contains(Event.current.mousePosition))
 			{
-				this.m_Window.ClearSelectedPropertyPath();
-				this.m_SelectedID = -1;
-				this.m_SelectedThread = threadIdx;
-				Event.current.Use();
+				this.ClearSelection();
 			}
 			GUI.EndGroup();
+		}
+
+		private void DrawProfilingDataDetailNative(Rect r, int frameIndex, int threadIndex, float timeOffset)
+		{
+			bool flag = Event.current.clickCount == 1 && Event.current.type == EventType.MouseDown;
+			bool flag2 = Event.current.clickCount == 2 && Event.current.type == EventType.MouseDown;
+			bool flag3 = r.Contains(Event.current.mousePosition);
+			GUI.BeginGroup(r);
+			ProfilingDataDrawNativeInfo profilingDataDrawNativeInfo = default(ProfilingDataDrawNativeInfo);
+			profilingDataDrawNativeInfo.Reset();
+			profilingDataDrawNativeInfo.trySelect = ((!flag && !flag2) ? 0 : 1);
+			profilingDataDrawNativeInfo.frameIndex = frameIndex;
+			profilingDataDrawNativeInfo.threadIndex = threadIndex;
+			profilingDataDrawNativeInfo.timeOffset = timeOffset;
+			profilingDataDrawNativeInfo.threadRect = r;
+			profilingDataDrawNativeInfo.shownAreaRect = this.m_TimeArea.shownArea;
+			profilingDataDrawNativeInfo.mousePos = Event.current.mousePosition;
+			profilingDataDrawNativeInfo.profilerColors = ProfilerColors.colors;
+			profilingDataDrawNativeInfo.nativeAllocationColor = ProfilerColors.nativeAllocation;
+			profilingDataDrawNativeInfo.ghostAlpha = 0.3f;
+			profilingDataDrawNativeInfo.nonSelectedAlpha = 0.75f;
+			profilingDataDrawNativeInfo.guiStyle = ProfilerTimelineGUI.styles.bar.m_Ptr;
+			profilingDataDrawNativeInfo.lineHeight = 16f;
+			profilingDataDrawNativeInfo.textFadeOutWidth = 20f;
+			profilingDataDrawNativeInfo.textFadeStartWidth = 50f;
+			ProfilerDraw.DrawNative(ref profilingDataDrawNativeInfo);
+			if (flag || flag2)
+			{
+				if (profilingDataDrawNativeInfo.out_SelectedPath.Length > 0)
+				{
+					this.m_Window.SetSelectedPropertyPath(profilingDataDrawNativeInfo.out_SelectedPath);
+					this.m_SelectedFrameId = frameIndex;
+					this.m_SelectedThreadId = threadIndex;
+					this.m_SelectedInstanceId = profilingDataDrawNativeInfo.out_SelectedInstanceId;
+					this.m_SelectedTime = profilingDataDrawNativeInfo.out_SelectedTime;
+					this.m_SelectedDur = profilingDataDrawNativeInfo.out_SelectedDur;
+					this.m_SelectedY = r.y + profilingDataDrawNativeInfo.out_SelectedY;
+					this.m_SelectedName = profilingDataDrawNativeInfo.out_SelectedName;
+					this.m_SelectedRect = r;
+					this.UpdateSelectedObject(flag, flag2);
+					Event.current.Use();
+				}
+				else if (flag3)
+				{
+					this.ClearSelection();
+				}
+			}
+			GUI.EndGroup();
+		}
+
+		private void UpdateSelectedObject(bool singleClick, bool doubleClick)
+		{
+			UnityEngine.Object @object = EditorUtility.InstanceIDToObject(this.m_SelectedInstanceId);
+			if (@object is Component)
+			{
+				@object = ((Component)@object).gameObject;
+			}
+			if (@object != null)
+			{
+				if (singleClick)
+				{
+					EditorGUIUtility.PingObject(@object.GetInstanceID());
+				}
+				else if (doubleClick)
+				{
+					Selection.objects = new List<UnityEngine.Object>
+					{
+						@object
+					}.ToArray();
+				}
+			}
+		}
+
+		private void ClearSelection()
+		{
+			this.m_Window.ClearSelectedPropertyPath();
+			this.m_SelectedFrameId = -1;
+			this.m_SelectedThreadId = 0;
+			this.m_SelectedInstanceId = -1;
+			this.m_SelectedTime = 0f;
+			this.m_SelectedDur = 0f;
+			this.m_SelectedY = 0f;
+			this.m_SelectedName = string.Empty;
+			this.m_SelectedRect = Rect.zero;
+			Event.current.Use();
 		}
 
 		private void PerformFrameSelected(float frameMS)
 		{
 			float num = this.m_SelectedTime;
 			float num2 = this.m_SelectedDur;
-			if (this.m_SelectedID < 0 || num2 <= 0f)
+			if (this.m_SelectedInstanceId < 0 || num2 <= 0f)
 			{
 				num = 0f;
 				num2 = frameMS;
@@ -541,59 +578,95 @@ namespace UnityEditorInternal
 		private void HandleFrameSelected(float frameMS)
 		{
 			Event current = Event.current;
-			if ((current.type == EventType.ValidateCommand || current.type == EventType.ExecuteCommand) && current.commandName == "FrameSelected")
+			if (current.type == EventType.ValidateCommand || current.type == EventType.ExecuteCommand)
 			{
-				bool flag = current.type == EventType.ExecuteCommand;
-				if (flag)
+				if (current.commandName == "FrameSelected")
 				{
-					this.PerformFrameSelected(frameMS);
+					bool flag = current.type == EventType.ExecuteCommand;
+					if (flag)
+					{
+						this.PerformFrameSelected(frameMS);
+					}
+					current.Use();
 				}
-				current.Use();
 			}
 		}
 
-		private void DoProfilerFrame(int frameIndex, Rect fullRect, bool ghost, ref int threadCount, float offset)
+		private void DoProfilerFrame(int frameIndex, Rect fullRect, bool ghost, int threadCount, float offset, bool detailView)
 		{
 			ProfilerFrameDataIterator profilerFrameDataIterator = new ProfilerFrameDataIterator();
 			int threadCount2 = profilerFrameDataIterator.GetThreadCount(frameIndex);
-			if (ghost && threadCount2 != threadCount)
+			if (!ghost || threadCount2 == threadCount)
 			{
-				return;
-			}
-			profilerFrameDataIterator.SetRoot(frameIndex, 0);
-			if (!ghost)
-			{
-				threadCount = threadCount2;
-				this.DrawGrid(fullRect, threadCount, profilerFrameDataIterator.frameTimeMS);
-				this.HandleFrameSelected(profilerFrameDataIterator.frameTimeMS);
-			}
-			float num = fullRect.y;
-			foreach (ProfilerTimelineGUI.GroupInfo current in this.groups)
-			{
-				Rect r = fullRect;
-				bool expanded = current.expanded;
-				if (expanded)
+				profilerFrameDataIterator.SetRoot(frameIndex, 0);
+				if (!ghost)
 				{
-					num += current.height;
+					this.DrawGrid(fullRect, threadCount, profilerFrameDataIterator.frameTimeMS);
+					this.HandleFrameSelected(profilerFrameDataIterator.frameTimeMS);
 				}
-				float num2 = num;
-				int count = current.threads.Count;
-				foreach (ProfilerTimelineGUI.ThreadInfo current2 in current.threads)
+				float num = fullRect.y;
+				foreach (ProfilerTimelineGUI.GroupInfo current in this.groups)
 				{
-					profilerFrameDataIterator.SetRoot(frameIndex, current2.threadIndex);
-					r.y = num;
-					r.height = ((!expanded) ? Math.Max(current.height / (float)count - 1f, 2f) : current2.height);
-					this.DrawProfilingData(profilerFrameDataIterator, r, current2.threadIndex, offset, ghost, expanded);
-					num += r.height;
+					Rect r = fullRect;
+					bool expanded = current.expanded;
+					if (expanded)
+					{
+						num += current.height;
+					}
+					float num2 = num;
+					int count = current.threads.Count;
+					foreach (ProfilerTimelineGUI.ThreadInfo current2 in current.threads)
+					{
+						profilerFrameDataIterator.SetRoot(frameIndex, current2.threadIndex);
+						r.y = num;
+						r.height = ((!expanded) ? Math.Max(current.height / (float)count - 1f, 2f) : current2.height);
+						if (detailView)
+						{
+							this.DrawProfilingDataDetailNative(r, frameIndex, current2.threadIndex, offset);
+						}
+						else
+						{
+							this.DrawProfilingData(profilerFrameDataIterator, r, frameIndex, current2.threadIndex, offset, ghost, expanded);
+						}
+						num += r.height;
+					}
+					if (!expanded)
+					{
+						num = num2 + current.height;
+					}
 				}
-				if (!expanded)
+				if (this.m_SelectedName.Length > 0 && this.m_SelectedFrameId == frameIndex && !ghost)
 				{
-					num = num2 + current.height;
+					string text = string.Format(((double)this.m_SelectedDur < 1.0) ? "{0}\n{1:f3}ms" : "{0}\n{1:f2}ms", this.m_SelectedName, this.m_SelectedDur);
+					GUIContent content = new GUIContent(text);
+					GUIStyle tooltip = ProfilerTimelineGUI.styles.tooltip;
+					Vector2 vector = tooltip.CalcSize(content);
+					float num3 = this.m_TimeArea.TimeToPixel(this.m_SelectedTime + this.m_SelectedDur * 0.5f, this.m_SelectedRect);
+					if (num3 > this.m_SelectedRect.xMax)
+					{
+						num3 = this.m_SelectedRect.xMax - 20f;
+					}
+					if (num3 < this.m_SelectedRect.x)
+					{
+						num3 = this.m_SelectedRect.x + 20f;
+					}
+					Rect position = new Rect(num3 - 32f, this.m_SelectedY, 50f, 7f);
+					Rect position2 = new Rect(num3, this.m_SelectedY + 6f, vector.x, vector.y);
+					if (position2.xMax > this.m_SelectedRect.xMax + 20f)
+					{
+						position2.x = this.m_SelectedRect.xMax - position2.width + 20f;
+					}
+					if (position2.xMin < this.m_SelectedRect.xMin + 30f)
+					{
+						position2.x = this.m_SelectedRect.xMin + 30f;
+					}
+					GUI.Label(position, GUIContent.none, ProfilerTimelineGUI.styles.tooltipArrow);
+					GUI.Label(position2, content, tooltip);
 				}
 			}
 		}
 
-		public void DoGUI(int frameIndex, float width, float ypos, float height)
+		public void DoGUI(int frameIndex, float width, float ypos, float height, bool detailView)
 		{
 			Rect drawRect = new Rect(0f, ypos - 1f, width, height + 1f);
 			float num = 169f;
@@ -632,25 +705,25 @@ namespace UnityEditorInternal
 			GUI.BeginClip(this.m_TimeArea.drawRect);
 			drawRect.x = 0f;
 			drawRect.y = 0f;
-			int num2 = 0;
-			this.DoProfilerFrame(frameIndex, drawRect, false, ref num2, 0f);
 			bool enabled = GUI.enabled;
 			GUI.enabled = false;
+			ProfilerFrameDataIterator profilerFrameDataIterator2 = new ProfilerFrameDataIterator();
+			int threadCount = profilerFrameDataIterator2.GetThreadCount(frameIndex);
 			int previousFrameIndex = ProfilerDriver.GetPreviousFrameIndex(frameIndex);
 			if (previousFrameIndex != -1)
 			{
-				ProfilerFrameDataIterator profilerFrameDataIterator2 = new ProfilerFrameDataIterator();
 				profilerFrameDataIterator2.SetRoot(previousFrameIndex, 0);
-				this.DoProfilerFrame(previousFrameIndex, drawRect, true, ref num2, -profilerFrameDataIterator2.frameTimeMS);
+				this.DoProfilerFrame(previousFrameIndex, drawRect, true, threadCount, -profilerFrameDataIterator2.frameTimeMS, detailView);
 			}
 			int nextFrameIndex = ProfilerDriver.GetNextFrameIndex(frameIndex);
 			if (nextFrameIndex != -1)
 			{
-				ProfilerFrameDataIterator profilerFrameDataIterator3 = new ProfilerFrameDataIterator();
-				profilerFrameDataIterator3.SetRoot(frameIndex, 0);
-				this.DoProfilerFrame(nextFrameIndex, drawRect, true, ref num2, profilerFrameDataIterator3.frameTimeMS);
+				profilerFrameDataIterator2.SetRoot(frameIndex, 0);
+				this.DoProfilerFrame(nextFrameIndex, drawRect, true, threadCount, profilerFrameDataIterator2.frameTimeMS, detailView);
 			}
 			GUI.enabled = enabled;
+			threadCount = 0;
+			this.DoProfilerFrame(frameIndex, drawRect, false, threadCount, 0f, detailView);
 			GUI.EndClip();
 		}
 	}

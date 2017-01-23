@@ -7,11 +7,11 @@ namespace UnityEditor
 	{
 		private static WindowFocusState m_Instance;
 
-		internal string m_LastWindowTypeInSameDock = string.Empty;
+		internal string m_LastWindowTypeInSameDock = "";
 
-		internal bool m_WasMaximizedBeforePlay;
+		internal bool m_WasMaximizedBeforePlay = false;
 
-		internal bool m_CurrentlyInPlayMode;
+		internal bool m_CurrentlyInPlayMode = false;
 
 		internal static WindowFocusState instance
 		{

@@ -65,14 +65,13 @@ namespace UnityEditor
 				TooltipView.s_guiView = ScriptableObject.CreateInstance<TooltipView>();
 				TooltipView.s_guiView.m_tooltipContainer = ScriptableObject.CreateInstance<ContainerWindow>();
 				TooltipView.s_guiView.m_tooltipContainer.m_DontSaveToLayout = true;
-				TooltipView.s_guiView.m_tooltipContainer.mainView = TooltipView.s_guiView;
+				TooltipView.s_guiView.m_tooltipContainer.rootView = TooltipView.s_guiView;
 				TooltipView.s_guiView.m_tooltipContainer.SetMinMaxSizes(new Vector2(10f, 10f), new Vector2(2000f, 2000f));
 			}
-			if (TooltipView.s_guiView.m_tooltip.text == tooltip && rect == TooltipView.s_guiView.m_hoverRect)
+			if (!(TooltipView.s_guiView.m_tooltip.text == tooltip) || !(rect == TooltipView.s_guiView.m_hoverRect))
 			{
-				return;
+				TooltipView.s_guiView.Setup(tooltip, rect);
 			}
-			TooltipView.s_guiView.Setup(tooltip, rect);
 		}
 
 		public static void Close()

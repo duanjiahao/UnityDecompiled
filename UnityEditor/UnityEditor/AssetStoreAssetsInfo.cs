@@ -111,9 +111,9 @@ namespace UnityEditor
 					previewInfo.isPurchased = (current.ContainsKey("purchased") && current["purchased"].AsBool(true));
 					previewInfo.isDownloadable = (previewInfo.isPurchased || assetStoreAsset.price == null);
 					previewInfo.publisherName = current["publisher_name"].AsString(true).Trim();
-					previewInfo.packageUrl = ((!current.Get("package_url").IsNull()) ? current["package_url"].AsString(true) : string.Empty);
-					previewInfo.encryptionKey = ((!current.Get("encryption_key").IsNull()) ? current["encryption_key"].AsString(true) : string.Empty);
-					previewInfo.categoryName = ((!current.Get("category_name").IsNull()) ? current["category_name"].AsString(true) : string.Empty);
+					previewInfo.packageUrl = ((!current.Get("package_url").IsNull()) ? current["package_url"].AsString(true) : "");
+					previewInfo.encryptionKey = ((!current.Get("encryption_key").IsNull()) ? current["encryption_key"].AsString(true) : "");
+					previewInfo.categoryName = ((!current.Get("category_name").IsNull()) ? current["category_name"].AsString(true) : "");
 					previewInfo.buildProgress = -1f;
 					previewInfo.downloadProgress = -1f;
 				}

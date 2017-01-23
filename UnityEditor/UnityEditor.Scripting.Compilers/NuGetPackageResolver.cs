@@ -91,17 +91,25 @@ namespace UnityEditor.Scripting.Compilers
 		private string GetPackagesPath()
 		{
 			string text = this.PackagesDirectory;
+			string result;
 			if (!string.IsNullOrEmpty(text))
 			{
-				return text;
+				result = text;
 			}
-			text = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
-			if (!string.IsNullOrEmpty(text))
+			else
 			{
-				return text;
+				text = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+				if (!string.IsNullOrEmpty(text))
+				{
+					result = text;
+				}
+				else
+				{
+					string environmentVariable = Environment.GetEnvironmentVariable("USERPROFILE");
+					result = Path.Combine(Path.Combine(environmentVariable, ".nuget"), "packages");
+				}
 			}
-			string environmentVariable = Environment.GetEnvironmentVariable("USERPROFILE");
-			return Path.Combine(Path.Combine(environmentVariable, ".nuget"), "packages");
+			return result;
 		}
 	}
 }

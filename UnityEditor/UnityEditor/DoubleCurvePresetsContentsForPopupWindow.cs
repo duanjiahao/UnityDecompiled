@@ -12,7 +12,7 @@ namespace UnityEditor
 
 		private DoubleCurve m_DoubleCurve;
 
-		private bool m_WantsToClose;
+		private bool m_WantsToClose = false;
 
 		private Action<DoubleCurve> m_PresetSelectedCallback;
 
@@ -66,8 +66,8 @@ namespace UnityEditor
 				string particleCurveLibraryExtension = PresetLibraryLocations.GetParticleCurveLibraryExtension(this.m_DoubleCurve.IsSingleCurve(), this.m_DoubleCurve.signedRange);
 				ScriptableObjectSaveLoadHelper<DoubleCurvePresetLibrary> helper = new ScriptableObjectSaveLoadHelper<DoubleCurvePresetLibrary>(particleCurveLibraryExtension, SaveType.Text);
 				this.m_CurveLibraryEditor = new PresetLibraryEditor<DoubleCurvePresetLibrary>(helper, this.m_CurveLibraryEditorState, new Action<int, object>(this.ItemClickedCallback));
-				PresetLibraryEditor<DoubleCurvePresetLibrary> expr_7B = this.m_CurveLibraryEditor;
-				expr_7B.addDefaultPresets = (Action<PresetLibrary>)Delegate.Combine(expr_7B.addDefaultPresets, new Action<PresetLibrary>(this.AddDefaultPresetsToLibrary));
+				PresetLibraryEditor<DoubleCurvePresetLibrary> expr_7F = this.m_CurveLibraryEditor;
+				expr_7F.addDefaultPresets = (Action<PresetLibrary>)Delegate.Combine(expr_7F.addDefaultPresets, new Action<PresetLibrary>(this.AddDefaultPresetsToLibrary));
 				this.m_CurveLibraryEditor.presetsWasReordered = new Action(this.PresetsWasReordered);
 				this.m_CurveLibraryEditor.previewAspect = 4f;
 				this.m_CurveLibraryEditor.minMaxPreviewHeight = new Vector2(24f, 24f);
@@ -111,25 +111,27 @@ namespace UnityEditor
 			if (doubleCurvePresetLibrary == null)
 			{
 				Debug.Log("Incorrect preset library, should be a DoubleCurvePresetLibrary but was a " + presetLibrary.GetType());
-				return;
-			}
-			bool signedRange = this.m_DoubleCurve.signedRange;
-			List<DoubleCurve> list = new List<DoubleCurve>();
-			if (this.IsSingleCurve(this.m_DoubleCurve))
-			{
-				list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedSingleCurveDefaults(signedRange);
-			}
-			else if (signedRange)
-			{
-				list = DoubleCurvePresetsContentsForPopupWindow.GetSignedDoubleCurveDefaults();
 			}
 			else
 			{
-				list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedDoubleCurveDefaults();
-			}
-			foreach (DoubleCurve current in list)
-			{
-				doubleCurvePresetLibrary.Add(current, string.Empty);
+				bool signedRange = this.m_DoubleCurve.signedRange;
+				List<DoubleCurve> list = new List<DoubleCurve>();
+				if (this.IsSingleCurve(this.m_DoubleCurve))
+				{
+					list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedSingleCurveDefaults(signedRange);
+				}
+				else if (signedRange)
+				{
+					list = DoubleCurvePresetsContentsForPopupWindow.GetSignedDoubleCurveDefaults();
+				}
+				else
+				{
+					list = DoubleCurvePresetsContentsForPopupWindow.GetUnsignedDoubleCurveDefaults();
+				}
+				foreach (DoubleCurve current in list)
+				{
+					doubleCurvePresetLibrary.Add(current, "");
+				}
 			}
 		}
 

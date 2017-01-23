@@ -14,19 +14,24 @@ namespace UnityEditor.Audio
 
 		public override string ResolveStringPath(bool getOnlyBasePath)
 		{
+			string result;
 			if (getOnlyBasePath)
 			{
-				return this.GetBasePath(this.group.GetDisplayString(), null);
+				result = this.GetBasePath(this.group.GetDisplayString(), null);
 			}
-			if (this.group.GetGUIDForVolume() == this.parameter)
+			else if (this.group.GetGUIDForVolume() == this.parameter)
 			{
-				return "Volume" + this.GetBasePath(this.group.GetDisplayString(), null);
+				result = "Volume" + this.GetBasePath(this.group.GetDisplayString(), null);
 			}
-			if (this.group.GetGUIDForPitch() == this.parameter)
+			else if (this.group.GetGUIDForPitch() == this.parameter)
 			{
-				return "Pitch" + this.GetBasePath(this.group.GetDisplayString(), null);
+				result = "Pitch" + this.GetBasePath(this.group.GetDisplayString(), null);
 			}
-			return "Error finding Parameter path.";
+			else
+			{
+				result = "Error finding Parameter path.";
+			}
+			return result;
 		}
 
 		protected string GetBasePath(string group, string effect)

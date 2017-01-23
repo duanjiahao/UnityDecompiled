@@ -151,23 +151,26 @@ namespace UnityEditor
 		{
 			get
 			{
+				Color result;
 				if (this.m_Type == MaterialProperty.PropType.Color)
 				{
-					return (Color)this.m_Value;
+					result = (Color)this.m_Value;
 				}
-				return Color.black;
+				else
+				{
+					result = Color.black;
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Type != MaterialProperty.PropType.Color)
+				if (this.m_Type == MaterialProperty.PropType.Color)
 				{
-					return;
+					if (this.hasMixedValue || !(value == (Color)this.m_Value))
+					{
+						this.ApplyProperty(value);
+					}
 				}
-				if (!this.hasMixedValue && value == (Color)this.m_Value)
-				{
-					return;
-				}
-				this.ApplyProperty(value);
 			}
 		}
 
@@ -175,23 +178,26 @@ namespace UnityEditor
 		{
 			get
 			{
+				Vector4 result;
 				if (this.m_Type == MaterialProperty.PropType.Vector)
 				{
-					return (Vector4)this.m_Value;
+					result = (Vector4)this.m_Value;
 				}
-				return Vector4.zero;
+				else
+				{
+					result = Vector4.zero;
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Type != MaterialProperty.PropType.Vector)
+				if (this.m_Type == MaterialProperty.PropType.Vector)
 				{
-					return;
+					if (this.hasMixedValue || !(value == (Vector4)this.m_Value))
+					{
+						this.ApplyProperty(value);
+					}
 				}
-				if (!this.hasMixedValue && value == (Vector4)this.m_Value)
-				{
-					return;
-				}
-				this.ApplyProperty(value);
 			}
 		}
 
@@ -199,23 +205,26 @@ namespace UnityEditor
 		{
 			get
 			{
+				float result;
 				if (this.m_Type == MaterialProperty.PropType.Float || this.m_Type == MaterialProperty.PropType.Range)
 				{
-					return (float)this.m_Value;
+					result = (float)this.m_Value;
 				}
-				return 0f;
+				else
+				{
+					result = 0f;
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Type != MaterialProperty.PropType.Float && this.m_Type != MaterialProperty.PropType.Range)
+				if (this.m_Type == MaterialProperty.PropType.Float || this.m_Type == MaterialProperty.PropType.Range)
 				{
-					return;
+					if (this.hasMixedValue || value != (float)this.m_Value)
+					{
+						this.ApplyProperty(value);
+					}
 				}
-				if (!this.hasMixedValue && value == (float)this.m_Value)
-				{
-					return;
-				}
-				this.ApplyProperty(value);
 			}
 		}
 
@@ -223,26 +232,29 @@ namespace UnityEditor
 		{
 			get
 			{
+				Texture result;
 				if (this.m_Type == MaterialProperty.PropType.Texture)
 				{
-					return (Texture)this.m_Value;
+					result = (Texture)this.m_Value;
 				}
-				return null;
+				else
+				{
+					result = null;
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Type != MaterialProperty.PropType.Texture)
+				if (this.m_Type == MaterialProperty.PropType.Texture)
 				{
-					return;
+					if (this.hasMixedValue || !(value == (Texture)this.m_Value))
+					{
+						this.m_MixedValueMask &= -2;
+						object value2 = this.m_Value;
+						this.m_Value = value;
+						this.ApplyProperty(value2, 1);
+					}
 				}
-				if (!this.hasMixedValue && value == (Texture)this.m_Value)
-				{
-					return;
-				}
-				this.m_MixedValueMask &= -2;
-				object value2 = this.m_Value;
-				this.m_Value = value;
-				this.ApplyProperty(value2, 1);
 			}
 		}
 
@@ -250,31 +262,34 @@ namespace UnityEditor
 		{
 			get
 			{
+				Vector4 result;
 				if (this.m_Type == MaterialProperty.PropType.Texture)
 				{
-					return this.m_TextureScaleAndOffset;
+					result = this.m_TextureScaleAndOffset;
 				}
-				return Vector4.zero;
+				else
+				{
+					result = Vector4.zero;
+				}
+				return result;
 			}
 			set
 			{
-				if (this.m_Type != MaterialProperty.PropType.Texture)
+				if (this.m_Type == MaterialProperty.PropType.Texture)
 				{
-					return;
+					if (this.hasMixedValue || !(value == this.m_TextureScaleAndOffset))
+					{
+						this.m_MixedValueMask &= 1;
+						int num = 0;
+						for (int i = 1; i < 5; i++)
+						{
+							num |= 1 << i;
+						}
+						object previousValue = this.m_TextureScaleAndOffset;
+						this.m_TextureScaleAndOffset = value;
+						this.ApplyProperty(previousValue, num);
+					}
 				}
-				if (!this.hasMixedValue && value == this.m_TextureScaleAndOffset)
-				{
-					return;
-				}
-				this.m_MixedValueMask &= 1;
-				int num = 0;
-				for (int i = 1; i < 5; i++)
-				{
-					num |= 1 << i;
-				}
-				object previousValue = this.m_TextureScaleAndOffset;
-				this.m_TextureScaleAndOffset = value;
-				this.ApplyProperty(previousValue, num);
 			}
 		}
 

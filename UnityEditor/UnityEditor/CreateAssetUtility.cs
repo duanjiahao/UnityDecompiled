@@ -15,7 +15,7 @@ namespace UnityEditor
 		private int m_InstanceID;
 
 		[SerializeField]
-		private string m_Path = string.Empty;
+		private string m_Path = "";
 
 		[SerializeField]
 		private Texture2D m_Icon;
@@ -75,20 +75,25 @@ namespace UnityEditor
 		{
 			this.m_EndAction = null;
 			this.m_InstanceID = 0;
-			this.m_Path = string.Empty;
+			this.m_Path = "";
 			this.m_Icon = null;
-			this.m_ResourceFile = string.Empty;
+			this.m_ResourceFile = "";
 		}
 
 		private static bool IsPathDataValid(string filePath)
 		{
+			bool result;
 			if (string.IsNullOrEmpty(filePath))
 			{
-				return false;
+				result = false;
 			}
-			string directoryName = Path.GetDirectoryName(filePath);
-			int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(directoryName);
-			return mainAssetInstanceID != 0;
+			else
+			{
+				string directoryName = Path.GetDirectoryName(filePath);
+				int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(directoryName);
+				result = (mainAssetInstanceID != 0);
+			}
+			return result;
 		}
 
 		public bool BeginNewAssetCreation(int instanceID, EndNameEditAction newAssetEndAction, string filePath, Texture2D icon, string newAssetResourceFile)
@@ -102,6 +107,7 @@ namespace UnityEditor
 			{
 				text = AssetDatabase.GenerateUniqueAssetPath(filePath);
 			}
+			bool result;
 			if (!CreateAssetUtility.IsPathDataValid(text))
 			{
 				Debug.LogErrorFormat("Invalid generated unique path '{0}' (input path '{1}')", new object[]
@@ -110,15 +116,19 @@ namespace UnityEditor
 					filePath
 				});
 				this.Clear();
-				return false;
+				result = false;
 			}
-			this.m_InstanceID = instanceID;
-			this.m_Path = text;
-			this.m_Icon = icon;
-			this.m_EndAction = newAssetEndAction;
-			this.m_ResourceFile = newAssetResourceFile;
-			Selection.activeObject = EditorUtility.InstanceIDToObject(instanceID);
-			return true;
+			else
+			{
+				this.m_InstanceID = instanceID;
+				this.m_Path = text;
+				this.m_Icon = icon;
+				this.m_EndAction = newAssetEndAction;
+				this.m_ResourceFile = newAssetResourceFile;
+				Selection.activeObject = EditorUtility.InstanceIDToObject(instanceID);
+				result = true;
+			}
+			return result;
 		}
 
 		public void EndNewAssetCreation(string name)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -18,6 +19,9 @@ namespace UnityEditor
 
 			public int userData;
 		}
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
 
 		public static void MenuCallback(object callbackObject)
 		{
@@ -63,7 +67,13 @@ namespace UnityEditor
 			menuCallbackObject.onBeforeExecuteCallback = onBeforeExecuteCallback;
 			menuCallbackObject.onAfterExecuteCallback = onAfterExecuteCallback;
 			menuCallbackObject.userData = userData;
-			menu.AddItem(new GUIContent(replacementMenuString), false, new GenericMenu.MenuFunction2(MenuUtils.MenuCallback), menuCallbackObject);
+			GUIContent arg_53_1 = new GUIContent(replacementMenuString);
+			bool arg_53_2 = false;
+			if (MenuUtils.<>f__mg$cache0 == null)
+			{
+				MenuUtils.<>f__mg$cache0 = new GenericMenu.MenuFunction2(MenuUtils.MenuCallback);
+			}
+			menu.AddItem(arg_53_1, arg_53_2, MenuUtils.<>f__mg$cache0, menuCallbackObject);
 		}
 	}
 }

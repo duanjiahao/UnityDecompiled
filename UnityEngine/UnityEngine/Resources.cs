@@ -8,19 +8,24 @@ namespace UnityEngine
 	{
 		internal static T[] ConvertObjects<T>(Object[] rawObjects) where T : Object
 		{
+			T[] result;
 			if (rawObjects == null)
 			{
-				return null;
+				result = null;
 			}
-			T[] array = new T[rawObjects.Length];
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				array[i] = (T)((object)rawObjects[i]);
+				T[] array = new T[rawObjects.Length];
+				for (int i = 0; i < array.Length; i++)
+				{
+					array[i] = (T)((object)rawObjects[i]);
+				}
+				result = array;
 			}
-			return array;
+			return result;
 		}
 
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
+		[TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindObjectsOfTypeAll(Type type);
 
@@ -39,7 +44,7 @@ namespace UnityEngine
 			return (T)((object)Resources.Load(path, typeof(T)));
 		}
 
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
+		[TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object Load(string path, Type systemTypeInstance);
 
@@ -53,11 +58,9 @@ namespace UnityEngine
 			return Resources.LoadAsync(path, typeof(T));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern ResourceRequest LoadAsync(string path, Type type);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] LoadAll(string path, Type systemTypeInstance);
 
@@ -71,7 +74,7 @@ namespace UnityEngine
 			return Resources.ConvertObjects<T>(Resources.LoadAll(path, typeof(T)));
 		}
 
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
+		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object GetBuiltinResource(Type type, string path);
 
@@ -80,11 +83,9 @@ namespace UnityEngine
 			return (T)((object)Resources.GetBuiltinResource(typeof(T), path));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadAsset(Object assetToUnload);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation UnloadUnusedAssets();
 

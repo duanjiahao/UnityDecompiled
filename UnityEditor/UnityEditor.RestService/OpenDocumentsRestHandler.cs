@@ -9,17 +9,17 @@ namespace UnityEditor.RestService
 	{
 		protected override JSONValue HandlePost(Request request, JSONValue payload)
 		{
-			List<string> arg_56_0;
+			List<string> arg_57_0;
 			if (payload.ContainsKey("documents"))
 			{
-				arg_56_0 = (from d in payload["documents"].AsList()
+				arg_57_0 = (from d in payload["documents"].AsList()
 				select d.AsString()).ToList<string>();
 			}
 			else
 			{
-				arg_56_0 = new List<string>();
+				arg_57_0 = new List<string>();
 			}
-			ScriptEditorSettings.OpenDocuments = arg_56_0;
+			ScriptEditorSettings.OpenDocuments = arg_57_0;
 			ScriptEditorSettings.Save();
 			return default(JSONValue);
 		}

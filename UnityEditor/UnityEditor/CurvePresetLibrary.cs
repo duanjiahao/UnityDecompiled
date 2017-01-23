@@ -71,12 +71,14 @@ namespace UnityEditor
 			if (animationCurve == null)
 			{
 				Debug.LogError("Wrong type used in CurvePresetLibrary");
-				return;
 			}
-			AnimationCurve animationCurve2 = new AnimationCurve(animationCurve.keys);
-			animationCurve2.preWrapMode = animationCurve.preWrapMode;
-			animationCurve2.postWrapMode = animationCurve.postWrapMode;
-			this.m_Presets.Add(new CurvePresetLibrary.CurvePreset(animationCurve2, presetName));
+			else
+			{
+				AnimationCurve animationCurve2 = new AnimationCurve(animationCurve.keys);
+				animationCurve2.preWrapMode = animationCurve.preWrapMode;
+				animationCurve2.postWrapMode = animationCurve.postWrapMode;
+				this.m_Presets.Add(new CurvePresetLibrary.CurvePreset(animationCurve2, presetName));
+			}
 		}
 
 		public override void Replace(int index, object newPresetObject)
@@ -85,12 +87,14 @@ namespace UnityEditor
 			if (animationCurve == null)
 			{
 				Debug.LogError("Wrong type used in CurvePresetLibrary");
-				return;
 			}
-			AnimationCurve animationCurve2 = new AnimationCurve(animationCurve.keys);
-			animationCurve2.preWrapMode = animationCurve.preWrapMode;
-			animationCurve2.postWrapMode = animationCurve.postWrapMode;
-			this.m_Presets[index].curve = animationCurve2;
+			else
+			{
+				AnimationCurve animationCurve2 = new AnimationCurve(animationCurve.keys);
+				animationCurve2.preWrapMode = animationCurve.preWrapMode;
+				animationCurve2.postWrapMode = animationCurve.postWrapMode;
+				this.m_Presets[index].curve = animationCurve2;
+			}
 		}
 
 		public override void Remove(int index)
@@ -115,11 +119,10 @@ namespace UnityEditor
 
 		private void DrawInternal(Rect rect, AnimationCurve animCurve)
 		{
-			if (animCurve == null)
+			if (animCurve != null)
 			{
-				return;
+				EditorGUIUtility.DrawCurveSwatch(rect, animCurve, null, new Color(0.8f, 0.8f, 0.8f, 1f), EditorGUI.kCurveBGColor);
 			}
-			EditorGUIUtility.DrawCurveSwatch(rect, animCurve, null, new Color(0.8f, 0.8f, 0.8f, 1f), EditorGUI.kCurveBGColor);
 		}
 
 		public override string GetName(int index)

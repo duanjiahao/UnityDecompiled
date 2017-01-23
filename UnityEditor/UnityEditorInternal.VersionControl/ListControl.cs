@@ -20,7 +20,7 @@ namespace UnityEditorInternal.VersionControl
 		public class ListState
 		{
 			[SerializeField]
-			public float Scroll;
+			public float Scroll = 0f;
 
 			[SerializeField]
 			public List<string> Expanded = new List<string>();
@@ -32,6 +32,53 @@ namespace UnityEditorInternal.VersionControl
 
 		public delegate void ActionDelegate(ListItem item, int actionIdx);
 
+		private ListControl.ExpandDelegate expandDelegate;
+
+		private ListControl.DragDelegate dragDelegate;
+
+		private ListControl.ActionDelegate actionDelegate;
+
+		private ListItem root = new ListItem();
+
+		private ListItem active = null;
+
+		private List<ListItem> visibleList = new List<ListItem>();
+
+		private Texture2D blueTex = null;
+
+		private Texture2D greyTex = null;
+
+		private Texture2D yellowTex = null;
+
+		[SerializeField]
+		private ListControl.ListState m_listState;
+
+		private Dictionary<string, ListItem> pathSearch = new Dictionary<string, ListItem>();
+
+		private Texture2D defaultIcon = null;
+
+		private bool readOnly = false;
+
+		private bool scrollVisible = false;
+
+		private string menuFolder = null;
+
+		private string menuDefault = null;
+
+		private bool dragAcceptOnly = false;
+
+		private ListItem dragTarget = null;
+
+		private int dragCount = 0;
+
+		private ListControl.SelectDirection dragAdjust = ListControl.SelectDirection.Current;
+
+		private Dictionary<string, ListItem> selectList = new Dictionary<string, ListItem>();
+
+		private ListItem singleSelect = null;
+
+		private GUIContent calcSizeTmpContent = new GUIContent();
+
 		private const float c_lineHeight = 16f;
 
 		private const float c_scrollWidth = 14f;
@@ -42,55 +89,8 @@ namespace UnityEditorInternal.VersionControl
 
 		internal const string c_emptyChangeListMessage = "Empty change list";
 
-		private ListControl.ExpandDelegate expandDelegate;
-
-		private ListControl.DragDelegate dragDelegate;
-
-		private ListControl.ActionDelegate actionDelegate;
-
-		private ListItem root = new ListItem();
-
-		private ListItem active;
-
-		private List<ListItem> visibleList = new List<ListItem>();
-
-		private Texture2D blueTex;
-
-		private Texture2D greyTex;
-
-		private Texture2D yellowTex;
-
-		[SerializeField]
-		private ListControl.ListState m_listState;
-
-		private Dictionary<string, ListItem> pathSearch = new Dictionary<string, ListItem>();
-
-		private Texture2D defaultIcon;
-
-		private bool readOnly;
-
-		private bool scrollVisible;
-
-		private string menuFolder;
-
-		private string menuDefault;
-
-		private bool dragAcceptOnly;
-
-		private ListItem dragTarget;
-
-		private int dragCount;
-
-		private ListControl.SelectDirection dragAdjust = ListControl.SelectDirection.Current;
-
-		private Dictionary<string, ListItem> selectList = new Dictionary<string, ListItem>();
-
-		private ListItem singleSelect;
-
-		private GUIContent calcSizeTmpContent = new GUIContent();
-
 		[NonSerialized]
-		private int uniqueID;
+		private int uniqueID = 0;
 
 		private static int s_uniqueIDCount = 1;
 
@@ -304,15 +304,20 @@ namespace UnityEditorInternal.VersionControl
 			{
 				listItem2.Hidden = true;
 			}
+			ListItem result;
 			if (listItem2.Asset == null)
 			{
-				return listItem2;
+				result = listItem2;
 			}
-			if (listItem2.Asset.path.Length > 0)
+			else
 			{
-				this.pathSearch[listItem2.Asset.path.ToLower()] = listItem2;
+				if (listItem2.Asset.path.Length > 0)
+				{
+					this.pathSearch[listItem2.Asset.path.ToLower()] = listItem2;
+				}
+				result = listItem2;
 			}
-			return listItem2;
+			return result;
 		}
 
 		public ListItem Add(ListItem parent, string name, ChangeSet change)
@@ -328,19 +333,25 @@ namespace UnityEditorInternal.VersionControl
 
 		internal ListItem GetChangeSetItem(ChangeSet change)
 		{
+			ListItem result;
 			if (change == null)
 			{
-				return null;
+				result = null;
 			}
-			for (ListItem listItem = this.root.FirstChild; listItem != null; listItem = listItem.Next)
+			else
 			{
-				ChangeSet changeSet = listItem.Item as ChangeSet;
-				if (changeSet != null && changeSet.id == change.id)
+				for (ListItem listItem = this.root.FirstChild; listItem != null; listItem = listItem.Next)
 				{
-					return listItem;
+					ChangeSet changeSet = listItem.Item as ChangeSet;
+					if (changeSet != null && changeSet.id == change.id)
+					{
+						result = listItem;
+						return result;
+					}
 				}
+				result = null;
 			}
-			return null;
+			return result;
 		}
 
 		public void Clear()
@@ -526,10 +537,13 @@ namespace UnityEditorInternal.VersionControl
 							EditorUtility.DisplayPopupMenu(new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f), this.menuDefault, new MenuCommand(null, this.uniqueID));
 						}
 					}
-					else if (current.type != EventType.ContextClick && current.button == 0 && !current.control && !current.command && !current.shift && this.IsSelected(this.singleSelect))
+					else if (current.type != EventType.ContextClick && current.button == 0 && !current.control && !current.command && !current.shift)
 					{
-						this.SelectedSet(this.singleSelect);
-						this.singleSelect = null;
+						if (this.IsSelected(this.singleSelect))
+						{
+							this.SelectedSet(this.singleSelect);
+							this.singleSelect = null;
+						}
 					}
 				}
 			}
@@ -590,14 +604,17 @@ namespace UnityEditorInternal.VersionControl
 					}
 				}
 			}
-			if (current.type == EventType.DragPerform && this.dragTarget != null)
+			if (current.type == EventType.DragPerform)
 			{
-				ListItem listItem = (this.dragAdjust != ListControl.SelectDirection.Current) ? this.dragTarget.Parent : this.dragTarget;
-				if (this.dragDelegate != null && listItem != null && listItem.CanAccept)
+				if (this.dragTarget != null)
 				{
-					this.dragDelegate(listItem.Change);
+					ListItem listItem = (this.dragAdjust != ListControl.SelectDirection.Current) ? this.dragTarget.Parent : this.dragTarget;
+					if (this.dragDelegate != null && listItem != null && listItem.CanAccept)
+					{
+						this.dragDelegate(listItem.Change);
+					}
+					this.dragTarget = null;
 				}
-				this.dragTarget = null;
 			}
 			if (current.type == EventType.DragExited)
 			{
@@ -670,59 +687,57 @@ namespace UnityEditorInternal.VersionControl
 
 		private void HandleKeyInput(Event e)
 		{
-			if (e.type != EventType.KeyDown)
+			if (e.type == EventType.KeyDown)
 			{
-				return;
-			}
-			if (this.selectList.Count == 0)
-			{
-				return;
-			}
-			if (e.keyCode == KeyCode.UpArrow || e.keyCode == KeyCode.DownArrow)
-			{
-				ListItem listItem;
-				if (e.keyCode == KeyCode.UpArrow)
+				if (this.selectList.Count != 0)
 				{
-					listItem = this.SelectedFirstIn(this.active);
-					if (listItem != null)
+					if (e.keyCode == KeyCode.UpArrow || e.keyCode == KeyCode.DownArrow)
 					{
-						listItem = listItem.PrevOpenSkip;
+						ListItem listItem;
+						if (e.keyCode == KeyCode.UpArrow)
+						{
+							listItem = this.SelectedFirstIn(this.active);
+							if (listItem != null)
+							{
+								listItem = listItem.PrevOpenSkip;
+							}
+						}
+						else
+						{
+							listItem = this.SelectedLastIn(this.active);
+							if (listItem != null)
+							{
+								listItem = listItem.NextOpenSkip;
+							}
+						}
+						if (listItem != null)
+						{
+							if (!this.ScrollUpTo(listItem))
+							{
+								this.ScrollDownTo(listItem);
+							}
+							if (e.shift)
+							{
+								this.SelectionFlow(listItem);
+							}
+							else
+							{
+								this.SelectedSet(listItem);
+							}
+						}
+					}
+					if (e.keyCode == KeyCode.LeftArrow || e.keyCode == KeyCode.RightArrow)
+					{
+						ListItem listItem2 = this.SelectedCurrentIn(this.active);
+						listItem2.Expanded = (e.keyCode == KeyCode.RightArrow);
+						this.CallExpandedEvent(listItem2, true);
+					}
+					if (e.keyCode == KeyCode.Return && GUIUtility.keyboardControl == 0)
+					{
+						ListItem listItem3 = this.SelectedCurrentIn(this.active);
+						listItem3.Asset.Edit();
 					}
 				}
-				else
-				{
-					listItem = this.SelectedLastIn(this.active);
-					if (listItem != null)
-					{
-						listItem = listItem.NextOpenSkip;
-					}
-				}
-				if (listItem != null)
-				{
-					if (!this.ScrollUpTo(listItem))
-					{
-						this.ScrollDownTo(listItem);
-					}
-					if (e.shift)
-					{
-						this.SelectionFlow(listItem);
-					}
-					else
-					{
-						this.SelectedSet(listItem);
-					}
-				}
-			}
-			if (e.keyCode == KeyCode.LeftArrow || e.keyCode == KeyCode.RightArrow)
-			{
-				ListItem listItem2 = this.SelectedCurrentIn(this.active);
-				listItem2.Expanded = (e.keyCode == KeyCode.RightArrow);
-				this.CallExpandedEvent(listItem2, true);
-			}
-			if (e.keyCode == KeyCode.Return && GUIUtility.keyboardControl == 0)
-			{
-				ListItem listItem3 = this.SelectedCurrentIn(this.active);
-				listItem3.Asset.Edit();
 			}
 		}
 
@@ -854,45 +869,56 @@ namespace UnityEditorInternal.VersionControl
 		private ListItem GetItemAt(Rect area, Vector2 pos)
 		{
 			int num = (int)((pos.y - area.y) / 16f);
+			ListItem result;
 			if (num >= 0 && num < this.visibleList.Count)
 			{
-				return this.visibleList[num];
+				result = this.visibleList[num];
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private bool ScrollUpTo(ListItem item)
 		{
 			int num = (int)this.listState.Scroll;
 			ListItem listItem = (this.visibleList.Count <= 0) ? null : this.visibleList[0];
+			bool result;
 			while (listItem != null && num >= 0)
 			{
 				if (listItem == item)
 				{
 					this.listState.Scroll = (float)num;
-					return true;
+					result = true;
+					return result;
 				}
 				num--;
 				listItem = listItem.PrevOpenVisible;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private bool ScrollDownTo(ListItem item)
 		{
 			int num = (int)this.listState.Scroll;
 			ListItem listItem = (this.visibleList.Count <= 0) ? null : this.visibleList[this.visibleList.Count - 1];
+			bool result;
 			while (listItem != null && num >= 0)
 			{
 				if (listItem == item)
 				{
 					this.listState.Scroll = (float)num;
-					return true;
+					result = true;
+					return result;
 				}
 				num++;
 				listItem = listItem.NextOpenVisible;
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private void LoadExpanded(ListItem item)
@@ -972,23 +998,31 @@ namespace UnityEditorInternal.VersionControl
 
 		private bool IsSelected(ListItem item)
 		{
+			bool result;
 			if (item.Asset != null)
 			{
-				return this.selectList.ContainsKey(item.Asset.path.ToLower());
+				result = this.selectList.ContainsKey(item.Asset.path.ToLower());
 			}
-			return item.Change != null && this.selectList.ContainsKey("_chkeyprfx_" + item.Change.id.ToString());
+			else
+			{
+				result = (item.Change != null && this.selectList.ContainsKey("_chkeyprfx_" + item.Change.id.ToString()));
+			}
+			return result;
 		}
 
 		private bool IsSelectedAsset()
 		{
+			bool result;
 			foreach (KeyValuePair<string, ListItem> current in this.selectList)
 			{
 				if (current.Value != null && current.Value.Asset != null)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private void SelectedClear()
@@ -1010,18 +1044,17 @@ namespace UnityEditorInternal.VersionControl
 
 		public void SelectedSet(ListItem item)
 		{
-			if (item.Dummy)
+			if (!item.Dummy)
 			{
-				return;
-			}
-			this.SelectedClear();
-			if (item.Asset != null)
-			{
-				this.SelectedAdd(item);
-			}
-			else if (item.Change != null)
-			{
-				this.selectList["_chkeyprfx_" + item.Change.id.ToString()] = item;
+				this.SelectedClear();
+				if (item.Asset != null)
+				{
+					this.SelectedAdd(item);
+				}
+				else if (item.Change != null)
+				{
+					this.selectList["_chkeyprfx_" + item.Change.id.ToString()] = item;
+				}
 			}
 		}
 
@@ -1049,74 +1082,89 @@ namespace UnityEditorInternal.VersionControl
 		private ListItem GetTwinAsset(ListItem item)
 		{
 			ListItem prev = item.Prev;
+			ListItem result;
 			if (item.Name.EndsWith(".meta") && prev != null && prev.Asset != null && AssetDatabase.GetTextMetaFilePathFromAssetPath(prev.Asset.path).ToLower() == item.Asset.path.ToLower())
 			{
-				return prev;
+				result = prev;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private ListItem GetTwinMeta(ListItem item)
 		{
 			ListItem next = item.Next;
+			ListItem result;
 			if (!item.Name.EndsWith(".meta") && next != null && next.Asset != null && next.Asset.path.ToLower() == AssetDatabase.GetTextMetaFilePathFromAssetPath(item.Asset.path).ToLower())
 			{
-				return next;
+				result = next;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
 
 		private ListItem GetTwin(ListItem item)
 		{
 			ListItem twinAsset = this.GetTwinAsset(item);
+			ListItem result;
 			if (twinAsset != null)
 			{
-				return twinAsset;
+				result = twinAsset;
 			}
-			return this.GetTwinMeta(item);
+			else
+			{
+				result = this.GetTwinMeta(item);
+			}
+			return result;
 		}
 
 		public void SelectedAdd(ListItem item)
 		{
-			if (item.Dummy)
+			if (!item.Dummy)
 			{
-				return;
-			}
-			ListItem listItem = this.SelectedCurrentIn(this.active);
-			if (item.Exclusive || (listItem != null && listItem.Exclusive))
-			{
-				this.SelectedSet(item);
-				return;
-			}
-			string text = item.Asset.path.ToLower();
-			int count = this.selectList.Count;
-			this.selectList[text] = item;
-			ListItem twin = this.GetTwin(item);
-			if (twin != null)
-			{
-				this.selectList[twin.Asset.path.ToLower()] = twin;
-			}
-			if (count == this.selectList.Count)
-			{
-				return;
-			}
-			int[] instanceIDs = Selection.instanceIDs;
-			int num = 0;
-			if (instanceIDs != null)
-			{
-				num = instanceIDs.Length;
-			}
-			text = ((!text.EndsWith(".meta")) ? text : text.Substring(0, text.Length - 5));
-			int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(text.TrimEnd(new char[]
-			{
-				'/'
-			}));
-			if (mainAssetInstanceID != 0)
-			{
-				int[] array = new int[num + 1];
-				array[num] = mainAssetInstanceID;
-				Array.Copy(instanceIDs, array, num);
-				Selection.instanceIDs = array;
+				ListItem listItem = this.SelectedCurrentIn(this.active);
+				if (item.Exclusive || (listItem != null && listItem.Exclusive))
+				{
+					this.SelectedSet(item);
+				}
+				else
+				{
+					string text = item.Asset.path.ToLower();
+					int count = this.selectList.Count;
+					this.selectList[text] = item;
+					ListItem twin = this.GetTwin(item);
+					if (twin != null)
+					{
+						this.selectList[twin.Asset.path.ToLower()] = twin;
+					}
+					if (count != this.selectList.Count)
+					{
+						int[] instanceIDs = Selection.instanceIDs;
+						int num = 0;
+						if (instanceIDs != null)
+						{
+							num = instanceIDs.Length;
+						}
+						text = ((!text.EndsWith(".meta")) ? text : text.Substring(0, text.Length - 5));
+						int mainAssetInstanceID = AssetDatabase.GetMainAssetInstanceID(text.TrimEnd(new char[]
+						{
+							'/'
+						}));
+						if (mainAssetInstanceID != 0)
+						{
+							int[] array = new int[num + 1];
+							array[num] = mainAssetInstanceID;
+							Array.Copy(instanceIDs, array, num);
+							Selection.instanceIDs = array;
+						}
+					}
+				}
 			}
 		}
 
@@ -1134,17 +1182,16 @@ namespace UnityEditorInternal.VersionControl
 			if (mainAssetInstanceID != 0 && instanceIDs.Length > 0)
 			{
 				int num = Array.IndexOf<int>(instanceIDs, mainAssetInstanceID);
-				if (num < 0)
+				if (num >= 0)
 				{
-					return;
+					int[] array = new int[instanceIDs.Length - 1];
+					Array.Copy(instanceIDs, array, num);
+					if (num < instanceIDs.Length - 1)
+					{
+						Array.Copy(instanceIDs, num + 1, array, num, instanceIDs.Length - num - 1);
+					}
+					Selection.instanceIDs = array;
 				}
-				int[] array = new int[instanceIDs.Length - 1];
-				Array.Copy(instanceIDs, array, num);
-				if (num < instanceIDs.Length - 1)
-				{
-					Array.Copy(instanceIDs, num + 1, array, num, instanceIDs.Length - num - 1);
-				}
-				Selection.instanceIDs = array;
 			}
 		}
 
@@ -1182,17 +1229,22 @@ namespace UnityEditorInternal.VersionControl
 					listItem = listItem2;
 				}
 			}
+			bool result;
 			if (item == listItem)
 			{
-				return false;
+				result = false;
 			}
-			this.SelectedClear();
-			this.SelectedAdd(listItem);
-			for (ListItem listItem2 = item; listItem2 != listItem; listItem2 = listItem2.PrevOpenVisible)
+			else
 			{
-				this.SelectedAdd(listItem2);
+				this.SelectedClear();
+				this.SelectedAdd(listItem);
+				for (ListItem listItem2 = item; listItem2 != listItem; listItem2 = listItem2.PrevOpenVisible)
+				{
+					this.SelectedAdd(listItem2);
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private bool SelectionFlowDown(ListItem item)
@@ -1205,29 +1257,37 @@ namespace UnityEditorInternal.VersionControl
 					listItem = listItem2;
 				}
 			}
+			bool result;
 			if (item == listItem)
 			{
-				return false;
+				result = false;
 			}
-			this.SelectedClear();
-			this.SelectedAdd(listItem);
-			for (ListItem listItem2 = item; listItem2 != listItem; listItem2 = listItem2.NextOpenVisible)
+			else
 			{
-				this.SelectedAdd(listItem2);
+				this.SelectedClear();
+				this.SelectedAdd(listItem);
+				for (ListItem listItem2 = item; listItem2 != listItem; listItem2 = listItem2.NextOpenVisible)
+				{
+					this.SelectedAdd(listItem2);
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private ListItem SelectedCurrentIn(ListItem root)
 		{
+			ListItem result;
 			foreach (KeyValuePair<string, ListItem> current in this.selectList)
 			{
 				if (current.Value.IsChildOf(root))
 				{
-					return current.Value;
+					result = current.Value;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		private ListItem SelectedFirstIn(ListItem root)
@@ -1259,8 +1319,8 @@ namespace UnityEditorInternal.VersionControl
 		private string DisplayName(ListItem item)
 		{
 			string text = item.Name;
-			string text2 = string.Empty;
-			while (text2 == string.Empty)
+			string text2 = "";
+			while (text2 == "")
 			{
 				int num = text.IndexOf('\n');
 				if (num < 0)
@@ -1270,14 +1330,17 @@ namespace UnityEditorInternal.VersionControl
 				text2 = text.Substring(0, num).Trim();
 				text = text.Substring(num + 1);
 			}
-			if (text2 != string.Empty)
+			if (text2 != "")
 			{
 				text = text2;
 			}
 			text = text.Trim();
-			if (text == string.Empty && item.Change != null)
+			if (text == "")
 			{
-				text = item.Change.id.ToString() + " " + item.Change.description;
+				if (item.Change != null)
+				{
+					text = item.Change.id.ToString() + " " + item.Change.description;
+				}
 			}
 			return text;
 		}

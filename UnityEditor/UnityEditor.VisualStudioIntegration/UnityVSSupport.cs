@@ -29,88 +29,107 @@ namespace UnityEditor.VisualStudioIntegration
 
 		public static void Initialize(string editorPath)
 		{
-			if (Application.platform != RuntimePlatform.WindowsEditor)
+			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
-				return;
-			}
-			string text = editorPath ?? EditorPrefs.GetString("kScriptsDefaultApp");
-			if (text.EndsWith("UnityVS.OpenFile.exe"))
-			{
-				text = SyncVS.FindBestVisualStudio();
-				if (text != null)
+				string text = editorPath ?? EditorPrefs.GetString("kScriptsDefaultApp");
+				if (text.EndsWith("UnityVS.OpenFile.exe"))
 				{
-					EditorPrefs.SetString("kScriptsDefaultApp", text);
+					text = SyncVS.FindBestVisualStudio();
+					if (text != null)
+					{
+						EditorPrefs.SetString("kScriptsDefaultApp", text);
+					}
+				}
+				VisualStudioVersion version;
+				if (UnityVSSupport.IsVisualStudio(text, out version))
+				{
+					UnityVSSupport.m_ShouldUnityVSBeActive = true;
+					string vstuBridgeAssembly = UnityVSSupport.GetVstuBridgeAssembly(version);
+					if (vstuBridgeAssembly == null)
+					{
+						Console.WriteLine("Unable to find bridge dll in registry for Microsoft Visual Studio Tools for Unity for " + text);
+					}
+					else if (!File.Exists(vstuBridgeAssembly))
+					{
+						Console.WriteLine("Unable to find bridge dll on disk for Microsoft Visual Studio Tools for Unity for " + vstuBridgeAssembly);
+					}
+					else
+					{
+						UnityVSSupport.s_UnityVSBridgeToLoad = vstuBridgeAssembly;
+						InternalEditorUtility.SetupCustomDll(Path.GetFileNameWithoutExtension(vstuBridgeAssembly), vstuBridgeAssembly);
+					}
 				}
 			}
-			VisualStudioVersion version;
-			if (!UnityVSSupport.IsVisualStudio(text, out version))
-			{
-				return;
-			}
-			UnityVSSupport.m_ShouldUnityVSBeActive = true;
-			string vstuBridgeAssembly = UnityVSSupport.GetVstuBridgeAssembly(version);
-			if (vstuBridgeAssembly == null)
-			{
-				Console.WriteLine("Unable to find bridge dll in registry for Microsoft Visual Studio Tools for Unity for " + text);
-				return;
-			}
-			if (!File.Exists(vstuBridgeAssembly))
-			{
-				Console.WriteLine("Unable to find bridge dll on disk for Microsoft Visual Studio Tools for Unity for " + vstuBridgeAssembly);
-				return;
-			}
-			UnityVSSupport.s_UnityVSBridgeToLoad = vstuBridgeAssembly;
-			InternalEditorUtility.SetupCustomDll(Path.GetFileNameWithoutExtension(vstuBridgeAssembly), vstuBridgeAssembly);
 		}
 
 		private static bool IsVisualStudio(string externalEditor, out VisualStudioVersion vsVersion)
 		{
+			bool result;
 			if (string.IsNullOrEmpty(externalEditor))
 			{
 				vsVersion = VisualStudioVersion.Invalid;
-				return false;
+				result = false;
 			}
-			KeyValuePair<VisualStudioVersion, string>[] array = (from kvp in SyncVS.InstalledVisualStudios
-			where Paths.AreEqual(kvp.Value, externalEditor, true)
-			select kvp).ToArray<KeyValuePair<VisualStudioVersion, string>>();
-			if (array.Length > 0)
+			else
 			{
-				vsVersion = array[0].Key;
-				return true;
+				KeyValuePair<VisualStudioVersion, string>[] array = (from kvp in SyncVS.InstalledVisualStudios
+				where Paths.AreEqual(kvp.Value, externalEditor, true)
+				select kvp).ToArray<KeyValuePair<VisualStudioVersion, string>>();
+				if (array.Length > 0)
+				{
+					vsVersion = array[0].Key;
+					result = true;
+				}
+				else
+				{
+					if (externalEditor.EndsWith("devenv.exe", StringComparison.OrdinalIgnoreCase))
+					{
+						if (UnityVSSupport.TryGetVisualStudioVersion(externalEditor, out vsVersion))
+						{
+							result = true;
+							return result;
+						}
+					}
+					vsVersion = VisualStudioVersion.Invalid;
+					result = false;
+				}
 			}
-			if (externalEditor.EndsWith("devenv.exe", StringComparison.OrdinalIgnoreCase) && UnityVSSupport.TryGetVisualStudioVersion(externalEditor, out vsVersion))
-			{
-				return true;
-			}
-			vsVersion = VisualStudioVersion.Invalid;
-			return false;
+			return result;
 		}
 
 		private static bool TryGetVisualStudioVersion(string externalEditor, out VisualStudioVersion vsVersion)
 		{
+			bool result;
 			switch (UnityVSSupport.ProductVersion(externalEditor).Major)
 			{
 			case 9:
 				vsVersion = VisualStudioVersion.VisualStudio2008;
-				return true;
+				result = true;
+				return result;
 			case 10:
 				vsVersion = VisualStudioVersion.VisualStudio2010;
-				return true;
+				result = true;
+				return result;
 			case 11:
 				vsVersion = VisualStudioVersion.VisualStudio2012;
-				return true;
+				result = true;
+				return result;
 			case 12:
 				vsVersion = VisualStudioVersion.VisualStudio2013;
-				return true;
+				result = true;
+				return result;
 			case 14:
 				vsVersion = VisualStudioVersion.VisualStudio2015;
-				return true;
+				result = true;
+				return result;
 			case 15:
 				vsVersion = VisualStudioVersion.VisualStudio15;
-				return true;
+				result = true;
+				return result;
 			}
 			vsVersion = VisualStudioVersion.Invalid;
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static Version ProductVersion(string externalEditor)
@@ -150,16 +169,16 @@ namespace UnityEditor.VisualStudioIntegration
 		{
 			if (!UnityVSSupport.s_IsUnityVSEnabled.HasValue)
 			{
-				bool arg_48_0;
+				bool arg_49_0;
 				if (UnityVSSupport.m_ShouldUnityVSBeActive)
 				{
-					arg_48_0 = AppDomain.CurrentDomain.GetAssemblies().Any((Assembly a) => UnityVSSupport.GetAssemblyLocation(a) == UnityVSSupport.s_UnityVSBridgeToLoad);
+					arg_49_0 = AppDomain.CurrentDomain.GetAssemblies().Any((Assembly a) => UnityVSSupport.GetAssemblyLocation(a) == UnityVSSupport.s_UnityVSBridgeToLoad);
 				}
 				else
 				{
-					arg_48_0 = false;
+					arg_49_0 = false;
 				}
-				UnityVSSupport.s_IsUnityVSEnabled = new bool?(arg_48_0);
+				UnityVSSupport.s_IsUnityVSEnabled = new bool?(arg_49_0);
 			}
 			return UnityVSSupport.s_IsUnityVSEnabled.Value;
 		}
@@ -205,39 +224,51 @@ namespace UnityEditor.VisualStudioIntegration
 
 		public static void ScriptEditorChanged(string editorPath)
 		{
-			if (Application.platform != RuntimePlatform.WindowsEditor)
+			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
-				return;
+				UnityVSSupport.Initialize(editorPath);
+				InternalEditorUtility.RequestScriptReload();
 			}
-			UnityVSSupport.Initialize(editorPath);
-			InternalEditorUtility.RequestScriptReload();
 		}
 
 		public static string GetAboutWindowLabel()
 		{
+			string result;
 			if (UnityVSSupport.s_AboutLabel != null)
 			{
-				return UnityVSSupport.s_AboutLabel;
+				result = UnityVSSupport.s_AboutLabel;
 			}
-			UnityVSSupport.s_AboutLabel = UnityVSSupport.CalculateAboutWindowLabel();
-			return UnityVSSupport.s_AboutLabel;
+			else
+			{
+				UnityVSSupport.s_AboutLabel = UnityVSSupport.CalculateAboutWindowLabel();
+				result = UnityVSSupport.s_AboutLabel;
+			}
+			return result;
 		}
 
 		private static string CalculateAboutWindowLabel()
 		{
+			string result;
 			if (!UnityVSSupport.IsUnityVSEnabled())
 			{
-				return string.Empty;
+				result = "";
 			}
-			Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault((Assembly a) => a.Location == UnityVSSupport.s_UnityVSBridgeToLoad);
-			if (assembly == null)
+			else
 			{
-				return string.Empty;
+				Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault((Assembly a) => a.Location == UnityVSSupport.s_UnityVSBridgeToLoad);
+				if (assembly == null)
+				{
+					result = "";
+				}
+				else
+				{
+					StringBuilder stringBuilder = new StringBuilder("Microsoft Visual Studio Tools for Unity ");
+					stringBuilder.Append(assembly.GetName().Version);
+					stringBuilder.Append(" enabled");
+					result = stringBuilder.ToString();
+				}
 			}
-			StringBuilder stringBuilder = new StringBuilder("Microsoft Visual Studio Tools for Unity ");
-			stringBuilder.Append(assembly.GetName().Version);
-			stringBuilder.Append(" enabled");
-			return stringBuilder.ToString();
+			return result;
 		}
 	}
 }

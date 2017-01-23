@@ -83,6 +83,7 @@ namespace UnityEngine.WSA
 		TileSquare150x150IconWithBadge,
 		TileWide310x150IconWithBadgeAndText,
 		TileSquare71x71Image,
+		TileTall150x310Image,
 		TileSquare99x99IconWithBadge = 1000,
 		TileSquare210x210IconWithBadge,
 		TileWide432x210IconWithBadgeAndText

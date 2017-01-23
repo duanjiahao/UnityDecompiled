@@ -11,7 +11,7 @@ namespace UnityEditor.Web
 
 		private const string kServiceDisplayName = "Unity Collab";
 
-		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/collab";
+		private const string kServiceUrl = "https://public-cdn.cloud.unity3d.com/editor/production/cloud/collab";
 
 		private static CollabAccess s_instance;
 
@@ -26,7 +26,7 @@ namespace UnityEditor.Web
 		static CollabAccess()
 		{
 			CollabAccess.s_instance = new CollabAccess();
-			UnityConnectServiceData cloudService = new UnityConnectServiceData("Collab", "https://public-cdn.cloud.unity3d.com/editor/5.4/production/cloud/collab", CollabAccess.s_instance, "unity/project/cloud/collab");
+			UnityConnectServiceData cloudService = new UnityConnectServiceData("Collab", "https://public-cdn.cloud.unity3d.com/editor/production/cloud/collab", CollabAccess.s_instance, "unity/project/cloud/collab");
 			UnityConnectServiceCollection.instance.AddService(cloudService);
 		}
 
@@ -42,9 +42,17 @@ namespace UnityEditor.Web
 
 		public override void EnableService(bool enabled)
 		{
-			base.EnableService(enabled);
-			Collab.instance.SendNotification();
-			Collab.instance.SetCollabEnabledForCurrentProject(enabled);
+			if (!Collab.instance.collabInfo.whitelisted)
+			{
+				base.EnableService(false);
+				Collab.instance.SendNotification();
+			}
+			else
+			{
+				base.EnableService(enabled);
+				Collab.instance.SendNotification();
+				Collab.instance.SetCollabEnabledForCurrentProject(enabled);
+			}
 		}
 
 		public bool IsCollabUIAccessible()

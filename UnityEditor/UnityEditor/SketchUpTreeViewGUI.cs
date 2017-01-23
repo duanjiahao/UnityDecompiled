@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -9,7 +10,7 @@ namespace UnityEditor
 
 		private readonly Texture2D k_Icon = EditorGUIUtility.FindTexture("Mesh Icon");
 
-		public SketchUpTreeViewGUI(TreeView treeView) : base(treeView)
+		public SketchUpTreeViewGUI(TreeViewController treeView) : base(treeView)
 		{
 			this.k_BaseIndent = 20f;
 		}

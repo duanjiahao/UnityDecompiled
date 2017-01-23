@@ -34,7 +34,7 @@ namespace UnityEditor.Scripting
 			}).ToArray<SupportedLanguageStruct>();
 		}
 
-		internal static string GetNamespace(string file)
+		internal static string GetNamespace(string file, string definedSymbols)
 		{
 			if (string.IsNullOrEmpty(file))
 			{
@@ -45,7 +45,7 @@ namespace UnityEditor.Scripting
 			{
 				if (current.GetExtensionICanCompile() == extensionOfSourceFile)
 				{
-					return current.GetNamespace(file);
+					return current.GetNamespace(file, definedSymbols);
 				}
 			}
 			throw new ApplicationException("Unable to find a suitable compiler");

@@ -8,13 +8,13 @@ namespace UnityEditor
 {
 	internal class PropertyHandler
 	{
-		private PropertyDrawer m_PropertyDrawer;
+		private PropertyDrawer m_PropertyDrawer = null;
 
-		private List<DecoratorDrawer> m_DecoratorDrawers;
+		private List<DecoratorDrawer> m_DecoratorDrawers = null;
 
-		public string tooltip;
+		public string tooltip = null;
 
-		public List<ContextMenuItemAttribute> contextMenuItems;
+		public List<ContextMenuItemAttribute> contextMenuItems = null;
 
 		public bool hasPropertyDrawer
 		{
@@ -53,22 +53,22 @@ namespace UnityEditor
 			if (attribute is TooltipAttribute)
 			{
 				this.tooltip = (attribute as TooltipAttribute).tooltip;
-				return;
 			}
-			if (!(attribute is ContextMenuItemAttribute))
+			else if (attribute is ContextMenuItemAttribute)
+			{
+				if (!propertyType.IsArrayOrList())
+				{
+					if (this.contextMenuItems == null)
+					{
+						this.contextMenuItems = new List<ContextMenuItemAttribute>();
+					}
+					this.contextMenuItems.Add(attribute as ContextMenuItemAttribute);
+				}
+			}
+			else
 			{
 				this.HandleDrawnType(attribute.GetType(), propertyType, field, attribute);
-				return;
 			}
-			if (propertyType.IsArrayOrList())
-			{
-				return;
-			}
-			if (this.contextMenuItems == null)
-			{
-				this.contextMenuItems = new List<ContextMenuItemAttribute>();
-			}
-			this.contextMenuItems.Add(attribute as ContextMenuItemAttribute);
 		}
 
 		public void HandleDrawnType(Type drawnType, Type propertyType, FieldInfo field, PropertyAttribute attribute)
@@ -78,27 +78,25 @@ namespace UnityEditor
 			{
 				if (typeof(PropertyDrawer).IsAssignableFrom(drawerTypeForType))
 				{
-					if (propertyType != null && propertyType.IsArrayOrList())
+					if (propertyType == null || !propertyType.IsArrayOrList())
 					{
-						return;
+						this.m_PropertyDrawer = (PropertyDrawer)Activator.CreateInstance(drawerTypeForType);
+						this.m_PropertyDrawer.m_FieldInfo = field;
+						this.m_PropertyDrawer.m_Attribute = attribute;
 					}
-					this.m_PropertyDrawer = (PropertyDrawer)Activator.CreateInstance(drawerTypeForType);
-					this.m_PropertyDrawer.m_FieldInfo = field;
-					this.m_PropertyDrawer.m_Attribute = attribute;
 				}
 				else if (typeof(DecoratorDrawer).IsAssignableFrom(drawerTypeForType))
 				{
-					if (field != null && field.FieldType.IsArrayOrList() && !propertyType.IsArrayOrList())
+					if (field == null || !field.FieldType.IsArrayOrList() || propertyType.IsArrayOrList())
 					{
-						return;
+						DecoratorDrawer decoratorDrawer = (DecoratorDrawer)Activator.CreateInstance(drawerTypeForType);
+						decoratorDrawer.m_Attribute = attribute;
+						if (this.m_DecoratorDrawers == null)
+						{
+							this.m_DecoratorDrawers = new List<DecoratorDrawer>();
+						}
+						this.m_DecoratorDrawers.Add(decoratorDrawer);
 					}
-					DecoratorDrawer decoratorDrawer = (DecoratorDrawer)Activator.CreateInstance(drawerTypeForType);
-					decoratorDrawer.m_Attribute = attribute;
-					if (this.m_DecoratorDrawers == null)
-					{
-						this.m_DecoratorDrawers = new List<DecoratorDrawer>();
-					}
-					this.m_DecoratorDrawers.Add(decoratorDrawer);
 				}
 			}
 		}
@@ -122,6 +120,7 @@ namespace UnityEditor
 				}
 			}
 			position.height = num;
+			bool result;
 			if (this.propertyDrawer != null)
 			{
 				float labelWidth = EditorGUIUtility.labelWidth;
@@ -129,38 +128,42 @@ namespace UnityEditor
 				this.propertyDrawer.OnGUISafe(position, property.Copy(), label ?? EditorGUIUtility.TempContent(property.displayName));
 				EditorGUIUtility.labelWidth = labelWidth;
 				EditorGUIUtility.fieldWidth = fieldWidth;
-				return false;
+				result = false;
 			}
-			if (!includeChildren)
+			else if (!includeChildren)
 			{
-				return EditorGUI.DefaultPropertyField(position, property, label);
+				result = EditorGUI.DefaultPropertyField(position, property, label);
 			}
-			Vector2 iconSize = EditorGUIUtility.GetIconSize();
-			bool enabled = GUI.enabled;
-			int indentLevel = EditorGUI.indentLevel;
-			int num2 = indentLevel - property.depth;
-			SerializedProperty serializedProperty = property.Copy();
-			SerializedProperty endProperty = serializedProperty.GetEndProperty();
-			position.height = EditorGUI.GetSinglePropertyHeight(serializedProperty, label);
-			EditorGUI.indentLevel = serializedProperty.depth + num2;
-			bool enterChildren = EditorGUI.DefaultPropertyField(position, serializedProperty, label) && EditorGUI.HasVisibleChildFields(serializedProperty);
-			position.y += position.height + 2f;
-			while (serializedProperty.NextVisible(enterChildren) && !SerializedProperty.EqualContents(serializedProperty, endProperty))
+			else
 			{
+				Vector2 iconSize = EditorGUIUtility.GetIconSize();
+				bool enabled = GUI.enabled;
+				int indentLevel = EditorGUI.indentLevel;
+				int num2 = indentLevel - property.depth;
+				SerializedProperty serializedProperty = property.Copy();
+				SerializedProperty endProperty = serializedProperty.GetEndProperty();
+				position.height = EditorGUI.GetSinglePropertyHeight(serializedProperty, label);
 				EditorGUI.indentLevel = serializedProperty.depth + num2;
-				position.height = EditorGUI.GetPropertyHeight(serializedProperty, null, false);
-				EditorGUI.BeginChangeCheck();
-				enterChildren = (ScriptAttributeUtility.GetHandler(serializedProperty).OnGUI(position, serializedProperty, null, false) && EditorGUI.HasVisibleChildFields(serializedProperty));
-				if (EditorGUI.EndChangeCheck())
-				{
-					break;
-				}
+				bool enterChildren = EditorGUI.DefaultPropertyField(position, serializedProperty, label) && EditorGUI.HasVisibleChildFields(serializedProperty);
 				position.y += position.height + 2f;
+				while (serializedProperty.NextVisible(enterChildren) && !SerializedProperty.EqualContents(serializedProperty, endProperty))
+				{
+					EditorGUI.indentLevel = serializedProperty.depth + num2;
+					position.height = EditorGUI.GetPropertyHeight(serializedProperty, null, false);
+					EditorGUI.BeginChangeCheck();
+					enterChildren = (ScriptAttributeUtility.GetHandler(serializedProperty).OnGUI(position, serializedProperty, null, false) && EditorGUI.HasVisibleChildFields(serializedProperty));
+					if (EditorGUI.EndChangeCheck())
+					{
+						break;
+					}
+					position.y += position.height + 2f;
+				}
+				GUI.enabled = enabled;
+				EditorGUIUtility.SetIconSize(iconSize);
+				EditorGUI.indentLevel = indentLevel;
+				result = false;
 			}
-			GUI.enabled = enabled;
-			EditorGUIUtility.SetIconSize(iconSize);
-			EditorGUI.indentLevel = indentLevel;
-			return false;
+			return result;
 		}
 
 		public bool OnGUILayout(SerializedProperty property, GUIContent label, bool includeChildren, params GUILayoutOption[] options)
@@ -214,20 +217,19 @@ namespace UnityEditor
 
 		public void AddMenuItems(SerializedProperty property, GenericMenu menu)
 		{
-			if (this.contextMenuItems == null)
+			if (this.contextMenuItems != null)
 			{
-				return;
-			}
-			Type type = property.serializedObject.targetObject.GetType();
-			foreach (ContextMenuItemAttribute current in this.contextMenuItems)
-			{
-				MethodInfo method = type.GetMethod(current.function, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-				if (method != null)
+				Type type = property.serializedObject.targetObject.GetType();
+				foreach (ContextMenuItemAttribute current in this.contextMenuItems)
 				{
-					menu.AddItem(new GUIContent(current.name), false, delegate
+					MethodInfo method = type.GetMethod(current.function, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+					if (method != null)
 					{
-						this.CallMenuCallback(property.serializedObject.targetObjects, method);
-					});
+						menu.AddItem(new GUIContent(current.name), false, delegate
+						{
+							this.CallMenuCallback(property.serializedObject.targetObjects, method);
+						});
+					}
 				}
 			}
 		}

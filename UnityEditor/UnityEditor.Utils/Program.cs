@@ -96,11 +96,24 @@ namespace UnityEditor.Utils
 		{
 			Console.WriteLine("Filename: " + si.FileName);
 			Console.WriteLine("Arguments: " + si.Arguments);
-			foreach (DictionaryEntry dictionaryEntry in si.EnvironmentVariables)
+			IEnumerator enumerator = si.EnvironmentVariables.GetEnumerator();
+			try
 			{
-				if (dictionaryEntry.Key.ToString().StartsWith("MONO"))
+				while (enumerator.MoveNext())
 				{
-					Console.WriteLine("{0}: {1}", dictionaryEntry.Key, dictionaryEntry.Value);
+					DictionaryEntry dictionaryEntry = (DictionaryEntry)enumerator.Current;
+					if (dictionaryEntry.Key.ToString().StartsWith("MONO"))
+					{
+						Console.WriteLine("{0}: {1}", dictionaryEntry.Key, dictionaryEntry.Value);
+					}
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
 				}
 			}
 			int num = si.Arguments.IndexOf("Temp/UnityTempFile");

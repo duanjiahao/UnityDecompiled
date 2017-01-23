@@ -10,7 +10,7 @@ namespace UnityEditor.VersionControl
 
 		private AssetList assetList = new AssetList();
 
-		private bool cancelled;
+		private bool cancelled = false;
 
 		public void OnEnable()
 		{
@@ -91,7 +91,7 @@ namespace UnityEditor.VersionControl
 			GUILayout.FlexibleSpace();
 			Rect screenRect = new Rect(6f, 40f, base.position.width - 12f, base.position.height - 112f);
 			GUILayout.BeginArea(screenRect);
-			GUILayout.Box(string.Empty, new GUILayoutOption[]
+			GUILayout.Box("", new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true),
 				GUILayout.ExpandHeight(true)

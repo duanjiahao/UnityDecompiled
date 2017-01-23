@@ -6,8 +6,6 @@ namespace UnityEditor
 {
 	internal class Brush
 	{
-		internal const int kMinBrushSize = 3;
-
 		private float[] m_Strength;
 
 		private int m_Size;
@@ -18,13 +16,16 @@ namespace UnityEditor
 
 		private Projector m_BrushProjector;
 
+		internal const int kMinBrushSize = 3;
+
 		public bool Load(Texture2D brushTex, int size)
 		{
+			bool result;
 			if (this.m_Brush == brushTex && size == this.m_Size && this.m_Strength != null)
 			{
-				return true;
+				result = true;
 			}
-			if (brushTex != null)
+			else if (brushTex != null)
 			{
 				float num = (float)size;
 				this.m_Size = size;
@@ -47,7 +48,7 @@ namespace UnityEditor
 					}
 				}
 				UnityEngine.Object.DestroyImmediate(this.m_Preview);
-				this.m_Preview = new Texture2D(this.m_Size, this.m_Size, TextureFormat.ARGB32, false);
+				this.m_Preview = new Texture2D(this.m_Size, this.m_Size, TextureFormat.RGBA32, false);
 				this.m_Preview.hideFlags = HideFlags.HideAndDontSave;
 				this.m_Preview.wrapMode = TextureWrapMode.Repeat;
 				this.m_Preview.filterMode = FilterMode.Point;
@@ -64,12 +65,16 @@ namespace UnityEditor
 				}
 				this.m_BrushProjector.material.mainTexture = this.m_Preview;
 				this.m_Brush = brushTex;
-				return true;
+				result = true;
 			}
-			this.m_Strength = new float[1];
-			this.m_Strength[0] = 1f;
-			this.m_Size = 1;
-			return false;
+			else
+			{
+				this.m_Strength = new float[1];
+				this.m_Strength[0] = 1f;
+				this.m_Size = 1;
+				result = false;
+			}
+			return result;
 		}
 
 		public float GetStrengthInt(int ix, int iy)

@@ -31,9 +31,9 @@ namespace UnityEditor
 
 		private static readonly int kAssetBundleVariantFieldIdHash = "AssetBundleVariantFieldHash".GetHashCode();
 
-		private bool m_ShowAssetBundleNameTextField;
+		private bool m_ShowAssetBundleNameTextField = false;
 
-		private bool m_ShowAssetBundleVariantTextField;
+		private bool m_ShowAssetBundleVariantTextField = false;
 
 		public void OnAssetBundleNameGUI(IEnumerable<UnityEngine.Object> assets)
 		{
@@ -42,7 +42,7 @@ namespace UnityEditor
 			Rect rect2 = rect;
 			rect.width *= 0.8f;
 			rect2.xMin += rect.width + 5f;
-			int controlID = GUIUtility.GetControlID(AssetBundleNameGUI.kAssetBundleNameFieldIdHash, FocusType.Native, rect);
+			int controlID = GUIUtility.GetControlID(AssetBundleNameGUI.kAssetBundleNameFieldIdHash, FocusType.Passive, rect);
 			rect = EditorGUI.PrefixLabel(rect, controlID, AssetBundleNameGUI.kAssetBundleName, AssetBundleNameGUI.Styles.label);
 			if (this.m_ShowAssetBundleNameTextField)
 			{
@@ -52,7 +52,7 @@ namespace UnityEditor
 			{
 				this.AssetBundlePopup(rect, controlID, assets, false);
 			}
-			controlID = GUIUtility.GetControlID(AssetBundleNameGUI.kAssetBundleVariantFieldIdHash, FocusType.Native, rect2);
+			controlID = GUIUtility.GetControlID(AssetBundleNameGUI.kAssetBundleVariantFieldIdHash, FocusType.Passive, rect2);
 			if (this.m_ShowAssetBundleVariantTextField)
 			{
 				this.AssetBundleTextField(rect2, controlID, assets, true);
@@ -75,7 +75,7 @@ namespace UnityEditor
 			Color cursorColor = GUI.skin.settings.cursorColor;
 			GUI.skin.settings.cursorColor = AssetBundleNameGUI.Styles.cursorColor;
 			EditorGUI.BeginChangeCheck();
-			string name = EditorGUI.DelayedTextFieldInternal(rect, id, GUIContent.none, string.Empty, null, AssetBundleNameGUI.Styles.textField);
+			string name = EditorGUI.DelayedTextFieldInternal(rect, id, GUIContent.none, "", null, AssetBundleNameGUI.Styles.textField);
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.SetAssetBundleForAssets(assets, name, isVariant);
@@ -98,12 +98,12 @@ namespace UnityEditor
 		{
 			List<string> list = new List<string>();
 			list.Add("None");
-			list.Add(string.Empty);
+			list.Add("");
 			bool flag;
 			IEnumerable<string> assetBundlesFromAssets = this.GetAssetBundlesFromAssets(assets, isVariant, out flag);
 			string[] collection = (!isVariant) ? AssetDatabase.GetAllAssetBundleNamesWithoutVariant() : AssetDatabase.GetAllAssetBundleVariants();
 			list.AddRange(collection);
-			list.Add(string.Empty);
+			list.Add("");
 			int count = list.Count;
 			list.Add("New...");
 			int num = -1;
@@ -115,7 +115,7 @@ namespace UnityEditor
 				num2 = list.Count;
 				if (assetBundlesFromAssets.Count<string>() != 0)
 				{
-					list.Add("Filter Selected Name" + ((!flag) ? string.Empty : "s"));
+					list.Add("Filter Selected Name" + ((!flag) ? "" : "s"));
 				}
 			}
 			int num3 = 0;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -73,6 +74,10 @@ namespace UnityEditor
 
 			public GUIContent priorityLabel = new GUIContent("Priority", "Sets the priority of the source. Note that a sound with a larger priority value will more likely be stolen by sounds with smaller priority values.");
 
+			public GUIContent spatializeLabel = new GUIContent("Spatialize", "Enables or disables custom spatialization for the AudioSource.");
+
+			public GUIContent spatializePostEffectsLabel = new GUIContent("Spatialize Post Effects", "Determines if the custom spatializer is applied before or after the effect filters attached to the AudioSource. This flag only has an effect if the spatialize flag is enabled on the AudioSource.");
+
 			public GUIContent priorityLeftLabel = new GUIContent("High");
 
 			public GUIContent priorityRightLabel = new GUIContent("Low");
@@ -85,20 +90,6 @@ namespace UnityEditor
 
 			public GUIContent panRightLabel = new GUIContent("Right");
 		}
-
-		private const int kRolloffCurveID = 0;
-
-		private const int kSpatialBlendCurveID = 1;
-
-		private const int kSpreadCurveID = 2;
-
-		private const int kLowPassCurveID = 3;
-
-		private const int kReverbZoneMixCurveID = 4;
-
-		internal const float kMaxCutoffFrequency = 22000f;
-
-		private const float EPSILON = 0.0001f;
 
 		private SerializedProperty m_AudioClip;
 
@@ -113,6 +104,8 @@ namespace UnityEditor
 		private SerializedProperty m_Mute;
 
 		private SerializedProperty m_Spatialize;
+
+		private SerializedProperty m_SpatializePostEffects;
 
 		private SerializedProperty m_Priority;
 
@@ -140,11 +133,27 @@ namespace UnityEditor
 
 		private AudioSourceInspector.AudioCurveWrapper[] m_AudioCurves;
 
-		private bool m_RefreshCurveEditor;
+		private bool m_RefreshCurveEditor = false;
 
-		private CurveEditor m_CurveEditor;
+		private CurveEditor m_CurveEditor = null;
+
+		private Vector3 m_LastSourcePosition;
 
 		private Vector3 m_LastListenerPosition;
+
+		private const int kRolloffCurveID = 0;
+
+		private const int kSpatialBlendCurveID = 1;
+
+		private const int kSpreadCurveID = 2;
+
+		private const int kLowPassCurveID = 3;
+
+		private const int kReverbZoneMixCurveID = 4;
+
+		internal const float kMaxCutoffFrequency = 22000f;
+
+		private const float EPSILON = 0.0001f;
 
 		private static CurveEditorSettings m_CurveEditorSettings = new CurveEditorSettings();
 
@@ -160,9 +169,27 @@ namespace UnityEditor
 
 		internal bool[] m_SelectedCurves = new bool[0];
 
-		private bool m_Expanded3D;
+		private bool m_Expanded3D = false;
 
 		private static AudioSourceInspector.Styles ms_Styles;
+
+		[CompilerGenerated]
+		private static TargetChoiceHandler.TargetChoiceMenuFunction <>f__mg$cache0;
+
+		private Vector3 GetSourcePos(UnityEngine.Object target)
+		{
+			AudioSource audioSource = (AudioSource)target;
+			Vector3 result;
+			if (audioSource == null)
+			{
+				result = new Vector3(0f, 0f, 0f);
+			}
+			else
+			{
+				result = audioSource.transform.position;
+			}
+			return result;
+		}
 
 		private void OnEnable()
 		{
@@ -173,6 +200,7 @@ namespace UnityEditor
 			this.m_Loop = base.serializedObject.FindProperty("Loop");
 			this.m_Mute = base.serializedObject.FindProperty("Mute");
 			this.m_Spatialize = base.serializedObject.FindProperty("Spatialize");
+			this.m_SpatializePostEffects = base.serializedObject.FindProperty("SpatializePostEffects");
 			this.m_Priority = base.serializedObject.FindProperty("Priority");
 			this.m_DopplerLevel = base.serializedObject.FindProperty("DopplerLevel");
 			this.m_MinDistance = base.serializedObject.FindProperty("MinDistance");
@@ -205,12 +233,14 @@ namespace UnityEditor
 			tickStyle2.tickColor.color = new Color(0f, 0f, 0f, 0.15f);
 			tickStyle2.distLabel = 20;
 			AudioSourceInspector.m_CurveEditorSettings.vTickStyle = tickStyle2;
+			AudioSourceInspector.m_CurveEditorSettings.undoRedoSelection = true;
 			this.m_CurveEditor = new CurveEditor(new Rect(0f, 0f, 1000f, 100f), new CurveWrapper[0], false);
 			this.m_CurveEditor.settings = AudioSourceInspector.m_CurveEditorSettings;
 			this.m_CurveEditor.margin = 25f;
 			this.m_CurveEditor.SetShownHRangeInsideMargins(0f, 1f);
 			this.m_CurveEditor.SetShownVRangeInsideMargins(0f, 1.1f);
 			this.m_CurveEditor.ignoreScrollWheelUntilClicked = true;
+			this.m_LastSourcePosition = this.GetSourcePos(base.target);
 			this.m_LastListenerPosition = AudioUtil.GetListenerPos();
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
@@ -348,9 +378,11 @@ namespace UnityEditor
 
 		private void Update()
 		{
+			Vector3 sourcePos = this.GetSourcePos(base.target);
 			Vector3 listenerPos = AudioUtil.GetListenerPos();
-			if ((this.m_LastListenerPosition - listenerPos).sqrMagnitude > 0.0001f)
+			if ((this.m_LastSourcePosition - sourcePos).sqrMagnitude > 0.0001f || (this.m_LastListenerPosition - listenerPos).sqrMagnitude > 0.0001f)
 			{
+				this.m_LastSourcePosition = sourcePos;
 				this.m_LastListenerPosition = listenerPos;
 				base.Repaint();
 			}
@@ -379,6 +411,7 @@ namespace UnityEditor
 			{
 				this.m_LowpassObject = new SerializedObject(array);
 				audioCurveWrapper.curveProp = this.m_LowpassObject.FindProperty("lowpassLevelCustomCurve");
+				return;
 			}
 		}
 
@@ -395,27 +428,27 @@ namespace UnityEditor
 			for (int i = 0; i < audioCurves.Length; i++)
 			{
 				AudioSourceInspector.AudioCurveWrapper audioCurveWrapper = audioCurves[i];
-				CurveWrapper curveWrapperById = this.m_CurveEditor.getCurveWrapperById(audioCurveWrapper.id);
+				CurveWrapper curveWrapperFromID = this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id);
 				if (audioCurveWrapper.curveProp != null)
 				{
 					AnimationCurve animationCurveValue = audioCurveWrapper.curveProp.animationCurveValue;
-					if (curveWrapperById == null != audioCurveWrapper.curveProp.hasMultipleDifferentValues)
+					if (curveWrapperFromID == null != audioCurveWrapper.curveProp.hasMultipleDifferentValues)
 					{
 						this.m_RefreshCurveEditor = true;
 					}
-					else if (curveWrapperById != null)
+					else if (curveWrapperFromID != null)
 					{
-						if (curveWrapperById.curve.length == 0)
+						if (curveWrapperFromID.curve.length == 0)
 						{
 							this.m_RefreshCurveEditor = true;
 						}
-						else if (animationCurveValue.length >= 1 && animationCurveValue.keys[0].value != curveWrapperById.curve.keys[0].value)
+						else if (animationCurveValue.length >= 1 && animationCurveValue.keys[0].value != curveWrapperFromID.curve.keys[0].value)
 						{
 							this.m_RefreshCurveEditor = true;
 						}
 					}
 				}
-				else if (curveWrapperById != null)
+				else if (curveWrapperFromID != null)
 				{
 					this.m_RefreshCurveEditor = true;
 				}
@@ -427,7 +460,11 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Mute, new GUILayoutOption[0]);
 			if (AudioUtil.canUseSpatializerEffect)
 			{
-				EditorGUILayout.PropertyField(this.m_Spatialize, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_Spatialize, AudioSourceInspector.ms_Styles.spatializeLabel, new GUILayoutOption[0]);
+				using (new EditorGUI.DisabledScope(!this.m_Spatialize.boolValue))
+				{
+					EditorGUILayout.PropertyField(this.m_SpatializePostEffects, AudioSourceInspector.ms_Styles.spatializePostEffectsLabel, new GUILayoutOption[0]);
+				}
 			}
 			EditorGUILayout.PropertyField(this.m_BypassEffects, new GUILayoutOption[0]);
 			if (base.targets.Any((UnityEngine.Object t) => (t as AudioSource).outputAudioMixerGroup != null))
@@ -463,7 +500,7 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.reverbZoneMixLabel, this.m_AudioCurves[4].curveProp, 0f, 1.1f, false);
 			EditorGUILayout.Space();
-			this.m_Expanded3D = EditorGUILayout.Foldout(this.m_Expanded3D, "3D Sound Settings");
+			this.m_Expanded3D = EditorGUILayout.Foldout(this.m_Expanded3D, "3D Sound Settings", true);
 			if (this.m_Expanded3D)
 			{
 				EditorGUI.indentLevel++;
@@ -492,7 +529,13 @@ namespace UnityEditor
 			AudioSourceInspector.AnimProp(AudioSourceInspector.ms_Styles.spreadLabel, this.m_AudioCurves[2].curveProp, 0f, 360f, true);
 			if (this.m_RolloffMode.hasMultipleDifferentValues || (this.m_RolloffMode.enumValueIndex == 2 && this.m_AudioCurves[0].curveProp.hasMultipleDifferentValues))
 			{
-				EditorGUILayout.TargetChoiceField(this.m_AudioCurves[0].curveProp, AudioSourceInspector.ms_Styles.rolloffLabel, new TargetChoiceHandler.TargetChoiceMenuFunction(AudioSourceInspector.SetRolloffToTarget), new GUILayoutOption[0]);
+				SerializedProperty arg_C5_0 = this.m_AudioCurves[0].curveProp;
+				GUIContent arg_C5_1 = AudioSourceInspector.ms_Styles.rolloffLabel;
+				if (AudioSourceInspector.<>f__mg$cache0 == null)
+				{
+					AudioSourceInspector.<>f__mg$cache0 = new TargetChoiceHandler.TargetChoiceMenuFunction(AudioSourceInspector.SetRolloffToTarget);
+				}
+				EditorGUILayout.TargetChoiceField(arg_C5_0, arg_C5_1, AudioSourceInspector.<>f__mg$cache0, new GUILayoutOption[0]);
 			}
 			else
 			{
@@ -537,7 +580,7 @@ namespace UnityEditor
 			this.m_CurveEditor.OnGUI();
 			if (base.targets.Length == 1)
 			{
-				AudioSource audioSource = (AudioSource)this.target;
+				AudioSource audioSource = (AudioSource)base.target;
 				AudioListener x = (AudioListener)UnityEngine.Object.FindObjectOfType(typeof(AudioListener));
 				if (x != null)
 				{
@@ -550,13 +593,13 @@ namespace UnityEditor
 			for (int i = 0; i < audioCurves.Length; i++)
 			{
 				AudioSourceInspector.AudioCurveWrapper audioCurveWrapper = audioCurves[i];
-				if (this.m_CurveEditor.getCurveWrapperById(audioCurveWrapper.id) != null && this.m_CurveEditor.getCurveWrapperById(audioCurveWrapper.id).changed)
+				if (this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id) != null && this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).changed)
 				{
-					AnimationCurve curve = this.m_CurveEditor.getCurveWrapperById(audioCurveWrapper.id).curve;
+					AnimationCurve curve = this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).curve;
 					if (curve.length > 0)
 					{
 						audioCurveWrapper.curveProp.animationCurveValue = curve;
-						this.m_CurveEditor.getCurveWrapperById(audioCurveWrapper.id).changed = false;
+						this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).changed = false;
 						if (audioCurveWrapper.type == AudioSourceInspector.AudioCurveType.Volume)
 						{
 							this.m_RolloffMode.enumValueIndex = 2;
@@ -626,21 +669,20 @@ namespace UnityEditor
 		private List<AudioSourceInspector.AudioCurveWrapper> GetShownAudioCurves()
 		{
 			return (from f in this.m_AudioCurves
-			where this.m_CurveEditor.getCurveWrapperById(f.id) != null
+			where this.m_CurveEditor.GetCurveWrapperFromID(f.id) != null
 			select f).ToList<AudioSourceInspector.AudioCurveWrapper>();
 		}
 
 		private void SyncShownCurvesToLegend(List<AudioSourceInspector.AudioCurveWrapper> curves)
 		{
-			if (curves.Count != this.m_SelectedCurves.Length)
+			if (curves.Count == this.m_SelectedCurves.Length)
 			{
-				return;
+				for (int i = 0; i < curves.Count; i++)
+				{
+					this.m_CurveEditor.GetCurveWrapperFromID(curves[i].id).hidden = !this.m_SelectedCurves[i];
+				}
+				this.m_CurveEditor.animationCurves = this.m_CurveEditor.animationCurves;
 			}
-			for (int i = 0; i < curves.Count; i++)
-			{
-				this.m_CurveEditor.getCurveWrapperById(curves[i].id).hidden = !this.m_SelectedCurves[i];
-			}
-			this.m_CurveEditor.animationCurves = this.m_CurveEditor.animationCurves;
 		}
 
 		private void DrawLabel(string label, float value, Rect r)
@@ -665,53 +707,56 @@ namespace UnityEditor
 			if (prop.hasMultipleDifferentValues)
 			{
 				EditorGUILayout.TargetChoiceField(prop, label, new GUILayoutOption[0]);
-				return;
-			}
-			AnimationCurve animationCurveValue = prop.animationCurveValue;
-			if (animationCurveValue == null)
-			{
-				Debug.LogError(label.text + " curve is null!");
-				return;
-			}
-			if (animationCurveValue.length == 0)
-			{
-				Debug.LogError(label.text + " curve has no keys!");
-				return;
-			}
-			if (animationCurveValue.length != 1)
-			{
-				using (new EditorGUI.DisabledScope(true))
-				{
-					EditorGUILayout.LabelField(label.text, AudioSourceInspector.ms_Styles.controlledByCurveLabel, new GUILayoutOption[0]);
-				}
 			}
 			else
 			{
-				float num = (!useNormalizedValue) ? animationCurveValue.keys[0].value : Mathf.Lerp(min, max, animationCurveValue.keys[0].value);
-				num = MathUtils.DiscardLeastSignificantDecimal(num);
-				EditorGUI.BeginChangeCheck();
-				if (max > min)
+				AnimationCurve animationCurveValue = prop.animationCurveValue;
+				if (animationCurveValue == null)
 				{
-					num = EditorGUILayout.Slider(label, num, min, max, new GUILayoutOption[0]);
+					Debug.LogError(label.text + " curve is null!");
+				}
+				else if (animationCurveValue.length == 0)
+				{
+					Debug.LogError(label.text + " curve has no keys!");
 				}
 				else
 				{
-					num = EditorGUILayout.Slider(label, num, max, min, new GUILayoutOption[0]);
-				}
-				if (EditorGUI.EndChangeCheck())
-				{
-					Keyframe key = animationCurveValue.keys[0];
-					key.time = 0f;
-					key.value = ((!useNormalizedValue) ? num : Mathf.InverseLerp(min, max, num));
-					animationCurveValue.MoveKey(0, key);
+					if (animationCurveValue.length != 1)
+					{
+						using (new EditorGUI.DisabledScope(true))
+						{
+							EditorGUILayout.LabelField(label.text, AudioSourceInspector.ms_Styles.controlledByCurveLabel, new GUILayoutOption[0]);
+						}
+					}
+					else
+					{
+						float num = (!useNormalizedValue) ? animationCurveValue.keys[0].value : Mathf.Lerp(min, max, animationCurveValue.keys[0].value);
+						num = MathUtils.DiscardLeastSignificantDecimal(num);
+						EditorGUI.BeginChangeCheck();
+						if (max > min)
+						{
+							num = EditorGUILayout.Slider(label, num, min, max, new GUILayoutOption[0]);
+						}
+						else
+						{
+							num = EditorGUILayout.Slider(label, num, max, min, new GUILayoutOption[0]);
+						}
+						if (EditorGUI.EndChangeCheck())
+						{
+							Keyframe key = animationCurveValue.keys[0];
+							key.time = 0f;
+							key.value = ((!useNormalizedValue) ? num : Mathf.InverseLerp(min, max, num));
+							animationCurveValue.MoveKey(0, key);
+						}
+					}
+					prop.animationCurveValue = animationCurveValue;
 				}
 			}
-			prop.animationCurveValue = animationCurveValue;
 		}
 
 		private void OnSceneGUI()
 		{
-			AudioSource audioSource = (AudioSource)this.target;
+			AudioSource audioSource = (AudioSource)base.target;
 			Color color = Handles.color;
 			if (audioSource.enabled)
 			{

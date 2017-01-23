@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEditor
 {
-	internal enum iOSBuildType
+	public enum iOSBuildType
 	{
 		Debug,
 		Release

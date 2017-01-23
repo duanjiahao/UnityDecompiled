@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,11 +13,11 @@ namespace UnityEditor
 			public GUIStyle typeButton = "SearchModeFilter";
 		}
 
-		private static Type s_FocusType;
+		private static Type s_FocusType = null;
 
-		private static SceneHierarchyWindow s_HierarchyWindow;
+		private static SceneHierarchyWindow s_HierarchyWindow = null;
 
-		private static GUIContent s_NoneButtonContent;
+		private static GUIContent s_NoneButtonContent = null;
 
 		private static SceneModeUtility.Styles s_Styles;
 
@@ -155,22 +156,30 @@ namespace UnityEditor
 			EditorGUI.showMixedValue = flag3;
 			EditorGUI.BeginChangeCheck();
 			bool flag4 = EditorGUILayout.Toggle(label, flag2, new GUILayoutOption[0]);
-			if (!EditorGUI.EndChangeCheck())
+			bool result;
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (!SceneModeUtility.SetStaticFlags(property.serializedObject.targetObjects, flag, flag4))
+				{
+					result = (flag2 && !flag3);
+				}
+				else
+				{
+					result = flag4;
+				}
+			}
+			else
 			{
 				EditorGUI.showMixedValue = false;
-				return flag4 && !flag3;
+				result = (flag4 && !flag3);
 			}
-			if (!SceneModeUtility.SetStaticFlags(property.serializedObject.targetObjects, flag, flag4))
-			{
-				return flag2 && !flag3;
-			}
-			return flag4;
+			return result;
 		}
 
 		public static bool SetStaticFlags(UnityEngine.Object[] targetObjects, int changedFlags, bool flagValue)
 		{
 			bool flag = changedFlags == -1;
-			StaticEditorFlags staticEditorFlags = (StaticEditorFlags)((!flag) ? ((int)Enum.Parse(typeof(StaticEditorFlags), changedFlags.ToString())) : 0);
+			StaticEditorFlags staticEditorFlags = (!flag) ? ((StaticEditorFlags)Enum.Parse(typeof(StaticEditorFlags), changedFlags.ToString())) : ((StaticEditorFlags)0);
 			GameObjectUtility.ShouldIncludeChildren shouldIncludeChildren = GameObjectUtility.DisplayUpdateChildrenDialogIfNeeded(targetObjects.OfType<GameObject>(), "Change Static Flags", (!flag) ? string.Concat(new string[]
 			{
 				"Do you want to ",
@@ -179,30 +188,48 @@ namespace UnityEditor
 				ObjectNames.NicifyVariableName(staticEditorFlags.ToString()),
 				" flag for all the child objects as well?"
 			}) : ("Do you want to " + ((!flagValue) ? "disable" : "enable") + " the static flags for all the child objects as well?"));
+			bool result;
 			if (shouldIncludeChildren == GameObjectUtility.ShouldIncludeChildren.Cancel)
 			{
 				GUIUtility.ExitGUI();
-				return false;
+				result = false;
 			}
-			GameObject[] objects = SceneModeUtility.GetObjects(targetObjects, shouldIncludeChildren == GameObjectUtility.ShouldIncludeChildren.IncludeChildren);
-			Undo.RecordObjects(objects, "Change Static Flags");
-			GameObject[] array = objects;
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				GameObject go = array[i];
-				int num = (int)GameObjectUtility.GetStaticEditorFlags(go);
-				num = ((!flagValue) ? (num & ~changedFlags) : (num | changedFlags));
-				GameObjectUtility.SetStaticEditorFlags(go, (StaticEditorFlags)num);
+				GameObject[] objects = SceneModeUtility.GetObjects(targetObjects, shouldIncludeChildren == GameObjectUtility.ShouldIncludeChildren.IncludeChildren);
+				Undo.RecordObjects(objects, "Change Static Flags");
+				GameObject[] array = objects;
+				for (int i = 0; i < array.Length; i++)
+				{
+					GameObject go = array[i];
+					int num = (int)GameObjectUtility.GetStaticEditorFlags(go);
+					num = ((!flagValue) ? (num & ~changedFlags) : (num | changedFlags));
+					GameObjectUtility.SetStaticEditorFlags(go, (StaticEditorFlags)num);
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private static void GetObjectsRecurse(Transform root, List<GameObject> arr)
 		{
 			arr.Add(root.gameObject);
-			foreach (Transform root2 in root)
+			IEnumerator enumerator = root.GetEnumerator();
+			try
 			{
-				SceneModeUtility.GetObjectsRecurse(root2, arr);
+				while (enumerator.MoveNext())
+				{
+					Transform root2 = (Transform)enumerator.Current;
+					SceneModeUtility.GetObjectsRecurse(root2, arr);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 

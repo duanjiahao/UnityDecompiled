@@ -61,6 +61,7 @@ namespace UnityEditor
 		private static T Evaluate<T>(string[] tokens)
 		{
 			Stack<string> stack = new Stack<string>();
+			T result;
 			for (int i = 0; i < tokens.Length; i++)
 			{
 				string text = tokens[i];
@@ -78,23 +79,29 @@ namespace UnityEditor
 					list.Reverse();
 					if (!flag || list.Count != @operator.inputs)
 					{
-						return default(T);
+						result = default(T);
+						return result;
 					}
-					Stack<string> arg_CA_0 = stack;
+					Stack<string> arg_D0_0 = stack;
 					T t = ExpressionEvaluator.Evaluate<T>(list.ToArray(), text[0]);
-					arg_CA_0.Push(t.ToString());
+					arg_D0_0.Push(t.ToString());
 				}
 				else
 				{
 					stack.Push(text);
 				}
 			}
-			T result;
-			if (stack.LongCount<string>() == 1L && ExpressionEvaluator.TryParse<T>(stack.Pop(), out result))
+			if (stack.LongCount<string>() == 1L)
 			{
-				return result;
+				T t2;
+				if (ExpressionEvaluator.TryParse<T>(stack.Pop(), out t2))
+				{
+					result = t2;
+					return result;
+				}
 			}
-			return default(T);
+			result = default(T);
+			return result;
 		}
 
 		private static string[] InfixToRPN(string[] tokens)
@@ -146,21 +153,27 @@ namespace UnityEditor
 
 		private static bool NeedToPop(Stack<char> operatorStack, ExpressionEvaluator.Operator newOperator)
 		{
+			bool result;
 			if (operatorStack.LongCount<char>() > 0L)
 			{
 				ExpressionEvaluator.Operator @operator = ExpressionEvaluator.CharToOperator(operatorStack.Peek());
-				if (ExpressionEvaluator.IsOperator(@operator.character) && ((newOperator.associativity == ExpressionEvaluator.Associativity.Left && newOperator.presedence <= @operator.presedence) || (newOperator.associativity == ExpressionEvaluator.Associativity.Right && newOperator.presedence < @operator.presedence)))
+				if (ExpressionEvaluator.IsOperator(@operator.character))
 				{
-					return true;
+					if ((newOperator.associativity == ExpressionEvaluator.Associativity.Left && newOperator.presedence <= @operator.presedence) || (newOperator.associativity == ExpressionEvaluator.Associativity.Right && newOperator.presedence < @operator.presedence))
+					{
+						result = true;
+						return result;
+					}
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static string[] ExpressionToTokens(string expression)
 		{
 			List<string> list = new List<string>();
-			string text = string.Empty;
+			string text = "";
 			for (int i = 0; i < expression.Length; i++)
 			{
 				char c = expression[i];
@@ -171,7 +184,7 @@ namespace UnityEditor
 						list.Add(text);
 					}
 					list.Add(c.ToString());
-					text = string.Empty;
+					text = "";
 				}
 				else if (c != ' ')
 				{
@@ -203,81 +216,99 @@ namespace UnityEditor
 		private static bool IsOperator(char character)
 		{
 			ExpressionEvaluator.Operator[] array = ExpressionEvaluator.s_Operators;
+			bool result;
 			for (int i = 0; i < array.Length; i++)
 			{
 				ExpressionEvaluator.Operator @operator = array[i];
 				if (@operator.character == character)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static ExpressionEvaluator.Operator CharToOperator(char character)
 		{
 			ExpressionEvaluator.Operator[] array = ExpressionEvaluator.s_Operators;
+			ExpressionEvaluator.Operator result;
 			for (int i = 0; i < array.Length; i++)
 			{
-				ExpressionEvaluator.Operator result = array[i];
-				if (result.character == character)
+				ExpressionEvaluator.Operator @operator = array[i];
+				if (@operator.character == character)
 				{
+					result = @operator;
 					return result;
 				}
 			}
-			return default(ExpressionEvaluator.Operator);
+			result = default(ExpressionEvaluator.Operator);
+			return result;
 		}
 
 		private static string PreFormatExpression(string expression)
 		{
 			string text = expression.Trim();
+			string result;
 			if (text.Length == 0)
 			{
-				return text;
+				result = text;
 			}
-			char c = text[text.Length - 1];
-			if (ExpressionEvaluator.IsOperator(c))
+			else
 			{
-				text = text.TrimEnd(new char[]
+				char c = text[text.Length - 1];
+				if (ExpressionEvaluator.IsOperator(c))
 				{
-					c
-				});
+					text = text.TrimEnd(new char[]
+					{
+						c
+					});
+				}
+				result = text;
 			}
-			return text;
+			return result;
 		}
 
 		private static string[] FixUnaryOperators(string[] tokens)
 		{
+			string[] result;
 			if (tokens.Length == 0)
 			{
-				return tokens;
+				result = tokens;
 			}
-			if (tokens[0] == "-")
+			else
 			{
-				tokens[0] = "u";
-			}
-			for (int i = 1; i < tokens.Length - 1; i++)
-			{
-				string a = tokens[i];
-				string token = tokens[i - 1];
-				string a2 = tokens[i - 1];
-				if (a == "-" && (ExpressionEvaluator.IsCommand(token) || a2 == "(" || a2 == ")"))
+				if (tokens[0] == "-")
 				{
-					tokens[i] = "u";
+					tokens[0] = "u";
 				}
+				for (int i = 1; i < tokens.Length - 1; i++)
+				{
+					string a = tokens[i];
+					string token = tokens[i - 1];
+					string a2 = tokens[i - 1];
+					if (a == "-" && (ExpressionEvaluator.IsCommand(token) || a2 == "(" || a2 == ")"))
+					{
+						tokens[i] = "u";
+					}
+				}
+				result = tokens;
 			}
-			return tokens;
+			return result;
 		}
 
 		private static T Evaluate<T>(T[] values, char oper)
 		{
+			T result;
 			if (typeof(T) == typeof(float))
 			{
 				if (values.Length == 1)
 				{
 					if (oper == 'u')
 					{
-						return (T)((object)((float)((object)values[0]) * -1f));
+						result = (T)((object)((float)((object)values[0]) * -1f));
+						return result;
 					}
 				}
 				else if (values.Length == 2)
@@ -285,29 +316,35 @@ namespace UnityEditor
 					switch (oper)
 					{
 					case '*':
-						return (T)((object)((float)((object)values[0]) * (float)((object)values[1])));
+						result = (T)((object)((float)((object)values[0]) * (float)((object)values[1])));
+						return result;
 					case '+':
-						return (T)((object)((float)((object)values[0]) + (float)((object)values[1])));
+						result = (T)((object)((float)((object)values[0]) + (float)((object)values[1])));
+						return result;
 					case ',':
 					case '.':
-						IL_84:
+						IL_8A:
 						if (oper == '%')
 						{
-							return (T)((object)((float)((object)values[0]) % (float)((object)values[1])));
+							result = (T)((object)((float)((object)values[0]) % (float)((object)values[1])));
+							return result;
 						}
 						if (oper != '^')
 						{
-							goto IL_1B1;
+							goto IL_1D6;
 						}
-						return (T)((object)Mathf.Pow((float)((object)values[0]), (float)((object)values[1])));
+						result = (T)((object)Mathf.Pow((float)((object)values[0]), (float)((object)values[1])));
+						return result;
 					case '-':
-						return (T)((object)((float)((object)values[0]) - (float)((object)values[1])));
+						result = (T)((object)((float)((object)values[0]) - (float)((object)values[1])));
+						return result;
 					case '/':
-						return (T)((object)((float)((object)values[0]) / (float)((object)values[1])));
+						result = (T)((object)((float)((object)values[0]) / (float)((object)values[1])));
+						return result;
 					}
-					goto IL_84;
+					goto IL_8A;
 				}
-				IL_1B1:;
+				IL_1D6:;
 			}
 			else if (typeof(T) == typeof(int))
 			{
@@ -315,7 +352,8 @@ namespace UnityEditor
 				{
 					if (oper == 'u')
 					{
-						return (T)((object)((int)((object)values[0]) * -1));
+						result = (T)((object)((int)((object)values[0]) * -1));
+						return result;
 					}
 				}
 				else if (values.Length == 2)
@@ -323,37 +361,44 @@ namespace UnityEditor
 					switch (oper)
 					{
 					case '*':
-						return (T)((object)((int)((object)values[0]) * (int)((object)values[1])));
+						result = (T)((object)((int)((object)values[0]) * (int)((object)values[1])));
+						return result;
 					case '+':
-						return (T)((object)((int)((object)values[0]) + (int)((object)values[1])));
+						result = (T)((object)((int)((object)values[0]) + (int)((object)values[1])));
+						return result;
 					case ',':
 					case '.':
-						IL_236:
+						IL_261:
 						if (oper == '%')
 						{
-							return (T)((object)((int)((object)values[0]) % (int)((object)values[1])));
+							result = (T)((object)((int)((object)values[0]) % (int)((object)values[1])));
+							return result;
 						}
 						if (oper != '^')
 						{
-							goto IL_366;
+							goto IL_3B0;
 						}
-						return (T)((object)((int)Math.Pow((double)((int)((object)values[0])), (double)((int)((object)values[1])))));
+						result = (T)((object)((int)Math.Pow((double)((int)((object)values[0])), (double)((int)((object)values[1])))));
+						return result;
 					case '-':
-						return (T)((object)((int)((object)values[0]) - (int)((object)values[1])));
+						result = (T)((object)((int)((object)values[0]) - (int)((object)values[1])));
+						return result;
 					case '/':
-						return (T)((object)((int)((object)values[0]) / (int)((object)values[1])));
+						result = (T)((object)((int)((object)values[0]) / (int)((object)values[1])));
+						return result;
 					}
-					goto IL_236;
+					goto IL_261;
 				}
+				IL_3B0:;
 			}
-			IL_366:
 			if (typeof(T) == typeof(double))
 			{
 				if (values.Length == 1)
 				{
 					if (oper == 'u')
 					{
-						return (T)((object)((double)((object)values[0]) * -1.0));
+						result = (T)((object)((double)((object)values[0]) * -1.0));
+						return result;
 					}
 				}
 				else if (values.Length == 2)
@@ -361,29 +406,35 @@ namespace UnityEditor
 					switch (oper)
 					{
 					case '*':
-						return (T)((object)((double)((object)values[0]) * (double)((object)values[1])));
+						result = (T)((object)((double)((object)values[0]) * (double)((object)values[1])));
+						return result;
 					case '+':
-						return (T)((object)((double)((object)values[0]) + (double)((object)values[1])));
+						result = (T)((object)((double)((object)values[0]) + (double)((object)values[1])));
+						return result;
 					case ',':
 					case '.':
-						IL_3EE:
+						IL_43E:
 						if (oper == '%')
 						{
-							return (T)((object)((double)((object)values[0]) % (double)((object)values[1])));
+							result = (T)((object)((double)((object)values[0]) % (double)((object)values[1])));
+							return result;
 						}
 						if (oper != '^')
 						{
-							goto IL_51B;
+							goto IL_58A;
 						}
-						return (T)((object)Math.Pow((double)((object)values[0]), (double)((object)values[1])));
+						result = (T)((object)Math.Pow((double)((object)values[0]), (double)((object)values[1])));
+						return result;
 					case '-':
-						return (T)((object)((double)((object)values[0]) - (double)((object)values[1])));
+						result = (T)((object)((double)((object)values[0]) - (double)((object)values[1])));
+						return result;
 					case '/':
-						return (T)((object)((double)((object)values[0]) / (double)((object)values[1])));
+						result = (T)((object)((double)((object)values[0]) / (double)((object)values[1])));
+						return result;
 					}
-					goto IL_3EE;
+					goto IL_43E;
 				}
-				IL_51B:;
+				IL_58A:;
 			}
 			else if (typeof(T) == typeof(long))
 			{
@@ -391,7 +442,8 @@ namespace UnityEditor
 				{
 					if (oper == 'u')
 					{
-						return (T)((object)((long)((object)values[0]) * -1L));
+						result = (T)((object)((long)((object)values[0]) * -1L));
+						return result;
 					}
 				}
 				else if (values.Length == 2)
@@ -399,31 +451,38 @@ namespace UnityEditor
 					switch (oper)
 					{
 					case '*':
-						return (T)((object)((long)((object)values[0]) * (long)((object)values[1])));
+						result = (T)((object)((long)((object)values[0]) * (long)((object)values[1])));
+						return result;
 					case '+':
-						return (T)((object)((long)((object)values[0]) + (long)((object)values[1])));
+						result = (T)((object)((long)((object)values[0]) + (long)((object)values[1])));
+						return result;
 					case ',':
 					case '.':
-						IL_5A1:
+						IL_616:
 						if (oper == '%')
 						{
-							return (T)((object)((long)((object)values[0]) % (long)((object)values[1])));
+							result = (T)((object)((long)((object)values[0]) % (long)((object)values[1])));
+							return result;
 						}
 						if (oper != '^')
 						{
-							goto IL_6D1;
+							goto IL_765;
 						}
-						return (T)((object)((long)Math.Pow((double)((long)((object)values[0])), (double)((long)((object)values[1])))));
+						result = (T)((object)((long)Math.Pow((double)((long)((object)values[0])), (double)((long)((object)values[1])))));
+						return result;
 					case '-':
-						return (T)((object)((long)((object)values[0]) - (long)((object)values[1])));
+						result = (T)((object)((long)((object)values[0]) - (long)((object)values[1])));
+						return result;
 					case '/':
-						return (T)((object)((long)((object)values[0]) / (long)((object)values[1])));
+						result = (T)((object)((long)((object)values[0]) / (long)((object)values[1])));
+						return result;
 					}
-					goto IL_5A1;
+					goto IL_616;
 				}
+				IL_765:;
 			}
-			IL_6D1:
-			return default(T);
+			result = default(T);
+			return result;
 		}
 
 		private static bool TryParse<T>(string expression, out T result)

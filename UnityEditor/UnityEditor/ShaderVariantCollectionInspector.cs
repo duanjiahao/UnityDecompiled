@@ -9,9 +9,9 @@ namespace UnityEditor
 	{
 		private class Styles
 		{
-			public static readonly GUIContent iconAdd = EditorGUIUtility.IconContent("Toolbar Plus", "Add variant");
+			public static readonly GUIContent iconAdd = EditorGUIUtility.IconContent("Toolbar Plus", "|Add variant");
 
-			public static readonly GUIContent iconRemove = EditorGUIUtility.IconContent("Toolbar Minus", "Remove entry");
+			public static readonly GUIContent iconRemove = EditorGUIUtility.IconContent("Toolbar Minus", "|Remove entry");
 
 			public static readonly GUIStyle invisibleButton = "InvisibleButton";
 		}
@@ -39,18 +39,20 @@ namespace UnityEditor
 			if (array.Length == 0)
 			{
 				EditorApplication.Beep();
-				return;
 			}
-			popupData.keywords = new string[array.Length][];
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				popupData.keywords[i] = array[i].Split(new char[]
+				popupData.keywords = new string[array.Length][];
+				for (int i = 0; i < array.Length; i++)
 				{
-					' '
-				});
+					popupData.keywords[i] = array[i].Split(new char[]
+					{
+						' '
+					});
+				}
+				AddShaderVariantWindow.ShowAddVariantWindow(popupData);
+				GUIUtility.ExitGUI();
 			}
-			AddShaderVariantWindow.ShowAddVariantWindow(popupData);
-			GUIUtility.ExitGUI();
 		}
 
 		private void DrawShaderEntry(int shaderIndex)
@@ -92,7 +94,7 @@ namespace UnityEditor
 			Rect addRemoveButtonRect3 = ShaderVariantCollectionInspector.GetAddRemoveButtonRect(rect3);
 			if (GUI.Button(addRemoveButtonRect3, ShaderVariantCollectionInspector.Styles.iconAdd, ShaderVariantCollectionInspector.Styles.invisibleButton))
 			{
-				this.DisplayAddVariantsWindow(shader, this.target as ShaderVariantCollection);
+				this.DisplayAddVariantsWindow(shader, base.target as ShaderVariantCollection);
 			}
 		}
 
@@ -109,15 +111,18 @@ namespace UnityEditor
 				ObjectSelector.get.objectSelectorID = "ShaderVariantSelector".GetHashCode();
 				GUIUtility.ExitGUI();
 			}
-			if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "ObjectSelectorClosed" && ObjectSelector.get.objectSelectorID == "ShaderVariantSelector".GetHashCode())
+			if (Event.current.type == EventType.ExecuteCommand)
 			{
-				Shader shader = ObjectSelector.GetCurrentObject() as Shader;
-				if (shader != null)
+				if (Event.current.commandName == "ObjectSelectorClosed" && ObjectSelector.get.objectSelectorID == "ShaderVariantSelector".GetHashCode())
 				{
-					ShaderUtil.AddNewShaderToCollection(shader, this.target as ShaderVariantCollection);
+					Shader shader = ObjectSelector.GetCurrentObject() as Shader;
+					if (shader != null)
+					{
+						ShaderUtil.AddNewShaderToCollection(shader, base.target as ShaderVariantCollection);
+					}
+					Event.current.Use();
+					GUIUtility.ExitGUI();
 				}
-				Event.current.Use();
-				GUIUtility.ExitGUI();
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}

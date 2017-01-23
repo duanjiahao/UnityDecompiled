@@ -32,38 +32,32 @@ namespace UnityEditorInternal.VersionControl
 
 		public static void DrawOverlay(Asset asset, Rect itemRect)
 		{
-			if (asset == null)
+			if (asset != null)
 			{
-				return;
+				if (Event.current.type == EventType.Repaint)
+				{
+					string externalVersionControl = EditorSettings.externalVersionControl;
+					if (!(externalVersionControl == ExternalVersionControl.Disabled) && !(externalVersionControl == ExternalVersionControl.AutoDetect) && !(externalVersionControl == ExternalVersionControl.Generic) && !(externalVersionControl == ExternalVersionControl.AssetServer))
+					{
+						Overlay.DrawOverlays(asset, null, itemRect);
+					}
+				}
 			}
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			string externalVersionControl = EditorSettings.externalVersionControl;
-			if (externalVersionControl == ExternalVersionControl.Disabled || externalVersionControl == ExternalVersionControl.AutoDetect || externalVersionControl == ExternalVersionControl.Generic || externalVersionControl == ExternalVersionControl.AssetServer)
-			{
-				return;
-			}
-			Overlay.DrawOverlays(asset, null, itemRect);
 		}
 
 		public static void DrawOverlay(Asset asset, Asset metaAsset, Rect itemRect)
 		{
-			if (asset == null || metaAsset == null)
+			if (asset != null && metaAsset != null)
 			{
-				return;
+				if (Event.current.type == EventType.Repaint)
+				{
+					string externalVersionControl = EditorSettings.externalVersionControl;
+					if (!(externalVersionControl == ExternalVersionControl.Disabled) && !(externalVersionControl == ExternalVersionControl.AutoDetect) && !(externalVersionControl == ExternalVersionControl.Generic) && !(externalVersionControl == ExternalVersionControl.AssetServer))
+					{
+						Overlay.DrawOverlays(asset, metaAsset, itemRect);
+					}
+				}
 			}
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			string externalVersionControl = EditorSettings.externalVersionControl;
-			if (externalVersionControl == ExternalVersionControl.Disabled || externalVersionControl == ExternalVersionControl.AutoDetect || externalVersionControl == ExternalVersionControl.Generic || externalVersionControl == ExternalVersionControl.AssetServer)
-			{
-				return;
-			}
-			Overlay.DrawOverlays(asset, metaAsset, itemRect);
 		}
 
 		private static void DrawMetaOverlay(Rect iconRect, bool isRemote)
@@ -88,16 +82,14 @@ namespace UnityEditorInternal.VersionControl
 		private static void DrawOverlay(Asset.States state, Rect iconRect)
 		{
 			Rect atlasRectForState = Provider.GetAtlasRectForState((int)state);
-			if (atlasRectForState.width == 0f)
+			if (atlasRectForState.width != 0f)
 			{
-				return;
+				Texture2D overlayAtlas = Provider.overlayAtlas;
+				if (!(overlayAtlas == null))
+				{
+					GUI.DrawTextureWithTexCoords(iconRect, overlayAtlas, atlasRectForState);
+				}
 			}
-			Texture2D overlayAtlas = Provider.overlayAtlas;
-			if (overlayAtlas == null)
-			{
-				return;
-			}
-			GUI.DrawTextureWithTexCoords(iconRect, overlayAtlas, atlasRectForState);
 		}
 
 		private static void DrawOverlays(Asset asset, Asset metaAsset, Rect itemRect)

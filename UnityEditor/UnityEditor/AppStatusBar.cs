@@ -11,7 +11,7 @@ namespace UnityEditor
 
 		private static GUIContent[] s_StatusWheel;
 
-		private string m_LastMiniMemoryOverview = string.Empty;
+		private string m_LastMiniMemoryOverview = "";
 
 		private static GUIStyle background;
 

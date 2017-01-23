@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace UnityEditor
 			set;
 		}
 
-		public GameObjectsTreeViewDragging(TreeView treeView) : base(treeView)
+		public GameObjectsTreeViewDragging(TreeViewController treeView) : base(treeView)
 		{
 			this.allowDragBetween = true;
 		}
@@ -87,36 +88,42 @@ namespace UnityEditor
 		public override DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPos)
 		{
 			DragAndDropVisualMode dragAndDropVisualMode = this.DoDragScenes(parentItem as GameObjectTreeViewItem, targetItem as GameObjectTreeViewItem, perform, dropPos);
+			DragAndDropVisualMode result;
 			if (dragAndDropVisualMode != DragAndDropVisualMode.None)
 			{
-				return dragAndDropVisualMode;
+				result = dragAndDropVisualMode;
 			}
-			if (parentItem == null || targetItem == null)
+			else if (parentItem == null || targetItem == null)
 			{
-				return InternalEditorUtility.HierarchyWindowDrag(null, perform, InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
+				result = InternalEditorUtility.HierarchyWindowDrag(null, perform, InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
 			}
-			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
-			if (this.allowDragBetween)
+			else
 			{
-				if (dropPos == TreeViewDragging.DropPosition.Above || !hierarchyProperty.Find(targetItem.id, null))
+				HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
+				if (this.allowDragBetween)
+				{
+					if (!hierarchyProperty.Find(targetItem.id, null))
+					{
+						hierarchyProperty = null;
+					}
+				}
+				else if (!hierarchyProperty.Find(parentItem.id, null))
 				{
 					hierarchyProperty = null;
 				}
+				InternalEditorUtility.HierarchyDropMode hierarchyDropMode = InternalEditorUtility.HierarchyDropMode.kHierarchyDragNormal;
+				if (this.allowDragBetween)
+				{
+					hierarchyDropMode = ((dropPos != TreeViewDragging.DropPosition.Upon) ? InternalEditorUtility.HierarchyDropMode.kHierarchyDropBetween : InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
+				}
+				bool flag = parentItem != null && targetItem != parentItem && dropPos == TreeViewDragging.DropPosition.Above && parentItem.children[0] == targetItem;
+				if (flag)
+				{
+					hierarchyDropMode |= InternalEditorUtility.HierarchyDropMode.kHierarchyDropAfterParent;
+				}
+				result = InternalEditorUtility.HierarchyWindowDrag(hierarchyProperty, perform, hierarchyDropMode);
 			}
-			else if (dropPos == TreeViewDragging.DropPosition.Above || !hierarchyProperty.Find(parentItem.id, null))
-			{
-				hierarchyProperty = null;
-			}
-			InternalEditorUtility.HierarchyDropMode hierarchyDropMode = InternalEditorUtility.HierarchyDropMode.kHierarchyDragNormal;
-			if (this.allowDragBetween)
-			{
-				hierarchyDropMode = ((dropPos != TreeViewDragging.DropPosition.Upon) ? InternalEditorUtility.HierarchyDropMode.kHierarchyDropBetween : InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
-			}
-			if (parentItem != null && parentItem == targetItem && dropPos != TreeViewDragging.DropPosition.Above)
-			{
-				hierarchyDropMode |= InternalEditorUtility.HierarchyDropMode.kHierarchyDropAfterParent;
-			}
-			return InternalEditorUtility.HierarchyWindowDrag(hierarchyProperty, perform, hierarchyDropMode);
+			return result;
 		}
 
 		public override void DragCleanup(bool revertExpanded)
@@ -128,16 +135,19 @@ namespace UnityEditor
 		private List<Scene> GetDraggedScenes(List<int> draggedItemIDs)
 		{
 			List<Scene> list = new List<Scene>();
+			List<Scene> result;
 			foreach (int current in draggedItemIDs)
 			{
 				Scene sceneByHandle = EditorSceneManager.GetSceneByHandle(current);
 				if (!SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(sceneByHandle))
 				{
-					return null;
+					result = null;
+					return result;
 				}
 				list.Add(sceneByHandle);
 			}
-			return list;
+			result = list;
+			return result;
 		}
 
 		private DragAndDropVisualMode DoDragScenes(GameObjectTreeViewItem parentItem, GameObjectTreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPos)
@@ -159,96 +169,101 @@ namespace UnityEditor
 				}
 				flag2 = (num == DragAndDrop.objectReferences.Length);
 			}
+			DragAndDropVisualMode result;
 			if (!flag && !flag2)
 			{
-				return DragAndDropVisualMode.None;
+				result = DragAndDropVisualMode.None;
 			}
-			if (perform)
+			else
 			{
-				List<Scene> list2 = null;
-				if (flag2)
+				if (perform)
 				{
-					List<Scene> list3 = new List<Scene>();
-					UnityEngine.Object[] objectReferences2 = DragAndDrop.objectReferences;
-					for (int j = 0; j < objectReferences2.Length; j++)
+					List<Scene> list2 = null;
+					if (flag2)
 					{
-						UnityEngine.Object assetObject = objectReferences2[j];
-						string assetPath = AssetDatabase.GetAssetPath(assetObject);
-						Scene scene = SceneManager.GetSceneByPath(assetPath);
-						if (SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(scene))
+						List<Scene> list3 = new List<Scene>();
+						UnityEngine.Object[] objectReferences2 = DragAndDrop.objectReferences;
+						for (int j = 0; j < objectReferences2.Length; j++)
 						{
-							this.m_TreeView.Frame(scene.handle, true, true);
-						}
-						else
-						{
-							bool alt = Event.current.alt;
-							if (alt)
+							UnityEngine.Object assetObject = objectReferences2[j];
+							string assetPath = AssetDatabase.GetAssetPath(assetObject);
+							Scene scene = SceneManager.GetSceneByPath(assetPath);
+							if (SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(scene))
 							{
-								scene = EditorSceneManager.OpenScene(assetPath, OpenSceneMode.AdditiveWithoutLoading);
+								this.m_TreeView.Frame(scene.handle, true, true);
 							}
 							else
 							{
-								scene = EditorSceneManager.OpenScene(assetPath, OpenSceneMode.Additive);
-							}
-							if (SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(scene))
-							{
-								list3.Add(scene);
+								bool alt = Event.current.alt;
+								if (alt)
+								{
+									scene = EditorSceneManager.OpenScene(assetPath, OpenSceneMode.AdditiveWithoutLoading);
+								}
+								else
+								{
+									scene = EditorSceneManager.OpenScene(assetPath, OpenSceneMode.Additive);
+								}
+								if (SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(scene))
+								{
+									list3.Add(scene);
+								}
 							}
 						}
-					}
-					if (targetItem != null)
-					{
-						list2 = list3;
-					}
-					if (list3.Count > 0)
-					{
-						Selection.instanceIDs = (from x in list3
-						select x.handle).ToArray<int>();
-						this.m_TreeView.Frame(list3.Last<Scene>().handle, true, false);
-					}
-				}
-				else
-				{
-					list2 = list;
-				}
-				if (list2 != null)
-				{
-					if (targetItem != null)
-					{
-						Scene scene2 = targetItem.scene;
-						if (SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(scene2))
+						if (targetItem != null)
 						{
-							if (!targetItem.isSceneHeader || dropPos == TreeViewDragging.DropPosition.Upon)
-							{
-								dropPos = TreeViewDragging.DropPosition.Below;
-							}
-							if (dropPos == TreeViewDragging.DropPosition.Above)
-							{
-								for (int k = 0; k < list2.Count; k++)
-								{
-									EditorSceneManager.MoveSceneBefore(list2[k], scene2);
-								}
-							}
-							else if (dropPos == TreeViewDragging.DropPosition.Below)
-							{
-								for (int l = list2.Count - 1; l >= 0; l--)
-								{
-									EditorSceneManager.MoveSceneAfter(list2[l], scene2);
-								}
-							}
+							list2 = list3;
+						}
+						if (list3.Count > 0)
+						{
+							Selection.instanceIDs = (from x in list3
+							select x.handle).ToArray<int>();
+							this.m_TreeView.Frame(list3.Last<Scene>().handle, true, false);
 						}
 					}
 					else
 					{
-						Scene sceneAt = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
-						for (int m = list2.Count - 1; m >= 0; m--)
+						list2 = list;
+					}
+					if (list2 != null)
+					{
+						if (targetItem != null)
 						{
-							EditorSceneManager.MoveSceneAfter(list2[m], sceneAt);
+							Scene scene2 = targetItem.scene;
+							if (SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(scene2))
+							{
+								if (!targetItem.isSceneHeader || dropPos == TreeViewDragging.DropPosition.Upon)
+								{
+									dropPos = TreeViewDragging.DropPosition.Below;
+								}
+								if (dropPos == TreeViewDragging.DropPosition.Above)
+								{
+									for (int k = 0; k < list2.Count; k++)
+									{
+										EditorSceneManager.MoveSceneBefore(list2[k], scene2);
+									}
+								}
+								else if (dropPos == TreeViewDragging.DropPosition.Below)
+								{
+									for (int l = list2.Count - 1; l >= 0; l--)
+									{
+										EditorSceneManager.MoveSceneAfter(list2[l], scene2);
+									}
+								}
+							}
+						}
+						else
+						{
+							Scene sceneAt = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+							for (int m = list2.Count - 1; m >= 0; m--)
+							{
+								EditorSceneManager.MoveSceneAfter(list2[m], sceneAt);
+							}
 						}
 					}
 				}
+				result = DragAndDropVisualMode.Move;
 			}
-			return DragAndDropVisualMode.Move;
+			return result;
 		}
 	}
 }

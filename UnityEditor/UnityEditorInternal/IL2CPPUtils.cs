@@ -36,6 +36,13 @@ namespace UnityEditorInternal
 			return iL2CPPBuilder;
 		}
 
+		internal static IL2CPPBuilder RunCompileAndLink(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool developmentBuild)
+		{
+			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(tempFolder, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, developmentBuild);
+			iL2CPPBuilder.RunCompileAndLink();
+			return iL2CPPBuilder;
+		}
+
 		internal static void CopyEmbeddedResourceFiles(string tempFolder, string destinationFolder)
 		{
 			foreach (string current in from f in Directory.GetFiles(Paths.Combine(new string[]
@@ -81,6 +88,17 @@ namespace UnityEditorInternal
 					Path.GetFileName(current)
 				}), true);
 			}
+		}
+
+		internal static void CopyConfigFiles(string tempFolder, string destinationFolder)
+		{
+			string source = Paths.Combine(new string[]
+			{
+				IL2CPPBuilder.GetCppOutputPath(tempFolder),
+				"Data",
+				"etc"
+			});
+			FileUtil.CopyDirectoryRecursive(source, destinationFolder);
 		}
 	}
 }

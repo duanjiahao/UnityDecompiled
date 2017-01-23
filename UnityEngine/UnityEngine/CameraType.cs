@@ -7,6 +7,7 @@ namespace UnityEngine
 	{
 		Game = 1,
 		SceneView = 2,
-		Preview = 4
+		Preview = 4,
+		VR = 8
 	}
 }

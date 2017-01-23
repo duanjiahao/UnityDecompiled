@@ -8,7 +8,6 @@ namespace UnityEngine
 	{
 		private List<RectTransform> m_Tracked;
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CanRecordModifications();
 

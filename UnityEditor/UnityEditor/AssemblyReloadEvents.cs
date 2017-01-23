@@ -1,6 +1,5 @@
 using System;
 using UnityEditorInternal;
-using UnityEngine;
 
 namespace UnityEditor
 {
@@ -8,7 +7,6 @@ namespace UnityEditor
 	{
 		public static void OnBeforeAssemblyReload()
 		{
-			Security.ClearVerifiedAssemblies();
 			InternalEditorUtility.AuxWindowManager_OnAssemblyReload();
 		}
 

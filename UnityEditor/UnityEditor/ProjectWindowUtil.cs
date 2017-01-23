@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditorInternal;
 using UnityEngine;
@@ -37,11 +36,16 @@ namespace UnityEditor
 		internal static string GetActiveFolderPath()
 		{
 			ProjectBrowser projectBrowserIfExists = ProjectWindowUtil.GetProjectBrowserIfExists();
+			string result;
 			if (projectBrowserIfExists == null)
 			{
-				return "Assets";
+				result = "Assets";
 			}
-			return projectBrowserIfExists.GetActiveFolderPath();
+			else
+			{
+				result = projectBrowserIfExists.GetActiveFolderPath();
+			}
+			return result;
 		}
 
 		internal static void EndNameEditAction(EndNameEditAction action, int instanceId, string pathName, string resourceFile)
@@ -77,7 +81,7 @@ namespace UnityEditor
 		private static void CreateScriptAsset(string templatePath, string destName)
 		{
 			string fileName = Path.GetFileName(templatePath);
-			if (fileName.ToLower().Contains("test"))
+			if (fileName.ToLower().Contains("editortest"))
 			{
 				string text = AssetDatabase.GetUniquePathNameAtSelectedPath(destName);
 				if (!text.ToLower().Contains("/editor/"))
@@ -95,23 +99,31 @@ namespace UnityEditor
 			}
 			string extension = Path.GetExtension(destName);
 			Texture2D icon;
-			switch (extension)
+			if (extension != null)
 			{
-			case ".js":
-				icon = (EditorGUIUtility.IconContent("js Script Icon").image as Texture2D);
-				goto IL_19D;
-			case ".cs":
-				icon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
-				goto IL_19D;
-			case ".boo":
-				icon = (EditorGUIUtility.IconContent("boo Script Icon").image as Texture2D);
-				goto IL_19D;
-			case ".shader":
-				icon = (EditorGUIUtility.IconContent("Shader Icon").image as Texture2D);
-				goto IL_19D;
+				if (extension == ".js")
+				{
+					icon = (EditorGUIUtility.IconContent("js Script Icon").image as Texture2D);
+					goto IL_16F;
+				}
+				if (extension == ".cs")
+				{
+					icon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
+					goto IL_16F;
+				}
+				if (extension == ".boo")
+				{
+					icon = (EditorGUIUtility.IconContent("boo Script Icon").image as Texture2D);
+					goto IL_16F;
+				}
+				if (extension == ".shader")
+				{
+					icon = (EditorGUIUtility.IconContent("Shader Icon").image as Texture2D);
+					goto IL_16F;
+				}
 			}
 			icon = (EditorGUIUtility.IconContent("TextAsset Icon").image as Texture2D);
-			IL_19D:
+			IL_16F:
 			ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, ScriptableObject.CreateInstance<DoCreateScriptAsset>(), destName, icon, templatePath);
 		}
 
@@ -138,40 +150,40 @@ namespace UnityEditor
 
 		private static void CreateSpritePolygon(int sides)
 		{
-			string str = string.Empty;
+			string str;
 			switch (sides)
 			{
 			case 0:
 				str = "Square";
-				goto IL_8F;
+				goto IL_8E;
 			case 1:
 			case 2:
 			case 5:
-				IL_2A:
+				IL_29:
 				if (sides == 42)
 				{
 					str = "Everythingon";
-					goto IL_8F;
+					goto IL_8E;
 				}
 				if (sides != 128)
 				{
 					str = "Polygon";
-					goto IL_8F;
+					goto IL_8E;
 				}
 				str = "Circle";
-				goto IL_8F;
+				goto IL_8E;
 			case 3:
 				str = "Triangle";
-				goto IL_8F;
+				goto IL_8E;
 			case 4:
 				str = "Diamond";
-				goto IL_8F;
+				goto IL_8E;
 			case 6:
 				str = "Hexagon";
-				goto IL_8F;
+				goto IL_8E;
 			}
-			goto IL_2A;
-			IL_8F:
+			goto IL_29;
+			IL_8E:
 			Texture2D icon = EditorGUIUtility.IconContent("Sprite Icon").image as Texture2D;
 			DoCreateSpritePolygon doCreateSpritePolygon = ScriptableObject.CreateInstance<DoCreateSpritePolygon>();
 			doCreateSpritePolygon.sides = sides;
@@ -181,30 +193,24 @@ namespace UnityEditor
 		internal static UnityEngine.Object CreateScriptAssetFromTemplate(string pathName, string resourceFile)
 		{
 			string fullPath = Path.GetFullPath(pathName);
-			StreamReader streamReader = new StreamReader(resourceFile);
-			string text = streamReader.ReadToEnd();
-			streamReader.Close();
+			string text = File.ReadAllText(resourceFile);
+			text = text.Replace("#NOTRIM#", "");
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pathName);
-			text = Regex.Replace(text, "#NAME#", fileNameWithoutExtension);
-			string text2 = Regex.Replace(fileNameWithoutExtension, " ", string.Empty);
-			text = Regex.Replace(text, "#SCRIPTNAME#", text2);
+			text = text.Replace("#NAME#", fileNameWithoutExtension);
+			string text2 = fileNameWithoutExtension.Replace(" ", "");
+			text = text.Replace("#SCRIPTNAME#", text2);
 			if (char.IsUpper(text2, 0))
 			{
 				text2 = char.ToLower(text2[0]) + text2.Substring(1);
-				text = Regex.Replace(text, "#SCRIPTNAME_LOWER#", text2);
+				text = text.Replace("#SCRIPTNAME_LOWER#", text2);
 			}
 			else
 			{
 				text2 = "my" + char.ToUpper(text2[0]) + text2.Substring(1);
-				text = Regex.Replace(text, "#SCRIPTNAME_LOWER#", text2);
+				text = text.Replace("#SCRIPTNAME_LOWER#", text2);
 			}
-			bool encoderShouldEmitUTF8Identifier = true;
-			bool throwOnInvalidBytes = false;
-			UTF8Encoding encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier, throwOnInvalidBytes);
-			bool append = false;
-			StreamWriter streamWriter = new StreamWriter(fullPath, append, encoding);
-			streamWriter.Write(text);
-			streamWriter.Close();
+			UTF8Encoding encoding = new UTF8Encoding(true);
+			File.WriteAllText(fullPath, text, encoding);
 			AssetDatabase.ImportAsset(pathName);
 			return AssetDatabase.LoadAssetAtPath(pathName, typeof(UnityEngine.Object));
 		}
@@ -251,7 +257,7 @@ namespace UnityEditor
 		internal static void StartDrag(int draggedInstanceID, List<int> selectedInstanceIDs)
 		{
 			DragAndDrop.PrepareStartDrag();
-			string title = string.Empty;
+			string title = "";
 			if (ProjectWindowUtil.IsFavoritesItem(draggedInstanceID))
 			{
 				DragAndDrop.SetGenericData(ProjectWindowUtil.k_DraggingFavoriteGenericData, draggedInstanceID);
@@ -261,7 +267,7 @@ namespace UnityEditor
 			{
 				bool flag = ProjectWindowUtil.IsFolder(draggedInstanceID);
 				DragAndDrop.objectReferences = ProjectWindowUtil.GetDragAndDropObjects(draggedInstanceID, selectedInstanceIDs);
-				DragAndDrop.SetGenericData(ProjectWindowUtil.k_IsFolderGenericData, (!flag) ? string.Empty : "isFolder");
+				DragAndDrop.SetGenericData(ProjectWindowUtil.k_IsFolderGenericData, (!flag) ? "" : "isFolder");
 				string[] dragAndDropPaths = ProjectWindowUtil.GetDragAndDropPaths(draggedInstanceID, selectedInstanceIDs);
 				if (dragAndDropPaths.Length > 0)
 				{
@@ -316,18 +322,26 @@ namespace UnityEditor
 				}
 			}
 			string assetPath2 = AssetDatabase.GetAssetPath(draggedInstanceID);
-			if (string.IsNullOrEmpty(assetPath2))
+			string[] result;
+			if (!string.IsNullOrEmpty(assetPath2))
 			{
-				return new string[0];
+				if (list.Contains(assetPath2))
+				{
+					result = list.ToArray();
+				}
+				else
+				{
+					result = new string[]
+					{
+						assetPath2
+					};
+				}
 			}
-			if (list.Contains(assetPath2))
+			else
 			{
-				return list.ToArray();
+				result = new string[0];
 			}
-			return new string[]
-			{
-				assetPath2
-			};
+			return result;
 		}
 
 		public static int[] GetAncestors(int instanceID)
@@ -356,63 +370,76 @@ namespace UnityEditor
 
 		public static string GetContainingFolder(string path)
 		{
+			string result;
 			if (string.IsNullOrEmpty(path))
 			{
-				return null;
+				result = null;
 			}
-			path = path.Trim(new char[]
+			else
 			{
-				'/'
-			});
-			int num = path.LastIndexOf("/", StringComparison.Ordinal);
-			if (num != -1)
-			{
-				return path.Substring(0, num);
+				path = path.Trim(new char[]
+				{
+					'/'
+				});
+				int num = path.LastIndexOf("/", StringComparison.Ordinal);
+				if (num != -1)
+				{
+					result = path.Substring(0, num);
+				}
+				else
+				{
+					result = null;
+				}
 			}
-			return null;
+			return result;
 		}
 
 		public static string[] GetBaseFolders(string[] folders)
 		{
+			string[] result;
 			if (folders.Length <= 1)
 			{
-				return folders;
+				result = folders;
 			}
-			List<string> list = new List<string>();
-			List<string> list2 = new List<string>(folders);
-			for (int i = 0; i < list2.Count; i++)
+			else
 			{
-				list2[i] = list2[i].Trim(new char[]
+				List<string> list = new List<string>();
+				List<string> list2 = new List<string>(folders);
+				for (int i = 0; i < list2.Count; i++)
 				{
-					'/'
-				});
-			}
-			list2.Sort();
-			for (int j = 0; j < list2.Count; j++)
-			{
-				if (!list2[j].EndsWith("/"))
-				{
-					list2[j] += "/";
+					list2[i] = list2[i].Trim(new char[]
+					{
+						'/'
+					});
 				}
-			}
-			string text = list2[0];
-			list.Add(text);
-			for (int k = 1; k < list2.Count; k++)
-			{
-				if (list2[k].IndexOf(text, StringComparison.Ordinal) != 0)
+				list2.Sort();
+				for (int j = 0; j < list2.Count; j++)
 				{
-					list.Add(list2[k]);
-					text = list2[k];
+					if (!list2[j].EndsWith("/"))
+					{
+						list2[j] += "/";
+					}
 				}
-			}
-			for (int l = 0; l < list.Count; l++)
-			{
-				list[l] = list[l].Trim(new char[]
+				string text = list2[0];
+				list.Add(text);
+				for (int k = 1; k < list2.Count; k++)
 				{
-					'/'
-				});
+					if (list2[k].IndexOf(text, StringComparison.Ordinal) != 0)
+					{
+						list.Add(list2[k]);
+						text = list2[k];
+					}
+				}
+				for (int l = 0; l < list.Count; l++)
+				{
+					list[l] = list[l].Trim(new char[]
+					{
+						'/'
+					});
+				}
+				result = list.ToArray();
 			}
-			return list.ToArray();
+			return result;
 		}
 
 		internal static void DuplicateSelectedAssets()

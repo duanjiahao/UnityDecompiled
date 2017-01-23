@@ -117,11 +117,11 @@ namespace UnityEditor.Modules
 			}
 		}
 
-		protected bool hasModified;
+		protected bool hasModified = false;
 
-		protected DefaultPluginImporterExtension.Property[] properties;
+		protected DefaultPluginImporterExtension.Property[] properties = null;
 
-		internal bool propertiesRefreshed;
+		internal bool propertiesRefreshed = false;
 
 		public DefaultPluginImporterExtension(DefaultPluginImporterExtension.Property[] properties)
 		{
@@ -141,15 +141,14 @@ namespace UnityEditor.Modules
 
 		public virtual void Apply(PluginImporterInspector inspector)
 		{
-			if (!this.propertiesRefreshed)
+			if (this.propertiesRefreshed)
 			{
-				return;
-			}
-			DefaultPluginImporterExtension.Property[] array = this.properties;
-			for (int i = 0; i < array.Length; i++)
-			{
-				DefaultPluginImporterExtension.Property property = array[i];
-				property.Apply(inspector);
+				DefaultPluginImporterExtension.Property[] array = this.properties;
+				for (int i = 0; i < array.Length; i++)
+				{
+					DefaultPluginImporterExtension.Property property = array[i];
+					property.Apply(inspector);
+				}
 			}
 		}
 
@@ -235,11 +234,22 @@ namespace UnityEditor.Modules
 				List<PluginImporter> value = current.Value;
 				if (value.Count != 1)
 				{
-					flag = true;
-					stringBuilder.AppendLine(string.Format("Plugin '{0}' is used from several locations:", Path.GetFileName(current.Key)));
+					int num = 0;
 					foreach (PluginImporter current2 in value)
 					{
-						stringBuilder.AppendLine(" " + current2.assetPath + " would be copied to <PluginPath>/" + current.Key.Replace("\\", "/"));
+						if (!current2.GetIsOverridable())
+						{
+							num++;
+						}
+					}
+					if (num != 1)
+					{
+						flag = true;
+						stringBuilder.AppendLine(string.Format("Plugin '{0}' is used from several locations:", Path.GetFileName(current.Key)));
+						foreach (PluginImporter current3 in value)
+						{
+							stringBuilder.AppendLine(" " + current3.assetPath + " would be copied to <PluginPath>/" + current.Key.Replace("\\", "/"));
+						}
 					}
 				}
 			}

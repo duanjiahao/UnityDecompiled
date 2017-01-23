@@ -44,9 +44,9 @@ namespace UnityEditor
 			get
 			{
 				List<Vector3> list = new List<Vector3>();
-				for (int i = 0; i < this.m_Selection.Count; i++)
+				foreach (int current in this.m_Selection)
 				{
-					list.Add(this.m_SourcePositions[i]);
+					list.Add(this.m_SourcePositions[current]);
 				}
 				return this.GetBounds(list);
 			}
@@ -114,9 +114,10 @@ namespace UnityEditor
 		public void SelectAllProbes()
 		{
 			this.DeselectProbes();
-			for (int i = 0; i < this.m_SourcePositions.Count; i++)
+			int count = this.m_SourcePositions.Count;
+			for (int i = 0; i < count; i++)
 			{
-				this.SelectProbe(i);
+				this.m_Selection.Add(i);
 			}
 		}
 
@@ -134,20 +135,19 @@ namespace UnityEditor
 
 		public void DuplicateSelectedProbes()
 		{
-			if (this.m_Selection.Count == 0)
+			if (this.m_Selection.Count != 0)
 			{
-				return;
+				Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
+				{
+					this.m_Group,
+					this.m_SerializedSelectedProbes
+				}, "Duplicate Probes");
+				foreach (Vector3 current in this.SelectedProbePositions())
+				{
+					this.m_SourcePositions.Add(current);
+				}
+				this.MarkTetrahedraDirty();
 			}
-			Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
-			{
-				this.m_Group,
-				this.m_SerializedSelectedProbes
-			}, "Duplicate Probes");
-			foreach (Vector3 current in this.SelectedProbePositions())
-			{
-				this.m_SourcePositions.Add(current);
-			}
-			this.MarkTetrahedraDirty();
 		}
 
 		private void CopySelectedProbes()
@@ -224,24 +224,23 @@ namespace UnityEditor
 
 		public void RemoveSelectedProbes()
 		{
-			if (this.m_Selection.Count == 0)
+			if (this.m_Selection.Count != 0)
 			{
-				return;
+				Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
+				{
+					this.m_Group,
+					this.m_SerializedSelectedProbes
+				}, "Delete Probes");
+				IOrderedEnumerable<int> orderedEnumerable = from x in this.m_Selection
+				orderby x descending
+				select x;
+				foreach (int current in orderedEnumerable)
+				{
+					this.m_SourcePositions.RemoveAt(current);
+				}
+				this.DeselectProbes();
+				this.MarkTetrahedraDirty();
 			}
-			Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
-			{
-				this.m_Group,
-				this.m_SerializedSelectedProbes
-			}, "Delete Probes");
-			IOrderedEnumerable<int> orderedEnumerable = from x in this.m_Selection
-			orderby x descending
-			select x;
-			foreach (int current in orderedEnumerable)
-			{
-				this.m_SourcePositions.RemoveAt(current);
-			}
-			this.DeselectProbes();
-			this.MarkTetrahedraDirty();
 		}
 
 		public void PullProbePositions()
@@ -252,42 +251,19 @@ namespace UnityEditor
 
 		public void PushProbePositions()
 		{
-			bool flag = false;
-			if (this.m_Group.probePositions.Length != this.m_SourcePositions.Count || this.m_SerializedSelectedProbes.m_Selection.Count != this.m_Selection.Count)
-			{
-				flag = true;
-			}
-			if (!flag)
-			{
-				if (this.m_Group.probePositions.Where((Vector3 t, int i) => t != this.m_SourcePositions[i]).Any<Vector3>())
-				{
-					flag = true;
-				}
-				for (int j = 0; j < this.m_SerializedSelectedProbes.m_Selection.Count; j++)
-				{
-					if (this.m_SerializedSelectedProbes.m_Selection[j] != this.m_Selection[j])
-					{
-						flag = true;
-					}
-				}
-			}
-			if (flag)
-			{
-				this.m_Group.probePositions = this.m_SourcePositions.ToArray();
-				this.m_SerializedSelectedProbes.m_Selection = this.m_Selection;
-			}
+			this.m_Group.probePositions = this.m_SourcePositions.ToArray();
+			this.m_SerializedSelectedProbes.m_Selection = this.m_Selection;
 		}
 
 		private void DrawTetrahedra()
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			if (SceneView.lastActiveSceneView)
-			{
-				LightmapVisualization.DrawTetrahedra(this.m_ShouldRecalculateTetrahedra, SceneView.lastActiveSceneView.camera.transform.position);
-				this.m_ShouldRecalculateTetrahedra = false;
+				if (SceneView.lastActiveSceneView)
+				{
+					LightmapVisualization.DrawTetrahedra(this.m_ShouldRecalculateTetrahedra, SceneView.lastActiveSceneView.camera.transform.position);
+					this.m_ShouldRecalculateTetrahedra = false;
+				}
 			}
 		}
 
@@ -297,45 +273,61 @@ namespace UnityEditor
 			{
 				bool flag = Event.current.type == EventType.ExecuteCommand;
 				string commandName = Event.current.commandName;
-				switch (commandName)
+				if (commandName != null)
 				{
-				case "SoftDelete":
-				case "Delete":
-					if (flag)
+					if (!(commandName == "SoftDelete") && !(commandName == "Delete"))
 					{
-						this.RemoveSelectedProbes();
+						if (!(commandName == "Duplicate"))
+						{
+							if (!(commandName == "SelectAll"))
+							{
+								if (!(commandName == "Cut"))
+								{
+									if (commandName == "Copy")
+									{
+										if (flag)
+										{
+											this.CopySelectedProbes();
+										}
+										Event.current.Use();
+									}
+								}
+								else
+								{
+									if (flag)
+									{
+										this.CopySelectedProbes();
+										this.RemoveSelectedProbes();
+									}
+									Event.current.Use();
+								}
+							}
+							else
+							{
+								if (flag)
+								{
+									this.SelectAllProbes();
+								}
+								Event.current.Use();
+							}
+						}
+						else
+						{
+							if (flag)
+							{
+								this.DuplicateSelectedProbes();
+							}
+							Event.current.Use();
+						}
 					}
-					Event.current.Use();
-					break;
-				case "Duplicate":
-					if (flag)
+					else
 					{
-						this.DuplicateSelectedProbes();
+						if (flag)
+						{
+							this.RemoveSelectedProbes();
+						}
+						Event.current.Use();
 					}
-					Event.current.Use();
-					break;
-				case "SelectAll":
-					if (flag)
-					{
-						this.SelectAllProbes();
-					}
-					Event.current.Use();
-					break;
-				case "Cut":
-					if (flag)
-					{
-						this.CopySelectedProbes();
-						this.RemoveSelectedProbes();
-					}
-					Event.current.Use();
-					break;
-				case "Copy":
-					if (flag)
-					{
-						this.CopySelectedProbes();
-					}
-					Event.current.Use();
-					break;
 				}
 			}
 		}
@@ -347,107 +339,131 @@ namespace UnityEditor
 			{
 				positions = new Vector3[0];
 				indices = new int[0];
-				return;
 			}
-			List<Vector3> list = new List<Vector3>();
-			LightProbeGroup[] array2 = array;
-			for (int i = 0; i < array2.Length; i++)
+			else
 			{
-				LightProbeGroup lightProbeGroup = array2[i];
-				Vector3[] probePositions = lightProbeGroup.probePositions;
-				Vector3[] array3 = probePositions;
-				for (int j = 0; j < array3.Length; j++)
+				List<Vector3> list = new List<Vector3>();
+				LightProbeGroup[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
 				{
-					Vector3 position = array3[j];
-					Vector3 item = lightProbeGroup.transform.TransformPoint(position);
-					list.Add(item);
+					LightProbeGroup lightProbeGroup = array2[i];
+					Vector3[] probePositions = lightProbeGroup.probePositions;
+					Vector3[] array3 = probePositions;
+					for (int j = 0; j < array3.Length; j++)
+					{
+						Vector3 position = array3[j];
+						Vector3 item = lightProbeGroup.transform.TransformPoint(position);
+						list.Add(item);
+					}
+				}
+				if (list.Count == 0)
+				{
+					positions = new Vector3[0];
+					indices = new int[0];
+				}
+				else
+				{
+					Lightmapping.Tetrahedralize(list.ToArray(), out indices, out positions);
 				}
 			}
-			if (list.Count == 0)
-			{
-				positions = new Vector3[0];
-				indices = new int[0];
-				return;
-			}
-			Lightmapping.Tetrahedralize(list.ToArray(), out indices, out positions);
 		}
 
 		public bool OnSceneGUI(Transform transform)
 		{
+			bool editing;
 			if (!this.m_Group.enabled)
 			{
-				return this.m_Editing;
+				editing = this.m_Editing;
 			}
-			if (Event.current.type == EventType.Layout)
+			else
 			{
-				if (this.m_LastPosition != this.m_Group.transform.position || this.m_LastRotation != this.m_Group.transform.rotation || this.m_LastScale != this.m_Group.transform.localScale)
+				if (Event.current.type == EventType.Layout)
 				{
-					this.MarkTetrahedraDirty();
+					if (this.m_LastPosition != this.m_Group.transform.position || this.m_LastRotation != this.m_Group.transform.rotation || this.m_LastScale != this.m_Group.transform.localScale)
+					{
+						this.MarkTetrahedraDirty();
+					}
+					this.m_LastPosition = this.m_Group.transform.position;
+					this.m_LastRotation = this.m_Group.transform.rotation;
+					this.m_LastScale = this.m_Group.transform.localScale;
 				}
-				this.m_LastPosition = this.m_Group.transform.position;
-				this.m_LastRotation = this.m_Group.transform.rotation;
-				this.m_LastScale = this.m_Group.transform.localScale;
-			}
-			bool firstSelect = false;
-			if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && this.SelectedCount == 0)
-			{
-				int num = PointEditor.FindNearest(Event.current.mousePosition, transform, this);
-				bool flag = num != -1;
-				if (flag && !this.m_Editing)
+				bool firstSelect = false;
+				if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
 				{
-					this.m_Inspector.StartEditMode();
-					this.m_Editing = true;
-					firstSelect = true;
+					if (this.SelectedCount == 0)
+					{
+						int num = PointEditor.FindNearest(Event.current.mousePosition, transform, this);
+						bool flag = num != -1;
+						if (flag && !this.m_Editing)
+						{
+							this.m_Inspector.StartEditMode();
+							this.m_Editing = true;
+							firstSelect = true;
+						}
+					}
+				}
+				bool flag2 = Event.current.type == EventType.MouseUp;
+				if (this.m_Editing)
+				{
+					if (PointEditor.SelectPoints(this, transform, ref this.m_Selection, firstSelect))
+					{
+						Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
+						{
+							this.m_Group,
+							this.m_SerializedSelectedProbes
+						}, "Select Probes");
+					}
+				}
+				if ((Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand) && Event.current.commandName == "Paste")
+				{
+					if (Event.current.type == EventType.ValidateCommand)
+					{
+						if (LightProbeGroupEditor.CanPasteProbes())
+						{
+							Event.current.Use();
+						}
+					}
+					if (Event.current.type == EventType.ExecuteCommand)
+					{
+						if (this.PasteProbes())
+						{
+							Event.current.Use();
+							this.m_Editing = true;
+						}
+					}
+				}
+				if (this.drawTetrahedra)
+				{
+					this.DrawTetrahedra();
+				}
+				PointEditor.Draw(this, transform, this.m_Selection, true);
+				if (!this.m_Editing)
+				{
+					editing = this.m_Editing;
+				}
+				else
+				{
+					this.HandleEditMenuHotKeyCommands();
+					if (this.m_Editing && PointEditor.MovePoints(this, transform, this.m_Selection))
+					{
+						Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
+						{
+							this.m_Group,
+							this.m_SerializedSelectedProbes
+						}, "Move Probes");
+						if (LightmapVisualization.dynamicUpdateLightProbes)
+						{
+							this.MarkTetrahedraDirty();
+						}
+					}
+					if (this.m_Editing && flag2 && !LightmapVisualization.dynamicUpdateLightProbes)
+					{
+						this.MarkTetrahedraDirty();
+					}
+					editing = this.m_Editing;
 				}
 			}
-			bool flag2 = Event.current.type == EventType.MouseUp;
-			if (this.m_Editing && PointEditor.SelectPoints(this, transform, ref this.m_Selection, firstSelect))
-			{
-				Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
-				{
-					this.m_Group,
-					this.m_SerializedSelectedProbes
-				}, "Select Probes");
-			}
-			if ((Event.current.type == EventType.ValidateCommand || Event.current.type == EventType.ExecuteCommand) && Event.current.commandName == "Paste")
-			{
-				if (Event.current.type == EventType.ValidateCommand && LightProbeGroupEditor.CanPasteProbes())
-				{
-					Event.current.Use();
-				}
-				if (Event.current.type == EventType.ExecuteCommand && this.PasteProbes())
-				{
-					Event.current.Use();
-					this.m_Editing = true;
-				}
-			}
-			if (this.drawTetrahedra)
-			{
-				this.DrawTetrahedra();
-			}
-			PointEditor.Draw(this, transform, this.m_Selection, true);
-			if (!this.m_Editing)
-			{
-				return this.m_Editing;
-			}
-			this.HandleEditMenuHotKeyCommands();
-			if (this.m_Editing && PointEditor.MovePoints(this, transform, this.m_Selection))
-			{
-				Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[]
-				{
-					this.m_Group,
-					this.m_SerializedSelectedProbes
-				}, "Move Probes");
-				if (LightmapVisualization.dynamicUpdateLightProbes)
-				{
-					this.MarkTetrahedraDirty();
-				}
-			}
-			if (this.m_Editing && flag2 && !LightmapVisualization.dynamicUpdateLightProbes)
-			{
-				this.MarkTetrahedraDirty();
-			}
-			return this.m_Editing;
+			return editing;
 		}
 
 		public void MarkTetrahedraDirty()
@@ -457,46 +473,19 @@ namespace UnityEditor
 
 		private Bounds GetBounds(List<Vector3> positions)
 		{
+			Bounds result;
 			if (positions.Count == 0)
 			{
-				return default(Bounds);
+				result = default(Bounds);
 			}
-			if (positions.Count == 1)
+			else if (positions.Count == 1)
 			{
-				return new Bounds(this.m_Group.transform.TransformPoint(positions[0]), new Vector3(1f, 1f, 1f));
+				result = new Bounds(this.m_Group.transform.TransformPoint(positions[0]), new Vector3(1f, 1f, 1f));
 			}
-			Vector3 min = new Vector3(3.40282347E+38f, 3.40282347E+38f, 3.40282347E+38f);
-			Vector3 max = new Vector3(-3.40282347E+38f, -3.40282347E+38f, -3.40282347E+38f);
-			foreach (Vector3 current in positions)
+			else
 			{
-				Vector3 vector = this.m_Group.transform.TransformPoint(current);
-				if (vector.x < min.x)
-				{
-					min.x = vector.x;
-				}
-				if (vector.y < min.y)
-				{
-					min.y = vector.y;
-				}
-				if (vector.z < min.z)
-				{
-					min.z = vector.z;
-				}
-				if (vector.x > max.x)
-				{
-					max.x = vector.x;
-				}
-				if (vector.y > max.y)
-				{
-					max.y = vector.y;
-				}
-				if (vector.z > max.z)
-				{
-					max.z = vector.z;
-				}
+				result = GeometryUtility.CalculateBounds(positions.ToArray(), this.m_Group.transform.localToWorldMatrix);
 			}
-			Bounds result = default(Bounds);
-			result.SetMinMax(min, max);
 			return result;
 		}
 
@@ -512,11 +501,10 @@ namespace UnityEditor
 
 		public void SetPosition(int idx, Vector3 position)
 		{
-			if (this.m_SourcePositions[idx] == position)
+			if (!(this.m_SourcePositions[idx] == position))
 			{
-				return;
+				this.m_SourcePositions[idx] = position;
 			}
-			this.m_SourcePositions[idx] = position;
 		}
 
 		public Color GetDefaultColor()
@@ -536,8 +524,9 @@ namespace UnityEditor
 
 		public Vector3[] GetSelectedPositions()
 		{
-			Vector3[] array = new Vector3[this.SelectedCount];
-			for (int i = 0; i < this.SelectedCount; i++)
+			int selectedCount = this.SelectedCount;
+			Vector3[] array = new Vector3[selectedCount];
+			for (int i = 0; i < selectedCount; i++)
 			{
 				array[i] = this.m_SourcePositions[this.m_Selection[i]];
 			}
@@ -546,11 +535,10 @@ namespace UnityEditor
 
 		public void UpdateSelectedPosition(int idx, Vector3 position)
 		{
-			if (idx > this.SelectedCount - 1)
+			if (idx <= this.SelectedCount - 1)
 			{
-				return;
+				this.m_SourcePositions[this.m_Selection[idx]] = position;
 			}
-			this.m_SourcePositions[this.m_Selection[idx]] = position;
 		}
 
 		public IEnumerable<Vector3> GetPositions()
@@ -560,7 +548,40 @@ namespace UnityEditor
 
 		public Vector3[] GetUnselectedPositions()
 		{
-			return this.m_SourcePositions.Where((Vector3 t, int i) => !this.m_Selection.Contains(i)).ToArray<Vector3>();
+			int count = this.Count;
+			int selectedCount = this.SelectedCount;
+			Vector3[] result;
+			if (selectedCount == count)
+			{
+				result = new Vector3[0];
+			}
+			else if (selectedCount == 0)
+			{
+				result = this.m_SourcePositions.ToArray();
+			}
+			else
+			{
+				bool[] array = new bool[count];
+				for (int i = 0; i < count; i++)
+				{
+					array[i] = false;
+				}
+				for (int j = 0; j < selectedCount; j++)
+				{
+					array[this.m_Selection[j]] = true;
+				}
+				Vector3[] array2 = new Vector3[count - selectedCount];
+				int num = 0;
+				for (int k = 0; k < count; k++)
+				{
+					if (!array[k])
+					{
+						array2[num++] = this.m_SourcePositions[k];
+					}
+				}
+				result = array2;
+			}
+			return result;
 		}
 	}
 }

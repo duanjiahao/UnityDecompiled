@@ -8,14 +8,12 @@ namespace UnityEngine
 	{
 		public extern int mipmapCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern TextureFormat format
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -30,7 +28,6 @@ namespace UnityEngine
 			Cubemap.INTERNAL_CALL_SetPixel(this, face, x, y, ref color);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPixel(Cubemap self, CubemapFace face, int x, int y, ref Color color);
 
@@ -41,11 +38,9 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetPixel(Cubemap self, CubemapFace face, int x, int y, out Color value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Color[] GetPixels(CubemapFace face, [DefaultValue("0")] int miplevel);
 
@@ -56,7 +51,6 @@ namespace UnityEngine
 			return this.GetPixels(face, miplevel);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPixels(Color[] colors, CubemapFace face, [DefaultValue("0")] int miplevel);
 
@@ -67,7 +61,6 @@ namespace UnityEngine
 			this.SetPixels(colors, face, miplevel);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Apply([DefaultValue("true")] bool updateMipmaps, [DefaultValue("false")] bool makeNoLongerReadable);
 
@@ -86,11 +79,9 @@ namespace UnityEngine
 			this.Apply(updateMipmaps, makeNoLongerReadable);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] Cubemap mono, int size, TextureFormat format, bool mipmap);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SmoothEdges([DefaultValue("1")] int smoothRegionWidthInPixels);
 

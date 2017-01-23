@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Internal;
 using UnityEngine.SceneManagement;
@@ -15,17 +14,14 @@ namespace UnityEditor.SceneManagement
 
 		public static extern int loadedSceneCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool preventCrossSceneReferences
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -46,7 +42,6 @@ namespace UnityEditor.SceneManagement
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_OpenScene(string scenePath, OpenSceneMode mode, out Scene value);
 
@@ -66,11 +61,9 @@ namespace UnityEditor.SceneManagement
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_NewScene(NewSceneSetup setup, NewSceneMode mode, out Scene value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CreateSceneAsset(string scenePath, bool createDefaultGameObjects);
 
@@ -79,7 +72,6 @@ namespace UnityEditor.SceneManagement
 			return EditorSceneManager.INTERNAL_CALL_CloseScene(ref scene, removeScene);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_CloseScene(ref Scene scene, bool removeScene);
 
@@ -88,13 +80,21 @@ namespace UnityEditor.SceneManagement
 			return EditorSceneManager.INTERNAL_CALL_ReloadScene(ref scene);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_ReloadScene(ref Scene scene);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetTargetSceneForNewGameObjects(int sceneHandle);
+
+		internal static Scene GetTargetSceneForNewGameObjects()
+		{
+			Scene result;
+			EditorSceneManager.INTERNAL_CALL_GetTargetSceneForNewGameObjects(out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetTargetSceneForNewGameObjects(out Scene value);
 
 		internal static Scene GetSceneByHandle(int handle)
 		{
@@ -103,7 +103,6 @@ namespace UnityEditor.SceneManagement
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSceneByHandle(int handle, out Scene value);
 
@@ -112,7 +111,6 @@ namespace UnityEditor.SceneManagement
 			EditorSceneManager.INTERNAL_CALL_MoveSceneBefore(ref src, ref dst);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MoveSceneBefore(ref Scene src, ref Scene dst);
 
@@ -121,7 +119,6 @@ namespace UnityEditor.SceneManagement
 			EditorSceneManager.INTERNAL_CALL_MoveSceneAfter(ref src, ref dst);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MoveSceneAfter(ref Scene src, ref Scene dst);
 
@@ -130,7 +127,6 @@ namespace UnityEditor.SceneManagement
 			return EditorSceneManager.INTERNAL_CALL_SaveSceneAs(ref scene);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_SaveSceneAs(ref Scene scene);
 
@@ -150,31 +146,25 @@ namespace UnityEditor.SceneManagement
 		public static bool SaveScene(Scene scene)
 		{
 			bool saveAsCopy = false;
-			string empty = string.Empty;
-			return EditorSceneManager.INTERNAL_CALL_SaveScene(ref scene, empty, saveAsCopy);
+			string dstScenePath = "";
+			return EditorSceneManager.INTERNAL_CALL_SaveScene(ref scene, dstScenePath, saveAsCopy);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_SaveScene(ref Scene scene, string dstScenePath, bool saveAsCopy);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SaveOpenScenes();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SaveScenes(Scene[] scenes);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SaveCurrentModifiedScenesIfUserWantsTo();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SaveModifiedScenesIfUserWantsTo(Scene[] scenes);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool EnsureUntitledSceneHasBeenSaved(string operation);
 
@@ -183,19 +173,15 @@ namespace UnityEditor.SceneManagement
 			return EditorSceneManager.INTERNAL_CALL_MarkSceneDirty(ref scene);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_MarkSceneDirty(ref Scene scene);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void MarkAllScenesDirty();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern SceneSetup[] GetSceneManagerSetup();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RestoreSceneManagerSetup(SceneSetup[] value);
 
@@ -204,7 +190,6 @@ namespace UnityEditor.SceneManagement
 			return EditorSceneManager.INTERNAL_CALL_DetectCrossSceneReferences(ref scene);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_DetectCrossSceneReferences(ref Scene scene);
 

@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace UnityEditor.Hardware
 {
@@ -9,15 +9,27 @@ namespace UnityEditor.Hardware
 
 		public static event Usb.OnDevicesChangedHandler DevicesChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				Usb.DevicesChanged = (Usb.OnDevicesChangedHandler)Delegate.Combine(Usb.DevicesChanged, value);
+				Usb.OnDevicesChangedHandler onDevicesChangedHandler = Usb.DevicesChanged;
+				Usb.OnDevicesChangedHandler onDevicesChangedHandler2;
+				do
+				{
+					onDevicesChangedHandler2 = onDevicesChangedHandler;
+					onDevicesChangedHandler = Interlocked.CompareExchange<Usb.OnDevicesChangedHandler>(ref Usb.DevicesChanged, (Usb.OnDevicesChangedHandler)Delegate.Combine(onDevicesChangedHandler2, value), onDevicesChangedHandler);
+				}
+				while (onDevicesChangedHandler != onDevicesChangedHandler2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				Usb.DevicesChanged = (Usb.OnDevicesChangedHandler)Delegate.Remove(Usb.DevicesChanged, value);
+				Usb.OnDevicesChangedHandler onDevicesChangedHandler = Usb.DevicesChanged;
+				Usb.OnDevicesChangedHandler onDevicesChangedHandler2;
+				do
+				{
+					onDevicesChangedHandler2 = onDevicesChangedHandler;
+					onDevicesChangedHandler = Interlocked.CompareExchange<Usb.OnDevicesChangedHandler>(ref Usb.DevicesChanged, (Usb.OnDevicesChangedHandler)Delegate.Remove(onDevicesChangedHandler2, value), onDevicesChangedHandler);
+				}
+				while (onDevicesChangedHandler != onDevicesChangedHandler2);
 			}
 		}
 

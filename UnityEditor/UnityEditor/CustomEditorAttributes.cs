@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -23,6 +22,10 @@ namespace UnityEditor
 
 		private static readonly List<CustomEditorAttributes.MonoEditorType> kSCustomMultiEditors = new List<CustomEditorAttributes.MonoEditorType>();
 
+		private static readonly Dictionary<Type, Type> kCachedEditorForType = new Dictionary<Type, Type>();
+
+		private static readonly Dictionary<Type, Type> kCachedMultiEditorForType = new Dictionary<Type, Type>();
+
 		private static bool s_Initialized;
 
 		internal static Type FindCustomEditorType(UnityEngine.Object o, bool multiEdit)
@@ -41,21 +44,48 @@ namespace UnityEditor
 				}
 				CustomEditorAttributes.s_Initialized = true;
 			}
-			List<CustomEditorAttributes.MonoEditorType> source = (!multiEdit) ? CustomEditorAttributes.kSCustomEditors : CustomEditorAttributes.kSCustomMultiEditors;
-			int pass;
-			for (pass = 0; pass < 2; pass++)
+			Type result;
+			if (type == null)
 			{
-				Type inspected;
-				for (inspected = type; inspected != null; inspected = inspected.BaseType)
+				result = null;
+			}
+			else
+			{
+				Dictionary<Type, Type> dictionary = (!multiEdit) ? CustomEditorAttributes.kCachedEditorForType : CustomEditorAttributes.kCachedMultiEditorForType;
+				Type inspectorType;
+				if (dictionary.TryGetValue(type, out inspectorType))
 				{
-					CustomEditorAttributes.MonoEditorType monoEditorType = source.FirstOrDefault((CustomEditorAttributes.MonoEditorType x) => (type == inspected || x.m_EditorForChildClasses) && pass == 1 == x.m_IsFallback && inspected == x.m_InspectedType);
-					if (monoEditorType != null)
+					result = inspectorType;
+				}
+				else
+				{
+					List<CustomEditorAttributes.MonoEditorType> list = (!multiEdit) ? CustomEditorAttributes.kSCustomEditors : CustomEditorAttributes.kSCustomMultiEditors;
+					for (int j = 0; j < 2; j++)
 					{
-						return monoEditorType.m_InspectorType;
+						for (Type type2 = type; type2 != null; type2 = type2.BaseType)
+						{
+							for (int k = 0; k < list.Count; k++)
+							{
+								if (CustomEditorAttributes.IsAppropriateEditor(list[k], type2, type != type2, j == 1))
+								{
+									inspectorType = list[k].m_InspectorType;
+									dictionary.Add(type, inspectorType);
+									result = inspectorType;
+									return result;
+								}
+							}
+						}
 					}
+					dictionary.Add(type, null);
+					result = null;
 				}
 			}
-			return null;
+			return result;
+		}
+
+		private static bool IsAppropriateEditor(CustomEditorAttributes.MonoEditorType editor, Type parentClass, bool isChildClass, bool isFallback)
+		{
+			return (!isChildClass || editor.m_EditorForChildClasses) && isFallback == editor.m_IsFallback && parentClass == editor.m_InspectedType;
 		}
 
 		internal static void Rebuild(Assembly assembly)
@@ -67,7 +97,8 @@ namespace UnityEditor
 				Type type = array[i];
 				object[] customAttributes = type.GetCustomAttributes(typeof(CustomEditor), false);
 				object[] array2 = customAttributes;
-				for (int j = 0; j < array2.Length; j++)
+				int j = 0;
+				while (j < array2.Length)
 				{
 					CustomEditor customEditor = (CustomEditor)array2[j];
 					CustomEditorAttributes.MonoEditorType monoEditorType = new CustomEditorAttributes.MonoEditorType();
@@ -94,6 +125,10 @@ namespace UnityEditor
 							CustomEditorAttributes.kSCustomMultiEditors.Add(monoEditorType);
 						}
 					}
+					IL_14D:
+					j++;
+					continue;
+					goto IL_14D;
 				}
 			}
 		}

@@ -8,30 +8,24 @@ namespace UnityEngine
 	{
 		public extern float density
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isTrigger
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool usedByEffector
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -52,14 +46,12 @@ namespace UnityEngine
 
 		public extern Rigidbody2D attachedRigidbody
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int shapeCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -76,38 +68,42 @@ namespace UnityEngine
 
 		internal extern ColliderErrorState2D errorState
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern PhysicsMaterial2D sharedMaterial
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
+		public extern float friction
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern float bounciness
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_offset(out Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_offset(ref Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_bounds(out Bounds value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsTouching(Collider2D collider);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsTouchingLayers([DefaultValue("Physics2D.AllLayers")] int layerMask);
 
@@ -123,7 +119,6 @@ namespace UnityEngine
 			return Collider2D.INTERNAL_CALL_OverlapPoint(this, ref point);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_OverlapPoint(Collider2D self, ref Vector2 point);
 
@@ -166,7 +161,6 @@ namespace UnityEngine
 			return Collider2D.INTERNAL_CALL_Raycast(this, ref direction, results, distance, layerMask, minDepth, maxDepth);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int INTERNAL_CALL_Raycast(Collider2D self, ref Vector2 direction, RaycastHit2D[] results, float distance, int layerMask, float minDepth, float maxDepth);
 
@@ -190,7 +184,6 @@ namespace UnityEngine
 			return Collider2D.INTERNAL_CALL_Cast(this, ref direction, results, distance, ignoreSiblingColliders);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int INTERNAL_CALL_Cast(Collider2D self, ref Vector2 direction, RaycastHit2D[] results, float distance, bool ignoreSiblingColliders);
 	}

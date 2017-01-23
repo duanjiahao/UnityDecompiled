@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditorInternal
@@ -19,7 +20,7 @@ namespace UnityEditorInternal
 			set;
 		}
 
-		public AnimationWindowHierarchyDataSource(TreeView treeView, AnimationWindowState animationWindowState) : base(treeView)
+		public AnimationWindowHierarchyDataSource(TreeViewController treeView, AnimationWindowState animationWindowState) : base(treeView)
 		{
 			this.state = animationWindowState;
 		}
@@ -33,33 +34,32 @@ namespace UnityEditorInternal
 
 		private AnimationWindowHierarchyNode GetEmptyRootNode()
 		{
-			return new AnimationWindowHierarchyNode(0, -1, null, null, string.Empty, string.Empty, "root");
+			return new AnimationWindowHierarchyNode(0, -1, null, null, "", "", "root");
 		}
 
 		public override void FetchData()
 		{
 			this.m_RootItem = this.GetEmptyRootNode();
 			this.SetupRootNodeSettings();
-			this.m_NeedRefreshVisibleFolders = true;
-			if (this.state.activeRootGameObject == null && this.state.activeAnimationClip == null)
+			this.m_NeedRefreshRows = true;
+			if (this.state.selection.disabled)
 			{
-				this.root.children = null;
-				return;
+				base.root.children = null;
 			}
-			List<AnimationWindowHierarchyNode> list = new List<AnimationWindowHierarchyNode>();
-			if (this.state.allCurves.Count > 0)
+			else
 			{
-				list.Add(new AnimationWindowHierarchyMasterNode
+				List<AnimationWindowHierarchyNode> list = new List<AnimationWindowHierarchyNode>();
+				if (this.state.allCurves.Count > 0)
 				{
-					curves = this.state.allCurves.ToArray()
-				});
-			}
-			list.AddRange(this.CreateTreeFromCurves());
-			if (this.state.activeRootGameObject != null)
-			{
+					list.Add(new AnimationWindowHierarchyMasterNode
+					{
+						curves = this.state.allCurves.ToArray()
+					});
+				}
+				list.AddRange(this.CreateTreeFromCurves());
 				list.Add(new AnimationWindowHierarchyAddButtonNode());
+				TreeViewUtility.SetChildParentReferences(new List<TreeViewItem>(list.ToArray()), base.root);
 			}
-			TreeViewUtility.SetChildParentReferences(new List<TreeViewItem>(list.ToArray()), this.root);
 		}
 
 		public override bool IsRenamingItemAllowed(TreeViewItem item)
@@ -120,7 +120,7 @@ namespace UnityEditorInternal
 			List<AnimationWindowHierarchyNode> list = new List<AnimationWindowHierarchyNode>();
 			Type type = curves[0].type;
 			AnimationWindowHierarchyPropertyGroupNode animationWindowHierarchyPropertyGroupNode = new AnimationWindowHierarchyPropertyGroupNode(type, selectedItem.id, AnimationWindowUtility.GetPropertyGroupName(curves[0].propertyName), curves[0].path, parentNode);
-			animationWindowHierarchyPropertyGroupNode.icon = this.GetIcon(curves[0].binding);
+			animationWindowHierarchyPropertyGroupNode.icon = this.GetIcon(selectedItem, curves[0].binding);
 			animationWindowHierarchyPropertyGroupNode.indent = curves[0].depth;
 			animationWindowHierarchyPropertyGroupNode.curves = curves;
 			for (int i = 0; i < curves.Length; i++)
@@ -143,7 +143,7 @@ namespace UnityEditorInternal
 			}
 			else
 			{
-				animationWindowHierarchyPropertyNode.icon = this.GetIcon(curve.binding);
+				animationWindowHierarchyPropertyNode.icon = this.GetIcon(selectedItem, curve.binding);
 			}
 			animationWindowHierarchyPropertyNode.indent = curve.depth;
 			animationWindowHierarchyPropertyNode.curves = new AnimationWindowCurve[]
@@ -153,17 +153,20 @@ namespace UnityEditorInternal
 			return animationWindowHierarchyPropertyNode;
 		}
 
-		public Texture2D GetIcon(EditorCurveBinding curveBinding)
+		public Texture2D GetIcon(AnimationWindowSelectionItem selectedItem, EditorCurveBinding curveBinding)
 		{
-			if (this.state.activeRootGameObject != null)
+			Texture2D result;
+			if (selectedItem.rootGameObject != null)
 			{
-				object animatedObject = AnimationUtility.GetAnimatedObject(this.state.activeRootGameObject, curveBinding);
+				UnityEngine.Object animatedObject = AnimationUtility.GetAnimatedObject(selectedItem.rootGameObject, curveBinding);
 				if (animatedObject != null)
 				{
-					return AssetPreview.GetMiniThumbnail(AnimationUtility.GetAnimatedObject(this.state.activeRootGameObject, curveBinding));
+					result = AssetPreview.GetMiniThumbnail(animatedObject);
+					return result;
 				}
 			}
-			return AssetPreview.GetMiniTypeThumbnail(curveBinding.type);
+			result = AssetPreview.GetMiniTypeThumbnail(curveBinding.type);
+			return result;
 		}
 
 		public void UpdateData()

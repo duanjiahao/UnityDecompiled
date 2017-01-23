@@ -69,9 +69,11 @@ namespace UnityEditor
 			if (doubleCurve == null)
 			{
 				Debug.LogError("Wrong type used in DoubleCurvePresetLibrary: Should be a DoubleCurve");
-				return;
 			}
-			this.m_Presets.Add(new DoubleCurvePresetLibrary.DoubleCurvePreset(doubleCurve, presetName));
+			else
+			{
+				this.m_Presets.Add(new DoubleCurvePresetLibrary.DoubleCurvePreset(doubleCurve, presetName));
+			}
 		}
 
 		public override void Replace(int index, object newPresetObject)
@@ -80,9 +82,11 @@ namespace UnityEditor
 			if (doubleCurve == null)
 			{
 				Debug.LogError("Wrong type used in DoubleCurvePresetLibrary");
-				return;
 			}
-			this.m_Presets[index].doubleCurve = doubleCurve;
+			else
+			{
+				this.m_Presets[index].doubleCurve = doubleCurve;
+			}
 		}
 
 		public override void Remove(int index)
@@ -110,9 +114,11 @@ namespace UnityEditor
 			if (doubleCurve == null)
 			{
 				Debug.Log("DoubleCurve is null");
-				return;
 			}
-			EditorGUIUtility.DrawRegionSwatch(rect, doubleCurve.maxCurve, doubleCurve.minCurve, new Color(0.8f, 0.8f, 0.8f, 1f), EditorGUI.kCurveBGColor, (!doubleCurve.signedRange) ? this.kUnsignedRange : this.kSignedRange);
+			else
+			{
+				EditorGUIUtility.DrawRegionSwatch(rect, doubleCurve.maxCurve, doubleCurve.minCurve, new Color(0.8f, 0.8f, 0.8f, 1f), EditorGUI.kCurveBGColor, (!doubleCurve.signedRange) ? this.kUnsignedRange : this.kSignedRange);
+			}
 		}
 
 		public override string GetName(int index)

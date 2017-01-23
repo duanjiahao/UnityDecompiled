@@ -31,15 +31,18 @@ namespace UnityEditor
 		public T Load(string filePath)
 		{
 			filePath = this.AppendFileExtensionIfNeeded(filePath);
+			T result;
 			if (!string.IsNullOrEmpty(filePath))
 			{
 				UnityEngine.Object[] array = InternalEditorUtility.LoadSerializedFileAndForget(filePath);
 				if (array != null && array.Length > 0)
 				{
-					return array[0] as T;
+					result = (array[0] as T);
+					return result;
 				}
 			}
-			return (T)((object)null);
+			result = (T)((object)null);
+			return result;
 		}
 
 		public T Create()
@@ -52,23 +55,24 @@ namespace UnityEditor
 			if (t == null)
 			{
 				Debug.LogError("Cannot save scriptableObject: its null!");
-				return;
 			}
-			if (string.IsNullOrEmpty(filePath))
+			else if (string.IsNullOrEmpty(filePath))
 			{
 				Debug.LogError("Invalid path: '" + filePath + "'");
-				return;
 			}
-			string directoryName = Path.GetDirectoryName(filePath);
-			if (!Directory.Exists(directoryName))
+			else
 			{
-				Directory.CreateDirectory(directoryName);
+				string directoryName = Path.GetDirectoryName(filePath);
+				if (!Directory.Exists(directoryName))
+				{
+					Directory.CreateDirectory(directoryName);
+				}
+				filePath = this.AppendFileExtensionIfNeeded(filePath);
+				InternalEditorUtility.SaveToSerializedFileAndForget(new T[]
+				{
+					t
+				}, filePath, this.saveType == SaveType.Text);
 			}
-			filePath = this.AppendFileExtensionIfNeeded(filePath);
-			InternalEditorUtility.SaveToSerializedFileAndForget(new T[]
-			{
-				t
-			}, filePath, this.saveType == SaveType.Text);
 		}
 
 		public override string ToString()
@@ -78,11 +82,16 @@ namespace UnityEditor
 
 		private string AppendFileExtensionIfNeeded(string path)
 		{
+			string result;
 			if (!Path.HasExtension(path) && !string.IsNullOrEmpty(this.fileExtensionWithoutDot))
 			{
-				return path + "." + this.fileExtensionWithoutDot;
+				result = path + "." + this.fileExtensionWithoutDot;
 			}
-			return path;
+			else
+			{
+				result = path;
+			}
+			return result;
 		}
 	}
 }

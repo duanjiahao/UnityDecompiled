@@ -7,16 +7,15 @@ namespace UnityEditor
 	{
 		protected virtual void OnToolGUI(SceneView view)
 		{
-			if (!Selection.activeTransform || Tools.s_Hidden)
+			if (Selection.activeTransform && !Tools.s_Hidden)
 			{
-				return;
-			}
-			bool flag = !Tools.s_Hidden && EditorApplication.isPlaying && GameObjectUtility.ContainsStatic(Selection.gameObjects);
-			using (new EditorGUI.DisabledScope(flag))
-			{
-				Vector3 handlePosition = Tools.handlePosition;
-				this.ToolGUI(view, handlePosition, flag);
-				Handles.ShowStaticLabelIfNeeded(handlePosition);
+				bool flag = !Tools.s_Hidden && EditorApplication.isPlaying && GameObjectUtility.ContainsStatic(Selection.gameObjects);
+				using (new EditorGUI.DisabledScope(flag))
+				{
+					Vector3 handlePosition = Tools.handlePosition;
+					this.ToolGUI(view, handlePosition, flag);
+					Handles.ShowStaticLabelIfNeeded(handlePosition);
+				}
 			}
 		}
 

@@ -28,7 +28,7 @@ namespace UnityEditor
 
 		public const int kDefaultServerPort = 10733;
 
-		public static ASMainWindow asMainWin;
+		public static ASMainWindow asMainWin = null;
 
 		private static string s_TestingConflictResClass;
 
@@ -178,29 +178,34 @@ namespace UnityEditor
 			{
 				timeout = 5;
 			}
+			bool result;
 			if (text2.Length == 0 || text3.Length == 0 || text4.Length == 0 || text.Length == 0)
 			{
-				AssetServer.SetProjectName(string.Empty);
-				return false;
+				AssetServer.SetProjectName("");
+				result = false;
 			}
-			AssetServer.SetProjectName(string.Format("{0} @ {1}", text3, text2));
-			string connectionString = string.Concat(new string[]
+			else
 			{
-				"host='",
-				text2,
-				"' user='",
-				text,
-				"' password='",
-				ASEditorBackend.GetPassword(text2, text),
-				"' dbname='",
-				text4,
-				"' port='",
-				text5,
-				"' sslmode=disable ",
-				pListConfig["Maint Connection Settings"]
-			});
-			AssetServer.Initialize(text, connectionString, timeout);
-			return true;
+				AssetServer.SetProjectName(string.Format("{0} @ {1}", text3, text2));
+				string connectionString = string.Concat(new string[]
+				{
+					"host='",
+					text2,
+					"' user='",
+					text,
+					"' password='",
+					ASEditorBackend.GetPassword(text2, text),
+					"' dbname='",
+					text4,
+					"' port='",
+					text5,
+					"' sslmode=disable ",
+					pListConfig["Maint Connection Settings"]
+				});
+				AssetServer.Initialize(text, connectionString, timeout);
+				result = true;
+			}
+			return result;
 		}
 
 		public static void Testing_SetActionFinishedCallback(string klass, string name)
@@ -268,10 +273,10 @@ namespace UnityEditor
 			pListConfig["Maint database name"] = dbName;
 			pListConfig["Maint port number"] = port.ToString();
 			pListConfig["Maint project name"] = projectName;
-			pListConfig["Maint Password"] = string.Empty;
+			pListConfig["Maint Password"] = "";
 			pListConfig["Maint settings type"] = "manual";
 			pListConfig["Maint Timeout"] = "5";
-			pListConfig["Maint Connection Settings"] = string.Empty;
+			pListConfig["Maint Connection Settings"] = "";
 			pListConfig.Save();
 		}
 
@@ -279,30 +284,41 @@ namespace UnityEditor
 		{
 			AssetServer.AdminSetCredentials(host, port, adminUser, adminPwd);
 			MaintDatabaseRecord[] array = AssetServer.AdminRefreshDatabases();
+			bool result;
 			if (array == null)
 			{
-				return false;
+				result = false;
 			}
-			MaintDatabaseRecord[] array2 = array;
-			for (int i = 0; i < array2.Length; i++)
+			else
 			{
-				MaintDatabaseRecord maintDatabaseRecord = array2[i];
-				if (maintDatabaseRecord.name == projectName)
+				MaintDatabaseRecord[] array2 = array;
+				for (int i = 0; i < array2.Length; i++)
 				{
-					AssetServer.AdminDeleteDB(projectName);
+					MaintDatabaseRecord maintDatabaseRecord = array2[i];
+					if (maintDatabaseRecord.name == projectName)
+					{
+						AssetServer.AdminDeleteDB(projectName);
+					}
+				}
+				if (AssetServer.AdminCreateDB(projectName) == 0)
+				{
+					result = false;
+				}
+				else
+				{
+					string databaseName = AssetServer.GetDatabaseName(host, adminUser, adminPwd, port.ToString(), projectName);
+					if (!AssetServer.AdminSetUserEnabled(databaseName, user, user, string.Empty, 1))
+					{
+						result = false;
+					}
+					else
+					{
+						ASEditorBackend.Testing_SetActiveDatabase(host, port, projectName, databaseName, user, pwd);
+						result = true;
+					}
 				}
 			}
-			if (AssetServer.AdminCreateDB(projectName) == 0)
-			{
-				return false;
-			}
-			string databaseName = AssetServer.GetDatabaseName(host, adminUser, adminPwd, port.ToString(), projectName);
-			if (!AssetServer.AdminSetUserEnabled(databaseName, user, user, string.Empty, 1))
-			{
-				return false;
-			}
-			ASEditorBackend.Testing_SetActiveDatabase(host, port, projectName, databaseName, user, pwd);
-			return true;
+			return result;
 		}
 
 		public static string[] Testing_GetAllDatabaseNames()

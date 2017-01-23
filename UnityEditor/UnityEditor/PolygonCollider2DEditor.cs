@@ -27,63 +27,63 @@ namespace UnityEditor
 			EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 			base.BeginColliderInspector();
 			base.OnInspectorGUI();
-			GUI.enabled = !base.editingCollider;
-			EditorGUILayout.PropertyField(this.m_Points, true, new GUILayoutOption[0]);
-			GUI.enabled = true;
+			if (base.targets.Length == 1)
+			{
+				EditorGUI.BeginDisabledGroup(base.editingCollider);
+				EditorGUILayout.PropertyField(this.m_Points, true, new GUILayoutOption[0]);
+				EditorGUI.EndDisabledGroup();
+			}
 			base.EndColliderInspector();
-			base.CheckAllErrorsAndWarnings();
+			base.FinalizeInspectorGUI();
 			EditorGUILayout.EndVertical();
 			this.HandleDragAndDrop(GUILayoutUtility.GetLastRect());
 		}
 
 		private void HandleDragAndDrop(Rect targetRect)
 		{
-			if (Event.current.type != EventType.DragPerform && Event.current.type != EventType.DragUpdated)
+			if (Event.current.type == EventType.DragPerform || Event.current.type == EventType.DragUpdated)
 			{
-				return;
-			}
-			if (!targetRect.Contains(Event.current.mousePosition))
-			{
-				return;
-			}
-			using (IEnumerator<UnityEngine.Object> enumerator = (from obj in DragAndDrop.objectReferences
-			where obj is Sprite || obj is Texture2D
-			select obj).GetEnumerator())
-			{
-				if (enumerator.MoveNext())
+				if (targetRect.Contains(Event.current.mousePosition))
 				{
-					UnityEngine.Object current = enumerator.Current;
-					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-					if (Event.current.type == EventType.DragPerform)
+					using (IEnumerator<UnityEngine.Object> enumerator = (from obj in DragAndDrop.objectReferences
+					where obj is Sprite || obj is Texture2D
+					select obj).GetEnumerator())
 					{
-						Sprite sprite = (!(current is Sprite)) ? SpriteUtility.TextureToSprite(current as Texture2D) : (current as Sprite);
-						foreach (PolygonCollider2D current2 in from target in base.targets
-						select target as PolygonCollider2D)
+						if (enumerator.MoveNext())
 						{
-							Vector2[][] array;
-							UnityEditor.Sprites.SpriteUtility.GenerateOutlineFromSprite(sprite, 0.25f, 200, true, out array);
-							current2.pathCount = array.Length;
-							for (int i = 0; i < array.Length; i++)
+							UnityEngine.Object current = enumerator.Current;
+							DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+							if (Event.current.type == EventType.DragPerform)
 							{
-								current2.SetPath(i, array[i]);
+								Sprite sprite = (!(current is Sprite)) ? SpriteUtility.TextureToSprite(current as Texture2D) : (current as Sprite);
+								foreach (PolygonCollider2D current2 in from target in base.targets
+								select target as PolygonCollider2D)
+								{
+									Vector2[][] array;
+									UnityEditor.Sprites.SpriteUtility.GenerateOutlineFromSprite(sprite, 0.25f, 200, true, out array);
+									current2.pathCount = array.Length;
+									for (int i = 0; i < array.Length; i++)
+									{
+										current2.SetPath(i, array[i]);
+									}
+									this.m_PolyUtility.StopEditing();
+									DragAndDrop.AcceptDrag();
+								}
 							}
-							this.m_PolyUtility.StopEditing();
-							DragAndDrop.AcceptDrag();
+							return;
 						}
 					}
-					return;
+					DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
 				}
 			}
-			DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
 		}
 
 		protected override void OnEditStart()
 		{
-			if (this.target == null)
+			if (!(base.target == null))
 			{
-				return;
+				this.m_PolyUtility.StartEditing(base.target as Collider2D);
 			}
-			this.m_PolyUtility.StartEditing(this.target as Collider2D);
 		}
 
 		protected override void OnEditEnd()
@@ -93,11 +93,10 @@ namespace UnityEditor
 
 		public void OnSceneGUI()
 		{
-			if (!base.editingCollider)
+			if (base.editingCollider)
 			{
-				return;
+				this.m_PolyUtility.OnSceneGUI();
 			}
-			this.m_PolyUtility.OnSceneGUI();
 		}
 	}
 }

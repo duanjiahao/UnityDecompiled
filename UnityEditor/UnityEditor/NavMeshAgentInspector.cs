@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace UnityEditor
 {
@@ -17,9 +18,11 @@ namespace UnityEditor
 			public readonly GUIContent m_AgentPathFindingHeader = new GUIContent("Path Finding");
 		}
 
-		private SerializedProperty m_WalkableMask;
-
 		private SerializedProperty m_Radius;
+
+		private SerializedProperty m_Height;
+
+		private SerializedProperty m_WalkableMask;
 
 		private SerializedProperty m_Speed;
 
@@ -35,8 +38,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_AutoRepath;
 
-		private SerializedProperty m_Height;
-
 		private SerializedProperty m_BaseOffset;
 
 		private SerializedProperty m_ObstacleAvoidanceType;
@@ -47,8 +48,9 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
-			this.m_WalkableMask = base.serializedObject.FindProperty("m_WalkableMask");
 			this.m_Radius = base.serializedObject.FindProperty("m_Radius");
+			this.m_Height = base.serializedObject.FindProperty("m_Height");
+			this.m_WalkableMask = base.serializedObject.FindProperty("m_WalkableMask");
 			this.m_Speed = base.serializedObject.FindProperty("m_Speed");
 			this.m_Acceleration = base.serializedObject.FindProperty("m_Acceleration");
 			this.m_AngularSpeed = base.serializedObject.FindProperty("m_AngularSpeed");
@@ -56,7 +58,6 @@ namespace UnityEditor
 			this.m_AutoTraverseOffMeshLink = base.serializedObject.FindProperty("m_AutoTraverseOffMeshLink");
 			this.m_AutoBraking = base.serializedObject.FindProperty("m_AutoBraking");
 			this.m_AutoRepath = base.serializedObject.FindProperty("m_AutoRepath");
-			this.m_Height = base.serializedObject.FindProperty("m_Height");
 			this.m_BaseOffset = base.serializedObject.FindProperty("m_BaseOffset");
 			this.m_ObstacleAvoidanceType = base.serializedObject.FindProperty("m_ObstacleAvoidanceType");
 			this.m_AvoidancePriority = base.serializedObject.FindProperty("avoidancePriority");

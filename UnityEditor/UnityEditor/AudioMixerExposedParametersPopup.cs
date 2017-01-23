@@ -7,7 +7,7 @@ namespace UnityEditor
 {
 	internal class AudioMixerExposedParametersPopup : PopupWindowContent
 	{
-		private static GUIContent m_ButtonContent = new GUIContent(string.Empty, "Audio Mixer parameters can be exposed to scripting. Select an Audio Mixer Group, right click one of its properties in the Inspector and select 'Expose ..'.");
+		private static GUIContent m_ButtonContent = new GUIContent("", "Audio Mixer parameters can be exposed to scripting. Select an Audio Mixer Group, right click one of its properties in the Inspector and select 'Expose ..'.");
 
 		private static int m_LastNumExposedParams = -1;
 

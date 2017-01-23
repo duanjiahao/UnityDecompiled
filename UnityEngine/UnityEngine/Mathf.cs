@@ -19,6 +19,31 @@ namespace UnityEngine
 
 		public static readonly float Epsilon = (!MathfInternal.IsFlushToZeroEnabled) ? MathfInternal.FloatMinDenormal : MathfInternal.FloatMinNormal;
 
+		[ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int ClosestPowerOfTwo(int value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float GammaToLinearSpace(float value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float LinearToGammaSpace(float value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsPowerOfTwo(int value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int NextPowerOfTwo(int value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float PerlinNoise(float x, float y);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern ushort FloatToHalf(float val);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float HalfToFloat(ushort val);
+
 		public static float Sin(float f)
 		{
 			return (float)Math.Sin((double)f);
@@ -77,19 +102,24 @@ namespace UnityEngine
 		public static float Min(params float[] values)
 		{
 			int num = values.Length;
+			float result;
 			if (num == 0)
 			{
-				return 0f;
+				result = 0f;
 			}
-			float num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] < num2)
+				float num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] < num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
 
 		public static int Min(int a, int b)
@@ -100,19 +130,24 @@ namespace UnityEngine
 		public static int Min(params int[] values)
 		{
 			int num = values.Length;
+			int result;
 			if (num == 0)
 			{
-				return 0;
+				result = 0;
 			}
-			int num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] < num2)
+				int num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] < num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
 
 		public static float Max(float a, float b)
@@ -123,19 +158,24 @@ namespace UnityEngine
 		public static float Max(params float[] values)
 		{
 			int num = values.Length;
+			float result;
 			if (num == 0)
 			{
-				return 0f;
+				result = 0f;
 			}
-			float num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] > num2)
+				float num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] > num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
 
 		public static int Max(int a, int b)
@@ -146,19 +186,24 @@ namespace UnityEngine
 		public static int Max(params int[] values)
 		{
 			int num = values.Length;
+			int result;
 			if (num == 0)
 			{
-				return 0;
+				result = 0;
 			}
-			int num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] > num2)
+				int num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] > num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
 
 		public static float Pow(float f, float p)
@@ -249,15 +294,20 @@ namespace UnityEngine
 
 		public static float Clamp01(float value)
 		{
+			float result;
 			if (value < 0f)
 			{
-				return 0f;
+				result = 0f;
 			}
-			if (value > 1f)
+			else if (value > 1f)
 			{
-				return 1f;
+				result = 1f;
 			}
-			return value;
+			else
+			{
+				result = value;
+			}
+			return result;
 		}
 
 		public static float Lerp(float a, float b, float t)
@@ -282,22 +332,32 @@ namespace UnityEngine
 
 		public static float MoveTowards(float current, float target, float maxDelta)
 		{
+			float result;
 			if (Mathf.Abs(target - current) <= maxDelta)
 			{
-				return target;
+				result = target;
 			}
-			return current + Mathf.Sign(target - current) * maxDelta;
+			else
+			{
+				result = current + Mathf.Sign(target - current) * maxDelta;
+			}
+			return result;
 		}
 
 		public static float MoveTowardsAngle(float current, float target, float maxDelta)
 		{
 			float num = Mathf.DeltaAngle(current, target);
+			float result;
 			if (-maxDelta < num && num < maxDelta)
 			{
-				return target;
+				result = target;
 			}
-			target = current + num;
-			return Mathf.MoveTowards(current, target, maxDelta);
+			else
+			{
+				target = current + num;
+				result = Mathf.MoveTowards(current, target, maxDelta);
+			}
+			return result;
 		}
 
 		public static float SmoothStep(float from, float to, float t)
@@ -315,12 +375,17 @@ namespace UnityEngine
 				flag = true;
 			}
 			float num = Mathf.Abs(value);
+			float result;
 			if (num > absmax)
 			{
-				return (!flag) ? num : (-num);
+				result = ((!flag) ? num : (-num));
 			}
-			float num2 = Mathf.Pow(num / absmax, gamma) * absmax;
-			return (!flag) ? num2 : (-num2);
+			else
+			{
+				float num2 = Mathf.Pow(num / absmax, gamma) * absmax;
+				result = ((!flag) ? num2 : (-num2));
+			}
+			return result;
 		}
 
 		public static bool Approximately(float a, float b)
@@ -399,32 +464,17 @@ namespace UnityEngine
 
 		public static float InverseLerp(float a, float b, float value)
 		{
+			float result;
 			if (a != b)
 			{
-				return Mathf.Clamp01((value - a) / (b - a));
+				result = Mathf.Clamp01((value - a) / (b - a));
 			}
-			return 0f;
+			else
+			{
+				result = 0f;
+			}
+			return result;
 		}
-
-		[ThreadAndSerializationSafe, WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int ClosestPowerOfTwo(int value);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float GammaToLinearSpace(float value);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float LinearToGammaSpace(float value);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsPowerOfTwo(int value);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int NextPowerOfTwo(int value);
 
 		public static float DeltaAngle(float current, float target)
 		{
@@ -436,10 +486,6 @@ namespace UnityEngine
 			return num;
 		}
 
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float PerlinNoise(float x, float y);
-
 		internal static bool LineIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, ref Vector2 result)
 		{
 			float num = p2.x - p1.x;
@@ -447,15 +493,20 @@ namespace UnityEngine
 			float num3 = p4.x - p3.x;
 			float num4 = p4.y - p3.y;
 			float num5 = num * num4 - num2 * num3;
+			bool result2;
 			if (num5 == 0f)
 			{
-				return false;
+				result2 = false;
 			}
-			float num6 = p3.x - p1.x;
-			float num7 = p3.y - p1.y;
-			float num8 = (num6 * num4 - num7 * num3) / num5;
-			result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
-			return true;
+			else
+			{
+				float num6 = p3.x - p1.x;
+				float num7 = p3.y - p1.y;
+				float num8 = (num6 * num4 - num7 * num3) / num5;
+				result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
+				result2 = true;
+			}
+			return result2;
 		}
 
 		internal static bool LineSegmentIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, ref Vector2 result)
@@ -465,33 +516,36 @@ namespace UnityEngine
 			float num3 = p4.x - p3.x;
 			float num4 = p4.y - p3.y;
 			float num5 = num * num4 - num2 * num3;
+			bool result2;
 			if (num5 == 0f)
 			{
-				return false;
+				result2 = false;
 			}
-			float num6 = p3.x - p1.x;
-			float num7 = p3.y - p1.y;
-			float num8 = (num6 * num4 - num7 * num3) / num5;
-			if (num8 < 0f || num8 > 1f)
+			else
 			{
-				return false;
+				float num6 = p3.x - p1.x;
+				float num7 = p3.y - p1.y;
+				float num8 = (num6 * num4 - num7 * num3) / num5;
+				if (num8 < 0f || num8 > 1f)
+				{
+					result2 = false;
+				}
+				else
+				{
+					float num9 = (num6 * num2 - num7 * num) / num5;
+					if (num9 < 0f || num9 > 1f)
+					{
+						result2 = false;
+					}
+					else
+					{
+						result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
+						result2 = true;
+					}
+				}
 			}
-			float num9 = (num6 * num2 - num7 * num) / num5;
-			if (num9 < 0f || num9 > 1f)
-			{
-				return false;
-			}
-			result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
-			return true;
+			return result2;
 		}
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern ushort FloatToHalf(float val);
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float HalfToFloat(ushort val);
 
 		internal static long RandomToLong(System.Random r)
 		{

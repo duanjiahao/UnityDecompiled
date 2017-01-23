@@ -32,16 +32,21 @@ namespace UnityEditor
 
 		public static Rect DrawCurveFrame(Rect r)
 		{
+			Rect result;
 			if (Event.current.type != EventType.Repaint)
 			{
-				return r;
+				result = r;
 			}
-			EditorStyles.colorPickerBox.Draw(r, false, false, false, false);
-			r.x += 1f;
-			r.y += 1f;
-			r.width -= 2f;
-			r.height -= 2f;
-			return r;
+			else
+			{
+				EditorStyles.colorPickerBox.Draw(r, false, false, false, false);
+				r.x += 1f;
+				r.y += 1f;
+				r.width -= 2f;
+				r.height -= 2f;
+				result = r;
+			}
+			return result;
 		}
 
 		public static void DrawCurveBackground(Rect r)
@@ -60,40 +65,39 @@ namespace UnityEditor
 
 		public static void DrawFilledCurve(Rect r, AudioCurveRendering.AudioCurveAndColorEvaluator eval)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(1);
+				float num = EditorGUIUtility.pixelsPerPoint;
+				float num2 = 1f / num;
+				float num3 = 0.5f * num2;
+				float num4 = Mathf.Ceil(r.width) * num;
+				float num5 = Mathf.Floor(r.x) + AudioCurveRendering.pixelEpsilon;
+				float num6 = 1f / (num4 - 1f);
+				float num7 = r.height * 0.5f;
+				float num8 = r.y + 0.5f * r.height;
+				float y = r.y + r.height;
+				Color c;
+				float b = Mathf.Clamp(num7 * eval(0f, out c), -num7, num7);
+				int num9 = 0;
+				while ((float)num9 < num4)
+				{
+					float x = num5 + (float)num9 * num2;
+					float num10 = Mathf.Clamp(num7 * eval((float)num9 * num6, out c), -num7, num7);
+					float num11 = Mathf.Min(num10, b) - num3;
+					float num12 = Mathf.Max(num10, b) + num3;
+					GL.Color(new Color(c.r, c.g, c.b, 0f));
+					AudioMixerDrawUtils.Vertex(x, num8 - num12);
+					GL.Color(c);
+					AudioMixerDrawUtils.Vertex(x, num8 - num11);
+					AudioMixerDrawUtils.Vertex(x, num8 - num11);
+					AudioMixerDrawUtils.Vertex(x, y);
+					b = num10;
+					num9++;
+				}
+				GL.End();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(1);
-			float num = EditorGUIUtility.pixelsPerPoint;
-			float num2 = 1f / num;
-			float num3 = 0.5f * num2;
-			float num4 = Mathf.Ceil(r.width) * num;
-			float num5 = Mathf.Floor(r.x) + AudioCurveRendering.pixelEpsilon;
-			float num6 = 1f / (num4 - 1f);
-			float num7 = r.height * 0.5f;
-			float num8 = r.y + 0.5f * r.height;
-			float y = r.y + r.height;
-			Color c;
-			float b = Mathf.Clamp(num7 * eval(0f, out c), -num7, num7);
-			int num9 = 0;
-			while ((float)num9 < num4)
-			{
-				float x = num5 + (float)num9 * num2;
-				float num10 = Mathf.Clamp(num7 * eval((float)num9 * num6, out c), -num7, num7);
-				float num11 = Mathf.Min(num10, b) - num3;
-				float num12 = Mathf.Max(num10, b) + num3;
-				GL.Color(new Color(c.r, c.g, c.b, 0f));
-				AudioMixerDrawUtils.Vertex(x, num8 - num12);
-				GL.Color(c);
-				AudioMixerDrawUtils.Vertex(x, num8 - num11);
-				AudioMixerDrawUtils.Vertex(x, num8 - num11);
-				AudioMixerDrawUtils.Vertex(x, y);
-				b = num10;
-				num9++;
-			}
-			GL.End();
 		}
 
 		private static void Sort2(ref float minValue, ref float maxValue)
@@ -163,66 +167,64 @@ namespace UnityEditor
 
 		public static void DrawSymmetricFilledCurve(Rect r, AudioCurveRendering.AudioCurveAndColorEvaluator eval)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(1);
+				float num = EditorGUIUtility.pixelsPerPoint;
+				float num2 = 1f / num;
+				float num3 = 0.5f * num2;
+				float num4 = Mathf.Ceil(r.width) * num;
+				float num5 = Mathf.Floor(r.x) + AudioCurveRendering.pixelEpsilon;
+				float num6 = 1f / (num4 - 1f);
+				float num7 = r.height * 0.5f;
+				float num8 = r.y + 0.5f * r.height;
+				Color c;
+				float b = Mathf.Clamp(num7 * eval(0.0001f, out c), 0f, num7);
+				int num9 = 0;
+				while ((float)num9 < num4)
+				{
+					float x = num5 + (float)num9 * num2;
+					float num10 = Mathf.Clamp(num7 * eval((float)num9 * num6, out c), 0f, num7);
+					float num11 = Mathf.Max(Mathf.Min(num10, b) - num3, 0f);
+					float num12 = Mathf.Min(Mathf.Max(num10, b) + num3, num7);
+					Color c2 = new Color(c.r, c.g, c.b, 0f);
+					GL.Color(c2);
+					AudioMixerDrawUtils.Vertex(x, num8 - num12);
+					GL.Color(c);
+					AudioMixerDrawUtils.Vertex(x, num8 - num11);
+					AudioMixerDrawUtils.Vertex(x, num8 - num11);
+					AudioMixerDrawUtils.Vertex(x, num8 + num11);
+					AudioMixerDrawUtils.Vertex(x, num8 + num11);
+					GL.Color(c2);
+					AudioMixerDrawUtils.Vertex(x, num8 + num12);
+					b = num10;
+					num9++;
+				}
+				GL.End();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(1);
-			float num = EditorGUIUtility.pixelsPerPoint;
-			float num2 = 1f / num;
-			float num3 = 0.5f * num2;
-			float num4 = Mathf.Ceil(r.width) * num;
-			float num5 = Mathf.Floor(r.x) + AudioCurveRendering.pixelEpsilon;
-			float num6 = 1f / (num4 - 1f);
-			float num7 = r.height * 0.5f;
-			float num8 = r.y + 0.5f * r.height;
-			Color c;
-			float b = Mathf.Clamp(num7 * eval(0.0001f, out c), 0f, num7);
-			int num9 = 0;
-			while ((float)num9 < num4)
-			{
-				float x = num5 + (float)num9 * num2;
-				float num10 = Mathf.Clamp(num7 * eval((float)num9 * num6, out c), 0f, num7);
-				float num11 = Mathf.Max(Mathf.Min(num10, b) - num3, 0f);
-				float num12 = Mathf.Min(Mathf.Max(num10, b) + num3, num7);
-				Color c2 = new Color(c.r, c.g, c.b, 0f);
-				GL.Color(c2);
-				AudioMixerDrawUtils.Vertex(x, num8 - num12);
-				GL.Color(c);
-				AudioMixerDrawUtils.Vertex(x, num8 - num11);
-				AudioMixerDrawUtils.Vertex(x, num8 - num11);
-				AudioMixerDrawUtils.Vertex(x, num8 + num11);
-				AudioMixerDrawUtils.Vertex(x, num8 + num11);
-				GL.Color(c2);
-				AudioMixerDrawUtils.Vertex(x, num8 + num12);
-				b = num10;
-				num9++;
-			}
-			GL.End();
 		}
 
 		public static void DrawCurve(Rect r, AudioCurveRendering.AudioCurveEvaluator eval, Color curveColor)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				int num = (int)Mathf.Ceil(r.width);
+				float num2 = r.height * 0.5f;
+				float num3 = 1f / (float)(num - 1);
+				Vector3[] pointCache = AudioCurveRendering.GetPointCache(num);
+				for (int i = 0; i < num; i++)
+				{
+					pointCache[i].x = (float)i + r.x;
+					pointCache[i].y = num2 - num2 * eval((float)i * num3) + r.y;
+					pointCache[i].z = 0f;
+				}
+				GUI.BeginClip(r);
+				Handles.color = curveColor;
+				Handles.DrawAAPolyLine(3f, num, pointCache);
+				GUI.EndClip();
 			}
-			HandleUtility.ApplyWireMaterial();
-			int num = (int)Mathf.Ceil(r.width);
-			float num2 = r.height * 0.5f;
-			float num3 = 1f / (float)(num - 1);
-			Vector3[] pointCache = AudioCurveRendering.GetPointCache(num);
-			for (int i = 0; i < num; i++)
-			{
-				pointCache[i].x = (float)i + r.x;
-				pointCache[i].y = num2 - num2 * eval((float)i * num3) + r.y;
-				pointCache[i].z = 0f;
-			}
-			GUI.BeginClip(r);
-			Handles.color = curveColor;
-			Handles.DrawAAPolyLine(3f, num, pointCache);
-			GUI.EndClip();
 		}
 
 		private static Vector3[] GetPointCache(int numPoints)
@@ -236,31 +238,30 @@ namespace UnityEditor
 
 		public static void DrawGradientRect(Rect r, Color c1, Color c2, float blend, bool horizontal)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				HandleUtility.ApplyWireMaterial();
+				GL.Begin(7);
+				if (horizontal)
+				{
+					GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * blend));
+					GL.Vertex3(r.x, r.y, 0f);
+					GL.Vertex3(r.x + r.width, r.y, 0f);
+					GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * blend));
+					GL.Vertex3(r.x + r.width, r.y + r.height, 0f);
+					GL.Vertex3(r.x, r.y + r.height, 0f);
+				}
+				else
+				{
+					GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * blend));
+					GL.Vertex3(r.x, r.y + r.height, 0f);
+					GL.Vertex3(r.x, r.y, 0f);
+					GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * blend));
+					GL.Vertex3(r.x + r.width, r.y, 0f);
+					GL.Vertex3(r.x + r.width, r.y + r.height, 0f);
+				}
+				GL.End();
 			}
-			HandleUtility.ApplyWireMaterial();
-			GL.Begin(7);
-			if (horizontal)
-			{
-				GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * blend));
-				GL.Vertex3(r.x, r.y, 0f);
-				GL.Vertex3(r.x + r.width, r.y, 0f);
-				GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * blend));
-				GL.Vertex3(r.x + r.width, r.y + r.height, 0f);
-				GL.Vertex3(r.x, r.y + r.height, 0f);
-			}
-			else
-			{
-				GL.Color(new Color(c1.r, c1.g, c1.b, c1.a * blend));
-				GL.Vertex3(r.x, r.y + r.height, 0f);
-				GL.Vertex3(r.x, r.y, 0f);
-				GL.Color(new Color(c2.r, c2.g, c2.b, c2.a * blend));
-				GL.Vertex3(r.x + r.width, r.y, 0f);
-				GL.Vertex3(r.x + r.width, r.y + r.height, 0f);
-			}
-			GL.End();
 		}
 	}
 }

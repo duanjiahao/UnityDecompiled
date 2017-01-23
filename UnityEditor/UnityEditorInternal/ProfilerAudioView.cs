@@ -7,6 +7,8 @@ namespace UnityEditorInternal
 		Stats,
 		Channels,
 		Groups,
-		ChannelsAndGroups
+		ChannelsAndGroups,
+		DSPGraph,
+		Clips
 	}
 }

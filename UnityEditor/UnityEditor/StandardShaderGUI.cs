@@ -38,7 +38,7 @@ namespace UnityEditor
 				new GUIContent("UV channel 1")
 			};
 
-			public static string emptyTootip = string.Empty;
+			public static string emptyTootip = "";
 
 			public static GUIContent albedoText = new GUIContent("Albedo", "Albedo (RGB) and Transparency (A)");
 
@@ -89,61 +89,61 @@ namespace UnityEditor
 			public static readonly string[] blendNames = Enum.GetNames(typeof(StandardShaderGUI.BlendMode));
 		}
 
-		private MaterialProperty blendMode;
+		private MaterialProperty blendMode = null;
 
-		private MaterialProperty albedoMap;
+		private MaterialProperty albedoMap = null;
 
-		private MaterialProperty albedoColor;
+		private MaterialProperty albedoColor = null;
 
-		private MaterialProperty alphaCutoff;
+		private MaterialProperty alphaCutoff = null;
 
-		private MaterialProperty specularMap;
+		private MaterialProperty specularMap = null;
 
-		private MaterialProperty specularColor;
+		private MaterialProperty specularColor = null;
 
-		private MaterialProperty metallicMap;
+		private MaterialProperty metallicMap = null;
 
-		private MaterialProperty metallic;
+		private MaterialProperty metallic = null;
 
-		private MaterialProperty smoothness;
+		private MaterialProperty smoothness = null;
 
-		private MaterialProperty smoothnessScale;
+		private MaterialProperty smoothnessScale = null;
 
-		private MaterialProperty smoothnessMapChannel;
+		private MaterialProperty smoothnessMapChannel = null;
 
-		private MaterialProperty highlights;
+		private MaterialProperty highlights = null;
 
-		private MaterialProperty reflections;
+		private MaterialProperty reflections = null;
 
-		private MaterialProperty bumpScale;
+		private MaterialProperty bumpScale = null;
 
-		private MaterialProperty bumpMap;
+		private MaterialProperty bumpMap = null;
 
-		private MaterialProperty occlusionStrength;
+		private MaterialProperty occlusionStrength = null;
 
-		private MaterialProperty occlusionMap;
+		private MaterialProperty occlusionMap = null;
 
-		private MaterialProperty heigtMapScale;
+		private MaterialProperty heigtMapScale = null;
 
-		private MaterialProperty heightMap;
+		private MaterialProperty heightMap = null;
 
-		private MaterialProperty emissionColorForRendering;
+		private MaterialProperty emissionColorForRendering = null;
 
-		private MaterialProperty emissionMap;
+		private MaterialProperty emissionMap = null;
 
-		private MaterialProperty detailMask;
+		private MaterialProperty detailMask = null;
 
-		private MaterialProperty detailAlbedoMap;
+		private MaterialProperty detailAlbedoMap = null;
 
-		private MaterialProperty detailNormalMapScale;
+		private MaterialProperty detailNormalMapScale = null;
 
-		private MaterialProperty detailNormalMap;
+		private MaterialProperty detailNormalMap = null;
 
-		private MaterialProperty uvSetSecondary;
+		private MaterialProperty uvSetSecondary = null;
 
 		private MaterialEditor m_MaterialEditor;
 
-		private StandardShaderGUI.WorkflowMode m_WorkflowMode;
+		private StandardShaderGUI.WorkflowMode m_WorkflowMode = StandardShaderGUI.WorkflowMode.Specular;
 
 		private ColorPickerHDRConfig m_ColorPickerHDRConfig = new ColorPickerHDRConfig(0f, 99f, 0.01010101f, 3f);
 
@@ -275,23 +275,25 @@ namespace UnityEditor
 			if (oldShader == null || !oldShader.name.Contains("Legacy Shaders/"))
 			{
 				StandardShaderGUI.SetupMaterialWithBlendMode(material, (StandardShaderGUI.BlendMode)material.GetFloat("_Mode"));
-				return;
 			}
-			StandardShaderGUI.BlendMode blendMode = StandardShaderGUI.BlendMode.Opaque;
-			if (oldShader.name.Contains("/Transparent/Cutout/"))
+			else
 			{
-				blendMode = StandardShaderGUI.BlendMode.Cutout;
+				StandardShaderGUI.BlendMode blendMode = StandardShaderGUI.BlendMode.Opaque;
+				if (oldShader.name.Contains("/Transparent/Cutout/"))
+				{
+					blendMode = StandardShaderGUI.BlendMode.Cutout;
+				}
+				else if (oldShader.name.Contains("/Transparent/"))
+				{
+					blendMode = StandardShaderGUI.BlendMode.Fade;
+				}
+				material.SetFloat("_Mode", (float)blendMode);
+				this.DetermineWorkflow(MaterialEditor.GetMaterialProperties(new Material[]
+				{
+					material
+				}));
+				StandardShaderGUI.MaterialChanged(material, this.m_WorkflowMode);
 			}
-			else if (oldShader.name.Contains("/Transparent/"))
-			{
-				blendMode = StandardShaderGUI.BlendMode.Fade;
-			}
-			material.SetFloat("_Mode", (float)blendMode);
-			this.DetermineWorkflow(MaterialEditor.GetMaterialProperties(new Material[]
-			{
-				material
-			}));
-			StandardShaderGUI.MaterialChanged(material, this.m_WorkflowMode);
 		}
 
 		private void BlendModePopup()
@@ -370,7 +372,7 @@ namespace UnityEditor
 			switch (blendMode)
 			{
 			case StandardShaderGUI.BlendMode.Opaque:
-				material.SetOverrideTag("RenderType", string.Empty);
+				material.SetOverrideTag("RenderType", "");
 				material.SetInt("_SrcBlend", 1);
 				material.SetInt("_DstBlend", 0);
 				material.SetInt("_ZWrite", 1);
@@ -415,11 +417,16 @@ namespace UnityEditor
 		private static StandardShaderGUI.SmoothnessMapChannel GetSmoothnessMapChannel(Material material)
 		{
 			int num = (int)material.GetFloat("_SmoothnessTextureChannel");
+			StandardShaderGUI.SmoothnessMapChannel result;
 			if (num == 1)
 			{
-				return StandardShaderGUI.SmoothnessMapChannel.AlbedoAlpha;
+				result = StandardShaderGUI.SmoothnessMapChannel.AlbedoAlpha;
 			}
-			return StandardShaderGUI.SmoothnessMapChannel.SpecularMetallicAlpha;
+			else
+			{
+				result = StandardShaderGUI.SmoothnessMapChannel.SpecularMetallicAlpha;
+			}
+			return result;
 		}
 
 		private static bool ShouldEmissionBeEnabled(Material mat, Color color)

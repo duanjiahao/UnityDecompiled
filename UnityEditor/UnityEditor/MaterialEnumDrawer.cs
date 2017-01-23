@@ -168,11 +168,16 @@ namespace UnityEditor
 
 		public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
 		{
+			float result;
 			if (prop.type != MaterialProperty.PropType.Float && prop.type != MaterialProperty.PropType.Range)
 			{
-				return 40f;
+				result = 40f;
 			}
-			return base.GetPropertyHeight(prop, label, editor);
+			else
+			{
+				result = base.GetPropertyHeight(prop, label, editor);
+			}
+			return result;
 		}
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -181,16 +186,18 @@ namespace UnityEditor
 			{
 				GUIContent label2 = EditorGUIUtility.TempContent("Enum used on a non-float property: " + prop.name, EditorGUIUtility.GetHelpIcon(MessageType.Warning));
 				EditorGUI.LabelField(position, label2, EditorStyles.helpBox);
-				return;
 			}
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = prop.hasMixedValue;
-			int num = (int)prop.floatValue;
-			num = EditorGUI.IntPopup(position, label, num, this.names, this.values);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
+			else
 			{
-				prop.floatValue = (float)num;
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = prop.hasMixedValue;
+				int num = (int)prop.floatValue;
+				num = EditorGUI.IntPopup(position, label, num, this.names, this.values);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					prop.floatValue = (float)num;
+				}
 			}
 		}
 	}

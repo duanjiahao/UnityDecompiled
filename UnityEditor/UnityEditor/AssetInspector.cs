@@ -60,11 +60,16 @@ namespace UnityEditor
 
 		private string GetGUID()
 		{
+			string result;
 			if (Selection.objects.Length == 0)
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.objects[0]));
+			else
+			{
+				result = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.objects[0]));
+			}
+			return result;
 		}
 
 		private void DoShowDiff(string guid)
@@ -84,39 +89,50 @@ namespace UnityEditor
 			{
 				selected = 1;
 			}
-			switch (selected)
+			if (selected != 0)
 			{
-			case 0:
-				this.DoShowDiff(this.GetGUID());
-				break;
-			case 1:
-				ASEditorBackend.DoAS();
-				ASEditorBackend.ASWin.ShowHistory();
-				break;
-			case 2:
-				if (!ASEditorBackend.SettingsIfNeeded())
+				if (selected != 1)
 				{
-					Debug.Log("Asset Server connection for current project is not set up");
-				}
-				if (EditorUtility.DisplayDialog("Discard changes", "Are you sure you want to discard local changes of selected asset?", "Discard", "Cancel"))
-				{
-					AssetServer.DoUpdateWithoutConflictResolutionOnNextTick(new string[]
+					if (selected == 2)
 					{
-						this.GetGUID()
-					});
+						if (!ASEditorBackend.SettingsIfNeeded())
+						{
+							Debug.Log("Asset Server connection for current project is not set up");
+						}
+						if (EditorUtility.DisplayDialog("Discard changes", "Are you sure you want to discard local changes of selected asset?", "Discard", "Cancel"))
+						{
+							AssetServer.DoUpdateWithoutConflictResolutionOnNextTick(new string[]
+							{
+								this.GetGUID()
+							});
+						}
+					}
 				}
-				break;
+				else
+				{
+					ASEditorBackend.DoAS();
+					ASEditorBackend.ASWin.ShowHistory();
+				}
+			}
+			else
+			{
+				this.DoShowDiff(this.GetGUID());
 			}
 		}
 
 		private ChangeFlags GetChangeFlags()
 		{
 			string gUID = this.GetGUID();
+			ChangeFlags result;
 			if (gUID == string.Empty)
 			{
-				return ChangeFlags.None;
+				result = ChangeFlags.None;
 			}
-			return AssetServer.GetChangeFlags(gUID);
+			else
+			{
+				result = AssetServer.GetChangeFlags(gUID);
+			}
+			return result;
 		}
 
 		private string GetModificationString(ChangeFlags flags)
@@ -147,26 +163,25 @@ namespace UnityEditor
 
 		public void OnAssetStatusGUI(Rect r, int id, UnityEngine.Object target, GUIStyle style)
 		{
-			if (target == null)
+			if (!(target == null))
 			{
-				return;
-			}
-			ChangeFlags changeFlags = this.GetChangeFlags();
-			string modificationString = this.GetModificationString(changeFlags);
-			GUIContent content;
-			if (modificationString == string.Empty)
-			{
-				content = EditorGUIUtility.TextContent("Asset is unchanged");
-			}
-			else
-			{
-				content = new GUIContent("Locally " + modificationString);
-			}
-			if (EditorGUI.DoToggle(r, id, false, content, style))
-			{
-				GUIUtility.hotControl = 0;
-				r = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-				EditorUtility.DisplayCustomMenu(r, (!(modificationString == string.Empty)) ? this.m_Menu : this.m_UnmodifiedMenu, -1, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), modificationString == string.Empty);
+				ChangeFlags changeFlags = this.GetChangeFlags();
+				string modificationString = this.GetModificationString(changeFlags);
+				GUIContent content;
+				if (modificationString == string.Empty)
+				{
+					content = EditorGUIUtility.TextContent("Asset is unchanged");
+				}
+				else
+				{
+					content = new GUIContent("Locally " + modificationString);
+				}
+				if (EditorGUI.DoToggle(r, id, false, content, style))
+				{
+					GUIUtility.hotControl = 0;
+					r = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+					EditorUtility.DisplayCustomMenu(r, (!(modificationString == string.Empty)) ? this.m_Menu : this.m_UnmodifiedMenu, -1, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), modificationString == string.Empty);
+				}
 			}
 		}
 	}

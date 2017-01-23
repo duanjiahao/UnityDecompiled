@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEditor.AnimatedValues;
+using UnityEditor.Rendering;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Profiling;
 
 namespace UnityEditor
 {
@@ -18,7 +21,7 @@ namespace UnityEditor
 		{
 			public bool showFog = true;
 
-			public bool showMaterialUpdate;
+			public bool showMaterialUpdate = false;
 
 			public bool showSkybox = true;
 
@@ -54,6 +57,8 @@ namespace UnityEditor
 			}
 		}
 
+		public delegate void OnSceneFunc(SceneView sceneView);
+
 		private struct CursorRect
 		{
 			public Rect rect;
@@ -74,20 +79,6 @@ namespace UnityEditor
 			LookAt
 		}
 
-		public delegate void OnSceneFunc(SceneView sceneView);
-
-		private const float kDefaultViewSize = 10f;
-
-		private const float kOrthoThresholdAngle = 3f;
-
-		private const float kOneOverSqrt2 = 0.707106769f;
-
-		private const double k_MaxDoubleKeypressTime = 0.5;
-
-		private const float kPerspectiveFov = 90f;
-
-		public const float kToolbarHeight = 17f;
-
 		private static SceneView s_LastActiveSceneView;
 
 		private static SceneView s_CurrentDrawingSceneView;
@@ -98,9 +89,9 @@ namespace UnityEditor
 
 		private static readonly PrefColor kSceneViewWireOverlay = new PrefColor("Scene/Wireframe Overlay", 0f, 0f, 0f, 0.25f);
 
-		private static readonly PrefColor kSceneViewWireActive = new PrefColor("Scene/Wireframe Active", 0.490196079f, 0.6901961f, 0.980392158f, 0.372549027f);
+		private static readonly PrefColor kSceneViewSelectedOutline = new PrefColor("Scene/Selected Outline", 1f, 0.4f, 0f, 0.0470588244f);
 
-		private static readonly PrefColor kSceneViewWireSelected = new PrefColor("Scene/Wireframe Selected", 0.368627459f, 0.466666669f, 0.607843161f, 0.25f);
+		private static readonly PrefColor kSceneViewSelectedWire = new PrefColor("Scene/Selected Wireframe", 0.368627459f, 0.466666669f, 0.607843161f, 0.2509804f);
 
 		internal static Color kSceneViewFrontLight = new Color(0.769f, 0.769f, 0.769f, 1f);
 
@@ -113,8 +104,14 @@ namespace UnityEditor
 		[NonSerialized]
 		private static readonly Quaternion kDefaultRotation = Quaternion.LookRotation(new Vector3(-1f, -0.7f, -1f));
 
+		private const float kDefaultViewSize = 10f;
+
 		[NonSerialized]
 		private static readonly Vector3 kDefaultPivot = Vector3.zero;
+
+		private const float kOrthoThresholdAngle = 3f;
+
+		private const float kOneOverSqrt2 = 0.707106769f;
 
 		[NonSerialized]
 		private ActiveEditorTracker m_Tracker;
@@ -122,7 +119,9 @@ namespace UnityEditor
 		[SerializeField]
 		public bool m_SceneLighting = true;
 
-		public double lastFramingTime;
+		public double lastFramingTime = 0.0;
+
+		private const double k_MaxDoubleKeypressTime = 0.5;
 
 		private static readonly PrefKey k2DMode = new PrefKey("Tools/2D Mode", "2");
 
@@ -131,9 +130,12 @@ namespace UnityEditor
 		[SerializeField]
 		private bool m_2DMode;
 
+		[SerializeField]
+		private bool m_isRotationLocked = false;
+
 		internal UnityEngine.Object m_OneClickDragObject;
 
-		public bool m_AudioPlay;
+		public bool m_AudioPlay = false;
 
 		private static SceneView s_AudioSceneView;
 
@@ -142,7 +144,9 @@ namespace UnityEditor
 
 		public static SceneView.OnSceneFunc onSceneGUIDelegate;
 
-		public DrawCameraMode m_RenderMode;
+		internal static SceneView.OnSceneFunc onPreSceneGUIDelegate;
+
+		public DrawCameraMode m_RenderMode = DrawCameraMode.Textured;
 
 		[SerializeField]
 		internal SceneView.SceneViewState m_SceneViewState;
@@ -181,6 +185,8 @@ namespace UnityEditor
 		private Light[] m_Light = new Light[3];
 
 		private RectSelection m_RectSelection;
+
+		private const float kPerspectiveFov = 90f;
 
 		private static ArrayList s_SceneViews = new ArrayList();
 
@@ -226,7 +232,7 @@ namespace UnityEditor
 		[SerializeField]
 		private string m_ReplacementString;
 
-		internal bool m_ShowSceneViewWindows;
+		internal bool m_ShowSceneViewWindows = false;
 
 		private SceneViewOverlay m_SceneViewOverlay;
 
@@ -245,6 +251,18 @@ namespace UnityEditor
 		private bool m_RequestedSceneViewFiltering;
 
 		private double m_lastRenderedTime;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache1;
+
+		[CompilerGenerated]
+		private static ComponentUtility.IsDesiredComponent <>f__mg$cache2;
+
+		[CompilerGenerated]
+		private static ComponentUtility.IsDesiredComponent <>f__mg$cache3;
 
 		public static SceneView lastActiveSceneView
 		{
@@ -274,6 +292,21 @@ namespace UnityEditor
 				{
 					this.m_2DMode = value;
 					this.On2DModeChange();
+				}
+			}
+		}
+
+		public bool isRotationLocked
+		{
+			get
+			{
+				return this.m_isRotationLocked;
+			}
+			set
+			{
+				if (this.m_isRotationLocked != value)
+				{
+					this.m_isRotationLocked = value;
 				}
 			}
 		}
@@ -311,11 +344,16 @@ namespace UnityEditor
 			get
 			{
 				float num = this.m_Ortho.Fade(90f, 0f);
+				float result;
 				if (!this.camera.orthographic)
 				{
-					return this.size / Mathf.Tan(num * 0.5f * 0.0174532924f);
+					result = this.size / Mathf.Tan(num * 0.5f * 0.0174532924f);
 				}
-				return this.size * 2f;
+				else
+				{
+					result = this.size * 2f;
+				}
+				return result;
 			}
 		}
 
@@ -502,15 +540,28 @@ namespace UnityEditor
 
 		public static void RepaintAll()
 		{
-			foreach (SceneView sceneView in SceneView.s_SceneViews)
+			IEnumerator enumerator = SceneView.s_SceneViews.GetEnumerator();
+			try
 			{
-				sceneView.Repaint();
+				while (enumerator.MoveNext())
+				{
+					SceneView sceneView = (SceneView)enumerator.Current;
+					sceneView.Repaint();
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		internal override void SetSearchFilter(string searchFilter, SearchableEditorWindow.SearchMode mode, bool setAll)
 		{
-			if (this.m_SearchFilter == string.Empty || searchFilter == string.Empty)
+			if (this.m_SearchFilter == "" || searchFilter == "")
 			{
 				this.m_StartSearchFilterTime = EditorApplication.timeSinceStartup;
 			}
@@ -567,7 +618,12 @@ namespace UnityEditor
 			this.m_2DModeContent = new GUIContent("2D");
 			this.m_RenderDocContent = EditorGUIUtility.IconContent("renderdoc", "Capture|Capture the current view and open in RenderDoc");
 			this.m_SceneViewOverlay = new SceneViewOverlay(this);
-			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(SceneView.RepaintAll));
+			Delegate arg_190_0 = EditorApplication.modifierKeysChanged;
+			if (SceneView.<>f__mg$cache0 == null)
+			{
+				SceneView.<>f__mg$cache0 = new EditorApplication.CallbackFunction(SceneView.RepaintAll);
+			}
+			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(arg_190_0, SceneView.<>f__mg$cache0);
 			this.m_DraggingLockedState = SceneView.DraggingLockedState.NotDragging;
 			this.CreateSceneCameraAndLights();
 			if (this.m_2DMode)
@@ -615,7 +671,12 @@ namespace UnityEditor
 
 		public override void OnDisable()
 		{
-			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(SceneView.RepaintAll));
+			Delegate arg_23_0 = EditorApplication.modifierKeysChanged;
+			if (SceneView.<>f__mg$cache1 == null)
+			{
+				SceneView.<>f__mg$cache1 = new EditorApplication.CallbackFunction(SceneView.RepaintAll);
+			}
+			EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Remove(arg_23_0, SceneView.<>f__mg$cache1);
 			if (this.m_Camera)
 			{
 				UnityEngine.Object.DestroyImmediate(this.m_Camera.gameObject, true);
@@ -752,10 +813,13 @@ namespace UnityEditor
 
 		private void RefreshAudioPlay()
 		{
-			if (SceneView.s_AudioSceneView != null && SceneView.s_AudioSceneView != this && SceneView.s_AudioSceneView.m_AudioPlay)
+			if (SceneView.s_AudioSceneView != null && SceneView.s_AudioSceneView != this)
 			{
-				SceneView.s_AudioSceneView.m_AudioPlay = false;
-				SceneView.s_AudioSceneView.Repaint();
+				if (SceneView.s_AudioSceneView.m_AudioPlay)
+				{
+					SceneView.s_AudioSceneView.m_AudioPlay = false;
+					SceneView.s_AudioSceneView.Repaint();
+				}
 			}
 			AudioSource[] array = (AudioSource[])UnityEngine.Object.FindObjectsOfType(typeof(AudioSource));
 			AudioSource[] array2 = array;
@@ -819,12 +883,17 @@ namespace UnityEditor
 		[MenuItem("GameObject/Set as first sibling %=", true)]
 		internal static bool ValidateMenuMoveToFront()
 		{
+			bool result;
 			if (Selection.activeTransform != null)
 			{
 				Transform parent = Selection.activeTransform.parent;
-				return parent != null && parent.GetChild(0) != Selection.activeTransform;
+				result = (parent != null && parent.GetChild(0) != Selection.activeTransform);
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		[MenuItem("GameObject/Set as last sibling %-")]
@@ -842,12 +911,17 @@ namespace UnityEditor
 		[MenuItem("GameObject/Set as last sibling %-", true)]
 		internal static bool ValidateMenuMoveToBack()
 		{
+			bool result;
 			if (Selection.activeTransform != null)
 			{
 				Transform parent = Selection.activeTransform.parent;
-				return parent != null && parent.GetChild(parent.childCount - 1) != Selection.activeTransform;
+				result = (parent != null && parent.GetChild(parent.childCount - 1) != Selection.activeTransform);
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		[MenuItem("GameObject/Move To View %&f")]
@@ -920,36 +994,35 @@ namespace UnityEditor
 
 		private static void CreateMipColorsTexture()
 		{
-			if (SceneView.s_MipColorsTexture)
+			if (!SceneView.s_MipColorsTexture)
 			{
-				return;
-			}
-			SceneView.s_MipColorsTexture = new Texture2D(32, 32, TextureFormat.ARGB32, true);
-			SceneView.s_MipColorsTexture.hideFlags = HideFlags.HideAndDontSave;
-			Color[] array = new Color[]
-			{
-				new Color(0f, 0f, 1f, 0.8f),
-				new Color(0f, 0.5f, 1f, 0.4f),
-				new Color(1f, 1f, 1f, 0f),
-				new Color(1f, 0.7f, 0f, 0.2f),
-				new Color(1f, 0.3f, 0f, 0.6f),
-				new Color(1f, 0f, 0f, 0.8f)
-			};
-			int num = Mathf.Min(6, SceneView.s_MipColorsTexture.mipmapCount);
-			for (int i = 0; i < num; i++)
-			{
-				int num2 = Mathf.Max(SceneView.s_MipColorsTexture.width >> i, 1);
-				int num3 = Mathf.Max(SceneView.s_MipColorsTexture.height >> i, 1);
-				Color[] array2 = new Color[num2 * num3];
-				for (int j = 0; j < array2.Length; j++)
+				SceneView.s_MipColorsTexture = new Texture2D(32, 32, TextureFormat.RGBA32, true);
+				SceneView.s_MipColorsTexture.hideFlags = HideFlags.HideAndDontSave;
+				Color[] array = new Color[]
 				{
-					array2[j] = array[i];
+					new Color(0f, 0f, 1f, 0.8f),
+					new Color(0f, 0.5f, 1f, 0.4f),
+					new Color(1f, 1f, 1f, 0f),
+					new Color(1f, 0.7f, 0f, 0.2f),
+					new Color(1f, 0.3f, 0f, 0.6f),
+					new Color(1f, 0f, 0f, 0.8f)
+				};
+				int num = Mathf.Min(6, SceneView.s_MipColorsTexture.mipmapCount);
+				for (int i = 0; i < num; i++)
+				{
+					int num2 = Mathf.Max(SceneView.s_MipColorsTexture.width >> i, 1);
+					int num3 = Mathf.Max(SceneView.s_MipColorsTexture.height >> i, 1);
+					Color[] array2 = new Color[num2 * num3];
+					for (int j = 0; j < array2.Length; j++)
+					{
+						array2[j] = array[i];
+					}
+					SceneView.s_MipColorsTexture.SetPixels(array2, i);
 				}
-				SceneView.s_MipColorsTexture.SetPixels(array2, i);
+				SceneView.s_MipColorsTexture.filterMode = FilterMode.Trilinear;
+				SceneView.s_MipColorsTexture.Apply(false);
+				Shader.SetGlobalTexture("_SceneViewMipcolorsTexture", SceneView.s_MipColorsTexture);
 			}
-			SceneView.s_MipColorsTexture.filterMode = FilterMode.Trilinear;
-			SceneView.s_MipColorsTexture.Apply(false);
-			Shader.SetGlobalTexture("_SceneViewMipcolorsTexture", SceneView.s_MipColorsTexture);
 		}
 
 		public void SetSceneViewFiltering(bool enable)
@@ -1030,7 +1103,7 @@ namespace UnityEditor
 			{
 				num = 1;
 			}
-			RenderTextureFormat renderTextureFormat = (!hdr) ? RenderTextureFormat.ARGB32 : RenderTextureFormat.ARGBHalf;
+			RenderTextureFormat renderTextureFormat = (!hdr || !SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)) ? RenderTextureFormat.ARGB32 : RenderTextureFormat.ARGBHalf;
 			if (this.m_SceneTargetTexture != null)
 			{
 				bool flag2 = this.m_SceneTargetTexture != null && flag == this.m_SceneTargetTexture.sRGB;
@@ -1066,12 +1139,12 @@ namespace UnityEditor
 
 		internal static bool DoesCameraDrawModeSupportDeferred(DrawCameraMode mode)
 		{
-			return mode == DrawCameraMode.Normal || mode == DrawCameraMode.Textured || mode == DrawCameraMode.ShadowCascades || mode == DrawCameraMode.RenderPaths || mode == DrawCameraMode.AlphaChannel || mode == DrawCameraMode.DeferredDiffuse || mode == DrawCameraMode.DeferredSpecular || mode == DrawCameraMode.DeferredSmoothness || mode == DrawCameraMode.DeferredNormal || mode == DrawCameraMode.Charting || mode == DrawCameraMode.Systems || mode == DrawCameraMode.Albedo || mode == DrawCameraMode.Emissive || mode == DrawCameraMode.Irradiance || mode == DrawCameraMode.Directionality || mode == DrawCameraMode.Baked || mode == DrawCameraMode.Clustering || mode == DrawCameraMode.LitClustering;
+			return mode == DrawCameraMode.Normal || mode == DrawCameraMode.Textured || mode == DrawCameraMode.TexturedWire || mode == DrawCameraMode.ShadowCascades || mode == DrawCameraMode.RenderPaths || mode == DrawCameraMode.AlphaChannel || mode == DrawCameraMode.DeferredDiffuse || mode == DrawCameraMode.DeferredSpecular || mode == DrawCameraMode.DeferredSmoothness || mode == DrawCameraMode.DeferredNormal || mode == DrawCameraMode.Charting || mode == DrawCameraMode.Systems || mode == DrawCameraMode.Albedo || mode == DrawCameraMode.Emissive || mode == DrawCameraMode.Irradiance || mode == DrawCameraMode.Directionality || mode == DrawCameraMode.Baked || mode == DrawCameraMode.Clustering || mode == DrawCameraMode.LitClustering;
 		}
 
 		internal static bool DoesCameraDrawModeSupportHDR(DrawCameraMode mode)
 		{
-			return mode != DrawCameraMode.Wireframe && mode != DrawCameraMode.TexturedWire && mode != DrawCameraMode.Overdraw && mode != DrawCameraMode.Mipmaps;
+			return mode == DrawCameraMode.Textured || mode == DrawCameraMode.TexturedWire;
 		}
 
 		private void PrepareCameraTargetTexture(Rect cameraRect)
@@ -1079,46 +1152,48 @@ namespace UnityEditor
 			bool hdr = this.SceneViewIsRenderingHDR();
 			this.CreateCameraTargetTexture(cameraRect, hdr);
 			this.m_Camera.targetTexture = this.m_SceneTargetTexture;
-			if ((this.UseSceneFiltering() || !SceneView.DoesCameraDrawModeSupportDeferred(this.m_RenderMode)) && this.IsSceneCameraDeferred())
+			if (this.UseSceneFiltering() || !SceneView.DoesCameraDrawModeSupportDeferred(this.m_RenderMode))
 			{
-				this.m_Camera.renderingPath = RenderingPath.Forward;
+				if (this.IsSceneCameraDeferred())
+				{
+					this.m_Camera.renderingPath = RenderingPath.Forward;
+				}
 			}
 		}
 
 		private void PrepareCameraReplacementShader()
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			Handles.SetSceneViewColors(SceneView.kSceneViewWire, SceneView.kSceneViewWireOverlay, SceneView.kSceneViewWireActive, SceneView.kSceneViewWireSelected);
-			if (this.m_RenderMode == DrawCameraMode.Overdraw)
-			{
-				if (!SceneView.s_ShowOverdrawShader)
+				Handles.SetSceneViewColors(SceneView.kSceneViewWire, SceneView.kSceneViewWireOverlay, SceneView.kSceneViewSelectedOutline, SceneView.kSceneViewSelectedWire);
+				if (this.m_RenderMode == DrawCameraMode.Overdraw)
 				{
-					SceneView.s_ShowOverdrawShader = (EditorGUIUtility.LoadRequired("SceneView/SceneViewShowOverdraw.shader") as Shader);
+					if (!SceneView.s_ShowOverdrawShader)
+					{
+						SceneView.s_ShowOverdrawShader = (EditorGUIUtility.LoadRequired("SceneView/SceneViewShowOverdraw.shader") as Shader);
+					}
+					this.m_Camera.SetReplacementShader(SceneView.s_ShowOverdrawShader, "RenderType");
 				}
-				this.m_Camera.SetReplacementShader(SceneView.s_ShowOverdrawShader, "RenderType");
-			}
-			else if (this.m_RenderMode == DrawCameraMode.Mipmaps)
-			{
-				if (!SceneView.s_ShowMipsShader)
+				else if (this.m_RenderMode == DrawCameraMode.Mipmaps)
 				{
-					SceneView.s_ShowMipsShader = (EditorGUIUtility.LoadRequired("SceneView/SceneViewShowMips.shader") as Shader);
-				}
-				if (SceneView.s_ShowMipsShader != null && SceneView.s_ShowMipsShader.isSupported)
-				{
-					SceneView.CreateMipColorsTexture();
-					this.m_Camera.SetReplacementShader(SceneView.s_ShowMipsShader, "RenderType");
+					if (!SceneView.s_ShowMipsShader)
+					{
+						SceneView.s_ShowMipsShader = (EditorGUIUtility.LoadRequired("SceneView/SceneViewShowMips.shader") as Shader);
+					}
+					if (SceneView.s_ShowMipsShader != null && SceneView.s_ShowMipsShader.isSupported)
+					{
+						SceneView.CreateMipColorsTexture();
+						this.m_Camera.SetReplacementShader(SceneView.s_ShowMipsShader, "RenderType");
+					}
+					else
+					{
+						this.m_Camera.SetReplacementShader(this.m_ReplacementShader, this.m_ReplacementString);
+					}
 				}
 				else
 				{
 					this.m_Camera.SetReplacementShader(this.m_ReplacementShader, this.m_ReplacementString);
 				}
-			}
-			else
-			{
-				this.m_Camera.SetReplacementShader(this.m_ReplacementShader, this.m_ReplacementString);
 			}
 		}
 
@@ -1130,60 +1205,59 @@ namespace UnityEditor
 		private void DoDrawCamera(Rect cameraRect, out bool pushedGUIClip)
 		{
 			pushedGUIClip = false;
-			if (!this.m_Camera.gameObject.activeInHierarchy)
+			if (this.m_Camera.gameObject.activeInHierarchy)
 			{
-				return;
-			}
-			DrawGridParameters gridParam = this.grid.PrepareGridRender(this.camera, this.pivot, this.m_Rotation.target, this.m_Size.value, this.m_Ortho.target, AnnotationUtility.showGrid);
-			Event current = Event.current;
-			if (this.UseSceneFiltering())
-			{
-				if (current.type == EventType.Repaint)
+				DrawGridParameters gridParam = this.grid.PrepareGridRender(this.camera, this.pivot, this.m_Rotation.target, this.m_Size.value, this.m_Ortho.target, AnnotationUtility.showGrid);
+				Event current = Event.current;
+				if (this.UseSceneFiltering())
 				{
-					Handles.EnableCameraFx(this.m_Camera, true);
-					Handles.SetCameraFilterMode(this.m_Camera, Handles.FilterMode.ShowRest);
-					float num = Mathf.Clamp01((float)(EditorApplication.timeSinceStartup - this.m_StartSearchFilterTime));
-					Handles.DrawCamera(cameraRect, this.m_Camera, this.m_RenderMode);
-					Handles.DrawCameraFade(this.m_Camera, num);
-					Handles.EnableCameraFx(this.m_Camera, false);
-					Handles.SetCameraFilterMode(this.m_Camera, Handles.FilterMode.ShowFiltered);
-					if (!SceneView.s_AuraShader)
+					if (current.type == EventType.Repaint)
 					{
-						SceneView.s_AuraShader = (EditorGUIUtility.LoadRequired("SceneView/SceneViewAura.shader") as Shader);
+						Handles.EnableCameraFx(this.m_Camera, true);
+						Handles.SetCameraFilterMode(this.m_Camera, Handles.FilterMode.ShowRest);
+						float num = Mathf.Clamp01((float)(EditorApplication.timeSinceStartup - this.m_StartSearchFilterTime));
+						Handles.DrawCamera(cameraRect, this.m_Camera, this.m_RenderMode);
+						Handles.DrawCameraFade(this.m_Camera, num);
+						Handles.EnableCameraFx(this.m_Camera, false);
+						Handles.SetCameraFilterMode(this.m_Camera, Handles.FilterMode.ShowFiltered);
+						if (!SceneView.s_AuraShader)
+						{
+							SceneView.s_AuraShader = (EditorGUIUtility.LoadRequired("SceneView/SceneViewAura.shader") as Shader);
+						}
+						this.m_Camera.SetReplacementShader(SceneView.s_AuraShader, "");
+						Handles.DrawCamera(cameraRect, this.m_Camera, this.m_RenderMode);
+						this.m_Camera.SetReplacementShader(this.m_ReplacementShader, this.m_ReplacementString);
+						Handles.DrawCamera(cameraRect, this.m_Camera, this.m_RenderMode, gridParam);
+						if (num < 1f)
+						{
+							base.Repaint();
+						}
 					}
-					this.m_Camera.SetReplacementShader(SceneView.s_AuraShader, string.Empty);
-					Handles.DrawCamera(cameraRect, this.m_Camera, this.m_RenderMode);
-					this.m_Camera.SetReplacementShader(this.m_ReplacementShader, this.m_ReplacementString);
-					Handles.DrawCamera(cameraRect, this.m_Camera, this.m_RenderMode, gridParam);
-					if (num < 1f)
+					if (current.type == EventType.Repaint)
 					{
-						base.Repaint();
+						RenderTexture.active = null;
 					}
+					GUI.EndGroup();
+					GUI.BeginGroup(new Rect(0f, 17f, base.position.width, base.position.height - 17f));
+					if (current.type == EventType.Repaint)
+					{
+						GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
+						GUI.DrawTexture(cameraRect, this.m_SceneTargetTexture, ScaleMode.StretchToFill, false, 0f);
+						GL.sRGBWrite = false;
+					}
+					Handles.SetCamera(cameraRect, this.m_Camera);
+					this.HandleSelectionAndOnSceneGUI();
 				}
-				if (current.type == EventType.Repaint)
+				else
 				{
-					RenderTexture.active = null;
+					if (this.SceneCameraRendersIntoRT())
+					{
+						GUIClip.Push(new Rect(0f, 0f, base.position.width, base.position.height), Vector2.zero, Vector2.zero, true);
+						pushedGUIClip = true;
+					}
+					Handles.DrawCameraStep1(cameraRect, this.m_Camera, this.m_RenderMode, gridParam);
+					this.DrawRenderModeOverlay(cameraRect);
 				}
-				GUI.EndGroup();
-				GUI.BeginGroup(new Rect(0f, 17f, base.position.width, base.position.height - 17f));
-				if (current.type == EventType.Repaint)
-				{
-					GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
-					GUI.DrawTexture(cameraRect, this.m_SceneTargetTexture, ScaleMode.StretchToFill, false, 0f);
-					GL.sRGBWrite = false;
-				}
-				Handles.SetCamera(cameraRect, this.m_Camera);
-				this.HandleSelectionAndOnSceneGUI();
-			}
-			else
-			{
-				if (this.SceneCameraRendersIntoRT())
-				{
-					GUIClip.Push(new Rect(0f, 0f, base.position.width, base.position.height), Vector2.zero, Vector2.zero, true);
-					pushedGUIClip = true;
-				}
-				Handles.DrawCameraStep1(cameraRect, this.m_Camera, this.m_RenderMode, gridParam);
-				this.DrawRenderModeOverlay(cameraRect);
 			}
 		}
 
@@ -1198,54 +1272,51 @@ namespace UnityEditor
 
 		private void SetupCustomSceneLighting()
 		{
-			if (this.m_SceneLighting)
+			if (!this.m_SceneLighting)
 			{
-				return;
-			}
-			this.m_Light[0].transform.rotation = this.m_Camera.transform.rotation;
-			if (Event.current.type == EventType.Repaint)
-			{
-				InternalEditorUtility.SetCustomLighting(this.m_Light, SceneView.kSceneViewMidLight);
+				this.m_Light[0].transform.rotation = this.m_Camera.transform.rotation;
+				if (Event.current.type == EventType.Repaint)
+				{
+					InternalEditorUtility.SetCustomLighting(this.m_Light, SceneView.kSceneViewMidLight);
+				}
 			}
 		}
 
 		private void CleanupCustomSceneLighting()
 		{
-			if (this.m_SceneLighting)
+			if (!this.m_SceneLighting)
 			{
-				return;
-			}
-			if (Event.current.type == EventType.Repaint)
-			{
-				InternalEditorUtility.RemoveCustomLighting();
+				if (Event.current.type == EventType.Repaint)
+				{
+					InternalEditorUtility.RemoveCustomLighting();
+				}
 			}
 		}
 
 		private void HandleViewToolCursor()
 		{
-			if (!Tools.viewToolActive || Event.current.type != EventType.Repaint)
+			if (Tools.viewToolActive && Event.current.type == EventType.Repaint)
 			{
-				return;
-			}
-			MouseCursor mouseCursor = MouseCursor.Arrow;
-			switch (Tools.viewTool)
-			{
-			case ViewTool.Orbit:
-				mouseCursor = MouseCursor.Orbit;
-				break;
-			case ViewTool.Pan:
-				mouseCursor = MouseCursor.Pan;
-				break;
-			case ViewTool.Zoom:
-				mouseCursor = MouseCursor.Zoom;
-				break;
-			case ViewTool.FPS:
-				mouseCursor = MouseCursor.FPS;
-				break;
-			}
-			if (mouseCursor != MouseCursor.Arrow)
-			{
-				SceneView.AddCursorRect(new Rect(0f, 17f, base.position.width, base.position.height - 17f), mouseCursor);
+				MouseCursor mouseCursor = MouseCursor.Arrow;
+				switch (Tools.viewTool)
+				{
+				case ViewTool.Orbit:
+					mouseCursor = MouseCursor.Orbit;
+					break;
+				case ViewTool.Pan:
+					mouseCursor = MouseCursor.Pan;
+					break;
+				case ViewTool.Zoom:
+					mouseCursor = MouseCursor.Zoom;
+					break;
+				case ViewTool.FPS:
+					mouseCursor = MouseCursor.FPS;
+					break;
+				}
+				if (mouseCursor != MouseCursor.Arrow)
+				{
+					SceneView.AddCursorRect(new Rect(0f, 17f, base.position.width, base.position.height - 17f), mouseCursor);
+				}
 			}
 		}
 
@@ -1256,27 +1327,38 @@ namespace UnityEditor
 
 		private void UpdateImageEffects(bool enable)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				Camera mainCamera = SceneView.GetMainCamera();
+				if (!enable || mainCamera == null)
+				{
+					GameObject arg_57_0 = this.m_Camera.gameObject;
+					if (SceneView.<>f__mg$cache2 == null)
+					{
+						SceneView.<>f__mg$cache2 = new ComponentUtility.IsDesiredComponent(SceneView.ComponentHasImageEffectAttribute);
+					}
+					ComponentUtility.DestroyComponentsMatching(arg_57_0, SceneView.<>f__mg$cache2);
+				}
+				else
+				{
+					GameObject arg_8F_0 = mainCamera.gameObject;
+					GameObject arg_8F_1 = this.m_Camera.gameObject;
+					if (SceneView.<>f__mg$cache3 == null)
+					{
+						SceneView.<>f__mg$cache3 = new ComponentUtility.IsDesiredComponent(SceneView.ComponentHasImageEffectAttribute);
+					}
+					ComponentUtility.ReplaceComponentsIfDifferent(arg_8F_0, arg_8F_1, SceneView.<>f__mg$cache3);
+				}
 			}
-			Camera mainCamera = SceneView.GetMainCamera();
-			if (!enable || mainCamera == null)
-			{
-				ComponentUtility.DestroyComponentsMatching(this.m_Camera.gameObject, new ComponentUtility.IsDesiredComponent(SceneView.ComponentHasImageEffectAttribute));
-				return;
-			}
-			ComponentUtility.ReplaceComponentsIfDifferent(mainCamera.gameObject, this.m_Camera.gameObject, new ComponentUtility.IsDesiredComponent(SceneView.ComponentHasImageEffectAttribute));
 		}
 
 		private void DoOnPreSceneGUICallbacks(Rect cameraRect)
 		{
-			if (this.UseSceneFiltering())
+			if (!this.UseSceneFiltering())
 			{
-				return;
+				Handles.SetCamera(cameraRect, this.m_Camera);
+				this.CallOnPreSceneGUI();
 			}
-			Handles.SetCamera(cameraRect, this.m_Camera);
-			this.CallOnPreSceneGUI();
 		}
 
 		private void RepaintGizmosThatAreRenderedOnTopOfSceneView()
@@ -1506,12 +1588,17 @@ namespace UnityEditor
 		private float CalcCameraDist()
 		{
 			float num = this.m_Ortho.Fade(90f, 0f);
+			float result;
 			if (num > 3f)
 			{
 				this.m_Camera.orthographic = false;
-				return this.size / Mathf.Tan(num * 0.5f * 0.0174532924f);
+				result = this.size / Mathf.Tan(num * 0.5f * 0.0174532924f);
 			}
-			return 0f;
+			else
+			{
+				result = 0f;
+			}
+			return result;
 		}
 
 		private void ResetIfNaN()
@@ -1529,32 +1616,45 @@ namespace UnityEditor
 		internal static Camera GetMainCamera()
 		{
 			Camera main = Camera.main;
+			Camera result;
 			if (main != null)
 			{
-				return main;
+				result = main;
 			}
-			Camera[] allCameras = Camera.allCameras;
-			if (allCameras != null && allCameras.Length == 1)
+			else
 			{
-				return allCameras[0];
+				Camera[] allCameras = Camera.allCameras;
+				if (allCameras != null && allCameras.Length == 1)
+				{
+					result = allCameras[0];
+				}
+				else
+				{
+					result = null;
+				}
 			}
-			return null;
+			return result;
 		}
 
 		internal static RenderingPath GetSceneViewRenderingPath()
 		{
 			Camera mainCamera = SceneView.GetMainCamera();
+			RenderingPath result;
 			if (mainCamera != null)
 			{
-				return mainCamera.renderingPath;
+				result = mainCamera.renderingPath;
 			}
-			return RenderingPath.UsePlayerSettings;
+			else
+			{
+				result = RenderingPath.UsePlayerSettings;
+			}
+			return result;
 		}
 
 		internal static bool IsUsingDeferredRenderingPath()
 		{
 			RenderingPath sceneViewRenderingPath = SceneView.GetSceneViewRenderingPath();
-			return sceneViewRenderingPath == RenderingPath.DeferredShading || (sceneViewRenderingPath == RenderingPath.UsePlayerSettings && PlayerSettings.renderingPath == RenderingPath.DeferredShading);
+			return sceneViewRenderingPath == RenderingPath.DeferredShading || (sceneViewRenderingPath == RenderingPath.UsePlayerSettings && EditorGraphicsSettings.GetCurrentTierSettings().renderingPath == RenderingPath.DeferredShading);
 		}
 
 		internal bool CheckDrawModeForRenderingPath(DrawCameraMode mode)
@@ -1570,19 +1670,23 @@ namespace UnityEditor
 				this.m_Camera.hdr = false;
 				this.m_Camera.depthTextureMode = DepthTextureMode.None;
 				this.m_Camera.clearStencilAfterLightingPass = false;
-				return;
 			}
-			Camera mainCamera = SceneView.GetMainCamera();
-			if (mainCamera == null)
+			else
 			{
-				this.m_Camera.hdr = false;
-				this.m_Camera.depthTextureMode = DepthTextureMode.None;
-				this.m_Camera.clearStencilAfterLightingPass = false;
-				return;
+				Camera mainCamera = SceneView.GetMainCamera();
+				if (mainCamera == null)
+				{
+					this.m_Camera.hdr = false;
+					this.m_Camera.depthTextureMode = DepthTextureMode.None;
+					this.m_Camera.clearStencilAfterLightingPass = false;
+				}
+				else
+				{
+					this.m_Camera.hdr = mainCamera.hdr;
+					this.m_Camera.depthTextureMode = mainCamera.depthTextureMode;
+					this.m_Camera.clearStencilAfterLightingPass = mainCamera.clearStencilAfterLightingPass;
+				}
 			}
-			this.m_Camera.hdr = mainCamera.hdr;
-			this.m_Camera.depthTextureMode = mainCamera.depthTextureMode;
-			this.m_Camera.clearStencilAfterLightingPass = mainCamera.clearStencilAfterLightingPass;
 		}
 
 		private void SetupCamera()
@@ -1623,8 +1727,16 @@ namespace UnityEditor
 				this.m_RenderMode = DrawCameraMode.Textured;
 			}
 			this.SetSceneCameraHDRAndDepthModes();
-			Handles.EnableCameraFlares(this.m_Camera, this.m_SceneViewState.showFlares);
-			Handles.EnableCameraSkybox(this.m_Camera, this.m_SceneViewState.showSkybox);
+			if (this.m_RenderMode == DrawCameraMode.Textured || this.m_RenderMode == DrawCameraMode.TexturedWire)
+			{
+				Handles.EnableCameraFlares(this.m_Camera, this.m_SceneViewState.showFlares);
+				Handles.EnableCameraSkybox(this.m_Camera, this.m_SceneViewState.showSkybox);
+			}
+			else
+			{
+				Handles.EnableCameraFlares(this.m_Camera, false);
+				Handles.EnableCameraSkybox(this.m_Camera, false);
+			}
 			this.m_Light[0].transform.position = this.m_Camera.transform.position;
 			this.m_Light[0].transform.rotation = this.m_Camera.transform.rotation;
 			if (this.m_AudioPlay)
@@ -1634,13 +1746,17 @@ namespace UnityEditor
 			}
 			if (this.m_ViewIsLockedToObject && Selection.gameObjects.Length > 0)
 			{
-				switch (this.m_DraggingLockedState)
+				SceneView.DraggingLockedState draggingLockedState = this.m_DraggingLockedState;
+				if (draggingLockedState != SceneView.DraggingLockedState.Dragging)
 				{
-				case SceneView.DraggingLockedState.NotDragging:
-					this.m_Position.value = Selection.activeGameObject.transform.position;
-					break;
-				case SceneView.DraggingLockedState.LookAt:
-					if (!this.m_Position.value.Equals(Selection.activeGameObject.transform.position))
+					if (draggingLockedState != SceneView.DraggingLockedState.LookAt)
+					{
+						if (draggingLockedState == SceneView.DraggingLockedState.NotDragging)
+						{
+							this.m_Position.value = Selection.activeGameObject.transform.position;
+						}
+					}
+					else if (!this.m_Position.value.Equals(Selection.activeGameObject.transform.position))
 					{
 						if (!EditorApplication.isPlaying)
 						{
@@ -1655,7 +1771,6 @@ namespace UnityEditor
 					{
 						this.m_DraggingLockedState = SceneView.DraggingLockedState.NotDragging;
 					}
-					break;
 				}
 			}
 		}
@@ -1765,8 +1880,7 @@ namespace UnityEditor
 				SceneView.s_CurrentTool = ((!Tools.viewToolActive) ? Tools.current : Tool.View);
 			}
 			Tool tool = (Event.current.type != EventType.Repaint) ? SceneView.s_CurrentTool : Tools.current;
-			Tool tool2 = tool;
-			switch (tool2 + 1)
+			switch (tool + 1)
 			{
 			case Tool.Rotate:
 				MoveTool.OnGUI(this);
@@ -1804,32 +1918,30 @@ namespace UnityEditor
 		{
 			Event current = Event.current;
 			SpriteUtility.OnSceneDrag(this);
-			if (current.type == EventType.Used)
+			if (current.type != EventType.Used)
 			{
-				return;
-			}
-			if (DragAndDrop.objectReferences.Length == 0)
-			{
-				return;
-			}
-			if (this.m_DragEditorCache == null)
-			{
-				this.m_DragEditorCache = new EditorCache(EditorFeatures.OnSceneDrag);
-			}
-			UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
-			for (int i = 0; i < objectReferences.Length; i++)
-			{
-				UnityEngine.Object @object = objectReferences[i];
-				if (!(@object == null))
+				if (DragAndDrop.objectReferences.Length != 0)
 				{
-					EditorWrapper editorWrapper = this.m_DragEditorCache[@object];
-					if (editorWrapper != null)
+					if (this.m_DragEditorCache == null)
 					{
-						editorWrapper.OnSceneDrag(this);
+						this.m_DragEditorCache = new EditorCache(EditorFeatures.OnSceneDrag);
 					}
-					if (current.type == EventType.Used)
+					UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
+					for (int i = 0; i < objectReferences.Length; i++)
 					{
-						return;
+						UnityEngine.Object @object = objectReferences[i];
+						if (!(@object == null))
+						{
+							EditorWrapper editorWrapper = this.m_DragEditorCache[@object];
+							if (editorWrapper != null)
+							{
+								editorWrapper.OnSceneDrag(this);
+							}
+							if (current.type == EventType.Used)
+							{
+								break;
+							}
+						}
 					}
 				}
 			}
@@ -1839,45 +1951,34 @@ namespace UnityEditor
 		{
 			Event current = Event.current;
 			EventType type = current.type;
-			switch (type)
+			if (type != EventType.DragPerform && type != EventType.DragUpdated)
 			{
-			case EventType.Repaint:
-				this.CallEditorDragFunctions();
-				return;
-			case EventType.Layout:
-				IL_25:
-				if (type != EventType.DragExited)
+				if (type == EventType.DragExited)
 				{
-					return;
+					this.CallEditorDragFunctions();
+					this.CleanupEditorDragFunctions();
 				}
-				this.CallEditorDragFunctions();
-				this.CleanupEditorDragFunctions();
-				return;
-			case EventType.DragUpdated:
-			case EventType.DragPerform:
+			}
+			else
 			{
 				this.CallEditorDragFunctions();
-				if (current.type == EventType.Used)
+				if (current.type != EventType.Used)
 				{
-					return;
-				}
-				bool flag = current.type == EventType.DragPerform;
-				if (DragAndDrop.visualMode != DragAndDropVisualMode.Copy)
-				{
-					GameObject dropUpon = HandleUtility.PickGameObject(Event.current.mousePosition, true);
-					DragAndDrop.visualMode = InternalEditorUtility.SceneViewDrag(dropUpon, this.pivot, Event.current.mousePosition, flag);
-				}
-				if (flag && DragAndDrop.visualMode != DragAndDropVisualMode.None)
-				{
-					DragAndDrop.AcceptDrag();
+					bool flag = current.type == EventType.DragPerform;
+					if (DragAndDrop.visualMode != DragAndDropVisualMode.Copy)
+					{
+						GameObject dropUpon = HandleUtility.PickGameObject(Event.current.mousePosition, true);
+						DragAndDrop.visualMode = InternalEditorUtility.SceneViewDrag(dropUpon, this.pivot, Event.current.mousePosition, flag);
+					}
+					if (flag && DragAndDrop.visualMode != DragAndDropVisualMode.None)
+					{
+						DragAndDrop.AcceptDrag();
+						current.Use();
+						GUIUtility.ExitGUI();
+					}
 					current.Use();
-					GUIUtility.ExitGUI();
 				}
-				current.Use();
-				return;
 			}
-			}
-			goto IL_25;
 		}
 
 		private void CommandsGUI()
@@ -2030,16 +2131,21 @@ namespace UnityEditor
 		internal bool Frame(Bounds bounds)
 		{
 			float num = bounds.extents.magnitude * 1.5f;
+			bool result;
 			if (num == float.PositiveInfinity)
 			{
-				return false;
+				result = false;
 			}
-			if (num == 0f)
+			else
 			{
-				num = 10f;
+				if (num == 0f)
+				{
+					num = 10f;
+				}
+				this.LookAt(bounds.center, this.m_Rotation.target, num * 2.2f, this.m_Ortho.value, EditorApplication.isPlaying);
+				result = true;
 			}
-			this.LookAt(bounds.center, this.m_Rotation.target, num * 2.2f, this.m_Ortho.value, EditorApplication.isPlaying);
-			return true;
+			return result;
 		}
 
 		private void CreateSceneCameraAndLights()
@@ -2144,6 +2250,10 @@ namespace UnityEditor
 					}
 				}
 			}
+			if (SceneView.onPreSceneGUIDelegate != null)
+			{
+				SceneView.onPreSceneGUIDelegate(this);
+			}
 			Handles.matrix = Matrix4x4.identity;
 		}
 
@@ -2158,9 +2268,12 @@ namespace UnityEditor
 				if (sceneView.m_Parent is DockArea)
 				{
 					DockArea dockArea = (DockArea)sceneView.m_Parent;
-					if (dockArea && dockArea.actualView == sceneView)
+					if (dockArea)
 					{
-						list.Add(sceneView);
+						if (dockArea.actualView == sceneView)
+						{
+							list.Add(sceneView);
+						}
 					}
 				}
 			}
@@ -2197,25 +2310,27 @@ namespace UnityEditor
 
 		private void ResetToDefaults(EditorBehaviorMode behaviorMode)
 		{
-			if (behaviorMode != EditorBehaviorMode.Mode3D)
+			if (behaviorMode != EditorBehaviorMode.Mode2D)
 			{
-				if (behaviorMode == EditorBehaviorMode.Mode2D)
+				if (behaviorMode != EditorBehaviorMode.Mode3D)
 				{
-					this.m_2DMode = true;
-					this.m_Rotation.value = Quaternion.identity;
-					this.m_Position.value = SceneView.kDefaultPivot;
-					this.m_Size.value = 10f;
-					this.m_Ortho.value = true;
-					this.m_LastSceneViewRotation = SceneView.kDefaultRotation;
-					this.m_LastSceneViewOrtho = false;
-					return;
 				}
+				this.m_2DMode = false;
+				this.m_Rotation.value = SceneView.kDefaultRotation;
+				this.m_Position.value = SceneView.kDefaultPivot;
+				this.m_Size.value = 10f;
+				this.m_Ortho.value = false;
 			}
-			this.m_2DMode = false;
-			this.m_Rotation.value = SceneView.kDefaultRotation;
-			this.m_Position.value = SceneView.kDefaultPivot;
-			this.m_Size.value = 10f;
-			this.m_Ortho.value = false;
+			else
+			{
+				this.m_2DMode = true;
+				this.m_Rotation.value = Quaternion.identity;
+				this.m_Position.value = SceneView.kDefaultPivot;
+				this.m_Size.value = 10f;
+				this.m_Ortho.value = true;
+				this.m_LastSceneViewRotation = SceneView.kDefaultRotation;
+				this.m_LastSceneViewOrtho = false;
+			}
 		}
 
 		internal void OnNewProjectLayoutWasCreated()
@@ -2256,7 +2371,7 @@ namespace UnityEditor
 				SceneView sceneView = array[0] as SceneView;
 				if (sceneView.in2DMode)
 				{
-					Analytics.Event("2D", "SceneView", "Single 2D", 1);
+					UsabilityAnalytics.Event("2D", "SceneView", "Single 2D", 1);
 				}
 			}
 		}

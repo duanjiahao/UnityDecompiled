@@ -76,5 +76,13 @@ namespace UnityEditor.Connect
 				this.m_JavascriptGlobalObject.EnableService(enabled);
 			}
 		}
+
+		public void OnProjectUnbound()
+		{
+			if (this.m_JavascriptGlobalObject != null)
+			{
+				this.m_JavascriptGlobalObject.OnProjectUnbound();
+			}
+		}
 	}
 }

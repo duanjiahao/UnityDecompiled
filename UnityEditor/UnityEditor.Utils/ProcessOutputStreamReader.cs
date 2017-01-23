@@ -31,21 +31,20 @@ namespace UnityEditor.Utils
 
 		private void ThreadFunc()
 		{
-			if (this.hostProcessExited())
+			if (!this.hostProcessExited())
 			{
-				return;
-			}
-			while (this.stream.BaseStream != null)
-			{
-				string text = this.stream.ReadLine();
-				if (text == null)
+				while (this.stream.BaseStream != null)
 				{
-					return;
-				}
-				List<string> obj = this.lines;
-				lock (obj)
-				{
-					this.lines.Add(text);
+					string text = this.stream.ReadLine();
+					if (text == null)
+					{
+						break;
+					}
+					object obj = this.lines;
+					lock (obj)
+					{
+						this.lines.Add(text);
+					}
 				}
 			}
 		}
@@ -56,7 +55,7 @@ namespace UnityEditor.Utils
 			{
 				this.thread.Join();
 			}
-			List<string> obj = this.lines;
+			object obj = this.lines;
 			string[] result;
 			lock (obj)
 			{

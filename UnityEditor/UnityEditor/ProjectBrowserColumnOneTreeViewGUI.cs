@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
@@ -14,9 +15,9 @@ namespace UnityEditor
 
 		private Texture2D k_FavoriteFilterIcon = EditorGUIUtility.FindTexture("Search Icon");
 
-		private bool m_IsCreatingSavedFilter;
+		private bool m_IsCreatingSavedFilter = false;
 
-		public ProjectBrowserColumnOneTreeViewGUI(TreeView treeView) : base(treeView)
+		public ProjectBrowserColumnOneTreeViewGUI(TreeViewController treeView) : base(treeView)
 		{
 		}
 
@@ -29,11 +30,11 @@ namespace UnityEditor
 
 		public override Rect GetRowRect(int row, float rowWidth)
 		{
-			List<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+			IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
 			return new Rect(0f, this.GetTopPixelOfRow(row, rows), rowWidth, this.k_LineHeight);
 		}
 
-		private float GetTopPixelOfRow(int row, List<TreeViewItem> rows)
+		private float GetTopPixelOfRow(int row, IList<TreeViewItem> rows)
 		{
 			float num = (float)row * this.k_LineHeight;
 			TreeViewItem treeViewItem = rows[row];
@@ -75,24 +76,35 @@ namespace UnityEditor
 
 		protected override Texture GetIconForItem(TreeViewItem item)
 		{
+			Texture result;
 			if (item != null && item.icon != null)
 			{
-				return item.icon;
+				result = item.icon;
 			}
-			SearchFilterTreeItem searchFilterTreeItem = item as SearchFilterTreeItem;
-			if (searchFilterTreeItem == null)
+			else
 			{
-				return base.GetIconForItem(item);
+				SearchFilterTreeItem searchFilterTreeItem = item as SearchFilterTreeItem;
+				if (searchFilterTreeItem != null)
+				{
+					if (this.IsVisibleRootNode(item))
+					{
+						result = this.k_FavoritesIcon;
+					}
+					else if (searchFilterTreeItem.isFolder)
+					{
+						result = this.k_FavoriteFolderIcon;
+					}
+					else
+					{
+						result = this.k_FavoriteFilterIcon;
+					}
+				}
+				else
+				{
+					result = base.GetIconForItem(item);
+				}
 			}
-			if (this.IsVisibleRootNode(item))
-			{
-				return this.k_FavoritesIcon;
-			}
-			if (searchFilterTreeItem.isFolder)
-			{
-				return this.k_FavoriteFolderIcon;
-			}
-			return this.k_FavoriteFilterIcon;
+			return result;
 		}
 
 		public static float GetListAreaGridSize()

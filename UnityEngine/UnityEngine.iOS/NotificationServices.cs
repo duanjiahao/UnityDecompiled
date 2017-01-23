@@ -7,7 +7,6 @@ namespace UnityEngine.iOS
 	{
 		public static extern int localNotificationCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -28,14 +27,12 @@ namespace UnityEngine.iOS
 
 		public static extern LocalNotification[] scheduledLocalNotifications
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int remoteNotificationCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -56,54 +53,43 @@ namespace UnityEngine.iOS
 
 		public static extern NotificationType enabledNotificationTypes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern byte[] deviceToken
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string registrationError
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern LocalNotification GetLocalNotification(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ScheduleLocalNotification(LocalNotification notification);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PresentLocalNotificationNow(LocalNotification notification);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CancelLocalNotification(LocalNotification notification);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CancelAllLocalNotifications();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern RemoteNotification GetRemoteNotification(int index);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearLocalNotifications();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearRemoteNotifications();
 
@@ -112,11 +98,9 @@ namespace UnityEngine.iOS
 			NotificationServices.RegisterForNotifications(notificationTypes, true);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RegisterForNotifications(NotificationType notificationTypes, bool registerForRemote);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnregisterForRemoteNotifications();
 	}

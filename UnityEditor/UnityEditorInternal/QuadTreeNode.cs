@@ -7,8 +7,6 @@ namespace UnityEditorInternal
 {
 	internal class QuadTreeNode<T> where T : IBounds
 	{
-		private const float kSmallestAreaForQuadTreeNode = 10f;
-
 		private Rect m_BoundingRect;
 
 		private static Color m_DebugFillColor = new Color(1f, 1f, 1f, 0.01f);
@@ -16,6 +14,8 @@ namespace UnityEditorInternal
 		private static Color m_DebugWireColor = new Color(1f, 0f, 0f, 0.5f);
 
 		private static Color m_DebugBoxFillColor = new Color(1f, 0f, 0f, 0.01f);
+
+		private const float kSmallestAreaForQuadTreeNode = 10f;
 
 		private List<T> m_Elements = new List<T>();
 
@@ -185,16 +185,15 @@ namespace UnityEditorInternal
 
 		private void Subdivide()
 		{
-			if (this.m_BoundingRect.height * this.m_BoundingRect.width <= 10f)
+			if (this.m_BoundingRect.height * this.m_BoundingRect.width > 10f)
 			{
-				return;
+				float num = this.m_BoundingRect.width / 2f;
+				float num2 = this.m_BoundingRect.height / 2f;
+				this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.position.x, this.m_BoundingRect.position.y, num, num2)));
+				this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.xMin, this.m_BoundingRect.yMin + num2, num, num2)));
+				this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.xMin + num, this.m_BoundingRect.yMin, num, num2)));
+				this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.xMin + num, this.m_BoundingRect.yMin + num2, num, num2)));
 			}
-			float num = this.m_BoundingRect.width / 2f;
-			float num2 = this.m_BoundingRect.height / 2f;
-			this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.position.x, this.m_BoundingRect.position.y, num, num2)));
-			this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.xMin, this.m_BoundingRect.yMin + num2, num, num2)));
-			this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.xMin + num, this.m_BoundingRect.yMin, num, num2)));
-			this.m_ChildrenNodes.Add(new QuadTreeNode<T>(new Rect(this.m_BoundingRect.xMin + num, this.m_BoundingRect.yMin + num2, num, num2)));
 		}
 
 		public void DebugDraw(Vector2 offset)

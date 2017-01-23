@@ -63,11 +63,10 @@ namespace UnityEditorInternal
 
 		private void StateChangedCallback(bool newValue)
 		{
-			if (this.m_IgnoreCallback)
+			if (!this.m_IgnoreCallback)
 			{
-				return;
+				this.m_Recording = false;
 			}
-			this.m_Recording = false;
 		}
 	}
 }

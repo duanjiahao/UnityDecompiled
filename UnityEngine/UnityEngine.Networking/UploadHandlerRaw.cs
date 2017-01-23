@@ -12,19 +12,15 @@ namespace UnityEngine.Networking
 			base.InternalCreateRaw(data);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern string InternalGetContentType();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalSetContentType(string newContentType);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern byte[] InternalGetData();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern float InternalGetProgress();
 

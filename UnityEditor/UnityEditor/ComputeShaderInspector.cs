@@ -21,15 +21,14 @@ namespace UnityEditor
 
 		public override void OnInspectorGUI()
 		{
-			ComputeShader computeShader = this.target as ComputeShader;
-			if (computeShader == null)
+			ComputeShader computeShader = base.target as ComputeShader;
+			if (!(computeShader == null))
 			{
-				return;
+				GUI.enabled = true;
+				EditorGUI.indentLevel = 0;
+				this.ShowDebuggingData(computeShader);
+				this.ShowShaderErrors(computeShader);
 			}
-			GUI.enabled = true;
-			EditorGUI.indentLevel = 0;
-			this.ShowDebuggingData(computeShader);
-			this.ShowShaderErrors(computeShader);
 		}
 
 		private void ShowDebuggingData(ComputeShader cs)
@@ -52,11 +51,10 @@ namespace UnityEditor
 		private void ShowShaderErrors(ComputeShader s)
 		{
 			int computeShaderErrorCount = ShaderUtil.GetComputeShaderErrorCount(s);
-			if (computeShaderErrorCount < 1)
+			if (computeShaderErrorCount >= 1)
 			{
-				return;
+				ShaderInspector.ShaderErrorListUI(s, ShaderUtil.GetComputeShaderErrors(s), ref this.m_ScrollPosition);
 			}
-			ShaderInspector.ShaderErrorListUI(s, ShaderUtil.GetComputeShaderErrors(s), ref this.m_ScrollPosition);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace UnityEngine.WSA
 {
@@ -7,29 +8,53 @@ namespace UnityEngine.WSA
 	{
 		public static event WindowSizeChanged windowSizeChanged
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				Application.windowSizeChanged = (WindowSizeChanged)Delegate.Combine(Application.windowSizeChanged, value);
+				WindowSizeChanged windowSizeChanged = Application.windowSizeChanged;
+				WindowSizeChanged windowSizeChanged2;
+				do
+				{
+					windowSizeChanged2 = windowSizeChanged;
+					windowSizeChanged = Interlocked.CompareExchange<WindowSizeChanged>(ref Application.windowSizeChanged, (WindowSizeChanged)Delegate.Combine(windowSizeChanged2, value), windowSizeChanged);
+				}
+				while (windowSizeChanged != windowSizeChanged2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				Application.windowSizeChanged = (WindowSizeChanged)Delegate.Remove(Application.windowSizeChanged, value);
+				WindowSizeChanged windowSizeChanged = Application.windowSizeChanged;
+				WindowSizeChanged windowSizeChanged2;
+				do
+				{
+					windowSizeChanged2 = windowSizeChanged;
+					windowSizeChanged = Interlocked.CompareExchange<WindowSizeChanged>(ref Application.windowSizeChanged, (WindowSizeChanged)Delegate.Remove(windowSizeChanged2, value), windowSizeChanged);
+				}
+				while (windowSizeChanged != windowSizeChanged2);
 			}
 		}
 
 		public static event WindowActivated windowActivated
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				Application.windowActivated = (WindowActivated)Delegate.Combine(Application.windowActivated, value);
+				WindowActivated windowActivated = Application.windowActivated;
+				WindowActivated windowActivated2;
+				do
+				{
+					windowActivated2 = windowActivated;
+					windowActivated = Interlocked.CompareExchange<WindowActivated>(ref Application.windowActivated, (WindowActivated)Delegate.Combine(windowActivated2, value), windowActivated);
+				}
+				while (windowActivated != windowActivated2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				Application.windowActivated = (WindowActivated)Delegate.Remove(Application.windowActivated, value);
+				WindowActivated windowActivated = Application.windowActivated;
+				WindowActivated windowActivated2;
+				do
+				{
+					windowActivated2 = windowActivated;
+					windowActivated = Interlocked.CompareExchange<WindowActivated>(ref Application.windowActivated, (WindowActivated)Delegate.Remove(windowActivated2, value), windowActivated);
+				}
+				while (windowActivated != windowActivated2);
 			}
 		}
 
@@ -51,11 +76,9 @@ namespace UnityEngine.WSA
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetAdvertisingIdentifier();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetAppArguments();
 
@@ -99,19 +122,19 @@ namespace UnityEngine.WSA
 			return true;
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool InternalTryInvokeOnAppThread(AppCallbackItem item, bool waitUntilDone);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool InternalTryInvokeOnUIThread(AppCallbackItem item, bool waitUntilDone);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RunningOnAppThread();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RunningOnUIThread();
 	}

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor
@@ -9,19 +10,39 @@ namespace UnityEditor
 		{
 			public GUIStyle menuItem = "MenuItem";
 
-			public GUIContent plusButtonText = new GUIContent(string.Empty, "Add New Item");
+			public GUIContent plusButtonText = new GUIContent("", "Add New Item");
 		}
 
 		internal static class ItemContextMenu
 		{
 			private static FlexibleMenu s_Caller;
 
+			[CompilerGenerated]
+			private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
+			[CompilerGenerated]
+			private static GenericMenu.MenuFunction2 <>f__mg$cache1;
+
 			public static void Show(int itemIndex, FlexibleMenu caller)
 			{
 				FlexibleMenu.ItemContextMenu.s_Caller = caller;
 				GenericMenu genericMenu = new GenericMenu();
-				genericMenu.AddItem(new GUIContent("Edit..."), false, new GenericMenu.MenuFunction2(FlexibleMenu.ItemContextMenu.Edit), itemIndex);
-				genericMenu.AddItem(new GUIContent("Delete"), false, new GenericMenu.MenuFunction2(FlexibleMenu.ItemContextMenu.Delete), itemIndex);
+				GenericMenu arg_3C_0 = genericMenu;
+				GUIContent arg_3C_1 = new GUIContent("Edit...");
+				bool arg_3C_2 = false;
+				if (FlexibleMenu.ItemContextMenu.<>f__mg$cache0 == null)
+				{
+					FlexibleMenu.ItemContextMenu.<>f__mg$cache0 = new GenericMenu.MenuFunction2(FlexibleMenu.ItemContextMenu.Edit);
+				}
+				arg_3C_0.AddItem(arg_3C_1, arg_3C_2, FlexibleMenu.ItemContextMenu.<>f__mg$cache0, itemIndex);
+				GenericMenu arg_70_0 = genericMenu;
+				GUIContent arg_70_1 = new GUIContent("Delete");
+				bool arg_70_2 = false;
+				if (FlexibleMenu.ItemContextMenu.<>f__mg$cache1 == null)
+				{
+					FlexibleMenu.ItemContextMenu.<>f__mg$cache1 = new GenericMenu.MenuFunction2(FlexibleMenu.ItemContextMenu.Delete);
+				}
+				arg_70_0.AddItem(arg_70_1, arg_70_2, FlexibleMenu.ItemContextMenu.<>f__mg$cache1, itemIndex);
 				genericMenu.ShowAsContext();
 				GUIUtility.ExitGUI();
 			}
@@ -38,12 +59,6 @@ namespace UnityEditor
 				FlexibleMenu.ItemContextMenu.s_Caller.m_ShowEditWindowForIndex = showEditWindowForIndex;
 			}
 		}
-
-		private const float lineHeight = 18f;
-
-		private const float seperatorHeight = 8f;
-
-		private const float leftMargin = 25f;
 
 		private static FlexibleMenu.Styles s_Styles;
 
@@ -64,6 +79,12 @@ namespace UnityEditor
 		private int[] m_SeperatorIndices;
 
 		private float m_MaxTextWidth = -1f;
+
+		private const float lineHeight = 18f;
+
+		private const float seperatorHeight = 8f;
+
+		private const float leftMargin = 25f;
 
 		private int maxIndex
 		{
@@ -145,18 +166,21 @@ namespace UnityEditor
 								current.Use();
 							}
 						}
-						goto IL_389;
+						goto IL_3B9;
 					case EventType.MouseUp:
 						if (GUIUtility.hotControl == num2)
 						{
 							GUIUtility.hotControl = 0;
-							if (current.button == 0 && rect2.Contains(current.mousePosition) && this.AllowDeleteClick(i))
+							if (current.button == 0 && rect2.Contains(current.mousePosition))
 							{
-								this.DeleteItem(i);
-								current.Use();
+								if (this.AllowDeleteClick(i))
+								{
+									this.DeleteItem(i);
+									current.Use();
+								}
 							}
 						}
-						goto IL_389;
+						goto IL_3B9;
 					case EventType.MouseMove:
 						if (rect2.Contains(current.mousePosition))
 						{
@@ -171,15 +195,15 @@ namespace UnityEditor
 							this.m_HoverIndex = -1;
 							this.Repaint();
 						}
-						goto IL_389;
+						goto IL_3B9;
 					case EventType.MouseDrag:
 					case EventType.KeyDown:
 					case EventType.KeyUp:
 					case EventType.ScrollWheel:
-						IL_109:
+						IL_114:
 						if (type != EventType.ContextClick)
 						{
-							goto IL_389;
+							goto IL_3B9;
 						}
 						if (rect2.Contains(current.mousePosition))
 						{
@@ -189,7 +213,7 @@ namespace UnityEditor
 								FlexibleMenu.ItemContextMenu.Show(i, this);
 							}
 						}
-						goto IL_389;
+						goto IL_3B9;
 					case EventType.Repaint:
 					{
 						bool isHover = false;
@@ -218,11 +242,11 @@ namespace UnityEditor
 						{
 							EditorGUIUtility.AddCursorRect(rect2, MouseCursor.ArrowMinus);
 						}
-						goto IL_389;
+						goto IL_3B9;
 					}
 					}
-					goto IL_109;
-					IL_389:
+					goto IL_114;
+					IL_3B9:
 					num += 18f;
 					if (flag)
 					{
@@ -242,7 +266,7 @@ namespace UnityEditor
 			}
 		}
 
-		private Vector2 CalcSize()
+		protected Vector2 CalcSize()
 		{
 			float y = (float)(this.maxIndex + 1) * 18f + (float)this.m_SeperatorIndices.Length * 8f;
 			if (this.m_MaxTextWidth < 0f)
@@ -279,40 +303,38 @@ namespace UnityEditor
 
 		private void CreateNewItemButton(Rect itemRect)
 		{
-			if (this.m_ModifyItemUI == null)
+			if (this.m_ModifyItemUI != null)
 			{
-				return;
-			}
-			Rect rect = new Rect(itemRect.x + 25f, itemRect.y, 15f, 15f);
-			if (GUI.Button(rect, FlexibleMenu.s_Styles.plusButtonText, "OL Plus"))
-			{
-				rect.y -= 15f;
-				this.m_ModifyItemUI.Init(FlexibleMenuModifyItemUI.MenuType.Add, this.m_ItemProvider.Create(), delegate(object obj)
+				Rect rect = new Rect(itemRect.x + 25f, itemRect.y, 15f, 15f);
+				if (GUI.Button(rect, FlexibleMenu.s_Styles.plusButtonText, "OL Plus"))
 				{
-					this.ClearCachedWidth();
-					int index = this.m_ItemProvider.Add(obj);
-					this.SelectItem(index);
-					EditorApplication.RequestRepaintAllViews();
-				});
-				PopupWindow.Show(rect, this.m_ModifyItemUI);
+					rect.y -= 15f;
+					this.m_ModifyItemUI.Init(FlexibleMenuModifyItemUI.MenuType.Add, this.m_ItemProvider.Create(), delegate(object obj)
+					{
+						this.ClearCachedWidth();
+						int index = this.m_ItemProvider.Add(obj);
+						this.SelectItem(index);
+						EditorApplication.RequestRepaintAllViews();
+					});
+					PopupWindow.Show(rect, this.m_ModifyItemUI, null, ShowMode.PopupMenuWithKeyboardFocus);
+				}
 			}
 		}
 
 		private void EditExistingItem(Rect itemRect, int index)
 		{
-			if (this.m_ModifyItemUI == null)
+			if (this.m_ModifyItemUI != null)
 			{
-				return;
+				itemRect.y -= itemRect.height;
+				itemRect.x += itemRect.width;
+				this.m_ModifyItemUI.Init(FlexibleMenuModifyItemUI.MenuType.Edit, this.m_ItemProvider.GetItem(index), delegate(object obj)
+				{
+					this.ClearCachedWidth();
+					this.m_ItemProvider.Replace(index, obj);
+					EditorApplication.RequestRepaintAllViews();
+				});
+				PopupWindow.Show(itemRect, this.m_ModifyItemUI);
 			}
-			itemRect.y -= itemRect.height;
-			itemRect.x += itemRect.width;
-			this.m_ModifyItemUI.Init(FlexibleMenuModifyItemUI.MenuType.Edit, this.m_ItemProvider.GetItem(index), delegate(object obj)
-			{
-				this.ClearCachedWidth();
-				this.m_ItemProvider.Replace(index, obj);
-				EditorApplication.RequestRepaintAllViews();
-			});
-			PopupWindow.Show(itemRect, this.m_ModifyItemUI);
 		}
 
 		private void DeleteItem(int index)
@@ -324,14 +346,13 @@ namespace UnityEditor
 
 		public static void DrawRect(Rect rect, Color color)
 		{
-			if (Event.current.type != EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
-				return;
+				Color color2 = GUI.color;
+				GUI.color *= color;
+				GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
+				GUI.color = color2;
 			}
-			Color color2 = GUI.color;
-			GUI.color *= color;
-			GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
-			GUI.color = color2;
 		}
 	}
 }

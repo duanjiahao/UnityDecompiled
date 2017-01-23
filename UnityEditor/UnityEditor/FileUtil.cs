@@ -9,47 +9,36 @@ namespace UnityEditor
 {
 	public sealed class FileUtil
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DeleteFileOrDirectory(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyFileOrDirectory(string from, string to);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyFileOrDirectoryFollowSymlinks(string from, string to);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void MoveFileOrDirectory(string from, string to);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUniqueTempPathInProject();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetActualPathName(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetProjectRelativePath(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetLastPathNameComponent(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string DeleteLastPathNameComponent(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetPathExtension(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetPathWithoutExtension(string path);
 
@@ -196,18 +185,17 @@ namespace UnityEditor
 					FileUtil.UnityFileCopy(text, to, overwrite);
 				}
 			}
-			if (!recursive)
+			if (recursive)
 			{
-				return;
-			}
-			string[] directories = Directory.GetDirectories(source);
-			for (int j = 0; j < directories.Length; j++)
-			{
-				string text2 = directories[j];
-				if (includeCallback(text2))
+				string[] directories = Directory.GetDirectories(source);
+				for (int j = 0; j < directories.Length; j++)
 				{
-					string fileName2 = Path.GetFileName(text2);
-					FileUtil.CopyDirectoryFiltered(Path.Combine(source, fileName2), Path.Combine(target, fileName2), overwrite, includeCallback, recursive);
+					string text2 = directories[j];
+					if (includeCallback(text2))
+					{
+						string fileName2 = Path.GetFileName(text2);
+						FileUtil.CopyDirectoryFiltered(Path.Combine(source, fileName2), Path.Combine(target, fileName2), overwrite, includeCallback, recursive);
+					}
 				}
 			}
 		}
@@ -316,20 +304,30 @@ namespace UnityEditor
 			{
 				num++;
 			}
+			string result;
 			if (num == array.Length)
 			{
-				return string.Empty;
+				result = "";
 			}
-			return string.Join(Path.DirectorySeparatorChar.ToString(), array, num, array.Length - num);
+			else
+			{
+				result = string.Join(Path.DirectorySeparatorChar.ToString(), array, num, array.Length - num);
+			}
+			return result;
 		}
 
 		internal static string CombinePaths(params string[] paths)
 		{
+			string result;
 			if (paths == null)
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			return string.Join(Path.DirectorySeparatorChar.ToString(), paths);
+			else
+			{
+				result = string.Join(Path.DirectorySeparatorChar.ToString(), paths);
+			}
+			return result;
 		}
 
 		internal static List<string> GetAllFilesRecursive(string path)

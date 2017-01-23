@@ -8,19 +8,18 @@ namespace UnityEditorInternal.VersionControl
 	{
 		public static void OnProjectWindowItem(string guid, Rect drawRect)
 		{
-			if (!Provider.isActive)
+			if (Provider.isActive)
 			{
-				return;
-			}
-			Asset assetByGUID = Provider.GetAssetByGUID(guid);
-			if (assetByGUID != null)
-			{
-				string unityPath = assetByGUID.path.Trim(new char[]
+				Asset assetByGUID = Provider.GetAssetByGUID(guid);
+				if (assetByGUID != null)
 				{
-					'/'
-				}) + ".meta";
-				Asset assetByPath = Provider.GetAssetByPath(unityPath);
-				Overlay.DrawOverlay(assetByGUID, assetByPath, drawRect);
+					string unityPath = assetByGUID.path.Trim(new char[]
+					{
+						'/'
+					}) + ".meta";
+					Asset assetByPath = Provider.GetAssetByPath(unityPath);
+					Overlay.DrawOverlay(assetByGUID, assetByPath, drawRect);
+				}
 			}
 		}
 

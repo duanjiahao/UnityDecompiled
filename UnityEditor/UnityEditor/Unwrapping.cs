@@ -18,9 +18,13 @@ namespace UnityEditor
 			return Unwrapping.GeneratePerTriangleUVImpl(src, settings);
 		}
 
-		[WrapperlessIcall]
+		internal static Vector2[] GeneratePerTriangleUVImpl(Mesh src, UnwrapParam settings)
+		{
+			return Unwrapping.INTERNAL_CALL_GeneratePerTriangleUVImpl(src, ref settings);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Vector2[] GeneratePerTriangleUVImpl(Mesh src, UnwrapParam settings);
+		private static extern Vector2[] INTERNAL_CALL_GeneratePerTriangleUVImpl(Mesh src, ref UnwrapParam settings);
 
 		public static void GenerateSecondaryUVSet(Mesh src)
 		{

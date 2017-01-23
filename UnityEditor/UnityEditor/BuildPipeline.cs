@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor.BuildReporting;
 using UnityEngine;
@@ -12,40 +11,35 @@ namespace UnityEditor
 	{
 		public static extern bool isBuildingPlayer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern BuildTargetGroup GetBuildTargetGroup(BuildTarget platform);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern BuildTargetGroup GetBuildTargetGroupByName(string platform);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern BuildTarget GetBuildTargetByName(string platform);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetBuildTargetGroupDisplayName(BuildTargetGroup targetPlatformGroup);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetBuildTargetName(BuildTarget targetPlatform);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetEditorTargetName();
 
-		[Obsolete("PushAssetDependencies has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details."), WrapperlessIcall]
+		[Obsolete("PushAssetDependencies has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PushAssetDependencies();
 
-		[Obsolete("PopAssetDependencies has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details."), WrapperlessIcall]
+		[Obsolete("PopAssetDependencies has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PopAssetDependencies();
 
@@ -61,23 +55,40 @@ namespace UnityEditor
 
 		public static string BuildPlayer(EditorBuildSettingsScene[] levels, string locationPathName, BuildTarget target, BuildOptions options)
 		{
-			string[] levels2 = null;
-			if (levels != null)
+			return BuildPipeline.BuildPlayer(new BuildPlayerOptions
 			{
-				levels2 = (from l in levels
-				where l.enabled
-				select l.path).ToArray<string>();
-			}
-			return BuildPipeline.BuildPlayer(levels2, locationPathName, target, options);
+				scenes = EditorBuildSettingsScene.GetActiveSceneList(levels),
+				locationPathName = locationPathName,
+				target = target,
+				options = options
+			});
 		}
 
 		public static string BuildPlayer(string[] levels, string locationPathName, BuildTarget target, BuildOptions options)
 		{
+			return BuildPipeline.BuildPlayer(new BuildPlayerOptions
+			{
+				scenes = levels,
+				locationPathName = locationPathName,
+				target = target,
+				options = options
+			});
+		}
+
+		public static string BuildPlayer(BuildPlayerOptions buildPlayerOptions)
+		{
+			return BuildPipeline.BuildPlayer(buildPlayerOptions.scenes, buildPlayerOptions.locationPathName, buildPlayerOptions.assetBundleManifestPath, buildPlayerOptions.target, buildPlayerOptions.options);
+		}
+
+		private static string BuildPlayer(string[] scenes, string locationPathName, string assetBundleManifestPath, BuildTarget target, BuildOptions options)
+		{
+			string result;
 			if (string.IsNullOrEmpty(locationPathName))
 			{
 				if ((options & BuildOptions.InstallInBuildFolder) == BuildOptions.None || !PostprocessBuildPlayer.SupportsInstallInBuildFolder(target))
 				{
-					return "The 'locationPathName' parameter for BuildPipeline.BuildPlayer should not be null or empty.";
+					result = "The 'locationPathName' parameter for BuildPipeline.BuildPlayer should not be null or empty.";
+					return result;
 				}
 			}
 			else if (string.IsNullOrEmpty(Path.GetFileName(locationPathName)))
@@ -85,18 +96,18 @@ namespace UnityEditor
 				string extensionForBuildTarget = PostprocessBuildPlayer.GetExtensionForBuildTarget(target, options);
 				if (!string.IsNullOrEmpty(extensionForBuildTarget))
 				{
-					return string.Format("For the '{0}' target the 'locationPathName' parameter for BuildPipeline.BuildPlayer should not end with a directory separator.\nProvided path: '{1}', expected a path with the extension '.{2}'.", target, locationPathName, extensionForBuildTarget);
+					result = string.Format("For the '{0}' target the 'locationPathName' parameter for BuildPipeline.BuildPlayer should not end with a directory separator.\nProvided path: '{1}', expected a path with the extension '.{2}'.", target, locationPathName, extensionForBuildTarget);
+					return result;
 				}
 			}
-			string result;
 			try
 			{
-				result = BuildPipeline.BuildPlayerInternal(levels, locationPathName, target, options).SummarizeErrors();
+				result = BuildPipeline.BuildPlayerInternal(scenes, locationPathName, assetBundleManifestPath, target, options).SummarizeErrors();
 			}
 			catch (Exception exception)
 			{
 				BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildPlayer", exception);
-				result = string.Empty;
+				result = "";
 			}
 			return result;
 		}
@@ -120,7 +131,7 @@ namespace UnityEditor
 			string result;
 			try
 			{
-				BuildReport buildReport = BuildPipeline.BuildPlayerInternal(levels, locationPath, target, options | BuildOptions.BuildAdditionalStreamedScenes | BuildOptions.ComputeCRC);
+				BuildReport buildReport = BuildPipeline.BuildPlayerInternal(levels, locationPath, null, target, options | BuildOptions.BuildAdditionalStreamedScenes | BuildOptions.ComputeCRC);
 				crc = buildReport.crc;
 				string text = buildReport.SummarizeErrors();
 				UnityEngine.Object.DestroyImmediate(buildReport, true);
@@ -129,7 +140,7 @@ namespace UnityEditor
 			catch (Exception exception)
 			{
 				BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildStreamedSceneAssetBundle", exception);
-				result = string.Empty;
+				result = "";
 			}
 			return result;
 		}
@@ -140,22 +151,17 @@ namespace UnityEditor
 			return BuildPipeline.BuildStreamedSceneAssetBundle(levels, locationPath, target, out crc, BuildOptions.None);
 		}
 
-		private static BuildReport BuildPlayerInternal(string[] levels, string locationPathName, BuildTarget target, BuildOptions options)
+		private static BuildReport BuildPlayerInternal(string[] levels, string locationPathName, string assetBundleManifestPath, BuildTarget target, BuildOptions options)
 		{
 			if ((BuildOptions.EnableHeadlessMode & options) != BuildOptions.None && (BuildOptions.Development & options) != BuildOptions.None)
 			{
 				throw new Exception("Unsupported build setting: cannot build headless development player");
 			}
-			if (target == BuildTarget.WSAPlayer && EditorUserBuildSettings.wsaSDK == WSASDK.SDK80)
-			{
-				throw new Exception("Windows SDK 8.0 is no longer supported, please switch to Windows SDK 8.1");
-			}
-			return BuildPipeline.BuildPlayerInternalNoCheck(levels, locationPathName, target, options, false);
+			return BuildPipeline.BuildPlayerInternalNoCheck(levels, locationPathName, assetBundleManifestPath, target, options, false);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern BuildReport BuildPlayerInternalNoCheck(string[] levels, string locationPathName, BuildTarget target, BuildOptions options, bool delayToAfterScriptReload);
+		internal static extern BuildReport BuildPlayerInternalNoCheck(string[] levels, string locationPathName, string assetBundleManifestPath, BuildTarget target, BuildOptions options, bool delayToAfterScriptReload);
 
 		[Obsolete("WebPlayer has been removed in 5.4", true)]
 		private static bool WebPlayerAssetBundlesAreNoLongerSupported()
@@ -263,7 +269,6 @@ namespace UnityEditor
 			return BuildPipeline.WebPlayerAssetBundlesAreNoLongerSupported();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool BuildAssetBundleInternal(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string[] assetNames, string pathName, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform, out uint crc);
 
@@ -285,23 +290,11 @@ namespace UnityEditor
 		{
 			if (!Directory.Exists(outputPath))
 			{
-				Debug.LogError("The output path \"" + outputPath + "\" doesn't exist");
-				return null;
+				throw new ArgumentException("The output path \"" + outputPath + "\" doesn't exist");
 			}
-			AssetBundleManifest result;
-			try
-			{
-				result = BuildPipeline.BuildAssetBundlesInternal(outputPath, assetBundleOptions, targetPlatform);
-			}
-			catch (Exception exception)
-			{
-				BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildAssetBundles", exception);
-				result = null;
-			}
-			return result;
+			return BuildPipeline.BuildAssetBundlesInternal(outputPath, assetBundleOptions, targetPlatform);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AssetBundleManifest BuildAssetBundlesInternal(string outputPath, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform);
 
@@ -323,80 +316,59 @@ namespace UnityEditor
 		{
 			if (!Directory.Exists(outputPath))
 			{
-				Debug.LogError("The output path \"" + outputPath + "\" doesn't exist");
-				return null;
+				throw new ArgumentException("The output path \"" + outputPath + "\" doesn't exist");
 			}
 			if (builds == null)
 			{
-				Debug.LogError("AssetBundleBuild cannot be null.");
-				return null;
+				throw new ArgumentException("AssetBundleBuild cannot be null.");
 			}
-			AssetBundleManifest result;
-			try
-			{
-				result = BuildPipeline.BuildAssetBundlesWithInfoInternal(outputPath, builds, assetBundleOptions, targetPlatform);
-			}
-			catch (Exception exception)
-			{
-				BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildAssetBundles", exception);
-				result = null;
-			}
-			return result;
+			return BuildPipeline.BuildAssetBundlesWithInfoInternal(outputPath, builds, assetBundleOptions, targetPlatform);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AssetBundleManifest BuildAssetBundlesWithInfoInternal(string outputPath, AssetBundleBuild[] builds, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetCRCForAssetBundle(string targetPath, out uint crc);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetHashForAssetBundle(string targetPath, out Hash128 hash);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool LicenseCheck(BuildTarget target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsBuildTargetSupported(BuildTarget target);
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsBuildTargetCompatibleWithOS(BuildTarget target);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetBuildTargetAdvancedLicenseName(BuildTarget target);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetPlaybackEngineDirectory(BuildTarget target, BuildOptions options);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetPlaybackEngineDirectory(BuildTarget target, BuildOptions options, string playbackEngineDirectory);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetBuildToolsDirectory(BuildTarget target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetMonoBinDirectory(BuildTarget target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetMonoLibDirectory(BuildTarget target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetMonoProfileLibDirectory(BuildTarget target, string profile);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetBuildTargetGroupName(BuildTarget target);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsUnityScriptEvalSupported(BuildTarget target);
 	}

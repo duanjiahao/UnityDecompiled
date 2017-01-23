@@ -21,7 +21,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern Message.Severity severity
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -29,7 +28,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string message
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -38,7 +36,7 @@ namespace UnityEditor.VersionControl
 		{
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 

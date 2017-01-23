@@ -45,7 +45,30 @@ namespace UnityEditorInternal
 			set
 			{
 				this.m_value = value;
-				this.m_Hash = 0;
+			}
+		}
+
+		public float inTangent
+		{
+			get
+			{
+				return this.m_InTangent;
+			}
+			set
+			{
+				this.m_InTangent = value;
+			}
+		}
+
+		public float outTangent
+		{
+			get
+			{
+				return this.m_OutTangent;
+			}
+			set
+			{
+				this.m_OutTangent = value;
 			}
 		}
 
@@ -82,6 +105,7 @@ namespace UnityEditorInternal
 			this.m_InTangent = key.m_InTangent;
 			this.m_OutTangent = key.m_OutTangent;
 			this.m_TangentMode = key.m_TangentMode;
+			this.m_curve = key.m_curve;
 		}
 
 		public AnimationWindowKeyframe(AnimationWindowCurve curve, Keyframe key)
@@ -92,6 +116,7 @@ namespace UnityEditorInternal
 			this.m_InTangent = key.inTangent;
 			this.m_OutTangent = key.outTangent;
 			this.m_TangentMode = key.tangentMode;
+			this.m_curve = curve;
 		}
 
 		public AnimationWindowKeyframe(AnimationWindowCurve curve, ObjectReferenceKeyframe key)
@@ -113,14 +138,17 @@ namespace UnityEditorInternal
 
 		public int GetIndex()
 		{
+			int result;
 			for (int i = 0; i < this.curve.m_Keyframes.Count; i++)
 			{
 				if (this.curve.m_Keyframes[i] == this)
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
 	}
 }

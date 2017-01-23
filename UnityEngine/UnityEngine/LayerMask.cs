@@ -21,11 +21,21 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
+		public static implicit operator int(LayerMask mask)
+		{
+			return mask.m_Mask;
+		}
+
+		public static implicit operator LayerMask(int intVal)
+		{
+			LayerMask result;
+			result.m_Mask = intVal;
+			return result;
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string LayerToName(int layer);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int NameToLayer(string layerName);
 
@@ -46,18 +56,6 @@ namespace UnityEngine
 				}
 			}
 			return num;
-		}
-
-		public static implicit operator int(LayerMask mask)
-		{
-			return mask.m_Mask;
-		}
-
-		public static implicit operator LayerMask(int intVal)
-		{
-			LayerMask result;
-			result.m_Mask = intVal;
-			return result;
 		}
 	}
 }

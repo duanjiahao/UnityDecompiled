@@ -7,20 +7,16 @@ namespace UnityEngine
 	{
 		public extern Component observed
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern NetworkStateSynchronization stateSynchronization
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -41,10 +37,8 @@ namespace UnityEngine
 
 		public extern int group
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -65,13 +59,16 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_RPC(NetworkView view, string name, RPCMode mode, object[] args);
 
-		[WrapperlessIcall]
+		private static void Internal_RPC_Target(NetworkView view, string name, NetworkPlayer target, object[] args)
+		{
+			NetworkView.INTERNAL_CALL_Internal_RPC_Target(view, name, ref target, args);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_RPC_Target(NetworkView view, string name, NetworkPlayer target, object[] args);
+		private static extern void INTERNAL_CALL_Internal_RPC_Target(NetworkView view, string name, ref NetworkPlayer target, object[] args);
 
 		[Obsolete("NetworkView RPC functions are deprecated. Refer to the new Multiplayer Networking system.")]
 		public void RPC(string name, RPCMode mode, params object[] args)
@@ -85,7 +82,6 @@ namespace UnityEngine
 			NetworkView.Internal_RPC_Target(this, name, target, args);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_GetViewID(out NetworkViewID viewID);
 
@@ -94,20 +90,22 @@ namespace UnityEngine
 			NetworkView.INTERNAL_CALL_Internal_SetViewID(this, ref viewID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetViewID(NetworkView self, ref NetworkViewID viewID);
 
-		[WrapperlessIcall]
+		public bool SetScope(NetworkPlayer player, bool relevancy)
+		{
+			return NetworkView.INTERNAL_CALL_SetScope(this, ref player, relevancy);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool SetScope(NetworkPlayer player, bool relevancy);
+		private static extern bool INTERNAL_CALL_SetScope(NetworkView self, ref NetworkPlayer player, bool relevancy);
 
 		public static NetworkView Find(NetworkViewID viewID)
 		{
 			return NetworkView.INTERNAL_CALL_Find(ref viewID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern NetworkView INTERNAL_CALL_Find(ref NetworkViewID viewID);
 	}

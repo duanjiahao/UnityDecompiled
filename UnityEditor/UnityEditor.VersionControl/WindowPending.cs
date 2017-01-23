@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityEditor.VersionControl
 {
-	[EditorWindowTitle(title = "Versioning", icon = "UnityEditor.VersionControl")]
+	[EditorWindowTitle(title = "Version Control", icon = "UnityEditor.VersionControl")]
 	internal class WindowPending : EditorWindow
 	{
 		internal class Styles
@@ -14,19 +14,13 @@ namespace UnityEditor.VersionControl
 			public GUIStyle bottomBarBg = "ProjectBrowserBottomBarBg";
 		}
 
-		private const float k_ResizerHeight = 17f;
+		private static WindowPending.Styles s_Styles = null;
 
-		private const float k_MinIncomingAreaHeight = 50f;
+		private static Texture2D changeIcon = null;
 
-		private const float k_BottomBarHeight = 17f;
+		private Texture2D syncIcon = null;
 
-		private static WindowPending.Styles s_Styles;
-
-		private static Texture2D changeIcon;
-
-		private Texture2D syncIcon;
-
-		private Texture2D refreshIcon;
+		private Texture2D refreshIcon = null;
 
 		private GUIStyle header;
 
@@ -36,17 +30,23 @@ namespace UnityEditor.VersionControl
 		[SerializeField]
 		private ListControl incomingList;
 
-		private bool m_ShowIncoming;
+		private bool m_ShowIncoming = false;
 
-		private float s_ToolbarButtonsWidth;
+		private const float k_ResizerHeight = 17f;
 
-		private float s_SettingsButtonWidth;
+		private const float k_MinIncomingAreaHeight = 50f;
 
-		private float s_DeleteChangesetsButtonWidth;
+		private const float k_BottomBarHeight = 17f;
+
+		private float s_ToolbarButtonsWidth = 0f;
+
+		private float s_SettingsButtonWidth = 0f;
+
+		private float s_DeleteChangesetsButtonWidth = 0f;
 
 		private static GUIContent[] sStatusWheel;
 
-		private static bool s_DidReload;
+		private static bool s_DidReload = false;
 
 		internal static GUIContent StatusWheel
 		{
@@ -84,10 +84,10 @@ namespace UnityEditor.VersionControl
 			{
 				this.pendingList = new ListControl();
 			}
-			ListControl expr_28 = this.pendingList;
-			expr_28.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_28.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpand));
-			ListControl expr_4F = this.pendingList;
-			expr_4F.DragEvent = (ListControl.DragDelegate)Delegate.Combine(expr_4F.DragEvent, new ListControl.DragDelegate(this.OnDrop));
+			ListControl expr_29 = this.pendingList;
+			expr_29.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_29.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpand));
+			ListControl expr_50 = this.pendingList;
+			expr_50.DragEvent = (ListControl.DragDelegate)Delegate.Combine(expr_50.DragEvent, new ListControl.DragDelegate(this.OnDrop));
 			this.pendingList.MenuDefault = "CONTEXT/Pending";
 			this.pendingList.MenuFolder = "CONTEXT/Change";
 			this.pendingList.DragAcceptOnly = true;
@@ -95,8 +95,8 @@ namespace UnityEditor.VersionControl
 			{
 				this.incomingList = new ListControl();
 			}
-			ListControl expr_B8 = this.incomingList;
-			expr_B8.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_B8.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpandIncoming));
+			ListControl expr_B9 = this.incomingList;
+			expr_B9.ExpandEvent = (ListControl.ExpandDelegate)Delegate.Combine(expr_B9.ExpandEvent, new ListControl.ExpandDelegate(this.OnExpandIncoming));
 			this.UpdateWindow();
 		}
 
@@ -129,39 +129,37 @@ namespace UnityEditor.VersionControl
 
 		private void OnExpand(ChangeSet change, ListItem item)
 		{
-			if (!Provider.isActive)
+			if (Provider.isActive)
 			{
-				return;
-			}
-			Task task = Provider.ChangeSetStatus(change);
-			task.userIdentifier = item.Identifier;
-			task.SetCompletionAction(CompletionAction.OnChangeContentsPendingWindow);
-			if (!item.HasChildren)
-			{
-				Asset asset = new Asset("Updating...");
-				ListItem listItem = this.pendingList.Add(item, asset.prettyPath, asset);
-				listItem.Dummy = true;
-				this.pendingList.Refresh(false);
-				base.Repaint();
+				Task task = Provider.ChangeSetStatus(change);
+				task.userIdentifier = item.Identifier;
+				task.SetCompletionAction(CompletionAction.OnChangeContentsPendingWindow);
+				if (!item.HasChildren)
+				{
+					Asset asset = new Asset("Updating...");
+					ListItem listItem = this.pendingList.Add(item, asset.prettyPath, asset);
+					listItem.Dummy = true;
+					this.pendingList.Refresh(false);
+					base.Repaint();
+				}
 			}
 		}
 
 		private void OnExpandIncoming(ChangeSet change, ListItem item)
 		{
-			if (!Provider.isActive)
+			if (Provider.isActive)
 			{
-				return;
-			}
-			Task task = Provider.IncomingChangeSetAssets(change);
-			task.userIdentifier = item.Identifier;
-			task.SetCompletionAction(CompletionAction.OnChangeContentsPendingWindow);
-			if (!item.HasChildren)
-			{
-				Asset asset = new Asset("Updating...");
-				ListItem listItem = this.incomingList.Add(item, asset.prettyPath, asset);
-				listItem.Dummy = true;
-				this.incomingList.Refresh(false);
-				base.Repaint();
+				Task task = Provider.IncomingChangeSetAssets(change);
+				task.userIdentifier = item.Identifier;
+				task.SetCompletionAction(CompletionAction.OnChangeContentsPendingWindow);
+				if (!item.HasChildren)
+				{
+					Asset asset = new Asset("Updating...");
+					ListItem listItem = this.incomingList.Add(item, asset.prettyPath, asset);
+					listItem.Dummy = true;
+					this.incomingList.Refresh(false);
+					base.Repaint();
+				}
 			}
 		}
 
@@ -172,9 +170,8 @@ namespace UnityEditor.VersionControl
 				this.pendingList.Clear();
 				Provider.UpdateSettings();
 				base.Repaint();
-				return;
 			}
-			if (Provider.onlineState == OnlineState.Online)
+			else if (Provider.onlineState == OnlineState.Online)
 			{
 				Task task = Provider.ChangeSets();
 				task.SetCompletionAction(CompletionAction.OnChangeSetsPendingWindow);
@@ -215,20 +212,26 @@ namespace UnityEditor.VersionControl
 					break;
 				}
 			}
-			switch (completionAction)
+			if (completionAction != CompletionAction.OnSubmittedChangeWindow)
 			{
-			case CompletionAction.OnSubmittedChangeWindow:
-				WindowChange.OnSubmitted(task);
-				break;
-			case CompletionAction.OnAddedChangeWindow:
-				WindowChange.OnAdded(task);
-				break;
-			case CompletionAction.OnCheckoutCompleted:
-				if (EditorUserSettings.showFailedCheckout)
+				if (completionAction != CompletionAction.OnAddedChangeWindow)
 				{
-					WindowCheckoutFailure.OpenIfCheckoutFailed(task.assetList);
+					if (completionAction == CompletionAction.OnCheckoutCompleted)
+					{
+						if (EditorUserSettings.showFailedCheckout)
+						{
+							WindowCheckoutFailure.OpenIfCheckoutFailed(task.assetList);
+						}
+					}
 				}
-				break;
+				else
+				{
+					WindowChange.OnAdded(task);
+				}
+			}
+			else
+			{
+				WindowChange.OnSubmitted(task);
 			}
 			task.Dispose();
 		}
@@ -313,27 +316,26 @@ namespace UnityEditor.VersionControl
 		{
 			ListItem listItem = this.pendingList.FindItemWithIdentifier(task.userIdentifier);
 			ListItem listItem2 = (listItem != null) ? listItem : this.incomingList.FindItemWithIdentifier(task.userIdentifier);
-			if (listItem2 == null)
+			if (listItem2 != null)
 			{
-				return;
-			}
-			ListControl listControl = (listItem != null) ? this.pendingList : this.incomingList;
-			listItem2.RemoveAll();
-			AssetList assetList = task.assetList;
-			if (assetList.Count == 0)
-			{
-				ListItem listItem3 = listControl.Add(listItem2, "Empty change list", null);
-				listItem3.Dummy = true;
-			}
-			else
-			{
-				foreach (Asset current in assetList)
+				ListControl listControl = (listItem != null) ? this.pendingList : this.incomingList;
+				listItem2.RemoveAll();
+				AssetList assetList = task.assetList;
+				if (assetList.Count == 0)
 				{
-					listControl.Add(listItem2, current.prettyPath, current);
+					ListItem listItem3 = listControl.Add(listItem2, "Empty change list", null);
+					listItem3.Dummy = true;
 				}
+				else
+				{
+					foreach (Asset current in assetList)
+					{
+						listControl.Add(listItem2, current.prettyPath, current);
+					}
+				}
+				listControl.Refresh(false);
+				base.Repaint();
 			}
-			listControl.Refresh(false);
-			base.Repaint();
 		}
 
 		private ChangeSets GetEmptyChangeSetsCandidates()
@@ -377,7 +379,7 @@ namespace UnityEditor.VersionControl
 			EditorGUI.BeginChangeCheck();
 			int num = (this.incomingList.Root != null) ? this.incomingList.Root.ChildCount : 0;
 			this.m_ShowIncoming = !GUILayout.Toggle(!this.m_ShowIncoming, "Outgoing", EditorStyles.toolbarButton, new GUILayoutOption[0]);
-			GUIContent content = GUIContent.Temp("Incoming" + ((num != 0) ? (" (" + num.ToString() + ")") : string.Empty));
+			GUIContent content = GUIContent.Temp("Incoming" + ((num != 0) ? (" (" + num.ToString() + ")") : ""));
 			this.m_ShowIncoming = GUILayout.Toggle(this.m_ShowIncoming, content, EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -413,10 +415,13 @@ namespace UnityEditor.VersionControl
 			bool flag4 = GUILayout.Button(this.refreshIcon, EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			flag = (flag || flag4);
 			GUI.color = color;
-			if (current.isKey && GUIUtility.keyboardControl == 0 && current.type == EventType.KeyDown && current.keyCode == KeyCode.F5)
+			if (current.isKey && GUIUtility.keyboardControl == 0)
 			{
-				flag = true;
-				current.Use();
+				if (current.type == EventType.KeyDown && current.keyCode == KeyCode.F5)
+				{
+					flag = true;
+					current.Use();
+				}
 			}
 			if (flag)
 			{
@@ -491,7 +496,7 @@ namespace UnityEditor.VersionControl
 					{
 						if (GUI.Button(position, content2, EditorStyles.miniButton))
 						{
-							Asset item = new Asset(string.Empty);
+							Asset item = new Asset("");
 							Task latest = Provider.GetLatest(new AssetList
 							{
 								item
@@ -509,6 +514,7 @@ namespace UnityEditor.VersionControl
 
 		internal static bool ProgressGUI(Rect rect, Task activeTask, bool descriptionTextFirst)
 		{
+			bool result;
 			if (activeTask != null && (activeTask.progressPct != -1 || activeTask.secondsSpent != -1 || activeTask.progressMessage.Length != 0))
 			{
 				string text = activeTask.progressMessage;
@@ -531,9 +537,13 @@ namespace UnityEditor.VersionControl
 					rect.width = 120f;
 					EditorGUI.ProgressBar(rect, (float)activeTask.progressPct, text);
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void CreateResources()

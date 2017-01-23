@@ -16,7 +16,7 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
-			AnimatorOverrideController animatorOverrideController = this.target as AnimatorOverrideController;
+			AnimatorOverrideController animatorOverrideController = base.target as AnimatorOverrideController;
 			this.m_Controller = base.serializedObject.FindProperty("m_Controller");
 			if (this.m_ClipList == null)
 			{
@@ -25,15 +25,15 @@ namespace UnityEditor
 				this.m_ClipList.drawHeaderCallback = new ReorderableList.HeaderCallbackDelegate(this.DrawClipHeader);
 				this.m_ClipList.elementHeight = 16f;
 			}
-			AnimatorOverrideController expr_8B = animatorOverrideController;
-			expr_8B.OnOverrideControllerDirty = (AnimatorOverrideController.OnOverrideControllerDirtyCallback)Delegate.Combine(expr_8B.OnOverrideControllerDirty, new AnimatorOverrideController.OnOverrideControllerDirtyCallback(base.Repaint));
+			AnimatorOverrideController expr_8E = animatorOverrideController;
+			expr_8E.OnOverrideControllerDirty = (AnimatorOverrideController.OnOverrideControllerDirtyCallback)Delegate.Combine(expr_8E.OnOverrideControllerDirty, new AnimatorOverrideController.OnOverrideControllerDirtyCallback(base.Repaint));
 		}
 
 		private void OnDisable()
 		{
-			AnimatorOverrideController animatorOverrideController = this.target as AnimatorOverrideController;
-			AnimatorOverrideController expr_0D = animatorOverrideController;
-			expr_0D.OnOverrideControllerDirty = (AnimatorOverrideController.OnOverrideControllerDirtyCallback)Delegate.Remove(expr_0D.OnOverrideControllerDirty, new AnimatorOverrideController.OnOverrideControllerDirtyCallback(base.Repaint));
+			AnimatorOverrideController animatorOverrideController = base.target as AnimatorOverrideController;
+			AnimatorOverrideController expr_0E = animatorOverrideController;
+			expr_0E.OnOverrideControllerDirty = (AnimatorOverrideController.OnOverrideControllerDirtyCallback)Delegate.Remove(expr_0E.OnOverrideControllerDirty, new AnimatorOverrideController.OnOverrideControllerDirtyCallback(base.Repaint));
 		}
 
 		public override void OnInspectorGUI()
@@ -41,7 +41,7 @@ namespace UnityEditor
 			bool flag = base.targets.Length > 1;
 			bool flag2 = false;
 			base.serializedObject.UpdateIfDirtyOrScript();
-			AnimatorOverrideController animatorOverrideController = this.target as AnimatorOverrideController;
+			AnimatorOverrideController animatorOverrideController = base.target as AnimatorOverrideController;
 			RuntimeAnimatorController runtimeAnimatorController = (!this.m_Controller.hasMultipleDifferentValues) ? animatorOverrideController.runtimeAnimatorController : null;
 			EditorGUI.BeginChangeCheck();
 			runtimeAnimatorController = (EditorGUILayout.ObjectField("Controller", runtimeAnimatorController, typeof(UnityEditor.Animations.AnimatorController), false, new GUILayoutOption[0]) as RuntimeAnimatorController);
@@ -85,7 +85,7 @@ namespace UnityEditor
 			rect.xMin = rect.xMax;
 			rect.xMax *= 2f;
 			EditorGUI.BeginChangeCheck();
-			animationClip = (EditorGUI.ObjectField(rect, string.Empty, animationClip, typeof(AnimationClip), false) as AnimationClip);
+			animationClip = (EditorGUI.ObjectField(rect, "", animationClip, typeof(AnimationClip), false) as AnimationClip);
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.m_Clips[index].overrideClip = animationClip;

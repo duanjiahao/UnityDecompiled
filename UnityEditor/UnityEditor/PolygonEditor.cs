@@ -6,15 +6,12 @@ namespace UnityEditor
 {
 	internal sealed class PolygonEditor
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StartEditing(Collider2D collider);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ApplyEditing(Collider2D collider);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopEditing();
 
@@ -23,7 +20,6 @@ namespace UnityEditor
 			return PolygonEditor.INTERNAL_CALL_GetNearestPoint(ref point, out pathIndex, out pointIndex, out distance);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_GetNearestPoint(ref Vector2 point, out int pathIndex, out int pointIndex, out float distance);
 
@@ -32,19 +28,15 @@ namespace UnityEditor
 			return PolygonEditor.INTERNAL_CALL_GetNearestEdge(ref point, out pathIndex, out pointIndex0, out pointIndex1, out distance, loop);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_GetNearestEdge(ref Vector2 point, out int pathIndex, out int pointIndex0, out int pointIndex1, out float distance, bool loop);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetPathCount();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetPointCount(int pathIndex);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetPoint(int pathIndex, int pointIndex, out Vector2 point);
 
@@ -53,7 +45,6 @@ namespace UnityEditor
 			PolygonEditor.INTERNAL_CALL_SetPoint(pathIndex, pointIndex, ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPoint(int pathIndex, int pointIndex, ref Vector2 value);
 
@@ -62,11 +53,9 @@ namespace UnityEditor
 			PolygonEditor.INTERNAL_CALL_InsertPoint(pathIndex, pointIndex, ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InsertPoint(int pathIndex, int pointIndex, ref Vector2 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RemovePoint(int pathIndex, int pointIndex);
 
@@ -75,7 +64,6 @@ namespace UnityEditor
 			PolygonEditor.INTERNAL_CALL_TestPointMove(pathIndex, pointIndex, ref movePosition, out leftIntersect, out rightIntersect, loop);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_TestPointMove(int pathIndex, int pointIndex, ref Vector2 movePosition, out bool leftIntersect, out bool rightIntersect, bool loop);
 	}

@@ -26,13 +26,13 @@ namespace UnityEditor
 		private bool m_IsWaitingForDelay;
 
 		[SerializeField]
-		private bool m_IsRenaming;
+		private bool m_IsRenaming = false;
 
 		[SerializeField]
 		private EventType m_OriginalEventType = EventType.Ignore;
 
 		[SerializeField]
-		private bool m_IsRenamingFilename;
+		private bool m_IsRenamingFilename = false;
 
 		[SerializeField]
 		private GUIView m_ClientGUIView;
@@ -120,28 +120,33 @@ namespace UnityEditor
 
 		public bool BeginRename(string name, int userData, float delay)
 		{
+			bool result;
 			if (this.m_IsRenaming)
 			{
 				Debug.LogError("BeginRename fail: already renaming");
-				return false;
-			}
-			this.m_Name = name;
-			this.m_OriginalName = name;
-			this.m_UserData = userData;
-			this.m_UserAcceptedRename = false;
-			this.m_IsWaitingForDelay = (delay > 0f);
-			this.m_IsRenaming = true;
-			this.m_EditFieldRect = new Rect(0f, 0f, 0f, 0f);
-			this.m_ClientGUIView = GUIView.current;
-			if (delay > 0f)
-			{
-				this.m_DelayedCallback = new DelayedCallback(new Action(this.BeginRenameInternalCallback), (double)delay);
+				result = false;
 			}
 			else
 			{
-				this.BeginRenameInternalCallback();
+				this.m_Name = name;
+				this.m_OriginalName = name;
+				this.m_UserData = userData;
+				this.m_UserAcceptedRename = false;
+				this.m_IsWaitingForDelay = (delay > 0f);
+				this.m_IsRenaming = true;
+				this.m_EditFieldRect = new Rect(0f, 0f, 0f, 0f);
+				this.m_ClientGUIView = GUIView.current;
+				if (delay > 0f)
+				{
+					this.m_DelayedCallback = new DelayedCallback(new Action(this.BeginRenameInternalCallback), (double)delay);
+				}
+				else
+				{
+					this.BeginRenameInternalCallback();
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
 
 		private void BeginRenameInternalCallback()
@@ -156,24 +161,23 @@ namespace UnityEditor
 
 		public void EndRename(bool acceptChanges)
 		{
-			if (!this.m_IsRenaming)
+			if (this.m_IsRenaming)
 			{
-				return;
+				Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));
+				if (this.m_DelayedCallback != null)
+				{
+					this.m_DelayedCallback.Clear();
+				}
+				this.RemoveMessage();
+				if (this.isRenamingFilename)
+				{
+					this.m_Name = InternalEditorUtility.RemoveInvalidCharsFromFileName(this.m_Name, true);
+				}
+				this.m_IsRenaming = false;
+				this.m_IsWaitingForDelay = false;
+				this.m_UserAcceptedRename = acceptChanges;
+				this.RepaintClientView();
 			}
-			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));
-			if (this.m_DelayedCallback != null)
-			{
-				this.m_DelayedCallback.Clear();
-			}
-			this.RemoveMessage();
-			if (this.isRenamingFilename)
-			{
-				this.m_Name = InternalEditorUtility.RemoveInvalidCharsFromFileName(this.m_Name, true);
-			}
-			this.m_IsRenaming = false;
-			this.m_IsWaitingForDelay = false;
-			this.m_UserAcceptedRename = acceptChanges;
-			this.RepaintClientView();
 		}
 
 		private void RepaintClientView()
@@ -188,8 +192,8 @@ namespace UnityEditor
 		{
 			this.m_IsRenaming = false;
 			this.m_UserAcceptedRename = false;
-			this.m_Name = string.Empty;
-			this.m_OriginalName = string.Empty;
+			this.m_Name = "";
+			this.m_OriginalName = "";
 			this.m_EditFieldRect = default(Rect);
 			this.m_UserData = 0;
 			this.m_IsWaitingForDelay = false;
@@ -214,24 +218,32 @@ namespace UnityEditor
 
 		public bool OnEvent()
 		{
+			bool result;
 			if (!this.m_IsRenaming)
 			{
-				return true;
+				result = true;
 			}
-			if (!this.m_IsWaitingForDelay)
+			else
 			{
-				GUIUtility.GetControlID(84895748, FocusType.Passive);
-				GUI.SetNextControlName(this.k_RenameOverlayFocusName);
-				EditorGUI.FocusTextInControl(this.k_RenameOverlayFocusName);
-				this.m_TextFieldControlID = GUIUtility.GetControlID(RenameOverlay.s_TextFieldHash, FocusType.Keyboard, this.m_EditFieldRect);
+				if (!this.m_IsWaitingForDelay)
+				{
+					GUIUtility.GetControlID(84895748, FocusType.Passive);
+					GUI.SetNextControlName(this.k_RenameOverlayFocusName);
+					EditorGUI.FocusTextInControl(this.k_RenameOverlayFocusName);
+					this.m_TextFieldControlID = GUIUtility.GetControlID(RenameOverlay.s_TextFieldHash, FocusType.Keyboard, this.m_EditFieldRect);
+				}
+				this.m_OriginalEventType = Event.current.type;
+				if (this.m_IsWaitingForDelay && (this.m_OriginalEventType == EventType.MouseDown || this.m_OriginalEventType == EventType.KeyDown))
+				{
+					this.EndRename(false);
+					result = false;
+				}
+				else
+				{
+					result = true;
+				}
 			}
-			this.m_OriginalEventType = Event.current.type;
-			if (this.m_IsWaitingForDelay && (this.m_OriginalEventType == EventType.MouseDown || this.m_OriginalEventType == EventType.KeyDown))
-			{
-				this.EndRename(false);
-				return false;
-			}
-			return true;
+			return result;
 		}
 
 		public bool OnGUI()
@@ -241,52 +253,62 @@ namespace UnityEditor
 
 		public bool OnGUI(GUIStyle textFieldStyle)
 		{
+			bool result;
 			if (this.m_IsWaitingForDelay)
 			{
-				return true;
+				result = true;
 			}
-			if (!this.m_IsRenaming)
+			else if (!this.m_IsRenaming)
 			{
-				return false;
+				result = false;
 			}
-			if (this.m_UndoRedoWasPerformed)
+			else if (this.m_UndoRedoWasPerformed)
 			{
 				this.m_UndoRedoWasPerformed = false;
 				this.EndRename(false);
-				return false;
+				result = false;
 			}
-			if (this.m_EditFieldRect.width <= 0f || this.m_EditFieldRect.height <= 0f || this.m_TextFieldControlID == 0)
+			else if (this.m_EditFieldRect.width <= 0f || this.m_EditFieldRect.height <= 0f || this.m_TextFieldControlID == 0)
 			{
 				HandleUtility.Repaint();
-				return true;
+				result = true;
 			}
-			Event current = Event.current;
-			if (current.type == EventType.KeyDown)
+			else
 			{
-				if (current.keyCode == KeyCode.Escape)
+				Event current = Event.current;
+				if (current.type == EventType.KeyDown)
 				{
-					current.Use();
-					this.EndRename(false);
-					return false;
+					if (current.keyCode == KeyCode.Escape)
+					{
+						current.Use();
+						this.EndRename(false);
+						result = false;
+						return result;
+					}
+					if (current.keyCode == KeyCode.Return || current.keyCode == KeyCode.KeypadEnter)
+					{
+						current.Use();
+						this.EndRename(true);
+						result = false;
+						return result;
+					}
 				}
-				if (current.keyCode == KeyCode.Return || current.keyCode == KeyCode.KeypadEnter)
+				if (this.m_OriginalEventType == EventType.MouseDown && !this.m_EditFieldRect.Contains(Event.current.mousePosition))
 				{
-					current.Use();
 					this.EndRename(true);
-					return false;
+					result = false;
+				}
+				else
+				{
+					this.m_Name = this.DoTextField(this.m_Name, textFieldStyle);
+					if (current.type == EventType.ScrollWheel)
+					{
+						current.Use();
+					}
+					result = true;
 				}
 			}
-			if (this.m_OriginalEventType == EventType.MouseDown && !this.m_EditFieldRect.Contains(Event.current.mousePosition))
-			{
-				this.EndRename(true);
-				return false;
-			}
-			this.m_Name = this.DoTextField(this.m_Name, textFieldStyle);
-			if (current.type == EventType.ScrollWheel)
-			{
-				current.Use();
-			}
-			return true;
+			return result;
 		}
 
 		private string DoTextField(string text, GUIStyle textFieldStyle)
@@ -308,8 +330,11 @@ namespace UnityEditor
 			{
 				GUIUtility.keyboardControl = this.m_TextFieldControlID;
 			}
+			GUIStyle gUIStyle = textFieldStyle ?? RenameOverlay.s_DefaultTextFieldStyle;
+			Rect position = EditorGUI.IndentedRect(this.m_EditFieldRect);
+			position.xMin -= (float)gUIStyle.padding.left;
 			bool flag;
-			return EditorGUI.DoTextField(EditorGUI.s_RecycledEditor, this.m_TextFieldControlID, EditorGUI.IndentedRect(this.m_EditFieldRect), text, textFieldStyle ?? RenameOverlay.s_DefaultTextFieldStyle, null, out flag, false, false, false);
+			return EditorGUI.DoTextField(EditorGUI.s_RecycledEditor, this.m_TextFieldControlID, position, text, gUIStyle, null, out flag, false, false, false);
 		}
 
 		private void EatInvalidChars()
@@ -319,13 +344,13 @@ namespace UnityEditor
 				Event current = Event.current;
 				if (GUIUtility.keyboardControl == this.m_TextFieldControlID && current.GetTypeForControl(this.m_TextFieldControlID) == EventType.KeyDown)
 				{
-					string text = string.Empty;
+					string text = "";
 					string invalidFilenameChars = EditorUtility.GetInvalidFilenameChars();
 					if (invalidFilenameChars.IndexOf(current.character) > -1)
 					{
 						text = "A file name can't contain any of the following characters:\t" + invalidFilenameChars;
 					}
-					if (text != string.Empty)
+					if (text != "")
 					{
 						current.Use();
 						this.ShowMessage(text);

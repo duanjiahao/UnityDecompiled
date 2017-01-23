@@ -16,7 +16,7 @@ namespace UnityEditor
 
 		private Animator m_Animator;
 
-		private bool m_ControllerIsDirty;
+		private bool m_ControllerIsDirty = false;
 
 		public Animator animator
 		{
@@ -76,8 +76,8 @@ namespace UnityEditor
 				this.m_StateMachine.hideFlags = HideFlags.HideAndDontSave;
 				this.m_Controller.hideFlags = HideFlags.HideAndDontSave;
 				AnimatorController.SetAnimatorController(this.m_Animator, this.m_Controller);
-				AnimatorController expr_DF = this.m_Controller;
-				expr_DF.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_DF.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
+				AnimatorController expr_E1 = this.m_Controller;
+				expr_E1.OnAnimatorControllerDirty = (Action)Delegate.Combine(expr_E1.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
 				this.m_ControllerIsDirty = false;
 			}
 		}
@@ -90,8 +90,8 @@ namespace UnityEditor
 			}
 			if (this.m_Controller != null)
 			{
-				AnimatorController expr_34 = this.m_Controller;
-				expr_34.OnAnimatorControllerDirty = (Action)Delegate.Remove(expr_34.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
+				AnimatorController expr_35 = this.m_Controller;
+				expr_35.OnAnimatorControllerDirty = (Action)Delegate.Remove(expr_35.OnAnimatorControllerDirty, new Action(this.ControllerDirty));
 			}
 			UnityEngine.Object.DestroyImmediate(this.m_Controller);
 			UnityEngine.Object.DestroyImmediate(this.m_State);
@@ -118,17 +118,16 @@ namespace UnityEditor
 				this.Reset();
 			}
 			int recursiveBlendParameterCount = this.m_BlendTree.recursiveBlendParameterCount;
-			if (this.m_Controller.parameters.Length < recursiveBlendParameterCount)
+			if (this.m_Controller.parameters.Length >= recursiveBlendParameterCount)
 			{
-				return;
+				for (int i = 0; i < recursiveBlendParameterCount; i++)
+				{
+					string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
+					float parameterValue = BlendTreeInspector.GetParameterValue(this.animator, this.m_BlendTree, recursiveBlendParameter);
+					this.animator.SetFloat(recursiveBlendParameter, parameterValue);
+				}
+				this.animator.EvaluateController();
 			}
-			for (int i = 0; i < recursiveBlendParameterCount; i++)
-			{
-				string recursiveBlendParameter = this.m_BlendTree.GetRecursiveBlendParameter(i);
-				float parameterValue = BlendTreeInspector.GetParameterValue(this.animator, this.m_BlendTree, recursiveBlendParameter);
-				this.animator.SetFloat(recursiveBlendParameter, parameterValue);
-			}
-			this.animator.EvaluateController();
 		}
 	}
 }

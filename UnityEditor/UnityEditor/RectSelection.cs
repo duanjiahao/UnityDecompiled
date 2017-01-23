@@ -24,7 +24,7 @@ namespace UnityEditor
 
 		private Dictionary<GameObject, bool> m_LastSelection;
 
-		private UnityEngine.Object[] m_CurrentSelection;
+		private UnityEngine.Object[] m_CurrentSelection = null;
 
 		private EditorWindow m_Window;
 
@@ -52,7 +52,7 @@ namespace UnityEditor
 					this.m_SelectionStart = Selection.objects;
 					this.m_RectSelecting = false;
 				}
-				goto IL_4CB;
+				goto IL_4F7;
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == num && current.button == 0)
 				{
@@ -86,15 +86,15 @@ namespace UnityEditor
 						current.Use();
 					}
 				}
-				goto IL_4CB;
+				goto IL_4F7;
 			case EventType.MouseMove:
 			case EventType.KeyDown:
 			case EventType.KeyUp:
 			case EventType.ScrollWheel:
-				IL_4C:
+				IL_4B:
 				if (typeForControl != EventType.ExecuteCommand)
 				{
-					goto IL_4CB;
+					goto IL_4F7;
 				}
 				if (num == GUIUtility.hotControl && current.commandName == "ModifierKeysChanged")
 				{
@@ -112,7 +112,7 @@ namespace UnityEditor
 					}
 					current.Use();
 				}
-				goto IL_4CB;
+				goto IL_4F7;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == num)
 				{
@@ -181,22 +181,22 @@ namespace UnityEditor
 					}
 					current.Use();
 				}
-				goto IL_4CB;
+				goto IL_4F7;
 			case EventType.Repaint:
 				if (GUIUtility.hotControl == num && this.m_RectSelecting)
 				{
 					EditorStyles.selectionRect.Draw(EditorGUIExt.FromToRect(this.m_SelectStartPoint, this.m_SelectMousePoint), GUIContent.none, false, false, false, false);
 				}
-				goto IL_4CB;
+				goto IL_4F7;
 			case EventType.Layout:
 				if (!Tools.viewToolActive)
 				{
 					HandleUtility.AddDefaultControl(num);
 				}
-				goto IL_4CB;
+				goto IL_4F7;
 			}
-			goto IL_4C;
-			IL_4CB:
+			goto IL_4B;
+			IL_4F7:
 			Handles.EndGUI();
 		}
 

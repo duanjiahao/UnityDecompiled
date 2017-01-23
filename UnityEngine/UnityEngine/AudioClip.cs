@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine.Scripting;
 
 namespace UnityEngine
@@ -12,56 +13,76 @@ namespace UnityEngine
 
 		private event AudioClip.PCMReaderCallback m_PCMReaderCallback
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.m_PCMReaderCallback = (AudioClip.PCMReaderCallback)Delegate.Combine(this.m_PCMReaderCallback, value);
+				AudioClip.PCMReaderCallback pCMReaderCallback = this.m_PCMReaderCallback;
+				AudioClip.PCMReaderCallback pCMReaderCallback2;
+				do
+				{
+					pCMReaderCallback2 = pCMReaderCallback;
+					pCMReaderCallback = Interlocked.CompareExchange<AudioClip.PCMReaderCallback>(ref this.m_PCMReaderCallback, (AudioClip.PCMReaderCallback)Delegate.Combine(pCMReaderCallback2, value), pCMReaderCallback);
+				}
+				while (pCMReaderCallback != pCMReaderCallback2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.m_PCMReaderCallback = (AudioClip.PCMReaderCallback)Delegate.Remove(this.m_PCMReaderCallback, value);
+				AudioClip.PCMReaderCallback pCMReaderCallback = this.m_PCMReaderCallback;
+				AudioClip.PCMReaderCallback pCMReaderCallback2;
+				do
+				{
+					pCMReaderCallback2 = pCMReaderCallback;
+					pCMReaderCallback = Interlocked.CompareExchange<AudioClip.PCMReaderCallback>(ref this.m_PCMReaderCallback, (AudioClip.PCMReaderCallback)Delegate.Remove(pCMReaderCallback2, value), pCMReaderCallback);
+				}
+				while (pCMReaderCallback != pCMReaderCallback2);
 			}
 		}
 
 		private event AudioClip.PCMSetPositionCallback m_PCMSetPositionCallback
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				this.m_PCMSetPositionCallback = (AudioClip.PCMSetPositionCallback)Delegate.Combine(this.m_PCMSetPositionCallback, value);
+				AudioClip.PCMSetPositionCallback pCMSetPositionCallback = this.m_PCMSetPositionCallback;
+				AudioClip.PCMSetPositionCallback pCMSetPositionCallback2;
+				do
+				{
+					pCMSetPositionCallback2 = pCMSetPositionCallback;
+					pCMSetPositionCallback = Interlocked.CompareExchange<AudioClip.PCMSetPositionCallback>(ref this.m_PCMSetPositionCallback, (AudioClip.PCMSetPositionCallback)Delegate.Combine(pCMSetPositionCallback2, value), pCMSetPositionCallback);
+				}
+				while (pCMSetPositionCallback != pCMSetPositionCallback2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				this.m_PCMSetPositionCallback = (AudioClip.PCMSetPositionCallback)Delegate.Remove(this.m_PCMSetPositionCallback, value);
+				AudioClip.PCMSetPositionCallback pCMSetPositionCallback = this.m_PCMSetPositionCallback;
+				AudioClip.PCMSetPositionCallback pCMSetPositionCallback2;
+				do
+				{
+					pCMSetPositionCallback2 = pCMSetPositionCallback;
+					pCMSetPositionCallback = Interlocked.CompareExchange<AudioClip.PCMSetPositionCallback>(ref this.m_PCMSetPositionCallback, (AudioClip.PCMSetPositionCallback)Delegate.Remove(pCMSetPositionCallback2, value), pCMSetPositionCallback);
+				}
+				while (pCMSetPositionCallback != pCMSetPositionCallback2);
 			}
 		}
 
 		public extern float length
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int samples
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int channels
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int frequency
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -69,52 +90,50 @@ namespace UnityEngine
 		[Obsolete("Use AudioClip.loadState instead to get more detailed information about the loading process.")]
 		public extern bool isReadyToPlay
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern AudioClipLoadType loadType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool preloadAudioData
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern AudioDataLoadState loadState
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool loadInBackground
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[WrapperlessIcall]
+		public AudioClip()
+		{
+			this.m_PCMReaderCallback = null;
+			this.m_PCMSetPositionCallback = null;
+			base..ctor();
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool LoadAudioData();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool UnloadAudioData();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetData(float[] data, int offsetSamples);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool SetData(float[] data, int offsetSamples);
 
@@ -167,13 +186,11 @@ namespace UnityEngine
 			AudioClip audioClip = AudioClip.Construct_Internal();
 			if (pcmreadercallback != null)
 			{
-				AudioClip expr_50 = audioClip;
-				expr_50.m_PCMReaderCallback = (AudioClip.PCMReaderCallback)Delegate.Combine(expr_50.m_PCMReaderCallback, pcmreadercallback);
+				audioClip.m_PCMReaderCallback += pcmreadercallback;
 			}
 			if (pcmsetpositioncallback != null)
 			{
-				AudioClip expr_6F = audioClip;
-				expr_6F.m_PCMSetPositionCallback = (AudioClip.PCMSetPositionCallback)Delegate.Combine(expr_6F.m_PCMSetPositionCallback, pcmsetpositioncallback);
+				audioClip.m_PCMSetPositionCallback += pcmsetpositioncallback;
 			}
 			audioClip.Init_Internal(name, lengthSamples, channels, frequency, stream);
 			return audioClip;
@@ -197,11 +214,9 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AudioClip Construct_Internal();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Init_Internal(string name, int lengthSamples, int channels, int frequency, bool stream);
 	}

@@ -14,7 +14,6 @@ namespace UnityEngine.Networking
 
 		public extern bool isDone
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -39,19 +38,15 @@ namespace UnityEngine.Networking
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateBuffer();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateScript();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateTexture(bool readable);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateAssetBundle(string url, uint crc);
 
@@ -60,15 +55,13 @@ namespace UnityEngine.Networking
 			DownloadHandler.INTERNAL_CALL_InternalCreateAssetBundle(this, url, ref hash, crc);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InternalCreateAssetBundle(DownloadHandler self, string url, ref Hash128 hash, uint crc);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateAudioClip(string url, AudioType audioType);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalDestroy();
 
@@ -91,11 +84,16 @@ namespace UnityEngine.Networking
 		protected virtual string GetText()
 		{
 			byte[] data = this.GetData();
+			string result;
 			if (data != null && data.Length > 0)
 			{
-				return Encoding.UTF8.GetString(data, 0, data.Length);
+				result = Encoding.UTF8.GetString(data, 0, data.Length);
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
 
 		[UsedByNativeCode]

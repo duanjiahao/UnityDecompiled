@@ -54,11 +54,16 @@ namespace UnityEditorInternal
 
 		public static bool IsAnimated(MaterialProperty materialProp, Renderer target)
 		{
+			bool result;
 			if (materialProp.type == MaterialProperty.PropType.Texture)
 			{
-				return AnimationMode.IsPropertyAnimated(target, "material." + materialProp.name + "_ST");
+				result = AnimationMode.IsPropertyAnimated(target, "material." + materialProp.name + "_ST");
 			}
-			return AnimationMode.IsPropertyAnimated(target, "material." + materialProp.name);
+			else
+			{
+				result = AnimationMode.IsPropertyAnimated(target, "material." + materialProp.name);
+			}
+			return result;
 		}
 
 		public static void SetupMaterialPropertyBlock(MaterialProperty materialProp, int changedMask, Renderer target)
@@ -71,33 +76,43 @@ namespace UnityEditorInternal
 
 		public static bool ApplyMaterialModificationToAnimationRecording(MaterialProperty materialProp, int changedMask, Renderer target, object oldValue)
 		{
+			bool result;
 			switch (materialProp.type)
 			{
 			case MaterialProperty.PropType.Color:
 				MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 				MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(materialProp, target, (Color)oldValue);
-				return true;
+				result = true;
+				break;
 			case MaterialProperty.PropType.Vector:
 				MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 				MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(materialProp, target, (Vector4)oldValue);
-				return true;
+				result = true;
+				break;
 			case MaterialProperty.PropType.Float:
 			case MaterialProperty.PropType.Range:
 				MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 				MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(materialProp, target, (float)oldValue);
-				return true;
+				result = true;
+				break;
 			case MaterialProperty.PropType.Texture:
 				if (MaterialProperty.IsTextureOffsetAndScaleChangedMask(changedMask))
 				{
 					string name = materialProp.name + "_ST";
 					MaterialAnimationUtility.SetupMaterialPropertyBlock(materialProp, changedMask, target);
 					MaterialAnimationUtility.ApplyMaterialModificationToAnimationRecording(name, target, (Vector4)oldValue);
-					return true;
+					result = true;
 				}
-				return false;
+				else
+				{
+					result = false;
+				}
+				break;
 			default:
-				return false;
+				result = false;
+				break;
 			}
+			return result;
 		}
 	}
 }

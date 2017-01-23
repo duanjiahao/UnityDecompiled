@@ -7,7 +7,7 @@ namespace UnityEditor
 	{
 		private class Texts
 		{
-			public GUIContent lockParticleSystem = new GUIContent(string.Empty, "Lock the current selected Particle System");
+			public GUIContent lockParticleSystem = new GUIContent("", "Lock the current selected Particle System");
 
 			public GUIContent previewAll = new GUIContent("Simulate All", "Simulate all particle systems that have Play On Awake set");
 		}
@@ -60,7 +60,6 @@ namespace UnityEditor
 
 		private void OnDisable()
 		{
-			ParticleSystemEditorUtils.editorUpdateAll = false;
 			SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneViewGUI));
 			EditorApplication.projectWindowChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.projectWindowChanged, new EditorApplication.CallbackFunction(this.OnHierarchyOrProjectWindowWasChanged));
 			EditorApplication.hierarchyWindowChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.hierarchyWindowChanged, new EditorApplication.CallbackFunction(this.OnHierarchyOrProjectWindowWasChanged));
@@ -104,20 +103,18 @@ namespace UnityEditor
 
 		private void OnBecameVisible()
 		{
-			if (this.m_IsVisible)
+			if (!this.m_IsVisible)
 			{
-				return;
+				this.m_IsVisible = true;
+				this.InitEffectUI();
+				SceneView.RepaintAll();
+				InspectorWindow.RepaintAllInspectors();
 			}
-			this.m_IsVisible = true;
-			this.InitEffectUI();
-			SceneView.RepaintAll();
-			InspectorWindow.RepaintAllInspectors();
 		}
 
 		private void OnBecameInvisible()
 		{
 			this.m_IsVisible = false;
-			ParticleSystemEditorUtils.editorUpdateAll = false;
 			this.Clear();
 			SceneView.RepaintAll();
 			InspectorWindow.RepaintAllInspectors();
@@ -131,33 +128,32 @@ namespace UnityEditor
 
 		private void InitEffectUI()
 		{
-			if (!this.m_IsVisible)
+			if (this.m_IsVisible)
 			{
-				return;
-			}
-			ParticleSystem particleSystem = ParticleSystemEditorUtils.lockedParticleSystem;
-			if (particleSystem == null && Selection.activeGameObject != null)
-			{
-				particleSystem = Selection.activeGameObject.GetComponent<ParticleSystem>();
-			}
-			this.m_Target = particleSystem;
-			if (this.m_Target != null)
-			{
-				if (this.m_ParticleEffectUI == null)
+				ParticleSystem particleSystem = ParticleSystemEditorUtils.lockedParticleSystem;
+				if (particleSystem == null && Selection.activeGameObject != null)
 				{
-					this.m_ParticleEffectUI = new ParticleEffectUI(this);
+					particleSystem = Selection.activeGameObject.GetComponent<ParticleSystem>();
 				}
-				if (this.m_ParticleEffectUI.InitializeIfNeeded(this.m_Target))
+				this.m_Target = particleSystem;
+				if (this.m_Target != null)
 				{
+					if (this.m_ParticleEffectUI == null)
+					{
+						this.m_ParticleEffectUI = new ParticleEffectUI(this);
+					}
+					if (this.m_ParticleEffectUI.InitializeIfNeeded(this.m_Target))
+					{
+						base.Repaint();
+					}
+				}
+				if (this.m_Target == null && this.m_ParticleEffectUI != null)
+				{
+					this.Clear();
 					base.Repaint();
+					SceneView.RepaintAll();
+					GameView.RepaintAll();
 				}
-			}
-			if (this.m_Target == null && this.m_ParticleEffectUI != null)
-			{
-				this.Clear();
-				base.Repaint();
-				SceneView.RepaintAll();
-				GameView.RepaintAll();
 			}
 		}
 
@@ -170,78 +166,84 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal("Toolbar", new GUILayoutOption[0]);
 			using (new EditorGUI.DisabledScope(this.m_ParticleEffectUI == null))
 			{
-				using (new EditorGUI.DisabledScope(ParticleSystemEditorUtils.editorUpdateAll))
+				if (!EditorApplication.isPlaying)
 				{
-					if (!EditorApplication.isPlaying)
+					bool flag = false;
+					if (this.m_ParticleEffectUI != null)
 					{
-						bool flag = false;
+						flag = this.m_ParticleEffectUI.IsPlaying();
+					}
+					if (GUILayout.Button((!flag) ? ParticleEffectUI.texts.play : ParticleEffectUI.texts.pause, "ToolbarButton", new GUILayoutOption[]
+					{
+						GUILayout.Width(65f)
+					}))
+					{
 						if (this.m_ParticleEffectUI != null)
 						{
-							flag = this.m_ParticleEffectUI.IsPlaying();
-						}
-						if (GUILayout.Button((!flag) ? ParticleEffectUI.texts.play : ParticleEffectUI.texts.pause, "ToolbarButton", new GUILayoutOption[]
-						{
-							GUILayout.Width(65f)
-						}))
-						{
-							if (this.m_ParticleEffectUI != null)
+							if (flag)
 							{
-								if (flag)
-								{
-									this.m_ParticleEffectUI.Pause();
-								}
-								else
-								{
-									this.m_ParticleEffectUI.Play();
-								}
+								this.m_ParticleEffectUI.Pause();
 							}
-							base.Repaint();
+							else
+							{
+								this.m_ParticleEffectUI.Play();
+							}
 						}
-						if (GUILayout.Button(ParticleEffectUI.texts.stop, "ToolbarButton", new GUILayoutOption[0]) && this.m_ParticleEffectUI != null)
-						{
-							this.m_ParticleEffectUI.Stop();
-						}
+						base.Repaint();
 					}
-					else
+					if (GUILayout.Button(ParticleEffectUI.texts.stop, "ToolbarButton", new GUILayoutOption[0]) && this.m_ParticleEffectUI != null)
 					{
-						if (GUILayout.Button(ParticleEffectUI.texts.play, "ToolbarButton", new GUILayoutOption[]
-						{
-							GUILayout.Width(65f)
-						}) && this.m_ParticleEffectUI != null)
+						this.m_ParticleEffectUI.Stop();
+					}
+				}
+				else
+				{
+					if (GUILayout.Button(ParticleEffectUI.texts.play, "ToolbarButton", new GUILayoutOption[]
+					{
+						GUILayout.Width(65f)
+					}))
+					{
+						if (this.m_ParticleEffectUI != null)
 						{
 							this.m_ParticleEffectUI.Stop();
 							this.m_ParticleEffectUI.Play();
 						}
-						if (GUILayout.Button(ParticleEffectUI.texts.stop, "ToolbarButton", new GUILayoutOption[0]) && this.m_ParticleEffectUI != null)
+					}
+					if (GUILayout.Button(ParticleEffectUI.texts.stop, "ToolbarButton", new GUILayoutOption[0]))
+					{
+						if (this.m_ParticleEffectUI != null)
 						{
 							this.m_ParticleEffectUI.Stop();
 						}
 					}
-					GUILayout.FlexibleSpace();
-					bool flag2 = this.m_ParticleEffectUI != null && this.m_ParticleEffectUI.IsShowOnlySelectedMode();
-					bool flag3 = GUILayout.Toggle(flag2, (!flag2) ? "Show: All" : "Show: Selected", ParticleSystemStyles.Get().toolbarButtonLeftAlignText, new GUILayoutOption[]
-					{
-						GUILayout.Width(100f)
-					});
-					if (flag3 != flag2 && this.m_ParticleEffectUI != null)
-					{
-						this.m_ParticleEffectUI.SetShowOnlySelectedMode(flag3);
-					}
-					ParticleSystemEditorUtils.editorResimulation = GUILayout.Toggle(ParticleSystemEditorUtils.editorResimulation, ParticleEffectUI.texts.resimulation, "ToolbarButton", new GUILayoutOption[0]);
-					ParticleEffectUI.m_ShowWireframe = GUILayout.Toggle(ParticleEffectUI.m_ShowWireframe, ParticleEffectUI.texts.wireframe, "ToolbarButton", new GUILayoutOption[0]);
-					ParticleEffectUI.m_ShowBounds = GUILayout.Toggle(ParticleEffectUI.m_ShowBounds, ParticleEffectUI.texts.bounds, "ToolbarButton", new GUILayoutOption[0]);
-					if (GUILayout.Button((!ParticleEffectUI.m_VerticalLayout) ? ParticleSystemWindow.s_Icons[1] : ParticleSystemWindow.s_Icons[0], "ToolbarButton", new GUILayoutOption[0]))
-					{
-						ParticleEffectUI.m_VerticalLayout = !ParticleEffectUI.m_VerticalLayout;
-						EditorPrefs.SetBool("ShurikenVerticalLayout", ParticleEffectUI.m_VerticalLayout);
-						this.Clear();
-					}
-					GUILayout.BeginVertical(new GUILayoutOption[0]);
-					GUILayout.Space(3f);
-					ParticleSystem lockedParticleSystem = ParticleSystemEditorUtils.lockedParticleSystem;
-					bool flag4 = lockedParticleSystem != null;
-					bool flag5 = GUILayout.Toggle(flag4, ParticleSystemWindow.s_Texts.lockParticleSystem, "IN LockButton", new GUILayoutOption[0]);
-					if (flag4 != flag5 && this.m_ParticleEffectUI != null && this.m_Target != null)
+				}
+				GUILayout.FlexibleSpace();
+				bool flag2 = this.m_ParticleEffectUI != null && this.m_ParticleEffectUI.IsShowOnlySelectedMode();
+				bool flag3 = GUILayout.Toggle(flag2, (!flag2) ? "Show: All" : "Show: Selected", ParticleSystemStyles.Get().toolbarButtonLeftAlignText, new GUILayoutOption[]
+				{
+					GUILayout.Width(100f)
+				});
+				if (flag3 != flag2 && this.m_ParticleEffectUI != null)
+				{
+					this.m_ParticleEffectUI.SetShowOnlySelectedMode(flag3);
+				}
+				ParticleSystemEditorUtils.editorResimulation = GUILayout.Toggle(ParticleSystemEditorUtils.editorResimulation, ParticleEffectUI.texts.resimulation, "ToolbarButton", new GUILayoutOption[0]);
+				ParticleEffectUI.m_ShowWireframe = GUILayout.Toggle(ParticleEffectUI.m_ShowWireframe, ParticleEffectUI.texts.wireframe, "ToolbarButton", new GUILayoutOption[0]);
+				ParticleEffectUI.m_ShowBounds = GUILayout.Toggle(ParticleEffectUI.m_ShowBounds, ParticleEffectUI.texts.bounds, "ToolbarButton", new GUILayoutOption[0]);
+				if (GUILayout.Button((!ParticleEffectUI.m_VerticalLayout) ? ParticleSystemWindow.s_Icons[1] : ParticleSystemWindow.s_Icons[0], "ToolbarButton", new GUILayoutOption[0]))
+				{
+					ParticleEffectUI.m_VerticalLayout = !ParticleEffectUI.m_VerticalLayout;
+					EditorPrefs.SetBool("ShurikenVerticalLayout", ParticleEffectUI.m_VerticalLayout);
+					this.Clear();
+				}
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				GUILayout.Space(3f);
+				ParticleSystem lockedParticleSystem = ParticleSystemEditorUtils.lockedParticleSystem;
+				bool flag4 = lockedParticleSystem != null;
+				bool flag5 = GUILayout.Toggle(flag4, ParticleSystemWindow.s_Texts.lockParticleSystem, "IN LockButton", new GUILayoutOption[0]);
+				if (flag4 != flag5)
+				{
+					if (this.m_ParticleEffectUI != null && this.m_Target != null)
 					{
 						if (flag5)
 						{
@@ -252,8 +254,8 @@ namespace UnityEditor
 							ParticleSystemEditorUtils.lockedParticleSystem = null;
 						}
 					}
-					GUILayout.EndVertical();
 				}
+				GUILayout.EndVertical();
 			}
 			GUILayout.EndHorizontal();
 		}
@@ -277,38 +279,25 @@ namespace UnityEditor
 				this.InitEffectUI();
 			}
 			this.DoToolbarGUI();
-			using (new EditorGUI.DisabledScope(ParticleSystemEditorUtils.editorUpdateAll))
+			if (this.m_Target != null && this.m_ParticleEffectUI != null)
 			{
-				if (this.m_Target != null && this.m_ParticleEffectUI != null)
-				{
-					this.m_ParticleEffectUI.OnGUI();
-				}
+				this.m_ParticleEffectUI.OnGUI();
 			}
 		}
 
 		public void OnSceneViewGUI(SceneView sceneView)
 		{
-			if (!this.m_IsVisible)
+			if (this.m_IsVisible)
 			{
-				return;
-			}
-			if (ParticleSystemEditorUtils.editorUpdateAll)
-			{
-				return;
-			}
-			if (this.m_ParticleEffectUI != null)
-			{
-				this.m_ParticleEffectUI.OnSceneGUI();
-				this.m_ParticleEffectUI.OnSceneViewGUI();
+				if (this.m_ParticleEffectUI != null)
+				{
+					this.m_ParticleEffectUI.OnSceneGUI();
+					this.m_ParticleEffectUI.OnSceneViewGUI();
+				}
 			}
 		}
 
 		private void OnDidOpenScene()
-		{
-			base.Repaint();
-		}
-
-		virtual void Repaint()
 		{
 			base.Repaint();
 		}

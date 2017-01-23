@@ -52,14 +52,18 @@ namespace UnityEditor
 
 		public void Load()
 		{
-			if (this.m_Loaded)
+			if (!this.m_Loaded)
 			{
-				return;
+				this.m_Loaded = true;
+				PrefColor prefColor = Settings.Get<PrefColor>(this.m_name, this);
+				this.m_name = prefColor.Name;
+				this.m_color = prefColor.Color;
 			}
-			this.m_Loaded = true;
-			PrefColor prefColor = Settings.Get<PrefColor>(this.m_name, this);
-			this.m_name = prefColor.Name;
-			this.m_color = prefColor.Color;
+		}
+
+		public static implicit operator Color(PrefColor pcolor)
+		{
+			return pcolor.Color;
 		}
 
 		public string ToUniqueString()
@@ -85,28 +89,30 @@ namespace UnityEditor
 			if (array.Length != 5)
 			{
 				Debug.LogError("Parsing PrefColor failed");
-				return;
-			}
-			this.m_name = array[0];
-			array[1] = array[1].Replace(',', '.');
-			array[2] = array[2].Replace(',', '.');
-			array[3] = array[3].Replace(',', '.');
-			array[4] = array[4].Replace(',', '.');
-			float r;
-			bool flag = float.TryParse(array[1], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out r);
-			float g;
-			flag &= float.TryParse(array[2], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out g);
-			float b;
-			flag &= float.TryParse(array[3], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out b);
-			float a;
-			flag &= float.TryParse(array[4], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out a);
-			if (flag)
-			{
-				this.m_color = new Color(r, g, b, a);
 			}
 			else
 			{
-				Debug.LogError("Parsing PrefColor failed");
+				this.m_name = array[0];
+				array[1] = array[1].Replace(',', '.');
+				array[2] = array[2].Replace(',', '.');
+				array[3] = array[3].Replace(',', '.');
+				array[4] = array[4].Replace(',', '.');
+				float r;
+				bool flag = float.TryParse(array[1], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out r);
+				float g;
+				flag &= float.TryParse(array[2], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out g);
+				float b;
+				flag &= float.TryParse(array[3], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out b);
+				float a;
+				flag &= float.TryParse(array[4], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out a);
+				if (flag)
+				{
+					this.m_color = new Color(r, g, b, a);
+				}
+				else
+				{
+					Debug.LogError("Parsing PrefColor failed");
+				}
 			}
 		}
 
@@ -114,11 +120,6 @@ namespace UnityEditor
 		{
 			this.Load();
 			this.m_color = this.m_DefaultColor;
-		}
-
-		public static implicit operator Color(PrefColor pcolor)
-		{
-			return pcolor.Color;
 		}
 	}
 }

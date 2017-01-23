@@ -1,8 +1,10 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace UnityEngine
 {
 	[Obsolete("iPhoneAccelerationEvent struct is deprecated. Please use AccelerationEvent instead (UnityUpgradable) -> AccelerationEvent", true)]
+	[StructLayout(LayoutKind.Sequential, Size = 1)]
 	public struct iPhoneAccelerationEvent
 	{
 		[Obsolete("timeDelta property is deprecated. Please use AccelerationEvent.deltaTime instead (UnityUpgradable) -> AccelerationEvent.deltaTime", true)]

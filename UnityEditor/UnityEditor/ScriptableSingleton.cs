@@ -52,20 +52,22 @@ namespace UnityEditor
 			if (ScriptableSingleton<T>.s_Instance == null)
 			{
 				Debug.Log("Cannot save ScriptableSingleton: no instance!");
-				return;
 			}
-			string filePath = ScriptableSingleton<T>.GetFilePath();
-			if (!string.IsNullOrEmpty(filePath))
+			else
 			{
-				string directoryName = Path.GetDirectoryName(filePath);
-				if (!Directory.Exists(directoryName))
+				string filePath = ScriptableSingleton<T>.GetFilePath();
+				if (!string.IsNullOrEmpty(filePath))
 				{
-					Directory.CreateDirectory(directoryName);
+					string directoryName = Path.GetDirectoryName(filePath);
+					if (!Directory.Exists(directoryName))
+					{
+						Directory.CreateDirectory(directoryName);
+					}
+					InternalEditorUtility.SaveToSerializedFileAndForget(new T[]
+					{
+						ScriptableSingleton<T>.s_Instance
+					}, filePath, saveAsText);
 				}
-				InternalEditorUtility.SaveToSerializedFileAndForget(new T[]
-				{
-					ScriptableSingleton<T>.s_Instance
-				}, filePath, saveAsText);
 			}
 		}
 
@@ -74,16 +76,19 @@ namespace UnityEditor
 			Type typeFromHandle = typeof(T);
 			object[] customAttributes = typeFromHandle.GetCustomAttributes(true);
 			object[] array = customAttributes;
+			string result;
 			for (int i = 0; i < array.Length; i++)
 			{
 				object obj = array[i];
 				if (obj is FilePathAttribute)
 				{
 					FilePathAttribute filePathAttribute = obj as FilePathAttribute;
-					return filePathAttribute.filepath;
+					result = filePathAttribute.filepath;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 	}
 }

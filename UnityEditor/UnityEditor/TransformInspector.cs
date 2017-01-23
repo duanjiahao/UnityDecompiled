@@ -53,7 +53,7 @@ namespace UnityEditor
 			}
 			base.serializedObject.Update();
 			this.Inspector3D();
-			Transform transform = this.target as Transform;
+			Transform transform = base.target as Transform;
 			Vector3 position = transform.position;
 			if (Mathf.Abs(position.x) > 100000f || Mathf.Abs(position.y) > 100000f || Mathf.Abs(position.z) > 100000f)
 			{

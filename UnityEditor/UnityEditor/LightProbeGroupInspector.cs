@@ -30,7 +30,7 @@ namespace UnityEditor
 
 		public void OnEnable()
 		{
-			this.m_Editor = new LightProbeGroupEditor(this.target as LightProbeGroup, this);
+			this.m_Editor = new LightProbeGroupEditor(base.target as LightProbeGroup, this);
 			this.m_Editor.PullProbePositions();
 			this.m_Editor.DeselectProbes();
 			this.m_Editor.PushProbePositions();
@@ -63,28 +63,26 @@ namespace UnityEditor
 
 		private void StartEditProbes()
 		{
-			if (this.m_EditingProbes)
+			if (!this.m_EditingProbes)
 			{
-				return;
+				this.m_EditingProbes = true;
+				this.m_Editor.SetEditing(true);
+				Tools.s_Hidden = true;
+				SceneView.RepaintAll();
 			}
-			this.m_EditingProbes = true;
-			this.m_Editor.SetEditing(true);
-			Tools.s_Hidden = true;
-			SceneView.RepaintAll();
 		}
 
 		private void EndEditProbes()
 		{
-			if (!this.m_EditingProbes)
+			if (this.m_EditingProbes)
 			{
-				return;
+				this.m_Editor.drawTetrahedra = true;
+				this.m_Editor.DeselectProbes();
+				this.m_Editor.SetEditing(false);
+				this.m_EditingProbes = false;
+				Tools.s_Hidden = false;
+				SceneView.RepaintAll();
 			}
-			this.m_Editor.drawTetrahedra = true;
-			this.m_Editor.DeselectProbes();
-			this.m_Editor.SetEditing(false);
-			this.m_EditingProbes = false;
-			Tools.s_Hidden = false;
-			SceneView.RepaintAll();
 		}
 
 		public void OnDisable()
@@ -92,7 +90,7 @@ namespace UnityEditor
 			this.EndEditProbes();
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneGUIDelegate));
-			if (this.target != null)
+			if (base.target != null)
 			{
 				this.m_Editor.PushProbePositions();
 				this.m_Editor = null;
@@ -134,7 +132,7 @@ namespace UnityEditor
 				Vector3 position = Vector3.zero;
 				if (SceneView.lastActiveSceneView)
 				{
-					LightProbeGroup lightProbeGroup = this.target as LightProbeGroup;
+					LightProbeGroup lightProbeGroup = base.target as LightProbeGroup;
 					if (lightProbeGroup)
 					{
 						position = lightProbeGroup.transform.InverseTransformPoint(position);
@@ -175,29 +173,31 @@ namespace UnityEditor
 
 		private void InternalOnSceneView()
 		{
-			if (!EditorGUIUtility.IsGizmosAllowedForObject(this.target))
+			if (EditorGUIUtility.IsGizmosAllowedForObject(base.target))
 			{
-				return;
-			}
-			if (SceneView.lastActiveSceneView != null && this.m_ShouldFocus)
-			{
-				this.m_ShouldFocus = false;
-				SceneView.lastActiveSceneView.FrameSelected();
-			}
-			this.m_Editor.PullProbePositions();
-			LightProbeGroup lightProbeGroup = this.target as LightProbeGroup;
-			if (lightProbeGroup != null)
-			{
-				if (this.m_Editor.OnSceneGUI(lightProbeGroup.transform))
+				if (SceneView.lastActiveSceneView != null)
 				{
-					this.StartEditProbes();
+					if (this.m_ShouldFocus)
+					{
+						this.m_ShouldFocus = false;
+						SceneView.lastActiveSceneView.FrameSelected();
+					}
 				}
-				else
+				this.m_Editor.PullProbePositions();
+				LightProbeGroup lightProbeGroup = base.target as LightProbeGroup;
+				if (lightProbeGroup != null)
 				{
-					this.EndEditProbes();
+					if (this.m_Editor.OnSceneGUI(lightProbeGroup.transform))
+					{
+						this.StartEditProbes();
+					}
+					else
+					{
+						this.EndEditProbes();
+					}
 				}
+				this.m_Editor.PushProbePositions();
 			}
-			this.m_Editor.PushProbePositions();
 		}
 
 		public void OnSceneGUI()

@@ -14,21 +14,31 @@ namespace UnityEditor
 		{
 			get
 			{
+				int result;
 				if (this.m_Rects != null)
 				{
-					return this.m_Rects.Count;
+					result = this.m_Rects.Count;
 				}
-				return 0;
+				else
+				{
+					result = 0;
+				}
+				return result;
 			}
 		}
 
 		public SpriteRect RectAt(int i)
 		{
+			SpriteRect result;
 			if (i >= this.Count)
 			{
-				return null;
+				result = null;
 			}
-			return this.m_Rects[i];
+			else
+			{
+				result = this.m_Rects[i];
+			}
+			return result;
 		}
 
 		public void AddRect(SpriteRect r)
@@ -57,11 +67,16 @@ namespace UnityEditor
 
 		public int GetIndex(SpriteRect spriteRect)
 		{
+			int result;
 			if (this.m_Rects != null)
 			{
-				return this.m_Rects.FindIndex((SpriteRect p) => p.Equals(spriteRect));
+				result = this.m_Rects.FindIndex((SpriteRect p) => p.Equals(spriteRect));
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 
 		public bool Contains(SpriteRect spriteRect)

@@ -15,7 +15,7 @@ namespace UnityEditor
 			base.minSize = new Vector2(275f, 50f);
 		}
 
-		[MenuItem("Window/Collab History", false, 3000)]
+		[MenuItem("Window/Collab History", false, 2011)]
 		public static CollabHistoryWindow ShowHistoryWindow()
 		{
 			return EditorWindow.GetWindow<CollabHistoryWindow>("Collab History", new Type[]
@@ -53,17 +53,20 @@ namespace UnityEditor
 			base.OnDestroy();
 		}
 
+		public void OnCollabStateChanged(CollabInfo info)
+		{
+			if (Collab.instance.WasWhitelistedRequestSent())
+			{
+				if (!info.whitelisted || !CollabAccess.Instance.IsServiceEnabled())
+				{
+					CollabHistoryWindow.CloseHistoryWindows();
+				}
+			}
+		}
+
 		public new void ToggleMaximize()
 		{
 			base.ToggleMaximize();
-		}
-
-		public void OnCollabStateChanged(CollabInfo info)
-		{
-			if (!info.whitelisted || !CollabAccess.Instance.IsServiceEnabled())
-			{
-				CollabHistoryWindow.CloseHistoryWindows();
-			}
 		}
 
 		private static void CloseHistoryWindows()

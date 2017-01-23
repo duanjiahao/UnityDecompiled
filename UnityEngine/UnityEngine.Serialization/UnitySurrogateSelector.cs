@@ -8,23 +8,27 @@ namespace UnityEngine.Serialization
 	{
 		public ISerializationSurrogate GetSurrogate(Type type, StreamingContext context, out ISurrogateSelector selector)
 		{
+			ISerializationSurrogate result;
 			if (type.IsGenericType)
 			{
 				Type genericTypeDefinition = type.GetGenericTypeDefinition();
 				if (genericTypeDefinition == typeof(List<>))
 				{
 					selector = this;
-					return ListSerializationSurrogate.Default;
+					result = ListSerializationSurrogate.Default;
+					return result;
 				}
 				if (genericTypeDefinition == typeof(Dictionary<, >))
 				{
 					selector = this;
 					Type type2 = typeof(DictionarySerializationSurrogate<, >).MakeGenericType(type.GetGenericArguments());
-					return (ISerializationSurrogate)Activator.CreateInstance(type2);
+					result = (ISerializationSurrogate)Activator.CreateInstance(type2);
+					return result;
 				}
 			}
 			selector = null;
-			return null;
+			result = null;
+			return result;
 		}
 
 		public void ChainSelector(ISurrogateSelector selector)

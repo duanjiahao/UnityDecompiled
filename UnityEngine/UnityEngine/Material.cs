@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 
@@ -8,10 +9,8 @@ namespace UnityEngine
 	{
 		public extern Shader shader
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -66,37 +65,30 @@ namespace UnityEngine
 
 		public extern int passCount
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int renderQueue
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string[] shaderKeywords
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern MaterialGlobalIlluminationFlags globalIlluminationFlags
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -127,7 +119,6 @@ namespace UnityEngine
 			Material.INTERNAL_CALL_SetColor(this, nameID, ref color);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetColor(Material self, int nameID, ref Color color);
 
@@ -143,7 +134,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetColor(Material self, int nameID, out Color value);
 
@@ -174,7 +164,6 @@ namespace UnityEngine
 			this.SetTexture(Shader.PropertyToID(propertyName), texture);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTexture(int nameID, Texture texture);
 
@@ -183,11 +172,9 @@ namespace UnityEngine
 			return this.GetTexture(Shader.PropertyToID(propertyName));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Texture GetTexture(int nameID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetTextureScaleAndOffset(Material mat, string name, out Vector4 output);
 
@@ -196,7 +183,6 @@ namespace UnityEngine
 			Material.INTERNAL_CALL_SetTextureOffset(this, propertyName, ref offset);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetTextureOffset(Material self, string propertyName, ref Vector2 offset);
 
@@ -212,7 +198,6 @@ namespace UnityEngine
 			Material.INTERNAL_CALL_SetTextureScale(this, propertyName, ref scale);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetTextureScale(Material self, string propertyName, ref Vector2 scale);
 
@@ -233,7 +218,6 @@ namespace UnityEngine
 			Material.INTERNAL_CALL_SetMatrix(this, nameID, ref matrix);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetMatrix(Material self, int nameID, ref Matrix4x4 matrix);
 
@@ -249,7 +233,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetMatrix(Material self, int nameID, out Matrix4x4 value);
 
@@ -258,7 +241,6 @@ namespace UnityEngine
 			this.SetFloat(Shader.PropertyToID(propertyName), value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetFloat(int nameID, float value);
 
@@ -267,45 +249,296 @@ namespace UnityEngine
 			return this.GetFloat(Shader.PropertyToID(propertyName));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetFloat(int nameID);
+
+		public void SetFloatArray(string name, List<float> values)
+		{
+			this.SetFloatArray(Shader.PropertyToID(name), values);
+		}
+
+		public void SetFloatArray(int nameID, List<float> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Count == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetFloatArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetFloatArrayImplList(int nameID, object values);
 
 		public void SetFloatArray(string name, float[] values)
 		{
 			this.SetFloatArray(Shader.PropertyToID(name), values);
 		}
 
-		[WrapperlessIcall]
+		public void SetFloatArray(int nameID, float[] values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Length == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetFloatArrayImpl(nameID, values);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetFloatArray(int nameID, float[] values);
+		private extern void SetFloatArrayImpl(int nameID, float[] values);
+
+		public void SetVectorArray(string name, List<Vector4> values)
+		{
+			this.SetVectorArray(Shader.PropertyToID(name), values);
+		}
+
+		public void SetVectorArray(int nameID, List<Vector4> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Count == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetVectorArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetVectorArrayImplList(int nameID, object values);
 
 		public void SetVectorArray(string name, Vector4[] values)
 		{
 			this.SetVectorArray(Shader.PropertyToID(name), values);
 		}
 
-		[WrapperlessIcall]
+		public void SetVectorArray(int nameID, Vector4[] values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Length == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetVectorArrayImpl(nameID, values);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetVectorArray(int nameID, Vector4[] values);
+		private extern void SetVectorArrayImpl(int nameID, Vector4[] values);
+
+		public void SetColorArray(string name, List<Color> values)
+		{
+			this.SetColorArray(Shader.PropertyToID(name), values);
+		}
+
+		public void SetColorArray(int nameID, List<Color> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Count == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetColorArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetColorArrayImplList(int nameID, object values);
 
 		public void SetColorArray(string name, Color[] values)
 		{
 			this.SetColorArray(Shader.PropertyToID(name), values);
 		}
 
-		[WrapperlessIcall]
+		public void SetColorArray(int nameID, Color[] values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Length == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetColorArrayImpl(nameID, values);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetColorArray(int nameID, Color[] values);
+		private extern void SetColorArrayImpl(int nameID, Color[] values);
+
+		public void SetMatrixArray(string name, List<Matrix4x4> values)
+		{
+			this.SetMatrixArray(Shader.PropertyToID(name), values);
+		}
+
+		public void SetMatrixArray(int nameID, List<Matrix4x4> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Count == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetMatrixArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetMatrixArrayImplList(int nameID, object values);
 
 		public void SetMatrixArray(string name, Matrix4x4[] values)
 		{
 			this.SetMatrixArray(Shader.PropertyToID(name), values);
 		}
 
-		[WrapperlessIcall]
+		public void SetMatrixArray(int nameID, Matrix4x4[] values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Length == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
+			this.SetMatrixArrayImpl(nameID, values);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetMatrixArray(int nameID, Matrix4x4[] values);
+		private extern void SetMatrixArrayImpl(int nameID, Matrix4x4[] values);
+
+		public void GetFloatArray(string name, List<float> values)
+		{
+			this.GetFloatArray(Shader.PropertyToID(name), values);
+		}
+
+		public void GetFloatArray(int nameID, List<float> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			this.GetFloatArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetFloatArrayImplList(int nameID, object list);
+
+		public float[] GetFloatArray(string name)
+		{
+			return this.GetFloatArray(Shader.PropertyToID(name));
+		}
+
+		public float[] GetFloatArray(int nameID)
+		{
+			return this.GetFloatArrayImpl(nameID);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern float[] GetFloatArrayImpl(int nameID);
+
+		public void GetVectorArray(string name, List<Vector4> values)
+		{
+			this.GetVectorArray(Shader.PropertyToID(name), values);
+		}
+
+		public void GetVectorArray(int nameID, List<Vector4> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			this.GetVectorArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetVectorArrayImplList(int nameID, object list);
+
+		public Vector4[] GetVectorArray(string name)
+		{
+			return this.GetVectorArray(Shader.PropertyToID(name));
+		}
+
+		public Vector4[] GetVectorArray(int nameID)
+		{
+			return this.GetVectorArrayImpl(nameID);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern Vector4[] GetVectorArrayImpl(int nameID);
+
+		public void GetColorArray(string name, List<Color> values)
+		{
+			this.GetColorArray(Shader.PropertyToID(name), values);
+		}
+
+		public void GetColorArray(int nameID, List<Color> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			this.GetColorArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetColorArrayImplList(int nameID, object list);
+
+		public Color[] GetColorArray(string name)
+		{
+			return this.GetColorArray(Shader.PropertyToID(name));
+		}
+
+		public Color[] GetColorArray(int nameID)
+		{
+			return this.GetColorArrayImpl(nameID);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern Color[] GetColorArrayImpl(int nameID);
+
+		public void GetMatrixArray(string name, List<Matrix4x4> values)
+		{
+			this.GetMatrixArray(Shader.PropertyToID(name), values);
+		}
+
+		public void GetMatrixArray(int nameID, List<Matrix4x4> values)
+		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			this.GetMatrixArrayImplList(nameID, values);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetMatrixArrayImplList(int nameID, object list);
+
+		public Matrix4x4[] GetMatrixArray(string name)
+		{
+			return this.GetMatrixArray(Shader.PropertyToID(name));
+		}
+
+		public Matrix4x4[] GetMatrixArray(int nameID)
+		{
+			return this.GetMatrixArrayImpl(nameID);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern Matrix4x4[] GetMatrixArrayImpl(int nameID);
 
 		public void SetInt(string propertyName, int value)
 		{
@@ -327,7 +560,6 @@ namespace UnityEngine
 			return (int)this.GetFloat(nameID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetBuffer(string propertyName, ComputeBuffer buffer);
 
@@ -336,32 +568,33 @@ namespace UnityEngine
 			return this.HasProperty(Shader.PropertyToID(propertyName));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasProperty(int nameID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetTag(string tag, bool searchFallbacks, [DefaultValue("\"\"")] string defaultValue);
 
 		[ExcludeFromDocs]
 		public string GetTag(string tag, bool searchFallbacks)
 		{
-			string empty = string.Empty;
-			return this.GetTag(tag, searchFallbacks, empty);
+			string defaultValue = "";
+			return this.GetTag(tag, searchFallbacks, defaultValue);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetOverrideTag(string tag, string val);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Lerp(Material start, Material end, float t);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool SetPass(int pass);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetPassName(int pass);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern int FindPass(string passName);
 
 		[Obsolete("Creating materials from shader source string will be removed in the future. Use Shader assets instead.")]
 		public static Material Create(string scriptContents)
@@ -369,31 +602,24 @@ namespace UnityEngine
 			return new Material(scriptContents);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateWithString([Writable] Material mono, string contents);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateWithShader([Writable] Material mono, Shader shader);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateWithMaterial([Writable] Material mono, Material source);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CopyPropertiesFromMaterial(Material mat);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void EnableKeyword(string keyword);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DisableKeyword(string keyword);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsKeywordEnabled(string keyword);
 	}

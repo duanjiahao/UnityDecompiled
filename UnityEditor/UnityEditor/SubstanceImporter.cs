@@ -7,83 +7,63 @@ namespace UnityEditor
 {
 	public sealed class SubstanceImporter : AssetImporter
 	{
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string[] GetPrototypeNames();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetMaterialCount();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern ProceduralMaterial[] GetMaterials();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string CloneMaterial(ProceduralMaterial material);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string InstantiateMaterial(string prototypeName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void DestroyMaterial(ProceduralMaterial material);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ResetMaterial(ProceduralMaterial material);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool RenameMaterial(ProceduralMaterial material, string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void OnShaderModified(ProceduralMaterial material);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern ProceduralOutputType GetTextureAlphaSource(ProceduralMaterial material, string textureName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTextureAlphaSource(ProceduralMaterial material, string textureName, ProceduralOutputType alphaSource);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetPlatformTextureSettings(string materialName, string platform, out int maxTextureWidth, out int maxTextureHeight, out int textureFormat, out int loadBehavior);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPlatformTextureSettings(ProceduralMaterial material, string platform, int maxTextureWidth, int maxTextureHeight, int textureFormat, int loadBehavior);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern ScriptingProceduralMaterialInformation GetMaterialInformation(ProceduralMaterial material);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetMaterialInformation(ProceduralMaterial material, ScriptingProceduralMaterialInformation scriptingProcMatInfo);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CanShaderPropertyHostProceduralOutput(string name, ProceduralOutputType substanceType);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void ClearPlatformTextureSettings(string materialName, string platform);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void OnTextureInformationsChanged(ProceduralTexture texture);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void ExportBitmapsInternal(ProceduralMaterial material, string exportPath, bool alphaRemap);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsSubstanceParented(ProceduralTexture texture, ProceduralMaterial material);
 
@@ -198,7 +178,7 @@ namespace UnityEditor
 			{
 				throw new ArgumentException("Invalid ProceduralMaterial");
 			}
-			if (exportPath == string.Empty)
+			if (exportPath == "")
 			{
 				throw new ArgumentException("Invalid export path specified");
 			}
@@ -216,7 +196,7 @@ namespace UnityEditor
 			{
 				throw new ArgumentException("Invalid ProceduralMaterial");
 			}
-			if (exportPath == string.Empty)
+			if (exportPath == "")
 			{
 				throw new ArgumentException("Invalid export path specified");
 			}

@@ -35,21 +35,20 @@ namespace UnityEditor
 
 		protected override void Init()
 		{
-			if (this.m_X != null)
+			if (this.m_X == null)
 			{
-				return;
+				if (SizeModuleUI.s_Texts == null)
+				{
+					SizeModuleUI.s_Texts = new SizeModuleUI.Texts();
+				}
+				this.m_X = new SerializedMinMaxCurve(this, SizeModuleUI.s_Texts.x, "curve");
+				this.m_Y = new SerializedMinMaxCurve(this, SizeModuleUI.s_Texts.y, "y");
+				this.m_Z = new SerializedMinMaxCurve(this, SizeModuleUI.s_Texts.z, "z");
+				this.m_X.m_AllowConstant = false;
+				this.m_Y.m_AllowConstant = false;
+				this.m_Z.m_AllowConstant = false;
+				this.m_SeparateAxes = base.GetProperty("separateAxes");
 			}
-			if (SizeModuleUI.s_Texts == null)
-			{
-				SizeModuleUI.s_Texts = new SizeModuleUI.Texts();
-			}
-			this.m_X = new SerializedMinMaxCurve(this, SizeModuleUI.s_Texts.x, "curve");
-			this.m_Y = new SerializedMinMaxCurve(this, SizeModuleUI.s_Texts.y, "y");
-			this.m_Z = new SerializedMinMaxCurve(this, SizeModuleUI.s_Texts.z, "z");
-			this.m_X.m_AllowConstant = false;
-			this.m_Y.m_AllowConstant = false;
-			this.m_Z.m_AllowConstant = false;
-			this.m_SeparateAxes = base.GetProperty("separateAxes");
 		}
 
 		public override void OnInspectorGUI(ParticleSystem s)
@@ -59,7 +58,7 @@ namespace UnityEditor
 				SizeModuleUI.s_Texts = new SizeModuleUI.Texts();
 			}
 			EditorGUI.BeginChangeCheck();
-			bool flag = ModuleUI.GUIToggle(SizeModuleUI.s_Texts.separateAxes, this.m_SeparateAxes);
+			bool flag = ModuleUI.GUIToggle(SizeModuleUI.s_Texts.separateAxes, this.m_SeparateAxes, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				if (flag)
@@ -73,19 +72,19 @@ namespace UnityEditor
 					this.m_Z.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_8F_0 = this.m_Z;
+			SerializedMinMaxCurve arg_9C_0 = this.m_Z;
 			MinMaxCurveState state = this.m_X.state;
 			this.m_Y.state = state;
-			arg_8F_0.state = state;
+			arg_9C_0.state = state;
 			if (flag)
 			{
 				this.m_X.m_DisplayName = SizeModuleUI.s_Texts.x;
-				base.GUITripleMinMaxCurve(GUIContent.none, SizeModuleUI.s_Texts.x, this.m_X, SizeModuleUI.s_Texts.y, this.m_Y, SizeModuleUI.s_Texts.z, this.m_Z, null);
+				base.GUITripleMinMaxCurve(GUIContent.none, SizeModuleUI.s_Texts.x, this.m_X, SizeModuleUI.s_Texts.y, this.m_Y, SizeModuleUI.s_Texts.z, this.m_Z, null, new GUILayoutOption[0]);
 			}
 			else
 			{
 				this.m_X.m_DisplayName = SizeModuleUI.s_Texts.size;
-				ModuleUI.GUIMinMaxCurve(SizeModuleUI.s_Texts.size, this.m_X);
+				ModuleUI.GUIMinMaxCurve(SizeModuleUI.s_Texts.size, this.m_X, new GUILayoutOption[0]);
 			}
 		}
 	}

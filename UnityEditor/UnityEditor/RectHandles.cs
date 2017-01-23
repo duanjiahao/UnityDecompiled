@@ -55,41 +55,44 @@ namespace UnityEditor
 			}
 		}
 
-		internal static Vector3 SideSlider(int id, Vector3 position, Vector3 sideVector, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap)
+		internal static Vector3 SideSlider(int id, Vector3 position, Vector3 sideVector, Vector3 direction, float size, Handles.CapFunction capFunction, float snap)
 		{
-			return RectHandles.SideSlider(id, position, sideVector, direction, size, drawFunc, snap, 0f);
+			return RectHandles.SideSlider(id, position, sideVector, direction, size, capFunction, snap, 0f);
 		}
 
-		internal static Vector3 SideSlider(int id, Vector3 position, Vector3 sideVector, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap, float bias)
+		internal static Vector3 SideSlider(int id, Vector3 position, Vector3 sideVector, Vector3 direction, float size, Handles.CapFunction capFunction, float snap, float bias)
 		{
 			Event current = Event.current;
 			Vector3 normalized = Vector3.Cross(sideVector, direction).normalized;
-			Vector3 vector = Handles.Slider2D(id, position, normalized, direction, sideVector, 0f, drawFunc, Vector2.one * snap);
+			Vector3 vector = Handles.Slider2D(id, position, normalized, direction, sideVector, 0f, capFunction, Vector2.one * snap);
 			vector = position + Vector3.Project(vector - position, direction);
 			EventType type = current.type;
-			if (type != EventType.Repaint)
+			if (type != EventType.Layout)
 			{
-				if (type != EventType.Layout)
+				if (type != EventType.MouseMove)
 				{
-					if (type == EventType.MouseMove)
+					if (type == EventType.Repaint)
 					{
-						RectHandles.DetectCursorChange(id);
+						if ((HandleUtility.nearestControl == id && GUIUtility.hotControl == 0) || GUIUtility.hotControl == id)
+						{
+							RectHandles.HandleDirectionalCursor(position, normalized, direction);
+						}
 					}
 				}
 				else
 				{
-					Vector3 normalized2 = sideVector.normalized;
-					HandleUtility.AddControl(id, HandleUtility.DistanceToLine(position + sideVector * 0.5f - normalized2 * size * 2f, position - sideVector * 0.5f + normalized2 * size * 2f) - bias);
+					RectHandles.DetectCursorChange(id);
 				}
 			}
-			else if ((HandleUtility.nearestControl == id && GUIUtility.hotControl == 0) || GUIUtility.hotControl == id)
+			else
 			{
-				RectHandles.HandleDirectionalCursor(position, normalized, direction);
+				Vector3 normalized2 = sideVector.normalized;
+				HandleUtility.AddControl(id, HandleUtility.DistanceToLine(position + sideVector * 0.5f - normalized2 * size * 2f, position - sideVector * 0.5f + normalized2 * size * 2f) - bias);
 			}
 			return vector;
 		}
 
-		internal static Vector3 CornerSlider(int id, Vector3 cornerPos, Vector3 handleDir, Vector3 outwardsDir1, Vector3 outwardsDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
+		internal static Vector3 CornerSlider(int id, Vector3 cornerPos, Vector3 handleDir, Vector3 outwardsDir1, Vector3 outwardsDir2, float handleSize, Handles.CapFunction drawFunc, Vector2 snap)
 		{
 			Event current = Event.current;
 			Vector3 result = Handles.Slider2D(id, cornerPos, handleDir, outwardsDir1, outwardsDir2, handleSize, drawFunc, snap);
@@ -132,7 +135,7 @@ namespace UnityEditor
 			return num * (float)((Vector3.Dot(axis, Vector3.Cross(dirA, dirB)) >= 0f) ? 1 : -1);
 		}
 
-		public static float RotationSlider(int id, Vector3 cornerPos, float rotation, Vector3 pivot, Vector3 handleDir, Vector3 outwardsDir1, Vector3 outwardsDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap)
+		public static float RotationSlider(int id, Vector3 cornerPos, float rotation, Vector3 pivot, Vector3 handleDir, Vector3 outwardsDir1, Vector3 outwardsDir2, float handleSize, Handles.CapFunction drawFunc, Vector2 snap)
 		{
 			Vector3 b = outwardsDir1 + outwardsDir2;
 			Vector2 vector = HandleUtility.WorldToGUIPoint(cornerPos);
@@ -144,10 +147,13 @@ namespace UnityEditor
 			{
 				RectHandles.DetectCursorChange(id);
 			}
-			if (current.type == EventType.Repaint && ((HandleUtility.nearestControl == id && GUIUtility.hotControl == 0) || GUIUtility.hotControl == id))
+			if (current.type == EventType.Repaint)
 			{
-				Rect position = new Rect(current.mousePosition.x - 100f, current.mousePosition.y - 100f, 200f, 200f);
-				EditorGUIUtility.AddCursorRect(position, MouseCursor.RotateArrow);
+				if ((HandleUtility.nearestControl == id && GUIUtility.hotControl == 0) || GUIUtility.hotControl == id)
+				{
+					Rect position = new Rect(current.mousePosition.x - 100f, current.mousePosition.y - 100f, 200f, 200f);
+					EditorGUIUtility.AddCursorRect(position, MouseCursor.RotateArrow);
+				}
 			}
 			return rotation - RectHandles.AngleAroundAxis(a - pivot, cornerPos - pivot, handleDir);
 		}
@@ -168,79 +174,103 @@ namespace UnityEditor
 			{
 				num = 360f + num;
 			}
+			MouseCursor result;
 			if (num < 27.5f)
 			{
-				return MouseCursor.ResizeVertical;
+				result = MouseCursor.ResizeVertical;
 			}
-			if (num < 72.5f)
+			else if (num < 72.5f)
 			{
-				return MouseCursor.ResizeUpRight;
+				result = MouseCursor.ResizeUpRight;
 			}
-			if (num < 117.5f)
+			else if (num < 117.5f)
 			{
-				return MouseCursor.ResizeHorizontal;
+				result = MouseCursor.ResizeHorizontal;
 			}
-			if (num < 162.5f)
+			else if (num < 162.5f)
 			{
-				return MouseCursor.ResizeUpLeft;
+				result = MouseCursor.ResizeUpLeft;
 			}
-			if (num < 207.5f)
+			else if (num < 207.5f)
 			{
-				return MouseCursor.ResizeVertical;
+				result = MouseCursor.ResizeVertical;
 			}
-			if (num < 252.5f)
+			else if (num < 252.5f)
 			{
-				return MouseCursor.ResizeUpRight;
+				result = MouseCursor.ResizeUpRight;
 			}
-			if (num < 297.5f)
+			else if (num < 297.5f)
 			{
-				return MouseCursor.ResizeHorizontal;
+				result = MouseCursor.ResizeHorizontal;
 			}
-			if (num < 342.5f)
+			else if (num < 342.5f)
 			{
-				return MouseCursor.ResizeUpLeft;
+				result = MouseCursor.ResizeUpLeft;
 			}
-			return MouseCursor.ResizeVertical;
+			else
+			{
+				result = MouseCursor.ResizeVertical;
+			}
+			return result;
 		}
 
-		public static void RectScalingCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		public static void RectScalingHandleCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (RectHandles.s_Styles == null)
 			{
 				RectHandles.s_Styles = new RectHandles.Styles();
 			}
-			RectHandles.DrawImageBasedCap(controlID, position, rotation, size, RectHandles.s_Styles.dragdot, RectHandles.s_Styles.dragdotactive);
+			if (eventType != EventType.Layout)
+			{
+				if (eventType == EventType.Repaint)
+				{
+					RectHandles.DrawImageBasedCap(controlID, position, rotation, size, RectHandles.s_Styles.dragdot, RectHandles.s_Styles.dragdotactive);
+				}
+			}
+			else
+			{
+				HandleUtility.AddControl(controlID, HandleUtility.DistanceToCircle(position, size * 0.5f));
+			}
 		}
 
-		public static void PivotCap(int controlID, Vector3 position, Quaternion rotation, float size)
+		public static void PivotHandleCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (RectHandles.s_Styles == null)
 			{
 				RectHandles.s_Styles = new RectHandles.Styles();
 			}
-			RectHandles.DrawImageBasedCap(controlID, position, rotation, size, RectHandles.s_Styles.pivotdot, RectHandles.s_Styles.pivotdotactive);
+			if (eventType != EventType.Layout)
+			{
+				if (eventType == EventType.Repaint)
+				{
+					RectHandles.DrawImageBasedCap(controlID, position, rotation, size, RectHandles.s_Styles.pivotdot, RectHandles.s_Styles.pivotdotactive);
+				}
+			}
+			else
+			{
+				HandleUtility.AddControl(controlID, HandleUtility.DistanceToCircle(position, size * 0.5f));
+			}
 		}
 
 		private static void DrawImageBasedCap(int controlID, Vector3 position, Quaternion rotation, float size, GUIStyle normal, GUIStyle active)
 		{
-			if (Camera.current && Vector3.Dot(position - Camera.current.transform.position, Camera.current.transform.forward) < 0f)
+			if (!Camera.current || Vector3.Dot(position - Camera.current.transform.position, Camera.current.transform.forward) >= 0f)
 			{
-				return;
+				Vector3 vector = HandleUtility.WorldToGUIPoint(position);
+				Handles.BeginGUI();
+				float fixedWidth = normal.fixedWidth;
+				float fixedHeight = normal.fixedHeight;
+				Rect position2 = new Rect(vector.x - fixedWidth / 2f, vector.y - fixedHeight / 2f, fixedWidth, fixedHeight);
+				if (GUIUtility.hotControl == controlID)
+				{
+					active.Draw(position2, GUIContent.none, controlID);
+				}
+				else
+				{
+					normal.Draw(position2, GUIContent.none, controlID);
+				}
+				Handles.EndGUI();
 			}
-			Vector3 vector = HandleUtility.WorldToGUIPoint(position);
-			Handles.BeginGUI();
-			float fixedWidth = normal.fixedWidth;
-			float fixedHeight = normal.fixedHeight;
-			Rect position2 = new Rect(vector.x - fixedWidth / 2f, vector.y - fixedHeight / 2f, fixedWidth, fixedHeight);
-			if (GUIUtility.hotControl == controlID)
-			{
-				active.Draw(position2, GUIContent.none, controlID);
-			}
-			else
-			{
-				normal.Draw(position2, GUIContent.none, controlID);
-			}
-			Handles.EndGUI();
 		}
 
 		public static void RenderRectWithShadow(bool active, params Vector3[] corners)
@@ -262,39 +292,37 @@ namespace UnityEditor
 		public static void DrawPolyLineWithShadow(Color shadowColor, Vector2 screenOffset, params Vector3[] points)
 		{
 			Camera current = Camera.current;
-			if (!current || Event.current.type != EventType.Repaint)
+			if (current && Event.current.type == EventType.Repaint)
 			{
-				return;
+				if (RectHandles.s_TempVectors.Length != points.Length)
+				{
+					RectHandles.s_TempVectors = new Vector3[points.Length];
+				}
+				for (int i = 0; i < points.Length; i++)
+				{
+					RectHandles.s_TempVectors[i] = current.ScreenToWorldPoint(current.WorldToScreenPoint(points[i]) + screenOffset);
+				}
+				Color color = Handles.color;
+				shadowColor.a *= color.a;
+				Handles.color = shadowColor;
+				Handles.DrawPolyLine(RectHandles.s_TempVectors);
+				Handles.color = color;
+				Handles.DrawPolyLine(points);
 			}
-			if (RectHandles.s_TempVectors.Length != points.Length)
-			{
-				RectHandles.s_TempVectors = new Vector3[points.Length];
-			}
-			for (int i = 0; i < points.Length; i++)
-			{
-				RectHandles.s_TempVectors[i] = current.ScreenToWorldPoint(current.WorldToScreenPoint(points[i]) + screenOffset);
-			}
-			Color color = Handles.color;
-			shadowColor.a *= color.a;
-			Handles.color = shadowColor;
-			Handles.DrawPolyLine(RectHandles.s_TempVectors);
-			Handles.color = color;
-			Handles.DrawPolyLine(points);
 		}
 
 		public static void DrawDottedLineWithShadow(Color shadowColor, Vector2 screenOffset, Vector3 p1, Vector3 p2, float screenSpaceSize)
 		{
 			Camera current = Camera.current;
-			if (!current || Event.current.type != EventType.Repaint)
+			if (current && Event.current.type == EventType.Repaint)
 			{
-				return;
+				Color color = Handles.color;
+				shadowColor.a *= color.a;
+				Handles.color = shadowColor;
+				Handles.DrawDottedLine(current.ScreenToWorldPoint(current.WorldToScreenPoint(p1) + screenOffset), current.ScreenToWorldPoint(current.WorldToScreenPoint(p2) + screenOffset), screenSpaceSize);
+				Handles.color = color;
+				Handles.DrawDottedLine(p1, p2, screenSpaceSize);
 			}
-			Color color = Handles.color;
-			shadowColor.a *= color.a;
-			Handles.color = shadowColor;
-			Handles.DrawDottedLine(current.ScreenToWorldPoint(current.WorldToScreenPoint(p1) + screenOffset), current.ScreenToWorldPoint(current.WorldToScreenPoint(p2) + screenOffset), screenSpaceSize);
-			Handles.color = color;
-			Handles.DrawDottedLine(p1, p2, screenSpaceSize);
 		}
 	}
 }

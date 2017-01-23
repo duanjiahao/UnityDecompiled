@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEngine
 {
-	[Obsolete("ADBannerView class is deprecated. Please use iOS.ADBannerView instead (UnityUpgradable) -> UnityEngine.iOS.ADBannerView", true)]
+	[Obsolete("ADBannerView class is obsolete, Apple iAD service discontinued", true)]
 	public sealed class ADBannerView
 	{
 		public enum Layout

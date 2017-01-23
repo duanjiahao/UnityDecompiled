@@ -6,12 +6,12 @@ namespace UnityEditor
 	[RequiredByNativeCode]
 	internal sealed class MuscleClipQualityInfo
 	{
-		public float loop;
+		public float loop = 0f;
 
-		public float loopOrientation;
+		public float loopOrientation = 0f;
 
-		public float loopPositionY;
+		public float loopPositionY = 0f;
 
-		public float loopPositionXZ;
+		public float loopPositionXZ = 0f;
 	}
 }

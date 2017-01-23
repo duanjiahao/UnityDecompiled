@@ -1,23 +1,24 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UnityEditor.NScreen
 {
-	internal class RemoteGame : EditorWindow, IHasCustomMenu
+	internal class RemoteGame : EditorWindow, IHasCustomMenu, IGameViewSizeMenuUser
 	{
 		private const float kMaxWidth = 1280f;
 
 		private const float kMaxHeight = 720f;
 
-		private Process remoteProcess;
+		private Process remoteProcess = null;
 
-		public NScreenBridge bridge;
+		public NScreenBridge bridge = null;
 
 		public bool shouldExit = true;
 
-		public bool shouldBuild;
+		public bool shouldBuild = false;
 
 		public int id;
 
@@ -27,11 +28,41 @@ namespace UnityEditor.NScreen
 
 		private Rect remoteViewRect;
 
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction <>f__mg$cache0;
+
 		private int ToolBarHeight
 		{
 			get
 			{
 				return 17;
+			}
+		}
+
+		public bool lowResolutionForAspectRatios
+		{
+			get
+			{
+				return false;
+			}
+			set
+			{
+			}
+		}
+
+		public bool forceLowResolutionAspectRatios
+		{
+			get
+			{
+				return EditorGUIUtility.pixelsPerPoint == 1f;
+			}
+		}
+
+		public bool showLowResolutionToggle
+		{
+			get
+			{
+				return false;
 			}
 		}
 
@@ -101,7 +132,7 @@ namespace UnityEditor.NScreen
 			}
 		}
 
-		private void SelectionCallback(int indexClicked, object objectSelected)
+		public void SizeSelectionCallback(int indexClicked, object objectSelected)
 		{
 			if (indexClicked != ScriptableSingleton<NScreenManager>.instance.SelectedSizeIndex)
 			{
@@ -120,7 +151,7 @@ namespace UnityEditor.NScreen
 		{
 			GUI.color = Color.white;
 			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
-			EditorGUILayout.GameViewSizePopup(ScriptableSingleton<GameViewSizes>.instance.currentGroupType, ScriptableSingleton<NScreenManager>.instance.SelectedSizeIndex, new Action<int, object>(this.SelectionCallback), EditorStyles.toolbarDropDown, new GUILayoutOption[]
+			EditorGUILayout.GameViewSizePopup(ScriptableSingleton<GameViewSizes>.instance.currentGroupType, ScriptableSingleton<NScreenManager>.instance.SelectedSizeIndex, this, EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{
 				GUILayout.Width(160f)
 			});
@@ -196,7 +227,13 @@ namespace UnityEditor.NScreen
 
 		public void AddItemsToMenu(GenericMenu menu)
 		{
-			menu.AddItem(new GUIContent("Add Tab/Remote Game"), false, new GenericMenu.MenuFunction(NScreenManager.OpenAnotherWindow));
+			GUIContent arg_2A_1 = new GUIContent("Add Tab/Remote Game");
+			bool arg_2A_2 = false;
+			if (RemoteGame.<>f__mg$cache0 == null)
+			{
+				RemoteGame.<>f__mg$cache0 = new GenericMenu.MenuFunction(NScreenManager.OpenAnotherWindow);
+			}
+			menu.AddItem(arg_2A_1, arg_2A_2, RemoteGame.<>f__mg$cache0);
 		}
 	}
 }

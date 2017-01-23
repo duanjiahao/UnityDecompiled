@@ -7,6 +7,7 @@ namespace UnityEditor
 		k_Color,
 		k_Gradient,
 		k_RandomBetweenTwoColors,
-		k_RandomBetweenTwoGradients
+		k_RandomBetweenTwoGradients,
+		k_RandomColor
 	}
 }

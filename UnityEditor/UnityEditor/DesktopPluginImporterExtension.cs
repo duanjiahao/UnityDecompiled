@@ -28,7 +28,12 @@ namespace UnityEditor
 
 			internal bool IsTargetEnabled(PluginImporterInspector inspector)
 			{
-				return inspector.GetCompatibleWithPlatform(base.platformName);
+				PluginImporterInspector.Compatibility platformCompatibility = inspector.GetPlatformCompatibility(base.platformName);
+				if (platformCompatibility == PluginImporterInspector.Compatibility.Mixed)
+				{
+					throw new Exception("Unexpected mixed value for '" + inspector.importer.assetPath + "', platform: " + base.platformName);
+				}
+				return platformCompatibility == PluginImporterInspector.Compatibility.Compatible;
 			}
 
 			internal override void OnGUI(PluginImporterInspector inspector)
@@ -40,7 +45,7 @@ namespace UnityEditor
 				if (EditorGUI.EndChangeCheck())
 				{
 					base.value = ((!flag) ? DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.None : base.defaultValue);
-					inspector.SetCompatibleWithPlatform(base.platformName, flag);
+					inspector.SetPlatformCompatibility(base.platformName, flag);
 				}
 				EditorGUILayout.EndHorizontal();
 			}
@@ -83,49 +88,69 @@ namespace UnityEditor
 
 		private DesktopPluginImporterExtension.DesktopPluginCPUArchitecture CalculateMultiCPUArchitecture(bool x86, bool x64)
 		{
+			DesktopPluginImporterExtension.DesktopPluginCPUArchitecture result;
 			if (x86 && x64)
 			{
-				return DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.AnyCPU;
+				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.AnyCPU;
 			}
-			if (x86 && !x64)
+			else if (x86 && !x64)
 			{
-				return DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.x86;
+				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.x86;
 			}
-			if (!x86 && x64)
+			else if (!x86 && x64)
 			{
-				return DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.x86_64;
+				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.x86_64;
 			}
-			return DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.None;
+			else
+			{
+				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.None;
+			}
+			return result;
 		}
 
 		private bool IsUsableOnWindows(PluginImporter imp)
 		{
+			bool result;
 			if (!imp.isNativePlugin)
 			{
-				return true;
+				result = true;
 			}
-			string a = Path.GetExtension(imp.assetPath).ToLower();
-			return a == ".dll";
+			else
+			{
+				string a = Path.GetExtension(imp.assetPath).ToLower();
+				result = (a == ".dll");
+			}
+			return result;
 		}
 
 		private bool IsUsableOnOSX(PluginImporter imp)
 		{
+			bool result;
 			if (!imp.isNativePlugin)
 			{
-				return true;
+				result = true;
 			}
-			string a = Path.GetExtension(imp.assetPath).ToLower();
-			return a == ".so" || a == ".bundle";
+			else
+			{
+				string a = Path.GetExtension(imp.assetPath).ToLower();
+				result = (a == ".so" || a == ".bundle");
+			}
+			return result;
 		}
 
 		private bool IsUsableOnLinux(PluginImporter imp)
 		{
+			bool result;
 			if (!imp.isNativePlugin)
 			{
-				return true;
+				result = true;
 			}
-			string a = Path.GetExtension(imp.assetPath).ToLower();
-			return a == ".so";
+			else
+			{
+				string a = Path.GetExtension(imp.assetPath).ToLower();
+				result = (a == ".so");
+			}
+			return result;
 		}
 
 		public override void OnPlatformSettingsGUI(PluginImporterInspector inspector)
@@ -175,7 +200,12 @@ namespace UnityEditor
 			{
 				DesktopPluginImporterExtension.DesktopSingleCPUProperty desktopSingleCPUProperty = array2[i];
 				string value = (!desktopSingleCPUProperty.IsTargetEnabled(inspector)) ? DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.None.ToString() : desktopSingleCPUProperty.defaultValue.ToString();
-				inspector.importer.SetPlatformData(desktopSingleCPUProperty.platformName, "CPU", value);
+				PluginImporter[] importers = inspector.importers;
+				for (int j = 0; j < importers.Length; j++)
+				{
+					PluginImporter pluginImporter = importers[j];
+					pluginImporter.SetPlatformData(desktopSingleCPUProperty.platformName, "CPU", value);
+				}
 			}
 			this.ValidateUniversalTargets(inspector);
 		}
@@ -185,13 +215,23 @@ namespace UnityEditor
 			bool flag = this.m_LinuxX86.IsTargetEnabled(inspector);
 			bool flag2 = this.m_LinuxX86_X64.IsTargetEnabled(inspector);
 			DesktopPluginImporterExtension.DesktopPluginCPUArchitecture desktopPluginCPUArchitecture = this.CalculateMultiCPUArchitecture(flag, flag2);
-			inspector.importer.SetPlatformData(BuildTarget.StandaloneLinuxUniversal, "CPU", desktopPluginCPUArchitecture.ToString());
-			inspector.SetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneLinuxUniversal), flag || flag2);
+			PluginImporter[] importers = inspector.importers;
+			for (int i = 0; i < importers.Length; i++)
+			{
+				PluginImporter pluginImporter = importers[i];
+				pluginImporter.SetPlatformData(BuildTarget.StandaloneLinuxUniversal, "CPU", desktopPluginCPUArchitecture.ToString());
+			}
+			inspector.SetPlatformCompatibility(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneLinuxUniversal), flag || flag2);
 			bool flag3 = this.m_OSXX86.IsTargetEnabled(inspector);
 			bool flag4 = this.m_OSXX86_X64.IsTargetEnabled(inspector);
 			DesktopPluginImporterExtension.DesktopPluginCPUArchitecture desktopPluginCPUArchitecture2 = this.CalculateMultiCPUArchitecture(flag3, flag4);
-			inspector.importer.SetPlatformData(BuildTarget.StandaloneOSXUniversal, "CPU", desktopPluginCPUArchitecture2.ToString());
-			inspector.SetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneOSXUniversal), flag3 || flag4);
+			PluginImporter[] importers2 = inspector.importers;
+			for (int j = 0; j < importers2.Length; j++)
+			{
+				PluginImporter pluginImporter2 = importers2[j];
+				pluginImporter2.SetPlatformData(BuildTarget.StandaloneOSXUniversal, "CPU", desktopPluginCPUArchitecture2.ToString());
+			}
+			inspector.SetPlatformCompatibility(BuildPipeline.GetBuildTargetName(BuildTarget.StandaloneOSXUniversal), flag3 || flag4);
 		}
 
 		public override string CalculateFinalPluginPath(string platformName, PluginImporter imp)
@@ -204,28 +244,36 @@ namespace UnityEditor
 			{
 				throw new Exception(string.Format("Failed to resolve standalone platform, platform string '{0}', resolved target '{1}'", platformName, buildTargetByName.ToString()));
 			}
+			string result;
 			if (flag && !this.IsUsableOnWindows(imp))
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			if (flag2 && !this.IsUsableOnOSX(imp))
+			else if (flag2 && !this.IsUsableOnOSX(imp))
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			if (flag3 && !this.IsUsableOnLinux(imp))
+			else if (flag3 && !this.IsUsableOnLinux(imp))
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			string platformData = imp.GetPlatformData(platformName, "CPU");
-			if (string.Compare(platformData, "None", true) == 0)
+			else
 			{
-				return string.Empty;
+				string platformData = imp.GetPlatformData(platformName, "CPU");
+				if (string.Compare(platformData, "None", true) == 0)
+				{
+					result = string.Empty;
+				}
+				else if (!string.IsNullOrEmpty(platformData) && string.Compare(platformData, "AnyCPU", true) != 0)
+				{
+					result = Path.Combine(platformData, Path.GetFileName(imp.assetPath));
+				}
+				else
+				{
+					result = Path.GetFileName(imp.assetPath);
+				}
 			}
-			if (!string.IsNullOrEmpty(platformData) && string.Compare(platformData, "AnyCPU", true) != 0)
-			{
-				return Path.Combine(platformData, Path.GetFileName(imp.assetPath));
-			}
-			return Path.GetFileName(imp.assetPath);
+			return result;
 		}
 	}
 }

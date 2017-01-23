@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEditor.Audio;
 using UnityEditorInternal;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace UnityEditor
 		[Serializable]
 		public class State
 		{
-			public int m_LastClickedInstanceID;
+			public int m_LastClickedInstanceID = 0;
 
 			public Vector2 m_ScrollPos = new Vector2(0f, 0f);
 		}
@@ -88,8 +89,6 @@ namespace UnityEditor
 
 		private class ChannelStripParams
 		{
-			private const float kAddEffectButtonHeight = 16f;
-
 			public int index;
 
 			public Rect stripRect;
@@ -114,7 +113,7 @@ namespace UnityEditor
 
 			public List<AudioMixerGroupController> shownGroups;
 
-			public int numChannels;
+			public int numChannels = 0;
 
 			public float[] vuinfo_level = new float[9];
 
@@ -122,9 +121,11 @@ namespace UnityEditor
 
 			public Dictionary<AudioMixerEffectController, AudioMixerGroupController> effectMap;
 
+			private const float kAddEffectButtonHeight = 16f;
+
 			public List<Rect> bgRects;
 
-			public readonly int kHeaderIndex;
+			public readonly int kHeaderIndex = 0;
 
 			public readonly int kVUMeterFaderIndex = 1;
 
@@ -177,28 +178,6 @@ namespace UnityEditor
 			}
 		}
 
-		private const float k_MinVULevel = -80f;
-
-		private const float headerHeight = 22f;
-
-		private const float vuHeight = 170f;
-
-		private const float dbHeight = 17f;
-
-		private const float soloMuteBypassHeight = 30f;
-
-		private const float effectHeight = 16f;
-
-		private const float spaceBetween = 0f;
-
-		private const int channelStripSpacing = 4;
-
-		private const float channelStripBaseWidth = 90f;
-
-		private const float spaceBetweenMainGroupsAndReferenced = 50f;
-
-		private const float kGridTileWidth = 12f;
-
 		public static float kVolumeScaleMouseDrag = 1f;
 
 		public static float kEffectScaleMouseDrag = 0.3f;
@@ -225,17 +204,17 @@ namespace UnityEditor
 
 		public int m_FocusIndex = -1;
 
-		public int m_IndexCounter;
+		public int m_IndexCounter = 0;
 
 		public int m_EffectInteractionControlID;
 
 		public int m_RectSelectionControlID;
 
-		public float m_MouseDragStartX;
+		public float m_MouseDragStartX = 0f;
 
-		public float m_MouseDragStartY;
+		public float m_MouseDragStartY = 0f;
 
-		public float m_MouseDragStartValue;
+		public float m_MouseDragStartValue = 0f;
 
 		public Vector2 m_RectSelectionStartPos = new Vector2(0f, 0f);
 
@@ -247,7 +226,7 @@ namespace UnityEditor
 
 		private MixerGroupControllerCompareByName m_GroupComparer = new MixerGroupControllerCompareByName();
 
-		private bool m_WaitingForDragEvent;
+		private bool m_WaitingForDragEvent = false;
 
 		private int m_ChangingWetMixIndex = -1;
 
@@ -259,19 +238,41 @@ namespace UnityEditor
 
 		private Rect m_MovingDstRect = new Rect(-1f, -1f, 0f, 0f);
 
-		private bool m_MovingEffectAllowed;
+		private bool m_MovingEffectAllowed = false;
 
-		private AudioMixerGroupController m_MovingSrcGroup;
+		private AudioMixerGroupController m_MovingSrcGroup = null;
 
-		private AudioMixerGroupController m_MovingDstGroup;
+		private AudioMixerGroupController m_MovingDstGroup = null;
+
+		private const float k_MinVULevel = -80f;
 
 		private List<int> m_LastNumChannels = new List<int>();
 
-		private bool m_RequiresRepaint;
+		private bool m_RequiresRepaint = false;
+
+		private const float headerHeight = 22f;
+
+		private const float vuHeight = 170f;
+
+		private const float dbHeight = 17f;
+
+		private const float soloMuteBypassHeight = 30f;
+
+		private const float effectHeight = 16f;
+
+		private const float spaceBetween = 0f;
+
+		private const int channelStripSpacing = 4;
+
+		private const float channelStripBaseWidth = 90f;
+
+		private const float spaceBetweenMainGroupsAndReferenced = 50f;
 
 		private readonly Vector2 channelStripsOffset = new Vector2(15f, 10f);
 
 		private static Texture2D m_GridTexture;
+
+		private const float kGridTileWidth = 12f;
 
 		private static readonly Color kGridColorDark = new Color(0f, 0f, 0f, 0.18f);
 
@@ -283,14 +284,14 @@ namespace UnityEditor
 
 		public GUIStyle sharedGuiStyle = new GUIStyle();
 
-		private GUIContent bypassButtonContent = new GUIContent(string.Empty, "Toggle bypass on this effect");
+		private GUIContent bypassButtonContent = new GUIContent("", "Toggle bypass on this effect");
 
 		private GUIContent headerGUIContent = new GUIContent();
 
 		private GUIContent addText = new GUIContent("Add..");
 
 		[NonSerialized]
-		private int FrameCounter;
+		private int FrameCounter = 0;
 
 		[NonSerialized]
 		private GUIStyle developerInfoStyle = AudioMixerDrawUtils.BuildGUIStyleForLabel(new Color(1f, 0f, 0f, 0.5f), 20, false, FontStyle.Bold, TextAnchor.MiddleLeft);
@@ -298,16 +299,30 @@ namespace UnityEditor
 		[NonSerialized]
 		private Vector3[] cablepoints = new Vector3[20];
 
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache1;
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache2;
+
 		public bool requiresRepaint
 		{
 			get
 			{
+				bool result;
 				if (this.m_RequiresRepaint)
 				{
 					this.m_RequiresRepaint = false;
-					return true;
+					result = true;
 				}
-				return false;
+				else
+				{
+					result = false;
+				}
+				return result;
 			}
 		}
 
@@ -315,11 +330,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				Color result;
 				if (EditorGUIUtility.isProSkin)
 				{
-					return AudioMixerChannelStripView.kGridColorDark;
+					result = AudioMixerChannelStripView.kGridColorDark;
 				}
-				return AudioMixerChannelStripView.kGridColorLight;
+				else
+				{
+					result = AudioMixerChannelStripView.kGridColorLight;
+				}
+				return result;
 			}
 		}
 
@@ -363,7 +383,7 @@ namespace UnityEditor
 			{
 				array[(height - 1) * width + k] = lineColor;
 			}
-			Texture2D texture2D = new Texture2D(width, height, TextureFormat.ARGB32, false);
+			Texture2D texture2D = new Texture2D(width, height, TextureFormat.RGBA32, false);
 			texture2D.hideFlags = HideFlags.HideAndDontSave;
 			texture2D.SetPixels(array);
 			texture2D.Apply();
@@ -556,184 +576,269 @@ namespace UnityEditor
 
 		public GUIStyle GetEffectBarStyle(AudioMixerEffectController effect)
 		{
+			GUIStyle result;
 			if (effect.IsSend() || effect.IsReceive() || effect.IsDuckVolume())
 			{
-				return this.styles.sendReturnBar;
+				result = this.styles.sendReturnBar;
 			}
-			if (effect.IsAttenuation())
+			else if (effect.IsAttenuation())
 			{
-				return this.styles.attenuationBar;
+				result = this.styles.attenuationBar;
 			}
-			return this.styles.effectBar;
+			else
+			{
+				result = this.styles.effectBar;
+			}
+			return result;
 		}
 
 		private void EffectSlot(Rect effectRect, AudioMixerSnapshotController snapshot, AudioMixerEffectController effect, int effectIndex, ref int highlightEffectIndex, AudioMixerChannelStripView.ChannelStripParams p, ref Dictionary<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> patchslots)
 		{
-			if (effect == null)
+			if (!(effect == null))
 			{
-				return;
-			}
-			Rect rect = effectRect;
-			Event current = Event.current;
-			if (current.type == EventType.Repaint && patchslots != null && (effect.IsSend() || MixerEffectDefinitions.EffectCanBeSidechainTarget(effect)))
-			{
-				AudioMixerChannelStripView.PatchSlot patchSlot = new AudioMixerChannelStripView.PatchSlot();
-				patchSlot.group = p.group;
-				patchSlot.x = rect.xMax - (rect.yMax - rect.yMin) * 0.5f;
-				patchSlot.y = (rect.yMin + rect.yMax) * 0.5f;
-				patchslots[effect] = patchSlot;
-			}
-			bool flag = !effect.DisallowsBypass();
-			Rect position = rect;
-			position.width = 10f;
-			rect.xMin += 10f;
-			if (flag && GUI.Button(position, this.bypassButtonContent, GUIStyle.none))
-			{
-				effect.bypass = !effect.bypass;
-				this.m_Controller.UpdateBypass();
-				InspectorWindow.RepaintAllInspectors();
-			}
-			this.m_IndexCounter++;
-			float num = (!(effect != null)) ? AudioMixerController.kMinVolume : Mathf.Clamp(effect.GetValueForMixLevel(this.m_Controller, snapshot), AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect);
-			bool flag2 = effect != null && ((effect.IsSend() && effect.sendTarget != null) || effect.enableWetMix);
-			if (current.type == EventType.Repaint)
-			{
-				GUIStyle effectBarStyle = this.GetEffectBarStyle(effect);
-				float num2 = (!flag2) ? 1f : ((num - AudioMixerController.kMinVolume) / (AudioMixerController.kMaxEffect - AudioMixerController.kMinVolume));
-				bool flag3 = (!p.group.bypassEffects && (effect == null || !effect.bypass)) || (effect != null && effect.DisallowsBypass());
-				Color color = (!(effect != null)) ? new Color(0f, 0f, 0f, 0.5f) : AudioMixerDrawUtils.GetEffectColor(effect);
-				if (!flag3)
+				Rect rect = effectRect;
+				Event current = Event.current;
+				if (current.type == EventType.Repaint && patchslots != null && (effect.IsSend() || MixerEffectDefinitions.EffectCanBeSidechainTarget(effect)))
 				{
-					color = new Color(color.r * 0.5f, color.g * 0.5f, color.b * 0.5f);
+					AudioMixerChannelStripView.PatchSlot patchSlot = new AudioMixerChannelStripView.PatchSlot();
+					patchSlot.group = p.group;
+					patchSlot.x = rect.xMax - (rect.yMax - rect.yMin) * 0.5f;
+					patchSlot.y = (rect.yMin + rect.yMax) * 0.5f;
+					patchslots[effect] = patchSlot;
 				}
-				if (flag3)
+				bool flag = !effect.DisallowsBypass();
+				Rect position = rect;
+				position.width = 10f;
+				rect.xMin += 10f;
+				if (flag)
 				{
-					if (num2 < 1f)
+					if (GUI.Button(position, this.bypassButtonContent, GUIStyle.none))
 					{
-						float num3 = rect.width * num2;
-						if (num3 < 4f)
+						effect.bypass = !effect.bypass;
+						this.m_Controller.UpdateBypass();
+						InspectorWindow.RepaintAllInspectors();
+					}
+				}
+				this.m_IndexCounter++;
+				float num = (!(effect != null)) ? AudioMixerController.kMinVolume : Mathf.Clamp(effect.GetValueForMixLevel(this.m_Controller, snapshot), AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect);
+				bool flag2 = effect != null && ((effect.IsSend() && effect.sendTarget != null) || effect.enableWetMix);
+				if (current.type == EventType.Repaint)
+				{
+					GUIStyle effectBarStyle = this.GetEffectBarStyle(effect);
+					float num2 = (!flag2) ? 1f : ((num - AudioMixerController.kMinVolume) / (AudioMixerController.kMaxEffect - AudioMixerController.kMinVolume));
+					bool flag3 = (!p.group.bypassEffects && (effect == null || !effect.bypass)) || (effect != null && effect.DisallowsBypass());
+					Color color = (!(effect != null)) ? new Color(0f, 0f, 0f, 0.5f) : AudioMixerDrawUtils.GetEffectColor(effect);
+					if (!flag3)
+					{
+						color = new Color(color.r * 0.5f, color.g * 0.5f, color.b * 0.5f);
+					}
+					if (flag3)
+					{
+						if (num2 < 1f)
 						{
-							num3 = Mathf.Max(num3, 2f);
-							float num4 = 1f - num3 / 4f;
-							Color color2 = GUI.color;
-							if (!GUI.enabled)
+							float num3 = rect.width * num2;
+							if (num3 < 4f)
 							{
-								GUI.color = new Color(1f, 1f, 1f, 0.5f);
+								num3 = Mathf.Max(num3, 2f);
+								float num4 = 1f - num3 / 4f;
+								Color color2 = GUI.color;
+								if (!GUI.enabled)
+								{
+									GUI.color = new Color(1f, 1f, 1f, 0.5f);
+								}
+								GUI.DrawTextureWithTexCoords(new Rect(rect.x, rect.y, num3, rect.height), effectBarStyle.focused.background, new Rect(num4, 0f, 1f - num4, 1f));
+								GUI.color = color2;
 							}
-							GUI.DrawTextureWithTexCoords(new Rect(rect.x, rect.y, num3, rect.height), effectBarStyle.focused.background, new Rect(num4, 0f, 1f - num4, 1f));
-							GUI.color = color2;
+							else
+							{
+								effectBarStyle.Draw(new Rect(rect.x, rect.y, num3, rect.height), false, false, false, true);
+							}
+							GUI.DrawTexture(new Rect(rect.x + num3, rect.y, rect.width - num3, rect.height), effectBarStyle.onFocused.background, ScaleMode.StretchToFill);
 						}
 						else
 						{
-							effectBarStyle.Draw(new Rect(rect.x, rect.y, num3, rect.height), false, false, false, true);
+							effectBarStyle.Draw(rect, !flag2, false, false, flag2);
 						}
-						GUI.DrawTexture(new Rect(rect.x + num3, rect.y, rect.width - num3, rect.height), effectBarStyle.onFocused.background, ScaleMode.StretchToFill);
 					}
 					else
 					{
-						effectBarStyle.Draw(rect, !flag2, false, false, flag2);
+						effectBarStyle.Draw(rect, false, false, false, false);
+					}
+					if (flag)
+					{
+						this.styles.circularToggle.Draw(new Rect(position.x + 2f, position.y + 5f, position.width - 2f, position.width - 2f), false, false, !effect.bypass, false);
+					}
+					if (effect.IsSend() && effect.sendTarget != null)
+					{
+						position.y -= 1f;
+						GUI.Label(position, this.styles.sendString, EditorStyles.miniLabel);
+					}
+					using (new EditorGUI.DisabledScope(!flag3))
+					{
+						string effectSlotName = this.GetEffectSlotName(effect, flag2, snapshot, p);
+						string effectSlotTooltip = this.GetEffectSlotTooltip(effect, rect, p);
+						GUI.Label(new Rect(rect.x, rect.y, rect.width - 10f, rect.height), GUIContent.Temp(effectSlotName, effectSlotTooltip), this.styles.effectName);
 					}
 				}
 				else
 				{
-					effectBarStyle.Draw(rect, false, false, false, false);
+					this.EffectSlotDragging(effectRect, snapshot, effect, flag2, num, effectIndex, ref highlightEffectIndex, p);
 				}
-				if (flag)
-				{
-					this.styles.circularToggle.Draw(new Rect(position.x + 2f, position.y + 5f, position.width - 2f, position.width - 2f), false, false, !effect.bypass, false);
-				}
-				if (effect.IsSend() && effect.sendTarget != null)
-				{
-					position.y -= 1f;
-					GUI.Label(position, this.styles.sendString, EditorStyles.miniLabel);
-				}
-				using (new EditorGUI.DisabledScope(!flag3))
-				{
-					string effectSlotName = this.GetEffectSlotName(effect, flag2, snapshot, p);
-					string effectSlotTooltip = this.GetEffectSlotTooltip(effect, rect, p);
-					GUI.Label(new Rect(rect.x, rect.y, rect.width - 10f, rect.height), GUIContent.Temp(effectSlotName, effectSlotTooltip), this.styles.effectName);
-				}
-			}
-			else
-			{
-				this.EffectSlotDragging(effectRect, snapshot, effect, flag2, num, effectIndex, ref highlightEffectIndex, p);
 			}
 		}
 
 		private string GetEffectSlotName(AudioMixerEffectController effect, bool showLevel, AudioMixerSnapshotController snapshot, AudioMixerChannelStripView.ChannelStripParams p)
 		{
+			string result;
 			if (this.m_ChangingWetMixIndex == this.m_IndexCounter && showLevel)
 			{
-				return string.Format("{0:F1} dB", effect.GetValueForMixLevel(this.m_Controller, snapshot));
+				result = string.Format("{0:F1} dB", effect.GetValueForMixLevel(this.m_Controller, snapshot));
 			}
-			if (effect.IsSend() && effect.sendTarget != null)
+			else if (effect.IsSend() && effect.sendTarget != null)
 			{
-				return effect.GetSendTargetDisplayString(p.effectMap);
+				result = effect.GetSendTargetDisplayString(p.effectMap);
 			}
-			return effect.effectName;
+			else
+			{
+				result = effect.effectName;
+			}
+			return result;
 		}
 
 		private string GetEffectSlotTooltip(AudioMixerEffectController effect, Rect effectRect, AudioMixerChannelStripView.ChannelStripParams p)
 		{
+			string result;
 			if (!effectRect.Contains(Event.current.mousePosition))
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			if (effect.IsSend())
+			else if (effect.IsSend())
 			{
 				if (effect.sendTarget != null)
 				{
 					string sendTargetDisplayString = effect.GetSendTargetDisplayString(p.effectMap);
-					return "Send to: " + sendTargetDisplayString;
+					result = "Send to: " + sendTargetDisplayString;
 				}
-				return this.styles.emptySendSlotGUIContent.tooltip;
+				else
+				{
+					result = this.styles.emptySendSlotGUIContent.tooltip;
+				}
+			}
+			else if (effect.IsReceive())
+			{
+				result = this.styles.returnSlotGUIContent.tooltip;
+			}
+			else if (effect.IsDuckVolume())
+			{
+				result = this.styles.duckVolumeSlotGUIContent.tooltip;
+			}
+			else if (effect.IsAttenuation())
+			{
+				result = this.styles.attenuationSlotGUIContent.tooltip;
 			}
 			else
 			{
-				if (effect.IsReceive())
-				{
-					return this.styles.returnSlotGUIContent.tooltip;
-				}
-				if (effect.IsDuckVolume())
-				{
-					return this.styles.duckVolumeSlotGUIContent.tooltip;
-				}
-				if (effect.IsAttenuation())
-				{
-					return this.styles.attenuationSlotGUIContent.tooltip;
-				}
-				return this.styles.effectSlotGUIContent.tooltip;
+				result = this.styles.effectSlotGUIContent.tooltip;
 			}
+			return result;
 		}
 
 		private void EffectSlotDragging(Rect r, AudioMixerSnapshotController snapshot, AudioMixerEffectController effect, bool showLevel, float level, int effectIndex, ref int highlightEffectIndex, AudioMixerChannelStripView.ChannelStripParams p)
 		{
 			Event current = Event.current;
-			switch (current.GetTypeForControl(this.m_EffectInteractionControlID))
+			EventType typeForControl = current.GetTypeForControl(this.m_EffectInteractionControlID);
+			if (typeForControl != EventType.MouseDown)
 			{
-			case EventType.MouseDown:
-				if (r.Contains(current.mousePosition) && current.button == 0 && GUIUtility.hotControl == 0)
+				if (typeForControl != EventType.MouseUp)
 				{
-					GUIUtility.hotControl = this.m_EffectInteractionControlID;
-					this.m_MouseDragStartX = current.mousePosition.x;
-					this.m_MouseDragStartValue = level;
-					highlightEffectIndex = effectIndex;
-					this.m_MovingEffectSrcIndex = -1;
-					this.m_MovingEffectDstIndex = -1;
-					this.m_WaitingForDragEvent = true;
-					this.m_MovingSrcRect = r;
-					this.m_MovingDstRect = r;
-					this.m_MovingSrcGroup = p.group;
-					this.m_MovingDstGroup = p.group;
-					this.m_MovingEffectAllowed = true;
-					this.SetFocus();
-					Event.current.Use();
-					EditorGUIUtility.SetWantsMouseJumping(1);
-					InspectorWindow.RepaintAllInspectors();
+					if (typeForControl == EventType.MouseDrag)
+					{
+						if (GUIUtility.hotControl == this.m_EffectInteractionControlID)
+						{
+							if (this.HasFocus() && this.m_WaitingForDragEvent)
+							{
+								this.m_ChangingWetMixIndex = -1;
+								if (effectIndex < p.group.effects.Length)
+								{
+									if (Mathf.Abs(current.delta.y) > Mathf.Abs(current.delta.x))
+									{
+										this.m_MovingEffectSrcIndex = effectIndex;
+										this.ClearFocus();
+									}
+									else
+									{
+										this.m_ChangingWetMixIndex = this.m_IndexCounter;
+									}
+								}
+								this.m_WaitingForDragEvent = false;
+							}
+							if (this.IsMovingEffect() && p.stripRect.Contains(current.mousePosition))
+							{
+								float num = r.height * 0.5f;
+								float num2 = (effectIndex != 0) ? 0f : (-num);
+								float num3 = (effectIndex != p.group.effects.Length - 1) ? r.height : (r.height + num);
+								float num4 = current.mousePosition.y - r.y;
+								if (num4 >= num2 && num4 <= num3 && effectIndex < p.group.effects.Length)
+								{
+									int num5 = (num4 >= num) ? (effectIndex + 1) : effectIndex;
+									if (num5 != this.m_MovingEffectDstIndex || this.m_MovingDstGroup != p.group)
+									{
+										this.m_MovingDstRect.x = r.x;
+										this.m_MovingDstRect.width = r.width;
+										this.m_MovingDstRect.y = ((num4 >= num) ? (r.y + r.height) : r.y) - 1f;
+										this.m_MovingEffectDstIndex = num5;
+										this.m_MovingDstGroup = p.group;
+										this.m_MovingEffectAllowed = ((!this.m_MovingSrcGroup.effects[this.m_MovingEffectSrcIndex].IsAttenuation() || !(this.m_MovingSrcGroup != this.m_MovingDstGroup)) && !AudioMixerController.WillMovingEffectCauseFeedback(p.allGroups, this.m_MovingSrcGroup, this.m_MovingEffectSrcIndex, this.m_MovingDstGroup, num5, null) && (!this.IsDuplicateKeyPressed() || this.CanDuplicateDraggedEffect()));
+									}
+									current.Use();
+								}
+							}
+							if (this.IsAdjustingWetMix() && this.HasFocus())
+							{
+								if (showLevel)
+								{
+									this.m_WaitingForDragEvent = false;
+									float value = AudioMixerChannelStripView.kEffectScaleMouseDrag * HandleUtility.niceMouseDelta + level;
+									float num6 = Mathf.Clamp(value, AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect) - level;
+									if (num6 != 0f)
+									{
+										Undo.RecordObject(this.m_Controller.TargetSnapshot, "Change effect level");
+										if (effect.IsSend() && this.m_Controller.CachedSelection.Count > 1 && this.m_Controller.CachedSelection.Contains(p.group))
+										{
+											List<AudioMixerEffectController> list = new List<AudioMixerEffectController>();
+											foreach (AudioMixerGroupController current2 in this.m_Controller.CachedSelection)
+											{
+												AudioMixerEffectController[] effects = current2.effects;
+												for (int i = 0; i < effects.Length; i++)
+												{
+													AudioMixerEffectController audioMixerEffectController = effects[i];
+													if (audioMixerEffectController.effectName == effect.effectName && audioMixerEffectController.sendTarget == effect.sendTarget)
+													{
+														list.Add(audioMixerEffectController);
+													}
+												}
+											}
+											foreach (AudioMixerEffectController current3 in list)
+											{
+												if (!current3.IsSend() || current3.sendTarget != null)
+												{
+													current3.SetValueForMixLevel(this.m_Controller, snapshot, Mathf.Clamp(current3.GetValueForMixLevel(this.m_Controller, snapshot) + num6, AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect));
+												}
+											}
+										}
+										else if (!effect.IsSend() || effect.sendTarget != null)
+										{
+											effect.SetValueForMixLevel(this.m_Controller, snapshot, Mathf.Clamp(level + num6, AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect));
+										}
+										InspectorWindow.RepaintAllInspectors();
+									}
+									current.Use();
+								}
+							}
+						}
+					}
 				}
-				break;
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == this.m_EffectInteractionControlID && current.button == 0 && p.stripRect.Contains(current.mousePosition))
+				else if (GUIUtility.hotControl == this.m_EffectInteractionControlID && current.button == 0 && p.stripRect.Contains(current.mousePosition))
 				{
 					if (this.m_MovingEffectDstIndex != -1 && this.m_MovingEffectAllowed)
 					{
@@ -741,28 +846,28 @@ namespace UnityEditor
 						{
 							AudioMixerEffectController sourceEffect = this.m_MovingSrcGroup.effects[this.m_MovingEffectSrcIndex];
 							AudioMixerEffectController effect2 = this.m_MovingSrcGroup.controller.CopyEffect(sourceEffect);
-							List<AudioMixerEffectController> list = this.m_MovingDstGroup.effects.ToList<AudioMixerEffectController>();
-							if (AudioMixerController.InsertEffect(effect2, ref list, this.m_MovingEffectDstIndex))
+							List<AudioMixerEffectController> list2 = this.m_MovingDstGroup.effects.ToList<AudioMixerEffectController>();
+							if (AudioMixerController.InsertEffect(effect2, ref list2, this.m_MovingEffectDstIndex))
 							{
-								this.m_MovingDstGroup.effects = list.ToArray();
+								this.m_MovingDstGroup.effects = list2.ToArray();
 							}
 						}
 						else if (this.m_MovingSrcGroup == this.m_MovingDstGroup)
 						{
-							List<AudioMixerEffectController> list2 = this.m_MovingSrcGroup.effects.ToList<AudioMixerEffectController>();
-							if (AudioMixerController.MoveEffect(ref list2, this.m_MovingEffectSrcIndex, ref list2, this.m_MovingEffectDstIndex))
+							List<AudioMixerEffectController> list3 = this.m_MovingSrcGroup.effects.ToList<AudioMixerEffectController>();
+							if (AudioMixerController.MoveEffect(ref list3, this.m_MovingEffectSrcIndex, ref list3, this.m_MovingEffectDstIndex))
 							{
-								this.m_MovingSrcGroup.effects = list2.ToArray();
+								this.m_MovingSrcGroup.effects = list3.ToArray();
 							}
 						}
 						else if (!this.m_MovingSrcGroup.effects[this.m_MovingEffectSrcIndex].IsAttenuation())
 						{
-							List<AudioMixerEffectController> list3 = this.m_MovingSrcGroup.effects.ToList<AudioMixerEffectController>();
-							List<AudioMixerEffectController> list4 = this.m_MovingDstGroup.effects.ToList<AudioMixerEffectController>();
-							if (AudioMixerController.MoveEffect(ref list3, this.m_MovingEffectSrcIndex, ref list4, this.m_MovingEffectDstIndex))
+							List<AudioMixerEffectController> list4 = this.m_MovingSrcGroup.effects.ToList<AudioMixerEffectController>();
+							List<AudioMixerEffectController> list5 = this.m_MovingDstGroup.effects.ToList<AudioMixerEffectController>();
+							if (AudioMixerController.MoveEffect(ref list4, this.m_MovingEffectSrcIndex, ref list5, this.m_MovingEffectDstIndex))
 							{
-								this.m_MovingSrcGroup.effects = list3.ToArray();
-								this.m_MovingDstGroup.effects = list4.ToArray();
+								this.m_MovingSrcGroup.effects = list4.ToArray();
+								this.m_MovingDstGroup.effects = list5.ToArray();
 							}
 						}
 					}
@@ -771,89 +876,25 @@ namespace UnityEditor
 					EditorGUIUtility.SetWantsMouseJumping(0);
 					GUIUtility.ExitGUI();
 				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == this.m_EffectInteractionControlID)
-				{
-					if (this.HasFocus() && this.m_WaitingForDragEvent)
-					{
-						this.m_ChangingWetMixIndex = -1;
-						if (effectIndex < p.group.effects.Length)
-						{
-							if (Mathf.Abs(current.delta.y) > Mathf.Abs(current.delta.x))
-							{
-								this.m_MovingEffectSrcIndex = effectIndex;
-								this.ClearFocus();
-							}
-							else
-							{
-								this.m_ChangingWetMixIndex = this.m_IndexCounter;
-							}
-						}
-						this.m_WaitingForDragEvent = false;
-					}
-					if (this.IsMovingEffect() && p.stripRect.Contains(current.mousePosition))
-					{
-						float num = r.height * 0.5f;
-						float num2 = (effectIndex != 0) ? 0f : (-num);
-						float num3 = (effectIndex != p.group.effects.Length - 1) ? r.height : (r.height + num);
-						float num4 = current.mousePosition.y - r.y;
-						if (num4 >= num2 && num4 <= num3 && effectIndex < p.group.effects.Length)
-						{
-							int num5 = (num4 >= num) ? (effectIndex + 1) : effectIndex;
-							if (num5 != this.m_MovingEffectDstIndex || this.m_MovingDstGroup != p.group)
-							{
-								this.m_MovingDstRect.x = r.x;
-								this.m_MovingDstRect.width = r.width;
-								this.m_MovingDstRect.y = ((num4 >= num) ? (r.y + r.height) : r.y) - 1f;
-								this.m_MovingEffectDstIndex = num5;
-								this.m_MovingDstGroup = p.group;
-								this.m_MovingEffectAllowed = ((!this.m_MovingSrcGroup.effects[this.m_MovingEffectSrcIndex].IsAttenuation() || !(this.m_MovingSrcGroup != this.m_MovingDstGroup)) && !AudioMixerController.WillMovingEffectCauseFeedback(p.allGroups, this.m_MovingSrcGroup, this.m_MovingEffectSrcIndex, this.m_MovingDstGroup, num5, null) && (!this.IsDuplicateKeyPressed() || this.CanDuplicateDraggedEffect()));
-							}
-							current.Use();
-						}
-					}
-					if (this.IsAdjustingWetMix() && this.HasFocus() && showLevel)
-					{
-						this.m_WaitingForDragEvent = false;
-						float value = AudioMixerChannelStripView.kEffectScaleMouseDrag * HandleUtility.niceMouseDelta + level;
-						float num6 = Mathf.Clamp(value, AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect) - level;
-						if (num6 != 0f)
-						{
-							Undo.RecordObject(this.m_Controller.TargetSnapshot, "Change effect level");
-							if (effect.IsSend() && this.m_Controller.CachedSelection.Count > 1 && this.m_Controller.CachedSelection.Contains(p.group))
-							{
-								List<AudioMixerEffectController> list5 = new List<AudioMixerEffectController>();
-								foreach (AudioMixerGroupController current2 in this.m_Controller.CachedSelection)
-								{
-									AudioMixerEffectController[] effects = current2.effects;
-									for (int i = 0; i < effects.Length; i++)
-									{
-										AudioMixerEffectController audioMixerEffectController = effects[i];
-										if (audioMixerEffectController.effectName == effect.effectName && audioMixerEffectController.sendTarget == effect.sendTarget)
-										{
-											list5.Add(audioMixerEffectController);
-										}
-									}
-								}
-								foreach (AudioMixerEffectController current3 in list5)
-								{
-									if (!current3.IsSend() || current3.sendTarget != null)
-									{
-										current3.SetValueForMixLevel(this.m_Controller, snapshot, Mathf.Clamp(current3.GetValueForMixLevel(this.m_Controller, snapshot) + num6, AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect));
-									}
-								}
-							}
-							else if (!effect.IsSend() || effect.sendTarget != null)
-							{
-								effect.SetValueForMixLevel(this.m_Controller, snapshot, Mathf.Clamp(level + num6, AudioMixerController.kMinVolume, AudioMixerController.kMaxEffect));
-							}
-							InspectorWindow.RepaintAllInspectors();
-						}
-						current.Use();
-					}
-				}
-				break;
+			}
+			else if (r.Contains(current.mousePosition) && current.button == 0 && GUIUtility.hotControl == 0)
+			{
+				GUIUtility.hotControl = this.m_EffectInteractionControlID;
+				this.m_MouseDragStartX = current.mousePosition.x;
+				this.m_MouseDragStartValue = level;
+				highlightEffectIndex = effectIndex;
+				this.m_MovingEffectSrcIndex = -1;
+				this.m_MovingEffectDstIndex = -1;
+				this.m_WaitingForDragEvent = true;
+				this.m_MovingSrcRect = r;
+				this.m_MovingDstRect = r;
+				this.m_MovingSrcGroup = p.group;
+				this.m_MovingDstGroup = p.group;
+				this.m_MovingEffectAllowed = true;
+				this.SetFocus();
+				Event.current.Use();
+				EditorGUIUtility.SetWantsMouseJumping(1);
+				InspectorWindow.RepaintAllInspectors();
 			}
 		}
 
@@ -879,49 +920,46 @@ namespace UnityEditor
 		{
 			Event current = Event.current;
 			EventType typeForControl = current.GetTypeForControl(this.m_EffectInteractionControlID);
-			switch (typeForControl)
+			if (typeForControl != EventType.MouseUp)
 			{
-			case EventType.MouseUp:
-				if (GUIUtility.hotControl == this.m_EffectInteractionControlID && current.button == 0)
+				if (typeForControl != EventType.MouseDrag)
 				{
-					this.ClearEffectDragging(ref highlightEffectIndex);
-					current.Use();
+					if (typeForControl == EventType.Repaint)
+					{
+						if (this.IsMovingEffect())
+						{
+							if (current.type == EventType.Repaint)
+							{
+								EditorGUI.DrawRect(this.m_MovingSrcRect, AudioMixerChannelStripView.kMoveColorHighlight);
+								MouseCursor mouse = (!this.IsDuplicateKeyPressed() || !this.m_MovingEffectAllowed) ? MouseCursor.ResizeVertical : MouseCursor.ArrowPlus;
+								EditorGUIUtility.AddCursorRect(new Rect(current.mousePosition.x - 10f, current.mousePosition.y - 10f, 20f, 20f), mouse, this.m_EffectInteractionControlID);
+							}
+						}
+						if (this.m_MovingEffectDstIndex != -1 && this.m_MovingDstRect.y >= 0f)
+						{
+							float num = 2f;
+							Color color = (!this.m_MovingEffectAllowed) ? AudioMixerChannelStripView.kMoveSlotColLoDisallowed : AudioMixerChannelStripView.kMoveSlotColLoAllowed;
+							Color color2 = (!this.m_MovingEffectAllowed) ? AudioMixerChannelStripView.kMoveSlotColHiDisallowed : AudioMixerChannelStripView.kMoveSlotColHiAllowed;
+							Color color3 = (!this.m_MovingEffectAllowed) ? AudioMixerChannelStripView.kMoveSlotColBorderDisallowed : AudioMixerChannelStripView.kMoveSlotColBorderAllowed;
+							AudioMixerDrawUtils.DrawGradientRect(new Rect(this.m_MovingDstRect.x, this.m_MovingDstRect.y - num, this.m_MovingDstRect.width, num), color, color2);
+							AudioMixerDrawUtils.DrawGradientRect(new Rect(this.m_MovingDstRect.x, this.m_MovingDstRect.y, this.m_MovingDstRect.width, num), color2, color);
+							AudioMixerDrawUtils.DrawGradientRect(new Rect(this.m_MovingDstRect.x, this.m_MovingDstRect.y - 1f, this.m_MovingDstRect.width, 1f), color3, color3);
+						}
+					}
 				}
-				return;
-			case EventType.MouseMove:
-				IL_29:
-				if (typeForControl != EventType.Repaint)
-				{
-					return;
-				}
-				if (this.IsMovingEffect() && current.type == EventType.Repaint)
-				{
-					EditorGUI.DrawRect(this.m_MovingSrcRect, AudioMixerChannelStripView.kMoveColorHighlight);
-					MouseCursor mouse = (!this.IsDuplicateKeyPressed() || !this.m_MovingEffectAllowed) ? MouseCursor.ResizeVertical : MouseCursor.ArrowPlus;
-					EditorGUIUtility.AddCursorRect(new Rect(current.mousePosition.x - 10f, current.mousePosition.y - 10f, 20f, 20f), mouse, this.m_EffectInteractionControlID);
-				}
-				if (this.m_MovingEffectDstIndex != -1 && this.m_MovingDstRect.y >= 0f)
-				{
-					float num = 2f;
-					Color color = (!this.m_MovingEffectAllowed) ? AudioMixerChannelStripView.kMoveSlotColLoDisallowed : AudioMixerChannelStripView.kMoveSlotColLoAllowed;
-					Color color2 = (!this.m_MovingEffectAllowed) ? AudioMixerChannelStripView.kMoveSlotColHiDisallowed : AudioMixerChannelStripView.kMoveSlotColHiAllowed;
-					Color color3 = (!this.m_MovingEffectAllowed) ? AudioMixerChannelStripView.kMoveSlotColBorderDisallowed : AudioMixerChannelStripView.kMoveSlotColBorderAllowed;
-					AudioMixerDrawUtils.DrawGradientRect(new Rect(this.m_MovingDstRect.x, this.m_MovingDstRect.y - num, this.m_MovingDstRect.width, num), color, color2);
-					AudioMixerDrawUtils.DrawGradientRect(new Rect(this.m_MovingDstRect.x, this.m_MovingDstRect.y, this.m_MovingDstRect.width, num), color2, color);
-					AudioMixerDrawUtils.DrawGradientRect(new Rect(this.m_MovingDstRect.x, this.m_MovingDstRect.y - 1f, this.m_MovingDstRect.width, 1f), color3, color3);
-				}
-				return;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == this.m_EffectInteractionControlID)
+				else if (GUIUtility.hotControl == this.m_EffectInteractionControlID)
 				{
 					this.m_MovingEffectDstIndex = -1;
 					this.m_MovingDstRect = new Rect(-1f, -1f, 0f, 0f);
 					this.m_MovingDstGroup = null;
 					current.Use();
 				}
-				return;
 			}
-			goto IL_29;
+			else if (GUIUtility.hotControl == this.m_EffectInteractionControlID && current.button == 0)
+			{
+				this.ClearEffectDragging(ref highlightEffectIndex);
+				current.Use();
+			}
 		}
 
 		private bool IsDuplicateKeyPressed()
@@ -937,6 +975,7 @@ namespace UnityEditor
 		private bool DoSoloButton(Rect r, AudioMixerGroupController group, List<AudioMixerGroupController> allGroups, List<AudioMixerGroupController> selection)
 		{
 			Event current = Event.current;
+			bool result;
 			if (current.type == EventType.MouseUp && current.button == 1 && r.Contains(current.mousePosition))
 			{
 				if (allGroups.Any((AudioMixerGroupController g) => g.solo))
@@ -947,7 +986,8 @@ namespace UnityEditor
 						current2.solo = false;
 					}
 					current.Use();
-					return true;
+					result = true;
+					return result;
 				}
 			}
 			bool flag = GUI.Toggle(r, group.solo, this.styles.soloGUIContent, AudioMixerDrawUtils.styles.soloToggle);
@@ -959,14 +999,19 @@ namespace UnityEditor
 				{
 					current3.solo = group.solo;
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private bool DoMuteButton(Rect r, AudioMixerGroupController group, List<AudioMixerGroupController> allGroups, bool anySoloActive, List<AudioMixerGroupController> selection)
 		{
 			Event current = Event.current;
+			bool result;
 			if (current.type == EventType.MouseUp && current.button == 1 && r.Contains(current.mousePosition))
 			{
 				if (allGroups.Any((AudioMixerGroupController g) => g.mute))
@@ -974,14 +1019,16 @@ namespace UnityEditor
 					Undo.RecordObject(group, "Change mute state");
 					if (allGroups.Any((AudioMixerGroupController g) => g.solo))
 					{
-						return false;
+						result = false;
+						return result;
 					}
 					foreach (AudioMixerGroupController current2 in allGroups)
 					{
 						current2.mute = false;
 					}
 					current.Use();
-					return true;
+					result = true;
+					return result;
 				}
 			}
 			Color color = GUI.color;
@@ -1003,14 +1050,19 @@ namespace UnityEditor
 				{
 					current3.mute = group.mute;
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private bool DoBypassEffectsButton(Rect r, AudioMixerGroupController group, List<AudioMixerGroupController> allGroups, List<AudioMixerGroupController> selection)
 		{
 			Event current = Event.current;
+			bool result;
 			if (current.type == EventType.MouseUp && current.button == 1 && r.Contains(current.mousePosition))
 			{
 				if (allGroups.Any((AudioMixerGroupController g) => g.bypassEffects))
@@ -1021,7 +1073,8 @@ namespace UnityEditor
 						current2.bypassEffects = false;
 					}
 					current.Use();
-					return true;
+					result = true;
+					return result;
 				}
 			}
 			bool flag = GUI.Toggle(r, group.bypassEffects, this.styles.bypassGUIContent, AudioMixerDrawUtils.styles.bypassToggle);
@@ -1033,9 +1086,13 @@ namespace UnityEditor
 				{
 					current3.bypassEffects = group.bypassEffects;
 				}
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private static bool RectOverlaps(Rect r1, Rect r2)
@@ -1102,7 +1159,13 @@ namespace UnityEditor
 			{
 				if (effectList[i] != "Attenuation")
 				{
-					pm.AddItem(new GUIContent(prefix + AudioMixerController.FixNameForPopupMenu(effectList[i])), false, new GenericMenu.MenuFunction2(AudioMixerChannelStripView.InsertEffectPopupCallback), new AudioMixerChannelStripView.EffectContext(controller, groups, insertIndex, effectList[i]));
+					GUIContent arg_5F_1 = new GUIContent(prefix + AudioMixerController.FixNameForPopupMenu(effectList[i]));
+					bool arg_5F_2 = false;
+					if (AudioMixerChannelStripView.<>f__mg$cache0 == null)
+					{
+						AudioMixerChannelStripView.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AudioMixerChannelStripView.InsertEffectPopupCallback);
+					}
+					pm.AddItem(arg_5F_1, arg_5F_2, AudioMixerChannelStripView.<>f__mg$cache0, new AudioMixerChannelStripView.EffectContext(controller, groups, insertIndex, effectList[i]));
 				}
 			}
 		}
@@ -1129,22 +1192,22 @@ namespace UnityEditor
 						this.m_Controller.UpdateBypass();
 						InspectorWindow.RepaintAllInspectors();
 					});
-					genericMenu.AddSeparator(string.Empty);
+					genericMenu.AddSeparator("");
 				}
 				AudioMixerChannelStripView.AddEffectItemsToMenu(group.controller, groups, effectSlotIndex, "Add effect before/", genericMenu);
 				AudioMixerChannelStripView.AddEffectItemsToMenu(group.controller, groups, effectSlotIndex + 1, "Add effect after/", genericMenu);
 			}
 			else
 			{
-				AudioMixerChannelStripView.AddEffectItemsToMenu(group.controller, groups, effectSlotIndex, string.Empty, genericMenu);
+				AudioMixerChannelStripView.AddEffectItemsToMenu(group.controller, groups, effectSlotIndex, "", genericMenu);
 			}
 			if (effectSlotIndex < group.effects.Length)
 			{
 				AudioMixerEffectController audioMixerEffectController = group.effects[effectSlotIndex];
 				if (!audioMixerEffectController.IsAttenuation())
 				{
-					genericMenu.AddSeparator(string.Empty);
-					genericMenu.AddItem(new GUIContent("Remove"), false, new GenericMenu.MenuFunction2(this.RemoveEffectPopupCallback), new AudioMixerChannelStripView.EffectContext(this.m_Controller, groups, effectSlotIndex, string.Empty));
+					genericMenu.AddSeparator("");
+					genericMenu.AddItem(new GUIContent("Remove"), false, new GenericMenu.MenuFunction2(this.RemoveEffectPopupCallback), new AudioMixerChannelStripView.EffectContext(this.m_Controller, groups, effectSlotIndex, ""));
 					bool flag = false;
 					if (audioMixerEffectController.IsSend())
 					{
@@ -1153,9 +1216,16 @@ namespace UnityEditor
 							if (!flag)
 							{
 								flag = true;
-								genericMenu.AddSeparator(string.Empty);
+								genericMenu.AddSeparator("");
 							}
-							genericMenu.AddItem(new GUIContent("Disconnect from '" + audioMixerEffectController.GetSendTargetDisplayString(effectMap) + "'"), false, new GenericMenu.MenuFunction2(AudioMixerChannelStripView.ConnectSendPopupCallback), new AudioMixerChannelStripView.ConnectSendContext(audioMixerEffectController, null));
+							GenericMenu arg_1FB_0 = genericMenu;
+							GUIContent arg_1FB_1 = new GUIContent("Disconnect from '" + audioMixerEffectController.GetSendTargetDisplayString(effectMap) + "'");
+							bool arg_1FB_2 = false;
+							if (AudioMixerChannelStripView.<>f__mg$cache1 == null)
+							{
+								AudioMixerChannelStripView.<>f__mg$cache1 = new GenericMenu.MenuFunction2(AudioMixerChannelStripView.ConnectSendPopupCallback);
+							}
+							arg_1FB_0.AddItem(arg_1FB_1, arg_1FB_2, AudioMixerChannelStripView.<>f__mg$cache1, new AudioMixerChannelStripView.ConnectSendContext(audioMixerEffectController, null));
 						}
 						if (!flag)
 						{
@@ -1179,7 +1249,7 @@ namespace UnityEditor
 					AudioMixerEffectController audioMixerEffectController = effects[i];
 					if (audioMixerEffectController.IsReceive() || audioMixerEffectController.IsDuckVolume())
 					{
-						pm.AddSeparator(string.Empty);
+						pm.AddSeparator("");
 						return;
 					}
 				}
@@ -1201,7 +1271,13 @@ namespace UnityEditor
 						{
 							if (showCurrent || effect.sendTarget != audioMixerEffectController)
 							{
-								pm.AddItem(new GUIContent(prefix + "'" + audioMixerEffectController.GetDisplayString(effectMap) + "'"), effect.sendTarget == audioMixerEffectController, new GenericMenu.MenuFunction2(AudioMixerChannelStripView.ConnectSendPopupCallback), new AudioMixerChannelStripView.ConnectSendContext(effect, audioMixerEffectController));
+								GUIContent arg_BC_1 = new GUIContent(prefix + "'" + audioMixerEffectController.GetDisplayString(effectMap) + "'");
+								bool arg_BC_2 = effect.sendTarget == audioMixerEffectController;
+								if (AudioMixerChannelStripView.<>f__mg$cache2 == null)
+								{
+									AudioMixerChannelStripView.<>f__mg$cache2 = new GenericMenu.MenuFunction2(AudioMixerChannelStripView.ConnectSendPopupCallback);
+								}
+								pm.AddItem(arg_BC_1, arg_BC_2, AudioMixerChannelStripView.<>f__mg$cache2, new AudioMixerChannelStripView.ConnectSendContext(effect, audioMixerEffectController));
 							}
 						}
 						else
@@ -1272,16 +1348,19 @@ namespace UnityEditor
 			Event current = Event.current;
 			bool flag = current.type == EventType.MouseDown && p.stripRect.Contains(current.mousePosition);
 			bool flag2 = this.m_Controller.CachedSelection.Contains(p.group);
-			if (this.IsRectSelectionActive() && AudioMixerChannelStripView.RectOverlaps(p.stripRect, this.m_RectSelectionRect))
+			if (this.IsRectSelectionActive())
 			{
-				p.rectSelectionGroups.Add(p.group);
-				flag2 = true;
+				if (AudioMixerChannelStripView.RectOverlaps(p.stripRect, this.m_RectSelectionRect))
+				{
+					p.rectSelectionGroups.Add(p.group);
+					flag2 = true;
+				}
 			}
 			this.DrawBackgrounds(p, flag2);
-			GUIContent arg_9B_0 = this.headerGUIContent;
+			GUIContent arg_9D_0 = this.headerGUIContent;
 			string displayString = p.group.GetDisplayString();
 			this.headerGUIContent.tooltip = displayString;
-			arg_9B_0.text = displayString;
+			arg_9D_0.text = displayString;
 			GUI.Label(p.bgRects[p.kHeaderIndex], this.headerGUIContent, AudioMixerDrawUtils.styles.channelStripHeaderStyle);
 			Rect rect = new RectOffset(-6, 0, 0, -4).Add(p.bgRects[p.kVUMeterFaderIndex]);
 			float num = 1f;
@@ -1394,27 +1473,32 @@ namespace UnityEditor
 				vuRect.x = vuRect.xMax - 25f;
 				vuRect.width = 25f;
 			}
+			float x;
 			if (num2 == 0)
 			{
-				return vuRect.x;
+				x = vuRect.x;
 			}
-			float num3 = Mathf.Floor(attenuationMarkerHeight / 2f);
-			vuRect.y += num3;
-			vuRect.height -= 2f * num3;
-			float num4 = Mathf.Round((vuRect.width - (float)num2 * num) / (float)num2);
-			Rect r = new Rect(vuRect.xMax - num4, vuRect.y, num4, vuRect.height);
-			for (int i = num2 - 1; i >= 0; i--)
+			else
 			{
-				if (i != num2 - 1)
+				float num3 = Mathf.Floor(attenuationMarkerHeight / 2f);
+				vuRect.y += num3;
+				vuRect.height -= 2f * num3;
+				float num4 = Mathf.Round((vuRect.width - (float)num2 * num) / (float)num2);
+				Rect r = new Rect(vuRect.xMax - num4, vuRect.y, num4, vuRect.height);
+				for (int i = num2 - 1; i >= 0; i--)
 				{
-					r.x -= r.width + num;
+					if (i != num2 - 1)
+					{
+						r.x -= r.width + num;
+					}
+					float level = 1f - AudioMixerController.VolumeToScreenMapping(Mathf.Clamp(p.vuinfo_level[i], AudioMixerController.kMinVolume, AudioMixerController.GetMaxVolume()), 1f, true);
+					float peak = 1f - AudioMixerController.VolumeToScreenMapping(Mathf.Clamp(p.vuinfo_peak[i], AudioMixerController.kMinVolume, AudioMixerController.GetMaxVolume()), 1f, true);
+					this.VUMeter(p.group, r, level, peak);
 				}
-				float level = 1f - AudioMixerController.VolumeToScreenMapping(Mathf.Clamp(p.vuinfo_level[i], AudioMixerController.kMinVolume, AudioMixerController.GetMaxVolume()), 1f, true);
-				float peak = 1f - AudioMixerController.VolumeToScreenMapping(Mathf.Clamp(p.vuinfo_peak[i], AudioMixerController.kMinVolume, AudioMixerController.GetMaxVolume()), 1f, true);
-				this.VUMeter(p.group, r, level, peak);
+				AudioMixerDrawUtils.AddTooltipOverlay(vuRect, this.styles.vuMeterGUIContent.tooltip);
+				x = r.x;
 			}
-			AudioMixerDrawUtils.AddTooltipOverlay(vuRect, this.styles.vuMeterGUIContent.tooltip);
-			return r.x;
+			return x;
 		}
 
 		private void DoSoloMuteBypassButtons(Rect rect, AudioMixerGroupController group, List<AudioMixerGroupController> allGroups, List<AudioMixerGroupController> selection, bool anySoloActive)
@@ -1468,160 +1552,158 @@ namespace UnityEditor
 			if (this.m_Controller == null)
 			{
 				this.DrawAreaBackground(rect);
-				return;
 			}
-			if (Event.current.type == EventType.Layout)
+			else if (Event.current.type != EventType.Layout)
 			{
-				return;
-			}
-			this.m_RectSelectionControlID = GUIUtility.GetControlID(AudioMixerChannelStripView.kRectSelectionHashCode, FocusType.Passive);
-			this.m_EffectInteractionControlID = GUIUtility.GetControlID(AudioMixerChannelStripView.kEffectDraggingHashCode, FocusType.Passive);
-			this.m_IndexCounter = 0;
-			Event current = Event.current;
-			List<AudioMixerGroupController> list = this.m_Controller.GetCurrentViewGroupList().ToList<AudioMixerGroupController>();
-			if (sortGroupsAlphabetically)
-			{
-				list.Sort(this.m_GroupComparer);
-			}
-			Rect rect2 = new Rect(this.channelStripsOffset.x, this.channelStripsOffset.y, 90f, 300f);
-			if (scrollToItem != null)
-			{
-				int num = list.IndexOf(scrollToItem);
-				if (num >= 0)
+				this.m_RectSelectionControlID = GUIUtility.GetControlID(AudioMixerChannelStripView.kRectSelectionHashCode, FocusType.Passive);
+				this.m_EffectInteractionControlID = GUIUtility.GetControlID(AudioMixerChannelStripView.kEffectDraggingHashCode, FocusType.Passive);
+				this.m_IndexCounter = 0;
+				Event current = Event.current;
+				List<AudioMixerGroupController> list = this.m_Controller.GetCurrentViewGroupList().ToList<AudioMixerGroupController>();
+				if (sortGroupsAlphabetically)
 				{
-					float num2 = (rect2.width + 4f) * (float)num - this.m_State.m_ScrollPos.x;
-					if (num2 < -20f || num2 > rect.width)
-					{
-						AudioMixerChannelStripView.State expr_111_cp_0 = this.m_State;
-						expr_111_cp_0.m_ScrollPos.x = expr_111_cp_0.m_ScrollPos.x + num2;
-					}
+					list.Sort(this.m_GroupComparer);
 				}
-			}
-			List<AudioMixerGroupController> list2 = new List<AudioMixerGroupController>();
-			foreach (AudioMixerGroupController current2 in list)
-			{
-				AudioMixerEffectController[] effects = current2.effects;
-				for (int i = 0; i < effects.Length; i++)
+				Rect rect2 = new Rect(this.channelStripsOffset.x, this.channelStripsOffset.y, 90f, 300f);
+				if (scrollToItem != null)
 				{
-					AudioMixerEffectController audioMixerEffectController = effects[i];
-					if (audioMixerEffectController.sendTarget != null)
+					int num = list.IndexOf(scrollToItem);
+					if (num >= 0)
 					{
-						AudioMixerGroupController item = effectMap[audioMixerEffectController.sendTarget];
-						if (!list2.Contains(item) && !list.Contains(item))
+						float num2 = (rect2.width + 4f) * (float)num - this.m_State.m_ScrollPos.x;
+						if (num2 < -20f || num2 > rect.width)
 						{
-							list2.Add(item);
+							AudioMixerChannelStripView.State expr_11F_cp_0 = this.m_State;
+							expr_11F_cp_0.m_ScrollPos.x = expr_11F_cp_0.m_ScrollPos.x + num2;
 						}
 					}
 				}
-			}
-			List<AudioMixerGroupController> list3 = list2.ToList<AudioMixerGroupController>();
-			list3.Sort(this.m_GroupComparer);
-			int count = list.Count;
-			if (showReferencedBuses && list3.Count > 0)
-			{
-				list.AddRange(list3);
-			}
-			int num3 = 1;
-			foreach (AudioMixerGroupController current3 in list)
-			{
-				num3 = Mathf.Max(num3, current3.effects.Length);
-			}
-			bool isShowingReferencedGroups = list.Count != count;
-			Rect contentRect = this.GetContentRect(list, isShowingReferencedGroups, num3);
-			this.m_State.m_ScrollPos = GUI.BeginScrollView(rect, this.m_State.m_ScrollPos, contentRect);
-			this.DrawAreaBackground(new Rect(0f, 0f, 10000f, 10000f));
-			AudioMixerChannelStripView.ChannelStripParams channelStripParams = new AudioMixerChannelStripView.ChannelStripParams();
-			channelStripParams.effectMap = effectMap;
-			channelStripParams.allGroups = allGroups;
-			channelStripParams.shownGroups = list;
-			channelStripParams.anySoloActive = allGroups.Any((AudioMixerGroupController g) => g.solo);
-			channelStripParams.visibleRect = new Rect(this.m_State.m_ScrollPos.x, this.m_State.m_ScrollPos.y, rect.width, rect.height);
-			AudioMixerChannelStripView.ChannelStripParams channelStripParams2 = channelStripParams;
-			Dictionary<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> dictionary = (!showBusConnections) ? null : new Dictionary<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot>();
-			for (int j = 0; j < list.Count; j++)
-			{
-				AudioMixerGroupController group = list[j];
-				channelStripParams2.index = j;
-				channelStripParams2.group = group;
-				channelStripParams2.drawingBuses = false;
-				channelStripParams2.visible = AudioMixerChannelStripView.RectOverlaps(channelStripParams2.visibleRect, rect2);
-				channelStripParams2.Init(this.m_Controller, rect2, num3);
-				this.DrawChannelStrip(channelStripParams2, ref this.m_Controller.m_HighlightEffectIndex, ref dictionary, showBusConnectionsOfSelection);
-				if (current.type == EventType.MouseDown && current.button == 0 && channelStripParams2.stripRect.Contains(current.mousePosition))
+				List<AudioMixerGroupController> list2 = new List<AudioMixerGroupController>();
+				foreach (AudioMixerGroupController current2 in list)
 				{
-					current.Use();
-				}
-				if (this.IsMovingEffect() && current.type == EventType.MouseDrag && channelStripParams2.stripRect.Contains(current.mousePosition) && GUIUtility.hotControl == this.m_EffectInteractionControlID)
-				{
-					this.m_MovingEffectDstIndex = -1;
-					current.Use();
-				}
-				rect2.x += channelStripParams2.stripRect.width + 4f;
-				if (showReferencedBuses && j == count - 1 && list.Count > count)
-				{
-					rect2.x += 50f;
-					using (new EditorGUI.DisabledScope(true))
+					AudioMixerEffectController[] effects = current2.effects;
+					for (int i = 0; i < effects.Length; i++)
 					{
-						GUI.Label(new Rect(rect2.x, channelStripParams2.stripRect.yMax, 130f, 22f), this.styles.referencedGroups, this.styles.channelStripHeaderStyle);
-					}
-				}
-			}
-			this.UnhandledEffectDraggingEvents(ref this.m_Controller.m_HighlightEffectIndex);
-			if (current.type == EventType.Repaint && dictionary != null)
-			{
-				foreach (KeyValuePair<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> current4 in dictionary)
-				{
-					AudioMixerChannelStripView.PatchSlot value = current4.Value;
-					bool flag = !showBusConnectionsOfSelection || this.m_Controller.CachedSelection.Contains(value.group);
-					if (flag)
-					{
-						this.styles.circularToggle.Draw(new Rect(value.x - 3f, value.y - 3f, 6f, 6f), false, false, flag, false);
-					}
-				}
-				float num4 = Mathf.Exp(-0.03f * Time.time * Time.time) * 0.1f;
-				Color color = new Color(0f, 0f, 0f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.05f : 0.1f);
-				Color color2 = new Color(0f, 0f, 0f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.5f : 1f);
-				foreach (KeyValuePair<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> current5 in dictionary)
-				{
-					AudioMixerEffectController key = current5.Key;
-					AudioMixerEffectController sendTarget = key.sendTarget;
-					if (!(sendTarget == null))
-					{
-						AudioMixerChannelStripView.PatchSlot value2 = current5.Value;
-						if (dictionary.ContainsKey(sendTarget))
+						AudioMixerEffectController audioMixerEffectController = effects[i];
+						if (audioMixerEffectController.sendTarget != null)
 						{
-							AudioMixerChannelStripView.PatchSlot patchSlot = dictionary[sendTarget];
-							int num5 = key.GetInstanceID() ^ sendTarget.GetInstanceID();
-							float num6 = (float)(num5 & 63) * 0.1f;
-							float x = Mathf.Abs(patchSlot.x - value2.x) * Mathf.Sin(Time.time * 5f + num6) * num4 + (value2.x + patchSlot.x) * 0.5f;
-							float y = Mathf.Abs(patchSlot.y - value2.y) * Mathf.Cos(Time.time * 5f + num6) * num4 + Math.Max(value2.y, patchSlot.y) + Mathf.Max(Mathf.Min(0.5f * Math.Abs(patchSlot.y - value2.y), 50f), 50f);
-							for (int k = 0; k < this.cablepoints.Length; k++)
+							AudioMixerGroupController item = effectMap[audioMixerEffectController.sendTarget];
+							if (!list2.Contains(item) && !list.Contains(item))
 							{
-								AudioMixerChannelStripView.GetCableVertex(value2.x, value2.y, x, y, patchSlot.x, patchSlot.y, (float)k / (float)(this.cablepoints.Length - 1), out this.cablepoints[k].x, out this.cablepoints[k].y);
-							}
-							bool flag2 = showBusConnectionsOfSelection && !this.m_Controller.CachedSelection.Contains(value2.group) && !this.m_Controller.CachedSelection.Contains(patchSlot.group);
-							Handles.color = ((!flag2) ? color2 : color);
-							Handles.DrawAAPolyLine(7f, this.cablepoints.Length, this.cablepoints);
-							if (!flag2)
-							{
-								num5 ^= (num5 >> 6 ^ num5 >> 12 ^ num5 >> 18);
-								Handles.color = new Color((float)(num5 & 3) * 0.15f + 0.55f, (float)(num5 >> 2 & 3) * 0.15f + 0.55f, (float)(num5 >> 4 & 3) * 0.15f + 0.55f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.5f : 1f);
-								Handles.DrawAAPolyLine(4f, this.cablepoints.Length, this.cablepoints);
-								Handles.color = new Color(1f, 1f, 1f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.25f : 0.5f);
-								Handles.DrawAAPolyLine(3f, this.cablepoints.Length, this.cablepoints);
+								list2.Add(item);
 							}
 						}
 					}
 				}
-			}
-			this.RectSelection(channelStripParams2);
-			GUI.EndScrollView(true);
-			AudioMixerDrawUtils.DrawScrollDropShadow(rect, this.m_State.m_ScrollPos.y, contentRect.height);
-			this.WarningOverlay(allGroups, rect, contentRect);
-			this.ShowDeveloperOverlays(rect, current, showDeveloperOverlays);
-			if (!EditorApplication.isPlaying && !this.m_Controller.isSuspended)
-			{
-				this.m_RequiresRepaint = true;
+				List<AudioMixerGroupController> list3 = list2.ToList<AudioMixerGroupController>();
+				list3.Sort(this.m_GroupComparer);
+				int count = list.Count;
+				if (showReferencedBuses && list3.Count > 0)
+				{
+					list.AddRange(list3);
+				}
+				int num3 = 1;
+				foreach (AudioMixerGroupController current3 in list)
+				{
+					num3 = Mathf.Max(num3, current3.effects.Length);
+				}
+				bool isShowingReferencedGroups = list.Count != count;
+				Rect contentRect = this.GetContentRect(list, isShowingReferencedGroups, num3);
+				this.m_State.m_ScrollPos = GUI.BeginScrollView(rect, this.m_State.m_ScrollPos, contentRect);
+				this.DrawAreaBackground(new Rect(0f, 0f, 10000f, 10000f));
+				AudioMixerChannelStripView.ChannelStripParams channelStripParams = new AudioMixerChannelStripView.ChannelStripParams();
+				channelStripParams.effectMap = effectMap;
+				channelStripParams.allGroups = allGroups;
+				channelStripParams.shownGroups = list;
+				channelStripParams.anySoloActive = allGroups.Any((AudioMixerGroupController g) => g.solo);
+				channelStripParams.visibleRect = new Rect(this.m_State.m_ScrollPos.x, this.m_State.m_ScrollPos.y, rect.width, rect.height);
+				AudioMixerChannelStripView.ChannelStripParams channelStripParams2 = channelStripParams;
+				Dictionary<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> dictionary = (!showBusConnections) ? null : new Dictionary<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot>();
+				for (int j = 0; j < list.Count; j++)
+				{
+					AudioMixerGroupController group = list[j];
+					channelStripParams2.index = j;
+					channelStripParams2.group = group;
+					channelStripParams2.drawingBuses = false;
+					channelStripParams2.visible = AudioMixerChannelStripView.RectOverlaps(channelStripParams2.visibleRect, rect2);
+					channelStripParams2.Init(this.m_Controller, rect2, num3);
+					this.DrawChannelStrip(channelStripParams2, ref this.m_Controller.m_HighlightEffectIndex, ref dictionary, showBusConnectionsOfSelection);
+					if (current.type == EventType.MouseDown && current.button == 0 && channelStripParams2.stripRect.Contains(current.mousePosition))
+					{
+						current.Use();
+					}
+					if (this.IsMovingEffect() && current.type == EventType.MouseDrag && channelStripParams2.stripRect.Contains(current.mousePosition) && GUIUtility.hotControl == this.m_EffectInteractionControlID)
+					{
+						this.m_MovingEffectDstIndex = -1;
+						current.Use();
+					}
+					rect2.x += channelStripParams2.stripRect.width + 4f;
+					if (showReferencedBuses && j == count - 1 && list.Count > count)
+					{
+						rect2.x += 50f;
+						using (new EditorGUI.DisabledScope(true))
+						{
+							GUI.Label(new Rect(rect2.x, channelStripParams2.stripRect.yMax, 130f, 22f), this.styles.referencedGroups, this.styles.channelStripHeaderStyle);
+						}
+					}
+				}
+				this.UnhandledEffectDraggingEvents(ref this.m_Controller.m_HighlightEffectIndex);
+				if (current.type == EventType.Repaint && dictionary != null)
+				{
+					foreach (KeyValuePair<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> current4 in dictionary)
+					{
+						AudioMixerChannelStripView.PatchSlot value = current4.Value;
+						bool flag = !showBusConnectionsOfSelection || this.m_Controller.CachedSelection.Contains(value.group);
+						if (flag)
+						{
+							this.styles.circularToggle.Draw(new Rect(value.x - 3f, value.y - 3f, 6f, 6f), false, false, flag, false);
+						}
+					}
+					float num4 = Mathf.Exp(-0.03f * Time.time * Time.time) * 0.1f;
+					Color color = new Color(0f, 0f, 0f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.05f : 0.1f);
+					Color color2 = new Color(0f, 0f, 0f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.5f : 1f);
+					foreach (KeyValuePair<AudioMixerEffectController, AudioMixerChannelStripView.PatchSlot> current5 in dictionary)
+					{
+						AudioMixerEffectController key = current5.Key;
+						AudioMixerEffectController sendTarget = key.sendTarget;
+						if (!(sendTarget == null))
+						{
+							AudioMixerChannelStripView.PatchSlot value2 = current5.Value;
+							if (dictionary.ContainsKey(sendTarget))
+							{
+								AudioMixerChannelStripView.PatchSlot patchSlot = dictionary[sendTarget];
+								int num5 = key.GetInstanceID() ^ sendTarget.GetInstanceID();
+								float num6 = (float)(num5 & 63) * 0.1f;
+								float x = Mathf.Abs(patchSlot.x - value2.x) * Mathf.Sin(Time.time * 5f + num6) * num4 + (value2.x + patchSlot.x) * 0.5f;
+								float y = Mathf.Abs(patchSlot.y - value2.y) * Mathf.Cos(Time.time * 5f + num6) * num4 + Math.Max(value2.y, patchSlot.y) + Mathf.Max(Mathf.Min(0.5f * Math.Abs(patchSlot.y - value2.y), 50f), 50f);
+								for (int k = 0; k < this.cablepoints.Length; k++)
+								{
+									AudioMixerChannelStripView.GetCableVertex(value2.x, value2.y, x, y, patchSlot.x, patchSlot.y, (float)k / (float)(this.cablepoints.Length - 1), out this.cablepoints[k].x, out this.cablepoints[k].y);
+								}
+								bool flag2 = showBusConnectionsOfSelection && !this.m_Controller.CachedSelection.Contains(value2.group) && !this.m_Controller.CachedSelection.Contains(patchSlot.group);
+								Handles.color = ((!flag2) ? color2 : color);
+								Handles.DrawAAPolyLine(7f, this.cablepoints.Length, this.cablepoints);
+								if (!flag2)
+								{
+									num5 ^= (num5 >> 6 ^ num5 >> 12 ^ num5 >> 18);
+									Handles.color = new Color((float)(num5 & 3) * 0.15f + 0.55f, (float)(num5 >> 2 & 3) * 0.15f + 0.55f, (float)(num5 >> 4 & 3) * 0.15f + 0.55f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.5f : 1f);
+									Handles.DrawAAPolyLine(4f, this.cablepoints.Length, this.cablepoints);
+									Handles.color = new Color(1f, 1f, 1f, (!AudioMixerController.EditingTargetSnapshot()) ? 0.25f : 0.5f);
+									Handles.DrawAAPolyLine(3f, this.cablepoints.Length, this.cablepoints);
+								}
+							}
+						}
+					}
+				}
+				this.RectSelection(channelStripParams2);
+				GUI.EndScrollView(true);
+				AudioMixerDrawUtils.DrawScrollDropShadow(rect, this.m_State.m_ScrollPos.y, contentRect.height);
+				this.WarningOverlay(allGroups, rect, contentRect);
+				this.ShowDeveloperOverlays(rect, current, showDeveloperOverlays);
+				if (!EditorApplication.isPlaying && !this.m_Controller.isSuspended)
+				{
+					this.m_RequiresRepaint = true;
+				}
 			}
 		}
 
@@ -1681,10 +1763,13 @@ namespace UnityEditor
 				GUIUtility.hotControl = 0;
 				Event.current.Use();
 			}
-			if (current.type == EventType.Repaint && this.IsRectSelectionActive())
+			if (current.type == EventType.Repaint)
 			{
-				Color color = new Color(1f, 1f, 1f, 0.3f);
-				AudioMixerDrawUtils.DrawGradientRectHorizontal(this.m_RectSelectionRect, color, color);
+				if (this.IsRectSelectionActive())
+				{
+					Color color = new Color(1f, 1f, 1f, 0.3f);
+					AudioMixerDrawUtils.DrawGradientRectHorizontal(this.m_RectSelectionRect, color, color);
+				}
 			}
 		}
 

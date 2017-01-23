@@ -138,19 +138,25 @@ namespace UnityEngine
 		{
 			get
 			{
+				float result;
 				switch (index)
 				{
 				case 0:
-					return this.r;
+					result = this.r;
+					break;
 				case 1:
-					return this.g;
+					result = this.g;
+					break;
 				case 2:
-					return this.b;
+					result = this.b;
+					break;
 				case 3:
-					return this.a;
+					result = this.a;
+					break;
 				default:
 					throw new IndexOutOfRangeException("Invalid Vector3 index!");
 				}
+				return result;
 			}
 			set
 			{
@@ -219,12 +225,57 @@ namespace UnityEngine
 
 		public override bool Equals(object other)
 		{
+			bool result;
 			if (!(other is Color))
 			{
-				return false;
+				result = false;
 			}
-			Color color = (Color)other;
-			return this.r.Equals(color.r) && this.g.Equals(color.g) && this.b.Equals(color.b) && this.a.Equals(color.a);
+			else
+			{
+				Color color = (Color)other;
+				result = (this.r.Equals(color.r) && this.g.Equals(color.g) && this.b.Equals(color.b) && this.a.Equals(color.a));
+			}
+			return result;
+		}
+
+		public static Color operator +(Color a, Color b)
+		{
+			return new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+		}
+
+		public static Color operator -(Color a, Color b)
+		{
+			return new Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
+		}
+
+		public static Color operator *(Color a, Color b)
+		{
+			return new Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
+		}
+
+		public static Color operator *(Color a, float b)
+		{
+			return new Color(a.r * b, a.g * b, a.b * b, a.a * b);
+		}
+
+		public static Color operator *(float b, Color a)
+		{
+			return new Color(a.r * b, a.g * b, a.b * b, a.a * b);
+		}
+
+		public static Color operator /(Color a, float b)
+		{
+			return new Color(a.r / b, a.g / b, a.b / b, a.a / b);
+		}
+
+		public static bool operator ==(Color lhs, Color rhs)
+		{
+			return lhs == rhs;
+		}
+
+		public static bool operator !=(Color lhs, Color rhs)
+		{
+			return !(lhs == rhs);
 		}
 
 		public static Color Lerp(Color a, Color b, float t)
@@ -251,6 +302,16 @@ namespace UnityEngine
 		internal Color RGBMultiplied(Color multiplier)
 		{
 			return new Color(this.r * multiplier.r, this.g * multiplier.g, this.b * multiplier.b, this.a);
+		}
+
+		public static implicit operator Vector4(Color c)
+		{
+			return new Vector4(c.r, c.g, c.b, c.a);
+		}
+
+		public static implicit operator Color(Vector4 v)
+		{
+			return new Color(v.x, v.y, v.z, v.w);
 		}
 
 		public static void RGBToHSV(Color rgbColor, out float H, out float S, out float V)
@@ -338,8 +399,7 @@ namespace UnityEngine
 				float num4 = V * (1f - S);
 				float num5 = V * (1f - S * num3);
 				float num6 = V * (1f - S * (1f - num3));
-				int num7 = num2;
-				switch (num7 + 1)
+				switch (num2 + 1)
 				{
 				case 0:
 					white.r = V;
@@ -390,56 +450,6 @@ namespace UnityEngine
 				}
 			}
 			return white;
-		}
-
-		public static Color operator +(Color a, Color b)
-		{
-			return new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
-		}
-
-		public static Color operator -(Color a, Color b)
-		{
-			return new Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
-		}
-
-		public static Color operator *(Color a, Color b)
-		{
-			return new Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
-		}
-
-		public static Color operator *(Color a, float b)
-		{
-			return new Color(a.r * b, a.g * b, a.b * b, a.a * b);
-		}
-
-		public static Color operator *(float b, Color a)
-		{
-			return new Color(a.r * b, a.g * b, a.b * b, a.a * b);
-		}
-
-		public static Color operator /(Color a, float b)
-		{
-			return new Color(a.r / b, a.g / b, a.b / b, a.a / b);
-		}
-
-		public static bool operator ==(Color lhs, Color rhs)
-		{
-			return lhs == rhs;
-		}
-
-		public static bool operator !=(Color lhs, Color rhs)
-		{
-			return !(lhs == rhs);
-		}
-
-		public static implicit operator Vector4(Color c)
-		{
-			return new Vector4(c.r, c.g, c.b, c.a);
-		}
-
-		public static implicit operator Color(Vector4 v)
-		{
-			return new Color(v.x, v.y, v.z, v.w);
 		}
 	}
 }

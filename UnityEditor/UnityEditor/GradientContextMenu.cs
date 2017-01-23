@@ -18,10 +18,11 @@ namespace UnityEditor
 			GUIContent content = new GUIContent("Copy");
 			GUIContent content2 = new GUIContent("Paste");
 			GenericMenu genericMenu = new GenericMenu();
-			genericMenu.AddItem(content, false, new GenericMenu.MenuFunction(new GradientContextMenu(prop).Copy));
+			GradientContextMenu @object = new GradientContextMenu(prop);
+			genericMenu.AddItem(content, false, new GenericMenu.MenuFunction(@object.Copy));
 			if (ParticleSystemClipboard.HasSingleGradient())
 			{
-				genericMenu.AddItem(content2, false, new GenericMenu.MenuFunction(new GradientContextMenu(prop).Paste));
+				genericMenu.AddItem(content2, false, new GenericMenu.MenuFunction(@object.Paste));
 			}
 			else
 			{
@@ -39,6 +40,10 @@ namespace UnityEditor
 		private void Paste()
 		{
 			ParticleSystemClipboard.PasteGradient(this.m_Prop1, null);
+			if (this.m_Prop1 != null)
+			{
+				this.m_Prop1.serializedObject.ApplyModifiedProperties();
+			}
 			GradientPreviewCache.ClearCache();
 		}
 	}

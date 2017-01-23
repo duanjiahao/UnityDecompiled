@@ -39,6 +39,36 @@ namespace UnityEngine
 
 		public float m33;
 
+		public Matrix4x4 inverse
+		{
+			get
+			{
+				return Matrix4x4.Inverse(this);
+			}
+		}
+
+		public Matrix4x4 transpose
+		{
+			get
+			{
+				return Matrix4x4.Transpose(this);
+			}
+		}
+
+		public extern bool isIdentity
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public float determinant
+		{
+			get
+			{
+				return Matrix4x4.Determinant(this);
+			}
+		}
+
 		public float this[int row, int column]
 		{
 			get
@@ -55,43 +85,61 @@ namespace UnityEngine
 		{
 			get
 			{
+				float result;
 				switch (index)
 				{
 				case 0:
-					return this.m00;
+					result = this.m00;
+					break;
 				case 1:
-					return this.m10;
+					result = this.m10;
+					break;
 				case 2:
-					return this.m20;
+					result = this.m20;
+					break;
 				case 3:
-					return this.m30;
+					result = this.m30;
+					break;
 				case 4:
-					return this.m01;
+					result = this.m01;
+					break;
 				case 5:
-					return this.m11;
+					result = this.m11;
+					break;
 				case 6:
-					return this.m21;
+					result = this.m21;
+					break;
 				case 7:
-					return this.m31;
+					result = this.m31;
+					break;
 				case 8:
-					return this.m02;
+					result = this.m02;
+					break;
 				case 9:
-					return this.m12;
+					result = this.m12;
+					break;
 				case 10:
-					return this.m22;
+					result = this.m22;
+					break;
 				case 11:
-					return this.m32;
+					result = this.m32;
+					break;
 				case 12:
-					return this.m03;
+					result = this.m03;
+					break;
 				case 13:
-					return this.m13;
+					result = this.m13;
+					break;
 				case 14:
-					return this.m23;
+					result = this.m23;
+					break;
 				case 15:
-					return this.m33;
+					result = this.m33;
+					break;
 				default:
 					throw new IndexOutOfRangeException("Invalid matrix index!");
 				}
+				return result;
 			}
 			set
 			{
@@ -151,37 +199,6 @@ namespace UnityEngine
 			}
 		}
 
-		public Matrix4x4 inverse
-		{
-			get
-			{
-				return Matrix4x4.Inverse(this);
-			}
-		}
-
-		public Matrix4x4 transpose
-		{
-			get
-			{
-				return Matrix4x4.Transpose(this);
-			}
-		}
-
-		public extern bool isIdentity
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public float determinant
-		{
-			get
-			{
-				return Matrix4x4.Determinant(this);
-			}
-		}
-
 		public static Matrix4x4 zero
 		{
 			get
@@ -234,21 +251,6 @@ namespace UnityEngine
 			}
 		}
 
-		public override int GetHashCode()
-		{
-			return this.GetColumn(0).GetHashCode() ^ this.GetColumn(1).GetHashCode() << 2 ^ this.GetColumn(2).GetHashCode() >> 2 ^ this.GetColumn(3).GetHashCode() >> 1;
-		}
-
-		public override bool Equals(object other)
-		{
-			if (!(other is Matrix4x4))
-			{
-				return false;
-			}
-			Matrix4x4 matrix4x = (Matrix4x4)other;
-			return this.GetColumn(0).Equals(matrix4x.GetColumn(0)) && this.GetColumn(1).Equals(matrix4x.GetColumn(1)) && this.GetColumn(2).Equals(matrix4x.GetColumn(2)) && this.GetColumn(3).Equals(matrix4x.GetColumn(3));
-		}
-
 		[ThreadAndSerializationSafe]
 		public static Matrix4x4 Inverse(Matrix4x4 m)
 		{
@@ -257,7 +259,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Inverse(ref Matrix4x4 m, out Matrix4x4 value);
 
@@ -268,7 +269,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Transpose(ref Matrix4x4 m, out Matrix4x4 value);
 
@@ -277,7 +277,6 @@ namespace UnityEngine
 			return Matrix4x4.INTERNAL_CALL_Invert(ref inMatrix, out dest);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Invert(ref Matrix4x4 inMatrix, out Matrix4x4 dest);
 
@@ -286,9 +285,106 @@ namespace UnityEngine
 			return Matrix4x4.INTERNAL_CALL_Determinant(ref m);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float INTERNAL_CALL_Determinant(ref Matrix4x4 m);
+
+		public void SetTRS(Vector3 pos, Quaternion q, Vector3 s)
+		{
+			this = Matrix4x4.TRS(pos, q, s);
+		}
+
+		public static Matrix4x4 TRS(Vector3 pos, Quaternion q, Vector3 s)
+		{
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_TRS(ref pos, ref q, ref s, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_TRS(ref Vector3 pos, ref Quaternion q, ref Vector3 s, out Matrix4x4 value);
+
+		public static Matrix4x4 Ortho(float left, float right, float bottom, float top, float zNear, float zFar)
+		{
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_Ortho(left, right, bottom, top, zNear, zFar, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Ortho(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4x4 value);
+
+		public static Matrix4x4 Perspective(float fov, float aspect, float zNear, float zFar)
+		{
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_Perspective(fov, aspect, zNear, zFar, out result);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Perspective(float fov, float aspect, float zNear, float zFar, out Matrix4x4 value);
+
+		public override int GetHashCode()
+		{
+			return this.GetColumn(0).GetHashCode() ^ this.GetColumn(1).GetHashCode() << 2 ^ this.GetColumn(2).GetHashCode() >> 2 ^ this.GetColumn(3).GetHashCode() >> 1;
+		}
+
+		public override bool Equals(object other)
+		{
+			bool result;
+			if (!(other is Matrix4x4))
+			{
+				result = false;
+			}
+			else
+			{
+				Matrix4x4 matrix4x = (Matrix4x4)other;
+				result = (this.GetColumn(0).Equals(matrix4x.GetColumn(0)) && this.GetColumn(1).Equals(matrix4x.GetColumn(1)) && this.GetColumn(2).Equals(matrix4x.GetColumn(2)) && this.GetColumn(3).Equals(matrix4x.GetColumn(3)));
+			}
+			return result;
+		}
+
+		public static Matrix4x4 operator *(Matrix4x4 lhs, Matrix4x4 rhs)
+		{
+			return new Matrix4x4
+			{
+				m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20 + lhs.m03 * rhs.m30,
+				m01 = lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21 + lhs.m03 * rhs.m31,
+				m02 = lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22 + lhs.m03 * rhs.m32,
+				m03 = lhs.m00 * rhs.m03 + lhs.m01 * rhs.m13 + lhs.m02 * rhs.m23 + lhs.m03 * rhs.m33,
+				m10 = lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20 + lhs.m13 * rhs.m30,
+				m11 = lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21 + lhs.m13 * rhs.m31,
+				m12 = lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22 + lhs.m13 * rhs.m32,
+				m13 = lhs.m10 * rhs.m03 + lhs.m11 * rhs.m13 + lhs.m12 * rhs.m23 + lhs.m13 * rhs.m33,
+				m20 = lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20 + lhs.m23 * rhs.m30,
+				m21 = lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21 + lhs.m23 * rhs.m31,
+				m22 = lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22 + lhs.m23 * rhs.m32,
+				m23 = lhs.m20 * rhs.m03 + lhs.m21 * rhs.m13 + lhs.m22 * rhs.m23 + lhs.m23 * rhs.m33,
+				m30 = lhs.m30 * rhs.m00 + lhs.m31 * rhs.m10 + lhs.m32 * rhs.m20 + lhs.m33 * rhs.m30,
+				m31 = lhs.m30 * rhs.m01 + lhs.m31 * rhs.m11 + lhs.m32 * rhs.m21 + lhs.m33 * rhs.m31,
+				m32 = lhs.m30 * rhs.m02 + lhs.m31 * rhs.m12 + lhs.m32 * rhs.m22 + lhs.m33 * rhs.m32,
+				m33 = lhs.m30 * rhs.m03 + lhs.m31 * rhs.m13 + lhs.m32 * rhs.m23 + lhs.m33 * rhs.m33
+			};
+		}
+
+		public static Vector4 operator *(Matrix4x4 lhs, Vector4 v)
+		{
+			Vector4 result;
+			result.x = lhs.m00 * v.x + lhs.m01 * v.y + lhs.m02 * v.z + lhs.m03 * v.w;
+			result.y = lhs.m10 * v.x + lhs.m11 * v.y + lhs.m12 * v.z + lhs.m13 * v.w;
+			result.z = lhs.m20 * v.x + lhs.m21 * v.y + lhs.m22 * v.z + lhs.m23 * v.w;
+			result.w = lhs.m30 * v.x + lhs.m31 * v.y + lhs.m32 * v.z + lhs.m33 * v.w;
+			return result;
+		}
+
+		public static bool operator ==(Matrix4x4 lhs, Matrix4x4 rhs)
+		{
+			return lhs.GetColumn(0) == rhs.GetColumn(0) && lhs.GetColumn(1) == rhs.GetColumn(1) && lhs.GetColumn(2) == rhs.GetColumn(2) && lhs.GetColumn(3) == rhs.GetColumn(3);
+		}
+
+		public static bool operator !=(Matrix4x4 lhs, Matrix4x4 rhs)
+		{
+			return !(lhs == rhs);
+		}
 
 		public Vector4 GetColumn(int i)
 		{
@@ -371,22 +467,6 @@ namespace UnityEngine
 			};
 		}
 
-		public void SetTRS(Vector3 pos, Quaternion q, Vector3 s)
-		{
-			this = Matrix4x4.TRS(pos, q, s);
-		}
-
-		public static Matrix4x4 TRS(Vector3 pos, Quaternion q, Vector3 s)
-		{
-			Matrix4x4 result;
-			Matrix4x4.INTERNAL_CALL_TRS(ref pos, ref q, ref s, out result);
-			return result;
-		}
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_TRS(ref Vector3 pos, ref Quaternion q, ref Vector3 s, out Matrix4x4 value);
-
 		public override string ToString()
 		{
 			return UnityString.Format("{0:F5}\t{1:F5}\t{2:F5}\t{3:F5}\n{4:F5}\t{5:F5}\t{6:F5}\t{7:F5}\n{8:F5}\t{9:F5}\t{10:F5}\t{11:F5}\n{12:F5}\t{13:F5}\t{14:F5}\t{15:F5}\n", new object[]
@@ -431,71 +511,6 @@ namespace UnityEngine
 				this.m32.ToString(format),
 				this.m33.ToString(format)
 			});
-		}
-
-		public static Matrix4x4 Ortho(float left, float right, float bottom, float top, float zNear, float zFar)
-		{
-			Matrix4x4 result;
-			Matrix4x4.INTERNAL_CALL_Ortho(left, right, bottom, top, zNear, zFar, out result);
-			return result;
-		}
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Ortho(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4x4 value);
-
-		public static Matrix4x4 Perspective(float fov, float aspect, float zNear, float zFar)
-		{
-			Matrix4x4 result;
-			Matrix4x4.INTERNAL_CALL_Perspective(fov, aspect, zNear, zFar, out result);
-			return result;
-		}
-
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Perspective(float fov, float aspect, float zNear, float zFar, out Matrix4x4 value);
-
-		public static Matrix4x4 operator *(Matrix4x4 lhs, Matrix4x4 rhs)
-		{
-			return new Matrix4x4
-			{
-				m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20 + lhs.m03 * rhs.m30,
-				m01 = lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21 + lhs.m03 * rhs.m31,
-				m02 = lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22 + lhs.m03 * rhs.m32,
-				m03 = lhs.m00 * rhs.m03 + lhs.m01 * rhs.m13 + lhs.m02 * rhs.m23 + lhs.m03 * rhs.m33,
-				m10 = lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20 + lhs.m13 * rhs.m30,
-				m11 = lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21 + lhs.m13 * rhs.m31,
-				m12 = lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22 + lhs.m13 * rhs.m32,
-				m13 = lhs.m10 * rhs.m03 + lhs.m11 * rhs.m13 + lhs.m12 * rhs.m23 + lhs.m13 * rhs.m33,
-				m20 = lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20 + lhs.m23 * rhs.m30,
-				m21 = lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21 + lhs.m23 * rhs.m31,
-				m22 = lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22 + lhs.m23 * rhs.m32,
-				m23 = lhs.m20 * rhs.m03 + lhs.m21 * rhs.m13 + lhs.m22 * rhs.m23 + lhs.m23 * rhs.m33,
-				m30 = lhs.m30 * rhs.m00 + lhs.m31 * rhs.m10 + lhs.m32 * rhs.m20 + lhs.m33 * rhs.m30,
-				m31 = lhs.m30 * rhs.m01 + lhs.m31 * rhs.m11 + lhs.m32 * rhs.m21 + lhs.m33 * rhs.m31,
-				m32 = lhs.m30 * rhs.m02 + lhs.m31 * rhs.m12 + lhs.m32 * rhs.m22 + lhs.m33 * rhs.m32,
-				m33 = lhs.m30 * rhs.m03 + lhs.m31 * rhs.m13 + lhs.m32 * rhs.m23 + lhs.m33 * rhs.m33
-			};
-		}
-
-		public static Vector4 operator *(Matrix4x4 lhs, Vector4 v)
-		{
-			Vector4 result;
-			result.x = lhs.m00 * v.x + lhs.m01 * v.y + lhs.m02 * v.z + lhs.m03 * v.w;
-			result.y = lhs.m10 * v.x + lhs.m11 * v.y + lhs.m12 * v.z + lhs.m13 * v.w;
-			result.z = lhs.m20 * v.x + lhs.m21 * v.y + lhs.m22 * v.z + lhs.m23 * v.w;
-			result.w = lhs.m30 * v.x + lhs.m31 * v.y + lhs.m32 * v.z + lhs.m33 * v.w;
-			return result;
-		}
-
-		public static bool operator ==(Matrix4x4 lhs, Matrix4x4 rhs)
-		{
-			return lhs.GetColumn(0) == rhs.GetColumn(0) && lhs.GetColumn(1) == rhs.GetColumn(1) && lhs.GetColumn(2) == rhs.GetColumn(2) && lhs.GetColumn(3) == rhs.GetColumn(3);
-		}
-
-		public static bool operator !=(Matrix4x4 lhs, Matrix4x4 rhs)
-		{
-			return !(lhs == rhs);
 		}
 	}
 }

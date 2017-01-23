@@ -59,7 +59,7 @@ namespace UnityEditor
 			{
 				get
 				{
-					return this.name == string.Empty;
+					return this.name == "";
 				}
 			}
 
@@ -91,7 +91,7 @@ namespace UnityEditor
 				this.name = _name;
 				this.icon = _icon;
 				this.m_Overridden = false;
-				if (this.name != string.Empty)
+				if (this.name != "")
 				{
 					UnityEngine.Object[] array = this.targets;
 					for (int i = 0; i < array.Length; i++)
@@ -112,7 +112,7 @@ namespace UnityEditor
 					SubstanceImporter substanceImporter2 = AssetImporter.GetAtPath(assetPath2) as SubstanceImporter;
 					if (substanceImporter2 != null)
 					{
-						substanceImporter2.GetPlatformTextureSettings((this.targets[0] as ProceduralMaterial).name, string.Empty, out this.maxTextureWidth, out this.maxTextureHeight, out this.m_TextureFormat, out this.m_LoadBehavior);
+						substanceImporter2.GetPlatformTextureSettings((this.targets[0] as ProceduralMaterial).name, "", out this.maxTextureWidth, out this.maxTextureHeight, out this.m_TextureFormat, out this.m_LoadBehavior);
 					}
 				}
 			}
@@ -145,7 +145,7 @@ namespace UnityEditor
 					ProceduralMaterial proceduralMaterial = (ProceduralMaterial)array[i];
 					string assetPath = AssetDatabase.GetAssetPath(proceduralMaterial);
 					SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath) as SubstanceImporter;
-					if (this.name != string.Empty)
+					if (this.name != "")
 					{
 						if (this.m_Overridden)
 						{
@@ -192,9 +192,9 @@ namespace UnityEditor
 			2048
 		};
 
-		private bool m_AllowTextureSizeModification;
+		private bool m_AllowTextureSizeModification = false;
 
-		private bool m_ShowTexturesSection;
+		private bool m_ShowTexturesSection = false;
 
 		private bool m_ShowHSLInputs = true;
 
@@ -238,7 +238,7 @@ namespace UnityEditor
 			3
 		};
 
-		private bool m_MightHaveModified;
+		private bool m_MightHaveModified = false;
 
 		private static bool m_UndoWasPerformed = false;
 
@@ -291,18 +291,21 @@ namespace UnityEditor
 
 		public void ReimportSubstancesIfNeeded()
 		{
-			if (this.m_MightHaveModified && !ProceduralMaterialInspector.m_UndoWasPerformed && !EditorApplication.isPlaying && !InternalEditorUtility.ignoreInspectorChanges)
+			if (this.m_MightHaveModified && !ProceduralMaterialInspector.m_UndoWasPerformed)
 			{
-				this.ReimportSubstances();
+				if (!EditorApplication.isPlaying && !InternalEditorUtility.ignoreInspectorChanges)
+				{
+					this.ReimportSubstances();
+				}
 			}
 		}
 
 		public override void OnDisable()
 		{
-			ProceduralMaterial exists = this.target as ProceduralMaterial;
+			ProceduralMaterial exists = base.target as ProceduralMaterial;
 			if (exists && this.m_PlatformSettings != null && this.HasModified())
 			{
-				string message = "Unapplied import settings for '" + AssetDatabase.GetAssetPath(this.target) + "'";
+				string message = "Unapplied import settings for '" + AssetDatabase.GetAssetPath(base.target) + "'";
 				if (EditorUtility.DisplayDialog("Unapplied import settings", message, "Apply", "Revert"))
 				{
 					this.Apply();
@@ -336,7 +339,7 @@ namespace UnityEditor
 			{
 				this.m_Styles = new ProceduralMaterialInspector.Styles();
 			}
-			ProceduralMaterial proceduralMaterial = this.target as ProceduralMaterial;
+			ProceduralMaterial proceduralMaterial = base.target as ProceduralMaterial;
 			if (ProceduralMaterialInspector.m_Material != proceduralMaterial)
 			{
 				ProceduralMaterialInspector.m_Material = proceduralMaterial;
@@ -359,25 +362,24 @@ namespace UnityEditor
 
 		internal override void OnHeaderTitleGUI(Rect titleRect, string header)
 		{
-			ProceduralMaterial proceduralMaterial = this.target as ProceduralMaterial;
-			string assetPath = AssetDatabase.GetAssetPath(this.target);
+			ProceduralMaterial proceduralMaterial = base.target as ProceduralMaterial;
+			string assetPath = AssetDatabase.GetAssetPath(base.target);
 			ProceduralMaterialInspector.m_Importer = (AssetImporter.GetAtPath(assetPath) as SubstanceImporter);
-			if (ProceduralMaterialInspector.m_Importer == null)
+			if (!(ProceduralMaterialInspector.m_Importer == null))
 			{
-				return;
-			}
-			string text = proceduralMaterial.name;
-			text = EditorGUI.DelayedTextField(titleRect, text, EditorStyles.textField);
-			if (text != proceduralMaterial.name)
-			{
-				if (ProceduralMaterialInspector.m_Importer.RenameMaterial(proceduralMaterial, text))
+				string text = proceduralMaterial.name;
+				text = EditorGUI.DelayedTextField(titleRect, text, EditorStyles.textField);
+				if (text != proceduralMaterial.name)
 				{
-					AssetDatabase.ImportAsset(ProceduralMaterialInspector.m_Importer.assetPath, ImportAssetOptions.ForceUncompressedImport);
-					GUIUtility.ExitGUI();
-				}
-				else
-				{
-					text = proceduralMaterial.name;
+					if (ProceduralMaterialInspector.m_Importer.RenameMaterial(proceduralMaterial, text))
+					{
+						AssetDatabase.ImportAsset(ProceduralMaterialInspector.m_Importer.assetPath, ImportAssetOptions.ForceUncompressedImport);
+						GUIUtility.ExitGUI();
+					}
+					else
+					{
+						text = proceduralMaterial.name;
+					}
 				}
 			}
 		}
@@ -391,8 +393,8 @@ namespace UnityEditor
 				{
 					this.m_Styles = new ProceduralMaterialInspector.Styles();
 				}
-				ProceduralMaterial proceduralMaterial = this.target as ProceduralMaterial;
-				string assetPath = AssetDatabase.GetAssetPath(this.target);
+				ProceduralMaterial proceduralMaterial = base.target as ProceduralMaterial;
+				string assetPath = AssetDatabase.GetAssetPath(base.target);
 				ProceduralMaterialInspector.m_Importer = (AssetImporter.GetAtPath(assetPath) as SubstanceImporter);
 				if (ProceduralMaterialInspector.m_Importer == null)
 				{
@@ -462,91 +464,92 @@ namespace UnityEditor
 			if (base.targets.Length > 1)
 			{
 				GUILayout.Label("Procedural properties do not support multi-editing.", EditorStyles.wordWrappedLabel, new GUILayoutOption[0]);
-				return;
 			}
-			EditorGUIUtility.labelWidth = 0f;
-			EditorGUIUtility.fieldWidth = 0f;
-			if (ProceduralMaterialInspector.m_Importer != null)
+			else
 			{
-				if (!ProceduralMaterial.isSupported)
+				EditorGUIUtility.labelWidth = 0f;
+				EditorGUIUtility.fieldWidth = 0f;
+				if (ProceduralMaterialInspector.m_Importer != null)
 				{
-					GUILayout.Label("Procedural Materials are not supported on " + EditorUserBuildSettings.activeBuildTarget + ". Textures will be baked.", EditorStyles.helpBox, new GUILayoutOption[]
+					if (!ProceduralMaterial.isSupported)
 					{
-						GUILayout.ExpandWidth(true)
-					});
-				}
-				bool changed = GUI.changed;
-				using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
-				{
-					EditorGUI.BeginChangeCheck();
-					bool generated = EditorGUILayout.Toggle(this.m_Styles.generateAllOutputsContent, ProceduralMaterialInspector.m_Importer.GetGenerateAllOutputs(ProceduralMaterialInspector.m_Material), new GUILayoutOption[0]);
-					if (EditorGUI.EndChangeCheck())
-					{
-						ProceduralMaterialInspector.m_Importer.SetGenerateAllOutputs(ProceduralMaterialInspector.m_Material, generated);
+						GUILayout.Label("Procedural Materials are not supported on " + EditorUserBuildSettings.activeBuildTarget + ". Textures will be baked.", EditorStyles.helpBox, new GUILayoutOption[]
+						{
+							GUILayout.ExpandWidth(true)
+						});
 					}
-					EditorGUI.BeginChangeCheck();
-					bool mode = EditorGUILayout.Toggle(this.m_Styles.mipmapContent, ProceduralMaterialInspector.m_Importer.GetGenerateMipMaps(ProceduralMaterialInspector.m_Material), new GUILayoutOption[0]);
-					if (EditorGUI.EndChangeCheck())
+					bool changed = GUI.changed;
+					using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
 					{
-						ProceduralMaterialInspector.m_Importer.SetGenerateMipMaps(ProceduralMaterialInspector.m_Material, mode);
+						EditorGUI.BeginChangeCheck();
+						bool generated = EditorGUILayout.Toggle(this.m_Styles.generateAllOutputsContent, ProceduralMaterialInspector.m_Importer.GetGenerateAllOutputs(ProceduralMaterialInspector.m_Material), new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							ProceduralMaterialInspector.m_Importer.SetGenerateAllOutputs(ProceduralMaterialInspector.m_Material, generated);
+						}
+						EditorGUI.BeginChangeCheck();
+						bool mode = EditorGUILayout.Toggle(this.m_Styles.mipmapContent, ProceduralMaterialInspector.m_Importer.GetGenerateMipMaps(ProceduralMaterialInspector.m_Material), new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							ProceduralMaterialInspector.m_Importer.SetGenerateMipMaps(ProceduralMaterialInspector.m_Material, mode);
+						}
 					}
-				}
-				if (ProceduralMaterialInspector.m_Material.HasProceduralProperty("$time"))
-				{
-					EditorGUI.BeginChangeCheck();
-					int animation_update_rate = EditorGUILayout.IntField(this.m_Styles.animatedContent, ProceduralMaterialInspector.m_Importer.GetAnimationUpdateRate(ProceduralMaterialInspector.m_Material), new GUILayoutOption[0]);
-					if (EditorGUI.EndChangeCheck())
+					if (ProceduralMaterialInspector.m_Material.HasProceduralProperty("$time"))
 					{
-						ProceduralMaterialInspector.m_Importer.SetAnimationUpdateRate(ProceduralMaterialInspector.m_Material, animation_update_rate);
+						EditorGUI.BeginChangeCheck();
+						int animation_update_rate = EditorGUILayout.IntField(this.m_Styles.animatedContent, ProceduralMaterialInspector.m_Importer.GetAnimationUpdateRate(ProceduralMaterialInspector.m_Material), new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							ProceduralMaterialInspector.m_Importer.SetAnimationUpdateRate(ProceduralMaterialInspector.m_Material, animation_update_rate);
+						}
 					}
+					GUI.changed = changed;
 				}
-				GUI.changed = changed;
+				this.InputOptions(ProceduralMaterialInspector.m_Material);
 			}
-			this.InputOptions(ProceduralMaterialInspector.m_Material);
 		}
 
 		private void GeneratedTextures()
 		{
-			if (base.targets.Length > 1)
+			if (base.targets.Length <= 1)
 			{
-				return;
-			}
-			ProceduralPropertyDescription[] proceduralPropertyDescriptions = ProceduralMaterialInspector.m_Material.GetProceduralPropertyDescriptions();
-			ProceduralPropertyDescription[] array = proceduralPropertyDescriptions;
-			for (int i = 0; i < array.Length; i++)
-			{
-				ProceduralPropertyDescription proceduralPropertyDescription = array[i];
-				if (proceduralPropertyDescription.name == "$outputsize")
+				ProceduralPropertyDescription[] proceduralPropertyDescriptions = ProceduralMaterialInspector.m_Material.GetProceduralPropertyDescriptions();
+				ProceduralPropertyDescription[] array = proceduralPropertyDescriptions;
+				for (int i = 0; i < array.Length; i++)
 				{
-					this.m_AllowTextureSizeModification = true;
-					break;
-				}
-			}
-			string text = "Generated Textures";
-			if (ProceduralMaterialInspector.ShowIsGenerating(this.target as ProceduralMaterial))
-			{
-				text += " (Generating...)";
-			}
-			EditorGUI.BeginChangeCheck();
-			this.m_ShowTexturesSection = EditorGUILayout.Foldout(this.m_ShowTexturesSection, text);
-			if (EditorGUI.EndChangeCheck())
-			{
-				EditorPrefs.SetBool("ProceduralShowTextures", this.m_ShowTexturesSection);
-			}
-			if (this.m_ShowTexturesSection)
-			{
-				this.ShowProceduralTexturesGUI(ProceduralMaterialInspector.m_Material);
-				this.ShowGeneratedTexturesGUI(ProceduralMaterialInspector.m_Material);
-				if (ProceduralMaterialInspector.m_Importer != null)
-				{
-					if (this.HasProceduralTextureProperties(ProceduralMaterialInspector.m_Material))
+					ProceduralPropertyDescription proceduralPropertyDescription = array[i];
+					if (proceduralPropertyDescription.name == "$outputsize")
 					{
-						this.OffsetScaleGUI(ProceduralMaterialInspector.m_Material);
+						this.m_AllowTextureSizeModification = true;
+						break;
 					}
-					GUILayout.Space(5f);
-					using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
+				}
+				string text = "Generated Textures";
+				if (ProceduralMaterialInspector.ShowIsGenerating(base.target as ProceduralMaterial))
+				{
+					text += " (Generating...)";
+				}
+				EditorGUI.BeginChangeCheck();
+				this.m_ShowTexturesSection = EditorGUILayout.Foldout(this.m_ShowTexturesSection, text, true);
+				if (EditorGUI.EndChangeCheck())
+				{
+					EditorPrefs.SetBool("ProceduralShowTextures", this.m_ShowTexturesSection);
+				}
+				if (this.m_ShowTexturesSection)
+				{
+					this.ShowProceduralTexturesGUI(ProceduralMaterialInspector.m_Material);
+					this.ShowGeneratedTexturesGUI(ProceduralMaterialInspector.m_Material);
+					if (ProceduralMaterialInspector.m_Importer != null)
 					{
-						this.ShowTextureSizeGUI();
+						if (this.HasProceduralTextureProperties(ProceduralMaterialInspector.m_Material))
+						{
+							this.OffsetScaleGUI(ProceduralMaterialInspector.m_Material);
+						}
+						GUILayout.Space(5f);
+						using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
+						{
+							this.ShowTextureSizeGUI();
+						}
 					}
 				}
 			}
@@ -558,29 +561,40 @@ namespace UnityEditor
 			{
 				ProceduralMaterialInspector.m_GeneratingSince[mat] = 0f;
 			}
+			bool result;
 			if (mat.isProcessing)
 			{
-				return Time.realtimeSinceStartup > ProceduralMaterialInspector.m_GeneratingSince[mat] + 0.4f;
+				result = (Time.realtimeSinceStartup > ProceduralMaterialInspector.m_GeneratingSince[mat] + 0.4f);
 			}
-			ProceduralMaterialInspector.m_GeneratingSince[mat] = Time.realtimeSinceStartup;
-			return false;
+			else
+			{
+				ProceduralMaterialInspector.m_GeneratingSince[mat] = Time.realtimeSinceStartup;
+				result = false;
+			}
+			return result;
 		}
 
 		public override string GetInfoString()
 		{
-			ProceduralMaterial proceduralMaterial = this.target as ProceduralMaterial;
+			ProceduralMaterial proceduralMaterial = base.target as ProceduralMaterial;
 			Texture[] generatedTextures = proceduralMaterial.GetGeneratedTextures();
+			string result;
 			if (generatedTextures.Length == 0)
 			{
-				return string.Empty;
+				result = string.Empty;
 			}
-			return generatedTextures[0].width + "x" + generatedTextures[0].height;
+			else
+			{
+				result = generatedTextures[0].width + "x" + generatedTextures[0].height;
+			}
+			return result;
 		}
 
 		public bool HasProceduralTextureProperties(Material material)
 		{
 			Shader shader = material.shader;
 			int propertyCount = ShaderUtil.GetPropertyCount(shader);
+			bool result;
 			for (int i = 0; i < propertyCount; i++)
 			{
 				if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
@@ -589,11 +603,13 @@ namespace UnityEditor
 					Texture texture = material.GetTexture(propertyName);
 					if (SubstanceImporter.IsProceduralTextureSlot(material, texture, propertyName))
 					{
-						return true;
+						result = true;
+						return result;
 					}
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		protected void RecordForUndo(ProceduralMaterial material, SubstanceImporter importer, string message)
@@ -614,24 +630,23 @@ namespace UnityEditor
 
 		protected void OffsetScaleGUI(ProceduralMaterial material)
 		{
-			if (ProceduralMaterialInspector.m_Importer == null || base.targets.Length > 1)
+			if (!(ProceduralMaterialInspector.m_Importer == null) && base.targets.Length <= 1)
 			{
-				return;
-			}
-			Vector2 materialScale = ProceduralMaterialInspector.m_Importer.GetMaterialScale(material);
-			Vector2 materialOffset = ProceduralMaterialInspector.m_Importer.GetMaterialOffset(material);
-			Vector4 scaleOffset = new Vector4(materialScale.x, materialScale.y, materialOffset.x, materialOffset.y);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(10f);
-			Rect rect = GUILayoutUtility.GetRect(100f, 10000f, 32f, 32f);
-			GUILayout.EndHorizontal();
-			EditorGUI.BeginChangeCheck();
-			scaleOffset = MaterialEditor.TextureScaleOffsetProperty(rect, scaleOffset);
-			if (EditorGUI.EndChangeCheck())
-			{
-				this.RecordForUndo(material, ProceduralMaterialInspector.m_Importer, "Modify " + material.name + "'s Tiling/Offset");
-				ProceduralMaterialInspector.m_Importer.SetMaterialScale(material, new Vector2(scaleOffset.x, scaleOffset.y));
-				ProceduralMaterialInspector.m_Importer.SetMaterialOffset(material, new Vector2(scaleOffset.z, scaleOffset.w));
+				Vector2 materialScale = ProceduralMaterialInspector.m_Importer.GetMaterialScale(material);
+				Vector2 materialOffset = ProceduralMaterialInspector.m_Importer.GetMaterialOffset(material);
+				Vector4 scaleOffset = new Vector4(materialScale.x, materialScale.y, materialOffset.x, materialOffset.y);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Space(10f);
+				Rect rect = GUILayoutUtility.GetRect(100f, 10000f, 32f, 32f);
+				GUILayout.EndHorizontal();
+				EditorGUI.BeginChangeCheck();
+				scaleOffset = MaterialEditor.TextureScaleOffsetProperty(rect, scaleOffset);
+				if (EditorGUI.EndChangeCheck())
+				{
+					this.RecordForUndo(material, ProceduralMaterialInspector.m_Importer, "Modify " + material.name + "'s Tiling/Offset");
+					ProceduralMaterialInspector.m_Importer.SetMaterialScale(material, new Vector2(scaleOffset.x, scaleOffset.y));
+					ProceduralMaterialInspector.m_Importer.SetMaterialOffset(material, new Vector2(scaleOffset.z, scaleOffset.w));
+				}
 			}
 		}
 
@@ -655,16 +670,15 @@ namespace UnityEditor
 
 		private static void ExportBitmaps(ProceduralMaterial material, bool alphaRemap)
 		{
-			string text = EditorUtility.SaveFolderPanel("Set bitmap export path...", string.Empty, string.Empty);
-			if (text == string.Empty)
+			string text = EditorUtility.SaveFolderPanel("Set bitmap export path...", "", "");
+			if (!(text == ""))
 			{
-				return;
-			}
-			string assetPath = AssetDatabase.GetAssetPath(material);
-			SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath) as SubstanceImporter;
-			if (substanceImporter)
-			{
-				substanceImporter.ExportBitmaps(material, text, alphaRemap);
+				string assetPath = AssetDatabase.GetAssetPath(material);
+				SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath) as SubstanceImporter;
+				if (substanceImporter)
+				{
+					substanceImporter.ExportBitmaps(material, text, alphaRemap);
+				}
 			}
 		}
 
@@ -683,118 +697,113 @@ namespace UnityEditor
 		[MenuItem("CONTEXT/ProceduralMaterial/Export Preset", false)]
 		public static void ExportPreset(MenuCommand command)
 		{
-			string text = EditorUtility.SaveFolderPanel("Set preset export path...", string.Empty, string.Empty);
-			if (text == string.Empty)
+			string text = EditorUtility.SaveFolderPanel("Set preset export path...", "", "");
+			if (!(text == ""))
 			{
-				return;
-			}
-			ProceduralMaterial proceduralMaterial = command.context as ProceduralMaterial;
-			string assetPath = AssetDatabase.GetAssetPath(proceduralMaterial);
-			SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath) as SubstanceImporter;
-			if (substanceImporter)
-			{
-				substanceImporter.ExportPreset(proceduralMaterial, text);
+				ProceduralMaterial proceduralMaterial = command.context as ProceduralMaterial;
+				string assetPath = AssetDatabase.GetAssetPath(proceduralMaterial);
+				SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath) as SubstanceImporter;
+				if (substanceImporter)
+				{
+					substanceImporter.ExportPreset(proceduralMaterial, text);
+				}
 			}
 		}
 
 		protected void ShowProceduralTexturesGUI(ProceduralMaterial material)
 		{
-			if (base.targets.Length > 1)
+			if (base.targets.Length <= 1)
 			{
-				return;
-			}
-			EditorGUILayout.Space();
-			Shader shader = material.shader;
-			if (shader == null)
-			{
-				return;
-			}
-			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(4f);
-			GUILayout.FlexibleSpace();
-			float pixels = 10f;
-			bool flag = true;
-			for (int i = 0; i < ShaderUtil.GetPropertyCount(shader); i++)
-			{
-				if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
+				EditorGUILayout.Space();
+				Shader shader = material.shader;
+				if (!(shader == null))
 				{
-					string propertyName = ShaderUtil.GetPropertyName(shader, i);
-					Texture texture = material.GetTexture(propertyName);
-					if (SubstanceImporter.IsProceduralTextureSlot(material, texture, propertyName))
+					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.Space(4f);
+					GUILayout.FlexibleSpace();
+					float pixels = 10f;
+					bool flag = true;
+					for (int i = 0; i < ShaderUtil.GetPropertyCount(shader); i++)
 					{
-						string propertyDescription = ShaderUtil.GetPropertyDescription(shader, i);
-						TextureDimension texDim = ShaderUtil.GetTexDim(shader, i);
-						Type textureTypeFromDimension = MaterialEditor.GetTextureTypeFromDimension(texDim);
-						GUIStyle gUIStyle = "ObjectPickerResultsGridLabel";
-						if (flag)
+						if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
 						{
-							flag = false;
+							string propertyName = ShaderUtil.GetPropertyName(shader, i);
+							Texture texture = material.GetTexture(propertyName);
+							if (SubstanceImporter.IsProceduralTextureSlot(material, texture, propertyName))
+							{
+								string propertyDescription = ShaderUtil.GetPropertyDescription(shader, i);
+								TextureDimension texDim = ShaderUtil.GetTexDim(shader, i);
+								Type textureTypeFromDimension = MaterialEditor.GetTextureTypeFromDimension(texDim);
+								GUIStyle gUIStyle = "ObjectPickerResultsGridLabel";
+								if (flag)
+								{
+									flag = false;
+								}
+								else
+								{
+									GUILayout.Space(pixels);
+								}
+								GUILayout.BeginVertical(new GUILayoutOption[]
+								{
+									GUILayout.Height(72f + gUIStyle.fixedHeight + gUIStyle.fixedHeight + 8f)
+								});
+								Rect rect = GUILayoutUtility.GetRect(72f, 72f);
+								ProceduralMaterialInspector.DoObjectPingField(rect, rect, GUIUtility.GetControlID(12354, FocusType.Keyboard, rect), texture, textureTypeFromDimension);
+								this.ShowAlphaSourceGUI(material, texture as ProceduralTexture, ref rect);
+								rect.height = gUIStyle.fixedHeight;
+								GUI.Label(rect, propertyDescription, gUIStyle);
+								GUILayout.EndVertical();
+								GUILayout.FlexibleSpace();
+							}
 						}
-						else
-						{
-							GUILayout.Space(pixels);
-						}
-						GUILayout.BeginVertical(new GUILayoutOption[]
-						{
-							GUILayout.Height(72f + gUIStyle.fixedHeight + gUIStyle.fixedHeight + 8f)
-						});
-						Rect rect = GUILayoutUtility.GetRect(72f, 72f);
-						ProceduralMaterialInspector.DoObjectPingField(rect, rect, GUIUtility.GetControlID(12354, EditorGUIUtility.native, rect), texture, textureTypeFromDimension);
-						this.ShowAlphaSourceGUI(material, texture as ProceduralTexture, ref rect);
-						rect.height = gUIStyle.fixedHeight;
-						GUI.Label(rect, propertyDescription, gUIStyle);
-						GUILayout.EndVertical();
-						GUILayout.FlexibleSpace();
 					}
+					GUILayout.Space(4f);
+					EditorGUILayout.EndHorizontal();
 				}
 			}
-			GUILayout.Space(4f);
-			EditorGUILayout.EndHorizontal();
 		}
 
 		protected void ShowGeneratedTexturesGUI(ProceduralMaterial material)
 		{
-			if (base.targets.Length > 1)
+			if (base.targets.Length <= 1)
 			{
-				return;
-			}
-			if (ProceduralMaterialInspector.m_Importer != null && !ProceduralMaterialInspector.m_Importer.GetGenerateAllOutputs(ProceduralMaterialInspector.m_Material))
-			{
-				return;
-			}
-			GUIStyle gUIStyle = "ObjectPickerResultsGridLabel";
-			EditorGUILayout.Space();
-			GUILayout.FlexibleSpace();
-			this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[]
-			{
-				GUILayout.Height(64f + gUIStyle.fixedHeight + gUIStyle.fixedHeight + 16f)
-			});
-			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			float pixels = 10f;
-			Texture[] generatedTextures = material.GetGeneratedTextures();
-			Texture[] array = generatedTextures;
-			for (int i = 0; i < array.Length; i++)
-			{
-				Texture texture = array[i];
-				ProceduralTexture proceduralTexture = texture as ProceduralTexture;
-				if (proceduralTexture != null)
+				if (!(ProceduralMaterialInspector.m_Importer != null) || ProceduralMaterialInspector.m_Importer.GetGenerateAllOutputs(ProceduralMaterialInspector.m_Material))
 				{
-					GUILayout.Space(pixels);
-					GUILayout.BeginVertical(new GUILayoutOption[]
-					{
-						GUILayout.Height(64f + gUIStyle.fixedHeight + 8f)
-					});
-					Rect rect = GUILayoutUtility.GetRect(64f, 64f);
-					ProceduralMaterialInspector.DoObjectPingField(rect, rect, GUIUtility.GetControlID(12354, EditorGUIUtility.native, rect), proceduralTexture, typeof(Texture));
-					this.ShowAlphaSourceGUI(material, proceduralTexture, ref rect);
-					GUILayout.EndVertical();
-					GUILayout.Space(pixels);
+					GUIStyle gUIStyle = "ObjectPickerResultsGridLabel";
+					EditorGUILayout.Space();
 					GUILayout.FlexibleSpace();
+					this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[]
+					{
+						GUILayout.Height(64f + gUIStyle.fixedHeight + gUIStyle.fixedHeight + 16f)
+					});
+					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
+					GUILayout.FlexibleSpace();
+					float pixels = 10f;
+					Texture[] generatedTextures = material.GetGeneratedTextures();
+					Texture[] array = generatedTextures;
+					for (int i = 0; i < array.Length; i++)
+					{
+						Texture texture = array[i];
+						ProceduralTexture proceduralTexture = texture as ProceduralTexture;
+						if (proceduralTexture != null)
+						{
+							GUILayout.Space(pixels);
+							GUILayout.BeginVertical(new GUILayoutOption[]
+							{
+								GUILayout.Height(64f + gUIStyle.fixedHeight + 8f)
+							});
+							Rect rect = GUILayoutUtility.GetRect(64f, 64f);
+							ProceduralMaterialInspector.DoObjectPingField(rect, rect, GUIUtility.GetControlID(12354, FocusType.Keyboard, rect), proceduralTexture, typeof(Texture));
+							this.ShowAlphaSourceGUI(material, proceduralTexture, ref rect);
+							GUILayout.EndVertical();
+							GUILayout.Space(pixels);
+							GUILayout.FlexibleSpace();
+						}
+					}
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.EndScrollView();
 				}
 			}
-			EditorGUILayout.EndHorizontal();
-			EditorGUILayout.EndScrollView();
 		}
 
 		private void ShowAlphaSourceGUI(ProceduralMaterial material, ProceduralTexture tex, ref Rect rect)
@@ -842,16 +851,19 @@ namespace UnityEditor
 
 		private UnityEngine.Object TextureValidator(UnityEngine.Object[] references, Type objType, SerializedProperty property)
 		{
+			UnityEngine.Object result;
 			for (int i = 0; i < references.Length; i++)
 			{
 				UnityEngine.Object @object = references[i];
 				Texture texture = @object as Texture;
 				if (texture)
 				{
-					return texture;
+					result = texture;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		internal static void DoObjectPingField(Rect position, Rect dropRect, int id, UnityEngine.Object obj, Type objType)
@@ -863,10 +875,9 @@ namespace UnityEditor
 				eventType = Event.current.rawType;
 			}
 			bool flag = EditorGUIUtility.HasObjectThumbnail(objType) && position.height > 16f;
-			EventType eventType2 = eventType;
-			if (eventType2 != EventType.MouseDown)
+			if (eventType != EventType.MouseDown)
 			{
-				if (eventType2 == EventType.Repaint)
+				if (eventType == EventType.Repaint)
 				{
 					GUIContent gUIContent = EditorGUIUtility.ObjectContent(obj, objType);
 					if (flag)
@@ -941,21 +952,24 @@ namespace UnityEditor
 
 		internal bool HasModified()
 		{
+			bool result;
 			foreach (ProceduralMaterialInspector.ProceduralPlatformSetting current in this.m_PlatformSettings)
 			{
 				if (current.HasChanged())
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		public void BuildTargetList()
 		{
 			List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
 			this.m_PlatformSettings = new List<ProceduralMaterialInspector.ProceduralPlatformSetting>();
-			this.m_PlatformSettings.Add(new ProceduralMaterialInspector.ProceduralPlatformSetting(base.targets, string.Empty, BuildTarget.StandaloneWindows, null));
+			this.m_PlatformSettings.Add(new ProceduralMaterialInspector.ProceduralPlatformSetting(base.targets, "", BuildTarget.StandaloneWindows, null));
 			foreach (BuildPlayerWindow.BuildPlatform current in validPlatforms)
 			{
 				this.m_PlatformSettings.Add(new ProceduralMaterialInspector.ProceduralPlatformSetting(base.targets, current.name, current.DefaultTarget, current.smallIcon));
@@ -978,7 +992,7 @@ namespace UnityEditor
 			ProceduralMaterialInspector.ProceduralPlatformSetting proceduralPlatformSetting = this.m_PlatformSettings[num + 1];
 			ProceduralMaterialInspector.ProceduralPlatformSetting proceduralPlatformSetting2 = proceduralPlatformSetting;
 			bool flag = true;
-			if (proceduralPlatformSetting.name != string.Empty)
+			if (proceduralPlatformSetting.name != "")
 			{
 				EditorGUI.BeginChangeCheck();
 				flag = GUILayout.Toggle(proceduralPlatformSetting.overridden, "Override for " + proceduralPlatformSetting.name, new GUILayoutOption[0]);
@@ -1075,7 +1089,7 @@ namespace UnityEditor
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			base.OnPreviewGUI(r, background);
-			if (ProceduralMaterialInspector.ShowIsGenerating(this.target as ProceduralMaterial) && r.width > 50f)
+			if (ProceduralMaterialInspector.ShowIsGenerating(base.target as ProceduralMaterial) && r.width > 50f)
 			{
 				EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Generating...");
 			}
@@ -1156,13 +1170,13 @@ namespace UnityEditor
 			}
 			foreach (string current2 in list)
 			{
-				ProceduralMaterial proceduralMaterial = this.target as ProceduralMaterial;
+				ProceduralMaterial proceduralMaterial = base.target as ProceduralMaterial;
 				string name = proceduralMaterial.name;
 				string key = name + current2;
 				GUILayout.Space(5f);
 				bool flag2 = EditorPrefs.GetBool(key, true);
 				EditorGUI.BeginChangeCheck();
-				flag2 = EditorGUILayout.Foldout(flag2, current2);
+				flag2 = EditorGUILayout.Foldout(flag2, current2, true);
 				if (EditorGUI.EndChangeCheck())
 				{
 					EditorPrefs.SetBool(key, flag2);
@@ -1267,20 +1281,23 @@ namespace UnityEditor
 					EditorGUI.indentLevel--;
 					EditorGUILayout.EndVertical();
 				}
+				else if (num != 2)
+				{
+					if (num != 3)
+					{
+						if (num == 4)
+						{
+							vector = EditorGUILayout.Vector4Field(input.name, vector, new GUILayoutOption[0]);
+						}
+					}
+					else
+					{
+						vector = EditorGUILayout.Vector3Field(input.name, vector, new GUILayoutOption[0]);
+					}
+				}
 				else
 				{
-					switch (num)
-					{
-					case 2:
-						vector = EditorGUILayout.Vector2Field(input.name, vector, new GUILayoutOption[0]);
-						break;
-					case 3:
-						vector = EditorGUILayout.Vector3Field(input.name, vector, new GUILayoutOption[0]);
-						break;
-					case 4:
-						vector = EditorGUILayout.Vector4Field(input.name, vector, new GUILayoutOption[0]);
-						break;
-					}
+					vector = EditorGUILayout.Vector2Field(input.name, vector, new GUILayoutOption[0]);
 				}
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -1328,7 +1345,7 @@ namespace UnityEditor
 					GUILayout.ExpandWidth(false)
 				});
 				EditorGUI.BeginChangeCheck();
-				Texture2D value5 = EditorGUI.DoObjectField(rect, rect, GUIUtility.GetControlID(12354, EditorGUIUtility.native, rect), ProceduralMaterialInspector.m_Material.GetProceduralTexture(input.name), typeof(Texture2D), null, null, false) as Texture2D;
+				Texture2D value5 = EditorGUI.DoObjectField(rect, rect, GUIUtility.GetControlID(12354, FocusType.Keyboard, rect), ProceduralMaterialInspector.m_Material.GetProceduralTexture(input.name), typeof(Texture2D), null, null, false) as Texture2D;
 				EditorGUILayout.EndHorizontal();
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -1345,7 +1362,7 @@ namespace UnityEditor
 			GUILayout.Space(5f);
 			this.m_ShowHSLInputs = EditorPrefs.GetBool("ProceduralShowHSL", true);
 			EditorGUI.BeginChangeCheck();
-			this.m_ShowHSLInputs = EditorGUILayout.Foldout(this.m_ShowHSLInputs, this.m_Styles.hslContent);
+			this.m_ShowHSLInputs = EditorGUILayout.Foldout(this.m_ShowHSLInputs, this.m_Styles.hslContent, true);
 			if (EditorGUI.EndChangeCheck())
 			{
 				EditorPrefs.SetBool("ProceduralShowHSL", this.m_ShowHSLInputs);

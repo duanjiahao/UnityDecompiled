@@ -19,8 +19,6 @@ namespace UnityEditor
 			public static readonly GUIContent fogLinearEnd = EditorGUIUtility.TextContent("End");
 		}
 
-		private const string kShowEditorKey = "ShowFogEditorFoldout";
-
 		protected SerializedProperty m_Fog;
 
 		protected SerializedProperty m_FogColor;
@@ -34,6 +32,8 @@ namespace UnityEditor
 		protected SerializedProperty m_LinearFogEnd;
 
 		private bool m_ShowEditor;
+
+		private const string kShowEditorKey = "ShowFogEditorFoldout";
 
 		public virtual void OnEnable()
 		{

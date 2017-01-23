@@ -16,6 +16,9 @@ namespace UnityEngine
 
 		public readonly string text;
 
+		[CompilerGenerated]
+		private static Comparison<CrashReport> <>f__mg$cache0;
+
 		public static CrashReport[] reports
 		{
 			get
@@ -37,14 +40,17 @@ namespace UnityEngine
 			{
 				CrashReport.PopulateReports();
 				object obj = CrashReport.reportsLock;
+				CrashReport result;
 				lock (obj)
 				{
 					if (CrashReport.internalReports.Count > 0)
 					{
-						return CrashReport.internalReports[CrashReport.internalReports.Count - 1];
+						result = CrashReport.internalReports[CrashReport.internalReports.Count - 1];
+						return result;
 					}
 				}
-				return null;
+				result = null;
+				return result;
 			}
 		}
 
@@ -59,15 +65,20 @@ namespace UnityEngine
 		{
 			long ticks = c1.time.Ticks;
 			long ticks2 = c2.time.Ticks;
+			int result;
 			if (ticks > ticks2)
 			{
-				return 1;
+				result = 1;
 			}
-			if (ticks < ticks2)
+			else if (ticks < ticks2)
 			{
-				return -1;
+				result = -1;
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 
 		private static void PopulateReports()
@@ -84,13 +95,17 @@ namespace UnityEngine
 					{
 						string text = array[i];
 						double value;
-						string text2;
-						CrashReport.GetReportData(text, out value, out text2);
+						string reportData = CrashReport.GetReportData(text, out value);
 						DateTime dateTime = new DateTime(1970, 1, 1);
 						DateTime dateTime2 = dateTime.AddSeconds(value);
-						CrashReport.internalReports.Add(new CrashReport(text, dateTime2, text2));
+						CrashReport.internalReports.Add(new CrashReport(text, dateTime2, reportData));
 					}
-					CrashReport.internalReports.Sort(new Comparison<CrashReport>(CrashReport.Compare));
+					List<CrashReport> arg_AB_0 = CrashReport.internalReports;
+					if (CrashReport.<>f__mg$cache0 == null)
+					{
+						CrashReport.<>f__mg$cache0 = new Comparison<CrashReport>(CrashReport.Compare);
+					}
+					arg_AB_0.Sort(CrashReport.<>f__mg$cache0);
 				}
 			}
 		}
@@ -117,15 +132,15 @@ namespace UnityEngine
 			}
 		}
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string[] GetReports();
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void GetReportData(string id, out double secondsSinceUnixEpoch, out string text);
+		private static extern string GetReportData(string id, out double secondsSinceUnixEpoch);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool RemoveReport(string id);
 	}

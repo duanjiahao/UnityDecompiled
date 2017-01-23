@@ -7,7 +7,7 @@ namespace UnityEditor
 	{
 		public override void OnInspectorGUI()
 		{
-			DefaultAsset defaultAsset = (DefaultAsset)this.target;
+			DefaultAsset defaultAsset = (DefaultAsset)base.target;
 			if (defaultAsset.message.Length > 0)
 			{
 				EditorGUILayout.HelpBox(defaultAsset.message, (!defaultAsset.isWarning) ? MessageType.Info : MessageType.Warning);

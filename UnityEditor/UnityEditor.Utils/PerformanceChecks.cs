@@ -31,72 +31,83 @@ namespace UnityEditor.Utils
 
 		public static string CheckMaterial(Material mat, BuildTarget buildTarget)
 		{
+			string result;
 			if (mat == null || mat.shader == null)
 			{
-				return null;
+				result = null;
 			}
-			string shaderName = mat.shader.name;
-			int lOD = ShaderUtil.GetLOD(mat.shader);
-			bool flag = Array.Exists<string>(PerformanceChecks.kShadersWithMobileVariants, (string s) => s == shaderName);
-			bool flag2 = PerformanceChecks.IsMobileBuildTarget(buildTarget);
-			if (!(mat.GetTag("PerformanceChecks", true).ToLower() == "false"))
+			else
 			{
-				if (flag)
+				string shaderName = mat.shader.name;
+				int lOD = ShaderUtil.GetLOD(mat.shader);
+				bool flag = Array.Exists<string>(PerformanceChecks.kShadersWithMobileVariants, (string s) => s == shaderName);
+				bool flag2 = PerformanceChecks.IsMobileBuildTarget(buildTarget);
+				if (!(mat.GetTag("PerformanceChecks", true).ToLower() == "false"))
 				{
-					if (flag2 && mat.HasProperty("_Color") && mat.GetColor("_Color") == new Color(1f, 1f, 1f, 1f))
+					if (flag)
 					{
-						return PerformanceChecks.FormattedTextContent("Shader is using white color which does nothing; Consider using {0} shader for performance.", new object[]
+						if (flag2 && mat.HasProperty("_Color") && mat.GetColor("_Color") == new Color(1f, 1f, 1f, 1f))
 						{
-							"Mobile/" + shaderName
-						});
-					}
-					if (flag2 && shaderName.StartsWith("Particles/"))
-					{
-						return PerformanceChecks.FormattedTextContent("Consider using {0} shader on this platform for performance.", new object[]
+							result = PerformanceChecks.FormattedTextContent("Shader is using white color which does nothing; Consider using {0} shader for performance.", new object[]
+							{
+								"Mobile/" + shaderName
+							});
+							return result;
+						}
+						if (flag2 && shaderName.StartsWith("Particles/"))
 						{
-							"Mobile/" + shaderName
-						});
-					}
-					if (shaderName == "RenderFX/Skybox" && mat.HasProperty("_Tint") && mat.GetColor("_Tint") == new Color(0.5f, 0.5f, 0.5f, 0.5f))
-					{
-						return PerformanceChecks.FormattedTextContent("Skybox shader is using gray color which does nothing; Consider using {0} shader for performance.", new object[]
+							result = PerformanceChecks.FormattedTextContent("Consider using {0} shader on this platform for performance.", new object[]
+							{
+								"Mobile/" + shaderName
+							});
+							return result;
+						}
+						if (shaderName == "RenderFX/Skybox" && mat.HasProperty("_Tint") && mat.GetColor("_Tint") == new Color(0.5f, 0.5f, 0.5f, 0.5f))
 						{
-							"Mobile/Skybox"
-						});
-					}
-				}
-				if (lOD >= 300 && flag2 && !shaderName.StartsWith("Mobile/"))
-				{
-					return PerformanceChecks.FormattedTextContent("Shader might be expensive on this platform. Consider switching to a simpler shader; look under Mobile shaders.", new object[0]);
-				}
-				if (shaderName.Contains("VertexLit") && mat.HasProperty("_Emission"))
-				{
-					bool flag3 = false;
-					Shader shader = mat.shader;
-					int propertyCount = ShaderUtil.GetPropertyCount(shader);
-					for (int i = 0; i < propertyCount; i++)
-					{
-						if (ShaderUtil.GetPropertyName(shader, i) == "_Emission")
-						{
-							flag3 = (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.Color);
-							break;
+							result = PerformanceChecks.FormattedTextContent("Skybox shader is using gray color which does nothing; Consider using {0} shader for performance.", new object[]
+							{
+								"Mobile/Skybox"
+							});
+							return result;
 						}
 					}
-					if (flag3)
+					if (lOD >= 300 && flag2 && !shaderName.StartsWith("Mobile/"))
 					{
-						Color color = mat.GetColor("_Emission");
-						if (color.r >= 0.5f && color.g >= 0.5f && color.b >= 0.5f)
+						result = PerformanceChecks.FormattedTextContent("Shader might be expensive on this platform. Consider switching to a simpler shader; look under Mobile shaders.", new object[0]);
+						return result;
+					}
+					if (shaderName.Contains("VertexLit") && mat.HasProperty("_Emission"))
+					{
+						bool flag3 = false;
+						Shader shader = mat.shader;
+						int propertyCount = ShaderUtil.GetPropertyCount(shader);
+						for (int i = 0; i < propertyCount; i++)
 						{
-							return PerformanceChecks.FormattedTextContent("Looks like you're using VertexLit shader to simulate an unlit object (white emissive). Use one of Unlit shaders instead for performance.", new object[0]);
+							if (ShaderUtil.GetPropertyName(shader, i) == "_Emission")
+							{
+								flag3 = (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.Color);
+								break;
+							}
+						}
+						if (flag3)
+						{
+							Color color = mat.GetColor("_Emission");
+							if (color.r >= 0.5f && color.g >= 0.5f && color.b >= 0.5f)
+							{
+								result = PerformanceChecks.FormattedTextContent("Looks like you're using VertexLit shader to simulate an unlit object (white emissive). Use one of Unlit shaders instead for performance.", new object[0]);
+								return result;
+							}
 						}
 					}
+					if (mat.HasProperty("_BumpMap") && mat.GetTexture("_BumpMap") == null)
+					{
+						result = PerformanceChecks.FormattedTextContent("Normal mapped shader without a normal map. Consider using a non-normal mapped shader for performance.", new object[0]);
+						return result;
+					}
 				}
-				if (mat.HasProperty("_BumpMap") && mat.GetTexture("_BumpMap") == null)
-				{
-					return PerformanceChecks.FormattedTextContent("Normal mapped shader without a normal map. Consider using a non-normal mapped shader for performance.", new object[0]);
-				}
+				result = null;
 			}
-			return null;
+			return result;
 		}
 	}
 }

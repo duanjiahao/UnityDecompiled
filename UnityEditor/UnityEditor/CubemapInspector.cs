@@ -6,8 +6,6 @@ namespace UnityEditor
 	[CustomEditor(typeof(Cubemap))]
 	internal class CubemapInspector : TextureInspector
 	{
-		private const int kTextureSize = 64;
-
 		private static readonly string[] kSizes = new string[]
 		{
 			"16",
@@ -31,6 +29,8 @@ namespace UnityEditor
 			1024,
 			2048
 		};
+
+		private const int kTextureSize = 64;
 
 		private Texture2D[] m_Images;
 
@@ -58,7 +58,7 @@ namespace UnityEditor
 
 		private void InitTexturesFromCubemap()
 		{
-			Cubemap cubemap = this.target as Cubemap;
+			Cubemap cubemap = base.target as Cubemap;
 			if (cubemap != null)
 			{
 				if (this.m_Images == null)
@@ -77,7 +77,7 @@ namespace UnityEditor
 					}
 					else
 					{
-						this.m_Images[i] = new Texture2D(64, 64, TextureFormat.ARGB32, false);
+						this.m_Images[i] = new Texture2D(64, 64, TextureFormat.RGBA32, false);
 						this.m_Images[i].hideFlags = HideFlags.HideAndDontSave;
 						TextureUtil.CopyCubemapFaceIntoTexture(cubemap, (CubemapFace)i, this.m_Images[i]);
 					}
@@ -92,45 +92,44 @@ namespace UnityEditor
 				this.InitTexturesFromCubemap();
 			}
 			EditorGUIUtility.labelWidth = 50f;
-			Cubemap cubemap = this.target as Cubemap;
-			if (cubemap == null)
+			Cubemap cubemap = base.target as Cubemap;
+			if (!(cubemap == null))
 			{
-				return;
-			}
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			this.ShowFace("Right\n(+X)", CubemapFace.PositiveX);
-			this.ShowFace("Left\n(-X)", CubemapFace.NegativeX);
-			GUILayout.EndHorizontal();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			this.ShowFace("Top\n(+Y)", CubemapFace.PositiveY);
-			this.ShowFace("Bottom\n(-Y)", CubemapFace.NegativeY);
-			GUILayout.EndHorizontal();
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			this.ShowFace("Front\n(+Z)", CubemapFace.PositiveZ);
-			this.ShowFace("Back\n(-Z)", CubemapFace.NegativeZ);
-			GUILayout.EndHorizontal();
-			GUILayout.EndVertical();
-			EditorGUIUtility.labelWidth = 0f;
-			EditorGUILayout.Space();
-			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.HelpBox("Lowering face size is a destructive operation, you might need to re-assign the textures later to fix resolution issues. It's preferable to use Cubemap texture import type instead of Legacy Cubemap assets.", MessageType.Warning);
-			int num = TextureUtil.GetGPUWidth(cubemap);
-			num = EditorGUILayout.IntPopup("Face size", num, CubemapInspector.kSizes, CubemapInspector.kSizesValues, new GUILayoutOption[0]);
-			int mipmapCount = TextureUtil.GetMipmapCount(cubemap);
-			bool useMipmap = EditorGUILayout.Toggle("MipMaps", mipmapCount > 1, new GUILayoutOption[0]);
-			bool flag = TextureUtil.GetLinearSampled(cubemap);
-			flag = EditorGUILayout.Toggle("Linear", flag, new GUILayoutOption[0]);
-			bool flag2 = TextureUtil.IsCubemapReadable(cubemap);
-			flag2 = EditorGUILayout.Toggle("Readable", flag2, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
-			{
-				if (TextureUtil.ReformatCubemap(ref cubemap, num, num, cubemap.format, useMipmap, flag))
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				this.ShowFace("Right\n(+X)", CubemapFace.PositiveX);
+				this.ShowFace("Left\n(-X)", CubemapFace.NegativeX);
+				GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				this.ShowFace("Top\n(+Y)", CubemapFace.PositiveY);
+				this.ShowFace("Bottom\n(-Y)", CubemapFace.NegativeY);
+				GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				this.ShowFace("Front\n(+Z)", CubemapFace.PositiveZ);
+				this.ShowFace("Back\n(-Z)", CubemapFace.NegativeZ);
+				GUILayout.EndHorizontal();
+				GUILayout.EndVertical();
+				EditorGUIUtility.labelWidth = 0f;
+				EditorGUILayout.Space();
+				EditorGUI.BeginChangeCheck();
+				EditorGUILayout.HelpBox("Lowering face size is a destructive operation, you might need to re-assign the textures later to fix resolution issues. It's preferable to use Cubemap texture import type instead of Legacy Cubemap assets.", MessageType.Warning);
+				int num = TextureUtil.GetGPUWidth(cubemap);
+				num = EditorGUILayout.IntPopup("Face size", num, CubemapInspector.kSizes, CubemapInspector.kSizesValues, new GUILayoutOption[0]);
+				int mipmapCount = TextureUtil.GetMipmapCount(cubemap);
+				bool useMipmap = EditorGUILayout.Toggle("MipMaps", mipmapCount > 1, new GUILayoutOption[0]);
+				bool flag = TextureUtil.GetLinearSampled(cubemap);
+				flag = EditorGUILayout.Toggle("Linear", flag, new GUILayoutOption[0]);
+				bool flag2 = TextureUtil.IsCubemapReadable(cubemap);
+				flag2 = EditorGUILayout.Toggle("Readable", flag2, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
 				{
-					this.InitTexturesFromCubemap();
+					if (TextureUtil.ReformatCubemap(ref cubemap, num, num, cubemap.format, useMipmap, flag))
+					{
+						this.InitTexturesFromCubemap();
+					}
+					TextureUtil.MarkCubemapReadable(cubemap, flag2);
+					cubemap.Apply();
 				}
-				TextureUtil.MarkCubemapReadable(cubemap, flag2);
-				cubemap.Apply();
 			}
 		}
 
@@ -141,7 +140,7 @@ namespace UnityEditor
 
 		private void ShowFace(string label, CubemapFace face)
 		{
-			Cubemap cubemapRef = this.target as Cubemap;
+			Cubemap cubemapRef = base.target as Cubemap;
 			GUI.changed = false;
 			Texture2D texture2D = (Texture2D)CubemapInspector.ObjectField(label, this.m_Images[(int)face], typeof(Texture2D), false, new GUILayoutOption[0]);
 			if (GUI.changed)

@@ -3,44 +3,55 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 internal class AssemblyValidation
 {
 	private static Dictionary<RuntimePlatform, List<Type>> _rulesByPlatform;
 
+	[CompilerGenerated]
+	private static Func<Type, bool> <>f__mg$cache0;
+
 	public static ValidationResult Validate(RuntimePlatform platform, IEnumerable<string> userAssemblies, params object[] options)
 	{
 		AssemblyValidation.WarmUpRulesCache();
 		string[] array = (userAssemblies as string[]) ?? userAssemblies.ToArray<string>();
+		ValidationResult result;
 		if (array.Length != 0)
 		{
 			foreach (IValidationRule current in AssemblyValidation.ValidationRulesFor(platform, options))
 			{
-				ValidationResult result = current.Validate(array, options);
-				if (!result.Success)
+				ValidationResult validationResult = current.Validate(array, options);
+				if (!validationResult.Success)
 				{
+					result = validationResult;
 					return result;
 				}
 			}
 		}
-		return new ValidationResult
+		result = new ValidationResult
 		{
 			Success = true
 		};
+		return result;
 	}
 
 	private static void WarmUpRulesCache()
 	{
-		if (AssemblyValidation._rulesByPlatform != null)
+		if (AssemblyValidation._rulesByPlatform == null)
 		{
-			return;
-		}
-		AssemblyValidation._rulesByPlatform = new Dictionary<RuntimePlatform, List<Type>>();
-		Assembly assembly = typeof(AssemblyValidation).Assembly;
-		foreach (Type current in assembly.GetTypes().Where(new Func<Type, bool>(AssemblyValidation.IsValidationRule)))
-		{
-			AssemblyValidation.RegisterValidationRule(current);
+			AssemblyValidation._rulesByPlatform = new Dictionary<RuntimePlatform, List<Type>>();
+			Assembly assembly = typeof(AssemblyValidation).Assembly;
+			IEnumerable<Type> arg_4E_0 = assembly.GetTypes();
+			if (AssemblyValidation.<>f__mg$cache0 == null)
+			{
+				AssemblyValidation.<>f__mg$cache0 = new Func<Type, bool>(AssemblyValidation.IsValidationRule);
+			}
+			foreach (Type current in arg_4E_0.Where(AssemblyValidation.<>f__mg$cache0))
+			{
+				AssemblyValidation.RegisterValidationRule(current);
+			}
 		}
 	}
 
@@ -60,12 +71,11 @@ internal class AssemblyValidation
 	[DebuggerHidden]
 	private static IEnumerable<Type> ValidationRuleTypesFor(RuntimePlatform platform)
 	{
-		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator5 <ValidationRuleTypesFor>c__Iterator = new AssemblyValidation.<ValidationRuleTypesFor>c__Iterator5();
+		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator0 <ValidationRuleTypesFor>c__Iterator = new AssemblyValidation.<ValidationRuleTypesFor>c__Iterator0();
 		<ValidationRuleTypesFor>c__Iterator.platform = platform;
-		<ValidationRuleTypesFor>c__Iterator.<$>platform = platform;
-		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator5 expr_15 = <ValidationRuleTypesFor>c__Iterator;
-		expr_15.$PC = -2;
-		return expr_15;
+		AssemblyValidation.<ValidationRuleTypesFor>c__Iterator0 expr_0E = <ValidationRuleTypesFor>c__Iterator;
+		expr_0E.$PC = -2;
+		return expr_0E;
 	}
 
 	private static IValidationRule CreateValidationRuleWithOptions(Type type, params object[] options)
@@ -87,9 +97,11 @@ internal class AssemblyValidation
 			}
 			list.RemoveAt(list.Count - 1);
 		}
-		return (IValidationRule)constructorInfo.Invoke(array);
+		IValidationRule result = (IValidationRule)constructorInfo.Invoke(array);
+		return result;
 		Block_2:
-		return null;
+		result = null;
+		return result;
 	}
 
 	private static ConstructorInfo ConstructorFor(Type type, IEnumerable<object> options)
@@ -124,11 +136,16 @@ internal class AssemblyValidation
 	{
 		int num = AssemblyValidation.PriorityFor(a, platform);
 		int num2 = AssemblyValidation.PriorityFor(b, platform);
+		int result;
 		if (num == num2)
 		{
-			return 0;
+			result = 0;
 		}
-		return (num >= num2) ? 1 : -1;
+		else
+		{
+			result = ((num >= num2) ? 1 : -1);
+		}
+		return result;
 	}
 
 	private static int PriorityFor(Type type, RuntimePlatform platform)

@@ -35,7 +35,7 @@ namespace UnityEngine
 
 		internal static GUILayoutUtility.LayoutCache current = new GUILayoutUtility.LayoutCache();
 
-		private static readonly Rect kDummyRect = new Rect(0f, 0f, 1f, 1f);
+		internal static readonly Rect kDummyRect = new Rect(0f, 0f, 1f, 1f);
 
 		private static GUIStyle s_SpaceStyle;
 
@@ -125,10 +125,12 @@ namespace UnityEngine
 			}
 		}
 
+		[Obsolete("BeginGroup has no effect and will be removed", false)]
 		public static void BeginGroup(string GroupName)
 		{
 		}
 
+		[Obsolete("EndGroup has no effect and will be removed", false)]
 		public static void EndGroup(string groupName)
 		{
 		}
@@ -161,6 +163,7 @@ namespace UnityEngine
 
 		internal static float LayoutFromInspector(float width)
 		{
+			float result;
 			if (GUILayoutUtility.current.topLevel != null && GUILayoutUtility.current.topLevel.windowID == -1)
 			{
 				GUILayoutUtility.current.topLevel.CalcWidth();
@@ -169,13 +172,17 @@ namespace UnityEngine
 				GUILayoutUtility.current.topLevel.SetVertical(0f, Mathf.Min((float)Screen.height / GUIUtility.pixelsPerPoint, GUILayoutUtility.current.topLevel.maxHeight));
 				float minHeight = GUILayoutUtility.current.topLevel.minHeight;
 				GUILayoutUtility.LayoutFreeGroup(GUILayoutUtility.current.windows);
-				return minHeight;
+				result = minHeight;
 			}
-			if (GUILayoutUtility.current.topLevel != null)
+			else
 			{
-				GUILayoutUtility.LayoutSingleGroup(GUILayoutUtility.current.topLevel);
+				if (GUILayoutUtility.current.topLevel != null)
+				{
+					GUILayoutUtility.LayoutSingleGroup(GUILayoutUtility.current.topLevel);
+				}
+				result = 0f;
 			}
-			return 0f;
+			return result;
 		}
 
 		internal static void LayoutFreeGroup(GUILayoutGroup toplevel)
@@ -229,7 +236,7 @@ namespace UnityEngine
 		{
 			EventType type = Event.current.type;
 			GUILayoutGroup gUILayoutGroup;
-			if (type != EventType.Layout && type != EventType.Used)
+			if (type != EventType.Used && type != EventType.Layout)
 			{
 				gUILayoutGroup = (GUILayoutUtility.current.topLevel.GetNext() as GUILayoutGroup);
 				if (gUILayoutGroup == null)
@@ -237,6 +244,7 @@ namespace UnityEngine
 					throw new ArgumentException("GUILayout: Mismatched LayoutGroup." + Event.current.type);
 				}
 				gUILayoutGroup.ResetCursor();
+				GUIDebugger.LogLayoutGroupEntry(gUILayoutGroup.rect, gUILayoutGroup.margin, gUILayoutGroup.style, gUILayoutGroup.isVertical);
 			}
 			else
 			{
@@ -255,16 +263,20 @@ namespace UnityEngine
 
 		internal static void EndLayoutGroup()
 		{
-			EventType type = Event.current.type;
+			if (Event.current.type != EventType.Layout && Event.current.type != EventType.Used)
+			{
+				GUIDebugger.LogLayoutEndGroup();
+			}
+			EventType arg_31_0 = Event.current.type;
 			GUILayoutUtility.current.layoutGroups.Pop();
-			GUILayoutUtility.current.topLevel = (GUILayoutGroup)GUILayoutUtility.current.layoutGroups.Peek();
+			GUILayoutUtility.current.topLevel = ((0 >= GUILayoutUtility.current.layoutGroups.Count) ? null : ((GUILayoutGroup)GUILayoutUtility.current.layoutGroups.Peek()));
 		}
 
 		internal static GUILayoutGroup BeginLayoutArea(GUIStyle style, Type layoutType)
 		{
 			EventType type = Event.current.type;
 			GUILayoutGroup gUILayoutGroup;
-			if (type != EventType.Layout && type != EventType.Used)
+			if (type != EventType.Used && type != EventType.Layout)
 			{
 				gUILayoutGroup = (GUILayoutUtility.current.windows.GetNext() as GUILayoutGroup);
 				if (gUILayoutGroup == null)
@@ -272,6 +284,7 @@ namespace UnityEngine
 					throw new ArgumentException("GUILayout: Mismatched LayoutGroup." + Event.current.type);
 				}
 				gUILayoutGroup.ResetCursor();
+				GUIDebugger.LogLayoutGroupEntry(gUILayoutGroup.rect, gUILayoutGroup.margin, gUILayoutGroup.style, gUILayoutGroup.isVertical);
 			}
 			else
 			{
@@ -303,7 +316,21 @@ namespace UnityEngine
 		{
 			GUIUtility.CheckOnGUI();
 			EventType type = Event.current.type;
-			if (type == EventType.Layout)
+			Rect rect;
+			if (type != EventType.Layout)
+			{
+				if (type != EventType.Used)
+				{
+					GUILayoutEntry next = GUILayoutUtility.current.topLevel.GetNext();
+					GUIDebugger.LogLayoutEntry(next.rect, next.margin, next.style);
+					rect = next.rect;
+				}
+				else
+				{
+					rect = GUILayoutUtility.kDummyRect;
+				}
+			}
+			else
 			{
 				if (style.isHeightDependantOnWidth)
 				{
@@ -317,27 +344,26 @@ namespace UnityEngine
 						for (int i = 0; i < options.Length; i++)
 						{
 							GUILayoutOption gUILayoutOption = options[i];
-							switch (gUILayoutOption.type)
+							GUILayoutOption.Type type2 = gUILayoutOption.type;
+							if (type2 != GUILayoutOption.Type.maxHeight)
 							{
-							case GUILayoutOption.Type.maxWidth:
-								constraints.x = (float)gUILayoutOption.value;
-								break;
-							case GUILayoutOption.Type.maxHeight:
+								if (type2 == GUILayoutOption.Type.maxWidth)
+								{
+									constraints.x = (float)gUILayoutOption.value;
+								}
+							}
+							else
+							{
 								constraints.y = (float)gUILayoutOption.value;
-								break;
 							}
 						}
 					}
 					Vector2 vector = style.CalcSizeWithConstraints(content, constraints);
 					GUILayoutUtility.current.topLevel.Add(new GUILayoutEntry(vector.x, vector.x, vector.y, vector.y, style, options));
 				}
-				return GUILayoutUtility.kDummyRect;
+				rect = GUILayoutUtility.kDummyRect;
 			}
-			if (type != EventType.Used)
-			{
-				return GUILayoutUtility.current.topLevel.GetNext().rect;
-			}
-			return GUILayoutUtility.kDummyRect;
+			return rect;
 		}
 
 		public static Rect GetRect(float width, float height)
@@ -383,30 +409,46 @@ namespace UnityEngine
 		private static Rect DoGetRect(float minWidth, float maxWidth, float minHeight, float maxHeight, GUIStyle style, GUILayoutOption[] options)
 		{
 			EventType type = Event.current.type;
-			if (type == EventType.Layout)
+			Rect rect;
+			if (type != EventType.Layout)
+			{
+				if (type != EventType.Used)
+				{
+					rect = GUILayoutUtility.current.topLevel.GetNext().rect;
+				}
+				else
+				{
+					rect = GUILayoutUtility.kDummyRect;
+				}
+			}
+			else
 			{
 				GUILayoutUtility.current.topLevel.Add(new GUILayoutEntry(minWidth, maxWidth, minHeight, maxHeight, style, options));
-				return GUILayoutUtility.kDummyRect;
+				rect = GUILayoutUtility.kDummyRect;
 			}
-			if (type != EventType.Used)
-			{
-				return GUILayoutUtility.current.topLevel.GetNext().rect;
-			}
-			return GUILayoutUtility.kDummyRect;
+			return rect;
 		}
 
 		public static Rect GetLastRect()
 		{
 			EventType type = Event.current.type;
-			if (type == EventType.Layout)
+			Rect last;
+			if (type != EventType.Layout)
 			{
-				return GUILayoutUtility.kDummyRect;
+				if (type != EventType.Used)
+				{
+					last = GUILayoutUtility.current.topLevel.GetLast();
+				}
+				else
+				{
+					last = GUILayoutUtility.kDummyRect;
+				}
 			}
-			if (type != EventType.Used)
+			else
 			{
-				return GUILayoutUtility.current.topLevel.GetLast();
+				last = GUILayoutUtility.kDummyRect;
 			}
-			return GUILayoutUtility.kDummyRect;
+			return last;
 		}
 
 		public static Rect GetAspectRect(float aspect)
@@ -432,16 +474,24 @@ namespace UnityEngine
 		private static Rect DoGetAspectRect(float aspect, GUIStyle style, GUILayoutOption[] options)
 		{
 			EventType type = Event.current.type;
-			if (type == EventType.Layout)
+			Rect rect;
+			if (type != EventType.Layout)
+			{
+				if (type != EventType.Used)
+				{
+					rect = GUILayoutUtility.current.topLevel.GetNext().rect;
+				}
+				else
+				{
+					rect = GUILayoutUtility.kDummyRect;
+				}
+			}
+			else
 			{
 				GUILayoutUtility.current.topLevel.Add(new GUIAspectSizer(aspect, options));
-				return GUILayoutUtility.kDummyRect;
+				rect = GUILayoutUtility.kDummyRect;
 			}
-			if (type != EventType.Used)
-			{
-				return GUILayoutUtility.current.topLevel.GetNext().rect;
-			}
-			return GUILayoutUtility.kDummyRect;
+			return rect;
 		}
 
 		private static Rect Internal_GetWindowRect(int windowID)
@@ -451,7 +501,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_GetWindowRect(int windowID, out Rect value);
 
@@ -460,7 +509,6 @@ namespace UnityEngine
 			GUILayoutUtility.INTERNAL_CALL_Internal_MoveWindow(windowID, ref r);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_MoveWindow(int windowID, ref Rect r);
 
@@ -471,7 +519,6 @@ namespace UnityEngine
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetWindowsBounds(out Rect value);
 	}

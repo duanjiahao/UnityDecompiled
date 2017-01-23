@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 
 namespace UnityEditor
@@ -24,6 +25,10 @@ namespace UnityEditor
 			public GUIContent noFrameDebugger = EditorGUIUtility.TextContent("Frame Debugger|Open Frame Debugger (Current frame needs to be selected)");
 
 			public GUIContent gatherObjectReferences = EditorGUIUtility.TextContent("Gather object references|Collect reference information to see where objects are referenced from. Disable this to save memory");
+
+			public GUIContent timelineHighDetail = EditorGUIUtility.TextContent("High Detail|Guaranteed to show all samples and memory callstacks");
+
+			public GUIContent memRecord = EditorGUIUtility.TextContent("Mem Record|Record activity in the native memory system");
 
 			public GUIContent profilerRecord = EditorGUIUtility.TextContentWithIcon("Record|Record profiling information", "Profiler.Record");
 
@@ -51,8 +56,6 @@ namespace UnityEditor
 
 			public GUIStyle entryOdd = "OL EntryBackOdd";
 
-			public GUIStyle foldout = "IN foldout";
-
 			public GUIStyle profilerGraphBackground = "ProfilerScrollviewBackground";
 
 			public Styles()
@@ -79,43 +82,11 @@ namespace UnityEditor
 			}
 		}
 
-		private const float kRowHeight = 16f;
-
-		private const float kIndentPx = 16f;
-
-		private const float kBaseIndent = 8f;
-
-		private const float kSmallMargin = 4f;
-
-		private const float kNameColumnSize = 350f;
-
-		private const float kColumnSize = 80f;
-
-		private const float kFoldoutSize = 14f;
-
-		private const int kFirst = -999999;
-
-		private const int kLast = 999999;
-
-		private const string kProfilerColumnSettings = "VisibleProfilerColumnsV2";
-
-		private const string kProfilerDetailColumnSettings = "VisibleProfilerDetailColumns";
-
-		private const string kProfilerGPUColumnSettings = "VisibleProfilerGPUColumns";
-
-		private const string kProfilerGPUDetailColumnSettings = "VisibleProfilerGPUDetailColumns";
-
-		private const string kProfilerVisibleGraphsSettings = "VisibleProfilerGraphs";
-
-		private const string kProfilerEnabledSessionKey = "ProfilerEnabled";
-
-		private const string kSearchControlName = "ProfilerSearchField";
-
 		private static ProfilerWindow.Styles ms_Styles;
 
-		private bool m_FocusSearchField;
+		private bool m_FocusSearchField = false;
 
-		private string m_SearchString = string.Empty;
+		private string m_SearchString = "";
 
 		private SplitterState m_VertSplit = new SplitterState(new float[]
 		{
@@ -156,17 +127,32 @@ namespace UnityEditor
 
 		private Vector2[] m_PaneScroll = new Vector2[9];
 
+		private Vector2 m_PaneScroll_AudioChannels = Vector2.zero;
+
+		private Vector2 m_PaneScroll_AudioDSP = Vector2.zero;
+
+		private Vector2 m_PaneScroll_AudioClips = Vector2.zero;
+
 		private string m_ActiveNativePlatformSupportModule;
 
 		private static List<ProfilerWindow> m_ProfilerWindows = new List<ProfilerWindow>();
 
-		private ProfilerViewType m_ViewType;
+		private ProfilerViewType m_ViewType = ProfilerViewType.Hierarchy;
 
-		private ProfilerArea m_CurrentArea;
+		private ProfilerArea m_CurrentArea = ProfilerArea.CPU;
 
-		private ProfilerMemoryView m_ShowDetailedMemoryPane;
+		private ProfilerMemoryView m_ShowDetailedMemoryPane = ProfilerMemoryView.Simple;
 
-		private ProfilerAudioView m_ShowDetailedAudioPane;
+		private ProfilerAudioView m_ShowDetailedAudioPane = ProfilerAudioView.Stats;
+
+		[SerializeField]
+		private bool m_ShowInactiveDSPChains = false;
+
+		[SerializeField]
+		private bool m_HighlightAudibleDSPChains = true;
+
+		[SerializeField]
+		private float m_DSPGraphZoomFactor = 1f;
 
 		private int m_CurrentFrame = -1;
 
@@ -186,6 +172,24 @@ namespace UnityEditor
 
 		private float m_ChartMaxClamp = 70000f;
 
+		private const float kRowHeight = 16f;
+
+		private const float kIndentPx = 16f;
+
+		private const float kBaseIndent = 8f;
+
+		private const float kSmallMargin = 4f;
+
+		private const float kNameColumnSize = 350f;
+
+		private const float kColumnSize = 80f;
+
+		private const float kFoldoutSize = 14f;
+
+		private const int kFirst = -999999;
+
+		private const int kLast = 999999;
+
 		private ProfilerHierarchyGUI m_CPUHierarchyGUI;
 
 		private ProfilerHierarchyGUI m_GPUHierarchyGUI;
@@ -196,6 +200,9 @@ namespace UnityEditor
 
 		private ProfilerTimelineGUI m_CPUTimelineGUI;
 
+		[SerializeField]
+		private bool m_TimelineViewDetail = false;
+
 		private MemoryTreeList m_ReferenceListView;
 
 		private MemoryTreeListClickable m_MemoryListView;
@@ -203,11 +210,38 @@ namespace UnityEditor
 		private bool m_GatherObjectReferences = true;
 
 		[SerializeField]
-		private AudioProfilerTreeViewState m_AudioProfilerTreeViewState;
+		private AudioProfilerGroupTreeViewState m_AudioProfilerGroupTreeViewState;
 
-		private AudioProfilerView m_AudioProfilerView;
+		private AudioProfilerGroupView m_AudioProfilerGroupView = null;
 
-		private AudioProfilerBackend m_AudioProfilerBackend;
+		private AudioProfilerGroupViewBackend m_AudioProfilerGroupViewBackend;
+
+		[SerializeField]
+		private AudioProfilerClipTreeViewState m_AudioProfilerClipTreeViewState;
+
+		private AudioProfilerClipView m_AudioProfilerClipView = null;
+
+		private AudioProfilerClipViewBackend m_AudioProfilerClipViewBackend;
+
+		private AudioProfilerDSPView m_AudioProfilerDSPView;
+
+		private ProfilerMemoryRecordMode m_SelectedMemRecordMode = ProfilerMemoryRecordMode.None;
+
+		private readonly char s_CheckMark = '✔';
+
+		private const string kProfilerColumnSettings = "VisibleProfilerColumnsV2";
+
+		private const string kProfilerDetailColumnSettings = "VisibleProfilerDetailColumns";
+
+		private const string kProfilerGPUColumnSettings = "VisibleProfilerGPUColumns";
+
+		private const string kProfilerGPUDetailColumnSettings = "VisibleProfilerGPUDetailColumns";
+
+		private const string kProfilerVisibleGraphsSettings = "VisibleProfilerGraphs";
+
+		private const string kProfilerEnabledSessionKey = "ProfilerEnabled";
+
+		private const string kSearchControlName = "ProfilerSearchField";
 
 		private static readonly int s_HashControlID = "ProfilerSearchField".GetHashCode();
 
@@ -254,7 +288,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_MemoryListView.GetRoot() == null;
+				return this.m_MemoryListView.RequiresRefresh;
 			}
 		}
 
@@ -439,7 +473,7 @@ namespace UnityEditor
 				ProfilerChart profilerChart = new ProfilerChart(profilerArea, type, dataScale, num);
 				for (int i = 0; i < num; i++)
 				{
-					profilerChart.m_Series[i] = new ChartSeries(graphStatisticsPropertiesForArea[i], len, colors[i]);
+					profilerChart.m_Series[i] = new ChartSeries(graphStatisticsPropertiesForArea[i], len, colors[i % colors.Length]);
 				}
 				this.m_Charts[(int)profilerArea] = profilerChart;
 			}
@@ -478,12 +512,12 @@ namespace UnityEditor
 
 		private void Awake()
 		{
-			if (!Profiler.supported)
+			if (Profiler.supported)
 			{
-				return;
+				this.m_Recording = SessionState.GetBool("ProfilerEnabled", true);
+				Profiler.enabled = this.m_Recording;
+				this.m_SelectedMemRecordMode = ProfilerDriver.memoryRecordMode;
 			}
-			this.m_Recording = SessionState.GetBool("ProfilerEnabled", true);
-			Profiler.enabled = this.m_Recording;
 		}
 
 		private void OnDestroy()
@@ -504,6 +538,14 @@ namespace UnityEditor
 
 		private void OnLostFocus()
 		{
+			if (GUIUtility.hotControl != 0)
+			{
+				for (int i = 0; i < this.m_Charts.Length; i++)
+				{
+					ProfilerChart profilerChart = this.m_Charts[i];
+					profilerChart.m_Chart.OnLostFocus();
+				}
+			}
 		}
 
 		private static void ShowProfilerWindow()
@@ -538,36 +580,40 @@ namespace UnityEditor
 		private static void SetProfileDeepScripts(bool deep)
 		{
 			bool deepProfiling = ProfilerDriver.deepProfiling;
-			if (deepProfiling == deep)
+			if (deepProfiling != deep)
 			{
-				return;
-			}
-			bool flag = true;
-			if (EditorApplication.isPlaying)
-			{
-				if (deep)
+				bool flag = true;
+				if (EditorApplication.isPlaying)
 				{
-					flag = EditorUtility.DisplayDialog("Enable deep script profiling", "Enabling deep profiling requires reloading scripts.", "Reload", "Cancel");
+					if (deep)
+					{
+						flag = EditorUtility.DisplayDialog("Enable deep script profiling", "Enabling deep profiling requires reloading scripts.", "Reload", "Cancel");
+					}
+					else
+					{
+						flag = EditorUtility.DisplayDialog("Disable deep script profiling", "Disabling deep profiling requires reloading all scripts", "Reload", "Cancel");
+					}
 				}
-				else
+				if (flag)
 				{
-					flag = EditorUtility.DisplayDialog("Disable deep script profiling", "Disabling deep profiling requires reloading all scripts", "Reload", "Cancel");
+					ProfilerDriver.deepProfiling = deep;
+					InternalEditorUtility.RequestScriptReload();
 				}
-			}
-			if (flag)
-			{
-				ProfilerDriver.deepProfiling = deep;
-				InternalEditorUtility.RequestScriptReload();
 			}
 		}
 
 		private string PickFrameLabel()
 		{
+			string result;
 			if (this.m_CurrentFrame == -1)
 			{
-				return "Current";
+				result = "Current";
 			}
-			return this.m_CurrentFrame + 1 + " / " + (ProfilerDriver.lastFrameIndex + 1);
+			else
+			{
+				result = this.m_CurrentFrame + 1 + " / " + (ProfilerDriver.lastFrameIndex + 1);
+			}
+			return result;
 		}
 
 		private void PrevFrame()
@@ -619,7 +665,7 @@ namespace UnityEditor
 			};
 			this.m_ViewType = (ProfilerViewType)EditorGUILayout.IntPopup((int)this.m_ViewType, displayedOptions, optionValues, EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{
-				GUILayout.Width(100f)
+				GUILayout.Width(120f)
 			});
 			GUILayout.FlexibleSpace();
 			GUILayout.Label(string.Format("CPU:{0}ms   GPU:{1}ms", property.frameTime, property.frameGpuTime), EditorStyles.miniLabel, new GUILayoutOption[0]);
@@ -630,13 +676,60 @@ namespace UnityEditor
 				frameDebuggerWindow.EnableIfNeeded();
 			}
 			GUI.enabled = true;
-			if (ProfilerInstrumentationPopup.InstrumentationEnabled && GUILayout.Button(ProfilerWindow.ms_Styles.profilerInstrumentation, EditorStyles.toolbarDropDown, new GUILayoutOption[0]))
+			if (ProfilerInstrumentationPopup.InstrumentationEnabled)
 			{
-				Rect last = GUILayoutUtility.topLevel.GetLast();
-				ProfilerInstrumentationPopup.Show(last);
+				if (GUILayout.Button(ProfilerWindow.ms_Styles.profilerInstrumentation, EditorStyles.toolbarDropDown, new GUILayoutOption[0]))
+				{
+					Rect last = GUILayoutUtility.topLevel.GetLast();
+					ProfilerInstrumentationPopup.Show(last);
+				}
 			}
 			GUILayout.FlexibleSpace();
-			this.SearchFieldGUI();
+			if (this.m_ViewType == ProfilerViewType.Timeline)
+			{
+				this.m_TimelineViewDetail = GUILayout.Toggle(this.m_TimelineViewDetail, ProfilerWindow.ms_Styles.timelineHighDetail, EditorStyles.toolbarButton, new GUILayoutOption[0]);
+				ProfilerWindow.ms_Styles.memRecord.text = "Mem Record";
+				if (this.m_SelectedMemRecordMode != ProfilerMemoryRecordMode.None)
+				{
+					GUIContent expr_194 = ProfilerWindow.ms_Styles.memRecord;
+					string text = expr_194.text;
+					expr_194.text = string.Concat(new object[]
+					{
+						text,
+						" [",
+						this.s_CheckMark,
+						"]"
+					});
+				}
+				Rect rect = GUILayoutUtility.GetRect(ProfilerWindow.ms_Styles.memRecord, EditorStyles.toolbarDropDown, new GUILayoutOption[]
+				{
+					GUILayout.Width(100f)
+				});
+				if (EditorGUI.ButtonMouseDown(rect, ProfilerWindow.ms_Styles.memRecord, FocusType.Passive, EditorStyles.toolbarDropDown))
+				{
+					string[] array = new string[]
+					{
+						"None",
+						"Sample only",
+						"Callstack (fast)",
+						"Callstack (full)"
+					};
+					bool[] array2 = new bool[array.Length];
+					for (int i = 0; i < array.Length; i++)
+					{
+						array2[i] = true;
+					}
+					int[] selected = new int[]
+					{
+						(int)this.m_SelectedMemRecordMode
+					};
+					EditorUtility.DisplayCustomMenu(rect, array, array2, selected, new EditorUtility.SelectMenuItemFunction(this.MemRecordModeClick), null);
+				}
+			}
+			else
+			{
+				this.SearchFieldGUI();
+			}
 			EditorGUILayout.EndHorizontal();
 			this.HandleCommandEvents();
 		}
@@ -663,10 +756,6 @@ namespace UnityEditor
 		{
 			Event current = Event.current;
 			Rect rect = GUILayoutUtility.GetRect(50f, 300f, 16f, 16f, EditorStyles.toolbarSearchField);
-			if (this.m_ViewType == ProfilerViewType.Timeline)
-			{
-				return;
-			}
 			GUI.SetNextControlName("ProfilerSearchField");
 			if (this.m_FocusSearchField)
 			{
@@ -678,7 +767,7 @@ namespace UnityEditor
 			}
 			if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape && GUI.GetNameOfFocusedControl() == "ProfilerSearchField")
 			{
-				this.m_SearchString = string.Empty;
+				this.m_SearchString = "";
 			}
 			if (current.type == EventType.KeyDown && (current.keyCode == KeyCode.DownArrow || current.keyCode == KeyCode.UpArrow) && GUI.GetNameOfFocusedControl() == "ProfilerSearchField")
 			{
@@ -691,20 +780,31 @@ namespace UnityEditor
 			EditorGUI.BeginChangeCheck();
 			int controlID = GUIUtility.GetControlID(ProfilerWindow.s_HashControlID, FocusType.Keyboard, base.position);
 			this.m_SearchString = EditorGUI.ToolbarSearchField(controlID, rect, this.m_SearchString, false);
-			if (EditorGUI.EndChangeCheck() && !this.IsSearching() && GUIUtility.keyboardControl == 0 && flag)
+			if (EditorGUI.EndChangeCheck())
 			{
-				this.m_CPUHierarchyGUI.FrameSelection();
+				if (!this.IsSearching() && GUIUtility.keyboardControl == 0)
+				{
+					if (flag)
+					{
+						this.m_CPUHierarchyGUI.FrameSelection();
+					}
+				}
 			}
 		}
 
 		private static bool CheckFrameData(ProfilerProperty property)
 		{
+			bool result;
 			if (!property.frameDataReady)
 			{
 				GUILayout.Label(ProfilerWindow.ms_Styles.noData, ProfilerWindow.ms_Styles.background, new GUILayoutOption[0]);
-				return false;
+				result = false;
 			}
-			return true;
+			else
+			{
+				result = true;
+			}
+			return result;
 		}
 
 		private void DrawCPUOrRenderingPane(ProfilerHierarchyGUI mainPane, ProfilerHierarchyGUI detailPane, ProfilerTimelineGUI timelinePane)
@@ -714,13 +814,12 @@ namespace UnityEditor
 			if (!ProfilerWindow.CheckFrameData(profilerProperty))
 			{
 				profilerProperty.Cleanup();
-				return;
 			}
-			if (timelinePane != null && this.m_ViewType == ProfilerViewType.Timeline)
+			else if (timelinePane != null && this.m_ViewType == ProfilerViewType.Timeline)
 			{
 				float num = (float)this.m_VertSplit.realSizes[1];
 				num -= EditorStyles.toolbar.CalcHeight(GUIContent.none, 10f) + 2f;
-				timelinePane.DoGUI(this.GetActiveVisibleFrameIndex(), base.position.width, base.position.height - num, num);
+				timelinePane.DoGUI(this.GetActiveVisibleFrameIndex(), base.position.width, base.position.height - num, num, this.m_TimelineViewDetail);
 				profilerProperty.Cleanup();
 			}
 			else
@@ -835,6 +934,16 @@ namespace UnityEditor
 			SplitterGUILayout.EndHorizontalSplit();
 		}
 
+		private void AudioProfilerToggle(ProfilerCaptureFlags toggleFlag)
+		{
+			bool flag = (AudioSettings.profilerCaptureFlags & (int)toggleFlag) != 0;
+			bool flag2 = GUILayout.Toggle(flag, "Record", EditorStyles.toolbarButton, new GUILayoutOption[0]);
+			if (flag != flag2)
+			{
+				ProfilerDriver.SetAudioCaptureFlags((AudioSettings.profilerCaptureFlags & (int)(~(int)toggleFlag)) | (int)((!flag2) ? ProfilerCaptureFlags.None : toggleFlag));
+			}
+		}
+
 		private void DrawAudioPane()
 		{
 			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
@@ -855,6 +964,14 @@ namespace UnityEditor
 			{
 				profilerAudioView = ProfilerAudioView.ChannelsAndGroups;
 			}
+			if (Unsupported.IsDeveloperBuild() && GUILayout.Toggle(profilerAudioView == ProfilerAudioView.DSPGraph, "DSP Graph", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			{
+				profilerAudioView = ProfilerAudioView.DSPGraph;
+			}
+			if (Unsupported.IsDeveloperBuild() && GUILayout.Toggle(profilerAudioView == ProfilerAudioView.Clips, "Clips", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+			{
+				profilerAudioView = ProfilerAudioView.Clips;
+			}
 			if (profilerAudioView != this.m_ShowDetailedAudioPane)
 			{
 				this.m_ShowDetailedAudioPane = profilerAudioView;
@@ -862,12 +979,97 @@ namespace UnityEditor
 			}
 			if (this.m_ShowDetailedAudioPane == ProfilerAudioView.Stats)
 			{
+				GUILayout.Space(5f);
 				GUILayout.FlexibleSpace();
 				EditorGUILayout.EndHorizontal();
 				this.DrawOverviewText(this.m_CurrentArea);
 			}
+			else if (this.m_ShowDetailedAudioPane == ProfilerAudioView.DSPGraph)
+			{
+				GUILayout.Space(5f);
+				this.AudioProfilerToggle(ProfilerCaptureFlags.DSPNodes);
+				GUILayout.Space(5f);
+				this.m_ShowInactiveDSPChains = GUILayout.Toggle(this.m_ShowInactiveDSPChains, "Show inactive", EditorStyles.toolbarButton, new GUILayoutOption[0]);
+				if (this.m_ShowInactiveDSPChains)
+				{
+					this.m_HighlightAudibleDSPChains = GUILayout.Toggle(this.m_HighlightAudibleDSPChains, "Highlight audible", EditorStyles.toolbarButton, new GUILayoutOption[0]);
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+				Rect rect = GUILayoutUtility.GetRect(20f, 10000f, 10f, 20000f);
+				this.m_PaneScroll_AudioDSP = GUI.BeginScrollView(rect, this.m_PaneScroll_AudioDSP, new Rect(0f, 0f, 10000f, 20000f));
+				Rect clippingRect = new Rect(this.m_PaneScroll_AudioDSP.x, this.m_PaneScroll_AudioDSP.y, rect.width, rect.height);
+				if (this.m_AudioProfilerDSPView == null)
+				{
+					this.m_AudioProfilerDSPView = new AudioProfilerDSPView();
+				}
+				ProfilerProperty profilerProperty = this.CreateProperty(false);
+				if (ProfilerWindow.CheckFrameData(profilerProperty))
+				{
+					this.m_AudioProfilerDSPView.OnGUI(clippingRect, profilerProperty, this.m_ShowInactiveDSPChains, this.m_HighlightAudibleDSPChains, ref this.m_DSPGraphZoomFactor, ref this.m_PaneScroll_AudioDSP);
+				}
+				profilerProperty.Cleanup();
+				GUI.EndScrollView();
+				base.Repaint();
+			}
+			else if (this.m_ShowDetailedAudioPane == ProfilerAudioView.Clips)
+			{
+				GUILayout.Space(5f);
+				this.AudioProfilerToggle(ProfilerCaptureFlags.Clips);
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+				Rect rect2 = GUILayoutUtility.GetRect(20f, 20000f, 10f, 10000f);
+				Rect position = new Rect(rect2.x, rect2.y, 230f, rect2.height);
+				Rect rect3 = new Rect(position.xMax, rect2.y, rect2.width - position.width, rect2.height);
+				string overviewText = ProfilerDriver.GetOverviewText(this.m_CurrentArea, this.GetActiveVisibleFrameIndex());
+				Vector2 vector = EditorStyles.wordWrappedLabel.CalcSize(GUIContent.Temp(overviewText));
+				this.m_PaneScroll_AudioClips = GUI.BeginScrollView(position, this.m_PaneScroll_AudioClips, new Rect(0f, 0f, vector.x, vector.y));
+				GUI.Label(new Rect(3f, 3f, vector.x, vector.y), overviewText, EditorStyles.wordWrappedLabel);
+				GUI.EndScrollView();
+				EditorGUI.DrawRect(new Rect(position.xMax - 1f, position.y, 1f, position.height), Color.black);
+				if (this.m_AudioProfilerClipTreeViewState == null)
+				{
+					this.m_AudioProfilerClipTreeViewState = new AudioProfilerClipTreeViewState();
+				}
+				if (this.m_AudioProfilerClipViewBackend == null)
+				{
+					this.m_AudioProfilerClipViewBackend = new AudioProfilerClipViewBackend(this.m_AudioProfilerClipTreeViewState);
+				}
+				ProfilerProperty profilerProperty2 = this.CreateProperty(false);
+				if (ProfilerWindow.CheckFrameData(profilerProperty2))
+				{
+					if (this.m_CurrentFrame == -1 || this.m_LastAudioProfilerFrame != this.m_CurrentFrame)
+					{
+						this.m_LastAudioProfilerFrame = this.m_CurrentFrame;
+						AudioProfilerClipInfo[] audioProfilerClipInfo = profilerProperty2.GetAudioProfilerClipInfo();
+						if (audioProfilerClipInfo != null && audioProfilerClipInfo.Length > 0)
+						{
+							List<AudioProfilerClipInfoWrapper> list = new List<AudioProfilerClipInfoWrapper>();
+							AudioProfilerClipInfo[] array = audioProfilerClipInfo;
+							for (int i = 0; i < array.Length; i++)
+							{
+								AudioProfilerClipInfo info = array[i];
+								list.Add(new AudioProfilerClipInfoWrapper(info, profilerProperty2.GetAudioProfilerNameByOffset(info.assetNameOffset)));
+							}
+							this.m_AudioProfilerClipViewBackend.SetData(list);
+							if (this.m_AudioProfilerClipView == null)
+							{
+								this.m_AudioProfilerClipView = new AudioProfilerClipView(this, this.m_AudioProfilerClipTreeViewState);
+								this.m_AudioProfilerClipView.Init(rect3, this.m_AudioProfilerClipViewBackend);
+							}
+						}
+					}
+					if (this.m_AudioProfilerClipView != null)
+					{
+						this.m_AudioProfilerClipView.OnGUI(rect3);
+					}
+				}
+				profilerProperty2.Cleanup();
+			}
 			else
 			{
+				GUILayout.Space(5f);
+				this.AudioProfilerToggle(ProfilerCaptureFlags.Channels);
 				GUILayout.Space(5f);
 				bool flag = GUILayout.Toggle(AudioUtil.resetAllAudioClipPlayCountsOnPlay, "Reset play count on play", EditorStyles.toolbarButton, new GUILayoutOption[0]);
 				if (flag != AudioUtil.resetAllAudioClipPlayCountsOnPlay)
@@ -886,60 +1088,60 @@ namespace UnityEditor
 				}
 				GUILayout.FlexibleSpace();
 				EditorGUILayout.EndHorizontal();
-				Rect rect = GUILayoutUtility.GetRect(20f, 20000f, 10f, 10000f);
-				Rect position = new Rect(rect.x, rect.y, 230f, rect.height);
-				Rect rect2 = new Rect(position.xMax, rect.y, rect.width - position.width, rect.height);
-				string overviewText = ProfilerDriver.GetOverviewText(this.m_CurrentArea, this.GetActiveVisibleFrameIndex());
-				Vector2 vector = EditorStyles.wordWrappedLabel.CalcSize(GUIContent.Temp(overviewText));
-				this.m_PaneScroll[(int)this.m_CurrentArea] = GUI.BeginScrollView(position, this.m_PaneScroll[(int)this.m_CurrentArea], new Rect(0f, 0f, vector.x, vector.y));
-				GUI.Label(new Rect(3f, 3f, vector.x, vector.y), overviewText, EditorStyles.wordWrappedLabel);
+				Rect rect4 = GUILayoutUtility.GetRect(20f, 20000f, 10f, 10000f);
+				Rect position2 = new Rect(rect4.x, rect4.y, 230f, rect4.height);
+				Rect rect5 = new Rect(position2.xMax, rect4.y, rect4.width - position2.width, rect4.height);
+				string overviewText2 = ProfilerDriver.GetOverviewText(this.m_CurrentArea, this.GetActiveVisibleFrameIndex());
+				Vector2 vector2 = EditorStyles.wordWrappedLabel.CalcSize(GUIContent.Temp(overviewText2));
+				this.m_PaneScroll_AudioChannels = GUI.BeginScrollView(position2, this.m_PaneScroll_AudioChannels, new Rect(0f, 0f, vector2.x, vector2.y));
+				GUI.Label(new Rect(3f, 3f, vector2.x, vector2.y), overviewText2, EditorStyles.wordWrappedLabel);
 				GUI.EndScrollView();
-				EditorGUI.DrawRect(new Rect(position.xMax - 1f, position.y, 1f, position.height), Color.black);
-				if (this.m_AudioProfilerTreeViewState == null)
+				EditorGUI.DrawRect(new Rect(position2.xMax - 1f, position2.y, 1f, position2.height), Color.black);
+				if (this.m_AudioProfilerGroupTreeViewState == null)
 				{
-					this.m_AudioProfilerTreeViewState = new AudioProfilerTreeViewState();
+					this.m_AudioProfilerGroupTreeViewState = new AudioProfilerGroupTreeViewState();
 				}
-				if (this.m_AudioProfilerBackend == null)
+				if (this.m_AudioProfilerGroupViewBackend == null)
 				{
-					this.m_AudioProfilerBackend = new AudioProfilerBackend(this.m_AudioProfilerTreeViewState);
+					this.m_AudioProfilerGroupViewBackend = new AudioProfilerGroupViewBackend(this.m_AudioProfilerGroupTreeViewState);
 				}
-				ProfilerProperty profilerProperty = this.CreateProperty(false);
-				if (ProfilerWindow.CheckFrameData(profilerProperty))
+				ProfilerProperty profilerProperty3 = this.CreateProperty(false);
+				if (ProfilerWindow.CheckFrameData(profilerProperty3))
 				{
 					if (this.m_CurrentFrame == -1 || this.m_LastAudioProfilerFrame != this.m_CurrentFrame)
 					{
 						this.m_LastAudioProfilerFrame = this.m_CurrentFrame;
-						AudioProfilerInfo[] audioProfilerInfo = profilerProperty.GetAudioProfilerInfo();
-						if (audioProfilerInfo != null && audioProfilerInfo.Length > 0)
+						AudioProfilerGroupInfo[] audioProfilerGroupInfo = profilerProperty3.GetAudioProfilerGroupInfo();
+						if (audioProfilerGroupInfo != null && audioProfilerGroupInfo.Length > 0)
 						{
-							List<AudioProfilerInfoWrapper> list = new List<AudioProfilerInfoWrapper>();
-							AudioProfilerInfo[] array = audioProfilerInfo;
-							for (int i = 0; i < array.Length; i++)
+							List<AudioProfilerGroupInfoWrapper> list2 = new List<AudioProfilerGroupInfoWrapper>();
+							AudioProfilerGroupInfo[] array2 = audioProfilerGroupInfo;
+							for (int j = 0; j < array2.Length; j++)
 							{
-								AudioProfilerInfo info = array[i];
-								bool flag3 = (info.flags & 64) != 0;
+								AudioProfilerGroupInfo info2 = array2[j];
+								bool flag3 = (info2.flags & 64) != 0;
 								if (this.m_ShowDetailedAudioPane != ProfilerAudioView.Channels || !flag3)
 								{
 									if (this.m_ShowDetailedAudioPane != ProfilerAudioView.Groups || flag3)
 									{
-										list.Add(new AudioProfilerInfoWrapper(info, profilerProperty.GetAudioProfilerNameByOffset(info.assetNameOffset), profilerProperty.GetAudioProfilerNameByOffset(info.objectNameOffset), this.m_ShowDetailedAudioPane == ProfilerAudioView.Channels));
+										list2.Add(new AudioProfilerGroupInfoWrapper(info2, profilerProperty3.GetAudioProfilerNameByOffset(info2.assetNameOffset), profilerProperty3.GetAudioProfilerNameByOffset(info2.objectNameOffset), this.m_ShowDetailedAudioPane == ProfilerAudioView.Channels));
 									}
 								}
 							}
-							this.m_AudioProfilerBackend.SetData(list);
-							if (this.m_AudioProfilerView == null)
+							this.m_AudioProfilerGroupViewBackend.SetData(list2);
+							if (this.m_AudioProfilerGroupView == null)
 							{
-								this.m_AudioProfilerView = new AudioProfilerView(this, this.m_AudioProfilerTreeViewState);
-								this.m_AudioProfilerView.Init(rect2, this.m_AudioProfilerBackend);
+								this.m_AudioProfilerGroupView = new AudioProfilerGroupView(this, this.m_AudioProfilerGroupTreeViewState);
+								this.m_AudioProfilerGroupView.Init(rect5, this.m_AudioProfilerGroupViewBackend);
 							}
 						}
 					}
-					if (this.m_AudioProfilerView != null)
+					if (this.m_AudioProfilerGroupView != null)
 					{
-						this.m_AudioProfilerView.OnGUI(rect2, this.m_ShowDetailedAudioPane == ProfilerAudioView.Channels);
+						this.m_AudioProfilerGroupView.OnGUI(rect5, this.m_ShowDetailedAudioPane == ProfilerAudioView.Channels);
 					}
 				}
-				profilerProperty.Cleanup();
+				profilerProperty3.Cleanup();
 			}
 		}
 
@@ -979,7 +1181,7 @@ namespace UnityEditor
 
 		private void RefreshMemoryData()
 		{
-			this.m_MemoryListView.SetRoot(null);
+			this.m_MemoryListView.RequiresRefresh = true;
 			ProfilerDriver.RequestObjectMemoryInfo(this.m_GatherObjectReferences);
 		}
 
@@ -1165,11 +1367,7 @@ namespace UnityEditor
 				ProfilerWindow.UpdateChartGrid(num8, profilerChart3.m_Data);
 			}
 			string notSupportedWarning = null;
-			if (ProfilerDriver.isGPUProfilerBuggyOnDriver)
-			{
-				notSupportedWarning = "Graphics card driver returned invalid timing information. Please update to a newer version if available.";
-			}
-			else if (!ProfilerDriver.isGPUProfilerSupported)
+			if (!ProfilerDriver.isGPUProfilerSupported)
 			{
 				notSupportedWarning = "GPU profiling is not supported by the graphics card driver. Please update to a newer version if available.";
 				if (Application.platform == RuntimePlatform.OSXEditor)
@@ -1192,6 +1390,12 @@ namespace UnityEditor
 			this.m_Charts[selected].active = true;
 		}
 
+		private void MemRecordModeClick(object userData, string[] options, int selected)
+		{
+			this.m_SelectedMemRecordMode = (ProfilerMemoryRecordMode)selected;
+			ProfilerDriver.memoryRecordMode = this.m_SelectedMemRecordMode;
+		}
+
 		private void DrawMainToolbar()
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
@@ -1199,14 +1403,17 @@ namespace UnityEditor
 			{
 				GUILayout.Width(120f)
 			});
-			if (EditorGUI.ButtonMouseDown(rect, ProfilerWindow.ms_Styles.addArea, FocusType.Native, EditorStyles.toolbarDropDown))
+			if (EditorGUI.ButtonMouseDown(rect, ProfilerWindow.ms_Styles.addArea, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
 				int num = this.m_Charts.Length;
 				string[] array = new string[num];
 				bool[] array2 = new bool[num];
 				for (int i = 0; i < num; i++)
 				{
-					array[i] = ((ProfilerArea)i).ToString();
+					string[] arg_89_0 = array;
+					int arg_89_1 = i;
+					ProfilerArea profilerArea = (ProfilerArea)i;
+					arg_89_0[arg_89_1] = profilerArea.ToString();
 					array2[i] = !this.m_Charts[i].active;
 				}
 				EditorUtility.DisplayCustomMenu(rect, array, array2, null, new EditorUtility.SelectMenuItemFunction(this.AddAreaClick), null);
@@ -1361,38 +1568,33 @@ namespace UnityEditor
 				base.Repaint();
 				GUIUtility.ExitGUI();
 			}
-			GUILayout.EndScrollView();
+			EditorGUILayout.EndScrollView();
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			switch (this.m_CurrentArea)
 			{
 			case ProfilerArea.CPU:
 				this.DrawCPUOrRenderingPane(this.m_CPUHierarchyGUI, this.m_CPUDetailHierarchyGUI, this.m_CPUTimelineGUI);
-				goto IL_25B;
+				goto IL_26E;
 			case ProfilerArea.GPU:
 				this.DrawCPUOrRenderingPane(this.m_GPUHierarchyGUI, this.m_GPUDetailHierarchyGUI, null);
-				goto IL_25B;
+				goto IL_26E;
 			case ProfilerArea.Memory:
 				this.DrawMemoryPane(this.m_ViewSplit);
-				goto IL_25B;
+				goto IL_26E;
 			case ProfilerArea.Audio:
 				this.DrawAudioPane();
-				goto IL_25B;
+				goto IL_26E;
 			case ProfilerArea.NetworkMessages:
 				this.DrawPane(this.m_CurrentArea);
-				goto IL_25B;
+				goto IL_26E;
 			case ProfilerArea.NetworkOperations:
 				this.DrawNetworkOperationsPane();
-				goto IL_25B;
+				goto IL_26E;
 			}
 			this.DrawPane(this.m_CurrentArea);
-			IL_25B:
+			IL_26E:
 			GUILayout.EndVertical();
 			SplitterGUILayout.EndVerticalSplit();
-		}
-
-		virtual void Repaint()
-		{
-			base.Repaint();
 		}
 	}
 }

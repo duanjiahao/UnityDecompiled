@@ -82,32 +82,42 @@ namespace UnityEditor
 
 		private static bool OnGlobalMouseOrKeyEvent(EventType type, KeyCode keyCode, Vector2 mousePosition)
 		{
+			bool result;
 			if (PopupWindowWithoutFocus.s_PopupWindowWithoutFocus == null)
 			{
-				return false;
+				result = false;
 			}
-			if (type == EventType.KeyDown && keyCode == KeyCode.Escape)
+			else if (type == EventType.KeyDown && keyCode == KeyCode.Escape)
 			{
 				PopupWindowWithoutFocus.s_PopupWindowWithoutFocus.Close();
-				return true;
+				result = true;
 			}
-			if (type == EventType.MouseDown && !PopupWindowWithoutFocus.s_PopupWindowWithoutFocus.position.Contains(mousePosition))
+			else if (type == EventType.MouseDown && !PopupWindowWithoutFocus.s_PopupWindowWithoutFocus.position.Contains(mousePosition))
 			{
 				PopupWindowWithoutFocus.s_PopupWindowWithoutFocus.Close();
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private static bool ShouldShowWindow(Rect activatorRect)
 		{
 			bool flag = EditorApplication.timeSinceStartup - PopupWindowWithoutFocus.s_LastClosedTime < 0.2;
+			bool result;
 			if (!flag || activatorRect != PopupWindowWithoutFocus.s_LastActivatorRect)
 			{
 				PopupWindowWithoutFocus.s_LastActivatorRect = activatorRect;
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		internal void OnGUI()

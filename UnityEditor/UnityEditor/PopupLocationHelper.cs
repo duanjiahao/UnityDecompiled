@@ -18,11 +18,16 @@ namespace UnityEditor
 		{
 			get
 			{
+				float result;
 				if (Application.platform == RuntimePlatform.OSXEditor)
 				{
-					return 10f;
+					result = 10f;
 				}
-				return 0f;
+				else
+				{
+					result = 0f;
+				}
+				return result;
 			}
 		}
 
@@ -38,11 +43,14 @@ namespace UnityEditor
 				locationPriorityOrder = new PopupLocationHelper.PopupLocation[]
 				{
 					PopupLocationHelper.PopupLocation.Below,
-					PopupLocationHelper.PopupLocation.Above
+					PopupLocationHelper.PopupLocation.Above,
+					PopupLocationHelper.PopupLocation.Left,
+					PopupLocationHelper.PopupLocation.Right
 				};
 			}
 			List<Rect> list = new List<Rect>();
 			PopupLocationHelper.PopupLocation[] array = locationPriorityOrder;
+			Rect result;
 			for (int i = 0; i < array.Length; i++)
 			{
 				switch (array[i])
@@ -52,7 +60,8 @@ namespace UnityEditor
 					Rect rect;
 					if (PopupLocationHelper.PopupBelow(buttonRect, minSize, maxSize, popupContainerWindow, out rect))
 					{
-						return rect;
+						result = rect;
+						return result;
 					}
 					list.Add(rect);
 					break;
@@ -62,7 +71,8 @@ namespace UnityEditor
 					Rect rect;
 					if (PopupLocationHelper.PopupAbove(buttonRect, minSize, maxSize, popupContainerWindow, out rect))
 					{
-						return rect;
+						result = rect;
+						return result;
 					}
 					list.Add(rect);
 					break;
@@ -72,7 +82,8 @@ namespace UnityEditor
 					Rect rect;
 					if (PopupLocationHelper.PopupLeft(buttonRect, minSize, maxSize, popupContainerWindow, out rect))
 					{
-						return rect;
+						result = rect;
+						return result;
 					}
 					list.Add(rect);
 					break;
@@ -82,23 +93,30 @@ namespace UnityEditor
 					Rect rect;
 					if (PopupLocationHelper.PopupRight(buttonRect, minSize, maxSize, popupContainerWindow, out rect))
 					{
-						return rect;
+						result = rect;
+						return result;
 					}
 					list.Add(rect);
 					break;
 				}
 				}
 			}
-			return PopupLocationHelper.GetLargestRect(list);
+			result = PopupLocationHelper.GetLargestRect(list);
+			return result;
 		}
 
 		private static Rect FitRect(Rect rect, ContainerWindow popupContainerWindow)
 		{
+			Rect result;
 			if (popupContainerWindow)
 			{
-				return popupContainerWindow.FitWindowRectToScreen(rect, true, true);
+				result = popupContainerWindow.FitWindowRectToScreen(rect, true, true);
 			}
-			return ContainerWindow.FitRectToScreen(rect, true, true);
+			else
+			{
+				result = ContainerWindow.FitRectToScreen(rect, true, true);
+			}
+			return result;
 		}
 
 		private static bool PopupRight(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, out Rect resultRect)
@@ -134,14 +152,19 @@ namespace UnityEditor
 			rect.yMin -= num;
 			rect = PopupLocationHelper.FitRect(rect, popupContainerWindow);
 			float num2 = Mathf.Max(buttonRect.y - rect.y - num, 0f);
+			bool result;
 			if (num2 >= minSize.y)
 			{
 				float num3 = Mathf.Min(num2, maxSize.y);
 				resultRect = new Rect(rect.x, buttonRect.y - num3, rect.width, num3);
-				return true;
+				result = true;
 			}
-			resultRect = new Rect(rect.x, buttonRect.y - num2, rect.width, num2);
-			return false;
+			else
+			{
+				resultRect = new Rect(rect.x, buttonRect.y - num2, rect.width, num2);
+				result = false;
+			}
+			return result;
 		}
 
 		private static bool PopupBelow(Rect buttonRect, Vector2 minSize, Vector2 maxSize, ContainerWindow popupContainerWindow, out Rect resultRect)
@@ -150,14 +173,19 @@ namespace UnityEditor
 			rect.height += PopupLocationHelper.k_SpaceFromBottom;
 			rect = PopupLocationHelper.FitRect(rect, popupContainerWindow);
 			float num = Mathf.Max(rect.yMax - buttonRect.yMax - PopupLocationHelper.k_SpaceFromBottom, 0f);
+			bool result;
 			if (num >= minSize.y)
 			{
 				float height = Mathf.Min(num, maxSize.y);
 				resultRect = new Rect(rect.x, buttonRect.yMax, rect.width, height);
-				return true;
+				result = true;
 			}
-			resultRect = new Rect(rect.x, buttonRect.yMax, rect.width, num);
-			return false;
+			else
+			{
+				resultRect = new Rect(rect.x, buttonRect.yMax, rect.width, num);
+				result = false;
+			}
+			return result;
 		}
 
 		private static Rect GetLargestRect(List<Rect> rects)

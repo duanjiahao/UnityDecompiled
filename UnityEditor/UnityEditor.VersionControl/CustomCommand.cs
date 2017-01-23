@@ -11,7 +11,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string name
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -19,7 +18,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string label
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -27,7 +25,6 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern CommandContext context
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -36,7 +33,6 @@ namespace UnityEditor.VersionControl
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Task StartTask();
 	}

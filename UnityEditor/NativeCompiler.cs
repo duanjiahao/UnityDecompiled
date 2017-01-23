@@ -79,7 +79,7 @@ internal abstract class NativeCompiler : INativeCompiler
 
 	protected static string Aggregate(IEnumerable<string> items, string prefix, string suffix)
 	{
-		return items.Aggregate(string.Empty, (string current, string additionalFile) => current + prefix + additionalFile + suffix);
+		return items.Aggregate("", (string current, string additionalFile) => current + prefix + additionalFile + suffix);
 	}
 
 	internal static void ParallelFor<T>(T[] sources, Action<T> action)

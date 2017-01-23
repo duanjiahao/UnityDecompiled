@@ -142,9 +142,8 @@ namespace UnityEngine.Assertions
 			if (typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
 			{
 				Assert.AreEqual(expected as UnityEngine.Object, actual as UnityEngine.Object, message);
-				return;
 			}
-			if (!comparer.Equals(actual, expected))
+			else if (!comparer.Equals(actual, expected))
 			{
 				Assert.Fail(AssertionMessageUtil.GetEqualityMessage(actual, expected, true), message);
 			}
@@ -177,9 +176,8 @@ namespace UnityEngine.Assertions
 			if (typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
 			{
 				Assert.AreNotEqual(expected as UnityEngine.Object, actual as UnityEngine.Object, message);
-				return;
 			}
-			if (comparer.Equals(actual, expected))
+			else if (comparer.Equals(actual, expected))
 			{
 				Assert.Fail(AssertionMessageUtil.GetEqualityMessage(actual, expected, false), message);
 			}

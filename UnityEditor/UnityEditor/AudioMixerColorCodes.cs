@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditor.Audio;
 using UnityEngine;
 
@@ -52,6 +53,9 @@ namespace UnityEditor
 			"Green"
 		};
 
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
 		private static string[] GetColorNames()
 		{
 			return AudioMixerColorCodes.colorNames;
@@ -59,11 +63,16 @@ namespace UnityEditor
 
 		private static Color[] GetColors()
 		{
+			Color[] result;
 			if (EditorGUIUtility.isProSkin)
 			{
-				return AudioMixerColorCodes.darkSkinColors;
+				result = AudioMixerColorCodes.darkSkinColors;
 			}
-			return AudioMixerColorCodes.lightSkinColors;
+			else
+			{
+				result = AudioMixerColorCodes.lightSkinColors;
+			}
+			return result;
 		}
 
 		public static void AddColorItemsToGenericMenu(GenericMenu menu, AudioMixerGroupController[] groups)
@@ -72,8 +81,14 @@ namespace UnityEditor
 			string[] array = AudioMixerColorCodes.GetColorNames();
 			for (int i = 0; i < colors.Length; i++)
 			{
-				bool on = groups.Length == 1 && i == groups[0].userColorIndex;
-				menu.AddItem(new GUIContent(array[i]), on, new GenericMenu.MenuFunction2(AudioMixerColorCodes.ItemCallback), new AudioMixerColorCodes.ItemData
+				bool flag = groups.Length == 1 && i == groups[0].userColorIndex;
+				GUIContent arg_73_1 = new GUIContent(array[i]);
+				bool arg_73_2 = flag;
+				if (AudioMixerColorCodes.<>f__mg$cache0 == null)
+				{
+					AudioMixerColorCodes.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AudioMixerColorCodes.ItemCallback);
+				}
+				menu.AddItem(arg_73_1, arg_73_2, AudioMixerColorCodes.<>f__mg$cache0, new AudioMixerColorCodes.ItemData
 				{
 					groups = groups,
 					index = i
@@ -96,12 +111,17 @@ namespace UnityEditor
 		public static Color GetColor(int index)
 		{
 			Color[] colors = AudioMixerColorCodes.GetColors();
+			Color result;
 			if (index >= 0 && index < colors.Length)
 			{
-				return colors[index];
+				result = colors[index];
 			}
-			Debug.LogError("Invalid color code index: " + index);
-			return Color.white;
+			else
+			{
+				Debug.LogError("Invalid color code index: " + index);
+				result = Color.white;
+			}
+			return result;
 		}
 	}
 }

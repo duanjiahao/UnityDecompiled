@@ -6,12 +6,6 @@ namespace UnityEditor.VersionControl
 {
 	internal class WindowChange : EditorWindow
 	{
-		private const int kSubmitNotStartedResultCode = 256;
-
-		private const int kSubmitRunningResultCode = 0;
-
-		private const string c_defaultDescription = "";
-
 		private ListControl submitList = new ListControl();
 
 		private AssetList assetList = new AssetList();
@@ -20,23 +14,29 @@ namespace UnityEditor.VersionControl
 
 		private string description = string.Empty;
 
-		private bool allowSubmit;
+		private bool allowSubmit = false;
 
-		private Task taskStatus;
+		private Task taskStatus = null;
 
-		private Task taskDesc;
+		private Task taskDesc = null;
 
-		private Task taskStat;
+		private Task taskStat = null;
 
-		private Task taskSubmit;
+		private Task taskSubmit = null;
 
-		private Task taskAdd;
+		private Task taskAdd = null;
+
+		private const int kSubmitNotStartedResultCode = 256;
+
+		private const int kSubmitRunningResultCode = 0;
 
 		private int submitResultCode = 256;
 
-		private string submitErrorMessage;
+		private string submitErrorMessage = null;
 
-		private int m_TextAreaControlID;
+		private int m_TextAreaControlID = 0;
+
+		private const string c_defaultDescription = "";
 
 		public void OnEnable()
 		{
@@ -70,26 +70,37 @@ namespace UnityEditor.VersionControl
 
 		private string SanitizeDescription(string desc)
 		{
+			string result;
 			if (Provider.GetActivePlugin() != null && Provider.GetActivePlugin().name != "Perforce")
 			{
-				return desc;
+				result = desc;
 			}
-			int num = desc.IndexOf('\'');
-			if (num == -1)
+			else
 			{
-				return desc;
+				int num = desc.IndexOf('\'');
+				if (num == -1)
+				{
+					result = desc;
+				}
+				else
+				{
+					num++;
+					int num2 = desc.IndexOf('\'', num);
+					if (num2 == -1)
+					{
+						result = desc;
+					}
+					else
+					{
+						result = desc.Substring(num, num2 - num).Trim(new char[]
+						{
+							' ',
+							'\t'
+						});
+					}
+				}
 			}
-			num++;
-			int num2 = desc.IndexOf('\'', num);
-			if (num2 == -1)
-			{
-				return desc;
-			}
-			return desc.Substring(num, num2 - num).Trim(new char[]
-			{
-				' ',
-				'\t'
-			});
+			return result;
 		}
 
 		private void DoOpen(ChangeSet change, AssetList assets)
@@ -98,7 +109,7 @@ namespace UnityEditor.VersionControl
 			this.submitResultCode = 256;
 			this.submitErrorMessage = null;
 			this.changeSet = change;
-			this.description = ((change != null) ? this.SanitizeDescription(change.description) : string.Empty);
+			this.description = ((change != null) ? this.SanitizeDescription(change.description) : "");
 			this.assetList = null;
 			if (change == null)
 			{
@@ -131,64 +142,62 @@ namespace UnityEditor.VersionControl
 		internal static void OnSubmitted(Task task)
 		{
 			WindowChange[] array = Resources.FindObjectsOfTypeAll(typeof(WindowChange)) as WindowChange[];
-			if (array.Length == 0)
+			if (array.Length != 0)
 			{
-				return;
-			}
-			WindowChange windowChange = array[0];
-			windowChange.assetList = task.assetList;
-			windowChange.submitResultCode = task.resultCode;
-			windowChange.submitErrorMessage = null;
-			if ((task.resultCode & 2) != 0)
-			{
-				string empty = string.Empty;
-				Message[] messages = task.messages;
-				for (int i = 0; i < messages.Length; i++)
+				WindowChange windowChange = array[0];
+				windowChange.assetList = task.assetList;
+				windowChange.submitResultCode = task.resultCode;
+				windowChange.submitErrorMessage = null;
+				if ((task.resultCode & 2) != 0)
 				{
-					Message message = messages[i];
-					if (message.severity == Message.Severity.Error)
+					string str = "";
+					Message[] messages = task.messages;
+					for (int i = 0; i < messages.Length; i++)
 					{
-						WindowChange expr_77 = windowChange;
-						expr_77.submitErrorMessage = expr_77.submitErrorMessage + empty + message.message;
+						Message message = messages[i];
+						if (message.severity == Message.Severity.Error)
+						{
+							WindowChange expr_7F = windowChange;
+							expr_7F.submitErrorMessage = expr_7F.submitErrorMessage + str + message.message;
+						}
 					}
 				}
-			}
-			if ((task.resultCode & 3) != 0)
-			{
-				WindowPending.UpdateAllWindows();
-				bool flag = windowChange.changeSet == null;
-				if (flag)
+				if ((task.resultCode & 3) != 0)
 				{
-					Task task2 = Provider.Status(string.Empty);
-					task2.Wait();
-					WindowPending.ExpandLatestChangeSet();
+					WindowPending.UpdateAllWindows();
+					bool flag = windowChange.changeSet == null;
+					if (flag)
+					{
+						Task task2 = Provider.Status("");
+						task2.Wait();
+						WindowPending.ExpandLatestChangeSet();
+					}
 				}
-			}
-			if ((task.resultCode & 1) != 0)
-			{
-				windowChange.ResetAndClose();
-			}
-			else
-			{
-				windowChange.RefreshList();
+				if ((task.resultCode & 1) != 0)
+				{
+					windowChange.ResetAndClose();
+				}
+				else
+				{
+					windowChange.RefreshList();
+				}
 			}
 		}
 
 		internal static void OnAdded(Task task)
 		{
 			WindowChange[] array = Resources.FindObjectsOfTypeAll(typeof(WindowChange)) as WindowChange[];
-			if (array.Length == 0)
+			if (array.Length != 0)
 			{
-				return;
+				WindowChange windowChange = array[0];
+				windowChange.taskSubmit = null;
+				windowChange.submitResultCode = 256;
+				windowChange.submitErrorMessage = null;
+				windowChange.taskAdd = null;
+				windowChange.taskStatus = Provider.Status(windowChange.assetList, false);
+				windowChange.assetList = null;
+				WindowPending.UpdateAllWindows();
 			}
-			WindowChange windowChange = array[0];
-			windowChange.taskSubmit = null;
-			windowChange.submitResultCode = 256;
-			windowChange.submitErrorMessage = null;
-			windowChange.taskAdd = null;
-			windowChange.taskStatus = Provider.Status(windowChange.assetList, false);
-			windowChange.assetList = null;
-			WindowPending.UpdateAllWindows();
 		}
 
 		private void OnGUI()
@@ -237,7 +246,7 @@ namespace UnityEditor.VersionControl
 			}
 			else if (this.taskDesc != null && this.taskDesc.resultCode != 0)
 			{
-				this.description = ((this.taskDesc.text.Length <= 0) ? string.Empty : this.taskDesc.text);
+				this.description = ((this.taskDesc.text.Length <= 0) ? "" : this.taskDesc.text);
 				if (this.description.Trim() == "<enter description here>")
 				{
 					this.description = string.Empty;
@@ -270,7 +279,7 @@ namespace UnityEditor.VersionControl
 			GUILayout.FlexibleSpace();
 			Rect screenRect = new Rect(6f, 206f, base.position.width - 12f, base.position.height - 248f);
 			GUILayout.BeginArea(screenRect);
-			GUILayout.Box(string.Empty, new GUILayoutOption[]
+			GUILayout.Box("", new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true),
 				GUILayout.ExpandHeight(true)
@@ -315,7 +324,7 @@ namespace UnityEditor.VersionControl
 			{
 				bool flag4 = (this.submitResultCode & 1) != 0;
 				GUI.enabled = flag4;
-				string text = string.Empty;
+				string text = "";
 				if (flag4)
 				{
 					text = "Finished successfully";
@@ -348,7 +357,7 @@ namespace UnityEditor.VersionControl
 		private void OnErrorGUI()
 		{
 			GUILayout.Label("Submit failed", EditorStyles.boldLabel, new GUILayoutOption[0]);
-			string text = string.Empty;
+			string text = "";
 			if (!string.IsNullOrEmpty(this.submitErrorMessage))
 			{
 				text = this.submitErrorMessage + "\n";
@@ -368,7 +377,7 @@ namespace UnityEditor.VersionControl
 
 		private void OnConflictingFilesGUI()
 		{
-			string text = string.Empty;
+			string text = "";
 			foreach (Asset current in this.assetList)
 			{
 				if (current.IsState(Asset.States.Conflicted))
@@ -396,7 +405,7 @@ namespace UnityEditor.VersionControl
 		private void OnUnaddedFilesGUI()
 		{
 			AssetList assetList = new AssetList();
-			string text = string.Empty;
+			string text = "";
 			foreach (Asset current in this.assetList)
 			{
 				if (!current.IsState(Asset.States.OutOfSync) && !current.IsState(Asset.States.Synced) && !current.IsState(Asset.States.AddedLocal))
@@ -434,16 +443,18 @@ namespace UnityEditor.VersionControl
 
 		private void Save(bool submit)
 		{
-			if (this.description.Trim() == string.Empty)
+			if (this.description.Trim() == "")
 			{
 				Debug.LogError("Version control: Please enter a valid change description");
-				return;
 			}
-			EditorApplication.SaveAssets();
-			this.taskSubmit = Provider.Submit(this.changeSet, this.assetList, this.description, !submit);
-			this.submitResultCode = 0;
-			this.submitErrorMessage = null;
-			this.taskSubmit.SetCompletionAction(CompletionAction.OnSubmittedChangeWindow);
+			else
+			{
+				AssetDatabase.SaveAssets();
+				this.taskSubmit = Provider.Submit(this.changeSet, this.assetList, this.description, !submit);
+				this.submitResultCode = 0;
+				this.submitErrorMessage = null;
+				this.taskSubmit.SetCompletionAction(CompletionAction.OnSubmittedChangeWindow);
+			}
 		}
 	}
 }

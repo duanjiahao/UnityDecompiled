@@ -51,7 +51,7 @@ namespace UnityEditor
 
 		private int m_Mirror;
 
-		private int m_MaskType;
+		private int m_MaskType = 3;
 
 		private AvatarMask m_MaskSource;
 
@@ -370,6 +370,35 @@ namespace UnityEditor
 			set
 			{
 				this.m_HasAdditiveReferencePose = ((!value) ? 0 : 1);
+			}
+		}
+
+		public void ConfigureMaskFromClip(ref AvatarMask mask)
+		{
+			mask.transformCount = this.m_TransformMask.Length;
+			for (int i = 0; i < mask.transformCount; i++)
+			{
+				mask.SetTransformPath(i, this.m_TransformMask[i].path);
+				mask.SetTransformActive(i, this.m_TransformMask[i].weight > 0f);
+			}
+			for (int j = 0; j < this.m_BodyMask.Length; j++)
+			{
+				mask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)j, this.m_BodyMask[j] != 0);
+			}
+		}
+
+		public void ConfigureClipFromMask(AvatarMask mask)
+		{
+			this.m_TransformMask = new TransformMaskElement[mask.transformCount];
+			for (int i = 0; i < mask.transformCount; i++)
+			{
+				this.m_TransformMask[i].path = mask.GetTransformPath(i);
+				this.m_TransformMask[i].weight = ((!mask.GetTransformActive(i)) ? 0f : 1f);
+			}
+			this.m_BodyMask = new int[13];
+			for (int j = 0; j < 13; j++)
+			{
+				this.m_BodyMask[j] = ((!mask.GetHumanoidBodyPartActive((AvatarMaskBodyPart)j)) ? 0 : 1);
 			}
 		}
 

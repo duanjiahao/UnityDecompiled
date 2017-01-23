@@ -9,107 +9,85 @@ namespace UnityEditor
 	{
 		internal static extern float editorSimulationSpeed
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern float editorPlaybackTime
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool editorIsScrubbing
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool editorIsPlaying
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool editorIsPaused
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool editorResimulation
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-
-		internal static extern bool editorUpdateAll
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern ParticleSystem lockedParticleSystem
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string CheckCircularReferences(ParticleSystem subEmitter);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void PerformCompleteResimulation();
 
 		public static ParticleSystem GetRoot(ParticleSystem ps)
 		{
+			ParticleSystem result;
 			if (ps == null)
 			{
-				return null;
+				result = null;
 			}
-			Transform transform = ps.transform;
-			while (transform.parent && transform.parent.gameObject.GetComponent<ParticleSystem>() != null)
+			else
 			{
-				transform = transform.parent;
+				Transform transform = ps.transform;
+				while (transform.parent && transform.parent.gameObject.GetComponent<ParticleSystem>() != null)
+				{
+					transform = transform.parent;
+				}
+				result = transform.gameObject.GetComponent<ParticleSystem>();
 			}
-			return transform.gameObject.GetComponent<ParticleSystem>();
+			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void StopEffect([DefaultValue("true")] bool stop, [DefaultValue("true")] bool clear);
 

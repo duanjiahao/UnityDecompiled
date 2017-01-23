@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -34,21 +35,28 @@ namespace UnityEditor
 			select klass;
 		}
 
+		[RequiredByNativeCode]
 		private static void SetLoadedEditorAssemblies(Assembly[] assemblies)
 		{
 			EditorAssemblies.loadedAssemblies = assemblies;
-			EditorAssemblies.ProcessInitializeOnLoadAttributes();
 		}
 
+		[RequiredByNativeCode]
 		private static RuntimeInitializeClassInfo[] GetRuntimeInitializeClassInfos()
 		{
+			RuntimeInitializeClassInfo[] result;
 			if (EditorAssemblies.m_RuntimeInitializeClassInfoList == null)
 			{
-				return null;
+				result = null;
 			}
-			return EditorAssemblies.m_RuntimeInitializeClassInfoList.ToArray();
+			else
+			{
+				result = EditorAssemblies.m_RuntimeInitializeClassInfoList.ToArray();
+			}
+			return result;
 		}
 
+		[RequiredByNativeCode]
 		private static int GetTotalNumRuntimeInitializeMethods()
 		{
 			return EditorAssemblies.m_TotalNumRuntimeInitializeMethods;
@@ -91,7 +99,14 @@ namespace UnityEditor
 				}
 				if (Attribute.IsDefined(methodInfo, typeof(InitializeOnLoadMethodAttribute)))
 				{
-					methodInfo.Invoke(null, null);
+					try
+					{
+						methodInfo.Invoke(null, null);
+					}
+					catch (TargetInvocationException ex)
+					{
+						Debug.LogError(ex.InnerException);
+					}
 				}
 			}
 			if (list != null)
@@ -112,18 +127,59 @@ namespace UnityEditor
 			}
 		}
 
-		private static void ProcessInitializeOnLoadAttributes()
+		[RequiredByNativeCode]
+		private static int[] ProcessInitializeOnLoadAttributes()
 		{
+			List<int> list = null;
+			Assembly[] loadedAssemblies = EditorAssemblies.loadedAssemblies;
 			EditorAssemblies.m_TotalNumRuntimeInitializeMethods = 0;
 			EditorAssemblies.m_RuntimeInitializeClassInfoList = new List<RuntimeInitializeClassInfo>();
-			foreach (Type current in EditorAssemblies.loadedTypes)
+			for (int i = 0; i < loadedAssemblies.Length; i++)
 			{
-				if (current.IsDefined(typeof(InitializeOnLoadAttribute), false))
+				int totalNumRuntimeInitializeMethods = EditorAssemblies.m_TotalNumRuntimeInitializeMethods;
+				int count = EditorAssemblies.m_RuntimeInitializeClassInfoList.Count;
+				try
 				{
-					EditorAssemblies.ProcessEditorInitializeOnLoad(current);
+					Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(loadedAssemblies[i]);
+					Type[] array = typesFromAssembly;
+					for (int j = 0; j < array.Length; j++)
+					{
+						Type type = array[j];
+						if (type.IsDefined(typeof(InitializeOnLoadAttribute), false))
+						{
+							EditorAssemblies.ProcessEditorInitializeOnLoad(type);
+						}
+						EditorAssemblies.ProcessStaticMethodAttributes(type);
+					}
 				}
-				EditorAssemblies.ProcessStaticMethodAttributes(current);
+				catch (Exception exception)
+				{
+					Debug.LogException(exception);
+					if (list == null)
+					{
+						list = new List<int>();
+					}
+					if (totalNumRuntimeInitializeMethods != EditorAssemblies.m_TotalNumRuntimeInitializeMethods)
+					{
+						EditorAssemblies.m_TotalNumRuntimeInitializeMethods = totalNumRuntimeInitializeMethods;
+					}
+					if (count != EditorAssemblies.m_RuntimeInitializeClassInfoList.Count)
+					{
+						EditorAssemblies.m_RuntimeInitializeClassInfoList.RemoveRange(count, EditorAssemblies.m_RuntimeInitializeClassInfoList.Count - count);
+					}
+					list.Add(i);
+				}
 			}
+			int[] result;
+			if (list == null)
+			{
+				result = null;
+			}
+			else
+			{
+				result = list.ToArray();
+			}
+			return result;
 		}
 	}
 }

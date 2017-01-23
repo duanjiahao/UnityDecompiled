@@ -1,17 +1,127 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
 
 namespace UnityEditor
 {
 	public sealed class AssetDatabase
 	{
+		public delegate void ImportPackageCallback(string packageName);
+
+		public delegate void ImportPackageFailedCallback(string packageName, string errorMessage);
+
+		public static event AssetDatabase.ImportPackageCallback importPackageStarted
+		{
+			add
+			{
+				AssetDatabase.ImportPackageCallback importPackageCallback = AssetDatabase.importPackageStarted;
+				AssetDatabase.ImportPackageCallback importPackageCallback2;
+				do
+				{
+					importPackageCallback2 = importPackageCallback;
+					importPackageCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageCallback>(ref AssetDatabase.importPackageStarted, (AssetDatabase.ImportPackageCallback)Delegate.Combine(importPackageCallback2, value), importPackageCallback);
+				}
+				while (importPackageCallback != importPackageCallback2);
+			}
+			remove
+			{
+				AssetDatabase.ImportPackageCallback importPackageCallback = AssetDatabase.importPackageStarted;
+				AssetDatabase.ImportPackageCallback importPackageCallback2;
+				do
+				{
+					importPackageCallback2 = importPackageCallback;
+					importPackageCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageCallback>(ref AssetDatabase.importPackageStarted, (AssetDatabase.ImportPackageCallback)Delegate.Remove(importPackageCallback2, value), importPackageCallback);
+				}
+				while (importPackageCallback != importPackageCallback2);
+			}
+		}
+
+		public static event AssetDatabase.ImportPackageCallback importPackageCompleted
+		{
+			add
+			{
+				AssetDatabase.ImportPackageCallback importPackageCallback = AssetDatabase.importPackageCompleted;
+				AssetDatabase.ImportPackageCallback importPackageCallback2;
+				do
+				{
+					importPackageCallback2 = importPackageCallback;
+					importPackageCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageCallback>(ref AssetDatabase.importPackageCompleted, (AssetDatabase.ImportPackageCallback)Delegate.Combine(importPackageCallback2, value), importPackageCallback);
+				}
+				while (importPackageCallback != importPackageCallback2);
+			}
+			remove
+			{
+				AssetDatabase.ImportPackageCallback importPackageCallback = AssetDatabase.importPackageCompleted;
+				AssetDatabase.ImportPackageCallback importPackageCallback2;
+				do
+				{
+					importPackageCallback2 = importPackageCallback;
+					importPackageCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageCallback>(ref AssetDatabase.importPackageCompleted, (AssetDatabase.ImportPackageCallback)Delegate.Remove(importPackageCallback2, value), importPackageCallback);
+				}
+				while (importPackageCallback != importPackageCallback2);
+			}
+		}
+
+		public static event AssetDatabase.ImportPackageCallback importPackageCancelled
+		{
+			add
+			{
+				AssetDatabase.ImportPackageCallback importPackageCallback = AssetDatabase.importPackageCancelled;
+				AssetDatabase.ImportPackageCallback importPackageCallback2;
+				do
+				{
+					importPackageCallback2 = importPackageCallback;
+					importPackageCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageCallback>(ref AssetDatabase.importPackageCancelled, (AssetDatabase.ImportPackageCallback)Delegate.Combine(importPackageCallback2, value), importPackageCallback);
+				}
+				while (importPackageCallback != importPackageCallback2);
+			}
+			remove
+			{
+				AssetDatabase.ImportPackageCallback importPackageCallback = AssetDatabase.importPackageCancelled;
+				AssetDatabase.ImportPackageCallback importPackageCallback2;
+				do
+				{
+					importPackageCallback2 = importPackageCallback;
+					importPackageCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageCallback>(ref AssetDatabase.importPackageCancelled, (AssetDatabase.ImportPackageCallback)Delegate.Remove(importPackageCallback2, value), importPackageCallback);
+				}
+				while (importPackageCallback != importPackageCallback2);
+			}
+		}
+
+		public static event AssetDatabase.ImportPackageFailedCallback importPackageFailed
+		{
+			add
+			{
+				AssetDatabase.ImportPackageFailedCallback importPackageFailedCallback = AssetDatabase.importPackageFailed;
+				AssetDatabase.ImportPackageFailedCallback importPackageFailedCallback2;
+				do
+				{
+					importPackageFailedCallback2 = importPackageFailedCallback;
+					importPackageFailedCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageFailedCallback>(ref AssetDatabase.importPackageFailed, (AssetDatabase.ImportPackageFailedCallback)Delegate.Combine(importPackageFailedCallback2, value), importPackageFailedCallback);
+				}
+				while (importPackageFailedCallback != importPackageFailedCallback2);
+			}
+			remove
+			{
+				AssetDatabase.ImportPackageFailedCallback importPackageFailedCallback = AssetDatabase.importPackageFailed;
+				AssetDatabase.ImportPackageFailedCallback importPackageFailedCallback2;
+				do
+				{
+					importPackageFailedCallback2 = importPackageFailedCallback;
+					importPackageFailedCallback = Interlocked.CompareExchange<AssetDatabase.ImportPackageFailedCallback>(ref AssetDatabase.importPackageFailed, (AssetDatabase.ImportPackageFailedCallback)Delegate.Remove(importPackageFailedCallback2, value), importPackageFailedCallback);
+				}
+				while (importPackageFailedCallback != importPackageFailedCallback2);
+			}
+		}
+
 		internal static extern bool isLocked
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -21,11 +131,9 @@ namespace UnityEditor
 			return AssetDatabase.Contains(obj.GetInstanceID());
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Contains(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string CreateFolder(string parentFolder, string newFolderName);
 
@@ -34,7 +142,6 @@ namespace UnityEditor
 			return AssetDatabase.IsMainAsset(obj.GetInstanceID());
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsMainAsset(int instanceID);
 
@@ -43,7 +150,6 @@ namespace UnityEditor
 			return AssetDatabase.IsSubAsset(obj.GetInstanceID());
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsSubAsset(int instanceID);
 
@@ -52,7 +158,6 @@ namespace UnityEditor
 			return AssetDatabase.IsForeignAsset(obj.GetInstanceID());
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsForeignAsset(int instanceID);
 
@@ -61,43 +166,33 @@ namespace UnityEditor
 			return AssetDatabase.IsNativeAsset(obj.GetInstanceID());
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsNativeAsset(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GenerateUniqueAssetPath(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StartAssetEditing();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopAssetEditing();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string ValidateMoveAsset(string oldPath, string newPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string MoveAsset(string oldPath, string newPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string RenameAsset(string pathName, string newName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool MoveAssetToTrash(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DeleteAsset(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ImportAsset(string path, [DefaultValue("ImportAssetOptions.Default")] ImportAssetOptions options);
 
@@ -108,31 +203,24 @@ namespace UnityEditor
 			AssetDatabase.ImportAsset(path, options);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CopyAsset(string path, string newPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool WriteImportSettingsIfDirty(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetSubFolders(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsValidFolder(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CreateAsset(UnityEngine.Object asset, string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CreateAssetFromObjects(UnityEngine.Object[] assets, string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AddObjectToAsset(UnityEngine.Object objectToAdd, string path);
 
@@ -141,15 +229,12 @@ namespace UnityEditor
 			AssetDatabase.AddObjectToAsset_OBJ_Internal(objectToAdd, assetObject);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void AddInstanceIDToAssetWithRandomFileId(int instanceIDToAdd, UnityEngine.Object assetObject, bool hide);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AddObjectToAsset_OBJ_Internal(UnityEngine.Object newAsset, UnityEngine.Object sameAssetFile);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetPath(UnityEngine.Object assetObject);
 
@@ -158,27 +243,24 @@ namespace UnityEditor
 			return AssetDatabase.GetAssetPathFromInstanceID(instanceID);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetAssetPathFromInstanceID(int instanceID);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetMainAssetInstanceID(string assetPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetOrScenePath(UnityEngine.Object assetObject);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetTextMetaFilePathFromAssetPath(string path);
 
-		[ThreadAndSerializationSafe, WrapperlessIcall]
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetPathFromTextMetaFilePath(string path);
 
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
+		[TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object LoadAssetAtPath(string assetPath, Type type);
 
@@ -187,19 +269,21 @@ namespace UnityEditor
 			return (T)((object)AssetDatabase.LoadAssetAtPath(assetPath, typeof(T)));
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object LoadMainAssetAtPath(string assetPath);
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Type GetMainAssetTypeAtPath(string assetPath);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsMainAssetAtPathLoaded(string assetPath);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] LoadAllAssetRepresentationsAtPath(string assetPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] LoadAllAssetsAtPath(string assetPath);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAllAssetPaths();
 
@@ -213,7 +297,6 @@ namespace UnityEditor
 		{
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Refresh([DefaultValue("ImportAssetOptions.Default")] ImportAssetOptions options);
 
@@ -224,7 +307,6 @@ namespace UnityEditor
 			AssetDatabase.Refresh(options);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool OpenAsset(int instanceID, [DefaultValue("-1")] int lineNumber);
 
@@ -261,11 +343,9 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string AssetPathToGUID(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GUIDToAssetPath(string guid);
 
@@ -276,27 +356,21 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetAssetDependencyHash(string path, out Hash128 value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetInstanceIDFromGUID(string guid);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SaveAssets();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture GetCachedIcon(string path);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetLabels(UnityEngine.Object obj, string[] labels);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_GetAllLabels(out string[] labels, out float[] scores);
 
@@ -313,19 +387,15 @@ namespace UnityEditor
 			return dictionary;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetLabels(UnityEngine.Object obj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearLabels(UnityEngine.Object obj);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] MatchLabelsPartial(UnityEngine.Object obj, string partial);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAllAssetBundleNames();
 
@@ -335,33 +405,29 @@ namespace UnityEditor
 			return AssetDatabase.GetAllAssetBundleNames();
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] GetAllAssetBundleNamesWithoutVariant();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] GetAllAssetBundleVariants();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetUnusedAssetBundleNames();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RemoveAssetBundleName(string assetBundleName, bool forceRemove);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RemoveUnusedAssetBundleNames();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAssetPathsFromAssetBundle(string assetBundleName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAssetPathsFromAssetBundleAndAssetName(string assetBundleName, string assetName);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetAssetBundleDependencies(string assetBundleName, bool recursive);
 
 		public static string[] GetDependencies(string pathName)
 		{
@@ -381,7 +447,6 @@ namespace UnityEditor
 			return AssetDatabase.GetDependencies(pathNames, true);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetDependencies(string[] pathNames, bool recursive);
 
@@ -401,7 +466,6 @@ namespace UnityEditor
 			}, fileName, flags);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ExportPackage(string[] assetPathNames, string fileName, [DefaultValue("ExportPackageOptions.Default")] ExportPackageOptions flags);
 
@@ -421,17 +485,17 @@ namespace UnityEditor
 			string packageIconPath;
 			bool allowReInstall;
 			ImportPackageItem[] array = PackageUtility.ExtractAndPrepareAssetList(packagePath, out packageIconPath, out allowReInstall);
-			if (array == null)
+			if (array != null)
 			{
-				return;
-			}
-			if (interactive)
-			{
-				PackageImport.ShowImportPackage(packagePath, array, packageIconPath, allowReInstall);
-			}
-			else
-			{
-				PackageUtility.ImportPackageAssets(array, false);
+				if (interactive)
+				{
+					PackageImport.ShowImportPackage(packagePath, array, packageIconPath, allowReInstall);
+				}
+				else
+				{
+					string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(packagePath);
+					PackageUtility.ImportPackageAssets(fileNameWithoutExtension, array, false);
+				}
 			}
 		}
 
@@ -444,14 +508,13 @@ namespace UnityEditor
 			string text;
 			bool flag;
 			ImportPackageItem[] array = PackageUtility.ExtractAndPrepareAssetList(packagePath, out text, out flag);
-			if (array == null || array.Length == 0)
+			if (array != null && array.Length != 0)
 			{
-				return;
+				string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(packagePath);
+				PackageUtility.ImportPackageAssetsImmediately(fileNameWithoutExtension, array, false);
 			}
-			PackageUtility.ImportPackageAssetsImmediately(array, false);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetUniquePathNameAtSelectedPath(string fileName);
 
@@ -491,13 +554,49 @@ namespace UnityEditor
 			return AssetDatabase.IsOpenForEdit(textMetaFilePathFromAssetPath, out message);
 		}
 
-		[WrapperlessIcall, TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
+		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object GetBuiltinExtraResource(Type type, string path);
 
 		public static T GetBuiltinExtraResource<T>(string path) where T : UnityEngine.Object
 		{
 			return (T)((object)AssetDatabase.GetBuiltinExtraResource(typeof(T), path));
+		}
+
+		[RequiredByNativeCode]
+		private static void Internal_CallImportPackageStarted(string packageName)
+		{
+			if (AssetDatabase.importPackageStarted != null)
+			{
+				AssetDatabase.importPackageStarted(packageName);
+			}
+		}
+
+		[RequiredByNativeCode]
+		private static void Internal_CallImportPackageCompleted(string packageName)
+		{
+			if (AssetDatabase.importPackageCompleted != null)
+			{
+				AssetDatabase.importPackageCompleted(packageName);
+			}
+		}
+
+		[RequiredByNativeCode]
+		private static void Internal_CallImportPackageCancelled(string packageName)
+		{
+			if (AssetDatabase.importPackageCancelled != null)
+			{
+				AssetDatabase.importPackageCancelled(packageName);
+			}
+		}
+
+		[RequiredByNativeCode]
+		private static void Internal_CallImportPackageFailed(string packageName, string errorMessage)
+		{
+			if (AssetDatabase.importPackageFailed != null)
+			{
+				AssetDatabase.importPackageFailed(packageName, errorMessage);
+			}
 		}
 
 		[Obsolete("GetTextMetaDataPathFromAssetPath has been renamed to GetTextMetaFilePathFromAssetPath (UnityUpgradable) -> GetTextMetaFilePathFromAssetPath(*)")]
@@ -524,11 +623,16 @@ namespace UnityEditor
 
 		private static string[] FindAssets(SearchFilter searchFilter)
 		{
+			string[] result;
 			if (searchFilter.folders != null && searchFilter.folders.Length > 0)
 			{
-				return AssetDatabase.SearchInFolders(searchFilter);
+				result = AssetDatabase.SearchInFolders(searchFilter);
 			}
-			return AssetDatabase.SearchAllAssets(searchFilter);
+			else
+			{
+				result = AssetDatabase.SearchAllAssets(searchFilter);
+			}
+			return result;
 		}
 
 		private static string[] SearchAllAssets(SearchFilter searchFilter)

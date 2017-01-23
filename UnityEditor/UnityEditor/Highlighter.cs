@@ -7,37 +7,43 @@ namespace UnityEditor
 {
 	public sealed class Highlighter
 	{
+		private static GUIView s_View;
+
+		private static HighlightSearchMode s_SearchMode;
+
+		private static float s_HighlightElapsedTime = 0f;
+
+		private static float s_LastTime = 0f;
+
+		private static Rect s_RepaintRegion;
+
 		private const float kPulseSpeed = 0.45f;
 
 		private const float kPopupDuration = 0.33f;
 
 		private const int kExpansionMovementSize = 5;
 
-		private static GUIView s_View;
-
-		private static HighlightSearchMode s_SearchMode;
-
-		private static float s_HighlightElapsedTime;
-
-		private static float s_LastTime;
-
-		private static Rect s_RepaintRegion;
-
 		private static GUIStyle s_HighlightStyle;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache1;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache2;
 
 		internal static extern HighlightSearchMode searchMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool searching
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -101,15 +107,12 @@ namespace UnityEditor
 			Highlighter.INTERNAL_CALL_Handle(ref position, text);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Handle(ref Rect position, string text);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string internal_get_activeText();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void internal_set_activeText(string value);
 
@@ -120,7 +123,6 @@ namespace UnityEditor
 			return result;
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_internal_get_activeRect(out Rect value);
 
@@ -129,15 +131,12 @@ namespace UnityEditor
 			Highlighter.INTERNAL_CALL_internal_set_activeRect(ref value);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_internal_set_activeRect(ref Rect value);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool internal_get_activeVisible();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void internal_set_activeVisible(bool value);
 
@@ -160,34 +159,49 @@ namespace UnityEditor
 		{
 			Highlighter.Stop();
 			Highlighter.active = true;
+			bool result;
 			if (!Highlighter.SetWindow(windowTitle))
 			{
 				Debug.LogWarning("Window " + windowTitle + " not found.");
-				return false;
-			}
-			Highlighter.activeText = text;
-			Highlighter.s_SearchMode = mode;
-			Highlighter.s_LastTime = Time.realtimeSinceStartup;
-			bool flag = Highlighter.Search();
-			if (flag)
-			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(Highlighter.Update));
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(Highlighter.Update));
+				result = false;
 			}
 			else
 			{
-				Debug.LogWarning(string.Concat(new string[]
+				Highlighter.activeText = text;
+				Highlighter.s_SearchMode = mode;
+				Highlighter.s_LastTime = Time.realtimeSinceStartup;
+				bool flag = Highlighter.Search();
+				if (flag)
 				{
-					"Item ",
-					text,
-					" not found in window ",
-					windowTitle,
-					"."
-				}));
-				Highlighter.Stop();
+					Delegate arg_79_0 = EditorApplication.update;
+					if (Highlighter.<>f__mg$cache0 == null)
+					{
+						Highlighter.<>f__mg$cache0 = new EditorApplication.CallbackFunction(Highlighter.Update);
+					}
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_79_0, Highlighter.<>f__mg$cache0);
+					Delegate arg_AA_0 = EditorApplication.update;
+					if (Highlighter.<>f__mg$cache1 == null)
+					{
+						Highlighter.<>f__mg$cache1 = new EditorApplication.CallbackFunction(Highlighter.Update);
+					}
+					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_AA_0, Highlighter.<>f__mg$cache1);
+				}
+				else
+				{
+					Debug.LogWarning(string.Concat(new string[]
+					{
+						"Item ",
+						text,
+						" not found in window ",
+						windowTitle,
+						"."
+					}));
+					Highlighter.Stop();
+				}
+				InternalEditorUtility.RepaintAllViews();
+				result = flag;
 			}
-			InternalEditorUtility.RepaintAllViews();
-			return flag;
+			return result;
 		}
 
 		public static void HighlightIdentifier(Rect position, string identifier)
@@ -203,7 +217,12 @@ namespace UnityEditor
 			Rect activeRect = Highlighter.activeRect;
 			if (Highlighter.activeRect.width == 0f || Highlighter.s_View == null)
 			{
-				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(Highlighter.Update));
+				Delegate arg_51_0 = EditorApplication.update;
+				if (Highlighter.<>f__mg$cache2 == null)
+				{
+					Highlighter.<>f__mg$cache2 = new EditorApplication.CallbackFunction(Highlighter.Update);
+				}
+				EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_51_0, Highlighter.<>f__mg$cache2);
 				Highlighter.Stop();
 				InternalEditorUtility.RepaintAllViews();
 			}
@@ -273,51 +292,52 @@ namespace UnityEditor
 		{
 			Highlighter.searchMode = Highlighter.s_SearchMode;
 			Highlighter.s_View.RepaintImmediately();
+			bool result;
 			if (Highlighter.searchMode == HighlightSearchMode.None)
 			{
-				return true;
+				result = true;
 			}
-			Highlighter.searchMode = HighlightSearchMode.None;
-			Highlighter.Stop();
-			return false;
+			else
+			{
+				Highlighter.searchMode = HighlightSearchMode.None;
+				Highlighter.Stop();
+				result = false;
+			}
+			return result;
 		}
 
 		internal static void ControlHighlightGUI(GUIView self)
 		{
-			if (Highlighter.s_View == null || self.window != Highlighter.s_View.window)
+			if (!(Highlighter.s_View == null) && !(self.window != Highlighter.s_View.window))
 			{
-				return;
-			}
-			if (!Highlighter.activeVisible || Highlighter.searching)
-			{
-				return;
-			}
-			if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "HandleControlHighlight")
-			{
-				if (self.screenPosition.Overlaps(Highlighter.s_RepaintRegion))
+				if (Highlighter.activeVisible && !Highlighter.searching)
 				{
-					self.Repaint();
+					if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "HandleControlHighlight")
+					{
+						if (self.screenPosition.Overlaps(Highlighter.s_RepaintRegion))
+						{
+							self.Repaint();
+						}
+					}
+					else if (Event.current.type == EventType.Repaint)
+					{
+						Rect rect = GUIUtility.ScreenToGUIRect(Highlighter.activeRect);
+						rect = Highlighter.highlightStyle.padding.Add(rect);
+						float num = (Mathf.Cos(Highlighter.s_HighlightElapsedTime * 3.14159274f * 2f * 0.45f) + 1f) * 0.5f;
+						float num2 = Mathf.Min(1f, 0.01f + Highlighter.s_HighlightElapsedTime / 0.33f);
+						num2 += Mathf.Sin(num2 * 3.14159274f) * 0.5f;
+						Vector2 b = new Vector2((rect.width + 5f) / rect.width - 1f, (rect.height + 5f) / rect.height - 1f) * num;
+						Vector2 scale = (Vector2.one + b) * num2;
+						Matrix4x4 matrix = GUI.matrix;
+						Color color = GUI.color;
+						GUI.color = new Color(1f, 1f, 1f, 0.8f - 0.3f * num);
+						GUIUtility.ScaleAroundPivot(scale, rect.center);
+						Highlighter.highlightStyle.Draw(rect, false, false, false, false);
+						GUI.color = color;
+						GUI.matrix = matrix;
+					}
 				}
-				return;
 			}
-			if (Event.current.type != EventType.Repaint)
-			{
-				return;
-			}
-			Rect rect = GUIUtility.ScreenToGUIRect(Highlighter.activeRect);
-			rect = Highlighter.highlightStyle.padding.Add(rect);
-			float num = (Mathf.Cos(Highlighter.s_HighlightElapsedTime * 3.14159274f * 2f * 0.45f) + 1f) * 0.5f;
-			float num2 = Mathf.Min(1f, 0.01f + Highlighter.s_HighlightElapsedTime / 0.33f);
-			num2 += Mathf.Sin(num2 * 3.14159274f) * 0.5f;
-			Vector2 b = new Vector2((rect.width + 5f) / rect.width - 1f, (rect.height + 5f) / rect.height - 1f) * num;
-			Vector2 scale = (Vector2.one + b) * num2;
-			Matrix4x4 matrix = GUI.matrix;
-			Color color = GUI.color;
-			GUI.color = new Color(1f, 1f, 1f, 0.8f - 0.3f * num);
-			GUIUtility.ScaleAroundPivot(scale, rect.center);
-			Highlighter.highlightStyle.Draw(rect, false, false, false, false);
-			GUI.color = color;
-			GUI.matrix = matrix;
 		}
 	}
 }

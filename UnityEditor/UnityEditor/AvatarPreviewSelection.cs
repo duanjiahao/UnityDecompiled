@@ -19,24 +19,28 @@ namespace UnityEditor
 
 		public static void SetPreview(ModelImporterAnimationType type, GameObject go)
 		{
-			if (!Enum.IsDefined(typeof(ModelImporterAnimationType), type))
+			if (Enum.IsDefined(typeof(ModelImporterAnimationType), type))
 			{
-				return;
-			}
-			if (ScriptableSingleton<AvatarPreviewSelection>.instance.m_PreviewModels[(int)type] != go)
-			{
-				ScriptableSingleton<AvatarPreviewSelection>.instance.m_PreviewModels[(int)type] = go;
-				ScriptableSingleton<AvatarPreviewSelection>.instance.Save(false);
+				if (ScriptableSingleton<AvatarPreviewSelection>.instance.m_PreviewModels[(int)type] != go)
+				{
+					ScriptableSingleton<AvatarPreviewSelection>.instance.m_PreviewModels[(int)type] = go;
+					ScriptableSingleton<AvatarPreviewSelection>.instance.Save(false);
+				}
 			}
 		}
 
 		public static GameObject GetPreview(ModelImporterAnimationType type)
 		{
+			GameObject result;
 			if (!Enum.IsDefined(typeof(ModelImporterAnimationType), type))
 			{
-				return null;
+				result = null;
 			}
-			return ScriptableSingleton<AvatarPreviewSelection>.instance.m_PreviewModels[(int)type];
+			else
+			{
+				result = ScriptableSingleton<AvatarPreviewSelection>.instance.m_PreviewModels[(int)type];
+			}
+			return result;
 		}
 	}
 }

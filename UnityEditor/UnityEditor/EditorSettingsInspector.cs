@@ -48,7 +48,7 @@ namespace UnityEditor
 			new EditorSettingsInspector.PopupElement(ExternalVersionControl.AssetServer, true)
 		};
 
-		private EditorSettingsInspector.PopupElement[] vcPopupList;
+		private EditorSettingsInspector.PopupElement[] vcPopupList = null;
 
 		private EditorSettingsInspector.PopupElement[] serializationPopupList = new EditorSettingsInspector.PopupElement[]
 		{
@@ -174,7 +174,7 @@ namespace UnityEditor
 				GUILayout.Label("Version Control", EditorStyles.boldLabel, new GUILayoutOption[0]);
 				GUI.enabled = (enabled && !flag);
 				ExternalVersionControl d = EditorSettings.externalVersionControl;
-				this.CreatePopupMenu("Mode", this.vcPopupList, d, new GenericMenu.MenuFunction2(this.SetVersionControlSystem));
+				this.CreatePopupMenuVersionControl("Mode", this.vcPopupList, d, new GenericMenu.MenuFunction2(this.SetVersionControlSystem));
 			}
 			if (flag)
 			{
@@ -204,14 +204,18 @@ namespace UnityEditor
 							if (configField.isPassword)
 							{
 								text = EditorGUILayout.PasswordField(configField.label, configValue, new GUILayoutOption[0]);
+								if (text != configValue)
+								{
+									EditorUserSettings.SetPrivateConfigValue(configField.name, text);
+								}
 							}
 							else
 							{
 								text = EditorGUILayout.TextField(configField.label, configValue, new GUILayoutOption[0]);
-							}
-							if (text != configValue)
-							{
-								EditorUserSettings.SetConfigValue(configField.name, text);
+								if (text != configValue)
+								{
+									EditorUserSettings.SetConfigValue(configField.name, text);
+								}
 							}
 							if (configField.isRequired && string.IsNullOrEmpty(text))
 							{
@@ -279,14 +283,6 @@ namespace UnityEditor
 				this.DrawOverlayDescriptions();
 			}
 			GUILayout.Space(10f);
-			GUILayout.Label("WWW Security Emulation", EditorStyles.boldLabel, new GUILayoutOption[0]);
-			EditorSettings.webSecurityEmulationEnabled = EditorGUILayout.Toggle("Enable Webplayer Security Emulation", EditorSettings.webSecurityEmulationEnabled, new GUILayoutOption[0]);
-			string text2 = EditorGUILayout.TextField("Host URL", EditorSettings.webSecurityEmulationHostUrl, new GUILayoutOption[0]);
-			if (text2 != EditorSettings.webSecurityEmulationHostUrl)
-			{
-				EditorSettings.webSecurityEmulationHostUrl = text2;
-			}
-			GUILayout.Space(10f);
 			int selectedIndex = (int)EditorSettings.serializationMode;
 			using (new EditorGUI.DisabledScope(!flag))
 			{
@@ -314,6 +310,7 @@ namespace UnityEditor
 			selectedIndex = Mathf.Clamp(EditorSettings.spritePackerPaddingPower - 1, 0, 2);
 			this.CreatePopupMenu("Padding Power", this.spritePackerPaddingPowerPopupList, selectedIndex, new GenericMenu.MenuFunction2(this.SetSpritePackerPaddingPower));
 			this.DoProjectGenerationSettings();
+			this.DoInternalSettings();
 		}
 
 		private void DoProjectGenerationSettings()
@@ -334,28 +331,50 @@ namespace UnityEditor
 			}
 		}
 
+		private void DoInternalSettings()
+		{
+			if (EditorPrefs.GetBool("InternalMode", false))
+			{
+				GUILayout.Space(10f);
+				GUILayout.Label("Internal settings", EditorStyles.boldLabel, new GUILayoutOption[0]);
+				string internal_UserGeneratedProjectSuffix = EditorSettings.Internal_UserGeneratedProjectSuffix;
+				string text = EditorGUILayout.DelayedTextField("Assembly suffix", internal_UserGeneratedProjectSuffix, new GUILayoutOption[0]);
+				if (text != internal_UserGeneratedProjectSuffix)
+				{
+					EditorSettings.Internal_UserGeneratedProjectSuffix = text;
+					EditorApplication.ExecuteMenuItem("Assets/Reimport All");
+				}
+			}
+		}
+
 		private static int GetIndexById(DevDevice[] elements, string id, int defaultIndex)
 		{
+			int result;
 			for (int i = 0; i < elements.Length; i++)
 			{
 				if (elements[i].id == id)
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return defaultIndex;
+			result = defaultIndex;
+			return result;
 		}
 
 		private static int GetIndexById(EditorSettingsInspector.PopupElement[] elements, string id, int defaultIndex)
 		{
+			int result;
 			for (int i = 0; i < elements.Length; i++)
 			{
 				if (elements[i].id == id)
 				{
-					return i;
+					result = i;
+					return result;
 				}
 			}
-			return defaultIndex;
+			result = defaultIndex;
+			return result;
 		}
 
 		private void ShowUnityRemoteGUI(bool editorEnabled)
@@ -401,58 +420,60 @@ namespace UnityEditor
 		private void DrawOverlayDescriptions()
 		{
 			Texture2D overlayAtlas = Provider.overlayAtlas;
-			if (overlayAtlas == null)
+			if (!(overlayAtlas == null))
 			{
-				return;
+				GUILayout.Space(10f);
+				GUILayout.Label("Overlay legends", EditorStyles.boldLabel, new GUILayoutOption[0]);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				this.DrawOverlayDescription(Asset.States.Local);
+				this.DrawOverlayDescription(Asset.States.OutOfSync);
+				this.DrawOverlayDescription(Asset.States.CheckedOutLocal);
+				this.DrawOverlayDescription(Asset.States.CheckedOutRemote);
+				this.DrawOverlayDescription(Asset.States.DeletedLocal);
+				this.DrawOverlayDescription(Asset.States.DeletedRemote);
+				GUILayout.EndVertical();
+				GUILayout.BeginVertical(new GUILayoutOption[0]);
+				this.DrawOverlayDescription(Asset.States.AddedLocal);
+				this.DrawOverlayDescription(Asset.States.AddedRemote);
+				this.DrawOverlayDescription(Asset.States.Conflicted);
+				this.DrawOverlayDescription(Asset.States.LockedLocal);
+				this.DrawOverlayDescription(Asset.States.LockedRemote);
+				GUILayout.EndVertical();
+				GUILayout.EndHorizontal();
 			}
-			GUILayout.Space(10f);
-			GUILayout.Label("Overlay legends", EditorStyles.boldLabel, new GUILayoutOption[0]);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			this.DrawOverlayDescription(Asset.States.Local);
-			this.DrawOverlayDescription(Asset.States.OutOfSync);
-			this.DrawOverlayDescription(Asset.States.CheckedOutLocal);
-			this.DrawOverlayDescription(Asset.States.CheckedOutRemote);
-			this.DrawOverlayDescription(Asset.States.DeletedLocal);
-			this.DrawOverlayDescription(Asset.States.DeletedRemote);
-			GUILayout.EndVertical();
-			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			this.DrawOverlayDescription(Asset.States.AddedLocal);
-			this.DrawOverlayDescription(Asset.States.AddedRemote);
-			this.DrawOverlayDescription(Asset.States.Conflicted);
-			this.DrawOverlayDescription(Asset.States.LockedLocal);
-			this.DrawOverlayDescription(Asset.States.LockedRemote);
-			GUILayout.EndVertical();
-			GUILayout.EndHorizontal();
 		}
 
 		private void DrawOverlayDescription(Asset.States state)
 		{
 			Rect atlasRectForState = Provider.GetAtlasRectForState((int)state);
-			if (atlasRectForState.width == 0f)
+			if (atlasRectForState.width != 0f)
 			{
-				return;
+				Texture2D overlayAtlas = Provider.overlayAtlas;
+				if (!(overlayAtlas == null))
+				{
+					GUILayout.Label("    " + Asset.StateToString(state), EditorStyles.miniLabel, new GUILayoutOption[0]);
+					Rect lastRect = GUILayoutUtility.GetLastRect();
+					lastRect.width = 16f;
+					GUI.DrawTextureWithTexCoords(lastRect, overlayAtlas, atlasRectForState);
+				}
 			}
-			Texture2D overlayAtlas = Provider.overlayAtlas;
-			if (overlayAtlas == null)
-			{
-				return;
-			}
-			GUILayout.Label("    " + Asset.StateToString(state), EditorStyles.miniLabel, new GUILayoutOption[0]);
-			Rect lastRect = GUILayoutUtility.GetLastRect();
-			lastRect.width = 16f;
-			GUI.DrawTextureWithTexCoords(lastRect, overlayAtlas, atlasRectForState);
 		}
 
-		private void CreatePopupMenu(string title, EditorSettingsInspector.PopupElement[] elements, string selectedValue, GenericMenu.MenuFunction2 func)
+		private void CreatePopupMenuVersionControl(string title, EditorSettingsInspector.PopupElement[] elements, string selectedValue, GenericMenu.MenuFunction2 func)
 		{
-			int selectedIndex = Array.FindIndex<EditorSettingsInspector.PopupElement>(elements, (EditorSettingsInspector.PopupElement typeElem) => typeElem.content.text == selectedValue);
-			this.CreatePopupMenu(title, elements, selectedIndex, func);
+			int num = Array.FindIndex<EditorSettingsInspector.PopupElement>(elements, (EditorSettingsInspector.PopupElement typeElem) => typeElem.id == selectedValue);
+			GUIContent content = new GUIContent(elements[num].content);
+			this.CreatePopupMenu(title, content, elements, num, func);
 		}
 
 		private void CreatePopupMenu(string title, EditorSettingsInspector.PopupElement[] elements, int selectedIndex, GenericMenu.MenuFunction2 func)
 		{
-			GUIContent content = new GUIContent(elements[selectedIndex].content);
+			this.CreatePopupMenu(title, elements[selectedIndex].content, elements, selectedIndex, func);
+		}
+
+		private void CreatePopupMenu(string title, GUIContent content, EditorSettingsInspector.PopupElement[] elements, int selectedIndex, GenericMenu.MenuFunction2 func)
+		{
 			Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent(title));
 			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
@@ -481,39 +502,43 @@ namespace UnityEditor
 
 		private bool VersionControlSystemHasGUI()
 		{
+			bool result;
 			if (!Collab.instance.GetCollabInfo().whitelisted || !CollabAccess.Instance.IsServiceEnabled())
 			{
 				ExternalVersionControl d = EditorSettings.externalVersionControl;
-				return d != ExternalVersionControl.Disabled && d != ExternalVersionControl.AutoDetect && d != ExternalVersionControl.AssetServer && d != ExternalVersionControl.Generic;
+				result = (d != ExternalVersionControl.Disabled && d != ExternalVersionControl.AutoDetect && d != ExternalVersionControl.AssetServer && d != ExternalVersionControl.Generic);
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
 
 		private void SetVersionControlSystem(object data)
 		{
 			int num = (int)data;
-			if (num < 0 && num >= this.vcPopupList.Length)
+			if (num >= 0 || num < this.vcPopupList.Length)
 			{
-				return;
-			}
-			EditorSettingsInspector.PopupElement popupElement = this.vcPopupList[num];
-			string externalVersionControl = EditorSettings.externalVersionControl;
-			EditorSettings.externalVersionControl = popupElement.content.text;
-			Provider.UpdateSettings();
-			AssetDatabase.Refresh();
-			if (externalVersionControl != popupElement.content.text)
-			{
-				if (popupElement.content.text == ExternalVersionControl.AssetServer || popupElement.content.text == ExternalVersionControl.Disabled || popupElement.content.text == ExternalVersionControl.Generic)
+				EditorSettingsInspector.PopupElement popupElement = this.vcPopupList[num];
+				string externalVersionControl = EditorSettings.externalVersionControl;
+				EditorSettings.externalVersionControl = popupElement.id;
+				Provider.UpdateSettings();
+				AssetDatabase.Refresh();
+				if (externalVersionControl != popupElement.id)
 				{
-					WindowPending.CloseAllWindows();
-				}
-				else
-				{
-					ASMainWindow[] array = Resources.FindObjectsOfTypeAll(typeof(ASMainWindow)) as ASMainWindow[];
-					ASMainWindow aSMainWindow = (array.Length <= 0) ? null : array[0];
-					if (aSMainWindow != null)
+					if (popupElement.content.text == ExternalVersionControl.AssetServer || popupElement.content.text == ExternalVersionControl.Disabled || popupElement.content.text == ExternalVersionControl.Generic)
 					{
-						aSMainWindow.Close();
+						WindowPending.CloseAllWindows();
+					}
+					else
+					{
+						ASMainWindow[] array = Resources.FindObjectsOfTypeAll(typeof(ASMainWindow)) as ASMainWindow[];
+						ASMainWindow aSMainWindow = (array.Length <= 0) ? null : array[0];
+						if (aSMainWindow != null)
+						{
+							aSMainWindow.Close();
+						}
 					}
 				}
 			}

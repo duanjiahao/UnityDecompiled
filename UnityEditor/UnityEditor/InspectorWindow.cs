@@ -8,6 +8,7 @@ using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace UnityEditor
 {
@@ -36,7 +37,7 @@ namespace UnityEditor
 
 			public GUIStyle addComponentArea = EditorStyles.inspectorTitlebar;
 
-			public GUIStyle addComponentButtonStyle = "LargeButton";
+			public GUIStyle addComponentButtonStyle = "AC Button";
 
 			public GUIStyle previewMiniLabel = new GUIStyle(EditorStyles.whiteMiniLabel);
 
@@ -58,6 +59,14 @@ namespace UnityEditor
 			}
 		}
 
+		public Vector2 m_ScrollPosition;
+
+		public InspectorMode m_InspectorMode = InspectorMode.Normal;
+
+		private static readonly List<InspectorWindow> m_AllInspectors = new List<InspectorWindow>();
+
+		private static bool s_AllOptimizedGUIBlocksNeedsRebuild;
+
 		private const float kBottomToolbarHeight = 17f;
 
 		internal const int kInspectorPaddingLeft = 14;
@@ -66,15 +75,7 @@ namespace UnityEditor
 
 		private const long delayRepaintWhilePlayingAnimation = 150L;
 
-		public Vector2 m_ScrollPosition;
-
-		public InspectorMode m_InspectorMode;
-
-		private static readonly List<InspectorWindow> m_AllInspectors = new List<InspectorWindow>();
-
-		private static bool s_AllOptimizedGUIBlocksNeedsRebuild;
-
-		private long s_LastUpdateWhilePlayingAnimation;
+		private long s_LastUpdateWhilePlayingAnimation = 0L;
 
 		private bool m_ResetKeyboardControl;
 
@@ -82,7 +83,7 @@ namespace UnityEditor
 
 		private Editor m_LastInteractedEditor;
 
-		private bool m_IsOpenForEdit;
+		private bool m_IsOpenForEdit = false;
 
 		private static InspectorWindow.Styles s_Styles;
 
@@ -96,7 +97,7 @@ namespace UnityEditor
 
 		private AssetBundleNameGUI m_AssetBundleNameGUI = new AssetBundleNameGUI();
 
-		private TypeSelectionList m_TypeSelectionList;
+		private TypeSelectionList m_TypeSelectionList = null;
 
 		private double m_lastRenderedTime;
 
@@ -112,12 +113,12 @@ namespace UnityEditor
 		{
 			get
 			{
-				InspectorWindow.Styles arg_17_0;
-				if ((arg_17_0 = InspectorWindow.s_Styles) == null)
+				InspectorWindow.Styles arg_18_0;
+				if ((arg_18_0 = InspectorWindow.s_Styles) == null)
 				{
-					arg_17_0 = (InspectorWindow.s_Styles = new InspectorWindow.Styles());
+					arg_18_0 = (InspectorWindow.s_Styles = new InspectorWindow.Styles());
 				}
-				return arg_17_0;
+				return arg_18_0;
 			}
 		}
 
@@ -165,6 +166,7 @@ namespace UnityEditor
 			}
 			this.m_PreviewResizer.Init("InspectorPreview");
 			this.m_LabelGUI.OnEnable();
+			this.CreateTracker();
 		}
 
 		protected virtual void OnDisable()
@@ -275,14 +277,13 @@ namespace UnityEditor
 
 		private static void DoInspectorDragAndDrop(Rect rect, UnityEngine.Object[] targets)
 		{
-			if (!InspectorWindow.Dragging(rect))
+			if (InspectorWindow.Dragging(rect))
 			{
-				return;
-			}
-			DragAndDrop.visualMode = InternalEditorUtility.InspectorWindowDrag(targets, Event.current.type == EventType.DragPerform);
-			if (Event.current.type == EventType.DragPerform)
-			{
-				DragAndDrop.AcceptDrag();
+				DragAndDrop.visualMode = InternalEditorUtility.InspectorWindowDrag(targets, Event.current.type == EventType.DragPerform);
+				if (Event.current.type == EventType.DragPerform)
+				{
+					DragAndDrop.AcceptDrag();
+				}
 			}
 		}
 
@@ -302,34 +303,34 @@ namespace UnityEditor
 			if (this.m_Tracker != null)
 			{
 				this.m_Tracker.inspectorMode = this.m_InspectorMode;
-				return;
 			}
-			ActiveEditorTracker sharedTracker = ActiveEditorTracker.sharedTracker;
-			bool flag = InspectorWindow.m_AllInspectors.Any((InspectorWindow i) => i.m_Tracker != null && i.m_Tracker.Equals(sharedTracker));
-			this.m_Tracker = ((!flag) ? ActiveEditorTracker.sharedTracker : new ActiveEditorTracker());
-			this.m_Tracker.inspectorMode = this.m_InspectorMode;
-			this.m_Tracker.RebuildIfNecessary();
+			else
+			{
+				ActiveEditorTracker sharedTracker = ActiveEditorTracker.sharedTracker;
+				bool flag = InspectorWindow.m_AllInspectors.Any((InspectorWindow i) => i.m_Tracker != null && i.m_Tracker.Equals(sharedTracker));
+				this.m_Tracker = ((!flag) ? ActiveEditorTracker.sharedTracker : new ActiveEditorTracker());
+				this.m_Tracker.inspectorMode = this.m_InspectorMode;
+				this.m_Tracker.RebuildIfNecessary();
+			}
 		}
 
 		protected virtual void CreatePreviewables()
 		{
-			if (this.m_Previews != null)
+			if (this.m_Previews == null)
 			{
-				return;
-			}
-			this.m_Previews = new List<IPreviewable>();
-			if (this.m_Tracker.activeEditors.Length == 0)
-			{
-				return;
-			}
-			Editor[] activeEditors = this.m_Tracker.activeEditors;
-			for (int i = 0; i < activeEditors.Length; i++)
-			{
-				Editor editor = activeEditors[i];
-				IEnumerable<IPreviewable> previewsForType = this.GetPreviewsForType(editor);
-				foreach (IPreviewable current in previewsForType)
+				this.m_Previews = new List<IPreviewable>();
+				if (this.m_Tracker.activeEditors.Length != 0)
 				{
-					this.m_Previews.Add(current);
+					Editor[] activeEditors = this.m_Tracker.activeEditors;
+					for (int i = 0; i < activeEditors.Length; i++)
+					{
+						Editor editor = activeEditors[i];
+						IEnumerable<IPreviewable> previewsForType = this.GetPreviewsForType(editor);
+						foreach (IPreviewable current in previewsForType)
+						{
+							this.m_Previews.Add(current);
+						}
+					}
 				}
 			}
 		}
@@ -420,7 +421,7 @@ namespace UnityEditor
 			GUI.enabled = true;
 			this.CheckDragAndDrop(this.m_Tracker.activeEditors);
 			this.MoveFocusOnKeyPress();
-			GUILayout.EndScrollView();
+			EditorGUILayout.EndScrollView();
 			Profiler.BeginSample("InspectorWindow.DrawPreviewAndLabels");
 			this.DrawPreviewAndLabels();
 			Profiler.EndSample();
@@ -438,55 +439,64 @@ namespace UnityEditor
 
 		public IPreviewable GetEditorThatControlsPreview(IPreviewable[] editors)
 		{
+			IPreviewable result;
 			if (editors.Length == 0)
 			{
-				return null;
+				result = null;
 			}
-			if (this.m_SelectedPreview != null)
+			else if (this.m_SelectedPreview != null)
 			{
-				return this.m_SelectedPreview;
+				result = this.m_SelectedPreview;
 			}
-			IPreviewable lastInteractedEditor = this.GetLastInteractedEditor();
-			Type type = (lastInteractedEditor == null) ? null : lastInteractedEditor.GetType();
-			IPreviewable previewable = null;
-			IPreviewable previewable2 = null;
-			for (int i = 0; i < editors.Length; i++)
+			else
 			{
-				IPreviewable previewable3 = editors[i];
-				if (previewable3 != null && !(previewable3.target == null))
+				IPreviewable lastInteractedEditor = this.GetLastInteractedEditor();
+				Type type = (lastInteractedEditor == null) ? null : lastInteractedEditor.GetType();
+				IPreviewable previewable = null;
+				IPreviewable previewable2 = null;
+				for (int i = 0; i < editors.Length; i++)
 				{
-					if (!EditorUtility.IsPersistent(previewable3.target) || !(AssetDatabase.GetAssetPath(previewable3.target) != AssetDatabase.GetAssetPath(editors[0].target)))
+					IPreviewable previewable3 = editors[i];
+					if (previewable3 != null && !(previewable3.target == null))
 					{
-						if (!(editors[0] is AssetImporterInspector) || previewable3 is AssetImporterInspector)
+						if (!EditorUtility.IsPersistent(previewable3.target) || !(AssetDatabase.GetAssetPath(previewable3.target) != AssetDatabase.GetAssetPath(editors[0].target)))
 						{
-							if (previewable3.HasPreviewGUI())
+							if (!(editors[0] is AssetImporterInspector) || previewable3 is AssetImporterInspector)
 							{
-								if (previewable3 == lastInteractedEditor)
+								if (previewable3.HasPreviewGUI())
 								{
-									return previewable3;
-								}
-								if (previewable2 == null && previewable3.GetType() == type)
-								{
-									previewable2 = previewable3;
-								}
-								if (previewable == null)
-								{
-									previewable = previewable3;
+									if (previewable3 == lastInteractedEditor)
+									{
+										result = previewable3;
+										return result;
+									}
+									if (previewable2 == null && previewable3.GetType() == type)
+									{
+										previewable2 = previewable3;
+									}
+									if (previewable == null)
+									{
+										previewable = previewable3;
+									}
 								}
 							}
 						}
 					}
 				}
+				if (previewable2 != null)
+				{
+					result = previewable2;
+				}
+				else if (previewable != null)
+				{
+					result = previewable;
+				}
+				else
+				{
+					result = null;
+				}
 			}
-			if (previewable2 != null)
-			{
-				return previewable2;
-			}
-			if (previewable != null)
-			{
-				return previewable;
-			}
-			return null;
+			return result;
 		}
 
 		public IPreviewable[] GetEditorsWithPreviews(Editor[] editors)
@@ -529,47 +539,57 @@ namespace UnityEditor
 
 		public UnityEngine.Object GetInspectedObject()
 		{
+			UnityEngine.Object result;
 			if (this.m_Tracker == null)
 			{
-				return null;
+				result = null;
 			}
-			Editor firstNonImportInspectorEditor = this.GetFirstNonImportInspectorEditor(this.m_Tracker.activeEditors);
-			if (firstNonImportInspectorEditor == null)
+			else
 			{
-				return null;
+				Editor firstNonImportInspectorEditor = this.GetFirstNonImportInspectorEditor(this.m_Tracker.activeEditors);
+				if (firstNonImportInspectorEditor == null)
+				{
+					result = null;
+				}
+				else
+				{
+					result = firstNonImportInspectorEditor.target;
+				}
 			}
-			return firstNonImportInspectorEditor.target;
+			return result;
 		}
 
 		private Editor GetFirstNonImportInspectorEditor(Editor[] editors)
 		{
+			Editor result;
 			for (int i = 0; i < editors.Length; i++)
 			{
 				Editor editor = editors[i];
 				if (!(editor.target is AssetImporter))
 				{
-					return editor;
+					result = editor;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		private void MoveFocusOnKeyPress()
 		{
 			KeyCode keyCode = Event.current.keyCode;
-			if (Event.current.type != EventType.KeyDown || (keyCode != KeyCode.DownArrow && keyCode != KeyCode.UpArrow && keyCode != KeyCode.Tab))
+			if (Event.current.type == EventType.KeyDown && (keyCode == KeyCode.DownArrow || keyCode == KeyCode.UpArrow || keyCode == KeyCode.Tab))
 			{
-				return;
+				if (keyCode != KeyCode.Tab)
+				{
+					EditorGUIUtility.MoveFocusAndScroll(keyCode == KeyCode.DownArrow);
+				}
+				else
+				{
+					EditorGUIUtility.ScrollForTabbing(!Event.current.shift);
+				}
+				Event.current.Use();
 			}
-			if (keyCode != KeyCode.Tab)
-			{
-				EditorGUIUtility.MoveFocusAndScroll(keyCode == KeyCode.DownArrow);
-			}
-			else
-			{
-				EditorGUIUtility.ScrollForTabbing(!Event.current.shift);
-			}
-			Event.current.Use();
 		}
 
 		private void ResetKeyboardControl()
@@ -604,20 +624,26 @@ namespace UnityEditor
 
 		private UnityEngine.Object[] GetInspectedAssets()
 		{
+			UnityEngine.Object[] result;
 			if (this.m_Tracker != null)
 			{
 				Editor firstNonImportInspectorEditor = this.GetFirstNonImportInspectorEditor(this.m_Tracker.activeEditors);
-				if (firstNonImportInspectorEditor != null && firstNonImportInspectorEditor != null && firstNonImportInspectorEditor.targets.Length == 1)
+				if (firstNonImportInspectorEditor != null)
 				{
-					string assetPath = AssetDatabase.GetAssetPath(firstNonImportInspectorEditor.target);
-					bool flag = assetPath.ToLower().StartsWith("assets") && !Directory.Exists(assetPath);
-					if (flag)
+					if (firstNonImportInspectorEditor != null && firstNonImportInspectorEditor.targets.Length == 1)
 					{
-						return firstNonImportInspectorEditor.targets;
+						string assetPath = AssetDatabase.GetAssetPath(firstNonImportInspectorEditor.target);
+						bool flag = assetPath.ToLower().StartsWith("assets") && !Directory.Exists(assetPath);
+						if (flag)
+						{
+							result = firstNonImportInspectorEditor.targets;
+							return result;
+						}
 					}
 				}
 			}
-			return Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
+			result = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
+			return result;
 		}
 
 		private void DrawPreviewAndLabels()
@@ -632,132 +658,130 @@ namespace UnityEditor
 			UnityEngine.Object[] inspectedAssets = this.GetInspectedAssets();
 			bool flag2 = inspectedAssets.Length > 0;
 			bool flag3 = inspectedAssets.Any((UnityEngine.Object a) => !(a is MonoScript) && AssetDatabase.IsMainAsset(a));
-			if (!flag && !flag2)
+			if (flag || flag2)
 			{
-				return;
-			}
-			Event current = Event.current;
-			Rect position = EditorGUILayout.BeginHorizontal(GUIContent.none, InspectorWindow.styles.preToolbar, new GUILayoutOption[]
-			{
-				GUILayout.Height(17f)
-			});
-			Rect position2 = default(Rect);
-			GUILayout.FlexibleSpace();
-			Rect lastRect = GUILayoutUtility.GetLastRect();
-			GUIContent content;
-			if (flag)
-			{
-				GUIContent previewTitle = editorThatControlsPreview.GetPreviewTitle();
-				content = (previewTitle ?? InspectorWindow.styles.preTitle);
-			}
-			else
-			{
-				content = InspectorWindow.styles.labelTitle;
-			}
-			position2.x = lastRect.x + 3f;
-			position2.y = lastRect.y + (17f - InspectorWindow.s_Styles.dragHandle.fixedHeight) / 2f + 1f;
-			position2.width = lastRect.width - 6f;
-			position2.height = InspectorWindow.s_Styles.dragHandle.fixedHeight;
-			if (editorsWithPreviews.Length > 1)
-			{
-				Vector2 vector = InspectorWindow.styles.preDropDown.CalcSize(content);
-				Rect position3 = new Rect(lastRect.x, lastRect.y, vector.x, vector.y);
-				lastRect.xMin += vector.x;
-				position2.xMin += vector.x;
-				GUIContent[] array = new GUIContent[editorsWithPreviews.Length];
-				int selected = -1;
-				for (int i = 0; i < editorsWithPreviews.Length; i++)
+				Event current = Event.current;
+				Rect position = EditorGUILayout.BeginHorizontal(GUIContent.none, InspectorWindow.styles.preToolbar, new GUILayoutOption[]
 				{
-					IPreviewable previewable = editorsWithPreviews[i];
-					GUIContent gUIContent = previewable.GetPreviewTitle() ?? InspectorWindow.styles.preTitle;
-					string text;
-					if (gUIContent == InspectorWindow.styles.preTitle)
+					GUILayout.Height(17f)
+				});
+				Rect position2 = default(Rect);
+				GUILayout.FlexibleSpace();
+				Rect lastRect = GUILayoutUtility.GetLastRect();
+				GUIContent content;
+				if (flag)
+				{
+					GUIContent previewTitle = editorThatControlsPreview.GetPreviewTitle();
+					content = (previewTitle ?? InspectorWindow.styles.preTitle);
+				}
+				else
+				{
+					content = InspectorWindow.styles.labelTitle;
+				}
+				position2.x = lastRect.x + 3f;
+				position2.y = lastRect.y + (17f - InspectorWindow.s_Styles.dragHandle.fixedHeight) / 2f + 1f;
+				position2.width = lastRect.width - 6f;
+				position2.height = InspectorWindow.s_Styles.dragHandle.fixedHeight;
+				if (editorsWithPreviews.Length > 1)
+				{
+					Vector2 vector = InspectorWindow.styles.preDropDown.CalcSize(content);
+					Rect position3 = new Rect(lastRect.x, lastRect.y, vector.x, vector.y);
+					lastRect.xMin += vector.x;
+					position2.xMin += vector.x;
+					GUIContent[] array = new GUIContent[editorsWithPreviews.Length];
+					int selected = -1;
+					for (int i = 0; i < editorsWithPreviews.Length; i++)
 					{
-						string str = ObjectNames.GetTypeName(previewable.target);
-						if (previewable.target is MonoBehaviour)
+						IPreviewable previewable = editorsWithPreviews[i];
+						GUIContent gUIContent = previewable.GetPreviewTitle() ?? InspectorWindow.styles.preTitle;
+						string text;
+						if (gUIContent == InspectorWindow.styles.preTitle)
 						{
-							str = MonoScript.FromMonoBehaviour(previewable.target as MonoBehaviour).GetClass().Name;
+							string str = ObjectNames.GetTypeName(previewable.target);
+							if (previewable.target is MonoBehaviour)
+							{
+								str = MonoScript.FromMonoBehaviour(previewable.target as MonoBehaviour).GetClass().Name;
+							}
+							text = gUIContent.text + " - " + str;
 						}
-						text = gUIContent.text + " - " + str;
+						else
+						{
+							text = gUIContent.text;
+						}
+						array[i] = new GUIContent(text);
+						if (editorsWithPreviews[i] == editorThatControlsPreview)
+						{
+							selected = i;
+						}
 					}
-					else
+					if (GUI.Button(position3, content, InspectorWindow.styles.preDropDown))
 					{
-						text = gUIContent.text;
+						EditorUtility.DisplayCustomMenu(position3, array, selected, new EditorUtility.SelectMenuItemFunction(this.OnPreviewSelected), editorsWithPreviews);
 					}
-					array[i] = new GUIContent(text);
-					if (editorsWithPreviews[i] == editorThatControlsPreview)
+				}
+				else
+				{
+					float a2 = position2.xMax - lastRect.xMin - 3f - 20f;
+					float width = Mathf.Min(a2, InspectorWindow.styles.preToolbar2.CalcSize(content).x);
+					Rect position4 = new Rect(lastRect.x, lastRect.y, width, lastRect.height);
+					position2.xMin = position4.xMax + 3f;
+					GUI.Label(position4, content, InspectorWindow.styles.preToolbar2);
+				}
+				if (flag && Event.current.type == EventType.Repaint)
+				{
+					InspectorWindow.s_Styles.dragHandle.Draw(position2, GUIContent.none, false, false, false, false);
+				}
+				if (flag && this.m_PreviewResizer.GetExpandedBeforeDragging())
+				{
+					editorThatControlsPreview.OnPreviewSettings();
+				}
+				EditorGUILayout.EndHorizontal();
+				if (current.type == EventType.MouseUp && current.button == 1 && position.Contains(current.mousePosition) && this.m_PreviewWindow == null)
+				{
+					this.DetachPreview();
+				}
+				float height;
+				if (flag)
+				{
+					Rect position5 = base.position;
+					if (EditorSettings.externalVersionControl != ExternalVersionControl.Disabled && EditorSettings.externalVersionControl != ExternalVersionControl.AutoDetect && EditorSettings.externalVersionControl != ExternalVersionControl.Generic)
 					{
-						selected = i;
+						position5.height -= 17f;
 					}
+					height = this.m_PreviewResizer.ResizeHandle(position5, 100f, 100f, 17f, lastRect);
 				}
-				if (GUI.Button(position3, content, InspectorWindow.styles.preDropDown))
+				else
 				{
-					EditorUtility.DisplayCustomMenu(position3, array, selected, new EditorUtility.SelectMenuItemFunction(this.OnPreviewSelected), editorsWithPreviews);
+					if (GUI.Button(position, GUIContent.none, GUIStyle.none))
+					{
+						this.m_PreviewResizer.ToggleExpanded();
+					}
+					height = 0f;
 				}
-			}
-			else
-			{
-				float a2 = position2.xMax - lastRect.xMin - 3f - 20f;
-				float width = Mathf.Min(a2, InspectorWindow.styles.preToolbar2.CalcSize(content).x);
-				Rect position4 = new Rect(lastRect.x, lastRect.y, width, lastRect.height);
-				position2.xMin = position4.xMax + 3f;
-				GUI.Label(position4, content, InspectorWindow.styles.preToolbar2);
-			}
-			if (flag && Event.current.type == EventType.Repaint)
-			{
-				InspectorWindow.s_Styles.dragHandle.Draw(position2, GUIContent.none, false, false, false, false);
-			}
-			if (flag && this.m_PreviewResizer.GetExpandedBeforeDragging())
-			{
-				editorThatControlsPreview.OnPreviewSettings();
-			}
-			EditorGUILayout.EndHorizontal();
-			if (current.type == EventType.MouseUp && current.button == 1 && position.Contains(current.mousePosition) && this.m_PreviewWindow == null)
-			{
-				this.DetachPreview();
-			}
-			float height;
-			if (flag)
-			{
-				Rect position5 = base.position;
-				if (EditorSettings.externalVersionControl != ExternalVersionControl.Disabled && EditorSettings.externalVersionControl != ExternalVersionControl.AutoDetect && EditorSettings.externalVersionControl != ExternalVersionControl.Generic)
+				if (this.m_PreviewResizer.GetExpanded())
 				{
-					position5.height -= 17f;
-				}
-				height = this.m_PreviewResizer.ResizeHandle(position5, 100f, 100f, 17f, lastRect);
-			}
-			else
-			{
-				if (GUI.Button(position, GUIContent.none, GUIStyle.none))
-				{
-					this.m_PreviewResizer.ToggleExpanded();
-				}
-				height = 0f;
-			}
-			if (!this.m_PreviewResizer.GetExpanded())
-			{
-				return;
-			}
-			GUILayout.BeginVertical(InspectorWindow.styles.preBackground, new GUILayoutOption[]
-			{
-				GUILayout.Height(height)
-			});
-			if (flag)
-			{
-				editorThatControlsPreview.DrawPreview(GUILayoutUtility.GetRect(0f, 10240f, 64f, 10240f));
-			}
-			if (flag2)
-			{
-				using (new EditorGUI.DisabledScope(inspectedAssets.Any((UnityEngine.Object a) => EditorUtility.IsPersistent(a) && !Editor.IsAppropriateFileOpenForEdit(a))))
-				{
-					this.m_LabelGUI.OnLabelGUI(inspectedAssets);
+					GUILayout.BeginVertical(InspectorWindow.styles.preBackground, new GUILayoutOption[]
+					{
+						GUILayout.Height(height)
+					});
+					if (flag)
+					{
+						editorThatControlsPreview.DrawPreview(GUILayoutUtility.GetRect(0f, 10240f, 64f, 10240f));
+					}
+					if (flag2)
+					{
+						using (new EditorGUI.DisabledScope(inspectedAssets.Any((UnityEngine.Object a) => EditorUtility.IsPersistent(a) && !Editor.IsAppropriateFileOpenForEdit(a))))
+						{
+							this.m_LabelGUI.OnLabelGUI(inspectedAssets);
+						}
+					}
+					if (flag3)
+					{
+						this.m_AssetBundleNameGUI.OnAssetBundleNameGUI(inspectedAssets);
+					}
+					GUILayout.EndVertical();
 				}
 			}
-			if (flag3)
-			{
-				this.m_AssetBundleNameGUI.OnAssetBundleNameGUI(inspectedAssets);
-			}
-			GUILayout.EndVertical();
 		}
 
 		protected UnityEngine.Object[] GetTargetsForPreview(IPreviewable previewEditor)
@@ -794,9 +818,9 @@ namespace UnityEditor
 
 		protected virtual void DrawVCSSticky(float offset)
 		{
-			string empty = string.Empty;
+			string text = "";
 			Editor firstNonImportInspectorEditor = this.GetFirstNonImportInspectorEditor(this.m_Tracker.activeEditors);
-			if (!EditorPrefs.GetBool("vcssticky") && !Editor.IsAppropriateFileOpenForEdit(firstNonImportInspectorEditor.target, out empty))
+			if (!EditorPrefs.GetBool("vcssticky") && !Editor.IsAppropriateFileOpenForEdit(firstNonImportInspectorEditor.target, out text))
 			{
 				Rect position = new Rect(10f, base.position.height - 94f, base.position.width - 20f, 80f);
 				position.y -= offset;
@@ -837,60 +861,59 @@ namespace UnityEditor
 				Editor firstNonImportInspectorEditor2 = this.GetFirstNonImportInspectorEditor(this.m_Tracker.activeEditors);
 				string assetPath = AssetDatabase.GetAssetPath(firstNonImportInspectorEditor2.target);
 				Asset assetByPath = Provider.GetAssetByPath(assetPath);
-				if (assetByPath == null || (!assetByPath.path.StartsWith("Assets") && !assetByPath.path.StartsWith("ProjectSettings")))
+				if (assetByPath != null && (assetByPath.path.StartsWith("Assets") || assetByPath.path.StartsWith("ProjectSettings")))
 				{
-					return;
-				}
-				Asset assetByPath2 = Provider.GetAssetByPath(assetPath.Trim(new char[]
-				{
-					'/'
-				}) + ".meta");
-				string text = assetByPath.StateToString();
-				string text2 = (assetByPath2 != null) ? assetByPath2.StateToString() : string.Empty;
-				bool flag = assetByPath2 != null && (assetByPath2.state & ~Asset.States.MetaFile) != assetByPath.state;
-				bool flag2 = text != string.Empty;
-				float height = (!flag || !flag2) ? 17f : 34f;
-				GUILayout.Label(GUIContent.none, InspectorWindow.styles.preToolbar, new GUILayoutOption[]
-				{
-					GUILayout.Height(height)
-				});
-				Rect lastRect2 = GUILayoutUtility.GetLastRect();
-				bool flag3 = Event.current.type == EventType.Layout || Event.current.type == EventType.Repaint;
-				if (flag2 && flag3)
-				{
-					Texture2D icon = AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
-					if (flag)
+					Asset assetByPath2 = Provider.GetAssetByPath(assetPath.Trim(new char[]
 					{
-						Rect rect = lastRect2;
-						rect.height = 17f;
-						this.DrawVCSShortInfoAsset(assetByPath, this.BuildTooltip(assetByPath, null), rect, icon, text);
-						Texture2D iconForFile = InternalEditorUtility.GetIconForFile(assetByPath2.path);
-						rect.y += 17f;
-						this.DrawVCSShortInfoAsset(assetByPath2, this.BuildTooltip(null, assetByPath2), rect, iconForFile, text2);
-					}
-					else
+						'/'
+					}) + ".meta");
+					string text = assetByPath.StateToString();
+					string text2 = (assetByPath2 != null) ? assetByPath2.StateToString() : string.Empty;
+					bool flag = assetByPath2 != null && (assetByPath2.state & ~Asset.States.MetaFile) != assetByPath.state;
+					bool flag2 = text != "";
+					float height = (!flag || !flag2) ? 17f : 34f;
+					GUILayout.Label(GUIContent.none, InspectorWindow.styles.preToolbar, new GUILayoutOption[]
 					{
-						this.DrawVCSShortInfoAsset(assetByPath, this.BuildTooltip(assetByPath, assetByPath2), lastRect2, icon, text);
-					}
-				}
-				else if (text2 != string.Empty && flag3)
-				{
-					Texture2D iconForFile2 = InternalEditorUtility.GetIconForFile(assetByPath2.path);
-					this.DrawVCSShortInfoAsset(assetByPath2, this.BuildTooltip(assetByPath, assetByPath2), lastRect2, iconForFile2, text2);
-				}
-				string empty = string.Empty;
-				if (!Editor.IsAppropriateFileOpenForEdit(firstNonImportInspectorEditor2.target, out empty))
-				{
-					float num = 66f;
-					Rect position = new Rect(lastRect2.x + lastRect2.width - num, lastRect2.y, num, lastRect2.height);
-					if (GUI.Button(position, "Check out", InspectorWindow.styles.lockedHeaderButton))
+						GUILayout.Height(height)
+					});
+					Rect lastRect2 = GUILayoutUtility.GetLastRect();
+					bool flag3 = Event.current.type == EventType.Layout || Event.current.type == EventType.Repaint;
+					if (flag2 && flag3)
 					{
-						EditorPrefs.SetBool("vcssticky", true);
-						Task task = Provider.Checkout(firstNonImportInspectorEditor2.targets, CheckoutMode.Both);
-						task.Wait();
-						base.Repaint();
+						Texture2D icon = AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
+						if (flag)
+						{
+							Rect rect = lastRect2;
+							rect.height = 17f;
+							this.DrawVCSShortInfoAsset(assetByPath, this.BuildTooltip(assetByPath, null), rect, icon, text);
+							Texture2D iconForFile = InternalEditorUtility.GetIconForFile(assetByPath2.path);
+							rect.y += 17f;
+							this.DrawVCSShortInfoAsset(assetByPath2, this.BuildTooltip(null, assetByPath2), rect, iconForFile, text2);
+						}
+						else
+						{
+							this.DrawVCSShortInfoAsset(assetByPath, this.BuildTooltip(assetByPath, assetByPath2), lastRect2, icon, text);
+						}
 					}
-					this.DrawVCSSticky(lastRect2.height / 2f);
+					else if (text2 != "" && flag3)
+					{
+						Texture2D iconForFile2 = InternalEditorUtility.GetIconForFile(assetByPath2.path);
+						this.DrawVCSShortInfoAsset(assetByPath2, this.BuildTooltip(assetByPath, assetByPath2), lastRect2, iconForFile2, text2);
+					}
+					string text3 = "";
+					if (!Editor.IsAppropriateFileOpenForEdit(firstNonImportInspectorEditor2.target, out text3))
+					{
+						float num = 80f;
+						Rect position = new Rect(lastRect2.x + lastRect2.width - num, lastRect2.y, num, lastRect2.height);
+						if (GUI.Button(position, "Check out", InspectorWindow.styles.lockedHeaderButton))
+						{
+							EditorPrefs.SetBool("vcssticky", true);
+							Task task = Provider.Checkout(firstNonImportInspectorEditor2.targets, CheckoutMode.Both);
+							task.Wait();
+							base.Repaint();
+						}
+						this.DrawVCSSticky(lastRect2.height / 2f);
+					}
 				}
 			}
 		}
@@ -938,78 +961,72 @@ namespace UnityEditor
 
 		private void DrawEditors(Editor[] editors)
 		{
-			if (editors.Length == 0)
+			if (editors.Length != 0)
 			{
-				return;
-			}
-			UnityEngine.Object inspectedObject = this.GetInspectedObject();
-			string empty = string.Empty;
-			DockArea dockArea = this.m_Parent as DockArea;
-			if (dockArea != null)
-			{
-				dockArea.tabStyle = "dragtabbright";
-			}
-			GUILayout.Space(0f);
-			if (inspectedObject is Material)
-			{
-				int num = 0;
-				while (num <= 1 && num < editors.Length)
+				UnityEngine.Object inspectedObject = this.GetInspectedObject();
+				string empty = string.Empty;
+				GUILayout.Space(0f);
+				if (inspectedObject is Material)
 				{
-					MaterialEditor materialEditor = editors[num] as MaterialEditor;
-					if (materialEditor != null)
+					int num = 0;
+					while (num <= 1 && num < editors.Length)
 					{
-						materialEditor.forceVisible = true;
-						break;
+						MaterialEditor materialEditor = editors[num] as MaterialEditor;
+						if (materialEditor != null)
+						{
+							materialEditor.forceVisible = true;
+							break;
+						}
+						num++;
 					}
-					num++;
 				}
-			}
-			bool rebuildOptimizedGUIBlock = false;
-			if (Event.current.type == EventType.Repaint)
-			{
-				if (inspectedObject != null && this.m_IsOpenForEdit != Editor.IsAppropriateFileOpenForEdit(inspectedObject, out empty))
+				bool rebuildOptimizedGUIBlock = false;
+				if (Event.current.type == EventType.Repaint)
 				{
-					this.m_IsOpenForEdit = !this.m_IsOpenForEdit;
+					if (inspectedObject != null && this.m_IsOpenForEdit != Editor.IsAppropriateFileOpenForEdit(inspectedObject, out empty))
+					{
+						this.m_IsOpenForEdit = !this.m_IsOpenForEdit;
+						rebuildOptimizedGUIBlock = true;
+					}
+					if (this.m_InvalidateGUIBlockCache)
+					{
+						rebuildOptimizedGUIBlock = true;
+						this.m_InvalidateGUIBlockCache = false;
+					}
+				}
+				else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "EyeDropperUpdate")
+				{
 					rebuildOptimizedGUIBlock = true;
 				}
-				if (this.m_InvalidateGUIBlockCache)
+				Editor.m_AllowMultiObjectAccess = true;
+				bool flag = false;
+				Rect position = default(Rect);
+				for (int i = 0; i < editors.Length; i++)
 				{
-					rebuildOptimizedGUIBlock = true;
-					this.m_InvalidateGUIBlockCache = false;
-				}
-			}
-			else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "EyeDropperUpdate")
-			{
-				rebuildOptimizedGUIBlock = true;
-			}
-			Editor.m_AllowMultiObjectAccess = true;
-			bool flag = false;
-			Rect position = default(Rect);
-			for (int i = 0; i < editors.Length; i++)
-			{
-				if (this.ShouldCullEditor(editors, i))
-				{
-					if (Event.current.type == EventType.Repaint)
+					if (this.ShouldCullEditor(editors, i))
 					{
-						editors[i].isInspectorDirty = false;
+						if (Event.current.type == EventType.Repaint)
+						{
+							editors[i].isInspectorDirty = false;
+						}
+					}
+					else
+					{
+						bool textFieldInput = GUIUtility.textFieldInput;
+						this.DrawEditor(editors[i], i, rebuildOptimizedGUIBlock, ref flag, ref position);
+						if (Event.current.type == EventType.Repaint && !textFieldInput && GUIUtility.textFieldInput)
+						{
+							InspectorWindow.FlushOptimizedGUIBlock(editors[i]);
+						}
 					}
 				}
-				else
+				EditorGUIUtility.ResetGUIState();
+				if (position.height > 0f)
 				{
-					bool textFieldInput = GUIUtility.textFieldInput;
-					this.DrawEditor(editors[i], i, rebuildOptimizedGUIBlock, ref flag, ref position);
-					if (Event.current.type == EventType.Repaint && !textFieldInput && GUIUtility.textFieldInput)
-					{
-						InspectorWindow.FlushOptimizedGUIBlock(editors[i]);
-					}
+					GUI.BeginGroup(position);
+					GUI.Label(new Rect(0f, 0f, position.width, position.height), "Imported Object", "OL Title");
+					GUI.EndGroup();
 				}
-			}
-			EditorGUIUtility.ResetGUIState();
-			if (position.height > 0f)
-			{
-				GUI.BeginGroup(position);
-				GUI.Label(new Rect(0f, 0f, position.width, position.height), "Imported Object", "OL Title");
-				GUI.EndGroup();
 			}
 		}
 
@@ -1020,183 +1037,185 @@ namespace UnityEditor
 
 		private void DrawEditor(Editor editor, int editorIndex, bool rebuildOptimizedGUIBlock, ref bool showImportedObjectBarNext, ref Rect importedObjectBarRect)
 		{
-			if (editor == null)
+			if (!(editor == null))
 			{
-				return;
-			}
-			UnityEngine.Object target = editor.target;
-			GUIUtility.GetControlID(target.GetInstanceID(), FocusType.Passive);
-			EditorGUIUtility.ResetGUIState();
-			GUILayoutGroup topLevel = GUILayoutUtility.current.topLevel;
-			int visible = this.m_Tracker.GetVisible(editorIndex);
-			bool flag;
-			if (visible == -1)
-			{
-				flag = InternalEditorUtility.GetIsInspectorExpanded(target);
-				this.m_Tracker.SetVisible(editorIndex, (!flag) ? 0 : 1);
-			}
-			else
-			{
-				flag = (visible == 1);
-			}
-			rebuildOptimizedGUIBlock |= editor.isInspectorDirty;
-			if (Event.current.type == EventType.Repaint)
-			{
-				editor.isInspectorDirty = false;
-			}
-			ScriptAttributeUtility.propertyHandlerCache = editor.propertyHandlerCache;
-			bool flag2 = AssetDatabase.IsMainAsset(target) || AssetDatabase.IsSubAsset(target) || editorIndex == 0 || target is Material;
-			if (flag2)
-			{
-				string empty = string.Empty;
-				bool flag3 = editor.IsOpenForEdit(out empty);
-				if (showImportedObjectBarNext)
+				UnityEngine.Object target = editor.target;
+				GUIUtility.GetControlID(target.GetInstanceID(), FocusType.Passive);
+				EditorGUIUtility.ResetGUIState();
+				GUILayoutGroup topLevel = GUILayoutUtility.current.topLevel;
+				int visible = this.m_Tracker.GetVisible(editorIndex);
+				bool flag;
+				if (visible == -1)
 				{
-					showImportedObjectBarNext = false;
-					GUILayout.Space(15f);
-					importedObjectBarRect = GUILayoutUtility.GetRect(16f, 16f);
-					importedObjectBarRect.height = 17f;
+					flag = InternalEditorUtility.GetIsInspectorExpanded(target);
+					this.m_Tracker.SetVisible(editorIndex, (!flag) ? 0 : 1);
 				}
-				flag = true;
-				using (new EditorGUI.DisabledScope(!flag3))
+				else
 				{
-					editor.DrawHeader();
+					flag = (visible == 1);
 				}
-			}
-			if (editor.target is AssetImporter)
-			{
-				showImportedObjectBarNext = true;
-			}
-			bool flag4 = false;
-			if (editor is GenericInspector && CustomEditorAttributes.FindCustomEditorType(target, false) != null)
-			{
-				if (this.m_InspectorMode != InspectorMode.DebugInternal)
+				rebuildOptimizedGUIBlock |= editor.isInspectorDirty;
+				if (Event.current.type == EventType.Repaint)
 				{
-					if (this.m_InspectorMode == InspectorMode.Normal)
-					{
-						flag4 = true;
-					}
-					else if (target is AssetImporter)
-					{
-						flag4 = true;
-					}
+					editor.isInspectorDirty = false;
 				}
-			}
-			if (!flag2)
-			{
-				using (new EditorGUI.DisabledScope(!editor.IsEnabled()))
-				{
-					bool flag5 = EditorGUILayout.InspectorTitlebar(flag, editor.targets, editor.CanBeExpandedViaAFoldout());
-					if (flag != flag5)
-					{
-						this.m_Tracker.SetVisible(editorIndex, (!flag5) ? 0 : 1);
-						InternalEditorUtility.SetIsInspectorExpanded(target, flag5);
-						if (flag5)
-						{
-							this.m_LastInteractedEditor = editor;
-						}
-						else if (this.m_LastInteractedEditor == editor)
-						{
-							this.m_LastInteractedEditor = null;
-						}
-					}
-				}
-			}
-			if (flag4 && flag)
-			{
-				GUILayout.Label("Multi-object editing not supported.", EditorStyles.helpBox, new GUILayoutOption[0]);
-				return;
-			}
-			this.DisplayDeprecationMessageIfNecessary(editor);
-			EditorGUIUtility.ResetGUIState();
-			Rect rect = default(Rect);
-			using (new EditorGUI.DisabledScope(!editor.IsEnabled()))
-			{
-				GenericInspector genericInspector = editor as GenericInspector;
-				if (genericInspector)
-				{
-					genericInspector.m_InspectorMode = this.m_InspectorMode;
-				}
-				EditorGUIUtility.hierarchyMode = true;
-				EditorGUIUtility.wideMode = (base.position.width > 330f);
 				ScriptAttributeUtility.propertyHandlerCache = editor.propertyHandlerCache;
-				OptimizedGUIBlock optimizedGUIBlock;
-				float num;
-				if (editor.GetOptimizedGUIBlock(rebuildOptimizedGUIBlock, flag, out optimizedGUIBlock, out num))
+				bool flag2 = AssetDatabase.IsMainAsset(target) || AssetDatabase.IsSubAsset(target) || editorIndex == 0 || target is Material;
+				if (flag2)
 				{
-					rect = GUILayoutUtility.GetRect(0f, (!flag) ? 0f : num);
-					this.HandleLastInteractedEditor(rect, editor);
-					if (Event.current.type == EventType.Layout)
+					string empty = string.Empty;
+					bool flag3 = editor.IsOpenForEdit(out empty);
+					if (showImportedObjectBarNext)
 					{
-						return;
+						showImportedObjectBarNext = false;
+						GUILayout.Space(15f);
+						importedObjectBarRect = GUILayoutUtility.GetRect(16f, 16f);
+						importedObjectBarRect.height = 17f;
 					}
-					if (optimizedGUIBlock.Begin(rebuildOptimizedGUIBlock, rect) && flag)
+					flag = true;
+					using (new EditorGUI.DisabledScope(!flag3))
 					{
-						GUI.changed = false;
-						editor.OnOptimizedInspectorGUI(rect);
+						editor.DrawHeader();
 					}
-					optimizedGUIBlock.End();
 				}
-				else
+				if (editor.target is AssetImporter)
 				{
-					if (flag)
+					showImportedObjectBarNext = true;
+				}
+				bool flag4 = false;
+				if (editor is GenericInspector && CustomEditorAttributes.FindCustomEditorType(target, false) != null)
+				{
+					if (this.m_InspectorMode != InspectorMode.DebugInternal)
 					{
-						GUIStyle style = (!editor.UseDefaultMargins()) ? GUIStyle.none : EditorStyles.inspectorDefaultMargins;
-						rect = EditorGUILayout.BeginVertical(style, new GUILayoutOption[0]);
-						this.HandleLastInteractedEditor(rect, editor);
-						GUI.changed = false;
-						try
+						if (this.m_InspectorMode == InspectorMode.Normal)
 						{
-							editor.OnInspectorGUI();
+							flag4 = true;
 						}
-						catch (Exception exception)
+						else if (target is AssetImporter)
 						{
-							if (GUIUtility.ShouldRethrowException(exception))
+							flag4 = true;
+						}
+					}
+				}
+				if (!flag2)
+				{
+					using (new EditorGUI.DisabledScope(!editor.IsEnabled()))
+					{
+						bool flag5 = EditorGUILayout.InspectorTitlebar(flag, editor.targets, editor.CanBeExpandedViaAFoldout());
+						if (flag != flag5)
+						{
+							this.m_Tracker.SetVisible(editorIndex, (!flag5) ? 0 : 1);
+							InternalEditorUtility.SetIsInspectorExpanded(target, flag5);
+							if (flag5)
 							{
-								throw;
+								this.m_LastInteractedEditor = editor;
 							}
-							Debug.LogException(exception);
+							else if (this.m_LastInteractedEditor == editor)
+							{
+								this.m_LastInteractedEditor = null;
+							}
 						}
-						EditorGUILayout.EndVertical();
-					}
-					if (Event.current.type == EventType.Used)
-					{
-						return;
 					}
 				}
-			}
-			if (GUILayoutUtility.current.topLevel != topLevel)
-			{
-				if (!GUILayoutUtility.current.layoutGroups.Contains(topLevel))
+				if (flag4 && flag)
 				{
-					Debug.LogError("Expected top level layout group missing! Too many GUILayout.EndScrollView/EndVertical/EndHorizontal?");
-					GUIUtility.ExitGUI();
+					GUILayout.Label("Multi-object editing not supported.", EditorStyles.helpBox, new GUILayoutOption[0]);
 				}
 				else
 				{
-					Debug.LogWarning("Unexpected top level layout group! Missing GUILayout.EndScrollView/EndVertical/EndHorizontal?");
-					while (GUILayoutUtility.current.topLevel != topLevel)
+					this.DisplayDeprecationMessageIfNecessary(editor);
+					EditorGUIUtility.ResetGUIState();
+					Rect rect = default(Rect);
+					using (new EditorGUI.DisabledScope(!editor.IsEnabled()))
 					{
-						GUILayoutUtility.EndLayoutGroup();
+						GenericInspector genericInspector = editor as GenericInspector;
+						if (genericInspector)
+						{
+							genericInspector.m_InspectorMode = this.m_InspectorMode;
+						}
+						EditorGUIUtility.hierarchyMode = true;
+						EditorGUIUtility.wideMode = (base.position.width > 330f);
+						ScriptAttributeUtility.propertyHandlerCache = editor.propertyHandlerCache;
+						OptimizedGUIBlock optimizedGUIBlock;
+						float num;
+						if (editor.GetOptimizedGUIBlock(rebuildOptimizedGUIBlock, flag, out optimizedGUIBlock, out num))
+						{
+							rect = GUILayoutUtility.GetRect(0f, (!flag) ? 0f : num);
+							this.HandleLastInteractedEditor(rect, editor);
+							if (Event.current.type == EventType.Layout)
+							{
+								return;
+							}
+							if (optimizedGUIBlock.Begin(rebuildOptimizedGUIBlock, rect))
+							{
+								if (flag)
+								{
+									GUI.changed = false;
+									editor.OnOptimizedInspectorGUI(rect);
+								}
+							}
+							optimizedGUIBlock.End();
+						}
+						else
+						{
+							if (flag)
+							{
+								GUIStyle style = (!editor.UseDefaultMargins()) ? GUIStyle.none : EditorStyles.inspectorDefaultMargins;
+								rect = EditorGUILayout.BeginVertical(style, new GUILayoutOption[0]);
+								this.HandleLastInteractedEditor(rect, editor);
+								GUI.changed = false;
+								try
+								{
+									editor.OnInspectorGUI();
+								}
+								catch (Exception exception)
+								{
+									if (GUIUtility.ShouldRethrowException(exception))
+									{
+										throw;
+									}
+									Debug.LogException(exception);
+								}
+								EditorGUILayout.EndVertical();
+							}
+							if (Event.current.type == EventType.Used)
+							{
+								return;
+							}
+						}
 					}
+					if (GUILayoutUtility.current.topLevel != topLevel)
+					{
+						if (!GUILayoutUtility.current.layoutGroups.Contains(topLevel))
+						{
+							Debug.LogError("Expected top level layout group missing! Too many GUILayout.EndScrollView/EndVertical/EndHorizontal?");
+							GUIUtility.ExitGUI();
+						}
+						else
+						{
+							Debug.LogWarning("Unexpected top level layout group! Missing GUILayout.EndScrollView/EndVertical/EndHorizontal?");
+							while (GUILayoutUtility.current.topLevel != topLevel)
+							{
+								GUILayoutUtility.EndLayoutGroup();
+							}
+						}
+					}
+					this.HandleComponentScreenshot(rect, editor);
 				}
 			}
-			this.HandleComponentScreenshot(rect, editor);
 		}
 
 		private void DisplayDeprecationMessageIfNecessary(Editor editor)
 		{
-			if (!editor || !editor.target)
+			if (editor && editor.target)
 			{
-				return;
+				ObsoleteAttribute obsoleteAttribute = (ObsoleteAttribute)Attribute.GetCustomAttribute(editor.target.GetType(), typeof(ObsoleteAttribute));
+				if (obsoleteAttribute != null)
+				{
+					string message = (!string.IsNullOrEmpty(obsoleteAttribute.Message)) ? obsoleteAttribute.Message : "This component has been marked as obsolete.";
+					EditorGUILayout.HelpBox(message, (!obsoleteAttribute.IsError) ? MessageType.Warning : MessageType.Error);
+				}
 			}
-			ObsoleteAttribute obsoleteAttribute = (ObsoleteAttribute)Attribute.GetCustomAttribute(editor.target.GetType(), typeof(ObsoleteAttribute));
-			if (obsoleteAttribute == null)
-			{
-				return;
-			}
-			string message = (!string.IsNullOrEmpty(obsoleteAttribute.Message)) ? obsoleteAttribute.Message : "This component has been marked as obsolete.";
-			EditorGUILayout.HelpBox(message, (!obsoleteAttribute.IsError) ? MessageType.Warning : MessageType.Error);
 		}
 
 		private void HandleComponentScreenshot(Rect contentRect, Editor editor)
@@ -1215,28 +1234,37 @@ namespace UnityEditor
 
 		private bool ShouldCullEditor(Editor[] editors, int editorIndex)
 		{
+			bool result;
 			if (editors[editorIndex].hideInspector)
 			{
-				return true;
+				result = true;
 			}
-			UnityEngine.Object target = editors[editorIndex].target;
-			if (target is SubstanceImporter || target is ParticleSystemRenderer)
+			else
 			{
-				return true;
-			}
-			if (target.GetType() == typeof(AssetImporter))
-			{
-				return true;
-			}
-			if (this.m_InspectorMode == InspectorMode.Normal && editorIndex != 0)
-			{
-				AssetImporterInspector assetImporterInspector = editors[0] as AssetImporterInspector;
-				if (assetImporterInspector != null && !assetImporterInspector.showImportedObject)
+				UnityEngine.Object target = editors[editorIndex].target;
+				if (target is SubstanceImporter || target is ParticleSystemRenderer)
 				{
-					return true;
+					result = true;
+				}
+				else if (target.GetType() == typeof(AssetImporter))
+				{
+					result = true;
+				}
+				else
+				{
+					if (this.m_InspectorMode == InspectorMode.Normal && editorIndex != 0)
+					{
+						AssetImporterInspector assetImporterInspector = editors[0] as AssetImporterInspector;
+						if (assetImporterInspector != null && !assetImporterInspector.showImportedObject)
+						{
+							result = true;
+							return result;
+						}
+					}
+					result = false;
 				}
 			}
-			return false;
+			return result;
 		}
 
 		private void DrawSelectionPickerList()
@@ -1244,11 +1272,6 @@ namespace UnityEditor
 			if (this.m_TypeSelectionList == null)
 			{
 				this.m_TypeSelectionList = new TypeSelectionList(Selection.objects);
-			}
-			DockArea dockArea = this.m_Parent as DockArea;
-			if (dockArea != null)
-			{
-				dockArea.tabStyle = "dragtabbright";
 			}
 			GUILayout.Space(0f);
 			Editor.DrawHeaderGUI(null, Selection.objects.Length + " Objects");
@@ -1291,11 +1314,9 @@ namespace UnityEditor
 			if (firstNonImportInspectorEditor != null && firstNonImportInspectorEditor.target != null && firstNonImportInspectorEditor.target is GameObject && firstNonImportInspectorEditor.IsEnabled())
 			{
 				EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
 				GUIContent addComponentLabel = InspectorWindow.s_Styles.addComponentLabel;
-				Rect rect = GUILayoutUtility.GetRect(addComponentLabel, InspectorWindow.styles.addComponentButtonStyle, null);
-				rect.y += 10f;
-				rect.x += (rect.width - 230f) / 2f;
-				rect.width = 230f;
+				Rect rect = GUILayoutUtility.GetRect(addComponentLabel, InspectorWindow.styles.addComponentButtonStyle);
 				if (Event.current.type == EventType.Repaint)
 				{
 					this.DrawSplitLine(rect.y - 11f);
@@ -1320,22 +1341,26 @@ namespace UnityEditor
 						GUIUtility.ExitGUI();
 					}
 				}
+				GUILayout.FlexibleSpace();
 				EditorGUILayout.EndHorizontal();
 			}
 		}
 
 		private bool ReadyToRepaint()
 		{
+			bool result;
 			if (AnimationMode.InAnimationPlaybackMode())
 			{
 				long num = DateTime.Now.Ticks / 10000L;
 				if (num - this.s_LastUpdateWhilePlayingAnimation < 150L)
 				{
-					return false;
+					result = false;
+					return result;
 				}
 				this.s_LastUpdateWhilePlayingAnimation = num;
 			}
-			return true;
+			result = true;
+			return result;
 		}
 
 		private void DrawSplitLine(float y)
@@ -1357,20 +1382,19 @@ namespace UnityEditor
 
 		private static void FlushAllOptimizedGUIBlocksIfNeeded()
 		{
-			if (!InspectorWindow.s_AllOptimizedGUIBlocksNeedsRebuild)
+			if (InspectorWindow.s_AllOptimizedGUIBlocksNeedsRebuild)
 			{
-				return;
-			}
-			InspectorWindow.s_AllOptimizedGUIBlocksNeedsRebuild = false;
-			foreach (InspectorWindow current in InspectorWindow.m_AllInspectors)
-			{
-				if (current.m_Tracker != null)
+				InspectorWindow.s_AllOptimizedGUIBlocksNeedsRebuild = false;
+				foreach (InspectorWindow current in InspectorWindow.m_AllInspectors)
 				{
-					Editor[] activeEditors = current.m_Tracker.activeEditors;
-					for (int i = 0; i < activeEditors.Length; i++)
+					if (current.m_Tracker != null)
 					{
-						Editor editor = activeEditors[i];
-						InspectorWindow.FlushOptimizedGUIBlock(editor);
+						Editor[] activeEditors = current.m_Tracker.activeEditors;
+						for (int i = 0; i < activeEditors.Length; i++)
+						{
+							Editor editor = activeEditors[i];
+							InspectorWindow.FlushOptimizedGUIBlock(editor);
+						}
 					}
 				}
 			}
@@ -1378,43 +1402,40 @@ namespace UnityEditor
 
 		private static void FlushOptimizedGUIBlock(Editor editor)
 		{
-			if (editor == null)
+			if (!(editor == null))
 			{
-				return;
-			}
-			OptimizedGUIBlock optimizedGUIBlock;
-			float num;
-			if (editor.GetOptimizedGUIBlock(false, false, out optimizedGUIBlock, out num))
-			{
-				optimizedGUIBlock.valid = false;
+				OptimizedGUIBlock optimizedGUIBlock;
+				float num;
+				if (editor.GetOptimizedGUIBlock(false, false, out optimizedGUIBlock, out num))
+				{
+					optimizedGUIBlock.valid = false;
+				}
 			}
 		}
 
 		private void Update()
 		{
-			if (this.m_Tracker == null)
+			if (this.m_Tracker != null)
 			{
-				return;
-			}
-			Editor[] activeEditors = this.m_Tracker.activeEditors;
-			if (activeEditors == null)
-			{
-				return;
-			}
-			bool flag = false;
-			Editor[] array = activeEditors;
-			for (int i = 0; i < array.Length; i++)
-			{
-				Editor editor = array[i];
-				if (editor.RequiresConstantRepaint() && !editor.hideInspector)
+				Editor[] activeEditors = this.m_Tracker.activeEditors;
+				if (activeEditors != null)
 				{
-					flag = true;
+					bool flag = false;
+					Editor[] array = activeEditors;
+					for (int i = 0; i < array.Length; i++)
+					{
+						Editor editor = array[i];
+						if (editor.RequiresConstantRepaint() && !editor.hideInspector)
+						{
+							flag = true;
+						}
+					}
+					if (flag && this.m_lastRenderedTime + 0.032999999821186066 < EditorApplication.timeSinceStartup)
+					{
+						this.m_lastRenderedTime = EditorApplication.timeSinceStartup;
+						base.Repaint();
+					}
 				}
-			}
-			if (flag && this.m_lastRenderedTime + 0.032999999821186066 < EditorApplication.timeSinceStartup)
-			{
-				this.m_lastRenderedTime = EditorApplication.timeSinceStartup;
-				base.Repaint();
 			}
 		}
 	}

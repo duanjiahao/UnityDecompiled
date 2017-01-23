@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -56,11 +57,11 @@ namespace UnityEditor
 		{
 			get
 			{
-				return float.Parse(this.fileContents["Maint Timeout"]);
+				return float.Parse(this.fileContents["Maint Timeout"], CultureInfo.InvariantCulture);
 			}
 			set
 			{
-				this.fileContents["Maint Timeout"] = value.ToString();
+				this.fileContents["Maint Timeout"] = value.ToString(CultureInfo.InvariantCulture);
 			}
 		}
 

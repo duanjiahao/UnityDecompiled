@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using UnityEditor.Utils;
+using UnityEngine;
 
 namespace UnityEditor.Scripting.Compilers
 {
@@ -20,8 +21,13 @@ namespace UnityEditor.Scripting.Compilers
 				"-debug",
 				"-target:library",
 				"-nowarn:0169",
+				"-langversion:4",
 				"-out:" + ScriptCompilerBase.PrepareFileName(this._island._output)
 			};
+			if (!this._island._development_player && !this._island._editor)
+			{
+				list.Add("-optimize");
+			}
 			string[] references = this._island._references;
 			for (int i = 0; i < references.Length; i++)
 			{
@@ -42,13 +48,37 @@ namespace UnityEditor.Scripting.Compilers
 			for (int k = 0; k < additionalReferences.Length; k++)
 			{
 				string path = additionalReferences[k];
-				string text = Path.Combine(base.GetProfileDirectory(), path);
-				if (File.Exists(text))
+				string text = this._island._classlib_profile;
+				if (text == "2" || text == "2.0")
 				{
-					list.Add("-r:" + ScriptCompilerBase.PrepareFileName(text));
+					text = "2.0-api";
+				}
+				else if (text == "4" || text == "4.0")
+				{
+					text = "4.0-api";
+				}
+				else if (text == "4.5")
+				{
+					text = "4.5-api";
+				}
+				string text2 = Path.Combine(MonoInstallationFinder.GetProfileDirectory(this._island._target, text, "MonoBleedingEdge"), path);
+				if (File.Exists(text2))
+				{
+					list.Add("-r:" + ScriptCompilerBase.PrepareFileName(text2));
 				}
 			}
-			return base.StartCompiler(this._island._target, this.GetCompilerPath(list), list);
+			if (!base.AddCustomResponseFileIfPresent(list, "mcs.rsp"))
+			{
+				if (this._island._classlib_profile == "unity" && base.AddCustomResponseFileIfPresent(list, "smcs.rsp"))
+				{
+					Debug.LogWarning("Using obsolete custom response file 'smcs.rsp'. Please use 'mcs.rsp' instead.");
+				}
+				else if (this._island._classlib_profile == "2.0" && base.AddCustomResponseFileIfPresent(list, "gmcs.rsp"))
+				{
+					Debug.LogWarning("Using obsolete custom response file 'gmcs.rsp'. Please use 'mcs.rsp' instead.");
+				}
+			}
+			return base.StartCompiler(this._island._target, this.GetCompilerPath(list), list, false, MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"));
 		}
 
 		private string[] GetAdditionalReferences()
@@ -56,27 +86,21 @@ namespace UnityEditor.Scripting.Compilers
 			return new string[]
 			{
 				"System.Runtime.Serialization.dll",
-				"System.Xml.Linq.dll"
+				"System.Xml.Linq.dll",
+				"UnityScript.dll",
+				"UnityScript.Lang.dll",
+				"Boo.Lang.dll"
 			};
 		}
 
 		private string GetCompilerPath(List<string> arguments)
 		{
-			string profileDirectory = base.GetProfileDirectory();
-			string[] array = new string[]
+			string profileDirectory = MonoInstallationFinder.GetProfileDirectory(this._island._target, "4.5", "MonoBleedingEdge");
+			string text = Path.Combine(profileDirectory, "mcs.exe");
+			if (File.Exists(text))
 			{
-				"smcs",
-				"gmcs",
-				"mcs"
-			};
-			for (int i = 0; i < array.Length; i++)
-			{
-				string str = array[i];
-				string text = Path.Combine(profileDirectory, str + ".exe");
-				if (File.Exists(text))
-				{
-					return text;
-				}
+				arguments.Add("-sdk:" + this._island._classlib_profile);
+				return text;
 			}
 			throw new ApplicationException("Unable to find csharp compiler in " + profileDirectory);
 		}

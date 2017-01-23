@@ -9,6 +9,7 @@ namespace UnityEditor
 		Utility,
 		NoShadow,
 		MainWindow,
-		AuxWindow
+		AuxWindow,
+		PopupMenuWithKeyboardFocus
 	}
 }

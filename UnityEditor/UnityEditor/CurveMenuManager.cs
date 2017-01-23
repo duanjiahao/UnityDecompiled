@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -21,6 +20,7 @@ namespace UnityEditor
 			bool on2 = flag;
 			bool on3 = flag;
 			bool on4 = flag;
+			bool on5 = flag;
 			bool flag2 = flag;
 			bool flag3 = flag;
 			bool flag4 = flag;
@@ -30,57 +30,62 @@ namespace UnityEditor
 			foreach (KeyIdentifier current in keyList)
 			{
 				Keyframe keyframe = current.keyframe;
-				TangentMode keyTangentMode = CurveUtility.GetKeyTangentMode(keyframe, 0);
-				TangentMode keyTangentMode2 = CurveUtility.GetKeyTangentMode(keyframe, 1);
-				bool keyBroken = CurveUtility.GetKeyBroken(keyframe);
-				if (keyTangentMode != TangentMode.Smooth || keyTangentMode2 != TangentMode.Smooth)
+				AnimationUtility.TangentMode keyLeftTangentMode = AnimationUtility.GetKeyLeftTangentMode(keyframe);
+				AnimationUtility.TangentMode keyRightTangentMode = AnimationUtility.GetKeyRightTangentMode(keyframe);
+				bool keyBroken = AnimationUtility.GetKeyBroken(keyframe);
+				if (keyLeftTangentMode != AnimationUtility.TangentMode.ClampedAuto || keyRightTangentMode != AnimationUtility.TangentMode.ClampedAuto)
 				{
 					on = false;
 				}
-				if (keyBroken || keyTangentMode != TangentMode.Editable || keyTangentMode2 != TangentMode.Editable)
+				if (keyLeftTangentMode != AnimationUtility.TangentMode.Auto || keyRightTangentMode != AnimationUtility.TangentMode.Auto)
 				{
 					on2 = false;
 				}
-				if (keyBroken || keyTangentMode != TangentMode.Editable || keyframe.inTangent != 0f || keyTangentMode2 != TangentMode.Editable || keyframe.outTangent != 0f)
+				if (keyBroken || keyLeftTangentMode != AnimationUtility.TangentMode.Free || keyRightTangentMode != AnimationUtility.TangentMode.Free)
 				{
 					on3 = false;
 				}
-				if (!keyBroken)
+				if (keyBroken || keyLeftTangentMode != AnimationUtility.TangentMode.Free || keyframe.inTangent != 0f || keyRightTangentMode != AnimationUtility.TangentMode.Free || keyframe.outTangent != 0f)
 				{
 					on4 = false;
 				}
-				if (!keyBroken || keyTangentMode != TangentMode.Editable)
+				if (!keyBroken)
+				{
+					on5 = false;
+				}
+				if (!keyBroken || keyLeftTangentMode != AnimationUtility.TangentMode.Free)
 				{
 					flag2 = false;
 				}
-				if (!keyBroken || keyTangentMode != TangentMode.Linear)
+				if (!keyBroken || keyLeftTangentMode != AnimationUtility.TangentMode.Linear)
 				{
 					flag3 = false;
 				}
-				if (!keyBroken || keyTangentMode != TangentMode.Stepped)
+				if (!keyBroken || keyLeftTangentMode != AnimationUtility.TangentMode.Constant)
 				{
 					flag4 = false;
 				}
-				if (!keyBroken || keyTangentMode2 != TangentMode.Editable)
+				if (!keyBroken || keyRightTangentMode != AnimationUtility.TangentMode.Free)
 				{
 					flag5 = false;
 				}
-				if (!keyBroken || keyTangentMode2 != TangentMode.Linear)
+				if (!keyBroken || keyRightTangentMode != AnimationUtility.TangentMode.Linear)
 				{
 					flag6 = false;
 				}
-				if (!keyBroken || keyTangentMode2 != TangentMode.Stepped)
+				if (!keyBroken || keyRightTangentMode != AnimationUtility.TangentMode.Constant)
 				{
 					flag7 = false;
 				}
 			}
 			if (flag)
 			{
-				menu.AddItem(EditorGUIUtility.TextContent("Auto"), on, new GenericMenu.MenuFunction2(this.SetSmooth), keyList);
-				menu.AddItem(EditorGUIUtility.TextContent("Free Smooth"), on2, new GenericMenu.MenuFunction2(this.SetEditable), keyList);
-				menu.AddItem(EditorGUIUtility.TextContent("Flat"), on3, new GenericMenu.MenuFunction2(this.SetFlat), keyList);
-				menu.AddItem(EditorGUIUtility.TextContent("Broken"), on4, new GenericMenu.MenuFunction2(this.SetBroken), keyList);
-				menu.AddSeparator(string.Empty);
+				menu.AddItem(EditorGUIUtility.TextContent("Clamped Auto"), on, new GenericMenu.MenuFunction2(this.SetClampedAuto), keyList);
+				menu.AddItem(EditorGUIUtility.TextContent("Auto"), on2, new GenericMenu.MenuFunction2(this.SetAuto), keyList);
+				menu.AddItem(EditorGUIUtility.TextContent("Free Smooth"), on3, new GenericMenu.MenuFunction2(this.SetEditable), keyList);
+				menu.AddItem(EditorGUIUtility.TextContent("Flat"), on4, new GenericMenu.MenuFunction2(this.SetFlat), keyList);
+				menu.AddItem(EditorGUIUtility.TextContent("Broken"), on5, new GenericMenu.MenuFunction2(this.SetBroken), keyList);
+				menu.AddSeparator("");
 				menu.AddItem(EditorGUIUtility.TextContent("Left Tangent/Free"), flag2, new GenericMenu.MenuFunction2(this.SetLeftEditable), keyList);
 				menu.AddItem(EditorGUIUtility.TextContent("Left Tangent/Linear"), flag3, new GenericMenu.MenuFunction2(this.SetLeftLinear), keyList);
 				menu.AddItem(EditorGUIUtility.TextContent("Left Tangent/Constant"), flag4, new GenericMenu.MenuFunction2(this.SetLeftConstant), keyList);
@@ -93,11 +98,12 @@ namespace UnityEditor
 			}
 			else
 			{
+				menu.AddDisabledItem(EditorGUIUtility.TextContent("Clamped Auto"));
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Auto"));
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Free Smooth"));
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Flat"));
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Broken"));
-				menu.AddSeparator(string.Empty);
+				menu.AddSeparator("");
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Left Tangent/Free"));
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Left Tangent/Linear"));
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Left Tangent/Constant"));
@@ -110,62 +116,57 @@ namespace UnityEditor
 			}
 		}
 
-		public void SetSmooth(object keysToSet)
+		public void SetClampedAuto(object keysToSet)
 		{
-			this.SetBoth(TangentMode.Smooth, (List<KeyIdentifier>)keysToSet);
+			this.SetBoth(AnimationUtility.TangentMode.ClampedAuto, (List<KeyIdentifier>)keysToSet);
+		}
+
+		public void SetAuto(object keysToSet)
+		{
+			this.SetBoth(AnimationUtility.TangentMode.Auto, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetEditable(object keysToSet)
 		{
-			this.SetBoth(TangentMode.Editable, (List<KeyIdentifier>)keysToSet);
+			this.SetBoth(AnimationUtility.TangentMode.Free, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetFlat(object keysToSet)
 		{
-			this.SetBoth(TangentMode.Editable, (List<KeyIdentifier>)keysToSet);
+			this.SetBoth(AnimationUtility.TangentMode.Free, (List<KeyIdentifier>)keysToSet);
 			this.Flatten((List<KeyIdentifier>)keysToSet);
 		}
 
-		public void SetBoth(TangentMode mode, List<KeyIdentifier> keysToSet)
+		public void SetBoth(AnimationUtility.TangentMode mode, List<KeyIdentifier> keysToSet)
 		{
 			List<ChangedCurve> list = new List<ChangedCurve>();
-			List<int> list2 = new List<int>();
 			foreach (KeyIdentifier current in keysToSet)
 			{
 				AnimationCurve curve = current.curve;
 				Keyframe keyframe = current.keyframe;
-				CurveUtility.SetKeyBroken(ref keyframe, false);
-				CurveUtility.SetKeyTangentMode(ref keyframe, 1, mode);
-				CurveUtility.SetKeyTangentMode(ref keyframe, 0, mode);
-				if (mode == TangentMode.Editable)
+				AnimationUtility.SetKeyBroken(ref keyframe, false);
+				AnimationUtility.SetKeyRightTangentMode(ref keyframe, mode);
+				AnimationUtility.SetKeyLeftTangentMode(ref keyframe, mode);
+				if (mode == AnimationUtility.TangentMode.Free)
 				{
 					float num = CurveUtility.CalculateSmoothTangent(keyframe);
 					keyframe.inTangent = num;
 					keyframe.outTangent = num;
 				}
 				curve.MoveKey(current.key, keyframe);
-				CurveUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
+				AnimationUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
 				ChangedCurve item = new ChangedCurve(curve, current.curveId, current.binding);
 				if (!list.Contains(item))
 				{
 					list.Add(item);
 				}
-				list2.Add(current.curveId);
 			}
-			if (this.updater is DopeSheetEditor)
-			{
-				this.updater.UpdateCurves(list, "Set Tangents");
-			}
-			else
-			{
-				this.updater.UpdateCurves(list2, "Set Tangents");
-			}
+			this.updater.UpdateCurves(list, "Set Tangents");
 		}
 
 		public void Flatten(List<KeyIdentifier> keysToSet)
 		{
 			List<ChangedCurve> list = new List<ChangedCurve>();
-			List<int> list2 = new List<int>();
 			foreach (KeyIdentifier current in keysToSet)
 			{
 				AnimationCurve curve = current.curve;
@@ -173,153 +174,135 @@ namespace UnityEditor
 				keyframe.inTangent = 0f;
 				keyframe.outTangent = 0f;
 				curve.MoveKey(current.key, keyframe);
-				CurveUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
+				AnimationUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
 				ChangedCurve item = new ChangedCurve(curve, current.curveId, current.binding);
 				if (!list.Contains(item))
 				{
 					list.Add(item);
 				}
-				list2.Add(current.curveId);
 			}
-			if (this.updater is DopeSheetEditor)
-			{
-				this.updater.UpdateCurves(list, "Set Tangents");
-			}
-			else
-			{
-				this.updater.UpdateCurves(list2, "Set Tangents");
-			}
+			this.updater.UpdateCurves(list, "Set Tangents");
 		}
 
 		public void SetBroken(object _keysToSet)
 		{
 			List<ChangedCurve> list = new List<ChangedCurve>();
 			List<KeyIdentifier> list2 = (List<KeyIdentifier>)_keysToSet;
-			List<int> list3 = new List<int>();
 			foreach (KeyIdentifier current in list2)
 			{
 				AnimationCurve curve = current.curve;
 				Keyframe keyframe = current.keyframe;
-				CurveUtility.SetKeyBroken(ref keyframe, true);
-				if (CurveUtility.GetKeyTangentMode(keyframe, 1) == TangentMode.Smooth)
+				AnimationUtility.SetKeyBroken(ref keyframe, true);
+				if (AnimationUtility.GetKeyRightTangentMode(keyframe) == AnimationUtility.TangentMode.ClampedAuto || AnimationUtility.GetKeyRightTangentMode(keyframe) == AnimationUtility.TangentMode.Auto)
 				{
-					CurveUtility.SetKeyTangentMode(ref keyframe, 1, TangentMode.Editable);
+					AnimationUtility.SetKeyRightTangentMode(ref keyframe, AnimationUtility.TangentMode.Free);
 				}
-				if (CurveUtility.GetKeyTangentMode(keyframe, 0) == TangentMode.Smooth)
+				if (AnimationUtility.GetKeyLeftTangentMode(keyframe) == AnimationUtility.TangentMode.ClampedAuto || AnimationUtility.GetKeyLeftTangentMode(keyframe) == AnimationUtility.TangentMode.Auto)
 				{
-					CurveUtility.SetKeyTangentMode(ref keyframe, 0, TangentMode.Editable);
+					AnimationUtility.SetKeyLeftTangentMode(ref keyframe, AnimationUtility.TangentMode.Free);
 				}
 				curve.MoveKey(current.key, keyframe);
-				CurveUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
+				AnimationUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
 				ChangedCurve item = new ChangedCurve(curve, current.curveId, current.binding);
 				if (!list.Contains(item))
 				{
 					list.Add(item);
 				}
-				list3.Add(current.curveId);
 			}
-			if (this.updater is DopeSheetEditor)
-			{
-				this.updater.UpdateCurves(list, "Set Tangents");
-			}
-			else
-			{
-				this.updater.UpdateCurves(list3, "Set Tangents");
-			}
+			this.updater.UpdateCurves(list, "Set Tangents");
 		}
 
 		public void SetLeftEditable(object keysToSet)
 		{
-			this.SetTangent(0, TangentMode.Editable, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(0, AnimationUtility.TangentMode.Free, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetLeftLinear(object keysToSet)
 		{
-			this.SetTangent(0, TangentMode.Linear, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(0, AnimationUtility.TangentMode.Linear, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetLeftConstant(object keysToSet)
 		{
-			this.SetTangent(0, TangentMode.Stepped, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(0, AnimationUtility.TangentMode.Constant, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetRightEditable(object keysToSet)
 		{
-			this.SetTangent(1, TangentMode.Editable, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(1, AnimationUtility.TangentMode.Free, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetRightLinear(object keysToSet)
 		{
-			this.SetTangent(1, TangentMode.Linear, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(1, AnimationUtility.TangentMode.Linear, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetRightConstant(object keysToSet)
 		{
-			this.SetTangent(1, TangentMode.Stepped, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(1, AnimationUtility.TangentMode.Constant, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetBothEditable(object keysToSet)
 		{
-			this.SetTangent(2, TangentMode.Editable, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(2, AnimationUtility.TangentMode.Free, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetBothLinear(object keysToSet)
 		{
-			this.SetTangent(2, TangentMode.Linear, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(2, AnimationUtility.TangentMode.Linear, (List<KeyIdentifier>)keysToSet);
 		}
 
 		public void SetBothConstant(object keysToSet)
 		{
-			this.SetTangent(2, TangentMode.Stepped, (List<KeyIdentifier>)keysToSet);
+			this.SetTangent(2, AnimationUtility.TangentMode.Constant, (List<KeyIdentifier>)keysToSet);
 		}
 
-		public void SetTangent(int leftRight, TangentMode mode, List<KeyIdentifier> keysToSet)
+		public void SetTangent(int leftRight, AnimationUtility.TangentMode mode, List<KeyIdentifier> keysToSet)
 		{
-			List<int> list = new List<int>();
-			List<ChangedCurve> list2 = new List<ChangedCurve>();
+			List<ChangedCurve> list = new List<ChangedCurve>();
 			foreach (KeyIdentifier current in keysToSet)
 			{
 				AnimationCurve curve = current.curve;
 				Keyframe keyframe = current.keyframe;
-				CurveUtility.SetKeyBroken(ref keyframe, true);
+				AnimationUtility.SetKeyBroken(ref keyframe, true);
 				if (leftRight == 2)
 				{
-					CurveUtility.SetKeyTangentMode(ref keyframe, 0, mode);
-					CurveUtility.SetKeyTangentMode(ref keyframe, 1, mode);
+					AnimationUtility.SetKeyLeftTangentMode(ref keyframe, mode);
+					AnimationUtility.SetKeyRightTangentMode(ref keyframe, mode);
+				}
+				else if (leftRight == 0)
+				{
+					AnimationUtility.SetKeyLeftTangentMode(ref keyframe, mode);
+					if (AnimationUtility.GetKeyRightTangentMode(keyframe) == AnimationUtility.TangentMode.ClampedAuto || AnimationUtility.GetKeyRightTangentMode(keyframe) == AnimationUtility.TangentMode.Auto)
+					{
+						AnimationUtility.SetKeyRightTangentMode(ref keyframe, AnimationUtility.TangentMode.Free);
+					}
 				}
 				else
 				{
-					CurveUtility.SetKeyTangentMode(ref keyframe, leftRight, mode);
-					if (CurveUtility.GetKeyTangentMode(keyframe, 1 - leftRight) == TangentMode.Smooth)
+					AnimationUtility.SetKeyRightTangentMode(ref keyframe, mode);
+					if (AnimationUtility.GetKeyLeftTangentMode(keyframe) == AnimationUtility.TangentMode.ClampedAuto || AnimationUtility.GetKeyLeftTangentMode(keyframe) == AnimationUtility.TangentMode.Auto)
 					{
-						CurveUtility.SetKeyTangentMode(ref keyframe, 1 - leftRight, TangentMode.Editable);
+						AnimationUtility.SetKeyLeftTangentMode(ref keyframe, AnimationUtility.TangentMode.Free);
 					}
 				}
-				if (mode == TangentMode.Stepped && (leftRight == 0 || leftRight == 2))
+				if (mode == AnimationUtility.TangentMode.Constant && (leftRight == 0 || leftRight == 2))
 				{
 					keyframe.inTangent = float.PositiveInfinity;
 				}
-				if (mode == TangentMode.Stepped && (leftRight == 1 || leftRight == 2))
+				if (mode == AnimationUtility.TangentMode.Constant && (leftRight == 1 || leftRight == 2))
 				{
 					keyframe.outTangent = float.PositiveInfinity;
 				}
 				curve.MoveKey(current.key, keyframe);
-				CurveUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
+				AnimationUtility.UpdateTangentsFromModeSurrounding(curve, current.key);
 				ChangedCurve item = new ChangedCurve(curve, current.curveId, current.binding);
-				if (!list2.Contains(item))
+				if (!list.Contains(item))
 				{
-					list2.Add(item);
+					list.Add(item);
 				}
-				list.Add(current.curveId);
 			}
-			if (this.updater is DopeSheetEditor)
-			{
-				this.updater.UpdateCurves(list2, "Set Tangents");
-			}
-			else
-			{
-				this.updater.UpdateCurves(list, "Set Tangents");
-			}
+			this.updater.UpdateCurves(list, "Set Tangents");
 		}
 	}
 }

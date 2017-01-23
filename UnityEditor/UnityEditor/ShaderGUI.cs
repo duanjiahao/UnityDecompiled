@@ -37,11 +37,13 @@ namespace UnityEditor
 
 		protected static MaterialProperty FindProperty(string propertyName, MaterialProperty[] properties, bool propertyIsMandatory)
 		{
+			MaterialProperty result;
 			for (int i = 0; i < properties.Length; i++)
 			{
 				if (properties[i] != null && properties[i].name == propertyName)
 				{
-					return properties[i];
+					result = properties[i];
+					return result;
 				}
 			}
 			if (propertyIsMandatory)
@@ -54,7 +56,8 @@ namespace UnityEditor
 					properties.Length
 				}));
 			}
-			return null;
+			result = null;
+			return result;
 		}
 	}
 }

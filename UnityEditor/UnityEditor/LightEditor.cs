@@ -2,6 +2,7 @@ using System;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Rendering;
 
 namespace UnityEditor
 {
@@ -19,6 +20,10 @@ namespace UnityEditor
 			public readonly GUIContent BakedShadowAngle = EditorGUIUtility.TextContent("Baked Shadow Angle");
 
 			public readonly GUIContent ShadowNearPlane = EditorGUIUtility.TextContent("Shadow Near Plane|Shadow near plane, clamped to 0.1 units or 1% of light range, whichever is lower.");
+
+			public readonly GUIContent iconRemove = EditorGUIUtility.IconContent("Toolbar Minus", "Remove command buffer");
+
+			public readonly GUIStyle invisibleButton = "InvisibleButton";
 
 			public readonly GUIContent LightmappingModeLabel = EditorGUIUtility.TextContent("Baking");
 
@@ -99,9 +104,13 @@ namespace UnityEditor
 
 		private AnimBool m_ShowBakingWarning = new AnimBool();
 
+		private AnimBool m_ShowCookieWarning = new AnimBool();
+
 		private AnimBool m_BakedShadowAngleOptions = new AnimBool();
 
 		private AnimBool m_BakedShadowRadiusOptions = new AnimBool();
+
+		private bool m_CommandBuffersShown = true;
 
 		private static LightEditor.Styles s_Styles;
 
@@ -125,11 +134,35 @@ namespace UnityEditor
 			}
 		}
 
+		private bool lightmappingTypeIsSame
+		{
+			get
+			{
+				return !this.m_Lightmapping.hasMultipleDifferentValues;
+			}
+		}
+
 		private Light light
 		{
 			get
 			{
-				return this.target as Light;
+				return base.target as Light;
+			}
+		}
+
+		private bool isRealtime
+		{
+			get
+			{
+				return this.m_Lightmapping.intValue == 4;
+			}
+		}
+
+		private bool isCompletelyBaked
+		{
+			get
+			{
+				return this.m_Lightmapping.intValue == 2;
 			}
 		}
 
@@ -137,7 +170,15 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_Lightmapping.intValue != 4;
+				return !this.isRealtime;
+			}
+		}
+
+		private Texture cookie
+		{
+			get
+			{
+				return this.m_Cookie.objectReferenceValue as Texture;
 			}
 		}
 
@@ -177,7 +218,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.typeIsSame && this.light.type != LightType.Area && this.m_Lightmapping.intValue != 2;
+				return this.typeIsSame && this.light.type != LightType.Area && !this.isCompletelyBaked;
 			}
 		}
 
@@ -217,7 +258,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.typeIsSame && (this.light.type == LightType.Point || this.light.type == LightType.Spot) && this.m_Lightmapping.intValue == 4 && this.m_BounceIntensity.floatValue > 0f;
+				return this.typeIsSame && (this.light.type == LightType.Point || this.light.type == LightType.Spot) && this.lightmappingTypeIsSame && this.isRealtime && !this.m_BounceIntensity.hasMultipleDifferentValues && this.m_BounceIntensity.floatValue > 0f;
 			}
 		}
 
@@ -225,7 +266,15 @@ namespace UnityEditor
 		{
 			get
 			{
-				return !Lightmapping.bakedGI && this.isBakedOrMixed;
+				return !Lightmapping.bakedGI && this.lightmappingTypeIsSame && this.isBakedOrMixed;
+			}
+		}
+
+		private bool cookieWarningValue
+		{
+			get
+			{
+				return this.typeIsSame && this.light.type == LightType.Spot && !this.m_Cookie.hasMultipleDifferentValues && this.cookie && this.cookie.wrapMode != TextureWrapMode.Clamp;
 			}
 		}
 
@@ -251,6 +300,7 @@ namespace UnityEditor
 			this.SetOptions(this.m_ShowShadowOptions, initialize, this.shadowOptionsValue);
 			this.SetOptions(this.m_ShowIndirectWarning, initialize, this.bounceWarningValue);
 			this.SetOptions(this.m_ShowBakingWarning, initialize, this.bakingWarningValue);
+			this.SetOptions(this.m_ShowCookieWarning, initialize, this.cookieWarningValue);
 			this.SetOptions(this.m_ShowRuntimeOptions, initialize, this.runtimeOptionsValue);
 			this.SetOptions(this.m_BakedShadowAngleOptions, initialize, this.bakedShadowAngle);
 			this.SetOptions(this.m_BakedShadowRadiusOptions, initialize, this.bakedShadowRadius);
@@ -284,6 +334,69 @@ namespace UnityEditor
 			this.UpdateShowOptions(true);
 		}
 
+		private void CommandBufferGUI()
+		{
+			if (base.targets.Length == 1)
+			{
+				Light light = base.target as Light;
+				if (!(light == null))
+				{
+					int commandBufferCount = light.commandBufferCount;
+					if (commandBufferCount != 0)
+					{
+						this.m_CommandBuffersShown = GUILayout.Toggle(this.m_CommandBuffersShown, GUIContent.Temp(commandBufferCount + " command buffers"), EditorStyles.foldout, new GUILayoutOption[0]);
+						if (this.m_CommandBuffersShown)
+						{
+							EditorGUI.indentLevel++;
+							LightEvent[] array = (LightEvent[])Enum.GetValues(typeof(LightEvent));
+							for (int i = 0; i < array.Length; i++)
+							{
+								LightEvent lightEvent = array[i];
+								CommandBuffer[] commandBuffers = light.GetCommandBuffers(lightEvent);
+								CommandBuffer[] array2 = commandBuffers;
+								for (int j = 0; j < array2.Length; j++)
+								{
+									CommandBuffer commandBuffer = array2[j];
+									using (new GUILayout.HorizontalScope(new GUILayoutOption[0]))
+									{
+										Rect rect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.miniLabel);
+										rect.xMin += EditorGUI.indent;
+										Rect removeButtonRect = LightEditor.GetRemoveButtonRect(rect);
+										rect.xMax = removeButtonRect.x;
+										GUI.Label(rect, string.Format("{0}: {1} ({2})", lightEvent, commandBuffer.name, EditorUtility.FormatBytes(commandBuffer.sizeInBytes)), EditorStyles.miniLabel);
+										if (GUI.Button(removeButtonRect, LightEditor.s_Styles.iconRemove, LightEditor.s_Styles.invisibleButton))
+										{
+											light.RemoveCommandBuffer(lightEvent, commandBuffer);
+											SceneView.RepaintAll();
+											GameView.RepaintAll();
+											GUIUtility.ExitGUI();
+										}
+									}
+								}
+							}
+							using (new GUILayout.HorizontalScope(new GUILayoutOption[0]))
+							{
+								GUILayout.FlexibleSpace();
+								if (GUILayout.Button("Remove all", EditorStyles.miniButton, new GUILayoutOption[0]))
+								{
+									light.RemoveAllCommandBuffers();
+									SceneView.RepaintAll();
+									GameView.RepaintAll();
+								}
+							}
+							EditorGUI.indentLevel--;
+						}
+					}
+				}
+			}
+		}
+
+		private static Rect GetRemoveButtonRect(Rect r)
+		{
+			Vector2 vector = LightEditor.s_Styles.invisibleButton.CalcSize(LightEditor.s_Styles.iconRemove);
+			return new Rect(r.xMax - vector.x, r.y + (float)((int)(r.height / 2f - vector.y / 2f)), vector.x, vector.y);
+		}
+
 		public override void OnInspectorGUI()
 		{
 			if (LightEditor.s_Styles == null)
@@ -305,11 +418,21 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndFadeGroup();
 			EditorGUILayout.Space();
-			bool flag = this.m_ShowDirOptions.isAnimating && this.m_ShowAreaOptions.isAnimating && (this.m_ShowDirOptions.target || this.m_ShowAreaOptions.target);
-			float value = (!flag) ? (1f - Mathf.Max(this.m_ShowDirOptions.faded, this.m_ShowAreaOptions.faded)) : 0f;
+			float value = 1f - this.m_ShowDirOptions.faded;
 			if (EditorGUILayout.BeginFadeGroup(value))
 			{
-				EditorGUILayout.PropertyField(this.m_Range, new GUILayoutOption[0]);
+				if (this.m_ShowAreaOptions.target)
+				{
+					GUI.enabled = false;
+					string tooltip = "For area lights " + this.m_Range.displayName + " is computed from Width, Height and Intensity";
+					GUIContent label = new GUIContent(this.m_Range.displayName, tooltip);
+					EditorGUILayout.FloatField(label, this.light.range, new GUILayoutOption[0]);
+					GUI.enabled = true;
+				}
+				else
+				{
+					EditorGUILayout.PropertyField(this.m_Range, new GUILayoutOption[0]);
+				}
 			}
 			EditorGUILayout.EndFadeGroup();
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowSpotOptions.faded))
@@ -336,6 +459,11 @@ namespace UnityEditor
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowRuntimeOptions.faded))
 			{
 				EditorGUILayout.PropertyField(this.m_Cookie, new GUILayoutOption[0]);
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowCookieWarning.faded))
+				{
+					GUIContent gUIContent3 = EditorGUIUtility.TextContent("Cookie textures for spot lights should be set to clamp, not repeat, to avoid artifacts.");
+					EditorGUILayout.HelpBox(gUIContent3.text, MessageType.Warning, false);
+				}
 			}
 			EditorGUILayout.EndFadeGroup();
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowRuntimeOptions.faded * this.m_ShowDirOptions.faded))
@@ -350,9 +478,10 @@ namespace UnityEditor
 			EditorGUILayout.Space();
 			if (SceneView.currentDrawingSceneView != null && !SceneView.currentDrawingSceneView.m_SceneLighting)
 			{
-				GUIContent gUIContent3 = EditorGUIUtility.TextContent("One of your scene views has lighting disabled, please keep this in mind when editing lighting.");
-				EditorGUILayout.HelpBox(gUIContent3.text, MessageType.Warning, false);
+				GUIContent gUIContent4 = EditorGUIUtility.TextContent("One of your scene views has lighting disabled, please keep this in mind when editing lighting.");
+				EditorGUILayout.HelpBox(gUIContent4.text, MessageType.Warning, false);
 			}
+			this.CommandBufferGUI();
 			base.serializedObject.ApplyModifiedProperties();
 		}
 
@@ -369,6 +498,15 @@ namespace UnityEditor
 			num *= this.m_ShowShadowOptions.faded;
 			if (EditorGUILayout.BeginFadeGroup(num * this.m_ShowRuntimeOptions.faded))
 			{
+				if (this.m_Lightmapping.intValue == 1)
+				{
+					string[] array = new string[]
+					{
+						"No shadows from static objects onto dynamic objects and vice versa.",
+						"No shadows from static objects onto dynamic objects, the main light casts shadows from dynamic objects onto static objects."
+					};
+					EditorGUILayout.HelpBox(array[(this.m_Type.intValue == 1) ? 1 : 0], MessageType.Warning, false);
+				}
 				EditorGUILayout.Slider(this.m_ShadowsStrength, 0f, 1f, new GUILayoutOption[0]);
 				EditorGUILayout.PropertyField(this.m_ShadowsResolution, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_ShadowsBias, 0f, 2f, new GUILayoutOption[0]);
@@ -399,7 +537,7 @@ namespace UnityEditor
 
 		private void OnSceneGUI()
 		{
-			Light light = (Light)this.target;
+			Light light = (Light)base.target;
 			Color color = Handles.color;
 			if (light.enabled)
 			{

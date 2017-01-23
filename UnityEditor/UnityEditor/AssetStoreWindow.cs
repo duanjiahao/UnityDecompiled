@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Threading;
 using UnityEditor.Web;
 using UnityEngine;
 
@@ -22,14 +23,29 @@ namespace UnityEditor
 
 		private int m_RepeatedShow;
 
+		private bool m_ShouldRetryInitialURL;
+
+		public bool initialized
+		{
+			get
+			{
+				return null != this.webView;
+			}
+		}
+
 		public static void OpenURL(string url)
 		{
 			AssetStoreWindow assetStoreWindow = AssetStoreWindow.Init();
+			bool flag = !assetStoreWindow.initialized;
 			assetStoreWindow.InvokeJSMethod("document.AssetStore", "openURL", new object[]
 			{
 				url
 			});
 			AssetStoreContext.GetInstance().initialOpenURL = url;
+			if (flag)
+			{
+				assetStoreWindow.ScheduleOpenURL(TimeSpan.FromSeconds(3.0));
+			}
 		}
 
 		public static AssetStoreWindow Init()
@@ -68,20 +84,21 @@ namespace UnityEditor
 
 		public void OnLoadError(string url)
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
-			}
-			if (this.m_IsOffline)
-			{
-				Debug.LogErrorFormat("Unexpected error: Failed to load offline Asset Store page (url={0})", new object[]
+				if (this.m_IsOffline)
 				{
-					url
-				});
-				return;
+					Debug.LogErrorFormat("Unexpected error: Failed to load offline Asset Store page (url={0})", new object[]
+					{
+						url
+					});
+				}
+				else
+				{
+					this.m_IsOffline = true;
+					this.webView.LoadFile(AssetStoreUtils.GetOfflinePath());
+				}
 			}
-			this.m_IsOffline = true;
-			this.webView.LoadFile(AssetStoreUtils.GetOfflinePath());
 		}
 
 		public void OnInitScripting()
@@ -143,6 +160,19 @@ namespace UnityEditor
 			}
 		}
 
+		private void Update()
+		{
+			if (this.m_ShouldRetryInitialURL)
+			{
+				this.m_ShouldRetryInitialURL = false;
+				string initialOpenURL = AssetStoreContext.GetInstance().initialOpenURL;
+				if (!string.IsNullOrEmpty(initialOpenURL))
+				{
+					AssetStoreWindow.OpenURL(initialOpenURL);
+				}
+			}
+		}
+
 		public void UpdateDockStatusIfNeeded()
 		{
 			if (this.m_IsDocked != base.docked)
@@ -181,11 +211,10 @@ namespace UnityEditor
 
 		public void OnBecameInvisible()
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				this.webView.SetHostView(null);
 			}
-			this.webView.SetHostView(null);
 		}
 
 		public void OnDestroy()
@@ -219,78 +248,86 @@ namespace UnityEditor
 
 		private void CreateScriptObject()
 		{
-			if (this.scriptObject != null)
+			if (!(this.scriptObject != null))
 			{
-				return;
+				this.scriptObject = ScriptableObject.CreateInstance<WebScriptObject>();
+				this.scriptObject.hideFlags = HideFlags.HideAndDontSave;
+				this.scriptObject.webView = this.webView;
 			}
-			this.scriptObject = ScriptableObject.CreateInstance<WebScriptObject>();
-			this.scriptObject.hideFlags = HideFlags.HideAndDontSave;
-			this.scriptObject.webView = this.webView;
 		}
 
 		private void SetScriptObject()
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				this.CreateScriptObject();
+				this.webView.DefineScriptObject("window.unityScriptObject", this.scriptObject);
 			}
-			this.CreateScriptObject();
-			this.webView.DefineScriptObject("window.unityScriptObject", this.scriptObject);
 		}
 
 		private void InvokeJSMethod(string objectName, string name, params object[] args)
 		{
-			if (!this.webView)
+			if (this.webView)
 			{
-				return;
+				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.Append(objectName);
+				stringBuilder.Append('.');
+				stringBuilder.Append(name);
+				stringBuilder.Append('(');
+				bool flag = true;
+				for (int i = 0; i < args.Length; i++)
+				{
+					object obj = args[i];
+					if (!flag)
+					{
+						stringBuilder.Append(',');
+					}
+					bool flag2 = obj is string;
+					if (flag2)
+					{
+						stringBuilder.Append('"');
+					}
+					stringBuilder.Append(obj);
+					if (flag2)
+					{
+						stringBuilder.Append('"');
+					}
+					flag = false;
+				}
+				stringBuilder.Append(");");
+				this.webView.ExecuteJavascript(stringBuilder.ToString());
 			}
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(objectName);
-			stringBuilder.Append('.');
-			stringBuilder.Append(name);
-			stringBuilder.Append('(');
-			bool flag = true;
-			for (int i = 0; i < args.Length; i++)
-			{
-				object obj = args[i];
-				if (!flag)
-				{
-					stringBuilder.Append(',');
-				}
-				bool flag2 = obj is string;
-				if (flag2)
-				{
-					stringBuilder.Append('"');
-				}
-				stringBuilder.Append(obj);
-				if (flag2)
-				{
-					stringBuilder.Append('"');
-				}
-				flag = false;
-			}
-			stringBuilder.Append(");");
-			this.webView.ExecuteJavascript(stringBuilder.ToString());
 		}
 
 		private void SetFocus(bool value)
 		{
-			if (this.m_SyncingFocus)
+			if (!this.m_SyncingFocus)
 			{
-				return;
-			}
-			this.m_SyncingFocus = true;
-			if (this.webView)
-			{
-				if (value)
+				this.m_SyncingFocus = true;
+				if (this.webView)
 				{
-					this.webView.SetHostView(this.m_Parent);
-					this.webView.Show();
-					this.m_RepeatedShow = 5;
+					if (value)
+					{
+						this.webView.SetHostView(this.m_Parent);
+						this.webView.Show();
+						if (Application.platform == RuntimePlatform.OSXEditor)
+						{
+							this.m_RepeatedShow = 5;
+						}
+					}
+					this.webView.SetFocus(value);
 				}
-				this.webView.SetFocus(value);
+				this.m_SyncingFocus = false;
 			}
-			this.m_SyncingFocus = false;
+		}
+
+		private void ScheduleOpenURL(TimeSpan timeout)
+		{
+			ThreadPool.QueueUserWorkItem(delegate
+			{
+				Thread.Sleep(timeout);
+				this.m_ShouldRetryInitialURL = true;
+			});
 		}
 	}
 }

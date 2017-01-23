@@ -34,6 +34,24 @@ namespace UnityEditor.Modules
 
 		private static readonly GUIContent maxSize = EditorGUIUtility.TextContent("Max Size|Textures larger than this will be scaled down.");
 
+		private static readonly GUIContent kTextureCompression = EditorGUIUtility.TextContent("Compression|How will this texture be compressed?");
+
+		private static readonly GUIContent[] kTextureCompressionOptions = new GUIContent[]
+		{
+			EditorGUIUtility.TextContent("None|Texture is not compressed."),
+			EditorGUIUtility.TextContent("Low Quality|Texture compressed with low quality but high performance, high compression format."),
+			EditorGUIUtility.TextContent("Normal Quality|Texture is compressed with a standard format."),
+			EditorGUIUtility.TextContent("High Quality|Texture compressed with a high quality format.")
+		};
+
+		private static readonly int[] kTextureCompressionValues = new int[]
+		{
+			0,
+			3,
+			1,
+			2
+		};
+
 		public virtual void ShowImportSettings(Editor baseEditor, TextureImportPlatformSettings platformSettings)
 		{
 			TextureImporterInspector textureImporterInspector = baseEditor as TextureImporterInspector;
@@ -45,183 +63,135 @@ namespace UnityEditor.Modules
 			{
 				platformSettings.SetMaxTextureSizeForAll(maxTextureSizeForAll);
 			}
+			using (new EditorGUI.DisabledScope(platformSettings.overridden && !platformSettings.isDefault))
+			{
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = (platformSettings.overriddenIsDifferent || platformSettings.textureCompressionIsDifferent || (platformSettings.overridden && !platformSettings.isDefault));
+				TextureImporterCompression textureCompressionForAll = (TextureImporterCompression)EditorGUILayout.IntPopup(DefaultTextureImportSettingsExtension.kTextureCompression, (int)platformSettings.textureCompression, DefaultTextureImportSettingsExtension.kTextureCompressionOptions, DefaultTextureImportSettingsExtension.kTextureCompressionValues, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					platformSettings.SetTextureCompressionForAll(textureCompressionForAll);
+				}
+			}
 			int[] array = null;
 			string[] array2 = null;
 			bool flag = false;
 			int num = 0;
-			bool flag2 = false;
-			int num2 = 0;
-			bool flag3 = false;
 			for (int i = 0; i < textureImporterInspector.targets.Length; i++)
 			{
 				TextureImporter textureImporter = textureImporterInspector.targets[i] as TextureImporter;
-				TextureImporterType textureImporterType = (!textureImporterInspector.textureTypeHasMultipleDifferentValues) ? textureImporterInspector.textureType : textureImporter.textureType;
 				TextureImporterSettings settings = platformSettings.GetSettings(textureImporter);
-				int num3 = (int)platformSettings.textureFormats[i];
-				int num4 = num3;
-				if (!platformSettings.isDefault && num3 < 0)
-				{
-					num4 = (int)TextureImporter.SimpleToFullTextureFormat2((TextureImporterFormat)num4, textureImporterType, settings, textureImporter.DoesSourceTextureHaveAlpha(), textureImporter.IsSourceTextureHDR(), platformSettings.m_Target);
-				}
-				if (settings.normalMap && !TextureImporterInspector.IsGLESMobileTargetPlatform(platformSettings.m_Target))
-				{
-					num4 = (int)TextureImporterInspector.MakeTextureFormatHaveAlpha((TextureImporterFormat)num4);
-				}
-				TextureImporterType textureImporterType2 = textureImporterType;
+				TextureImporterType textureImporterType = (!textureImporterInspector.textureTypeHasMultipleDifferentValues) ? textureImporterInspector.textureType : settings.textureType;
+				int num2 = (int)platformSettings.format;
 				int[] array3;
 				string[] array4;
-				if (textureImporterType2 != TextureImporterType.Cookie)
+				if (platformSettings.isDefault)
 				{
-					if (textureImporterType2 != TextureImporterType.Advanced)
+					num2 = -1;
+					array3 = new int[]
 					{
-						array3 = textureImporterInspector.m_TextureFormatValues;
-						array4 = (from content in TextureImporterInspector.s_Styles.textureFormatOptions
-						select content.text).ToArray<string>();
-						if (num3 >= 0)
-						{
-							num3 = (int)TextureImporter.FullToSimpleTextureFormat((TextureImporterFormat)num3);
-						}
-						num3 = -1 - num3;
+						-1
+					};
+					array4 = new string[]
+					{
+						"Auto"
+					};
+				}
+				else if (!platformSettings.overridden)
+				{
+					num2 = (int)TextureImporter.FormatFromTextureParameters(settings, platformSettings.platformTextureSettings, textureImporter.DoesSourceTextureHaveAlpha(), textureImporter.IsSourceTextureHDR(), platformSettings.m_Target);
+					array3 = new int[]
+					{
+						num2
+					};
+					array4 = new string[]
+					{
+						TextureUtil.GetTextureFormatString((TextureFormat)num2)
+					};
+				}
+				else if (textureImporterType == TextureImporterType.Cookie || textureImporterType == TextureImporterType.SingleChannel)
+				{
+					array3 = TextureImportPlatformSettings.kTextureFormatsValueSingleChannel;
+					array4 = TextureImporterInspector.s_TextureFormatStringsSingleChannel;
+				}
+				else if (TextureImporterInspector.IsGLESMobileTargetPlatform(platformSettings.m_Target))
+				{
+					if (platformSettings.m_Target == BuildTarget.iOS || platformSettings.m_Target == BuildTarget.tvOS)
+					{
+						array3 = TextureImportPlatformSettings.kTextureFormatsValueApplePVR;
+						array4 = TextureImporterInspector.s_TextureFormatStringsApplePVR;
+					}
+					else if (platformSettings.m_Target == BuildTarget.SamsungTV)
+					{
+						array3 = TextureImportPlatformSettings.kTextureFormatsValueSTV;
+						array4 = TextureImporterInspector.s_TextureFormatStringsSTV;
 					}
 					else
 					{
-						num3 = num4;
-						if (TextureImporterInspector.IsGLESMobileTargetPlatform(platformSettings.m_Target))
-						{
-							if (TextureImporterInspector.s_TextureFormatStringsiPhone == null)
-							{
-								TextureImporterInspector.s_TextureFormatStringsiPhone = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueiPhone);
-							}
-							if (TextureImporterInspector.s_TextureFormatStringsAndroid == null)
-							{
-								TextureImporterInspector.s_TextureFormatStringsAndroid = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueAndroid);
-							}
-							if (TextureImporterInspector.s_TextureFormatStringsTizen == null)
-							{
-								TextureImporterInspector.s_TextureFormatStringsTizen = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueTizen);
-							}
-							if (platformSettings.m_Target == BuildTarget.iOS)
-							{
-								array3 = TextureImportPlatformSettings.kTextureFormatsValueiPhone;
-								array4 = TextureImporterInspector.s_TextureFormatStringsiPhone;
-							}
-							else if (platformSettings.m_Target == BuildTarget.SamsungTV)
-							{
-								if (TextureImporterInspector.s_TextureFormatStringsSTV == null)
-								{
-									TextureImporterInspector.s_TextureFormatStringsSTV = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueSTV);
-								}
-								array3 = TextureImportPlatformSettings.kTextureFormatsValueSTV;
-								array4 = TextureImporterInspector.s_TextureFormatStringsSTV;
-							}
-							else
-							{
-								array3 = TextureImportPlatformSettings.kTextureFormatsValueAndroid;
-								array4 = TextureImporterInspector.s_TextureFormatStringsAndroid;
-							}
-						}
-						else if (!settings.normalMap)
-						{
-							if (TextureImporterInspector.s_TextureFormatStringsAll == null)
-							{
-								TextureImporterInspector.s_TextureFormatStringsAll = TextureImporterInspector.BuildTextureStrings(TextureImporterInspector.TextureFormatsValueAll);
-							}
-							if (TextureImporterInspector.s_TextureFormatStringsWiiU == null)
-							{
-								TextureImporterInspector.s_TextureFormatStringsWiiU = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueWiiU);
-							}
-							if (TextureImporterInspector.s_TextureFormatStringsWeb == null)
-							{
-								TextureImporterInspector.s_TextureFormatStringsWeb = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueWeb);
-							}
-							if (platformSettings.isDefault)
-							{
-								array3 = TextureImporterInspector.TextureFormatsValueAll;
-								array4 = TextureImporterInspector.s_TextureFormatStringsAll;
-							}
-							else if (platformSettings.m_Target == BuildTarget.WiiU)
-							{
-								array3 = TextureImportPlatformSettings.kTextureFormatsValueWiiU;
-								array4 = TextureImporterInspector.s_TextureFormatStringsWiiU;
-							}
-							else
-							{
-								array3 = TextureImportPlatformSettings.kTextureFormatsValueWeb;
-								array4 = TextureImporterInspector.s_TextureFormatStringsWeb;
-							}
-						}
-						else
-						{
-							if (TextureImporterInspector.s_NormalFormatStringsAll == null)
-							{
-								TextureImporterInspector.s_NormalFormatStringsAll = TextureImporterInspector.BuildTextureStrings(TextureImporterInspector.NormalFormatsValueAll);
-							}
-							if (TextureImporterInspector.s_NormalFormatStringsWeb == null)
-							{
-								TextureImporterInspector.s_NormalFormatStringsWeb = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kNormalFormatsValueWeb);
-							}
-							if (platformSettings.isDefault)
-							{
-								array3 = TextureImporterInspector.NormalFormatsValueAll;
-								array4 = TextureImporterInspector.s_NormalFormatStringsAll;
-							}
-							else
-							{
-								array3 = TextureImportPlatformSettings.kNormalFormatsValueWeb;
-								array4 = TextureImporterInspector.s_NormalFormatStringsWeb;
-							}
-						}
+						array3 = TextureImportPlatformSettings.kTextureFormatsValueAndroid;
+						array4 = TextureImporterInspector.s_TextureFormatStringsAndroid;
 					}
+				}
+				else if (textureImporterType == TextureImporterType.NormalMap)
+				{
+					array3 = TextureImportPlatformSettings.kNormalFormatsValueDefault;
+					array4 = TextureImporterInspector.s_NormalFormatStringsDefault;
+				}
+				else if (platformSettings.m_Target == BuildTarget.WebGL)
+				{
+					array3 = TextureImportPlatformSettings.kTextureFormatsValueWebGL;
+					array4 = TextureImporterInspector.s_TextureFormatStringsWebGL;
+				}
+				else if (platformSettings.m_Target == BuildTarget.WiiU)
+				{
+					array3 = TextureImportPlatformSettings.kTextureFormatsValueWiiU;
+					array4 = TextureImporterInspector.s_TextureFormatStringsWiiU;
 				}
 				else
 				{
-					array3 = new int[1];
-					array4 = new string[]
-					{
-						"8 Bit Alpha"
-					};
-					num3 = 0;
+					array3 = TextureImportPlatformSettings.kTextureFormatsValueDefault;
+					array4 = TextureImporterInspector.s_TextureFormatStringsDefault;
 				}
 				if (i == 0)
 				{
 					array = array3;
 					array2 = array4;
-					num = num3;
-					num2 = num4;
+					num = num2;
 				}
-				else
+				else if (!array3.SequenceEqual(array) || !array4.SequenceEqual(array2))
 				{
-					if (num3 != num)
-					{
-						flag2 = true;
-					}
-					if (num4 != num2)
-					{
-						flag3 = true;
-					}
-					if (!array3.SequenceEqual(array) || !array4.SequenceEqual(array2))
-					{
-						flag = true;
-						break;
-					}
+					flag = true;
+					break;
 				}
 			}
 			using (new EditorGUI.DisabledScope(flag || array2.Length == 1))
 			{
 				EditorGUI.BeginChangeCheck();
-				EditorGUI.showMixedValue = (flag || flag2);
+				EditorGUI.showMixedValue = (flag || platformSettings.textureFormatIsDifferent);
 				num = EditorGUILayout.IntPopup(TextureImporterInspector.s_Styles.textureFormat, num, EditorGUIUtility.TempContent(array2), array, new GUILayoutOption[0]);
 				EditorGUI.showMixedValue = false;
-				if (textureImporterInspector.textureType != TextureImporterType.Advanced)
-				{
-					num = -1 - num;
-				}
 				if (EditorGUI.EndChangeCheck())
 				{
 					platformSettings.SetTextureFormatForAll((TextureImporterFormat)num);
 				}
+				if (Array.IndexOf<int>(array, num) == -1)
+				{
+					platformSettings.SetTextureFormatForAll((TextureImporterFormat)array[0]);
+				}
 			}
-			if (num2 == -5 || (!flag3 && ArrayUtility.Contains<TextureImporterFormat>(TextureImporterInspector.kFormatsWithCompressionSettings, (TextureImporterFormat)num2)))
+			if ((platformSettings.isDefault && platformSettings.textureCompression != TextureImporterCompression.Uncompressed) || (platformSettings.allAreOverridden && TextureImporterInspector.IsCompressedDXTTextureFormat((TextureImporterFormat)num)))
+			{
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = (platformSettings.overriddenIsDifferent || platformSettings.crunchedCompressionIsDifferent);
+				bool crunchedCompressionForAll = EditorGUILayout.Toggle(TextureImporterInspector.s_Styles.crunchedCompression, platformSettings.crunchedCompression, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					platformSettings.SetCrunchedCompressionForAll(crunchedCompressionForAll);
+				}
+			}
+			if ((platformSettings.crunchedCompression && !platformSettings.crunchedCompressionIsDifferent && (platformSettings.textureCompression != TextureImporterCompression.Uncompressed || num == 10 || num == 12)) || (!platformSettings.textureFormatIsDifferent && ArrayUtility.Contains<TextureImporterFormat>(TextureImporterInspector.kFormatsWithCompressionSettings, (TextureImporterFormat)num)))
 			{
 				EditorGUI.BeginChangeCheck();
 				EditorGUI.showMixedValue = (platformSettings.overriddenIsDifferent || platformSettings.compressionQualityIsDifferent);
@@ -232,62 +202,58 @@ namespace UnityEditor.Modules
 					platformSettings.SetCompressionQualityForAll(compressionQualityForAll);
 				}
 			}
-			if (TextureImporter.FullToSimpleTextureFormat((TextureImporterFormat)num) == TextureImporterFormat.AutomaticCrunched && TextureImporter.FullToSimpleTextureFormat((TextureImporterFormat)num2) != TextureImporterFormat.AutomaticCrunched)
+			bool flag2 = TextureImporter.IsETC1SupportedByBuildTarget(BuildPipeline.GetBuildTargetByName(platformSettings.name));
+			bool flag3 = textureImporterInspector.spriteImportMode != SpriteImportMode.None;
+			bool flag4 = platformSettings.textureCompression != TextureImporterCompression.Uncompressed || TextureImporter.IsTextureFormatETC1Compression((TextureFormat)num);
+			if (flag2 && flag3 && flag4)
 			{
-				EditorGUILayout.HelpBox("Crunched is not supported on this platform. Falling back to 'Compressed'.", MessageType.Warning);
-			}
-			bool flag4 = num == -1 || TextureImporter.IsTextureFormatETC1Compression((TextureFormat)num2);
-			if (platformSettings.overridden && platformSettings.m_Target == BuildTarget.Android && flag4 && platformSettings.importers.Length > 0)
-			{
-				TextureImporter textureImporter2 = platformSettings.importers[0];
 				EditorGUI.BeginChangeCheck();
-				bool allowsAlphaSplitting = GUILayout.Toggle(textureImporter2.GetAllowsAlphaSplitting(), TextureImporterInspector.s_Styles.etc1Compression, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = (platformSettings.overriddenIsDifferent || platformSettings.allowsAlphaSplitIsDifferent);
+				bool allowsAlphaSplitForAll = GUILayout.Toggle(platformSettings.allowsAlphaSplitting, TextureImporterInspector.s_Styles.etc1Compression, new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck())
 				{
-					TextureImporter[] importers = platformSettings.importers;
-					for (int j = 0; j < importers.Length; j++)
-					{
-						TextureImporter textureImporter3 = importers[j];
-						textureImporter3.SetAllowsAlphaSplitting(allowsAlphaSplitting);
-					}
-					platformSettings.SetChanged();
+					platformSettings.SetAllowsAlphaSplitForAll(allowsAlphaSplitForAll);
 				}
-			}
-			if (!platformSettings.overridden && platformSettings.m_Target == BuildTarget.Android && platformSettings.importers.Length > 0 && platformSettings.importers[0].GetAllowsAlphaSplitting())
-			{
-				platformSettings.importers[0].SetAllowsAlphaSplitting(false);
-				platformSettings.SetChanged();
 			}
 		}
 
 		private int EditCompressionQuality(BuildTarget target, int compression)
 		{
 			bool flag = target == BuildTarget.iOS || target == BuildTarget.tvOS || target == BuildTarget.Android || target == BuildTarget.Tizen || target == BuildTarget.SamsungTV;
-			if (!flag)
+			int result;
+			if (flag)
+			{
+				int selectedIndex = 1;
+				if (compression == 0)
+				{
+					selectedIndex = 0;
+				}
+				else if (compression == 100)
+				{
+					selectedIndex = 2;
+				}
+				switch (EditorGUILayout.Popup(TextureImporterInspector.s_Styles.compressionQuality, selectedIndex, TextureImporterInspector.s_Styles.mobileCompressionQualityOptions, new GUILayoutOption[0]))
+				{
+				case 0:
+					result = 0;
+					break;
+				case 1:
+					result = 50;
+					break;
+				case 2:
+					result = 100;
+					break;
+				default:
+					result = 50;
+					break;
+				}
+			}
+			else
 			{
 				compression = EditorGUILayout.IntSlider(TextureImporterInspector.s_Styles.compressionQualitySlider, compression, 0, 100, new GUILayoutOption[0]);
-				return compression;
+				result = compression;
 			}
-			int selectedIndex = 1;
-			if (compression == 0)
-			{
-				selectedIndex = 0;
-			}
-			else if (compression == 100)
-			{
-				selectedIndex = 2;
-			}
-			switch (EditorGUILayout.Popup(TextureImporterInspector.s_Styles.compressionQuality, selectedIndex, TextureImporterInspector.s_Styles.mobileCompressionQualityOptions, new GUILayoutOption[0]))
-			{
-			case 0:
-				return 0;
-			case 1:
-				return 50;
-			case 2:
-				return 100;
-			default:
-				return 50;
-			}
+			return result;
 		}
 	}
 }

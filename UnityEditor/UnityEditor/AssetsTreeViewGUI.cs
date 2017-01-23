@@ -1,6 +1,7 @@
 using System;
 using UnityEditor.Collaboration;
 using UnityEditor.Connect;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.VersionControl;
 using UnityEditor.Web;
@@ -11,11 +12,11 @@ namespace UnityEditor
 {
 	internal class AssetsTreeViewGUI : TreeViewGUI
 	{
-		private const float k_IconOverlayPadding = 7f;
-
 		private static bool s_VCEnabled;
 
-		public AssetsTreeViewGUI(TreeView treeView) : base(treeView)
+		private const float k_IconOverlayPadding = 7f;
+
+		public AssetsTreeViewGUI(TreeViewController treeView) : base(treeView)
 		{
 			base.iconOverlayGUI = (Action<TreeViewItem, Rect>)Delegate.Combine(base.iconOverlayGUI, new Action<TreeViewItem, Rect>(this.OnIconOverlayGUI));
 			this.k_TopRowMargin = 4f;
@@ -93,25 +94,30 @@ namespace UnityEditor
 
 		protected override Texture GetIconForItem(TreeViewItem item)
 		{
+			Texture result;
 			if (item == null)
 			{
-				return null;
+				result = null;
 			}
-			Texture texture = null;
-			if (this.IsCreatingNewAsset(item.id))
+			else
 			{
-				texture = this.GetCreateAssetUtility().icon;
+				Texture texture = null;
+				if (this.IsCreatingNewAsset(item.id))
+				{
+					texture = this.GetCreateAssetUtility().icon;
+				}
+				if (texture == null)
+				{
+					texture = item.icon;
+				}
+				if (texture == null && item.id != 0)
+				{
+					string assetPath = AssetDatabase.GetAssetPath(item.id);
+					texture = AssetDatabase.GetCachedIcon(assetPath);
+				}
+				result = texture;
 			}
-			if (texture == null)
-			{
-				texture = item.icon;
-			}
-			if (texture == null && item.id != 0)
-			{
-				string assetPath = AssetDatabase.GetAssetPath(item.id);
-				texture = AssetDatabase.GetCachedIcon(assetPath);
-			}
-			return texture;
+			return result;
 		}
 
 		private void OnIconOverlayGUI(TreeViewItem item, Rect overlayRect)
@@ -119,11 +125,14 @@ namespace UnityEditor
 			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
 			{
 				bool flag = CollabAccess.Instance.IsServiceEnabled();
-				if (flag && AssetDatabase.IsMainAsset(item.id))
+				if (flag)
 				{
-					string assetPath = AssetDatabase.GetAssetPath(item.id);
-					string guid = AssetDatabase.AssetPathToGUID(assetPath);
-					CollabProjectHook.OnProjectWindowItemIconOverlay(guid, overlayRect);
+					if (AssetDatabase.IsMainAsset(item.id))
+					{
+						string assetPath = AssetDatabase.GetAssetPath(item.id);
+						string guid = AssetDatabase.AssetPathToGUID(assetPath);
+						CollabProjectHook.OnProjectWindowItemIconOverlay(guid, overlayRect);
+					}
 				}
 			}
 			if (AssetsTreeViewGUI.s_VCEnabled && AssetDatabase.IsMainAsset(item.id))

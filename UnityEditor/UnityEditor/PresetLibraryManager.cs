@@ -56,7 +56,7 @@ namespace UnityEditor
 			}
 		}
 
-		private static string s_LastError;
+		private static string s_LastError = null;
 
 		private List<PresetLibraryManager.LibraryCache> m_LibraryCaches = new List<PresetLibraryManager.LibraryCache>();
 
@@ -82,44 +82,51 @@ namespace UnityEditor
 		public T CreateLibrary<T>(ScriptableObjectSaveLoadHelper<T> helper, string presetLibraryPathWithoutExtension) where T : ScriptableObject
 		{
 			string libaryNameFromPath = this.GetLibaryNameFromPath(presetLibraryPathWithoutExtension);
+			T result;
 			if (!InternalEditorUtility.IsValidFileName(libaryNameFromPath))
 			{
 				string displayStringOfInvalidCharsOfFileName = InternalEditorUtility.GetDisplayStringOfInvalidCharsOfFileName(libaryNameFromPath);
 				if (displayStringOfInvalidCharsOfFileName.Length > 0)
 				{
-					PresetLibraryManager.s_LastError = string.Format("A library filename cannot contain the following character{0}:  {1}", (displayStringOfInvalidCharsOfFileName.Length <= 1) ? string.Empty : "s", displayStringOfInvalidCharsOfFileName);
+					PresetLibraryManager.s_LastError = string.Format("A library filename cannot contain the following character{0}:  {1}", (displayStringOfInvalidCharsOfFileName.Length <= 1) ? "" : "s", displayStringOfInvalidCharsOfFileName);
 				}
 				else
 				{
 					PresetLibraryManager.s_LastError = "Invalid filename";
 				}
-				return (T)((object)null);
+				result = (T)((object)null);
 			}
-			if (this.GetLibrary<T>(helper, presetLibraryPathWithoutExtension) != null)
+			else if (this.GetLibrary<T>(helper, presetLibraryPathWithoutExtension) != null)
 			{
 				PresetLibraryManager.s_LastError = "Library '" + libaryNameFromPath + "' already exists! Ensure a unique name.";
-				return (T)((object)null);
+				result = (T)((object)null);
 			}
-			T t = helper.Create();
-			t.hideFlags = this.libraryHideFlag;
-			PresetLibraryManager.LibraryCache presetLibraryCache = this.GetPresetLibraryCache(helper.fileExtensionWithoutDot);
-			presetLibraryCache.loadedLibraries.Add(t);
-			presetLibraryCache.loadedLibraryIDs.Add(presetLibraryPathWithoutExtension);
-			PresetLibraryManager.s_LastError = null;
-			return t;
+			else
+			{
+				T t = helper.Create();
+				t.hideFlags = this.libraryHideFlag;
+				PresetLibraryManager.LibraryCache presetLibraryCache = this.GetPresetLibraryCache(helper.fileExtensionWithoutDot);
+				presetLibraryCache.loadedLibraries.Add(t);
+				presetLibraryCache.loadedLibraryIDs.Add(presetLibraryPathWithoutExtension);
+				PresetLibraryManager.s_LastError = null;
+				result = t;
+			}
+			return result;
 		}
 
 		public T GetLibrary<T>(ScriptableObjectSaveLoadHelper<T> helper, string presetLibraryPathWithoutExtension) where T : ScriptableObject
 		{
 			PresetLibraryManager.LibraryCache presetLibraryCache = this.GetPresetLibraryCache(helper.fileExtensionWithoutDot);
 			int i = 0;
+			T result;
 			while (i < presetLibraryCache.loadedLibraryIDs.Count)
 			{
 				if (presetLibraryCache.loadedLibraryIDs[i] == presetLibraryPathWithoutExtension)
 				{
 					if (presetLibraryCache.loadedLibraries[i] != null)
 					{
-						return presetLibraryCache.loadedLibraries[i] as T;
+						result = (presetLibraryCache.loadedLibraries[i] as T);
+						return result;
 					}
 					presetLibraryCache.loadedLibraries.RemoveAt(i);
 					presetLibraryCache.loadedLibraryIDs.RemoveAt(i);
@@ -137,9 +144,11 @@ namespace UnityEditor
 				t.hideFlags = this.libraryHideFlag;
 				presetLibraryCache.loadedLibraries.Add(t);
 				presetLibraryCache.loadedLibraryIDs.Add(presetLibraryPathWithoutExtension);
-				return t;
+				result = t;
+				return result;
 			}
-			return (T)((object)null);
+			result = (T)((object)null);
+			return result;
 		}
 
 		public void UnloadAllLibrariesFor<T>(ScriptableObjectSaveLoadHelper<T> helper) where T : ScriptableObject
@@ -174,16 +183,19 @@ namespace UnityEditor
 
 		private PresetLibraryManager.LibraryCache GetPresetLibraryCache(string identifier)
 		{
+			PresetLibraryManager.LibraryCache result;
 			foreach (PresetLibraryManager.LibraryCache current in this.m_LibraryCaches)
 			{
 				if (current.identifier == identifier)
 				{
-					return current;
+					result = current;
+					return result;
 				}
 			}
 			PresetLibraryManager.LibraryCache libraryCache = new PresetLibraryManager.LibraryCache(identifier);
 			this.m_LibraryCaches.Add(libraryCache);
-			return libraryCache;
+			result = libraryCache;
+			return result;
 		}
 	}
 }

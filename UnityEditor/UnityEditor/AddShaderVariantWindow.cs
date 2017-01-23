@@ -110,17 +110,15 @@ namespace UnityEditor
 			if (this.m_Data == null || this.m_Data.shader == null || this.m_Data.collection == null)
 			{
 				base.Close();
-				return;
 			}
-			if (Event.current.type == EventType.Layout)
+			else if (Event.current.type != EventType.Layout)
 			{
-				return;
-			}
-			Rect windowRect = new Rect(0f, 0f, base.position.width, base.position.height);
-			this.Draw(windowRect);
-			if (Event.current.type == EventType.MouseMove)
-			{
-				base.Repaint();
+				Rect windowRect = new Rect(0f, 0f, base.position.width, base.position.height);
+				this.Draw(windowRect);
+				if (Event.current.type == EventType.MouseMove)
+				{
+					base.Repaint();
+				}
 			}
 		}
 

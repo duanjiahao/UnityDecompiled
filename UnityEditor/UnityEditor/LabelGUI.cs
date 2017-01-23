@@ -13,11 +13,11 @@ namespace UnityEditor
 
 		private string m_ChangedLabel;
 
-		private bool m_CurrentChanged;
+		private bool m_CurrentChanged = false;
 
-		private bool m_ChangeWasAdd;
+		private bool m_ChangeWasAdd = false;
 
-		private bool m_IgnoreNextAssetLabelsChangedCall;
+		private bool m_IgnoreNextAssetLabelsChangedCall = false;
 
 		private static Action<UnityEngine.Object> s_AssetLabelsForObjectChangedDelegates;
 
@@ -118,15 +118,19 @@ namespace UnityEditor
 					m_SortAlphabetically = true
 				};
 				Dictionary<string, float> allLabels = AssetDatabase.GetAllLabels();
-				foreach (KeyValuePair<string, float> pair in allLabels)
+				using (Dictionary<string, float>.Enumerator enumerator = allLabels.GetEnumerator())
 				{
-					PopupList.ListElement listElement = this.m_AssetLabels.NewOrMatchingElement(pair.Key);
-					if (listElement.filterScore < pair.Value)
+					while (enumerator.MoveNext())
 					{
-						listElement.filterScore = pair.Value;
+						KeyValuePair<string, float> pair = enumerator.Current;
+						PopupList.ListElement listElement = this.m_AssetLabels.NewOrMatchingElement(pair.Key);
+						if (listElement.filterScore < pair.Value)
+						{
+							listElement.filterScore = pair.Value;
+						}
+						listElement.selected = source.Any((string label) => string.Equals(label, pair.Key, StringComparison.OrdinalIgnoreCase));
+						listElement.partiallySelected = source2.Any((string label) => string.Equals(label, pair.Key, StringComparison.OrdinalIgnoreCase));
 					}
-					listElement.selected = source.Any((string label) => string.Equals(label, pair.Key, StringComparison.OrdinalIgnoreCase));
-					listElement.partiallySelected = source2.Any((string label) => string.Equals(label, pair.Key, StringComparison.OrdinalIgnoreCase));
 				}
 			}
 			this.m_CurrentAssetsSet = hashSet;
@@ -154,7 +158,7 @@ namespace UnityEditor
 			rect2.x = rect.xMax + (float)assetLabelIcon.margin.left;
 			if (EditorGUI.ButtonMouseDown(rect2, GUIContent.none, FocusType.Passive, assetLabelIcon))
 			{
-				PopupWindow.Show(rect2, new PopupList(this.m_AssetLabels));
+				PopupWindow.Show(rect2, new PopupList(this.m_AssetLabels), null, ShowMode.PopupMenuWithKeyboardFocus);
 			}
 			EditorGUILayout.EndHorizontal();
 		}
@@ -178,7 +182,7 @@ namespace UnityEditor
 				{
 					current.Use();
 					rect.x = xMax;
-					PopupWindow.Show(rect, new PopupList(this.m_AssetLabels, current2.text));
+					PopupWindow.Show(rect, new PopupList(this.m_AssetLabels, current2.text), null, ShowMode.PopupMenuWithKeyboardFocus);
 				}
 			}
 		}

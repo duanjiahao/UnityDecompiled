@@ -19,7 +19,7 @@ namespace UnityEditorInternal
 
 			public UndoPropertyModification lastQuatModification;
 
-			public bool useEuler;
+			public bool useEuler = false;
 
 			public UndoPropertyModification eulerX;
 
@@ -34,29 +34,35 @@ namespace UnityEditorInternal
 
 		private static bool HasAnyRecordableModifications(GameObject root, UndoPropertyModification[] modifications)
 		{
+			bool result;
 			for (int i = 0; i < modifications.Length; i++)
 			{
 				EditorCurveBinding editorCurveBinding;
 				if (AnimationUtility.PropertyModificationToEditorCurveBinding(modifications[i].previousValue, root, out editorCurveBinding) != null)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
 
 		private static PropertyModification FindPropertyModification(GameObject root, UndoPropertyModification[] modifications, EditorCurveBinding binding)
 		{
+			PropertyModification result;
 			for (int i = 0; i < modifications.Length; i++)
 			{
 				EditorCurveBinding lhs;
 				AnimationUtility.PropertyModificationToEditorCurveBinding(modifications[i].previousValue, root, out lhs);
 				if (lhs == binding)
 				{
-					return modifications[i].previousValue;
+					result = modifications[i].previousValue;
+					return result;
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
 
 		private static void CollectRotationModifications(IAnimationRecordingState state, ref UndoPropertyModification[] modifications, ref Dictionary<object, AnimationRecording.RotationModification> rotationModifications)
@@ -116,7 +122,6 @@ namespace UnityEditorInternal
 					{
 						rotationModification2.eulerZ = undoPropertyModification;
 					}
-					list.Add(undoPropertyModification);
 				}
 				else
 				{
@@ -129,15 +134,12 @@ namespace UnityEditorInternal
 			}
 		}
 
-		private static void AddRotationPropertyModification(IAnimationRecordingState state, UndoPropertyModification modification)
+		private static void AddRotationPropertyModification(IAnimationRecordingState state, EditorCurveBinding baseBinding, UndoPropertyModification modification)
 		{
-			if (modification.previousValue == null)
+			if (modification.previousValue != null)
 			{
-				return;
-			}
-			EditorCurveBinding binding = default(EditorCurveBinding);
-			if (AnimationUtility.PropertyModificationToEditorCurveBinding(modification.previousValue, state.activeRootGameObject, out binding) != null)
-			{
+				EditorCurveBinding binding = baseBinding;
+				binding.propertyName = modification.previousValue.propertyPath;
 				AnimationMode.AddPropertyModification(binding, modification.previousValue, modification.keepPrefabOverride);
 			}
 		}
@@ -152,86 +154,92 @@ namespace UnityEditorInternal
 				Transform transform = current.Key as Transform;
 				if (!(transform == null))
 				{
-					EditorCurveBinding binding = default(EditorCurveBinding);
-					Type type = AnimationUtility.PropertyModificationToEditorCurveBinding(value.lastQuatModification.currentValue, state.activeRootGameObject, out binding);
-					AnimationRecording.AddRotationPropertyModification(state, value.x);
-					AnimationRecording.AddRotationPropertyModification(state, value.y);
-					AnimationRecording.AddRotationPropertyModification(state, value.z);
-					AnimationRecording.AddRotationPropertyModification(state, value.w);
-					if (value.useEuler)
+					EditorCurveBinding editorCurveBinding = default(EditorCurveBinding);
+					Type type = AnimationUtility.PropertyModificationToEditorCurveBinding(value.lastQuatModification.currentValue, state.activeRootGameObject, out editorCurveBinding);
+					if (type != null)
 					{
-						Vector3 localEulerAngles = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
-						Vector3 localEulerAngles2 = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
-						object obj;
-						if (AnimationRecording.ValueFromPropertyModification(value.eulerX.previousValue, binding, out obj))
+						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.x);
+						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.y);
+						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.z);
+						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.w);
+						if (value.useEuler)
 						{
-							localEulerAngles.x = (float)obj;
+							AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.eulerX);
+							AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.eulerY);
+							AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.eulerZ);
+							Vector3 localEulerAngles = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
+							Vector3 localEulerAngles2 = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
+							object obj;
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerX.previousValue, editorCurveBinding, out obj))
+							{
+								localEulerAngles.x = (float)obj;
+							}
+							object obj2;
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerY.previousValue, editorCurveBinding, out obj2))
+							{
+								localEulerAngles.y = (float)obj2;
+							}
+							object obj3;
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.previousValue, editorCurveBinding, out obj3))
+							{
+								localEulerAngles.z = (float)obj3;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerX.currentValue, editorCurveBinding, out obj))
+							{
+								localEulerAngles2.x = (float)obj;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerY.currentValue, editorCurveBinding, out obj2))
+							{
+								localEulerAngles2.y = (float)obj2;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.currentValue, editorCurveBinding, out obj3))
+							{
+								localEulerAngles2.z = (float)obj3;
+							}
+							AnimationRecording.AddRotationKey(state, editorCurveBinding, type, localEulerAngles, localEulerAngles2);
 						}
-						object obj2;
-						if (AnimationRecording.ValueFromPropertyModification(value.eulerY.previousValue, binding, out obj2))
+						else
 						{
-							localEulerAngles.y = (float)obj2;
+							Quaternion localRotation = transform.localRotation;
+							Quaternion localRotation2 = transform.localRotation;
+							object obj4;
+							if (AnimationRecording.ValueFromPropertyModification(value.x.previousValue, editorCurveBinding, out obj4))
+							{
+								localRotation.x = (float)obj4;
+							}
+							object obj5;
+							if (AnimationRecording.ValueFromPropertyModification(value.y.previousValue, editorCurveBinding, out obj5))
+							{
+								localRotation.y = (float)obj5;
+							}
+							object obj6;
+							if (AnimationRecording.ValueFromPropertyModification(value.z.previousValue, editorCurveBinding, out obj6))
+							{
+								localRotation.z = (float)obj6;
+							}
+							object obj7;
+							if (AnimationRecording.ValueFromPropertyModification(value.w.previousValue, editorCurveBinding, out obj7))
+							{
+								localRotation.w = (float)obj7;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.x.currentValue, editorCurveBinding, out obj4))
+							{
+								localRotation2.x = (float)obj4;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.y.currentValue, editorCurveBinding, out obj5))
+							{
+								localRotation2.y = (float)obj5;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.z.currentValue, editorCurveBinding, out obj6))
+							{
+								localRotation2.z = (float)obj6;
+							}
+							if (AnimationRecording.ValueFromPropertyModification(value.w.currentValue, editorCurveBinding, out obj7))
+							{
+								localRotation2.w = (float)obj7;
+							}
+							AnimationRecording.AddRotationKey(state, editorCurveBinding, type, localRotation.eulerAngles, localRotation2.eulerAngles);
 						}
-						object obj3;
-						if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.previousValue, binding, out obj3))
-						{
-							localEulerAngles.z = (float)obj3;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.eulerX.currentValue, binding, out obj))
-						{
-							localEulerAngles2.x = (float)obj;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.eulerY.currentValue, binding, out obj2))
-						{
-							localEulerAngles2.y = (float)obj2;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.currentValue, binding, out obj3))
-						{
-							localEulerAngles2.z = (float)obj3;
-						}
-						AnimationRecording.AddRotationKey(state, binding, type, localEulerAngles, localEulerAngles2);
-					}
-					else
-					{
-						Quaternion localRotation = transform.localRotation;
-						Quaternion localRotation2 = transform.localRotation;
-						object obj4;
-						if (AnimationRecording.ValueFromPropertyModification(value.x.previousValue, binding, out obj4))
-						{
-							localRotation.x = (float)obj4;
-						}
-						object obj5;
-						if (AnimationRecording.ValueFromPropertyModification(value.y.previousValue, binding, out obj5))
-						{
-							localRotation.y = (float)obj5;
-						}
-						object obj6;
-						if (AnimationRecording.ValueFromPropertyModification(value.z.previousValue, binding, out obj6))
-						{
-							localRotation.z = (float)obj6;
-						}
-						object obj7;
-						if (AnimationRecording.ValueFromPropertyModification(value.w.previousValue, binding, out obj7))
-						{
-							localRotation.w = (float)obj7;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.x.currentValue, binding, out obj4))
-						{
-							localRotation2.x = (float)obj4;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.y.currentValue, binding, out obj5))
-						{
-							localRotation2.y = (float)obj5;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.z.currentValue, binding, out obj6))
-						{
-							localRotation2.z = (float)obj6;
-						}
-						if (AnimationRecording.ValueFromPropertyModification(value.w.currentValue, binding, out obj7))
-						{
-							localRotation2.w = (float)obj7;
-						}
-						AnimationRecording.AddRotationKey(state, binding, type, localRotation.eulerAngles, localRotation2.eulerAngles);
 					}
 				}
 			}
@@ -240,100 +248,117 @@ namespace UnityEditorInternal
 		public static UndoPropertyModification[] Process(IAnimationRecordingState state, UndoPropertyModification[] modifications)
 		{
 			GameObject activeRootGameObject = state.activeRootGameObject;
+			UndoPropertyModification[] result;
 			if (activeRootGameObject == null)
 			{
-				return modifications;
+				result = modifications;
 			}
-			AnimationClip activeAnimationClip = state.activeAnimationClip;
-			Animator component = activeRootGameObject.GetComponent<Animator>();
-			if (!AnimationRecording.HasAnyRecordableModifications(activeRootGameObject, modifications))
+			else
 			{
-				return modifications;
-			}
-			AnimationRecording.ProcessRotationModifications(state, ref modifications);
-			List<UndoPropertyModification> list = new List<UndoPropertyModification>();
-			for (int i = 0; i < modifications.Length; i++)
-			{
-				EditorCurveBinding binding = default(EditorCurveBinding);
-				PropertyModification previousValue = modifications[i].previousValue;
-				Type type = AnimationUtility.PropertyModificationToEditorCurveBinding(previousValue, activeRootGameObject, out binding);
-				if (type != null)
+				AnimationClip activeAnimationClip = state.activeAnimationClip;
+				Animator component = activeRootGameObject.GetComponent<Animator>();
+				if (!AnimationRecording.HasAnyRecordableModifications(activeRootGameObject, modifications))
 				{
-					if (component != null && component.isHuman && binding.type == typeof(Transform) && component.IsBoneTransform(previousValue.target as Transform))
+					result = modifications;
+				}
+				else
+				{
+					AnimationRecording.ProcessRotationModifications(state, ref modifications);
+					List<UndoPropertyModification> list = new List<UndoPropertyModification>();
+					int i = 0;
+					while (i < modifications.Length)
 					{
-						Debug.LogWarning("Keyframing for humanoid rig is not supported!", previousValue.target as Transform);
-					}
-					else
-					{
-						AnimationMode.AddPropertyModification(binding, previousValue, modifications[i].keepPrefabOverride);
-						EditorCurveBinding[] array = RotationCurveInterpolation.RemapAnimationBindingForAddKey(binding, activeAnimationClip);
-						if (array != null)
+						EditorCurveBinding binding = default(EditorCurveBinding);
+						PropertyModification previousValue = modifications[i].previousValue;
+						Type type = AnimationUtility.PropertyModificationToEditorCurveBinding(previousValue, activeRootGameObject, out binding);
+						if (type != null)
 						{
-							for (int j = 0; j < array.Length; j++)
+							if (component != null && component.isHuman && binding.type == typeof(Transform) && component.IsBoneTransform(previousValue.target as Transform))
 							{
-								AnimationRecording.AddKey(state, array[j], type, AnimationRecording.FindPropertyModification(activeRootGameObject, modifications, array[j]));
+								Debug.LogWarning("Keyframing for humanoid rig is not supported!", previousValue.target as Transform);
+							}
+							else
+							{
+								AnimationMode.AddPropertyModification(binding, previousValue, modifications[i].keepPrefabOverride);
+								EditorCurveBinding[] array = RotationCurveInterpolation.RemapAnimationBindingForAddKey(binding, activeAnimationClip);
+								if (array != null)
+								{
+									for (int j = 0; j < array.Length; j++)
+									{
+										AnimationRecording.AddKey(state, array[j], type, AnimationRecording.FindPropertyModification(activeRootGameObject, modifications, array[j]));
+									}
+								}
+								else
+								{
+									AnimationRecording.AddKey(state, binding, type, previousValue);
+								}
 							}
 						}
 						else
 						{
-							AnimationRecording.AddKey(state, binding, type, previousValue);
+							list.Add(modifications[i]);
 						}
+						IL_17C:
+						i++;
+						continue;
+						goto IL_17C;
 					}
-				}
-				else
-				{
-					list.Add(modifications[i]);
+					result = list.ToArray();
 				}
 			}
-			return list.ToArray();
+			return result;
 		}
 
 		private static bool ValueFromPropertyModification(PropertyModification modification, EditorCurveBinding binding, out object outObject)
 		{
+			bool result;
+			float num;
 			if (modification == null)
 			{
 				outObject = null;
-				return false;
+				result = false;
 			}
-			if (binding.isPPtrCurve)
+			else if (binding.isPPtrCurve)
 			{
 				outObject = modification.objectReference;
-				return true;
+				result = true;
 			}
-			float num;
-			if (float.TryParse(modification.value, out num))
+			else if (float.TryParse(modification.value, out num))
 			{
 				outObject = num;
-				return true;
+				result = true;
 			}
-			outObject = null;
-			return false;
+			else
+			{
+				outObject = null;
+				result = false;
+			}
+			return result;
 		}
 
 		private static void AddKey(IAnimationRecordingState state, EditorCurveBinding binding, Type type, PropertyModification modification)
 		{
 			GameObject activeRootGameObject = state.activeRootGameObject;
 			AnimationClip activeAnimationClip = state.activeAnimationClip;
-			if ((activeAnimationClip.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+			if ((activeAnimationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None)
 			{
-				return;
-			}
-			AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(activeAnimationClip, binding, type);
-			object currentValue = CurveBindingUtility.GetCurrentValue(activeRootGameObject, binding);
-			if (animationWindowCurve.length == 0)
-			{
-				object value = null;
-				if (!AnimationRecording.ValueFromPropertyModification(modification, binding, out value))
+				AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(activeAnimationClip, binding, type);
+				object currentValue = CurveBindingUtility.GetCurrentValue(activeRootGameObject, binding);
+				if (animationWindowCurve.length == 0)
 				{
-					value = currentValue;
+					object value = null;
+					if (!AnimationRecording.ValueFromPropertyModification(modification, binding, out value))
+					{
+						value = currentValue;
+					}
+					if (state.frame != 0)
+					{
+						AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, value, type, AnimationKeyTime.Frame(0, activeAnimationClip.frameRate));
+					}
 				}
-				if (state.frame != 0)
-				{
-					AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, value, type, AnimationKeyTime.Frame(0, activeAnimationClip.frameRate));
-				}
+				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, type, AnimationKeyTime.Frame(state.frame, activeAnimationClip.frameRate));
+				state.SaveCurve(animationWindowCurve);
 			}
-			AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, type, AnimationKeyTime.Frame(state.frame, activeAnimationClip.frameRate));
-			state.SaveCurve(animationWindowCurve);
 		}
 
 		public static void SaveModifiedCurve(AnimationWindowCurve curve, AnimationClip clip)
@@ -366,20 +391,22 @@ namespace UnityEditorInternal
 		private static void AddRotationKey(IAnimationRecordingState state, EditorCurveBinding binding, Type type, Vector3 previousEulerAngles, Vector3 currentEulerAngles)
 		{
 			AnimationClip activeAnimationClip = state.activeAnimationClip;
-			if ((activeAnimationClip.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+			if ((activeAnimationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None)
 			{
-				return;
-			}
-			EditorCurveBinding[] array = RotationCurveInterpolation.RemapAnimationBindingForRotationAddKey(binding, activeAnimationClip);
-			for (int i = 0; i < 3; i++)
-			{
-				AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(activeAnimationClip, array[i], type);
-				if (animationWindowCurve.length == 0 && state.frame != 0)
+				EditorCurveBinding[] array = RotationCurveInterpolation.RemapAnimationBindingForRotationAddKey(binding, activeAnimationClip);
+				for (int i = 0; i < 3; i++)
 				{
-					AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, previousEulerAngles[i], type, AnimationKeyTime.Frame(0, activeAnimationClip.frameRate));
+					AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(activeAnimationClip, array[i], type);
+					if (animationWindowCurve.length == 0)
+					{
+						if (state.frame != 0)
+						{
+							AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, previousEulerAngles[i], type, AnimationKeyTime.Frame(0, activeAnimationClip.frameRate));
+						}
+					}
+					AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentEulerAngles[i], type, AnimationKeyTime.Frame(state.frame, activeAnimationClip.frameRate));
+					state.SaveCurve(animationWindowCurve);
 				}
-				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentEulerAngles[i], type, AnimationKeyTime.Frame(state.frame, activeAnimationClip.frameRate));
-				state.SaveCurve(animationWindowCurve);
 			}
 		}
 	}

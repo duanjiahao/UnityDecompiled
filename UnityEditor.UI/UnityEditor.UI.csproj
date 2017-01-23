@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{0202EE81-8DBB-4C49-9668-2AC7F15E1A1D}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <AssemblyName>UnityEditor.UI</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine" />
+    <Reference Include="UnityEditor" />
+    <Reference Include="UnityEngine.UI" />
+    <Reference Include="System.Core" />
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEditor.EventSystems\EventSystemEditor.cs" />
+    <Compile Include="UnityEditor.EventSystems\EventTriggerEditor.cs" />
+    <Compile Include="UnityEditor.Events\InterceptedEventsPreview.cs" />
+    <Compile Include="UnityEditor.Events\LayoutPropertiesPreview.cs" />
+    <Compile Include="UnityEditor.UI\AnimationTriggersDrawer.cs" />
+    <Compile Include="UnityEditor.UI\AspectRatioFitterEditor.cs" />
+    <Compile Include="UnityEditor.UI\ButtonEditor.cs" />
+    <Compile Include="UnityEditor.UI\CanvasScalerEditor.cs" />
+    <Compile Include="UnityEditor.UI\ColorBlockDrawer.cs" />
+    <Compile Include="UnityEditor.UI\ContentSizeFitterEditor.cs" />
+    <Compile Include="UnityEditor.UI\DropdownEditor.cs" />
+    <Compile Include="UnityEditor.UI\DropdownOptionListDrawer.cs" />
+    <Compile Include="UnityEditor.UI\FontDataDrawer.cs" />
+    <Compile Include="UnityEditor.UI\GraphicEditor.cs" />
+    <Compile Include="UnityEditor.UI\GridLayoutGroupEditor.cs" />
+    <Compile Include="UnityEditor.UI\HorizontalOrVerticalLayoutGroupEditor.cs" />
+    <Compile Include="UnityEditor.UI\ImageEditor.cs" />
+    <Compile Include="UnityEditor.UI\InputFieldEditor.cs" />
+    <Compile Include="UnityEditor.UI\LayoutElementEditor.cs" />
+    <Compile Include="UnityEditor.UI\MaskEditor.cs" />
+    <Compile Include="UnityEditor.UI\MenuOptions.cs" />
+    <Compile Include="UnityEditor.UI\NavigationDrawer.cs" />
+    <Compile Include="UnityEditor.UI\PrefabLayoutRebuilder.cs" />
+    <Compile Include="UnityEditor.UI\RawImageEditor.cs" />
+    <Compile Include="UnityEditor.UI\RectMask2DEditor.cs" />
+    <Compile Include="UnityEditor.UI\ScrollbarEditor.cs" />
+    <Compile Include="UnityEditor.UI\ScrollRectEditor.cs" />
+    <Compile Include="UnityEditor.UI\SelectableEditor.cs" />
+    <Compile Include="UnityEditor.UI\SelfControllerEditor.cs" />
+    <Compile Include="UnityEditor.UI\SliderEditor.cs" />
+    <Compile Include="UnityEditor.UI\SpriteDrawUtility.cs" />
+    <Compile Include="UnityEditor.UI\SpriteStateDrawer.cs" />
+    <Compile Include="UnityEditor.UI\TextEditor.cs" />
+    <Compile Include="UnityEditor.UI\ToggleEditor.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

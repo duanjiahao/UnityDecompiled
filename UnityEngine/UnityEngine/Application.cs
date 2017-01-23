@@ -53,35 +53,30 @@ namespace UnityEngine
 		[Obsolete("This property is deprecated, please use LoadLevelAsync to detect if a specific scene is currently loading.")]
 		public static extern bool isLoadingLevel
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int streamedBytes
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isPlaying
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isEditor
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isWebPlayer
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -89,7 +84,6 @@ namespace UnityEngine
 		[ThreadAndSerializationSafe]
 		public static extern RuntimePlatform platform
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -99,25 +93,30 @@ namespace UnityEngine
 			get
 			{
 				RuntimePlatform platform = Application.platform;
+				bool result;
 				switch (platform)
 				{
 				case RuntimePlatform.MetroPlayerX86:
 				case RuntimePlatform.MetroPlayerX64:
 				case RuntimePlatform.MetroPlayerARM:
-				case RuntimePlatform.WP8Player:
 				case RuntimePlatform.TizenPlayer:
-					return true;
+					goto IL_45;
+				case RuntimePlatform.WP8Player:
 				case RuntimePlatform.BB10Player:
-					IL_27:
+					IL_28:
 					switch (platform)
 					{
 					case RuntimePlatform.IPhonePlayer:
 					case RuntimePlatform.Android:
-						return true;
+						goto IL_45;
 					}
-					return false;
+					result = false;
+					return result;
 				}
-				goto IL_27;
+				goto IL_28;
+				IL_45:
+				result = true;
+				return result;
 			}
 		}
 
@@ -126,16 +125,14 @@ namespace UnityEngine
 			get
 			{
 				RuntimePlatform platform = Application.platform;
-				return platform == RuntimePlatform.PS3 || platform == RuntimePlatform.PS4 || platform == RuntimePlatform.XBOX360 || platform == RuntimePlatform.XboxOne;
+				return platform == RuntimePlatform.PS4 || platform == RuntimePlatform.XboxOne;
 			}
 		}
 
 		public static extern bool runInBackground
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -151,35 +148,30 @@ namespace UnityEngine
 
 		internal static extern bool isBatchmode
 		{
-			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		internal static extern bool isTestRun
+		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern bool isHumanControllingUs
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		internal static extern bool isRunningUnitTests
-		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string dataPath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string streamingAssetsPath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -187,117 +179,106 @@ namespace UnityEngine
 		[SecurityCritical]
 		public static extern string persistentDataPath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string temporaryCachePath
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string srcValue
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string absoluteURL
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string unityVersion
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string version
 		{
-			[WrapperlessIcall]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string installerName
+		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string bundleIdentifier
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern ApplicationInstallMode installMode
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern ApplicationSandboxType sandboxType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string productName
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string companyName
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string cloudProjectId
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[ThreadAndSerializationSafe]
+		[Obsolete("Application.webSecurityEnabled is no longer supported, since the Unity Web Player is no longer supported by Unity."), ThreadAndSerializationSafe]
 		public static extern bool webSecurityEnabled
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[ThreadAndSerializationSafe]
+		[Obsolete("Application.webSecurityHostUrl is no longer supported, since the Unity Web Player is no longer supported by Unity."), ThreadAndSerializationSafe]
 		public static extern string webSecurityHostUrl
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int targetFrameRate
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern SystemLanguage systemLanguage
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -305,55 +286,46 @@ namespace UnityEngine
 		[Obsolete("Use SetStackTraceLogType/GetStackTraceLogType instead")]
 		public static extern StackTraceLogType stackTraceLogType
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern ThreadPriority backgroundLoadingPriority
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern NetworkReachability internetReachability
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool genuine
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool genuineCheckAvailable
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern bool submitAnalytics
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isShowingSplashScreen
 		{
-			[WrapperlessIcall]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -394,19 +366,18 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Quit();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CancelQuit();
 
-		[WrapperlessIcall]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void Unload();
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetStreamProgressForLevelByName(string levelName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetStreamProgressForLevel(int levelIndex);
 
@@ -415,11 +386,9 @@ namespace UnityEngine
 			return Application.GetStreamProgressForLevelByName(levelName);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool CanStreamedLevelBeLoadedByName(string levelName);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CanStreamedLevelBeLoaded(int levelIndex);
 
@@ -428,7 +397,6 @@ namespace UnityEngine
 			return Application.CanStreamedLevelBeLoadedByName(levelName);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CaptureScreenshot(string filename, [DefaultValue("0")] int superSize);
 
@@ -439,86 +407,87 @@ namespace UnityEngine
 			Application.CaptureScreenshot(filename, superSize);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasProLicense();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasAdvancedLicense();
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasARGV(string name);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetValueForARGV(string name);
 
-		[Obsolete("Use Object.DontDestroyOnLoad instead"), WrapperlessIcall]
+		[Obsolete("Use Object.DontDestroyOnLoad instead")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DontDestroyOnLoad(Object mono);
 
 		private static string ObjectToJSString(object o)
 		{
+			string result;
 			if (o == null)
 			{
-				return "null";
+				result = "null";
 			}
-			if (o is string)
+			else if (o is string)
 			{
 				string text = o.ToString().Replace("\\", "\\\\");
 				text = text.Replace("\"", "\\\"");
 				text = text.Replace("\n", "\\n");
 				text = text.Replace("\r", "\\r");
-				text = text.Replace("\0", string.Empty);
-				text = text.Replace("\u2028", string.Empty);
-				text = text.Replace("\u2029", string.Empty);
-				return '"' + text + '"';
+				text = text.Replace("\0", "");
+				text = text.Replace("\u2028", "");
+				text = text.Replace("\u2029", "");
+				result = '"' + text + '"';
 			}
-			if (o is int || o is short || o is uint || o is ushort || o is byte)
+			else if (o is int || o is short || o is uint || o is ushort || o is byte)
 			{
-				return o.ToString();
+				result = o.ToString();
 			}
-			if (o is float)
+			else if (o is float)
 			{
 				NumberFormatInfo numberFormat = CultureInfo.InvariantCulture.NumberFormat;
-				return ((float)o).ToString(numberFormat);
+				result = ((float)o).ToString(numberFormat);
 			}
-			if (o is double)
+			else if (o is double)
 			{
 				NumberFormatInfo numberFormat2 = CultureInfo.InvariantCulture.NumberFormat;
-				return ((double)o).ToString(numberFormat2);
+				result = ((double)o).ToString(numberFormat2);
 			}
-			if (o is char)
+			else if (o is char)
 			{
 				if ((char)o == '"')
 				{
-					return "\"\\\"\"";
+					result = "\"\\\"\"";
 				}
-				return '"' + o.ToString() + '"';
+				else
+				{
+					result = '"' + o.ToString() + '"';
+				}
+			}
+			else if (o is IList)
+			{
+				IList list = (IList)o;
+				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.Append("new Array(");
+				int count = list.Count;
+				for (int i = 0; i < count; i++)
+				{
+					if (i != 0)
+					{
+						stringBuilder.Append(", ");
+					}
+					stringBuilder.Append(Application.ObjectToJSString(list[i]));
+				}
+				stringBuilder.Append(")");
+				result = stringBuilder.ToString();
 			}
 			else
 			{
-				if (o is IList)
-				{
-					IList list = (IList)o;
-					StringBuilder stringBuilder = new StringBuilder();
-					stringBuilder.Append("new Array(");
-					int count = list.Count;
-					for (int i = 0; i < count; i++)
-					{
-						if (i != 0)
-						{
-							stringBuilder.Append(", ");
-						}
-						stringBuilder.Append(Application.ObjectToJSString(list[i]));
-					}
-					stringBuilder.Append(")");
-					return stringBuilder.ToString();
-				}
-				return Application.ObjectToJSString(o.ToString());
+				result = Application.ObjectToJSString(o.ToString());
 			}
+			return result;
 		}
 
 		public static void ExternalCall(string functionName, params object[] args)
@@ -554,7 +523,6 @@ namespace UnityEngine
 			Application.Internal_ExternalCall(script);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_ExternalCall(string script);
 
@@ -566,15 +534,13 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RequestAdvertisingIdentifierAsync(Application.AdvertisingIdentifierCallback delegateMethod);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenURL(string url);
 
-		[Obsolete("For internal use only"), WrapperlessIcall]
+		[Obsolete("For internal use only")]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ForceCrash(int mode);
 
@@ -596,27 +562,21 @@ namespace UnityEngine
 			}
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetLogCallbackDefined(bool defined);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern StackTraceLogType GetStackTraceLogType(LogType logType);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetStackTraceLogType(LogType logType, StackTraceLogType stackTraceType);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation RequestUserAuthorization(UserAuthorization mode);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasUserAuthorization(UserAuthorization mode);
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ReplyToUserAuthorizationRequest(bool reply, [DefaultValue("false")] bool remember);
 
@@ -627,7 +587,6 @@ namespace UnityEngine
 			Application.ReplyToUserAuthorizationRequest(reply, remember);
 		}
 
-		[WrapperlessIcall]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetUserAuthorizationRequestMode_Internal();
 

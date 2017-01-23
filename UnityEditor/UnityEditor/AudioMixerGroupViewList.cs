@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEditor.Audio;
 using UnityEditorInternal;
 using UnityEngine;
@@ -27,6 +28,15 @@ namespace UnityEditor
 				public AudioMixerGroupViewList list;
 			}
 
+			[CompilerGenerated]
+			private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
+			[CompilerGenerated]
+			private static GenericMenu.MenuFunction2 <>f__mg$cache1;
+
+			[CompilerGenerated]
+			private static GenericMenu.MenuFunction2 <>f__mg$cache2;
+
 			public static void Show(Rect buttonRect, int viewIndex, AudioMixerGroupViewList list)
 			{
 				GenericMenu genericMenu = new GenericMenu();
@@ -35,9 +45,30 @@ namespace UnityEditor
 					viewIndex = viewIndex,
 					list = list
 				};
-				genericMenu.AddItem(new GUIContent("Rename"), false, new GenericMenu.MenuFunction2(AudioMixerGroupViewList.ViewsContexttMenu.Rename), userData);
-				genericMenu.AddItem(new GUIContent("Duplicate"), false, new GenericMenu.MenuFunction2(AudioMixerGroupViewList.ViewsContexttMenu.Duplicate), userData);
-				genericMenu.AddItem(new GUIContent("Delete"), false, new GenericMenu.MenuFunction2(AudioMixerGroupViewList.ViewsContexttMenu.Delete), userData);
+				GenericMenu arg_47_0 = genericMenu;
+				GUIContent arg_47_1 = new GUIContent("Rename");
+				bool arg_47_2 = false;
+				if (AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache0 == null)
+				{
+					AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AudioMixerGroupViewList.ViewsContexttMenu.Rename);
+				}
+				arg_47_0.AddItem(arg_47_1, arg_47_2, AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache0, userData);
+				GenericMenu arg_76_0 = genericMenu;
+				GUIContent arg_76_1 = new GUIContent("Duplicate");
+				bool arg_76_2 = false;
+				if (AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache1 == null)
+				{
+					AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache1 = new GenericMenu.MenuFunction2(AudioMixerGroupViewList.ViewsContexttMenu.Duplicate);
+				}
+				arg_76_0.AddItem(arg_76_1, arg_76_2, AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache1, userData);
+				GenericMenu arg_A5_0 = genericMenu;
+				GUIContent arg_A5_1 = new GUIContent("Delete");
+				bool arg_A5_2 = false;
+				if (AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache2 == null)
+				{
+					AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache2 = new GenericMenu.MenuFunction2(AudioMixerGroupViewList.ViewsContexttMenu.Delete);
+				}
+				arg_A5_0.AddItem(arg_A5_1, arg_A5_2, AudioMixerGroupViewList.ViewsContexttMenu.<>f__mg$cache2, userData);
 				genericMenu.DropDown(buttonRect);
 			}
 
@@ -89,67 +120,70 @@ namespace UnityEditor
 
 		public void OnEvent()
 		{
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
+				this.m_ReorderableListWithRenameAndScrollView.OnEvent();
 			}
-			this.m_ReorderableListWithRenameAndScrollView.OnEvent();
 		}
 
 		public void RecreateListControl()
 		{
-			if (this.m_Controller == null)
+			if (!(this.m_Controller == null))
 			{
-				return;
-			}
-			this.m_Views = new List<MixerGroupView>(this.m_Controller.views);
-			if (this.m_Views.Count == 0)
-			{
-				MixerGroupView item = default(MixerGroupView);
-				item.guids = (from gr in this.m_Controller.GetAllAudioGroupsSlow()
-				select gr.groupID).ToArray<GUID>();
-				item.name = "View";
-				this.m_Views.Add(item);
-				this.SaveToBackend();
-			}
-			ReorderableList reorderableList = new ReorderableList(this.m_Views, typeof(MixerGroupView), true, false, false, false);
-			ReorderableList expr_B2 = reorderableList;
-			expr_B2.onReorderCallback = (ReorderableList.ReorderCallbackDelegate)Delegate.Combine(expr_B2.onReorderCallback, new ReorderableList.ReorderCallbackDelegate(this.EndDragChild));
-			reorderableList.elementHeight = 16f;
-			reorderableList.headerHeight = 0f;
-			reorderableList.footerHeight = 0f;
-			reorderableList.showDefaultBackground = false;
-			reorderableList.index = this.m_Controller.currentViewIndex;
-			if (this.m_Controller.currentViewIndex >= reorderableList.count)
-			{
-				Debug.LogError(string.Concat(new object[]
+				this.m_Views = new List<MixerGroupView>(this.m_Controller.views);
+				if (this.m_Views.Count == 0)
 				{
-					"State mismatch, currentViewIndex: ",
-					this.m_Controller.currentViewIndex,
-					", num items: ",
-					reorderableList.count
-				}));
+					MixerGroupView item = default(MixerGroupView);
+					item.guids = (from gr in this.m_Controller.GetAllAudioGroupsSlow()
+					select gr.groupID).ToArray<GUID>();
+					item.name = "View";
+					this.m_Views.Add(item);
+					this.SaveToBackend();
+				}
+				ReorderableList reorderableList = new ReorderableList(this.m_Views, typeof(MixerGroupView), true, false, false, false);
+				ReorderableList expr_B9 = reorderableList;
+				expr_B9.onReorderCallback = (ReorderableList.ReorderCallbackDelegate)Delegate.Combine(expr_B9.onReorderCallback, new ReorderableList.ReorderCallbackDelegate(this.EndDragChild));
+				reorderableList.elementHeight = 16f;
+				reorderableList.headerHeight = 0f;
+				reorderableList.footerHeight = 0f;
+				reorderableList.showDefaultBackground = false;
+				reorderableList.index = this.m_Controller.currentViewIndex;
+				if (this.m_Controller.currentViewIndex >= reorderableList.count)
+				{
+					Debug.LogError(string.Concat(new object[]
+					{
+						"State mismatch, currentViewIndex: ",
+						this.m_Controller.currentViewIndex,
+						", num items: ",
+						reorderableList.count
+					}));
+				}
+				this.m_ReorderableListWithRenameAndScrollView = new ReorderableListWithRenameAndScrollView(reorderableList, this.m_State);
+				ReorderableListWithRenameAndScrollView expr_182 = this.m_ReorderableListWithRenameAndScrollView;
+				expr_182.onSelectionChanged = (Action<int>)Delegate.Combine(expr_182.onSelectionChanged, new Action<int>(this.SelectionChanged));
+				ReorderableListWithRenameAndScrollView expr_1A9 = this.m_ReorderableListWithRenameAndScrollView;
+				expr_1A9.onNameChangedAtIndex = (Action<int, string>)Delegate.Combine(expr_1A9.onNameChangedAtIndex, new Action<int, string>(this.NameChanged));
+				ReorderableListWithRenameAndScrollView expr_1D0 = this.m_ReorderableListWithRenameAndScrollView;
+				expr_1D0.onDeleteItemAtIndex = (Action<int>)Delegate.Combine(expr_1D0.onDeleteItemAtIndex, new Action<int>(this.Delete));
+				ReorderableListWithRenameAndScrollView expr_1F7 = this.m_ReorderableListWithRenameAndScrollView;
+				expr_1F7.onGetNameAtIndex = (Func<int, string>)Delegate.Combine(expr_1F7.onGetNameAtIndex, new Func<int, string>(this.GetNameOfElement));
+				ReorderableListWithRenameAndScrollView expr_21E = this.m_ReorderableListWithRenameAndScrollView;
+				expr_21E.onCustomDrawElement = (ReorderableList.ElementCallbackDelegate)Delegate.Combine(expr_21E.onCustomDrawElement, new ReorderableList.ElementCallbackDelegate(this.CustomDrawElement));
 			}
-			this.m_ReorderableListWithRenameAndScrollView = new ReorderableListWithRenameAndScrollView(reorderableList, this.m_State);
-			ReorderableListWithRenameAndScrollView expr_17B = this.m_ReorderableListWithRenameAndScrollView;
-			expr_17B.onSelectionChanged = (Action<int>)Delegate.Combine(expr_17B.onSelectionChanged, new Action<int>(this.SelectionChanged));
-			ReorderableListWithRenameAndScrollView expr_1A2 = this.m_ReorderableListWithRenameAndScrollView;
-			expr_1A2.onNameChangedAtIndex = (Action<int, string>)Delegate.Combine(expr_1A2.onNameChangedAtIndex, new Action<int, string>(this.NameChanged));
-			ReorderableListWithRenameAndScrollView expr_1C9 = this.m_ReorderableListWithRenameAndScrollView;
-			expr_1C9.onDeleteItemAtIndex = (Action<int>)Delegate.Combine(expr_1C9.onDeleteItemAtIndex, new Action<int>(this.Delete));
-			ReorderableListWithRenameAndScrollView expr_1F0 = this.m_ReorderableListWithRenameAndScrollView;
-			expr_1F0.onGetNameAtIndex = (Func<int, string>)Delegate.Combine(expr_1F0.onGetNameAtIndex, new Func<int, string>(this.GetNameOfElement));
-			ReorderableListWithRenameAndScrollView expr_217 = this.m_ReorderableListWithRenameAndScrollView;
-			expr_217.onCustomDrawElement = (ReorderableList.ElementCallbackDelegate)Delegate.Combine(expr_217.onCustomDrawElement, new ReorderableList.ElementCallbackDelegate(this.CustomDrawElement));
 		}
 
 		public float GetTotalHeight()
 		{
+			float result;
 			if (this.m_Controller == null)
 			{
-				return 0f;
+				result = 0f;
 			}
-			return this.m_ReorderableListWithRenameAndScrollView.list.GetHeight() + 22f;
+			else
+			{
+				result = this.m_ReorderableListWithRenameAndScrollView.list.GetHeight() + 22f;
+			}
+			return result;
 		}
 
 		public void OnGUI(Rect rect)
@@ -222,10 +256,12 @@ namespace UnityEditor
 			if (this.m_Views.Count <= 1)
 			{
 				Debug.Log("Deleting all views is not allowed");
-				return;
 			}
-			this.m_Controller.DeleteView(index);
-			this.LoadFromBackend();
+			else
+			{
+				this.m_Controller.DeleteView(index);
+				this.LoadFromBackend();
+			}
 		}
 
 		public void NameChanged(int index, string newName)

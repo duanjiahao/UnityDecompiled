@@ -26,6 +26,7 @@ namespace UnityEditor.Audio
 		public override bool GetFloatParameterInfo(string name, out float minRange, out float maxRange, out float defaultValue)
 		{
 			MixerParameterDefinition[] paramDefs = this.m_ParamDefs;
+			bool result;
 			for (int i = 0; i < paramDefs.Length; i++)
 			{
 				MixerParameterDefinition mixerParameterDefinition = paramDefs[i];
@@ -34,13 +35,15 @@ namespace UnityEditor.Audio
 					minRange = mixerParameterDefinition.minRange;
 					maxRange = mixerParameterDefinition.maxRange;
 					defaultValue = mixerParameterDefinition.defaultValue;
-					return true;
+					result = true;
+					return result;
 				}
 			}
 			minRange = 0f;
 			maxRange = 1f;
 			defaultValue = 0.5f;
-			return false;
+			result = false;
+			return result;
 		}
 
 		public override bool GetFloatBuffer(string name, out float[] data, int numsamples)
