@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{F7CDA827-F65F-486A-80A6-948FDDD88300}</ProjectGuid>
+    <ProjectGuid>{A2D84E72-888B-43DE-B8E8-42CE1813FC15}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
@@ -28,6 +28,7 @@
     <Reference Include="UnityEngine" />
     <Reference Include="System.Core" />
     <Reference Include="System" />
+    <Reference Include="UnityEditor" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="UnityEngine.UI\FontUpdateTracker.cs" />
     <Compile Include="UnityEngine.UI\Graphic.cs" />
     <Compile Include="UnityEngine.UI\GraphicRaycaster.cs" />
+    <Compile Include="UnityEngine.UI\GraphicRebuildTracker.cs" />
     <Compile Include="UnityEngine.UI\GraphicRegistry.cs" />
     <Compile Include="UnityEngine.UI\GridLayoutGroup.cs" />
     <Compile Include="UnityEngine.UI\HorizontalLayoutGroup.cs" />

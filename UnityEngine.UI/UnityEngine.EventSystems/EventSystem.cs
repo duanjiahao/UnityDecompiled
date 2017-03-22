@@ -257,6 +257,10 @@ namespace UnityEngine.EventSystems
 			{
 				EventSystem.current = this;
 			}
+			else
+			{
+				Debug.LogWarning("Multiple EventSystems in scene... this is not supported");
+			}
 		}
 
 		protected override void OnDisable()

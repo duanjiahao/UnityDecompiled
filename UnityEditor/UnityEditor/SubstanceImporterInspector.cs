@@ -126,22 +126,16 @@ namespace UnityEditor
 			else
 			{
 				ProceduralMaterial[] sortedMaterials = this.GetSortedMaterials();
-				if (this.m_SelectedMaterialInstanceName == null)
+				ProceduralMaterial proceduralMaterial = Array.Find<ProceduralMaterial>(sortedMaterials, (ProceduralMaterial element) => element.name == this.m_SelectedMaterialInstanceName);
+				if (this.m_SelectedMaterialInstanceName == null || proceduralMaterial == null)
 				{
 					if (sortedMaterials.Length > 0)
 					{
-						this.m_SelectedMaterialInstanceName = sortedMaterials[0].name;
-						result = sortedMaterials[0];
-					}
-					else
-					{
-						result = null;
+						proceduralMaterial = sortedMaterials[0];
+						this.m_SelectedMaterialInstanceName = proceduralMaterial.name;
 					}
 				}
-				else
-				{
-					result = Array.Find<ProceduralMaterial>(sortedMaterials, (ProceduralMaterial element) => element.name == this.m_SelectedMaterialInstanceName);
-				}
+				result = proceduralMaterial;
 			}
 			return result;
 		}

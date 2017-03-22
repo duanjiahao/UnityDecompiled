@@ -48,6 +48,15 @@ namespace UnityEngine.UI
 			base.OnDidApplyAnimationProperties();
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			if (this.graphic != null)
+			{
+				this.graphic.SetVerticesDirty();
+			}
+		}
+
 		public virtual void ModifyMesh(Mesh mesh)
 		{
 			using (VertexHelper vertexHelper = new VertexHelper(mesh))

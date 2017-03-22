@@ -320,15 +320,27 @@ namespace UnityEngine.UI
 
 		protected override void Awake()
 		{
-			this.m_AlphaTweenRunner = new TweenRunner<FloatTween>();
-			this.m_AlphaTweenRunner.Init(this);
-			if (this.m_CaptionImage)
+			if (Application.isPlaying)
 			{
-				this.m_CaptionImage.enabled = (this.m_CaptionImage.sprite != null);
+				this.m_AlphaTweenRunner = new TweenRunner<FloatTween>();
+				this.m_AlphaTweenRunner.Init(this);
+				if (this.m_CaptionImage)
+				{
+					this.m_CaptionImage.enabled = (this.m_CaptionImage.sprite != null);
+				}
+				if (this.m_Template)
+				{
+					this.m_Template.gameObject.SetActive(false);
+				}
 			}
-			if (this.m_Template)
+		}
+
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			if (this.IsActive())
 			{
-				this.m_Template.gameObject.SetActive(false);
+				this.RefreshShownValue();
 			}
 		}
 

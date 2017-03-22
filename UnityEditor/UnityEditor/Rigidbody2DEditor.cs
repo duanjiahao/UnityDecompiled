@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
@@ -96,9 +97,21 @@ namespace UnityEditor
 					if (EditorGUILayout.BeginFadeGroup(this.m_ShowIsKinematic.faded))
 					{
 						EditorGUILayout.PropertyField(this.m_UseAutoMass, new GUILayoutOption[0]);
-						EditorGUI.BeginDisabledGroup(rigidbody2D.useAutoMass);
-						EditorGUILayout.PropertyField(this.m_Mass, new GUILayoutOption[0]);
-						EditorGUI.EndDisabledGroup();
+						if (!this.m_UseAutoMass.hasMultipleDifferentValues)
+						{
+							if (this.m_UseAutoMass.boolValue)
+							{
+								if (base.targets.Any((UnityEngine.Object x) => PrefabUtility.GetPrefabType(x) == PrefabType.Prefab || !(x as Rigidbody2D).gameObject.activeInHierarchy))
+								{
+									EditorGUILayout.HelpBox("The auto mass value cannot be displayed for a prefab or if the object is not active.  The value will be calculated for a prefab instance and when the object is active.", MessageType.Info);
+									goto IL_161;
+								}
+							}
+							EditorGUI.BeginDisabledGroup(rigidbody2D.useAutoMass);
+							EditorGUILayout.PropertyField(this.m_Mass, new GUILayoutOption[0]);
+							EditorGUI.EndDisabledGroup();
+							IL_161:;
+						}
 						EditorGUILayout.PropertyField(this.m_LinearDrag, new GUILayoutOption[0]);
 						EditorGUILayout.PropertyField(this.m_AngularDrag, new GUILayoutOption[0]);
 						EditorGUILayout.PropertyField(this.m_GravityScale, new GUILayoutOption[0]);

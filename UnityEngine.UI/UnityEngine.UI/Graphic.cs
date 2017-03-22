@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
@@ -324,6 +325,7 @@ namespace UnityEngine.UI
 			base.OnEnable();
 			this.CacheCanvas();
 			GraphicRegistry.RegisterGraphicForCanvas(this.canvas, this);
+			GraphicRebuildTracker.TrackGraphic(this);
 			if (Graphic.s_WhiteTexture == null)
 			{
 				Graphic.s_WhiteTexture = Texture2D.whiteTexture;
@@ -333,6 +335,7 @@ namespace UnityEngine.UI
 
 		protected override void OnDisable()
 		{
+			GraphicRebuildTracker.UnTrackGraphic(this);
 			GraphicRegistry.UnregisterGraphicForCanvas(this.canvas, this);
 			CanvasUpdateRegistry.UnRegisterCanvasElementForRebuild(this);
 			if (this.canvasRenderer != null)
@@ -478,6 +481,29 @@ namespace UnityEngine.UI
 			vh.AddTriangle(2, 3, 0);
 		}
 
+		public virtual void OnRebuildRequested()
+		{
+			MonoBehaviour[] components = base.gameObject.GetComponents<MonoBehaviour>();
+			MonoBehaviour[] array = components;
+			for (int i = 0; i < array.Length; i++)
+			{
+				MonoBehaviour monoBehaviour = array[i];
+				if (!(monoBehaviour == null))
+				{
+					MethodInfo method = monoBehaviour.GetType().GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+					if (method != null)
+					{
+						method.Invoke(monoBehaviour, null);
+					}
+				}
+			}
+		}
+
+		protected override void Reset()
+		{
+			this.SetAllDirty();
+		}
+
 		protected override void OnDidApplyAnimationProperties()
 		{
 			this.SetAllDirty();
@@ -545,6 +571,12 @@ namespace UnityEngine.UI
 				result = true;
 			}
 			return result;
+		}
+
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			this.SetAllDirty();
 		}
 
 		public Vector2 PixelAdjustPoint(Vector2 point)

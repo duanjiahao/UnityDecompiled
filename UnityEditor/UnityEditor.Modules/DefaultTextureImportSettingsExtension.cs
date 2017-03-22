@@ -204,7 +204,7 @@ namespace UnityEditor.Modules
 			}
 			bool flag2 = TextureImporter.IsETC1SupportedByBuildTarget(BuildPipeline.GetBuildTargetByName(platformSettings.name));
 			bool flag3 = textureImporterInspector.spriteImportMode != SpriteImportMode.None;
-			bool flag4 = platformSettings.textureCompression != TextureImporterCompression.Uncompressed || TextureImporter.IsTextureFormatETC1Compression((TextureFormat)num);
+			bool flag4 = TextureImporter.IsTextureFormatETC1Compression((TextureFormat)num);
 			if (flag2 && flag3 && flag4)
 			{
 				EditorGUI.BeginChangeCheck();

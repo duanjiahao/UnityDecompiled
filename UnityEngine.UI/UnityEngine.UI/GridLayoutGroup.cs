@@ -120,6 +120,12 @@ namespace UnityEngine.UI
 		{
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			this.constraintCount = this.constraintCount;
+		}
+
 		public override void CalculateLayoutInputHorizontal()
 		{
 			base.CalculateLayoutInputHorizontal();

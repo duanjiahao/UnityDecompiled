@@ -286,7 +286,14 @@ namespace UnityEngine.UI
 
 		private void OnSetProperty()
 		{
-			this.InternalEvaluateAndTransitionToSelectionState(false);
+			if (!Application.isPlaying)
+			{
+				this.InternalEvaluateAndTransitionToSelectionState(true);
+			}
+			else
+			{
+				this.InternalEvaluateAndTransitionToSelectionState(false);
+			}
 		}
 
 		protected override void OnDisable()
@@ -294,6 +301,28 @@ namespace UnityEngine.UI
 			Selectable.s_List.Remove(this);
 			this.InstantClearState();
 			base.OnDisable();
+		}
+
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			this.m_Colors.fadeDuration = Mathf.Max(this.m_Colors.fadeDuration, 0f);
+			if (base.isActiveAndEnabled)
+			{
+				if (!this.interactable && EventSystem.current != null && EventSystem.current.currentSelectedGameObject == base.gameObject)
+				{
+					EventSystem.current.SetSelectedGameObject(null);
+				}
+				this.DoSpriteSwap(null);
+				this.StartColorTween(Color.white, true);
+				this.TriggerAnimation(this.m_AnimationTriggers.normalTrigger);
+				this.InternalEvaluateAndTransitionToSelectionState(true);
+			}
+		}
+
+		protected override void Reset()
+		{
+			this.m_TargetGraphic = base.GetComponent<Graphic>();
 		}
 
 		protected virtual void InstantClearState()

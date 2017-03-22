@@ -14,12 +14,12 @@ namespace UnityEditor
 		{
 			public bool Equals(AssemblyDefinition x, AssemblyDefinition y)
 			{
-				return x.get_FullName() == y.get_FullName();
+				return x.FullName == y.FullName;
 			}
 
 			public int GetHashCode(AssemblyDefinition obj)
 			{
-				return obj.get_FullName().GetHashCode();
+				return obj.FullName.GetHashCode();
 			}
 		}
 
@@ -77,20 +77,19 @@ namespace UnityEditor
 				for (int i = 0; i < allAssemblies.Length; i++)
 				{
 					string path = allAssemblies[i];
-					BaseAssemblyResolver arg_CB_0 = defaultAssemblyResolver;
-					string arg_CB_1 = Path.GetFileNameWithoutExtension(path);
-					ReaderParameters readerParameters = new ReaderParameters();
-					readerParameters.set_AssemblyResolver(defaultAssemblyResolver);
-					AssemblyDefinition assemblyDefinition = arg_CB_0.Resolve(arg_CB_1, readerParameters);
-					textWriter.WriteLine("<assembly fullname=\"{0}\">", assemblyDefinition.get_Name().get_Name());
-					if (assemblyDefinition.get_Name().get_Name().StartsWith("UnityEngine."))
+					AssemblyDefinition assemblyDefinition = defaultAssemblyResolver.Resolve(Path.GetFileNameWithoutExtension(path), new ReaderParameters
+					{
+						AssemblyResolver = defaultAssemblyResolver
+					});
+					textWriter.WriteLine("<assembly fullname=\"{0}\">", assemblyDefinition.Name.Name);
+					if (assemblyDefinition.Name.Name.StartsWith("UnityEngine."))
 					{
 						foreach (string current2 in usedClasses.GetAllManagedClassesAsString())
 						{
 							textWriter.WriteLine(string.Format("<type fullname=\"UnityEngine.{0}\" preserve=\"{1}\"/>", current2, usedClasses.GetRetentionLevel(current2)));
 						}
 					}
-					MonoAssemblyStripping.GenerateBlackListTypeXML(textWriter, assemblyDefinition.get_MainModule().get_Types(), usedClasses.GetAllManagedBaseClassesAsString());
+					MonoAssemblyStripping.GenerateBlackListTypeXML(textWriter, assemblyDefinition.MainModule.Types, usedClasses.GetAllManagedBaseClassesAsString());
 					textWriter.WriteLine("</assembly>");
 				}
 				textWriter.WriteLine("</linker>");
@@ -106,27 +105,24 @@ namespace UnityEditor
 			using (TextWriter textWriter = new StreamWriter(fullPath))
 			{
 				textWriter.WriteLine("<linker>");
-				foreach (AssemblyDefinition current in MonoAssemblyStripping.CollectAssembliesRecursive((from s in usedClasses.GetUserAssemblies()
+				foreach (AssemblyDefinition current in MonoAssemblyStripping.CollectAssembliesRecursive(from s in usedClasses.GetUserAssemblies()
 				where usedClasses.IsDLLUsed(s)
-				select s).Select(delegate(string file)
+				select s into file
+				select resolver.Resolve(Path.GetFileNameWithoutExtension(file), new ReaderParameters
 				{
-					BaseAssemblyResolver arg_1F_0 = resolver;
-					string arg_1F_1 = Path.GetFileNameWithoutExtension(file);
-					ReaderParameters readerParameters = new ReaderParameters();
-					readerParameters.set_AssemblyResolver(resolver);
-					return arg_1F_0.Resolve(arg_1F_1, readerParameters);
+					AssemblyResolver = resolver
 				})))
 				{
-					if (!(current.get_Name().get_Name() == "UnityEngine"))
+					if (!(current.Name.Name == "UnityEngine"))
 					{
 						HashSet<TypeDefinition> hashSet = new HashSet<TypeDefinition>();
-						MonoAssemblyStripping.CollectBlackListTypes(hashSet, current.get_MainModule().get_Types(), usedClasses.GetAllManagedBaseClassesAsString());
+						MonoAssemblyStripping.CollectBlackListTypes(hashSet, current.MainModule.Types, usedClasses.GetAllManagedBaseClassesAsString());
 						if (hashSet.Count != 0)
 						{
-							textWriter.WriteLine("<assembly fullname=\"{0}\">", current.get_Name().get_Name());
+							textWriter.WriteLine("<assembly fullname=\"{0}\">", current.Name.Name);
 							foreach (TypeDefinition current2 in hashSet)
 							{
-								textWriter.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current2.get_FullName());
+								textWriter.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current2.FullName);
 							}
 							textWriter.WriteLine("</assembly>");
 						}
@@ -144,8 +140,8 @@ namespace UnityEditor
 			while (hashSet.Count > num)
 			{
 				num = hashSet.Count;
-				hashSet.UnionWith(hashSet.ToArray<AssemblyDefinition>().SelectMany((AssemblyDefinition assembly) => from a in assembly.get_MainModule().get_AssemblyReferences()
-				select assembly.get_MainModule().get_AssemblyResolver().Resolve(a)));
+				hashSet.UnionWith(hashSet.ToArray<AssemblyDefinition>().SelectMany((AssemblyDefinition assembly) => from a in assembly.MainModule.AssemblyReferences
+				select assembly.MainModule.AssemblyResolver.Resolve(a)));
 			}
 			return hashSet;
 		}
@@ -166,7 +162,7 @@ namespace UnityEditor
 								break;
 							}
 						}
-						MonoAssemblyStripping.CollectBlackListTypes(typesToPreserve, current.get_NestedTypes(), baseTypes);
+						MonoAssemblyStripping.CollectBlackListTypes(typesToPreserve, current.NestedTypes, baseTypes);
 					}
 				}
 			}
@@ -178,7 +174,7 @@ namespace UnityEditor
 			MonoAssemblyStripping.CollectBlackListTypes(hashSet, types, baseTypes);
 			foreach (TypeDefinition current in hashSet)
 			{
-				w.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current.get_FullName());
+				w.WriteLine("<type fullname=\"{0}\" preserve=\"all\"/>", current.FullName);
 			}
 		}
 
@@ -187,7 +183,7 @@ namespace UnityEditor
 			bool result;
 			while (type != null)
 			{
-				if (type.get_FullName() == typeName)
+				if (type.FullName == typeName)
 				{
 					result = true;
 				}
@@ -196,7 +192,7 @@ namespace UnityEditor
 					TypeDefinition typeDefinition = type.Resolve();
 					if (typeDefinition != null)
 					{
-						type = typeDefinition.get_BaseType();
+						type = typeDefinition.BaseType;
 						continue;
 					}
 					result = false;

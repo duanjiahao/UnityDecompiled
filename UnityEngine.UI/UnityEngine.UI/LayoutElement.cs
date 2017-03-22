@@ -186,5 +186,10 @@ namespace UnityEngine.UI
 				LayoutRebuilder.MarkLayoutForRebuild(base.transform as RectTransform);
 			}
 		}
+
+		protected override void OnValidate()
+		{
+			this.SetDirty();
+		}
 	}
 }

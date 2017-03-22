@@ -17,19 +17,7 @@ namespace UnityEditor
 
 			public static GUIContent alignment = EditorGUIUtility.TextContent("Alignment|Lines can rotate to face their transform component or the camera.");
 
-			public static GUIContent[] alignmentOptions = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("View"),
-				EditorGUIUtility.TextContent("Local")
-			};
-
 			public static GUIContent textureMode = EditorGUIUtility.TextContent("Texture Mode|Should the U coordinate be stretched or tiled?");
-
-			public static GUIContent[] textureModeOptions = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("Stretch"),
-				EditorGUIUtility.TextContent("Tile")
-			};
 		}
 
 		private string[] m_ExcludedProperties;
@@ -76,8 +64,8 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_ColorGradient, LineRendererInspector.Styles.colorGradient, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_NumCornerVertices, LineRendererInspector.Styles.numCornerVertices, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_NumCapVertices, LineRendererInspector.Styles.numCapVertices, new GUILayoutOption[0]);
-			this.m_Alignment.intValue = EditorGUILayout.Popup(LineRendererInspector.Styles.alignment, this.m_Alignment.intValue, LineRendererInspector.Styles.alignmentOptions, new GUILayoutOption[0]);
-			this.m_TextureMode.intValue = EditorGUILayout.Popup(LineRendererInspector.Styles.textureMode, this.m_TextureMode.intValue, LineRendererInspector.Styles.textureModeOptions, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_Alignment, LineRendererInspector.Styles.alignment, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_TextureMode, LineRendererInspector.Styles.textureMode, new GUILayoutOption[0]);
 			this.m_Probes.OnGUI(base.targets, (Renderer)base.target, false);
 			base.serializedObject.ApplyModifiedProperties();
 		}

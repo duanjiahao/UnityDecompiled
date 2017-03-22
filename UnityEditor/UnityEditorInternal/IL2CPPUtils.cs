@@ -64,10 +64,15 @@ namespace UnityEditorInternal
 
 		internal static void CopySymmapFile(string tempFolder, string destinationFolder)
 		{
+			IL2CPPUtils.CopySymmapFile(tempFolder, destinationFolder, string.Empty);
+		}
+
+		internal static void CopySymmapFile(string tempFolder, string destinationFolder, string destinationFileNameSuffix)
+		{
 			string text = Path.Combine(tempFolder, "SymbolMap");
 			if (File.Exists(text))
 			{
-				File.Copy(text, Path.Combine(destinationFolder, "SymbolMap"), true);
+				File.Copy(text, Path.Combine(destinationFolder, "SymbolMap" + destinationFileNameSuffix), true);
 			}
 		}
 

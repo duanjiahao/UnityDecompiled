@@ -29,7 +29,7 @@ namespace UnityEditor.Scripting.Compilers
 			public override object VisitNamespaceDeclaration(NamespaceDeclaration namespaceDeclaration, object data)
 			{
 				CSharpLanguage.VisitorData visitorData = (CSharpLanguage.VisitorData)data;
-				visitorData.CurrentNamespaces.Push(namespaceDeclaration.get_Name());
+				visitorData.CurrentNamespaces.Push(namespaceDeclaration.Name);
 				namespaceDeclaration.AcceptChildren(this, visitorData);
 				visitorData.CurrentNamespaces.Pop();
 				return null;
@@ -38,7 +38,7 @@ namespace UnityEditor.Scripting.Compilers
 			public override object VisitTypeDeclaration(TypeDeclaration typeDeclaration, object data)
 			{
 				CSharpLanguage.VisitorData visitorData = (CSharpLanguage.VisitorData)data;
-				if (typeDeclaration.get_Name() == visitorData.TargetClassName)
+				if (typeDeclaration.Name == visitorData.TargetClassName)
 				{
 					string text = string.Empty;
 					foreach (string current in visitorData.CurrentNamespaces)
@@ -104,18 +104,18 @@ namespace UnityEditor.Scripting.Compilers
 				}, StringSplitOptions.RemoveEmptyEntries));
 				foreach (string current in hashSet)
 				{
-					parser.get_Lexer().get_ConditionalCompilationSymbols().Add(current, string.Empty);
+					parser.Lexer.ConditionalCompilationSymbols.Add(current, string.Empty);
 				}
-				parser.get_Lexer().set_EvaluateConditionalCompilation(true);
+				parser.Lexer.EvaluateConditionalCompilation = true;
 				parser.Parse();
 				try
 				{
-					CSharpLanguage.NamespaceVisitor namespaceVisitor = new CSharpLanguage.NamespaceVisitor();
+					CSharpLanguage.NamespaceVisitor visitor = new CSharpLanguage.NamespaceVisitor();
 					CSharpLanguage.VisitorData visitorData = new CSharpLanguage.VisitorData
 					{
 						TargetClassName = Path.GetFileNameWithoutExtension(fileName)
 					};
-					parser.get_CompilationUnit().AcceptVisitor(namespaceVisitor, visitorData);
+					parser.CompilationUnit.AcceptVisitor(visitor, visitorData);
 					result = ((!string.IsNullOrEmpty(visitorData.DiscoveredNamespace)) ? visitorData.DiscoveredNamespace : string.Empty);
 					return result;
 				}

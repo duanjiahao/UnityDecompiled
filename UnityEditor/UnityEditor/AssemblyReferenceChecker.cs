@@ -1,6 +1,5 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +12,8 @@ namespace UnityEditor
 		private readonly HashSet<string> _referencedMethods = new HashSet<string>();
 
 		private HashSet<string> _referencedTypes = new HashSet<string>();
+
+		private readonly HashSet<string> _userReferencedMethods = new HashSet<string>();
 
 		private readonly HashSet<string> _definedMethods = new HashSet<string>();
 
@@ -51,30 +52,26 @@ namespace UnityEditor
 			DefaultAssemblyResolver assemblyResolver = AssemblyReferenceChecker.AssemblyResolverFor(dir);
 			foreach (string current in roots)
 			{
-				string text = Path.Combine(dir, current);
+				string fileName = Path.Combine(dir, current);
 				if (!this._assemblyFileNames.Contains(current))
 				{
-					string arg_4D_0 = text;
-					ReaderParameters readerParameters = new ReaderParameters();
-					readerParameters.set_AssemblyResolver(assemblyResolver);
-					AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(arg_4D_0, readerParameters);
-					if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(assemblyDefinition.get_Name().get_Name()))
+					AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(fileName, new ReaderParameters
+					{
+						AssemblyResolver = assemblyResolver
+					});
+					if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(assemblyDefinition.Name.Name))
 					{
 						this._assemblyFileNames.Add(current);
 						this._assemblyDefinitions.Add(assemblyDefinition);
-						using (Collection<AssemblyNameReference>.Enumerator enumerator2 = assemblyDefinition.get_MainModule().get_AssemblyReferences().GetEnumerator())
+						foreach (AssemblyNameReference current2 in assemblyDefinition.MainModule.AssemblyReferences)
 						{
-							while (enumerator2.MoveNext())
+							string text = current2.Name + ".dll";
+							if (!this._assemblyFileNames.Contains(text))
 							{
-								AssemblyNameReference current2 = enumerator2.get_Current();
-								string text2 = current2.get_Name() + ".dll";
-								if (!this._assemblyFileNames.Contains(text2))
+								this.CollectReferencesFromRootsRecursive(dir, new string[]
 								{
-									this.CollectReferencesFromRootsRecursive(dir, new string[]
-									{
-										text2
-									}, ignoreSystemDlls);
-								}
+									text
+								}, ignoreSystemDlls);
 							}
 						}
 					}
@@ -106,11 +103,11 @@ namespace UnityEditor
 				string text = array2[i];
 				if (!(Path.GetExtension(text) != ".dll"))
 				{
-					string arg_74_0 = text;
-					ReaderParameters readerParameters = new ReaderParameters();
-					readerParameters.set_AssemblyResolver(assemblyResolver);
-					AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(arg_74_0, readerParameters);
-					if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(assemblyDefinition.get_Name().get_Name()))
+					AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(text, new ReaderParameters
+					{
+						AssemblyResolver = assemblyResolver
+					});
+					if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(assemblyDefinition.Name.Name))
 					{
 						this._assemblyFileNames.Add(Path.GetFileName(text));
 						this._assemblyDefinitions.Add(assemblyDefinition);
@@ -129,72 +126,66 @@ namespace UnityEditor
 		{
 			foreach (AssemblyDefinition current in assemblyDefinitions)
 			{
-				using (Collection<TypeDefinition>.Enumerator enumerator2 = current.get_MainModule().get_Types().GetEnumerator())
+				foreach (TypeDefinition current2 in current.MainModule.Types)
 				{
-					while (enumerator2.MoveNext())
-					{
-						TypeDefinition current2 = enumerator2.get_Current();
-						this.CollectReferencedAndDefinedMethods(current2);
-					}
+					this.CollectReferencedAndDefinedMethods(current2);
 				}
 			}
 		}
 
 		internal void CollectReferencedAndDefinedMethods(TypeDefinition type)
 		{
+			this.CollectReferencedAndDefinedMethods(type, false);
+		}
+
+		internal void CollectReferencedAndDefinedMethods(TypeDefinition type, bool isSystem)
+		{
 			if (this._updateProgressAction != null)
 			{
 				this._updateProgressAction();
 			}
-			using (Collection<TypeDefinition>.Enumerator enumerator = type.get_NestedTypes().GetEnumerator())
+			foreach (TypeDefinition current in type.NestedTypes)
 			{
-				while (enumerator.MoveNext())
-				{
-					TypeDefinition current = enumerator.get_Current();
-					this.CollectReferencedAndDefinedMethods(current);
-				}
+				this.CollectReferencedAndDefinedMethods(current);
 			}
-			using (Collection<MethodDefinition>.Enumerator enumerator2 = type.get_Methods().GetEnumerator())
+			foreach (MethodDefinition current2 in type.Methods)
 			{
-				while (enumerator2.MoveNext())
+				if (current2.HasBody)
 				{
-					MethodDefinition current2 = enumerator2.get_Current();
-					if (current2.get_HasBody())
+					foreach (Instruction current3 in current2.Body.Instructions)
 					{
-						using (Collection<Instruction>.Enumerator enumerator3 = current2.get_Body().get_Instructions().GetEnumerator())
+						if (OpCodes.Call == current3.OpCode)
 						{
-							while (enumerator3.MoveNext())
+							string item = current3.Operand.ToString();
+							if (!isSystem)
 							{
-								Instruction current3 = enumerator3.get_Current();
-								if (OpCodes.Call == current3.get_OpCode())
-								{
-									this._referencedMethods.Add(current3.get_Operand().ToString());
-								}
+								this._userReferencedMethods.Add(item);
 							}
+							this._referencedMethods.Add(item);
 						}
-						this._definedMethods.Add(current2.ToString());
-						this.HasMouseEvent |= this.MethodIsMouseEvent(current2);
 					}
+					this._definedMethods.Add(current2.ToString());
+					this.HasMouseEvent |= this.MethodIsMouseEvent(current2);
 				}
 			}
 		}
 
 		private bool MethodIsMouseEvent(MethodDefinition method)
 		{
-			return (method.get_Name() == "OnMouseDown" || method.get_Name() == "OnMouseDrag" || method.get_Name() == "OnMouseEnter" || method.get_Name() == "OnMouseExit" || method.get_Name() == "OnMouseOver" || method.get_Name() == "OnMouseUp" || method.get_Name() == "OnMouseUpAsButton") && method.get_Parameters().get_Count() == 0 && this.InheritsFromMonoBehaviour(method.get_DeclaringType());
+			return (method.Name == "OnMouseDown" || method.Name == "OnMouseDrag" || method.Name == "OnMouseEnter" || method.Name == "OnMouseExit" || method.Name == "OnMouseOver" || method.Name == "OnMouseUp" || method.Name == "OnMouseUpAsButton") && method.Parameters.Count == 0 && this.InheritsFromMonoBehaviour(method.DeclaringType);
 		}
 
 		private bool InheritsFromMonoBehaviour(TypeReference type)
 		{
 			bool result;
-			if (type.get_Namespace() == "UnityEngine" && type.get_Name() == "MonoBehaviour")
+			if (type.Namespace == "UnityEngine" && type.Name == "MonoBehaviour")
 			{
 				result = true;
 			}
 			else
 			{
 				TypeDefinition typeDefinition = type.Resolve();
-				result = (typeDefinition.get_BaseType() != null && this.InheritsFromMonoBehaviour(typeDefinition.get_BaseType()));
+				result = (typeDefinition.BaseType != null && this.InheritsFromMonoBehaviour(typeDefinition.BaseType));
 			}
 			return result;
 		}
@@ -219,7 +210,12 @@ namespace UnityEditor
 
 		public bool HasReferenceToMethod(string methodName)
 		{
-			return this._referencedMethods.Any((string item) => item.Contains(methodName));
+			return this.HasReferenceToMethod(methodName, false);
+		}
+
+		public bool HasReferenceToMethod(string methodName, bool ignoreSystemDlls)
+		{
+			return ignoreSystemDlls ? this._userReferencedMethods.Any((string item) => item.Contains(methodName)) : this._referencedMethods.Any((string item) => item.Contains(methodName));
 		}
 
 		public bool HasDefinedMethod(string methodName)
@@ -247,7 +243,7 @@ namespace UnityEditor
 			string result;
 			foreach (AssemblyDefinition current in this._assemblyDefinitions)
 			{
-				if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(current.get_Name().get_Name()))
+				if (!ignoreSystemDlls || !AssemblyReferenceChecker.IsIgnoredSystemDll(current.Name.Name))
 				{
 					AssemblyDefinition[] assemblies = new AssemblyDefinition[]
 					{
@@ -256,7 +252,7 @@ namespace UnityEditor
 					HashSet<string> source = MonoAOTRegistration.BuildReferencedTypeList(assemblies);
 					if (source.Any((string item) => item.StartsWith(klass)))
 					{
-						result = current.get_Name().get_Name();
+						result = current.Name.Name;
 						return result;
 					}
 				}

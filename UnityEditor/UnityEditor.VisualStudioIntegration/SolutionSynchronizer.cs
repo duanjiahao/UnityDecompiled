@@ -235,7 +235,7 @@ namespace UnityEditor.VisualStudioIntegration
 		{
 			if (!File.Exists(filename) || !(newContents == File.ReadAllText(filename)))
 			{
-				File.WriteAllText(filename, newContents);
+				File.WriteAllText(filename, newContents, Encoding.UTF8);
 			}
 		}
 
@@ -412,19 +412,22 @@ namespace UnityEditor.VisualStudioIntegration
 		private string SolutionText(IEnumerable<MonoIsland> islands, SolutionSynchronizer.Mode mode)
 		{
 			string text = "11.00";
+			string text2 = "2010";
 			if (this._settings.VisualStudioVersion == 9)
 			{
 				text = "10.00";
+				text2 = "2008";
 			}
 			IEnumerable<MonoIsland> enumerable = SolutionSynchronizer.RelevantIslandsForMode(islands, mode);
 			string projectEntries = this.GetProjectEntries(enumerable);
-			string text2 = string.Join(SolutionSynchronizer.WindowsNewline, (from i in enumerable
+			string text3 = string.Join(SolutionSynchronizer.WindowsNewline, (from i in enumerable
 			select this.GetProjectActiveConfigurations(this.ProjectGuid(i._output))).ToArray<string>());
 			return string.Format(this._settings.SolutionTemplate, new object[]
 			{
 				text,
-				projectEntries,
 				text2,
+				projectEntries,
+				text3,
 				this.ReadExistingMonoDevelopSolutionProperties()
 			});
 		}

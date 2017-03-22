@@ -13,7 +13,7 @@ namespace UnityEditor.VisualStudioIntegration
 
 		public static string GuidForSolution(string projectName)
 		{
-			return SolutionGuidGenerator.ComputeGuidHashFor(projectName);
+			return "FAE04EC0-301F-11D3-BF4B-00C04F79EFBC";
 		}
 
 		private static string ComputeGuidHashFor(string input)

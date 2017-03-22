@@ -9,6 +9,8 @@ namespace UnityEngine.UI
 		[SerializeField]
 		private FontData m_FontData = FontData.defaultFontData;
 
+		private Font m_LastTrackedFont;
+
 		[SerializeField, TextArea(3, 10)]
 		protected string m_Text = string.Empty;
 
@@ -83,6 +85,7 @@ namespace UnityEngine.UI
 					FontUpdateTracker.UntrackText(this);
 					this.m_FontData.font = value;
 					FontUpdateTracker.TrackText(this);
+					this.m_LastTrackedFont = value;
 					this.SetAllDirty();
 				}
 			}
@@ -431,6 +434,11 @@ namespace UnityEngine.UI
 			}
 		}
 
+		protected override void Reset()
+		{
+			this.AssignDefaultFont();
+		}
+
 		internal void AssignDefaultFont()
 		{
 			this.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
@@ -561,6 +569,35 @@ namespace UnityEngine.UI
 
 		public virtual void CalculateLayoutInputVertical()
 		{
+		}
+
+		public override void OnRebuildRequested()
+		{
+			FontUpdateTracker.UntrackText(this);
+			FontUpdateTracker.TrackText(this);
+			this.cachedTextGenerator.Invalidate();
+			base.OnRebuildRequested();
+		}
+
+		protected override void OnValidate()
+		{
+			if (!this.IsActive())
+			{
+				base.OnValidate();
+			}
+			else
+			{
+				if (this.m_FontData.font != this.m_LastTrackedFont)
+				{
+					Font font = this.m_FontData.font;
+					this.m_FontData.font = this.m_LastTrackedFont;
+					FontUpdateTracker.UntrackText(this);
+					this.m_FontData.font = font;
+					FontUpdateTracker.TrackText(this);
+					this.m_LastTrackedFont = font;
+				}
+				base.OnValidate();
+			}
 		}
 	}
 }

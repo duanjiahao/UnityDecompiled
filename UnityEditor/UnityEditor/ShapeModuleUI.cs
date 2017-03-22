@@ -414,14 +414,18 @@ namespace UnityEditor
 			EditorGUI.BeginChangeCheck();
 			int intValue = this.m_Type.intValue;
 			Matrix4x4 matrix4x = default(Matrix4x4);
-			float d = (intValue != 6) ? 1f : this.m_MeshScale.floatValue;
-			if (system.main.scalingMode == ParticleSystemScalingMode.Hierarchy)
+			float num = (intValue != 6) ? 1f : this.m_MeshScale.floatValue;
+			if (system.main.scalingMode == ParticleSystemScalingMode.Local)
 			{
-				matrix4x.SetTRS(system.transform.position, system.transform.rotation, system.transform.lossyScale * d);
+				matrix4x.SetTRS(system.transform.position, system.transform.rotation, system.transform.localScale * num);
+			}
+			else if (system.main.scalingMode == ParticleSystemScalingMode.Hierarchy)
+			{
+				matrix4x = system.transform.localToWorldMatrix * Matrix4x4.Scale(new Vector3(num, num, num));
 			}
 			else
 			{
-				matrix4x.SetTRS(system.transform.position, system.transform.rotation, system.transform.localScale * d);
+				matrix4x.SetTRS(system.transform.position, system.transform.rotation, system.transform.lossyScale * num);
 			}
 			Handles.matrix = matrix4x;
 			if (intValue == 0 || intValue == 1)

@@ -830,7 +830,7 @@ namespace UnityEngine.UI
 			float num2 = this.m_ViewBounds.min[axis] - value * num;
 			float num3 = this.m_Content.localPosition[axis] + num2 - this.m_ContentBounds.min[axis];
 			Vector3 localPosition = this.m_Content.localPosition;
-			if (Mathf.Abs(localPosition[axis] - num3) > 0.0001f)
+			if (Mathf.Abs(localPosition[axis] - num3) > 0.01f)
 			{
 				localPosition[axis] = num3;
 				this.m_Content.localPosition = localPosition;
@@ -1079,6 +1079,11 @@ namespace UnityEngine.UI
 				CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
 				LayoutRebuilder.MarkLayoutForRebuild(this.rectTransform);
 			}
+		}
+
+		protected override void OnValidate()
+		{
+			this.SetDirtyCaching();
 		}
 
 		Transform ICanvasElement.get_transform()

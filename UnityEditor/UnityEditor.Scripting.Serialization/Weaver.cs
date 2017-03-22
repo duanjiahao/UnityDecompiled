@@ -123,7 +123,7 @@ namespace UnityEditor.Scripting.Serialization
 					{
 						Weaver.<>f__mg$cache1 = new Action<string>(Debug.LogError);
 					}
-					if (!Program.Process(unityEngine, unityUNet, arg_151_2, expr_10A, arg_151_4, assemblyResolver, arg_151_6, Weaver.<>f__mg$cache1))
+					if (!Unity.UNetWeaver.Program.Process(unityEngine, unityUNet, arg_151_2, expr_10A, arg_151_4, assemblyResolver, arg_151_6, Weaver.<>f__mg$cache1))
 					{
 						Debug.LogError("Failure generating network code.");
 						result = false;

@@ -11,6 +11,7 @@ namespace UnityEditor
 		public void SetParentInspector(InspectorWindow inspector)
 		{
 			this.m_ParentInspectorWindow = inspector;
+			this.CreateTracker();
 		}
 
 		protected override void OnEnable()
@@ -28,7 +29,10 @@ namespace UnityEditor
 
 		protected override void CreateTracker()
 		{
-			this.m_Tracker = this.m_ParentInspectorWindow.GetTracker();
+			if (this.m_ParentInspectorWindow != null)
+			{
+				this.m_Tracker = this.m_ParentInspectorWindow.tracker;
+			}
 		}
 
 		public override Editor GetLastInteractedEditor()
@@ -44,10 +48,9 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 			Editor.m_AllowMultiObjectAccess = true;
-			this.CreateTracker();
 			this.CreatePreviewables();
-			base.AssignAssetEditor(this.m_Tracker.activeEditors);
-			IPreviewable[] editorsWithPreviews = base.GetEditorsWithPreviews(this.m_Tracker.activeEditors);
+			base.AssignAssetEditor(base.tracker.activeEditors);
+			IPreviewable[] editorsWithPreviews = base.GetEditorsWithPreviews(base.tracker.activeEditors);
 			IPreviewable editorThatControlsPreview = base.GetEditorThatControlsPreview(editorsWithPreviews);
 			bool flag = editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI();
 			Rect rect = EditorGUILayout.BeginHorizontal(GUIContent.none, InspectorWindow.styles.preToolbar, new GUILayoutOption[]

@@ -167,7 +167,7 @@ namespace UnityEditor.Sprites
 			for (int i = 0; i < allInspectorWindows.Length; i++)
 			{
 				InspectorWindow inspectorWindow = allInspectorWindows[i];
-				ActiveEditorTracker tracker = inspectorWindow.GetTracker();
+				ActiveEditorTracker tracker = inspectorWindow.tracker;
 				Editor[] activeEditors = tracker.activeEditors;
 				for (int j = 0; j < activeEditors.Length; j++)
 				{

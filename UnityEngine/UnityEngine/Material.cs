@@ -560,8 +560,18 @@ namespace UnityEngine
 			return (int)this.GetFloat(nameID);
 		}
 
+		public void SetBuffer(string name, ComputeBuffer value)
+		{
+			this.SetBuffer(Shader.PropertyToID(name), value);
+		}
+
+		public void SetBuffer(int nameID, ComputeBuffer value)
+		{
+			this.SetBufferImpl(nameID, value);
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetBuffer(string propertyName, ComputeBuffer buffer);
+		private extern void SetBufferImpl(int nameID, ComputeBuffer value);
 
 		public bool HasProperty(string propertyName)
 		{

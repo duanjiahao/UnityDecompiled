@@ -97,6 +97,12 @@ namespace UnityEngine.UI
 				this.m_Tracker.Clear();
 				switch (this.m_AspectMode)
 				{
+				case AspectRatioFitter.AspectMode.None:
+					if (!Application.isPlaying)
+					{
+						this.m_AspectRatio = Mathf.Clamp(this.rectTransform.rect.width / this.rectTransform.rect.height, 0.001f, 1000f);
+					}
+					break;
 				case AspectRatioFitter.AspectMode.WidthControlsHeight:
 					this.m_Tracker.Add(this, this.rectTransform, DrivenTransformProperties.SizeDeltaY);
 					this.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, this.rectTransform.rect.width / this.m_AspectRatio);
@@ -160,6 +166,12 @@ namespace UnityEngine.UI
 		protected void SetDirty()
 		{
 			this.UpdateRect();
+		}
+
+		protected override void OnValidate()
+		{
+			this.m_AspectRatio = Mathf.Clamp(this.m_AspectRatio, 0.001f, 1000f);
+			this.SetDirty();
 		}
 	}
 }

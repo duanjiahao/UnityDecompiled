@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Scripting.Compilers;
+using UnityEngine;
 
 namespace UnityEditorInternal
 {
@@ -69,6 +70,7 @@ namespace UnityEditorInternal
 			{
 				Il2CppNativeCodeBuilderUtils.ClearAndPrepareCacheDirectory(il2CppNativeCodeBuilder);
 				List<string> list = Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths).ToList<string>();
+				list.Add(string.Format("--map-file-parser=\"{0}\"", IL2CPPBuilder.GetMapFileParserPath()));
 				list.Add(string.Format("--generatedcppdir=\"{0}\"", Path.GetFullPath(this.GetCppOutputDirectoryInStagingArea())));
 				Action<ProcessStartInfo> setupStartInfo = new Action<ProcessStartInfo>(il2CppNativeCodeBuilder.SetupStartInfo);
 				string fullPath = Path.GetFullPath(Path.Combine(this.m_StagingAreaData, "Managed"));
@@ -117,6 +119,11 @@ namespace UnityEditorInternal
 			return Path.Combine(tempFolder, "il2cppOutput");
 		}
 
+		private static string GetMapFileParserPath()
+		{
+			return Path.GetFullPath(Path.Combine(EditorApplication.applicationContentsPath, (Application.platform != RuntimePlatform.WindowsEditor) ? "Tools/MapFileParser/MapFileParser" : "Tools\\MapFileParser\\MapFileParser.exe"));
+		}
+
 		private void ConvertPlayerDlltoCpp(ICollection<string> userAssemblies, string outputDirectory, string workingDirectory)
 		{
 			if (userAssemblies.Count != 0)
@@ -155,6 +162,7 @@ namespace UnityEditorInternal
 					Il2CppNativeCodeBuilderUtils.ClearAndPrepareCacheDirectory(il2CppNativeCodeBuilder);
 					list.AddRange(Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths));
 				}
+				list.Add(string.Format("--map-file-parser=\"{0}\"", IL2CPPBuilder.GetMapFileParserPath()));
 				if (array.Length > 0)
 				{
 					string[] array2 = array;

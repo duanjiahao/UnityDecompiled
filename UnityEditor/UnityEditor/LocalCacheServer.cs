@@ -86,8 +86,9 @@ namespace UnityEditor
 			{
 				Arguments = string.Concat(new object[]
 				{
+					"\"",
 					text2,
-					" --port ",
+					"\" --port ",
 					_port,
 					" --path ",
 					this.path,

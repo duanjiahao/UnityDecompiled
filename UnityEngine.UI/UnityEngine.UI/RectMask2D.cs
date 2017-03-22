@@ -81,6 +81,16 @@ namespace UnityEngine.UI
 			MaskUtilities.Notify2DMaskStateChanged(this);
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			this.m_ShouldRecalculateClipRects = true;
+			if (this.IsActive())
+			{
+				MaskUtilities.Notify2DMaskStateChanged(this);
+			}
+		}
+
 		public virtual bool IsRaycastLocationValid(Vector2 sp, Camera eventCamera)
 		{
 			return !base.isActiveAndEnabled || RectTransformUtility.RectangleContainsScreenPoint(this.rectTransform, sp, eventCamera);

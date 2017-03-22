@@ -209,5 +209,12 @@ namespace UnityEngine.UI
 				flexible = Mathf.Max(flexible, 1f);
 			}
 		}
+
+		protected override void Reset()
+		{
+			base.Reset();
+			this.m_ChildControlWidth = false;
+			this.m_ChildControlHeight = false;
+		}
 	}
 }

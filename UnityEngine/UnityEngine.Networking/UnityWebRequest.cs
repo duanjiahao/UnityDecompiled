@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
+using UnityEngineInternal;
 
 namespace UnityEngine.Networking
 {
@@ -65,8 +65,6 @@ namespace UnityEngine.Networking
 		public const string kHttpVerbCREATE = "CREATE";
 
 		public const string kHttpVerbDELETE = "DELETE";
-
-		private static Regex domainRegex = new Regex("^\\s*\\w+(?:\\.\\w+)+\\s*$");
 
 		private static readonly string[] forbiddenHeaderKeys = new string[]
 		{
@@ -184,38 +182,8 @@ namespace UnityEngine.Networking
 			}
 			set
 			{
-				string text = value;
-				string uriString = "http://localhost/";
-				Uri uri = new Uri(uriString);
-				if (text.StartsWith("//"))
-				{
-					text = uri.Scheme + ":" + text;
-				}
-				if (text.StartsWith("/"))
-				{
-					text = uri.Scheme + "://" + uri.Host + text;
-				}
-				if (UnityWebRequest.domainRegex.IsMatch(text))
-				{
-					text = uri.Scheme + "://" + text;
-				}
-				Uri uri2 = null;
-				try
-				{
-					uri2 = new Uri(text);
-				}
-				catch (FormatException ex)
-				{
-					try
-					{
-						uri2 = new Uri(uri, text);
-					}
-					catch (FormatException)
-					{
-						throw ex;
-					}
-				}
-				this.InternalSetUrl(uri2.AbsoluteUri);
+				string localUrl = "http://localhost/";
+				this.InternalSetUrl(WebRequestUtils.MakeInitialUrl(value, localUrl));
 			}
 		}
 
@@ -393,8 +361,13 @@ namespace UnityEngine.Networking
 		public static UnityWebRequest Post(string uri, string postData)
 		{
 			UnityWebRequest unityWebRequest = new UnityWebRequest(uri, "POST");
-			string s = WWWTranscoder.URLEncode(postData, Encoding.UTF8);
-			unityWebRequest.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(s));
+			byte[] data = null;
+			if (!string.IsNullOrEmpty(postData))
+			{
+				string s = WWWTranscoder.URLEncode(postData, Encoding.UTF8);
+				data = Encoding.UTF8.GetBytes(s);
+			}
+			unityWebRequest.uploadHandler = new UploadHandlerRaw(data);
 			unityWebRequest.uploadHandler.contentType = "application/x-www-form-urlencoded";
 			unityWebRequest.downloadHandler = new DownloadHandlerBuffer();
 			return unityWebRequest;
@@ -403,12 +376,24 @@ namespace UnityEngine.Networking
 		public static UnityWebRequest Post(string uri, WWWForm formData)
 		{
 			UnityWebRequest unityWebRequest = new UnityWebRequest(uri, "POST");
-			unityWebRequest.uploadHandler = new UploadHandlerRaw(formData.data);
-			unityWebRequest.downloadHandler = new DownloadHandlerBuffer();
-			Dictionary<string, string> headers = formData.headers;
-			foreach (KeyValuePair<string, string> current in headers)
+			byte[] array = null;
+			if (formData != null)
 			{
-				unityWebRequest.SetRequestHeader(current.Key, current.Value);
+				array = formData.data;
+				if (array.Length == 0)
+				{
+					array = null;
+				}
+			}
+			unityWebRequest.uploadHandler = new UploadHandlerRaw(array);
+			unityWebRequest.downloadHandler = new DownloadHandlerBuffer();
+			if (formData != null)
+			{
+				Dictionary<string, string> headers = formData.headers;
+				foreach (KeyValuePair<string, string> current in headers)
+				{
+					unityWebRequest.SetRequestHeader(current.Key, current.Value);
+				}
 			}
 			return unityWebRequest;
 		}
@@ -422,7 +407,11 @@ namespace UnityEngine.Networking
 		public static UnityWebRequest Post(string uri, List<IMultipartFormSection> multipartFormSections, byte[] boundary)
 		{
 			UnityWebRequest unityWebRequest = new UnityWebRequest(uri, "POST");
-			byte[] data = UnityWebRequest.SerializeFormSections(multipartFormSections, boundary);
+			byte[] data = null;
+			if (multipartFormSections != null && multipartFormSections.Count != 0)
+			{
+				data = UnityWebRequest.SerializeFormSections(multipartFormSections, boundary);
+			}
 			unityWebRequest.uploadHandler = new UploadHandlerRaw(data)
 			{
 				contentType = "multipart/form-data; boundary=" + Encoding.UTF8.GetString(boundary, 0, boundary.Length)
@@ -434,7 +423,11 @@ namespace UnityEngine.Networking
 		public static UnityWebRequest Post(string uri, Dictionary<string, string> formFields)
 		{
 			UnityWebRequest unityWebRequest = new UnityWebRequest(uri, "POST");
-			byte[] data = UnityWebRequest.SerializeSimpleForm(formFields);
+			byte[] data = null;
+			if (formFields != null && formFields.Count != 0)
+			{
+				data = UnityWebRequest.SerializeSimpleForm(formFields);
+			}
 			unityWebRequest.uploadHandler = new UploadHandlerRaw(data)
 			{
 				contentType = "application/x-www-form-urlencoded"
