@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
@@ -40,8 +41,11 @@ namespace UnityEngine.UI
 			set
 			{
 				this.m_Group = value;
-				this.SetToggleGroup(this.m_Group, true);
-				this.PlayEffect(true);
+				if (Application.isPlaying)
+				{
+					this.SetToggleGroup(this.m_Group, true);
+					this.PlayEffect(true);
+				}
 			}
 		}
 
@@ -61,8 +65,22 @@ namespace UnityEngine.UI
 		{
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			PrefabType prefabType = PrefabUtility.GetPrefabType(this);
+			if (prefabType != PrefabType.Prefab && !Application.isPlaying)
+			{
+				CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
+			}
+		}
+
 		public virtual void Rebuild(CanvasUpdate executing)
 		{
+			if (executing == CanvasUpdate.Prelayout)
+			{
+				this.onValueChanged.Invoke(this.m_IsOn);
+			}
 		}
 
 		public virtual void LayoutComplete()
@@ -151,7 +169,14 @@ namespace UnityEngine.UI
 		{
 			if (!(this.graphic == null))
 			{
-				this.graphic.CrossFadeAlpha((!this.m_IsOn) ? 0f : 1f, (!instant) ? 0.1f : 0f, true);
+				if (!Application.isPlaying)
+				{
+					this.graphic.canvasRenderer.SetAlpha((!this.m_IsOn) ? 0f : 1f);
+				}
+				else
+				{
+					this.graphic.CrossFadeAlpha((!this.m_IsOn) ? 0f : 1f, (!instant) ? 0.1f : 0f, true);
+				}
 			}
 		}
 

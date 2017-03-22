@@ -11,8 +11,6 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal class MicrosoftCSharpCompiler : ScriptCompilerBase
 	{
-		private static string[] _uwpReferences;
-
 		internal static string WindowsDirectory
 		{
 			get
@@ -278,6 +276,11 @@ namespace UnityEditor.Scripting.Compilers
 			}
 		}
 
+		private static void ThrowCompilerNotFoundException(string path)
+		{
+			throw new Exception(string.Format("'{0}' not found. Is your Unity installation corrupted?", path));
+		}
+
 		private Program StartCompilerImpl(List<string> arguments, string argsPrefix, bool msBuildCompiler)
 		{
 			string[] references = this._island._references;
@@ -296,24 +299,41 @@ namespace UnityEditor.Scripting.Compilers
 				string fileName2 = files[j];
 				arguments.Add(ScriptCompilerBase.PrepareFileName(fileName2).Replace('/', '\\'));
 			}
-			string text;
-			if (msBuildCompiler)
+			string text = Paths.Combine(new string[]
 			{
-				text = Path.Combine(MicrosoftCSharpCompiler.ProgramFilesDirectory, "MSBuild\\14.0\\Bin\\csc.exe");
-			}
-			else
+				EditorApplication.applicationContentsPath,
+				"Tools",
+				"Roslyn",
+				"CoreRun.exe"
+			}).Replace('/', '\\');
+			string text2 = Paths.Combine(new string[]
 			{
-				text = Path.Combine(MicrosoftCSharpCompiler.WindowsDirectory, "Microsoft.NET\\Framework\\v4.0.30319\\Csc.exe");
-			}
+				EditorApplication.applicationContentsPath,
+				"Tools",
+				"Roslyn",
+				"csc.exe"
+			}).Replace('/', '\\');
 			if (!File.Exists(text))
 			{
-				throw new Exception("'" + text + "' not found, either .NET 4.5 is not installed or your OS is not Windows 8/8.1.");
+				MicrosoftCSharpCompiler.ThrowCompilerNotFoundException(text);
+			}
+			if (!File.Exists(text2))
+			{
+				MicrosoftCSharpCompiler.ThrowCompilerNotFoundException(text2);
 			}
 			base.AddCustomResponseFileIfPresent(arguments, "csc.rsp");
-			string str = CommandLineFormatter.GenerateResponseFile(arguments);
+			string text3 = CommandLineFormatter.GenerateResponseFile(arguments);
 			ProcessStartInfo si = new ProcessStartInfo
 			{
-				Arguments = argsPrefix + "@" + str,
+				Arguments = string.Concat(new string[]
+				{
+					"\"",
+					text2,
+					"\" ",
+					argsPrefix,
+					"@",
+					text3
+				}),
 				FileName = text,
 				CreateNoWindow = true
 			};
@@ -402,14 +422,9 @@ namespace UnityEditor.Scripting.Compilers
 			{
 				result = null;
 			}
-			else if (MicrosoftCSharpCompiler._uwpReferences != null)
-			{
-				result = MicrosoftCSharpCompiler._uwpReferences;
-			}
 			else
 			{
-				MicrosoftCSharpCompiler._uwpReferences = UWPReferences.GetReferences();
-				result = MicrosoftCSharpCompiler._uwpReferences;
+				result = UWPReferences.GetReferences(UWPReferences.GetDesiredSDKVersion());
 			}
 			return result;
 		}
@@ -420,7 +435,19 @@ namespace UnityEditor.Scripting.Compilers
 			string result;
 			if (wsaSDK == WSASDK.UWP)
 			{
-				result = Path.Combine(windowsKitDirectory, "UnionMetadata\\Facade\\Windows.winmd");
+				string text = Paths.Combine(new string[]
+				{
+					windowsKitDirectory,
+					"UnionMetadata",
+					UWPReferences.SdkVersionToString(UWPReferences.GetDesiredSDKVersion()),
+					"Facade",
+					"Windows.winmd"
+				});
+				if (!File.Exists(text))
+				{
+					text = Path.Combine(windowsKitDirectory, "UnionMetadata\\Facade\\Windows.winmd");
+				}
+				result = text;
 			}
 			else
 			{

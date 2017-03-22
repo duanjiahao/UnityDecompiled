@@ -22,16 +22,16 @@ namespace UnityEditorInternal
 			throw new Exception("Platform unsupported, or already modular.");
 		}
 
-		internal static IL2CPPBuilder RunIl2Cpp(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool developmentBuild)
+		internal static IL2CPPBuilder RunIl2Cpp(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool debugBuild)
 		{
-			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(tempFolder, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, developmentBuild);
+			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(tempFolder, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, debugBuild);
 			iL2CPPBuilder.Run();
 			return iL2CPPBuilder;
 		}
 
-		internal static IL2CPPBuilder RunIl2Cpp(string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool developmentBuild)
+		internal static IL2CPPBuilder RunIl2Cpp(string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool debugBuild)
 		{
-			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(stagingAreaData, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, developmentBuild);
+			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(stagingAreaData, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, debugBuild);
 			iL2CPPBuilder.Run();
 			return iL2CPPBuilder;
 		}
@@ -64,10 +64,15 @@ namespace UnityEditorInternal
 
 		internal static void CopySymmapFile(string tempFolder, string destinationFolder)
 		{
+			IL2CPPUtils.CopySymmapFile(tempFolder, destinationFolder, string.Empty);
+		}
+
+		internal static void CopySymmapFile(string tempFolder, string destinationFolder, string destinationFileNameSuffix)
+		{
 			string text = Path.Combine(tempFolder, "SymbolMap");
 			if (File.Exists(text))
 			{
-				File.Copy(text, Path.Combine(destinationFolder, "SymbolMap"), true);
+				File.Copy(text, Path.Combine(destinationFolder, "SymbolMap" + destinationFileNameSuffix), true);
 			}
 		}
 

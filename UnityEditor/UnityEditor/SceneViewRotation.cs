@@ -80,6 +80,13 @@ namespace UnityEditor
 			"Perspective"
 		};
 
+		private static readonly GUIContent[] s_HandleAxisLabels = new GUIContent[]
+		{
+			new GUIContent("x"),
+			new GUIContent("y"),
+			new GUIContent("z")
+		};
+
 		private int[] m_ViewDirectionControlIDs;
 
 		private int m_CenterButtonControlID;
@@ -193,12 +200,6 @@ namespace UnityEditor
 			for (int i = SceneViewRotation.kDirectionRotations.Length - 1; i >= 0; i--)
 			{
 				Quaternion quaternion = SceneViewRotation.kDirectionRotations[i];
-				string[] array = new string[]
-				{
-					"x",
-					"y",
-					"z"
-				};
 				float faded = this.dirVisible[i % 3].faded;
 				Vector3 vector = SceneViewRotation.kDirectionRotations[i] * Vector3.forward;
 				float num = Vector3.Dot(view.camera.transform.forward, vector);
@@ -234,15 +235,15 @@ namespace UnityEditor
 						}
 						if (sgn > 0f)
 						{
-							int arg_1C6_0 = this.m_ViewDirectionControlIDs[i];
-							Vector3 arg_1C6_1 = quaternion * Vector3.forward * size * -1.2f;
-							Quaternion arg_1C6_2 = quaternion;
-							float arg_1C6_4 = size * 0.7f;
+							int arg_1A5_0 = this.m_ViewDirectionControlIDs[i];
+							Vector3 arg_1A5_1 = quaternion * Vector3.forward * size * -1.2f;
+							Quaternion arg_1A5_2 = quaternion;
+							float arg_1A5_4 = size * 0.7f;
 							if (SceneViewRotation.<>f__mg$cache0 == null)
 							{
 								SceneViewRotation.<>f__mg$cache0 = new Handles.CapFunction(Handles.ConeHandleCap);
 							}
-							if (Handles.Button(arg_1C6_0, arg_1C6_1, arg_1C6_2, size, arg_1C6_4, SceneViewRotation.<>f__mg$cache0))
+							if (Handles.Button(arg_1A5_0, arg_1A5_1, arg_1A5_2, size, arg_1A5_4, SceneViewRotation.<>f__mg$cache0))
 							{
 								if (!view.in2DMode && !view.isRotationLocked)
 								{
@@ -256,19 +257,19 @@ namespace UnityEditor
 							Vector3 a = vector;
 							a += num * view.camera.transform.forward * -0.5f;
 							a = (a * 0.7f + a.normalized * 1.5f) * size;
-							Handles.Label(-a, new GUIContent(array[i]), SceneViewRotation.styles.viewAxisLabelStyle);
+							Handles.Label(-a, SceneViewRotation.s_HandleAxisLabels[i], SceneViewRotation.styles.viewAxisLabelStyle);
 						}
 						if (sgn < 0f)
 						{
-							int arg_2F1_0 = this.m_ViewDirectionControlIDs[i];
-							Vector3 arg_2F1_1 = quaternion * Vector3.forward * size * -1.2f;
-							Quaternion arg_2F1_2 = quaternion;
-							float arg_2F1_4 = size * 0.7f;
+							int arg_2CE_0 = this.m_ViewDirectionControlIDs[i];
+							Vector3 arg_2CE_1 = quaternion * Vector3.forward * size * -1.2f;
+							Quaternion arg_2CE_2 = quaternion;
+							float arg_2CE_4 = size * 0.7f;
 							if (SceneViewRotation.<>f__mg$cache1 == null)
 							{
 								SceneViewRotation.<>f__mg$cache1 = new Handles.CapFunction(Handles.ConeHandleCap);
 							}
-							if (Handles.Button(arg_2F1_0, arg_2F1_1, arg_2F1_2, size, arg_2F1_4, SceneViewRotation.<>f__mg$cache1))
+							if (Handles.Button(arg_2CE_0, arg_2CE_1, arg_2CE_2, size, arg_2CE_4, SceneViewRotation.<>f__mg$cache1))
 							{
 								if (!view.in2DMode && !view.isRotationLocked)
 								{

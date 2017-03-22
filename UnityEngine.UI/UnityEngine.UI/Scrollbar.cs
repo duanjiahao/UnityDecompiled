@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Diagnostics;
+using UnityEditor;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
@@ -175,8 +176,29 @@ namespace UnityEngine.UI
 		{
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			this.m_Size = Mathf.Clamp01(this.m_Size);
+			if (this.IsActive())
+			{
+				this.UpdateCachedReferences();
+				this.Set(this.m_Value, false);
+				this.UpdateVisuals();
+			}
+			PrefabType prefabType = PrefabUtility.GetPrefabType(this);
+			if (prefabType != PrefabType.Prefab && !Application.isPlaying)
+			{
+				CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
+			}
+		}
+
 		public virtual void Rebuild(CanvasUpdate executing)
 		{
+			if (executing == CanvasUpdate.Prelayout)
+			{
+				this.onValueChanged.Invoke(this.value);
+			}
 		}
 
 		public virtual void LayoutComplete()
@@ -243,6 +265,10 @@ namespace UnityEngine.UI
 
 		private void UpdateVisuals()
 		{
+			if (!Application.isPlaying)
+			{
+				this.UpdateCachedReferences();
+			}
 			this.m_Tracker.Clear();
 			if (this.m_ContainerRect != null)
 			{

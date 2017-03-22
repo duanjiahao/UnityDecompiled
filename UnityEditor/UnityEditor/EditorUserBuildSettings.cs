@@ -95,6 +95,14 @@ namespace UnityEditor
 			set;
 		}
 
+		public static extern bool compressFilesInPackage
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern bool enableHeadlessMode
 		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -222,6 +230,14 @@ namespace UnityEditor
 		}
 
 		public static extern WSAUWPBuildType wsaUWPBuildType
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern string wsaUWPSDK
 		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;

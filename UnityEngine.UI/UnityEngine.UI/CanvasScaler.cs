@@ -345,5 +345,11 @@ namespace UnityEngine.UI
 				this.m_PrevReferencePixelsPerUnit = referencePixelsPerUnit;
 			}
 		}
+
+		protected override void OnValidate()
+		{
+			this.m_ScaleFactor = Mathf.Max(0.01f, this.m_ScaleFactor);
+			this.m_DefaultSpriteDPI = Mathf.Max(1f, this.m_DefaultSpriteDPI);
+		}
 	}
 }

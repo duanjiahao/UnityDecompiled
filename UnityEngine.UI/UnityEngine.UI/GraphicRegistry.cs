@@ -55,6 +55,10 @@ namespace UnityEngine.UI
 				if (GraphicRegistry.instance.m_Graphics.TryGetValue(c, out indexedSet))
 				{
 					indexedSet.Remove(graphic);
+					if (indexedSet.Count == 0)
+					{
+						GraphicRegistry.instance.m_Graphics.Remove(c);
+					}
 				}
 			}
 		}

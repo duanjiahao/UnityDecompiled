@@ -163,6 +163,14 @@ namespace UnityEngine.UI
 			}
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			this.m_ShouldRecalculateStencil = true;
+			this.UpdateClipParent();
+			this.SetMaterialDirty();
+		}
+
 		protected override void OnTransformParentChanged()
 		{
 			base.OnTransformParentChanged();

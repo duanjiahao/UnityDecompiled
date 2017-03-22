@@ -90,6 +90,22 @@ namespace UnityEngine
 			get;
 		}
 
+		public extern bool canGetSelection
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public RangeInt selection
+		{
+			get
+			{
+				RangeInt result;
+				this.GetSelectionInternal(out result.start, out result.length);
+				return result;
+			}
+		}
+
 		public extern int targetDisplay
 		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -198,6 +214,9 @@ namespace UnityEngine
 		{
 			return new TouchScreenKeyboard(text, keyboardType, autocorrection, multiline, secure, alert, textPlaceholder);
 		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void GetSelectionInternal(out int start, out int length);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_area(out Rect value);

@@ -45,8 +45,16 @@ namespace UnityEditor
 					"CacheServer"
 				});
 			}
-			Directory.CreateDirectory(result);
 			return result;
+		}
+
+		public static void CreateCacheDirectory()
+		{
+			string cacheLocation = LocalCacheServer.GetCacheLocation();
+			if (!Directory.Exists(cacheLocation))
+			{
+				Directory.CreateDirectory(cacheLocation);
+			}
 		}
 
 		private void Create(int _port, ulong _size)
@@ -74,6 +82,7 @@ namespace UnityEditor
 					"node"
 				});
 			}
+			LocalCacheServer.CreateCacheDirectory();
 			this.path = LocalCacheServer.GetCacheLocation();
 			string text2 = Paths.Combine(new string[]
 			{
@@ -86,8 +95,9 @@ namespace UnityEditor
 			{
 				Arguments = string.Concat(new object[]
 				{
+					"\"",
 					text2,
-					" --port ",
+					"\" --port ",
 					_port,
 					" --path ",
 					this.path,
@@ -184,6 +194,7 @@ namespace UnityEditor
 			{
 				if (ScriptableSingleton<LocalCacheServer>.instance.size == num && ScriptableSingleton<LocalCacheServer>.instance.path == LocalCacheServer.GetCacheLocation())
 				{
+					LocalCacheServer.CreateCacheDirectory();
 					return;
 				}
 				LocalCacheServer.Kill();
@@ -214,7 +225,16 @@ namespace UnityEditor
 		public static void Clear()
 		{
 			LocalCacheServer.Kill();
-			Directory.Delete(LocalCacheServer.GetCacheLocation(), true);
+			string cacheLocation = LocalCacheServer.GetCacheLocation();
+			if (Directory.Exists(cacheLocation))
+			{
+				Directory.Delete(cacheLocation, true);
+			}
+		}
+
+		public static bool CheckCacheLocationExists()
+		{
+			return Directory.Exists(LocalCacheServer.GetCacheLocation());
 		}
 
 		public static bool CheckValidCacheLocation(string path)

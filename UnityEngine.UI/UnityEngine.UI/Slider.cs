@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
@@ -241,8 +242,33 @@ namespace UnityEngine.UI
 		{
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			if (this.wholeNumbers)
+			{
+				this.m_MinValue = Mathf.Round(this.m_MinValue);
+				this.m_MaxValue = Mathf.Round(this.m_MaxValue);
+			}
+			if (this.IsActive())
+			{
+				this.UpdateCachedReferences();
+				this.Set(this.m_Value, false);
+				this.UpdateVisuals();
+			}
+			PrefabType prefabType = PrefabUtility.GetPrefabType(this);
+			if (prefabType != PrefabType.Prefab && !Application.isPlaying)
+			{
+				CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
+			}
+		}
+
 		public virtual void Rebuild(CanvasUpdate executing)
 		{
+			if (executing == CanvasUpdate.Prelayout)
+			{
+				this.onValueChanged.Invoke(this.value);
+			}
 		}
 
 		public virtual void LayoutComplete()
@@ -363,6 +389,10 @@ namespace UnityEngine.UI
 
 		private void UpdateVisuals()
 		{
+			if (!Application.isPlaying)
+			{
+				this.UpdateCachedReferences();
+			}
 			this.m_Tracker.Clear();
 			if (this.m_FillContainerRect != null)
 			{
@@ -389,10 +419,10 @@ namespace UnityEngine.UI
 				this.m_Tracker.Add(this, this.m_HandleRect, DrivenTransformProperties.Anchors);
 				Vector2 zero2 = Vector2.zero;
 				Vector2 one2 = Vector2.one;
-				int arg_144_1 = (int)this.axis;
+				int arg_154_1 = (int)this.axis;
 				float value = (!this.reverseValue) ? this.normalizedValue : (1f - this.normalizedValue);
 				one2[(int)this.axis] = value;
-				zero2[arg_144_1] = value;
+				zero2[arg_154_1] = value;
 				this.m_HandleRect.anchorMin = zero2;
 				this.m_HandleRect.anchorMax = one2;
 			}

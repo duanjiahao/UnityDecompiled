@@ -134,7 +134,7 @@ namespace UnityEditor
 				this.m_PlayOnAwake = base.GetProperty0("playOnAwake");
 				this.m_SimulationSpace = base.GetProperty0("moveWithTransform");
 				this.m_CustomSimulationSpace = base.GetProperty0("moveWithCustomTransform");
-				this.m_SimulationSpeed = base.GetProperty0("speed");
+				this.m_SimulationSpeed = base.GetProperty0("simulationSpeed");
 				this.m_ScalingMode = base.GetProperty0("scalingMode");
 				this.m_AutoRandomSeed = base.GetProperty0("autoRandomSeed");
 				this.m_RandomSeed = base.GetProperty0("randomSeed");

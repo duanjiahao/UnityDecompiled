@@ -17,19 +17,7 @@ namespace UnityEditor
 
 			public static GUIContent alignment = EditorGUIUtility.TextContent("Alignment|Trails can rotate to face their transform component or the camera.");
 
-			public static GUIContent[] alignmentOptions = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("View"),
-				EditorGUIUtility.TextContent("Local")
-			};
-
 			public static GUIContent textureMode = EditorGUIUtility.TextContent("Texture Mode|Should the U coordinate be stretched or tiled?");
-
-			public static GUIContent[] textureModeOptions = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("Stretch"),
-				EditorGUIUtility.TextContent("Tile")
-			};
 		}
 
 		private string[] m_ExcludedProperties;
@@ -80,8 +68,8 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_ColorGradient, TrailRendererInspector.Styles.colorGradient, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_NumCornerVertices, TrailRendererInspector.Styles.numCornerVertices, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_NumCapVertices, TrailRendererInspector.Styles.numCapVertices, new GUILayoutOption[0]);
-			this.m_Alignment.intValue = EditorGUILayout.Popup(TrailRendererInspector.Styles.alignment, this.m_Alignment.intValue, TrailRendererInspector.Styles.alignmentOptions, new GUILayoutOption[0]);
-			this.m_TextureMode.intValue = EditorGUILayout.Popup(TrailRendererInspector.Styles.textureMode, this.m_TextureMode.intValue, TrailRendererInspector.Styles.textureModeOptions, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_Alignment, TrailRendererInspector.Styles.alignment, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_TextureMode, TrailRendererInspector.Styles.textureMode, new GUILayoutOption[0]);
 			this.m_Probes.OnGUI(base.targets, (Renderer)base.target, false);
 			base.serializedObject.ApplyModifiedProperties();
 		}

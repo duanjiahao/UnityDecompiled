@@ -1155,11 +1155,6 @@ namespace UnityEditor
 					flag = (graphicsAPIs3.Contains(GraphicsDeviceType.OpenGLES3) && !graphicsAPIs3.Contains(GraphicsDeviceType.OpenGLES2));
 					flag2 = (PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel18);
 				}
-				else if (platform.targetGroup == BuildTargetGroup.Standalone)
-				{
-					GraphicsDeviceType[] graphicsAPIs4 = PlayerSettings.GetGraphicsAPIs(BuildTarget.StandaloneWindows);
-					flag = (!graphicsAPIs4.Contains(GraphicsDeviceType.OpenGLES3) && !graphicsAPIs4.Contains(GraphicsDeviceType.OpenGLES2));
-				}
 				result = (flag && flag2);
 			}
 			else

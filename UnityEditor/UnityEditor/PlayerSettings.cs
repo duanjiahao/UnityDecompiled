@@ -329,6 +329,30 @@ namespace UnityEditor
 				set;
 			}
 
+			public static extern string iOSManualProvisioningProfileID
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern string tvOSManualProvisioningProfileID
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern bool appleEnableAutomaticSigning
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
 			public static extern string cameraUsageDescription
 			{
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -607,7 +631,8 @@ namespace UnityEditor
 			public enum PS4AppCategory
 			{
 				Application,
-				Patch
+				Patch,
+				Remaster
 			}
 
 			public enum PS4RemotePlayKeyAssignment
@@ -627,6 +652,13 @@ namespace UnityEditor
 			{
 				CircleButton,
 				CrossButton
+			}
+
+			public enum PlayStationVREyeToEyeDistanceSettings
+			{
+				PerUser,
+				ForceDefault,
+				DynamicModeAtRuntime
 			}
 
 			public static extern string npTrophyPackPath
@@ -829,6 +861,14 @@ namespace UnityEditor
 				set;
 			}
 
+			public static extern int videoOutBaseModeInitialWidth
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
 			public static extern int videoOutReprojectionRate
 			{
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1022,6 +1062,14 @@ namespace UnityEditor
 				set;
 			}
 
+			public static extern int proGarlicHeapSize
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
 			public static extern bool reprojectionSupport
 			{
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1111,6 +1159,30 @@ namespace UnityEditor
 			}
 
 			public static extern int attribCpuUsage
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern bool videoRecordingFeaturesUsed
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern bool contentSearchFeaturesUsed
+			{
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern PlayerSettings.PS4.PlayStationVREyeToEyeDistanceSettings attribEyeToEyeDistanceSettingVR
 			{
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
@@ -3899,6 +3971,14 @@ namespace UnityEditor
 		}
 
 		public static extern bool graphicsJobs
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern GraphicsJobMode graphicsJobMode
 		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;

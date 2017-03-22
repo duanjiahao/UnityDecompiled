@@ -313,27 +313,35 @@ namespace UnityEngine
 			this.Internal_Create(this);
 		}
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMaximumResolution();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMinimumDetailResolutionPerPatch();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMaximumDetailResolutionPerPatch();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMaximumDetailPatchCount();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMinimumAlphamapResolution();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMaximumAlphamapResolution();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMinimumBaseMapResolution();
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetMaximumBaseMapResolution();
 

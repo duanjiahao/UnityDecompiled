@@ -37,7 +37,7 @@ namespace UnityEditor
 
 			public GUIContent overlayOpacity = EditorGUIUtility.TextContent("Overlay Opacity|Overlay strength applied to improve logo visibility.");
 
-			public GUIContent previewSplash = EditorGUIUtility.TextContent("Preview");
+			public GUIContent previewSplash = EditorGUIUtility.TextContent("Preview|Preview the splash screen in the game view.");
 
 			public GUIContent showLogo = EditorGUIUtility.TextContent("Show Unity Logo");
 

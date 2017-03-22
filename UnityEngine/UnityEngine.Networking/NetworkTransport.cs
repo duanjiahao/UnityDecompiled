@@ -257,6 +257,7 @@ namespace UnityEngine.Networking
 			{
 				throw new NullReferenceException("topology is not defined");
 			}
+			NetworkTransport.CheckTopology(topology);
 			int result;
 			if (ip == null)
 			{
@@ -296,6 +297,7 @@ namespace UnityEngine.Networking
 			{
 				throw new NullReferenceException("topology is not defined");
 			}
+			NetworkTransport.CheckTopology(topology);
 			int result;
 			if (ip == null)
 			{
@@ -329,6 +331,7 @@ namespace UnityEngine.Networking
 			{
 				throw new NullReferenceException("topology is not defined");
 			}
+			NetworkTransport.CheckTopology(topology);
 			int result;
 			if (ip == null)
 			{

@@ -43,8 +43,8 @@ namespace UnityEditor
 				AssemblyTypeInfoGenerator.AssemblyResolver assemblyResolver = new AssemblyTypeInfoGenerator.AssemblyResolver();
 				for (int i = 0; i < searchDirs.Length; i++)
 				{
-					string text = searchDirs[i];
-					assemblyResolver.AddSearchDirectory(text);
+					string directory = searchDirs[i];
+					assemblyResolver.AddSearchDirectory(directory);
 				}
 				assemblyResolver.RemoveSearchDirectory(".");
 				assemblyResolver.RemoveSearchDirectory("bin");
@@ -53,7 +53,7 @@ namespace UnityEditor
 
 			public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
 			{
-				AssemblyDefinition assemblyDefinition = (AssemblyDefinition)this.m_Assemblies[name.get_Name()];
+				AssemblyDefinition assemblyDefinition = (AssemblyDefinition)this.m_Assemblies[name.Name];
 				AssemblyDefinition result;
 				if (assemblyDefinition != null)
 				{
@@ -62,7 +62,7 @@ namespace UnityEditor
 				else
 				{
 					assemblyDefinition = base.Resolve(name, parameters);
-					this.m_Assemblies[name.get_Name()] = assemblyDefinition;
+					this.m_Assemblies[name.Name] = assemblyDefinition;
 					result = assemblyDefinition;
 				}
 				return result;
@@ -85,33 +85,35 @@ namespace UnityEditor
 
 		public AssemblyTypeInfoGenerator(string assembly, string[] searchDirs)
 		{
-			ReaderParameters readerParameters = new ReaderParameters();
-			readerParameters.set_AssemblyResolver(AssemblyTypeInfoGenerator.AssemblyResolver.WithSearchDirs(searchDirs));
-			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, readerParameters);
+			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, new ReaderParameters
+			{
+				AssemblyResolver = AssemblyTypeInfoGenerator.AssemblyResolver.WithSearchDirs(searchDirs)
+			});
 		}
 
 		public AssemblyTypeInfoGenerator(string assembly, IAssemblyResolver resolver)
 		{
-			ReaderParameters readerParameters = new ReaderParameters();
-			readerParameters.set_AssemblyResolver(resolver);
-			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, readerParameters);
+			this.assembly_ = AssemblyDefinition.ReadAssembly(assembly, new ReaderParameters
+			{
+				AssemblyResolver = resolver
+			});
 		}
 
 		private string GetMonoEmbeddedFullTypeNameFor(TypeReference type)
 		{
 			TypeSpecification typeSpecification = type as TypeSpecification;
 			string fullName;
-			if (typeSpecification != null && typeSpecification.get_IsRequiredModifier())
+			if (typeSpecification != null && typeSpecification.IsRequiredModifier)
 			{
-				fullName = typeSpecification.get_ElementType().get_FullName();
+				fullName = typeSpecification.ElementType.FullName;
 			}
-			else if (type.get_IsRequiredModifier())
+			else if (type.IsRequiredModifier)
 			{
-				fullName = type.GetElementType().get_FullName();
+				fullName = type.GetElementType().FullName;
 			}
 			else
 			{
-				fullName = type.get_FullName();
+				fullName = type.FullName;
 			}
 			return fullName.Replace('/', '+').Replace('<', '[').Replace('>', ']');
 		}
@@ -121,16 +123,16 @@ namespace UnityEditor
 			ArrayType arrayType = typeToResolve as ArrayType;
 			if (arrayType != null)
 			{
-				typeToResolve = new ArrayType(this.ResolveGenericInstanceType(arrayType.get_ElementType(), genericInstanceTypeMap), arrayType.get_Rank());
+				typeToResolve = new ArrayType(this.ResolveGenericInstanceType(arrayType.ElementType, genericInstanceTypeMap), arrayType.Rank);
 			}
 			while (genericInstanceTypeMap.ContainsKey(typeToResolve))
 			{
 				typeToResolve = genericInstanceTypeMap[typeToResolve];
 			}
-			if (typeToResolve.get_IsGenericInstance())
+			if (typeToResolve.IsGenericInstance)
 			{
 				GenericInstanceType genericInstanceType = (GenericInstanceType)typeToResolve;
-				typeToResolve = this.MakeGenericInstance(genericInstanceType.get_ElementType(), genericInstanceType.get_GenericArguments(), genericInstanceTypeMap);
+				typeToResolve = this.MakeGenericInstance(genericInstanceType.ElementType, genericInstanceType.GenericArguments, genericInstanceTypeMap);
 			}
 			return typeToResolve;
 		}
@@ -154,15 +156,15 @@ namespace UnityEditor
 				}
 				if (typeDefinition != null)
 				{
-					if (typeRef.get_IsGenericInstance())
+					if (typeRef.IsGenericInstance)
 					{
-						Collection<TypeReference> genericArguments = ((GenericInstanceType)typeRef).get_GenericArguments();
-						Collection<GenericParameter> genericParameters = typeDefinition.get_GenericParameters();
-						for (int i = 0; i < genericArguments.get_Count(); i++)
+						Collection<TypeReference> genericArguments = ((GenericInstanceType)typeRef).GenericArguments;
+						Collection<GenericParameter> genericParameters = typeDefinition.GenericParameters;
+						for (int i = 0; i < genericArguments.Count; i++)
 						{
-							if (genericParameters.get_Item(i) != genericArguments.get_Item(i))
+							if (genericParameters[i] != genericArguments[i])
 							{
-								genericInstanceTypeMap[genericParameters.get_Item(i)] = genericArguments.get_Item(i);
+								genericInstanceTypeMap[genericParameters[i]] = genericArguments[i];
 							}
 						}
 						this.typeResolver.Add((GenericInstanceType)typeRef);
@@ -183,12 +185,12 @@ namespace UnityEditor
 					{
 						AssemblyTypeInfoGenerator.ClassInfo item = default(AssemblyTypeInfoGenerator.ClassInfo);
 						item.name = this.GetMonoEmbeddedFullTypeNameFor(typeRef);
-						item.fields = this.GetFields(typeDefinition, typeRef.get_IsGenericInstance(), genericInstanceTypeMap);
+						item.fields = this.GetFields(typeDefinition, typeRef.IsGenericInstance, genericInstanceTypeMap);
 						this.classes_.Add(item);
 						this.AddNestedTypes(typeDefinition, genericInstanceTypeMap);
 						this.AddBaseType(typeRef, genericInstanceTypeMap);
 					}
-					if (typeRef.get_IsGenericInstance())
+					if (typeRef.IsGenericInstance)
 					{
 						this.typeResolver.Remove((GenericInstanceType)typeRef);
 					}
@@ -198,25 +200,21 @@ namespace UnityEditor
 
 		private void AddNestedTypes(TypeDefinition type, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
-			using (Collection<TypeDefinition>.Enumerator enumerator = type.get_NestedTypes().GetEnumerator())
+			foreach (TypeDefinition current in type.NestedTypes)
 			{
-				while (enumerator.MoveNext())
-				{
-					TypeDefinition current = enumerator.get_Current();
-					this.AddType(current, genericInstanceTypeMap);
-				}
+				this.AddType(current, genericInstanceTypeMap);
 			}
 		}
 
 		private void AddBaseType(TypeReference typeRef, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
-			TypeReference typeReference = typeRef.Resolve().get_BaseType();
+			TypeReference typeReference = typeRef.Resolve().BaseType;
 			if (typeReference != null)
 			{
-				if (typeRef.get_IsGenericInstance() && typeReference.get_IsGenericInstance())
+				if (typeRef.IsGenericInstance && typeReference.IsGenericInstance)
 				{
 					GenericInstanceType genericInstanceType = (GenericInstanceType)typeReference;
-					typeReference = this.MakeGenericInstance(genericInstanceType.get_ElementType(), genericInstanceType.get_GenericArguments(), genericInstanceTypeMap);
+					typeReference = this.MakeGenericInstance(genericInstanceType.ElementType, genericInstanceType.GenericArguments, genericInstanceTypeMap);
 				}
 				this.AddType(typeReference, genericInstanceTypeMap);
 			}
@@ -228,7 +226,7 @@ namespace UnityEditor
 			foreach (TypeReference current in from x in arguments
 			select this.ResolveGenericInstanceType(x, genericInstanceTypeMap))
 			{
-				genericInstanceType.get_GenericArguments().Add(current);
+				genericInstanceType.GenericArguments.Add(current);
 			}
 			return genericInstanceType;
 		}
@@ -236,16 +234,12 @@ namespace UnityEditor
 		private AssemblyTypeInfoGenerator.FieldInfo[] GetFields(TypeDefinition type, bool isGenericInstance, Dictionary<TypeReference, TypeReference> genericInstanceTypeMap)
 		{
 			List<AssemblyTypeInfoGenerator.FieldInfo> list = new List<AssemblyTypeInfoGenerator.FieldInfo>();
-			using (Collection<FieldDefinition>.Enumerator enumerator = type.get_Fields().GetEnumerator())
+			foreach (FieldDefinition current in type.Fields)
 			{
-				while (enumerator.MoveNext())
+				AssemblyTypeInfoGenerator.FieldInfo? fieldInfo = this.GetFieldInfo(type, current, isGenericInstance, genericInstanceTypeMap);
+				if (fieldInfo.HasValue)
 				{
-					FieldDefinition current = enumerator.get_Current();
-					AssemblyTypeInfoGenerator.FieldInfo? fieldInfo = this.GetFieldInfo(type, current, isGenericInstance, genericInstanceTypeMap);
-					if (fieldInfo.HasValue)
-					{
-						list.Add(fieldInfo.Value);
-					}
+					list.Add(fieldInfo.Value);
 				}
 			}
 			return list.ToArray();
@@ -261,15 +255,15 @@ namespace UnityEditor
 			else
 			{
 				AssemblyTypeInfoGenerator.FieldInfo value = default(AssemblyTypeInfoGenerator.FieldInfo);
-				value.name = field.get_Name();
+				value.name = field.Name;
 				TypeReference type2;
 				if (isDeclaringTypeGenericInstance)
 				{
-					type2 = this.ResolveGenericInstanceType(field.get_FieldType(), genericInstanceTypeMap);
+					type2 = this.ResolveGenericInstanceType(field.FieldType, genericInstanceTypeMap);
 				}
 				else
 				{
-					type2 = field.get_FieldType();
+					type2 = field.FieldType;
 				}
 				value.type = this.GetMonoEmbeddedFullTypeNameFor(type2);
 				result = new AssemblyTypeInfoGenerator.FieldInfo?(value);
@@ -288,8 +282,8 @@ namespace UnityEditor
 			{
 				Debug.LogFormat("Field '{0}' from '{1}', exception {2}", new object[]
 				{
-					field.get_FullName(),
-					field.get_Module().get_FullyQualifiedName(),
+					field.FullName,
+					field.Module.FullyQualifiedName,
 					ex.Message
 				});
 				result = false;
@@ -299,21 +293,13 @@ namespace UnityEditor
 
 		public AssemblyTypeInfoGenerator.ClassInfo[] GatherClassInfo()
 		{
-			using (Collection<ModuleDefinition>.Enumerator enumerator = this.assembly_.get_Modules().GetEnumerator())
+			foreach (ModuleDefinition current in this.assembly_.Modules)
 			{
-				while (enumerator.MoveNext())
+				foreach (TypeDefinition current2 in current.Types)
 				{
-					ModuleDefinition current = enumerator.get_Current();
-					using (Collection<TypeDefinition>.Enumerator enumerator2 = current.get_Types().GetEnumerator())
+					if (!(current2.Name == "<Module>"))
 					{
-						while (enumerator2.MoveNext())
-						{
-							TypeDefinition current2 = enumerator2.get_Current();
-							if (!(current2.get_Name() == "<Module>"))
-							{
-								this.AddType(current2, new Dictionary<TypeReference, TypeReference>());
-							}
-						}
+						this.AddType(current2, new Dictionary<TypeReference, TypeReference>());
 					}
 				}
 			}

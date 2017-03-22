@@ -109,6 +109,19 @@ namespace UnityEngine.UI
 			MaskUtilities.NotifyStencilStateChanged(this);
 		}
 
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			if (this.IsActive())
+			{
+				if (this.graphic != null)
+				{
+					this.graphic.SetMaterialDirty();
+				}
+				MaskUtilities.NotifyStencilStateChanged(this);
+			}
+		}
+
 		public virtual bool IsRaycastLocationValid(Vector2 sp, Camera eventCamera)
 		{
 			return !base.isActiveAndEnabled || RectTransformUtility.RectangleContainsScreenPoint(this.rectTransform, sp, eventCamera);

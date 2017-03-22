@@ -35,7 +35,7 @@ namespace UnityEditor
 
 			public GUIContent z = EditorGUIUtility.TextContent("Z");
 
-			public GUIContent previewTexture = EditorGUIUtility.TextContent("Preview");
+			public GUIContent previewTexture = EditorGUIUtility.TextContent("Preview|Preview the noise as a texture.");
 
 			public string[] qualityDropdown = new string[]
 			{

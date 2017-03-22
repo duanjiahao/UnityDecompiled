@@ -5,6 +5,7 @@ namespace UnityEditor
 	public enum PS4BuildSubtarget
 	{
 		PCHosted,
-		Package
+		Package,
+		Iso
 	}
 }

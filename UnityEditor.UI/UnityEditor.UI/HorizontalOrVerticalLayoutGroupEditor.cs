@@ -39,7 +39,7 @@ namespace UnityEditor.UI
 			EditorGUILayout.PropertyField(this.m_Spacing, true, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_ChildAlignment, true, new GUILayoutOption[0]);
 			Rect rect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
-			rect = EditorGUI.PrefixLabel(rect, -1, new GUIContent("Child Control Size"));
+			rect = EditorGUI.PrefixLabel(rect, -1, new GUIContent("Control Child Size"));
 			rect.width = Mathf.Max(50f, (rect.width - 4f) / 3f);
 			EditorGUIUtility.labelWidth = 50f;
 			this.ToggleLeft(rect, this.m_ChildControlWidth, new GUIContent("Width"));

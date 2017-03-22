@@ -130,7 +130,7 @@ namespace UnityEditorInternal
 		{
 			get
 			{
-				PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
+				Unity.DataContract.PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
 				string result;
 				if (packageInfo == null)
 				{
@@ -170,7 +170,7 @@ namespace UnityEditorInternal
 
 		protected string GetFolderInPackageOrDefault(string path)
 		{
-			PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
+			Unity.DataContract.PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
 			string result;
 			if (packageInfo == null)
 			{
@@ -186,7 +186,7 @@ namespace UnityEditorInternal
 
 		protected string GetFileInPackageOrDefault(string path)
 		{
-			PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
+			Unity.DataContract.PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
 			string result;
 			if (packageInfo == null)
 			{
@@ -200,9 +200,9 @@ namespace UnityEditorInternal
 			return result;
 		}
 
-		private static PackageInfo FindIl2CppPackage()
+		private static Unity.DataContract.PackageInfo FindIl2CppPackage()
 		{
-			return ModuleManager.packageManager.get_unityExtensions().FirstOrDefault((PackageInfo e) => e.name == "IL2CPP");
+			return ModuleManager.packageManager.unityExtensions.FirstOrDefault((Unity.DataContract.PackageInfo e) => e.name == "IL2CPP");
 		}
 	}
 }

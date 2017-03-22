@@ -18,22 +18,22 @@ namespace UnityEditor.VisualStudioIntegration
 			{
 				return string.Join("\r\n", new string[]
 				{
-					"Microsoft Visual Studio Solution File, Format Version {0}",
-					"# Visual Studio 2008",
 					"",
-					"{1}",
+					"Microsoft Visual Studio Solution File, Format Version {0}",
+					"# Visual Studio {1}",
+					"{2}",
 					"Global",
 					"    GlobalSection(SolutionConfigurationPlatforms) = preSolution",
 					"        Debug|Any CPU = Debug|Any CPU",
 					"        Release|Any CPU = Release|Any CPU",
 					"    EndGlobalSection",
 					"    GlobalSection(ProjectConfigurationPlatforms) = postSolution",
-					"{2}",
+					"{3}",
 					"    EndGlobalSection",
 					"    GlobalSection(SolutionProperties) = preSolution",
 					"        HideSolutionNode = FALSE",
 					"    EndGlobalSection",
-					"{3}",
+					"{4}",
 					"EndGlobal",
 					""
 				}).Replace("    ", "\t");

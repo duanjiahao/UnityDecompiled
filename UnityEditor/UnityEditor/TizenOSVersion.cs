@@ -4,7 +4,6 @@ namespace UnityEditor
 {
 	public enum TizenOSVersion
 	{
-		Version23,
-		Version24
+		Version24 = 1
 	}
 }

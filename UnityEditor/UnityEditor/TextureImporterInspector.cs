@@ -1435,18 +1435,21 @@ namespace UnityEditor
 			for (int i = 0; i < targets.Length; i++)
 			{
 				AssetImporter assetImporter = (AssetImporter)targets[i];
-				Texture tex = AssetDatabase.LoadMainAssetAtPath(assetImporter.assetPath) as Texture;
-				if (this.m_Aniso.intValue != -1)
+				Texture texture = AssetDatabase.LoadMainAssetAtPath(assetImporter.assetPath) as Texture;
+				if (texture != null)
 				{
-					TextureUtil.SetAnisoLevelNoDirty(tex, this.m_Aniso.intValue);
-				}
-				if (this.m_FilterMode.intValue != -1)
-				{
-					TextureUtil.SetFilterModeNoDirty(tex, (FilterMode)this.m_FilterMode.intValue);
-				}
-				if (this.m_WrapMode.intValue != -1)
-				{
-					TextureUtil.SetWrapModeNoDirty(tex, (TextureWrapMode)this.m_WrapMode.intValue);
+					if (this.m_Aniso.intValue != -1)
+					{
+						TextureUtil.SetAnisoLevelNoDirty(texture, this.m_Aniso.intValue);
+					}
+					if (this.m_FilterMode.intValue != -1)
+					{
+						TextureUtil.SetFilterModeNoDirty(texture, (FilterMode)this.m_FilterMode.intValue);
+					}
+					if (this.m_WrapMode.intValue != -1)
+					{
+						TextureUtil.SetWrapModeNoDirty(texture, (TextureWrapMode)this.m_WrapMode.intValue);
+					}
 				}
 			}
 			SceneView.RepaintAll();
@@ -1637,7 +1640,10 @@ namespace UnityEditor
 					arrayList.Add(texture);
 				}
 			}
-			Selection.objects = (arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[]);
+			if (arrayList.Count > 0)
+			{
+				Selection.objects = (arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[]);
+			}
 		}
 
 		internal override void ResetValues()

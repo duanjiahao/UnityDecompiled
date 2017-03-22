@@ -268,7 +268,7 @@ namespace UnityEditor
 				for (int j = 0; j < allInspectorWindows.Length; j++)
 				{
 					InspectorWindow inspectorWindow = allInspectorWindows[j];
-					inspectorWindow.GetTracker().ForceRebuild();
+					inspectorWindow.tracker.ForceRebuild();
 				}
 			}
 		}
@@ -1264,7 +1264,7 @@ namespace UnityEditor
 			Renderer result;
 			if (InspectorWindow.s_CurrentInspectorWindow)
 			{
-				Editor[] activeEditors = InspectorWindow.s_CurrentInspectorWindow.GetTracker().activeEditors;
+				Editor[] activeEditors = InspectorWindow.s_CurrentInspectorWindow.tracker.activeEditors;
 				Editor[] array = activeEditors;
 				for (int i = 0; i < array.Length; i++)
 				{

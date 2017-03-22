@@ -1,5 +1,4 @@
 using Mono.Cecil;
-using Mono.Collections.Generic;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -471,24 +470,20 @@ namespace UnityEditor
 			for (int i = 0; i < array.Length; i++)
 			{
 				AssemblyDefinition assemblyDefinition = array[i];
-				using (Collection<TypeDefinition>.Enumerator enumerator = assemblyDefinition.get_MainModule().get_Types().GetEnumerator())
+				foreach (TypeDefinition current in assemblyDefinition.MainModule.Types)
 				{
-					while (enumerator.MoveNext())
+					if (current.Namespace.StartsWith("UnityEngine"))
 					{
-						TypeDefinition current = enumerator.get_Current();
-						if (current.get_Namespace().StartsWith("UnityEngine"))
+						if (current.Fields.Count > 0 || current.Methods.Count > 0 || current.Properties.Count > 0)
 						{
-							if (current.get_Fields().get_Count() > 0 || current.get_Methods().get_Count() > 0 || current.get_Properties().get_Count() > 0)
+							string name = current.Name;
+							hashSet.Add(name);
+							if (strippingInfo != null)
 							{
-								string name = current.get_Name();
-								hashSet.Add(name);
-								if (strippingInfo != null)
+								string name2 = assemblyDefinition.Name.Name;
+								if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name2))
 								{
-									string name2 = assemblyDefinition.get_Name().get_Name();
-									if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name2))
-									{
-										strippingInfo.RegisterDependency(name, "Required by Scripts");
-									}
+									strippingInfo.RegisterDependency(name, "Required by Scripts");
 								}
 							}
 						}
@@ -509,15 +504,15 @@ namespace UnityEditor
 				AssemblyDefinition assemblyDefinition3 = array2[k];
 				if (assemblyDefinition3 != assemblyDefinition2)
 				{
-					foreach (TypeReference current2 in assemblyDefinition3.get_MainModule().GetTypeReferences())
+					foreach (TypeReference current2 in assemblyDefinition3.MainModule.GetTypeReferences())
 					{
-						if (current2.get_Namespace().StartsWith("UnityEngine"))
+						if (current2.Namespace.StartsWith("UnityEngine"))
 						{
-							string name3 = current2.get_Name();
+							string name3 = current2.Name;
 							hashSet.Add(name3);
 							if (strippingInfo != null)
 							{
-								string name4 = assemblyDefinition3.get_Name().get_Name();
+								string name4 = assemblyDefinition3.Name.Name;
 								if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name4))
 								{
 									strippingInfo.RegisterDependency(name3, "Required by Scripts");

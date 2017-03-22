@@ -119,9 +119,17 @@ namespace UnityEditor
 
 		public new void OnEnable()
 		{
-			if (this.m_Panes != null && this.m_Panes.Count > this.m_Selected)
+			if (this.m_Panes != null)
 			{
-				base.actualView = this.m_Panes[this.m_Selected];
+				if (this.m_Panes.Count == 0)
+				{
+					this.m_Selected = 0;
+				}
+				else
+				{
+					this.m_Selected = Math.Min(this.m_Selected, this.m_Panes.Count - 1);
+					base.actualView = this.m_Panes[this.m_Selected];
+				}
 			}
 			base.OnEnable();
 		}
@@ -137,7 +145,7 @@ namespace UnityEditor
 			this.m_Panes.Insert(idx, pane);
 			this.m_ActualView = pane;
 			this.m_Panes[idx] = pane;
-			this.m_Selected = idx;
+			this.selected = idx;
 			base.RegisterSelectedPane();
 			SplitView splitView = base.parent as SplitView;
 			if (splitView)
@@ -166,17 +174,22 @@ namespace UnityEditor
 				{
 					this.m_LastSelected = this.m_Panes.Count - 1;
 				}
-				else if (num < this.m_LastSelected)
+				else if (num < this.m_LastSelected || this.m_LastSelected == this.m_Panes.Count)
 				{
 					this.m_LastSelected--;
 				}
+				this.m_LastSelected = Mathf.Clamp(this.m_LastSelected, 0, this.m_Panes.Count - 1);
 				if (num == this.m_Selected)
 				{
-					this.selected = this.m_LastSelected;
+					this.m_Selected = this.m_LastSelected;
 				}
 				else
 				{
 					this.m_Selected = this.m_Panes.IndexOf(this.m_ActualView);
+				}
+				if (this.m_Selected >= 0 && this.m_Selected < this.m_Panes.Count)
+				{
+					base.actualView = this.m_Panes[this.m_Selected];
 				}
 				base.Repaint();
 				pane.m_Parent = null;

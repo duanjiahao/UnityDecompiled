@@ -35,17 +35,27 @@ namespace UnityEngine.Networking.Match
 
 		public Coroutine CreateMatch(string matchName, uint matchSize, bool matchAdvertise, string matchPassword, string publicClientAddress, string privateClientAddress, int eloScoreForMatch, int requestDomain, NetworkMatch.DataResponseDelegate<MatchInfo> callback)
 		{
-			return this.CreateMatch(new CreateMatchRequest
+			Coroutine result;
+			if (Application.platform == RuntimePlatform.WebGLPlayer)
 			{
-				name = matchName,
-				size = matchSize,
-				advertise = matchAdvertise,
-				password = matchPassword,
-				publicAddress = publicClientAddress,
-				privateAddress = privateClientAddress,
-				eloScore = eloScoreForMatch,
-				domain = requestDomain
-			}, callback);
+				UnityEngine.Debug.LogError("Matchmaking is not supported on WebGL player.");
+				result = null;
+			}
+			else
+			{
+				result = this.CreateMatch(new CreateMatchRequest
+				{
+					name = matchName,
+					size = matchSize,
+					advertise = matchAdvertise,
+					password = matchPassword,
+					publicAddress = publicClientAddress,
+					privateAddress = privateClientAddress,
+					eloScore = eloScoreForMatch,
+					domain = requestDomain
+				}, callback);
+			}
+			return result;
 		}
 
 		internal Coroutine CreateMatch(CreateMatchRequest req, NetworkMatch.DataResponseDelegate<MatchInfo> callback)
@@ -225,15 +235,25 @@ namespace UnityEngine.Networking.Match
 
 		public Coroutine ListMatches(int startPageNumber, int resultPageSize, string matchNameFilter, bool filterOutPrivateMatchesFromResults, int eloScoreTarget, int requestDomain, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>> callback)
 		{
-			return this.ListMatches(new ListMatchRequest
+			Coroutine result;
+			if (Application.platform == RuntimePlatform.WebGLPlayer)
 			{
-				pageNum = startPageNumber,
-				pageSize = resultPageSize,
-				nameFilter = matchNameFilter,
-				filterOutPrivateMatches = filterOutPrivateMatchesFromResults,
-				eloScore = eloScoreTarget,
-				domain = requestDomain
-			}, callback);
+				UnityEngine.Debug.LogError("Matchmaking is not supported on WebGL player.");
+				result = null;
+			}
+			else
+			{
+				result = this.ListMatches(new ListMatchRequest
+				{
+					pageNum = startPageNumber,
+					pageSize = resultPageSize,
+					nameFilter = matchNameFilter,
+					filterOutPrivateMatches = filterOutPrivateMatchesFromResults,
+					eloScore = eloScoreTarget,
+					domain = requestDomain
+				}, callback);
+			}
+			return result;
 		}
 
 		internal Coroutine ListMatches(ListMatchRequest req, NetworkMatch.DataResponseDelegate<List<MatchInfoSnapshot>> callback)

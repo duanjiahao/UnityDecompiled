@@ -82,7 +82,10 @@ namespace UnityEditor
 							string text = ParticleSystemEditorUtils.CheckCircularReferences(particleSystem);
 							if (text.Length == 0)
 							{
-								this.CheckIfChild(objectReferenceValue);
+								if (!this.CheckIfChild(objectReferenceValue))
+								{
+									flag = false;
+								}
 							}
 							else
 							{
@@ -153,37 +156,45 @@ namespace UnityEditor
 			return result;
 		}
 
-		private void CheckIfChild(UnityEngine.Object subEmitter)
+		private bool CheckIfChild(UnityEngine.Object subEmitter)
 		{
-			if (subEmitter != null)
+			ParticleSystem root = this.m_ParticleSystemUI.m_ParticleEffectUI.GetRoot();
+			bool result;
+			if (SubModuleUI.IsChild(subEmitter as ParticleSystem, root))
 			{
-				ParticleSystem root = this.m_ParticleSystemUI.m_ParticleEffectUI.GetRoot();
-				if (!SubModuleUI.IsChild(subEmitter as ParticleSystem, root))
+				result = true;
+			}
+			else
+			{
+				string message = string.Format("The assigned sub emitter is not a child of the current root particle system GameObject: '{0}' and is therefore NOT considered a part of the current effect. Do you want to reparent it?", root.gameObject.name);
+				if (EditorUtility.DisplayDialog("Reparent GameObjects", message, "Yes, Reparent", "No, Remove"))
 				{
-					string message = string.Format("The assigned sub emitter is not a child of the current root particle system GameObject: '{0}' and is therefore NOT considered a part of the current effect. Do you want to reparent it?", root.gameObject.name);
-					if (EditorUtility.DisplayDialog("Reparent GameObjects", message, "Yes, Reparent", "No"))
+					if (EditorUtility.IsPersistent(subEmitter))
 					{
-						if (EditorUtility.IsPersistent(subEmitter))
+						GameObject gameObject = UnityEngine.Object.Instantiate(subEmitter) as GameObject;
+						if (gameObject != null)
 						{
-							GameObject gameObject = UnityEngine.Object.Instantiate(subEmitter) as GameObject;
-							if (gameObject != null)
-							{
-								gameObject.transform.parent = this.m_ParticleSystemUI.m_ParticleSystem.transform;
-								gameObject.transform.localPosition = Vector3.zero;
-								gameObject.transform.localRotation = Quaternion.identity;
-							}
-						}
-						else
-						{
-							ParticleSystem particleSystem = subEmitter as ParticleSystem;
-							if (particleSystem)
-							{
-								Undo.SetTransformParent(particleSystem.gameObject.transform.transform, this.m_ParticleSystemUI.m_ParticleSystem.transform, "Reparent sub emitter");
-							}
+							gameObject.transform.parent = this.m_ParticleSystemUI.m_ParticleSystem.transform;
+							gameObject.transform.localPosition = Vector3.zero;
+							gameObject.transform.localRotation = Quaternion.identity;
 						}
 					}
+					else
+					{
+						ParticleSystem particleSystem = subEmitter as ParticleSystem;
+						if (particleSystem)
+						{
+							Undo.SetTransformParent(particleSystem.gameObject.transform.transform, this.m_ParticleSystemUI.m_ParticleSystem.transform, "Reparent sub emitter");
+						}
+					}
+					result = true;
+				}
+				else
+				{
+					result = false;
 				}
 			}
+			return result;
 		}
 
 		private List<UnityEngine.Object> GetSubEmitterProperties()

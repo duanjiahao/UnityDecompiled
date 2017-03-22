@@ -191,10 +191,10 @@ namespace UnityEditor.Scripting
 		private static string ConfigurationProviderAssembliesPathArgument()
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			foreach (PackageInfo current in ModuleManager.packageManager.get_unityExtensions())
+			foreach (Unity.DataContract.PackageInfo current in ModuleManager.packageManager.unityExtensions)
 			{
-				foreach (string current2 in from f in current.get_files()
-				where f.Value.type == 3
+				foreach (string current2 in from f in current.files
+				where f.Value.type == PackageFileType.Dll
 				select f into pi
 				select pi.Key)
 				{
@@ -289,7 +289,7 @@ namespace UnityEditor.Scripting
 			using (FileStream fileStream = File.Open(assemblyPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 			{
 				AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(fileStream);
-				if (assemblyDefinition.get_Name().get_IsWindowsRuntime())
+				if (assemblyDefinition.Name.IsWindowsRuntime)
 				{
 					result = false;
 					return result;
@@ -310,9 +310,9 @@ namespace UnityEditor.Scripting
 			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
 			{
 				int arg_48_0;
-				if (assembly.get_HasCustomAttributes())
+				if (assembly.HasCustomAttributes)
 				{
-					arg_48_0 = (assembly.get_CustomAttributes().Any((CustomAttribute attr) => APIUpdaterHelper.TargetsWindowsSpecificFramework(attr)) ? 1 : 0);
+					arg_48_0 = (assembly.CustomAttributes.Any((CustomAttribute attr) => APIUpdaterHelper.TargetsWindowsSpecificFramework(attr)) ? 1 : 0);
 				}
 				else
 				{
@@ -330,14 +330,14 @@ namespace UnityEditor.Scripting
 		private static bool TargetsWindowsSpecificFramework(CustomAttribute targetFrameworkAttr)
 		{
 			bool result;
-			if (!targetFrameworkAttr.get_AttributeType().get_FullName().Contains("System.Runtime.Versioning.TargetFrameworkAttribute"))
+			if (!targetFrameworkAttr.AttributeType.FullName.Contains("System.Runtime.Versioning.TargetFrameworkAttribute"))
 			{
 				result = false;
 			}
 			else
 			{
 				Regex regex = new Regex("\\.NETCore|\\.NETPortable");
-				bool flag = targetFrameworkAttr.get_ConstructorArguments().Any((CustomAttributeArgument arg) => arg.get_Type().get_FullName() == typeof(string).FullName && regex.IsMatch((string)arg.get_Value()));
+				bool flag = targetFrameworkAttr.ConstructorArguments.Any((CustomAttributeArgument arg) => arg.Type.FullName == typeof(string).FullName && regex.IsMatch((string)arg.Value));
 				result = flag;
 			}
 			return result;

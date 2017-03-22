@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Scripting.Compilers;
+using UnityEngine;
 
 namespace UnityEditorInternal
 {
@@ -20,18 +21,18 @@ namespace UnityEditorInternal
 
 		private readonly RuntimeClassRegistry m_RuntimeClassRegistry;
 
-		private readonly bool m_DevelopmentBuild;
+		private readonly bool m_DebugBuild;
 
 		private readonly LinkXmlReader m_linkXmlReader = new LinkXmlReader();
 
-		public IL2CPPBuilder(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool developmentBuild)
+		public IL2CPPBuilder(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool debugBuild)
 		{
 			this.m_TempFolder = tempFolder;
 			this.m_StagingAreaData = stagingAreaData;
 			this.m_PlatformProvider = platformProvider;
 			this.m_ModifyOutputBeforeCompile = modifyOutputBeforeCompile;
 			this.m_RuntimeClassRegistry = runtimeClassRegistry;
-			this.m_DevelopmentBuild = developmentBuild;
+			this.m_DebugBuild = debugBuild;
 		}
 
 		public void Run()
@@ -45,7 +46,7 @@ namespace UnityEditorInternal
 				FileInfo fileInfo = new FileInfo(fileName);
 				fileInfo.IsReadOnly = false;
 			}
-			AssemblyStripper.StripAssemblies(this.m_StagingAreaData, this.m_PlatformProvider, this.m_RuntimeClassRegistry, this.m_DevelopmentBuild);
+			AssemblyStripper.StripAssemblies(this.m_StagingAreaData, this.m_PlatformProvider, this.m_RuntimeClassRegistry);
 			FileUtil.CreateOrCleanDirectory(cppOutputDirectoryInStagingArea);
 			if (this.m_ModifyOutputBeforeCompile != null)
 			{
@@ -68,7 +69,8 @@ namespace UnityEditorInternal
 			if (il2CppNativeCodeBuilder != null)
 			{
 				Il2CppNativeCodeBuilderUtils.ClearAndPrepareCacheDirectory(il2CppNativeCodeBuilder);
-				List<string> list = Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths).ToList<string>();
+				List<string> list = Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths, this.m_DebugBuild).ToList<string>();
+				list.Add(string.Format("--map-file-parser=\"{0}\"", IL2CPPBuilder.GetMapFileParserPath()));
 				list.Add(string.Format("--generatedcppdir=\"{0}\"", Path.GetFullPath(this.GetCppOutputDirectoryInStagingArea())));
 				Action<ProcessStartInfo> setupStartInfo = new Action<ProcessStartInfo>(il2CppNativeCodeBuilder.SetupStartInfo);
 				string fullPath = Path.GetFullPath(Path.Combine(this.m_StagingAreaData, "Managed"));
@@ -117,6 +119,11 @@ namespace UnityEditorInternal
 			return Path.Combine(tempFolder, "il2cppOutput");
 		}
 
+		private static string GetMapFileParserPath()
+		{
+			return Path.GetFullPath(Path.Combine(EditorApplication.applicationContentsPath, (Application.platform != RuntimePlatform.WindowsEditor) ? "Tools/MapFileParser/MapFileParser" : "Tools\\MapFileParser\\MapFileParser.exe"));
+		}
+
 		private void ConvertPlayerDlltoCpp(ICollection<string> userAssemblies, string outputDirectory, string workingDirectory)
 		{
 			if (userAssemblies.Count != 0)
@@ -153,8 +160,9 @@ namespace UnityEditorInternal
 				if (il2CppNativeCodeBuilder != null)
 				{
 					Il2CppNativeCodeBuilderUtils.ClearAndPrepareCacheDirectory(il2CppNativeCodeBuilder);
-					list.AddRange(Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths));
+					list.AddRange(Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths, this.m_DebugBuild));
 				}
+				list.Add(string.Format("--map-file-parser=\"{0}\"", IL2CPPBuilder.GetMapFileParserPath()));
 				if (array.Length > 0)
 				{
 					string[] array2 = array;

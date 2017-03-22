@@ -52,7 +52,14 @@ namespace UnityEngine
 
 		private void Dispose(bool disposing)
 		{
-			ComputeBuffer.DestroyBuffer(this);
+			if (disposing)
+			{
+				ComputeBuffer.DestroyBuffer(this);
+			}
+			else if (this.m_Ptr != IntPtr.Zero)
+			{
+				Debug.LogWarning("GarbageCollector disposing of ComputeBuffer. Please use ComputeBuffer.Release() or .Dispose() to manually release the buffer.");
+			}
 			this.m_Ptr = IntPtr.Zero;
 		}
 

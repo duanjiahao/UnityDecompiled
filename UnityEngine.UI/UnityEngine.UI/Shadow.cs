@@ -88,6 +88,12 @@ namespace UnityEngine.UI
 		{
 		}
 
+		protected override void OnValidate()
+		{
+			this.effectDistance = this.m_EffectDistance;
+			base.OnValidate();
+		}
+
 		protected void ApplyShadowZeroAlloc(List<UIVertex> verts, Color32 color, int start, int end, float x, float y)
 		{
 			int num = verts.Count + end - start;

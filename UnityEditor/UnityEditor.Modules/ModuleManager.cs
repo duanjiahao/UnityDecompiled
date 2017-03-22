@@ -184,7 +184,7 @@ namespace UnityEditor.Modules
 
 		private static void LoadUnityExtensions()
 		{
-			foreach (PackageInfo current in ModuleManager.s_PackageManager.get_unityExtensions())
+			foreach (Unity.DataContract.PackageInfo current in ModuleManager.s_PackageManager.unityExtensions)
 			{
 				Console.WriteLine("Setting {0} v{1} for Unity v{2} to {3}", new object[]
 				{
@@ -193,8 +193,8 @@ namespace UnityEditor.Modules
 					current.unityVersion,
 					current.basePath
 				});
-				foreach (KeyValuePair<string, PackageFileData> current2 in from f in current.get_files()
-				where f.Value.type == 3
+				foreach (KeyValuePair<string, PackageFileData> current2 in from f in current.files
+				where f.Value.type == PackageFileType.Dll
 				select f)
 				{
 					string text = Path.Combine(current.basePath, current2.Key).NormalizePath();
@@ -313,13 +313,13 @@ namespace UnityEditor.Modules
 				Console.WriteLine("Error scanning for packages. {0}", arg2);
 				return;
 			}
-			PackageInfo packageInfo;
+			Unity.DataContract.PackageInfo packageInfo;
 			try
 			{
 				packageInfo = (type.InvokeMember("GetPackageManager", BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod, null, null, new string[]
 				{
 					Application.unityVersion
-				}) as PackageInfo);
+				}) as Unity.DataContract.PackageInfo);
 				if (packageInfo == null)
 				{
 					Console.WriteLine("No package manager found!");
@@ -345,10 +345,10 @@ namespace UnityEditor.Modules
 			}
 		}
 
-		private static bool InitializePackageManager(PackageInfo package)
+		private static bool InitializePackageManager(Unity.DataContract.PackageInfo package)
 		{
-			string text = (from x in package.get_files()
-			where x.Value.type == 3
+			string text = (from x in package.files
+			where x.Value.type == PackageFileType.Dll
 			select x.Key).FirstOrDefault<string>();
 			bool result;
 			if (text == null || !File.Exists(Path.Combine(package.basePath, text)))
@@ -364,7 +364,7 @@ namespace UnityEditor.Modules
 			return result;
 		}
 
-		private static bool InitializePackageManager(Assembly assembly, PackageInfo package)
+		private static bool InitializePackageManager(Assembly assembly, Unity.DataContract.PackageInfo package)
 		{
 			ModuleManager.s_PackageManager = AssemblyHelper.FindImplementors<IPackageManagerModule>(assembly).FirstOrDefault<IPackageManagerModule>();
 			bool result;
@@ -381,16 +381,16 @@ namespace UnityEditor.Modules
 				}
 				else
 				{
-					package = new PackageInfo
+					package = new Unity.DataContract.PackageInfo
 					{
 						basePath = Path.GetDirectoryName(location)
 					};
 				}
-				ModuleManager.s_PackageManager.set_moduleInfo(package);
-				ModuleManager.s_PackageManager.set_editorInstallPath(EditorApplication.applicationContentsPath);
-				ModuleManager.s_PackageManager.set_unityVersion(new PackageVersion(Application.unityVersion));
+				ModuleManager.s_PackageManager.moduleInfo = package;
+				ModuleManager.s_PackageManager.editorInstallPath = EditorApplication.applicationContentsPath;
+				ModuleManager.s_PackageManager.unityVersion = new PackageVersion(Application.unityVersion);
 				ModuleManager.s_PackageManager.Initialize();
-				foreach (PackageInfo current in ModuleManager.s_PackageManager.get_playbackEngines())
+				foreach (Unity.DataContract.PackageInfo current in ModuleManager.s_PackageManager.playbackEngines)
 				{
 					BuildTarget buildTarget = BuildTarget.StandaloneWindows;
 					if (ModuleManager.TryParseBuildTarget(current.name, out buildTarget))
@@ -402,8 +402,8 @@ namespace UnityEditor.Modules
 							current.unityVersion,
 							current.basePath
 						});
-						foreach (KeyValuePair<string, PackageFileData> current2 in from f in current.get_files()
-						where f.Value.type == 3
+						foreach (KeyValuePair<string, PackageFileData> current2 in from f in current.files
+						where f.Value.type == PackageFileType.Dll
 						select f)
 						{
 							string path = Path.Combine(current.basePath, current2.Key).NormalizePath();

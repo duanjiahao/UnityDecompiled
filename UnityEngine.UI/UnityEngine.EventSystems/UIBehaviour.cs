@@ -29,6 +29,14 @@ namespace UnityEngine.EventSystems
 			return base.isActiveAndEnabled;
 		}
 
+		protected virtual void OnValidate()
+		{
+		}
+
+		protected virtual void Reset()
+		{
+		}
+
 		protected virtual void OnRectTransformDimensionsChange()
 		{
 		}

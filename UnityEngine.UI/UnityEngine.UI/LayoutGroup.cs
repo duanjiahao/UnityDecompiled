@@ -311,5 +311,10 @@ namespace UnityEngine.UI
 			<DelayedSetDirty>c__Iterator.rectTransform = rectTransform;
 			return <DelayedSetDirty>c__Iterator;
 		}
+
+		protected override void OnValidate()
+		{
+			this.SetDirty();
+		}
 	}
 }
