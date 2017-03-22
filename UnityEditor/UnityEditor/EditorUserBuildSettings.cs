@@ -237,6 +237,14 @@ namespace UnityEditor
 			set;
 		}
 
+		public static extern string wsaUWPSDK
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern WSABuildAndRunDeployTarget wsaBuildAndRunDeployTarget
 		{
 			[MethodImpl(MethodImplOptions.InternalCall)]

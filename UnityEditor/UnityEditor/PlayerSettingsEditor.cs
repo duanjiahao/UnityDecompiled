@@ -37,6 +37,8 @@ namespace UnityEditor
 
 			public static readonly GUIContent vertexChannelCompressionMask;
 
+			public static readonly GUIContent graphicsJobsMode;
+
 			public static readonly GUIContent require31;
 
 			public static readonly GUIContent requireAEP;
@@ -54,6 +56,7 @@ namespace UnityEditor
 				PlayerSettingsEditor.Styles.defaultCursor = EditorGUIUtility.TextContent("Default Cursor");
 				PlayerSettingsEditor.Styles.defaultIcon = EditorGUIUtility.TextContent("Default Icon");
 				PlayerSettingsEditor.Styles.vertexChannelCompressionMask = EditorGUIUtility.TextContent("Vertex Compression*|Select which vertex channels should be compressed. Compression can save memory and bandwidth but precision will be lower.");
+				PlayerSettingsEditor.Styles.graphicsJobsMode = EditorGUIUtility.TextContent("Graphics Jobs Mode*");
 				PlayerSettingsEditor.Styles.require31 = EditorGUIUtility.TextContent("Require ES3.1");
 				PlayerSettingsEditor.Styles.requireAEP = EditorGUIUtility.TextContent("Require ES3.1+AEP");
 				PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll = new GUIContent[]
@@ -99,6 +102,18 @@ namespace UnityEditor
 		private PlayerSettingsSplashScreenEditor m_SplashScreenEditor;
 
 		public static readonly GUIContent defaultIsFullScreen = EditorGUIUtility.TextContent("Default Is Full Screen*");
+
+		private static GraphicsJobMode[] m_GfxJobModeValues = new GraphicsJobMode[]
+		{
+			GraphicsJobMode.Native,
+			GraphicsJobMode.Legacy
+		};
+
+		private static GUIContent[] m_GfxJobModeNames = new GUIContent[]
+		{
+			new GUIContent("Native"),
+			new GUIContent("Legacy")
+		};
 
 		private SavedInt m_SelectedSection = new SavedInt("PlayerSettings.ShownSection", -1);
 
@@ -632,17 +647,30 @@ namespace UnityEditor
 						{
 							int num = Mathf.Min(96, iconWidthsForPlatform[i]);
 							int num2 = (int)((float)iconHeightsForPlatform[i] * (float)num / (float)iconWidthsForPlatform[i]);
-							Rect rect = GUILayoutUtility.GetRect(64f, (float)(Mathf.Max(64, num2) + 6));
-							float num3 = Mathf.Min(rect.width, EditorGUIUtility.labelWidth + 4f + 64f + 6f + 96f);
+							if (targetGroup == BuildTargetGroup.iPhone)
+							{
+								if (i + 1 < iconWidthsForPlatform.Length && iconWidthsForPlatform[i + 1] == 80)
+								{
+									Rect rect = GUILayoutUtility.GetRect(EditorGUIUtility.labelWidth, 20f);
+									GUI.Label(new Rect(rect.x, rect.y, EditorGUIUtility.labelWidth, 20f), "Spotlight icons", EditorStyles.boldLabel);
+								}
+								if (iconWidthsForPlatform[i] == 87)
+								{
+									Rect rect2 = GUILayoutUtility.GetRect(EditorGUIUtility.labelWidth, 20f);
+									GUI.Label(new Rect(rect2.x, rect2.y, EditorGUIUtility.labelWidth, 20f), "Settings icons", EditorStyles.boldLabel);
+								}
+							}
+							Rect rect3 = GUILayoutUtility.GetRect(64f, (float)(Mathf.Max(64, num2) + 6));
+							float num3 = Mathf.Min(rect3.width, EditorGUIUtility.labelWidth + 4f + 64f + 6f + 96f);
 							string text2 = iconWidthsForPlatform[i] + "x" + iconHeightsForPlatform[i];
-							GUI.Label(new Rect(rect.x, rect.y, num3 - 96f - 64f - 12f, 20f), text2);
+							GUI.Label(new Rect(rect3.x, rect3.y, num3 - 96f - 64f - 12f, 20f), text2);
 							if (flag3)
 							{
 								int num4 = 64;
 								int num5 = (int)((float)iconHeightsForPlatform[i] / (float)iconWidthsForPlatform[i] * 64f);
-								array[i] = (Texture2D)EditorGUI.ObjectField(new Rect(rect.x + num3 - 96f - 64f - 6f, rect.y, (float)num4, (float)num5), array[i], typeof(Texture2D), false);
+								array[i] = (Texture2D)EditorGUI.ObjectField(new Rect(rect3.x + num3 - 96f - 64f - 6f, rect3.y, (float)num4, (float)num5), array[i], typeof(Texture2D), false);
 							}
-							Rect position = new Rect(rect.x + num3 - 96f, rect.y, (float)num, (float)num2);
+							Rect position = new Rect(rect3.x + num3 - 96f, rect3.y, (float)num, (float)num2);
 							Texture2D iconForPlatformAtSize = PlayerSettings.GetIconForPlatformAtSize(text, iconWidthsForPlatform[i], iconHeightsForPlatform[i]);
 							if (iconForPlatformAtSize != null)
 							{
@@ -1297,6 +1325,18 @@ namespace UnityEditor
 				}
 			}
 			EditorGUILayout.PropertyField(this.m_GraphicsJobs, EditorGUIUtility.TextContent("Graphics Jobs (Experimental)*"), new GUILayoutOption[0]);
+			if (this.PlatformSupportsGfxJobModes(targetGroup))
+			{
+				using (new EditorGUI.DisabledScope(!this.m_GraphicsJobs.boolValue))
+				{
+					int graphicsJobMode = (int)PlayerSettings.graphicsJobMode;
+					int num3 = PlayerSettingsEditor.BuildEnumPopup<GraphicsJobMode>(PlayerSettingsEditor.Styles.graphicsJobsMode, graphicsJobMode, PlayerSettingsEditor.m_GfxJobModeValues, PlayerSettingsEditor.m_GfxJobModeNames);
+					if (num3 != graphicsJobMode)
+					{
+						PlayerSettings.graphicsJobMode = (GraphicsJobMode)num3;
+					}
+				}
+			}
 			if (this.m_VRSettings.TargetGroupSupportsVirtualReality(targetGroup))
 			{
 				this.m_VRSettings.DevicesGUI(targetGroup);
@@ -1306,21 +1346,21 @@ namespace UnityEditor
 					bool flag7 = PlayerSettingsEditor.TargetSupportsStereoInstancingRendering(targetGroup);
 					if (PlayerSettings.virtualRealitySupported)
 					{
-						int num3 = 1 + ((!flag6) ? 0 : 1) + ((!flag7) ? 0 : 1);
-						GUIContent[] array = new GUIContent[num3];
-						int[] array2 = new int[num3];
-						int num4 = 0;
-						array[num4] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[0];
-						array2[num4++] = PlayerSettingsEditor.kStereoRenderingMethodValues[0];
+						int num4 = 1 + ((!flag6) ? 0 : 1) + ((!flag7) ? 0 : 1);
+						GUIContent[] array = new GUIContent[num4];
+						int[] array2 = new int[num4];
+						int num5 = 0;
+						array[num5] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[0];
+						array2[num5++] = PlayerSettingsEditor.kStereoRenderingMethodValues[0];
 						if (flag6)
 						{
-							array[num4] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[1];
-							array2[num4++] = PlayerSettingsEditor.kStereoRenderingMethodValues[1];
+							array[num5] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[1];
+							array2[num5++] = PlayerSettingsEditor.kStereoRenderingMethodValues[1];
 						}
 						if (flag7)
 						{
-							array[num4] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[2];
-							array2[num4++] = PlayerSettingsEditor.kStereoRenderingMethodValues[2];
+							array[num5] = PlayerSettingsEditor.Styles.kStereoRenderingMethodsAll[2];
+							array2[num5++] = PlayerSettingsEditor.kStereoRenderingMethodValues[2];
 						}
 						if (!flag7 && this.m_StereoRenderingPath.intValue == 2)
 						{
@@ -1637,6 +1677,11 @@ namespace UnityEditor
 				}
 			}
 			GUILayout.EndVertical();
+		}
+
+		private bool PlatformSupportsGfxJobModes(BuildTargetGroup targetGroup)
+		{
+			return targetGroup == BuildTargetGroup.PS4;
 		}
 
 		private static GUIContent[] GetNiceScriptingBackendNames(ScriptingImplementation[] scriptingBackends)

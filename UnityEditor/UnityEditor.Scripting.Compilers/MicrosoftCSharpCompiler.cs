@@ -11,8 +11,6 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal class MicrosoftCSharpCompiler : ScriptCompilerBase
 	{
-		private static string[] _uwpReferences;
-
 		internal static string WindowsDirectory
 		{
 			get
@@ -424,14 +422,9 @@ namespace UnityEditor.Scripting.Compilers
 			{
 				result = null;
 			}
-			else if (MicrosoftCSharpCompiler._uwpReferences != null)
-			{
-				result = MicrosoftCSharpCompiler._uwpReferences;
-			}
 			else
 			{
-				MicrosoftCSharpCompiler._uwpReferences = UWPReferences.GetReferences();
-				result = MicrosoftCSharpCompiler._uwpReferences;
+				result = UWPReferences.GetReferences(UWPReferences.GetDesiredSDKVersion());
 			}
 			return result;
 		}
@@ -442,7 +435,19 @@ namespace UnityEditor.Scripting.Compilers
 			string result;
 			if (wsaSDK == WSASDK.UWP)
 			{
-				result = Path.Combine(windowsKitDirectory, "UnionMetadata\\Facade\\Windows.winmd");
+				string text = Paths.Combine(new string[]
+				{
+					windowsKitDirectory,
+					"UnionMetadata",
+					UWPReferences.SdkVersionToString(UWPReferences.GetDesiredSDKVersion()),
+					"Facade",
+					"Windows.winmd"
+				});
+				if (!File.Exists(text))
+				{
+					text = Path.Combine(windowsKitDirectory, "UnionMetadata\\Facade\\Windows.winmd");
+				}
+				result = text;
 			}
 			else
 			{

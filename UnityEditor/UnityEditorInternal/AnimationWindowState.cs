@@ -1214,16 +1214,16 @@ namespace UnityEditorInternal
 						current2.key.time = Mathf.Max((!snapToFrame) ? v.x : this.SnapToFrame(v.x, current.curve.clip.frameRate), 0f);
 						if (flipX)
 						{
-							current2.key.inTangent = -current2.keySnapshot.outTangent;
-							current2.key.outTangent = -current2.keySnapshot.inTangent;
+							current2.key.inTangent = ((current2.keySnapshot.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-current2.keySnapshot.outTangent));
+							current2.key.outTangent = ((current2.keySnapshot.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-current2.keySnapshot.inTangent));
 						}
 						if (!current2.key.isPPtrCurve)
 						{
 							current2.key.value = v.y;
 							if (flipY)
 							{
-								current2.key.inTangent = -current2.key.inTangent;
-								current2.key.outTangent = -current2.key.outTangent;
+								current2.key.inTangent = ((current2.key.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-current2.key.inTangent));
+								current2.key.outTangent = ((current2.key.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-current2.key.outTangent));
 							}
 						}
 					}
@@ -1255,8 +1255,8 @@ namespace UnityEditorInternal
 						current2.key.time = Mathf.Max((!snapToFrame) ? v.x : this.SnapToFrame(v.x, current.curve.clip.frameRate), 0f);
 						if (flipX)
 						{
-							current2.key.inTangent = -current2.keySnapshot.outTangent;
-							current2.key.outTangent = -current2.keySnapshot.inTangent;
+							current2.key.inTangent = ((current2.keySnapshot.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-current2.keySnapshot.outTangent));
+							current2.key.outTangent = ((current2.keySnapshot.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-current2.keySnapshot.inTangent));
 						}
 					}
 					this.SelectKey(current2.key);

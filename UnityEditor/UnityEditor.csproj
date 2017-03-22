@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{393C16E7-D08F-4507-BD5D-768479734462}</ProjectGuid>
@@ -935,6 +935,7 @@
     <Compile Include="UnityEditor\GradientPicker.cs" />
     <Compile Include="UnityEditor\GradientPresetLibrary.cs" />
     <Compile Include="UnityEditor\GradientPresetLibraryEditor.cs" />
+    <Compile Include="UnityEditor\GraphicsJobMode.cs" />
     <Compile Include="UnityEditor\GraphicsSettings.cs" />
     <Compile Include="UnityEditor\GraphicsSettingsInspector.cs" />
     <Compile Include="UnityEditor\GraphicsSettingsWindow.cs" />

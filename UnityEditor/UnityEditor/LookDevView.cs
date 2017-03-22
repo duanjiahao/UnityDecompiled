@@ -518,6 +518,7 @@ namespace UnityEditor
 			RenderSettings.customReflection = cubemap;
 			if (cubemapInfo != null && !cubemapInfo.alreadyComputed && !flag)
 			{
+				RenderSettings.ambientMode = AmbientMode.Skybox;
 				RenderSettings.skybox = LookDevResources.m_SkyboxMaterial;
 				DynamicGI.UpdateEnvironment();
 				cubemapInfo.ambientProbe = RenderSettings.ambientProbe;

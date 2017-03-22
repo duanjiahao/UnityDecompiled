@@ -23,6 +23,8 @@ namespace UnityEngine.EventSystems
 
 		private Vector2 m_MousePosition;
 
+		private GameObject m_CurrentFocusedGameObject;
+
 		[SerializeField]
 		private string m_HorizontalAxis = "Horizontal";
 
@@ -445,6 +447,7 @@ namespace UnityEngine.EventSystems
 			this.ProcessMouseEvent(0);
 		}
 
+		[Obsolete("This method is no longer checked, overriding it with return true does nothing!")]
 		protected virtual bool ForceAutoSelect()
 		{
 			return false;
@@ -454,10 +457,7 @@ namespace UnityEngine.EventSystems
 		{
 			PointerInputModule.MouseState mousePointerEventData = this.GetMousePointerEventData(id);
 			PointerInputModule.MouseButtonEventData eventData = mousePointerEventData.GetButtonState(PointerEventData.InputButton.Left).eventData;
-			if (this.ForceAutoSelect())
-			{
-				base.eventSystem.SetSelectedGameObject(eventData.buttonData.pointerCurrentRaycast.gameObject, eventData.buttonData);
-			}
+			this.m_CurrentFocusedGameObject = eventData.buttonData.pointerCurrentRaycast.gameObject;
 			this.ProcessMousePress(eventData);
 			this.ProcessMove(eventData.buttonData);
 			this.ProcessDrag(eventData.buttonData);
@@ -560,6 +560,11 @@ namespace UnityEngine.EventSystems
 					base.HandlePointerExitAndEnter(buttonData, gameObject);
 				}
 			}
+		}
+
+		protected GameObject GetCurrentFocusedGameObject()
+		{
+			return this.m_CurrentFocusedGameObject;
 		}
 	}
 }

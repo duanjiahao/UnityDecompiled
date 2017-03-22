@@ -19,9 +19,9 @@ namespace UnityEditor
 
 			public static readonly GUIContent cleanCache = EditorGUIUtility.TextContent("Clean Cache");
 
-			public static readonly GUIContent browseCacheLocation = EditorGUIUtility.TextContent("Browse for local asset cache server location");
+			public static readonly GUIContent enumerateCache = EditorGUIUtility.TextContent("Check Cache Size|Check the size of the local asset cache server - can take a while");
 
-			public static readonly GUIContent cacheSizeIs = EditorGUIUtility.TextContent("Cache size is");
+			public static readonly GUIContent browseCacheLocation = EditorGUIUtility.TextContent("Browse for local asset cache server location");
 		}
 
 		internal class Constants
@@ -125,7 +125,7 @@ namespace UnityEditor
 				if (EditorUtility.DisplayDialog("Delete old Cache", text, "Delete", "Don't Delete"))
 				{
 					LocalCacheServer.Clear();
-					CacheServerPreferences.s_LocalCacheServerUsedSize = 0L;
+					CacheServerPreferences.s_LocalCacheServerUsedSize = -1L;
 				}
 			}
 			EditorPrefs.SetString("CacheServerIPAddress", CacheServerPreferences.s_CacheServerIPAddress);
@@ -259,19 +259,39 @@ namespace UnityEditor
 					{
 						CacheServerPreferences.s_CachePath = "";
 					}
-					if (GUILayout.Button(CacheServerPreferences.Styles.cleanCache, new GUILayoutOption[]
+					bool flag = LocalCacheServer.CheckCacheLocationExists();
+					if (flag)
 					{
-						GUILayout.Width(120f)
-					}))
-					{
-						LocalCacheServer.Clear();
-						CacheServerPreferences.s_LocalCacheServerUsedSize = 0L;
+						GUIContent label = EditorGUIUtility.TextContent("Cache size is unknown");
+						if (CacheServerPreferences.s_LocalCacheServerUsedSize != -1L)
+						{
+							label = EditorGUIUtility.TextContent("Cache size is " + EditorUtility.FormatBytes(CacheServerPreferences.s_LocalCacheServerUsedSize));
+						}
+						GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+						GUIStyle miniButton = EditorStyles.miniButton;
+						EditorGUILayout.PrefixLabel(label, miniButton);
+						Rect rect2 = GUILayoutUtility.GetRect(GUIContent.none, miniButton);
+						if (EditorGUI.Button(rect2, CacheServerPreferences.Styles.enumerateCache, miniButton))
+						{
+							CacheServerPreferences.s_LocalCacheServerUsedSize = ((!LocalCacheServer.CheckCacheLocationExists()) ? 0L : FileUtil.GetDirectorySize(LocalCacheServer.GetCacheLocation()));
+						}
+						GUILayout.EndHorizontal();
+						GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+						GUIContent blankContent = EditorGUIUtility.blankContent;
+						EditorGUILayout.PrefixLabel(blankContent, miniButton);
+						Rect rect3 = GUILayoutUtility.GetRect(GUIContent.none, miniButton);
+						if (EditorGUI.Button(rect3, CacheServerPreferences.Styles.cleanCache, miniButton))
+						{
+							LocalCacheServer.Clear();
+							CacheServerPreferences.s_LocalCacheServerUsedSize = 0L;
+						}
+						GUILayout.EndHorizontal();
 					}
-					if (CacheServerPreferences.s_LocalCacheServerUsedSize == -1L)
+					else
 					{
-						CacheServerPreferences.s_LocalCacheServerUsedSize = FileUtil.GetDirectorySize(LocalCacheServer.GetCacheLocation());
+						EditorGUILayout.HelpBox("Local cache directory does not exist - please check that you can access the cache folder and are able to write to it", MessageType.Warning, false);
+						CacheServerPreferences.s_LocalCacheServerUsedSize = -1L;
 					}
-					GUILayout.Label(CacheServerPreferences.Styles.cacheSizeIs.text + " " + EditorUtility.FormatBytes(CacheServerPreferences.s_LocalCacheServerUsedSize), new GUILayoutOption[0]);
 					GUILayout.Label(CacheServerPreferences.Styles.cacheFolderLocation.text + ":", new GUILayoutOption[0]);
 					GUILayout.Label(LocalCacheServer.GetCacheLocation(), CacheServerPreferences.s_Constants.cacheFolderLocation, new GUILayoutOption[0]);
 				}

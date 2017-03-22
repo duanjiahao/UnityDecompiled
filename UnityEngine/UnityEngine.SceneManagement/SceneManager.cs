@@ -233,10 +233,16 @@ namespace UnityEngine.SceneManagement
 		[Obsolete("Use SceneManager.UnloadSceneAsync. This function is not safe to use during triggers and under other circumstances. See Scripting reference for more details.")]
 		public static bool UnloadScene(Scene scene)
 		{
-			bool result;
-			SceneManager.UnloadSceneNameIndexInternal("", scene.buildIndex, true, out result);
-			return result;
+			return SceneManager.UnloadSceneInternal(scene);
 		}
+
+		private static bool UnloadSceneInternal(Scene scene)
+		{
+			return SceneManager.INTERNAL_CALL_UnloadSceneInternal(ref scene);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool INTERNAL_CALL_UnloadSceneInternal(ref Scene scene);
 
 		[Obsolete("Use SceneManager.UnloadSceneAsync. This function is not safe to use during triggers and under other circumstances. See Scripting reference for more details.")]
 		public static bool UnloadScene(int sceneBuildIndex)
@@ -268,9 +274,16 @@ namespace UnityEngine.SceneManagement
 
 		public static AsyncOperation UnloadSceneAsync(Scene scene)
 		{
-			bool flag;
-			return SceneManager.UnloadSceneNameIndexInternal("", scene.buildIndex, false, out flag);
+			return SceneManager.UnloadSceneAsyncInternal(scene);
 		}
+
+		private static AsyncOperation UnloadSceneAsyncInternal(Scene scene)
+		{
+			return SceneManager.INTERNAL_CALL_UnloadSceneAsyncInternal(ref scene);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern AsyncOperation INTERNAL_CALL_UnloadSceneAsyncInternal(ref Scene scene);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AsyncOperation UnloadSceneNameIndexInternal(string sceneName, int sceneBuildIndex, bool immediately, out bool outSuccess);

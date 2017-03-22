@@ -1427,16 +1427,16 @@ namespace UnityEditor
 					savedKeyFrame.key.time = Mathf.Clamp(v.x, this.hRangeMin, this.hRangeMax);
 					if (flipX)
 					{
-						savedKeyFrame.key.inTangent = -keyframe.key.outTangent;
-						savedKeyFrame.key.outTangent = -keyframe.key.inTangent;
+						savedKeyFrame.key.inTangent = ((keyframe.key.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-keyframe.key.outTangent));
+						savedKeyFrame.key.outTangent = ((keyframe.key.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-keyframe.key.inTangent));
 					}
 					if (savedKeyFrame.selected == CurveWrapper.SelectionMode.Selected)
 					{
 						savedKeyFrame.key.value = this.ClampVerticalValue(v.y, curve.curveId);
 						if (flipY)
 						{
-							savedKeyFrame.key.inTangent = -savedKeyFrame.key.inTangent;
-							savedKeyFrame.key.outTangent = -savedKeyFrame.key.outTangent;
+							savedKeyFrame.key.inTangent = ((savedKeyFrame.key.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-savedKeyFrame.key.inTangent));
+							savedKeyFrame.key.outTangent = ((savedKeyFrame.key.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-savedKeyFrame.key.outTangent));
 						}
 					}
 					result = savedKeyFrame;
@@ -1473,8 +1473,8 @@ namespace UnityEditor
 					savedKeyFrame.key.time = this.SnapTime(Mathf.Clamp(num, this.hRangeMin, this.hRangeMax));
 					if (flipX)
 					{
-						savedKeyFrame.key.inTangent = -keyframe.key.outTangent;
-						savedKeyFrame.key.outTangent = -keyframe.key.inTangent;
+						savedKeyFrame.key.inTangent = ((keyframe.key.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-keyframe.key.outTangent));
+						savedKeyFrame.key.outTangent = ((keyframe.key.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-keyframe.key.inTangent));
 					}
 					result = savedKeyFrame;
 				}
@@ -2484,11 +2484,13 @@ namespace UnityEditor
 			this.focusedPointField = "pointValueField";
 			this.timeWasEdited = (this.valueWasEdited = false);
 			this.editingPoints = true;
+			this.StartLiveEdit();
 		}
 
 		private void FinishEditingPoints()
 		{
 			this.editingPoints = false;
+			this.EndLiveEdit();
 		}
 
 		private void EditSelectedPoints()

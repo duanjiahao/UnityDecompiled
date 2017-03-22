@@ -39,9 +39,11 @@ namespace UnityEngine.iOS
 			get;
 		}
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetNoBackupFlag(string path);
 
+		[ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ResetNoBackupFlag(string path);
 

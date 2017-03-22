@@ -252,7 +252,7 @@ internal abstract class DesktopStandalonePostProcessor
 			string text4 = text2 + "/Metadata";
 			IL2CPPUtils.RunIl2Cpp(text, this.GetPlatformProvider(this.m_PostProcessArgs.target), delegate(string s)
 			{
-			}, this.m_PostProcessArgs.usedClassRegistry, this.Development);
+			}, this.m_PostProcessArgs.usedClassRegistry, false);
 			FileUtil.CreateOrCleanDirectory(text3);
 			IL2CPPUtils.CopyEmbeddedResourceFiles(text, text3);
 			FileUtil.CreateOrCleanDirectory(text4);

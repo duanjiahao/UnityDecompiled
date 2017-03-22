@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
 using UnityEngine.Internal;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.Scripting;
 
@@ -324,10 +325,13 @@ namespace UnityEngine
 			get;
 		}
 
-		public static extern bool isShowingSplashScreen
+		[Obsolete("This property is deprecated, please use SplashScreen.isFinished instead")]
+		public static bool isShowingSplashScreen
 		{
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return !SplashScreen.isFinished;
+			}
 		}
 
 		[Obsolete("Use SceneManager.sceneCountInBuildSettings")]

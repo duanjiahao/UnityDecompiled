@@ -126,9 +126,10 @@ namespace UnityEditor
 		{
 			foreach (AssemblyDefinition current in assemblyDefinitions)
 			{
+				bool isSystem = AssemblyReferenceChecker.IsIgnoredSystemDll(current.Name.Name);
 				foreach (TypeDefinition current2 in current.MainModule.Types)
 				{
-					this.CollectReferencedAndDefinedMethods(current2);
+					this.CollectReferencedAndDefinedMethods(current2, isSystem);
 				}
 			}
 		}
@@ -146,7 +147,7 @@ namespace UnityEditor
 			}
 			foreach (TypeDefinition current in type.NestedTypes)
 			{
-				this.CollectReferencedAndDefinedMethods(current);
+				this.CollectReferencedAndDefinedMethods(current, isSystem);
 			}
 			foreach (MethodDefinition current2 in type.Methods)
 			{

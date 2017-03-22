@@ -631,7 +631,8 @@ namespace UnityEditor
 			public enum PS4AppCategory
 			{
 				Application,
-				Patch
+				Patch,
+				Remaster
 			}
 
 			public enum PS4RemotePlayKeyAssignment
@@ -3970,6 +3971,14 @@ namespace UnityEditor
 		}
 
 		public static extern bool graphicsJobs
+		{
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern GraphicsJobMode graphicsJobMode
 		{
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;

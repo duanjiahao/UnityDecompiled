@@ -67,7 +67,7 @@ namespace UnityEditorInternal
 			});
 		}
 
-		private static bool StripAssembliesTo(string[] assemblies, string[] searchDirs, string outputFolder, string workingDirectory, out string output, out string error, string linkerPath, IIl2CppPlatformProvider platformProvider, IEnumerable<string> additionalBlacklist, bool developmentBuild)
+		private static bool StripAssembliesTo(string[] assemblies, string[] searchDirs, string outputFolder, string workingDirectory, out string output, out string error, string linkerPath, IIl2CppPlatformProvider platformProvider, IEnumerable<string> additionalBlacklist)
 		{
 			if (!Directory.Exists(outputFolder))
 			{
@@ -92,7 +92,7 @@ namespace UnityEditorInternal
 				"-out \"" + outputFolder + "\"",
 				"-l none",
 				"-c link",
-				"-b " + developmentBuild,
+				"-b " + platformProvider.developmentMode,
 				"-x \"" + AssemblyStripper.GetModuleWhitelist("Core", platformProvider.moduleStrippingInformationFolder) + "\"",
 				"-f \"" + Path.Combine(platformProvider.il2CppFolder, "LinkerDescriptors") + "\""
 			};
@@ -122,7 +122,7 @@ namespace UnityEditorInternal
 			select Path.Combine(managedDir, s)).ToList<string>();
 		}
 
-		internal static void StripAssemblies(string stagingAreaData, IIl2CppPlatformProvider platformProvider, RuntimeClassRegistry rcr, bool developmentBuild)
+		internal static void StripAssemblies(string stagingAreaData, IIl2CppPlatformProvider platformProvider, RuntimeClassRegistry rcr)
 		{
 			string fullPath = Path.GetFullPath(Path.Combine(stagingAreaData, "Managed"));
 			List<string> userAssemblies = AssemblyStripper.GetUserAssemblies(rcr, fullPath);
@@ -131,7 +131,7 @@ namespace UnityEditorInternal
 			{
 				fullPath
 			};
-			AssemblyStripper.RunAssemblyStripper(stagingAreaData, userAssemblies, fullPath, assembliesToStrip, searchDirs, AssemblyStripper.MonoLinker2Path, platformProvider, rcr, developmentBuild);
+			AssemblyStripper.RunAssemblyStripper(stagingAreaData, userAssemblies, fullPath, assembliesToStrip, searchDirs, AssemblyStripper.MonoLinker2Path, platformProvider, rcr);
 		}
 
 		internal static void GenerateInternalCallSummaryFile(string icallSummaryPath, string managedAssemblyFolderPath, string strippedDLLPath)
@@ -168,7 +168,7 @@ namespace UnityEditorInternal
 			return result;
 		}
 
-		private static void RunAssemblyStripper(string stagingAreaData, IEnumerable assemblies, string managedAssemblyFolderPath, string[] assembliesToStrip, string[] searchDirs, string monoLinkerPath, IIl2CppPlatformProvider platformProvider, RuntimeClassRegistry rcr, bool developmentBuild)
+		private static void RunAssemblyStripper(string stagingAreaData, IEnumerable assemblies, string managedAssemblyFolderPath, string[] assembliesToStrip, string[] searchDirs, string monoLinkerPath, IIl2CppPlatformProvider platformProvider, RuntimeClassRegistry rcr)
 		{
 			bool flag = rcr != null && PlayerSettings.stripEngineCode && platformProvider.supportsEngineStripping;
 			IEnumerable<string> enumerable = AssemblyStripper.Il2CppBlacklistPaths;
@@ -202,7 +202,7 @@ namespace UnityEditorInternal
 					break;
 				}
 				string text2;
-				if (!AssemblyStripper.StripAssembliesTo(assembliesToStrip, searchDirs, fullPath, managedAssemblyFolderPath, out text2, out text3, monoLinkerPath, platformProvider, enumerable, developmentBuild))
+				if (!AssemblyStripper.StripAssembliesTo(assembliesToStrip, searchDirs, fullPath, managedAssemblyFolderPath, out text2, out text3, monoLinkerPath, platformProvider, enumerable))
 				{
 					goto Block_6;
 				}

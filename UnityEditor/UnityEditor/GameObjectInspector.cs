@@ -327,14 +327,7 @@ namespace UnityEditor
 							{
 								if (GUILayout.Button("Revert", "MiniButtonMid", new GUILayoutOption[0]))
 								{
-									List<UnityEngine.Object> hierarchy2 = new List<UnityEngine.Object>();
-									this.GetObjectListFromHierarchy(hierarchy2, go);
-									Undo.RegisterFullObjectHierarchyUndo(go, "Revert Prefab Instance");
-									PrefabUtility.RevertPrefabInstance(go);
-									this.CalculatePrefabStatus();
-									List<UnityEngine.Object> list2 = new List<UnityEngine.Object>();
-									this.GetObjectListFromHierarchy(list2, go);
-									this.RegisterNewComponents(list2, hierarchy2);
+									this.RevertAndCheckForNewComponents(go);
 								}
 							}
 							if (prefabType == PrefabType.PrefabInstance || prefabType == PrefabType.DisconnectedPrefabInstance)
@@ -373,6 +366,18 @@ namespace UnityEditor
 			}
 		}
 
+		public void RevertAndCheckForNewComponents(GameObject gameObject)
+		{
+			List<UnityEngine.Object> hierarchy = new List<UnityEngine.Object>();
+			this.GetObjectListFromHierarchy(hierarchy, gameObject);
+			Undo.RegisterFullObjectHierarchyUndo(gameObject, "Revert Prefab Instance");
+			PrefabUtility.RevertPrefabInstance(gameObject);
+			this.CalculatePrefabStatus();
+			List<UnityEngine.Object> list = new List<UnityEngine.Object>();
+			this.GetObjectListFromHierarchy(list, gameObject);
+			this.RegisterNewComponents(list, hierarchy);
+		}
+
 		private void GetObjectListFromHierarchy(List<UnityEngine.Object> hierarchy, GameObject gameObject)
 		{
 			Transform transform = null;
@@ -401,7 +406,7 @@ namespace UnityEditor
 
 		private void RegisterNewComponents(List<UnityEngine.Object> newHierarchy, List<UnityEngine.Object> hierarchy)
 		{
-			for (int i = newHierarchy.Count - 1; i >= 0; i--)
+			for (int i = 0; i < newHierarchy.Count; i++)
 			{
 				bool flag = false;
 				UnityEngine.Object @object = newHierarchy[i];
