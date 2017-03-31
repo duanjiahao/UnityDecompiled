@@ -1,19 +1,19 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.VersionControl
 {
 	public sealed class Message
 	{
-		[Flags]
 		public enum Severity
 		{
-			Data = 0,
-			Verbose = 1,
-			Info = 2,
-			Warning = 3,
-			Error = 4
+			Data,
+			Verbose,
+			Info,
+			Warning,
+			Error
 		}
 
 		private IntPtr m_thisDummy;
@@ -21,6 +21,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern Message.Severity severity
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -28,6 +29,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string message
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -36,7 +38,7 @@ namespace UnityEditor.VersionControl
 		{
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 

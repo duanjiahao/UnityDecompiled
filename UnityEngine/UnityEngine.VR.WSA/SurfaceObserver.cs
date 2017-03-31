@@ -138,16 +138,19 @@ namespace UnityEngine.VR.WSA
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_Create(SurfaceObserver self, out IntPtr value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Destroy(IntPtr observer);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void DestroyThreaded(IntPtr observer);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Update(IntPtr observer, SurfaceObserver.SurfaceChangedDelegate onSurfaceChanged);
 
@@ -156,6 +159,7 @@ namespace UnityEngine.VR.WSA
 			SurfaceObserver.INTERNAL_CALL_Internal_SetVolumeAsAxisAlignedBox(this, observer, ref origin, ref extents);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetVolumeAsAxisAlignedBox(SurfaceObserver self, IntPtr observer, ref Vector3 origin, ref Vector3 extents);
 
@@ -164,6 +168,7 @@ namespace UnityEngine.VR.WSA
 			SurfaceObserver.INTERNAL_CALL_Internal_SetVolumeAsOrientedBox(this, observer, ref origin, ref extents, ref orientation);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetVolumeAsOrientedBox(SurfaceObserver self, IntPtr observer, ref Vector3 origin, ref Vector3 extents, ref Quaternion orientation);
 
@@ -172,12 +177,15 @@ namespace UnityEngine.VR.WSA
 			SurfaceObserver.INTERNAL_CALL_Internal_SetVolumeAsSphere(this, observer, ref origin, radiusMeters);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetVolumeAsSphere(SurfaceObserver self, IntPtr observer, ref Vector3 origin, float radiusMeters);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetVolumeAsFrustum(IntPtr observer, Plane[] planes);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_AddToWorkQueue(IntPtr observer, SurfaceObserver.SurfaceDataReadyDelegate onDataReady, int surfaceId, MeshFilter filter, WorldAnchor wa, MeshCollider mc, float trisPerCubicMeter, bool createColliderData);
 	}

@@ -1,3 +1,4 @@
+using ICSharpCode.NRefactory;
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
@@ -40,23 +41,18 @@ namespace UnityEditor.Scripting
 			return result;
 		}
 
-		public static bool IsReferenceToTypeWithChangedNamespace(string simpleOrQualifiedName)
+		public static bool IsReferenceToTypeWithChangedNamespace(string normalizedErrorMessage)
 		{
 			bool result;
 			try
 			{
-				Match match = Regex.Match(simpleOrQualifiedName, "^(?:(?<namespace>.*)(?=\\.)\\.)?(?<typename>[a-zA-Z_0-9]+)$");
-				if (!match.Success)
+				string[] lines = normalizedErrorMessage.Split(new char[]
 				{
-					result = false;
-				}
-				else
-				{
-					string typename = match.Groups["typename"].Value;
-					string namespaceName = match.Groups["namespace"].Value;
-					Type type = APIUpdaterHelper.FindTypeInLoadedAssemblies((Type t) => t.Name == typename && APIUpdaterHelper.NamespaceHasChanged(t, namespaceName));
-					result = (type != null);
-				}
+					'\n'
+				});
+				string valueFromNormalizedMessage = APIUpdaterHelper.GetValueFromNormalizedMessage(lines, "EntityName=");
+				Type type = APIUpdaterHelper.FindExactTypeMatchingMovedType(valueFromNormalizedMessage) ?? APIUpdaterHelper.FindTypeMatchingMovedTypeBasedOnNamespaceFromError(lines);
+				result = (type != null);
 			}
 			catch (ReflectionTypeLoadException ex)
 			{
@@ -274,7 +270,23 @@ namespace UnityEditor.Scripting
 		{
 			return (from assembly in AppDomain.CurrentDomain.GetAssemblies()
 			where !APIUpdaterHelper.IsIgnoredAssembly(assembly.GetName())
-			select assembly).SelectMany((Assembly a) => a.GetTypes()).FirstOrDefault(predicate);
+			select assembly).SelectMany((Assembly a) => APIUpdaterHelper.GetValidTypesIn(a)).FirstOrDefault(predicate);
+		}
+
+		private static IEnumerable<Type> GetValidTypesIn(Assembly a)
+		{
+			Type[] types;
+			try
+			{
+				types = a.GetTypes();
+			}
+			catch (ReflectionTypeLoadException ex)
+			{
+				types = ex.Types;
+			}
+			return from t in types
+			where t != null
+			select t;
 		}
 
 		private static bool IsIgnoredAssembly(AssemblyName assemblyName)
@@ -339,6 +351,67 @@ namespace UnityEditor.Scripting
 				Regex regex = new Regex("\\.NETCore|\\.NETPortable");
 				bool flag = targetFrameworkAttr.ConstructorArguments.Any((CustomAttributeArgument arg) => arg.Type.FullName == typeof(string).FullName && regex.IsMatch((string)arg.Value));
 				result = flag;
+			}
+			return result;
+		}
+
+		private static Type FindExactTypeMatchingMovedType(string simpleOrQualifiedName)
+		{
+			Match match = Regex.Match(simpleOrQualifiedName, "^(?:(?<namespace>.*)(?=\\.)\\.)?(?<typename>[a-zA-Z_0-9]+)$");
+			Type result;
+			if (!match.Success)
+			{
+				result = null;
+			}
+			else
+			{
+				string typename = match.Groups["typename"].Value;
+				string namespaceName = match.Groups["namespace"].Value;
+				result = APIUpdaterHelper.FindTypeInLoadedAssemblies((Type t) => t.Name == typename && APIUpdaterHelper.NamespaceHasChanged(t, namespaceName));
+			}
+			return result;
+		}
+
+		private static Type FindTypeMatchingMovedTypeBasedOnNamespaceFromError(IEnumerable<string> lines)
+		{
+			string valueFromNormalizedMessage = APIUpdaterHelper.GetValueFromNormalizedMessage(lines, "Line=");
+			int num = (valueFromNormalizedMessage == null) ? -1 : int.Parse(valueFromNormalizedMessage);
+			valueFromNormalizedMessage = APIUpdaterHelper.GetValueFromNormalizedMessage(lines, "Column=");
+			int num2 = (valueFromNormalizedMessage == null) ? -1 : int.Parse(valueFromNormalizedMessage);
+			string valueFromNormalizedMessage2 = APIUpdaterHelper.GetValueFromNormalizedMessage(lines, "Script=");
+			Type result;
+			if (num == -1 || num2 == -1 || valueFromNormalizedMessage2 == null)
+			{
+				result = null;
+			}
+			else
+			{
+				using (FileStream fileStream = File.Open(valueFromNormalizedMessage2, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+				{
+					IParser parser = ParserFactory.CreateParser(ICSharpCode.NRefactory.SupportedLanguage.CSharp, new StreamReader(fileStream));
+					parser.Lexer.EvaluateConditionalCompilation = false;
+					parser.Parse();
+					string text = InvalidTypeOrNamespaceErrorTypeMapper.IsTypeMovedToNamespaceError(parser.CompilationUnit, num, num2);
+					if (text == null)
+					{
+						result = null;
+					}
+					else
+					{
+						result = APIUpdaterHelper.FindExactTypeMatchingMovedType(text);
+					}
+				}
+			}
+			return result;
+		}
+
+		private static string GetValueFromNormalizedMessage(IEnumerable<string> lines, string marker)
+		{
+			string result = null;
+			string text = lines.FirstOrDefault((string l) => l.StartsWith(marker));
+			if (text != null)
+			{
+				result = text.Substring(marker.Length).Trim();
 			}
 			return result;
 		}

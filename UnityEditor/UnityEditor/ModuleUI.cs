@@ -94,11 +94,13 @@ namespace UnityEditor
 
 		protected const string kFormatString = "g7";
 
+		protected const float kReorderableListElementHeight = 16f;
+
 		public static float k_CompactFixedModuleWidth = 295f;
 
 		public static float k_SpaceBetweenModules = 5f;
 
-		private static readonly GUIStyle s_ControlRectStyle = new GUIStyle
+		public static readonly GUIStyle s_ControlRectStyle = new GUIStyle
 		{
 			margin = new RectOffset(0, 0, 2, 2)
 		};
@@ -159,6 +161,14 @@ namespace UnityEditor
 			}
 		}
 
+		public bool enabledHasMultipleDifferentValues
+		{
+			get
+			{
+				return this.m_Enabled.hasMultipleDifferentValues;
+			}
+		}
+
 		public string displayName
 		{
 			get
@@ -172,6 +182,14 @@ namespace UnityEditor
 			get
 			{
 				return this.m_ToolTip;
+			}
+		}
+
+		public bool isWindowView
+		{
+			get
+			{
+				return this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner is ParticleSystemWindow;
 			}
 		}
 
@@ -197,7 +215,14 @@ namespace UnityEditor
 			{
 				this.m_Enabled = base.GetProperty("enabled");
 			}
-			this.m_VisibilityState = (ModuleUI.VisibilityState)SessionState.GetInt(base.GetUniqueModuleName(), (int)defaultVisibilityState);
+			this.m_VisibilityState = ModuleUI.VisibilityState.NotVisible;
+			UnityEngine.Object[] targetObjects = o.targetObjects;
+			for (int i = 0; i < targetObjects.Length; i++)
+			{
+				UnityEngine.Object o2 = targetObjects[i];
+				ModuleUI.VisibilityState @int = (ModuleUI.VisibilityState)SessionState.GetInt(base.GetUniqueModuleName(o2), (int)defaultVisibilityState);
+				this.m_VisibilityState = (ModuleUI.VisibilityState)Mathf.Max((int)@int, (int)this.m_VisibilityState);
+			}
 			this.CheckVisibilityState();
 			if (this.foldout)
 			{
@@ -216,9 +241,9 @@ namespace UnityEditor
 			return 1f;
 		}
 
-		public abstract void OnInspectorGUI(ParticleSystem s);
+		public abstract void OnInspectorGUI(InitialModuleUI initial);
 
-		public virtual void OnSceneGUI(ParticleSystem s, InitialModuleUI initial)
+		public virtual void OnSceneViewGUI()
 		{
 		}
 
@@ -283,12 +308,21 @@ namespace UnityEditor
 					particleSystemCurveEditor2.Refresh();
 				}
 				this.m_VisibilityState = newState;
-				SessionState.SetInt(base.GetUniqueModuleName(), (int)this.m_VisibilityState);
+				UnityEngine.Object[] targetObjects = base.serializedObject.targetObjects;
+				for (int i = 0; i < targetObjects.Length; i++)
+				{
+					UnityEngine.Object o = targetObjects[i];
+					SessionState.SetInt(base.GetUniqueModuleName(o), (int)this.m_VisibilityState);
+				}
 				if (newState == ModuleUI.VisibilityState.VisibleAndFoldedOut)
 				{
 					this.Init();
 				}
 			}
+		}
+
+		public virtual void UndoRedoPerformed()
+		{
 		}
 
 		protected ParticleSystem GetParticleSystem()
@@ -320,7 +354,7 @@ namespace UnityEditor
 			return GUILayoutUtility.GetRect(0f, (float)height, ModuleUI.s_ControlRectStyle, layoutOptions);
 		}
 
-		private static Rect PrefixLabel(Rect totalPosition, GUIContent label)
+		protected static Rect PrefixLabel(Rect totalPosition, GUIContent label)
 		{
 			Rect result;
 			if (!EditorGUI.LabelHasContent(label))
@@ -337,13 +371,13 @@ namespace UnityEditor
 			return result;
 		}
 
-		private static Rect SubtractPopupWidth(Rect position)
+		protected static Rect SubtractPopupWidth(Rect position)
 		{
 			position.width -= 14f;
 			return position;
 		}
 
-		private static Rect GetPopupRect(Rect position)
+		protected static Rect GetPopupRect(Rect position)
 		{
 			position.xMin = position.xMax - 13f;
 			return position;
@@ -376,23 +410,26 @@ namespace UnityEditor
 
 		public static float FloatDraggable(Rect rect, SerializedProperty floatProp, float remap, float dragWidth, string formatString)
 		{
+			EditorGUI.showMixedValue = floatProp.hasMultipleDifferentValues;
 			Color color = GUI.color;
 			if (floatProp.isAnimated)
 			{
 				GUI.color = AnimationMode.animatedPropertyColor;
 			}
-			float floatValue = floatProp.floatValue;
-			float num = ModuleUI.FloatDraggable(rect, floatValue, remap, dragWidth, formatString);
-			if (num != floatValue)
+			EditorGUI.BeginChangeCheck();
+			float num = ModuleUI.FloatDraggable(rect, floatProp.floatValue, remap, dragWidth, formatString);
+			if (EditorGUI.EndChangeCheck())
 			{
 				floatProp.floatValue = num;
 			}
 			GUI.color = color;
+			EditorGUI.showMixedValue = false;
 			return num;
 		}
 
 		public static Vector3 GUIVector3Field(GUIContent guiContent, SerializedProperty vecProp, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = vecProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			GUIContent[] array = new GUIContent[]
@@ -404,13 +441,18 @@ namespace UnityEditor
 			float num = (rect.width - 8f) / 3f;
 			rect.width = num;
 			Vector3 vector3Value = vecProp.vector3Value;
+			EditorGUI.BeginChangeCheck();
 			for (int i = 0; i < 3; i++)
 			{
 				ModuleUI.Label(rect, array[i]);
 				vector3Value[i] = ModuleUI.FloatDraggable(rect, vector3Value[i], 1f, 25f, "g5");
 				rect.x += num + 4f;
 			}
-			vecProp.vector3Value = vector3Value;
+			if (EditorGUI.EndChangeCheck())
+			{
+				vecProp.vector3Value = vector3Value;
+			}
+			EditorGUI.showMixedValue = false;
 			return vector3Value;
 		}
 
@@ -438,20 +480,32 @@ namespace UnityEditor
 			return ModuleUI.FloatDraggable(controlRect, floatValue, 1f, EditorGUIUtility.labelWidth, formatString);
 		}
 
+		public static void GUIButtonGroup(EditMode.SceneViewEditMode[] modes, GUIContent[] guiContents, Bounds bounds, Editor caller)
+		{
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(EditorGUIUtility.labelWidth);
+			EditMode.DoInspectorToolbar(modes, guiContents, bounds, caller);
+			GUILayout.EndHorizontal();
+		}
+
 		private static bool Toggle(Rect rect, SerializedProperty boolProp)
 		{
+			EditorGUI.showMixedValue = boolProp.hasMultipleDifferentValues;
+			EditorGUIInternal.mixedToggleStyle = ParticleSystemStyles.Get().toggleMixed;
 			Color color = GUI.color;
 			if (boolProp.isAnimated)
 			{
 				GUI.color = AnimationMode.animatedPropertyColor;
 			}
-			bool boolValue = boolProp.boolValue;
-			bool flag = EditorGUI.Toggle(rect, boolValue, ParticleSystemStyles.Get().toggle);
-			if (boolValue != flag)
+			EditorGUI.BeginChangeCheck();
+			bool flag = EditorGUI.Toggle(rect, boolProp.boolValue, ParticleSystemStyles.Get().toggle);
+			if (EditorGUI.EndChangeCheck())
 			{
 				boolProp.boolValue = flag;
 			}
 			GUI.color = color;
+			EditorGUI.showMixedValue = false;
+			EditorGUIInternal.mixedToggleStyle = EditorStyles.toggleMixed;
 			return flag;
 		}
 
@@ -469,9 +523,11 @@ namespace UnityEditor
 
 		public static void GUILayerMask(GUIContent guiContent, SerializedProperty boolProp, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = boolProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
 			EditorGUI.LayerMaskField(rect, boolProp, GUIContent.none, ParticleSystemStyles.Get().popup);
+			EditorGUI.showMixedValue = false;
 		}
 
 		public static bool GUIToggle(GUIContent guiContent, bool boolValue, params GUILayoutOption[] layoutOptions)
@@ -518,25 +574,36 @@ namespace UnityEditor
 			flag = ((!invertToggle) ? flag : (!flag));
 			if (flag)
 			{
+				EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
 				float dragWidth = 25f;
 				Rect rect3 = new Rect(rect2.xMax, controlRect.y, controlRect.width - rect2.xMax + 9f, controlRect.height);
-				intProp.intValue = ModuleUI.IntDraggable(rect3, null, intProp.intValue, dragWidth);
+				EditorGUI.BeginChangeCheck();
+				int intValue = ModuleUI.IntDraggable(rect3, null, intProp.intValue, dragWidth);
+				if (EditorGUI.EndChangeCheck())
+				{
+					intProp.intValue = intValue;
+				}
+				EditorGUI.showMixedValue = false;
 			}
 		}
 
 		public static void GUIObject(GUIContent label, SerializedProperty objectProp, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = objectProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			EditorGUI.ObjectField(rect, objectProp, null, GUIContent.none, ParticleSystemStyles.Get().objectField);
+			EditorGUI.showMixedValue = false;
 		}
 
 		public static void GUIObjectFieldAndToggle(GUIContent label, SerializedProperty objectProp, SerializedProperty boolProp, params GUILayoutOption[] layoutOptions)
 		{
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
+			EditorGUI.showMixedValue = objectProp.hasMultipleDifferentValues;
 			rect.xMax -= 19f;
 			EditorGUI.ObjectField(rect, objectProp, GUIContent.none);
+			EditorGUI.showMixedValue = false;
 			if (boolProp != null)
 			{
 				rect.x += rect.width + 10f;
@@ -583,9 +650,11 @@ namespace UnityEditor
 			for (int i = 0; i < num; i++)
 			{
 				SerializedProperty serializedProperty = objectProps[i];
+				EditorGUI.showMixedValue = serializedProperty.hasMultipleDifferentValues;
 				Rect rect2 = new Rect(rect.x + num2 + num3 + num4, rect.y, width, rect.height);
 				int controlID = GUIUtility.GetControlID(1235498, FocusType.Keyboard, rect2);
 				EditorGUI.DoObjectField(rect2, rect2, controlID, null, null, serializedProperty, validator, true, ParticleSystemStyles.Get().objectField);
+				EditorGUI.showMixedValue = false;
 				if (serializedProperty.objectReferenceValue == null)
 				{
 					rect2 = new Rect(rect.xMax - 9f, rect.y + 3f, 9f, 9f);
@@ -597,17 +666,6 @@ namespace UnityEditor
 				rect.y += 15f;
 			}
 			return result;
-		}
-
-		public static int GUIIntDraggable(GUIContent label, SerializedProperty intProp, params GUILayoutOption[] layoutOptions)
-		{
-			return ModuleUI.GUIIntDraggable(label, intProp.intValue, layoutOptions);
-		}
-
-		public static int GUIIntDraggable(GUIContent label, int intValue, params GUILayoutOption[] layoutOptions)
-		{
-			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
-			return ModuleUI.IntDraggable(rect, label, intValue, EditorGUIUtility.labelWidth);
 		}
 
 		public static void GUIIntDraggableX2(GUIContent mainLabel, GUIContent label1, SerializedProperty intProp1, GUIContent label2, SerializedProperty intProp2, params GUILayoutOption[] layoutOptions)
@@ -623,20 +681,41 @@ namespace UnityEditor
 
 		public static int IntDraggable(Rect rect, GUIContent label, SerializedProperty intProp, float dragWidth)
 		{
-			intProp.intValue = ModuleUI.IntDraggable(rect, label, intProp.intValue, dragWidth);
+			EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
+			Color color = GUI.color;
+			if (intProp.isAnimated)
+			{
+				GUI.color = AnimationMode.animatedPropertyColor;
+			}
+			EditorGUI.BeginChangeCheck();
+			int intValue = ModuleUI.IntDraggable(rect, label, intProp.intValue, dragWidth);
+			if (EditorGUI.EndChangeCheck())
+			{
+				intProp.intValue = intValue;
+			}
+			GUI.color = color;
+			EditorGUI.showMixedValue = false;
 			return intProp.intValue;
-		}
-
-		public static int GUIInt(GUIContent guiContent, int intValue, params GUILayoutOption[] layoutOptions)
-		{
-			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
-			ModuleUI.PrefixLabel(rect, guiContent);
-			return ModuleUI.IntDraggable(rect, null, intValue, EditorGUIUtility.labelWidth);
 		}
 
 		public static int GUIInt(GUIContent guiContent, SerializedProperty intProp, params GUILayoutOption[] layoutOptions)
 		{
-			intProp.intValue = ModuleUI.GUIInt(guiContent, intProp.intValue, layoutOptions);
+			EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
+			Color color = GUI.color;
+			if (intProp.isAnimated)
+			{
+				GUI.color = AnimationMode.animatedPropertyColor;
+			}
+			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
+			ModuleUI.PrefixLabel(rect, guiContent);
+			EditorGUI.BeginChangeCheck();
+			int intValue = ModuleUI.IntDraggable(rect, null, intProp.intValue, EditorGUIUtility.labelWidth);
+			if (EditorGUI.EndChangeCheck())
+			{
+				intProp.intValue = intValue;
+			}
+			GUI.color = color;
+			EditorGUI.showMixedValue = false;
 			return intProp.intValue;
 		}
 
@@ -661,11 +740,13 @@ namespace UnityEditor
 
 		public static void GUIMinMaxRange(GUIContent label, SerializedProperty vec2Prop, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = vec2Prop.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			rect = ModuleUI.PrefixLabel(rect, label);
 			float num = (rect.width - 20f) * 0.5f;
 			Vector2 vector2Value = vec2Prop.vector2Value;
+			EditorGUI.BeginChangeCheck();
 			rect.width = num;
 			rect.xMin -= 20f;
 			vector2Value.x = ModuleUI.FloatDraggable(rect, vector2Value.x, 1f, 20f, "g7");
@@ -673,7 +754,11 @@ namespace UnityEditor
 			rect.x += num + 20f;
 			vector2Value.y = ModuleUI.FloatDraggable(rect, vector2Value.y, 1f, 20f, "g7");
 			vector2Value.y = Mathf.Max(vector2Value.x + 0.01f, vector2Value.y);
-			vec2Prop.vector2Value = vector2Value;
+			if (EditorGUI.EndChangeCheck())
+			{
+				vec2Prop.vector2Value = vector2Value;
+			}
+			EditorGUI.showMixedValue = false;
 		}
 
 		public static void GUISlider(SerializedProperty floatProp, float a, float b, float remap)
@@ -683,14 +768,22 @@ namespace UnityEditor
 
 		public static void GUISlider(string name, SerializedProperty floatProp, float a, float b, float remap)
 		{
-			floatProp.floatValue = EditorGUILayout.Slider(name, floatProp.floatValue * remap, a, b, new GUILayoutOption[]
+			EditorGUI.showMixedValue = floatProp.hasMultipleDifferentValues;
+			EditorGUI.BeginChangeCheck();
+			float floatValue = EditorGUILayout.Slider(name, floatProp.floatValue * remap, a, b, new GUILayoutOption[]
 			{
 				GUILayout.MinWidth(300f)
 			}) / remap;
+			if (EditorGUI.EndChangeCheck())
+			{
+				floatProp.floatValue = floatValue;
+			}
+			EditorGUI.showMixedValue = false;
 		}
 
 		public static void GUIMinMaxSlider(GUIContent label, SerializedProperty vec2Prop, float a, float b, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = vec2Prop.hasMultipleDifferentValues;
 			Rect controlRect = ModuleUI.GetControlRect(26, layoutOptions);
 			Rect rect = controlRect;
 			rect.height = 13f;
@@ -698,21 +791,28 @@ namespace UnityEditor
 			ModuleUI.PrefixLabel(rect, label);
 			Vector2 vector2Value = vec2Prop.vector2Value;
 			rect.y += 13f;
+			EditorGUI.BeginChangeCheck();
 			EditorGUI.MinMaxSlider(rect, ref vector2Value.x, ref vector2Value.y, a, b);
-			vec2Prop.vector2Value = vector2Value;
+			if (EditorGUI.EndChangeCheck())
+			{
+				vec2Prop.vector2Value = vector2Value;
+			}
+			EditorGUI.showMixedValue = false;
 		}
 
 		public static bool GUIBoolAsPopup(GUIContent label, SerializedProperty boolProp, string[] options, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = boolProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
-			int num = (!boolProp.boolValue) ? 0 : 1;
-			int num2 = EditorGUI.Popup(rect, num, options, ParticleSystemStyles.Get().popup);
-			if (num2 != num)
+			EditorGUI.BeginChangeCheck();
+			int num = EditorGUI.Popup(rect, (!boolProp.boolValue) ? 0 : 1, options, ParticleSystemStyles.Get().popup);
+			if (EditorGUI.EndChangeCheck())
 			{
-				boolProp.boolValue = (num2 > 0);
+				boolProp.boolValue = (num > 0);
 			}
-			return num2 > 0;
+			EditorGUI.showMixedValue = false;
+			return num > 0;
 		}
 
 		public static Enum GUIEnumMask(GUIContent label, Enum enumValue, params GUILayoutOption[] layoutOptions)
@@ -722,11 +822,18 @@ namespace UnityEditor
 			return EditorGUI.EnumMaskField(rect, enumValue, ParticleSystemStyles.Get().popup);
 		}
 
-		public static int GUIMask(GUIContent label, int intValue, string[] options, params GUILayoutOption[] layoutOptions)
+		public static void GUIMask(GUIContent label, SerializedProperty intProp, string[] options, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
-			return EditorGUI.MaskField(rect, label, intValue, options, ParticleSystemStyles.Get().popup);
+			EditorGUI.BeginChangeCheck();
+			int intValue = EditorGUI.MaskField(rect, label, intProp.intValue, options, ParticleSystemStyles.Get().popup);
+			if (EditorGUI.EndChangeCheck())
+			{
+				intProp.intValue = intValue;
+			}
+			EditorGUI.showMixedValue = false;
 		}
 
 		public static int GUIPopup(string name, SerializedProperty intProp, string[] options, params GUILayoutOption[] layoutOptions)
@@ -736,9 +843,16 @@ namespace UnityEditor
 
 		public static int GUIPopup(GUIContent label, SerializedProperty intProp, string[] options, params GUILayoutOption[] layoutOptions)
 		{
+			EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
-			intProp.intValue = EditorGUI.Popup(rect, intProp.intValue, options, ParticleSystemStyles.Get().popup);
+			EditorGUI.BeginChangeCheck();
+			int intValue = EditorGUI.Popup(rect, null, intProp.intValue, EditorGUIUtility.TempContent(options), ParticleSystemStyles.Get().popup);
+			if (EditorGUI.EndChangeCheck())
+			{
+				intProp.intValue = intValue;
+			}
+			EditorGUI.showMixedValue = false;
 			return intProp.intValue;
 		}
 
@@ -801,123 +915,129 @@ namespace UnityEditor
 
 		public static void GUIMinMaxCurve(GUIContent label, SerializedMinMaxCurve mmCurve, params GUILayoutOption[] layoutOptions)
 		{
+			bool stateHasMultipleDifferentValues = mmCurve.stateHasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			Rect popupRect = ModuleUI.GetPopupRect(rect);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			Rect rect2 = ModuleUI.PrefixLabel(rect, label);
-			MinMaxCurveState state = mmCurve.state;
-			if (state == MinMaxCurveState.k_Scalar)
+			if (stateHasMultipleDifferentValues)
 			{
-				float a = ModuleUI.FloatDraggable(rect, mmCurve.scalar, mmCurve.m_RemapValue, EditorGUIUtility.labelWidth);
-				if (!mmCurve.signedRange)
-				{
-					mmCurve.scalar.floatValue = Mathf.Max(a, 0f);
-				}
-			}
-			else if (state == MinMaxCurveState.k_TwoScalars)
-			{
-				Rect rect3 = rect2;
-				rect3.width = (rect2.width - 20f) * 0.5f;
-				float num = mmCurve.minConstant;
-				float num2 = mmCurve.maxConstant;
-				Rect rect4 = rect3;
-				rect4.xMin -= 20f;
-				EditorGUI.BeginChangeCheck();
-				num = ModuleUI.FloatDraggable(rect4, num, mmCurve.m_RemapValue, 20f, "g5");
-				if (EditorGUI.EndChangeCheck())
-				{
-					mmCurve.minConstant = num;
-				}
-				rect4.x += rect3.width + 20f;
-				EditorGUI.BeginChangeCheck();
-				num2 = ModuleUI.FloatDraggable(rect4, num2, mmCurve.m_RemapValue, 20f, "g5");
-				if (EditorGUI.EndChangeCheck())
-				{
-					mmCurve.maxConstant = num2;
-				}
+				ModuleUI.Label(rect2, GUIContent.Temp("-"));
 			}
 			else
 			{
-				Rect ranges = (!mmCurve.signedRange) ? ModuleUI.kUnsignedRange : ModuleUI.kSignedRange;
-				SerializedProperty minCurve = (state != MinMaxCurveState.k_TwoCurves) ? null : mmCurve.minCurve;
-				ModuleUI.GUICurveField(rect2, mmCurve.maxCurve, minCurve, ModuleUI.GetColor(mmCurve), ranges, new ModuleUI.CurveFieldMouseDownCallback(mmCurve.OnCurveAreaMouseDown));
+				MinMaxCurveState state = mmCurve.state;
+				if (state == MinMaxCurveState.k_Scalar)
+				{
+					EditorGUI.BeginChangeCheck();
+					float a = ModuleUI.FloatDraggable(rect, mmCurve.scalar, mmCurve.m_RemapValue, EditorGUIUtility.labelWidth);
+					if (EditorGUI.EndChangeCheck() && !mmCurve.signedRange)
+					{
+						mmCurve.scalar.floatValue = Mathf.Max(a, 0f);
+					}
+				}
+				else if (state == MinMaxCurveState.k_TwoScalars)
+				{
+					Rect rect3 = rect2;
+					rect3.width = (rect2.width - 20f) * 0.5f;
+					float num = mmCurve.minConstant;
+					float num2 = mmCurve.maxConstant;
+					Rect rect4 = rect3;
+					rect4.xMin -= 20f;
+					EditorGUI.BeginChangeCheck();
+					num = ModuleUI.FloatDraggable(rect4, num, mmCurve.m_RemapValue, 20f, "g5");
+					if (EditorGUI.EndChangeCheck())
+					{
+						mmCurve.minConstant = num;
+					}
+					rect4.x += rect3.width + 20f;
+					EditorGUI.BeginChangeCheck();
+					num2 = ModuleUI.FloatDraggable(rect4, num2, mmCurve.m_RemapValue, 20f, "g5");
+					if (EditorGUI.EndChangeCheck())
+					{
+						mmCurve.maxConstant = num2;
+					}
+				}
+				else
+				{
+					Rect ranges = (!mmCurve.signedRange) ? ModuleUI.kUnsignedRange : ModuleUI.kSignedRange;
+					SerializedProperty minCurve = (state != MinMaxCurveState.k_TwoCurves) ? null : mmCurve.minCurve;
+					ModuleUI.GUICurveField(rect2, mmCurve.maxCurve, minCurve, ModuleUI.GetColor(mmCurve), ranges, new ModuleUI.CurveFieldMouseDownCallback(mmCurve.OnCurveAreaMouseDown));
+				}
 			}
 			ModuleUI.GUIMMCurveStateList(popupRect, mmCurve);
 		}
 
-		public void GUIMinMaxGradient(GUIContent label, SerializedMinMaxGradient minMaxGradient, params GUILayoutOption[] layoutOptions)
+		public void GUIMinMaxGradient(GUIContent label, SerializedMinMaxGradient minMaxGradient, bool hdr, params GUILayoutOption[] layoutOptions)
 		{
+			bool stateHasMultipleDifferentValues = minMaxGradient.stateHasMultipleDifferentValues;
 			MinMaxGradientState state = minMaxGradient.state;
-			bool flag = state == MinMaxGradientState.k_RandomBetweenTwoColors || state == MinMaxGradientState.k_RandomBetweenTwoGradients;
+			bool flag = !stateHasMultipleDifferentValues && (state == MinMaxGradientState.k_RandomBetweenTwoColors || state == MinMaxGradientState.k_RandomBetweenTwoGradients);
 			Rect rect = GUILayoutUtility.GetRect(0f, (float)((!flag) ? 13 : 26), layoutOptions);
 			Rect popupRect = ModuleUI.GetPopupRect(rect);
 			rect = ModuleUI.SubtractPopupWidth(rect);
 			Rect rect2 = ModuleUI.PrefixLabel(rect, label);
 			rect2.height = 13f;
-			switch (state)
+			if (stateHasMultipleDifferentValues)
 			{
-			case MinMaxGradientState.k_Color:
-				ModuleUI.GUIColor(rect2, minMaxGradient.m_MaxColor);
-				break;
-			case MinMaxGradientState.k_Gradient:
-			case MinMaxGradientState.k_RandomColor:
-				EditorGUI.GradientField(rect2, minMaxGradient.m_MaxGradient);
-				break;
-			case MinMaxGradientState.k_RandomBetweenTwoColors:
-				ModuleUI.GUIColor(rect2, minMaxGradient.m_MaxColor);
-				rect2.y += rect2.height;
-				ModuleUI.GUIColor(rect2, minMaxGradient.m_MinColor);
-				break;
-			case MinMaxGradientState.k_RandomBetweenTwoGradients:
-				EditorGUI.GradientField(rect2, minMaxGradient.m_MaxGradient);
-				rect2.y += rect2.height;
-				EditorGUI.GradientField(rect2, minMaxGradient.m_MinGradient);
-				break;
+				ModuleUI.Label(rect2, GUIContent.Temp("-"));
+			}
+			else
+			{
+				switch (state)
+				{
+				case MinMaxGradientState.k_Color:
+					EditorGUI.showMixedValue = minMaxGradient.m_MaxColor.hasMultipleDifferentValues;
+					ModuleUI.GUIColor(rect2, minMaxGradient.m_MaxColor, hdr);
+					EditorGUI.showMixedValue = false;
+					break;
+				case MinMaxGradientState.k_Gradient:
+				case MinMaxGradientState.k_RandomColor:
+					EditorGUI.showMixedValue = minMaxGradient.m_MaxGradient.hasMultipleDifferentValues;
+					EditorGUI.GradientField(rect2, minMaxGradient.m_MaxGradient, hdr);
+					EditorGUI.showMixedValue = false;
+					break;
+				case MinMaxGradientState.k_RandomBetweenTwoColors:
+					EditorGUI.showMixedValue = minMaxGradient.m_MaxColor.hasMultipleDifferentValues;
+					ModuleUI.GUIColor(rect2, minMaxGradient.m_MaxColor, hdr);
+					EditorGUI.showMixedValue = false;
+					rect2.y += rect2.height;
+					EditorGUI.showMixedValue = minMaxGradient.m_MinColor.hasMultipleDifferentValues;
+					ModuleUI.GUIColor(rect2, minMaxGradient.m_MinColor, hdr);
+					EditorGUI.showMixedValue = false;
+					break;
+				case MinMaxGradientState.k_RandomBetweenTwoGradients:
+					EditorGUI.showMixedValue = minMaxGradient.m_MaxGradient.hasMultipleDifferentValues;
+					EditorGUI.GradientField(rect2, minMaxGradient.m_MaxGradient, hdr);
+					EditorGUI.showMixedValue = false;
+					rect2.y += rect2.height;
+					EditorGUI.showMixedValue = minMaxGradient.m_MinGradient.hasMultipleDifferentValues;
+					EditorGUI.GradientField(rect2, minMaxGradient.m_MinGradient, hdr);
+					EditorGUI.showMixedValue = false;
+					break;
+				}
 			}
 			ModuleUI.GUIMMGradientPopUp(popupRect, minMaxGradient);
 		}
 
-		private static void GUIGradientAsColor(Rect rect, SerializedProperty gradientProp)
-		{
-			bool changed = GUI.changed;
-			GUI.changed = false;
-			Color color = SerializedMinMaxGradient.GetGradientAsColor(gradientProp);
-			color = EditorGUI.ColorField(rect, color, false, true);
-			if (GUI.changed)
-			{
-				SerializedMinMaxGradient.SetGradientAsColor(gradientProp, color);
-			}
-			GUI.changed |= changed;
-		}
-
 		private static void GUIColor(Rect rect, SerializedProperty colorProp)
 		{
-			colorProp.colorValue = EditorGUI.ColorField(rect, colorProp.colorValue, false, true);
+			ModuleUI.GUIColor(rect, colorProp, false);
 		}
 
-		public void GUIMinMaxColor(GUIContent label, SerializedMinMaxColor minMaxColor, params GUILayoutOption[] layoutOptions)
+		private static void GUIColor(Rect rect, SerializedProperty colorProp, bool hdr)
 		{
-			Rect totalPosition = ModuleUI.GetControlRect(13, layoutOptions);
-			totalPosition = ModuleUI.PrefixLabel(totalPosition, label);
-			float num = totalPosition.width - 13f - 5f;
-			if (!minMaxColor.minMax.boolValue)
+			EditorGUI.BeginChangeCheck();
+			Color colorValue = EditorGUI.ColorField(rect, GUIContent.none, colorProp.colorValue, false, true, hdr, ColorPicker.defaultHDRConfig);
+			if (EditorGUI.EndChangeCheck())
 			{
-				Rect rect = new Rect(totalPosition.x, totalPosition.y, num, totalPosition.height);
-				ModuleUI.GUIColor(rect, minMaxColor.maxColor);
+				colorProp.colorValue = colorValue;
 			}
-			else
-			{
-				Rect rect2 = new Rect(totalPosition.x, totalPosition.y, num * 0.5f - 2f, totalPosition.height);
-				ModuleUI.GUIColor(rect2, minMaxColor.minColor);
-				rect2.x += rect2.width + 4f;
-				ModuleUI.GUIColor(rect2, minMaxColor.maxColor);
-			}
-			Rect rect3 = new Rect(totalPosition.xMax - 13f, totalPosition.y, 13f, 13f);
-			ModuleUI.GUIMMColorPopUp(rect3, minMaxColor.minMax);
 		}
 
 		public void GUITripleMinMaxCurve(GUIContent label, GUIContent x, SerializedMinMaxCurve xCurve, GUIContent y, SerializedMinMaxCurve yCurve, GUIContent z, SerializedMinMaxCurve zCurve, SerializedProperty randomizePerFrame, params GUILayoutOption[] layoutOptions)
 		{
+			bool stateHasMultipleDifferentValues = xCurve.stateHasMultipleDifferentValues;
 			MinMaxCurveState state = xCurve.state;
 			bool flag = label != GUIContent.none;
 			int num = (!flag) ? 1 : 2;
@@ -952,13 +1072,18 @@ namespace UnityEditor
 				yCurve,
 				zCurve
 			};
-			if (state == MinMaxCurveState.k_Scalar)
+			if (stateHasMultipleDifferentValues)
+			{
+				ModuleUI.Label(rect2, GUIContent.Temp("-"));
+			}
+			else if (state == MinMaxCurveState.k_Scalar)
 			{
 				for (int i = 0; i < array2.Length; i++)
 				{
 					ModuleUI.Label(rect2, array[i]);
+					EditorGUI.BeginChangeCheck();
 					float a = ModuleUI.FloatDraggable(rect2, array2[i].scalar, array2[i].m_RemapValue, 10f);
-					if (!array2[i].signedRange)
+					if (EditorGUI.EndChangeCheck() && !array2[i].signedRange)
 					{
 						array2[i].scalar.floatValue = Mathf.Max(a, 0f);
 					}
@@ -1028,7 +1153,7 @@ namespace UnityEditor
 
 		public static void GUIMMCurveStateList(Rect rect, SerializedMinMaxCurve[] minMaxCurves)
 		{
-			if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
+			if (EditorGUI.DropdownButton(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
 			{
 				if (minMaxCurves.Length != 0)
 				{
@@ -1053,19 +1178,20 @@ namespace UnityEditor
 						minMaxCurves[0].m_AllowRandom,
 						minMaxCurves[0].m_AllowRandom && minMaxCurves[0].m_AllowCurves
 					};
+					bool flag = !minMaxCurves[0].stateHasMultipleDifferentValues;
 					GenericMenu genericMenu = new GenericMenu();
 					for (int i = 0; i < array.Length; i++)
 					{
 						if (array3[i])
 						{
-							GenericMenu arg_10C_0 = genericMenu;
-							GUIContent arg_10C_1 = array[i];
-							bool arg_10C_2 = minMaxCurves[0].state == array2[i];
+							GenericMenu arg_123_0 = genericMenu;
+							GUIContent arg_123_1 = array[i];
+							bool arg_123_2 = flag && minMaxCurves[0].state == array2[i];
 							if (ModuleUI.<>f__mg$cache0 == null)
 							{
 								ModuleUI.<>f__mg$cache0 = new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxCurveStateCallback);
 							}
-							arg_10C_0.AddItem(arg_10C_1, arg_10C_2, ModuleUI.<>f__mg$cache0, new ModuleUI.CurveStateCallbackData(array2[i], minMaxCurves));
+							arg_123_0.AddItem(arg_123_1, arg_123_2, ModuleUI.<>f__mg$cache0, new ModuleUI.CurveStateCallbackData(array2[i], minMaxCurves));
 						}
 					}
 					genericMenu.DropDown(rect);
@@ -1082,7 +1208,7 @@ namespace UnityEditor
 
 		public static void GUIMMGradientPopUp(Rect rect, SerializedMinMaxGradient gradientProp)
 		{
-			if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
+			if (EditorGUI.DropdownButton(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
 			{
 				GUIContent[] array = new GUIContent[]
 				{
@@ -1108,19 +1234,20 @@ namespace UnityEditor
 					gradientProp.m_AllowRandomBetweenTwoGradients,
 					gradientProp.m_AllowRandomColor
 				};
+				bool flag = !gradientProp.stateHasMultipleDifferentValues;
 				GenericMenu genericMenu = new GenericMenu();
 				for (int i = 0; i < array.Length; i++)
 				{
 					if (array3[i])
 					{
-						GenericMenu arg_FB_0 = genericMenu;
-						GUIContent arg_FB_1 = array[i];
-						bool arg_FB_2 = gradientProp.state == array2[i];
+						GenericMenu arg_110_0 = genericMenu;
+						GUIContent arg_110_1 = array[i];
+						bool arg_110_2 = flag && gradientProp.state == array2[i];
 						if (ModuleUI.<>f__mg$cache1 == null)
 						{
 							ModuleUI.<>f__mg$cache1 = new GenericMenu.MenuFunction2(ModuleUI.SelectMinMaxGradientStateCallback);
 						}
-						arg_FB_0.AddItem(arg_FB_1, arg_FB_2, ModuleUI.<>f__mg$cache1, new ModuleUI.GradientCallbackData(array2[i], gradientProp));
+						arg_110_0.AddItem(arg_110_1, arg_110_2, ModuleUI.<>f__mg$cache1, new ModuleUI.GradientCallbackData(array2[i], gradientProp));
 					}
 				}
 				genericMenu.ShowAsContext();
@@ -1136,7 +1263,7 @@ namespace UnityEditor
 
 		public static void GUIMMColorPopUp(Rect rect, SerializedProperty boolProp)
 		{
-			if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
+			if (EditorGUI.DropdownButton(rect, GUIContent.none, FocusType.Passive, ParticleSystemStyles.Get().minMaxCurveStateDropDown))
 			{
 				GenericMenu genericMenu = new GenericMenu();
 				GUIContent[] array = new GUIContent[]

@@ -132,36 +132,7 @@ namespace UnityEditor
 		[MenuItem("Assets/Find References In Scene", false, 25)]
 		private static void OnSearchForReferences()
 		{
-			int activeInstanceID = Selection.activeInstanceID;
-			string text = AssetDatabase.GetAssetPath(activeInstanceID).Substring(7);
-			if (text.IndexOf(' ') != -1)
-			{
-				text = '"' + text + '"';
-			}
-			string searchFilter;
-			if (AssetDatabase.IsMainAsset(activeInstanceID))
-			{
-				searchFilter = "ref:" + text;
-			}
-			else
-			{
-				searchFilter = string.Concat(new object[]
-				{
-					"ref:",
-					activeInstanceID,
-					":",
-					text
-				});
-			}
-			foreach (SearchableEditorWindow current in SearchableEditorWindow.searchableWindows)
-			{
-				if (current.m_HierarchyType == HierarchyType.GameObjects)
-				{
-					current.SetSearchFilter(searchFilter, SearchableEditorWindow.SearchMode.All, false);
-					current.m_HasSearchFilterFocus = true;
-					current.Repaint();
-				}
-			}
+			SearchableEditorWindow.SearchForReferencesToInstanceID(Selection.activeInstanceID);
 		}
 
 		[MenuItem("Assets/Find References In Scene", true)]
@@ -190,6 +161,39 @@ namespace UnityEditor
 		public virtual void OnDisable()
 		{
 			SearchableEditorWindow.searchableWindows.Remove(this);
+		}
+
+		internal static void SearchForReferencesToInstanceID(int instanceID)
+		{
+			string text = AssetDatabase.GetAssetPath(instanceID).Substring(7);
+			if (text.IndexOf(' ') != -1)
+			{
+				text = '"' + text + '"';
+			}
+			string searchFilter;
+			if (AssetDatabase.IsMainAsset(instanceID))
+			{
+				searchFilter = "ref:" + text;
+			}
+			else
+			{
+				searchFilter = string.Concat(new object[]
+				{
+					"ref:",
+					instanceID,
+					":",
+					text
+				});
+			}
+			foreach (SearchableEditorWindow current in SearchableEditorWindow.searchableWindows)
+			{
+				if (current.m_HierarchyType == HierarchyType.GameObjects)
+				{
+					current.SetSearchFilter(searchFilter, SearchableEditorWindow.SearchMode.All, false);
+					current.m_HasSearchFilterFocus = true;
+					current.Repaint();
+				}
+			}
 		}
 
 		internal void FocusSearchField()

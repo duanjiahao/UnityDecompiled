@@ -70,6 +70,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_HDR;
 
+		private SerializedProperty m_AllowMSAA;
+
 		private SerializedProperty[] m_NearAndFarClippingPlanes;
 
 		private SerializedProperty m_StereoConvergence;
@@ -105,8 +107,6 @@ namespace UnityEditor
 		private Camera m_PreviewCamera;
 
 		private static readonly Color kGizmoCamera = new Color(0.9137255f, 0.9137255f, 0.9137255f, 0.5019608f);
-
-		private const float kPreviewWindowOffset = 10f;
 
 		private const float kPreviewNormalizedSize = 0.2f;
 
@@ -182,6 +182,7 @@ namespace UnityEditor
 			this.m_OcclusionCulling = base.serializedObject.FindProperty("m_OcclusionCulling");
 			this.m_TargetTexture = base.serializedObject.FindProperty("m_TargetTexture");
 			this.m_HDR = base.serializedObject.FindProperty("m_HDR");
+			this.m_AllowMSAA = base.serializedObject.FindProperty("m_AllowMSAA");
 			this.m_StereoConvergence = base.serializedObject.FindProperty("m_StereoConvergence");
 			this.m_StereoSeparation = base.serializedObject.FindProperty("m_StereoSeparation");
 			this.m_TargetDisplay = base.serializedObject.FindProperty("m_TargetDisplay");
@@ -380,11 +381,9 @@ namespace UnityEditor
 				}
 			}
 			EditorGUILayout.PropertyField(this.m_OcclusionCulling, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_HDR, new GUILayoutOption[0]);
-			if (this.m_HDR.boolValue)
-			{
-				this.DisplayHDRWarnings();
-			}
+			EditorGUILayout.PropertyField(this.m_HDR, EditorGUIUtility.TempContent("Allow HDR"), new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_AllowMSAA, new GUILayoutOption[0]);
+			this.DisplayCameraWarnings();
 			if (PlayerSettings.virtualRealitySupported)
 			{
 				EditorGUILayout.PropertyField(this.m_StereoSeparation, new GUILayoutOption[0]);
@@ -410,15 +409,15 @@ namespace UnityEditor
 			base.serializedObject.ApplyModifiedProperties();
 		}
 
-		private void DisplayHDRWarnings()
+		private void DisplayCameraWarnings()
 		{
 			Camera camera = base.target as Camera;
 			if (camera != null)
 			{
-				string[] hDRWarnings = camera.GetHDRWarnings();
-				if (hDRWarnings.Length > 0)
+				string[] cameraBufferWarnings = camera.GetCameraBufferWarnings();
+				if (cameraBufferWarnings.Length > 0)
 				{
-					EditorGUILayout.HelpBox(string.Join("\n\n", hDRWarnings), MessageType.Warning, true);
+					EditorGUILayout.HelpBox(string.Join("\n\n", cameraBufferWarnings), MessageType.Warning, true);
 				}
 			}
 		}

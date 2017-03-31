@@ -128,27 +128,35 @@ namespace UnityEngine.VR.WSA.Persistence
 			handler(WorldAnchorStore.s_Instance);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetAsync_Internal(WorldAnchorStore.GetAsyncDelegate onCompleted);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Save_Internal(IntPtr context, string id, WorldAnchor anchor);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Load_Internal(IntPtr context, string id, WorldAnchor anchor);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Delete_Internal(IntPtr context, string id);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Clear_Internal(IntPtr context);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetAnchorCount_Internal(IntPtr context);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetAllIds_Internal(IntPtr context, string[] ids);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Destruct_Internal(IntPtr context);
 	}

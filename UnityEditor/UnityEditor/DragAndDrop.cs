@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -11,32 +12,40 @@ namespace UnityEditor
 
 		public static extern UnityEngine.Object[] objectReferences
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern string[] paths
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern DragAndDropVisualMode visualMode
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int activeControlID
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -90,6 +99,7 @@ namespace UnityEditor
 			DragAndDrop.PrepareStartDrag_Internal();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void PrepareStartDrag_Internal();
 
@@ -105,9 +115,11 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void StartDrag_Internal(string title);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AcceptDrag();
 

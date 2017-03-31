@@ -41,17 +41,17 @@ namespace UnityEditor
 				{
 					RotationModuleUI.s_Texts = new RotationModuleUI.Texts();
 				}
-				this.m_X = new SerializedMinMaxCurve(this, RotationModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange);
-				this.m_Y = new SerializedMinMaxCurve(this, RotationModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange);
+				this.m_SeparateAxes = base.GetProperty("separateAxes");
+				this.m_X = new SerializedMinMaxCurve(this, RotationModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange, false, this.m_SeparateAxes.boolValue);
+				this.m_Y = new SerializedMinMaxCurve(this, RotationModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange, false, this.m_SeparateAxes.boolValue);
 				this.m_Z = new SerializedMinMaxCurve(this, RotationModuleUI.s_Texts.z, "curve", ModuleUI.kUseSignedRange);
 				this.m_X.m_RemapValue = 57.29578f;
 				this.m_Y.m_RemapValue = 57.29578f;
 				this.m_Z.m_RemapValue = 57.29578f;
-				this.m_SeparateAxes = base.GetProperty("separateAxes");
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (RotationModuleUI.s_Texts == null)
 			{
@@ -72,10 +72,11 @@ namespace UnityEditor
 					this.m_Z.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_9C_0 = this.m_X;
-			MinMaxCurveState state = this.m_Z.state;
-			this.m_Y.state = state;
-			arg_9C_0.state = state;
+			if (!this.m_Z.stateHasMultipleDifferentValues)
+			{
+				this.m_X.SetMinMaxState(this.m_Z.state, flag);
+				this.m_Y.SetMinMaxState(this.m_Z.state, flag);
+			}
 			if (flag)
 			{
 				this.m_Z.m_DisplayName = RotationModuleUI.s_Texts.z;

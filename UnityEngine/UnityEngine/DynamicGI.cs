@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -7,24 +8,30 @@ namespace UnityEngine
 	{
 		public static extern float indirectScale
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern float updateThreshold
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool synchronousMode
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -34,53 +41,26 @@ namespace UnityEngine
 			DynamicGI.INTERNAL_CALL_SetEmissive(renderer, ref color);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetEmissive(Renderer renderer, ref Color color);
 
+		[Obsolete("DynamicGI.UpdateMaterials(Renderer) is deprecated; instead, use extension method from RendererExtensions: 'renderer.UpdateGIMaterials()' (UnityUpgradable).", true)]
 		public static void UpdateMaterials(Renderer renderer)
 		{
-			DynamicGI.UpdateMaterialsForRenderer(renderer);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void UpdateMaterialsForRenderer(Renderer renderer);
-
-		public static void UpdateMaterials(Terrain terrain)
+		[Obsolete("DynamicGI.UpdateMaterials(Terrain) is deprecated; instead, use extension method from TerrainExtensions: 'terrain.UpdateGIMaterials()' (UnityUpgradable).", true)]
+		public static void UpdateMaterials(Object renderer)
 		{
-			if (terrain == null)
-			{
-				throw new ArgumentNullException("terrain");
-			}
-			if (terrain.terrainData == null)
-			{
-				throw new ArgumentException("Invalid terrainData.");
-			}
-			DynamicGI.UpdateMaterialsForTerrain(terrain, new Rect(0f, 0f, 1f, 1f));
 		}
 
-		public static void UpdateMaterials(Terrain terrain, int x, int y, int width, int height)
+		[Obsolete("DynamicGI.UpdateMaterials(Terrain, int, int, int, int) is deprecated; instead, use extension method from TerrainExtensions: 'terrain.UpdateGIMaterials(x, y, width, height)' (UnityUpgradable).", true)]
+		public static void UpdateMaterials(Object renderer, int x, int y, int width, int height)
 		{
-			if (terrain == null)
-			{
-				throw new ArgumentNullException("terrain");
-			}
-			if (terrain.terrainData == null)
-			{
-				throw new ArgumentException("Invalid terrainData.");
-			}
-			float num = (float)terrain.terrainData.alphamapWidth;
-			float num2 = (float)terrain.terrainData.alphamapHeight;
-			DynamicGI.UpdateMaterialsForTerrain(terrain, new Rect((float)x / num, (float)y / num2, (float)width / num, (float)height / num2));
 		}
 
-		internal static void UpdateMaterialsForTerrain(Terrain terrain, Rect uvBounds)
-		{
-			DynamicGI.INTERNAL_CALL_UpdateMaterialsForTerrain(terrain, ref uvBounds);
-		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_UpdateMaterialsForTerrain(Terrain terrain, ref Rect uvBounds);
-
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UpdateEnvironment();
 	}

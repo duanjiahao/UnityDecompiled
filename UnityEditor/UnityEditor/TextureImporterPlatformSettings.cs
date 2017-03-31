@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -127,6 +128,7 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CopyTo(TextureImporterPlatformSettings target);
 	}

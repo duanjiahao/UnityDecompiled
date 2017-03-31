@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityEditor.IMGUI.Controls
 {
-	internal class TreeViewItem : IComparable<TreeViewItem>
+	public class TreeViewItem : IComparable<TreeViewItem>
 	{
 		private int m_ID;
 
@@ -17,8 +17,6 @@ namespace UnityEditor.IMGUI.Controls
 		private string m_DisplayName;
 
 		private Texture2D m_Icon;
-
-		private object m_UserData;
 
 		public virtual int id
 		{
@@ -100,16 +98,8 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		internal virtual object userData
+		public TreeViewItem()
 		{
-			get
-			{
-				return this.m_UserData;
-			}
-			set
-			{
-				this.m_UserData = value;
-			}
 		}
 
 		public TreeViewItem(int id)
@@ -138,7 +128,7 @@ namespace UnityEditor.IMGUI.Controls
 			this.m_DisplayName = displayName;
 		}
 
-		internal void AddChild(TreeViewItem child)
+		public void AddChild(TreeViewItem child)
 		{
 			if (this.m_Children == null)
 			{

@@ -35,6 +35,8 @@ namespace UnityEditorInternal
 
 		private const float k_RowRightOffset = 10f;
 
+		private const float k_ValueFieldDragWidth = 15f;
+
 		private const float k_ValueFieldWidth = 50f;
 
 		private const float k_ValueFieldOffsetFromRightSide = 75f;
@@ -68,11 +70,11 @@ namespace UnityEditorInternal
 		public AnimationWindowHierarchyGUI(TreeViewController treeView, AnimationWindowState state) : base(treeView)
 		{
 			this.state = state;
+			this.InitStyles();
 		}
 
-		protected override void InitStyles()
+		protected void InitStyles()
 		{
-			base.InitStyles();
 			if (this.m_AnimationRowEvenStyle == null)
 			{
 				this.m_AnimationRowEvenStyle = new GUIStyle("AnimationRowEven");
@@ -87,7 +89,7 @@ namespace UnityEditorInternal
 			}
 			if (this.m_AnimationLineStyle == null)
 			{
-				this.m_AnimationLineStyle = new GUIStyle(TreeViewGUI.s_Styles.lineStyle);
+				this.m_AnimationLineStyle = new GUIStyle(TreeViewGUI.Styles.lineStyle);
 				this.m_AnimationLineStyle.padding.left = 0;
 			}
 			if (this.m_AnimationCurveDropdown == null)
@@ -199,9 +201,9 @@ namespace UnityEditorInternal
 			{
 				Rect position = rect;
 				position.x = indent;
-				position.width = TreeViewGUI.s_Styles.foldoutWidth;
+				position.width = TreeViewGUI.Styles.foldoutWidth;
 				EditorGUI.BeginChangeCheck();
-				bool expand = GUI.Toggle(position, this.m_HierarchyItemFoldControlIDs[row], this.m_TreeView.data.IsExpanded(node), GUIContent.none, TreeViewGUI.s_Styles.foldout);
+				bool expand = GUI.Toggle(position, this.m_HierarchyItemFoldControlIDs[row], this.m_TreeView.data.IsExpanded(node), GUIContent.none, TreeViewGUI.Styles.foldout);
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (Event.current.alt)
@@ -222,10 +224,10 @@ namespace UnityEditorInternal
 				{
 					Rect position2 = rect;
 					position2.x = indent;
-					position2.width = TreeViewGUI.s_Styles.foldoutWidth;
+					position2.width = TreeViewGUI.Styles.foldoutWidth;
 					EditorGUI.BeginChangeCheck();
 					bool flag = animationWindowHierarchyState.GetTallMode(animationWindowHierarchyPropertyNode);
-					flag = GUI.Toggle(position2, this.m_HierarchyItemFoldControlIDs[row], flag, GUIContent.none, TreeViewGUI.s_Styles.foldout);
+					flag = GUI.Toggle(position2, this.m_HierarchyItemFoldControlIDs[row], flag, GUIContent.none, TreeViewGUI.Styles.foldout);
 					if (EditorGUI.EndChangeCheck())
 					{
 						animationWindowHierarchyState.SetTallMode(animationWindowHierarchyPropertyNode, flag);
@@ -241,7 +243,7 @@ namespace UnityEditorInternal
 			{
 				if (selected)
 				{
-					TreeViewGUI.s_Styles.selectionStyle.Draw(rect, false, false, true, focused);
+					TreeViewGUI.Styles.selectionStyle.Draw(rect, false, false, true, focused);
 				}
 				if (AnimationMode.InAnimationMode())
 				{
@@ -289,20 +291,20 @@ namespace UnityEditorInternal
 						string gameObjectName = this.GetGameObjectName((!(selectionBinding != null)) ? null : selectionBinding.rootGameObject, node.path);
 						str = ((!string.IsNullOrEmpty(gameObjectName)) ? (gameObjectName + " : ") : "");
 					}
-					TreeViewGUI.s_Styles.content = new GUIContent(str + node.displayName + text, this.GetIconForItem(node), tooltip);
+					TreeViewGUI.Styles.content = new GUIContent(str + node.displayName + text, this.GetIconForItem(node), tooltip);
 					color = ((!EditorGUIUtility.isProSkin) ? Color.black : (Color.gray * 1.35f));
 				}
 				else
 				{
-					TreeViewGUI.s_Styles.content = new GUIContent(node.displayName + text, this.GetIconForItem(node), tooltip);
+					TreeViewGUI.Styles.content = new GUIContent(node.displayName + text, this.GetIconForItem(node), tooltip);
 					color = ((!EditorGUIUtility.isProSkin) ? this.m_LightSkinPropertyTextColor : Color.gray);
 					Color color2 = (!selected) ? this.m_PhantomCurveColor : (this.m_PhantomCurveColor * 1.4f);
 					color = ((!flag3) ? color : color2);
 				}
 				color = ((!flag && !flag2) ? color : AnimationWindowHierarchyGUI.k_LeftoverCurveColor);
 				this.SetStyleTextColor(this.m_AnimationLineStyle, color);
-				rect.xMin += (float)((int)(indent + TreeViewGUI.s_Styles.foldoutWidth + (float)this.m_AnimationLineStyle.margin.left));
-				GUI.Label(rect, TreeViewGUI.s_Styles.content, this.m_AnimationLineStyle);
+				rect.xMin += (float)((int)(indent + TreeViewGUI.Styles.foldoutWidth + (float)this.m_AnimationLineStyle.margin.left));
+				GUI.Label(rect, TreeViewGUI.Styles.content, this.m_AnimationLineStyle);
 				this.SetStyleTextColor(this.m_AnimationLineStyle, textColor);
 			}
 			if (this.IsRenaming(node.id) && Event.current.type != EventType.Layout)
@@ -359,6 +361,7 @@ namespace UnityEditorInternal
 				if (currentValue is float)
 				{
 					float num = (float)currentValue;
+					Rect dragHotZone = new Rect(rect.xMax - 75f - 15f, rect.y, 15f, rect.height);
 					Rect position = new Rect(rect.xMax - 75f, rect.y, 50f, rect.height);
 					if (Event.current.type == EventType.MouseMove && position.Contains(Event.current.mousePosition))
 					{
@@ -377,7 +380,7 @@ namespace UnityEditorInternal
 						{
 							GUIUtility.keyboardControl = num2;
 						}
-						num = EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position, new Rect(0f, 0f, 0f, 0f), num2, num, EditorGUI.kFloatFieldFormatString, this.m_AnimationSelectionTextField, false);
+						num = EditorGUI.DoFloatField(EditorGUI.s_RecycledEditor, position, dragHotZone, num2, num, EditorGUI.kFloatFieldFormatString, this.m_AnimationSelectionTextField, true);
 						if (flag2)
 						{
 							GUI.changed = true;
@@ -416,7 +419,7 @@ namespace UnityEditorInternal
 			}
 			if (flag)
 			{
-				this.state.ResampleAnimation();
+				this.state.StartRecording();
 			}
 		}
 
@@ -707,10 +710,7 @@ namespace UnityEditorInternal
 				}
 			}
 			this.m_TreeView.ReloadData();
-			if (this.state.recording)
-			{
-				this.state.ResampleAnimation();
-			}
+			this.state.controlInterface.ResampleAnimation();
 		}
 
 		private List<AnimationWindowCurve> GetCurvesAffectedByNodes(List<AnimationWindowHierarchyNode> nodes, bool includeLinkedCurves)
@@ -884,16 +884,15 @@ namespace UnityEditorInternal
 		public override bool BeginRename(TreeViewItem item, float delay)
 		{
 			this.m_RenamedNode = (item as AnimationWindowHierarchyNode);
-			GameObject rootGameObject = null;
 			if (this.m_RenamedNode.curves.Length > 0)
 			{
 				AnimationWindowSelectionItem selectionBinding = this.m_RenamedNode.curves[0].selectionBinding;
 				if (selectionBinding != null)
 				{
-					rootGameObject = selectionBinding.rootGameObject;
+					GameObject rootGameObject = selectionBinding.rootGameObject;
 				}
 			}
-			return base.GetRenameOverlay().BeginRename(this.GetGameObjectName(rootGameObject, this.m_RenamedNode.path), item.id, delay);
+			return base.GetRenameOverlay().BeginRename(this.m_RenamedNode.path, item.id, delay);
 		}
 
 		protected override void SyncFakeItem()
@@ -911,8 +910,7 @@ namespace UnityEditorInternal
 				for (int i = 0; i < curves.Length; i++)
 				{
 					AnimationWindowCurve animationWindowCurve = curves[i];
-					string newPath = this.RenamePath(animationWindowCurve.path, name);
-					EditorCurveBinding renamedBinding = AnimationWindowUtility.GetRenamedBinding(animationWindowCurve.binding, newPath);
+					EditorCurveBinding renamedBinding = AnimationWindowUtility.GetRenamedBinding(animationWindowCurve.binding, name);
 					if (AnimationWindowUtility.CurveExists(renamedBinding, this.state.allCurves.ToArray()))
 					{
 						Debug.LogWarning("Curve already exists, renaming cancelled.");
@@ -924,21 +922,6 @@ namespace UnityEditorInternal
 				}
 			}
 			this.m_RenamedNode = null;
-		}
-
-		private string RenamePath(string oldPath, string newGameObjectName)
-		{
-			string result;
-			if (oldPath.Length > 0)
-			{
-				string pathWithoutChildmostGameObject = this.GetPathWithoutChildmostGameObject(oldPath);
-				result = pathWithoutChildmostGameObject + newGameObjectName;
-			}
-			else
-			{
-				result = newGameObjectName;
-			}
-			return result;
 		}
 
 		protected override Texture GetIconForItem(TreeViewItem item)

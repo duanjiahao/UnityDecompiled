@@ -920,6 +920,12 @@ namespace UnityEditor
 			EditorGUI.Slider(position, property, leftValue, rightValue);
 		}
 
+		internal static void SliderWithTexture(GUIContent label, SerializedProperty property, float leftValue, float rightValue, float power, GUIStyle sliderStyle, GUIStyle thumbStyle, Texture2D sliderBackground, params GUILayoutOption[] options)
+		{
+			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetSliderRect(false, options);
+			EditorGUI.SliderWithTexture(position, label, property, leftValue, rightValue, power, sliderStyle, thumbStyle, sliderBackground);
+		}
+
 		public static void Slider(SerializedProperty property, float leftValue, float rightValue, string label, params GUILayoutOption[] options)
 		{
 			EditorGUILayout.Slider(property, leftValue, rightValue, EditorGUIUtility.TempContent(label), options);
@@ -1606,9 +1612,9 @@ namespace UnityEditor
 			return foldout;
 		}
 
-		internal static bool FoldoutTitlebar(bool foldout, GUIContent label)
+		internal static bool FoldoutTitlebar(bool foldout, GUIContent label, bool skipIconSpacing)
 		{
-			return EditorGUI.FoldoutTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), label, foldout);
+			return EditorGUI.FoldoutTitlebar(GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.inspectorTitlebar), label, foldout, skipIconSpacing);
 		}
 
 		internal static bool FoldoutInternal(bool foldout, GUIContent content, bool toggleOnLabelClick, GUIStyle style)
@@ -2107,6 +2113,17 @@ namespace UnityEditor
 			return EditorGUI.DelayedTextFieldDropDown(rect, label, text, dropDownElement);
 		}
 
+		public static bool DropdownButton(GUIContent content, FocusType focusType, params GUILayoutOption[] options)
+		{
+			return EditorGUILayout.DropdownButton(content, focusType, "MiniPullDown", options);
+		}
+
+		public static bool DropdownButton(GUIContent content, FocusType focusType, GUIStyle style, params GUILayoutOption[] options)
+		{
+			EditorGUILayout.s_LastRect = GUILayoutUtility.GetRect(content, style, options);
+			return EditorGUI.DropdownButton(EditorGUILayout.s_LastRect, content, focusType, style);
+		}
+
 		internal static Color ColorBrightnessField(GUIContent label, Color value, float minBrightness, float maxBrightness, params GUILayoutOption[] options)
 		{
 			Rect r = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.numberField, options);
@@ -2158,12 +2175,6 @@ namespace UnityEditor
 		{
 			Rect rect = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, EditorStyles.numberField, options);
 			return EditorGUI.HexColorTextField(rect, label, color, showAlpha, style);
-		}
-
-		internal static bool ButtonMouseDown(GUIContent content, FocusType focusType, GUIStyle style, params GUILayoutOption[] options)
-		{
-			EditorGUILayout.s_LastRect = GUILayoutUtility.GetRect(content, style, options);
-			return EditorGUI.ButtonMouseDown(EditorGUILayout.s_LastRect, content, focusType, style);
 		}
 
 		internal static bool IconButton(int id, GUIContent content, GUIStyle style, params GUILayoutOption[] options)

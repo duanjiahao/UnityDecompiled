@@ -14,6 +14,7 @@ namespace UnityEngine.Networking
 
 		public extern bool isDone
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -38,15 +39,19 @@ namespace UnityEngine.Networking
 		{
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateBuffer();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateScript();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateTexture(bool readable);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateAssetBundle(string url, uint crc);
 
@@ -55,13 +60,11 @@ namespace UnityEngine.Networking
 			DownloadHandler.INTERNAL_CALL_InternalCreateAssetBundle(this, url, ref hash, crc);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InternalCreateAssetBundle(DownloadHandler self, string url, ref Hash128 hash, uint crc);
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern void InternalCreateAudioClip(string url, AudioType audioType);
-
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalDestroy();
 

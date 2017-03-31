@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using UnityEditor.Scripting.Compilers;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -13,33 +14,49 @@ namespace UnityEditor
 
 		public static extern bool audioMasterMute
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool audioProfilingEnabled
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
+		public static extern bool scriptCompilationFailed
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevealInFinder(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetDirty(UnityEngine.Object target);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void LoadPlatformSupportModuleNativeDllInternal(string target);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void LoadPlatformSupportNativeLibrary(string nativeLibrary);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetDirtyIndex(int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsDirty(int instanceID);
 
@@ -49,9 +66,11 @@ namespace UnityEditor
 			return WindowLayout.LoadWindowLayout(path, newProjectLayoutWasCreated);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsPersistent(UnityEngine.Object target);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DisplayDialog(string title, string message, string ok, [DefaultValue("\"\"")] string cancel);
 
@@ -62,30 +81,39 @@ namespace UnityEditor
 			return EditorUtility.DisplayDialog(title, message, ok, cancel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int DisplayDialogComplex(string title, string message, string ok, string cancel, string alt);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string OpenFilePanel(string title, string directory, string extension);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string OpenFilePanelWithFilters(string title, string directory, string[] filters);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SaveFilePanel(string title, string directory, string defaultName, string extension);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string SaveBuildPanel(BuildTarget target, string title, string directory, string defaultName, string extension, out bool updateExistingBuild);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int NaturalCompare(string a, string b);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int NaturalCompareObjectNames(UnityEngine.Object a, UnityEngine.Object b);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string OpenFolderPanel(string title, string folder, string defaultName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SaveFolderPanel(string title, string folder, string defaultName);
 
@@ -99,19 +127,23 @@ namespace UnityEditor
 			return EditorUtility.Internal_SaveFilePanelInProject(title, defaultName, extension, message, path);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string Internal_SaveFilePanelInProject(string title, string defaultName, string extension, string message, string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool WarnPrefab(UnityEngine.Object target, string title, string warning, string okButton);
 
-		[Obsolete("use AssetDatabase.LoadAssetAtPath")]
+		[Obsolete("use AssetDatabase.LoadAssetAtPath"), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object FindAsset(string path, Type type);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object InstanceIDToObject(int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CompressTexture(Texture2D texture, TextureFormat format, int quality);
 
@@ -125,9 +157,11 @@ namespace UnityEditor
 			EditorUtility.CompressTexture(texture, format, TextureCompressionQuality.Normal);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string InvokeDiffTool(string leftTitle, string leftFile, string rightTitle, string rightFile, string ancestorTitle, string ancestorFile);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopySerialized(UnityEngine.Object source, UnityEngine.Object dest);
 
@@ -144,6 +178,7 @@ namespace UnityEditor
 			EditorUtility.InternalCopySerializedIfDifferent(source, dest);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void InternalCopySerializedIfDifferent(UnityEngine.Object source, UnityEngine.Object dest);
 
@@ -153,9 +188,11 @@ namespace UnityEditor
 			return AssetDatabase.GetAssetPath(asset);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] CollectDependencies(UnityEngine.Object[] roots);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] CollectDeepHierarchy(UnityEngine.Object[] roots);
 
@@ -226,14 +263,15 @@ namespace UnityEditor
 			return EditorUtility.INTERNAL_CALL_Internal_InstantiateRemoveAllNonAnimationComponentsSingle(data, ref pos, ref rot);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern UnityEngine.Object INTERNAL_CALL_Internal_InstantiateRemoveAllNonAnimationComponentsSingle(UnityEngine.Object data, ref Vector3 pos, ref Quaternion rot);
 
-		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead")]
+		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead"), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadUnusedAssets();
 
-		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead")]
+		[Obsolete("Use EditorUtility.UnloadUnusedAssetsImmediate instead"), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadUnusedAssetsIgnoreManagedReferences();
 
@@ -247,6 +285,7 @@ namespace UnityEditor
 			EditorUtility.UnloadUnusedAssetsImmediateInternal(includeMonoReferencesAsRoots);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void UnloadUnusedAssetsImmediateInternal(bool includeMonoReferencesAsRoots);
 
@@ -266,12 +305,15 @@ namespace UnityEditor
 			EditorUtility.INTERNAL_CALL_Private_DisplayPopupMenu(ref position, menuItemPath, context, contextUserData);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Private_DisplayPopupMenu(ref Rect position, string menuItemPath, UnityEngine.Object context, int contextUserData);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_UpdateMenuTitleForLanguage(SystemLanguage newloc);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_UpdateAllMenus();
 
@@ -323,6 +365,7 @@ namespace UnityEditor
 			EditorUtility.INTERNAL_CALL_Internal_DisplayObjectContextMenu(ref position, context, contextUserData);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DisplayObjectContextMenu(ref Rect position, UnityEngine.Object[] context, int contextUserData);
 
@@ -419,6 +462,7 @@ namespace UnityEditor
 			EditorUtility.INTERNAL_CALL_Private_DisplayCustomMenu(ref screenPosition, options, enabled, separator, selected, callback, userData, showHotkey);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Private_DisplayCustomMenu(ref Rect screenPosition, string[] options, int[] enabled, int[] separator, int[] selected, EditorUtility.SelectMenuItemFunction callback, object userData, bool showHotkey);
 
@@ -428,6 +472,7 @@ namespace UnityEditor
 			GUIUtility.hotControl = 0;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FocusProjectWindow();
 
@@ -436,21 +481,27 @@ namespace UnityEditor
 			return EditorUtility.FormatBytes((long)bytes);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string FormatBytes(long bytes);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DisplayProgressBar(string title, string info, float progress);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DisplayCancelableProgressBar(string title, string info, float progress);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearProgressBar();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetObjectEnabled(UnityEngine.Object target);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetObjectEnabled(UnityEngine.Object target, bool enabled);
 
@@ -460,15 +511,19 @@ namespace UnityEditor
 			EditorUtility.SetSelectedRenderState(renderer, (!enabled) ? (EditorSelectedRenderState.Wireframe | EditorSelectedRenderState.Highlight) : EditorSelectedRenderState.Hidden);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetSelectedRenderState(Renderer renderer, EditorSelectedRenderState renderState);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ForceReloadInspectors();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ForceRebuildInspectors();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool ExtractOggFile(UnityEngine.Object obj, string path);
 
@@ -484,6 +539,7 @@ namespace UnityEditor
 			return gameObject;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern GameObject Internal_CreateGameObjectWithHideFlags(string name, HideFlags flags);
 
@@ -492,11 +548,17 @@ namespace UnityEditor
 			return MonoCSharpCompiler.Compile(sources, references, defines, outputFile);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenWithDefaultApp(string fileName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool WSACreateTestCertificate(string path, string publisher, string password, bool overwrite);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsWindows10OrGreater();
 
 		[Obsolete("Use PrefabUtility.InstantiatePrefab")]
 		public static UnityEngine.Object InstantiatePrefab(UnityEngine.Object target)
@@ -552,13 +614,24 @@ namespace UnityEditor
 			return PrefabUtility.ResetToPrefabState(source);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetCameraAnimateMaterials(Camera camera, bool animate);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetInvalidFilenameChars();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetActiveNativePlatformSupportModuleName();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool EventHasDragCopyModifierPressed(Event evt);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool EventHasDragMoveModifierPressed(Event evt);
 	}
 }

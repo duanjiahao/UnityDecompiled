@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -27,6 +28,7 @@ namespace UnityEditor
 			return AssetPreview.GetAssetPreview(instanceID, 0);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D GetAssetPreview(int instanceID, int clientID);
 
@@ -35,6 +37,7 @@ namespace UnityEditor
 			return AssetPreview.IsLoadingAssetPreview(instanceID, 0);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsLoadingAssetPreview(int instanceID, int clientID);
 
@@ -43,6 +46,7 @@ namespace UnityEditor
 			return AssetPreview.IsLoadingAssetPreviews(0);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsLoadingAssetPreviews(int clientID);
 
@@ -51,6 +55,7 @@ namespace UnityEditor
 			return AssetPreview.HasAnyNewPreviewTexturesAvailable(0);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasAnyNewPreviewTexturesAvailable(int clientID);
 
@@ -59,15 +64,19 @@ namespace UnityEditor
 			AssetPreview.SetPreviewTextureCacheSize(size, 0);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetPreviewTextureCacheSize(int size, int clientID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ClearTemporaryAssetPreviews();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void DeletePreviewTextureManagerByID(int clientID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D GetMiniThumbnail(UnityEngine.Object obj);
 
@@ -90,12 +99,15 @@ namespace UnityEditor
 			return AssetPreview.INTERNAL_GetMiniTypeThumbnailFromObject(obj);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D GetMiniTypeThumbnailFromClassID(int classID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D INTERNAL_GetMiniTypeThumbnailFromObject(UnityEngine.Object monoObj);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D INTERNAL_GetMiniTypeThumbnailFromType(Type managedType);
 	}

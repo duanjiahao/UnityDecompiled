@@ -65,6 +65,16 @@ namespace UnityEditor.Utils
 
 		public void Start()
 		{
+			this.Start(null);
+		}
+
+		public void Start(EventHandler exitCallback)
+		{
+			if (exitCallback != null)
+			{
+				this._process.EnableRaisingEvents = true;
+				this._process.Exited += exitCallback;
+			}
 			this._process.StartInfo.RedirectStandardInput = true;
 			this._process.StartInfo.RedirectStandardError = true;
 			this._process.StartInfo.RedirectStandardOutput = true;

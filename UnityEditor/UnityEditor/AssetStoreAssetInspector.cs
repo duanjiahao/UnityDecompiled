@@ -11,8 +11,6 @@ namespace UnityEditor
 		{
 			public GUIStyle link = new GUIStyle(EditorStyles.label);
 
-			public GUIContent assetStoreLogo = EditorGUIUtility.IconContent("WelcomeScreen.AssetStoreLogo");
-
 			public Styles()
 			{
 				this.link.normal.textColor = new Color(0.26f, 0.51f, 0.75f, 1f);
@@ -30,8 +28,6 @@ namespace UnityEditor
 		private static AssetStoreAssetInspector s_SharedAssetStoreAssetInspector;
 
 		private static AssetStoreAssetInspector.Styles styles;
-
-		private Vector2 pos;
 
 		private bool packageInfoShown = true;
 

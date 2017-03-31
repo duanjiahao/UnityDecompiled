@@ -7,6 +7,8 @@ namespace UnityEngine.Rendering
 		BeforeShadowMap,
 		AfterShadowMap,
 		BeforeScreenspaceMask,
-		AfterScreenspaceMask
+		AfterScreenspaceMask,
+		BeforeShadowMapPass,
+		AfterShadowMapPass
 	}
 }

@@ -9,7 +9,7 @@ namespace UnityEditorInternal
 	{
 		public int instanceId;
 
-		public int memorySize;
+		public long memorySize;
 
 		public int count;
 

@@ -8,7 +8,7 @@ namespace UnityEditor.Modules
 		internal static string[] GetAdditionalReferencesForUserScripts()
 		{
 			List<string> list = new List<string>();
-			foreach (IPlatformSupportModule current in ModuleManager.platformSupportModules)
+			foreach (IPlatformSupportModule current in ModuleManager.platformSupportModulesDontRegister)
 			{
 				list.AddRange(current.AssemblyReferencesForUserScripts);
 			}
@@ -18,7 +18,7 @@ namespace UnityEditor.Modules
 		internal static string[] GetAdditionalReferencesForEditorCsharpProject()
 		{
 			List<string> list = new List<string>();
-			foreach (IPlatformSupportModule current in ModuleManager.platformSupportModules)
+			foreach (IPlatformSupportModule current in ModuleManager.platformSupportModulesDontRegister)
 			{
 				list.AddRange(current.AssemblyReferencesForEditorCsharpProject);
 			}

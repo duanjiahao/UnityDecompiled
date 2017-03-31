@@ -60,8 +60,8 @@ namespace UnityEditor.TreeViewExamples
 			if (this.m_TreeView == null)
 			{
 				this.m_BackendData = backendData;
-				TreeViewState treeViewState = new TreeViewState();
-				treeViewState.columnWidths = new float[]
+				TreeViewStateWithColumns treeViewStateWithColumns = new TreeViewStateWithColumns();
+				treeViewStateWithColumns.columnWidths = new float[]
 				{
 					250f,
 					90f,
@@ -70,7 +70,7 @@ namespace UnityEditor.TreeViewExamples
 					74f,
 					78f
 				};
-				this.m_TreeView = new TreeViewController(this.m_EditorWindow, treeViewState);
+				this.m_TreeView = new TreeViewController(this.m_EditorWindow, treeViewStateWithColumns);
 				ITreeViewGUI gui = new TestGUI(this.m_TreeView);
 				ITreeViewDragging dragging = new TestDragging(this.m_TreeView, this.m_BackendData);
 				ITreeViewDataSource data;
@@ -84,7 +84,7 @@ namespace UnityEditor.TreeViewExamples
 				}
 				this.m_TreeView.Init(rect, data, gui, dragging);
 				this.m_ColumnHeader = new TreeViewColumnHeader();
-				this.m_ColumnHeader.columnWidths = treeViewState.columnWidths;
+				this.m_ColumnHeader.columnWidths = treeViewStateWithColumns.columnWidths;
 				this.m_ColumnHeader.minColumnWidth = 30f;
 				TreeViewColumnHeader expr_DA = this.m_ColumnHeader;
 				expr_DA.columnRenderer = (Action<int, Rect>)Delegate.Combine(expr_DA.columnRenderer, new Action<int, Rect>(this.OnColumnRenderer));

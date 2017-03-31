@@ -6,7 +6,7 @@ namespace UnityEditor
 {
 	internal class PolygonEditorUtility
 	{
-		private const float k_HandlePointSnap = 0.2f;
+		private const float k_HandlePointSnap = 10f;
 
 		private const float k_HandlePickDistance = 50f;
 
@@ -20,15 +20,11 @@ namespace UnityEditor
 
 		private int m_SelectedVertex = -1;
 
-		private float m_SelectedDistance = 0f;
-
 		private int m_SelectedEdgePath = -1;
 
 		private int m_SelectedEdgeVertex0 = -1;
 
 		private int m_SelectedEdgeVertex1 = -1;
-
-		private float m_SelectedEdgeDistance = 0f;
 
 		private bool m_LeftIntersect = false;
 
@@ -37,6 +33,10 @@ namespace UnityEditor
 		private bool m_DeleteMode = false;
 
 		private bool m_FirstOnSceneGUIAfterReset;
+
+		private bool m_HandlePoint = false;
+
+		private bool m_HandleEdge = false;
 
 		[CompilerGenerated]
 		private static Handles.CapFunction <>f__mg$cache0;
@@ -54,6 +54,8 @@ namespace UnityEditor
 			this.m_LeftIntersect = false;
 			this.m_RightIntersect = false;
 			this.m_FirstOnSceneGUIAfterReset = true;
+			this.m_HandlePoint = false;
+			this.m_HandleEdge = false;
 		}
 
 		private void UndoRedoPerformed()
@@ -99,24 +101,6 @@ namespace UnityEditor
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
 
-		private void ApplyEditing(Collider2D collider)
-		{
-			PolygonCollider2D polygonCollider2D = collider as PolygonCollider2D;
-			if (polygonCollider2D)
-			{
-				PolygonEditor.ApplyEditing(polygonCollider2D);
-			}
-			else
-			{
-				EdgeCollider2D edgeCollider2D = collider as EdgeCollider2D;
-				if (!edgeCollider2D)
-				{
-					throw new NotImplementedException(string.Format("PolygonEditorUtility does not support {0}", collider));
-				}
-				PolygonEditor.ApplyEditing(edgeCollider2D);
-			}
-		}
-
 		public void OnSceneGUI()
 		{
 			if (!(this.m_ActiveCollider == null))
@@ -144,7 +128,6 @@ namespace UnityEditor
 						{
 							this.m_SelectedPath = num;
 							this.m_SelectedVertex = num2;
-							this.m_SelectedDistance = num3;
 						}
 						else
 						{
@@ -156,7 +139,6 @@ namespace UnityEditor
 							this.m_SelectedEdgePath = num;
 							this.m_SelectedEdgeVertex0 = num2;
 							this.m_SelectedEdgeVertex1 = selectedEdgeVertex;
-							this.m_SelectedEdgeDistance = num3;
 						}
 						else
 						{
@@ -172,33 +154,33 @@ namespace UnityEditor
 						this.m_LeftIntersect = false;
 						this.m_RightIntersect = false;
 					}
+					if (GUIUtility.hotControl == 0)
+					{
+						if (this.m_SelectedPath != -1 && this.m_SelectedEdgePath != -1)
+						{
+							Vector2 vector2;
+							PolygonEditor.GetPoint(this.m_SelectedPath, this.m_SelectedVertex, out vector2);
+							vector2 += offset;
+							Vector3 world = transform.TransformPoint(vector2);
+							this.m_HandleEdge = ((HandleUtility.WorldToGUIPoint(world) - Event.current.mousePosition).sqrMagnitude > 100f);
+							this.m_HandlePoint = !this.m_HandleEdge;
+						}
+						else if (this.m_SelectedPath != -1)
+						{
+							this.m_HandlePoint = true;
+						}
+						else if (this.m_SelectedEdgePath != -1)
+						{
+							this.m_HandleEdge = true;
+						}
+						if (this.m_DeleteMode && this.m_HandleEdge)
+						{
+							this.m_HandleEdge = false;
+							this.m_HandlePoint = true;
+						}
+					}
 					bool flag = false;
-					bool flag2 = false;
-					if (this.m_SelectedPath != -1 && this.m_SelectedEdgePath != -1)
-					{
-						Vector2 vector2;
-						PolygonEditor.GetPoint(this.m_SelectedPath, this.m_SelectedVertex, out vector2);
-						vector2 += offset;
-						Vector3 position = transform.TransformPoint(vector2);
-						float num4 = HandleUtility.GetHandleSize(position) * 0.2f;
-						flag2 = (this.m_SelectedEdgeDistance < this.m_SelectedDistance - num4);
-						flag = !flag2;
-					}
-					else if (this.m_SelectedPath != -1)
-					{
-						flag = true;
-					}
-					else if (this.m_SelectedEdgePath != -1)
-					{
-						flag2 = true;
-					}
-					if (this.m_DeleteMode && flag2)
-					{
-						flag2 = false;
-						flag = true;
-					}
-					bool flag3 = false;
-					if (flag2 && !this.m_DeleteMode)
+					if (this.m_HandleEdge && !this.m_DeleteMode)
 					{
 						Vector2 vector3;
 						PolygonEditor.GetPoint(this.m_SelectedEdgePath, this.m_SelectedEdgeVertex0, out vector3);
@@ -218,30 +200,30 @@ namespace UnityEditor
 						Handles.color = Color.white;
 						Vector2 v = this.GetNearestPointOnEdge(transform.TransformPoint(vector), vector5, vector6);
 						EditorGUI.BeginChangeCheck();
-						float num5 = HandleUtility.GetHandleSize(v) * 0.04f;
+						float num4 = HandleUtility.GetHandleSize(v) * 0.04f;
 						Handles.color = Color.green;
-						Vector3 arg_3CB_0 = v;
-						Vector3 arg_3CB_1 = new Vector3(0f, 0f, 1f);
-						Vector3 arg_3CB_2 = new Vector3(1f, 0f, 0f);
-						Vector3 arg_3CB_3 = new Vector3(0f, 1f, 0f);
-						float arg_3CB_4 = num5;
+						Vector3 arg_3EB_0 = v;
+						Vector3 arg_3EB_1 = new Vector3(0f, 0f, 1f);
+						Vector3 arg_3EB_2 = new Vector3(1f, 0f, 0f);
+						Vector3 arg_3EB_3 = new Vector3(0f, 1f, 0f);
+						float arg_3EB_4 = num4;
 						if (PolygonEditorUtility.<>f__mg$cache0 == null)
 						{
 							PolygonEditorUtility.<>f__mg$cache0 = new Handles.CapFunction(Handles.DotHandleCap);
 						}
-						v = Handles.Slider2D(arg_3CB_0, arg_3CB_1, arg_3CB_2, arg_3CB_3, arg_3CB_4, PolygonEditorUtility.<>f__mg$cache0, Vector3.zero);
+						v = Handles.Slider2D(arg_3EB_0, arg_3EB_1, arg_3EB_2, arg_3EB_3, arg_3EB_4, PolygonEditorUtility.<>f__mg$cache0, Vector3.zero);
 						Handles.color = Color.white;
 						if (EditorGUI.EndChangeCheck())
 						{
 							PolygonEditor.InsertPoint(this.m_SelectedEdgePath, this.m_SelectedEdgeVertex1, (vector3 + vector4) / 2f - offset);
 							this.m_SelectedPath = this.m_SelectedEdgePath;
 							this.m_SelectedVertex = this.m_SelectedEdgeVertex1;
-							this.m_SelectedDistance = 0f;
+							this.m_HandleEdge = false;
+							this.m_HandlePoint = true;
 							flag = true;
-							flag3 = true;
 						}
 					}
-					if (flag)
+					if (this.m_HandlePoint)
 					{
 						Vector2 vector7;
 						PolygonEditor.GetPoint(this.m_SelectedPath, this.m_SelectedVertex, out vector7);
@@ -249,7 +231,7 @@ namespace UnityEditor
 						Vector3 vector8 = transform.TransformPoint(vector7);
 						vector8.z = 0f;
 						Vector2 a = HandleUtility.WorldToGUIPoint(vector8);
-						float num6 = HandleUtility.GetHandleSize(vector8) * 0.04f;
+						float num5 = HandleUtility.GetHandleSize(vector8) * 0.04f;
 						if ((this.m_DeleteMode && current.type == EventType.MouseDown && Vector2.Distance(a, Event.current.mousePosition) < 50f) || this.DeleteCommandEvent(current))
 						{
 							if (current.type != EventType.ValidateCommand)
@@ -259,23 +241,23 @@ namespace UnityEditor
 								{
 									PolygonEditor.RemovePoint(this.m_SelectedPath, this.m_SelectedVertex);
 									this.Reset();
-									flag3 = true;
+									flag = true;
 								}
 							}
 							current.Use();
 						}
 						EditorGUI.BeginChangeCheck();
 						Handles.color = ((!this.m_DeleteMode) ? Color.green : Color.red);
-						Vector3 arg_5AF_0 = vector8;
-						Vector3 arg_5AF_1 = new Vector3(0f, 0f, 1f);
-						Vector3 arg_5AF_2 = new Vector3(1f, 0f, 0f);
-						Vector3 arg_5AF_3 = new Vector3(0f, 1f, 0f);
-						float arg_5AF_4 = num6;
+						Vector3 arg_5D3_0 = vector8;
+						Vector3 arg_5D3_1 = new Vector3(0f, 0f, 1f);
+						Vector3 arg_5D3_2 = new Vector3(1f, 0f, 0f);
+						Vector3 arg_5D3_3 = new Vector3(0f, 1f, 0f);
+						float arg_5D3_4 = num5;
 						if (PolygonEditorUtility.<>f__mg$cache1 == null)
 						{
 							PolygonEditorUtility.<>f__mg$cache1 = new Handles.CapFunction(Handles.DotHandleCap);
 						}
-						Vector3 vector9 = Handles.Slider2D(arg_5AF_0, arg_5AF_1, arg_5AF_2, arg_5AF_3, arg_5AF_4, PolygonEditorUtility.<>f__mg$cache1, Vector3.zero);
+						Vector3 vector9 = Handles.Slider2D(arg_5D3_0, arg_5D3_1, arg_5D3_2, arg_5D3_3, arg_5D3_4, PolygonEditorUtility.<>f__mg$cache1, Vector3.zero);
 						Handles.color = Color.white;
 						if (EditorGUI.EndChangeCheck() && !this.m_DeleteMode)
 						{
@@ -283,14 +265,14 @@ namespace UnityEditor
 							vector7 -= offset;
 							PolygonEditor.TestPointMove(this.m_SelectedPath, this.m_SelectedVertex, vector7, out this.m_LeftIntersect, out this.m_RightIntersect, this.m_LoopingCollider);
 							PolygonEditor.SetPoint(this.m_SelectedPath, this.m_SelectedVertex, vector7);
-							flag3 = true;
+							flag = true;
 						}
-						if (!flag3)
+						if (!flag)
 						{
 							this.DrawEdgesForSelectedPoint(vector9, transform, this.m_LeftIntersect, this.m_RightIntersect, this.m_LoopingCollider);
 						}
 					}
-					if (flag3)
+					if (flag)
 					{
 						Undo.RecordObject(this.m_ActiveCollider, "Edit Collider");
 						PolygonEditor.ApplyEditing(this.m_ActiveCollider);

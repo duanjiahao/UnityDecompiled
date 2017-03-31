@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -10,7 +11,7 @@ namespace UnityEngine
 			return JsonUtility.ToJson(obj, false);
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string ToJson(object obj, bool prettyPrint);
 
@@ -19,11 +20,11 @@ namespace UnityEngine
 			return (T)((object)JsonUtility.FromJson(json, typeof(T)));
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern object FromJson(string json, Type type);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FromJsonOverwrite(string json, object objectToOverwrite);
 	}

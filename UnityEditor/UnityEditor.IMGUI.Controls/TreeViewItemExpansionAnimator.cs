@@ -42,7 +42,7 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			get
 			{
-				return this.m_Setup.rowsRect.height - this.m_Setup.rowsRect.height * this.expandedValueNormalized;
+				return Mathf.Floor(this.m_Setup.rowsRect.height - this.m_Setup.rowsRect.height * this.expandedValueNormalized);
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			if (this.m_Setup != null)
 			{
-				if (this.m_Setup.item.id == setup.item.id)
+				if (this.m_Setup.item.id == setup.item.id && this.m_Setup.expanding != setup.expanding)
 				{
 					if (this.m_Setup.elapsedTime >= 0.0)
 					{
@@ -82,13 +82,13 @@ namespace UnityEditor.IMGUI.Controls
 					}
 					else
 					{
-						Debug.LogError("Invaid duration " + this.m_Setup.elapsedTime);
+						Debug.LogError("Invalid duration " + this.m_Setup.elapsedTime);
 					}
 					this.m_Setup = setup;
 				}
 				else
 				{
-					this.m_Setup.FireAnimationEndedEvent();
+					this.SkipAnimating();
 					this.m_Setup = setup;
 				}
 				this.m_Setup.expanding = setup.expanding;
@@ -103,6 +103,15 @@ namespace UnityEditor.IMGUI.Controls
 				Console.WriteLine("Begin animating: " + this.m_Setup);
 			}
 			this.m_CurrentClipRect = this.GetCurrentClippingRect();
+		}
+
+		public void SkipAnimating()
+		{
+			if (this.m_Setup != null)
+			{
+				this.m_Setup.FireAnimationEndedEvent();
+				this.m_Setup = null;
+			}
 		}
 
 		public bool CullRow(int row, ITreeViewGUI gui)
@@ -227,6 +236,10 @@ namespace UnityEditor.IMGUI.Controls
 			if (this.isAnimating)
 			{
 				HandleUtility.Repaint();
+			}
+			if (this.isAnimating && Event.current.type == EventType.Repaint)
+			{
+				this.m_Setup.CaptureTime();
 			}
 		}
 

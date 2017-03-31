@@ -181,7 +181,7 @@ namespace UnityEditorInternal
 			{
 				get
 				{
-					return this.m_TreeView.state.columnWidths;
+					return ((AudioProfilerGroupTreeViewState)this.m_TreeView.state).columnWidths;
 				}
 			}
 
@@ -220,7 +220,8 @@ namespace UnityEditorInternal
 			{
 				if (Event.current.type == EventType.Repaint)
 				{
-					GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.s_Styles.lineStyle : TreeViewGUI.s_Styles.lineBoldStyle;
+					GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.Styles.lineStyle : TreeViewGUI.Styles.lineBoldStyle;
+					TextAnchor alignment = gUIStyle.alignment;
 					gUIStyle.alignment = TextAnchor.MiddleLeft;
 					gUIStyle.padding.left = 0;
 					int num = 2;
@@ -236,7 +237,7 @@ namespace UnityEditorInternal
 						rect.x += this.columnWidths[i];
 						gUIStyle.alignment = TextAnchor.MiddleRight;
 					}
-					gUIStyle.alignment = TextAnchor.MiddleLeft;
+					gUIStyle.alignment = alignment;
 				}
 			}
 		}
@@ -276,7 +277,7 @@ namespace UnityEditorInternal
 			if (this.m_TreeView == null)
 			{
 				this.m_Backend = backend;
-				if (this.m_TreeViewState.columnWidths == null)
+				if (this.m_TreeViewState.columnWidths == null || this.m_TreeViewState.columnWidths.Length == 0)
 				{
 					int num = AudioProfilerGroupInfoHelper.GetLastColumnIndex() + 1;
 					this.m_TreeViewState.columnWidths = new float[num];
@@ -294,8 +295,8 @@ namespace UnityEditorInternal
 				this.m_ColumnHeader = new AudioProfilerGroupView.AudioProfilerGroupViewColumnHeader(this.m_TreeViewState, this.m_Backend);
 				this.m_ColumnHeader.columnWidths = this.m_TreeViewState.columnWidths;
 				this.m_ColumnHeader.minColumnWidth = 30f;
-				TreeViewController expr_163 = this.m_TreeView;
-				expr_163.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_163.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
+				TreeViewController expr_175 = this.m_TreeView;
+				expr_175.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_175.selectionChangedCallback, new Action<int[]>(this.OnTreeSelectionChanged));
 			}
 		}
 

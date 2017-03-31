@@ -72,6 +72,14 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public virtual UnityEngine.Object sourceObject
+		{
+			get
+			{
+				return (!(this.gameObject != null)) ? this.scriptableObject : this.gameObject;
+			}
+		}
+
 		public virtual AnimationClip animationClip
 		{
 			get
@@ -131,7 +139,7 @@ namespace UnityEditorInternal
 		{
 			get
 			{
-				return this.animationClip && (this.animationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None && AssetDatabase.IsOpenForEdit(this.animationClip);
+				return this.animationClip && (this.animationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None && AssetDatabase.IsOpenForEdit(this.animationClip, StatusQueryOptions.UseCachedIfPossible);
 			}
 		}
 
@@ -143,11 +151,20 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public virtual bool objectIsOptimized
+		{
+			get
+			{
+				Animator animator = this.animationPlayer as Animator;
+				return !(animator == null) && animator.isOptimizable && !animator.hasTransformHierarchy;
+			}
+		}
+
 		public virtual bool canRecord
 		{
 			get
 			{
-				return this.rootGameObject != null;
+				return this.rootGameObject != null && !this.objectIsOptimized;
 			}
 		}
 

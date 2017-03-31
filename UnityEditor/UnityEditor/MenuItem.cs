@@ -1,8 +1,9 @@
 using System;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
-	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true), RequiredByNativeCode]
 	public sealed class MenuItem : Attribute
 	{
 		public string menuItem;

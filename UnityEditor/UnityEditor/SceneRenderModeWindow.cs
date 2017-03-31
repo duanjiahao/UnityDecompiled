@@ -19,7 +19,48 @@ namespace UnityEditor
 
 			public static readonly GUIContent sGlobalIlluminationHeader = EditorGUIUtility.TextContent("Global Illumination");
 
+			public static readonly GUIContent sRealtimeGIHeader = EditorGUIUtility.TextContent("Realtime GI");
+
+			public static readonly GUIContent sBakedGIHeader = EditorGUIUtility.TextContent("Baked GI");
+
+			public static readonly GUIContent sMaterialValidationHeader = EditorGUIUtility.TextContent("Material Validation");
+
 			public static readonly GUIContent sResolutionToggle = EditorGUIUtility.TextContent("Show Lightmap Resolution");
+
+			public static DrawCameraMode[] sRenderModeUIOrder = new DrawCameraMode[]
+			{
+				DrawCameraMode.Textured,
+				DrawCameraMode.Wireframe,
+				DrawCameraMode.TexturedWire,
+				DrawCameraMode.ShadowCascades,
+				DrawCameraMode.RenderPaths,
+				DrawCameraMode.AlphaChannel,
+				DrawCameraMode.Overdraw,
+				DrawCameraMode.Mipmaps,
+				DrawCameraMode.DeferredDiffuse,
+				DrawCameraMode.DeferredSpecular,
+				DrawCameraMode.DeferredSmoothness,
+				DrawCameraMode.DeferredNormal,
+				DrawCameraMode.Systems,
+				DrawCameraMode.Clustering,
+				DrawCameraMode.LitClustering,
+				DrawCameraMode.RealtimeIndirect,
+				DrawCameraMode.RealtimeAlbedo,
+				DrawCameraMode.RealtimeEmissive,
+				DrawCameraMode.RealtimeDirectionality,
+				DrawCameraMode.RealtimeCharting,
+				DrawCameraMode.BakedLightmap,
+				DrawCameraMode.BakedAlbedo,
+				DrawCameraMode.BakedEmissive,
+				DrawCameraMode.BakedDirectionality,
+				DrawCameraMode.BakedCharting,
+				DrawCameraMode.BakedTexelValidity,
+				DrawCameraMode.BakedIndices,
+				DrawCameraMode.ShadowMasks,
+				DrawCameraMode.LightOverlap,
+				DrawCameraMode.ValidateAlbedo,
+				DrawCameraMode.ValidateMetalSpecular
+			};
 
 			public static readonly GUIContent[] sRenderModeOptions = new GUIContent[]
 			{
@@ -39,27 +80,39 @@ namespace UnityEditor
 				EditorGUIUtility.TextContent("Systems"),
 				EditorGUIUtility.TextContent("Albedo"),
 				EditorGUIUtility.TextContent("Emissive"),
-				EditorGUIUtility.TextContent("Irradiance"),
+				EditorGUIUtility.TextContent("Indirect"),
 				EditorGUIUtility.TextContent("Directionality"),
-				EditorGUIUtility.TextContent("Baked"),
+				EditorGUIUtility.TextContent("Baked Lightmap"),
 				EditorGUIUtility.TextContent("Clustering"),
-				EditorGUIUtility.TextContent("Lit Clustering")
+				EditorGUIUtility.TextContent("Lit Clustering"),
+				EditorGUIUtility.TextContent("Validate Albedo"),
+				EditorGUIUtility.TextContent("Validate Metal Specular"),
+				EditorGUIUtility.TextContent("Shadowmask"),
+				EditorGUIUtility.TextContent("Light Overlap"),
+				EditorGUIUtility.TextContent("Albedo"),
+				EditorGUIUtility.TextContent("Emissive"),
+				EditorGUIUtility.TextContent("Directionality"),
+				EditorGUIUtility.TextContent("Texel Validity"),
+				EditorGUIUtility.TextContent("Lightmap Indices"),
+				EditorGUIUtility.TextContent("UV Charts")
 			};
 		}
 
-		private readonly float m_WindowHeight = (float)SceneRenderModeWindow.sMenuRowCount * 16f + 9f + 22f;
+		private readonly float m_WindowHeight = (float)SceneRenderModeWindow.sMenuRowCount * 16f + 15f + 22f;
 
 		private const float m_WindowWidth = 205f;
 
 		private static readonly int sRenderModeCount = SceneRenderModeWindow.Styles.sRenderModeOptions.Length;
 
-		private static readonly int sMenuRowCount = SceneRenderModeWindow.sRenderModeCount + 4;
+		private static readonly int sMenuRowCount = SceneRenderModeWindow.sRenderModeCount + 7;
 
 		private SerializedProperty m_EnableRealtimeGI;
 
 		private SerializedProperty m_EnableBakedGI;
 
-		private const int kMenuHeaderCount = 4;
+		private bool m_PathTracerBackend = false;
+
+		private const int kMenuHeaderCount = 7;
 
 		private const float kSeparatorHeight = 3f;
 
@@ -90,6 +143,7 @@ namespace UnityEditor
 			SerializedObject serializedObject = new SerializedObject(LightmapEditorSettings.GetLightmapSettings());
 			this.m_EnableRealtimeGI = serializedObject.FindProperty("m_GISettings.m_EnableRealtimeLightmaps");
 			this.m_EnableBakedGI = serializedObject.FindProperty("m_GISettings.m_EnableBakedLightmaps");
+			this.m_PathTracerBackend = (LightmapEditorSettings.giBakeBackend == LightmapEditorSettings.GIBakeBackend.PathTracer);
 		}
 
 		public override void OnGUI(Rect rect)
@@ -140,40 +194,59 @@ namespace UnityEditor
 			this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sShadedHeader);
 			for (int i = 0; i < SceneRenderModeWindow.sRenderModeCount; i++)
 			{
-				DrawCameraMode drawCameraMode = (DrawCameraMode)i;
-				if (drawCameraMode != DrawCameraMode.ShadowCascades)
+				DrawCameraMode drawCameraMode = SceneRenderModeWindow.Styles.sRenderModeUIOrder[i];
+				switch (drawCameraMode)
 				{
-					if (drawCameraMode != DrawCameraMode.DeferredDiffuse)
+				case DrawCameraMode.Systems:
+					this.DrawSeparator(ref rect);
+					this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sGlobalIlluminationHeader);
+					goto IL_10D;
+				case DrawCameraMode.RealtimeAlbedo:
+				case DrawCameraMode.RealtimeEmissive:
+				case DrawCameraMode.RealtimeDirectionality:
+					IL_56:
+					if (drawCameraMode == DrawCameraMode.ShadowCascades)
 					{
-						if (drawCameraMode == DrawCameraMode.Charting)
-						{
-							this.DrawSeparator(ref rect);
-							this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sGlobalIlluminationHeader);
-						}
+						this.DrawSeparator(ref rect);
+						this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sMiscellaneous);
+						goto IL_10D;
 					}
-					else
+					if (drawCameraMode == DrawCameraMode.DeferredDiffuse)
 					{
 						this.DrawSeparator(ref rect);
 						this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sDeferredHeader);
+						goto IL_10D;
 					}
-				}
-				else
-				{
+					if (drawCameraMode != DrawCameraMode.ValidateAlbedo)
+					{
+						goto IL_10D;
+					}
 					this.DrawSeparator(ref rect);
-					this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sMiscellaneous);
+					this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sMaterialValidationHeader);
+					goto IL_10D;
+				case DrawCameraMode.RealtimeIndirect:
+					this.DrawSeparator(ref rect);
+					this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sRealtimeGIHeader);
+					goto IL_10D;
+				case DrawCameraMode.BakedLightmap:
+					this.DrawSeparator(ref rect);
+					this.DrawHeader(ref rect, SceneRenderModeWindow.Styles.sBakedGIHeader);
+					goto IL_10D;
 				}
+				goto IL_56;
+				IL_10D:
 				using (new EditorGUI.DisabledScope(this.IsModeDisabled(drawCameraMode)))
 				{
 					this.DoOneMode(caller, ref rect, drawCameraMode);
 				}
 			}
-			bool disabled = this.m_SceneView.renderMode < DrawCameraMode.Charting || this.IsModeDisabled(this.m_SceneView.renderMode);
+			bool disabled = this.m_SceneView.renderMode < DrawCameraMode.RealtimeCharting || this.IsModeDisabled(this.m_SceneView.renderMode);
 			this.DoResolutionToggle(rect, disabled);
 		}
 
 		private bool IsModeDisabled(DrawCameraMode mode)
 		{
-			return (!this.m_EnableBakedGI.boolValue && mode == DrawCameraMode.Baked) || (!this.m_EnableRealtimeGI.boolValue && !this.m_EnableBakedGI.boolValue && mode >= DrawCameraMode.Charting);
+			return (mode == DrawCameraMode.BakedLightmap && !this.m_EnableBakedGI.boolValue) || (mode == DrawCameraMode.BakedAlbedo && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedEmissive && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedTexelValidity && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode >= DrawCameraMode.RealtimeCharting && mode < DrawCameraMode.BakedLightmap && !this.m_EnableRealtimeGI.boolValue && (!this.m_EnableBakedGI.boolValue || (this.m_EnableBakedGI.boolValue && this.m_PathTracerBackend)));
 		}
 
 		private void DoResolutionToggle(Rect rect, bool disabled)

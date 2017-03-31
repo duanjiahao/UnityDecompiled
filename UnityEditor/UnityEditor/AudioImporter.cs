@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -8,16 +9,20 @@ namespace UnityEditor
 	{
 		public extern AudioImporterSampleSettings defaultSampleSettings
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool forceToMono
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -76,8 +81,10 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.compressionBitrate is no longer supported", true)]
 		public extern int compressionBitrate
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -85,8 +92,10 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.loopable is no longer supported. All audio assets encoded by Unity are by default loopable.")]
 		public extern bool loopable
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -94,8 +103,10 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.hardware is no longer supported. All mixing of audio is done by software and only some platforms use hardware acceleration to perform decoding.")]
 		public extern bool hardware
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -133,8 +144,10 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.threeD is no longer supported")]
 		public extern bool threeD
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -142,6 +155,7 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.durationMS is deprecated.", true)]
 		internal extern int durationMS
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -149,6 +163,7 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.frequency is deprecated.", true)]
 		internal extern int frequency
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -156,6 +171,7 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.origChannelCount is deprecated.", true)]
 		internal extern int origChannelCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -163,6 +179,7 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.origIsCompressible is deprecated.", true)]
 		internal extern bool origIsCompressible
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -170,6 +187,7 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.origIsMonoForcable is deprecated.", true)]
 		internal extern bool origIsMonoForcable
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -177,6 +195,7 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.defaultBitrate is deprecated.", true)]
 		internal extern int defaultBitrate
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -193,18 +212,21 @@ namespace UnityEditor
 		[Obsolete("AudioImporter.origFileSize is deprecated.", true)]
 		internal extern int origFileSize
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern int origSize
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern int compSize
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -225,6 +247,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_ContainsSampleSettingsOverride(BuildTargetGroup platformGroup);
 
@@ -244,6 +267,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AudioImporterSampleSettings Internal_GetOverrideSampleSettings(BuildTargetGroup platformGroup);
 
@@ -263,6 +287,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_SetOverrideSampleSettings(BuildTargetGroup platformGroup, AudioImporterSampleSettings settings);
 
@@ -282,22 +307,27 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_ClearSampleSettingOverride(BuildTargetGroup platform);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetLoadInBackground(bool flag);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool Internal_GetLoadInBackground();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetPreloadAudioData(bool flag);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool Internal_GetPreloadAudioData();
 
-		[Obsolete("AudioImporter.updateOrigData is deprecated.", true)]
+		[Obsolete("AudioImporter.updateOrigData is deprecated.", true), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void updateOrigData();
 

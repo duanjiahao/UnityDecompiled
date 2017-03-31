@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.Animations
 {
@@ -10,6 +11,7 @@ namespace UnityEditor.Animations
 			AnimatorTransition.Internal_Create(this);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorTransition mono);
 	}

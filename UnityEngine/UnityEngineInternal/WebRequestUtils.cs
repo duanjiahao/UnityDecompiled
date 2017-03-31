@@ -65,7 +65,7 @@ namespace UnityEngineInternal
 					throw ex;
 				}
 			}
-			return uri2.OriginalString;
+			return (!targetUrl.Contains("%")) ? uri2.AbsoluteUri : uri2.OriginalString;
 		}
 	}
 }

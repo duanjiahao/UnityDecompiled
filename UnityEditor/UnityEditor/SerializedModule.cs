@@ -68,9 +68,9 @@ namespace UnityEditor
 			return a + "." + b;
 		}
 
-		public string GetUniqueModuleName()
+		public string GetUniqueModuleName(UnityEngine.Object o)
 		{
-			return SerializedModule.Concat("" + this.m_Object.targetObject.GetInstanceID(), this.m_ModuleName);
+			return SerializedModule.Concat("" + o.GetInstanceID(), this.m_ModuleName);
 		}
 	}
 }

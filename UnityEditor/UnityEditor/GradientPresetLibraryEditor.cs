@@ -34,7 +34,7 @@ namespace UnityEditor
 
 		private void OnEditButtonClicked(string libraryPath)
 		{
-			GradientPicker.Show(new Gradient());
+			GradientPicker.Show(new Gradient(), true);
 			GradientPicker.instance.currentPresetLibrary = libraryPath;
 		}
 	}

@@ -18,8 +18,6 @@ namespace UnityEditor
 
 			public GUIContent[,] BodyPart;
 
-			public GUILayoutOption ButtonSize;
-
 			public Styles()
 			{
 				GUIContent[,] expr_49 = new GUIContent[4, 9];
@@ -35,7 +33,6 @@ namespace UnityEditor
 				expr_49[2, 4] = EditorGUIUtility.IconContent("AvatarInspector/LeftHandZoom");
 				expr_49[3, 6] = EditorGUIUtility.IconContent("AvatarInspector/RightHandZoom");
 				this.BodyPart = expr_49;
-				this.ButtonSize = GUILayout.MaxWidth(120f);
 				base..ctor();
 			}
 		}
@@ -78,8 +75,9 @@ namespace UnityEditor
 			AvatarControl.s_BonePositions[num, 4] = new Vector2(-0.21f, -0.4f);
 			AvatarControl.s_BonePositions[num, 5] = new Vector2(0.23f, -0.8f);
 			AvatarControl.s_BonePositions[num, 6] = new Vector2(-0.23f, -0.8f);
-			AvatarControl.s_BonePositions[num, 7] = new Vector2(0f, 0.25f);
-			AvatarControl.s_BonePositions[num, 8] = new Vector2(0f, 0.43f);
+			AvatarControl.s_BonePositions[num, 7] = new Vector2(0f, 0.2f);
+			AvatarControl.s_BonePositions[num, 8] = new Vector2(0f, 0.35f);
+			AvatarControl.s_BonePositions[num, 54] = new Vector2(0f, 0.5f);
 			AvatarControl.s_BonePositions[num, 9] = new Vector2(0f, 0.66f);
 			AvatarControl.s_BonePositions[num, 10] = new Vector2(0f, 0.76f);
 			AvatarControl.s_BonePositions[num, 11] = new Vector2(0.14f, 0.6f);
@@ -231,7 +229,7 @@ namespace UnityEditor
 				b = rect.center + b;
 				int num = 19;
 				Rect rect2 = new Rect(b.x - (float)num * 0.5f, b.y - (float)num * 0.5f, (float)num, (float)num);
-				bone.BoneDotGUI(rect2, i, true, true, serializedObject, editor);
+				bone.BoneDotGUI(rect2, rect2, i, true, true, true, serializedObject, editor);
 			}
 		}
 	}

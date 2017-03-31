@@ -24,6 +24,12 @@ namespace UnityEditor
 
 		private static ParticleSystemWindow.Texts s_Texts;
 
+		public Editor customEditor
+		{
+			get;
+			set;
+		}
+
 		private ParticleSystemWindow()
 		{
 		}
@@ -142,7 +148,10 @@ namespace UnityEditor
 					{
 						this.m_ParticleEffectUI = new ParticleEffectUI(this);
 					}
-					if (this.m_ParticleEffectUI.InitializeIfNeeded(this.m_Target))
+					if (this.m_ParticleEffectUI.InitializeIfNeeded(new ParticleSystem[]
+					{
+						this.m_Target
+					}))
 					{
 						base.Repaint();
 					}
@@ -291,7 +300,6 @@ namespace UnityEditor
 			{
 				if (this.m_ParticleEffectUI != null)
 				{
-					this.m_ParticleEffectUI.OnSceneGUI();
 					this.m_ParticleEffectUI.OnSceneViewGUI();
 				}
 			}

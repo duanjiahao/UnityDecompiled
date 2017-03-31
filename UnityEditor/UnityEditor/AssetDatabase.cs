@@ -122,6 +122,14 @@ namespace UnityEditor
 
 		internal static extern bool isLocked
 		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		internal static extern string assetFolderGUID
+		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -131,9 +139,11 @@ namespace UnityEditor
 			return AssetDatabase.Contains(obj.GetInstanceID());
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Contains(int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string CreateFolder(string parentFolder, string newFolderName);
 
@@ -142,6 +152,7 @@ namespace UnityEditor
 			return AssetDatabase.IsMainAsset(obj.GetInstanceID());
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsMainAsset(int instanceID);
 
@@ -150,6 +161,7 @@ namespace UnityEditor
 			return AssetDatabase.IsSubAsset(obj.GetInstanceID());
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsSubAsset(int instanceID);
 
@@ -158,6 +170,7 @@ namespace UnityEditor
 			return AssetDatabase.IsForeignAsset(obj.GetInstanceID());
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsForeignAsset(int instanceID);
 
@@ -166,33 +179,43 @@ namespace UnityEditor
 			return AssetDatabase.IsNativeAsset(obj.GetInstanceID());
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsNativeAsset(int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GenerateUniqueAssetPath(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StartAssetEditing();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopAssetEditing();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string ValidateMoveAsset(string oldPath, string newPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string MoveAsset(string oldPath, string newPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string RenameAsset(string pathName, string newName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool MoveAssetToTrash(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DeleteAsset(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ImportAsset(string path, [DefaultValue("ImportAssetOptions.Default")] ImportAssetOptions options);
 
@@ -203,24 +226,31 @@ namespace UnityEditor
 			AssetDatabase.ImportAsset(path, options);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CopyAsset(string path, string newPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool WriteImportSettingsIfDirty(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetSubFolders(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsValidFolder(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CreateAsset(UnityEngine.Object asset, string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CreateAssetFromObjects(UnityEngine.Object[] assets, string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AddObjectToAsset(UnityEngine.Object objectToAdd, string path);
 
@@ -229,12 +259,19 @@ namespace UnityEditor
 			AssetDatabase.AddObjectToAsset_OBJ_Internal(objectToAdd, assetObject);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void AddInstanceIDToAssetWithRandomFileId(int instanceIDToAdd, UnityEngine.Object assetObject, bool hide);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AddObjectToAsset_OBJ_Internal(UnityEngine.Object newAsset, UnityEngine.Object sameAssetFile);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetMainObject(UnityEngine.Object mainObject, string assetPath);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetPath(UnityEngine.Object assetObject);
 
@@ -243,24 +280,27 @@ namespace UnityEditor
 			return AssetDatabase.GetAssetPathFromInstanceID(instanceID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetAssetPathFromInstanceID(int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetMainAssetInstanceID(string assetPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetOrScenePath(UnityEngine.Object assetObject);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetTextMetaFilePathFromAssetPath(string path);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAssetPathFromTextMetaFilePath(string path);
 
-		[TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
+		[GeneratedByOldBindingsGenerator, TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object LoadAssetAtPath(string assetPath, Type type);
 
@@ -269,21 +309,27 @@ namespace UnityEditor
 			return (T)((object)AssetDatabase.LoadAssetAtPath(assetPath, typeof(T)));
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object LoadMainAssetAtPath(string assetPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Type GetMainAssetTypeAtPath(string assetPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsMainAssetAtPathLoaded(string assetPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] LoadAllAssetRepresentationsAtPath(string assetPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object[] LoadAllAssetsAtPath(string assetPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAllAssetPaths();
 
@@ -297,6 +343,7 @@ namespace UnityEditor
 		{
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Refresh([DefaultValue("ImportAssetOptions.Default")] ImportAssetOptions options);
 
@@ -307,6 +354,7 @@ namespace UnityEditor
 			AssetDatabase.Refresh(options);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool OpenAsset(int instanceID, [DefaultValue("-1")] int lineNumber);
 
@@ -343,9 +391,11 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string AssetPathToGUID(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GUIDToAssetPath(string guid);
 
@@ -356,21 +406,27 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetAssetDependencyHash(string path, out Hash128 value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetInstanceIDFromGUID(string guid);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SaveAssets();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture GetCachedIcon(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetLabels(UnityEngine.Object obj, string[] labels);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_GetAllLabels(out string[] labels, out float[] scores);
 
@@ -387,15 +443,19 @@ namespace UnityEditor
 			return dictionary;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetLabels(UnityEngine.Object obj);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearLabels(UnityEngine.Object obj);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] MatchLabelsPartial(UnityEngine.Object obj, string partial);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAllAssetBundleNames();
 
@@ -405,27 +465,43 @@ namespace UnityEditor
 			return AssetDatabase.GetAllAssetBundleNames();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] GetAllAssetBundleNamesWithoutVariant();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string[] GetAllAssetBundleVariants();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetUnusedAssetBundleNames();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RemoveAssetBundleName(string assetBundleName, bool forceRemove);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RemoveUnusedAssetBundleNames();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAssetPathsFromAssetBundle(string assetBundleName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAssetPathsFromAssetBundleAndAssetName(string assetBundleName, string assetName);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetImplicitAssetBundleName(string assetPath);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetImplicitAssetBundleVariantName(string assetPath);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAssetBundleDependencies(string assetBundleName, bool recursive);
 
@@ -447,6 +523,7 @@ namespace UnityEditor
 			return AssetDatabase.GetDependencies(pathNames, true);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetDependencies(string[] pathNames, bool recursive);
 
@@ -466,6 +543,7 @@ namespace UnityEditor
 			}, fileName, flags);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ExportPackage(string[] assetPathNames, string fileName, [DefaultValue("ExportPackageOptions.Default")] ExportPackageOptions flags);
 
@@ -515,46 +593,84 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetUniquePathNameAtSelectedPath(string fileName);
 
+		[Obsolete("AssetDatabase.IsOpenForEdit without StatusQueryOptions has been deprecated. Use the version with StatusQueryOptions instead. This will always request the cached status (StatusQueryOptions.UseCachedIfPossible)")]
 		public static bool IsOpenForEdit(UnityEngine.Object assetObject)
 		{
 			string assetOrScenePath = AssetDatabase.GetAssetOrScenePath(assetObject);
-			return AssetDatabase.IsOpenForEdit(assetOrScenePath);
+			return AssetDatabase.IsOpenForEdit(assetOrScenePath, StatusQueryOptions.UseCachedIfPossible);
 		}
 
-		public static bool IsOpenForEdit(string assetOrMetaFilePath)
-		{
-			string text;
-			return AssetDatabase.IsOpenForEdit(assetOrMetaFilePath, out text);
-		}
-
-		public static bool IsOpenForEdit(UnityEngine.Object assetObject, out string message)
+		public static bool IsOpenForEdit(UnityEngine.Object assetObject, StatusQueryOptions StatusQueryOptions)
 		{
 			string assetOrScenePath = AssetDatabase.GetAssetOrScenePath(assetObject);
-			return AssetDatabase.IsOpenForEdit(assetOrScenePath, out message);
+			return AssetDatabase.IsOpenForEdit(assetOrScenePath, StatusQueryOptions);
 		}
 
-		public static bool IsOpenForEdit(string assetOrMetaFilePath, out string message)
+		[Obsolete("AssetDatabase.IsOpenForEdit without StatusQueryOptions has been deprecated. Use the version with StatusQueryOptions instead. This will always request the cached status (StatusQueryOptions.UseCachedIfPossible)")]
+		public static bool IsOpenForEdit(string assetOrMetaFilePath)
 		{
-			return AssetModificationProcessorInternal.IsOpenForEdit(assetOrMetaFilePath, out message);
+			return AssetDatabase.IsOpenForEdit(assetOrMetaFilePath, StatusQueryOptions.UseCachedIfPossible);
 		}
 
-		public static bool IsMetaFileOpenForEdit(UnityEngine.Object assetObject)
+		public static bool IsOpenForEdit(string assetOrMetaFilePath, StatusQueryOptions StatusQueryOptions)
 		{
 			string text;
-			return AssetDatabase.IsMetaFileOpenForEdit(assetObject, out text);
+			return AssetDatabase.IsOpenForEdit(assetOrMetaFilePath, out text, StatusQueryOptions);
 		}
 
+		[Obsolete("AssetDatabase.IsOpenForEdit without StatusQueryOptions has been deprecated. Use the version with StatusQueryOptions instead. This will always request the cached status (StatusQueryOptions.UseCachedIfPossible)")]
+		public static bool IsOpenForEdit(UnityEngine.Object assetObject, out string message)
+		{
+			return AssetDatabase.IsOpenForEdit(assetObject, out message, StatusQueryOptions.UseCachedIfPossible);
+		}
+
+		public static bool IsOpenForEdit(UnityEngine.Object assetObject, out string message, StatusQueryOptions statusOptions)
+		{
+			string assetOrScenePath = AssetDatabase.GetAssetOrScenePath(assetObject);
+			return AssetDatabase.IsOpenForEdit(assetOrScenePath, out message, statusOptions);
+		}
+
+		[Obsolete("AssetDatabase.IsOpenForEdit without StatusQueryOptions has been deprecated. Use the version with StatusQueryOptions instead. This will always request the cached status (StatusQueryOptions.UseCachedIfPossible)")]
+		public static bool IsOpenForEdit(string assetOrMetaFilePath, out string message)
+		{
+			return AssetDatabase.IsOpenForEdit(assetOrMetaFilePath, out message, StatusQueryOptions.UseCachedIfPossible);
+		}
+
+		public static bool IsOpenForEdit(string assetOrMetaFilePath, out string message, StatusQueryOptions statusOptions)
+		{
+			return AssetModificationProcessorInternal.IsOpenForEdit(assetOrMetaFilePath, out message, statusOptions);
+		}
+
+		[Obsolete("AssetDatabase.IsMetaFileOpenForEdit without StatusQueryOptions has been deprecated. Use the version with StatusQueryOptions instead. This will always request the cached status (StatusQueryOptions.UseCachedIfPossible)")]
+		public static bool IsMetaFileOpenForEdit(UnityEngine.Object assetObject)
+		{
+			return AssetDatabase.IsMetaFileOpenForEdit(assetObject, StatusQueryOptions.UseCachedIfPossible);
+		}
+
+		public static bool IsMetaFileOpenForEdit(UnityEngine.Object assetObject, StatusQueryOptions statusOptions)
+		{
+			string text;
+			return AssetDatabase.IsMetaFileOpenForEdit(assetObject, out text, statusOptions);
+		}
+
+		[Obsolete("AssetDatabase.IsMetaFileOpenForEdit without StatusQueryOptions has been deprecated. Use the version with StatusQueryOptions instead. This will always request the cached status (StatusQueryOptions.UseCachedIfPossible)")]
 		public static bool IsMetaFileOpenForEdit(UnityEngine.Object assetObject, out string message)
+		{
+			return AssetDatabase.IsMetaFileOpenForEdit(assetObject, out message, StatusQueryOptions.UseCachedIfPossible);
+		}
+
+		public static bool IsMetaFileOpenForEdit(UnityEngine.Object assetObject, out string message, StatusQueryOptions statusOptions)
 		{
 			string assetOrScenePath = AssetDatabase.GetAssetOrScenePath(assetObject);
 			string textMetaFilePathFromAssetPath = AssetDatabase.GetTextMetaFilePathFromAssetPath(assetOrScenePath);
-			return AssetDatabase.IsOpenForEdit(textMetaFilePathFromAssetPath, out message);
+			return AssetDatabase.IsOpenForEdit(textMetaFilePathFromAssetPath, out message, statusOptions);
 		}
 
-		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
+		[GeneratedByOldBindingsGenerator, TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object GetBuiltinExtraResource(Type type, string path);
 
@@ -562,6 +678,10 @@ namespace UnityEditor
 		{
 			return (T)((object)AssetDatabase.GetBuiltinExtraResource(typeof(T), path));
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string[] CollectAllChildren(string guid, string[] collection);
 
 		[RequiredByNativeCode]
 		private static void Internal_CallImportPackageStarted(string packageName)

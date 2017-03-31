@@ -8,7 +8,7 @@ namespace UnityEditorInternal
 
 		void ClearSelectedPropertyPath();
 
-		ProfilerProperty CreateProperty(bool details);
+		ProfilerProperty GetRootProfilerProperty(ProfilerColumn sortType);
 
 		int GetActiveVisibleFrameIndex();
 

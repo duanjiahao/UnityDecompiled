@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEngine
 {
-	[Flags]
+	[Flags, Obsolete("ParticleSystemVertexStreams is deprecated. Please use ParticleSystemVertexStream instead.")]
 	public enum ParticleSystemVertexStreams
 	{
 		Position = 1,

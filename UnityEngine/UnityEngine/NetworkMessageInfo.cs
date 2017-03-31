@@ -47,6 +47,7 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern NetworkView NullNetworkView();
 	}

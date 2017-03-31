@@ -6,7 +6,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
-	public sealed class RemoteSettings
+	public static class RemoteSettings
 	{
 		public delegate void UpdatedEventHandler();
 
@@ -46,6 +46,7 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetInt(string key, [DefaultValue("0")] int defaultValue);
 
@@ -56,6 +57,7 @@ namespace UnityEngine
 			return RemoteSettings.GetInt(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetFloat(string key, [DefaultValue("0.0F")] float defaultValue);
 
@@ -66,6 +68,7 @@ namespace UnityEngine
 			return RemoteSettings.GetFloat(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetString(string key, [DefaultValue("\"\"")] string defaultValue);
 
@@ -76,6 +79,7 @@ namespace UnityEngine
 			return RemoteSettings.GetString(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetBool(string key, [DefaultValue("false")] bool defaultValue);
 
@@ -86,7 +90,16 @@ namespace UnityEngine
 			return RemoteSettings.GetBool(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasKey(string key);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetCount();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetKeys();
 	}
 }

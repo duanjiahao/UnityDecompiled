@@ -249,7 +249,7 @@ namespace UnityEditor
 				if (this.selectedLV1Items[i])
 				{
 					string guid = this.downloadConflicts[i];
-					if (res == DownloadResolution.Merge && (AssetServer.AssetIsBinaryByGUID(guid) || AssetServer.IsItemDeleted(guid)))
+					if (res == DownloadResolution.Merge && AssetServer.IsItemDeleted(guid))
 					{
 						flag = true;
 					}
@@ -271,10 +271,10 @@ namespace UnityEditor
 						num = ((num != -1) ? -2 : i);
 					}
 				}
-				IL_9F:
+				IL_94:
 				i++;
 				continue;
-				goto IL_9F;
+				goto IL_94;
 			}
 			this.enableContinueButton = (this.downloadConflictsToResolve == 0);
 			if (num >= 0)
@@ -427,7 +427,7 @@ namespace UnityEditor
 			{
 				if (this.selectedLV1Items[i])
 				{
-					if (!AssetServer.AssetIsBinaryByGUID(this.downloadConflicts[i]) && !AssetServer.IsItemDeleted(this.downloadConflicts[i]))
+					if (!AssetServer.IsItemDeleted(this.downloadConflicts[i]))
 					{
 						result = true;
 						return result;

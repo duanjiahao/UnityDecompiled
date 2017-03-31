@@ -2,17 +2,21 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
 	public sealed class ObjectNames
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string NicifyVariableName(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetInspectorTitle(UnityEngine.Object obj);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetClassName(UnityEngine.Object obj);
 
@@ -50,12 +54,15 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetDragAndDropTitle(UnityEngine.Object obj);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetNameSmart(UnityEngine.Object obj, string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetNameSmartWithInstanceID(int instanceID, string name);
 
@@ -71,6 +78,7 @@ namespace UnityEditor
 			return ObjectNames.GetInspectorTitle(obj);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetUniqueName(string[] existingNames, string name);
 	}

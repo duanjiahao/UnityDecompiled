@@ -8,13 +8,14 @@ namespace UnityEditor
 	{
 		private PolygonEditorUtility m_PolyUtility = new PolygonEditorUtility();
 
-		private bool m_ShowColliderInfo;
+		private SerializedProperty m_EdgeRadius;
 
 		private SerializedProperty m_Points;
 
 		public override void OnEnable()
 		{
 			base.OnEnable();
+			this.m_EdgeRadius = base.serializedObject.FindProperty("m_EdgeRadius");
 			this.m_Points = base.serializedObject.FindProperty("m_Points");
 			this.m_Points.isExpanded = false;
 		}
@@ -23,6 +24,7 @@ namespace UnityEditor
 		{
 			base.BeginColliderInspector();
 			base.OnInspectorGUI();
+			EditorGUILayout.PropertyField(this.m_EdgeRadius, new GUILayoutOption[0]);
 			if (base.targets.Length == 1)
 			{
 				EditorGUI.BeginDisabledGroup(base.editingCollider);

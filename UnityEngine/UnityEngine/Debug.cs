@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -20,14 +21,17 @@ namespace UnityEngine
 
 		public static extern bool developerConsoleVisible
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isDebugBuild
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -61,6 +65,7 @@ namespace UnityEngine
 			Debug.INTERNAL_CALL_DrawLine(ref start, ref end, ref white, duration, depthTest);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_DrawLine(ref Vector3 start, ref Vector3 end, ref Color color, float duration, bool depthTest);
 
@@ -93,9 +98,11 @@ namespace UnityEngine
 			Debug.DrawLine(start, start + dir, color, duration, depthTest);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Break();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DebugBreak();
 
@@ -139,6 +146,7 @@ namespace UnityEngine
 			Debug.logger.LogFormat(LogType.Error, context, format, args);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearDeveloperConsole();
 
@@ -152,6 +160,7 @@ namespace UnityEngine
 			Debug.logger.LogException(exception, context);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void LogPlayerBuildError(string message, string file, int line, int column);
 
@@ -271,12 +280,15 @@ namespace UnityEngine
 			Debug.logger.LogFormat(LogType.Assert, context, format, args);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void OpenConsoleFile();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void GetDiagnosticSwitches(List<DiagnosticSwitch> results);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetDiagnosticSwitch(string name, object value, bool setPersistent);
 

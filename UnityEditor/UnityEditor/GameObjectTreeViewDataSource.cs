@@ -20,7 +20,7 @@ namespace UnityEditor
 
 		private const HierarchyType k_HierarchyType = HierarchyType.GameObjects;
 
-		private readonly int kGameObjectClassID = BaseObjectTools.StringToClassID("GameObject");
+		private readonly int kGameObjectClassID = UnityType.FindTypeByName("GameObject").persistentTypeID;
 
 		private const int k_DefaultStartCapacity = 1000;
 
@@ -39,6 +39,8 @@ namespace UnityEditor
 		private bool m_RowsPartiallyInitialized;
 
 		private int m_RowCount;
+
+		private List<TreeViewItem> m_ListOfRows;
 
 		private List<GameObjectTreeViewItem> m_StickySceneHeaderItems = new List<GameObjectTreeViewItem>();
 
@@ -60,6 +62,10 @@ namespace UnityEditor
 			}
 			set
 			{
+				if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(this.m_SearchString))
+				{
+					this.ClearSearchFilter();
+				}
 				this.m_SearchString = value;
 			}
 		}
@@ -236,6 +242,12 @@ namespace UnityEditor
 			}
 		}
 
+		private void ClearSearchFilter()
+		{
+			HierarchyProperty hierarchyProperty = this.CreateHierarchyProperty();
+			hierarchyProperty.SetSearchFilter("", 0);
+		}
+
 		public override void FetchData()
 		{
 			Profiler.BeginSample("SceneHierarchyWindow.FetchData");
@@ -326,9 +338,9 @@ namespace UnityEditor
 		private void ResizeItemList(int count)
 		{
 			this.AllocateBackingArrayIfNeeded();
-			if (this.m_Rows.Count != count)
+			if (this.m_ListOfRows.Count != count)
 			{
-				GameObjectTreeViewDataSource.Resize(this.m_Rows as List<TreeViewItem>, count);
+				GameObjectTreeViewDataSource.Resize(this.m_ListOfRows, count);
 			}
 		}
 
@@ -337,7 +349,8 @@ namespace UnityEditor
 			if (this.m_Rows == null)
 			{
 				int capacity = (this.m_RowCount <= 1000) ? 1000 : this.m_RowCount;
-				this.m_Rows = new List<TreeViewItem>(capacity);
+				this.m_ListOfRows = new List<TreeViewItem>(capacity);
+				this.m_Rows = this.m_ListOfRows;
 			}
 		}
 
@@ -397,12 +410,14 @@ namespace UnityEditor
 		{
 			int num = -1;
 			int num2 = 0;
+			List<int> list = new List<int>();
 			while (property.NextWithDepthCheck(null, minAllowedDepth))
 			{
 				GameObjectTreeViewItem item = this.EnsureCreatedItem(num2);
 				if (this.AddSceneHeaderToSearchIfNeeded(item, property, ref num))
 				{
 					num2++;
+					list.Add(num2);
 					if (this.IsSceneHeader(property))
 					{
 						continue;
@@ -412,7 +427,19 @@ namespace UnityEditor
 				this.InitTreeViewItem(item, property, false, 0);
 				num2++;
 			}
-			return num2;
+			int num3 = num2;
+			if (list.Count > 0)
+			{
+				int num4 = list[0];
+				for (int i = 1; i < list.Count; i++)
+				{
+					int count = list[i] - num4 - 1;
+					this.m_ListOfRows.Sort(num4, count, new TreeViewItemAlphaNumericSort());
+					num4 = list[i];
+				}
+				this.m_ListOfRows.Sort(num4, num3 - num4, new TreeViewItemAlphaNumericSort());
+			}
+			return num3;
 		}
 
 		private bool AddSceneHeaderToSearchIfNeeded(GameObjectTreeViewItem item, HierarchyProperty property, ref int currentSceneHandle)
@@ -475,7 +502,6 @@ namespace UnityEditor
 		private void InitTreeViewItem(GameObjectTreeViewItem item, int itemID, Scene scene, bool isSceneHeader, int colorCode, UnityEngine.Object pptrObject, bool hasChildren, int depth)
 		{
 			item.children = null;
-			item.userData = null;
 			item.id = itemID;
 			item.depth = depth;
 			item.parent = null;

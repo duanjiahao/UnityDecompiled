@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEditor.Connect;
 using UnityEditor.SceneManagement;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.Web
 {
@@ -18,9 +19,11 @@ namespace UnityEditor.Web
 			JSProxyMgr.GetInstance().AddGlobalObject("unity/project", new EditorProjectAccess());
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetProjectEditorVersion();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetRESTServiceURI();
 

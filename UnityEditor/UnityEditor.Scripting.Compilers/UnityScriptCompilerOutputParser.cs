@@ -11,7 +11,10 @@ namespace UnityEditor.Scripting.Compilers
 		private static Regex sUnknownTypeOrNamespace = new Regex("[^']*'(?<type_name>[^']+)'.*", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
 		[CompilerGenerated]
-		private static Func<string, Regex, NormalizedCompilerStatus> <>f__mg$cache0;
+		private static Func<Match, Regex, NormalizedCompilerStatus> <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static Func<Match, Regex, NormalizedCompilerStatus> <>f__mg$cache1;
 
 		protected override string GetErrorIdentifier()
 		{
@@ -29,9 +32,25 @@ namespace UnityEditor.Scripting.Compilers
 			Regex arg_29_2 = UnityScriptCompilerOutputParser.sUnknownTypeOrNamespace;
 			if (UnityScriptCompilerOutputParser.<>f__mg$cache0 == null)
 			{
-				UnityScriptCompilerOutputParser.<>f__mg$cache0 = new Func<string, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeSimpleUnknownTypeOfNamespaceError);
+				UnityScriptCompilerOutputParser.<>f__mg$cache0 = new Func<Match, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeSimpleUnknownTypeOfNamespaceError);
 			}
-			return CompilerOutputParserBase.TryNormalizeCompilerStatus(match, arg_29_1, arg_29_2, UnityScriptCompilerOutputParser.<>f__mg$cache0);
+			NormalizedCompilerStatus normalizedCompilerStatus = CompilerOutputParserBase.TryNormalizeCompilerStatus(match, arg_29_1, arg_29_2, UnityScriptCompilerOutputParser.<>f__mg$cache0);
+			NormalizedCompilerStatus result;
+			if (normalizedCompilerStatus.code != NormalizedCompilerStatusCode.NotNormalized)
+			{
+				result = normalizedCompilerStatus;
+			}
+			else
+			{
+				string arg_6A_1 = "0005";
+				Regex arg_6A_2 = UnityScriptCompilerOutputParser.sUnknownTypeOrNamespace;
+				if (UnityScriptCompilerOutputParser.<>f__mg$cache1 == null)
+				{
+					UnityScriptCompilerOutputParser.<>f__mg$cache1 = new Func<Match, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeSimpleUnknownTypeOfNamespaceError);
+				}
+				result = CompilerOutputParserBase.TryNormalizeCompilerStatus(match, arg_6A_1, arg_6A_2, UnityScriptCompilerOutputParser.<>f__mg$cache1);
+			}
+			return result;
 		}
 	}
 }

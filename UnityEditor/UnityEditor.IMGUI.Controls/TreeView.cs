@@ -6,25 +6,28 @@ using UnityEngine;
 
 namespace UnityEditor.IMGUI.Controls
 {
-	internal abstract class TreeView
+	public abstract class TreeView
 	{
 		private class OverriddenMethods
 		{
-			public readonly bool hasItemGUI;
-
-			public readonly bool hasDrawItemBackground;
+			public readonly bool hasRowGUI;
 
 			public readonly bool hasHandleDragAndDrop;
 
 			public readonly bool hasGetRenameRect;
 
+			public readonly bool hasBuildRows;
+
+			public readonly bool hasGetCustomRowHeight;
+
 			public OverriddenMethods(TreeView treeView)
 			{
 				Type type = treeView.GetType();
-				this.hasItemGUI = TreeView.OverriddenMethods.IsOverridden(type, "OnItemGUI");
-				this.hasDrawItemBackground = TreeView.OverriddenMethods.IsOverridden(type, "OnDrawItemBackground");
+				this.hasRowGUI = TreeView.OverriddenMethods.IsOverridden(type, "RowGUI");
 				this.hasHandleDragAndDrop = TreeView.OverriddenMethods.IsOverridden(type, "HandleDragAndDrop");
 				this.hasGetRenameRect = TreeView.OverriddenMethods.IsOverridden(type, "GetRenameRect");
+				this.hasBuildRows = TreeView.OverriddenMethods.IsOverridden(type, "BuildRows");
+				this.hasGetCustomRowHeight = TreeView.OverriddenMethods.IsOverridden(type, "GetCustomRowHeight");
 				this.ValidateOverriddenMethods(treeView);
 			}
 
@@ -76,17 +79,28 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		public struct ItemGUIEventArgs
+		protected struct RowGUIArgs
 		{
+			internal struct MultiColumnInfo
+			{
+				public MultiColumnHeaderState multiColumnHeaderState;
+
+				public Rect[] cellRects;
+
+				internal MultiColumnInfo(MultiColumnHeaderState multiColumnHeaderState, Rect[] cellRects)
+				{
+					this.multiColumnHeaderState = multiColumnHeaderState;
+					this.cellRects = cellRects;
+				}
+			}
+
 			public TreeViewItem item;
+
+			public string label;
 
 			public Rect rowRect;
 
-			public Rect cellRect;
-
 			public int row;
-
-			public int column;
 
 			public bool selected;
 
@@ -94,11 +108,49 @@ namespace UnityEditor.IMGUI.Controls
 
 			public bool isRenaming;
 
-			public bool isDropTarget;
+			internal TreeView.RowGUIArgs.MultiColumnInfo columnInfo
+			{
+				get;
+				set;
+			}
+
+			public int GetNumVisibleColumns()
+			{
+				if (!this.HasMultiColumnInfo())
+				{
+					throw new NotSupportedException("Only call this method if you are using a MultiColumnHeader with the TreeView.");
+				}
+				return this.columnInfo.multiColumnHeaderState.visibleColumns.Length;
+			}
+
+			public int GetColumn(int visibleColumnIndex)
+			{
+				if (!this.HasMultiColumnInfo())
+				{
+					throw new NotSupportedException("Only call this method if you are using a MultiColumnHeader with the TreeView.");
+				}
+				return this.columnInfo.multiColumnHeaderState.visibleColumns[visibleColumnIndex];
+			}
+
+			public Rect GetCellRect(int visibleColumnIndex)
+			{
+				if (!this.HasMultiColumnInfo())
+				{
+					throw new NotSupportedException("Only call this method if you are using a MultiColumnHeader with the TreeView.");
+				}
+				return this.columnInfo.cellRects[visibleColumnIndex];
+			}
+
+			internal bool HasMultiColumnInfo()
+			{
+				return this.columnInfo.multiColumnHeaderState != null;
+			}
 		}
 
-		public struct DragAndDropArgs
+		protected struct DragAndDropArgs
 		{
+			public TreeView.DragAndDropPosition dragAndDropPosition;
+
 			public TreeViewItem parentItem;
 
 			public int insertAtIndex;
@@ -106,19 +158,19 @@ namespace UnityEditor.IMGUI.Controls
 			public bool performDrop;
 		}
 
-		public struct SetupDragAndDropArgs
+		protected struct SetupDragAndDropArgs
 		{
 			public IList<int> draggedItemIDs;
 		}
 
-		public struct CanStartDragArgs
+		protected struct CanStartDragArgs
 		{
 			public TreeViewItem draggedItem;
 
 			public IList<int> draggedItemIDs;
 		}
 
-		public struct RenameEndedArgs
+		protected struct RenameEndedArgs
 		{
 			public bool acceptedRename;
 
@@ -129,7 +181,14 @@ namespace UnityEditor.IMGUI.Controls
 			public string newName;
 		}
 
-		private class TreeViewControlDataSource : LazyTreeViewDataSource
+		protected enum DragAndDropPosition
+		{
+			UponItem,
+			BetweenItems,
+			OutsideItems
+		}
+
+		internal class TreeViewControlDataSource : LazyTreeViewDataSource
 		{
 			private readonly TreeView m_Owner;
 
@@ -139,26 +198,79 @@ namespace UnityEditor.IMGUI.Controls
 				base.showRootItem = false;
 			}
 
-			public override void FetchData()
+			public override void ReloadData()
 			{
-				this.m_Owner.BuildRootAndRows(out this.m_RootItem, out this.m_Rows);
+				this.m_RootItem = null;
+				base.ReloadData();
+			}
+
+			private void ValidateRootItem()
+			{
 				if (this.m_RootItem == null)
 				{
-					throw new NullReferenceException("BuildRootAndRows should set a valid root item.");
-				}
-				if (this.m_Rows == null)
-				{
-					throw new NullReferenceException("BuildRootAndRows should set valid list of rows.");
+					throw new NullReferenceException("BuildRoot should set a valid root item.");
 				}
 				if (this.m_RootItem.depth != -1)
 				{
+					Debug.LogError("BuildRoot should ensure the root item has a depth == -1. The visible items start at depth == 0.");
 					this.m_RootItem.depth = -1;
 				}
-				if (this.m_RootItem.id != 0)
+				if (this.m_RootItem.children == null && !this.m_Owner.m_OverriddenMethods.hasBuildRows)
 				{
-					this.m_RootItem.id = 0;
+					throw new InvalidOperationException("TreeView: 'rootItem.children == null'. Did you forget to add children? If you intend to only create the list of rows (not the full tree) then you need to override: BuildRows, GetAncestors and GetDescendantsThatHaveChildren.");
 				}
+			}
+
+			public override void FetchData()
+			{
 				this.m_NeedRefreshRows = false;
+				if (this.m_RootItem == null)
+				{
+					this.m_RootItem = this.m_Owner.BuildRoot();
+					this.ValidateRootItem();
+				}
+				this.m_Rows = this.m_Owner.BuildRows(this.m_RootItem);
+				if (this.m_Rows == null)
+				{
+					throw new NullReferenceException("RefreshRows should set valid list of rows.");
+				}
+				if (this.m_Owner.m_OverriddenMethods.hasGetCustomRowHeight)
+				{
+					this.m_Owner.m_GUI.RefreshRowRects(this.m_Rows);
+				}
+			}
+
+			public void SearchFullTree(string search, List<TreeViewItem> result)
+			{
+				if (string.IsNullOrEmpty(search))
+				{
+					throw new ArgumentException("Invalid search: cannot be null or empty", "search");
+				}
+				if (result == null)
+				{
+					throw new ArgumentException("Invalid list: cannot be null", "result");
+				}
+				Stack<TreeViewItem> stack = new Stack<TreeViewItem>();
+				stack.Push(this.m_RootItem);
+				while (stack.Count > 0)
+				{
+					TreeViewItem treeViewItem = stack.Pop();
+					if (treeViewItem.children != null)
+					{
+						foreach (TreeViewItem current in treeViewItem.children)
+						{
+							if (current != null)
+							{
+								if (this.m_Owner.DoesItemMatchSearch(current, search))
+								{
+									result.Add(current);
+								}
+								stack.Push(current);
+							}
+						}
+					}
+				}
+				result.Sort((TreeViewItem x, TreeViewItem y) => EditorUtility.NaturalCompare(x.displayName, y.displayName));
 			}
 
 			protected override HashSet<int> GetParentsAbove(int id)
@@ -194,19 +306,19 @@ namespace UnityEditor.IMGUI.Controls
 
 		public static class DefaultGUI
 		{
-			public static float contentLeftMargin
+			internal static float contentLeftMargin
 			{
 				get
 				{
-					return (float)TreeView.DefaultStyles.label.margin.left;
+					return (float)TreeView.DefaultStyles.foldoutLabel.margin.left;
 				}
 			}
 
-			public static float columnMargin
+			public static void FoldoutLabel(Rect rect, string label, bool selected, bool focused)
 			{
-				get
+				if (Event.current.type == EventType.Repaint)
 				{
-					return 5f;
+					TreeView.DefaultStyles.foldoutLabel.Draw(rect, GUIContent.Temp(label), false, false, selected, focused);
 				}
 			}
 
@@ -245,6 +357,8 @@ namespace UnityEditor.IMGUI.Controls
 
 		public static class DefaultStyles
 		{
+			public static GUIStyle foldoutLabel;
+
 			public static GUIStyle label;
 
 			public static GUIStyle labelRightAligned;
@@ -253,23 +367,26 @@ namespace UnityEditor.IMGUI.Controls
 
 			public static GUIStyle boldLabelRightAligned;
 
+			public static GUIStyle backgroundEven;
+
+			public static GUIStyle backgroundOdd;
+
 			static DefaultStyles()
 			{
-				TreeView.DefaultStyles.label = new GUIStyle("PR Label");
-				Texture2D background = TreeView.DefaultStyles.label.hover.background;
-				TreeView.DefaultStyles.label.padding.left = 0;
-				TreeView.DefaultStyles.label.padding.right = 0;
-				TreeView.DefaultStyles.label.onNormal.background = background;
-				TreeView.DefaultStyles.label.onActive.background = background;
-				TreeView.DefaultStyles.label.onFocused.background = background;
-				TreeView.DefaultStyles.label.alignment = TextAnchor.MiddleLeft;
+				TreeView.DefaultStyles.backgroundEven = "OL EntryBackEven";
+				TreeView.DefaultStyles.backgroundOdd = "OL EntryBackOdd";
+				TreeView.DefaultStyles.foldoutLabel = new GUIStyle(TreeViewGUI.Styles.lineStyle);
+				TreeView.DefaultStyles.foldoutLabel.padding.left = 0;
+				TreeView.DefaultStyles.label = new GUIStyle(TreeView.DefaultStyles.foldoutLabel);
+				TreeView.DefaultStyles.label.padding.left = 2;
+				TreeView.DefaultStyles.label.padding.right = 2;
 				TreeView.DefaultStyles.labelRightAligned = new GUIStyle(TreeView.DefaultStyles.label);
-				TreeView.DefaultStyles.labelRightAligned.alignment = TextAnchor.MiddleRight;
+				TreeView.DefaultStyles.labelRightAligned.alignment = TextAnchor.UpperRight;
 				TreeView.DefaultStyles.boldLabel = new GUIStyle(TreeView.DefaultStyles.label);
 				TreeView.DefaultStyles.boldLabel.font = EditorStyles.boldLabel.font;
 				TreeView.DefaultStyles.boldLabel.fontStyle = EditorStyles.boldLabel.fontStyle;
 				TreeView.DefaultStyles.boldLabelRightAligned = new GUIStyle(TreeView.DefaultStyles.boldLabel);
-				TreeView.DefaultStyles.boldLabelRightAligned.alignment = TextAnchor.MiddleRight;
+				TreeView.DefaultStyles.boldLabelRightAligned.alignment = TextAnchor.UpperRight;
 			}
 		}
 
@@ -306,19 +423,34 @@ namespace UnityEditor.IMGUI.Controls
 				{
 					TreeView.DragAndDropArgs args = new TreeView.DragAndDropArgs
 					{
-						insertAtIndex = -1,
+						dragAndDropPosition = this.GetDragAndDropPosition(parentItem, targetItem),
+						insertAtIndex = TreeViewDragging.GetInsertionIndex(parentItem, targetItem, dropPosition),
 						parentItem = parentItem,
 						performDrop = perform
 					};
-					if (parentItem != null && targetItem != null)
-					{
-						args.insertAtIndex = TreeViewDragging.GetInsertionIndex(parentItem, targetItem, dropPosition);
-					}
 					result = this.m_Owner.HandleDragAndDrop(args);
 				}
 				else
 				{
 					result = DragAndDropVisualMode.None;
+				}
+				return result;
+			}
+
+			private TreeView.DragAndDropPosition GetDragAndDropPosition(TreeViewItem parentItem, TreeViewItem targetItem)
+			{
+				TreeView.DragAndDropPosition result;
+				if (parentItem == null)
+				{
+					result = TreeView.DragAndDropPosition.OutsideItems;
+				}
+				else if (parentItem == targetItem)
+				{
+					result = TreeView.DragAndDropPosition.UponItem;
+				}
+				else
+				{
+					result = TreeView.DragAndDropPosition.BetweenItems;
 				}
 				return result;
 			}
@@ -330,27 +462,23 @@ namespace UnityEditor.IMGUI.Controls
 
 			private List<Rect> m_RowRects;
 
-			private bool hasCustomRowRects
-			{
-				get
-				{
-					return this.m_RowRects != null && this.m_RowRects.Count > 0;
-				}
-			}
+			private Rect[] m_CellRects;
 
-			private float customRowsTotalHeight
+			private const float k_BackgroundWidth = 100000f;
+
+			public float borderWidth = 1f;
+
+			public float cellMargin
 			{
-				get
-				{
-					return this.m_RowRects[this.m_RowRects.Count - 1].yMax + this.k_BottomRowMargin;
-				}
+				get;
+				set;
 			}
 
 			public float foldoutWidth
 			{
 				get
 				{
-					return TreeViewGUI.s_Styles.foldoutWidth;
+					return TreeViewGUI.Styles.foldoutWidth;
 				}
 			}
 
@@ -360,14 +488,59 @@ namespace UnityEditor.IMGUI.Controls
 				set;
 			}
 
+			public float totalHeight
+			{
+				get
+				{
+					return ((!this.useCustomRowRects) ? base.GetTotalSize().y : this.customRowsTotalHeight) + ((this.m_Owner.multiColumnHeader == null) ? 0f : this.m_Owner.multiColumnHeader.height);
+				}
+			}
+
+			private bool useCustomRowRects
+			{
+				get
+				{
+					return this.m_RowRects != null;
+				}
+			}
+
+			private float customRowsTotalHeight
+			{
+				get
+				{
+					return ((this.m_RowRects.Count <= 0) ? 0f : this.m_RowRects[this.m_RowRects.Count - 1].yMax) + this.k_BottomRowMargin - ((!this.m_TreeView.expansionAnimator.isAnimating) ? 0f : this.m_TreeView.expansionAnimator.deltaHeight);
+				}
+			}
+
 			public TreeViewControlGUI(TreeViewController treeView, TreeView owner) : base(treeView)
 			{
 				this.m_Owner = owner;
+				this.cellMargin = MultiColumnHeader.DefaultGUI.columnContentMargin;
+			}
+
+			public void RefreshRowRects(IList<TreeViewItem> rows)
+			{
+				if (this.m_RowRects == null)
+				{
+					this.m_RowRects = new List<Rect>(rows.Count);
+				}
+				if (this.m_RowRects.Capacity < rows.Count)
+				{
+					this.m_RowRects.Capacity = rows.Count;
+				}
+				this.m_RowRects.Clear();
+				float num = this.k_TopRowMargin;
+				for (int i = 0; i < rows.Count; i++)
+				{
+					float customRowHeight = this.m_Owner.GetCustomRowHeight(i, rows[i]);
+					this.m_RowRects.Add(new Rect(0f, num, 1f, customRowHeight));
+					num += customRowHeight;
+				}
 			}
 
 			public override Vector2 GetTotalSize()
 			{
-				Vector2 result = (!this.hasCustomRowRects) ? base.GetTotalSize() : new Vector2(1f, this.customRowsTotalHeight);
+				Vector2 result = (!this.useCustomRowRects) ? base.GetTotalSize() : new Vector2(1f, this.customRowsTotalHeight);
 				if (this.m_Owner.multiColumnHeader != null)
 				{
 					result.x = Mathf.Floor(this.m_Owner.multiColumnHeader.state.widthOfAllVisibleColumns);
@@ -375,60 +548,51 @@ namespace UnityEditor.IMGUI.Controls
 				return result;
 			}
 
-			protected override void DrawItemBackground(Rect rect, int row, TreeViewItem item, bool selected, bool focused)
-			{
-				if (this.m_Owner.m_OverriddenMethods.hasDrawItemBackground)
-				{
-					TreeView.ItemGUIEventArgs args = new TreeView.ItemGUIEventArgs
-					{
-						rowRect = rect,
-						row = row,
-						item = item,
-						selected = selected,
-						focused = focused,
-						isRenaming = this.IsRenaming(item.id),
-						isDropTarget = this.IsDropTarget(item)
-					};
-					this.m_Owner.OnDrawItemBackground(args);
-				}
-			}
-
 			protected override void OnContentGUI(Rect rect, int row, TreeViewItem item, string label, bool selected, bool focused, bool useBoldFont, bool isPinging)
 			{
 				if (!isPinging)
 				{
-					if (this.m_Owner.m_OverriddenMethods.hasItemGUI)
+					GUIUtility.GetControlID(TreeViewController.GetItemControlID(item), FocusType.Passive);
+					if (this.m_Owner.m_OverriddenMethods.hasRowGUI)
 					{
-						TreeView.ItemGUIEventArgs args = new TreeView.ItemGUIEventArgs
+						TreeView.RowGUIArgs args = new TreeView.RowGUIArgs
 						{
 							rowRect = rect,
 							row = row,
 							item = item,
+							label = label,
 							selected = selected,
 							focused = focused,
-							isRenaming = this.IsRenaming(item.id),
-							isDropTarget = this.IsDropTarget(item)
+							isRenaming = this.IsRenaming(item.id)
 						};
 						if (this.m_Owner.multiColumnHeader != null)
 						{
 							int[] visibleColumns = this.m_Owner.multiColumnHeader.state.visibleColumns;
+							if (this.m_CellRects == null || this.m_CellRects.Length != visibleColumns.Length)
+							{
+								this.m_CellRects = new Rect[visibleColumns.Length];
+							}
 							MultiColumnHeaderState.Column[] columns = this.m_Owner.multiColumnHeader.state.columns;
 							Rect rowRect = args.rowRect;
 							for (int i = 0; i < visibleColumns.Length; i++)
 							{
-								int num = visibleColumns[i];
-								MultiColumnHeaderState.Column column = columns[num];
+								MultiColumnHeaderState.Column column = columns[visibleColumns[i]];
 								rowRect.width = column.width;
-								args.cellRect = rowRect;
-								args.column = num;
-								this.m_Owner.OnItemGUI(args);
+								this.m_CellRects[i] = rowRect;
+								if (this.columnIndexForTreeFoldouts != visibleColumns[i])
+								{
+									Rect[] expr_13F_cp_0 = this.m_CellRects;
+									int expr_13F_cp_1 = i;
+									expr_13F_cp_0[expr_13F_cp_1].x = expr_13F_cp_0[expr_13F_cp_1].x + this.cellMargin;
+									Rect[] expr_15E_cp_0 = this.m_CellRects;
+									int expr_15E_cp_1 = i;
+									expr_15E_cp_0[expr_15E_cp_1].width = expr_15E_cp_0[expr_15E_cp_1].width - 2f * this.cellMargin;
+								}
 								rowRect.x += column.width;
 							}
+							args.columnInfo = new TreeView.RowGUIArgs.MultiColumnInfo(this.m_Owner.multiColumnHeader.state, this.m_CellRects);
 						}
-						else
-						{
-							this.m_Owner.OnItemGUI(args);
-						}
+						this.m_Owner.RowGUI(args);
 					}
 					else
 					{
@@ -437,14 +601,9 @@ namespace UnityEditor.IMGUI.Controls
 				}
 			}
 
-			internal void DefaultItemGUI(TreeView.ItemGUIEventArgs args)
+			internal void DefaultRowGUI(TreeView.RowGUIArgs args)
 			{
-				string label = args.item.displayName;
-				if (this.IsRenaming(args.item.id))
-				{
-					label = "";
-				}
-				base.OnContentGUI(args.rowRect, args.row, args.item, label, args.selected, args.focused, false, false);
+				base.OnContentGUI(args.rowRect, args.row, args.item, args.label, args.selected, args.focused, false, false);
 			}
 
 			protected override Rect DoFoldout(Rect rowRect, TreeViewItem item, int row)
@@ -463,21 +622,28 @@ namespace UnityEditor.IMGUI.Controls
 
 			private Rect DoMultiColumnFoldout(Rect rowRect, TreeViewItem item, int row)
 			{
-				Rect cellRectForTreeFoldouts = this.m_Owner.GetCellRectForTreeFoldouts(rowRect);
 				Rect result;
-				if (this.GetContentIndent(item) > cellRectForTreeFoldouts.width)
+				if (!this.m_Owner.multiColumnHeader.IsColumnVisible(this.columnIndexForTreeFoldouts))
 				{
-					GUIClip.Push(cellRectForTreeFoldouts, Vector2.zero, Vector2.zero, false);
-					float num = 0f;
-					cellRectForTreeFoldouts.y = num;
-					cellRectForTreeFoldouts.x = num;
-					Rect rect = base.DoFoldout(cellRectForTreeFoldouts, item, row);
-					GUIClip.Pop();
-					result = rect;
+					result = default(Rect);
 				}
 				else
 				{
-					result = base.DoFoldout(cellRectForTreeFoldouts, item, row);
+					Rect cellRectForTreeFoldouts = this.m_Owner.GetCellRectForTreeFoldouts(rowRect);
+					if (this.GetContentIndent(item) > cellRectForTreeFoldouts.width)
+					{
+						GUIClip.Push(cellRectForTreeFoldouts, Vector2.zero, Vector2.zero, false);
+						float num = 0f;
+						cellRectForTreeFoldouts.y = num;
+						cellRectForTreeFoldouts.x = num;
+						Rect rect = base.DoFoldout(cellRectForTreeFoldouts, item, row);
+						GUIClip.Pop();
+						result = rect;
+					}
+					else
+					{
+						result = base.DoFoldout(cellRectForTreeFoldouts, item, row);
+					}
 				}
 				return result;
 			}
@@ -501,11 +667,6 @@ namespace UnityEditor.IMGUI.Controls
 				return base.GetRenameRect(rowRect, row, item);
 			}
 
-			private bool IsDropTarget(TreeViewItem item)
-			{
-				return this.m_TreeView.dragging.GetDropTargetControlID() == item.id && this.m_TreeView.data.CanBeParent(item);
-			}
-
 			public override void BeginRowGUI()
 			{
 				base.BeginRowGUI();
@@ -514,13 +675,13 @@ namespace UnityEditor.IMGUI.Controls
 					int visibleColumnIndex = this.m_Owner.multiColumnHeader.GetVisibleColumnIndex(this.columnIndexForTreeFoldouts);
 					this.extraInsertionMarkerIndent = this.m_Owner.multiColumnHeader.GetColumnRect(visibleColumnIndex).x;
 				}
-				this.m_Owner.BeginRowGUI();
+				this.m_Owner.BeforeRowsGUI();
 			}
 
 			public override void EndRowGUI()
 			{
 				base.EndRowGUI();
-				this.m_Owner.EndRowGUI();
+				this.m_Owner.AfterRowsGUI();
 			}
 
 			protected override void RenameEnded()
@@ -539,17 +700,16 @@ namespace UnityEditor.IMGUI.Controls
 			public override Rect GetRowRect(int row, float rowWidth)
 			{
 				Rect result;
-				if (!this.hasCustomRowRects)
+				if (!this.useCustomRowRects)
 				{
 					result = base.GetRowRect(row, rowWidth);
 				}
-				else if (this.m_RowRects.Count == 0)
-				{
-					Debug.LogError("Mismatch in state: rows vs cached rects. No cached row rects but requested row rect " + row);
-					result = default(Rect);
-				}
 				else
 				{
+					if (row < 0 || row >= this.m_RowRects.Count)
+					{
+						throw new ArgumentOutOfRangeException("row", string.Format("Input row index: {0} is invalid. Number of rows rects: {1}. (Number of rows: {2})", row, this.m_RowRects.Count, this.m_Owner.m_DataSource.rowCount));
+					}
 					Rect rect = this.m_RowRects[row];
 					rect.width = rowWidth;
 					result = rect;
@@ -564,16 +724,21 @@ namespace UnityEditor.IMGUI.Controls
 
 			public override void GetFirstAndLastRowVisible(out int firstRowVisible, out int lastRowVisible)
 			{
-				if (!this.hasCustomRowRects)
+				if (!this.useCustomRowRects)
 				{
 					base.GetFirstAndLastRowVisible(out firstRowVisible, out lastRowVisible);
+				}
+				else if (this.m_TreeView.data.rowCount == 0)
+				{
+					firstRowVisible = (lastRowVisible = -1);
 				}
 				else
 				{
 					int rowCount = this.m_TreeView.data.rowCount;
 					if (rowCount != this.m_RowRects.Count)
 					{
-						Debug.LogError(string.Format("Mismatch in state: rows vs cached rects. Did you remember to update row heigths when BuildRootAndRows was called. Number of rows: {0}, number of custom row heights: {1}", rowCount, this.m_RowRects.Count));
+						this.m_RowRects = null;
+						throw new InvalidOperationException(string.Format("Number of rows does not match number of row rects. Did you remember to update the row rects when BuildRootAndRows was called? Number of rows: {0}, number of custom row rects: {1}. Falling back to fixed row height.", rowCount, this.m_RowRects.Count));
 					}
 					float y = this.m_TreeView.state.scrollPos.y;
 					float height = this.m_TreeView.GetTotalRect().height;
@@ -604,35 +769,59 @@ namespace UnityEditor.IMGUI.Controls
 				}
 			}
 
-			private void CalculateRowRects(IList<float> rowHeights)
+			protected override void DrawItemBackground(Rect rect, int row, TreeViewItem item, bool selected, bool focused)
 			{
-				if (this.m_RowRects == null)
+				if (this.m_Owner.showAlternatingRowBackgrounds && this.m_TreeView.animatingExpansion)
 				{
-					this.m_RowRects = new List<Rect>(rowHeights.Count);
-				}
-				if (this.m_RowRects.Capacity < rowHeights.Count)
-				{
-					this.m_RowRects.Capacity = rowHeights.Count;
-				}
-				this.m_RowRects.Clear();
-				float num = this.k_TopRowMargin;
-				for (int i = 0; i < rowHeights.Count; i++)
-				{
-					this.m_RowRects.Add(new Rect(0f, num, 1f, rowHeights[i]));
-					num += rowHeights[i];
+					rect.width = 100000f;
+					GUIStyle gUIStyle = (row % 2 != 0) ? TreeView.DefaultStyles.backgroundOdd : TreeView.DefaultStyles.backgroundEven;
+					gUIStyle.Draw(rect, false, false, false, false);
 				}
 			}
 
-			public void SetRowHeights(IList<float> rowHeights)
+			public void DrawAlternatingRowBackgrounds()
 			{
-				if (rowHeights == null)
+				if (Event.current.rawType == EventType.Repaint)
 				{
-					this.m_RowRects = null;
+					float num = this.m_Owner.treeViewRect.height + this.m_Owner.state.scrollPos.y;
+					TreeView.DefaultStyles.backgroundOdd.Draw(new Rect(0f, 0f, 100000f, num), false, false, false, false);
+					int num2 = 0;
+					int count = this.m_Owner.GetRows().Count;
+					if (count > 0)
+					{
+						int num3;
+						this.GetFirstAndLastRowVisible(out num2, out num3);
+						if (num2 < 0 || num2 >= count)
+						{
+							return;
+						}
+					}
+					Rect rowRect = new Rect(0f, 0f, 0f, this.m_Owner.rowHeight);
+					int num4 = num2;
+					while (rowRect.yMax < num)
+					{
+						if (num4 % 2 != 1)
+						{
+							if (num4 < count)
+							{
+								rowRect = this.m_Owner.GetRowRect(num4);
+							}
+							else if (num4 > 0)
+							{
+								rowRect.y += rowRect.height * 2f;
+							}
+							rowRect.width = 100000f;
+							TreeView.DefaultStyles.backgroundEven.Draw(rowRect, false, false, false, false);
+						}
+						num4++;
+					}
 				}
-				else
-				{
-					this.CalculateRowRects(rowHeights);
-				}
+			}
+
+			public Rect DoBorder(Rect rect)
+			{
+				EditorGUI.DrawOutline(rect, this.borderWidth, EditorGUI.kSplitLineSkinnedColor.color);
+				return new Rect(rect.x + this.borderWidth, rect.y + this.borderWidth, rect.width - 2f * this.borderWidth, rect.height - 2f * this.borderWidth);
 			}
 		}
 
@@ -645,6 +834,8 @@ namespace UnityEditor.IMGUI.Controls
 		private TreeView.TreeViewControlDragging m_Dragging;
 
 		private MultiColumnHeader m_MultiColumnHeader;
+
+		private List<TreeViewItem> m_DefaultRows;
 
 		private int m_TreeViewKeyControlID;
 
@@ -666,9 +857,29 @@ namespace UnityEditor.IMGUI.Controls
 			{
 				return this.m_MultiColumnHeader;
 			}
+			set
+			{
+				this.m_MultiColumnHeader = value;
+			}
 		}
 
-		public Rect treeViewRect
+		protected TreeViewItem rootItem
+		{
+			get
+			{
+				return this.m_TreeView.data.root;
+			}
+		}
+
+		protected bool isInitialized
+		{
+			get
+			{
+				return this.m_DataSource.isInitialized;
+			}
+		}
+
+		protected Rect treeViewRect
 		{
 			get
 			{
@@ -680,7 +891,7 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		public float baseIndent
+		protected float baseIndent
 		{
 			get
 			{
@@ -692,7 +903,7 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		public float foldoutWidth
+		protected float foldoutWidth
 		{
 			get
 			{
@@ -700,19 +911,31 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		public float foldoutYOffset
+		protected float extraSpaceBeforeIconAndLabel
 		{
 			get
 			{
-				return this.m_GUI.foldoutYOffset;
+				return this.m_GUI.extraSpaceBeforeIconAndLabel;
 			}
 			set
 			{
-				this.m_GUI.foldoutYOffset = value;
+				this.m_GUI.extraSpaceBeforeIconAndLabel = value;
 			}
 		}
 
-		public int columnIndexForTreeFoldouts
+		protected float customFoldoutYOffset
+		{
+			get
+			{
+				return this.m_GUI.customFoldoutYOffset;
+			}
+			set
+			{
+				this.m_GUI.customFoldoutYOffset = value;
+			}
+		}
+
+		protected int columnIndexForTreeFoldouts
 		{
 			get
 			{
@@ -720,11 +943,19 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			set
 			{
+				if (this.multiColumnHeader == null)
+				{
+					throw new InvalidOperationException("Setting columnIndexForTreeFoldouts can only be set when using TreeView with a MultiColumnHeader");
+				}
+				if (value < 0 || value >= this.multiColumnHeader.state.columns.Length)
+				{
+					throw new ArgumentOutOfRangeException("value", string.Format("Invalid index for columnIndexForTreeFoldouts: {0}. Number of available columns: {1}", value, this.multiColumnHeader.state.columns.Length));
+				}
 				this.m_GUI.columnIndexForTreeFoldouts = value;
 			}
 		}
 
-		public float depthIndentWidth
+		protected float depthIndentWidth
 		{
 			get
 			{
@@ -732,7 +963,55 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		public float rowHeight
+		protected bool showAlternatingRowBackgrounds
+		{
+			get;
+			set;
+		}
+
+		protected bool showBorder
+		{
+			get;
+			set;
+		}
+
+		protected bool showingHorizontalScrollBar
+		{
+			get
+			{
+				return this.m_TreeView.showingHorizontalScrollBar;
+			}
+		}
+
+		protected bool showingVerticalScrollBar
+		{
+			get
+			{
+				return this.m_TreeView.showingVerticalScrollBar;
+			}
+		}
+
+		protected float cellMargin
+		{
+			get
+			{
+				return this.m_GUI.cellMargin;
+			}
+			set
+			{
+				this.m_GUI.cellMargin = value;
+			}
+		}
+
+		public float totalHeight
+		{
+			get
+			{
+				return this.m_GUI.totalHeight + ((!this.showBorder) ? 0f : (this.m_GUI.borderWidth * 2f));
+			}
+		}
+
+		protected float rowHeight
 		{
 			get
 			{
@@ -740,7 +1019,7 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			set
 			{
-				this.m_GUI.k_LineHeight = Mathf.Max(value, 16f);
+				this.m_GUI.k_LineHeight = Mathf.Max(value, EditorGUIUtility.singleLineHeight);
 			}
 		}
 
@@ -750,17 +1029,13 @@ namespace UnityEditor.IMGUI.Controls
 			{
 				return this.m_TreeViewKeyControlID;
 			}
-		}
-
-		public TreeViewItem rootItem
-		{
-			get
+			set
 			{
-				return this.m_TreeView.data.root;
+				this.m_TreeViewKeyControlID = value;
 			}
 		}
 
-		public bool isDragging
+		protected bool isDragging
 		{
 			get
 			{
@@ -822,10 +1097,30 @@ namespace UnityEditor.IMGUI.Controls
 			expr_126.contextClickOutsideItemsCallback = (Action)Delegate.Combine(expr_126.contextClickOutsideItemsCallback, new Action(this.ContextClicked));
 			TreeViewController expr_14E = this.m_TreeView;
 			expr_14E.expandedStateChanged = (Action)Delegate.Combine(expr_14E.expandedStateChanged, new Action(this.ExpandedStateChanged));
+			TreeViewController expr_176 = this.m_TreeView;
+			expr_176.keyboardInputCallback = (Action)Delegate.Combine(expr_176.keyboardInputCallback, new Action(this.KeyEvent));
 			this.m_TreeViewKeyControlID = GUIUtility.GetPermanentControlID();
 		}
 
-		protected abstract void BuildRootAndRows(out TreeViewItem hiddenRoot, out IList<TreeViewItem> rows);
+		protected abstract TreeViewItem BuildRoot();
+
+		protected virtual IList<TreeViewItem> BuildRows(TreeViewItem root)
+		{
+			if (this.m_DefaultRows == null)
+			{
+				this.m_DefaultRows = new List<TreeViewItem>(100);
+			}
+			this.m_DefaultRows.Clear();
+			if (this.hasSearch)
+			{
+				this.m_DataSource.SearchFullTree(this.searchString, this.m_DefaultRows);
+			}
+			else
+			{
+				this.AddExpandedRows(root, this.m_DefaultRows);
+			}
+			return this.m_DefaultRows;
+		}
 
 		public void Reload()
 		{
@@ -836,7 +1131,12 @@ namespace UnityEditor.IMGUI.Controls
 			this.m_TreeView.ReloadData();
 		}
 
-		public Rect GetCellRectForTreeFoldouts(Rect rowRect)
+		public void Repaint()
+		{
+			this.m_TreeView.Repaint();
+		}
+
+		protected Rect GetCellRectForTreeFoldouts(Rect rowRect)
 		{
 			if (this.multiColumnHeader == null)
 			{
@@ -847,21 +1147,40 @@ namespace UnityEditor.IMGUI.Controls
 			return this.multiColumnHeader.GetCellRect(visibleColumnIndex, rowRect);
 		}
 
-		public void SetCustomRowHeights(IList<float> rowHeights)
+		protected Rect GetRowRect(int row)
 		{
-			this.m_GUI.SetRowHeights(rowHeights);
+			return this.m_TreeView.gui.GetRowRect(row, GUIClip.visibleRect.width);
 		}
 
-		public IList<TreeViewItem> GetRows()
+		public virtual IList<TreeViewItem> GetRows()
 		{
-			return this.m_TreeView.data.GetRows();
+			IList<TreeViewItem> result;
+			if (!this.isInitialized)
+			{
+				result = null;
+			}
+			else
+			{
+				result = this.m_TreeView.data.GetRows();
+			}
+			return result;
 		}
 
-		public IList<TreeViewItem> GetRowsFromIDs(IList<int> ids)
+		protected IList<TreeViewItem> FindRows(IList<int> ids)
 		{
 			return (from item in this.GetRows()
 			where ids.Contains(item.id)
 			select item).ToList<TreeViewItem>();
+		}
+
+		protected TreeViewItem FindItem(int id, TreeViewItem searchFromThisItem)
+		{
+			return TreeViewUtility.FindItem(id, searchFromThisItem);
+		}
+
+		protected void GetFirstAndLastVisibleRows(out int firstRowVisible, out int lastRowVisible)
+		{
+			this.m_GUI.GetFirstAndLastRowVisible(out firstRowVisible, out lastRowVisible);
 		}
 
 		public void ExpandAll()
@@ -931,6 +1250,41 @@ namespace UnityEditor.IMGUI.Controls
 			return this.m_TreeView.HasSelection();
 		}
 
+		public bool HasFocus()
+		{
+			return this.m_TreeView.HasFocus();
+		}
+
+		public void SetFocus()
+		{
+			GUIUtility.keyboardControl = this.m_TreeViewKeyControlID;
+			EditorGUIUtility.editingTextField = false;
+		}
+
+		public void SetFocusAndEnsureSelectedItem()
+		{
+			this.SetFocus();
+			if (this.GetRows().Count > 0)
+			{
+				if (this.m_TreeView.IsLastClickedPartOfRows())
+				{
+					this.FrameItem(this.state.lastClickedID);
+				}
+				else
+				{
+					this.SetSelection(new int[]
+					{
+						this.GetRows()[0].id
+					}, TreeViewSelectionOptions.FireSelectionChanged | TreeViewSelectionOptions.RevealAndFrame);
+				}
+			}
+		}
+
+		protected void SelectionClick(TreeViewItem item, bool keepMultiSelection)
+		{
+			this.m_TreeView.SelectionClick(item, keepMultiSelection);
+		}
+
 		public bool BeginRename(TreeViewItem item)
 		{
 			return this.BeginRename(item, 0f);
@@ -955,7 +1309,7 @@ namespace UnityEditor.IMGUI.Controls
 		private bool ValidTreeView()
 		{
 			bool result;
-			if (this.m_TreeView.data.root != null)
+			if (this.isInitialized)
 			{
 				result = true;
 			}
@@ -963,7 +1317,7 @@ namespace UnityEditor.IMGUI.Controls
 			{
 				if (!this.m_WarnedUser)
 				{
-					Debug.LogError("TreeView has not been properly intialized yet (rootItem is null). Ensure to call Reload() before using the tree view");
+					Debug.LogError("TreeView has not been properly intialized yet. Ensure to call Reload() before using the tree view.");
 					this.m_WarnedUser = true;
 				}
 				result = false;
@@ -971,11 +1325,15 @@ namespace UnityEditor.IMGUI.Controls
 			return result;
 		}
 
-		public void OnGUI(Rect rect)
+		public virtual void OnGUI(Rect rect)
 		{
 			if (this.ValidTreeView())
 			{
 				this.m_TreeView.OnEvent();
+				if (this.showBorder)
+				{
+					rect = this.m_GUI.DoBorder(rect);
+				}
 				if (this.m_MultiColumnHeader != null)
 				{
 					this.TreeViewWithMultiColumnHeader(rect);
@@ -984,7 +1342,17 @@ namespace UnityEditor.IMGUI.Controls
 				{
 					this.m_TreeView.OnGUI(rect, this.m_TreeViewKeyControlID);
 				}
+				this.CommandEventHandling();
 			}
+		}
+
+		public void SelectAllRows()
+		{
+			IList<TreeViewItem> rows = this.GetRows();
+			List<int> selectedIDs = (from treeViewItem in rows
+			where this.CanMultiSelect(treeViewItem)
+			select treeViewItem.id).ToList<int>();
+			this.SetSelection(selectedIDs, TreeViewSelectionOptions.FireSelectionChanged);
 		}
 
 		private void TreeViewWithMultiColumnHeader(Rect rect)
@@ -992,18 +1360,73 @@ namespace UnityEditor.IMGUI.Controls
 			Rect rect2 = new Rect(rect.x, rect.y, rect.width, this.m_MultiColumnHeader.height);
 			Rect rect3 = new Rect(rect.x, rect2.yMax, rect.width, rect.height - rect2.height);
 			float xScroll = Mathf.Max(this.m_TreeView.state.scrollPos.x, 0f);
+			Event current = Event.current;
+			if (current.type == EventType.MouseDown && rect2.Contains(current.mousePosition))
+			{
+				GUIUtility.keyboardControl = this.m_TreeViewKeyControlID;
+			}
 			this.m_MultiColumnHeader.OnGUI(rect2, xScroll);
 			this.m_TreeView.OnGUI(rect3, this.m_TreeViewKeyControlID);
 		}
 
-		public float GetFoldoutIndent(TreeViewItem item)
+		protected float GetFoldoutIndent(TreeViewItem item)
 		{
 			return this.m_GUI.GetFoldoutIndent(item);
 		}
 
-		public float GetContentIndent(TreeViewItem item)
+		protected float GetContentIndent(TreeViewItem item)
 		{
 			return this.m_GUI.GetContentIndent(item);
+		}
+
+		protected IList<int> SortItemIDsInRowOrder(IList<int> ids)
+		{
+			return this.m_TreeView.SortIDsInVisiblityOrder(ids);
+		}
+
+		protected void CenterRectUsingSingleLineHeight(ref Rect rect)
+		{
+			float singleLineHeight = EditorGUIUtility.singleLineHeight;
+			if (rect.height > singleLineHeight)
+			{
+				rect.y += (rect.height - singleLineHeight) * 0.5f;
+				rect.height = singleLineHeight;
+			}
+		}
+
+		protected void AddExpandedRows(TreeViewItem root, IList<TreeViewItem> rows)
+		{
+			if (root == null)
+			{
+				throw new ArgumentNullException("root", "root is null");
+			}
+			if (rows == null)
+			{
+				throw new ArgumentNullException("rows", "rows is null");
+			}
+			if (root.hasChildren)
+			{
+				foreach (TreeViewItem current in root.children)
+				{
+					this.GetExpandedRowsRecursive(current, rows);
+				}
+			}
+		}
+
+		private void GetExpandedRowsRecursive(TreeViewItem item, IList<TreeViewItem> expandedRows)
+		{
+			if (item == null)
+			{
+				Debug.LogError("Found a TreeViewItem that is null. Invalid use of AddExpandedRows(): This method is only valid to call if you have built the full tree of TreeViewItems.");
+			}
+			expandedRows.Add(item);
+			if (item.hasChildren && this.IsExpanded(item.id))
+			{
+				foreach (TreeViewItem current in item.children)
+				{
+					this.GetExpandedRowsRecursive(current, expandedRows);
+				}
+			}
 		}
 
 		protected virtual void SelectionChanged(IList<int> selectedIds)
@@ -1030,6 +1453,10 @@ namespace UnityEditor.IMGUI.Controls
 		{
 		}
 
+		protected virtual void KeyEvent()
+		{
+		}
+
 		protected virtual IList<int> GetAncestors(int id)
 		{
 			return TreeViewUtility.GetParentsAboveItem(this.FindItem(id)).ToList<int>();
@@ -1049,7 +1476,7 @@ namespace UnityEditor.IMGUI.Controls
 			TreeViewItem treeViewItem = TreeViewUtility.FindItem(id, this.rootItem);
 			if (treeViewItem == null)
 			{
-				throw new ArgumentException(string.Format("Could not find item with id: {0}. FindItem assumes complete tree is built.", id));
+				throw new ArgumentException(string.Format("Could not find item with id: {0}. FindItem assumes complete tree is built. Most likely the item is not allocated because it is hidden under a collapsed item. Check if GetAncestors are overriden for the tree view.", id));
 			}
 			return treeViewItem;
 		}
@@ -1092,13 +1519,40 @@ namespace UnityEditor.IMGUI.Controls
 			return !this.m_TreeView.isSearching && item.hasChildren;
 		}
 
-		protected virtual void OnItemGUI(TreeView.ItemGUIEventArgs args)
+		protected virtual bool DoesItemMatchSearch(TreeViewItem item, string search)
 		{
-			this.m_GUI.DefaultItemGUI(args);
+			return item.displayName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		protected virtual void OnDrawItemBackground(TreeView.ItemGUIEventArgs args)
+		protected virtual void RowGUI(TreeView.RowGUIArgs args)
 		{
+			this.m_GUI.DefaultRowGUI(args);
+		}
+
+		protected virtual void BeforeRowsGUI()
+		{
+			if (this.showAlternatingRowBackgrounds)
+			{
+				this.m_GUI.DrawAlternatingRowBackgrounds();
+			}
+		}
+
+		protected virtual void AfterRowsGUI()
+		{
+		}
+
+		protected virtual void RefreshCustomRowHeights()
+		{
+			if (!this.m_OverriddenMethods.hasGetCustomRowHeight)
+			{
+				throw new InvalidOperationException("Only call RefreshCustomRowHeights if you have overridden GetCustomRowHeight to customize the height of each row.");
+			}
+			this.m_GUI.RefreshRowRects(this.GetRows());
+		}
+
+		protected virtual float GetCustomRowHeight(int row, TreeViewItem item)
+		{
+			return this.rowHeight;
 		}
 
 		protected virtual Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
@@ -1106,17 +1560,58 @@ namespace UnityEditor.IMGUI.Controls
 			return this.m_GUI.DefaultRenameRect(rowRect, row, item);
 		}
 
-		protected virtual void BeginRowGUI()
+		protected virtual void CommandEventHandling()
 		{
+			Event current = Event.current;
+			if (current.type == EventType.ExecuteCommand || current.type == EventType.ValidateCommand)
+			{
+				bool flag = current.type == EventType.ExecuteCommand;
+				if (this.HasFocus() && current.commandName == "SelectAll")
+				{
+					if (flag)
+					{
+						this.SelectAllRows();
+					}
+					current.Use();
+					GUIUtility.ExitGUI();
+				}
+				if (current.commandName == "FrameSelected")
+				{
+					if (flag)
+					{
+						if (this.hasSearch)
+						{
+							this.searchString = string.Empty;
+						}
+						if (this.HasSelection())
+						{
+							this.FrameItem(this.GetSelection()[0]);
+						}
+					}
+					current.Use();
+					GUIUtility.ExitGUI();
+				}
+			}
 		}
 
-		protected virtual void EndRowGUI()
+		protected static void SetupParentsAndChildrenFromDepths(TreeViewItem root, IList<TreeViewItem> rows)
 		{
+			TreeViewUtility.SetChildParentReferences(rows, root);
 		}
 
-		public static List<TreeViewItem> CreateChildListForCollapsedParent()
+		protected static void SetupDepthsFromParentsAndChildren(TreeViewItem root)
+		{
+			TreeViewUtility.SetDepthValuesForItems(root);
+		}
+
+		protected static List<TreeViewItem> CreateChildListForCollapsedParent()
 		{
 			return LazyTreeViewDataSource.CreateChildListForCollapsedParent();
+		}
+
+		protected static bool IsChildListForACollapsedParent(IList<TreeViewItem> childList)
+		{
+			return LazyTreeViewDataSource.IsChildListForACollapsedParent(childList);
 		}
 	}
 }

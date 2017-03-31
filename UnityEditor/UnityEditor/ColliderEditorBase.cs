@@ -14,6 +14,14 @@ namespace UnityEditor
 			}
 		}
 
+		protected virtual GUIContent editModeButton
+		{
+			get
+			{
+				return EditorGUIUtility.IconContent("EditCollider");
+			}
+		}
+
 		protected virtual void OnEditStart()
 		{
 		}
@@ -25,21 +33,18 @@ namespace UnityEditor
 		public virtual void OnEnable()
 		{
 			EditMode.onEditModeStartDelegate = (EditMode.OnEditModeStartFunc)Delegate.Combine(EditMode.onEditModeStartDelegate, new EditMode.OnEditModeStartFunc(this.OnEditModeStart));
+			EditMode.onEditModeEndDelegate = (EditMode.OnEditModeStopFunc)Delegate.Combine(EditMode.onEditModeEndDelegate, new EditMode.OnEditModeStopFunc(this.OnEditModeEnd));
 		}
 
 		public virtual void OnDisable()
 		{
+			EditMode.onEditModeStartDelegate = (EditMode.OnEditModeStartFunc)Delegate.Remove(EditMode.onEditModeStartDelegate, new EditMode.OnEditModeStartFunc(this.OnEditModeStart));
 			EditMode.onEditModeEndDelegate = (EditMode.OnEditModeStopFunc)Delegate.Remove(EditMode.onEditModeEndDelegate, new EditMode.OnEditModeStopFunc(this.OnEditModeEnd));
-		}
-
-		protected void ForceQuitEditMode()
-		{
-			EditMode.QuitEditMode();
 		}
 
 		protected void InspectorEditButtonGUI()
 		{
-			EditMode.DoEditModeInspectorModeButton(EditMode.SceneViewEditMode.Collider, "Edit Collider", EditorGUIUtility.IconContent("EditCollider"), ColliderEditorBase.GetColliderBounds(base.target), this);
+			EditMode.DoEditModeInspectorModeButton(EditMode.SceneViewEditMode.Collider, "Edit Collider", this.editModeButton, ColliderEditorBase.GetColliderBounds(base.target), this);
 		}
 
 		private static Bounds GetColliderBounds(UnityEngine.Object collider)

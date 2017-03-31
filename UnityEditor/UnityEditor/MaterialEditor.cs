@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor.Utils;
 using UnityEditorInternal;
@@ -15,45 +16,75 @@ namespace UnityEditor
 		{
 			public static readonly GUIStyle kReflectionProbePickerStyle = "PaneOptions";
 
-			public static string[] lightmapEmissiveStrings = new string[]
+			public static GUIContent[] lightmapEmissiveStrings = new GUIContent[]
 			{
-				"None",
-				"Realtime",
-				"Baked"
+				EditorGUIUtility.TextContent("Realtime"),
+				EditorGUIUtility.TextContent("Baked"),
+				EditorGUIUtility.TextContent("None")
 			};
 
-			public static int[] lightmapEmissiveValues = new int[]
+			public static int[] lightmapEmissiveValues;
+
+			public static string lightmapEmissiveLabel;
+
+			public static string propBlockWarning;
+
+			public const int kNewShaderQueueValue = -1;
+
+			public const int kCustomQueueIndex = 4;
+
+			public static readonly GUIContent queueLabel;
+
+			public static readonly GUIContent[] queueNames;
+
+			public static readonly int[] queueValues;
+
+			public static GUIContent[] customQueueNames;
+
+			public static int[] customQueueValues;
+
+			public static readonly GUIContent enableInstancingLabel;
+
+			static Styles()
 			{
-				0,
-				1,
-				2
-			};
-
-			public static string lightmapEmissiveLabel = "Global Illumination";
-
-			public static string propBlockWarning = EditorGUIUtility.TextContent("MaterialPropertyBlock is used to modify these values").text;
-
-			public static int kCustomQueueValue = -2;
-
-			public static readonly GUIContent queueLabel = EditorGUIUtility.TextContent("Render Queue");
-
-			public static readonly GUIContent[] queueNames = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("From Shader"),
-				EditorGUIUtility.TextContent("Geometry|Queue 2000"),
-				EditorGUIUtility.TextContent("AlphaTest|Queue 2450"),
-				EditorGUIUtility.TextContent("Transparent|Queue 3000"),
-				EditorGUIUtility.TextContent("Custom")
-			};
-
-			public static readonly int[] queueValues = new int[]
-			{
-				-1,
-				2000,
-				2450,
-				3000,
-				0
-			};
+				// Note: this type is marked as 'beforefieldinit'.
+				int[] expr_47 = new int[3];
+				expr_47[0] = 1;
+				expr_47[1] = 2;
+				MaterialEditor.Styles.lightmapEmissiveValues = expr_47;
+				MaterialEditor.Styles.lightmapEmissiveLabel = "Global Illumination";
+				MaterialEditor.Styles.propBlockWarning = EditorGUIUtility.TextContent("MaterialPropertyBlock is used to modify these values").text;
+				MaterialEditor.Styles.queueLabel = EditorGUIUtility.TextContent("Render Queue");
+				MaterialEditor.Styles.queueNames = new GUIContent[]
+				{
+					EditorGUIUtility.TextContent("From Shader"),
+					EditorGUIUtility.TextContent("Geometry|Queue 2000"),
+					EditorGUIUtility.TextContent("AlphaTest|Queue 2450"),
+					EditorGUIUtility.TextContent("Transparent|Queue 3000")
+				};
+				MaterialEditor.Styles.queueValues = new int[]
+				{
+					-1,
+					2000,
+					2450,
+					3000
+				};
+				MaterialEditor.Styles.customQueueNames = new GUIContent[]
+				{
+					MaterialEditor.Styles.queueNames[0],
+					MaterialEditor.Styles.queueNames[1],
+					MaterialEditor.Styles.queueNames[2],
+					MaterialEditor.Styles.queueNames[3],
+					EditorGUIUtility.TextContent("")
+				};
+				int[] expr_11C = new int[5];
+				expr_11C[0] = MaterialEditor.Styles.queueValues[0];
+				expr_11C[1] = MaterialEditor.Styles.queueValues[1];
+				expr_11C[2] = MaterialEditor.Styles.queueValues[2];
+				expr_11C[3] = MaterialEditor.Styles.queueValues[3];
+				MaterialEditor.Styles.customQueueValues = expr_11C;
+				MaterialEditor.Styles.enableInstancingLabel = EditorGUIUtility.TextContent("Enable Instancing");
+			}
 		}
 
 		private enum PreviewType
@@ -117,6 +148,8 @@ namespace UnityEditor
 			}
 		}
 
+		private static readonly List<MaterialEditor> s_MaterialEditors = new List<MaterialEditor>(4);
+
 		private bool m_IsVisible;
 
 		private bool m_CheckSetup;
@@ -125,13 +158,13 @@ namespace UnityEditor
 
 		private const float kSpacingUnderTexture = 6f;
 
-		private const float kWarningMessageHeight = 33f;
-
 		private const float kMiniWarningMessageHeight = 27f;
 
 		private MaterialPropertyBlock m_PropertyBlock;
 
 		private Shader m_Shader;
+
+		private SerializedProperty m_EnableInstancing;
 
 		private string m_InfoMessage;
 
@@ -179,6 +212,8 @@ namespace UnityEditor
 		private const float kSpaceBetweenFlexibleAreaAndField = 5f;
 
 		private const float kQueuePopupWidth = 100f;
+
+		private const float kCustomQueuePopupWidth = 115f;
 
 		internal bool forceVisible
 		{
@@ -262,14 +297,23 @@ namespace UnityEditor
 				EditorMaterialUtility.ResetDefaultTextures(material, false);
 				MaterialEditor.ApplyMaterialPropertyDrawers(material);
 			}
-			if (flag && ActiveEditorTracker.sharedTracker != null)
+			if (flag)
 			{
-				InspectorWindow[] allInspectorWindows = InspectorWindow.GetAllInspectorWindows();
-				for (int j = 0; j < allInspectorWindows.Length; j++)
-				{
-					InspectorWindow inspectorWindow = allInspectorWindows[j];
-					inspectorWindow.tracker.ForceRebuild();
-				}
+				this.UpdateAllOpenMaterialEditors();
+			}
+			else
+			{
+				this.OnShaderChanged();
+			}
+		}
+
+		private void UpdateAllOpenMaterialEditors()
+		{
+			MaterialEditor[] array = MaterialEditor.s_MaterialEditors.ToArray();
+			for (int i = 0; i < array.Length; i++)
+			{
+				MaterialEditor materialEditor = array[i];
+				materialEditor.DetectShaderChanged();
 			}
 		}
 
@@ -305,7 +349,7 @@ namespace UnityEditor
 			rect = EditorGUI.PrefixLabel(rect, 47385, EditorGUIUtility.TempContent("Shader"));
 			EditorGUI.showMixedValue = this.HasMultipleMixedShaderValues();
 			GUIContent content = EditorGUIUtility.TempContent((!(this.m_Shader != null)) ? "No Shader Selected" : this.m_Shader.name);
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Keyboard, style))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Keyboard, style))
 			{
 				EditorGUI.showMixedValue = false;
 				Vector2 vector = GUIUtility.GUIToScreenPoint(new Vector2(rect.x, rect.y));
@@ -334,6 +378,7 @@ namespace UnityEditor
 				string oldEditorName = (!(this.m_Shader != null)) ? string.Empty : this.m_Shader.customEditor;
 				this.CreateCustomShaderGUI(material.shader, oldEditorName);
 				this.m_Shader = material.shader;
+				this.OnShaderChanged();
 				InspectorWindow.RepaintAllInspectors();
 			}
 		}
@@ -380,6 +425,10 @@ namespace UnityEditor
 			{
 				this.m_InfoMessage = PerformanceChecks.CheckMaterial(base.target as Material, EditorUserBuildSettings.activeBuildTarget);
 			}
+		}
+
+		protected virtual void OnShaderChanged()
+		{
 		}
 
 		protected override void OnHeaderGUI()
@@ -1093,7 +1142,7 @@ namespace UnityEditor
 			}
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.showMixedValue = showMixedValue;
-			materialGlobalIlluminationFlags = (MaterialGlobalIlluminationFlags)EditorGUI.IntPopup(position, MaterialEditor.Styles.lightmapEmissiveLabel, (int)materialGlobalIlluminationFlags, MaterialEditor.Styles.lightmapEmissiveStrings, MaterialEditor.Styles.lightmapEmissiveValues);
+			materialGlobalIlluminationFlags = (MaterialGlobalIlluminationFlags)EditorGUI.IntPopup(position, GUIContent.Temp(MaterialEditor.Styles.lightmapEmissiveLabel), (int)materialGlobalIlluminationFlags, MaterialEditor.Styles.lightmapEmissiveStrings, MaterialEditor.Styles.lightmapEmissiveValues);
 			EditorGUI.showMixedValue = false;
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -1108,6 +1157,101 @@ namespace UnityEditor
 				}
 			}
 			EditorGUI.indentLevel -= labelIndent;
+		}
+
+		public bool EmissionEnabledProperty()
+		{
+			Material[] array = Array.ConvertAll<UnityEngine.Object, Material>(base.targets, (UnityEngine.Object o) => (Material)o);
+			LightModeUtil lightModeUtil = LightModeUtil.Get();
+			MaterialGlobalIlluminationFlags materialGlobalIlluminationFlags = (!lightModeUtil.IsRealtimeGIEnabled()) ? ((!lightModeUtil.AreBakedLightmapsEnabled()) ? MaterialGlobalIlluminationFlags.None : MaterialGlobalIlluminationFlags.BakedEmissive) : MaterialGlobalIlluminationFlags.RealtimeEmissive;
+			bool flag = array[0].globalIlluminationFlags != MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+			bool flag2 = false;
+			for (int i = 1; i < array.Length; i++)
+			{
+				if (array[i].globalIlluminationFlags != MaterialGlobalIlluminationFlags.EmissiveIsBlack != flag)
+				{
+					flag2 = true;
+					break;
+				}
+			}
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = flag2;
+			flag = EditorGUILayout.Toggle(GUIContent.Temp("Emission"), flag, new GUILayoutOption[0]);
+			EditorGUI.showMixedValue = false;
+			bool result;
+			if (EditorGUI.EndChangeCheck())
+			{
+				Material[] array2 = array;
+				for (int j = 0; j < array2.Length; j++)
+				{
+					Material material = array2[j];
+					material.globalIlluminationFlags = ((!flag) ? MaterialGlobalIlluminationFlags.EmissiveIsBlack : materialGlobalIlluminationFlags);
+				}
+				result = flag;
+			}
+			else
+			{
+				result = (!flag2 && flag);
+			}
+			return result;
+		}
+
+		public static void FixupEmissiveFlag(Material mat)
+		{
+			if (mat == null)
+			{
+				throw new ArgumentNullException("mat");
+			}
+			mat.globalIlluminationFlags = MaterialEditor.FixupEmissiveFlag(mat.GetColor("_EmissionColor"), mat.globalIlluminationFlags);
+		}
+
+		public static MaterialGlobalIlluminationFlags FixupEmissiveFlag(Color col, MaterialGlobalIlluminationFlags flags)
+		{
+			if ((flags & MaterialGlobalIlluminationFlags.BakedEmissive) != MaterialGlobalIlluminationFlags.None && col.maxColorComponent == 0f)
+			{
+				flags |= MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+			}
+			else if (flags != MaterialGlobalIlluminationFlags.EmissiveIsBlack)
+			{
+				flags &= MaterialGlobalIlluminationFlags.AnyEmissive;
+			}
+			return flags;
+		}
+
+		public void LightmapEmissionFlagsProperty(int indent, bool enabled)
+		{
+			Material[] array = Array.ConvertAll<UnityEngine.Object, Material>(base.targets, (UnityEngine.Object o) => (Material)o);
+			MaterialGlobalIlluminationFlags materialGlobalIlluminationFlags = MaterialGlobalIlluminationFlags.AnyEmissive;
+			MaterialGlobalIlluminationFlags materialGlobalIlluminationFlags2 = array[0].globalIlluminationFlags & materialGlobalIlluminationFlags;
+			bool flag = false;
+			for (int i = 1; i < array.Length; i++)
+			{
+				flag = (flag || (array[i].globalIlluminationFlags & materialGlobalIlluminationFlags) != materialGlobalIlluminationFlags2);
+			}
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = flag;
+			EditorGUI.indentLevel += indent;
+			int[] optionValues = new int[]
+			{
+				MaterialEditor.Styles.lightmapEmissiveValues[0],
+				MaterialEditor.Styles.lightmapEmissiveValues[1]
+			};
+			GUIContent[] displayedOptions = new GUIContent[]
+			{
+				MaterialEditor.Styles.lightmapEmissiveStrings[0],
+				MaterialEditor.Styles.lightmapEmissiveStrings[1]
+			};
+			materialGlobalIlluminationFlags2 = (MaterialGlobalIlluminationFlags)EditorGUILayout.IntPopup(GUIContent.Temp(MaterialEditor.Styles.lightmapEmissiveLabel, "Controls if the emission is baked or realtime.\n\nBaked only has effect in scenes where baked global illumination is enabled.\n\nRealtime uses realtime global illumination if enabled in the scene. Otherwise the emission won't light up other objects."), (int)materialGlobalIlluminationFlags2, displayedOptions, optionValues, new GUILayoutOption[0]);
+			EditorGUI.indentLevel -= indent;
+			EditorGUI.showMixedValue = false;
+			bool flag2 = EditorGUI.EndChangeCheck();
+			Material[] array2 = array;
+			for (int j = 0; j < array2.Length; j++)
+			{
+				Material material = array2[j];
+				material.globalIlluminationFlags = ((!flag2) ? material.globalIlluminationFlags : materialGlobalIlluminationFlags2);
+				MaterialEditor.FixupEmissiveFlag(material);
+			}
 		}
 
 		private void ShaderPropertyInternal(Rect position, MaterialProperty prop, GUIContent label)
@@ -1283,13 +1427,17 @@ namespace UnityEditor
 
 		public static Renderer PrepareMaterialPropertiesForAnimationMode(MaterialProperty[] properties, bool isMaterialEditable)
 		{
+			return MaterialEditor.PrepareMaterialPropertiesForAnimationMode(properties, MaterialEditor.GetAssociatedRenderFromInspector(), isMaterialEditable);
+		}
+
+		internal static Renderer PrepareMaterialPropertiesForAnimationMode(MaterialProperty[] properties, Renderer renderer, bool isMaterialEditable)
+		{
 			bool flag = AnimationMode.InAnimationMode();
-			Renderer associatedRenderFromInspector = MaterialEditor.GetAssociatedRenderFromInspector();
-			if (associatedRenderFromInspector != null)
+			if (renderer != null)
 			{
-				MaterialEditor.ForwardApplyMaterialModification @object = new MaterialEditor.ForwardApplyMaterialModification(associatedRenderFromInspector, isMaterialEditable);
+				MaterialEditor.ForwardApplyMaterialModification @object = new MaterialEditor.ForwardApplyMaterialModification(renderer, isMaterialEditable);
 				MaterialPropertyBlock materialPropertyBlock = new MaterialPropertyBlock();
-				associatedRenderFromInspector.GetPropertyBlock(materialPropertyBlock);
+				renderer.GetPropertyBlock(materialPropertyBlock);
 				for (int i = 0; i < properties.Length; i++)
 				{
 					MaterialProperty materialProperty = properties[i];
@@ -1303,7 +1451,7 @@ namespace UnityEditor
 			Renderer result;
 			if (flag)
 			{
-				result = associatedRenderFromInspector;
+				result = renderer;
 			}
 			else
 			{
@@ -1435,7 +1583,10 @@ namespace UnityEditor
 					this.ShaderProperty(controlRect, props[i], props[i].displayName);
 				}
 			}
+			EditorGUILayout.Space();
+			EditorGUILayout.Space();
 			this.RenderQueueField();
+			this.EnableInstancingField();
 		}
 
 		public static void ApplyMaterialPropertyDrawers(Material material)
@@ -1590,7 +1741,7 @@ namespace UnityEditor
 			{
 				MaterialEditor.Styles.kReflectionProbePickerStyle.Draw(position, false, false, false, false);
 			}
-			return EditorGUI.ButtonMouseDown(buttonRect, GUIContent.none, FocusType.Passive, GUIStyle.none);
+			return EditorGUI.DropdownButton(buttonRect, GUIContent.none, FocusType.Passive, GUIStyle.none);
 		}
 
 		public void DefaultPreviewSettingsGUI()
@@ -1685,7 +1836,7 @@ namespace UnityEditor
 				}
 				if (mesh != null)
 				{
-					this.m_PreviewUtility.DrawMesh(mesh, Vector3.zero, quaternion, mat, 0, null, this.m_ReflectionProbePicker.Target);
+					this.m_PreviewUtility.DrawMesh(mesh, Vector3.zero, quaternion, mat, 0, null, this.m_ReflectionProbePicker.Target, false);
 				}
 				bool fog = RenderSettings.fog;
 				Unsupported.SetRenderSettingsUseFogNoDirty(false);
@@ -1766,6 +1917,8 @@ namespace UnityEditor
 		{
 			this.m_Shader = (base.serializedObject.FindProperty("m_Shader").objectReferenceValue as Shader);
 			this.CreateCustomShaderGUI(this.m_Shader, "");
+			this.m_EnableInstancing = base.serializedObject.FindProperty("m_EnableInstancingVariants");
+			MaterialEditor.s_MaterialEditors.Add(this);
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			this.PropertiesChanged();
 			this.m_PropertyBlock = new MaterialPropertyBlock();
@@ -1774,10 +1927,7 @@ namespace UnityEditor
 
 		public virtual void UndoRedoPerformed()
 		{
-			if (ActiveEditorTracker.sharedTracker != null)
-			{
-				ActiveEditorTracker.sharedTracker.ForceRebuild();
-			}
+			this.UpdateAllOpenMaterialEditors();
 			this.PropertiesChanged();
 		}
 
@@ -1789,6 +1939,7 @@ namespace UnityEditor
 				this.m_PreviewUtility.Cleanup();
 				this.m_PreviewUtility = null;
 			}
+			MaterialEditor.s_MaterialEditors.Remove(this);
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
 
@@ -1900,8 +2051,6 @@ namespace UnityEditor
 
 		public void RenderQueueField()
 		{
-			EditorGUILayout.Space();
-			EditorGUILayout.Space();
 			Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
 			this.RenderQueueField(controlRectForSingleLine);
 		}
@@ -1910,40 +2059,104 @@ namespace UnityEditor
 		{
 			bool showMixedValue = this.HasMultipleMixedQueueValues();
 			EditorGUI.showMixedValue = showMixedValue;
-			float labelWidth = EditorGUIUtility.labelWidth;
-			float fieldWidth = EditorGUIUtility.fieldWidth;
-			this.SetDefaultGUIWidths();
-			EditorGUIUtility.labelWidth -= 100f;
-			Rect position = r;
-			position.width -= EditorGUIUtility.fieldWidth + 2f;
-			Rect position2 = r;
-			position2.xMin = position2.xMax - EditorGUIUtility.fieldWidth;
 			Material material = base.targets[0] as Material;
 			int materialRawRenderQueue = ShaderUtil.GetMaterialRawRenderQueue(material);
 			int renderQueue = material.renderQueue;
 			bool flag = Array.IndexOf<int>(MaterialEditor.Styles.queueValues, materialRawRenderQueue) < 0;
-			int num = (!flag) ? materialRawRenderQueue : MaterialEditor.Styles.kCustomQueueValue;
-			int num2 = EditorGUI.IntPopup(position, MaterialEditor.Styles.queueLabel, num, MaterialEditor.Styles.queueNames, MaterialEditor.Styles.queueValues);
-			int num3 = EditorGUI.DelayedIntField(position2, renderQueue);
-			if (num != num2 || renderQueue != num3)
+			GUIContent[] displayedOptions;
+			int[] optionValues;
+			float num3;
+			if (flag)
+			{
+				bool flag2 = Array.IndexOf(MaterialEditor.Styles.customQueueNames, materialRawRenderQueue) < 0;
+				if (flag2)
+				{
+					int num = this.CalculateClosestQueueIndexToValue(materialRawRenderQueue);
+					string text = MaterialEditor.Styles.queueNames[num].text;
+					int num2 = materialRawRenderQueue - MaterialEditor.Styles.queueValues[num];
+					string text2 = string.Format((num2 <= 0) ? "{0}{1}" : "{0}+{1}", text, num2);
+					MaterialEditor.Styles.customQueueNames[4].text = text2;
+					MaterialEditor.Styles.customQueueValues[4] = materialRawRenderQueue;
+				}
+				displayedOptions = MaterialEditor.Styles.customQueueNames;
+				optionValues = MaterialEditor.Styles.customQueueValues;
+				num3 = 115f;
+			}
+			else
+			{
+				displayedOptions = MaterialEditor.Styles.queueNames;
+				optionValues = MaterialEditor.Styles.queueValues;
+				num3 = 100f;
+			}
+			float labelWidth = EditorGUIUtility.labelWidth;
+			float fieldWidth = EditorGUIUtility.fieldWidth;
+			this.SetDefaultGUIWidths();
+			EditorGUIUtility.labelWidth -= num3;
+			Rect position = r;
+			position.width -= EditorGUIUtility.fieldWidth + 2f;
+			Rect position2 = r;
+			position2.xMin = position2.xMax - EditorGUIUtility.fieldWidth;
+			int num4 = materialRawRenderQueue;
+			int num5 = EditorGUI.IntPopup(position, MaterialEditor.Styles.queueLabel, materialRawRenderQueue, displayedOptions, optionValues);
+			int num6 = EditorGUI.DelayedIntField(position2, renderQueue);
+			if (num4 != num5 || renderQueue != num6)
 			{
 				this.RegisterPropertyChangeUndo("Render Queue");
-				int num4 = num3;
-				if (num2 != num && num2 != MaterialEditor.Styles.kCustomQueueValue)
+				int num7 = num6;
+				if (num5 != num4)
 				{
-					num4 = num2;
+					num7 = num5;
 				}
-				num4 = Mathf.Clamp(num4, -1, 5000);
+				num7 = Mathf.Clamp(num7, -1, 5000);
 				UnityEngine.Object[] targets = base.targets;
 				for (int i = 0; i < targets.Length; i++)
 				{
 					UnityEngine.Object @object = targets[i];
-					((Material)@object).renderQueue = num4;
+					((Material)@object).renderQueue = num7;
 				}
 			}
 			EditorGUIUtility.labelWidth = labelWidth;
 			EditorGUIUtility.fieldWidth = fieldWidth;
 			EditorGUI.showMixedValue = false;
+		}
+
+		public bool EnableInstancingField()
+		{
+			bool result;
+			if (!ShaderUtil.HasInstancing(this.m_Shader))
+			{
+				result = false;
+			}
+			else
+			{
+				Rect controlRectForSingleLine = this.GetControlRectForSingleLine();
+				this.EnableInstancingField(controlRectForSingleLine);
+				result = true;
+			}
+			return result;
+		}
+
+		public void EnableInstancingField(Rect r)
+		{
+			EditorGUI.PropertyField(r, this.m_EnableInstancing, MaterialEditor.Styles.enableInstancingLabel);
+			base.serializedObject.ApplyModifiedProperties();
+		}
+
+		private int CalculateClosestQueueIndexToValue(int requestedValue)
+		{
+			int num = 2147483647;
+			int result = 1;
+			for (int i = 1; i < MaterialEditor.Styles.queueValues.Length; i++)
+			{
+				int num2 = MaterialEditor.Styles.queueValues[i];
+				int num3 = Mathf.Abs(num2 - requestedValue);
+				if (num3 < num)
+				{
+					result = i;
+					num = num3;
+				}
+			}
+			return result;
 		}
 
 		public Rect TexturePropertySingleLine(GUIContent label, MaterialProperty textureProp)

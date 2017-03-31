@@ -34,11 +34,6 @@ namespace UnityEditor.Scripting.Compilers
 			return this.process.GetStandardOutput();
 		}
 
-		protected bool CompilingForWSA()
-		{
-			return this._island._target == BuildTarget.WSAPlayer;
-		}
-
 		public void BeginCompiling()
 		{
 			if (this.process != null)
@@ -65,6 +60,13 @@ namespace UnityEditor.Scripting.Compilers
 		public virtual bool Poll()
 		{
 			return this.process == null || this.process.HasExited;
+		}
+
+		protected string GetMonoProfileLibDirectory()
+		{
+			string profile = BuildPipeline.CompatibilityProfileToClassLibFolder(this._island._api_compatibility_level);
+			string monoInstallation = (this._island._api_compatibility_level != ApiCompatibilityLevel.NET_4_6) ? "Mono" : "MonoBleedingEdge";
+			return MonoInstallationFinder.GetProfileDirectory(profile, monoInstallation);
 		}
 
 		protected bool AddCustomResponseFileIfPresent(List<string> arguments, string responseFileName)

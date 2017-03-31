@@ -116,7 +116,7 @@ namespace UnityEditor
 		private AudioMixerGroupTreeView m_GroupTree;
 
 		[SerializeField]
-		private TreeViewState m_MixersTreeState;
+		private TreeViewStateWithAssetUtility m_MixersTreeState;
 
 		private AudioMixersTreeView m_MixersTree;
 
@@ -315,7 +315,7 @@ namespace UnityEditor
 				this.m_GroupTree = new AudioMixerGroupTreeView(this, this.m_AudioGroupTreeState);
 				if (this.m_MixersTreeState == null)
 				{
-					this.m_MixersTreeState = new TreeViewState();
+					this.m_MixersTreeState = new TreeViewStateWithAssetUtility();
 				}
 				this.m_MixersTree = new AudioMixersTreeView(this, this.m_MixersTreeState, new Func<List<AudioMixerController>>(this.GetAllControllers));
 				if (this.m_ViewsState == null)

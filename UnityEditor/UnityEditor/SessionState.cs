@@ -1,75 +1,94 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
-	internal sealed class SessionState
+	public static class SessionState
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetBool(string key, bool value);
+		public static extern void SetBool(string key, bool value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern bool GetBool(string key, bool defaultValue);
+		public static extern bool GetBool(string key, bool defaultValue);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EraseBool(string key);
+		public static extern void EraseBool(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetFloat(string key, float value);
+		public static extern void SetFloat(string key, float value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern float GetFloat(string key, float defaultValue);
+		public static extern float GetFloat(string key, float defaultValue);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EraseFloat(string key);
+		public static extern void EraseFloat(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetInt(string key, int value);
+		public static extern void SetInt(string key, int value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetInt(string key, int defaultValue);
+		public static extern int GetInt(string key, int defaultValue);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EraseInt(string key);
+		public static extern void EraseInt(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetString(string key, string value);
+		public static extern void SetString(string key, string value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string GetString(string key, string defaultValue);
+		public static extern string GetString(string key, string defaultValue);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EraseString(string key);
+		public static extern void EraseString(string key);
 
-		internal static void SetVector3(string key, Vector3 value)
+		public static void SetVector3(string key, Vector3 value)
 		{
 			SessionState.INTERNAL_CALL_SetVector3(key, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetVector3(string key, ref Vector3 value);
 
-		internal static Vector3 GetVector3(string key, Vector3 defaultValue)
+		public static Vector3 GetVector3(string key, Vector3 defaultValue)
 		{
 			Vector3 result;
 			SessionState.INTERNAL_CALL_GetVector3(key, ref defaultValue, out result);
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetVector3(string key, ref Vector3 defaultValue, out Vector3 value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EraseVector3(string key);
+		public static extern void EraseVector3(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetIntArray(string key, int[] value);
+		public static extern void SetIntArray(string key, int[] value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int[] GetIntArray(string key, int[] defaultValue);
+		public static extern int[] GetIntArray(string key, int[] defaultValue);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void EraseIntArray(string key);
+		public static extern void EraseIntArray(string key);
 	}
 }

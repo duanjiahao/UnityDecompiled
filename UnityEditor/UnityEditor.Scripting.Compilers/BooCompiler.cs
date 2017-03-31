@@ -38,7 +38,7 @@ namespace UnityEditor.Scripting.Compilers
 				string fileName2 = files[j];
 				list.Add(ScriptCompilerBase.PrepareFileName(fileName2));
 			}
-			string compiler = Path.Combine(base.GetProfileDirectory(), "booc.exe");
+			string compiler = Path.Combine(base.GetMonoProfileLibDirectory(), "booc.exe");
 			return base.StartCompiler(this._island._target, compiler, list);
 		}
 

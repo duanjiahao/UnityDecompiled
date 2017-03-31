@@ -422,7 +422,7 @@ namespace UnityEditor
 				"Visualize"
 			};
 			int num = (!this.m_PreVis) ? 1 : 0;
-			if (EditorGUI.ButtonMouseDown(popupRect, new GUIContent(array[num]), FocusType.Passive, EditorStyles.popup))
+			if (EditorGUI.DropdownButton(popupRect, new GUIContent(array[num]), FocusType.Passive, EditorStyles.popup))
 			{
 				GenericMenu genericMenu = new GenericMenu();
 				genericMenu.AddItem(new GUIContent(array[0]), num == 0, new GenericMenu.MenuFunction(this.SetShowVolumePreVis));

@@ -229,6 +229,7 @@ namespace UnityEngine.VR.WSA.WebCam
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Resolution[] GetSupportedResolutions_Internal();
 
@@ -239,25 +240,31 @@ namespace UnityEngine.VR.WSA.WebCam
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Instantiate_Internal(bool showHolograms, PhotoCapture.OnCaptureResourceCreatedCallback onCreatedCallback, out IntPtr value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void StartPhotoMode_Internal(IntPtr photoCaptureObj, PhotoCapture.OnPhotoModeStartedCallback onPhotoModeStartedCallback, float hologramOpacity, float frameRate, int cameraResolutionWidth, int cameraResolutionHeight, int pixelFormat);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void StopPhotoMode_Internal(IntPtr photoCaptureObj, PhotoCapture.OnPhotoModeStoppedCallback onPhotoModeStoppedCallback);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void CapturePhotoToDisk_Internal(IntPtr photoCaptureObj, string filename, int fileOutputFormat, PhotoCapture.OnCapturedToDiskCallback onCapturedPhotoToDiskCallback);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void CapturePhotoToMemory_Internal(IntPtr photoCaptureObj, PhotoCapture.OnCapturedToMemoryCallback onCapturedPhotoToMemoryCallback);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Dispose_Internal(IntPtr photoCaptureObj);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void DisposeThreaded_Internal(IntPtr photoCaptureObj);
 
@@ -269,6 +276,7 @@ namespace UnityEngine.VR.WSA.WebCam
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetUnsafePointerToVideoDeviceController_Internal(IntPtr photoCaptureObj, out IntPtr value);
 	}

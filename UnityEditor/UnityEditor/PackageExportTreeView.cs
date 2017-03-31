@@ -98,7 +98,7 @@ namespace UnityEditor
 				bool flag = Event.current.type == EventType.Repaint;
 				if (selected && flag)
 				{
-					TreeViewGUI.s_Styles.selectionStyle.Draw(rowRect, false, false, true, focused);
+					TreeViewGUI.Styles.selectionStyle.Draw(rowRect, false, false, true, focused);
 				}
 				if (this.m_TreeView.data.IsExpandable(tvItem))
 				{
@@ -154,7 +154,7 @@ namespace UnityEditor
 			private void DoIconAndText(PackageExportTreeView.PackageExportTreeViewItem item, Rect contentRect, bool selected, bool focused)
 			{
 				EditorGUIUtility.SetIconSize(new Vector2(this.k_IconWidth, this.k_IconWidth));
-				GUIStyle lineStyle = TreeViewGUI.s_Styles.lineStyle;
+				GUIStyle lineStyle = TreeViewGUI.Styles.lineStyle;
 				lineStyle.padding.left = 0;
 				if (Event.current.type == EventType.Repaint)
 				{

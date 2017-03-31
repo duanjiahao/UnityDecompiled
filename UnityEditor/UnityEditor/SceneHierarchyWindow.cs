@@ -241,7 +241,7 @@ namespace UnityEditor
 			GameObjectsTreeViewDragging dragging = new GameObjectsTreeViewDragging(this.m_TreeView);
 			GameObjectTreeViewGUI gui = new GameObjectTreeViewGUI(this.m_TreeView, false);
 			this.m_TreeView.Init(this.treeViewRect, gameObjectTreeViewDataSource, gui, dragging);
-			gameObjectTreeViewDataSource.searchMode = (int)this.m_SearchMode;
+			gameObjectTreeViewDataSource.searchMode = (int)base.searchMode;
 			gameObjectTreeViewDataSource.searchString = this.m_SearchFilter;
 			this.m_AllowAlphaNumericalSort = (EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false) || InternalEditorUtility.inBatchMode);
 			this.SetUpSortMethodLists();
@@ -317,12 +317,12 @@ namespace UnityEditor
 			}
 		}
 
-		private void OnSceneWasCreated(Scene scene, NewSceneMode mode)
+		private void OnSceneCreated(Scene scene, NewSceneSetup setup, NewSceneMode mode)
 		{
 			this.ExpandTreeViewItem(scene.handle, true);
 		}
 
-		private void OnSceneWasOpened(Scene scene, OpenSceneMode mode)
+		private void OnSceneOpened(Scene scene, OpenSceneMode mode)
 		{
 			this.ExpandTreeViewItem(scene.handle, true);
 		}
@@ -362,8 +362,8 @@ namespace UnityEditor
 			EditorApplication.editorApplicationQuit = (UnityAction)Delegate.Combine(EditorApplication.editorApplicationQuit, new UnityAction(this.OnQuit));
 			EditorApplication.searchChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.searchChanged, new EditorApplication.CallbackFunction(this.SearchChanged));
 			EditorApplication.projectWasLoaded = (UnityAction)Delegate.Combine(EditorApplication.projectWasLoaded, new UnityAction(this.OnProjectWasLoaded));
-			EditorSceneManager.sceneWasCreated = (UnityAction<Scene, NewSceneMode>)Delegate.Combine(EditorSceneManager.sceneWasCreated, new UnityAction<Scene, NewSceneMode>(this.OnSceneWasCreated));
-			EditorSceneManager.sceneWasOpened = (UnityAction<Scene, OpenSceneMode>)Delegate.Combine(EditorSceneManager.sceneWasOpened, new UnityAction<Scene, OpenSceneMode>(this.OnSceneWasOpened));
+			EditorSceneManager.newSceneCreated += new EditorSceneManager.NewSceneCreatedCallback(this.OnSceneCreated);
+			EditorSceneManager.sceneOpened += new EditorSceneManager.SceneOpenedCallback(this.OnSceneOpened);
 			SceneHierarchyWindow.s_LastInteractedHierarchy = this;
 		}
 
@@ -373,8 +373,8 @@ namespace UnityEditor
 			EditorApplication.editorApplicationQuit = (UnityAction)Delegate.Remove(EditorApplication.editorApplicationQuit, new UnityAction(this.OnQuit));
 			EditorApplication.searchChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.searchChanged, new EditorApplication.CallbackFunction(this.SearchChanged));
 			EditorApplication.projectWasLoaded = (UnityAction)Delegate.Remove(EditorApplication.projectWasLoaded, new UnityAction(this.OnProjectWasLoaded));
-			EditorSceneManager.sceneWasCreated = (UnityAction<Scene, NewSceneMode>)Delegate.Remove(EditorSceneManager.sceneWasCreated, new UnityAction<Scene, NewSceneMode>(this.OnSceneWasCreated));
-			EditorSceneManager.sceneWasOpened = (UnityAction<Scene, OpenSceneMode>)Delegate.Remove(EditorSceneManager.sceneWasOpened, new UnityAction<Scene, OpenSceneMode>(this.OnSceneWasOpened));
+			EditorSceneManager.newSceneCreated -= new EditorSceneManager.NewSceneCreatedCallback(this.OnSceneCreated);
+			EditorSceneManager.sceneOpened -= new EditorSceneManager.SceneOpenedCallback(this.OnSceneOpened);
 			SceneHierarchyWindow.s_SceneHierarchyWindow.Remove(this);
 		}
 
@@ -748,7 +748,7 @@ namespace UnityEditor
 					gUIContent.tooltip = this.currentSortingName;
 				}
 				Rect rect = GUILayoutUtility.GetRect(gUIContent, EditorStyles.toolbarButton);
-				if (EditorGUI.ButtonMouseDown(rect, gUIContent, FocusType.Passive, EditorStyles.toolbarButton))
+				if (EditorGUI.DropdownButton(rect, gUIContent, FocusType.Passive, EditorStyles.toolbarButton))
 				{
 					List<SceneHierarchySortingWindow.InputData> list = new List<SceneHierarchySortingWindow.InputData>();
 					foreach (KeyValuePair<string, HierarchySorting> current in this.m_SortingObjects)

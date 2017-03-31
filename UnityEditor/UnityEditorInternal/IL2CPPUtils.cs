@@ -8,6 +8,8 @@ namespace UnityEditorInternal
 {
 	internal class IL2CPPUtils
 	{
+		public const string BinaryMetadataSuffix = "-metadata.dat";
+
 		internal static string editorIl2cppFolder
 		{
 			get
@@ -36,9 +38,9 @@ namespace UnityEditorInternal
 			return iL2CPPBuilder;
 		}
 
-		internal static IL2CPPBuilder RunCompileAndLink(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool developmentBuild)
+		internal static IL2CPPBuilder RunCompileAndLink(string tempFolder, string stagingAreaData, IIl2CppPlatformProvider platformProvider, Action<string> modifyOutputBeforeCompile, RuntimeClassRegistry runtimeClassRegistry, bool debugBuild)
 		{
-			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(tempFolder, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, developmentBuild);
+			IL2CPPBuilder iL2CPPBuilder = new IL2CPPBuilder(tempFolder, stagingAreaData, platformProvider, modifyOutputBeforeCompile, runtimeClassRegistry, debugBuild);
 			iL2CPPBuilder.RunCompileAndLink();
 			return iL2CPPBuilder;
 		}
@@ -104,6 +106,26 @@ namespace UnityEditorInternal
 				"etc"
 			});
 			FileUtil.CopyDirectoryRecursive(source, destinationFolder);
+		}
+
+		internal static string ApiCompatibilityLevelToDotNetProfileArgument(ApiCompatibilityLevel compatibilityLevel)
+		{
+			string result;
+			switch (compatibilityLevel)
+			{
+			case ApiCompatibilityLevel.NET_2_0:
+				result = "Net20";
+				break;
+			case ApiCompatibilityLevel.NET_2_0_Subset:
+				result = "Unity";
+				break;
+			case ApiCompatibilityLevel.NET_4_6:
+				result = "Net45";
+				break;
+			default:
+				throw new NotSupportedException(string.Format("ApiCompatibilityLevel.{0} is not supported by IL2CPP!", compatibilityLevel));
+			}
+			return result;
 		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.U2D.Interface;
 
 namespace UnityEditor
 {
@@ -141,6 +142,18 @@ namespace UnityEditor
 
 		private bool m_DelayedReset = false;
 
+		private HashSet<ShapeEditor> m_ShapeEditorListeners = new HashSet<ShapeEditor>();
+
+		private ShapeEditorRectSelectionTool m_RectSelectionTool;
+
+		private int m_MouseClosestEdge = -1;
+
+		private float m_MouseClosestEdgeDist = 3.40282347E+38f;
+
+		private int m_ShapeEditorRegisteredTo = 0;
+
+		private int m_ShapeEditorUpdateDone = 0;
+
 		private static readonly Color k_UnSelectedOutline = Color.gray;
 
 		private static readonly Color k_UnSelectedFill = Color.white;
@@ -169,13 +182,13 @@ namespace UnityEditor
 
 		private const float k_MinExistingPointDistanceForInsert = 20f;
 
-		private readonly int k_CreatorID = GUIUtility.GetPermanentControlID();
+		private readonly int k_CreatorID;
 
-		private readonly int k_EdgeID = GUIUtility.GetPermanentControlID();
+		private readonly int k_EdgeID;
 
-		private readonly int k_RightTangentID = GUIUtility.GetPermanentControlID();
+		private readonly int k_RightTangentID;
 
-		private readonly int k_LeftTangentID = GUIUtility.GetPermanentControlID();
+		private readonly int k_LeftTangentID;
 
 		[CompilerGenerated]
 		private static ShapeEditor.DistanceToControl <>f__mg$cache0;
@@ -210,7 +223,7 @@ namespace UnityEditor
 		[CompilerGenerated]
 		private static Handles.CapFunction <>f__mg$cacheA;
 
-		public Texture2D lineTexture
+		public UnityEngine.Texture2D lineTexture
 		{
 			get;
 			set;
@@ -276,15 +289,59 @@ namespace UnityEditor
 			}
 		}
 
-		public ShapeEditor()
+		private IGUIUtility guiUtility
+		{
+			get;
+			set;
+		}
+
+		private IEventSystem eventSystem
+		{
+			get;
+			set;
+		}
+
+		private IEvent currentEvent
+		{
+			get;
+			set;
+		}
+
+		public ShapeEditor(IGUIUtility gu, IEventSystem es)
 		{
 			this.m_Selection = new ShapeEditorSelection(this);
+			this.guiUtility = gu;
+			this.eventSystem = es;
+			this.k_CreatorID = this.guiUtility.GetPermanentControlID();
+			this.k_EdgeID = this.guiUtility.GetPermanentControlID();
+			this.k_RightTangentID = this.guiUtility.GetPermanentControlID();
+			this.k_LeftTangentID = this.guiUtility.GetPermanentControlID();
+		}
+
+		public void SetRectSelectionTool(ShapeEditorRectSelectionTool sers)
+		{
+			if (this.m_RectSelectionTool != null)
+			{
+				this.m_RectSelectionTool.RectSelect -= new Action<Rect, ShapeEditor.SelectionType>(this.SelectPointsInRect);
+				this.m_RectSelectionTool.ClearSelection -= new Action(this.ClearSelectedPoints);
+			}
+			this.m_RectSelectionTool = sers;
+			this.m_RectSelectionTool.RectSelect += new Action<Rect, ShapeEditor.SelectionType>(this.SelectPointsInRect);
+			this.m_RectSelectionTool.ClearSelection += new Action(this.ClearSelectedPoints);
+		}
+
+		public void OnDisable()
+		{
+			this.m_RectSelectionTool.RectSelect -= new Action<Rect, ShapeEditor.SelectionType>(this.SelectPointsInRect);
+			this.m_RectSelectionTool.ClearSelection -= new Action(this.ClearSelectedPoints);
+			this.m_RectSelectionTool = null;
 		}
 
 		public void OnGUI()
 		{
 			this.DelayedResetIfNecessary();
-			if (Event.current.type == EventType.MouseDown)
+			this.currentEvent = this.eventSystem.current;
+			if (this.currentEvent.type == EventType.MouseDown)
 			{
 				this.StoreMouseDownState();
 			}
@@ -297,22 +354,26 @@ namespace UnityEditor
 				this.Framing();
 				this.Tangents();
 				this.Points();
-				this.Selection();
 			}
 			Handles.color = color;
 			Handles.matrix = matrix;
+			this.OnShapeEditorUpdateDone();
+			foreach (ShapeEditor current in this.m_ShapeEditorListeners)
+			{
+				current.OnShapeEditorUpdateDone();
+			}
 		}
 
 		private void Framing()
 		{
-			if (Event.current.commandName == "FrameSelected" && this.m_Selection.Count > 0)
+			if (this.currentEvent.commandName == "FrameSelected" && this.m_Selection.Count > 0)
 			{
-				EventType type = Event.current.type;
+				EventType type = this.currentEvent.type;
 				if (type != EventType.ExecuteCommand)
 				{
 					if (type != EventType.ValidateCommand)
 					{
-						goto IL_DA;
+						goto IL_DD;
 					}
 				}
 				else
@@ -324,19 +385,64 @@ namespace UnityEditor
 					}
 					this.Frame(obj);
 				}
-				Event.current.Use();
-				IL_DA:;
+				this.currentEvent.Use();
+				IL_DD:;
 			}
+		}
+
+		private float GetMouseClosestEdgeDistance()
+		{
+			int num = this.GetPointsCount();
+			if (this.m_MouseClosestEdge == -1 && num > 0)
+			{
+				this.m_MouseClosestEdgeDist = 3.40282347E+38f;
+				int num2 = 0;
+				int num3 = ShapeEditor.NextIndex(num2, num);
+				int num4 = (!this.OpenEnded()) ? num : (num - 1);
+				for (int i = 0; i < num4; i++)
+				{
+					Vector3 vector = this.GetPointPosition(num2);
+					Vector3 vector2 = this.GetPointPosition(num3);
+					Vector3 arg = vector + this.GetPointRTangent(num2);
+					Vector3 arg2 = vector2 + this.GetPointLTangent(num3);
+					Vector2 v = this.LocalToScreen(vector);
+					Vector2 v2 = this.LocalToScreen(vector2);
+					Vector2 v3 = this.LocalToScreen(arg);
+					Vector2 v4 = this.LocalToScreen(arg2);
+					float num5 = HandleUtility.DistancePointBezier(this.eventSystem.current.mousePosition, v, v2, v3, v4);
+					if (num5 < this.m_MouseClosestEdgeDist)
+					{
+						this.m_MouseClosestEdge = num2;
+						this.m_MouseClosestEdgeDist = num5;
+					}
+					num2 = ShapeEditor.NextIndex(num2, num);
+					num3 = ShapeEditor.NextIndex(num3, num);
+				}
+			}
+			float result;
+			if (this.guiUtility.hotControl == this.k_CreatorID || this.guiUtility.hotControl == this.k_EdgeID)
+			{
+				result = -3.40282347E+38f;
+			}
+			else
+			{
+				result = this.m_MouseClosestEdgeDist;
+			}
+			return result;
 		}
 
 		public void Edges()
 		{
-			int num = this.GetPointsCount();
-			int closestEdge = -1;
-			float num2 = 3.40282347E+38f;
+			float num = 3.40282347E+38f;
+			if (this.m_ShapeEditorListeners.Count > 0)
+			{
+				num = (from se in this.m_ShapeEditorListeners
+				select se.GetMouseClosestEdgeDistance()).Max();
+			}
+			int num2 = this.GetPointsCount();
 			int num3 = 0;
-			int num4 = ShapeEditor.NextIndex(num3, num);
-			int num5 = (!this.OpenEnded()) ? num : (num - 1);
+			int num4 = ShapeEditor.NextIndex(num3, num2);
+			int num5 = (!this.OpenEnded()) ? num2 : (num2 - 1);
 			for (int i = 0; i < num5; i++)
 			{
 				Vector3 vector = this.GetPointPosition(num3);
@@ -347,30 +453,28 @@ namespace UnityEditor
 				Vector2 v2 = this.LocalToScreen(vector2);
 				Vector2 v3 = this.LocalToScreen(vector3);
 				Vector2 v4 = this.LocalToScreen(vector4);
-				float num6 = HandleUtility.DistancePointBezier(Event.current.mousePosition, v, v2, v3, v4);
+				float num6 = HandleUtility.DistancePointBezier(this.currentEvent.mousePosition, v, v2, v3, v4);
 				Color color = (num3 != this.m_ActiveEdge) ? Color.white : Color.yellow;
-				float width = (num3 != this.m_ActiveEdge && (!ShapeEditor.EdgeDragModifiersActive() || num6 >= 9f)) ? 2f : 6f;
+				float width = (num3 != this.m_ActiveEdge && (!this.EdgeDragModifiersActive() || num6 >= 9f || num6 >= num)) ? 2f : 6f;
 				Handles.DrawBezier(vector, vector2, vector3, vector4, color, this.lineTexture, width);
-				if (num6 < num2)
-				{
-					closestEdge = num3;
-					num2 = num6;
-				}
-				num3 = ShapeEditor.NextIndex(num3, num);
-				num4 = ShapeEditor.NextIndex(num4, num);
+				num3 = ShapeEditor.NextIndex(num3, num2);
+				num4 = ShapeEditor.NextIndex(num4, num2);
 			}
 			if (this.inEditMode)
 			{
-				this.HandlePointInsertToEdge(closestEdge, num2);
-				this.HandleEdgeDragging(closestEdge, num2);
+				if (num > this.GetMouseClosestEdgeDistance())
+				{
+					this.HandlePointInsertToEdge(this.m_MouseClosestEdge, this.m_MouseClosestEdgeDist);
+					this.HandleEdgeDragging(this.m_MouseClosestEdge, this.m_MouseClosestEdgeDist);
+				}
 			}
-			if (GUIUtility.hotControl != this.k_CreatorID && this.m_NewPointIndex != -1)
+			if (this.guiUtility.hotControl != this.k_CreatorID && this.m_NewPointIndex != -1)
 			{
 				this.m_NewPointDragFinished = true;
-				GUIUtility.keyboardControl = 0;
+				this.guiUtility.keyboardControl = 0;
 				this.m_NewPointIndex = -1;
 			}
-			if (GUIUtility.hotControl != this.k_EdgeID && this.m_ActiveEdge != -1)
+			if (this.guiUtility.hotControl != this.k_EdgeID && this.m_ActiveEdge != -1)
 			{
 				this.m_ActiveEdge = -1;
 			}
@@ -380,11 +484,11 @@ namespace UnityEditor
 		{
 			if (this.activePoint >= 0 && this.m_Selection.Count <= 1 && this.GetTangentMode(this.activePoint) != ShapeEditor.TangentMode.Linear)
 			{
-				Event current = Event.current;
+				IEvent current = this.eventSystem.current;
 				Vector3 vector = this.GetPointPosition(this.activePoint);
 				Vector3 vector2 = this.GetPointLTangent(this.activePoint);
 				Vector3 vector3 = this.GetPointRTangent(this.activePoint);
-				bool flag = GUIUtility.hotControl == this.k_RightTangentID || GUIUtility.hotControl == this.k_LeftTangentID;
+				bool flag = this.guiUtility.hotControl == this.k_RightTangentID || this.guiUtility.hotControl == this.k_LeftTangentID;
 				bool flag2 = vector2.sqrMagnitude == 0f && vector3.sqrMagnitude == 0f;
 				if (flag || !flag2)
 				{
@@ -411,7 +515,7 @@ namespace UnityEditor
 						this.RecordUndo();
 						this.SetPointLTangent(this.activePoint, vector4);
 						this.SetPointRTangent(this.activePoint, vector5);
-						this.RefreshTangents(this.activePoint, GUIUtility.hotControl == this.k_RightTangentID);
+						this.RefreshTangents(this.activePoint, this.guiUtility.hotControl == this.k_RightTangentID);
 						this.Repaint();
 					}
 				}
@@ -420,31 +524,31 @@ namespace UnityEditor
 
 		public void Points()
 		{
-			bool flag = (Event.current.type == EventType.ExecuteCommand || Event.current.type == EventType.ValidateCommand) && (Event.current.commandName == "SoftDelete" || Event.current.commandName == "Delete");
+			bool flag = (UnityEngine.Event.current.type == EventType.ExecuteCommand || UnityEngine.Event.current.type == EventType.ValidateCommand) && (UnityEngine.Event.current.commandName == "SoftDelete" || UnityEngine.Event.current.commandName == "Delete");
 			for (int i = 0; i < this.GetPointsCount(); i++)
 			{
 				if (i != this.m_NewPointIndex)
 				{
 					Vector3 vector = this.GetPointPosition(i);
-					int controlID = GUIUtility.GetControlID(5353, FocusType.Keyboard);
+					int controlID = this.guiUtility.GetControlID(5353, FocusType.Keyboard);
 					bool flag2 = this.m_Selection.Contains(i);
-					bool flag3 = Event.current.GetTypeForControl(controlID) == EventType.MouseDown;
-					bool flag4 = Event.current.GetTypeForControl(controlID) == EventType.MouseUp;
+					bool flag3 = this.currentEvent.GetTypeForControl(controlID) == EventType.MouseDown;
+					bool flag4 = this.currentEvent.GetTypeForControl(controlID) == EventType.MouseUp;
 					EditorGUI.BeginChangeCheck();
 					ShapeEditor.handleOutlineColor = this.GetOutlineColorForPoint(i, controlID);
 					ShapeEditor.handleFillColor = this.GetFillColorForPoint(i, controlID);
 					Vector3 vector2 = vector;
-					int hotControl = GUIUtility.hotControl;
-					if (!Event.current.alt || GUIUtility.hotControl == controlID)
+					int hotControl = this.guiUtility.hotControl;
+					if (!this.currentEvent.alt || this.guiUtility.hotControl == controlID)
 					{
 						vector2 = ShapeEditor.DoSlider(controlID, vector, Vector3.up, Vector3.right, this.GetHandleSizeForPoint(i), this.GetCapForPoint(i));
 					}
-					else if (Event.current.type == EventType.Repaint)
+					else if (this.currentEvent.type == EventType.Repaint)
 					{
-						this.GetCapForPoint(i)(controlID, vector, Quaternion.LookRotation(Vector3.forward, Vector3.up), this.GetHandleSizeForPoint(i), Event.current.type);
+						this.GetCapForPoint(i)(controlID, vector, Quaternion.LookRotation(Vector3.forward, Vector3.up), this.GetHandleSizeForPoint(i), this.currentEvent.type);
 					}
-					int hotControl2 = GUIUtility.hotControl;
-					if (flag4 && hotControl == controlID && hotControl2 == 0 && Event.current.mousePosition == this.m_MousePositionLastMouseDown && !Event.current.shift)
+					int hotControl2 = this.guiUtility.hotControl;
+					if (flag4 && hotControl == controlID && hotControl2 == 0 && this.currentEvent.mousePosition == this.m_MousePositionLastMouseDown && !this.currentEvent.shift)
 					{
 						this.HandlePointClick(i);
 					}
@@ -452,38 +556,33 @@ namespace UnityEditor
 					{
 						this.RecordUndo();
 						vector2 = this.Snap(vector2);
-						this.m_Selection.MoveSelection(vector2 - vector);
+						this.MoveSelections(vector2 - vector);
 					}
-					if (GUIUtility.hotControl == controlID && !flag2 && flag3)
+					if (this.guiUtility.hotControl == controlID && !flag2 && flag3)
 					{
-						this.m_Selection.SelectPoint(i, (!Event.current.shift) ? ShapeEditor.SelectionType.Normal : ShapeEditor.SelectionType.Additive);
+						this.SelectPoint(i, (!this.currentEvent.shift) ? ShapeEditor.SelectionType.Normal : ShapeEditor.SelectionType.Additive);
 						this.Repaint();
 					}
 					if (this.m_NewPointDragFinished && this.activePoint == i && controlID != -1)
 					{
-						GUIUtility.keyboardControl = controlID;
+						this.guiUtility.keyboardControl = controlID;
 						this.m_NewPointDragFinished = false;
 					}
 				}
 			}
 			if (flag)
 			{
-				if (Event.current.type == EventType.ValidateCommand)
+				if (this.currentEvent.type == EventType.ValidateCommand)
 				{
-					Event.current.Use();
+					this.currentEvent.Use();
 				}
-				else if (Event.current.type == EventType.ExecuteCommand)
+				else if (this.currentEvent.type == EventType.ExecuteCommand)
 				{
 					this.RecordUndo();
-					this.m_Selection.DeleteSelection();
-					Event.current.Use();
+					this.DeleteSelections();
+					this.currentEvent.Use();
 				}
 			}
-		}
-
-		private void Selection()
-		{
-			this.m_Selection.OnGUI();
 		}
 
 		public void HandlePointInsertToEdge(int closestEdge, float closestEdgeDist)
@@ -493,9 +592,9 @@ namespace UnityEditor
 			bool flag3 = this.MouseDistanceToClosestTangent() > 20f;
 			bool flag4 = flag2 && flag3;
 			bool flag5 = closestEdgeDist < 9f;
-			if ((flag5 && flag4 && !this.m_Selection.isSelecting && Event.current.modifiers == EventModifiers.None) || flag)
+			if ((flag5 && flag4 && !this.m_RectSelectionTool.isSelecting && this.currentEvent.modifiers == EventModifiers.None) || flag)
 			{
-				Vector3 vector = (!flag) ? this.FindClosestPointOnEdge(closestEdge, this.ScreenToLocal(Event.current.mousePosition), 100) : this.GetPointPosition(this.m_NewPointIndex);
+				Vector3 vector = (!flag) ? this.FindClosestPointOnEdge(closestEdge, this.ScreenToLocal(this.currentEvent.mousePosition), 100) : this.GetPointPosition(this.m_NewPointIndex);
 				EditorGUI.BeginChangeCheck();
 				ShapeEditor.handleFillColor = ShapeEditor.k_SelectedHoveredFill;
 				ShapeEditor.handleOutlineColor = ShapeEditor.k_SelectedHoveredOutline;
@@ -505,28 +604,28 @@ namespace UnityEditor
 					ShapeEditor.handleOutlineColor = ShapeEditor.handleOutlineColor.AlphaMultiplied(0.5f);
 				}
 				int hotControl = GUIUtility.hotControl;
-				int arg_14D_0 = this.k_CreatorID;
-				Vector3 arg_14D_1 = vector;
-				Vector3 arg_14D_2 = Vector3.up;
-				Vector3 arg_14D_3 = Vector3.right;
-				float arg_14D_4 = this.GetHandleSizeForPoint(closestEdge);
+				int arg_14F_0 = this.k_CreatorID;
+				Vector3 arg_14F_1 = vector;
+				Vector3 arg_14F_2 = Vector3.up;
+				Vector3 arg_14F_3 = Vector3.right;
+				float arg_14F_4 = this.GetHandleSizeForPoint(closestEdge);
 				if (ShapeEditor.<>f__mg$cache3 == null)
 				{
 					ShapeEditor.<>f__mg$cache3 = new Handles.CapFunction(ShapeEditor.RectCap);
 				}
-				Vector3 vector2 = ShapeEditor.DoSlider(arg_14D_0, arg_14D_1, arg_14D_2, arg_14D_3, arg_14D_4, ShapeEditor.<>f__mg$cache3);
+				Vector3 vector2 = ShapeEditor.DoSlider(arg_14F_0, arg_14F_1, arg_14F_2, arg_14F_3, arg_14F_4, ShapeEditor.<>f__mg$cache3);
 				if (hotControl != this.k_CreatorID && GUIUtility.hotControl == this.k_CreatorID)
 				{
 					this.RecordUndo();
 					this.m_NewPointIndex = ShapeEditor.NextIndex(closestEdge, this.GetPointsCount());
 					this.InsertPointAt(this.m_NewPointIndex, vector2);
-					this.m_Selection.SelectPoint(this.m_NewPointIndex, ShapeEditor.SelectionType.Normal);
+					this.SelectPoint(this.m_NewPointIndex, ShapeEditor.SelectionType.Normal);
 				}
 				else if (EditorGUI.EndChangeCheck())
 				{
 					this.RecordUndo();
 					vector2 = this.Snap(vector2);
-					this.m_Selection.MoveSelection(vector2 - vector);
+					this.MoveSelections(vector2 - vector);
 				}
 			}
 		}
@@ -538,9 +637,9 @@ namespace UnityEditor
 			bool flag3 = this.MouseDistanceToClosestTangent() > 20f;
 			bool flag4 = flag2 && flag3;
 			bool flag5 = closestEdgeDist < 9f;
-			if ((flag5 && flag4 && !this.m_Selection.isSelecting && ShapeEditor.EdgeDragModifiersActive()) || flag)
+			if ((flag5 && flag4 && !this.m_RectSelectionTool.isSelecting && this.EdgeDragModifiersActive()) || flag)
 			{
-				EventType type = Event.current.type;
+				EventType type = this.currentEvent.type;
 				if (type != EventType.MouseDown)
 				{
 					if (type != EventType.MouseDrag)
@@ -549,13 +648,13 @@ namespace UnityEditor
 						{
 							this.m_ActiveEdge = -1;
 							GUIUtility.hotControl = 0;
-							Event.current.Use();
+							this.currentEvent.Use();
 						}
 					}
 					else
 					{
 						this.RecordUndo();
-						Vector3 a = this.ScreenToLocal(Event.current.mousePosition);
+						Vector3 a = this.ScreenToLocal(this.currentEvent.mousePosition);
 						Vector3 b = a - this.m_EdgeDragStartMousePosition;
 						Vector3 b2 = this.GetPointPosition(this.m_ActiveEdge);
 						Vector3 vector = this.m_EdgeDragStartP0 + b;
@@ -565,7 +664,7 @@ namespace UnityEditor
 						int num = ShapeEditor.NextIndex(this.m_ActiveEdge, this.GetPointsCount());
 						this.SetPointPosition(this.m_ActiveEdge, this.GetPointPosition(activeEdge) + b3);
 						this.SetPointPosition(num, this.GetPointPosition(num) + b3);
-						Event.current.Use();
+						this.currentEvent.Use();
 					}
 				}
 				else
@@ -573,16 +672,16 @@ namespace UnityEditor
 					this.m_ActiveEdge = closestEdge;
 					this.m_EdgeDragStartP0 = this.GetPointPosition(this.m_ActiveEdge);
 					this.m_EdgeDragStartP1 = this.GetPointPosition(ShapeEditor.NextIndex(this.m_ActiveEdge, this.GetPointsCount()));
-					if (Event.current.shift)
+					if (this.currentEvent.shift)
 					{
 						this.RecordUndo();
 						this.InsertPointAt(this.m_ActiveEdge + 1, this.m_EdgeDragStartP0);
 						this.InsertPointAt(this.m_ActiveEdge + 2, this.m_EdgeDragStartP1);
 						this.m_ActiveEdge++;
 					}
-					this.m_EdgeDragStartMousePosition = this.ScreenToLocal(Event.current.mousePosition);
+					this.m_EdgeDragStartMousePosition = this.ScreenToLocal(this.currentEvent.mousePosition);
 					GUIUtility.hotControl = this.k_EdgeID;
-					Event.current.Use();
+					this.currentEvent.Use();
 				}
 			}
 		}
@@ -617,7 +716,7 @@ namespace UnityEditor
 			{
 				this.m_Selection.SelectPoint(pointIndex, ShapeEditor.SelectionType.Normal);
 			}
-			else if (!Event.current.control && !Event.current.shift && this.m_ActivePointOnLastMouseDown == this.activePoint)
+			else if (!this.currentEvent.control && !this.currentEvent.shift && this.m_ActivePointOnLastMouseDown == this.activePoint)
 			{
 				this.OnPointClick(pointIndex);
 			}
@@ -810,7 +909,7 @@ namespace UnityEditor
 
 		private float GetHandleSizeForPoint(int index)
 		{
-			return (!(Camera.current != null)) ? (this.GetHandleSize() / Handles.matrix.m00) : (HandleUtility.GetHandleSize(this.GetPointPosition(index)) * 0.075f);
+			return (!(Camera.current != null)) ? this.GetHandleSize() : (HandleUtility.GetHandleSize(this.GetPointPosition(index)) * 0.075f);
 		}
 
 		private float GetTangentSizeForPoint(int index)
@@ -844,7 +943,7 @@ namespace UnityEditor
 
 		private void StoreMouseDownState()
 		{
-			this.m_MousePositionLastMouseDown = Event.current.mousePosition;
+			this.m_MousePositionLastMouseDown = this.currentEvent.mousePosition;
 			this.m_ActivePointOnLastMouseDown = this.activePoint;
 		}
 
@@ -852,8 +951,8 @@ namespace UnityEditor
 		{
 			if (this.m_DelayedReset)
 			{
-				GUIUtility.hotControl = 0;
-				GUIUtility.keyboardControl = 0;
+				this.guiUtility.hotControl = 0;
+				this.guiUtility.keyboardControl = 0;
 				this.m_Selection.Clear();
 				this.activePoint = -1;
 				this.m_DelayedReset = false;
@@ -895,7 +994,7 @@ namespace UnityEditor
 
 		private int FindClosestPointToMouse()
 		{
-			Vector3 position = this.ScreenToLocal(Event.current.mousePosition);
+			Vector3 position = this.ScreenToLocal(this.currentEvent.mousePosition);
 			return this.FindClosestPointIndex(position);
 		}
 
@@ -999,9 +1098,9 @@ namespace UnityEditor
 			return result;
 		}
 
-		private static bool EdgeDragModifiersActive()
+		private bool EdgeDragModifiersActive()
 		{
-			return Event.current.modifiers == EventModifiers.Control || Event.current.modifiers == EventModifiers.Command;
+			return this.currentEvent.modifiers == EventModifiers.Control || this.currentEvent.modifiers == EventModifiers.Command;
 		}
 
 		private static Vector3 DoSlider(int id, Vector3 position, Vector3 slide1, Vector3 slide2, float s, Handles.CapFunction cap)
@@ -1063,7 +1162,7 @@ namespace UnityEditor
 					from = Vector3.Cross(vector, Vector3.right);
 				}
 				Vector3[] array = new Vector3[60];
-				Handles.SetDiscSectionPoints(array, 60, position, vector, from, 360f, size);
+				Handles.SetDiscSectionPoints(array, position, vector, from, 360f, size);
 				HandleUtility.ApplyWireMaterial();
 				GL.PushMatrix();
 				GL.Begin(4);
@@ -1147,6 +1246,71 @@ namespace UnityEditor
 			planeNormal.Normalize();
 			float d = -Vector3.Dot(planeNormal.normalized, point - planePoint);
 			return point + planeNormal * d;
+		}
+
+		public void RegisterToShapeEditor(ShapeEditor se)
+		{
+			this.m_ShapeEditorRegisteredTo++;
+			se.m_ShapeEditorListeners.Add(this);
+		}
+
+		public void UnregisterFromShapeEditor(ShapeEditor se)
+		{
+			this.m_ShapeEditorRegisteredTo--;
+			se.m_ShapeEditorListeners.Remove(this);
+		}
+
+		private void OnShapeEditorUpdateDone()
+		{
+			this.m_ShapeEditorUpdateDone++;
+			if (this.m_ShapeEditorUpdateDone >= this.m_ShapeEditorRegisteredTo)
+			{
+				this.m_ShapeEditorUpdateDone = 0;
+				this.m_MouseClosestEdge = -1;
+				this.m_MouseClosestEdgeDist = 3.40282347E+38f;
+			}
+		}
+
+		private void ClearSelectedPoints()
+		{
+			this.selectedPoints.Clear();
+			this.activePoint = -1;
+		}
+
+		private void SelectPointsInRect(Rect r, ShapeEditor.SelectionType st)
+		{
+			Rect rect = EditorGUIExt.FromToRect(this.ScreenToLocal(r.min), this.ScreenToLocal(r.max));
+			this.m_Selection.RectSelect(rect, st);
+		}
+
+		private void DeleteSelections()
+		{
+			foreach (ShapeEditor current in this.m_ShapeEditorListeners)
+			{
+				current.m_Selection.DeleteSelection();
+			}
+			this.m_Selection.DeleteSelection();
+		}
+
+		private void MoveSelections(Vector2 distance)
+		{
+			foreach (ShapeEditor current in this.m_ShapeEditorListeners)
+			{
+				current.m_Selection.MoveSelection(distance);
+			}
+			this.m_Selection.MoveSelection(distance);
+		}
+
+		private void SelectPoint(int index, ShapeEditor.SelectionType st)
+		{
+			if (st == ShapeEditor.SelectionType.Normal)
+			{
+				foreach (ShapeEditor current in this.m_ShapeEditorListeners)
+				{
+					current.ClearSelectedPoints();
+				}
+			}
+			this.m_Selection.SelectPoint(index, st);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.iOS
 {
@@ -7,6 +8,7 @@ namespace UnityEngine.iOS
 	{
 		public static extern bool enabled
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -16,6 +18,7 @@ namespace UnityEngine.iOS
 			return OnDemandResources.PreloadAsyncInternal(tags);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern OnDemandResourcesRequest PreloadAsyncInternal(string[] tags);
 	}

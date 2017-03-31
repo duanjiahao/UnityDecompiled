@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -12,72 +14,95 @@ namespace UnityEditor
 
 		public static extern Transform[] transforms
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern Transform activeTransform
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern GameObject[] gameObjects
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern GameObject activeGameObject
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern UnityEngine.Object activeObject
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
-		public static extern int activeInstanceID
+		public static extern UnityEngine.Object activeContext
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+		}
+
+		public static extern int activeInstanceID
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern UnityEngine.Object[] objects
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int[] instanceIDs
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern string[] assetGUIDsDeepSelection
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string[] assetGUIDs
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -85,6 +110,26 @@ namespace UnityEditor
 		public static bool Contains(int instanceID)
 		{
 			return Array.IndexOf<int>(Selection.instanceIDs, instanceID) != -1;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetActiveObjectWithContext(UnityEngine.Object obj, UnityEngine.Object context);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Transform[] GetTransforms(SelectionMode mode);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern UnityEngine.Object[] GetObjectsMode(SelectionMode mode);
+
+		private static void Internal_CallSelectionChanged()
+		{
+			if (Selection.selectionChanged != null)
+			{
+				Selection.selectionChanged();
+			}
 		}
 
 		public static bool Contains(UnityEngine.Object obj)
@@ -125,64 +170,38 @@ namespace UnityEditor
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Transform[] GetTransforms(SelectionMode mode);
-
-		public static UnityEngine.Object[] GetFiltered(Type type, SelectionMode mode)
+		private static IEnumerable GetFilteredInternal(Type type, SelectionMode mode)
 		{
-			ArrayList arrayList = new ArrayList();
-			if (type == typeof(Component) || type.IsSubclassOf(typeof(Component)))
+			IEnumerable result;
+			if (typeof(Component).IsAssignableFrom(type) || type.IsInterface)
 			{
-				Transform[] transforms = Selection.GetTransforms(mode);
-				Transform[] array = transforms;
-				for (int i = 0; i < array.Length; i++)
-				{
-					Transform transform = array[i];
-					Component component = transform.GetComponent(type);
-					if (component)
-					{
-						arrayList.Add(component);
-					}
-				}
+				result = from t in Selection.GetTransforms(mode)
+				select t.GetComponent(type) into c
+				where c != null
+				select c;
 			}
-			else if (type == typeof(GameObject) || type.IsSubclassOf(typeof(GameObject)))
+			else if (typeof(GameObject).IsAssignableFrom(type))
 			{
-				Transform[] transforms2 = Selection.GetTransforms(mode);
-				Transform[] array2 = transforms2;
-				for (int j = 0; j < array2.Length; j++)
-				{
-					Transform transform2 = array2[j];
-					arrayList.Add(transform2.gameObject);
-				}
+				result = from t in Selection.GetTransforms(mode)
+				select t.gameObject;
 			}
 			else
 			{
-				UnityEngine.Object[] objectsMode = Selection.GetObjectsMode(mode);
-				UnityEngine.Object[] array3 = objectsMode;
-				for (int k = 0; k < array3.Length; k++)
-				{
-					UnityEngine.Object @object = array3[k];
-					if (@object != null)
-					{
-						if (@object.GetType() == type || @object.GetType().IsSubclassOf(type))
-						{
-							arrayList.Add(@object);
-						}
-					}
-				}
+				result = from o in Selection.GetObjectsMode(mode)
+				where o != null && type.IsAssignableFrom(o.GetType())
+				select o;
 			}
-			return (UnityEngine.Object[])arrayList.ToArray(typeof(UnityEngine.Object));
+			return result;
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern UnityEngine.Object[] GetObjectsMode(SelectionMode mode);
-
-		private static void Internal_CallSelectionChanged()
+		public static T[] GetFiltered<T>(SelectionMode mode)
 		{
-			if (Selection.selectionChanged != null)
-			{
-				Selection.selectionChanged();
-			}
+			return Selection.GetFilteredInternal(typeof(T), mode).Cast<T>().ToArray<T>();
+		}
+
+		public static UnityEngine.Object[] GetFiltered(Type type, SelectionMode mode)
+		{
+			return Selection.GetFilteredInternal(type, mode).Cast<UnityEngine.Object>().ToArray<UnityEngine.Object>();
 		}
 	}
 }

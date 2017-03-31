@@ -5,6 +5,7 @@ using UnityEditor.Modules;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -42,7 +43,7 @@ namespace UnityEditor
 			static Styles()
 			{
 				GameView.Styles.gizmosContent = EditorGUIUtility.TextContent("Gizmos");
-				GameView.Styles.zoomSliderContent = EditorGUIUtility.TextContent("Scale|Size of the game view on the screen");
+				GameView.Styles.zoomSliderContent = EditorGUIUtility.TextContent("Scale|Size of the game view on the screen.");
 				GameView.Styles.maximizeOnPlayContent = EditorGUIUtility.TextContent("Maximize On Play");
 				GameView.Styles.muteContent = EditorGUIUtility.TextContent("Mute Audio");
 				GameView.Styles.statsContent = EditorGUIUtility.TextContent("Stats");
@@ -53,7 +54,7 @@ namespace UnityEditor
 				GameView.Styles.lowResAspectRatiosContextMenuContent = EditorGUIUtility.TextContent("Low Resolution Aspect Ratios");
 				GameView.Styles.gameViewBackgroundStyle = "GameViewBackground";
 				GameView.Styles.gizmoButtonStyle = "GV Gizmo DropDown";
-				GameView.Styles.renderdocContent = EditorGUIUtility.IconContent("renderdoc", "Capture|Capture the current view and open in RenderDoc");
+				GameView.Styles.renderdocContent = EditorGUIUtility.IconContent("renderdoc", "Capture|Capture the current view and open in RenderDoc.");
 			}
 		}
 
@@ -259,7 +260,7 @@ namespace UnityEditor
 			get
 			{
 				Rect result;
-				if (SystemInfo.usesOpenGLTextureCoords)
+				if (!SystemInfo.graphicsUVStartsAtTop)
 				{
 					result = this.targetInView;
 				}
@@ -406,6 +407,12 @@ namespace UnityEditor
 				result = new Vector2(640f, 480f);
 			}
 			return result;
+		}
+
+		[RequiredByNativeCode]
+		private static void GetMainGameViewTargetSizeNoBox(out Vector2 result)
+		{
+			result = GameView.GetMainGameViewTargetSize();
 		}
 
 		private void UpdateZoomAreaAndParent()
@@ -665,7 +672,7 @@ namespace UnityEditor
 			this.m_Stats = GUILayout.Toggle(this.m_Stats, GameView.Styles.statsContent, EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			Rect rect = GUILayoutUtility.GetRect(GameView.Styles.gizmosContent, GameView.Styles.gizmoButtonStyle);
 			Rect position = new Rect(rect.xMax - (float)GameView.Styles.gizmoButtonStyle.border.right, rect.y, (float)GameView.Styles.gizmoButtonStyle.border.right, rect.height);
-			if (EditorGUI.ButtonMouseDown(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
+			if (EditorGUI.DropdownButton(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
 			{
 				Rect last = GUILayoutUtility.topLevel.GetLast();
 				if (AnnotationWindow.ShowAtPosition(last, true))
@@ -702,14 +709,14 @@ namespace UnityEditor
 				this.m_TargetTexture.name = "GameView RT";
 				this.m_TargetTexture.filterMode = FilterMode.Point;
 				this.m_TargetTexture.hideFlags = HideFlags.HideAndDontSave;
+				EditorGUIUtility.SetGUITextureBlitColorspaceSettings(EditorGUIUtility.GUITextureBlitColorspaceMaterial);
 			}
-			int num = Mathf.Max(1, QualitySettings.antiAliasing);
-			if (this.m_TargetTexture.width != width || this.m_TargetTexture.height != height || this.m_TargetTexture.antiAliasing != num)
+			if (this.m_TargetTexture.width != width || this.m_TargetTexture.height != height)
 			{
 				this.m_TargetTexture.Release();
 				this.m_TargetTexture.width = width;
 				this.m_TargetTexture.height = height;
-				this.m_TargetTexture.antiAliasing = num;
+				this.m_TargetTexture.antiAliasing = 1;
 				flag = true;
 				if (this.m_TargetClamped)
 				{
@@ -838,7 +845,7 @@ namespace UnityEditor
 					GUIUtility.s_EditorScreenPointOffset = s_EditorScreenPointOffset;
 					GUI.BeginGroup(this.m_ZoomArea.drawRect);
 					GL.sRGBWrite = (this.m_CurrentColorSpace == ColorSpace.Linear);
-					GUI.DrawTexture(this.deviceFlippedTargetInView, this.m_TargetTexture, ScaleMode.StretchToFill, false);
+					Graphics.DrawTexture(this.deviceFlippedTargetInView, this.m_TargetTexture, new Rect(0f, 0f, 1f, 1f), 0, 0, 0, 0, GUI.color, EditorGUIUtility.GUITextureBlitColorspaceMaterial);
 					GL.sRGBWrite = false;
 					GUI.EndGroup();
 				}

@@ -17,11 +17,7 @@ namespace UnityEditor
 
 		public GUID(string hexRepresentation)
 		{
-			this.m_Value0 = 0u;
-			this.m_Value1 = 0u;
-			this.m_Value2 = 0u;
-			this.m_Value3 = 0u;
-			this.ParseExact(hexRepresentation);
+			GUID.TryParse(hexRepresentation, out this);
 		}
 
 		public static bool operator ==(GUID x, GUID y)
@@ -50,13 +46,40 @@ namespace UnityEditor
 			return this.m_Value0 == 0u && this.m_Value1 == 0u && this.m_Value2 == 0u && this.m_Value3 == 0u;
 		}
 
+		[Obsolete("Use TryParse instead")]
 		public bool ParseExact(string hex)
 		{
-			this.HexToGUIDInternal(hex, ref this);
-			return !this.Empty();
+			return GUID.TryParse(hex, out this);
 		}
 
+		public static bool TryParse(string hex, out GUID result)
+		{
+			GUID.HexToGUIDInternal(hex, out result);
+			return !result.Empty();
+		}
+
+		public static GUID Generate()
+		{
+			GUID result;
+			GUID.GenerateInternal(out result);
+			return result;
+		}
+
+		public override string ToString()
+		{
+			return GUID.GUIDToHexInternal(ref this);
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void HexToGUIDInternal(string hex, ref GUID guid);
+		private static extern string GUIDToHexInternal(ref GUID value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void HexToGUIDInternal(string hex, out GUID result);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GenerateInternal(out GUID result);
 	}
 }

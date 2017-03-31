@@ -15,7 +15,7 @@ namespace UnityEngine
 		{
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void ReleaseCoroutine();
 

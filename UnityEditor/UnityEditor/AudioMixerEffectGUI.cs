@@ -248,7 +248,7 @@ namespace UnityEditor
 				Rect rect2 = GUILayoutUtility.GetRect(buttonContent, style, options);
 				buttonRect = rect2;
 			}
-			return EditorGUI.ButtonMouseDown(buttonRect, buttonContent, FocusType.Passive, style);
+			return EditorGUI.DropdownButton(buttonRect, buttonContent, FocusType.Passive, style);
 		}
 	}
 }

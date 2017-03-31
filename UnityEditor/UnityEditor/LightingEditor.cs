@@ -1,8 +1,6 @@
 using System;
 using System.Linq;
-using UnityEditor.AnimatedValues;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.Rendering;
 
 namespace UnityEditor
@@ -12,47 +10,45 @@ namespace UnityEditor
 	{
 		internal static class Styles
 		{
-			public static readonly GUIContent environmentHeader = EditorGUIUtility.TextContent("Environment Lighting|Settings for the scene's surroundings, that can cast light into the scene.");
+			public static readonly GUIContent env_top = EditorGUIUtility.TextContent("Environment");
 
-			public static readonly GUIContent sunLabel = EditorGUIUtility.TextContent("Sun|The light used by the procedural skybox. If none, the brightest directional light is used.");
+			public static readonly GUIContent env_skybox_mat = EditorGUIUtility.TextContent("Skybox Material|Specifies the material that is used to simulate the sky or other distant background in the Scene.");
 
-			public static readonly GUIContent skyboxLabel = EditorGUIUtility.TextContent("Skybox|A skybox is rendered behind everything else in the scene in order to give the impression of scenery that is far away such as the sky or mountains. If 'Skybox' is set as the Ambient Source, light from this is cast into the scene.");
+			public static readonly GUIContent env_skybox_sun = EditorGUIUtility.TextContent("Sun Source|Specifies the directional light that is used to indicate the direction of the sun when a procedural skybox is used. If set to None, the brightest directional light in the Scene is used to represent the sun.");
 
-			public static readonly GUIContent ambientIntensity = EditorGUIUtility.TextContent("Ambient Intensity|How much the light from the Ambient Source affects the scene.");
+			public static readonly GUIContent env_amb_top = EditorGUIUtility.TextContent("Environment Lighting");
 
-			public static readonly GUIContent reflectionIntensity = EditorGUIUtility.TextContent("Reflection Intensity|How much the skybox / custom cubemap reflection affects the scene.");
+			public static readonly GUIContent env_amb_src = EditorGUIUtility.TextContent("Source|Specifies whether to use a skybox, gradient, or color for ambient light contributed to the Scene.");
 
-			public static readonly GUIContent reflectionBounces = EditorGUIUtility.TextContent("Reflection Bounces|How many times reflection reflects another reflection, for ex., if you set 1 bounce, a reflection will not reflect another reflection, and will show black.");
+			public static readonly GUIContent env_amb_int = EditorGUIUtility.TextContent("Intensity Multiplier|Controls the brightness of the skybox lighting in the Scene.");
+
+			public static readonly GUIContent env_refl_top = EditorGUIUtility.TextContent("Environment Reflections");
+
+			public static readonly GUIContent env_refl_src = EditorGUIUtility.TextContent("Source|Specifies whether to use the skybox or a custom cube map for reflection effects in the Scene.");
+
+			public static readonly GUIContent env_refl_res = EditorGUIUtility.TextContent("Resolution|Controls the resolution for the cube map assigned to the skybox material for reflection effects in the Scene.");
+
+			public static readonly GUIContent env_refl_cmp = EditorGUIUtility.TextContent("Compression|Controls how Unity compresses the reflection cube map. Options are Auto, Compressed, and Uncompressed. Auto compresses the cube map if the compression format is suitable.");
+
+			public static readonly GUIContent env_refl_int = EditorGUIUtility.TextContent("Intensity Multiplier|Controls how much the skybox or custom cubemap affects reflections in the Scene. A value of 1 produces physically correct results.");
+
+			public static readonly GUIContent env_refl_bnc = EditorGUIUtility.TextContent("Bounces|Controls how many times a reflection includes other reflections. A value of 1 results in the Scene being rendered once so mirrored reflections will be black. A value of 2 results in mirrored reflections being visible in the Scene.");
 
 			public static readonly GUIContent skyboxWarning = EditorGUIUtility.TextContent("Shader of this material does not support skybox rendering.");
 
-			public static readonly GUIContent defReflectionWarning = EditorGUIUtility.TextContent("Reflection Source material is not set. The default material will be black.");
-
 			public static readonly GUIContent createLight = EditorGUIUtility.TextContent("Create Light");
 
-			public static readonly GUIContent ambientModeLabel = EditorGUIUtility.TextContent("Ambient Source|The source of the ambient light that shines into the scene.");
+			public static readonly GUIContent ambientUp = EditorGUIUtility.TextContent("Sky Color|Controls the color of light emitted from the sky in the Scene.");
 
-			public static readonly GUIContent ambientUp = EditorGUIUtility.TextContent("Sky Color|Ambient lighting coming from above.");
+			public static readonly GUIContent ambientMid = EditorGUIUtility.TextContent("Equator Color|Controls the color of light emitted from the sides of the Scene.");
 
-			public static readonly GUIContent ambientMid = EditorGUIUtility.TextContent("Equator Color|Ambient lighting coming from the sides.");
+			public static readonly GUIContent ambientDown = EditorGUIUtility.TextContent("Ground Color|Controls the color of light emitted from the ground of the Scene.");
 
-			public static readonly GUIContent ambientDown = EditorGUIUtility.TextContent("Ground Color|Ambient lighting coming from below.");
+			public static readonly GUIContent ambient = EditorGUIUtility.TextContent("Ambient Color|Controls the color of the ambient light contributed to the Scene.");
 
-			public static readonly GUIContent ambient = EditorGUIUtility.TextContent("Ambient Color|The color used for the ambient light shining into the scene.");
+			public static readonly GUIContent customReflection = EditorGUIUtility.TextContent("Cubemap|Specifies the custom cube map used for reflection effects in the Scene.");
 
-			public static readonly GUIContent reflectionModeLabel = EditorGUIUtility.TextContent("Reflection Source|Default reflection cubemap - custom or generated from current skybox.");
-
-			public static readonly GUIContent customReflection = EditorGUIUtility.TextContent("Cubemap|Custom reflection cubemap.");
-
-			public static readonly GUIContent skyLightColor = EditorGUIUtility.TextContent("Sky Light Color");
-
-			public static readonly GUIContent skyboxTint = EditorGUIUtility.TextContent("Skybox Tint");
-
-			public static readonly GUIContent SkyLightBaked = EditorGUIUtility.TextContent("Ambient GI|Which of the two Global Illumination modes (Precomputed Realtime or Baked) that should handle the ambient light. Only needed if both GI modes are enabled.");
-
-			public static readonly GUIContent ReflectionCompression = EditorGUIUtility.TextContent("Compression|If Auto is selected Reflection Probes would be compressed unless doing so would result in ugly artefacts, e.g. PVRTC compression is \"warp around\" compression, so it is impossible to have seamless cubemap.");
-
-			public static readonly GUIContent defaultReflectionResolution = EditorGUIUtility.TextContent("Resolution|Cubemap resolution for default reflection.");
+			public static readonly GUIContent AmbientLightingMode = EditorGUIUtility.TextContent("Ambient Mode|Specifies the Global Illumination mode that should be used for handling ambient light in the Scene. Options are Realtime or Baked. This property is not editable unless both Realtime Global Illumination and Baked Global Illumination are enabled for the scene.");
 
 			public static int[] defaultReflectionSizesValues = new int[]
 			{
@@ -65,14 +61,20 @@ namespace UnityEditor
 			public static GUIContent[] defaultReflectionSizes = (from n in LightingEditor.Styles.defaultReflectionSizesValues
 			select new GUIContent(n.ToString())).ToArray<GUIContent>();
 
-			public static readonly GUIContent[] kFullAmbientModes = new GUIContent[]
+			public static readonly GUIContent[] kFullAmbientSource = new GUIContent[]
 			{
 				EditorGUIUtility.TextContent("Skybox"),
 				EditorGUIUtility.TextContent("Gradient"),
 				EditorGUIUtility.TextContent("Color")
 			};
 
-			public static readonly int[] kFullAmbientModeValues = new int[]
+			public static readonly GUIContent[] AmbientLightingModes = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("Realtime"),
+				EditorGUIUtility.TextContent("Baked")
+			};
+
+			public static readonly int[] kFullAmbientSourceValues = new int[]
 			{
 				0,
 				1,
@@ -82,7 +84,7 @@ namespace UnityEditor
 
 		protected SerializedProperty m_Sun;
 
-		protected SerializedProperty m_AmbientMode;
+		protected SerializedProperty m_AmbientSource;
 
 		protected SerializedProperty m_AmbientSkyColor;
 
@@ -91,6 +93,8 @@ namespace UnityEditor
 		protected SerializedProperty m_AmbientGroundColor;
 
 		protected SerializedProperty m_AmbientIntensity;
+
+		protected SerializedProperty m_AmbientLightingMode;
 
 		protected SerializedProperty m_ReflectionIntensity;
 
@@ -106,39 +110,16 @@ namespace UnityEditor
 
 		protected SerializedProperty m_ReflectionCompression;
 
-		protected SerializedObject m_lightmapSettings;
+		protected SerializedObject m_LightmapSettings;
 
-		protected SerializedProperty m_EnvironmentLightingMode;
+		private bool m_bShowEnvironment;
 
-		private bool m_ShowEditor;
-
-		private const string kShowLightingEditorKey = "ShowLightingEditor";
-
-		private AnimBool m_ShowAmbientBakeMode = new AnimBool();
-
-		private EditorWindow m_ParentWindow;
-
-		public EditorWindow parentWindow
-		{
-			get
-			{
-				return this.m_ParentWindow;
-			}
-			set
-			{
-				if (this.m_ParentWindow != null)
-				{
-					this.m_ShowAmbientBakeMode.valueChanged.RemoveListener(new UnityAction(this.m_ParentWindow.Repaint));
-				}
-				this.m_ParentWindow = value;
-				this.m_ShowAmbientBakeMode.valueChanged.AddListener(new UnityAction(this.m_ParentWindow.Repaint));
-			}
-		}
+		private const string kShowEnvironment = "ShowEnvironment";
 
 		public virtual void OnEnable()
 		{
 			this.m_Sun = base.serializedObject.FindProperty("m_Sun");
-			this.m_AmbientMode = base.serializedObject.FindProperty("m_AmbientMode");
+			this.m_AmbientSource = base.serializedObject.FindProperty("m_AmbientMode");
 			this.m_AmbientSkyColor = base.serializedObject.FindProperty("m_AmbientSkyColor");
 			this.m_AmbientEquatorColor = base.serializedObject.FindProperty("m_AmbientEquatorColor");
 			this.m_AmbientGroundColor = base.serializedObject.FindProperty("m_AmbientGroundColor");
@@ -149,40 +130,35 @@ namespace UnityEditor
 			this.m_DefaultReflectionMode = base.serializedObject.FindProperty("m_DefaultReflectionMode");
 			this.m_DefaultReflectionResolution = base.serializedObject.FindProperty("m_DefaultReflectionResolution");
 			this.m_CustomReflection = base.serializedObject.FindProperty("m_CustomReflection");
-			this.m_lightmapSettings = new SerializedObject(LightmapEditorSettings.GetLightmapSettings());
-			this.m_EnvironmentLightingMode = this.m_lightmapSettings.FindProperty("m_GISettings.m_EnvironmentLightingMode");
-			this.m_ReflectionCompression = this.m_lightmapSettings.FindProperty("m_LightmapEditorSettings.m_ReflectionCompression");
-			this.m_ShowEditor = SessionState.GetBool("ShowLightingEditor", true);
-			this.m_ShowAmbientBakeMode.target = LightingEditor.ShowAmbientField();
+			this.m_LightmapSettings = new SerializedObject(LightmapEditorSettings.GetLightmapSettings());
+			this.m_ReflectionCompression = this.m_LightmapSettings.FindProperty("m_LightmapEditorSettings.m_ReflectionCompression");
+			this.m_AmbientLightingMode = this.m_LightmapSettings.FindProperty("m_GISettings.m_EnvironmentLightingMode");
+			this.m_bShowEnvironment = SessionState.GetBool("ShowEnvironment", true);
 		}
 
 		public virtual void OnDisable()
 		{
-			SessionState.SetBool("ShowLightingEditor", this.m_ShowEditor);
-			this.m_ShowAmbientBakeMode.valueChanged.RemoveAllListeners();
-			this.m_ParentWindow = null;
+			SessionState.SetBool("ShowEnvironment", this.m_bShowEnvironment);
 		}
 
-		public override void OnInspectorGUI()
+		private void DrawGUI()
 		{
-			base.serializedObject.Update();
-			this.m_lightmapSettings.Update();
-			EditorGUILayout.Space();
-			this.m_ShowEditor = EditorGUILayout.FoldoutTitlebar(this.m_ShowEditor, LightingEditor.Styles.environmentHeader);
-			if (this.m_ShowEditor)
+			Material material = this.m_SkyboxMaterial.objectReferenceValue as Material;
+			this.m_bShowEnvironment = EditorGUILayout.FoldoutTitlebar(this.m_bShowEnvironment, LightingEditor.Styles.env_top, true);
+			if (this.m_bShowEnvironment)
 			{
 				EditorGUI.indentLevel++;
-				EditorGUILayout.PropertyField(this.m_SkyboxMaterial, LightingEditor.Styles.skyboxLabel, new GUILayoutOption[0]);
-				Material material = this.m_SkyboxMaterial.objectReferenceValue as Material;
+				EditorGUILayout.PropertyField(this.m_SkyboxMaterial, LightingEditor.Styles.env_skybox_mat, new GUILayoutOption[0]);
 				if (material && !EditorMaterialUtility.IsBackgroundMaterial(material))
 				{
 					EditorGUILayout.HelpBox(LightingEditor.Styles.skyboxWarning.text, MessageType.Warning);
 				}
-				EditorGUILayout.PropertyField(this.m_Sun, LightingEditor.Styles.sunLabel, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_Sun, LightingEditor.Styles.env_skybox_sun, new GUILayoutOption[0]);
 				EditorGUILayout.Space();
-				EditorGUILayout.IntPopup(this.m_AmbientMode, LightingEditor.Styles.kFullAmbientModes, LightingEditor.Styles.kFullAmbientModeValues, LightingEditor.Styles.ambientModeLabel, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(LightingEditor.Styles.env_amb_top, new GUILayoutOption[0]);
 				EditorGUI.indentLevel++;
-				AmbientMode intValue = (AmbientMode)this.m_AmbientMode.intValue;
+				EditorGUILayout.IntPopup(this.m_AmbientSource, LightingEditor.Styles.kFullAmbientSource, LightingEditor.Styles.kFullAmbientSourceValues, LightingEditor.Styles.env_amb_src, new GUILayoutOption[0]);
+				AmbientMode intValue = (AmbientMode)this.m_AmbientSource.intValue;
 				if (intValue != AmbientMode.Trilight)
 				{
 					if (intValue != AmbientMode.Flat)
@@ -200,7 +176,7 @@ namespace UnityEditor
 							}
 							else
 							{
-								EditorGUILayout.Slider(this.m_AmbientIntensity, 0f, 8f, LightingEditor.Styles.ambientIntensity, new GUILayoutOption[0]);
+								EditorGUILayout.Slider(this.m_AmbientIntensity, 0f, 8f, LightingEditor.Styles.env_amb_int, new GUILayoutOption[0]);
 							}
 						}
 					}
@@ -227,34 +203,33 @@ namespace UnityEditor
 						this.m_AmbientGroundColor.colorValue = colorValue5;
 					}
 				}
-				EditorGUI.indentLevel--;
-				this.m_ShowAmbientBakeMode.target = LightingEditor.ShowAmbientField();
-				if (EditorGUILayout.BeginFadeGroup(this.m_ShowAmbientBakeMode.faded))
+				if (LightModeUtil.Get().IsAnyGIEnabled())
 				{
-					bool flag = Lightmapping.realtimeGI && Lightmapping.bakedGI;
-					using (new EditorGUI.DisabledScope(!flag))
+					int selectedValue;
+					bool ambientLightingMode = LightModeUtil.Get().GetAmbientLightingMode(out selectedValue);
+					using (new EditorGUI.DisabledScope(!ambientLightingMode))
 					{
-						if (flag)
+						int[] optionValues = new int[]
 						{
-							EditorGUILayout.PropertyField(this.m_EnvironmentLightingMode, LightingEditor.Styles.SkyLightBaked, new GUILayoutOption[0]);
+							0,
+							1
+						};
+						if (ambientLightingMode)
+						{
+							this.m_AmbientLightingMode.intValue = EditorGUILayout.IntPopup(LightingEditor.Styles.AmbientLightingMode, this.m_AmbientLightingMode.intValue, LightingEditor.Styles.AmbientLightingModes, optionValues, new GUILayoutOption[0]);
 						}
 						else
 						{
-							int num = (!Lightmapping.bakedGI) ? 0 : 1;
-							EditorGUILayout.LabelField(LightingEditor.Styles.SkyLightBaked, GUIContent.Temp(this.m_EnvironmentLightingMode.enumNames[num]), EditorStyles.popup, new GUILayoutOption[0]);
+							EditorGUILayout.IntPopup(LightingEditor.Styles.AmbientLightingMode, selectedValue, LightingEditor.Styles.AmbientLightingModes, optionValues, new GUILayoutOption[0]);
 						}
 					}
 				}
-				EditorGUILayout.EndFadeGroup();
+				EditorGUI.indentLevel--;
 				EditorGUILayout.Space();
-				EditorGUILayout.PropertyField(this.m_DefaultReflectionMode, LightingEditor.Styles.reflectionModeLabel, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(LightingEditor.Styles.env_refl_top, new GUILayoutOption[0]);
 				EditorGUI.indentLevel++;
-				Cubemap exists = this.m_CustomReflection.objectReferenceValue as Cubemap;
+				EditorGUILayout.PropertyField(this.m_DefaultReflectionMode, LightingEditor.Styles.env_refl_src, new GUILayoutOption[0]);
 				DefaultReflectionMode intValue2 = (DefaultReflectionMode)this.m_DefaultReflectionMode.intValue;
-				if ((!material && intValue2 == DefaultReflectionMode.FromSkybox) || (!exists && intValue2 == DefaultReflectionMode.Custom))
-				{
-					EditorGUILayout.HelpBox(LightingEditor.Styles.defReflectionWarning.text, MessageType.Warning);
-				}
 				if (intValue2 != DefaultReflectionMode.FromSkybox)
 				{
 					if (intValue2 == DefaultReflectionMode.Custom)
@@ -264,24 +239,27 @@ namespace UnityEditor
 				}
 				else
 				{
-					EditorGUILayout.IntPopup(this.m_DefaultReflectionResolution, LightingEditor.Styles.defaultReflectionSizes, LightingEditor.Styles.defaultReflectionSizesValues, LightingEditor.Styles.defaultReflectionResolution, new GUILayoutOption[]
+					EditorGUILayout.IntPopup(this.m_DefaultReflectionResolution, LightingEditor.Styles.defaultReflectionSizes, LightingEditor.Styles.defaultReflectionSizesValues, LightingEditor.Styles.env_refl_res, new GUILayoutOption[]
 					{
 						GUILayout.MinWidth(40f)
 					});
 				}
-				EditorGUILayout.PropertyField(this.m_ReflectionCompression, LightingEditor.Styles.ReflectionCompression, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_ReflectionCompression, LightingEditor.Styles.env_refl_cmp, new GUILayoutOption[0]);
+				EditorGUILayout.Slider(this.m_ReflectionIntensity, 0f, 1f, LightingEditor.Styles.env_refl_int, new GUILayoutOption[0]);
+				EditorGUILayout.IntSlider(this.m_ReflectionBounces, 1, 5, LightingEditor.Styles.env_refl_bnc, new GUILayoutOption[0]);
 				EditorGUI.indentLevel--;
-				EditorGUILayout.Slider(this.m_ReflectionIntensity, 0f, 1f, LightingEditor.Styles.reflectionIntensity, new GUILayoutOption[0]);
-				EditorGUILayout.IntSlider(this.m_ReflectionBounces, 1, 5, LightingEditor.Styles.reflectionBounces, new GUILayoutOption[0]);
 				EditorGUI.indentLevel--;
-				base.serializedObject.ApplyModifiedProperties();
-				this.m_lightmapSettings.ApplyModifiedProperties();
+				EditorGUILayout.Space();
 			}
 		}
 
-		private static bool ShowAmbientField()
+		public override void OnInspectorGUI()
 		{
-			return Lightmapping.realtimeGI || Lightmapping.bakedGI;
+			base.serializedObject.Update();
+			this.m_LightmapSettings.Update();
+			this.DrawGUI();
+			base.serializedObject.ApplyModifiedProperties();
+			this.m_LightmapSettings.ApplyModifiedProperties();
 		}
 	}
 }

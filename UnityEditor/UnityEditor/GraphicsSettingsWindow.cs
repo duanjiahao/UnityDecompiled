@@ -6,29 +6,8 @@ using UnityEngine.Rendering;
 
 namespace UnityEditor
 {
-	internal class GraphicsSettingsWindow : EditorWindow
+	internal class GraphicsSettingsWindow
 	{
-		private enum SettingsTab
-		{
-			Tiers,
-			Shaders
-		}
-
-		internal class Styles
-		{
-			public static readonly GUIContent[] Tabs = new GUIContent[]
-			{
-				EditorGUIUtility.TextContent("Tiers|Preliminary name."),
-				EditorGUIUtility.TextContent("Shaders|Preliminary name.")
-			};
-
-			public static readonly GUIContent builtinSettings = EditorGUIUtility.TextContent("Built-in shader settings");
-
-			public static readonly GUIContent shaderStrippingSettings = EditorGUIUtility.TextContent("Shader stripping");
-
-			public static readonly GUIContent shaderPreloadSettings = EditorGUIUtility.TextContent("Shader preloading");
-		}
-
 		internal class BuiltinShaderSettings
 		{
 			internal enum BuiltinShaderMode
@@ -61,7 +40,6 @@ namespace UnityEditor
 			}
 		}
 
-		[CustomEditor(typeof(GraphicsSettings))]
 		internal class BuiltinShadersEditor : Editor
 		{
 			private GraphicsSettingsWindow.BuiltinShaderSettings m_Deferred;
@@ -140,7 +118,6 @@ namespace UnityEditor
 			}
 		}
 
-		[CustomEditor(typeof(GraphicsSettings))]
 		internal class AlwaysIncludedShadersEditor : Editor
 		{
 			private SerializedProperty m_AlwaysIncludedShaders;
@@ -159,7 +136,6 @@ namespace UnityEditor
 			}
 		}
 
-		[CustomEditor(typeof(GraphicsSettings))]
 		internal class ShaderStrippingEditor : Editor
 		{
 			internal class Styles
@@ -172,23 +148,23 @@ namespace UnityEditor
 
 				public static readonly GUIContent shaderPreloadSettings = EditorGUIUtility.TextContent("Shader preloading");
 
-				public static readonly GUIContent lightmapModes = EditorGUIUtility.TextContent("Lightmap modes");
+				public static readonly GUIContent lightmapModes = EditorGUIUtility.TextContent("Lightmap Modes");
 
 				public static readonly GUIContent lightmapPlain = EditorGUIUtility.TextContent("Baked Non-Directional|Include support for baked non-directional lightmaps.");
 
 				public static readonly GUIContent lightmapDirCombined = EditorGUIUtility.TextContent("Baked Directional|Include support for baked directional lightmaps.");
 
-				public static readonly GUIContent lightmapDirSeparate = EditorGUIUtility.TextContent("Baked Directional Specular|Include support for baked directional specular lightmaps.");
+				public static readonly GUIContent lightmapKeepShadowMask = EditorGUIUtility.TextContent("Baked Shadow Mask|Include support for baked shadow occlusion.");
+
+				public static readonly GUIContent lightmapKeepSubtractive = EditorGUIUtility.TextContent("Baked Subtractive|Include support for baked substractive lightmaps.");
 
 				public static readonly GUIContent lightmapDynamicPlain = EditorGUIUtility.TextContent("Realtime Non-Directional|Include support for realtime non-directional lightmaps.");
 
 				public static readonly GUIContent lightmapDynamicDirCombined = EditorGUIUtility.TextContent("Realtime Directional|Include support for realtime directional lightmaps.");
 
-				public static readonly GUIContent lightmapDynamicDirSeparate = EditorGUIUtility.TextContent("Realtime Directional Specular|Include support for realtime directional specular lightmaps.");
-
 				public static readonly GUIContent lightmapFromScene = EditorGUIUtility.TextContent("From current scene|Calculate lightmap modes used by the current scene.");
 
-				public static readonly GUIContent fogModes = EditorGUIUtility.TextContent("Fog modes");
+				public static readonly GUIContent fogModes = EditorGUIUtility.TextContent("Fog Modes");
 
 				public static readonly GUIContent fogLinear = EditorGUIUtility.TextContent("Linear|Include support for Linear fog.");
 
@@ -197,6 +173,8 @@ namespace UnityEditor
 				public static readonly GUIContent fogExp2 = EditorGUIUtility.TextContent("Exponential Squared|Include support for Exponential Squared fog.");
 
 				public static readonly GUIContent fogFromScene = EditorGUIUtility.TextContent("From current scene|Calculate fog modes used by the current scene.");
+
+				public static readonly GUIContent instancingVariants = EditorGUIUtility.TextContent("Instancing Variants");
 
 				public static readonly GUIContent shaderPreloadSave = EditorGUIUtility.TextContent("Save to asset...|Save currently tracked shaders into a Shader Variant Manifest asset.");
 
@@ -209,13 +187,13 @@ namespace UnityEditor
 
 			private SerializedProperty m_LightmapKeepDirCombined;
 
-			private SerializedProperty m_LightmapKeepDirSeparate;
-
 			private SerializedProperty m_LightmapKeepDynamicPlain;
 
 			private SerializedProperty m_LightmapKeepDynamicDirCombined;
 
-			private SerializedProperty m_LightmapKeepDynamicDirSeparate;
+			private SerializedProperty m_LightmapKeepShadowMask;
+
+			private SerializedProperty m_LightmapKeepSubtractive;
 
 			private SerializedProperty m_FogStripping;
 
@@ -225,19 +203,22 @@ namespace UnityEditor
 
 			private SerializedProperty m_FogKeepExp2;
 
+			private SerializedProperty m_InstancingStripping;
+
 			public void OnEnable()
 			{
 				this.m_LightmapStripping = base.serializedObject.FindProperty("m_LightmapStripping");
 				this.m_LightmapKeepPlain = base.serializedObject.FindProperty("m_LightmapKeepPlain");
 				this.m_LightmapKeepDirCombined = base.serializedObject.FindProperty("m_LightmapKeepDirCombined");
-				this.m_LightmapKeepDirSeparate = base.serializedObject.FindProperty("m_LightmapKeepDirSeparate");
 				this.m_LightmapKeepDynamicPlain = base.serializedObject.FindProperty("m_LightmapKeepDynamicPlain");
 				this.m_LightmapKeepDynamicDirCombined = base.serializedObject.FindProperty("m_LightmapKeepDynamicDirCombined");
-				this.m_LightmapKeepDynamicDirSeparate = base.serializedObject.FindProperty("m_LightmapKeepDynamicDirSeparate");
+				this.m_LightmapKeepShadowMask = base.serializedObject.FindProperty("m_LightmapKeepShadowMask");
+				this.m_LightmapKeepSubtractive = base.serializedObject.FindProperty("m_LightmapKeepSubtractive");
 				this.m_FogStripping = base.serializedObject.FindProperty("m_FogStripping");
 				this.m_FogKeepLinear = base.serializedObject.FindProperty("m_FogKeepLinear");
 				this.m_FogKeepExp = base.serializedObject.FindProperty("m_FogKeepExp");
 				this.m_FogKeepExp2 = base.serializedObject.FindProperty("m_FogKeepExp2");
+				this.m_InstancingStripping = base.serializedObject.FindProperty("m_InstancingStripping");
 			}
 
 			public override void OnInspectorGUI()
@@ -251,10 +232,10 @@ namespace UnityEditor
 					EditorGUI.indentLevel++;
 					EditorGUILayout.PropertyField(this.m_LightmapKeepPlain, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapPlain, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_LightmapKeepDirCombined, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapDirCombined, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_LightmapKeepDirSeparate, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapDirSeparate, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_LightmapKeepDynamicPlain, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapDynamicPlain, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_LightmapKeepDynamicDirCombined, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapDynamicDirCombined, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_LightmapKeepDynamicDirSeparate, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapDynamicDirSeparate, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_LightmapKeepShadowMask, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapKeepShadowMask, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_LightmapKeepSubtractive, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapKeepSubtractive, new GUILayoutOption[0]);
 					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					EditorGUILayout.PrefixLabel(GUIContent.Temp(" "), EditorStyles.miniButton);
 					if (GUILayout.Button(GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapFromScene, EditorStyles.miniButton, new GUILayoutOption[]
@@ -286,6 +267,7 @@ namespace UnityEditor
 					EditorGUILayout.EndHorizontal();
 					EditorGUI.indentLevel--;
 				}
+				EditorGUILayout.PropertyField(this.m_InstancingStripping, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.instancingVariants, new GUILayoutOption[0]);
 				base.serializedObject.ApplyModifiedProperties();
 				if (flag)
 				{
@@ -298,7 +280,6 @@ namespace UnityEditor
 			}
 		}
 
-		[CustomEditor(typeof(GraphicsSettings))]
 		internal class ShaderPreloadEditor : Editor
 		{
 			internal class Styles
@@ -318,6 +299,7 @@ namespace UnityEditor
 
 			public override void OnInspectorGUI()
 			{
+				base.serializedObject.Update();
 				base.serializedObject.ApplyModifiedProperties();
 				EditorGUILayout.PropertyField(this.m_PreloadedShaders, true, new GUILayoutOption[0]);
 				EditorGUILayout.Space();
@@ -343,7 +325,6 @@ namespace UnityEditor
 			}
 		}
 
-		[CustomEditor(typeof(GraphicsSettings))]
 		internal class TierSettingsEditor : Editor
 		{
 			internal class Styles
@@ -378,6 +359,34 @@ namespace UnityEditor
 					2
 				};
 
+				public static readonly GUIContent[] hdrModeName = new GUIContent[]
+				{
+					new GUIContent("FP16"),
+					new GUIContent("R11G11B10")
+				};
+
+				public static readonly int[] hdrModeValue = new int[]
+				{
+					1,
+					2
+				};
+
+				public static readonly GUIContent[] realtimeGICPUUsageName = new GUIContent[]
+				{
+					new GUIContent("Low"),
+					new GUIContent("Medium"),
+					new GUIContent("High"),
+					new GUIContent("Unlimited")
+				};
+
+				public static readonly int[] realtimeGICPUUsageValue = new int[]
+				{
+					25,
+					50,
+					75,
+					100
+				};
+
 				public static readonly GUIContent[] tierName = new GUIContent[]
 				{
 					new GUIContent("Low (Tier1)"),
@@ -389,7 +398,9 @@ namespace UnityEditor
 
 				public static readonly GUIContent autoSettings = EditorGUIUtility.TextContent("Use Defaults");
 
-				public static readonly GUIContent cascadedShadowMaps = EditorGUIUtility.TextContent("Cascaded Shadows");
+				public static readonly GUIContent standardShaderSettings = EditorGUIUtility.TextContent("Standard Shader");
+
+				public static readonly GUIContent renderingSettings = EditorGUIUtility.TextContent("Rendering");
 
 				public static readonly GUIContent standardShaderQuality = EditorGUIUtility.TextContent("Standard Shader Quality");
 
@@ -397,18 +408,44 @@ namespace UnityEditor
 
 				public static readonly GUIContent reflectionProbeBlending = EditorGUIUtility.TextContent("Reflection Probes Blending");
 
+				public static readonly GUIContent detailNormalMap = EditorGUIUtility.TextContent("Detail Normal Map");
+
+				public static readonly GUIContent cascadedShadowMaps = EditorGUIUtility.TextContent("Cascaded Shadows");
+
+				public static readonly GUIContent semitransparentShadows = EditorGUIUtility.TextContent("Enable Semitransparent Shadows");
+
 				public static readonly GUIContent renderingPath = EditorGUIUtility.TextContent("Rendering Path");
+
+				public static readonly GUIContent useHDR = EditorGUIUtility.TextContent("Use HDR");
+
+				public static readonly GUIContent hdrMode = EditorGUIUtility.TextContent("HDR Mode");
+
+				public static readonly GUIContent realtimeGICPUUsage = EditorGUIUtility.TextContent("Realtime Global Illumination CPU Usage|How many CPU worker threads to create for Realtime Global Illumination lighting calculations in the Player. Increasing this makes the system react faster to changes in lighting at a cost of using more CPU time. The higher the CPU Usage value, the more worker threads are created for solving Realtime GI.");
 			}
 
 			public bool verticalLayout = false;
 
-			internal void OnFieldLabelsGUI()
+			internal void OnFieldLabelsGUI(bool vertical)
 			{
-				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.cascadedShadowMaps, new GUILayoutOption[0]);
+				if (!vertical)
+				{
+					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.standardShaderSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				}
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.standardShaderQuality, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.reflectionProbeBoxProjection, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.reflectionProbeBlending, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.detailNormalMap, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.semitransparentShadows, new GUILayoutOption[0]);
+				if (!vertical)
+				{
+					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.renderingSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				}
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.cascadedShadowMaps, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.useHDR, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.hdrMode, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.renderingPath, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.realtimeGICPUUsage, new GUILayoutOption[0]);
 			}
 
 			internal ShaderQuality ShaderQualityPopup(ShaderQuality sq)
@@ -421,15 +458,39 @@ namespace UnityEditor
 				return (RenderingPath)EditorGUILayout.IntPopup((int)rp, GraphicsSettingsWindow.TierSettingsEditor.Styles.renderingPathName, GraphicsSettingsWindow.TierSettingsEditor.Styles.renderingPathValue, new GUILayoutOption[0]);
 			}
 
-			internal void OnTierGUI(BuildTargetGroup platform, GraphicsTier tier)
+			internal CameraHDRMode HDRModePopup(CameraHDRMode mode)
+			{
+				return (CameraHDRMode)EditorGUILayout.IntPopup((int)mode, GraphicsSettingsWindow.TierSettingsEditor.Styles.hdrModeName, GraphicsSettingsWindow.TierSettingsEditor.Styles.hdrModeValue, new GUILayoutOption[0]);
+			}
+
+			internal RealtimeGICPUUsage RealtimeGICPUUsagePopup(RealtimeGICPUUsage usage)
+			{
+				return (RealtimeGICPUUsage)EditorGUILayout.IntPopup((int)usage, GraphicsSettingsWindow.TierSettingsEditor.Styles.realtimeGICPUUsageName, GraphicsSettingsWindow.TierSettingsEditor.Styles.realtimeGICPUUsageValue, new GUILayoutOption[0]);
+			}
+
+			internal void OnTierGUI(BuildTargetGroup platform, GraphicsTier tier, bool vertical)
 			{
 				TierSettings tierSettings = EditorGraphicsSettings.GetTierSettings(platform, tier);
 				EditorGUI.BeginChangeCheck();
-				tierSettings.cascadedShadowMaps = EditorGUILayout.Toggle(tierSettings.cascadedShadowMaps, new GUILayoutOption[0]);
+				if (!vertical)
+				{
+					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				}
 				tierSettings.standardShaderQuality = this.ShaderQualityPopup(tierSettings.standardShaderQuality);
 				tierSettings.reflectionProbeBoxProjection = EditorGUILayout.Toggle(tierSettings.reflectionProbeBoxProjection, new GUILayoutOption[0]);
 				tierSettings.reflectionProbeBlending = EditorGUILayout.Toggle(tierSettings.reflectionProbeBlending, new GUILayoutOption[0]);
+				tierSettings.detailNormalMap = EditorGUILayout.Toggle(tierSettings.detailNormalMap, new GUILayoutOption[0]);
+				tierSettings.semitransparentShadows = EditorGUILayout.Toggle(tierSettings.semitransparentShadows, new GUILayoutOption[0]);
+				if (!vertical)
+				{
+					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				}
+				tierSettings.cascadedShadowMaps = EditorGUILayout.Toggle(tierSettings.cascadedShadowMaps, new GUILayoutOption[0]);
+				tierSettings.hdr = EditorGUILayout.Toggle(tierSettings.hdr, new GUILayoutOption[0]);
+				tierSettings.hdrMode = this.HDRModePopup(tierSettings.hdrMode);
 				tierSettings.renderingPath = this.RenderingPathPopup(tierSettings.renderingPath);
+				tierSettings.realtimeGICPUUsage = this.RealtimeGICPUUsagePopup(tierSettings.realtimeGICPUUsage);
 				if (EditorGUI.EndChangeCheck())
 				{
 					EditorGraphicsSettings.RegisterUndoForGraphicsSettings();
@@ -437,13 +498,15 @@ namespace UnityEditor
 				}
 			}
 
-			internal void OnGuiVertical(BuildTargetGroup platform)
+			internal void OnGuiHorizontal(BuildTargetGroup platform)
 			{
 				EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 				EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 				EditorGUIUtility.labelWidth = 140f;
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
-				this.OnFieldLabelsGUI();
+				this.OnFieldLabelsGUI(false);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.autoSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
 				EditorGUILayout.EndVertical();
 				EditorGUIUtility.labelWidth = 50f;
 				IEnumerator enumerator = Enum.GetValues(typeof(GraphicsTier)).GetEnumerator();
@@ -452,9 +515,22 @@ namespace UnityEditor
 					while (enumerator.MoveNext())
 					{
 						GraphicsTier graphicsTier = (GraphicsTier)enumerator.Current;
+						bool flag = EditorGraphicsSettings.AreTierSettingsAutomatic(platform, graphicsTier);
 						EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 						EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.tierName[(int)graphicsTier], EditorStyles.boldLabel, new GUILayoutOption[0]);
-						this.OnTierGUI(platform, graphicsTier);
+						using (new EditorGUI.DisabledScope(flag))
+						{
+							this.OnTierGUI(platform, graphicsTier, false);
+						}
+						EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
+						EditorGUI.BeginChangeCheck();
+						flag = EditorGUILayout.Toggle(flag, new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							EditorGraphicsSettings.RegisterUndoForGraphicsSettings();
+							EditorGraphicsSettings.MakeTierSettingsAutomatic(platform, graphicsTier, flag);
+							EditorGraphicsSettings.OnUpdateTierSettingsImpl(platform, true);
+						}
 						EditorGUILayout.EndVertical();
 					}
 				}
@@ -470,7 +546,7 @@ namespace UnityEditor
 				EditorGUILayout.EndHorizontal();
 			}
 
-			internal void OnGuiHorizontal(BuildTargetGroup platform)
+			internal void OnGuiVertical(BuildTargetGroup platform)
 			{
 				IEnumerator enumerator = Enum.GetValues(typeof(GraphicsTier)).GetEnumerator();
 				try
@@ -499,11 +575,11 @@ namespace UnityEditor
 							EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 							EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 							EditorGUIUtility.labelWidth = 140f;
-							this.OnFieldLabelsGUI();
+							this.OnFieldLabelsGUI(true);
 							EditorGUILayout.EndVertical();
 							EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 							EditorGUIUtility.labelWidth = 50f;
-							this.OnTierGUI(platform, graphicsTier);
+							this.OnTierGUI(platform, graphicsTier, true);
 							EditorGUILayout.EndVertical();
 							GUILayout.EndHorizontal();
 							EditorGUI.indentLevel--;
@@ -535,143 +611,6 @@ namespace UnityEditor
 				}
 				EditorGUILayout.EndPlatformGrouping();
 			}
-		}
-
-		private Editor m_TierSettingsEditor;
-
-		private Editor m_BuiltinShadersEditor;
-
-		private Editor m_AlwaysIncludedShadersEditor;
-
-		private Editor m_ShaderStrippingEditor;
-
-		private Editor m_ShaderPreloadEditor;
-
-		private GraphicsSettingsWindow.SettingsTab m_Tab = GraphicsSettingsWindow.SettingsTab.Tiers;
-
-		private Vector2 m_ScrollPosition = Vector2.zero;
-
-		private const float kToolbarPadding = 38f;
-
-		private UnityEngine.Object graphicsSettings
-		{
-			get
-			{
-				return UnityEngine.Rendering.GraphicsSettings.GetGraphicsSettings();
-			}
-		}
-
-		private Editor tierSettingsEditor
-		{
-			get
-			{
-				Editor.CreateCachedEditor(this.graphicsSettings, typeof(GraphicsSettingsWindow.TierSettingsEditor), ref this.m_TierSettingsEditor);
-				((GraphicsSettingsWindow.TierSettingsEditor)this.m_TierSettingsEditor).verticalLayout = true;
-				return this.m_TierSettingsEditor;
-			}
-		}
-
-		private Editor builtinShadersEditor
-		{
-			get
-			{
-				Editor.CreateCachedEditor(this.graphicsSettings, typeof(GraphicsSettingsWindow.BuiltinShadersEditor), ref this.m_BuiltinShadersEditor);
-				return this.m_BuiltinShadersEditor;
-			}
-		}
-
-		private Editor alwaysIncludedShadersEditor
-		{
-			get
-			{
-				Editor.CreateCachedEditor(this.graphicsSettings, typeof(GraphicsSettingsWindow.AlwaysIncludedShadersEditor), ref this.m_AlwaysIncludedShadersEditor);
-				return this.m_AlwaysIncludedShadersEditor;
-			}
-		}
-
-		private Editor shaderStrippingEditor
-		{
-			get
-			{
-				Editor.CreateCachedEditor(this.graphicsSettings, typeof(GraphicsSettingsWindow.ShaderStrippingEditor), ref this.m_ShaderStrippingEditor);
-				return this.m_ShaderStrippingEditor;
-			}
-		}
-
-		private Editor shaderPreloadEditor
-		{
-			get
-			{
-				Editor.CreateCachedEditor(this.graphicsSettings, typeof(GraphicsSettingsWindow.ShaderPreloadEditor), ref this.m_ShaderPreloadEditor);
-				return this.m_ShaderPreloadEditor;
-			}
-		}
-
-		private void OnDisable()
-		{
-			UnityEngine.Object.DestroyImmediate(this.m_TierSettingsEditor);
-			this.m_TierSettingsEditor = null;
-			UnityEngine.Object.DestroyImmediate(this.m_BuiltinShadersEditor);
-			this.m_BuiltinShadersEditor = null;
-			UnityEngine.Object.DestroyImmediate(this.m_AlwaysIncludedShadersEditor);
-			this.m_AlwaysIncludedShadersEditor = null;
-			UnityEngine.Object.DestroyImmediate(this.m_ShaderStrippingEditor);
-			this.m_ShaderStrippingEditor = null;
-			UnityEngine.Object.DestroyImmediate(this.m_ShaderPreloadEditor);
-			this.m_ShaderPreloadEditor = null;
-		}
-
-		private void TabsGUI()
-		{
-			EditorGUILayout.Space();
-			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Space(38f);
-			float width = base.position.width - 76f;
-			this.m_Tab = (GraphicsSettingsWindow.SettingsTab)GUILayout.Toolbar((int)this.m_Tab, GraphicsSettingsWindow.Styles.Tabs, "LargeButton", new GUILayoutOption[]
-			{
-				GUILayout.Width(width)
-			});
-			GUILayout.FlexibleSpace();
-			EditorGUILayout.EndHorizontal();
-			EditorGUILayout.Space();
-		}
-
-		private void OnTiersGUI()
-		{
-			this.tierSettingsEditor.OnInspectorGUI();
-		}
-
-		private void OnShadersGUI()
-		{
-			this.alwaysIncludedShadersEditor.OnInspectorGUI();
-			EditorGUILayout.Space();
-			GUILayout.Label(GraphicsSettingsWindow.Styles.builtinSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			this.builtinShadersEditor.OnInspectorGUI();
-			EditorGUILayout.Space();
-			GUILayout.Label(GraphicsSettingsWindow.Styles.shaderStrippingSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			this.shaderStrippingEditor.OnInspectorGUI();
-			EditorGUILayout.Space();
-			GUILayout.Label(GraphicsSettingsWindow.Styles.shaderPreloadSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			this.shaderPreloadEditor.OnInspectorGUI();
-		}
-
-		private void OnGUI()
-		{
-			this.TabsGUI();
-			this.m_ScrollPosition = EditorGUILayout.BeginScrollView(this.m_ScrollPosition, new GUILayoutOption[0]);
-			GraphicsSettingsWindow.SettingsTab tab = this.m_Tab;
-			if (tab != GraphicsSettingsWindow.SettingsTab.Tiers)
-			{
-				if (tab == GraphicsSettingsWindow.SettingsTab.Shaders)
-				{
-					this.OnShadersGUI();
-				}
-			}
-			else
-			{
-				this.OnTiersGUI();
-			}
-			EditorGUILayout.EndScrollView();
 		}
 	}
 }

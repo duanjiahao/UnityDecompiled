@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -7,16 +8,20 @@ namespace UnityEngine
 	{
 		public extern Component observed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern NetworkStateSynchronization stateSynchronization
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -37,8 +42,10 @@ namespace UnityEngine
 
 		public extern int group
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -59,6 +66,7 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_RPC(NetworkView view, string name, RPCMode mode, object[] args);
 
@@ -67,6 +75,7 @@ namespace UnityEngine
 			NetworkView.INTERNAL_CALL_Internal_RPC_Target(view, name, ref target, args);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_RPC_Target(NetworkView view, string name, ref NetworkPlayer target, object[] args);
 
@@ -82,6 +91,7 @@ namespace UnityEngine
 			NetworkView.Internal_RPC_Target(this, name, target, args);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_GetViewID(out NetworkViewID viewID);
 
@@ -90,6 +100,7 @@ namespace UnityEngine
 			NetworkView.INTERNAL_CALL_Internal_SetViewID(this, ref viewID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetViewID(NetworkView self, ref NetworkViewID viewID);
 
@@ -98,6 +109,7 @@ namespace UnityEngine
 			return NetworkView.INTERNAL_CALL_SetScope(this, ref player, relevancy);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_SetScope(NetworkView self, ref NetworkPlayer player, bool relevancy);
 
@@ -106,6 +118,7 @@ namespace UnityEngine
 			return NetworkView.INTERNAL_CALL_Find(ref viewID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern NetworkView INTERNAL_CALL_Find(ref NetworkViewID viewID);
 	}

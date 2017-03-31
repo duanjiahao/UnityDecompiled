@@ -5,8 +5,9 @@ namespace UnityEditorInternal.VR
 {
 	internal class VRCustomOptionsNone : VRCustomOptions
 	{
-		public override void Draw(Rect rect)
+		public override Rect Draw(Rect rect)
 		{
+			return rect;
 		}
 
 		public override float GetHeight()

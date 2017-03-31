@@ -77,7 +77,7 @@ namespace UnityEditor
 
 		public override string ToString()
 		{
-			return string.Format("{0}, {1}, {2}", this.fileExtensionWithoutDot, this.saveType);
+			return string.Format("{0}, {1}", this.fileExtensionWithoutDot, this.saveType);
 		}
 
 		private string AppendFileExtensionIfNeeded(string path)

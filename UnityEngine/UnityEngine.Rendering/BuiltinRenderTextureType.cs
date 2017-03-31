@@ -18,6 +18,11 @@ namespace UnityEngine.Rendering
 		GBuffer1,
 		GBuffer2,
 		GBuffer3,
-		Reflections
+		Reflections,
+		MotionVectors,
+		GBuffer4,
+		GBuffer5,
+		GBuffer6,
+		GBuffer7
 	}
 }

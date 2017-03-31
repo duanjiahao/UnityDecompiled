@@ -23,12 +23,12 @@ namespace UnityEditor
 			while (xPathNodeIterator.MoveNext())
 			{
 				string attribute = xPathNodeIterator.Current.GetAttribute("name", "");
-				if (attribute == null || attribute.Length < 1)
+				if (string.IsNullOrEmpty(attribute))
 				{
 					throw new ApplicationException(string.Format("Failed to load {0}, <assembly> name attribute is empty", text));
 				}
 				string text2 = xPathNodeIterator.Current.GetAttribute("platform", "");
-				if (text2 == null || text2.Length < 1)
+				if (string.IsNullOrEmpty(text2))
 				{
 					text2 = "*";
 				}

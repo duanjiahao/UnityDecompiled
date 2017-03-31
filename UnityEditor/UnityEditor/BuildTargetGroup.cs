@@ -1,7 +1,9 @@
 using System;
+using Unity.Bindings;
 
 namespace UnityEditor
 {
+	[NativeEnum(GenerateNativeType = false, Name = "BuildTargetPlatformGroup", Header = "Editor/Src/BuildPipeline/BuildTargetPlatformSpecific.h")]
 	public enum BuildTargetGroup
 	{
 		Unknown,
@@ -32,6 +34,8 @@ namespace UnityEditor
 		SamsungTV,
 		N3DS,
 		WiiU,
-		tvOS
+		tvOS,
+		Facebook,
+		Switch
 	}
 }

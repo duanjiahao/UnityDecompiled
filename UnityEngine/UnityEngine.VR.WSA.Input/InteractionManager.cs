@@ -1,7 +1,9 @@
+using AOT;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.VR.WSA.Input
 {
@@ -157,6 +159,7 @@ namespace UnityEngine.VR.WSA.Input
 
 		public static extern int numSourceStates
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -171,6 +174,7 @@ namespace UnityEngine.VR.WSA.Input
 			InteractionManager.Initialize(Marshal.GetFunctionPointerForDelegate(InteractionManager.m_OnSourceEventHandler));
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetCurrentReading_Internal(InteractionSourceState[] sourceStates);
 
@@ -202,9 +206,11 @@ namespace UnityEngine.VR.WSA.Input
 			return array;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Initialize(IntPtr internalSourceEventHandler);
 
+		[MonoPInvokeCallback(typeof(InteractionManager.InternalSourceEventHandler))]
 		private static void OnSourceEvent(InteractionManager.EventType eventType, InteractionSourceState state)
 		{
 			switch (eventType)

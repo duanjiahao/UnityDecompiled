@@ -27,7 +27,7 @@ namespace UnityEditor
 				AudioMixerItem audioMixerItem = item as AudioMixerItem;
 				if (audioMixerItem != null)
 				{
-					GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.s_Styles.lineStyle : TreeViewGUI.s_Styles.lineBoldStyle;
+					GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.Styles.lineStyle : TreeViewGUI.Styles.lineBoldStyle;
 					gUIStyle.padding.left = (int)(this.k_IconWidth + base.iconTotalPadding + this.k_SpaceBetweenIconAndText);
 					gUIStyle.Draw(rect, label, false, false, selected, focused);
 					audioMixerItem.UpdateSuspendedString(false);
@@ -58,7 +58,7 @@ namespace UnityEditor
 
 		protected CreateAssetUtility GetCreateAssetUtility()
 		{
-			return this.m_TreeView.state.createAssetUtility;
+			return ((TreeViewStateWithAssetUtility)this.m_TreeView.state).createAssetUtility;
 		}
 
 		protected override void RenameEnded()

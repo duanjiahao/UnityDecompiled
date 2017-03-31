@@ -1,12 +1,14 @@
 using System;
-using System.Runtime.CompilerServices;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(CapsuleCollider))]
-	internal class CapsuleColliderEditor : Collider3DEditorBase
+	internal class CapsuleColliderEditor : PrimitiveCollider3DEditor
 	{
+		private static readonly int s_HandleControlIDHint = typeof(CapsuleColliderEditor).Name.GetHashCode();
+
 		private SerializedProperty m_Center;
 
 		private SerializedProperty m_Radius;
@@ -15,10 +17,15 @@ namespace UnityEditor
 
 		private SerializedProperty m_Direction;
 
-		private int m_HandleControlID;
+		private readonly CapsuleBoundsHandle m_BoundsHandle = new CapsuleBoundsHandle(CapsuleColliderEditor.s_HandleControlIDHint);
 
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache0;
+		protected override PrimitiveBoundsHandle boundsHandle
+		{
+			get
+			{
+				return this.m_BoundsHandle;
+			}
+		}
 
 		public override void OnEnable()
 		{
@@ -27,7 +34,6 @@ namespace UnityEditor
 			this.m_Radius = base.serializedObject.FindProperty("m_Radius");
 			this.m_Height = base.serializedObject.FindProperty("m_Height");
 			this.m_Direction = base.serializedObject.FindProperty("m_Direction");
-			this.m_HandleControlID = -1;
 		}
 
 		public override void OnInspectorGUI()
@@ -43,117 +49,101 @@ namespace UnityEditor
 			base.serializedObject.ApplyModifiedProperties();
 		}
 
-		public void OnSceneGUI()
+		protected override void CopyColliderPropertiesToHandle()
 		{
-			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
 			CapsuleCollider capsuleCollider = (CapsuleCollider)base.target;
-			Color color = Handles.color;
-			if (capsuleCollider.enabled)
+			this.m_BoundsHandle.center = base.TransformColliderCenterToHandleSpace(capsuleCollider.transform, capsuleCollider.center);
+			float num;
+			Vector3 capsuleColliderHandleScale = this.GetCapsuleColliderHandleScale(capsuleCollider.transform.lossyScale, capsuleCollider.direction, out num);
+			this.m_BoundsHandle.height = capsuleCollider.height * Mathf.Abs(capsuleColliderHandleScale[capsuleCollider.direction]);
+			this.m_BoundsHandle.radius = capsuleCollider.radius * num;
+			int direction = capsuleCollider.direction;
+			if (direction != 0)
 			{
-				Handles.color = Handles.s_ColliderHandleColor;
+				if (direction != 1)
+				{
+					if (direction == 2)
+					{
+						this.m_BoundsHandle.heightAxis = CapsuleBoundsHandle.HeightAxis.Z;
+					}
+				}
+				else
+				{
+					this.m_BoundsHandle.heightAxis = CapsuleBoundsHandle.HeightAxis.Y;
+				}
 			}
 			else
 			{
-				Handles.color = Handles.s_ColliderHandleColorDisabled;
+				this.m_BoundsHandle.heightAxis = CapsuleBoundsHandle.HeightAxis.X;
 			}
-			bool enabled = GUI.enabled;
-			if (!base.editingCollider && !flag)
-			{
-				GUI.enabled = false;
-				Handles.color = new Color(1f, 0f, 0f, 0.001f);
-			}
-			Vector3 capsuleExtents = ColliderUtil.GetCapsuleExtents(capsuleCollider);
-			float num = capsuleExtents.y + 2f * capsuleExtents.x;
-			float x = capsuleExtents.x;
-			Matrix4x4 matrix = ColliderUtil.CalculateCapsuleTransform(capsuleCollider);
-			int hotControl = GUIUtility.hotControl;
-			float num2 = capsuleCollider.height;
-			Vector3 vector = Vector3.left * num * 0.5f;
-			float num3 = CapsuleColliderEditor.SizeHandle(vector, Vector3.left, matrix, true);
-			if (!GUI.changed)
-			{
-				num3 = CapsuleColliderEditor.SizeHandle(-vector, Vector3.right, matrix, true);
-			}
-			if (GUI.changed)
-			{
-				float num4 = num / capsuleCollider.height;
-				num2 += num3 / num4;
-			}
-			float num5 = capsuleCollider.radius;
-			num3 = CapsuleColliderEditor.SizeHandle(Vector3.forward * x, Vector3.forward, matrix, true);
-			if (!GUI.changed)
-			{
-				num3 = CapsuleColliderEditor.SizeHandle(-Vector3.forward * x, -Vector3.forward, matrix, true);
-			}
-			if (!GUI.changed)
-			{
-				num3 = CapsuleColliderEditor.SizeHandle(Vector3.up * x, Vector3.up, matrix, true);
-			}
-			if (!GUI.changed)
-			{
-				num3 = CapsuleColliderEditor.SizeHandle(-Vector3.up * x, -Vector3.up, matrix, true);
-			}
-			if (GUI.changed)
-			{
-				float num6 = Mathf.Max(capsuleExtents.z / capsuleCollider.radius, capsuleExtents.x / capsuleCollider.radius);
-				num5 += num3 / num6;
-			}
-			if (hotControl != GUIUtility.hotControl && GUIUtility.hotControl != 0)
-			{
-				this.m_HandleControlID = GUIUtility.hotControl;
-			}
-			if (GUI.changed)
-			{
-				Undo.RecordObject(capsuleCollider, "Modify Capsule Collider");
-				capsuleCollider.radius = Mathf.Max(num5, 1E-05f);
-				capsuleCollider.height = Mathf.Max(num2, 1E-05f);
-			}
-			Handles.color = color;
-			GUI.enabled = enabled;
 		}
 
-		private static float SizeHandle(Vector3 localPos, Vector3 localPullDir, Matrix4x4 matrix, bool isEdgeHandle)
+		protected override void CopyHandlePropertiesToCollider()
 		{
-			Vector3 vector = matrix.MultiplyVector(localPullDir);
-			Vector3 vector2 = matrix.MultiplyPoint(localPos);
-			float handleSize = HandleUtility.GetHandleSize(vector2);
-			bool changed = GUI.changed;
-			GUI.changed = false;
-			Color color = Handles.color;
-			float num = 0f;
-			if (isEdgeHandle)
+			CapsuleCollider capsuleCollider = (CapsuleCollider)base.target;
+			capsuleCollider.center = base.TransformHandleCenterToColliderSpace(capsuleCollider.transform, this.m_BoundsHandle.center);
+			float num;
+			Vector3 scaleVector = this.GetCapsuleColliderHandleScale(capsuleCollider.transform.lossyScale, capsuleCollider.direction, out num);
+			scaleVector = base.InvertScaleVector(scaleVector);
+			if (num != 0f)
 			{
-				num = Mathf.Cos(0.7853982f);
+				capsuleCollider.radius = this.m_BoundsHandle.radius / num;
 			}
-			float num2;
-			if (Camera.current.orthographic)
+			if (scaleVector[capsuleCollider.direction] != 0f)
 			{
-				num2 = Vector3.Dot(-Camera.current.transform.forward, vector);
+				capsuleCollider.height = this.m_BoundsHandle.height * Mathf.Abs(scaleVector[capsuleCollider.direction]);
 			}
-			else
+		}
+
+		protected override void OnSceneGUI()
+		{
+			CapsuleCollider capsuleCollider = (CapsuleCollider)base.target;
+			float num;
+			this.GetCapsuleColliderHandleScale(capsuleCollider.transform.lossyScale, capsuleCollider.direction, out num);
+			this.boundsHandle.axes = PrimitiveBoundsHandle.Axes.All;
+			if (num == 0f)
 			{
-				num2 = Vector3.Dot((Camera.current.transform.position - vector2).normalized, vector);
+				int direction = capsuleCollider.direction;
+				if (direction != 0)
+				{
+					if (direction != 1)
+					{
+						if (direction == 2)
+						{
+							this.boundsHandle.axes = PrimitiveBoundsHandle.Axes.Z;
+						}
+					}
+					else
+					{
+						this.boundsHandle.axes = PrimitiveBoundsHandle.Axes.Y;
+					}
+				}
+				else
+				{
+					this.boundsHandle.axes = PrimitiveBoundsHandle.Axes.X;
+				}
 			}
-			if (num2 < -num)
+			base.OnSceneGUI();
+		}
+
+		private Vector3 GetCapsuleColliderHandleScale(Vector3 lossyScale, int capsuleDirection, out float radiusScaleFactor)
+		{
+			radiusScaleFactor = 0f;
+			for (int i = 0; i < 3; i++)
 			{
-				Handles.color = new Color(Handles.color.r, Handles.color.g, Handles.color.b, Handles.color.a * Handles.backfaceAlphaMultiplier);
+				if (i != capsuleDirection)
+				{
+					radiusScaleFactor = Mathf.Max(radiusScaleFactor, Mathf.Abs(lossyScale[i]));
+				}
 			}
-			Vector3 arg_119_0 = vector2;
-			Vector3 arg_119_1 = vector;
-			float arg_119_2 = handleSize * 0.03f;
-			if (CapsuleColliderEditor.<>f__mg$cache0 == null)
+			for (int j = 0; j < 3; j++)
 			{
-				CapsuleColliderEditor.<>f__mg$cache0 = new Handles.CapFunction(Handles.DotHandleCap);
+				if (j != capsuleDirection)
+				{
+					lossyScale[j] = Mathf.Sign(lossyScale[j]) * radiusScaleFactor;
+				}
 			}
-			Vector3 point = Handles.Slider(arg_119_0, arg_119_1, arg_119_2, CapsuleColliderEditor.<>f__mg$cache0, 0f);
-			float result = 0f;
-			if (GUI.changed)
-			{
-				result = HandleUtility.PointOnLineParameter(point, vector2, vector);
-			}
-			GUI.changed |= changed;
-			Handles.color = color;
-			return result;
+			return lossyScale;
 		}
 	}
 }

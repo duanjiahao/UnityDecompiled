@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -19,46 +17,6 @@ namespace UnityEditor
 			public Type drawnType;
 
 			public int options;
-		}
-
-		private struct MonoMenuItem
-		{
-			public string menuItem;
-
-			public int index;
-
-			public int priority;
-
-			public Type executeType;
-
-			public MethodInfo executeMethod;
-
-			public string executeName;
-
-			public Type validateType;
-
-			public MethodInfo validateMethod;
-
-			public string validateName;
-		}
-
-		internal class CompareMenuIndex : IComparer
-		{
-			int IComparer.Compare(object xo, object yo)
-			{
-				AttributeHelper.MonoMenuItem monoMenuItem = (AttributeHelper.MonoMenuItem)xo;
-				AttributeHelper.MonoMenuItem monoMenuItem2 = (AttributeHelper.MonoMenuItem)yo;
-				int result;
-				if (monoMenuItem.priority != monoMenuItem2.priority)
-				{
-					result = monoMenuItem.priority.CompareTo(monoMenuItem2.priority);
-				}
-				else
-				{
-					result = monoMenuItem.index.CompareTo(monoMenuItem2.index);
-				}
-				return result;
-			}
 		}
 
 		private struct MonoCreateAssetItem
@@ -95,6 +53,10 @@ namespace UnityEditor
 						{
 							UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but does not take parameters (ComponentType, GizmoType) so will be ignored.", methodInfo.DeclaringType.FullName, methodInfo.Name));
 						}
+						else if (methodInfo.DeclaringType != null && methodInfo.DeclaringType.IsGenericTypeDefinition)
+						{
+							UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but is defined on a generic type definition, so will be ignored.", methodInfo.DeclaringType.FullName, methodInfo.Name));
+						}
 						else
 						{
 							AttributeHelper.MonoGizmoMethod item = default(AttributeHelper.MonoGizmoMethod);
@@ -107,7 +69,7 @@ namespace UnityEditor
 								if (!parameters[0].ParameterType.IsAssignableFrom(drawGizmo.drawnType))
 								{
 									UnityEngine.Debug.LogWarning(string.Format("Method {0}.{1} is marked with the DrawGizmo attribute but the component type it applies to could not be determined.", methodInfo.DeclaringType.FullName, methodInfo.Name));
-									goto IL_198;
+									goto IL_1DD;
 								}
 								item.drawnType = drawGizmo.drawnType;
 							}
@@ -122,182 +84,11 @@ namespace UnityEditor
 								list.Add(item);
 							}
 						}
-						IL_198:;
+						IL_1DD:;
 					}
 				}
 			}
 			return list.ToArray();
-		}
-
-		private static bool ValidateMethodForMenuCommand(MethodInfo mi, bool contextMenu)
-		{
-			bool result;
-			if (contextMenu)
-			{
-				if (mi.IsStatic)
-				{
-					UnityEngine.Debug.LogWarningFormat("Method {0}.{1} is static and cannot be used for context menu commands.", new object[]
-					{
-						mi.DeclaringType.FullName,
-						mi.Name
-					});
-					result = false;
-					return result;
-				}
-			}
-			else if (!mi.IsStatic)
-			{
-				UnityEngine.Debug.LogWarningFormat("Method {0}.{1} is not static and cannot be used for menu commands.", new object[]
-				{
-					mi.DeclaringType.FullName,
-					mi.Name
-				});
-				result = false;
-				return result;
-			}
-			if (mi.IsGenericMethod)
-			{
-				UnityEngine.Debug.LogWarningFormat("Method {0}.{1} is generic and cannot be used for menu commands.", new object[]
-				{
-					mi.DeclaringType.FullName,
-					mi.Name
-				});
-				result = false;
-			}
-			else if (mi.GetParameters().Length > 1 || (mi.GetParameters().Length == 1 && mi.GetParameters()[0].ParameterType != typeof(MenuCommand)))
-			{
-				UnityEngine.Debug.LogWarningFormat("Method {0}.{1} has invalid parameters. MenuCommand is the only optional supported parameter.", new object[]
-				{
-					mi.DeclaringType.FullName,
-					mi.Name
-				});
-				result = false;
-			}
-			else
-			{
-				result = true;
-			}
-			return result;
-		}
-
-		[RequiredByNativeCode]
-		private static AttributeHelper.MonoMenuItem[] ExtractMenuCommands(Assembly assembly, bool modifiedSinceLastReload)
-		{
-			BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-			if (modifiedSinceLastReload)
-			{
-				bindingFlags |= BindingFlags.Instance;
-			}
-			bool @bool = EditorPrefs.GetBool("InternalMode", false);
-			Dictionary<string, AttributeHelper.MonoMenuItem> dictionary = new Dictionary<string, AttributeHelper.MonoMenuItem>();
-			Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(assembly);
-			Type[] array = typesFromAssembly;
-			for (int i = 0; i < array.Length; i++)
-			{
-				Type type = array[i];
-				MethodInfo[] methods = type.GetMethods(bindingFlags);
-				for (int j = 0; j < methods.GetLength(0); j++)
-				{
-					MethodInfo methodInfo = methods[j];
-					object[] customAttributes = methodInfo.GetCustomAttributes(typeof(MenuItem), false);
-					if (customAttributes.Length > 0 && type.IsGenericTypeDefinition)
-					{
-						UnityEngine.Debug.LogWarningFormat("Method {0}.{1} cannot be used for menu commands because class {0} is an open generic type.", new object[]
-						{
-							type.Name,
-							methodInfo.Name
-						});
-					}
-					else
-					{
-						object[] array2 = customAttributes;
-						int k = 0;
-						while (k < array2.Length)
-						{
-							MenuItem menuItem = (MenuItem)array2[k];
-							AttributeHelper.MonoMenuItem value = (!dictionary.ContainsKey(menuItem.menuItem)) ? default(AttributeHelper.MonoMenuItem) : dictionary[menuItem.menuItem];
-							if (!AttributeHelper.ValidateMethodForMenuCommand(methodInfo, false))
-							{
-								break;
-							}
-							if (!menuItem.menuItem.StartsWith("internal:", StringComparison.Ordinal))
-							{
-								value.menuItem = menuItem.menuItem;
-								goto IL_154;
-							}
-							if (@bool)
-							{
-								value.menuItem = menuItem.menuItem.Substring(9);
-								goto IL_154;
-							}
-							IL_1D0:
-							k++;
-							continue;
-							IL_154:
-							if (menuItem.validate)
-							{
-								value.validateType = type;
-								value.validateMethod = methodInfo;
-								value.validateName = methodInfo.Name;
-							}
-							else
-							{
-								value.index = j;
-								value.priority = menuItem.priority;
-								value.executeType = type;
-								value.executeMethod = methodInfo;
-								value.executeName = methodInfo.Name;
-							}
-							dictionary[menuItem.menuItem] = value;
-							goto IL_1D0;
-						}
-					}
-				}
-			}
-			AttributeHelper.MonoMenuItem[] array3 = dictionary.Values.ToArray<AttributeHelper.MonoMenuItem>();
-			Array.Sort(array3, new AttributeHelper.CompareMenuIndex());
-			return array3;
-		}
-
-		[RequiredByNativeCode]
-		private static AttributeHelper.MonoMenuItem[] ExtractContextMenu(Type type)
-		{
-			Dictionary<string, AttributeHelper.MonoMenuItem> dictionary = new Dictionary<string, AttributeHelper.MonoMenuItem>();
-			MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-			for (int i = 0; i < methods.GetLength(0); i++)
-			{
-				MethodInfo methodInfo = methods[i];
-				object[] customAttributes = methodInfo.GetCustomAttributes(typeof(ContextMenu), false);
-				object[] array = customAttributes;
-				for (int j = 0; j < array.Length; j++)
-				{
-					ContextMenu contextMenu = (ContextMenu)array[j];
-					AttributeHelper.MonoMenuItem value = (!dictionary.ContainsKey(contextMenu.menuItem)) ? default(AttributeHelper.MonoMenuItem) : dictionary[contextMenu.menuItem];
-					if (!AttributeHelper.ValidateMethodForMenuCommand(methodInfo, true))
-					{
-						break;
-					}
-					value.menuItem = contextMenu.menuItem;
-					if (contextMenu.validate)
-					{
-						value.validateType = type;
-						value.validateMethod = methodInfo;
-						value.validateName = methodInfo.Name;
-					}
-					else
-					{
-						value.index = i;
-						value.priority = contextMenu.priority;
-						value.executeType = type;
-						value.executeMethod = methodInfo;
-						value.executeName = methodInfo.Name;
-					}
-					dictionary[contextMenu.menuItem] = value;
-				}
-			}
-			AttributeHelper.MonoMenuItem[] array2 = dictionary.Values.ToArray<AttributeHelper.MonoMenuItem>();
-			Array.Sort(array2, new AttributeHelper.CompareMenuIndex());
-			return array2;
 		}
 
 		[RequiredByNativeCode]
@@ -419,13 +210,6 @@ namespace UnityEditor
 			AttributeHelper.<CallMethodsWithAttribute>c__Iterator0<T> expr_15 = <CallMethodsWithAttribute>c__Iterator;
 			expr_15.$PC = -2;
 			return expr_15;
-		}
-
-		[RequiredByNativeCode]
-		internal static string GetHelpURLFromAttribute(Type objectType)
-		{
-			HelpURLAttribute helpURLAttribute = (HelpURLAttribute)Attribute.GetCustomAttribute(objectType, typeof(HelpURLAttribute));
-			return (helpURLAttribute == null) ? null : helpURLAttribute.URL;
 		}
 	}
 }

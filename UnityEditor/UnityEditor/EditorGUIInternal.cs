@@ -5,6 +5,20 @@ namespace UnityEditor
 {
 	internal sealed class EditorGUIInternal : GUI
 	{
+		private static GUIStyle s_MixedToggleStyle = EditorStyles.toggleMixed;
+
+		internal static GUIStyle mixedToggleStyle
+		{
+			get
+			{
+				return EditorGUIInternal.s_MixedToggleStyle;
+			}
+			set
+			{
+				EditorGUIInternal.s_MixedToggleStyle = value;
+			}
+		}
+
 		internal static Rect GetTooltipRect()
 		{
 			return GUI.tooltipRect;
@@ -26,7 +40,7 @@ namespace UnityEditor
 			}
 			if (EditorGUI.showMixedValue)
 			{
-				style = EditorStyles.toggleMixed;
+				style = EditorGUIInternal.mixedToggleStyle;
 			}
 			EventType type = current.type;
 			bool flag = current.type == EventType.MouseDown && current.button != 0;

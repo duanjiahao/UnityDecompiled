@@ -29,13 +29,13 @@ namespace UnityEditor.Utils
 			return result;
 		}
 
-		public static string GetProfileDirectory(BuildTarget target, string profile)
+		public static string GetProfileDirectory(string profile)
 		{
 			string monoInstallation = MonoInstallationFinder.GetMonoInstallation();
 			return Path.Combine(monoInstallation, Path.Combine("lib", Path.Combine("mono", profile)));
 		}
 
-		public static string GetProfileDirectory(BuildTarget target, string profile, string monoInstallation)
+		public static string GetProfileDirectory(string profile, string monoInstallation)
 		{
 			string monoInstallation2 = MonoInstallationFinder.GetMonoInstallation(monoInstallation);
 			return Path.Combine(monoInstallation2, Path.Combine("lib", Path.Combine("mono", profile)));
@@ -56,6 +56,11 @@ namespace UnityEditor.Utils
 		public static string GetMonoInstallation()
 		{
 			return MonoInstallationFinder.GetMonoInstallation("Mono");
+		}
+
+		public static string GetMonoBleedingEdgeInstallation()
+		{
+			return MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge");
 		}
 
 		public static string GetMonoInstallation(string monoName)

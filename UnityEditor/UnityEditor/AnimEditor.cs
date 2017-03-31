@@ -7,6 +7,13 @@ namespace UnityEditor
 {
 	internal class AnimEditor : ScriptableObject
 	{
+		private struct ChangedCurvesPerClip
+		{
+			public List<EditorCurveBinding> bindings;
+
+			public List<AnimationCurve> curves;
+		}
+
 		private static List<AnimEditor> s_AnimationWindows = new List<AnimEditor>();
 
 		[SerializeField]
@@ -46,9 +53,6 @@ namespace UnityEditor
 		private bool m_StylesInitialized;
 
 		[NonSerialized]
-		private float m_PreviousUpdateTime;
-
-		[NonSerialized]
 		private bool m_Initialized;
 
 		internal static PrefColor kEulerXColor = new PrefColor("Testing/EulerX", 1f, 0f, 1f, 1f);
@@ -86,18 +90,6 @@ namespace UnityEditor
 		internal const int kToggleButtonWidth = 80;
 
 		internal const float kDisabledRulerAlpha = 0.12f;
-
-		public bool locked
-		{
-			get
-			{
-				return this.m_State.locked;
-			}
-			set
-			{
-				this.m_State.locked = value;
-			}
-		}
 
 		public bool stateDisabled
 		{
@@ -151,15 +143,23 @@ namespace UnityEditor
 			}
 		}
 
-		public AnimationWindowPolicy policy
+		public IAnimationWindowControl controlInterface
 		{
 			get
 			{
-				return this.m_State.policy;
+				return this.state.controlInterface;
+			}
+		}
+
+		public IAnimationWindowControl overrideControlInterface
+		{
+			get
+			{
+				return this.state.overrideControlInterface;
 			}
 			set
 			{
-				this.m_State.policy = value;
+				this.state.overrideControlInterface = value;
 			}
 		}
 
@@ -167,7 +167,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return (this.policy == null || this.policy.triggerFramingOnSelection) && this.m_TriggerFraming;
+				return this.m_TriggerFraming;
 			}
 			set
 			{
@@ -206,6 +206,10 @@ namespace UnityEditor
 				this.Initialize();
 			}
 			this.m_State.OnGUI();
+			if (this.m_State.disabled && this.controlInterface.recording)
+			{
+				this.m_State.StopRecording();
+			}
 			this.SynchronizeLayout();
 			using (new EditorGUI.DisabledScope(this.m_State.disabled || this.m_State.animatorIsOptimized))
 			{
@@ -217,6 +221,7 @@ namespace UnityEditor
 				this.PlayControlsOnGUI();
 				GUILayout.EndHorizontal();
 				GUILayout.BeginHorizontal(EditorStyles.toolbarButton, new GUILayoutOption[0]);
+				this.LinkOptionsOnGUI();
 				this.ClipSelectionDropDownOnGUI();
 				GUILayout.FlexibleSpace();
 				this.FrameRateInputFieldOnGUI();
@@ -243,9 +248,8 @@ namespace UnityEditor
 				GUILayout.EndHorizontal();
 				this.OverlayOnGUI(rect3);
 				this.RenderEventTooltip();
+				this.HandleHotKeys();
 			}
-			this.HandleHotKeys();
-			this.PostLayoutChanges();
 		}
 
 		private void MainContentOnGUI(Rect contentLayoutRect)
@@ -262,13 +266,22 @@ namespace UnityEditor
 				{
 					this.SetupWizardOnGUI(contentLayoutRect);
 				}
-				else if (this.m_State.showCurveEditor)
-				{
-					this.CurveEditorOnGUI(contentLayoutRect);
-				}
 				else
 				{
-					this.DopeSheetOnGUI(contentLayoutRect);
+					if (this.triggerFraming && Event.current.type == EventType.Repaint)
+					{
+						this.m_DopeSheet.FrameClip();
+						this.m_CurveEditor.FrameClip(true, true);
+						this.triggerFraming = false;
+					}
+					if (this.m_State.showCurveEditor)
+					{
+						this.CurveEditorOnGUI(contentLayoutRect);
+					}
+					else
+					{
+						this.DopeSheetOnGUI(contentLayoutRect);
+					}
 				}
 				this.HandleCopyPaste();
 			}
@@ -282,7 +295,6 @@ namespace UnityEditor
 				{
 					Rect position = new Rect(this.hierarchyWidth - 1f, 0f, this.contentWidth - 15f, this.m_Position.height - 15f);
 					GUI.BeginGroup(position);
-					EditorGUI.BeginChangeCheck();
 					this.m_Overlay.HandleEvents();
 					GUI.EndGroup();
 				}
@@ -341,12 +353,7 @@ namespace UnityEditor
 			this.m_Overlay.state = this.m_State;
 			CurveEditor expr_E9 = this.m_CurveEditor;
 			expr_E9.curvesUpdated = (CurveEditor.CallbackFunction)Delegate.Combine(expr_E9.curvesUpdated, new CurveEditor.CallbackFunction(this.SaveChangedCurvesFromCurveEditor));
-			AnimationWindowSelection expr_115 = this.m_State.selection;
-			expr_115.onSelectionChanged = (Action)Delegate.Combine(expr_115.onSelectionChanged, new Action(this.OnSelectionChanged));
-			AnimationWindowState expr_13C = this.m_State;
-			expr_13C.onStartLiveEdit = (Action)Delegate.Combine(expr_13C.onStartLiveEdit, new Action(this.OnStartLiveEdit));
-			AnimationWindowState expr_163 = this.m_State;
-			expr_163.onEndLiveEdit = (Action)Delegate.Combine(expr_163.onEndLiveEdit, new Action(this.OnEndLiveEdit));
+			this.m_CurveEditor.OnEnable();
 		}
 
 		public void OnDisable()
@@ -362,12 +369,6 @@ namespace UnityEditor
 			{
 				this.m_DopeSheet.OnDisable();
 			}
-			AnimationWindowSelection expr_6D = this.m_State.selection;
-			expr_6D.onSelectionChanged = (Action)Delegate.Remove(expr_6D.onSelectionChanged, new Action(this.OnSelectionChanged));
-			AnimationWindowState expr_94 = this.m_State;
-			expr_94.onStartLiveEdit = (Action)Delegate.Remove(expr_94.onStartLiveEdit, new Action(this.OnStartLiveEdit));
-			AnimationWindowState expr_BB = this.m_State;
-			expr_BB.onEndLiveEdit = (Action)Delegate.Remove(expr_BB.onEndLiveEdit, new Action(this.OnEndLiveEdit));
 			this.m_State.OnDisable();
 		}
 
@@ -395,6 +396,7 @@ namespace UnityEditor
 		public void OnEndLiveEdit()
 		{
 			this.UpdateSelectedKeysToCurveEditor();
+			this.controlInterface.ResampleAnimation();
 		}
 
 		public void OnLostFocus()
@@ -408,21 +410,12 @@ namespace UnityEditor
 
 		private void PlaybackUpdate()
 		{
-			if (this.m_State.disabled && this.m_State.playing)
+			if (this.m_State.disabled && this.controlInterface.playing)
 			{
-				this.m_State.playing = false;
+				this.controlInterface.StopPlayback();
 			}
-			if (this.m_State.playing)
+			if (this.controlInterface.PlaybackUpdate())
 			{
-				float num = Time.realtimeSinceStartup - this.m_PreviousUpdateTime;
-				this.m_PreviousUpdateTime = Time.realtimeSinceStartup;
-				this.m_State.currentTime += num;
-				if (this.m_State.currentTime > this.m_State.maxTime)
-				{
-					this.m_State.currentTime = this.m_State.minTime;
-				}
-				this.m_State.currentTime = Mathf.Clamp(this.m_State.currentTime, this.m_State.minTime, this.m_State.maxTime);
-				this.m_State.ResampleAnimation();
 				this.Repaint();
 			}
 		}
@@ -452,9 +445,6 @@ namespace UnityEditor
 					{
 						Component closestAnimationPlayerComponentInParents = AnimationWindowUtility.GetClosestAnimationPlayerComponentInParents(this.m_State.activeGameObject.transform);
 						this.m_State.selection.UpdateClip(this.m_State.selectedItem, AnimationUtility.GetAnimationClips(closestAnimationPlayerComponentInParents.gameObject)[0]);
-						this.m_State.recording = true;
-						this.m_State.currentTime = 0f;
-						this.m_State.ResampleAnimation();
 						GUIUtility.ExitGUI();
 					}
 				}
@@ -524,15 +514,20 @@ namespace UnityEditor
 
 		private void FrameRateInputFieldOnGUI()
 		{
-			GUILayout.Label(AnimationWindowStyles.samples, AnimationWindowStyles.toolbarLabel, new GUILayoutOption[0]);
-			EditorGUI.BeginChangeCheck();
-			int num = EditorGUILayout.IntField((int)this.m_State.clipFrameRate, EditorStyles.toolbarTextField, new GUILayoutOption[]
+			AnimationWindowSelectionItem selectedItem = this.m_State.selectedItem;
+			using (new EditorGUI.DisabledScope(selectedItem == null || !selectedItem.animationIsEditable))
 			{
-				GUILayout.Width(35f)
-			});
-			if (EditorGUI.EndChangeCheck())
-			{
-				this.m_State.clipFrameRate = (float)num;
+				GUILayout.Label(AnimationWindowStyles.samples, AnimationWindowStyles.toolbarLabel, new GUILayoutOption[0]);
+				EditorGUI.BeginChangeCheck();
+				int num = EditorGUILayout.DelayedIntField((int)this.m_State.clipFrameRate, EditorStyles.toolbarTextField, new GUILayoutOption[]
+				{
+					GUILayout.Width(35f)
+				});
+				if (EditorGUI.EndChangeCheck())
+				{
+					this.m_State.clipFrameRate = (float)num;
+					this.UpdateSelectedKeysToCurveEditor();
+				}
 			}
 		}
 
@@ -552,11 +547,6 @@ namespace UnityEditor
 			}
 			if (!this.m_State.showCurveEditor)
 			{
-				if (this.triggerFraming && Event.current.type == EventType.Repaint)
-				{
-					this.m_DopeSheet.FrameClip();
-					this.triggerFraming = false;
-				}
 				Rect position2 = new Rect(position.xMin, position.yMin, position.width - 15f, position.height - 15f);
 				Rect position3 = new Rect(position2.xMin, position2.yMin, position2.width, 16f);
 				this.m_DopeSheet.BeginViewGUI();
@@ -572,6 +562,10 @@ namespace UnityEditor
 				float height = this.m_Hierarchy.GetTotalRect().height;
 				float bottomValue = Mathf.Max(height, this.m_Hierarchy.GetContentSize().y);
 				this.m_State.hierarchyState.scrollPos.y = GUI.VerticalScrollbar(position4, this.m_State.hierarchyState.scrollPos.y, height, 0f, bottomValue);
+				if (this.m_DopeSheet.spritePreviewLoading)
+				{
+					this.Repaint();
+				}
 			}
 		}
 
@@ -581,11 +575,6 @@ namespace UnityEditor
 			{
 				this.m_CurveEditor.rect = position;
 				this.m_CurveEditor.SetTickMarkerRanges();
-			}
-			if (this.m_TriggerFraming && Event.current.type == EventType.Repaint)
-			{
-				this.m_CurveEditor.FrameClip(true, true);
-				this.m_TriggerFraming = false;
 			}
 			Rect position2 = new Rect(position.xMin, position.yMin, position.width - 15f, position.height - 15f);
 			this.m_CurveEditor.vSlider = this.m_State.showCurveEditor;
@@ -650,49 +639,63 @@ namespace UnityEditor
 					AnimationKeyTime time = AnimationKeyTime.Time(this.m_State.currentTime, this.m_State.frameRate);
 					AnimationWindowUtility.AddSelectedKeyframes(this.m_State, time);
 					this.UpdateSelectedKeysToCurveEditor();
+					GUIUtility.ExitGUI();
 				}
 			}
 		}
 
 		private void PlayControlsOnGUI()
 		{
-			using (new EditorGUI.DisabledScope(!this.m_State.canRecord))
+			using (new EditorGUI.DisabledScope(!this.controlInterface.canRecord))
 			{
 				this.RecordButtonOnGUI();
 			}
 			if (GUILayout.Button(AnimationWindowStyles.firstKeyContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
 			{
-				this.MoveToFirstKeyframe();
+				this.controlInterface.GoToFirstKeyframe();
 				EditorGUI.EndEditingActiveTextField();
 			}
 			if (GUILayout.Button(AnimationWindowStyles.prevKeyContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
 			{
-				this.MoveToPreviousKeyframe();
+				this.controlInterface.GoToPreviousKeyframe();
 				EditorGUI.EndEditingActiveTextField();
 			}
-			using (new EditorGUI.DisabledScope(!this.m_State.canRecord))
+			using (new EditorGUI.DisabledScope(!this.controlInterface.canPlay))
 			{
 				this.PlayButtonOnGUI();
 			}
 			if (GUILayout.Button(AnimationWindowStyles.nextKeyContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
 			{
-				this.MoveToNextKeyframe();
+				this.controlInterface.GoToNextKeyframe();
 				EditorGUI.EndEditingActiveTextField();
 			}
 			if (GUILayout.Button(AnimationWindowStyles.lastKeyContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
 			{
-				this.MoveToLastKeyframe();
+				this.controlInterface.GoToLastKeyframe();
 				EditorGUI.EndEditingActiveTextField();
 			}
 			GUILayout.FlexibleSpace();
 			EditorGUI.BeginChangeCheck();
-			int frame = EditorGUILayout.IntField(this.m_State.frame, EditorStyles.toolbarTextField, new GUILayoutOption[]
+			int frame = EditorGUILayout.DelayedIntField(this.m_State.currentFrame, EditorStyles.toolbarTextField, new GUILayoutOption[]
 			{
 				GUILayout.Width(35f)
 			});
 			if (EditorGUI.EndChangeCheck())
 			{
-				this.m_State.frame = frame;
+				this.controlInterface.GoToFrame(frame);
+			}
+		}
+
+		private void LinkOptionsOnGUI()
+		{
+			if (this.m_State.linkedWithSequencer)
+			{
+				if (!GUILayout.Toggle(true, AnimationWindowStyles.sequencerLinkContent, EditorStyles.toolbarButton, new GUILayoutOption[0]))
+				{
+					this.m_State.linkedWithSequencer = false;
+					this.m_State.selection.Clear();
+					GUIUtility.ExitGUI();
+				}
 			}
 		}
 
@@ -703,32 +706,32 @@ namespace UnityEditor
 				bool flag = false;
 				if (AnimEditor.kAnimationPrevKeyframe.activated)
 				{
-					this.MoveToPreviousKeyframe();
+					this.controlInterface.GoToPreviousKeyframe();
 					flag = true;
 				}
 				if (AnimEditor.kAnimationNextKeyframe.activated)
 				{
-					this.MoveToNextKeyframe();
+					this.controlInterface.GoToNextKeyframe();
 					flag = true;
 				}
 				if (AnimEditor.kAnimationNextFrame.activated)
 				{
-					this.m_State.frame++;
+					this.controlInterface.GoToNextFrame();
 					flag = true;
 				}
 				if (AnimEditor.kAnimationPrevFrame.activated)
 				{
-					this.m_State.frame--;
+					this.controlInterface.GoToPreviousFrame();
 					flag = true;
 				}
 				if (AnimEditor.kAnimationFirstKey.activated)
 				{
-					this.MoveToFirstKeyframe();
+					this.controlInterface.GoToFirstKeyframe();
 					flag = true;
 				}
 				if (AnimEditor.kAnimationLastKey.activated)
 				{
-					this.MoveToLastKeyframe();
+					this.controlInterface.GoToLastKeyframe();
 					flag = true;
 				}
 				if (flag)
@@ -738,14 +741,14 @@ namespace UnityEditor
 				}
 				if (AnimEditor.kAnimationPlayToggle.activated)
 				{
-					this.m_State.playing = !this.m_State.playing;
-					this.m_PreviousUpdateTime = Time.realtimeSinceStartup;
-					Event.current.Use();
-				}
-				if (AnimEditor.kAnimationPlayToggle.activated)
-				{
-					this.m_State.playing = !this.m_State.playing;
-					this.m_PreviousUpdateTime = Time.realtimeSinceStartup;
+					if (this.controlInterface.playing)
+					{
+						this.controlInterface.StopPlayback();
+					}
+					else
+					{
+						this.controlInterface.StartPlayback();
+					}
 					Event.current.Use();
 				}
 				if (AnimEditor.kAnimationRecordKeyframe.activated)
@@ -759,54 +762,38 @@ namespace UnityEditor
 			}
 		}
 
-		private void MoveToPreviousKeyframe()
-		{
-			List<AnimationWindowCurve> list = (!this.m_State.showCurveEditor || this.m_State.activeCurves.Count <= 0) ? this.m_State.allCurves : this.m_State.activeCurves;
-			float previousKeyframeTime = AnimationWindowUtility.GetPreviousKeyframeTime(list.ToArray(), this.m_State.currentTime, this.m_State.clipFrameRate);
-			this.m_State.currentTime = this.m_State.SnapToFrame(previousKeyframeTime, AnimationWindowState.SnapMode.SnapToClipFrame);
-		}
-
-		private void MoveToNextKeyframe()
-		{
-			List<AnimationWindowCurve> list = (!this.m_State.showCurveEditor || this.m_State.activeCurves.Count <= 0) ? this.m_State.allCurves : this.m_State.activeCurves;
-			float nextKeyframeTime = AnimationWindowUtility.GetNextKeyframeTime(list.ToArray(), this.m_State.currentTime, this.m_State.clipFrameRate);
-			this.m_State.currentTime = this.m_State.SnapToFrame(nextKeyframeTime, AnimationWindowState.SnapMode.SnapToClipFrame);
-		}
-
-		private void MoveToFirstKeyframe()
-		{
-			if (this.m_State.activeAnimationClip)
-			{
-				this.m_State.currentTime = this.m_State.activeAnimationClip.startTime;
-			}
-		}
-
-		private void MoveToLastKeyframe()
-		{
-			if (this.m_State.activeAnimationClip)
-			{
-				this.m_State.currentTime = this.m_State.activeAnimationClip.stopTime;
-			}
-		}
-
 		private void PlayButtonOnGUI()
 		{
 			EditorGUI.BeginChangeCheck();
-			this.m_State.playing = GUILayout.Toggle(this.m_State.playing, AnimationWindowStyles.playContent, EditorStyles.toolbarButton, new GUILayoutOption[0]);
+			bool flag = GUILayout.Toggle(this.controlInterface.playing, AnimationWindowStyles.playContent, EditorStyles.toolbarButton, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
+				if (flag)
+				{
+					this.controlInterface.StartPlayback();
+				}
+				else
+				{
+					this.controlInterface.StopPlayback();
+				}
 				EditorGUI.EndEditingActiveTextField();
-				this.m_PreviousUpdateTime = Time.realtimeSinceStartup;
 			}
 		}
 
 		private void RecordButtonOnGUI()
 		{
 			EditorGUI.BeginChangeCheck();
-			this.m_State.recording = GUILayout.Toggle(this.m_State.recording, AnimationWindowStyles.recordContent, EditorStyles.toolbarButton, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck() && this.m_State.recording)
+			bool flag = GUILayout.Toggle(this.controlInterface.recording, AnimationWindowStyles.recordContent, EditorStyles.toolbarButton, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
 			{
-				this.m_State.ResampleAnimation();
+				if (flag)
+				{
+					this.m_State.StartRecording();
+				}
+				else
+				{
+					this.m_State.StopRecording();
+				}
 			}
 		}
 
@@ -828,7 +815,6 @@ namespace UnityEditor
 			this.UpdateSelectedKeysToCurveEditor();
 			AnimationWindowUtility.SyncTimeArea(this.m_DopeSheet, this.m_CurveEditor);
 			this.m_State.timeArea = this.m_CurveEditor;
-			this.m_CurveEditor.FrameSelected(false, true);
 		}
 
 		internal void SwitchToDopeSheetEditor()
@@ -845,7 +831,7 @@ namespace UnityEditor
 			{
 				if (this.m_State.showCurveEditor || this.m_State.selectedKeys.Count != 0)
 				{
-					Bounds bounds = (!this.m_State.showCurveEditor) ? this.m_DopeSheet.selectionBounds : this.m_CurveEditor.selectionBounds;
+					Bounds bounds = (!this.m_State.showCurveEditor) ? this.m_State.selectionBounds : this.m_CurveEditor.selectionBounds;
 					float num = this.m_State.TimeToPixel(bounds.min.x) + rect.xMin;
 					float num2 = this.m_State.TimeToPixel(bounds.max.x) + rect.xMin;
 					if (num2 - num < 14f)
@@ -868,69 +854,21 @@ namespace UnityEditor
 		private void SynchronizeLayout()
 		{
 			this.m_HorizontalSplitter.realSizes[1] = (int)Mathf.Min(this.m_Position.width - (float)this.m_HorizontalSplitter.realSizes[0], (float)this.m_HorizontalSplitter.realSizes[1]);
-			if (this.policy != null)
+			if (this.selectedItem != null && this.selectedItem.animationClip != null)
 			{
-				this.policy.SynchronizeGeometry(ref this.m_HorizontalSplitter.realSizes, ref this.m_HorizontalSplitter.minSizes);
-				float frameRate = 0f;
-				if (this.policy.SynchronizeFrameRate(ref frameRate))
-				{
-					this.m_State.frameRate = frameRate;
-				}
-				float currentTime = 0f;
-				if (this.policy.SynchronizeCurrentTime(ref currentTime))
-				{
-					this.m_State.currentTime = currentTime;
-				}
-				float x = 1f;
-				float x2 = 0f;
-				if (this.policy.SynchronizeZoomableArea(ref x, ref x2))
-				{
-					if (this.m_State.timeArea != null)
-					{
-						this.m_State.timeArea.m_Scale = new Vector2(x, this.m_State.timeArea.m_Scale.y);
-						this.m_State.timeArea.m_Translation = new Vector2(x2, this.m_State.timeArea.m_Translation.y);
-						this.m_State.timeArea.EnforceScaleAndRange();
-					}
-				}
+				this.m_State.frameRate = this.selectedItem.animationClip.frameRate;
 			}
-		}
-
-		private void PostLayoutChanges()
-		{
-			if (this.policy != null)
+			else
 			{
-				if (GUIUtility.hotControl == this.m_HorizontalSplitter.ID)
-				{
-					this.policy.OnGeometryChange(this.m_HorizontalSplitter.realSizes);
-				}
-				if (!this.m_State.disabled)
-				{
-					float num = 0f;
-					if (this.policy.SynchronizeCurrentTime(ref num))
-					{
-						if (num != this.m_State.currentTime)
-						{
-							this.policy.OnCurrentTimeChange(this.m_State.currentTime);
-						}
-					}
-					float a = 1f;
-					float a2 = 0f;
-					if (this.policy.SynchronizeZoomableArea(ref a, ref a2))
-					{
-						if (!Mathf.Approximately(a, this.m_State.timeArea.m_Scale.x) || !Mathf.Approximately(a2, this.m_State.timeArea.m_Translation.x))
-						{
-							this.policy.OnZoomableAreaChange(this.m_State.timeArea.m_Scale.x, this.m_State.timeArea.m_Translation.x);
-						}
-					}
-				}
+				this.m_State.frameRate = 60f;
 			}
 		}
 
 		private void SaveChangedCurvesFromCurveEditor()
 		{
 			this.m_State.SaveKeySelection("Edit Curve");
-			HashSet<AnimationClip> hashSet = new HashSet<AnimationClip>();
-			List<CurveWrapper> list = new List<CurveWrapper>();
+			Dictionary<AnimationClip, AnimEditor.ChangedCurvesPerClip> dictionary = new Dictionary<AnimationClip, AnimEditor.ChangedCurvesPerClip>();
+			AnimEditor.ChangedCurvesPerClip value = default(AnimEditor.ChangedCurvesPerClip);
 			for (int i = 0; i < this.m_CurveEditor.animationCurves.Length; i++)
 			{
 				CurveWrapper curveWrapper = this.m_CurveEditor.animationCurves[i];
@@ -942,29 +880,32 @@ namespace UnityEditor
 					}
 					if (curveWrapper.animationClip != null)
 					{
-						list.Add(curveWrapper);
-						hashSet.Add(curveWrapper.animationClip);
+						if (dictionary.TryGetValue(curveWrapper.animationClip, out value))
+						{
+							value.bindings.Add(curveWrapper.binding);
+							value.curves.Add(curveWrapper.curve);
+						}
+						else
+						{
+							value.bindings = new List<EditorCurveBinding>();
+							value.curves = new List<AnimationCurve>();
+							value.bindings.Add(curveWrapper.binding);
+							value.curves.Add(curveWrapper.curve);
+							dictionary.Add(curveWrapper.animationClip, value);
+						}
 					}
 					curveWrapper.changed = false;
 				}
 			}
-			if (hashSet.Count > 0)
+			if (dictionary.Count > 0)
 			{
-				foreach (AnimationClip current in hashSet)
+				foreach (KeyValuePair<AnimationClip, AnimEditor.ChangedCurvesPerClip> current in dictionary)
 				{
-					Undo.RegisterCompleteObjectUndo(current, "Edit Curve");
+					Undo.RegisterCompleteObjectUndo(current.Key, "Edit Curve");
+					AnimationUtility.SetEditorCurves(current.Key, current.Value.bindings.ToArray(), current.Value.curves.ToArray());
 				}
+				this.m_State.StartRecording();
 			}
-			if (list.Count > 0)
-			{
-				for (int j = 0; j < list.Count; j++)
-				{
-					CurveWrapper curveWrapper2 = list[j];
-					AnimationUtility.SetEditorCurve(curveWrapper2.animationClip, curveWrapper2.binding, curveWrapper2.curve);
-				}
-				this.m_State.ResampleAnimation();
-			}
-			this.UpdateSelectedKeysFromCurveEditor();
 		}
 
 		private void UpdateSelectedKeysFromCurveEditor()
@@ -984,6 +925,7 @@ namespace UnityEditor
 		{
 			this.UpdateCurveEditorData();
 			this.m_CurveEditor.ClearSelection();
+			this.m_CurveEditor.BeginRangeSelection();
 			foreach (AnimationWindowKeyframe current in this.m_State.selectedKeys)
 			{
 				CurveSelection curveSelection = AnimationWindowUtility.AnimationWindowKeyframeToCurveSelection(current, this.m_CurveEditor);
@@ -992,6 +934,7 @@ namespace UnityEditor
 					this.m_CurveEditor.AddSelection(curveSelection);
 				}
 			}
+			this.m_CurveEditor.EndRangeSelection();
 		}
 
 		private void SaveCurveEditorKeySelection()
@@ -1016,6 +959,7 @@ namespace UnityEditor
 								this.SaveCurveEditorKeySelection();
 								this.m_State.PasteKeys();
 								this.UpdateSelectedKeysToCurveEditor();
+								GUIUtility.ExitGUI();
 							}
 							Event.current.Use();
 						}
@@ -1024,6 +968,10 @@ namespace UnityEditor
 					{
 						if (Event.current.type == EventType.ExecuteCommand)
 						{
+							if (this.m_State.showCurveEditor)
+							{
+								this.UpdateSelectedKeysFromCurveEditor();
+							}
 							this.m_State.CopyKeys();
 						}
 						Event.current.Use();
@@ -1034,7 +982,7 @@ namespace UnityEditor
 
 		internal void UpdateCurveEditorData()
 		{
-			this.m_CurveEditor.animationCurves = this.m_State.activeCurveWrappers.ToArray();
+			this.m_CurveEditor.animationCurves = this.m_State.activeCurveWrappers;
 		}
 
 		public void Repaint()
@@ -1138,6 +1086,12 @@ namespace UnityEditor
 				this.m_CurveEditor.invSnap = newFrameRate;
 				this.m_CurveEditor.hTicks.SetTickModulosForFrameRate(newFrameRate);
 			}));
+			AnimationWindowState expr_2E = this.m_State;
+			expr_2E.onStartLiveEdit = (Action)Delegate.Combine(expr_2E.onStartLiveEdit, new Action(this.OnStartLiveEdit));
+			AnimationWindowState expr_55 = this.m_State;
+			expr_55.onEndLiveEdit = (Action)Delegate.Combine(expr_55.onEndLiveEdit, new Action(this.OnEndLiveEdit));
+			AnimationWindowSelection expr_81 = this.m_State.selection;
+			expr_81.onSelectionChanged = (Action)Delegate.Combine(expr_81.onSelectionChanged, new Action(this.OnSelectionChanged));
 		}
 	}
 }

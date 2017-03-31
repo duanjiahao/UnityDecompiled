@@ -88,7 +88,7 @@ namespace UnityEditor
 			TriggerModuleUI.s_VisualizeBounds = EditorPrefs.GetBool("VisualizeTriggerBounds", false);
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (TriggerModuleUI.s_Texts == null)
 			{
@@ -130,12 +130,34 @@ namespace UnityEditor
 
 		private void DoListOfCollisionShapesGUI()
 		{
-			int num = base.GUIListOfFloatObjectToggleFields(TriggerModuleUI.s_Texts.collisionShapes, this.m_ShownCollisionShapes, null, TriggerModuleUI.s_Texts.createCollisionShape, true, new GUILayoutOption[0]);
-			if (num >= 0)
+			if (this.m_ParticleSystemUI.multiEdit)
 			{
-				GameObject gameObject = TriggerModuleUI.CreateDefaultCollider("Collider " + (num + 1), this.m_ParticleSystemUI.m_ParticleSystem);
-				gameObject.transform.localPosition = new Vector3(0f, 0f, (float)(10 + num));
-				this.m_ShownCollisionShapes[num].objectReferenceValue = gameObject;
+				for (int i = 0; i < 6; i++)
+				{
+					int num = -1;
+					ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+					for (int j = 0; j < particleSystems.Length; j++)
+					{
+						ParticleSystem particleSystem = particleSystems[j];
+						int num2 = (!(particleSystem.trigger.GetCollider(i) != null)) ? 0 : 1;
+						if (num == -1)
+						{
+							num = num2;
+						}
+						else if (num2 != num)
+						{
+							EditorGUILayout.HelpBox("Collider list editing is only available when all selected systems contain the same number of colliders", MessageType.Info, true);
+							return;
+						}
+					}
+				}
+			}
+			int num3 = base.GUIListOfFloatObjectToggleFields(TriggerModuleUI.s_Texts.collisionShapes, this.m_ShownCollisionShapes, null, TriggerModuleUI.s_Texts.createCollisionShape, !this.m_ParticleSystemUI.multiEdit, new GUILayoutOption[0]);
+			if (num3 >= 0 && !this.m_ParticleSystemUI.multiEdit)
+			{
+				GameObject gameObject = TriggerModuleUI.CreateDefaultCollider("Collider " + (num3 + 1), this.m_ParticleSystemUI.m_ParticleSystems[0]);
+				gameObject.transform.localPosition = new Vector3(0f, 0f, (float)(10 + num3));
+				this.m_ShownCollisionShapes[num3].objectReferenceValue = gameObject;
 			}
 			Rect rect = GUILayoutUtility.GetRect(0f, 16f);
 			rect.x = rect.xMax - 24f - 5f;
@@ -162,33 +184,45 @@ namespace UnityEditor
 			}
 		}
 
-		[DrawGizmo(GizmoType.Active)]
-		private static void RenderCollisionBounds(ParticleSystem system, GizmoType gizmoType)
+		public override void OnSceneViewGUI()
 		{
-			if (system.trigger.enabled)
+			if (TriggerModuleUI.s_VisualizeBounds)
 			{
-				if (TriggerModuleUI.s_VisualizeBounds)
+				Color color = Handles.color;
+				Handles.color = Color.green;
+				Matrix4x4 matrix = Handles.matrix;
+				Vector3[] array = new Vector3[20];
+				Vector3[] array2 = new Vector3[20];
+				Vector3[] array3 = new Vector3[20];
+				Handles.SetDiscSectionPoints(array, Vector3.zero, Vector3.forward, Vector3.right, 360f, 1f);
+				Handles.SetDiscSectionPoints(array2, Vector3.zero, Vector3.up, -Vector3.right, 360f, 1f);
+				Handles.SetDiscSectionPoints(array3, Vector3.zero, Vector3.right, Vector3.up, 360f, 1f);
+				Vector3[] array4 = new Vector3[array.Length + array2.Length + array3.Length];
+				array.CopyTo(array4, 0);
+				array2.CopyTo(array4, 20);
+				array3.CopyTo(array4, 40);
+				ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+				for (int i = 0; i < particleSystems.Length; i++)
 				{
-					ParticleSystem.Particle[] array = new ParticleSystem.Particle[system.particleCount];
-					int particles = system.GetParticles(array);
-					Color color = Gizmos.color;
-					Gizmos.color = Color.green;
-					Matrix4x4 matrix = Matrix4x4.identity;
-					if (system.main.simulationSpace == ParticleSystemSimulationSpace.Local)
+					ParticleSystem particleSystem = particleSystems[i];
+					ParticleSystem.Particle[] array5 = new ParticleSystem.Particle[particleSystem.particleCount];
+					int particles = particleSystem.GetParticles(array5);
+					Matrix4x4 lhs = Matrix4x4.identity;
+					if (particleSystem.main.simulationSpace == ParticleSystemSimulationSpace.Local)
 					{
-						matrix = system.GetLocalToWorldMatrix();
+						lhs = particleSystem.GetLocalToWorldMatrix();
 					}
-					Matrix4x4 matrix2 = Gizmos.matrix;
-					Gizmos.matrix = matrix;
-					for (int i = 0; i < particles; i++)
+					for (int j = 0; j < particles; j++)
 					{
-						ParticleSystem.Particle particle = array[i];
-						Vector3 currentSize3D = particle.GetCurrentSize3D(system);
-						Gizmos.DrawWireSphere(particle.position, Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.5f * system.trigger.radiusScale);
+						ParticleSystem.Particle particle = array5[j];
+						Vector3 currentSize3D = particle.GetCurrentSize3D(particleSystem);
+						float num = Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.5f * particleSystem.trigger.radiusScale;
+						Handles.matrix = lhs * Matrix4x4.TRS(particle.position, Quaternion.identity, new Vector3(num, num, num));
+						Handles.DrawPolyLine(array4);
 					}
-					Gizmos.color = color;
-					Gizmos.matrix = matrix2;
 				}
+				Handles.color = color;
+				Handles.matrix = matrix;
 			}
 		}
 	}

@@ -105,7 +105,8 @@ namespace UnityEngine.UI
 			}
 			bool flag = true;
 			Rect rect = Clipping.FindCullAndClipWorldRect(this.m_Clippers, out flag);
-			if (rect != this.m_LastClipRectCanvasSpace || this.m_ForceClip)
+			bool flag2 = rect != this.m_LastClipRectCanvasSpace;
+			if (flag2 || this.m_ForceClip)
 			{
 				foreach (IClippable current in this.m_ClipTargets)
 				{
@@ -116,7 +117,11 @@ namespace UnityEngine.UI
 			}
 			foreach (IClippable current2 in this.m_ClipTargets)
 			{
-				current2.Cull(this.m_LastClipRectCanvasSpace, this.m_LastValidClipRect);
+				MaskableGraphic maskableGraphic = current2 as MaskableGraphic;
+				if (!(maskableGraphic != null) || maskableGraphic.canvasRenderer.hasMoved || flag2)
+				{
+					current2.Cull(this.m_LastClipRectCanvasSpace, this.m_LastValidClipRect);
+				}
 			}
 		}
 

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace UnityEditor
@@ -144,11 +145,11 @@ namespace UnityEditor
 				this.m_Color.m_AllowRandomColor = true;
 				this.m_Size3D = base.GetProperty("size3D");
 				this.m_SizeX = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.x, "startSize");
-				this.m_SizeY = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.y, "startSizeY");
-				this.m_SizeZ = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.z, "startSizeZ");
+				this.m_SizeY = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.y, "startSizeY", false, false, this.m_Size3D.boolValue);
+				this.m_SizeZ = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.z, "startSizeZ", false, false, this.m_Size3D.boolValue);
 				this.m_Rotation3D = base.GetProperty("rotation3D");
-				this.m_RotationX = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.x, "startRotationX", ModuleUI.kUseSignedRange);
-				this.m_RotationY = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.y, "startRotationY", ModuleUI.kUseSignedRange);
+				this.m_RotationX = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.x, "startRotationX", ModuleUI.kUseSignedRange, false, this.m_Rotation3D.boolValue);
+				this.m_RotationY = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.y, "startRotationY", ModuleUI.kUseSignedRange, false, this.m_Rotation3D.boolValue);
 				this.m_RotationZ = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.z, "startRotation", ModuleUI.kUseSignedRange);
 				this.m_RotationX.m_RemapValue = 57.29578f;
 				this.m_RotationY.m_RemapValue = 57.29578f;
@@ -162,19 +163,26 @@ namespace UnityEditor
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (InitialModuleUI.s_Texts == null)
 			{
 				InitialModuleUI.s_Texts = new InitialModuleUI.Texts();
 			}
 			ModuleUI.GUIFloat(InitialModuleUI.s_Texts.duration, this.m_LengthInSec, "f2", new GUILayoutOption[0]);
-			this.m_LengthInSec.floatValue = Mathf.Min(100000f, Mathf.Max(0f, this.m_LengthInSec.floatValue));
-			bool boolValue = this.m_Looping.boolValue;
-			ModuleUI.GUIToggle(InitialModuleUI.s_Texts.looping, this.m_Looping, new GUILayoutOption[0]);
-			if (this.m_Looping.boolValue && !boolValue && s.time >= this.m_LengthInSec.floatValue)
+			EditorGUI.BeginChangeCheck();
+			bool flag = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.looping, this.m_Looping, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck() && flag)
 			{
-				s.time = 0f;
+				ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+				for (int i = 0; i < particleSystems.Length; i++)
+				{
+					ParticleSystem particleSystem = particleSystems[i];
+					if (particleSystem.time >= particleSystem.main.duration)
+					{
+						particleSystem.time = 0f;
+					}
+				}
 			}
 			using (new EditorGUI.DisabledScope(!this.m_Looping.boolValue))
 			{
@@ -187,10 +195,10 @@ namespace UnityEditor
 			ModuleUI.GUIMinMaxCurve(InitialModuleUI.s_Texts.lifetime, this.m_LifeTime, new GUILayoutOption[0]);
 			ModuleUI.GUIMinMaxCurve(InitialModuleUI.s_Texts.speed, this.m_Speed, new GUILayoutOption[0]);
 			EditorGUI.BeginChangeCheck();
-			bool flag = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.size3D, this.m_Size3D, new GUILayoutOption[0]);
+			bool flag2 = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.size3D, this.m_Size3D, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
-				if (flag)
+				if (flag2)
 				{
 					this.m_SizeX.RemoveCurveFromEditor();
 				}
@@ -201,11 +209,12 @@ namespace UnityEditor
 					this.m_SizeZ.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_21A_0 = this.m_SizeZ;
-			MinMaxCurveState state = this.m_SizeX.state;
-			this.m_SizeY.state = state;
-			arg_21A_0.state = state;
-			if (flag)
+			if (!this.m_SizeX.stateHasMultipleDifferentValues)
+			{
+				this.m_SizeZ.SetMinMaxState(this.m_SizeX.state, flag2);
+				this.m_SizeY.SetMinMaxState(this.m_SizeX.state, flag2);
+			}
+			if (flag2)
 			{
 				this.m_SizeX.m_DisplayName = InitialModuleUI.s_Texts.x;
 				base.GUITripleMinMaxCurve(GUIContent.none, InitialModuleUI.s_Texts.x, this.m_SizeX, InitialModuleUI.s_Texts.y, this.m_SizeY, InitialModuleUI.s_Texts.z, this.m_SizeZ, null, new GUILayoutOption[0]);
@@ -216,10 +225,10 @@ namespace UnityEditor
 				ModuleUI.GUIMinMaxCurve(InitialModuleUI.s_Texts.size, this.m_SizeX, new GUILayoutOption[0]);
 			}
 			EditorGUI.BeginChangeCheck();
-			bool flag2 = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.rotation3D, this.m_Rotation3D, new GUILayoutOption[0]);
+			bool flag3 = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.rotation3D, this.m_Rotation3D, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
-				if (flag2)
+				if (flag3)
 				{
 					this.m_RotationZ.RemoveCurveFromEditor();
 				}
@@ -230,11 +239,12 @@ namespace UnityEditor
 					this.m_RotationZ.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_341_0 = this.m_RotationX;
-			state = this.m_RotationZ.state;
-			this.m_RotationY.state = state;
-			arg_341_0.state = state;
-			if (flag2)
+			if (!this.m_RotationZ.stateHasMultipleDifferentValues)
+			{
+				this.m_RotationX.SetMinMaxState(this.m_RotationZ.state, flag3);
+				this.m_RotationY.SetMinMaxState(this.m_RotationZ.state, flag3);
+			}
+			if (flag3)
 			{
 				this.m_RotationZ.m_DisplayName = InitialModuleUI.s_Texts.z;
 				base.GUITripleMinMaxCurve(GUIContent.none, InitialModuleUI.s_Texts.x, this.m_RotationX, InitialModuleUI.s_Texts.y, this.m_RotationY, InitialModuleUI.s_Texts.z, this.m_RotationZ, null, new GUILayoutOption[0]);
@@ -245,7 +255,7 @@ namespace UnityEditor
 				ModuleUI.GUIMinMaxCurve(InitialModuleUI.s_Texts.rotation, this.m_RotationZ, new GUILayoutOption[0]);
 			}
 			ModuleUI.GUIFloat(InitialModuleUI.s_Texts.randomizeRotationDirection, this.m_RandomizeRotationDirection, new GUILayoutOption[0]);
-			base.GUIMinMaxGradient(InitialModuleUI.s_Texts.color, this.m_Color, new GUILayoutOption[0]);
+			base.GUIMinMaxGradient(InitialModuleUI.s_Texts.color, this.m_Color, false, new GUILayoutOption[0]);
 			ModuleUI.GUIMinMaxCurve(InitialModuleUI.s_Texts.gravity, this.m_GravityModifier, new GUILayoutOption[0]);
 			int num = ModuleUI.GUIPopup(InitialModuleUI.s_Texts.simulationSpace, this.m_SimulationSpace, new string[]
 			{
@@ -258,7 +268,8 @@ namespace UnityEditor
 				ModuleUI.GUIObject(InitialModuleUI.s_Texts.customSimulationSpace, this.m_CustomSimulationSpace, new GUILayoutOption[0]);
 			}
 			ModuleUI.GUIFloat(InitialModuleUI.s_Texts.simulationSpeed, this.m_SimulationSpeed, new GUILayoutOption[0]);
-			if (this.m_ParticleSystemUI.m_ParticleSystem.shape.shapeType != ParticleSystemShapeType.SkinnedMeshRenderer && this.m_ParticleSystemUI.m_ParticleSystem.shape.shapeType != ParticleSystemShapeType.MeshRenderer)
+			bool flag4 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.shape.shapeType != ParticleSystemShapeType.SkinnedMeshRenderer && o.shape.shapeType != ParticleSystemShapeType.MeshRenderer) != null;
+			if (flag4)
 			{
 				ModuleUI.GUIPopup(InitialModuleUI.s_Texts.scalingMode, this.m_ScalingMode, new string[]
 				{
@@ -267,35 +278,35 @@ namespace UnityEditor
 					"Shape"
 				}, new GUILayoutOption[0]);
 			}
-			bool boolValue2 = this.m_PlayOnAwake.boolValue;
-			bool flag3 = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.autoplay, this.m_PlayOnAwake, new GUILayoutOption[0]);
-			if (boolValue2 != flag3)
+			bool boolValue = this.m_PlayOnAwake.boolValue;
+			bool flag5 = ModuleUI.GUIToggle(InitialModuleUI.s_Texts.autoplay, this.m_PlayOnAwake, new GUILayoutOption[0]);
+			if (boolValue != flag5)
 			{
-				this.m_ParticleSystemUI.m_ParticleEffectUI.PlayOnAwakeChanged(flag3);
+				this.m_ParticleSystemUI.m_ParticleEffectUI.PlayOnAwakeChanged(flag5);
 			}
 			ModuleUI.GUIInt(InitialModuleUI.s_Texts.maxParticles, this.m_MaxNumParticles, new GUILayoutOption[0]);
 			if (!ModuleUI.GUIToggle(InitialModuleUI.s_Texts.autoRandomSeed, this.m_AutoRandomSeed, new GUILayoutOption[0]))
 			{
-				bool flag4 = this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner is ParticleSystemInspector;
-				if (flag4)
+				bool flag6 = this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner is ParticleSystemInspector;
+				if (flag6)
 				{
 					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					ModuleUI.GUIInt(InitialModuleUI.s_Texts.randomSeed, this.m_RandomSeed, new GUILayoutOption[0]);
-					if (GUILayout.Button("Reseed", EditorStyles.miniButton, new GUILayoutOption[]
+					if (!this.m_ParticleSystemUI.multiEdit && GUILayout.Button("Reseed", EditorStyles.miniButton, new GUILayoutOption[]
 					{
 						GUILayout.Width(60f)
 					}))
 					{
-						this.m_RandomSeed.intValue = this.m_ParticleSystemUI.m_ParticleSystem.GenerateRandomSeed();
+						this.m_RandomSeed.intValue = this.m_ParticleSystemUI.m_ParticleSystems[0].GenerateRandomSeed();
 					}
 					GUILayout.EndHorizontal();
 				}
 				else
 				{
 					ModuleUI.GUIInt(InitialModuleUI.s_Texts.randomSeed, this.m_RandomSeed, new GUILayoutOption[0]);
-					if (GUILayout.Button("Reseed", EditorStyles.miniButton, new GUILayoutOption[0]))
+					if (!this.m_ParticleSystemUI.multiEdit && GUILayout.Button("Reseed", EditorStyles.miniButton, new GUILayoutOption[0]))
 					{
-						this.m_RandomSeed.intValue = this.m_ParticleSystemUI.m_ParticleSystem.GenerateRandomSeed();
+						this.m_RandomSeed.intValue = this.m_ParticleSystemUI.m_ParticleSystems[0].GenerateRandomSeed();
 					}
 				}
 			}

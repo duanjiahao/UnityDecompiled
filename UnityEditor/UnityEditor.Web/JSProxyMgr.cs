@@ -244,7 +244,7 @@ namespace UnityEditor.Web
 
 		private bool DoOnEventMessage(long messageID, JSProxyMgr.ExecCallback callback, Dictionary<string, object> jsonData, WebView webView)
 		{
-			callback(JSProxyMgr.FormatError(messageID, -1002, "errUnknownMethod", "method DoOnEventMessage is depracated"));
+			callback(JSProxyMgr.FormatError(messageID, -1002, "errUnknownMethod", "method DoOnEventMessage is deprecated"));
 			return false;
 		}
 

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.VersionControl
 {
@@ -11,6 +12,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string name
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -18,6 +20,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string label
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -25,6 +28,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern CommandContext context
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -33,6 +37,7 @@ namespace UnityEditor.VersionControl
 		{
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Task StartTask();
 	}

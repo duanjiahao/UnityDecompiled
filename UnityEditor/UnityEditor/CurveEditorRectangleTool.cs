@@ -402,9 +402,8 @@ namespace UnityEditor
 				AreaManipulator expr_3D3 = this.m_SelectionBox;
 				expr_3D3.onStartDrag = (AnimationWindowManipulator.OnStartDragDelegate)Delegate.Combine(expr_3D3.onStartDrag, new AnimationWindowManipulator.OnStartDragDelegate(delegate(AnimationWindowManipulator manipulator, Event evt)
 				{
-					bool flag = evt.shift || EditorGUI.actionKey;
 					bool result;
-					if ((!Mathf.Approximately(this.selectionBounds.size.x, 0f) || !Mathf.Approximately(this.selectionBounds.size.y, 0f)) && !flag && this.hasSelection && manipulator.rect.Contains(evt.mousePosition))
+					if (!evt.shift && !EditorGUI.actionKey && this.hasSelection && manipulator.rect.Contains(evt.mousePosition))
 					{
 						this.OnStartMove(new Vector2(base.PixelToTime(evt.mousePosition.x, this.frameRate), base.PixelToValue(evt.mousePosition.y)), (!base.rippleTimeClutch) ? CurveEditorRectangleTool.DragMode.MoveBothAxis : CurveEditorRectangleTool.DragMode.MoveHorizontal, base.rippleTimeClutch);
 						result = true;
@@ -418,7 +417,15 @@ namespace UnityEditor
 				AreaManipulator expr_3FA = this.m_SelectionBox;
 				expr_3FA.onDrag = (AnimationWindowManipulator.OnDragDelegate)Delegate.Combine(expr_3FA.onDrag, new AnimationWindowManipulator.OnDragDelegate(delegate(AnimationWindowManipulator manipulator, Event evt)
 				{
-					this.OnMove(new Vector2(base.PixelToTime(evt.mousePosition.x, this.frameRate), base.PixelToValue(evt.mousePosition.y)));
+					if (evt.shift && this.m_DragMode == CurveEditorRectangleTool.DragMode.MoveBothAxis)
+					{
+						float f = evt.mousePosition.x - base.TimeToPixel(this.m_Previous.x);
+						float f2 = evt.mousePosition.y - base.ValueToPixel(this.m_Previous.y);
+						this.m_DragMode = ((Mathf.Abs(f) <= Mathf.Abs(f2)) ? CurveEditorRectangleTool.DragMode.MoveVertical : CurveEditorRectangleTool.DragMode.MoveHorizontal);
+					}
+					float x = ((this.m_DragMode & CurveEditorRectangleTool.DragMode.MoveHorizontal) == CurveEditorRectangleTool.DragMode.None) ? this.m_Previous.x : base.PixelToTime(evt.mousePosition.x, this.frameRate);
+					float y = ((this.m_DragMode & CurveEditorRectangleTool.DragMode.MoveVertical) == CurveEditorRectangleTool.DragMode.None) ? this.m_Previous.y : base.PixelToValue(evt.mousePosition.y);
+					this.OnMove(new Vector2(x, y));
 					return true;
 				}));
 				AreaManipulator expr_421 = this.m_SelectionBox;
@@ -610,25 +617,31 @@ namespace UnityEditor
 
 		public void HandleEvents()
 		{
-			this.m_SelectionScaleTop.HandleEvents();
-			this.m_SelectionScaleBottom.HandleEvents();
-			this.m_SelectionScaleLeft.HandleEvents();
-			this.m_SelectionScaleRight.HandleEvents();
-			this.m_SelectionBox.HandleEvents();
+			if (this.m_CurveEditor.settings.rectangleToolFlags != CurveEditorSettings.RectangleToolFlags.NoRectangleTool)
+			{
+				this.m_SelectionScaleTop.HandleEvents();
+				this.m_SelectionScaleBottom.HandleEvents();
+				this.m_SelectionScaleLeft.HandleEvents();
+				this.m_SelectionScaleRight.HandleEvents();
+				this.m_SelectionBox.HandleEvents();
+			}
 		}
 
 		public void HandleOverlayEvents()
 		{
 			base.HandleClutchKeys();
 			CurveEditorSettings.RectangleToolFlags rectangleToolFlags = this.m_CurveEditor.settings.rectangleToolFlags;
-			if (rectangleToolFlags == CurveEditorSettings.RectangleToolFlags.FullRectangleTool)
+			if (rectangleToolFlags != CurveEditorSettings.RectangleToolFlags.NoRectangleTool)
 			{
-				this.m_VBarBottom.HandleEvents();
-				this.m_VBarTop.HandleEvents();
-				this.m_VBar.HandleEvents();
-				this.m_HBarLeft.HandleEvents();
-				this.m_HBarRight.HandleEvents();
-				this.m_HBar.HandleEvents();
+				if (rectangleToolFlags == CurveEditorSettings.RectangleToolFlags.FullRectangleTool)
+				{
+					this.m_VBarBottom.HandleEvents();
+					this.m_VBarTop.HandleEvents();
+					this.m_VBar.HandleEvents();
+					this.m_HBarLeft.HandleEvents();
+					this.m_HBarRight.HandleEvents();
+					this.m_HBar.HandleEvents();
+				}
 			}
 		}
 
@@ -841,6 +854,11 @@ namespace UnityEditor
 			GUI.changed = true;
 		}
 
+		internal void OnStartMove(Vector2 position, bool rippleTime)
+		{
+			this.OnStartMove(position, CurveEditorRectangleTool.DragMode.None, rippleTime);
+		}
+
 		private void OnStartMove(Vector2 position, CurveEditorRectangleTool.DragMode dragMode, bool rippleTime)
 		{
 			Bounds selectionBounds = this.selectionBounds;
@@ -852,7 +870,7 @@ namespace UnityEditor
 			this.m_CurveEditor.StartLiveEdit();
 		}
 
-		private void OnMove(Vector2 position)
+		internal void OnMove(Vector2 position)
 		{
 			Vector2 vector = position - this.m_Previous;
 			Matrix4x4 identity = Matrix4x4.identity;
@@ -860,7 +878,7 @@ namespace UnityEditor
 			this.TransformKeys(identity, false, false);
 		}
 
-		private void OnEndMove()
+		internal void OnEndMove()
 		{
 			this.m_CurveEditor.EndLiveEdit();
 			this.m_DragMode = CurveEditorRectangleTool.DragMode.None;

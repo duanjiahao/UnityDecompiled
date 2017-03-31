@@ -1,41 +1,48 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace UnityEditor.IMGUI.Controls
 {
 	[Serializable]
-	internal class MultiColumnHeaderState
+	public class MultiColumnHeaderState
 	{
 		[Serializable]
 		public class Column
 		{
 			[SerializeField]
-			public float width;
+			public float width = 50f;
 
 			[SerializeField]
 			public bool sortedAscending;
 
-			[SerializeField]
-			public string headerText;
+			[NonSerialized]
+			public GUIContent headerContent = new GUIContent();
 
-			[SerializeField]
+			[NonSerialized]
+			public string contextMenuText;
+
+			[NonSerialized]
 			public TextAlignment headerTextAlignment = TextAlignment.Left;
 
-			[SerializeField]
+			[NonSerialized]
 			public TextAlignment sortingArrowAlignment = TextAlignment.Center;
 
-			[SerializeField]
-			public float minWidth;
+			[NonSerialized]
+			public float minWidth = 20f;
 
-			[SerializeField]
-			public float maxWidth;
+			[NonSerialized]
+			public float maxWidth = 1000000f;
 
-			[SerializeField]
-			public bool autoResize;
+			[NonSerialized]
+			public bool autoResize = true;
 
-			[SerializeField]
+			[NonSerialized]
 			public bool allowToggleVisibility = true;
+
+			[NonSerialized]
+			public bool canSort = true;
 		}
 
 		[SerializeField]
@@ -45,32 +52,58 @@ namespace UnityEditor.IMGUI.Controls
 		private int[] m_VisibleColumns;
 
 		[SerializeField]
-		private int m_SortedColumnIndex;
+		private List<int> m_SortedColumns;
 
-		[SerializeField]
-		private int m_PreviousSortedColumnIndex;
+		[NonSerialized]
+		private int m_MaxNumberOfSortedColumns = 3;
 
 		public int sortedColumnIndex
 		{
 			get
 			{
-				return this.m_SortedColumnIndex;
+				return (this.m_SortedColumns.Count <= 0) ? -1 : this.m_SortedColumns[0];
 			}
 			set
 			{
-				if (value != this.m_SortedColumnIndex)
+				int num = (this.m_SortedColumns.Count <= 0) ? -1 : this.m_SortedColumns[0];
+				if (value != num)
 				{
-					this.m_PreviousSortedColumnIndex = this.m_SortedColumnIndex;
+					if (value >= 0)
+					{
+						this.m_SortedColumns.Remove(value);
+						this.m_SortedColumns.Insert(0, value);
+					}
+					else
+					{
+						this.m_SortedColumns.Clear();
+					}
 				}
-				this.m_SortedColumnIndex = value;
 			}
 		}
 
-		public int previousSortedColumnIndex
+		public int maximumNumberOfSortedColumns
 		{
 			get
 			{
-				return this.m_PreviousSortedColumnIndex;
+				return this.m_MaxNumberOfSortedColumns;
+			}
+			set
+			{
+				this.m_MaxNumberOfSortedColumns = value;
+				this.RemoveInvalidSortingColumnsIndices();
+			}
+		}
+
+		public int[] sortedColumns
+		{
+			get
+			{
+				return this.m_SortedColumns.ToArray();
+			}
+			set
+			{
+				this.m_SortedColumns = ((value != null) ? new List<int>(value) : new List<int>());
+				this.RemoveInvalidSortingColumnsIndices();
 			}
 		}
 
@@ -121,12 +154,43 @@ namespace UnityEditor.IMGUI.Controls
 				throw new ArgumentException("columns array should at least have one column: it is empty", "columns");
 			}
 			this.m_Columns = columns;
-			this.m_SortedColumnIndex = -1;
-			this.m_PreviousSortedColumnIndex = -1;
+			this.m_SortedColumns = new List<int>();
 			this.m_VisibleColumns = new int[this.m_Columns.Length];
 			for (int i = 0; i < this.m_Columns.Length; i++)
 			{
 				this.m_VisibleColumns[i] = i;
+			}
+		}
+
+		public static bool CanOverwriteSerializedFields(MultiColumnHeaderState source, MultiColumnHeaderState destination)
+		{
+			return source != null && destination != null && source.m_Columns != null && destination.m_Columns != null && source.m_Columns.Length == destination.m_Columns.Length;
+		}
+
+		public static void OverwriteSerializedFields(MultiColumnHeaderState source, MultiColumnHeaderState destination)
+		{
+			if (!MultiColumnHeaderState.CanOverwriteSerializedFields(source, destination))
+			{
+				Debug.LogError("MultiColumnHeaderState: Not able to overwrite serialized fields");
+			}
+			else
+			{
+				destination.m_VisibleColumns = source.m_VisibleColumns.ToArray<int>();
+				destination.m_SortedColumns = new List<int>(source.m_SortedColumns);
+				for (int i = 0; i < destination.m_Columns.Length; i++)
+				{
+					destination.m_Columns[i].width = source.m_Columns[i].width;
+					destination.m_Columns[i].sortedAscending = source.m_Columns[i].sortedAscending;
+				}
+			}
+		}
+
+		private void RemoveInvalidSortingColumnsIndices()
+		{
+			this.m_SortedColumns.RemoveAll((int x) => x >= this.m_Columns.Length);
+			if (this.m_SortedColumns.Count > this.m_MaxNumberOfSortedColumns)
+			{
+				this.m_SortedColumns.RemoveRange(this.m_MaxNumberOfSortedColumns, this.m_SortedColumns.Count - this.m_MaxNumberOfSortedColumns);
 			}
 		}
 	}

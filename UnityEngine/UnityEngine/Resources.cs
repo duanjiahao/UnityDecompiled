@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
 
 namespace UnityEngine
@@ -25,7 +26,7 @@ namespace UnityEngine
 			return result;
 		}
 
-		[TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
+		[GeneratedByOldBindingsGenerator, TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindObjectsOfTypeAll(Type type);
 
@@ -44,7 +45,7 @@ namespace UnityEngine
 			return (T)((object)Resources.Load(path, typeof(T)));
 		}
 
-		[TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
+		[GeneratedByOldBindingsGenerator, TypeInferenceRule(TypeInferenceRules.TypeReferencedBySecondArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object Load(string path, Type systemTypeInstance);
 
@@ -58,9 +59,11 @@ namespace UnityEngine
 			return Resources.LoadAsync(path, typeof(T));
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern ResourceRequest LoadAsync(string path, Type type);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] LoadAll(string path, Type systemTypeInstance);
 
@@ -74,7 +77,7 @@ namespace UnityEngine
 			return Resources.ConvertObjects<T>(Resources.LoadAll(path, typeof(T)));
 		}
 
-		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
+		[GeneratedByOldBindingsGenerator, TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object GetBuiltinResource(Type type, string path);
 
@@ -83,9 +86,11 @@ namespace UnityEngine
 			return (T)((object)Resources.GetBuiltinResource(typeof(T), path));
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnloadAsset(Object assetToUnload);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation UnloadUnusedAssets();
 

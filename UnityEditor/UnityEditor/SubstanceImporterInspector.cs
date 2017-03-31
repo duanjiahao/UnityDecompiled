@@ -374,7 +374,7 @@ namespace UnityEditor
 				if (this.m_PrototypeNames.Length > 1)
 				{
 					Rect rect = GUILayoutUtility.GetRect(this.m_SubstanceStyles.iconToolbarPlus, this.m_SubstanceStyles.toolbarDropDown);
-					if (EditorGUI.ButtonMouseDown(rect, this.m_SubstanceStyles.iconToolbarPlus, FocusType.Passive, this.m_SubstanceStyles.toolbarDropDown))
+					if (EditorGUI.DropdownButton(rect, this.m_SubstanceStyles.iconToolbarPlus, FocusType.Passive, this.m_SubstanceStyles.toolbarDropDown))
 					{
 						GenericMenu genericMenu = new GenericMenu();
 						for (int i = 0; i < this.m_PrototypeNames.Length; i++)

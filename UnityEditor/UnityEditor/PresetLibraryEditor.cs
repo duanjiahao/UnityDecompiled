@@ -736,7 +736,7 @@ namespace UnityEditor
 				Event current = Event.current;
 				if (this.m_PresetLibraryFileLocation == PresetFileLocation.ProjectFolder && current.type == EventType.Repaint)
 				{
-					this.m_IsOpenForEdit = AssetDatabase.IsOpenForEdit(this.pathWithExtension);
+					this.m_IsOpenForEdit = AssetDatabase.IsOpenForEdit(this.pathWithExtension, StatusQueryOptions.UseCachedIfPossible);
 				}
 				else if (this.m_PresetLibraryFileLocation == PresetFileLocation.PreferencesFolder)
 				{

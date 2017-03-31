@@ -13,7 +13,7 @@ namespace UnityEditor
 			bool result;
 			if (base.target is MonoBehaviour)
 			{
-				if (AudioUtil.HaveAudioCallback(base.target as MonoBehaviour) && AudioUtil.GetCustomFilterChannelCount(base.target as MonoBehaviour) > 0)
+				if (AudioUtil.HasAudioCallback(base.target as MonoBehaviour) && AudioUtil.GetCustomFilterChannelCount(base.target as MonoBehaviour) > 0)
 				{
 					result = false;
 					return result;
@@ -72,7 +72,7 @@ namespace UnityEditor
 				base.OnInspectorGUI();
 				if (base.target is MonoBehaviour)
 				{
-					if (AudioUtil.HaveAudioCallback(base.target as MonoBehaviour) && AudioUtil.GetCustomFilterChannelCount(base.target as MonoBehaviour) > 0)
+					if (AudioUtil.HasAudioCallback(base.target as MonoBehaviour) && AudioUtil.GetCustomFilterChannelCount(base.target as MonoBehaviour) > 0)
 					{
 						if (this.m_AudioFilterGUI == null)
 						{

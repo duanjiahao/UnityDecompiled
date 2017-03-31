@@ -97,6 +97,7 @@ namespace UnityEngine
 
 		private extern string responseHeadersString
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -133,18 +134,21 @@ namespace UnityEngine
 
 		public extern byte[] bytes
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int size
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern string error
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -165,46 +169,54 @@ namespace UnityEngine
 			}
 		}
 
-		public AudioClip audioClip
+		[Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetAudioClip(UnityEngine.WWW)", true)]
+		public Object audioClip
 		{
 			get
 			{
-				return this.GetAudioClip(true);
+				return null;
 			}
 		}
 
-		public extern MovieTexture movie
+		[Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetMovieTexture(UnityEngine.WWW)", true)]
+		public Object movie
 		{
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return null;
+			}
 		}
 
 		public extern bool isDone
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float progress
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float uploadProgress
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int bytesDownloaded
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property WWW.oggVorbis has been deprecated. Use WWW.audioClip instead (UnityUpgradable).", true)]
-		public AudioClip oggVorbis
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetAudioClip(UnityEngine.WWW)", true)]
+		public Object oggVorbis
 		{
 			get
 			{
@@ -214,20 +226,24 @@ namespace UnityEngine
 
 		public extern string url
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern AssetBundle assetBundle
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ThreadPriority threadPriority
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -277,13 +293,15 @@ namespace UnityEngine
 			this.DestroyWWW(false);
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void DestroyWWW(bool cancel);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitWWW(string url, byte[] postData, string[] iHeaders);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool enforceWebSecurityRestrictions();
 
@@ -379,46 +397,23 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Texture2D GetTexture(bool markNonReadable);
 
-		public AudioClip GetAudioClip(bool threeD)
-		{
-			return this.GetAudioClip(threeD, false);
-		}
-
-		public AudioClip GetAudioClip(bool threeD, bool stream)
-		{
-			return this.GetAudioClip(threeD, stream, AudioType.UNKNOWN);
-		}
-
-		public AudioClip GetAudioClip(bool threeD, bool stream, AudioType audioType)
-		{
-			return this.GetAudioClipInternal(threeD, stream, false, audioType);
-		}
-
-		public AudioClip GetAudioClipCompressed()
-		{
-			return this.GetAudioClipCompressed(true);
-		}
-
-		public AudioClip GetAudioClipCompressed(bool threeD)
-		{
-			return this.GetAudioClipCompressed(threeD, AudioType.UNKNOWN);
-		}
-
-		public AudioClip GetAudioClipCompressed(bool threeD, AudioType audioType)
-		{
-			return this.GetAudioClipInternal(threeD, false, true, audioType);
-		}
-
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern AudioClip GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType);
+		internal extern Object GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern Object GetMovieTextureInternal();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void LoadImageIntoTexture(Texture2D tex);
 
-		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true)]
+		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetURL(string url);
 
@@ -433,6 +428,7 @@ namespace UnityEngine
 		{
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_WWW(WWW self, string url, ref Hash128 hash, uint crc);
 

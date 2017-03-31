@@ -31,11 +31,6 @@ namespace UnityEditorInternal
 			get;
 		}
 
-		bool loadSymbols
-		{
-			get;
-		}
-
 		string nativeLibraryFileName
 		{
 			get;

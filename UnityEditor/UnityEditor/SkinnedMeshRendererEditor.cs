@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -7,13 +9,9 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(SkinnedMeshRenderer))]
 	internal class SkinnedMeshRendererEditor : RendererEditorBase
 	{
-		private static int s_BoxHash = "SkinnedMeshRendererEditor".GetHashCode();
+		private static int s_HandleControlIDHint = typeof(SkinnedMeshRendererEditor).Name.GetHashCode();
 
-		private SerializedProperty m_CastShadows;
-
-		private SerializedProperty m_ReceiveShadows;
-
-		private SerializedProperty m_MotionVectors;
+		private const string kDisplayLightingKey = "SkinnedMeshRendererEditor.Lighting.ShowSettings";
 
 		private SerializedProperty m_Materials;
 
@@ -23,23 +21,22 @@ namespace UnityEditor
 
 		private SerializedProperty m_BlendShapeWeights;
 
-		private BoxEditor m_BoxEditor = new BoxEditor(false, SkinnedMeshRendererEditor.s_BoxHash);
+		private LightingSettingsInspector m_Lighting;
+
+		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(SkinnedMeshRendererEditor.s_HandleControlIDHint);
 
 		private string[] m_ExcludedProperties;
 
 		public override void OnEnable()
 		{
 			base.OnEnable();
-			this.m_CastShadows = base.serializedObject.FindProperty("m_CastShadows");
-			this.m_ReceiveShadows = base.serializedObject.FindProperty("m_ReceiveShadows");
-			this.m_MotionVectors = base.serializedObject.FindProperty("m_MotionVectors");
 			this.m_Materials = base.serializedObject.FindProperty("m_Materials");
 			this.m_BlendShapeWeights = base.serializedObject.FindProperty("m_BlendShapeWeights");
 			this.m_AABB = base.serializedObject.FindProperty("m_AABB");
 			this.m_DirtyAABB = base.serializedObject.FindProperty("m_DirtyAABB");
-			this.m_BoxEditor.OnEnable();
-			this.m_BoxEditor.SetAlwaysDisplayHandles(true);
+			this.m_BoundsHandle.SetColor(Handles.s_BoundingBoxHandleColor);
 			base.InitializeProbeFields();
+			this.InitializeLightingFields();
 			List<string> list = new List<string>();
 			list.AddRange(new string[]
 			{
@@ -48,34 +45,49 @@ namespace UnityEditor
 				"m_MotionVectors",
 				"m_Materials",
 				"m_BlendShapeWeights",
-				"m_AABB"
+				"m_AABB",
+				"m_LightmapParameters"
 			});
 			list.AddRange(RendererEditorBase.Probes.GetFieldsStringArray());
 			this.m_ExcludedProperties = list.ToArray();
 		}
 
-		public void OnDisable()
+		private void InitializeLightingFields()
 		{
-			this.m_BoxEditor.OnDisable();
+			this.m_Lighting = new LightingSettingsInspector(base.serializedObject);
+			this.m_Lighting.showSettings = EditorPrefs.GetBool("SkinnedMeshRendererEditor.Lighting.ShowSettings", false);
 		}
 
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
 			this.OnBlendShapeUI();
-			EditorGUILayout.PropertyField(this.m_CastShadows, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_ReceiveShadows, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_MotionVectors, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_Materials, true, new GUILayoutOption[0]);
-			base.RenderProbeFields();
 			Editor.DrawPropertiesExcluding(base.serializedObject, this.m_ExcludedProperties);
+			EditMode.DoEditModeInspectorModeButton(EditMode.SceneViewEditMode.Collider, "Edit Bounds", PrimitiveBoundsHandle.editModeButton, (base.target as SkinnedMeshRenderer).bounds, this);
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(this.m_AABB, new GUIContent("Bounds"), new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.m_DirtyAABB.boolValue = false;
 			}
+			this.LightingFieldsGUI();
+			EditorGUILayout.PropertyField(this.m_Materials, true, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
+		}
+
+		private void LightingFieldsGUI()
+		{
+			bool showSettings = this.m_Lighting.showSettings;
+			if (this.m_Lighting.Begin())
+			{
+				base.RenderProbeFields();
+				this.m_Lighting.RenderMeshSettings(false);
+			}
+			this.m_Lighting.End();
+			if (this.m_Lighting.showSettings != showSettings)
+			{
+				EditorPrefs.SetBool("SkinnedMeshRendererEditor.Lighting.ShowSettings", this.m_Lighting.showSettings);
+			}
 		}
 
 		public void OnBlendShapeUI()
@@ -128,13 +140,19 @@ namespace UnityEditor
 			}
 			else
 			{
-				Bounds localBounds = skinnedMeshRenderer.localBounds;
-				Vector3 center2 = localBounds.center;
-				Vector3 size2 = localBounds.size;
-				if (this.m_BoxEditor.OnSceneGUI(skinnedMeshRenderer.actualRootBone, Handles.s_BoundingBoxHandleColor, false, ref center2, ref size2))
+				using (new Handles.DrawingScope(skinnedMeshRenderer.actualRootBone.localToWorldMatrix))
 				{
-					Undo.RecordObject(skinnedMeshRenderer, "Resize Bounds");
-					skinnedMeshRenderer.localBounds = new Bounds(center2, size2);
+					Bounds localBounds = skinnedMeshRenderer.localBounds;
+					this.m_BoundsHandle.center = localBounds.center;
+					this.m_BoundsHandle.size = localBounds.size;
+					this.m_BoundsHandle.handleColor = ((EditMode.editMode != EditMode.SceneViewEditMode.Collider || !EditMode.IsOwner(this)) ? Color.clear : this.m_BoundsHandle.wireframeColor);
+					EditorGUI.BeginChangeCheck();
+					this.m_BoundsHandle.DrawHandle();
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(skinnedMeshRenderer, "Resize Bounds");
+						skinnedMeshRenderer.localBounds = new Bounds(this.m_BoundsHandle.center, this.m_BoundsHandle.size);
+					}
 				}
 			}
 		}

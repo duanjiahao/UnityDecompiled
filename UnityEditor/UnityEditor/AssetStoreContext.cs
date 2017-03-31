@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using UnityEditor.Web;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -189,15 +190,19 @@ namespace UnityEditor
 			AssetStoreContext.GetInstance();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SessionSetString(string key, string value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SessionGetString(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SessionRemoveString(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SessionHasString(string key);
 

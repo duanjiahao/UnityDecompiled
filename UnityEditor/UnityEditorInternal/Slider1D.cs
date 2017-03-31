@@ -16,6 +16,7 @@ namespace UnityEditorInternal
 		[CompilerGenerated]
 		private static Handles.DrawCapFunction <>f__mg$cache0;
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		internal static Vector3 Do(int id, Vector3 position, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap)
 		{
 			return Slider1D.Do(id, position, direction, direction, size, drawFunc, snap);
@@ -26,6 +27,7 @@ namespace UnityEditorInternal
 			return Slider1D.Do(id, position, direction, direction, size, capFunction, snap);
 		}
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		internal static Vector3 Do(int id, Vector3 position, Vector3 handleDirection, Vector3 slideDirection, float size, Handles.DrawCapFunction drawFunc, float snap)
 		{
 			Event current = Event.current;
@@ -57,8 +59,8 @@ namespace UnityEditorInternal
 					float num = HandleUtility.CalcLineTranslation(Slider1D.s_StartMousePosition, Slider1D.s_CurrentMousePosition, Slider1D.s_StartPosition, slideDirection);
 					num = Handles.SnapValue(num, snap);
 					Vector3 a = Handles.matrix.MultiplyVector(slideDirection);
-					Vector3 v = Handles.s_Matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
-					position = Handles.s_InverseMatrix.MultiplyPoint(v);
+					Vector3 v = Handles.matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
+					position = Handles.inverseMatrix.MultiplyPoint(v);
 					GUI.changed = true;
 					current.Use();
 				}
@@ -128,8 +130,8 @@ namespace UnityEditorInternal
 					float num = HandleUtility.CalcLineTranslation(Slider1D.s_StartMousePosition, Slider1D.s_CurrentMousePosition, Slider1D.s_StartPosition, slideDirection);
 					num = Handles.SnapValue(num, snap);
 					Vector3 a = Handles.matrix.MultiplyVector(slideDirection);
-					Vector3 v = Handles.s_Matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
-					position = Handles.s_InverseMatrix.MultiplyPoint(v);
+					Vector3 v = Handles.matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
+					position = Handles.inverseMatrix.MultiplyPoint(v);
 					GUI.changed = true;
 					current.Use();
 				}

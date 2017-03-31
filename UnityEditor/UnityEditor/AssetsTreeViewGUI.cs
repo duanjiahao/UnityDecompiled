@@ -1,6 +1,5 @@
 using System;
 using UnityEditor.Collaboration;
-using UnityEditor.Connect;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.VersionControl;
@@ -33,7 +32,7 @@ namespace UnityEditor
 
 		protected CreateAssetUtility GetCreateAssetUtility()
 		{
-			return this.m_TreeView.state.createAssetUtility;
+			return ((TreeViewStateWithAssetUtility)this.m_TreeView.state).createAssetUtility;
 		}
 
 		protected virtual bool IsCreatingNewAsset(int instanceID)
@@ -122,17 +121,14 @@ namespace UnityEditor
 
 		private void OnIconOverlayGUI(TreeViewItem item, Rect overlayRect)
 		{
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
+			bool flag = CollabAccess.Instance.IsServiceEnabled();
+			if (flag)
 			{
-				bool flag = CollabAccess.Instance.IsServiceEnabled();
-				if (flag)
+				if (AssetDatabase.IsMainAsset(item.id))
 				{
-					if (AssetDatabase.IsMainAsset(item.id))
-					{
-						string assetPath = AssetDatabase.GetAssetPath(item.id);
-						string guid = AssetDatabase.AssetPathToGUID(assetPath);
-						CollabProjectHook.OnProjectWindowItemIconOverlay(guid, overlayRect);
-					}
+					string assetPath = AssetDatabase.GetAssetPath(item.id);
+					string guid = AssetDatabase.AssetPathToGUID(assetPath);
+					CollabProjectHook.OnProjectWindowItemIconOverlay(guid, overlayRect);
 				}
 			}
 			if (AssetsTreeViewGUI.s_VCEnabled && AssetDatabase.IsMainAsset(item.id))

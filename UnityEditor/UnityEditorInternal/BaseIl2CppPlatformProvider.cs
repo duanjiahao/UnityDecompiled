@@ -62,14 +62,6 @@ namespace UnityEditorInternal
 			}
 		}
 
-		public virtual bool loadSymbols
-		{
-			get
-			{
-				return false;
-			}
-		}
-
 		public virtual bool supportsEngineStripping
 		{
 			get

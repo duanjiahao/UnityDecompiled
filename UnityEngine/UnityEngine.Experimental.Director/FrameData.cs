@@ -4,35 +4,36 @@ namespace UnityEngine.Experimental.Director
 {
 	public struct FrameData
 	{
-		internal int m_UpdateId;
-
-		internal double m_Time;
-
-		internal double m_LastTime;
-
-		internal double m_TimeScale;
-
-		public int updateId
+		[Flags]
+		internal enum Flags
 		{
-			get
-			{
-				return this.m_UpdateId;
-			}
+			Evaluate = 1,
+			SeekOccured = 2
 		}
 
-		public float time
+		public enum EvaluationType
 		{
-			get
-			{
-				return (float)this.m_Time;
-			}
+			Evaluate,
+			Playback
 		}
 
-		public float lastTime
+		internal ulong m_FrameID;
+
+		internal double m_DeltaTime;
+
+		internal float m_Weight;
+
+		internal float m_EffectiveWeight;
+
+		internal float m_EffectiveSpeed;
+
+		internal FrameData.Flags m_Flags;
+
+		public ulong frameId
 		{
 			get
 			{
-				return (float)this.m_LastTime;
+				return this.m_FrameID;
 			}
 		}
 
@@ -40,47 +41,47 @@ namespace UnityEngine.Experimental.Director
 		{
 			get
 			{
-				return (float)this.m_Time - (float)this.m_LastTime;
+				return (float)this.m_DeltaTime;
 			}
 		}
 
-		public float timeScale
+		public float weight
 		{
 			get
 			{
-				return (float)this.m_TimeScale;
+				return this.m_Weight;
 			}
 		}
 
-		public double dTime
+		public float effectiveWeight
 		{
 			get
 			{
-				return this.m_Time;
+				return this.m_EffectiveWeight;
 			}
 		}
 
-		public double dLastTime
+		public float effectiveSpeed
 		{
 			get
 			{
-				return this.m_LastTime;
+				return this.m_EffectiveSpeed;
 			}
 		}
 
-		public double dDeltaTime
+		public FrameData.EvaluationType evaluationType
 		{
 			get
 			{
-				return this.m_Time - this.m_LastTime;
+				return ((this.m_Flags & FrameData.Flags.Evaluate) == (FrameData.Flags)0) ? FrameData.EvaluationType.Playback : FrameData.EvaluationType.Evaluate;
 			}
 		}
 
-		public double dtimeScale
+		public bool seekOccurred
 		{
 			get
 			{
-				return this.m_TimeScale;
+				return (this.m_Flags & FrameData.Flags.SeekOccured) != (FrameData.Flags)0;
 			}
 		}
 	}

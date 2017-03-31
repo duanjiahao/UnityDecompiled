@@ -15,8 +15,9 @@ namespace UnityEngine.EventSystems
 		{
 			if (!(this.eventCamera == null))
 			{
-				Ray r = this.eventCamera.ScreenPointToRay(eventData.position);
-				float f = this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane;
+				Ray r;
+				float f;
+				base.ComputeRayAndDistance(eventData, out r, out f);
 				if (ReflectionMethodsCache.Singleton.getRayIntersectionAll != null)
 				{
 					RaycastHit2D[] array = ReflectionMethodsCache.Singleton.getRayIntersectionAll(r, f, base.finalEventMask);

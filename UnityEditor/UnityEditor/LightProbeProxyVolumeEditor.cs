@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using UnityEditor.AnimatedValues;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
@@ -111,7 +112,7 @@ namespace UnityEditor
 				select new GUIContent(n.ToString())).ToArray<GUIContent>();
 				LightProbeProxyVolumeEditor.Styles.toolContents = new GUIContent[]
 				{
-					EditorGUIUtility.IconContent("EditCollider"),
+					PrimitiveBoundsHandle.editModeButton,
 					EditorGUIUtility.IconContent("MoveTool", "|Move the selected objects.")
 				};
 				LightProbeProxyVolumeEditor.Styles.sceneViewEditModes = new EditMode.SceneViewEditMode[]
@@ -155,9 +156,9 @@ namespace UnityEditor
 
 		internal static Color kGizmoLightProbeProxyVolumeHandleColor = new Color(1f, 0.8980392f, 0.6666667f, 1f);
 
-		private static int s_BoxHash = "LightProbeProxyVolumeEditorHash".GetHashCode();
+		private static int s_HandleControlIDHint = typeof(LightProbeProxyVolumeEditor).Name.GetHashCode();
 
-		private BoxEditor m_BoxEditor = new BoxEditor(true, LightProbeProxyVolumeEditor.s_BoxHash);
+		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(LightProbeProxyVolumeEditor.s_HandleControlIDHint);
 
 		private AnimBool m_ShowBoundingBoxOptions = new AnimBool();
 
@@ -270,15 +271,9 @@ namespace UnityEditor
 			this.m_ResolutionProbesPerUnit = base.serializedObject.FindProperty("m_ResolutionProbesPerUnit");
 			this.m_ProbePositionMode = base.serializedObject.FindProperty("m_ProbePositionMode");
 			this.m_RefreshMode = base.serializedObject.FindProperty("m_RefreshMode");
-			this.m_BoxEditor.OnEnable();
-			this.m_BoxEditor.SetAlwaysDisplayHandles(true);
-			this.m_BoxEditor.allowNegativeSize = false;
+			this.m_BoundsHandle.handleColor = LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeHandleColor;
+			this.m_BoundsHandle.wireframeColor = Color.clear;
 			this.UpdateShowOptions(true);
-		}
-
-		public void OnDisable()
-		{
-			this.m_BoxEditor.OnDisable();
 		}
 
 		private Bounds GetGlobalBounds()
@@ -470,15 +465,19 @@ namespace UnityEditor
 		private void DoBoxEditing()
 		{
 			LightProbeProxyVolume lightProbeProxyVolume = (LightProbeProxyVolume)base.target;
-			Vector3 sizeCustom = lightProbeProxyVolume.sizeCustom;
-			Vector3 originCustom = lightProbeProxyVolume.originCustom;
-			if (this.m_BoxEditor.OnSceneGUI(lightProbeProxyVolume.transform.localToWorldMatrix, LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeColor, LightProbeProxyVolumeEditor.kGizmoLightProbeProxyVolumeHandleColor, true, ref originCustom, ref sizeCustom))
+			using (new Handles.DrawingScope(lightProbeProxyVolume.transform.localToWorldMatrix))
 			{
-				Undo.RecordObject(lightProbeProxyVolume, "Modified Light Probe Proxy Volume AABB");
-				Vector3 originCustom2 = originCustom;
-				lightProbeProxyVolume.sizeCustom = sizeCustom;
-				lightProbeProxyVolume.originCustom = originCustom2;
-				EditorUtility.SetDirty(base.target);
+				this.m_BoundsHandle.center = lightProbeProxyVolume.originCustom;
+				this.m_BoundsHandle.size = lightProbeProxyVolume.sizeCustom;
+				EditorGUI.BeginChangeCheck();
+				this.m_BoundsHandle.DrawHandle();
+				if (EditorGUI.EndChangeCheck())
+				{
+					Undo.RecordObject(lightProbeProxyVolume, "Modified Light Probe Proxy Volume AABB");
+					lightProbeProxyVolume.originCustom = this.m_BoundsHandle.center;
+					lightProbeProxyVolume.sizeCustom = this.m_BoundsHandle.size;
+					EditorUtility.SetDirty(base.target);
+				}
 			}
 		}
 	}

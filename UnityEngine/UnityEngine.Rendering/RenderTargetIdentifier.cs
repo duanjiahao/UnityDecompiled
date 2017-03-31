@@ -57,5 +57,50 @@ namespace UnityEngine.Rendering
 		{
 			return new RenderTargetIdentifier(tex);
 		}
+
+		public override string ToString()
+		{
+			return UnityString.Format("Type {0} NameID {1} InstanceID {2}", new object[]
+			{
+				this.m_Type,
+				this.m_NameID,
+				this.m_InstanceID
+			});
+		}
+
+		public override int GetHashCode()
+		{
+			return (this.m_Type.GetHashCode() * 23 + this.m_NameID.GetHashCode()) * 23 + this.m_InstanceID.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			bool result;
+			if (!(obj is RenderTargetIdentifier))
+			{
+				result = false;
+			}
+			else
+			{
+				RenderTargetIdentifier renderTargetIdentifier = (RenderTargetIdentifier)obj;
+				result = (this.m_Type == renderTargetIdentifier.m_Type && this.m_NameID == renderTargetIdentifier.m_NameID && this.m_InstanceID == renderTargetIdentifier.m_InstanceID);
+			}
+			return result;
+		}
+
+		public bool Equals(RenderTargetIdentifier rhs)
+		{
+			return this.m_Type == rhs.m_Type && this.m_NameID == rhs.m_NameID && this.m_InstanceID == rhs.m_InstanceID;
+		}
+
+		public static bool operator ==(RenderTargetIdentifier lhs, RenderTargetIdentifier rhs)
+		{
+			return lhs.m_Type == rhs.m_Type && lhs.m_NameID == rhs.m_NameID && lhs.m_InstanceID == rhs.m_InstanceID;
+		}
+
+		public static bool operator !=(RenderTargetIdentifier lhs, RenderTargetIdentifier rhs)
+		{
+			return lhs.m_Type != rhs.m_Type || lhs.m_NameID != rhs.m_NameID || lhs.m_InstanceID != rhs.m_InstanceID;
+		}
 	}
 }

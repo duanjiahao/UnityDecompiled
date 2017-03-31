@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
 
 namespace UnityEditor.Animations
@@ -12,126 +13,157 @@ namespace UnityEditor.Animations
 
 		public extern int nameHash
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern Motion motion
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float speed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float cycleOffset
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool mirror
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool iKOnFeet
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool writeDefaultValues
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string tag
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string speedParameter
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string cycleOffsetParameter
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern string mirrorParameter
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool speedParameterActive
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool cycleOffsetParameterActive
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool mirrorParameterActive
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern AnimatorStateTransition[] transitions
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern StateMachineBehaviour[] behaviours
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -167,18 +199,23 @@ namespace UnityEditor.Animations
 			AnimatorState.Internal_Create(this);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorState mono);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddBehaviour(int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveBehaviour(int index);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern ScriptableObject Internal_AddStateMachineBehaviourWithType(Type stateMachineBehaviourType);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern MonoScript GetBehaviourMonoScript(int index);
 
@@ -230,6 +267,22 @@ namespace UnityEditor.Animations
 			return animatorStateTransition;
 		}
 
+		private void SetDefaultTransitionExitTime(ref AnimatorStateTransition newTransition)
+		{
+			newTransition.hasExitTime = true;
+			if (this.motion != null && this.motion.averageDuration > 0f)
+			{
+				float num = 0.25f / this.motion.averageDuration;
+				newTransition.duration = 0.25f;
+				newTransition.exitTime = 1f - num;
+			}
+			else
+			{
+				newTransition.duration = 0.25f;
+				newTransition.exitTime = 0.75f;
+			}
+		}
+
 		public AnimatorStateTransition AddTransition(AnimatorState destinationState)
 		{
 			AnimatorStateTransition animatorStateTransition = this.CreateTransition(false);
@@ -244,20 +297,6 @@ namespace UnityEditor.Animations
 			animatorStateTransition.destinationStateMachine = destinationStateMachine;
 			this.AddTransition(animatorStateTransition);
 			return animatorStateTransition;
-		}
-
-		private void SetDefaultTransitionExitTime(ref AnimatorStateTransition newTransition)
-		{
-			newTransition.hasExitTime = true;
-			if (this.motion != null)
-			{
-				if (this.motion.averageDuration > 0f)
-				{
-					float num = 0.25f / this.motion.averageDuration;
-					newTransition.duration = ((!newTransition.hasFixedDuration) ? num : 0.25f);
-					newTransition.exitTime = 1f - num;
-				}
-			}
 		}
 
 		public AnimatorStateTransition AddTransition(AnimatorState destinationState, bool defaultExitTime)
@@ -278,20 +317,13 @@ namespace UnityEditor.Animations
 
 		public AnimatorStateTransition AddExitTransition()
 		{
-			AnimatorStateTransition animatorStateTransition = this.CreateTransition(false);
-			animatorStateTransition.isExit = true;
-			this.AddTransition(animatorStateTransition);
-			return animatorStateTransition;
+			return this.AddExitTransition(false);
 		}
 
 		public AnimatorStateTransition AddExitTransition(bool defaultExitTime)
 		{
-			AnimatorStateTransition animatorStateTransition = this.CreateTransition(false);
+			AnimatorStateTransition animatorStateTransition = this.CreateTransition(defaultExitTime);
 			animatorStateTransition.isExit = true;
-			if (defaultExitTime)
-			{
-				this.SetDefaultTransitionExitTime(ref animatorStateTransition);
-			}
 			this.AddTransition(animatorStateTransition);
 			return animatorStateTransition;
 		}

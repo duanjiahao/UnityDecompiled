@@ -114,7 +114,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_DopeSheetEditor.selectionBounds;
+				return this.m_State.selectionBounds;
 			}
 		}
 
@@ -385,7 +385,7 @@ namespace UnityEditor
 			this.m_IsDragging = false;
 		}
 
-		private void OnStartMove(Vector2 position, bool rippleTime)
+		internal void OnStartMove(Vector2 position, bool rippleTime)
 		{
 			Bounds selectionBounds = this.selectionBounds;
 			this.m_IsDragging = true;
@@ -396,7 +396,7 @@ namespace UnityEditor
 			this.m_State.StartLiveEdit();
 		}
 
-		private void OnMove(Vector2 position)
+		internal void OnMove(Vector2 position)
 		{
 			Vector2 vector = position - this.m_Previous;
 			Matrix4x4 identity = Matrix4x4.identity;
@@ -404,7 +404,7 @@ namespace UnityEditor
 			this.TransformKeys(identity, false, false);
 		}
 
-		private void OnEndMove()
+		internal void OnEndMove()
 		{
 			this.m_State.EndLiveEdit();
 			this.m_IsDragging = false;

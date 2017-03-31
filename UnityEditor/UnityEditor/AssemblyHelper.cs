@@ -101,7 +101,7 @@ namespace UnityEditor
 		private static bool IgnoreAssembly(string assemblyPath, BuildTarget target)
 		{
 			bool result;
-			if (target == BuildTarget.WSAPlayer)
+			if (target == BuildTarget.WSAPlayer || (target == BuildTarget.XboxOne && PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.XboxOne) == ApiCompatibilityLevel.NET_4_6))
 			{
 				if (assemblyPath.IndexOf("mscorlib.dll") != -1 || assemblyPath.IndexOf("System.") != -1 || assemblyPath.IndexOf("Windows.dll") != -1 || assemblyPath.IndexOf("Microsoft.") != -1 || assemblyPath.IndexOf("Windows.") != -1 || assemblyPath.IndexOf("WinRTLegacy.dll") != -1 || assemblyPath.IndexOf("platform.dll") != -1)
 				{

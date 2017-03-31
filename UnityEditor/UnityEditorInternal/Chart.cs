@@ -36,6 +36,10 @@ namespace UnityEditorInternal
 			public GUIStyle whiteLabel = "ProfilerBadge";
 
 			public GUIStyle selectedLabel = "ProfilerSelectedLabel";
+
+			public Color selectedFrameColor1 = new Color(1f, 1f, 1f, 0.6f);
+
+			public Color selectedFrameColor2 = new Color(1f, 1f, 1f, 0.7f);
 		}
 
 		private static int s_ChartHash = "Charts".GetHashCode();
@@ -240,20 +244,28 @@ namespace UnityEditorInternal
 
 		private void DrawSelectedFrame(int selectedFrame, ChartData cdata, Rect r)
 		{
+			if (cdata.firstSelectableFrame != -1 && selectedFrame - cdata.firstSelectableFrame >= 0)
+			{
+				Chart.DrawVerticalLine(selectedFrame, cdata, r, Chart.ms_Styles.selectedFrameColor1, Chart.ms_Styles.selectedFrameColor2, 1f);
+			}
+		}
+
+		internal static void DrawVerticalLine(int frame, ChartData cdata, Rect r, Color color1, Color color2, float widthFactor)
+		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				if (cdata.firstSelectableFrame != -1 && selectedFrame - cdata.firstSelectableFrame >= 0)
+				frame -= cdata.firstFrame;
+				if (frame >= 0)
 				{
 					float num = (float)cdata.NumberOfFrames;
-					selectedFrame -= cdata.firstFrame;
 					HandleUtility.ApplyWireMaterial();
 					GL.Begin(7);
-					GL.Color(new Color(1f, 1f, 1f, 0.6f));
-					GL.Vertex3(r.x + r.width / num * (float)selectedFrame, r.y + 1f, 0f);
-					GL.Vertex3(r.x + r.width / num * (float)selectedFrame + r.width / num, r.y + 1f, 0f);
-					GL.Color(new Color(1f, 1f, 1f, 0.7f));
-					GL.Vertex3(r.x + r.width / num * (float)selectedFrame + r.width / num, r.yMax, 0f);
-					GL.Vertex3(r.x + r.width / num * (float)selectedFrame, r.yMax, 0f);
+					GL.Color(color1);
+					GL.Vertex3(r.x + r.width / num * (float)frame, r.y + 1f, 0f);
+					GL.Vertex3(r.x + r.width / num * (float)frame + r.width / num, r.y + 1f, 0f);
+					GL.Color(color2);
+					GL.Vertex3(r.x + r.width / num * (float)frame + r.width / num, r.yMax, 0f);
+					GL.Vertex3(r.x + r.width / num * (float)frame, r.yMax, 0f);
 					GL.End();
 				}
 			}
@@ -619,7 +631,7 @@ namespace UnityEditorInternal
 			}
 		}
 
-		private void DrawLabelDragger(Chart.ChartType type, Rect r, ChartData cdata)
+		protected virtual void DrawLabelDragger(Chart.ChartType type, Rect r, ChartData cdata)
 		{
 			Vector2 mousePosition = Event.current.mousePosition;
 			if (type == Chart.ChartType.StackedFill)
@@ -646,15 +658,21 @@ namespace UnityEditorInternal
 			{
 				for (int j = 0; j < cdata.charts.Length; j++)
 				{
-					Rect position2 = new Rect(r.x, r.y + 20f + (float)(j * 11), 170f, 11f);
 					GUI.backgroundColor = cdata.charts[j].color;
-					GUI.Label(position2, cdata.charts[j].name, Chart.ms_Styles.paneSubLabel);
+					string name = cdata.charts[j].name;
+					Chart.DrawSubLabel(r, j, name);
 				}
 			}
 			GUI.backgroundColor = Color.white;
 		}
 
-		private void LabelDraggerDrag(int chartControlID, Chart.ChartType chartType, ChartData cdata, Rect r, bool active)
+		protected static void DrawSubLabel(Rect r, int i, string name)
+		{
+			Rect position = new Rect(r.x, r.y + 20f + (float)(i * 11), 170f, 11f);
+			GUI.Label(position, name, Chart.ms_Styles.paneSubLabel);
+		}
+
+		protected internal virtual void LabelDraggerDrag(int chartControlID, Chart.ChartType chartType, ChartData cdata, Rect r, bool active)
 		{
 			if (chartType != Chart.ChartType.Line && active)
 			{
@@ -675,8 +693,7 @@ namespace UnityEditorInternal
 					{
 						if ((current.type == EventType.MouseUp && this.m_MouseDownIndex != -1) || current.type == EventType.MouseDown)
 						{
-							Rect rect = new Rect(r.x + 10f + 40f, r.y + 20f + (float)(num * 11), 9f, 9f);
-							if (rect.Contains(current.mousePosition))
+							if (Chart.GetToggleRect(r, num).Contains(current.mousePosition))
 							{
 								this.m_DragItemIndex = -1;
 								if (current.type == EventType.MouseUp && this.m_MouseDownIndex == i)
@@ -697,14 +714,14 @@ namespace UnityEditorInternal
 						}
 						if (current.type == EventType.MouseDown)
 						{
-							Rect rect2 = new Rect(r.x, r.y + 20f + (float)(num * 11), 170f, 11f);
-							if (rect2.Contains(current.mousePosition))
+							Rect rect = new Rect(r.x, r.y + 20f + (float)(num * 11), 170f, 11f);
+							if (rect.Contains(current.mousePosition))
 							{
 								this.m_MouseDownIndex = -1;
 								this.m_DragItemIndex = i;
 								this.m_DragDownPos = current.mousePosition;
-								this.m_DragDownPos.x = this.m_DragDownPos.x - rect2.x;
-								this.m_DragDownPos.y = this.m_DragDownPos.y - rect2.y;
+								this.m_DragDownPos.x = this.m_DragDownPos.x - rect.x;
+								this.m_DragDownPos.y = this.m_DragDownPos.y - rect.y;
 								this.m_ChartOrderBackup = new int[cdata.chartOrder.Length];
 								Array.Copy(cdata.chartOrder, this.m_ChartOrderBackup, this.m_ChartOrderBackup.Length);
 								GUIUtility.hotControl = chartControlID;
@@ -739,6 +756,11 @@ namespace UnityEditorInternal
 					}
 				}
 			}
+		}
+
+		protected static Rect GetToggleRect(Rect r, int idx)
+		{
+			return new Rect(r.x + 10f + 40f, r.y + 20f + (float)(idx * 11), 9f, 9f);
 		}
 
 		private void LoadChartsSettings(ChartData cdata)

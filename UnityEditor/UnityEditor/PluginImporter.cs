@@ -22,99 +22,14 @@ namespace UnityEditor
 			get;
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void ClearSettings();
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetCompatibleWithAnyPlatform(bool enable);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetCompatibleWithAnyPlatform();
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetExcludeFromAnyPlatform(string platformName, bool excludedFromAny);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetExcludeFromAnyPlatform(string platformName);
-
-		public void SetExcludeFromAnyPlatform(BuildTarget platform, bool excludedFromAny)
-		{
-			this.SetExcludeFromAnyPlatform(BuildPipeline.GetBuildTargetName(platform), excludedFromAny);
-		}
-
-		public bool GetExcludeFromAnyPlatform(BuildTarget platform)
-		{
-			return this.GetExcludeFromAnyPlatform(BuildPipeline.GetBuildTargetName(platform));
-		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetExcludeEditorFromAnyPlatform(bool excludedFromAny);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetExcludeEditorFromAnyPlatform();
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetCompatibleWithEditor(bool enable);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetCompatibleWithEditor();
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern void SetIsPreloaded(bool isPreloaded);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern bool GetIsPreloaded();
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetIsOverridable();
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool ShouldIncludeInBuild();
-
-		public void SetCompatibleWithPlatform(BuildTarget platform, bool enable)
-		{
-			this.SetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(platform), enable);
-		}
-
-		public bool GetCompatibleWithPlatform(BuildTarget platform)
-		{
-			return this.GetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(platform));
-		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetCompatibleWithPlatform(string platformName, bool enable);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool GetCompatibleWithPlatform(string platformName);
-
-		public void SetPlatformData(BuildTarget platform, string key, string value)
-		{
-			this.SetPlatformData(BuildPipeline.GetBuildTargetName(platform), key, value);
-		}
-
-		public string GetPlatformData(BuildTarget platform, string key)
-		{
-			return this.GetPlatformData(BuildPipeline.GetBuildTargetName(platform), key);
-		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetPlatformData(string platformName, string key, string value);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern string GetPlatformData(string platformName, string key);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetEditorData(string key, string value);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern string GetEditorData(string key);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern PluginImporter[] GetAllImporters();
-
 		private static bool IsCompatible(PluginImporter imp, string platformName)
 		{
 			return !string.IsNullOrEmpty(imp.assetPath) && (imp.GetCompatibleWithPlatform(platformName) || (imp.GetCompatibleWithAnyPlatform() && !imp.GetExcludeFromAnyPlatform(platformName))) && imp.ShouldIncludeInBuild();
+		}
+
+		private static bool IsCompatible(PluginImporter imp, string buildTargetGroup, string buildTarget)
+		{
+			return !string.IsNullOrEmpty(imp.assetPath) && (imp.GetCompatibleWithPlatform(buildTargetGroup, buildTarget) || imp.GetCompatibleWithAnyPlatform());
 		}
 
 		public static PluginImporter[] GetImporters(string platformName)
@@ -177,6 +92,18 @@ namespace UnityEditor
 			return PluginImporter.GetImporters(BuildPipeline.GetBuildTargetName(platform));
 		}
 
+		public static PluginImporter[] GetImporters(string buildTargetGroup, string buildTarget)
+		{
+			return (from imp in PluginImporter.GetAllImporters()
+			where PluginImporter.IsCompatible(imp, buildTargetGroup, buildTarget)
+			select imp).ToArray<PluginImporter>();
+		}
+
+		public static PluginImporter[] GetImporters(BuildTargetGroup buildTargetGroup, BuildTarget buildTarget)
+		{
+			return PluginImporter.GetImporters(BuildPipeline.GetBuildTargetGroupName(buildTargetGroup), BuildPipeline.GetBuildTargetName(buildTarget));
+		}
+
 		[DebuggerHidden]
 		internal static IEnumerable<PluginDesc> GetExtensionPlugins(BuildTarget target)
 		{
@@ -186,5 +113,128 @@ namespace UnityEditor
 			expr_0E.$PC = -2;
 			return expr_0E;
 		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void ClearSettings();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetCompatibleWithAnyPlatform(bool enable);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetCompatibleWithAnyPlatform();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetExcludeFromAnyPlatform(string platformName, bool excludedFromAny);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetExcludeFromAnyPlatform(string platformName);
+
+		public void SetExcludeFromAnyPlatform(BuildTarget platform, bool excludedFromAny)
+		{
+			this.SetExcludeFromAnyPlatform(BuildPipeline.GetBuildTargetName(platform), excludedFromAny);
+		}
+
+		public bool GetExcludeFromAnyPlatform(BuildTarget platform)
+		{
+			return this.GetExcludeFromAnyPlatform(BuildPipeline.GetBuildTargetName(platform));
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetExcludeEditorFromAnyPlatform(bool excludedFromAny);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetExcludeEditorFromAnyPlatform();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetCompatibleWithEditor(bool enable);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetCompatibleWithEditorWithBuildTargetsInternal(BuildTargetGroup buildTargetGroup, BuildTarget buildTarget, bool enable);
+
+		internal void SetCompatibleWithEditor(BuildTargetGroup buildTargetGroup, BuildTarget buildTarget, bool enable)
+		{
+			this.SetCompatibleWithEditorWithBuildTargetsInternal(buildTargetGroup, buildTarget, enable);
+		}
+
+		public bool GetCompatibleWithEditor()
+		{
+			return this.GetCompatibleWithEditor("", "");
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetCompatibleWithEditor(string buildTargetGroup, string buildTarget);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetIsPreloaded(bool isPreloaded);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern bool GetIsPreloaded();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetIsOverridable();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool ShouldIncludeInBuild();
+
+		public void SetCompatibleWithPlatform(BuildTarget platform, bool enable)
+		{
+			this.SetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(platform), enable);
+		}
+
+		internal void SetCompatibleWithPlatform(BuildTargetGroup buildTargetGroup, BuildTarget buildTarget, bool enable)
+		{
+			this.SetCompatibleWithPlatform(BuildPipeline.GetBuildTargetGroupName(buildTargetGroup), BuildPipeline.GetBuildTargetName(buildTarget), enable);
+		}
+
+		public bool GetCompatibleWithPlatform(BuildTarget platform)
+		{
+			return this.GetCompatibleWithPlatform(BuildPipeline.GetBuildTargetName(platform));
+		}
+
+		internal bool GetCompatibleWithPlatform(BuildTargetGroup buildTargetGroup, BuildTarget buildTarget)
+		{
+			return this.GetCompatibleWithPlatform(BuildPipeline.GetBuildTargetGroupName(buildTargetGroup), BuildPipeline.GetBuildTargetName(buildTarget));
+		}
+
+		public void SetCompatibleWithPlatform(string platformName, bool enable)
+		{
+			this.SetCompatibleWithPlatform(BuildPipeline.GetBuildTargetGroupName(BuildPipeline.GetBuildTargetByName(platformName)), platformName, enable);
+		}
+
+		public bool GetCompatibleWithPlatform(string platformName)
+		{
+			return this.GetCompatibleWithPlatform(BuildPipeline.GetBuildTargetGroupName(BuildPipeline.GetBuildTargetByName(platformName)), platformName);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void SetCompatibleWithPlatform(string buildTargetGroup, string buildTarget, bool enable);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern bool GetCompatibleWithPlatform(string buildTargetGroup, string buildTarget);
+
+		public void SetPlatformData(BuildTarget platform, string key, string value)
+		{
+			this.SetPlatformData(BuildPipeline.GetBuildTargetName(platform), key, value);
+		}
+
+		public string GetPlatformData(BuildTarget platform, string key)
+		{
+			return this.GetPlatformData(BuildPipeline.GetBuildTargetName(platform), key);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetPlatformData(string platformName, string key, string value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetPlatformData(string platformName, string key);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetEditorData(string key, string value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetEditorData(string key);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern PluginImporter[] GetAllImporters();
 	}
 }

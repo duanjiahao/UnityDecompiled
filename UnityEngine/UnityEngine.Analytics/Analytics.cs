@@ -7,6 +7,47 @@ namespace UnityEngine.Analytics
 	{
 		private static UnityAnalyticsHandler s_UnityAnalyticsHandler;
 
+		public static bool limitUserTracking
+		{
+			get
+			{
+				return UnityAnalyticsHandler.limitUserTracking;
+			}
+			set
+			{
+				UnityAnalyticsHandler.limitUserTracking = value;
+			}
+		}
+
+		public static bool deviceStatsEnabled
+		{
+			get
+			{
+				return UnityAnalyticsHandler.deviceStatsEnabled;
+			}
+			set
+			{
+				UnityAnalyticsHandler.deviceStatsEnabled = value;
+			}
+		}
+
+		public static bool enabled
+		{
+			get
+			{
+				UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+				return unityAnalyticsHandler != null && unityAnalyticsHandler.enabled;
+			}
+			set
+			{
+				UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
+				if (unityAnalyticsHandler != null)
+				{
+					unityAnalyticsHandler.enabled = value;
+				}
+			}
+		}
+
 		internal static UnityAnalyticsHandler GetUnityAnalyticsHandler()
 		{
 			if (Analytics.s_UnityAnalyticsHandler == null)
@@ -110,7 +151,7 @@ namespace UnityEngine.Analytics
 			return result;
 		}
 
-		internal static AnalyticsResult Transaction(string productId, decimal amount, string currency, string receiptPurchaseData, string signature, bool usingIAPService)
+		public static AnalyticsResult Transaction(string productId, decimal amount, string currency, string receiptPurchaseData, string signature, bool usingIAPService)
 		{
 			UnityAnalyticsHandler unityAnalyticsHandler = Analytics.GetUnityAnalyticsHandler();
 			AnalyticsResult result;

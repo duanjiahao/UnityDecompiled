@@ -138,12 +138,17 @@ namespace UnityEditor
 				return result;
 			}
 
-			public void BoneDotGUI(Rect rect, int boneIndex, bool doClickSelect, bool doDragDrop, SerializedObject serializedObject, AvatarMappingEditor editor)
+			public void BoneDotGUI(Rect rect, Rect selectRect, int boneIndex, bool doClickSelect, bool doDragDrop, bool doDeleteKey, SerializedObject serializedObject, AvatarMappingEditor editor)
 			{
 				int controlID = GUIUtility.GetControlID(FocusType.Passive, rect);
+				int controlID2 = GUIUtility.GetControlID(FocusType.Keyboard, selectRect);
 				if (doClickSelect)
 				{
-					this.HandleClickSelection(rect, boneIndex);
+					this.HandleClickSelection(controlID2, selectRect, boneIndex);
+				}
+				if (doDeleteKey)
+				{
+					this.HandleDeleteSelection(controlID2, serializedObject, editor);
 				}
 				if (doDragDrop)
 				{
@@ -188,19 +193,41 @@ namespace UnityEditor
 				GUI.color = color;
 			}
 
-			public void HandleClickSelection(Rect selectRect, int boneIndex)
+			public void HandleClickSelection(int keyboardID, Rect selectRect, int boneIndex)
 			{
 				Event current = Event.current;
 				if (current.type == EventType.MouseDown && selectRect.Contains(current.mousePosition))
 				{
 					AvatarMappingEditor.s_SelectedBoneIndex = boneIndex;
 					AvatarMappingEditor.s_DirtySelection = true;
+					AvatarMappingEditor.s_KeyboardControl = keyboardID;
 					Selection.activeTransform = this.bone;
 					if (this.bone != null)
 					{
 						EditorGUIUtility.PingObject(this.bone);
 					}
 					current.Use();
+				}
+			}
+
+			public void HandleDeleteSelection(int keyboardID, SerializedObject serializedObject, AvatarMappingEditor editor)
+			{
+				Event current = Event.current;
+				if (current.type == EventType.KeyDown)
+				{
+					if (GUIUtility.keyboardControl == keyboardID)
+					{
+						if (current.keyCode == KeyCode.Backspace || current.keyCode == KeyCode.Delete)
+						{
+							Undo.RegisterCompleteObjectUndo(editor, "Avatar mapping modified");
+							this.bone = null;
+							this.state = BoneState.None;
+							this.Serialize(serializedObject);
+							Selection.activeTransform = null;
+							GUI.changed = true;
+							current.Use();
+						}
+					}
 				}
 			}
 
@@ -287,31 +314,6 @@ namespace UnityEditor
 			}
 		}
 
-		private class TransformHierarchySorter : IComparer<Transform>
-		{
-			public int Compare(Transform a, Transform b)
-			{
-				int result;
-				while (!(a == null))
-				{
-					if (b == null)
-					{
-						result = 1;
-						return result;
-					}
-					a = a.parent;
-					b = b.parent;
-				}
-				if (b == null)
-				{
-					result = 0;
-					return result;
-				}
-				result = -1;
-				return result;
-			}
-		}
-
 		private class SkinTransformHierarchySorter : IComparer<SkinnedMeshRenderer>
 		{
 			public int Compare(SkinnedMeshRenderer skinA, SkinnedMeshRenderer skinB)
@@ -355,64 +357,6 @@ namespace UnityEditor
 
 		internal static string sScale = "m_Scale";
 
-		internal static int[] sHumanParent = new int[]
-		{
-			0,
-			0,
-			0,
-			1,
-			2,
-			3,
-			4,
-			0,
-			7,
-			8,
-			9,
-			8,
-			8,
-			11,
-			12,
-			13,
-			14,
-			15,
-			16,
-			5,
-			6,
-			10,
-			10,
-			10,
-			17,
-			24,
-			25,
-			17,
-			27,
-			28,
-			17,
-			30,
-			31,
-			17,
-			33,
-			34,
-			17,
-			36,
-			37,
-			18,
-			39,
-			40,
-			18,
-			42,
-			43,
-			18,
-			45,
-			46,
-			18,
-			48,
-			49,
-			18,
-			51,
-			52
-		};
-
 		private static AvatarSetupTool.BonePoseData[] sBonePoses = new AvatarSetupTool.BonePoseData[]
 		{
 			new AvatarSetupTool.BonePoseData(Vector3.up, true, 15f),
@@ -425,11 +369,13 @@ namespace UnityEditor
 			new AvatarSetupTool.BonePoseData(Vector3.up, true, 30f, new int[]
 			{
 				8,
+				54,
 				9,
 				10
 			}),
 			new AvatarSetupTool.BonePoseData(Vector3.up, true, 30f, new int[]
 			{
+				54,
 				9,
 				10
 			}),
@@ -483,7 +429,12 @@ namespace UnityEditor
 			new AvatarSetupTool.BonePoseData(Vector3.right, false, 5f),
 			new AvatarSetupTool.BonePoseData(Vector3.right, false, 10f),
 			new AvatarSetupTool.BonePoseData(Vector3.right, false, 5f),
-			new AvatarSetupTool.BonePoseData(Vector3.right, false, 5f)
+			new AvatarSetupTool.BonePoseData(Vector3.right, false, 5f),
+			new AvatarSetupTool.BonePoseData(Vector3.up, true, 30f, new int[]
+			{
+				9,
+				10
+			})
 		};
 
 		public static Dictionary<Transform, bool> GetModelBones(Transform root, bool includeAll, AvatarSetupTool.BoneWrapper[] humanBones)
@@ -651,10 +602,10 @@ namespace UnityEditor
 
 		public static int GetFirstHumanBoneAncestor(AvatarSetupTool.BoneWrapper[] bones, int boneIndex)
 		{
-			boneIndex = AvatarSetupTool.sHumanParent[boneIndex];
-			while (bones[boneIndex].bone == null && boneIndex != 0)
+			boneIndex = HumanTrait.GetParentBone(boneIndex);
+			while (boneIndex > 0 && bones[boneIndex].bone == null)
 			{
-				boneIndex = AvatarSetupTool.sHumanParent[boneIndex];
+				boneIndex = HumanTrait.GetParentBone(boneIndex);
 			}
 			return boneIndex;
 		}
@@ -662,9 +613,9 @@ namespace UnityEditor
 		public static int GetHumanBoneChild(AvatarSetupTool.BoneWrapper[] bones, int boneIndex)
 		{
 			int result;
-			for (int i = 0; i < AvatarSetupTool.sHumanParent.Length; i++)
+			for (int i = 0; i < HumanTrait.BoneCount; i++)
 			{
-				if (AvatarSetupTool.sHumanParent[i] == boneIndex)
+				if (HumanTrait.GetParentBone(i) == boneIndex)
 				{
 					result = i;
 					return result;
@@ -1336,15 +1287,18 @@ namespace UnityEditor
 			AvatarSetupTool.BonePoseData bonePoseData = AvatarSetupTool.sBonePoses[boneIndex];
 			if (!bonePoseData.compareInGlobalSpace)
 			{
-				int num = AvatarSetupTool.sHumanParent[boneIndex];
-				AvatarSetupTool.BonePoseData bonePoseData2 = AvatarSetupTool.sBonePoses[num];
-				if (bones[num].bone != null && bonePoseData2 != null)
+				int parentBone = HumanTrait.GetParentBone(boneIndex);
+				if (parentBone > 0)
 				{
-					Vector3 boneAlignmentDirection = AvatarSetupTool.GetBoneAlignmentDirection(bones, avatarOrientation, num);
-					if (boneAlignmentDirection != Vector3.zero)
+					AvatarSetupTool.BonePoseData bonePoseData2 = AvatarSetupTool.sBonePoses[parentBone];
+					if (bones[parentBone].bone != null && bonePoseData2 != null)
 					{
-						Vector3 fromDirection = avatarOrientation * bonePoseData2.direction;
-						lhs = Quaternion.FromToRotation(fromDirection, boneAlignmentDirection);
+						Vector3 boneAlignmentDirection = AvatarSetupTool.GetBoneAlignmentDirection(bones, avatarOrientation, parentBone);
+						if (boneAlignmentDirection != Vector3.zero)
+						{
+							Vector3 fromDirection = avatarOrientation * bonePoseData2.direction;
+							lhs = Quaternion.FromToRotation(fromDirection, boneAlignmentDirection);
+						}
 					}
 				}
 			}

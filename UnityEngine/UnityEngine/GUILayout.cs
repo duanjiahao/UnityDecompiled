@@ -743,7 +743,7 @@ namespace UnityEngine
 
 		public static void BeginArea(Rect screenRect, GUIContent content)
 		{
-			GUILayout.BeginArea(screenRect, GUIContent.none, GUIStyle.none);
+			GUILayout.BeginArea(screenRect, content, GUIStyle.none);
 		}
 
 		public static void BeginArea(Rect screenRect, GUIStyle style)

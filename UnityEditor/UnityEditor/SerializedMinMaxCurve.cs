@@ -46,7 +46,15 @@ namespace UnityEditor
 			}
 			set
 			{
-				this.SetMinMaxState(value);
+				this.SetMinMaxState(value, true);
+			}
+		}
+
+		public bool stateHasMultipleDifferentValues
+		{
+			get
+			{
+				return this.minMaxState.hasMultipleDifferentValues;
 			}
 		}
 
@@ -116,30 +124,35 @@ namespace UnityEditor
 
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName)
 		{
-			this.Init(m, displayName, "curve", false, false);
+			this.Init(m, displayName, "curve", false, false, true);
 		}
 
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name)
 		{
-			this.Init(m, displayName, name, false, false);
+			this.Init(m, displayName, name, false, false, true);
 		}
 
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, bool signedRange)
 		{
-			this.Init(m, displayName, "curve", signedRange, false);
+			this.Init(m, displayName, "curve", signedRange, false, true);
 		}
 
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name, bool signedRange)
 		{
-			this.Init(m, displayName, name, signedRange, false);
+			this.Init(m, displayName, name, signedRange, false, true);
 		}
 
 		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name, bool signedRange, bool useProp0)
 		{
-			this.Init(m, displayName, name, signedRange, useProp0);
+			this.Init(m, displayName, name, signedRange, useProp0, true);
 		}
 
-		private void Init(ModuleUI m, GUIContent displayName, string uniqueName, bool signedRange, bool useProp0)
+		public SerializedMinMaxCurve(ModuleUI m, GUIContent displayName, string name, bool signedRange, bool useProp0, bool addCurveIfNeeded)
+		{
+			this.Init(m, displayName, name, signedRange, useProp0, addCurveIfNeeded);
+		}
+
+		private void Init(ModuleUI m, GUIContent displayName, string uniqueName, bool signedRange, bool useProp0, bool addCurveIfNeeded)
 		{
 			this.m_Module = m;
 			this.m_DisplayName = displayName;
@@ -156,11 +169,14 @@ namespace UnityEditor
 			this.minCurve = ((!useProp0) ? m.GetProperty(this.m_Name, "minCurve") : m.GetProperty0(this.m_Name, "minCurve"));
 			this.minCurveFirstKeyValue = this.minCurve.FindPropertyRelative("m_Curve.Array.data[0].value");
 			this.minMaxState = ((!useProp0) ? m.GetProperty(this.m_Name, "minMaxState") : m.GetProperty0(this.m_Name, "minMaxState"));
-			if (this.state == MinMaxCurveState.k_Curve || this.state == MinMaxCurveState.k_TwoCurves)
+			if (addCurveIfNeeded)
 			{
-				if (this.m_Module.m_ParticleSystemUI.m_ParticleEffectUI.IsParticleSystemUIVisible(this.m_Module.m_ParticleSystemUI))
+				if (this.state == MinMaxCurveState.k_Curve || this.state == MinMaxCurveState.k_TwoCurves)
 				{
-					m.GetParticleSystemCurveEditor().AddCurveDataIfNeeded(this.GetUniqueCurveName(), this.CreateCurveData(Color.black));
+					if (this.m_Module.m_ParticleSystemUI.m_ParticleEffectUI.IsParticleSystemUIVisible(this.m_Module.m_ParticleSystemUI))
+					{
+						m.GetParticleSystemCurveEditor().AddCurveDataIfNeeded(this.GetUniqueCurveName(), this.CreateCurveData(Color.black));
+					}
 				}
 			}
 			m.AddToModuleCurves(this.maxCurve);
@@ -259,32 +275,39 @@ namespace UnityEditor
 			}
 		}
 
-		private void SetMinMaxState(MinMaxCurveState newState)
+		public void SetMinMaxState(MinMaxCurveState newState, bool addToCurveEditor = true)
 		{
-			if (newState != this.state)
+			if (!this.stateHasMultipleDifferentValues)
 			{
-				MinMaxCurveState state = this.state;
-				ParticleSystemCurveEditor particleSystemCurveEditor = this.m_Module.GetParticleSystemCurveEditor();
-				if (particleSystemCurveEditor.IsAdded(this.GetMinCurve(), this.maxCurve))
+				if (newState == this.state)
 				{
-					particleSystemCurveEditor.RemoveCurve(this.GetMinCurve(), this.maxCurve);
+					return;
 				}
-				switch (newState)
-				{
-				case MinMaxCurveState.k_Scalar:
-					this.InitSingleScalar(state);
-					break;
-				case MinMaxCurveState.k_Curve:
-					this.InitSingleCurve(state);
-					break;
-				case MinMaxCurveState.k_TwoCurves:
-					this.InitDoubleCurves(state);
-					break;
-				case MinMaxCurveState.k_TwoScalars:
-					this.InitDoubleScalars(state);
-					break;
-				}
-				this.minMaxState.intValue = (int)newState;
+			}
+			MinMaxCurveState state = this.state;
+			ParticleSystemCurveEditor particleSystemCurveEditor = this.m_Module.GetParticleSystemCurveEditor();
+			if (particleSystemCurveEditor.IsAdded(this.GetMinCurve(), this.maxCurve))
+			{
+				particleSystemCurveEditor.RemoveCurve(this.GetMinCurve(), this.maxCurve);
+			}
+			switch (newState)
+			{
+			case MinMaxCurveState.k_Scalar:
+				this.InitSingleScalar(state);
+				break;
+			case MinMaxCurveState.k_Curve:
+				this.InitSingleCurve(state);
+				break;
+			case MinMaxCurveState.k_TwoCurves:
+				this.InitDoubleCurves(state);
+				break;
+			case MinMaxCurveState.k_TwoScalars:
+				this.InitDoubleScalars(state);
+				break;
+			}
+			this.minMaxState.intValue = (int)newState;
+			if (addToCurveEditor)
+			{
 				switch (newState)
 				{
 				case MinMaxCurveState.k_Scalar:
@@ -298,8 +321,8 @@ namespace UnityEditor
 					Debug.LogError("Unhandled enum value");
 					break;
 				}
-				AnimationCurvePreviewCache.ClearCache();
 			}
+			AnimationCurvePreviewCache.ClearCache();
 		}
 
 		private void InitSingleScalar(MinMaxCurveState oldState)
@@ -464,7 +487,7 @@ namespace UnityEditor
 
 		public string GetUniqueCurveName()
 		{
-			return SerializedModule.Concat(this.m_Module.GetUniqueModuleName(), this.m_Name);
+			return SerializedModule.Concat(this.m_Module.GetUniqueModuleName(this.m_Module.serializedObject.targetObject), this.m_Name);
 		}
 
 		public bool SupportsProcedural()

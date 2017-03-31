@@ -1,7 +1,9 @@
 using System;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct Plane
 	{
 		private Vector3 m_Normal;

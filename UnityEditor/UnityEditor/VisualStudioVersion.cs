@@ -10,6 +10,6 @@ namespace UnityEditor
 		VisualStudio2012,
 		VisualStudio2013,
 		VisualStudio2015 = 14,
-		VisualStudio15
+		VisualStudio2017
 	}
 }

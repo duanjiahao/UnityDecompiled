@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
 
 namespace UnityEngine.Networking
@@ -48,7 +50,8 @@ namespace UnityEngine.Networking
 			SSLCACertError,
 			UnrecognizedContentEncoding,
 			LoginFailed,
-			SSLShutdownFailed
+			SSLShutdownFailed,
+			NoInternetConnection
 		}
 
 		[NonSerialized]
@@ -162,14 +165,17 @@ namespace UnityEngine.Networking
 
 		public extern string error
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool useHttpContinue
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -189,80 +195,96 @@ namespace UnityEngine.Networking
 
 		public extern long responseCode
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float uploadProgress
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isModifiable
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isDone
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isError
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern float downloadProgress
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ulong uploadedBytes
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern ulong downloadedBytes
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int redirectLimit
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool chunkedTransfer
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern UploadHandler uploadHandler
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern DownloadHandler downloadHandler
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -325,7 +347,27 @@ namespace UnityEngine.Networking
 
 		public static UnityWebRequest GetAudioClip(string uri, AudioType audioType)
 		{
-			return new UnityWebRequest(uri, "GET", new DownloadHandlerAudioClip(uri, audioType), null);
+			Type type = Type.GetType("UnityEngine.Networking.DownloadHandlerAudioClip");
+			UnityWebRequest result;
+			if (type == null)
+			{
+				result = UnityWebRequest.Get(uri);
+			}
+			else
+			{
+				ConstructorInfo constructor = type.GetConstructor(new Type[]
+				{
+					typeof(string),
+					typeof(AudioType)
+				});
+				UnityWebRequest unityWebRequest = new UnityWebRequest(uri, "GET", constructor.Invoke(new object[]
+				{
+					uri,
+					audioType
+				}) as DownloadHandler, null);
+				result = unityWebRequest;
+			}
+			return result;
 		}
 
 		public static UnityWebRequest GetAssetBundle(string uri)
@@ -512,10 +554,11 @@ namespace UnityEngine.Networking
 			return Encoding.UTF8.GetBytes(text);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreate();
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalDestroy();
 
@@ -552,9 +595,11 @@ namespace UnityEngine.Networking
 			GC.SuppressFinalize(this);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern AsyncOperation InternalBegin();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalAbort();
 
@@ -568,30 +613,39 @@ namespace UnityEngine.Networking
 			this.InternalAbort();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalSetMethod(UnityWebRequest.UnityWebRequestMethod methodType);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalSetCustomMethod(string customMethodName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int InternalGetMethod();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string InternalGetCustomMethod();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int InternalGetError();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern string InternalGetUrl();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalSetUrl(string url);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetRequestHeader(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalSetRequestHeader(string name, string value);
 
@@ -616,9 +670,11 @@ namespace UnityEngine.Networking
 			this.InternalSetRequestHeader(name, value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetResponseHeader(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string[] InternalGetResponseHeaderKeys();
 

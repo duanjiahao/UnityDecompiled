@@ -93,11 +93,11 @@ namespace UnityEditor
 			{
 				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.AnyCPU;
 			}
-			else if (x86 && !x64)
+			else if (x86)
 			{
 				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.x86;
 			}
-			else if (!x86 && x64)
+			else if (x64)
 			{
 				result = DesktopPluginImporterExtension.DesktopPluginCPUArchitecture.x86_64;
 			}

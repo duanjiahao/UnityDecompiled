@@ -264,7 +264,7 @@ namespace UnityEditor
 					GUILayout.ExpandWidth(false)
 				});
 				Rect position = new Rect(rect.xMax - 16f, rect.y, 16f, rect.height);
-				if (EditorGUI.ButtonMouseDown(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
+				if (EditorGUI.DropdownButton(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
 				{
 					Rect last = GUILayoutUtility.topLevel.GetLast();
 					PopupWindow.Show(last, new ShaderInspectorPlatformsPopup(s));

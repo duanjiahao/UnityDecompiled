@@ -11,6 +11,11 @@ namespace UnityEngineInternal
 		Directionality,
 		Baked,
 		BakedDirectional,
-		InputWorkspace
+		InputWorkspace,
+		BakedShadowMask,
+		BakedAlbedo,
+		BakedEmissive,
+		BakedCharting,
+		BakedTexelValidity
 	}
 }

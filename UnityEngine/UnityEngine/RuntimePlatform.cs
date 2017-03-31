@@ -49,6 +49,7 @@ namespace UnityEngine
 		XboxOne,
 		SamsungTVPlayer,
 		WiiU = 30,
-		tvOS
+		tvOS,
+		Switch
 	}
 }

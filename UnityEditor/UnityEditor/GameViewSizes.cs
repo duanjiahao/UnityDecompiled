@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.VR;
 
 namespace UnityEditor
 {
@@ -24,6 +25,9 @@ namespace UnityEditor
 
 		[SerializeField]
 		private GameViewSizeGroup m_N3DS = new GameViewSizeGroup();
+
+		[SerializeField]
+		private GameViewSizeGroup m_HMD = new GameViewSizeGroup();
 
 		[NonSerialized]
 		private GameViewSize m_Remote = null;
@@ -92,6 +96,9 @@ namespace UnityEditor
 			case GameViewSizeGroupType.N3DS:
 				result = this.m_N3DS;
 				break;
+			case GameViewSizeGroupType.HMD:
+				result = this.m_HMD;
+				break;
 			default:
 				Debug.LogError("Unhandled group enum! " + gameViewSizeGroupType);
 				result = this.m_Standalone;
@@ -132,6 +139,10 @@ namespace UnityEditor
 			{
 				this.m_LastRemoteScreenSize = new Vector2(InternalEditorUtility.remoteScreenWidth, InternalEditorUtility.remoteScreenHeight);
 				this.RefreshRemoteScreenSize((int)this.m_LastRemoteScreenSize.x, (int)this.m_LastRemoteScreenSize.y);
+			}
+			if (VRSettings.isDeviceActive && this.m_Remote.width != VRSettings.eyeTextureWidth && this.m_Remote.height != VRSettings.eyeTextureHeight)
+			{
+				this.RefreshRemoteScreenSize(VRSettings.eyeTextureWidth, VRSettings.eyeTextureHeight);
 			}
 		}
 
@@ -280,6 +291,11 @@ namespace UnityEditor
 					gameViewSize39,
 					gameViewSize40
 				});
+				this.m_HMD.AddBuiltinSizes(new GameViewSize[]
+				{
+					gameViewSize,
+					this.m_Remote
+				});
 			}
 		}
 
@@ -312,18 +328,30 @@ namespace UnityEditor
 			}
 			else if (ScriptableSingleton<GameViewSizes>.instance.IsRemoteScreenSize(groupType, gameViewSizeIndex))
 			{
-				if (InternalEditorUtility.remoteScreenWidth <= 0f || InternalEditorUtility.remoteScreenHeight <= 0f)
+				int num;
+				int num2;
+				if (VRSettings.isDeviceActive)
 				{
-					gameViewSize.sizeType = GameViewSizeType.AspectRatio;
-					int num = 0;
-					gameViewSize.height = num;
-					gameViewSize.width = num;
+					num = VRSettings.eyeTextureWidth;
+					num2 = VRSettings.eyeTextureHeight;
 				}
 				else
 				{
+					num = (int)InternalEditorUtility.remoteScreenWidth;
+					num2 = (int)InternalEditorUtility.remoteScreenHeight;
+				}
+				if (num > 0 && num2 > 0)
+				{
 					gameViewSize.sizeType = GameViewSizeType.FixedResolution;
-					gameViewSize.width = (int)InternalEditorUtility.remoteScreenWidth;
-					gameViewSize.height = (int)InternalEditorUtility.remoteScreenHeight;
+					gameViewSize.width = num;
+					gameViewSize.height = num2;
+				}
+				else
+				{
+					gameViewSize.sizeType = GameViewSizeType.AspectRatio;
+					int num3 = 0;
+					gameViewSize.height = num3;
+					gameViewSize.width = num3;
 				}
 			}
 		}
@@ -428,20 +456,22 @@ namespace UnityEditor
 			float num3 = vector.x * vector.y;
 			if (num3 > num2)
 			{
-				vector *= num2 / num3;
+				float num4 = vector.x / vector.y;
+				vector.x = Mathf.Sqrt(num2 * num4);
+				vector.y = num4 * vector.x;
 				clamped = true;
 			}
 			float b = 8192f;
-			float num4 = Mathf.Min((float)SystemInfo.maxRenderTextureSize, b);
-			if (vector.x > num4 || vector.y > num4)
+			float num5 = Mathf.Min((float)SystemInfo.maxRenderTextureSize, b);
+			if (vector.x > num5 || vector.y > num5)
 			{
 				if (vector.x > vector.y)
 				{
-					vector *= num4 / vector.x;
+					vector *= num5 / vector.x;
 				}
 				else
 				{
-					vector *= num4 / vector.y;
+					vector *= num5 / vector.y;
 				}
 				clamped = true;
 			}
@@ -456,48 +486,47 @@ namespace UnityEditor
 
 		public static GameViewSizeGroupType BuildTargetGroupToGameViewSizeGroup(BuildTargetGroup buildTargetGroup)
 		{
-			switch (buildTargetGroup)
+			GameViewSizeGroupType result;
+			if (!VRSettings.enabled || !VRSettings.showDeviceView)
 			{
-			case BuildTargetGroup.Standalone:
-			{
-				GameViewSizeGroupType result = GameViewSizeGroupType.Standalone;
-				return result;
-			}
-			case BuildTargetGroup.WebPlayer:
-			case (BuildTargetGroup)3:
-			{
-				IL_19:
-				GameViewSizeGroupType result;
-				if (buildTargetGroup == BuildTargetGroup.N3DS)
+				switch (buildTargetGroup)
 				{
-					result = GameViewSizeGroupType.N3DS;
-					return result;
-				}
-				if (buildTargetGroup == BuildTargetGroup.WiiU)
-				{
-					result = GameViewSizeGroupType.WiiU;
-					return result;
-				}
-				if (buildTargetGroup == BuildTargetGroup.Android)
-				{
-					result = GameViewSizeGroupType.Android;
-					return result;
-				}
-				if (buildTargetGroup != BuildTargetGroup.Tizen)
-				{
+				case BuildTargetGroup.Standalone:
 					result = GameViewSizeGroupType.Standalone;
 					return result;
+				case BuildTargetGroup.WebPlayer:
+				case (BuildTargetGroup)3:
+					IL_35:
+					if (buildTargetGroup == BuildTargetGroup.N3DS)
+					{
+						result = GameViewSizeGroupType.N3DS;
+						return result;
+					}
+					if (buildTargetGroup == BuildTargetGroup.WiiU)
+					{
+						result = GameViewSizeGroupType.WiiU;
+						return result;
+					}
+					if (buildTargetGroup == BuildTargetGroup.Android)
+					{
+						result = GameViewSizeGroupType.Android;
+						return result;
+					}
+					if (buildTargetGroup != BuildTargetGroup.Tizen)
+					{
+						result = GameViewSizeGroupType.Standalone;
+						return result;
+					}
+					result = GameViewSizeGroupType.Tizen;
+					return result;
+				case BuildTargetGroup.iPhone:
+					result = GameViewSizeGroupType.iOS;
+					return result;
 				}
-				result = GameViewSizeGroupType.Tizen;
-				return result;
+				goto IL_35;
 			}
-			case BuildTargetGroup.iPhone:
-			{
-				GameViewSizeGroupType result = GameViewSizeGroupType.iOS;
-				return result;
-			}
-			}
-			goto IL_19;
+			result = GameViewSizeGroupType.HMD;
+			return result;
 		}
 	}
 }

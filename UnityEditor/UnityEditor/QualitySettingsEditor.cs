@@ -15,10 +15,6 @@ namespace UnityEditor
 
 			public static readonly GUIStyle kDefaultToggle = "OL ToggleWhite";
 
-			public static readonly GUIStyle kButton = "Button";
-
-			public static readonly GUIStyle kSelected = "PR Label";
-
 			public static readonly GUIContent kPlatformTooltip = new GUIContent("", "Allow quality setting on platform");
 
 			public static readonly GUIContent kIconTrash = EditorGUIUtility.IconContent("TreeEditor.Trash", "|Delete Level");

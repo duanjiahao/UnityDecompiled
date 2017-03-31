@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -23,6 +24,7 @@ namespace UnityEditor
 			return Unwrapping.INTERNAL_CALL_GeneratePerTriangleUVImpl(src, ref settings);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Vector2[] INTERNAL_CALL_GeneratePerTriangleUVImpl(Mesh src, ref UnwrapParam settings);
 

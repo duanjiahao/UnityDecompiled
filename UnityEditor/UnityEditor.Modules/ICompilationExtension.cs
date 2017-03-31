@@ -1,5 +1,6 @@
 using Mono.Cecil;
 using System;
+using System.Collections.Generic;
 
 namespace UnityEditor.Modules
 {
@@ -10,5 +11,13 @@ namespace UnityEditor.Modules
 		string[] GetCompilerExtraAssemblyPaths(bool isEditor, string assemblyPathName);
 
 		IAssemblyResolver GetAssemblyResolver(bool buildingForEditor, string assemblyPath, string[] searchDirectories);
+
+		IEnumerable<string> GetWindowsMetadataReferences();
+
+		IEnumerable<string> GetAdditionalAssemblyReferences();
+
+		IEnumerable<string> GetAdditionalDefines();
+
+		IEnumerable<string> GetAdditionalSourceFiles();
 	}
 }

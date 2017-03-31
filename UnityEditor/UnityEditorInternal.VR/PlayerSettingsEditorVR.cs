@@ -3,12 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UnityEditorInternal.VR
 {
 	internal class PlayerSettingsEditorVR
 	{
-		private SerializedProperty m_VREditorSettings;
+		private static class Styles
+		{
+			public static readonly GUIContent singlepassAndroidWarning = EditorGUIUtility.TextContent("Single-pass stereo rendering requires OpenGL ES 3. Please make sure that it's the first one listed under Graphics APIs.");
+
+			public static readonly GUIContent singlepassAndroidWarning2 = EditorGUIUtility.TextContent("Multi-pass stereo rendering will be used on Android devices that don't support single-pass stereo rendering.");
+
+			public static readonly GUIContent singlePassStereoRendering = EditorGUIUtility.TextContent("Single-Pass Stereo Rendering");
+
+			public static readonly GUIContent[] kDefaultStereoRenderingPaths = new GUIContent[]
+			{
+				new GUIContent("Multi Pass"),
+				new GUIContent("Single Pass"),
+				new GUIContent("Single Pass Instanced")
+			};
+
+			public static readonly GUIContent[] kAndroidStereoRenderingPaths = new GUIContent[]
+			{
+				new GUIContent("Multi Pass"),
+				new GUIContent("Single Pass (Preview)")
+			};
+		}
+
+		private SerializedObject m_Settings;
 
 		private Dictionary<BuildTargetGroup, VRDeviceInfoEditor[]> m_AllVRDevicesForBuildTarget = new Dictionary<BuildTargetGroup, VRDeviceInfoEditor[]>();
 
@@ -20,18 +43,21 @@ namespace UnityEditorInternal.VR
 
 		private Dictionary<string, VRCustomOptions> m_CustomOptions = new Dictionary<string, VRCustomOptions>();
 
-		public PlayerSettingsEditorVR(SerializedProperty settingsEditor)
+		public PlayerSettingsEditorVR(SerializedObject settingsEditor)
 		{
-			this.m_VREditorSettings = settingsEditor;
+			this.m_Settings = settingsEditor;
 		}
 
 		private void RefreshVRDeviceList(BuildTargetGroup targetGroup)
 		{
-			VRDeviceInfoEditor[] allVRDeviceInfo = VREditor.GetAllVRDeviceInfo(targetGroup);
-			this.m_AllVRDevicesForBuildTarget[targetGroup] = allVRDeviceInfo;
-			for (int i = 0; i < allVRDeviceInfo.Length; i++)
+			VRDeviceInfoEditor[] array = VREditor.GetAllVRDeviceInfo(targetGroup);
+			array = (from d in array
+			orderby d.deviceNameUI
+			select d).ToArray<VRDeviceInfoEditor>();
+			this.m_AllVRDevicesForBuildTarget[targetGroup] = array;
+			for (int i = 0; i < array.Length; i++)
 			{
-				VRDeviceInfoEditor vRDeviceInfoEditor = allVRDeviceInfo[i];
+				VRDeviceInfoEditor vRDeviceInfoEditor = array[i];
 				this.m_MapVRDeviceKeyToUIString[vRDeviceInfoEditor.deviceNameKey] = vRDeviceInfoEditor.deviceNameUI;
 				this.m_MapVRUIStringToDeviceKey[vRDeviceInfoEditor.deviceNameUI] = vRDeviceInfoEditor.deviceNameKey;
 				VRCustomOptions vRCustomOptions;
@@ -46,7 +72,7 @@ namespace UnityEditorInternal.VR
 					{
 						vRCustomOptions = new VRCustomOptionsNone();
 					}
-					vRCustomOptions.Initialize(this.m_VREditorSettings);
+					vRCustomOptions.Initialize(this.m_Settings);
 					this.m_CustomOptions.Add(vRDeviceInfoEditor.deviceNameKey, vRCustomOptions);
 				}
 			}
@@ -76,6 +102,74 @@ namespace UnityEditorInternal.VR
 				if (flag)
 				{
 					this.VRDevicesGUIOneBuildTarget(targetGroup);
+				}
+			}
+		}
+
+		private static bool TargetSupportsSinglePassStereoRendering(BuildTargetGroup targetGroup)
+		{
+			return targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.PS4;
+		}
+
+		private static bool TargetSupportsStereoInstancingRendering(BuildTargetGroup targetGroup)
+		{
+			return targetGroup == BuildTargetGroup.WSA;
+		}
+
+		private static GUIContent[] GetStereoRenderingPaths(BuildTargetGroup targetGroup)
+		{
+			return (targetGroup != BuildTargetGroup.Android) ? PlayerSettingsEditorVR.Styles.kDefaultStereoRenderingPaths : PlayerSettingsEditorVR.Styles.kAndroidStereoRenderingPaths;
+		}
+
+		internal void SinglePassStereoGUI(BuildTargetGroup targetGroup, SerializedProperty stereoRenderingPath)
+		{
+			if (PlayerSettings.virtualRealitySupported)
+			{
+				bool flag = PlayerSettingsEditorVR.TargetSupportsSinglePassStereoRendering(targetGroup);
+				bool flag2 = PlayerSettingsEditorVR.TargetSupportsStereoInstancingRendering(targetGroup);
+				int num = 1 + ((!flag) ? 0 : 1) + ((!flag2) ? 0 : 1);
+				GUIContent[] array = new GUIContent[num];
+				int[] array2 = new int[num];
+				int[] array3 = new int[]
+				{
+					0,
+					1,
+					2
+				};
+				GUIContent[] stereoRenderingPaths = PlayerSettingsEditorVR.GetStereoRenderingPaths(targetGroup);
+				int num2 = 0;
+				array[num2] = stereoRenderingPaths[0];
+				array2[num2++] = array3[0];
+				if (flag)
+				{
+					array[num2] = stereoRenderingPaths[1];
+					array2[num2++] = array3[1];
+				}
+				if (flag2 && stereoRenderingPaths.Length > 2)
+				{
+					array[num2] = stereoRenderingPaths[2];
+					array2[num2++] = array3[2];
+				}
+				if (!flag2 && stereoRenderingPath.intValue == 2)
+				{
+					stereoRenderingPath.intValue = 1;
+				}
+				if (!flag && stereoRenderingPath.intValue == 1)
+				{
+					stereoRenderingPath.intValue = 0;
+				}
+				EditorGUILayout.IntPopup(stereoRenderingPath, array, array2, EditorGUIUtility.TextContent("Stereo Rendering Method*"), new GUILayoutOption[0]);
+				if (stereoRenderingPath.intValue == 1 && targetGroup == BuildTargetGroup.Android)
+				{
+					GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
+					if (graphicsAPIs.Length > 0 && graphicsAPIs[0] == GraphicsDeviceType.OpenGLES3)
+					{
+						EditorGUILayout.HelpBox(PlayerSettingsEditorVR.Styles.singlepassAndroidWarning2.text, MessageType.Warning);
+					}
+					else
+					{
+						EditorGUILayout.HelpBox(PlayerSettingsEditorVR.Styles.singlepassAndroidWarning.text, MessageType.Error);
+					}
 				}
 			}
 		}
@@ -121,6 +215,13 @@ namespace UnityEditorInternal.VR
 		{
 			if (this.m_VRDeviceActiveUI.ContainsKey(target))
 			{
+				if (target == BuildTargetGroup.iPhone)
+				{
+					if (devices.Contains("cardboard") && PlayerSettings.iOS.cameraUsageDescription == "")
+					{
+						PlayerSettings.iOS.cameraUsageDescription = "Used to scan QR codes";
+					}
+				}
 				VREditor.SetVREnabledDevicesOnTargetGroup(target, devices);
 				this.m_VRDeviceActiveUI[target].list = devices;
 			}

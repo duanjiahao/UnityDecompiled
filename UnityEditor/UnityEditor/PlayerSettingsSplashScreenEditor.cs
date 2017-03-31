@@ -6,6 +6,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -127,6 +128,7 @@ namespace UnityEditor
 
 		public static extern bool licenseAllowsDisabling
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -143,6 +145,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSplashScreenActualBackgroundColor(out Color value);
 
@@ -151,6 +154,7 @@ namespace UnityEditor
 			return PlayerSettingsSplashScreenEditor.INTERNAL_CALL_GetSplashScreenActualBackgroundImage(ref windowRect);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Texture2D INTERNAL_CALL_GetSplashScreenActualBackgroundImage(ref Rect windowRect);
 
@@ -161,6 +165,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSplashScreenActualUVs(ref Rect windowRect, out Rect value);
 
@@ -436,8 +441,8 @@ namespace UnityEditor
 					{
 						this.AddUnityLogoToLogosList();
 					}
-					this.m_ShowLogoControlsAnimator.target = this.m_ShowUnitySplashLogo.boolValue;
 				}
+				this.m_ShowLogoControlsAnimator.target = this.m_ShowUnitySplashLogo.boolValue;
 			}
 			if (EditorGUILayout.BeginFadeGroup(this.m_ShowLogoControlsAnimator.faded))
 			{

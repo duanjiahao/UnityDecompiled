@@ -109,8 +109,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_Priority;
 
-		private SerializedProperty m_PanLevel;
-
 		private SerializedProperty m_DopplerLevel;
 
 		private SerializedProperty m_MinDistance;

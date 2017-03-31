@@ -162,82 +162,84 @@ namespace UnityEditorInternal
 						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.y);
 						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.z);
 						AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.w);
+						Quaternion localRotation = transform.localRotation;
+						Quaternion localRotation2 = transform.localRotation;
+						object obj;
+						if (AnimationRecording.ValueFromPropertyModification(value.x.previousValue, editorCurveBinding, out obj))
+						{
+							localRotation.x = (float)obj;
+						}
+						object obj2;
+						if (AnimationRecording.ValueFromPropertyModification(value.y.previousValue, editorCurveBinding, out obj2))
+						{
+							localRotation.y = (float)obj2;
+						}
+						object obj3;
+						if (AnimationRecording.ValueFromPropertyModification(value.z.previousValue, editorCurveBinding, out obj3))
+						{
+							localRotation.z = (float)obj3;
+						}
+						object obj4;
+						if (AnimationRecording.ValueFromPropertyModification(value.w.previousValue, editorCurveBinding, out obj4))
+						{
+							localRotation.w = (float)obj4;
+						}
+						if (AnimationRecording.ValueFromPropertyModification(value.x.currentValue, editorCurveBinding, out obj))
+						{
+							localRotation2.x = (float)obj;
+						}
+						if (AnimationRecording.ValueFromPropertyModification(value.y.currentValue, editorCurveBinding, out obj2))
+						{
+							localRotation2.y = (float)obj2;
+						}
+						if (AnimationRecording.ValueFromPropertyModification(value.z.currentValue, editorCurveBinding, out obj3))
+						{
+							localRotation2.z = (float)obj3;
+						}
+						if (AnimationRecording.ValueFromPropertyModification(value.w.currentValue, editorCurveBinding, out obj4))
+						{
+							localRotation2.w = (float)obj4;
+						}
 						if (value.useEuler)
 						{
 							AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.eulerX);
 							AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.eulerY);
 							AnimationRecording.AddRotationPropertyModification(state, editorCurveBinding, value.eulerZ);
-							Vector3 localEulerAngles = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
-							Vector3 localEulerAngles2 = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
-							object obj;
-							if (AnimationRecording.ValueFromPropertyModification(value.eulerX.previousValue, editorCurveBinding, out obj))
+							Vector3 vector = transform.GetLocalEulerAngles(RotationOrder.OrderZXY);
+							Vector3 vector2 = vector;
+							object obj5;
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerX.previousValue, editorCurveBinding, out obj5))
 							{
-								localEulerAngles.x = (float)obj;
+								vector.x = (float)obj5;
 							}
-							object obj2;
-							if (AnimationRecording.ValueFromPropertyModification(value.eulerY.previousValue, editorCurveBinding, out obj2))
+							object obj6;
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerY.previousValue, editorCurveBinding, out obj6))
 							{
-								localEulerAngles.y = (float)obj2;
+								vector.y = (float)obj6;
 							}
-							object obj3;
-							if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.previousValue, editorCurveBinding, out obj3))
+							object obj7;
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.previousValue, editorCurveBinding, out obj7))
 							{
-								localEulerAngles.z = (float)obj3;
+								vector.z = (float)obj7;
 							}
-							if (AnimationRecording.ValueFromPropertyModification(value.eulerX.currentValue, editorCurveBinding, out obj))
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerX.currentValue, editorCurveBinding, out obj5))
 							{
-								localEulerAngles2.x = (float)obj;
+								vector2.x = (float)obj5;
 							}
-							if (AnimationRecording.ValueFromPropertyModification(value.eulerY.currentValue, editorCurveBinding, out obj2))
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerY.currentValue, editorCurveBinding, out obj6))
 							{
-								localEulerAngles2.y = (float)obj2;
+								vector2.y = (float)obj6;
 							}
-							if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.currentValue, editorCurveBinding, out obj3))
+							if (AnimationRecording.ValueFromPropertyModification(value.eulerZ.currentValue, editorCurveBinding, out obj7))
 							{
-								localEulerAngles2.z = (float)obj3;
+								vector2.z = (float)obj7;
 							}
-							AnimationRecording.AddRotationKey(state, editorCurveBinding, type, localEulerAngles, localEulerAngles2);
+							vector = AnimationUtility.GetClosestEuler(localRotation, vector, RotationOrder.OrderZXY);
+							vector2 = AnimationUtility.GetClosestEuler(localRotation2, vector2, RotationOrder.OrderZXY);
+							AnimationRecording.AddRotationKey(state, editorCurveBinding, type, vector, vector2);
 						}
 						else
 						{
-							Quaternion localRotation = transform.localRotation;
-							Quaternion localRotation2 = transform.localRotation;
-							object obj4;
-							if (AnimationRecording.ValueFromPropertyModification(value.x.previousValue, editorCurveBinding, out obj4))
-							{
-								localRotation.x = (float)obj4;
-							}
-							object obj5;
-							if (AnimationRecording.ValueFromPropertyModification(value.y.previousValue, editorCurveBinding, out obj5))
-							{
-								localRotation.y = (float)obj5;
-							}
-							object obj6;
-							if (AnimationRecording.ValueFromPropertyModification(value.z.previousValue, editorCurveBinding, out obj6))
-							{
-								localRotation.z = (float)obj6;
-							}
-							object obj7;
-							if (AnimationRecording.ValueFromPropertyModification(value.w.previousValue, editorCurveBinding, out obj7))
-							{
-								localRotation.w = (float)obj7;
-							}
-							if (AnimationRecording.ValueFromPropertyModification(value.x.currentValue, editorCurveBinding, out obj4))
-							{
-								localRotation2.x = (float)obj4;
-							}
-							if (AnimationRecording.ValueFromPropertyModification(value.y.currentValue, editorCurveBinding, out obj5))
-							{
-								localRotation2.y = (float)obj5;
-							}
-							if (AnimationRecording.ValueFromPropertyModification(value.z.currentValue, editorCurveBinding, out obj6))
-							{
-								localRotation2.z = (float)obj6;
-							}
-							if (AnimationRecording.ValueFromPropertyModification(value.w.currentValue, editorCurveBinding, out obj7))
-							{
-								localRotation2.w = (float)obj7;
-							}
 							AnimationRecording.AddRotationKey(state, editorCurveBinding, type, localRotation.eulerAngles, localRotation2.eulerAngles);
 						}
 					}
@@ -351,12 +353,12 @@ namespace UnityEditorInternal
 					{
 						value = currentValue;
 					}
-					if (state.frame != 0)
+					if (state.currentFrame != 0 && state.addZeroFrame)
 					{
 						AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, value, type, AnimationKeyTime.Frame(0, activeAnimationClip.frameRate));
 					}
 				}
-				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, type, AnimationKeyTime.Frame(state.frame, activeAnimationClip.frameRate));
+				AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, type, AnimationKeyTime.Frame(state.currentFrame, activeAnimationClip.frameRate));
 				state.SaveCurve(animationWindowCurve);
 			}
 		}
@@ -399,12 +401,12 @@ namespace UnityEditorInternal
 					AnimationWindowCurve animationWindowCurve = new AnimationWindowCurve(activeAnimationClip, array[i], type);
 					if (animationWindowCurve.length == 0)
 					{
-						if (state.frame != 0)
+						if (state.currentFrame != 0)
 						{
 							AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, previousEulerAngles[i], type, AnimationKeyTime.Frame(0, activeAnimationClip.frameRate));
 						}
 					}
-					AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentEulerAngles[i], type, AnimationKeyTime.Frame(state.frame, activeAnimationClip.frameRate));
+					AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentEulerAngles[i], type, AnimationKeyTime.Frame(state.currentFrame, activeAnimationClip.frameRate));
 					state.SaveCurve(animationWindowCurve);
 				}
 			}

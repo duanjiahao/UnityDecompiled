@@ -85,7 +85,7 @@ namespace UnityEditor
 
 		private static bool IsAppropriateEditor(CustomEditorAttributes.MonoEditorType editor, Type parentClass, bool isChildClass, bool isFallback)
 		{
-			return (!isChildClass || editor.m_EditorForChildClasses) && isFallback == editor.m_IsFallback && parentClass == editor.m_InspectedType;
+			return (!isChildClass || editor.m_EditorForChildClasses) && isFallback == editor.m_IsFallback && (parentClass == editor.m_InspectedType || (parentClass.IsGenericType && parentClass.GetGenericTypeDefinition() == editor.m_InspectedType));
 		}
 
 		internal static void Rebuild(Assembly assembly)

@@ -12,9 +12,6 @@ namespace UnityEditorInternal
 		public Action onSelectionChanged;
 
 		[SerializeField]
-		private bool m_Locked = false;
-
-		[SerializeField]
 		private List<AnimationWindowSelectionItem> m_Selection = new List<AnimationWindowSelectionItem>();
 
 		private bool m_BatchOperations = false;
@@ -44,18 +41,6 @@ namespace UnityEditorInternal
 					}
 				}
 				return this.m_CurvesCache;
-			}
-		}
-
-		public bool locked
-		{
-			get
-			{
-				return this.m_Locked;
-			}
-			set
-			{
-				this.m_Locked = value;
 			}
 		}
 
@@ -161,45 +146,36 @@ namespace UnityEditorInternal
 
 		public void Set(AnimationWindowSelectionItem newItem)
 		{
-			if (!this.locked)
-			{
-				this.BeginOperations();
-				this.Clear();
-				this.Add(newItem);
-				this.EndOperations();
-			}
+			this.BeginOperations();
+			this.Clear();
+			this.Add(newItem);
+			this.EndOperations();
 		}
 
 		public void Add(AnimationWindowSelectionItem newItem)
 		{
-			if (!this.locked)
+			if (!this.m_Selection.Contains(newItem))
 			{
-				if (!this.m_Selection.Contains(newItem))
-				{
-					this.m_Selection.Add(newItem);
-					this.Notify();
-				}
+				this.m_Selection.Add(newItem);
+				this.Notify();
 			}
 		}
 
 		public void RangeAdd(AnimationWindowSelectionItem[] newItemArray)
 		{
-			if (!this.locked)
+			bool flag = false;
+			for (int i = 0; i < newItemArray.Length; i++)
 			{
-				bool flag = false;
-				for (int i = 0; i < newItemArray.Length; i++)
+				AnimationWindowSelectionItem item = newItemArray[i];
+				if (!this.m_Selection.Contains(item))
 				{
-					AnimationWindowSelectionItem item = newItemArray[i];
-					if (!this.m_Selection.Contains(item))
-					{
-						this.m_Selection.Add(item);
-						flag = true;
-					}
+					this.m_Selection.Add(item);
+					flag = true;
 				}
-				if (flag)
-				{
-					this.Notify();
-				}
+			}
+			if (flag)
+			{
+				this.Notify();
 			}
 		}
 
@@ -266,17 +242,14 @@ namespace UnityEditorInternal
 
 		public void Clear()
 		{
-			if (!this.locked)
+			if (this.m_Selection.Count > 0)
 			{
-				if (this.m_Selection.Count > 0)
+				foreach (AnimationWindowSelectionItem current in this.m_Selection)
 				{
-					foreach (AnimationWindowSelectionItem current in this.m_Selection)
-					{
-						UnityEngine.Object.DestroyImmediate(current);
-					}
-					this.m_Selection.Clear();
-					this.Notify();
+					UnityEngine.Object.DestroyImmediate(current);
 				}
+				this.m_Selection.Clear();
+				this.Notify();
 			}
 		}
 
@@ -293,10 +266,6 @@ namespace UnityEditorInternal
 				{
 					current.Synchronize();
 				}
-			}
-			if (this.disabled)
-			{
-				this.m_Locked = false;
 			}
 		}
 	}

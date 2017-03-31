@@ -22,19 +22,11 @@ namespace UnityEditor
 
 			public GUIContent modelIcon = EditorGUIUtility.IconContent("PrefabModel Icon");
 
-			public GUIContent dataTemplateIcon = EditorGUIUtility.IconContent("PrefabNormal Icon");
-
-			public GUIContent dropDownIcon = EditorGUIUtility.IconContent("Icon Dropdown");
-
 			public GUIContent staticContent = EditorGUIUtility.TextContent("Static");
-
-			public float staticFieldToggleWidth = EditorStyles.toggle.CalcSize(EditorGUIUtility.TempContent("Static")).x + 6f;
 
 			public float tagFieldWidth = EditorStyles.boldLabel.CalcSize(EditorGUIUtility.TempContent("Tag")).x;
 
 			public float layerFieldWidth = EditorStyles.boldLabel.CalcSize(EditorGUIUtility.TempContent("Layer")).x;
-
-			public float navLayerFieldWidth = EditorStyles.boldLabel.CalcSize(EditorGUIUtility.TempContent("Nav Layer")).x;
 
 			public GUIStyle staticDropdown = "StaticDropdown";
 
@@ -406,13 +398,13 @@ namespace UnityEditor
 
 		private void RegisterNewComponents(List<UnityEngine.Object> newHierarchy, List<UnityEngine.Object> hierarchy)
 		{
-			for (int i = 0; i < newHierarchy.Count; i++)
+			List<Component> list = new List<Component>();
+			foreach (UnityEngine.Object current in newHierarchy)
 			{
 				bool flag = false;
-				UnityEngine.Object @object = newHierarchy[i];
-				for (int j = 0; j < hierarchy.Count; j++)
+				foreach (UnityEngine.Object current2 in hierarchy)
 				{
-					if (hierarchy[j].GetInstanceID() == @object.GetInstanceID())
+					if (current2.GetInstanceID() == current.GetInstanceID())
 					{
 						flag = true;
 						break;
@@ -420,8 +412,45 @@ namespace UnityEditor
 				}
 				if (!flag)
 				{
-					Undo.RegisterCreatedObjectUndo(newHierarchy[i], "Dangly component");
+					list.Add(current as Component);
 				}
+			}
+			HashSet<Type> hashSet = new HashSet<Type>
+			{
+				typeof(Transform)
+			};
+			bool flag2 = false;
+			while (list.Count > 0 && !flag2)
+			{
+				flag2 = true;
+				for (int i = 0; i < list.Count; i++)
+				{
+					Component component = list[i];
+					object[] customAttributes = component.GetType().GetCustomAttributes(typeof(RequireComponent), true);
+					bool flag3 = true;
+					object[] array = customAttributes;
+					for (int j = 0; j < array.Length; j++)
+					{
+						RequireComponent requireComponent = (RequireComponent)array[j];
+						if ((requireComponent.m_Type0 != null && !hashSet.Contains(requireComponent.m_Type0)) || (requireComponent.m_Type1 != null && !hashSet.Contains(requireComponent.m_Type1)) || (requireComponent.m_Type2 != null && !hashSet.Contains(requireComponent.m_Type2)))
+						{
+							flag3 = false;
+							break;
+						}
+					}
+					if (flag3)
+					{
+						Undo.RegisterCreatedObjectUndo(component, "Dangling component");
+						hashSet.Add(component.GetType());
+						list.RemoveAt(i);
+						i--;
+						flag2 = false;
+					}
+				}
+			}
+			foreach (Component current3 in list)
+			{
+				Undo.RegisterCreatedObjectUndo(current3, "Dangling component");
 			}
 		}
 

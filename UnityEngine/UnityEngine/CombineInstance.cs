@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 
 namespace UnityEngine
 {
@@ -11,11 +10,15 @@ namespace UnityEngine
 
 		private Matrix4x4 m_Transform;
 
+		private Vector4 m_LightmapScaleOffset;
+
+		private Vector4 m_RealtimeLightmapScaleOffset;
+
 		public Mesh mesh
 		{
 			get
 			{
-				return this.InternalGetMesh(this.m_MeshInstanceID);
+				return CombineInstanceHelper.GetMesh(this.m_MeshInstanceID);
 			}
 			set
 			{
@@ -47,7 +50,28 @@ namespace UnityEngine
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern Mesh InternalGetMesh(int instanceID);
+		public Vector4 lightmapScaleOffset
+		{
+			get
+			{
+				return this.m_LightmapScaleOffset;
+			}
+			set
+			{
+				this.m_LightmapScaleOffset = value;
+			}
+		}
+
+		public Vector4 realtimeLightmapScaleOffset
+		{
+			get
+			{
+				return this.m_RealtimeLightmapScaleOffset;
+			}
+			set
+			{
+				this.m_RealtimeLightmapScaleOffset = value;
+			}
+		}
 	}
 }

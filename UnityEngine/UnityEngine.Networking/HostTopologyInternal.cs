@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Networking
 {
@@ -20,6 +21,7 @@ namespace UnityEngine.Networking
 			this.InitOtherParameters(topology);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitWrapper(ConnectionConfigInternal config, int maxDefaultConnections);
 
@@ -28,6 +30,7 @@ namespace UnityEngine.Networking
 			return this.AddSpecialConnectionConfigWrapper(config);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int AddSpecialConnectionConfigWrapper(ConnectionConfigInternal config);
 
@@ -38,16 +41,19 @@ namespace UnityEngine.Networking
 			this.InitMessagePoolSizeGrowthFactor(topology.MessagePoolSizeGrowthFactor);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitReceivedPoolSize(ushort pool);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitSentMessagePoolSize(ushort pool);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitMessagePoolSizeGrowthFactor(float factor);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 

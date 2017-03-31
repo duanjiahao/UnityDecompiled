@@ -92,6 +92,8 @@ namespace UnityEditor
 
 		internal static bool s_DirtySelection = false;
 
+		internal static int s_KeyboardControl = 0;
+
 		protected bool m_HasSkinnedMesh;
 
 		private bool m_IsBiped;
@@ -110,7 +112,8 @@ namespace UnityEditor
 			{
 				0,
 				7,
-				8
+				8,
+				54
 			},
 			new int[]
 			{
@@ -239,10 +242,6 @@ namespace UnityEditor
 		{
 			if (!(base.gameObject == null))
 			{
-				if (AvatarSetupTool.sHumanParent.Length != HumanTrait.BoneCount)
-				{
-					throw new Exception("Avatar's Human parent list is out of sync");
-				}
 				this.m_IsBiped = AvatarBipedMapper.IsBiped(base.gameObject.transform, null);
 				if (this.m_Bones == null)
 				{
@@ -372,22 +371,10 @@ namespace UnityEditor
 				}
 			}
 			this.UpdateSelectedBone();
-			if (Event.current.type == EventType.KeyDown)
+			if (AvatarMappingEditor.s_KeyboardControl != 0)
 			{
-				if (Event.current.keyCode == KeyCode.Backspace || Event.current.keyCode == KeyCode.Delete)
-				{
-					if (AvatarMappingEditor.s_SelectedBoneIndex != -1 && AvatarMappingEditor.s_SelectedBoneIndex < this.m_Bones.Length)
-					{
-						Undo.RegisterCompleteObjectUndo(this, "Avatar mapping modified");
-						AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[AvatarMappingEditor.s_SelectedBoneIndex];
-						boneWrapper.bone = null;
-						boneWrapper.state = BoneState.None;
-						boneWrapper.Serialize(base.serializedObject);
-						Selection.activeTransform = null;
-						GUI.changed = true;
-						Event.current.Use();
-					}
-				}
+				GUIUtility.keyboardControl = AvatarMappingEditor.s_KeyboardControl;
+				AvatarMappingEditor.s_KeyboardControl = 0;
 			}
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			EditorGUI.BeginChangeCheck();
@@ -695,8 +682,8 @@ namespace UnityEditor
 								Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 								Rect selectRect = controlRect;
 								selectRect.width -= 15f;
-								boneWrapper.HandleClickSelection(selectRect, num2);
-								boneWrapper.BoneDotGUI(new Rect(controlRect.x + EditorGUI.indent, controlRect.y - 1f, 19f, 19f), num2, false, false, base.serializedObject, this);
+								Rect rect = new Rect(controlRect.x + EditorGUI.indent, controlRect.y - 1f, 19f, 19f);
+								boneWrapper.BoneDotGUI(rect, selectRect, num2, true, false, true, base.serializedObject, this);
 								controlRect.xMin += 19f;
 								Transform transform = EditorGUI.ObjectField(controlRect, new GUIContent(text), boneWrapper.bone, typeof(Transform), true) as Transform;
 								if (transform != boneWrapper.bone)
@@ -766,7 +753,8 @@ namespace UnityEditor
 			}
 			else
 			{
-				AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[AvatarSetupTool.GetFirstHumanBoneAncestor(this.m_Bones, i)];
+				int firstHumanBoneAncestor = AvatarSetupTool.GetFirstHumanBoneAncestor(this.m_Bones, i);
+				AvatarSetupTool.BoneWrapper boneWrapper = this.m_Bones[(firstHumanBoneAncestor <= 0) ? 0 : firstHumanBoneAncestor];
 				if (i == 0 && bone.bone.parent == null)
 				{
 					error = bone.messageName + " cannot be the root transform";
@@ -777,41 +765,54 @@ namespace UnityEditor
 					error = bone.messageName + " is not a child of " + boneWrapper.messageName + ".";
 					result = BoneState.InvalidHierarchy;
 				}
-				else if (i != 23 && boneWrapper.bone != null && boneWrapper.bone != bone.bone && (bone.bone.position - boneWrapper.bone.position).sqrMagnitude < Mathf.Epsilon)
-				{
-					error = bone.messageName + " has bone length of zero.";
-					result = BoneState.BoneLenghtIsZero;
-				}
 				else
 				{
-					IEnumerable<AvatarSetupTool.BoneWrapper> source = from f in this.m_Bones
-					where f.bone == bone.bone
-					select f;
-					if (source.Count<AvatarSetupTool.BoneWrapper>() > 1)
+					if (i == 54)
 					{
-						error = bone.messageName + " is also assigned to ";
-						bool flag = true;
-						for (int j = 0; j < this.m_Bones.Length; j++)
+						AvatarSetupTool.BoneWrapper boneWrapper2 = this.m_Bones[8];
+						if (boneWrapper2.bone == null)
 						{
-							if (i != j && this.m_Bones[i].bone == this.m_Bones[j].bone)
-							{
-								if (flag)
-								{
-									flag = false;
-								}
-								else
-								{
-									error += ", ";
-								}
-								error += ObjectNames.NicifyVariableName(this.m_Bones[j].humanBoneName);
-							}
+							error = "Chest must be assigned before assigning UpperChest.";
+							result = BoneState.InvalidHierarchy;
+							return result;
 						}
-						error += ".";
-						result = BoneState.Duplicate;
+					}
+					if (i != 23 && boneWrapper.bone != null && boneWrapper.bone != bone.bone && (bone.bone.position - boneWrapper.bone.position).sqrMagnitude < Mathf.Epsilon)
+					{
+						error = bone.messageName + " has bone length of zero.";
+						result = BoneState.BoneLenghtIsZero;
 					}
 					else
 					{
-						result = BoneState.Valid;
+						IEnumerable<AvatarSetupTool.BoneWrapper> source = from f in this.m_Bones
+						where f.bone == bone.bone
+						select f;
+						if (source.Count<AvatarSetupTool.BoneWrapper>() > 1)
+						{
+							error = bone.messageName + " is also assigned to ";
+							bool flag = true;
+							for (int j = 0; j < this.m_Bones.Length; j++)
+							{
+								if (i != j && this.m_Bones[i].bone == this.m_Bones[j].bone)
+								{
+									if (flag)
+									{
+										flag = false;
+									}
+									else
+									{
+										error += ", ";
+									}
+									error += ObjectNames.NicifyVariableName(this.m_Bones[j].humanBoneName);
+								}
+							}
+							error += ".";
+							result = BoneState.Duplicate;
+						}
+						else
+						{
+							result = BoneState.Valid;
+						}
 					}
 				}
 			}

@@ -147,6 +147,7 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern UnityType.UnityTypeTransport[] Internal_GetAllTypes();
 

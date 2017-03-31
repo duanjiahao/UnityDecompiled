@@ -19,16 +19,19 @@ namespace UnityEditorInternal
 		[CompilerGenerated]
 		private static Handles.DrawCapFunction <>f__mg$cache1;
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		public static Vector3 Do(int id, Vector3 handlePos, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap, bool drawHelper)
 		{
 			return Slider2D.Do(id, handlePos, new Vector3(0f, 0f, 0f), handleDir, slideDir1, slideDir2, handleSize, drawFunc, new Vector2(snap, snap), drawHelper);
 		}
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		public static Vector3 Do(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, float snap, bool drawHelper)
 		{
 			return Slider2D.Do(id, handlePos, offset, handleDir, slideDir1, slideDir2, handleSize, drawFunc, new Vector2(snap, snap), drawHelper);
 		}
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		public static Vector3 Do(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, bool drawHelper)
 		{
 			bool changed = GUI.changed;
@@ -65,6 +68,7 @@ namespace UnityEditorInternal
 			return handlePos;
 		}
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		private static Vector2 CalcDeltaAlongDirections(int id, Vector3 handlePos, Vector3 offset, Vector3 handleDir, Vector3 slideDir1, Vector3 slideDir2, float handleSize, Handles.DrawCapFunction drawFunc, Vector2 snap, bool drawHelper)
 		{
 			Vector2 vector = new Vector2(0f, 0f);
@@ -82,7 +86,7 @@ namespace UnityEditorInternal
 					GUIUtility.hotControl = id;
 					Slider2D.s_CurrentMousePosition = current.mousePosition;
 					Slider2D.s_StartPosition = handlePos;
-					Vector3 a = Handles.s_InverseMatrix.MultiplyPoint(ray.GetPoint(distance));
+					Vector3 a = Handles.inverseMatrix.MultiplyPoint(ray.GetPoint(distance));
 					Vector3 lhs = a - handlePos;
 					Slider2D.s_StartPlaneOffset.x = Vector3.Dot(lhs, slideDir1);
 					Slider2D.s_StartPlaneOffset.y = Vector3.Dot(lhs, slideDir2);
@@ -110,7 +114,7 @@ namespace UnityEditorInternal
 					float distance2 = 0f;
 					if (plane2.Raycast(ray2, out distance2))
 					{
-						Vector3 point = Handles.s_InverseMatrix.MultiplyPoint(ray2.GetPoint(distance2));
+						Vector3 point = Handles.inverseMatrix.MultiplyPoint(ray2.GetPoint(distance2));
 						vector.x = HandleUtility.PointOnLineParameter(point, Slider2D.s_StartPosition, slideDir1);
 						vector.y = HandleUtility.PointOnLineParameter(point, Slider2D.s_StartPosition, slideDir2);
 						vector -= Slider2D.s_StartPlaneOffset;
@@ -198,7 +202,7 @@ namespace UnityEditorInternal
 				if (((HandleUtility.nearestControl == id && current.button == 0) || (GUIUtility.keyboardControl == id && current.button == 2)) && GUIUtility.hotControl == 0)
 				{
 					bool flag = true;
-					Vector3 a = Handles.s_InverseMatrix.MultiplyPoint(Slider2D.GetMousePosition(handleDir, handlePos, ref flag));
+					Vector3 a = Handles.inverseMatrix.MultiplyPoint(Slider2D.GetMousePosition(handleDir, handlePos, ref flag));
 					if (flag)
 					{
 						GUIUtility.keyboardControl = id;
@@ -226,7 +230,7 @@ namespace UnityEditorInternal
 				{
 					Slider2D.s_CurrentMousePosition += current.delta;
 					bool flag2 = true;
-					Vector3 point = Handles.s_InverseMatrix.MultiplyPoint(Slider2D.GetMousePosition(handleDir, handlePos, ref flag2));
+					Vector3 point = Handles.inverseMatrix.MultiplyPoint(Slider2D.GetMousePosition(handleDir, handlePos, ref flag2));
 					if (flag2)
 					{
 						vector2.x = HandleUtility.PointOnLineParameter(point, Slider2D.s_StartPosition, slideDir1);

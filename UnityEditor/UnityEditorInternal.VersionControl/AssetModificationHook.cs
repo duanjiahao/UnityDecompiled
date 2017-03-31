@@ -19,6 +19,13 @@ namespace UnityEditorInternal.VersionControl
 			return asset;
 		}
 
+		private static Asset GetStatusForceUpdate(string from)
+		{
+			Task task = Provider.Status(from);
+			task.Wait();
+			return (task.assetList.Count <= 0) ? null : task.assetList[0];
+		}
+
 		public static AssetMoveResult OnWillMoveAsset(string from, string to)
 		{
 			AssetMoveResult result;
@@ -80,7 +87,7 @@ namespace UnityEditorInternal.VersionControl
 			return result;
 		}
 
-		public static bool IsOpenForEdit(string assetPath, out string message)
+		public static bool IsOpenForEdit(string assetPath, out string message, StatusQueryOptions statusOptions)
 		{
 			message = "";
 			bool result;
@@ -94,13 +101,7 @@ namespace UnityEditorInternal.VersionControl
 			}
 			else
 			{
-				Asset asset = Provider.GetAssetByPath(assetPath);
-				if (asset == null)
-				{
-					Task task = Provider.Status(assetPath, false);
-					task.Wait();
-					asset = ((task.assetList.Count <= 0) ? null : task.assetList[0]);
-				}
+				Asset asset = (statusOptions != StatusQueryOptions.UseCachedIfPossible) ? AssetModificationHook.GetStatusForceUpdate(assetPath) : AssetModificationHook.GetStatusCachedIfPossible(assetPath);
 				result = (asset != null && Provider.IsOpenForEdit(asset));
 			}
 			return result;

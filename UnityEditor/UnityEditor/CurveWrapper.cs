@@ -130,6 +130,14 @@ namespace UnityEditor
 			}
 		}
 
+		public Bounds bounds
+		{
+			get
+			{
+				return this.renderer.GetBounds();
+			}
+		}
+
 		public bool changed
 		{
 			get

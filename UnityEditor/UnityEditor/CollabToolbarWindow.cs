@@ -1,7 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEditor.Collaboration;
-using UnityEditor.Connect;
 using UnityEditor.Web;
 using UnityEngine;
 
@@ -64,7 +62,7 @@ namespace UnityEditor
 		[MenuItem("Window/Collab Toolbar", true)]
 		public static bool ValidateShowToolbarWindow()
 		{
-			return UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted;
+			return true;
 		}
 
 		internal static bool ShowCenteredAtPosition(Rect buttonRect)
@@ -87,6 +85,7 @@ namespace UnityEditor
 				CollabToolbarWindow.s_CollabToolbarWindow.initialOpenUrl = "file:///" + EditorApplication.userJavascriptPackagesPath + "unityeditor-collab-toolbar/dist/index.html";
 				CollabToolbarWindow.s_CollabToolbarWindow.Init();
 				CollabToolbarWindow.s_CollabToolbarWindow.ShowAsDropDown(buttonRect, windowSize);
+				CollabToolbarWindow.s_CollabToolbarWindow.OnFocus();
 				result = true;
 			}
 			else
@@ -112,16 +111,27 @@ namespace UnityEditor
 			base.maxSize = new Vector2(320f, 350f);
 			base.initialOpenUrl = "file:///" + EditorApplication.userJavascriptPackagesPath + "unityeditor-collab-toolbar/dist/index.html";
 			base.OnEnable();
+			if (CollabToolbarWindow.s_CollabToolbarWindow)
+			{
+				CollabToolbarWindow.s_ToolbarIsVisible = true;
+				base.NotifyVisibility(CollabToolbarWindow.s_ToolbarIsVisible);
+			}
 		}
 
 		internal void OnDisable()
 		{
 			CollabToolbarWindow.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
+			if (CollabToolbarWindow.s_CollabToolbarWindow)
+			{
+				CollabToolbarWindow.s_ToolbarIsVisible = false;
+				base.NotifyVisibility(CollabToolbarWindow.s_ToolbarIsVisible);
+			}
 			CollabToolbarWindow.s_CollabToolbarWindow = null;
 		}
 
 		public new void OnDestroy()
 		{
+			this.OnLostFocus();
 			base.OnDestroy();
 		}
 
@@ -129,14 +139,12 @@ namespace UnityEditor
 		{
 			base.OnFocus();
 			EditorApplication.LockReloadAssemblies();
-			CollabToolbarWindow.s_ToolbarIsVisible = true;
 		}
 
 		public new void OnLostFocus()
 		{
 			base.OnLostFocus();
 			EditorApplication.UnlockReloadAssemblies();
-			CollabToolbarWindow.s_ToolbarIsVisible = false;
 		}
 	}
 }

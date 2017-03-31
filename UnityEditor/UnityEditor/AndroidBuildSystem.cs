@@ -6,6 +6,7 @@ namespace UnityEditor
 	{
 		Internal,
 		Gradle,
-		ADT
+		ADT,
+		VisualStudio
 	}
 }

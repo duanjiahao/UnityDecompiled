@@ -314,11 +314,12 @@ namespace UnityEditor
 			new AvatarAutoMapper.BoneMappingItem(6, 20, 1, 2, 0.5f, Vector3.forward, AvatarAutoMapper.Side.Right, true, true, AvatarAutoMapper.kToeKeywords),
 			new AvatarAutoMapper.BoneMappingItem(0, 7, 1, 3, 0f, Vector3.up, AvatarAutoMapper.Side.None, new string[0]),
 			new AvatarAutoMapper.BoneMappingItem(7, 8, 0, 3, 1.4f, Vector3.up, AvatarAutoMapper.Side.None, true, false, new string[0]),
-			new AvatarAutoMapper.BoneMappingItem(8, 12, 1, 3, 0f, Vector3.right, AvatarAutoMapper.Side.Right, true, false, AvatarAutoMapper.kShoulderKeywords),
+			new AvatarAutoMapper.BoneMappingItem(8, 54, 0, 3, 1.4f, Vector3.up, AvatarAutoMapper.Side.None, true, false, new string[0]),
+			new AvatarAutoMapper.BoneMappingItem(54, 12, 1, 3, 0f, Vector3.right, AvatarAutoMapper.Side.Right, true, false, AvatarAutoMapper.kShoulderKeywords),
 			new AvatarAutoMapper.BoneMappingItem(12, 14, 0, 2, 0.5f, Vector3.right, AvatarAutoMapper.Side.Right, AvatarAutoMapper.kUpperArmKeywords),
 			new AvatarAutoMapper.BoneMappingItem(14, 16, 1, 2, 2f, Vector3.right, AvatarAutoMapper.Side.Right, AvatarAutoMapper.kLowerArmKeywords),
 			new AvatarAutoMapper.BoneMappingItem(16, 18, 1, 2, 1f, Vector3.right, AvatarAutoMapper.Side.Right, AvatarAutoMapper.kHandKeywords),
-			new AvatarAutoMapper.BoneMappingItem(8, 9, 1, 3, 1.8f, Vector3.up, AvatarAutoMapper.Side.None, true, false, AvatarAutoMapper.kNeckKeywords),
+			new AvatarAutoMapper.BoneMappingItem(54, 9, 1, 3, 1.8f, Vector3.up, AvatarAutoMapper.Side.None, true, false, AvatarAutoMapper.kNeckKeywords),
 			new AvatarAutoMapper.BoneMappingItem(9, 10, 0, 2, 0.3f, Vector3.up, AvatarAutoMapper.Side.None, AvatarAutoMapper.kHeadKeywords),
 			new AvatarAutoMapper.BoneMappingItem(10, 23, 1, 2, 0f, Vector3.forward, AvatarAutoMapper.Side.None, true, false, AvatarAutoMapper.kJawKeywords),
 			new AvatarAutoMapper.BoneMappingItem(10, 22, 1, 2, 0f, new Vector3(1f, 1f, 1f), AvatarAutoMapper.Side.Right, true, false, AvatarAutoMapper.kEyeKeywords),
@@ -403,7 +404,7 @@ namespace UnityEditor
 			{
 				result = rightIndex;
 			}
-			else if (rightIndex < 54)
+			else if (rightIndex < 55)
 			{
 				string text = Enum.GetName(typeof(HumanBodyBones), rightIndex);
 				text = text.Replace("Right", "Left");
@@ -411,7 +412,7 @@ namespace UnityEditor
 			}
 			else
 			{
-				result = rightIndex + 24 - 39;
+				result = -1;
 			}
 			return result;
 		}
@@ -497,6 +498,11 @@ namespace UnityEditor
 					}
 					dictionary[0] = parent;
 				}
+			}
+			if (!dictionary.ContainsKey(8) && dictionary.ContainsKey(54))
+			{
+				dictionary.Add(8, dictionary[54]);
+				dictionary.Remove(54);
 			}
 			int num = 3;
 			Quaternion orientation = this.m_Orientation;
@@ -843,23 +849,6 @@ namespace UnityEditor
 				}
 			}
 			Debug.Log(text);
-		}
-
-		private AvatarAutoMapper.BoneMappingItem GetBoneMappingItem(int bone)
-		{
-			AvatarAutoMapper.BoneMappingItem[] mappingData = this.m_MappingData;
-			AvatarAutoMapper.BoneMappingItem result;
-			for (int i = 0; i < mappingData.Length; i++)
-			{
-				AvatarAutoMapper.BoneMappingItem boneMappingItem = mappingData[i];
-				if (boneMappingItem.bone == bone)
-				{
-					result = boneMappingItem;
-					return result;
-				}
-			}
-			result = default(AvatarAutoMapper.BoneMappingItem);
-			return result;
 		}
 
 		private bool IsParentOfOther(Transform knownCommonParent, Transform potentialParent, Transform potentialChild)

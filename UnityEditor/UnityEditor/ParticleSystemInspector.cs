@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace UnityEditor
 {
-	[CustomEditor(typeof(ParticleSystem))]
+	[CanEditMultipleObjects, CustomEditor(typeof(ParticleSystem))]
 	internal class ParticleSystemInspector : Editor, ParticleEffectUIOwner
 	{
 		private ParticleEffectUI m_ParticleEffectUI;
@@ -48,6 +50,14 @@ namespace UnityEditor
 			}
 		}
 
+		public Editor customEditor
+		{
+			get
+			{
+				return this;
+			}
+		}
+
 		public void OnEnable()
 		{
 			EditorApplication.hierarchyWindowChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.hierarchyWindowChanged, new EditorApplication.CallbackFunction(this.HierarchyOrProjectWindowWasChanged));
@@ -70,7 +80,7 @@ namespace UnityEditor
 
 		private void HierarchyOrProjectWindowWasChanged()
 		{
-			if (this.ShouldShowInspector())
+			if (base.target != null && this.ShouldShowInspector())
 			{
 				this.Init(true);
 			}
@@ -78,6 +88,7 @@ namespace UnityEditor
 
 		private void UndoRedoPerformed()
 		{
+			this.Init(true);
 			if (this.m_ParticleEffectUI != null)
 			{
 				this.m_ParticleEffectUI.UndoRedoPerformed();
@@ -86,18 +97,21 @@ namespace UnityEditor
 
 		private void Init(bool forceInit)
 		{
-			ParticleSystem particleSystem = base.target as ParticleSystem;
-			if (!(particleSystem == null))
+			IEnumerable<ParticleSystem> enumerable = from p in base.targets.OfType<ParticleSystem>()
+			where p != null
+			select p;
+			if (enumerable == null || !enumerable.Any<ParticleSystem>())
 			{
-				if (this.m_ParticleEffectUI == null)
-				{
-					this.m_ParticleEffectUI = new ParticleEffectUI(this);
-					this.m_ParticleEffectUI.InitializeIfNeeded(particleSystem);
-				}
-				else if (forceInit)
-				{
-					this.m_ParticleEffectUI.InitializeIfNeeded(particleSystem);
-				}
+				this.m_ParticleEffectUI = null;
+			}
+			else if (this.m_ParticleEffectUI == null)
+			{
+				this.m_ParticleEffectUI = new ParticleEffectUI(this);
+				this.m_ParticleEffectUI.InitializeIfNeeded(enumerable);
+			}
+			else if (forceInit)
+			{
+				this.m_ParticleEffectUI.InitializeIfNeeded(enumerable);
 			}
 		}
 
@@ -105,57 +119,62 @@ namespace UnityEditor
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
-			bool selectedInParticleSystemWindow = this.selectedInParticleSystemWindow;
-			GameObject gameObject = (base.target as ParticleSystem).gameObject;
-			ParticleSystemWindow instance = ParticleSystemWindow.GetInstance();
-			GUIContent content;
-			if (instance && instance.IsVisible() && selectedInParticleSystemWindow)
+			if (this.m_ParticleEffectUI == null || !this.m_ParticleEffectUI.multiEdit)
 			{
-				if (instance.GetNumTabs() > 1)
-				{
-					content = this.hideWindowText;
-				}
-				else
-				{
-					content = this.closeWindowText;
-				}
-			}
-			else
-			{
-				content = this.showWindowText;
-			}
-			if (GUILayout.Button(content, EditorStyles.miniButton, new GUILayoutOption[]
-			{
-				GUILayout.Width(110f)
-			}))
-			{
+				bool selectedInParticleSystemWindow = this.selectedInParticleSystemWindow;
+				GameObject gameObject = (base.target as ParticleSystem).gameObject;
+				ParticleSystemWindow instance = ParticleSystemWindow.GetInstance();
+				GUIContent content;
 				if (instance && instance.IsVisible() && selectedInParticleSystemWindow)
 				{
-					if (!instance.ShowNextTabIfPossible())
+					if (instance.GetNumTabs() > 1)
 					{
-						instance.Close();
-					}
-				}
-				else
-				{
-					if (!selectedInParticleSystemWindow)
-					{
-						ParticleSystemEditorUtils.lockedParticleSystem = null;
-						Selection.activeGameObject = gameObject;
-					}
-					if (instance)
-					{
-						if (!selectedInParticleSystemWindow)
-						{
-							instance.Clear();
-						}
-						instance.Focus();
+						content = this.hideWindowText;
 					}
 					else
 					{
-						this.Clear();
-						ParticleSystemWindow.CreateWindow();
-						GUIUtility.ExitGUI();
+						content = this.closeWindowText;
+					}
+				}
+				else
+				{
+					content = this.showWindowText;
+				}
+				if (GUILayout.Button(content, EditorStyles.miniButton, new GUILayoutOption[]
+				{
+					GUILayout.Width(110f)
+				}))
+				{
+					if (instance && instance.IsVisible() && selectedInParticleSystemWindow)
+					{
+						if (!instance.ShowNextTabIfPossible())
+						{
+							instance.Close();
+						}
+					}
+					else
+					{
+						if (!selectedInParticleSystemWindow)
+						{
+							ParticleSystemEditorUtils.lockedParticleSystem = null;
+							Selection.activeGameObject = gameObject;
+						}
+						if (instance)
+						{
+							if (!selectedInParticleSystemWindow)
+							{
+								instance.Clear();
+							}
+							instance.Focus();
+						}
+						else
+						{
+							this.Clear();
+							ParticleSystemWindow.CreateWindow();
+							instance = ParticleSystemWindow.GetInstance();
+							instance.customEditor = this;
+							GUIUtility.ExitGUI();
+						}
 					}
 				}
 			}
@@ -205,17 +224,6 @@ namespace UnityEditor
 			return !instance || !instance.IsVisible() || !this.selectedInParticleSystemWindow;
 		}
 
-		public void OnSceneGUI()
-		{
-			if (this.ShouldShowInspector())
-			{
-				if (this.m_ParticleEffectUI != null)
-				{
-					this.m_ParticleEffectUI.OnSceneGUI();
-				}
-			}
-		}
-
 		public void OnSceneViewGUI(SceneView sceneView)
 		{
 			if (this.ShouldShowInspector())
@@ -230,7 +238,15 @@ namespace UnityEditor
 
 		public override bool HasPreviewGUI()
 		{
-			return this.ShouldShowInspector() && Selection.objects.Length == 1;
+			return this.ShouldShowInspector();
+		}
+
+		public override void DrawPreview(Rect previewArea)
+		{
+			ObjectPreview.DrawPreview(this, previewArea, new UnityEngine.Object[]
+			{
+				base.targets[0]
+			});
 		}
 
 		public override void OnPreviewGUI(Rect r, GUIStyle background)

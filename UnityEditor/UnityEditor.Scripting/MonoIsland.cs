@@ -10,7 +10,7 @@ namespace UnityEditor.Scripting
 
 		public readonly bool _editor;
 
-		public readonly string _classlib_profile;
+		public readonly ApiCompatibilityLevel _api_compatibility_level;
 
 		public readonly string[] _files;
 
@@ -20,12 +20,12 @@ namespace UnityEditor.Scripting
 
 		public readonly string _output;
 
-		public MonoIsland(BuildTarget target, string classlib_profile, string[] files, string[] references, string[] defines, string output)
+		public MonoIsland(BuildTarget target, ApiCompatibilityLevel api_compatibility_level, string[] files, string[] references, string[] defines, string output)
 		{
 			this._target = target;
 			this._development_player = false;
 			this._editor = false;
-			this._classlib_profile = classlib_profile;
+			this._api_compatibility_level = api_compatibility_level;
 			this._files = files;
 			this._references = references;
 			this._defines = defines;

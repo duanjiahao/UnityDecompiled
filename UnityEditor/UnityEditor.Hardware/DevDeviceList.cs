@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.Hardware
 {
@@ -61,6 +62,7 @@ namespace UnityEditor.Hardware
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern DevDevice[] GetDevices();
 
@@ -70,6 +72,7 @@ namespace UnityEditor.Hardware
 			DevDeviceList.OnChanged();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateInternal(string target, DevDevice[] devices);
 	}

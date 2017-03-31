@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Audio
 {
@@ -7,6 +8,7 @@ namespace UnityEngine.Audio
 	{
 		public extern AudioMixer audioMixer
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}

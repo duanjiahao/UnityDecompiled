@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.U2D.Interface;
 
 namespace UnityEditorInternal
 {
@@ -20,7 +21,7 @@ namespace UnityEditorInternal
 				EditorGUIUtility.TextContent("Top Right"),
 				EditorGUIUtility.TextContent("Left"),
 				EditorGUIUtility.TextContent("Right"),
-				EditorGUIUtility.TextContent("sBottom Left"),
+				EditorGUIUtility.TextContent("Bottom Left"),
 				EditorGUIUtility.TextContent("Bottom"),
 				EditorGUIUtility.TextContent("Bottom Right"),
 				EditorGUIUtility.TextContent("Custom")
@@ -69,24 +70,27 @@ namespace UnityEditorInternal
 			}
 		}
 
-		public static SpriteEditorMenu s_SpriteEditorMenu;
-
 		private static SpriteEditorMenu.Styles s_Styles;
 
 		private static long s_LastClosedTime;
 
-		private static int s_Selected;
-
 		private static SpriteEditorMenuSetting s_Setting;
 
-		public static SpriteEditorWindow s_SpriteEditor;
+		private ITexture2D m_PreviewTexture;
 
-		private void Init(Rect buttonRect)
+		private ITexture2D m_SelectedTexture;
+
+		private SpriteFrameModule m_SpriteFrameModule;
+
+		private void Init(Rect buttonRect, SpriteFrameModule sf, ITexture2D previewTexture, ITexture2D selectedTexture)
 		{
 			if (SpriteEditorMenu.s_Setting == null)
 			{
 				SpriteEditorMenu.s_Setting = ScriptableObject.CreateInstance<SpriteEditorMenuSetting>();
 			}
+			this.m_SpriteFrameModule = sf;
+			this.m_PreviewTexture = previewTexture;
+			this.m_SelectedTexture = selectedTexture;
 			buttonRect = GUIUtility.GUIToScreenRect(buttonRect);
 			float y = 145f;
 			Vector2 windowSize = new Vector2(300f, y);
@@ -103,24 +107,20 @@ namespace UnityEditorInternal
 		{
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			SpriteEditorMenu.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
-			SpriteEditorMenu.s_SpriteEditorMenu = null;
 		}
 
-		internal static bool ShowAtPosition(Rect buttonRect)
+		internal static bool ShowAtPosition(Rect buttonRect, SpriteFrameModule sf, ITexture2D previewTexture, ITexture2D selectedTexture)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
 			bool result;
 			if (num >= SpriteEditorMenu.s_LastClosedTime + 50L)
 			{
-				if (Event.current != null)
+				if (UnityEngine.Event.current != null)
 				{
-					Event.current.Use();
+					UnityEngine.Event.current.Use();
 				}
-				if (SpriteEditorMenu.s_SpriteEditorMenu == null)
-				{
-					SpriteEditorMenu.s_SpriteEditorMenu = ScriptableObject.CreateInstance<SpriteEditorMenu>();
-				}
-				SpriteEditorMenu.s_SpriteEditorMenu.Init(buttonRect);
+				SpriteEditorMenu spriteEditorMenu = ScriptableObject.CreateInstance<SpriteEditorMenu>();
+				spriteEditorMenu.Init(buttonRect, sf, previewTexture, selectedTexture);
 				result = true;
 			}
 			else
@@ -188,10 +188,10 @@ namespace UnityEditorInternal
 		private void DoAnalytics()
 		{
 			UsabilityAnalytics.Event("Sprite Editor", "Slice", "Type", (int)SpriteEditorMenu.s_Setting.slicingType);
-			if (SpriteEditorMenu.s_SpriteEditor.originalTexture != null)
+			if (this.m_SelectedTexture != null)
 			{
-				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Texture Width", SpriteEditorMenu.s_SpriteEditor.originalTexture.width);
-				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Texture Height", SpriteEditorMenu.s_SpriteEditor.originalTexture.height);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Texture Width", this.m_SelectedTexture.width);
+				UsabilityAnalytics.Event("Sprite Editor", "Slice", "Texture Height", this.m_SelectedTexture.height);
 			}
 			if (SpriteEditorMenu.s_Setting.slicingType == SpriteEditorMenuSetting.SlicingType.Automatic)
 			{
@@ -231,8 +231,8 @@ namespace UnityEditorInternal
 
 		private void OnGridGUI()
 		{
-			int num = (!(SpriteEditorMenu.s_SpriteEditor.previewTexture != null)) ? 4096 : SpriteEditorMenu.s_SpriteEditor.previewTexture.width;
-			int num2 = (!(SpriteEditorMenu.s_SpriteEditor.previewTexture != null)) ? 4096 : SpriteEditorMenu.s_SpriteEditor.previewTexture.height;
+			int num = (!(this.m_PreviewTexture != null)) ? 4096 : this.m_PreviewTexture.width;
+			int num2 = (!(this.m_PreviewTexture != null)) ? 4096 : this.m_PreviewTexture.height;
 			if (SpriteEditorMenu.s_Setting.slicingType == SpriteEditorMenuSetting.SlicingType.GridByCellCount)
 			{
 				int value = (int)SpriteEditorMenu.s_Setting.gridCellCount.x;
@@ -286,7 +286,7 @@ namespace UnityEditorInternal
 		private void OnAutomaticGUI()
 		{
 			float num = 38f;
-			if (SpriteEditorMenu.s_SpriteEditor.originalTexture != null && TextureUtil.IsCompressedTextureFormat(SpriteEditorMenu.s_SpriteEditor.originalTexture.format))
+			if (this.m_SelectedTexture != null && TextureUtil.IsCompressedTextureFormat(this.m_SelectedTexture.format))
 			{
 				EditorGUILayout.LabelField(SpriteEditorMenu.s_Styles.automaticSlicingHintLabel, SpriteEditorMenu.s_Styles.notice, new GUILayoutOption[0]);
 				num -= 31f;
@@ -329,7 +329,7 @@ namespace UnityEditorInternal
 
 		private void DoAutomaticSlicing()
 		{
-			SpriteEditorMenu.s_SpriteEditor.DoAutomaticSlicing(4, SpriteEditorMenu.s_Setting.spriteAlignment, SpriteEditorMenu.s_Setting.pivot, (SpriteEditorWindow.AutoSlicingMethod)SpriteEditorMenu.s_Setting.autoSlicingMethod);
+			this.m_SpriteFrameModule.DoAutomaticSlicing(4, SpriteEditorMenu.s_Setting.spriteAlignment, SpriteEditorMenu.s_Setting.pivot, (SpriteFrameModule.AutoSlicingMethod)SpriteEditorMenu.s_Setting.autoSlicingMethod);
 		}
 
 		private void DoGridSlicing()
@@ -338,13 +338,13 @@ namespace UnityEditorInternal
 			{
 				this.DetemineGridCellSizeWithCellCount();
 			}
-			SpriteEditorMenu.s_SpriteEditor.DoGridSlicing(SpriteEditorMenu.s_Setting.gridSpriteSize, SpriteEditorMenu.s_Setting.gridSpriteOffset, SpriteEditorMenu.s_Setting.gridSpritePadding, SpriteEditorMenu.s_Setting.spriteAlignment, SpriteEditorMenu.s_Setting.pivot);
+			this.m_SpriteFrameModule.DoGridSlicing(SpriteEditorMenu.s_Setting.gridSpriteSize, SpriteEditorMenu.s_Setting.gridSpriteOffset, SpriteEditorMenu.s_Setting.gridSpritePadding, SpriteEditorMenu.s_Setting.spriteAlignment, SpriteEditorMenu.s_Setting.pivot);
 		}
 
 		private void DetemineGridCellSizeWithCellCount()
 		{
-			int num = (!(SpriteEditorMenu.s_SpriteEditor.previewTexture != null)) ? 4096 : SpriteEditorMenu.s_SpriteEditor.previewTexture.width;
-			int num2 = (!(SpriteEditorMenu.s_SpriteEditor.previewTexture != null)) ? 4096 : SpriteEditorMenu.s_SpriteEditor.previewTexture.height;
+			int num = (!(this.m_PreviewTexture != null)) ? 4096 : this.m_PreviewTexture.width;
+			int num2 = (!(this.m_PreviewTexture != null)) ? 4096 : this.m_PreviewTexture.height;
 			SpriteEditorMenu.s_Setting.gridSpriteSize.x = ((float)num - SpriteEditorMenu.s_Setting.gridSpriteOffset.x - SpriteEditorMenu.s_Setting.gridSpritePadding.x * SpriteEditorMenu.s_Setting.gridCellCount.x) / SpriteEditorMenu.s_Setting.gridCellCount.x;
 			SpriteEditorMenu.s_Setting.gridSpriteSize.y = ((float)num2 - SpriteEditorMenu.s_Setting.gridSpriteOffset.y - SpriteEditorMenu.s_Setting.gridSpritePadding.y * SpriteEditorMenu.s_Setting.gridCellCount.y) / SpriteEditorMenu.s_Setting.gridCellCount.y;
 			SpriteEditorMenu.s_Setting.gridSpriteSize.x = Mathf.Clamp(SpriteEditorMenu.s_Setting.gridSpriteSize.x, 1f, (float)num);

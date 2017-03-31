@@ -405,7 +405,7 @@ namespace UnityEditor
 			arrayList.Remove(win);
 			arrayList.Insert(0, splitview);
 			arrayList.Insert(1, win);
-			InternalEditorUtility.SaveToSerializedFileAndForget(arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[], path, false);
+			InternalEditorUtility.SaveToSerializedFileAndForget(arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[], path, true);
 		}
 
 		public static void Maximize(EditorWindow win)
@@ -771,7 +771,7 @@ namespace UnityEditor
 					arrayList.Add(editorWindow);
 				}
 			}
-			InternalEditorUtility.SaveToSerializedFileAndForget(arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[], path, false);
+			InternalEditorUtility.SaveToSerializedFileAndForget(arrayList.ToArray(typeof(UnityEngine.Object)) as UnityEngine.Object[], path, true);
 		}
 
 		public static void EnsureMainWindowHasBeenLoaded()

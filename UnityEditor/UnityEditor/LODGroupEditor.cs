@@ -363,7 +363,7 @@ namespace UnityEditor
 				{
 					GUI.enabled = false;
 				}
-				if (modelImporter != null && GUILayout.Button((!flag2) ? LODGroupGUI.Styles.m_UploadToImporterDisabled : LODGroupGUI.Styles.m_UploadToImporter, new GUILayoutOption[0]))
+				if (GUILayout.Button((!flag2) ? LODGroupGUI.Styles.m_UploadToImporterDisabled : LODGroupGUI.Styles.m_UploadToImporter, new GUILayoutOption[0]))
 				{
 					for (int j = 0; j < serializedProperty3.arraySize; j++)
 					{

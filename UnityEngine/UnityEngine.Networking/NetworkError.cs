@@ -15,6 +15,7 @@ namespace UnityEngine.Networking
 		WrongOperation,
 		VersionMismatch,
 		CRCMismatch,
-		DNSFailure
+		DNSFailure,
+		UsageError
 	}
 }

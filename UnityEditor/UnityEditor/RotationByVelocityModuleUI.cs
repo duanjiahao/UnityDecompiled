@@ -45,18 +45,18 @@ namespace UnityEditor
 				{
 					RotationByVelocityModuleUI.s_Texts = new RotationByVelocityModuleUI.Texts();
 				}
-				this.m_X = new SerializedMinMaxCurve(this, RotationByVelocityModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange);
-				this.m_Y = new SerializedMinMaxCurve(this, RotationByVelocityModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange);
+				this.m_SeparateAxes = base.GetProperty("separateAxes");
+				this.m_Range = base.GetProperty("range");
+				this.m_X = new SerializedMinMaxCurve(this, RotationByVelocityModuleUI.s_Texts.x, "x", ModuleUI.kUseSignedRange, false, this.m_SeparateAxes.boolValue);
+				this.m_Y = new SerializedMinMaxCurve(this, RotationByVelocityModuleUI.s_Texts.y, "y", ModuleUI.kUseSignedRange, false, this.m_SeparateAxes.boolValue);
 				this.m_Z = new SerializedMinMaxCurve(this, RotationByVelocityModuleUI.s_Texts.z, "curve", ModuleUI.kUseSignedRange);
 				this.m_X.m_RemapValue = 57.29578f;
 				this.m_Y.m_RemapValue = 57.29578f;
 				this.m_Z.m_RemapValue = 57.29578f;
-				this.m_SeparateAxes = base.GetProperty("separateAxes");
-				this.m_Range = base.GetProperty("range");
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (RotationByVelocityModuleUI.s_Texts == null)
 			{
@@ -77,11 +77,12 @@ namespace UnityEditor
 					this.m_Z.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_9C_0 = this.m_X;
+			if (!this.m_Z.stateHasMultipleDifferentValues)
+			{
+				this.m_X.SetMinMaxState(this.m_Z.state, flag);
+				this.m_Y.SetMinMaxState(this.m_Z.state, flag);
+			}
 			MinMaxCurveState state = this.m_Z.state;
-			this.m_Y.state = state;
-			arg_9C_0.state = state;
-			MinMaxCurveState state2 = this.m_Z.state;
 			if (flag)
 			{
 				this.m_Z.m_DisplayName = RotationByVelocityModuleUI.s_Texts.z;
@@ -92,7 +93,7 @@ namespace UnityEditor
 				this.m_Z.m_DisplayName = RotationByVelocityModuleUI.s_Texts.rotation;
 				ModuleUI.GUIMinMaxCurve(RotationByVelocityModuleUI.s_Texts.rotation, this.m_Z, new GUILayoutOption[0]);
 			}
-			using (new EditorGUI.DisabledScope(state2 == MinMaxCurveState.k_Scalar || state2 == MinMaxCurveState.k_TwoScalars))
+			using (new EditorGUI.DisabledScope(state == MinMaxCurveState.k_Scalar || state == MinMaxCurveState.k_TwoScalars))
 			{
 				ModuleUI.GUIMinMaxRange(RotationByVelocityModuleUI.s_Texts.velocityRange, this.m_Range, new GUILayoutOption[0]);
 			}

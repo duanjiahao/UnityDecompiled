@@ -1,5 +1,4 @@
 using System;
-using UnityEditorInternal;
 
 namespace UnityEditor
 {
@@ -32,7 +31,7 @@ namespace UnityEditor
 			this.m_Flags = flags;
 			if (this.m_ScriptClass == "")
 			{
-				this.m_DisplayText = BaseObjectTools.ClassIDToString(this.m_ClassID);
+				this.m_DisplayText = UnityType.FindTypeByPersistentTypeID(this.m_ClassID).name;
 			}
 			else
 			{

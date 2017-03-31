@@ -27,6 +27,7 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AnimationClip ClipInstanceToScriptingObject(int instanceID);
 	}

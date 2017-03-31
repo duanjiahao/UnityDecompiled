@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Security;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
 
 namespace UnityEngine
@@ -101,6 +102,23 @@ namespace UnityEngine
 			}
 		}
 
+		internal static void BeginContainer(GUILayoutUtility.LayoutCache cache)
+		{
+			if (Event.current.type == EventType.Layout)
+			{
+				GUILayoutUtility.current.topLevel = (cache.topLevel = new GUILayoutGroup());
+				GUILayoutUtility.current.layoutGroups.Clear();
+				GUILayoutUtility.current.layoutGroups.Push(GUILayoutUtility.current.topLevel);
+				GUILayoutUtility.current.windows = (cache.windows = new GUILayoutGroup());
+			}
+			else
+			{
+				GUILayoutUtility.current.topLevel = cache.topLevel;
+				GUILayoutUtility.current.layoutGroups = cache.layoutGroups;
+				GUILayoutUtility.current.windows = cache.windows;
+			}
+		}
+
 		internal static void BeginWindow(int windowID, GUIStyle style, GUILayoutOption[] options)
 		{
 			GUILayoutUtility.LayoutCache layoutCache = GUILayoutUtility.SelectIDList(windowID, true);
@@ -158,6 +176,15 @@ namespace UnityEngine
 			GUILayoutUtility.current.topLevel.SetHorizontal(0f, (float)Screen.width / GUIUtility.pixelsPerPoint);
 			GUILayoutUtility.current.topLevel.CalcHeight();
 			GUILayoutUtility.current.topLevel.SetVertical(0f, (float)Screen.height / GUIUtility.pixelsPerPoint);
+			GUILayoutUtility.LayoutFreeGroup(GUILayoutUtility.current.windows);
+		}
+
+		internal static void LayoutFromContainer(float w, float h)
+		{
+			GUILayoutUtility.current.topLevel.CalcWidth();
+			GUILayoutUtility.current.topLevel.SetHorizontal(0f, w);
+			GUILayoutUtility.current.topLevel.CalcHeight();
+			GUILayoutUtility.current.topLevel.SetVertical(0f, h);
 			GUILayoutUtility.LayoutFreeGroup(GUILayoutUtility.current.windows);
 		}
 
@@ -501,6 +528,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_GetWindowRect(int windowID, out Rect value);
 
@@ -509,6 +537,7 @@ namespace UnityEngine
 			GUILayoutUtility.INTERNAL_CALL_Internal_MoveWindow(windowID, ref r);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_MoveWindow(int windowID, ref Rect r);
 
@@ -519,6 +548,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetWindowsBounds(out Rect value);
 	}

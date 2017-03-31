@@ -7,7 +7,7 @@ namespace UnityEditor
 	{
 		public int instanceId;
 
-		public int memorySize;
+		public long memorySize;
 
 		public int reason;
 

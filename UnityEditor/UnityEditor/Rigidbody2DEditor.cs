@@ -41,9 +41,15 @@ namespace UnityEditor
 
 		private readonly AnimBool m_ShowInfo = new AnimBool();
 
+		private readonly AnimBool m_ShowContacts = new AnimBool();
+
+		private Vector2 m_ContactScrollPosition;
+
 		private static readonly GUIContent m_FreezePositionLabel = new GUIContent("Freeze Position");
 
 		private static readonly GUIContent m_FreezeRotationLabel = new GUIContent("Freeze Rotation");
+
+		private static ContactPoint2D[] m_Contacts = new ContactPoint2D[100];
 
 		private const int k_ToggleOffset = 30;
 
@@ -68,6 +74,8 @@ namespace UnityEditor
 			this.m_ShowIsKinematic.value = (rigidbody2D.bodyType != RigidbodyType2D.Kinematic);
 			this.m_ShowIsKinematic.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowInfo.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ShowContacts.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ContactScrollPosition = Vector2.zero;
 		}
 
 		public void OnDisable()
@@ -75,6 +83,7 @@ namespace UnityEditor
 			this.m_ShowIsStatic.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowIsKinematic.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowInfo.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+			this.m_ShowContacts.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 		}
 
 		public override void OnInspectorGUI()
@@ -164,6 +173,7 @@ namespace UnityEditor
 					EditorGUILayout.Vector2Field("World Center of Mass", rigidbody2D.worldCenterOfMass, new GUILayoutOption[0]);
 					EditorGUILayout.LabelField("Sleep State", (!rigidbody2D.IsSleeping()) ? "Awake" : "Asleep", new GUILayoutOption[0]);
 					EditorGUI.EndDisabledGroup();
+					this.ShowContacts(rigidbody2D);
 					base.Repaint();
 				}
 				else
@@ -171,7 +181,49 @@ namespace UnityEditor
 					EditorGUILayout.HelpBox("Cannot show Info properties when multiple bodies are selected.", MessageType.Info);
 				}
 			}
-			EditorGUILayout.EndFadeGroup();
+			Rigidbody2DEditor.FixedEndFadeGroup(this.m_ShowInfo.faded);
+		}
+
+		private void ShowContacts(Rigidbody2D body)
+		{
+			EditorGUI.indentLevel++;
+			this.m_ShowContacts.target = EditorGUILayout.Foldout(this.m_ShowContacts.target, "Contacts");
+			if (EditorGUILayout.BeginFadeGroup(this.m_ShowContacts.faded))
+			{
+				int contacts = body.GetContacts(Rigidbody2DEditor.m_Contacts);
+				if (contacts > 0)
+				{
+					this.m_ContactScrollPosition = EditorGUILayout.BeginScrollView(this.m_ContactScrollPosition, new GUILayoutOption[]
+					{
+						GUILayout.Height(180f)
+					});
+					EditorGUI.BeginDisabledGroup(true);
+					for (int i = 0; i < contacts; i++)
+					{
+						ContactPoint2D contactPoint2D = Rigidbody2DEditor.m_Contacts[i];
+						EditorGUILayout.HelpBox(string.Format("Contact#{0}", i), MessageType.None);
+						EditorGUI.indentLevel++;
+						EditorGUILayout.Vector2Field("Point", contactPoint2D.point, new GUILayoutOption[0]);
+						EditorGUILayout.Vector2Field("Normal", contactPoint2D.normal, new GUILayoutOption[0]);
+						EditorGUILayout.Vector2Field("Relative Velocity", contactPoint2D.relativeVelocity, new GUILayoutOption[0]);
+						EditorGUILayout.FloatField("Normal Impulse", contactPoint2D.normalImpulse, new GUILayoutOption[0]);
+						EditorGUILayout.FloatField("Tangent Impulse", contactPoint2D.tangentImpulse, new GUILayoutOption[0]);
+						EditorGUILayout.ObjectField("Collider", contactPoint2D.collider, typeof(Collider2D), true, new GUILayoutOption[0]);
+						EditorGUILayout.ObjectField("Rigidbody", contactPoint2D.rigidbody, typeof(Rigidbody2D), false, new GUILayoutOption[0]);
+						EditorGUILayout.ObjectField("OtherCollider", contactPoint2D.otherCollider, typeof(Collider2D), false, new GUILayoutOption[0]);
+						EditorGUI.indentLevel--;
+						EditorGUILayout.Space();
+					}
+					EditorGUI.EndDisabledGroup();
+					EditorGUILayout.EndScrollView();
+				}
+				else
+				{
+					EditorGUILayout.HelpBox("No Contacts", MessageType.Info);
+				}
+			}
+			Rigidbody2DEditor.FixedEndFadeGroup(this.m_ShowContacts.faded);
+			EditorGUI.indentLevel--;
 		}
 
 		private static void FixedEndFadeGroup(float value)

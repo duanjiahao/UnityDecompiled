@@ -110,7 +110,7 @@ namespace UnityEditor
 					text3
 				}), new GUILayoutOption[]
 				{
-					GUILayout.Width(400f),
+					GUILayout.Width(550f),
 					GUILayout.Height(42f)
 				});
 				this.m_TextInitialYPos = 108f;
@@ -229,7 +229,7 @@ namespace UnityEditor
 				{
 					" [",
 					text,
-					" extension: ",
+					": ",
 					extensionVersion,
 					"]"
 				});

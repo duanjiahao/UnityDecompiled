@@ -58,8 +58,6 @@ namespace UnityEditor
 
 			public readonly GUIStyle select = new GUIStyle("MeTransitionSelect");
 
-			public readonly GUIStyle overlay = new GUIStyle("MeTransBGOver");
-
 			public Styles()
 			{
 				this.timeBlockRight.alignment = TextAnchor.MiddleRight;
@@ -745,8 +743,8 @@ namespace UnityEditor
 						break;
 					case Timeline.DragStates.Source:
 					{
-						TimeArea expr_4A8_cp_0 = this.m_TimeArea;
-						expr_4A8_cp_0.m_Translation.x = expr_4A8_cp_0.m_Translation.x + current.delta.x;
+						TimeArea expr_4A9_cp_0 = this.m_TimeArea;
+						expr_4A9_cp_0.m_Translation.x = expr_4A9_cp_0.m_Translation.x + current.delta.x;
 						break;
 					}
 					case Timeline.DragStates.Playhead:
@@ -757,8 +755,8 @@ namespace UnityEditor
 						break;
 					case Timeline.DragStates.TimeArea:
 					{
-						TimeArea expr_4D3_cp_0 = this.m_TimeArea;
-						expr_4D3_cp_0.m_Translation.x = expr_4D3_cp_0.m_Translation.x + current.delta.x;
+						TimeArea expr_4D4_cp_0 = this.m_TimeArea;
+						expr_4D4_cp_0.m_Translation.x = expr_4D4_cp_0.m_Translation.x + current.delta.x;
 						break;
 					}
 					}
@@ -766,25 +764,22 @@ namespace UnityEditor
 					GUI.changed = true;
 				}
 			}
-			if (current.type == EventType.MouseUp)
+			if (Event.current.GetTypeForControl(this.id) == EventType.MouseUp)
 			{
-				if (GUIUtility.hotControl == this.id)
-				{
-					this.SrcStartTime = this.m_TimeArea.PixelToTime(num3, rect);
-					this.SrcStopTime = this.m_TimeArea.PixelToTime(num4, rect);
-					this.DstStartTime = this.m_TimeArea.PixelToTime(num5, rect);
-					this.DstStopTime = this.m_TimeArea.PixelToTime(num6, rect);
-					this.TransitionStartTime = this.m_TimeArea.PixelToTime(num7, rect);
-					this.TransitionStopTime = this.m_TimeArea.PixelToTime(num8, rect);
-					GUI.changed = true;
-					this.m_DragState = Timeline.DragStates.None;
-					result = this.WasDraggingData();
-					this.m_LeftThumbOffset = 0f;
-					this.m_RightThumbOffset = 0f;
-					this.m_DstDragOffset = 0f;
-					GUIUtility.hotControl = 0;
-					current.Use();
-				}
+				this.SrcStartTime = this.m_TimeArea.PixelToTime(num3, rect);
+				this.SrcStopTime = this.m_TimeArea.PixelToTime(num4, rect);
+				this.DstStartTime = this.m_TimeArea.PixelToTime(num5, rect);
+				this.DstStopTime = this.m_TimeArea.PixelToTime(num6, rect);
+				this.TransitionStartTime = this.m_TimeArea.PixelToTime(num7, rect);
+				this.TransitionStopTime = this.m_TimeArea.PixelToTime(num8, rect);
+				GUI.changed = true;
+				this.m_DragState = Timeline.DragStates.None;
+				result = this.WasDraggingData();
+				this.m_LeftThumbOffset = 0f;
+				this.m_RightThumbOffset = 0f;
+				this.m_DstDragOffset = 0f;
+				GUIUtility.hotControl = 0;
+				current.Use();
 			}
 			GUI.Box(position, GUIContent.none, this.styles.header);
 			GUI.Box(position2, GUIContent.none, this.styles.background);

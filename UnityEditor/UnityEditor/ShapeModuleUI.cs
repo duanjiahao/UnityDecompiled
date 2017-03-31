@@ -1,29 +1,66 @@
 using System;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	internal class ShapeModuleUI : ModuleUI
 	{
-		private enum ShapeTypes
+		private struct MultiModeParameter
 		{
-			Sphere,
-			SphereShell,
-			Hemisphere,
-			HemisphereShell,
-			Cone,
-			Box,
-			Mesh,
-			ConeShell,
-			ConeVolume,
-			ConeVolumeShell,
-			Circle,
-			CircleEdge,
-			SingleSidedEdge,
-			MeshRenderer,
-			SkinnedMeshRenderer,
-			BoxShell,
-			BoxEdge
+			public enum ValueMode
+			{
+				Random,
+				Loop,
+				PingPong,
+				BurstSpread
+			}
+
+			public SerializedProperty m_Value;
+
+			public SerializedProperty m_Mode;
+
+			public SerializedProperty m_Spread;
+
+			public SerializedMinMaxCurve m_Speed;
+
+			public static ShapeModuleUI.MultiModeParameter GetProperty(ModuleUI ui, string name, GUIContent speed)
+			{
+				return new ShapeModuleUI.MultiModeParameter
+				{
+					m_Value = ui.GetProperty(name + ".value"),
+					m_Mode = ui.GetProperty(name + ".mode"),
+					m_Spread = ui.GetProperty(name + ".spread"),
+					m_Speed = new SerializedMinMaxCurve(ui, speed, name + ".speed", ModuleUI.kUseSignedRange),
+					m_Speed = 
+					{
+						m_AllowRandom = false
+					}
+				};
+			}
+
+			public void OnInspectorGUI(ShapeModuleUI.MultiModeTexts text)
+			{
+				ModuleUI.GUIFloat(text.value, this.m_Value, new GUILayoutOption[0]);
+				EditorGUI.indentLevel++;
+				ModuleUI.GUIPopup(text.mode, this.m_Mode, new string[]
+				{
+					"Random",
+					"Loop",
+					"Ping-Pong",
+					"Burst Spread"
+				}, new GUILayoutOption[0]);
+				ModuleUI.GUIFloat(text.spread, this.m_Spread, new GUILayoutOption[0]);
+				if (!this.m_Mode.hasMultipleDifferentValues)
+				{
+					ShapeModuleUI.MultiModeParameter.ValueMode intValue = (ShapeModuleUI.MultiModeParameter.ValueMode)this.m_Mode.intValue;
+					if (intValue == ShapeModuleUI.MultiModeParameter.ValueMode.Loop || intValue == ShapeModuleUI.MultiModeParameter.ValueMode.PingPong)
+					{
+						ModuleUI.GUIMinMaxCurve(text.speed, this.m_Speed, new GUILayoutOption[0]);
+					}
+				}
+				EditorGUI.indentLevel--;
+			}
 		}
 
 		private class Texts
@@ -50,7 +87,7 @@ namespace UnityEditor
 
 			public GUIContent meshMaterialIndex = EditorGUIUtility.TextContent("Single Material|Only emit from a specific material of the mesh.");
 
-			public GUIContent useMeshColors = EditorGUIUtility.TextContent("Use Mesh Colors|Modulate particle color with mesh vertex colors, or if they don't exist, use the shader color property \"_Color\" or \"_TintColor\" from the material.");
+			public GUIContent useMeshColors = EditorGUIUtility.TextContent("Use Mesh Colors|Modulate particle color with mesh vertex colors, or if they don't exist, use the shader color property \"_Color\" or \"_TintColor\" from the material. Does not read texture colors.");
 
 			public GUIContent meshNormalOffset = EditorGUIUtility.TextContent("Normal Offset|Offset particle spawn positions along the mesh normal.");
 
@@ -67,8 +104,25 @@ namespace UnityEditor
 			public GUIContent emitFromEdge = EditorGUIUtility.TextContent("Emit from Edge|Emit from edge of the shape. If disabled particles will be emitted from the volume of the shape.");
 
 			public GUIContent emitFrom = EditorGUIUtility.TextContent("Emit from:|Specifies from where particles are emitted.");
+		}
 
-			public GUIContent arc = EditorGUIUtility.TextContent("Arc|Circle arc angle.");
+		private class MultiModeTexts
+		{
+			public GUIContent value;
+
+			public GUIContent mode;
+
+			public GUIContent spread;
+
+			public GUIContent speed;
+
+			public MultiModeTexts(string _value, string _mode, string _spread, string _speed)
+			{
+				this.value = EditorGUIUtility.TextContent(_value);
+				this.mode = EditorGUIUtility.TextContent(_mode);
+				this.spread = EditorGUIUtility.TextContent(_spread);
+				this.speed = EditorGUIUtility.TextContent(_speed);
+			}
 		}
 
 		private SerializedProperty m_Type;
@@ -77,7 +131,7 @@ namespace UnityEditor
 
 		private SerializedProperty m_SphericalDirectionAmount;
 
-		private SerializedProperty m_Radius;
+		private ShapeModuleUI.MultiModeParameter m_Radius;
 
 		private SerializedProperty m_Angle;
 
@@ -89,7 +143,7 @@ namespace UnityEditor
 
 		private SerializedProperty m_BoxZ;
 
-		private SerializedProperty m_Arc;
+		private ShapeModuleUI.MultiModeParameter m_Arc;
 
 		private SerializedProperty m_PlacementMode;
 
@@ -113,9 +167,9 @@ namespace UnityEditor
 
 		private Material m_Material;
 
-		private static int s_BoxHash = "BoxColliderEditor".GetHashCode();
+		private static int s_BoxHandleControlIDHint = typeof(ShapeModuleUI).Name.GetHashCode();
 
-		private BoxEditor m_BoxEditor = new BoxEditor(true, ShapeModuleUI.s_BoxHash);
+		private BoxBoundsHandle m_BoxBoundsHandle = new BoxBoundsHandle(ShapeModuleUI.s_BoxHandleControlIDHint);
 
 		private static Color s_ShapeGizmoColor = new Color(0.5803922f, 0.8980392f, 1f, 0.9f);
 
@@ -132,17 +186,17 @@ namespace UnityEditor
 			"Edge"
 		};
 
-		private readonly ShapeModuleUI.ShapeTypes[] m_GuiTypes = new ShapeModuleUI.ShapeTypes[]
+		private readonly ParticleSystemShapeType[] m_GuiTypes = new ParticleSystemShapeType[]
 		{
-			ShapeModuleUI.ShapeTypes.Sphere,
-			ShapeModuleUI.ShapeTypes.Hemisphere,
-			ShapeModuleUI.ShapeTypes.Cone,
-			ShapeModuleUI.ShapeTypes.Box,
-			ShapeModuleUI.ShapeTypes.Mesh,
-			ShapeModuleUI.ShapeTypes.MeshRenderer,
-			ShapeModuleUI.ShapeTypes.SkinnedMeshRenderer,
-			ShapeModuleUI.ShapeTypes.Circle,
-			ShapeModuleUI.ShapeTypes.SingleSidedEdge
+			ParticleSystemShapeType.Sphere,
+			ParticleSystemShapeType.Hemisphere,
+			ParticleSystemShapeType.Cone,
+			ParticleSystemShapeType.Box,
+			ParticleSystemShapeType.Mesh,
+			ParticleSystemShapeType.MeshRenderer,
+			ParticleSystemShapeType.SkinnedMeshRenderer,
+			ParticleSystemShapeType.Circle,
+			ParticleSystemShapeType.SingleSidedEdge
 		};
 
 		private readonly int[] m_TypeToGuiTypeIndex = new int[]
@@ -166,32 +220,36 @@ namespace UnityEditor
 			3
 		};
 
-		private readonly ShapeModuleUI.ShapeTypes[] boxShapes = new ShapeModuleUI.ShapeTypes[]
+		private readonly ParticleSystemShapeType[] boxShapes = new ParticleSystemShapeType[]
 		{
-			ShapeModuleUI.ShapeTypes.Box,
-			ShapeModuleUI.ShapeTypes.BoxShell,
-			ShapeModuleUI.ShapeTypes.BoxEdge
+			ParticleSystemShapeType.Box,
+			ParticleSystemShapeType.BoxShell,
+			ParticleSystemShapeType.BoxEdge
 		};
 
-		private readonly ShapeModuleUI.ShapeTypes[] coneShapes = new ShapeModuleUI.ShapeTypes[]
+		private readonly ParticleSystemShapeType[] coneShapes = new ParticleSystemShapeType[]
 		{
-			ShapeModuleUI.ShapeTypes.Cone,
-			ShapeModuleUI.ShapeTypes.ConeShell,
-			ShapeModuleUI.ShapeTypes.ConeVolume,
-			ShapeModuleUI.ShapeTypes.ConeVolumeShell
+			ParticleSystemShapeType.Cone,
+			ParticleSystemShapeType.ConeShell,
+			ParticleSystemShapeType.ConeVolume,
+			ParticleSystemShapeType.ConeVolumeShell
 		};
 
-		private readonly ShapeModuleUI.ShapeTypes[] shellShapes = new ShapeModuleUI.ShapeTypes[]
+		private readonly ParticleSystemShapeType[] shellShapes = new ParticleSystemShapeType[]
 		{
-			ShapeModuleUI.ShapeTypes.BoxShell,
-			ShapeModuleUI.ShapeTypes.HemisphereShell,
-			ShapeModuleUI.ShapeTypes.SphereShell,
-			ShapeModuleUI.ShapeTypes.ConeShell,
-			ShapeModuleUI.ShapeTypes.ConeVolumeShell,
-			ShapeModuleUI.ShapeTypes.CircleEdge
+			ParticleSystemShapeType.BoxShell,
+			ParticleSystemShapeType.HemisphereShell,
+			ParticleSystemShapeType.SphereShell,
+			ParticleSystemShapeType.ConeShell,
+			ParticleSystemShapeType.ConeVolumeShell,
+			ParticleSystemShapeType.CircleEdge
 		};
 
 		private static ShapeModuleUI.Texts s_Texts = new ShapeModuleUI.Texts();
+
+		private static ShapeModuleUI.MultiModeTexts s_RadiusTexts = new ShapeModuleUI.MultiModeTexts("Radius|New particles are spawned along the radius.", "Mode|Control how particles are spawned along the radius.", "Spread|Spawn particles only at specific positions along the radius (0 to disable).", "Speed|Control the speed that the emission position moves along the radius.");
+
+		private static ShapeModuleUI.MultiModeTexts s_ArcTexts = new ShapeModuleUI.MultiModeTexts("Arc|New particles are spawned around the arc.", "Mode|Control how particles are spawned around the arc.", "Spread|Spawn particles only at specific angles around the arc (0 to disable).", "Speed|Control the speed that the emission position moves around the arc.");
 
 		public ShapeModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "ShapeModule", displayName, ModuleUI.VisibilityState.VisibleAndFolded)
 		{
@@ -207,13 +265,13 @@ namespace UnityEditor
 					ShapeModuleUI.s_Texts = new ShapeModuleUI.Texts();
 				}
 				this.m_Type = base.GetProperty("type");
-				this.m_Radius = base.GetProperty("radius");
+				this.m_Radius = ShapeModuleUI.MultiModeParameter.GetProperty(this, "radius", ShapeModuleUI.s_RadiusTexts.speed);
 				this.m_Angle = base.GetProperty("angle");
 				this.m_Length = base.GetProperty("length");
 				this.m_BoxX = base.GetProperty("boxX");
 				this.m_BoxY = base.GetProperty("boxY");
 				this.m_BoxZ = base.GetProperty("boxZ");
-				this.m_Arc = base.GetProperty("arc");
+				this.m_Arc = ShapeModuleUI.MultiModeParameter.GetProperty(this, "arc", ShapeModuleUI.s_ArcTexts.speed);
 				this.m_PlacementMode = base.GetProperty("placementMode");
 				this.m_Mesh = base.GetProperty("m_Mesh");
 				this.m_MeshRenderer = base.GetProperty("m_MeshRenderer");
@@ -227,7 +285,6 @@ namespace UnityEditor
 				this.m_SphericalDirectionAmount = base.GetProperty("sphericalDirectionAmount");
 				this.m_AlignToDirection = base.GetProperty("alignToDirection");
 				this.m_Material = (EditorGUIUtility.GetBuiltinExtraResource(typeof(Material), "Default-Material.mat") as Material);
-				this.m_BoxEditor.SetAlwaysDisplayHandles(true);
 			}
 		}
 
@@ -236,32 +293,32 @@ namespace UnityEditor
 			return this.m_ParticleSystemUI.GetEmitterDuration();
 		}
 
-		private ShapeModuleUI.ShapeTypes ConvertConeEmitFromToConeType(int emitFrom)
+		private ParticleSystemShapeType ConvertConeEmitFromToConeType(int emitFrom)
 		{
 			return this.coneShapes[emitFrom];
 		}
 
-		private int ConvertConeTypeToConeEmitFrom(ShapeModuleUI.ShapeTypes shapeType)
+		private int ConvertConeTypeToConeEmitFrom(ParticleSystemShapeType shapeType)
 		{
-			return Array.IndexOf<ShapeModuleUI.ShapeTypes>(this.coneShapes, shapeType);
+			return Array.IndexOf<ParticleSystemShapeType>(this.coneShapes, shapeType);
 		}
 
-		private ShapeModuleUI.ShapeTypes ConvertBoxEmitFromToConeType(int emitFrom)
+		private ParticleSystemShapeType ConvertBoxEmitFromToConeType(int emitFrom)
 		{
 			return this.boxShapes[emitFrom];
 		}
 
-		private int ConvertBoxTypeToConeEmitFrom(ShapeModuleUI.ShapeTypes shapeType)
+		private int ConvertBoxTypeToConeEmitFrom(ParticleSystemShapeType shapeType)
 		{
-			return Array.IndexOf<ShapeModuleUI.ShapeTypes>(this.boxShapes, shapeType);
+			return Array.IndexOf<ParticleSystemShapeType>(this.boxShapes, shapeType);
 		}
 
-		private bool GetUsesShell(ShapeModuleUI.ShapeTypes shapeType)
+		private bool GetUsesShell(ParticleSystemShapeType shapeType)
 		{
-			return Array.IndexOf<ShapeModuleUI.ShapeTypes>(this.shellShapes, shapeType) != -1;
+			return Array.IndexOf<ParticleSystemShapeType>(this.shellShapes, shapeType) != -1;
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (ShapeModuleUI.s_Texts == null)
 			{
@@ -269,33 +326,36 @@ namespace UnityEditor
 			}
 			int num = this.m_Type.intValue;
 			int num2 = this.m_TypeToGuiTypeIndex[num];
-			bool usesShell = this.GetUsesShell((ShapeModuleUI.ShapeTypes)num);
+			bool usesShell = this.GetUsesShell((ParticleSystemShapeType)num);
+			EditorGUI.BeginChangeCheck();
 			int num3 = ModuleUI.GUIPopup(ShapeModuleUI.s_Texts.shape, num2, this.m_GuiNames, new GUILayoutOption[0]);
-			ShapeModuleUI.ShapeTypes shapeTypes = this.m_GuiTypes[num3];
+			bool flag = EditorGUI.EndChangeCheck();
+			ParticleSystemShapeType particleSystemShapeType = this.m_GuiTypes[num3];
 			if (num3 != num2)
 			{
-				num = (int)shapeTypes;
+				num = (int)particleSystemShapeType;
 			}
-			switch (shapeTypes)
+			switch (particleSystemShapeType)
 			{
-			case ShapeModuleUI.ShapeTypes.Sphere:
+			case ParticleSystemShapeType.Sphere:
 			{
-				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius, new GUILayoutOption[0]);
-				bool flag = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.emitFromShell, usesShell, new GUILayoutOption[0]);
-				num = ((!flag) ? 0 : 1);
-				break;
-			}
-			case ShapeModuleUI.ShapeTypes.Hemisphere:
-			{
-				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius, new GUILayoutOption[0]);
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius.m_Value, new GUILayoutOption[0]);
 				bool flag2 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.emitFromShell, usesShell, new GUILayoutOption[0]);
-				num = ((!flag2) ? 2 : 3);
+				num = ((!flag2) ? 0 : 1);
 				break;
 			}
-			case ShapeModuleUI.ShapeTypes.Cone:
+			case ParticleSystemShapeType.Hemisphere:
+			{
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius.m_Value, new GUILayoutOption[0]);
+				bool flag3 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.emitFromShell, usesShell, new GUILayoutOption[0]);
+				num = ((!flag3) ? 2 : 3);
+				break;
+			}
+			case ParticleSystemShapeType.Cone:
 			{
 				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.coneAngle, this.m_Angle, new GUILayoutOption[0]);
-				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius, new GUILayoutOption[0]);
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius.m_Value, new GUILayoutOption[0]);
+				this.m_Arc.OnInspectorGUI(ShapeModuleUI.s_ArcTexts);
 				bool disabled = num != 8 && num != 9;
 				using (new EditorGUI.DisabledScope(disabled))
 				{
@@ -308,12 +368,12 @@ namespace UnityEditor
 					"Volume",
 					"Volume Shell"
 				};
-				int num4 = this.ConvertConeTypeToConeEmitFrom((ShapeModuleUI.ShapeTypes)num);
+				int num4 = this.ConvertConeTypeToConeEmitFrom((ParticleSystemShapeType)num);
 				num4 = ModuleUI.GUIPopup(ShapeModuleUI.s_Texts.emitFrom, num4, options, new GUILayoutOption[0]);
 				num = (int)this.ConvertConeEmitFromToConeType(num4);
 				break;
 			}
-			case ShapeModuleUI.ShapeTypes.Box:
+			case ParticleSystemShapeType.Box:
 			{
 				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.boxX, this.m_BoxX, new GUILayoutOption[0]);
 				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.boxY, this.m_BoxY, new GUILayoutOption[0]);
@@ -324,14 +384,14 @@ namespace UnityEditor
 					"Shell",
 					"Edge"
 				};
-				int num5 = this.ConvertBoxTypeToConeEmitFrom((ShapeModuleUI.ShapeTypes)num);
+				int num5 = this.ConvertBoxTypeToConeEmitFrom((ParticleSystemShapeType)num);
 				num5 = ModuleUI.GUIPopup(ShapeModuleUI.s_Texts.emitFrom, num5, options2, new GUILayoutOption[0]);
 				num = (int)this.ConvertBoxEmitFromToConeType(num5);
 				break;
 			}
-			case ShapeModuleUI.ShapeTypes.Mesh:
-			case ShapeModuleUI.ShapeTypes.MeshRenderer:
-			case ShapeModuleUI.ShapeTypes.SkinnedMeshRenderer:
+			case ParticleSystemShapeType.Mesh:
+			case ParticleSystemShapeType.MeshRenderer:
+			case ParticleSystemShapeType.SkinnedMeshRenderer:
 			{
 				string[] options3 = new string[]
 				{
@@ -342,11 +402,11 @@ namespace UnityEditor
 				ModuleUI.GUIPopup("", this.m_PlacementMode, options3, new GUILayoutOption[0]);
 				Material material = null;
 				Mesh mesh = null;
-				if (shapeTypes == ShapeModuleUI.ShapeTypes.Mesh)
+				if (particleSystemShapeType == ParticleSystemShapeType.Mesh)
 				{
 					ModuleUI.GUIObject(ShapeModuleUI.s_Texts.mesh, this.m_Mesh, new GUILayoutOption[0]);
 				}
-				else if (shapeTypes == ShapeModuleUI.ShapeTypes.MeshRenderer)
+				else if (particleSystemShapeType == ParticleSystemShapeType.MeshRenderer)
 				{
 					ModuleUI.GUIObject(ShapeModuleUI.s_Texts.meshRenderer, this.m_MeshRenderer, new GUILayoutOption[0]);
 					MeshRenderer meshRenderer = (MeshRenderer)this.m_MeshRenderer.objectReferenceValue;
@@ -370,8 +430,8 @@ namespace UnityEditor
 					}
 				}
 				ModuleUI.GUIToggleWithIntField(ShapeModuleUI.s_Texts.meshMaterialIndex, this.m_UseMeshMaterialIndex, this.m_MeshMaterialIndex, false, new GUILayoutOption[0]);
-				bool flag3 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.useMeshColors, this.m_UseMeshColors, new GUILayoutOption[0]);
-				if (flag3)
+				bool flag4 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.useMeshColors, this.m_UseMeshColors, new GUILayoutOption[0]);
+				if (flag4)
 				{
 					if (material != null && mesh != null)
 					{
@@ -388,103 +448,147 @@ namespace UnityEditor
 				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.meshScale, this.m_MeshScale, new GUILayoutOption[0]);
 				break;
 			}
-			case ShapeModuleUI.ShapeTypes.Circle:
+			case ParticleSystemShapeType.Circle:
 			{
-				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius, new GUILayoutOption[0]);
-				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.arc, this.m_Arc, new GUILayoutOption[0]);
-				bool flag4 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.emitFromEdge, usesShell, new GUILayoutOption[0]);
-				num = ((!flag4) ? 10 : 11);
+				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius.m_Value, new GUILayoutOption[0]);
+				this.m_Arc.OnInspectorGUI(ShapeModuleUI.s_ArcTexts);
+				bool flag5 = ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.emitFromEdge, usesShell, new GUILayoutOption[0]);
+				num = ((!flag5) ? 10 : 11);
 				break;
 			}
-			case ShapeModuleUI.ShapeTypes.SingleSidedEdge:
-				ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.radius, this.m_Radius, new GUILayoutOption[0]);
+			case ParticleSystemShapeType.SingleSidedEdge:
+				this.m_Radius.OnInspectorGUI(ShapeModuleUI.s_RadiusTexts);
 				break;
 			}
-			this.m_Type.intValue = num;
+			if (flag || !this.m_Type.hasMultipleDifferentValues)
+			{
+				this.m_Type.intValue = num;
+			}
 			ModuleUI.GUIToggle(ShapeModuleUI.s_Texts.alignToDirection, this.m_AlignToDirection, new GUILayoutOption[0]);
 			ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.randomDirectionAmount, this.m_RandomDirectionAmount, new GUILayoutOption[0]);
 			ModuleUI.GUIFloat(ShapeModuleUI.s_Texts.sphericalDirectionAmount, this.m_SphericalDirectionAmount, new GUILayoutOption[0]);
 		}
 
-		public override void OnSceneGUI(ParticleSystem system, InitialModuleUI initial)
+		public override void OnSceneViewGUI()
 		{
 			Color color = Handles.color;
 			Handles.color = ShapeModuleUI.s_ShapeGizmoColor;
 			Matrix4x4 matrix = Handles.matrix;
 			EditorGUI.BeginChangeCheck();
-			int intValue = this.m_Type.intValue;
-			Matrix4x4 matrix4x = default(Matrix4x4);
-			float num = (intValue != 6) ? 1f : this.m_MeshScale.floatValue;
-			if (system.main.scalingMode == ParticleSystemScalingMode.Local)
+			ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+			for (int i = 0; i < particleSystems.Length; i++)
 			{
-				matrix4x.SetTRS(system.transform.position, system.transform.rotation, system.transform.localScale * num);
-			}
-			else if (system.main.scalingMode == ParticleSystemScalingMode.Hierarchy)
-			{
-				matrix4x = system.transform.localToWorldMatrix * Matrix4x4.Scale(new Vector3(num, num, num));
-			}
-			else
-			{
-				matrix4x.SetTRS(system.transform.position, system.transform.rotation, system.transform.lossyScale * num);
-			}
-			Handles.matrix = matrix4x;
-			if (intValue == 0 || intValue == 1)
-			{
-				this.m_Radius.floatValue = Handles.DoSimpleRadiusHandle(Quaternion.identity, Vector3.zero, this.m_Radius.floatValue, false);
-			}
-			if (intValue == 10 || intValue == 11)
-			{
-				float floatValue = this.m_Radius.floatValue;
-				float floatValue2 = this.m_Arc.floatValue;
-				Handles.DoSimpleRadiusArcHandleXY(Quaternion.identity, Vector3.zero, ref floatValue, ref floatValue2);
-				this.m_Radius.floatValue = floatValue;
-				this.m_Arc.floatValue = floatValue2;
-			}
-			else if (intValue == 2 || intValue == 3)
-			{
-				this.m_Radius.floatValue = Handles.DoSimpleRadiusHandle(Quaternion.identity, Vector3.zero, this.m_Radius.floatValue, true);
-			}
-			else if (intValue == 4 || intValue == 7)
-			{
-				Vector3 radiusAngleRange = new Vector3(this.m_Radius.floatValue, this.m_Angle.floatValue, initial.m_Speed.scalar.floatValue);
-				radiusAngleRange = Handles.ConeFrustrumHandle(Quaternion.identity, Vector3.zero, radiusAngleRange);
-				this.m_Radius.floatValue = radiusAngleRange.x;
-				this.m_Angle.floatValue = radiusAngleRange.y;
-				initial.m_Speed.scalar.floatValue = radiusAngleRange.z;
-			}
-			else if (intValue == 8 || intValue == 9)
-			{
-				Vector3 radiusAngleRange2 = new Vector3(this.m_Radius.floatValue, this.m_Angle.floatValue, this.m_Length.floatValue);
-				radiusAngleRange2 = Handles.ConeFrustrumHandle(Quaternion.identity, Vector3.zero, radiusAngleRange2);
-				this.m_Radius.floatValue = radiusAngleRange2.x;
-				this.m_Angle.floatValue = radiusAngleRange2.y;
-				this.m_Length.floatValue = radiusAngleRange2.z;
-			}
-			else if (intValue == 5 || intValue == 15 || intValue == 16)
-			{
-				Vector3 zero = Vector3.zero;
-				Vector3 vector = new Vector3(this.m_BoxX.floatValue, this.m_BoxY.floatValue, this.m_BoxZ.floatValue);
-				if (this.m_BoxEditor.OnSceneGUI(matrix4x, ShapeModuleUI.s_ShapeGizmoColor, false, ref zero, ref vector))
+				ParticleSystem particleSystem = particleSystems[i];
+				ParticleSystem.ShapeModule shape = particleSystem.shape;
+				ParticleSystem.MainModule main = particleSystem.main;
+				ParticleSystemShapeType shapeType = shape.shapeType;
+				Matrix4x4 matrix2 = default(Matrix4x4);
+				float num = (shapeType != ParticleSystemShapeType.Mesh) ? 1f : shape.meshScale;
+				if (main.scalingMode == ParticleSystemScalingMode.Local)
 				{
-					this.m_BoxX.floatValue = vector.x;
-					this.m_BoxY.floatValue = vector.y;
-					this.m_BoxZ.floatValue = vector.z;
+					matrix2.SetTRS(particleSystem.transform.position, particleSystem.transform.rotation, particleSystem.transform.localScale * num);
 				}
-			}
-			else if (intValue == 12)
-			{
-				this.m_Radius.floatValue = Handles.DoSimpleEdgeHandle(Quaternion.identity, Vector3.zero, this.m_Radius.floatValue);
-			}
-			else if (intValue == 6)
-			{
-				Mesh mesh = (Mesh)this.m_Mesh.objectReferenceValue;
-				if (mesh)
+				else if (main.scalingMode == ParticleSystemScalingMode.Hierarchy)
 				{
-					bool wireframe = GL.wireframe;
-					GL.wireframe = true;
-					this.m_Material.SetPass(0);
-					Graphics.DrawMeshNow(mesh, matrix4x);
-					GL.wireframe = wireframe;
+					matrix2 = particleSystem.transform.localToWorldMatrix * Matrix4x4.Scale(new Vector3(num, num, num));
+				}
+				else
+				{
+					matrix2.SetTRS(particleSystem.transform.position, particleSystem.transform.rotation, particleSystem.transform.lossyScale * num);
+				}
+				Handles.matrix = matrix2;
+				if (shapeType == ParticleSystemShapeType.Sphere || shapeType == ParticleSystemShapeType.SphereShell)
+				{
+					EditorGUI.BeginChangeCheck();
+					float radius = Handles.DoSimpleRadiusHandle(Quaternion.identity, Vector3.zero, shape.radius, false);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Sphere Handle Change");
+						shape.radius = radius;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.Circle || shapeType == ParticleSystemShapeType.CircleEdge)
+				{
+					EditorGUI.BeginChangeCheck();
+					float radius2 = shape.radius;
+					float arc = shape.arc;
+					Handles.DoSimpleRadiusArcHandleXY(Quaternion.identity, Vector3.zero, ref radius2, ref arc);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Circle Handle Change");
+						shape.radius = radius2;
+						shape.arc = arc;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.Hemisphere || shapeType == ParticleSystemShapeType.HemisphereShell)
+				{
+					EditorGUI.BeginChangeCheck();
+					float radius3 = Handles.DoSimpleRadiusHandle(Quaternion.identity, Vector3.zero, shape.radius, true);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Hemisphere Handle Change");
+						shape.radius = radius3;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.Cone || shapeType == ParticleSystemShapeType.ConeShell)
+				{
+					EditorGUI.BeginChangeCheck();
+					Vector3 radiusAngleRange = new Vector3(shape.radius, shape.angle, main.startSpeedMultiplier);
+					radiusAngleRange = Handles.ConeFrustrumHandle(Quaternion.identity, Vector3.zero, radiusAngleRange);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Cone Handle Change");
+						shape.radius = radiusAngleRange.x;
+						shape.angle = radiusAngleRange.y;
+						main.startSpeedMultiplier = radiusAngleRange.z;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.ConeVolume || shapeType == ParticleSystemShapeType.ConeVolumeShell)
+				{
+					EditorGUI.BeginChangeCheck();
+					Vector3 radiusAngleRange2 = new Vector3(shape.radius, shape.angle, shape.length);
+					radiusAngleRange2 = Handles.ConeFrustrumHandle(Quaternion.identity, Vector3.zero, radiusAngleRange2);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Cone Volume Handle Change");
+						shape.radius = radiusAngleRange2.x;
+						shape.angle = radiusAngleRange2.y;
+						shape.length = radiusAngleRange2.z;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.Box || shapeType == ParticleSystemShapeType.BoxShell || shapeType == ParticleSystemShapeType.BoxEdge)
+				{
+					EditorGUI.BeginChangeCheck();
+					this.m_BoxBoundsHandle.center = Vector3.zero;
+					this.m_BoxBoundsHandle.size = shape.box;
+					this.m_BoxBoundsHandle.DrawHandle();
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Box Handle Change");
+						shape.box = this.m_BoxBoundsHandle.size;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.SingleSidedEdge)
+				{
+					EditorGUI.BeginChangeCheck();
+					float radius4 = Handles.DoSimpleEdgeHandle(Quaternion.identity, Vector3.zero, shape.radius);
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(particleSystem, "Edge Handle Change");
+						shape.radius = radius4;
+					}
+				}
+				else if (shapeType == ParticleSystemShapeType.Mesh)
+				{
+					Mesh mesh = shape.mesh;
+					if (mesh)
+					{
+						bool wireframe = GL.wireframe;
+						GL.wireframe = true;
+						this.m_Material.SetPass(0);
+						Graphics.DrawMeshNow(mesh, matrix2);
+						GL.wireframe = wireframe;
+					}
 				}
 			}
 			if (EditorGUI.EndChangeCheck())
@@ -493,6 +597,15 @@ namespace UnityEditor
 			}
 			Handles.color = color;
 			Handles.matrix = matrix;
+		}
+
+		public override void UpdateCullingSupportedString(ref string text)
+		{
+			this.Init();
+			if (this.m_Arc.m_Mode.intValue != 0 || this.m_Radius.m_Mode.intValue != 0)
+			{
+				text += "\n\tAnimated shape emission is enabled.";
+			}
 		}
 	}
 }

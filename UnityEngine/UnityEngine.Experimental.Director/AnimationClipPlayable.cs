@@ -4,68 +4,14 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine.Experimental.Director
 {
-	[UsedByNativeCode]
-	public struct AnimationClipPlayable
+	[RequiredByNativeCode]
+	public sealed class AnimationClipPlayable : AnimationPlayable
 	{
-		internal AnimationPlayable handle;
-
-		internal Playable node
-		{
-			get
-			{
-				return this.handle.node;
-			}
-		}
-
-		public PlayState state
-		{
-			get
-			{
-				return Playables.GetPlayStateValidated(this, base.GetType());
-			}
-			set
-			{
-				Playables.SetPlayStateValidated(this, value, base.GetType());
-			}
-		}
-
-		public double time
-		{
-			get
-			{
-				return Playables.GetTimeValidated(this, base.GetType());
-			}
-			set
-			{
-				Playables.SetTimeValidated(this, value, base.GetType());
-			}
-		}
-
-		public double duration
-		{
-			get
-			{
-				return Playables.GetDurationValidated(this, base.GetType());
-			}
-			set
-			{
-				Playables.SetDurationValidated(this, value, base.GetType());
-			}
-		}
-
-		public int outputCount
-		{
-			get
-			{
-				return Playables.GetOutputCountValidated(this, base.GetType());
-			}
-		}
-
 		public AnimationClip clip
 		{
 			get
 			{
-				return AnimationClipPlayable.GetAnimationClip(ref this);
+				return AnimationClipPlayable.GetAnimationClip(ref this.handle);
 			}
 		}
 
@@ -73,11 +19,11 @@ namespace UnityEngine.Experimental.Director
 		{
 			get
 			{
-				return AnimationClipPlayable.GetSpeed(ref this);
+				return AnimationClipPlayable.GetSpeed(ref this.handle);
 			}
 			set
 			{
-				AnimationClipPlayable.SetSpeed(ref this, value);
+				AnimationClipPlayable.SetSpeed(ref this.handle, value);
 			}
 		}
 
@@ -85,11 +31,11 @@ namespace UnityEngine.Experimental.Director
 		{
 			get
 			{
-				return AnimationClipPlayable.GetApplyFootIK(ref this);
+				return AnimationClipPlayable.GetApplyFootIK(ref this.handle);
 			}
 			set
 			{
-				AnimationClipPlayable.SetApplyFootIK(ref this, value);
+				AnimationClipPlayable.SetApplyFootIK(ref this.handle, value);
 			}
 		}
 
@@ -97,93 +43,75 @@ namespace UnityEngine.Experimental.Director
 		{
 			get
 			{
-				return AnimationClipPlayable.GetRemoveStartOffset(ref this);
+				return AnimationClipPlayable.GetRemoveStartOffset(ref this.handle);
 			}
 			set
 			{
-				AnimationClipPlayable.SetRemoveStartOffset(ref this, value);
+				AnimationClipPlayable.SetRemoveStartOffset(ref this.handle, value);
 			}
 		}
 
-		public static AnimationClipPlayable Create(AnimationClip clip)
+		private static AnimationClip GetAnimationClip(ref PlayableHandle handle)
 		{
-			AnimationClipPlayable result = default(AnimationClipPlayable);
-			AnimationClipPlayable.InternalCreate(clip, ref result);
-			return result;
+			return AnimationClipPlayable.INTERNAL_CALL_GetAnimationClip(ref handle);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void InternalCreate(AnimationClip clip, ref AnimationClipPlayable that);
+		private static extern AnimationClip INTERNAL_CALL_GetAnimationClip(ref PlayableHandle handle);
 
-		public void Destroy()
+		private static float GetSpeed(ref PlayableHandle handle)
 		{
-			this.node.Destroy();
+			return AnimationClipPlayable.INTERNAL_CALL_GetSpeed(ref handle);
 		}
 
-		public static bool operator ==(AnimationClipPlayable x, Playable y)
-		{
-			return Playables.Equals(x, y);
-		}
-
-		public static bool operator !=(AnimationClipPlayable x, Playable y)
-		{
-			return !Playables.Equals(x, y);
-		}
-
-		public override bool Equals(object p)
-		{
-			return Playables.Equals(this, p);
-		}
-
-		public override int GetHashCode()
-		{
-			return this.node.GetHashCode();
-		}
-
-		public static implicit operator Playable(AnimationClipPlayable b)
-		{
-			return b.node;
-		}
-
-		public static implicit operator AnimationPlayable(AnimationClipPlayable b)
-		{
-			return b.handle;
-		}
-
-		public bool IsValid()
-		{
-			return Playables.IsValid(this);
-		}
-
-		public Playable GetOutput(int outputPort)
-		{
-			return Playables.GetOutputValidated(this, outputPort, base.GetType());
-		}
-
-		public T CastTo<T>() where T : struct
-		{
-			return this.handle.CastTo<T>();
-		}
-
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern AnimationClip GetAnimationClip(ref AnimationClipPlayable that);
+		private static extern float INTERNAL_CALL_GetSpeed(ref PlayableHandle handle);
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern float GetSpeed(ref AnimationClipPlayable that);
+		private static void SetSpeed(ref PlayableHandle handle, float value)
+		{
+			AnimationClipPlayable.INTERNAL_CALL_SetSpeed(ref handle, value);
+		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetSpeed(ref AnimationClipPlayable that, float value);
+		private static extern void INTERNAL_CALL_SetSpeed(ref PlayableHandle handle, float value);
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool GetApplyFootIK(ref AnimationClipPlayable that);
+		private static bool GetApplyFootIK(ref PlayableHandle handle)
+		{
+			return AnimationClipPlayable.INTERNAL_CALL_GetApplyFootIK(ref handle);
+		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetApplyFootIK(ref AnimationClipPlayable that, bool value);
+		private static extern bool INTERNAL_CALL_GetApplyFootIK(ref PlayableHandle handle);
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool GetRemoveStartOffset(ref AnimationClipPlayable that);
+		private static void SetApplyFootIK(ref PlayableHandle handle, bool value)
+		{
+			AnimationClipPlayable.INTERNAL_CALL_SetApplyFootIK(ref handle, value);
+		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetRemoveStartOffset(ref AnimationClipPlayable that, bool value);
+		private static extern void INTERNAL_CALL_SetApplyFootIK(ref PlayableHandle handle, bool value);
+
+		private static bool GetRemoveStartOffset(ref PlayableHandle handle)
+		{
+			return AnimationClipPlayable.INTERNAL_CALL_GetRemoveStartOffset(ref handle);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool INTERNAL_CALL_GetRemoveStartOffset(ref PlayableHandle handle);
+
+		private static void SetRemoveStartOffset(ref PlayableHandle handle, bool value)
+		{
+			AnimationClipPlayable.INTERNAL_CALL_SetRemoveStartOffset(ref handle, value);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetRemoveStartOffset(ref PlayableHandle handle, bool value);
 	}
 }

@@ -2,16 +2,28 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.Rendering
 {
 	public sealed class EditorGraphicsSettings
 	{
+		public static extern AlbedoSwatchInfo[] albedoSwatches
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		internal static void SetTierSettingsImpl(BuildTargetGroup target, GraphicsTier tier, TierSettings settings)
 		{
 			EditorGraphicsSettings.INTERNAL_CALL_SetTierSettingsImpl(target, tier, ref settings);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetTierSettingsImpl(BuildTargetGroup target, GraphicsTier tier, ref TierSettings settings);
 
@@ -22,9 +34,11 @@ namespace UnityEditor.Rendering
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetTierSettingsImpl(BuildTargetGroup target, GraphicsTier tier, out TierSettings value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void OnUpdateTierSettingsImpl(BuildTargetGroup target, bool shouldReloadShaders);
 
@@ -35,15 +49,19 @@ namespace UnityEditor.Rendering
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetCurrentTierSettingsImpl(out TierSettings value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool AreTierSettingsAutomatic(BuildTargetGroup target, GraphicsTier tier);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void MakeTierSettingsAutomatic(BuildTargetGroup target, GraphicsTier tier, bool automatic);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void RegisterUndoForGraphicsSettings();
 
@@ -59,6 +77,7 @@ namespace UnityEditor.Rendering
 				throw new ArgumentException("TierSettings.renderingPath must be actual rendering path (not UsePlayerSettings)", "settings");
 			}
 			EditorGraphicsSettings.SetTierSettingsImpl(target, tier, settings);
+			EditorGraphicsSettings.MakeTierSettingsAutomatic(target, tier, false);
 			EditorGraphicsSettings.OnUpdateTierSettingsImpl(target, true);
 		}
 
@@ -83,13 +102,12 @@ namespace UnityEditor.Rendering
 		[Obsolete("Use SetTierSettings() instead (UnityUpgradable) -> SetTierSettings(*)", false)]
 		public static void SetShaderSettingsForPlatform(BuildTargetGroup target, ShaderHardwareTier tier, PlatformShaderSettings settings)
 		{
-			EditorGraphicsSettings.SetTierSettings(target, (GraphicsTier)tier, new TierSettings
-			{
-				standardShaderQuality = settings.standardShaderQuality,
-				cascadedShadowMaps = settings.cascadedShadowMaps,
-				reflectionProbeBoxProjection = settings.reflectionProbeBoxProjection,
-				reflectionProbeBlending = settings.reflectionProbeBlending
-			});
+			TierSettings tierSettings = EditorGraphicsSettings.GetTierSettings(target, (GraphicsTier)tier);
+			tierSettings.standardShaderQuality = settings.standardShaderQuality;
+			tierSettings.cascadedShadowMaps = settings.cascadedShadowMaps;
+			tierSettings.reflectionProbeBoxProjection = settings.reflectionProbeBoxProjection;
+			tierSettings.reflectionProbeBlending = settings.reflectionProbeBlending;
+			EditorGraphicsSettings.SetTierSettings(target, (GraphicsTier)tier, tierSettings);
 		}
 
 		[Obsolete("Use GraphicsTier instead of ShaderHardwareTier enum", false)]

@@ -161,6 +161,7 @@ namespace UnityEditor
 
 		public void EndRename(bool acceptChanges)
 		{
+			EditorGUIUtility.editingTextField = false;
 			if (this.m_IsRenaming)
 			{
 				Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoWasPerformed));

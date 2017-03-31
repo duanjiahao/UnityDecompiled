@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -172,21 +173,27 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SubmitClientRequest(string tag, string url, string[] headers, string method, string data, AsyncHTTPClient.RequestDoneCallback doneDelegate, AsyncHTTPClient.RequestProgressCallback progressDelegate, out IntPtr value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern byte[] GetBytesByHandle(IntPtr handle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Texture2D GetTextureByHandle(IntPtr handle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AbortByTag(string tag);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AbortByHandle(IntPtr handle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CurlRequestCheck();
 

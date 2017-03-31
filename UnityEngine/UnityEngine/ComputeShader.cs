@@ -1,17 +1,21 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
 	public sealed class ComputeShader : Object
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int FindKernel(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasKernel(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void GetKernelThreadGroupSizes(int kernelIndex, out uint x, out uint y, out uint z);
 
@@ -20,6 +24,7 @@ namespace UnityEngine
 			this.SetFloat(Shader.PropertyToID(name), val);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetFloat(int nameID, float val);
 
@@ -28,6 +33,7 @@ namespace UnityEngine
 			this.SetInt(Shader.PropertyToID(name), val);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetInt(int nameID, int val);
 
@@ -51,6 +57,7 @@ namespace UnityEngine
 			ComputeShader.INTERNAL_CALL_SetVector(this, nameID, ref val);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetVector(ComputeShader self, int nameID, ref Vector4 val);
 
@@ -64,6 +71,7 @@ namespace UnityEngine
 			this.Internal_SetFloats(nameID, values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetFloats(int nameID, float[] values);
 
@@ -77,6 +85,7 @@ namespace UnityEngine
 			this.Internal_SetInts(nameID, values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetInts(int nameID, int[] values);
 
@@ -85,6 +94,7 @@ namespace UnityEngine
 			this.SetTexture(kernelIndex, Shader.PropertyToID(name), texture);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTexture(int kernelIndex, int nameID, Texture texture);
 
@@ -93,6 +103,7 @@ namespace UnityEngine
 			this.SetTextureFromGlobal(kernelIndex, Shader.PropertyToID(name), Shader.PropertyToID(globalTextureName));
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetTextureFromGlobal(int kernelIndex, int nameID, int globalTextureNameID);
 
@@ -101,9 +112,11 @@ namespace UnityEngine
 			this.SetBuffer(kernelIndex, Shader.PropertyToID(name), buffer);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetBuffer(int kernelIndex, int nameID, ComputeBuffer buffer);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispatch(int kernelIndex, int threadGroupsX, int threadGroupsY, int threadGroupsZ);
 
@@ -127,6 +140,7 @@ namespace UnityEngine
 			this.Internal_DispatchIndirect(kernelIndex, argsBuffer, argsOffset);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_DispatchIndirect(int kernelIndex, ComputeBuffer argsBuffer, uint argsOffset);
 	}

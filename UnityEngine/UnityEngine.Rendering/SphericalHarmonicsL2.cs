@@ -255,6 +255,7 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2.INTERNAL_CALL_ClearInternal(ref sh);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ClearInternal(ref SphericalHarmonicsL2 sh);
 
@@ -268,6 +269,7 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2.INTERNAL_CALL_AddAmbientLightInternal(ref color, ref sh);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AddAmbientLightInternal(ref Color color, ref SphericalHarmonicsL2 sh);
 
@@ -282,8 +284,13 @@ namespace UnityEngine.Rendering
 			SphericalHarmonicsL2.INTERNAL_CALL_AddDirectionalLightInternal(ref direction, ref color, ref sh);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_AddDirectionalLightInternal(ref Vector3 direction, ref Color color, ref SphericalHarmonicsL2 sh);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Evaluate(Vector3[] directions, Color[] results);
 
 		public override int GetHashCode()
 		{

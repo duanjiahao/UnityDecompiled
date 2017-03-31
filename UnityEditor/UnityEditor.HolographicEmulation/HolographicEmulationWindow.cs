@@ -126,7 +126,7 @@ namespace UnityEditor.HolographicEmulation
 		private void LoadCurrentRoom()
 		{
 			string str = EditorApplication.applicationContentsPath + "/UnityExtensions/Unity/VR/HolographicSimulation/Rooms/";
-			PerceptionSimulation.LoadRoom(str + HolographicEmulationWindow.s_RoomStrings[this.m_RoomIndex].text + ".xef");
+			HolographicEmulation.LoadRoom(str + HolographicEmulationWindow.s_RoomStrings[this.m_RoomIndex].text + ".xef");
 		}
 
 		private void InitializeSimulation()
@@ -135,7 +135,7 @@ namespace UnityEditor.HolographicEmulation
 			{
 				this.Disconnect();
 			}
-			PerceptionSimulation.Initialize();
+			HolographicEmulation.Initialize();
 			this.LoadCurrentRoom();
 		}
 
@@ -145,7 +145,7 @@ namespace UnityEditor.HolographicEmulation
 			this.m_InPlayMode = EditorApplication.isPlayingOrWillChangePlaymode;
 			if (this.m_InPlayMode && !inPlayMode)
 			{
-				PerceptionSimulation.SetEmulationMode(this.m_Mode);
+				HolographicEmulation.SetEmulationMode(this.m_Mode);
 				EmulationMode mode = this.m_Mode;
 				if (mode != EmulationMode.Simulated)
 				{
@@ -169,7 +169,7 @@ namespace UnityEditor.HolographicEmulation
 				}
 				else
 				{
-					PerceptionSimulation.Shutdown();
+					HolographicEmulation.Shutdown();
 				}
 			}
 		}
@@ -292,7 +292,7 @@ namespace UnityEditor.HolographicEmulation
 			EditorGUILayout.LabelField(label, new GUILayoutOption[0]);
 			EditorGUILayout.EndHorizontal();
 			EditorGUI.BeginDisabledGroup(this.m_InPlayMode);
-			bool flag = EditorGUILayout.ButtonMouseDown(content, FocusType.Passive, EditorStyles.miniButton, new GUILayoutOption[0]);
+			bool flag = EditorGUILayout.DropdownButton(content, FocusType.Passive, EditorStyles.miniButton, new GUILayoutOption[0]);
 			EditorGUI.EndDisabledGroup();
 			if (flag)
 			{
@@ -351,7 +351,7 @@ namespace UnityEditor.HolographicEmulation
 						this.m_Hand = (GestureHand)EditorGUILayout.Popup(HolographicEmulationWindow.s_HandText, (int)this.m_Hand, HolographicEmulationWindow.s_HandStrings, new GUILayoutOption[0]);
 						if (EditorGUI.EndChangeCheck())
 						{
-							PerceptionSimulation.SetGestureHand(this.m_Hand);
+							HolographicEmulation.SetGestureHand(this.m_Hand);
 						}
 					}
 				}
@@ -392,7 +392,7 @@ namespace UnityEditor.HolographicEmulation
 			}
 			else
 			{
-				PerceptionSimulation.SetGestureHand(this.m_Hand);
+				HolographicEmulation.SetGestureHand(this.m_Hand);
 			}
 		}
 	}

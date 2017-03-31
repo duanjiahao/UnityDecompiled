@@ -78,10 +78,10 @@ namespace UnityEditor
 				this.visWeightColor = (EditorGUIUtility.isProSkin ? new Color(0.65f, 0.75f, 1f, 0.65f) : new Color(0.5f, 0.6f, 0.9f, 0.8f));
 				this.visWeightShapeColor = (EditorGUIUtility.isProSkin ? new Color(0.4f, 0.65f, 1f, 0.12f) : new Color(0.4f, 0.65f, 1f, 0.15f));
 				this.visWeightLineColor = (EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.6f) : new Color(0f, 0f, 0f, 0.3f));
-				this.visPointColor = (EditorGUIUtility.isProSkin ? new Color(0.5f, 0.7f, 1f) : new Color(0.5f, 0.7f, 1f));
+				this.visPointColor = new Color(0.5f, 0.7f, 1f);
 				this.visPointEmptyColor = (EditorGUIUtility.isProSkin ? new Color(0.6f, 0.6f, 0.6f) : new Color(0.8f, 0.8f, 0.8f));
 				this.visPointOverlayColor = (EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.4f) : new Color(0f, 0f, 0f, 0.2f));
-				this.visSamplerColor = (EditorGUIUtility.isProSkin ? new Color(1f, 0.4f, 0.4f) : new Color(1f, 0.4f, 0.4f));
+				this.visSamplerColor = new Color(1f, 0.4f, 0.4f);
 			}
 		}
 
@@ -107,6 +107,12 @@ namespace UnityEditor
 		private readonly int m_BlendAnimationID = "BlendAnimationIDHash".GetHashCode();
 
 		private readonly int m_ClickDragFloatID = "ClickDragFloatIDHash".GetHashCode();
+
+		private float m_DragAndDropDelta;
+
+		private float m_OriginMin;
+
+		private float m_OriginMax;
 
 		private ReorderableList m_ReorderableList;
 
@@ -476,27 +482,35 @@ namespace UnityEditor
 			num2 = this.ClickDragFloat(position2, num2, true);
 			if (EditorGUI.EndChangeCheck())
 			{
+				float num3 = Mathf.Min(num, num2);
+				float num4 = Mathf.Max(num, num2);
 				if (this.m_Childs.arraySize >= 2)
 				{
 					SerializedProperty arrayElementAtIndex = this.m_Childs.GetArrayElementAtIndex(0);
 					SerializedProperty arrayElementAtIndex2 = this.m_Childs.GetArrayElementAtIndex(this.m_Childs.arraySize - 1);
 					SerializedProperty serializedProperty = arrayElementAtIndex.FindPropertyRelative("m_Threshold");
 					SerializedProperty serializedProperty2 = arrayElementAtIndex2.FindPropertyRelative("m_Threshold");
-					serializedProperty.floatValue = Mathf.Min(num, num2);
-					serializedProperty2.floatValue = Mathf.Max(num, num2);
-				}
-				if (!this.m_UseAutomaticThresholds.boolValue)
-				{
-					for (int i = 0; i < this.m_Childs.arraySize; i++)
+					float floatValue = serializedProperty.floatValue;
+					float floatValue2 = serializedProperty2.floatValue;
+					serializedProperty.floatValue = num3;
+					serializedProperty2.floatValue = num4;
+					if (!this.m_UseAutomaticThresholds.boolValue)
 					{
-						SerializedProperty arrayElementAtIndex3 = this.m_Childs.GetArrayElementAtIndex(i);
-						SerializedProperty serializedProperty3 = arrayElementAtIndex3.FindPropertyRelative("m_Threshold");
-						float t = Mathf.InverseLerp(this.m_MinThreshold.floatValue, this.m_MaxThreshold.floatValue, serializedProperty3.floatValue);
-						serializedProperty3.floatValue = Mathf.Lerp(Mathf.Min(num, num2), Mathf.Max(num, num2), t);
+						int arraySize = this.m_Childs.arraySize;
+						for (int i = 1; i < arraySize - 1; i++)
+						{
+							SerializedProperty arrayElementAtIndex3 = this.m_Childs.GetArrayElementAtIndex(i);
+							SerializedProperty serializedProperty3 = arrayElementAtIndex3.FindPropertyRelative("m_Threshold");
+							float t = Mathf.InverseLerp(floatValue, floatValue2, serializedProperty3.floatValue);
+							serializedProperty3.floatValue = Mathf.Lerp(num3, num4, t);
+						}
 					}
+					float num5 = BlendTreeInspector.GetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, this.m_BlendTree.blendParameter);
+					num5 = Mathf.Clamp(num5, num3, num4);
+					BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, this.m_BlendTree.blendParameter, num5);
 				}
-				this.m_MinThreshold.floatValue = Mathf.Min(num, num2);
-				this.m_MaxThreshold.floatValue = Mathf.Max(num, num2);
+				this.m_MinThreshold.floatValue = num3;
+				this.m_MaxThreshold.floatValue = num4;
 			}
 		}
 
@@ -644,15 +658,14 @@ namespace UnityEditor
 			switch (current.GetTypeForControl(controlID))
 			{
 			case EventType.MouseDown:
+			{
+				float num4 = 0f;
 				if (position.Contains(current.mousePosition))
 				{
 					current.Use();
 					GUIUtility.hotControl = controlID;
 					this.m_ReorderableList.index = -1;
-					this.m_ReorderableList.index = -1;
-					float num4 = Mathf.InverseLerp(0f, area.width, current.mousePosition.x - 4f);
-					num4 = Mathf.Lerp(num, num2, num4);
-					BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameter, num4);
+					num4 = BlendTreeInspector.GetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, blendParameter);
 				}
 				else if (area.Contains(current.mousePosition))
 				{
@@ -675,8 +688,17 @@ namespace UnityEditor
 						}
 					}
 					this.m_UseAutomaticThresholds.boolValue = false;
+					SerializedProperty arrayElementAtIndex2 = this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index);
+					SerializedProperty serializedProperty2 = arrayElementAtIndex2.FindPropertyRelative("m_Threshold");
+					num4 = serializedProperty2.floatValue;
 				}
+				float num8 = (current.mousePosition.x - area.x) / area.width;
+				num8 = Mathf.LerpUnclamped(num, num2, num8);
+				this.m_DragAndDropDelta = num8 - num4;
+				this.m_OriginMin = num;
+				this.m_OriginMax = num2;
 				break;
+			}
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == controlID)
 				{
@@ -689,43 +711,41 @@ namespace UnityEditor
 				if (GUIUtility.hotControl == controlID)
 				{
 					current.Use();
+					float num9 = (current.mousePosition.x - area.x) / area.width;
+					num9 = Mathf.LerpUnclamped(this.m_OriginMin, this.m_OriginMax, num9);
+					float num10 = num9 - this.m_DragAndDropDelta;
 					if (this.m_ReorderableList.index == -1)
 					{
-						float num8 = Mathf.InverseLerp(0f, area.width, current.mousePosition.x - 4f);
-						num8 = Mathf.Lerp(num, num2, num8);
-						BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameter, num8);
+						num10 = Mathf.Clamp(num10, num, num2);
+						BlendTreeInspector.SetParameterValue(BlendTreeInspector.currentAnimator, this.m_BlendTree, BlendTreeInspector.parentBlendTree, blendParameter, num10);
 					}
 					else
 					{
-						float t = Mathf.InverseLerp(0f, area.width, current.mousePosition.x);
-						t = Mathf.Lerp(num, num2, t);
-						SerializedProperty arrayElementAtIndex2 = this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index);
-						SerializedProperty serializedProperty2 = arrayElementAtIndex2.FindPropertyRelative("m_Threshold");
-						SerializedProperty serializedProperty3 = (this.m_ReorderableList.index > 0) ? this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index - 1) : arrayElementAtIndex2;
-						SerializedProperty serializedProperty4 = (this.m_ReorderableList.index != this.m_Childs.arraySize - 1) ? this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index + 1) : arrayElementAtIndex2;
-						SerializedProperty serializedProperty5 = serializedProperty3.FindPropertyRelative("m_Threshold");
+						SerializedProperty arrayElementAtIndex3 = this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index);
+						SerializedProperty serializedProperty3 = arrayElementAtIndex3.FindPropertyRelative("m_Threshold");
+						SerializedProperty serializedProperty4 = (this.m_ReorderableList.index > 0) ? this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index - 1) : arrayElementAtIndex3;
+						SerializedProperty serializedProperty5 = (this.m_ReorderableList.index != this.m_Childs.arraySize - 1) ? this.m_Childs.GetArrayElementAtIndex(this.m_ReorderableList.index + 1) : arrayElementAtIndex3;
 						SerializedProperty serializedProperty6 = serializedProperty4.FindPropertyRelative("m_Threshold");
-						float num9 = (num2 - num) / area.width;
-						float x2 = current.delta.x;
-						serializedProperty2.floatValue += x2 * num9;
-						if (serializedProperty2.floatValue < serializedProperty5.floatValue && this.m_ReorderableList.index != 0)
+						SerializedProperty serializedProperty7 = serializedProperty5.FindPropertyRelative("m_Threshold");
+						serializedProperty3.floatValue = num10;
+						if (serializedProperty3.floatValue < serializedProperty6.floatValue && this.m_ReorderableList.index != 0)
 						{
 							this.m_Childs.MoveArrayElement(this.m_ReorderableList.index, this.m_ReorderableList.index - 1);
 							this.m_ReorderableList.index--;
 						}
-						if (serializedProperty2.floatValue > serializedProperty6.floatValue && this.m_ReorderableList.index < this.m_Childs.arraySize - 1)
+						if (serializedProperty3.floatValue > serializedProperty7.floatValue && this.m_ReorderableList.index < this.m_Childs.arraySize - 1)
 						{
 							this.m_Childs.MoveArrayElement(this.m_ReorderableList.index, this.m_ReorderableList.index + 1);
 							this.m_ReorderableList.index++;
 						}
-						float num10 = 3f * ((num2 - num) / area.width);
-						if (serializedProperty2.floatValue - serializedProperty5.floatValue <= num10)
+						float num11 = 3f * ((num2 - num) / area.width);
+						if (serializedProperty3.floatValue - serializedProperty6.floatValue <= num11)
 						{
-							serializedProperty2.floatValue = serializedProperty5.floatValue;
+							serializedProperty3.floatValue = serializedProperty6.floatValue;
 						}
-						else if (serializedProperty6.floatValue - serializedProperty2.floatValue <= num10)
+						else if (serializedProperty7.floatValue - serializedProperty3.floatValue <= num11)
 						{
-							serializedProperty2.floatValue = serializedProperty6.floatValue;
+							serializedProperty3.floatValue = serializedProperty7.floatValue;
 						}
 						this.SetMinMaxThresholds();
 					}
@@ -1471,7 +1491,7 @@ namespace UnityEditor
 				Rect rect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 				GUIContent label = (this.ParameterCount != 1) ? EditorGUIUtility.TempContent("Compute Positions") : EditorGUIUtility.TempContent("Compute Thresholds");
 				rect = EditorGUI.PrefixLabel(rect, 0, label);
-				if (EditorGUI.ButtonMouseDown(rect, EditorGUIUtility.TempContent("Select"), FocusType.Passive, EditorStyles.popup))
+				if (EditorGUI.DropdownButton(rect, EditorGUIUtility.TempContent("Select"), FocusType.Passive, EditorStyles.popup))
 				{
 					GenericMenu genericMenu = new GenericMenu();
 					if (this.ParameterCount == 1)
@@ -1493,7 +1513,7 @@ namespace UnityEditor
 			{
 				Rect rect2 = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 				rect2 = EditorGUI.PrefixLabel(rect2, 0, EditorGUIUtility.TempContent("Adjust Time Scale"));
-				if (EditorGUI.ButtonMouseDown(rect2, EditorGUIUtility.TempContent("Select"), FocusType.Passive, EditorStyles.popup))
+				if (EditorGUI.DropdownButton(rect2, EditorGUIUtility.TempContent("Select"), FocusType.Passive, EditorStyles.popup))
 				{
 					GenericMenu genericMenu2 = new GenericMenu();
 					genericMenu2.AddItem(new GUIContent("Homogeneous Speed"), false, new GenericMenu.MenuFunction(this.ComputeTimeScaleFromSpeed));
@@ -1807,6 +1827,10 @@ namespace UnityEditor
 			if (this.m_PreviewBlendTree != null)
 			{
 				this.m_PreviewBlendTree.OnDisable();
+			}
+			if (this.m_VisBlendTree != null)
+			{
+				this.m_VisBlendTree.Reset();
 			}
 		}
 

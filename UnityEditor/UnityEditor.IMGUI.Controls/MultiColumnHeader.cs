@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace UnityEditor.IMGUI.Controls
 {
-	internal class MultiColumnHeader
+	public class MultiColumnHeader
 	{
 		public delegate void HeaderCallback(MultiColumnHeader multiColumnHeader);
 
@@ -27,6 +27,22 @@ namespace UnityEditor.IMGUI.Controls
 					return 20f;
 				}
 			}
+
+			public static float columnContentMargin
+			{
+				get
+				{
+					return 3f;
+				}
+			}
+
+			internal static float labelSpaceFromBottom
+			{
+				get
+				{
+					return 3f;
+				}
+			}
 		}
 
 		public static class DefaultStyles
@@ -35,9 +51,11 @@ namespace UnityEditor.IMGUI.Controls
 
 			public static GUIStyle columnHeaderRightAligned;
 
+			public static GUIStyle columnHeaderCenterAligned;
+
 			public static GUIStyle background;
 
-			public static GUIStyle arrowStyle;
+			internal static GUIStyle arrowStyle;
 
 			static DefaultStyles()
 			{
@@ -45,10 +63,15 @@ namespace UnityEditor.IMGUI.Controls
 				MultiColumnHeader.DefaultStyles.background.fixedHeight = 0f;
 				MultiColumnHeader.DefaultStyles.background.border = new RectOffset(3, 3, 3, 3);
 				MultiColumnHeader.DefaultStyles.columnHeader = new GUIStyle(EditorStyles.label);
-				MultiColumnHeader.DefaultStyles.columnHeader.padding = new RectOffset(4, 4, 4, 4);
+				MultiColumnHeader.DefaultStyles.columnHeader.alignment = TextAnchor.MiddleLeft;
+				MultiColumnHeader.DefaultStyles.columnHeader.padding = new RectOffset(4, 4, 0, 0);
 				Color textColor = MultiColumnHeader.DefaultStyles.columnHeader.normal.textColor;
 				textColor.a = 0.8f;
 				MultiColumnHeader.DefaultStyles.columnHeader.normal.textColor = textColor;
+				MultiColumnHeader.DefaultStyles.columnHeaderRightAligned = new GUIStyle(MultiColumnHeader.DefaultStyles.columnHeader);
+				MultiColumnHeader.DefaultStyles.columnHeaderRightAligned.alignment = TextAnchor.MiddleRight;
+				MultiColumnHeader.DefaultStyles.columnHeaderCenterAligned = new GUIStyle(MultiColumnHeader.DefaultStyles.columnHeader);
+				MultiColumnHeader.DefaultStyles.columnHeaderCenterAligned.alignment = TextAnchor.MiddleCenter;
 				MultiColumnHeader.DefaultStyles.arrowStyle = new GUIStyle(EditorStyles.label);
 				MultiColumnHeader.DefaultStyles.arrowStyle.padding = new RectOffset();
 				MultiColumnHeader.DefaultStyles.arrowStyle.fixedWidth = 13f;
@@ -63,6 +86,8 @@ namespace UnityEditor.IMGUI.Controls
 		private float m_DividerWidth = 6f;
 
 		private Rect m_PreviousRect;
+
+		private bool m_ResizeToFit = false;
 
 		private bool m_CanSort = true;
 
@@ -138,14 +163,6 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		public int previousSortedColumnIndex
-		{
-			get
-			{
-				return this.state.previousSortedColumnIndex;
-			}
-		}
-
 		public MultiColumnHeaderState state
 		{
 			get
@@ -171,7 +188,6 @@ namespace UnityEditor.IMGUI.Controls
 			set
 			{
 				this.m_Height = value;
-				this.m_Height = Mathf.Max(this.m_Height, (!this.m_CanSort) ? MultiColumnHeader.DefaultGUI.minimumHeight : MultiColumnHeader.DefaultGUI.defaultHeight);
 			}
 		}
 
@@ -191,6 +207,76 @@ namespace UnityEditor.IMGUI.Controls
 		public MultiColumnHeader(MultiColumnHeaderState state)
 		{
 			this.m_State = state;
+		}
+
+		public void SetSortingColumns(int[] columnIndices, bool[] sortAscending)
+		{
+			if (columnIndices == null)
+			{
+				throw new ArgumentNullException("columnIndices");
+			}
+			if (sortAscending == null)
+			{
+				throw new ArgumentNullException("sortAscending");
+			}
+			if (columnIndices.Length != sortAscending.Length)
+			{
+				throw new ArgumentException("Input arrays should have same length");
+			}
+			if (columnIndices.Length > this.state.maximumNumberOfSortedColumns)
+			{
+				throw new ArgumentException(string.Concat(new object[]
+				{
+					"The maximum number of sorted columns is ",
+					this.state.maximumNumberOfSortedColumns,
+					". Trying to set ",
+					columnIndices.Length,
+					" columns."
+				}));
+			}
+			if (columnIndices.Length != columnIndices.Distinct<int>().Count<int>())
+			{
+				throw new ArgumentException("Duplicate column indices are not allowed", "columnIndices");
+			}
+			bool flag = false;
+			if (!columnIndices.SequenceEqual(this.state.sortedColumns))
+			{
+				this.state.sortedColumns = columnIndices;
+				flag = true;
+			}
+			for (int i = 0; i < columnIndices.Length; i++)
+			{
+				MultiColumnHeaderState.Column column = this.GetColumn(columnIndices[i]);
+				if (column.sortedAscending != sortAscending[i])
+				{
+					column.sortedAscending = sortAscending[i];
+					flag = true;
+				}
+			}
+			if (flag)
+			{
+				this.OnSortingChanged();
+			}
+		}
+
+		public void SetSorting(int columnIndex, bool sortAscending)
+		{
+			bool flag = false;
+			if (this.state.sortedColumnIndex != columnIndex)
+			{
+				this.state.sortedColumnIndex = columnIndex;
+				flag = true;
+			}
+			MultiColumnHeaderState.Column column = this.GetColumn(columnIndex);
+			if (column.sortedAscending != sortAscending)
+			{
+				column.sortedAscending = sortAscending;
+				flag = true;
+			}
+			if (flag)
+			{
+				this.OnSortingChanged();
+			}
 		}
 
 		public void SetSortDirection(int columnIndex, bool sortAscending)
@@ -217,6 +303,11 @@ namespace UnityEditor.IMGUI.Controls
 			return this.state.columns[columnIndex];
 		}
 
+		public bool IsColumnVisible(int columnIndex)
+		{
+			return this.state.visibleColumns.Any((int t) => t == columnIndex);
+		}
+
 		public int GetVisibleColumnIndex(int columnIndex)
 		{
 			for (int i = 0; i < this.state.visibleColumns.Length; i++)
@@ -226,7 +317,9 @@ namespace UnityEditor.IMGUI.Controls
 					return i;
 				}
 			}
-			throw new ArgumentException("Invalid columnIndex: it is not part of the visible columns", "columnIndex");
+			string arg = string.Join(", ", (from t in this.state.visibleColumns
+			select t.ToString()).ToArray<string>());
+			throw new ArgumentException(string.Format("Invalid columnIndex: {0}. The index is not part of the current visible columns: {1}", columnIndex, arg), "columnIndex");
 		}
 
 		public Rect GetCellRect(int visibleColumnIndex, Rect rowRect)
@@ -244,6 +337,12 @@ namespace UnityEditor.IMGUI.Controls
 				throw new ArgumentException(string.Format("The provided visibleColumnIndex is invalid. Ensure the index ({0}) is within the number of visible columns ({1})", visibleColumnIndex, this.m_ColumnRects.Length), "visibleColumnIndex");
 			}
 			return this.m_ColumnRects[visibleColumnIndex];
+		}
+
+		public void ResizeToFit()
+		{
+			this.m_ResizeToFit = true;
+			this.Repaint();
 		}
 
 		private void UpdateColumnHeaderRects(Rect totalHeaderRect)
@@ -274,6 +373,11 @@ namespace UnityEditor.IMGUI.Controls
 				this.m_GUIView = GUIView.current;
 			}
 			this.DetectSizeChanges(rect);
+			if (this.m_ResizeToFit && current.type == EventType.Repaint)
+			{
+				this.m_ResizeToFit = false;
+				this.ResizeColumnsWidthsProportionally(rect.width - GUI.skin.verticalScrollbar.fixedWidth - this.state.widthOfAllVisibleColumns);
+			}
 			GUIClip.Push(rect, new Vector2(-xScroll, 0f), Vector2.zero, false);
 			Rect totalHeaderRect = new Rect(0f, 0f, rect.width, rect.height);
 			float widthOfAllVisibleColumns = this.state.widthOfAllVisibleColumns;
@@ -292,15 +396,28 @@ namespace UnityEditor.IMGUI.Controls
 				MultiColumnHeaderState.Column column = this.state.columns[num];
 				Rect headerRect = this.m_ColumnRects[i];
 				Rect dividerRect = new Rect(headerRect.xMax - 1f, headerRect.y + 4f, 1f, headerRect.height - 8f);
-				this.DrawDivider(dividerRect);
 				Rect position2 = new Rect(dividerRect.x - this.m_DividerWidth * 0.5f, totalHeaderRect.y, this.m_DividerWidth, totalHeaderRect.height);
-				column.width = EditorGUI.WidthResizer(position2, column.width, column.minWidth, column.maxWidth);
+				bool flag;
+				column.width = EditorGUI.WidthResizer(position2, column.width, column.minWidth, column.maxWidth, out flag);
+				if (flag && current.type == EventType.Repaint)
+				{
+					this.DrawColumnResizing(headerRect, column);
+				}
+				this.DrawDivider(dividerRect, column);
 				this.ColumnHeaderGUI(column, headerRect, num);
 			}
 			GUIClip.Pop();
 		}
 
-		protected virtual void DrawDivider(Rect dividerRect)
+		internal virtual void DrawColumnResizing(Rect headerRect, MultiColumnHeaderState.Column column)
+		{
+			headerRect.y += 1f;
+			headerRect.width -= 1f;
+			headerRect.height -= 2f;
+			EditorGUI.DrawRect(headerRect, new Color(0.5f, 0.5f, 0.5f, 0.1f));
+		}
+
+		internal virtual void DrawDivider(Rect dividerRect, MultiColumnHeaderState.Column column)
 		{
 			EditorGUI.DrawRect(dividerRect, new Color(0.5f, 0.5f, 0.5f, 0.5f));
 		}
@@ -328,13 +445,14 @@ namespace UnityEditor.IMGUI.Controls
 
 		protected virtual void ColumnHeaderGUI(MultiColumnHeaderState.Column column, Rect headerRect, int columnIndex)
 		{
-			if (this.canSort)
+			if (this.canSort && column.canSort)
 			{
 				this.SortingButton(column, headerRect, columnIndex);
 			}
-			GUIStyle columnHeader = MultiColumnHeader.DefaultStyles.columnHeader;
-			columnHeader.alignment = this.ConvertHeaderAlignmentToTextAnchor(column.headerTextAlignment);
-			GUI.Label(headerRect, column.headerText, columnHeader);
+			GUIStyle style = this.GetStyle(column.headerTextAlignment);
+			float singleLineHeight = EditorGUIUtility.singleLineHeight;
+			Rect position = new Rect(headerRect.x, headerRect.yMax - singleLineHeight - MultiColumnHeader.DefaultGUI.labelSpaceFromBottom, headerRect.width, singleLineHeight);
+			GUI.Label(position, column.headerContent, style);
 		}
 
 		protected void SortingButton(MultiColumnHeaderState.Column column, Rect headerRect, int columnIndex)
@@ -345,31 +463,13 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			if (columnIndex == this.state.sortedColumnIndex && Event.current.type == EventType.Repaint)
 			{
-				float fixedWidth = MultiColumnHeader.DefaultStyles.arrowStyle.fixedWidth;
-				float y = headerRect.y;
-				float f = 0f;
-				switch (column.sortingArrowAlignment)
-				{
-				case TextAlignment.Left:
-					f = headerRect.x + (float)MultiColumnHeader.DefaultStyles.columnHeader.padding.left;
-					break;
-				case TextAlignment.Center:
-					f = headerRect.x + headerRect.width * 0.5f - fixedWidth * 0.5f;
-					break;
-				case TextAlignment.Right:
-					f = headerRect.xMax - (float)MultiColumnHeader.DefaultStyles.columnHeader.padding.right - fixedWidth;
-					break;
-				default:
-					Debug.LogError("Unhandled enum");
-					break;
-				}
-				Rect position = new Rect(Mathf.Round(f), y, fixedWidth, 12f);
+				Rect arrowRect = this.GetArrowRect(column, headerRect);
 				Matrix4x4 matrix = GUI.matrix;
 				if (column.sortedAscending)
 				{
-					GUIUtility.RotateAroundPivot(180f, position.center);
+					GUIUtility.RotateAroundPivot(180f, arrowRect.center - new Vector2(0f, 1f));
 				}
-				GUI.Label(position, "▾", MultiColumnHeader.DefaultStyles.arrowStyle);
+				GUI.Label(arrowRect, "▾", MultiColumnHeader.DefaultStyles.arrowStyle);
 				if (column.sortedAscending)
 				{
 					GUI.matrix = matrix;
@@ -377,46 +477,73 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		protected TextAnchor ConvertHeaderAlignmentToTextAnchor(TextAlignment alignment)
+		internal virtual Rect GetArrowRect(MultiColumnHeaderState.Column column, Rect headerRect)
 		{
-			TextAnchor result;
+			float fixedWidth = MultiColumnHeader.DefaultStyles.arrowStyle.fixedWidth;
+			float y = headerRect.y;
+			float f = 0f;
+			switch (column.sortingArrowAlignment)
+			{
+			case TextAlignment.Left:
+				f = headerRect.x + (float)MultiColumnHeader.DefaultStyles.columnHeader.padding.left;
+				break;
+			case TextAlignment.Center:
+				f = headerRect.x + headerRect.width * 0.5f - fixedWidth * 0.5f;
+				break;
+			case TextAlignment.Right:
+				f = headerRect.xMax - (float)MultiColumnHeader.DefaultStyles.columnHeader.padding.right - fixedWidth;
+				break;
+			default:
+				Debug.LogError("Unhandled enum");
+				break;
+			}
+			Rect result = new Rect(Mathf.Round(f), y, fixedWidth, 16f);
+			return result;
+		}
+
+		private GUIStyle GetStyle(TextAlignment alignment)
+		{
+			GUIStyle result;
 			switch (alignment)
 			{
 			case TextAlignment.Left:
-				result = TextAnchor.LowerLeft;
+				result = MultiColumnHeader.DefaultStyles.columnHeader;
 				break;
 			case TextAlignment.Center:
-				result = TextAnchor.LowerCenter;
+				result = MultiColumnHeader.DefaultStyles.columnHeaderCenterAligned;
 				break;
 			case TextAlignment.Right:
-				result = TextAnchor.LowerRight;
+				result = MultiColumnHeader.DefaultStyles.columnHeaderRightAligned;
 				break;
 			default:
-				result = TextAnchor.LowerLeft;
+				result = MultiColumnHeader.DefaultStyles.columnHeader;
 				break;
 			}
 			return result;
 		}
 
-		protected virtual void DoContextMenu()
+		private void DoContextMenu()
 		{
 			GenericMenu genericMenu = new GenericMenu();
-			this.AddColumnVisibilityItems(genericMenu);
+			this.AddColumnHeaderContextMenuItems(genericMenu);
 			genericMenu.ShowAsContext();
 		}
 
-		protected virtual void AddColumnVisibilityItems(GenericMenu menu)
+		protected virtual void AddColumnHeaderContextMenuItems(GenericMenu menu)
 		{
+			menu.AddItem(new GUIContent("Resize to Fit"), false, new GenericMenu.MenuFunction(this.ResizeToFit));
+			menu.AddSeparator("");
 			for (int i = 0; i < this.state.columns.Length; i++)
 			{
 				MultiColumnHeaderState.Column column = this.state.columns[i];
+				string text = string.IsNullOrEmpty(column.contextMenuText) ? column.headerContent.text : column.contextMenuText;
 				if (column.allowToggleVisibility)
 				{
-					menu.AddItem(new GUIContent(column.headerText), this.state.visibleColumns.Contains(i), new GenericMenu.MenuFunction2(this.ToggleVisibility), i);
+					menu.AddItem(new GUIContent(text), this.state.visibleColumns.Contains(i), new GenericMenu.MenuFunction2(this.ToggleVisibility), i);
 				}
 				else
 				{
-					menu.AddDisabledItem(new GUIContent(column.headerText));
+					menu.AddDisabledItem(new GUIContent(text));
 				}
 			}
 		}
@@ -453,7 +580,10 @@ namespace UnityEditor.IMGUI.Controls
 
 		public void Repaint()
 		{
-			this.m_GUIView.Repaint();
+			if (this.m_GUIView != null)
+			{
+				this.m_GUIView.Repaint();
+			}
 		}
 
 		private void DetectSizeChanges(Rect rect)

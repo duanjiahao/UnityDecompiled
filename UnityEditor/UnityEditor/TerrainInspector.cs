@@ -118,6 +118,8 @@ namespace UnityEditor
 
 		private static TerrainInspector.Styles styles;
 
+		private const string kDisplayLightingKey = "TerrainInspector.Lighting.ShowSettings";
+
 		internal static PrefKey[] s_ToolKeys = new PrefKey[]
 		{
 			new PrefKey("Terrain/Raise Height", "f1"),
@@ -146,17 +148,23 @@ namespace UnityEditor
 
 		private GUIContent[] m_DetailContents = null;
 
-		private SavedFloat m_TargetHeight = new SavedFloat("TerrainBrushTargetHeight", 0.2f);
+		private float m_TargetHeight;
 
-		private SavedFloat m_Strength = new SavedFloat("TerrainBrushStrength", 0.5f);
+		private float m_Strength;
 
-		private SavedInt m_Size = new SavedInt("TerrainBrushSize", 25);
+		private int m_Size;
 
-		private SavedFloat m_SplatAlpha = new SavedFloat("TerrainBrushSplatAlpha", 1f);
+		private float m_SplatAlpha;
 
-		private SavedFloat m_DetailOpacity = new SavedFloat("TerrainDetailOpacity", 1f);
+		private float m_DetailOpacity;
 
-		private SavedFloat m_DetailStrength = new SavedFloat("TerrainDetailStrength", 0.8f);
+		private float m_DetailStrength;
+
+		private int m_SelectedBrush = 0;
+
+		private int m_SelectedSplat = 0;
+
+		private int m_SelectedDetail = 0;
 
 		private const float kHeightmapBrushScale = 0.01f;
 
@@ -166,13 +174,9 @@ namespace UnityEditor
 
 		private static Texture2D[] s_BrushTextures = null;
 
-		private int m_SelectedBrush = 0;
-
-		private int m_SelectedSplat = 0;
-
-		private int m_SelectedDetail = 0;
-
 		private static int s_TerrainEditorHash = "TerrainEditor".GetHashCode();
+
+		private static int s_activeTerrainInspector = 0;
 
 		private List<ReflectionProbeBlendInfo> m_BlendInfoList = new List<ReflectionProbeBlendInfo>();
 
@@ -184,6 +188,8 @@ namespace UnityEditor
 
 		private bool m_LODTreePrototypePresent = false;
 
+		private LightingSettingsInspector m_Lighting;
+
 		private SavedInt m_SelectedTool = new SavedInt("TerrainSelectedTool", 0);
 
 		private TerrainTool selectedTool
@@ -191,7 +197,7 @@ namespace UnityEditor
 			get
 			{
 				TerrainTool result;
-				if (Tools.current == Tool.None)
+				if (Tools.current == Tool.None && base.GetInstanceID() == TerrainInspector.s_activeTerrainInspector)
 				{
 					result = (TerrainTool)this.m_SelectedTool.value;
 				}
@@ -208,6 +214,7 @@ namespace UnityEditor
 					Tools.current = Tool.None;
 				}
 				this.m_SelectedTool.value = (int)value;
+				TerrainInspector.s_activeTerrainInspector = base.GetInstanceID();
 			}
 		}
 
@@ -231,81 +238,84 @@ namespace UnityEditor
 
 		private void CheckKeys()
 		{
-			for (int i = 0; i < TerrainInspector.s_ToolKeys.Length; i++)
+			if (TerrainInspector.s_activeTerrainInspector == 0 || TerrainInspector.s_activeTerrainInspector == base.GetInstanceID())
 			{
-				if (TerrainInspector.s_ToolKeys[i].activated)
+				for (int i = 0; i < TerrainInspector.s_ToolKeys.Length; i++)
 				{
-					this.selectedTool = (TerrainTool)i;
+					if (TerrainInspector.s_ToolKeys[i].activated)
+					{
+						this.selectedTool = (TerrainTool)i;
+						base.Repaint();
+						Event.current.Use();
+					}
+				}
+				if (TerrainInspector.s_PrevBrush.activated)
+				{
+					this.m_SelectedBrush--;
+					if (this.m_SelectedBrush < 0)
+					{
+						this.m_SelectedBrush = TerrainInspector.s_BrushTextures.Length - 1;
+					}
 					base.Repaint();
 					Event.current.Use();
 				}
-			}
-			if (TerrainInspector.s_PrevBrush.activated)
-			{
-				this.m_SelectedBrush--;
-				if (this.m_SelectedBrush < 0)
+				if (TerrainInspector.s_NextBrush.activated)
 				{
-					this.m_SelectedBrush = TerrainInspector.s_BrushTextures.Length - 1;
-				}
-				base.Repaint();
-				Event.current.Use();
-			}
-			if (TerrainInspector.s_NextBrush.activated)
-			{
-				this.m_SelectedBrush++;
-				if (this.m_SelectedBrush >= TerrainInspector.s_BrushTextures.Length)
-				{
-					this.m_SelectedBrush = 0;
-				}
-				base.Repaint();
-				Event.current.Use();
-			}
-			int num = 0;
-			if (TerrainInspector.s_NextTexture.activated)
-			{
-				num = 1;
-			}
-			if (TerrainInspector.s_PrevTexture.activated)
-			{
-				num = -1;
-			}
-			if (num != 0)
-			{
-				TerrainTool selectedTool = this.selectedTool;
-				if (selectedTool != TerrainTool.PaintDetail)
-				{
-					if (selectedTool != TerrainTool.PlaceTree)
+					this.m_SelectedBrush++;
+					if (this.m_SelectedBrush >= TerrainInspector.s_BrushTextures.Length)
 					{
-						if (selectedTool == TerrainTool.PaintTexture)
+						this.m_SelectedBrush = 0;
+					}
+					base.Repaint();
+					Event.current.Use();
+				}
+				int num = 0;
+				if (TerrainInspector.s_NextTexture.activated)
+				{
+					num = 1;
+				}
+				if (TerrainInspector.s_PrevTexture.activated)
+				{
+					num = -1;
+				}
+				if (num != 0)
+				{
+					TerrainTool selectedTool = this.selectedTool;
+					if (selectedTool != TerrainTool.PaintDetail)
+					{
+						if (selectedTool != TerrainTool.PlaceTree)
 						{
-							this.m_SelectedSplat = (int)Mathf.Repeat((float)(this.m_SelectedSplat + num), (float)this.m_Terrain.terrainData.splatPrototypes.Length);
+							if (selectedTool == TerrainTool.PaintTexture)
+							{
+								this.m_SelectedSplat = (int)Mathf.Repeat((float)(this.m_SelectedSplat + num), (float)this.m_Terrain.terrainData.splatPrototypes.Length);
+								Event.current.Use();
+								base.Repaint();
+							}
+						}
+						else
+						{
+							if (TreePainter.selectedTree >= 0)
+							{
+								TreePainter.selectedTree = (int)Mathf.Repeat((float)(TreePainter.selectedTree + num), (float)this.m_TreeContents.Length);
+							}
+							else if (num == -1 && this.m_TreeContents.Length > 0)
+							{
+								TreePainter.selectedTree = this.m_TreeContents.Length - 1;
+							}
+							else if (num == 1 && this.m_TreeContents.Length > 0)
+							{
+								TreePainter.selectedTree = 0;
+							}
 							Event.current.Use();
 							base.Repaint();
 						}
 					}
 					else
 					{
-						if (TreePainter.selectedTree >= 0)
-						{
-							TreePainter.selectedTree = (int)Mathf.Repeat((float)(TreePainter.selectedTree + num), (float)this.m_TreeContents.Length);
-						}
-						else if (num == -1 && this.m_TreeContents.Length > 0)
-						{
-							TreePainter.selectedTree = this.m_TreeContents.Length - 1;
-						}
-						else if (num == 1 && this.m_TreeContents.Length > 0)
-						{
-							TreePainter.selectedTree = 0;
-						}
+						this.m_SelectedDetail = (int)Mathf.Repeat((float)(this.m_SelectedDetail + num), (float)this.m_Terrain.terrainData.detailPrototypes.Length);
 						Event.current.Use();
 						base.Repaint();
 					}
-				}
-				else
-				{
-					this.m_SelectedDetail = (int)Mathf.Repeat((float)(this.m_SelectedDetail + num), (float)this.m_Terrain.terrainData.detailPrototypes.Length);
-					Event.current.Use();
-					base.Repaint();
 				}
 			}
 		}
@@ -354,8 +364,38 @@ namespace UnityEditor
 			}
 		}
 
+		private void LoadInspectorSettings()
+		{
+			this.m_TargetHeight = EditorPrefs.GetFloat("TerrainBrushTargetHeight", 0.2f);
+			this.m_Strength = EditorPrefs.GetFloat("TerrainBrushStrength", 0.5f);
+			this.m_Size = EditorPrefs.GetInt("TerrainBrushSize", 25);
+			this.m_SplatAlpha = EditorPrefs.GetFloat("TerrainBrushSplatAlpha", 1f);
+			this.m_DetailOpacity = EditorPrefs.GetFloat("TerrainDetailOpacity", 1f);
+			this.m_DetailStrength = EditorPrefs.GetFloat("TerrainDetailStrength", 0.8f);
+			this.m_SelectedBrush = EditorPrefs.GetInt("TerrainSelectedBrush", 0);
+			this.m_SelectedSplat = EditorPrefs.GetInt("TerrainSelectedSplat", 0);
+			this.m_SelectedDetail = EditorPrefs.GetInt("TerrainSelectedDetail", 0);
+		}
+
+		private void SaveInspectorSettings()
+		{
+			EditorPrefs.SetInt("TerrainSelectedDetail", this.m_SelectedDetail);
+			EditorPrefs.SetInt("TerrainSelectedSplat", this.m_SelectedSplat);
+			EditorPrefs.SetInt("TerrainSelectedBrush", this.m_SelectedBrush);
+			EditorPrefs.SetFloat("TerrainDetailStrength", this.m_DetailStrength);
+			EditorPrefs.SetFloat("TerrainDetailOpacity", this.m_DetailOpacity);
+			EditorPrefs.SetFloat("TerrainBrushSplatAlpha", this.m_SplatAlpha);
+			EditorPrefs.SetInt("TerrainBrushSize", this.m_Size);
+			EditorPrefs.SetFloat("TerrainBrushStrength", this.m_Strength);
+			EditorPrefs.SetFloat("TerrainBrushTargetHeight", this.m_TargetHeight);
+		}
+
 		public void OnEnable()
 		{
+			if (TerrainInspector.s_activeTerrainInspector == 0)
+			{
+				TerrainInspector.s_activeTerrainInspector = base.GetInstanceID();
+			}
 			this.m_ShowBuiltinSpecularSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowCustomMaterialSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowReflectionProbesGUI.valueChanged.AddListener(new UnityAction(base.Repaint));
@@ -366,18 +406,27 @@ namespace UnityEditor
 				this.m_ShowCustomMaterialSettings.value = (terrain.materialType == Terrain.MaterialType.Custom);
 				this.m_ShowReflectionProbesGUI.value = (terrain.materialType == Terrain.MaterialType.BuiltInStandard || terrain.materialType == Terrain.MaterialType.Custom);
 			}
+			this.LoadInspectorSettings();
 			SceneView.onPreSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Combine(SceneView.onPreSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnPreSceneGUICallback));
+			SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Combine(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneGUICallback));
+			this.InitializeLightingFields();
 		}
 
 		public void OnDisable()
 		{
+			SceneView.onSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnSceneGUICallback));
 			SceneView.onPreSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onPreSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnPreSceneGUICallback));
+			this.SaveInspectorSettings();
 			this.m_ShowReflectionProbesGUI.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowCustomMaterialSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowBuiltinSpecularSettings.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			if (this.m_CachedBrush != null)
 			{
 				this.m_CachedBrush.Dispose();
+			}
+			if (TerrainInspector.s_activeTerrainInspector == base.GetInstanceID())
+			{
+				TerrainInspector.s_activeTerrainInspector = 0;
 			}
 		}
 
@@ -416,7 +465,7 @@ namespace UnityEditor
 					doubleClick = true;
 					current.Use();
 				}
-				result = GUI.SelectionGrid(aspectRect, selected, textures, Mathf.RoundToInt(EditorGUIUtility.currentViewWidth - 20f) / approxSize, style);
+				result = GUI.SelectionGrid(aspectRect, Math.Min(selected, textures.Length - 1), textures, Mathf.RoundToInt(EditorGUIUtility.currentViewWidth - 20f) / approxSize, style);
 			}
 			else
 			{
@@ -458,7 +507,7 @@ namespace UnityEditor
 					doubleClick = true;
 					current.Use();
 				}
-				result = GUI.SelectionGrid(brushAspectRect, selected, textures, xCount, style);
+				result = GUI.SelectionGrid(brushAspectRect, Math.Min(selected, textures.Length - 1), textures, xCount, style);
 			}
 			else
 			{
@@ -682,10 +731,10 @@ namespace UnityEditor
 			this.ShowRefreshPrototypes();
 			GUILayout.EndHorizontal();
 			GUILayout.Label(TerrainInspector.styles.settings, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			this.m_Size.value = Mathf.RoundToInt(EditorGUILayout.Slider(TerrainInspector.styles.brushSize, (float)this.m_Size, 1f, 100f, new GUILayoutOption[0]));
-			this.m_DetailOpacity.value = EditorGUILayout.Slider(TerrainInspector.styles.opacity, this.m_DetailOpacity, 0f, 1f, new GUILayoutOption[0]);
-			this.m_DetailStrength.value = EditorGUILayout.Slider(TerrainInspector.styles.detailTargetStrength, this.m_DetailStrength, 0f, 1f, new GUILayoutOption[0]);
-			this.m_DetailStrength.value = Mathf.Round(this.m_DetailStrength * 16f) / 16f;
+			this.m_Size = Mathf.RoundToInt(EditorGUILayout.Slider(TerrainInspector.styles.brushSize, (float)this.m_Size, 1f, 100f, new GUILayoutOption[0]));
+			this.m_DetailOpacity = EditorGUILayout.Slider(TerrainInspector.styles.opacity, this.m_DetailOpacity, 0f, 1f, new GUILayoutOption[0]);
+			this.m_DetailStrength = EditorGUILayout.Slider(TerrainInspector.styles.detailTargetStrength, this.m_DetailStrength, 0f, 1f, new GUILayoutOption[0]);
+			this.m_DetailStrength = Mathf.Round(this.m_DetailStrength * 16f) / 16f;
 		}
 
 		public void ShowSettings()
@@ -835,7 +884,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Label(TerrainInspector.styles.settings, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			this.ShowBrushSettings();
-			this.m_SplatAlpha.value = EditorGUILayout.Slider("Target Strength", this.m_SplatAlpha, 0f, 1f, new GUILayoutOption[0]);
+			this.m_SplatAlpha = EditorGUILayout.Slider("Target Strength", this.m_SplatAlpha, 0f, 1f, new GUILayoutOption[0]);
 		}
 
 		public void ShowBrushes()
@@ -1002,8 +1051,8 @@ namespace UnityEditor
 
 		public void ShowBrushSettings()
 		{
-			this.m_Size.value = Mathf.RoundToInt(EditorGUILayout.Slider(TerrainInspector.styles.brushSize, (float)this.m_Size, 1f, 100f, new GUILayoutOption[0]));
-			this.m_Strength.value = TerrainInspector.PercentSlider(TerrainInspector.styles.opacity, this.m_Strength, 0.00167849252f, 1f);
+			this.m_Size = Mathf.RoundToInt(EditorGUILayout.Slider(TerrainInspector.styles.brushSize, (float)this.m_Size, 1f, 100f, new GUILayoutOption[0]));
+			this.m_Strength = TerrainInspector.PercentSlider(TerrainInspector.styles.opacity, this.m_Strength, 0.00167849252f, 1f);
 		}
 
 		public void ShowSetHeight()
@@ -1017,7 +1066,7 @@ namespace UnityEditor
 			num = EditorGUILayout.Slider("Height", num, 0f, this.m_Terrain.terrainData.size.y, new GUILayoutOption[0]);
 			if (GUI.changed)
 			{
-				this.m_TargetHeight.value = num / this.m_Terrain.terrainData.size.y;
+				this.m_TargetHeight = num / this.m_Terrain.terrainData.size.y;
 			}
 			if (GUILayout.Button(TerrainInspector.styles.flatten, new GUILayoutOption[]
 			{
@@ -1025,9 +1074,29 @@ namespace UnityEditor
 			}))
 			{
 				Undo.RegisterCompleteObjectUndo(this.m_Terrain.terrainData, "Flatten Heightmap");
-				HeightmapFilters.Flatten(this.m_Terrain.terrainData, this.m_TargetHeight.value);
+				HeightmapFilters.Flatten(this.m_Terrain.terrainData, this.m_TargetHeight);
 			}
 			GUILayout.EndHorizontal();
+		}
+
+		public void InitializeLightingFields()
+		{
+			this.m_Lighting = new LightingSettingsInspector(base.serializedObject);
+			this.m_Lighting.showSettings = EditorPrefs.GetBool("TerrainInspector.Lighting.ShowSettings", false);
+		}
+
+		public void RenderLightingFields()
+		{
+			bool showSettings = this.m_Lighting.showSettings;
+			if (this.m_Lighting.Begin())
+			{
+				this.m_Lighting.RenderTerrainSettings();
+			}
+			this.m_Lighting.End();
+			if (this.m_Lighting.showSettings != showSettings)
+			{
+				EditorPrefs.SetBool("TerrainInspector.Lighting.ShowSettings", this.m_Lighting.showSettings);
+			}
 		}
 
 		private void OnInspectorUpdate()
@@ -1040,6 +1109,7 @@ namespace UnityEditor
 
 		public override void OnInspectorGUI()
 		{
+			base.serializedObject.Update();
 			this.Initialize();
 			if (TerrainInspector.styles == null)
 			{
@@ -1085,9 +1155,11 @@ namespace UnityEditor
 				GUILayout.FlexibleSpace();
 				GUI.changed = false;
 				int selectedTool = (int)this.selectedTool;
-				this.selectedTool = (TerrainTool)GUILayout.Toolbar(selectedTool, TerrainInspector.styles.toolIcons, TerrainInspector.styles.command, new GUILayoutOption[0]);
-				if (this.selectedTool != (TerrainTool)selectedTool)
+				int num = GUILayout.Toolbar(selectedTool, TerrainInspector.styles.toolIcons, TerrainInspector.styles.command, new GUILayoutOption[0]);
+				if (num != selectedTool)
 				{
+					this.selectedTool = (TerrainTool)num;
+					InspectorWindow.RepaintAllInspectors();
 					if (Toolbar.get != null)
 					{
 						Toolbar.get.Repaint();
@@ -1132,6 +1204,7 @@ namespace UnityEditor
 					this.ShowSettings();
 					break;
 				}
+				this.RenderLightingFields();
 				GUILayout.Space(5f);
 			}
 		}
@@ -1331,7 +1404,7 @@ namespace UnityEditor
 				previewProjector.enabled = flag;
 				if (flag)
 				{
-					vector2.y = this.m_Terrain.SampleHeight(vector2);
+					vector2.y = this.m_Terrain.transform.position.y + this.m_Terrain.SampleHeight(vector2);
 					transform.position = vector2 + new Vector3(0f, 50f, 0f);
 				}
 				previewProjector.orthographicSize = num / num2;
@@ -1339,7 +1412,7 @@ namespace UnityEditor
 			}
 		}
 
-		public void OnSceneGUI()
+		public void OnSceneGUICallback(SceneView sceneView)
 		{
 			this.Initialize();
 			if (this.m_Terrain.terrainData)
@@ -1373,7 +1446,7 @@ namespace UnityEditor
 											{
 												if (this.selectedTool == TerrainTool.SetHeight && Event.current.shift)
 												{
-													this.m_TargetHeight.value = this.m_Terrain.terrainData.GetInterpolatedHeight(vector.x, vector.y) / this.m_Terrain.terrainData.size.y;
+													this.m_TargetHeight = this.m_Terrain.terrainData.GetInterpolatedHeight(vector.x, vector.y) / this.m_Terrain.terrainData.size.y;
 													InspectorWindow.RepaintAllInspectors();
 												}
 												else if (this.selectedTool == TerrainTool.PlaceTree)

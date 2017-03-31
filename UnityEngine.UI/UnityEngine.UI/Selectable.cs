@@ -578,7 +578,7 @@ namespace UnityEngine.UI
 
 		private void TriggerAnimation(string triggername)
 		{
-			if (this.transition == Selectable.Transition.Animation && !(this.animator == null) && this.animator.isActiveAndEnabled && !(this.animator.runtimeAnimatorController == null) && !string.IsNullOrEmpty(triggername))
+			if (this.transition == Selectable.Transition.Animation && !(this.animator == null) && this.animator.isActiveAndEnabled && this.animator.hasBoundPlayables && !string.IsNullOrEmpty(triggername))
 			{
 				this.animator.ResetTrigger(this.m_AnimationTriggers.normalTrigger);
 				this.animator.ResetTrigger(this.m_AnimationTriggers.pressedTrigger);

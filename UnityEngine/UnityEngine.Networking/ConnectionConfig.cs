@@ -48,6 +48,9 @@ namespace UnityEngine.Networking
 		private uint m_AckDelay;
 
 		[SerializeField]
+		private uint m_SendDelay;
+
+		[SerializeField]
 		private ushort m_MaxCombinedReliableMessageSize;
 
 		[SerializeField]
@@ -57,13 +60,31 @@ namespace UnityEngine.Networking
 		private ushort m_MaxSentMessageQueueSize;
 
 		[SerializeField]
-		private bool m_IsAcksLong;
+		private ConnectionAcksType m_AcksType;
 
 		[SerializeField]
 		private bool m_UsePlatformSpecificProtocols;
 
 		[SerializeField]
+		private uint m_InitialBandwidth;
+
+		[SerializeField]
+		private float m_BandwidthPeakFactor;
+
+		[SerializeField]
 		private ushort m_WebSocketReceiveBufferMaxSize;
+
+		[SerializeField]
+		private uint m_UdpSocketReceiveBufferMaxSize;
+
+		[SerializeField]
+		private string m_SSLCertFilePath;
+
+		[SerializeField]
+		private string m_SSLPrivateKeyFilePath;
+
+		[SerializeField]
+		private string m_SSLCAFilePath;
 
 		[SerializeField]
 		internal List<ChannelQOS> m_Channels = new List<ChannelQOS>();
@@ -228,6 +249,18 @@ namespace UnityEngine.Networking
 			}
 		}
 
+		public uint SendDelay
+		{
+			get
+			{
+				return this.m_SendDelay;
+			}
+			set
+			{
+				this.m_SendDelay = value;
+			}
+		}
+
 		public ushort MaxCombinedReliableMessageSize
 		{
 			get
@@ -264,15 +297,35 @@ namespace UnityEngine.Networking
 			}
 		}
 
+		public ConnectionAcksType AcksType
+		{
+			get
+			{
+				return this.m_AcksType;
+			}
+			set
+			{
+				this.m_AcksType = value;
+			}
+		}
+
+		[Obsolete("IsAcksLong is deprecated. Use AcksType = ConnectionAcksType.Acks64", false)]
 		public bool IsAcksLong
 		{
 			get
 			{
-				return this.m_IsAcksLong;
+				return this.m_AcksType != ConnectionAcksType.Acks32;
 			}
 			set
 			{
-				this.m_IsAcksLong = value;
+				if (value && this.m_AcksType == ConnectionAcksType.Acks32)
+				{
+					this.m_AcksType = ConnectionAcksType.Acks64;
+				}
+				else if (!value)
+				{
+					this.m_AcksType = ConnectionAcksType.Acks32;
+				}
 			}
 		}
 
@@ -292,6 +345,30 @@ namespace UnityEngine.Networking
 			}
 		}
 
+		public uint InitialBandwidth
+		{
+			get
+			{
+				return this.m_InitialBandwidth;
+			}
+			set
+			{
+				this.m_InitialBandwidth = value;
+			}
+		}
+
+		public float BandwidthPeakFactor
+		{
+			get
+			{
+				return this.m_BandwidthPeakFactor;
+			}
+			set
+			{
+				this.m_BandwidthPeakFactor = value;
+			}
+		}
+
 		public ushort WebSocketReceiveBufferMaxSize
 		{
 			get
@@ -301,6 +378,54 @@ namespace UnityEngine.Networking
 			set
 			{
 				this.m_WebSocketReceiveBufferMaxSize = value;
+			}
+		}
+
+		public uint UdpSocketReceiveBufferMaxSize
+		{
+			get
+			{
+				return this.m_UdpSocketReceiveBufferMaxSize;
+			}
+			set
+			{
+				this.m_UdpSocketReceiveBufferMaxSize = value;
+			}
+		}
+
+		public string SSLCertFilePath
+		{
+			get
+			{
+				return this.m_SSLCertFilePath;
+			}
+			set
+			{
+				this.m_SSLCertFilePath = value;
+			}
+		}
+
+		public string SSLPrivateKeyFilePath
+		{
+			get
+			{
+				return this.m_SSLPrivateKeyFilePath;
+			}
+			set
+			{
+				this.m_SSLPrivateKeyFilePath = value;
+			}
+		}
+
+		public string SSLCAFilePath
+		{
+			get
+			{
+				return this.m_SSLCAFilePath;
+			}
+			set
+			{
+				this.m_SSLCAFilePath = value;
 			}
 		}
 
@@ -322,7 +447,7 @@ namespace UnityEngine.Networking
 
 		public ConnectionConfig()
 		{
-			this.m_PacketSize = 1500;
+			this.m_PacketSize = 1440;
 			this.m_FragmentSize = 500;
 			this.m_ResendTimeout = 1200u;
 			this.m_DisconnectTimeout = 2000u;
@@ -335,12 +460,19 @@ namespace UnityEngine.Networking
 			this.m_OverflowDropThreshold = 5;
 			this.m_MaxConnectionAttempt = 10;
 			this.m_AckDelay = 33u;
+			this.m_SendDelay = 10u;
 			this.m_MaxCombinedReliableMessageSize = 100;
 			this.m_MaxCombinedReliableMessageCount = 10;
-			this.m_MaxSentMessageQueueSize = 128;
-			this.m_IsAcksLong = false;
+			this.m_MaxSentMessageQueueSize = 512;
+			this.m_AcksType = ConnectionAcksType.Acks32;
 			this.m_UsePlatformSpecificProtocols = false;
+			this.m_InitialBandwidth = 0u;
+			this.m_BandwidthPeakFactor = 2f;
 			this.m_WebSocketReceiveBufferMaxSize = 0;
+			this.m_UdpSocketReceiveBufferMaxSize = 0u;
+			this.m_SSLCertFilePath = null;
+			this.m_SSLPrivateKeyFilePath = null;
+			this.m_SSLCAFilePath = null;
 		}
 
 		public ConnectionConfig(ConnectionConfig config)
@@ -362,12 +494,23 @@ namespace UnityEngine.Networking
 			this.m_OverflowDropThreshold = config.m_OverflowDropThreshold;
 			this.m_MaxConnectionAttempt = config.m_MaxConnectionAttempt;
 			this.m_AckDelay = config.m_AckDelay;
+			this.m_SendDelay = config.m_SendDelay;
 			this.m_MaxCombinedReliableMessageSize = config.MaxCombinedReliableMessageSize;
 			this.m_MaxCombinedReliableMessageCount = config.m_MaxCombinedReliableMessageCount;
 			this.m_MaxSentMessageQueueSize = config.m_MaxSentMessageQueueSize;
-			this.m_IsAcksLong = config.m_IsAcksLong;
+			this.m_AcksType = config.m_AcksType;
 			this.m_UsePlatformSpecificProtocols = config.m_UsePlatformSpecificProtocols;
+			this.m_InitialBandwidth = config.m_InitialBandwidth;
+			if (this.m_InitialBandwidth == 0u)
+			{
+				this.m_InitialBandwidth = (uint)(this.m_PacketSize * 1000) / this.m_MinUpdateTimeout;
+			}
+			this.m_BandwidthPeakFactor = config.m_BandwidthPeakFactor;
 			this.m_WebSocketReceiveBufferMaxSize = config.m_WebSocketReceiveBufferMaxSize;
+			this.m_UdpSocketReceiveBufferMaxSize = config.m_UdpSocketReceiveBufferMaxSize;
+			this.m_SSLCertFilePath = config.m_SSLCertFilePath;
+			this.m_SSLPrivateKeyFilePath = config.m_SSLPrivateKeyFilePath;
+			this.m_SSLCAFilePath = config.m_SSLCAFilePath;
 			foreach (ChannelQOS current in config.m_Channels)
 			{
 				this.m_Channels.Add(new ChannelQOS(current));

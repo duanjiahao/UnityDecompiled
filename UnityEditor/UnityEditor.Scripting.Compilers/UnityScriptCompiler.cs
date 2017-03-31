@@ -65,7 +65,7 @@ namespace UnityEditor.Scripting.Compilers
 				string fileName2 = files[j];
 				list.Add(ScriptCompilerBase.PrepareFileName(fileName2));
 			}
-			string compiler = Path.Combine(base.GetProfileDirectory(), "us.exe");
+			string compiler = Path.Combine(base.GetMonoProfileLibDirectory(), "us.exe");
 			return base.StartCompiler(this._island._target, compiler, list);
 		}
 

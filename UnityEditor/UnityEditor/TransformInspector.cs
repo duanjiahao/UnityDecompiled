@@ -12,12 +12,6 @@ namespace UnityEditor
 
 			public GUIContent scaleContent = new GUIContent(LocalizationDatabase.GetLocalizedString("Scale"), LocalizationDatabase.GetLocalizedString("The local scaling of this Game Object relative to the parent."));
 
-			public GUIContent[] subLabels = new GUIContent[]
-			{
-				new GUIContent("X"),
-				new GUIContent("Y")
-			};
-
 			public string floatingPointWarning = LocalizationDatabase.GetLocalizedString("Due to floating-point precision limitations, it is recommended to bring the world coordinates of the GameObject within a smaller range.");
 		}
 

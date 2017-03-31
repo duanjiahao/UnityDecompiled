@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -726,9 +727,11 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Equal(TextureImporterSettings a, TextureImporterSettings b);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CopyTo(TextureImporterSettings target);
 
@@ -743,6 +746,7 @@ namespace UnityEditor
 			TextureImporterSettings.Internal_ApplyTextureType(this, type);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_ApplyTextureType(TextureImporterSettings s, TextureImporterType type);
 	}

@@ -11,10 +11,6 @@ namespace UnityEditor
 	{
 		private const int m_RowHeight = 16;
 
-		private static GUIContent s_HelpIcon;
-
-		private static GUIContent s_TitleSettingsIcon;
-
 		private SerializedObject m_TargetObject;
 
 		private SerializedProperty m_Icon;
@@ -115,13 +111,17 @@ namespace UnityEditor
 						EditorGUILayout.HelpBox("No MonoBehaviour scripts in the file, or their names do not match the file name.", MessageType.Info);
 					}
 				}
-				Vector2 iconSize = EditorGUIUtility.GetIconSize();
-				EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
 				List<string> list = new List<string>();
 				List<UnityEngine.Object> list2 = new List<UnityEngine.Object>();
 				bool flag = false;
-				this.ShowFieldInfo(@class, monoImporter, list, list2, ref flag);
-				EditorGUIUtility.SetIconSize(iconSize);
+				using (new EditorGUIUtility.IconSizeScope(new Vector2(16f, 16f)))
+				{
+					this.ShowFieldInfo(@class, monoImporter, list, list2, ref flag);
+				}
+				if (list2.Count != 0)
+				{
+					EditorGUILayout.HelpBox("Default references will only be applied in edit mode.", MessageType.Info);
+				}
 				if (flag)
 				{
 					monoImporter.SetDefaultReferences(list.ToArray(), list2.ToArray());

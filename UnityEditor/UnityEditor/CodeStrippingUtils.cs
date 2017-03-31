@@ -9,6 +9,7 @@ using UnityEditor.Analytics;
 using UnityEditor.BuildReporting;
 using UnityEditor.Utils;
 using UnityEditorInternal;
+using UnityEditorInternal.VR;
 
 namespace UnityEditor
 {
@@ -18,6 +19,7 @@ namespace UnityEditor
 
 		private static string[] s_blackListNativeClassNames = new string[]
 		{
+			"Behaviour",
 			"PreloadData",
 			"Material",
 			"Cubemap",
@@ -25,7 +27,10 @@ namespace UnityEditor
 			"Texture2DArray",
 			"RenderTexture",
 			"Mesh",
-			"Sprite"
+			"MeshFilter",
+			"MeshRenderer",
+			"Sprite",
+			"LowerResBlitTexture"
 		};
 
 		private static UnityType[] s_blackListNativeClasses;
@@ -134,7 +139,27 @@ namespace UnityEditor
 			return hashSet;
 		}
 
-		public static void InjectCustomDependencies(StrippingInfo strippingInfo, HashSet<UnityType> nativeClasses)
+		private static bool IsVRModuleUsed(BuildTarget target)
+		{
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(target);
+			bool result;
+			if (buildTargetGroup != BuildTargetGroup.iPhone)
+			{
+				result = false;
+			}
+			else if (!PlayerSettings.virtualRealitySupported)
+			{
+				result = false;
+			}
+			else
+			{
+				string[] vREnabledDevicesOnTargetGroup = VREditor.GetVREnabledDevicesOnTargetGroup(buildTargetGroup);
+				result = (Array.IndexOf<string>(vREnabledDevicesOnTargetGroup, "cardboard") >= 0);
+			}
+			return result;
+		}
+
+		public static void InjectCustomDependencies(BuildTarget target, StrippingInfo strippingInfo, HashSet<UnityType> nativeClasses, HashSet<string> nativeModules)
 		{
 			UnityType item = UnityType.FindTypeByName("UnityAnalyticsManager");
 			if (nativeClasses.Contains(item))
@@ -149,6 +174,12 @@ namespace UnityEditor
 					strippingInfo.RegisterDependency("UnityAnalyticsManager", "Required by Unity Analytics (See Services Window)");
 					strippingInfo.SetIcon("Required by Unity Analytics (See Services Window)", "class/PlayerSettings");
 				}
+			}
+			if (CodeStrippingUtils.IsVRModuleUsed(target))
+			{
+				nativeModules.Add("VR");
+				strippingInfo.RegisterDependency("VR", "Required by Scripts");
+				strippingInfo.SetIcon("Required because VR is enabled in PlayerSettings", "class/PlayerSettings");
 			}
 		}
 
@@ -231,7 +262,7 @@ namespace UnityEditor
 			}
 			if (nativeClasses != null && strippingInfo != null)
 			{
-				CodeStrippingUtils.InjectCustomDependencies(strippingInfo, nativeClasses);
+				CodeStrippingUtils.InjectCustomDependencies(platformProvider.target, strippingInfo, nativeClasses, nativeModules);
 			}
 		}
 
@@ -491,20 +522,25 @@ namespace UnityEditor
 				}
 			}
 			AssemblyDefinition assemblyDefinition2 = null;
+			AssemblyDefinition assemblyDefinition3 = null;
 			for (int j = 0; j < assemblyFileNames.Length; j++)
 			{
 				if (assemblyFileNames[j] == "UnityEngine.dll")
 				{
 					assemblyDefinition2 = assemblyDefinitions[j];
 				}
+				if (assemblyFileNames[j] == "UnityEngine.UI.dll")
+				{
+					assemblyDefinition3 = assemblyDefinitions[j];
+				}
 			}
 			AssemblyDefinition[] array2 = assemblyDefinitions;
 			for (int k = 0; k < array2.Length; k++)
 			{
-				AssemblyDefinition assemblyDefinition3 = array2[k];
-				if (assemblyDefinition3 != assemblyDefinition2)
+				AssemblyDefinition assemblyDefinition4 = array2[k];
+				if (assemblyDefinition4 != assemblyDefinition2 && assemblyDefinition4 != assemblyDefinition3)
 				{
-					foreach (TypeReference current2 in assemblyDefinition3.MainModule.GetTypeReferences())
+					foreach (TypeReference current2 in assemblyDefinition4.MainModule.GetTypeReferences())
 					{
 						if (current2.Namespace.StartsWith("UnityEngine"))
 						{
@@ -512,7 +548,7 @@ namespace UnityEditor
 							hashSet.Add(name3);
 							if (strippingInfo != null)
 							{
-								string name4 = assemblyDefinition3.Name.Name;
+								string name4 = assemblyDefinition4.Name.Name;
 								if (!AssemblyReferenceChecker.IsIgnoredSystemDll(name4))
 								{
 									strippingInfo.RegisterDependency(name3, "Required by Scripts");

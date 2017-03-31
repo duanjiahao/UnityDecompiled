@@ -15,6 +15,7 @@ namespace UnityEditor
 		Tizen,
 		[Obsolete("Windows Phone 8 was removed in 5.3", false)]
 		WP8,
-		N3DS
+		N3DS,
+		HMD
 	}
 }

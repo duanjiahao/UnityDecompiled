@@ -7,49 +7,57 @@ namespace UnityEditor.IMGUI.Controls
 {
 	internal abstract class TreeViewGUI : ITreeViewGUI
 	{
-		internal class Styles
+		internal static class Styles
 		{
-			public GUIStyle foldout = "IN Foldout";
+			public static GUIStyle foldout;
 
-			public GUIStyle insertion = "PR Insertion";
+			public static GUIStyle insertion;
 
-			public GUIStyle ping = new GUIStyle("PR Ping");
+			public static GUIStyle ping;
 
-			public GUIStyle toolbarButton = "ToolbarButton";
+			public static GUIStyle toolbarButton;
 
-			public GUIStyle lineStyle = new GUIStyle("PR Label");
+			public static GUIStyle lineStyle;
 
-			public GUIStyle lineBoldStyle;
+			public static GUIStyle lineBoldStyle;
 
-			public GUIStyle selectionStyle = new GUIStyle("PR Label");
+			public static GUIStyle selectionStyle;
 
-			public GUIContent content = new GUIContent(EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName));
+			public static GUIContent content;
 
-			public float foldoutWidth
+			public static float foldoutWidth
 			{
 				get
 				{
-					return TreeViewGUI.s_Styles.foldout.fixedWidth;
+					return TreeViewGUI.Styles.foldout.fixedWidth;
 				}
 			}
 
-			public Styles()
+			static Styles()
 			{
-				Texture2D background = this.lineStyle.hover.background;
-				this.lineStyle.onNormal.background = background;
-				this.lineStyle.onActive.background = background;
-				this.lineStyle.onFocused.background = background;
-				this.lineStyle.alignment = TextAnchor.MiddleLeft;
-				this.lineStyle.fixedHeight = 0f;
-				this.lineBoldStyle = new GUIStyle(this.lineStyle);
-				this.lineBoldStyle.font = EditorStyles.boldLabel.font;
-				this.lineBoldStyle.fontStyle = EditorStyles.boldLabel.fontStyle;
-				this.ping.padding.left = 16;
-				this.ping.padding.right = 16;
-				this.ping.fixedHeight = 16f;
-				this.selectionStyle.fixedHeight = 0f;
-				this.selectionStyle.border = new RectOffset();
-				this.insertion.overflow = new RectOffset(4, 0, 0, 0);
+				TreeViewGUI.Styles.foldout = "IN Foldout";
+				TreeViewGUI.Styles.insertion = new GUIStyle("PR Insertion");
+				TreeViewGUI.Styles.ping = new GUIStyle("PR Ping");
+				TreeViewGUI.Styles.toolbarButton = "ToolbarButton";
+				TreeViewGUI.Styles.lineStyle = new GUIStyle("PR Label");
+				TreeViewGUI.Styles.selectionStyle = new GUIStyle("PR Label");
+				TreeViewGUI.Styles.content = new GUIContent(EditorGUIUtility.FindTexture(EditorResourcesUtility.folderIconName));
+				Texture2D background = TreeViewGUI.Styles.lineStyle.hover.background;
+				TreeViewGUI.Styles.lineStyle.onNormal.background = background;
+				TreeViewGUI.Styles.lineStyle.onActive.background = background;
+				TreeViewGUI.Styles.lineStyle.onFocused.background = background;
+				TreeViewGUI.Styles.lineStyle.alignment = TextAnchor.UpperLeft;
+				TreeViewGUI.Styles.lineStyle.padding.top = 2;
+				TreeViewGUI.Styles.lineStyle.fixedHeight = 0f;
+				TreeViewGUI.Styles.lineBoldStyle = new GUIStyle(TreeViewGUI.Styles.lineStyle);
+				TreeViewGUI.Styles.lineBoldStyle.font = EditorStyles.boldLabel.font;
+				TreeViewGUI.Styles.lineBoldStyle.fontStyle = EditorStyles.boldLabel.fontStyle;
+				TreeViewGUI.Styles.ping.padding.left = 16;
+				TreeViewGUI.Styles.ping.padding.right = 16;
+				TreeViewGUI.Styles.ping.fixedHeight = 16f;
+				TreeViewGUI.Styles.selectionStyle.fixedHeight = 0f;
+				TreeViewGUI.Styles.selectionStyle.border = new RectOffset();
+				TreeViewGUI.Styles.insertion.overflow = new RectOffset(4, 0, 0, 0);
 			}
 		}
 
@@ -79,11 +87,9 @@ namespace UnityEditor.IMGUI.Controls
 
 		public float k_HalfDropBetweenHeight = 4f;
 
-		public float foldoutYOffset = 0f;
+		public float customFoldoutYOffset = 0f;
 
 		public float extraInsertionMarkerIndent = 0f;
-
-		protected static TreeViewGUI.Styles s_Styles;
 
 		public float iconLeftPadding
 		{
@@ -117,6 +123,12 @@ namespace UnityEditor.IMGUI.Controls
 			{
 				return this.k_IndentWidth + this.iconTotalPadding;
 			}
+		}
+
+		public float extraSpaceBeforeIconAndLabel
+		{
+			get;
+			set;
 		}
 
 		public float halfDropBetweenHeight
@@ -158,14 +170,6 @@ namespace UnityEditor.IMGUI.Controls
 		{
 		}
 
-		protected virtual void InitStyles()
-		{
-			if (TreeViewGUI.s_Styles == null)
-			{
-				TreeViewGUI.s_Styles = new TreeViewGUI.Styles();
-			}
-		}
-
 		protected virtual Texture GetIconForItem(TreeViewItem item)
 		{
 			return item.icon;
@@ -173,7 +177,6 @@ namespace UnityEditor.IMGUI.Controls
 
 		public virtual Vector2 GetTotalSize()
 		{
-			this.InitStyles();
 			float x = 1f;
 			if (this.m_UseHorizontalScroll)
 			{
@@ -190,7 +193,6 @@ namespace UnityEditor.IMGUI.Controls
 
 		protected float GetMaxWidth(IList<TreeViewItem> rows)
 		{
-			this.InitStyles();
 			float num = 1f;
 			foreach (TreeViewItem current in rows)
 			{
@@ -202,7 +204,7 @@ namespace UnityEditor.IMGUI.Controls
 				}
 				float num3;
 				float num4;
-				TreeViewGUI.s_Styles.lineStyle.CalcMinMaxWidth(GUIContent.Temp(current.displayName), out num3, out num4);
+				TreeViewGUI.Styles.lineStyle.CalcMinMaxWidth(GUIContent.Temp(current.displayName), out num3, out num4);
 				num2 += num4;
 				num2 += this.k_BaseIndent;
 				if (num2 > num)
@@ -242,7 +244,6 @@ namespace UnityEditor.IMGUI.Controls
 
 		public virtual void BeginRowGUI()
 		{
-			this.InitStyles();
 			this.m_DraggingInsertionMarkerRect.x = -1f;
 			this.SyncFakeItem();
 			if (Event.current.type != EventType.Repaint)
@@ -255,7 +256,7 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			if (this.m_DraggingInsertionMarkerRect.x >= 0f && Event.current.type == EventType.Repaint)
 			{
-				TreeViewGUI.s_Styles.insertion.Draw(this.m_DraggingInsertionMarkerRect, false, false, false, false);
+				TreeViewGUI.Styles.insertion.Draw(this.m_DraggingInsertionMarkerRect, false, false, false, false);
 			}
 			if (Event.current.type == EventType.Repaint)
 			{
@@ -275,12 +276,12 @@ namespace UnityEditor.IMGUI.Controls
 
 		public virtual Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
 		{
-			float num = this.GetContentIndent(item) + (float)TreeViewGUI.s_Styles.lineStyle.margin.left;
+			float num = this.GetContentIndent(item) + this.extraSpaceBeforeIconAndLabel;
 			if (this.GetIconForItem(item) != null)
 			{
 				num += this.k_SpaceBetweenIconAndText + this.k_IconWidth + this.iconTotalPadding;
 			}
-			return new Rect(rowRect.x + num, rowRect.y, rowRect.width - num, 16f);
+			return new Rect(rowRect.x + num, rowRect.y, rowRect.width - num, EditorGUIUtility.singleLineHeight);
 		}
 
 		protected virtual void DoItemGUI(Rect rect, int row, TreeViewItem item, bool selected, bool focused, bool useBoldFont)
@@ -310,16 +311,16 @@ namespace UnityEditor.IMGUI.Controls
 				this.DrawItemBackground(rect, row, item, selected, focused);
 				if (selected)
 				{
-					TreeViewGUI.s_Styles.selectionStyle.Draw(rect, false, false, true, focused);
+					TreeViewGUI.Styles.selectionStyle.Draw(rect, false, false, true, focused);
 				}
 				if (flag)
 				{
-					TreeViewGUI.s_Styles.lineStyle.Draw(rect, GUIContent.none, true, true, false, false);
+					TreeViewGUI.Styles.lineStyle.Draw(rect, GUIContent.none, true, true, false, false);
 				}
 				if (this.m_TreeView.dragging != null && this.m_TreeView.dragging.GetRowMarkerControlID() == itemControlID)
 				{
-					float y = ((!this.m_TreeView.dragging.drawRowMarkerAbove) ? rect.yMax : rect.y) - TreeViewGUI.s_Styles.insertion.fixedHeight * 0.5f;
-					this.m_DraggingInsertionMarkerRect = new Rect(rect.x + foldoutIndent + this.extraInsertionMarkerIndent + TreeViewGUI.s_Styles.foldoutWidth + (float)TreeViewGUI.s_Styles.lineStyle.margin.left, y, rect.width - foldoutIndent, rect.height);
+					float y = ((!this.m_TreeView.dragging.drawRowMarkerAbove) ? rect.yMax : rect.y) - TreeViewGUI.Styles.insertion.fixedHeight * 0.5f;
+					this.m_DraggingInsertionMarkerRect = new Rect(rect.x + foldoutIndent + this.extraInsertionMarkerIndent + TreeViewGUI.Styles.foldoutWidth + (float)TreeViewGUI.Styles.lineStyle.margin.left, y, rect.width - foldoutIndent, rect.height);
 				}
 			}
 			this.OnContentGUI(rect, row, item, label, selected, focused, useBoldFont, false);
@@ -345,11 +346,16 @@ namespace UnityEditor.IMGUI.Controls
 			return this.GetRowRect(row, 1f);
 		}
 
+		private float GetFoldoutYPosition(float rectY)
+		{
+			return rectY + this.customFoldoutYOffset;
+		}
+
 		protected virtual Rect DoFoldout(Rect rect, TreeViewItem item, int row)
 		{
 			float foldoutIndent = this.GetFoldoutIndent(item);
-			Rect rect2 = new Rect(rect.x + foldoutIndent, rect.y + this.foldoutYOffset, TreeViewGUI.s_Styles.foldoutWidth, rect.height);
-			this.FoldoutButton(rect2, item, row, TreeViewGUI.s_Styles.foldout);
+			Rect rect2 = new Rect(rect.x + foldoutIndent, this.GetFoldoutYPosition(rect.y), TreeViewGUI.Styles.foldoutWidth, EditorGUIUtility.singleLineHeight);
+			this.FoldoutButton(rect2, item, row, TreeViewGUI.Styles.foldout);
 			return rect2;
 		}
 
@@ -357,29 +363,8 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			TreeViewItemExpansionAnimator expansionAnimator = this.m_TreeView.expansionAnimator;
 			EditorGUI.BeginChangeCheck();
-			bool expand;
-			if (expansionAnimator.IsAnimating(item.id))
-			{
-				Matrix4x4 matrix = GUI.matrix;
-				float num = Mathf.Min(1f, expansionAnimator.expandedValueNormalized * 2f);
-				float angle;
-				if (!expansionAnimator.isExpanding)
-				{
-					angle = num * 90f;
-				}
-				else
-				{
-					angle = (1f - num) * -90f;
-				}
-				GUIUtility.RotateAroundPivot(angle, foldoutRect.center);
-				bool isExpanding = expansionAnimator.isExpanding;
-				expand = GUI.Toggle(foldoutRect, isExpanding, GUIContent.none, foldoutStyle);
-				GUI.matrix = matrix;
-			}
-			else
-			{
-				expand = GUI.Toggle(foldoutRect, this.m_TreeView.data.IsExpanded(item), GUIContent.none, foldoutStyle);
-			}
+			bool value = (!expansionAnimator.IsAnimating(item.id)) ? this.m_TreeView.data.IsExpanded(item) : expansionAnimator.isExpanding;
+			bool expand = GUI.Toggle(foldoutRect, value, GUIContent.none, foldoutStyle);
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.m_TreeView.UserInputChangedExpandedState(item, row, expand);
@@ -392,12 +377,10 @@ namespace UnityEditor.IMGUI.Controls
 			{
 				if (!isPinging)
 				{
-					float contentIndent = this.GetContentIndent(item);
-					rect.x += contentIndent;
-					rect.width -= contentIndent;
+					float num = this.GetContentIndent(item) + this.extraSpaceBeforeIconAndLabel;
+					rect.xMin += num;
 				}
-				GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.s_Styles.lineStyle : TreeViewGUI.s_Styles.lineBoldStyle;
-				rect.xMin += (float)gUIStyle.margin.left;
+				GUIStyle gUIStyle = (!useBoldFont) ? TreeViewGUI.Styles.lineStyle : TreeViewGUI.Styles.lineBoldStyle;
 				Rect position = rect;
 				position.width = this.k_IconWidth;
 				position.x += this.iconLeftPadding;
@@ -406,14 +389,18 @@ namespace UnityEditor.IMGUI.Controls
 				{
 					GUI.DrawTexture(position, iconForItem, ScaleMode.ScaleToFit);
 				}
-				gUIStyle.padding.left = ((!(iconForItem == null)) ? ((int)(this.k_IconWidth + this.iconTotalPadding + this.k_SpaceBetweenIconAndText)) : 0);
-				gUIStyle.Draw(rect, label, false, false, selected, focused);
 				if (this.iconOverlayGUI != null)
 				{
 					Rect arg = rect;
 					arg.width = this.k_IconWidth + this.iconTotalPadding;
 					this.iconOverlayGUI(item, arg);
 				}
+				gUIStyle.padding.left = 0;
+				if (iconForItem != null)
+				{
+					rect.xMin += this.k_IconWidth + this.iconTotalPadding + this.k_SpaceBetweenIconAndText;
+				}
+				gUIStyle.Draw(rect, label, false, false, selected, focused);
 			}
 		}
 
@@ -424,10 +411,10 @@ namespace UnityEditor.IMGUI.Controls
 				if (topPixelOfRow >= 0f)
 				{
 					this.m_Ping.m_TimeStart = Time.realtimeSinceStartup;
-					this.m_Ping.m_PingStyle = TreeViewGUI.s_Styles.ping;
+					this.m_Ping.m_PingStyle = TreeViewGUI.Styles.ping;
 					GUIContent content = GUIContent.Temp(item.displayName);
 					Vector2 vector = this.m_Ping.m_PingStyle.CalcSize(content);
-					this.m_Ping.m_ContentRect = new Rect(this.GetContentIndent(item), topPixelOfRow, this.k_IconWidth + this.k_SpaceBetweenIconAndText + vector.x + this.iconTotalPadding, vector.y);
+					this.m_Ping.m_ContentRect = new Rect(this.GetContentIndent(item) + this.extraSpaceBeforeIconAndLabel, topPixelOfRow, this.k_IconWidth + this.k_SpaceBetweenIconAndText + vector.x + this.iconTotalPadding, vector.y);
 					this.m_Ping.m_AvailableWidth = availableWidth;
 					int row = this.m_TreeView.data.GetRow(item.id);
 					bool useBoldFont = item.displayName.Equals("Assets");
@@ -517,7 +504,7 @@ namespace UnityEditor.IMGUI.Controls
 
 		public virtual float GetContentIndent(TreeViewItem item)
 		{
-			return this.GetFoldoutIndent(item) + TreeViewGUI.s_Styles.foldoutWidth;
+			return this.GetFoldoutIndent(item) + TreeViewGUI.Styles.foldoutWidth + (float)TreeViewGUI.Styles.lineStyle.margin.left;
 		}
 	}
 }

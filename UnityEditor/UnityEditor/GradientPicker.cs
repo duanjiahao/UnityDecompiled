@@ -21,6 +21,8 @@ namespace UnityEditor
 
 		private GUIView m_DelegateView;
 
+		private bool m_HDR;
+
 		public static string presetsEditorPrefID
 		{
 			get
@@ -86,12 +88,13 @@ namespace UnityEditor
 			}
 		}
 
-		public static void Show(Gradient newGradient)
+		public static void Show(Gradient newGradient, bool hdr)
 		{
 			GUIView current = GUIView.current;
 			if (GradientPicker.s_GradientPicker == null)
 			{
-				GradientPicker.s_GradientPicker = (GradientPicker)EditorWindow.GetWindow(typeof(GradientPicker), true, "Gradient Editor", false);
+				string title = (!hdr) ? "Gradient Editor" : "HDR Gradient Editor";
+				GradientPicker.s_GradientPicker = (GradientPicker)EditorWindow.GetWindow(typeof(GradientPicker), true, title, false);
 				Vector2 minSize = new Vector2(360f, 224f);
 				Vector2 maxSize = new Vector2(1900f, 3000f);
 				GradientPicker.s_GradientPicker.minSize = minSize;
@@ -104,16 +107,17 @@ namespace UnityEditor
 				GradientPicker.s_GradientPicker.Repaint();
 			}
 			GradientPicker.s_GradientPicker.m_DelegateView = current;
-			GradientPicker.s_GradientPicker.Init(newGradient);
+			GradientPicker.s_GradientPicker.Init(newGradient, hdr);
 			GradientPreviewCache.ClearCache();
 		}
 
-		private void Init(Gradient newGradient)
+		private void Init(Gradient newGradient, bool hdr)
 		{
 			this.m_Gradient = newGradient;
+			this.m_HDR = hdr;
 			if (this.m_GradientEditor != null)
 			{
-				this.m_GradientEditor.Init(newGradient, 0);
+				this.m_GradientEditor.Init(newGradient, 0, this.m_HDR);
 			}
 			base.Repaint();
 		}
@@ -123,7 +127,7 @@ namespace UnityEditor
 			this.m_Gradient.colorKeys = gradient.colorKeys;
 			this.m_Gradient.alphaKeys = gradient.alphaKeys;
 			this.m_Gradient.mode = gradient.mode;
-			this.Init(this.m_Gradient);
+			this.Init(this.m_Gradient, this.m_HDR);
 		}
 
 		public void OnEnable()
@@ -155,7 +159,7 @@ namespace UnityEditor
 			if (this.m_GradientEditor == null)
 			{
 				this.m_GradientEditor = new GradientEditor();
-				this.m_GradientEditor.Init(this.m_Gradient, 0);
+				this.m_GradientEditor.Init(this.m_Gradient, 0, this.m_HDR);
 			}
 			if (this.m_GradientLibraryEditorState == null)
 			{

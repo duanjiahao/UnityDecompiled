@@ -106,7 +106,7 @@ namespace UnityEditor.Scripting.Compilers
 			return result;
 		}
 
-		internal static string SdkVersionToString(Version version)
+		private static string SdkVersionToString(Version version)
 		{
 			string text = version.ToString();
 			if (version.Minor == -1)
@@ -173,40 +173,6 @@ namespace UnityEditor.Scripting.Compilers
 			return result;
 		}
 
-		public static Version GetDesiredSDKVersion()
-		{
-			Version[] array = UWPReferences.GetInstalledSDKVersions().ToArray<Version>();
-			Version result;
-			if (array.Length == 0)
-			{
-				result = new Version(10, 0, 10240, 0);
-			}
-			else
-			{
-				Version version = array.Max<Version>();
-				string wsaUWPSDK = EditorUserBuildSettings.wsaUWPSDK;
-				if (string.IsNullOrEmpty(wsaUWPSDK))
-				{
-					result = version;
-				}
-				else
-				{
-					Version[] array2 = array;
-					for (int i = 0; i < array2.Length; i++)
-					{
-						Version version2 = array2[i];
-						if (version2.ToString() == wsaUWPSDK)
-						{
-							result = version2;
-							return result;
-						}
-					}
-					result = version;
-				}
-			}
-			return result;
-		}
-
 		private static bool FindVersionInNode(XElement node, out Version version)
 		{
 			bool result;
@@ -232,7 +198,7 @@ namespace UnityEditor.Scripting.Compilers
 
 		private static string[] GetPlatform(string folder, string version)
 		{
-			string text = FileUtil.CombinePaths(new string[]
+			string text = UWPReferences.CombinePaths(new string[]
 			{
 				folder,
 				"Platforms\\UAP",
@@ -358,7 +324,7 @@ namespace UnityEditor.Scripting.Compilers
 			string text = Path.Combine(environmentVariable, "Windows Kits\\10\\");
 			try
 			{
-				text = RegistryUtil.GetRegistryStringValue32("SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v10.0", "InstallationFolder", text);
+				text = RegistryUtil.GetRegistryStringValue("SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v10.0", "InstallationFolder", text, RegistryView._32);
 			}
 			catch
 			{

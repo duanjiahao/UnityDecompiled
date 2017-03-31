@@ -16,6 +16,10 @@ namespace UnityEngine
 
 		public Vector2 uv1;
 
+		public Vector2 uv2;
+
+		public Vector2 uv3;
+
 		public Vector4 tangent;
 
 		private static readonly Color32 s_DefaultColor = new Color32(255, 255, 255, 255);
@@ -29,7 +33,9 @@ namespace UnityEngine
 			tangent = UIVertex.s_DefaultTangent,
 			color = UIVertex.s_DefaultColor,
 			uv0 = Vector2.zero,
-			uv1 = Vector2.zero
+			uv1 = Vector2.zero,
+			uv2 = Vector2.zero,
+			uv3 = Vector2.zero
 		};
 	}
 }

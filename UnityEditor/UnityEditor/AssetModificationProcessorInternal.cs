@@ -161,12 +161,12 @@ namespace UnityEditor
 			}
 		}
 
-		private static void OnWillSaveAssets(string[] assets, out string[] assetsThatShouldBeSaved, out string[] assetsThatShouldBeReverted, int explicitlySaveScene)
+		private static void OnWillSaveAssets(string[] assets, out string[] assetsThatShouldBeSaved, out string[] assetsThatShouldBeReverted, int explicitlySaveAsset)
 		{
 			assetsThatShouldBeReverted = new string[0];
 			assetsThatShouldBeSaved = assets;
 			bool flag = assets.Length > 0 && EditorPrefs.GetBool("VerifySavingAssets", false) && InternalEditorUtility.isHumanControllingUs;
-			if (explicitlySaveScene != 0 && assets.Length == 1 && assets[0].EndsWith(".unity"))
+			if (explicitlySaveAsset != 0 && assets.Length == 1 && (assets[0].EndsWith(".unity") || assets[0].EndsWith(".prefab")))
 			{
 				flag = false;
 			}
@@ -204,7 +204,7 @@ namespace UnityEditor
 				for (int i = 0; i < array3.Length; i++)
 				{
 					string text = array3[i];
-					if (!AssetDatabase.IsOpenForEdit(text))
+					if (!AssetDatabase.IsOpenForEdit(text, StatusQueryOptions.ForceUpdate))
 					{
 						list.Add(text);
 					}
@@ -328,7 +328,7 @@ namespace UnityEditor
 			return AssetModificationProcessorInternal.isOpenForEditMethods;
 		}
 
-		internal static bool IsOpenForEdit(string assetPath, out string message)
+		internal static bool IsOpenForEdit(string assetPath, out string message, StatusQueryOptions statusOptions)
 		{
 			message = "";
 			bool result;
@@ -338,7 +338,7 @@ namespace UnityEditor
 			}
 			else
 			{
-				bool flag = AssetModificationHook.IsOpenForEdit(assetPath, out message);
+				bool flag = AssetModificationHook.IsOpenForEdit(assetPath, out message, statusOptions);
 				MethodInfo[] array = AssetModificationProcessorInternal.GetIsOpenForEditMethods();
 				for (int i = 0; i < array.Length; i++)
 				{

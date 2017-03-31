@@ -59,6 +59,23 @@ namespace UnityEditor.Modules
 			}
 		}
 
+		internal static IEnumerable<IPlatformSupportModule> platformSupportModulesDontRegister
+		{
+			get
+			{
+				IEnumerable<IPlatformSupportModule> result;
+				if (ModuleManager.s_PlatformModules == null)
+				{
+					result = new List<IPlatformSupportModule>();
+				}
+				else
+				{
+					result = ModuleManager.s_PlatformModules;
+				}
+				return result;
+			}
+		}
+
 		private static List<IEditorModule> editorModules
 		{
 			get
@@ -259,9 +276,12 @@ namespace UnityEditor.Modules
 		internal static void ShutdownPlatformSupportModules()
 		{
 			ModuleManager.DeactivateActivePlatformModule();
-			foreach (IPlatformSupportModule current in ModuleManager.s_PlatformModules)
+			if (ModuleManager.s_PlatformModules != null)
 			{
-				current.OnUnload();
+				foreach (IPlatformSupportModule current in ModuleManager.s_PlatformModules)
+				{
+					current.OnUnload();
+				}
 			}
 		}
 
@@ -392,15 +412,17 @@ namespace UnityEditor.Modules
 				ModuleManager.s_PackageManager.Initialize();
 				foreach (Unity.DataContract.PackageInfo current in ModuleManager.s_PackageManager.playbackEngines)
 				{
-					BuildTarget buildTarget = BuildTarget.StandaloneWindows;
-					if (ModuleManager.TryParseBuildTarget(current.name, out buildTarget))
+					BuildTargetGroup buildTargetGroup;
+					BuildTarget buildTarget;
+					if (ModuleManager.TryParseBuildTarget(current.name, out buildTargetGroup, out buildTarget))
 					{
-						Console.WriteLine("Setting {0} v{1} for Unity v{2} to {3}", new object[]
+						Console.WriteLine("Setting {4}:{0} v{1} for Unity v{2} to {3}", new object[]
 						{
 							buildTarget,
 							current.version,
 							current.unityVersion,
-							current.basePath
+							current.basePath,
+							buildTargetGroup
 						});
 						foreach (KeyValuePair<string, PackageFileData> current2 in from f in current.files
 						where f.Value.type == PackageFileType.Dll
@@ -430,13 +452,23 @@ namespace UnityEditor.Modules
 			return result;
 		}
 
-		private static bool TryParseBuildTarget(string targetString, out BuildTarget target)
+		private static bool TryParseBuildTarget(string targetString, out BuildTargetGroup buildTargetGroup, out BuildTarget target)
 		{
+			buildTargetGroup = BuildTargetGroup.Standalone;
 			target = BuildTarget.StandaloneWindows;
 			bool result;
 			try
 			{
-				target = (BuildTarget)Enum.Parse(typeof(BuildTarget), targetString);
+				if (targetString == BuildTargetGroup.Facebook.ToString())
+				{
+					buildTargetGroup = BuildTargetGroup.Facebook;
+					target = BuildTarget.StandaloneWindows;
+				}
+				else
+				{
+					target = (BuildTarget)Enum.Parse(typeof(BuildTarget), targetString);
+					buildTargetGroup = BuildPipeline.GetBuildTargetGroup(target);
+				}
 				result = true;
 				return result;
 			}
@@ -586,9 +618,9 @@ namespace UnityEditor.Modules
 			return result;
 		}
 
-		internal static IBuildPostprocessor GetBuildPostProcessor(BuildTarget target)
+		internal static IBuildPostprocessor GetBuildPostProcessor(BuildTargetGroup targetGroup, BuildTarget target)
 		{
-			return ModuleManager.GetBuildPostProcessor(ModuleManager.GetTargetStringFromBuildTarget(target));
+			return ModuleManager.GetBuildPostProcessor(ModuleManager.GetTargetStringFrom(targetGroup, target));
 		}
 
 		internal static IBuildAnalyzer GetBuildAnalyzer(string target)
@@ -794,17 +826,17 @@ namespace UnityEditor.Modules
 			case (BuildTarget)23:
 			case BuildTarget.WP8Player:
 			case BuildTarget.BlackBerry:
-				IL_5E:
+				IL_62:
 				switch (target)
 				{
 				case BuildTarget.StandaloneOSXUniversal:
 				case BuildTarget.StandaloneOSXIntel:
-					goto IL_138;
+					goto IL_147;
 				case (BuildTarget)3:
 				case BuildTarget.WebPlayer:
 				case BuildTarget.WebPlayerStreamed:
 				case (BuildTarget)8:
-					IL_86:
+					IL_8A:
 					if (target != BuildTarget.Android)
 					{
 						result = null;
@@ -813,14 +845,14 @@ namespace UnityEditor.Modules
 					result = "Android";
 					return result;
 				case BuildTarget.StandaloneWindows:
-					goto IL_12D;
+					goto IL_13C;
 				case BuildTarget.iOS:
 					result = "iOS";
 					return result;
 				}
-				goto IL_86;
+				goto IL_8A;
 			case BuildTarget.StandaloneWindows64:
-				goto IL_12D;
+				goto IL_13C;
 			case BuildTarget.WebGL:
 				result = "WebGL";
 				return result;
@@ -828,7 +860,7 @@ namespace UnityEditor.Modules
 				result = "Metro";
 				return result;
 			case BuildTarget.StandaloneOSXIntel64:
-				goto IL_138;
+				goto IL_147;
 			case BuildTarget.Tizen:
 				result = "Tizen";
 				return result;
@@ -856,12 +888,15 @@ namespace UnityEditor.Modules
 			case BuildTarget.tvOS:
 				result = "tvOS";
 				return result;
+			case BuildTarget.Switch:
+				result = "Switch";
+				return result;
 			}
-			goto IL_5E;
-			IL_12D:
+			goto IL_62;
+			IL_13C:
 			result = "WindowsStandalone";
 			return result;
-			IL_138:
+			IL_147:
 			result = "OSXStandalone";
 			return result;
 		}
@@ -883,7 +918,7 @@ namespace UnityEditor.Modules
 			case BuildTargetGroup.WP8:
 			case BuildTargetGroup.BlackBerry:
 			{
-				IL_3E:
+				IL_46:
 				string result;
 				switch (target)
 				{
@@ -942,8 +977,18 @@ namespace UnityEditor.Modules
 				string result = "tvOS";
 				return result;
 			}
+			case BuildTargetGroup.Facebook:
+			{
+				string result = "Facebook";
+				return result;
 			}
-			goto IL_3E;
+			case BuildTargetGroup.Switch:
+			{
+				string result = "Switch";
+				return result;
+			}
+			}
+			goto IL_46;
 		}
 
 		internal static string GetTargetStringFrom(BuildTargetGroup targetGroup, BuildTarget target)
@@ -953,13 +998,20 @@ namespace UnityEditor.Modules
 				throw new ArgumentException("targetGroup must be valid");
 			}
 			string result;
-			if (targetGroup != BuildTargetGroup.Standalone)
+			if (targetGroup != BuildTargetGroup.Facebook)
 			{
-				result = ModuleManager.GetTargetStringFromBuildTargetGroup(targetGroup);
+				if (targetGroup != BuildTargetGroup.Standalone)
+				{
+					result = ModuleManager.GetTargetStringFromBuildTargetGroup(targetGroup);
+				}
+				else
+				{
+					result = ModuleManager.GetTargetStringFromBuildTarget(target);
+				}
 			}
 			else
 			{
-				result = ModuleManager.GetTargetStringFromBuildTarget(target);
+				result = "Facebook";
 			}
 			return result;
 		}
@@ -971,8 +1023,9 @@ namespace UnityEditor.Modules
 
 		internal static bool HaveLicenseForBuildTarget(string targetString)
 		{
-			BuildTarget target = BuildTarget.StandaloneWindows;
-			return ModuleManager.TryParseBuildTarget(targetString, out target) && BuildPipeline.LicenseCheck(target);
+			BuildTargetGroup buildTargetGroup;
+			BuildTarget target;
+			return ModuleManager.TryParseBuildTarget(targetString, out buildTargetGroup, out target) && BuildPipeline.LicenseCheck(target);
 		}
 
 		internal static string GetExtensionVersion(string target)

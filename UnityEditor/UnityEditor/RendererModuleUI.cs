@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -47,6 +49,8 @@ namespace UnityEditor
 
 			public GUIContent receiveShadows = EditorGUIUtility.TextContent("Receive Shadows|Only opaque materials receive shadows");
 
+			public GUIContent motionVectors = EditorGUIUtility.TextContent("Motion Vectors|Specifies whether the Particle System renders 'Per Object Motion', 'Camera Motion', or 'No Motion' vectors to the Camera Motion Vector Texture. Note that there is no built-in support for Per-Particle Motion.");
+
 			public GUIContent normalDirection = EditorGUIUtility.TextContent("Normal Direction|Value between 0.0 and 1.0. If 1.0 is used, normals will point towards camera. If 0.0 is used, normals will point out in the corner direction of the particle.");
 
 			public GUIContent sortingLayer = EditorGUIUtility.TextContent("Sorting Layer");
@@ -59,9 +63,7 @@ namespace UnityEditor
 
 			public GUIContent visualizePivot = EditorGUIUtility.TextContent("Visualize Pivot|Render the pivot positions of the particles.");
 
-			public GUIContent useCustomVertexStreams = EditorGUIUtility.TextContent("Use Custom Vertex Streams|Choose wheher to send custom particle data to the shader.");
-
-			public GUIContent streams = EditorGUIUtility.TextContent("Vertex Streams|Configure the list of vertex attributes supplied to the vertex shader.");
+			public GUIContent useCustomVertexStreams = EditorGUIUtility.TextContent("Custom Vertex Streams|Choose whether to send custom particle data to the shader.");
 
 			public string[] particleTypes = new string[]
 			{
@@ -89,71 +91,163 @@ namespace UnityEditor
 				"Facing"
 			};
 
-			public string[] vertexStreams = new string[]
+			public string[] motionVectorOptions = new string[]
+			{
+				"Camera Motion Only",
+				"Per Object Motion",
+				"Force No Motion"
+			};
+
+			public string[] vertexStreamsMenu = new string[]
+			{
+				"Position",
+				"Normal",
+				"Tangent",
+				"Color",
+				"UV/UV1",
+				"UV/UV2",
+				"UV/UV3",
+				"UV/UV4",
+				"UV/AnimBlend",
+				"UV/AnimFrame",
+				"Center",
+				"VertexID",
+				"Size/Size.x",
+				"Size/Size.xy",
+				"Size/Size.xyz",
+				"Rotation/Rotation",
+				"Rotation/Rotation3D",
+				"Rotation/RotationSpeed",
+				"Rotation/RotationSpeed3D",
+				"Velocity",
+				"Speed",
+				"Lifetime/AgePercent",
+				"Lifetime/InverseStartLifetime",
+				"Random/Stable.x",
+				"Random/Stable.xy",
+				"Random/Stable.xyz",
+				"Random/Stable.xyzw",
+				"Random/Varying.x",
+				"Random/Varying.xy",
+				"Random/Varying.xyz",
+				"Random/Varying.xyzw",
+				"Custom/Custom1.x",
+				"Custom/Custom1.xy",
+				"Custom/Custom1.xyz",
+				"Custom/Custom1.xyzw",
+				"Custom/Custom2.x",
+				"Custom/Custom2.xy",
+				"Custom/Custom2.xyz",
+				"Custom/Custom2.xyzw"
+			};
+
+			public string[] vertexStreamsPacked = new string[]
 			{
 				"Position",
 				"Normal",
 				"Tangent",
 				"Color",
 				"UV",
-				"UV2BlendAndFrame",
-				"CenterAndVertexID",
+				"UV2",
+				"UV3",
+				"UV4",
+				"AnimBlend",
+				"AnimFrame",
+				"Center",
+				"VertexID",
 				"Size",
+				"Size.xy",
+				"Size.xyz",
 				"Rotation",
+				"Rotation3D",
+				"RotationSpeed",
+				"RotationSpeed3D",
 				"Velocity",
-				"Lifetime",
-				"Custom1",
-				"Custom2",
-				"Random"
+				"Speed",
+				"AgePercent",
+				"InverseStartLifetime",
+				"StableRandom.x",
+				"StableRandom.xy",
+				"StableRandom.xyz",
+				"StableRandom.xyzw",
+				"VariableRandom.x",
+				"VariableRandom.xy",
+				"VariableRandom.xyz",
+				"VariableRandom.xyzw",
+				"Custom1.x",
+				"Custom1.xy",
+				"Custom1.xyz",
+				"Custom1.xyzw",
+				"Custom2.x",
+				"Custom2.xy",
+				"Custom2.xyz",
+				"Custom2.xyzw"
 			};
 
-			public bool[] vertexStreamIsTexCoord = new bool[]
+			public string[] vertexStreamPackedTypes = new string[]
 			{
-				false,
-				false,
-				false,
-				false,
-				true,
-				true,
-				true,
-				true,
-				true,
-				true,
-				true,
-				true,
-				true,
-				true
+				"POSITION.xyz",
+				"NORMAL.xyz",
+				"TANGENT.xyzw",
+				"COLOR.xyzw"
 			};
 
-			public string[] vertexStreamDataTypes = new string[]
+			public int[] vertexStreamTexCoordChannels = new int[]
 			{
-				"float3",
-				"float3",
-				"float4",
-				"fixed4",
-				"float2",
-				"float4",
-				"float4",
-				"float3",
-				"float3",
-				"float3",
-				"float2",
-				"float4",
-				"float4",
-				"float4"
+				0,
+				0,
+				0,
+				0,
+				2,
+				2,
+				2,
+				2,
+				1,
+				1,
+				3,
+				1,
+				1,
+				2,
+				3,
+				1,
+				3,
+				1,
+				3,
+				3,
+				1,
+				1,
+				1,
+				1,
+				2,
+				3,
+				4,
+				1,
+				2,
+				3,
+				4,
+				1,
+				2,
+				3,
+				4,
+				1,
+				2,
+				3,
+				4
 			};
+
+			public string channels = "xyzw|xyz";
 		}
 
 		private class StreamCallbackData
 		{
 			public SerializedProperty streamProp;
 
-			public string text;
+			public int stream;
 
-			public StreamCallbackData(SerializedProperty prop, string t)
+			public StreamCallbackData(SerializedProperty prop, int s)
 			{
 				this.streamProp = prop;
-				this.text = t;
+				this.stream = s;
 			}
 		}
 
@@ -162,6 +256,8 @@ namespace UnityEditor
 		private SerializedProperty m_CastShadows;
 
 		private SerializedProperty m_ReceiveShadows;
+
+		private SerializedProperty m_MotionVectors;
 
 		private SerializedProperty m_Material;
 
@@ -201,7 +297,17 @@ namespace UnityEditor
 
 		private SerializedProperty m_UseCustomVertexStreams;
 
-		private SerializedProperty m_VertexStreamMask;
+		private SerializedProperty m_VertexStreams;
+
+		private ReorderableList m_VertexStreamsList;
+
+		private int m_NumTexCoords;
+
+		private int m_TexCoordChannelIndex;
+
+		private bool m_HasTangent;
+
+		private bool m_HasColor;
 
 		private static bool s_VisualizePivot = false;
 
@@ -221,6 +327,7 @@ namespace UnityEditor
 			{
 				this.m_CastShadows = base.GetProperty0("m_CastShadows");
 				this.m_ReceiveShadows = base.GetProperty0("m_ReceiveShadows");
+				this.m_MotionVectors = base.GetProperty0("m_MotionVectors");
 				this.m_Material = base.GetProperty0("m_Materials.Array.data[0]");
 				this.m_TrailMaterial = base.GetProperty0("m_Materials.Array.data[1]");
 				this.m_SortingOrder = base.GetProperty0("m_SortingOrder");
@@ -252,101 +359,124 @@ namespace UnityEditor
 				}
 				this.m_ShownMeshes = list.ToArray();
 				this.m_UseCustomVertexStreams = base.GetProperty0("m_UseCustomVertexStreams");
-				this.m_VertexStreamMask = base.GetProperty0("m_VertexStreamMask");
+				this.m_VertexStreams = base.GetProperty0("m_VertexStreams");
+				this.m_VertexStreamsList = new ReorderableList(base.serializedObject, this.m_VertexStreams, true, true, true, true);
+				this.m_VertexStreamsList.elementHeight = 16f;
+				this.m_VertexStreamsList.headerHeight = 0f;
+				this.m_VertexStreamsList.onAddDropdownCallback = new ReorderableList.AddDropdownCallbackDelegate(this.OnVertexStreamListAddDropdownCallback);
+				this.m_VertexStreamsList.onCanRemoveCallback = new ReorderableList.CanRemoveCallbackDelegate(this.OnVertexStreamListCanRemoveCallback);
+				this.m_VertexStreamsList.drawElementCallback = new ReorderableList.ElementCallbackDelegate(this.DrawVertexStreamListElementCallback);
 				RendererModuleUI.s_VisualizePivot = EditorPrefs.GetBool("VisualizePivot", false);
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (RendererModuleUI.s_Texts == null)
 			{
 				RendererModuleUI.s_Texts = new RendererModuleUI.Texts();
 			}
-			RendererModuleUI.RenderMode intValue = (RendererModuleUI.RenderMode)this.m_RenderMode.intValue;
+			EditorGUI.BeginChangeCheck();
 			RendererModuleUI.RenderMode renderMode = (RendererModuleUI.RenderMode)ModuleUI.GUIPopup(RendererModuleUI.s_Texts.renderMode, this.m_RenderMode, RendererModuleUI.s_Texts.particleTypes, new GUILayoutOption[0]);
-			if (renderMode == RendererModuleUI.RenderMode.Mesh)
+			bool flag = EditorGUI.EndChangeCheck();
+			if (!this.m_RenderMode.hasMultipleDifferentValues)
 			{
-				EditorGUI.indentLevel++;
-				this.DoListOfMeshesGUI();
-				EditorGUI.indentLevel--;
-				if (intValue != RendererModuleUI.RenderMode.Mesh && this.m_Meshes[0].objectReferenceInstanceIDValue == 0)
+				if (renderMode == RendererModuleUI.RenderMode.Mesh)
 				{
-					this.m_Meshes[0].objectReferenceValue = Resources.GetBuiltinResource(typeof(Mesh), "Cube.fbx");
+					EditorGUI.indentLevel++;
+					this.DoListOfMeshesGUI();
+					EditorGUI.indentLevel--;
+					if (flag && this.m_Meshes[0].objectReferenceInstanceIDValue == 0 && !this.m_Meshes[0].hasMultipleDifferentValues)
+					{
+						this.m_Meshes[0].objectReferenceValue = Resources.GetBuiltinResource(typeof(Mesh), "Cube.fbx");
+					}
+				}
+				else if (renderMode == RendererModuleUI.RenderMode.Stretch3D)
+				{
+					EditorGUI.indentLevel++;
+					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.cameraSpeedScale, this.m_CameraVelocityScale, new GUILayoutOption[0]);
+					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.speedScale, this.m_VelocityScale, new GUILayoutOption[0]);
+					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.lengthScale, this.m_LengthScale, new GUILayoutOption[0]);
+					EditorGUI.indentLevel--;
+				}
+				if (renderMode != RendererModuleUI.RenderMode.None)
+				{
+					if (renderMode != RendererModuleUI.RenderMode.Mesh)
+					{
+						ModuleUI.GUIFloat(RendererModuleUI.s_Texts.normalDirection, this.m_NormalDirection, new GUILayoutOption[0]);
+					}
+					if (this.m_Material != null)
+					{
+						ModuleUI.GUIObject(RendererModuleUI.s_Texts.material, this.m_Material, new GUILayoutOption[0]);
+					}
 				}
 			}
-			else if (renderMode == RendererModuleUI.RenderMode.Stretch3D)
-			{
-				EditorGUI.indentLevel++;
-				ModuleUI.GUIFloat(RendererModuleUI.s_Texts.cameraSpeedScale, this.m_CameraVelocityScale, new GUILayoutOption[0]);
-				ModuleUI.GUIFloat(RendererModuleUI.s_Texts.speedScale, this.m_VelocityScale, new GUILayoutOption[0]);
-				ModuleUI.GUIFloat(RendererModuleUI.s_Texts.lengthScale, this.m_LengthScale, new GUILayoutOption[0]);
-				EditorGUI.indentLevel--;
-			}
-			if (renderMode != RendererModuleUI.RenderMode.None)
-			{
-				if (renderMode != RendererModuleUI.RenderMode.Mesh)
-				{
-					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.normalDirection, this.m_NormalDirection, new GUILayoutOption[0]);
-				}
-				if (this.m_Material != null)
-				{
-					ModuleUI.GUIObject(RendererModuleUI.s_Texts.material, this.m_Material, new GUILayoutOption[0]);
-				}
-			}
-			if (this.m_ParticleSystemUI.m_ParticleSystem.trails.enabled && this.m_TrailMaterial != null)
+			bool flag2 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.trails.enabled) != null;
+			if (flag2 && this.m_TrailMaterial != null)
 			{
 				ModuleUI.GUIObject(RendererModuleUI.s_Texts.trailMaterial, this.m_TrailMaterial, new GUILayoutOption[0]);
 			}
-			if (renderMode != RendererModuleUI.RenderMode.None)
+			if (!this.m_RenderMode.hasMultipleDifferentValues)
 			{
-				ModuleUI.GUIPopup(RendererModuleUI.s_Texts.sortMode, this.m_SortMode, RendererModuleUI.s_Texts.sortTypes, new GUILayoutOption[0]);
-				ModuleUI.GUIFloat(RendererModuleUI.s_Texts.sortingFudge, this.m_SortingFudge, new GUILayoutOption[0]);
-				if (renderMode != RendererModuleUI.RenderMode.Mesh)
+				if (renderMode != RendererModuleUI.RenderMode.None)
 				{
-					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.minParticleSize, this.m_MinParticleSize, new GUILayoutOption[0]);
-					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.maxParticleSize, this.m_MaxParticleSize, new GUILayoutOption[0]);
-				}
-				if (renderMode == RendererModuleUI.RenderMode.Billboard)
-				{
-					if (this.m_ParticleSystemUI.m_ParticleSystem.shape.alignToDirection)
+					ModuleUI.GUIPopup(RendererModuleUI.s_Texts.sortMode, this.m_SortMode, RendererModuleUI.s_Texts.sortTypes, new GUILayoutOption[0]);
+					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.sortingFudge, this.m_SortingFudge, new GUILayoutOption[0]);
+					if (renderMode != RendererModuleUI.RenderMode.Mesh)
 					{
-						using (new EditorGUI.DisabledScope(true))
+						ModuleUI.GUIFloat(RendererModuleUI.s_Texts.minParticleSize, this.m_MinParticleSize, new GUILayoutOption[0]);
+						ModuleUI.GUIFloat(RendererModuleUI.s_Texts.maxParticleSize, this.m_MaxParticleSize, new GUILayoutOption[0]);
+					}
+					if (renderMode == RendererModuleUI.RenderMode.Billboard)
+					{
+						bool flag3 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.shape.alignToDirection) != null;
+						if (flag3)
 						{
-							ModuleUI.GUIPopup(RendererModuleUI.s_Texts.space, 0, new string[]
+							using (new EditorGUI.DisabledScope(true))
 							{
-								RendererModuleUI.s_Texts.spaces[2]
-							}, new GUILayoutOption[0]);
+								ModuleUI.GUIPopup(RendererModuleUI.s_Texts.space, 0, new string[]
+								{
+									RendererModuleUI.s_Texts.spaces[2]
+								}, new GUILayoutOption[0]);
+							}
+							GUIContent gUIContent = EditorGUIUtility.TextContent("Using Align to Direction in the Shape Module forces the system to be rendered using Local Billboard Alignment.");
+							EditorGUILayout.HelpBox(gUIContent.text, MessageType.Info, true);
 						}
-						GUIContent gUIContent = EditorGUIUtility.TextContent("Using Align to Direction in the Shape Module forces the system to be rendered using Local Billboard Alignment.");
-						EditorGUILayout.HelpBox(gUIContent.text, MessageType.Info, true);
+						else
+						{
+							ModuleUI.GUIPopup(RendererModuleUI.s_Texts.space, this.m_RenderAlignment, RendererModuleUI.s_Texts.spaces, new GUILayoutOption[0]);
+						}
 					}
-					else
+					ModuleUI.GUIVector3Field(RendererModuleUI.s_Texts.pivot, this.m_Pivot, new GUILayoutOption[0]);
+					EditorGUI.BeginChangeCheck();
+					RendererModuleUI.s_VisualizePivot = ModuleUI.GUIToggle(RendererModuleUI.s_Texts.visualizePivot, RendererModuleUI.s_VisualizePivot, new GUILayoutOption[0]);
+					if (EditorGUI.EndChangeCheck())
 					{
-						ModuleUI.GUIPopup(RendererModuleUI.s_Texts.space, this.m_RenderAlignment, RendererModuleUI.s_Texts.spaces, new GUILayoutOption[0]);
+						EditorPrefs.SetBool("VisualizePivot", RendererModuleUI.s_VisualizePivot);
 					}
+					if (ModuleUI.GUIToggle(RendererModuleUI.s_Texts.useCustomVertexStreams, this.m_UseCustomVertexStreams, new GUILayoutOption[0]))
+					{
+						this.DoVertexStreamsGUI(renderMode);
+					}
+					EditorGUILayout.Space();
+					ModuleUI.GUIPopup(RendererModuleUI.s_Texts.castShadows, this.m_CastShadows, this.m_CastShadows.enumDisplayNames, new GUILayoutOption[0]);
+					using (new EditorGUI.DisabledScope(SceneView.IsUsingDeferredRenderingPath()))
+					{
+						ModuleUI.GUIToggle(RendererModuleUI.s_Texts.receiveShadows, this.m_ReceiveShadows, new GUILayoutOption[0]);
+					}
+					ModuleUI.GUIPopup(RendererModuleUI.s_Texts.motionVectors, this.m_MotionVectors, RendererModuleUI.s_Texts.motionVectorOptions, new GUILayoutOption[0]);
+					EditorGUILayout.SortingLayerField(RendererModuleUI.s_Texts.sortingLayer, this.m_SortingLayerID, ParticleSystemStyles.Get().popup, ParticleSystemStyles.Get().label);
+					ModuleUI.GUIInt(RendererModuleUI.s_Texts.sortingOrder, this.m_SortingOrder, new GUILayoutOption[0]);
 				}
-				ModuleUI.GUIVector3Field(RendererModuleUI.s_Texts.pivot, this.m_Pivot, new GUILayoutOption[0]);
-				EditorGUI.BeginChangeCheck();
-				RendererModuleUI.s_VisualizePivot = ModuleUI.GUIToggle(RendererModuleUI.s_Texts.visualizePivot, RendererModuleUI.s_VisualizePivot, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
-				{
-					EditorPrefs.SetBool("VisualizePivot", RendererModuleUI.s_VisualizePivot);
-				}
-				if (ModuleUI.GUIToggle(RendererModuleUI.s_Texts.useCustomVertexStreams, this.m_UseCustomVertexStreams, new GUILayoutOption[0]))
-				{
-					this.DoVertexStreamsGUI(renderMode);
-				}
-				EditorGUILayout.Space();
-				ModuleUI.GUIPopup(RendererModuleUI.s_Texts.castShadows, this.m_CastShadows, this.m_CastShadows.enumDisplayNames, new GUILayoutOption[0]);
-				using (new EditorGUI.DisabledScope(SceneView.IsUsingDeferredRenderingPath()))
-				{
-					ModuleUI.GUIToggle(RendererModuleUI.s_Texts.receiveShadows, this.m_ReceiveShadows, new GUILayoutOption[0]);
-				}
-				EditorGUILayout.SortingLayerField(RendererModuleUI.s_Texts.sortingLayer, this.m_SortingLayerID, ParticleSystemStyles.Get().popup, ParticleSystemStyles.Get().label);
-				ModuleUI.GUIInt(RendererModuleUI.s_Texts.sortingOrder, this.m_SortingOrder, new GUILayoutOption[0]);
 			}
-			this.m_Probes.OnGUI(null, s.GetComponent<Renderer>(), true);
+			List<ParticleSystemRenderer> list = new List<ParticleSystemRenderer>();
+			ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+			for (int i = 0; i < particleSystems.Length; i++)
+			{
+				ParticleSystem particleSystem = particleSystems[i];
+				list.Add(particleSystem.GetComponent<ParticleSystemRenderer>());
+			}
+			this.m_Probes.OnGUI(list.ToArray(), list.FirstOrDefault<ParticleSystemRenderer>(), true);
 		}
 
 		private void DoListOfMeshesGUI()
@@ -379,178 +509,206 @@ namespace UnityEditor
 
 		private static void SelectVertexStreamCallback(object obj)
 		{
-			RendererModuleUI.StreamCallbackData data = (RendererModuleUI.StreamCallbackData)obj;
-			data.streamProp.intValue |= 1 << Array.FindIndex<string>(RendererModuleUI.s_Texts.vertexStreams, (string item) => item == data.text);
+			RendererModuleUI.StreamCallbackData streamCallbackData = (RendererModuleUI.StreamCallbackData)obj;
+			int arraySize = streamCallbackData.streamProp.arraySize;
+			streamCallbackData.streamProp.InsertArrayElementAtIndex(arraySize);
+			SerializedProperty arrayElementAtIndex = streamCallbackData.streamProp.GetArrayElementAtIndex(arraySize);
+			arrayElementAtIndex.intValue = streamCallbackData.stream;
 		}
 
 		private void DoVertexStreamsGUI(RendererModuleUI.RenderMode renderMode)
 		{
-			Rect controlRect = ModuleUI.GetControlRect(13, new GUILayoutOption[0]);
-			GUI.Label(controlRect, RendererModuleUI.s_Texts.streams, ParticleSystemStyles.Get().label);
-			int num = 0;
-			for (int i = 0; i < RendererModuleUI.s_Texts.vertexStreams.Length; i++)
+			this.m_NumTexCoords = 0;
+			this.m_TexCoordChannelIndex = 0;
+			this.m_HasTangent = false;
+			this.m_HasColor = false;
+			this.m_VertexStreamsList.DoLayoutList();
+			if (!this.m_ParticleSystemUI.multiEdit)
 			{
-				if ((this.m_VertexStreamMask.intValue & 1 << i) != 0)
+				string text = "";
+				if (this.m_Material != null)
 				{
-					bool flag = this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner is ParticleSystemInspector;
-					string text = (!flag) ? "TEX" : "TEXCOORD";
-					Rect position = new Rect(controlRect.x + EditorGUIUtility.labelWidth, controlRect.y, controlRect.width, controlRect.height);
-					if (RendererModuleUI.s_Texts.vertexStreamIsTexCoord[i])
+					Material material = this.m_Material.objectReferenceValue as Material;
+					int texCoordChannelCount = this.m_NumTexCoords * 4 + this.m_TexCoordChannelIndex;
+					bool flag = false;
+					bool flag2 = false;
+					bool flag3 = false;
+					bool flag4 = this.m_ParticleSystemUI.m_ParticleSystems[0].CheckVertexStreamsMatchShader(this.m_HasTangent, this.m_HasColor, texCoordChannelCount, material, ref flag, ref flag2, ref flag3);
+					if (flag4)
 					{
-						GUI.Label(position, string.Concat(new object[]
+						text += "Vertex streams do not match the shader inputs. Particle systems may not render correctly. Ensure your streams match and are used by the shader.";
+						if (flag)
 						{
-							RendererModuleUI.s_Texts.vertexStreams[i],
-							" (",
-							text,
-							num++,
-							", ",
-							RendererModuleUI.s_Texts.vertexStreamDataTypes[i],
-							")"
-						}), ParticleSystemStyles.Get().label);
-					}
-					else
-					{
-						GUI.Label(position, RendererModuleUI.s_Texts.vertexStreams[i] + " (" + RendererModuleUI.s_Texts.vertexStreamDataTypes[i] + ")", ParticleSystemStyles.Get().label);
-					}
-					position.x = controlRect.xMax - 12f;
-					controlRect = ModuleUI.GetControlRect(13, new GUILayoutOption[0]);
-					if (i == 0)
-					{
-						if (this.m_VertexStreamMask.intValue != (1 << RendererModuleUI.s_Texts.vertexStreams.Length) - 1)
+							text += "\n- TANGENT stream does not match.";
+						}
+						if (flag2)
 						{
-							position.x -= 2f;
-							position.y -= 2f;
-							if (EditorGUI.ButtonMouseDown(position, GUIContent.none, FocusType.Passive, "OL Plus"))
+							text += "\n- COLOR stream does not match.";
+						}
+						if (flag3)
+						{
+							text += "\n- TEXCOORD streams do not match.";
+						}
+					}
+				}
+				int maxTexCoordStreams = this.m_ParticleSystemUI.m_ParticleSystems[0].GetMaxTexCoordStreams();
+				if (this.m_NumTexCoords > maxTexCoordStreams || (this.m_NumTexCoords == maxTexCoordStreams && this.m_TexCoordChannelIndex > 0))
+				{
+					if (text != "")
+					{
+						text += "\n\n";
+					}
+					string text2 = text;
+					text = string.Concat(new object[]
+					{
+						text2,
+						"Only ",
+						maxTexCoordStreams,
+						" TEXCOORD streams are supported."
+					});
+				}
+				if (renderMode == RendererModuleUI.RenderMode.Mesh)
+				{
+					ParticleSystemRenderer component = this.m_ParticleSystemUI.m_ParticleSystems[0].GetComponent<ParticleSystemRenderer>();
+					Mesh[] array = new Mesh[4];
+					int meshes = component.GetMeshes(array);
+					for (int i = 0; i < meshes; i++)
+					{
+						if (array[i].HasChannel(Mesh.InternalShaderChannel.TexCoord2))
+						{
+							if (text != "")
 							{
-								List<GUIContent> list = new List<GUIContent>();
-								for (int j = 0; j < RendererModuleUI.s_Texts.vertexStreams.Length; j++)
-								{
-									if ((this.m_VertexStreamMask.intValue & 1 << j) == 0)
-									{
-										list.Add(new GUIContent(RendererModuleUI.s_Texts.vertexStreams[j]));
-									}
-								}
-								GenericMenu genericMenu = new GenericMenu();
-								for (int k = 0; k < list.Count; k++)
-								{
-									GenericMenu arg_292_0 = genericMenu;
-									GUIContent arg_292_1 = list[k];
-									bool arg_292_2 = false;
-									if (RendererModuleUI.<>f__mg$cache0 == null)
-									{
-										RendererModuleUI.<>f__mg$cache0 = new GenericMenu.MenuFunction2(RendererModuleUI.SelectVertexStreamCallback);
-									}
-									arg_292_0.AddItem(arg_292_1, arg_292_2, RendererModuleUI.<>f__mg$cache0, new RendererModuleUI.StreamCallbackData(this.m_VertexStreamMask, list[k].text));
-								}
-								genericMenu.ShowAsContext();
-								Event.current.Use();
+								text += "\n\n";
 							}
+							text += "Meshes may only use a maximum of 2 input UV streams.";
 						}
 					}
-					else if (ModuleUI.MinusButton(position))
-					{
-						this.m_VertexStreamMask.intValue &= ~(1 << i);
-					}
 				}
-			}
-			string text2 = "";
-			if (this.m_Material != null)
-			{
-				Material material = this.m_Material.objectReferenceValue as Material;
-				ParticleSystemVertexStreams particleSystemVertexStreams = this.m_ParticleSystemUI.m_ParticleSystem.CheckVertexStreamsMatchShader((ParticleSystemVertexStreams)this.m_VertexStreamMask.intValue, material);
-				if (particleSystemVertexStreams != ParticleSystemVertexStreams.None)
+				if (text != "")
 				{
-					text2 += "Vertex streams do not match the shader inputs. Particle systems may not render correctly. Ensure your streams match and are used by the shader.";
-					if ((particleSystemVertexStreams & ParticleSystemVertexStreams.Tangent) != ParticleSystemVertexStreams.None)
-					{
-						text2 += "\n- TANGENT stream does not match.";
-					}
-					if ((particleSystemVertexStreams & ParticleSystemVertexStreams.Color) != ParticleSystemVertexStreams.None)
-					{
-						text2 += "\n- COLOR stream does not match.";
-					}
-					if ((particleSystemVertexStreams & ParticleSystemVertexStreams.UV) != ParticleSystemVertexStreams.None)
-					{
-						text2 += "\n- TEXCOORD streams do not match.";
-					}
+					GUIContent gUIContent = EditorGUIUtility.TextContent(text);
+					EditorGUILayout.HelpBox(gUIContent.text, MessageType.Error, true);
 				}
-			}
-			int maxTexCoordStreams = this.m_ParticleSystemUI.m_ParticleSystem.GetMaxTexCoordStreams();
-			if (num > maxTexCoordStreams)
-			{
-				if (text2 != "")
-				{
-					text2 += "\n\n";
-				}
-				string text3 = text2;
-				text2 = string.Concat(new object[]
-				{
-					text3,
-					"Only ",
-					maxTexCoordStreams,
-					" TEXCOORD streams are supported."
-				});
-			}
-			if (renderMode == RendererModuleUI.RenderMode.Mesh)
-			{
-				ParticleSystemRenderer component = this.m_ParticleSystemUI.m_ParticleSystem.GetComponent<ParticleSystemRenderer>();
-				Mesh[] array = new Mesh[4];
-				int meshes = component.GetMeshes(array);
-				for (int l = 0; l < meshes; l++)
-				{
-					if (array[l].HasChannel(Mesh.InternalShaderChannel.TexCoord2))
-					{
-						if (text2 != "")
-						{
-							text2 += "\n\n";
-						}
-						text2 += "Meshes may only use a maximum of 2 input UV streams.";
-					}
-				}
-			}
-			if (text2 != "")
-			{
-				GUIContent gUIContent = EditorGUIUtility.TextContent(text2);
-				EditorGUILayout.HelpBox(gUIContent.text, MessageType.Error, true);
 			}
 		}
 
-		public bool IsMeshEmitter()
+		private void OnVertexStreamListAddDropdownCallback(Rect rect, ReorderableList list)
 		{
-			return this.m_RenderMode != null && this.m_RenderMode.intValue == 4;
-		}
-
-		[DrawGizmo(GizmoType.Active)]
-		private static void RenderPivots(ParticleSystem system, GizmoType gizmoType)
-		{
-			ParticleSystemRenderer component = system.GetComponent<ParticleSystemRenderer>();
-			if (!(component == null))
+			List<int> list2 = new List<int>();
+			for (int i = 0; i < RendererModuleUI.s_Texts.vertexStreamsPacked.Length; i++)
 			{
-				if (component.enabled)
+				bool flag = false;
+				for (int j = 0; j < this.m_VertexStreams.arraySize; j++)
 				{
-					if (RendererModuleUI.s_VisualizePivot)
+					if (this.m_VertexStreams.GetArrayElementAtIndex(j).intValue == i)
 					{
-						ParticleSystem.Particle[] array = new ParticleSystem.Particle[system.particleCount];
-						int particles = system.GetParticles(array);
-						Color color = Gizmos.color;
-						Gizmos.color = Color.green;
-						Matrix4x4 matrix = Matrix4x4.identity;
-						if (system.main.simulationSpace == ParticleSystemSimulationSpace.Local)
-						{
-							matrix = system.GetLocalToWorldMatrix();
-						}
-						Matrix4x4 matrix2 = Gizmos.matrix;
-						Gizmos.matrix = matrix;
-						for (int i = 0; i < particles; i++)
-						{
-							ParticleSystem.Particle particle = array[i];
-							Vector3 currentSize3D = particle.GetCurrentSize3D(system);
-							Gizmos.DrawWireSphere(particle.position, Math.Max(currentSize3D.x, Math.Max(currentSize3D.y, currentSize3D.z)) * 0.05f);
-						}
-						Gizmos.color = color;
-						Gizmos.matrix = matrix2;
+						flag = true;
+						break;
 					}
 				}
+				if (!flag)
+				{
+					list2.Add(i);
+				}
+			}
+			GenericMenu genericMenu = new GenericMenu();
+			for (int k = 0; k < list2.Count; k++)
+			{
+				GenericMenu arg_CC_0 = genericMenu;
+				GUIContent arg_CC_1 = new GUIContent(RendererModuleUI.s_Texts.vertexStreamsMenu[list2[k]]);
+				bool arg_CC_2 = false;
+				if (RendererModuleUI.<>f__mg$cache0 == null)
+				{
+					RendererModuleUI.<>f__mg$cache0 = new GenericMenu.MenuFunction2(RendererModuleUI.SelectVertexStreamCallback);
+				}
+				arg_CC_0.AddItem(arg_CC_1, arg_CC_2, RendererModuleUI.<>f__mg$cache0, new RendererModuleUI.StreamCallbackData(this.m_VertexStreams, list2[k]));
+			}
+			genericMenu.ShowAsContext();
+			Event.current.Use();
+		}
+
+		private bool OnVertexStreamListCanRemoveCallback(ReorderableList list)
+		{
+			SerializedProperty arrayElementAtIndex = this.m_VertexStreams.GetArrayElementAtIndex(list.index);
+			return RendererModuleUI.s_Texts.vertexStreamsPacked[arrayElementAtIndex.intValue] != "Position";
+		}
+
+		private void DrawVertexStreamListElementCallback(Rect rect, int index, bool isActive, bool isFocused)
+		{
+			SerializedProperty arrayElementAtIndex = this.m_VertexStreams.GetArrayElementAtIndex(index);
+			int intValue = arrayElementAtIndex.intValue;
+			string text = (!base.isWindowView) ? "TEXCOORD" : "TEX";
+			int num = RendererModuleUI.s_Texts.vertexStreamTexCoordChannels[intValue];
+			if (num != 0)
+			{
+				int length = (this.m_TexCoordChannelIndex + num <= 4) ? num : (num + 1);
+				string text2 = RendererModuleUI.s_Texts.channels.Substring(this.m_TexCoordChannelIndex, length);
+				GUI.Label(rect, string.Concat(new object[]
+				{
+					RendererModuleUI.s_Texts.vertexStreamsPacked[intValue],
+					" (",
+					text,
+					this.m_NumTexCoords,
+					".",
+					text2,
+					")"
+				}), ParticleSystemStyles.Get().label);
+				this.m_TexCoordChannelIndex += num;
+				if (this.m_TexCoordChannelIndex >= 4)
+				{
+					this.m_TexCoordChannelIndex -= 4;
+					this.m_NumTexCoords++;
+				}
+			}
+			else
+			{
+				GUI.Label(rect, RendererModuleUI.s_Texts.vertexStreamsPacked[intValue] + " (" + RendererModuleUI.s_Texts.vertexStreamPackedTypes[intValue] + ")", ParticleSystemStyles.Get().label);
+				if (RendererModuleUI.s_Texts.vertexStreamsPacked[intValue] == "Tangent")
+				{
+					this.m_HasTangent = true;
+				}
+				if (RendererModuleUI.s_Texts.vertexStreamsPacked[intValue] == "Color")
+				{
+					this.m_HasColor = true;
+				}
+			}
+		}
+
+		public override void OnSceneViewGUI()
+		{
+			if (RendererModuleUI.s_VisualizePivot)
+			{
+				Color color = Handles.color;
+				Handles.color = Color.green;
+				Matrix4x4 matrix = Handles.matrix;
+				Vector3[] array = new Vector3[6];
+				ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+				for (int i = 0; i < particleSystems.Length; i++)
+				{
+					ParticleSystem particleSystem = particleSystems[i];
+					ParticleSystem.Particle[] array2 = new ParticleSystem.Particle[particleSystem.particleCount];
+					int particles = particleSystem.GetParticles(array2);
+					Matrix4x4 matrix2 = Matrix4x4.identity;
+					if (particleSystem.main.simulationSpace == ParticleSystemSimulationSpace.Local)
+					{
+						matrix2 = particleSystem.GetLocalToWorldMatrix();
+					}
+					Handles.matrix = matrix2;
+					for (int j = 0; j < particles; j++)
+					{
+						ParticleSystem.Particle particle = array2[j];
+						Vector3 vector = particle.GetCurrentSize3D(particleSystem) * 0.05f;
+						array[0] = particle.position - Vector3.right * vector.x;
+						array[1] = particle.position + Vector3.right * vector.x;
+						array[2] = particle.position - Vector3.up * vector.y;
+						array[3] = particle.position + Vector3.up * vector.y;
+						array[4] = particle.position - Vector3.forward * vector.z;
+						array[5] = particle.position + Vector3.forward * vector.z;
+						Handles.DrawLines(array);
+					}
+				}
+				Handles.color = color;
+				Handles.matrix = matrix;
 			}
 		}
 	}

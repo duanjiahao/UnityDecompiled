@@ -595,10 +595,6 @@ namespace UnityEditor
 					{
 						flag = true;
 					}
-					else
-					{
-						selections = new bool[selections.Length];
-					}
 				}
 				EventType typeForControl = current.GetTypeForControl(controlID);
 				switch (typeForControl)
@@ -607,7 +603,7 @@ namespace UnityEditor
 				{
 					if (current.button != 0)
 					{
-						goto IL_6B4;
+						goto IL_6A2;
 					}
 					GUIUtility.hotControl = controlID;
 					GUIUtility.keyboardControl = controlID;
@@ -695,11 +691,11 @@ namespace UnityEditor
 							return result;
 						}
 					}
-					goto IL_6B4;
+					goto IL_6A2;
 				case EventType.MouseMove:
 				case EventType.KeyUp:
 				case EventType.ScrollWheel:
-					IL_AA:
+					IL_98:
 					switch (typeForControl)
 					{
 					case EventType.ValidateCommand:
@@ -721,9 +717,9 @@ namespace UnityEditor
 								}
 							}
 						}
-						goto IL_6B4;
+						goto IL_6A2;
 					case EventType.DragExited:
-						goto IL_6B4;
+						goto IL_6A2;
 					case EventType.ContextClick:
 					{
 						int indexUnderMouse = EditorGUIExt.GetIndexUnderMouse(hitPositions, readOnly);
@@ -735,16 +731,16 @@ namespace UnityEditor
 							result = HighLevelEvent.ContextClick;
 							return result;
 						}
-						goto IL_6B4;
+						goto IL_6A2;
 					}
 					default:
-						goto IL_6B4;
+						goto IL_6A2;
 					}
 					break;
 				case EventType.MouseDrag:
 					if (GUIUtility.hotControl != controlID)
 					{
-						goto IL_6B4;
+						goto IL_6A2;
 					}
 					if (EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.DragSelecting)
 					{
@@ -797,7 +793,7 @@ namespace UnityEditor
 							return result;
 						}
 					}
-					goto IL_6B4;
+					goto IL_6A2;
 				case EventType.Repaint:
 				{
 					if (GUIUtility.hotControl == controlID && EditorGUIExt.s_MultiSelectDragSelection == EditorGUIExt.DragSelectionState.DragSelecting)
@@ -830,11 +826,11 @@ namespace UnityEditor
 						style.Draw(positions[n], content, controlID, selections[n]);
 					}
 					GUI.color = color;
-					goto IL_6B4;
+					goto IL_6A2;
 				}
 				}
-				goto IL_AA;
-				IL_6B4:
+				goto IL_98;
+				IL_6A2:
 				result = HighLevelEvent.None;
 			}
 			return result;

@@ -41,6 +41,13 @@ namespace UnityEditor
 			EditorAssemblies.loadedAssemblies = assemblies;
 		}
 
+		internal static void FindClassesThatImplementAnyInterface(List<Type> results, params Type[] interfaces)
+		{
+			results.AddRange(from x in EditorAssemblies.loadedTypes
+			where interfaces.Any((Type i) => i.IsAssignableFrom(x) && i != x)
+			select x);
+		}
+
 		[RequiredByNativeCode]
 		private static RuntimeInitializeClassInfo[] GetRuntimeInitializeClassInfos()
 		{

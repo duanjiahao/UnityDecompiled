@@ -23,9 +23,9 @@ namespace UnityEditor
 		{
 			GUIContent buttonContent = AudioMixerExposedParametersPopup.GetButtonContent(controller);
 			Rect rect = GUILayoutUtility.GetRect(buttonContent, style, options);
-			if (EditorGUI.ButtonMouseDown(rect, buttonContent, FocusType.Passive, style))
+			if (EditorGUI.DropdownButton(rect, buttonContent, FocusType.Passive, style))
 			{
-				PopupWindow.Show(rect, new AudioMixerExposedParametersPopup(controller));
+				PopupWindow.Show(rect, new AudioMixerExposedParametersPopup(controller), null, ShowMode.PopupMenuWithKeyboardFocus);
 			}
 		}
 

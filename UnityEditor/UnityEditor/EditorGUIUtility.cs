@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Rendering;
 using UnityEngine.Scripting;
 using UnityEngineInternal;
 
@@ -13,6 +14,22 @@ namespace UnityEditor
 {
 	public sealed class EditorGUIUtility : GUIUtility
 	{
+		public class IconSizeScope : GUI.Scope
+		{
+			private Vector2 m_OriginalIconSize;
+
+			public IconSizeScope(Vector2 iconSizeWithinScope)
+			{
+				this.m_OriginalIconSize = EditorGUIUtility.GetIconSize();
+				EditorGUIUtility.SetIconSize(iconSizeWithinScope);
+			}
+
+			protected override void CloseScope()
+			{
+				EditorGUIUtility.SetIconSize(this.m_OriginalIconSize);
+			}
+		}
+
 		internal class SkinnedColor
 		{
 			private Color normalColor;
@@ -110,6 +127,8 @@ namespace UnityEditor
 		[Obsolete("This field is no longer used by any builtin controls. If passing this field to GetControlID, explicitly use the FocusType enum instead.", false)]
 		public static FocusType native;
 
+		internal static Material s_GUITextureBlitColorspaceMaterial;
+
 		[CompilerGenerated]
 		private static GUISkin.SkinChangedDelegate <>f__mg$cache0;
 
@@ -139,14 +158,17 @@ namespace UnityEditor
 
 		internal static extern int skinIndex
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern Texture2D whiteTexture
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -317,8 +339,10 @@ namespace UnityEditor
 
 		public new static extern string systemCopyBuffer
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -344,6 +368,20 @@ namespace UnityEditor
 			get
 			{
 				return (EventType)1002;
+			}
+		}
+
+		internal static Material GUITextureBlitColorspaceMaterial
+		{
+			get
+			{
+				if (!EditorGUIUtility.s_GUITextureBlitColorspaceMaterial)
+				{
+					Shader shader = EditorGUIUtility.LoadRequired("SceneView/GUITextureBlitColorspace.shader") as Shader;
+					EditorGUIUtility.s_GUITextureBlitColorspaceMaterial = new Material(shader);
+					EditorGUIUtility.SetGUITextureBlitColorspaceSettings(EditorGUIUtility.s_GUITextureBlitColorspaceMaterial);
+				}
+				return EditorGUIUtility.s_GUITextureBlitColorspaceMaterial;
 			}
 		}
 
@@ -382,9 +420,11 @@ namespace UnityEditor
 			GUISkin.m_SkinChanged = (GUISkin.SkinChangedDelegate)Delegate.Combine(arg_D6_0, EditorGUIUtility.<>f__mg$cache0);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string SerializeMainMenuToString();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetMenuLocalizationTestMode(bool onoff);
 
@@ -394,7 +434,8 @@ namespace UnityEditor
 			{
 				textAndTooltip = "";
 			}
-			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_TextGUIContents[textAndTooltip];
+			string key = textAndTooltip;
+			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_TextGUIContents[key];
 			if (gUIContent == null)
 			{
 				string[] nameAndTooltipString = EditorGUIUtility.GetNameAndTooltipString(textAndTooltip);
@@ -403,7 +444,7 @@ namespace UnityEditor
 				{
 					gUIContent.tooltip = nameAndTooltipString[2];
 				}
-				EditorGUIUtility.s_TextGUIContents[textAndTooltip] = gUIContent;
+				EditorGUIUtility.s_TextGUIContents[key] = gUIContent;
 			}
 			return gUIContent;
 		}
@@ -414,7 +455,12 @@ namespace UnityEditor
 			{
 				textAndTooltip = "";
 			}
-			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_TextGUIContents[textAndTooltip];
+			if (icon == null)
+			{
+				icon = "";
+			}
+			string key = string.Format("{0}|{1}", textAndTooltip, icon);
+			GUIContent gUIContent = (GUIContent)EditorGUIUtility.s_TextGUIContents[key];
 			if (gUIContent == null)
 			{
 				string[] nameAndTooltipString = EditorGUIUtility.GetNameAndTooltipString(textAndTooltip);
@@ -424,7 +470,7 @@ namespace UnityEditor
 				{
 					gUIContent.tooltip = nameAndTooltipString[2];
 				}
-				EditorGUIUtility.s_TextGUIContents[textAndTooltip] = gUIContent;
+				EditorGUIUtility.s_TextGUIContents[key] = gUIContent;
 			}
 			return gUIContent;
 		}
@@ -559,9 +605,11 @@ namespace UnityEditor
 			EditorGUIUtility.skinIndex = 1 - EditorGUIUtility.skinIndex;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetObjectNameWithInfo(UnityEngine.Object obj);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetTypeNameWithInfo(string typeName);
 
@@ -629,6 +677,7 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_SetIconSize(ref size);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetIconSize(ref Vector2 size);
 
@@ -639,15 +688,19 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetIconSize(out Vector2 size);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object GetScript(string scriptClass);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetIconForObject(UnityEngine.Object obj, Texture2D icon);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Texture2D GetIconForObject(UnityEngine.Object obj);
 
@@ -697,6 +750,7 @@ namespace UnityEditor
 			EditorApplication.RequestRepaintAllViews();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Texture2D FindTexture(string name);
 
@@ -756,9 +810,11 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object GetBuiltinExtraResource(Type type, string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern BuiltinResource[] GetBuiltinResourceList(int classID);
 
@@ -812,27 +868,35 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_GetKeyboardRect(int id, out Rect rect);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_MoveKeyboardFocus(bool forward);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int Internal_GetNextKeyboardControlID(bool forward);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern AssetBundle GetEditorAssetBundle();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetRenderTextureNoViewport(RenderTexture rt);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetVisibleLayers(int layers);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetLockedLayers(int layers);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsGizmosAllowedForObject(UnityEngine.Object obj);
 
@@ -861,6 +925,7 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_RenderGameViewCamerasInternal(target, targetDisplay, ref screenRect, ref mousePosition, gizmos);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RenderGameViewCamerasInternal(RenderTexture target, int targetDisplay, ref Rect screenRect, ref Vector2 mousePosition, bool gizmos);
 
@@ -870,6 +935,7 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_RenderGameViewCameras(target, targetDisplay, ref screenRect, ref mousePosition, gizmos);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RenderGameViewCameras(RenderTexture target, int targetDisplay, ref Rect screenRect, ref Vector2 mousePosition, bool gizmos);
 
@@ -883,12 +949,15 @@ namespace UnityEditor
 		{
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsDisplayReferencedByCameras(int displayIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void QueueGameViewInputEvent(Event evt);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetDefaultFont(Font font);
 
@@ -997,6 +1066,7 @@ namespace UnityEditor
 			return @event;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetupEventValues(object evt);
 
@@ -1184,9 +1254,11 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_SetPasteboardColor(ref color);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPasteboardColor(ref Color color);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasPasteboardColor();
 
@@ -1197,6 +1269,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetPasteboardColor(out Color value);
 
@@ -1224,6 +1297,7 @@ namespace UnityEditor
 			EditorGUIUtility.INTERNAL_CALL_Internal_AddCursorRect(ref r, m, controlID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_AddCursorRect(ref Rect r, MouseCursor m, int controlID);
 
@@ -1264,18 +1338,23 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void CleanCache(string text);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSearchIndexOfControlIDList(int index);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetSearchIndexOfControlIDList();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CanHaveKeyboardFocus(int id);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetWantsMouseJumping(int wantz);
 
@@ -1307,6 +1386,19 @@ namespace UnityEditor
 		{
 			GUIUtility.CheckOnGUI();
 			return GUIView.current.hasFocus;
+		}
+
+		internal static void SetGUITextureBlitColorspaceSettings(Material mat)
+		{
+			bool flag = SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal;
+			if (flag && QualitySettings.activeColorSpace == ColorSpace.Linear)
+			{
+				mat.SetFloat("_ConvertToGamma", 1f);
+			}
+			else
+			{
+				mat.SetFloat("_ConvertToGamma", 0f);
+			}
 		}
 
 		public static Rect PointsToPixels(Rect rect)

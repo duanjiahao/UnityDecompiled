@@ -11,9 +11,18 @@ namespace UnityEditor.VisualStudioIntegration
 			return SolutionGuidGenerator.ComputeGuidHashFor(projectName + "salt");
 		}
 
-		public static string GuidForSolution(string projectName)
+		public static string GuidForSolution(string projectName, string sourceFileExtension)
 		{
-			return "FAE04EC0-301F-11D3-BF4B-00C04F79EFBC";
+			string result;
+			if (sourceFileExtension.ToLower() == "cs")
+			{
+				result = "FAE04EC0-301F-11D3-BF4B-00C04F79EFBC";
+			}
+			else
+			{
+				result = SolutionGuidGenerator.ComputeGuidHashFor(projectName);
+			}
+			return result;
 		}
 
 		private static string ComputeGuidHashFor(string input)

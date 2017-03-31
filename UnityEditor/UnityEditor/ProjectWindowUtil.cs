@@ -81,7 +81,7 @@ namespace UnityEditor
 		private static void CreateScriptAsset(string templatePath, string destName)
 		{
 			string fileName = Path.GetFileName(templatePath);
-			if (fileName.ToLower().Contains("editortest"))
+			if (fileName.ToLower().Contains("editortest") || fileName.ToLower().Contains("editmode"))
 			{
 				string text = AssetDatabase.GetUniquePathNameAtSelectedPath(destName);
 				if (!text.ToLower().Contains("/editor/"))
@@ -104,26 +104,26 @@ namespace UnityEditor
 				if (extension == ".js")
 				{
 					icon = (EditorGUIUtility.IconContent("js Script Icon").image as Texture2D);
-					goto IL_16F;
+					goto IL_184;
 				}
 				if (extension == ".cs")
 				{
 					icon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
-					goto IL_16F;
+					goto IL_184;
 				}
 				if (extension == ".boo")
 				{
 					icon = (EditorGUIUtility.IconContent("boo Script Icon").image as Texture2D);
-					goto IL_16F;
+					goto IL_184;
 				}
 				if (extension == ".shader")
 				{
 					icon = (EditorGUIUtility.IconContent("Shader Icon").image as Texture2D);
-					goto IL_16F;
+					goto IL_184;
 				}
 			}
 			icon = (EditorGUIUtility.IconContent("TextAsset Icon").image as Texture2D);
-			IL_16F:
+			IL_184:
 			ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, ScriptableObject.CreateInstance<DoCreateScriptAsset>(), destName, icon, templatePath);
 		}
 

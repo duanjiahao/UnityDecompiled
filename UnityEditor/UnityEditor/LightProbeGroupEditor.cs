@@ -261,7 +261,7 @@ namespace UnityEditor
 			{
 				if (SceneView.lastActiveSceneView)
 				{
-					LightmapVisualization.DrawTetrahedra(this.m_ShouldRecalculateTetrahedra, SceneView.lastActiveSceneView.camera.transform.position);
+					LightProbeVisualization.DrawTetrahedra(this.m_ShouldRecalculateTetrahedra, SceneView.lastActiveSceneView.camera.transform.position);
 					this.m_ShouldRecalculateTetrahedra = false;
 				}
 			}
@@ -451,12 +451,12 @@ namespace UnityEditor
 							this.m_Group,
 							this.m_SerializedSelectedProbes
 						}, "Move Probes");
-						if (LightmapVisualization.dynamicUpdateLightProbes)
+						if (LightProbeVisualization.dynamicUpdateLightProbes)
 						{
 							this.MarkTetrahedraDirty();
 						}
 					}
-					if (this.m_Editing && flag2 && !LightmapVisualization.dynamicUpdateLightProbes)
+					if (this.m_Editing && flag2 && !LightProbeVisualization.dynamicUpdateLightProbes)
 					{
 						this.MarkTetrahedraDirty();
 					}

@@ -289,7 +289,7 @@ namespace UnityEngine
 
 		public static bool operator !=(Vector4 lhs, Vector4 rhs)
 		{
-			return Vector4.SqrMagnitude(lhs - rhs) >= 9.99999944E-11f;
+			return !(lhs == rhs);
 		}
 
 		public static implicit operator Vector4(Vector3 v)

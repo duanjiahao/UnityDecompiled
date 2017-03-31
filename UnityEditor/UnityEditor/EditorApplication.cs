@@ -16,6 +16,8 @@ namespace UnityEditor
 
 		public delegate void CallbackFunction();
 
+		public delegate void SerializedPropertyCallbackFunction(GenericMenu menu, SerializedProperty property);
+
 		public static EditorApplication.ProjectWindowItemCallback projectWindowItemOnGUI;
 
 		public static EditorApplication.HierarchyWindowItemCallback hierarchyWindowItemOnGUI;
@@ -42,6 +44,8 @@ namespace UnityEditor
 
 		internal static EditorApplication.CallbackFunction windowsReordered;
 
+		public static EditorApplication.SerializedPropertyCallbackFunction contextualPropertyMenu;
+
 		private static EditorApplication.CallbackFunction delayedCallback;
 
 		private static float s_DelayedCallbackTime = 0f;
@@ -58,40 +62,48 @@ namespace UnityEditor
 
 		public static extern bool isPlaying
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isPlayingOrWillChangePlaymode
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isPaused
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool isCompiling
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isUpdating
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern bool isRemoteConnected
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -99,36 +111,49 @@ namespace UnityEditor
 		[ThreadAndSerializationSafe]
 		public static extern string applicationContentsPath
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern string applicationPath
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern string userJavascriptPackagesPath
 		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern bool isTemporaryProject
+		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern UnityEngine.Object tagManager
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal static extern UnityEngine.Object renderSettings
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern double timeSinceStartup
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -172,15 +197,19 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadLevelInPlayMode(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LoadLevelAdditiveInPlayMode(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation LoadLevelAsyncInPlayMode(string path);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation LoadLevelAdditiveAsyncInPlayMode(string path);
 
@@ -189,37 +218,51 @@ namespace UnityEditor
 			EditorApplication.OpenProjectInternal(projectPath, args);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void OpenProjectInternal(string projectPath, string[] args);
 
-		[Obsolete("Use AssetDatabase.SaveAssets instead (UnityUpgradable) -> AssetDatabase.SaveAssets()", true)]
+		[Obsolete("Use AssetDatabase.SaveAssets instead (UnityUpgradable) -> AssetDatabase.SaveAssets()", true), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SaveAssets();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Step();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void LockReloadAssemblies();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool ExecuteMenuItem(string menuItemPath);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool ExecuteMenuItemOnGameObjects(string menuItemPath, GameObject[] objects);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool ExecuteMenuItemWithTemporaryContext(string menuItemPath, UnityEngine.Object[] objects);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void UnlockReloadAssemblies();
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetTemporaryProjectKeepPath(string path);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Exit(int returnValue);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetSceneRepaintDirty();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateSceneIfNeeded();
 
@@ -282,15 +325,9 @@ namespace UnityEditor
 			EditorGUIUtility.Internal_SwitchSkin();
 		}
 
-		internal static void RequestRepaintAllViews()
-		{
-			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(GUIView));
-			for (int i = 0; i < array.Length; i++)
-			{
-				GUIView gUIView = (GUIView)array[i];
-				gUIView.Repaint();
-			}
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void RequestRepaintAllViews();
 
 		private static void Internal_CallHierarchyWindowHasChanged()
 		{
@@ -393,9 +430,11 @@ namespace UnityEditor
 			Event.current = null;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Beep();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void ReportUNetWeaver(string filename, string msg, bool isError);
 

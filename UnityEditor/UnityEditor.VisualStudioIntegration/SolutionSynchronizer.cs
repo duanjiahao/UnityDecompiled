@@ -52,6 +52,10 @@ namespace UnityEditor.VisualStudioIntegration
 				ScriptingLanguage.None
 			},
 			{
+				"hlsl",
+				ScriptingLanguage.None
+			},
+			{
 				"glslinc",
 				ScriptingLanguage.None
 			}
@@ -164,7 +168,7 @@ namespace UnityEditor.VisualStudioIntegration
 
 		private static void DumpIsland(MonoIsland island)
 		{
-			Console.WriteLine("{0} ({1})", island._output, island._classlib_profile);
+			Console.WriteLine("{0} ({1})", island._output, island._api_compatibility_level);
 			Console.WriteLine("Files: ");
 			Console.WriteLine(string.Join("\n", island._files));
 			Console.WriteLine("References: ");
@@ -444,7 +448,7 @@ namespace UnityEditor.VisualStudioIntegration
 			IEnumerable<string> source = from i in islands
 			select string.Format(SolutionSynchronizer.DefaultSynchronizationSettings.SolutionProjectEntryTemplate, new object[]
 			{
-				this.SolutionGuid(),
+				this.SolutionGuid(i),
 				this._projectName,
 				Path.GetFileName(this.ProjectFile(i)),
 				this.ProjectGuid(i._output)
@@ -469,9 +473,9 @@ namespace UnityEditor.VisualStudioIntegration
 			return SolutionGuidGenerator.GuidForProject(this._projectName + Path.GetFileNameWithoutExtension(assembly));
 		}
 
-		private string SolutionGuid()
+		private string SolutionGuid(MonoIsland island)
 		{
-			return SolutionGuidGenerator.GuidForSolution(this._projectName);
+			return SolutionGuidGenerator.GuidForSolution(this._projectName, island.GetExtensionOfSourceFiles());
 		}
 
 		private string ProjectFooter(MonoIsland island)

@@ -175,6 +175,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Slerp(ref Vector3 a, ref Vector3 b, float t, out Vector3 value);
 
@@ -185,6 +186,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SlerpUnclamped(ref Vector3 a, ref Vector3 b, float t, out Vector3 value);
 
@@ -193,6 +195,7 @@ namespace UnityEngine
 			Vector3.INTERNAL_CALL_Internal_OrthoNormalize2(ref a, ref b);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_OrthoNormalize2(ref Vector3 a, ref Vector3 b);
 
@@ -201,6 +204,7 @@ namespace UnityEngine
 			Vector3.INTERNAL_CALL_Internal_OrthoNormalize3(ref a, ref b, ref c);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_OrthoNormalize3(ref Vector3 a, ref Vector3 b, ref Vector3 c);
 
@@ -221,6 +225,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_RotateTowards(ref Vector3 current, ref Vector3 target, float maxRadiansDelta, float maxMagnitudeDelta, out Vector3 value);
 
@@ -478,7 +483,7 @@ namespace UnityEngine
 
 		public static bool operator !=(Vector3 lhs, Vector3 rhs)
 		{
-			return Vector3.SqrMagnitude(lhs - rhs) >= 9.99999944E-11f;
+			return !(lhs == rhs);
 		}
 
 		public override string ToString()

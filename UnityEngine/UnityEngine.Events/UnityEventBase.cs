@@ -1,9 +1,11 @@
 using System;
 using System.Reflection;
+using UnityEngine.Scripting;
 using UnityEngine.Serialization;
 
 namespace UnityEngine.Events
 {
+	[UsedByNativeCode]
 	[Serializable]
 	public abstract class UnityEventBase : ISerializationCallbackReceiver
 	{

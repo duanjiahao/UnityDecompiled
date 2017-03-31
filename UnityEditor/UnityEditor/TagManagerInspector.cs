@@ -294,7 +294,7 @@ namespace UnityEditor
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
-			this.m_IsEditable = AssetDatabase.IsOpenForEdit("ProjectSettings/TagManager.asset");
+			this.m_IsEditable = AssetDatabase.IsOpenForEdit("ProjectSettings/TagManager.asset", StatusQueryOptions.UseCachedIfPossible);
 			bool enabled = GUI.enabled;
 			GUI.enabled = this.m_IsEditable;
 			this.m_Tags.isExpanded = EditorGUILayout.Foldout(this.m_Tags.isExpanded, "Tags", true);

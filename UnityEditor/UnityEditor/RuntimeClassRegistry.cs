@@ -375,8 +375,8 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(BoneWeight));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Particle));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SliderState), "all");
-			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUI.ScrollViewState), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUIScrollGroup), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(ScrollViewState), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(TextEditor), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(ClassLibraryInitializer), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AssetBundleCreateRequest), "all");

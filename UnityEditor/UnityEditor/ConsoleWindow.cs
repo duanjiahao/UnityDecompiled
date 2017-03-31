@@ -414,7 +414,7 @@ namespace UnityEditor
 				GUIUtility.keyboardControl = 0;
 			}
 			int count = LogEntries.GetCount();
-			if (this.m_ListView.totalRows != count)
+			if (this.m_ListView.totalRows != count && this.m_ListView.totalRows > 0)
 			{
 				if (this.m_ListView.scrollPos.y >= (float)(this.m_ListView.rowHeight * this.m_ListView.totalRows - this.ms_LVHeight))
 				{

@@ -38,6 +38,14 @@ namespace UnityEditor
 			}
 		}
 
+		public bool stateHasMultipleDifferentValues
+		{
+			get
+			{
+				return this.m_MinMaxState.hasMultipleDifferentValues;
+			}
+		}
+
 		public SerializedMinMaxGradient(SerializedModule m)
 		{
 			this.Init(m, "gradient");

@@ -1,10 +1,21 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.VR
 {
 	public static class InputTracking
 	{
+		public static extern bool disablePositionalTracking
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static Vector3 GetLocalPosition(VRNode node)
 		{
 			Vector3 result;
@@ -12,6 +23,7 @@ namespace UnityEngine.VR
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetLocalPosition(VRNode node, out Vector3 value);
 
@@ -22,9 +34,11 @@ namespace UnityEngine.VR
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetLocalRotation(VRNode node, out Quaternion value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Recenter();
 	}

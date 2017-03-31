@@ -26,13 +26,15 @@ namespace UnityEditor.IMGUI.Controls
 
 		internal const string kExpansionAnimationPrefKey = "TreeViewExpansionAnimation";
 
-		private bool m_UseExpansionAnimation = EditorPrefs.GetBool("TreeViewExpansionAnimation", false);
+		private bool m_UseExpansionAnimation = EditorPrefs.GetBool("TreeViewExpansionAnimation", true);
 
 		private bool m_GrabKeyboardFocus;
 
 		private Rect m_TotalRect;
 
 		private Rect m_VisibleRect;
+
+		private Rect m_ContentRect;
 
 		private bool m_HadFocusLastEvent;
 
@@ -124,6 +126,18 @@ namespace UnityEditor.IMGUI.Controls
 			set;
 		}
 
+		public GUIStyle horizontalScrollbarStyle
+		{
+			get;
+			set;
+		}
+
+		public GUIStyle verticalScrollbarStyle
+		{
+			get;
+			set;
+		}
+
 		public TreeViewItemExpansionAnimator expansionAnimator
 		{
 			get
@@ -166,6 +180,22 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
+		public bool showingVerticalScrollBar
+		{
+			get
+			{
+				return this.m_ContentRect.height > this.m_VisibleRect.height;
+			}
+		}
+
+		public bool showingHorizontalScrollBar
+		{
+			get
+			{
+				return this.m_ContentRect.width > this.m_VisibleRect.width;
+			}
+		}
+
 		public string searchString
 		{
 			get
@@ -174,19 +204,22 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			set
 			{
-				if (!(this.state.searchString == value))
+				if (!object.ReferenceEquals(this.state.searchString, value))
 				{
-					this.state.searchString = value;
-					this.data.OnSearchChanged();
-					if (this.searchChanged != null)
+					if (!(this.state.searchString == value))
 					{
-						this.searchChanged(this.state.searchString);
+						this.state.searchString = value;
+						this.data.OnSearchChanged();
+						if (this.searchChanged != null)
+						{
+							this.searchChanged(this.state.searchString);
+						}
 					}
 				}
 			}
 		}
 
-		private bool animatingExpansion
+		public bool animatingExpansion
 		{
 			get
 			{
@@ -346,7 +379,7 @@ namespace UnityEditor.IMGUI.Controls
 						else
 						{
 							List<int> newSelection = this.GetNewSelection(item, true, false);
-							bool flag = this.dragging != null && this.dragging.CanStartDrag(item, newSelection, Event.current.mousePosition);
+							bool flag = this.dragging != null && newSelection.Count != 0 && this.dragging.CanStartDrag(item, newSelection, Event.current.mousePosition);
 							if (flag)
 							{
 								this.m_DragSelection = newSelection;
@@ -500,15 +533,15 @@ namespace UnityEditor.IMGUI.Controls
 					this.m_ExpansionAnimator.OnRowGUI(row);
 				}
 				this.gui.OnRowGUI(rect, item, row, selected, hasFocus);
-				if (this.animatingExpansion)
-				{
-					this.m_ExpansionAnimator.OnEndRowGUI(row);
-				}
 				if (this.onGUIRowCallback != null)
 				{
 					float contentIndent = this.gui.GetContentIndent(item);
 					Rect arg = new Rect(rect.x + contentIndent, rect.y, rect.width - contentIndent, rect.height);
 					this.onGUIRowCallback(item.id, arg);
+				}
+				if (this.animatingExpansion)
+				{
+					this.m_ExpansionAnimator.OnEndRowGUI(row);
 				}
 				this.HandleUnusedMouseEventsForItem(rect, item, row);
 			}
@@ -516,8 +549,12 @@ namespace UnityEditor.IMGUI.Controls
 
 		public void OnGUI(Rect rect, int keyboardControlID)
 		{
-			this.m_TotalRect = rect;
 			this.m_KeyboardControlID = keyboardControlID;
+			Event current = Event.current;
+			if (current.type == EventType.Repaint)
+			{
+				this.m_TotalRect = rect;
+			}
 			if (this.m_GUIView == null)
 			{
 				this.m_GUIView = GUIView.current;
@@ -526,7 +563,6 @@ namespace UnityEditor.IMGUI.Controls
 			{
 				this.EndNameEditing(true);
 			}
-			Event current = Event.current;
 			if (this.m_GrabKeyboardFocus || (current.type == EventType.MouseDown && this.m_TotalRect.Contains(current.mousePosition)))
 			{
 				this.m_GrabKeyboardFocus = false;
@@ -552,10 +588,10 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			this.data.InitIfNeeded();
 			Vector2 totalSize = this.gui.GetTotalSize();
-			Rect viewRect = new Rect(0f, 0f, totalSize.x, totalSize.y);
+			this.m_ContentRect = new Rect(0f, 0f, totalSize.x, totalSize.y);
 			if (this.m_UseScrollView)
 			{
-				this.state.scrollPos = GUI.BeginScrollView(this.m_TotalRect, this.state.scrollPos, viewRect);
+				this.state.scrollPos = GUI.BeginScrollView(this.m_TotalRect, this.state.scrollPos, this.m_ContentRect, (this.horizontalScrollbarStyle == null) ? GUI.skin.horizontalScrollbar : this.horizontalScrollbarStyle, (this.verticalScrollbarStyle == null) ? GUI.skin.verticalScrollbar : this.verticalScrollbarStyle);
 			}
 			else
 			{
@@ -563,7 +599,7 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			if (current.type == EventType.Repaint)
 			{
-				this.m_VisibleRect = GUIClip.visibleRect;
+				this.m_VisibleRect = ((!this.m_UseScrollView) ? this.m_TotalRect : GUI.GetTopScrollView().visibleRect);
 			}
 			this.gui.BeginRowGUI();
 			int num;
@@ -572,7 +608,7 @@ namespace UnityEditor.IMGUI.Controls
 			if (num2 >= 0)
 			{
 				int numVisibleRows = num2 - num + 1;
-				float rowWidth = Mathf.Max(GUIClip.visibleRect.width, viewRect.width);
+				float rowWidth = Mathf.Max(GUIClip.visibleRect.width, this.m_ContentRect.width);
 				this.IterateVisibleItems(num, numVisibleRows, rowWidth, flag);
 			}
 			if (this.animatingExpansion)
@@ -582,7 +618,7 @@ namespace UnityEditor.IMGUI.Controls
 			this.gui.EndRowGUI();
 			if (this.m_UseScrollView)
 			{
-				GUI.EndScrollView();
+				GUI.EndScrollView(this.showingVerticalScrollBar);
 			}
 			else
 			{
@@ -669,22 +705,23 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			if (!setup.expanding)
 			{
-				this.ChangeExpandedState(setup.item, false);
+				this.ChangeExpandedState(setup.item, false, setup.includeChildren);
 			}
 		}
 
 		private float GetAnimationDuration(float height)
 		{
-			return (height <= 60f) ? (height * 0.1f / 60f) : 0.1f;
+			return (height <= 60f) ? (height * 0.07f / 60f) : 0.07f;
 		}
 
 		public void UserInputChangedExpandedState(TreeViewItem item, int row, bool expand)
 		{
+			bool alt = Event.current.alt;
 			if (this.useExpansionAnimation)
 			{
 				if (expand)
 				{
-					this.ChangeExpandedState(item, true);
+					this.ChangeExpandedState(item, true, alt);
 				}
 				int num = row + 1;
 				int lastChildRowUnder = this.GetLastChildRowUnder(row);
@@ -698,8 +735,8 @@ namespace UnityEditor.IMGUI.Controls
 					endRow = lastChildRowUnder,
 					startRowRect = this.gui.GetRowRect(num, width),
 					rowsRect = rectForRows,
-					startTime = EditorApplication.timeSinceStartup,
 					expanding = expand,
+					includeChildren = alt,
 					animationEnded = new Action<TreeViewAnimationInput>(this.ExpansionAnimationEnded),
 					item = item,
 					treeView = this
@@ -708,13 +745,13 @@ namespace UnityEditor.IMGUI.Controls
 			}
 			else
 			{
-				this.ChangeExpandedState(item, expand);
+				this.ChangeExpandedState(item, expand, alt);
 			}
 		}
 
-		private void ChangeExpandedState(TreeViewItem item, bool expand)
+		private void ChangeExpandedState(TreeViewItem item, bool expand, bool includeChildren)
 		{
-			if (Event.current.alt)
+			if (includeChildren)
 			{
 				this.data.SetExpandedWithChildren(item, expand);
 			}
@@ -922,13 +959,17 @@ namespace UnityEditor.IMGUI.Controls
 				{
 					this.UserInputChangedExpandedState(itemAndRowIndex, row, expand);
 				}
-				else if (expand)
-				{
-					this.HandleFastExpand(itemAndRowIndex, row);
-				}
 				else
 				{
-					this.HandleFastCollapse(itemAndRowIndex, row);
+					this.expansionAnimator.SkipAnimating();
+					if (expand)
+					{
+						this.HandleFastExpand(itemAndRowIndex, row);
+					}
+					else
+					{
+						this.HandleFastCollapse(itemAndRowIndex, row);
+					}
 				}
 			}
 		}
@@ -1085,6 +1126,7 @@ namespace UnityEditor.IMGUI.Controls
 
 		public void OffsetSelection(int offset)
 		{
+			this.expansionAnimator.SkipAnimating();
 			IList<TreeViewItem> rows = this.data.GetRows();
 			if (rows.Count != 0)
 			{
@@ -1246,12 +1288,12 @@ namespace UnityEditor.IMGUI.Controls
 			this.gui.EndPingItem();
 		}
 
-		public List<int> SortIDsInVisiblityOrder(List<int> ids)
+		public List<int> SortIDsInVisiblityOrder(IList<int> ids)
 		{
 			List<int> result;
 			if (ids.Count <= 1)
 			{
-				result = ids;
+				result = ids.ToList<int>();
 			}
 			else
 			{
