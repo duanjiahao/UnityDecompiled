@@ -31,7 +31,7 @@ namespace UnityEditor
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (ExternalForcesModuleUI.s_Texts == null)
 			{

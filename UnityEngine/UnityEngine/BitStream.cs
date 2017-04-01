@@ -12,28 +12,35 @@ namespace UnityEngine
 
 		public extern bool isReading
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isWriting
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializeb(ref int value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializec(ref char value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializes(ref short value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializei(ref int value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serializef(ref float value, float maximumDelta);
 
@@ -42,6 +49,7 @@ namespace UnityEngine
 			BitStream.INTERNAL_CALL_Serializeq(this, ref value, maximumDelta);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Serializeq(BitStream self, ref Quaternion value, float maximumDelta);
 
@@ -50,6 +58,7 @@ namespace UnityEngine
 			BitStream.INTERNAL_CALL_Serializev(this, ref value, maximumDelta);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Serializev(BitStream self, ref Vector3 value, float maximumDelta);
 
@@ -58,6 +67,7 @@ namespace UnityEngine
 			BitStream.INTERNAL_CALL_Serializen(this, ref viewID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Serializen(BitStream self, ref NetworkViewID viewID);
 
@@ -131,6 +141,7 @@ namespace UnityEngine
 			this.Serializen(ref viewID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Serialize(ref string value);
 	}

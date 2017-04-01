@@ -47,6 +47,14 @@ namespace UnityEditor
 					result.rect = result.rectTransform.rect;
 					result.anchoredPosition = result.rectTransform.anchoredPosition;
 				}
+				else
+				{
+					SpriteRenderer component = t.GetComponent<SpriteRenderer>();
+					if (component != null && component.drawMode != SpriteDrawMode.Simple)
+					{
+						result.sizeDelta = component.size;
+					}
+				}
 				return result;
 			}
 
@@ -99,21 +107,28 @@ namespace UnityEditor
 				Quaternion refAlignment = this.GetRefAlignment(scaleRotation, ownRotation);
 				scaleDelta = refAlignment * scaleDelta;
 				scaleDelta = Vector3.Scale(scaleDelta, refAlignment * Vector3.one);
-				if (preferRectResize && this.rectTransform != null)
+				if (preferRectResize)
 				{
-					Vector2 vector = this.sizeDelta + Vector2.Scale(this.rect.size, scaleDelta) - this.rect.size;
-					vector.x = MathUtils.RoundBasedOnMinimumDifference(vector.x, minDragDifference.x);
-					vector.y = MathUtils.RoundBasedOnMinimumDifference(vector.y, minDragDifference.y);
-					this.rectTransform.sizeDelta = vector;
-					if (this.rectTransform.drivenByObject != null)
+					if (this.rectTransform != null)
 					{
-						RectTransform.SendReapplyDrivenProperties(this.rectTransform);
+						Vector2 vector = this.sizeDelta + Vector2.Scale(this.rect.size, scaleDelta) - this.rect.size;
+						vector.x = MathUtils.RoundBasedOnMinimumDifference(vector.x, minDragDifference.x);
+						vector.y = MathUtils.RoundBasedOnMinimumDifference(vector.y, minDragDifference.y);
+						this.rectTransform.sizeDelta = vector;
+						if (this.rectTransform.drivenByObject != null)
+						{
+							RectTransform.SendReapplyDrivenProperties(this.rectTransform);
+						}
+						return;
+					}
+					SpriteRenderer component = this.transform.GetComponent<SpriteRenderer>();
+					if (component != null && component.drawMode != SpriteDrawMode.Simple)
+					{
+						component.size = Vector2.Scale(this.sizeDelta, scaleDelta);
+						return;
 					}
 				}
-				else
-				{
-					this.SetScaleValue(Vector3.Scale(this.scale, scaleDelta));
-				}
+				this.SetScaleValue(Vector3.Scale(this.scale, scaleDelta));
 			}
 
 			private void SetPosition(Vector3 newPosition)
@@ -320,7 +335,26 @@ namespace UnityEditor
 				for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
 				{
 					TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
-					Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Resize");
+					if (transformData.rectTransform != null)
+					{
+						Undo.RecordObject(transformData.rectTransform, "Resize");
+					}
+					else
+					{
+						SpriteRenderer component = transformData.transform.GetComponent<SpriteRenderer>();
+						if (component != null && component.drawMode != SpriteDrawMode.Simple)
+						{
+							Undo.RecordObjects(new UnityEngine.Object[]
+							{
+								component,
+								transformData.transform
+							}, "Resize");
+						}
+						else
+						{
+							Undo.RecordObject(transformData.transform, "Resize");
+						}
+					}
 				}
 				for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
 				{

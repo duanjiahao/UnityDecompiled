@@ -8,11 +8,9 @@ namespace UnityEditor
 	{
 		private PreviewRenderUtility m_PreviewUtility;
 
-		private AudioClip m_PlayingClip = null;
+		private AudioClip m_PlayingClip;
 
 		private Vector2 m_Position = Vector2.zero;
-
-		private GUIView m_GUI;
 
 		private static GUIStyle s_PreButton;
 
@@ -20,7 +18,7 @@ namespace UnityEditor
 
 		private static bool m_bAutoPlay;
 
-		private static bool m_bLoop = false;
+		private static bool m_bLoop;
 
 		private static bool m_bPlayFirst;
 

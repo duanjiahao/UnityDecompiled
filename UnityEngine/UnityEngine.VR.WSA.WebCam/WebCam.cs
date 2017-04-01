@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.VR.WSA.WebCam
 {
@@ -13,6 +14,7 @@ namespace UnityEngine.VR.WSA.WebCam
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetWebCamModeState_Internal();
 	}

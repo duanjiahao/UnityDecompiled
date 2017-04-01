@@ -25,13 +25,15 @@ namespace UnityEditor
 
 		public GUIStyle minus = ParticleSystemStyles.FindStyle("ShurikenMinus");
 
-		public GUIStyle line = ParticleSystemStyles.FindStyle("ShurikenLine");
-
 		public GUIStyle checkmark = ParticleSystemStyles.FindStyle("ShurikenCheckMark");
+
+		public GUIStyle checkmarkMixed = ParticleSystemStyles.FindStyle("ShurikenCheckMarkMixed");
 
 		public GUIStyle minMaxCurveStateDropDown = ParticleSystemStyles.FindStyle("ShurikenDropdown");
 
 		public GUIStyle toggle = ParticleSystemStyles.FindStyle("ShurikenToggle");
+
+		public GUIStyle toggleMixed = ParticleSystemStyles.FindStyle("ShurikenToggleMixed");
 
 		public GUIStyle popup = ParticleSystemStyles.FindStyle("ShurikenPopUp");
 

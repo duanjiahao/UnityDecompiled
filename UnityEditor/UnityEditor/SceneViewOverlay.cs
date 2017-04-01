@@ -13,6 +13,7 @@ namespace UnityEditor
 			OcclusionCulling = 100,
 			Lightmapping = 200,
 			NavMesh = 300,
+			PhysicsDebug = 350,
 			ParticleEffect = 400
 		}
 

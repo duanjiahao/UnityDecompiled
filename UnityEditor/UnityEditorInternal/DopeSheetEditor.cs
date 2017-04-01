@@ -339,15 +339,15 @@ namespace UnityEditorInternal
 
 		private bool m_Initialized;
 
+		private bool m_SpritePreviewLoading;
+
+		private int m_SpritePreviewCacheSize;
+
 		public Bounds m_Bounds = new Bounds(Vector3.zero, Vector3.zero);
 
 		private DopeSheetEditor.DopeSheetControlPointRenderer m_PointRenderer;
 
 		private DopeSheetEditorRectangleTool m_RectangleTool;
-
-		public bool m_SpritePreviewLoading;
-
-		public int m_SpritePreviewCacheSize;
 
 		public float contentHeight
 		{
@@ -371,35 +371,6 @@ namespace UnityEditorInternal
 			}
 		}
 
-		public Bounds selectionBounds
-		{
-			get
-			{
-				List<AnimationWindowKeyframe> selectedKeys = this.state.selectedKeys;
-				Bounds result;
-				if (selectedKeys.Count > 0)
-				{
-					AnimationWindowKeyframe animationWindowKeyframe = selectedKeys[0];
-					float x = animationWindowKeyframe.time + animationWindowKeyframe.curve.timeOffset;
-					float y = (!animationWindowKeyframe.isPPtrCurve) ? ((float)animationWindowKeyframe.value) : 0f;
-					Bounds bounds = new Bounds(new Vector2(x, y), Vector2.zero);
-					for (int i = 1; i < selectedKeys.Count; i++)
-					{
-						animationWindowKeyframe = selectedKeys[i];
-						x = animationWindowKeyframe.time + animationWindowKeyframe.curve.timeOffset;
-						y = ((!animationWindowKeyframe.isPPtrCurve) ? ((float)animationWindowKeyframe.value) : 0f);
-						bounds.Encapsulate(new Vector2(x, y));
-					}
-					result = bounds;
-				}
-				else
-				{
-					result = new Bounds(Vector2.zero, Vector2.zero);
-				}
-				return result;
-			}
-		}
-
 		public bool isDragging
 		{
 			get
@@ -413,6 +384,14 @@ namespace UnityEditorInternal
 			get
 			{
 				return (!(this.m_Owner != null)) ? 0 : this.m_Owner.GetInstanceID();
+			}
+		}
+
+		public bool spritePreviewLoading
+		{
+			get
+			{
+				return this.m_SpritePreviewLoading;
 			}
 		}
 
@@ -706,10 +685,9 @@ namespace UnityEditorInternal
 				}
 			}
 			AnimationKeyTime time = AnimationKeyTime.Time(this.state.PixelToTime(Event.current.mousePosition.x, AnimationWindowState.SnapMode.SnapToClipFrame), this.state.frameRate);
-			this.state.recording = true;
-			this.state.ResampleAnimation();
+			this.state.StartRecording();
 			string text = "Add Key";
-			if (dopeline.isEditable && list.Count == 0 && this.state.canRecord)
+			if (dopeline.isEditable && list.Count == 0)
 			{
 				genericMenu.AddItem(new GUIContent(text), false, new GenericMenu.MenuFunction2(this.AddKeyToDopeline), new DopeSheetEditor.AddKeyToDopelineContext
 				{
@@ -722,7 +700,7 @@ namespace UnityEditorInternal
 				genericMenu.AddDisabledItem(new GUIContent(text));
 			}
 			text = ((this.state.selectedKeys.Count <= 1) ? "Delete Key" : "Delete Keys");
-			if (dopeline.isEditable && (this.state.selectedKeys.Count > 0 || list.Count > 0) && this.state.canRecord)
+			if (dopeline.isEditable && (this.state.selectedKeys.Count > 0 || list.Count > 0))
 			{
 				genericMenu.AddItem(new GUIContent(text), false, new GenericMenu.MenuFunction2(this.DeleteKeys), (this.state.selectedKeys.Count <= 0) ? list : this.state.selectedKeys);
 			}
@@ -777,7 +755,7 @@ namespace UnityEditorInternal
 						this.m_IsDraggingPlayheadStarted = true;
 						GUIUtility.hotControl = controlID;
 						this.m_DragStartTime = this.state.PixelToTime(Event.current.mousePosition.x);
-						this.state.StartLiveEdit();
+						this.m_RectangleTool.OnStartMove(new Vector2(this.m_DragStartTime, 0f), this.m_RectangleTool.rippleTimeClutch);
 						Event.current.Use();
 					}
 				}
@@ -787,16 +765,11 @@ namespace UnityEditorInternal
 					b = Mathf.Min(current.time, b);
 				}
 				float num = this.state.SnapToFrame(this.state.PixelToTime(Event.current.mousePosition.x), AnimationWindowState.SnapMode.SnapToClipFrame);
-				float deltaTime = num - this.m_DragStartTime;
 				if (this.m_IsDragging)
 				{
 					if (!Mathf.Approximately(num, this.m_DragStartTime))
 					{
-						this.state.MoveSelectedKeys(deltaTime, true);
-						if (this.state.activeKeyframe != null && !this.state.playing && this.state.syncTimeDuringDrag)
-						{
-							this.state.frame = this.state.TimeToFrameFloor(this.state.activeKeyframe.time + this.state.activeKeyframe.curve.timeOffset);
-						}
+						this.m_RectangleTool.OnMove(new Vector2(num, 0f));
 						Event.current.Use();
 					}
 				}
@@ -804,8 +777,7 @@ namespace UnityEditorInternal
 				{
 					if (this.m_IsDragging && GUIUtility.hotControl == controlID)
 					{
-						this.state.MoveSelectedKeys(deltaTime, true);
-						this.state.EndLiveEdit();
+						this.m_RectangleTool.OnEndMove();
 						Event.current.Use();
 						this.m_IsDragging = false;
 					}
@@ -1151,10 +1123,6 @@ namespace UnityEditorInternal
 						}
 						this.state.activeKeyframe = current4;
 						this.m_MousedownOnKeyframe = true;
-						if (!this.state.playing && this.state.syncTimeDuringDrag)
-						{
-							this.state.frame = this.state.TimeToFrameRound(this.state.activeKeyframe.time + this.state.activeKeyframe.curve.timeOffset);
-						}
 						current.Use();
 					}
 				}
@@ -1171,14 +1139,8 @@ namespace UnityEditorInternal
 				{
 					this.HandleDopelineDoubleclick(dopeline);
 				}
-				if (current.button == 1 && !this.state.playing)
+				if (current.button == 1 && !this.state.controlInterface.playing)
 				{
-					float time = this.state.PixelToTime(Event.current.mousePosition.x, AnimationWindowState.SnapMode.SnapToClipFrame);
-					AnimationKeyTime animationKeyTime = AnimationKeyTime.Time(time, this.state.frameRate);
-					if (this.state.syncTimeDuringDrag)
-					{
-						this.state.frame = animationKeyTime.frame;
-					}
 					if (!flag4)
 					{
 						this.state.ClearSelections();
@@ -1195,10 +1157,6 @@ namespace UnityEditorInternal
 			float time = this.state.PixelToTime(Event.current.mousePosition.x, AnimationWindowState.SnapMode.SnapToClipFrame);
 			AnimationKeyTime time2 = AnimationKeyTime.Time(time, this.state.frameRate);
 			AnimationWindowUtility.AddKeyframes(this.state, dopeline.curves.ToArray<AnimationWindowCurve>(), time2);
-			if (!this.state.playing && this.state.syncTimeDuringDrag)
-			{
-				this.state.frame = time2.frame;
-			}
 			Event.current.Use();
 		}
 
@@ -1218,16 +1176,7 @@ namespace UnityEditorInternal
 			{
 				width = dopeline.position.height;
 			}
-			Rect result;
-			if (dopeline.isPptrDopeline && dopeline.tallMode)
-			{
-				result = new Rect(this.state.TimeToPixel(this.state.SnapToFrame(time, AnimationWindowState.SnapMode.SnapToClipFrame)) + this.GetKeyframeOffset(dopeline, keyframe), dopeline.position.yMin, width, dopeline.position.height);
-			}
-			else
-			{
-				result = new Rect(this.state.TimeToPixel(this.state.SnapToFrame(time, AnimationWindowState.SnapMode.SnapToClipFrame)) + this.GetKeyframeOffset(dopeline, keyframe), dopeline.position.yMin, width, dopeline.position.height);
-			}
-			return result;
+			return new Rect(this.state.TimeToPixel(this.state.SnapToFrame(time, AnimationWindowState.SnapMode.SnapToClipFrame)) + this.GetKeyframeOffset(dopeline, keyframe), dopeline.position.yMin, width, dopeline.position.height);
 		}
 
 		private float GetKeyframeOffset(DopeLine dopeline, AnimationWindowKeyframe keyframe)
@@ -1345,8 +1294,8 @@ namespace UnityEditorInternal
 							{
 								animationWindowCurve = animationWindowCurve2;
 							}
-							Sprite[] spriteFromPathsOrObjects = SpriteUtility.GetSpriteFromPathsOrObjects(DragAndDrop.objectReferences, DragAndDrop.paths, Event.current.type);
-							if (animationWindowCurve2.valueType == typeof(Sprite) && spriteFromPathsOrObjects != null && spriteFromPathsOrObjects.Length > 0)
+							List<Sprite> spriteFromPathsOrObjects = SpriteUtility.GetSpriteFromPathsOrObjects(DragAndDrop.objectReferences, DragAndDrop.paths, Event.current.type);
+							if (animationWindowCurve2.valueType == typeof(Sprite) && spriteFromPathsOrObjects.Count > 0)
 							{
 								animationWindowCurve = animationWindowCurve2;
 								type = typeof(Sprite);

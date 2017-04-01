@@ -72,9 +72,9 @@ namespace UnityEditor.VisualStudioIntegration
 			}
 			else
 			{
-				KeyValuePair<VisualStudioVersion, string>[] array = (from kvp in SyncVS.InstalledVisualStudios
-				where Paths.AreEqual(kvp.Value, externalEditor, true)
-				select kvp).ToArray<KeyValuePair<VisualStudioVersion, string>>();
+				KeyValuePair<VisualStudioVersion, VisualStudioPath[]>[] array = (from kvp in SyncVS.InstalledVisualStudios
+				where kvp.Value.Any((VisualStudioPath v) => Paths.AreEqual(v.Path, externalEditor, true))
+				select kvp).ToArray<KeyValuePair<VisualStudioVersion, VisualStudioPath[]>>();
 				if (array.Length > 0)
 				{
 					vsVersion = array[0].Key;
@@ -123,7 +123,7 @@ namespace UnityEditor.VisualStudioIntegration
 				result = true;
 				return result;
 			case 15:
-				vsVersion = VisualStudioVersion.VisualStudio15;
+				vsVersion = VisualStudioVersion.VisualStudio2017;
 				result = true;
 				return result;
 			}
@@ -203,7 +203,7 @@ namespace UnityEditor.VisualStudioIntegration
 				case VisualStudioVersion.VisualStudio2015:
 					vsVersion = "2015";
 					break;
-				case VisualStudioVersion.VisualStudio15:
+				case VisualStudioVersion.VisualStudio2017:
 					vsVersion = "15.0";
 					break;
 				}

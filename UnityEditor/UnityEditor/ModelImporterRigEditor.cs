@@ -56,6 +56,8 @@ namespace UnityEditor
 
 			public GUIContent UpdateReferenceClips = EditorGUIUtility.TextContent("Update reference clips|Click on this button to update all the @convention file referencing this file. Should set all these files to Copy From Other Avatar, set the source Avatar to this one and reimport all these files.");
 
+			public GUIContent ImportMessages = EditorGUIUtility.TextContent("Import Messages");
+
 			public Styles()
 			{
 				this.helpText.normal.background = null;
@@ -106,6 +108,12 @@ namespace UnityEditor
 		private SerializedProperty m_SrcHasExtraRoot;
 
 		private SerializedProperty m_DstHasExtraRoot;
+
+		private SerializedProperty m_RigImportErrors;
+
+		private SerializedProperty m_RigImportWarnings;
+
+		private static bool importMessageFoldout = false;
 
 		private GUIContent[] m_RootMotionBoneList;
 
@@ -198,6 +206,8 @@ namespace UnityEditor
 			this.m_CopyAvatar = base.serializedObject.FindProperty("m_CopyAvatar");
 			this.m_LegacyGenerateAnimations = base.serializedObject.FindProperty("m_LegacyGenerateAnimations");
 			this.m_AnimationCompression = base.serializedObject.FindProperty("m_AnimationCompression");
+			this.m_RigImportErrors = base.serializedObject.FindProperty("m_RigImportErrors");
+			this.m_RigImportWarnings = base.serializedObject.FindProperty("m_RigImportWarnings");
 			this.m_ExposeTransformEditor.OnEnable(this.singleImporter.transformPaths, base.serializedObject);
 			this.m_CanMultiEditTransformList = this.CanMultiEditTransformList();
 			this.CheckIfAvatarCopyIsUpToDate();
@@ -494,6 +504,18 @@ namespace UnityEditor
 			{
 				ModelImporterRigEditor.styles = new ModelImporterRigEditor.Styles();
 			}
+			string stringValue = this.m_RigImportErrors.stringValue;
+			string stringValue2 = this.m_RigImportWarnings.stringValue;
+			if (stringValue.Length > 0)
+			{
+				EditorGUILayout.Space();
+				EditorGUILayout.HelpBox("Error(s) found while importing rig in this animation file. Open \"Import Messages\" foldout below for more details", MessageType.Error);
+			}
+			else if (stringValue2.Length > 0)
+			{
+				EditorGUILayout.Space();
+				EditorGUILayout.HelpBox("Warning(s) found while importing rig in this animation file. Open \"Import Messages\" foldout below for more details", MessageType.Warning);
+			}
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.Popup(this.m_AnimationType, ModelImporterRigEditor.styles.AnimationTypeOpt, ModelImporterRigEditor.styles.AnimationType, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
@@ -547,6 +569,22 @@ namespace UnityEditor
 					using (new EditorGUI.DisabledScope(!this.m_CanMultiEditTransformList))
 					{
 						this.m_ExposeTransformEditor.OnGUI();
+					}
+				}
+			}
+			if (stringValue.Length > 0 || stringValue2.Length > 0)
+			{
+				EditorGUILayout.Space();
+				ModelImporterRigEditor.importMessageFoldout = EditorGUILayout.Foldout(ModelImporterRigEditor.importMessageFoldout, ModelImporterRigEditor.styles.ImportMessages, true);
+				if (ModelImporterRigEditor.importMessageFoldout)
+				{
+					if (stringValue.Length > 0)
+					{
+						EditorGUILayout.HelpBox(stringValue, MessageType.None);
+					}
+					else if (stringValue2.Length > 0)
+					{
+						EditorGUILayout.HelpBox(stringValue2, MessageType.None);
 					}
 				}
 			}
@@ -642,14 +680,14 @@ namespace UnityEditor
 					array2[j].copyAvatar = this.m_CopyAvatar.boolValue;
 				}
 			}
-			base.serializedObject.ApplyModifiedProperties();
+			base.Apply();
 			for (int k = 0; k < base.targets.Length; k++)
 			{
 				if (array[k].usesOwnAvatar && !array2[k].usesOwnAvatar && !array2[k].copyAvatar)
 				{
 					SerializedObject serializedObject2 = new SerializedObject(base.targets[k]);
 					AvatarSetupTool.ClearAll(serializedObject2);
-					serializedObject2.ApplyModifiedProperties();
+					serializedObject2.ApplyModifiedPropertiesWithoutUndo();
 				}
 				if (!this.m_CopyAvatar.boolValue && !array2[k].humanoid && this.rootIndex > 0)
 				{
@@ -668,14 +706,21 @@ namespace UnityEditor
 						this.m_RootMotionBoneRotation.quaternionValue = transform.rotation;
 					}
 					SerializedObject serializedObject3 = new SerializedObject(base.targets[k]);
-					serializedObject3.ApplyModifiedProperties();
+					serializedObject3.ApplyModifiedPropertiesWithoutUndo();
+					if (flag)
+					{
+						UnityEngine.Object.DestroyImmediate(gameObject);
+					}
 				}
 				if (!array[k].usesOwnAvatar && array2[k].usesOwnAvatar)
 				{
 					ModelImporter modelImporter2 = base.targets[k] as ModelImporter;
 					if (array[k].hasNoAnimation)
 					{
+						ModelImporterAnimationType animationType = modelImporter2.animationType;
+						modelImporter2.animationType = ModelImporterAnimationType.Generic;
 						AssetDatabase.ImportAsset(modelImporter2.assetPath);
+						modelImporter2.animationType = animationType;
 					}
 					SerializedObject serializedObject4 = new SerializedObject(base.targets[k]);
 					GameObject gameObject2 = AssetDatabase.LoadMainAssetAtPath(modelImporter2.assetPath) as GameObject;
@@ -692,7 +737,7 @@ namespace UnityEditor
 					{
 						UnityEngine.Object.DestroyImmediate(gameObject2);
 					}
-					serializedObject4.ApplyModifiedProperties();
+					serializedObject4.ApplyModifiedPropertiesWithoutUndo();
 				}
 			}
 		}

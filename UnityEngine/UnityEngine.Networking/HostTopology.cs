@@ -16,10 +16,10 @@ namespace UnityEngine.Networking
 		private List<ConnectionConfig> m_SpecialConnections = new List<ConnectionConfig>();
 
 		[SerializeField]
-		private ushort m_ReceivedMessagePoolSize = 128;
+		private ushort m_ReceivedMessagePoolSize = 1024;
 
 		[SerializeField]
-		private ushort m_SentMessagePoolSize = 128;
+		private ushort m_SentMessagePoolSize = 1024;
 
 		[SerializeField]
 		private float m_MessagePoolSizeGrowthFactor = 0.75f;

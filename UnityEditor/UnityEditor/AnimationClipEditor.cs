@@ -255,7 +255,7 @@ namespace UnityEditor
 		{
 			if (this.m_EventManipulationHandler != null)
 			{
-				this.m_EventManipulationHandler.UpdateEvent(info);
+				this.m_EventManipulationHandler.UpdateEvents(info);
 			}
 		}
 

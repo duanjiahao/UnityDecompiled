@@ -92,7 +92,7 @@ namespace UnityEditor
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (TrailModuleUI.s_Texts == null)
 			{
@@ -107,15 +107,21 @@ namespace UnityEditor
 			ModuleUI.GUIToggle(TrailModuleUI.s_Texts.sizeAffectsWidth, this.m_SizeAffectsWidth, new GUILayoutOption[0]);
 			ModuleUI.GUIToggle(TrailModuleUI.s_Texts.sizeAffectsLifetime, this.m_SizeAffectsLifetime, new GUILayoutOption[0]);
 			ModuleUI.GUIToggle(TrailModuleUI.s_Texts.inheritParticleColor, this.m_InheritParticleColor, new GUILayoutOption[0]);
-			base.GUIMinMaxGradient(TrailModuleUI.s_Texts.colorOverLifetime, this.m_ColorOverLifetime, new GUILayoutOption[0]);
+			base.GUIMinMaxGradient(TrailModuleUI.s_Texts.colorOverLifetime, this.m_ColorOverLifetime, false, new GUILayoutOption[0]);
 			ModuleUI.GUIMinMaxCurve(TrailModuleUI.s_Texts.widthOverTrail, this.m_WidthOverTrail, new GUILayoutOption[0]);
-			base.GUIMinMaxGradient(TrailModuleUI.s_Texts.colorOverTrail, this.m_ColorOverTrail, new GUILayoutOption[0]);
-			if (this.m_ParticleSystemUI.m_ParticleSystem.trails.enabled)
+			base.GUIMinMaxGradient(TrailModuleUI.s_Texts.colorOverTrail, this.m_ColorOverTrail, false, new GUILayoutOption[0]);
+			ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
+			for (int i = 0; i < particleSystems.Length; i++)
 			{
-				ParticleSystemRenderer component = this.m_ParticleSystemUI.m_ParticleSystem.GetComponent<ParticleSystemRenderer>();
-				if (component != null && component.trailMaterial == null)
+				ParticleSystem particleSystem = particleSystems[i];
+				if (particleSystem.trails.enabled)
 				{
-					EditorGUILayout.HelpBox("Assign a Trail Material in the Renderer Module", MessageType.Warning, true);
+					ParticleSystemRenderer component = particleSystem.GetComponent<ParticleSystemRenderer>();
+					if (component != null && component.trailMaterial == null)
+					{
+						EditorGUILayout.HelpBox("Assign a Trail Material in the Renderer Module", MessageType.Warning, true);
+						break;
+					}
 				}
 			}
 		}

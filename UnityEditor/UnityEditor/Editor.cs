@@ -29,6 +29,8 @@ namespace UnityEditor
 
 		private UnityEngine.Object[] m_Targets;
 
+		private UnityEngine.Object m_Context;
+
 		private int m_IsDirty;
 
 		private int m_ReferenceTargetIndex = 0;
@@ -165,6 +167,50 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Editor CreateEditorWithContext(UnityEngine.Object[] targetObjects, UnityEngine.Object context, [DefaultValue("null")] Type editorType);
+
+		[ExcludeFromDocs]
+		public static Editor CreateEditorWithContext(UnityEngine.Object[] targetObjects, UnityEngine.Object context)
+		{
+			Type editorType = null;
+			return Editor.CreateEditorWithContext(targetObjects, context, editorType);
+		}
+
+		public static void CreateCachedEditorWithContext(UnityEngine.Object targetObject, UnityEngine.Object context, Type editorType, ref Editor previousEditor)
+		{
+			Editor.CreateCachedEditorWithContext(new UnityEngine.Object[]
+			{
+				targetObject
+			}, context, editorType, ref previousEditor);
+		}
+
+		public static void CreateCachedEditorWithContext(UnityEngine.Object[] targetObjects, UnityEngine.Object context, Type editorType, ref Editor previousEditor)
+		{
+			if (!(previousEditor != null) || !ArrayUtility.ArrayEquals<UnityEngine.Object>(previousEditor.m_Targets, targetObjects) || !(previousEditor.m_Context == context))
+			{
+				if (previousEditor != null)
+				{
+					UnityEngine.Object.DestroyImmediate(previousEditor);
+				}
+				previousEditor = Editor.CreateEditorWithContext(targetObjects, context, editorType);
+			}
+		}
+
+		public static void CreateCachedEditor(UnityEngine.Object targetObject, Type editorType, ref Editor previousEditor)
+		{
+			Editor.CreateCachedEditorWithContext(new UnityEngine.Object[]
+			{
+				targetObject
+			}, null, editorType, ref previousEditor);
+		}
+
+		public static void CreateCachedEditor(UnityEngine.Object[] targetObjects, Type editorType, ref Editor previousEditor)
+		{
+			Editor.CreateCachedEditorWithContext(targetObjects, null, editorType, ref previousEditor);
+		}
+
 		[ExcludeFromDocs]
 		public static Editor CreateEditor(UnityEngine.Object targetObject)
 		{
@@ -174,14 +220,11 @@ namespace UnityEditor
 
 		public static Editor CreateEditor(UnityEngine.Object targetObject, [DefaultValue("null")] Type editorType)
 		{
-			return Editor.CreateEditor(new UnityEngine.Object[]
+			return Editor.CreateEditorWithContext(new UnityEngine.Object[]
 			{
 				targetObject
-			}, editorType);
+			}, null, editorType);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Editor CreateEditor(UnityEngine.Object[] targetObjects, [DefaultValue("null")] Type editorType);
 
 		[ExcludeFromDocs]
 		public static Editor CreateEditor(UnityEngine.Object[] targetObjects)
@@ -190,35 +233,16 @@ namespace UnityEditor
 			return Editor.CreateEditor(targetObjects, editorType);
 		}
 
-		public static void CreateCachedEditor(UnityEngine.Object targetObject, Type editorType, ref Editor previousEditor)
+		public static Editor CreateEditor(UnityEngine.Object[] targetObjects, [DefaultValue("null")] Type editorType)
 		{
-			if (!(previousEditor != null) || previousEditor.m_Targets.Length != 1 || !(previousEditor.m_Targets[0] == targetObject))
-			{
-				if (previousEditor != null)
-				{
-					UnityEngine.Object.DestroyImmediate(previousEditor);
-				}
-				previousEditor = Editor.CreateEditor(targetObject, editorType);
-			}
-		}
-
-		public static void CreateCachedEditor(UnityEngine.Object[] targetObjects, Type editorType, ref Editor previousEditor)
-		{
-			if (!(previousEditor != null) || !ArrayUtility.ArrayEquals<UnityEngine.Object>(previousEditor.m_Targets, targetObjects))
-			{
-				if (previousEditor != null)
-				{
-					UnityEngine.Object.DestroyImmediate(previousEditor);
-				}
-				previousEditor = Editor.CreateEditor(targetObjects, editorType);
-			}
+			return Editor.CreateEditorWithContext(targetObjects, null, editorType);
 		}
 
 		internal virtual SerializedObject GetSerializedObjectInternal()
 		{
 			if (this.m_SerializedObject == null)
 			{
-				this.m_SerializedObject = new SerializedObject(this.targets);
+				this.m_SerializedObject = new SerializedObject(this.targets, this.m_Context);
 			}
 			return this.m_SerializedObject;
 		}
@@ -267,7 +291,7 @@ namespace UnityEditor
 			{
 				if (this.m_SerializedObject == null)
 				{
-					this.m_SerializedObject = new SerializedObject(this.targets);
+					this.m_SerializedObject = new SerializedObject(this.targets, this.m_Context);
 				}
 				else
 				{
@@ -350,6 +374,11 @@ namespace UnityEditor
 		internal void InternalSetHidden(bool hidden)
 		{
 			this.hideInspector = hidden;
+		}
+
+		internal void InternalSetContextObject(UnityEngine.Object context)
+		{
+			this.m_Context = context;
 		}
 
 		internal virtual bool GetOptimizedGUIBlock(bool isDirty, bool isVisible, out OptimizedGUIBlock block, out float height)
@@ -531,7 +560,7 @@ namespace UnityEditor
 			Vector2 vector = EditorStyles.iconButton.CalcSize(EditorGUI.GUIContents.titleSettingsIcon);
 			float num = vector.x;
 			Rect position = new Rect(r.xMax - num, r.y + 5f, vector.x, vector.y);
-			if (EditorGUI.ButtonMouseDown(position, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.iconButton))
+			if (EditorGUI.DropdownButton(position, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.iconButton))
 			{
 				EditorUtility.DisplayObjectContextMenu(position, this.targets, 0);
 			}
@@ -620,7 +649,7 @@ namespace UnityEditor
 		{
 			if (this.m_SerializedObject == null)
 			{
-				this.m_SerializedObject = new SerializedObject(this.targets);
+				this.m_SerializedObject = new SerializedObject(this.targets, this.m_Context);
 			}
 			else
 			{
@@ -655,7 +684,7 @@ namespace UnityEditor
 			bool result;
 			if (AssetDatabase.IsNativeAsset(assetObject))
 			{
-				if (!AssetDatabase.IsOpenForEdit(assetObject, out message))
+				if (!AssetDatabase.IsOpenForEdit(assetObject, out message, StatusQueryOptions.UseCachedIfPossible))
 				{
 					result = false;
 					return result;
@@ -663,7 +692,7 @@ namespace UnityEditor
 			}
 			else if (AssetDatabase.IsForeignAsset(assetObject))
 			{
-				if (!AssetDatabase.IsMetaFileOpenForEdit(assetObject, out message))
+				if (!AssetDatabase.IsMetaFileOpenForEdit(assetObject, out message, StatusQueryOptions.UseCachedIfPossible))
 				{
 					result = false;
 					return result;

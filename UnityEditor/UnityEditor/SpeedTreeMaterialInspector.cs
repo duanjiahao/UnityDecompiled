@@ -151,6 +151,10 @@ namespace UnityEditor
 						base.ShaderProperty(current4, current4.displayName);
 					}
 				}
+				EditorGUILayout.Space();
+				EditorGUILayout.Space();
+				base.RenderQueueField();
+				base.EnableInstancingField();
 			}
 		}
 

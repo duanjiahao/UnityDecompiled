@@ -14,7 +14,7 @@ namespace UnityEditor
 		{
 			base.showRootItem = false;
 			base.rootIsCollapsable = false;
-			SavedSearchFilters.AddChangeListener(new Action(base.ReloadData));
+			SavedSearchFilters.AddChangeListener(new Action(this.ReloadData));
 		}
 
 		public override bool SetExpanded(int id, bool expand)

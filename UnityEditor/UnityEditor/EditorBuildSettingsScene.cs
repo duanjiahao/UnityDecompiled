@@ -11,6 +11,8 @@ namespace UnityEditor
 
 		private string m_Path;
 
+		private GUID m_GUID;
+
 		public bool enabled
 		{
 			get
@@ -35,14 +37,34 @@ namespace UnityEditor
 			}
 		}
 
-		public EditorBuildSettingsScene(string path, bool enable)
+		public GUID guid
 		{
-			this.m_Path = path.Replace("\\", "/");
-			this.enabled = enable;
+			get
+			{
+				return this.m_GUID;
+			}
+			set
+			{
+				this.m_GUID = value;
+			}
 		}
 
 		public EditorBuildSettingsScene()
 		{
+		}
+
+		public EditorBuildSettingsScene(string path, bool enable)
+		{
+			this.m_Path = path.Replace("\\", "/");
+			this.enabled = enable;
+			GUID.TryParse(AssetDatabase.AssetPathToGUID(path), out this.m_GUID);
+		}
+
+		public EditorBuildSettingsScene(GUID guid, bool enable)
+		{
+			this.m_GUID = guid;
+			this.enabled = enable;
+			this.m_Path = AssetDatabase.GUIDToAssetPath(guid.ToString());
 		}
 
 		public int CompareTo(object obj)

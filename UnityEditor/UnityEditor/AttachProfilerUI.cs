@@ -164,7 +164,7 @@ namespace UnityEditor
 
 		public void OnGUI(Rect connectRect, GUIContent profilerLabel)
 		{
-			if (EditorGUI.ButtonMouseDown(connectRect, profilerLabel, FocusType.Passive, EditorStyles.toolbarDropDown))
+			if (EditorGUI.DropdownButton(connectRect, profilerLabel, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
 				List<ProfilerChoise> list = new List<ProfilerChoise>();
 				list.Clear();

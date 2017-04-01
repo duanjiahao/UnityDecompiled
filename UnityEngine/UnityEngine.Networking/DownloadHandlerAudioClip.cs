@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Networking
 {
@@ -9,14 +10,20 @@ namespace UnityEngine.Networking
 	{
 		public extern AudioClip audioClip
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
+		[RequiredByNativeCode]
 		public DownloadHandlerAudioClip(string url, AudioType audioType)
 		{
-			base.InternalCreateAudioClip(url, audioType);
+			this.InternalCreateAudioClip(url, audioType);
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void InternalCreateAudioClip(string url, AudioType audioType);
 
 		protected override byte[] GetData()
 		{
@@ -28,6 +35,7 @@ namespace UnityEngine.Networking
 			throw new NotSupportedException("String access is not supported for audio clips");
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern byte[] InternalGetData();
 

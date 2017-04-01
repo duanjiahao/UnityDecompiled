@@ -69,6 +69,8 @@ namespace UnityEditor
 
 		private int m_NumSteps;
 
+		private bool m_HDR;
+
 		public Gradient target
 		{
 			get
@@ -77,10 +79,11 @@ namespace UnityEditor
 			}
 		}
 
-		public void Init(Gradient gradient, int numSteps)
+		public void Init(Gradient gradient, int numSteps, bool hdr)
 		{
 			this.m_Gradient = gradient;
 			this.m_NumSteps = numSteps;
+			this.m_HDR = hdr;
 			this.BuildArrays();
 			if (this.m_RGBSwatches.Count > 0)
 			{
@@ -128,17 +131,23 @@ namespace UnityEditor
 			}
 		}
 
-		public static void DrawGradientWithBackground(Rect position, Texture2D gradientTexture)
+		public static void DrawGradientWithBackground(Rect position, Gradient gradient)
 		{
+			Texture2D gradientPreview = GradientPreviewCache.GetGradientPreview(gradient);
 			Rect position2 = new Rect(position.x + 1f, position.y + 1f, position.width - 2f, position.height - 2f);
 			Texture2D backgroundTexture = GradientEditor.GetBackgroundTexture();
 			Rect texCoords = new Rect(0f, 0f, position2.width / (float)backgroundTexture.width, position2.height / (float)backgroundTexture.height);
 			GUI.DrawTextureWithTexCoords(position2, backgroundTexture, texCoords, false);
-			if (gradientTexture != null)
+			if (gradientPreview != null)
 			{
-				GUI.DrawTexture(position2, gradientTexture, ScaleMode.StretchToFill, true);
+				GUI.DrawTexture(position2, gradientPreview, ScaleMode.StretchToFill, true);
 			}
 			GUI.Label(position, GUIContent.none, EditorStyles.colorPickerBox);
+			float maxColorComponent = GradientEditor.GetMaxColorComponent(gradient);
+			if (maxColorComponent > 1f)
+			{
+				GUI.Label(new Rect(position.x, position.y, position.width - 3f, position.height), "HDR", EditorStyles.centeredGreyMiniLabel);
+			}
 		}
 
 		public void OnGUI(Rect position)
@@ -164,7 +173,7 @@ namespace UnityEditor
 			if (Event.current.type == EventType.Repaint)
 			{
 				position.height = num4;
-				GradientEditor.DrawGradientWithBackground(position, GradientPreviewCache.GetGradientPreview(this.m_Gradient));
+				GradientEditor.DrawGradientWithBackground(position, this.m_Gradient);
 			}
 			position.y += num4;
 			position.height = num2;
@@ -200,7 +209,7 @@ namespace UnityEditor
 				else
 				{
 					EditorGUI.BeginChangeCheck();
-					this.m_SelectedSwatch.m_Value = EditorGUI.ColorField(position2, GradientEditor.s_Styles.colorText, this.m_SelectedSwatch.m_Value, true, false);
+					this.m_SelectedSwatch.m_Value = EditorGUI.ColorField(position2, GradientEditor.s_Styles.colorText, this.m_SelectedSwatch.m_Value, true, false, this.m_HDR, ColorPicker.defaultHDRConfig);
 					if (EditorGUI.EndChangeCheck())
 					{
 						this.AssignBack();
@@ -249,7 +258,7 @@ namespace UnityEditor
 						if (current.clickCount == 2)
 						{
 							GUIUtility.keyboardControl = controlID;
-							ColorPicker.Show(GUIView.current, this.m_SelectedSwatch.m_Value, false, false, null);
+							ColorPicker.Show(GUIView.current, this.m_SelectedSwatch.m_Value, false, this.m_HDR, ColorPicker.defaultHDRConfig);
 							GUIUtility.ExitGUI();
 						}
 					}
@@ -545,34 +554,67 @@ namespace UnityEditor
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				Texture2D backgroundTexture = GradientEditor.GetBackgroundTexture();
-				if (backgroundTexture != null)
+				if (EditorGUI.showMixedValue)
 				{
 					Color color = GUI.color;
-					GUI.color = bgColor;
-					GUIStyle basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(backgroundTexture);
-					basicTextureStyle.Draw(position, false, false, false, false);
+					float a = (float)((!GUI.enabled) ? 2 : 1);
+					GUI.color = new Color(0.82f, 0.82f, 0.82f, a) * bgColor;
+					GUIStyle whiteTextureStyle = EditorGUIUtility.whiteTextureStyle;
+					whiteTextureStyle.Draw(position, false, false, false, false);
+					EditorGUI.BeginHandleMixedValueContentColor();
+					whiteTextureStyle.Draw(position, EditorGUI.mixedValueContent, false, false, false, false);
+					EditorGUI.EndHandleMixedValueContentColor();
 					GUI.color = color;
 				}
-				Texture2D texture2D;
-				if (property != null)
-				{
-					texture2D = GradientPreviewCache.GetPropertyPreview(property);
-				}
 				else
 				{
-					texture2D = GradientPreviewCache.GetGradientPreview(gradient);
-				}
-				if (texture2D == null)
-				{
-					Debug.Log("Warning: Could not create preview for gradient");
-				}
-				else
-				{
-					GUIStyle basicTextureStyle2 = EditorGUIUtility.GetBasicTextureStyle(texture2D);
-					basicTextureStyle2.Draw(position, false, false, false, false);
+					Texture2D backgroundTexture = GradientEditor.GetBackgroundTexture();
+					if (backgroundTexture != null)
+					{
+						Color color2 = GUI.color;
+						GUI.color = bgColor;
+						GUIStyle basicTextureStyle = EditorGUIUtility.GetBasicTextureStyle(backgroundTexture);
+						basicTextureStyle.Draw(position, false, false, false, false);
+						GUI.color = color2;
+					}
+					Texture2D texture2D;
+					float maxColorComponent;
+					if (property != null)
+					{
+						texture2D = GradientPreviewCache.GetPropertyPreview(property);
+						maxColorComponent = GradientEditor.GetMaxColorComponent(property.gradientValue);
+					}
+					else
+					{
+						texture2D = GradientPreviewCache.GetGradientPreview(gradient);
+						maxColorComponent = GradientEditor.GetMaxColorComponent(gradient);
+					}
+					if (texture2D == null)
+					{
+						Debug.Log("Warning: Could not create preview for gradient");
+					}
+					else
+					{
+						GUIStyle basicTextureStyle2 = EditorGUIUtility.GetBasicTextureStyle(texture2D);
+						basicTextureStyle2.Draw(position, false, false, false, false);
+						if (maxColorComponent > 1f)
+						{
+							GUI.Label(new Rect(position.x, position.y - 1f, position.width - 3f, position.height + 2f), "HDR", EditorStyles.centeredGreyMiniLabel);
+						}
+					}
 				}
 			}
+		}
+
+		private static float GetMaxColorComponent(Gradient gradient)
+		{
+			float num = 0f;
+			GradientColorKey[] colorKeys = gradient.colorKeys;
+			for (int i = 0; i < colorKeys.Length; i++)
+			{
+				num = Mathf.Max(num, colorKeys[i].color.maxColorComponent);
+			}
+			return num;
 		}
 	}
 }

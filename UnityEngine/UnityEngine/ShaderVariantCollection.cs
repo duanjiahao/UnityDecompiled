@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -22,24 +23,28 @@ namespace UnityEngine
 				ShaderVariantCollection.ShaderVariant.Internal_CheckVariant(shader, passType, keywords);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void Internal_CheckVariant(Shader shader, PassType passType, string[] keywords);
 		}
 
 		public extern int shaderCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int variantCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isWarmedUp
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -49,6 +54,7 @@ namespace UnityEngine
 			ShaderVariantCollection.Internal_Create(this);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] ShaderVariantCollection mono);
 
@@ -57,6 +63,7 @@ namespace UnityEngine
 			return this.AddInternal(variant.shader, variant.passType, variant.keywords);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool AddInternal(Shader shader, PassType passType, string[] keywords);
 
@@ -65,6 +72,7 @@ namespace UnityEngine
 			return this.RemoveInternal(variant.shader, variant.passType, variant.keywords);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool RemoveInternal(Shader shader, PassType passType, string[] keywords);
 
@@ -73,12 +81,15 @@ namespace UnityEngine
 			return this.ContainsInternal(variant.shader, variant.passType, variant.keywords);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool ContainsInternal(Shader shader, PassType passType, string[] keywords);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void WarmUp();
 	}

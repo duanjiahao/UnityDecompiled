@@ -220,19 +220,23 @@ namespace UnityEditor
 				{
 					if (GUILayout.Button(LookDevSettingsWindow.styles.sSaveCurrentLibrary, LookDevSettingsWindow.styles.sMenuItem, new GUILayoutOption[0]))
 					{
+						base.editorWindow.Close();
 						if (this.m_LookDevView.SaveLookDevLibrary())
 						{
 							this.m_LookDevView.envLibrary.dirty = false;
 						}
+						GUIUtility.ExitGUI();
 					}
 				}
 				if (GUILayout.Button(LookDevSettingsWindow.styles.sCreateNewLibrary, LookDevSettingsWindow.styles.sMenuItem, new GUILayoutOption[0]))
 				{
+					base.editorWindow.Close();
 					string text = EditorUtility.SaveFilePanelInProject("Save New Environment Library", "New Env Library", "asset", "");
 					if (!string.IsNullOrEmpty(text))
 					{
 						this.m_LookDevView.CreateNewLibrary(text);
 					}
+					GUIUtility.ExitGUI();
 				}
 				EditorGUI.BeginChangeCheck();
 				LookDevEnvironmentLibrary envLibrary = EditorGUILayout.ObjectField(this.m_LookDevView.userEnvLibrary, typeof(LookDevEnvironmentLibrary), false, new GUILayoutOption[0]) as LookDevEnvironmentLibrary;

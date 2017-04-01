@@ -21,8 +21,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_Center;
 
-		private SerializedProperty m_Direction;
-
 		private int m_HandleControlID;
 
 		[CompilerGenerated]

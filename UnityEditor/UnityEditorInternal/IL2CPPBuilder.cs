@@ -119,7 +119,7 @@ namespace UnityEditorInternal
 			return Path.Combine(tempFolder, "il2cppOutput");
 		}
 
-		private static string GetMapFileParserPath()
+		public static string GetMapFileParserPath()
 		{
 			return Path.GetFullPath(Path.Combine(EditorApplication.applicationContentsPath, (Application.platform != RuntimePlatform.WindowsEditor) ? "Tools/MapFileParser/MapFileParser" : "Tools\\MapFileParser\\MapFileParser.exe"));
 		}
@@ -128,8 +128,6 @@ namespace UnityEditorInternal
 		{
 			if (userAssemblies.Count != 0)
 			{
-				string[] array = (from s in Directory.GetFiles("Assets", "il2cpp_extra_types.txt", SearchOption.AllDirectories)
-				select Path.Combine(Directory.GetCurrentDirectory(), s)).ToArray<string>();
 				List<string> list = new List<string>();
 				list.Add("--convert-to-cpp");
 				if (this.m_PlatformProvider.emitNullChecks)
@@ -148,13 +146,14 @@ namespace UnityEditorInternal
 				{
 					list.Add("--enable-divide-by-zero-check");
 				}
-				if (this.m_PlatformProvider.loadSymbols)
-				{
-					list.Add("--enable-symbol-loading");
-				}
 				if (this.m_PlatformProvider.developmentMode)
 				{
 					list.Add("--development-mode");
+				}
+				BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(this.m_PlatformProvider.target);
+				if (PlayerSettings.GetApiCompatibilityLevel(buildTargetGroup) == ApiCompatibilityLevel.NET_4_6)
+				{
+					list.Add("--dotnetprofile=\"net45\"");
 				}
 				Il2CppNativeCodeBuilder il2CppNativeCodeBuilder = this.m_PlatformProvider.CreateIl2CppNativeCodeBuilder();
 				if (il2CppNativeCodeBuilder != null)
@@ -163,35 +162,26 @@ namespace UnityEditorInternal
 					list.AddRange(Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths, this.m_DebugBuild));
 				}
 				list.Add(string.Format("--map-file-parser=\"{0}\"", IL2CPPBuilder.GetMapFileParserPath()));
-				if (array.Length > 0)
+				string text = PlayerSettings.GetAdditionalIl2CppArgs();
+				if (!string.IsNullOrEmpty(text))
 				{
-					string[] array2 = array;
-					for (int i = 0; i < array2.Length; i++)
-					{
-						string arg2 = array2[i];
-						list.Add(string.Format("--extra-types.file=\"{0}\"", arg2));
-					}
+					list.Add(text);
 				}
-				string text = Path.Combine(this.m_PlatformProvider.il2CppFolder, "il2cpp_default_extra_types.txt");
-				if (File.Exists(text))
+				text = Environment.GetEnvironmentVariable("IL2CPP_ADDITIONAL_ARGS");
+				if (!string.IsNullOrEmpty(text))
 				{
-					list.Add(string.Format("--extra-types.file=\"{0}\"", text));
-				}
-				string text2 = PlayerSettings.GetAdditionalIl2CppArgs();
-				if (!string.IsNullOrEmpty(text2))
-				{
-					list.Add(text2);
-				}
-				text2 = Environment.GetEnvironmentVariable("IL2CPP_ADDITIONAL_ARGS");
-				if (!string.IsNullOrEmpty(text2))
-				{
-					list.Add(text2);
+					list.Add(text);
 				}
 				List<string> source = new List<string>(userAssemblies);
 				list.AddRange(from arg in source
 				select "--assembly=\"" + Path.GetFullPath(arg) + "\"");
 				list.Add(string.Format("--generatedcppdir=\"{0}\"", Path.GetFullPath(outputDirectory)));
-				if (EditorUtility.DisplayCancelableProgressBar("Building Player", "Converting managed assemblies to C++", 0.3f))
+				string info = "Converting managed assemblies to C++";
+				if (il2CppNativeCodeBuilder != null)
+				{
+					info = "Building native binary with IL2CPP...";
+				}
+				if (EditorUtility.DisplayCancelableProgressBar("Building Player", info, 0.3f))
 				{
 					throw new OperationCanceledException();
 				}

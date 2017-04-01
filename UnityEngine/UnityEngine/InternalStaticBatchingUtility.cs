@@ -231,8 +231,8 @@ namespace UnityEngine
 				{
 					text = text + " " + (batchIndex + 1);
 				}
-				Mesh mesh = StaticBatchingUtility.InternalCombineVertices(list.ToArray(), text);
-				StaticBatchingUtility.InternalCombineIndices(list2.ToArray(), mesh);
+				Mesh mesh = StaticBatchingHelper.InternalCombineVertices(list.ToArray(), text);
+				StaticBatchingHelper.InternalCombineIndices(list2.ToArray(), mesh);
 				int num = 0;
 				foreach (MeshSubsetCombineUtility.MeshContainer current2 in meshes)
 				{

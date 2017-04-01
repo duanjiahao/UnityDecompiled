@@ -13,12 +13,14 @@ namespace UnityEngine
 	{
 		public extern Transform transform
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern GameObject gameObject
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -194,6 +196,7 @@ namespace UnityEngine
 			return this.gameObject.GetComponent(type);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void GetComponentFastPath(Type type, IntPtr oneFurtherThanResultValue);
 
@@ -205,6 +208,7 @@ namespace UnityEngine
 			return castHelper.t;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Component GetComponent(string type);
 
@@ -307,6 +311,7 @@ namespace UnityEngine
 			return this.gameObject.GetComponents(type);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void GetComponentsForListInternal(Type searchType, object resultList);
 
@@ -325,9 +330,11 @@ namespace UnityEngine
 			return this.gameObject.GetComponents<T>();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool CompareTag(string tag);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SendMessageUpwards(string methodName, [DefaultValue("null")] object value, [DefaultValue("SendMessageOptions.RequireReceiver")] SendMessageOptions options);
 
@@ -351,6 +358,7 @@ namespace UnityEngine
 			this.SendMessageUpwards(methodName, null, options);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SendMessage(string methodName, [DefaultValue("null")] object value, [DefaultValue("SendMessageOptions.RequireReceiver")] SendMessageOptions options);
 
@@ -374,6 +382,7 @@ namespace UnityEngine
 			this.SendMessage(methodName, null, options);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void BroadcastMessage(string methodName, [DefaultValue("null")] object parameter, [DefaultValue("SendMessageOptions.RequireReceiver")] SendMessageOptions options);
 

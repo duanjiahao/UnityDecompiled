@@ -822,7 +822,7 @@ namespace UnityEngine.UI
 			this.SetNormalizedPosition(value, 1);
 		}
 
-		private void SetNormalizedPosition(float value, int axis)
+		protected virtual void SetNormalizedPosition(float value, int axis)
 		{
 			this.EnsureLayoutHasRebuilt();
 			this.UpdateBounds();
@@ -964,13 +964,44 @@ namespace UnityEngine.UI
 				Vector3 size = this.m_ContentBounds.size;
 				Vector3 center = this.m_ContentBounds.center;
 				Vector2 pivot = this.m_Content.pivot;
-				ScrollRect.InternalUpdateBounds(ref this.m_ViewBounds, ref pivot, ref size, ref center);
+				ScrollRect.AdjustBounds(ref this.m_ViewBounds, ref pivot, ref size, ref center);
 				this.m_ContentBounds.size = size;
 				this.m_ContentBounds.center = center;
+				if (this.movementType == ScrollRect.MovementType.Clamped)
+				{
+					Vector3 zero = Vector3.zero;
+					if (this.m_ViewBounds.max.x > this.m_ContentBounds.max.x)
+					{
+						zero.x = Math.Min(this.m_ViewBounds.min.x - this.m_ContentBounds.min.x, this.m_ViewBounds.max.x - this.m_ContentBounds.max.x);
+					}
+					else if (this.m_ViewBounds.min.x < this.m_ContentBounds.min.x)
+					{
+						zero.x = Math.Max(this.m_ViewBounds.min.x - this.m_ContentBounds.min.x, this.m_ViewBounds.max.x - this.m_ContentBounds.max.x);
+					}
+					if (this.m_ViewBounds.min.y < this.m_ContentBounds.min.y)
+					{
+						zero.y = Math.Max(this.m_ViewBounds.min.y - this.m_ContentBounds.min.y, this.m_ViewBounds.max.y - this.m_ContentBounds.max.y);
+					}
+					else if (this.m_ViewBounds.max.y > this.m_ContentBounds.max.y)
+					{
+						zero.y = Math.Min(this.m_ViewBounds.min.y - this.m_ContentBounds.min.y, this.m_ViewBounds.max.y - this.m_ContentBounds.max.y);
+					}
+					if (zero != Vector3.zero)
+					{
+						this.m_Content.Translate(zero);
+						this.m_ContentBounds = this.GetBounds();
+						size = this.m_ContentBounds.size;
+						center = this.m_ContentBounds.center;
+						pivot = this.m_Content.pivot;
+						ScrollRect.AdjustBounds(ref this.m_ViewBounds, ref pivot, ref size, ref center);
+						this.m_ContentBounds.size = size;
+						this.m_ContentBounds.center = center;
+					}
+				}
 			}
 		}
 
-		internal static void InternalUpdateBounds(ref Bounds viewBounds, ref Vector2 contentPivot, ref Vector3 contentSize, ref Vector3 contentPos)
+		internal static void AdjustBounds(ref Bounds viewBounds, ref Vector2 contentPivot, ref Vector3 contentSize, ref Vector3 contentPos)
 		{
 			Vector3 vector = viewBounds.size - contentSize;
 			if (vector.x > 0f)

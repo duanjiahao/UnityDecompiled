@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -118,7 +117,7 @@ namespace UnityEditor
 		{
 			if (gradient != null)
 			{
-				GradientEditor.DrawGradientWithBackground(rect, GradientPreviewCache.GetGradientPreview(gradient));
+				GradientEditor.DrawGradientWithBackground(rect, gradient);
 			}
 		}
 

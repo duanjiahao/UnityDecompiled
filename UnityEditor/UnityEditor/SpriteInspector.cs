@@ -198,7 +198,7 @@ namespace UnityEditor
 				RenderTexture.active = temporary;
 				GL.sRGBWrite = (QualitySettings.activeColorSpace == ColorSpace.Linear);
 				GL.Clear(true, true, new Color(0f, 0f, 0f, 0f));
-				Texture texture = null;
+				Texture value = null;
 				Vector4 vector = new Vector4(0f, 0f, 0f, 0f);
 				bool flag = false;
 				bool flag2 = false;
@@ -212,7 +212,7 @@ namespace UnityEditor
 				{
 					if (flag)
 					{
-						texture = spriteRendererMaterial.GetTexture("_MainTex");
+						value = spriteRendererMaterial.GetTexture("_MainTex");
 						spriteRendererMaterial.SetTexture("_MainTex", spriteTexture);
 					}
 					if (flag2)
@@ -254,7 +254,7 @@ namespace UnityEditor
 				{
 					if (flag)
 					{
-						spriteRendererMaterial.SetTexture("_MainTex", texture);
+						spriteRendererMaterial.SetTexture("_MainTex", value);
 					}
 					if (flag2)
 					{

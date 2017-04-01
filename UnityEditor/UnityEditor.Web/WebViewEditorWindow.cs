@@ -146,6 +146,7 @@ namespace UnityEditor.Web
 				}
 				if (Event.current.type == EventType.Repaint)
 				{
+					this.webView.SetHostView(this.m_Parent);
 					this.webView.SetSizeAndPosition((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 				}
 			}

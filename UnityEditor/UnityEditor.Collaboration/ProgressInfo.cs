@@ -14,6 +14,8 @@ namespace UnityEditor.Collaboration
 			Both
 		}
 
+		private int m_JobId;
+
 		private string m_Title;
 
 		private string m_ExtraInfo;
@@ -35,6 +37,14 @@ namespace UnityEditor.Collaboration
 		private string m_LastErrorString;
 
 		private ulong m_LastError;
+
+		public int jobId
+		{
+			get
+			{
+				return this.m_JobId;
+			}
+		}
 
 		public string title
 		{

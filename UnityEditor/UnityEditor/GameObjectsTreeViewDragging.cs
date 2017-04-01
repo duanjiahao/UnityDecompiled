@@ -13,20 +13,8 @@ namespace UnityEditor
 	{
 		private const string kSceneHeaderDragString = "SceneHeaderList";
 
-		public bool allowDragBetween
-		{
-			get;
-			set;
-		}
-
 		public GameObjectsTreeViewDragging(TreeViewController treeView) : base(treeView)
 		{
-			this.allowDragBetween = true;
-		}
-
-		public override bool CanStartDrag(TreeViewItem targetItem, List<int> draggedItemIDs, Vector2 mouseDownPosition)
-		{
-			return string.IsNullOrEmpty(((GameObjectTreeViewDataSource)this.m_TreeView.data).searchString);
 		}
 
 		public override void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs)
@@ -93,35 +81,42 @@ namespace UnityEditor
 			{
 				result = dragAndDropVisualMode;
 			}
-			else if (parentItem == null || targetItem == null)
-			{
-				result = InternalEditorUtility.HierarchyWindowDrag(null, perform, InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
-			}
 			else
 			{
-				HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
-				if (this.allowDragBetween)
+				InternalEditorUtility.HierarchyDropMode hierarchyDropMode = InternalEditorUtility.HierarchyDropMode.kHierarchyDragNormal;
+				bool flag = !string.IsNullOrEmpty(((GameObjectTreeViewDataSource)this.m_TreeView.data).searchString);
+				if (flag)
 				{
+					hierarchyDropMode |= InternalEditorUtility.HierarchyDropMode.kHierarchySearchActive;
+				}
+				if (parentItem == null || targetItem == null)
+				{
+					hierarchyDropMode |= InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon;
+					result = InternalEditorUtility.HierarchyWindowDrag(null, perform, hierarchyDropMode);
+				}
+				else
+				{
+					HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
 					if (!hierarchyProperty.Find(targetItem.id, null))
 					{
 						hierarchyProperty = null;
 					}
+					bool flag2 = dropPos == TreeViewDragging.DropPosition.Upon;
+					if (flag && !flag2)
+					{
+						result = DragAndDropVisualMode.None;
+					}
+					else
+					{
+						hierarchyDropMode |= ((!flag2) ? InternalEditorUtility.HierarchyDropMode.kHierarchyDropBetween : InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
+						bool flag3 = parentItem != null && targetItem != parentItem && dropPos == TreeViewDragging.DropPosition.Above && parentItem.children[0] == targetItem;
+						if (flag3)
+						{
+							hierarchyDropMode |= InternalEditorUtility.HierarchyDropMode.kHierarchyDropAfterParent;
+						}
+						result = InternalEditorUtility.HierarchyWindowDrag(hierarchyProperty, perform, hierarchyDropMode);
+					}
 				}
-				else if (!hierarchyProperty.Find(parentItem.id, null))
-				{
-					hierarchyProperty = null;
-				}
-				InternalEditorUtility.HierarchyDropMode hierarchyDropMode = InternalEditorUtility.HierarchyDropMode.kHierarchyDragNormal;
-				if (this.allowDragBetween)
-				{
-					hierarchyDropMode = ((dropPos != TreeViewDragging.DropPosition.Upon) ? InternalEditorUtility.HierarchyDropMode.kHierarchyDropBetween : InternalEditorUtility.HierarchyDropMode.kHierarchyDropUpon);
-				}
-				bool flag = parentItem != null && targetItem != parentItem && dropPos == TreeViewDragging.DropPosition.Above && parentItem.children[0] == targetItem;
-				if (flag)
-				{
-					hierarchyDropMode |= InternalEditorUtility.HierarchyDropMode.kHierarchyDropAfterParent;
-				}
-				result = InternalEditorUtility.HierarchyWindowDrag(hierarchyProperty, perform, hierarchyDropMode);
 			}
 			return result;
 		}

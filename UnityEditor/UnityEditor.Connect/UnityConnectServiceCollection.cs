@@ -84,8 +84,11 @@ namespace UnityEditor.Connect
 				string actualServiceName = this.GetActualServiceName(this.m_CurrentServiceName, state);
 				if (actualServiceName != this.m_CurrentServiceName || (UnityConnectServiceCollection.s_UnityConnectEditorWindow != null && this.m_Services[actualServiceName].serviceUrl != UnityConnectServiceCollection.s_UnityConnectEditorWindow.currentUrl))
 				{
-					bool forceFocus = UnityConnectServiceCollection.s_UnityConnectEditorWindow && UnityConnectServiceCollection.s_UnityConnectEditorWindow.webView && UnityConnectServiceCollection.s_UnityConnectEditorWindow.webView.HasApplicationFocus();
-					this.ShowService(actualServiceName, forceFocus);
+					bool flag = UnityConnectServiceCollection.s_UnityConnectEditorWindow && UnityConnectServiceCollection.s_UnityConnectEditorWindow.webView && UnityConnectServiceCollection.s_UnityConnectEditorWindow.webView.HasApplicationFocus();
+					if (flag)
+					{
+						this.ShowService(actualServiceName, flag);
+					}
 				}
 			}
 		}
@@ -93,6 +96,10 @@ namespace UnityEditor.Connect
 		private void Init()
 		{
 			JSProxyMgr.GetInstance().AddGlobalObject("UnityConnectEditor", this);
+			if (Application.HasARGV("createProject"))
+			{
+				this.ShowService("Hub", true);
+			}
 		}
 
 		private void EnsureDrawerIsVisible(bool forceFocus)

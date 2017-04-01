@@ -15,7 +15,11 @@ namespace UnityEditor
 		public static bool ArrayEquals<T>(T[] lhs, T[] rhs)
 		{
 			bool result;
-			if (lhs.Length != rhs.Length)
+			if (lhs == null || rhs == null)
+			{
+				result = (lhs == rhs);
+			}
+			else if (lhs.Length != rhs.Length)
 			{
 				result = false;
 			}
@@ -24,6 +28,32 @@ namespace UnityEditor
 				for (int i = 0; i < lhs.Length; i++)
 				{
 					if (!lhs[i].Equals(rhs[i]))
+					{
+						result = false;
+						return result;
+					}
+				}
+				result = true;
+			}
+			return result;
+		}
+
+		public static bool ArrayReferenceEquals<T>(T[] lhs, T[] rhs)
+		{
+			bool result;
+			if (lhs == null || rhs == null)
+			{
+				result = (lhs == rhs);
+			}
+			else if (lhs.Length != rhs.Length)
+			{
+				result = false;
+			}
+			else
+			{
+				for (int i = 0; i < lhs.Length; i++)
+				{
+					if (!object.ReferenceEquals(lhs[i], rhs[i]))
 					{
 						result = false;
 						return result;

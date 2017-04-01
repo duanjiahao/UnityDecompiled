@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -15,7 +16,7 @@ namespace UnityEngine
 			}
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void WriteStringToUnityLog(string s);
 

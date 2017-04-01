@@ -9,6 +9,7 @@ namespace UnityEditorInternal
 		Rendering,
 		Memory,
 		Audio,
+		Video,
 		Physics,
 		Physics2D,
 		NetworkMessages,

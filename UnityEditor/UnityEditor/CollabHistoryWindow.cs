@@ -1,6 +1,5 @@
 using System;
 using UnityEditor.Collaboration;
-using UnityEditor.Connect;
 using UnityEditor.Web;
 using UnityEngine;
 
@@ -27,7 +26,7 @@ namespace UnityEditor
 		[MenuItem("Window/Collab History", true)]
 		public static bool ValidateShowHistoryWindow()
 		{
-			return UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted && CollabAccess.Instance.IsServiceEnabled();
+			return CollabAccess.Instance.IsServiceEnabled();
 		}
 
 		public void OnReceiveTitle(string title)
@@ -42,25 +41,22 @@ namespace UnityEditor
 
 		public override void OnEnable()
 		{
-			Collab.instance.StateChanged += new UnityEditor.Collaboration.StateChangedDelegate(this.OnCollabStateChanged);
+			Collab.instance.StateChanged += new StateChangedDelegate(this.OnCollabStateChanged);
 			base.initialOpenUrl = "file:///" + EditorApplication.userJavascriptPackagesPath + "unityeditor-collab-history/dist/index.html";
 			base.OnEnable();
 		}
 
 		public new void OnDestroy()
 		{
-			Collab.instance.StateChanged -= new UnityEditor.Collaboration.StateChangedDelegate(this.OnCollabStateChanged);
+			Collab.instance.StateChanged -= new StateChangedDelegate(this.OnCollabStateChanged);
 			base.OnDestroy();
 		}
 
 		public void OnCollabStateChanged(CollabInfo info)
 		{
-			if (Collab.instance.WasWhitelistedRequestSent())
+			if (!CollabAccess.Instance.IsServiceEnabled())
 			{
-				if (!info.whitelisted || !CollabAccess.Instance.IsServiceEnabled())
-				{
-					CollabHistoryWindow.CloseHistoryWindows();
-				}
+				CollabHistoryWindow.CloseHistoryWindows();
 			}
 		}
 

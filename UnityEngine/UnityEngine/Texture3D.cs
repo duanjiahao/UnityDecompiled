@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -8,12 +9,14 @@ namespace UnityEngine
 	{
 		public extern int depth
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern TextureFormat format
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -23,6 +26,7 @@ namespace UnityEngine
 			Texture3D.Internal_Create(this, width, height, depth, format, mipmap);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Color[] GetPixels([DefaultValue("0")] int miplevel);
 
@@ -33,6 +37,7 @@ namespace UnityEngine
 			return this.GetPixels(miplevel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Color32[] GetPixels32([DefaultValue("0")] int miplevel);
 
@@ -43,6 +48,7 @@ namespace UnityEngine
 			return this.GetPixels32(miplevel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPixels(Color[] colors, [DefaultValue("0")] int miplevel);
 
@@ -53,6 +59,7 @@ namespace UnityEngine
 			this.SetPixels(colors, miplevel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPixels32(Color32[] colors, [DefaultValue("0")] int miplevel);
 
@@ -63,6 +70,7 @@ namespace UnityEngine
 			this.SetPixels32(colors, miplevel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Apply([DefaultValue("true")] bool updateMipmaps, [DefaultValue("false")] bool makeNoLongerReadable);
 
@@ -81,6 +89,7 @@ namespace UnityEngine
 			this.Apply(updateMipmaps, makeNoLongerReadable);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] Texture3D mono, int width, int height, int depth, TextureFormat format, bool mipmap);
 	}

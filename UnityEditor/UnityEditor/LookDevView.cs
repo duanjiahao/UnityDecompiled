@@ -309,7 +309,7 @@ namespace UnityEditor
 				{
 					Debug.LogWarning("Look Dev switched rendering mode to deferred shading for display.");
 				}
-				if (!Camera.main.hdr)
+				if (!Camera.main.allowHDR)
 				{
 					Debug.LogWarning("Look Dev switched HDR mode on for display.");
 				}
@@ -458,7 +458,7 @@ namespace UnityEditor
 			previewRenderUtility.m_Camera.renderingPath = RenderingPath.DeferredShading;
 			previewRenderUtility.m_Camera.clearFlags = ((!flag) ? CameraClearFlags.Skybox : CameraClearFlags.Color);
 			previewRenderUtility.m_Camera.backgroundColor = Color.white;
-			previewRenderUtility.m_Camera.hdr = true;
+			previewRenderUtility.m_Camera.allowHDR = true;
 			for (int i = 0; i < 2; i++)
 			{
 				previewRenderUtility.m_Light[i].enabled = false;
@@ -896,7 +896,7 @@ namespace UnityEditor
 			{
 				GUILayout.Width(120f)
 			});
-			if (EditorGUI.ButtonMouseDown(rect, LookDevSettingsWindow.styles.sTitle, FocusType.Passive, EditorStyles.toolbarDropDown))
+			if (EditorGUI.DropdownButton(rect, LookDevSettingsWindow.styles.sTitle, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
 				Rect last = GUILayoutUtility.topLevel.GetLast();
 				PopupWindow.Show(last, new LookDevSettingsWindow(this));
@@ -906,7 +906,7 @@ namespace UnityEditor
 			{
 				GUILayout.Width(120f)
 			});
-			if (EditorGUI.ButtonMouseDown(rect, LookDevViewsWindow.styles.sTitle, FocusType.Passive, EditorStyles.toolbarDropDown))
+			if (EditorGUI.DropdownButton(rect, LookDevViewsWindow.styles.sTitle, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
 				Rect last2 = GUILayoutUtility.topLevel.GetLast();
 				PopupWindow.Show(last2, new LookDevViewsWindow(this));
@@ -953,7 +953,7 @@ namespace UnityEditor
 				}
 			}
 			rect = GUILayoutUtility.GetRect(LookDevEnvironmentWindow.styles.sTitle, EditorStyles.iconButton);
-			if (EditorGUI.ButtonMouseDown(rect, LookDevEnvironmentWindow.styles.sTitle, FocusType.Passive, EditorStyles.iconButton))
+			if (EditorGUI.DropdownButton(rect, LookDevEnvironmentWindow.styles.sTitle, FocusType.Passive, EditorStyles.iconButton))
 			{
 				this.m_ShowLookDevEnvWindow = !this.m_ShowLookDevEnvWindow;
 			}
@@ -1131,10 +1131,10 @@ namespace UnityEditor
 
 		private void RenderCompositing(Rect previewRect, LookDevView.PreviewContext previewContext0, LookDevView.PreviewContext previewContext1, bool dualView)
 		{
-			Vector4 vector = new Vector4(this.m_LookDevConfig.gizmo.center.x, this.m_LookDevConfig.gizmo.center.y, 0f, 0f);
-			Vector4 vector2 = new Vector4(this.m_LookDevConfig.gizmo.point2.x, this.m_LookDevConfig.gizmo.point2.y, 0f, 0f);
-			Vector4 vector3 = new Vector4(this.m_GizmoThickness, this.m_GizmoThicknessSelected, 0f, 0f);
-			Vector4 vector4 = new Vector4(this.m_GizmoCircleRadius, this.m_GizmoCircleRadiusSelected, 0f, 0f);
+			Vector4 value = new Vector4(this.m_LookDevConfig.gizmo.center.x, this.m_LookDevConfig.gizmo.center.y, 0f, 0f);
+			Vector4 value2 = new Vector4(this.m_LookDevConfig.gizmo.point2.x, this.m_LookDevConfig.gizmo.point2.y, 0f, 0f);
+			Vector4 value3 = new Vector4(this.m_GizmoThickness, this.m_GizmoThicknessSelected, 0f, 0f);
+			Vector4 value4 = new Vector4(this.m_GizmoCircleRadius, this.m_GizmoCircleRadiusSelected, 0f, 0f);
 			int num = (this.m_LookDevConfig.lookDevMode != LookDevMode.Single2) ? 0 : 1;
 			int num2 = (this.m_LookDevConfig.lookDevMode != LookDevMode.Single1) ? 1 : 0;
 			float y = (this.m_LookDevConfig.lookDevContexts[num].shadingMode != -1 && this.m_LookDevConfig.lookDevContexts[num].shadingMode != 2) ? 0f : this.m_LookDevConfig.lookDevContexts[num].exposureValue;
@@ -1146,43 +1146,43 @@ namespace UnityEditor
 			float shadowIntensity2 = cubemapInfo2.shadowInfo.shadowIntensity;
 			Color shadowColor = cubemapInfo.shadowInfo.shadowColor;
 			Color shadowColor2 = cubemapInfo2.shadowInfo.shadowColor;
-			Texture texture = previewContext0.m_PreviewResult[0];
-			Texture texture2 = previewContext0.m_PreviewResult[1];
-			Texture texture3 = previewContext0.m_PreviewResult[2];
-			Texture texture4 = previewContext1.m_PreviewResult[0];
-			Texture texture5 = previewContext1.m_PreviewResult[1];
-			Texture texture6 = previewContext1.m_PreviewResult[2];
-			Vector4 vector5 = new Vector4(this.m_LookDevConfig.dualViewBlendFactor, y, z, (this.m_LookDevConfig.currentEditionContext != LookDevEditionContext.Left) ? -1f : 1f);
-			Vector4 vector6 = new Vector4(x, (!this.m_LookDevConfig.enableToneMap) ? -1f : 1f, shadowIntensity, shadowIntensity2);
-			Vector4 vector7 = new Vector4(1.4f, 1f, 0.5f, 0.5f);
-			Vector4 vector8 = new Vector4(0f, 0f, 5.3f, 1f);
+			Texture value5 = previewContext0.m_PreviewResult[0];
+			Texture value6 = previewContext0.m_PreviewResult[1];
+			Texture value7 = previewContext0.m_PreviewResult[2];
+			Texture value8 = previewContext1.m_PreviewResult[0];
+			Texture value9 = previewContext1.m_PreviewResult[1];
+			Texture value10 = previewContext1.m_PreviewResult[2];
+			Vector4 value11 = new Vector4(this.m_LookDevConfig.dualViewBlendFactor, y, z, (this.m_LookDevConfig.currentEditionContext != LookDevEditionContext.Left) ? -1f : 1f);
+			Vector4 value12 = new Vector4(x, (!this.m_LookDevConfig.enableToneMap) ? -1f : 1f, shadowIntensity, shadowIntensity2);
+			Vector4 value13 = new Vector4(1.4f, 1f, 0.5f, 0.5f);
+			Vector4 value14 = new Vector4(0f, 0f, 5.3f, 1f);
 			RenderTexture active = RenderTexture.active;
 			RenderTexture.active = this.m_FinalCompositionTexture;
-			LookDevResources.m_LookDevCompositing.SetTexture("_Tex0Normal", texture);
-			LookDevResources.m_LookDevCompositing.SetTexture("_Tex0WithoutSun", texture2);
-			LookDevResources.m_LookDevCompositing.SetTexture("_Tex0Shadows", texture3);
+			LookDevResources.m_LookDevCompositing.SetTexture("_Tex0Normal", value5);
+			LookDevResources.m_LookDevCompositing.SetTexture("_Tex0WithoutSun", value6);
+			LookDevResources.m_LookDevCompositing.SetTexture("_Tex0Shadows", value7);
 			LookDevResources.m_LookDevCompositing.SetColor("_ShadowColor0", shadowColor);
-			LookDevResources.m_LookDevCompositing.SetTexture("_Tex1Normal", texture4);
-			LookDevResources.m_LookDevCompositing.SetTexture("_Tex1WithoutSun", texture5);
-			LookDevResources.m_LookDevCompositing.SetTexture("_Tex1Shadows", texture6);
+			LookDevResources.m_LookDevCompositing.SetTexture("_Tex1Normal", value8);
+			LookDevResources.m_LookDevCompositing.SetTexture("_Tex1WithoutSun", value9);
+			LookDevResources.m_LookDevCompositing.SetTexture("_Tex1Shadows", value10);
 			LookDevResources.m_LookDevCompositing.SetColor("_ShadowColor1", shadowColor2);
-			LookDevResources.m_LookDevCompositing.SetVector("_CompositingParams", vector5);
-			LookDevResources.m_LookDevCompositing.SetVector("_CompositingParams2", vector6);
+			LookDevResources.m_LookDevCompositing.SetVector("_CompositingParams", value11);
+			LookDevResources.m_LookDevCompositing.SetVector("_CompositingParams2", value12);
 			LookDevResources.m_LookDevCompositing.SetColor("_FirstViewColor", LookDevView.m_FirstViewGizmoColor);
 			LookDevResources.m_LookDevCompositing.SetColor("_SecondViewColor", LookDevView.m_SecondViewGizmoColor);
-			LookDevResources.m_LookDevCompositing.SetVector("_GizmoPosition", vector);
-			LookDevResources.m_LookDevCompositing.SetVector("_GizmoZoneCenter", vector2);
+			LookDevResources.m_LookDevCompositing.SetVector("_GizmoPosition", value);
+			LookDevResources.m_LookDevCompositing.SetVector("_GizmoZoneCenter", value2);
 			LookDevResources.m_LookDevCompositing.SetVector("_GizmoSplitPlane", this.m_LookDevConfig.gizmo.plane);
 			LookDevResources.m_LookDevCompositing.SetVector("_GizmoSplitPlaneOrtho", this.m_LookDevConfig.gizmo.planeOrtho);
 			LookDevResources.m_LookDevCompositing.SetFloat("_GizmoLength", this.m_LookDevConfig.gizmo.length);
-			LookDevResources.m_LookDevCompositing.SetVector("_GizmoThickness", vector3);
-			LookDevResources.m_LookDevCompositing.SetVector("_GizmoCircleRadius", vector4);
+			LookDevResources.m_LookDevCompositing.SetVector("_GizmoThickness", value3);
+			LookDevResources.m_LookDevCompositing.SetVector("_GizmoCircleRadius", value4);
 			LookDevResources.m_LookDevCompositing.SetFloat("_BlendFactorCircleRadius", this.m_BlendFactorCircleRadius);
 			LookDevResources.m_LookDevCompositing.SetFloat("_GetBlendFactorMaxGizmoDistance", this.GetBlendFactorMaxGizmoDistance());
 			LookDevResources.m_LookDevCompositing.SetFloat("_GizmoRenderMode", (!this.m_ForceGizmoRenderSelector) ? ((float)this.m_GizmoRenderMode) : 4f);
 			LookDevResources.m_LookDevCompositing.SetVector("_ScreenRatio", this.m_ScreenRatio);
-			LookDevResources.m_LookDevCompositing.SetVector("_ToneMapCoeffs1", vector7);
-			LookDevResources.m_LookDevCompositing.SetVector("_ToneMapCoeffs2", vector8);
+			LookDevResources.m_LookDevCompositing.SetVector("_ToneMapCoeffs1", value13);
+			LookDevResources.m_LookDevCompositing.SetVector("_ToneMapCoeffs2", value14);
 			LookDevResources.m_LookDevCompositing.SetPass((int)this.m_LookDevConfig.lookDevMode);
 			LookDevView.DrawFullScreenQuad(new Rect(0f, 0f, previewRect.width, previewRect.height));
 			RenderTexture.active = active;

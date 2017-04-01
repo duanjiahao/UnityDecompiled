@@ -1,16 +1,19 @@
 using System;
-using System.Runtime.CompilerServices;
 
 namespace UnityEditor
 {
-	public sealed class DDSImporter : AssetImporter
+	[Obsolete("DDSImporter is obsolete. Use IHVImageFormatImporter instead (UnityUpgradable) -> IHVImageFormatImporter", true)]
+	public class DDSImporter : AssetImporter
 	{
-		public extern bool isReadable
+		public bool isReadable
 		{
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
+			get
+			{
+				return false;
+			}
+			set
+			{
+			}
 		}
 	}
 }

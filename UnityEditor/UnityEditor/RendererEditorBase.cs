@@ -20,13 +20,13 @@ namespace UnityEditor
 
 			private SerializedProperty m_ReceiveShadows;
 
-			private GUIContent m_LightProbeUsageStyle = EditorGUIUtility.TextContent("Light Probes|Probe-based lighting interpolation mode. This mode is disabled when the object has the lightmap static flag set.");
+			private GUIContent m_LightProbeUsageStyle = EditorGUIUtility.TextContent("Light Probes|Specifies how Light Probes will handle the interpolation of lighting and occlusion. Disabled if the object is set to Lightmap Static.");
 
 			private GUIContent m_LightProbeVolumeOverrideStyle = EditorGUIUtility.TextContent("Proxy Volume Override|If set, the Renderer will use the Light Probe Proxy Volume component from another GameObject.");
 
-			private GUIContent m_ReflectionProbeUsageStyle = EditorGUIUtility.TextContent("Reflection Probes");
+			private GUIContent m_ReflectionProbeUsageStyle = EditorGUIUtility.TextContent("Reflection Probes|Specifies if or how the object is affected by reflections in the Scene.  This property cannot be disabled in deferred rendering modes.");
 
-			private GUIContent m_ProbeAnchorStyle = EditorGUIUtility.TextContent("Anchor Override|If set, the Renderer will use this Transform's position to sample light probes and find the matching reflection probe.");
+			private GUIContent m_ProbeAnchorStyle = EditorGUIUtility.TextContent("Anchor Override|Specifies the Transform position that will be used for sampling the light probes and reflection probes.");
 
 			private GUIContent m_DeferredNote = EditorGUIUtility.TextContent("In Deferred Shading, all objects receive shadows and get per-pixel reflection probes.");
 
@@ -186,7 +186,7 @@ namespace UnityEditor
 			{
 				int selectionCount = 1;
 				bool flag = SceneView.IsUsingDeferredRenderingPath();
-				bool flag2 = flag && UnityEngine.Rendering.GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
+				bool flag2 = flag && GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
 				bool usesLightMaps = false;
 				if (selection != null)
 				{
@@ -260,13 +260,6 @@ namespace UnityEditor
 			}
 		}
 
-		private static class Styles
-		{
-			public static GUIContent m_SortingLayerStyle = EditorGUIUtility.TextContent("Sorting Layer|Name of the Renderer's sorting layer");
-
-			public static GUIContent m_SortingOrderStyle = EditorGUIUtility.TextContent("Order in Layer|Renderer's order within a sorting layer");
-		}
-
 		private SerializedProperty m_SortingOrder;
 
 		private SerializedProperty m_SortingLayerID;
@@ -282,8 +275,7 @@ namespace UnityEditor
 		protected void RenderSortingLayerFields()
 		{
 			EditorGUILayout.Space();
-			EditorGUILayout.SortingLayerField(RendererEditorBase.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup, EditorStyles.label);
-			EditorGUILayout.PropertyField(this.m_SortingOrder, RendererEditorBase.Styles.m_SortingOrderStyle, new GUILayoutOption[0]);
+			SortingLayerEditorUtility.RenderSortingLayerFields(this.m_SortingOrder, this.m_SortingLayerID);
 		}
 
 		protected void InitializeProbeFields()
@@ -300,7 +292,7 @@ namespace UnityEditor
 		protected void RenderCommonProbeFields(bool useMiniStyle)
 		{
 			bool flag = SceneView.IsUsingDeferredRenderingPath();
-			bool isDeferredReflections = flag && UnityEngine.Rendering.GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
+			bool isDeferredReflections = flag && GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
 			this.m_Probes.RenderReflectionProbeUsage(useMiniStyle, flag, isDeferredReflections);
 			this.m_Probes.RenderProbeAnchor(useMiniStyle);
 		}

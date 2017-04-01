@@ -825,18 +825,27 @@ namespace UnityEngine.UI
 			vertexHelper.AddTriangle(currentVertCount + 2, currentVertCount + 3, currentVertCount);
 		}
 
-		private Vector4 GetAdjustedBorders(Vector4 border, Rect rect)
+		private Vector4 GetAdjustedBorders(Vector4 border, Rect adjustedRect)
 		{
+			Rect rect = base.rectTransform.rect;
 			for (int i = 0; i <= 1; i++)
 			{
-				float num = border[i] + border[i + 2];
-				if (rect.size[i] < num && num != 0f)
+				if (rect.size[i] != 0f)
 				{
-					float num2 = rect.size[i] / num;
+					float num = adjustedRect.size[i] / rect.size[i];
 					int index;
-					border[index = i] = border[index] * num2;
+					border[index = i] = border[index] * num;
 					int index2;
-					border[index2 = i + 2] = border[index2] * num2;
+					border[index2 = i + 2] = border[index2] * num;
+				}
+				float num2 = border[i] + border[i + 2];
+				if (adjustedRect.size[i] < num2 && num2 != 0f)
+				{
+					float num = adjustedRect.size[i] / num2;
+					int index3;
+					border[index3 = i] = border[index3] * num;
+					int index4;
+					border[index4 = i + 2] = border[index4] * num;
 				}
 			}
 			return border;

@@ -7,62 +7,73 @@ namespace UnityEditor
 {
 	internal class AvatarBipedMapper
 	{
-		private static string[] kBipedHumanBoneNames = new string[]
+		private struct BipedBone
 		{
-			"Pelvis",
-			"L Thigh",
-			"R Thigh",
-			"L Calf",
-			"R Calf",
-			"L Foot",
-			"R Foot",
-			"Spine",
-			"Spine1",
-			"Neck",
-			"Head",
-			"L Clavicle",
-			"R Clavicle",
-			"L UpperArm",
-			"R UpperArm",
-			"L Forearm",
-			"R Forearm",
-			"L Hand",
-			"R Hand",
-			"L Toe0",
-			"R Toe0",
-			"",
-			"",
-			"",
-			"L Finger0",
-			"L Finger01",
-			"L Finger02",
-			"L Finger1",
-			"L Finger11",
-			"L Finger12",
-			"L Finger2",
-			"L Finger21",
-			"L Finger22",
-			"L Finger3",
-			"L Finger31",
-			"L Finger32",
-			"L Finger4",
-			"L Finger41",
-			"L Finger42",
-			"R Finger0",
-			"R Finger01",
-			"R Finger02",
-			"R Finger1",
-			"R Finger11",
-			"R Finger12",
-			"R Finger2",
-			"R Finger21",
-			"R Finger22",
-			"R Finger3",
-			"R Finger31",
-			"R Finger32",
-			"R Finger4",
-			"R Finger41",
-			"R Finger42"
+			public string name;
+
+			public int index;
+
+			public BipedBone(string name, int index)
+			{
+				this.name = name;
+				this.index = index;
+			}
+		}
+
+		private static AvatarBipedMapper.BipedBone[] s_BipedBones = new AvatarBipedMapper.BipedBone[]
+		{
+			new AvatarBipedMapper.BipedBone("Pelvis", 0),
+			new AvatarBipedMapper.BipedBone("L Thigh", 1),
+			new AvatarBipedMapper.BipedBone("R Thigh", 2),
+			new AvatarBipedMapper.BipedBone("L Calf", 3),
+			new AvatarBipedMapper.BipedBone("R Calf", 4),
+			new AvatarBipedMapper.BipedBone("L Foot", 5),
+			new AvatarBipedMapper.BipedBone("R Foot", 6),
+			new AvatarBipedMapper.BipedBone("Spine", 7),
+			new AvatarBipedMapper.BipedBone("Spine1", 8),
+			new AvatarBipedMapper.BipedBone("Spine2", 54),
+			new AvatarBipedMapper.BipedBone("Neck", 9),
+			new AvatarBipedMapper.BipedBone("Head", 10),
+			new AvatarBipedMapper.BipedBone("L Clavicle", 11),
+			new AvatarBipedMapper.BipedBone("R Clavicle", 12),
+			new AvatarBipedMapper.BipedBone("L UpperArm", 13),
+			new AvatarBipedMapper.BipedBone("R UpperArm", 14),
+			new AvatarBipedMapper.BipedBone("L Forearm", 15),
+			new AvatarBipedMapper.BipedBone("R Forearm", 16),
+			new AvatarBipedMapper.BipedBone("L Hand", 17),
+			new AvatarBipedMapper.BipedBone("R Hand", 18),
+			new AvatarBipedMapper.BipedBone("L Toe0", 19),
+			new AvatarBipedMapper.BipedBone("R Toe0", 20),
+			new AvatarBipedMapper.BipedBone("L Finger0", 24),
+			new AvatarBipedMapper.BipedBone("L Finger01", 25),
+			new AvatarBipedMapper.BipedBone("L Finger02", 26),
+			new AvatarBipedMapper.BipedBone("L Finger1", 27),
+			new AvatarBipedMapper.BipedBone("L Finger11", 28),
+			new AvatarBipedMapper.BipedBone("L Finger12", 29),
+			new AvatarBipedMapper.BipedBone("L Finger2", 30),
+			new AvatarBipedMapper.BipedBone("L Finger21", 31),
+			new AvatarBipedMapper.BipedBone("L Finger22", 32),
+			new AvatarBipedMapper.BipedBone("L Finger3", 33),
+			new AvatarBipedMapper.BipedBone("L Finger31", 34),
+			new AvatarBipedMapper.BipedBone("L Finger32", 35),
+			new AvatarBipedMapper.BipedBone("L Finger4", 36),
+			new AvatarBipedMapper.BipedBone("L Finger41", 37),
+			new AvatarBipedMapper.BipedBone("L Finger42", 38),
+			new AvatarBipedMapper.BipedBone("R Finger0", 39),
+			new AvatarBipedMapper.BipedBone("R Finger01", 40),
+			new AvatarBipedMapper.BipedBone("R Finger02", 41),
+			new AvatarBipedMapper.BipedBone("R Finger1", 42),
+			new AvatarBipedMapper.BipedBone("R Finger11", 43),
+			new AvatarBipedMapper.BipedBone("R Finger12", 44),
+			new AvatarBipedMapper.BipedBone("R Finger2", 45),
+			new AvatarBipedMapper.BipedBone("R Finger21", 46),
+			new AvatarBipedMapper.BipedBone("R Finger22", 47),
+			new AvatarBipedMapper.BipedBone("R Finger3", 48),
+			new AvatarBipedMapper.BipedBone("R Finger31", 49),
+			new AvatarBipedMapper.BipedBone("R Finger32", 50),
+			new AvatarBipedMapper.BipedBone("R Finger4", 51),
+			new AvatarBipedMapper.BipedBone("R Finger41", 52),
+			new AvatarBipedMapper.BipedBone("R Finger42", 53)
 		};
 
 		public static bool IsBiped(Transform root, List<string> report)
@@ -89,39 +100,47 @@ namespace UnityEditor
 					}
 				}
 			}
+			if (!dictionary.ContainsKey(8) && dictionary.ContainsKey(54))
+			{
+				dictionary.Add(8, dictionary[54]);
+				dictionary.Remove(54);
+			}
 			return dictionary;
 		}
 
 		private static bool MapBipedBones(Transform root, ref Transform[] humanToTransform, List<string> report)
 		{
 			bool result;
-			for (int i = 0; i < HumanTrait.BoneCount; i++)
+			for (int i = 0; i < AvatarBipedMapper.s_BipedBones.Length; i++)
 			{
-				string a = AvatarBipedMapper.kBipedHumanBoneNames[i];
-				int parentBone = HumanTrait.GetParentBone(i);
-				bool flag = HumanTrait.RequiredBone(i);
+				int index = AvatarBipedMapper.s_BipedBones[i].index;
+				int parentBone = HumanTrait.GetParentBone(index);
+				bool flag = HumanTrait.RequiredBone(index);
 				bool flag2 = parentBone == -1 || HumanTrait.RequiredBone(parentBone);
 				Transform transform = (parentBone == -1) ? root : humanToTransform[parentBone];
 				if (transform == null && !flag2)
 				{
 					parentBone = HumanTrait.GetParentBone(parentBone);
+					flag2 = (parentBone == -1 || HumanTrait.RequiredBone(parentBone));
 					transform = ((parentBone == -1) ? null : humanToTransform[parentBone]);
-				}
-				if (a != "")
-				{
-					humanToTransform[i] = AvatarBipedMapper.MapBipedBone(i, transform, transform, report);
-					if (humanToTransform[i] == null && flag)
+					if (transform == null && !flag2)
 					{
-						result = false;
-						return result;
+						parentBone = HumanTrait.GetParentBone(parentBone);
+						transform = ((parentBone == -1) ? null : humanToTransform[parentBone]);
 					}
+				}
+				humanToTransform[index] = AvatarBipedMapper.MapBipedBone(i, transform, transform, report);
+				if (humanToTransform[index] == null && flag)
+				{
+					result = false;
+					return result;
 				}
 			}
 			result = true;
 			return result;
 		}
 
-		private static Transform MapBipedBone(int boneIndex, Transform transform, Transform parentTransform, List<string> report)
+		private static Transform MapBipedBone(int bipedBoneIndex, Transform transform, Transform parentTransform, List<string> report)
 		{
 			Transform transform2 = null;
 			if (transform != null)
@@ -130,34 +149,36 @@ namespace UnityEditor
 				int num = 0;
 				while (transform2 == null && num < childCount)
 				{
-					if (transform.GetChild(num).name.EndsWith(AvatarBipedMapper.kBipedHumanBoneNames[boneIndex]))
+					string name = AvatarBipedMapper.s_BipedBones[bipedBoneIndex].name;
+					int index = AvatarBipedMapper.s_BipedBones[bipedBoneIndex].index;
+					if (transform.GetChild(num).name.EndsWith(name))
 					{
 						transform2 = transform.GetChild(num);
-						if (transform2 != null && report != null && boneIndex != 0 && transform != parentTransform)
+						if (transform2 != null && report != null && index != 0 && transform != parentTransform)
 						{
 							string text = string.Concat(new string[]
 							{
 								"- Invalid parent for ",
 								transform2.name,
-								".Expected ",
+								". Expected ",
 								parentTransform.name,
 								", but found ",
 								transform.name,
 								"."
 							});
-							if (boneIndex == 1 || boneIndex == 2)
+							if (index == 1 || index == 2)
 							{
 								text += " Disable Triangle Pelvis";
 							}
-							else if (boneIndex == 11 || boneIndex == 12)
+							else if (index == 11 || index == 12)
 							{
 								text += " Enable Triangle Neck";
 							}
-							else if (boneIndex == 9)
+							else if (index == 9)
 							{
-								text += " Preferred is two Spine Links";
+								text += " Preferred is three Spine Links";
 							}
-							else if (boneIndex == 10)
+							else if (index == 10)
 							{
 								text += " Preferred is one Neck Links";
 							}
@@ -170,7 +191,7 @@ namespace UnityEditor
 				int num2 = 0;
 				while (transform2 == null && num2 < childCount)
 				{
-					transform2 = AvatarBipedMapper.MapBipedBone(boneIndex, transform.GetChild(num2), parentTransform, report);
+					transform2 = AvatarBipedMapper.MapBipedBone(bipedBoneIndex, transform.GetChild(num2), parentTransform, report);
 					num2++;
 				}
 			}

@@ -96,12 +96,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_AnchorMax;
 
-		private SerializedProperty m_Position;
-
-		private SerializedProperty m_SizeDelta;
-
-		private SerializedProperty m_Pivot;
-
 		private Vector2[,] m_InitValues;
 
 		private const int kTopPartHeight = 38;
@@ -139,9 +133,6 @@ namespace UnityEditor
 		{
 			this.m_AnchorMin = so.FindProperty("m_AnchorMin");
 			this.m_AnchorMax = so.FindProperty("m_AnchorMax");
-			this.m_Position = so.FindProperty("m_Position");
-			this.m_SizeDelta = so.FindProperty("m_SizeDelta");
-			this.m_Pivot = so.FindProperty("m_Pivot");
 			this.m_InitValues = new Vector2[so.targetObjects.Length, 4];
 			for (int i = 0; i < so.targetObjects.Length; i++)
 			{
@@ -209,8 +200,8 @@ namespace UnityEditor
 
 		internal static void DrawLayoutModeHeadersOutsideRect(Rect rect, SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta)
 		{
-			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, 0);
-			LayoutDropdownWindow.LayoutMode layoutMode = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, 1);
+			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, sizeDelta, 0);
+			LayoutDropdownWindow.LayoutMode layoutMode = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, sizeDelta, 1);
 			layoutMode = LayoutDropdownWindow.SwappedVMode(layoutMode);
 			LayoutDropdownWindow.DrawLayoutModeHeaderOutsideRect(rect, 0, layoutModeForAxis);
 			LayoutDropdownWindow.DrawLayoutModeHeaderOutsideRect(rect, 1, layoutMode);
@@ -252,8 +243,8 @@ namespace UnityEditor
 			GUI.DrawTexture(new Rect(0f, (float)num4, 400f, 1f), EditorGUIUtility.whiteTexture);
 			GUI.DrawTexture(new Rect((float)num4, 0f, 1f, 400f), EditorGUIUtility.whiteTexture);
 			GUI.color = color;
-			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(this.m_AnchorMin, this.m_AnchorMax, this.m_Position, this.m_SizeDelta, 0);
-			LayoutDropdownWindow.LayoutMode layoutMode = LayoutDropdownWindow.GetLayoutModeForAxis(this.m_AnchorMin, this.m_AnchorMax, this.m_Position, this.m_SizeDelta, 1);
+			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(this.m_AnchorMin, this.m_AnchorMax, 0);
+			LayoutDropdownWindow.LayoutMode layoutMode = LayoutDropdownWindow.GetLayoutModeForAxis(this.m_AnchorMin, this.m_AnchorMax, 1);
 			layoutMode = LayoutDropdownWindow.SwappedVMode(layoutMode);
 			bool shift = Event.current.shift;
 			bool alt = Event.current.alt;
@@ -302,8 +293,8 @@ namespace UnityEditor
 						int clickCount = Event.current.clickCount;
 						if (GUI.Button(position, GUIContent.none, GUIStyle.none))
 						{
-							LayoutDropdownWindow.SetLayoutModeForAxis(this.m_AnchorMin, this.m_AnchorMax, this.m_Position, this.m_SizeDelta, this.m_Pivot, 0, layoutMode2, shift, alt, this.m_InitValues);
-							LayoutDropdownWindow.SetLayoutModeForAxis(this.m_AnchorMin, this.m_AnchorMax, this.m_Position, this.m_SizeDelta, this.m_Pivot, 1, LayoutDropdownWindow.SwappedVMode(layoutMode3), shift, alt, this.m_InitValues);
+							LayoutDropdownWindow.SetLayoutModeForAxis(this.m_AnchorMin, 0, layoutMode2, shift, alt, this.m_InitValues);
+							LayoutDropdownWindow.SetLayoutModeForAxis(this.m_AnchorMin, 1, LayoutDropdownWindow.SwappedVMode(layoutMode3), shift, alt, this.m_InitValues);
 							if (clickCount == 2)
 							{
 								base.editorWindow.Close();
@@ -319,7 +310,7 @@ namespace UnityEditor
 			GUI.color = color;
 		}
 
-		private static LayoutDropdownWindow.LayoutMode GetLayoutModeForAxis(SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta, int axis)
+		private static LayoutDropdownWindow.LayoutMode GetLayoutModeForAxis(SerializedProperty anchorMin, SerializedProperty anchorMax, int axis)
 		{
 			LayoutDropdownWindow.LayoutMode result;
 			if (anchorMin.vector2Value[axis] == 0f && anchorMax.vector2Value[axis] == 0f)
@@ -345,22 +336,7 @@ namespace UnityEditor
 			return result;
 		}
 
-		private static void SetLayoutModeForAxis(SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta, SerializedProperty pivot, int axis, LayoutDropdownWindow.LayoutMode layoutMode)
-		{
-			LayoutDropdownWindow.SetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, pivot, axis, layoutMode, false, false, null);
-		}
-
-		private static void SetLayoutModeForAxis(SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta, SerializedProperty pivot, int axis, LayoutDropdownWindow.LayoutMode layoutMode, bool doPivot)
-		{
-			LayoutDropdownWindow.SetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, pivot, axis, layoutMode, doPivot, false, null);
-		}
-
-		private static void SetLayoutModeForAxis(SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta, SerializedProperty pivot, int axis, LayoutDropdownWindow.LayoutMode layoutMode, bool doPivot, bool doPosition)
-		{
-			LayoutDropdownWindow.SetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, pivot, axis, layoutMode, doPivot, doPosition, null);
-		}
-
-		private static void SetLayoutModeForAxis(SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta, SerializedProperty pivot, int axis, LayoutDropdownWindow.LayoutMode layoutMode, bool doPivot, bool doPosition, Vector2[,] defaultValues)
+		private static void SetLayoutModeForAxis(SerializedProperty anchorMin, int axis, LayoutDropdownWindow.LayoutMode layoutMode, bool doPivot, bool doPosition, Vector2[,] defaultValues)
 		{
 			anchorMin.serializedObject.ApplyModifiedProperties();
 			for (int i = 0; i < anchorMin.serializedObject.targetObjects.Length; i++)
@@ -424,9 +400,9 @@ namespace UnityEditor
 					rectTransform.anchoredPosition = anchoredPosition;
 					if (layoutMode == LayoutDropdownWindow.LayoutMode.Stretch)
 					{
-						Vector2 sizeDelta2 = rectTransform.sizeDelta;
-						sizeDelta2[axis] = 0f;
-						rectTransform.sizeDelta = sizeDelta2;
+						Vector2 sizeDelta = rectTransform.sizeDelta;
+						sizeDelta[axis] = 0f;
+						rectTransform.sizeDelta = sizeDelta;
 					}
 				}
 			}
@@ -435,8 +411,8 @@ namespace UnityEditor
 
 		internal static void DrawLayoutMode(Rect rect, SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta)
 		{
-			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, 0);
-			LayoutDropdownWindow.LayoutMode vMode = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, position, sizeDelta, 1);
+			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, 0);
+			LayoutDropdownWindow.LayoutMode vMode = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, 1);
 			vMode = LayoutDropdownWindow.SwappedVMode(vMode);
 			LayoutDropdownWindow.DrawLayoutMode(rect, layoutModeForAxis, vMode);
 		}

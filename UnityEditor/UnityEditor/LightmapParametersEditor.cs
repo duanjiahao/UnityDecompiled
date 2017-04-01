@@ -32,7 +32,7 @@ namespace UnityEditor
 
 			public static readonly GUIContent blurRadiusContent = EditorGUIUtility.TextContent("Blur Radius|The radius (in texels) of the post-processing filter that blurs baked direct lighting. This reduces aliasing artefacts and produces softer shadows.");
 
-			public static readonly GUIContent antiAliasingSamplesContent = EditorGUIUtility.TextContent("Anti-aliasing Samples|The maximum number of times to supersample a texel to reduce aliasing.");
+			public static readonly GUIContent antiAliasingSamplesContent = EditorGUIUtility.TextContent("Anti-aliasing Samples|The maximum number of times to supersample a texel to reduce aliasing. Progressive lightmapper supersamples the positions and normals buffers (part of the G-buffer) and hence the sample count is a multiplier on the amount of memory used for those buffers. Progressive lightmapper clamps the value to the [1;16] range.");
 
 			public static readonly GUIContent directLightQualityContent = EditorGUIUtility.TextContent("Direct Light Quality|The number of rays used for lights with an area. Allows for accurate soft shadowing.");
 
@@ -114,19 +114,35 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_IsTransparent, LightmapParametersEditor.Styles.isTransparent, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_SystemTag, LightmapParametersEditor.Styles.systemTagContent, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
+			bool disabled = LightmapEditorSettings.giBakeBackend == LightmapEditorSettings.GIBakeBackend.PathTracer;
 			GUILayout.Label(LightmapParametersEditor.Styles.bakedGIContent, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_BlurRadius, LightmapParametersEditor.Styles.blurRadiusContent, new GUILayoutOption[0]);
+			using (new EditorGUI.DisabledScope(disabled))
+			{
+				EditorGUILayout.PropertyField(this.m_BlurRadius, LightmapParametersEditor.Styles.blurRadiusContent, new GUILayoutOption[0]);
+			}
 			EditorGUILayout.PropertyField(this.m_AntiAliasingSamples, LightmapParametersEditor.Styles.antiAliasingSamplesContent, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_DirectLightQuality, LightmapParametersEditor.Styles.directLightQualityContent, new GUILayoutOption[0]);
+			using (new EditorGUI.DisabledScope(disabled))
+			{
+				EditorGUILayout.PropertyField(this.m_DirectLightQuality, LightmapParametersEditor.Styles.directLightQualityContent, new GUILayoutOption[0]);
+			}
 			EditorGUILayout.PropertyField(this.m_BakedLightmapTag, LightmapParametersEditor.Styles.bakedLightmapTagContent, new GUILayoutOption[0]);
 			EditorGUILayout.Slider(this.m_Pushoff, 0f, 1f, LightmapParametersEditor.Styles.pushoffContent, new GUILayoutOption[0]);
 			EditorGUILayout.Space();
-			GUILayout.Label(LightmapParametersEditor.Styles.bakedAOContent, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_AOQuality, LightmapParametersEditor.Styles.aoQualityContent, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_AOAntiAliasingSamples, LightmapParametersEditor.Styles.aoAntiAliasingSamplesContent, new GUILayoutOption[0]);
+			using (new EditorGUI.DisabledScope(disabled))
+			{
+				GUILayout.Label(LightmapParametersEditor.Styles.bakedAOContent, EditorStyles.boldLabel, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_AOQuality, LightmapParametersEditor.Styles.aoQualityContent, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_AOAntiAliasingSamples, LightmapParametersEditor.Styles.aoAntiAliasingSamplesContent, new GUILayoutOption[0]);
+			}
 			GUILayout.Label(LightmapParametersEditor.Styles.generalGIContent, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.Slider(this.m_BackFaceTolerance, 0f, 1f, LightmapParametersEditor.Styles.backFaceToleranceContent, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
+		}
+
+		internal override void OnHeaderControlsGUI()
+		{
+			GUILayoutUtility.GetRect(10f, 10f, 16f, 16f, EditorStyles.layerMaskField);
+			GUILayout.FlexibleSpace();
 		}
 	}
 }

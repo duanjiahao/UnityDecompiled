@@ -6,6 +6,7 @@ namespace UnityEditorInternal
 {
 	internal class Button
 	{
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		public static bool Do(int id, Vector3 position, Quaternion direction, float size, float pickSize, Handles.DrawCapFunction capFunc)
 		{
 			Event current = Event.current;
@@ -13,7 +14,7 @@ namespace UnityEditorInternal
 			switch (current.GetTypeForControl(id))
 			{
 			case EventType.MouseDown:
-				if (HandleUtility.nearestControl == id)
+				if (HandleUtility.nearestControl == id && (current.button == 0 || current.button == 2))
 				{
 					GUIUtility.hotControl = id;
 					current.Use();
@@ -66,7 +67,7 @@ namespace UnityEditorInternal
 			switch (current.GetTypeForControl(id))
 			{
 			case EventType.MouseDown:
-				if (HandleUtility.nearestControl == id)
+				if (HandleUtility.nearestControl == id && (current.button == 0 || current.button == 2))
 				{
 					GUIUtility.hotControl = id;
 					current.Use();

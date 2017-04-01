@@ -27,6 +27,8 @@ namespace UnityEditor
 
 		private float m_Smoothness;
 
+		private bool m_NormalMapHasCorrectTextureType;
+
 		public TerrainSplatEditor()
 		{
 			base.position = new Rect(50f, 50f, 200f, 300f);
@@ -60,6 +62,28 @@ namespace UnityEditor
 			this.m_Specular = splatPrototype.specular;
 			this.m_Metallic = splatPrototype.metallic;
 			this.m_Smoothness = splatPrototype.smoothness;
+			this.CheckIfNormalMapHasCorrectTextureType();
+		}
+
+		private void CheckIfNormalMapHasCorrectTextureType()
+		{
+			string assetPath = AssetDatabase.GetAssetPath(this.m_NormalMap);
+			if (string.IsNullOrEmpty(assetPath))
+			{
+				this.m_NormalMapHasCorrectTextureType = true;
+			}
+			else
+			{
+				TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+				if (textureImporter == null)
+				{
+					this.m_NormalMapHasCorrectTextureType = false;
+				}
+				else
+				{
+					this.m_NormalMapHasCorrectTextureType = (textureImporter.textureType == TextureImporterType.NormalMap);
+				}
+			}
 		}
 
 		private void ApplyTerrainSplat()
@@ -102,27 +126,32 @@ namespace UnityEditor
 			return result;
 		}
 
-		private bool ValidateMainTexture(Texture2D tex)
+		private bool ValidateTextures()
 		{
 			bool result;
-			if (tex == null)
+			if (this.m_Texture == null)
 			{
 				EditorGUILayout.HelpBox("Assign a tiling texture", MessageType.Warning);
 				result = false;
 			}
-			else if (tex.wrapMode != TextureWrapMode.Repeat)
+			else if (this.m_Texture.wrapMode != TextureWrapMode.Repeat)
 			{
 				EditorGUILayout.HelpBox("Texture wrap mode must be set to Repeat", MessageType.Warning);
 				result = false;
 			}
-			else if (tex.width != Mathf.ClosestPowerOfTwo(tex.width) || tex.height != Mathf.ClosestPowerOfTwo(tex.height))
+			else if (this.m_Texture.width != Mathf.ClosestPowerOfTwo(this.m_Texture.width) || this.m_Texture.height != Mathf.ClosestPowerOfTwo(this.m_Texture.height))
 			{
 				EditorGUILayout.HelpBox("Texture size must be power of two", MessageType.Warning);
 				result = false;
 			}
-			else if (tex.mipmapCount <= 1)
+			else if (this.m_Texture.mipmapCount <= 1)
 			{
 				EditorGUILayout.HelpBox("Texture must have mip maps", MessageType.Warning);
+				result = false;
+			}
+			else if (!this.m_NormalMapHasCorrectTextureType)
+			{
+				EditorGUILayout.HelpBox("Normal texture should be imported as Normal Map.", MessageType.Warning);
 				result = false;
 			}
 			else
@@ -240,10 +269,15 @@ namespace UnityEditor
 				break;
 			}
 			TerrainSplatEditor.TextureFieldGUI(label, ref this.m_Texture, alignmentOffset);
+			Texture2D normalMap = this.m_NormalMap;
 			TerrainSplatEditor.TextureFieldGUI("\nNormal", ref this.m_NormalMap, -4f);
+			if (this.m_NormalMap != normalMap)
+			{
+				this.CheckIfNormalMapHasCorrectTextureType();
+			}
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
-			flag &= this.ValidateMainTexture(this.m_Texture);
+			flag &= this.ValidateTextures();
 			if (flag)
 			{
 				if (TerrainSplatEditor.IsUsingMetallic(this.m_Terrain.materialType, this.m_Terrain.materialTemplate))

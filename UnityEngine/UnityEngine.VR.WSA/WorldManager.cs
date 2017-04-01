@@ -37,6 +37,7 @@ namespace UnityEngine.VR.WSA
 
 		public static extern PositionalLocatorState state
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -57,6 +58,7 @@ namespace UnityEngine.VR.WSA
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetNativeISpatialCoordinateSystemPtr(out IntPtr value);
 	}

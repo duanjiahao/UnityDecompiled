@@ -148,5 +148,35 @@ namespace UnityEditorInternal
 			GL.End();
 			GL.PopMatrix();
 		}
+
+		public static void FourIntFields(Vector2 rectSize, GUIContent label, GUIContent labelX, GUIContent labelY, GUIContent labelZ, GUIContent labelW, ref int x, ref int y, ref int z, ref int w)
+		{
+			Rect rect = GUILayoutUtility.GetRect(rectSize.x, rectSize.y);
+			Rect position = rect;
+			position.width = EditorGUIUtility.labelWidth;
+			position.height = 16f;
+			GUI.Label(position, label);
+			Rect position2 = rect;
+			position2.width -= EditorGUIUtility.labelWidth;
+			position2.height = 16f;
+			position2.x += EditorGUIUtility.labelWidth;
+			position2.width /= 2f;
+			position2.width -= 2f;
+			float labelWidth = EditorGUIUtility.labelWidth;
+			EditorGUIUtility.labelWidth = 13f;
+			GUI.SetNextControlName("FourIntFields_x");
+			x = EditorGUI.IntField(position2, labelX, x);
+			position2.x += position2.width + 5f;
+			GUI.SetNextControlName("FourIntFields_y");
+			y = EditorGUI.IntField(position2, labelY, y);
+			position2.y += 16f;
+			position2.x -= position2.width + 5f;
+			GUI.SetNextControlName("FourIntFields_z");
+			z = EditorGUI.IntField(position2, labelZ, z);
+			position2.x += position2.width + 5f;
+			GUI.SetNextControlName("FourIntFields_w");
+			w = EditorGUI.IntField(position2, labelW, w);
+			EditorGUIUtility.labelWidth = labelWidth;
+		}
 	}
 }

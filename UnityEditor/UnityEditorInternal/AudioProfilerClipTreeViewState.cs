@@ -15,6 +15,9 @@ namespace UnityEditorInternal
 		[SerializeField]
 		public bool sortByDescendingOrder = true;
 
+		[SerializeField]
+		public float[] columnWidths;
+
 		public void SetSelectedColumn(int index)
 		{
 			if (index != this.selectedColumn)

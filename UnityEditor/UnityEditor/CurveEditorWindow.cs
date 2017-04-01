@@ -6,6 +6,13 @@ namespace UnityEditor
 	[Serializable]
 	internal class CurveEditorWindow : EditorWindow
 	{
+		private enum NormalizationMode
+		{
+			None,
+			Normalize,
+			Denormalize
+		}
+
 		internal class Styles
 		{
 			public GUIStyle curveEditorBackground = "PopupCurveEditorBackground";
@@ -175,31 +182,56 @@ namespace UnityEditor
 			return result;
 		}
 
-		private static Keyframe[] CopyAndScaleCurveKeys(Keyframe[] orgKeys, Rect rect, bool realToNormalized)
+		private static Keyframe[] CopyAndScaleCurveKeys(Keyframe[] orgKeys, Rect rect, CurveEditorWindow.NormalizationMode normalization)
 		{
+			Keyframe[] array = new Keyframe[orgKeys.Length];
+			orgKeys.CopyTo(array, 0);
 			Keyframe[] result;
-			if (rect.width == 0f || rect.height == 0f || float.IsInfinity(rect.width) || float.IsInfinity(rect.height))
+			if (normalization == CurveEditorWindow.NormalizationMode.None)
+			{
+				result = array;
+			}
+			else if (rect.width == 0f || rect.height == 0f || float.IsInfinity(rect.width) || float.IsInfinity(rect.height))
 			{
 				Debug.LogError("CopyAndScaleCurve: Invalid scale: " + rect);
-				result = orgKeys;
+				result = array;
 			}
 			else
 			{
-				Keyframe[] array = new Keyframe[orgKeys.Length];
-				if (realToNormalized)
+				float num = rect.height / rect.width;
+				if (normalization != CurveEditorWindow.NormalizationMode.Normalize)
 				{
-					for (int i = 0; i < array.Length; i++)
+					if (normalization == CurveEditorWindow.NormalizationMode.Denormalize)
 					{
-						array[i].time = (orgKeys[i].time - rect.xMin) / rect.width;
-						array[i].value = (orgKeys[i].value - rect.yMin) / rect.height;
+						for (int i = 0; i < array.Length; i++)
+						{
+							array[i].time = orgKeys[i].time * rect.width + rect.xMin;
+							array[i].value = orgKeys[i].value * rect.height + rect.yMin;
+							if (!float.IsInfinity(orgKeys[i].inTangent))
+							{
+								array[i].inTangent = orgKeys[i].inTangent * num;
+							}
+							if (!float.IsInfinity(orgKeys[i].outTangent))
+							{
+								array[i].outTangent = orgKeys[i].outTangent * num;
+							}
+						}
 					}
 				}
 				else
 				{
 					for (int j = 0; j < array.Length; j++)
 					{
-						array[j].time = orgKeys[j].time * rect.width + rect.xMin;
-						array[j].value = orgKeys[j].value * rect.height + rect.yMin;
+						array[j].time = (orgKeys[j].time - rect.xMin) / rect.width;
+						array[j].value = (orgKeys[j].value - rect.yMin) / rect.height;
+						if (!float.IsInfinity(orgKeys[j].inTangent))
+						{
+							array[j].inTangent = orgKeys[j].inTangent / num;
+						}
+						if (!float.IsInfinity(orgKeys[j].outTangent))
+						{
+							array[j].outTangent = orgKeys[j].outTangent / num;
+						}
 					}
 				}
 				result = array;
@@ -214,16 +246,7 @@ namespace UnityEditor
 				Action<AnimationCurve> presetSelectedCallback = delegate(AnimationCurve presetCurve)
 				{
 					this.ValidateCurveLibraryTypeAndScale();
-					Rect rect;
-					if (this.GetNormalizationRect(out rect))
-					{
-						bool realToNormalized = false;
-						this.m_Curve.keys = CurveEditorWindow.CopyAndScaleCurveKeys(presetCurve.keys, rect, realToNormalized);
-					}
-					else
-					{
-						this.m_Curve.keys = presetCurve.keys;
-					}
+					this.m_Curve.keys = this.GetDenormalizedKeys(presetCurve.keys);
 					this.m_Curve.postWrapMode = presetCurve.postWrapMode;
 					this.m_Curve.preWrapMode = presetCurve.preWrapMode;
 					this.m_CurveEditor.SelectNone();
@@ -301,34 +324,24 @@ namespace UnityEditor
 
 		internal static Keyframe[] GetLinearKeys()
 		{
-			Keyframe[] array = new Keyframe[]
+			Keyframe[] result = new Keyframe[]
 			{
 				new Keyframe(0f, 0f, 1f, 1f),
 				new Keyframe(1f, 1f, 1f, 1f)
 			};
-			for (int i = 0; i < 2; i++)
-			{
-				AnimationUtility.SetKeyBroken(ref array[i], false);
-				AnimationUtility.SetKeyLeftTangentMode(ref array[i], AnimationUtility.TangentMode.Auto);
-				AnimationUtility.SetKeyRightTangentMode(ref array[i], AnimationUtility.TangentMode.Auto);
-			}
-			return array;
+			CurveEditorWindow.SetSmoothEditable(ref result);
+			return result;
 		}
 
 		internal static Keyframe[] GetLinearMirrorKeys()
 		{
-			Keyframe[] array = new Keyframe[]
+			Keyframe[] result = new Keyframe[]
 			{
 				new Keyframe(0f, 1f, -1f, -1f),
 				new Keyframe(1f, 0f, -1f, -1f)
 			};
-			for (int i = 0; i < 2; i++)
-			{
-				AnimationUtility.SetKeyBroken(ref array[i], false);
-				AnimationUtility.SetKeyLeftTangentMode(ref array[i], AnimationUtility.TangentMode.Auto);
-				AnimationUtility.SetKeyRightTangentMode(ref array[i], AnimationUtility.TangentMode.Auto);
-			}
-			return array;
+			CurveEditorWindow.SetSmoothEditable(ref result);
+			return result;
 		}
 
 		internal static Keyframe[] GetEaseInKeys()
@@ -418,6 +431,26 @@ namespace UnityEditor
 			}
 		}
 
+		private Keyframe[] NormalizeKeys(Keyframe[] sourceKeys, CurveEditorWindow.NormalizationMode normalization)
+		{
+			Rect rect;
+			if (!this.GetNormalizationRect(out rect))
+			{
+				normalization = CurveEditorWindow.NormalizationMode.None;
+			}
+			return CurveEditorWindow.CopyAndScaleCurveKeys(sourceKeys, rect, normalization);
+		}
+
+		private Keyframe[] GetDenormalizedKeys(Keyframe[] sourceKeys)
+		{
+			return this.NormalizeKeys(sourceKeys, CurveEditorWindow.NormalizationMode.Denormalize);
+		}
+
+		private Keyframe[] GetNormalizedKeys(Keyframe[] sourceKeys)
+		{
+			return this.NormalizeKeys(sourceKeys, CurveEditorWindow.NormalizationMode.Normalize);
+		}
+
 		private void OnGUI()
 		{
 			bool flag = Event.current.type == EventType.MouseUp;
@@ -450,7 +483,7 @@ namespace UnityEditor
 					if (GUI.Button(rect, this.m_GUIContent, CurveEditorWindow.ms_Styles.curveSwatch))
 					{
 						AnimationCurve animationCurve = currentLib.GetPreset(i) as AnimationCurve;
-						this.m_Curve.keys = animationCurve.keys;
+						this.m_Curve.keys = this.GetDenormalizedKeys(animationCurve.keys);
 						this.m_Curve.postWrapMode = animationCurve.postWrapMode;
 						this.m_Curve.preWrapMode = animationCurve.preWrapMode;
 						this.m_CurveEditor.SelectNone();
@@ -481,7 +514,7 @@ namespace UnityEditor
 
 		private void PresetDropDown(Rect rect)
 		{
-			if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.inspectorTitlebarText))
+			if (EditorGUI.DropdownButton(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.inspectorTitlebarText))
 			{
 				if (this.m_Curve != null)
 				{
@@ -492,17 +525,7 @@ namespace UnityEditor
 					else
 					{
 						this.ValidateCurveLibraryTypeAndScale();
-						AnimationCurve animationCurve = new AnimationCurve();
-						Rect rect2;
-						if (this.GetNormalizationRect(out rect2))
-						{
-							bool realToNormalized = true;
-							animationCurve.keys = CurveEditorWindow.CopyAndScaleCurveKeys(this.m_Curve.keys, rect2, realToNormalized);
-						}
-						else
-						{
-							animationCurve = new AnimationCurve(this.m_Curve.keys);
-						}
+						AnimationCurve animationCurve = new AnimationCurve(this.GetNormalizedKeys(this.m_Curve.keys));
 						animationCurve.postWrapMode = this.m_Curve.postWrapMode;
 						animationCurve.preWrapMode = this.m_Curve.preWrapMode;
 						this.m_CurvePresets.curveToSaveAsPreset = animationCurve;

@@ -14,6 +14,8 @@ namespace UnityEditorInternal
 
 		private EditorCurveBinding m_Binding;
 
+		private int m_BindingHashCode;
+
 		private AnimationClip m_Clip;
 
 		private AnimationWindowSelectionItem m_SelectionBinding;
@@ -167,6 +169,7 @@ namespace UnityEditorInternal
 		{
 			binding = RotationCurveInterpolation.RemapAnimationBindingForRotationCurves(binding, clip);
 			this.m_Binding = binding;
+			this.m_BindingHashCode = binding.GetHashCode();
 			this.m_ValueType = valueType;
 			this.m_Clip = clip;
 			this.LoadKeyframes(clip);
@@ -200,7 +203,12 @@ namespace UnityEditorInternal
 		public override int GetHashCode()
 		{
 			int num = (!(this.clip == null)) ? this.clip.GetInstanceID() : 0;
-			return this.selectionID * 92821 ^ num * 19603 ^ this.binding.GetHashCode();
+			return this.selectionID * 92821 ^ num * 19603 ^ this.GetBindingHashCode();
+		}
+
+		public int GetBindingHashCode()
+		{
+			return this.m_BindingHashCode;
 		}
 
 		public int CompareTo(AnimationWindowCurve obj)

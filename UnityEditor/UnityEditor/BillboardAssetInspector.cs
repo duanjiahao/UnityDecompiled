@@ -154,7 +154,7 @@ namespace UnityEditor
 				{
 					GUILayout.Width(75f)
 				});
-				if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, BillboardAssetInspector.Styles.m_DropdownButton))
+				if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, BillboardAssetInspector.Styles.m_DropdownButton))
 				{
 					GUIUtility.hotControl = 0;
 					GenericMenu genericMenu = new GenericMenu();

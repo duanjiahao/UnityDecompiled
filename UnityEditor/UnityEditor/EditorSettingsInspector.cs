@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Collaboration;
 using UnityEditor.Hardware;
 using UnityEditor.VersionControl;
 using UnityEditor.Web;
@@ -89,8 +88,8 @@ namespace UnityEditor
 
 		private EditorSettingsInspector.PopupElement[] remoteResolutionList = new EditorSettingsInspector.PopupElement[]
 		{
-			new EditorSettingsInspector.PopupElement("Normal"),
-			new EditorSettingsInspector.PopupElement("Downsize")
+			new EditorSettingsInspector.PopupElement("Downsize"),
+			new EditorSettingsInspector.PopupElement("Normal")
 		};
 
 		private EditorSettingsInspector.PopupElement[] remoteJoystickSourceList = new EditorSettingsInspector.PopupElement[]
@@ -167,14 +166,14 @@ namespace UnityEditor
 			bool enabled = GUI.enabled;
 			this.ShowUnityRemoteGUI(enabled);
 			GUILayout.Space(10f);
-			bool flag = Collab.instance.GetCollabInfo().whitelisted && CollabAccess.Instance.IsServiceEnabled();
+			bool flag = CollabAccess.Instance.IsServiceEnabled();
 			using (new EditorGUI.DisabledScope(!flag))
 			{
 				GUI.enabled = !flag;
 				GUILayout.Label("Version Control", EditorStyles.boldLabel, new GUILayoutOption[0]);
-				GUI.enabled = (enabled && !flag);
 				ExternalVersionControl d = EditorSettings.externalVersionControl;
 				this.CreatePopupMenuVersionControl("Mode", this.vcPopupList, d, new GenericMenu.MenuFunction2(this.SetVersionControlSystem));
+				GUI.enabled = (enabled && !flag);
 			}
 			if (flag)
 			{
@@ -387,7 +386,7 @@ namespace UnityEditor
 			GUIContent content = new GUIContent(this.remoteDevicePopupList[indexById].content);
 			Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Device"));
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, EditorStyles.popup))
 			{
 				this.DoPopup(rect, this.remoteDevicePopupList, indexById, new GenericMenu.MenuFunction2(this.SetUnityRemoteDevice));
 			}
@@ -395,7 +394,7 @@ namespace UnityEditor
 			content = new GUIContent(this.remoteCompressionList[indexById2].content);
 			rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Compression"));
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, EditorStyles.popup))
 			{
 				this.DoPopup(rect, this.remoteCompressionList, indexById2, new GenericMenu.MenuFunction2(this.SetUnityRemoteCompression));
 			}
@@ -403,7 +402,7 @@ namespace UnityEditor
 			content = new GUIContent(this.remoteResolutionList[indexById3].content);
 			rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Resolution"));
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, EditorStyles.popup))
 			{
 				this.DoPopup(rect, this.remoteResolutionList, indexById3, new GenericMenu.MenuFunction2(this.SetUnityRemoteResolution));
 			}
@@ -411,7 +410,7 @@ namespace UnityEditor
 			content = new GUIContent(this.remoteJoystickSourceList[indexById4].content);
 			rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent("Joystick Source"));
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, EditorStyles.popup))
 			{
 				this.DoPopup(rect, this.remoteJoystickSourceList, indexById4, new GenericMenu.MenuFunction2(this.SetUnityRemoteJoystickSource));
 			}
@@ -476,7 +475,7 @@ namespace UnityEditor
 		{
 			Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.popup);
 			rect = EditorGUI.PrefixLabel(rect, 0, new GUIContent(title));
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, EditorStyles.popup))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, EditorStyles.popup))
 			{
 				this.DoPopup(rect, elements, selectedIndex, func);
 			}
@@ -503,7 +502,7 @@ namespace UnityEditor
 		private bool VersionControlSystemHasGUI()
 		{
 			bool result;
-			if (!Collab.instance.GetCollabInfo().whitelisted || !CollabAccess.Instance.IsServiceEnabled())
+			if (!CollabAccess.Instance.IsServiceEnabled())
 			{
 				ExternalVersionControl d = EditorSettings.externalVersionControl;
 				result = (d != ExternalVersionControl.Disabled && d != ExternalVersionControl.AutoDetect && d != ExternalVersionControl.AssetServer && d != ExternalVersionControl.Generic);

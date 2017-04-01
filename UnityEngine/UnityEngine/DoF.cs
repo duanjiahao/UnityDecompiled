@@ -5,21 +5,21 @@ namespace UnityEngine
 	internal enum DoF
 	{
 		BodyDoFStart,
-		HeadDoFStart = 6,
-		LeftLegDoFStart = 18,
-		RightLegDoFStart = 26,
-		LeftArmDoFStart = 34,
-		RightArmDoFStart = 43,
-		LeftThumbDoFStart = 52,
-		LeftIndexDoFStart = 56,
-		LeftMiddleDoFStart = 60,
-		LeftRingDoFStart = 64,
-		LeftLittleDoFStart = 68,
-		RightThumbDoFStart = 72,
-		RightIndexDoFStart = 76,
-		RightMiddleDoFStart = 80,
-		RightRingDoFStart = 84,
-		RightLittleDoFStart = 88,
-		LastDoF = 92
+		HeadDoFStart = 9,
+		LeftLegDoFStart = 21,
+		RightLegDoFStart = 29,
+		LeftArmDoFStart = 37,
+		RightArmDoFStart = 46,
+		LeftThumbDoFStart = 55,
+		LeftIndexDoFStart = 59,
+		LeftMiddleDoFStart = 63,
+		LeftRingDoFStart = 67,
+		LeftLittleDoFStart = 71,
+		RightThumbDoFStart = 75,
+		RightIndexDoFStart = 79,
+		RightMiddleDoFStart = 83,
+		RightRingDoFStart = 87,
+		RightLittleDoFStart = 91,
+		LastDoF = 95
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -8,26 +9,31 @@ namespace UnityEngine
 		[Obsolete("this API is not for public use.")]
 		public static extern CacheIndex[] index
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern long spaceFree
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern long maximumAvailableDiskSpace
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern long spaceOccupied
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -35,6 +41,7 @@ namespace UnityEngine
 		[Obsolete("Please use Caching.spaceFree instead")]
 		public static extern int spaceAvailable
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -42,36 +49,44 @@ namespace UnityEngine
 		[Obsolete("Please use Caching.spaceOccupied instead")]
 		public static extern int spaceUsed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int expirationDelay
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool enabled
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool compressionEnabled
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern bool ready
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -81,6 +96,7 @@ namespace UnityEngine
 			return Caching.Authorize(name, domain, size, -1, signature);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool Authorize(string name, string domain, long size, int expiration, string signature);
 
@@ -96,18 +112,19 @@ namespace UnityEngine
 			return Caching.Authorize(name, domain, (long)size, signature);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CleanCache();
 
-		[Obsolete("this API is not for public use.")]
+		[Obsolete("this API is not for public use."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CleanNamedCache(string name);
 
-		[Obsolete("This function is obsolete and has no effect.")]
+		[Obsolete("This function is obsolete and has no effect."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool DeleteFromCache(string url);
 
-		[Obsolete("This function is obsolete and will always return -1. Use IsVersionCached instead.")]
+		[Obsolete("This function is obsolete and will always return -1. Use IsVersionCached instead."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetVersionFromCache(string url);
 
@@ -122,6 +139,7 @@ namespace UnityEngine
 			return Caching.INTERNAL_CALL_IsVersionCached(url, ref hash);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_IsVersionCached(string url, ref Hash128 hash);
 
@@ -136,6 +154,7 @@ namespace UnityEngine
 			return Caching.INTERNAL_CALL_MarkAsUsed(url, ref hash);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_MarkAsUsed(string url, ref Hash128 hash);
 
@@ -148,6 +167,7 @@ namespace UnityEngine
 			Caching.INTERNAL_CALL_SetNoBackupFlag(url, ref hash);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetNoBackupFlag(string url, ref Hash128 hash);
 
@@ -160,6 +180,7 @@ namespace UnityEngine
 			Caching.INTERNAL_CALL_ResetNoBackupFlag(url, ref hash);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ResetNoBackupFlag(string url, ref Hash128 hash);
 	}

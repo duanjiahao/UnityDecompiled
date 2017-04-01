@@ -28,17 +28,7 @@ namespace UnityEditor
 
 		private static class Styles
 		{
-			public static GUIStyle optionsButton = "PaneOptions";
-
 			public static GUIContent uvSetLabel = new GUIContent("UV Set");
-
-			public static GUIContent[] uvSetOptions = new GUIContent[]
-			{
-				new GUIContent("UV channel 0"),
-				new GUIContent("UV channel 1")
-			};
-
-			public static string emptyTootip = "";
 
 			public static GUIContent albedoText = new GUIContent("Albedo", "Albedo (RGB) and Transparency (A)");
 
@@ -64,15 +54,13 @@ namespace UnityEditor
 
 			public static GUIContent occlusionText = new GUIContent("Occlusion", "Occlusion (G)");
 
-			public static GUIContent emissionText = new GUIContent("Emission", "Emission (RGB)");
+			public static GUIContent emissionText = new GUIContent("Color", "Emission (RGB)");
 
 			public static GUIContent detailMaskText = new GUIContent("Detail Mask", "Mask for Secondary Maps (A)");
 
 			public static GUIContent detailAlbedoText = new GUIContent("Detail Albedo x2", "Albedo (RGB) multiplied by 2");
 
 			public static GUIContent detailNormalMapText = new GUIContent("Normal Map", "Normal Map");
-
-			public static string whiteSpaceString = " ";
 
 			public static string primaryMapsText = "Main Maps";
 
@@ -82,9 +70,9 @@ namespace UnityEditor
 
 			public static string renderingMode = "Rendering Mode";
 
-			public static GUIContent emissiveWarning = new GUIContent("Emissive value is animated but the material has not been configured to support emissive. Please make sure the material itself has some amount of emissive.");
+			public static string advancedText = "Advanced Options";
 
-			public static GUIContent emissiveColorWarning = new GUIContent("Ensure emissive color is non-black for emission to have effect.");
+			public static GUIContent emissiveWarning = new GUIContent("Emissive value is animated but the material has not been configured to support emissive. Please make sure the material itself has some amount of emissive.");
 
 			public static readonly string[] blendNames = Enum.GetNames(typeof(StandardShaderGUI.BlendMode));
 		}
@@ -215,8 +203,8 @@ namespace UnityEditor
 			this.m_MaterialEditor.TexturePropertySingleLine(StandardShaderGUI.Styles.normalMapText, this.bumpMap, (!(this.bumpMap.textureValue != null)) ? null : this.bumpScale);
 			this.m_MaterialEditor.TexturePropertySingleLine(StandardShaderGUI.Styles.heightMapText, this.heightMap, (!(this.heightMap.textureValue != null)) ? null : this.heigtMapScale);
 			this.m_MaterialEditor.TexturePropertySingleLine(StandardShaderGUI.Styles.occlusionText, this.occlusionMap, (!(this.occlusionMap.textureValue != null)) ? null : this.occlusionStrength);
-			this.DoEmissionArea(material);
 			this.m_MaterialEditor.TexturePropertySingleLine(StandardShaderGUI.Styles.detailMaskText, this.detailMask);
+			this.DoEmissionArea(material);
 			EditorGUI.BeginChangeCheck();
 			this.m_MaterialEditor.TextureScaleOffsetProperty(this.albedoMap);
 			if (EditorGUI.EndChangeCheck())
@@ -247,6 +235,10 @@ namespace UnityEditor
 					StandardShaderGUI.MaterialChanged((Material)@object, this.m_WorkflowMode);
 				}
 			}
+			EditorGUILayout.Space();
+			GUILayout.Label(StandardShaderGUI.Styles.advancedText, EditorStyles.boldLabel, new GUILayoutOption[0]);
+			this.m_MaterialEditor.RenderQueueField();
+			this.m_MaterialEditor.EnableInstancingField();
 		}
 
 		internal void DetermineWorkflow(MaterialProperty[] props)
@@ -321,18 +313,16 @@ namespace UnityEditor
 
 		private void DoEmissionArea(Material material)
 		{
-			bool flag = !this.HasValidEmissiveKeyword(material);
-			bool flag2 = this.emissionMap.textureValue != null;
-			this.m_MaterialEditor.TexturePropertyWithHDRColor(StandardShaderGUI.Styles.emissionText, this.emissionMap, this.emissionColorForRendering, this.m_ColorPickerHDRConfig, false);
-			float maxColorComponent = this.emissionColorForRendering.colorValue.maxColorComponent;
-			if (this.emissionMap.textureValue != null && !flag2 && maxColorComponent <= 0f)
+			if (this.m_MaterialEditor.EmissionEnabledProperty())
 			{
-				this.emissionColorForRendering.colorValue = Color.white;
-			}
-			this.m_MaterialEditor.LightmapEmissionProperty(3);
-			if (flag)
-			{
-				EditorGUILayout.HelpBox(StandardShaderGUI.Styles.emissiveWarning.text, MessageType.Warning);
+				bool flag = this.emissionMap.textureValue != null;
+				this.m_MaterialEditor.TexturePropertyWithHDRColor(StandardShaderGUI.Styles.emissionText, this.emissionMap, this.emissionColorForRendering, this.m_ColorPickerHDRConfig, false);
+				float maxColorComponent = this.emissionColorForRendering.colorValue.maxColorComponent;
+				if (this.emissionMap.textureValue != null && !flag && maxColorComponent <= 0f)
+				{
+					this.emissionColorForRendering.colorValue = Color.white;
+				}
+				this.m_MaterialEditor.LightmapEmissionFlagsProperty(2, true);
 			}
 		}
 
@@ -429,12 +419,6 @@ namespace UnityEditor
 			return result;
 		}
 
-		private static bool ShouldEmissionBeEnabled(Material mat, Color color)
-		{
-			bool flag = (mat.globalIlluminationFlags & MaterialGlobalIlluminationFlags.RealtimeEmissive) > MaterialGlobalIlluminationFlags.None;
-			return color.maxColorComponent > 0.000392156857f || flag;
-		}
-
 		private static void SetMaterialKeywords(Material material, StandardShaderGUI.WorkflowMode workflowMode)
 		{
 			StandardShaderGUI.SetKeyword(material, "_NORMALMAP", material.GetTexture("_BumpMap") || material.GetTexture("_DetailNormalMap"));
@@ -448,27 +432,13 @@ namespace UnityEditor
 			}
 			StandardShaderGUI.SetKeyword(material, "_PARALLAXMAP", material.GetTexture("_ParallaxMap"));
 			StandardShaderGUI.SetKeyword(material, "_DETAIL_MULX2", material.GetTexture("_DetailAlbedoMap") || material.GetTexture("_DetailNormalMap"));
-			bool flag = StandardShaderGUI.ShouldEmissionBeEnabled(material, material.GetColor("_EmissionColor"));
-			StandardShaderGUI.SetKeyword(material, "_EMISSION", flag);
+			MaterialEditor.FixupEmissiveFlag(material);
+			bool state = (material.globalIlluminationFlags & MaterialGlobalIlluminationFlags.EmissiveIsBlack) == MaterialGlobalIlluminationFlags.None;
+			StandardShaderGUI.SetKeyword(material, "_EMISSION", state);
 			if (material.HasProperty("_SmoothnessTextureChannel"))
 			{
 				StandardShaderGUI.SetKeyword(material, "_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A", StandardShaderGUI.GetSmoothnessMapChannel(material) == StandardShaderGUI.SmoothnessMapChannel.AlbedoAlpha);
 			}
-			MaterialGlobalIlluminationFlags materialGlobalIlluminationFlags = material.globalIlluminationFlags;
-			if ((materialGlobalIlluminationFlags & (MaterialGlobalIlluminationFlags.RealtimeEmissive | MaterialGlobalIlluminationFlags.BakedEmissive)) != MaterialGlobalIlluminationFlags.None)
-			{
-				materialGlobalIlluminationFlags &= ~MaterialGlobalIlluminationFlags.EmissiveIsBlack;
-				if (!flag)
-				{
-					materialGlobalIlluminationFlags |= MaterialGlobalIlluminationFlags.EmissiveIsBlack;
-				}
-				material.globalIlluminationFlags = materialGlobalIlluminationFlags;
-			}
-		}
-
-		private bool HasValidEmissiveKeyword(Material material)
-		{
-			return material.IsKeywordEnabled("_EMISSION") || !StandardShaderGUI.ShouldEmissionBeEnabled(material, this.emissionColorForRendering.colorValue);
 		}
 
 		private static void MaterialChanged(Material material, StandardShaderGUI.WorkflowMode workflowMode)

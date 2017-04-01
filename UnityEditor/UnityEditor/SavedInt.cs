@@ -32,6 +32,7 @@ namespace UnityEditor
 		{
 			this.m_Name = name;
 			this.m_Loaded = false;
+			this.m_Value = value;
 		}
 
 		private void Load()
@@ -39,7 +40,7 @@ namespace UnityEditor
 			if (!this.m_Loaded)
 			{
 				this.m_Loaded = true;
-				this.m_Value = EditorPrefs.GetInt(this.m_Name, this.value);
+				this.m_Value = EditorPrefs.GetInt(this.m_Name, this.m_Value);
 			}
 		}
 

@@ -9,7 +9,7 @@ namespace UnityEditor
 
 		private const string kLastIP = "ProfilerLastIP";
 
-		internal string m_IPString = ProfilerIPWindow.GetLastIPString();
+		internal string m_IPString;
 
 		internal bool didFocus = false;
 
@@ -19,6 +19,11 @@ namespace UnityEditor
 			ProfilerIPWindow windowWithRect = EditorWindow.GetWindowWithRect<ProfilerIPWindow>(rect, true, "Enter Player IP");
 			windowWithRect.position = rect;
 			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
+		}
+
+		private void OnEnable()
+		{
+			this.m_IPString = ProfilerIPWindow.GetLastIPString();
 		}
 
 		public static string GetLastIPString()

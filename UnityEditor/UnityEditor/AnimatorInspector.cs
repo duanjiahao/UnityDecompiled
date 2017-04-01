@@ -91,7 +91,7 @@ namespace UnityEditor
 		{
 			bool flag = base.targets.Length > 1;
 			Animator animator = base.target as Animator;
-			base.serializedObject.UpdateIfDirtyOrScript();
+			base.serializedObject.UpdateIfRequiredOrScript();
 			this.UpdateShowOptions();
 			EditorGUI.BeginChangeCheck();
 			RuntimeAnimatorController runtimeAnimatorController = EditorGUILayout.ObjectField("Controller", animator.runtimeAnimatorController, typeof(RuntimeAnimatorController), false, new GUILayoutOption[0]) as RuntimeAnimatorController;

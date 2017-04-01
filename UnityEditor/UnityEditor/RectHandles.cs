@@ -18,17 +18,7 @@ namespace UnityEditor
 
 		private static RectHandles.Styles s_Styles;
 
-		private static Vector2 s_StartMousePosition;
-
-		private static Vector2 s_CurrentMousePosition;
-
-		private static Vector3 s_StartPosition;
-
-		private static float s_StartRotation;
-
-		private static float s_RotationDist;
-
-		private static int s_LastCursorId = 0;
+		private static int s_LastCursorId;
 
 		private static Vector3[] s_TempVectors = new Vector3[0];
 

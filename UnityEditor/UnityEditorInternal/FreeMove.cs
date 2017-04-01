@@ -12,6 +12,7 @@ namespace UnityEditorInternal
 
 		private static Vector3 s_StartPosition;
 
+		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		public static Vector3 Do(int id, Vector3 position, Quaternion rotation, float size, Vector3 snap, Handles.DrawCapFunction capFunc)
 		{
 			Vector3 position2 = Handles.matrix.MultiplyPoint(position);
@@ -64,7 +65,7 @@ namespace UnityEditorInternal
 									d = Vector3.Dot(position, raycastHit.normal) - num;
 								}
 							}
-							position = Handles.s_InverseMatrix.MultiplyPoint(raycastHit.point + raycastHit.normal * d);
+							position = Handles.inverseMatrix.MultiplyPoint(raycastHit.point + raycastHit.normal * d);
 						}
 						else
 						{
@@ -74,9 +75,9 @@ namespace UnityEditorInternal
 					if (!flag)
 					{
 						FreeMove.s_CurrentMousePosition += new Vector2(current.delta.x, -current.delta.y);
-						Vector3 vector = Camera.current.WorldToScreenPoint(Handles.s_Matrix.MultiplyPoint(FreeMove.s_StartPosition));
+						Vector3 vector = Camera.current.WorldToScreenPoint(Handles.matrix.MultiplyPoint(FreeMove.s_StartPosition));
 						vector += FreeMove.s_CurrentMousePosition - FreeMove.s_StartMousePosition;
-						position = Handles.s_InverseMatrix.MultiplyPoint(Camera.current.ScreenToWorldPoint(vector));
+						position = Handles.inverseMatrix.MultiplyPoint(Camera.current.ScreenToWorldPoint(vector));
 						if (Camera.current.transform.forward == Vector3.forward || Camera.current.transform.forward == -Vector3.forward)
 						{
 							position.z = FreeMove.s_StartPosition.z;
@@ -98,7 +99,7 @@ namespace UnityEditorInternal
 							Vector3 v;
 							if (HandleUtility.FindNearestVertex(current.mousePosition, null, out v))
 							{
-								position = Handles.s_InverseMatrix.MultiplyPoint(v);
+								position = Handles.inverseMatrix.MultiplyPoint(v);
 							}
 						}
 						if (EditorGUI.actionKey && !current.shift)
@@ -192,7 +193,7 @@ namespace UnityEditorInternal
 									d = Vector3.Dot(position, raycastHit.normal) - num;
 								}
 							}
-							position = Handles.s_InverseMatrix.MultiplyPoint(raycastHit.point + raycastHit.normal * d);
+							position = Handles.inverseMatrix.MultiplyPoint(raycastHit.point + raycastHit.normal * d);
 						}
 						else
 						{
@@ -202,9 +203,9 @@ namespace UnityEditorInternal
 					if (!flag)
 					{
 						FreeMove.s_CurrentMousePosition += new Vector2(current.delta.x, -current.delta.y);
-						Vector3 vector = Camera.current.WorldToScreenPoint(Handles.s_Matrix.MultiplyPoint(FreeMove.s_StartPosition));
+						Vector3 vector = Camera.current.WorldToScreenPoint(Handles.matrix.MultiplyPoint(FreeMove.s_StartPosition));
 						vector += FreeMove.s_CurrentMousePosition - FreeMove.s_StartMousePosition;
-						position = Handles.s_InverseMatrix.MultiplyPoint(Camera.current.ScreenToWorldPoint(vector));
+						position = Handles.inverseMatrix.MultiplyPoint(Camera.current.ScreenToWorldPoint(vector));
 						if (Camera.current.transform.forward == Vector3.forward || Camera.current.transform.forward == -Vector3.forward)
 						{
 							position.z = FreeMove.s_StartPosition.z;
@@ -226,7 +227,7 @@ namespace UnityEditorInternal
 							Vector3 v;
 							if (HandleUtility.FindNearestVertex(current.mousePosition, null, out v))
 							{
-								position = Handles.s_InverseMatrix.MultiplyPoint(v);
+								position = Handles.inverseMatrix.MultiplyPoint(v);
 							}
 						}
 						if (EditorGUI.actionKey && !current.shift)
@@ -261,7 +262,7 @@ namespace UnityEditorInternal
 			}
 			case EventType.Layout:
 				Handles.matrix = Matrix4x4.identity;
-				handleFunction(id, position, rotation, size, EventType.Layout);
+				handleFunction(id, position2, Camera.current.transform.rotation, size, EventType.Layout);
 				Handles.matrix = matrix;
 				break;
 			}

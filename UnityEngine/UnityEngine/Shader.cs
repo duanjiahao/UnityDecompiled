@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -9,40 +10,58 @@ namespace UnityEngine
 	{
 		public extern bool isSupported
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern string customEditor
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int maximumLOD
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public static extern int globalMaximumLOD
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern string globalRenderPipeline
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int renderQueue
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern DisableBatchingType disableBatching
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -60,82 +79,230 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Shader Find(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Shader FindBuiltin(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void EnableKeyword(string keyword);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DisableKeyword(string keyword);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsKeywordEnabled(string keyword);
 
-		public static void SetGlobalVector(string propertyName, Vector4 vec)
-		{
-			Shader.SetGlobalVector(Shader.PropertyToID(propertyName), vec);
-		}
-
-		public static void SetGlobalVector(int nameID, Vector4 vec)
-		{
-			Shader.INTERNAL_CALL_SetGlobalVector(nameID, ref vec);
-		}
-
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetGlobalVector(int nameID, ref Vector4 vec);
+		private static extern void SetGlobalFloatImpl(int nameID, float value);
 
-		public static void SetGlobalColor(string propertyName, Color color)
-		{
-			Shader.SetGlobalColor(Shader.PropertyToID(propertyName), color);
-		}
-
-		public static void SetGlobalColor(int nameID, Color color)
-		{
-			Shader.SetGlobalVector(nameID, color);
-		}
-
-		public static void SetGlobalFloat(string propertyName, float value)
-		{
-			Shader.SetGlobalFloat(Shader.PropertyToID(propertyName), value);
-		}
-
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetGlobalFloat(int nameID, float value);
+		private static extern void SetGlobalIntImpl(int nameID, int value);
 
-		public static void SetGlobalInt(string propertyName, int value)
+		private static void SetGlobalVectorImpl(int nameID, Vector4 value)
 		{
-			Shader.SetGlobalFloat(propertyName, (float)value);
+			Shader.INTERNAL_CALL_SetGlobalVectorImpl(nameID, ref value);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetGlobalVectorImpl(int nameID, ref Vector4 value);
+
+		private static void SetGlobalColorImpl(int nameID, Color value)
+		{
+			Shader.INTERNAL_CALL_SetGlobalColorImpl(nameID, ref value);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetGlobalColorImpl(int nameID, ref Color value);
+
+		private static void SetGlobalMatrixImpl(int nameID, Matrix4x4 value)
+		{
+			Shader.INTERNAL_CALL_SetGlobalMatrixImpl(nameID, ref value);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetGlobalMatrixImpl(int nameID, ref Matrix4x4 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetGlobalTextureImpl(int nameID, Texture value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Array ExtractArrayFromList(object list);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetGlobalFloatArrayImpl(int nameID, float[] values);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetGlobalVectorArrayImpl(int nameID, Vector4[] values);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetGlobalMatrixArrayImpl(int nameID, Matrix4x4[] values);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetGlobalBuffer(int nameID, ComputeBuffer buffer);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern float GetGlobalFloatImpl(int nameID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int GetGlobalIntImpl(int nameID);
+
+		private static Vector4 GetGlobalVectorImpl(int nameID)
+		{
+			Vector4 result;
+			Shader.INTERNAL_CALL_GetGlobalVectorImpl(nameID, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetGlobalVectorImpl(int nameID, out Vector4 value);
+
+		private static Color GetGlobalColorImpl(int nameID)
+		{
+			Color result;
+			Shader.INTERNAL_CALL_GetGlobalColorImpl(nameID, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetGlobalColorImpl(int nameID, out Color value);
+
+		private static Matrix4x4 GetGlobalMatrixImpl(int nameID)
+		{
+			Matrix4x4 result;
+			Shader.INTERNAL_CALL_GetGlobalMatrixImpl(nameID, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetGlobalMatrixImpl(int nameID, out Matrix4x4 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Texture GetGlobalTextureImpl(int nameID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern float[] GetGlobalFloatArrayImpl(int nameID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Vector4[] GetGlobalVectorArrayImpl(int nameID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern Matrix4x4[] GetGlobalMatrixArrayImpl(int nameID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetGlobalFloatArrayImplList(int nameID, object list);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetGlobalVectorArrayImplList(int nameID, object list);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void GetGlobalMatrixArrayImplList(int nameID, object list);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int PropertyToID(string name);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string IDToProperty(int id);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void WarmupAllShaders();
+
+		public static void SetGlobalFloat(string name, float value)
+		{
+			Shader.SetGlobalFloat(Shader.PropertyToID(name), value);
+		}
+
+		public static void SetGlobalFloat(int nameID, float value)
+		{
+			Shader.SetGlobalFloatImpl(nameID, value);
+		}
+
+		public static void SetGlobalInt(string name, int value)
+		{
+			Shader.SetGlobalInt(Shader.PropertyToID(name), value);
 		}
 
 		public static void SetGlobalInt(int nameID, int value)
 		{
-			Shader.SetGlobalFloat(nameID, (float)value);
+			Shader.SetGlobalIntImpl(nameID, value);
 		}
 
-		public static void SetGlobalMatrix(string propertyName, Matrix4x4 mat)
+		public static void SetGlobalVector(string name, Vector4 value)
 		{
-			Shader.SetGlobalMatrix(Shader.PropertyToID(propertyName), mat);
+			Shader.SetGlobalVector(Shader.PropertyToID(name), value);
 		}
 
-		public static void SetGlobalMatrix(int nameID, Matrix4x4 mat)
+		public static void SetGlobalVector(int nameID, Vector4 value)
 		{
-			Shader.INTERNAL_CALL_SetGlobalMatrix(nameID, ref mat);
+			Shader.SetGlobalVectorImpl(nameID, value);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetGlobalMatrix(int nameID, ref Matrix4x4 mat);
-
-		public static void SetGlobalTexture(string propertyName, Texture tex)
+		public static void SetGlobalColor(string name, Color value)
 		{
-			Shader.SetGlobalTexture(Shader.PropertyToID(propertyName), tex);
+			Shader.SetGlobalColor(Shader.PropertyToID(name), value);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetGlobalTexture(int nameID, Texture tex);
+		public static void SetGlobalColor(int nameID, Color value)
+		{
+			Shader.SetGlobalColorImpl(nameID, value);
+		}
+
+		public static void SetGlobalMatrix(string name, Matrix4x4 value)
+		{
+			Shader.SetGlobalMatrix(Shader.PropertyToID(name), value);
+		}
+
+		public static void SetGlobalMatrix(int nameID, Matrix4x4 value)
+		{
+			Shader.SetGlobalMatrixImpl(nameID, value);
+		}
+
+		public static void SetGlobalTexture(string name, Texture value)
+		{
+			Shader.SetGlobalTexture(Shader.PropertyToID(name), value);
+		}
+
+		public static void SetGlobalTexture(int nameID, Texture value)
+		{
+			Shader.SetGlobalTextureImpl(nameID, value);
+		}
+
+		public static void SetGlobalBuffer(string name, ComputeBuffer buffer)
+		{
+			Shader.SetGlobalBuffer(Shader.PropertyToID(name), buffer);
+		}
 
 		public static void SetGlobalFloatArray(string name, List<float> values)
 		{
@@ -144,23 +311,12 @@ namespace UnityEngine
 
 		public static void SetGlobalFloatArray(int nameID, List<float> values)
 		{
-			if (values == null)
-			{
-				throw new ArgumentNullException("values");
-			}
-			if (values.Count == 0)
-			{
-				throw new ArgumentException("Zero-sized array is not allowed.");
-			}
-			Shader.SetGlobalFloatArrayImplList(nameID, values);
+			Shader.SetGlobalFloatArray(nameID, (float[])Shader.ExtractArrayFromList(values));
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetGlobalFloatArrayImplList(int nameID, object values);
-
-		public static void SetGlobalFloatArray(string propertyName, float[] values)
+		public static void SetGlobalFloatArray(string name, float[] values)
 		{
-			Shader.SetGlobalFloatArray(Shader.PropertyToID(propertyName), values);
+			Shader.SetGlobalFloatArray(Shader.PropertyToID(name), values);
 		}
 
 		public static void SetGlobalFloatArray(int nameID, float[] values)
@@ -176,9 +332,6 @@ namespace UnityEngine
 			Shader.SetGlobalFloatArrayImpl(nameID, values);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetGlobalFloatArrayImpl(int nameID, float[] values);
-
 		public static void SetGlobalVectorArray(string name, List<Vector4> values)
 		{
 			Shader.SetGlobalVectorArray(Shader.PropertyToID(name), values);
@@ -186,23 +339,12 @@ namespace UnityEngine
 
 		public static void SetGlobalVectorArray(int nameID, List<Vector4> values)
 		{
-			if (values == null)
-			{
-				throw new ArgumentNullException("values");
-			}
-			if (values.Count == 0)
-			{
-				throw new ArgumentException("Zero-sized array is not allowed.");
-			}
-			Shader.SetGlobalVectorArrayImplList(nameID, values);
+			Shader.SetGlobalVectorArray(nameID, (Vector4[])Shader.ExtractArrayFromList(values));
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetGlobalVectorArrayImplList(int nameID, object values);
-
-		public static void SetGlobalVectorArray(string propertyName, Vector4[] values)
+		public static void SetGlobalVectorArray(string name, Vector4[] values)
 		{
-			Shader.SetGlobalVectorArray(Shader.PropertyToID(propertyName), values);
+			Shader.SetGlobalVectorArray(Shader.PropertyToID(name), values);
 		}
 
 		public static void SetGlobalVectorArray(int nameID, Vector4[] values)
@@ -218,9 +360,6 @@ namespace UnityEngine
 			Shader.SetGlobalVectorArrayImpl(nameID, values);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetGlobalVectorArrayImpl(int nameID, Vector4[] values);
-
 		public static void SetGlobalMatrixArray(string name, List<Matrix4x4> values)
 		{
 			Shader.SetGlobalMatrixArray(Shader.PropertyToID(name), values);
@@ -228,23 +367,12 @@ namespace UnityEngine
 
 		public static void SetGlobalMatrixArray(int nameID, List<Matrix4x4> values)
 		{
-			if (values == null)
-			{
-				throw new ArgumentNullException("values");
-			}
-			if (values.Count == 0)
-			{
-				throw new ArgumentException("Zero-sized array is not allowed.");
-			}
-			Shader.SetGlobalMatrixArrayImplList(nameID, values);
+			Shader.SetGlobalMatrixArray(nameID, (Matrix4x4[])Shader.ExtractArrayFromList(values));
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetGlobalMatrixArrayImplList(int nameID, object values);
-
-		public static void SetGlobalMatrixArray(string propertyName, Matrix4x4[] values)
+		public static void SetGlobalMatrixArray(string name, Matrix4x4[] values)
 		{
-			Shader.SetGlobalMatrixArray(Shader.PropertyToID(propertyName), values);
+			Shader.SetGlobalMatrixArray(Shader.PropertyToID(name), values);
 		}
 
 		public static void SetGlobalMatrixArray(int nameID, Matrix4x4[] values)
@@ -260,32 +388,25 @@ namespace UnityEngine
 			Shader.SetGlobalMatrixArrayImpl(nameID, values);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetGlobalMatrixArrayImpl(int nameID, Matrix4x4[] values);
-
-		public static void SetGlobalBuffer(string name, ComputeBuffer buffer)
-		{
-			Shader.SetGlobalBuffer(Shader.PropertyToID(name), buffer);
-		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetGlobalBuffer(int nameID, ComputeBuffer buffer);
-
 		public static float GetGlobalFloat(string name)
 		{
 			return Shader.GetGlobalFloat(Shader.PropertyToID(name));
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float GetGlobalFloat(int nameID);
+		public static float GetGlobalFloat(int nameID)
+		{
+			return Shader.GetGlobalFloatImpl(nameID);
+		}
 
 		public static int GetGlobalInt(string name)
 		{
 			return Shader.GetGlobalInt(Shader.PropertyToID(name));
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int GetGlobalInt(int nameID);
+		public static int GetGlobalInt(int nameID)
+		{
+			return Shader.GetGlobalIntImpl(nameID);
+		}
 
 		public static Vector4 GetGlobalVector(string name)
 		{
@@ -294,13 +415,8 @@ namespace UnityEngine
 
 		public static Vector4 GetGlobalVector(int nameID)
 		{
-			Vector4 result;
-			Shader.INTERNAL_CALL_GetGlobalVector(nameID, out result);
-			return result;
+			return Shader.GetGlobalVectorImpl(nameID);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_GetGlobalVector(int nameID, out Vector4 value);
 
 		public static Color GetGlobalColor(string name)
 		{
@@ -309,13 +425,8 @@ namespace UnityEngine
 
 		public static Color GetGlobalColor(int nameID)
 		{
-			Color result;
-			Shader.INTERNAL_CALL_GetGlobalColor(nameID, out result);
-			return result;
+			return Shader.GetGlobalColorImpl(nameID);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_GetGlobalColor(int nameID, out Color value);
 
 		public static Matrix4x4 GetGlobalMatrix(string name)
 		{
@@ -324,21 +435,18 @@ namespace UnityEngine
 
 		public static Matrix4x4 GetGlobalMatrix(int nameID)
 		{
-			Matrix4x4 result;
-			Shader.INTERNAL_CALL_GetGlobalMatrix(nameID, out result);
-			return result;
+			return Shader.GetGlobalMatrixImpl(nameID);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_GetGlobalMatrix(int nameID, out Matrix4x4 value);
 
 		public static Texture GetGlobalTexture(string name)
 		{
 			return Shader.GetGlobalTexture(Shader.PropertyToID(name));
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Texture GetGlobalTexture(int nameID);
+		public static Texture GetGlobalTexture(int nameID)
+		{
+			return Shader.GetGlobalTextureImpl(nameID);
+		}
 
 		public static void GetGlobalFloatArray(string name, List<float> values)
 		{
@@ -354,9 +462,6 @@ namespace UnityEngine
 			Shader.GetGlobalFloatArrayImplList(nameID, values);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void GetGlobalFloatArrayImplList(int nameID, object list);
-
 		public static float[] GetGlobalFloatArray(string name)
 		{
 			return Shader.GetGlobalFloatArray(Shader.PropertyToID(name));
@@ -366,9 +471,6 @@ namespace UnityEngine
 		{
 			return Shader.GetGlobalFloatArrayImpl(nameID);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern float[] GetGlobalFloatArrayImpl(int nameID);
 
 		public static void GetGlobalVectorArray(string name, List<Vector4> values)
 		{
@@ -384,9 +486,6 @@ namespace UnityEngine
 			Shader.GetGlobalVectorArrayImplList(nameID, values);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void GetGlobalVectorArrayImplList(int nameID, object list);
-
 		public static Vector4[] GetGlobalVectorArray(string name)
 		{
 			return Shader.GetGlobalVectorArray(Shader.PropertyToID(name));
@@ -396,9 +495,6 @@ namespace UnityEngine
 		{
 			return Shader.GetGlobalVectorArrayImpl(nameID);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector4[] GetGlobalVectorArrayImpl(int nameID);
 
 		public static void GetGlobalMatrixArray(string name, List<Matrix4x4> values)
 		{
@@ -414,9 +510,6 @@ namespace UnityEngine
 			Shader.GetGlobalMatrixArrayImplList(nameID, values);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void GetGlobalMatrixArrayImplList(int nameID, object list);
-
 		public static Matrix4x4[] GetGlobalMatrixArray(string name)
 		{
 			return Shader.GetGlobalMatrixArray(Shader.PropertyToID(name));
@@ -426,15 +519,6 @@ namespace UnityEngine
 		{
 			return Shader.GetGlobalMatrixArrayImpl(nameID);
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Matrix4x4[] GetGlobalMatrixArrayImpl(int nameID);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int PropertyToID(string name);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void WarmupAllShaders();
 
 		[Obsolete("SetGlobalTexGenMode is not supported anymore. Use programmable shaders to achieve the same effect.", true)]
 		public static void SetGlobalTexGenMode(string propertyName, TexGenMode mode)

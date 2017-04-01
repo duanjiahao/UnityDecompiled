@@ -90,12 +90,14 @@ namespace UnityEngine.SceneManagement
 
 		public static extern int sceneCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern int sceneCountInBuildSettings
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -107,6 +109,7 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetActiveScene(out Scene value);
 
@@ -115,6 +118,7 @@ namespace UnityEngine.SceneManagement
 			return SceneManager.INTERNAL_CALL_SetActiveScene(ref scene);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_SetActiveScene(ref Scene scene);
 
@@ -125,6 +129,7 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSceneByPath(string scenePath, out Scene value);
 
@@ -135,6 +140,7 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSceneByName(string name, out Scene value);
 
@@ -145,6 +151,7 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSceneByBuildIndex(int buildIndex, out Scene value);
 
@@ -155,6 +162,7 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetSceneAt(int index, out Scene value);
 
@@ -217,6 +225,7 @@ namespace UnityEngine.SceneManagement
 			return SceneManager.LoadSceneAsyncNameIndexInternal(null, sceneBuildIndex, mode == LoadSceneMode.Additive, false);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AsyncOperation LoadSceneAsyncNameIndexInternal(string sceneName, int sceneBuildIndex, bool isAdditive, bool mustCompleteNextFrame);
 
@@ -227,6 +236,7 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_CreateScene(string sceneName, out Scene value);
 
@@ -241,6 +251,7 @@ namespace UnityEngine.SceneManagement
 			return SceneManager.INTERNAL_CALL_UnloadSceneInternal(ref scene);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_UnloadSceneInternal(ref Scene scene);
 
@@ -282,9 +293,11 @@ namespace UnityEngine.SceneManagement
 			return SceneManager.INTERNAL_CALL_UnloadSceneAsyncInternal(ref scene);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AsyncOperation INTERNAL_CALL_UnloadSceneAsyncInternal(ref Scene scene);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern AsyncOperation UnloadSceneNameIndexInternal(string sceneName, int sceneBuildIndex, bool immediately, out bool outSuccess);
 
@@ -293,6 +306,7 @@ namespace UnityEngine.SceneManagement
 			SceneManager.INTERNAL_CALL_MergeScenes(ref sourceScene, ref destinationScene);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MergeScenes(ref Scene sourceScene, ref Scene destinationScene);
 
@@ -301,6 +315,7 @@ namespace UnityEngine.SceneManagement
 			SceneManager.INTERNAL_CALL_MoveGameObjectToScene(go, ref scene);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MoveGameObjectToScene(GameObject go, ref Scene scene);
 

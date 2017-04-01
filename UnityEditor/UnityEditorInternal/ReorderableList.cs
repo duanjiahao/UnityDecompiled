@@ -567,6 +567,7 @@ namespace UnityEditorInternal
 					{
 						if (this.m_NonDragTargetIndices[j] != -1)
 						{
+							rect.height = this.GetElementHeight(j);
 							if (this.elementHeightCallback == null)
 							{
 								rect.y = listRect.y + this.GetElementYOffset(j, this.m_ActiveElement);
@@ -644,6 +645,7 @@ namespace UnityEditorInternal
 					{
 						bool flag2 = k == this.m_ActiveElement;
 						bool flag3 = k == this.m_ActiveElement && this.HasKeyboardControl();
+						rect.height = this.GetElementHeight(k);
 						rect.y = listRect.y + this.GetElementYOffset(k);
 						if (this.drawElementBackgroundCallback == null)
 						{

@@ -15,8 +15,6 @@ namespace UnityEditorInternal
 
 		public string shaderName;
 
-		public Shader shader;
-
 		public int shaderInstanceID;
 
 		public int shaderPassIndex;
@@ -30,6 +28,18 @@ namespace UnityEditorInternal
 		public int meshInstanceID;
 
 		public int meshSubset;
+
+		public int csInstanceID;
+
+		public string csName;
+
+		public string csKernel;
+
+		public int csThreadGroupsX;
+
+		public int csThreadGroupsY;
+
+		public int csThreadGroupsZ;
 
 		public string rtName;
 
@@ -52,6 +62,8 @@ namespace UnityEditorInternal
 		public FrameDebuggerRasterState rasterState;
 
 		public FrameDebuggerDepthState depthState;
+
+		public int batchBreakCause;
 
 		public ShaderProperties shaderProperties;
 	}

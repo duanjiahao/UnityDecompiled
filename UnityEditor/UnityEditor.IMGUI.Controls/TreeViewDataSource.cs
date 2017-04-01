@@ -65,6 +65,14 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
+		public bool isInitialized
+		{
+			get
+			{
+				return this.m_RootItem != null && this.m_Rows != null;
+			}
+		}
+
 		public TreeViewDataSource(TreeViewController treeView)
 		{
 			this.m_TreeView = treeView;
@@ -80,7 +88,7 @@ namespace UnityEditor.IMGUI.Controls
 
 		public abstract void FetchData();
 
-		public void ReloadData()
+		public virtual void ReloadData()
 		{
 			this.m_FakeItem = null;
 			this.FetchData();

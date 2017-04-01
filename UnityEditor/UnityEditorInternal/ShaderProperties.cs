@@ -11,5 +11,7 @@ namespace UnityEditorInternal
 		public ShaderMatrixInfo[] matrices;
 
 		public ShaderTextureInfo[] textures;
+
+		public ShaderBufferInfo[] buffers;
 	}
 }

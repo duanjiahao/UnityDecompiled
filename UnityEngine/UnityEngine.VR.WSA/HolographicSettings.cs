@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.VR.WSA
 {
@@ -7,6 +8,7 @@ namespace UnityEngine.VR.WSA
 	{
 		public static extern bool IsLatentFramePresentation
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -21,6 +23,7 @@ namespace UnityEngine.VR.WSA
 			HolographicSettings.INTERNAL_CALL_InternalSetFocusPointForFrame(ref position);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InternalSetFocusPointForFrame(ref Vector3 position);
 
@@ -34,6 +37,7 @@ namespace UnityEngine.VR.WSA
 			HolographicSettings.INTERNAL_CALL_InternalSetFocusPointForFrameWithNormal(ref position, ref normal);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InternalSetFocusPointForFrameWithNormal(ref Vector3 position, ref Vector3 normal);
 
@@ -47,9 +51,11 @@ namespace UnityEngine.VR.WSA
 			HolographicSettings.INTERNAL_CALL_InternalSetFocusPointForFrameWithNormalVelocity(ref position, ref normal, ref velocity);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InternalSetFocusPointForFrameWithNormalVelocity(ref Vector3 position, ref Vector3 normal, ref Vector3 velocity);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ActivateLatentFramePresentation(bool activated);
 	}

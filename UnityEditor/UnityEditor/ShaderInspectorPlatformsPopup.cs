@@ -60,7 +60,7 @@ namespace UnityEditor
 			{
 				if (ShaderInspectorPlatformsPopup.s_CurrentPlatformMask < 0)
 				{
-					ShaderInspectorPlatformsPopup.s_CurrentPlatformMask = EditorPrefs.GetInt("ShaderInspectorPlatformMask", 524287);
+					ShaderInspectorPlatformsPopup.s_CurrentPlatformMask = EditorPrefs.GetInt("ShaderInspectorPlatformMask", 1048575);
 				}
 				return ShaderInspectorPlatformsPopup.s_CurrentPlatformMask;
 			}

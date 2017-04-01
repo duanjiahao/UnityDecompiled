@@ -1,17 +1,36 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnityEditor.Collaboration
 {
 	internal class CollabTesting
 	{
-		private static readonly Queue<Action> m_Actions = new Queue<Action>();
+		private static IEnumerator<bool> _enumerator = null;
 
-		public static int ActionsCount
+		private static Action _runAfter = null;
+
+		public static Func<IEnumerable<bool>> Tick
+		{
+			set
+			{
+				CollabTesting._enumerator = value().GetEnumerator();
+			}
+		}
+
+		public static Action AfterRun
+		{
+			set
+			{
+				CollabTesting._runAfter = value;
+			}
+		}
+
+		public static bool IsRunning
 		{
 			get
 			{
-				return CollabTesting.m_Actions.Count;
+				return CollabTesting._enumerator != null;
 			}
 		}
 
@@ -20,23 +39,35 @@ namespace UnityEditor.Collaboration
 			CollabTesting.Execute();
 		}
 
-		public static void AddAction(Action action)
-		{
-			CollabTesting.m_Actions.Enqueue(action);
-		}
-
 		public static void Execute()
 		{
-			if (CollabTesting.m_Actions.Count != 0)
+			if (CollabTesting._enumerator != null)
 			{
-				Action action = CollabTesting.m_Actions.Dequeue();
-				action();
+				if (!Collab.instance.AnyJobRunning())
+				{
+					try
+					{
+						if (!CollabTesting._enumerator.MoveNext())
+						{
+							CollabTesting.End();
+						}
+					}
+					catch (Exception)
+					{
+						Debug.LogError("Something Went wrong with the test framework itself");
+						throw;
+					}
+				}
 			}
 		}
 
-		public static void DropAll()
+		public static void End()
 		{
-			CollabTesting.m_Actions.Clear();
+			if (CollabTesting._enumerator != null)
+			{
+				CollabTesting._runAfter();
+				CollabTesting._enumerator = null;
+			}
 		}
 	}
 }

@@ -19,11 +19,11 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			get
 			{
-				return EditorApplication.timeSinceStartup - this.startTime;
+				return this.timeCaptured - this.startTime;
 			}
 			set
 			{
-				this.startTime = EditorApplication.timeSinceStartup - value;
+				this.startTime = this.timeCaptured - value;
 			}
 		}
 
@@ -57,6 +57,12 @@ namespace UnityEditor.IMGUI.Controls
 			set;
 		}
 
+		public double timeCaptured
+		{
+			get;
+			set;
+		}
+
 		public double animationDuration
 		{
 			get;
@@ -64,6 +70,12 @@ namespace UnityEditor.IMGUI.Controls
 		}
 
 		public bool expanding
+		{
+			get;
+			set;
+		}
+
+		public bool includeChildren
 		{
 			get;
 			set;
@@ -79,6 +91,18 @@ namespace UnityEditor.IMGUI.Controls
 		{
 			get;
 			set;
+		}
+
+		public TreeViewAnimationInput()
+		{
+			double timeSinceStartup = EditorApplication.timeSinceStartup;
+			this.timeCaptured = timeSinceStartup;
+			this.startTime = timeSinceStartup;
+		}
+
+		public void CaptureTime()
+		{
+			this.timeCaptured = EditorApplication.timeSinceStartup;
 		}
 
 		public void FireAnimationEndedEvent()

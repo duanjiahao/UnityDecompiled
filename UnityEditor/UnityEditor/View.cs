@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
+	[UsedByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	internal class View : ScriptableObject
 	{

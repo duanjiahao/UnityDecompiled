@@ -3,9 +3,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
+	[UsedByNativeCode]
 	public class EditorWindow : ScriptableObject
 	{
 		[HideInInspector, SerializeField]
@@ -24,9 +26,6 @@ namespace UnityEditor
 		private int m_DepthBufferBits = 0;
 
 		[HideInInspector, SerializeField]
-		private int m_AntiAlias = 0;
-
-		[HideInInspector, SerializeField]
 		internal Rect m_Pos = new Rect(0f, 0f, 320f, 240f);
 
 		private Rect m_GameViewRect;
@@ -38,6 +37,8 @@ namespace UnityEditor
 		private bool m_DontClearBackground;
 
 		private bool m_WantsMouseMove;
+
+		private bool m_WantsMouseEnterLeaveWindow;
 
 		[NonSerialized]
 		internal HostView m_Parent;
@@ -61,6 +62,19 @@ namespace UnityEditor
 			set
 			{
 				this.m_WantsMouseMove = value;
+				this.MakeParentsSettingsMatchMe();
+			}
+		}
+
+		public bool wantsMouseEnterLeaveWindow
+		{
+			get
+			{
+				return this.m_WantsMouseEnterLeaveWindow;
+			}
+			set
+			{
+				this.m_WantsMouseEnterLeaveWindow = value;
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
@@ -241,15 +255,15 @@ namespace UnityEditor
 			}
 		}
 
+		[Obsolete("AA is not supported on EditorWindows", false)]
 		public int antiAlias
 		{
 			get
 			{
-				return this.m_AntiAlias;
+				return 1;
 			}
 			set
 			{
-				this.m_AntiAlias = value;
 			}
 		}
 
@@ -269,9 +283,14 @@ namespace UnityEditor
 					{
 						this.m_Parent.window.position = value;
 					}
-					else if (!dockArea || (dockArea.parent && dockArea.m_Panes.Count == 1 && !dockArea.parent.parent))
+					else if (dockArea.parent && dockArea.m_Panes.Count == 1 && !dockArea.parent.parent)
 					{
-						dockArea.window.position = dockArea.borderSize.Add(value);
+						Rect position = dockArea.borderSize.Add(value);
+						if (dockArea.background != null)
+						{
+							position.y -= (float)dockArea.background.margin.top;
+						}
+						dockArea.window.position = position;
 					}
 					else
 					{
@@ -287,6 +306,7 @@ namespace UnityEditor
 			this.titleContent.text = base.GetType().ToString();
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void MakeModal(ContainerWindow win);
 
@@ -535,11 +555,11 @@ namespace UnityEditor
 			{
 				this.m_Parent.SetTitle(base.GetType().FullName);
 				this.m_Parent.autoRepaintOnSceneChange = this.m_AutoRepaintOnSceneChange;
-				bool flag = this.m_Parent.antiAlias != this.m_AntiAlias || this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
-				this.m_Parent.antiAlias = this.m_AntiAlias;
+				bool flag = this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
 				this.m_Parent.depthBufferBits = this.m_DepthBufferBits;
 				this.m_Parent.SetInternalGameViewDimensions(this.m_GameViewRect, this.m_GameViewClippedRect, this.m_GameViewTargetSize);
 				this.m_Parent.wantsMouseMove = this.m_WantsMouseMove;
+				this.m_Parent.wantsMouseEnterLeaveWindow = this.m_WantsMouseEnterLeaveWindow;
 				Vector2 b = new Vector2((float)(this.m_Parent.borderSize.left + this.m_Parent.borderSize.right), (float)(this.m_Parent.borderSize.top + this.m_Parent.borderSize.bottom));
 				this.m_Parent.SetMinMaxSizes(this.minSize + b, this.maxSize + b);
 				if (flag)
@@ -650,7 +670,9 @@ namespace UnityEditor
 		internal void ShowModal()
 		{
 			this.ShowWithMode(ShowMode.AuxWindow);
+			SavedGUIState savedGUIState = SavedGUIState.Create();
 			this.MakeModal(this.m_Parent.window);
+			savedGUIState.ApplyAndForget();
 		}
 
 		private static EditorWindow GetWindowPrivate(Type t, bool utility, string title, bool focus)

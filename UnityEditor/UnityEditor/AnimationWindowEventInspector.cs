@@ -6,36 +6,58 @@ using UnityEngine;
 
 namespace UnityEditor
 {
-	[CustomEditor(typeof(AnimationWindowEvent))]
+	[CanEditMultipleObjects, CustomEditor(typeof(AnimationWindowEvent))]
 	internal class AnimationWindowEventInspector : Editor
 	{
+		private struct AnimationWindowEventData
+		{
+			public GameObject root;
+
+			public AnimationClip clip;
+
+			public AnimationClipInfoProperties clipInfo;
+
+			public AnimationEvent[] events;
+
+			public AnimationEvent[] selectedEvents;
+		}
+
 		private const string kNotSupportedPostFix = " (Function Not Supported)";
 
 		private const string kNoneSelected = "(No Function Selected)";
 
 		public override void OnInspectorGUI()
 		{
-			AnimationWindowEventInspector.OnEditAnimationEvent(base.target as AnimationWindowEvent);
+			AnimationWindowEvent[] awEvents = (from o in base.targets
+			select o as AnimationWindowEvent).ToArray<AnimationWindowEvent>();
+			AnimationWindowEventInspector.OnEditAnimationEvents(awEvents);
 		}
 
-		public static void OnEditAnimationEvent(AnimationWindowEvent awevt)
+		protected override void OnHeaderGUI()
 		{
-			AnimationEvent[] array = null;
-			if (awevt.clip != null)
+			string header = (base.targets.Length != 1) ? (base.targets.Length + " Animation Events") : "Animation Event";
+			Editor.DrawHeaderGUI(this, header);
+		}
+
+		public static void OnEditAnimationEvent(AnimationWindowEvent awe)
+		{
+			AnimationWindowEventInspector.OnEditAnimationEvents(new AnimationWindowEvent[]
 			{
-				array = AnimationUtility.GetAnimationEvents(awevt.clip);
-			}
-			else if (awevt.clipInfo != null)
+				awe
+			});
+		}
+
+		public static void OnEditAnimationEvents(AnimationWindowEvent[] awEvents)
+		{
+			AnimationWindowEventInspector.AnimationWindowEventData data = AnimationWindowEventInspector.GetData(awEvents);
+			if (data.events != null && data.selectedEvents != null && data.selectedEvents.Length != 0)
 			{
-				array = awevt.clipInfo.GetEvents();
-			}
-			if (array != null && awevt.eventIndex >= 0 && awevt.eventIndex < array.Length)
-			{
-				AnimationEvent evt = array[awevt.eventIndex];
+				AnimationEvent firstEvent = data.selectedEvents[0];
+				bool flag = Array.TrueForAll<AnimationEvent>(data.selectedEvents, (AnimationEvent evt) => evt.functionName == firstEvent.functionName);
 				GUI.changed = false;
-				if (awevt.root != null)
+				if (data.root != null)
 				{
-					List<AnimationWindowEventMethod> list = AnimationWindowEventInspector.CollectSupportedMethods(awevt);
+					List<AnimationWindowEventMethod> list = AnimationWindowEventInspector.CollectSupportedMethods(data.root);
 					List<string> list2 = new List<string>(list.Count);
 					for (int i = 0; i < list.Count; i++)
 					{
@@ -59,34 +81,41 @@ namespace UnityEditor
 						list2.Add(animationWindowEventMethod.name + str);
 					}
 					int count = list.Count;
-					int num = list.FindIndex((AnimationWindowEventMethod method) => method.name == evt.functionName);
+					int num = list.FindIndex((AnimationWindowEventMethod method) => method.name == firstEvent.functionName);
 					if (num == -1)
 					{
 						num = list.Count;
 						list.Add(new AnimationWindowEventMethod
 						{
-							name = evt.functionName,
+							name = firstEvent.functionName,
 							parameterType = null
 						});
-						if (string.IsNullOrEmpty(evt.functionName))
+						if (string.IsNullOrEmpty(firstEvent.functionName))
 						{
 							list2.Add("(No Function Selected)");
 						}
 						else
 						{
-							list2.Add(evt.functionName + " (Function Not Supported)");
+							list2.Add(firstEvent.functionName + " (Function Not Supported)");
 						}
 					}
 					EditorGUIUtility.labelWidth = 130f;
-					int num2 = num;
+					EditorGUI.showMixedValue = !flag;
+					int num2 = (!flag) ? -1 : num;
 					num = EditorGUILayout.Popup("Function: ", num, list2.ToArray(), new GUILayoutOption[0]);
 					if (num2 != num && num != -1 && num != count)
 					{
-						evt.functionName = list[num].name;
-						evt.stringParameter = string.Empty;
+						AnimationEvent[] selectedEvents = data.selectedEvents;
+						for (int j = 0; j < selectedEvents.Length; j++)
+						{
+							AnimationEvent animationEvent = selectedEvents[j];
+							animationEvent.functionName = list[num].name;
+							animationEvent.stringParameter = string.Empty;
+						}
 					}
+					EditorGUI.showMixedValue = false;
 					Type parameterType = list[num].parameterType;
-					if (parameterType != null)
+					if (flag && parameterType != null)
 					{
 						EditorGUILayout.Space();
 						if (parameterType == typeof(AnimationEvent))
@@ -97,25 +126,44 @@ namespace UnityEditor
 						{
 							EditorGUILayout.PrefixLabel("Parameters");
 						}
-						AnimationWindowEventInspector.DoEditRegularParameters(evt, parameterType);
+						AnimationWindowEventInspector.DoEditRegularParameters(data.selectedEvents, parameterType);
 					}
 				}
 				else
 				{
-					evt.functionName = EditorGUILayout.TextField(new GUIContent("Function"), evt.functionName, new GUILayoutOption[0]);
-					AnimationWindowEventInspector.DoEditRegularParameters(evt, typeof(AnimationEvent));
+					EditorGUI.showMixedValue = !flag;
+					string text = (!flag) ? "" : firstEvent.functionName;
+					string text2 = EditorGUILayout.TextField(new GUIContent("Function"), text, new GUILayoutOption[0]);
+					if (text2 != text)
+					{
+						AnimationEvent[] selectedEvents2 = data.selectedEvents;
+						for (int k = 0; k < selectedEvents2.Length; k++)
+						{
+							AnimationEvent animationEvent2 = selectedEvents2[k];
+							animationEvent2.functionName = text2;
+							animationEvent2.stringParameter = string.Empty;
+						}
+					}
+					EditorGUI.showMixedValue = false;
+					if (flag)
+					{
+						AnimationWindowEventInspector.DoEditRegularParameters(data.selectedEvents, typeof(AnimationEvent));
+					}
+					else
+					{
+						using (new EditorGUI.DisabledScope(true))
+						{
+							AnimationEvent animationEvent3 = new AnimationEvent();
+							AnimationWindowEventInspector.DoEditRegularParameters(new AnimationEvent[]
+							{
+								animationEvent3
+							}, typeof(AnimationEvent));
+						}
+					}
 				}
 				if (GUI.changed)
 				{
-					if (awevt.clip != null)
-					{
-						Undo.RegisterCompleteObjectUndo(awevt.clip, "Animation Event Change");
-						AnimationUtility.SetAnimationEvents(awevt.clip, array);
-					}
-					else if (awevt.clipInfo != null)
-					{
-						awevt.clipInfo.SetEvent(awevt.eventIndex, evt);
-					}
+					AnimationWindowEventInspector.SetData(awEvents, data);
 				}
 			}
 		}
@@ -126,21 +174,24 @@ namespace UnityEditor
 			using (new EditorGUI.DisabledScope(true))
 			{
 				animationEvent.functionName = EditorGUILayout.TextField(new GUIContent("Function"), animationEvent.functionName, new GUILayoutOption[0]);
-				AnimationWindowEventInspector.DoEditRegularParameters(animationEvent, typeof(AnimationEvent));
+				AnimationWindowEventInspector.DoEditRegularParameters(new AnimationEvent[]
+				{
+					animationEvent
+				}, typeof(AnimationEvent));
 			}
 		}
 
-		public static List<AnimationWindowEventMethod> CollectSupportedMethods(AnimationWindowEvent awevt)
+		public static List<AnimationWindowEventMethod> CollectSupportedMethods(GameObject gameObject)
 		{
 			List<AnimationWindowEventMethod> list = new List<AnimationWindowEventMethod>();
 			List<AnimationWindowEventMethod> result;
-			if (awevt.root == null)
+			if (gameObject == null)
 			{
 				result = list;
 			}
 			else
 			{
-				MonoBehaviour[] components = awevt.root.GetComponents<MonoBehaviour>();
+				MonoBehaviour[] components = gameObject.GetComponents<MonoBehaviour>();
 				HashSet<string> hashSet = new HashSet<string>();
 				MonoBehaviour[] array = components;
 				for (int i = 0; i < array.Length; i++)
@@ -167,7 +218,7 @@ namespace UnityEditor
 											type2 = parameters[0].ParameterType;
 											if (type2 != typeof(string) && type2 != typeof(float) && type2 != typeof(int) && type2 != typeof(AnimationEvent) && type2 != typeof(UnityEngine.Object) && !type2.IsSubclassOf(typeof(UnityEngine.Object)) && !type2.IsEnum)
 											{
-												goto IL_1C7;
+												goto IL_1BD;
 											}
 										}
 										AnimationWindowEventMethod item = default(AnimationWindowEventMethod);
@@ -184,7 +235,7 @@ namespace UnityEditor
 										list.Add(item);
 									}
 								}
-								IL_1C7:;
+								IL_1BD:;
 							}
 							type = type.BaseType;
 						}
@@ -254,33 +305,86 @@ namespace UnityEditor
 			return result;
 		}
 
-		private static void DoEditRegularParameters(AnimationEvent evt, Type selectedParameter)
+		private static void DoEditRegularParameters(AnimationEvent[] events, Type selectedParameter)
 		{
+			AnimationEvent firstEvent = events[0];
 			if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(float))
 			{
-				evt.floatParameter = EditorGUILayout.FloatField("Float", evt.floatParameter, new GUILayoutOption[0]);
+				bool flag = Array.TrueForAll<AnimationEvent>(events, (AnimationEvent evt) => evt.floatParameter == firstEvent.floatParameter);
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = !flag;
+				float floatParameter = EditorGUILayout.FloatField("Float", firstEvent.floatParameter, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					for (int i = 0; i < events.Length; i++)
+					{
+						AnimationEvent animationEvent = events[i];
+						animationEvent.floatParameter = floatParameter;
+					}
+				}
 			}
-			if (selectedParameter.IsEnum)
+			if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(int) || selectedParameter.IsEnum)
 			{
-				evt.intParameter = AnimationWindowEventInspector.EnumPopup("Enum", selectedParameter, evt.intParameter);
-			}
-			else if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(int))
-			{
-				evt.intParameter = EditorGUILayout.IntField("Int", evt.intParameter, new GUILayoutOption[0]);
+				bool flag2 = Array.TrueForAll<AnimationEvent>(events, (AnimationEvent evt) => evt.intParameter == firstEvent.intParameter);
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = !flag2;
+				int intParameter;
+				if (selectedParameter.IsEnum)
+				{
+					intParameter = AnimationWindowEventInspector.EnumPopup("Enum", selectedParameter, firstEvent.intParameter);
+				}
+				else
+				{
+					intParameter = EditorGUILayout.IntField("Int", firstEvent.intParameter, new GUILayoutOption[0]);
+				}
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					for (int j = 0; j < events.Length; j++)
+					{
+						AnimationEvent animationEvent2 = events[j];
+						animationEvent2.intParameter = intParameter;
+					}
+				}
 			}
 			if (selectedParameter == typeof(AnimationEvent) || selectedParameter == typeof(string))
 			{
-				evt.stringParameter = EditorGUILayout.TextField("String", evt.stringParameter, new GUILayoutOption[0]);
+				bool flag3 = Array.TrueForAll<AnimationEvent>(events, (AnimationEvent evt) => evt.stringParameter == firstEvent.stringParameter);
+				EditorGUI.BeginChangeCheck();
+				EditorGUI.showMixedValue = !flag3;
+				string stringParameter = EditorGUILayout.TextField("String", firstEvent.stringParameter, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					for (int k = 0; k < events.Length; k++)
+					{
+						AnimationEvent animationEvent3 = events[k];
+						animationEvent3.stringParameter = stringParameter;
+					}
+				}
 			}
 			if (selectedParameter == typeof(AnimationEvent) || selectedParameter.IsSubclassOf(typeof(UnityEngine.Object)) || selectedParameter == typeof(UnityEngine.Object))
 			{
+				bool flag4 = Array.TrueForAll<AnimationEvent>(events, (AnimationEvent evt) => evt.objectReferenceParameter == firstEvent.objectReferenceParameter);
+				EditorGUI.BeginChangeCheck();
 				Type type = typeof(UnityEngine.Object);
 				if (selectedParameter != typeof(AnimationEvent))
 				{
 					type = selectedParameter;
 				}
+				EditorGUI.showMixedValue = !flag4;
 				bool allowSceneObjects = false;
-				evt.objectReferenceParameter = EditorGUILayout.ObjectField(ObjectNames.NicifyVariableName(type.Name), evt.objectReferenceParameter, type, allowSceneObjects, new GUILayoutOption[0]);
+				UnityEngine.Object objectReferenceParameter = EditorGUILayout.ObjectField(ObjectNames.NicifyVariableName(type.Name), firstEvent.objectReferenceParameter, type, allowSceneObjects, new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = false;
+				if (EditorGUI.EndChangeCheck())
+				{
+					for (int l = 0; l < events.Length; l++)
+					{
+						AnimationEvent animationEvent4 = events[l];
+						animationEvent4.objectReferenceParameter = objectReferenceParameter;
+					}
+				}
 			}
 		}
 
@@ -373,6 +477,94 @@ namespace UnityEditor
 				}
 			}
 			return result;
+		}
+
+		private static AnimationWindowEventInspector.AnimationWindowEventData GetData(AnimationWindowEvent[] awEvents)
+		{
+			AnimationWindowEventInspector.AnimationWindowEventData animationWindowEventData = default(AnimationWindowEventInspector.AnimationWindowEventData);
+			AnimationWindowEventInspector.AnimationWindowEventData result;
+			if (awEvents.Length == 0)
+			{
+				result = animationWindowEventData;
+			}
+			else
+			{
+				AnimationWindowEvent animationWindowEvent = awEvents[0];
+				animationWindowEventData.root = animationWindowEvent.root;
+				animationWindowEventData.clip = animationWindowEvent.clip;
+				animationWindowEventData.clipInfo = animationWindowEvent.clipInfo;
+				if (animationWindowEventData.clip != null)
+				{
+					animationWindowEventData.events = AnimationUtility.GetAnimationEvents(animationWindowEventData.clip);
+				}
+				else if (animationWindowEventData.clipInfo != null)
+				{
+					animationWindowEventData.events = animationWindowEventData.clipInfo.GetEvents();
+				}
+				if (animationWindowEventData.events != null)
+				{
+					List<AnimationEvent> list = new List<AnimationEvent>();
+					for (int i = 0; i < awEvents.Length; i++)
+					{
+						AnimationWindowEvent animationWindowEvent2 = awEvents[i];
+						if (animationWindowEvent2.eventIndex >= 0 && animationWindowEvent2.eventIndex < animationWindowEventData.events.Length)
+						{
+							list.Add(animationWindowEventData.events[animationWindowEvent2.eventIndex]);
+						}
+					}
+					animationWindowEventData.selectedEvents = list.ToArray();
+				}
+				result = animationWindowEventData;
+			}
+			return result;
+		}
+
+		private static void SetData(AnimationWindowEvent[] awEvents, AnimationWindowEventInspector.AnimationWindowEventData data)
+		{
+			if (data.events != null)
+			{
+				if (data.clip != null)
+				{
+					Undo.RegisterCompleteObjectUndo(data.clip, "Animation Event Change");
+					AnimationUtility.SetAnimationEvents(data.clip, data.events);
+				}
+				else if (data.clipInfo != null)
+				{
+					for (int i = 0; i < awEvents.Length; i++)
+					{
+						AnimationWindowEvent animationWindowEvent = awEvents[i];
+						if (animationWindowEvent.eventIndex >= 0 && animationWindowEvent.eventIndex < data.events.Length)
+						{
+							data.clipInfo.SetEvent(animationWindowEvent.eventIndex, data.events[animationWindowEvent.eventIndex]);
+						}
+					}
+				}
+			}
+		}
+
+		[MenuItem("CONTEXT/AnimationWindowEvent/Reset")]
+		private static void ResetValues(MenuCommand command)
+		{
+			AnimationWindowEvent animationWindowEvent = command.context as AnimationWindowEvent;
+			AnimationWindowEvent[] awEvents = new AnimationWindowEvent[]
+			{
+				animationWindowEvent
+			};
+			AnimationWindowEventInspector.AnimationWindowEventData data = AnimationWindowEventInspector.GetData(awEvents);
+			if (data.events != null && data.selectedEvents != null && data.selectedEvents.Length != 0)
+			{
+				AnimationEvent[] selectedEvents = data.selectedEvents;
+				for (int i = 0; i < selectedEvents.Length; i++)
+				{
+					AnimationEvent animationEvent = selectedEvents[i];
+					animationEvent.functionName = "";
+					animationEvent.stringParameter = string.Empty;
+					animationEvent.floatParameter = 0f;
+					animationEvent.intParameter = 0;
+					animationEvent.objectReferenceParameter = null;
+				}
+				AnimationWindowEventInspector.SetData(awEvents, data);
+			}
 		}
 	}
 }

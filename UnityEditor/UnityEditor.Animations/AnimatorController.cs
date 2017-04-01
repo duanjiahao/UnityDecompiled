@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Experimental.Director;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
 
 namespace UnityEditor.Animations
@@ -23,22 +24,27 @@ namespace UnityEditor.Animations
 
 		public extern AnimatorControllerLayer[] layers
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern UnityEngine.AnimatorControllerParameter[] parameters
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal extern bool isAssetBundled
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -74,34 +80,57 @@ namespace UnityEditor.Animations
 			AnimatorController.Internal_Create(this);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorController mono);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern AnimatorController GetEffectiveAnimatorController(Animator animator);
 
 		internal static AnimatorControllerPlayable FindAnimatorControllerPlayable(Animator animator, AnimatorController controller)
 		{
-			AnimatorControllerPlayable result = default(AnimatorControllerPlayable);
-			AnimatorController.FindAnimatorControllerPlayableInternal(ref result, animator, controller);
+			PlayableHandle playableHandle = default(PlayableHandle);
+			AnimatorController.FindAnimatorControllerPlayableInternal(ref playableHandle, animator, controller);
+			AnimatorControllerPlayable result;
+			if (!playableHandle.IsValid())
+			{
+				result = null;
+			}
+			else
+			{
+				AnimatorControllerPlayable @object = playableHandle.GetObject<AnimatorControllerPlayable>();
+				result = @object;
+			}
 			return result;
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void FindAnimatorControllerPlayableInternal(ref AnimatorControllerPlayable ret, Animator animator, AnimatorController controller);
+		internal static void FindAnimatorControllerPlayableInternal(ref PlayableHandle ret, Animator animator, AnimatorController controller)
+		{
+			AnimatorController.INTERNAL_CALL_FindAnimatorControllerPlayableInternal(ref ret, animator, controller);
+		}
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_FindAnimatorControllerPlayableInternal(ref PlayableHandle ret, Animator animator, AnimatorController controller);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetAnimatorController(Animator behavior, AnimatorController controller);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int IndexOfParameter(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RenameParameter(string prevName, string newName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string MakeUniqueParameterName(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string MakeUniqueLayerName(string name);
 
@@ -110,15 +139,19 @@ namespace UnityEditor.Animations
 			return AnimatorController.Internal_FindStateMachineBehaviourContext(behaviour);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int CreateStateMachineBehaviour(MonoScript script);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CanAddStateMachineBehaviours();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern MonoScript GetBehaviourMonoScript(AnimatorState state, int layerIndex, int behaviourIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern ScriptableObject Internal_AddStateMachineBehaviourWithType(Type stateMachineBehaviourType, AnimatorState state, int layerIndex);
 
@@ -138,6 +171,7 @@ namespace UnityEditor.Animations
 			return AnimatorController.ConvertStateMachineBehaviour<T>(this.GetBehaviours(typeof(T)));
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern ScriptableObject[] GetBehaviours(Type type);
 
@@ -160,21 +194,27 @@ namespace UnityEditor.Animations
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern UnityEngine.Object[] CollectObjectsUsingParameter(string parameterName);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddStateEffectiveBehaviour(AnimatorState state, int layerIndex, int instanceID);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveStateEffectiveBehaviour(AnimatorState state, int layerIndex, int behaviourIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern StateMachineBehaviour[] Internal_GetEffectiveBehaviours(AnimatorState state, int layerIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void Internal_SetEffectiveBehaviours(AnimatorState state, int layerIndex, StateMachineBehaviour[] behaviours);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern StateMachineBehaviourContext[] Internal_FindStateMachineBehaviourContext(ScriptableObject scriptableObject);
 

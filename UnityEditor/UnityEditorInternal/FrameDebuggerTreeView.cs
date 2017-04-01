@@ -109,7 +109,7 @@ namespace UnityEditorInternal
 				bool flag = this.m_FrameEvents == null || this.m_FrameEvents.Length < 1;
 				this.m_FrameEvents = frameEvents;
 				this.m_NeedRefreshRows = true;
-				base.ReloadData();
+				this.ReloadData();
 				if (flag)
 				{
 					this.SetExpandedWithChildren(this.m_RootItem, true);

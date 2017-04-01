@@ -6,6 +6,7 @@ namespace UnityEngine
 	{
 		Default,
 		Perspective,
-		Orthographic
+		Orthographic,
+		CustomAxis
 	}
 }

@@ -33,17 +33,28 @@ namespace UnityEditor.Utils
 		{
 			if (!this.hostProcessExited())
 			{
-				while (this.stream.BaseStream != null)
+				try
 				{
-					string text = this.stream.ReadLine();
-					if (text == null)
+					while (this.stream.BaseStream != null)
 					{
-						break;
+						string text = this.stream.ReadLine();
+						if (text == null)
+						{
+							break;
+						}
+						object obj = this.lines;
+						lock (obj)
+						{
+							this.lines.Add(text);
+						}
 					}
-					object obj = this.lines;
-					lock (obj)
+				}
+				catch (ObjectDisposedException)
+				{
+					object obj2 = this.lines;
+					lock (obj2)
 					{
-						this.lines.Add(text);
+						this.lines.Add("Could not read output because an ObjectDisposedException was thrown.");
 					}
 				}
 			}

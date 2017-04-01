@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -56,7 +55,8 @@ namespace UnityEditor
 			GenericMenu genericMenu = new GenericMenu();
 			int num = (!(serializedProperty.objectReferenceValue != null)) ? 0 : serializedProperty.objectReferenceValue.GetInstanceID();
 			bool flag = false;
-			int num2 = BaseObjectTools.StringToClassID(typeName);
+			UnityType unityType = UnityType.FindTypeByName(typeName);
+			int num2 = (unityType == null) ? 0 : unityType.persistentTypeID;
 			BuiltinResource[] array = null;
 			if (num2 > 0)
 			{
@@ -67,14 +67,14 @@ namespace UnityEditor
 					BuiltinResource resource = array2[i];
 					if (resource.m_Name == defaultFieldName)
 					{
-						GenericMenu arg_10E_0 = genericMenu;
-						GUIContent arg_10E_1 = new GUIContent(resource.m_Name);
-						bool arg_10E_2 = resource.m_InstanceID == num;
+						GenericMenu arg_124_0 = genericMenu;
+						GUIContent arg_124_1 = new GUIContent(resource.m_Name);
+						bool arg_124_2 = resource.m_InstanceID == num;
 						if (AssetPopupBackend.<>f__mg$cache0 == null)
 						{
 							AssetPopupBackend.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AssetPopupBackend.AssetPopupMenuCallback);
 						}
-						arg_10E_0.AddItem(arg_10E_1, arg_10E_2, AssetPopupBackend.<>f__mg$cache0, new object[]
+						arg_124_0.AddItem(arg_124_1, arg_124_2, AssetPopupBackend.<>f__mg$cache0, new object[]
 						{
 							resource.m_InstanceID,
 							serializedProperty
@@ -89,14 +89,14 @@ namespace UnityEditor
 			}
 			if (!flag)
 			{
-				GenericMenu arg_190_0 = genericMenu;
-				GUIContent arg_190_1 = new GUIContent(defaultFieldName);
-				bool arg_190_2 = num == 0;
+				GenericMenu arg_1A6_0 = genericMenu;
+				GUIContent arg_1A6_1 = new GUIContent(defaultFieldName);
+				bool arg_1A6_2 = num == 0;
 				if (AssetPopupBackend.<>f__mg$cache1 == null)
 				{
 					AssetPopupBackend.<>f__mg$cache1 = new GenericMenu.MenuFunction2(AssetPopupBackend.AssetPopupMenuCallback);
 				}
-				arg_190_0.AddItem(arg_190_1, arg_190_2, AssetPopupBackend.<>f__mg$cache1, new object[]
+				arg_1A6_0.AddItem(arg_1A6_1, arg_1A6_2, AssetPopupBackend.<>f__mg$cache1, new object[]
 				{
 					0,
 					serializedProperty
@@ -114,14 +114,14 @@ namespace UnityEditor
 			hierarchyProperty.Reset();
 			while (hierarchyProperty.Next(null))
 			{
-				GenericMenu arg_227_0 = genericMenu;
-				GUIContent arg_227_1 = new GUIContent(hierarchyProperty.name);
-				bool arg_227_2 = hierarchyProperty.instanceID == num;
+				GenericMenu arg_23D_0 = genericMenu;
+				GUIContent arg_23D_1 = new GUIContent(hierarchyProperty.name);
+				bool arg_23D_2 = hierarchyProperty.instanceID == num;
 				if (AssetPopupBackend.<>f__mg$cache2 == null)
 				{
 					AssetPopupBackend.<>f__mg$cache2 = new GenericMenu.MenuFunction2(AssetPopupBackend.AssetPopupMenuCallback);
 				}
-				arg_227_0.AddItem(arg_227_1, arg_227_2, AssetPopupBackend.<>f__mg$cache2, new object[]
+				arg_23D_0.AddItem(arg_23D_1, arg_23D_2, AssetPopupBackend.<>f__mg$cache2, new object[]
 				{
 					hierarchyProperty.instanceID,
 					serializedProperty
@@ -133,14 +133,14 @@ namespace UnityEditor
 				for (int j = 0; j < array3.Length; j++)
 				{
 					BuiltinResource builtinResource = array3[j];
-					GenericMenu arg_2B1_0 = genericMenu;
-					GUIContent arg_2B1_1 = new GUIContent(builtinResource.m_Name);
-					bool arg_2B1_2 = builtinResource.m_InstanceID == num;
+					GenericMenu arg_2C7_0 = genericMenu;
+					GUIContent arg_2C7_1 = new GUIContent(builtinResource.m_Name);
+					bool arg_2C7_2 = builtinResource.m_InstanceID == num;
 					if (AssetPopupBackend.<>f__mg$cache3 == null)
 					{
 						AssetPopupBackend.<>f__mg$cache3 = new GenericMenu.MenuFunction2(AssetPopupBackend.AssetPopupMenuCallback);
 					}
-					arg_2B1_0.AddItem(arg_2B1_1, arg_2B1_2, AssetPopupBackend.<>f__mg$cache3, new object[]
+					arg_2C7_0.AddItem(arg_2C7_1, arg_2C7_2, AssetPopupBackend.<>f__mg$cache3, new object[]
 					{
 						builtinResource.m_InstanceID,
 						serializedProperty

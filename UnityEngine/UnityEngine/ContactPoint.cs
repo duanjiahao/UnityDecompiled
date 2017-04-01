@@ -57,6 +57,7 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Collider ColliderFromInstanceId(int instanceID);
 	}

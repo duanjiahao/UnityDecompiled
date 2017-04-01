@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -12,15 +13,19 @@ namespace UnityEditor
 			GUIViewDebuggerHelper.GetViewsInternal(views);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetViewsInternal(object views);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void DebugWindow(GUIView view);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void StopDebugging();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int GetInstructionCount();
 
@@ -31,9 +36,11 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetRectFromInstruction(int instructionIndex, out Rect value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern GUIStyle GetStyleFromInstruction(int instructionIndex);
 
@@ -46,12 +53,15 @@ namespace UnityEditor
 			};
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetContentTextFromInstruction(int instructionIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Texture GetContentImageFromInstruction(int instructionIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern StackFrame[] GetManagedStackTrace(int instructionIndex);
 
@@ -60,6 +70,7 @@ namespace UnityEditor
 			GUIViewDebuggerHelper.GetClipInstructionsInternal(clipInstructions);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetClipInstructionsInternal(object clipInstructions);
 
@@ -68,6 +79,7 @@ namespace UnityEditor
 			GUIViewDebuggerHelper.GetLayoutInstructionsInternal(layoutInstructions);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetLayoutInstructionsInternal(object layoutInstructions);
 
@@ -76,6 +88,7 @@ namespace UnityEditor
 			GUIViewDebuggerHelper.GetUnifiedInstructionsInternal(layoutInstructions);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetUnifiedInstructionsInternal(object instructions);
 	}

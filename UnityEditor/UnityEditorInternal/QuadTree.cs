@@ -75,10 +75,14 @@ namespace UnityEditorInternal
 			this.m_Root.Remove(item);
 		}
 
+		public List<T> GetItemsAtPosition(Vector2 pos)
+		{
+			Rect area = new Rect(pos, Vector2.one);
+			return this.IntersectsWith(area);
+		}
+
 		public List<T> IntersectsWith(Rect area)
 		{
-			area.x -= this.m_ScreenSpaceOffset.x;
-			area.y -= this.m_ScreenSpaceOffset.y;
 			return this.m_Root.IntersectsWith(area);
 		}
 

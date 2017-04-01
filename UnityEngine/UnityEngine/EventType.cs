@@ -21,6 +21,8 @@ namespace UnityEngine
 		ValidateCommand,
 		ExecuteCommand,
 		ContextClick = 16,
+		MouseEnterWindow = 20,
+		MouseLeaveWindow,
 		mouseDown = 0,
 		mouseUp,
 		mouseMove,

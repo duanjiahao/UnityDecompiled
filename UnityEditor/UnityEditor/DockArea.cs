@@ -382,6 +382,12 @@ namespace UnityEditor
 			Highlighter.ControlHighlightGUI(this);
 		}
 
+		protected override void SetActualViewPosition(Rect newPos)
+		{
+			Rect actualViewPosition = base.borderSize.Remove(newPos);
+			base.SetActualViewPosition(actualViewPosition);
+		}
+
 		private void Maximize(object userData)
 		{
 			EditorWindow editorWindow = userData as EditorWindow;
@@ -405,10 +411,11 @@ namespace UnityEditor
 			}
 		}
 
-		private int GetMainWindowPaneCount()
+		private bool AllowTabAction()
 		{
 			int num = 0;
 			ContainerWindow containerWindow = ContainerWindow.windows.First((ContainerWindow e) => e.showMode == ShowMode.MainWindow);
+			bool result;
 			if (containerWindow != null)
 			{
 				View[] allChildren = containerWindow.rootView.allChildren;
@@ -419,10 +426,16 @@ namespace UnityEditor
 					if (dockArea != null)
 					{
 						num += dockArea.m_Panes.Count;
+						if (num > 1)
+						{
+							result = true;
+							return result;
+						}
 					}
 				}
 			}
-			return num;
+			result = false;
+			return result;
 		}
 
 		protected override void AddDefaultItemsToMenu(GenericMenu menu, EditorWindow view)
@@ -439,7 +452,7 @@ namespace UnityEditor
 			{
 				menu.AddDisabledItem(EditorGUIUtility.TextContent("Maximize"));
 			}
-			bool flag = base.window.showMode != ShowMode.MainWindow || this.GetMainWindowPaneCount() > 1;
+			bool flag = base.window.showMode != ShowMode.MainWindow || this.AllowTabAction();
 			if (flag)
 			{
 				menu.AddItem(EditorGUIUtility.TextContent("Close Tab"), false, new GenericMenu.MenuFunction2(this.Close), view);
@@ -552,7 +565,7 @@ namespace UnityEditor
 						}
 					}
 				}
-				goto IL_744;
+				goto IL_741;
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == controlID)
 				{
@@ -561,12 +574,12 @@ namespace UnityEditor
 					{
 						DockArea.s_DragMode = 0;
 						PaneDragTab.get.Close();
-						Delegate arg_49D_0 = EditorApplication.update;
+						Delegate arg_49A_0 = EditorApplication.update;
 						if (DockArea.<>f__mg$cache1 == null)
 						{
 							DockArea.<>f__mg$cache1 = new EditorApplication.CallbackFunction(DockArea.CheckDragWindowExists);
 						}
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_49D_0, DockArea.<>f__mg$cache1);
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_49A_0, DockArea.<>f__mg$cache1);
 						if (DockArea.s_DropInfo != null && DockArea.s_DropInfo.dropArea != null)
 						{
 							DockArea.s_DropInfo.dropArea.PerformDrop(DockArea.s_DragPane, DockArea.s_DropInfo, vector);
@@ -593,7 +606,7 @@ namespace UnityEditor
 					GUIUtility.hotControl = 0;
 					current.Use();
 				}
-				goto IL_744;
+				goto IL_741;
 			case EventType.MouseMove:
 			case EventType.KeyDown:
 			case EventType.KeyUp:
@@ -601,7 +614,7 @@ namespace UnityEditor
 				IL_6F:
 				if (typeForControl != EventType.ContextClick)
 				{
-					goto IL_744;
+					goto IL_741;
 				}
 				if (pos.Contains(current.mousePosition) && GUIUtility.hotControl == 0)
 				{
@@ -611,14 +624,14 @@ namespace UnityEditor
 						base.PopupGenericMenu(this.m_Panes[tabAtMousePos2], new Rect(current.mousePosition.x, current.mousePosition.y, 0f, 0f));
 					}
 				}
-				goto IL_744;
+				goto IL_741;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == controlID)
 				{
 					Vector2 vector2 = current.mousePosition - DockArea.s_StartDragPosition;
 					current.Use();
 					Rect screenPosition = base.screenPosition;
-					bool flag = base.window.showMode != ShowMode.MainWindow || this.GetMainWindowPaneCount() > 1;
+					bool flag = base.window.showMode != ShowMode.MainWindow || this.AllowTabAction();
 					if (DockArea.s_DragMode == 0 && vector2.sqrMagnitude > 99f && flag)
 					{
 						DockArea.s_DragMode = 1;
@@ -634,12 +647,12 @@ namespace UnityEditor
 						}
 						DockArea.s_OriginalDragSource = this;
 						PaneDragTab.get.Show(new Rect(pos.x + screenPosition.x + tabWidth * (float)this.selected, pos.y + screenPosition.y, tabWidth, pos.height), DockArea.s_DragPane.titleContent, base.position.size, GUIUtility.GUIToScreenPoint(current.mousePosition));
-						Delegate arg_2F8_0 = EditorApplication.update;
+						Delegate arg_2F5_0 = EditorApplication.update;
 						if (DockArea.<>f__mg$cache0 == null)
 						{
 							DockArea.<>f__mg$cache0 = new EditorApplication.CallbackFunction(DockArea.CheckDragWindowExists);
 						}
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_2F8_0, DockArea.<>f__mg$cache0);
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_2F5_0, DockArea.<>f__mg$cache0);
 						GUIUtility.ExitGUI();
 					}
 					if (DockArea.s_DragMode == 1)
@@ -695,7 +708,7 @@ namespace UnityEditor
 						}
 					}
 				}
-				goto IL_744;
+				goto IL_741;
 			case EventType.Repaint:
 			{
 				float num = pos.xMin;
@@ -726,11 +739,11 @@ namespace UnityEditor
 					Rect position3 = new Rect(num4, rect2.y, Mathf.Round(rect2.x + rect2.width) - num4, rect2.height);
 					tabStyle.Draw(position3, "Failed to load", false, false, true, false);
 				}
-				goto IL_744;
+				goto IL_741;
 			}
 			}
 			goto IL_6F;
-			IL_744:
+			IL_741:
 			this.selected = Mathf.Clamp(this.selected, 0, this.m_Panes.Count - 1);
 		}
 

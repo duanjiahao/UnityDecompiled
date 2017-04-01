@@ -6,9 +6,17 @@ namespace UnityEditor
 	[CustomEditor(typeof(RenderSettings))]
 	internal class OtherRenderingEditor : Editor
 	{
-		internal class Styles
+		internal static class Styles
 		{
-			public static readonly GUIContent otherHeader = EditorGUIUtility.TextContent("Other Settings");
+			public static readonly GUIContent HaloStrength = EditorGUIUtility.TextContent("Halo Strength|Controls the visibility of the halo effect around lights in the Scene.");
+
+			public static readonly GUIContent HaloTexture = EditorGUIUtility.TextContent("Halo Texture|Specifies the Texture used when drawing the halo effect around lights in the Scene");
+
+			public static readonly GUIContent FlareStrength = EditorGUIUtility.TextContent("Flare Strength|Controls the visibility of lens flares from lights in the Scene.");
+
+			public static readonly GUIContent FlareFadeSpeed = EditorGUIUtility.TextContent("Flare Fade Speed|Controls the time over which lens flares fade from view after initially appearing.");
+
+			public static readonly GUIContent SpotCookie = EditorGUIUtility.TextContent("Spot Cookie|Specifies the Texture mask used to cast shadows, create silhouettes, or patterned illumination when using spot lights.");
 		}
 
 		protected SerializedProperty m_HaloStrength;
@@ -21,10 +29,6 @@ namespace UnityEditor
 
 		protected SerializedProperty m_SpotCookie;
 
-		private bool m_ShowEditor;
-
-		private const string kShowEditorKey = "ShowOtherRenderingEditorFoldout";
-
 		public virtual void OnEnable()
 		{
 			this.m_HaloStrength = base.serializedObject.FindProperty("m_HaloStrength");
@@ -32,32 +36,21 @@ namespace UnityEditor
 			this.m_FlareFadeSpeed = base.serializedObject.FindProperty("m_FlareFadeSpeed");
 			this.m_HaloTexture = base.serializedObject.FindProperty("m_HaloTexture");
 			this.m_SpotCookie = base.serializedObject.FindProperty("m_SpotCookie");
-			this.m_ShowEditor = SessionState.GetBool("ShowOtherRenderingEditorFoldout", false);
 		}
 
 		public virtual void OnDisable()
 		{
-			SessionState.SetBool("ShowOtherRenderingEditorFoldout", this.m_ShowEditor);
 		}
 
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
-			EditorGUILayout.Space();
-			this.m_ShowEditor = EditorGUILayout.FoldoutTitlebar(this.m_ShowEditor, OtherRenderingEditor.Styles.otherHeader);
-			if (this.m_ShowEditor)
-			{
-				EditorGUI.indentLevel++;
-				EditorGUILayout.PropertyField(this.m_HaloTexture, new GUILayoutOption[0]);
-				EditorGUILayout.Slider(this.m_HaloStrength, 0f, 1f, new GUILayoutOption[0]);
-				EditorGUILayout.Space();
-				EditorGUILayout.PropertyField(this.m_FlareFadeSpeed, new GUILayoutOption[0]);
-				EditorGUILayout.Slider(this.m_FlareStrength, 0f, 1f, new GUILayoutOption[0]);
-				EditorGUILayout.Space();
-				EditorGUILayout.PropertyField(this.m_SpotCookie, new GUILayoutOption[0]);
-				EditorGUI.indentLevel--;
-				base.serializedObject.ApplyModifiedProperties();
-			}
+			EditorGUILayout.PropertyField(this.m_HaloTexture, OtherRenderingEditor.Styles.HaloTexture, new GUILayoutOption[0]);
+			EditorGUILayout.Slider(this.m_HaloStrength, 0f, 1f, OtherRenderingEditor.Styles.HaloStrength, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_FlareFadeSpeed, OtherRenderingEditor.Styles.FlareFadeSpeed, new GUILayoutOption[0]);
+			EditorGUILayout.Slider(this.m_FlareStrength, 0f, 1f, OtherRenderingEditor.Styles.FlareStrength, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_SpotCookie, OtherRenderingEditor.Styles.SpotCookie, new GUILayoutOption[0]);
+			base.serializedObject.ApplyModifiedProperties();
 		}
 	}
 }

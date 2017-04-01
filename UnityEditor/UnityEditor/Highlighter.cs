@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -23,6 +24,8 @@ namespace UnityEditor
 
 		private const int kExpansionMovementSize = 5;
 
+		private static bool s_RecursionLock = false;
+
 		private static GUIStyle s_HighlightStyle;
 
 		[CompilerGenerated]
@@ -36,14 +39,17 @@ namespace UnityEditor
 
 		internal static extern HighlightSearchMode searchMode
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		internal static extern bool searching
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -107,12 +113,15 @@ namespace UnityEditor
 			Highlighter.INTERNAL_CALL_Handle(ref position, text);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Handle(ref Rect position, string text);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string internal_get_activeText();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void internal_set_activeText(string value);
 
@@ -123,6 +132,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_internal_get_activeRect(out Rect value);
 
@@ -131,12 +141,15 @@ namespace UnityEditor
 			Highlighter.INTERNAL_CALL_internal_set_activeRect(ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_internal_set_activeRect(ref Rect value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool internal_get_activeVisible();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void internal_set_activeVisible(bool value);
 
@@ -157,51 +170,62 @@ namespace UnityEditor
 
 		public static bool Highlight(string windowTitle, string text, HighlightSearchMode mode)
 		{
-			Highlighter.Stop();
-			Highlighter.active = true;
-			bool result;
-			if (!Highlighter.SetWindow(windowTitle))
+			bool flag = false;
+			if (Highlighter.s_RecursionLock || Highlighter.searching)
 			{
-				Debug.LogWarning("Window " + windowTitle + " not found.");
-				result = false;
+				Debug.LogWarning("Highlighter recursion detected.  You are calling Highlighter.Highlight() with too much abandon.  Avoid highlighting during layout and repaint events.");
+			}
+			else if (Event.current != null && Event.current.type == EventType.Layout)
+			{
+				Debug.LogWarning("You are calling Highlighter.Highlight() inorrectly.  Avoid highlighting during layout and repaint events.");
 			}
 			else
 			{
-				Highlighter.activeText = text;
-				Highlighter.s_SearchMode = mode;
-				Highlighter.s_LastTime = Time.realtimeSinceStartup;
-				bool flag = Highlighter.Search();
-				if (flag)
+				Highlighter.s_RecursionLock = true;
+				Highlighter.Stop();
+				if (!Highlighter.SetWindow(windowTitle))
 				{
-					Delegate arg_79_0 = EditorApplication.update;
-					if (Highlighter.<>f__mg$cache0 == null)
-					{
-						Highlighter.<>f__mg$cache0 = new EditorApplication.CallbackFunction(Highlighter.Update);
-					}
-					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_79_0, Highlighter.<>f__mg$cache0);
-					Delegate arg_AA_0 = EditorApplication.update;
-					if (Highlighter.<>f__mg$cache1 == null)
-					{
-						Highlighter.<>f__mg$cache1 = new EditorApplication.CallbackFunction(Highlighter.Update);
-					}
-					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_AA_0, Highlighter.<>f__mg$cache1);
+					Debug.LogWarning("Window " + windowTitle + " not found.");
 				}
-				else
+				else if (mode != HighlightSearchMode.None)
 				{
-					Debug.LogWarning(string.Concat(new string[]
+					Highlighter.active = true;
+					Highlighter.activeText = text;
+					Highlighter.s_SearchMode = mode;
+					Highlighter.s_LastTime = Time.realtimeSinceStartup;
+					flag = Highlighter.Search();
+					if (flag)
 					{
-						"Item ",
-						text,
-						" not found in window ",
-						windowTitle,
-						"."
-					}));
-					Highlighter.Stop();
+						Delegate arg_D8_0 = EditorApplication.update;
+						if (Highlighter.<>f__mg$cache0 == null)
+						{
+							Highlighter.<>f__mg$cache0 = new EditorApplication.CallbackFunction(Highlighter.Update);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_D8_0, Highlighter.<>f__mg$cache0);
+						Delegate arg_109_0 = EditorApplication.update;
+						if (Highlighter.<>f__mg$cache1 == null)
+						{
+							Highlighter.<>f__mg$cache1 = new EditorApplication.CallbackFunction(Highlighter.Update);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_109_0, Highlighter.<>f__mg$cache1);
+					}
+					else
+					{
+						Debug.LogWarning(string.Concat(new string[]
+						{
+							"Item ",
+							text,
+							" not found in window ",
+							windowTitle,
+							"."
+						}));
+						Highlighter.Stop();
+					}
+					InternalEditorUtility.RepaintAllViews();
 				}
-				InternalEditorUtility.RepaintAllViews();
-				result = flag;
+				Highlighter.s_RecursionLock = false;
 			}
-			return result;
+			return flag;
 		}
 
 		public static void HighlightIdentifier(Rect position, string identifier)
@@ -229,35 +253,35 @@ namespace UnityEditor
 			else
 			{
 				Highlighter.Search();
-			}
-			if (Highlighter.activeVisible)
-			{
-				Highlighter.s_HighlightElapsedTime += Time.realtimeSinceStartup - Highlighter.s_LastTime;
-			}
-			Highlighter.s_LastTime = Time.realtimeSinceStartup;
-			Rect rect = Highlighter.activeRect;
-			if (activeRect.width > 0f)
-			{
-				rect.xMin = Mathf.Min(rect.xMin, activeRect.xMin);
-				rect.xMax = Mathf.Max(rect.xMax, activeRect.xMax);
-				rect.yMin = Mathf.Min(rect.yMin, activeRect.yMin);
-				rect.yMax = Mathf.Max(rect.yMax, activeRect.yMax);
-			}
-			rect = Highlighter.highlightStyle.padding.Add(rect);
-			rect = Highlighter.highlightStyle.overflow.Add(rect);
-			rect = new RectOffset(7, 7, 7, 7).Add(rect);
-			if (Highlighter.s_HighlightElapsedTime < 0.43f)
-			{
-				rect = new RectOffset((int)rect.width / 2, (int)rect.width / 2, (int)rect.height / 2, (int)rect.height / 2).Add(rect);
-			}
-			Highlighter.s_RepaintRegion = rect;
-			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(GUIView));
-			for (int i = 0; i < array.Length; i++)
-			{
-				GUIView gUIView = (GUIView)array[i];
-				if (gUIView.window == Highlighter.s_View.window)
+				if (Highlighter.activeVisible)
 				{
-					gUIView.SendEvent(EditorGUIUtility.CommandEvent("HandleControlHighlight"));
+					Highlighter.s_HighlightElapsedTime += Time.realtimeSinceStartup - Highlighter.s_LastTime;
+				}
+				Highlighter.s_LastTime = Time.realtimeSinceStartup;
+				Rect rect = Highlighter.activeRect;
+				if (activeRect.width > 0f)
+				{
+					rect.xMin = Mathf.Min(rect.xMin, activeRect.xMin);
+					rect.xMax = Mathf.Max(rect.xMax, activeRect.xMax);
+					rect.yMin = Mathf.Min(rect.yMin, activeRect.yMin);
+					rect.yMax = Mathf.Max(rect.yMax, activeRect.yMax);
+				}
+				rect = Highlighter.highlightStyle.padding.Add(rect);
+				rect = Highlighter.highlightStyle.overflow.Add(rect);
+				rect = new RectOffset(7, 7, 7, 7).Add(rect);
+				if (Highlighter.s_HighlightElapsedTime < 0.43f)
+				{
+					rect = new RectOffset((int)rect.width / 2, (int)rect.width / 2, (int)rect.height / 2, (int)rect.height / 2).Add(rect);
+				}
+				Highlighter.s_RepaintRegion = rect;
+				UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(GUIView));
+				for (int i = 0; i < array.Length; i++)
+				{
+					GUIView gUIView = (GUIView)array[i];
+					if (gUIView.window == Highlighter.s_View.window)
+					{
+						gUIView.SendEvent(EditorGUIUtility.CommandEvent("HandleControlHighlight"));
+					}
 				}
 			}
 		}
@@ -299,7 +323,7 @@ namespace UnityEditor
 			}
 			else
 			{
-				Highlighter.searchMode = HighlightSearchMode.None;
+				Highlighter.s_SearchMode = HighlightSearchMode.None;
 				Highlighter.Stop();
 				result = false;
 			}
@@ -330,7 +354,7 @@ namespace UnityEditor
 						Vector2 scale = (Vector2.one + b) * num2;
 						Matrix4x4 matrix = GUI.matrix;
 						Color color = GUI.color;
-						GUI.color = new Color(1f, 1f, 1f, 0.8f - 0.3f * num);
+						GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(0.8f * num2 - 0.3f * num));
 						GUIUtility.ScaleAroundPivot(scale, rect.center);
 						Highlighter.highlightStyle.Draw(rect, false, false, false, false);
 						GUI.color = color;

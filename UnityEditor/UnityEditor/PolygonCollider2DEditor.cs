@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Sprites;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -11,21 +12,32 @@ namespace UnityEditor
 	{
 		private readonly PolygonEditorUtility m_PolyUtility = new PolygonEditorUtility();
 
-		private bool m_ShowColliderInfo;
-
 		private SerializedProperty m_Points;
 
 		public override void OnEnable()
 		{
 			base.OnEnable();
 			this.m_Points = base.serializedObject.FindProperty("m_Points");
+			this.m_AutoTiling = base.serializedObject.FindProperty("m_AutoTiling");
 			this.m_Points.isExpanded = false;
 		}
 
 		public override void OnInspectorGUI()
 		{
 			EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
-			base.BeginColliderInspector();
+			bool flag = !base.CanEditCollider();
+			if (flag)
+			{
+				EditorGUILayout.HelpBox(Collider2DEditorBase.Styles.s_ColliderEditDisableHelp.text, MessageType.Info);
+				if (base.editingCollider)
+				{
+					EditMode.QuitEditMode();
+				}
+			}
+			else
+			{
+				base.BeginColliderInspector();
+			}
 			base.OnInspectorGUI();
 			if (base.targets.Length == 1)
 			{

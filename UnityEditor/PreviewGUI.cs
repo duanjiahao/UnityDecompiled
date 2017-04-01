@@ -48,23 +48,15 @@ internal class PreviewGUI
 		{
 			if (type != EventType.Used)
 			{
-				bool flag = false;
-				bool flag2 = false;
-				if (flag2 || rect3.width > rect.width)
-				{
-					flag2 = true;
-				}
-				if (flag || rect3.height > rect.height)
-				{
-					flag = true;
-				}
+				bool flag = (int)rect3.width > (int)rect.width;
+				bool flag2 = (int)rect3.height > (int)rect.height;
 				int controlID = GUIUtility.GetControlID(PreviewGUI.sliderHash, FocusType.Passive);
 				if (flag2)
 				{
 					GUIStyle gUIStyle = "PreHorizontalScrollbar";
-					GUIStyle thumbStyle = "PreHorizontalScrollbarThumb";
+					GUIStyle thumb = "PreHorizontalScrollbarThumb";
 					float num = (rect3.width - rect.width) * 0.5f;
-					result.x = GUI.Slider(new Rect(rect2.x, rect2.yMax - gUIStyle.fixedHeight, rect.width - ((!flag) ? 0f : gUIStyle.fixedHeight), gUIStyle.fixedHeight), result.x, rect.width + num, -num, rect3.width, gUIStyle, thumbStyle, true, controlID);
+					result.x = GUI.Slider(new Rect(rect2.x, rect2.yMax - gUIStyle.fixedHeight, rect.width - ((!flag) ? 0f : gUIStyle.fixedHeight), gUIStyle.fixedHeight), result.x, rect.width + num, -num, rect3.width, gUIStyle, thumb, true, controlID);
 				}
 				else
 				{
@@ -74,9 +66,9 @@ internal class PreviewGUI
 				if (flag)
 				{
 					GUIStyle gUIStyle2 = "PreVerticalScrollbar";
-					GUIStyle thumbStyle2 = "PreVerticalScrollbarThumb";
+					GUIStyle thumb2 = "PreVerticalScrollbarThumb";
 					float num2 = (rect3.height - rect.height) * 0.5f;
-					result.y = GUI.Slider(new Rect(rect.xMax - gUIStyle2.fixedWidth, rect.y, gUIStyle2.fixedWidth, rect.height), result.y, rect.height + num2, -num2, rect3.height, gUIStyle2, thumbStyle2, false, controlID);
+					result.y = GUI.Slider(new Rect(rect.xMax - gUIStyle2.fixedWidth, rect.y, gUIStyle2.fixedWidth, rect.height), result.y, rect.height + num2, -num2, rect3.height, gUIStyle2, thumb2, false, controlID);
 				}
 				else
 				{

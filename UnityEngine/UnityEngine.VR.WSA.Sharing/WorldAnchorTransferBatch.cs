@@ -175,21 +175,27 @@ namespace UnityEngine.VR.WSA.Sharing
 			onDeserializationComplete(completionReason, deserializedTransferBatch);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ExportAsync_Internal(IntPtr transferBatch, WorldAnchorTransferBatch.SerializationDataAvailableDelegate onDataAvailable, WorldAnchorTransferBatch.SerializationCompleteDelegate onComplete);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ImportAsync_Internal(byte[] serializedData, int offset, int length, WorldAnchorTransferBatch.DeserializationCompleteDelegate onComplete);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool AddWorldAnchor_Internal(IntPtr context, string id, WorldAnchor anchor);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetAnchorCount_Internal(IntPtr context);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetAllIds_Internal(IntPtr context, string[] ids);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool LoadAnchor_Internal(IntPtr context, string id, WorldAnchor anchor);
 
@@ -200,13 +206,15 @@ namespace UnityEngine.VR.WSA.Sharing
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Create_Internal(out IntPtr value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Dispose_Internal(IntPtr context);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void DisposeThreaded_Internal(IntPtr context);
 	}

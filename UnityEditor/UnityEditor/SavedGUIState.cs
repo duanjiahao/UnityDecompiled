@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -16,6 +17,9 @@ namespace UnityEditor
 
 		internal GUISkin skin;
 
+		internal int instanceID;
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetupSavedGUIState(out IntPtr state, out Vector2 screenManagerSize);
 
@@ -24,9 +28,11 @@ namespace UnityEditor
 			SavedGUIState.INTERNAL_CALL_Internal_ApplySavedGUIState(state, ref screenManagerSize);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_ApplySavedGUIState(IntPtr state, ref Vector2 screenManagerSize);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int Internal_GetGUIDepth();
 
@@ -37,6 +43,7 @@ namespace UnityEditor
 			{
 				result.skin = GUI.skin;
 				result.layoutCache = new GUILayoutUtility.LayoutCache(GUILayoutUtility.current);
+				result.instanceID = GUIUtility.s_OriginalID;
 				SavedGUIState.Internal_SetupSavedGUIState(out result.guiState, out result.screenManagerSize);
 			}
 			return result;
@@ -48,6 +55,7 @@ namespace UnityEditor
 			{
 				GUILayoutUtility.current = this.layoutCache;
 				GUI.skin = this.skin;
+				GUIUtility.s_OriginalID = this.instanceID;
 				SavedGUIState.Internal_ApplySavedGUIState(this.guiState, this.screenManagerSize);
 				GUIClip.Reapply();
 			}

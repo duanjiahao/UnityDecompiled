@@ -46,9 +46,18 @@ namespace UnityEditor
 			}
 		}
 
+		protected virtual void OnViewChange(EditorWindow view)
+		{
+		}
+
 		protected override void SetPosition(Rect newPos)
 		{
 			base.SetPosition(newPos);
+			this.SetActualViewPosition(newPos);
+		}
+
+		protected virtual void SetActualViewPosition(Rect newPos)
+		{
 			if (this.m_ActualView != null)
 			{
 				this.m_ActualView.m_Pos = newPos;
@@ -62,7 +71,7 @@ namespace UnityEditor
 			this.RegisterSelectedPane();
 		}
 
-		private void OnDisable()
+		public void OnDisable()
 		{
 			this.DeregisterSelectedPane(false);
 		}
@@ -83,7 +92,7 @@ namespace UnityEditor
 			}
 			this.Invoke("OnGUI");
 			EditorGUIUtility.ResetGUIState();
-			if (this.m_ActualView.m_FadeoutTime != 0f && Event.current.type == EventType.Repaint)
+			if (this.m_ActualView != null && this.m_ActualView.m_FadeoutTime != 0f && Event.current.type == EventType.Repaint)
 			{
 				this.m_ActualView.DrawNotification();
 			}
@@ -216,10 +225,10 @@ namespace UnityEditor
 		public void InvokeOnGUI(Rect onGUIPosition)
 		{
 			base.DoWindowDecorationStart();
-			GUIStyle style = "dockareaoverlay";
+			GUIStyle gUIStyle = "dockareaoverlay";
 			if (this.actualView is GameView)
 			{
-				GUI.Box(onGUIPosition, GUIContent.none, style);
+				GUI.Box(onGUIPosition, GUIContent.none, gUIStyle);
 			}
 			HostView.BeginOffsetArea(new Rect(onGUIPosition.x + 2f, onGUIPosition.y + 17f, onGUIPosition.width - 4f, onGUIPosition.height - 17f - 2f), GUIContent.none, "TabWindowBackground");
 			EditorGUIUtility.ResetGUIState();
@@ -247,7 +256,10 @@ namespace UnityEditor
 					HostView.EndOffsetArea();
 					EditorGUIUtility.ResetGUIState();
 					base.DoWindowDecorationEnd();
-					GUI.Box(onGUIPosition, GUIContent.none, style);
+					if (Event.current.type == EventType.Repaint)
+					{
+						gUIStyle.Draw(onGUIPosition, GUIContent.none, 0);
+					}
 				}
 			}
 		}
@@ -284,6 +296,7 @@ namespace UnityEditor
 				{
 					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
 				}
+				this.OnViewChange(this.m_ActualView);
 				try
 				{
 					this.Invoke("OnBecameVisible");
@@ -341,7 +354,7 @@ namespace UnityEditor
 		{
 			GUIStyle gUIStyle = "PaneOptions";
 			Rect rect = new Rect(base.position.width - gUIStyle.fixedWidth - 4f, Mathf.Floor((float)(this.background.margin.top + 20) - gUIStyle.fixedHeight), gUIStyle.fixedWidth, gUIStyle.fixedHeight);
-			if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, "PaneOptions"))
+			if (EditorGUI.DropdownButton(rect, GUIContent.none, FocusType.Passive, "PaneOptions"))
 			{
 				this.PopupGenericMenu(this.m_ActualView, rect);
 			}

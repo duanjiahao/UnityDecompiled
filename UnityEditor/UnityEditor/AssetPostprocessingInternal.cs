@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -38,6 +39,7 @@ namespace UnityEditor
 			});
 		}
 
+		[RequiredByNativeCode]
 		private static void PostprocessAllAssets(string[] importedAssets, string[] addedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromPathAssets)
 		{
 			object[] parameters = new object[]
@@ -58,6 +60,7 @@ namespace UnityEditor
 			SyncVS.PostprocessSyncProject(importedAssets, addedAssets, deletedAssets, movedAssets, movedFromPathAssets);
 		}
 
+		[RequiredByNativeCode]
 		private static void PreprocessAssembly(string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -127,6 +130,7 @@ namespace UnityEditor
 			return AssetPostprocessingInternal.m_PostprocessorClasses;
 		}
 
+		[RequiredByNativeCode]
 		private static void InitPostprocessors(string pathName)
 		{
 			AssetPostprocessingInternal.m_ImportProcessors = new ArrayList();
@@ -170,6 +174,7 @@ namespace UnityEditor
 			AssetPostprocessingInternal.m_PostprocessStack.Add(postprocessStack);
 		}
 
+		[RequiredByNativeCode]
 		private static void CleanupPostprocessors()
 		{
 			if (AssetPostprocessingInternal.m_PostprocessStack != null)
@@ -183,6 +188,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static uint[] GetMeshProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -213,6 +219,7 @@ namespace UnityEditor
 			return list.ToArray();
 		}
 
+		[RequiredByNativeCode]
 		private static void PreprocessMesh(string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -234,6 +241,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PreprocessSpeedTree(string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -255,6 +263,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PreprocessAnimation(string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -276,6 +285,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static Material ProcessMeshAssignMaterial(Renderer renderer, Material material)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -310,6 +320,7 @@ namespace UnityEditor
 			return result;
 		}
 
+		[RequiredByNativeCode]
 		private static bool ProcessMeshHasAssignMaterial()
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -388,6 +399,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PostprocessGameObjectWithUserProperties(GameObject go, string[] prop_names, object[] prop_values)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -415,6 +427,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static uint[] GetTextureProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -444,6 +457,7 @@ namespace UnityEditor
 			return list.ToArray();
 		}
 
+		[RequiredByNativeCode]
 		private static void PreprocessTexture(string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -465,6 +479,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PostprocessTexture(Texture2D tex, string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -490,6 +505,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PostprocessSprites(Texture2D tex, string pathName, Sprite[] sprites)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -516,6 +532,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static uint[] GetAudioProcessorVersions()
 		{
 			List<uint> list = new List<uint>();
@@ -545,6 +562,7 @@ namespace UnityEditor
 			return list.ToArray();
 		}
 
+		[RequiredByNativeCode]
 		private static void PreprocessAudio(string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -566,6 +584,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PostprocessAudio(AudioClip tex, string pathName)
 		{
 			IEnumerator enumerator = AssetPostprocessingInternal.m_ImportProcessors.GetEnumerator();
@@ -591,6 +610,7 @@ namespace UnityEditor
 			}
 		}
 
+		[RequiredByNativeCode]
 		private static void PostprocessAssetbundleNameChanged(string assetPAth, string prevoiusAssetBundleName, string newAssetBundleName)
 		{
 			object[] args = new object[]

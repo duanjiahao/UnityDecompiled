@@ -265,8 +265,6 @@ namespace UnityEditor
 
 		private const int kPreferredSpacing = 100;
 
-		private const string kOrderValuesEditorPrefString = "ScriptExecutionOrderShowOrderValues";
-
 		private int[] kRoundingAmounts = new int[]
 		{
 			1000,
@@ -287,6 +285,8 @@ namespace UnityEditor
 		private static MonoScript sDummyScript;
 
 		private Vector2 m_Scroll = Vector2.zero;
+
+		private static readonly List<ScriptExecutionOrderInspector> m_Instances = new List<ScriptExecutionOrderInspector>();
 
 		private MonoScript[] m_AllScripts;
 
@@ -309,6 +309,20 @@ namespace UnityEditor
 			}
 		}
 
+		[MenuItem("CONTEXT/MonoManager/Reset")]
+		private static void Reset(MenuCommand cmd)
+		{
+			List<ScriptExecutionOrderInspector> instances = ScriptExecutionOrderInspector.GetInstances();
+			foreach (ScriptExecutionOrderInspector current in instances)
+			{
+				for (int i = 0; i < current.m_AllOrders.Length; i++)
+				{
+					current.m_AllOrders[i] = 0;
+				}
+				current.Apply();
+			}
+		}
+
 		public void OnEnable()
 		{
 			if (ScriptExecutionOrderInspector.sDummyScript == null)
@@ -318,6 +332,10 @@ namespace UnityEditor
 			if (this.m_AllScripts == null || !this.m_DirtyOrders)
 			{
 				this.PopulateScriptArray();
+			}
+			if (!ScriptExecutionOrderInspector.m_Instances.Contains(this))
+			{
+				ScriptExecutionOrderInspector.m_Instances.Add(this);
 			}
 		}
 
@@ -356,6 +374,11 @@ namespace UnityEditor
 				result = ((flag || flag2) && AssetDatabase.GetAssetPath(script).IndexOf("Assets/") == 0);
 			}
 			return result;
+		}
+
+		internal static List<ScriptExecutionOrderInspector> GetInstances()
+		{
+			return ScriptExecutionOrderInspector.m_Instances;
 		}
 
 		private void PopulateScriptArray()
@@ -459,6 +482,10 @@ namespace UnityEditor
 				{
 					this.Apply();
 				}
+			}
+			if (ScriptExecutionOrderInspector.m_Instances.Contains(this))
+			{
+				ScriptExecutionOrderInspector.m_Instances.Remove(this);
 			}
 		}
 
@@ -706,7 +733,7 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			GUIContent iconToolbarPlus = ScriptExecutionOrderInspector.m_Styles.iconToolbarPlus;
 			Rect rect3 = GUILayoutUtility.GetRect(iconToolbarPlus, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown);
-			if (EditorGUI.ButtonMouseDown(rect3, iconToolbarPlus, FocusType.Passive, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown))
+			if (EditorGUI.DropdownButton(rect3, iconToolbarPlus, FocusType.Passive, ScriptExecutionOrderInspector.m_Styles.toolbarDropDown))
 			{
 				this.ShowScriptPopup(rect3);
 			}
@@ -763,7 +790,9 @@ namespace UnityEditor
 			}
 			GUI.Label(this.GetButtonLabelRect(r), monoScript.GetClass().FullName);
 			int executionOrder = this.GetExecutionOrder(monoScript);
-			string s = EditorGUI.DelayedTextFieldInternal(this.GetFieldRect(r), executionOrder.ToString(), "0123456789-", EditorStyles.textField);
+			Rect fieldRect = this.GetFieldRect(r);
+			int controlID = GUIUtility.GetControlID(monoScript.GetHashCode(), FocusType.Keyboard, fieldRect);
+			string s = EditorGUI.DelayedTextFieldInternal(fieldRect, controlID, GUIContent.none, executionOrder.ToString(), "0123456789-", EditorStyles.textField);
 			int num = executionOrder;
 			if (int.TryParse(s, out num) && num != executionOrder)
 			{

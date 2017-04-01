@@ -39,12 +39,12 @@ namespace UnityEngine
 			}
 		}
 
-		[Obsolete("collider property is deprecated. Use colliderComponent instead, which supports Collider and Collider2D components.")]
-		public Collider collider
+		[Obsolete("collider property is deprecated. Use colliderComponent instead, which supports Collider and Collider2D components.", true)]
+		public Component collider
 		{
 			get
 			{
-				return ParticleCollisionEvent.InstanceIDToCollider(this.m_ColliderInstanceID);
+				return null;
 			}
 		}
 
@@ -56,9 +56,7 @@ namespace UnityEngine
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Collider InstanceIDToCollider(int instanceID);
-
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Component InstanceIDToColliderComponent(int instanceID);
 	}

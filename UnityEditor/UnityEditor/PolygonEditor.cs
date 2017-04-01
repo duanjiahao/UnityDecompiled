@@ -1,17 +1,21 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
 	internal sealed class PolygonEditor
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StartEditing(Collider2D collider);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ApplyEditing(Collider2D collider);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopEditing();
 
@@ -20,6 +24,7 @@ namespace UnityEditor
 			return PolygonEditor.INTERNAL_CALL_GetNearestPoint(ref point, out pathIndex, out pointIndex, out distance);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_GetNearestPoint(ref Vector2 point, out int pathIndex, out int pointIndex, out float distance);
 
@@ -28,15 +33,19 @@ namespace UnityEditor
 			return PolygonEditor.INTERNAL_CALL_GetNearestEdge(ref point, out pathIndex, out pointIndex0, out pointIndex1, out distance, loop);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_GetNearestEdge(ref Vector2 point, out int pathIndex, out int pointIndex0, out int pointIndex1, out float distance, bool loop);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetPathCount();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetPointCount(int pathIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetPoint(int pathIndex, int pointIndex, out Vector2 point);
 
@@ -45,6 +54,7 @@ namespace UnityEditor
 			PolygonEditor.INTERNAL_CALL_SetPoint(pathIndex, pointIndex, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPoint(int pathIndex, int pointIndex, ref Vector2 value);
 
@@ -53,9 +63,11 @@ namespace UnityEditor
 			PolygonEditor.INTERNAL_CALL_InsertPoint(pathIndex, pointIndex, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_InsertPoint(int pathIndex, int pointIndex, ref Vector2 value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RemovePoint(int pathIndex, int pointIndex);
 
@@ -64,6 +76,7 @@ namespace UnityEditor
 			PolygonEditor.INTERNAL_CALL_TestPointMove(pathIndex, pointIndex, ref movePosition, out leftIntersect, out rightIntersect, loop);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_TestPointMove(int pathIndex, int pointIndex, ref Vector2 movePosition, out bool leftIntersect, out bool rightIntersect, bool loop);
 	}

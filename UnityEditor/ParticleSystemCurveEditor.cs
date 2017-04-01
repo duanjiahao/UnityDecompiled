@@ -508,11 +508,11 @@ internal class ParticleSystemCurveEditor
 					{
 						if (curveData.m_MaxId > 0)
 						{
-							this.SetCurve(this.m_CurveEditor.GetCurveFromID(curveData.m_MaxId), doubleCurve.maxCurve);
+							this.SetCurve(this.m_CurveEditor.GetCurveWrapperFromID(curveData.m_MaxId), doubleCurve.maxCurve);
 						}
 						if (curveData.m_MinId > 0)
 						{
-							this.SetCurve(this.m_CurveEditor.GetCurveFromID(curveData.m_MinId), doubleCurve.minCurve);
+							this.SetCurve(this.m_CurveEditor.GetCurveWrapperFromID(curveData.m_MinId), doubleCurve.minCurve);
 						}
 					}
 					else
@@ -556,7 +556,7 @@ internal class ParticleSystemCurveEditor
 
 	private void PresetDropDown(Rect rect)
 	{
-		if (EditorGUI.ButtonMouseDown(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.inspectorTitlebarText))
+		if (EditorGUI.DropdownButton(rect, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.inspectorTitlebarText))
 		{
 			DoubleCurve doubleCurve = this.CreateDoubleCurveFromTopMostCurve();
 			if (doubleCurve != null)
@@ -793,25 +793,36 @@ internal class ParticleSystemCurveEditor
 	{
 		List<CurveWrapper> list = new List<CurveWrapper>();
 		int num = 0;
-		for (int i = 0; i < this.m_AddedCurves.Count; i++)
+		int i = 0;
+		while (i < this.m_AddedCurves.Count)
 		{
 			ParticleSystemCurveEditor.CurveData curveData = this.m_AddedCurves[i];
 			if (curveData.m_Visible)
 			{
-				int regionId = -1;
-				if (curveData.IsRegion())
+				if (curveData.m_Max == null || !curveData.m_Max.hasMultipleDifferentValues)
 				{
-					num = (regionId = num + 1);
-				}
-				if (curveData.m_Max != null)
-				{
-					list.Add(this.CreateCurveWrapper(curveData.m_Max, curveData.m_MaxId, regionId, curveData.m_Color, curveData.m_SignedRange, curveData.m_GetAxisScalarsCallback, curveData.m_SetAxisScalarsCallback));
-				}
-				if (curveData.m_Min != null)
-				{
-					list.Add(this.CreateCurveWrapper(curveData.m_Min, curveData.m_MinId, regionId, curveData.m_Color, curveData.m_SignedRange, curveData.m_GetAxisScalarsCallback, curveData.m_SetAxisScalarsCallback));
+					if (curveData.m_Min == null || !curveData.m_Min.hasMultipleDifferentValues)
+					{
+						int regionId = -1;
+						if (curveData.IsRegion())
+						{
+							num = (regionId = num + 1);
+						}
+						if (curveData.m_Max != null)
+						{
+							list.Add(this.CreateCurveWrapper(curveData.m_Max, curveData.m_MaxId, regionId, curveData.m_Color, curveData.m_SignedRange, curveData.m_GetAxisScalarsCallback, curveData.m_SetAxisScalarsCallback));
+						}
+						if (curveData.m_Min != null)
+						{
+							list.Add(this.CreateCurveWrapper(curveData.m_Min, curveData.m_MinId, regionId, curveData.m_Color, curveData.m_SignedRange, curveData.m_GetAxisScalarsCallback, curveData.m_SetAxisScalarsCallback));
+						}
+					}
 				}
 			}
+			IL_FF:
+			i++;
+			continue;
+			goto IL_FF;
 		}
 		return list.ToArray();
 	}

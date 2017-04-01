@@ -17,31 +17,35 @@ namespace UnityEditor
 		public void OnGUI()
 		{
 			AnimationWindowSelectionItem selectedItem = this.state.selectedItem;
-			if (!(selectedItem == null) && selectedItem.canChangeAnimationClip)
+			if (!(selectedItem == null))
 			{
-				string[] clipMenuContent = this.GetClipMenuContent();
-				EditorGUI.BeginChangeCheck();
-				this.selectedIndex = EditorGUILayout.Popup(this.ClipToIndex(this.state.activeAnimationClip), clipMenuContent, EditorStyles.toolbarPopup, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
+				if (selectedItem.canChangeAnimationClip)
 				{
-					if (clipMenuContent[this.selectedIndex] == AnimationWindowStyles.createNewClip.text)
+					string[] clipMenuContent = this.GetClipMenuContent();
+					EditorGUI.BeginChangeCheck();
+					this.selectedIndex = EditorGUILayout.Popup(this.ClipToIndex(this.state.activeAnimationClip), clipMenuContent, EditorStyles.toolbarPopup, new GUILayoutOption[0]);
+					if (EditorGUI.EndChangeCheck())
 					{
-						AnimationClip animationClip = AnimationWindowUtility.CreateNewClip(selectedItem.rootGameObject.name);
-						if (animationClip)
+						if (clipMenuContent[this.selectedIndex] == AnimationWindowStyles.createNewClip.text)
 						{
-							AnimationWindowUtility.AddClipToAnimationPlayerComponent(this.state.activeAnimationPlayer, animationClip);
-							this.state.selection.UpdateClip(this.state.selectedItem, animationClip);
-							this.state.currentTime = 0f;
-							this.state.ResampleAnimation();
-							GUIUtility.ExitGUI();
+							AnimationClip animationClip = AnimationWindowUtility.CreateNewClip(selectedItem.rootGameObject.name);
+							if (animationClip)
+							{
+								AnimationWindowUtility.AddClipToAnimationPlayerComponent(this.state.activeAnimationPlayer, animationClip);
+								this.state.selection.UpdateClip(this.state.selectedItem, animationClip);
+								GUIUtility.ExitGUI();
+							}
+						}
+						else
+						{
+							this.state.selection.UpdateClip(this.state.selectedItem, this.IndexToClip(this.selectedIndex));
 						}
 					}
-					else
-					{
-						this.state.selection.UpdateClip(this.state.selectedItem, this.IndexToClip(this.selectedIndex));
-						this.state.currentTime = 0f;
-						this.state.ResampleAnimation();
-					}
+				}
+				else if (this.state.activeAnimationClip != null)
+				{
+					Rect controlRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight, AnimationWindowStyles.toolbarLabel, new GUILayoutOption[0]);
+					EditorGUI.LabelField(controlRect, CurveUtility.GetClipName(this.state.activeAnimationClip), AnimationWindowStyles.toolbarLabel);
 				}
 			}
 		}

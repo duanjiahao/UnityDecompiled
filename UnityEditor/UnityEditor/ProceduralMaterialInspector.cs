@@ -166,8 +166,6 @@ namespace UnityEditor
 
 		private static ProceduralMaterial m_Material = null;
 
-		private static Shader m_ShaderPMaterial = null;
-
 		private static SubstanceImporter m_Importer = null;
 
 		private static string[] kMaxTextureSizeStrings = new string[]
@@ -197,8 +195,6 @@ namespace UnityEditor
 		private bool m_ShowTexturesSection = false;
 
 		private bool m_ShowHSLInputs = true;
-
-		private string m_LastGroup;
 
 		private ProceduralMaterialInspector.Styles m_Styles;
 
@@ -280,6 +276,11 @@ namespace UnityEditor
 			base.Awake();
 			this.m_ShowTexturesSection = EditorPrefs.GetBool("ProceduralShowTextures", false);
 			this.m_ReimportOnDisable = true;
+			if (ProceduralMaterialInspector.m_UndoWasPerformed)
+			{
+				ProceduralMaterialInspector.m_UndoWasPerformed = false;
+				this.OnShaderChanged();
+			}
 			ProceduralMaterialInspector.m_UndoWasPerformed = false;
 		}
 
@@ -324,12 +325,26 @@ namespace UnityEditor
 		public override void UndoRedoPerformed()
 		{
 			ProceduralMaterialInspector.m_UndoWasPerformed = true;
-			base.UndoRedoPerformed();
 			if (ProceduralMaterialInspector.m_Material != null)
 			{
 				ProceduralMaterialInspector.m_Material.RebuildTextures();
 			}
-			base.Repaint();
+			base.UndoRedoPerformed();
+		}
+
+		protected override void OnShaderChanged()
+		{
+			UnityEngine.Object[] targets = base.targets;
+			for (int i = 0; i < targets.Length; i++)
+			{
+				ProceduralMaterial proceduralMaterial = (ProceduralMaterial)targets[i];
+				string assetPath = AssetDatabase.GetAssetPath(proceduralMaterial);
+				SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath) as SubstanceImporter;
+				if (substanceImporter != null && proceduralMaterial != null)
+				{
+					substanceImporter.OnShaderModified(proceduralMaterial);
+				}
+			}
 		}
 
 		internal void DisplayRestrictedInspector()
@@ -343,7 +358,6 @@ namespace UnityEditor
 			if (ProceduralMaterialInspector.m_Material != proceduralMaterial)
 			{
 				ProceduralMaterialInspector.m_Material = proceduralMaterial;
-				ProceduralMaterialInspector.m_ShaderPMaterial = proceduralMaterial.shader;
 			}
 			this.ProceduralProperties();
 			GUILayout.Space(15f);
@@ -405,33 +419,12 @@ namespace UnityEditor
 					if (ProceduralMaterialInspector.m_Material != proceduralMaterial)
 					{
 						ProceduralMaterialInspector.m_Material = proceduralMaterial;
-						ProceduralMaterialInspector.m_ShaderPMaterial = proceduralMaterial.shader;
 					}
 					if (base.isVisible && !(proceduralMaterial.shader == null))
 					{
-						if (ProceduralMaterialInspector.m_ShaderPMaterial != proceduralMaterial.shader)
-						{
-							ProceduralMaterialInspector.m_ShaderPMaterial = proceduralMaterial.shader;
-							UnityEngine.Object[] targets = base.targets;
-							for (int i = 0; i < targets.Length; i++)
-							{
-								ProceduralMaterial proceduralMaterial2 = (ProceduralMaterial)targets[i];
-								string assetPath2 = AssetDatabase.GetAssetPath(proceduralMaterial2);
-								SubstanceImporter substanceImporter = AssetImporter.GetAtPath(assetPath2) as SubstanceImporter;
-								substanceImporter.OnShaderModified(proceduralMaterial2);
-							}
-						}
 						if (base.PropertiesGUI())
 						{
-							ProceduralMaterialInspector.m_ShaderPMaterial = proceduralMaterial.shader;
-							UnityEngine.Object[] targets2 = base.targets;
-							for (int j = 0; j < targets2.Length; j++)
-							{
-								ProceduralMaterial proceduralMaterial3 = (ProceduralMaterial)targets2[j];
-								string assetPath3 = AssetDatabase.GetAssetPath(proceduralMaterial3);
-								SubstanceImporter substanceImporter2 = AssetImporter.GetAtPath(assetPath3) as SubstanceImporter;
-								substanceImporter2.OnShaderModified(proceduralMaterial3);
-							}
+							this.OnShaderChanged();
 							base.PropertiesChanged();
 						}
 						GUILayout.Space(5f);
@@ -847,23 +840,6 @@ namespace UnityEditor
 				}
 			}
 			rect.width += num;
-		}
-
-		private UnityEngine.Object TextureValidator(UnityEngine.Object[] references, Type objType, SerializedProperty property)
-		{
-			UnityEngine.Object result;
-			for (int i = 0; i < references.Length; i++)
-			{
-				UnityEngine.Object @object = references[i];
-				Texture texture = @object as Texture;
-				if (texture)
-				{
-					result = texture;
-					return result;
-				}
-			}
-			result = null;
-			return result;
 		}
 
 		internal static void DoObjectPingField(Rect position, Rect dropRect, int id, UnityEngine.Object obj, Type objType)

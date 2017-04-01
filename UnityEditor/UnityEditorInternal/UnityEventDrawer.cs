@@ -20,15 +20,6 @@ namespace UnityEditorInternal
 			public int lastSelectedIndex;
 		}
 
-		private class Styles
-		{
-			public readonly GUIContent iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus");
-
-			public readonly GUIStyle genericFieldStyle = EditorStyles.label;
-
-			public readonly GUIStyle removeButton = "InvisibleButton";
-		}
-
 		private struct ValidMethodMap
 		{
 			public UnityEngine.Object target;
@@ -136,8 +127,6 @@ namespace UnityEditorInternal
 
 		private const string kObjectArgumentAssemblyTypeName = "m_ObjectArgumentAssemblyTypeName";
 
-		private UnityEventDrawer.Styles m_Styles;
-
 		private string m_Text;
 
 		private UnityEventBase m_DummyEvent;
@@ -238,10 +227,6 @@ namespace UnityEditorInternal
 				this.m_DummyEvent = UnityEventDrawer.GetDummyEvent(this.m_Prop);
 				if (this.m_DummyEvent != null)
 				{
-					if (this.m_Styles == null)
-					{
-						this.m_Styles = new UnityEventDrawer.Styles();
-					}
 					if (this.m_ReorderableList != null)
 					{
 						int indentLevel = EditorGUI.indentLevel;

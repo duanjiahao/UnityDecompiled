@@ -31,13 +31,13 @@ namespace UnityEditor
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (ColorModuleUI.s_Texts == null)
 			{
 				ColorModuleUI.s_Texts = new ColorModuleUI.Texts();
 			}
-			base.GUIMinMaxGradient(ColorModuleUI.s_Texts.color, this.m_Gradient, new GUILayoutOption[0]);
+			base.GUIMinMaxGradient(ColorModuleUI.s_Texts.color, this.m_Gradient, false, new GUILayoutOption[0]);
 		}
 	}
 }

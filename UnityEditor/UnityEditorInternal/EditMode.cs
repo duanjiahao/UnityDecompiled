@@ -21,7 +21,9 @@ namespace UnityEditorInternal
 			ReflectionProbeOrigin,
 			LightProbeProxyVolumeBox,
 			LightProbeProxyVolumeOrigin,
-			LightProbeGroup
+			LightProbeGroup,
+			ParticleSystemCollisionModulePlanesMove,
+			ParticleSystemCollisionModulePlanesRotate
 		}
 
 		private const string kEditModeStringKey = "EditModeState";

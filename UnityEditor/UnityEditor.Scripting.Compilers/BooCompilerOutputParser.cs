@@ -13,10 +13,10 @@ namespace UnityEditor.Scripting.Compilers
 		private static Regex sUnknownTypeOrNamespace = new Regex("[^']*'(?<type_name>[^']+)'.*", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
 		[CompilerGenerated]
-		private static Func<string, Regex, NormalizedCompilerStatus> <>f__mg$cache0;
+		private static Func<Match, Regex, NormalizedCompilerStatus> <>f__mg$cache0;
 
 		[CompilerGenerated]
-		private static Func<string, Regex, NormalizedCompilerStatus> <>f__mg$cache1;
+		private static Func<Match, Regex, NormalizedCompilerStatus> <>f__mg$cache1;
 
 		protected override string GetErrorIdentifier()
 		{
@@ -34,7 +34,7 @@ namespace UnityEditor.Scripting.Compilers
 			Regex arg_29_2 = BooCompilerOutputParser.sMissingMember;
 			if (BooCompilerOutputParser.<>f__mg$cache0 == null)
 			{
-				BooCompilerOutputParser.<>f__mg$cache0 = new Func<string, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeMemberNotFoundError);
+				BooCompilerOutputParser.<>f__mg$cache0 = new Func<Match, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeMemberNotFoundError);
 			}
 			NormalizedCompilerStatus normalizedCompilerStatus = CompilerOutputParserBase.TryNormalizeCompilerStatus(match, arg_29_1, arg_29_2, BooCompilerOutputParser.<>f__mg$cache0);
 			NormalizedCompilerStatus result;
@@ -48,7 +48,7 @@ namespace UnityEditor.Scripting.Compilers
 				Regex arg_6A_2 = BooCompilerOutputParser.sUnknownTypeOrNamespace;
 				if (BooCompilerOutputParser.<>f__mg$cache1 == null)
 				{
-					BooCompilerOutputParser.<>f__mg$cache1 = new Func<string, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeSimpleUnknownTypeOfNamespaceError);
+					BooCompilerOutputParser.<>f__mg$cache1 = new Func<Match, Regex, NormalizedCompilerStatus>(CompilerOutputParserBase.NormalizeSimpleUnknownTypeOfNamespaceError);
 				}
 				result = CompilerOutputParserBase.TryNormalizeCompilerStatus(match, arg_6A_1, arg_6A_2, BooCompilerOutputParser.<>f__mg$cache1);
 			}

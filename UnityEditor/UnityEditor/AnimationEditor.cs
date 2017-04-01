@@ -6,21 +6,11 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(Animation))]
 	internal class AnimationEditor : Editor
 	{
-		private static int s_BoxHash = "AnimationBoundsEditorHash".GetHashCode();
-
-		private BoxEditor m_BoxEditor = new BoxEditor(false, AnimationEditor.s_BoxHash);
-
 		private int m_PrePreviewAnimationArraySize = -1;
 
 		public void OnEnable()
 		{
 			this.m_PrePreviewAnimationArraySize = -1;
-			this.m_BoxEditor.OnEnable();
-		}
-
-		public void OnDisable()
-		{
-			this.m_BoxEditor.OnDisable();
 		}
 
 		public override void OnInspectorGUI()

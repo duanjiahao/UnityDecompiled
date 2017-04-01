@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.VersionControl
 {
@@ -34,6 +35,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern Asset.States state
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -41,6 +43,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string path
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -48,6 +51,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool isFolder
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -55,6 +59,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool readOnly
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -62,6 +67,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool isMeta
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -69,6 +75,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool locked
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -76,6 +83,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string name
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -83,6 +91,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern string fullName
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -90,6 +99,7 @@ namespace UnityEditor.VersionControl
 		[ThreadAndSerializationSafe]
 		public extern bool isInCurrentProject
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -115,11 +125,11 @@ namespace UnityEditor.VersionControl
 			this.InternalCreateFromString(clientPath);
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void InternalCreateFromString(string clientPath);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 
@@ -128,7 +138,7 @@ namespace UnityEditor.VersionControl
 			this.Dispose();
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsChildOf(Asset other);
 

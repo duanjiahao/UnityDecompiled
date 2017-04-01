@@ -22,6 +22,12 @@ namespace UnityEditor
 			set;
 		}
 
+		public BuildTargetGroup targetGroup
+		{
+			get;
+			set;
+		}
+
 		public BuildTarget target
 		{
 			get;

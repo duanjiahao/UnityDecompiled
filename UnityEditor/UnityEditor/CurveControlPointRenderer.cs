@@ -13,12 +13,12 @@ namespace UnityEditor
 
 		private ControlPointRenderer m_SemiSelectedPointOverlayRenderer;
 
-		public CurveControlPointRenderer(CurveEditor.Styles style)
+		public CurveControlPointRenderer()
 		{
-			this.m_UnselectedPointRenderer = new ControlPointRenderer(style.pointIcon);
-			this.m_SelectedPointRenderer = new ControlPointRenderer(style.pointIconSelected);
-			this.m_SelectedPointOverlayRenderer = new ControlPointRenderer(style.pointIconSelectedOverlay);
-			this.m_SemiSelectedPointOverlayRenderer = new ControlPointRenderer(style.pointIconSemiSelectedOverlay);
+			this.m_UnselectedPointRenderer = new ControlPointRenderer(CurveEditor.Styles.pointIcon);
+			this.m_SelectedPointRenderer = new ControlPointRenderer(CurveEditor.Styles.pointIconSelected);
+			this.m_SelectedPointOverlayRenderer = new ControlPointRenderer(CurveEditor.Styles.pointIconSelectedOverlay);
+			this.m_SemiSelectedPointOverlayRenderer = new ControlPointRenderer(CurveEditor.Styles.pointIconSemiSelectedOverlay);
 		}
 
 		public void FlushCache()

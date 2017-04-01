@@ -248,7 +248,8 @@ namespace UnityEditor
 				"ProceduralTexture",
 				"Sprite",
 				"AudioMixerGroup",
-				"AudioMixerSnapshot"
+				"AudioMixerSnapshot",
+				"VideoClip"
 			};
 			bool result;
 			if (checkGameObject && requiredClassName == "GameObject")

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -15,6 +16,7 @@ namespace UnityEditor
 
 		internal int recollectVertices;
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetDefaults(out UnwrapParam param);
 	}

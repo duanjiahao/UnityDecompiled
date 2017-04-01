@@ -20,7 +20,12 @@ namespace UnityEditorInternal
 			get;
 		}
 
-		int frame
+		int currentFrame
+		{
+			get;
+		}
+
+		bool addZeroFrame
 		{
 			get;
 		}

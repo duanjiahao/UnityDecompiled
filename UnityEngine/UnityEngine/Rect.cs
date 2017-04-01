@@ -334,7 +334,7 @@ namespace UnityEngine
 
 		public static bool operator !=(Rect lhs, Rect rhs)
 		{
-			return lhs.x != rhs.x || lhs.y != rhs.y || lhs.width != rhs.width || lhs.height != rhs.height;
+			return !(lhs == rhs);
 		}
 
 		public static bool operator ==(Rect lhs, Rect rhs)

@@ -204,7 +204,7 @@ namespace UnityEditor
 
 		protected CreateAssetUtility GetCreateAssetUtility()
 		{
-			return this.m_TreeView.state.createAssetUtility;
+			return ((TreeViewStateWithAssetUtility)this.m_TreeView.state).createAssetUtility;
 		}
 
 		public int GetInsertAfterItemIDForNewItem(string newName, TreeViewItem parentItem, bool isCreatingNewFolder, bool foldersFirst)

@@ -519,7 +519,7 @@ namespace UnityEditor
 				else
 				{
 					Handles.color = Handles.secondaryColor * new Color(1f, 1f, 1f, 1.5f * num2);
-					Handles.CircleCap(controlID, pivot, rotation, num);
+					Handles.CircleHandleCap(controlID, pivot, rotation, num, EventType.Repaint);
 					Handles.color = Handles.secondaryColor * new Color(1f, 1f, 1f, 0.3f * num2);
 					Handles.DrawSolidDisc(pivot, rotation * Vector3.forward, num);
 				}

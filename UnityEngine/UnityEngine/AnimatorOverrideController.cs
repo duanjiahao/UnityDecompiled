@@ -14,8 +14,10 @@ namespace UnityEngine
 
 		public extern RuntimeAnimatorController runtimeAnimatorController
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -44,28 +46,27 @@ namespace UnityEngine
 			}
 		}
 
+		public extern int overridesCount
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[Obsolete("clips property is deprecated. Use AnimatorOverrideController.GetOverrides and AnimatorOverrideController.ApplyOverrides instead.")]
 		public AnimationClipPair[] clips
 		{
 			get
 			{
-				AnimationClip[] array = this.GetOriginalClips();
-				Dictionary<AnimationClip, bool> dictionary = new Dictionary<AnimationClip, bool>(array.Length);
-				AnimationClip[] array2 = array;
-				for (int i = 0; i < array2.Length; i++)
+				int overridesCount = this.overridesCount;
+				AnimationClipPair[] array = new AnimationClipPair[overridesCount];
+				for (int i = 0; i < overridesCount; i++)
 				{
-					AnimationClip key = array2[i];
-					dictionary[key] = true;
+					array[i] = new AnimationClipPair();
+					array[i].originalClip = this.Internal_GetOriginalClip(i);
+					array[i].overrideClip = this.Internal_GetOverrideClip(array[i].originalClip);
 				}
-				array = new AnimationClip[dictionary.Count];
-				dictionary.Keys.CopyTo(array, 0);
-				AnimationClipPair[] array3 = new AnimationClipPair[array.Length];
-				for (int j = 0; j < array.Length; j++)
-				{
-					array3[j] = new AnimationClipPair();
-					array3[j].originalClip = array[j];
-					array3[j].overrideClip = this.Internal_GetClip(array[j], false);
-				}
-				return array3;
+				return array;
 			}
 			set
 			{
@@ -73,27 +74,37 @@ namespace UnityEngine
 				{
 					this.Internal_SetClip(value[i].originalClip, value[i].overrideClip, false);
 				}
-				this.Internal_SetDirty();
+				this.SendNotification();
 			}
 		}
 
 		public AnimatorOverrideController()
 		{
-			AnimatorOverrideController.Internal_CreateAnimationSet(this);
+			AnimatorOverrideController.Internal_CreateAnimatorOverrideController(this, null);
 		}
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_CreateAnimationSet([Writable] AnimatorOverrideController self);
+		public AnimatorOverrideController(RuntimeAnimatorController controller)
+		{
+			AnimatorOverrideController.Internal_CreateAnimatorOverrideController(this, controller);
+		}
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_CreateAnimatorOverrideController([Writable] AnimatorOverrideController self, RuntimeAnimatorController controller);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AnimationClip Internal_GetClipByName(string name, bool returnEffectiveClip);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetClipByName(string name, AnimationClip clip);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern AnimationClip Internal_GetClip(AnimationClip originalClip, bool returnEffectiveClip);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetClip(AnimationClip originalClip, AnimationClip overrideClip, [DefaultValue("true")] bool notify);
 
@@ -104,8 +115,9 @@ namespace UnityEngine
 			this.Internal_SetClip(originalClip, overrideClip, notify);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_SetDirty();
+		private extern void SendNotification();
 
 		[RequiredByNativeCode]
 		internal static void OnInvalidateOverrideController(AnimatorOverrideController controller)
@@ -116,12 +128,47 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern AnimationClip[] GetOriginalClips();
+		private extern AnimationClip Internal_GetOriginalClip(int index);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern AnimationClip[] GetOverrideClips();
+		private extern AnimationClip Internal_GetOverrideClip(AnimationClip originalClip);
 
+		public void GetOverrides(List<KeyValuePair<AnimationClip, AnimationClip>> overrides)
+		{
+			if (overrides == null)
+			{
+				throw new ArgumentNullException("overrides");
+			}
+			int overridesCount = this.overridesCount;
+			if (overrides.Capacity < overridesCount)
+			{
+				overrides.Capacity = overridesCount;
+			}
+			overrides.Clear();
+			for (int i = 0; i < overridesCount; i++)
+			{
+				AnimationClip animationClip = this.Internal_GetOriginalClip(i);
+				overrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(animationClip, this.Internal_GetOverrideClip(animationClip)));
+			}
+		}
+
+		public void ApplyOverrides(IList<KeyValuePair<AnimationClip, AnimationClip>> overrides)
+		{
+			if (overrides == null)
+			{
+				throw new ArgumentNullException("overrides");
+			}
+			for (int i = 0; i < overrides.Count; i++)
+			{
+				this.Internal_SetClip(overrides[i].Key, overrides[i].Value, false);
+			}
+			this.SendNotification();
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void PerformOverrideClipListCleanup();
 	}

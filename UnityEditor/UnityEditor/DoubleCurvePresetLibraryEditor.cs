@@ -10,13 +10,12 @@ namespace UnityEditor
 
 		public void OnEnable()
 		{
-			string assetPath = AssetDatabase.GetAssetPath(base.target.GetInstanceID());
-			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<DoubleCurvePresetLibrary>(base.target, this.GetHeader(assetPath), null);
+			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<DoubleCurvePresetLibrary>(base.target, this.GetHeader(), null);
 			this.m_GenericPresetLibraryInspector.presetSize = new Vector2(72f, 20f);
 			this.m_GenericPresetLibraryInspector.lineSpacing = 5f;
 		}
 
-		private string GetHeader(string filePath)
+		private string GetHeader()
 		{
 			return "Particle Curve Preset Library";
 		}

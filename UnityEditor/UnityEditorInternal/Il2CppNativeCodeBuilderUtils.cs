@@ -88,12 +88,17 @@ namespace UnityEditorInternal
 
 		private static string FormatArgument(string name, string value)
 		{
-			return string.Format("--{0}=\"{1}\"", name, value);
+			return string.Format("--{0}=\"{1}\"", name, Il2CppNativeCodeBuilderUtils.EscapeEmbeddedQuotes(value));
 		}
 
 		private static string EditorVersionFilenameFor(string editorVersion)
 		{
 			return string.Format("il2cpp_cache {0}", editorVersion);
+		}
+
+		private static string EscapeEmbeddedQuotes(string value)
+		{
+			return value.Replace("\"", "\\\"");
 		}
 	}
 }

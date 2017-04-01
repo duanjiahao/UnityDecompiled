@@ -3,7 +3,7 @@ using System;
 namespace UnityEditor.IMGUI.Controls
 {
 	[Flags]
-	internal enum TreeViewSelectionOptions
+	public enum TreeViewSelectionOptions
 	{
 		None = 0,
 		FireSelectionChanged = 1,

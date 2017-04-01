@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace UnityEditor
 {
@@ -14,7 +15,7 @@ namespace UnityEditor
 		private AnimEditor m_AnimEditor;
 
 		[SerializeField]
-		private AnimationWindowPolicy m_Policy;
+		private bool m_Locked = false;
 
 		private GUIStyle m_LockButtonStyle;
 
@@ -58,12 +59,14 @@ namespace UnityEditor
 			AnimationWindow.s_AnimationWindows.Add(this);
 			base.titleContent = base.GetLocalizedTitleContent();
 			this.OnSelectionChange();
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
 
 		public void OnDisable()
 		{
 			AnimationWindow.s_AnimationWindows.Remove(this);
 			this.m_AnimEditor.OnDisable();
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 		}
 
 		public void OnDestroy()
@@ -78,8 +81,9 @@ namespace UnityEditor
 
 		public void OnGUI()
 		{
-			this.SynchronizePolicy();
+			Profiler.BeginSample("AnimationWindow.OnGUI");
 			this.m_AnimEditor.OnAnimEditorGUI(this, base.position);
+			Profiler.EndSample();
 		}
 
 		public void OnSelectionChange()
@@ -96,7 +100,7 @@ namespace UnityEditor
 					AnimationClip animationClip = Selection.activeObject as AnimationClip;
 					if (animationClip != null)
 					{
-						this.EditAnimationClip(animationClip, null);
+						this.EditAnimationClip(animationClip);
 					}
 				}
 			}
@@ -120,38 +124,86 @@ namespace UnityEditor
 			}
 		}
 
-		public void EditGameObject(GameObject gameObject)
+		public bool EditGameObject(GameObject gameObject)
 		{
-			if (!EditorUtility.IsPersistent(gameObject))
+			return !this.state.linkedWithSequencer && this.EditGameObjectInternal(gameObject, null);
+		}
+
+		public bool EditAnimationClip(AnimationClip animationClip)
+		{
+			return !this.state.linkedWithSequencer && this.EditAnimationClipInternal(animationClip, null, null);
+		}
+
+		public bool EditSequencerClip(AnimationClip animationClip, UnityEngine.Object sourceObject, IAnimationWindowControl controlInterface)
+		{
+			bool result;
+			if (this.EditAnimationClipInternal(animationClip, sourceObject, controlInterface))
 			{
-				if ((gameObject.hideFlags & HideFlags.NotEditable) == HideFlags.None)
-				{
-					GameObjectSelectionItem gameObjectSelectionItem = GameObjectSelectionItem.Create(gameObject);
-					if (this.ShouldUpdateSelection(gameObjectSelectionItem))
-					{
-						this.m_AnimEditor.state.recording = false;
-						this.m_AnimEditor.selectedItem = gameObjectSelectionItem;
-					}
-					else
-					{
-						UnityEngine.Object.DestroyImmediate(gameObjectSelectionItem);
-					}
-				}
+				this.state.linkedWithSequencer = true;
+				result = true;
+			}
+			else
+			{
+				result = false;
+			}
+			return result;
+		}
+
+		public void UnlinkSequencer()
+		{
+			if (this.state.linkedWithSequencer)
+			{
+				this.state.linkedWithSequencer = false;
+				this.EditAnimationClip(null);
+				this.OnSelectionChange();
 			}
 		}
 
-		public void EditAnimationClip(AnimationClip animationClip, UnityEngine.Object sourceObject)
+		private bool EditGameObjectInternal(GameObject gameObject, IAnimationWindowControl controlInterface)
+		{
+			bool result;
+			if (EditorUtility.IsPersistent(gameObject))
+			{
+				result = false;
+			}
+			else if ((gameObject.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+			{
+				result = false;
+			}
+			else
+			{
+				GameObjectSelectionItem gameObjectSelectionItem = GameObjectSelectionItem.Create(gameObject);
+				if (this.ShouldUpdateGameObjectSelection(gameObjectSelectionItem))
+				{
+					this.m_AnimEditor.selectedItem = gameObjectSelectionItem;
+					this.m_AnimEditor.overrideControlInterface = controlInterface;
+					result = true;
+				}
+				else
+				{
+					UnityEngine.Object.DestroyImmediate(gameObjectSelectionItem);
+					result = false;
+				}
+			}
+			return result;
+		}
+
+		private bool EditAnimationClipInternal(AnimationClip animationClip, UnityEngine.Object sourceObject, IAnimationWindowControl controlInterface)
 		{
 			AnimationClipSelectionItem animationClipSelectionItem = AnimationClipSelectionItem.Create(animationClip, sourceObject);
+			bool result;
 			if (this.ShouldUpdateSelection(animationClipSelectionItem))
 			{
-				this.m_AnimEditor.state.recording = false;
 				this.m_AnimEditor.selectedItem = animationClipSelectionItem;
+				this.m_AnimEditor.overrideControlInterface = controlInterface;
+				result = true;
 			}
 			else
 			{
 				UnityEngine.Object.DestroyImmediate(animationClipSelectionItem);
+				result = false;
 			}
+			return result;
 		}
 
 		protected virtual void ShowButton(Rect r)
@@ -160,10 +212,14 @@ namespace UnityEditor
 			{
 				this.m_LockButtonStyle = "IN LockButton";
 			}
+			if (this.m_AnimEditor.stateDisabled)
+			{
+				this.m_Locked = false;
+			}
 			EditorGUI.BeginChangeCheck();
 			using (new EditorGUI.DisabledScope(this.m_AnimEditor.stateDisabled))
 			{
-				this.m_AnimEditor.locked = GUI.Toggle(r, this.m_AnimEditor.locked, GUIContent.none, this.m_LockButtonStyle);
+				this.m_Locked = GUI.Toggle(r, this.m_Locked, GUIContent.none, this.m_LockButtonStyle);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -171,39 +227,10 @@ namespace UnityEditor
 			}
 		}
 
-		private void SynchronizePolicy()
-		{
-			if (!(this.m_AnimEditor == null))
-			{
-				if (this.m_Policy == null)
-				{
-					this.m_Policy = new AnimationWindowPolicy();
-				}
-				if (this.m_Policy.unitialized)
-				{
-					this.m_Policy.SynchronizeFrameRate = delegate(ref float frameRate)
-					{
-						AnimationWindowSelectionItem selectedItem = this.m_AnimEditor.selectedItem;
-						if (selectedItem != null && selectedItem.animationClip != null)
-						{
-							frameRate = selectedItem.animationClip.frameRate;
-						}
-						else
-						{
-							frameRate = 60f;
-						}
-						return true;
-					};
-					this.m_Policy.unitialized = false;
-				}
-				this.m_AnimEditor.policy = this.m_Policy;
-			}
-		}
-
-		private bool ShouldUpdateSelection(GameObjectSelectionItem selectedItem)
+		private bool ShouldUpdateGameObjectSelection(GameObjectSelectionItem selectedItem)
 		{
 			bool result;
-			if (this.m_AnimEditor.locked)
+			if (this.m_Locked)
 			{
 				result = false;
 			}
@@ -246,10 +273,10 @@ namespace UnityEditor
 			return result;
 		}
 
-		private bool ShouldUpdateSelection(AnimationClipSelectionItem selectedItem)
+		private bool ShouldUpdateSelection(AnimationWindowSelectionItem selectedItem)
 		{
 			bool result;
-			if (this.m_AnimEditor.locked)
+			if (this.m_Locked)
 			{
 				result = false;
 			}
@@ -259,6 +286,11 @@ namespace UnityEditor
 				result = (!(selectedItem2 != null) || selectedItem.GetRefreshHash() != selectedItem2.GetRefreshHash());
 			}
 			return result;
+		}
+
+		private void UndoRedoPerformed()
+		{
+			base.Repaint();
 		}
 	}
 }

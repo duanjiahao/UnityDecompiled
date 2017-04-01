@@ -294,6 +294,7 @@ namespace UnityEngine.UI
 					{
 						value = "";
 					}
+					value = value.Replace("\0", string.Empty);
 					if (this.m_LineType == InputField.LineType.SingleLine)
 					{
 						value = value.Replace("\n", "").Replace("\t", "");
@@ -390,7 +391,10 @@ namespace UnityEngine.UI
 			}
 			set
 			{
-				SetPropertyUtility.SetClass<Text>(ref this.m_TextComponent, value);
+				if (SetPropertyUtility.SetClass<Text>(ref this.m_TextComponent, value))
+				{
+					this.EnforceTextHOverflow();
+				}
 			}
 		}
 
@@ -546,6 +550,7 @@ namespace UnityEngine.UI
 						InputField.ContentType.Standard,
 						InputField.ContentType.Autocorrected
 					});
+					this.EnforceTextHOverflow();
 				}
 			}
 		}
@@ -820,6 +825,7 @@ namespace UnityEngine.UI
 
 		protected InputField()
 		{
+			this.EnforceTextHOverflow();
 		}
 
 		protected void ClampPos(ref int pos)
@@ -838,6 +844,7 @@ namespace UnityEngine.UI
 		{
 			base.OnValidate();
 			this.EnforceContentType();
+			this.EnforceTextHOverflow();
 			this.m_CharacterLimit = Math.Max(0, this.m_CharacterLimit);
 			if (this.IsActive())
 			{
@@ -860,12 +867,13 @@ namespace UnityEngine.UI
 			this.m_DrawEnd = this.m_Text.Length;
 			if (this.m_CachedInputRenderer != null)
 			{
-				this.m_CachedInputRenderer.SetMaterial(Graphic.defaultGraphicMaterial, Texture2D.whiteTexture);
+				this.m_CachedInputRenderer.SetMaterial(this.m_TextComponent.GetModifiedMaterial(Graphic.defaultGraphicMaterial), Texture2D.whiteTexture);
 			}
 			if (this.m_TextComponent != null)
 			{
 				this.m_TextComponent.RegisterDirtyVerticesCallback(new UnityAction(this.MarkGeometryAsDirty));
 				this.m_TextComponent.RegisterDirtyVerticesCallback(new UnityAction(this.UpdateLabel));
+				this.m_TextComponent.RegisterDirtyMaterialCallback(new UnityAction(this.UpdateCaretMaterial));
 				this.UpdateLabel();
 			}
 		}
@@ -878,6 +886,7 @@ namespace UnityEngine.UI
 			{
 				this.m_TextComponent.UnregisterDirtyVerticesCallback(new UnityAction(this.MarkGeometryAsDirty));
 				this.m_TextComponent.UnregisterDirtyVerticesCallback(new UnityAction(this.UpdateLabel));
+				this.m_TextComponent.UnregisterDirtyMaterialCallback(new UnityAction(this.UpdateCaretMaterial));
 			}
 			CanvasUpdateRegistry.UnRegisterCanvasElementForRebuild(this);
 			if (this.m_CachedInputRenderer != null)
@@ -925,6 +934,14 @@ namespace UnityEngine.UI
 				{
 					this.m_CaretVisible = true;
 				}
+			}
+		}
+
+		private void UpdateCaretMaterial()
+		{
+			if (this.m_TextComponent != null && this.m_CachedInputRenderer != null)
+			{
+				this.m_CachedInputRenderer.SetMaterial(this.m_TextComponent.GetModifiedMaterial(Graphic.defaultGraphicMaterial), Texture2D.whiteTexture);
 			}
 		}
 
@@ -1886,13 +1903,14 @@ namespace UnityEngine.UI
 			{
 				if (this.InPlaceEditing())
 				{
+					int num = Math.Min(this.selectionFocusPosition, this.selectionAnchorPosition);
 					if (this.onValidateInput != null)
 					{
-						input = this.onValidateInput(this.text, this.caretPositionInternal, input);
+						input = this.onValidateInput(this.text, num, input);
 					}
 					else if (this.characterValidation != InputField.CharacterValidation.None)
 					{
-						input = this.Validate(this.text, this.caretPositionInternal, input);
+						input = this.Validate(this.text, num, input);
 					}
 					if (input != '\0')
 					{
@@ -1989,7 +2007,11 @@ namespace UnityEngine.UI
 					if (caretPos > this.m_DrawEnd)
 					{
 						this.m_DrawEnd = InputField.GetLineEndPosition(this.cachedInputTextGenerator, num);
-						float num2 = lines[num].topY + (float)lines[num].height;
+						float num2 = lines[num].topY - (float)lines[num].height;
+						if (num == lines.Count - 1)
+						{
+							num2 += lines[num].leading;
+						}
 						int i;
 						for (i = num; i > 0; i--)
 						{
@@ -2011,9 +2033,17 @@ namespace UnityEngine.UI
 						int k = j;
 						float topY2 = lines[j].topY;
 						float num3 = lines[k].topY - (float)lines[k].height;
+						if (k == lines.Count - 1)
+						{
+							num3 += lines[k].leading;
+						}
 						while (k < lines.Count - 1)
 						{
 							num3 = lines[k + 1].topY - (float)lines[k + 1].height;
+							if (k + 1 == lines.Count - 1)
+							{
+								num3 += lines[k + 1].leading;
+							}
 							if (topY2 - num3 > size.y)
 							{
 								break;
@@ -2114,14 +2144,18 @@ namespace UnityEngine.UI
 				{
 					if (this.m_CachedInputRenderer == null && this.m_TextComponent != null)
 					{
-						GameObject gameObject = new GameObject(base.transform.name + " Input Caret");
+						GameObject gameObject = new GameObject(base.transform.name + " Input Caret", new Type[]
+						{
+							typeof(RectTransform),
+							typeof(CanvasRenderer)
+						});
 						gameObject.hideFlags = HideFlags.DontSave;
 						gameObject.transform.SetParent(this.m_TextComponent.transform.parent);
 						gameObject.transform.SetAsFirstSibling();
 						gameObject.layer = base.gameObject.layer;
-						this.caretRectTrans = gameObject.AddComponent<RectTransform>();
-						this.m_CachedInputRenderer = gameObject.AddComponent<CanvasRenderer>();
-						this.m_CachedInputRenderer.SetMaterial(Graphic.defaultGraphicMaterial, Texture2D.whiteTexture);
+						this.caretRectTrans = gameObject.GetComponent<RectTransform>();
+						this.m_CachedInputRenderer = gameObject.GetComponent<CanvasRenderer>();
+						this.m_CachedInputRenderer.SetMaterial(this.m_TextComponent.GetModifiedMaterial(Graphic.defaultGraphicMaterial), Texture2D.whiteTexture);
 						gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 						this.AssignPositioningIfNeeded();
 					}
@@ -2346,16 +2380,14 @@ namespace UnityEngine.UI
 				}
 				else if (this.characterValidation == InputField.CharacterValidation.Name)
 				{
-					char c = (text.Length <= 0) ? ' ' : text[Mathf.Clamp(pos, 0, text.Length - 1)];
-					char c2 = (text.Length <= 0) ? '\n' : text[Mathf.Clamp(pos + 1, 0, text.Length - 1)];
 					if (char.IsLetter(ch))
 					{
-						if (char.IsLower(ch) && c == ' ')
+						if (char.IsLower(ch) && (pos == 0 || text[pos - 1] == ' '))
 						{
 							result = char.ToUpper(ch);
 							return result;
 						}
-						if (char.IsUpper(ch) && c != ' ' && c != '\'')
+						if (char.IsUpper(ch) && pos > 0 && text[pos - 1] != ' ' && text[pos - 1] != '\'')
 						{
 							result = char.ToLower(ch);
 							return result;
@@ -2363,20 +2395,23 @@ namespace UnityEngine.UI
 						result = ch;
 						return result;
 					}
-					else if (ch == '\'')
+					else
 					{
-						if (c != ' ' && c != '\'' && c2 != '\'' && !text.Contains("'"))
+						if (ch == '\'')
 						{
-							result = ch;
-							return result;
+							if (!text.Contains("'") && (pos <= 0 || (text[pos - 1] != ' ' && text[pos - 1] != '\'')) && (pos >= text.Length || (text[pos] != ' ' && text[pos] != '\'')))
+							{
+								result = ch;
+								return result;
+							}
 						}
-					}
-					else if (ch == ' ')
-					{
-						if (c != ' ' && c != '\'' && c2 != ' ' && c2 != '\'')
+						if (ch == ' ')
 						{
-							result = ch;
-							return result;
+							if ((pos <= 0 || (text[pos - 1] != ' ' && text[pos - 1] != '\'')) && (pos >= text.Length || (text[pos] != ' ' && text[pos] != '\'')))
+							{
+								result = ch;
+								return result;
+							}
 						}
 					}
 				}
@@ -2409,9 +2444,9 @@ namespace UnityEngine.UI
 					}
 					if (ch == '.')
 					{
-						char c3 = (text.Length <= 0) ? ' ' : text[Mathf.Clamp(pos, 0, text.Length - 1)];
-						char c4 = (text.Length <= 0) ? '\n' : text[Mathf.Clamp(pos + 1, 0, text.Length - 1)];
-						if (c3 != '.' && c4 != '.')
+						char c = (text.Length <= 0) ? ' ' : text[Mathf.Clamp(pos, 0, text.Length - 1)];
+						char c2 = (text.Length <= 0) ? '\n' : text[Mathf.Clamp(pos + 1, 0, text.Length - 1)];
+						if (c != '.' && c2 != '.')
 						{
 							result = ch;
 							return result;
@@ -2588,6 +2623,22 @@ namespace UnityEngine.UI
 				this.m_KeyboardType = TouchScreenKeyboardType.NumberPad;
 				this.m_CharacterValidation = InputField.CharacterValidation.Integer;
 				break;
+			}
+			this.EnforceTextHOverflow();
+		}
+
+		private void EnforceTextHOverflow()
+		{
+			if (this.m_TextComponent != null)
+			{
+				if (this.multiLine)
+				{
+					this.m_TextComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
+				}
+				else
+				{
+					this.m_TextComponent.horizontalOverflow = HorizontalWrapMode.Overflow;
+				}
 			}
 		}
 

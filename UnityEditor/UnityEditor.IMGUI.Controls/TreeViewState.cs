@@ -5,7 +5,7 @@ using UnityEngine;
 namespace UnityEditor.IMGUI.Controls
 {
 	[Serializable]
-	internal class TreeViewState
+	public class TreeViewState
 	{
 		public Vector2 scrollPos;
 
@@ -22,13 +22,7 @@ namespace UnityEditor.IMGUI.Controls
 		private RenameOverlay m_RenameOverlay = new RenameOverlay();
 
 		[SerializeField]
-		private CreateAssetUtility m_CreateAssetUtility = new CreateAssetUtility();
-
-		[SerializeField]
 		private string m_SearchString;
-
-		[SerializeField]
-		private float[] m_ColumnWidths = null;
 
 		public List<int> selectedIDs
 		{
@@ -78,30 +72,6 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		internal CreateAssetUtility createAssetUtility
-		{
-			get
-			{
-				return this.m_CreateAssetUtility;
-			}
-			set
-			{
-				this.m_CreateAssetUtility = value;
-			}
-		}
-
-		internal float[] columnWidths
-		{
-			get
-			{
-				return this.m_ColumnWidths;
-			}
-			set
-			{
-				this.m_ColumnWidths = value;
-			}
-		}
-
 		public string searchString
 		{
 			get
@@ -114,10 +84,9 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
-		internal void OnAwake()
+		internal virtual void OnAwake()
 		{
 			this.m_RenameOverlay.Clear();
-			this.m_CreateAssetUtility = new CreateAssetUtility();
 		}
 	}
 }

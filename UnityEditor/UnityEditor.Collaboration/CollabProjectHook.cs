@@ -1,5 +1,4 @@
 using System;
-using UnityEditor.Connect;
 using UnityEditor.Web;
 using UnityEngine;
 
@@ -10,14 +9,11 @@ namespace UnityEditor.Collaboration
 		public static void OnProjectWindowItemIconOverlay(string guid, Rect drawRect)
 		{
 			bool flag = CollabAccess.Instance.IsServiceEnabled();
-			if (flag && UnityConnect.instance.userInfo.whitelisted)
+			if (flag)
 			{
 				Collab instance = Collab.instance;
-				if (instance.collabInfo.whitelisted)
-				{
-					Collab.CollabStates assetState = instance.GetAssetState(guid);
-					Overlay.DrawOverlays(assetState, drawRect);
-				}
+				Collab.CollabStates assetState = instance.GetAssetState(guid);
+				Overlay.DrawOverlays(assetState, drawRect);
 			}
 		}
 	}

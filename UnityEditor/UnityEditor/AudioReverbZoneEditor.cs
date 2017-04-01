@@ -34,8 +34,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_LFReference;
 
-		private SerializedProperty m_RoomRolloffFactor;
-
 		private SerializedProperty m_Diffusion;
 
 		private SerializedProperty m_Density;
@@ -56,7 +54,6 @@ namespace UnityEditor
 			this.m_ReverbDelay = base.serializedObject.FindProperty("m_ReverbDelay");
 			this.m_HFReference = base.serializedObject.FindProperty("m_HFReference");
 			this.m_LFReference = base.serializedObject.FindProperty("m_LFReference");
-			this.m_RoomRolloffFactor = base.serializedObject.FindProperty("m_RoomRolloffFactor");
 			this.m_Diffusion = base.serializedObject.FindProperty("m_Diffusion");
 			this.m_Density = base.serializedObject.FindProperty("m_Density");
 		}
@@ -86,7 +83,6 @@ namespace UnityEditor
 				EditorGUILayout.Slider(this.m_ReverbDelay, 0f, 0.1f, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_HFReference, 1000f, 20000f, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_LFReference, 20f, 1000f, new GUILayoutOption[0]);
-				EditorGUILayout.Slider(this.m_RoomRolloffFactor, 0f, 10f, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_Diffusion, 0f, 100f, new GUILayoutOption[0]);
 				EditorGUILayout.Slider(this.m_Density, 0f, 100f, new GUILayoutOption[0]);
 			}

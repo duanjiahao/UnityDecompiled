@@ -10,7 +10,7 @@ namespace UnityEditor.MemoryProfiler
 		internal string m_Name;
 
 		[SerializeField]
-		internal int m_BaseClassId;
+		internal int m_NativeBaseTypeArrayIndex;
 
 		public string name
 		{
@@ -20,11 +20,20 @@ namespace UnityEditor.MemoryProfiler
 			}
 		}
 
+		[Obsolete("PackedNativeType.baseClassId is obsolete. Use PackedNativeType.nativeBaseTypeArrayIndex instead (UnityUpgradable) -> nativeBaseTypeArrayIndex")]
 		public int baseClassId
 		{
 			get
 			{
-				return this.m_BaseClassId;
+				return this.m_NativeBaseTypeArrayIndex;
+			}
+		}
+
+		public int nativeBaseTypeArrayIndex
+		{
+			get
+			{
+				return this.m_NativeBaseTypeArrayIndex;
 			}
 		}
 	}

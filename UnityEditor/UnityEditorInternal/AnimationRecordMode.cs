@@ -14,7 +14,7 @@ namespace UnityEditorInternal
 			get
 			{
 				bool flag = AnimationMode.InAnimationMode();
-				return !flag || (this.m_Recording && flag);
+				return !flag || this.m_Recording;
 			}
 		}
 

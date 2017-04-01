@@ -40,11 +40,7 @@ namespace UnityEditor
 					DockArea dockArea = EditorApplicationLayout.m_GameView.m_Parent as DockArea;
 					if (dockArea != null)
 					{
-						ContainerWindow window = dockArea.actualView.m_Parent.window;
-						if (!window.maximized)
-						{
-							EditorApplicationLayout.m_MaximizePending = WindowLayout.MaximizePrepare(dockArea.actualView);
-						}
+						EditorApplicationLayout.m_MaximizePending = WindowLayout.MaximizePrepare(dockArea.actualView);
 					}
 				}
 				EditorApplicationLayout.m_GameView.m_Parent.SetAsStartView();

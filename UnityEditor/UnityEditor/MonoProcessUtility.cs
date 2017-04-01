@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor.Utils;
 using UnityEngine;
 
 namespace UnityEditor
@@ -59,49 +60,19 @@ namespace UnityEditor
 			}
 		}
 
-		private static BuildTarget GetMonoExecTarget(BuildTarget buildTarget)
+		public static Process PrepareMonoProcess(string workDir)
 		{
-			BuildTarget result = buildTarget;
-			switch (buildTarget)
-			{
-			case BuildTarget.PSP2:
-			case BuildTarget.PS4:
-			case BuildTarget.XboxOne:
-			case BuildTarget.WiiU:
-				result = BuildTarget.StandaloneWindows64;
-				break;
-			}
-			return result;
-		}
-
-		public static string GetMonoExec(BuildTarget buildTarget)
-		{
-			string monoBinDirectory = BuildPipeline.GetMonoBinDirectory(buildTarget);
-			string result;
-			if (Application.platform == RuntimePlatform.WindowsEditor)
-			{
-				result = Path.Combine(monoBinDirectory, "mono.exe");
-			}
-			else
-			{
-				result = Path.Combine(monoBinDirectory, "mono");
-			}
-			return result;
-		}
-
-		public static string GetMonoPath(BuildTarget buildTarget)
-		{
-			string monoLibDirectory = BuildPipeline.GetMonoLibDirectory(buildTarget);
-			return monoLibDirectory + Path.PathSeparator + ".";
-		}
-
-		public static Process PrepareMonoProcess(BuildTarget target, string workDir)
-		{
-			BuildTarget monoExecTarget = MonoProcessUtility.GetMonoExecTarget(target);
 			Process process = new Process();
-			process.StartInfo.FileName = MonoProcessUtility.GetMonoExec(monoExecTarget);
+			string text = (Application.platform != RuntimePlatform.WindowsEditor) ? "mono" : "mono.exe";
+			process.StartInfo.FileName = Paths.Combine(new string[]
+			{
+				MonoInstallationFinder.GetMonoInstallation(),
+				"bin",
+				text
+			});
 			process.StartInfo.EnvironmentVariables["_WAPI_PROCESS_HANDLE_OFFSET"] = "5";
-			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoProcessUtility.GetMonoPath(monoExecTarget);
+			string profile = BuildPipeline.CompatibilityProfileToClassLibFolder(ApiCompatibilityLevel.NET_2_0);
+			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoInstallationFinder.GetProfileDirectory(profile);
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;

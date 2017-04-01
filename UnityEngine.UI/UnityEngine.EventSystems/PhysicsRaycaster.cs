@@ -58,12 +58,20 @@ namespace UnityEngine.EventSystems
 		{
 		}
 
+		protected void ComputeRayAndDistance(PointerEventData eventData, out Ray ray, out float distanceToClipPlane)
+		{
+			ray = this.eventCamera.ScreenPointToRay(eventData.position);
+			float z = ray.direction.z;
+			distanceToClipPlane = ((!Mathf.Approximately(0f, z)) ? Mathf.Abs((this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane) / z) : float.PositiveInfinity);
+		}
+
 		public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
 		{
 			if (!(this.eventCamera == null))
 			{
-				Ray r = this.eventCamera.ScreenPointToRay(eventData.position);
-				float f = this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane;
+				Ray r;
+				float f;
+				this.ComputeRayAndDistance(eventData, out r, out f);
 				if (ReflectionMethodsCache.Singleton.raycast3DAll != null)
 				{
 					RaycastHit[] array = ReflectionMethodsCache.Singleton.raycast3DAll(r, f, this.finalEventMask);

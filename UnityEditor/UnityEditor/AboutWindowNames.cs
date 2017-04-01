@@ -1379,7 +1379,7 @@ namespace UnityEditor
 			"Richard Kettlewell",
 			"Richard Lee",
 			"Richard Sykes",
-			"Richard Thomas",
+			"Richard \"Diki\" Thomas",
 			"Richard Underhill",
 			"Richard Yang",
 			"Rick Armstrong",

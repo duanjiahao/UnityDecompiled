@@ -68,7 +68,7 @@ namespace UnityEditor
 			ArrayUtility.Insert<AnimationEvent>(ref events, num, evt);
 			AnimationUtility.SetAnimationEvents(clip, events);
 			events = AnimationUtility.GetAnimationEvents(clip);
-			if (events[num].time != evt.time || events[num].functionName != events[num].functionName)
+			if (events[num].time != evt.time || events[num].functionName != evt.functionName)
 			{
 				Debug.LogError("Failed insertion");
 			}

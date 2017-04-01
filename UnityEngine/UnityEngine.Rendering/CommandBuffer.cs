@@ -13,14 +13,17 @@ namespace UnityEngine.Rendering
 
 		public extern string name
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int sizeInBytes
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -48,10 +51,11 @@ namespace UnityEngine.Rendering
 			this.m_Ptr = IntPtr.Zero;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void InitBuffer(CommandBuffer buf);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void ReleaseBuffer();
 
@@ -60,6 +64,77 @@ namespace UnityEngine.Rendering
 			this.Dispose();
 		}
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetComputeFloatParam(ComputeShader computeShader, string name, float val);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetComputeIntParam(ComputeShader computeShader, string name, int val);
+
+		public void SetComputeVectorParam(ComputeShader computeShader, string name, Vector4 val)
+		{
+			CommandBuffer.INTERNAL_CALL_SetComputeVectorParam(this, computeShader, name, ref val);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetComputeVectorParam(CommandBuffer self, ComputeShader computeShader, string name, ref Vector4 val);
+
+		public void SetComputeFloatParams(ComputeShader computeShader, string name, params float[] values)
+		{
+			this.Internal_SetComputeFloats(computeShader, name, values);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_SetComputeFloats(ComputeShader computeShader, string name, float[] values);
+
+		public void SetComputeIntParams(ComputeShader computeShader, string name, params int[] values)
+		{
+			this.Internal_SetComputeInts(computeShader, name, values);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_SetComputeInts(ComputeShader computeShader, string name, int[] values);
+
+		public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, string name, RenderTargetIdentifier rt)
+		{
+			this.Internal_SetComputeTextureParam(computeShader, kernelIndex, name, ref rt);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, string name, ref RenderTargetIdentifier rt);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, string name, ComputeBuffer buffer);
+
+		public void DispatchCompute(ComputeShader computeShader, int kernelIndex, int threadGroupsX, int threadGroupsY, int threadGroupsZ)
+		{
+			this.Internal_DispatchCompute(computeShader, kernelIndex, threadGroupsX, threadGroupsY, threadGroupsZ);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_DispatchCompute(ComputeShader computeShader, int kernelIndex, int threadGroupsX, int threadGroupsY, int threadGroupsZ);
+
+		public void DispatchCompute(ComputeShader computeShader, int kernelIndex, ComputeBuffer indirectBuffer, uint argsOffset)
+		{
+			this.Internal_DispatchComputeIndirect(computeShader, kernelIndex, indirectBuffer, argsOffset);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_DispatchComputeIndirect(ComputeShader computeShader, int kernelIndex, ComputeBuffer indirectBuffer, uint argsOffset);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void CopyCounterValue(ComputeBuffer src, ComputeBuffer dst, uint dstOffset);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear();
 
@@ -110,6 +185,7 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_Internal_DrawMesh(this, mesh, ref matrix, material, submeshIndex, shaderPass, properties);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawMesh(CommandBuffer self, Mesh mesh, ref Matrix4x4 matrix, Material material, int submeshIndex, int shaderPass, MaterialPropertyBlock properties);
 
@@ -146,6 +222,7 @@ namespace UnityEngine.Rendering
 			this.Internal_DrawRenderer(renderer, material, submeshIndex, shaderPass);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_DrawRenderer(Renderer renderer, Material material, [DefaultValue("0")] int submeshIndex, [DefaultValue("-1")] int shaderPass);
 
@@ -193,6 +270,7 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_Internal_DrawProcedural(this, ref matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawProcedural(CommandBuffer self, ref Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount, MaterialPropertyBlock properties);
 
@@ -229,6 +307,7 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_Internal_DrawProceduralIndirect(this, ref matrix, material, shaderPass, topology, bufferWithArgs, argsOffset, properties);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_DrawProceduralIndirect(CommandBuffer self, ref Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, ComputeBuffer bufferWithArgs, int argsOffset, MaterialPropertyBlock properties);
 
@@ -279,8 +358,53 @@ namespace UnityEngine.Rendering
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, int shaderPass, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties);
+
+		[ExcludeFromDocs]
+		public void DrawMeshInstancedIndirect(Mesh mesh, int submeshIndex, Material material, int shaderPass, ComputeBuffer bufferWithArgs, int argsOffset)
+		{
+			MaterialPropertyBlock properties = null;
+			this.DrawMeshInstancedIndirect(mesh, submeshIndex, material, shaderPass, bufferWithArgs, argsOffset, properties);
+		}
+
+		[ExcludeFromDocs]
+		public void DrawMeshInstancedIndirect(Mesh mesh, int submeshIndex, Material material, int shaderPass, ComputeBuffer bufferWithArgs)
+		{
+			MaterialPropertyBlock properties = null;
+			int argsOffset = 0;
+			this.DrawMeshInstancedIndirect(mesh, submeshIndex, material, shaderPass, bufferWithArgs, argsOffset, properties);
+		}
+
+		public void DrawMeshInstancedIndirect(Mesh mesh, int submeshIndex, Material material, int shaderPass, ComputeBuffer bufferWithArgs, [DefaultValue("0")] int argsOffset, [DefaultValue("null")] MaterialPropertyBlock properties)
+		{
+			if (!SystemInfo.supportsInstancing)
+			{
+				throw new InvalidOperationException("Instancing is not supported.");
+			}
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
+			if (submeshIndex < 0 || submeshIndex >= mesh.subMeshCount)
+			{
+				throw new ArgumentOutOfRangeException("submeshIndex", "submeshIndex out of range.");
+			}
+			if (material == null)
+			{
+				throw new ArgumentNullException("material");
+			}
+			if (bufferWithArgs == null)
+			{
+				throw new ArgumentNullException("bufferWithArgs");
+			}
+			this.Internal_DrawMeshInstancedIndirect(mesh, submeshIndex, material, shaderPass, bufferWithArgs, argsOffset, properties);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_DrawMeshInstancedIndirect(Mesh mesh, int submeshIndex, Material material, int shaderPass, ComputeBuffer bufferWithArgs, int argsOffset, MaterialPropertyBlock properties);
 
 		public void SetRenderTarget(RenderTargetIdentifier rt)
 		{
@@ -327,14 +451,50 @@ namespace UnityEngine.Rendering
 			this.SetRenderTarget_Multiple(colors, ref depth);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetRenderTarget_Single(ref RenderTargetIdentifier rt, int mipLevel, CubemapFace cubemapFace, int depthSlice);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetRenderTarget_ColDepth(ref RenderTargetIdentifier color, ref RenderTargetIdentifier depth, int mipLevel, CubemapFace cubemapFace, int depthSlice);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetRenderTarget_Multiple(RenderTargetIdentifier[] color, ref RenderTargetIdentifier depth);
+
+		public void CopyTexture(RenderTargetIdentifier src, RenderTargetIdentifier dst)
+		{
+			this.CopyTexture_Internal(ref src, -1, -1, -1, -1, -1, -1, ref dst, -1, -1, -1, -1, 1);
+		}
+
+		public void CopyTexture(RenderTargetIdentifier src, int srcElement, RenderTargetIdentifier dst, int dstElement)
+		{
+			this.CopyTexture_Internal(ref src, srcElement, -1, -1, -1, -1, -1, ref dst, dstElement, -1, -1, -1, 2);
+		}
+
+		public void CopyTexture(RenderTargetIdentifier src, int srcElement, int srcMip, RenderTargetIdentifier dst, int dstElement, int dstMip)
+		{
+			this.CopyTexture_Internal(ref src, srcElement, srcMip, -1, -1, -1, -1, ref dst, dstElement, dstMip, -1, -1, 3);
+		}
+
+		public void CopyTexture(RenderTargetIdentifier src, int srcElement, int srcMip, int srcX, int srcY, int srcWidth, int srcHeight, RenderTargetIdentifier dst, int dstElement, int dstMip, int dstX, int dstY)
+		{
+			this.CopyTexture_Internal(ref src, srcElement, srcMip, srcX, srcY, srcWidth, srcHeight, ref dst, dstElement, dstMip, dstX, dstY, 4);
+		}
+
+		public void SetViewport(Rect pixelRect)
+		{
+			CommandBuffer.INTERNAL_CALL_SetViewport(this, ref pixelRect);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetViewport(CommandBuffer self, ref Rect pixelRect);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void CopyTexture_Internal(ref RenderTargetIdentifier src, int srcElement, int srcMip, int srcX, int srcY, int srcWidth, int srcHeight, ref RenderTargetIdentifier dst, int dstElement, int dstMip, int dstX, int dstY, int mode);
 
 		public void Blit(Texture source, RenderTargetIdentifier dest)
 		{
@@ -351,6 +511,7 @@ namespace UnityEngine.Rendering
 			this.Blit_Texture(source, ref dest, mat, pass);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Blit_Texture(Texture source, ref RenderTargetIdentifier dest, Material mat, int pass);
 
@@ -369,6 +530,7 @@ namespace UnityEngine.Rendering
 			this.Blit_Identifier(ref source, ref dest, mat, pass);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Blit_Identifier(ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, [DefaultValue("null")] Material mat, [DefaultValue("-1")] int pass);
 
@@ -387,54 +549,68 @@ namespace UnityEngine.Rendering
 			this.Blit_Identifier(ref source, ref dest, mat, pass);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void GetTemporaryRT(int nameID, int width, int height, [DefaultValue("0")] int depthBuffer, [DefaultValue("FilterMode.Point")] FilterMode filter, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing);
+		public extern void GetTemporaryRT(int nameID, int width, int height, [DefaultValue("0")] int depthBuffer, [DefaultValue("FilterMode.Point")] FilterMode filter, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing, [DefaultValue("false")] bool enableRandomWrite);
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite, int antiAliasing)
+		{
+			bool enableRandomWrite = false;
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite)
 		{
+			bool enableRandomWrite = false;
 			int antiAliasing = 1;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format)
 		{
+			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter)
 		{
+			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
 			RenderTextureFormat format = RenderTextureFormat.Default;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer)
 		{
+			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
 			RenderTextureFormat format = RenderTextureFormat.Default;
 			FilterMode filter = FilterMode.Point;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height)
 		{
+			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
 			RenderTextureFormat format = RenderTextureFormat.Default;
 			FilterMode filter = FilterMode.Point;
 			int depthBuffer = 0;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ReleaseTemporaryRT(int nameID);
 
@@ -450,6 +626,7 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_ClearRenderTarget(this, clearDepth, clearColor, ref backgroundColor, depth);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ClearRenderTarget(CommandBuffer self, bool clearDepth, bool clearColor, ref Color backgroundColor, float depth);
 
@@ -458,6 +635,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalFloat(Shader.PropertyToID(name), value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalFloat(int nameID, float value);
 
@@ -471,6 +649,7 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_SetGlobalVector(this, nameID, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalVector(CommandBuffer self, int nameID, ref Vector4 value);
 
@@ -484,6 +663,7 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_SetGlobalColor(this, nameID, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalColor(CommandBuffer self, int nameID, ref Color value);
 
@@ -497,8 +677,48 @@ namespace UnityEngine.Rendering
 			CommandBuffer.INTERNAL_CALL_SetGlobalMatrix(this, nameID, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetGlobalMatrix(CommandBuffer self, int nameID, ref Matrix4x4 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void EnableShaderKeyword(string keyword);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void DisableShaderKeyword(string keyword);
+
+		public void SetViewMatrix(Matrix4x4 view)
+		{
+			CommandBuffer.INTERNAL_CALL_SetViewMatrix(this, ref view);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetViewMatrix(CommandBuffer self, ref Matrix4x4 view);
+
+		public void SetProjectionMatrix(Matrix4x4 proj)
+		{
+			CommandBuffer.INTERNAL_CALL_SetProjectionMatrix(this, ref proj);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetProjectionMatrix(CommandBuffer self, ref Matrix4x4 proj);
+
+		public void SetViewProjectionMatrices(Matrix4x4 view, Matrix4x4 proj)
+		{
+			CommandBuffer.INTERNAL_CALL_SetViewProjectionMatrices(this, ref view, ref proj);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetViewProjectionMatrices(CommandBuffer self, ref Matrix4x4 view, ref Matrix4x4 proj);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetGlobalDepthBias(float bias, float slopeBias);
 
 		public void SetGlobalFloatArray(string propertyName, List<float> values)
 		{
@@ -518,6 +738,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalFloatArrayListImpl(nameID, values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetGlobalFloatArrayListImpl(int nameID, object values);
 
@@ -526,6 +747,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalFloatArray(Shader.PropertyToID(propertyName), values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalFloatArray(int nameID, float[] values);
 
@@ -547,6 +769,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalVectorArrayListImpl(nameID, values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetGlobalVectorArrayListImpl(int nameID, object values);
 
@@ -555,6 +778,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalVectorArray(Shader.PropertyToID(propertyName), values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalVectorArray(int nameID, Vector4[] values);
 
@@ -565,9 +789,18 @@ namespace UnityEngine.Rendering
 
 		public void SetGlobalMatrixArray(int nameID, List<Matrix4x4> values)
 		{
+			if (values == null)
+			{
+				throw new ArgumentNullException("values");
+			}
+			if (values.Count == 0)
+			{
+				throw new ArgumentException("Zero-sized array is not allowed.");
+			}
 			this.SetGlobalMatrixArrayListImpl(nameID, values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetGlobalMatrixArrayListImpl(int nameID, object values);
 
@@ -576,6 +809,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalMatrixArray(Shader.PropertyToID(propertyName), values);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalMatrixArray(int nameID, Matrix4x4[] values);
 
@@ -589,6 +823,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalTexture_Impl(nameID, ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetGlobalTexture_Impl(int nameID, ref RenderTargetIdentifier rt);
 
@@ -597,6 +832,7 @@ namespace UnityEngine.Rendering
 			this.SetGlobalBuffer(Shader.PropertyToID(name), value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetGlobalBuffer(int nameID, ComputeBuffer value);
 
@@ -605,6 +841,7 @@ namespace UnityEngine.Rendering
 			this.SetShadowSamplingMode_Impl(ref shadowmap, mode);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void SetShadowSamplingMode_Impl(ref RenderTargetIdentifier shadowmap, ShadowSamplingMode mode);
 
@@ -617,7 +854,16 @@ namespace UnityEngine.Rendering
 			this.IssuePluginEventInternal(callback, eventID);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void IssuePluginEventInternal(IntPtr callback, int eventID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void BeginSample(string name);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void EndSample(string name);
 	}
 }

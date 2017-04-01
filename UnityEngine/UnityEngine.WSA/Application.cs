@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.WSA
 {
@@ -76,9 +77,11 @@ namespace UnityEngine.WSA
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetAdvertisingIdentifier();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetAppArguments();
 
@@ -122,19 +125,19 @@ namespace UnityEngine.WSA
 			return true;
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool InternalTryInvokeOnAppThread(AppCallbackItem item, bool waitUntilDone);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool InternalTryInvokeOnUIThread(AppCallbackItem item, bool waitUntilDone);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RunningOnAppThread();
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool RunningOnUIThread();
 	}

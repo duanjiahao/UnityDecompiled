@@ -11,5 +11,7 @@ namespace UnityEngine
 		public int height;
 
 		public float topY;
+
+		public float leading;
 	}
 }

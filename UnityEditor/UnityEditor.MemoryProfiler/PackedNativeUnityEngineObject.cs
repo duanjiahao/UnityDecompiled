@@ -23,7 +23,7 @@ namespace UnityEditor.MemoryProfiler
 		internal int m_Size;
 
 		[SerializeField]
-		internal int m_ClassId;
+		internal int m_NativeTypeArrayIndex;
 
 		[SerializeField]
 		internal HideFlags m_HideFlags;
@@ -82,11 +82,20 @@ namespace UnityEditor.MemoryProfiler
 			}
 		}
 
+		[Obsolete("PackedNativeUnityEngineObject.classId is obsolete. Use PackedNativeUnityEngineObject.nativeTypeArrayIndex instead (UnityUpgradable) -> nativeTypeArrayIndex")]
 		public int classId
 		{
 			get
 			{
-				return this.m_ClassId;
+				return this.m_NativeTypeArrayIndex;
+			}
+		}
+
+		public int nativeTypeArrayIndex
+		{
+			get
+			{
+				return this.m_NativeTypeArrayIndex;
 			}
 		}
 

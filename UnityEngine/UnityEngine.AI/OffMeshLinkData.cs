@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 using UnityEngine.Scripting.APIUpdating;
 
 namespace UnityEngine.AI
@@ -67,6 +68,7 @@ namespace UnityEngine.AI
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern OffMeshLink GetOffMeshLinkInternal(int instanceID);
 	}

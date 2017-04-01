@@ -777,7 +777,7 @@ namespace UnityEditor
 
 			private BuiltinResource[] m_ActiveBuiltinList;
 
-			public const int k_ListModeLeftPadding = 16;
+			public const int k_ListModeLeftPadding = 13;
 
 			public const int k_ListModeLeftPaddingForSubAssets = 28;
 
@@ -1586,8 +1586,7 @@ namespace UnityEditor
 						}
 						if (filterItem != null && filterItem.isMainRepresentation)
 						{
-							bool flag8 = CollabAccess.Instance.IsServiceEnabled();
-							if (flag8 && Collab.instance.GetCollabInfo().whitelisted)
+							if (CollabAccess.Instance.IsServiceEnabled())
 							{
 								CollabProjectHook.OnProjectWindowItemIconOverlay(filterItem.guid, position);
 							}
@@ -1735,23 +1734,26 @@ namespace UnityEditor
 						string[] classNames = searchFilter.classNames;
 						for (int i = 0; i < classNames.Length; i++)
 						{
-							string classString = classNames[i];
-							int num = BaseObjectTools.StringToClassIDCaseInsensitive(classString);
-							if (num >= 0)
+							string name = classNames[i];
+							UnityType unityType = UnityType.FindTypeByNameCaseInsensitive(name);
+							if (unityType != null)
 							{
-								list2.Add(num);
+								list2.Add(unityType.persistentTypeID);
 							}
 						}
 						if (list2.Count > 0)
 						{
 							foreach (KeyValuePair<string, BuiltinResource[]> current in this.m_BuiltinResourceMap)
 							{
-								int classID = BaseObjectTools.StringToClassID(current.Key);
-								foreach (int current2 in list2)
+								UnityType unityType2 = UnityType.FindTypeByName(current.Key);
+								if (unityType2 != null)
 								{
-									if (BaseObjectTools.IsDerivedFromClassID(classID, current2))
+									foreach (int current2 in list2)
 									{
-										list.AddRange(current.Value);
+										if (unityType2.IsDerivedFrom(UnityType.FindTypeByPersistentTypeID(current2)))
+										{
+											list.AddRange(current.Value);
+										}
 									}
 								}
 							}
@@ -1822,14 +1824,14 @@ namespace UnityEditor
 				else
 				{
 					string text = type.ToString().Substring(type.Namespace.ToString().Length + 1);
-					int num = BaseObjectTools.StringToClassID(text);
-					if (num < 0)
+					UnityType unityType = UnityType.FindTypeByName(text);
+					if (unityType == null)
 					{
 						Debug.LogWarning("ObjectSelector::InitBuiltinAssetType: class '" + text + "' not found");
 					}
 					else
 					{
-						BuiltinResource[] builtinResourceList = EditorGUIUtility.GetBuiltinResourceList(num);
+						BuiltinResource[] builtinResourceList = EditorGUIUtility.GetBuiltinResourceList(unityType.persistentTypeID);
 						if (builtinResourceList != null)
 						{
 							this.m_BuiltinResourceMap.Add(text, builtinResourceList);
@@ -2133,8 +2135,7 @@ namespace UnityEditor
 				{
 					Rect drawRect = rect;
 					drawRect.width = num + 16f;
-					bool flag = CollabAccess.Instance.IsServiceEnabled();
-					if (flag && Collab.instance.GetCollabInfo().whitelisted)
+					if (CollabAccess.Instance.IsServiceEnabled())
 					{
 						CollabProjectHook.OnProjectWindowItemIconOverlay(filterItem.guid, drawRect);
 					}
@@ -3834,7 +3835,7 @@ namespace UnityEditor
 						Vector2 vector = this.m_Ping.m_PingStyle.CalcSize(gUIContent);
 						this.m_Ping.m_ContentRect.width = vector.x + num2 + 16f;
 						this.m_Ping.m_ContentRect.height = vector.y;
-						this.m_LeftPaddingForPinging = ((!hierarchyProperty.isMainRepresentation) ? 28 : 16);
+						this.m_LeftPaddingForPinging = ((!hierarchyProperty.isMainRepresentation) ? 28 : 13);
 						FilteredHierarchy.FilterResult res = this.m_LocalAssets.LookupByInstanceID(instanceID);
 						this.m_Ping.m_ContentDraw = delegate(Rect r)
 						{

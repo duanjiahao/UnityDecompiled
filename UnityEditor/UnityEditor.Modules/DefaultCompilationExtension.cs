@@ -1,5 +1,6 @@
 using Mono.Cecil;
 using System;
+using System.Collections.Generic;
 
 namespace UnityEditor.Modules
 {
@@ -18,6 +19,26 @@ namespace UnityEditor.Modules
 		public virtual IAssemblyResolver GetAssemblyResolver(bool buildingForEditor, string assemblyPath, string[] searchDirectories)
 		{
 			return null;
+		}
+
+		public virtual IEnumerable<string> GetWindowsMetadataReferences()
+		{
+			return new string[0];
+		}
+
+		public virtual IEnumerable<string> GetAdditionalAssemblyReferences()
+		{
+			return new string[0];
+		}
+
+		public virtual IEnumerable<string> GetAdditionalDefines()
+		{
+			return new string[0];
+		}
+
+		public virtual IEnumerable<string> GetAdditionalSourceFiles()
+		{
+			return new string[0];
 		}
 	}
 }

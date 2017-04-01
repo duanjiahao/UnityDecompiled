@@ -22,6 +22,7 @@ namespace UnityEditor
 		AnimationCurve,
 		Bounds,
 		Gradient,
-		Quaternion
+		Quaternion,
+		ExposedReference
 	}
 }

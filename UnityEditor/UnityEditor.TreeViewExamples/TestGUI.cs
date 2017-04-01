@@ -19,7 +19,7 @@ namespace UnityEditor.TreeViewExamples
 		{
 			get
 			{
-				return this.m_TreeView.state.columnWidths;
+				return ((TreeViewStateWithColumns)this.m_TreeView.state).columnWidths;
 			}
 		}
 
@@ -46,21 +46,21 @@ namespace UnityEditor.TreeViewExamples
 			{
 				if (this.m_LabelStyle == null)
 				{
-					this.m_LabelStyle = new GUIStyle(TreeViewGUI.s_Styles.lineStyle);
-					RectOffset arg_56_0 = this.m_LabelStyle.padding;
+					this.m_LabelStyle = new GUIStyle(TreeViewGUI.Styles.lineStyle);
+					RectOffset arg_51_0 = this.m_LabelStyle.padding;
 					int num = 6;
 					this.m_LabelStyle.padding.right = num;
-					arg_56_0.left = num;
-					this.m_LabelStyleRightAlign = new GUIStyle(TreeViewGUI.s_Styles.lineStyle);
-					RectOffset arg_8F_0 = this.m_LabelStyleRightAlign.padding;
+					arg_51_0.left = num;
+					this.m_LabelStyleRightAlign = new GUIStyle(TreeViewGUI.Styles.lineStyle);
+					RectOffset arg_85_0 = this.m_LabelStyleRightAlign.padding;
 					num = 6;
 					this.m_LabelStyleRightAlign.padding.left = num;
-					arg_8F_0.right = num;
+					arg_85_0.right = num;
 					this.m_LabelStyleRightAlign.alignment = TextAnchor.MiddleRight;
 				}
 				if (selected)
 				{
-					TreeViewGUI.s_Styles.selectionStyle.Draw(rect, false, false, true, focused);
+					TreeViewGUI.Styles.selectionStyle.Draw(rect, false, false, true, focused);
 				}
 				if (isPinging || this.columnWidths == null || this.columnWidths.Length == 0)
 				{

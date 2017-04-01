@@ -6,19 +6,26 @@ namespace UnityEditor.Collaboration
 {
 	internal class Overlay
 	{
-		private static readonly Dictionary<Collab.CollabStates, Texture2D> s_Overlays = new Dictionary<Collab.CollabStates, Texture2D>();
+		private static double OverlaySizeOnSmallIcon = 0.6;
+
+		private static double OverlaySizeOnLargeIcon = 0.35;
+
+		private static readonly Dictionary<Collab.CollabStates, GUIContent> s_Overlays = new Dictionary<Collab.CollabStates, GUIContent>();
 
 		protected static void LoadOverlays()
 		{
 			Overlay.s_Overlays.Clear();
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabConflicted, TextureUtility.LoadTextureFromApplicationContents("conflict.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabPendingMerge, TextureUtility.LoadTextureFromApplicationContents("conflict.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabChanges, TextureUtility.LoadTextureFromApplicationContents("changes.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal | Collab.CollabStates.kCollabMovedLocal, TextureUtility.LoadTextureFromApplicationContents("modif-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabAddedLocal, TextureUtility.LoadTextureFromApplicationContents("added-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal, TextureUtility.LoadTextureFromApplicationContents("modif-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabDeletedLocal, TextureUtility.LoadTextureFromApplicationContents("deleted-local.png"));
-			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabMovedLocal, TextureUtility.LoadTextureFromApplicationContents("modif-local.png"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabIgnored, EditorGUIUtility.IconContent("CollabExclude Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabConflicted, EditorGUIUtility.IconContent("CollabConflict Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabPendingMerge, EditorGUIUtility.IconContent("CollabConflict Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabMovedLocal, EditorGUIUtility.IconContent("CollabMoved Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal | Collab.CollabStates.kCollabMovedLocal, EditorGUIUtility.IconContent("CollabMoved Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabCheckedOutLocal, EditorGUIUtility.IconContent("CollabEdit Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabAddedLocal, EditorGUIUtility.IconContent("CollabCreate Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.kCollabDeletedLocal, EditorGUIUtility.IconContent("CollabDeleted Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.KCollabContentConflicted, EditorGUIUtility.IconContent("CollabChangesConflict Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.KCollabContentChanged, EditorGUIUtility.IconContent("CollabChanges Icon"));
+			Overlay.s_Overlays.Add(Collab.CollabStates.KCollabContentDeleted, EditorGUIUtility.IconContent("CollabChangesDeleted Icon"));
 		}
 
 		protected static bool AreOverlaysLoaded()
@@ -30,12 +37,15 @@ namespace UnityEditor.Collaboration
 			}
 			else
 			{
-				foreach (Texture2D current in Overlay.s_Overlays.Values)
+				using (Dictionary<Collab.CollabStates, GUIContent>.ValueCollection.Enumerator enumerator = Overlay.s_Overlays.Values.GetEnumerator())
 				{
-					if (current == null)
+					while (enumerator.MoveNext())
 					{
-						result = false;
-						return result;
+						if (enumerator.Current == null)
+						{
+							result = false;
+							return result;
+						}
 					}
 				}
 				result = true;
@@ -60,12 +70,22 @@ namespace UnityEditor.Collaboration
 
 		protected static void DrawOverlayElement(Collab.CollabStates singleState, Rect itemRect)
 		{
-			Texture2D texture2D;
-			if (Overlay.s_Overlays.TryGetValue(singleState, out texture2D))
+			GUIContent gUIContent;
+			if (Overlay.s_Overlays.TryGetValue(singleState, out gUIContent))
 			{
-				if (texture2D != null)
+				Texture image = gUIContent.image;
+				if (image != null)
 				{
-					GUI.DrawTexture(itemRect, texture2D);
+					Rect position = itemRect;
+					double num = Overlay.OverlaySizeOnLargeIcon;
+					if (position.width <= 24f)
+					{
+						num = Overlay.OverlaySizeOnSmallIcon;
+					}
+					position.width = (float)Convert.ToInt32(Math.Ceiling((double)position.width * num));
+					position.height = (float)Convert.ToInt32(Math.Ceiling((double)position.height * num));
+					position.x += itemRect.width - position.width;
+					GUI.DrawTexture(position, image, ScaleMode.ScaleToFit);
 				}
 			}
 		}

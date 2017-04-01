@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.U2D.Interface;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	[Serializable]
-	internal class SpriteRectCache : ScriptableObject
+	internal class SpriteRectCache : ScriptableObject, ISpriteRectCache, IUndoableObject
 	{
 		[SerializeField]
 		public List<SpriteRect> m_Rects;
@@ -14,31 +15,13 @@ namespace UnityEditor
 		{
 			get
 			{
-				int result;
-				if (this.m_Rects != null)
-				{
-					result = this.m_Rects.Count;
-				}
-				else
-				{
-					result = 0;
-				}
-				return result;
+				return (this.m_Rects == null) ? 0 : this.m_Rects.Count;
 			}
 		}
 
 		public SpriteRect RectAt(int i)
 		{
-			SpriteRect result;
-			if (i >= this.Count)
-			{
-				result = null;
-			}
-			else
-			{
-				result = this.m_Rects[i];
-			}
-			return result;
+			return (i < this.Count && i >= 0) ? this.m_Rects[i] : null;
 		}
 
 		public void AddRect(SpriteRect r)

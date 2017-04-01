@@ -66,13 +66,18 @@ namespace UnityEditor
 
 		public static void WriteCPlusPlusFileForStaticAOTModuleRegistration(BuildTarget buildTarget, string file, CrossCompileOptions crossCompileOptions, bool advancedLic, string targetDevice, bool stripping, RuntimeClassRegistry usedClassRegistry, AssemblyReferenceChecker checker, string stagingAreaDataManaged)
 		{
+			MonoAOTRegistration.WriteCPlusPlusFileForStaticAOTModuleRegistration(buildTarget, file, crossCompileOptions, advancedLic, targetDevice, stripping, usedClassRegistry, checker, stagingAreaDataManaged, null);
+		}
+
+		public static void WriteCPlusPlusFileForStaticAOTModuleRegistration(BuildTarget buildTarget, string file, CrossCompileOptions crossCompileOptions, bool advancedLic, string targetDevice, bool stripping, RuntimeClassRegistry usedClassRegistry, AssemblyReferenceChecker checker, string stagingAreaDataManaged, IIl2CppPlatformProvider platformProvider)
+		{
 			string text = Path.Combine(stagingAreaDataManaged, "ICallSummary.txt");
 			string exe = Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "Tools/InternalCallRegistrationWriter/InternalCallRegistrationWriter.exe");
 			string args = string.Format("-assembly=\"{0}\" -summary=\"{1}\"", Path.Combine(stagingAreaDataManaged, "UnityEngine.dll"), text);
 			Runner.RunManagedProgram(exe, args);
 			HashSet<UnityType> hashSet;
 			HashSet<string> nativeModules;
-			CodeStrippingUtils.GenerateDependencies(Path.GetDirectoryName(stagingAreaDataManaged), text, usedClassRegistry, stripping, out hashSet, out nativeModules, null);
+			CodeStrippingUtils.GenerateDependencies(Path.GetDirectoryName(stagingAreaDataManaged), text, usedClassRegistry, stripping, out hashSet, out nativeModules, platformProvider);
 			using (TextWriter textWriter = new StreamWriter(file))
 			{
 				string[] assemblyFileNames = checker.GetAssemblyFileNames();
@@ -298,7 +303,7 @@ namespace UnityEditor
 			{
 				if (current.baseClass != null && !current.isEditorOnly)
 				{
-					if (current.hasNativeNamespace)
+					if (!current.hasNativeNamespace)
 					{
 						output.WriteLine("class {0};", current.name);
 					}
@@ -312,12 +317,14 @@ namespace UnityEditor
 			output.Write("void RegisterAllClasses() \n{\n");
 			output.WriteLine("\tvoid RegisterBuiltinTypes();");
 			output.WriteLine("\tRegisterBuiltinTypes();");
-			output.WriteLine("\t// Non stripped classes");
+			output.WriteLine("\t// {0} Non stripped classes\n", nativeClassesAndBaseClasses.Count);
+			int num = 1;
 			foreach (UnityType current2 in UnityType.GetTypes())
 			{
 				if (current2.baseClass != null && !current2.isEditorOnly && nativeClassesAndBaseClasses.Contains(current2))
 				{
-					output.WriteLine("\tRegisterClass<{0}>();", current2.qualifiedName);
+					output.WriteLine("\t// {0}. {1}", num++, current2.qualifiedName);
+					output.WriteLine("\tRegisterClass<{0}>();\n", current2.qualifiedName);
 				}
 			}
 			output.WriteLine();

@@ -12,9 +12,9 @@ namespace UnityEditor
 	{
 		private int m_DepthBufferBits = 0;
 
-		private int m_AntiAlias = 0;
-
 		private bool m_WantsMouseMove = false;
+
+		private bool m_WantsMouseEnterLeaveWindow = false;
 
 		private bool m_AutoRepaintOnSceneChange = false;
 
@@ -22,32 +22,38 @@ namespace UnityEditor
 
 		public static extern GUIView current
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern GUIView focusedView
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public static extern GUIView mouseOverView
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool hasFocus
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		internal extern bool mouseRayInvisible
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -62,6 +68,19 @@ namespace UnityEditor
 			{
 				this.m_WantsMouseMove = value;
 				this.Internal_SetWantsMouseMove(this.m_WantsMouseMove);
+			}
+		}
+
+		public bool wantsMouseEnterLeaveWindow
+		{
+			get
+			{
+				return this.m_WantsMouseEnterLeaveWindow;
+			}
+			set
+			{
+				this.m_WantsMouseEnterLeaveWindow = value;
+				this.Internal_SetWantsMouseEnterLeaveWindow(this.m_WantsMouseEnterLeaveWindow);
 			}
 		}
 
@@ -102,62 +121,80 @@ namespace UnityEditor
 			}
 		}
 
+		[Obsolete("AA is not supported on GUIViews", false)]
 		public int antiAlias
 		{
 			get
 			{
-				return this.m_AntiAlias;
+				return 1;
 			}
 			set
 			{
-				this.m_AntiAlias = value;
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetTitle(string title);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_Init(int depthBits, int antiAlias);
+		private extern void Internal_Init(int depthBits);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Internal_Recreate(int depthBits, int antiAlias);
+		private extern void Internal_Recreate(int depthBits);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_Close();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern bool Internal_SendEvent(Event e);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddToAuxWindowList();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveFromAuxWindowList();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		protected extern void Internal_SetAsActiveWindow();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetWantsMouseMove(bool wantIt);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_SetWantsMouseEnterLeaveWindow(bool wantIt);
 
 		public void SetInternalGameViewDimensions(Rect rect, Rect clippedRect, Vector2 targetSize)
 		{
 			GUIView.INTERNAL_CALL_SetInternalGameViewDimensions(this, ref rect, ref clippedRect, ref targetSize);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetInternalGameViewDimensions(GUIView self, ref Rect rect, ref Rect clippedRect, ref Vector2 targetSize);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAsStartView();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void ClearStartView();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetAutoRepaint(bool doit);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetWindow(ContainerWindow win);
 
@@ -166,30 +203,39 @@ namespace UnityEditor
 			GUIView.INTERNAL_CALL_Internal_SetPosition(this, ref windowPosition);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_SetPosition(GUIView self, ref Rect windowPosition);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Focus();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Repaint();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RepaintImmediately();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CaptureRenderDoc();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void MakeVistaDWMHappyDance();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void StealMouseCapture();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void ClearKeyboardControl();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetKeyboardControl(int id);
 
@@ -198,6 +244,7 @@ namespace UnityEditor
 			GUIView.INTERNAL_CALL_GrabPixels(this, rd, ref rect);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GrabPixels(GUIView self, RenderTexture rd, ref Rect rect);
 
@@ -221,7 +268,7 @@ namespace UnityEditor
 		protected override void SetWindow(ContainerWindow win)
 		{
 			base.SetWindow(win);
-			this.Internal_Init(this.m_DepthBufferBits, this.m_AntiAlias);
+			this.Internal_Init(this.m_DepthBufferBits);
 			if (win)
 			{
 				this.Internal_SetWindow(win);
@@ -229,12 +276,13 @@ namespace UnityEditor
 			this.Internal_SetAutoRepaint(this.m_AutoRepaintOnSceneChange);
 			this.Internal_SetPosition(base.windowPosition);
 			this.Internal_SetWantsMouseMove(this.m_WantsMouseMove);
+			this.Internal_SetWantsMouseEnterLeaveWindow(this.m_WantsMouseEnterLeaveWindow);
 			this.m_BackgroundValid = false;
 		}
 
 		internal void RecreateContext()
 		{
-			this.Internal_Recreate(this.m_DepthBufferBits, this.m_AntiAlias);
+			this.Internal_Recreate(this.m_DepthBufferBits);
 			this.m_BackgroundValid = false;
 		}
 

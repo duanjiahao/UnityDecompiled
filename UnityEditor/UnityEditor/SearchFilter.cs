@@ -2,8 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using UnityEditor.Collaboration;
-using UnityEditor.Connect;
 using UnityEngine;
 
 namespace UnityEditor
@@ -196,11 +194,7 @@ namespace UnityEditor
 
 		public SearchFilter.State GetState()
 		{
-			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmpty<string>(this.m_AssetLabels) || !this.IsNullOrEmpty<string>(this.m_ClassNames) || !this.IsNullOrEmpty<string>(this.m_AssetBundleNames) || !this.IsNullOrEmpty<int>(this.m_ReferencingInstanceIDs);
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
-			{
-				flag = (flag || !this.IsNullOrEmpty<string>(this.m_VersionControlStates));
-			}
+			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmpty<string>(this.m_AssetLabels) || !this.IsNullOrEmpty<string>(this.m_ClassNames) || !this.IsNullOrEmpty<string>(this.m_AssetBundleNames) || !this.IsNullOrEmpty<int>(this.m_ReferencingInstanceIDs) || !this.IsNullOrEmpty<string>(this.m_VersionControlStates);
 			bool flag2 = !this.IsNullOrEmpty<string>(this.m_Folders);
 			SearchFilter.State result;
 			if (flag)
@@ -253,13 +247,10 @@ namespace UnityEditor
 				this.m_Folders = newFilter.m_Folders;
 				result = true;
 			}
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
+			if (newFilter.m_VersionControlStates != this.m_VersionControlStates)
 			{
-				if (newFilter.m_VersionControlStates != this.m_VersionControlStates)
-				{
-					this.m_VersionControlStates = newFilter.m_VersionControlStates;
-					result = true;
-				}
+				this.m_VersionControlStates = newFilter.m_VersionControlStates;
+				result = true;
 			}
 			if (newFilter.m_AssetLabels != this.m_AssetLabels)
 			{
@@ -302,12 +293,9 @@ namespace UnityEditor
 			{
 				text = text + "[Labels: " + this.m_AssetLabels[0] + "]";
 			}
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
+			if (this.m_VersionControlStates != null && this.m_VersionControlStates.Length > 0)
 			{
-				if (this.m_VersionControlStates != null && this.m_VersionControlStates.Length > 0)
-				{
-					text = text + "[VersionStates: " + this.m_VersionControlStates[0] + "]";
-				}
+				text = text + "[VersionStates: " + this.m_VersionControlStates[0] + "]";
 			}
 			if (this.m_AssetBundleNames != null && this.m_AssetBundleNames.Length > 0)
 			{
@@ -361,10 +349,7 @@ namespace UnityEditor
 			}
 			this.AddToString<string>("t:", this.m_ClassNames, ref text);
 			this.AddToString<string>("l:", this.m_AssetLabels, ref text);
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
-			{
-				this.AddToString<string>("v:", this.m_VersionControlStates, ref text);
-			}
+			this.AddToString<string>("v:", this.m_VersionControlStates, ref text);
 			this.AddToString<string>("b:", this.m_AssetBundleNames, ref text);
 			return text;
 		}

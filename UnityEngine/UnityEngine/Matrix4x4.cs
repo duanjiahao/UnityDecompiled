@@ -57,6 +57,7 @@ namespace UnityEngine
 
 		public extern bool isIdentity
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -259,6 +260,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Inverse(ref Matrix4x4 m, out Matrix4x4 value);
 
@@ -269,6 +271,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Transpose(ref Matrix4x4 m, out Matrix4x4 value);
 
@@ -277,6 +280,7 @@ namespace UnityEngine
 			return Matrix4x4.INTERNAL_CALL_Invert(ref inMatrix, out dest);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Invert(ref Matrix4x4 inMatrix, out Matrix4x4 dest);
 
@@ -285,6 +289,7 @@ namespace UnityEngine
 			return Matrix4x4.INTERNAL_CALL_Determinant(ref m);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float INTERNAL_CALL_Determinant(ref Matrix4x4 m);
 
@@ -300,6 +305,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_TRS(ref Vector3 pos, ref Quaternion q, ref Vector3 s, out Matrix4x4 value);
 
@@ -310,6 +316,7 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Ortho(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4x4 value);
 
@@ -320,8 +327,20 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Perspective(float fov, float aspect, float zNear, float zFar, out Matrix4x4 value);
+
+		public static Matrix4x4 LookAt(Vector3 from, Vector3 to, Vector3 up)
+		{
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_LookAt(ref from, ref to, ref up, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_LookAt(ref Vector3 from, ref Vector3 to, ref Vector3 up, out Matrix4x4 value);
 
 		public override int GetHashCode()
 		{
@@ -460,6 +479,29 @@ namespace UnityEngine
 				m21 = 0f,
 				m22 = v.z,
 				m23 = 0f,
+				m30 = 0f,
+				m31 = 0f,
+				m32 = 0f,
+				m33 = 1f
+			};
+		}
+
+		public static Matrix4x4 Translate(Vector3 v)
+		{
+			return new Matrix4x4
+			{
+				m00 = 1f,
+				m01 = 0f,
+				m02 = 0f,
+				m03 = v.x,
+				m10 = 0f,
+				m11 = 1f,
+				m12 = 0f,
+				m13 = v.y,
+				m20 = 0f,
+				m21 = 0f,
+				m22 = 1f,
+				m23 = v.z,
 				m30 = 0f,
 				m31 = 0f,
 				m32 = 0f,

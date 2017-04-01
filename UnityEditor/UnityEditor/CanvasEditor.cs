@@ -23,6 +23,8 @@ namespace UnityEditor
 			public static GUIContent targetDisplay = new GUIContent("Target Display", "Display on which to render the canvas when in overlay mode");
 
 			public static GUIContent m_SortingOrderStyle = EditorGUIUtility.TextContent("Order in Layer");
+
+			public static GUIContent m_ShaderChannel = EditorGUIUtility.TextContent("Additional Shader Channels");
 		}
 
 		private enum PixelPerfect
@@ -50,6 +52,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_OverrideSorting;
 
+		private SerializedProperty m_ShaderChannels;
+
 		private AnimBool m_OverlayMode;
 
 		private AnimBool m_CameraMode;
@@ -66,6 +70,15 @@ namespace UnityEditor
 
 		private bool m_NoneOverlay = false;
 
+		private string[] shaderChannelOptions = new string[]
+		{
+			"TexCoord1",
+			"TexCoord2",
+			"TexCoord3",
+			"Normal",
+			"Tangent"
+		};
+
 		private CanvasEditor.PixelPerfect pixelPerfect = CanvasEditor.PixelPerfect.Inherit;
 
 		private void OnEnable()
@@ -79,6 +92,7 @@ namespace UnityEditor
 			this.m_TargetDisplay = base.serializedObject.FindProperty("m_TargetDisplay");
 			this.m_OverrideSorting = base.serializedObject.FindProperty("m_OverrideSorting");
 			this.m_PixelPerfectOverride = base.serializedObject.FindProperty("m_OverridePixelPerfect");
+			this.m_ShaderChannels = base.serializedObject.FindProperty("m_AdditionalShaderChannelsFlag");
 			this.m_OverlayMode = new AnimBool(this.m_RenderMode.intValue == 0);
 			this.m_OverlayMode.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_CameraMode = new AnimBool(this.m_RenderMode.intValue == 1);
@@ -133,105 +147,131 @@ namespace UnityEditor
 			this.m_SortingOverride.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 		}
 
+		private void AllRootCanvases()
+		{
+			EditorGUILayout.PropertyField(this.m_RenderMode, new GUILayoutOption[0]);
+			this.m_OverlayMode.target = (this.m_RenderMode.intValue == 0);
+			this.m_CameraMode.target = (this.m_RenderMode.intValue == 1);
+			this.m_WorldMode.target = (this.m_RenderMode.intValue == 2);
+			EditorGUI.indentLevel++;
+			if (EditorGUILayout.BeginFadeGroup(this.m_OverlayMode.faded))
+			{
+				EditorGUILayout.PropertyField(this.m_PixelPerfect, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.sortingOrder, new GUILayoutOption[0]);
+				GUIContent[] displayNames = DisplayUtility.GetDisplayNames();
+				EditorGUILayout.IntPopup(this.m_TargetDisplay, displayNames, DisplayUtility.GetDisplayIndices(), CanvasEditor.Styles.targetDisplay, new GUILayoutOption[0]);
+			}
+			EditorGUILayout.EndFadeGroup();
+			if (EditorGUILayout.BeginFadeGroup(this.m_CameraMode.faded))
+			{
+				EditorGUILayout.PropertyField(this.m_PixelPerfect, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_Camera, CanvasEditor.Styles.renderCamera, new GUILayoutOption[0]);
+				if (this.m_Camera.objectReferenceValue != null)
+				{
+					EditorGUILayout.PropertyField(this.m_PlaneDistance, new GUILayoutOption[0]);
+				}
+				EditorGUILayout.Space();
+				if (this.m_Camera.objectReferenceValue != null)
+				{
+					EditorGUILayout.SortingLayerField(CanvasEditor.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup, EditorStyles.label);
+				}
+				EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.m_SortingOrderStyle, new GUILayoutOption[0]);
+				if (this.m_Camera.objectReferenceValue == null)
+				{
+					EditorGUILayout.HelpBox("Screen Space - A canvas with no specified camera acts like a Overlay Canvas. Please assign a camera to it in the 'Render Camera' field.", MessageType.Warning);
+				}
+			}
+			EditorGUILayout.EndFadeGroup();
+			if (EditorGUILayout.BeginFadeGroup(this.m_WorldMode.faded))
+			{
+				EditorGUILayout.PropertyField(this.m_Camera, CanvasEditor.Styles.eventCamera, new GUILayoutOption[0]);
+				EditorGUILayout.Space();
+				EditorGUILayout.SortingLayerField(CanvasEditor.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup);
+				EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.m_SortingOrderStyle, new GUILayoutOption[0]);
+			}
+			EditorGUILayout.EndFadeGroup();
+			EditorGUI.indentLevel--;
+		}
+
+		private void AllNestedCanvases()
+		{
+			EditorGUI.BeginChangeCheck();
+			this.pixelPerfect = (CanvasEditor.PixelPerfect)EditorGUILayout.EnumPopup("Pixel Perfect", this.pixelPerfect, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (this.pixelPerfect == CanvasEditor.PixelPerfect.Inherit)
+				{
+					this.m_PixelPerfectOverride.boolValue = false;
+				}
+				else if (this.pixelPerfect == CanvasEditor.PixelPerfect.Off)
+				{
+					this.m_PixelPerfectOverride.boolValue = true;
+					this.m_PixelPerfect.boolValue = false;
+				}
+				else
+				{
+					this.m_PixelPerfectOverride.boolValue = true;
+					this.m_PixelPerfect.boolValue = true;
+				}
+			}
+			EditorGUI.BeginChangeCheck();
+			EditorGUILayout.PropertyField(this.m_OverrideSorting, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				((Canvas)base.serializedObject.targetObject).overrideSorting = this.m_OverrideSorting.boolValue;
+				this.m_SortingOverride.target = this.m_OverrideSorting.boolValue;
+			}
+			if (EditorGUILayout.BeginFadeGroup(this.m_SortingOverride.faded))
+			{
+				GUIContent gUIContent = null;
+				if (this.m_AllOverlay)
+				{
+					gUIContent = CanvasEditor.Styles.sortingOrder;
+				}
+				else if (this.m_NoneOverlay)
+				{
+					gUIContent = CanvasEditor.Styles.m_SortingOrderStyle;
+					EditorGUILayout.SortingLayerField(CanvasEditor.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup);
+				}
+				if (gUIContent != null)
+				{
+					EditorGUI.BeginChangeCheck();
+					EditorGUILayout.PropertyField(this.m_SortingOrder, gUIContent, new GUILayoutOption[0]);
+					if (EditorGUI.EndChangeCheck())
+					{
+						((Canvas)base.serializedObject.targetObject).sortingOrder = this.m_SortingOrder.intValue;
+					}
+				}
+			}
+			EditorGUILayout.EndFadeGroup();
+		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
-			if (this.m_AllRoot)
+			if (this.m_AllRoot || this.m_AllNested)
 			{
-				EditorGUILayout.PropertyField(this.m_RenderMode, new GUILayoutOption[0]);
-				this.m_OverlayMode.target = (this.m_RenderMode.intValue == 0);
-				this.m_CameraMode.target = (this.m_RenderMode.intValue == 1);
-				this.m_WorldMode.target = (this.m_RenderMode.intValue == 2);
-				EditorGUI.indentLevel++;
-				if (EditorGUILayout.BeginFadeGroup(this.m_OverlayMode.faded))
+				if (this.m_AllRoot)
 				{
-					EditorGUILayout.PropertyField(this.m_PixelPerfect, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.sortingOrder, new GUILayoutOption[0]);
-					GUIContent[] displayNames = DisplayUtility.GetDisplayNames();
-					EditorGUILayout.IntPopup(this.m_TargetDisplay, displayNames, DisplayUtility.GetDisplayIndices(), CanvasEditor.Styles.targetDisplay, new GUILayoutOption[0]);
+					this.AllRootCanvases();
 				}
-				EditorGUILayout.EndFadeGroup();
-				if (EditorGUILayout.BeginFadeGroup(this.m_CameraMode.faded))
+				else if (this.m_AllNested)
 				{
-					EditorGUILayout.PropertyField(this.m_PixelPerfect, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_Camera, CanvasEditor.Styles.renderCamera, new GUILayoutOption[0]);
-					if (this.m_Camera.objectReferenceValue != null)
-					{
-						EditorGUILayout.PropertyField(this.m_PlaneDistance, new GUILayoutOption[0]);
-					}
-					EditorGUILayout.Space();
-					if (this.m_Camera.objectReferenceValue != null)
-					{
-						EditorGUILayout.SortingLayerField(CanvasEditor.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup, EditorStyles.label);
-					}
-					EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.m_SortingOrderStyle, new GUILayoutOption[0]);
-					if (this.m_Camera.objectReferenceValue == null)
-					{
-						EditorGUILayout.HelpBox("Screen Space - A canvas with no specified camera acts like a Overlay Canvas. Please assign a camera to it in the 'Render Camera' field.", MessageType.Warning);
-					}
-				}
-				EditorGUILayout.EndFadeGroup();
-				if (EditorGUILayout.BeginFadeGroup(this.m_WorldMode.faded))
-				{
-					EditorGUILayout.PropertyField(this.m_Camera, CanvasEditor.Styles.eventCamera, new GUILayoutOption[0]);
-					EditorGUILayout.Space();
-					EditorGUILayout.SortingLayerField(CanvasEditor.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup);
-					EditorGUILayout.PropertyField(this.m_SortingOrder, CanvasEditor.Styles.m_SortingOrderStyle, new GUILayoutOption[0]);
-				}
-				EditorGUILayout.EndFadeGroup();
-				EditorGUI.indentLevel--;
-			}
-			else if (this.m_AllNested)
-			{
-				EditorGUI.BeginChangeCheck();
-				this.pixelPerfect = (CanvasEditor.PixelPerfect)EditorGUILayout.EnumPopup("Pixel Perfect", this.pixelPerfect, new GUILayoutOption[0]);
-				if (EditorGUI.EndChangeCheck())
-				{
-					if (this.pixelPerfect == CanvasEditor.PixelPerfect.Inherit)
-					{
-						this.m_PixelPerfectOverride.boolValue = false;
-					}
-					else if (this.pixelPerfect == CanvasEditor.PixelPerfect.Off)
-					{
-						this.m_PixelPerfectOverride.boolValue = true;
-						this.m_PixelPerfect.boolValue = false;
-					}
-					else
-					{
-						this.m_PixelPerfectOverride.boolValue = true;
-						this.m_PixelPerfect.boolValue = true;
-					}
+					this.AllNestedCanvases();
 				}
 				EditorGUI.BeginChangeCheck();
-				EditorGUILayout.PropertyField(this.m_OverrideSorting, new GUILayoutOption[0]);
+				int num = EditorGUILayout.MaskField(CanvasEditor.Styles.m_ShaderChannel, this.m_ShaderChannels.intValue, this.shaderChannelOptions, new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck())
 				{
-					((Canvas)base.serializedObject.targetObject).overrideSorting = this.m_OverrideSorting.boolValue;
-					this.m_SortingOverride.target = this.m_OverrideSorting.boolValue;
+					this.m_ShaderChannels.intValue = num;
 				}
-				if (EditorGUILayout.BeginFadeGroup(this.m_SortingOverride.faded))
+				if (this.m_RenderMode.intValue == 0)
 				{
-					GUIContent gUIContent = null;
-					if (this.m_AllOverlay)
+					if (((num & 8) | (num & 16)) != 0)
 					{
-						gUIContent = CanvasEditor.Styles.sortingOrder;
-					}
-					else if (this.m_NoneOverlay)
-					{
-						gUIContent = CanvasEditor.Styles.m_SortingOrderStyle;
-						EditorGUILayout.SortingLayerField(CanvasEditor.Styles.m_SortingLayerStyle, this.m_SortingLayerID, EditorStyles.popup);
-					}
-					if (gUIContent != null)
-					{
-						EditorGUI.BeginChangeCheck();
-						EditorGUILayout.PropertyField(this.m_SortingOrder, gUIContent, new GUILayoutOption[0]);
-						if (EditorGUI.EndChangeCheck())
-						{
-							((Canvas)base.serializedObject.targetObject).sortingOrder = this.m_SortingOrder.intValue;
-						}
+						EditorGUILayout.HelpBox("Shader channels Normal and Tangent are most often used with lighting, which an Overlay canvas does not support. Its likely these channels are not needed.", MessageType.Warning);
 					}
 				}
-				EditorGUILayout.EndFadeGroup();
 			}
 			else
 			{

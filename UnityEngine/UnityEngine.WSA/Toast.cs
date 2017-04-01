@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.WSA
 {
@@ -48,6 +49,7 @@ namespace UnityEngine.WSA
 			this.m_ToastId = id;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetTemplate(ToastTemplate templ);
 
@@ -66,6 +68,7 @@ namespace UnityEngine.WSA
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int CreateToastXml(string xml);
 
@@ -84,12 +87,15 @@ namespace UnityEngine.WSA
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int CreateToastImageAndText(string image, string text);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetArguments(int id);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetArguments(int id, string args);
 
@@ -98,6 +104,7 @@ namespace UnityEngine.WSA
 			Toast.Show(this.m_ToastId);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Show(int id);
 
@@ -106,12 +113,15 @@ namespace UnityEngine.WSA
 			Toast.Hide(this.m_ToastId);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Hide(int id);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetActivated(int id);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetDismissed(int id, bool byUser);
 	}

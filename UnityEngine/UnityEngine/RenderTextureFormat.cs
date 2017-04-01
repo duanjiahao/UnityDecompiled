@@ -14,7 +14,8 @@ namespace UnityEngine
 		Default,
 		ARGB2101010,
 		DefaultHDR,
-		ARGBFloat = 11,
+		ARGB64,
+		ARGBFloat,
 		RGFloat,
 		RGHalf,
 		RFloat,
@@ -24,6 +25,7 @@ namespace UnityEngine
 		RGInt,
 		RInt,
 		BGRA32,
-		RGB111110Float = 22
+		RGB111110Float = 22,
+		RG32
 	}
 }

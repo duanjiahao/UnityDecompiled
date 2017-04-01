@@ -1273,7 +1273,7 @@ namespace UnityEditor
 				GUILayout.ExpandWidth(false)
 			});
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			if (EditorGUILayout.ButtonMouseDown(this.GetModeString(this.drawMode), FocusType.Passive, EditorStyles.toolbarDropDown, new GUILayoutOption[0]))
+			if (EditorGUILayout.DropdownButton(this.GetModeString(this.drawMode), FocusType.Passive, EditorStyles.toolbarDropDown, new GUILayoutOption[0]))
 			{
 				Rect last = GUILayoutUtility.topLevel.GetLast();
 				GenericMenu genericMenu = new GenericMenu();

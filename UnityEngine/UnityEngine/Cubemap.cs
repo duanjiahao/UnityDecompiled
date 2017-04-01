@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -8,12 +9,14 @@ namespace UnityEngine
 	{
 		public extern int mipmapCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern TextureFormat format
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -28,6 +31,7 @@ namespace UnityEngine
 			Cubemap.INTERNAL_CALL_SetPixel(this, face, x, y, ref color);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetPixel(Cubemap self, CubemapFace face, int x, int y, ref Color color);
 
@@ -38,9 +42,11 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetPixel(Cubemap self, CubemapFace face, int x, int y, out Color value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Color[] GetPixels(CubemapFace face, [DefaultValue("0")] int miplevel);
 
@@ -51,6 +57,7 @@ namespace UnityEngine
 			return this.GetPixels(face, miplevel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetPixels(Color[] colors, CubemapFace face, [DefaultValue("0")] int miplevel);
 
@@ -61,6 +68,7 @@ namespace UnityEngine
 			this.SetPixels(colors, face, miplevel);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Apply([DefaultValue("true")] bool updateMipmaps, [DefaultValue("false")] bool makeNoLongerReadable);
 
@@ -79,9 +87,11 @@ namespace UnityEngine
 			this.Apply(updateMipmaps, makeNoLongerReadable);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create([Writable] Cubemap mono, int size, TextureFormat format, bool mipmap);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SmoothEdges([DefaultValue("1")] int smoothRegionWidthInPixels);
 

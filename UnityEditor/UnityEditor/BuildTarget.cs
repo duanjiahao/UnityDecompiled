@@ -1,7 +1,9 @@
 using System;
+using Unity.Bindings;
 
 namespace UnityEditor
 {
+	[NativeEnum(Name = "BuildTargetPlatform", Header = "Runtime/Serialize/SerializationMetaFlags.h")]
 	public enum BuildTarget
 	{
 		StandaloneOSXUniversal = 2,
@@ -37,6 +39,7 @@ namespace UnityEditor
 		N3DS,
 		WiiU,
 		tvOS,
+		Switch,
 		[Obsolete("Use iOS instead (UnityUpgradable) -> iOS", true)]
 		iPhone = -1,
 		[Obsolete("BlackBerry has been removed in 5.4")]

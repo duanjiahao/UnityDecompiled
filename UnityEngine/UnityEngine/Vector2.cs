@@ -336,7 +336,7 @@ namespace UnityEngine
 
 		public static bool operator !=(Vector2 lhs, Vector2 rhs)
 		{
-			return (lhs - rhs).sqrMagnitude >= 9.99999944E-11f;
+			return !(lhs == rhs);
 		}
 
 		public static implicit operator Vector2(Vector3 v)

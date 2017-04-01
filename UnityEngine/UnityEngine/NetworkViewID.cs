@@ -41,6 +41,7 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_unassigned(out NetworkViewID value);
 
@@ -49,6 +50,7 @@ namespace UnityEngine
 			return NetworkViewID.INTERNAL_CALL_Internal_IsMine(ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Internal_IsMine(ref NetworkViewID value);
 
@@ -57,6 +59,7 @@ namespace UnityEngine
 			NetworkViewID.INTERNAL_CALL_Internal_GetOwner(ref value, out player);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_GetOwner(ref NetworkViewID value, out NetworkPlayer player);
 
@@ -65,6 +68,7 @@ namespace UnityEngine
 			return NetworkViewID.INTERNAL_CALL_Internal_GetString(ref value);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string INTERNAL_CALL_Internal_GetString(ref NetworkViewID value);
 
@@ -73,6 +77,7 @@ namespace UnityEngine
 			return NetworkViewID.INTERNAL_CALL_Internal_Compare(ref lhs, ref rhs);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Internal_Compare(ref NetworkViewID lhs, ref NetworkViewID rhs);
 

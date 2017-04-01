@@ -255,19 +255,23 @@ namespace UnityEditor
 		{
 			if (!(this.m_CurveMesh != null))
 			{
+				Vector3[] points = this.GetPoints();
 				this.m_CurveMesh = new Mesh();
 				this.m_CurveMesh.name = "NormalCurveRendererMesh";
 				this.m_CurveMesh.hideFlags |= HideFlags.DontSave;
-				this.m_CurveMesh.vertices = this.GetPoints();
-				int num = this.m_CurveMesh.vertices.Length - 1;
-				int i = 0;
-				List<int> list = new List<int>(num * 2);
-				while (i < num)
+				this.m_CurveMesh.vertices = points;
+				if (points.Length > 0)
 				{
-					list.Add(i);
-					list.Add(++i);
+					int num = points.Length - 1;
+					int i = 0;
+					List<int> list = new List<int>(num * 2);
+					while (i < num)
+					{
+						list.Add(i);
+						list.Add(++i);
+					}
+					this.m_CurveMesh.SetIndices(list.ToArray(), MeshTopology.Lines, 0);
 				}
-				this.m_CurveMesh.SetIndices(list.ToArray(), MeshTopology.Lines, 0);
 			}
 		}
 
@@ -562,10 +566,11 @@ namespace UnityEditor
 
 		public Bounds GetBounds()
 		{
+			this.BuildCurveMesh();
 			Bounds? bounds = this.m_Bounds;
 			if (!bounds.HasValue)
 			{
-				this.m_Bounds = new Bounds?(this.GetBounds(this.rangeStart, this.rangeEnd));
+				this.m_Bounds = new Bounds?(this.m_CurveMesh.bounds);
 			}
 			return this.m_Bounds.Value;
 		}

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
@@ -8,31 +9,36 @@ namespace UnityEngine
 	{
 		public extern Vector3[] positions
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern SphericalHarmonicsL2[] bakedProbes
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int count
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern int cellCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
-		[Obsolete("coefficients property has been deprecated. Please use bakedProbes instead.", true)]
+		[Obsolete("Use bakedProbes instead.", true)]
 		public float[] coefficients
 		{
 			get
@@ -49,10 +55,11 @@ namespace UnityEngine
 			LightProbes.INTERNAL_CALL_GetInterpolatedProbe(ref position, renderer, out probe);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetInterpolatedProbe(ref Vector3 position, Renderer renderer, out SphericalHarmonicsL2 probe);
 
-		[Obsolete("GetInterpolatedLightProbe has been deprecated. Please use the static GetInterpolatedProbe instead.", true)]
+		[Obsolete("Use GetInterpolatedProbe instead.", true)]
 		public void GetInterpolatedLightProbe(Vector3 position, Renderer renderer, float[] coefficients)
 		{
 		}

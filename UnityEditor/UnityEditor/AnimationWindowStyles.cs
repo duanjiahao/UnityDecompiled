@@ -23,6 +23,8 @@ namespace UnityEditor
 
 		public static GUIContent addEventContent = EditorGUIUtility.IconContent("Animation.AddEvent", "|Add event.");
 
+		public static GUIContent sequencerLinkContent = EditorGUIUtility.IconContent("Animation.SequencerLink", "|Animation Window is linked to Sequence Editor.  Press to Unlink.");
+
 		public static GUIContent noAnimatableObjectSelectedText = EditorGUIUtility.TextContent("No animatable object selected.");
 
 		public static GUIContent formatIsMissing = EditorGUIUtility.TextContent("To begin animating {0}, create {1}.");

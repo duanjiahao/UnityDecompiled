@@ -279,9 +279,10 @@ namespace UnityEditor
 			base.ResetValues();
 			this.m_HasModified = false;
 			this.ResetCompatability(ref this.m_CompatibleWithAnyPlatform, (PluginImporter imp) => imp.GetCompatibleWithAnyPlatform());
+			this.ResetCompatability(ref this.m_CompatibleWithEditor, (PluginImporter imp) => imp.GetCompatibleWithEditor());
 			if (this.m_CompatibleWithAnyPlatform < PluginImporterInspector.Compatibility.Compatible)
 			{
-				this.ResetCompatability(ref this.m_CompatibleWithEditor, (PluginImporter imp) => imp.GetCompatibleWithEditor());
+				this.ResetCompatability(ref this.m_CompatibleWithEditor, (PluginImporter imp) => imp.GetCompatibleWithEditor("", ""));
 				using (List<BuildTarget>.Enumerator enumerator = PluginImporterInspector.GetValidBuildTargets().GetEnumerator())
 				{
 					while (enumerator.MoveNext())

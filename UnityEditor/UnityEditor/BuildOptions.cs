@@ -27,6 +27,7 @@ namespace UnityEditor
 		BuildScriptsOnly = 32768,
 		Il2CPP = 65536,
 		ForceEnableAssertions = 131072,
+		CompressWithLz4 = 262144,
 		ForceOptimizeScriptCompilation = 524288,
 		ComputeCRC = 1048576,
 		StrictMode = 2097152

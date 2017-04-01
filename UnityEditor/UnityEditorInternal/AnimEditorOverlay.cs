@@ -37,9 +37,11 @@ namespace UnityEditorInternal
 			{
 				this.m_PlayHeadCursor = new TimeCursorManipulator(AnimationWindowStyles.playHead);
 				TimeCursorManipulator expr_23 = this.m_PlayHeadCursor;
-				expr_23.onStartDrag = (AnimationWindowManipulator.OnStartDragDelegate)Delegate.Combine(expr_23.onStartDrag, new AnimationWindowManipulator.OnStartDragDelegate((AnimationWindowManipulator manipulator, Event evt) => evt.mousePosition.y <= this.m_Rect.yMin + 20f && this.OnDragPlayHead(evt)));
+				expr_23.onStartDrag = (AnimationWindowManipulator.OnStartDragDelegate)Delegate.Combine(expr_23.onStartDrag, new AnimationWindowManipulator.OnStartDragDelegate((AnimationWindowManipulator manipulator, Event evt) => evt.mousePosition.y <= this.m_Rect.yMin + 20f && this.OnStartDragPlayHead(evt)));
 				TimeCursorManipulator expr_4A = this.m_PlayHeadCursor;
 				expr_4A.onDrag = (AnimationWindowManipulator.OnDragDelegate)Delegate.Combine(expr_4A.onDrag, new AnimationWindowManipulator.OnDragDelegate((AnimationWindowManipulator manipulator, Event evt) => this.OnDragPlayHead(evt)));
+				TimeCursorManipulator expr_71 = this.m_PlayHeadCursor;
+				expr_71.onEndDrag = (AnimationWindowManipulator.OnEndDragDelegate)Delegate.Combine(expr_71.onEndDrag, new AnimationWindowManipulator.OnEndDragDelegate((AnimationWindowManipulator manipulator, Event evt) => this.OnEndDragPlayHead(evt)));
 			}
 		}
 
@@ -60,12 +62,23 @@ namespace UnityEditorInternal
 			this.m_PlayHeadCursor.HandleEvents();
 		}
 
+		private bool OnStartDragPlayHead(Event evt)
+		{
+			this.state.controlInterface.StopPlayback();
+			this.state.controlInterface.StartScrubTime();
+			this.state.controlInterface.ScrubTime(this.MousePositionToTime(evt));
+			return true;
+		}
+
 		private bool OnDragPlayHead(Event evt)
 		{
-			this.state.currentTime = this.MousePositionToTime(evt);
-			this.state.recording = true;
-			this.state.playing = false;
-			this.state.ResampleAnimation();
+			this.state.controlInterface.ScrubTime(this.MousePositionToTime(evt));
+			return true;
+		}
+
+		private bool OnEndDragPlayHead(Event evt)
+		{
+			this.state.controlInterface.EndScrubTime();
 			return true;
 		}
 

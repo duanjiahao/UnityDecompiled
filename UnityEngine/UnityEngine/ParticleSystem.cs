@@ -8,8 +8,46 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[RequireComponent(typeof(Transform))]
 	public sealed class ParticleSystem : Component
 	{
+		[Obsolete("ParticleSystem.CollisionEvent has been deprecated. Use ParticleCollisionEvent instead (UnityUpgradable) -> ParticleCollisionEvent", true)]
+		[StructLayout(LayoutKind.Sequential, Size = 1)]
+		public struct CollisionEvent
+		{
+			public Vector3 intersection
+			{
+				get
+				{
+					return default(Vector3);
+				}
+			}
+
+			public Vector3 normal
+			{
+				get
+				{
+					return default(Vector3);
+				}
+			}
+
+			public Vector3 velocity
+			{
+				get
+				{
+					return default(Vector3);
+				}
+			}
+
+			public Component collider
+			{
+				get
+				{
+					return null;
+				}
+			}
+		}
+
 		public struct Burst
 		{
 			private float m_Time;
@@ -17,6 +55,10 @@ namespace UnityEngine
 			private short m_MinCount;
 
 			private short m_MaxCount;
+
+			private int m_RepeatCount;
+
+			private float m_RepeatInterval;
 
 			public float time
 			{
@@ -54,11 +96,37 @@ namespace UnityEngine
 				}
 			}
 
+			public int cycleCount
+			{
+				get
+				{
+					return this.m_RepeatCount + 1;
+				}
+				set
+				{
+					this.m_RepeatCount = value - 1;
+				}
+			}
+
+			public float repeatInterval
+			{
+				get
+				{
+					return this.m_RepeatInterval;
+				}
+				set
+				{
+					this.m_RepeatInterval = value;
+				}
+			}
+
 			public Burst(float _time, short _count)
 			{
 				this.m_Time = _time;
 				this.m_MinCount = _count;
 				this.m_MaxCount = _count;
+				this.m_RepeatCount = 0;
+				this.m_RepeatInterval = 0f;
 			}
 
 			public Burst(float _time, short _minCount, short _maxCount)
@@ -66,6 +134,17 @@ namespace UnityEngine
 				this.m_Time = _time;
 				this.m_MinCount = _minCount;
 				this.m_MaxCount = _maxCount;
+				this.m_RepeatCount = 0;
+				this.m_RepeatInterval = 0f;
+			}
+
+			public Burst(float _time, short _minCount, short _maxCount, int _cycleCount, float _repeatInterval)
+			{
+				this.m_Time = _time;
+				this.m_MinCount = _minCount;
+				this.m_MaxCount = _maxCount;
+				this.m_RepeatCount = _cycleCount - 1;
+				this.m_RepeatInterval = _repeatInterval;
 			}
 		}
 
@@ -926,207 +1005,275 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDuration(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetDuration(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLoop(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetLoop(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetPrewarm(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetPrewarm(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartDelay(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartDelay(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartDelayMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartDelayMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartLifetime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartLifetime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartLifetimeMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartLifetimeMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSpeedMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartSpeedMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSize3D(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetStartSize3D(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSizeX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartSizeX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSizeXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartSizeXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSizeY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartSizeY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSizeYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartSizeYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSizeZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartSizeZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartSizeZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartSizeZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotation3D(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetStartRotation3D(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotationX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartRotationX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotationXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartRotationXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotationY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartRotationY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotationYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartRotationYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotationZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartRotationZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartRotationZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartRotationZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRandomizeRotationDirection(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRandomizeRotationDirection(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartColor(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartColor(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetGravityModifier(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetGravityModifier(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetGravityModifierMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetGravityModifierMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSimulationSpace(ParticleSystem system, ParticleSystemSimulationSpace value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern ParticleSystemSimulationSpace GetSimulationSpace(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCustomSimulationSpace(ParticleSystem system, Transform value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern Transform GetCustomSimulationSpace(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSimulationSpeed(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetSimulationSpeed(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetScalingMode(ParticleSystem system, ParticleSystemScalingMode value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern ParticleSystemScalingMode GetScalingMode(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetPlayOnAwake(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetPlayOnAwake(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMaxParticles(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMaxParticles(ParticleSystem system);
 		}
@@ -1267,42 +1414,55 @@ namespace UnityEngine
 				return ParticleSystem.EmissionModule.GetBursts(this.m_ParticleSystem, bursts);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetBurstCount(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRateOverTime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetRateOverTime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRateOverTimeMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRateOverTimeMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRateOverDistance(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetRateOverDistance(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRateOverDistanceMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRateOverDistanceMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetBursts(ParticleSystem system, ParticleSystem.Burst[] bursts, int size);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetBursts(ParticleSystem system, ParticleSystem.Burst[] bursts);
 		}
@@ -1380,6 +1540,56 @@ namespace UnityEngine
 				set
 				{
 					ParticleSystem.ShapeModule.SetRadius(this.m_ParticleSystem, value);
+				}
+			}
+
+			public ParticleSystemShapeMultiModeValue radiusMode
+			{
+				get
+				{
+					return (ParticleSystemShapeMultiModeValue)ParticleSystem.ShapeModule.GetRadiusMode(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRadiusMode(this.m_ParticleSystem, (int)value);
+				}
+			}
+
+			public float radiusSpread
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetRadiusSpread(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRadiusSpread(this.m_ParticleSystem, value);
+				}
+			}
+
+			public ParticleSystem.MinMaxCurve radiusSpeed
+			{
+				get
+				{
+					ParticleSystem.MinMaxCurve result = default(ParticleSystem.MinMaxCurve);
+					ParticleSystem.ShapeModule.GetRadiusSpeed(this.m_ParticleSystem, ref result);
+					return result;
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRadiusSpeed(this.m_ParticleSystem, ref value);
+				}
+			}
+
+			public float radiusSpeedMultiplier
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetRadiusSpeedMultiplier(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRadiusSpeedMultiplier(this.m_ParticleSystem, value);
 				}
 			}
 
@@ -1539,6 +1749,56 @@ namespace UnityEngine
 				}
 			}
 
+			public ParticleSystemShapeMultiModeValue arcMode
+			{
+				get
+				{
+					return (ParticleSystemShapeMultiModeValue)ParticleSystem.ShapeModule.GetArcMode(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetArcMode(this.m_ParticleSystem, (int)value);
+				}
+			}
+
+			public float arcSpread
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetArcSpread(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetArcSpread(this.m_ParticleSystem, value);
+				}
+			}
+
+			public ParticleSystem.MinMaxCurve arcSpeed
+			{
+				get
+				{
+					ParticleSystem.MinMaxCurve result = default(ParticleSystem.MinMaxCurve);
+					ParticleSystem.ShapeModule.GetArcSpeed(this.m_ParticleSystem, ref result);
+					return result;
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetArcSpeed(this.m_ParticleSystem, ref value);
+				}
+			}
+
+			public float arcSpeedMultiplier
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetArcSpeedMultiplier(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetArcSpeedMultiplier(this.m_ParticleSystem, value);
+				}
+			}
+
 			[Obsolete("randomDirection property is deprecated. Use randomDirectionAmount instead.")]
 			public bool randomDirection
 			{
@@ -1557,51 +1817,99 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetShapeType(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetShapeType(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRandomDirectionAmount(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRandomDirectionAmount(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSphericalDirectionAmount(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetSphericalDirectionAmount(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetAlignToDirection(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetAlignToDirection(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRadius(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRadius(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRadiusMode(ParticleSystem system, int value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern int GetRadiusMode(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRadiusSpread(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetRadiusSpread(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRadiusSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetRadiusSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRadiusSpeedMultiplier(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetRadiusSpeedMultiplier(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetAngle(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetAngle(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLength(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetLength(ParticleSystem system);
 
@@ -1610,6 +1918,7 @@ namespace UnityEngine
 				ParticleSystem.ShapeModule.INTERNAL_CALL_SetBox(system, ref value);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_SetBox(ParticleSystem system, ref Vector3 value);
 
@@ -1620,68 +1929,121 @@ namespace UnityEngine
 				return result;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_GetBox(ParticleSystem system, out Vector3 value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMeshShapeType(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMeshShapeType(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMesh(ParticleSystem system, Mesh value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern Mesh GetMesh(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMeshRenderer(ParticleSystem system, MeshRenderer value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern MeshRenderer GetMeshRenderer(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSkinnedMeshRenderer(ParticleSystem system, SkinnedMeshRenderer value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern SkinnedMeshRenderer GetSkinnedMeshRenderer(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUseMeshMaterialIndex(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUseMeshMaterialIndex(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMeshMaterialIndex(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMeshMaterialIndex(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUseMeshColors(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUseMeshColors(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetNormalOffset(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetNormalOffset(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMeshScale(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetMeshScale(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetArc(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetArc(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetArcMode(ParticleSystem system, int value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern int GetArcMode(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetArcSpread(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetArcSpread(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetArcSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetArcSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetArcSpeedMultiplier(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetArcSpeedMultiplier(ParticleSystem system);
 		}
 
 		public struct VelocityOverLifetimeModule
@@ -1795,51 +2157,67 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetWorldSpace(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetWorldSpace(ParticleSystem system);
 		}
@@ -2005,75 +2383,99 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMagnitude(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetMagnitude(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMagnitudeMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetMagnitudeMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDampen(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetDampen(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSeparateAxes(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSeparateAxes(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetWorldSpace(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetWorldSpace(ParticleSystem system);
 		}
@@ -2137,27 +2539,35 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMode(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMode(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCurve(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetCurve(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCurveMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetCurveMultiplier(ParticleSystem system);
 		}
@@ -2285,57 +2695,75 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetWorldSpace(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetWorldSpace(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRandomized(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetRandomized(ParticleSystem system);
 		}
@@ -2375,15 +2803,19 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetColor(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetColor(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 		}
@@ -2435,15 +2867,19 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetColor(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetColor(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
@@ -2452,6 +2888,7 @@ namespace UnityEngine
 				ParticleSystem.ColorBySpeedModule.INTERNAL_CALL_SetRange(system, ref value);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_SetRange(ParticleSystem system, ref Vector2 value);
 
@@ -2462,6 +2899,7 @@ namespace UnityEngine
 				return result;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_GetRange(ParticleSystem system, out Vector2 value);
 		}
@@ -2603,51 +3041,67 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSeparateAxes(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSeparateAxes(ParticleSystem system);
 		}
@@ -2801,51 +3255,67 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSeparateAxes(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSeparateAxes(ParticleSystem system);
 
@@ -2854,6 +3324,7 @@ namespace UnityEngine
 				ParticleSystem.SizeBySpeedModule.INTERNAL_CALL_SetRange(system, ref value);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_SetRange(ParticleSystem system, ref Vector2 value);
 
@@ -2864,6 +3335,7 @@ namespace UnityEngine
 				return result;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_GetRange(ParticleSystem system, out Vector2 value);
 		}
@@ -2979,51 +3451,67 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSeparateAxes(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSeparateAxes(ParticleSystem system);
 		}
@@ -3151,51 +3639,67 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSeparateAxes(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSeparateAxes(ParticleSystem system);
 
@@ -3204,6 +3708,7 @@ namespace UnityEngine
 				ParticleSystem.RotationBySpeedModule.INTERNAL_CALL_SetRange(system, ref value);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_SetRange(ParticleSystem system, ref Vector2 value);
 
@@ -3214,6 +3719,7 @@ namespace UnityEngine
 				return result;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_GetRange(ParticleSystem system, out Vector2 value);
 		}
@@ -3251,15 +3757,19 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetMultiplier(ParticleSystem system);
 		}
@@ -3615,141 +4125,187 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSeparateAxes(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSeparateAxes(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStrengthX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStrengthX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStrengthY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStrengthY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStrengthZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStrengthZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStrengthXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStrengthXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStrengthYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStrengthYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStrengthZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStrengthZMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetFrequency(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetFrequency(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDamping(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetDamping(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetOctaveCount(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetOctaveCount(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetOctaveMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetOctaveMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetOctaveScale(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetOctaveScale(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetQuality(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetQuality(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetScrollSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetScrollSpeed(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetScrollSpeedMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetScrollSpeedMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetRemapEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetRemapX(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetRemapY(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetRemapZ(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapXMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRemapXMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapYMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRemapYMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRemapZMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRemapZMultiplier(ParticleSystem system);
 		}
@@ -4015,126 +4571,167 @@ namespace UnityEngine
 				return ParticleSystem.CollisionModule.GetPlane(this.m_ParticleSystem, index);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetType(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetType(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMode(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMode(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDampen(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetDampen(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDampenMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetDampenMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetBounce(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetBounce(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetBounceMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetBounceMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLifetimeLoss(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetLifetimeLoss(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLifetimeLossMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetLifetimeLossMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMinKillSpeed(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetMinKillSpeed(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMaxKillSpeed(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetMaxKillSpeed(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCollidesWith(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetCollidesWith(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnableDynamicColliders(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnableDynamicColliders(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnableInteriorCollisions(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnableInteriorCollisions(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMaxCollisionShapes(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMaxCollisionShapes(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetQuality(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetQuality(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetVoxelSize(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetVoxelSize(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRadiusScale(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRadiusScale(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUsesCollisionMessages(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUsesCollisionMessages(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetPlane(ParticleSystem system, int index, Transform transform);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern Transform GetPlane(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMaxPlaneCount(ParticleSystem system);
 		}
@@ -4238,48 +4835,63 @@ namespace UnityEngine
 				return ParticleSystem.TriggerModule.GetCollider(this.m_ParticleSystem, index);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetInside(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetInside(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetOutside(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetOutside(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnter(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetEnter(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetExit(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetExit(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRadiusScale(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRadiusScale(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCollider(ParticleSystem system, int index, Component collider);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern Component GetCollider(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMaxColliderCount(ParticleSystem system);
 		}
@@ -4431,54 +5043,71 @@ namespace UnityEngine
 				return (ParticleSystemSubEmitterProperties)ParticleSystem.SubEmittersModule.GetSubEmitterProperties(this.m_ParticleSystem, index);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetSubEmittersCount(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetBirth(ParticleSystem system, int index, ParticleSystem value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern ParticleSystem GetBirth(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCollision(ParticleSystem system, int index, ParticleSystem value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern ParticleSystem GetCollision(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDeath(ParticleSystem system, int index, ParticleSystem value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern ParticleSystem GetDeath(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void AddSubEmitter(ParticleSystem system, ParticleSystem subEmitter, int type, int properties);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void RemoveSubEmitter(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSubEmitterSystem(ParticleSystem system, int index, ParticleSystem subEmitter);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSubEmitterType(ParticleSystem system, int index, int type);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSubEmitterProperties(ParticleSystem system, int index, int properties);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern ParticleSystem GetSubEmitterSystem(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetSubEmitterType(ParticleSystem system, int index);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetSubEmitterProperties(ParticleSystem system, int index);
 		}
@@ -4664,87 +5293,115 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetNumTilesX(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetNumTilesX(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetNumTilesY(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetNumTilesY(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetAnimationType(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetAnimationType(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUseRandomRow(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUseRandomRow(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetFrameOverTime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetFrameOverTime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetFrameOverTimeMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetFrameOverTimeMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartFrame(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetStartFrame(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetStartFrameMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetStartFrameMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetCycleCount(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetCycleCount(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRowIndex(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetRowIndex(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUVChannelMask(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetUVChannelMask(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetFlipU(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetFlipU(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetFlipV(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetFlipV(ParticleSystem system);
 		}
@@ -4906,75 +5563,99 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRatio(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRatio(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUseRandomDistribution(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUseRandomDistribution(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLightPrefab(ParticleSystem system, Light value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern Light GetLightPrefab(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetUseParticleColor(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUseParticleColor(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSizeAffectsRange(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSizeAffectsRange(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetAlphaAffectsIntensity(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetAlphaAffectsIntensity(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRange(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetRange(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRangeMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRangeMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetIntensity(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetIntensity(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetIntensityMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetIntensityMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMaxLights(ParticleSystem system, int value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMaxLights(ParticleSystem system);
 		}
@@ -5176,95 +5857,231 @@ namespace UnityEngine
 				this.m_ParticleSystem = particleSystem;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetEnabled(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetRatio(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRatio(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLifetime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetLifetime(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetLifetimeMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetLifetimeMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetMinVertexDistance(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetMinVertexDistance(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetTextureMode(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetTextureMode(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetWorldSpace(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetWorldSpace(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetDieWithParticles(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetDieWithParticles(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSizeAffectsWidth(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSizeAffectsWidth(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetSizeAffectsLifetime(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetSizeAffectsLifetime(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetInheritParticleColor(ParticleSystem system, bool value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetInheritParticleColor(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetColorOverLifetime(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetColorOverLifetime(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetWidthOverTrail(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetWidthOverTrail(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetWidthOverTrailMultiplier(ParticleSystem system, float value);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetWidthOverTrailMultiplier(ParticleSystem system);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetColorOverTrail(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetColorOverTrail(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
+		}
+
+		public struct CustomDataModule
+		{
+			private ParticleSystem m_ParticleSystem;
+
+			public bool enabled
+			{
+				get
+				{
+					return ParticleSystem.CustomDataModule.GetEnabled(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.CustomDataModule.SetEnabled(this.m_ParticleSystem, value);
+				}
+			}
+
+			internal CustomDataModule(ParticleSystem particleSystem)
+			{
+				this.m_ParticleSystem = particleSystem;
+			}
+
+			public void SetMode(ParticleSystemCustomData stream, ParticleSystemCustomDataMode mode)
+			{
+				ParticleSystem.CustomDataModule.SetMode(this.m_ParticleSystem, (int)stream, (int)mode);
+			}
+
+			public ParticleSystemCustomDataMode GetMode(ParticleSystemCustomData stream)
+			{
+				return (ParticleSystemCustomDataMode)ParticleSystem.CustomDataModule.GetMode(this.m_ParticleSystem, (int)stream);
+			}
+
+			public void SetVectorComponentCount(ParticleSystemCustomData stream, int count)
+			{
+				ParticleSystem.CustomDataModule.SetVectorComponentCount(this.m_ParticleSystem, (int)stream, count);
+			}
+
+			public int GetVectorComponentCount(ParticleSystemCustomData stream)
+			{
+				return ParticleSystem.CustomDataModule.GetVectorComponentCount(this.m_ParticleSystem, (int)stream);
+			}
+
+			public void SetVector(ParticleSystemCustomData stream, int component, ParticleSystem.MinMaxCurve curve)
+			{
+				ParticleSystem.CustomDataModule.SetVector(this.m_ParticleSystem, (int)stream, component, ref curve);
+			}
+
+			public ParticleSystem.MinMaxCurve GetVector(ParticleSystemCustomData stream, int component)
+			{
+				ParticleSystem.MinMaxCurve result = default(ParticleSystem.MinMaxCurve);
+				ParticleSystem.CustomDataModule.GetVector(this.m_ParticleSystem, (int)stream, component, ref result);
+				return result;
+			}
+
+			public void SetColor(ParticleSystemCustomData stream, ParticleSystem.MinMaxGradient gradient)
+			{
+				ParticleSystem.CustomDataModule.SetColor(this.m_ParticleSystem, (int)stream, ref gradient);
+			}
+
+			public ParticleSystem.MinMaxGradient GetColor(ParticleSystemCustomData stream)
+			{
+				ParticleSystem.MinMaxGradient result = default(ParticleSystem.MinMaxGradient);
+				ParticleSystem.CustomDataModule.GetColor(this.m_ParticleSystem, (int)stream, ref result);
+				return result;
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetEnabled(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetEnabled(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetMode(ParticleSystem system, int stream, int mode);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetVectorComponentCount(ParticleSystem system, int stream, int count);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetVector(ParticleSystem system, int stream, int component, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetColor(ParticleSystem system, int stream, ref ParticleSystem.MinMaxGradient gradient);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern int GetMode(ParticleSystem system, int stream);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern int GetVectorComponentCount(ParticleSystem system, int stream);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetVector(ParticleSystem system, int stream, int component, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetColor(ParticleSystem system, int stream, ref ParticleSystem.MinMaxGradient gradient);
 		}
 
 		[RequiredByNativeCode("particleSystemParticle", Optional = true)]
@@ -5521,6 +6338,7 @@ namespace UnityEngine
 				return ParticleSystem.Particle.GetCurrentColor(system, ref this);
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetCurrentSize(ParticleSystem system, ref ParticleSystem.Particle particle);
 
@@ -5531,6 +6349,7 @@ namespace UnityEngine
 				return result;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_GetCurrentSize3D(ParticleSystem system, ref ParticleSystem.Particle particle, out Vector3 value);
 
@@ -5541,6 +6360,7 @@ namespace UnityEngine
 				return result;
 			}
 
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void INTERNAL_CALL_GetCurrentColor(ParticleSystem system, ref ParticleSystem.Particle particle, out Color32 value);
 		}
@@ -5785,72 +6605,50 @@ namespace UnityEngine
 
 		internal delegate bool IteratorDelegate(ParticleSystem ps);
 
-		[Obsolete("ParticleSystem.CollisionEvent has been deprecated. Use ParticleCollisionEvent instead (UnityUpgradable) -> ParticleCollisionEvent", true)]
-		[StructLayout(LayoutKind.Sequential, Size = 1)]
-		public struct CollisionEvent
+		[Obsolete("safeCollisionEventSize has been deprecated. Use GetSafeCollisionEventSize() instead (UnityUpgradable) -> ParticlePhysicsExtensions.GetSafeCollisionEventSize(UnityEngine.ParticleSystem)", false)]
+		public int safeCollisionEventSize
 		{
-			public Vector3 intersection
+			get
 			{
-				get
-				{
-					return default(Vector3);
-				}
-			}
-
-			public Vector3 normal
-			{
-				get
-				{
-					return default(Vector3);
-				}
-			}
-
-			public Vector3 velocity
-			{
-				get
-				{
-					return default(Vector3);
-				}
-			}
-
-			public Collider collider
-			{
-				get
-				{
-					return null;
-				}
+				return ParticleSystemExtensionsImpl.GetSafeCollisionEventSize(this);
 			}
 		}
 
 		[Obsolete("startDelay property is deprecated. Use main.startDelay or main.startDelayMultiplier instead.")]
 		public extern float startDelay
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool isPlaying
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isEmitting
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isStopped
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
 		public extern bool isPaused
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -5858,8 +6656,10 @@ namespace UnityEngine
 		[Obsolete("loop property is deprecated. Use main.loop instead.")]
 		public extern bool loop
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -5867,16 +6667,20 @@ namespace UnityEngine
 		[Obsolete("playOnAwake property is deprecated. Use main.playOnAwake instead.")]
 		public extern bool playOnAwake
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern float time
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -5884,6 +6688,7 @@ namespace UnityEngine
 		[Obsolete("duration property is deprecated. Use main.duration instead.")]
 		public extern float duration
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -5891,14 +6696,17 @@ namespace UnityEngine
 		[Obsolete("playbackSpeed property is deprecated. Use main.simulationSpeed instead.")]
 		public extern float playbackSpeed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern int particleCount
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -5932,8 +6740,10 @@ namespace UnityEngine
 		[Obsolete("startSpeed property is deprecated. Use main.startSpeed or main.startSpeedMultiplier instead.")]
 		public extern float startSpeed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -5941,8 +6751,10 @@ namespace UnityEngine
 		[Obsolete("startSize property is deprecated. Use main.startSize or main.startSizeMultiplier instead.")]
 		public extern float startSize
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -5965,8 +6777,10 @@ namespace UnityEngine
 		[Obsolete("startRotation property is deprecated. Use main.startRotation or main.startRotationMultiplier instead.")]
 		public extern float startRotation
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -5989,8 +6803,10 @@ namespace UnityEngine
 		[Obsolete("startLifetime property is deprecated. Use main.startLifetime or main.startLifetimeMultiplier instead.")]
 		public extern float startLifetime
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -5998,8 +6814,10 @@ namespace UnityEngine
 		[Obsolete("gravityModifier property is deprecated. Use main.gravityModifier or main.gravityModifierMultiplier instead.")]
 		public extern float gravityModifier
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -6007,8 +6825,10 @@ namespace UnityEngine
 		[Obsolete("maxParticles property is deprecated. Use main.maxParticles instead.")]
 		public extern int maxParticles
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -6016,8 +6836,10 @@ namespace UnityEngine
 		[Obsolete("simulationSpace property is deprecated. Use main.simulationSpace instead.")]
 		public extern ParticleSystemSimulationSpace simulationSpace
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -6025,24 +6847,30 @@ namespace UnityEngine
 		[Obsolete("scalingMode property is deprecated. Use main.scalingMode instead.")]
 		public extern ParticleSystemScalingMode scalingMode
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern uint randomSeed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern bool useAutoRandomSeed
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
@@ -6215,30 +7043,35 @@ namespace UnityEngine
 			}
 		}
 
-		[Obsolete("safeCollisionEventSize has been deprecated. Use GetSafeCollisionEventSize() instead (UnityUpgradable) -> ParticlePhysicsExtensions.GetSafeCollisionEventSize(UnityEngine.ParticleSystem)", false)]
-		public int safeCollisionEventSize
+		public ParticleSystem.CustomDataModule customData
 		{
 			get
 			{
-				return ParticleSystemExtensionsImpl.GetSafeCollisionEventSize(this);
+				return new ParticleSystem.CustomDataModule(this);
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_startColor(out Color value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_startColor(ref Color value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_startRotation3D(out Vector3 value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_startRotation3D(ref Vector3 value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetParticles(ParticleSystem.Particle[] particles, int size);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetParticles(ParticleSystem.Particle[] particles);
 
@@ -6252,27 +7085,35 @@ namespace UnityEngine
 			return this.GetCustomParticleDataInternal(customData, (int)streamIndex);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetCustomParticleDataInternal(object customData, int streamIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int GetCustomParticleDataInternal(object customData, int streamIndex);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_Simulate(ParticleSystem self, float t, bool restart, bool fixedTimeStep);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_Play(ParticleSystem self);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_Stop(ParticleSystem self, ParticleSystemStopBehavior stopBehavior);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_Pause(ParticleSystem self);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_Clear(ParticleSystem self);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool Internal_IsAlive(ParticleSystem self);
 
@@ -6378,6 +7219,7 @@ namespace UnityEngine
 			ParticleSystem.INTERNAL_CALL_Emit(this, count);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Emit(ParticleSystem self, int count);
 
@@ -6403,6 +7245,7 @@ namespace UnityEngine
 			this.Internal_EmitOld(ref particle);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_EmitOld(ref ParticleSystem.Particle particle);
 
@@ -6411,6 +7254,7 @@ namespace UnityEngine
 			this.Internal_Emit(ref emitParams, count);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_Emit(ref ParticleSystem.EmitParams emitParams, int count);
 
@@ -6445,6 +7289,7 @@ namespace UnityEngine
 			return flag;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetupDefaultType(int type);
 
@@ -6455,21 +7300,27 @@ namespace UnityEngine
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetLocalToWorldMatrix(ParticleSystem self, out Matrix4x4 value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void GenerateNoisePreviewTexture(Texture2D dst);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool CountSubEmitterParticles(ref int count);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern ParticleSystemVertexStreams CheckVertexStreamsMatchShader(ParticleSystemVertexStreams streams, Material material);
+		internal extern bool CheckVertexStreamsMatchShader(bool hasTangent, bool hasColor, int texCoordChannelCount, Material material, ref bool tangentError, ref bool colorError, ref bool uvError);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int GetMaxTexCoordStreams();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int GenerateRandomSeed();
 	}

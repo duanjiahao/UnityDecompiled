@@ -42,22 +42,14 @@ namespace UnityEditor.Web
 
 		public override void EnableService(bool enabled)
 		{
-			if (!Collab.instance.collabInfo.whitelisted)
-			{
-				base.EnableService(false);
-				Collab.instance.SendNotification();
-			}
-			else
-			{
-				base.EnableService(enabled);
-				Collab.instance.SendNotification();
-				Collab.instance.SetCollabEnabledForCurrentProject(enabled);
-			}
+			base.EnableService(enabled);
+			Collab.instance.SendNotification();
+			Collab.instance.SetCollabEnabledForCurrentProject(enabled);
 		}
 
 		public bool IsCollabUIAccessible()
 		{
-			return UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted;
+			return true;
 		}
 	}
 }

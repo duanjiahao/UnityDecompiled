@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.CrashReportHandler
 {
@@ -8,8 +9,10 @@ namespace UnityEngine.CrashReportHandler
 		[ThreadAndSerializationSafe]
 		public static extern bool enableCaptureExceptions
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}

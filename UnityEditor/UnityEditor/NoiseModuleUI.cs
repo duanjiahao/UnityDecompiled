@@ -37,6 +37,8 @@ namespace UnityEditor
 
 			public GUIContent previewTexture = EditorGUIUtility.TextContent("Preview|Preview the noise as a texture.");
 
+			public GUIContent previewTextureMultiEdit = EditorGUIUtility.TextContent("Preview (Disabled)|Preview is disabled in multi-object editing mode.");
+
 			public string[] qualityDropdown = new string[]
 			{
 				"Low (1D)",
@@ -127,6 +129,7 @@ namespace UnityEditor
 					NoiseModuleUI.s_PreviewTexture.filterMode = FilterMode.Bilinear;
 					NoiseModuleUI.s_PreviewTexture.hideFlags = HideFlags.HideAndDontSave;
 					NoiseModuleUI.s_Texts.previewTexture.image = NoiseModuleUI.s_PreviewTexture;
+					NoiseModuleUI.s_Texts.previewTextureMultiEdit.image = NoiseModuleUI.s_PreviewTexture;
 				}
 				NoiseModuleUI.s_PreviewTextureDirty = true;
 				this.previewTextureStyle = new GUIStyle(ParticleSystemStyles.Get().label);
@@ -135,7 +138,7 @@ namespace UnityEditor
 			}
 		}
 
-		public override void OnInspectorGUI(ParticleSystem s)
+		public override void OnInspectorGUI(InitialModuleUI initial)
 		{
 			if (NoiseModuleUI.s_Texts == null)
 			{
@@ -143,22 +146,34 @@ namespace UnityEditor
 			}
 			if (NoiseModuleUI.s_PreviewTextureDirty)
 			{
-				this.m_ParticleSystemUI.m_ParticleSystem.GenerateNoisePreviewTexture(NoiseModuleUI.s_PreviewTexture);
+				if (this.m_ParticleSystemUI.multiEdit)
+				{
+					Color32[] array = new Color32[NoiseModuleUI.s_PreviewTexture.width * NoiseModuleUI.s_PreviewTexture.height];
+					for (int i = 0; i < array.Length; i++)
+					{
+						array[i] = new Color32(120, 120, 120, 255);
+					}
+					NoiseModuleUI.s_PreviewTexture.SetPixels32(array);
+					NoiseModuleUI.s_PreviewTexture.Apply(false);
+				}
+				else
+				{
+					this.m_ParticleSystemUI.m_ParticleSystems[0].GenerateNoisePreviewTexture(NoiseModuleUI.s_PreviewTexture);
+				}
 				NoiseModuleUI.s_PreviewTextureDirty = false;
 			}
-			bool flag = this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner is ParticleSystemInspector;
-			if (flag)
+			if (!base.isWindowView)
 			{
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 				GUILayout.BeginVertical(new GUILayoutOption[0]);
 			}
 			EditorGUI.BeginChangeCheck();
-			bool flag2 = ModuleUI.GUIToggle(NoiseModuleUI.s_Texts.separateAxes, this.m_SeparateAxes, new GUILayoutOption[0]);
-			bool flag3 = EditorGUI.EndChangeCheck();
+			bool flag = ModuleUI.GUIToggle(NoiseModuleUI.s_Texts.separateAxes, this.m_SeparateAxes, new GUILayoutOption[0]);
+			bool flag2 = EditorGUI.EndChangeCheck();
 			EditorGUI.BeginChangeCheck();
-			if (flag3)
+			if (flag2)
 			{
-				if (flag2)
+				if (flag)
 				{
 					this.m_StrengthX.RemoveCurveFromEditor();
 					this.m_RemapX.RemoveCurveFromEditor();
@@ -173,15 +188,17 @@ namespace UnityEditor
 					this.m_RemapZ.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_12D_0 = this.m_StrengthZ;
-			MinMaxCurveState state = this.m_StrengthX.state;
-			this.m_StrengthY.state = state;
-			arg_12D_0.state = state;
-			SerializedMinMaxCurve arg_151_0 = this.m_RemapZ;
-			state = this.m_RemapX.state;
-			this.m_RemapY.state = state;
-			arg_151_0.state = state;
-			if (flag2)
+			if (!this.m_StrengthX.stateHasMultipleDifferentValues)
+			{
+				this.m_StrengthZ.SetMinMaxState(this.m_StrengthX.state, flag);
+				this.m_StrengthY.SetMinMaxState(this.m_StrengthX.state, flag);
+			}
+			if (!this.m_RemapX.stateHasMultipleDifferentValues)
+			{
+				this.m_RemapZ.SetMinMaxState(this.m_RemapX.state, flag);
+				this.m_RemapY.SetMinMaxState(this.m_RemapX.state, flag);
+			}
+			if (flag)
 			{
 				this.m_StrengthX.m_DisplayName = NoiseModuleUI.s_Texts.x;
 				base.GUITripleMinMaxCurve(GUIContent.none, NoiseModuleUI.s_Texts.x, this.m_StrengthX, NoiseModuleUI.s_Texts.y, this.m_StrengthY, NoiseModuleUI.s_Texts.z, this.m_StrengthZ, null, new GUILayoutOption[0]);
@@ -201,10 +218,10 @@ namespace UnityEditor
 				ModuleUI.GUIFloat(NoiseModuleUI.s_Texts.octaveScale, this.m_OctaveScale, new GUILayoutOption[0]);
 			}
 			ModuleUI.GUIPopup(NoiseModuleUI.s_Texts.quality, this.m_Quality, NoiseModuleUI.s_Texts.qualityDropdown, new GUILayoutOption[0]);
-			bool flag4 = ModuleUI.GUIToggle(NoiseModuleUI.s_Texts.remap, this.m_RemapEnabled, new GUILayoutOption[0]);
-			using (new EditorGUI.DisabledScope(!flag4))
+			bool flag3 = ModuleUI.GUIToggle(NoiseModuleUI.s_Texts.remap, this.m_RemapEnabled, new GUILayoutOption[0]);
+			using (new EditorGUI.DisabledScope(!flag3))
 			{
-				if (flag2)
+				if (flag)
 				{
 					this.m_RemapX.m_DisplayName = NoiseModuleUI.s_Texts.x;
 					base.GUITripleMinMaxCurve(GUIContent.none, NoiseModuleUI.s_Texts.x, this.m_RemapX, NoiseModuleUI.s_Texts.y, this.m_RemapY, NoiseModuleUI.s_Texts.z, this.m_RemapZ, null, new GUILayoutOption[0]);
@@ -215,21 +232,32 @@ namespace UnityEditor
 					ModuleUI.GUIMinMaxCurve(NoiseModuleUI.s_Texts.remapCurve, this.m_RemapX, new GUILayoutOption[0]);
 				}
 			}
-			if (flag)
+			if (!base.isWindowView)
 			{
 				GUILayout.EndVertical();
 			}
-			if (EditorGUI.EndChangeCheck() || this.m_ScrollSpeed.scalar.floatValue > 0f || flag4 || flag3)
+			if (EditorGUI.EndChangeCheck() || this.m_ScrollSpeed.scalar.floatValue != 0f || flag3 || flag2)
 			{
 				NoiseModuleUI.s_PreviewTextureDirty = true;
 				this.m_ParticleSystemUI.m_ParticleEffectUI.m_Owner.Repaint();
 			}
-			GUILayout.Label(NoiseModuleUI.s_Texts.previewTexture, this.previewTextureStyle, new GUILayoutOption[]
+			if (this.m_ParticleSystemUI.multiEdit)
 			{
-				GUILayout.ExpandWidth(true),
-				GUILayout.ExpandHeight(false)
-			});
-			if (flag)
+				GUILayout.Label(NoiseModuleUI.s_Texts.previewTextureMultiEdit, this.previewTextureStyle, new GUILayoutOption[]
+				{
+					GUILayout.ExpandWidth(true),
+					GUILayout.ExpandHeight(false)
+				});
+			}
+			else
+			{
+				GUILayout.Label(NoiseModuleUI.s_Texts.previewTexture, this.previewTextureStyle, new GUILayoutOption[]
+				{
+					GUILayout.ExpandWidth(true),
+					GUILayout.ExpandHeight(false)
+				});
+			}
+			if (!base.isWindowView)
 			{
 				GUILayout.EndHorizontal();
 			}

@@ -111,6 +111,14 @@ namespace UnityEngine
 			}
 		}
 
+		public bool active
+		{
+			get
+			{
+				return Display.GetActiveImp(this.nativeDisplay);
+			}
+		}
+
 		public static Display main
 		{
 			get
@@ -188,26 +196,37 @@ namespace UnityEngine
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetSystemExtImpl(IntPtr nativeDisplay, out int w, out int h);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRenderingExtImpl(IntPtr nativeDisplay, out int w, out int h);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRenderingBuffersImpl(IntPtr nativeDisplay, out RenderBuffer color, out RenderBuffer depth);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetRenderingResolutionImpl(IntPtr nativeDisplay, int w, int h);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ActivateDisplayImpl(IntPtr nativeDisplay, int width, int height, int refreshRate);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetParamsImpl(IntPtr nativeDisplay, int width, int height, int x, int y);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int RelativeMouseAtImpl(int x, int y, out int rx, out int ry);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool GetActiveImp(IntPtr nativeDisplay);
 
 		static Display()
 		{

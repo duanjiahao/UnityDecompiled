@@ -40,8 +40,6 @@ namespace UnityEditor
 
 		private class ComponentElement : AddComponentWindow.Element
 		{
-			public string typeName;
-
 			public string menuPath;
 
 			public bool isLegacy;
@@ -65,7 +63,6 @@ namespace UnityEditor
 			public ComponentElement(int level, string name, string menuPath, string commandString)
 			{
 				this.level = level;
-				this.typeName = name.Replace(" ", "");
 				this.menuPath = menuPath;
 				this.isLegacy = menuPath.Contains("Legacy");
 				if (commandString.StartsWith("SCRIPT"))
@@ -314,8 +311,6 @@ namespace UnityEditor
 			public GUIStyle groupButton;
 
 			public GUIStyle background = "grey_border";
-
-			public GUIStyle previewBackground = "PopupCurveSwatchBackground";
 
 			public GUIStyle previewHeader = new GUIStyle(EditorStyles.label);
 

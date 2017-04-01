@@ -28,7 +28,7 @@ namespace UnityEditor
 				texture3D.height,
 				texture3D.depth,
 				TextureUtil.GetTextureFormatString(texture3D.format),
-				EditorUtility.FormatBytes(TextureUtil.GetRuntimeMemorySize(texture3D))
+				EditorUtility.FormatBytes(TextureUtil.GetRuntimeMemorySizeLong(texture3D))
 			});
 		}
 

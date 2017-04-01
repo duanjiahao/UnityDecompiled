@@ -9,10 +9,12 @@ namespace UnityEngine
 	{
 		public extern AssetBundle assetBundle
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void DisableCompatibilityChecks();
 	}

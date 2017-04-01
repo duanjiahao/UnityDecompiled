@@ -212,7 +212,7 @@ namespace UnityEditor
 			return true;
 		}
 
-		private bool ResetSettingsFromBackend()
+		private void ResetSettingsFromBackend()
 		{
 			if (this.GetAllAudioImporterTargets().Any<AudioImporter>())
 			{
@@ -242,7 +242,6 @@ namespace UnityEditor
 					}
 				}
 			}
-			return true;
 		}
 
 		public bool CurrentPlatformHasAutoTranslatedCompression()
@@ -317,7 +316,7 @@ namespace UnityEditor
 
 		public override void OnInspectorGUI()
 		{
-			base.serializedObject.UpdateIfDirtyOrScript();
+			base.serializedObject.UpdateIfRequiredOrScript();
 			bool selectionContainsTrackerFile = false;
 			foreach (AudioImporter current in this.GetAllAudioImporterTargets())
 			{
@@ -461,7 +460,7 @@ namespace UnityEditor
 					list.Add(AudioCompressionFormat.Vorbis);
 				}
 				list.Add(AudioCompressionFormat.ADPCM);
-				if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.WSA && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.XboxOne && platform != BuildTargetGroup.Unknown)
+				if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.WSA && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.Unknown)
 				{
 					list.Add(AudioCompressionFormat.MP3);
 				}

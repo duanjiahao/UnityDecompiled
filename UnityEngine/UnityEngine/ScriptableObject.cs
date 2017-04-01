@@ -14,7 +14,7 @@ namespace UnityEngine
 			ScriptableObject.Internal_CreateScriptableObject(this);
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateScriptableObject([Writable] ScriptableObject self);
 
@@ -24,9 +24,11 @@ namespace UnityEngine
 			ScriptableObject.INTERNAL_CALL_SetDirty(this);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetDirty(ScriptableObject self);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern ScriptableObject CreateInstance(string className);
 
@@ -35,6 +37,7 @@ namespace UnityEngine
 			return ScriptableObject.CreateInstanceFromType(type);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern ScriptableObject CreateInstanceFromType(Type type);
 

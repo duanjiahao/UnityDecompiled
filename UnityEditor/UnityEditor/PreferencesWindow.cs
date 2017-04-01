@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using UnityEditor.Collaboration;
 using UnityEditor.Connect;
 using UnityEditor.Modules;
 using UnityEditor.VisualStudioIntegration;
@@ -209,6 +208,8 @@ namespace UnityEditor
 
 		private string[] m_ScriptApps;
 
+		private string[] m_ScriptAppsEditions;
+
 		private string[] m_ImageApps;
 
 		private string[] m_DiffTools;
@@ -237,9 +238,9 @@ namespace UnityEditor
 
 		private SortedDictionary<string, List<KeyValuePair<string, PrefColor>>> s_CachedColors = null;
 
-		private static Vector2 s_ColorScrollPos = Vector2.zero;
-
 		private int currentPage;
+
+		private static Vector2 s_ScrollPosition = Vector2.zero;
 
 		private int m_SpriteAtlasCacheSize;
 
@@ -385,10 +386,11 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
 			GUILayout.Label(this.selectedSection.content, PreferencesWindow.constants.sectionHeader, new GUILayoutOption[0]);
-			this.selectedSection.guiFunc();
-			GUILayout.Space(5f);
-			GUILayout.EndVertical();
 			GUILayout.Space(10f);
+			PreferencesWindow.s_ScrollPosition = EditorGUILayout.BeginScrollView(PreferencesWindow.s_ScrollPosition, new GUILayoutOption[0]);
+			this.selectedSection.guiFunc();
+			EditorGUILayout.EndScrollView();
+			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 		}
 
@@ -415,7 +417,6 @@ namespace UnityEditor
 
 		private void ShowExternalApplications()
 		{
-			GUILayout.Space(10f);
 			this.FilePopup("External Script Editor", this.m_ScriptEditorPath, ref this.m_ScriptAppDisplayNames, ref this.m_ScriptApps, this.m_ScriptEditorPath, "internal", new Action(this.OnScriptEditorChanged));
 			if (!this.IsSelectedScriptEditorSpecial())
 			{
@@ -524,8 +525,7 @@ namespace UnityEditor
 
 		private void ShowGeneral()
 		{
-			GUILayout.Space(10f);
-			bool flag = Collab.instance.GetCollabInfo().whitelisted && CollabAccess.Instance.IsServiceEnabled();
+			bool flag = CollabAccess.Instance.IsServiceEnabled();
 			using (new EditorGUI.DisabledScope(flag))
 			{
 				if (flag)
@@ -680,7 +680,6 @@ namespace UnityEditor
 		private void ShowKeys()
 		{
 			int controlID = GUIUtility.GetControlID(PreferencesWindow.s_KeysControlHash, FocusType.Keyboard);
-			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.BeginVertical(new GUILayoutOption[]
 			{
@@ -862,8 +861,6 @@ namespace UnityEditor
 				this.s_CachedColors = this.OrderPrefs<PrefColor>(Settings.Prefs<PrefColor>());
 			}
 			bool flag = false;
-			PreferencesWindow.s_ColorScrollPos = EditorGUILayout.BeginScrollView(PreferencesWindow.s_ColorScrollPos, new GUILayoutOption[0]);
-			GUILayout.Space(10f);
 			PrefColor prefColor = null;
 			foreach (KeyValuePair<string, List<KeyValuePair<string, PrefColor>>> current in this.s_CachedColors)
 			{
@@ -884,7 +881,6 @@ namespace UnityEditor
 					Settings.Set<PrefColor>(prefColor.Name, prefColor);
 				}
 			}
-			EditorGUILayout.EndScrollView();
 			GUILayout.Space(5f);
 			if (GUILayout.Button("Use Defaults", new GUILayoutOption[]
 			{
@@ -926,12 +922,12 @@ namespace UnityEditor
 				this.m_GICacheSettings.m_EnableCustomPath = EditorGUILayout.Toggle(PreferencesWindow.Styles.customCacheLocation, this.m_GICacheSettings.m_EnableCustomPath, new GUILayoutOption[0]);
 				if (this.m_GICacheSettings.m_EnableCustomPath)
 				{
-					GUIStyle popup = EditorStyles.popup;
+					GUIStyle miniButton = EditorStyles.miniButton;
 					GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-					EditorGUILayout.PrefixLabel(PreferencesWindow.Styles.cacheFolderLocation, popup);
-					Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
+					EditorGUILayout.PrefixLabel(PreferencesWindow.Styles.cacheFolderLocation, miniButton);
+					Rect rect = GUILayoutUtility.GetRect(GUIContent.none, miniButton);
 					GUIContent content = (!string.IsNullOrEmpty(this.m_GICacheSettings.m_CachePath)) ? new GUIContent(this.m_GICacheSettings.m_CachePath) : PreferencesWindow.Styles.browse;
-					if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, popup))
+					if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, miniButton))
 					{
 						string cachePath = this.m_GICacheSettings.m_CachePath;
 						string text = EditorUtility.OpenFolderPanel(PreferencesWindow.Styles.browseGICacheLocation.text, cachePath, "");
@@ -1057,26 +1053,31 @@ namespace UnityEditor
 			this.m_ExternalEditorSupportsUnityProj = EditorPrefs.GetBool("kExternalEditorSupportsUnityProj", false);
 			this.m_ImageAppPath.str = EditorPrefs.GetString("kImagesDefaultApp");
 			this.m_ScriptApps = this.BuildAppPathList(this.m_ScriptEditorPath, "RecentlyUsedScriptApp", "internal");
+			this.m_ScriptAppsEditions = new string[this.m_ScriptApps.Length];
 			if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
-				foreach (string current in SyncVS.InstalledVisualStudios.Values)
+				foreach (VisualStudioPath[] current in SyncVS.InstalledVisualStudios.Values)
 				{
-					if (Array.IndexOf<string>(this.m_ScriptApps, current) == -1)
+					VisualStudioPath[] array = current;
+					for (int i = 0; i < array.Length; i++)
 					{
-						if (this.m_ScriptApps.Length < 10)
+						VisualStudioPath visualStudioPath = array[i];
+						int num = Array.IndexOf<string>(this.m_ScriptApps, visualStudioPath.Path);
+						if (num == -1)
 						{
-							ArrayUtility.Add<string>(ref this.m_ScriptApps, current);
+							ArrayUtility.Add<string>(ref this.m_ScriptApps, visualStudioPath.Path);
+							ArrayUtility.Add<string>(ref this.m_ScriptAppsEditions, visualStudioPath.Edition);
 						}
 						else
 						{
-							this.m_ScriptApps[1] = current;
+							this.m_ScriptAppsEditions[num] = visualStudioPath.Edition;
 						}
 					}
 				}
 			}
 			this.m_ImageApps = this.BuildAppPathList(this.m_ImageAppPath, "RecentlyUsedImageApp", "");
-			this.m_ScriptAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ScriptApps, "MonoDevelop (built-in)");
-			this.m_ImageAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ImageApps, "Open by file extension");
+			this.m_ScriptAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ScriptApps, this.m_ScriptAppsEditions, "MonoDevelop (built-in)");
+			this.m_ImageAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ImageApps, null, "Open by file extension");
 			this.m_DiffTools = InternalEditorUtility.GetAvailableDiffTools();
 			if ((this.m_DiffTools == null || this.m_DiffTools.Length == 0) && InternalEditorUtility.HasTeamLicense())
 			{
@@ -1170,7 +1171,7 @@ namespace UnityEditor
 			GUIContent content = new GUIContent((array.Length != 0) ? names[array[0]] : defaultString);
 			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, popup);
 			PreferencesWindow.AppsListUserData userData = new PreferencesWindow.AppsListUserData(paths, outString, onChanged);
-			if (EditorGUI.ButtonMouseDown(rect, content, FocusType.Passive, popup))
+			if (EditorGUI.DropdownButton(rect, content, FocusType.Passive, popup))
 			{
 				ArrayUtility.Add<string>(ref names, "Browse...");
 				EditorUtility.DisplayCustomMenu(rect, names, array, new EditorUtility.SelectMenuItemFunction(this.AppsListClick), userData);
@@ -1204,7 +1205,7 @@ namespace UnityEditor
 			return array;
 		}
 
-		private string[] BuildFriendlyAppNameList(string[] appPathList, string defaultBuiltIn)
+		private string[] BuildFriendlyAppNameList(string[] appPathList, string[] appEditionList, string defaultBuiltIn)
 		{
 			List<string> list = new List<string>();
 			for (int i = 0; i < appPathList.Length; i++)
@@ -1216,7 +1217,12 @@ namespace UnityEditor
 				}
 				else
 				{
-					list.Add(this.StripMicrosoftFromVisualStudioName(OSUtil.GetAppFriendlyName(text)));
+					string text2 = this.StripMicrosoftFromVisualStudioName(OSUtil.GetAppFriendlyName(text));
+					if (appEditionList != null && !string.IsNullOrEmpty(appEditionList[i]))
+					{
+						text2 = string.Format("{0} ({1})", text2, appEditionList[i]);
+					}
+					list.Add(text2);
 				}
 			}
 			return list.ToArray();

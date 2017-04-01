@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
@@ -20,6 +21,7 @@ namespace UnityEditor
 
 		public static Undo.PostprocessModifications postprocessModifications;
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRecordsInternal(object undoRecords, object redoRecords);
 
@@ -45,9 +47,11 @@ namespace UnityEditor
 			}
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void RegisterCompleteObjectUndoMultiple(UnityEngine.Object identifier, UnityEngine.Object[] objectsToUndo, string name, int namePriority);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetTransformParent(Transform transform, Transform newParent, string name);
 
@@ -56,15 +60,19 @@ namespace UnityEditor
 			Undo.INTERNAL_CALL_MoveGameObjectToScene(go, ref scene, name);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_MoveGameObjectToScene(GameObject go, ref Scene scene, string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RegisterCreatedObjectUndo(UnityEngine.Object objectToUndo, string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DestroyObjectImmediate(UnityEngine.Object objectToUndo);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Component AddComponent(GameObject gameObject, Type type);
 
@@ -73,6 +81,7 @@ namespace UnityEditor
 			return Undo.AddComponent(gameObject, typeof(T)) as T;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RegisterFullObjectHierarchyUndo(UnityEngine.Object objectToUndo, string name);
 
@@ -82,39 +91,51 @@ namespace UnityEditor
 			Undo.RegisterFullObjectHierarchyUndo(objectToUndo, "Full Object Hierarchy");
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RecordObject(UnityEngine.Object objectToUndo, string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RecordObjects(UnityEngine.Object[] objectsToUndo, string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearUndo(UnityEngine.Object identifier);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PerformUndo();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PerformRedo();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void IncrementCurrentGroup();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetCurrentGroup();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetCurrentGroupName();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetCurrentGroupName(string name);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevertAllInCurrentGroup();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void RevertAllDownToGroup(int group);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CollapseUndoOperations(int groupIndex);
 
@@ -130,6 +151,7 @@ namespace UnityEditor
 			Undo.RegisterCompleteObjectUndo(objectsToUndo, name);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FlushUndoRecordObjects();
 

@@ -2,11 +2,13 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditorInternal
 {
 	public sealed class AssetStoreToolUtils
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool BuildAssetStoreAssetBundle(UnityEngine.Object targetObject, string targetPath);
 

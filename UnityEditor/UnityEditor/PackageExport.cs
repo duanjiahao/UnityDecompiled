@@ -87,7 +87,7 @@ namespace UnityEditor
 			if (guids.Count == 0)
 			{
 				string[] collection = new string[0];
-				guids = new HashSet<string>(AssetServer.CollectAllChildren(AssetServer.GetRootGUID(), collection));
+				guids = new HashSet<string>(AssetDatabase.CollectAllChildren(AssetDatabase.assetFolderGUID, collection));
 			}
 			ExportPackageItem[] source = PackageUtility.BuildExportPackageItemsList(guids.ToArray<string>(), includeDependencies);
 			if (includeDependencies)

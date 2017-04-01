@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.VR.WSA.WebCam
 {
@@ -152,11 +153,11 @@ namespace UnityEngine.VR.WSA.WebCam
 			this.Cleanup();
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern CapturePixelFormat GetCapturePixelFormat(IntPtr photoCaptureFrame);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetHasLocationData(IntPtr photoCaptureFrame);
 
@@ -168,6 +169,7 @@ namespace UnityEngine.VR.WSA.WebCam
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetCameraToWorldMatrix(IntPtr photoCaptureFrame, out Matrix4x4 value);
 
@@ -179,10 +181,11 @@ namespace UnityEngine.VR.WSA.WebCam
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetProjection(IntPtr photoCaptureFrame, out Matrix4x4 value);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetDataLength(IntPtr photoCaptureFrame);
 
@@ -194,22 +197,23 @@ namespace UnityEngine.VR.WSA.WebCam
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetUnsafePointerToBuffer(IntPtr photoCaptureFrame, out IntPtr value);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetData_Internal(IntPtr photoCaptureFrame, IntPtr targetBuffer);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern byte[] CopyRawImageDataIntoBuffer_Internal(IntPtr photoCaptureFrame);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void UploadImageDataToTexture_Internal(IntPtr photoCaptureFrame, Texture2D targetTexture);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Dispose_Internal(IntPtr photoCaptureFrame);
 	}

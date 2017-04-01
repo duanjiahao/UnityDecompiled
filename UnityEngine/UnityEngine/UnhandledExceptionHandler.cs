@@ -26,8 +26,12 @@ namespace UnityEngine
 			if (ex != null)
 			{
 				UnhandledExceptionHandler.PrintException("Unhandled Exception: ", ex);
+				UnhandledExceptionHandler.NativeUnhandledExceptionHandler(ex.GetType().Name, ex.Message, ex.StackTrace);
 			}
-			UnhandledExceptionHandler.NativeUnhandledExceptionHandler();
+			else
+			{
+				UnhandledExceptionHandler.NativeUnhandledExceptionHandler(null, null, null);
+			}
 		}
 
 		private static void PrintException(string title, Exception e)
@@ -39,8 +43,8 @@ namespace UnityEngine
 			}
 		}
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void NativeUnhandledExceptionHandler();
+		private static extern void NativeUnhandledExceptionHandler(string managedExceptionType, string managedExceptionMessage, string managedExceptionStack);
 	}
 }

@@ -22,23 +22,29 @@ namespace UnityEngine
 
 		public extern string name
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
 		public extern HideFlags hideFlags
 		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object Internal_CloneSingle(Object data);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object Internal_CloneSingleWithParent(Object data, Transform parent, bool worldPositionStays);
 
@@ -48,6 +54,7 @@ namespace UnityEngine
 			return Object.INTERNAL_CALL_Internal_InstantiateSingle(data, ref pos, ref rot);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object INTERNAL_CALL_Internal_InstantiateSingle(Object data, ref Vector3 pos, ref Quaternion rot);
 
@@ -56,17 +63,19 @@ namespace UnityEngine
 			return Object.INTERNAL_CALL_Internal_InstantiateSingleWithParent(data, parent, ref pos, ref rot);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object INTERNAL_CALL_Internal_InstantiateSingleWithParent(Object data, Transform parent, ref Vector3 pos, ref Quaternion rot);
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetOffsetOfInstanceIDInCPlusPlusObject();
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void EnsureRunningOnMainThread();
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Destroy(Object obj, [DefaultValue("0.0F")] float t);
 
@@ -77,6 +86,7 @@ namespace UnityEngine
 			Object.Destroy(obj, t);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DestroyImmediate(Object obj, [DefaultValue("false")] bool allowDestroyingAssets);
 
@@ -87,13 +97,15 @@ namespace UnityEngine
 			Object.DestroyImmediate(obj, allowDestroyingAssets);
 		}
 
-		[TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
+		[GeneratedByOldBindingsGenerator, TypeInferenceRule(TypeInferenceRules.ArrayOfTypeReferencedByFirstArgument)]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindObjectsOfType(Type type);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DontDestroyOnLoad(Object target);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DestroyObject(Object obj, [DefaultValue("0.0F")] float t);
 
@@ -104,11 +116,11 @@ namespace UnityEngine
 			Object.DestroyObject(obj, t);
 		}
 
-		[Obsolete("use Object.FindObjectsOfType instead.")]
+		[Obsolete("use Object.FindObjectsOfType instead."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindSceneObjectsOfType(Type type);
 
-		[Obsolete("use Resources.FindObjectsOfTypeAll instead.")]
+		[Obsolete("use Resources.FindObjectsOfTypeAll instead."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Object[] FindObjectsOfTypeIncludingAssets(Type type);
 
@@ -118,10 +130,11 @@ namespace UnityEngine
 			return Resources.FindObjectsOfTypeAll(type);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public override extern string ToString();
 
-		[ThreadAndSerializationSafe]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool DoesObjectWithInstanceIDExist(int instanceID);
 
@@ -256,7 +269,7 @@ namespace UnityEngine
 
 		public static T Instantiate<T>(T original, Transform parent) where T : Object
 		{
-			return Object.Instantiate<T>(original, parent, true);
+			return Object.Instantiate<T>(original, parent, false);
 		}
 
 		public static T Instantiate<T>(T original, Transform parent, bool worldPositionStays) where T : Object

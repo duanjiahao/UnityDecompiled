@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Animations;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -105,6 +104,10 @@ namespace UnityEditor
 		private SerializedProperty m_MotionNodeName;
 
 		private SerializedProperty m_PivotNodeName;
+
+		private SerializedProperty m_RigImportErrors;
+
+		private SerializedProperty m_RigImportWarnings;
 
 		private SerializedProperty m_AnimationImportErrors;
 
@@ -213,6 +216,8 @@ namespace UnityEditor
 			this.m_AnimationPositionError = base.serializedObject.FindProperty("m_AnimationPositionError");
 			this.m_AnimationScaleError = base.serializedObject.FindProperty("m_AnimationScaleError");
 			this.m_AnimationWrapMode = base.serializedObject.FindProperty("m_AnimationWrapMode");
+			this.m_RigImportErrors = base.serializedObject.FindProperty("m_RigImportErrors");
+			this.m_RigImportWarnings = base.serializedObject.FindProperty("m_RigImportWarnings");
 			this.m_AnimationImportErrors = base.serializedObject.FindProperty("m_AnimationImportErrors");
 			this.m_AnimationImportWarnings = base.serializedObject.FindProperty("m_AnimationImportWarnings");
 			this.m_AnimationRetargetingWarnings = base.serializedObject.FindProperty("m_AnimationRetargetingWarnings");
@@ -318,6 +323,12 @@ namespace UnityEditor
 			this.DestroyEditorsAndData();
 		}
 
+		public override void OnDisable()
+		{
+			this.DestroyEditorsAndData();
+			base.OnDisable();
+		}
+
 		internal override void ResetValues()
 		{
 			base.ResetValues();
@@ -337,14 +348,22 @@ namespace UnityEditor
 		{
 			string stringValue = this.m_AnimationImportErrors.stringValue;
 			string stringValue2 = this.m_AnimationImportWarnings.stringValue;
-			string stringValue3 = this.m_AnimationRetargetingWarnings.stringValue;
+			string stringValue3 = this.m_RigImportWarnings.stringValue;
+			string stringValue4 = this.m_AnimationRetargetingWarnings.stringValue;
 			if (stringValue.Length > 0)
 			{
-				EditorGUILayout.HelpBox("Error(s) found while importing this animation file. Open \"Import Messages\" foldout below for more details", MessageType.Error);
+				EditorGUILayout.HelpBox("Error(s) found while importing this animation file. Open \"Import Messages\" foldout below for more details.", MessageType.Error);
 			}
-			else if (stringValue2.Length > 0)
+			else
 			{
-				EditorGUILayout.HelpBox("Warning(s) found while importing this animation file. Open \"Import Messages\" foldout below for more details", MessageType.Warning);
+				if (stringValue3.Length > 0)
+				{
+					EditorGUILayout.HelpBox("Warning(s) found while importing rig in this animation file. Open \"Rig\" tab for more details.", MessageType.Warning);
+				}
+				if (stringValue2.Length > 0)
+				{
+					EditorGUILayout.HelpBox("Warning(s) found while importing this animation file. Open \"Import Messages\" foldout below for more details.", MessageType.Warning);
+				}
 			}
 			this.AnimationSettings();
 			if (!base.serializedObject.isEditingMultipleObjects)
@@ -377,9 +396,9 @@ namespace UnityEditor
 						EditorGUILayout.PropertyField(this.m_AnimationDoRetargetingWarnings, ModelImporterClipEditor.styles.GenerateRetargetingWarnings, new GUILayoutOption[0]);
 						if (this.m_AnimationDoRetargetingWarnings.boolValue)
 						{
-							if (stringValue3.Length > 0)
+							if (stringValue4.Length > 0)
 							{
-								EditorGUILayout.HelpBox(stringValue3, MessageType.Info);
+								EditorGUILayout.HelpBox(stringValue4, MessageType.Info);
 							}
 						}
 						else
@@ -413,7 +432,15 @@ namespace UnityEditor
 					}
 					else
 					{
-						EditorGUILayout.HelpBox("No animation data available in this model.", MessageType.Info);
+						string stringValue = this.m_RigImportErrors.stringValue;
+						if (stringValue.Length > 0)
+						{
+							EditorGUILayout.HelpBox("Error(s) found while importing rig in this animation file. Open \"Rig\" tab for more details.", MessageType.Error);
+						}
+						else
+						{
+							EditorGUILayout.HelpBox("No animation data available in this model.", MessageType.Info);
+						}
 					}
 				}
 				else if (this.m_AnimationType.hasMultipleDifferentValues)
@@ -679,7 +706,7 @@ namespace UnityEditor
 						int takeIndex = this.m_AnimationClipEditor.takeIndex;
 						if (takeIndex != -1 && takeIndex != num)
 						{
-							selectedClipInfo.name = this.MakeUniqueClipName(array[takeIndex], -1);
+							selectedClipInfo.name = this.MakeUniqueClipName(array[takeIndex]);
 							this.SetupTakeNameAndFrames(selectedClipInfo, importedTakeInfos[takeIndex]);
 							GUIUtility.keyboardControl = 0;
 							this.SelectClip(this.selectedClipIndex);
@@ -746,26 +773,91 @@ namespace UnityEditor
 			return result;
 		}
 
-		private string MakeUniqueClipName(string name, int row)
+		private string RemoveDuplicateSuffix(string name, out int number)
 		{
-			string text = name;
-			int num = 0;
-			int i;
-			do
+			number = -1;
+			int length = name.Length;
+			string result;
+			if (length < 4 || name[length - 1] != ')')
 			{
-				for (i = 0; i < this.m_ClipAnimations.arraySize; i++)
+				result = name;
+			}
+			else
+			{
+				int num = name.LastIndexOf('(', length - 2);
+				if (num == -1 || name[num - 1] != ' ')
 				{
-					AnimationClipInfoProperties animationClipInfoAtIndex = this.GetAnimationClipInfoAtIndex(i);
-					if (text == animationClipInfoAtIndex.name && row != i)
+					result = name;
+				}
+				else
+				{
+					int num2 = length - num - 2;
+					if (num2 == 0)
 					{
-						text = name + num.ToString();
-						num++;
-						break;
+						result = name;
+					}
+					else
+					{
+						int num3 = 0;
+						while (num3 < num2 && char.IsDigit(name[num + 1 + num3]))
+						{
+							num3++;
+						}
+						if (num3 != num2)
+						{
+							result = name;
+						}
+						else
+						{
+							string s = name.Substring(num + 1, num2);
+							number = int.Parse(s);
+							result = name.Substring(0, num - 1);
+						}
 					}
 				}
 			}
-			while (i != this.m_ClipAnimations.arraySize);
-			return text;
+			return result;
+		}
+
+		private int FindNextDuplicateNumber(string baseName)
+		{
+			int num = -1;
+			for (int i = 0; i < this.m_ClipAnimations.arraySize; i++)
+			{
+				AnimationClipInfoProperties animationClipInfoAtIndex = this.GetAnimationClipInfoAtIndex(i);
+				int num2;
+				string a = this.RemoveDuplicateSuffix(animationClipInfoAtIndex.name, out num2);
+				if (a == baseName)
+				{
+					if (num == -1)
+					{
+						num = 1;
+					}
+					if (num2 != -1)
+					{
+						num = Math.Max(num, num2 + 1);
+					}
+				}
+			}
+			return num;
+		}
+
+		private string MakeUniqueClipName(string name)
+		{
+			int num;
+			string text = this.RemoveDuplicateSuffix(name, out num);
+			int num2 = this.FindNextDuplicateNumber(text);
+			if (num2 != -1)
+			{
+				name = string.Concat(new object[]
+				{
+					text,
+					" (",
+					num2,
+					")"
+				});
+			}
+			return name;
 		}
 
 		private void RemoveClip(int index)
@@ -787,9 +879,10 @@ namespace UnityEditor
 
 		private void AddClip(TakeInfo takeInfo)
 		{
+			string name = this.MakeUniqueClipName(takeInfo.defaultClipName);
 			this.m_ClipAnimations.InsertArrayElementAtIndex(this.m_ClipAnimations.arraySize);
 			AnimationClipInfoProperties animationClipInfoAtIndex = this.GetAnimationClipInfoAtIndex(this.m_ClipAnimations.arraySize - 1);
-			animationClipInfoAtIndex.name = this.MakeUniqueClipName(takeInfo.defaultClipName, -1);
+			animationClipInfoAtIndex.name = name;
 			this.SetupTakeNameAndFrames(animationClipInfoAtIndex, takeInfo);
 			animationClipInfoAtIndex.wrapMode = 0;
 			animationClipInfoAtIndex.loop = false;

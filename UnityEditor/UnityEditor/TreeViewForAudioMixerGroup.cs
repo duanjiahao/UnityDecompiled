@@ -56,7 +56,7 @@ namespace UnityEditor
 					bool flag2 = item.id == TreeViewForAudioMixerGroup.kNoneItemID;
 					if (flag && !flag2)
 					{
-						AudioMixerController controller = (item.userData as AudioMixerGroupController).controller;
+						AudioMixerController controller = ((TreeViewForAudioMixerGroup.MixerTreeViewItem)item).group.controller;
 						GUI.Label(new Rect(rowRect.x + 2f, rowRect.y - 18f, rowRect.width, 18f), GUIContent.Temp(controller.name), EditorStyles.boldLabel);
 					}
 				}
@@ -190,6 +190,20 @@ namespace UnityEditor
 			}
 		}
 
+		private class MixerTreeViewItem : TreeViewItem
+		{
+			public AudioMixerGroupController group
+			{
+				get;
+				set;
+			}
+
+			public MixerTreeViewItem(int id, int depth, TreeViewItem parent, string displayName, AudioMixerGroupController groupController) : base(id, depth, parent, displayName)
+			{
+				this.group = groupController;
+			}
+		}
+
 		private class TreeViewDataSourceForMixers : TreeViewDataSource
 		{
 			public AudioMixerController ignoreThisController
@@ -251,10 +265,9 @@ namespace UnityEditor
 			private TreeViewItem BuildSubTree(AudioMixerController controller)
 			{
 				AudioMixerGroupController masterGroup = controller.masterGroup;
-				TreeViewItem treeViewItem = new TreeViewItem(masterGroup.GetInstanceID(), 0, this.m_RootItem, masterGroup.name);
-				treeViewItem.userData = masterGroup;
-				this.AddChildrenRecursive(masterGroup, treeViewItem);
-				return treeViewItem;
+				TreeViewForAudioMixerGroup.MixerTreeViewItem mixerTreeViewItem = new TreeViewForAudioMixerGroup.MixerTreeViewItem(masterGroup.GetInstanceID(), 0, this.m_RootItem, masterGroup.name, masterGroup);
+				this.AddChildrenRecursive(masterGroup, mixerTreeViewItem);
+				return mixerTreeViewItem;
 			}
 
 			private void AddChildrenRecursive(AudioMixerGroupController group, TreeViewItem item)
@@ -262,8 +275,7 @@ namespace UnityEditor
 				item.children = new List<TreeViewItem>(group.children.Length);
 				for (int i = 0; i < group.children.Length; i++)
 				{
-					item.children.Add(new TreeViewItem(group.children[i].GetInstanceID(), item.depth + 1, item, group.children[i].name));
-					item.children[i].userData = group.children[i];
+					item.children.Add(new TreeViewForAudioMixerGroup.MixerTreeViewItem(group.children[i].GetInstanceID(), item.depth + 1, item, group.children[i].name, group.children[i]));
 					this.AddChildrenRecursive(group.children[i], item.children[i]);
 				}
 			}

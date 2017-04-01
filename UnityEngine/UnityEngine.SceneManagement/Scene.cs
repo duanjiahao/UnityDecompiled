@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.SceneManagement
 {
@@ -48,6 +49,14 @@ namespace UnityEngine.SceneManagement
 			internal set
 			{
 				Scene.SetNameInternal(this.handle, value);
+			}
+		}
+
+		internal string guid
+		{
+			get
+			{
+				return Scene.GetGUIDInternal(this.handle);
 			}
 		}
 
@@ -146,33 +155,47 @@ namespace UnityEngine.SceneManagement
 			return result;
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool IsValidInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetPathInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string GetNameInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void SetNameInternal(int sceneHandle, string name);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern string GetGUIDInternal(int sceneHandle);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetIsLoadedInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Scene.LoadingState GetLoadingStateInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetIsDirtyInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetBuildIndexInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int GetRootCountInternal(int sceneHandle);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetRootGameObjectsInternal(int sceneHandle, object resultRootList);
 	}

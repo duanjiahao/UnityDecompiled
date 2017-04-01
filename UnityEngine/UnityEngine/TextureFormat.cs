@@ -23,6 +23,7 @@ namespace UnityEngine
 		RGFloat,
 		RGBAFloat,
 		YUY2,
+		RGB9e5Float,
 		BC4 = 26,
 		BC5,
 		BC6H = 24,

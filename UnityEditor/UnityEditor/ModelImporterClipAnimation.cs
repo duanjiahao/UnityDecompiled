@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEditor.Animations;
 using UnityEngine;
 
 namespace UnityEditor
@@ -17,7 +16,7 @@ namespace UnityEditor
 
 		private float m_LastFrame;
 
-		private int m_WrapMode;
+		private WrapMode m_WrapMode;
 
 		private int m_Loop;
 
@@ -117,11 +116,11 @@ namespace UnityEditor
 		{
 			get
 			{
-				return (WrapMode)this.m_WrapMode;
+				return this.m_WrapMode;
 			}
 			set
 			{
-				this.m_WrapMode = (int)value;
+				this.m_WrapMode = value;
 			}
 		}
 

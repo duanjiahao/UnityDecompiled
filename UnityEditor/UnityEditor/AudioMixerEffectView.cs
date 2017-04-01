@@ -326,7 +326,7 @@ namespace UnityEditor
 					GUILayout.Space(10f);
 					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					GUILayout.FlexibleSpace();
-					if (EditorGUILayout.ButtonMouseDown(AudioMixerEffectView.Texts.addEffect, FocusType.Passive, GUISkin.current.button, new GUILayoutOption[0]))
+					if (EditorGUILayout.DropdownButton(AudioMixerEffectView.Texts.addEffect, FocusType.Passive, GUISkin.current.button, new GUILayoutOption[0]))
 					{
 						GenericMenu genericMenu = new GenericMenu();
 						Rect last = GUILayoutUtility.topLevel.GetLast();
@@ -388,7 +388,7 @@ namespace UnityEditor
 			Color effectColor = AudioMixerDrawUtils.GetEffectColor(audioMixerEffectController);
 			EditorGUI.DrawRect(rect2, effectColor);
 			GUI.Label(position, (!flag2) ? audioMixerEffectController.effectName : (audioMixerEffectController.effectName + string.Format(AudioMixerEffectView.Texts.cpuFormatString, audioMixerEffectController.GetCPUUsage(controller))), EditorStyles.boldLabel);
-			if (EditorGUI.ButtonMouseDown(rect3, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.iconButton))
+			if (EditorGUI.DropdownButton(rect3, EditorGUI.GUIContents.titleSettingsIcon, FocusType.Passive, EditorStyles.iconButton))
 			{
 				AudioMixerEffectView.ShowEffectContextMenu(group, audioMixerEffectController, effectIndex, controller, rect3);
 			}
@@ -477,10 +477,6 @@ namespace UnityEditor
 							if (audioMixerEffectController2.IsSend() && audioMixerEffectController2.sendTarget == audioMixerEffectController)
 							{
 								flag3 = true;
-								break;
-							}
-							if (flag3)
-							{
 								break;
 							}
 						}

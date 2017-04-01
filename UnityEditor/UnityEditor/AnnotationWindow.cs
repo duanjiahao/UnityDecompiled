@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -323,7 +322,7 @@ namespace UnityEditor
 						{
 							text2,
 							"   ",
-							BaseObjectTools.ClassIDToString(aInfo.m_ClassID),
+							UnityType.FindTypeByPersistentTypeID(aInfo.m_ClassID).name,
 							": icon ",
 							aInfo.m_IconEnabled,
 							" gizmo ",
@@ -375,24 +374,24 @@ namespace UnityEditor
 
 		internal void OnGUI()
 		{
-			if (Event.current.type != EventType.Layout)
+			if (AnnotationWindow.m_Styles == null)
 			{
-				if (AnnotationWindow.m_Styles == null)
-				{
-					AnnotationWindow.m_Styles = new AnnotationWindow.Styles();
-				}
-				if (this.m_SyncWithState)
-				{
-					this.SyncToState();
-				}
-				float topSectionHeight = this.GetTopSectionHeight();
-				this.DrawTopSection(topSectionHeight);
-				this.DrawAnnotationList(topSectionHeight, base.position.height - topSectionHeight);
-				GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, AnnotationWindow.m_Styles.background);
-				if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-				{
-					this.Cancel();
-				}
+				AnnotationWindow.m_Styles = new AnnotationWindow.Styles();
+			}
+			if (this.m_SyncWithState)
+			{
+				this.SyncToState();
+			}
+			float topSectionHeight = this.GetTopSectionHeight();
+			this.DrawTopSection(topSectionHeight);
+			this.DrawAnnotationList(topSectionHeight, base.position.height - topSectionHeight);
+			if (Event.current.type == EventType.Repaint)
+			{
+				AnnotationWindow.m_Styles.background.Draw(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, false, false, false, false);
+			}
+			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+			{
+				this.Cancel();
 			}
 		}
 

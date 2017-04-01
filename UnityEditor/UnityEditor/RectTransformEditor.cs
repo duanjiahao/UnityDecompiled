@@ -14,8 +14,6 @@ namespace UnityEditor
 	{
 		private class Styles
 		{
-			public GUIStyle lockStyle = EditorStyles.miniButton;
-
 			public GUIStyle measuringLabelStyle = new GUIStyle("PreOverlayLabel");
 
 			public GUIContent anchorsContent = new GUIContent("Anchors");
@@ -24,15 +22,9 @@ namespace UnityEditor
 
 			public GUIContent anchorMaxContent = new GUIContent("Max", "The normalized position in the parent rectangle that the upper right corner is anchored to.");
 
-			public GUIContent positionContent = new GUIContent("Position", "The local position of the rectangle. The position specifies this rectangle's pivot relative to the anchor reference point.");
-
-			public GUIContent sizeContent = new GUIContent("Size", "The size of the rectangle.");
-
 			public GUIContent pivotContent = new GUIContent("Pivot", "The pivot point specified in normalized values between 0 and 1. The pivot point is the origin of this rectangle. Rotation and scaling is around this point.");
 
 			public GUIContent transformScaleContent = new GUIContent("Scale", "The local scaling of this Game Object relative to the parent. This scales everything including image borders and text.");
-
-			public GUIContent transformPositionZContent = new GUIContent("Pos Z", "Distance to offset the rectangle along the Z axis of the parent. The effect is visible if the Canvas uses a perspective camera, or if a parent RectTransform is rotated along the X or Y axis.");
 
 			public GUIContent rawEditContent;
 
@@ -103,12 +95,6 @@ namespace UnityEditor
 		};
 
 		private static bool[] s_ScaleDisabledMask = new bool[3];
-
-		private static Vector3 s_StartMouseWorldPos;
-
-		private static Vector3 s_StartPosition;
-
-		private static Vector2 s_StartMousePos;
 
 		private static bool s_DragAnchorsTogether;
 
@@ -396,7 +382,7 @@ namespace UnityEditor
 			{
 				Color color = GUI.color;
 				GUI.color = new Color(1f, 1f, 1f, 0.6f) * color;
-				if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, "box"))
+				if (EditorGUI.DropdownButton(rect, GUIContent.none, FocusType.Passive, "box"))
 				{
 					GUIUtility.keyboardControl = 0;
 					this.m_DropdownWindow = new LayoutDropdownWindow(base.serializedObject);
@@ -668,14 +654,6 @@ namespace UnityEditor
 			Rect result = totalRect;
 			result.xMin += (totalRect.width - 4f) * ((float)column / 3f) + (float)(column * 2);
 			result.width = (totalRect.width - 4f) / 3f;
-			return result;
-		}
-
-		private int AnchorPopup(Rect position, string label, int selected, string[] displayedOptions)
-		{
-			EditorGUIUtility.labelWidth = 12f;
-			int result = EditorGUI.Popup(position, label, selected, displayedOptions);
-			EditorGUIUtility.labelWidth = 0f;
 			return result;
 		}
 
@@ -1188,11 +1166,6 @@ namespace UnityEditor
 				GUIContent label = new GUIContent(num.ToString());
 				this.DrawLabelBetweenPoints(vector, vector2, label);
 			}
-		}
-
-		private float LerpUnclamped(float a, float b, float t)
-		{
-			return a * (1f - t) + b * t;
 		}
 
 		private void DrawAnchorDistances(Transform parentSpace, RectTransform gui, RectTransform guiParent, float size, float alpha)

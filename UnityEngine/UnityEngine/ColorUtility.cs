@@ -1,10 +1,12 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
 	public sealed class ColorUtility
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool DoTryParseHtmlColor(string htmlString, out Color32 color);
 

@@ -164,7 +164,7 @@ namespace UnityEditor
 			GUILayout.FlexibleSpace();
 			Rect rect2 = GUILayoutUtility.GetRect(assetLabelIcon.fixedWidth, assetLabelIcon.fixedWidth, assetLabelIcon.fixedHeight + num3, assetLabelIcon.fixedHeight + num3);
 			rect2.x = rect.xMax + (float)assetLabelIcon.margin.left;
-			if (EditorGUI.ButtonMouseDown(rect2, GUIContent.none, FocusType.Passive, assetLabelIcon))
+			if (EditorGUI.DropdownButton(rect2, GUIContent.none, FocusType.Passive, assetLabelIcon))
 			{
 				PopupWindow.Show(rect2, new PopupList(this.m_AssetLabels), null, ShowMode.PopupMenuWithKeyboardFocus);
 			}

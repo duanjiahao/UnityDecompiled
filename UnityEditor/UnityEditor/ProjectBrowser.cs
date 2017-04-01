@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor.Collaboration;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.TreeViewExamples;
@@ -244,14 +245,14 @@ namespace UnityEditor
 		private bool m_UseTreeViewSelectionInsteadOfMainSelection;
 
 		[SerializeField]
-		private TreeViewState m_FolderTreeState;
+		private TreeViewStateWithAssetUtility m_FolderTreeState;
 
 		private TreeViewController m_FolderTree;
 
 		private int m_TreeViewKeyboardControlID;
 
 		[SerializeField]
-		private TreeViewState m_AssetTreeState;
+		private TreeViewStateWithAssetUtility m_AssetTreeState;
 
 		private TreeViewController m_AssetTree;
 
@@ -353,6 +354,7 @@ namespace UnityEditor
 			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(this.OnPlayModeStateChanged));
 			EditorApplication.assetLabelsChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.assetLabelsChanged, new EditorApplication.CallbackFunction(this.OnAssetLabelsChanged));
 			EditorApplication.assetBundleNameChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.assetBundleNameChanged, new EditorApplication.CallbackFunction(this.OnAssetBundleNameChanged));
+			Collab.instance.StateChanged += new StateChangedDelegate(this.OnCollabStateChanged);
 			ProjectBrowser.s_LastInteractedProjectBrowser = this;
 		}
 
@@ -362,6 +364,7 @@ namespace UnityEditor
 			EditorApplication.projectWindowChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.projectWindowChanged, new EditorApplication.CallbackFunction(this.OnProjectChanged));
 			EditorApplication.assetLabelsChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.assetLabelsChanged, new EditorApplication.CallbackFunction(this.OnAssetLabelsChanged));
 			EditorApplication.assetBundleNameChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.assetBundleNameChanged, new EditorApplication.CallbackFunction(this.OnAssetBundleNameChanged));
+			Collab.instance.StateChanged -= new StateChangedDelegate(this.OnCollabStateChanged);
 			ProjectBrowser.s_ProjectBrowsers.Remove(this);
 		}
 
@@ -387,6 +390,20 @@ namespace UnityEditor
 			if (this.m_ListArea != null)
 			{
 				this.InitListArea();
+			}
+		}
+
+		private void OnCollabStateChanged(CollabInfo info)
+		{
+			if (info.ready && !info.inProgress && !info.maintenance)
+			{
+				if (this.Initialized())
+				{
+					if (this.m_SearchFilter.IsSearching())
+					{
+						this.InitListArea();
+					}
+				}
 			}
 		}
 
@@ -567,12 +584,12 @@ namespace UnityEditor
 				this.m_SearchAreaMenu = new ExposablePopupMenu();
 				if (this.m_FolderTreeState == null)
 				{
-					this.m_FolderTreeState = new TreeViewState();
+					this.m_FolderTreeState = new TreeViewStateWithAssetUtility();
 				}
 				this.m_FolderTreeState.renameOverlay.isRenamingFilename = true;
 				if (this.m_AssetTreeState == null)
 				{
-					this.m_AssetTreeState = new TreeViewState();
+					this.m_AssetTreeState = new TreeViewStateWithAssetUtility();
 				}
 				this.m_AssetTreeState.renameOverlay.isRenamingFilename = true;
 				this.InitViewMode(this.m_ViewMode);
@@ -885,7 +902,8 @@ namespace UnityEditor
 				"Script",
 				"Shader",
 				"Sprite",
-				"Texture"
+				"Texture",
+				"VideoClip"
 			};
 		}
 
@@ -902,14 +920,10 @@ namespace UnityEditor
 				}
 			}
 			element.selected = !element.selected;
-			string[] array = (from item in this.m_ObjectTypes.m_ListElements
+			string[] classNames = (from item in this.m_ObjectTypes.m_ListElements
 			where item.selected
 			select item.text).ToArray<string>();
-			for (int i = 0; i < array.Length; i++)
-			{
-				array[i] = array[i];
-			}
-			this.m_SearchFilter.classNames = array;
+			this.m_SearchFilter.classNames = classNames;
 			this.m_SearchFieldText = this.m_SearchFilter.FilterToSearchFieldString();
 			this.TopBarSearchSettingsChanged();
 			base.Repaint();
@@ -1249,24 +1263,30 @@ namespace UnityEditor
 			EditorGUI.EndEditingActiveTextField();
 		}
 
+		private bool ShouldFrameAsset(int instanceID)
+		{
+			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
+			return hierarchyProperty.Find(instanceID, null);
+		}
+
 		private void OnSelectionChange()
 		{
 			if (this.m_ListArea != null)
 			{
 				this.m_ListArea.InitSelection(Selection.instanceIDs);
+				int instanceID = (Selection.instanceIDs.Length <= 0) ? 0 : Selection.instanceIDs[Selection.instanceIDs.Length - 1];
 				if (this.m_ViewMode == ProjectBrowser.ViewMode.OneColumn)
 				{
-					bool revealSelectionAndFrameLastSelected = !this.m_IsLocked;
+					bool revealSelectionAndFrameLastSelected = !this.m_IsLocked && this.ShouldFrameAsset(instanceID);
 					this.m_AssetTree.SetSelection(Selection.instanceIDs, revealSelectionAndFrameLastSelected);
 				}
 				else if (this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns)
 				{
 					if (!this.m_InternalSelectionChange)
 					{
-						bool flag = !this.m_IsLocked && Selection.instanceIDs.Length > 0;
+						bool flag = !this.m_IsLocked && Selection.instanceIDs.Length > 0 && this.ShouldFrameAsset(instanceID);
 						if (flag)
 						{
-							int instanceID = Selection.instanceIDs[Selection.instanceIDs.Length - 1];
 							if (this.m_SearchFilter.IsSearching())
 							{
 								this.m_ListArea.Frame(instanceID, true, false);
@@ -2182,7 +2202,7 @@ namespace UnityEditor
 		private void CreateDropdown()
 		{
 			Rect rect = GUILayoutUtility.GetRect(ProjectBrowser.s_Styles.m_CreateDropdownContent, EditorStyles.toolbarDropDown);
-			if (EditorGUI.ButtonMouseDown(rect, ProjectBrowser.s_Styles.m_CreateDropdownContent, FocusType.Passive, EditorStyles.toolbarDropDown))
+			if (EditorGUI.DropdownButton(rect, ProjectBrowser.s_Styles.m_CreateDropdownContent, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
 				GUIUtility.hotControl = 0;
 				EditorUtility.DisplayPopupMenu(rect, "Assets/Create", null);
@@ -2192,7 +2212,7 @@ namespace UnityEditor
 		private void AssetLabelsDropDown()
 		{
 			Rect rect = GUILayoutUtility.GetRect(ProjectBrowser.s_Styles.m_FilterByLabel, EditorStyles.toolbarButton);
-			if (EditorGUI.ButtonMouseDown(rect, ProjectBrowser.s_Styles.m_FilterByLabel, FocusType.Passive, EditorStyles.toolbarButton))
+			if (EditorGUI.DropdownButton(rect, ProjectBrowser.s_Styles.m_FilterByLabel, FocusType.Passive, EditorStyles.toolbarButton))
 			{
 				PopupWindow.Show(rect, new PopupList(this.m_AssetLabels), null, ShowMode.PopupMenuWithKeyboardFocus);
 			}
@@ -2201,7 +2221,7 @@ namespace UnityEditor
 		private void TypeDropDown()
 		{
 			Rect rect = GUILayoutUtility.GetRect(ProjectBrowser.s_Styles.m_FilterByType, EditorStyles.toolbarButton);
-			if (EditorGUI.ButtonMouseDown(rect, ProjectBrowser.s_Styles.m_FilterByType, FocusType.Passive, EditorStyles.toolbarButton))
+			if (EditorGUI.DropdownButton(rect, ProjectBrowser.s_Styles.m_FilterByType, FocusType.Passive, EditorStyles.toolbarButton))
 			{
 				PopupWindow.Show(rect, new PopupList(this.m_ObjectTypes));
 			}
@@ -2420,7 +2440,7 @@ namespace UnityEditor
 							if (!flag || this.m_BreadCrumbLastFolderHasSubFolders)
 							{
 								Rect rect = new Rect(listHeaderRect.x, listHeaderRect.y + 2f, 13f, 13f);
-								if (EditorGUI.ButtonMouseDown(rect, GUIContent.none, FocusType.Passive, ProjectBrowser.s_Styles.foldout))
+								if (EditorGUI.DropdownButton(rect, GUIContent.none, FocusType.Passive, ProjectBrowser.s_Styles.foldout))
 								{
 									string currentSubFolder = "";
 									if (!flag)
@@ -2528,7 +2548,8 @@ namespace UnityEditor
 
 		public void FrameObject(int instanceID, bool ping)
 		{
-			this.FrameObjectPrivate(instanceID, !this.m_IsLocked, ping);
+			bool frame = !this.m_IsLocked && (ping || this.ShouldFrameAsset(instanceID));
+			this.FrameObjectPrivate(instanceID, frame, ping);
 			if (ProjectBrowser.s_LastInteractedProjectBrowser == this)
 			{
 				this.m_GrabKeyboardFocusForListArea = true;

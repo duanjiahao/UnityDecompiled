@@ -59,7 +59,7 @@ namespace UnityEngine.UI
 				int result;
 				if (this.canvas.renderMode == RenderMode.ScreenSpaceOverlay)
 				{
-					result = this.canvas.renderOrder;
+					result = this.canvas.rootCanvas.renderOrder;
 				}
 				else
 				{
@@ -136,127 +136,140 @@ namespace UnityEngine.UI
 		{
 			if (!(this.canvas == null))
 			{
-				Vector3 vector = Display.RelativeMouseAt(eventData.position);
-				int targetDisplay = this.canvas.targetDisplay;
-				if (vector.z == (float)targetDisplay)
+				int targetDisplay;
+				if (this.canvas.renderMode == RenderMode.ScreenSpaceOverlay || !this.eventCamera)
 				{
-					if (vector.z == 0f)
+					targetDisplay = this.canvas.targetDisplay;
+				}
+				else
+				{
+					targetDisplay = this.eventCamera.targetDisplay;
+				}
+				Vector3 vector = Display.RelativeMouseAt(eventData.position);
+				if (vector != Vector3.zero)
+				{
+					int num = (int)vector.z;
+					if (num != targetDisplay)
 					{
-						vector = eventData.position;
+						return;
 					}
-					Vector2 vector2;
-					if (this.eventCamera == null)
+				}
+				else
+				{
+					vector = eventData.position;
+				}
+				Vector2 vector2;
+				if (this.eventCamera == null)
+				{
+					float num2 = (float)Screen.width;
+					float num3 = (float)Screen.height;
+					if (targetDisplay > 0 && targetDisplay < Display.displays.Length)
 					{
-						float num = (float)Screen.width;
-						float num2 = (float)Screen.height;
-						if (targetDisplay > 0 && targetDisplay < Display.displays.Length)
-						{
-							num = (float)Display.displays[targetDisplay].systemWidth;
-							num2 = (float)Display.displays[targetDisplay].systemHeight;
-						}
-						vector2 = new Vector2(vector.x / num, vector.y / num2);
+						num2 = (float)Display.displays[targetDisplay].systemWidth;
+						num3 = (float)Display.displays[targetDisplay].systemHeight;
 					}
-					else
+					vector2 = new Vector2(vector.x / num2, vector.y / num3);
+				}
+				else
+				{
+					vector2 = this.eventCamera.ScreenToViewportPoint(vector);
+				}
+				if (vector2.x >= 0f && vector2.x <= 1f && vector2.y >= 0f && vector2.y <= 1f)
+				{
+					float num4 = 3.40282347E+38f;
+					Ray r = default(Ray);
+					if (this.eventCamera != null)
 					{
-						vector2 = this.eventCamera.ScreenToViewportPoint(vector);
+						r = this.eventCamera.ScreenPointToRay(vector);
 					}
-					if (vector2.x >= 0f && vector2.x <= 1f && vector2.y >= 0f && vector2.y <= 1f)
+					if (this.canvas.renderMode != RenderMode.ScreenSpaceOverlay && this.blockingObjects != GraphicRaycaster.BlockingObjects.None)
 					{
-						float num3 = 3.40282347E+38f;
-						Ray r = default(Ray);
+						float num5 = 100f;
 						if (this.eventCamera != null)
 						{
-							r = this.eventCamera.ScreenPointToRay(vector);
+							num5 = this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane;
 						}
-						if (this.canvas.renderMode != RenderMode.ScreenSpaceOverlay && this.blockingObjects != GraphicRaycaster.BlockingObjects.None)
+						if (this.blockingObjects == GraphicRaycaster.BlockingObjects.ThreeD || this.blockingObjects == GraphicRaycaster.BlockingObjects.All)
 						{
-							float num4 = 100f;
-							if (this.eventCamera != null)
+							if (ReflectionMethodsCache.Singleton.raycast3D != null)
 							{
-								num4 = this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane;
-							}
-							if (this.blockingObjects == GraphicRaycaster.BlockingObjects.ThreeD || this.blockingObjects == GraphicRaycaster.BlockingObjects.All)
-							{
-								if (ReflectionMethodsCache.Singleton.raycast3D != null)
+								RaycastHit raycastHit;
+								if (ReflectionMethodsCache.Singleton.raycast3D(r, out raycastHit, num5, this.m_BlockingMask))
 								{
-									RaycastHit raycastHit;
-									if (ReflectionMethodsCache.Singleton.raycast3D(r, out raycastHit, num4, this.m_BlockingMask))
-									{
-										num3 = raycastHit.distance;
-									}
-								}
-							}
-							if (this.blockingObjects == GraphicRaycaster.BlockingObjects.TwoD || this.blockingObjects == GraphicRaycaster.BlockingObjects.All)
-							{
-								if (ReflectionMethodsCache.Singleton.raycast2D != null)
-								{
-									RaycastHit2D raycastHit2D = ReflectionMethodsCache.Singleton.raycast2D(r.origin, r.direction, num4, this.m_BlockingMask);
-									if (raycastHit2D.collider)
-									{
-										num3 = raycastHit2D.fraction * num4;
-									}
+									num4 = raycastHit.distance;
 								}
 							}
 						}
-						this.m_RaycastResults.Clear();
-						GraphicRaycaster.Raycast(this.canvas, this.eventCamera, vector, this.m_RaycastResults);
-						int i = 0;
-						while (i < this.m_RaycastResults.Count)
+						if (this.blockingObjects == GraphicRaycaster.BlockingObjects.TwoD || this.blockingObjects == GraphicRaycaster.BlockingObjects.All)
 						{
-							GameObject gameObject = this.m_RaycastResults[i].gameObject;
-							bool flag = true;
-							if (this.ignoreReversedGraphics)
+							if (ReflectionMethodsCache.Singleton.raycast2D != null)
 							{
-								if (this.eventCamera == null)
+								RaycastHit2D raycastHit2D = ReflectionMethodsCache.Singleton.raycast2D(r.origin, r.direction, num5, this.m_BlockingMask);
+								if (raycastHit2D.collider)
 								{
-									Vector3 rhs = gameObject.transform.rotation * Vector3.forward;
-									flag = (Vector3.Dot(Vector3.forward, rhs) > 0f);
-								}
-								else
-								{
-									Vector3 lhs = this.eventCamera.transform.rotation * Vector3.forward;
-									Vector3 rhs2 = gameObject.transform.rotation * Vector3.forward;
-									flag = (Vector3.Dot(lhs, rhs2) > 0f);
+									num4 = raycastHit2D.fraction * num5;
 								}
 							}
-							if (flag)
-							{
-								float num5;
-								if (this.eventCamera == null || this.canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-								{
-									num5 = 0f;
-								}
-								else
-								{
-									Transform transform = gameObject.transform;
-									Vector3 forward = transform.forward;
-									num5 = Vector3.Dot(forward, transform.position - r.origin) / Vector3.Dot(forward, r.direction);
-									if (num5 < 0f)
-									{
-										goto IL_48A;
-									}
-								}
-								if (num5 < num3)
-								{
-									RaycastResult item = new RaycastResult
-									{
-										gameObject = gameObject,
-										module = this,
-										distance = num5,
-										screenPosition = vector,
-										index = (float)resultAppendList.Count,
-										depth = this.m_RaycastResults[i].depth,
-										sortingLayer = this.canvas.sortingLayerID,
-										sortingOrder = this.canvas.sortingOrder
-									};
-									resultAppendList.Add(item);
-								}
-							}
-							IL_48A:
-							i++;
-							continue;
-							goto IL_48A;
 						}
+					}
+					this.m_RaycastResults.Clear();
+					GraphicRaycaster.Raycast(this.canvas, this.eventCamera, vector, this.m_RaycastResults);
+					int i = 0;
+					while (i < this.m_RaycastResults.Count)
+					{
+						GameObject gameObject = this.m_RaycastResults[i].gameObject;
+						bool flag = true;
+						if (this.ignoreReversedGraphics)
+						{
+							if (this.eventCamera == null)
+							{
+								Vector3 rhs = gameObject.transform.rotation * Vector3.forward;
+								flag = (Vector3.Dot(Vector3.forward, rhs) > 0f);
+							}
+							else
+							{
+								Vector3 lhs = this.eventCamera.transform.rotation * Vector3.forward;
+								Vector3 rhs2 = gameObject.transform.rotation * Vector3.forward;
+								flag = (Vector3.Dot(lhs, rhs2) > 0f);
+							}
+						}
+						if (flag)
+						{
+							float num6;
+							if (this.eventCamera == null || this.canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+							{
+								num6 = 0f;
+							}
+							else
+							{
+								Transform transform = gameObject.transform;
+								Vector3 forward = transform.forward;
+								num6 = Vector3.Dot(forward, transform.position - r.origin) / Vector3.Dot(forward, r.direction);
+								if (num6 < 0f)
+								{
+									goto IL_4C8;
+								}
+							}
+							if (num6 < num4)
+							{
+								RaycastResult item = new RaycastResult
+								{
+									gameObject = gameObject,
+									module = this,
+									distance = num6,
+									screenPosition = vector,
+									index = (float)resultAppendList.Count,
+									depth = this.m_RaycastResults[i].depth,
+									sortingLayer = this.canvas.sortingLayerID,
+									sortingOrder = this.canvas.sortingOrder
+								};
+								resultAppendList.Add(item);
+							}
+						}
+						IL_4C8:
+						i++;
+						continue;
+						goto IL_4C8;
 					}
 				}
 			}
@@ -268,13 +281,16 @@ namespace UnityEngine.UI
 			for (int i = 0; i < graphicsForCanvas.Count; i++)
 			{
 				Graphic graphic = graphicsForCanvas[i];
-				if (graphic.depth != -1 && graphic.raycastTarget)
+				if (!graphic.canvasRenderer.cull)
 				{
-					if (RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, pointerPosition, eventCamera))
+					if (graphic.depth != -1 && graphic.raycastTarget)
 					{
-						if (graphic.Raycast(pointerPosition, eventCamera))
+						if (RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, pointerPosition, eventCamera))
 						{
-							GraphicRaycaster.s_SortedGraphics.Add(graphic);
+							if (graphic.Raycast(pointerPosition, eventCamera))
+							{
+								GraphicRaycaster.s_SortedGraphics.Add(graphic);
+							}
 						}
 					}
 				}

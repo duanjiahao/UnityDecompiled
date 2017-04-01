@@ -1357,7 +1357,7 @@ namespace UnityEditor
 			EditorGUI.showMixedValue = this.m_TextureType.hasMultipleDifferentValues;
 			int num = EditorGUILayout.IntPopup(TextureImporterInspector.s_Styles.textureTypeTitle, this.m_TextureType.intValue, TextureImporterInspector.s_Styles.textureTypeOptions, TextureImporterInspector.s_Styles.textureTypeValues, new GUILayoutOption[0]);
 			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
+			if (EditorGUI.EndChangeCheck() && this.m_TextureType.intValue != num)
 			{
 				this.m_TextureType.intValue = num;
 				TextureImporterSettings serializedPropertySettings = this.GetSerializedPropertySettings();

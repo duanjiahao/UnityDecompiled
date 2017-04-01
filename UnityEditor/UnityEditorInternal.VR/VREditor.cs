@@ -7,6 +7,27 @@ namespace UnityEditorInternal.VR
 {
 	public sealed class VREditor
 	{
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern VRDeviceInfoEditor[] GetAllVRDeviceInfo(BuildTargetGroup targetGroup);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern VRDeviceInfoEditor[] GetAllVRDeviceInfoByTarget(BuildTarget target);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool GetVREnabledOnTargetGroup(BuildTargetGroup targetGroup);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetVREnabledOnTargetGroup(BuildTargetGroup targetGroup, bool value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetVREnabledDevicesOnTargetGroup(BuildTargetGroup targetGroup);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetVREnabledDevicesOnTarget(BuildTarget target);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetVREnabledDevicesOnTargetGroup(BuildTargetGroup targetGroup, string[] devices);
+
 		[Obsolete("Use GetVREnabledOnTargetGroup instead.")]
 		public static bool GetVREnabled(BuildTargetGroup targetGroup)
 		{
@@ -46,26 +67,5 @@ namespace UnityEditorInternal.VR
 			where enabledVRDevices.Contains(d.deviceNameKey)
 			select d).ToArray<VRDeviceInfoEditor>();
 		}
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern VRDeviceInfoEditor[] GetAllVRDeviceInfo(BuildTargetGroup targetGroup);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern VRDeviceInfoEditor[] GetAllVRDeviceInfoByTarget(BuildTarget target);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool GetVREnabledOnTargetGroup(BuildTargetGroup targetGroup);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetVREnabledOnTargetGroup(BuildTargetGroup targetGroup, bool value);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string[] GetVREnabledDevicesOnTargetGroup(BuildTargetGroup targetGroup);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string[] GetVREnabledDevicesOnTarget(BuildTarget target);
-
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetVREnabledDevicesOnTargetGroup(BuildTargetGroup targetGroup, string[] devices);
 	}
 }

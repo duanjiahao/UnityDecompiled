@@ -1,14 +1,17 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
 	public sealed class EditorPrefs
 	{
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetInt(string key, int value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetInt(string key, [DefaultValue("0")] int defaultValue);
 
@@ -19,9 +22,11 @@ namespace UnityEditor
 			return EditorPrefs.GetInt(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetFloat(string key, float value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetFloat(string key, [DefaultValue("0.0F")] float defaultValue);
 
@@ -32,9 +37,11 @@ namespace UnityEditor
 			return EditorPrefs.GetFloat(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetString(string key, string value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetString(string key, [DefaultValue("\"\"")] string defaultValue);
 
@@ -45,9 +52,11 @@ namespace UnityEditor
 			return EditorPrefs.GetString(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetBool(string key, bool value);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetBool(string key, [DefaultValue("false")] bool defaultValue);
 
@@ -58,12 +67,15 @@ namespace UnityEditor
 			return EditorPrefs.GetBool(key, defaultValue);
 		}
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasKey(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DeleteKey(string key);
 
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DeleteAll();
 	}

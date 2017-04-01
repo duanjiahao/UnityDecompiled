@@ -300,7 +300,7 @@ namespace UnityEditor
 			ModelImporterAnimationType result;
 			if (component)
 			{
-				Avatar avatar = (!(component != null)) ? null : component.avatar;
+				Avatar avatar = component.avatar;
 				if (avatar && avatar.isHuman)
 				{
 					result = ModelImporterAnimationType.Human;
@@ -747,8 +747,8 @@ namespace UnityEditor
 			Vector3 position = new Vector3(0f, 0f, 0f);
 			position = this.m_ReferenceInstance.transform.position;
 			position.y = num2;
-			Matrix4x4 matrix;
-			RenderTexture renderTexture = this.RenderPreviewShadowmap(this.m_PreviewUtility.m_Light[0], this.m_BoundingVolumeScale / 2f, bodyPosition, position, out matrix);
+			Matrix4x4 value;
+			RenderTexture renderTexture = this.RenderPreviewShadowmap(this.m_PreviewUtility.m_Light[0], this.m_BoundingVolumeScale / 2f, bodyPosition, position, out value);
 			this.m_PreviewUtility.m_Camera.nearClipPlane = 0.5f * this.m_ZoomFactor;
 			this.m_PreviewUtility.m_Camera.farClipPlane = 100f * this.m_AvatarScale;
 			Quaternion rotation = Quaternion.Euler(-this.m_PreviewDir.y, -this.m_PreviewDir.x, 0f);
@@ -757,12 +757,12 @@ namespace UnityEditor
 			this.m_PreviewUtility.m_Camera.transform.rotation = rotation;
 			position.y = num2;
 			Material floorMaterial = this.m_FloorMaterial;
-			Matrix4x4 matrix2 = Matrix4x4.TRS(position, identity, Vector3.one * 5f * this.m_AvatarScale);
+			Matrix4x4 matrix = Matrix4x4.TRS(position, identity, Vector3.one * 5f * this.m_AvatarScale);
 			floorMaterial.mainTextureOffset = -new Vector2(position.x, position.z) * 5f * 0.08f * (1f / this.m_AvatarScale);
 			floorMaterial.SetTexture("_ShadowTexture", renderTexture);
-			floorMaterial.SetMatrix("_ShadowTextureMatrix", matrix);
+			floorMaterial.SetMatrix("_ShadowTextureMatrix", value);
 			floorMaterial.SetVector("_Alphas", new Vector4(0.5f * num3, 0.3f * num3, 0f, 0f));
-			Graphics.DrawMesh(this.m_FloorPlane, matrix2, floorMaterial, Camera.PreviewCullingLayer, this.m_PreviewUtility.m_Camera, 0);
+			Graphics.DrawMesh(this.m_FloorPlane, matrix, floorMaterial, Camera.PreviewCullingLayer, this.m_PreviewUtility.m_Camera, 0);
 			if (flag)
 			{
 				bool flag2 = this.m_NextFloorHeight > this.m_PrevFloorHeight;
@@ -773,10 +773,10 @@ namespace UnityEditor
 				Material floorMaterialSmall = this.m_FloorMaterialSmall;
 				floorMaterialSmall.mainTextureOffset = -new Vector2(position.x, position.z) * 0.2f * 0.08f;
 				floorMaterialSmall.SetTexture("_ShadowTexture", renderTexture);
-				floorMaterialSmall.SetMatrix("_ShadowTextureMatrix", matrix);
+				floorMaterialSmall.SetMatrix("_ShadowTextureMatrix", value);
 				floorMaterialSmall.SetVector("_Alphas", new Vector4(0.5f * num5, 0f, 0f, 0f));
-				Matrix4x4 matrix3 = Matrix4x4.TRS(position, identity, Vector3.one * 0.2f * this.m_AvatarScale);
-				Graphics.DrawMesh(this.m_FloorPlane, matrix3, floorMaterialSmall, Camera.PreviewCullingLayer, this.m_PreviewUtility.m_Camera, 0);
+				Matrix4x4 matrix2 = Matrix4x4.TRS(position, identity, Vector3.one * 0.2f * this.m_AvatarScale);
+				Graphics.DrawMesh(this.m_FloorPlane, matrix2, floorMaterialSmall, Camera.PreviewCullingLayer, this.m_PreviewUtility.m_Camera, 0);
 			}
 			this.SetPreviewCharacterEnabled(true, this.m_ShowReference);
 			this.m_PreviewUtility.m_Camera.Render();
@@ -1007,7 +1007,7 @@ namespace UnityEditor
 		{
 			this.Init();
 			Rect position = new Rect(rect.xMax - 16f, rect.yMax - 16f, 16f, 16f);
-			if (EditorGUI.ButtonMouseDown(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
+			if (EditorGUI.DropdownButton(position, GUIContent.none, FocusType.Passive, GUIStyle.none))
 			{
 				GenericMenu genericMenu = new GenericMenu();
 				genericMenu.AddItem(new GUIContent("Auto"), false, new GenericMenu.MenuFunction2(this.SetPreviewAvatarOption), AvatarPreview.PreviewPopupOptions.Auto);

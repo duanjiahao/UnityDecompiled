@@ -1,9 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
+	[RequiredByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class MenuCommand
 	{

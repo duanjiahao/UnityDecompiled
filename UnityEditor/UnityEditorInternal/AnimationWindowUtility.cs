@@ -144,9 +144,12 @@ namespace UnityEditorInternal
 				{
 					AnimationKeyTime time2 = AnimationKeyTime.Time(time.time - animationWindowCurve.timeOffset, time.frameRate);
 					object currentValue = CurveBindingUtility.GetCurrentValue(state, animationWindowCurve);
-					AnimationWindowKeyframe keyframe = AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, animationWindowCurve.valueType, time2);
-					state.SaveCurve(animationWindowCurve, undoLabel);
-					state.SelectKey(keyframe);
+					AnimationWindowKeyframe animationWindowKeyframe = AnimationWindowUtility.AddKeyframeToCurve(animationWindowCurve, currentValue, animationWindowCurve.valueType, time2);
+					if (animationWindowKeyframe != null)
+					{
+						state.SaveCurve(animationWindowCurve, undoLabel);
+						state.SelectKey(animationWindowKeyframe);
+					}
 				}
 			}
 		}
@@ -178,16 +181,18 @@ namespace UnityEditorInternal
 			}
 			else
 			{
-				AnimationWindowKeyframe animationWindowKeyframe2 = new AnimationWindowKeyframe();
-				animationWindowKeyframe2.time = time.time;
+				AnimationWindowKeyframe animationWindowKeyframe2 = null;
 				if (curve.isPPtrCurve)
 				{
+					animationWindowKeyframe2 = new AnimationWindowKeyframe();
+					animationWindowKeyframe2.time = time.time;
 					animationWindowKeyframe2.value = value;
 					animationWindowKeyframe2.curve = curve;
 					curve.AddKeyframe(animationWindowKeyframe2, time);
 				}
 				else if (type == typeof(bool) || type == typeof(float))
 				{
+					animationWindowKeyframe2 = new AnimationWindowKeyframe();
 					AnimationCurve animationCurve = curve.ToAnimationCurve();
 					Keyframe key = new Keyframe(time.time, (float)value);
 					if (type == typeof(bool))
@@ -208,6 +213,7 @@ namespace UnityEditorInternal
 							animationWindowKeyframe2.m_TangentMode = animationCurve[num].tangentMode;
 						}
 					}
+					animationWindowKeyframe2.time = time.time;
 					animationWindowKeyframe2.value = value;
 					animationWindowKeyframe2.curve = curve;
 					curve.AddKeyframe(animationWindowKeyframe2, time);
@@ -638,7 +644,7 @@ namespace UnityEditorInternal
 
 		public static bool GameObjectIsAnimatable(GameObject gameObject, AnimationClip animationClip)
 		{
-			return !(gameObject == null) && (gameObject.hideFlags & HideFlags.NotEditable) == HideFlags.None && !EditorUtility.IsPersistent(gameObject) && (!(animationClip != null) || ((animationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None && AssetDatabase.IsOpenForEdit(animationClip)));
+			return !(gameObject == null) && (gameObject.hideFlags & HideFlags.NotEditable) == HideFlags.None && !EditorUtility.IsPersistent(gameObject) && (!(animationClip != null) || ((animationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None && AssetDatabase.IsOpenForEdit(animationClip, StatusQueryOptions.UseCachedIfPossible)));
 		}
 
 		public static bool InitializeGameobjectForAnimation(GameObject animatedObject)
@@ -902,7 +908,7 @@ namespace UnityEditorInternal
 		public static void DrawRangeOfClip(Rect rect, float startOfClipPixel, float endOfClipPixel)
 		{
 			Color color = (!EditorGUIUtility.isProSkin) ? Color.gray.AlphaMultiplied(0.32f) : Color.gray.RGBMultiplied(0.3f).AlphaMultiplied(0.5f);
-			Color color2 = (!EditorGUIUtility.isProSkin) ? Color.white.RGBMultiplied(0.4f) : Color.white.RGBMultiplied(0.4f);
+			Color color2 = Color.white.RGBMultiplied(0.4f);
 			if (startOfClipPixel > rect.xMin)
 			{
 				Rect rect2 = new Rect(rect.xMin, rect.yMin, Mathf.Min(startOfClipPixel - rect.xMin, rect.width), rect.height);

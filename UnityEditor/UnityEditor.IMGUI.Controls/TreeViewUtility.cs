@@ -6,42 +6,32 @@ namespace UnityEditor.IMGUI.Controls
 {
 	internal static class TreeViewUtility
 	{
-		public static void SetParentAndChildrenForItems(IList<TreeViewItem> rows, TreeViewItem root)
+		internal static void SetParentAndChildrenForItems(IList<TreeViewItem> rows, TreeViewItem root)
 		{
 			TreeViewUtility.SetChildParentReferences(rows, root);
 		}
 
-		public static void BuildRowsUsingExpandedState(IList<TreeViewItem> rows, TreeViewItem root, TreeView treeView)
+		internal static void SetDepthValuesForItems(TreeViewItem root)
 		{
-			if (treeView == null)
-			{
-				throw new ArgumentNullException("treeView", "treeView is null");
-			}
 			if (root == null)
 			{
-				throw new ArgumentNullException("root", "root is null");
+				throw new ArgumentNullException("root", "The root is null");
 			}
-			if (rows == null)
+			Stack<TreeViewItem> stack = new Stack<TreeViewItem>();
+			stack.Push(root);
+			while (stack.Count > 0)
 			{
-				throw new ArgumentNullException("rows", "rows is null");
-			}
-			if (root.hasChildren)
-			{
-				foreach (TreeViewItem current in root.children)
+				TreeViewItem treeViewItem = stack.Pop();
+				if (treeViewItem.children != null)
 				{
-					TreeViewUtility.GetExpandedRowsRecursive(treeView, current, rows);
-				}
-			}
-		}
-
-		private static void GetExpandedRowsRecursive(TreeView treeView, TreeViewItem item, IList<TreeViewItem> expandedRows)
-		{
-			expandedRows.Add(item);
-			if (item.hasChildren && treeView.IsExpanded(item.id))
-			{
-				foreach (TreeViewItem current in item.children)
-				{
-					TreeViewUtility.GetExpandedRowsRecursive(treeView, current, expandedRows);
+					foreach (TreeViewItem current in treeViewItem.children)
+					{
+						if (current != null)
+						{
+							current.depth = treeViewItem.depth + 1;
+							stack.Push(current);
+						}
+					}
 				}
 			}
 		}
@@ -178,6 +168,10 @@ namespace UnityEditor.IMGUI.Controls
 					}
 				}
 				root.children = list;
+			}
+			else
+			{
+				root.children = new List<TreeViewItem>();
 			}
 		}
 

@@ -72,7 +72,7 @@ namespace UnityEditorInternal
 				{
 					SpriteEditorHandles.s_CurrentMousePosition += current.delta;
 					Vector2 a = pos;
-					pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_CurrentMousePosition);
+					pos = Handles.inverseMatrix.MultiplyPoint(SpriteEditorHandles.s_CurrentMousePosition);
 					if (!Mathf.Approximately((a - pos).magnitude, 0f))
 					{
 						GUI.changed = true;
@@ -85,7 +85,7 @@ namespace UnityEditorInternal
 				{
 					if (current.keyCode == KeyCode.Escape)
 					{
-						pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
+						pos = Handles.inverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
 						GUIUtility.hotControl = 0;
 						GUI.changed = true;
 						current.Use();
@@ -135,7 +135,7 @@ namespace UnityEditorInternal
 				{
 					SpriteEditorHandles.s_CurrentMousePosition += current.delta;
 					Vector2 a = pos;
-					Vector3 vector2 = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_CurrentMousePosition - SpriteEditorHandles.s_DragScreenOffset);
+					Vector3 vector2 = Handles.inverseMatrix.MultiplyPoint(SpriteEditorHandles.s_CurrentMousePosition - SpriteEditorHandles.s_DragScreenOffset);
 					pos = new Vector2(vector2.x, vector2.y);
 					if (!Mathf.Approximately((a - pos).magnitude, 0f))
 					{
@@ -149,7 +149,7 @@ namespace UnityEditorInternal
 				{
 					if (current.keyCode == KeyCode.Escape)
 					{
-						pos = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
+						pos = Handles.inverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
 						GUIUtility.hotControl = 0;
 						GUI.changed = true;
 						current.Use();
@@ -184,7 +184,7 @@ namespace UnityEditorInternal
 			switch (current.GetTypeForControl(controlID))
 			{
 			case EventType.MouseDown:
-				if (current.button == 0 && pos.Contains(Handles.s_InverseMatrix.MultiplyPoint(Event.current.mousePosition)) && !current.alt)
+				if (current.button == 0 && pos.Contains(Handles.inverseMatrix.MultiplyPoint(Event.current.mousePosition)) && !current.alt)
 				{
 					SpriteEditorHandles.HandleSliderRectMouseDown(controlID, current, pos);
 					current.Use();
@@ -203,7 +203,7 @@ namespace UnityEditorInternal
 				{
 					SpriteEditorHandles.s_CurrentMousePosition += current.delta;
 					Vector2 center = pos.center;
-					pos.center = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_CurrentMousePosition - SpriteEditorHandles.s_DragScreenOffset);
+					pos.center = Handles.inverseMatrix.MultiplyPoint(SpriteEditorHandles.s_CurrentMousePosition - SpriteEditorHandles.s_DragScreenOffset);
 					if (!Mathf.Approximately((center - pos.center).magnitude, 0f))
 					{
 						GUI.changed = true;
@@ -216,7 +216,7 @@ namespace UnityEditorInternal
 				{
 					if (current.keyCode == KeyCode.Escape)
 					{
-						pos.center = Handles.s_InverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
+						pos.center = Handles.inverseMatrix.MultiplyPoint(SpriteEditorHandles.s_DragStartScreenPosition - SpriteEditorHandles.s_DragScreenOffset);
 						GUIUtility.hotControl = 0;
 						GUI.changed = true;
 						current.Use();
@@ -225,8 +225,8 @@ namespace UnityEditorInternal
 				break;
 			case EventType.Repaint:
 			{
-				Vector2 vector = Handles.s_InverseMatrix.MultiplyPoint(new Vector2(pos.xMin, pos.yMin));
-				Vector2 vector2 = Handles.s_InverseMatrix.MultiplyPoint(new Vector2(pos.xMax, pos.yMax));
+				Vector2 vector = Handles.inverseMatrix.MultiplyPoint(new Vector2(pos.xMin, pos.yMin));
+				Vector2 vector2 = Handles.inverseMatrix.MultiplyPoint(new Vector2(pos.xMax, pos.yMax));
 				EditorGUIUtility.AddCursorRect(new Rect(vector.x, vector.y, vector2.x - vector.x, vector2.y - vector.y), MouseCursor.Arrow, controlID);
 				break;
 			}
@@ -245,7 +245,7 @@ namespace UnityEditorInternal
 			EditorGUIUtility.SetWantsMouseJumping(1);
 		}
 
-		internal static Rect RectCreator(float textureWidth, float textureHeight, GUIStyle rectStyle)
+		internal static Rect RectCreator(Rect textureArea, GUIStyle rectStyle)
 		{
 			Event current = Event.current;
 			Vector2 mousePosition = current.mousePosition;
@@ -257,11 +257,10 @@ namespace UnityEditorInternal
 				if (current.button == 0)
 				{
 					GUIUtility.hotControl = num;
-					Rect rect = new Rect(0f, 0f, textureWidth, textureHeight);
-					Vector2 v = Handles.s_InverseMatrix.MultiplyPoint(mousePosition);
-					v.x = Mathf.Min(Mathf.Max(v.x, rect.xMin), rect.xMax);
-					v.y = Mathf.Min(Mathf.Max(v.y, rect.yMin), rect.yMax);
-					SpriteEditorHandles.s_DragStartScreenPosition = Handles.s_Matrix.MultiplyPoint(v);
+					Vector2 v = Handles.inverseMatrix.MultiplyPoint(mousePosition);
+					v.x = Mathf.Min(Mathf.Max(v.x, textureArea.xMin), textureArea.xMax);
+					v.y = Mathf.Min(Mathf.Max(v.y, textureArea.yMin), textureArea.yMax);
+					SpriteEditorHandles.s_DragStartScreenPosition = Handles.matrix.MultiplyPoint(v);
 					SpriteEditorHandles.s_CurrentMousePosition = mousePosition;
 					current.Use();
 				}
@@ -271,7 +270,7 @@ namespace UnityEditorInternal
 				{
 					if (SpriteEditorHandles.ValidRect(SpriteEditorHandles.s_DragStartScreenPosition, SpriteEditorHandles.s_CurrentMousePosition))
 					{
-						result = SpriteEditorHandles.GetCurrentRect(false, textureWidth, textureHeight, SpriteEditorHandles.s_DragStartScreenPosition, SpriteEditorHandles.s_CurrentMousePosition);
+						result = SpriteEditorHandles.GetCurrentRect(false, textureArea, SpriteEditorHandles.s_DragStartScreenPosition, SpriteEditorHandles.s_CurrentMousePosition);
 						GUI.changed = true;
 						current.Use();
 					}
@@ -300,7 +299,7 @@ namespace UnityEditorInternal
 				if (GUIUtility.hotControl == num && SpriteEditorHandles.ValidRect(SpriteEditorHandles.s_DragStartScreenPosition, SpriteEditorHandles.s_CurrentMousePosition))
 				{
 					SpriteEditorUtility.BeginLines(Color.green * 1.5f);
-					SpriteEditorUtility.DrawBox(SpriteEditorHandles.GetCurrentRect(false, textureWidth, textureHeight, SpriteEditorHandles.s_DragStartScreenPosition, SpriteEditorHandles.s_CurrentMousePosition));
+					SpriteEditorUtility.DrawBox(SpriteEditorHandles.GetCurrentRect(false, textureArea, SpriteEditorHandles.s_DragStartScreenPosition, SpriteEditorHandles.s_CurrentMousePosition));
 					SpriteEditorUtility.EndLines();
 				}
 				break;
@@ -308,15 +307,20 @@ namespace UnityEditorInternal
 			return result;
 		}
 
+		internal static Rect RectCreator(float textureWidth, float textureHeight, GUIStyle rectStyle)
+		{
+			return SpriteEditorHandles.RectCreator(new Rect(0f, 0f, textureWidth, textureHeight), rectStyle);
+		}
+
 		private static bool ValidRect(Vector2 startPoint, Vector2 endPoint)
 		{
 			return Mathf.Abs((endPoint - startPoint).x) > 5f && Mathf.Abs((endPoint - startPoint).y) > 5f;
 		}
 
-		private static Rect GetCurrentRect(bool screenSpace, float textureWidth, float textureHeight, Vector2 startPoint, Vector2 endPoint)
+		private static Rect GetCurrentRect(bool screenSpace, Rect clampArea, Vector2 startPoint, Vector2 endPoint)
 		{
-			Rect rect = EditorGUIExt.FromToRect(Handles.s_InverseMatrix.MultiplyPoint(startPoint), Handles.s_InverseMatrix.MultiplyPoint(endPoint));
-			rect = SpriteEditorUtility.ClampedRect(SpriteEditorUtility.RoundToInt(rect), new Rect(0f, 0f, textureWidth, textureHeight), false);
+			Rect rect = EditorGUIExt.FromToRect(Handles.inverseMatrix.MultiplyPoint(startPoint), Handles.inverseMatrix.MultiplyPoint(endPoint));
+			rect = SpriteEditorUtility.ClampedRect(SpriteEditorUtility.RoundToInt(rect), clampArea, false);
 			if (screenSpace)
 			{
 				Vector2 vector = Handles.matrix.MultiplyPoint(new Vector2(rect.xMin, rect.yMin));

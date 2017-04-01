@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Collaboration;
-using UnityEditor.Connect;
 using UnityEngine;
 
 namespace UnityEditor
@@ -94,18 +92,15 @@ namespace UnityEditor
 				}.ToArray();
 				result = true;
 			}
-			if (UnityConnect.instance.userInfo.whitelisted && Collab.instance.collabInfo.whitelisted)
+			num = searchString.IndexOf("v:");
+			if (num >= 0)
 			{
-				num = searchString.IndexOf("v:");
-				if (num >= 0)
+				string item3 = searchString.Substring(num + 2);
+				filter.versionControlStates = new List<string>(filter.versionControlStates)
 				{
-					string item3 = searchString.Substring(num + 2);
-					filter.versionControlStates = new List<string>(filter.versionControlStates)
-					{
-						item3
-					}.ToArray();
-					result = true;
-				}
+					item3
+				}.ToArray();
+				result = true;
 			}
 			num = searchString.IndexOf("b:");
 			if (num == 0)

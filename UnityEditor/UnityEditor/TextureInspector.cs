@@ -205,7 +205,7 @@ namespace UnityEditor
 				{
 					TextureInspector.s_Styles = new TextureInspector.Styles();
 				}
-				Texture t = base.target as Texture;
+				Texture texture = base.target as Texture;
 				bool flag = true;
 				bool flag2 = false;
 				bool flag3 = true;
@@ -218,34 +218,37 @@ namespace UnityEditor
 				UnityEngine.Object[] targets = base.targets;
 				for (int i = 0; i < targets.Length; i++)
 				{
-					Texture texture = (Texture)targets[i];
-					TextureFormat format = (TextureFormat)0;
-					bool flag4 = false;
-					if (texture is Texture2D)
+					Texture texture2 = (Texture)targets[i];
+					if (!(texture2 == null))
 					{
-						format = (texture as Texture2D).format;
-						flag4 = true;
-					}
-					else if (texture is ProceduralTexture)
-					{
-						format = (texture as ProceduralTexture).format;
-						flag4 = true;
-					}
-					if (flag4)
-					{
-						if (!TextureUtil.IsAlphaOnlyTextureFormat(format))
+						TextureFormat format = (TextureFormat)0;
+						bool flag4 = false;
+						if (texture2 is Texture2D)
 						{
-							flag2 = false;
+							format = (texture2 as Texture2D).format;
+							flag4 = true;
 						}
-						if (TextureUtil.HasAlphaTextureFormat(format))
+						else if (texture2 is ProceduralTexture)
 						{
-							if (TextureUtil.GetUsageMode(texture) == TextureUsageMode.Default)
+							format = (texture2 as ProceduralTexture).format;
+							flag4 = true;
+						}
+						if (flag4)
+						{
+							if (!TextureUtil.IsAlphaOnlyTextureFormat(format))
 							{
-								flag3 = true;
+								flag2 = false;
+							}
+							if (TextureUtil.HasAlphaTextureFormat(format))
+							{
+								if (TextureUtil.GetUsageMode(texture2) == TextureUsageMode.Default)
+								{
+									flag3 = true;
+								}
 							}
 						}
+						num = Mathf.Max(num, TextureUtil.GetMipmapCount(texture2));
 					}
-					num = Mathf.Max(num, TextureUtil.GetMipmapCount(texture));
 				}
 				if (flag2)
 				{
@@ -257,7 +260,7 @@ namespace UnityEditor
 					this.m_ShowAlpha = false;
 					flag = false;
 				}
-				if (flag && !TextureInspector.IsNormalMap(t))
+				if (flag && texture != null && !TextureInspector.IsNormalMap(texture))
 				{
 					this.m_ShowAlpha = GUILayout.Toggle(this.m_ShowAlpha, (!this.m_ShowAlpha) ? TextureInspector.s_Styles.RGBIcon : TextureInspector.s_Styles.alphaIcon, TextureInspector.s_Styles.previewButton, new GUILayoutOption[0]);
 				}
@@ -285,89 +288,92 @@ namespace UnityEditor
 				background.Draw(r, false, false, false, false);
 			}
 			Texture texture = base.target as Texture;
-			RenderTexture renderTexture = texture as RenderTexture;
-			if (renderTexture != null)
+			if (!(texture == null))
 			{
-				if (!SystemInfo.SupportsRenderTextureFormat(renderTexture.format))
+				RenderTexture renderTexture = texture as RenderTexture;
+				if (renderTexture != null)
 				{
-					return;
+					if (!SystemInfo.SupportsRenderTextureFormat(renderTexture.format))
+					{
+						return;
+					}
+					renderTexture.Create();
 				}
-				renderTexture.Create();
-			}
-			if (this.IsCubemap())
-			{
-				this.m_CubemapPreview.OnPreviewGUI(texture, r, background);
-			}
-			else
-			{
-				int num = Mathf.Max(texture.width, 1);
-				int num2 = Mathf.Max(texture.height, 1);
-				float mipLevelForRendering = this.GetMipLevelForRendering();
-				float num3 = Mathf.Min(Mathf.Min(r.width / (float)num, r.height / (float)num2), 1f);
-				Rect rect = new Rect(r.x, r.y, (float)num * num3, (float)num2 * num3);
-				PreviewGUI.BeginScrollView(r, this.m_Pos, rect, "PreHorizontalScrollbar", "PreHorizontalScrollbarThumb");
-				float mipMapBias = texture.mipMapBias;
-				TextureUtil.SetMipMapBiasNoDirty(texture, mipLevelForRendering - this.Log2((float)num / rect.width));
-				FilterMode filterMode = texture.filterMode;
-				TextureUtil.SetFilterModeNoDirty(texture, FilterMode.Point);
-				if (this.m_ShowAlpha)
+				if (this.IsCubemap())
 				{
-					EditorGUI.DrawTextureAlpha(rect, texture);
+					this.m_CubemapPreview.OnPreviewGUI(texture, r, background);
 				}
 				else
 				{
-					Texture2D texture2D = texture as Texture2D;
-					if (texture2D != null && texture2D.alphaIsTransparency)
+					int num = Mathf.Max(texture.width, 1);
+					int num2 = Mathf.Max(texture.height, 1);
+					float mipLevelForRendering = this.GetMipLevelForRendering();
+					float num3 = Mathf.Min(Mathf.Min(r.width / (float)num, r.height / (float)num2), 1f);
+					Rect rect = new Rect(r.x, r.y, (float)num * num3, (float)num2 * num3);
+					PreviewGUI.BeginScrollView(r, this.m_Pos, rect, "PreHorizontalScrollbar", "PreHorizontalScrollbarThumb");
+					float mipMapBias = texture.mipMapBias;
+					TextureUtil.SetMipMapBiasNoDirty(texture, mipLevelForRendering - this.Log2((float)num / rect.width));
+					FilterMode filterMode = texture.filterMode;
+					TextureUtil.SetFilterModeNoDirty(texture, FilterMode.Point);
+					if (this.m_ShowAlpha)
 					{
-						EditorGUI.DrawTextureTransparent(rect, texture);
+						EditorGUI.DrawTextureAlpha(rect, texture);
 					}
 					else
 					{
-						EditorGUI.DrawPreviewTexture(rect, texture);
-					}
-				}
-				if (rect.width > 32f && rect.height > 32f)
-				{
-					string assetPath = AssetDatabase.GetAssetPath(texture);
-					TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-					SpriteMetaData[] array = (!(textureImporter != null)) ? null : textureImporter.spritesheet;
-					if (array != null && textureImporter.spriteImportMode == SpriteImportMode.Multiple)
-					{
-						Rect rect2 = default(Rect);
-						Rect rect3 = default(Rect);
-						GUI.CalculateScaledTextureRects(rect, ScaleMode.StretchToFill, (float)texture.width / (float)texture.height, ref rect2, ref rect3);
-						int width = texture.width;
-						int height = texture.height;
-						textureImporter.GetWidthAndHeight(ref width, ref height);
-						float num4 = (float)texture.width / (float)width;
-						HandleUtility.ApplyWireMaterial();
-						GL.PushMatrix();
-						GL.MultMatrix(Handles.matrix);
-						GL.Begin(1);
-						GL.Color(new Color(1f, 1f, 1f, 0.5f));
-						SpriteMetaData[] array2 = array;
-						for (int i = 0; i < array2.Length; i++)
+						Texture2D texture2D = texture as Texture2D;
+						if (texture2D != null && texture2D.alphaIsTransparency)
 						{
-							SpriteMetaData spriteMetaData = array2[i];
-							Rect rect4 = spriteMetaData.rect;
-							this.DrawRect(new Rect
-							{
-								xMin = rect2.xMin + rect2.width * (rect4.xMin / (float)texture.width * num4),
-								xMax = rect2.xMin + rect2.width * (rect4.xMax / (float)texture.width * num4),
-								yMin = rect2.yMin + rect2.height * (1f - rect4.yMin / (float)texture.height * num4),
-								yMax = rect2.yMin + rect2.height * (1f - rect4.yMax / (float)texture.height * num4)
-							});
+							EditorGUI.DrawTextureTransparent(rect, texture);
 						}
-						GL.End();
-						GL.PopMatrix();
+						else
+						{
+							EditorGUI.DrawPreviewTexture(rect, texture);
+						}
 					}
-				}
-				TextureUtil.SetMipMapBiasNoDirty(texture, mipMapBias);
-				TextureUtil.SetFilterModeNoDirty(texture, filterMode);
-				this.m_Pos = PreviewGUI.EndScrollView();
-				if (mipLevelForRendering != 0f)
-				{
-					EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + mipLevelForRendering);
+					if (rect.width > 32f && rect.height > 32f)
+					{
+						string assetPath = AssetDatabase.GetAssetPath(texture);
+						TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+						SpriteMetaData[] array = (!(textureImporter != null)) ? null : textureImporter.spritesheet;
+						if (array != null && textureImporter.spriteImportMode == SpriteImportMode.Multiple)
+						{
+							Rect rect2 = default(Rect);
+							Rect rect3 = default(Rect);
+							GUI.CalculateScaledTextureRects(rect, ScaleMode.StretchToFill, (float)texture.width / (float)texture.height, ref rect2, ref rect3);
+							int width = texture.width;
+							int height = texture.height;
+							textureImporter.GetWidthAndHeight(ref width, ref height);
+							float num4 = (float)texture.width / (float)width;
+							HandleUtility.ApplyWireMaterial();
+							GL.PushMatrix();
+							GL.MultMatrix(Handles.matrix);
+							GL.Begin(1);
+							GL.Color(new Color(1f, 1f, 1f, 0.5f));
+							SpriteMetaData[] array2 = array;
+							for (int i = 0; i < array2.Length; i++)
+							{
+								SpriteMetaData spriteMetaData = array2[i];
+								Rect rect4 = spriteMetaData.rect;
+								this.DrawRect(new Rect
+								{
+									xMin = rect2.xMin + rect2.width * (rect4.xMin / (float)texture.width * num4),
+									xMax = rect2.xMin + rect2.width * (rect4.xMax / (float)texture.width * num4),
+									yMin = rect2.yMin + rect2.height * (1f - rect4.yMin / (float)texture.height * num4),
+									yMax = rect2.yMin + rect2.height * (1f - rect4.yMax / (float)texture.height * num4)
+								});
+							}
+							GL.End();
+							GL.PopMatrix();
+						}
+					}
+					TextureUtil.SetMipMapBiasNoDirty(texture, mipMapBias);
+					TextureUtil.SetFilterModeNoDirty(texture, filterMode);
+					this.m_Pos = PreviewGUI.EndScrollView();
+					if (mipLevelForRendering != 0f)
+					{
+						EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Mip " + mipLevelForRendering);
+					}
 				}
 			}
 		}
@@ -401,7 +407,7 @@ namespace UnityEditor
 				else
 				{
 					TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-					if (textureImporter != null && textureImporter.spriteImportMode == SpriteImportMode.Polygon)
+					if (textureImporter != null && textureImporter.textureType == TextureImporterType.Sprite && textureImporter.spriteImportMode == SpriteImportMode.Polygon)
 					{
 						Sprite sprite = subAssets[0] as Sprite;
 						if (sprite)
@@ -532,7 +538,7 @@ namespace UnityEditor
 			}
 			if (flag5)
 			{
-				text = text + "\n" + EditorUtility.FormatBytes(TextureUtil.GetStorageMemorySize(texture));
+				text = text + "\n" + EditorUtility.FormatBytes(TextureUtil.GetStorageMemorySizeLong(texture));
 			}
 			if (TextureUtil.GetUsageMode(texture) == TextureUsageMode.AlwaysPadded)
 			{

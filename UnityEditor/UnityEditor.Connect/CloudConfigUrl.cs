@@ -9,6 +9,7 @@ namespace UnityEditor.Connect
 		CloudWebauth,
 		CloudLogin,
 		CloudIdentity = 6,
-		CloudPortal
+		CloudPortal,
+		CloudPerfEvents
 	}
 }

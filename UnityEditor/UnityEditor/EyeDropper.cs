@@ -17,7 +17,7 @@ namespace UnityEditor
 
 		private const int kPixelSize = 10;
 
-		private const int kDummyWindowSize = 10000;
+		private const int kDummyWindowSize = 8192;
 
 		internal static Color s_LastPickedColor;
 
@@ -66,8 +66,8 @@ namespace UnityEditor
 			containerWindow.Show(ShowMode.PopupMenu, true, false);
 			base.AddToAuxWindowList();
 			containerWindow.SetInvisible();
-			base.SetMinMaxSizes(new Vector2(0f, 0f), new Vector2(10000f, 10000f));
-			containerWindow.position = new Rect(-5000f, -5000f, 10000f, 10000f);
+			base.SetMinMaxSizes(new Vector2(0f, 0f), new Vector2(8192f, 8192f));
+			containerWindow.position = new Rect(-4096f, -4096f, 8192f, 8192f);
 			base.wantsMouseMove = true;
 			base.StealMouseCapture();
 		}

@@ -5,6 +5,13 @@ namespace UnityEditor
 {
 	internal class SceneViewMotion
 	{
+		private enum MotionState
+		{
+			kInactive,
+			kActive,
+			kDragging
+		}
+
 		private static Vector3 s_Motion;
 
 		private static float s_FlySpeed = 0f;
@@ -17,7 +24,7 @@ namespace UnityEditor
 
 		private static float s_TotalMotion = 0f;
 
-		private static bool s_Dragged = false;
+		private static SceneViewMotion.MotionState s_CurrentState;
 
 		private static int s_ViewToolID = GUIUtility.GetPermanentControlID();
 
@@ -183,6 +190,12 @@ namespace UnityEditor
 				}
 				break;
 			}
+			case EventType.Used:
+				if (GUIUtility.hotControl != num && SceneViewMotion.s_CurrentState != SceneViewMotion.MotionState.kInactive)
+				{
+					SceneViewMotion.ResetDragState();
+				}
+				break;
 			}
 		}
 
@@ -213,7 +226,7 @@ namespace UnityEditor
 
 		private static void HandleMouseDown(SceneView view, int id, int button)
 		{
-			SceneViewMotion.s_Dragged = false;
+			SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kInactive;
 			if (Tools.viewToolActive)
 			{
 				ViewTool viewTool = Tools.viewTool;
@@ -235,6 +248,7 @@ namespace UnityEditor
 					}
 					EditorGUIUtility.SetWantsMouseJumping(1);
 					current.Use();
+					SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kActive;
 					GUIUtility.ExitGUI();
 				}
 			}
@@ -242,7 +256,7 @@ namespace UnityEditor
 
 		private static void ResetDragState()
 		{
-			GUIUtility.hotControl = 0;
+			SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kInactive;
 			Tools.s_LockedViewTool = ViewTool.None;
 			Tools.s_ButtonDown = -1;
 			SceneViewMotion.s_Motion = Vector3.zero;
@@ -257,8 +271,8 @@ namespace UnityEditor
 		{
 			if (GUIUtility.hotControl == id)
 			{
-				SceneViewMotion.ResetDragState();
-				if (button == 2 && !SceneViewMotion.s_Dragged)
+				GUIUtility.hotControl = 0;
+				if (button == 2 && SceneViewMotion.s_CurrentState != SceneViewMotion.MotionState.kDragging)
 				{
 					RaycastHit raycastHit;
 					if (SceneViewMotion.RaycastWorld(Event.current.mousePosition, out raycastHit))
@@ -272,6 +286,7 @@ namespace UnityEditor
 						view.LookAt(raycastHit.point, view.rotation, newSize);
 					}
 				}
+				SceneViewMotion.ResetDragState();
 				Event.current.Use();
 			}
 		}
@@ -352,7 +367,7 @@ namespace UnityEditor
 
 		private static void HandleMouseDrag(SceneView view, int id)
 		{
-			SceneViewMotion.s_Dragged = true;
+			SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kDragging;
 			if (GUIUtility.hotControl == id)
 			{
 				Event current = Event.current;
@@ -434,6 +449,7 @@ namespace UnityEditor
 		{
 			if (Event.current.keyCode == KeyCode.Escape && GUIUtility.hotControl == SceneViewMotion.s_ViewToolID)
 			{
+				GUIUtility.hotControl = 0;
 				SceneViewMotion.ResetDragState();
 			}
 			if (Tools.s_LockedViewTool == ViewTool.FPS)
