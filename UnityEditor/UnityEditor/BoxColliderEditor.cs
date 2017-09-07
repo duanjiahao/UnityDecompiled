@@ -7,13 +7,11 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(BoxCollider))]
 	internal class BoxColliderEditor : PrimitiveCollider3DEditor
 	{
-		private static readonly int s_HandleControlIDHint = typeof(BoxColliderEditor).Name.GetHashCode();
-
 		private SerializedProperty m_Center;
 
 		private SerializedProperty m_Size;
 
-		private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(BoxColliderEditor.s_HandleControlIDHint);
+		private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
 
 		protected override PrimitiveBoundsHandle boundsHandle
 		{

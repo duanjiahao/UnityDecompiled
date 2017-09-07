@@ -19,7 +19,7 @@ namespace UnityEditor.Sprites
 
 			public static readonly GUIContent pageContentLabel = EditorGUIUtility.TextContent("Page {0}");
 
-			public static readonly GUIContent packingDisabledLabel = EditorGUIUtility.TextContent("Sprite packing is disabled. Enable it in Edit > Project Settings > Editor.");
+			public static readonly GUIContent packingDisabledLabel = EditorGUIUtility.TextContent("Legacy sprite packing is disabled. Enable it in Edit > Project Settings > Editor.");
 
 			public static readonly GUIContent openProjectSettingButton = EditorGUIUtility.TextContent("Open Project Editor Settings");
 		}
@@ -133,7 +133,7 @@ namespace UnityEditor.Sprites
 		private bool ValidateIsPackingEnabled()
 		{
 			bool result;
-			if (EditorSettings.spritePackerMode == SpritePackerMode.Disabled)
+			if (EditorSettings.spritePackerMode != SpritePackerMode.BuildTimeOnly && EditorSettings.spritePackerMode != SpritePackerMode.AlwaysOn)
 			{
 				EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
 				GUILayout.Label(PackerWindow.PackerWindowStyle.packingDisabledLabel, new GUILayoutOption[0]);

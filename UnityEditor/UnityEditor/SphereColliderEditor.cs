@@ -7,13 +7,11 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(SphereCollider))]
 	internal class SphereColliderEditor : PrimitiveCollider3DEditor
 	{
-		private static readonly int s_HandleControlIDHint = typeof(SphereColliderEditor).Name.GetHashCode();
-
 		private SerializedProperty m_Center;
 
 		private SerializedProperty m_Radius;
 
-		private readonly SphereBoundsHandle m_BoundsHandle = new SphereBoundsHandle(SphereColliderEditor.s_HandleControlIDHint);
+		private readonly SphereBoundsHandle m_BoundsHandle = new SphereBoundsHandle();
 
 		protected override PrimitiveBoundsHandle boundsHandle
 		{

@@ -1,12 +1,13 @@
 using System;
 using System.IO;
 using System.Linq;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(TrueTypeFontImporter))]
-	internal class TrueTypeFontImporterInspector : AssetImporterInspector
+	internal class TrueTypeFontImporterInspector : AssetImporterEditor
 	{
 		private SerializedProperty m_FontSize;
 
@@ -84,7 +85,7 @@ namespace UnityEditor
 			2
 		};
 
-		private void OnEnable()
+		public override void OnEnable()
 		{
 			this.m_FontSize = base.serializedObject.FindProperty("m_FontSize");
 			this.m_TextureCase = base.serializedObject.FindProperty("m_ForceTextureCase");

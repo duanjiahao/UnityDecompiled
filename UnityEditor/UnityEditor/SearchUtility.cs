@@ -102,13 +102,23 @@ namespace UnityEditor
 				}.ToArray();
 				result = true;
 			}
+			num = searchString.IndexOf("s:");
+			if (num >= 0)
+			{
+				string item4 = searchString.Substring(num + 2);
+				filter.softLockControlStates = new List<string>(filter.softLockControlStates)
+				{
+					item4
+				}.ToArray();
+				result = true;
+			}
 			num = searchString.IndexOf("b:");
 			if (num == 0)
 			{
-				string item4 = searchString.Substring(num + 2);
+				string item5 = searchString.Substring(num + 2);
 				filter.assetBundleNames = new List<string>(filter.assetBundleNames)
 				{
-					item4
+					item5
 				}.ToArray();
 				result = true;
 			}

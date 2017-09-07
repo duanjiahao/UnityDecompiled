@@ -25,6 +25,10 @@ namespace UnityEditor
 			{
 				Vector3 positionDelta = a - TransformManipulator.mouseDownHandlePosition;
 				ManipulationToolUtility.SetMinDragDifferenceForPos(handlePosition);
+				if (Tools.vertexDragging)
+				{
+					ManipulationToolUtility.DisableMinDragDifference();
+				}
 				TransformManipulator.SetPositionDelta(positionDelta);
 			}
 			TransformManipulator.EndManipulationHandling();

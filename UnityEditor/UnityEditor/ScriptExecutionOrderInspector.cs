@@ -9,29 +9,22 @@ namespace UnityEditor
 	[CustomEditor(typeof(MonoManager))]
 	internal class ScriptExecutionOrderInspector : Editor
 	{
-		public class SortMonoScriptExecutionOrder : IComparer<MonoScript>
+		public class SortMonoScriptNameOrder : IComparer<MonoScript>
 		{
-			private ScriptExecutionOrderInspector inspector;
-
-			public SortMonoScriptExecutionOrder(ScriptExecutionOrderInspector inspector)
-			{
-				this.inspector = inspector;
-			}
-
-			public int Compare(MonoScript x, MonoScript y)
+			public virtual int Compare(MonoScript x, MonoScript y)
 			{
 				int result;
 				if (x != null && y != null)
 				{
-					int executionOrder = this.inspector.GetExecutionOrder(x);
-					int executionOrder2 = this.inspector.GetExecutionOrder(y);
-					if (executionOrder == executionOrder2)
+					Type @class = x.GetClass();
+					Type class2 = y.GetClass();
+					if (@class != null && class2 != null)
 					{
-						result = x.name.CompareTo(y.name);
+						result = @class.FullName.CompareTo(class2.FullName);
 					}
 					else
 					{
-						result = executionOrder.CompareTo(executionOrder2);
+						result = x.name.CompareTo(y.name);
 					}
 				}
 				else
@@ -42,14 +35,30 @@ namespace UnityEditor
 			}
 		}
 
-		public class SortMonoScriptNameOrder : IComparer<MonoScript>
+		public class SortMonoScriptExecutionOrder : ScriptExecutionOrderInspector.SortMonoScriptNameOrder
 		{
-			public int Compare(MonoScript x, MonoScript y)
+			private ScriptExecutionOrderInspector inspector;
+
+			public SortMonoScriptExecutionOrder(ScriptExecutionOrderInspector inspector)
+			{
+				this.inspector = inspector;
+			}
+
+			public override int Compare(MonoScript x, MonoScript y)
 			{
 				int result;
 				if (x != null && y != null)
 				{
-					result = x.name.CompareTo(y.name);
+					int executionOrder = this.inspector.GetExecutionOrder(x);
+					int executionOrder2 = this.inspector.GetExecutionOrder(y);
+					if (executionOrder == executionOrder2)
+					{
+						result = base.Compare(x, y);
+					}
+					else
+					{
+						result = executionOrder.CompareTo(executionOrder2);
+					}
 				}
 				else
 				{
@@ -337,9 +346,29 @@ namespace UnityEditor
 			{
 				ScriptExecutionOrderInspector.m_Instances.Add(this);
 			}
+			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(this.OnPlayModeChanged));
 		}
 
-		private static UnityEngine.Object MonoScriptValidatorCallback(UnityEngine.Object[] references, Type objType, SerializedProperty property)
+		public void OnDisable()
+		{
+			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(this.OnPlayModeChanged));
+		}
+
+		private void OnPlayModeChanged()
+		{
+			if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
+			{
+				if (this.m_DirtyOrders)
+				{
+					if (EditorUtility.DisplayDialog("Unapplied execution order", "Unapplied script execution order", "Apply", "Revert"))
+					{
+						this.Apply();
+					}
+				}
+			}
+		}
+
+		private static UnityEngine.Object MonoScriptValidatorCallback(UnityEngine.Object[] references, Type objType, SerializedProperty property, EditorGUI.ObjectFieldValidatorOptions options)
 		{
 			UnityEngine.Object result;
 			for (int i = 0; i < references.Length; i++)
@@ -476,16 +505,19 @@ namespace UnityEditor
 
 		private void OnDestroy()
 		{
-			if (this.m_DirtyOrders)
-			{
-				if (EditorUtility.DisplayDialog("Unapplied execution order", "Unapplied script execution order", "Apply", "Revert"))
-				{
-					this.Apply();
-				}
-			}
 			if (ScriptExecutionOrderInspector.m_Instances.Contains(this))
 			{
 				ScriptExecutionOrderInspector.m_Instances.Remove(this);
+			}
+			if (!Application.isPlaying)
+			{
+				if (this.m_DirtyOrders)
+				{
+					if (EditorUtility.DisplayDialog("Unapplied execution order", "Unapplied script execution order", "Apply", "Revert"))
+					{
+						this.Apply();
+					}
+				}
 			}
 		}
 

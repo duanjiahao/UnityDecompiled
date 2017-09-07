@@ -555,7 +555,7 @@ namespace UnityEditor
 		}
 
 		[RequiredByNativeCode]
-		private static void BeginHandles()
+		internal static void BeginHandles()
 		{
 			Handles.Init();
 			EventType type = Event.current.type;
@@ -579,7 +579,7 @@ namespace UnityEditor
 		}
 
 		[RequiredByNativeCode]
-		private static void EndHandles()
+		internal static void EndHandles()
 		{
 			EditorGUI.s_DelayedTextEditor.EndGUI(Event.current.type);
 		}

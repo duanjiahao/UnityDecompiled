@@ -460,16 +460,9 @@ namespace UnityEngine
 		{
 			EventType type = Event.current.type;
 			Rect last;
-			if (type != EventType.Layout)
+			if (type != EventType.Layout && type != EventType.Used)
 			{
-				if (type != EventType.Used)
-				{
-					last = GUILayoutUtility.current.topLevel.GetLast();
-				}
-				else
-				{
-					last = GUILayoutUtility.kDummyRect;
-				}
+				last = GUILayoutUtility.current.topLevel.GetLast();
 			}
 			else
 			{

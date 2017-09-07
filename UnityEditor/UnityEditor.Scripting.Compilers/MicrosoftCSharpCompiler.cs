@@ -123,6 +123,8 @@ namespace UnityEditor.Scripting.Compilers
 					list.Add(Path.Combine(path, "System.ObjectModel.dll"));
 					list.Add(Path.Combine(path, "System.Runtime.dll"));
 					list.Add(Path.Combine(path, "System.Runtime.InteropServices.WindowsRuntime.dll"));
+					list.Add(Path.Combine(monoAssemblyDirectory, "System.Numerics.dll"));
+					list.Add(Path.Combine(monoAssemblyDirectory, "System.Numerics.Vectors.dll"));
 				}
 				result = list.ToArray();
 			}
@@ -132,10 +134,10 @@ namespace UnityEditor.Scripting.Compilers
 				{
 					throw new InvalidOperationException(string.Format("MicrosoftCSharpCompiler cannot build for .NET Scripting backend for BuildTarget.{0}.", this.BuildTarget));
 				}
-				WSASDK wsaSDK = EditorUserBuildSettings.wsaSDK;
-				if (wsaSDK != WSASDK.UWP)
+				WSASDK wSASDK = WSASDK.UWP;
+				if (wSASDK != WSASDK.UWP)
 				{
-					result = Directory.GetFiles(MicrosoftCSharpCompiler.GetNETCoreFrameworkReferencesDirectory(wsaSDK), "*.dll");
+					result = Directory.GetFiles(MicrosoftCSharpCompiler.GetNETCoreFrameworkReferencesDirectory(wSASDK), "*.dll");
 				}
 				else
 				{

@@ -113,6 +113,13 @@ namespace UnityEngine
 			get;
 		}
 
+		public extern bool ambisonic
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public extern AudioDataLoadState loadState
 		{
 			[GeneratedByOldBindingsGenerator]

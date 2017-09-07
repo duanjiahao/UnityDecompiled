@@ -17,7 +17,12 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
+		[Obsolete("Use parameterless constructor instead.")]
 		public BoxBoundsHandle(int controlIDHint) : base(controlIDHint)
+		{
+		}
+
+		public BoxBoundsHandle()
 		{
 		}
 

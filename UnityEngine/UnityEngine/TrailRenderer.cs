@@ -154,6 +154,16 @@ namespace UnityEngine
 			set;
 		}
 
+		public extern bool generateLightingData
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern int positionCount
 		{
 			[GeneratedByOldBindingsGenerator]

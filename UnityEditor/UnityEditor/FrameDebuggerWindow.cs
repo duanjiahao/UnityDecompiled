@@ -73,6 +73,8 @@ namespace UnityEditor
 
 			public static readonly GUIContent copyToClipboardTooltip = EditorGUIUtility.TextContent("|Click to copy shader and keywords text to clipboard.");
 
+			public static readonly GUIContent arrayValuePopupButton = new GUIContent("...");
+
 			public Styles()
 			{
 				this.rowTextRight.alignment = TextAnchor.MiddleRight;
@@ -86,6 +88,64 @@ namespace UnityEditor
 					this.headerContent[i] = EditorGUIUtility.TextContent(FrameDebuggerWindow.Styles.s_ColumnNames[i]);
 				}
 				this.batchBreakCauses = FrameDebuggerUtility.GetBatchBreakCauseStrings();
+			}
+		}
+
+		private class ArrayValuePopup : PopupWindowContent
+		{
+			public delegate string GetValueStringDelegate(int index, bool highPrecision);
+
+			private FrameDebuggerWindow.ArrayValuePopup.GetValueStringDelegate GetValueString;
+
+			private Vector2 m_ScrollPos = Vector2.zero;
+
+			private int m_StartIndex;
+
+			private int m_NumValues;
+
+			private float m_WindowWidth;
+
+			private static readonly GUIStyle m_Style = EditorStyles.miniLabel;
+
+			public ArrayValuePopup(int startIndex, int numValues, float windowWidth, FrameDebuggerWindow.ArrayValuePopup.GetValueStringDelegate getValueString)
+			{
+				this.m_StartIndex = startIndex;
+				this.m_NumValues = numValues;
+				this.m_WindowWidth = windowWidth;
+				this.GetValueString = getValueString;
+			}
+
+			public override Vector2 GetWindowSize()
+			{
+				float num = FrameDebuggerWindow.ArrayValuePopup.m_Style.lineHeight + (float)FrameDebuggerWindow.ArrayValuePopup.m_Style.padding.vertical + (float)FrameDebuggerWindow.ArrayValuePopup.m_Style.margin.top;
+				return new Vector2(this.m_WindowWidth, Math.Min(num * (float)this.m_NumValues, 250f));
+			}
+
+			public override void OnGUI(Rect rect)
+			{
+				this.m_ScrollPos = EditorGUILayout.BeginScrollView(this.m_ScrollPos, new GUILayoutOption[0]);
+				for (int i = 0; i < this.m_NumValues; i++)
+				{
+					string text = string.Format("[{0}]\t{1}", i, this.GetValueString(this.m_StartIndex + i, false));
+					GUILayout.Label(text, FrameDebuggerWindow.ArrayValuePopup.m_Style, new GUILayoutOption[0]);
+				}
+				EditorGUILayout.EndScrollView();
+				Event current = Event.current;
+				if (current.type == EventType.ContextClick && rect.Contains(current.mousePosition))
+				{
+					current.Use();
+					string allText = string.Empty;
+					for (int j = 0; j < this.m_NumValues; j++)
+					{
+						allText += string.Format("[{0}]\t{1}\n", j, this.GetValueString(this.m_StartIndex + j, true));
+					}
+					GenericMenu genericMenu = new GenericMenu();
+					genericMenu.AddItem(new GUIContent("Copy value"), false, delegate
+					{
+						EditorGUIUtility.systemCopyBuffer = allText;
+					});
+					genericMenu.ShowAsContext();
+				}
 			}
 		}
 
@@ -133,15 +193,17 @@ namespace UnityEditor
 
 		private const string kFloatDetailedFormat = "g7";
 
-		private const float kPropertyFieldHeight = 16f;
+		private const float kShaderPropertiesIndention = 15f;
 
-		private const float kPropertyFieldIndent = 15f;
+		private const float kNameFieldWidth = 200f;
 
-		private const float kPropertyNameWidth = 0.4f;
+		private const float kValueFieldWidth = 200f;
 
-		private const float kPropertyFlagsWidth = 0.1f;
+		private const float kArrayValuePopupBtnWidth = 25f;
 
-		private const float kPropertyValueWidth = 0.5f;
+		private const int kShaderTypeBits = 6;
+
+		private const int kArraySizeBitMask = 1023;
 
 		private const int kNeedToRepaintFrames = 4;
 
@@ -413,7 +475,7 @@ namespace UnityEditor
 			if (this.m_PreviewUtility == null)
 			{
 				this.m_PreviewUtility = new PreviewRenderUtility();
-				this.m_PreviewUtility.m_CameraFieldOfView = 30f;
+				this.m_PreviewUtility.camera.fieldOfView = 30f;
 			}
 			if (this.m_Material == null)
 			{
@@ -697,7 +759,7 @@ namespace UnityEditor
 			}
 		}
 
-		private void DrawShaderPropertyFlags(Rect flagsRect, int flags)
+		private void DrawShaderPropertyFlags(int flags)
 		{
 			string text = string.Empty;
 			if ((flags & 2) != 0)
@@ -720,7 +782,10 @@ namespace UnityEditor
 			{
 				text += 'd';
 			}
-			GUI.Label(flagsRect, text, EditorStyles.miniLabel);
+			GUILayout.Label(text, EditorStyles.miniLabel, new GUILayoutOption[]
+			{
+				GUILayout.MinWidth(20f)
+			});
 		}
 
 		private void ShaderPropertyCopyValueMenu(Rect valueRect, object value)
@@ -755,43 +820,172 @@ namespace UnityEditor
 			}
 		}
 
-		private void OnGUIShaderPropFloat(Rect nameRect, Rect flagsRect, Rect valueRect, ShaderFloatInfo t)
+		private void OnGUIShaderPropFloats(ShaderFloatInfo[] floats, int startIndex, int numValues)
 		{
-			GUI.Label(nameRect, t.name, EditorStyles.miniLabel);
-			this.DrawShaderPropertyFlags(flagsRect, t.flags);
-			GUI.Label(valueRect, t.value.ToString("g2"), EditorStyles.miniLabel);
-			this.ShaderPropertyCopyValueMenu(valueRect, t.value);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(15f);
+			ShaderFloatInfo shaderFloatInfo = floats[startIndex];
+			if (numValues == 1)
+			{
+				GUILayout.Label(shaderFloatInfo.name, EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.DrawShaderPropertyFlags(shaderFloatInfo.flags);
+				GUILayout.Label(shaderFloatInfo.value.ToString("g2"), EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.ShaderPropertyCopyValueMenu(GUILayoutUtility.GetLastRect(), shaderFloatInfo.value);
+			}
+			else
+			{
+				string text = string.Format("{0} [{1}]", shaderFloatInfo.name, numValues);
+				GUILayout.Label(text, EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.DrawShaderPropertyFlags(shaderFloatInfo.flags);
+				Rect rect = GUILayoutUtility.GetRect(FrameDebuggerWindow.Styles.arrayValuePopupButton, GUI.skin.button, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				rect.width = 25f;
+				if (GUI.Button(rect, FrameDebuggerWindow.Styles.arrayValuePopupButton))
+				{
+					FrameDebuggerWindow.ArrayValuePopup.GetValueStringDelegate getValueString = (int index, bool highPrecision) => floats[index].value.ToString((!highPrecision) ? "g2" : "g7");
+					PopupWindowWithoutFocus.Show(rect, new FrameDebuggerWindow.ArrayValuePopup(startIndex, numValues, 100f, getValueString), new PopupLocationHelper.PopupLocation[]
+					{
+						PopupLocationHelper.PopupLocation.Left,
+						PopupLocationHelper.PopupLocation.Below,
+						PopupLocationHelper.PopupLocation.Right
+					});
+				}
+			}
+			GUILayout.EndHorizontal();
 		}
 
-		private void OnGUIShaderPropVector4(Rect nameRect, Rect flagsRect, Rect valueRect, ShaderVectorInfo t)
+		private void OnGUIShaderPropVectors(ShaderVectorInfo[] vectors, int startIndex, int numValues)
 		{
-			GUI.Label(nameRect, t.name, EditorStyles.miniLabel);
-			this.DrawShaderPropertyFlags(flagsRect, t.flags);
-			GUI.Label(valueRect, t.value.ToString("g2"), EditorStyles.miniLabel);
-			this.ShaderPropertyCopyValueMenu(valueRect, t.value);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(15f);
+			ShaderVectorInfo shaderVectorInfo = vectors[startIndex];
+			if (numValues == 1)
+			{
+				GUILayout.Label(shaderVectorInfo.name, EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.DrawShaderPropertyFlags(shaderVectorInfo.flags);
+				GUILayout.Label(shaderVectorInfo.value.ToString("g2"), EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.ShaderPropertyCopyValueMenu(GUILayoutUtility.GetLastRect(), shaderVectorInfo.value);
+			}
+			else
+			{
+				string text = string.Format("{0} [{1}]", shaderVectorInfo.name, numValues);
+				GUILayout.Label(text, EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.DrawShaderPropertyFlags(shaderVectorInfo.flags);
+				Rect rect = GUILayoutUtility.GetRect(FrameDebuggerWindow.Styles.arrayValuePopupButton, GUI.skin.button, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				rect.width = 25f;
+				if (GUI.Button(rect, FrameDebuggerWindow.Styles.arrayValuePopupButton))
+				{
+					FrameDebuggerWindow.ArrayValuePopup.GetValueStringDelegate getValueString = (int index, bool highPrecision) => vectors[index].value.ToString((!highPrecision) ? "g2" : "g7");
+					PopupWindowWithoutFocus.Show(rect, new FrameDebuggerWindow.ArrayValuePopup(startIndex, numValues, 200f, getValueString), new PopupLocationHelper.PopupLocation[]
+					{
+						PopupLocationHelper.PopupLocation.Left,
+						PopupLocationHelper.PopupLocation.Below,
+						PopupLocationHelper.PopupLocation.Right
+					});
+				}
+			}
+			GUILayout.EndHorizontal();
 		}
 
-		private void OnGUIShaderPropMatrix(Rect nameRect, Rect flagsRect, Rect valueRect, ShaderMatrixInfo t)
+		private void OnGUIShaderPropMatrices(ShaderMatrixInfo[] matrices, int startIndex, int numValues)
 		{
-			GUI.Label(nameRect, t.name, EditorStyles.miniLabel);
-			this.DrawShaderPropertyFlags(flagsRect, t.flags);
-			string text = t.value.ToString("g2");
-			GUI.Label(valueRect, text, EditorStyles.miniLabel);
-			this.ShaderPropertyCopyValueMenu(valueRect, t.value);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(15f);
+			ShaderMatrixInfo shaderMatrixInfo = matrices[startIndex];
+			if (numValues == 1)
+			{
+				GUILayout.Label(shaderMatrixInfo.name, EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.DrawShaderPropertyFlags(shaderMatrixInfo.flags);
+				GUILayout.Label(shaderMatrixInfo.value.ToString("g2"), EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.ShaderPropertyCopyValueMenu(GUILayoutUtility.GetLastRect(), shaderMatrixInfo.value);
+			}
+			else
+			{
+				string text = string.Format("{0} [{1}]", shaderMatrixInfo.name, numValues);
+				GUILayout.Label(text, EditorStyles.miniLabel, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				this.DrawShaderPropertyFlags(shaderMatrixInfo.flags);
+				Rect rect = GUILayoutUtility.GetRect(FrameDebuggerWindow.Styles.arrayValuePopupButton, GUI.skin.button, new GUILayoutOption[]
+				{
+					GUILayout.MinWidth(200f)
+				});
+				rect.width = 25f;
+				if (GUI.Button(rect, FrameDebuggerWindow.Styles.arrayValuePopupButton))
+				{
+					FrameDebuggerWindow.ArrayValuePopup.GetValueStringDelegate getValueString = (int index, bool highPrecision) => '\n' + matrices[index].value.ToString((!highPrecision) ? "g2" : "g7");
+					PopupWindowWithoutFocus.Show(rect, new FrameDebuggerWindow.ArrayValuePopup(startIndex, numValues, 200f, getValueString), new PopupLocationHelper.PopupLocation[]
+					{
+						PopupLocationHelper.PopupLocation.Left,
+						PopupLocationHelper.PopupLocation.Below,
+						PopupLocationHelper.PopupLocation.Right
+					});
+				}
+			}
+			GUILayout.EndHorizontal();
 		}
 
-		private void OnGUIShaderPropBuffer(Rect nameRect, Rect flagsRect, Rect valueRect, ShaderBufferInfo t)
+		private void OnGUIShaderPropBuffer(ShaderBufferInfo t)
 		{
-			GUI.Label(nameRect, t.name, EditorStyles.miniLabel);
-			this.DrawShaderPropertyFlags(flagsRect, t.flags);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(15f);
+			GUILayout.Label(t.name, EditorStyles.miniLabel, new GUILayoutOption[]
+			{
+				GUILayout.MinWidth(200f)
+			});
+			this.DrawShaderPropertyFlags(t.flags);
+			GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.miniLabel, new GUILayoutOption[]
+			{
+				GUILayout.MinWidth(200f)
+			});
+			GUILayout.EndHorizontal();
 		}
 
-		private void OnGUIShaderPropTexture(Rect nameRect, Rect flagsRect, Rect valueRect, ShaderTextureInfo t)
+		private void OnGUIShaderPropTexture(ShaderTextureInfo t)
 		{
-			GUI.Label(nameRect, t.name, EditorStyles.miniLabel);
-			this.DrawShaderPropertyFlags(flagsRect, t.flags);
+			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+			GUILayout.Space(15f);
+			GUILayout.Label(t.name, EditorStyles.miniLabel, new GUILayoutOption[]
+			{
+				GUILayout.MinWidth(200f)
+			});
+			this.DrawShaderPropertyFlags(t.flags);
+			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, GUI.skin.label, new GUILayoutOption[]
+			{
+				GUILayout.MinWidth(200f)
+			});
 			Event current = Event.current;
-			Rect position = valueRect;
+			Rect position = rect;
 			position.width = position.height;
 			if (t.value != null && position.Contains(current.mousePosition))
 			{
@@ -799,7 +993,7 @@ namespace UnityEditor
 			}
 			if (current.type == EventType.Repaint)
 			{
-				Rect position2 = valueRect;
+				Rect position2 = rect;
 				position2.xMin += position.width;
 				if (t.value != null)
 				{
@@ -814,27 +1008,13 @@ namespace UnityEditor
 			}
 			else if (current.type == EventType.MouseDown)
 			{
-				if (valueRect.Contains(current.mousePosition))
+				if (rect.Contains(current.mousePosition))
 				{
-					EditorGUI.PingObjectOrShowPreviewOnClick(t.value, valueRect);
+					EditorGUI.PingObjectOrShowPreviewOnClick(t.value, rect);
 					current.Use();
 				}
 			}
-		}
-
-		private void GetPropertyFieldRects(int count, float height, out Rect nameRect, out Rect flagsRect, out Rect valueRect)
-		{
-			Rect rect = GUILayoutUtility.GetRect(1f, height * (float)count);
-			rect.height /= (float)count;
-			rect.xMin += 15f;
-			nameRect = rect;
-			nameRect.width *= 0.4f;
-			flagsRect = rect;
-			flagsRect.width *= 0.1f;
-			flagsRect.x += nameRect.width;
-			valueRect = rect;
-			valueRect.width *= 0.5f;
-			valueRect.x += nameRect.width + flagsRect.width;
+			GUILayout.EndHorizontal();
 		}
 
 		private void DrawShaderProperties(ShaderProperties props)
@@ -843,86 +1023,51 @@ namespace UnityEditor
 			if (props.textures.Count<ShaderTextureInfo>() > 0)
 			{
 				GUILayout.Label("Textures", EditorStyles.boldLabel, new GUILayoutOption[0]);
-				Rect nameRect;
-				Rect flagsRect;
-				Rect valueRect;
-				this.GetPropertyFieldRects(props.textures.Count<ShaderTextureInfo>(), 16f, out nameRect, out flagsRect, out valueRect);
 				ShaderTextureInfo[] textures = props.textures;
 				for (int i = 0; i < textures.Length; i++)
 				{
 					ShaderTextureInfo t = textures[i];
-					this.OnGUIShaderPropTexture(nameRect, flagsRect, valueRect, t);
-					nameRect.y += nameRect.height;
-					flagsRect.y += flagsRect.height;
-					valueRect.y += valueRect.height;
+					this.OnGUIShaderPropTexture(t);
 				}
 			}
 			if (props.floats.Count<ShaderFloatInfo>() > 0)
 			{
 				GUILayout.Label("Floats", EditorStyles.boldLabel, new GUILayoutOption[0]);
-				Rect nameRect;
-				Rect flagsRect;
-				Rect valueRect;
-				this.GetPropertyFieldRects(props.floats.Count<ShaderFloatInfo>(), 16f, out nameRect, out flagsRect, out valueRect);
-				ShaderFloatInfo[] floats = props.floats;
-				for (int j = 0; j < floats.Length; j++)
+				int num;
+				for (int j = 0; j < props.floats.Length; j += num)
 				{
-					ShaderFloatInfo t2 = floats[j];
-					this.OnGUIShaderPropFloat(nameRect, flagsRect, valueRect, t2);
-					nameRect.y += nameRect.height;
-					flagsRect.y += flagsRect.height;
-					valueRect.y += valueRect.height;
+					num = (props.floats[j].flags >> 6 & 1023);
+					this.OnGUIShaderPropFloats(props.floats, j, num);
 				}
 			}
 			if (props.vectors.Count<ShaderVectorInfo>() > 0)
 			{
 				GUILayout.Label("Vectors", EditorStyles.boldLabel, new GUILayoutOption[0]);
-				Rect nameRect;
-				Rect flagsRect;
-				Rect valueRect;
-				this.GetPropertyFieldRects(props.vectors.Count<ShaderVectorInfo>(), 16f, out nameRect, out flagsRect, out valueRect);
-				ShaderVectorInfo[] vectors = props.vectors;
-				for (int k = 0; k < vectors.Length; k++)
+				int num2;
+				for (int k = 0; k < props.vectors.Length; k += num2)
 				{
-					ShaderVectorInfo t3 = vectors[k];
-					this.OnGUIShaderPropVector4(nameRect, flagsRect, valueRect, t3);
-					nameRect.y += nameRect.height;
-					flagsRect.y += flagsRect.height;
-					valueRect.y += valueRect.height;
+					num2 = (props.vectors[k].flags >> 6 & 1023);
+					this.OnGUIShaderPropVectors(props.vectors, k, num2);
 				}
 			}
 			if (props.matrices.Count<ShaderMatrixInfo>() > 0)
 			{
 				GUILayout.Label("Matrices", EditorStyles.boldLabel, new GUILayoutOption[0]);
-				Rect nameRect;
-				Rect flagsRect;
-				Rect valueRect;
-				this.GetPropertyFieldRects(props.matrices.Count<ShaderMatrixInfo>(), 48f, out nameRect, out flagsRect, out valueRect);
-				ShaderMatrixInfo[] matrices = props.matrices;
-				for (int l = 0; l < matrices.Length; l++)
+				int num3;
+				for (int l = 0; l < props.matrices.Length; l += num3)
 				{
-					ShaderMatrixInfo t4 = matrices[l];
-					this.OnGUIShaderPropMatrix(nameRect, flagsRect, valueRect, t4);
-					nameRect.y += nameRect.height;
-					flagsRect.y += flagsRect.height;
-					valueRect.y += valueRect.height;
+					num3 = (props.matrices[l].flags >> 6 & 1023);
+					this.OnGUIShaderPropMatrices(props.matrices, l, num3);
 				}
 			}
 			if (props.buffers.Count<ShaderBufferInfo>() > 0)
 			{
 				GUILayout.Label("Buffers", EditorStyles.boldLabel, new GUILayoutOption[0]);
-				Rect nameRect;
-				Rect flagsRect;
-				Rect valueRect;
-				this.GetPropertyFieldRects(props.buffers.Count<ShaderBufferInfo>(), 16f, out nameRect, out flagsRect, out valueRect);
 				ShaderBufferInfo[] buffers = props.buffers;
 				for (int m = 0; m < buffers.Length; m++)
 				{
-					ShaderBufferInfo t5 = buffers[m];
-					this.OnGUIShaderPropBuffer(nameRect, flagsRect, valueRect, t5);
-					nameRect.y += nameRect.height;
-					flagsRect.y += flagsRect.height;
-					valueRect.y += valueRect.height;
+					ShaderBufferInfo t2 = buffers[m];
+					this.OnGUIShaderPropBuffer(t2);
 				}
 			}
 			GUILayout.EndScrollView();

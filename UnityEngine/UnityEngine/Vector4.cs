@@ -16,6 +16,14 @@ namespace UnityEngine
 
 		public float w;
 
+		private static readonly Vector4 zeroVector = new Vector4(0f, 0f, 0f, 0f);
+
+		private static readonly Vector4 oneVector = new Vector4(1f, 1f, 1f, 1f);
+
+		private static readonly Vector4 positiveInfinityVector = new Vector4(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+
+		private static readonly Vector4 negativeInfinityVector = new Vector4(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+
 		public float this[int index]
 		{
 			get
@@ -90,7 +98,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector4(0f, 0f, 0f, 0f);
+				return Vector4.zeroVector;
 			}
 		}
 
@@ -98,7 +106,23 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector4(1f, 1f, 1f, 1f);
+				return Vector4.oneVector;
+			}
+		}
+
+		public static Vector4 positiveInfinity
+		{
+			get
+			{
+				return Vector4.positiveInfinityVector;
+			}
+		}
+
+		public static Vector4 negativeInfinity
+		{
+			get
+			{
+				return Vector4.negativeInfinityVector;
 			}
 		}
 
@@ -126,12 +150,12 @@ namespace UnityEngine
 			this.w = 0f;
 		}
 
-		public void Set(float new_x, float new_y, float new_z, float new_w)
+		public void Set(float newX, float newY, float newZ, float newW)
 		{
-			this.x = new_x;
-			this.y = new_y;
-			this.z = new_z;
-			this.w = new_w;
+			this.x = newX;
+			this.y = newY;
+			this.z = newZ;
+			this.w = newW;
 		}
 
 		public static Vector4 Lerp(Vector4 a, Vector4 b, float t)

@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
 using System.Threading;
-using UnityEngine.Internal;
+using UnityEngine.Events;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.Scripting;
@@ -77,6 +77,32 @@ namespace UnityEngine
 			remove
 			{
 				Application.s_LogCallbackHandlerThreaded = (Application.LogCallback)Delegate.Remove(Application.s_LogCallbackHandlerThreaded, value);
+			}
+		}
+
+		public static event UnityAction onBeforeRender
+		{
+			add
+			{
+				UnityAction unityAction = Application.onBeforeRender;
+				UnityAction unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction>(ref Application.onBeforeRender, (UnityAction)Delegate.Combine(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
+			}
+			remove
+			{
+				UnityAction unityAction = Application.onBeforeRender;
+				UnityAction unityAction2;
+				do
+				{
+					unityAction2 = unityAction;
+					unityAction = Interlocked.CompareExchange<UnityAction>(ref Application.onBeforeRender, (UnityAction)Delegate.Remove(unityAction2, value), unityAction);
+				}
+				while (unityAction != unityAction2);
 			}
 		}
 
@@ -515,13 +541,18 @@ namespace UnityEngine
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CaptureScreenshot(string filename, [DefaultValue("0")] int superSize);
+		public static extern void SetBuildTags(string[] buildTags);
 
-		[ExcludeFromDocs]
+		[Obsolete("Application.CaptureScreenshot is obsolete. Use ScreenCapture.CaptureScreenshot instead (UnityUpgradable) -> [UnityEngine] UnityEngine.ScreenCapture.CaptureScreenshot(*)", true)]
+		public static void CaptureScreenshot(string filename, int superSize)
+		{
+			throw new NotSupportedException("Application.CaptureScreenshot is obsolete. Use ScreenCapture.CaptureScreenshot instead.");
+		}
+
+		[Obsolete("Application.CaptureScreenshot is obsolete. Use ScreenCapture.CaptureScreenshot instead (UnityUpgradable) -> [UnityEngine] UnityEngine.ScreenCapture.CaptureScreenshot(*)", true)]
 		public static void CaptureScreenshot(string filename)
 		{
-			int superSize = 0;
-			Application.CaptureScreenshot(filename, superSize);
+			throw new NotSupportedException("Application.CaptureScreenshot is obsolete. Use ScreenCapture.CaptureScreenshot instead.");
 		}
 
 		[GeneratedByOldBindingsGenerator]
@@ -705,6 +736,16 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasUserAuthorization(UserAuthorization mode);
+
+		[RequiredByNativeCode]
+		internal static void InvokeOnBeforeRender()
+		{
+			UnityAction unityAction = Application.onBeforeRender;
+			if (unityAction != null)
+			{
+				unityAction();
+			}
+		}
 
 		[Obsolete("Application.RegisterLogCallback is deprecated. Use Application.logMessageReceived instead.")]
 		public static void RegisterLogCallback(Application.LogCallback handler)

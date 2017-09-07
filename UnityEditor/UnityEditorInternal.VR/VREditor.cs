@@ -67,5 +67,23 @@ namespace UnityEditorInternal.VR
 			where enabledVRDevices.Contains(d.deviceNameKey)
 			select d).ToArray<VRDeviceInfoEditor>();
 		}
+
+		public static bool IsVRDeviceEnabledForBuildTarget(BuildTarget target, string deviceName)
+		{
+			string[] vREnabledDevicesOnTarget = VREditor.GetVREnabledDevicesOnTarget(target);
+			string[] array = vREnabledDevicesOnTarget;
+			bool result;
+			for (int i = 0; i < array.Length; i++)
+			{
+				string a = array[i];
+				if (a == deviceName)
+				{
+					result = true;
+					return result;
+				}
+			}
+			result = false;
+			return result;
+		}
 	}
 }

@@ -294,7 +294,6 @@ namespace UnityEditor
 					if (obj != null)
 					{
 						DragAndDrop.PrepareStartDrag();
-						DragAndDrop.objectReferences = new UnityEngine.Object[0];
 						DragAndDrop.paths = null;
 						DragAndDrop.SetGenericData("CustomDragData", obj);
 						DragAndDrop.StartDrag(columnViewElements[listView.row].name);

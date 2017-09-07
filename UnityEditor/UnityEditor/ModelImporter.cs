@@ -65,6 +65,16 @@ namespace UnityEditor
 			get;
 		}
 
+		public extern bool importVisibility
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern bool useFileUnits
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -75,13 +85,17 @@ namespace UnityEditor
 			set;
 		}
 
-		public extern float fileScale
+		public extern bool useFileScale
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
+		[Obsolete("Use useFileScale instead")]
 		public extern bool isFileScaleUsed
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -90,6 +104,26 @@ namespace UnityEditor
 		}
 
 		public extern bool importBlendShapes
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool importCameras
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool importLights
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -302,6 +336,16 @@ namespace UnityEditor
 			set;
 		}
 
+		public extern ModelImporterNormalCalculationMode normalCalculationMode
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern ModelImporterTangents importTangents
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -400,6 +444,16 @@ namespace UnityEditor
 		}
 
 		public extern string[] extraExposedTransformPaths
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern string[] extraUserProperties
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace UnityEditor
 {
 	[CustomEditor(typeof(ShaderImporter))]
-	internal class ShaderImporterInspector : AssetImporterInspector
+	internal class ShaderImporterInspector : AssetImporterEditor
 	{
 		private List<string> propertyNames = new List<string>();
 
@@ -27,7 +28,7 @@ namespace UnityEditor
 			}
 		}
 
-		public void OnEnable()
+		public override void OnEnable()
 		{
 			this.ResetValues();
 		}
@@ -46,7 +47,7 @@ namespace UnityEditor
 					if (textureTypeFromDimension != null)
 					{
 						string t = (!string.IsNullOrEmpty(this.displayNames[i])) ? this.displayNames[i] : ObjectNames.NicifyVariableName(this.propertyNames[i]);
-						value = (EditorGUILayout.MiniThumbnailObjectField(GUIContent.Temp(t), obj, textureTypeFromDimension, null, new GUILayoutOption[0]) as Texture);
+						value = (EditorGUILayout.MiniThumbnailObjectField(GUIContent.Temp(t), obj, textureTypeFromDimension, new GUILayoutOption[0]) as Texture);
 					}
 					if (EditorGUI.EndChangeCheck())
 					{
@@ -56,7 +57,7 @@ namespace UnityEditor
 			}
 		}
 
-		internal override bool HasModified()
+		public override bool HasModified()
 		{
 			bool result;
 			if (base.HasModified())
@@ -99,7 +100,7 @@ namespace UnityEditor
 			return result;
 		}
 
-		internal override void ResetValues()
+		protected override void ResetValues()
 		{
 			base.ResetValues();
 			this.propertyNames = new List<string>();
@@ -130,7 +131,7 @@ namespace UnityEditor
 			}
 		}
 
-		internal override void Apply()
+		protected override void Apply()
 		{
 			base.Apply();
 			ShaderImporter shaderImporter = base.target as ShaderImporter;

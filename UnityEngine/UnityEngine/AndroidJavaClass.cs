@@ -15,8 +15,8 @@ namespace UnityEngine
 			{
 				throw new Exception("JNI: Init'd AndroidJavaClass with null ptr!");
 			}
-			this.m_jclass = AndroidJNI.NewGlobalRef(jclass);
-			this.m_jobject = IntPtr.Zero;
+			this.m_jclass = new GlobalJavaObjectRef(jclass);
+			this.m_jobject = new GlobalJavaObjectRef(IntPtr.Zero);
 		}
 
 		private void _AndroidJavaClass(string className)
@@ -24,8 +24,8 @@ namespace UnityEngine
 			base.DebugPrint("Creating AndroidJavaClass from " + className);
 			using (AndroidJavaObject androidJavaObject = AndroidJavaObject.FindClass(className))
 			{
-				this.m_jclass = AndroidJNI.NewGlobalRef(androidJavaObject.GetRawObject());
-				this.m_jobject = IntPtr.Zero;
+				this.m_jclass = new GlobalJavaObjectRef(androidJavaObject.GetRawObject());
+				this.m_jobject = new GlobalJavaObjectRef(IntPtr.Zero);
 			}
 		}
 	}

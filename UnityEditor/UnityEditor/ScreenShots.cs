@@ -90,7 +90,7 @@ namespace UnityEditor
 		public static void ScreenGameViewContent()
 		{
 			string uniquePathForName = ScreenShots.GetUniquePathForName("ContentExample");
-			Application.CaptureScreenshot(uniquePathForName);
+			ScreenCapture.CaptureScreenshot(uniquePathForName);
 			Debug.Log(string.Format("Saved screenshot at {0}", uniquePathForName));
 		}
 

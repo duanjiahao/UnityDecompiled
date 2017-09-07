@@ -15,6 +15,14 @@ namespace UnityEditorInternal
 		[CompilerGenerated]
 		private static Func<string, bool> <>f__mg$cache0;
 
+		private static bool debugUnstripped
+		{
+			get
+			{
+				return false;
+			}
+		}
+
 		private static string[] Il2CppBlacklistPaths
 		{
 			get
@@ -26,35 +34,11 @@ namespace UnityEditorInternal
 			}
 		}
 
-		private static string MonoLinkerPath
-		{
-			get
-			{
-				return Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "Tools/UnusedBytecodeStripper.exe");
-			}
-		}
-
-		private static string ModulesWhitelistPath
-		{
-			get
-			{
-				return Path.Combine(Path.GetDirectoryName(AssemblyStripper.MonoLinkerPath), "ModuleStrippingInformation");
-			}
-		}
-
 		private static string MonoLinker2Path
 		{
 			get
 			{
-				return Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "Tools/UnusedByteCodeStripper2/UnusedBytecodeStripper2.exe");
-			}
-		}
-
-		private static string BlacklistPath
-		{
-			get
-			{
-				return Path.Combine(Path.GetDirectoryName(AssemblyStripper.MonoLinkerPath), "Core.xml");
+				return Path.Combine(MonoInstallationFinder.GetFrameWorksFolder(), "il2cpp/build/UnityLinker.exe");
 			}
 		}
 
@@ -88,13 +72,13 @@ namespace UnityEditorInternal
 			additionalBlacklist = additionalBlacklist.Concat(userBlacklistFiles);
 			List<string> list = new List<string>
 			{
-				"--api " + PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup).ToString(),
-				"-out \"" + outputFolder + "\"",
-				"-l none",
-				"-c link",
-				"-b true",
-				"-x \"" + AssemblyStripper.GetModuleWhitelist("Core", platformProvider.moduleStrippingInformationFolder) + "\"",
-				"-f \"" + Path.Combine(platformProvider.il2CppFolder, "LinkerDescriptors") + "\""
+				"--api=" + PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup).ToString(),
+				"-out=\"" + outputFolder + "\"",
+				"-l=none",
+				"-c=link",
+				"--link-symbols",
+				"-x=\"" + AssemblyStripper.GetModuleWhitelist("Core", platformProvider.moduleStrippingInformationFolder) + "\"",
+				"-f=\"" + Path.Combine(platformProvider.il2CppFolder, "LinkerDescriptors") + "\""
 			};
 			list.AddRange(from path in additionalBlacklist
 			select "-x \"" + path + "\"");
@@ -108,7 +92,7 @@ namespace UnityEditorInternal
 		private static bool RunAssemblyLinker(IEnumerable<string> args, out string @out, out string err, string linkerPath, string workingDirectory)
 		{
 			string text = args.Aggregate((string buff, string s) => buff + " " + s);
-			Console.WriteLine("Invoking UnusedByteCodeStripper2 with arguments: " + text);
+			Console.WriteLine("Invoking UnityLinker with arguments: " + text);
 			Runner.RunManagedProgram(linkerPath, text, workingDirectory, null, null);
 			@out = "";
 			err = "";
@@ -126,6 +110,7 @@ namespace UnityEditorInternal
 		{
 			string fullPath = Path.GetFullPath(Path.Combine(stagingAreaData, "Managed"));
 			List<string> userAssemblies = AssemblyStripper.GetUserAssemblies(rcr, fullPath);
+			userAssemblies.AddRange(Directory.GetFiles(fullPath, "I18N*.dll", SearchOption.TopDirectoryOnly));
 			string[] assembliesToStrip = userAssemblies.ToArray();
 			string[] searchDirs = new string[]
 			{
@@ -170,7 +155,9 @@ namespace UnityEditorInternal
 
 		private static void RunAssemblyStripper(string stagingAreaData, IEnumerable assemblies, string managedAssemblyFolderPath, string[] assembliesToStrip, string[] searchDirs, string monoLinkerPath, IIl2CppPlatformProvider platformProvider, RuntimeClassRegistry rcr)
 		{
-			bool flag = rcr != null && PlayerSettings.stripEngineCode && platformProvider.supportsEngineStripping;
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(platformProvider.target);
+			bool flag = PlayerSettings.GetScriptingBackend(buildTargetGroup) == ScriptingImplementation.Mono2x;
+			bool flag2 = rcr != null && PlayerSettings.stripEngineCode && platformProvider.supportsEngineStripping;
 			IEnumerable<string> enumerable = AssemblyStripper.Il2CppBlacklistPaths;
 			if (rcr != null)
 			{
@@ -180,82 +167,104 @@ namespace UnityEditorInternal
 					MonoAssemblyStripping.GenerateLinkXmlToPreserveDerivedTypes(stagingAreaData, managedAssemblyFolderPath, rcr)
 				});
 			}
-			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(platformProvider.target);
 			if (PlayerSettings.GetApiCompatibilityLevel(buildTargetGroup) == ApiCompatibilityLevel.NET_4_6)
 			{
 				string path = Path.Combine(platformProvider.il2CppFolder, "LinkerDescriptors");
 				enumerable = enumerable.Concat(Directory.GetFiles(path, "*45.xml"));
 			}
-			if (!flag)
+			if (flag)
 			{
-				string[] files = Directory.GetFiles(platformProvider.moduleStrippingInformationFolder, "*.xml");
-				for (int i = 0; i < files.Length; i++)
+				string path2 = Path.Combine(platformProvider.il2CppFolder, "LinkerDescriptors");
+				enumerable = enumerable.Concat(Directory.GetFiles(path2, "*_mono.xml"));
+				string text = Path.Combine(BuildPipeline.GetBuildToolsDirectory(platformProvider.target), "link.xml");
+				if (File.Exists(text))
 				{
-					string text = files[i];
 					enumerable = enumerable.Concat(new string[]
 					{
 						text
 					});
 				}
 			}
+			if (!flag2)
+			{
+				string[] files = Directory.GetFiles(platformProvider.moduleStrippingInformationFolder, "*.xml");
+				for (int i = 0; i < files.Length; i++)
+				{
+					string text2 = files[i];
+					enumerable = enumerable.Concat(new string[]
+					{
+						text2
+					});
+				}
+			}
 			string fullPath = Path.GetFullPath(Path.Combine(managedAssemblyFolderPath, "tempStrip"));
-			string text3;
+			string text4;
 			while (true)
 			{
-				bool flag2 = false;
+				bool flag3 = false;
 				if (EditorUtility.DisplayCancelableProgressBar("Building Player", "Stripping assemblies", 0f))
 				{
 					break;
 				}
-				string text2;
-				if (!AssemblyStripper.StripAssembliesTo(assembliesToStrip, searchDirs, fullPath, managedAssemblyFolderPath, out text2, out text3, monoLinkerPath, platformProvider, enumerable))
+				string text3;
+				if (!AssemblyStripper.StripAssembliesTo(assembliesToStrip, searchDirs, fullPath, managedAssemblyFolderPath, out text3, out text4, monoLinkerPath, platformProvider, enumerable))
 				{
-					goto Block_7;
+					goto Block_9;
 				}
 				if (platformProvider.supportsEngineStripping)
 				{
-					string text4 = Path.Combine(managedAssemblyFolderPath, "ICallSummary.txt");
-					AssemblyStripper.GenerateInternalCallSummaryFile(text4, managedAssemblyFolderPath, fullPath);
-					if (flag)
+					string text5 = Path.Combine(managedAssemblyFolderPath, "ICallSummary.txt");
+					AssemblyStripper.GenerateInternalCallSummaryFile(text5, managedAssemblyFolderPath, fullPath);
+					if (flag2)
 					{
 						HashSet<UnityType> hashSet;
 						HashSet<string> nativeModules;
-						CodeStrippingUtils.GenerateDependencies(fullPath, text4, rcr, flag, out hashSet, out nativeModules, platformProvider);
-						flag2 = AssemblyStripper.AddWhiteListsForModules(nativeModules, ref enumerable, platformProvider.moduleStrippingInformationFolder);
+						CodeStrippingUtils.GenerateDependencies(fullPath, text5, rcr, flag2, out hashSet, out nativeModules, platformProvider);
+						flag3 = AssemblyStripper.AddWhiteListsForModules(nativeModules, ref enumerable, platformProvider.moduleStrippingInformationFolder);
 					}
 				}
-				if (!flag2)
+				if (!flag3)
 				{
-					goto Block_10;
+					goto Block_12;
 				}
 			}
 			throw new OperationCanceledException();
-			Block_7:
+			Block_9:
 			throw new Exception(string.Concat(new object[]
 			{
 				"Error in stripping assemblies: ",
 				assemblies,
 				", ",
-				text3
+				text4
 			}));
-			Block_10:
+			Block_12:
 			string fullPath2 = Path.GetFullPath(Path.Combine(managedAssemblyFolderPath, "tempUnstripped"));
-			Directory.CreateDirectory(fullPath2);
+			if (AssemblyStripper.debugUnstripped)
+			{
+				Directory.CreateDirectory(fullPath2);
+			}
 			string[] files2 = Directory.GetFiles(managedAssemblyFolderPath);
 			for (int j = 0; j < files2.Length; j++)
 			{
-				string text5 = files2[j];
-				string extension = Path.GetExtension(text5);
+				string text6 = files2[j];
+				string extension = Path.GetExtension(text6);
 				if (string.Equals(extension, ".dll", StringComparison.InvariantCultureIgnoreCase) || string.Equals(extension, ".winmd", StringComparison.InvariantCultureIgnoreCase) || string.Equals(extension, ".mdb", StringComparison.InvariantCultureIgnoreCase) || string.Equals(extension, ".pdb", StringComparison.InvariantCultureIgnoreCase))
 				{
-					File.Move(text5, Path.Combine(fullPath2, Path.GetFileName(text5)));
+					if (AssemblyStripper.debugUnstripped)
+					{
+						File.Move(text6, Path.Combine(fullPath2, Path.GetFileName(text6)));
+					}
+					else
+					{
+						File.Delete(text6);
+					}
 				}
 			}
 			string[] files3 = Directory.GetFiles(fullPath);
 			for (int k = 0; k < files3.Length; k++)
 			{
-				string text6 = files3[k];
-				File.Move(text6, Path.Combine(managedAssemblyFolderPath, Path.GetFileName(text6)));
+				string text7 = files3[k];
+				File.Move(text7, Path.Combine(managedAssemblyFolderPath, Path.GetFileName(text7)));
 			}
 			Directory.Delete(fullPath);
 		}
@@ -292,6 +301,18 @@ namespace UnityEditorInternal
 			}
 			stringBuilder.AppendLine("</linker>");
 			return stringBuilder.ToString();
+		}
+
+		public static void InvokeFromBuildPlayer(BuildTarget buildTarget, RuntimeClassRegistry usedClasses)
+		{
+			string text = Paths.Combine(new string[]
+			{
+				"Temp",
+				"StagingArea",
+				"Data"
+			});
+			BaseIl2CppPlatformProvider platformProvider = new BaseIl2CppPlatformProvider(buildTarget, Path.Combine(text, "Libraries"));
+			AssemblyStripper.StripAssemblies(text, platformProvider, usedClasses);
 		}
 	}
 }

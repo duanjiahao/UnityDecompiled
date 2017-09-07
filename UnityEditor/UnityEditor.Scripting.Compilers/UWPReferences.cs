@@ -134,41 +134,49 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			else
 			{
-				string[] files = Directory.GetFiles(UWPReferences.CombinePaths(new string[]
+				string path = UWPReferences.CombinePaths(new string[]
 				{
 					windowsKit,
 					"Platforms",
 					"UAP"
-				}), "*", SearchOption.AllDirectories);
-				IEnumerable<string> enumerable = from f in files
-				where string.Equals("Platform.xml", Path.GetFileName(f), StringComparison.OrdinalIgnoreCase)
-				select f;
-				List<Version> list = new List<Version>();
-				foreach (string current in enumerable)
+				});
+				if (!Directory.Exists(path))
 				{
-					XDocument xDocument;
-					try
+					result = new Version[0];
+				}
+				else
+				{
+					string[] files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+					IEnumerable<string> enumerable = from f in files
+					where string.Equals("Platform.xml", Path.GetFileName(f), StringComparison.OrdinalIgnoreCase)
+					select f;
+					List<Version> list = new List<Version>();
+					foreach (string current in enumerable)
 					{
-						xDocument = XDocument.Load(current);
-					}
-					catch
-					{
-						continue;
-					}
-					foreach (XNode current2 in xDocument.Nodes())
-					{
-						XElement xElement = current2 as XElement;
-						if (xElement != null)
+						XDocument xDocument;
+						try
 						{
-							Version item;
-							if (UWPReferences.FindVersionInNode(xElement, out item))
+							xDocument = XDocument.Load(current);
+						}
+						catch
+						{
+							continue;
+						}
+						foreach (XNode current2 in xDocument.Nodes())
+						{
+							XElement xElement = current2 as XElement;
+							if (xElement != null)
 							{
-								list.Add(item);
+								Version item;
+								if (UWPReferences.FindVersionInNode(xElement, out item))
+								{
+									list.Add(item);
+								}
 							}
 						}
 					}
+					result = list;
 				}
-				result = list;
 			}
 			return result;
 		}
@@ -205,14 +213,23 @@ namespace UnityEditor.Scripting.Compilers
 				version,
 				"Platform.xml"
 			});
-			XDocument xDocument = XDocument.Load(text);
-			XElement xElement = xDocument.Element("ApplicationPlatform");
-			if (xElement.Attribute("name").Value != "UAP")
+			string[] result;
+			if (!File.Exists(text))
 			{
-				throw new Exception(string.Format("Invalid platform manifest at \"{0}\".", text));
+				result = new string[0];
 			}
-			XElement containedApiContractsElement = xElement.Element("ContainedApiContracts");
-			return UWPReferences.GetReferences(folder, version, containedApiContractsElement);
+			else
+			{
+				XDocument xDocument = XDocument.Load(text);
+				XElement xElement = xDocument.Element("ApplicationPlatform");
+				if (xElement.Attribute("name").Value != "UAP")
+				{
+					throw new Exception(string.Format("Invalid platform manifest at \"{0}\".", text));
+				}
+				XElement containedApiContractsElement = xElement.Element("ContainedApiContracts");
+				result = UWPReferences.GetReferences(folder, version, containedApiContractsElement);
+			}
+			return result;
 		}
 
 		private static string CombinePaths(params string[] paths)

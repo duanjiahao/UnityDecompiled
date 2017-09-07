@@ -227,7 +227,7 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void GetGlobalMatrixArrayImplList(int nameID, object list);
 
-		[GeneratedByOldBindingsGenerator]
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int PropertyToID(string name);
 

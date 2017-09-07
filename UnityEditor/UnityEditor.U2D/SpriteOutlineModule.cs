@@ -73,7 +73,7 @@ namespace UnityEditor.U2D
 			}
 		}
 
-		private List<SpriteOutline> selectedShapeOutline
+		protected virtual List<SpriteOutline> selectedShapeOutline
 		{
 			get
 			{
@@ -177,7 +177,7 @@ namespace UnityEditor.U2D
 				for (int i = 0; i < spriteRects.Count; i++)
 				{
 					SpriteRect spriteRect = spriteRects.RectAt(i);
-					if (spriteRect.outline == null || spriteRect.outline.Count == 0)
+					if (!this.HasShapeOutline(spriteRect))
 					{
 						this.spriteEditorWindow.DisplayProgressBar(this.styles.generatingOutlineDialogTitle.text, string.Format(this.styles.generatingOutlineDialogContent.text, i + 1, spriteRects.Count), (float)i / (float)spriteRects.Count);
 						this.SetupShapeEditorOutline(spriteRect);
@@ -271,7 +271,6 @@ namespace UnityEditor.U2D
 					this.RecordUndo();
 					this.selectedShapeOutline.Clear();
 					this.SetupShapeEditorOutline(this.m_Selected);
-					this.selectedShapeOutline = this.m_Selected.outline;
 					this.spriteEditorWindow.SetDataModified();
 					this.shapeEditorDirty = true;
 				}
@@ -436,7 +435,6 @@ namespace UnityEditor.U2D
 				if (this.m_Selected != null)
 				{
 					this.SetupShapeEditorOutline(this.m_Selected);
-					this.selectedShapeOutline = this.m_Selected.outline;
 					this.m_ShapeEditors = new ShapeEditor[this.selectedShapeOutline.Count];
 					for (int i = 0; i < this.selectedShapeOutline.Count; i++)
 					{
@@ -482,6 +480,11 @@ namespace UnityEditor.U2D
 				}
 			}
 			this.shapeEditorDirty = false;
+		}
+
+		protected virtual bool HasShapeOutline(SpriteRect spriteRect)
+		{
+			return spriteRect.outline != null && spriteRect.outline.Count > 0;
 		}
 
 		protected virtual void SetupShapeEditorOutline(SpriteRect spriteRect)
@@ -585,7 +588,7 @@ namespace UnityEditor.U2D
 
 		private void DrawGizmos()
 		{
-			if (this.eventSystem.current.type == EventType.Layout || this.eventSystem.current.type == EventType.Repaint)
+			if (this.eventSystem.current.type == EventType.Repaint)
 			{
 				SpriteRect selectedSpriteRect = this.spriteEditorWindow.selectedSpriteRect;
 				if (selectedSpriteRect != null)
@@ -597,7 +600,7 @@ namespace UnityEditor.U2D
 			}
 		}
 
-		private static List<SpriteOutline> GenerateSpriteRectOutline(Rect rect, ITexture2D texture, float detail, byte alphaTolerance)
+		protected static List<SpriteOutline> GenerateSpriteRectOutline(Rect rect, ITexture2D texture, float detail, byte alphaTolerance)
 		{
 			List<SpriteOutline> list = new List<SpriteOutline>();
 			if (texture != null)

@@ -125,6 +125,10 @@ namespace UnityEditorInternal
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern float GetColumnAsSingle(ProfilerColumn column);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern AudioProfilerGroupInfo[] GetAudioProfilerGroupInfo();
 
 		[GeneratedByOldBindingsGenerator]
@@ -138,5 +142,33 @@ namespace UnityEditorInternal
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern string GetAudioProfilerNameByOffset(int offset);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern UISystemProfilerInfo[] GetUISystemProfilerInfo();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetUISystemProfilerNameByOffset(int offset);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern EventMarker[] GetUISystemEventMarkers();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern string GetUISystemEventMarkerNameByOffset(int offset);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern int[] GetUISystemBatchInstanceIDs();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Texture2D UISystemProfilerRender(int renderDataIndex, int renderDataCount, bool renderOverdraw);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ReleaseUISystemProfilerRender(Texture2D t);
 	}
 }

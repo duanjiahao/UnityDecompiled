@@ -106,33 +106,51 @@ namespace UnityEditor
 				{
 					buildTargetGroup = BuildPipeline.GetBuildTargetGroup(target);
 				}
-				if (string.IsNullOrEmpty(locationPathName))
+				string text;
+				if (!BuildPipeline.ValidateLocationPathNameForBuildTargetGroup(locationPathName, buildTargetGroup, target, options, out text))
 				{
-					if ((options & BuildOptions.InstallInBuildFolder) == BuildOptions.None || !PostprocessBuildPlayer.SupportsInstallInBuildFolder(buildTargetGroup, target))
+					result = text;
+				}
+				else
+				{
+					try
 					{
-						result = "The 'locationPathName' parameter for BuildPipeline.BuildPlayer should not be null or empty.";
-						return result;
+						result = BuildPipeline.BuildPlayerInternal(scenes, locationPathName, assetBundleManifestPath, buildTargetGroup, target, options).SummarizeErrors();
 					}
-				}
-				else if (string.IsNullOrEmpty(Path.GetFileName(locationPathName)))
-				{
-					string extensionForBuildTarget = PostprocessBuildPlayer.GetExtensionForBuildTarget(buildTargetGroup, target, options);
-					if (!string.IsNullOrEmpty(extensionForBuildTarget))
+					catch (Exception exception)
 					{
-						result = string.Format("For the '{0}' target the 'locationPathName' parameter for BuildPipeline.BuildPlayer should not end with a directory separator.\nProvided path: '{1}', expected a path with the extension '.{2}'.", target, locationPathName, extensionForBuildTarget);
-						return result;
+						BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildPlayer", exception);
+						result = "";
 					}
-				}
-				try
-				{
-					result = BuildPipeline.BuildPlayerInternal(scenes, locationPathName, assetBundleManifestPath, buildTargetGroup, target, options).SummarizeErrors();
-				}
-				catch (Exception exception)
-				{
-					BuildPipeline.LogBuildExceptionAndExit("BuildPipeline.BuildPlayer", exception);
-					result = "";
 				}
 			}
+			return result;
+		}
+
+		internal static bool ValidateLocationPathNameForBuildTargetGroup(string locationPathName, BuildTargetGroup buildTargetGroup, BuildTarget target, BuildOptions options, out string errorMessage)
+		{
+			bool result;
+			if (string.IsNullOrEmpty(locationPathName))
+			{
+				if ((options & BuildOptions.InstallInBuildFolder) == BuildOptions.None || !PostprocessBuildPlayer.SupportsInstallInBuildFolder(buildTargetGroup, target))
+				{
+					errorMessage = "The 'locationPathName' parameter for BuildPipeline.BuildPlayer should not be null or empty.";
+					result = false;
+					return result;
+				}
+			}
+			else if (string.IsNullOrEmpty(Path.GetFileName(locationPathName)))
+			{
+				string extensionForBuildTarget = PostprocessBuildPlayer.GetExtensionForBuildTarget(buildTargetGroup, target, options);
+				if (!string.IsNullOrEmpty(extensionForBuildTarget))
+				{
+					errorMessage = string.Format("For the '{0}' target the 'locationPathName' parameter for BuildPipeline.BuildPlayer should not end with a directory separator.\nProvided path: '{1}', expected a path with the extension '.{2}'.", target, locationPathName, extensionForBuildTarget);
+					result = false;
+					return result;
+				}
+			}
+			errorMessage = "";
+			result = true;
 			return result;
 		}
 
@@ -151,8 +169,8 @@ namespace UnityEditor
 		[Obsolete("BuildStreamedSceneAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static string BuildStreamedSceneAssetBundle(string[] levels, string locationPath, BuildTarget target, out uint crc, BuildOptions options)
 		{
-			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
-			return BuildPipeline.BuildStreamedSceneAssetBundle(levels, locationPath, activeBuildTargetGroup, target, out crc, options);
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(target);
+			return BuildPipeline.BuildStreamedSceneAssetBundle(levels, locationPath, buildTargetGroup, target, out crc, options);
 		}
 
 		[Obsolete("BuildStreamedSceneAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
@@ -223,8 +241,8 @@ namespace UnityEditor
 		[Obsolete("BuildAssetBundle has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
 		{
-			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
-			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out crc, assetBundleOptions, activeBuildTargetGroup, targetPlatform);
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(targetPlatform);
+			return BuildPipeline.BuildAssetBundle(mainAsset, assets, pathName, out crc, assetBundleOptions, buildTargetGroup, targetPlatform);
 		}
 
 		internal static bool BuildAssetBundle(UnityEngine.Object mainAsset, UnityEngine.Object[] assets, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions, BuildTargetGroup targetPlatformGroup, BuildTarget targetPlatform)
@@ -279,8 +297,8 @@ namespace UnityEditor
 		[Obsolete("BuildAssetBundleExplicitAssetNames has been made obsolete. Please use the new AssetBundle build system introduced in 5.0 and check BuildAssetBundles documentation for details.")]
 		public static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
 		{
-			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
-			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out crc, assetBundleOptions, activeBuildTargetGroup, targetPlatform);
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(targetPlatform);
+			return BuildPipeline.BuildAssetBundleExplicitAssetNames(assets, assetNames, pathName, out crc, assetBundleOptions, buildTargetGroup, targetPlatform);
 		}
 
 		internal static bool BuildAssetBundleExplicitAssetNames(UnityEngine.Object[] assets, string[] assetNames, string pathName, out uint crc, BuildAssetBundleOptions assetBundleOptions, BuildTargetGroup targetPlatformGroup, BuildTarget targetPlatform)
@@ -333,8 +351,8 @@ namespace UnityEditor
 
 		public static AssetBundleManifest BuildAssetBundles(string outputPath, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
 		{
-			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
-			return BuildPipeline.BuildAssetBundles(outputPath, assetBundleOptions, activeBuildTargetGroup, targetPlatform);
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(targetPlatform);
+			return BuildPipeline.BuildAssetBundles(outputPath, assetBundleOptions, buildTargetGroup, targetPlatform);
 		}
 
 		internal static AssetBundleManifest BuildAssetBundles(string outputPath, BuildAssetBundleOptions assetBundleOptions, BuildTargetGroup targetPlatformGroup, BuildTarget targetPlatform)
@@ -366,8 +384,8 @@ namespace UnityEditor
 
 		public static AssetBundleManifest BuildAssetBundles(string outputPath, AssetBundleBuild[] builds, BuildAssetBundleOptions assetBundleOptions, BuildTarget targetPlatform)
 		{
-			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
-			return BuildPipeline.BuildAssetBundles(outputPath, builds, assetBundleOptions, activeBuildTargetGroup, targetPlatform);
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(targetPlatform);
+			return BuildPipeline.BuildAssetBundles(outputPath, builds, assetBundleOptions, buildTargetGroup, targetPlatform);
 		}
 
 		internal static AssetBundleManifest BuildAssetBundles(string outputPath, AssetBundleBuild[] builds, BuildAssetBundleOptions assetBundleOptions, BuildTargetGroup targetPlatformGroup, BuildTarget targetPlatform)

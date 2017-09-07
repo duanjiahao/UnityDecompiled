@@ -27,6 +27,18 @@ namespace UnityEditor
 			set;
 		}
 
+		public bool ambisonic
+		{
+			get
+			{
+				return this.Internal_GetAmbisonic();
+			}
+			set
+			{
+				this.Internal_SetAmbisonic(value);
+			}
+		}
+
 		public bool loadInBackground
 		{
 			get
@@ -310,6 +322,14 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool Internal_ClearSampleSettingOverride(BuildTargetGroup platform);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void Internal_SetAmbisonic(bool flag);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern bool Internal_GetAmbisonic();
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

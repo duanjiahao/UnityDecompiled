@@ -11,7 +11,7 @@ namespace UnityEngine
 	[RequireComponent(typeof(Transform))]
 	public sealed class ParticleSystem : Component
 	{
-		[Obsolete("ParticleSystem.CollisionEvent has been deprecated. Use ParticleCollisionEvent instead (UnityUpgradable) -> ParticleCollisionEvent", true)]
+		[Obsolete("ParticleSystem.CollisionEvent has been deprecated. Use ParticleCollisionEvent instead (UnityUpgradable)", true)]
 		[StructLayout(LayoutKind.Sequential, Size = 1)]
 		public struct CollisionEvent
 		{
@@ -964,6 +964,18 @@ namespace UnityEngine
 				}
 			}
 
+			public bool useUnscaledTime
+			{
+				get
+				{
+					return ParticleSystem.MainModule.GetUseUnscaledTime(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.MainModule.SetUseUnscaledTime(this.m_ParticleSystem, value);
+				}
+			}
+
 			public ParticleSystemScalingMode scalingMode
 			{
 				get
@@ -997,6 +1009,18 @@ namespace UnityEngine
 				set
 				{
 					ParticleSystem.MainModule.SetMaxParticles(this.m_ParticleSystem, value);
+				}
+			}
+
+			public ParticleSystemEmitterVelocityMode emitterVelocityMode
+			{
+				get
+				{
+					return (!ParticleSystem.MainModule.GetUseRigidbodyForVelocity(this.m_ParticleSystem)) ? ParticleSystemEmitterVelocityMode.Transform : ParticleSystemEmitterVelocityMode.Rigidbody;
+				}
+				set
+				{
+					ParticleSystem.MainModule.SetUseRigidbodyForVelocity(this.m_ParticleSystem, value == ParticleSystemEmitterVelocityMode.Rigidbody);
 				}
 			}
 
@@ -1255,6 +1279,14 @@ namespace UnityEngine
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetUseUnscaledTime(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetUseUnscaledTime(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetScalingMode(ParticleSystem system, ParticleSystemScalingMode value);
 
 			[GeneratedByOldBindingsGenerator]
@@ -1276,6 +1308,14 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern int GetMaxParticles(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetUseRigidbodyForVelocity(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetUseRigidbodyForVelocity(ParticleSystem system);
 		}
 
 		public struct EmissionModule
@@ -1519,6 +1559,18 @@ namespace UnityEngine
 				}
 			}
 
+			public float randomPositionAmount
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetRandomPositionAmount(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRandomPositionAmount(this.m_ParticleSystem, value);
+				}
+			}
+
 			public bool alignToDirection
 			{
 				get
@@ -1593,6 +1645,18 @@ namespace UnityEngine
 				}
 			}
 
+			public float radiusThickness
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetRadiusThickness(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRadiusThickness(this.m_ParticleSystem, value);
+				}
+			}
+
 			public float angle
 			{
 				get
@@ -1617,15 +1681,28 @@ namespace UnityEngine
 				}
 			}
 
+			[Obsolete("Please use scale instead. (UnityUpgradable) -> UnityEngine.ParticleSystem/ShapeModule.scale")]
 			public Vector3 box
 			{
 				get
 				{
-					return ParticleSystem.ShapeModule.GetBox(this.m_ParticleSystem);
+					return ParticleSystem.ShapeModule.GetScale(this.m_ParticleSystem);
 				}
 				set
 				{
-					ParticleSystem.ShapeModule.SetBox(this.m_ParticleSystem, value);
+					ParticleSystem.ShapeModule.SetScale(this.m_ParticleSystem, value);
+				}
+			}
+
+			public Vector3 boxThickness
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetBoxThickness(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetBoxThickness(this.m_ParticleSystem, value);
 				}
 			}
 
@@ -1725,15 +1802,16 @@ namespace UnityEngine
 				}
 			}
 
+			[Obsolete("meshScale property is deprecated. Please use scale instead.")]
 			public float meshScale
 			{
 				get
 				{
-					return ParticleSystem.ShapeModule.GetMeshScale(this.m_ParticleSystem);
+					return ParticleSystem.ShapeModule.GetScale(this.m_ParticleSystem).x;
 				}
 				set
 				{
-					ParticleSystem.ShapeModule.SetMeshScale(this.m_ParticleSystem, value);
+					ParticleSystem.ShapeModule.SetScale(this.m_ParticleSystem, new Vector3(value, value, value));
 				}
 			}
 
@@ -1799,6 +1877,54 @@ namespace UnityEngine
 				}
 			}
 
+			public float donutRadius
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetDonutRadius(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetDonutRadius(this.m_ParticleSystem, value);
+				}
+			}
+
+			public Vector3 position
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetPosition(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetPosition(this.m_ParticleSystem, value);
+				}
+			}
+
+			public Vector3 rotation
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetRotation(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetRotation(this.m_ParticleSystem, value);
+				}
+			}
+
+			public Vector3 scale
+			{
+				get
+				{
+					return ParticleSystem.ShapeModule.GetScale(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.ShapeModule.SetScale(this.m_ParticleSystem, value);
+				}
+			}
+
 			[Obsolete("randomDirection property is deprecated. Use randomDirectionAmount instead.")]
 			public bool randomDirection
 			{
@@ -1851,6 +1977,14 @@ namespace UnityEngine
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRandomPositionAmount(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetRandomPositionAmount(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetAlignToDirection(ParticleSystem system, bool value);
 
 			[GeneratedByOldBindingsGenerator]
@@ -1899,6 +2033,14 @@ namespace UnityEngine
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRadiusThickness(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetRadiusThickness(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetAngle(ParticleSystem system, float value);
 
 			[GeneratedByOldBindingsGenerator]
@@ -1913,25 +2055,25 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetLength(ParticleSystem system);
 
-			private static void SetBox(ParticleSystem system, Vector3 value)
+			private static void SetBoxThickness(ParticleSystem system, Vector3 value)
 			{
-				ParticleSystem.ShapeModule.INTERNAL_CALL_SetBox(system, ref value);
+				ParticleSystem.ShapeModule.INTERNAL_CALL_SetBoxThickness(system, ref value);
 			}
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
-			private static extern void INTERNAL_CALL_SetBox(ParticleSystem system, ref Vector3 value);
+			private static extern void INTERNAL_CALL_SetBoxThickness(ParticleSystem system, ref Vector3 value);
 
-			private static Vector3 GetBox(ParticleSystem system)
+			private static Vector3 GetBoxThickness(ParticleSystem system)
 			{
 				Vector3 result;
-				ParticleSystem.ShapeModule.INTERNAL_CALL_GetBox(system, out result);
+				ParticleSystem.ShapeModule.INTERNAL_CALL_GetBoxThickness(system, out result);
 				return result;
 			}
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
-			private static extern void INTERNAL_CALL_GetBox(ParticleSystem system, out Vector3 value);
+			private static extern void INTERNAL_CALL_GetBoxThickness(ParticleSystem system, out Vector3 value);
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -1999,14 +2141,6 @@ namespace UnityEngine
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
-			private static extern void SetMeshScale(ParticleSystem system, float value);
-
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			private static extern float GetMeshScale(ParticleSystem system);
-
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void SetArc(ParticleSystem system, float value);
 
 			[GeneratedByOldBindingsGenerator]
@@ -2044,6 +2178,74 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetArcSpeedMultiplier(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetDonutRadius(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetDonutRadius(ParticleSystem system);
+
+			private static void SetPosition(ParticleSystem system, Vector3 value)
+			{
+				ParticleSystem.ShapeModule.INTERNAL_CALL_SetPosition(system, ref value);
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void INTERNAL_CALL_SetPosition(ParticleSystem system, ref Vector3 value);
+
+			private static Vector3 GetPosition(ParticleSystem system)
+			{
+				Vector3 result;
+				ParticleSystem.ShapeModule.INTERNAL_CALL_GetPosition(system, out result);
+				return result;
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void INTERNAL_CALL_GetPosition(ParticleSystem system, out Vector3 value);
+
+			private static void SetRotation(ParticleSystem system, Vector3 value)
+			{
+				ParticleSystem.ShapeModule.INTERNAL_CALL_SetRotation(system, ref value);
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void INTERNAL_CALL_SetRotation(ParticleSystem system, ref Vector3 value);
+
+			private static Vector3 GetRotation(ParticleSystem system)
+			{
+				Vector3 result;
+				ParticleSystem.ShapeModule.INTERNAL_CALL_GetRotation(system, out result);
+				return result;
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void INTERNAL_CALL_GetRotation(ParticleSystem system, out Vector3 value);
+
+			private static void SetScale(ParticleSystem system, Vector3 value)
+			{
+				ParticleSystem.ShapeModule.INTERNAL_CALL_SetScale(system, ref value);
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void INTERNAL_CALL_SetScale(ParticleSystem system, ref Vector3 value);
+
+			private static Vector3 GetScale(ParticleSystem system)
+			{
+				Vector3 result;
+				ParticleSystem.ShapeModule.INTERNAL_CALL_GetScale(system, out result);
+				return result;
+			}
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void INTERNAL_CALL_GetScale(ParticleSystem system, out Vector3 value);
 		}
 
 		public struct VelocityOverLifetimeModule
@@ -4120,6 +4322,48 @@ namespace UnityEngine
 				}
 			}
 
+			public ParticleSystem.MinMaxCurve positionAmount
+			{
+				get
+				{
+					ParticleSystem.MinMaxCurve result = default(ParticleSystem.MinMaxCurve);
+					ParticleSystem.NoiseModule.GetPositionAmount(this.m_ParticleSystem, ref result);
+					return result;
+				}
+				set
+				{
+					ParticleSystem.NoiseModule.SetPositionAmount(this.m_ParticleSystem, ref value);
+				}
+			}
+
+			public ParticleSystem.MinMaxCurve rotationAmount
+			{
+				get
+				{
+					ParticleSystem.MinMaxCurve result = default(ParticleSystem.MinMaxCurve);
+					ParticleSystem.NoiseModule.GetRotationAmount(this.m_ParticleSystem, ref result);
+					return result;
+				}
+				set
+				{
+					ParticleSystem.NoiseModule.SetRotationAmount(this.m_ParticleSystem, ref value);
+				}
+			}
+
+			public ParticleSystem.MinMaxCurve sizeAmount
+			{
+				get
+				{
+					ParticleSystem.MinMaxCurve result = default(ParticleSystem.MinMaxCurve);
+					ParticleSystem.NoiseModule.GetSizeAmount(this.m_ParticleSystem, ref result);
+					return result;
+				}
+				set
+				{
+					ParticleSystem.NoiseModule.SetSizeAmount(this.m_ParticleSystem, ref value);
+				}
+			}
+
 			internal NoiseModule(ParticleSystem particleSystem)
 			{
 				this.m_ParticleSystem = particleSystem;
@@ -4308,6 +4552,30 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetRemapZMultiplier(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetPositionAmount(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetPositionAmount(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetRotationAmount(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetRotationAmount(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetSizeAmount(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void GetSizeAmount(ParticleSystem system, ref ParticleSystem.MinMaxCurve curve);
 		}
 
 		public struct CollisionModule
@@ -4476,6 +4744,7 @@ namespace UnityEngine
 				}
 			}
 
+			[Obsolete("enableInteriorCollisions property is deprecated and is no longer required and has no effect on the particle system.")]
 			public bool enableInteriorCollisions
 			{
 				get
@@ -4545,6 +4814,54 @@ namespace UnityEngine
 				set
 				{
 					ParticleSystem.CollisionModule.SetUsesCollisionMessages(this.m_ParticleSystem, value);
+				}
+			}
+
+			public float colliderForce
+			{
+				get
+				{
+					return ParticleSystem.CollisionModule.GetColliderForce(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.CollisionModule.SetColliderForce(this.m_ParticleSystem, value);
+				}
+			}
+
+			public bool multiplyColliderForceByCollisionAngle
+			{
+				get
+				{
+					return ParticleSystem.CollisionModule.GetMultiplyColliderForceByCollisionAngle(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.CollisionModule.SetMultiplyColliderForceByCollisionAngle(this.m_ParticleSystem, value);
+				}
+			}
+
+			public bool multiplyColliderForceByParticleSpeed
+			{
+				get
+				{
+					return ParticleSystem.CollisionModule.GetMultiplyColliderForceByParticleSpeed(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.CollisionModule.SetMultiplyColliderForceByParticleSpeed(this.m_ParticleSystem, value);
+				}
+			}
+
+			public bool multiplyColliderForceByParticleSize
+			{
+				get
+				{
+					return ParticleSystem.CollisionModule.GetMultiplyColliderForceByParticleSize(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.CollisionModule.SetMultiplyColliderForceByParticleSize(this.m_ParticleSystem, value);
 				}
 			}
 
@@ -4722,6 +5039,38 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetUsesCollisionMessages(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetColliderForce(ParticleSystem system, float value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern float GetColliderForce(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetMultiplyColliderForceByCollisionAngle(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetMultiplyColliderForceByCollisionAngle(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetMultiplyColliderForceByParticleSpeed(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetMultiplyColliderForceByParticleSpeed(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetMultiplyColliderForceByParticleSize(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetMultiplyColliderForceByParticleSize(ParticleSystem system);
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -5128,6 +5477,18 @@ namespace UnityEngine
 				}
 			}
 
+			public ParticleSystemAnimationMode mode
+			{
+				get
+				{
+					return (ParticleSystemAnimationMode)ParticleSystem.TextureSheetAnimationModule.GetMode(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.TextureSheetAnimationModule.SetMode(this.m_ParticleSystem, (int)value);
+				}
+			}
+
 			public int numTilesX
 			{
 				get
@@ -5288,9 +5649,37 @@ namespace UnityEngine
 				}
 			}
 
+			public int spriteCount
+			{
+				get
+				{
+					return ParticleSystem.TextureSheetAnimationModule.GetSpriteCount(this.m_ParticleSystem);
+				}
+			}
+
 			internal TextureSheetAnimationModule(ParticleSystem particleSystem)
 			{
 				this.m_ParticleSystem = particleSystem;
+			}
+
+			public void AddSprite(Sprite sprite)
+			{
+				ParticleSystem.TextureSheetAnimationModule.AddSprite(this.m_ParticleSystem, sprite);
+			}
+
+			public void RemoveSprite(int index)
+			{
+				ParticleSystem.TextureSheetAnimationModule.RemoveSprite(this.m_ParticleSystem, index);
+			}
+
+			public void SetSprite(int index, Sprite sprite)
+			{
+				ParticleSystem.TextureSheetAnimationModule.SetSprite(this.m_ParticleSystem, index, sprite);
+			}
+
+			public Sprite GetSprite(int index)
+			{
+				return ParticleSystem.TextureSheetAnimationModule.GetSprite(this.m_ParticleSystem, index);
 			}
 
 			[GeneratedByOldBindingsGenerator]
@@ -5300,6 +5689,14 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool GetEnabled(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetMode(ParticleSystem system, int value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern int GetMode(ParticleSystem system);
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -5404,6 +5801,26 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern float GetFlipV(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern int GetSpriteCount(ParticleSystem system);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void AddSprite(ParticleSystem system, Object sprite);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void RemoveSprite(ParticleSystem system, int index);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetSprite(ParticleSystem system, int index, Object sprite);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern Sprite GetSprite(ParticleSystem system, int index);
 		}
 
 		public struct LightsModule
@@ -5852,6 +6269,18 @@ namespace UnityEngine
 				}
 			}
 
+			public bool generateLightingData
+			{
+				get
+				{
+					return ParticleSystem.TrailModule.GetGenerateLightingData(this.m_ParticleSystem);
+				}
+				set
+				{
+					ParticleSystem.TrailModule.SetGenerateLightingData(this.m_ParticleSystem, value);
+				}
+			}
+
 			internal TrailModule(ParticleSystem particleSystem)
 			{
 				this.m_ParticleSystem = particleSystem;
@@ -5976,6 +6405,14 @@ namespace UnityEngine
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern void GetColorOverTrail(ParticleSystem system, ref ParticleSystem.MinMaxGradient gradient);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetGenerateLightingData(ParticleSystem system, bool value);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern bool GetGenerateLightingData(ParticleSystem system);
 		}
 
 		public struct CustomDataModule
@@ -6603,8 +7040,6 @@ namespace UnityEngine
 			}
 		}
 
-		internal delegate bool IteratorDelegate(ParticleSystem ps);
-
 		[Obsolete("safeCollisionEventSize has been deprecated. Use GetSafeCollisionEventSize() instead (UnityUpgradable) -> ParticlePhysicsExtensions.GetSafeCollisionEventSize(UnityEngine.ParticleSystem)", false)]
 		public int safeCollisionEventSize
 		{
@@ -7095,27 +7530,7 @@ namespace UnityEngine
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_Simulate(ParticleSystem self, float t, bool restart, bool fixedTimeStep);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_Play(ParticleSystem self);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_Stop(ParticleSystem self, ParticleSystemStopBehavior stopBehavior);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_Pause(ParticleSystem self);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_Clear(ParticleSystem self);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool Internal_IsAlive(ParticleSystem self);
+		public extern void Simulate(float t, [DefaultValue("true")] bool withChildren, [DefaultValue("true")] bool restart, [DefaultValue("true")] bool fixedTimeStep);
 
 		[ExcludeFromDocs]
 		public void Simulate(float t, bool withChildren, bool restart)
@@ -7141,10 +7556,9 @@ namespace UnityEngine
 			this.Simulate(t, withChildren, restart, fixedTimeStep);
 		}
 
-		public void Simulate(float t, [DefaultValue("true")] bool withChildren, [DefaultValue("true")] bool restart, [DefaultValue("true")] bool fixedTimeStep)
-		{
-			this.IterateParticleSystems(withChildren, (ParticleSystem ps) => ParticleSystem.Internal_Simulate(ps, t, restart, fixedTimeStep));
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Play([DefaultValue("true")] bool withChildren);
 
 		[ExcludeFromDocs]
 		public void Play()
@@ -7153,10 +7567,20 @@ namespace UnityEngine
 			this.Play(withChildren);
 		}
 
-		public void Play([DefaultValue("true")] bool withChildren)
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Pause([DefaultValue("true")] bool withChildren);
+
+		[ExcludeFromDocs]
+		public void Pause()
 		{
-			this.IterateParticleSystems(withChildren, (ParticleSystem ps) => ParticleSystem.Internal_Play(ps));
+			bool withChildren = true;
+			this.Pause(withChildren);
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Stop([DefaultValue("true")] bool withChildren, [DefaultValue("ParticleSystemStopBehavior.StopEmitting")] ParticleSystemStopBehavior stopBehavior);
 
 		[ExcludeFromDocs]
 		public void Stop(bool withChildren)
@@ -7173,22 +7597,9 @@ namespace UnityEngine
 			this.Stop(withChildren, stopBehavior);
 		}
 
-		public void Stop([DefaultValue("true")] bool withChildren, [DefaultValue("ParticleSystemStopBehavior.StopEmitting")] ParticleSystemStopBehavior stopBehavior)
-		{
-			this.IterateParticleSystems(withChildren, (ParticleSystem ps) => ParticleSystem.Internal_Stop(ps, stopBehavior));
-		}
-
-		[ExcludeFromDocs]
-		public void Pause()
-		{
-			bool withChildren = true;
-			this.Pause(withChildren);
-		}
-
-		public void Pause([DefaultValue("true")] bool withChildren)
-		{
-			this.IterateParticleSystems(withChildren, (ParticleSystem ps) => ParticleSystem.Internal_Pause(ps));
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Clear([DefaultValue("true")] bool withChildren);
 
 		[ExcludeFromDocs]
 		public void Clear()
@@ -7197,21 +7608,15 @@ namespace UnityEngine
 			this.Clear(withChildren);
 		}
 
-		public void Clear([DefaultValue("true")] bool withChildren)
-		{
-			this.IterateParticleSystems(withChildren, (ParticleSystem ps) => ParticleSystem.Internal_Clear(ps));
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool IsAlive([DefaultValue("true")] bool withChildren);
 
 		[ExcludeFromDocs]
 		public bool IsAlive()
 		{
 			bool withChildren = true;
 			return this.IsAlive(withChildren);
-		}
-
-		public bool IsAlive([DefaultValue("true")] bool withChildren)
-		{
-			return this.IterateParticleSystems(withChildren, (ParticleSystem ps) => ParticleSystem.Internal_IsAlive(ps));
 		}
 
 		public void Emit(int count)
@@ -7258,37 +7663,6 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_Emit(ref ParticleSystem.EmitParams emitParams, int count);
 
-		internal bool IterateParticleSystems(bool recurse, ParticleSystem.IteratorDelegate func)
-		{
-			bool flag = func(this);
-			if (recurse)
-			{
-				flag |= ParticleSystem.IterateParticleSystemsRecursive(base.transform, func);
-			}
-			return flag;
-		}
-
-		private static bool IterateParticleSystemsRecursive(Transform transform, ParticleSystem.IteratorDelegate func)
-		{
-			bool flag = false;
-			int childCount = transform.childCount;
-			for (int i = 0; i < childCount; i++)
-			{
-				Transform child = transform.GetChild(i);
-				ParticleSystem component = child.gameObject.GetComponent<ParticleSystem>();
-				if (component != null)
-				{
-					flag = func(component);
-					if (flag)
-					{
-						break;
-					}
-					ParticleSystem.IterateParticleSystemsRecursive(child, func);
-				}
-			}
-			return flag;
-		}
-
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetupDefaultType(int type);
@@ -7310,7 +7684,11 @@ namespace UnityEngine
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern bool CountSubEmitterParticles(ref int count);
+		internal extern void CalculateEffectUIData(ref int particleCount, ref float fastestParticle, ref float slowestParticle);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern bool CalculateEffectUISubEmitterData(ref int particleCount, ref float fastestParticle, ref float slowestParticle);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

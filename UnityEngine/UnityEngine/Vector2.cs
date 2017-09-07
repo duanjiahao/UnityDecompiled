@@ -10,6 +10,22 @@ namespace UnityEngine
 
 		public float y;
 
+		private static readonly Vector2 zeroVector = new Vector2(0f, 0f);
+
+		private static readonly Vector2 oneVector = new Vector2(1f, 1f);
+
+		private static readonly Vector2 upVector = new Vector2(0f, 1f);
+
+		private static readonly Vector2 downVector = new Vector2(0f, -1f);
+
+		private static readonly Vector2 leftVector = new Vector2(-1f, 0f);
+
+		private static readonly Vector2 rightVector = new Vector2(1f, 0f);
+
+		private static readonly Vector2 positiveInfinityVector = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+
+		private static readonly Vector2 negativeInfinityVector = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
 		public const float kEpsilon = 1E-05f;
 
 		public float this[int index]
@@ -78,7 +94,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector2(0f, 0f);
+				return Vector2.zeroVector;
 			}
 		}
 
@@ -86,7 +102,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector2(1f, 1f);
+				return Vector2.oneVector;
 			}
 		}
 
@@ -94,7 +110,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector2(0f, 1f);
+				return Vector2.upVector;
 			}
 		}
 
@@ -102,7 +118,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector2(0f, -1f);
+				return Vector2.downVector;
 			}
 		}
 
@@ -110,7 +126,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector2(-1f, 0f);
+				return Vector2.leftVector;
 			}
 		}
 
@@ -118,7 +134,23 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector2(1f, 0f);
+				return Vector2.rightVector;
+			}
+		}
+
+		public static Vector2 positiveInfinity
+		{
+			get
+			{
+				return Vector2.positiveInfinityVector;
+			}
+		}
+
+		public static Vector2 negativeInfinity
+		{
+			get
+			{
+				return Vector2.negativeInfinityVector;
 			}
 		}
 
@@ -236,6 +268,15 @@ namespace UnityEngine
 		public static float Angle(Vector2 from, Vector2 to)
 		{
 			return Mathf.Acos(Mathf.Clamp(Vector2.Dot(from.normalized, to.normalized), -1f, 1f)) * 57.29578f;
+		}
+
+		public static float SignedAngle(Vector2 from, Vector2 to)
+		{
+			Vector2 normalized = from.normalized;
+			Vector2 normalized2 = to.normalized;
+			float num = Mathf.Acos(Mathf.Clamp(Vector2.Dot(normalized, normalized2), -1f, 1f)) * 57.29578f;
+			float num2 = Mathf.Sign(normalized.x * normalized2.y - normalized.y * normalized2.x);
+			return num * num2;
 		}
 
 		public static float Distance(Vector2 a, Vector2 b)

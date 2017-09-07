@@ -5,25 +5,25 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(SketchUpImporter))]
 	internal class SketchUpImporterEditor : ModelImporterEditor
 	{
-		internal override bool showImportedObject
+		public override bool showImportedObject
 		{
 			get
 			{
-				return base.activeEditor is SketchUpImporterModelEditor;
+				return base.activeTab is SketchUpImporterModelEditor;
 			}
 		}
 
-		internal override void OnEnable()
+		public override void OnEnable()
 		{
-			if (this.m_SubEditorTypes == null)
+			if (base.tabs == null)
 			{
-				this.m_SubEditorTypes = new Type[]
+				base.tabs = new BaseAssetImporterTabUI[]
 				{
-					typeof(SketchUpImporterModelEditor),
-					typeof(ModelImporterRigEditor),
-					typeof(ModelImporterClipEditor)
+					new SketchUpImporterModelEditor(this),
+					new ModelImporterRigEditor(this),
+					new ModelImporterClipEditor(this)
 				};
-				this.m_SubEditorNames = new string[]
+				this.m_TabNames = new string[]
 				{
 					"Sketch Up",
 					"Rig",

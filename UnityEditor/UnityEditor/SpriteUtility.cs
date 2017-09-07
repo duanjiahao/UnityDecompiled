@@ -549,6 +549,7 @@ namespace UnityEditor
 			else
 			{
 				RenderTexture active = RenderTexture.active;
+				Rect rawViewportRect = ShaderUtil.rawViewportRect;
 				bool flag = !TextureUtil.GetLinearSampled(original);
 				RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.Default, (!flag) ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB);
 				GL.sRGBWrite = (flag && QualitySettings.activeColorSpace == ColorSpace.Linear);
@@ -561,6 +562,7 @@ namespace UnityEditor
 				texture2D.Apply();
 				RenderTexture.ReleaseTemporary(temporary);
 				EditorGUIUtility.SetRenderTextureNoViewport(active);
+				ShaderUtil.rawViewportRect = rawViewportRect;
 				texture2D.alphaIsTransparency = original.alphaIsTransparency;
 				result = texture2D;
 			}

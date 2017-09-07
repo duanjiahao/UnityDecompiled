@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace UnityEditor
 {
+	[Obsolete("AssetsItem class is not used anymore (Asset Server has been removed)")]
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class AssetsItem

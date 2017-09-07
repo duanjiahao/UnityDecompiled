@@ -87,6 +87,10 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Internal_Pop();
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern int Internal_GetCount();
+
 		internal static Rect GetTopRect()
 		{
 			Rect result;
@@ -162,14 +166,14 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetMatrix(ref Matrix4x4 m);
 
-		internal static void SetTransform(Matrix4x4 clipTransform, Matrix4x4 objectTransform, Rect clipRect)
+		internal static void SetTransform(Matrix4x4 objectTransform, Rect clipRect)
 		{
-			GUIClip.INTERNAL_CALL_SetTransform(ref clipTransform, ref objectTransform, ref clipRect);
+			GUIClip.INTERNAL_CALL_SetTransform(ref objectTransform, ref clipRect);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetTransform(ref Matrix4x4 clipTransform, ref Matrix4x4 objectTransform, ref Rect clipRect);
+		private static extern void INTERNAL_CALL_SetTransform(ref Matrix4x4 objectTransform, ref Rect clipRect);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

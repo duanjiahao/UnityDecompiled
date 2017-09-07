@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEditor.AnimatedValues;
+using UnityEditor.Build;
 using UnityEditor.Modules;
 using UnityEditorInternal;
 using UnityEngine;
@@ -86,8 +87,6 @@ namespace UnityEditor
 		private ReorderableList m_LogoList;
 
 		private float m_TotalLogosDuration;
-
-		private static readonly Color k_DarkLogoColor = new Color(0.13f, 0.17f, 0.21f);
 
 		private static readonly float k_MinLogoTime = 2f;
 
@@ -224,7 +223,7 @@ namespace UnityEditor
 			float num2 = num / ((float)PlayerSettingsSplashScreenEditor.s_UnityLogo.texture.width / (float)PlayerSettingsSplashScreenEditor.s_UnityLogo.texture.height);
 			Rect position = new Rect(rect.x, rect.y + (rect.height - num2) / 2f, PlayerSettingsSplashScreenEditor.k_LogoListUnityLogoMaxWidth, num2);
 			Color color = GUI.color;
-			GUI.color = ((this.m_SplashScreenLogoStyle.intValue != 0) ? Color.white : PlayerSettingsSplashScreenEditor.k_DarkLogoColor);
+			GUI.color = ((this.m_SplashScreenLogoStyle.intValue != 0) ? Color.white : Color.black);
 			GUI.Label(position, PlayerSettingsSplashScreenEditor.s_UnityLogo.texture);
 			GUI.color = color;
 			float labelWidth = EditorGUIUtility.labelWidth;
@@ -361,7 +360,7 @@ namespace UnityEditor
 			EditorGUI.EndProperty();
 		}
 
-		public void SplashSectionGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
+		public void SplashSectionGUI(BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			GUI.changed = false;
 			if (this.m_Owner.BeginSettingsBox(2, PlayerSettingsSplashScreenEditor.k_Texts.title))

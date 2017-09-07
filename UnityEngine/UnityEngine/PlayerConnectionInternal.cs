@@ -35,6 +35,11 @@ namespace UnityEngine
 			return PlayerConnectionInternal.IsConnected();
 		}
 
+		void IPlayerEditorConnectionNative.DisconnectAll()
+		{
+			PlayerConnectionInternal.DisconnectAll();
+		}
+
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsConnected();
@@ -54,5 +59,9 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SendMessage(string messageId, byte[] data, int playerId);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void DisconnectAll();
 	}
 }

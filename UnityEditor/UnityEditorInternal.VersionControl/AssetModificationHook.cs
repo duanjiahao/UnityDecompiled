@@ -14,7 +14,14 @@ namespace UnityEditorInternal.VersionControl
 			{
 				Task task = Provider.Status(from, false);
 				task.Wait();
-				asset = Provider.CacheStatus(from);
+				if (task.success)
+				{
+					asset = Provider.CacheStatus(from);
+				}
+				else
+				{
+					asset = null;
+				}
 			}
 			return asset;
 		}
@@ -102,7 +109,18 @@ namespace UnityEditorInternal.VersionControl
 			else
 			{
 				Asset asset = (statusOptions != StatusQueryOptions.UseCachedIfPossible) ? AssetModificationHook.GetStatusForceUpdate(assetPath) : AssetModificationHook.GetStatusCachedIfPossible(assetPath);
-				result = (asset != null && Provider.IsOpenForEdit(asset));
+				if (asset == null)
+				{
+					if (Provider.onlineState == OnlineState.Offline && Provider.offlineReason != string.Empty)
+					{
+						message = Provider.offlineReason;
+					}
+					result = false;
+				}
+				else
+				{
+					result = Provider.IsOpenForEdit(asset);
+				}
 			}
 			return result;
 		}

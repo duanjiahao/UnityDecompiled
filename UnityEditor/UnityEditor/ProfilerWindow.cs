@@ -27,8 +27,6 @@ namespace UnityEditor
 
 			public GUIContent gatherObjectReferences = EditorGUIUtility.TextContent("Gather object references|Collect reference information to see where objects are referenced from. Disable this to save memory");
 
-			public GUIContent timelineHighDetail = EditorGUIUtility.TextContent("High Detail|Guaranteed to show all samples and memory callstacks");
-
 			public GUIContent memRecord = EditorGUIUtility.TextContent("Mem Record|Record activity in the native memory system");
 
 			public GUIContent profilerRecord = EditorGUIUtility.TextContentWithIcon("Record|Record profiling information", "Profiler.Record");
@@ -50,6 +48,8 @@ namespace UnityEditor
 			public GUIContent loadProfilingData = EditorGUIUtility.TextContent("Load|Load binary profiling information from a file. Shift click to append to the existing data");
 
 			public GUIContent[] reasons = ProfilerWindow.Styles.GetLocalizedReasons();
+
+			public GUIContent[] detailedPaneTypes = ProfilerWindow.Styles.GetLocalizedDetailedPaneTypes();
 
 			public GUIStyle background = "OL Box";
 
@@ -85,6 +85,16 @@ namespace UnityEditor
 					EditorGUIUtility.TextContent("Not Applicable")
 				};
 			}
+
+			private static GUIContent[] GetLocalizedDetailedPaneTypes()
+			{
+				return new GUIContent[]
+				{
+					EditorGUIUtility.TextContent("No Details"),
+					EditorGUIUtility.TextContent("Show Related Objects"),
+					EditorGUIUtility.TextContent("Show Calls")
+				};
+			}
 		}
 
 		private struct CachedProfilerPropertyConfig
@@ -101,8 +111,16 @@ namespace UnityEditor
 		private enum HierarchyViewDetailPaneType
 		{
 			None,
-			Objects
+			Objects,
+			CallersAndCallees
 		}
+
+		private static readonly ProfilerArea[] ms_StackedAreas = new ProfilerArea[]
+		{
+			ProfilerArea.CPU,
+			ProfilerArea.GPU,
+			ProfilerArea.UI
+		};
 
 		private static ProfilerWindow.Styles ms_Styles;
 
@@ -147,7 +165,7 @@ namespace UnityEditor
 
 		private Vector2 m_GraphPos = Vector2.zero;
 
-		private Vector2[] m_PaneScroll = new Vector2[10];
+		private Vector2[] m_PaneScroll = new Vector2[12];
 
 		private Vector2 m_PaneScroll_AudioChannels = Vector2.zero;
 
@@ -191,6 +209,15 @@ namespace UnityEditor
 		private float[] m_ChartOldMax = new float[]
 		{
 			-1f,
+			-1f,
+			0f,
+			0f,
+			0f,
+			0f,
+			0f,
+			0f,
+			0f,
+			0f,
 			-1f
 		};
 
@@ -225,7 +252,7 @@ namespace UnityEditor
 		private ProfilerProperty m_CPUOrGPUProfilerProperty;
 
 		[SerializeField]
-		private bool m_TimelineViewDetail = false;
+		private UISystemProfiler m_UISystemProfiler;
 
 		private MemoryTreeList m_ReferenceListView;
 
@@ -368,6 +395,7 @@ namespace UnityEditor
 			array3[0] = text;
 			ProfilerHierarchyGUI detailedObjectsView2 = new ProfilerHierarchyGUI(this, null, "VisibleProfilerGPUDetailColumns", array5, array3, true, ProfilerColumn.TotalGPUTime);
 			this.m_GPUHierarchyGUI = new ProfilerHierarchyGUI(this, detailedObjectsView2, "VisibleProfilerGPUColumns", array4, ProfilerWindow.ProfilerColumnNames(array4), false, ProfilerColumn.TotalGPUTime);
+			this.m_UISystemProfiler = new UISystemProfiler();
 		}
 
 		private static string[] ProfilerColumnNames(ProfilerColumn[] columns)
@@ -491,20 +519,20 @@ namespace UnityEditor
 		private void Initialize()
 		{
 			int len = ProfilerDriver.maxHistoryLength - 1;
-			this.m_Charts = new ProfilerChart[10];
+			this.m_Charts = new ProfilerChart[12];
 			Color[] colors = ProfilerColors.colors;
 			for (ProfilerArea profilerArea = ProfilerArea.CPU; profilerArea < ProfilerArea.AreaCount; profilerArea++)
 			{
-				float dataScale = 1f;
-				Chart.ChartType type = Chart.ChartType.Line;
+				float scale = 1f;
+				Chart.ChartType chartType = Chart.ChartType.Line;
 				string[] graphStatisticsPropertiesForArea = ProfilerDriver.GetGraphStatisticsPropertiesForArea(profilerArea);
 				int num = graphStatisticsPropertiesForArea.Length;
-				if (profilerArea == ProfilerArea.GPU || profilerArea == ProfilerArea.CPU)
+				if (Array.IndexOf<ProfilerArea>(ProfilerWindow.ms_StackedAreas, profilerArea) != -1)
 				{
-					type = Chart.ChartType.StackedFill;
-					dataScale = 0.001f;
+					chartType = Chart.ChartType.StackedFill;
+					scale = 0.001f;
 				}
-				ProfilerChart profilerChart = new ProfilerChart(profilerArea, type, dataScale, num);
+				ProfilerChart profilerChart = ProfilerWindow.CreateProfilerChart(profilerArea, chartType, scale, num);
 				for (int i = 0; i < num; i++)
 				{
 					profilerChart.m_Series[i] = new ChartSeries(graphStatisticsPropertiesForArea[i], len, colors[i % colors.Length]);
@@ -529,6 +557,20 @@ namespace UnityEditor
 			}
 		}
 
+		private static ProfilerChart CreateProfilerChart(ProfilerArea i, Chart.ChartType chartType, float scale, int length)
+		{
+			ProfilerChart result;
+			if (i == ProfilerArea.UIDetails)
+			{
+				result = new UISystemProfilerChart(chartType, scale, length);
+			}
+			else
+			{
+				result = new ProfilerChart(i, chartType, scale, length);
+			}
+			return result;
+		}
+
 		private void CheckForPlatformModuleChange()
 		{
 			if (this.m_ActiveNativePlatformSupportModule != EditorUtility.GetActiveNativePlatformSupportModuleName())
@@ -542,6 +584,7 @@ namespace UnityEditor
 		private void OnDisable()
 		{
 			ProfilerWindow.m_ProfilerWindows.Remove(this);
+			this.m_UISystemProfiler.CurrentAreaChanged(ProfilerArea.AreaCount);
 		}
 
 		private void Awake()
@@ -687,13 +730,12 @@ namespace UnityEditor
 			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
 			this.DrawCPUorGPUCommonToolbar(property);
 			GUILayout.FlexibleSpace();
-			this.m_TimelineViewDetail = GUILayout.Toggle(this.m_TimelineViewDetail, ProfilerWindow.ms_Styles.timelineHighDetail, EditorStyles.toolbarButton, new GUILayoutOption[0]);
-			ProfilerWindow.ms_Styles.memRecord.text = "Mem Record";
+			ProfilerWindow.ms_Styles.memRecord.text = "Allocation Callstacks";
 			if (this.m_SelectedMemRecordMode != ProfilerMemoryRecordMode.None)
 			{
-				GUIContent expr_6D = ProfilerWindow.ms_Styles.memRecord;
-				string text = expr_6D.text;
-				expr_6D.text = string.Concat(new object[]
+				GUIContent expr_47 = ProfilerWindow.ms_Styles.memRecord;
+				string text = expr_47.text;
+				expr_47.text = string.Concat(new object[]
 				{
 					text,
 					" [",
@@ -703,17 +745,25 @@ namespace UnityEditor
 			}
 			Rect rect = GUILayoutUtility.GetRect(ProfilerWindow.ms_Styles.memRecord, EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{
-				GUILayout.Width(100f)
+				GUILayout.Width(170f)
 			});
 			if (EditorGUI.DropdownButton(rect, ProfilerWindow.ms_Styles.memRecord, FocusType.Passive, EditorStyles.toolbarDropDown))
 			{
 				string[] array = new string[]
 				{
 					"None",
-					"Sample only",
-					"Callstack (fast)",
-					"Callstack (full)"
+					"Managed Allocations"
 				};
+				if (Unsupported.IsDeveloperBuild())
+				{
+					array = new string[]
+					{
+						"None",
+						"Managed Allocations",
+						"All Allocations (fast)",
+						"All Allocations (full)"
+					};
+				}
 				bool[] array2 = new bool[array.Length];
 				for (int i = 0; i < array.Length; i++)
 				{
@@ -837,7 +887,7 @@ namespace UnityEditor
 				this.DrawCPUOrGPUTimelineViewToolbar(rootProfilerProperty);
 				float num = (float)this.m_VertSplit.realSizes[1];
 				num -= EditorStyles.toolbar.CalcHeight(GUIContent.none, 10f) + 2f;
-				timelinePane.DoGUI(this.GetActiveVisibleFrameIndex(), base.position.width, base.position.height - num, num, this.m_TimelineViewDetail);
+				timelinePane.DoGUI(this.GetActiveVisibleFrameIndex(), base.position.width, base.position.height - num, num);
 			}
 			else
 			{
@@ -857,7 +907,18 @@ namespace UnityEditor
 					this.m_HierarchyViewDetailPaneType = this.DrawCPUOrGPUDetailedViewPopup();
 					GUILayout.FlexibleSpace();
 					EditorGUILayout.EndHorizontal();
-					mainPane.detailedObjectsView.DoGUI(ProfilerWindow.ms_Styles.header, this.GetActiveVisibleFrameIndex(), this.m_ViewType);
+					ProfilerWindow.HierarchyViewDetailPaneType hierarchyViewDetailPaneType = this.m_HierarchyViewDetailPaneType;
+					if (hierarchyViewDetailPaneType != ProfilerWindow.HierarchyViewDetailPaneType.Objects)
+					{
+						if (hierarchyViewDetailPaneType == ProfilerWindow.HierarchyViewDetailPaneType.CallersAndCallees)
+						{
+							mainPane.detailedCallsView.DoGUI(ProfilerWindow.ms_Styles.header, this.GetActiveVisibleFrameIndex(), this.m_ViewType);
+						}
+					}
+					else
+					{
+						mainPane.detailedObjectsView.DoGUI(ProfilerWindow.ms_Styles.header, this.GetActiveVisibleFrameIndex(), this.m_ViewType);
+					}
 					GUILayout.EndVertical();
 					SplitterGUILayout.EndHorizontalSplit();
 				}
@@ -866,17 +927,13 @@ namespace UnityEditor
 
 		private ProfilerWindow.HierarchyViewDetailPaneType DrawCPUOrGPUDetailedViewPopup()
 		{
-			string[] displayedOptions = new string[]
-			{
-				"No details",
-				"Show related objects"
-			};
 			int[] optionValues = new int[]
 			{
 				0,
-				1
+				1,
+				2
 			};
-			return (ProfilerWindow.HierarchyViewDetailPaneType)EditorGUILayout.IntPopup((int)this.m_HierarchyViewDetailPaneType, displayedOptions, optionValues, EditorStyles.toolbarDropDown, new GUILayoutOption[]
+			return (ProfilerWindow.HierarchyViewDetailPaneType)EditorGUILayout.IntPopup((int)this.m_HierarchyViewDetailPaneType, ProfilerWindow.ms_Styles.detailedPaneTypes, optionValues, EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{
 				GUILayout.Width(120f)
 			});
@@ -1327,108 +1384,36 @@ namespace UnityEditor
 		{
 			int num = ProfilerDriver.maxHistoryLength - 1;
 			int num2 = ProfilerDriver.lastFrameIndex - num;
-			int num3 = Mathf.Max(ProfilerDriver.firstFrameIndex, num2);
+			int firstFrame = Mathf.Max(ProfilerDriver.firstFrameIndex, num2);
 			ProfilerChart[] charts = this.m_Charts;
 			for (int i = 0; i < charts.Length; i++)
 			{
-				ProfilerChart profilerChart = charts[i];
-				float num4 = 1f;
-				float[] array = new float[profilerChart.m_Series.Length];
-				for (int j = 0; j < profilerChart.m_Series.Length; j++)
-				{
-					int statisticsIdentifier = ProfilerDriver.GetStatisticsIdentifier(profilerChart.m_Series[j].identifierName);
-					float num5;
-					ProfilerDriver.GetStatisticsValues(statisticsIdentifier, num2, profilerChart.m_DataScale, profilerChart.m_Series[j].data, out num5);
-					num5 = Mathf.Max(num5, 0.0001f);
-					if (num5 > num4)
-					{
-						num4 = num5;
-					}
-					float num6;
-					if (profilerChart.m_Type == Chart.ChartType.Line)
-					{
-						num6 = 1f / (num5 * (1.05f + (float)j * 0.05f));
-					}
-					else
-					{
-						num6 = 1f / num5;
-					}
-					array[j] = num6;
-				}
-				if (profilerChart.m_Type == Chart.ChartType.Line)
-				{
-					profilerChart.m_Data.AssignScale(array);
-				}
-				if (profilerChart.m_Area == ProfilerArea.NetworkMessages || profilerChart.m_Area == ProfilerArea.NetworkOperations)
-				{
-					for (int k = 0; k < profilerChart.m_Series.Length; k++)
-					{
-						array[k] = 0.9f / num4;
-					}
-					profilerChart.m_Data.AssignScale(array);
-					profilerChart.m_Data.maxValue = num4;
-				}
-				profilerChart.m_Data.Assign(profilerChart.m_Series, num2, num3);
+				ProfilerChart chart = charts[i];
+				ProfilerWindow.UpdateSingleChart(chart, num2, firstFrame);
 			}
 			string selectedPropertyPath = ProfilerDriver.selectedPropertyPath;
 			bool flag = selectedPropertyPath != string.Empty && this.m_CurrentArea == ProfilerArea.CPU;
-			ProfilerChart profilerChart2 = this.m_Charts[0];
+			ProfilerChart profilerChart = this.m_Charts[0];
 			if (flag)
 			{
-				profilerChart2.m_Data.hasOverlay = true;
-				ChartSeries[] series = profilerChart2.m_Series;
-				for (int l = 0; l < series.Length; l++)
+				profilerChart.m_Data.hasOverlay = true;
+				ChartSeries[] series = profilerChart.m_Series;
+				for (int j = 0; j < series.Length; j++)
 				{
-					ChartSeries chartSeries = series[l];
-					int statisticsIdentifier2 = ProfilerDriver.GetStatisticsIdentifier("Selected" + chartSeries.identifierName);
+					ChartSeries chartSeries = series[j];
+					int statisticsIdentifier = ProfilerDriver.GetStatisticsIdentifier("Selected" + chartSeries.identifierName);
 					chartSeries.CreateOverlayData();
-					float num7;
-					ProfilerDriver.GetStatisticsValues(statisticsIdentifier2, num2, profilerChart2.m_DataScale, chartSeries.overlayData, out num7);
+					float num3;
+					ProfilerDriver.GetStatisticsValues(statisticsIdentifier, num2, profilerChart.m_DataScale, chartSeries.overlayData, out num3);
 				}
 			}
 			else
 			{
-				profilerChart2.m_Data.hasOverlay = false;
+				profilerChart.m_Data.hasOverlay = false;
 			}
-			for (ProfilerArea profilerArea = ProfilerArea.CPU; profilerArea <= ProfilerArea.GPU; profilerArea++)
+			for (int k = 0; k < ProfilerWindow.ms_StackedAreas.Length; k++)
 			{
-				ProfilerChart profilerChart3 = this.m_Charts[(int)profilerArea];
-				float num8 = 0f;
-				float num9 = 0f;
-				for (int m = 0; m < num; m++)
-				{
-					float num10 = 0f;
-					for (int n = 0; n < profilerChart3.m_Series.Length; n++)
-					{
-						if (profilerChart3.m_Series[n].enabled)
-						{
-							num10 += profilerChart3.m_Series[n].data[m];
-						}
-					}
-					if (num10 > num8)
-					{
-						num8 = num10;
-					}
-					if (num10 > num9 && m + num2 >= num3 + 1)
-					{
-						num9 = num10;
-					}
-				}
-				if (num9 != 0f)
-				{
-					num8 = num9;
-				}
-				num8 = Math.Min(num8, this.m_ChartMaxClamp);
-				if (this.m_ChartOldMax[(int)profilerArea] > 0f)
-				{
-					num8 = Mathf.Lerp(this.m_ChartOldMax[(int)profilerArea], num8, 0.4f);
-				}
-				this.m_ChartOldMax[(int)profilerArea] = num8;
-				profilerChart3.m_Data.AssignScale(new float[]
-				{
-					1f / num8
-				});
-				ProfilerWindow.UpdateChartGrid(num8, profilerChart3.m_Data);
+				this.ComputeChartScaleValue(ProfilerWindow.ms_StackedAreas[k], num, num2, firstFrame);
 			}
 			string notSupportedWarning = null;
 			if (!ProfilerDriver.isGPUProfilerSupported)
@@ -1447,6 +1432,92 @@ namespace UnityEditor
 				}
 			}
 			this.m_Charts[1].m_Chart.m_NotSupportedWarning = notSupportedWarning;
+		}
+
+		private void ComputeChartScaleValue(ProfilerArea i, int historyLength, int firstEmptyFrame, int firstFrame)
+		{
+			ProfilerChart profilerChart = this.m_Charts[(int)i];
+			float num = 0f;
+			float num2 = 0f;
+			for (int j = 0; j < historyLength; j++)
+			{
+				float num3 = 0f;
+				for (int k = 0; k < profilerChart.m_Series.Length; k++)
+				{
+					if (profilerChart.m_Series[k].enabled)
+					{
+						num3 += profilerChart.m_Series[k].data[j];
+					}
+				}
+				if (num3 > num)
+				{
+					num = num3;
+				}
+				if (num3 > num2 && j + firstEmptyFrame >= firstFrame + 1)
+				{
+					num2 = num3;
+				}
+			}
+			if (num2 != 0f)
+			{
+				num = num2;
+			}
+			num = Math.Min(num, this.m_ChartMaxClamp);
+			if (this.m_ChartOldMax[(int)i] > 0f)
+			{
+				num = Mathf.Lerp(this.m_ChartOldMax[(int)i], num, 0.4f);
+			}
+			this.m_ChartOldMax[(int)i] = num;
+			profilerChart.m_Data.AssignScale(new float[]
+			{
+				1f / num
+			});
+			ProfilerWindow.UpdateChartGrid(num, profilerChart.m_Data);
+		}
+
+		internal static void UpdateSingleChart(ProfilerChart chart, int firstEmptyFrame, int firstFrame)
+		{
+			float num = 1f;
+			float[] array = new float[chart.m_Series.Length];
+			for (int i = 0; i < chart.m_Series.Length; i++)
+			{
+				int statisticsIdentifier = ProfilerDriver.GetStatisticsIdentifier(chart.m_Series[i].identifierName);
+				float num2;
+				ProfilerDriver.GetStatisticsValues(statisticsIdentifier, firstEmptyFrame, chart.m_DataScale, chart.m_Series[i].data, out num2);
+				num2 = Mathf.Max(num2, 0.0001f);
+				if (num2 > num)
+				{
+					num = num2;
+				}
+				float num3;
+				if (chart.m_Type == Chart.ChartType.Line)
+				{
+					num3 = 1f / (num2 * (1.05f + (float)i * 0.05f));
+				}
+				else
+				{
+					num3 = 1f / num2;
+				}
+				array[i] = num3;
+			}
+			if (chart.m_Type == Chart.ChartType.Line)
+			{
+				chart.m_Data.AssignScale(array);
+			}
+			if (chart.m_Area == ProfilerArea.NetworkMessages || chart.m_Area == ProfilerArea.NetworkOperations)
+			{
+				for (int j = 0; j < chart.m_Series.Length; j++)
+				{
+					array[j] = 0.9f / num;
+				}
+				chart.m_Data.AssignScale(array);
+				chart.m_Data.maxValue = num;
+			}
+			chart.m_Data.Assign(chart.m_Series, firstEmptyFrame, firstFrame);
+			if (chart is UISystemProfilerChart)
+			{
+				((UISystemProfilerChart)chart).Update(firstFrame, ProfilerDriver.maxHistoryLength - 1);
+			}
 		}
 
 		private void AddAreaClick(object userData, string[] options, int selected)
@@ -1677,6 +1748,7 @@ namespace UnityEditor
 						if (this.m_CurrentArea == (ProfilerArea)j)
 						{
 							this.m_CurrentArea = ProfilerArea.CPU;
+							this.m_UISystemProfiler.CurrentAreaChanged(this.m_CurrentArea);
 						}
 						profilerChart2.active = false;
 					}
@@ -1687,6 +1759,7 @@ namespace UnityEditor
 						{
 							this.ClearSelectedPropertyPath();
 						}
+						this.m_UISystemProfiler.CurrentAreaChanged(this.m_CurrentArea);
 						flag = true;
 					}
 				}
@@ -1702,25 +1775,29 @@ namespace UnityEditor
 			{
 			case ProfilerArea.CPU:
 				this.DrawCPUOrGPUPane(this.m_CPUHierarchyGUI, this.m_CPUTimelineGUI);
-				goto IL_266;
+				goto IL_2B7;
 			case ProfilerArea.GPU:
 				this.DrawCPUOrGPUPane(this.m_GPUHierarchyGUI, null);
-				goto IL_266;
+				goto IL_2B7;
 			case ProfilerArea.Memory:
 				this.DrawMemoryPane(this.m_ViewSplit);
-				goto IL_266;
+				goto IL_2B7;
 			case ProfilerArea.Audio:
 				this.DrawAudioPane();
-				goto IL_266;
+				goto IL_2B7;
 			case ProfilerArea.NetworkMessages:
 				this.DrawPane(this.m_CurrentArea);
-				goto IL_266;
+				goto IL_2B7;
 			case ProfilerArea.NetworkOperations:
 				this.DrawNetworkOperationsPane();
-				goto IL_266;
+				goto IL_2B7;
+			case ProfilerArea.UI:
+			case ProfilerArea.UIDetails:
+				this.m_UISystemProfiler.DrawUIPane(this, this.m_CurrentArea, (UISystemProfilerChart)this.m_Charts[11]);
+				goto IL_2B7;
 			}
 			this.DrawPane(this.m_CurrentArea);
-			IL_266:
+			IL_2B7:
 			GUILayout.EndVertical();
 			SplitterGUILayout.EndVerticalSplit();
 		}

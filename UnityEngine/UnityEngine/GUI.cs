@@ -334,6 +334,13 @@ namespace UnityEngine
 			get;
 		}
 
+		internal static extern Material roundedRectMaterial
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		internal static extern bool usePageScrollbars
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -423,6 +430,11 @@ namespace UnityEngine
 
 		public static void DrawTexture(Rect position, Texture image, ScaleMode scaleMode, bool alphaBlend, float imageAspect)
 		{
+			GUI.DrawTexture(position, image, scaleMode, alphaBlend, imageAspect, GUI.color, 0f, 0f);
+		}
+
+		public static void DrawTexture(Rect position, Texture image, ScaleMode scaleMode, bool alphaBlend, float imageAspect, Color color, float borderWidth, float cornerRadius)
+		{
 			GUIUtility.CheckOnGUI();
 			if (Event.current.type == EventType.Repaint)
 			{
@@ -436,13 +448,23 @@ namespace UnityEngine
 					{
 						imageAspect = (float)image.width / (float)image.height;
 					}
-					Material mat = (!alphaBlend) ? GUI.blitMaterial : GUI.blendMaterial;
+					Material mat;
+					if (borderWidth > Mathf.Epsilon || cornerRadius > Mathf.Epsilon)
+					{
+						mat = GUI.roundedRectMaterial;
+					}
+					else
+					{
+						mat = ((!alphaBlend) ? GUI.blitMaterial : GUI.blendMaterial);
+					}
 					Internal_DrawTextureArguments internal_DrawTextureArguments = default(Internal_DrawTextureArguments);
 					internal_DrawTextureArguments.leftBorder = 0;
 					internal_DrawTextureArguments.rightBorder = 0;
 					internal_DrawTextureArguments.topBorder = 0;
 					internal_DrawTextureArguments.bottomBorder = 0;
-					internal_DrawTextureArguments.color = GUI.color;
+					internal_DrawTextureArguments.color = color;
+					internal_DrawTextureArguments.borderWidth = borderWidth;
+					internal_DrawTextureArguments.cornerRadius = cornerRadius;
 					internal_DrawTextureArguments.texture = image;
 					internal_DrawTextureArguments.mat = mat;
 					GUI.CalculateScaledTextureRects(position, scaleMode, imageAspect, ref internal_DrawTextureArguments.screenRect, ref internal_DrawTextureArguments.sourceRect);
@@ -1227,9 +1249,9 @@ namespace UnityEngine
 					{
 						gUIStyle.Draw(array[selected], contents[selected], selected == buttonGridMouseSelection2 && (GUI.enabled || controlID == GUIUtility.hotControl) && (controlID == GUIUtility.hotControl || GUIUtility.hotControl == 0), controlID == GUIUtility.hotControl, true, false);
 					}
-					if (buttonGridMouseSelection2 >= 0)
+					if (buttonGridMouseSelection2 >= 0 && !string.IsNullOrEmpty(contents[buttonGridMouseSelection2].tooltip))
 					{
-						GUI.tooltip = contents[buttonGridMouseSelection2].tooltip;
+						GUIStyle.SetMouseTooltip(contents[buttonGridMouseSelection2].tooltip, array[buttonGridMouseSelection2]);
 					}
 					GUIClip.Pop();
 					break;
@@ -1482,6 +1504,11 @@ namespace UnityEngine
 
 		public static void BeginGroup(Rect position, GUIContent content, GUIStyle style)
 		{
+			GUI.BeginGroup(position, content, style, Vector2.zero);
+		}
+
+		internal static void BeginGroup(Rect position, GUIContent content, GUIStyle style, Vector2 scrollOffset)
+		{
 			GUIUtility.CheckOnGUI();
 			int controlID = GUIUtility.GetControlID(GUI.s_BeginGroupHash, FocusType.Passive);
 			if (content != GUIContent.none || style != GUIStyle.none)
@@ -1499,7 +1526,7 @@ namespace UnityEngine
 					style.Draw(position, content, controlID);
 				}
 			}
-			GUIClip.Push(position, Vector2.zero, Vector2.zero, false);
+			GUIClip.Push(position, scrollOffset, Vector2.zero, false);
 		}
 
 		public static void EndGroup()
@@ -1670,6 +1697,14 @@ namespace UnityEngine
 			{
 				scrollViewState.scrollPosition.x = Mathf.Clamp(scrollViewState.scrollPosition.x + Event.current.delta.x * 20f, 0f, scrollViewState.viewRect.width - scrollViewState.visibleRect.width);
 				scrollViewState.scrollPosition.y = Mathf.Clamp(scrollViewState.scrollPosition.y + Event.current.delta.y * 20f, 0f, scrollViewState.viewRect.height - scrollViewState.visibleRect.height);
+				if (scrollViewState.scrollPosition.x < 0f)
+				{
+					scrollViewState.scrollPosition.x = 0f;
+				}
+				if (scrollViewState.scrollPosition.y < 0f)
+				{
+					scrollViewState.scrollPosition.y = 0f;
+				}
 				scrollViewState.apply = true;
 				Event.current.Use();
 			}

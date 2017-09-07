@@ -30,6 +30,8 @@ namespace UnityEditorInternal
 
 		public delegate bool CanRemoveCallbackDelegate(ReorderableList list);
 
+		public delegate bool CanAddCallbackDelegate(ReorderableList list);
+
 		public class Defaults
 		{
 			public GUIContent iconToolbarPlus = EditorGUIUtility.IconContent("Toolbar Plus", "|Add to list");
@@ -77,23 +79,26 @@ namespace UnityEditorInternal
 				}
 				if (list.displayAdd)
 				{
-					if (GUI.Button(rect2, (list.onAddDropdownCallback == null) ? this.iconToolbarPlus : this.iconToolbarPlusMore, this.preButton))
+					using (new EditorGUI.DisabledScope(list.onCanAddCallback != null && !list.onCanAddCallback(list)))
 					{
-						if (list.onAddDropdownCallback != null)
+						if (GUI.Button(rect2, (list.onAddDropdownCallback == null) ? this.iconToolbarPlus : this.iconToolbarPlusMore, this.preButton))
 						{
-							list.onAddDropdownCallback(rect2, list);
-						}
-						else if (list.onAddCallback != null)
-						{
-							list.onAddCallback(list);
-						}
-						else
-						{
-							this.DoAddButton(list);
-						}
-						if (list.onChangedCallback != null)
-						{
-							list.onChangedCallback(list);
+							if (list.onAddDropdownCallback != null)
+							{
+								list.onAddDropdownCallback(rect2, list);
+							}
+							else if (list.onAddCallback != null)
+							{
+								list.onAddCallback(list);
+							}
+							else
+							{
+								this.DoAddButton(list);
+							}
+							if (list.onChangedCallback != null)
+							{
+								list.onChangedCallback(list);
+							}
 						}
 					}
 				}
@@ -239,6 +244,8 @@ namespace UnityEditorInternal
 		public ReorderableList.SelectCallbackDelegate onMouseUpCallback;
 
 		public ReorderableList.CanRemoveCallbackDelegate onCanRemoveCallback;
+
+		public ReorderableList.CanAddCallbackDelegate onCanAddCallback;
 
 		public ReorderableList.ChangedCallbackDelegate onChangedCallback;
 

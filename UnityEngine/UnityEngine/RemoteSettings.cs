@@ -48,6 +48,10 @@ namespace UnityEngine
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ForceUpdate();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetInt(string key, [DefaultValue("0")] int defaultValue);
 
 		[ExcludeFromDocs]

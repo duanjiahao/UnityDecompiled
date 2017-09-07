@@ -200,9 +200,6 @@ namespace UnityEditor
 		[CompilerGenerated]
 		private static Handles.CapFunction <>f__mg$cache8;
 
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache9;
-
 		public static Color xAxisColor
 		{
 			get
@@ -326,6 +323,66 @@ namespace UnityEditor
 			get
 			{
 				return Handles.color * new Color(1f, 1f, 1f, 0.5f) + ((!Handles.lighting) ? new Color(0f, 0f, 0f, 0f) : new Color(0f, 0f, 0f, 0.5f));
+			}
+		}
+
+		private static Mesh cubeMesh
+		{
+			get
+			{
+				if (Handles.s_CubeMesh == null)
+				{
+					Handles.Init();
+				}
+				return Handles.s_CubeMesh;
+			}
+		}
+
+		private static Mesh coneMesh
+		{
+			get
+			{
+				if (Handles.s_ConeMesh == null)
+				{
+					Handles.Init();
+				}
+				return Handles.s_ConeMesh;
+			}
+		}
+
+		private static Mesh cylinderMesh
+		{
+			get
+			{
+				if (Handles.s_CylinderMesh == null)
+				{
+					Handles.Init();
+				}
+				return Handles.s_CylinderMesh;
+			}
+		}
+
+		private static Mesh quadMesh
+		{
+			get
+			{
+				if (Handles.s_QuadMesh == null)
+				{
+					Handles.Init();
+				}
+				return Handles.s_QuadMesh;
+			}
+		}
+
+		private static Mesh sphereMesh
+		{
+			get
+			{
+				if (Handles.s_SphereMesh == null)
+				{
+					Handles.Init();
+				}
+				return Handles.s_SphereMesh;
 			}
 		}
 
@@ -623,7 +680,7 @@ namespace UnityEditor
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				Graphics.DrawMeshNow(Handles.s_CubeMesh, Handles.StartCapDraw(position, rotation, size));
+				Graphics.DrawMeshNow(Handles.cubeMesh, Handles.StartCapDraw(position, rotation, size));
 			}
 		}
 
@@ -632,7 +689,7 @@ namespace UnityEditor
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				Graphics.DrawMeshNow(Handles.s_SphereMesh, Handles.StartCapDraw(position, rotation, size));
+				Graphics.DrawMeshNow(Handles.sphereMesh, Handles.StartCapDraw(position, rotation, size));
 			}
 		}
 
@@ -641,7 +698,7 @@ namespace UnityEditor
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				Graphics.DrawMeshNow(Handles.s_ConeMesh, Handles.StartCapDraw(position, rotation, size));
+				Graphics.DrawMeshNow(Handles.coneMesh, Handles.StartCapDraw(position, rotation, size));
 			}
 		}
 
@@ -650,7 +707,7 @@ namespace UnityEditor
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
-				Graphics.DrawMeshNow(Handles.s_CylinderMesh, Handles.StartCapDraw(position, rotation, size));
+				Graphics.DrawMeshNow(Handles.cylinderMesh, Handles.StartCapDraw(position, rotation, size));
 			}
 		}
 
@@ -999,7 +1056,7 @@ namespace UnityEditor
 				GameObject gameObject = (GameObject)EditorGUIUtility.Load("SceneView/HandlesGO.fbx");
 				if (!gameObject)
 				{
-					Debug.Log("ARGH - We couldn't find SceneView/HandlesGO.fbx");
+					Debug.Log("Couldn't find SceneView/HandlesGO.fbx");
 				}
 				gameObject.SetActive(false);
 				IEnumerator enumerator = gameObject.transform.GetEnumerator();
@@ -1511,6 +1568,11 @@ namespace UnityEditor
 			return Slider1D.Do(controlID, position, direction, size, capFunction, snap);
 		}
 
+		public static Vector3 Slider(int controlID, Vector3 position, Vector3 direction, float size, Handles.CapFunction capFunction, float snap)
+		{
+			return Slider1D.Do(controlID, position, direction, size, capFunction, snap);
+		}
+
 		[Obsolete("DrawCapFunction is obsolete. Use the version with CapFunction instead. Example: Change SphereCap to SphereHandleCap.")]
 		public static Vector3 Slider(Vector3 position, Vector3 direction, float size, Handles.DrawCapFunction drawFunc, float snap)
 		{
@@ -1574,7 +1636,7 @@ namespace UnityEditor
 			{
 				if (eventType == EventType.Repaint)
 				{
-					Graphics.DrawMeshNow(Handles.s_CubeMesh, Handles.StartCapDraw(position, rotation, size));
+					Graphics.DrawMeshNow(Handles.cubeMesh, Handles.StartCapDraw(position, rotation, size));
 				}
 			}
 			else
@@ -1589,7 +1651,7 @@ namespace UnityEditor
 			{
 				if (eventType == EventType.Repaint)
 				{
-					Graphics.DrawMeshNow(Handles.s_SphereMesh, Handles.StartCapDraw(position, rotation, size));
+					Graphics.DrawMeshNow(Handles.sphereMesh, Handles.StartCapDraw(position, rotation, size));
 				}
 			}
 			else
@@ -1604,7 +1666,7 @@ namespace UnityEditor
 			{
 				if (eventType == EventType.Repaint)
 				{
-					Graphics.DrawMeshNow(Handles.s_ConeMesh, Handles.StartCapDraw(position, rotation, size));
+					Graphics.DrawMeshNow(Handles.coneMesh, Handles.StartCapDraw(position, rotation, size));
 				}
 			}
 			else
@@ -1619,7 +1681,7 @@ namespace UnityEditor
 			{
 				if (eventType == EventType.Repaint)
 				{
-					Graphics.DrawMeshNow(Handles.s_CylinderMesh, Handles.StartCapDraw(position, rotation, size));
+					Graphics.DrawMeshNow(Handles.cylinderMesh, Handles.StartCapDraw(position, rotation, size));
 				}
 			}
 			else
@@ -2178,60 +2240,67 @@ namespace UnityEditor
 			int index = 3 - num2 - num;
 			Color color = Handles.color;
 			Matrix4x4 matrix4x = Matrix4x4.TRS(position, rotation, Vector3.one);
-			Vector3 normalized;
-			if (Camera.current.orthographic)
-			{
-				normalized = matrix4x.inverse.MultiplyVector(SceneView.currentDrawingSceneView.cameraTargetRotation * -Vector3.forward).normalized;
-			}
-			else
-			{
-				normalized = matrix4x.inverse.MultiplyPoint(SceneView.currentDrawingSceneView.camera.transform.position).normalized;
-			}
-			int controlID = GUIUtility.GetControlID(hint, FocusType.Keyboard);
 			Vector3 result;
-			if (Mathf.Abs(normalized[index]) < 0.05f && GUIUtility.hotControl != controlID)
+			if (Camera.current == null)
 			{
-				Handles.color = color;
 				result = position;
 			}
 			else
 			{
-				if (!Handles.currentlyDragging)
+				Vector3 normalized;
+				if (Camera.current.orthographic)
 				{
-					Handles.s_PlanarHandlesOctant[num] = (float)((normalized[num] >= -0.01f) ? 1 : -1);
-					Handles.s_PlanarHandlesOctant[num2] = (float)((normalized[num2] >= -0.01f) ? 1 : -1);
+					normalized = matrix4x.inverse.MultiplyVector(Camera.current.transform.rotation * -Vector3.forward).normalized;
 				}
-				Vector3 vector = Handles.s_PlanarHandlesOctant;
-				vector[index] = 0f;
-				vector = rotation * (vector * handleSize * 0.5f);
-				Vector3 vector2 = Vector3.zero;
-				Vector3 vector3 = Vector3.zero;
-				Vector3 vector4 = Vector3.zero;
-				vector2[num] = 1f;
-				vector3[num2] = 1f;
-				vector4[index] = 1f;
-				vector2 = rotation * vector2;
-				vector3 = rotation * vector3;
-				vector4 = rotation * vector4;
-				Handles.verts[0] = position + vector + (vector2 + vector3) * handleSize * 0.5f;
-				Handles.verts[1] = position + vector + (-vector2 + vector3) * handleSize * 0.5f;
-				Handles.verts[2] = position + vector + (-vector2 - vector3) * handleSize * 0.5f;
-				Handles.verts[3] = position + vector + (vector2 - vector3) * handleSize * 0.5f;
-				Handles.DrawSolidRectangleWithOutline(Handles.verts, new Color(Handles.color.r, Handles.color.g, Handles.color.b, 0.1f), new Color(0f, 0f, 0f, 0f));
-				int arg_3FB_0 = controlID;
-				Vector3 arg_3FB_1 = position;
-				Vector3 arg_3FB_2 = vector;
-				Vector3 arg_3FB_3 = vector4;
-				Vector3 arg_3FB_4 = vector2;
-				Vector3 arg_3FB_5 = vector3;
-				float arg_3FB_6 = handleSize * 0.5f;
-				if (Handles.<>f__mg$cache6 == null)
+				else
 				{
-					Handles.<>f__mg$cache6 = new Handles.CapFunction(Handles.RectangleHandleCap);
+					normalized = matrix4x.inverse.MultiplyPoint(Camera.current.transform.position).normalized;
 				}
-				position = Handles.Slider2D(arg_3FB_0, arg_3FB_1, arg_3FB_2, arg_3FB_3, arg_3FB_4, arg_3FB_5, arg_3FB_6, Handles.<>f__mg$cache6, new Vector2(SnapSettings.move[num], SnapSettings.move[num2]));
-				Handles.color = color;
-				result = position;
+				int controlID = GUIUtility.GetControlID(hint, FocusType.Keyboard);
+				if (Mathf.Abs(normalized[index]) < 0.05f && GUIUtility.hotControl != controlID)
+				{
+					Handles.color = color;
+					result = position;
+				}
+				else
+				{
+					if (!Handles.currentlyDragging)
+					{
+						Handles.s_PlanarHandlesOctant[num] = (float)((normalized[num] >= -0.01f) ? 1 : -1);
+						Handles.s_PlanarHandlesOctant[num2] = (float)((normalized[num2] >= -0.01f) ? 1 : -1);
+					}
+					Vector3 vector = Handles.s_PlanarHandlesOctant;
+					vector[index] = 0f;
+					vector = rotation * (vector * handleSize * 0.5f);
+					Vector3 vector2 = Vector3.zero;
+					Vector3 vector3 = Vector3.zero;
+					Vector3 vector4 = Vector3.zero;
+					vector2[num] = 1f;
+					vector3[num2] = 1f;
+					vector4[index] = 1f;
+					vector2 = rotation * vector2;
+					vector3 = rotation * vector3;
+					vector4 = rotation * vector4;
+					Handles.verts[0] = position + vector + (vector2 + vector3) * handleSize * 0.5f;
+					Handles.verts[1] = position + vector + (-vector2 + vector3) * handleSize * 0.5f;
+					Handles.verts[2] = position + vector + (-vector2 - vector3) * handleSize * 0.5f;
+					Handles.verts[3] = position + vector + (vector2 - vector3) * handleSize * 0.5f;
+					Handles.DrawSolidRectangleWithOutline(Handles.verts, new Color(Handles.color.r, Handles.color.g, Handles.color.b, 0.1f), new Color(0f, 0f, 0f, 0f));
+					int arg_413_0 = controlID;
+					Vector3 arg_413_1 = position;
+					Vector3 arg_413_2 = vector;
+					Vector3 arg_413_3 = vector4;
+					Vector3 arg_413_4 = vector2;
+					Vector3 arg_413_5 = vector3;
+					float arg_413_6 = handleSize * 0.5f;
+					if (Handles.<>f__mg$cache6 == null)
+					{
+						Handles.<>f__mg$cache6 = new Handles.CapFunction(Handles.RectangleHandleCap);
+					}
+					position = Handles.Slider2D(arg_413_0, arg_413_1, arg_413_2, arg_413_3, arg_413_4, arg_413_5, arg_413_6, Handles.<>f__mg$cache6, new Vector2(SnapSettings.move[num], SnapSettings.move[num2]));
+					Handles.color = color;
+					result = position;
+				}
 			}
 			return result;
 		}
@@ -2445,64 +2514,6 @@ namespace UnityEditor
 				Handles.DrawLine(position - vector * radius, position + vector * radius);
 			}
 			return radius;
-		}
-
-		internal static void DoSimpleRadiusArcHandleXY(Quaternion rotation, Vector3 position, ref float radius, ref float arc)
-		{
-			Vector3 vector = rotation * Vector3.forward;
-			Vector3 vector2 = rotation * Vector3.up;
-			Vector3 vector3 = rotation * Vector3.right;
-			Vector3 a = Quaternion.Euler(0f, 0f, arc) * vector3;
-			EditorGUI.BeginChangeCheck();
-			if (arc < 315f)
-			{
-				radius = Handles.SizeSlider(position, vector3, radius);
-			}
-			if (arc > 135f)
-			{
-				radius = Handles.SizeSlider(position, vector2, radius);
-			}
-			if (arc > 225f)
-			{
-				radius = Handles.SizeSlider(position, -vector3, radius);
-			}
-			if (arc > 315f)
-			{
-				radius = Handles.SizeSlider(position, -vector2, radius);
-			}
-			if (EditorGUI.EndChangeCheck())
-			{
-				radius = Mathf.Max(0f, radius);
-			}
-			if (radius > 0f)
-			{
-				Handles.DrawWireArc(position, vector, vector3, arc, radius);
-				if (arc < 360f)
-				{
-					Handles.DrawLine(position, vector3 * radius);
-					Handles.DrawLine(position, a * radius);
-				}
-				else
-				{
-					Handles.DrawDottedLine(position, vector3 * radius, 5f);
-				}
-				Vector3 vector4 = a * radius;
-				float handleSize = HandleUtility.GetHandleSize(vector4);
-				EditorGUI.BeginChangeCheck();
-				Vector3 arg_166_0 = vector4;
-				Quaternion arg_166_1 = Quaternion.identity;
-				float arg_166_2 = handleSize * 0.03f;
-				Vector3 arg_166_3 = SnapSettings.move;
-				if (Handles.<>f__mg$cache9 == null)
-				{
-					Handles.<>f__mg$cache9 = new Handles.CapFunction(Handles.CircleHandleCap);
-				}
-				Vector3 rhs = Handles.FreeMoveHandle(arg_166_0, arg_166_1, arg_166_2, arg_166_3, Handles.<>f__mg$cache9);
-				if (EditorGUI.EndChangeCheck())
-				{
-					arc += Mathf.Atan2(Vector3.Dot(vector, Vector3.Cross(vector4, rhs)), Vector3.Dot(vector4, rhs)) * 57.29578f;
-				}
-			}
 		}
 
 		internal static float DoSimpleRadiusHandle(Quaternion rotation, Vector3 position, float radius, bool hemisphere)

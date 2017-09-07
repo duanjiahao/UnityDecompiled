@@ -18,11 +18,11 @@ namespace UnityEditor
 
 			public static string s_RootAndNestedMessage = "Cannot multi-edit root Canvas together with nested Canvas.";
 
-			public static GUIContent m_SortingLayerStyle = EditorGUIUtility.TextContent("Sorting Layer");
+			public static GUIContent m_SortingLayerStyle = EditorGUIUtility.TextContent("Sorting Layer|Name of the Renderer's sorting layer");
 
 			public static GUIContent targetDisplay = new GUIContent("Target Display", "Display on which to render the canvas when in overlay mode");
 
-			public static GUIContent m_SortingOrderStyle = EditorGUIUtility.TextContent("Order in Layer");
+			public static GUIContent m_SortingOrderStyle = EditorGUIUtility.TextContent("Order in Layer|Renderer's order within a sorting layer");
 
 			public static GUIContent m_ShaderChannel = EditorGUIUtility.TextContent("Additional Shader Channels");
 		}
@@ -116,11 +116,7 @@ namespace UnityEditor
 			for (int i = 0; i < base.targets.Length; i++)
 			{
 				Canvas canvas = base.targets[i] as Canvas;
-				if (canvas.transform.parent == null)
-				{
-					this.m_AllNested = false;
-				}
-				else if (canvas.transform.parent.GetComponentInParent<Canvas>() == null)
+				if (canvas.transform.parent == null || canvas.transform.parent.GetComponentInParent<Canvas>() == null)
 				{
 					this.m_AllNested = false;
 				}

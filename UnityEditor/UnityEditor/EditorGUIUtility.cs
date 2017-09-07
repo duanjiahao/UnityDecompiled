@@ -1085,8 +1085,10 @@ namespace UnityEditor
 			if (Event.current.type == EventType.Repaint)
 			{
 				Color color2 = GUI.color;
+				Color backgroundColor = GUI.backgroundColor;
 				float a = (float)((!GUI.enabled) ? 2 : 1);
 				GUI.color = ((!EditorGUI.showMixedValue) ? new Color(color.r, color.g, color.b, a) : (new Color(0.82f, 0.82f, 0.82f, a) * color2));
+				GUI.backgroundColor = Color.white;
 				GUIStyle whiteTextureStyle = EditorGUIUtility.whiteTextureStyle;
 				whiteTextureStyle.Draw(position, false, false, false, false);
 				float maxColorComponent = GUI.color.maxColorComponent;
@@ -1127,6 +1129,7 @@ namespace UnityEditor
 					EditorGUI.EndHandleMixedValueContentColor();
 				}
 				GUI.color = color2;
+				GUI.backgroundColor = backgroundColor;
 				if (hdr && maxColorComponent > 1f)
 				{
 					GUI.Label(new Rect(position.x, position.y, position.width - 3f, position.height), "HDR", EditorStyles.centeredGreyMiniLabel);

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using UnityEngine.Experimental.Director;
 using UnityEngine.Internal;
+using UnityEngine.Playables;
 using UnityEngine.Scripting;
 
 namespace UnityEngine
@@ -465,6 +465,11 @@ namespace UnityEngine
 			return null;
 		}
 
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Stop is obsolete. Use Animator.enabled = false instead", true)]
+		public void Stop()
+		{
+		}
+
 		public float GetFloat(string name)
 		{
 			return this.GetFloatString(name);
@@ -912,7 +917,7 @@ namespace UnityEngine
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern ScriptableObject[] GetBehaviours(Type type);
+		internal extern ScriptableObject[] InternalGetBehaviours(Type type);
 
 		internal static T[] ConvertStateMachineBehaviour<T>(ScriptableObject[] rawObjects) where T : StateMachineBehaviour
 		{
@@ -935,7 +940,16 @@ namespace UnityEngine
 
 		public T[] GetBehaviours<T>() where T : StateMachineBehaviour
 		{
-			return Animator.ConvertStateMachineBehaviour<T>(this.GetBehaviours(typeof(T)));
+			return Animator.ConvertStateMachineBehaviour<T>(this.InternalGetBehaviours(typeof(T)));
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern StateMachineBehaviour[] InternalGetBehavioursByKey(int fullPathHash, int layerIndex, Type type);
+
+		public StateMachineBehaviour[] GetBehaviours(int fullPathHash, int layerIndex)
+		{
+			return this.InternalGetBehavioursByKey(fullPathHash, layerIndex, typeof(StateMachineBehaviour));
 		}
 
 		[GeneratedByOldBindingsGenerator]
@@ -1258,6 +1272,10 @@ namespace UnityEngine
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void ClearInternalControllerPlayable();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasState(int layerIndex, int stateID);
 
 		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
@@ -1268,9 +1286,14 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern string GetStats();
 
+		private void InternalGetCurrentGraph(ref PlayableGraph graph)
+		{
+			Animator.INTERNAL_CALL_InternalGetCurrentGraph(this, ref graph);
+		}
+
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InternalGetCurrentGraph(ref PlayableGraph graph);
+		private static extern void INTERNAL_CALL_InternalGetCurrentGraph(Animator self, ref PlayableGraph graph);
 
 		private void CheckIfInIKPass()
 		{

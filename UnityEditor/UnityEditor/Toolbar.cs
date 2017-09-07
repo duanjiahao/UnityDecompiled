@@ -154,11 +154,7 @@ namespace UnityEditor
 					EditorGUIUtility.IconContent("PlayButton On"),
 					EditorGUIUtility.IconContent("PauseButton On"),
 					EditorGUIUtility.IconContent("StepButton On"),
-					EditorGUIUtility.IconContent("PlayButtonProfile On"),
-					EditorGUIUtility.IconContent("PlayButton Anim"),
-					EditorGUIUtility.IconContent("PauseButton Anim"),
-					EditorGUIUtility.IconContent("StepButton Anim"),
-					EditorGUIUtility.IconContent("PlayButtonProfile Anim")
+					EditorGUIUtility.IconContent("PlayButtonProfile On")
 				};
 				Toolbar.s_CloudIcon = EditorGUIUtility.IconContent("CloudConnect");
 				Toolbar.s_AccountContent = new GUIContent("Account");
@@ -306,7 +302,7 @@ namespace UnityEditor
 			this.ReserveWidthLeft(32f, ref pos);
 			if (GUI.Button(this.GetThinArea(pos), Toolbar.s_CloudIcon))
 			{
-				UnityConnectServiceCollection.instance.ShowService("Hub", true);
+				UnityConnectServiceCollection.instance.ShowService("Hub", true, "cloud_icon");
 			}
 			this.ReserveWidthLeft(width, ref pos);
 			this.ReserveWidthLeft(78f, ref pos);
@@ -383,6 +379,7 @@ namespace UnityEditor
 			if (GUI.changed)
 			{
 				Tools.current = (Tool)num;
+				Tools.ResetGlobalHandleRotation();
 			}
 		}
 
@@ -417,10 +414,6 @@ namespace UnityEditor
 			bool isPlaying = EditorApplication.isPlaying;
 			GUI.changed = false;
 			int num = (!isPlaying) ? 0 : 4;
-			if (AnimationMode.InAnimationMode())
-			{
-				num = 8;
-			}
 			Color color = GUI.color + new Color(0.01f, 0.01f, 0.01f, 0.01f);
 			GUI.contentColor = new Color(1f / color.r, 1f / color.g, 1f / color.g, 1f / color.a);
 			GUILayout.Toggle(isOrWillEnterPlaymode, Toolbar.s_PlayIcons[num], "CommandLeft", new GUILayoutOption[0]);

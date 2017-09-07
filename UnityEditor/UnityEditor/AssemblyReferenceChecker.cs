@@ -185,8 +185,19 @@ namespace UnityEditor
 			}
 			else
 			{
-				TypeDefinition typeDefinition = type.Resolve();
-				result = (typeDefinition.BaseType != null && this.InheritsFromMonoBehaviour(typeDefinition.BaseType));
+				try
+				{
+					TypeDefinition typeDefinition = type.Resolve();
+					if (typeDefinition.BaseType != null)
+					{
+						result = this.InheritsFromMonoBehaviour(typeDefinition.BaseType);
+						return result;
+					}
+				}
+				catch (AssemblyResolutionException)
+				{
+				}
+				result = false;
 			}
 			return result;
 		}

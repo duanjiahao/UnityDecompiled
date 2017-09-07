@@ -15,9 +15,11 @@ namespace UnityEditor
 
 		private class Styles2
 		{
-			public GUIStyle TimelineTick = "AnimationTimelineTick";
+			public GUIStyle timelineTick = "AnimationTimelineTick";
 
 			public GUIStyle labelTickMarks = "CurveEditorLabelTickMarks";
+
+			public GUIStyle playhead = "AnimationPlayHead";
 		}
 
 		public enum TimeRulerDragMode
@@ -142,7 +144,7 @@ namespace UnityEditor
 				TimeArea.InitStyles();
 				this.SetTickMarkerRanges();
 				this.hTicks.SetTickStrengths(3f, 80f, true);
-				Color textColor = TimeArea.styles.TimelineTick.normal.textColor;
+				Color textColor = TimeArea.styles.timelineTick.normal.textColor;
 				textColor.a = 0.1f;
 				Handles.color = textColor;
 				Rect shownArea = base.shownArea;
@@ -187,7 +189,7 @@ namespace UnityEditor
 			Color backgroundColor = GUI.backgroundColor;
 			this.SetTickMarkerRanges();
 			this.hTicks.SetTickStrengths(3f, 80f, true);
-			Color textColor = TimeArea.styles.TimelineTick.normal.textColor;
+			Color textColor = TimeArea.styles.timelineTick.normal.textColor;
 			textColor.a = 0.75f * alpha;
 			if (Event.current.type == EventType.Repaint)
 			{
@@ -228,7 +230,7 @@ namespace UnityEditor
 						int num4 = Mathf.RoundToInt(ticksAtLevel2[k] * frameRate);
 						float num5 = Mathf.Floor(this.FrameToPixel((float)num4, frameRate, position));
 						string text = this.FormatTime(ticksAtLevel2[k], frameRate, timeFormat);
-						GUI.Label(new Rect(num5 + 3f, -3f, 40f, 20f), text, TimeArea.styles.TimelineTick);
+						GUI.Label(new Rect(num5 + 3f, -3f, 40f, 20f), text, TimeArea.styles.timelineTick);
 					}
 				}
 			}
@@ -237,10 +239,30 @@ namespace UnityEditor
 			GUI.color = color;
 		}
 
+		public static void DrawPlayhead(float x, float yMin, float yMax, float thickness, float alpha)
+		{
+			if (Event.current.type == EventType.Repaint)
+			{
+				TimeArea.InitStyles();
+				float num = thickness * 0.5f;
+				Color color = TimeArea.styles.playhead.normal.textColor.AlphaMultiplied(alpha);
+				if (thickness > 1f)
+				{
+					Rect rect = Rect.MinMaxRect(x - num, yMin, x + num, yMax);
+					EditorGUI.DrawRect(rect, color);
+				}
+				else
+				{
+					TimeArea.DrawVerticalLine(x, yMin, yMax, color);
+				}
+			}
+		}
+
 		public static void DrawVerticalLine(float x, float minY, float maxY, Color color)
 		{
 			if (Event.current.type == EventType.Repaint)
 			{
+				Color color2 = Handles.color;
 				HandleUtility.ApplyWireMaterial();
 				if (Application.platform == RuntimePlatform.WindowsEditor)
 				{
@@ -252,6 +274,7 @@ namespace UnityEditor
 				}
 				TimeArea.DrawVerticalLineFast(x, minY, maxY, color);
 				GL.End();
+				Handles.color = color2;
 			}
 		}
 
@@ -364,12 +387,6 @@ namespace UnityEditor
 			}
 			result = TimeArea.TimeRulerDragMode.None;
 			return result;
-		}
-
-		private void DrawLine(Vector2 lhs, Vector2 rhs)
-		{
-			GL.Vertex(base.DrawingToViewTransformPoint(new Vector3(lhs.x, lhs.y, 0f)));
-			GL.Vertex(base.DrawingToViewTransformPoint(new Vector3(rhs.x, rhs.y, 0f)));
 		}
 
 		private float FrameToPixel(float i, float frameRate, Rect rect, Rect theShownArea)

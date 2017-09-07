@@ -49,20 +49,16 @@ namespace UnityEngine.Networking
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern void InternalCreateTexture(bool readable);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void InternalCreateAssetBundle(string url, uint crc);
 
-		internal void InternalCreateAssetBundle(string url, Hash128 hash, uint crc)
+		internal void InternalCreateAssetBundleCached(string url, string name, Hash128 hash, uint crc)
 		{
-			DownloadHandler.INTERNAL_CALL_InternalCreateAssetBundle(this, url, ref hash, crc);
+			DownloadHandler.INTERNAL_CALL_InternalCreateAssetBundleCached(this, url, name, ref hash, crc);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_InternalCreateAssetBundle(DownloadHandler self, string url, ref Hash128 hash, uint crc);
+		private static extern void INTERNAL_CALL_InternalCreateAssetBundleCached(DownloadHandler self, string url, string name, ref Hash128 hash, uint crc);
 
 		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -90,7 +86,7 @@ namespace UnityEngine.Networking
 			string result;
 			if (data != null && data.Length > 0)
 			{
-				result = Encoding.UTF8.GetString(data, 0, data.Length);
+				result = this.GetTextEncoder().GetString(data, 0, data.Length);
 			}
 			else
 			{
@@ -98,6 +94,48 @@ namespace UnityEngine.Networking
 			}
 			return result;
 		}
+
+		private Encoding GetTextEncoder()
+		{
+			string contentType = this.GetContentType();
+			Encoding result;
+			if (!string.IsNullOrEmpty(contentType))
+			{
+				int num = contentType.IndexOf("charset", StringComparison.OrdinalIgnoreCase);
+				if (num > -1)
+				{
+					int num2 = contentType.IndexOf('=', num);
+					if (num2 > -1)
+					{
+						string text = contentType.Substring(num2 + 1).Trim().Trim(new char[]
+						{
+							'\'',
+							'"'
+						}).Trim();
+						int num3 = text.IndexOf(';');
+						if (num3 > -1)
+						{
+							text = text.Substring(0, num3);
+						}
+						try
+						{
+							result = Encoding.GetEncoding(text);
+							return result;
+						}
+						catch (ArgumentException ex)
+						{
+							Debug.LogWarning(string.Format("Unsupported encoding '{0}': {1}", text, ex.Message));
+						}
+					}
+				}
+			}
+			result = Encoding.UTF8;
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern string GetContentType();
 
 		[UsedByNativeCode]
 		protected virtual bool ReceiveData(byte[] data, int dataLength)
@@ -131,7 +169,7 @@ namespace UnityEngine.Networking
 			{
 				throw new InvalidOperationException("Cannot get content from an unfinished UnityWebRequest object");
 			}
-			if (www.isError)
+			if (www.isNetworkError)
 			{
 				throw new InvalidOperationException(www.error);
 			}

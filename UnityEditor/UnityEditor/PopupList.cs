@@ -387,9 +387,10 @@ namespace UnityEditor
 					switch (keyCode)
 					{
 					case KeyCode.Backspace:
-						goto IL_13E;
+						goto IL_12F;
 					case KeyCode.Tab:
-						goto IL_BB;
+					case KeyCode.Return:
+						goto IL_AC;
 					case (KeyCode)10:
 					case (KeyCode)11:
 					case KeyCode.Clear:
@@ -398,13 +399,13 @@ namespace UnityEditor
 						{
 							this.ChangeSelectedCompletion(-1);
 							flag3 = true;
-							goto IL_182;
+							goto IL_173;
 						}
 						if (keyCode == KeyCode.DownArrow)
 						{
 							this.ChangeSelectedCompletion(1);
 							flag3 = true;
-							goto IL_182;
+							goto IL_173;
 						}
 						if (keyCode == KeyCode.None)
 						{
@@ -412,26 +413,20 @@ namespace UnityEditor
 							{
 								flag3 = true;
 							}
-							goto IL_182;
+							goto IL_173;
 						}
-						if (keyCode == KeyCode.Space)
+						if (keyCode == KeyCode.Space || keyCode == KeyCode.Comma)
 						{
-							goto IL_BB;
-						}
-						if (keyCode == KeyCode.Comma)
-						{
-							goto IL_BB;
+							goto IL_AC;
 						}
 						if (keyCode != KeyCode.Delete)
 						{
-							goto IL_182;
+							goto IL_173;
 						}
-						goto IL_13E;
-					case KeyCode.Return:
-						goto IL_BB;
+						goto IL_12F;
 					}
 					goto IL_6D;
-					IL_BB:
+					IL_AC:
 					if (text != "")
 					{
 						if (this.m_Data.m_OnSelectCallback != null)
@@ -448,10 +443,10 @@ namespace UnityEditor
 						}
 					}
 					flag3 = true;
-					goto IL_182;
-					IL_13E:
+					goto IL_173;
+					IL_12F:
 					flag = false;
-					IL_182:;
+					IL_173:;
 				}
 				bool flag5 = false;
 				Rect rect = new Rect(windowRect.x + 5f, windowRect.y + ((this.m_Gravity != PopupList.Gravity.Top) ? (windowRect.height - 16f - 5f) : 5f), windowRect.width - 10f - 14f, 16f);

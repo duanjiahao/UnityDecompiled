@@ -1,65 +1,64 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.Connect;
+using UnityEngine.Scripting;
 
 namespace UnityEditor.Advertisements
 {
 	public static class AdvertisementSettings
 	{
-		public static bool enabled
+		public static extern bool enabled
 		{
-			get
-			{
-				return UnityAdsSettings.enabled;
-			}
-			set
-			{
-				UnityAdsSettings.enabled = value;
-			}
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
-		public static bool initializeOnStartup
+		public static extern bool testMode
 		{
-			get
-			{
-				return UnityAdsSettings.initializeOnStartup;
-			}
-			set
-			{
-				UnityAdsSettings.initializeOnStartup = value;
-			}
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
-		public static bool testMode
+		public static extern bool initializeOnStartup
 		{
-			get
-			{
-				return UnityAdsSettings.testMode;
-			}
-			set
-			{
-				UnityAdsSettings.testMode = value;
-			}
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
-		public static bool IsPlatformEnabled(RuntimePlatform platform)
-		{
-			return UnityAdsSettings.IsPlatformEnabled(platform);
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsPlatformEnabled(RuntimePlatform platform);
 
-		public static void SetPlatformEnabled(RuntimePlatform platform, bool value)
-		{
-			UnityAdsSettings.SetPlatformEnabled(platform, value);
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetPlatformEnabled(RuntimePlatform platform, bool value);
 
-		public static string GetGameId(RuntimePlatform platform)
-		{
-			return UnityAdsSettings.GetGameId(platform);
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetGameId(RuntimePlatform platform);
 
-		public static void SetGameId(RuntimePlatform platform, string gameId)
-		{
-			UnityAdsSettings.SetGameId(platform, gameId);
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetGameId(RuntimePlatform platform, string gameId);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetPlatformGameId(string platformName);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetPlatformGameId(string platformName, string gameId);
 	}
 }

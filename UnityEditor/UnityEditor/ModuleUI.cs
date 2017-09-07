@@ -253,11 +253,21 @@ namespace UnityEditor
 
 		protected virtual void OnModuleEnable()
 		{
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Combine(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			this.Init();
+		}
+
+		public virtual void UndoRedoPerformed()
+		{
+			if (!this.enabled)
+			{
+				this.OnModuleDisable();
+			}
 		}
 
 		protected virtual void OnModuleDisable()
 		{
+			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			ParticleSystemCurveEditor particleSystemCurveEditor = this.m_ParticleSystemUI.m_ParticleEffectUI.GetParticleSystemCurveEditor();
 			foreach (SerializedProperty current in this.m_ModuleCurves)
 			{
@@ -319,10 +329,6 @@ namespace UnityEditor
 					this.Init();
 				}
 			}
-		}
-
-		public virtual void UndoRedoPerformed()
-		{
 		}
 
 		protected ParticleSystem GetParticleSystem()
@@ -410,20 +416,14 @@ namespace UnityEditor
 
 		public static float FloatDraggable(Rect rect, SerializedProperty floatProp, float remap, float dragWidth, string formatString)
 		{
-			EditorGUI.showMixedValue = floatProp.hasMultipleDifferentValues;
-			Color color = GUI.color;
-			if (floatProp.isAnimated)
-			{
-				GUI.color = AnimationMode.animatedPropertyColor;
-			}
+			EditorGUI.BeginProperty(rect, GUIContent.none, floatProp);
 			EditorGUI.BeginChangeCheck();
 			float num = ModuleUI.FloatDraggable(rect, floatProp.floatValue, remap, dragWidth, formatString);
 			if (EditorGUI.EndChangeCheck())
 			{
 				floatProp.floatValue = num;
 			}
-			GUI.color = color;
-			EditorGUI.showMixedValue = false;
+			EditorGUI.EndProperty();
 			return num;
 		}
 
@@ -490,21 +490,15 @@ namespace UnityEditor
 
 		private static bool Toggle(Rect rect, SerializedProperty boolProp)
 		{
-			EditorGUI.showMixedValue = boolProp.hasMultipleDifferentValues;
 			EditorGUIInternal.mixedToggleStyle = ParticleSystemStyles.Get().toggleMixed;
-			Color color = GUI.color;
-			if (boolProp.isAnimated)
-			{
-				GUI.color = AnimationMode.animatedPropertyColor;
-			}
+			EditorGUI.BeginProperty(rect, GUIContent.none, boolProp);
 			EditorGUI.BeginChangeCheck();
 			bool flag = EditorGUI.Toggle(rect, boolProp.boolValue, ParticleSystemStyles.Get().toggle);
 			if (EditorGUI.EndChangeCheck())
 			{
 				boolProp.boolValue = flag;
 			}
-			GUI.color = color;
-			EditorGUI.showMixedValue = false;
+			EditorGUI.EndProperty();
 			EditorGUIInternal.mixedToggleStyle = EditorStyles.toggleMixed;
 			return flag;
 		}
@@ -526,7 +520,7 @@ namespace UnityEditor
 			EditorGUI.showMixedValue = boolProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, guiContent);
-			EditorGUI.LayerMaskField(rect, boolProp, GUIContent.none, ParticleSystemStyles.Get().popup);
+			EditorGUI.LayerMaskField(rect, boolProp, null, ParticleSystemStyles.Get().popup);
 			EditorGUI.showMixedValue = false;
 		}
 
@@ -589,10 +583,15 @@ namespace UnityEditor
 
 		public static void GUIObject(GUIContent label, SerializedProperty objectProp, params GUILayoutOption[] layoutOptions)
 		{
+			ModuleUI.GUIObject(label, objectProp, null, layoutOptions);
+		}
+
+		public static void GUIObject(GUIContent label, SerializedProperty objectProp, Type objType, params GUILayoutOption[] layoutOptions)
+		{
 			EditorGUI.showMixedValue = objectProp.hasMultipleDifferentValues;
 			Rect rect = ModuleUI.GetControlRect(13, layoutOptions);
 			rect = ModuleUI.PrefixLabel(rect, label);
-			EditorGUI.ObjectField(rect, objectProp, null, GUIContent.none, ParticleSystemStyles.Get().objectField);
+			EditorGUI.ObjectField(rect, objectProp, objType, GUIContent.none, ParticleSystemStyles.Get().objectField);
 			EditorGUI.showMixedValue = false;
 		}
 
@@ -681,32 +680,21 @@ namespace UnityEditor
 
 		public static int IntDraggable(Rect rect, GUIContent label, SerializedProperty intProp, float dragWidth)
 		{
-			EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
-			Color color = GUI.color;
-			if (intProp.isAnimated)
-			{
-				GUI.color = AnimationMode.animatedPropertyColor;
-			}
+			EditorGUI.BeginProperty(rect, GUIContent.none, intProp);
 			EditorGUI.BeginChangeCheck();
 			int intValue = ModuleUI.IntDraggable(rect, label, intProp.intValue, dragWidth);
 			if (EditorGUI.EndChangeCheck())
 			{
 				intProp.intValue = intValue;
 			}
-			GUI.color = color;
-			EditorGUI.showMixedValue = false;
+			EditorGUI.EndProperty();
 			return intProp.intValue;
 		}
 
 		public static int GUIInt(GUIContent guiContent, SerializedProperty intProp, params GUILayoutOption[] layoutOptions)
 		{
-			EditorGUI.showMixedValue = intProp.hasMultipleDifferentValues;
-			Color color = GUI.color;
-			if (intProp.isAnimated)
-			{
-				GUI.color = AnimationMode.animatedPropertyColor;
-			}
 			Rect rect = GUILayoutUtility.GetRect(0f, 13f, layoutOptions);
+			EditorGUI.BeginProperty(rect, GUIContent.none, intProp);
 			ModuleUI.PrefixLabel(rect, guiContent);
 			EditorGUI.BeginChangeCheck();
 			int intValue = ModuleUI.IntDraggable(rect, null, intProp.intValue, EditorGUIUtility.labelWidth);
@@ -714,8 +702,7 @@ namespace UnityEditor
 			{
 				intProp.intValue = intValue;
 			}
-			GUI.color = color;
-			EditorGUI.showMixedValue = false;
+			EditorGUI.EndProperty();
 			return intProp.intValue;
 		}
 

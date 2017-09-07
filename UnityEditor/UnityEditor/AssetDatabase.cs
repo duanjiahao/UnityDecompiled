@@ -120,13 +120,6 @@ namespace UnityEditor
 			}
 		}
 
-		internal static extern bool isLocked
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
 		internal static extern string assetFolderGUID
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -450,10 +443,6 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearLabels(UnityEngine.Object obj);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string[] MatchLabelsPartial(UnityEngine.Object obj, string partial);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

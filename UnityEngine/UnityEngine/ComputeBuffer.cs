@@ -88,30 +88,66 @@ namespace UnityEngine
 		[SecuritySafeCritical]
 		public void SetData(Array data)
 		{
-			this.InternalSetData(data, Marshal.SizeOf(data.GetType().GetElementType()));
+			if (data == null)
+			{
+				throw new ArgumentNullException("data");
+			}
+			this.InternalSetData(data, 0, 0, data.Length, Marshal.SizeOf(data.GetType().GetElementType()));
+		}
+
+		[SecuritySafeCritical]
+		public void SetData(Array data, int managedBufferStartIndex, int computeBufferStartIndex, int count)
+		{
+			if (data == null)
+			{
+				throw new ArgumentNullException("data");
+			}
+			if (managedBufferStartIndex < 0 || computeBufferStartIndex < 0 || count < 0 || managedBufferStartIndex + count > data.Length)
+			{
+				throw new ArgumentOutOfRangeException(string.Format("Bad indices/count arguments (managedBufferStartIndex:{0} computeBufferStartIndex:{1} count:{2})", managedBufferStartIndex, computeBufferStartIndex, count));
+			}
+			this.InternalSetData(data, managedBufferStartIndex, computeBufferStartIndex, count, Marshal.SizeOf(data.GetType().GetElementType()));
 		}
 
 		[SecurityCritical, GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InternalSetData(Array data, int elemSize);
+		private extern void InternalSetData(Array data, int managedBufferStartIndex, int computeBufferStartIndex, int count, int elemSize);
+
+		[SecurityCritical]
+		public void GetData(Array data)
+		{
+			if (data == null)
+			{
+				throw new ArgumentNullException("data");
+			}
+			this.InternalGetData(data, 0, 0, data.Length, Marshal.SizeOf(data.GetType().GetElementType()));
+		}
+
+		[SecurityCritical]
+		public void GetData(Array data, int managedBufferStartIndex, int computeBufferStartIndex, int count)
+		{
+			if (data == null)
+			{
+				throw new ArgumentNullException("data");
+			}
+			if (managedBufferStartIndex < 0 || computeBufferStartIndex < 0 || count < 0 || managedBufferStartIndex + count > data.Length)
+			{
+				throw new ArgumentOutOfRangeException(string.Format("Bad indices/count argument (managedBufferStartIndex:{0} computeBufferStartIndex:{1} count:{2})", managedBufferStartIndex, computeBufferStartIndex, count));
+			}
+			this.InternalGetData(data, managedBufferStartIndex, computeBufferStartIndex, count, Marshal.SizeOf(data.GetType().GetElementType()));
+		}
+
+		[SecurityCritical, GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void InternalGetData(Array data, int managedBufferStartIndex, int computeBufferStartIndex, int count, int elemSize);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetCounterValue(uint counterValue);
 
-		[SecuritySafeCritical]
-		public void GetData(Array data)
-		{
-			this.InternalGetData(data, Marshal.SizeOf(data.GetType().GetElementType()));
-		}
-
-		[SecurityCritical, GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void InternalGetData(Array data, int elemSize);
-
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CopyCount(ComputeBuffer src, ComputeBuffer dst, int dstOffset);
+		public static extern void CopyCount(ComputeBuffer src, ComputeBuffer dst, int dstOffsetBytes);
 
 		public IntPtr GetNativeBufferPtr()
 		{

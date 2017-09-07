@@ -38,8 +38,6 @@ namespace UnityEditor.IMGUI.Controls
 
 		private static GUIContent s_EditModeButton;
 
-		private int m_ControlIDHint;
-
 		private int[] m_ControlIDs = new int[6];
 
 		private Bounds m_Bounds;
@@ -106,9 +104,13 @@ namespace UnityEditor.IMGUI.Controls
 			set;
 		}
 
-		public PrimitiveBoundsHandle(int controlIDHint)
+		[Obsolete("Use parameterless constructor instead.")]
+		public PrimitiveBoundsHandle(int controlIDHint) : this()
 		{
-			this.m_ControlIDHint = controlIDHint;
+		}
+
+		public PrimitiveBoundsHandle()
+		{
 			this.handleColor = Color.white;
 			this.wireframeColor = Color.white;
 			this.axes = PrimitiveBoundsHandle.Axes.All;
@@ -127,71 +129,88 @@ namespace UnityEditor.IMGUI.Controls
 
 		public void DrawHandle()
 		{
-			for (int i = 0; i < this.m_ControlIDs.Length; i++)
+			int i = 0;
+			int num = this.m_ControlIDs.Length;
+			while (i < num)
 			{
-				this.m_ControlIDs[i] = GUIUtility.GetControlID(this.m_ControlIDHint, FocusType.Keyboard);
+				this.m_ControlIDs[i] = GUIUtility.GetControlID(this.GetHashCode(), FocusType.Passive);
+				i++;
 			}
-			Color color = Handles.color;
-			Handles.color *= this.wireframeColor;
-			if (Handles.color.a > 0f)
+			using (new Handles.DrawingScope(Handles.color * this.wireframeColor))
 			{
 				this.DrawWireframe();
 			}
-			if (!Event.current.alt)
+			if (Event.current.alt)
 			{
-				Vector3 min = this.m_Bounds.min;
-				Vector3 max = this.m_Bounds.max;
-				int hotControl = GUIUtility.hotControl;
-				Handles.color = color * this.handleColor;
-				Vector3 point = Handles.inverseMatrix.MultiplyPoint(Camera.current.transform.position);
-				bool isCameraInsideBox = this.m_Bounds.Contains(point);
-				EditorGUI.BeginChangeCheck();
-				this.MidpointHandles(ref min, ref max, isCameraInsideBox);
-				bool flag = EditorGUI.EndChangeCheck();
-				if (hotControl != GUIUtility.hotControl && GUIUtility.hotControl != 0)
+				bool flag = true;
+				int[] controlIDs = this.m_ControlIDs;
+				for (int j = 0; j < controlIDs.Length; j++)
 				{
-					this.m_BoundsOnClick = this.m_Bounds;
+					int num2 = controlIDs[j];
+					if (num2 == GUIUtility.hotControl)
+					{
+						flag = false;
+						break;
+					}
 				}
 				if (flag)
 				{
-					this.m_Bounds.center = (max + min) * 0.5f;
-					this.m_Bounds.size = max - min;
-					int j = 0;
-					int num = this.m_ControlIDs.Length;
-					while (j < num)
-					{
-						if (GUIUtility.hotControl == this.m_ControlIDs[j])
-						{
-							this.m_Bounds = this.OnHandleChanged((PrimitiveBoundsHandle.HandleDirection)j, this.m_BoundsOnClick, this.m_Bounds);
-						}
-						j++;
-					}
-					if (Event.current.shift)
-					{
-						int hotControl2 = GUIUtility.hotControl;
-						Vector3 size = this.m_Bounds.size;
-						int num2 = 0;
-						if (hotControl2 == this.m_ControlIDs[2] || hotControl2 == this.m_ControlIDs[3])
-						{
-							num2 = 1;
-						}
-						if (hotControl2 == this.m_ControlIDs[4] || hotControl2 == this.m_ControlIDs[5])
-						{
-							num2 = 2;
-						}
-						float num3 = (!Mathf.Approximately(this.m_BoundsOnClick.size[num2], 0f)) ? (size[num2] / this.m_BoundsOnClick.size[num2]) : 1f;
-						int num4 = PrimitiveBoundsHandle.s_NextAxis[num2];
-						size[num4] = num3 * this.m_BoundsOnClick.size[num4];
-						num4 = PrimitiveBoundsHandle.s_NextAxis[num4];
-						size[num4] = num3 * this.m_BoundsOnClick.size[num4];
-						this.m_Bounds.size = size;
-					}
-					if (Event.current.alt)
-					{
-						this.m_Bounds.center = this.m_BoundsOnClick.center;
-					}
+					return;
 				}
-				Handles.color = color;
+			}
+			Vector3 min = this.m_Bounds.min;
+			Vector3 max = this.m_Bounds.max;
+			int hotControl = GUIUtility.hotControl;
+			Vector3 point = Handles.inverseMatrix.MultiplyPoint(Camera.current.transform.position);
+			bool isCameraInsideBox = this.m_Bounds.Contains(point);
+			EditorGUI.BeginChangeCheck();
+			using (new Handles.DrawingScope(Handles.color * this.handleColor))
+			{
+				this.MidpointHandles(ref min, ref max, isCameraInsideBox);
+			}
+			bool flag2 = EditorGUI.EndChangeCheck();
+			if (hotControl != GUIUtility.hotControl && GUIUtility.hotControl != 0)
+			{
+				this.m_BoundsOnClick = this.m_Bounds;
+			}
+			if (flag2)
+			{
+				this.m_Bounds.center = (max + min) * 0.5f;
+				this.m_Bounds.size = max - min;
+				int k = 0;
+				int num3 = this.m_ControlIDs.Length;
+				while (k < num3)
+				{
+					if (GUIUtility.hotControl == this.m_ControlIDs[k])
+					{
+						this.m_Bounds = this.OnHandleChanged((PrimitiveBoundsHandle.HandleDirection)k, this.m_BoundsOnClick, this.m_Bounds);
+					}
+					k++;
+				}
+				if (Event.current.shift)
+				{
+					int hotControl2 = GUIUtility.hotControl;
+					Vector3 size = this.m_Bounds.size;
+					int num4 = 0;
+					if (hotControl2 == this.m_ControlIDs[2] || hotControl2 == this.m_ControlIDs[3])
+					{
+						num4 = 1;
+					}
+					if (hotControl2 == this.m_ControlIDs[4] || hotControl2 == this.m_ControlIDs[5])
+					{
+						num4 = 2;
+					}
+					float num5 = (!Mathf.Approximately(this.m_BoundsOnClick.size[num4], 0f)) ? (size[num4] / this.m_BoundsOnClick.size[num4]) : 1f;
+					int num6 = PrimitiveBoundsHandle.s_NextAxis[num4];
+					size[num6] = num5 * this.m_BoundsOnClick.size[num6];
+					num6 = PrimitiveBoundsHandle.s_NextAxis[num6];
+					size[num6] = num5 * this.m_BoundsOnClick.size[num6];
+					this.m_Bounds.size = size;
+				}
+				if (Event.current.alt)
+				{
+					this.m_Bounds.center = this.m_BoundsOnClick.center;
+				}
 			}
 		}
 

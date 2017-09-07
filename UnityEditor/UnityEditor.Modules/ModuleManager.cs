@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.DataContract;
+using UnityEditor.Build;
+using UnityEditor.DeploymentTargets;
 using UnityEditor.Hardware;
 using UnityEditor.Utils;
 using UnityEditorInternal;
@@ -16,6 +18,22 @@ namespace UnityEditor.Modules
 {
 	internal static class ModuleManager
 	{
+		private class BuildTargetChangedHandler : IActiveBuildTargetChanged, IOrderedCallback
+		{
+			public int callbackOrder
+			{
+				get
+				{
+					return 0;
+				}
+			}
+
+			public void OnActiveBuildTargetChanged(BuildTarget oldTarget, BuildTarget newTarget)
+			{
+				ModuleManager.OnActiveBuildTargetChanged(oldTarget, newTarget);
+			}
+		}
+
 		[NonSerialized]
 		private static List<IPlatformSupportModule> s_PlatformModules;
 
@@ -32,10 +50,7 @@ namespace UnityEditor.Modules
 		private static IPlatformSupportModule s_ActivePlatformModule;
 
 		[CompilerGenerated]
-		private static Action <>f__mg$cache0;
-
-		[CompilerGenerated]
-		private static Func<Assembly, IEnumerable<IPlatformSupportModule>> <>f__mg$cache1;
+		private static Func<Assembly, IEnumerable<IPlatformSupportModule>> <>f__mg$cache0;
 
 		internal static IPackageManagerModule packageManager
 		{
@@ -93,19 +108,9 @@ namespace UnityEditor.Modules
 			}
 		}
 
-		static ModuleManager()
+		private static void OnActiveBuildTargetChanged(BuildTarget oldTarget, BuildTarget newTarget)
 		{
-			Delegate arg_23_0 = EditorUserBuildSettings.activeBuildTargetChanged;
-			if (ModuleManager.<>f__mg$cache0 == null)
-			{
-				ModuleManager.<>f__mg$cache0 = new Action(ModuleManager.OnActiveBuildTargetChanged);
-			}
-			EditorUserBuildSettings.activeBuildTargetChanged = (Action)Delegate.Combine(arg_23_0, ModuleManager.<>f__mg$cache0);
-		}
-
-		private static void OnActiveBuildTargetChanged()
-		{
-			string targetStringFromBuildTarget = ModuleManager.GetTargetStringFromBuildTarget(EditorUserBuildSettings.activeBuildTarget);
+			string targetStringFromBuildTarget = ModuleManager.GetTargetStringFromBuildTarget(newTarget);
 			ModuleManager.ChangeActivePlatformModuleTo(targetStringFromBuildTarget);
 		}
 
@@ -233,7 +238,7 @@ namespace UnityEditor.Modules
 						}
 						else
 						{
-							InternalEditorUtility.SetupCustomDll(Path.GetFileName(text), text);
+							InternalEditorUtility.RegisterPrecompiledAssembly(Path.GetFileName(text), text);
 						}
 					}
 				}
@@ -263,12 +268,12 @@ namespace UnityEditor.Modules
 					for (int j = 0; j < assemblyReferencesForUserScripts.Length; j++)
 					{
 						string text = assemblyReferencesForUserScripts[j];
-						InternalEditorUtility.SetupCustomDll(Path.GetFileName(text), text);
+						InternalEditorUtility.RegisterPrecompiledAssembly(Path.GetFileName(text), text);
 					}
 					EditorUtility.LoadPlatformSupportModuleNativeDllInternal(current.TargetName);
 					current.OnLoad();
 				}
-				ModuleManager.OnActiveBuildTargetChanged();
+				ModuleManager.OnActiveBuildTargetChanged(BuildTarget.NoTarget, EditorUserBuildSettings.activeBuildTarget);
 				ModuleManager.s_PlatformModulesInitialized = true;
 			}
 		}
@@ -397,7 +402,7 @@ namespace UnityEditor.Modules
 				string location = assembly.Location;
 				if (package != null)
 				{
-					InternalEditorUtility.SetupCustomDll(Path.GetFileName(location), location);
+					InternalEditorUtility.RegisterPrecompiledAssembly(Path.GetFileName(location), location);
 				}
 				else
 				{
@@ -439,7 +444,7 @@ namespace UnityEditor.Modules
 							}
 							else
 							{
-								InternalEditorUtility.SetupCustomDll(Path.GetFileName(location), location);
+								InternalEditorUtility.RegisterPrecompiledAssembly(Path.GetFileName(location), location);
 							}
 						}
 						BuildPipeline.SetPlaybackEngineDirectory(buildTarget, BuildOptions.None, current.basePath);
@@ -490,11 +495,11 @@ namespace UnityEditor.Modules
 			{
 				Console.WriteLine("Registering platform support modules:");
 				Stopwatch stopwatch = Stopwatch.StartNew();
-				if (ModuleManager.<>f__mg$cache1 == null)
+				if (ModuleManager.<>f__mg$cache0 == null)
 				{
-					ModuleManager.<>f__mg$cache1 = new Func<Assembly, IEnumerable<IPlatformSupportModule>>(ModuleManager.RegisterPlatformSupportModulesFromAssembly);
+					ModuleManager.<>f__mg$cache0 = new Func<Assembly, IEnumerable<IPlatformSupportModule>>(ModuleManager.RegisterPlatformSupportModulesFromAssembly);
 				}
-				ModuleManager.s_PlatformModules = ModuleManager.RegisterModulesFromLoadedAssemblies<IPlatformSupportModule>(ModuleManager.<>f__mg$cache1).ToList<IPlatformSupportModule>();
+				ModuleManager.s_PlatformModules = ModuleManager.RegisterModulesFromLoadedAssemblies<IPlatformSupportModule>(ModuleManager.<>f__mg$cache0).ToList<IPlatformSupportModule>();
 				stopwatch.Stop();
 				Console.WriteLine("Registered platform support modules in: " + stopwatch.Elapsed.TotalSeconds + "s.");
 			}
@@ -621,6 +626,33 @@ namespace UnityEditor.Modules
 		internal static IBuildPostprocessor GetBuildPostProcessor(BuildTargetGroup targetGroup, BuildTarget target)
 		{
 			return ModuleManager.GetBuildPostProcessor(ModuleManager.GetTargetStringFrom(targetGroup, target));
+		}
+
+		internal static IDeploymentTargetsExtension GetDeploymentTargetsExtension(string target)
+		{
+			IDeploymentTargetsExtension result;
+			if (target == null)
+			{
+				result = null;
+			}
+			else
+			{
+				foreach (IPlatformSupportModule current in ModuleManager.platformSupportModules)
+				{
+					if (current.TargetName == target)
+					{
+						result = current.CreateDeploymentTargetsExtension();
+						return result;
+					}
+				}
+				result = null;
+			}
+			return result;
+		}
+
+		internal static IDeploymentTargetsExtension GetDeploymentTargetsExtension(BuildTargetGroup targetGroup, BuildTarget target)
+		{
+			return ModuleManager.GetDeploymentTargetsExtension(ModuleManager.GetTargetStringFrom(targetGroup, target));
 		}
 
 		internal static IBuildAnalyzer GetBuildAnalyzer(string target)
@@ -1048,6 +1080,12 @@ namespace UnityEditor.Modules
 				result = null;
 			}
 			return result;
+		}
+
+		internal static bool ShouldShowMultiDisplayOption()
+		{
+			GUIContent[] displayNames = ModuleManager.GetDisplayNames(EditorUserBuildSettings.activeBuildTarget.ToString());
+			return BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget) == BuildTargetGroup.Standalone || BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget) == BuildTargetGroup.WSA || displayNames != null;
 		}
 
 		internal static GUIContent[] GetDisplayNames(string target)

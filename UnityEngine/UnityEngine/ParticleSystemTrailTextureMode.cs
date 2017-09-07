@@ -5,6 +5,8 @@ namespace UnityEngine
 	public enum ParticleSystemTrailTextureMode
 	{
 		Stretch,
-		Tile
+		Tile,
+		DistributePerSegment,
+		RepeatPerSegment
 	}
 }

@@ -1,9 +1,7 @@
 using System;
-using Unity.Bindings;
 
 namespace UnityEditor
 {
-	[NativeEnum(Name = "BuildTargetPlatform", Header = "Runtime/Serialize/SerializationMetaFlags.h")]
 	public enum BuildTarget
 	{
 		StandaloneOSXUniversal = 2,

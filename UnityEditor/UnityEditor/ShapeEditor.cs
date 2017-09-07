@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using UnityEditor.U2D.Interface;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.U2D.Interface;
@@ -31,6 +32,48 @@ namespace UnityEditor
 			Linear,
 			Continuous,
 			Broken
+		}
+
+		private enum ColorEnum
+		{
+			EUnselected,
+			EUnselectedHovered,
+			ESelected,
+			ESelectedHovered
+		}
+
+		private class DrawBatchDataKey
+		{
+			private int m_Hash;
+
+			public Color color
+			{
+				get;
+				private set;
+			}
+
+			public int glMode
+			{
+				get;
+				private set;
+			}
+
+			public DrawBatchDataKey(Color c, int mode)
+			{
+				this.color = c;
+				this.glMode = mode;
+				this.m_Hash = (this.glMode ^ this.color.GetHashCode() << 2);
+			}
+
+			public override int GetHashCode()
+			{
+				return this.m_Hash;
+			}
+
+			public override bool Equals(object obj)
+			{
+				return this.m_Hash == obj.GetHashCode();
+			}
 		}
 
 		public Func<int, Vector3> GetPointPosition = (int i) => Vector3.zero;
@@ -154,21 +197,25 @@ namespace UnityEditor
 
 		private int m_ShapeEditorUpdateDone = 0;
 
-		private static readonly Color k_UnSelectedOutline = Color.gray;
+		private Dictionary<ShapeEditor.DrawBatchDataKey, List<Vector3>> m_DrawBatch;
 
-		private static readonly Color k_UnSelectedFill = Color.white;
+		private Vector3[][] m_EdgePoints;
 
-		private static readonly Color k_UnSelectedHoveredOutline = Color.white;
+		private static readonly Color[] k_OutlineColor = new Color[]
+		{
+			Color.gray,
+			Color.white,
+			new Color(0.13333334f, 0.670588255f, 1f),
+			Color.white
+		};
 
-		private static readonly Color k_UnSelectedHoveredFill = new Color(0.5137255f, 0.8627451f, 1f);
-
-		private static readonly Color k_SelectedOutline = new Color(0.13333334f, 0.670588255f, 1f);
-
-		private static readonly Color k_SelectedFill = new Color(0.13333334f, 0.670588255f, 1f);
-
-		private static readonly Color k_SelectedHoveredOutline = Color.white;
-
-		private static readonly Color k_SelectedHoveredFill = new Color(0.13333334f, 0.670588255f, 1f);
+		private static readonly Color[] k_FillColor = new Color[]
+		{
+			Color.white,
+			new Color(0.5137255f, 0.8627451f, 1f),
+			new Color(0.13333334f, 0.670588255f, 1f),
+			new Color(0.13333334f, 0.670588255f, 1f)
+		};
 
 		private static readonly Color k_TangentColor = new Color(0.13333334f, 0.670588255f, 1f);
 
@@ -190,6 +237,8 @@ namespace UnityEditor
 
 		private readonly int k_LeftTangentID;
 
+		private const int k_BezierPatch = 40;
+
 		[CompilerGenerated]
 		private static ShapeEditor.DistanceToControl <>f__mg$cache0;
 
@@ -200,30 +249,9 @@ namespace UnityEditor
 		private static ShapeEditor.DistanceToControl <>f__mg$cache2;
 
 		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache3;
+		private static ShapeEditor.DistanceToControl <>f__mg$cache3;
 
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache4;
-
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache5;
-
-		[CompilerGenerated]
-		private static ShapeEditor.DistanceToControl <>f__mg$cache6;
-
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache7;
-
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache8;
-
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cache9;
-
-		[CompilerGenerated]
-		private static Handles.CapFunction <>f__mg$cacheA;
-
-		public UnityEngine.Texture2D lineTexture
+		public ITexture2D lineTexture
 		{
 			get;
 			set;
@@ -281,11 +309,11 @@ namespace UnityEditor
 			set;
 		}
 
-		private static Quaternion handleMatrixrotation
+		private Quaternion handleMatrixrotation
 		{
 			get
 			{
-				return Quaternion.LookRotation(Handles.matrix.GetColumn(2), Handles.matrix.GetColumn(1));
+				return Quaternion.LookRotation(this.handles.matrix.GetColumn(2), this.handles.matrix.GetColumn(1));
 			}
 		}
 
@@ -307,6 +335,18 @@ namespace UnityEditor
 			set;
 		}
 
+		private IGL glSystem
+		{
+			get;
+			set;
+		}
+
+		private IHandles handles
+		{
+			get;
+			set;
+		}
+
 		public ShapeEditor(IGUIUtility gu, IEventSystem es)
 		{
 			this.m_Selection = new ShapeEditorSelection(this);
@@ -316,6 +356,8 @@ namespace UnityEditor
 			this.k_EdgeID = this.guiUtility.GetPermanentControlID();
 			this.k_RightTangentID = this.guiUtility.GetPermanentControlID();
 			this.k_LeftTangentID = this.guiUtility.GetPermanentControlID();
+			this.glSystem = GLSystem.GetSystem();
+			this.handles = HandlesSystem.GetSystem();
 		}
 
 		public void SetRectSelectionTool(ShapeEditorRectSelectionTool sers)
@@ -337,6 +379,44 @@ namespace UnityEditor
 			this.m_RectSelectionTool = null;
 		}
 
+		private void PrepareDrawBatch()
+		{
+			if (this.currentEvent.type == EventType.Repaint)
+			{
+				this.m_DrawBatch = new Dictionary<ShapeEditor.DrawBatchDataKey, List<Vector3>>();
+			}
+		}
+
+		private void DrawBatch()
+		{
+			if (this.currentEvent.type == EventType.Repaint)
+			{
+				HandleUtility.ApplyWireMaterial();
+				this.glSystem.PushMatrix();
+				this.glSystem.MultMatrix(this.handles.matrix);
+				foreach (KeyValuePair<ShapeEditor.DrawBatchDataKey, List<Vector3>> current in this.m_DrawBatch)
+				{
+					this.glSystem.Begin(current.Key.glMode);
+					this.glSystem.Color(current.Key.color);
+					foreach (Vector3 current2 in current.Value)
+					{
+						this.glSystem.Vertex(current2);
+					}
+					this.glSystem.End();
+				}
+				this.glSystem.PopMatrix();
+			}
+		}
+
+		private List<Vector3> GetDrawBatchList(ShapeEditor.DrawBatchDataKey key)
+		{
+			if (!this.m_DrawBatch.ContainsKey(key))
+			{
+				this.m_DrawBatch.Add(key, new List<Vector3>());
+			}
+			return this.m_DrawBatch[key];
+		}
+
 		public void OnGUI()
 		{
 			this.DelayedResetIfNecessary();
@@ -345,9 +425,10 @@ namespace UnityEditor
 			{
 				this.StoreMouseDownState();
 			}
-			Color color = Handles.color;
-			Matrix4x4 matrix = Handles.matrix;
-			Handles.matrix = this.LocalToWorldMatrix();
+			Color color = this.handles.color;
+			Matrix4x4 matrix = this.handles.matrix;
+			this.handles.matrix = this.LocalToWorldMatrix();
+			this.PrepareDrawBatch();
 			this.Edges();
 			if (this.inEditMode)
 			{
@@ -355,8 +436,9 @@ namespace UnityEditor
 				this.Tangents();
 				this.Points();
 			}
-			Handles.color = color;
-			Handles.matrix = matrix;
+			this.DrawBatch();
+			this.handles.color = color;
+			this.handles.matrix = matrix;
 			this.OnShapeEditorUpdateDone();
 			foreach (ShapeEditor current in this.m_ShapeEditorListeners)
 			{
@@ -390,35 +472,55 @@ namespace UnityEditor
 			}
 		}
 
-		private float GetMouseClosestEdgeDistance()
+		private void PrepareEdgePointList()
 		{
-			int num = this.GetPointsCount();
-			if (this.m_MouseClosestEdge == -1 && num > 0)
+			if (this.m_EdgePoints == null)
 			{
-				this.m_MouseClosestEdgeDist = 3.40282347E+38f;
-				int num2 = 0;
-				int num3 = ShapeEditor.NextIndex(num2, num);
-				int num4 = (!this.OpenEnded()) ? num : (num - 1);
-				for (int i = 0; i < num4; i++)
+				int num = this.GetPointsCount();
+				int num2 = (!this.OpenEnded()) ? num : (num - 1);
+				this.m_EdgePoints = new Vector3[num2][];
+				int num3 = ShapeEditor.mod(num - 1, num2);
+				for (int i = ShapeEditor.mod(num3 + 1, num); i < num; i++)
 				{
-					Vector3 vector = this.GetPointPosition(num2);
-					Vector3 vector2 = this.GetPointPosition(num3);
-					Vector3 arg = vector + this.GetPointRTangent(num2);
-					Vector3 arg2 = vector2 + this.GetPointLTangent(num3);
-					Vector2 v = this.LocalToScreen(vector);
-					Vector2 v2 = this.LocalToScreen(vector2);
-					Vector2 v3 = this.LocalToScreen(arg);
-					Vector2 v4 = this.LocalToScreen(arg2);
-					float num5 = HandleUtility.DistancePointBezier(this.eventSystem.current.mousePosition, v, v2, v3, v4);
-					if (num5 < this.m_MouseClosestEdgeDist)
+					Vector3 vector = this.GetPointPosition(num3);
+					Vector3 vector2 = this.GetPointPosition(i);
+					if (this.GetTangentMode(num3) == ShapeEditor.TangentMode.Linear && this.GetTangentMode(i) == ShapeEditor.TangentMode.Linear)
 					{
-						this.m_MouseClosestEdge = num2;
-						this.m_MouseClosestEdgeDist = num5;
+						this.m_EdgePoints[num3] = new Vector3[]
+						{
+							vector,
+							vector2
+						};
 					}
-					num2 = ShapeEditor.NextIndex(num2, num);
-					num3 = ShapeEditor.NextIndex(num3, num);
+					else
+					{
+						Vector3 startTangent = this.GetPointRTangent(num3) + vector;
+						Vector3 endTangent = this.GetPointLTangent(i) + vector2;
+						this.m_EdgePoints[num3] = this.handles.MakeBezierPoints(vector, vector2, startTangent, endTangent, 40);
+					}
+					num3 = i;
 				}
 			}
+		}
+
+		private float DistancePointEdge(Vector3 point, Vector3[] edge)
+		{
+			float num = 3.40282347E+38f;
+			int num2 = edge.Length - 1;
+			for (int i = 0; i < edge.Length; i++)
+			{
+				float num3 = HandleUtility.DistancePointLine(point, edge[num2], edge[i]);
+				if (num3 < num)
+				{
+					num = num3;
+				}
+				num2 = i;
+			}
+			return num;
+		}
+
+		private float GetMouseClosestEdgeDistance()
+		{
 			float result;
 			if (this.guiUtility.hotControl == this.k_CreatorID || this.guiUtility.hotControl == this.k_EdgeID)
 			{
@@ -426,6 +528,23 @@ namespace UnityEditor
 			}
 			else
 			{
+				Vector3 point = this.ScreenToLocal(this.eventSystem.current.mousePosition);
+				int num = this.GetPointsCount();
+				if (this.m_MouseClosestEdge == -1 && num > 0)
+				{
+					this.PrepareEdgePointList();
+					this.m_MouseClosestEdgeDist = 3.40282347E+38f;
+					int num2 = (!this.OpenEnded()) ? num : (num - 1);
+					for (int i = 0; i < num2; i++)
+					{
+						float num3 = this.DistancePointEdge(point, this.m_EdgePoints[i]);
+						if (num3 < this.m_MouseClosestEdgeDist)
+						{
+							this.m_MouseClosestEdge = i;
+							this.m_MouseClosestEdgeDist = num3;
+						}
+					}
+				}
 				result = this.m_MouseClosestEdgeDist;
 			}
 			return result;
@@ -439,33 +558,40 @@ namespace UnityEditor
 				num = (from se in this.m_ShapeEditorListeners
 				select se.GetMouseClosestEdgeDistance()).Max();
 			}
-			int num2 = this.GetPointsCount();
-			int num3 = 0;
-			int num4 = ShapeEditor.NextIndex(num3, num2);
-			int num5 = (!this.OpenEnded()) ? num2 : (num2 - 1);
-			for (int i = 0; i < num5; i++)
+			float mouseClosestEdgeDistance = this.GetMouseClosestEdgeDistance();
+			bool flag = this.EdgeDragModifiersActive() && mouseClosestEdgeDistance < 9f && mouseClosestEdgeDistance < num;
+			if (this.currentEvent.type == EventType.Repaint)
 			{
-				Vector3 vector = this.GetPointPosition(num3);
-				Vector3 vector2 = this.GetPointPosition(num4);
-				Vector3 vector3 = vector + this.GetPointRTangent(num3);
-				Vector3 vector4 = vector2 + this.GetPointLTangent(num4);
-				Vector2 v = this.LocalToScreen(vector);
-				Vector2 v2 = this.LocalToScreen(vector2);
-				Vector2 v3 = this.LocalToScreen(vector3);
-				Vector2 v4 = this.LocalToScreen(vector4);
-				float num6 = HandleUtility.DistancePointBezier(this.currentEvent.mousePosition, v, v2, v3, v4);
-				Color color = (num3 != this.m_ActiveEdge) ? Color.white : Color.yellow;
-				float width = (num3 != this.m_ActiveEdge && (!this.EdgeDragModifiersActive() || num6 >= 9f || num6 >= num)) ? 2f : 6f;
-				Handles.DrawBezier(vector, vector2, vector3, vector4, color, this.lineTexture, width);
-				num3 = ShapeEditor.NextIndex(num3, num2);
-				num4 = ShapeEditor.NextIndex(num4, num2);
+				Color color = this.handles.color;
+				this.PrepareEdgePointList();
+				int num2 = this.GetPointsCount();
+				int num3 = (!this.OpenEnded()) ? num2 : (num2 - 1);
+				for (int i = 0; i < num3; i++)
+				{
+					Color color2 = (i != this.m_ActiveEdge) ? Color.white : Color.yellow;
+					float width = (i != this.m_ActiveEdge && (this.m_MouseClosestEdge != i || !flag)) ? 2f : 6f;
+					this.handles.color = color2;
+					this.handles.DrawAAPolyLine(this.lineTexture, width, this.m_EdgePoints[i]);
+				}
+				this.handles.color = color;
 			}
 			if (this.inEditMode)
 			{
-				if (num > this.GetMouseClosestEdgeDistance())
+				if (num > mouseClosestEdgeDistance)
 				{
-					this.HandlePointInsertToEdge(this.m_MouseClosestEdge, this.m_MouseClosestEdgeDist);
-					this.HandleEdgeDragging(this.m_MouseClosestEdge, this.m_MouseClosestEdgeDist);
+					bool flag2 = this.MouseDistanceToPoint(this.FindClosestPointToMouse()) > 20f;
+					bool flag3 = this.MouseDistanceToClosestTangent() > 20f;
+					bool flag4 = flag2 && flag3;
+					bool flag5 = this.m_MouseClosestEdgeDist < 9f;
+					bool flag6 = flag5 && flag4 && !this.m_RectSelectionTool.isSelecting;
+					if (GUIUtility.hotControl == this.k_EdgeID || (this.EdgeDragModifiersActive() && flag6))
+					{
+						this.HandleEdgeDragging(this.m_MouseClosestEdge);
+					}
+					else if (GUIUtility.hotControl == this.k_CreatorID || (this.currentEvent.modifiers == EventModifiers.None && flag6))
+					{
+						this.HandlePointInsertToEdge(this.m_MouseClosestEdge, this.m_MouseClosestEdgeDist);
+					}
 				}
 			}
 			if (this.guiUtility.hotControl != this.k_CreatorID && this.m_NewPointIndex != -1)
@@ -531,12 +657,15 @@ namespace UnityEditor
 				{
 					Vector3 vector = this.GetPointPosition(i);
 					int controlID = this.guiUtility.GetControlID(5353, FocusType.Keyboard);
-					bool flag2 = this.m_Selection.Contains(i);
-					bool flag3 = this.currentEvent.GetTypeForControl(controlID) == EventType.MouseDown;
-					bool flag4 = this.currentEvent.GetTypeForControl(controlID) == EventType.MouseUp;
+					bool flag2 = this.currentEvent.GetTypeForControl(controlID) == EventType.MouseDown;
+					bool flag3 = this.currentEvent.GetTypeForControl(controlID) == EventType.MouseUp;
 					EditorGUI.BeginChangeCheck();
-					ShapeEditor.handleOutlineColor = this.GetOutlineColorForPoint(i, controlID);
-					ShapeEditor.handleFillColor = this.GetFillColorForPoint(i, controlID);
+					if (this.currentEvent.type == EventType.Repaint)
+					{
+						ShapeEditor.ColorEnum colorForPoint = this.GetColorForPoint(i, controlID);
+						ShapeEditor.handleOutlineColor = ShapeEditor.k_OutlineColor[(int)colorForPoint];
+						ShapeEditor.handleFillColor = ShapeEditor.k_FillColor[(int)colorForPoint];
+					}
 					Vector3 vector2 = vector;
 					int hotControl = this.guiUtility.hotControl;
 					if (!this.currentEvent.alt || this.guiUtility.hotControl == controlID)
@@ -548,7 +677,7 @@ namespace UnityEditor
 						this.GetCapForPoint(i)(controlID, vector, Quaternion.LookRotation(Vector3.forward, Vector3.up), this.GetHandleSizeForPoint(i), this.currentEvent.type);
 					}
 					int hotControl2 = this.guiUtility.hotControl;
-					if (flag4 && hotControl == controlID && hotControl2 == 0 && this.currentEvent.mousePosition == this.m_MousePositionLastMouseDown && !this.currentEvent.shift)
+					if (flag3 && hotControl == controlID && hotControl2 == 0 && this.currentEvent.mousePosition == this.m_MousePositionLastMouseDown && !this.currentEvent.shift)
 					{
 						this.HandlePointClick(i);
 					}
@@ -558,7 +687,7 @@ namespace UnityEditor
 						vector2 = this.Snap(vector2);
 						this.MoveSelections(vector2 - vector);
 					}
-					if (this.guiUtility.hotControl == controlID && !flag2 && flag3)
+					if (this.guiUtility.hotControl == controlID && flag2 && !this.m_Selection.Contains(i))
 					{
 						this.SelectPoint(i, (!this.currentEvent.shift) ? ShapeEditor.SelectionType.Normal : ShapeEditor.SelectionType.Additive);
 						this.Repaint();
@@ -588,101 +717,77 @@ namespace UnityEditor
 		public void HandlePointInsertToEdge(int closestEdge, float closestEdgeDist)
 		{
 			bool flag = GUIUtility.hotControl == this.k_CreatorID;
-			bool flag2 = this.MouseDistanceToPoint(this.FindClosestPointToMouse()) > 20f;
-			bool flag3 = this.MouseDistanceToClosestTangent() > 20f;
-			bool flag4 = flag2 && flag3;
-			bool flag5 = closestEdgeDist < 9f;
-			if ((flag5 && flag4 && !this.m_RectSelectionTool.isSelecting && this.currentEvent.modifiers == EventModifiers.None) || flag)
+			Vector3 vector = (!flag) ? this.FindClosestPointOnEdge(closestEdge, this.ScreenToLocal(this.currentEvent.mousePosition), 100) : this.GetPointPosition(this.m_NewPointIndex);
+			EditorGUI.BeginChangeCheck();
+			ShapeEditor.handleFillColor = ShapeEditor.k_FillColor[3];
+			ShapeEditor.handleOutlineColor = ShapeEditor.k_OutlineColor[3];
+			if (!flag)
 			{
-				Vector3 vector = (!flag) ? this.FindClosestPointOnEdge(closestEdge, this.ScreenToLocal(this.currentEvent.mousePosition), 100) : this.GetPointPosition(this.m_NewPointIndex);
-				EditorGUI.BeginChangeCheck();
-				ShapeEditor.handleFillColor = ShapeEditor.k_SelectedHoveredFill;
-				ShapeEditor.handleOutlineColor = ShapeEditor.k_SelectedHoveredOutline;
-				if (!flag)
-				{
-					ShapeEditor.handleFillColor = ShapeEditor.handleFillColor.AlphaMultiplied(0.5f);
-					ShapeEditor.handleOutlineColor = ShapeEditor.handleOutlineColor.AlphaMultiplied(0.5f);
-				}
-				int hotControl = GUIUtility.hotControl;
-				int arg_14F_0 = this.k_CreatorID;
-				Vector3 arg_14F_1 = vector;
-				Vector3 arg_14F_2 = Vector3.up;
-				Vector3 arg_14F_3 = Vector3.right;
-				float arg_14F_4 = this.GetHandleSizeForPoint(closestEdge);
-				if (ShapeEditor.<>f__mg$cache3 == null)
-				{
-					ShapeEditor.<>f__mg$cache3 = new Handles.CapFunction(ShapeEditor.RectCap);
-				}
-				Vector3 vector2 = ShapeEditor.DoSlider(arg_14F_0, arg_14F_1, arg_14F_2, arg_14F_3, arg_14F_4, ShapeEditor.<>f__mg$cache3);
-				if (hotControl != this.k_CreatorID && GUIUtility.hotControl == this.k_CreatorID)
-				{
-					this.RecordUndo();
-					this.m_NewPointIndex = ShapeEditor.NextIndex(closestEdge, this.GetPointsCount());
-					this.InsertPointAt(this.m_NewPointIndex, vector2);
-					this.SelectPoint(this.m_NewPointIndex, ShapeEditor.SelectionType.Normal);
-				}
-				else if (EditorGUI.EndChangeCheck())
-				{
-					this.RecordUndo();
-					vector2 = this.Snap(vector2);
-					this.MoveSelections(vector2 - vector);
-				}
+				ShapeEditor.handleFillColor = ShapeEditor.handleFillColor.AlphaMultiplied(0.5f);
+				ShapeEditor.handleOutlineColor = ShapeEditor.handleOutlineColor.AlphaMultiplied(0.5f);
+			}
+			int hotControl = GUIUtility.hotControl;
+			Vector3 vector2 = ShapeEditor.DoSlider(this.k_CreatorID, vector, Vector3.up, Vector3.right, this.GetHandleSizeForPoint(closestEdge), new Handles.CapFunction(this.RectCap));
+			if (hotControl != this.k_CreatorID && GUIUtility.hotControl == this.k_CreatorID)
+			{
+				this.RecordUndo();
+				this.m_NewPointIndex = ShapeEditor.NextIndex(closestEdge, this.GetPointsCount());
+				this.InsertPointAt(this.m_NewPointIndex, vector2);
+				this.SelectPoint(this.m_NewPointIndex, ShapeEditor.SelectionType.Normal);
+			}
+			else if (EditorGUI.EndChangeCheck())
+			{
+				this.RecordUndo();
+				vector2 = this.Snap(vector2);
+				this.MoveSelections(vector2 - vector);
 			}
 		}
 
-		private void HandleEdgeDragging(int closestEdge, float closestEdgeDist)
+		private void HandleEdgeDragging(int closestEdge)
 		{
-			bool flag = GUIUtility.hotControl == this.k_EdgeID;
-			bool flag2 = this.MouseDistanceToPoint(this.FindClosestPointToMouse()) > 20f;
-			bool flag3 = this.MouseDistanceToClosestTangent() > 20f;
-			bool flag4 = flag2 && flag3;
-			bool flag5 = closestEdgeDist < 9f;
-			if ((flag5 && flag4 && !this.m_RectSelectionTool.isSelecting && this.EdgeDragModifiersActive()) || flag)
+			EventType type = this.currentEvent.type;
+			if (type != EventType.MouseDown)
 			{
-				EventType type = this.currentEvent.type;
-				if (type != EventType.MouseDown)
+				if (type != EventType.MouseDrag)
 				{
-					if (type != EventType.MouseDrag)
+					if (type == EventType.MouseUp)
 					{
-						if (type == EventType.MouseUp)
-						{
-							this.m_ActiveEdge = -1;
-							GUIUtility.hotControl = 0;
-							this.currentEvent.Use();
-						}
-					}
-					else
-					{
-						this.RecordUndo();
-						Vector3 a = this.ScreenToLocal(this.currentEvent.mousePosition);
-						Vector3 b = a - this.m_EdgeDragStartMousePosition;
-						Vector3 b2 = this.GetPointPosition(this.m_ActiveEdge);
-						Vector3 vector = this.m_EdgeDragStartP0 + b;
-						vector = this.Snap(vector);
-						Vector3 b3 = vector - b2;
-						int activeEdge = this.m_ActiveEdge;
-						int num = ShapeEditor.NextIndex(this.m_ActiveEdge, this.GetPointsCount());
-						this.SetPointPosition(this.m_ActiveEdge, this.GetPointPosition(activeEdge) + b3);
-						this.SetPointPosition(num, this.GetPointPosition(num) + b3);
+						this.m_ActiveEdge = -1;
+						GUIUtility.hotControl = 0;
 						this.currentEvent.Use();
 					}
 				}
 				else
 				{
-					this.m_ActiveEdge = closestEdge;
-					this.m_EdgeDragStartP0 = this.GetPointPosition(this.m_ActiveEdge);
-					this.m_EdgeDragStartP1 = this.GetPointPosition(ShapeEditor.NextIndex(this.m_ActiveEdge, this.GetPointsCount()));
-					if (this.currentEvent.shift)
-					{
-						this.RecordUndo();
-						this.InsertPointAt(this.m_ActiveEdge + 1, this.m_EdgeDragStartP0);
-						this.InsertPointAt(this.m_ActiveEdge + 2, this.m_EdgeDragStartP1);
-						this.m_ActiveEdge++;
-					}
-					this.m_EdgeDragStartMousePosition = this.ScreenToLocal(this.currentEvent.mousePosition);
-					GUIUtility.hotControl = this.k_EdgeID;
+					this.RecordUndo();
+					Vector3 a = this.ScreenToLocal(this.currentEvent.mousePosition);
+					Vector3 b = a - this.m_EdgeDragStartMousePosition;
+					Vector3 b2 = this.GetPointPosition(this.m_ActiveEdge);
+					Vector3 vector = this.m_EdgeDragStartP0 + b;
+					vector = this.Snap(vector);
+					Vector3 b3 = vector - b2;
+					int activeEdge = this.m_ActiveEdge;
+					int num = ShapeEditor.NextIndex(this.m_ActiveEdge, this.GetPointsCount());
+					this.SetPointPosition(this.m_ActiveEdge, this.GetPointPosition(activeEdge) + b3);
+					this.SetPointPosition(num, this.GetPointPosition(num) + b3);
 					this.currentEvent.Use();
 				}
+			}
+			else
+			{
+				this.m_ActiveEdge = closestEdge;
+				this.m_EdgeDragStartP0 = this.GetPointPosition(this.m_ActiveEdge);
+				this.m_EdgeDragStartP1 = this.GetPointPosition(ShapeEditor.NextIndex(this.m_ActiveEdge, this.GetPointsCount()));
+				if (this.currentEvent.shift)
+				{
+					this.RecordUndo();
+					this.InsertPointAt(this.m_ActiveEdge + 1, this.m_EdgeDragStartP0);
+					this.InsertPointAt(this.m_ActiveEdge + 2, this.m_EdgeDragStartP1);
+					this.m_ActiveEdge++;
+				}
+				this.m_EdgeDragStartMousePosition = this.ScreenToLocal(this.currentEvent.mousePosition);
+				GUIUtility.hotControl = this.k_EdgeID;
+				this.currentEvent.Use();
 			}
 		}
 
@@ -690,11 +795,11 @@ namespace UnityEditor
 		{
 			float handleSizeForPoint = this.GetHandleSizeForPoint(pointIndex);
 			float tangentSizeForPoint = this.GetTangentSizeForPoint(pointIndex);
-			Handles.color = color;
+			this.handles.color = color;
 			float num = HandleUtility.DistanceToCircle(t0, tangentSizeForPoint);
 			if (this.lineTexture != null)
 			{
-				Handles.DrawAAPolyLine(this.lineTexture, new Vector3[]
+				this.handles.DrawAAPolyLine(this.lineTexture, new Vector3[]
 				{
 					p0,
 					t0
@@ -702,9 +807,9 @@ namespace UnityEditor
 			}
 			else
 			{
-				Handles.DrawLine(p0, t0);
+				this.handles.DrawLine(p0, t0);
 			}
-			ShapeEditor.handleOutlineColor = ((num <= 0f) ? ShapeEditor.k_SelectedHoveredOutline : color);
+			ShapeEditor.handleOutlineColor = ((num <= 0f) ? ShapeEditor.k_OutlineColor[3] : color);
 			ShapeEditor.handleFillColor = color;
 			Vector3 vector = ShapeEditor.DoSlider(cid, t0, Vector3.up, Vector3.right, tangentSizeForPoint, this.GetCapForTangent(pointIndex)) - p0;
 			return (vector.magnitude >= handleSizeForPoint) ? vector : Vector3.zero;
@@ -755,50 +860,26 @@ namespace UnityEditor
 			}
 		}
 
-		private Color GetOutlineColorForPoint(int pointIndex, int handleID)
+		private ShapeEditor.ColorEnum GetColorForPoint(int pointIndex, int handleID)
 		{
 			bool flag = this.MouseDistanceToPoint(pointIndex) <= 0f;
 			bool flag2 = this.m_Selection.Contains(pointIndex);
-			Color result;
+			ShapeEditor.ColorEnum result;
 			if ((flag && flag2) || GUIUtility.hotControl == handleID)
 			{
-				result = ShapeEditor.k_SelectedHoveredOutline;
+				result = ShapeEditor.ColorEnum.ESelectedHovered;
 			}
 			else if (flag)
 			{
-				result = ShapeEditor.k_UnSelectedHoveredOutline;
+				result = ShapeEditor.ColorEnum.EUnselectedHovered;
 			}
 			else if (flag2)
 			{
-				result = ShapeEditor.k_SelectedOutline;
+				result = ShapeEditor.ColorEnum.ESelected;
 			}
 			else
 			{
-				result = ShapeEditor.k_UnSelectedOutline;
-			}
-			return result;
-		}
-
-		private Color GetFillColorForPoint(int pointIndex, int handleID)
-		{
-			bool flag = this.MouseDistanceToPoint(pointIndex) <= 0f;
-			bool flag2 = this.m_Selection.Contains(pointIndex);
-			Color result;
-			if ((flag && flag2) || GUIUtility.hotControl == handleID)
-			{
-				result = ShapeEditor.k_SelectedHoveredFill;
-			}
-			else if (flag)
-			{
-				result = ShapeEditor.k_UnSelectedHoveredFill;
-			}
-			else if (flag2)
-			{
-				result = ShapeEditor.k_SelectedFill;
-			}
-			else
-			{
-				result = ShapeEditor.k_UnSelectedFill;
+				result = ShapeEditor.ColorEnum.EUnselected;
 			}
 			return result;
 		}
@@ -822,19 +903,11 @@ namespace UnityEditor
 			Handles.CapFunction result;
 			if (this.GetTangentMode(index) == ShapeEditor.TangentMode.Continuous)
 			{
-				if (ShapeEditor.<>f__mg$cache4 == null)
-				{
-					ShapeEditor.<>f__mg$cache4 = new Handles.CapFunction(ShapeEditor.CircleCap);
-				}
-				result = ShapeEditor.<>f__mg$cache4;
+				result = new Handles.CapFunction(this.CircleCap);
 			}
 			else
 			{
-				if (ShapeEditor.<>f__mg$cache5 == null)
-				{
-					ShapeEditor.<>f__mg$cache5 = new Handles.CapFunction(ShapeEditor.DiamondCap);
-				}
-				result = ShapeEditor.<>f__mg$cache5;
+				result = new Handles.CapFunction(this.DiamondCap);
 			}
 			return result;
 		}
@@ -848,11 +921,11 @@ namespace UnityEditor
 			}
 			else
 			{
-				if (ShapeEditor.<>f__mg$cache6 == null)
+				if (ShapeEditor.<>f__mg$cache3 == null)
 				{
-					ShapeEditor.<>f__mg$cache6 = new ShapeEditor.DistanceToControl(HandleUtility.DistanceToDiamond);
+					ShapeEditor.<>f__mg$cache3 = new ShapeEditor.DistanceToControl(HandleUtility.DistanceToDiamond);
 				}
-				result = ShapeEditor.<>f__mg$cache6;
+				result = ShapeEditor.<>f__mg$cache3;
 			}
 			return result;
 		}
@@ -867,37 +940,21 @@ namespace UnityEditor
 				{
 					if (tangentMode != ShapeEditor.TangentMode.Linear)
 					{
-						if (ShapeEditor.<>f__mg$cacheA == null)
-						{
-							ShapeEditor.<>f__mg$cacheA = new Handles.CapFunction(ShapeEditor.DiamondCap);
-						}
-						result = ShapeEditor.<>f__mg$cacheA;
+						result = new Handles.CapFunction(this.DiamondCap);
 					}
 					else
 					{
-						if (ShapeEditor.<>f__mg$cache9 == null)
-						{
-							ShapeEditor.<>f__mg$cache9 = new Handles.CapFunction(ShapeEditor.RectCap);
-						}
-						result = ShapeEditor.<>f__mg$cache9;
+						result = new Handles.CapFunction(this.RectCap);
 					}
 				}
 				else
 				{
-					if (ShapeEditor.<>f__mg$cache8 == null)
-					{
-						ShapeEditor.<>f__mg$cache8 = new Handles.CapFunction(ShapeEditor.CircleCap);
-					}
-					result = ShapeEditor.<>f__mg$cache8;
+					result = new Handles.CapFunction(this.CircleCap);
 				}
 			}
 			else
 			{
-				if (ShapeEditor.<>f__mg$cache7 == null)
-				{
-					ShapeEditor.<>f__mg$cache7 = new Handles.CapFunction(ShapeEditor.DiamondCap);
-				}
-				result = ShapeEditor.<>f__mg$cache7;
+				result = new Handles.CapFunction(this.DiamondCap);
 			}
 			return result;
 		}
@@ -967,10 +1024,10 @@ namespace UnityEditor
 			for (float num3 = 0f; num3 <= 1f; num3 += num)
 			{
 				Vector3 positionByIndex = this.GetPositionByIndex((float)edgeIndex + num3);
-				float magnitude = (position - positionByIndex).magnitude;
-				if (magnitude < num2)
+				float sqrMagnitude = (position - positionByIndex).sqrMagnitude;
+				if (sqrMagnitude < num2)
 				{
-					num2 = magnitude;
+					num2 = sqrMagnitude;
 					index = (float)edgeIndex + num3;
 				}
 			}
@@ -1030,11 +1087,11 @@ namespace UnityEditor
 			for (int i = 0; i < this.GetPointsCount(); i++)
 			{
 				Vector3 a = this.GetPointPosition(i);
-				float magnitude = (a - position).magnitude;
-				if (magnitude < num)
+				float sqrMagnitude = (a - position).sqrMagnitude;
+				if (sqrMagnitude < num)
 				{
 					result = i;
-					num = magnitude;
+					num = sqrMagnitude;
 				}
 			}
 			return result;
@@ -1108,7 +1165,7 @@ namespace UnityEditor
 			return Slider2D.Do(id, position, Vector3.zero, Vector3.Cross(slide1, slide2), slide1, slide2, s, cap, Vector2.zero, false);
 		}
 
-		public static void RectCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
+		public void RectCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (eventType == EventType.Layout)
 			{
@@ -1116,37 +1173,31 @@ namespace UnityEditor
 			}
 			else if (eventType == EventType.Repaint)
 			{
-				Vector3 planeNormal = Handles.matrix.GetColumn(2);
+				Vector3 planeNormal = this.handles.matrix.GetColumn(2);
 				Vector3 normalized = (ShapeEditor.ProjectPointOnPlane(planeNormal, position, position + Vector3.up) - position).normalized;
-				Quaternion rotation2 = Quaternion.LookRotation(Handles.matrix.GetColumn(2), normalized);
+				Quaternion rotation2 = Quaternion.LookRotation(this.handles.matrix.GetColumn(2), normalized);
 				Vector3 b = rotation2 * Vector3.right * size;
 				Vector3 b2 = rotation2 * Vector3.up * size;
-				HandleUtility.ApplyWireMaterial();
-				GL.PushMatrix();
-				GL.MultMatrix(Handles.matrix);
-				GL.Begin(7);
-				GL.Color(ShapeEditor.handleFillColor);
-				GL.Vertex(position + b + b2);
-				GL.Vertex(position + b - b2);
-				GL.Vertex(position - b - b2);
-				GL.Vertex(position - b + b2);
-				GL.End();
-				GL.Begin(1);
-				GL.Color(ShapeEditor.handleOutlineColor);
-				GL.Vertex(position + b + b2);
-				GL.Vertex(position + b - b2);
-				GL.Vertex(position + b - b2);
-				GL.Vertex(position - b - b2);
-				GL.Vertex(position - b - b2);
-				GL.Vertex(position - b + b2);
-				GL.Vertex(position - b + b2);
-				GL.Vertex(position + b + b2);
-				GL.End();
-				GL.PopMatrix();
+				List<Vector3> drawBatchList = this.GetDrawBatchList(new ShapeEditor.DrawBatchDataKey(ShapeEditor.handleFillColor, 4));
+				drawBatchList.Add(position + b + b2);
+				drawBatchList.Add(position + b - b2);
+				drawBatchList.Add(position - b - b2);
+				drawBatchList.Add(position - b - b2);
+				drawBatchList.Add(position - b + b2);
+				drawBatchList.Add(position + b + b2);
+				drawBatchList = this.GetDrawBatchList(new ShapeEditor.DrawBatchDataKey(ShapeEditor.handleOutlineColor, 1));
+				drawBatchList.Add(position + b + b2);
+				drawBatchList.Add(position + b - b2);
+				drawBatchList.Add(position + b - b2);
+				drawBatchList.Add(position - b - b2);
+				drawBatchList.Add(position - b - b2);
+				drawBatchList.Add(position - b + b2);
+				drawBatchList.Add(position - b + b2);
+				drawBatchList.Add(position + b + b2);
 			}
 		}
 
-		public static void CircleCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
+		public void CircleCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (eventType == EventType.Layout)
 			{
@@ -1154,40 +1205,31 @@ namespace UnityEditor
 			}
 			else if (eventType == EventType.Repaint)
 			{
-				Handles.StartCapDraw(position, rotation, size);
-				Vector3 vector = ShapeEditor.handleMatrixrotation * rotation * Vector3.forward;
+				Vector3 vector = this.handleMatrixrotation * rotation * Vector3.forward;
 				Vector3 from = Vector3.Cross(vector, Vector3.up);
 				if (from.sqrMagnitude < 0.001f)
 				{
 					from = Vector3.Cross(vector, Vector3.right);
 				}
 				Vector3[] array = new Vector3[60];
-				Handles.SetDiscSectionPoints(array, position, vector, from, 360f, size);
-				HandleUtility.ApplyWireMaterial();
-				GL.PushMatrix();
-				GL.Begin(4);
-				GL.MultMatrix(Handles.matrix);
-				GL.Color(ShapeEditor.handleFillColor);
+				this.handles.SetDiscSectionPoints(array, position, vector, from, 360f, size);
+				List<Vector3> drawBatchList = this.GetDrawBatchList(new ShapeEditor.DrawBatchDataKey(ShapeEditor.handleFillColor, 4));
 				for (int i = 1; i < array.Length; i++)
 				{
-					GL.Vertex(position);
-					GL.Vertex(array[i - 1]);
-					GL.Vertex(array[i]);
+					drawBatchList.Add(position);
+					drawBatchList.Add(array[i]);
+					drawBatchList.Add(array[i - 1]);
 				}
-				GL.End();
-				GL.Begin(1);
-				GL.Color(ShapeEditor.handleOutlineColor);
+				drawBatchList = this.GetDrawBatchList(new ShapeEditor.DrawBatchDataKey(ShapeEditor.handleOutlineColor, 1));
 				for (int j = 0; j < array.Length - 1; j++)
 				{
-					GL.Vertex(array[j]);
-					GL.Vertex(array[j + 1]);
+					drawBatchList.Add(array[j]);
+					drawBatchList.Add(array[j + 1]);
 				}
-				GL.End();
-				GL.PopMatrix();
 			}
 		}
 
-		public static void DiamondCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
+		public void DiamondCap(int controlID, Vector3 position, Quaternion rotation, float size, EventType eventType)
 		{
 			if (eventType == EventType.Layout)
 			{
@@ -1195,33 +1237,27 @@ namespace UnityEditor
 			}
 			else if (eventType == EventType.Repaint)
 			{
-				Vector3 planeNormal = Handles.matrix.GetColumn(2);
+				Vector3 planeNormal = this.handles.matrix.GetColumn(2);
 				Vector3 normalized = (ShapeEditor.ProjectPointOnPlane(planeNormal, position, position + Vector3.up) - position).normalized;
-				Quaternion rotation2 = Quaternion.LookRotation(Handles.matrix.GetColumn(2), normalized);
+				Quaternion rotation2 = Quaternion.LookRotation(this.handles.matrix.GetColumn(2), normalized);
 				Vector3 b = rotation2 * Vector3.right * size * 1.25f;
 				Vector3 b2 = rotation2 * Vector3.up * size * 1.25f;
-				HandleUtility.ApplyWireMaterial();
-				GL.PushMatrix();
-				GL.Begin(7);
-				GL.MultMatrix(Handles.matrix);
-				GL.Color(ShapeEditor.handleFillColor);
-				GL.Vertex(position + b);
-				GL.Vertex(position - b2);
-				GL.Vertex(position - b);
-				GL.Vertex(position + b2);
-				GL.End();
-				GL.Begin(1);
-				GL.Color(ShapeEditor.handleOutlineColor);
-				GL.Vertex(position + b);
-				GL.Vertex(position - b2);
-				GL.Vertex(position - b2);
-				GL.Vertex(position - b);
-				GL.Vertex(position - b);
-				GL.Vertex(position + b2);
-				GL.Vertex(position + b2);
-				GL.Vertex(position + b);
-				GL.End();
-				GL.PopMatrix();
+				List<Vector3> drawBatchList = this.GetDrawBatchList(new ShapeEditor.DrawBatchDataKey(ShapeEditor.handleFillColor, 4));
+				drawBatchList.Add(position - b2);
+				drawBatchList.Add(position + b);
+				drawBatchList.Add(position - b);
+				drawBatchList.Add(position - b);
+				drawBatchList.Add(position + b2);
+				drawBatchList.Add(position + b);
+				drawBatchList = this.GetDrawBatchList(new ShapeEditor.DrawBatchDataKey(ShapeEditor.handleOutlineColor, 1));
+				drawBatchList.Add(position + b);
+				drawBatchList.Add(position - b2);
+				drawBatchList.Add(position - b2);
+				drawBatchList.Add(position - b);
+				drawBatchList.Add(position - b);
+				drawBatchList.Add(position + b2);
+				drawBatchList.Add(position + b2);
+				drawBatchList.Add(position + b);
 			}
 		}
 
@@ -1268,6 +1304,7 @@ namespace UnityEditor
 				this.m_ShapeEditorUpdateDone = 0;
 				this.m_MouseClosestEdge = -1;
 				this.m_MouseClosestEdgeDist = 3.40282347E+38f;
+				this.m_EdgePoints = null;
 			}
 		}
 

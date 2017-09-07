@@ -75,9 +75,13 @@ namespace UnityEditor
 			}
 		}
 
+		internal delegate void OnHeaderGUIDelegate(Rect availableRect, string scenePath);
+
 		private float m_PrevScollPos;
 
 		private float m_PrevTotalHeight;
+
+		internal static GameObjectTreeViewGUI.OnHeaderGUIDelegate OnPostHeaderGUI = null;
 
 		public event Action scrollPositionChanged
 		{
@@ -397,6 +401,16 @@ namespace UnityEditor
 			{
 				this.m_TreeView.SelectionClick(goItem, true);
 				this.m_TreeView.contextClickItemCallback(goItem.id);
+			}
+			if (GameObjectTreeViewGUI.OnPostHeaderGUI != null)
+			{
+				float num = rect.width - position.x;
+				float width = rect.width - num - 4f;
+				float x = 0f;
+				float y = rect.y;
+				float height = rect.height;
+				Rect availableRect = new Rect(x, y, width, height);
+				GameObjectTreeViewGUI.OnPostHeaderGUI(availableRect, goItem.scene.path);
 			}
 		}
 

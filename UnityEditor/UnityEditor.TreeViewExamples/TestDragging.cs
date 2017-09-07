@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 namespace UnityEditor.TreeViewExamples
 {
@@ -31,7 +30,6 @@ namespace UnityEditor.TreeViewExamples
 		{
 			DragAndDrop.PrepareStartDrag();
 			DragAndDrop.SetGenericData("FooDragging", new TestDragging.FooDragData(this.GetItemsFromIDs(draggedItemIDs)));
-			DragAndDrop.objectReferences = new UnityEngine.Object[0];
 			string title = draggedItemIDs.Count + " Foo" + ((draggedItemIDs.Count <= 1) ? "" : "s");
 			DragAndDrop.StartDrag(title);
 		}

@@ -28,7 +28,8 @@ namespace UnityEditor
 		Il2CPP = 65536,
 		ForceEnableAssertions = 131072,
 		CompressWithLz4 = 262144,
-		ForceOptimizeScriptCompilation = 524288,
+		[Obsolete("Specify IL2CPP optimization level in Player Settings.")]
+		ForceOptimizeScriptCompilation = 0,
 		ComputeCRC = 1048576,
 		StrictMode = 2097152
 	}

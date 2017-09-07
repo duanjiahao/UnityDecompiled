@@ -12,6 +12,7 @@ namespace UnityEditor
 
 		public static readonly string Generic = "Visible Meta Files";
 
+		[Obsolete("Asset Server VCS support has been removed.")]
 		public static readonly string AssetServer = "Asset Server";
 
 		public ExternalVersionControl(string value)

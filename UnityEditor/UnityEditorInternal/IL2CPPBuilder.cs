@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Scripting;
 using UnityEditor.Scripting.Compilers;
 using UnityEngine;
 
@@ -72,6 +73,11 @@ namespace UnityEditorInternal
 				List<string> list = Il2CppNativeCodeBuilderUtils.AddBuilderArguments(il2CppNativeCodeBuilder, this.OutputFileRelativePath(), this.m_PlatformProvider.includePaths, this.m_DebugBuild).ToList<string>();
 				list.Add(string.Format("--map-file-parser=\"{0}\"", IL2CPPBuilder.GetMapFileParserPath()));
 				list.Add(string.Format("--generatedcppdir=\"{0}\"", Path.GetFullPath(this.GetCppOutputDirectoryInStagingArea())));
+				BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(this.m_PlatformProvider.target);
+				if (PlayerSettings.GetApiCompatibilityLevel(buildTargetGroup) == ApiCompatibilityLevel.NET_4_6)
+				{
+					list.Add("--dotnetprofile=\"net45\"");
+				}
 				Action<ProcessStartInfo> setupStartInfo = new Action<ProcessStartInfo>(il2CppNativeCodeBuilder.SetupStartInfo);
 				string fullPath = Path.GetFullPath(Path.Combine(this.m_StagingAreaData, "Managed"));
 				this.RunIl2CppWithArguments(list, setupStartInfo, fullPath);
@@ -196,15 +202,54 @@ namespace UnityEditorInternal
 
 		private void RunIl2CppWithArguments(List<string> arguments, Action<ProcessStartInfo> setupStartInfo, string workingDirectory)
 		{
-			string il2CppExe = this.GetIl2CppExe();
 			string text = arguments.Aggregate(string.Empty, (string current, string arg) => current + arg + " ");
+			bool flag = this.ShouldUseIl2CppCore();
+			string exe = (!flag) ? this.GetIl2CppExe() : this.GetIl2CppCoreExe();
 			Console.WriteLine("Invoking il2cpp with arguments: " + text);
-			Runner.RunManagedProgram(il2CppExe, text, workingDirectory, new Il2CppOutputParser(), setupStartInfo);
+			CompilerOutputParserBase compilerOutputParserBase = this.m_PlatformProvider.CreateIl2CppOutputParser();
+			if (compilerOutputParserBase == null)
+			{
+				compilerOutputParserBase = new Il2CppOutputParser();
+			}
+			if (flag)
+			{
+				Runner.RunNetCoreProgram(exe, text, workingDirectory, compilerOutputParserBase, setupStartInfo);
+			}
+			else
+			{
+				Runner.RunManagedProgram(exe, text, workingDirectory, compilerOutputParserBase, setupStartInfo);
+			}
 		}
 
 		private string GetIl2CppExe()
 		{
 			return this.m_PlatformProvider.il2CppFolder + "/build/il2cpp.exe";
+		}
+
+		private string GetIl2CppCoreExe()
+		{
+			return this.m_PlatformProvider.il2CppFolder + "/build/il2cppcore/il2cppcore.dll";
+		}
+
+		private bool ShouldUseIl2CppCore()
+		{
+			bool flag = false;
+			if (Application.platform == RuntimePlatform.OSXEditor)
+			{
+				if (SystemInfo.operatingSystem.StartsWith("Mac OS X 10."))
+				{
+					string version = SystemInfo.operatingSystem.Substring(9);
+					if (new Version(version) >= new Version(10, 9))
+					{
+						flag = true;
+					}
+				}
+				else
+				{
+					flag = true;
+				}
+			}
+			return flag && NetCoreProgram.IsNetCoreAvailable();
 		}
 	}
 }

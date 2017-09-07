@@ -5,6 +5,8 @@ namespace UnityEngine
 	public enum LineTextureMode
 	{
 		Stretch,
-		Tile
+		Tile,
+		DistributePerSegment,
+		RepeatPerSegment
 	}
 }

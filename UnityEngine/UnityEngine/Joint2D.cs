@@ -20,6 +20,13 @@ namespace UnityEngine
 			}
 		}
 
+		public extern Rigidbody2D attachedRigidbody
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public extern Rigidbody2D connectedBody
 		{
 			[GeneratedByOldBindingsGenerator]

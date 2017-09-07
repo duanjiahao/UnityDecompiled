@@ -15,11 +15,14 @@ namespace UnityEngine
 			get;
 		}
 
-		public static extern Resolution currentResolution
+		public static Resolution currentResolution
 		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				Resolution result;
+				Screen.INTERNAL_get_currentResolution(out result);
+				return result;
+			}
 		}
 
 		[ThreadAndSerializationSafe]
@@ -152,6 +155,10 @@ namespace UnityEngine
 				}
 			}
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_get_currentResolution(out Resolution value);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

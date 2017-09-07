@@ -125,7 +125,7 @@ namespace UnityEditor
 							ListViewShared.dragControlID = this.ilvState.state.ID;
 						}
 					}
-					if ((this.ilvState.wantsReordering || this.ilvState.wantsToStartCustomDrag) && GUIUtility.hotControl == this.ilvState.state.ID && Event.current.type == EventType.MouseDrag && GUIClip.visibleRect.Contains(Event.current.mousePosition))
+					if (!ListViewShared.isDragging && (this.ilvState.wantsReordering || this.ilvState.wantsToStartCustomDrag) && GUIUtility.hotControl == this.ilvState.state.ID && Event.current.type == EventType.MouseDrag && GUIClip.visibleRect.Contains(Event.current.mousePosition))
 					{
 						DragAndDropDelay dragAndDropDelay2 = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), this.ilvState.state.ID);
 						if (dragAndDropDelay2.CanStartDrag())
@@ -143,6 +143,7 @@ namespace UnityEditor
 								DragAndDrop.SetGenericData("CustomDragID", this.ilvState.state.ID);
 								DragAndDrop.StartDrag(this.dragTitle);
 							}
+							ListViewShared.isDragging = true;
 						}
 						Event.current.Use();
 					}
@@ -403,6 +404,8 @@ namespace UnityEditor
 
 		internal static int dragControlID = -1;
 
+		internal static bool isDragging = false;
+
 		private static bool DoLVPageUpDown(ListViewShared.InternalListViewState ilvState, ref int selectedRow, ref Vector2 scrollPos, bool up)
 		{
 			int num = ilvState.endRow - ilvState.invisibleRows;
@@ -530,6 +533,7 @@ namespace UnityEditor
 				{
 					GUIUtility.hotControl = ilvState.state.ID;
 					GUIUtility.keyboardControl = ilvState.state.ID;
+					ListViewShared.isDragging = false;
 					Event.current.Use();
 					result = true;
 					return result;

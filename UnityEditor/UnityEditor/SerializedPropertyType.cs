@@ -23,6 +23,7 @@ namespace UnityEditor
 		Bounds,
 		Gradient,
 		Quaternion,
-		ExposedReference
+		ExposedReference,
+		FixedBufferSize
 	}
 }

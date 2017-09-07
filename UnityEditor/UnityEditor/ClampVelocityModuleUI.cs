@@ -84,10 +84,11 @@ namespace UnityEditor
 					this.m_Z.RemoveCurveFromEditor();
 				}
 			}
-			SerializedMinMaxCurve arg_88_0 = this.m_Z;
-			MinMaxCurveState state = this.m_X.state;
-			this.m_Y.state = state;
-			arg_88_0.state = state;
+			if (!this.m_X.stateHasMultipleDifferentValues)
+			{
+				this.m_Y.SetMinMaxState(this.m_X.state, flag);
+				this.m_Z.SetMinMaxState(this.m_X.state, flag);
+			}
 			if (flag)
 			{
 				base.GUITripleMinMaxCurve(GUIContent.none, ClampVelocityModuleUI.s_Texts.x, this.m_X, ClampVelocityModuleUI.s_Texts.y, this.m_Y, ClampVelocityModuleUI.s_Texts.z, this.m_Z, null, new GUILayoutOption[0]);
@@ -102,7 +103,7 @@ namespace UnityEditor
 
 		public override void UpdateCullingSupportedString(ref string text)
 		{
-			text += "\n\tLimit velocity is enabled.";
+			text += "\nLimit Velocity over Lifetime module is enabled.";
 		}
 	}
 }

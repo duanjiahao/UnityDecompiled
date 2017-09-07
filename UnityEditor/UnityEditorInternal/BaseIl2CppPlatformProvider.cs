@@ -5,6 +5,7 @@ using Unity.DataContract;
 using UnityEditor;
 using UnityEditor.BuildReporting;
 using UnityEditor.Modules;
+using UnityEditor.Scripting.Compilers;
 
 namespace UnityEditorInternal
 {
@@ -156,6 +157,11 @@ namespace UnityEditorInternal
 		}
 
 		public virtual Il2CppNativeCodeBuilder CreateIl2CppNativeCodeBuilder()
+		{
+			return null;
+		}
+
+		public virtual CompilerOutputParserBase CreateIl2CppOutputParser()
 		{
 			return null;
 		}

@@ -55,7 +55,7 @@ namespace UnityEditor
 
 		public static void CheckEffectorWarnings(Collider2D collider)
 		{
-			if (collider.usedByEffector)
+			if (collider.usedByEffector && !collider.usedByComposite)
 			{
 				Effector2D component = collider.GetComponent<Effector2D>();
 				if (component == null || !component.enabled)

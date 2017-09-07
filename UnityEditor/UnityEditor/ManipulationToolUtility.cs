@@ -20,6 +20,11 @@ namespace UnityEditor
 			ManipulationToolUtility.minDragDifference = Vector3.one * (HandleUtility.GetHandleSize(position) / 80f);
 		}
 
+		public static void SetMinDragDifferenceForPos(Vector3 position, float multiplier)
+		{
+			ManipulationToolUtility.minDragDifference = Vector3.one * (HandleUtility.GetHandleSize(position) * multiplier / 80f);
+		}
+
 		public static void DisableMinDragDifference()
 		{
 			ManipulationToolUtility.minDragDifference = Vector3.zero;

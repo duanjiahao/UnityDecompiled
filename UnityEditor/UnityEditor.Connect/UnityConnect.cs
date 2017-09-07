@@ -344,7 +344,7 @@ namespace UnityEditor.Connect
 
 		public void GoToHub(string page)
 		{
-			UnityConnectServiceCollection.instance.ShowService("Hub", page, true);
+			UnityConnectServiceCollection.instance.ShowService("Hub", page, true, "goto_hub_method");
 		}
 
 		public void UnbindProject()

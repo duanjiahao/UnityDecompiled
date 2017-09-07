@@ -26,7 +26,17 @@ namespace UnityEngine.Experimental.Rendering
 			return renderPipeline;
 		}
 
+		public virtual int GetTerrainBrushPassIndex()
+		{
+			return 2500;
+		}
+
 		protected abstract IRenderPipeline InternalCreatePipeline();
+
+		protected IEnumerable<IRenderPipeline> CreatedInstances()
+		{
+			return this.m_CreatedPipelines;
+		}
 
 		private void OnValidate()
 		{

@@ -26,6 +26,8 @@ namespace UnityEngine.Rendering
 		AfterImageEffects,
 		AfterEverything,
 		BeforeReflections,
-		AfterReflections
+		AfterReflections,
+		BeforeHaloAndLensFlares,
+		AfterHaloAndLensFlares
 	}
 }

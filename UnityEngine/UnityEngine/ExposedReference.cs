@@ -13,19 +13,20 @@ namespace UnityEngine
 		[SerializeField]
 		public Object defaultValue;
 
-		public T Resolve(ExposedPropertyResolver resolver)
+		public T Resolve(IExposedPropertyTable resolver)
 		{
-			bool flag;
-			Object @object = ExposedPropertyResolver.ResolveReferenceInternal(resolver.table, this.exposedName, out flag);
 			T result;
-			if (flag)
+			if (resolver != null)
 			{
-				result = (@object as T);
+				bool flag;
+				Object referenceValue = resolver.GetReferenceValue(this.exposedName, out flag);
+				if (flag)
+				{
+					result = (referenceValue as T);
+					return result;
+				}
 			}
-			else
-			{
-				result = (this.defaultValue as T);
-			}
+			result = (this.defaultValue as T);
 			return result;
 		}
 	}

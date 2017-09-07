@@ -262,6 +262,20 @@ namespace UnityEngine
 			set;
 		}
 
+		public Vector3 patchBoundsMultiplier
+		{
+			get
+			{
+				Vector3 result;
+				this.INTERNAL_get_patchBoundsMultiplier(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_patchBoundsMultiplier(ref value);
+			}
+		}
+
 		public extern float treeLODBiasMultiplier
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -352,6 +366,14 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_legacySpecular(ref Color value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_patchBoundsMultiplier(out Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_patchBoundsMultiplier(ref Vector3 value);
 
 		public float SampleHeight(Vector3 worldPosition)
 		{

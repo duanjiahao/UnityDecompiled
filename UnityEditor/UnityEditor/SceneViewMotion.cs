@@ -504,32 +504,17 @@ namespace UnityEditor
 			if (Tools.s_LockedViewTool == ViewTool.FPS)
 			{
 				Event current = Event.current;
-				if (current.keyCode == SceneViewMotion.kFPSForward.keyCode)
+				if (current.keyCode == SceneViewMotion.kFPSForward.keyCode || current.keyCode == SceneViewMotion.kFPSBack.keyCode)
 				{
 					SceneViewMotion.s_Motion.z = 0f;
 					current.Use();
 				}
-				else if (current.keyCode == SceneViewMotion.kFPSBack.keyCode)
-				{
-					SceneViewMotion.s_Motion.z = 0f;
-					current.Use();
-				}
-				else if (current.keyCode == SceneViewMotion.kFPSLeft.keyCode)
+				else if (current.keyCode == SceneViewMotion.kFPSLeft.keyCode || current.keyCode == SceneViewMotion.kFPSRight.keyCode)
 				{
 					SceneViewMotion.s_Motion.x = 0f;
 					current.Use();
 				}
-				else if (current.keyCode == SceneViewMotion.kFPSRight.keyCode)
-				{
-					SceneViewMotion.s_Motion.x = 0f;
-					current.Use();
-				}
-				else if (current.keyCode == SceneViewMotion.kFPSUp.keyCode)
-				{
-					SceneViewMotion.s_Motion.y = 0f;
-					current.Use();
-				}
-				else if (current.keyCode == SceneViewMotion.kFPSDown.keyCode)
+				else if (current.keyCode == SceneViewMotion.kFPSUp.keyCode || current.keyCode == SceneViewMotion.kFPSDown.keyCode)
 				{
 					SceneViewMotion.s_Motion.y = 0f;
 					current.Use();

@@ -123,6 +123,12 @@ namespace UnityEditor
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AcceptDrag();
 
+		[RequiredByNativeCode]
+		private static bool HasGenericDragData()
+		{
+			return DragAndDrop.ms_GenericData != null;
+		}
+
 		public static object GetGenericData(string type)
 		{
 			object result;

@@ -211,8 +211,6 @@ namespace UnityEditor
 						assemblyDefinition2
 					};
 					MonoAOTRegistration.GenerateRegisterInternalCalls(assemblies, textWriter);
-					MonoAOTRegistration.ResolveDefinedNativeClassesFromMono(assemblies, usedClassRegistry);
-					MonoAOTRegistration.ResolveReferencedUnityEngineClassesFromMono(assemblyDefinitions, assemblyDefinition2, usedClassRegistry);
 					MonoAOTRegistration.GenerateRegisterModules(hashSet, nativeModules, textWriter, stripping);
 					if (stripping && usedClassRegistry != null)
 					{
@@ -224,47 +222,6 @@ namespace UnityEditor
 					}
 				}
 				textWriter.Close();
-			}
-		}
-
-		public static void ResolveReferencedUnityEngineClassesFromMono(AssemblyDefinition[] assemblies, AssemblyDefinition unityEngine, RuntimeClassRegistry res)
-		{
-			if (res != null)
-			{
-				for (int i = 0; i < assemblies.Length; i++)
-				{
-					AssemblyDefinition assemblyDefinition = assemblies[i];
-					if (assemblyDefinition != unityEngine)
-					{
-						foreach (TypeReference current in assemblyDefinition.MainModule.GetTypeReferences())
-						{
-							if (current.Namespace.StartsWith("UnityEngine"))
-							{
-								string name = current.Name;
-								res.AddMonoClass(name);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		public static void ResolveDefinedNativeClassesFromMono(AssemblyDefinition[] assemblies, RuntimeClassRegistry res)
-		{
-			if (res != null)
-			{
-				for (int i = 0; i < assemblies.Length; i++)
-				{
-					AssemblyDefinition assemblyDefinition = assemblies[i];
-					foreach (TypeDefinition current in assemblyDefinition.MainModule.Types)
-					{
-						if (current.Fields.Count > 0 || current.Methods.Count > 0 || current.Properties.Count > 0)
-						{
-							string name = current.Name;
-							res.AddMonoClass(name);
-						}
-					}
-				}
 			}
 		}
 

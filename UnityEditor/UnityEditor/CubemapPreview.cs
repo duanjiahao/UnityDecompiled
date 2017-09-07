@@ -1,5 +1,4 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -80,10 +79,8 @@ namespace UnityEditor
 		{
 			if (this.m_PreviewUtility == null)
 			{
-				this.m_PreviewUtility = new PreviewRenderUtility
-				{
-					m_CameraFieldOfView = 15f
-				};
+				this.m_PreviewUtility = new PreviewRenderUtility();
+				this.m_PreviewUtility.camera.fieldOfView = 15f;
 				this.m_Mesh = PreviewRenderUtility.GetPreviewSphere();
 			}
 		}
@@ -201,9 +198,8 @@ namespace UnityEditor
 				this.InitPreview();
 				this.m_PreviewUtility.BeginStaticPreview(new Rect(0f, 0f, (float)width, (float)height));
 				Vector2 previewDir = new Vector2(0f, 0f);
-				InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, new Color(0f, 0f, 0f, 0f));
+				this.m_PreviewUtility.ambientColor = Color.black;
 				this.RenderCubemap(t, previewDir, 5.3f);
-				InternalEditorUtility.RemoveCustomLighting();
 				result = this.m_PreviewUtility.EndStaticPreview();
 			}
 			return result;
@@ -211,10 +207,8 @@ namespace UnityEditor
 
 		private void RenderCubemap(Texture t, Vector2 previewDir, float previewDistance)
 		{
-			bool fog = RenderSettings.fog;
-			Unsupported.SetRenderSettingsUseFogNoDirty(false);
-			this.m_PreviewUtility.m_Camera.transform.position = -Vector3.forward * previewDistance;
-			this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.identity;
+			this.m_PreviewUtility.camera.transform.position = -Vector3.forward * previewDistance;
+			this.m_PreviewUtility.camera.transform.rotation = Quaternion.identity;
 			Quaternion quaternion = Quaternion.Euler(previewDir.y, 0f, 0f) * Quaternion.Euler(0f, previewDir.x, 0f);
 			Material material = EditorGUIUtility.LoadRequired("Previews/PreviewCubemapMaterial.mat") as Material;
 			material.mainTexture = t;
@@ -224,8 +218,7 @@ namespace UnityEditor
 			material.SetFloat("_Alpha", (this.m_PreviewType != CubemapPreview.PreviewType.Alpha) ? 0f : 1f);
 			material.SetFloat("_Intensity", this.m_Intensity);
 			this.m_PreviewUtility.DrawMesh(this.m_Mesh, Vector3.zero, quaternion, material, 0);
-			this.m_PreviewUtility.m_Camera.Render();
-			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
+			this.m_PreviewUtility.Render(false, true);
 		}
 	}
 }

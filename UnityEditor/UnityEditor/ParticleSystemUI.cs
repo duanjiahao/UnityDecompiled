@@ -19,7 +19,7 @@ namespace UnityEditor
 		{
 			public GUIContent addModules = new GUIContent("", "Show/Hide Modules");
 
-			public GUIContent supportsCullingText = new GUIContent("", ParticleSystemStyles.Get().warningIcon);
+			public string bulletPoint = "• ";
 		}
 
 		public ParticleEffectUI m_ParticleEffectUI;
@@ -36,7 +36,9 @@ namespace UnityEditor
 
 		private string m_SupportsCullingText;
 
-		private static ParticleSystemUI.Texts s_Texts;
+		private string m_SupportsCullingTextLabel;
+
+		private static ParticleSystemUI.Texts s_Texts = new ParticleSystemUI.Texts();
 
 		public bool multiEdit
 		{
@@ -133,10 +135,6 @@ namespace UnityEditor
 
 		public void OnGUI(float width, bool fixedWidth)
 		{
-			if (ParticleSystemUI.s_Texts == null)
-			{
-				ParticleSystemUI.s_Texts = new ParticleSystemUI.Texts();
-			}
 			bool flag = Event.current.type == EventType.Repaint;
 			string text = null;
 			if (this.m_ParticleSystems.Length > 1)
@@ -270,7 +268,7 @@ namespace UnityEditor
 						}
 						Rect position4 = new Rect(rect.x + rect.width - 10f, rect.y + rect.height - 10f, 10f, 10f);
 						Rect position5 = new Rect(position4.x - 4f, position4.y - 4f, position4.width + 4f, position4.height + 4f);
-						Rect position6 = new Rect(position4.x - 23f, position4.y - 3f, 16f, 16f);
+						Rect position6 = new Rect(position4.x - 23f, position4.y - 8f, 20f, 20f);
 						if (flag2 && EditorGUI.DropdownButton(position5, ParticleSystemUI.s_Texts.addModules, FocusType.Passive, GUIStyle.none))
 						{
 							this.ShowAddModuleMenu();
@@ -337,10 +335,10 @@ namespace UnityEditor
 								GUI.Label(position4, GUIContent.none, ParticleSystemStyles.Get().plus);
 							}
 						}
-						ParticleSystemUI.s_Texts.supportsCullingText.tooltip = this.m_SupportsCullingText;
-						if (flag2 && ParticleSystemUI.s_Texts.supportsCullingText.tooltip != null)
+						if (flag2 && !string.IsNullOrEmpty(this.m_SupportsCullingTextLabel))
 						{
-							GUI.Label(position6, ParticleSystemUI.s_Texts.supportsCullingText);
+							GUIContent content = new GUIContent("", ParticleSystemStyles.Get().warningIcon, this.m_SupportsCullingTextLabel);
+							GUI.Label(position6, content);
 						}
 						GUILayout.Space(1f);
 					}
@@ -429,13 +427,18 @@ namespace UnityEditor
 					moduleUI.UpdateCullingSupportedString(ref text);
 				}
 			}
-			if (text != "")
+			if (text != string.Empty)
 			{
-				this.m_SupportsCullingText = "Automatic culling is disabled because: " + text;
+				if (text != this.m_SupportsCullingText || this.m_SupportsCullingTextLabel == null)
+				{
+					this.m_SupportsCullingText = text;
+					this.m_SupportsCullingTextLabel = "Automatic culling is disabled because: " + text.Replace("\n", "\n" + ParticleSystemUI.s_Texts.bulletPoint);
+				}
 			}
 			else
 			{
 				this.m_SupportsCullingText = null;
+				this.m_SupportsCullingTextLabel = null;
 			}
 		}
 

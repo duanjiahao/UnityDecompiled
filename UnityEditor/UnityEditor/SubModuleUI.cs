@@ -333,7 +333,7 @@ namespace UnityEditor
 
 		public override void UpdateCullingSupportedString(ref string text)
 		{
-			text += "\n\tSub Emitters are enabled.";
+			text += "\nSub Emitters module is enabled.";
 		}
 	}
 }

@@ -5,8 +5,8 @@ namespace UnityEditorInternal
 	public enum ProfilerMemoryRecordMode
 	{
 		None,
-		SampleOnly,
-		CallstackFast,
-		CallstackFull
+		ManagedAllocations,
+		AllAllocationsFast,
+		AllAllocationsFull
 	}
 }

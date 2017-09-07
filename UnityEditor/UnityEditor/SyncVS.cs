@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using UnityEditor.Build;
 using UnityEditor.Utils;
 using UnityEditor.VisualStudioIntegration;
 using UnityEditorInternal;
@@ -21,7 +21,7 @@ namespace UnityEditor
 			{
 				get
 				{
-					string externalScriptEditor = InternalEditorUtility.GetExternalScriptEditor();
+					string externalScriptEditor = ScriptEditorUtility.GetExternalScriptEditor();
 					int result;
 					if (SyncVS.InstalledVisualStudios.ContainsKey(UnityEditor.VisualStudioVersion.VisualStudio2008) && externalScriptEditor != string.Empty && SyncVS.PathsAreEquivalent(SyncVS.InstalledVisualStudios[UnityEditor.VisualStudioVersion.VisualStudio2008].Last<VisualStudioPath>().Path, externalScriptEditor))
 					{
@@ -99,12 +99,25 @@ namespace UnityEditor
 			}
 		}
 
+		private class BuildTargetChangedHandler : IActiveBuildTargetChanged, IOrderedCallback
+		{
+			public int callbackOrder
+			{
+				get
+				{
+					return 0;
+				}
+			}
+
+			public void OnActiveBuildTargetChanged(BuildTarget oldTarget, BuildTarget newTarget)
+			{
+				SyncVS.SyncVisualStudioProjectIfItAlreadyExists();
+			}
+		}
+
 		private static bool s_AlreadySyncedThisDomainReload;
 
 		private static readonly SolutionSynchronizer Synchronizer;
-
-		[CompilerGenerated]
-		private static Action <>f__mg$cache0;
 
 		internal static Dictionary<VisualStudioVersion, VisualStudioPath[]> InstalledVisualStudios
 		{
@@ -115,12 +128,6 @@ namespace UnityEditor
 		static SyncVS()
 		{
 			SyncVS.Synchronizer = new SolutionSynchronizer(Directory.GetParent(Application.dataPath).FullName, new SyncVS.SolutionSynchronizationSettings());
-			Delegate arg_41_0 = EditorUserBuildSettings.activeBuildTargetChanged;
-			if (SyncVS.<>f__mg$cache0 == null)
-			{
-				SyncVS.<>f__mg$cache0 = new Action(SyncVS.SyncVisualStudioProjectIfItAlreadyExists);
-			}
-			EditorUserBuildSettings.activeBuildTargetChanged = (Action)Delegate.Combine(arg_41_0, SyncVS.<>f__mg$cache0);
 			try
 			{
 				SyncVS.InstalledVisualStudios = (SyncVS.GetInstalledVisualStudios() as Dictionary<VisualStudioVersion, VisualStudioPath[]>);

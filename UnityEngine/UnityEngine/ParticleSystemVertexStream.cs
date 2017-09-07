@@ -44,6 +44,12 @@ namespace UnityEngine
 		Custom2X,
 		Custom2XY,
 		Custom2XYZ,
-		Custom2XYZW
+		Custom2XYZW,
+		NoiseSumX,
+		NoiseSumXY,
+		NoiseSumXYZ,
+		NoiseImpulseX,
+		NoiseImpulseXY,
+		NoiseImpulseXYZ
 	}
 }

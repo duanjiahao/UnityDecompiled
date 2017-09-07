@@ -583,6 +583,15 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Blit(Texture source, RenderTexture dest);
 
+		public static void Blit(Texture source, RenderTexture dest, Vector2 scale, Vector2 offset)
+		{
+			Graphics.INTERNAL_CALL_Blit(source, dest, ref scale, ref offset);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Blit(Texture source, RenderTexture dest, ref Vector2 scale, ref Vector2 offset);
+
 		[ExcludeFromDocs]
 		public static void Blit(Texture source, RenderTexture dest, Material mat)
 		{
@@ -592,7 +601,7 @@ namespace UnityEngine
 
 		public static void Blit(Texture source, RenderTexture dest, Material mat, [UnityEngine.Internal.DefaultValue("-1")] int pass)
 		{
-			Graphics.Internal_BlitMaterial(source, dest, mat, pass, true);
+			Graphics.Internal_BlitMaterial(source, dest, mat, pass, true, new Vector2(1f, 1f), new Vector2(0f, 0f));
 		}
 
 		[ExcludeFromDocs]
@@ -604,12 +613,17 @@ namespace UnityEngine
 
 		public static void Blit(Texture source, Material mat, [UnityEngine.Internal.DefaultValue("-1")] int pass)
 		{
-			Graphics.Internal_BlitMaterial(source, null, mat, pass, false);
+			Graphics.Internal_BlitMaterial(source, null, mat, pass, false, new Vector2(1f, 1f), new Vector2(0f, 0f));
+		}
+
+		private static void Internal_BlitMaterial(Texture source, RenderTexture dest, Material mat, int pass, bool setRT, Vector2 scale, Vector2 offset)
+		{
+			Graphics.INTERNAL_CALL_Internal_BlitMaterial(source, dest, mat, pass, setRT, ref scale, ref offset);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_BlitMaterial(Texture source, RenderTexture dest, Material mat, int pass, bool setRT);
+		private static extern void INTERNAL_CALL_Internal_BlitMaterial(Texture source, RenderTexture dest, Material mat, int pass, bool setRT, ref Vector2 scale, ref Vector2 offset);
 
 		public static void BlitMultiTap(Texture source, RenderTexture dest, Material mat, params Vector2[] offsets)
 		{
@@ -704,10 +718,6 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_SetRandomWriteTargetBuffer(int index, ComputeBuffer uav, bool preserveCounterValue);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetupVertexLights(Light[] lights);
 
 		internal static void CheckLoadActionValid(RenderBufferLoadAction load, string bufferType)
 		{
@@ -907,6 +917,10 @@ namespace UnityEngine
 
 		public static void DrawMeshNow(Mesh mesh, Vector3 position, Quaternion rotation, int materialIndex)
 		{
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
 			Graphics.Internal_DrawMeshNow1(mesh, materialIndex, position, rotation);
 		}
 
@@ -917,6 +931,10 @@ namespace UnityEngine
 
 		public static void DrawMeshNow(Mesh mesh, Matrix4x4 matrix, int materialIndex)
 		{
+			if (mesh == null)
+			{
+				throw new ArgumentNullException("mesh");
+			}
 			Graphics.Internal_DrawMeshNow2(mesh, materialIndex, matrix);
 		}
 

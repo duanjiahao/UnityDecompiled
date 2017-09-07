@@ -59,12 +59,6 @@ namespace UnityEditor
 
 		private static CacheServerPreferences.ConnectionState s_ConnectionState;
 
-		private static bool s_CollabCacheEnabled;
-
-		private static string s_CollabCacheIPAddress;
-
-		private static bool s_EnableCollabCacheConfiguration = false;
-
 		private static CacheServerPreferences.CacheServerMode s_CacheServerMode;
 
 		private static string s_CacheServerIPAddress;
@@ -79,11 +73,6 @@ namespace UnityEditor
 
 		private static CacheServerPreferences.Constants s_Constants = null;
 
-		private static bool IsCollabCacheEnabled()
-		{
-			return CacheServerPreferences.s_EnableCollabCacheConfiguration || Application.HasARGV("enableCacheServer");
-		}
-
 		public static void ReadPreferences()
 		{
 			CacheServerPreferences.s_CacheServerIPAddress = EditorPrefs.GetString("CacheServerIPAddress", CacheServerPreferences.s_CacheServerIPAddress);
@@ -91,11 +80,6 @@ namespace UnityEditor
 			CacheServerPreferences.s_LocalCacheServerSize = EditorPrefs.GetInt("LocalCacheServerSize", 10);
 			CacheServerPreferences.s_CachePath = EditorPrefs.GetString("LocalCacheServerPath");
 			CacheServerPreferences.s_EnableCustomPath = EditorPrefs.GetBool("LocalCacheServerCustomPath");
-			if (CacheServerPreferences.IsCollabCacheEnabled())
-			{
-				CacheServerPreferences.s_CollabCacheIPAddress = EditorPrefs.GetString("CollabCacheIPAddress", CacheServerPreferences.s_CollabCacheIPAddress);
-				CacheServerPreferences.s_CollabCacheEnabled = EditorPrefs.GetBool("CollabCacheEnabled");
-			}
 		}
 
 		public static void WritePreferences()
@@ -132,12 +116,11 @@ namespace UnityEditor
 			EditorPrefs.SetInt("LocalCacheServerSize", CacheServerPreferences.s_LocalCacheServerSize);
 			EditorPrefs.SetString("LocalCacheServerPath", CacheServerPreferences.s_CachePath);
 			EditorPrefs.SetBool("LocalCacheServerCustomPath", CacheServerPreferences.s_EnableCustomPath);
-			if (CacheServerPreferences.IsCollabCacheEnabled())
-			{
-				EditorPrefs.SetString("CollabCacheIPAddress", CacheServerPreferences.s_CollabCacheIPAddress);
-				EditorPrefs.SetBool("CollabCacheEnabled", CacheServerPreferences.s_CollabCacheEnabled);
-			}
 			LocalCacheServer.Setup();
+			if (flag)
+			{
+				GUIUtility.ExitGUI();
+			}
 		}
 
 		[PreferenceItem("Cache Server")]
@@ -171,14 +154,6 @@ namespace UnityEditor
 					CacheServerPreferences.s_PrefsLoaded = true;
 				}
 				EditorGUI.BeginChangeCheck();
-				if (CacheServerPreferences.IsCollabCacheEnabled())
-				{
-					CacheServerPreferences.s_CollabCacheEnabled = EditorGUILayout.Toggle("Use Collab Cache", CacheServerPreferences.s_CollabCacheEnabled, new GUILayoutOption[0]);
-					using (new EditorGUI.DisabledScope(!CacheServerPreferences.s_CollabCacheEnabled))
-					{
-						CacheServerPreferences.s_CollabCacheIPAddress = EditorGUILayout.TextField("Collab Cache IP Address", CacheServerPreferences.s_CollabCacheIPAddress, new GUILayoutOption[0]);
-					}
-				}
 				CacheServerPreferences.s_CacheServerMode = (CacheServerPreferences.CacheServerMode)EditorGUILayout.EnumPopup("Cache Server Mode", CacheServerPreferences.s_CacheServerMode, new GUILayoutOption[0]);
 				if (CacheServerPreferences.s_CacheServerMode == CacheServerPreferences.CacheServerMode.Remote)
 				{
@@ -249,6 +224,7 @@ namespace UnityEditor
 								{
 									EditorUtility.DisplayDialog("Invalid Cache Location", "The directory " + text + " contains some files which don't look like Unity Cache server files. Please delete the directory contents or choose another directory.", "OK");
 								}
+								GUIUtility.ExitGUI();
 							}
 						}
 						GUILayout.EndHorizontal();

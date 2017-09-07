@@ -220,17 +220,15 @@ namespace UnityEditor
 
 		private static float PercentSlider(GUIContent content, float valueInPercent, float minVal, float maxVal)
 		{
-			bool changed = GUI.changed;
-			GUI.changed = false;
+			EditorGUI.BeginChangeCheck();
 			float num = EditorGUILayout.Slider(content, Mathf.Round(valueInPercent * 100f), minVal * 100f, maxVal * 100f, new GUILayoutOption[0]);
 			float result;
-			if (GUI.changed)
+			if (EditorGUI.EndChangeCheck())
 			{
 				result = num / 100f;
 			}
 			else
 			{
-				GUI.changed = changed;
 				result = valueInPercent;
 			}
 			return result;
@@ -542,6 +540,7 @@ namespace UnityEditor
 				if (treePrototypes[i].prefab != null)
 				{
 					this.m_TreeContents[i].text = treePrototypes[i].prefab.name;
+					this.m_TreeContents[i].tooltip = this.m_TreeContents[i].text;
 				}
 				else
 				{

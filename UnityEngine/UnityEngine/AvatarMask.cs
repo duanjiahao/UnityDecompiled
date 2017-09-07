@@ -6,7 +6,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace UnityEngine
 {
-	[MovedFrom("UnityEditor.Animations")]
+	[MovedFrom("UnityEditor.Animations", true)]
 	public sealed class AvatarMask : Object
 	{
 		[Obsolete("AvatarMask.humanoidBodyPartCount is deprecated. Use AvatarMaskBodyPart.LastBodyPart instead.")]
@@ -37,12 +37,12 @@ namespace UnityEngine
 
 		public AvatarMask()
 		{
-			AvatarMask.Internal_Create(this);
+			AvatarMask.Internal_CreateAvatarMask(this);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_Create([Writable] AvatarMask mono);
+		private static extern void Internal_CreateAvatarMask([Writable] AvatarMask mono);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

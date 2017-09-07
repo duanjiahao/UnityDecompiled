@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor.AnimatedValues;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.Rendering;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
@@ -99,7 +100,7 @@ namespace UnityEditor
 				ReflectionProbeEditor.Styles.intensityText = new GUIContent("Intensity");
 				ReflectionProbeEditor.Styles.resolutionText = new GUIContent("Resolution");
 				ReflectionProbeEditor.Styles.captureCubemapHeaderText = new GUIContent("Cubemap capture settings");
-				ReflectionProbeEditor.Styles.boxProjectionText = new GUIContent("Box Projection", "Box projection causes reflections to appear to change based on the object's position within the probe's box, while still using a single probe as the source of the reflection. This works well for reflections on objects that are moving through enclosed spaces such as corridors and rooms. Setting box projection to False and the cubemap reflection will be treated as coming from infinitely far away.");
+				ReflectionProbeEditor.Styles.boxProjectionText = new GUIContent("Box Projection", "Box projection causes reflections to appear to change based on the object's position within the probe's box, while still using a single probe as the source of the reflection. This works well for reflections on objects that are moving through enclosed spaces such as corridors and rooms. Setting box projection to False and the cubemap reflection will be treated as coming from infinitely far away. Note that this feature can be globally disabled from Graphics Settings -> Tier Settings");
 				ReflectionProbeEditor.Styles.blendDistanceText = new GUIContent("Blend Distance", "Area around the probe where it is blended with other probes. Only used in deferred probes.");
 				ReflectionProbeEditor.Styles.sizeText = EditorGUIUtility.TextContent("Box Size|The size of the box in which the reflections will be applied to objects. The value is not affected by the Transform of the Game Object.");
 				ReflectionProbeEditor.Styles.centerText = EditorGUIUtility.TextContent("Box Offset|The center of the box in which the reflections will be applied to objects. The value is relative to the position of the Game Object.");
@@ -213,9 +214,7 @@ namespace UnityEditor
 
 		private float m_MipLevelPreview = 0f;
 
-		private static int s_HandleControlIDHint = typeof(ReflectionProbeEditor).Name.GetHashCode();
-
-		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(ReflectionProbeEditor.s_HandleControlIDHint);
+		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
 
 		private Hashtable m_CachedGizmoMaterials = new Hashtable();
 
@@ -565,7 +564,17 @@ namespace UnityEditor
 			EditorGUI.indentLevel++;
 			EditorGUILayout.PropertyField(this.m_Importance, ReflectionProbeEditor.Styles.importanceText, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_IntensityMultiplier, ReflectionProbeEditor.Styles.intensityText, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(this.m_BoxProjection, ReflectionProbeEditor.Styles.boxProjectionText, new GUILayoutOption[0]);
+			if (!EditorGraphicsSettings.GetCurrentTierSettings().reflectionProbeBoxProjection)
+			{
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUILayout.Toggle(ReflectionProbeEditor.Styles.boxProjectionText, false, new GUILayoutOption[0]);
+				}
+			}
+			else
+			{
+				EditorGUILayout.PropertyField(this.m_BoxProjection, ReflectionProbeEditor.Styles.boxProjectionText, new GUILayoutOption[0]);
+			}
 			bool flag = SceneView.IsUsingDeferredRenderingPath();
 			bool flag2 = flag && GraphicsSettings.GetShaderMode(BuiltinShaderType.DeferredReflections) != BuiltinShaderMode.Disabled;
 			using (new EditorGUI.DisabledScope(!flag2))
@@ -847,14 +856,14 @@ namespace UnityEditor
 			Vector3 position = reflectionProbe.transform.position;
 			Vector3 size = reflectionProbe.size;
 			EditorGUI.BeginChangeCheck();
-			Vector3 v = Handles.PositionHandle(position, ReflectionProbeEditor.GetLocalSpaceRotation(reflectionProbe));
+			Vector3 point = Handles.PositionHandle(position, ReflectionProbeEditor.GetLocalSpaceRotation(reflectionProbe));
 			if (EditorGUI.EndChangeCheck() || this.m_OldLocalSpace != ReflectionProbeEditor.GetLocalSpace((ReflectionProbe)base.target))
 			{
-				Vector3 vector = this.m_OldLocalSpace.inverse.MultiplyPoint3x4(v);
+				Vector3 point2 = this.m_OldLocalSpace.inverse.MultiplyPoint3x4(point);
 				Bounds bounds = new Bounds(reflectionProbe.center, size);
-				vector = bounds.ClosestPoint(vector);
+				point2 = bounds.ClosestPoint(point2);
 				Undo.RecordObject(reflectionProbe.transform, "Modified Reflection Probe Origin");
-				reflectionProbe.transform.position = this.m_OldLocalSpace.MultiplyPoint3x4(vector);
+				reflectionProbe.transform.position = this.m_OldLocalSpace.MultiplyPoint3x4(point2);
 				Undo.RecordObject(reflectionProbe, "Modified Reflection Probe Origin");
 				reflectionProbe.center = ReflectionProbeEditor.GetLocalSpace(reflectionProbe).inverse.MultiplyPoint3x4(this.m_OldLocalSpace.MultiplyPoint3x4(reflectionProbe.center));
 				EditorUtility.SetDirty(base.target);

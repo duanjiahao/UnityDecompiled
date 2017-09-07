@@ -250,6 +250,14 @@ namespace UnityEditor
 			}
 		}
 
+		public SpriteEditorWindow()
+		{
+			this.m_EventSystem = new EventSystem();
+			this.m_UndoSystem = new UndoSystem();
+			this.m_AssetDatabase = new AssetDatabaseSystem();
+			this.m_GUIUtility = new GUIUtilitySystem();
+		}
+
 		public static void GetWindow()
 		{
 			EditorWindow.GetWindow<SpriteEditorWindow>();
@@ -371,10 +379,6 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
-			this.m_EventSystem = new EventSystem();
-			this.m_UndoSystem = new UndoSystem();
-			this.m_AssetDatabase = new AssetDatabaseSystem();
-			this.m_GUIUtility = new GUIUtilitySystem();
 			base.minSize = new Vector2(360f, 200f);
 			base.titleContent = SpriteEditorWindow.SpriteEditorWindowStyles.spriteEditorWindowTitle;
 			SpriteEditorWindow.s_Instance = this;
@@ -441,15 +445,15 @@ namespace UnityEditor
 
 		private void RefreshRects()
 		{
+			if (this.m_RectsCache)
+			{
+				this.m_RectsCache.ClearAll();
+				Undo.ClearUndo(this.m_RectsCache);
+				UnityEngine.Object.DestroyImmediate(this.m_RectsCache);
+			}
+			this.m_RectsCache = ScriptableObject.CreateInstance<SpriteRectCache>();
 			if (this.m_TextureImporterSprites != null)
 			{
-				if (this.m_RectsCache)
-				{
-					this.m_RectsCache.ClearAll();
-					Undo.ClearUndo(this.m_RectsCache);
-					UnityEngine.Object.DestroyImmediate(this.m_RectsCache);
-				}
-				this.m_RectsCache = ScriptableObject.CreateInstance<SpriteRectCache>();
 				if (this.multipleSprites)
 				{
 					for (int i = 0; i < this.m_TextureImporterSprites.arraySize; i++)
@@ -471,6 +475,8 @@ namespace UnityEditor
 					spriteRect2.tessellationDetail = this.m_TextureImporterSO.FindProperty("m_SpriteTessellationDetail").floatValue;
 					SerializedProperty outlineSP = this.m_TextureImporterSO.FindProperty("m_SpriteSheet.m_Outline");
 					spriteRect2.outline = SpriteRect.AcquireOutline(outlineSP);
+					SerializedProperty outlineSP2 = this.m_TextureImporterSO.FindProperty("m_SpriteSheet.m_PhysicsShape");
+					spriteRect2.physicsShape = SpriteRect.AcquireOutline(outlineSP2);
 					this.m_RectsCache.AddRect(spriteRect2);
 				}
 				EditorUtility.ClearProgressBar();
@@ -484,7 +490,7 @@ namespace UnityEditor
 		private void OnGUI()
 		{
 			base.InitStyles();
-			if (this.m_ResetOnNextRepaint || this.selectedTextureChanged)
+			if (this.m_ResetOnNextRepaint || this.selectedTextureChanged || this.m_RectsCache == null)
 			{
 				this.ResetWindow();
 				this.RefreshPropertiesCache();
@@ -647,6 +653,15 @@ namespace UnityEditor
 				else
 				{
 					serializedProperty2.ClearArray();
+				}
+				SerializedProperty serializedProperty3 = so.FindProperty("m_SpriteSheet.m_PhysicsShape");
+				if (spriteRect2.physicsShape != null)
+				{
+					SpriteRect.ApplyOutlineChanges(serializedProperty3, spriteRect2.physicsShape);
+				}
+				else
+				{
+					serializedProperty3.ClearArray();
 				}
 			}
 			EditorUtility.ClearProgressBar();
@@ -887,6 +902,7 @@ namespace UnityEditor
 			this.m_AllRegisteredModules.Add(new SpriteFrameModule(this, this.m_EventSystem, this.m_UndoSystem, this.m_AssetDatabase));
 			this.m_AllRegisteredModules.Add(new SpritePolygonModeModule(this, this.m_EventSystem, this.m_UndoSystem, this.m_AssetDatabase));
 			this.m_AllRegisteredModules.Add(new SpriteOutlineModule(this, this.m_EventSystem, this.m_UndoSystem, this.m_AssetDatabase, this.m_GUIUtility, new ShapeEditorFactory(), outlineTexture));
+			this.m_AllRegisteredModules.Add(new SpritePhysicsShapeModule(this, this.m_EventSystem, this.m_UndoSystem, this.m_AssetDatabase, this.m_GUIUtility, new ShapeEditorFactory(), outlineTexture));
 			this.UpdateAvailableModules();
 		}
 

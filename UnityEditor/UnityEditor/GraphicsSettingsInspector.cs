@@ -16,17 +16,17 @@ namespace UnityEditor
 
 			public static readonly GUIContent closeEditorWindow = new GUIContent("Close Editor");
 
-			public static readonly GUIContent tierSettings = EditorGUIUtility.TextContent("Tier settings");
+			public static readonly GUIContent tierSettings = EditorGUIUtility.TextContent("Tier Settings");
 
-			public static readonly GUIContent builtinSettings = EditorGUIUtility.TextContent("Built-in shader settings");
+			public static readonly GUIContent builtinSettings = EditorGUIUtility.TextContent("Built-in Shader Settings");
 
-			public static readonly GUIContent shaderStrippingSettings = EditorGUIUtility.TextContent("Shader stripping");
+			public static readonly GUIContent shaderStrippingSettings = EditorGUIUtility.TextContent("Shader Stripping");
 
-			public static readonly GUIContent shaderPreloadSettings = EditorGUIUtility.TextContent("Shader preloading");
+			public static readonly GUIContent shaderPreloadSettings = EditorGUIUtility.TextContent("Shader Preloading");
 
-			public static readonly GUIContent cameraSettings = EditorGUIUtility.TextContent("Camera settings");
+			public static readonly GUIContent cameraSettings = EditorGUIUtility.TextContent("Camera Settings");
 
-			public static readonly GUIContent renderLoopSettings = EditorGUIUtility.TextContent("Scriptable RenderLoop settings");
+			public static readonly GUIContent renderLoopSettings = EditorGUIUtility.TextContent("Scriptable RenderLoop Settings");
 
 			public static readonly GUIContent renderLoopLabel = EditorGUIUtility.TextContent("Scriptable Render Loop");
 		}

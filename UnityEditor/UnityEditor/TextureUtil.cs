@@ -144,7 +144,7 @@ namespace UnityEditor
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void SetWrapModeNoDirty(Texture tex, TextureWrapMode mode);
+		public static extern void SetWrapModeNoDirty(Texture tex, TextureWrapMode u, TextureWrapMode v, TextureWrapMode w);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

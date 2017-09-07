@@ -24,5 +24,9 @@ namespace UnityEditorInternal
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ReportGroupedAPIUpdaterFailure(string msg);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ResetConsentStatus();
 	}
 }

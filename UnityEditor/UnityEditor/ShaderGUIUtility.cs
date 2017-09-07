@@ -5,39 +5,39 @@ namespace UnityEditor
 {
 	internal static class ShaderGUIUtility
 	{
-		internal static ShaderGUI CreateShaderGUI(string customEditorName)
+		private static Type ExtractCustomEditorType(string customEditorName)
 		{
-			string value = "UnityEditor." + customEditorName;
-			Assembly[] loadedAssemblies = EditorAssemblies.loadedAssemblies;
-			ShaderGUI result;
-			for (int i = loadedAssemblies.Length - 1; i >= 0; i--)
+			Type result;
+			if (string.IsNullOrEmpty(customEditorName))
 			{
-				Assembly assembly = loadedAssemblies[i];
-				Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(assembly);
-				Type[] array = typesFromAssembly;
-				int j = 0;
-				while (j < array.Length)
+				result = null;
+			}
+			else
+			{
+				string value = "UnityEditor." + customEditorName;
+				Assembly[] loadedAssemblies = EditorAssemblies.loadedAssemblies;
+				for (int i = loadedAssemblies.Length - 1; i >= 0; i--)
 				{
-					Type type = array[j];
-					if (type.FullName.Equals(customEditorName, StringComparison.Ordinal) || type.FullName.Equals(value, StringComparison.Ordinal))
+					Type[] typesFromAssembly = AssemblyHelper.GetTypesFromAssembly(loadedAssemblies[i]);
+					for (int j = 0; j < typesFromAssembly.Length; j++)
 					{
-						if (typeof(ShaderGUI).IsAssignableFrom(type))
+						Type type = typesFromAssembly[j];
+						if (type.FullName.Equals(customEditorName, StringComparison.Ordinal) || type.FullName.Equals(value, StringComparison.Ordinal))
 						{
-							ShaderGUI shaderGUI = Activator.CreateInstance(type) as ShaderGUI;
-							result = shaderGUI;
+							result = ((!typeof(ShaderGUI).IsAssignableFrom(type)) ? null : type);
 							return result;
 						}
-						result = null;
-						return result;
-					}
-					else
-					{
-						j++;
 					}
 				}
+				result = null;
 			}
-			result = null;
 			return result;
+		}
+
+		internal static ShaderGUI CreateShaderGUI(string customEditorName)
+		{
+			Type type = ShaderGUIUtility.ExtractCustomEditorType(customEditorName);
+			return (type == null) ? null : (Activator.CreateInstance(type) as ShaderGUI);
 		}
 	}
 }

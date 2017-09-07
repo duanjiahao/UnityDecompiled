@@ -15,9 +15,11 @@ namespace UnityEditor
 
 			public static GUIContent numCapVertices = EditorGUIUtility.TextContent("End Cap Vertices|How many vertices to add at each end.");
 
-			public static GUIContent alignment = EditorGUIUtility.TextContent("Alignment|Lines can rotate to face their transform component or the camera.");
+			public static GUIContent alignment = EditorGUIUtility.TextContent("Alignment|Lines can rotate to face their transform component or the camera. Note that when using Local mode, lines will face the XY plane of the Transform.");
 
 			public static GUIContent textureMode = EditorGUIUtility.TextContent("Texture Mode|Should the U coordinate be stretched or tiled?");
+
+			public static GUIContent generateLightingData = EditorGUIUtility.TextContent("Generate Lighting Data|Toggle generation of normal and tangent data, for use in lit shaders.");
 		}
 
 		private string[] m_ExcludedProperties;
@@ -34,6 +36,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_TextureMode;
 
+		private SerializedProperty m_GenerateLightingData;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
@@ -47,6 +51,7 @@ namespace UnityEditor
 			this.m_NumCapVertices = base.serializedObject.FindProperty("m_Parameters.numCapVertices");
 			this.m_Alignment = base.serializedObject.FindProperty("m_Parameters.alignment");
 			this.m_TextureMode = base.serializedObject.FindProperty("m_Parameters.textureMode");
+			this.m_GenerateLightingData = base.serializedObject.FindProperty("m_Parameters.generateLightingData");
 			base.InitializeProbeFields();
 		}
 
@@ -66,6 +71,9 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_NumCapVertices, LineRendererInspector.Styles.numCapVertices, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Alignment, LineRendererInspector.Styles.alignment, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_TextureMode, LineRendererInspector.Styles.textureMode, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_GenerateLightingData, LineRendererInspector.Styles.generateLightingData, new GUILayoutOption[0]);
+			EditorGUILayout.Space();
+			base.RenderSortingLayerFields();
 			this.m_Probes.OnGUI(base.targets, (Renderer)base.target, false);
 			base.serializedObject.ApplyModifiedProperties();
 		}

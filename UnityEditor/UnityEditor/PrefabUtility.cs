@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEditor.SceneManagement;
+using UnityEditor.Utils;
 using UnityEngine;
 using UnityEngine.Internal;
 using UnityEngine.SceneManagement;
@@ -65,19 +66,54 @@ namespace UnityEditor
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern UnityEngine.Object INTERNAL_CALL_InternalInstantiatePrefab(UnityEngine.Object target, ref Scene destinationScene);
 
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern UnityEngine.Object CreateEmptyPrefab(string path);
+		public static UnityEngine.Object CreateEmptyPrefab(string path)
+		{
+			UnityEngine.Object result;
+			if (!Paths.IsValidAssetPathWithErrorLogging(path, ".prefab"))
+			{
+				result = null;
+			}
+			else
+			{
+				result = PrefabUtility.Internal_CreateEmptyPrefab(path);
+			}
+			return result;
+		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern GameObject CreatePrefab(string path, GameObject go, [DefaultValue("ReplacePrefabOptions.Default")] ReplacePrefabOptions options);
+		private static extern UnityEngine.Object Internal_CreateEmptyPrefab(string path);
 
 		[ExcludeFromDocs]
 		public static GameObject CreatePrefab(string path, GameObject go)
 		{
 			ReplacePrefabOptions options = ReplacePrefabOptions.Default;
 			return PrefabUtility.CreatePrefab(path, go, options);
+		}
+
+		public static GameObject CreatePrefab(string path, GameObject go, [DefaultValue("ReplacePrefabOptions.Default")] ReplacePrefabOptions options)
+		{
+			GameObject result;
+			if (!Paths.IsValidAssetPathWithErrorLogging(path, ".prefab"))
+			{
+				result = null;
+			}
+			else
+			{
+				result = PrefabUtility.Internal_CreatePrefab(path, go, options);
+			}
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern GameObject Internal_CreatePrefab(string path, GameObject go, [DefaultValue("ReplacePrefabOptions.Default")] ReplacePrefabOptions options);
+
+		[ExcludeFromDocs]
+		private static GameObject Internal_CreatePrefab(string path, GameObject go)
+		{
+			ReplacePrefabOptions options = ReplacePrefabOptions.Default;
+			return PrefabUtility.Internal_CreatePrefab(path, go, options);
 		}
 
 		[GeneratedByOldBindingsGenerator]

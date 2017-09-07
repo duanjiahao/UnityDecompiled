@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Scripting;
+using UnityEngine.VR;
 
 namespace UnityEngine.Internal.VR
 {
@@ -12,16 +13,16 @@ namespace UnityEngine.Internal.VR
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void AddTrackedDevice(string deviceName);
+		public static extern void AddTrackedDevice(VRNode nodeType);
 
-		public static void UpdateTrackedDevice(string deviceName, Vector3 position, Quaternion rotation)
+		public static void UpdateTrackedDevice(VRNode nodeType, Vector3 position, Quaternion rotation)
 		{
-			VRTestMock.INTERNAL_CALL_UpdateTrackedDevice(deviceName, ref position, ref rotation);
+			VRTestMock.INTERNAL_CALL_UpdateTrackedDevice(nodeType, ref position, ref rotation);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_UpdateTrackedDevice(string deviceName, ref Vector3 position, ref Quaternion rotation);
+		private static extern void INTERNAL_CALL_UpdateTrackedDevice(VRNode nodeType, ref Vector3 position, ref Quaternion rotation);
 
 		public static void UpdateLeftEye(Vector3 position, Quaternion rotation)
 		{
@@ -40,6 +41,24 @@ namespace UnityEngine.Internal.VR
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_UpdateRightEye(ref Vector3 position, ref Quaternion rotation);
+
+		public static void UpdateCenterEye(Vector3 position, Quaternion rotation)
+		{
+			VRTestMock.INTERNAL_CALL_UpdateCenterEye(ref position, ref rotation);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_UpdateCenterEye(ref Vector3 position, ref Quaternion rotation);
+
+		public static void UpdateHead(Vector3 position, Quaternion rotation)
+		{
+			VRTestMock.INTERNAL_CALL_UpdateHead(ref position, ref rotation);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_UpdateHead(ref Vector3 position, ref Quaternion rotation);
 
 		public static void UpdateLeftHand(Vector3 position, Quaternion rotation)
 		{

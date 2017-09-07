@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor.AnimatedValues;
+using UnityEditor.Build;
 using UnityEditor.CrashReporting;
 using UnityEditor.Modules;
 using UnityEditor.SceneManagement;
+using UnityEditor.Scripting.ScriptCompilation;
 using UnityEditorInternal;
 using UnityEditorInternal.VR;
 using UnityEngine;
@@ -136,6 +138,8 @@ namespace UnityEditor
 
 			public static readonly GUIContent useMacAppStoreValidation;
 
+			public static readonly GUIContent macAppStoreCategory;
+
 			public static readonly GUIContent D3D9FullscreenMode;
 
 			public static readonly GUIContent D3D11FullscreenMode;
@@ -200,6 +204,8 @@ namespace UnityEditor
 
 			public static readonly GUIContent prepareIOSForRecording;
 
+			public static readonly GUIContent forceIOSSpeakersWhenRecording;
+
 			public static readonly GUIContent UIRequiresPersistentWiFi;
 
 			public static readonly GUIContent iOSAllowHTTPDownload;
@@ -216,9 +222,17 @@ namespace UnityEditor
 
 			public static readonly GUIContent skinOnGPUPS4;
 
+			public static readonly GUIContent skinOnGPUAndroidWarning;
+
 			public static readonly GUIContent disableStatistics;
 
 			public static readonly GUIContent scriptingDefineSymbols;
+
+			public static readonly GUIContent scriptingRuntimeVersion;
+
+			public static readonly GUIContent scriptingRuntimeVersionLegacy;
+
+			public static readonly GUIContent scriptingRuntimeVersionLatest;
 
 			public static readonly GUIContent scriptingBackend;
 
@@ -239,6 +253,10 @@ namespace UnityEditor
 			public static readonly GUIContent apiCompatibilityLevel_NET_2_0_Subset;
 
 			public static readonly GUIContent apiCompatibilityLevel_NET_4_6;
+
+			public static readonly GUIContent activeInputHandling;
+
+			public static readonly GUIContent[] activeInputHandlingOptions;
 
 			public static string undoChangedBundleIdentifierString
 			{
@@ -321,7 +339,7 @@ namespace UnityEditor
 				PlayerSettingsEditor.Styles.stripEngineCode = EditorGUIUtility.TextContent("Strip Engine Code*|Strip Unused Engine Code - Note that byte code stripping of managed assemblies is always enabled for the IL2CPP scripting backend.");
 				PlayerSettingsEditor.Styles.iPhoneStrippingLevel = EditorGUIUtility.TextContent("Stripping Level*");
 				PlayerSettingsEditor.Styles.iPhoneScriptCallOptimization = EditorGUIUtility.TextContent("Script Call Optimization*");
-				PlayerSettingsEditor.Styles.enableInternalProfiler = EditorGUIUtility.TextContent("Enable Internal Profiler*");
+				PlayerSettingsEditor.Styles.enableInternalProfiler = EditorGUIUtility.TextContent("Enable Internal Profiler* (Deprecated)|Internal profiler counters should be accessed by scripts using UnityEngine.Profiling::Profiler API.");
 				PlayerSettingsEditor.Styles.stripUnusedMeshComponents = EditorGUIUtility.TextContent("Optimize Mesh Data*|Remove unused mesh components");
 				PlayerSettingsEditor.Styles.videoMemoryForVertexBuffers = EditorGUIUtility.TextContent("Mesh Video Mem*|How many megabytes of video memory to use for mesh data before we use main memory");
 				PlayerSettingsEditor.Styles.protectGraphicsMemory = EditorGUIUtility.TextContent("Protect Graphics Memory|Protect GPU memory from being read (on supported devices). Will prevent user from taking screenshots");
@@ -340,6 +358,7 @@ namespace UnityEditor
 				PlayerSettingsEditor.Styles.UIStatusBarHidden = EditorGUIUtility.TextContent("Status Bar Hidden");
 				PlayerSettingsEditor.Styles.UIStatusBarStyle = EditorGUIUtility.TextContent("Status Bar Style");
 				PlayerSettingsEditor.Styles.useMacAppStoreValidation = EditorGUIUtility.TextContent("Mac App Store Validation");
+				PlayerSettingsEditor.Styles.macAppStoreCategory = EditorGUIUtility.TextContent("Category|'LSApplicationCategoryType'");
 				PlayerSettingsEditor.Styles.D3D9FullscreenMode = EditorGUIUtility.TextContent("D3D9 Fullscreen Mode");
 				PlayerSettingsEditor.Styles.D3D11FullscreenMode = EditorGUIUtility.TextContent("D3D11 Fullscreen Mode");
 				PlayerSettingsEditor.Styles.visibleInBackground = EditorGUIUtility.TextContent("Visible In Background");
@@ -372,6 +391,7 @@ namespace UnityEditor
 				PlayerSettingsEditor.Styles.microphoneUsageDescription = EditorGUIUtility.TextContent("Microphone Usage Description*");
 				PlayerSettingsEditor.Styles.muteOtherAudioSources = EditorGUIUtility.TextContent("Mute Other Audio Sources*");
 				PlayerSettingsEditor.Styles.prepareIOSForRecording = EditorGUIUtility.TextContent("Prepare iOS for Recording");
+				PlayerSettingsEditor.Styles.forceIOSSpeakersWhenRecording = EditorGUIUtility.TextContent("Force iOS Speakers when Recording");
 				PlayerSettingsEditor.Styles.UIRequiresPersistentWiFi = EditorGUIUtility.TextContent("Requires Persistent WiFi*");
 				PlayerSettingsEditor.Styles.iOSAllowHTTPDownload = EditorGUIUtility.TextContent("Allow downloads over HTTP (nonsecure)*");
 				PlayerSettingsEditor.Styles.iOSURLSchemes = EditorGUIUtility.TextContent("Supported URL schemes*");
@@ -380,10 +400,14 @@ namespace UnityEditor
 				PlayerSettingsEditor.Styles.requireAEP = EditorGUIUtility.TextContent("Require ES3.1+AEP");
 				PlayerSettingsEditor.Styles.skinOnGPU = EditorGUIUtility.TextContent("GPU Skinning*|Use DX11/ES3 GPU Skinning");
 				PlayerSettingsEditor.Styles.skinOnGPUPS4 = EditorGUIUtility.TextContent("Compute Skinning*|Use Compute pipeline for Skinning");
+				PlayerSettingsEditor.Styles.skinOnGPUAndroidWarning = EditorGUIUtility.TextContent("GPU skinning on Android devices is only enabled in VR builds, and is experimental. Be sure to validate behavior and performance on your target devices.");
 				PlayerSettingsEditor.Styles.disableStatistics = EditorGUIUtility.TextContent("Disable HW Statistics*|Disables HW Statistics (Pro Only)");
 				PlayerSettingsEditor.Styles.scriptingDefineSymbols = EditorGUIUtility.TextContent("Scripting Define Symbols*");
+				PlayerSettingsEditor.Styles.scriptingRuntimeVersion = EditorGUIUtility.TextContent("Scripting Runtime Version*|The scripting runtime version to be used. Unity uses different scripting backends based on platform, so these options are listed as equivalent expected behavior.");
+				PlayerSettingsEditor.Styles.scriptingRuntimeVersionLegacy = EditorGUIUtility.TextContent("Stable (.NET 3.5 Equivalent)");
+				PlayerSettingsEditor.Styles.scriptingRuntimeVersionLatest = EditorGUIUtility.TextContent("Experimental (.NET 4.6 Equivalent)");
 				PlayerSettingsEditor.Styles.scriptingBackend = EditorGUIUtility.TextContent("Scripting Backend");
-				PlayerSettingsEditor.Styles.scriptingMono2x = EditorGUIUtility.TextContent("Mono2x");
+				PlayerSettingsEditor.Styles.scriptingMono2x = EditorGUIUtility.TextContent("Mono");
 				PlayerSettingsEditor.Styles.scriptingWinRTDotNET = EditorGUIUtility.TextContent(".NET");
 				PlayerSettingsEditor.Styles.scriptingIL2CPP = EditorGUIUtility.TextContent("IL2CPP");
 				PlayerSettingsEditor.Styles.scriptingDefault = EditorGUIUtility.TextContent("Default");
@@ -392,15 +416,22 @@ namespace UnityEditor
 				PlayerSettingsEditor.Styles.apiCompatibilityLevel_NET_2_0 = EditorGUIUtility.TextContent(".NET 2.0");
 				PlayerSettingsEditor.Styles.apiCompatibilityLevel_NET_2_0_Subset = EditorGUIUtility.TextContent(".NET 2.0 Subset");
 				PlayerSettingsEditor.Styles.apiCompatibilityLevel_NET_4_6 = EditorGUIUtility.TextContent(".NET 4.6");
+				PlayerSettingsEditor.Styles.activeInputHandling = EditorGUIUtility.TextContent("Active Input Handling*");
+				PlayerSettingsEditor.Styles.activeInputHandlingOptions = new GUIContent[]
+				{
+					new GUIContent("Input Manager"),
+					new GUIContent("Input System (Preview)"),
+					new GUIContent("Both")
+				};
 				PlayerSettingsEditor.Styles.categoryBox.padding.left = 14;
 			}
 		}
 
 		private struct ChangeGraphicsApiAction
 		{
-			public bool changeList;
+			public readonly bool changeList;
 
-			public bool reloadGfx;
+			public readonly bool reloadGfx;
 
 			public ChangeGraphicsApiAction(bool doChange, bool doReload)
 			{
@@ -431,13 +462,15 @@ namespace UnityEditor
 
 		private SavedInt m_SelectedSection = new SavedInt("PlayerSettings.ShownSection", -1);
 
-		private BuildPlayerWindow.BuildPlatform[] validPlatforms;
+		private BuildPlatform[] validPlatforms;
 
 		private SerializedProperty m_StripEngineCode;
 
 		private SerializedProperty m_ApplicationBundleVersion;
 
 		private SerializedProperty m_UseMacAppStoreValidation;
+
+		private SerializedProperty m_MacAppStoreCategory;
 
 		private SerializedProperty m_IPhoneApplicationDisplayName;
 
@@ -511,6 +544,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_PrepareIOSForRecording;
 
+		private SerializedProperty m_ForceIOSSpeakersWhenRecording;
+
 		private SerializedProperty m_EnableInternalProfiler;
 
 		private SerializedProperty m_ActionOnDotNetUnhandledException;
@@ -518,6 +553,10 @@ namespace UnityEditor
 		private SerializedProperty m_LogObjCUncaughtExceptions;
 
 		private SerializedProperty m_EnableCrashReportAPI;
+
+		private SerializedProperty m_EnableInputSystem;
+
+		private SerializedProperty m_DisableInputManager;
 
 		private SerializedProperty m_VideoMemoryForVertexBuffers;
 
@@ -611,6 +650,11 @@ namespace UnityEditor
 
 		private static Texture2D s_WarningIcon;
 
+		private static ApiCompatibilityLevel[] only_4_x_profiles = new ApiCompatibilityLevel[]
+		{
+			ApiCompatibilityLevel.NET_4_6
+		};
+
 		private static ApiCompatibilityLevel[] only_2_0_profiles = new ApiCompatibilityLevel[]
 		{
 			ApiCompatibilityLevel.NET_2_0,
@@ -665,7 +709,7 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
-			this.validPlatforms = BuildPlayerWindow.GetValidPlatforms(true).ToArray();
+			this.validPlatforms = BuildPlatforms.instance.GetValidPlatforms(true).ToArray();
 			this.m_IPhoneSdkVersion = this.FindPropertyAssert("iPhoneSdkVersion");
 			this.m_IPhoneTargetOSVersion = this.FindPropertyAssert("iOSTargetOSVersionString");
 			this.m_IPhoneStrippingLevel = this.FindPropertyAssert("iPhoneStrippingLevel");
@@ -700,6 +744,7 @@ namespace UnityEditor
 			this.m_AccelerometerFrequency = this.FindPropertyAssert("accelerometerFrequency");
 			this.m_MuteOtherAudioSources = this.FindPropertyAssert("muteOtherAudioSources");
 			this.m_PrepareIOSForRecording = this.FindPropertyAssert("Prepare IOS For Recording");
+			this.m_ForceIOSSpeakersWhenRecording = this.FindPropertyAssert("Force IOS Speakers When Recording");
 			this.m_UIRequiresPersistentWiFi = this.FindPropertyAssert("uIRequiresPersistentWiFi");
 			this.m_IOSAllowHTTPDownload = this.FindPropertyAssert("iosAllowHTTPDownload");
 			this.m_SubmitAnalytics = this.FindPropertyAssert("submitAnalytics");
@@ -712,6 +757,8 @@ namespace UnityEditor
 			this.m_ActionOnDotNetUnhandledException = this.FindPropertyAssert("actionOnDotNetUnhandledException");
 			this.m_LogObjCUncaughtExceptions = this.FindPropertyAssert("logObjCUncaughtExceptions");
 			this.m_EnableCrashReportAPI = this.FindPropertyAssert("enableCrashReportAPI");
+			this.m_EnableInputSystem = this.FindPropertyAssert("enableNativePlatformBackendsForNewInputSystem");
+			this.m_DisableInputManager = this.FindPropertyAssert("disableOldInputManagerSupport");
 			this.m_DefaultScreenWidth = this.FindPropertyAssert("defaultScreenWidth");
 			this.m_DefaultScreenHeight = this.FindPropertyAssert("defaultScreenHeight");
 			this.m_RunInBackground = this.FindPropertyAssert("runInBackground");
@@ -738,6 +785,7 @@ namespace UnityEditor
 			this.m_BakeCollisionMeshes = this.FindPropertyAssert("bakeCollisionMeshes");
 			this.m_ResizableWindow = this.FindPropertyAssert("resizableWindow");
 			this.m_UseMacAppStoreValidation = this.FindPropertyAssert("useMacAppStoreValidation");
+			this.m_MacAppStoreCategory = this.FindPropertyAssert("macAppStoreCategory");
 			this.m_D3D9FullscreenMode = this.FindPropertyAssert("d3d9FullscreenMode");
 			this.m_D3D11FullscreenMode = this.FindPropertyAssert("d3d11FullscreenMode");
 			this.m_VisibleInBackground = this.FindPropertyAssert("visibleInBackground");
@@ -799,7 +847,7 @@ namespace UnityEditor
 			}
 			GUILayout.Label("Settings for " + this.validPlatforms[this.selectedPlatform].title.text, new GUILayoutOption[0]);
 			EditorGUIUtility.labelWidth = Mathf.Max(150f, EditorGUIUtility.labelWidth - 8f);
-			BuildPlayerWindow.BuildPlatform buildPlatform = this.validPlatforms[this.selectedPlatform];
+			BuildPlatform buildPlatform = this.validPlatforms[this.selectedPlatform];
 			BuildTargetGroup targetGroup = buildPlatform.targetGroup;
 			this.ResolutionSectionGUI(targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
 			this.IconSectionGUI(targetGroup, this.m_SettingsExtensions[this.selectedPlatform]);
@@ -888,7 +936,7 @@ namespace UnityEditor
 				if (flag)
 				{
 					bool flag2 = this.selectedPlatform < 0;
-					BuildPlayerWindow.BuildPlatform buildPlatform = null;
+					BuildPlatform buildPlatform = null;
 					targetGroup = BuildTargetGroup.Standalone;
 					string platform = "";
 					if (!flag2)
@@ -1010,11 +1058,6 @@ namespace UnityEditor
 			return targetGroup == BuildTargetGroup.Android;
 		}
 
-		private static bool TargetSupportsHighDynamicRangeDisplays(BuildTargetGroup targetGroup)
-		{
-			return targetGroup == BuildTargetGroup.XboxOne;
-		}
-
 		public void ResolutionSectionGUI(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			if (this.BeginSettingsBox(0, PlayerSettingsEditor.Styles.resolutionPresentationTitle))
@@ -1088,10 +1131,7 @@ namespace UnityEditor
 								Debug.LogError("All orientations are disabled. Allowing portrait");
 							}
 							EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToPortrait, PlayerSettingsEditor.Styles.allowedAutoRotateToPortrait, new GUILayoutOption[0]);
-							if (targetGroup != BuildTargetGroup.WSA || EditorUserBuildSettings.wsaSDK != WSASDK.PhoneSDK81)
-							{
-								EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToPortraitUpsideDown, PlayerSettingsEditor.Styles.allowedAutoRotateToPortraitUpsideDown, new GUILayoutOption[0]);
-							}
+							EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToPortraitUpsideDown, PlayerSettingsEditor.Styles.allowedAutoRotateToPortraitUpsideDown, new GUILayoutOption[0]);
 							EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToLandscapeRight, PlayerSettingsEditor.Styles.allowedAutoRotateToLandscapeRight, new GUILayoutOption[0]);
 							EditorGUILayout.PropertyField(this.m_AllowedAutoRotateToLandscapeLeft, PlayerSettingsEditor.Styles.allowedAutoRotateToLandscapeLeft, new GUILayoutOption[0]);
 							EditorGUI.indentLevel--;
@@ -1386,7 +1426,7 @@ namespace UnityEditor
 			}
 		}
 
-		public void DebugAndCrashReportingGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
+		public void DebugAndCrashReportingGUI(BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 			{
@@ -1453,7 +1493,7 @@ namespace UnityEditor
 			return options[num];
 		}
 
-		public void OtherSectionGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
+		public void OtherSectionGUI(BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			if (this.BeginSettingsBox(4, PlayerSettingsEditor.Styles.otherSettingsTitle))
 			{
@@ -1467,7 +1507,7 @@ namespace UnityEditor
 			this.EndSettingsBox();
 		}
 
-		private void OtherSectionRenderingGUI(BuildPlayerWindow.BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
+		private void OtherSectionRenderingGUI(BuildPlatform platform, BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			GUILayout.Label(PlayerSettingsEditor.Styles.renderingTitle, EditorStyles.boldLabel, new GUILayoutOption[0]);
 			if (targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.XboxOne || targetGroup == BuildTargetGroup.WSA || targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.WebGL)
@@ -1519,7 +1559,7 @@ namespace UnityEditor
 					}
 				}
 			}
-			this.GraphicsAPIsGUI(targetGroup, platform.DefaultTarget);
+			this.GraphicsAPIsGUI(targetGroup, platform.defaultTarget);
 			if (targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS)
 			{
 				this.m_MetalForceHardShadows.boolValue = EditorGUILayout.Toggle(PlayerSettingsEditor.Styles.metalForceHardShadows, this.m_MetalForceHardShadows.boolValue, new GUILayoutOption[0]);
@@ -1561,26 +1601,15 @@ namespace UnityEditor
 					this.m_MetalAPIValidation.boolValue = EditorGUILayout.Toggle(PlayerSettingsEditor.Styles.metalAPIValidation, this.m_MetalAPIValidation.boolValue, new GUILayoutOption[0]);
 				}
 			}
-			if (targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.SamsungTV)
+			if (settingsExtension != null)
 			{
-				if (this.IsMobileTarget(targetGroup))
+				if (this.IsMobileTarget(targetGroup) && settingsExtension.SupportsMultithreadedRendering())
 				{
 					this.m_MobileMTRendering.boolValue = EditorGUILayout.Toggle(PlayerSettingsEditor.Styles.mTRendering, this.m_MobileMTRendering.boolValue, new GUILayoutOption[0]);
 				}
-				else
+				else if (settingsExtension.SupportsMultithreadedRendering())
 				{
 					this.m_MTRendering.boolValue = EditorGUILayout.Toggle(PlayerSettingsEditor.Styles.mTRendering, this.m_MTRendering.boolValue, new GUILayoutOption[0]);
-				}
-			}
-			else if (targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PSM)
-			{
-				if (Unsupported.IsDeveloperBuild())
-				{
-					this.m_MTRendering.boolValue = EditorGUILayout.Toggle(PlayerSettingsEditor.Styles.mTRendering, this.m_MTRendering.boolValue, new GUILayoutOption[0]);
-				}
-				else
-				{
-					this.m_MTRendering.boolValue = true;
 				}
 			}
 			bool flag5 = true;
@@ -1592,7 +1621,7 @@ namespace UnityEditor
 			}
 			int num;
 			int num2;
-			PlayerSettings.GetBatchingForPlatform(platform.DefaultTarget, out num, out num2);
+			PlayerSettings.GetBatchingForPlatform(platform.defaultTarget, out num, out num2);
 			bool flag7 = false;
 			if (!flag5 && num == 1)
 			{
@@ -1606,7 +1635,7 @@ namespace UnityEditor
 			}
 			if (flag7)
 			{
-				PlayerSettings.SetBatchingForPlatform(platform.DefaultTarget, num, num2);
+				PlayerSettings.SetBatchingForPlatform(platform.defaultTarget, num, num2);
 			}
 			EditorGUI.BeginChangeCheck();
 			using (new EditorGUI.DisabledScope(!flag5))
@@ -1627,7 +1656,14 @@ namespace UnityEditor
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RecordObject(base.target, PlayerSettingsEditor.Styles.undoChangedBatchingString);
-				PlayerSettings.SetBatchingForPlatform(platform.DefaultTarget, num, num2);
+				PlayerSettings.SetBatchingForPlatform(platform.defaultTarget, num, num2);
+			}
+			bool flag8 = false;
+			bool flag9 = false;
+			if (settingsExtension != null)
+			{
+				flag8 = settingsExtension.SupportsHighDynamicRangeDisplays();
+				flag9 = settingsExtension.SupportsGfxJobModes();
 			}
 			if (targetGroup == BuildTargetGroup.WiiU || targetGroup == BuildTargetGroup.Standalone || targetGroup == BuildTargetGroup.iPhone || targetGroup == BuildTargetGroup.tvOS || targetGroup == BuildTargetGroup.Android || targetGroup == BuildTargetGroup.PSP2 || targetGroup == BuildTargetGroup.PS4 || targetGroup == BuildTargetGroup.PSM || targetGroup == BuildTargetGroup.WSA)
 			{
@@ -1638,8 +1674,12 @@ namespace UnityEditor
 					ShaderUtil.RecreateSkinnedMeshResources();
 				}
 			}
+			if (targetGroup == BuildTargetGroup.Android && PlayerSettings.gpuSkinning)
+			{
+				EditorGUILayout.HelpBox(PlayerSettingsEditor.Styles.skinOnGPUAndroidWarning.text, MessageType.Warning);
+			}
 			EditorGUILayout.PropertyField(this.m_GraphicsJobs, PlayerSettingsEditor.Styles.graphicsJobs, new GUILayoutOption[0]);
-			if (this.PlatformSupportsGfxJobModes(targetGroup))
+			if (flag9)
 			{
 				using (new EditorGUI.DisabledScope(!this.m_GraphicsJobs.boolValue))
 				{
@@ -1663,7 +1703,7 @@ namespace UnityEditor
 			{
 				PlayerSettings.protectGraphicsMemory = EditorGUILayout.Toggle(PlayerSettingsEditor.Styles.protectGraphicsMemory, PlayerSettings.protectGraphicsMemory, new GUILayoutOption[0]);
 			}
-			if (PlayerSettingsEditor.TargetSupportsHighDynamicRangeDisplays(targetGroup))
+			if (flag8)
 			{
 				PlayerSettings.useHDRDisplay = EditorGUILayout.Toggle(EditorGUIUtility.TextContent("Use display in HDR mode|Automatically switch the display to HDR output (on supported displays) at start of application."), PlayerSettings.useHDRDisplay, new GUILayoutOption[0]);
 			}
@@ -1681,9 +1721,10 @@ namespace UnityEditor
 			else if (targetGroup == BuildTargetGroup.Standalone)
 			{
 				GUILayout.Label(PlayerSettingsEditor.Styles.macAppStoreTitle, EditorStyles.boldLabel, new GUILayoutOption[0]);
-				PlayerSettingsEditor.ShowApplicationIdentifierUI(base.serializedObject, BuildTargetGroup.Standalone, "Bundle Identifier", PlayerSettingsEditor.Styles.undoChangedBundleIdentifierString);
-				EditorGUILayout.PropertyField(this.m_ApplicationBundleVersion, EditorGUIUtility.TextContent("Version*"), new GUILayoutOption[0]);
-				PlayerSettingsEditor.ShowBuildNumberUI(base.serializedObject, BuildTargetGroup.Standalone, "Build", PlayerSettingsEditor.Styles.undoChangedBuildNumberString);
+				PlayerSettingsEditor.ShowApplicationIdentifierUI(base.serializedObject, BuildTargetGroup.Standalone, "Bundle Identifier|'CFBundleIdentifier'", PlayerSettingsEditor.Styles.undoChangedBundleIdentifierString);
+				EditorGUILayout.PropertyField(this.m_ApplicationBundleVersion, EditorGUIUtility.TextContent("Version*|'CFBundleShortVersionString'"), new GUILayoutOption[0]);
+				PlayerSettingsEditor.ShowBuildNumberUI(base.serializedObject, BuildTargetGroup.Standalone, "Build|'CFBundleVersion'", PlayerSettingsEditor.Styles.undoChangedBuildNumberString);
+				EditorGUILayout.PropertyField(this.m_MacAppStoreCategory, PlayerSettingsEditor.Styles.macAppStoreCategory, new GUILayoutOption[0]);
 				EditorGUILayout.PropertyField(this.m_UseMacAppStoreValidation, PlayerSettingsEditor.Styles.useMacAppStoreValidation, new GUILayoutOption[0]);
 				EditorGUILayout.Space();
 			}
@@ -1692,7 +1733,7 @@ namespace UnityEditor
 		internal static void ShowApplicationIdentifierUI(SerializedObject serializedObject, BuildTargetGroup targetGroup, string label, string undoText)
 		{
 			EditorGUI.BeginChangeCheck();
-			string identifier = EditorGUILayout.DelayedTextField(EditorGUIUtility.TextContent(label), PlayerSettings.GetApplicationIdentifier(targetGroup), new GUILayoutOption[0]);
+			string identifier = EditorGUILayout.TextField(EditorGUIUtility.TextContent(label), PlayerSettings.GetApplicationIdentifier(targetGroup), new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RecordObject(serializedObject.targetObject, undoText);
@@ -1703,7 +1744,7 @@ namespace UnityEditor
 		internal static void ShowBuildNumberUI(SerializedObject serializedObject, BuildTargetGroup targetGroup, string label, string undoText)
 		{
 			EditorGUI.BeginChangeCheck();
-			string buildNumber = EditorGUILayout.DelayedTextField(EditorGUIUtility.TextContent(label), PlayerSettings.GetBuildNumber(targetGroup), new GUILayoutOption[0]);
+			string buildNumber = EditorGUILayout.TextField(EditorGUIUtility.TextContent(label), PlayerSettings.GetBuildNumber(targetGroup), new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				Undo.RecordObject(serializedObject.targetObject, undoText);
@@ -1732,6 +1773,29 @@ namespace UnityEditor
 		private void OtherSectionConfigurationGUI(BuildTargetGroup targetGroup, ISettingEditorExtension settingsExtension)
 		{
 			GUILayout.Label(PlayerSettingsEditor.Styles.configurationTitle, EditorStyles.boldLabel, new GUILayoutOption[0]);
+			ScriptingRuntimeVersion[] options = new ScriptingRuntimeVersion[]
+			{
+				ScriptingRuntimeVersion.Legacy,
+				ScriptingRuntimeVersion.Latest
+			};
+			GUIContent[] optionNames = new GUIContent[]
+			{
+				PlayerSettingsEditor.Styles.scriptingRuntimeVersionLegacy,
+				PlayerSettingsEditor.Styles.scriptingRuntimeVersionLatest
+			};
+			ScriptingRuntimeVersion scriptingRuntimeVersion = PlayerSettingsEditor.BuildEnumPopup<ScriptingRuntimeVersion>(PlayerSettingsEditor.Styles.scriptingRuntimeVersion, PlayerSettings.scriptingRuntimeVersion, options, optionNames);
+			if (scriptingRuntimeVersion != PlayerSettings.scriptingRuntimeVersion)
+			{
+				if (EditorUtility.DisplayDialog(LocalizationDatabase.GetLocalizedString("Restart required"), LocalizationDatabase.GetLocalizedString("Changing scripting runtime version requires a restart of the Editor to take effect. Do you wish to proceed?"), LocalizationDatabase.GetLocalizedString("Restart"), LocalizationDatabase.GetLocalizedString("Cancel")))
+				{
+					PlayerSettings.scriptingRuntimeVersion = scriptingRuntimeVersion;
+					EditorCompilationInterface.Instance.CleanScriptAssemblies();
+					if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+					{
+						EditorApplication.OpenProject(Environment.CurrentDirectory, new string[0]);
+					}
+				}
+			}
 			IScriptingImplementations scriptingImplementations = ModuleManager.GetScriptingImplementations(targetGroup);
 			if (scriptingImplementations == null)
 			{
@@ -1814,6 +1878,7 @@ namespace UnityEditor
 					if (targetGroup == BuildTargetGroup.iPhone)
 					{
 						EditorGUILayout.PropertyField(this.m_PrepareIOSForRecording, PlayerSettingsEditor.Styles.prepareIOSForRecording, new GUILayoutOption[0]);
+						EditorGUILayout.PropertyField(this.m_ForceIOSSpeakersWhenRecording, PlayerSettingsEditor.Styles.forceIOSSpeakersWhenRecording, new GUILayoutOption[0]);
 					}
 					EditorGUILayout.PropertyField(this.m_UIRequiresPersistentWiFi, PlayerSettingsEditor.Styles.UIRequiresPersistentWiFi, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_IOSAllowHTTPDownload, PlayerSettingsEditor.Styles.iOSAllowHTTPDownload, new GUILayoutOption[0]);
@@ -1844,6 +1909,15 @@ namespace UnityEditor
 			if (EditorGUI.EndChangeCheck())
 			{
 				PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, defines);
+			}
+			int num = this.m_EnableInputSystem.boolValue ? ((!this.m_DisableInputManager.boolValue) ? 2 : 1) : 0;
+			EditorGUI.BeginChangeCheck();
+			num = EditorGUILayout.Popup(PlayerSettingsEditor.Styles.activeInputHandling, num, PlayerSettingsEditor.Styles.activeInputHandlingOptions, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				EditorUtility.DisplayDialog("Unity editor restart required", "The Unity editor must be restarted for this change to take effect.", "OK");
+				this.m_EnableInputSystem.boolValue = (num == 1 || num == 2);
+				this.m_DisableInputManager.boolValue = (num != 0 && num != 2);
 			}
 			EditorGUILayout.Space();
 		}
@@ -1910,7 +1984,11 @@ namespace UnityEditor
 		private ApiCompatibilityLevel[] GetAvailableApiCompatibilityLevels(BuildTargetGroup activeBuildTargetGroup)
 		{
 			ApiCompatibilityLevel[] result;
-			if (activeBuildTargetGroup == BuildTargetGroup.WSA || activeBuildTargetGroup == BuildTargetGroup.XboxOne)
+			if (EditorApplication.scriptingRuntimeVersion == ScriptingRuntimeVersion.Latest)
+			{
+				result = PlayerSettingsEditor.only_4_x_profiles;
+			}
+			else if (activeBuildTargetGroup == BuildTargetGroup.WSA || activeBuildTargetGroup == BuildTargetGroup.XboxOne)
 			{
 				result = PlayerSettingsEditor.allProfiles;
 			}
@@ -2008,11 +2086,6 @@ namespace UnityEditor
 				array[i] = contents[values[i]];
 			}
 			return array;
-		}
-
-		private bool PlatformSupportsGfxJobModes(BuildTargetGroup targetGroup)
-		{
-			return targetGroup == BuildTargetGroup.PS4;
 		}
 
 		private static GUIContent[] GetNiceScriptingBackendNames(ScriptingImplementation[] scriptingBackends)

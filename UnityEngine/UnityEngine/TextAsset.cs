@@ -20,9 +20,18 @@ namespace UnityEngine
 			get;
 		}
 
+		public TextAsset()
+		{
+			TextAsset.Internal_CreateTextAsset(this);
+		}
+
 		public override string ToString()
 		{
 			return this.text;
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void Internal_CreateTextAsset([Writable] TextAsset mono);
 	}
 }

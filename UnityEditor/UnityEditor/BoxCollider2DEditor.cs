@@ -10,8 +10,6 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(BoxCollider2D))]
 	internal class BoxCollider2DEditor : Collider2DEditorBase
 	{
-		private static readonly int s_HandleControlIDHint = typeof(BoxCollider2DEditor).Name.GetHashCode();
-
 		private SerializedProperty m_Size;
 
 		private SerializedProperty m_EdgeRadius;
@@ -20,7 +18,7 @@ namespace UnityEditor
 
 		private readonly AnimBool m_ShowCompositeRedundants = new AnimBool();
 
-		private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(BoxCollider2DEditor.s_HandleControlIDHint);
+		private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
 
 		protected override GUIContent editModeButton
 		{
@@ -89,7 +87,7 @@ namespace UnityEditor
 					matrix4x.SetRow(2, new Vector4(0f, 0f, 1f, boxCollider2D.transform.position.z));
 					if (boxCollider2D.usedByComposite && boxCollider2D.composite != null)
 					{
-						Vector3 pos = Matrix4x4.TRS(boxCollider2D.composite.transform.position, boxCollider2D.composite.transform.rotation, Vector3.one).MultiplyPoint3x4(boxCollider2D.composite.offset);
+						Vector3 pos = boxCollider2D.composite.transform.rotation * boxCollider2D.composite.offset;
 						pos.z = 0f;
 						matrix4x = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one) * matrix4x;
 					}

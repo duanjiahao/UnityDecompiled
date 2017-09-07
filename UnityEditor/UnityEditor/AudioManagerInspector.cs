@@ -27,6 +27,8 @@ namespace UnityEditor
 
 			public static GUIContent SpatializerPlugin = EditorGUIUtility.TextContent("Spatializer Plugin|Native audio plugin performing spatialized filtering of 3D sources.");
 
+			public static GUIContent AmbisonicDecoderPlugin = EditorGUIUtility.TextContent("Ambisonic Decoder Plugin|Native audio plugin performing ambisonic-to-binaural filtering of sources.");
+
 			public static GUIContent DisableAudio = EditorGUIUtility.TextContent("Disable Unity Audio|Prevent allocating the output device in the runtime. Use this if you want to use other sound systems than the built-in one.");
 
 			public static GUIContent VirtualizeEffects = EditorGUIUtility.TextContent("Virtualize Effects|When enabled dynamically turn off effects and spatializers on AudioSources that are culled in order to save CPU.");
@@ -50,6 +52,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_SpatializerPlugin;
 
+		private SerializedProperty m_AmbisonicDecoderPlugin;
+
 		private SerializedProperty m_DisableAudio;
 
 		private SerializedProperty m_VirtualizeEffects;
@@ -65,6 +69,7 @@ namespace UnityEditor
 			this.m_VirtualVoiceCount = base.serializedObject.FindProperty("m_VirtualVoiceCount");
 			this.m_RealVoiceCount = base.serializedObject.FindProperty("m_RealVoiceCount");
 			this.m_SpatializerPlugin = base.serializedObject.FindProperty("m_SpatializerPlugin");
+			this.m_AmbisonicDecoderPlugin = base.serializedObject.FindProperty("m_AmbisonicDecoderPlugin");
 			this.m_DisableAudio = base.serializedObject.FindProperty("m_DisableAudio");
 			this.m_VirtualizeEffects = base.serializedObject.FindProperty("m_VirtualizeEffects");
 		}
@@ -105,6 +110,16 @@ namespace UnityEditor
 				string text = array2[i];
 				list2.Add(new GUIContent(text));
 			}
+			List<string> list3 = new List<string>(AudioUtil.GetAmbisonicDecoderPluginNames());
+			list3.Insert(0, "None");
+			string[] array3 = list3.ToArray();
+			List<GUIContent> list4 = new List<GUIContent>();
+			string[] array4 = array3;
+			for (int j = 0; j < array4.Length; j++)
+			{
+				string text2 = array4[j];
+				list4.Add(new GUIContent(text2));
+			}
 			EditorGUI.BeginChangeCheck();
 			int num = this.FindPluginStringIndex(array, this.m_SpatializerPlugin.stringValue);
 			num = EditorGUILayout.Popup(AudioManagerInspector.Styles.SpatializerPlugin, num, list2.ToArray(), new GUILayoutOption[0]);
@@ -117,6 +132,20 @@ namespace UnityEditor
 				else
 				{
 					this.m_SpatializerPlugin.stringValue = array[num];
+				}
+			}
+			EditorGUI.BeginChangeCheck();
+			num = this.FindPluginStringIndex(array3, this.m_AmbisonicDecoderPlugin.stringValue);
+			num = EditorGUILayout.Popup(AudioManagerInspector.Styles.AmbisonicDecoderPlugin, num, list4.ToArray(), new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (num == 0)
+				{
+					this.m_AmbisonicDecoderPlugin.stringValue = "";
+				}
+				else
+				{
+					this.m_AmbisonicDecoderPlugin.stringValue = array3[num];
 				}
 			}
 			EditorGUI.BeginChangeCheck();

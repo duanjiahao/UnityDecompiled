@@ -118,9 +118,28 @@ namespace UnityEditor
 						diagnosticSwitch.persistentValue = (uint)EditorGUI.IntField(rect, label, (int)((uint)diagnosticSwitch.persistentValue));
 					}
 				}
+				else if (diagnosticSwitch.value is int)
+				{
+					int num5 = (int)diagnosticSwitch.minValue;
+					int num6 = (int)diagnosticSwitch.maxValue;
+					if ((long)(num6 - num5) <= 10L && num6 - num5 > 0 && num5 < 2147483647 && num6 < 2147483647)
+					{
+						diagnosticSwitch.persistentValue = EditorGUI.IntSlider(rect, label, (int)diagnosticSwitch.persistentValue, num5, num6);
+					}
+					else
+					{
+						diagnosticSwitch.persistentValue = EditorGUI.IntField(rect, label, (int)diagnosticSwitch.persistentValue);
+					}
+				}
 				else if (diagnosticSwitch.value is string)
 				{
 					diagnosticSwitch.persistentValue = EditorGUI.TextField(rect, label, (string)diagnosticSwitch.persistentValue);
+				}
+				else
+				{
+					GUIStyle gUIStyle = new GUIStyle();
+					gUIStyle.normal.textColor = Color.red;
+					EditorGUI.LabelField(rect, label, new GUIContent("Unsupported type: " + diagnosticSwitch.value.GetType().Name), gUIStyle);
 				}
 			}
 			if (EditorGUI.EndChangeCheck())

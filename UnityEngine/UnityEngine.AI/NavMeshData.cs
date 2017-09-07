@@ -16,7 +16,7 @@ namespace UnityEngine.AI
 			}
 		}
 
-		internal Vector3 position
+		public Vector3 position
 		{
 			get
 			{
@@ -30,7 +30,7 @@ namespace UnityEngine.AI
 			}
 		}
 
-		internal Quaternion rotation
+		public Quaternion rotation
 		{
 			get
 			{

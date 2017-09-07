@@ -8,13 +8,11 @@ namespace UnityEditor
 	{
 		public SerializedProperty scalar;
 
+		public SerializedProperty minScalar;
+
 		public SerializedProperty maxCurve;
 
 		public SerializedProperty minCurve;
-
-		public SerializedProperty minCurveFirstKeyValue;
-
-		public SerializedProperty maxCurveFirstKeyValue;
 
 		private SerializedProperty minMaxState;
 
@@ -70,7 +68,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.maxCurveFirstKeyValue.floatValue * this.scalar.floatValue;
+				return this.scalar.floatValue;
 			}
 			set
 			{
@@ -79,18 +77,7 @@ namespace UnityEditor
 				{
 					value = Mathf.Max(value, 0f);
 				}
-				float minConstant = this.minConstant;
-				float num = Mathf.Abs(minConstant);
-				float num2 = Mathf.Abs(value);
-				float num3 = (num2 <= num) ? num : num2;
-				if (num3 != this.scalar.floatValue)
-				{
-					this.SetScalarAndNormalizedConstants(num3, minConstant, value);
-				}
-				else
-				{
-					this.SetNormalizedConstant(this.maxCurve, value);
-				}
+				this.scalar.floatValue = value;
 			}
 		}
 
@@ -98,7 +85,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.minCurveFirstKeyValue.floatValue * this.scalar.floatValue;
+				return this.minScalar.floatValue;
 			}
 			set
 			{
@@ -107,18 +94,7 @@ namespace UnityEditor
 				{
 					value = Mathf.Max(value, 0f);
 				}
-				float maxConstant = this.maxConstant;
-				float num = Mathf.Abs(value);
-				float num2 = Mathf.Abs(maxConstant);
-				float num3 = (num2 <= num) ? num : num2;
-				if (num3 != this.scalar.floatValue)
-				{
-					this.SetScalarAndNormalizedConstants(num3, value, maxConstant);
-				}
-				else
-				{
-					this.SetNormalizedConstant(this.minCurve, value);
-				}
+				this.minScalar.floatValue = value;
 			}
 		}
 
@@ -164,10 +140,9 @@ namespace UnityEditor
 			this.m_AllowRandom = true;
 			this.m_AllowCurves = true;
 			this.scalar = ((!useProp0) ? m.GetProperty(this.m_Name, "scalar") : m.GetProperty0(this.m_Name, "scalar"));
+			this.minScalar = ((!useProp0) ? m.GetProperty(this.m_Name, "minScalar") : m.GetProperty0(this.m_Name, "minScalar"));
 			this.maxCurve = ((!useProp0) ? m.GetProperty(this.m_Name, "maxCurve") : m.GetProperty0(this.m_Name, "maxCurve"));
-			this.maxCurveFirstKeyValue = this.maxCurve.FindPropertyRelative("m_Curve.Array.data[0].value");
 			this.minCurve = ((!useProp0) ? m.GetProperty(this.m_Name, "minCurve") : m.GetProperty0(this.m_Name, "minCurve"));
-			this.minCurveFirstKeyValue = this.minCurve.FindPropertyRelative("m_Curve.Array.data[0].value");
 			this.minMaxState = ((!useProp0) ? m.GetProperty(this.m_Name, "minMaxState") : m.GetProperty0(this.m_Name, "minMaxState"));
 			if (addCurveIfNeeded)
 			{
@@ -194,21 +169,6 @@ namespace UnityEditor
 				result = val;
 			}
 			return result;
-		}
-
-		public void SetScalarAndNormalizedConstants(float newScalar, float totalMin, float totalMax)
-		{
-			this.scalar.floatValue = newScalar;
-			this.SetNormalizedConstant(this.minCurve, totalMin);
-			this.SetNormalizedConstant(this.maxCurve, totalMax);
-		}
-
-		private void SetNormalizedConstant(SerializedProperty curve, float totalValue)
-		{
-			float num = this.scalar.floatValue;
-			num = Mathf.Max(num, 0.0001f);
-			float value = totalValue / num;
-			this.SetCurveConstant(curve, value);
 		}
 
 		public Vector2 GetAxisScalars()
@@ -275,134 +235,50 @@ namespace UnityEditor
 			}
 		}
 
-		public void SetMinMaxState(MinMaxCurveState newState, bool addToCurveEditor = true)
+		public void SetMinMaxState(MinMaxCurveState newState, bool addToCurveEditor)
 		{
-			if (!this.stateHasMultipleDifferentValues)
+			if (this.stateHasMultipleDifferentValues)
 			{
-				if (newState == this.state)
+				Debug.LogError("SetMinMaxState is not allowed with multiple different values");
+			}
+			else if (newState != this.state)
+			{
+				MinMaxCurveState state = this.state;
+				ParticleSystemCurveEditor particleSystemCurveEditor = this.m_Module.GetParticleSystemCurveEditor();
+				if (particleSystemCurveEditor.IsAdded(this.GetMinCurve(), this.maxCurve))
 				{
-					return;
+					particleSystemCurveEditor.RemoveCurve(this.GetMinCurve(), this.maxCurve);
 				}
-			}
-			MinMaxCurveState state = this.state;
-			ParticleSystemCurveEditor particleSystemCurveEditor = this.m_Module.GetParticleSystemCurveEditor();
-			if (particleSystemCurveEditor.IsAdded(this.GetMinCurve(), this.maxCurve))
-			{
-				particleSystemCurveEditor.RemoveCurve(this.GetMinCurve(), this.maxCurve);
-			}
-			switch (newState)
-			{
-			case MinMaxCurveState.k_Scalar:
-				this.InitSingleScalar(state);
-				break;
-			case MinMaxCurveState.k_Curve:
-				this.InitSingleCurve(state);
-				break;
-			case MinMaxCurveState.k_TwoCurves:
-				this.InitDoubleCurves(state);
-				break;
-			case MinMaxCurveState.k_TwoScalars:
-				this.InitDoubleScalars(state);
-				break;
-			}
-			this.minMaxState.intValue = (int)newState;
-			if (addToCurveEditor)
-			{
-				switch (newState)
+				if (newState != MinMaxCurveState.k_Curve)
 				{
-				case MinMaxCurveState.k_Scalar:
-				case MinMaxCurveState.k_TwoScalars:
-					break;
-				case MinMaxCurveState.k_Curve:
-				case MinMaxCurveState.k_TwoCurves:
-					particleSystemCurveEditor.AddCurve(this.CreateCurveData(particleSystemCurveEditor.GetAvailableColor()));
-					break;
-				default:
-					Debug.LogError("Unhandled enum value");
-					break;
-				}
-			}
-			AnimationCurvePreviewCache.ClearCache();
-		}
-
-		private void InitSingleScalar(MinMaxCurveState oldState)
-		{
-			if (oldState == MinMaxCurveState.k_Curve || oldState == MinMaxCurveState.k_TwoCurves || oldState == MinMaxCurveState.k_TwoScalars)
-			{
-				float maxKeyValue = this.GetMaxKeyValue(this.maxCurve.animationCurveValue.keys);
-				this.scalar.floatValue *= maxKeyValue;
-			}
-			this.SetCurveConstant(this.maxCurve, 1f);
-		}
-
-		private void InitDoubleScalars(MinMaxCurveState oldState)
-		{
-			this.minConstant = this.GetAverageKeyValue(this.minCurve.animationCurveValue.keys) * this.scalar.floatValue;
-			switch (oldState)
-			{
-			case MinMaxCurveState.k_Scalar:
-				this.maxConstant = this.scalar.floatValue;
-				break;
-			case MinMaxCurveState.k_Curve:
-			case MinMaxCurveState.k_TwoCurves:
-				this.maxConstant = this.GetAverageKeyValue(this.maxCurve.animationCurveValue.keys) * this.scalar.floatValue;
-				break;
-			default:
-				Debug.LogError("Enum not handled!");
-				break;
-			}
-			this.SetCurveRequirements();
-		}
-
-		private void InitSingleCurve(MinMaxCurveState oldState)
-		{
-			if (oldState != MinMaxCurveState.k_Scalar)
-			{
-				if (oldState != MinMaxCurveState.k_TwoScalars && oldState != MinMaxCurveState.k_TwoCurves)
-				{
-				}
-			}
-			else
-			{
-				this.SetCurveConstant(this.maxCurve, this.GetNormalizedValueFromScalar());
-			}
-			this.SetCurveRequirements();
-		}
-
-		private void InitDoubleCurves(MinMaxCurveState oldState)
-		{
-			if (oldState != MinMaxCurveState.k_Scalar)
-			{
-				if (oldState != MinMaxCurveState.k_TwoScalars)
-				{
-					if (oldState != MinMaxCurveState.k_Curve)
+					if (newState == MinMaxCurveState.k_TwoCurves)
 					{
+						this.SetCurveRequirements();
 					}
 				}
+				else
+				{
+					this.SetCurveRequirements();
+				}
+				this.minMaxState.intValue = (int)newState;
+				if (addToCurveEditor)
+				{
+					switch (newState)
+					{
+					case MinMaxCurveState.k_Scalar:
+					case MinMaxCurveState.k_TwoScalars:
+						break;
+					case MinMaxCurveState.k_Curve:
+					case MinMaxCurveState.k_TwoCurves:
+						particleSystemCurveEditor.AddCurve(this.CreateCurveData(particleSystemCurveEditor.GetAvailableColor()));
+						break;
+					default:
+						Debug.LogError("Unhandled enum value");
+						break;
+					}
+				}
+				AnimationCurvePreviewCache.ClearCache();
 			}
-			else
-			{
-				this.SetCurveConstant(this.maxCurve, this.GetNormalizedValueFromScalar());
-			}
-			this.SetCurveRequirements();
-		}
-
-		private float GetNormalizedValueFromScalar()
-		{
-			float result;
-			if (this.scalar.floatValue < 0f)
-			{
-				result = -1f;
-			}
-			else if (this.scalar.floatValue > 0f)
-			{
-				result = 1f;
-			}
-			else
-			{
-				result = 0f;
-			}
-			return result;
 		}
 
 		private void SetCurveRequirements()
@@ -414,85 +290,46 @@ namespace UnityEditor
 			}
 		}
 
-		private void SetCurveConstant(SerializedProperty curve, float value)
-		{
-			curve.animationCurveValue = new AnimationCurve(new Keyframe[]
-			{
-				new Keyframe(0f, value)
-			});
-		}
-
-		private float GetAverageKeyValue(Keyframe[] keyFrames)
-		{
-			float num = 0f;
-			for (int i = 0; i < keyFrames.Length; i++)
-			{
-				Keyframe keyframe = keyFrames[i];
-				num += keyframe.value;
-			}
-			return num / (float)keyFrames.Length;
-		}
-
-		private float GetMaxKeyValue(Keyframe[] keyFrames)
-		{
-			float num = float.NegativeInfinity;
-			float num2 = float.PositiveInfinity;
-			for (int i = 0; i < keyFrames.Length; i++)
-			{
-				Keyframe keyframe = keyFrames[i];
-				if (keyframe.value > num)
-				{
-					num = keyframe.value;
-				}
-				if (keyframe.value < num2)
-				{
-					num2 = keyframe.value;
-				}
-			}
-			float result;
-			if (Mathf.Abs(num2) > num)
-			{
-				result = num2;
-			}
-			else
-			{
-				result = num;
-			}
-			return result;
-		}
-
-		private bool IsCurveConstant(Keyframe[] keyFrames, out float constantValue)
-		{
-			bool result;
-			if (keyFrames.Length == 0)
-			{
-				constantValue = 0f;
-				result = false;
-			}
-			else
-			{
-				constantValue = keyFrames[0].value;
-				for (int i = 1; i < keyFrames.Length; i++)
-				{
-					if (Mathf.Abs(constantValue - keyFrames[i].value) > 1E-05f)
-					{
-						result = false;
-						return result;
-					}
-				}
-				result = true;
-			}
-			return result;
-		}
-
 		public string GetUniqueCurveName()
 		{
 			return SerializedModule.Concat(this.m_Module.GetUniqueModuleName(this.m_Module.serializedObject.targetObject), this.m_Name);
 		}
 
-		public bool SupportsProcedural()
+		private static bool AnimationCurveSupportsProcedural(AnimationCurve curve, ref string failureReason)
 		{
-			bool flag = AnimationUtility.CurveSupportsProcedural(this.maxCurve.animationCurveValue);
+			bool result;
+			switch (AnimationUtility.IsValidPolynomialCurve(curve))
+			{
+			case AnimationUtility.PolynomialValid.Valid:
+				result = true;
+				return result;
+			case AnimationUtility.PolynomialValid.InvalidPreWrapMode:
+				failureReason = "Unsupported curve pre-wrap mode. Loop and ping-pong do not support procedural mode.";
+				break;
+			case AnimationUtility.PolynomialValid.InvalidPostWrapMode:
+				failureReason = "Unsupported curve post-wrap mode. Loop and ping-pong do not support procedural mode.";
+				break;
+			case AnimationUtility.PolynomialValid.TooManySegments:
+				failureReason = "Curve uses too many keys. Procedural mode does not support more than " + AnimationUtility.GetMaxNumPolynomialSegmentsSupported() + " keys";
+				if (curve.keys[0].time != 0f || curve.keys[curve.keys.Length - 1].time != 1f)
+				{
+					failureReason += " (Additional keys are added to curves that do not start at 0, or do not end at 1)";
+				}
+				failureReason += ".";
+				break;
+			}
+			result = false;
+			return result;
+		}
+
+		public bool SupportsProcedural(ref string failureReason)
+		{
+			string text = "Max Curve: ";
+			bool flag = SerializedMinMaxCurve.AnimationCurveSupportsProcedural(this.maxCurve.animationCurveValue, ref text);
+			if (!flag)
+			{
+				failureReason = text;
+			}
 			bool result;
 			if (this.state != MinMaxCurveState.k_TwoCurves && this.state != MinMaxCurveState.k_TwoScalars)
 			{
@@ -500,7 +337,13 @@ namespace UnityEditor
 			}
 			else
 			{
-				result = (flag && AnimationUtility.CurveSupportsProcedural(this.minCurve.animationCurveValue));
+				string str = "Min Curve: ";
+				bool flag2 = SerializedMinMaxCurve.AnimationCurveSupportsProcedural(this.minCurve.animationCurveValue, ref str);
+				if (flag2)
+				{
+					failureReason += str;
+				}
+				result = (flag && flag2);
 			}
 			return result;
 		}

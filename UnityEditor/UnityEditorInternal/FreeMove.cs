@@ -96,10 +96,10 @@ namespace UnityEditorInternal
 							{
 								Handles.SetupIgnoreRaySnapObjects();
 							}
-							Vector3 v;
-							if (HandleUtility.FindNearestVertex(current.mousePosition, null, out v))
+							Vector3 point;
+							if (HandleUtility.FindNearestVertex(current.mousePosition, null, out point))
 							{
-								position = Handles.inverseMatrix.MultiplyPoint(v);
+								position = Handles.inverseMatrix.MultiplyPoint(point);
 							}
 						}
 						if (EditorGUI.actionKey && !current.shift)
@@ -224,10 +224,10 @@ namespace UnityEditorInternal
 							{
 								Handles.SetupIgnoreRaySnapObjects();
 							}
-							Vector3 v;
-							if (HandleUtility.FindNearestVertex(current.mousePosition, null, out v))
+							Vector3 point;
+							if (HandleUtility.FindNearestVertex(current.mousePosition, null, out point))
 							{
-								position = Handles.inverseMatrix.MultiplyPoint(v);
+								position = Handles.inverseMatrix.MultiplyPoint(point);
 							}
 						}
 						if (EditorGUI.actionKey && !current.shift)

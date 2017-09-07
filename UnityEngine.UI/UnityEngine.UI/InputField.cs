@@ -391,9 +391,21 @@ namespace UnityEngine.UI
 			}
 			set
 			{
+				if (this.m_TextComponent != null)
+				{
+					this.m_TextComponent.UnregisterDirtyVerticesCallback(new UnityAction(this.MarkGeometryAsDirty));
+					this.m_TextComponent.UnregisterDirtyVerticesCallback(new UnityAction(this.UpdateLabel));
+					this.m_TextComponent.UnregisterDirtyMaterialCallback(new UnityAction(this.UpdateCaretMaterial));
+				}
 				if (SetPropertyUtility.SetClass<Text>(ref this.m_TextComponent, value))
 				{
 					this.EnforceTextHOverflow();
+					if (this.m_TextComponent != null)
+					{
+						this.m_TextComponent.RegisterDirtyVerticesCallback(new UnityAction(this.MarkGeometryAsDirty));
+						this.m_TextComponent.RegisterDirtyVerticesCallback(new UnityAction(this.UpdateLabel));
+						this.m_TextComponent.RegisterDirtyMaterialCallback(new UnityAction(this.UpdateCaretMaterial));
+					}
 				}
 			}
 		}
@@ -578,6 +590,13 @@ namespace UnityEngine.UI
 			}
 			set
 			{
+				if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.WiiU)
+				{
+					if (value == TouchScreenKeyboardType.NintendoNetworkAccount)
+					{
+						UnityEngine.Debug.LogWarning("Invalid InputField.keyboardType value set. TouchScreenKeyboardType.NintendoNetworkAccount only applies to the Wii U. InputField.keyboardType will default to TouchScreenKeyboardType.Default .");
+					}
+				}
 				if (SetPropertyUtility.SetStruct<TouchScreenKeyboardType>(ref this.m_KeyboardType, value))
 				{
 					this.SetToCustom();
@@ -1862,6 +1881,7 @@ namespace UnityEngine.UI
 
 		private void SendOnValueChanged()
 		{
+			UISystemProfilerApi.AddMarker("InputField.value", this);
 			if (this.onValueChanged != null)
 			{
 				this.onValueChanged.Invoke(this.text);
@@ -1870,6 +1890,7 @@ namespace UnityEngine.UI
 
 		protected void SendOnSubmit()
 		{
+			UISystemProfilerApi.AddMarker("InputField.onSubmit", this);
 			if (this.onEndEdit != null)
 			{
 				this.onEndEdit.Invoke(this.m_Text);
@@ -2340,15 +2361,16 @@ namespace UnityEngine.UI
 				if (this.characterValidation == InputField.CharacterValidation.Integer || this.characterValidation == InputField.CharacterValidation.Decimal)
 				{
 					bool flag = pos == 0 && text.Length > 0 && text[0] == '-';
-					bool flag2 = this.caretPositionInternal == 0 || this.caretSelectPositionInternal == 0;
-					if (!flag)
+					bool flag2 = text.Length > 0 && text[0] == '-' && ((this.caretPositionInternal == 0 && this.caretSelectPositionInternal > 0) || (this.caretSelectPositionInternal == 0 && this.caretPositionInternal > 0));
+					bool flag3 = this.caretPositionInternal == 0 || this.caretSelectPositionInternal == 0;
+					if (!flag || flag2)
 					{
 						if (ch >= '0' && ch <= '9')
 						{
 							result = ch;
 							return result;
 						}
-						if (ch == '-' && (pos == 0 || flag2))
+						if (ch == '-' && (pos == 0 || flag3))
 						{
 							result = ch;
 							return result;

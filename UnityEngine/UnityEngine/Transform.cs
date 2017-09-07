@@ -657,6 +657,7 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsChildOf(Transform parent);
 
+		[Obsolete("FindChild has been deprecated. Use Find instead (UnityUpgradable) -> Find([mscorlib] System.String)", false)]
 		public Transform FindChild(string name)
 		{
 			return this.Find(name);

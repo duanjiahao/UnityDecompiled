@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -517,7 +516,7 @@ namespace UnityEditor
 
 		protected void DoRenderPreview(UnityEngine.Object[] subAssets)
 		{
-			if (this.m_PreviewUtility.m_RenderTexture.width > 0 && this.m_PreviewUtility.m_RenderTexture.height > 0)
+			if (this.m_PreviewUtility.renderTexture.width > 0 && this.m_PreviewUtility.renderTexture.height > 0)
 			{
 				List<ProceduralMaterial> list = new List<ProceduralMaterial>();
 				for (int i = 0; i < subAssets.Length; i++)
@@ -534,38 +533,31 @@ namespace UnityEditor
 					num++;
 				}
 				int num2 = Mathf.CeilToInt((float)list.Count / (float)num);
-				this.m_PreviewUtility.m_Camera.transform.position = -Vector3.forward * 5f * (float)num;
-				this.m_PreviewUtility.m_Camera.transform.rotation = Quaternion.identity;
-				this.m_PreviewUtility.m_Camera.farClipPlane = (float)(5 * num) + 5f;
-				this.m_PreviewUtility.m_Camera.nearClipPlane = (float)(5 * num) - 3f;
-				Color ambient;
+				this.m_PreviewUtility.camera.transform.position = -Vector3.forward * 5f * (float)num;
+				this.m_PreviewUtility.camera.transform.rotation = Quaternion.identity;
+				this.m_PreviewUtility.camera.farClipPlane = (float)(5 * num) + 5f;
+				this.m_PreviewUtility.camera.nearClipPlane = (float)(5 * num) - 3f;
+				this.m_PreviewUtility.ambientColor = new Color(0.2f, 0.2f, 0.2f, 0f);
 				if (this.lightMode == 0)
 				{
-					this.m_PreviewUtility.m_Light[0].intensity = 1f;
-					this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(30f, 30f, 0f);
-					this.m_PreviewUtility.m_Light[1].intensity = 0f;
-					ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
+					this.m_PreviewUtility.lights[0].intensity = 1f;
+					this.m_PreviewUtility.lights[0].transform.rotation = Quaternion.Euler(30f, 30f, 0f);
+					this.m_PreviewUtility.lights[1].intensity = 0f;
 				}
 				else
 				{
-					this.m_PreviewUtility.m_Light[0].intensity = 1f;
-					this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
-					this.m_PreviewUtility.m_Light[1].intensity = 1f;
-					ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
+					this.m_PreviewUtility.lights[0].intensity = 1f;
+					this.m_PreviewUtility.lights[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
+					this.m_PreviewUtility.lights[1].intensity = 1f;
 				}
-				InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);
 				for (int j = 0; j < list.Count; j++)
 				{
 					ProceduralMaterial mat = list[j];
 					Vector3 vector = new Vector3((float)(j % num) - (float)(num - 1) * 0.5f, (float)(-(float)j / num) + (float)(num2 - 1) * 0.5f, 0f);
-					vector *= Mathf.Tan(this.m_PreviewUtility.m_Camera.fieldOfView * 0.5f * 0.0174532924f) * 5f * 2f;
+					vector *= Mathf.Tan(this.m_PreviewUtility.camera.fieldOfView * 0.5f * 0.0174532924f) * 5f * 2f;
 					this.m_PreviewUtility.DrawMesh(SubstanceImporterInspector.s_Meshes[this.selectedMesh], vector, Quaternion.Euler(this.previewDir.y, 0f, 0f) * Quaternion.Euler(0f, this.previewDir.x, 0f), mat, 0);
 				}
-				bool fog = RenderSettings.fog;
-				Unsupported.SetRenderSettingsUseFogNoDirty(false);
-				this.m_PreviewUtility.m_Camera.Render();
-				Unsupported.SetRenderSettingsUseFogNoDirty(fog);
-				InternalEditorUtility.RemoveCustomLighting();
+				this.m_PreviewUtility.Render(false, true);
 			}
 		}
 	}

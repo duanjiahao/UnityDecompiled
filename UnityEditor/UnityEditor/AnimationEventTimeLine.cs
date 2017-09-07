@@ -89,13 +89,28 @@ namespace UnityEditor
 					list.Add(AnimationWindowEvent.Edit(gameObject, clip, i));
 				}
 			}
-			Selection.objects = list.ToArray();
+			if (list.Count > 0)
+			{
+				Selection.objects = list.ToArray();
+			}
+			else
+			{
+				this.ClearSelection();
+			}
 		}
 
 		public void EditEvent(GameObject gameObject, AnimationClip clip, int index)
 		{
 			AnimationWindowEvent activeObject = AnimationWindowEvent.Edit(gameObject, clip, index);
 			Selection.activeObject = activeObject;
+		}
+
+		public void ClearSelection()
+		{
+			if (Selection.activeObject is AnimationWindowEvent)
+			{
+				Selection.activeObject = null;
+			}
 		}
 
 		public void DeleteEvents(AnimationClip clip, bool[] deleteIndices)

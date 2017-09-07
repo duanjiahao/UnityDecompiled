@@ -7,6 +7,7 @@ namespace UnityEngine
 		View,
 		World,
 		Local,
-		Facing
+		Facing,
+		Velocity
 	}
 }

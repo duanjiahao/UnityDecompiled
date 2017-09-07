@@ -330,9 +330,10 @@ namespace UnityEngine
 			return this.gameObject.GetComponents<T>();
 		}
 
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool CompareTag(string tag);
+		public bool CompareTag(string tag)
+		{
+			return this.gameObject.CompareTag(tag);
+		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

@@ -315,6 +315,8 @@ namespace UnityEditorInternal
 
 		private ProfilerDetailedObjectsView m_DetailedObjectsView;
 
+		private ProfilerDetailedCallsView m_DetailedCallsView;
+
 		protected static ProfilerHierarchyGUI.Styles styles
 		{
 			get
@@ -376,6 +378,14 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public ProfilerDetailedCallsView detailedCallsView
+		{
+			get
+			{
+				return this.m_DetailedCallsView;
+			}
+		}
+
 		public ProfilerHierarchyGUI(IProfilerWindowController window, ProfilerHierarchyGUI detailedObjectsView, string columnSettingsName, ProfilerColumn[] columnsToShow, string[] columnNames, bool detailPane, ProfilerColumn sort)
 		{
 			this.m_Window = window;
@@ -403,6 +413,7 @@ namespace UnityEditorInternal
 			this.m_SearchResults = new ProfilerHierarchyGUI.SearchResults();
 			this.m_SearchResults.Init(100);
 			this.m_DetailedObjectsView = new ProfilerDetailedObjectsView(detailedObjectsView, this);
+			this.m_DetailedCallsView = new ProfilerDetailedCallsView(this);
 			this.m_Window.Repaint();
 		}
 
@@ -450,6 +461,11 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public ProfilerProperty GetRootProperty()
+		{
+			return this.m_Window.GetRootProfilerProperty(this.sortType);
+		}
+
 		public ProfilerProperty GetDetailedProperty()
 		{
 			ProfilerProperty rootProfilerProperty = this.m_Window.GetRootProfilerProperty(this.sortType);
@@ -479,13 +495,23 @@ namespace UnityEditorInternal
 		{
 			if (this.m_DetailedObjectsView != null)
 			{
-				this.m_DetailedObjectsView.ClearCache();
+				this.m_DetailedObjectsView.ResetCachedProfilerProperty();
+			}
+			if (this.m_DetailedCallsView != null)
+			{
+				this.m_DetailedCallsView.ResetCachedProfilerProperty();
 			}
 		}
 
 		private void DoScroll()
 		{
 			this.m_DoScroll = 2;
+		}
+
+		public void SelectPath(string path)
+		{
+			this.m_Window.SetSelectedPropertyPath(path);
+			this.FrameSelection();
 		}
 
 		public void FrameSelection()

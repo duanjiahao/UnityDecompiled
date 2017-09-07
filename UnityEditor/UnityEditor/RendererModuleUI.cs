@@ -53,11 +53,11 @@ namespace UnityEditor
 
 			public GUIContent normalDirection = EditorGUIUtility.TextContent("Normal Direction|Value between 0.0 and 1.0. If 1.0 is used, normals will point towards camera. If 0.0 is used, normals will point out in the corner direction of the particle.");
 
-			public GUIContent sortingLayer = EditorGUIUtility.TextContent("Sorting Layer");
+			public GUIContent sortingLayer = EditorGUIUtility.TextContent("Sorting Layer|Name of the Renderer's sorting layer.");
 
-			public GUIContent sortingOrder = EditorGUIUtility.TextContent("Order in Layer");
+			public GUIContent sortingOrder = EditorGUIUtility.TextContent("Order in Layer|Renderer's order within a sorting layer");
 
-			public GUIContent space = EditorGUIUtility.TextContent("Billboard Alignment|Specifies if the particles will face the camera, align to world axes, or stay local to the system's transform.");
+			public GUIContent space = EditorGUIUtility.TextContent("Render Alignment|Specifies if the particles will face the camera, align to world axes, or stay local to the system's transform.");
 
 			public GUIContent pivot = EditorGUIUtility.TextContent("Pivot|Applies an offset to the pivot of particles, as a multiplier of its size.");
 
@@ -88,7 +88,8 @@ namespace UnityEditor
 				"View",
 				"World",
 				"Local",
-				"Facing"
+				"Facing",
+				"Velocity"
 			};
 
 			public string[] motionVectorOptions = new string[]
@@ -96,6 +97,15 @@ namespace UnityEditor
 				"Camera Motion Only",
 				"Per Object Motion",
 				"Force No Motion"
+			};
+
+			public GUIContent maskingMode = EditorGUIUtility.TextContent("Masking|Defines the masking behaviour of the particle renderer.");
+
+			public string[] maskInteraction = new string[]
+			{
+				"No Masking",
+				"Visible Inside Mask",
+				"Visible Outside Mask"
 			};
 
 			public string[] vertexStreamsMenu = new string[]
@@ -138,7 +148,13 @@ namespace UnityEditor
 				"Custom/Custom2.x",
 				"Custom/Custom2.xy",
 				"Custom/Custom2.xyz",
-				"Custom/Custom2.xyzw"
+				"Custom/Custom2.xyzw",
+				"Noise/Sum.x",
+				"Noise/Sum.xy",
+				"Noise/Sum.xyz",
+				"Noise/Impulse.x",
+				"Noise/Impulse.xy",
+				"Noise/Impulse.xyz"
 			};
 
 			public string[] vertexStreamsPacked = new string[]
@@ -181,7 +197,13 @@ namespace UnityEditor
 				"Custom2.x",
 				"Custom2.xy",
 				"Custom2.xyz",
-				"Custom2.xyzw"
+				"Custom2.xyzw",
+				"NoiseSum.x",
+				"NoiseSum.xy",
+				"NoiseSum.xyz",
+				"NoiseImpulse.x",
+				"NoiseImpulse.xy",
+				"NoiseImpulse.xyz"
 			};
 
 			public string[] vertexStreamPackedTypes = new string[]
@@ -232,7 +254,13 @@ namespace UnityEditor
 				1,
 				2,
 				3,
-				4
+				4,
+				1,
+				2,
+				3,
+				1,
+				2,
+				3
 			};
 
 			public string channels = "xyzw|xyz";
@@ -299,6 +327,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_VertexStreams;
 
+		private SerializedProperty m_MaskInteraction;
+
 		private ReorderableList m_VertexStreamsList;
 
 		private int m_NumTexCoords;
@@ -358,6 +388,7 @@ namespace UnityEditor
 					}
 				}
 				this.m_ShownMeshes = list.ToArray();
+				this.m_MaskInteraction = base.GetProperty0("m_MaskInteraction");
 				this.m_UseCustomVertexStreams = base.GetProperty0("m_UseCustomVertexStreams");
 				this.m_VertexStreams = base.GetProperty0("m_VertexStreams");
 				this.m_VertexStreamsList = new ReorderableList(base.serializedObject, this.m_VertexStreams, true, true, true, true);
@@ -411,14 +442,13 @@ namespace UnityEditor
 					}
 				}
 			}
-			bool flag2 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.trails.enabled) != null;
-			if (flag2 && this.m_TrailMaterial != null)
+			if (this.m_TrailMaterial != null)
 			{
 				ModuleUI.GUIObject(RendererModuleUI.s_Texts.trailMaterial, this.m_TrailMaterial, new GUILayoutOption[0]);
 			}
-			if (!this.m_RenderMode.hasMultipleDifferentValues)
+			if (renderMode != RendererModuleUI.RenderMode.None)
 			{
-				if (renderMode != RendererModuleUI.RenderMode.None)
+				if (!this.m_RenderMode.hasMultipleDifferentValues)
 				{
 					ModuleUI.GUIPopup(RendererModuleUI.s_Texts.sortMode, this.m_SortMode, RendererModuleUI.s_Texts.sortTypes, new GUILayoutOption[0]);
 					ModuleUI.GUIFloat(RendererModuleUI.s_Texts.sortingFudge, this.m_SortingFudge, new GUILayoutOption[0]);
@@ -427,10 +457,10 @@ namespace UnityEditor
 						ModuleUI.GUIFloat(RendererModuleUI.s_Texts.minParticleSize, this.m_MinParticleSize, new GUILayoutOption[0]);
 						ModuleUI.GUIFloat(RendererModuleUI.s_Texts.maxParticleSize, this.m_MaxParticleSize, new GUILayoutOption[0]);
 					}
-					if (renderMode == RendererModuleUI.RenderMode.Billboard)
+					if (renderMode == RendererModuleUI.RenderMode.Billboard || renderMode == RendererModuleUI.RenderMode.Mesh)
 					{
-						bool flag3 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.shape.alignToDirection) != null;
-						if (flag3)
+						bool flag2 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.shape.alignToDirection) != null;
+						if (flag2)
 						{
 							using (new EditorGUI.DisabledScope(true))
 							{
@@ -439,7 +469,7 @@ namespace UnityEditor
 									RendererModuleUI.s_Texts.spaces[2]
 								}, new GUILayoutOption[0]);
 							}
-							GUIContent gUIContent = EditorGUIUtility.TextContent("Using Align to Direction in the Shape Module forces the system to be rendered using Local Billboard Alignment.");
+							GUIContent gUIContent = EditorGUIUtility.TextContent("Using Align to Direction in the Shape Module forces the system to be rendered using Local Render Alignment.");
 							EditorGUILayout.HelpBox(gUIContent.text, MessageType.Info, true);
 						}
 						else
@@ -454,6 +484,10 @@ namespace UnityEditor
 					{
 						EditorPrefs.SetBool("VisualizePivot", RendererModuleUI.s_VisualizePivot);
 					}
+				}
+				ModuleUI.GUIPopup(RendererModuleUI.s_Texts.maskingMode, this.m_MaskInteraction, RendererModuleUI.s_Texts.maskInteraction, new GUILayoutOption[0]);
+				if (!this.m_RenderMode.hasMultipleDifferentValues)
+				{
 					if (ModuleUI.GUIToggle(RendererModuleUI.s_Texts.useCustomVertexStreams, this.m_UseCustomVertexStreams, new GUILayoutOption[0]))
 					{
 						this.DoVertexStreamsGUI(renderMode);

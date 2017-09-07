@@ -249,6 +249,7 @@ namespace UnityEngine.UI
 				this.UpdateVisuals();
 				if (sendCallback)
 				{
+					UISystemProfilerApi.AddMarker("Scrollbar.value", this);
 					this.m_OnValueChanged.Invoke(this.value);
 				}
 			}

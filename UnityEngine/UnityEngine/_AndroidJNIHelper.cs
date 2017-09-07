@@ -109,7 +109,7 @@ namespace UnityEngine
 				}
 				else if (obj is AndroidJavaProxy)
 				{
-					array[num].l = AndroidJNIHelper.CreateJavaProxy((AndroidJavaProxy)obj);
+					array[num].l = ((AndroidJavaProxy)obj).GetProxy().GetRawObject();
 				}
 				else
 				{
@@ -360,7 +360,7 @@ namespace UnityEngine
 			}
 			else if (obj is AndroidJavaProxy)
 			{
-				result = AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(AndroidJNIHelper.CreateJavaProxy((AndroidJavaProxy)obj));
+				result = ((AndroidJavaProxy)obj).GetProxy();
 			}
 			else
 			{
@@ -379,7 +379,7 @@ namespace UnityEngine
 			for (int i = 0; i < args.Length; i++)
 			{
 				object obj = args[i];
-				if (obj is string || obj is AndroidJavaRunnable || obj is AndroidJavaProxy || obj is Array)
+				if (obj is string || obj is AndroidJavaRunnable || obj is Array)
 				{
 					AndroidJNISafe.DeleteLocalRef(jniArgs[num].l);
 				}

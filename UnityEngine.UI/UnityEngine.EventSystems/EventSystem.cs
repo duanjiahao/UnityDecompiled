@@ -24,7 +24,7 @@ namespace UnityEngine.EventSystems
 
 		private GameObject m_CurrentSelected;
 
-		private bool m_Paused;
+		private bool m_HasFocus = true;
 
 		private bool m_SelectionGuard;
 
@@ -99,6 +99,14 @@ namespace UnityEngine.EventSystems
 			get
 			{
 				return null;
+			}
+		}
+
+		public bool isFocused
+		{
+			get
+			{
+				return this.m_HasFocus;
 			}
 		}
 
@@ -290,15 +298,12 @@ namespace UnityEngine.EventSystems
 
 		protected virtual void OnApplicationFocus(bool hasFocus)
 		{
-			if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.Windows || SystemInfo.operatingSystemFamily == OperatingSystemFamily.Linux || SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX)
-			{
-				this.m_Paused = !hasFocus;
-			}
+			this.m_HasFocus = hasFocus;
 		}
 
 		protected virtual void Update()
 		{
-			if (!(EventSystem.current != this) && !this.m_Paused)
+			if (!(EventSystem.current != this))
 			{
 				this.TickModules();
 				bool flag = false;

@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Scripting;
 
 namespace UnityEditor
@@ -284,15 +285,30 @@ namespace UnityEditor
 				}
 				if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
 				{
-					SceneSetup[] sceneManagerSetup = EditorSceneManager.GetSceneManagerSetup();
+					SceneSetup[] sceneSetup = EditorSceneManager.GetSceneManagerSetup();
+					Lightmapping.OnCompletedFunction OnBakeFinish = null;
+					OnBakeFinish = delegate
+					{
+						EditorSceneManager.SaveOpenScenes();
+						EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
+						Lightmapping.completed = (Lightmapping.OnCompletedFunction)Delegate.Remove(Lightmapping.completed, OnBakeFinish);
+					};
+					EditorSceneManager.SceneOpenedCallback BakeOnAllOpen = null;
+					BakeOnAllOpen = delegate(Scene scene, OpenSceneMode loadSceneMode)
+					{
+						if (EditorSceneManager.loadedSceneCount == paths.Length)
+						{
+							Lightmapping.BakeAsync();
+							Lightmapping.completed = (Lightmapping.OnCompletedFunction)Delegate.Combine(Lightmapping.completed, OnBakeFinish);
+							EditorSceneManager.sceneOpened -= BakeOnAllOpen;
+						}
+					};
+					EditorSceneManager.sceneOpened += BakeOnAllOpen;
 					EditorSceneManager.OpenScene(paths[0]);
 					for (int k = 1; k < paths.Length; k++)
 					{
 						EditorSceneManager.OpenScene(paths[k], OpenSceneMode.Additive);
 					}
-					Lightmapping.Bake();
-					EditorSceneManager.SaveOpenScenes();
-					EditorSceneManager.RestoreSceneManagerSetup(sceneManagerSetup);
 				}
 			}
 		}

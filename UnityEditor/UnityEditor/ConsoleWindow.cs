@@ -166,6 +166,8 @@ namespace UnityEditor
 
 		private int ms_LVHeight = 0;
 
+		private AttachProfilerUI m_AttachProfilerUI = new AttachProfilerUI();
+
 		private static ConsoleWindow ms_ConsoleWindow = null;
 
 		[CompilerGenerated]
@@ -432,6 +434,7 @@ namespace UnityEditor
 			}
 			ConsoleWindow.SetFlag(ConsoleWindow.ConsoleFlags.ClearOnPlay, GUILayout.Toggle(ConsoleWindow.HasFlag(ConsoleWindow.ConsoleFlags.ClearOnPlay), "Clear on Play", ConsoleWindow.Constants.MiniButtonMiddle, new GUILayoutOption[0]));
 			ConsoleWindow.SetFlag(ConsoleWindow.ConsoleFlags.ErrorPause, GUILayout.Toggle(ConsoleWindow.HasFlag(ConsoleWindow.ConsoleFlags.ErrorPause), "Error Pause", ConsoleWindow.Constants.MiniButtonRight, new GUILayoutOption[0]));
+			this.m_AttachProfilerUI.OnGUILayout(this);
 			EditorGUILayout.Space();
 			if (this.m_DevBuild)
 			{
@@ -444,9 +447,14 @@ namespace UnityEditor
 			int num2 = 0;
 			int num3 = 0;
 			LogEntries.GetCountsByType(ref num, ref num2, ref num3);
+			EditorGUI.BeginChangeCheck();
 			bool val = GUILayout.Toggle(ConsoleWindow.HasFlag(ConsoleWindow.ConsoleFlags.LogLevelLog), new GUIContent((num3 > 999) ? "999+" : num3.ToString(), (num3 <= 0) ? ConsoleWindow.iconInfoMono : ConsoleWindow.iconInfoSmall), ConsoleWindow.Constants.MiniButtonRight, new GUILayoutOption[0]);
 			bool val2 = GUILayout.Toggle(ConsoleWindow.HasFlag(ConsoleWindow.ConsoleFlags.LogLevelWarning), new GUIContent((num2 > 999) ? "999+" : num2.ToString(), (num2 <= 0) ? ConsoleWindow.iconWarnMono : ConsoleWindow.iconWarnSmall), ConsoleWindow.Constants.MiniButtonMiddle, new GUILayoutOption[0]);
 			bool val3 = GUILayout.Toggle(ConsoleWindow.HasFlag(ConsoleWindow.ConsoleFlags.LogLevelError), new GUIContent((num > 999) ? "999+" : num.ToString(), (num <= 0) ? ConsoleWindow.iconErrorMono : ConsoleWindow.iconErrorSmall), ConsoleWindow.Constants.MiniButtonLeft, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				this.SetActiveEntry(null);
+			}
 			ConsoleWindow.SetFlag(ConsoleWindow.ConsoleFlags.LogLevelLog, val);
 			ConsoleWindow.SetFlag(ConsoleWindow.ConsoleFlags.LogLevelWarning, val2);
 			ConsoleWindow.SetFlag(ConsoleWindow.ConsoleFlags.LogLevelError, val3);

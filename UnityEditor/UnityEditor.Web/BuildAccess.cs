@@ -27,5 +27,13 @@ namespace UnityEditor.Web
 		{
 			return "Unity Build";
 		}
+
+		public void ShowBuildForCommit(string commitId)
+		{
+			base.ShowServicePage();
+			string scriptCode = string.Format("window.unityEvents ? window.unityEvents.broadcast('build.showForCommit', '{0}'): '';", commitId);
+			WebView webView = base.GetWebView();
+			webView.ExecuteJavascript(scriptCode);
+		}
 	}
 }

@@ -58,7 +58,7 @@ namespace UnityEditor
 		{
 			if (this.m_CurrentProfiler == null)
 			{
-				this.m_CurrentProfiler = EditorGUIUtility.TextContent("Active Profiler|Select connected player to profile");
+				this.m_CurrentProfiler = EditorGUIUtility.TextContent("Connected Player|Select player to connect to for receiving profiler and log data.");
 			}
 			Rect rect = GUILayoutUtility.GetRect(this.m_CurrentProfiler, EditorStyles.toolbarDropDown, new GUILayoutOption[]
 			{

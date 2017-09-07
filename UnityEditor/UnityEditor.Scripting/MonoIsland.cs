@@ -32,6 +32,18 @@ namespace UnityEditor.Scripting
 			this._output = output;
 		}
 
+		public MonoIsland(BuildTarget target, bool editor, bool development_player, ApiCompatibilityLevel api_compatibility_level, string[] files, string[] references, string[] defines, string output)
+		{
+			this._target = target;
+			this._development_player = development_player;
+			this._editor = editor;
+			this._api_compatibility_level = api_compatibility_level;
+			this._files = files;
+			this._references = references;
+			this._defines = defines;
+			this._output = output;
+		}
+
 		public string GetExtensionOfSourceFiles()
 		{
 			return (this._files.Length <= 0) ? "NA" : ScriptCompilers.GetExtensionOfSourceFile(this._files[0]);

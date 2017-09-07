@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.DeploymentTargets;
 using UnityEngine;
 
 namespace UnityEditor.Modules
@@ -38,6 +39,8 @@ namespace UnityEditor.Modules
 		GUIContent[] GetDisplayNames();
 
 		IBuildPostprocessor CreateBuildPostprocessor();
+
+		IDeploymentTargetsExtension CreateDeploymentTargetsExtension();
 
 		IScriptingImplementations CreateScriptingImplementations();
 

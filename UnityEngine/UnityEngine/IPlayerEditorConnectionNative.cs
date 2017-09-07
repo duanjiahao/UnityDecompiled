@@ -6,6 +6,8 @@ namespace UnityEngine
 	{
 		void Initialize();
 
+		void DisconnectAll();
+
 		void SendMessage(Guid messageId, byte[] data, int playerId);
 
 		void RegisterInternal(Guid messageId);

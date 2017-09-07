@@ -30,6 +30,9 @@ namespace UnityEditor
 		private List<SpriteOutline> m_Outline = new List<SpriteOutline>();
 
 		[SerializeField]
+		private List<SpriteOutline> m_PhysicsShape = new List<SpriteOutline>();
+
+		[SerializeField]
 		private float m_TessellationDetail;
 
 		public string name
@@ -120,6 +123,18 @@ namespace UnityEditor
 			}
 		}
 
+		public List<SpriteOutline> physicsShape
+		{
+			get
+			{
+				return this.m_PhysicsShape;
+			}
+			set
+			{
+				this.m_PhysicsShape = value;
+			}
+		}
+
 		public float tessellationDetail
 		{
 			get
@@ -180,6 +195,12 @@ namespace UnityEditor
 			{
 				SpriteRect.ApplyOutlineChanges(serializedProperty, this.outline);
 			}
+			SerializedProperty serializedProperty2 = sp.FindPropertyRelative("m_PhysicsShape");
+			serializedProperty2.ClearArray();
+			if (this.physicsShape != null)
+			{
+				SpriteRect.ApplyOutlineChanges(serializedProperty2, this.physicsShape);
+			}
 		}
 
 		public void LoadFromSerializedProperty(SerializedProperty sp)
@@ -192,6 +213,8 @@ namespace UnityEditor
 			this.tessellationDetail = sp.FindPropertyRelative("m_TessellationDetail").floatValue;
 			SerializedProperty outlineSP = sp.FindPropertyRelative("m_Outline");
 			this.outline = SpriteRect.AcquireOutline(outlineSP);
+			outlineSP = sp.FindPropertyRelative("m_PhysicsShape");
+			this.physicsShape = SpriteRect.AcquireOutline(outlineSP);
 		}
 	}
 }

@@ -1,58 +1,76 @@
 using System;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor
 {
-	internal abstract class AssetImporterTabbedEditor : AssetImporterInspector
+	internal abstract class AssetImporterTabbedEditor : AssetImporterEditor
 	{
-		protected Type[] m_SubEditorTypes = null;
-
-		protected string[] m_SubEditorNames = null;
+		protected string[] m_TabNames = null;
 
 		private int m_ActiveEditorIndex = 0;
 
-		private AssetImporterInspector m_ActiveEditor;
+		private BaseAssetImporterTabUI[] m_Tabs = null;
 
-		public AssetImporterInspector activeEditor
+		public BaseAssetImporterTabUI activeTab
 		{
-			get
-			{
-				return this.m_ActiveEditor;
-			}
+			get;
+			private set;
 		}
 
-		internal override Editor assetEditor
+		protected BaseAssetImporterTabUI[] tabs
 		{
 			get
 			{
-				return base.assetEditor;
+				return this.m_Tabs;
 			}
 			set
 			{
-				base.assetEditor = value;
-				if (this.activeEditor)
-				{
-					this.activeEditor.assetEditor = this.assetEditor;
-				}
+				this.m_Tabs = value;
 			}
 		}
 
-		internal virtual void OnEnable()
+		public override void OnEnable()
 		{
-			this.m_ActiveEditorIndex = EditorPrefs.GetInt(base.GetType().Name + "ActiveEditorIndex", 0);
-			if (this.m_ActiveEditor == null)
+			BaseAssetImporterTabUI[] tabs = this.m_Tabs;
+			for (int i = 0; i < tabs.Length; i++)
 			{
-				this.m_ActiveEditor = (Editor.CreateEditor(base.targets, this.m_SubEditorTypes[this.m_ActiveEditorIndex]) as AssetImporterInspector);
+				BaseAssetImporterTabUI baseAssetImporterTabUI = tabs[i];
+				baseAssetImporterTabUI.OnEnable();
+			}
+			this.m_ActiveEditorIndex = EditorPrefs.GetInt(base.GetType().Name + "ActiveEditorIndex", 0);
+			if (this.activeTab == null)
+			{
+				this.activeTab = this.m_Tabs[this.m_ActiveEditorIndex];
 			}
 		}
 
 		private void OnDestroy()
 		{
-			AssetImporterInspector activeEditor = this.activeEditor;
-			if (activeEditor != null)
+			if (this.m_Tabs != null)
 			{
-				this.m_ActiveEditor = null;
-				UnityEngine.Object.DestroyImmediate(activeEditor);
+				BaseAssetImporterTabUI[] tabs = this.m_Tabs;
+				for (int i = 0; i < tabs.Length; i++)
+				{
+					BaseAssetImporterTabUI baseAssetImporterTabUI = tabs[i];
+					baseAssetImporterTabUI.OnDestroy();
+				}
+				this.m_Tabs = null;
+				this.activeTab = null;
+			}
+		}
+
+		protected override void ResetValues()
+		{
+			base.ResetValues();
+			if (this.m_Tabs != null)
+			{
+				BaseAssetImporterTabUI[] tabs = this.m_Tabs;
+				for (int i = 0; i < tabs.Length; i++)
+				{
+					BaseAssetImporterTabUI baseAssetImporterTabUI = tabs[i];
+					baseAssetImporterTabUI.ResetValues();
+				}
 			}
 		}
 
@@ -64,35 +82,62 @@ namespace UnityEditor
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 				GUILayout.FlexibleSpace();
 				EditorGUI.BeginChangeCheck();
-				this.m_ActiveEditorIndex = GUILayout.Toolbar(this.m_ActiveEditorIndex, this.m_SubEditorNames, new GUILayoutOption[0]);
+				this.m_ActiveEditorIndex = GUILayout.Toolbar(this.m_ActiveEditorIndex, this.m_TabNames, new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck())
 				{
 					EditorPrefs.SetInt(base.GetType().Name + "ActiveEditorIndex", this.m_ActiveEditorIndex);
-					AssetImporterInspector activeEditor = this.activeEditor;
-					this.m_ActiveEditor = null;
-					UnityEngine.Object.DestroyImmediate(activeEditor);
-					this.m_ActiveEditor = (Editor.CreateEditor(base.targets, this.m_SubEditorTypes[this.m_ActiveEditorIndex]) as AssetImporterInspector);
-					this.m_ActiveEditor.assetEditor = this.assetEditor;
+					this.activeTab = this.m_Tabs[this.m_ActiveEditorIndex];
+					this.activeTab.OnInspectorGUI();
 				}
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
 			}
-			this.activeEditor.OnInspectorGUI();
+			if (this.activeTab != null)
+			{
+				this.activeTab.OnInspectorGUI();
+			}
+			base.ApplyRevertGUI();
 		}
 
 		public override void OnPreviewSettings()
 		{
-			this.activeEditor.OnPreviewSettings();
+			if (this.activeTab != null)
+			{
+				this.activeTab.OnPreviewSettings();
+			}
 		}
 
 		public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
 		{
-			this.activeEditor.OnInteractivePreviewGUI(r, background);
+			if (this.activeTab != null)
+			{
+				this.activeTab.OnInteractivePreviewGUI(r, background);
+			}
 		}
 
 		public override bool HasPreviewGUI()
 		{
-			return !(this.activeEditor == null) && this.activeEditor.HasPreviewGUI();
+			return this.activeTab != null && this.activeTab.HasPreviewGUI();
+		}
+
+		protected override void Apply()
+		{
+			if (this.m_Tabs != null)
+			{
+				BaseAssetImporterTabUI[] tabs = this.m_Tabs;
+				for (int i = 0; i < tabs.Length; i++)
+				{
+					BaseAssetImporterTabUI baseAssetImporterTabUI = tabs[i];
+					baseAssetImporterTabUI.PreApply();
+				}
+				base.Apply();
+				BaseAssetImporterTabUI[] tabs2 = this.m_Tabs;
+				for (int j = 0; j < tabs2.Length; j++)
+				{
+					BaseAssetImporterTabUI baseAssetImporterTabUI2 = tabs2[j];
+					baseAssetImporterTabUI2.PostApply();
+				}
+			}
 		}
 	}
 }

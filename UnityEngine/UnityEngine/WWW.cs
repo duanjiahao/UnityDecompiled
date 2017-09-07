@@ -1,19 +1,20 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
-using UnityEngine.Internal;
-using UnityEngine.Scripting;
+using UnityEngine.Networking;
 
 namespace UnityEngine
 {
-	[UsedByNativeCode]
-	public sealed class WWW : IDisposable
+	public class WWW : CustomYieldInstruction, IDisposable
 	{
-		[RequiredByNativeCode]
-		internal IntPtr m_Ptr;
+		private UnityWebRequest _uwr;
+
+		private AssetBundle _assetBundle;
+
+		private Dictionary<string, string> _responseHeaders;
 
 		private static readonly char[] forbiddenCharacters = new char[]
 		{
@@ -83,47 +84,159 @@ namespace UnityEngine
 			"X-Unity-Version"
 		};
 
+		public AssetBundle assetBundle
+		{
+			get
+			{
+				AssetBundle result;
+				if (this._assetBundle == null)
+				{
+					if (!this.WaitUntilDoneIfPossible())
+					{
+						result = null;
+						return result;
+					}
+					if (this._uwr.isNetworkError)
+					{
+						result = null;
+						return result;
+					}
+					DownloadHandlerAssetBundle downloadHandlerAssetBundle = this._uwr.downloadHandler as DownloadHandlerAssetBundle;
+					if (downloadHandlerAssetBundle != null)
+					{
+						this._assetBundle = downloadHandlerAssetBundle.assetBundle;
+					}
+					else
+					{
+						byte[] bytes = this.bytes;
+						if (bytes == null)
+						{
+							result = null;
+							return result;
+						}
+						this._assetBundle = AssetBundle.LoadFromMemory(bytes);
+					}
+				}
+				result = this._assetBundle;
+				return result;
+			}
+		}
+
+		public byte[] bytes
+		{
+			get
+			{
+				byte[] result;
+				if (!this.WaitUntilDoneIfPossible())
+				{
+					result = new byte[0];
+				}
+				else if (this._uwr.isNetworkError)
+				{
+					result = null;
+				}
+				else
+				{
+					DownloadHandler downloadHandler = this._uwr.downloadHandler;
+					if (downloadHandler == null)
+					{
+						result = null;
+					}
+					else
+					{
+						result = downloadHandler.data;
+					}
+				}
+				return result;
+			}
+		}
+
+		[Obsolete("WWW.size is obsolete. Please use WWW.bytesDownloaded instead")]
+		public int size
+		{
+			get
+			{
+				return this.bytesDownloaded;
+			}
+		}
+
+		public int bytesDownloaded
+		{
+			get
+			{
+				return (int)this._uwr.downloadedBytes;
+			}
+		}
+
+		public string error
+		{
+			get
+			{
+				string result;
+				if (!this._uwr.isDone)
+				{
+					result = "";
+				}
+				else if (this._uwr.isNetworkError)
+				{
+					result = this._uwr.error;
+				}
+				else if (this._uwr.responseCode >= 400L)
+				{
+					result = string.Format("{0} {1}", this._uwr.responseCode, this.GetStatusCodeName(this._uwr.responseCode));
+				}
+				else
+				{
+					result = "";
+				}
+				return result;
+			}
+		}
+
+		public bool isDone
+		{
+			get
+			{
+				return this._uwr.isDone;
+			}
+		}
+
+		public float progress
+		{
+			get
+			{
+				float num = this._uwr.downloadProgress;
+				if (num < 0f)
+				{
+					num = 0f;
+				}
+				return num;
+			}
+		}
+
 		public Dictionary<string, string> responseHeaders
 		{
 			get
 			{
-				if (!this.isDone)
+				Dictionary<string, string> result;
+				if (!this.isDone || this._uwr.isNetworkError)
 				{
-					throw new UnityException("WWW is not finished downloading yet");
+					result = null;
 				}
-				return WWW.ParseHTTPHeaderString(this.responseHeadersString);
-			}
-		}
-
-		private extern string responseHeadersString
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public string text
-		{
-			get
-			{
-				if (!this.isDone)
+				else
 				{
-					throw new UnityException("WWW is not ready downloading yet");
+					if (this._responseHeaders == null)
+					{
+						this._responseHeaders = this._uwr.GetResponseHeaders();
+						this._responseHeaders["STATUS"] = string.Format("HTTP/1.1 {0} {1}", this._uwr.responseCode, this.GetStatusCodeName(this._uwr.responseCode));
+					}
+					result = this._responseHeaders;
 				}
-				byte[] bytes = this.bytes;
-				return this.GetTextEncoder().GetString(bytes, 0, bytes.Length);
+				return result;
 			}
 		}
 
-		internal static Encoding DefaultEncoding
-		{
-			get
-			{
-				return Encoding.ASCII;
-			}
-		}
-
-		[Obsolete("Please use WWW.text instead")]
+		[Obsolete("Please use WWW.text instead. (UnityUpgradable) -> text", true)]
 		public string data
 		{
 			get
@@ -132,32 +245,40 @@ namespace UnityEngine
 			}
 		}
 
-		public extern byte[] bytes
+		public string text
 		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern int size
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern string error
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				string result;
+				if (!this.WaitUntilDoneIfPossible())
+				{
+					result = "";
+				}
+				else if (this._uwr.isNetworkError)
+				{
+					result = "";
+				}
+				else
+				{
+					DownloadHandler downloadHandler = this._uwr.downloadHandler;
+					if (downloadHandler == null)
+					{
+						result = "";
+					}
+					else
+					{
+						result = downloadHandler.text;
+					}
+				}
+				return result;
+			}
 		}
 
 		public Texture2D texture
 		{
 			get
 			{
-				return this.GetTexture(false);
+				return this.CreateTextureFromDownloadedData(false);
 			}
 		}
 
@@ -165,7 +286,42 @@ namespace UnityEngine
 		{
 			get
 			{
-				return this.GetTexture(true);
+				return this.CreateTextureFromDownloadedData(true);
+			}
+		}
+
+		public ThreadPriority threadPriority
+		{
+			get;
+			set;
+		}
+
+		public float uploadProgress
+		{
+			get
+			{
+				float num = this._uwr.uploadProgress;
+				if (num < 0f)
+				{
+					num = 0f;
+				}
+				return num;
+			}
+		}
+
+		public string url
+		{
+			get
+			{
+				return this._uwr.url;
+			}
+		}
+
+		public override bool keepWaiting
+		{
+			get
+			{
+				return !this._uwr.isDone;
 			}
 		}
 
@@ -187,34 +343,6 @@ namespace UnityEngine
 			}
 		}
 
-		public extern bool isDone
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern float progress
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern float uploadProgress
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern int bytesDownloaded
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
 		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetAudioClip(UnityEngine.WWW)", true)]
 		public Object oggVorbis
 		{
@@ -224,237 +352,313 @@ namespace UnityEngine
 			}
 		}
 
-		public extern string url
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern AssetBundle assetBundle
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
-		public extern ThreadPriority threadPriority
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-
 		public WWW(string url)
 		{
-			this.InitWWW(url, null, null);
+			this._uwr = UnityWebRequest.Get(url);
+			this._uwr.Send();
 		}
 
 		public WWW(string url, WWWForm form)
 		{
-			string[] array = WWW.FlattenedHeadersFrom(form.headers);
-			if (this.enforceWebSecurityRestrictions())
-			{
-				WWW.CheckSecurityOnHeaders(array);
-			}
-			this.InitWWW(url, form.data, array);
+			this._uwr = UnityWebRequest.Post(url, form);
+			this._uwr.Send();
 		}
 
 		public WWW(string url, byte[] postData)
 		{
-			this.InitWWW(url, postData, null);
+			this._uwr = new UnityWebRequest(url, "POST");
+			UploadHandler uploadHandler = new UploadHandlerRaw(postData);
+			uploadHandler.contentType = "application/x-www-form-urlencoded";
+			this._uwr.uploadHandler = uploadHandler;
+			this._uwr.downloadHandler = new DownloadHandlerBuffer();
+			this._uwr.Send();
+		}
+
+		[Obsolete("This overload is deprecated. Use UnityEngine.WWW.WWW(string, byte[], System.Collections.Generic.Dictionary<string, string>) instead.")]
+		public WWW(string url, byte[] postData, Hashtable headers)
+		{
+			string method = (postData != null) ? "POST" : "GET";
+			this._uwr = new UnityWebRequest(url, method);
+			UploadHandler uploadHandler = new UploadHandlerRaw(postData);
+			uploadHandler.contentType = "application/x-www-form-urlencoded";
+			this._uwr.uploadHandler = uploadHandler;
+			this._uwr.downloadHandler = new DownloadHandlerBuffer();
+			IEnumerator enumerator = headers.Keys.GetEnumerator();
+			try
+			{
+				while (enumerator.MoveNext())
+				{
+					object current = enumerator.Current;
+					this._uwr.SetRequestHeader((string)current, (string)headers[current]);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			this._uwr.Send();
 		}
 
 		public WWW(string url, byte[] postData, Dictionary<string, string> headers)
 		{
-			string[] array = WWW.FlattenedHeadersFrom(headers);
-			if (this.enforceWebSecurityRestrictions())
+			string method = (postData != null) ? "POST" : "GET";
+			this._uwr = new UnityWebRequest(url, method);
+			UploadHandler uploadHandler = new UploadHandlerRaw(postData);
+			uploadHandler.contentType = "application/x-www-form-urlencoded";
+			this._uwr.uploadHandler = uploadHandler;
+			this._uwr.downloadHandler = new DownloadHandlerBuffer();
+			foreach (KeyValuePair<string, string> current in headers)
 			{
-				WWW.CheckSecurityOnHeaders(array);
+				this._uwr.SetRequestHeader(current.Key, current.Value);
 			}
-			this.InitWWW(url, postData, array);
+			this._uwr.Send();
 		}
 
-		internal WWW(string url, Hash128 hash, uint crc)
+		internal WWW(string url, string name, Hash128 hash, uint crc)
 		{
-			WWW.INTERNAL_CALL_WWW(this, url, ref hash, crc);
+			this._uwr = UnityWebRequest.GetAssetBundle(url, new CachedAssetBundle(name, hash), crc);
+			this._uwr.Send();
+		}
+
+		private Texture2D CreateTextureFromDownloadedData(bool markNonReadable)
+		{
+			Texture2D result;
+			if (!this.WaitUntilDoneIfPossible())
+			{
+				result = new Texture2D(2, 2);
+			}
+			else if (this._uwr.isNetworkError)
+			{
+				result = null;
+			}
+			else
+			{
+				DownloadHandler downloadHandler = this._uwr.downloadHandler;
+				if (downloadHandler == null)
+				{
+					result = null;
+				}
+				else
+				{
+					Texture2D texture2D = new Texture2D(2, 2);
+					texture2D.LoadImage(downloadHandler.data, markNonReadable);
+					result = texture2D;
+				}
+			}
+			return result;
+		}
+
+		public void LoadImageIntoTexture(Texture2D texture)
+		{
+			if (this.WaitUntilDoneIfPossible())
+			{
+				if (this._uwr.isNetworkError)
+				{
+					Debug.LogError("Cannot load image: download failed");
+				}
+				else
+				{
+					DownloadHandler downloadHandler = this._uwr.downloadHandler;
+					if (downloadHandler == null)
+					{
+						Debug.LogError("Cannot load image: internal error");
+					}
+					else
+					{
+						texture.LoadImage(downloadHandler.data, false);
+					}
+				}
+			}
 		}
 
 		public void Dispose()
 		{
-			this.DestroyWWW(true);
+			this._uwr.Dispose();
 		}
 
-		~WWW()
+		internal Object GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType)
 		{
-			this.DestroyWWW(false);
+			return WebRequestWWW.InternalCreateAudioClipUsingDH(this._uwr.downloadHandler, this._uwr.url, stream, compressed, audioType);
 		}
 
-		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void DestroyWWW(bool cancel);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void InitWWW(string url, byte[] postData, string[] iHeaders);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern bool enforceWebSecurityRestrictions();
-
-		[ExcludeFromDocs]
-		public static string EscapeURL(string s)
+		internal object GetMovieTextureInternal()
 		{
-			Encoding uTF = Encoding.UTF8;
-			return WWW.EscapeURL(s, uTF);
+			return WebRequestWWW.InternalCreateMovieTextureUsingDH(this._uwr.downloadHandler);
 		}
 
-		public static string EscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
+		private bool WaitUntilDoneIfPossible()
+		{
+			bool result;
+			if (this._uwr.isDone)
+			{
+				result = true;
+			}
+			else if (this.url.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+			{
+				while (!this._uwr.isDone)
+				{
+				}
+				result = true;
+			}
+			else
+			{
+				Debug.LogError("You are trying to load data from a www stream which has not completed the download yet.\nYou need to yield the download or wait until isDone returns true.");
+				result = false;
+			}
+			return result;
+		}
+
+		private string GetStatusCodeName(long statusCode)
 		{
 			string result;
-			if (s == null)
+			if (statusCode >= 400L && statusCode <= 416L)
 			{
-				result = null;
+				switch ((int)(statusCode - 400L))
+				{
+				case 0:
+					result = "Bad Request";
+					return result;
+				case 1:
+					result = "Unauthorized";
+					return result;
+				case 2:
+					result = "Payment Required";
+					return result;
+				case 3:
+					result = "Forbidden";
+					return result;
+				case 4:
+					result = "Not Found";
+					return result;
+				case 5:
+					result = "Method Not Allowed";
+					return result;
+				case 6:
+					result = "Not Acceptable";
+					return result;
+				case 7:
+					result = "Proxy Authentication Required";
+					return result;
+				case 8:
+					result = "Request Timeout";
+					return result;
+				case 9:
+					result = "Conflict";
+					return result;
+				case 10:
+					result = "Gone";
+					return result;
+				case 11:
+					result = "Length Required";
+					return result;
+				case 12:
+					result = "Precondition Failed";
+					return result;
+				case 13:
+					result = "Request Entity Too Large";
+					return result;
+				case 14:
+					result = "Request-URI Too Long";
+					return result;
+				case 15:
+					result = "Unsupported Media Type";
+					return result;
+				case 16:
+					result = "Requested Range Not Satisfiable";
+					return result;
+				}
 			}
-			else if (s == "")
+			if (statusCode >= 200L && statusCode <= 206L)
+			{
+				switch ((int)(statusCode - 200L))
+				{
+				case 0:
+					result = "OK";
+					return result;
+				case 1:
+					result = "Created";
+					return result;
+				case 2:
+					result = "Accepted";
+					return result;
+				case 3:
+					result = "Non-Authoritative Information";
+					return result;
+				case 4:
+					result = "No Content";
+					return result;
+				case 5:
+					result = "Reset Content";
+					return result;
+				case 6:
+					result = "Partial Content";
+					return result;
+				}
+			}
+			if (statusCode >= 300L && statusCode <= 307L)
+			{
+				switch ((int)(statusCode - 300L))
+				{
+				case 0:
+					result = "Multiple Choices";
+					return result;
+				case 1:
+					result = "Moved Permanently";
+					return result;
+				case 2:
+					result = "Found";
+					return result;
+				case 3:
+					result = "See Other";
+					return result;
+				case 4:
+					result = "Not Modified";
+					return result;
+				case 5:
+					result = "Use Proxy";
+					return result;
+				case 7:
+					result = "Temporary Redirect";
+					return result;
+				}
+			}
+			if (statusCode >= 500L && statusCode <= 505L)
+			{
+				switch ((int)(statusCode - 500L))
+				{
+				case 0:
+					result = "Internal Server Error";
+					return result;
+				case 1:
+					result = "Not Implemented";
+					return result;
+				case 2:
+					result = "Bad Gateway";
+					return result;
+				case 3:
+					result = "Service Unavailable";
+					return result;
+				case 4:
+					result = "Gateway Timeout";
+					return result;
+				case 5:
+					result = "HTTP Version Not Supported";
+					return result;
+				}
+			}
+			if (statusCode != 41L)
 			{
 				result = "";
 			}
-			else if (e == null)
-			{
-				result = null;
-			}
 			else
 			{
-				result = WWWTranscoder.URLEncode(s, e);
+				result = "Expectation Failed";
 			}
 			return result;
-		}
-
-		[ExcludeFromDocs]
-		public static string UnEscapeURL(string s)
-		{
-			Encoding uTF = Encoding.UTF8;
-			return WWW.UnEscapeURL(s, uTF);
-		}
-
-		public static string UnEscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
-		{
-			string result;
-			if (s == null)
-			{
-				result = null;
-			}
-			else if (s.IndexOf('%') == -1 && s.IndexOf('+') == -1)
-			{
-				result = s;
-			}
-			else
-			{
-				result = WWWTranscoder.URLDecode(s, e);
-			}
-			return result;
-		}
-
-		private Encoding GetTextEncoder()
-		{
-			string text = null;
-			Encoding result;
-			if (this.responseHeaders.TryGetValue("CONTENT-TYPE", out text))
-			{
-				int num = text.IndexOf("charset", StringComparison.OrdinalIgnoreCase);
-				if (num > -1)
-				{
-					int num2 = text.IndexOf('=', num);
-					if (num2 > -1)
-					{
-						string text2 = text.Substring(num2 + 1).Trim().Trim(new char[]
-						{
-							'\'',
-							'"'
-						}).Trim();
-						int num3 = text2.IndexOf(';');
-						if (num3 > -1)
-						{
-							text2 = text2.Substring(0, num3);
-						}
-						try
-						{
-							result = Encoding.GetEncoding(text2);
-							return result;
-						}
-						catch (Exception)
-						{
-							Debug.Log("Unsupported encoding: '" + text2 + "'");
-						}
-					}
-				}
-			}
-			result = Encoding.UTF8;
-			return result;
-		}
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern Texture2D GetTexture(bool markNonReadable);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern Object GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern Object GetMovieTextureInternal();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void LoadImageIntoTexture(Texture2D tex);
-
-		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true), GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string GetURL(string url);
-
-		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true)]
-		public static Texture2D GetTextureFromURL(string url)
-		{
-			return new WWW(url).texture;
-		}
-
-		[Obsolete("LoadUnityWeb is no longer supported. Please use javascript to reload the web player on a different url instead", true)]
-		public void LoadUnityWeb()
-		{
-		}
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_WWW(WWW self, string url, ref Hash128 hash, uint crc);
-
-		[ExcludeFromDocs]
-		public static WWW LoadFromCacheOrDownload(string url, int version)
-		{
-			uint crc = 0u;
-			return WWW.LoadFromCacheOrDownload(url, version, crc);
-		}
-
-		public static WWW LoadFromCacheOrDownload(string url, int version, [UnityEngine.Internal.DefaultValue("0")] uint crc)
-		{
-			Hash128 hash = new Hash128(0u, 0u, 0u, (uint)version);
-			return WWW.LoadFromCacheOrDownload(url, hash, crc);
-		}
-
-		[ExcludeFromDocs]
-		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash)
-		{
-			uint crc = 0u;
-			return WWW.LoadFromCacheOrDownload(url, hash, crc);
-		}
-
-		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash, [UnityEngine.Internal.DefaultValue("0")] uint crc)
-		{
-			return new WWW(url, hash, crc);
 		}
 
 		private static void CheckSecurityOnHeaders(string[] headers)
@@ -479,6 +683,82 @@ namespace UnityEngine
 					throw new ArgumentException("Cannot include control characters in a HTTP header, either as key or value.");
 				}
 			}
+		}
+
+		public static string EscapeURL(string s)
+		{
+			return WWW.EscapeURL(s, Encoding.UTF8);
+		}
+
+		public static string EscapeURL(string s, Encoding e)
+		{
+			string result;
+			if (s == null)
+			{
+				result = null;
+			}
+			else if (s == "")
+			{
+				result = "";
+			}
+			else if (e == null)
+			{
+				result = null;
+			}
+			else
+			{
+				result = WWWTranscoder.URLEncode(s, e);
+			}
+			return result;
+		}
+
+		public static string UnEscapeURL(string s)
+		{
+			return WWW.UnEscapeURL(s, Encoding.UTF8);
+		}
+
+		public static string UnEscapeURL(string s, Encoding e)
+		{
+			string result;
+			if (s == null)
+			{
+				result = null;
+			}
+			else if (s.IndexOf('%') == -1 && s.IndexOf('+') == -1)
+			{
+				result = s;
+			}
+			else
+			{
+				result = WWWTranscoder.URLDecode(s, e);
+			}
+			return result;
+		}
+
+		public static WWW LoadFromCacheOrDownload(string url, int version)
+		{
+			return WWW.LoadFromCacheOrDownload(url, version, 0u);
+		}
+
+		public static WWW LoadFromCacheOrDownload(string url, int version, uint crc)
+		{
+			Hash128 hash = new Hash128(0u, 0u, 0u, (uint)version);
+			return WWW.LoadFromCacheOrDownload(url, hash, crc);
+		}
+
+		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash)
+		{
+			return WWW.LoadFromCacheOrDownload(url, hash, 0u);
+		}
+
+		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash, uint crc)
+		{
+			return new WWW(url, "", hash, crc);
+		}
+
+		public static WWW LoadFromCacheOrDownload(string url, CachedAssetBundle cachedBundle, uint crc = 0u)
+		{
+			return new WWW(url, cachedBundle.name, cachedBundle.hash, crc);
 		}
 
 		private static string[] FlattenedHeadersFrom(Dictionary<string, string> headers)

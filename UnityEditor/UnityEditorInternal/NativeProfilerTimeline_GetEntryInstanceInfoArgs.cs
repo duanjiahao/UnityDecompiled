@@ -14,7 +14,7 @@ namespace UnityEditorInternal
 
 		public string out_Path;
 
-		public string out_AllocationInfo;
+		public string out_CallstackInfo;
 
 		public string out_MetaData;
 
@@ -25,7 +25,7 @@ namespace UnityEditorInternal
 			this.entryIndex = -1;
 			this.out_Id = 0;
 			this.out_Path = string.Empty;
-			this.out_AllocationInfo = string.Empty;
+			this.out_CallstackInfo = string.Empty;
 			this.out_MetaData = string.Empty;
 		}
 	}

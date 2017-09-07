@@ -11,6 +11,8 @@ namespace UnityEditor
 
 		public static GUIContent recordContent = EditorGUIUtility.IconContent("Animation.Record", "|Enable/disable keyframe recording mode.");
 
+		public static GUIContent previewContent = EditorGUIUtility.TextContent("Preview|Enable/disable scene preview mode.");
+
 		public static GUIContent prevKeyContent = EditorGUIUtility.IconContent("Animation.PrevKey", "|Go to previous keyframe.");
 
 		public static GUIContent nextKeyContent = EditorGUIUtility.IconContent("Animation.NextKey", "|Go to next keyframe.");

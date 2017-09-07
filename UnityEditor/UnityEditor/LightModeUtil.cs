@@ -5,27 +5,11 @@ namespace UnityEditor
 {
 	internal class LightModeUtil
 	{
-		internal enum ShadowMaskMode
-		{
-			None,
-			Full,
-			PastShadowDistance
-		}
-
 		internal enum LightmapMixedBakeMode
 		{
 			IndirectOnly,
 			LightmapsWithSubtractiveShadows,
-			DirectAndIndirect,
-			ShadowMaskAndIndirect
-		}
-
-		internal enum MixedLightModeRowIndex
-		{
-			IndirectOnly,
-			ShadowMaskPastShadowDistance,
-			ShadowMaskAllTheWay,
-			Subtractive
+			ShadowmaskAndIndirect
 		}
 
 		public static readonly GUIContent s_enableBaked = EditorGUIUtility.TextContent("Baked Global Illumination|Controls whether Mixed and Baked lights will use baked Global Illumination. If enabled, Mixed lights are baked using the specified Lighting Mode and Baked lights will be completely baked and not adjustable at runtime.");
@@ -54,7 +38,7 @@ namespace UnityEditor
 
 		private SerializedProperty m_mixedBakeMode = null;
 
-		private SerializedProperty m_shadowMaskMode = null;
+		private SerializedProperty m_useShadowmask = null;
 
 		private SerializedProperty m_enabledBakedGI = null;
 
@@ -124,7 +108,7 @@ namespace UnityEditor
 
 		public bool IsSubtractiveModeEnabled()
 		{
-			return this.m_modeVals[1] == 3;
+			return this.m_modeVals[1] == 1;
 		}
 
 		public bool IsWorkflowAuto()
@@ -137,41 +121,12 @@ namespace UnityEditor
 			this.m_workflowMode.intValue = ((!bAutoEnabled) ? 1 : 0);
 		}
 
-		public void GetProps(out SerializedProperty o_enableRealtimeGI, out SerializedProperty o_enableBakedGI, out SerializedProperty o_mixedBakeMode, out SerializedProperty o_shadowMaskMode)
+		public void GetProps(out SerializedProperty o_enableRealtimeGI, out SerializedProperty o_enableBakedGI, out SerializedProperty o_mixedBakeMode, out SerializedProperty o_useShadowMask)
 		{
 			o_enableRealtimeGI = this.m_enableRealtimeGI;
 			o_enableBakedGI = this.m_enabledBakedGI;
 			o_mixedBakeMode = this.m_mixedBakeMode;
-			o_shadowMaskMode = this.m_shadowMaskMode;
-		}
-
-		public LightModeUtil.MixedLightModeRowIndex MapMixedSettingsToRowIndex(LightModeUtil.LightmapMixedBakeMode bakeMode, LightModeUtil.ShadowMaskMode maskMode)
-		{
-			LightModeUtil.MixedLightModeRowIndex result;
-			if (bakeMode != LightModeUtil.LightmapMixedBakeMode.IndirectOnly)
-			{
-				if (bakeMode != LightModeUtil.LightmapMixedBakeMode.ShadowMaskAndIndirect)
-				{
-					if (bakeMode != LightModeUtil.LightmapMixedBakeMode.LightmapsWithSubtractiveShadows)
-					{
-						Debug.LogError("Unkown Mixed bake mode in LightModeUtil.MapSettings()");
-						result = LightModeUtil.MixedLightModeRowIndex.IndirectOnly;
-					}
-					else
-					{
-						result = LightModeUtil.MixedLightModeRowIndex.Subtractive;
-					}
-				}
-				else
-				{
-					result = ((maskMode != LightModeUtil.ShadowMaskMode.PastShadowDistance) ? LightModeUtil.MixedLightModeRowIndex.ShadowMaskAllTheWay : LightModeUtil.MixedLightModeRowIndex.ShadowMaskPastShadowDistance);
-				}
-			}
-			else
-			{
-				result = LightModeUtil.MixedLightModeRowIndex.IndirectOnly;
-			}
-			return result;
+			o_useShadowMask = this.m_useShadowmask;
 		}
 
 		public bool Load()
@@ -184,8 +139,8 @@ namespace UnityEditor
 			else
 			{
 				int realtimeMode = (!this.m_enableRealtimeGI.boolValue) ? 1 : 0;
-				int mixedMode = (int)this.MapMixedSettingsToRowIndex((LightModeUtil.LightmapMixedBakeMode)this.m_mixedBakeMode.intValue, (LightModeUtil.ShadowMaskMode)this.m_shadowMaskMode.intValue);
-				this.Update(realtimeMode, mixedMode);
+				int intValue = this.m_mixedBakeMode.intValue;
+				this.Update(realtimeMode, intValue);
 				result = true;
 			}
 			return result;
@@ -197,19 +152,8 @@ namespace UnityEditor
 			if (this.CheckCachedObject())
 			{
 				this.m_enableRealtimeGI.boolValue = (this.m_modeVals[0] == 0);
-				LightModeUtil.LightmapMixedBakeMode[] array = new LightModeUtil.LightmapMixedBakeMode[]
-				{
-					LightModeUtil.LightmapMixedBakeMode.IndirectOnly,
-					LightModeUtil.LightmapMixedBakeMode.ShadowMaskAndIndirect,
-					LightModeUtil.LightmapMixedBakeMode.ShadowMaskAndIndirect,
-					LightModeUtil.LightmapMixedBakeMode.LightmapsWithSubtractiveShadows
-				};
-				this.m_mixedBakeMode.intValue = (int)array[this.m_modeVals[1]];
-				LightModeUtil.ShadowMaskMode[] expr_5C = new LightModeUtil.ShadowMaskMode[4];
-				expr_5C[1] = LightModeUtil.ShadowMaskMode.PastShadowDistance;
-				expr_5C[2] = LightModeUtil.ShadowMaskMode.Full;
-				LightModeUtil.ShadowMaskMode[] array2 = expr_5C;
-				this.m_shadowMaskMode.intValue = (int)array2[this.m_modeVals[1]];
+				this.m_mixedBakeMode.intValue = this.m_modeVals[1];
+				this.m_useShadowmask.boolValue = (this.m_modeVals[1] == 2);
 			}
 		}
 
@@ -281,7 +225,7 @@ namespace UnityEditor
 				this.m_so = new SerializedObject(lightmapSettings);
 				this.m_enableRealtimeGI = this.m_so.FindProperty("m_GISettings.m_EnableRealtimeLightmaps");
 				this.m_mixedBakeMode = this.m_so.FindProperty("m_LightmapEditorSettings.m_MixedBakeMode");
-				this.m_shadowMaskMode = this.m_so.FindProperty("m_ShadowMaskMode");
+				this.m_useShadowmask = this.m_so.FindProperty("m_UseShadowmask");
 				this.m_enabledBakedGI = this.m_so.FindProperty("m_GISettings.m_EnableBakedLightmaps");
 				this.m_workflowMode = this.m_so.FindProperty("m_GIWorkflowMode");
 				this.m_environmentMode = this.m_so.FindProperty("m_GISettings.m_EnvironmentLightingMode");

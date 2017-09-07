@@ -13,6 +13,11 @@ namespace UnityEditor.Web
 	[InitializeOnLoad]
 	internal class PurchasingAccess : CloudServiceAccess
 	{
+		public struct PurchasingServiceState
+		{
+			public bool iap;
+		}
+
 		private const string kServiceName = "Purchasing";
 
 		private const string kServiceDisplayName = "In App Purchasing";
@@ -51,7 +56,14 @@ namespace UnityEditor.Web
 
 		public override void EnableService(bool enabled)
 		{
-			PurchasingSettings.enabled = enabled;
+			if (PurchasingSettings.enabled != enabled)
+			{
+				PurchasingSettings.enabled = enabled;
+				EditorAnalytics.SendEventServiceInfo(new PurchasingAccess.PurchasingServiceState
+				{
+					iap = enabled
+				});
+			}
 		}
 
 		public void InstallUnityPackage()

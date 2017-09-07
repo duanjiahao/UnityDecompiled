@@ -53,5 +53,18 @@ namespace UnityEngine.VR
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_GetNativePtr(out IntPtr value);
+
+		public static void DisableAutoVRCameraTracking(Camera camera, bool disabled)
+		{
+			if (camera == null)
+			{
+				throw new ArgumentNullException("camera");
+			}
+			VRDevice.DisableAutoVRCameraTrackingInternal(camera, disabled);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void DisableAutoVRCameraTrackingInternal(Camera camera, bool disabled);
 	}
 }

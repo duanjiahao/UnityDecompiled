@@ -7,6 +7,12 @@ namespace UnityEngine
 	{
 		public readonly AndroidJavaClass javaInterface;
 
+		internal AndroidJavaObject proxyObject;
+
+		private static readonly GlobalJavaObjectRef s_JavaLangSystemClass = new GlobalJavaObjectRef(AndroidJNISafe.FindClass("java/lang/System"));
+
+		private static readonly IntPtr s_HashCodeMethodID = AndroidJNIHelper.GetMethodID(AndroidJavaProxy.s_JavaLangSystemClass, "identityHashCode", "(Ljava/lang/Object;)I", true);
+
 		public AndroidJavaProxy(string javaInterface) : this(new AndroidJavaClass(javaInterface))
 		{
 		}
@@ -79,6 +85,33 @@ namespace UnityEngine
 				array[i] = _AndroidJNIHelper.Unbox(javaArgs[i]);
 			}
 			return this.Invoke(methodName, array);
+		}
+
+		public virtual bool equals(AndroidJavaObject obj)
+		{
+			IntPtr obj2 = (obj != null) ? obj.GetRawObject() : IntPtr.Zero;
+			return AndroidJNI.IsSameObject(this.GetProxy().GetRawObject(), obj2);
+		}
+
+		public virtual int hashCode()
+		{
+			jvalue[] array = new jvalue[1];
+			array[0].l = this.GetProxy().GetRawObject();
+			return AndroidJNISafe.CallStaticIntMethod(AndroidJavaProxy.s_JavaLangSystemClass, AndroidJavaProxy.s_HashCodeMethodID, array);
+		}
+
+		public virtual string toString()
+		{
+			return this.ToString() + " <c# proxy java object>";
+		}
+
+		internal AndroidJavaObject GetProxy()
+		{
+			if (this.proxyObject == null)
+			{
+				this.proxyObject = AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(AndroidJNIHelper.CreateJavaProxy(this));
+			}
+			return this.proxyObject;
 		}
 	}
 }

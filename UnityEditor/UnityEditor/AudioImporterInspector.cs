@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using UnityEditor.Build;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(AudioImporter))]
-	internal class AudioImporterInspector : AssetImporterInspector
+	internal class AudioImporterInspector : AssetImporterEditor
 	{
 		private static class Styles
 		{
@@ -100,6 +102,8 @@ namespace UnityEditor
 
 		public SerializedProperty m_PreloadAudioData;
 
+		public SerializedProperty m_Ambisonic;
+
 		public SerializedProperty m_LoadInBackground;
 
 		public SerializedProperty m_OrigSize;
@@ -122,7 +126,7 @@ namespace UnityEditor
 
 		private bool SyncSettingsToBackend()
 		{
-			BuildPlayerWindow.BuildPlatform[] array = BuildPlayerWindow.GetValidPlatforms().ToArray();
+			BuildPlatform[] array = BuildPlatforms.instance.GetValidPlatforms().ToArray();
 			foreach (AudioImporter current in this.GetAllAudioImporterTargets())
 			{
 				AudioImporterSampleSettings defaultSampleSettings = current.defaultSampleSettings;
@@ -151,10 +155,10 @@ namespace UnityEditor
 					defaultSampleSettings.conversionMode = this.m_DefaultSampleSettings.settings.conversionMode;
 				}
 				current.defaultSampleSettings = defaultSampleSettings;
-				BuildPlayerWindow.BuildPlatform[] array2 = array;
+				BuildPlatform[] array2 = array;
 				for (int i = 0; i < array2.Length; i++)
 				{
-					BuildPlayerWindow.BuildPlatform buildPlatform = array2[i];
+					BuildPlatform buildPlatform = array2[i];
 					BuildTargetGroup targetGroup = buildPlatform.targetGroup;
 					if (this.m_SampleSettingOverrides.ContainsKey(targetGroup))
 					{
@@ -197,10 +201,10 @@ namespace UnityEditor
 				}
 			}
 			this.m_DefaultSampleSettings.ClearChangedFlags();
-			BuildPlayerWindow.BuildPlatform[] array3 = array;
+			BuildPlatform[] array3 = array;
 			for (int j = 0; j < array3.Length; j++)
 			{
-				BuildPlayerWindow.BuildPlatform buildPlatform2 = array3[j];
+				BuildPlatform buildPlatform2 = array3[j];
 				BuildTargetGroup targetGroup2 = buildPlatform2.targetGroup;
 				if (this.m_SampleSettingOverrides.ContainsKey(targetGroup2))
 				{
@@ -220,8 +224,8 @@ namespace UnityEditor
 				this.m_DefaultSampleSettings.settings = audioImporter.defaultSampleSettings;
 				this.m_DefaultSampleSettings.ClearChangedFlags();
 				this.m_SampleSettingOverrides = new Dictionary<BuildTargetGroup, AudioImporterInspector.SampleSettingProperties>();
-				List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
-				foreach (BuildPlayerWindow.BuildPlatform current in validPlatforms)
+				List<BuildPlatform> validPlatforms = BuildPlatforms.instance.GetValidPlatforms();
+				foreach (BuildPlatform current in validPlatforms)
 				{
 					BuildTargetGroup targetGroup = current.targetGroup;
 					foreach (AudioImporter current2 in this.GetAllAudioImporterTargets())
@@ -297,18 +301,19 @@ namespace UnityEditor
 			return result;
 		}
 
-		public void OnEnable()
+		public override void OnEnable()
 		{
 			this.m_ForceToMono = base.serializedObject.FindProperty("m_ForceToMono");
 			this.m_Normalize = base.serializedObject.FindProperty("m_Normalize");
 			this.m_PreloadAudioData = base.serializedObject.FindProperty("m_PreloadAudioData");
+			this.m_Ambisonic = base.serializedObject.FindProperty("m_Ambisonic");
 			this.m_LoadInBackground = base.serializedObject.FindProperty("m_LoadInBackground");
 			this.m_OrigSize = base.serializedObject.FindProperty("m_PreviewData.m_OrigSize");
 			this.m_CompSize = base.serializedObject.FindProperty("m_PreviewData.m_CompSize");
 			this.ResetSettingsFromBackend();
 		}
 
-		internal override void ResetValues()
+		protected override void ResetValues()
 		{
 			base.ResetValues();
 			this.ResetSettingsFromBackend();
@@ -460,7 +465,7 @@ namespace UnityEditor
 					list.Add(AudioCompressionFormat.Vorbis);
 				}
 				list.Add(AudioCompressionFormat.ADPCM);
-				if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.WSA && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.Unknown)
+				if (platform != BuildTargetGroup.Standalone && platform != BuildTargetGroup.WSA && platform != BuildTargetGroup.WiiU && platform != BuildTargetGroup.XboxOne && platform != BuildTargetGroup.Unknown)
 				{
 					list.Add(AudioCompressionFormat.MP3);
 				}
@@ -499,6 +504,7 @@ namespace UnityEditor
 			case AudioCompressionFormat.MP3:
 			case AudioCompressionFormat.XMA:
 			case AudioCompressionFormat.AAC:
+			case AudioCompressionFormat.ATRAC9:
 				result = true;
 				return result;
 			}
@@ -587,8 +593,9 @@ namespace UnityEditor
 				}
 				EditorGUI.indentLevel--;
 				EditorGUILayout.PropertyField(this.m_LoadInBackground, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_Ambisonic, new GUILayoutOption[0]);
 			}
-			BuildPlayerWindow.BuildPlatform[] array = BuildPlayerWindow.GetValidPlatforms().ToArray();
+			BuildPlatform[] array = BuildPlatforms.instance.GetValidPlatforms().ToArray();
 			GUILayout.Space(10f);
 			int num = EditorGUILayout.BeginPlatformGrouping(array, GUIContent.Temp("Default"));
 			if (num == -1)
@@ -624,7 +631,7 @@ namespace UnityEditor
 			EditorGUILayout.EndPlatformGrouping();
 		}
 
-		internal override bool HasModified()
+		public override bool HasModified()
 		{
 			bool result;
 			if (base.HasModified())
@@ -651,7 +658,7 @@ namespace UnityEditor
 			return result;
 		}
 
-		internal override void Apply()
+		protected override void Apply()
 		{
 			base.Apply();
 			this.SyncSettingsToBackend();

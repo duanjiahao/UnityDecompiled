@@ -368,7 +368,7 @@ namespace UnityEditor
 			}
 		}
 
-		internal float cameraDistance
+		public float cameraDistance
 		{
 			get
 			{
@@ -1072,7 +1072,7 @@ namespace UnityEditor
 
 		internal bool SceneViewIsRenderingHDR()
 		{
-			return !this.UseSceneFiltering() && this.m_Camera != null && this.m_Camera.allowHDR;
+			return this.m_Camera != null && this.m_Camera.allowHDR;
 		}
 
 		private void HandleClickAndDragToFocus()
@@ -1731,7 +1731,10 @@ namespace UnityEditor
 			if (!this.UseSceneFiltering())
 			{
 				Handles.DrawCameraStep2(this.m_Camera, this.m_RenderMode);
+				bool sRGBWrite = GL.sRGBWrite;
+				GL.sRGBWrite = false;
 				this.HandleSelectionAndOnSceneGUI();
+				GL.sRGBWrite = sRGBWrite;
 			}
 			if (current.type == EventType.ExecuteCommand || current.type == EventType.ValidateCommand)
 			{
@@ -1747,7 +1750,10 @@ namespace UnityEditor
 			{
 				Handles.SetCameraFilterMode(Camera.current, Handles.FilterMode.Off);
 			}
+			bool sRGBWrite2 = GL.sRGBWrite;
+			GL.sRGBWrite = false;
 			this.DefaultHandles();
+			GL.sRGBWrite = sRGBWrite2;
 			if (!this.UseSceneFiltering())
 			{
 				if (current.type == EventType.Repaint)
@@ -2436,7 +2442,7 @@ namespace UnityEditor
 			return this.Frame(bounds);
 		}
 
-		internal bool Frame(Bounds bounds)
+		public bool Frame(Bounds bounds)
 		{
 			float num = bounds.extents.magnitude * 1.5f;
 			bool result;

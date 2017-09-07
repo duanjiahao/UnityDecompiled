@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using UnityEditor.Utils;
 using UnityEngine.Events;
 using UnityEngine.Internal;
 using UnityEngine.SceneManagement;
@@ -227,6 +228,16 @@ namespace UnityEditor.SceneManagement
 			set;
 		}
 
+		public static extern SceneAsset playModeStartScene
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static Scene OpenScene(string scenePath, [DefaultValue("OpenSceneMode.Single")] OpenSceneMode mode)
 		{
 			Scene result;
@@ -267,9 +278,25 @@ namespace UnityEditor.SceneManagement
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_NewScene(NewSceneSetup setup, NewSceneMode mode, out Scene value);
 
+		public static Scene NewPreviewScene()
+		{
+			Scene result;
+			EditorSceneManager.INTERNAL_CALL_NewPreviewScene(out result);
+			return result;
+		}
+
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern bool CreateSceneAsset(string scenePath, bool createDefaultGameObjects);
+		private static extern void INTERNAL_CALL_NewPreviewScene(out Scene value);
+
+		internal static bool CreateSceneAsset(string scenePath, bool createDefaultGameObjects)
+		{
+			return Paths.IsValidAssetPathWithErrorLogging(scenePath, ".unity") && EditorSceneManager.Internal_CreateSceneAsset(scenePath, createDefaultGameObjects);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool Internal_CreateSceneAsset(string scenePath, bool createDefaultGameObjects);
 
 		public static bool CloseScene(Scene scene, bool removeScene)
 		{
@@ -279,6 +306,15 @@ namespace UnityEditor.SceneManagement
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_CloseScene(ref Scene scene, bool removeScene);
+
+		public static bool ClosePreviewScene(Scene scene)
+		{
+			return EditorSceneManager.INTERNAL_CALL_ClosePreviewScene(ref scene);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool INTERNAL_CALL_ClosePreviewScene(ref Scene scene);
 
 		internal static bool ReloadScene(Scene scene)
 		{
@@ -342,16 +378,11 @@ namespace UnityEditor.SceneManagement
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_SaveSceneAs(ref Scene scene);
 
-		public static bool SaveScene(Scene scene, [DefaultValue("\"\"")] string dstScenePath, [DefaultValue("false")] bool saveAsCopy)
-		{
-			return EditorSceneManager.INTERNAL_CALL_SaveScene(ref scene, dstScenePath, saveAsCopy);
-		}
-
 		[ExcludeFromDocs]
 		public static bool SaveScene(Scene scene, string dstScenePath)
 		{
 			bool saveAsCopy = false;
-			return EditorSceneManager.INTERNAL_CALL_SaveScene(ref scene, dstScenePath, saveAsCopy);
+			return EditorSceneManager.SaveScene(scene, dstScenePath, saveAsCopy);
 		}
 
 		[ExcludeFromDocs]
@@ -359,12 +390,22 @@ namespace UnityEditor.SceneManagement
 		{
 			bool saveAsCopy = false;
 			string dstScenePath = "";
-			return EditorSceneManager.INTERNAL_CALL_SaveScene(ref scene, dstScenePath, saveAsCopy);
+			return EditorSceneManager.SaveScene(scene, dstScenePath, saveAsCopy);
+		}
+
+		public static bool SaveScene(Scene scene, [DefaultValue("\"\"")] string dstScenePath, [DefaultValue("false")] bool saveAsCopy)
+		{
+			return (string.IsNullOrEmpty(dstScenePath) || Paths.IsValidAssetPathWithErrorLogging(dstScenePath, ".unity")) && EditorSceneManager.Internal_SaveScene(scene, dstScenePath, saveAsCopy);
+		}
+
+		private static bool Internal_SaveScene(Scene scene, string dstScenePath, bool saveAsCopy)
+		{
+			return EditorSceneManager.INTERNAL_CALL_Internal_SaveScene(ref scene, dstScenePath, saveAsCopy);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern bool INTERNAL_CALL_SaveScene(ref Scene scene, string dstScenePath, bool saveAsCopy);
+		private static extern bool INTERNAL_CALL_Internal_SaveScene(ref Scene scene, string dstScenePath, bool saveAsCopy);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

@@ -35,7 +35,6 @@ namespace UnityEditor
 				List<AudioMixerItem> audioMixerItemsFromIDs = this.GetAudioMixerItemsFromIDs(draggedNodes);
 				DragAndDrop.PrepareStartDrag();
 				DragAndDrop.SetGenericData("AudioMixerDragging", new AudioMixerTreeViewDragging.DragData(audioMixerItemsFromIDs));
-				DragAndDrop.objectReferences = new UnityEngine.Object[0];
 				string title = draggedNodes.Count + " AudioMixer" + ((draggedNodes.Count <= 1) ? "" : "s");
 				DragAndDrop.StartDrag(title);
 			}

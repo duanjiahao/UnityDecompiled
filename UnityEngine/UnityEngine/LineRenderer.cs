@@ -165,6 +165,16 @@ namespace UnityEngine
 			set;
 		}
 
+		public extern bool generateLightingData
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_startColor(out Color value);
@@ -208,6 +218,10 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetPositions(Vector3[] positions);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void Simplify(float tolerance);
 
 		[Obsolete("Use startWidth, endWidth or widthCurve instead.", false)]
 		public void SetWidth(float start, float end)

@@ -35,7 +35,13 @@ namespace UnityEditor
 
 			public static readonly GUIContent BuildLabel = EditorGUIUtility.TextContent("Generate Lighting|Generates the lightmap data for the current master scene.  This lightmap data (for realtime and baked global illumination) is stored in the GI Cache. For GI Cache settings see the Preferences panel.");
 
-			public static readonly GUIStyle labelStyle = EditorStyles.wordWrappedMiniLabel;
+			public static readonly GUIStyle LabelStyle = EditorStyles.wordWrappedMiniLabel;
+
+			public static readonly GUIStyle ToolbarStyle = "preToolbar";
+
+			public static readonly GUIStyle ToolbarTitleStyle = "preToolbar";
+
+			public static readonly GUIStyle ButtonStyle = "LargeButton";
 		}
 
 		public const float kButtonWidth = 150f;
@@ -133,7 +139,6 @@ namespace UnityEditor
 		private void OnGUI()
 		{
 			LightModeUtil.Get().Load();
-			EditorGUIUtility.labelWidth = 130f;
 			EditorGUILayout.Space();
 			EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(this.toolbarPadding);
@@ -213,12 +218,12 @@ namespace UnityEditor
 		{
 			if (this.m_Mode != LightingWindow.Mode.LightingSettings)
 			{
-				EditorGUILayout.BeginHorizontal(GUIContent.none, "preToolbar", new GUILayoutOption[]
+				EditorGUILayout.BeginHorizontal(GUIContent.none, LightingWindow.Styles.ToolbarStyle, new GUILayoutOption[]
 				{
 					GUILayout.Height(17f)
 				});
 				GUILayout.FlexibleSpace();
-				GUI.Label(GUILayoutUtility.GetLastRect(), "Preview", "preToolbar2");
+				GUI.Label(GUILayoutUtility.GetLastRect(), "Preview", LightingWindow.Styles.ToolbarTitleStyle);
 				EditorGUILayout.EndHorizontal();
 			}
 			LightingWindow.Mode mode = this.m_Mode;
@@ -247,7 +252,7 @@ namespace UnityEditor
 		private void ModeToggle()
 		{
 			float width = base.position.width - this.toolbarPadding * 2f;
-			this.m_Mode = (LightingWindow.Mode)GUILayout.Toolbar((int)this.m_Mode, LightingWindow.Styles.ModeToggles, "LargeButton", new GUILayoutOption[]
+			this.m_Mode = (LightingWindow.Mode)GUILayout.Toolbar((int)this.m_Mode, LightingWindow.Styles.ModeToggles, LightingWindow.Styles.ButtonStyle, new GUILayoutOption[]
 			{
 				GUILayout.Width(width)
 			});
@@ -419,17 +424,17 @@ namespace UnityEditor
 			stringBuilder.Append(" ");
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Label(stringBuilder.ToString(), LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+			GUILayout.Label(stringBuilder.ToString(), LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 			GUILayout.EndVertical();
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			GUILayout.Label(EditorUtility.FormatBytes(num), LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
-			GUILayout.Label((num2 != 0) ? "" : "No Lightmaps", LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+			GUILayout.Label(EditorUtility.FormatBytes(num), LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
+			GUILayout.Label((num2 != 0) ? "" : "No Lightmaps", LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 			if (LightmapEditorSettings.giBakeBackend == LightmapEditorSettings.GIBakeBackend.PathTracer)
 			{
 				GUILayout.BeginVertical(new GUILayoutOption[0]);
-				GUILayout.Label("Occupied texels: " + InternalEditorUtility.CountToString(Lightmapping.occupiedTexelCount), LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+				GUILayout.Label("Occupied texels: " + InternalEditorUtility.CountToString(Lightmapping.occupiedTexelCount), LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 				if (Lightmapping.isRunning)
 				{
 					int num3 = 0;
@@ -472,22 +477,22 @@ namespace UnityEditor
 							}
 						}
 					}
-					EditorGUILayout.LabelField("Lightmaps in view: " + num3, LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField("Lightmaps in view: " + num3, LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 					EditorGUI.indentLevel++;
-					EditorGUILayout.LabelField("converged: " + num4, LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
-					EditorGUILayout.LabelField("not converged: " + num5, LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField("converged: " + num4, LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField("not converged: " + num5, LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 					EditorGUI.indentLevel--;
-					EditorGUILayout.LabelField("Lightmaps out of view: " + num6, LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField("Lightmaps out of view: " + num6, LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 					EditorGUI.indentLevel++;
-					EditorGUILayout.LabelField("converged: " + num7, LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
-					EditorGUILayout.LabelField("not converged: " + num8, LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField("converged: " + num7, LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
+					EditorGUILayout.LabelField("not converged: " + num8, LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 					EditorGUI.indentLevel--;
 				}
 				float lightmapBakeTimeTotal = Lightmapping.GetLightmapBakeTimeTotal();
 				float lightmapBakePerformanceTotal = Lightmapping.GetLightmapBakePerformanceTotal();
 				if ((double)lightmapBakePerformanceTotal >= 0.0)
 				{
-					GUILayout.Label("Bake performance: " + lightmapBakePerformanceTotal.ToString("0.00") + " mrays/sec", LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+					GUILayout.Label("Bake performance: " + lightmapBakePerformanceTotal.ToString("0.00") + " mrays/sec", LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 				}
 				if (!Lightmapping.isRunning)
 				{
@@ -520,7 +525,7 @@ namespace UnityEditor
 							num13.ToString("00"),
 							":",
 							num14.ToString("00")
-						}), LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+						}), LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 						if (Unsupported.IsDeveloperBuild())
 						{
 							GUILayout.Label(string.Concat(new string[]
@@ -538,7 +543,7 @@ namespace UnityEditor
 								":",
 								num22.ToString("00"),
 								")"
-							}), LightingWindow.Styles.labelStyle, new GUILayoutOption[0]);
+							}), LightingWindow.Styles.LabelStyle, new GUILayoutOption[0]);
 						}
 					}
 				}

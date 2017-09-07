@@ -7,7 +7,9 @@ namespace UnityEditorInternal
 	{
 		public Color[] profilerColors;
 
-		public Color nativeAllocationColor;
+		public Color allocationSampleColor;
+
+		public Color internalSampleColor;
 
 		public float ghostAlpha;
 
@@ -24,7 +26,8 @@ namespace UnityEditorInternal
 		public void Reset()
 		{
 			this.profilerColors = null;
-			this.nativeAllocationColor = Color.clear;
+			this.allocationSampleColor = Color.clear;
+			this.internalSampleColor = Color.clear;
 			this.ghostAlpha = 0f;
 			this.nonSelectedAlpha = 0f;
 			this.guiStyle = (IntPtr)0;

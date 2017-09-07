@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace UnityEditorInternal
@@ -30,6 +31,10 @@ namespace UnityEditorInternal
 			get;
 		}
 
+		bool DiscardModification(PropertyModification modification);
+
 		void SaveCurve(AnimationWindowCurve curve);
+
+		void AddPropertyModification(EditorCurveBinding binding, PropertyModification propertyModification, bool keepPrefabOverride);
 	}
 }

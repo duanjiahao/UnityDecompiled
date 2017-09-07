@@ -386,9 +386,13 @@ namespace UnityEditor
 				this.m_AvatarPreview.fps = Mathf.RoundToInt((base.target as AnimationClip).frameRate);
 				this.m_AvatarPreview.ShowIKOnFeetButton = (base.target as Motion).isHumanMotion;
 			}
+			if (this.m_AvatarPreview.timeControl.currentTime == float.NegativeInfinity)
+			{
+				this.m_AvatarPreview.timeControl.Update();
+			}
 		}
 
-		private void OnEnable()
+		internal void OnEnable()
 		{
 			this.m_Clip = (base.target as AnimationClip);
 			this.m_InitialClipLength = this.m_Clip.stopTime - this.m_Clip.startTime;
@@ -439,7 +443,10 @@ namespace UnityEditor
 
 		public override bool HasPreviewGUI()
 		{
-			this.Init();
+			if (Event.current.type == EventType.Layout)
+			{
+				this.Init();
+			}
 			return this.m_AvatarPreview != null;
 		}
 
@@ -551,48 +558,44 @@ namespace UnityEditor
 			float num3 = this.m_TimeArea.FrameToPixel(stopFrame, this.m_Clip.frameRate, rect);
 			GUI.Label(new Rect(num2, rect.y, num3 - num2, rect.height), "", EditorStyles.selectionRect);
 			this.m_TimeArea.TimeRuler(rect, this.m_Clip.frameRate);
-			float num4 = this.m_TimeArea.TimeToPixel(this.m_AvatarPreview.timeControl.currentTime, rect) - 0.5f;
-			Handles.color = new Color(1f, 0f, 0f, 0.5f);
-			Handles.DrawLine(new Vector2(num4, rect.yMin), new Vector2(num4, rect.yMax));
-			Handles.DrawLine(new Vector2(num4 + 1f, rect.yMin), new Vector2(num4 + 1f, rect.yMax));
-			Handles.color = Color.white;
+			TimeArea.DrawPlayhead(this.m_TimeArea.TimeToPixel(this.m_AvatarPreview.timeControl.currentTime, rect), rect.yMin, rect.yMax, 2f, 1f);
 			using (new EditorGUI.DisabledScope(flag))
 			{
-				float num5 = startFrame / this.m_Clip.frameRate;
-				TimeArea.TimeRulerDragMode timeRulerDragMode = this.m_TimeArea.BrowseRuler(rect, controlID, ref num5, 0f, false, "TL InPoint");
+				float num4 = startFrame / this.m_Clip.frameRate;
+				TimeArea.TimeRulerDragMode timeRulerDragMode = this.m_TimeArea.BrowseRuler(rect, controlID, ref num4, 0f, false, "TL InPoint");
 				if (timeRulerDragMode == TimeArea.TimeRulerDragMode.Cancel)
 				{
 					startFrame = this.m_DraggingStartFrame;
 				}
 				else if (timeRulerDragMode != TimeArea.TimeRulerDragMode.None)
 				{
-					startFrame = num5 * this.m_Clip.frameRate;
+					startFrame = num4 * this.m_Clip.frameRate;
 					startFrame = MathUtils.RoundBasedOnMinimumDifference(startFrame, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
 					changedStart = true;
 				}
-				float num6 = stopFrame / this.m_Clip.frameRate;
-				TimeArea.TimeRulerDragMode timeRulerDragMode2 = this.m_TimeArea.BrowseRuler(rect, controlID2, ref num6, 0f, false, "TL OutPoint");
+				float num5 = stopFrame / this.m_Clip.frameRate;
+				TimeArea.TimeRulerDragMode timeRulerDragMode2 = this.m_TimeArea.BrowseRuler(rect, controlID2, ref num5, 0f, false, "TL OutPoint");
 				if (timeRulerDragMode2 == TimeArea.TimeRulerDragMode.Cancel)
 				{
 					stopFrame = this.m_DraggingStopFrame;
 				}
 				else if (timeRulerDragMode2 != TimeArea.TimeRulerDragMode.None)
 				{
-					stopFrame = num6 * this.m_Clip.frameRate;
+					stopFrame = num5 * this.m_Clip.frameRate;
 					stopFrame = MathUtils.RoundBasedOnMinimumDifference(stopFrame, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
 					changedStop = true;
 				}
 				if (showAdditivePoseFrame)
 				{
-					float num7 = additivePoseframe / this.m_Clip.frameRate;
-					TimeArea.TimeRulerDragMode timeRulerDragMode3 = this.m_TimeArea.BrowseRuler(rect, controlID3, ref num7, 0f, false, "TL playhead");
+					float num6 = additivePoseframe / this.m_Clip.frameRate;
+					TimeArea.TimeRulerDragMode timeRulerDragMode3 = this.m_TimeArea.BrowseRuler(rect, controlID3, ref num6, 0f, false, "TL playhead");
 					if (timeRulerDragMode3 == TimeArea.TimeRulerDragMode.Cancel)
 					{
 						additivePoseframe = this.m_DraggingAdditivePoseFrame;
 					}
 					else if (timeRulerDragMode3 != TimeArea.TimeRulerDragMode.None)
 					{
-						additivePoseframe = num7 * this.m_Clip.frameRate;
+						additivePoseframe = num6 * this.m_Clip.frameRate;
 						additivePoseframe = MathUtils.RoundBasedOnMinimumDifference(additivePoseframe, this.m_TimeArea.PixelDeltaToTime(rect) * this.m_Clip.frameRate * 10f);
 						changedAdditivePoseframe = true;
 					}
@@ -817,10 +820,6 @@ namespace UnityEditor
 		{
 			if (this.m_ClipInfo != null)
 			{
-				if (this.m_AvatarPreview.timeControl.currentTime == float.NegativeInfinity)
-				{
-					this.m_AvatarPreview.timeControl.Update();
-				}
 				float normalizedTime = this.m_AvatarPreview.timeControl.normalizedTime;
 				for (int i = 0; i < this.m_ClipInfo.GetCurveCount(); i++)
 				{
@@ -930,8 +929,7 @@ namespace UnityEditor
 						});
 						Rect lastRect = GUILayoutUtility.GetLastRect();
 						length = animationCurveValue.length;
-						Handles.color = Color.red;
-						Handles.DrawLine(new Vector3(lastRect.x + normalizedTime * lastRect.width, lastRect.y, 0f), new Vector3(lastRect.x + normalizedTime * lastRect.width, lastRect.y + lastRect.height, 0f));
+						TimeArea.DrawPlayhead(lastRect.x + normalizedTime * lastRect.width, lastRect.yMin, lastRect.yMax, 1f, 1f);
 						for (int k = 0; k < length; k++)
 						{
 							float time = animationCurveValue.keys[k].time;
@@ -984,11 +982,7 @@ namespace UnityEditor
 				{
 					this.m_ClipInfo.SetEvents(events);
 				}
-				float num = this.m_EventTimeArea.TimeToPixel(this.m_AvatarPreview.timeControl.normalizedTime, rect2) - 0.5f;
-				Handles.color = new Color(1f, 0f, 0f, 0.5f);
-				Handles.DrawLine(new Vector2(num, rect2.yMin), new Vector2(num, rect2.yMax));
-				Handles.DrawLine(new Vector2(num + 1f, rect2.yMin), new Vector2(num + 1f, rect2.yMax));
-				Handles.color = Color.white;
+				TimeArea.DrawPlayhead(this.m_EventTimeArea.TimeToPixel(this.m_AvatarPreview.timeControl.normalizedTime, rect2), rect2.yMin, rect2.yMax, 2f, 1f);
 				GUI.EndGroup();
 				GUILayout.EndHorizontal();
 				this.m_EventManipulationHandler.Draw(rect);
@@ -1000,15 +994,19 @@ namespace UnityEditor
 			EditorGUI.BeginChangeCheck();
 			this.InitController();
 			AnimationClipSettings animationClipSettings = AnimationUtility.GetAnimationClipSettings(this.m_Clip);
+			this.m_StartFrame = ((!this.m_DraggingRange) ? (animationClipSettings.startTime * this.m_Clip.frameRate) : this.m_StartFrame);
+			this.m_StopFrame = ((!this.m_DraggingRange) ? (animationClipSettings.stopTime * this.m_Clip.frameRate) : this.m_StopFrame);
+			this.m_AdditivePoseFrame = ((!this.m_DraggingRange) ? (animationClipSettings.additiveReferencePoseTime * this.m_Clip.frameRate) : this.m_AdditivePoseFrame);
+			float num = this.m_StartFrame / this.m_Clip.frameRate;
+			float num2 = this.m_StopFrame / this.m_Clip.frameRate;
+			float num3 = this.m_AdditivePoseFrame / this.m_Clip.frameRate;
+			MuscleClipQualityInfo muscleClipQualityInfo = MuscleClipEditorUtilities.GetMuscleClipQualityInfo(this.m_Clip, num, num2);
 			bool isHumanMotion = (base.target as Motion).isHumanMotion;
 			bool flag = AnimationUtility.HasMotionCurves(this.m_Clip);
 			bool flag2 = AnimationUtility.HasRootCurves(this.m_Clip);
 			bool flag3 = AnimationUtility.HasGenericRootTransform(this.m_Clip);
 			bool flag4 = AnimationUtility.HasMotionFloatCurves(this.m_Clip);
 			bool flag5 = flag2 || flag;
-			this.m_StartFrame = ((!this.m_DraggingRange) ? (animationClipSettings.startTime * this.m_Clip.frameRate) : this.m_StartFrame);
-			this.m_StopFrame = ((!this.m_DraggingRange) ? (animationClipSettings.stopTime * this.m_Clip.frameRate) : this.m_StopFrame);
-			this.m_AdditivePoseFrame = ((!this.m_DraggingRange) ? (animationClipSettings.additiveReferencePoseTime * this.m_Clip.frameRate) : this.m_AdditivePoseFrame);
 			bool flag6 = false;
 			bool flag7 = false;
 			bool flag8 = false;
@@ -1028,9 +1026,6 @@ namespace UnityEditor
 				}
 				this.ClipRangeGUI(ref this.m_StartFrame, ref this.m_StopFrame, out flag6, out flag7, animationClipSettings.hasAdditiveReferencePose, ref this.m_AdditivePoseFrame, out flag8);
 			}
-			float num = this.m_StartFrame / this.m_Clip.frameRate;
-			float num2 = this.m_StopFrame / this.m_Clip.frameRate;
-			float num3 = this.m_AdditivePoseFrame / this.m_Clip.frameRate;
 			if (!this.m_DraggingRange)
 			{
 				animationClipSettings.startTime = num;
@@ -1053,7 +1048,6 @@ namespace UnityEditor
 			}
 			EditorGUIUtility.labelWidth = 0f;
 			EditorGUIUtility.fieldWidth = 0f;
-			MuscleClipQualityInfo muscleClipQualityInfo = MuscleClipEditorUtilities.GetMuscleClipQualityInfo(this.m_Clip, num, num2);
 			Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 			this.LoopToggle(controlRect, AnimationClipEditor.Styles.LoopTime, ref animationClipSettings.loopTime);
 			Rect controlRect2;

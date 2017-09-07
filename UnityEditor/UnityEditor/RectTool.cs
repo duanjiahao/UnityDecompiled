@@ -275,7 +275,7 @@ namespace UnityEditor
 							}
 							if (EditorGUI.EndChangeCheck())
 							{
-								ManipulationToolUtility.SetMinDragDifferenceForPos(rectPointInWorld2);
+								ManipulationToolUtility.SetMinDragDifferenceForPos(rectPointInWorld2, 0.1f);
 								if (flag)
 								{
 									Transform parent2 = Selection.activeTransform.parent;

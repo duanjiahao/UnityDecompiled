@@ -82,6 +82,10 @@ namespace UnityEngine
 
 		public static Texture2D CreateExternalTexture(int width, int height, TextureFormat format, bool mipmap, bool linear, IntPtr nativeTex)
 		{
+			if (nativeTex == IntPtr.Zero)
+			{
+				throw new ArgumentException("nativeTex can not be null");
+			}
 			return new Texture2D(width, height, format, mipmap, linear, nativeTex);
 		}
 
@@ -183,17 +187,6 @@ namespace UnityEngine
 		public void SetPixels32(int x, int y, int blockWidth, int blockHeight, Color32[] colors, [DefaultValue("0")] int miplevel)
 		{
 			this.SetBlockOfPixels32(x, y, blockWidth, blockHeight, colors, miplevel);
-		}
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern bool LoadImage(byte[] data, [DefaultValue("false")] bool markNonReadable);
-
-		[ExcludeFromDocs]
-		public bool LoadImage(byte[] data)
-		{
-			bool markNonReadable = false;
-			return this.LoadImage(data, markNonReadable);
 		}
 
 		[GeneratedByOldBindingsGenerator]
@@ -373,29 +366,5 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_ReadPixels(Texture2D self, ref Rect source, int destX, int destY, bool recalculateMipMaps);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern byte[] EncodeToPNG();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern byte[] EncodeToJPG(int quality);
-
-		public byte[] EncodeToJPG()
-		{
-			return this.EncodeToJPG(75);
-		}
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern byte[] EncodeToEXR([DefaultValue("EXRFlags.None")] Texture2D.EXRFlags flags);
-
-		[ExcludeFromDocs]
-		public byte[] EncodeToEXR()
-		{
-			Texture2D.EXRFlags flags = Texture2D.EXRFlags.None;
-			return this.EncodeToEXR(flags);
-		}
 	}
 }

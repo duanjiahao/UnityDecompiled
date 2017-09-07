@@ -592,7 +592,7 @@ namespace UnityEngine
 			}
 		}
 
-		internal void DrawWithTextSelection(Rect position, GUIContent content, int controlID, int firstSelectedCharacter, int lastSelectedCharacter, bool drawSelectionAsComposition)
+		internal void DrawWithTextSelection(Rect position, GUIContent content, bool isActive, bool hasKeyboardFocus, int firstSelectedCharacter, int lastSelectedCharacter, bool drawSelectionAsComposition)
 		{
 			if (Event.current.type != EventType.Repaint)
 			{
@@ -616,12 +616,17 @@ namespace UnityEngine
 				internal_DrawWithTextSelectionArguments.cursorColor = cursorColor;
 				internal_DrawWithTextSelectionArguments.selectionColor = GUI.skin.settings.selectionColor;
 				internal_DrawWithTextSelectionArguments.isHover = ((!position.Contains(current.mousePosition)) ? 0 : 1);
-				internal_DrawWithTextSelectionArguments.isActive = ((controlID != GUIUtility.hotControl) ? 0 : 1);
+				internal_DrawWithTextSelectionArguments.isActive = ((!isActive) ? 0 : 1);
 				internal_DrawWithTextSelectionArguments.on = 0;
-				internal_DrawWithTextSelectionArguments.hasKeyboardFocus = ((controlID != GUIUtility.keyboardControl || !GUIStyle.showKeyboardFocus) ? 0 : 1);
+				internal_DrawWithTextSelectionArguments.hasKeyboardFocus = ((!hasKeyboardFocus) ? 0 : 1);
 				internal_DrawWithTextSelectionArguments.drawSelectionAsComposition = ((!drawSelectionAsComposition) ? 0 : 1);
 				GUIStyle.Internal_DrawWithTextSelection(content, ref internal_DrawWithTextSelectionArguments);
 			}
+		}
+
+		internal void DrawWithTextSelection(Rect position, GUIContent content, int controlID, int firstSelectedCharacter, int lastSelectedCharacter, bool drawSelectionAsComposition)
+		{
+			this.DrawWithTextSelection(position, content, controlID == GUIUtility.hotControl, controlID == GUIUtility.keyboardControl && GUIStyle.showKeyboardFocus, firstSelectedCharacter, lastSelectedCharacter, drawSelectionAsComposition);
 		}
 
 		public void DrawWithTextSelection(Rect position, GUIContent content, int controlID, int firstSelectedCharacter, int lastSelectedCharacter)
@@ -786,14 +791,14 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_Internal_Draw2(IntPtr style, ref Rect position, GUIContent content, int controlID, bool on);
 
-		internal void SetMouseTooltip(string tooltip, Rect screenRect)
+		internal static void SetMouseTooltip(string tooltip, Rect screenRect)
 		{
-			GUIStyle.INTERNAL_CALL_SetMouseTooltip(this, tooltip, ref screenRect);
+			GUIStyle.INTERNAL_CALL_SetMouseTooltip(tooltip, ref screenRect);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetMouseTooltip(GUIStyle self, string tooltip, ref Rect screenRect);
+		private static extern void INTERNAL_CALL_SetMouseTooltip(string tooltip, ref Rect screenRect);
 
 		private static void Internal_DrawPrefixLabel(IntPtr style, Rect position, GUIContent content, int controlID, bool on)
 		{

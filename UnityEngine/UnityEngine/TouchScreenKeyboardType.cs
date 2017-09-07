@@ -12,6 +12,8 @@ namespace UnityEngine
 		PhonePad,
 		NamePhonePad,
 		EmailAddress,
-		NintendoNetworkAccount
+		NintendoNetworkAccount,
+		Social,
+		Search
 	}
 }

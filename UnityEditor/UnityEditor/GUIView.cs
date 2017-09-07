@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEditor.StyleSheets;
 using UnityEngine;
+using UnityEngine.Experimental.UIElements;
 using UnityEngine.Scripting;
 
 namespace UnityEditor
@@ -10,15 +12,18 @@ namespace UnityEditor
 	[StructLayout(LayoutKind.Sequential)]
 	internal class GUIView : View
 	{
+		private DataWatchService s_DataWatch = new DataWatchService();
+
 		private int m_DepthBufferBits = 0;
 
-		private bool m_WantsMouseMove = false;
-
-		private bool m_WantsMouseEnterLeaveWindow = false;
+		private EventInterests m_EventInterests;
 
 		private bool m_AutoRepaintOnSceneChange = false;
 
 		private bool m_BackgroundValid = false;
+
+		[CompilerGenerated]
+		private static LoadResourceFunction <>f__mg$cache0;
 
 		public static extern GUIView current
 		{
@@ -58,16 +63,69 @@ namespace UnityEditor
 			set;
 		}
 
+		private Panel panel
+		{
+			get
+			{
+				int arg_2B_0 = base.GetInstanceID();
+				ContextType arg_2B_1 = ContextType.Editor;
+				IDataWatchService arg_2B_2 = this.s_DataWatch;
+				if (GUIView.<>f__mg$cache0 == null)
+				{
+					GUIView.<>f__mg$cache0 = new LoadResourceFunction(StyleSheetResourceUtil.LoadResource);
+				}
+				Panel panel = UIElementsUtility.FindOrCreatePanel(arg_2B_0, arg_2B_1, arg_2B_2, GUIView.<>f__mg$cache0);
+				if (panel.visualTree.styleSheets == null)
+				{
+					panel.visualTree.AddStyleSheetPath("StyleSheets/DefaultCommon.uss");
+					if (EditorGUIUtility.isProSkin)
+					{
+						panel.visualTree.AddStyleSheetPath("StyleSheets/DefaultCommonDark.uss");
+					}
+					else
+					{
+						panel.visualTree.AddStyleSheetPath("StyleSheets/DefaultCommonLight.uss");
+					}
+					panel.visualTree.LoadStyleSheetsFromPaths();
+				}
+				return panel;
+			}
+		}
+
+		public VisualContainer visualTree
+		{
+			get
+			{
+				return this.panel.visualTree;
+			}
+		}
+
+		public EventInterests eventInterests
+		{
+			get
+			{
+				return this.m_EventInterests;
+			}
+			set
+			{
+				this.m_EventInterests = value;
+				this.panel.IMGUIEventInterests = this.m_EventInterests;
+				this.Internal_SetWantsMouseMove(this.wantsMouseMove);
+				this.Internal_SetWantsMouseEnterLeaveWindow(this.wantsMouseEnterLeaveWindow);
+			}
+		}
+
 		public bool wantsMouseMove
 		{
 			get
 			{
-				return this.m_WantsMouseMove;
+				return this.m_EventInterests.wantsMouseMove;
 			}
 			set
 			{
-				this.m_WantsMouseMove = value;
-				this.Internal_SetWantsMouseMove(this.m_WantsMouseMove);
+				this.m_EventInterests.wantsMouseMove = value;
+				this.panel.IMGUIEventInterests = this.m_EventInterests;
+				this.Internal_SetWantsMouseMove(this.wantsMouseMove);
 			}
 		}
 
@@ -75,12 +133,13 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_WantsMouseEnterLeaveWindow;
+				return this.m_EventInterests.wantsMouseEnterLeaveWindow;
 			}
 			set
 			{
-				this.m_WantsMouseEnterLeaveWindow = value;
-				this.Internal_SetWantsMouseEnterLeaveWindow(this.m_WantsMouseEnterLeaveWindow);
+				this.m_EventInterests.wantsMouseEnterLeaveWindow = value;
+				this.panel.IMGUIEventInterests = this.m_EventInterests;
+				this.Internal_SetWantsMouseEnterLeaveWindow(this.wantsMouseEnterLeaveWindow);
 			}
 		}
 
@@ -275,8 +334,9 @@ namespace UnityEditor
 			}
 			this.Internal_SetAutoRepaint(this.m_AutoRepaintOnSceneChange);
 			this.Internal_SetPosition(base.windowPosition);
-			this.Internal_SetWantsMouseMove(this.m_WantsMouseMove);
-			this.Internal_SetWantsMouseEnterLeaveWindow(this.m_WantsMouseEnterLeaveWindow);
+			this.Internal_SetWantsMouseMove(this.m_EventInterests.wantsMouseMove);
+			this.Internal_SetWantsMouseEnterLeaveWindow(this.m_EventInterests.wantsMouseMove);
+			this.panel.visualTree.SetSize(base.windowPosition.size);
 			this.m_BackgroundValid = false;
 		}
 
@@ -298,6 +358,7 @@ namespace UnityEditor
 			{
 				this.Internal_SetPosition(base.windowPosition);
 				this.m_BackgroundValid = false;
+				this.panel.visualTree.SetSize(base.windowPosition.size);
 				this.Repaint();
 			}
 		}

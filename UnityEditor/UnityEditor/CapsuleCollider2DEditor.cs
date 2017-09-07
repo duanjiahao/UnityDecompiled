@@ -7,13 +7,11 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(CapsuleCollider2D))]
 	internal class CapsuleCollider2DEditor : PrimitiveCollider2DEditor
 	{
-		private static readonly int s_HandleControlIDHint = typeof(CapsuleCollider2DEditor).Name.GetHashCode();
-
 		private SerializedProperty m_Size;
 
 		private SerializedProperty m_Direction;
 
-		private readonly CapsuleBoundsHandle m_BoundsHandle = new CapsuleBoundsHandle(CapsuleCollider2DEditor.s_HandleControlIDHint);
+		private readonly CapsuleBoundsHandle m_BoundsHandle = new CapsuleBoundsHandle();
 
 		protected override PrimitiveBoundsHandle boundsHandle
 		{
@@ -47,6 +45,10 @@ namespace UnityEditor
 			Vector3 vector;
 			Vector3 vector2;
 			this.GetHandleVectorsInWorldSpace(collider, out vector, out vector2);
+			CapsuleBoundsHandle arg_31_0 = this.m_BoundsHandle;
+			float num = 0f;
+			this.m_BoundsHandle.radius = num;
+			arg_31_0.height = num;
 			this.m_BoundsHandle.height = vector.magnitude;
 			this.m_BoundsHandle.radius = vector2.magnitude * 0.5f;
 		}

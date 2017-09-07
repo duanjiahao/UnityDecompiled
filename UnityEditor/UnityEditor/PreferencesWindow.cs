@@ -31,7 +31,7 @@ namespace UnityEditor
 
 			public GUIStyle oddRow = "CN EntryBackOdd";
 
-			public GUIStyle selected = "ServerUpdateChangesetOn";
+			public GUIStyle selected = "OL SelectedRow";
 
 			public GUIStyle keysElement = "PreferencesKeysElement";
 
@@ -438,7 +438,7 @@ namespace UnityEditor
 			{
 				GUILayout.Label("Changing this setting requires a restart to take effect.", EditorStyles.helpBox, new GUILayoutOption[0]);
 			}
-			if (this.GetSelectedScriptEditor() == InternalEditorUtility.ScriptEditor.VisualStudioExpress)
+			if (this.GetSelectedScriptEditor() == ScriptEditorUtility.ScriptEditor.VisualStudioExpress)
 			{
 				GUILayout.BeginHorizontal(EditorStyles.helpBox, new GUILayoutOption[0]);
 				GUILayout.Label("", PreferencesWindow.constants.warningIcon, new GUILayoutOption[0]);
@@ -468,19 +468,19 @@ namespace UnityEditor
 					current.ShowExternalApplications();
 				}
 			}
-			this.ApplyChangesToPrefs();
+			this.ApplyChangesToPrefs(false);
 		}
 
 		private void DoUnityProjCheckbox()
 		{
 			bool flag = false;
 			bool flag2 = false;
-			InternalEditorUtility.ScriptEditor selectedScriptEditor = this.GetSelectedScriptEditor();
-			if (selectedScriptEditor == InternalEditorUtility.ScriptEditor.Internal)
+			ScriptEditorUtility.ScriptEditor selectedScriptEditor = this.GetSelectedScriptEditor();
+			if (selectedScriptEditor == ScriptEditorUtility.ScriptEditor.Internal)
 			{
 				flag2 = true;
 			}
-			else if (selectedScriptEditor == InternalEditorUtility.ScriptEditor.MonoDevelop)
+			else if (selectedScriptEditor == ScriptEditorUtility.ScriptEditor.MonoDevelop)
 			{
 				flag = true;
 				flag2 = this.m_ExternalEditorSupportsUnityProj;
@@ -497,30 +497,30 @@ namespace UnityEditor
 
 		private bool IsSelectedScriptEditorSpecial()
 		{
-			return InternalEditorUtility.IsScriptEditorSpecial(this.m_ScriptEditorPath.str);
+			return ScriptEditorUtility.IsScriptEditorSpecial(this.m_ScriptEditorPath.str);
 		}
 
-		private InternalEditorUtility.ScriptEditor GetSelectedScriptEditor()
+		private ScriptEditorUtility.ScriptEditor GetSelectedScriptEditor()
 		{
-			return InternalEditorUtility.GetScriptEditorFromPath(this.m_ScriptEditorPath.str);
+			return ScriptEditorUtility.GetScriptEditorFromPath(this.m_ScriptEditorPath.str);
 		}
 
 		private void OnScriptEditorChanged()
 		{
-			InternalEditorUtility.SetExternalScriptEditor(this.m_ScriptEditorPath);
-			this.m_ScriptEditorArgs = InternalEditorUtility.GetExternalScriptEditorArgs();
+			ScriptEditorUtility.SetExternalScriptEditor(this.m_ScriptEditorPath);
+			this.m_ScriptEditorArgs = ScriptEditorUtility.GetExternalScriptEditorArgs();
 			UnityVSSupport.ScriptEditorChanged(this.m_ScriptEditorPath.str);
 		}
 
 		private void OnScriptEditorArgsChanged()
 		{
-			InternalEditorUtility.SetExternalScriptEditorArgs(this.m_ScriptEditorArgs);
+			ScriptEditorUtility.SetExternalScriptEditorArgs(this.m_ScriptEditorArgs);
 		}
 
 		private void ShowUnityConnectPrefs()
 		{
 			UnityConnectPrefs.ShowPanelPrefUI();
-			this.ApplyChangesToPrefs();
+			this.ApplyChangesToPrefs(false);
 		}
 
 		private void ShowGeneral()
@@ -530,16 +530,13 @@ namespace UnityEditor
 			{
 				if (flag)
 				{
-					this.m_AutoRefresh = EditorGUILayout.Toggle("Auto Refresh", true, new GUILayoutOption[0]);
+					EditorGUILayout.Toggle("Auto Refresh", true, new GUILayoutOption[0]);
+					EditorGUILayout.HelpBox("Auto Refresh must be set when using Collaboration feature.", MessageType.Warning);
 				}
 				else
 				{
 					this.m_AutoRefresh = EditorGUILayout.Toggle("Auto Refresh", this.m_AutoRefresh, new GUILayoutOption[0]);
 				}
-			}
-			if (flag)
-			{
-				EditorGUILayout.HelpBox("Auto Refresh must be set when using Collaboration feature.", MessageType.Warning);
 			}
 			this.m_ReopenLastUsedProjectOnStartup = EditorGUILayout.Toggle("Load Previous Project on Startup", this.m_ReopenLastUsedProjectOnStartup, new GUILayoutOption[0]);
 			bool compressAssetsOnImport = this.m_CompressAssetsOnImport;
@@ -609,7 +606,7 @@ namespace UnityEditor
 					flag4 = true;
 				}
 			}
-			this.ApplyChangesToPrefs();
+			this.ApplyChangesToPrefs(false);
 			if (flag4)
 			{
 				EditorGUIUtility.NotifyLanguageChanged(this.m_SelectedLanguage);
@@ -625,9 +622,9 @@ namespace UnityEditor
 			}
 		}
 
-		private void ApplyChangesToPrefs()
+		public void ApplyChangesToPrefs(bool force = false)
 		{
-			if (GUI.changed)
+			if (GUI.changed || force)
 			{
 				this.WritePreferences();
 				this.ReadPreferences();
@@ -995,8 +992,8 @@ namespace UnityEditor
 
 		private void WritePreferences()
 		{
-			InternalEditorUtility.SetExternalScriptEditor(this.m_ScriptEditorPath);
-			InternalEditorUtility.SetExternalScriptEditorArgs(this.m_ScriptEditorArgs);
+			ScriptEditorUtility.SetExternalScriptEditor(this.m_ScriptEditorPath);
+			ScriptEditorUtility.SetExternalScriptEditorArgs(this.m_ScriptEditorArgs);
 			EditorPrefs.SetBool("kExternalEditorSupportsUnityProj", this.m_ExternalEditorSupportsUnityProj);
 			EditorPrefs.SetString("kImagesDefaultApp", this.m_ImageAppPath);
 			EditorPrefs.SetString("kDiffsDefaultApp", (this.m_DiffTools.Length != 0) ? this.m_DiffTools[this.m_DiffToolIndex] : "");
@@ -1048,8 +1045,8 @@ namespace UnityEditor
 
 		private void ReadPreferences()
 		{
-			this.m_ScriptEditorPath.str = InternalEditorUtility.GetExternalScriptEditor();
-			this.m_ScriptEditorArgs = InternalEditorUtility.GetExternalScriptEditorArgs();
+			this.m_ScriptEditorPath.str = ScriptEditorUtility.GetExternalScriptEditor();
+			this.m_ScriptEditorArgs = ScriptEditorUtility.GetExternalScriptEditorArgs();
 			this.m_ExternalEditorSupportsUnityProj = EditorPrefs.GetBool("kExternalEditorSupportsUnityProj", false);
 			this.m_ImageAppPath.str = EditorPrefs.GetString("kImagesDefaultApp");
 			this.m_ScriptApps = this.BuildAppPathList(this.m_ScriptEditorPath, "RecentlyUsedScriptApp", "internal");
@@ -1075,6 +1072,14 @@ namespace UnityEditor
 					}
 				}
 			}
+			string[] foundScriptEditorPaths = ScriptEditorUtility.GetFoundScriptEditorPaths(Application.platform);
+			string[] array2 = foundScriptEditorPaths;
+			for (int j = 0; j < array2.Length; j++)
+			{
+				string item = array2[j];
+				ArrayUtility.Add<string>(ref this.m_ScriptApps, item);
+				ArrayUtility.Add<string>(ref this.m_ScriptAppsEditions, null);
+			}
 			this.m_ImageApps = this.BuildAppPathList(this.m_ImageAppPath, "RecentlyUsedImageApp", "");
 			this.m_ScriptAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ScriptApps, this.m_ScriptAppsEditions, "MonoDevelop (built-in)");
 			this.m_ImageAppDisplayNames = this.BuildFriendlyAppNameList(this.m_ImageApps, null, "Open by file extension");
@@ -1097,7 +1102,7 @@ namespace UnityEditor
 			this.m_VerifySavingAssets = EditorPrefs.GetBool("VerifySavingAssets", false);
 			this.m_GICacheSettings.m_EnableCustomPath = EditorPrefs.GetBool("GICacheEnableCustomPath");
 			this.m_GICacheSettings.m_CachePath = EditorPrefs.GetString("GICacheFolder");
-			this.m_GICacheSettings.m_MaximumSize = EditorPrefs.GetInt("GICacheMaximumSizeGB");
+			this.m_GICacheSettings.m_MaximumSize = EditorPrefs.GetInt("GICacheMaximumSizeGB", 10);
 			this.m_GICacheSettings.m_CompressionLevel = EditorPrefs.GetInt("GICacheCompressionLevel");
 			this.m_SpriteAtlasCacheSize = EditorPrefs.GetInt("SpritePackerCacheMaximumSizeGB");
 			this.m_AllowAttachedDebuggingOfEditor = EditorPrefs.GetBool("AllowAttachedDebuggingOfEditor", true);

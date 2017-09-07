@@ -131,20 +131,8 @@ namespace UnityEditor
 
 		public new void OnDestroy()
 		{
-			this.OnLostFocus();
-			base.OnDestroy();
-		}
-
-		public new void OnFocus()
-		{
-			base.OnFocus();
-			EditorApplication.LockReloadAssemblies();
-		}
-
-		public new void OnLostFocus()
-		{
 			base.OnLostFocus();
-			EditorApplication.UnlockReloadAssemblies();
+			base.OnDestroy();
 		}
 	}
 }

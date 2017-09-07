@@ -143,7 +143,7 @@ namespace UnityEngine
 			}
 			set
 			{
-				this.m_Content.text = value;
+				this.m_Content.text = (value ?? string.Empty);
 				this.ClampTextIndex(ref this.m_CursorIndex);
 				this.ClampTextIndex(ref this.m_SelectIndex);
 			}
@@ -162,6 +162,14 @@ namespace UnityEngine
 					this.m_Position = value;
 					this.UpdateScrollOffset();
 				}
+			}
+		}
+
+		internal virtual Rect localPosition
+		{
+			get
+			{
+				return this.position;
 			}
 		}
 
@@ -193,6 +201,30 @@ namespace UnityEngine
 			{
 				this.m_SelectIndex = value;
 				this.ClampTextIndex(ref this.m_SelectIndex);
+			}
+		}
+
+		public TextEditor.DblClickSnapping doubleClickSnapping
+		{
+			get
+			{
+				return this.m_DblClickSnap;
+			}
+			set
+			{
+				this.m_DblClickSnap = value;
+			}
+		}
+
+		public int altCursorPosition
+		{
+			get
+			{
+				return this.m_iAltCursorPos;
+			}
+			set
+			{
+				this.m_iAltCursorPos = value;
 			}
 		}
 
@@ -261,8 +293,8 @@ namespace UnityEngine
 		{
 			if (!this.hasHorizontalCursorPos)
 			{
-				this.graphicalCursorPos = this.style.GetCursorPixelPosition(this.position, this.m_Content, this.cursorIndex);
-				this.graphicalSelectCursorPos = this.style.GetCursorPixelPosition(this.position, this.m_Content, this.selectIndex);
+				this.graphicalCursorPos = this.style.GetCursorPixelPosition(this.localPosition, this.m_Content, this.cursorIndex);
+				this.graphicalSelectCursorPos = this.style.GetCursorPixelPosition(this.localPosition, this.m_Content, this.selectIndex);
 				this.hasHorizontalCursorPos = false;
 			}
 		}
@@ -548,7 +580,7 @@ namespace UnityEngine
 			}
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y - 1f;
-			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, this.graphicalCursorPos);
 			this.selectIndex = cursorStringIndex;
 			this.cursorIndex = cursorStringIndex;
 			if (this.cursorIndex <= 0)
@@ -569,7 +601,7 @@ namespace UnityEngine
 			}
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y + (this.style.lineHeight + 5f);
-			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, this.graphicalCursorPos);
 			this.selectIndex = cursorStringIndex;
 			this.cursorIndex = cursorStringIndex;
 			if (this.cursorIndex == this.text.Length)
@@ -684,8 +716,13 @@ namespace UnityEngine
 
 		public void MoveCursorToPosition(Vector2 cursorPosition)
 		{
-			this.selectIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
-			if (!Event.current.shift)
+			this.MoveCursorToPosition_Internal(cursorPosition, Event.current.shift);
+		}
+
+		protected internal void MoveCursorToPosition_Internal(Vector2 cursorPosition, bool shift)
+		{
+			this.selectIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPosition + this.scrollOffset);
+			if (!shift)
 			{
 				this.cursorIndex = this.selectIndex;
 			}
@@ -694,14 +731,14 @@ namespace UnityEngine
 
 		public void MoveAltCursorToPosition(Vector2 cursorPosition)
 		{
-			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPosition + this.scrollOffset);
 			this.m_iAltCursorPos = Mathf.Min(this.text.Length, cursorStringIndex);
 			this.DetectFocusChange();
 		}
 
 		public bool IsOverSelection(Vector2 cursorPosition)
 		{
-			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPosition + this.scrollOffset);
 			return cursorStringIndex < Mathf.Max(this.cursorIndex, this.selectIndex) && cursorStringIndex > Mathf.Min(this.cursorIndex, this.selectIndex);
 		}
 
@@ -709,11 +746,11 @@ namespace UnityEngine
 		{
 			if (!this.m_MouseDragSelectsWholeWords)
 			{
-				this.cursorIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
+				this.cursorIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPosition + this.scrollOffset);
 			}
 			else
 			{
-				int num = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
+				int num = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPosition + this.scrollOffset);
 				if (this.m_DblClickSnap == TextEditor.DblClickSnapping.WORDS)
 				{
 					if (num < this.m_DblClickInitPos)
@@ -786,14 +823,14 @@ namespace UnityEngine
 		{
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y - 1f;
-			this.cursorIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
+			this.cursorIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, this.graphicalCursorPos);
 		}
 
 		public void SelectDown()
 		{
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y + (this.style.lineHeight + 5f);
-			this.cursorIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
+			this.cursorIndex = this.style.GetCursorStringIndex(this.localPosition, this.m_Content, this.graphicalCursorPos);
 		}
 
 		public void SelectTextEnd()
@@ -819,16 +856,16 @@ namespace UnityEngine
 
 		private int GetGraphicalLineStart(int p)
 		{
-			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.position, this.m_Content, p);
+			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.localPosition, this.m_Content, p);
 			cursorPixelPosition.x = 0f;
-			return this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPixelPosition);
+			return this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPixelPosition);
 		}
 
 		private int GetGraphicalLineEnd(int p)
 		{
-			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.position, this.m_Content, p);
+			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.localPosition, this.m_Content, p);
 			cursorPixelPosition.x += 5000f;
-			return this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPixelPosition);
+			return this.style.GetCursorStringIndex(this.localPosition, this.m_Content, cursorPixelPosition);
 		}
 
 		private int FindNextSeperator(int startPos)
@@ -1227,7 +1264,7 @@ namespace UnityEngine
 			}
 		}
 
-		private void UpdateScrollOffset()
+		protected void UpdateScrollOffset()
 		{
 			int cursorIndex = this.cursorIndex;
 			this.graphicalCursorPos = this.style.GetCursorPixelPosition(new Rect(0f, 0f, this.position.width, this.position.height), this.m_Content, cursorIndex);
@@ -1616,6 +1653,11 @@ namespace UnityEngine
 		}
 
 		public void DetectFocusChange()
+		{
+			this.OnDetectFocusChange();
+		}
+
+		internal virtual void OnDetectFocusChange()
 		{
 			if (this.m_HasFocus && this.controlID != GUIUtility.keyboardControl)
 			{

@@ -78,7 +78,7 @@ namespace UnityEngine
 			get;
 		}
 
-		internal extern bool empty
+		public extern bool empty
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -95,6 +95,13 @@ namespace UnityEngine
 			{
 				this.SetEventsInternal(value);
 			}
+		}
+
+		internal extern bool hasRootMotion
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 
 		public AnimationClip()

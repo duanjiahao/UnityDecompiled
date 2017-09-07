@@ -420,6 +420,6 @@ namespace UnityEditor
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void Internal_CollectCollidersForDebugDraw(object colliderList);
+		internal static extern void Internal_CollectCollidersForDebugDraw(Camera cam, object colliderList);
 	}
 }

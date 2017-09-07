@@ -225,5 +225,10 @@ namespace UnityEditor
 				Handles.matrix = matrix;
 			}
 		}
+
+		public override void UpdateCullingSupportedString(ref string text)
+		{
+			text += "\nTriggers module is enabled.";
+		}
 	}
 }

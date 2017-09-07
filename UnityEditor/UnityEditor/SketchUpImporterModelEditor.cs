@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor
@@ -63,6 +64,10 @@ namespace UnityEditor
 		private SketchUpImporter m_Target;
 
 		private float lengthToUnit = 0f;
+
+		public SketchUpImporterModelEditor(AssetImporterEditor panelContainer) : base(panelContainer)
+		{
+		}
 
 		internal override void OnEnable()
 		{

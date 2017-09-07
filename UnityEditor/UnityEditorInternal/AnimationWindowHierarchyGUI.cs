@@ -154,8 +154,16 @@ namespace UnityEditorInternal
 			this.m_HierarchyItemButtonControlIDs = new int[rowCount];
 			for (int i = 0; i < rowCount; i++)
 			{
+				AnimationWindowHierarchyPropertyNode animationWindowHierarchyPropertyNode = this.m_TreeView.data.GetItem(i) as AnimationWindowHierarchyPropertyNode;
+				if (animationWindowHierarchyPropertyNode != null && !animationWindowHierarchyPropertyNode.isPptrNode)
+				{
+					this.m_HierarchyItemValueControlIDs[i] = GUIUtility.GetControlID(FocusType.Keyboard);
+				}
+				else
+				{
+					this.m_HierarchyItemValueControlIDs[i] = 0;
+				}
 				this.m_HierarchyItemFoldControlIDs[i] = GUIUtility.GetControlID(FocusType.Passive);
-				this.m_HierarchyItemValueControlIDs[i] = GUIUtility.GetControlID(FocusType.Passive);
 				this.m_HierarchyItemButtonControlIDs[i] = GUIUtility.GetControlID(FocusType.Passive);
 			}
 		}
@@ -245,7 +253,7 @@ namespace UnityEditorInternal
 				{
 					TreeViewGUI.Styles.selectionStyle.Draw(rect, false, false, true, focused);
 				}
-				if (AnimationMode.InAnimationMode())
+				if (node is AnimationWindowHierarchyPropertyNode)
 				{
 					rect.width -= 77f;
 				}
@@ -419,7 +427,7 @@ namespace UnityEditorInternal
 			}
 			if (flag)
 			{
-				this.state.StartRecording();
+				this.state.ResampleAnimation();
 			}
 		}
 
@@ -493,7 +501,7 @@ namespace UnityEditorInternal
 					GUI.color = AnimationWindowHierarchyGUI.k_KeyColorForNonCurves;
 				}
 				bool flag = false;
-				if (AnimationMode.InAnimationMode())
+				if (this.state.previewing)
 				{
 					AnimationWindowCurve[] curves = node.curves;
 					for (int i = 0; i < curves.Length; i++)
@@ -596,7 +604,7 @@ namespace UnityEditorInternal
 				genericMenu.AddItem(new GUIContent("Interpolation/Euler Angles (Quaternion)"), rotationInterpolationMode == RotationCurveInterpolation.Mode.Baked, (!enabled) ? menuFunction : new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.Baked);
 				genericMenu.AddItem(new GUIContent("Interpolation/Quaternion"), rotationInterpolationMode == RotationCurveInterpolation.Mode.NonBaked, (!enabled) ? menuFunction : new GenericMenu.MenuFunction2(this.ChangeRotationInterpolation), RotationCurveInterpolation.Mode.NonBaked);
 			}
-			if (AnimationMode.InAnimationMode())
+			if (this.state.previewing)
 			{
 				genericMenu.AddSeparator("");
 				bool flag3 = true;

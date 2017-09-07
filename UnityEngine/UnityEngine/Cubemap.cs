@@ -23,7 +23,12 @@ namespace UnityEngine
 
 		public Cubemap(int size, TextureFormat format, bool mipmap)
 		{
-			Cubemap.Internal_Create(this, size, format, mipmap);
+			Cubemap.Internal_Create(this, size, format, mipmap, IntPtr.Zero);
+		}
+
+		internal Cubemap(int size, TextureFormat format, bool mipmap, IntPtr nativeTex)
+		{
+			Cubemap.Internal_Create(this, size, format, mipmap, nativeTex);
 		}
 
 		public void SetPixel(CubemapFace face, int x, int y, Color color)
@@ -87,9 +92,18 @@ namespace UnityEngine
 			this.Apply(updateMipmaps, makeNoLongerReadable);
 		}
 
+		public static Cubemap CreateExternalTexture(int size, TextureFormat format, bool mipmap, IntPtr nativeTex)
+		{
+			if (nativeTex == IntPtr.Zero)
+			{
+				throw new ArgumentException("nativeTex can not be null");
+			}
+			return new Cubemap(size, format, mipmap, nativeTex);
+		}
+
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void Internal_Create([Writable] Cubemap mono, int size, TextureFormat format, bool mipmap);
+		private static extern void Internal_Create([Writable] Cubemap mono, int size, TextureFormat format, bool mipmap, IntPtr nativeTex);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

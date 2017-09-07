@@ -7,6 +7,7 @@ using System.Linq;
 using System.Xml;
 using UnityEditor.Analytics;
 using UnityEditor.BuildReporting;
+using UnityEditor.Scripting.ScriptCompilation;
 using UnityEditor.Utils;
 using UnityEditorInternal;
 using UnityEditorInternal.VR;
@@ -45,12 +46,8 @@ namespace UnityEditor
 
 		private static Dictionary<UnityType, UnityType> s_blackListNativeClassesDependency;
 
-		private static readonly string[] s_UserAssemblies = new string[]
+		private static readonly string[] s_TreatedAsUserAssemblies = new string[]
 		{
-			"Assembly-CSharp.dll",
-			"Assembly-CSharp-firstpass.dll",
-			"Assembly-UnityScript.dll",
-			"Assembly-UnityScript-firstpass.dll",
 			"UnityEngine.Analytics.dll"
 		};
 
@@ -99,16 +96,17 @@ namespace UnityEditor
 		{
 			get
 			{
-				string[] assembliesWithSuffix;
-				try
+				EditorCompilation.TargetAssemblyInfo[] targetAssemblies = EditorCompilationInterface.GetTargetAssemblies();
+				string[] array = new string[targetAssemblies.Length + CodeStrippingUtils.s_TreatedAsUserAssemblies.Length];
+				for (int i = 0; i < targetAssemblies.Length; i++)
 				{
-					assembliesWithSuffix = CodeStrippingUtils.GetAssembliesWithSuffix();
+					array[i] = targetAssemblies[i].Name;
 				}
-				catch
+				for (int j = 0; j < CodeStrippingUtils.s_TreatedAsUserAssemblies.Length; j++)
 				{
-					assembliesWithSuffix = CodeStrippingUtils.s_UserAssemblies;
+					array[targetAssemblies.Length + j] = CodeStrippingUtils.s_TreatedAsUserAssemblies[j];
 				}
-				return assembliesWithSuffix;
+				return array;
 			}
 		}
 
@@ -139,26 +137,6 @@ namespace UnityEditor
 			return hashSet;
 		}
 
-		private static bool IsVRModuleUsed(BuildTarget target)
-		{
-			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(target);
-			bool result;
-			if (buildTargetGroup != BuildTargetGroup.iPhone)
-			{
-				result = false;
-			}
-			else if (!PlayerSettings.virtualRealitySupported)
-			{
-				result = false;
-			}
-			else
-			{
-				string[] vREnabledDevicesOnTargetGroup = VREditor.GetVREnabledDevicesOnTargetGroup(buildTargetGroup);
-				result = (Array.IndexOf<string>(vREnabledDevicesOnTargetGroup, "cardboard") >= 0);
-			}
-			return result;
-		}
-
 		public static void InjectCustomDependencies(BuildTarget target, StrippingInfo strippingInfo, HashSet<UnityType> nativeClasses, HashSet<string> nativeModules)
 		{
 			UnityType item = UnityType.FindTypeByName("UnityAnalyticsManager");
@@ -175,7 +153,7 @@ namespace UnityEditor
 					strippingInfo.SetIcon("Required by Unity Analytics (See Services Window)", "class/PlayerSettings");
 				}
 			}
-			if (CodeStrippingUtils.IsVRModuleUsed(target))
+			if (VRModule.ShouldInjectVRDependenciesForBuildTarget(target))
 			{
 				nativeModules.Add("VR");
 				strippingInfo.RegisterDependency("VR", "Required by Scripts");
@@ -653,24 +631,6 @@ namespace UnityEditor
 				textWriter.WriteLine("}");
 				textWriter.Close();
 			}
-		}
-
-		private static string[] GetAssembliesWithSuffix()
-		{
-			string suffix = EditorSettings.Internal_UserGeneratedProjectSuffix;
-			return CodeStrippingUtils.s_UserAssemblies.Select(delegate(string a)
-			{
-				string result;
-				if (a.StartsWith("Assembly-"))
-				{
-					result = a.Substring(0, a.Length - ".dll".Length) + suffix + ".dll";
-				}
-				else
-				{
-					result = a;
-				}
-				return result;
-			}).ToArray<string>();
 		}
 
 		private static string[] GetUserAssemblies(string strippedAssemblyDir)

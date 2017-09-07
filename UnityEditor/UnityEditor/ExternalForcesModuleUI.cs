@@ -42,7 +42,7 @@ namespace UnityEditor
 
 		public override void UpdateCullingSupportedString(ref string text)
 		{
-			text += "\n\tExternal Forces is enabled.";
+			text += "\nExternal Forces module is enabled.";
 		}
 	}
 }

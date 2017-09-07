@@ -5,10 +5,6 @@ namespace UnityEditor.Web
 {
 	internal abstract class CloudServiceAccess
 	{
-		public CloudServiceAccess()
-		{
-		}
-
 		public abstract string GetServiceName();
 
 		protected WebView GetWebView()
@@ -42,12 +38,12 @@ namespace UnityEditor.Web
 
 		public void ShowServicePage()
 		{
-			UnityConnectServiceCollection.instance.ShowService(this.GetServiceName(), true);
+			UnityConnectServiceCollection.instance.ShowService(this.GetServiceName(), true, "show_service_page");
 		}
 
 		public void GoBackToHub()
 		{
-			UnityConnectServiceCollection.instance.ShowService("Hub", true);
+			UnityConnectServiceCollection.instance.ShowService("Hub", true, "go_back_to_hub");
 		}
 	}
 }

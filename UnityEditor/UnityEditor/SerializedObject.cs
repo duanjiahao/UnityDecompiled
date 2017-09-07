@@ -5,7 +5,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEditor
 {
-	public sealed class SerializedObject
+	public sealed class SerializedObject : IDisposable
 	{
 		private IntPtr m_Property;
 
@@ -114,34 +114,6 @@ namespace UnityEditor
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
 
-		~SerializedObject()
-		{
-			this.Dispose();
-		}
-
-		public SerializedProperty GetIterator()
-		{
-			SerializedProperty iterator_Internal = this.GetIterator_Internal();
-			iterator_Internal.m_SerializedObject = this;
-			return iterator_Internal;
-		}
-
-		public SerializedProperty FindProperty(string propertyPath)
-		{
-			SerializedProperty iterator_Internal = this.GetIterator_Internal();
-			iterator_Internal.m_SerializedObject = this;
-			SerializedProperty result;
-			if (iterator_Internal.FindPropertyInternal(propertyPath))
-			{
-				result = iterator_Internal;
-			}
-			else
-			{
-				result = null;
-			}
-			return result;
-		}
-
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern SerializedProperty GetIterator_Internal();
@@ -169,5 +141,33 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void CopyFromSerializedProperty(SerializedProperty prop);
+
+		~SerializedObject()
+		{
+			this.Dispose();
+		}
+
+		public SerializedProperty GetIterator()
+		{
+			SerializedProperty iterator_Internal = this.GetIterator_Internal();
+			iterator_Internal.m_SerializedObject = this;
+			return iterator_Internal;
+		}
+
+		public SerializedProperty FindProperty(string propertyPath)
+		{
+			SerializedProperty iterator_Internal = this.GetIterator_Internal();
+			iterator_Internal.m_SerializedObject = this;
+			SerializedProperty result;
+			if (iterator_Internal.FindPropertyInternal(propertyPath))
+			{
+				result = iterator_Internal;
+			}
+			else
+			{
+				result = null;
+			}
+			return result;
+		}
 	}
 }

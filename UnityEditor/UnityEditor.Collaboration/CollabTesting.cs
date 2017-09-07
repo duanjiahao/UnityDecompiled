@@ -6,11 +6,21 @@ namespace UnityEditor.Collaboration
 {
 	internal class CollabTesting
 	{
-		private static IEnumerator<bool> _enumerator = null;
+		[Flags]
+		public enum AsyncState
+		{
+			NotWaiting = 0,
+			WaitForJobComplete = 1,
+			WaitForAssetUpdate = 2
+		}
+
+		private static IEnumerator<CollabTesting.AsyncState> _enumerator = null;
 
 		private static Action _runAfter = null;
 
-		public static Func<IEnumerable<bool>> Tick
+		private static CollabTesting.AsyncState _nextState = CollabTesting.AsyncState.NotWaiting;
+
+		public static Func<IEnumerable<CollabTesting.AsyncState>> Tick
 		{
 			set
 			{
@@ -36,7 +46,26 @@ namespace UnityEditor.Collaboration
 
 		public static void OnCompleteJob()
 		{
-			CollabTesting.Execute();
+			if ((CollabTesting._nextState & CollabTesting.AsyncState.WaitForJobComplete) != CollabTesting.AsyncState.NotWaiting)
+			{
+				CollabTesting._nextState &= ~CollabTesting.AsyncState.WaitForJobComplete;
+				if (CollabTesting._nextState == CollabTesting.AsyncState.NotWaiting)
+				{
+					CollabTesting.Execute();
+				}
+			}
+		}
+
+		public static void OnAssetUpdate()
+		{
+			if ((CollabTesting._nextState & CollabTesting.AsyncState.WaitForAssetUpdate) != CollabTesting.AsyncState.NotWaiting)
+			{
+				CollabTesting._nextState &= ~CollabTesting.AsyncState.WaitForAssetUpdate;
+				if (CollabTesting._nextState == CollabTesting.AsyncState.NotWaiting)
+				{
+					CollabTesting.Execute();
+				}
+			}
 		}
 
 		public static void Execute()
@@ -50,6 +79,10 @@ namespace UnityEditor.Collaboration
 						if (!CollabTesting._enumerator.MoveNext())
 						{
 							CollabTesting.End();
+						}
+						else
+						{
+							CollabTesting._nextState = CollabTesting._enumerator.Current;
 						}
 					}
 					catch (Exception)

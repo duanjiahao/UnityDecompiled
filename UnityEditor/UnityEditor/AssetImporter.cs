@@ -67,5 +67,9 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern int LocalFileIDToClassID(long fileId);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void RegisterImporter(Type importer, int importerVersion, int queuePos, string fileExt);
 	}
 }

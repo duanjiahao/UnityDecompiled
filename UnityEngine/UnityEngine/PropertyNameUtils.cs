@@ -1,12 +1,12 @@
 using System;
 using System.Runtime.CompilerServices;
-using Unity.Bindings;
+using UnityEngine.Bindings;
 
 namespace UnityEngine
 {
 	internal class PropertyNameUtils
 	{
-		public static PropertyName PropertyNameFromString([NativeParameter(Unmarshalled = true)] string name)
+		public static PropertyName PropertyNameFromString([Unmarshalled] string name)
 		{
 			PropertyName result;
 			PropertyNameUtils.PropertyNameFromString_Injected(name, out result);

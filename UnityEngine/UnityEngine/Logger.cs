@@ -39,7 +39,22 @@ namespace UnityEngine
 
 		public bool IsLogTypeAllowed(LogType logType)
 		{
-			return this.logEnabled && (logType <= this.filterLogType || logType == LogType.Exception);
+			bool result;
+			if (this.logEnabled)
+			{
+				if (logType == LogType.Exception)
+				{
+					result = true;
+					return result;
+				}
+				if (this.filterLogType != LogType.Exception)
+				{
+					result = (logType <= this.filterLogType);
+					return result;
+				}
+			}
+			result = false;
+			return result;
 		}
 
 		private static string GetString(object message)

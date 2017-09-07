@@ -538,6 +538,17 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern GameObject Find(string name);
 
+		internal Bounds CalculateBounds()
+		{
+			Bounds result;
+			GameObject.INTERNAL_CALL_CalculateBounds(this, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_CalculateBounds(GameObject self, out Bounds value);
+
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_scene(out Scene value);

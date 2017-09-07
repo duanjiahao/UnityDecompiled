@@ -55,14 +55,7 @@ namespace UnityEditor
 
 		private static void ShowVersionControl()
 		{
-			if (EditorSettings.externalVersionControl == ExternalVersionControl.AssetServer)
-			{
-				ASEditorBackend.DoAS();
-			}
-			else
-			{
-				EditorWindow.GetWindow<WindowPending>();
-			}
+			EditorWindow.GetWindow<WindowPending>();
 		}
 
 		[MenuItem("Window/Sprite Packer", false, 2014)]

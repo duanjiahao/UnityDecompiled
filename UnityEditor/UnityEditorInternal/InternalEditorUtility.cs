@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEditor.Scripting;
-using UnityEditor.Utils;
+using UnityEditor.Scripting.ScriptCompilation;
 using UnityEngine;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
@@ -23,16 +23,6 @@ namespace UnityEditorInternal
 			kHierarchyDropBetween,
 			kHierarchyDropAfterParent = 4,
 			kHierarchySearchActive = 8
-		}
-
-		public enum ScriptEditor
-		{
-			Internal,
-			MonoDevelop,
-			VisualStudio,
-			VisualStudioExpress,
-			VisualStudioCode,
-			Other = 32
 		}
 
 		public static extern bool isApplicationActive
@@ -227,7 +217,7 @@ namespace UnityEditorInternal
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void SetupCustomDll(string dllName, string dllLocation);
+		internal static extern void RegisterPrecompiledAssembly(string dllName, string dllLocation);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -463,10 +453,6 @@ namespace UnityEditorInternal
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern string GetUnityVersionFull();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetFullUnityVersion();
 
 		public static Version GetUnityVersion()
@@ -531,10 +517,6 @@ namespace UnityEditorInternal
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenPlayerConsole();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Resolution GetDesktopResolution();
 
 		public static string TextifyEvent(Event evt)
 		{
@@ -737,14 +719,23 @@ namespace UnityEditorInternal
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_TransformBounds(ref Bounds b, Transform t, out Bounds value);
 
-		public static void SetCustomLighting(Light[] lights, Color ambient)
+		public static void SetCustomLightingInternal(Light[] lights, Color ambient)
 		{
-			InternalEditorUtility.INTERNAL_CALL_SetCustomLighting(lights, ref ambient);
+			InternalEditorUtility.INTERNAL_CALL_SetCustomLightingInternal(lights, ref ambient);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetCustomLighting(Light[] lights, ref Color ambient);
+		private static extern void INTERNAL_CALL_SetCustomLightingInternal(Light[] lights, ref Color ambient);
+
+		public static void SetCustomLighting(Light[] lights, Color ambient)
+		{
+			if (lights == null)
+			{
+				throw new ArgumentNullException("lights");
+			}
+			InternalEditorUtility.SetCustomLightingInternal(lights, ambient);
+		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -849,6 +840,10 @@ namespace UnityEditorInternal
 				{
 					result = ((SpriteRenderer)component2).GetSpriteBounds();
 				}
+				else if (component2 is SpriteMask)
+				{
+					result = ((SpriteMask)component2).GetSpriteBounds();
+				}
 				else
 				{
 					result = new Bounds(Vector3.zero, Vector3.zero);
@@ -864,14 +859,6 @@ namespace UnityEditorInternal
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool OpenFileAtLineExternal(string filename, int line);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern MonoIsland[] GetMonoIslands();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern MonoIsland[] GetMonoIslandsForPlayer();
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -959,10 +946,6 @@ namespace UnityEditorInternal
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ShowPackageManagerWindow();
 
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void AuxWindowManager_OnAssemblyReload();
-
 		public static Vector2 PassAndReturnVector2(Vector2 v)
 		{
 			Vector2 result;
@@ -1038,109 +1021,41 @@ namespace UnityEditorInternal
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool LaunchApplication(string path, string[] arguments);
 
-		public static InternalEditorUtility.ScriptEditor GetScriptEditorFromPath(string path)
-		{
-			string text = path.ToLower();
-			InternalEditorUtility.ScriptEditor result;
-			if (text == "internal")
-			{
-				result = InternalEditorUtility.ScriptEditor.Internal;
-			}
-			else if (text.Contains("monodevelop") || text.Contains("xamarinstudio") || text.Contains("xamarin studio"))
-			{
-				result = InternalEditorUtility.ScriptEditor.MonoDevelop;
-			}
-			else if (text.EndsWith("devenv.exe"))
-			{
-				result = InternalEditorUtility.ScriptEditor.VisualStudio;
-			}
-			else if (text.EndsWith("vcsexpress.exe"))
-			{
-				result = InternalEditorUtility.ScriptEditor.VisualStudioExpress;
-			}
-			else
-			{
-				string a = Path.GetFileName(Paths.UnifyDirectorySeparator(text)).Replace(" ", "");
-				if (a == "code.exe" || a == "visualstudiocode.app" || a == "vscode.app" || a == "code.app" || a == "code")
-				{
-					result = InternalEditorUtility.ScriptEditor.VisualStudioCode;
-				}
-				else
-				{
-					result = InternalEditorUtility.ScriptEditor.Other;
-				}
-			}
-			return result;
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string[] GetCompilationDefines(EditorScriptCompilationOptions options, BuildTargetGroup targetGroup, BuildTarget target);
 
-		public static bool IsScriptEditorSpecial(string path)
-		{
-			return InternalEditorUtility.GetScriptEditorFromPath(path) != InternalEditorUtility.ScriptEditor.Other;
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern PrecompiledAssembly[] GetUnityAssemblies(bool buildingForEditor, BuildTargetGroup buildTargetGroup, BuildTarget target);
 
-		public static string GetExternalScriptEditor()
-		{
-			return EditorPrefs.GetString("kScriptsDefaultApp");
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern PrecompiledAssembly[] GetPrecompiledAssemblies(bool buildingForEditor, BuildTargetGroup buildTargetGroup, BuildTarget target);
 
-		public static void SetExternalScriptEditor(string path)
-		{
-			EditorPrefs.SetString("kScriptsDefaultApp", path);
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetEditorProfile();
 
-		private static string GetScriptEditorArgsKey(string path)
-		{
-			string result;
-			if (Application.platform == RuntimePlatform.OSXEditor)
-			{
-				result = "kScriptEditorArgs_" + path;
-			}
-			else
-			{
-				result = "kScriptEditorArgs" + path;
-			}
-			return result;
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsUnityExtensionsInitialized();
 
-		private static string GetDefaultStringEditorArgs()
-		{
-			string result;
-			if (Application.platform == RuntimePlatform.OSXEditor)
-			{
-				result = "";
-			}
-			else
-			{
-				result = "\"$(File)\"";
-			}
-			return result;
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsValidUnityExtensionPath(string path);
 
-		public static string GetExternalScriptEditorArgs()
-		{
-			string externalScriptEditor = InternalEditorUtility.GetExternalScriptEditor();
-			string result;
-			if (InternalEditorUtility.IsScriptEditorSpecial(externalScriptEditor))
-			{
-				result = "";
-			}
-			else
-			{
-				result = EditorPrefs.GetString(InternalEditorUtility.GetScriptEditorArgsKey(externalScriptEditor), InternalEditorUtility.GetDefaultStringEditorArgs());
-			}
-			return result;
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsUnityExtensionRegistered(string filename);
 
-		public static void SetExternalScriptEditorArgs(string args)
-		{
-			string externalScriptEditor = InternalEditorUtility.GetExternalScriptEditor();
-			EditorPrefs.SetString(InternalEditorUtility.GetScriptEditorArgsKey(externalScriptEditor), args);
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsUnityExtensionCompatibleWithEditor(BuildTargetGroup targetGroup, BuildTarget target, string path);
 
-		public static InternalEditorUtility.ScriptEditor GetScriptEditorFromPreferences()
-		{
-			return InternalEditorUtility.GetScriptEditorFromPath(InternalEditorUtility.GetExternalScriptEditor());
-		}
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string[] GetEditorModuleDllNames();
 
 		public static Texture2D GetIconForFile(string fileName)
 		{
@@ -1673,6 +1588,27 @@ namespace UnityEditorInternal
 			return from asset in AssetDatabase.GetAllAssetPaths()
 			where InternalEditorUtility.IsScriptOrAssembly(asset)
 			select AssetDatabase.AssetPathToGUID(asset);
+		}
+
+		internal static MonoIsland[] GetMonoIslands()
+		{
+			return EditorCompilationInterface.GetAllMonoIslands();
+		}
+
+		internal static MonoIsland[] GetMonoIslandsForPlayer()
+		{
+			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
+			BuildTarget activeBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+			PrecompiledAssembly[] unityAssemblies = InternalEditorUtility.GetUnityAssemblies(false, activeBuildTargetGroup, activeBuildTarget);
+			PrecompiledAssembly[] precompiledAssemblies = InternalEditorUtility.GetPrecompiledAssemblies(false, activeBuildTargetGroup, activeBuildTarget);
+			return EditorCompilationInterface.GetAllMonoIslandsExt(unityAssemblies, precompiledAssemblies, BuildFlags.None);
+		}
+
+		internal static string[] GetCompilationDefinesForPlayer()
+		{
+			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
+			BuildTarget activeBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+			return InternalEditorUtility.GetCompilationDefines(EditorScriptCompilationOptions.BuildingEmpty, activeBuildTargetGroup, activeBuildTarget);
 		}
 	}
 }

@@ -8,9 +8,7 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(OcclusionPortal))]
 	internal class OcclusionPortalEditor : Editor
 	{
-		private static readonly int s_HandleControlIDHint = typeof(OcclusionPortalEditor).Name.GetHashCode();
-
-		private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(OcclusionPortalEditor.s_HandleControlIDHint);
+		private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
 
 		private SerializedProperty m_Center;
 

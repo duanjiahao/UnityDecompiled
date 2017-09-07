@@ -5,6 +5,14 @@ namespace UnityEditorInternal
 {
 	internal class AnimationClipSelectionItem : AnimationWindowSelectionItem
 	{
+		public override bool canPreview
+		{
+			get
+			{
+				return false;
+			}
+		}
+
 		public override bool canRecord
 		{
 			get

@@ -22,13 +22,17 @@ namespace UnityEngine.Networking
 
 		public DownloadHandlerAssetBundle(string url, uint version, uint crc)
 		{
-			Hash128 hash = new Hash128(0u, 0u, 0u, version);
-			base.InternalCreateAssetBundle(url, hash, crc);
+			base.InternalCreateAssetBundleCached(url, "", new Hash128(0u, 0u, 0u, version), crc);
 		}
 
 		public DownloadHandlerAssetBundle(string url, Hash128 hash, uint crc)
 		{
-			base.InternalCreateAssetBundle(url, hash, crc);
+			base.InternalCreateAssetBundleCached(url, "", hash, crc);
+		}
+
+		public DownloadHandlerAssetBundle(string url, string name, Hash128 hash, uint crc)
+		{
+			base.InternalCreateAssetBundleCached(url, name, hash, crc);
 		}
 
 		protected override byte[] GetData()

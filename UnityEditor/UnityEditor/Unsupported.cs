@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Scripting;
 
 namespace UnityEditor
@@ -21,6 +22,16 @@ namespace UnityEditor
 				Unsupported.s_FakeNonDeveloperBuild = value;
 				EditorPrefs.SetBool("FakeNonDeveloperBuild", value);
 			}
+		}
+
+		internal static extern bool useScriptableRenderPipeline
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
 		}
 
 		internal static Vector3 MakeNiceVector3(Vector3 vector)
@@ -98,6 +109,19 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetAllowCursorLock(bool allow);
+
+		internal static bool SetOverrideRenderSettings(Scene scene)
+		{
+			return Unsupported.SetOverrideRenderSettingsInternal(scene.handle);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool SetOverrideRenderSettingsInternal(int sceneHandle);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void RestoreOverrideRenderSettings();
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

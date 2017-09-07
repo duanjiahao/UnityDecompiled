@@ -16,6 +16,26 @@ namespace UnityEngine
 
 		public float z;
 
+		private static readonly Vector3 zeroVector = new Vector3(0f, 0f, 0f);
+
+		private static readonly Vector3 oneVector = new Vector3(1f, 1f, 1f);
+
+		private static readonly Vector3 upVector = new Vector3(0f, 1f, 0f);
+
+		private static readonly Vector3 downVector = new Vector3(0f, -1f, 0f);
+
+		private static readonly Vector3 leftVector = new Vector3(-1f, 0f, 0f);
+
+		private static readonly Vector3 rightVector = new Vector3(1f, 0f, 0f);
+
+		private static readonly Vector3 forwardVector = new Vector3(0f, 0f, 1f);
+
+		private static readonly Vector3 backVector = new Vector3(0f, 0f, -1f);
+
+		private static readonly Vector3 positiveInfinityVector = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+
+		private static readonly Vector3 negativeInfinityVector = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+
 		public float this[int index]
 		{
 			get
@@ -84,7 +104,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(0f, 0f, 0f);
+				return Vector3.zeroVector;
 			}
 		}
 
@@ -92,7 +112,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(1f, 1f, 1f);
+				return Vector3.oneVector;
 			}
 		}
 
@@ -100,7 +120,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(0f, 0f, 1f);
+				return Vector3.forwardVector;
 			}
 		}
 
@@ -108,7 +128,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(0f, 0f, -1f);
+				return Vector3.backVector;
 			}
 		}
 
@@ -116,7 +136,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(0f, 1f, 0f);
+				return Vector3.upVector;
 			}
 		}
 
@@ -124,7 +144,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(0f, -1f, 0f);
+				return Vector3.downVector;
 			}
 		}
 
@@ -132,7 +152,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(-1f, 0f, 0f);
+				return Vector3.leftVector;
 			}
 		}
 
@@ -140,7 +160,23 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Vector3(1f, 0f, 0f);
+				return Vector3.rightVector;
+			}
+		}
+
+		public static Vector3 positiveInfinity
+		{
+			get
+			{
+				return Vector3.positiveInfinityVector;
+			}
+		}
+
+		public static Vector3 negativeInfinity
+		{
+			get
+			{
+				return Vector3.negativeInfinityVector;
 			}
 		}
 
@@ -251,7 +287,7 @@ namespace UnityEngine
 			Vector3 a = target - current;
 			float magnitude = a.magnitude;
 			Vector3 result;
-			if (magnitude <= maxDistanceDelta || magnitude == 0f)
+			if (magnitude <= maxDistanceDelta || magnitude < 1.401298E-45f)
 			{
 				result = target;
 			}
@@ -299,11 +335,11 @@ namespace UnityEngine
 			return vector4;
 		}
 
-		public void Set(float new_x, float new_y, float new_z)
+		public void Set(float newX, float newY, float newZ)
 		{
-			this.x = new_x;
-			this.y = new_y;
-			this.z = new_z;
+			this.x = newX;
+			this.y = newY;
+			this.z = newZ;
 		}
 
 		public static Vector3 Scale(Vector3 a, Vector3 b)
@@ -406,6 +442,15 @@ namespace UnityEngine
 			return Mathf.Acos(Mathf.Clamp(Vector3.Dot(from.normalized, to.normalized), -1f, 1f)) * 57.29578f;
 		}
 
+		public static float SignedAngle(Vector3 from, Vector3 to, Vector3 axis)
+		{
+			Vector3 normalized = from.normalized;
+			Vector3 normalized2 = to.normalized;
+			float num = Mathf.Acos(Mathf.Clamp(Vector3.Dot(normalized, normalized2), -1f, 1f)) * 57.29578f;
+			float num2 = Mathf.Sign(Vector3.Dot(axis, Vector3.Cross(normalized, normalized2)));
+			return num * num2;
+		}
+
 		public static float Distance(Vector3 a, Vector3 b)
 		{
 			Vector3 vector = new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
@@ -426,14 +471,14 @@ namespace UnityEngine
 			return result;
 		}
 
-		public static float Magnitude(Vector3 a)
+		public static float Magnitude(Vector3 vector)
 		{
-			return Mathf.Sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+			return Mathf.Sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
 		}
 
-		public static float SqrMagnitude(Vector3 a)
+		public static float SqrMagnitude(Vector3 vector)
 		{
-			return a.x * a.x + a.y * a.y + a.z * a.z;
+			return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z;
 		}
 
 		public static Vector3 Min(Vector3 lhs, Vector3 rhs)

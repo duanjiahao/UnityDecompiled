@@ -194,6 +194,7 @@ namespace UnityEditor
 					break;
 				case PrefabType.Prefab:
 				case PrefabType.PrefabInstance:
+				case PrefabType.MissingPrefabInstance:
 				case PrefabType.DisconnectedPrefabInstance:
 					gUIContent = GameObjectInspector.s_Styles.prefabIcon;
 					break;
@@ -201,9 +202,6 @@ namespace UnityEditor
 				case PrefabType.ModelPrefabInstance:
 				case PrefabType.DisconnectedModelPrefabInstance:
 					gUIContent = GameObjectInspector.s_Styles.modelIcon;
-					break;
-				case PrefabType.MissingPrefabInstance:
-					gUIContent = GameObjectInspector.s_Styles.prefabIcon;
 					break;
 				}
 			}
@@ -216,6 +214,7 @@ namespace UnityEditor
 			{
 				GUILayout.ExpandWidth(false)
 			}), base.targets, true, gUIContent.image as Texture2D, this.m_Icon);
+			base.DrawPostIconContent();
 			using (new EditorGUI.DisabledScope(prefabType == PrefabType.ModelPrefab))
 			{
 				EditorGUILayout.BeginVertical(new GUILayoutOption[0]);
@@ -469,6 +468,7 @@ namespace UnityEditor
 					this.m_Layer.intValue = num;
 					this.SetLayer(num, shouldIncludeChildren == GameObjectUtility.ShouldIncludeChildren.IncludeChildren);
 				}
+				GUIUtility.ExitGUI();
 			}
 			EditorGUI.EndProperty();
 		}
@@ -569,16 +569,6 @@ namespace UnityEditor
 			}
 		}
 
-		public static void SetEnabledRecursive(GameObject go, bool enabled)
-		{
-			Renderer[] componentsInChildren = go.GetComponentsInChildren<Renderer>();
-			for (int i = 0; i < componentsInChildren.Length; i++)
-			{
-				Renderer renderer = componentsInChildren[i];
-				renderer.enabled = enabled;
-			}
-		}
-
 		public override void ReloadPreviewInstances()
 		{
 			this.CreatePreviewInstances();
@@ -586,7 +576,6 @@ namespace UnityEditor
 
 		private void CreatePreviewInstances()
 		{
-			this.DestroyPreviewInstances();
 			if (this.m_PreviewInstances == null)
 			{
 				this.m_PreviewInstances = new List<GameObject>(base.targets.Length);
@@ -594,20 +583,8 @@ namespace UnityEditor
 			for (int i = 0; i < base.targets.Length; i++)
 			{
 				GameObject gameObject = EditorUtility.InstantiateForAnimatorPreview(base.targets[i]);
-				GameObjectInspector.SetEnabledRecursive(gameObject, false);
 				this.m_PreviewInstances.Add(gameObject);
-			}
-		}
-
-		private void DestroyPreviewInstances()
-		{
-			if (this.m_PreviewInstances != null && this.m_PreviewInstances.Count != 0)
-			{
-				foreach (GameObject current in this.m_PreviewInstances)
-				{
-					UnityEngine.Object.DestroyImmediate(current);
-				}
-				this.m_PreviewInstances.Clear();
+				this.m_PreviewUtility.AddSingleGO(gameObject);
 			}
 		}
 
@@ -615,20 +592,19 @@ namespace UnityEditor
 		{
 			if (this.m_PreviewUtility == null)
 			{
-				this.m_PreviewUtility = new PreviewRenderUtility(true);
-				this.m_PreviewUtility.m_CameraFieldOfView = 30f;
-				this.m_PreviewUtility.m_Camera.cullingMask = 1 << Camera.PreviewCullingLayer;
+				this.m_PreviewUtility = new PreviewRenderUtility();
+				this.m_PreviewUtility.camera.fieldOfView = 30f;
 				this.CreatePreviewInstances();
 			}
 		}
 
 		public void OnDestroy()
 		{
-			this.DestroyPreviewInstances();
 			if (this.m_PreviewUtility != null)
 			{
 				this.m_PreviewUtility.Cleanup();
 				this.m_PreviewUtility = null;
+				this.m_PreviewInstances.Clear();
 			}
 		}
 
@@ -858,23 +834,18 @@ namespace UnityEditor
 			float num2 = num * 3.8f;
 			Quaternion quaternion = Quaternion.Euler(-this.previewDir.y, -this.previewDir.x, 0f);
 			Vector3 position = bounds.center - quaternion * (Vector3.forward * num2);
-			this.m_PreviewUtility.m_Camera.transform.position = position;
-			this.m_PreviewUtility.m_Camera.transform.rotation = quaternion;
-			this.m_PreviewUtility.m_Camera.nearClipPlane = num2 - num * 1.1f;
-			this.m_PreviewUtility.m_Camera.farClipPlane = num2 + num * 1.1f;
-			this.m_PreviewUtility.m_Light[0].intensity = 0.7f;
-			this.m_PreviewUtility.m_Light[0].transform.rotation = quaternion * Quaternion.Euler(40f, 40f, 0f);
-			this.m_PreviewUtility.m_Light[1].intensity = 0.7f;
-			this.m_PreviewUtility.m_Light[1].transform.rotation = quaternion * Quaternion.Euler(340f, 218f, 177f);
-			Color ambient = new Color(0.1f, 0.1f, 0.1f, 0f);
-			InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);
-			bool fog = RenderSettings.fog;
-			Unsupported.SetRenderSettingsUseFogNoDirty(false);
-			GameObjectInspector.SetEnabledRecursive(gameObject, true);
-			this.m_PreviewUtility.m_Camera.Render();
-			GameObjectInspector.SetEnabledRecursive(gameObject, false);
-			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
-			InternalEditorUtility.RemoveCustomLighting();
+			this.m_PreviewUtility.camera.transform.position = position;
+			this.m_PreviewUtility.camera.transform.rotation = quaternion;
+			this.m_PreviewUtility.camera.nearClipPlane = num2 - num * 1.1f;
+			this.m_PreviewUtility.camera.farClipPlane = num2 + num * 1.1f;
+			this.m_PreviewUtility.lights[0].intensity = 0.7f;
+			this.m_PreviewUtility.lights[0].transform.rotation = quaternion * Quaternion.Euler(40f, 40f, 0f);
+			this.m_PreviewUtility.lights[1].intensity = 0.7f;
+			this.m_PreviewUtility.lights[1].transform.rotation = quaternion * Quaternion.Euler(340f, 218f, 177f);
+			this.m_PreviewUtility.ambientColor = new Color(0.1f, 0.1f, 0.1f, 0f);
+			PrefabType prefabType = PrefabUtility.GetPrefabType(gameObject);
+			bool allowScriptableRenderPipeline = prefabType != PrefabType.DisconnectedModelPrefabInstance && prefabType != PrefabType.ModelPrefab;
+			this.m_PreviewUtility.Render(allowScriptableRenderPipeline, true);
 		}
 
 		public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)

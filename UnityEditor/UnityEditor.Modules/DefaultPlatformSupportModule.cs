@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.DeploymentTargets;
 using UnityEngine;
 
 namespace UnityEditor.Modules
@@ -104,6 +105,11 @@ namespace UnityEditor.Modules
 		}
 
 		public virtual IProjectGeneratorExtension CreateProjectGeneratorExtension()
+		{
+			return null;
+		}
+
+		public virtual IDeploymentTargetsExtension CreateDeploymentTargetsExtension()
 		{
 			return null;
 		}

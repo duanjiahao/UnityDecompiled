@@ -1,10 +1,11 @@
 using System;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	[CustomEditor(typeof(MovieImporter))]
-	internal class MovieImporterInspector : AssetImporterInspector
+	internal class MovieImporterInspector : AssetImporterEditor
 	{
 		private float m_quality;
 
@@ -14,7 +15,7 @@ namespace UnityEditor
 
 		public static GUIContent linearTextureContent = EditorGUIUtility.TextContent("Bypass sRGB Sampling|Texture will not be converted from gamma space to linear when sampled. Enable for IMGUI textures and non-color textures.");
 
-		internal override bool showImportedObject
+		public override bool showImportedObject
 		{
 			get
 			{
@@ -22,13 +23,13 @@ namespace UnityEditor
 			}
 		}
 
-		internal override bool HasModified()
+		public override bool HasModified()
 		{
 			MovieImporter movieImporter = base.target as MovieImporter;
 			return movieImporter.quality != this.m_quality || movieImporter.linearTexture != this.m_linearTexture;
 		}
 
-		internal override void ResetValues()
+		protected override void ResetValues()
 		{
 			MovieImporter movieImporter = base.target as MovieImporter;
 			this.m_quality = movieImporter.quality;
@@ -36,7 +37,7 @@ namespace UnityEditor
 			this.m_duration = movieImporter.duration;
 		}
 
-		internal override void Apply()
+		protected override void Apply()
 		{
 			MovieImporter movieImporter = base.target as MovieImporter;
 			movieImporter.quality = this.m_quality;

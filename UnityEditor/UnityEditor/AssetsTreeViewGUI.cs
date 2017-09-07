@@ -1,9 +1,8 @@
 using System;
-using UnityEditor.Collaboration;
+using System.Threading;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.VersionControl;
-using UnityEditor.Web;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
 
@@ -11,9 +10,37 @@ namespace UnityEditor
 {
 	internal class AssetsTreeViewGUI : TreeViewGUI
 	{
+		internal delegate void OnAssetIconDrawDelegate(Rect iconRect, string guid);
+
 		private static bool s_VCEnabled;
 
 		private const float k_IconOverlayPadding = 7f;
+
+		internal static event AssetsTreeViewGUI.OnAssetIconDrawDelegate postAssetIconDrawCallback
+		{
+			add
+			{
+				AssetsTreeViewGUI.OnAssetIconDrawDelegate onAssetIconDrawDelegate = AssetsTreeViewGUI.postAssetIconDrawCallback;
+				AssetsTreeViewGUI.OnAssetIconDrawDelegate onAssetIconDrawDelegate2;
+				do
+				{
+					onAssetIconDrawDelegate2 = onAssetIconDrawDelegate;
+					onAssetIconDrawDelegate = Interlocked.CompareExchange<AssetsTreeViewGUI.OnAssetIconDrawDelegate>(ref AssetsTreeViewGUI.postAssetIconDrawCallback, (AssetsTreeViewGUI.OnAssetIconDrawDelegate)Delegate.Combine(onAssetIconDrawDelegate2, value), onAssetIconDrawDelegate);
+				}
+				while (onAssetIconDrawDelegate != onAssetIconDrawDelegate2);
+			}
+			remove
+			{
+				AssetsTreeViewGUI.OnAssetIconDrawDelegate onAssetIconDrawDelegate = AssetsTreeViewGUI.postAssetIconDrawCallback;
+				AssetsTreeViewGUI.OnAssetIconDrawDelegate onAssetIconDrawDelegate2;
+				do
+				{
+					onAssetIconDrawDelegate2 = onAssetIconDrawDelegate;
+					onAssetIconDrawDelegate = Interlocked.CompareExchange<AssetsTreeViewGUI.OnAssetIconDrawDelegate>(ref AssetsTreeViewGUI.postAssetIconDrawCallback, (AssetsTreeViewGUI.OnAssetIconDrawDelegate)Delegate.Remove(onAssetIconDrawDelegate2, value), onAssetIconDrawDelegate);
+				}
+				while (onAssetIconDrawDelegate != onAssetIconDrawDelegate2);
+			}
+		}
 
 		public AssetsTreeViewGUI(TreeViewController treeView) : base(treeView)
 		{
@@ -121,15 +148,11 @@ namespace UnityEditor
 
 		private void OnIconOverlayGUI(TreeViewItem item, Rect overlayRect)
 		{
-			bool flag = CollabAccess.Instance.IsServiceEnabled();
-			if (flag)
+			if (AssetsTreeViewGUI.postAssetIconDrawCallback != null && AssetDatabase.IsMainAsset(item.id))
 			{
-				if (AssetDatabase.IsMainAsset(item.id))
-				{
-					string assetPath = AssetDatabase.GetAssetPath(item.id);
-					string guid = AssetDatabase.AssetPathToGUID(assetPath);
-					CollabProjectHook.OnProjectWindowItemIconOverlay(guid, overlayRect);
-				}
+				string assetPath = AssetDatabase.GetAssetPath(item.id);
+				string guid = AssetDatabase.AssetPathToGUID(assetPath);
+				AssetsTreeViewGUI.postAssetIconDrawCallback(overlayRect, guid);
 			}
 			if (AssetsTreeViewGUI.s_VCEnabled && AssetDatabase.IsMainAsset(item.id))
 			{
@@ -137,6 +160,12 @@ namespace UnityEditor
 				string guid2 = AssetDatabase.AssetPathToGUID(assetPath2);
 				ProjectHooks.OnProjectWindowItem(guid2, overlayRect);
 			}
+		}
+
+		static AssetsTreeViewGUI()
+		{
+			// Note: this type is marked as 'beforefieldinit'.
+			AssetsTreeViewGUI.postAssetIconDrawCallback = null;
 		}
 	}
 }

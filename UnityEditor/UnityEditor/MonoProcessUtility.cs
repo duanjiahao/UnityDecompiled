@@ -80,5 +80,26 @@ namespace UnityEditor
 			process.StartInfo.WorkingDirectory = workDir;
 			return process;
 		}
+
+		public static Process PrepareMonoProcessBleedingEdge(string workDir)
+		{
+			Process process = new Process();
+			string text = (Application.platform != RuntimePlatform.WindowsEditor) ? "mono" : "mono.exe";
+			process.StartInfo.FileName = Paths.Combine(new string[]
+			{
+				MonoInstallationFinder.GetMonoBleedingEdgeInstallation(),
+				"bin",
+				text
+			});
+			process.StartInfo.EnvironmentVariables["_WAPI_PROCESS_HANDLE_OFFSET"] = "5";
+			string profile = BuildPipeline.CompatibilityProfileToClassLibFolder(ApiCompatibilityLevel.NET_4_6);
+			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoInstallationFinder.GetProfileDirectory(profile);
+			process.StartInfo.UseShellExecute = false;
+			process.StartInfo.RedirectStandardOutput = true;
+			process.StartInfo.RedirectStandardError = true;
+			process.StartInfo.CreateNoWindow = true;
+			process.StartInfo.WorkingDirectory = workDir;
+			return process;
+		}
 	}
 }

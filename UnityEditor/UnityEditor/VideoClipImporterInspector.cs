@@ -3,13 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor.AnimatedValues;
+using UnityEditor.Build;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(VideoClipImporter))]
-	internal class VideoClipImporterInspector : AssetImporterInspector
+	internal class VideoClipImporterInspector : AssetImporterEditor
 	{
 		internal struct MultiTargetSettingState
 		{
@@ -163,7 +165,15 @@ namespace UnityEditor
 
 		private const int kToggleButtonWidth = 16;
 
-		internal override bool showImportedObject
+		private const int kMinCustomWidth = 1;
+
+		private const int kMaxCustomWidth = 16384;
+
+		private const int kMinCustomHeight = 1;
+
+		private const int kMaxCustomHeight = 16384;
+
+		public override bool showImportedObject
 		{
 			get
 			{
@@ -184,7 +194,7 @@ namespace UnityEditor
 			this.m_TargetSettings = null;
 			if (base.targets.Length > 0)
 			{
-				List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+				List<BuildPlatform> validPlatforms = BuildPlatforms.instance.GetValidPlatforms();
 				this.m_TargetSettings = new VideoClipImporterInspector.InspectorTargetSettings[base.targets.Length, validPlatforms.Count + 1];
 				for (int i = 0; i < base.targets.Length; i++)
 				{
@@ -208,7 +218,7 @@ namespace UnityEditor
 		{
 			if (this.m_TargetSettings != null)
 			{
-				List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+				List<BuildPlatform> validPlatforms = BuildPlatforms.instance.GetValidPlatforms();
 				for (int i = 0; i < base.targets.Length; i++)
 				{
 					VideoClipImporter videoClipImporter = (VideoClipImporter)base.targets[i];
@@ -230,7 +240,7 @@ namespace UnityEditor
 			this.m_ModifiedTargetSettings = false;
 		}
 
-		public void OnEnable()
+		public override void OnEnable()
 		{
 			if (VideoClipImporterInspector.s_Styles == null)
 			{
@@ -412,7 +422,8 @@ namespace UnityEditor
 				{
 					EditorGUI.showMixedValue = multiState.mixedCustomWidth;
 					EditorGUI.BeginChangeCheck();
-					int customWidth = EditorGUILayout.IntField(VideoClipImporterInspector.s_Styles.widthContent, multiState.firstCustomWidth, new GUILayoutOption[0]);
+					int num = EditorGUILayout.IntField(VideoClipImporterInspector.s_Styles.widthContent, multiState.firstCustomWidth, new GUILayoutOption[0]);
+					num = Mathf.Clamp(num, 1, 16384);
 					EditorGUI.showMixedValue = false;
 					if (EditorGUI.EndChangeCheck())
 					{
@@ -420,14 +431,15 @@ namespace UnityEditor
 						{
 							if (this.m_TargetSettings[j, platformIndex].settings != null)
 							{
-								this.m_TargetSettings[j, platformIndex].settings.customWidth = customWidth;
+								this.m_TargetSettings[j, platformIndex].settings.customWidth = num;
 								this.m_ModifiedTargetSettings = true;
 							}
 						}
 					}
 					EditorGUI.showMixedValue = multiState.mixedCustomHeight;
 					EditorGUI.BeginChangeCheck();
-					int customHeight = EditorGUILayout.IntField(VideoClipImporterInspector.s_Styles.heightContent, multiState.firstCustomHeight, new GUILayoutOption[0]);
+					int num2 = EditorGUILayout.IntField(VideoClipImporterInspector.s_Styles.heightContent, multiState.firstCustomHeight, new GUILayoutOption[0]);
+					num2 = Mathf.Clamp(num2, 1, 16384);
 					EditorGUI.showMixedValue = false;
 					if (EditorGUI.EndChangeCheck())
 					{
@@ -435,7 +447,7 @@ namespace UnityEditor
 						{
 							if (this.m_TargetSettings[k, platformIndex].settings != null)
 							{
-								this.m_TargetSettings[k, platformIndex].settings.customHeight = customHeight;
+								this.m_TargetSettings[k, platformIndex].settings.customHeight = num2;
 								this.m_ModifiedTargetSettings = true;
 							}
 						}
@@ -609,7 +621,7 @@ namespace UnityEditor
 
 		private void OnTargetsInspectorGUI()
 		{
-			BuildPlayerWindow.BuildPlatform[] array = BuildPlayerWindow.GetValidPlatforms().ToArray();
+			BuildPlatform[] array = BuildPlatforms.instance.GetValidPlatforms().ToArray();
 			int num = EditorGUILayout.BeginPlatformGrouping(array, GUIContent.Temp("Default"));
 			string platformName = (num != -1) ? array[num].name : "Default";
 			this.OnTargetInspectorGUI(num + 1, platformName);
@@ -677,12 +689,12 @@ namespace UnityEditor
 			base.ApplyRevertGUI();
 		}
 
-		internal override bool HasModified()
+		public override bool HasModified()
 		{
 			return base.HasModified() || this.m_ModifiedTargetSettings;
 		}
 
-		internal override void Apply()
+		protected override void Apply()
 		{
 			base.Apply();
 			this.WriteSettingsToBackend();
@@ -721,7 +733,7 @@ namespace UnityEditor
 			return previewTitle;
 		}
 
-		internal override void ResetValues()
+		protected override void ResetValues()
 		{
 			base.ResetValues();
 			this.OnEnable();

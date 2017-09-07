@@ -239,6 +239,66 @@ namespace UnityEngine.Networking
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetIncomingPacketCountForAllHosts();
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingPacketCount();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingPacketCountForHost(int hostId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingPacketCountForConnection(int hostId, int connectionId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingMessageCount();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingMessageCountForHost(int hostId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingMessageCountForConnection(int hostId, int connectionId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingUserBytesCount();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingUserBytesCountForHost(int hostId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingUserBytesCountForConnection(int hostId, int connectionId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingSystemBytesCount();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingSystemBytesCountForHost(int hostId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingSystemBytesCountForConnection(int hostId, int connectionId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingFullBytesCount();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingFullBytesCountForHost(int hostId, out byte error);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetOutgoingFullBytesCountForConnection(int hostId, int connectionId, out byte error);
+
 		[Obsolete("GetPacketSentRate has been deprecated."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetPacketSentRate(int hostId, int connectionId, out byte error);

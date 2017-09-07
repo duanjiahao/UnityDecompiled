@@ -53,6 +53,8 @@ namespace UnityEditor.BuildReporting
 			this.SetIcon(StrippingInfo.ModuleName("UNET"), "class/NetworkTransform");
 			this.SetIcon(StrippingInfo.ModuleName("Vehicles"), "class/WheelCollider");
 			this.SetIcon(StrippingInfo.ModuleName("Cloth"), "class/Cloth");
+			this.SetIcon(StrippingInfo.ModuleName("ImageConversion"), "class/Texture");
+			this.SetIcon(StrippingInfo.ModuleName("ScreenCapture"), "class/RenderTexture");
 		}
 
 		public void OnBeforeSerialize()

@@ -18,6 +18,10 @@ namespace UnityEditor
 
 		public delegate void SerializedPropertyCallbackFunction(GenericMenu menu, SerializedProperty property);
 
+		internal static UnityAction projectWasLoaded;
+
+		internal static UnityAction editorApplicationQuit;
+
 		public static EditorApplication.ProjectWindowItemCallback projectWindowItemOnGUI;
 
 		public static EditorApplication.HierarchyWindowItemCallback hierarchyWindowItemOnGUI;
@@ -49,10 +53,6 @@ namespace UnityEditor
 		private static EditorApplication.CallbackFunction delayedCallback;
 
 		private static float s_DelayedCallbackTime = 0f;
-
-		internal static UnityAction projectWasLoaded;
-
-		internal static UnityAction editorApplicationQuit;
 
 		[CompilerGenerated]
 		private static EditorApplication.CallbackFunction <>f__mg$cache0;
@@ -102,6 +102,13 @@ namespace UnityEditor
 		}
 
 		public static extern bool isRemoteConnected
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern ScriptingRuntimeVersion scriptingRuntimeVersion
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -266,6 +273,26 @@ namespace UnityEditor
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void UpdateSceneIfNeeded();
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void Beep();
+
+		private static void Internal_ProjectWasLoaded()
+		{
+			if (EditorApplication.projectWasLoaded != null)
+			{
+				EditorApplication.projectWasLoaded();
+			}
+		}
+
+		private static void Internal_EditorApplicationQuit()
+		{
+			if (EditorApplication.editorApplicationQuit != null)
+			{
+				EditorApplication.editorApplicationQuit();
+			}
+		}
+
 		public static void RepaintProjectWindow()
 		{
 			foreach (ProjectBrowser current in ProjectBrowser.GetAllProjectBrowsers())
@@ -325,9 +352,15 @@ namespace UnityEditor
 			EditorGUIUtility.Internal_SwitchSkin();
 		}
 
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void RequestRepaintAllViews();
+		internal static void RequestRepaintAllViews()
+		{
+			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(GUIView));
+			for (int i = 0; i < array.Length; i++)
+			{
+				GUIView gUIView = (GUIView)array[i];
+				gUIView.Repaint();
+			}
+		}
 
 		private static void Internal_CallHierarchyWindowHasChanged()
 		{
@@ -428,30 +461,6 @@ namespace UnityEditor
 			}
 			WindowLayout.MaximizeKeyHandler();
 			Event.current = null;
-		}
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void Beep();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void ReportUNetWeaver(string filename, string msg, bool isError);
-
-		private static void Internal_ProjectWasLoaded()
-		{
-			if (EditorApplication.projectWasLoaded != null)
-			{
-				EditorApplication.projectWasLoaded();
-			}
-		}
-
-		private static void Internal_EditorApplicationQuit()
-		{
-			if (EditorApplication.editorApplicationQuit != null)
-			{
-				EditorApplication.editorApplicationQuit();
-			}
 		}
 
 		[Obsolete("Use EditorSceneManager.NewScene (NewSceneSetup.DefaultGameObjects)")]

@@ -336,7 +336,11 @@ namespace UnityEditor
 			this.m_IsShowingAssets = true;
 			this.m_AllowedIDs = allowedInstanceIDs;
 			string text = "";
-			if (property != null)
+			if (requiredType != null)
+			{
+				text = requiredType.Name;
+			}
+			else if (property != null)
 			{
 				text = property.objectReferenceTypeString;
 				obj = property.objectReferenceValue;
@@ -345,10 +349,6 @@ namespace UnityEditor
 				{
 					this.m_AllowSceneObjects = false;
 				}
-			}
-			else if (requiredType != null)
-			{
-				text = requiredType.Name;
 			}
 			if (this.m_AllowSceneObjects)
 			{
@@ -758,6 +758,8 @@ namespace UnityEditor
 		private void Cancel()
 		{
 			Undo.RevertAllDownToGroup(this.m_ModalUndoGroup);
+			this.m_ListArea.InitSelection(new int[0]);
+			this.m_ObjectTreeWithSearch.Clear();
 			base.Close();
 			GUI.changed = true;
 			GUIUtility.ExitGUI();

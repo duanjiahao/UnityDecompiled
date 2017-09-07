@@ -46,7 +46,7 @@ namespace UnityEditor
 			}
 		}
 
-		protected virtual void OnViewChange(EditorWindow view)
+		protected virtual void UpdateViewMargins(EditorWindow view)
 		{
 		}
 
@@ -61,7 +61,17 @@ namespace UnityEditor
 			if (this.m_ActualView != null)
 			{
 				this.m_ActualView.m_Pos = newPos;
+				this.UpdateViewMargins(this.m_ActualView);
 				this.m_ActualView.OnResized();
+			}
+		}
+
+		protected override void SetWindow(ContainerWindow win)
+		{
+			base.SetWindow(win);
+			if (this.m_ActualView != null)
+			{
+				this.UpdateViewMargins(this.m_ActualView);
 			}
 		}
 
@@ -243,7 +253,7 @@ namespace UnityEditor
 				{
 					flag = true;
 				}
-				throw ex.InnerException;
+				throw;
 			}
 			finally
 			{
@@ -283,6 +293,7 @@ namespace UnityEditor
 			if (this.m_ActualView)
 			{
 				this.m_ActualView.m_Parent = this;
+				base.visualTree.AddChild(this.m_ActualView.rootVisualContainer);
 				if (this.GetPaneMethod("Update") != null)
 				{
 					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.SendUpdate));
@@ -296,7 +307,6 @@ namespace UnityEditor
 				{
 					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(this.m_ActualView.CheckForWindowRepaint));
 				}
-				this.OnViewChange(this.m_ActualView);
 				try
 				{
 					this.Invoke("OnBecameVisible");
@@ -306,6 +316,7 @@ namespace UnityEditor
 				{
 					Debug.LogError(ex.InnerException.GetType().Name + ":" + ex.InnerException.Message);
 				}
+				this.UpdateViewMargins(this.m_ActualView);
 			}
 		}
 
@@ -313,6 +324,10 @@ namespace UnityEditor
 		{
 			if (this.m_ActualView)
 			{
+				if (this.m_ActualView.rootVisualContainer.parent == base.visualTree)
+				{
+					base.visualTree.RemoveChild(this.m_ActualView.rootVisualContainer);
+				}
 				if (this.GetPaneMethod("Update") != null)
 				{
 					EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.SendUpdate));

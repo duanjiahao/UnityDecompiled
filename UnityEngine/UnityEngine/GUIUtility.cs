@@ -11,6 +11,16 @@ namespace UnityEngine
 
 		internal static int s_OriginalID;
 
+		internal static Action takeCapture;
+
+		internal static Action releaseCapture;
+
+		internal static Func<int, IntPtr, bool> processEvent;
+
+		internal static Action cleanupRoots;
+
+		internal static Func<Exception, bool> endContainerGUIFromException;
+
 		internal static Vector2 s_EditorScreenPointOffset = Vector2.zero;
 
 		internal static float pixelsPerPoint
@@ -123,10 +133,33 @@ namespace UnityEngine
 			return GUIStateObjects.QueryStateObject(t, controlID);
 		}
 
+		[RequiredByNativeCode]
+		internal static void TakeCapture()
+		{
+			if (GUIUtility.takeCapture != null)
+			{
+				GUIUtility.takeCapture();
+			}
+		}
+
+		[RequiredByNativeCode]
+		internal static void RemoveCapture()
+		{
+			if (GUIUtility.releaseCapture != null)
+			{
+				GUIUtility.releaseCapture();
+			}
+		}
+
 		public static void ExitGUI()
 		{
 			GUIUtility.guiIsExiting = true;
 			throw new ExitGUIException();
+		}
+
+		internal static GUISkin GetDefaultSkin(int skinMode)
+		{
+			return GUIUtility.Internal_GetDefaultSkin(skinMode);
 		}
 
 		internal static GUISkin GetDefaultSkin()
@@ -142,11 +175,26 @@ namespace UnityEngine
 		[RequiredByNativeCode]
 		internal static bool ProcessEvent(int instanceID, IntPtr nativeEventPtr)
 		{
-			return false;
+			return GUIUtility.processEvent != null && GUIUtility.processEvent(instanceID, nativeEventPtr);
+		}
+
+		internal static void BeginContainer(int instanceID)
+		{
+			GUIUtility.Internal_BeginContainer(instanceID);
+		}
+
+		internal static void EndContainer()
+		{
+			GUIUtility.Internal_EndContainer();
+			GUIUtility.Internal_ExitGUI();
 		}
 
 		internal static void CleanupRoots()
 		{
+			if (GUIUtility.cleanupRoots != null)
+			{
+				GUIUtility.cleanupRoots();
+			}
 		}
 
 		[RequiredByNativeCode]
@@ -154,13 +202,11 @@ namespace UnityEngine
 		{
 			GUIUtility.s_SkinMode = skinMode;
 			GUIUtility.s_OriginalID = instanceID;
-			GUI.skin = null;
-			GUIUtility.guiIsExiting = false;
+			GUIUtility.ResetGlobalState();
 			if (useGUILayout != 0)
 			{
 				GUILayoutUtility.Begin(instanceID);
 			}
-			GUI.changed = false;
 		}
 
 		[RequiredByNativeCode]
@@ -211,16 +257,28 @@ namespace UnityEngine
 		[RequiredByNativeCode]
 		internal static bool EndContainerGUIFromException(Exception exception)
 		{
-			return GUIUtility.ShouldRethrowException(exception);
+			return GUIUtility.endContainerGUIFromException != null && GUIUtility.endContainerGUIFromException(exception);
 		}
 
-		internal static bool ShouldRethrowException(Exception exception)
+		internal static void ResetGlobalState()
+		{
+			GUI.skin = null;
+			GUIUtility.guiIsExiting = false;
+			GUI.changed = false;
+		}
+
+		internal static bool IsExitGUIException(Exception exception)
 		{
 			while (exception is TargetInvocationException && exception.InnerException != null)
 			{
 				exception = exception.InnerException;
 			}
 			return exception is ExitGUIException;
+		}
+
+		internal static bool ShouldRethrowException(Exception exception)
+		{
+			return GUIUtility.IsExitGUIException(exception);
 		}
 
 		internal static void CheckOnGUI()
@@ -346,6 +404,10 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_BeginContainer(int instanceID);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool CheckForTabEvent(Event evt);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

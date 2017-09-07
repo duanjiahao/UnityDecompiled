@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor.Collaboration;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.TreeViewExamples;
@@ -354,8 +353,13 @@ namespace UnityEditor
 			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(this.OnPlayModeStateChanged));
 			EditorApplication.assetLabelsChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.assetLabelsChanged, new EditorApplication.CallbackFunction(this.OnAssetLabelsChanged));
 			EditorApplication.assetBundleNameChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.assetBundleNameChanged, new EditorApplication.CallbackFunction(this.OnAssetBundleNameChanged));
-			Collab.instance.StateChanged += new StateChangedDelegate(this.OnCollabStateChanged);
+			AssemblyReloadEvents.afterAssemblyReload += new AssemblyReloadEvents.AssemblyReloadCallback(this.OnAfterAssemblyReload);
 			ProjectBrowser.s_LastInteractedProjectBrowser = this;
+		}
+
+		private void OnAfterAssemblyReload()
+		{
+			base.Repaint();
 		}
 
 		private void OnDisable()
@@ -364,7 +368,7 @@ namespace UnityEditor
 			EditorApplication.projectWindowChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.projectWindowChanged, new EditorApplication.CallbackFunction(this.OnProjectChanged));
 			EditorApplication.assetLabelsChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.assetLabelsChanged, new EditorApplication.CallbackFunction(this.OnAssetLabelsChanged));
 			EditorApplication.assetBundleNameChanged = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.assetBundleNameChanged, new EditorApplication.CallbackFunction(this.OnAssetBundleNameChanged));
-			Collab.instance.StateChanged -= new StateChangedDelegate(this.OnCollabStateChanged);
+			AssemblyReloadEvents.afterAssemblyReload -= new AssemblyReloadEvents.AssemblyReloadCallback(this.OnAfterAssemblyReload);
 			ProjectBrowser.s_ProjectBrowsers.Remove(this);
 		}
 
@@ -390,20 +394,6 @@ namespace UnityEditor
 			if (this.m_ListArea != null)
 			{
 				this.InitListArea();
-			}
-		}
-
-		private void OnCollabStateChanged(CollabInfo info)
-		{
-			if (info.ready && !info.inProgress && !info.maintenance)
-			{
-				if (this.Initialized())
-				{
-					if (this.m_SearchFilter.IsSearching())
-					{
-						this.InitListArea();
-					}
-				}
 			}
 		}
 
@@ -607,9 +597,24 @@ namespace UnityEditor
 
 		public void SetSearch(SearchFilter searchFilter)
 		{
+			if (!this.Initialized())
+			{
+				this.Init();
+			}
 			this.m_SearchFilter = searchFilter;
 			this.m_SearchFieldText = searchFilter.FilterToSearchFieldString();
 			this.TopBarSearchSettingsChanged();
+		}
+
+		internal void RefreshSearchIfFilterContains(string searchString)
+		{
+			if (this.Initialized() && this.m_SearchFilter.IsSearching())
+			{
+				if (this.m_SearchFieldText.IndexOf(searchString) >= 0)
+				{
+					this.InitListArea();
+				}
+			}
 		}
 
 		private void SetSearchViewState(ProjectBrowser.SearchViewState state)
@@ -694,6 +699,7 @@ namespace UnityEditor
 				switch (searchViewState)
 				{
 				case ProjectBrowser.SearchViewState.NotSearching:
+				case ProjectBrowser.SearchViewState.AssetStore:
 					content = this.m_SearchAssetStore;
 					break;
 				case ProjectBrowser.SearchViewState.AllAssets:
@@ -701,9 +707,6 @@ namespace UnityEditor
 					break;
 				case ProjectBrowser.SearchViewState.SubFolders:
 					content = this.m_SearchInFolders;
-					break;
-				case ProjectBrowser.SearchViewState.AssetStore:
-					content = this.m_SearchAssetStore;
 					break;
 				default:
 					Debug.LogError("Unhandled enum");
@@ -1322,7 +1325,7 @@ namespace UnityEditor
 			}
 		}
 
-		private void SetFolderSelection(int[] selectedInstanceIDs, bool revealSelectionAndFrameLastSelected)
+		internal void SetFolderSelection(int[] selectedInstanceIDs, bool revealSelectionAndFrameLastSelected)
 		{
 			this.m_FolderTree.SetSelection(selectedInstanceIDs, revealSelectionAndFrameLastSelected);
 			this.SetFoldersInSearchFilter(selectedInstanceIDs);
@@ -1504,6 +1507,11 @@ namespace UnityEditor
 			}
 		}
 
+		public string[] GetCurrentVisibleNames()
+		{
+			return this.m_ListArea.GetCurrentVisibleNames();
+		}
+
 		private void InitListArea()
 		{
 			this.ShowAndHideFolderTreeSelectionAsNeeded();
@@ -1643,8 +1651,8 @@ namespace UnityEditor
 							if (itemType == ProjectBrowser.ItemType.Asset)
 							{
 								Event.current.Use();
-								int[] selectedIDs = ProjectBrowser.DuplicateFolders(selection);
-								this.m_FolderTree.SetSelection(selectedIDs, true);
+								int[] selectedInstanceIDs = ProjectBrowser.DuplicateFolders(selection);
+								this.SetFolderSelection(selectedInstanceIDs, true);
 								GUIUtility.ExitGUI();
 							}
 						}
@@ -2100,6 +2108,11 @@ namespace UnityEditor
 		private void SetTwoColumns()
 		{
 			this.SetViewMode(ProjectBrowser.ViewMode.TwoColumns);
+		}
+
+		internal bool IsTwoColumns()
+		{
+			return this.m_ViewMode == ProjectBrowser.ViewMode.TwoColumns;
 		}
 
 		private void OpenTreeViewTestWindow()

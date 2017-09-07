@@ -10,7 +10,10 @@ namespace UnityEditorInternal
 		{
 			List<string> list = new List<string>();
 			list.Add("--compile-cpp");
-			list.Add("--libil2cpp-static");
+			if (builder.LinkLibIl2CppStatically)
+			{
+				list.Add("--libil2cpp-static");
+			}
 			list.Add(Il2CppNativeCodeBuilderUtils.FormatArgument("platform", builder.CompilerPlatform));
 			list.Add(Il2CppNativeCodeBuilderUtils.FormatArgument("architecture", builder.CompilerArchitecture));
 			if (debugBuild)

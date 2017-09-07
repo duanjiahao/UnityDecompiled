@@ -179,32 +179,17 @@ namespace UnityEditor
 			if (this.m_CurrentViewTool == ViewTool.FPS)
 			{
 				Event current = Event.current;
-				if (current.keyCode == CameraControllerStandard.kFPSForward.keyCode)
+				if (current.keyCode == CameraControllerStandard.kFPSForward.keyCode || current.keyCode == CameraControllerStandard.kFPSBack.keyCode)
 				{
 					this.m_Motion.z = 0f;
 					current.Use();
 				}
-				else if (current.keyCode == CameraControllerStandard.kFPSBack.keyCode)
-				{
-					this.m_Motion.z = 0f;
-					current.Use();
-				}
-				else if (current.keyCode == CameraControllerStandard.kFPSLeft.keyCode)
+				else if (current.keyCode == CameraControllerStandard.kFPSLeft.keyCode || current.keyCode == CameraControllerStandard.kFPSRight.keyCode)
 				{
 					this.m_Motion.x = 0f;
 					current.Use();
 				}
-				else if (current.keyCode == CameraControllerStandard.kFPSRight.keyCode)
-				{
-					this.m_Motion.x = 0f;
-					current.Use();
-				}
-				else if (current.keyCode == CameraControllerStandard.kFPSUp.keyCode)
-				{
-					this.m_Motion.y = 0f;
-					current.Use();
-				}
-				else if (current.keyCode == CameraControllerStandard.kFPSDown.keyCode)
+				else if (current.keyCode == CameraControllerStandard.kFPSUp.keyCode || current.keyCode == CameraControllerStandard.kFPSDown.keyCode)
 				{
 					this.m_Motion.y = 0f;
 					current.Use();
