@@ -101,7 +101,7 @@ namespace UnityEditor
 
 		public override void UpdateCullingSupportedString(ref string text)
 		{
-			text += "\n\tRotation by Speed is enabled.";
+			text += "\nRotation by Speed module is enabled.";
 		}
 	}
 }

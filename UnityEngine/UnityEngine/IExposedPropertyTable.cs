@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEngine
 {
-	internal interface IExposedPropertyTable
+	public interface IExposedPropertyTable
 	{
 		void SetReferenceValue(PropertyName id, Object value);
 

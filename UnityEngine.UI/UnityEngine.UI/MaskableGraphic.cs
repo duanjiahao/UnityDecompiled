@@ -117,6 +117,7 @@ namespace UnityEngine.UI
 			base.canvasRenderer.cull = cull;
 			if (flag)
 			{
+				UISystemProfilerApi.AddMarker("MaskableGraphic.cullingChanged", this);
 				this.m_OnCullStateChanged.Invoke(cull);
 				this.SetVerticesDirty();
 			}

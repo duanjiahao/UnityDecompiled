@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Collaboration;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ namespace UnityEditor
 		private List<SavedFilter> m_SavedFilters;
 
 		private Action m_SavedFiltersChanged;
+
+		private Action m_SavedFiltersInitialized;
 
 		private bool m_AllowHierarchy = false;
 
@@ -52,6 +55,24 @@ namespace UnityEditor
 			{
 				result = null;
 			}
+			return result;
+		}
+
+		public static int GetFilterInstanceID(string name, string searchFieldString)
+		{
+			int result;
+			if (ScriptableSingleton<SavedSearchFilters>.instance.m_SavedFilters != null && ScriptableSingleton<SavedSearchFilters>.instance.m_SavedFilters.Count > 0)
+			{
+				foreach (SavedFilter current in ScriptableSingleton<SavedSearchFilters>.instance.m_SavedFilters)
+				{
+					if ((string.IsNullOrEmpty(name) || current.m_Name == name) && current.m_Filter.FilterToSearchFieldString() == searchFieldString)
+					{
+						result = current.m_ID;
+						return result;
+					}
+				}
+			}
+			result = 0;
 			return result;
 		}
 
@@ -122,12 +143,31 @@ namespace UnityEditor
 			return ScriptableSingleton<SavedSearchFilters>.instance.BuildTreeView();
 		}
 
+		public static void RefreshSavedFilters()
+		{
+			ScriptableSingleton<SavedSearchFilters>.instance.Changed();
+		}
+
 		public static void AddChangeListener(Action callback)
 		{
 			SavedSearchFilters expr_06 = ScriptableSingleton<SavedSearchFilters>.instance;
 			expr_06.m_SavedFiltersChanged = (Action)Delegate.Remove(expr_06.m_SavedFiltersChanged, callback);
 			SavedSearchFilters expr_21 = ScriptableSingleton<SavedSearchFilters>.instance;
 			expr_21.m_SavedFiltersChanged = (Action)Delegate.Combine(expr_21.m_SavedFiltersChanged, callback);
+		}
+
+		internal static void AddInitializedListener(Action callback)
+		{
+			SavedSearchFilters expr_06 = ScriptableSingleton<SavedSearchFilters>.instance;
+			expr_06.m_SavedFiltersInitialized = (Action)Delegate.Remove(expr_06.m_SavedFiltersInitialized, callback);
+			SavedSearchFilters expr_21 = ScriptableSingleton<SavedSearchFilters>.instance;
+			expr_21.m_SavedFiltersInitialized = (Action)Delegate.Combine(expr_21.m_SavedFiltersInitialized, callback);
+		}
+
+		internal static void RemoveInitializedListener(Action callback)
+		{
+			SavedSearchFilters expr_06 = ScriptableSingleton<SavedSearchFilters>.instance;
+			expr_06.m_SavedFiltersInitialized = (Action)Delegate.Remove(expr_06.m_SavedFiltersInitialized, callback);
 		}
 
 		public static void MoveSavedFilter(int instanceID, int parentInstanceID, int targetInstanceID, bool after)
@@ -407,6 +447,10 @@ namespace UnityEditor
 					this.m_SavedFilters[j].m_Depth = 1;
 				}
 			}
+			if (this.m_SavedFiltersInitialized != null && this.m_SavedFilters.Count > 1)
+			{
+				this.m_SavedFiltersInitialized();
+			}
 		}
 
 		private int GetRoot()
@@ -436,7 +480,8 @@ namespace UnityEditor
 			{
 				TreeViewItem treeViewItem = null;
 				List<TreeViewItem> list = new List<TreeViewItem>();
-				for (int i = 0; i < this.m_SavedFilters.Count; i++)
+				int i = 0;
+				while (i < this.m_SavedFilters.Count)
 				{
 					SavedFilter savedFilter = this.m_SavedFilters[i];
 					int iD = savedFilter.m_ID;
@@ -449,8 +494,30 @@ namespace UnityEditor
 					}
 					else
 					{
+						if (Collab.instance.collabFilters.ContainsSearchFilter(savedFilter.m_Name, savedFilter.m_Filter.FilterToSearchFieldString()))
+						{
+							if (!Collab.instance.IsCollabEnabledForCurrentProject())
+							{
+								goto IL_133;
+							}
+						}
+						if (SoftlockViewController.Instance.softLockFilters.ContainsSearchFilter(savedFilter.m_Name, savedFilter.m_Filter.FilterToSearchFieldString()))
+						{
+							if (!CollabSettingsManager.IsAvailable(CollabSettingType.InProgressEnabled))
+							{
+								goto IL_133;
+							}
+							if (!Collab.instance.IsCollabEnabledForCurrentProject() || !CollabSettingsManager.inProgressEnabled)
+							{
+								goto IL_133;
+							}
+						}
 						list.Add(treeViewItem2);
 					}
+					IL_133:
+					i++;
+					continue;
+					goto IL_133;
 				}
 				TreeViewUtility.SetChildParentReferences(list, treeViewItem);
 				result = treeViewItem;

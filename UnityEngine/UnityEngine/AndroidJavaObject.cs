@@ -7,11 +7,9 @@ namespace UnityEngine
 	{
 		private static bool enableDebugPrints = false;
 
-		private bool m_disposed = false;
+		internal GlobalJavaObjectRef m_jobject;
 
-		protected IntPtr m_jobject;
-
-		protected IntPtr m_jclass;
+		internal GlobalJavaObjectRef m_jclass;
 
 		private static AndroidJavaClass s_JavaLangClass;
 
@@ -39,8 +37,8 @@ namespace UnityEngine
 				throw new Exception("JNI: Init'd AndroidJavaObject with null ptr!");
 			}
 			IntPtr objectClass = AndroidJNISafe.GetObjectClass(jobject);
-			this.m_jobject = AndroidJNI.NewGlobalRef(jobject);
-			this.m_jclass = AndroidJNI.NewGlobalRef(objectClass);
+			this.m_jobject = new GlobalJavaObjectRef(jobject);
+			this.m_jclass = new GlobalJavaObjectRef(objectClass);
 			AndroidJNISafe.DeleteLocalRef(objectClass);
 		}
 
@@ -144,13 +142,13 @@ namespace UnityEngine
 			}
 			using (AndroidJavaObject androidJavaObject = AndroidJavaObject.FindClass(className))
 			{
-				this.m_jclass = AndroidJNI.NewGlobalRef(androidJavaObject.GetRawObject());
+				this.m_jclass = new GlobalJavaObjectRef(androidJavaObject.GetRawObject());
 				jvalue[] array = AndroidJNIHelper.CreateJNIArgArray(args);
 				try
 				{
 					IntPtr constructorID = AndroidJNIHelper.GetConstructorID(this.m_jclass, args);
 					IntPtr intPtr = AndroidJNISafe.NewObject(this.m_jclass, constructorID, array);
-					this.m_jobject = AndroidJNI.NewGlobalRef(intPtr);
+					this.m_jobject = new GlobalJavaObjectRef(intPtr);
 					AndroidJNISafe.DeleteLocalRef(intPtr);
 				}
 				finally
@@ -167,12 +165,8 @@ namespace UnityEngine
 
 		protected virtual void Dispose(bool disposing)
 		{
-			if (!this.m_disposed)
-			{
-				this.m_disposed = true;
-				AndroidJNISafe.DeleteGlobalRef(this.m_jobject);
-				AndroidJNISafe.DeleteGlobalRef(this.m_jclass);
-			}
+			this.m_jobject.Dispose();
+			this.m_jclass.Dispose();
 		}
 
 		protected void _Dispose()
@@ -255,13 +249,13 @@ namespace UnityEngine
 				}
 				else if (typeof(ReturnType) == typeof(AndroidJavaClass))
 				{
-					IntPtr jclass = AndroidJNISafe.CallObjectMethod(this.m_jobject, methodID, array);
-					result = (ReturnType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(jclass));
+					IntPtr intPtr = AndroidJNISafe.CallObjectMethod(this.m_jobject, methodID, array);
+					result = ((!(intPtr == IntPtr.Zero)) ? ((ReturnType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(intPtr))) : default(ReturnType));
 				}
 				else if (typeof(ReturnType) == typeof(AndroidJavaObject))
 				{
-					IntPtr jobject = AndroidJNISafe.CallObjectMethod(this.m_jobject, methodID, array);
-					result = (ReturnType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(jobject));
+					IntPtr intPtr2 = AndroidJNISafe.CallObjectMethod(this.m_jobject, methodID, array);
+					result = ((!(intPtr2 == IntPtr.Zero)) ? ((ReturnType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(intPtr2))) : default(ReturnType));
 				}
 				else
 				{
@@ -269,8 +263,8 @@ namespace UnityEngine
 					{
 						throw new Exception("JNI: Unknown return type '" + typeof(ReturnType) + "'");
 					}
-					IntPtr array2 = AndroidJNISafe.CallObjectMethod(this.m_jobject, methodID, array);
-					result = (ReturnType)((object)AndroidJNIHelper.ConvertFromJNIArray<ReturnType>(array2));
+					IntPtr intPtr3 = AndroidJNISafe.CallObjectMethod(this.m_jobject, methodID, array);
+					result = ((!(intPtr3 == IntPtr.Zero)) ? ((ReturnType)((object)AndroidJNIHelper.ConvertFromJNIArray<ReturnType>(intPtr3))) : default(ReturnType));
 				}
 			}
 			finally
@@ -330,12 +324,12 @@ namespace UnityEngine
 			else if (typeof(FieldType) == typeof(AndroidJavaClass))
 			{
 				IntPtr objectField = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
-				result = (FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(objectField));
+				result = ((!(objectField == IntPtr.Zero)) ? ((FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(objectField))) : default(FieldType));
 			}
 			else if (typeof(FieldType) == typeof(AndroidJavaObject))
 			{
 				IntPtr objectField2 = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
-				result = (FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(objectField2));
+				result = ((!(objectField2 == IntPtr.Zero)) ? ((FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(objectField2))) : default(FieldType));
 			}
 			else
 			{
@@ -344,7 +338,7 @@ namespace UnityEngine
 					throw new Exception("JNI: Unknown field type '" + typeof(FieldType) + "'");
 				}
 				IntPtr objectField3 = AndroidJNISafe.GetObjectField(this.m_jobject, fieldID);
-				result = (FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(objectField3));
+				result = ((!(objectField3 == IntPtr.Zero)) ? ((FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(objectField3))) : default(FieldType));
 			}
 			return result;
 		}
@@ -484,13 +478,13 @@ namespace UnityEngine
 				}
 				else if (typeof(ReturnType) == typeof(AndroidJavaClass))
 				{
-					IntPtr jclass = AndroidJNISafe.CallStaticObjectMethod(this.m_jclass, methodID, array);
-					result = (ReturnType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(jclass));
+					IntPtr intPtr = AndroidJNISafe.CallStaticObjectMethod(this.m_jclass, methodID, array);
+					result = ((!(intPtr == IntPtr.Zero)) ? ((ReturnType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(intPtr))) : default(ReturnType));
 				}
 				else if (typeof(ReturnType) == typeof(AndroidJavaObject))
 				{
-					IntPtr jobject = AndroidJNISafe.CallStaticObjectMethod(this.m_jclass, methodID, array);
-					result = (ReturnType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(jobject));
+					IntPtr intPtr2 = AndroidJNISafe.CallStaticObjectMethod(this.m_jclass, methodID, array);
+					result = ((!(intPtr2 == IntPtr.Zero)) ? ((ReturnType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(intPtr2))) : default(ReturnType));
 				}
 				else
 				{
@@ -498,8 +492,8 @@ namespace UnityEngine
 					{
 						throw new Exception("JNI: Unknown return type '" + typeof(ReturnType) + "'");
 					}
-					IntPtr array2 = AndroidJNISafe.CallStaticObjectMethod(this.m_jclass, methodID, array);
-					result = (ReturnType)((object)AndroidJNIHelper.ConvertFromJNIArray<ReturnType>(array2));
+					IntPtr intPtr3 = AndroidJNISafe.CallStaticObjectMethod(this.m_jclass, methodID, array);
+					result = ((!(intPtr3 == IntPtr.Zero)) ? ((ReturnType)((object)AndroidJNIHelper.ConvertFromJNIArray<ReturnType>(intPtr3))) : default(ReturnType));
 				}
 			}
 			finally
@@ -559,12 +553,12 @@ namespace UnityEngine
 			else if (typeof(FieldType) == typeof(AndroidJavaClass))
 			{
 				IntPtr staticObjectField = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
-				result = (FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(staticObjectField));
+				result = ((!(staticObjectField == IntPtr.Zero)) ? ((FieldType)((object)AndroidJavaObject.AndroidJavaClassDeleteLocalRef(staticObjectField))) : default(FieldType));
 			}
 			else if (typeof(FieldType) == typeof(AndroidJavaObject))
 			{
 				IntPtr staticObjectField2 = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
-				result = (FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(staticObjectField2));
+				result = ((!(staticObjectField2 == IntPtr.Zero)) ? ((FieldType)((object)AndroidJavaObject.AndroidJavaObjectDeleteLocalRef(staticObjectField2))) : default(FieldType));
 			}
 			else
 			{
@@ -573,7 +567,7 @@ namespace UnityEngine
 					throw new Exception("JNI: Unknown field type '" + typeof(FieldType) + "'");
 				}
 				IntPtr staticObjectField3 = AndroidJNISafe.GetStaticObjectField(this.m_jclass, fieldID);
-				result = (FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(staticObjectField3));
+				result = ((!(staticObjectField3 == IntPtr.Zero)) ? ((FieldType)((object)AndroidJNIHelper.ConvertFromJNIArray<FieldType>(staticObjectField3))) : default(FieldType));
 			}
 			return result;
 		}

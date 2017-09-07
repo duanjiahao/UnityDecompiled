@@ -243,9 +243,15 @@ namespace UnityEditor
 			this.m_TreeView.Init(this.treeViewRect, gameObjectTreeViewDataSource, gui, dragging);
 			gameObjectTreeViewDataSource.searchMode = (int)base.searchMode;
 			gameObjectTreeViewDataSource.searchString = this.m_SearchFilter;
-			this.m_AllowAlphaNumericalSort = (EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false) || InternalEditorUtility.inBatchMode);
+			this.m_AllowAlphaNumericalSort = (EditorPrefs.GetBool("AllowAlphaNumericHierarchy", false) || !InternalEditorUtility.isHumanControllingUs);
 			this.SetUpSortMethodLists();
 			this.m_TreeView.ReloadData();
+		}
+
+		internal void SetupForTesting()
+		{
+			this.m_AllowAlphaNumericalSort = true;
+			this.SetUpSortMethodLists();
 		}
 
 		public void SetCurrentRootInstanceID(int instanceID)
@@ -1289,7 +1295,10 @@ namespace UnityEditor
 				{
 					return;
 				}
-				EditorSceneManager.SaveScene(sceneByPath);
+				if (!EditorSceneManager.SaveScene(sceneByPath))
+				{
+					return;
+				}
 			}
 			Scene src = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Additive);
 			int handle = (int)userData;

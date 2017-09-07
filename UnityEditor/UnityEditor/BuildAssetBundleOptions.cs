@@ -18,6 +18,8 @@ namespace UnityEditor
 		AppendHashToAssetBundleName = 128,
 		ChunkBasedCompression = 256,
 		StrictMode = 512,
-		DryRunBuild = 1024
+		DryRunBuild = 1024,
+		DisableLoadAssetByFileName = 4096,
+		DisableLoadAssetByFileNameWithExtension = 8192
 	}
 }

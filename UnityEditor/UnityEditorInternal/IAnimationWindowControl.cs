@@ -20,6 +20,16 @@ namespace UnityEditorInternal
 			get;
 		}
 
+		public abstract bool canPreview
+		{
+			get;
+		}
+
+		public abstract bool previewing
+		{
+			get;
+		}
+
 		public abstract bool canRecord
 		{
 			get;
@@ -59,16 +69,24 @@ namespace UnityEditorInternal
 
 		public abstract void GoToLastKeyframe();
 
-		public abstract void StartPlayback();
+		public abstract bool StartPlayback();
 
 		public abstract void StopPlayback();
 
 		public abstract bool PlaybackUpdate();
 
-		public abstract void StartRecording(UnityEngine.Object targetObject);
+		public abstract bool StartPreview();
+
+		public abstract void StopPreview();
+
+		public abstract bool StartRecording(UnityEngine.Object targetObject);
 
 		public abstract void StopRecording();
 
 		public abstract void ResampleAnimation();
+
+		public abstract void ProcessCandidates();
+
+		public abstract void ClearCandidates();
 	}
 }

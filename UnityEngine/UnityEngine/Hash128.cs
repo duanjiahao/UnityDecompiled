@@ -4,6 +4,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct Hash128
 	{
 		private uint m_u32_0;

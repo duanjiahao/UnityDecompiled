@@ -103,8 +103,14 @@ namespace UnityEditorInternal
 			base.Repaint();
 		}
 
+		private void OnEnable()
+		{
+			AssemblyReloadEvents.beforeAssemblyReload += new AssemblyReloadEvents.AssemblyReloadCallback(base.Close);
+		}
+
 		private void OnDisable()
 		{
+			AssemblyReloadEvents.beforeAssemblyReload -= new AssemblyReloadEvents.AssemblyReloadCallback(base.Close);
 			Undo.undoRedoPerformed = (Undo.UndoRedoCallback)Delegate.Remove(Undo.undoRedoPerformed, new Undo.UndoRedoCallback(this.UndoRedoPerformed));
 			SpriteEditorMenu.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 		}

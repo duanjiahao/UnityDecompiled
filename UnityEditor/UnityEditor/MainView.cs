@@ -1,5 +1,4 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -49,9 +48,9 @@ namespace UnityEditor
 			MainView mainView = ScriptableObject.CreateInstance<MainView>();
 			mainView.SetMinMaxSizes(MainView.kMinSize, MainView.kMaxSize);
 			containerWindow.rootView = mainView;
-			Resolution desktopResolution = InternalEditorUtility.GetDesktopResolution();
-			int num = Mathf.Clamp(desktopResolution.width * 3 / 4, 800, 1400);
-			int num2 = Mathf.Clamp(desktopResolution.height * 3 / 4, 600, 950);
+			Resolution currentResolution = Screen.currentResolution;
+			int num = Mathf.Clamp(currentResolution.width * 3 / 4, 800, 1400);
+			int num2 = Mathf.Clamp(currentResolution.height * 3 / 4, 600, 950);
 			containerWindow.position = new Rect(60f, 20f, (float)num, (float)num2);
 			containerWindow.Show(ShowMode.MainWindow, true, true);
 			containerWindow.DisplayAllViews();

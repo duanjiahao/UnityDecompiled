@@ -237,8 +237,8 @@ namespace UnityEditor
 			}
 			EditorGUILayout.Space();
 			GUILayout.Label(StandardShaderGUI.Styles.advancedText, EditorStyles.boldLabel, new GUILayoutOption[0]);
-			this.m_MaterialEditor.RenderQueueField();
 			this.m_MaterialEditor.EnableInstancingField();
+			this.m_MaterialEditor.DoubleSidedGIField();
 		}
 
 		internal void DetermineWorkflow(MaterialProperty[] props)

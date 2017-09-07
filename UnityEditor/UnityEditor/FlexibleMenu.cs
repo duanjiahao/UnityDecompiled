@@ -333,7 +333,7 @@ namespace UnityEditor
 					this.m_ItemProvider.Replace(index, obj);
 					EditorApplication.RequestRepaintAllViews();
 				});
-				PopupWindow.Show(itemRect, this.m_ModifyItemUI);
+				PopupWindow.Show(itemRect, this.m_ModifyItemUI, null, ShowMode.PopupMenuWithKeyboardFocus);
 			}
 		}
 

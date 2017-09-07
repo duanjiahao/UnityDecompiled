@@ -149,12 +149,42 @@ namespace UnityEditor
 
 		public static void CompressTexture(Texture2D texture, TextureFormat format, TextureCompressionQuality quality)
 		{
+			if (texture == null)
+			{
+				throw new ArgumentNullException("texture can not be null");
+			}
 			EditorUtility.CompressTexture(texture, format, (int)quality);
 		}
 
 		private static void CompressTexture(Texture2D texture, TextureFormat format)
 		{
+			if (texture == null)
+			{
+				throw new ArgumentNullException("texture can not be null");
+			}
 			EditorUtility.CompressTexture(texture, format, TextureCompressionQuality.Normal);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void CompressCubemapTexture(Cubemap texture, TextureFormat format, int quality);
+
+		public static void CompressCubemapTexture(Cubemap texture, TextureFormat format, TextureCompressionQuality quality)
+		{
+			if (texture == null)
+			{
+				throw new ArgumentNullException("texture can not be null");
+			}
+			EditorUtility.CompressCubemapTexture(texture, format, (int)quality);
+		}
+
+		private static void CompressCubemapTexture(Cubemap texture, TextureFormat format)
+		{
+			if (texture == null)
+			{
+				throw new ArgumentNullException("texture can not be null");
+			}
+			EditorUtility.CompressCubemapTexture(texture, format, TextureCompressionQuality.Normal);
 		}
 
 		[GeneratedByOldBindingsGenerator]
@@ -472,9 +502,30 @@ namespace UnityEditor
 			GUIUtility.hotControl = 0;
 		}
 
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void FocusProjectWindow();
+		[RequiredByNativeCode]
+		public static void FocusProjectWindow()
+		{
+			ProjectBrowser projectBrowser = null;
+			HostView hostView = GUIView.focusedView as HostView;
+			if (hostView != null && hostView.actualView is ProjectBrowser)
+			{
+				projectBrowser = (hostView.actualView as ProjectBrowser);
+			}
+			if (projectBrowser == null)
+			{
+				UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(ProjectBrowser));
+				if (array.Length > 0)
+				{
+					projectBrowser = (array[0] as ProjectBrowser);
+				}
+			}
+			if (projectBrowser != null)
+			{
+				projectBrowser.Focus();
+				Event e = EditorGUIUtility.CommandEvent("FocusProjectWindow");
+				projectBrowser.SendEvent(e);
+			}
+		}
 
 		public static string FormatBytes(int bytes)
 		{
@@ -621,6 +672,10 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetInvalidFilenameChars();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool IsAutoRefreshEnabled();
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

@@ -11,9 +11,20 @@ namespace UnityEngine.Scripting.APIUpdating
 			private set;
 		}
 
-		public MovedFromAttribute(string sourceNamespace)
+		public bool IsInDifferentAssembly
+		{
+			get;
+			private set;
+		}
+
+		public MovedFromAttribute(string sourceNamespace) : this(sourceNamespace, false)
+		{
+		}
+
+		public MovedFromAttribute(string sourceNamespace, bool isInDifferentAssembly)
 		{
 			this.Namespace = sourceNamespace;
+			this.IsInDifferentAssembly = isInDifferentAssembly;
 		}
 	}
 }

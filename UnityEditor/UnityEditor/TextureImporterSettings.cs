@@ -24,6 +24,12 @@ namespace UnityEditor
 		private int m_BorderMipMap;
 
 		[SerializeField]
+		private int m_MipMapsPreserveCoverage;
+
+		[SerializeField]
+		private float m_AlphaTestReferenceValue;
+
+		[SerializeField]
 		private int m_MipMapFadeDistanceStart;
 
 		[SerializeField]
@@ -41,7 +47,6 @@ namespace UnityEditor
 		[SerializeField]
 		private int m_IsReadable;
 
-		[SerializeField]
 		private int m_NPOTScale;
 
 		[SerializeField]
@@ -99,7 +104,13 @@ namespace UnityEditor
 		private float m_MipBias;
 
 		[SerializeField]
-		private int m_WrapMode;
+		private int m_WrapU;
+
+		[SerializeField]
+		private int m_WrapV;
+
+		[SerializeField]
+		private int m_WrapW;
 
 		[SerializeField]
 		private int m_NormalMap;
@@ -233,6 +244,30 @@ namespace UnityEditor
 			set
 			{
 				this.m_BorderMipMap = ((!value) ? 0 : 1);
+			}
+		}
+
+		public bool mipMapsPreserveCoverage
+		{
+			get
+			{
+				return this.m_MipMapsPreserveCoverage != 0;
+			}
+			set
+			{
+				this.m_MipMapsPreserveCoverage = ((!value) ? 0 : 1);
+			}
+		}
+
+		public float alphaTestReferenceValue
+		{
+			get
+			{
+				return this.m_AlphaTestReferenceValue;
+			}
+			set
+			{
+				this.m_AlphaTestReferenceValue = value;
 			}
 		}
 
@@ -408,11 +443,49 @@ namespace UnityEditor
 		{
 			get
 			{
-				return (TextureWrapMode)this.m_WrapMode;
+				return (TextureWrapMode)this.m_WrapU;
 			}
 			set
 			{
-				this.m_WrapMode = (int)value;
+				this.m_WrapU = (int)value;
+				this.m_WrapV = (int)value;
+				this.m_WrapW = (int)value;
+			}
+		}
+
+		public TextureWrapMode wrapModeU
+		{
+			get
+			{
+				return (TextureWrapMode)this.m_WrapU;
+			}
+			set
+			{
+				this.m_WrapU = (int)value;
+			}
+		}
+
+		public TextureWrapMode wrapModeV
+		{
+			get
+			{
+				return (TextureWrapMode)this.m_WrapV;
+			}
+			set
+			{
+				this.m_WrapV = (int)value;
+			}
+		}
+
+		public TextureWrapMode wrapModeW
+		{
+			get
+			{
+				return (TextureWrapMode)this.m_WrapW;
+			}
+			set
+			{
+				this.m_WrapW = (int)value;
 			}
 		}
 

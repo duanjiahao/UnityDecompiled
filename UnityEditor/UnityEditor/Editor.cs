@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
@@ -12,6 +13,8 @@ namespace UnityEditor
 	[StructLayout(LayoutKind.Sequential)]
 	public class Editor : ScriptableObject, IPreviewable
 	{
+		internal delegate void OnEditorGUIDelegate(Editor editor, Rect drawRect);
+
 		private class Styles
 		{
 			public GUIStyle inspectorBig = new GUIStyle(EditorStyles.inspectorBig);
@@ -54,6 +57,8 @@ namespace UnityEditor
 		private static Editor.Styles s_Styles;
 
 		private const float kImageSectionWidth = 44f;
+
+		internal static Editor.OnEditorGUIDelegate OnPostIconGUI = null;
 
 		internal bool canEditMultipleObjects
 		{
@@ -114,7 +119,7 @@ namespace UnityEditor
 					{
 						this.m_Targets.Length,
 						" ",
-						ObjectNames.NicifyVariableName(ObjectNames.GetClassName(this.target)),
+						ObjectNames.NicifyVariableName(ObjectNames.GetTypeName(this.target)),
 						"s"
 					});
 				}
@@ -488,7 +493,7 @@ namespace UnityEditor
 			GUILayoutUtility.GetRect(10f, 10f, 16f, 16f, EditorStyles.layerMaskField);
 			GUILayout.FlexibleSpace();
 			bool flag = true;
-			if (!(this is AssetImporterInspector))
+			if (!(this is AssetImporterEditor))
 			{
 				if (!AssetDatabase.IsMainAsset(this.targets[0]))
 				{
@@ -504,9 +509,9 @@ namespace UnityEditor
 			{
 				if (GUILayout.Button("Open", EditorStyles.miniButton, new GUILayoutOption[0]))
 				{
-					if (this is AssetImporterInspector)
+					if (this is AssetImporterEditor)
 					{
-						AssetDatabase.OpenAsset((this as AssetImporterInspector).assetEditor.targets);
+						AssetDatabase.OpenAsset((this as AssetImporterEditor).assetEditor.targets);
 					}
 					else
 					{
@@ -618,6 +623,10 @@ namespace UnityEditor
 			{
 				GUI.Label(rect, AssetPreview.GetMiniTypeThumbnail(typeof(UnityEngine.Object)), Editor.s_Styles.centerStyle);
 			}
+			if (editor)
+			{
+				editor.DrawPostIconContent(rect);
+			}
 			Rect rect2 = new Rect(r.x + 44f, r.y + 6f, r.width - 44f - 38f - 4f, 16f);
 			if (editor)
 			{
@@ -638,6 +647,28 @@ namespace UnityEditor
 				current.Use();
 			}
 			return lastRect;
+		}
+
+		internal void DrawPostIconContent(Rect iconRect)
+		{
+			if (Editor.OnPostIconGUI != null)
+			{
+				Rect drawRect = iconRect;
+				drawRect.x = drawRect.xMax - 16f + 4f;
+				drawRect.y = drawRect.yMax - 16f + 1f;
+				drawRect.width = 16f;
+				drawRect.height = 16f;
+				Editor.OnPostIconGUI(this, drawRect);
+			}
+		}
+
+		internal void DrawPostIconContent()
+		{
+			if (Event.current.type == EventType.Repaint)
+			{
+				Rect lastRect = GUILayoutUtility.GetLastRect();
+				this.DrawPostIconContent(lastRect);
+			}
 		}
 
 		public virtual void DrawPreview(Rect previewArea)

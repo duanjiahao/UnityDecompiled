@@ -33,6 +33,7 @@ namespace UnityEditor
 			AboutWindow windowWithRect = EditorWindow.GetWindowWithRect<AboutWindow>(new Rect(100f, 100f, 570f, 340f), true, "About Unity");
 			windowWithRect.position = new Rect(100f, 100f, 570f, 340f);
 			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
+			AboutWindowNames.ParseCredits();
 		}
 
 		private static void LoadLogos()
@@ -59,13 +60,16 @@ namespace UnityEditor
 		public void UpdateScroll()
 		{
 			double num = EditorApplication.timeSinceStartup - this.m_LastScrollUpdate;
-			this.m_TextYPos -= 40f * (float)num;
-			if (this.m_TextYPos < -this.m_TotalCreditsHeight)
-			{
-				this.m_TextYPos = this.m_TextInitialYPos;
-			}
-			base.Repaint();
 			this.m_LastScrollUpdate = EditorApplication.timeSinceStartup;
+			if (GUIUtility.hotControl == 0)
+			{
+				this.m_TextYPos -= 40f * (float)num;
+				if (this.m_TextYPos < -this.m_TotalCreditsHeight)
+				{
+					this.m_TextYPos = this.m_TextInitialYPos;
+				}
+				base.Repaint();
+			}
 		}
 
 		public void OnGUI()
@@ -128,16 +132,18 @@ namespace UnityEditor
 				GUILayout.FlexibleSpace();
 				float creditsWidth = base.position.width - 10f;
 				float num = this.m_TextYPos;
-				GUI.BeginGroup(GUILayoutUtility.GetRect(10f, this.m_TextInitialYPos));
-				string[] nameChunks = AboutWindowNames.nameChunks;
-				for (int i = 0; i < nameChunks.Length; i++)
+				Rect rect = GUILayoutUtility.GetRect(10f, this.m_TextInitialYPos);
+				GUI.BeginGroup(rect);
+				string[] array = AboutWindowNames.Names(null, true);
+				for (int i = 0; i < array.Length; i++)
 				{
-					string nameChunk = nameChunks[i];
+					string nameChunk = array[i];
 					num = AboutWindow.DoCreditsNameChunk(nameChunk, creditsWidth, num);
 				}
 				num = AboutWindow.DoCreditsNameChunk("Thanks to Forest 'Yoggy' Johnson, Graham McAllister, David Janik-Jones, Raimund Schumacher, Alan J. Dickins and Emil 'Humus' Persson", creditsWidth, num);
 				this.m_TotalCreditsHeight = num - this.m_TextYPos;
 				GUI.EndGroup();
+				this.HandleScrollEvents(rect);
 				GUILayout.FlexibleSpace();
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 				GUILayout.Label(AboutWindow.s_MonoLogo, new GUILayoutOption[0]);
@@ -172,6 +178,38 @@ namespace UnityEditor
 				GUILayout.Space(5f);
 				GUILayout.EndHorizontal();
 				GUILayout.Space(5f);
+			}
+		}
+
+		private void HandleScrollEvents(Rect scrollAreaRect)
+		{
+			int controlID = GUIUtility.GetControlID(FocusType.Passive);
+			EventType typeForControl = Event.current.GetTypeForControl(controlID);
+			if (typeForControl != EventType.MouseDown)
+			{
+				if (typeForControl != EventType.MouseDrag)
+				{
+					if (typeForControl == EventType.MouseUp)
+					{
+						if (GUIUtility.hotControl == controlID)
+						{
+							GUIUtility.hotControl = 0;
+							Event.current.Use();
+						}
+					}
+				}
+				else if (GUIUtility.hotControl == controlID)
+				{
+					this.m_TextYPos += Event.current.delta.y;
+					this.m_TextYPos = Mathf.Min(this.m_TextYPos, this.m_TextInitialYPos);
+					this.m_TextYPos = Mathf.Max(this.m_TextYPos, -this.m_TotalCreditsHeight);
+					Event.current.Use();
+				}
+			}
+			else if (scrollAreaRect.Contains(Event.current.mousePosition))
+			{
+				GUIUtility.hotControl = controlID;
+				Event.current.Use();
 			}
 		}
 

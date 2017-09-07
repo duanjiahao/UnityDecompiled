@@ -184,19 +184,20 @@ namespace UnityEngine.UI
 					}
 					if (this.canvas.renderMode != RenderMode.ScreenSpaceOverlay && this.blockingObjects != GraphicRaycaster.BlockingObjects.None)
 					{
-						float num5 = 100f;
+						float f = 100f;
 						if (this.eventCamera != null)
 						{
-							num5 = this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane;
+							float z = r.direction.z;
+							f = ((!Mathf.Approximately(0f, z)) ? Mathf.Abs((this.eventCamera.farClipPlane - this.eventCamera.nearClipPlane) / z) : float.PositiveInfinity);
 						}
 						if (this.blockingObjects == GraphicRaycaster.BlockingObjects.ThreeD || this.blockingObjects == GraphicRaycaster.BlockingObjects.All)
 						{
 							if (ReflectionMethodsCache.Singleton.raycast3D != null)
 							{
-								RaycastHit raycastHit;
-								if (ReflectionMethodsCache.Singleton.raycast3D(r, out raycastHit, num5, this.m_BlockingMask))
+								RaycastHit[] array = ReflectionMethodsCache.Singleton.raycast3DAll(r, f, this.m_BlockingMask);
+								if (array.Length > 0)
 								{
-									num4 = raycastHit.distance;
+									num4 = array[0].distance;
 								}
 							}
 						}
@@ -204,10 +205,10 @@ namespace UnityEngine.UI
 						{
 							if (ReflectionMethodsCache.Singleton.raycast2D != null)
 							{
-								RaycastHit2D raycastHit2D = ReflectionMethodsCache.Singleton.raycast2D(r.origin, r.direction, num5, this.m_BlockingMask);
-								if (raycastHit2D.collider)
+								RaycastHit2D[] array2 = ReflectionMethodsCache.Singleton.getRayIntersectionAll(r, f, this.m_BlockingMask);
+								if (array2.Length > 0)
 								{
-									num4 = raycastHit2D.fraction * num5;
+									num4 = array2[0].distance;
 								}
 							}
 						}
@@ -235,28 +236,28 @@ namespace UnityEngine.UI
 						}
 						if (flag)
 						{
-							float num6;
+							float num5;
 							if (this.eventCamera == null || this.canvas.renderMode == RenderMode.ScreenSpaceOverlay)
 							{
-								num6 = 0f;
+								num5 = 0f;
 							}
 							else
 							{
 								Transform transform = gameObject.transform;
 								Vector3 forward = transform.forward;
-								num6 = Vector3.Dot(forward, transform.position - r.origin) / Vector3.Dot(forward, r.direction);
-								if (num6 < 0f)
+								num5 = Vector3.Dot(forward, transform.position - this.eventCamera.transform.position) / Vector3.Dot(forward, r.direction);
+								if (num5 < 0f)
 								{
-									goto IL_4C8;
+									goto IL_4F9;
 								}
 							}
-							if (num6 < num4)
+							if (num5 < num4)
 							{
 								RaycastResult item = new RaycastResult
 								{
 									gameObject = gameObject,
 									module = this,
-									distance = num6,
+									distance = num5,
 									screenPosition = vector,
 									index = (float)resultAppendList.Count,
 									depth = this.m_RaycastResults[i].depth,
@@ -266,10 +267,10 @@ namespace UnityEngine.UI
 								resultAppendList.Add(item);
 							}
 						}
-						IL_4C8:
+						IL_4F9:
 						i++;
 						continue;
-						goto IL_4C8;
+						goto IL_4F9;
 					}
 				}
 			}

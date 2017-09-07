@@ -29,6 +29,12 @@ namespace UnityEditor
 
 			public GUIContent remapCurve = EditorGUIUtility.TextContent("Remap Curve");
 
+			public GUIContent positionAmount = EditorGUIUtility.TextContent("Position Amount|What proportion of the noise is applied to the particle positions.");
+
+			public GUIContent rotationAmount = EditorGUIUtility.TextContent("Rotation Amount|What proportion of the noise is applied to the particle rotations, in degrees per second.");
+
+			public GUIContent sizeAmount = EditorGUIUtility.TextContent("Size Amount|Multiply the size of the particle by a proportion of the noise.");
+
 			public GUIContent x = EditorGUIUtility.TextContent("X");
 
 			public GUIContent y = EditorGUIUtility.TextContent("Y");
@@ -77,6 +83,12 @@ namespace UnityEditor
 
 		private SerializedProperty m_RemapEnabled;
 
+		private SerializedMinMaxCurve m_PositionAmount;
+
+		private SerializedMinMaxCurve m_RotationAmount;
+
+		private SerializedMinMaxCurve m_SizeAmount;
+
 		private const int k_PreviewSize = 96;
 
 		private static Texture2D s_PreviewTexture;
@@ -122,6 +134,9 @@ namespace UnityEditor
 				this.m_RemapY.m_AllowConstant = false;
 				this.m_RemapZ.m_AllowConstant = false;
 				this.m_RemapEnabled = base.GetProperty("remapEnabled");
+				this.m_PositionAmount = new SerializedMinMaxCurve(this, NoiseModuleUI.s_Texts.positionAmount, "positionAmount", ModuleUI.kUseSignedRange);
+				this.m_RotationAmount = new SerializedMinMaxCurve(this, NoiseModuleUI.s_Texts.rotationAmount, "rotationAmount", ModuleUI.kUseSignedRange);
+				this.m_SizeAmount = new SerializedMinMaxCurve(this, NoiseModuleUI.s_Texts.sizeAmount, "sizeAmount", ModuleUI.kUseSignedRange);
 				if (NoiseModuleUI.s_PreviewTexture == null)
 				{
 					NoiseModuleUI.s_PreviewTexture = new Texture2D(96, 96, TextureFormat.RGBA32, false, true);
@@ -232,6 +247,9 @@ namespace UnityEditor
 					ModuleUI.GUIMinMaxCurve(NoiseModuleUI.s_Texts.remapCurve, this.m_RemapX, new GUILayoutOption[0]);
 				}
 			}
+			ModuleUI.GUIMinMaxCurve(NoiseModuleUI.s_Texts.positionAmount, this.m_PositionAmount, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxCurve(NoiseModuleUI.s_Texts.rotationAmount, this.m_RotationAmount, new GUILayoutOption[0]);
+			ModuleUI.GUIMinMaxCurve(NoiseModuleUI.s_Texts.sizeAmount, this.m_SizeAmount, new GUILayoutOption[0]);
 			if (!base.isWindowView)
 			{
 				GUILayout.EndVertical();
@@ -261,6 +279,11 @@ namespace UnityEditor
 			{
 				GUILayout.EndHorizontal();
 			}
+		}
+
+		public override void UpdateCullingSupportedString(ref string text)
+		{
+			text += "\nNoise module is enabled.";
 		}
 	}
 }

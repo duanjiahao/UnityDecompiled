@@ -31,10 +31,14 @@ namespace UnityEditor
 
 			public GUIContent colorOverTrail = EditorGUIUtility.TextContent("Color over Trail|Select a color for the trail from its start to end vertex.");
 
+			public GUIContent generateLightingData = EditorGUIUtility.TextContent("Generate Lighting Data|Toggle generation of normal and tangent data, for use in lit shaders.");
+
 			public string[] textureModeOptions = new string[]
 			{
 				"Stretch",
-				"Tile"
+				"Tile",
+				"DistributePerSegment",
+				"RepeatPerSegment"
 			};
 		}
 
@@ -64,6 +68,8 @@ namespace UnityEditor
 
 		private SerializedMinMaxGradient m_ColorOverTrail;
 
+		private SerializedProperty m_GenerateLightingData;
+
 		public TrailModuleUI(ParticleSystemUI owner, SerializedObject o, string displayName) : base(owner, o, "TrailModule", displayName)
 		{
 			this.m_ToolTip = "Attach trails to the particles.";
@@ -89,6 +95,7 @@ namespace UnityEditor
 				this.m_ColorOverLifetime = new SerializedMinMaxGradient(this, "colorOverLifetime");
 				this.m_WidthOverTrail = new SerializedMinMaxCurve(this, TrailModuleUI.s_Texts.widthOverTrail, "widthOverTrail");
 				this.m_ColorOverTrail = new SerializedMinMaxGradient(this, "colorOverTrail");
+				this.m_GenerateLightingData = base.GetProperty("generateLightingData");
 			}
 		}
 
@@ -110,6 +117,7 @@ namespace UnityEditor
 			base.GUIMinMaxGradient(TrailModuleUI.s_Texts.colorOverLifetime, this.m_ColorOverLifetime, false, new GUILayoutOption[0]);
 			ModuleUI.GUIMinMaxCurve(TrailModuleUI.s_Texts.widthOverTrail, this.m_WidthOverTrail, new GUILayoutOption[0]);
 			base.GUIMinMaxGradient(TrailModuleUI.s_Texts.colorOverTrail, this.m_ColorOverTrail, false, new GUILayoutOption[0]);
+			ModuleUI.GUIToggle(TrailModuleUI.s_Texts.generateLightingData, this.m_GenerateLightingData, new GUILayoutOption[0]);
 			ParticleSystem[] particleSystems = this.m_ParticleSystemUI.m_ParticleSystems;
 			for (int i = 0; i < particleSystems.Length; i++)
 			{
@@ -124,6 +132,11 @@ namespace UnityEditor
 					}
 				}
 			}
+		}
+
+		public override void UpdateCullingSupportedString(ref string text)
+		{
+			text += "\nTrails module is enabled.";
 		}
 	}
 }

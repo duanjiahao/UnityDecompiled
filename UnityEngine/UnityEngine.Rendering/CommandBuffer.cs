@@ -132,7 +132,7 @@ namespace UnityEngine.Rendering
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void CopyCounterValue(ComputeBuffer src, ComputeBuffer dst, uint dstOffset);
+		public extern void CopyCounterValue(ComputeBuffer src, ComputeBuffer dst, uint dstOffsetBytes);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -498,108 +498,203 @@ namespace UnityEngine.Rendering
 
 		public void Blit(Texture source, RenderTargetIdentifier dest)
 		{
-			this.Blit_Texture(source, ref dest, null, -1);
+			this.Blit_Texture(source, ref dest, null, -1, new Vector2(1f, 1f), new Vector2(0f, 0f));
+		}
+
+		public void Blit(Texture source, RenderTargetIdentifier dest, Vector2 scale, Vector2 offset)
+		{
+			this.Blit_Texture(source, ref dest, null, -1, scale, offset);
 		}
 
 		public void Blit(Texture source, RenderTargetIdentifier dest, Material mat)
 		{
-			this.Blit_Texture(source, ref dest, mat, -1);
+			this.Blit_Texture(source, ref dest, mat, -1, new Vector2(1f, 1f), new Vector2(0f, 0f));
 		}
 
 		public void Blit(Texture source, RenderTargetIdentifier dest, Material mat, int pass)
 		{
-			this.Blit_Texture(source, ref dest, mat, pass);
+			this.Blit_Texture(source, ref dest, mat, pass, new Vector2(1f, 1f), new Vector2(0f, 0f));
+		}
+
+		private void Blit_Texture(Texture source, ref RenderTargetIdentifier dest, Material mat, int pass, Vector2 scale, Vector2 offset)
+		{
+			CommandBuffer.INTERNAL_CALL_Blit_Texture(this, source, ref dest, mat, pass, ref scale, ref offset);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Blit_Texture(Texture source, ref RenderTargetIdentifier dest, Material mat, int pass);
+		private static extern void INTERNAL_CALL_Blit_Texture(CommandBuffer self, Texture source, ref RenderTargetIdentifier dest, Material mat, int pass, ref Vector2 scale, ref Vector2 offset);
 
 		public void Blit(RenderTargetIdentifier source, RenderTargetIdentifier dest)
 		{
-			this.Blit_Identifier(ref source, ref dest, null, -1);
+			this.Blit_Identifier(ref source, ref dest, null, -1, new Vector2(1f, 1f), new Vector2(0f, 0f));
+		}
+
+		public void Blit(RenderTargetIdentifier source, RenderTargetIdentifier dest, Vector2 scale, Vector2 offset)
+		{
+			this.Blit_Identifier(ref source, ref dest, null, -1, scale, offset);
 		}
 
 		public void Blit(RenderTargetIdentifier source, RenderTargetIdentifier dest, Material mat)
 		{
-			this.Blit_Identifier(ref source, ref dest, mat, -1);
+			this.Blit_Identifier(ref source, ref dest, mat, -1, new Vector2(1f, 1f), new Vector2(0f, 0f));
 		}
 
 		public void Blit(RenderTargetIdentifier source, RenderTargetIdentifier dest, Material mat, int pass)
 		{
-			this.Blit_Identifier(ref source, ref dest, mat, pass);
+			this.Blit_Identifier(ref source, ref dest, mat, pass, new Vector2(1f, 1f), new Vector2(0f, 0f));
+		}
+
+		private void Blit_Identifier(ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, Material mat, int pass, Vector2 scale, Vector2 offset)
+		{
+			CommandBuffer.INTERNAL_CALL_Blit_Identifier(this, ref source, ref dest, mat, pass, ref scale, ref offset);
 		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void Blit_Identifier(ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, [DefaultValue("null")] Material mat, [DefaultValue("-1")] int pass);
-
-		[ExcludeFromDocs]
-		private void Blit_Identifier(ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, Material mat)
-		{
-			int pass = -1;
-			this.Blit_Identifier(ref source, ref dest, mat, pass);
-		}
-
-		[ExcludeFromDocs]
-		private void Blit_Identifier(ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest)
-		{
-			int pass = -1;
-			Material mat = null;
-			this.Blit_Identifier(ref source, ref dest, mat, pass);
-		}
+		private static extern void INTERNAL_CALL_Blit_Identifier(CommandBuffer self, ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, Material mat, int pass, ref Vector2 scale, ref Vector2 offset);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void GetTemporaryRT(int nameID, int width, int height, [DefaultValue("0")] int depthBuffer, [DefaultValue("FilterMode.Point")] FilterMode filter, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing, [DefaultValue("false")] bool enableRandomWrite);
+		public extern void GetTemporaryRT(int nameID, int width, int height, [DefaultValue("0")] int depthBuffer, [DefaultValue("FilterMode.Point")] FilterMode filter, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing, [DefaultValue("false")] bool enableRandomWrite, [DefaultValue("RenderTextureMemoryless.None")] RenderTextureMemoryless memorylessMode);
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite, int antiAliasing, bool enableRandomWrite)
+		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
+		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite, int antiAliasing)
 		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
 			bool enableRandomWrite = false;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite)
 		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
 			bool enableRandomWrite = false;
 			int antiAliasing = 1;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter, RenderTextureFormat format)
 		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
 			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer, FilterMode filter)
 		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
 			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
 			RenderTextureFormat format = RenderTextureFormat.Default;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
 		}
 
 		[ExcludeFromDocs]
 		public void GetTemporaryRT(int nameID, int width, int height, int depthBuffer)
+		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
+			bool enableRandomWrite = false;
+			int antiAliasing = 1;
+			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
+			RenderTextureFormat format = RenderTextureFormat.Default;
+			FilterMode filter = FilterMode.Point;
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
+		}
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRT(int nameID, int width, int height)
+		{
+			RenderTextureMemoryless memorylessMode = RenderTextureMemoryless.None;
+			bool enableRandomWrite = false;
+			int antiAliasing = 1;
+			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
+			RenderTextureFormat format = RenderTextureFormat.Default;
+			FilterMode filter = FilterMode.Point;
+			int depthBuffer = 0;
+			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite, memorylessMode);
+		}
+
+		public void GetTemporaryRT(int nameID, RenderTextureDescriptor desc, [DefaultValue("FilterMode.Point")] FilterMode filter)
+		{
+			CommandBuffer.INTERNAL_CALL_GetTemporaryRT(this, nameID, ref desc, filter);
+		}
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRT(int nameID, RenderTextureDescriptor desc)
+		{
+			FilterMode filter = FilterMode.Point;
+			CommandBuffer.INTERNAL_CALL_GetTemporaryRT(this, nameID, ref desc, filter);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetTemporaryRT(CommandBuffer self, int nameID, ref RenderTextureDescriptor desc, FilterMode filter);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void GetTemporaryRTArray(int nameID, int width, int height, int slices, [DefaultValue("0")] int depthBuffer, [DefaultValue("FilterMode.Point")] FilterMode filter, [DefaultValue("RenderTextureFormat.Default")] RenderTextureFormat format, [DefaultValue("RenderTextureReadWrite.Default")] RenderTextureReadWrite readWrite, [DefaultValue("1")] int antiAliasing, [DefaultValue("false")] bool enableRandomWrite);
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRTArray(int nameID, int width, int height, int slices, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite, int antiAliasing)
+		{
+			bool enableRandomWrite = false;
+			this.GetTemporaryRTArray(nameID, width, height, slices, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+		}
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRTArray(int nameID, int width, int height, int slices, int depthBuffer, FilterMode filter, RenderTextureFormat format, RenderTextureReadWrite readWrite)
+		{
+			bool enableRandomWrite = false;
+			int antiAliasing = 1;
+			this.GetTemporaryRTArray(nameID, width, height, slices, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+		}
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRTArray(int nameID, int width, int height, int slices, int depthBuffer, FilterMode filter, RenderTextureFormat format)
+		{
+			bool enableRandomWrite = false;
+			int antiAliasing = 1;
+			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
+			this.GetTemporaryRTArray(nameID, width, height, slices, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+		}
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRTArray(int nameID, int width, int height, int slices, int depthBuffer, FilterMode filter)
+		{
+			bool enableRandomWrite = false;
+			int antiAliasing = 1;
+			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
+			RenderTextureFormat format = RenderTextureFormat.Default;
+			this.GetTemporaryRTArray(nameID, width, height, slices, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+		}
+
+		[ExcludeFromDocs]
+		public void GetTemporaryRTArray(int nameID, int width, int height, int slices, int depthBuffer)
 		{
 			bool enableRandomWrite = false;
 			int antiAliasing = 1;
 			RenderTextureReadWrite readWrite = RenderTextureReadWrite.Default;
 			RenderTextureFormat format = RenderTextureFormat.Default;
 			FilterMode filter = FilterMode.Point;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+			this.GetTemporaryRTArray(nameID, width, height, slices, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
 		[ExcludeFromDocs]
-		public void GetTemporaryRT(int nameID, int width, int height)
+		public void GetTemporaryRTArray(int nameID, int width, int height, int slices)
 		{
 			bool enableRandomWrite = false;
 			int antiAliasing = 1;
@@ -607,7 +702,7 @@ namespace UnityEngine.Rendering
 			RenderTextureFormat format = RenderTextureFormat.Default;
 			FilterMode filter = FilterMode.Point;
 			int depthBuffer = 0;
-			this.GetTemporaryRT(nameID, width, height, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
+			this.GetTemporaryRTArray(nameID, width, height, slices, depthBuffer, filter, format, readWrite, antiAliasing, enableRandomWrite);
 		}
 
 		[GeneratedByOldBindingsGenerator]
@@ -865,5 +960,27 @@ namespace UnityEngine.Rendering
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void EndSample(string name);
+
+		public void IssuePluginEventAndData(IntPtr callback, int eventID, IntPtr data)
+		{
+			if (callback == IntPtr.Zero)
+			{
+				throw new ArgumentException("Null callback specified.");
+			}
+			this.IssuePluginEventAndDataInternal(callback, eventID, data);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void IssuePluginEventAndDataInternal(IntPtr callback, int eventID, IntPtr data);
+
+		public void IssuePluginCustomBlit(IntPtr callback, uint command, RenderTargetIdentifier source, RenderTargetIdentifier dest, uint commandParam, uint commandFlags)
+		{
+			this.IssuePluginCustomBlitInternal(callback, command, ref source, ref dest, commandParam, commandFlags);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void IssuePluginCustomBlitInternal(IntPtr callback, uint command, ref RenderTargetIdentifier source, ref RenderTargetIdentifier dest, uint commandParam, uint commandFlags);
 	}
 }

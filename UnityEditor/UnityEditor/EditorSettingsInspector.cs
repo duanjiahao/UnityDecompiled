@@ -43,8 +43,7 @@ namespace UnityEditor
 		private EditorSettingsInspector.PopupElement[] vcDefaultPopupList = new EditorSettingsInspector.PopupElement[]
 		{
 			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Disabled),
-			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Generic),
-			new EditorSettingsInspector.PopupElement(ExternalVersionControl.AssetServer, true)
+			new EditorSettingsInspector.PopupElement(ExternalVersionControl.Generic)
 		};
 
 		private EditorSettingsInspector.PopupElement[] vcPopupList = null;
@@ -65,6 +64,8 @@ namespace UnityEditor
 		private EditorSettingsInspector.PopupElement[] spritePackerPopupList = new EditorSettingsInspector.PopupElement[]
 		{
 			new EditorSettingsInspector.PopupElement("Disabled"),
+			new EditorSettingsInspector.PopupElement("Enabled For Builds(Legacy Sprite Packer)"),
+			new EditorSettingsInspector.PopupElement("Always Enabled(Legacy Sprite Packer)"),
 			new EditorSettingsInspector.PopupElement("Enabled For Builds"),
 			new EditorSettingsInspector.PopupElement("Always Enabled")
 		};
@@ -144,7 +145,7 @@ namespace UnityEditor
 			List<EditorSettingsInspector.PopupElement> list2 = new List<EditorSettingsInspector.PopupElement>();
 			list.Add(DevDevice.none);
 			list2.Add(new EditorSettingsInspector.PopupElement("None"));
-			list.Add(new DevDevice("Any Android Device", "Any Android Device", "Android", "Android", DevDeviceState.Connected, DevDeviceFeatures.RemoteConnection));
+			list.Add(new DevDevice("Any Android Device", "Any Android Device", "virtual", "Android", DevDeviceState.Connected, DevDeviceFeatures.RemoteConnection));
 			list2.Add(new EditorSettingsInspector.PopupElement("Any Android Device"));
 			DevDevice[] devices = DevDeviceList.GetDevices();
 			for (int i = 0; i < devices.Length; i++)
@@ -183,43 +184,35 @@ namespace UnityEditor
 			{
 				GUI.enabled = true;
 				bool flag2 = false;
-				if (EditorSettings.externalVersionControl == ExternalVersionControl.AssetServer)
+				if (!(EditorSettings.externalVersionControl == ExternalVersionControl.Generic) && !(EditorSettings.externalVersionControl == ExternalVersionControl.Disabled))
 				{
-					EditorUserSettings.SetConfigValue("vcUsername", EditorGUILayout.TextField("User", EditorUserSettings.GetConfigValue("vcUsername"), new GUILayoutOption[0]));
-					EditorUserSettings.SetConfigValue("vcPassword", EditorGUILayout.PasswordField("Password", EditorUserSettings.GetConfigValue("vcPassword"), new GUILayoutOption[0]));
-				}
-				else if (!(EditorSettings.externalVersionControl == ExternalVersionControl.Generic))
-				{
-					if (!(EditorSettings.externalVersionControl == ExternalVersionControl.Disabled))
+					ConfigField[] activeConfigFields = Provider.GetActiveConfigFields();
+					flag2 = true;
+					ConfigField[] array = activeConfigFields;
+					for (int i = 0; i < array.Length; i++)
 					{
-						ConfigField[] activeConfigFields = Provider.GetActiveConfigFields();
-						flag2 = true;
-						ConfigField[] array = activeConfigFields;
-						for (int i = 0; i < array.Length; i++)
+						ConfigField configField = array[i];
+						string configValue = EditorUserSettings.GetConfigValue(configField.name);
+						string text;
+						if (configField.isPassword)
 						{
-							ConfigField configField = array[i];
-							string configValue = EditorUserSettings.GetConfigValue(configField.name);
-							string text;
-							if (configField.isPassword)
+							text = EditorGUILayout.PasswordField(configField.label, configValue, new GUILayoutOption[0]);
+							if (text != configValue)
 							{
-								text = EditorGUILayout.PasswordField(configField.label, configValue, new GUILayoutOption[0]);
-								if (text != configValue)
-								{
-									EditorUserSettings.SetPrivateConfigValue(configField.name, text);
-								}
+								EditorUserSettings.SetPrivateConfigValue(configField.name, text);
 							}
-							else
+						}
+						else
+						{
+							text = EditorGUILayout.TextField(configField.label, configValue, new GUILayoutOption[0]);
+							if (text != configValue)
 							{
-								text = EditorGUILayout.TextField(configField.label, configValue, new GUILayoutOption[0]);
-								if (text != configValue)
-								{
-									EditorUserSettings.SetConfigValue(configField.name, text);
-								}
+								EditorUserSettings.SetConfigValue(configField.name, text);
 							}
-							if (configField.isRequired && string.IsNullOrEmpty(text))
-							{
-								flag2 = false;
-							}
+						}
+						if (configField.isRequired && string.IsNullOrEmpty(text))
+						{
+							flag2 = false;
 						}
 					}
 				}
@@ -227,9 +220,16 @@ namespace UnityEditor
 				int num = Array.FindIndex<string>(this.logLevelPopupList, (string item) => item.ToLower() == logLevel);
 				if (num == -1)
 				{
-					logLevel = "info";
+					logLevel = "notice";
+					num = Array.FindIndex<string>(this.logLevelPopupList, (string item) => item.ToLower() == logLevel);
+					if (num == -1)
+					{
+						num = 0;
+					}
+					logLevel = this.logLevelPopupList[num];
+					EditorUserSettings.SetConfigValue("vcSharedLogLevel", logLevel);
 				}
-				int num2 = EditorGUILayout.Popup("Log Level", Math.Abs(num), this.logLevelPopupList, new GUILayoutOption[0]);
+				int num2 = EditorGUILayout.Popup("Log Level", num, this.logLevelPopupList, new GUILayoutOption[0]);
 				if (num2 != num)
 				{
 					EditorUserSettings.SetConfigValue("vcSharedLogLevel", this.logLevelPopupList[num2].ToLower());
@@ -341,7 +341,6 @@ namespace UnityEditor
 				if (text != internal_UserGeneratedProjectSuffix)
 				{
 					EditorSettings.Internal_UserGeneratedProjectSuffix = text;
-					EditorApplication.ExecuteMenuItem("Assets/Reimport All");
 				}
 			}
 		}
@@ -505,7 +504,7 @@ namespace UnityEditor
 			if (!CollabAccess.Instance.IsServiceEnabled())
 			{
 				ExternalVersionControl d = EditorSettings.externalVersionControl;
-				result = (d != ExternalVersionControl.Disabled && d != ExternalVersionControl.AutoDetect && d != ExternalVersionControl.AssetServer && d != ExternalVersionControl.Generic);
+				result = (d != ExternalVersionControl.Disabled && d != ExternalVersionControl.AutoDetect && d != ExternalVersionControl.Generic);
 			}
 			else
 			{
@@ -526,18 +525,9 @@ namespace UnityEditor
 				AssetDatabase.Refresh();
 				if (externalVersionControl != popupElement.id)
 				{
-					if (popupElement.content.text == ExternalVersionControl.AssetServer || popupElement.content.text == ExternalVersionControl.Disabled || popupElement.content.text == ExternalVersionControl.Generic)
+					if (popupElement.content.text == ExternalVersionControl.Disabled || popupElement.content.text == ExternalVersionControl.Generic)
 					{
 						WindowPending.CloseAllWindows();
-					}
-					else
-					{
-						ASMainWindow[] array = Resources.FindObjectsOfTypeAll(typeof(ASMainWindow)) as ASMainWindow[];
-						ASMainWindow aSMainWindow = (array.Length <= 0) ? null : array[0];
-						if (aSMainWindow != null)
-						{
-							aSMainWindow.Close();
-						}
 					}
 				}
 			}

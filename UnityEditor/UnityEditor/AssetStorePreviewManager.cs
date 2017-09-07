@@ -59,8 +59,6 @@ namespace UnityEditor
 
 		private AssetStorePreviewManager.CachedAssetStoreImage m_DummyItem = new AssetStorePreviewManager.CachedAssetStoreImage();
 
-		private PreviewRenderUtility m_PreviewUtility;
-
 		private static bool s_NeedsRepaint = false;
 
 		internal static AssetStorePreviewManager Instance

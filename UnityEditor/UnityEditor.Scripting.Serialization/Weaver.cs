@@ -64,22 +64,35 @@ namespace UnityEditor.Scripting.Serialization
 
 		public static bool WeaveUnetFromEditor(string assemblyPath, string destPath, string unityEngine, string unityUNet, bool buildingForEditor)
 		{
+			IEnumerable<MonoIsland> islands = from i in InternalEditorUtility.GetMonoIslands()
+			where 0 < i._files.Length
+			select i;
+			return Weaver.WeaveUnetFromEditor(islands, assemblyPath, destPath, unityEngine, unityUNet, buildingForEditor);
+		}
+
+		public static bool WeaveUnetFromEditor(IEnumerable<MonoIsland> islands, string assemblyPath, string destPath, string unityEngine, string unityUNet, bool buildingForEditor)
+		{
 			Console.WriteLine("WeaveUnetFromEditor " + assemblyPath);
 			ICompilationExtension compilationExtension = Weaver.GetCompilationExtension();
 			string[] extraAssemblyPaths;
 			IAssemblyResolver assemblyResolver;
 			Weaver.QueryAssemblyPathsAndResolver(compilationExtension, assemblyPath, buildingForEditor, out extraAssemblyPaths, out assemblyResolver);
-			return Weaver.WeaveInto(unityUNet, destPath, unityEngine, assemblyPath, extraAssemblyPaths, assemblyResolver);
+			return Weaver.WeaveInto(islands, unityUNet, destPath, unityEngine, assemblyPath, extraAssemblyPaths, assemblyResolver);
 		}
 
 		public static bool WeaveInto(string unityUNet, string destPath, string unityEngine, string assemblyPath, string[] extraAssemblyPaths, IAssemblyResolver assemblyResolver)
 		{
-			IEnumerable<MonoIsland> enumerable = from i in InternalEditorUtility.GetMonoIslands()
+			IEnumerable<MonoIsland> islands = from i in InternalEditorUtility.GetMonoIslands()
 			where 0 < i._files.Length
 			select i;
+			return Weaver.WeaveInto(islands, unityUNet, destPath, unityEngine, assemblyPath, extraAssemblyPaths, assemblyResolver);
+		}
+
+		public static bool WeaveInto(IEnumerable<MonoIsland> islands, string unityUNet, string destPath, string unityEngine, string assemblyPath, string[] extraAssemblyPaths, IAssemblyResolver assemblyResolver)
+		{
 			string fullName = Directory.GetParent(Application.dataPath).FullName;
 			string[] array = null;
-			foreach (MonoIsland current in enumerable)
+			foreach (MonoIsland current in islands)
 			{
 				if (destPath.Equals(current._output))
 				{
@@ -90,16 +103,15 @@ namespace UnityEditor.Scripting.Serialization
 			bool result;
 			if (array == null)
 			{
-				Debug.LogError("Weaver failure: unable to locate assemblies (no matching project) for: " + destPath);
-				result = false;
+				result = true;
 			}
 			else
 			{
 				List<string> list = new List<string>();
 				string[] array2 = array;
-				for (int j = 0; j < array2.Length; j++)
+				for (int i = 0; i < array2.Length; i++)
 				{
-					string path = array2[j];
+					string path = array2[i];
 					list.Add(Path.GetDirectoryName(path));
 				}
 				if (extraAssemblyPaths != null)
@@ -108,22 +120,22 @@ namespace UnityEditor.Scripting.Serialization
 				}
 				try
 				{
-					string arg_151_2 = Path.GetDirectoryName(destPath);
-					string[] expr_10A = new string[]
+					string arg_115_2 = Path.GetDirectoryName(destPath);
+					string[] expr_CD = new string[]
 					{
 						assemblyPath
 					};
-					string[] arg_151_4 = list.ToArray();
+					string[] arg_115_4 = list.ToArray();
 					if (Weaver.<>f__mg$cache0 == null)
 					{
 						Weaver.<>f__mg$cache0 = new Action<string>(Debug.LogWarning);
 					}
-					Action<string> arg_151_6 = Weaver.<>f__mg$cache0;
+					Action<string> arg_115_6 = Weaver.<>f__mg$cache0;
 					if (Weaver.<>f__mg$cache1 == null)
 					{
 						Weaver.<>f__mg$cache1 = new Action<string>(Debug.LogError);
 					}
-					if (!Unity.UNetWeaver.Program.Process(unityEngine, unityUNet, arg_151_2, expr_10A, arg_151_4, assemblyResolver, arg_151_6, Weaver.<>f__mg$cache1))
+					if (!Unity.UNetWeaver.Program.Process(unityEngine, unityUNet, arg_115_2, expr_CD, arg_115_4, assemblyResolver, arg_115_6, Weaver.<>f__mg$cache1))
 					{
 						Debug.LogError("Failure generating network code.");
 						result = false;

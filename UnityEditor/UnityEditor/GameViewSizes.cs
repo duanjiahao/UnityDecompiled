@@ -1,4 +1,5 @@
 using System;
+using UnityEditor.Build;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.VR;
@@ -8,6 +9,22 @@ namespace UnityEditor
 	[FilePath("GameViewSizes.asset", FilePathAttribute.Location.PreferencesFolder)]
 	internal class GameViewSizes : ScriptableSingleton<GameViewSizes>
 	{
+		private class BuildTargetChangedHandler : IActiveBuildTargetChanged, IOrderedCallback
+		{
+			public int callbackOrder
+			{
+				get
+				{
+					return 0;
+				}
+			}
+
+			public void OnActiveBuildTargetChanged(BuildTarget oldTarget, BuildTarget newTarget)
+			{
+				GameViewSizes.RefreshGameViewSizeGroupType(oldTarget, newTarget);
+			}
+		}
+
 		[SerializeField]
 		private GameViewSizeGroup m_Standalone = new GameViewSizeGroup();
 
@@ -62,11 +79,7 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
-			GameViewSizes.RefreshGameViewSizeGroupType();
-			EditorUserBuildSettings.activeBuildTargetChanged = (Action)Delegate.Combine(EditorUserBuildSettings.activeBuildTargetChanged, new Action(delegate
-			{
-				GameViewSizes.RefreshGameViewSizeGroupType();
-			}));
+			GameViewSizes.RefreshGameViewSizeGroupType(BuildTarget.NoTarget, EditorUserBuildSettings.activeBuildTarget);
 		}
 
 		public GameViewSizeGroup GetGroup(GameViewSizeGroupType gameViewSizeGroupType)
@@ -478,9 +491,9 @@ namespace UnityEditor
 			return vector;
 		}
 
-		private static void RefreshGameViewSizeGroupType()
+		private static void RefreshGameViewSizeGroupType(BuildTarget oldTarget, BuildTarget newTarget)
 		{
-			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
+			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(newTarget);
 			GameViewSizes.s_GameViewSizeGroupType = GameViewSizes.BuildTargetGroupToGameViewSizeGroup(buildTargetGroup);
 		}
 

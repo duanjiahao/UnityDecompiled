@@ -183,6 +183,7 @@ namespace UnityEditor
 			{
 				this.SendEvent("EyeDropperCancelled", false);
 			}
+			base.OnDestroy();
 		}
 
 		protected override bool OnFocus()

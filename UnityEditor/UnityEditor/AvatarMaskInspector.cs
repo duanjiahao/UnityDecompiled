@@ -177,7 +177,10 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
-			this.InitializeSerializedProperties();
+			if (!(base.target == null))
+			{
+				this.InitializeSerializedProperties();
+			}
 		}
 
 		private ClipAnimationMaskType IndexToMaskType(int index)

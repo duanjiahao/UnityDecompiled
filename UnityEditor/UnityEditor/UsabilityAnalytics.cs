@@ -13,5 +13,9 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Event(string category, string action, string label, int value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SendEvent(string subType, DateTime startTime, TimeSpan duration, bool isBlocking, object parameters);
 	}
 }

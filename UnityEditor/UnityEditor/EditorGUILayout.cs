@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Internal;
 
@@ -211,6 +212,8 @@ namespace UnityEditor
 
 		public class FadeGroupScope : GUI.Scope
 		{
+			private float m_Value;
+
 			public bool visible
 			{
 				get;
@@ -220,11 +223,15 @@ namespace UnityEditor
 			public FadeGroupScope(float value)
 			{
 				this.visible = EditorGUILayout.BeginFadeGroup(value);
+				this.m_Value = value;
 			}
 
 			protected override void CloseScope()
 			{
-				EditorGUILayout.EndFadeGroup();
+				if (this.m_Value != 0f && this.m_Value != 1f)
+				{
+					EditorGUILayout.EndFadeGroup();
+				}
 			}
 		}
 
@@ -1401,10 +1408,10 @@ namespace UnityEditor
 			EditorGUI.ObjectField(position, property, objType, label);
 		}
 
-		internal static UnityEngine.Object MiniThumbnailObjectField(GUIContent label, UnityEngine.Object obj, Type objType, EditorGUI.ObjectFieldValidator validator, params GUILayoutOption[] options)
+		internal static UnityEngine.Object MiniThumbnailObjectField(GUIContent label, UnityEngine.Object obj, Type objType, params GUILayoutOption[] options)
 		{
 			Rect position = EditorGUILayout.s_LastRect = EditorGUILayout.GetControlRect(true, 16f, options);
-			return EditorGUI.MiniThumbnailObjectField(position, label, obj, objType, validator);
+			return EditorGUI.MiniThumbnailObjectField(position, label, obj, objType);
 		}
 
 		public static Vector2 Vector2Field(string label, Vector2 value, params GUILayoutOption[] options)
@@ -1945,12 +1952,12 @@ namespace UnityEditor
 			}
 		}
 
-		internal static int BeginPlatformGrouping(BuildPlayerWindow.BuildPlatform[] platforms, GUIContent defaultTab)
+		internal static int BeginPlatformGrouping(BuildPlatform[] platforms, GUIContent defaultTab)
 		{
 			return EditorGUILayout.BeginPlatformGrouping(platforms, defaultTab, GUI.skin.box);
 		}
 
-		internal static int BeginPlatformGrouping(BuildPlayerWindow.BuildPlatform[] platforms, GUIContent defaultTab, GUIStyle style)
+		internal static int BeginPlatformGrouping(BuildPlatform[] platforms, GUIContent defaultTab, GUIStyle style)
 		{
 			int num = -1;
 			for (int i = 0; i < platforms.Length; i++)

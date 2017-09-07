@@ -9,6 +9,8 @@ namespace UnityEngine.Experimental.Rendering
 	{
 		public VisibleLight[] visibleLights;
 
+		public VisibleLight[] visibleOffscreenVertexLights;
+
 		public VisibleReflectionProbe[] visibleReflectionProbes;
 
 		internal IntPtr cullResults;
@@ -42,6 +44,7 @@ namespace UnityEngine.Experimental.Rendering
 		{
 			results.cullResults = IntPtr.Zero;
 			results.visibleLights = null;
+			results.visibleOffscreenVertexLights = null;
 			results.visibleReflectionProbes = null;
 			CullingParameters cullingParameters;
 			bool result;
@@ -83,6 +86,24 @@ namespace UnityEngine.Experimental.Rendering
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void FillLightIndices(IntPtr cullResults, ComputeBuffer computeBuffer);
+
+		internal int[] GetLightIndexMap()
+		{
+			return CullResults.GetLightIndexMap(this.cullResults);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int[] GetLightIndexMap(IntPtr cullResults);
+
+		internal void SetLightIndexMap(int[] mapping)
+		{
+			CullResults.SetLightIndexMap(this.cullResults, mapping);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetLightIndexMap(IntPtr cullResults, int[] mapping);
 
 		public bool ComputeSpotShadowMatricesAndCullingPrimitives(int activeLightIndex, out Matrix4x4 viewMatrix, out Matrix4x4 projMatrix, out ShadowSplitData shadowSplitData)
 		{

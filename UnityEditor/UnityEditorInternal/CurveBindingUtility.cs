@@ -11,7 +11,7 @@ namespace UnityEditorInternal
 		public static object GetCurrentValue(AnimationWindowState state, AnimationWindowCurve curve)
 		{
 			object result;
-			if (AnimationMode.InAnimationMode() && curve.rootGameObject != null)
+			if (state.previewing && curve.rootGameObject != null)
 			{
 				result = AnimationWindowUtility.GetCurrentValue(curve.rootGameObject, curve.binding);
 			}

@@ -88,6 +88,10 @@ namespace UnityEditor
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsSubstanceParented(ProceduralTexture texture, ProceduralMaterial material);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern MonoScript GetSubstanceArchive();
+
 		public Vector2 GetMaterialOffset(ProceduralMaterial material)
 		{
 			if (material == null)

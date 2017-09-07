@@ -98,7 +98,12 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
+		[Obsolete("Use parameterless constructor instead.")]
 		public CapsuleBoundsHandle(int controlIDHint) : base(controlIDHint)
+		{
+		}
+
+		public CapsuleBoundsHandle()
 		{
 		}
 

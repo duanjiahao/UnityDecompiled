@@ -133,10 +133,10 @@ namespace UnityEditor
 
 			private void SetPosition(Vector3 newPosition)
 			{
-				this.SetPositionDelta(newPosition - this.position);
+				this.SetPositionDelta(newPosition - this.position, true);
 			}
 
-			public void SetPositionDelta(Vector3 positionDelta)
+			public void SetPositionDelta(Vector3 positionDelta, bool applySmartRounding)
 			{
 				Vector3 vector = positionDelta;
 				Vector3 minDragDifference = ManipulationToolUtility.minDragDifference;
@@ -153,19 +153,28 @@ namespace UnityEditor
 				if (this.rectTransform == null)
 				{
 					Vector3 vector2 = this.localPosition + vector;
-					vector2.x = ((!flag) ? MathUtils.RoundBasedOnMinimumDifference(vector2.x, minDragDifference.x) : this.localPosition.x);
-					vector2.y = ((!flag2) ? MathUtils.RoundBasedOnMinimumDifference(vector2.y, minDragDifference.y) : this.localPosition.y);
-					vector2.z = ((!flag3) ? MathUtils.RoundBasedOnMinimumDifference(vector2.z, minDragDifference.z) : this.localPosition.z);
+					if (applySmartRounding)
+					{
+						vector2.x = ((!flag) ? MathUtils.RoundBasedOnMinimumDifference(vector2.x, minDragDifference.x) : this.localPosition.x);
+						vector2.y = ((!flag2) ? MathUtils.RoundBasedOnMinimumDifference(vector2.y, minDragDifference.y) : this.localPosition.y);
+						vector2.z = ((!flag3) ? MathUtils.RoundBasedOnMinimumDifference(vector2.z, minDragDifference.z) : this.localPosition.z);
+					}
 					this.transform.localPosition = vector2;
 				}
 				else
 				{
 					Vector3 vector3 = this.localPosition + vector;
-					vector3.z = ((!flag3) ? MathUtils.RoundBasedOnMinimumDifference(vector3.z, minDragDifference.z) : this.localPosition.z);
+					if (applySmartRounding)
+					{
+						vector3.z = ((!flag3) ? MathUtils.RoundBasedOnMinimumDifference(vector3.z, minDragDifference.z) : this.localPosition.z);
+					}
 					this.transform.localPosition = vector3;
 					Vector2 vector4 = this.anchoredPosition + vector;
-					vector4.x = ((!flag) ? MathUtils.RoundBasedOnMinimumDifference(vector4.x, minDragDifference.x) : this.anchoredPosition.x);
-					vector4.y = ((!flag2) ? MathUtils.RoundBasedOnMinimumDifference(vector4.y, minDragDifference.y) : this.anchoredPosition.y);
+					if (applySmartRounding)
+					{
+						vector4.x = ((!flag) ? MathUtils.RoundBasedOnMinimumDifference(vector4.x, minDragDifference.x) : this.anchoredPosition.x);
+						vector4.y = ((!flag2) ? MathUtils.RoundBasedOnMinimumDifference(vector4.y, minDragDifference.y) : this.anchoredPosition.y);
+					}
 					this.rectTransform.anchoredPosition = vector4;
 					if (this.rectTransform.drivenByObject != null)
 					{
@@ -367,14 +376,22 @@ namespace UnityEditor
 		{
 			if (TransformManipulator.s_MouseDownState != null)
 			{
-				for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
+				if (positionDelta.magnitude != 0f)
 				{
-					TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
-					Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Move");
-				}
-				for (int j = 0; j < TransformManipulator.s_MouseDownState.Length; j++)
-				{
-					TransformManipulator.s_MouseDownState[j].SetPositionDelta(positionDelta);
+					for (int i = 0; i < TransformManipulator.s_MouseDownState.Length; i++)
+					{
+						TransformManipulator.TransformData transformData = TransformManipulator.s_MouseDownState[i];
+						Undo.RecordObject((!(transformData.rectTransform != null)) ? transformData.transform : transformData.rectTransform, "Move");
+					}
+					if (TransformManipulator.s_MouseDownState.Length > 0)
+					{
+						TransformManipulator.s_MouseDownState[0].SetPositionDelta(positionDelta, true);
+						Vector3 positionDelta2 = TransformManipulator.s_MouseDownState[0].transform.position - TransformManipulator.s_MouseDownState[0].position;
+						for (int j = 1; j < TransformManipulator.s_MouseDownState.Length; j++)
+						{
+							TransformManipulator.s_MouseDownState[j].SetPositionDelta(positionDelta2, false);
+						}
+					}
 				}
 			}
 		}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor.AnimatedValues;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Events;
@@ -10,7 +11,7 @@ using UnityEngine.Events;
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(SpeedTreeImporter))]
-	internal class SpeedTreeImporterInspector : AssetImporterInspector
+	internal class SpeedTreeImporterInspector : AssetImporterEditor
 	{
 		private class Styles
 		{
@@ -105,7 +106,7 @@ namespace UnityEditor
 			}
 		}
 
-		private void OnEnable()
+		public override void OnEnable()
 		{
 			this.m_LODSettings = base.serializedObject.FindProperty("m_LODSettings");
 			this.m_EnableSmoothLOD = base.serializedObject.FindProperty("m_EnableSmoothLODTransition");
@@ -129,7 +130,7 @@ namespace UnityEditor
 			this.m_ShowCrossFadeWidthOptions.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 		}
 
-		protected override bool ApplyRevertGUIButtons()
+		protected override bool OnApplyRevertGUI()
 		{
 			bool result;
 			using (new EditorGUI.DisabledScope(!this.HasModified()))
@@ -360,6 +361,7 @@ namespace UnityEditor
 				{
 					current.Use();
 					GUIUtility.hotControl = controlID;
+					bool flag = false;
 					IOrderedEnumerable<LODGroupGUI.LODInfo> collection = from lod in lods
 					where lod.ScreenPercent > 0.5f
 					select lod into x
@@ -379,13 +381,20 @@ namespace UnityEditor
 						{
 							this.m_SelectedLODSlider = current2.LODLevel;
 							this.m_SelectedLODRange = current2.LODLevel;
+							flag = true;
 							break;
 						}
-						if (current2.m_RangePosition.Contains(current.mousePosition))
+					}
+					if (!flag)
+					{
+						foreach (LODGroupGUI.LODInfo current3 in list)
 						{
-							this.m_SelectedLODSlider = -1;
-							this.m_SelectedLODRange = current2.LODLevel;
-							break;
+							if (current3.m_RangePosition.Contains(current.mousePosition))
+							{
+								this.m_SelectedLODSlider = -1;
+								this.m_SelectedLODRange = current3.LODLevel;
+								break;
+							}
 						}
 					}
 				}

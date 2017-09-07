@@ -57,12 +57,14 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
+			AssemblyReloadEvents.beforeAssemblyReload += new AssemblyReloadEvents.AssemblyReloadCallback(base.Close);
 			base.hideFlags = HideFlags.DontSave;
 			base.wantsMouseMove = true;
 		}
 
 		private void OnDisable()
 		{
+			AssemblyReloadEvents.beforeAssemblyReload -= new AssemblyReloadEvents.AssemblyReloadCallback(base.Close);
 			SceneHierarchySortingWindow.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 		}
 

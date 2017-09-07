@@ -89,6 +89,10 @@ namespace UnityEditorInternal
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool CopyComponentsRelativeToComponents(Component[] components, Component[] targetComponents, bool aboveTarget, bool validateOnly, out Component[] outNewComponents);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool WarnCanAddScriptComponent(GameObject gameObject, MonoScript script);
+
 		private static bool CompareComponentOrderAndTypes(List<Component> srcComponents, List<Component> dstComponents)
 		{
 			bool result;

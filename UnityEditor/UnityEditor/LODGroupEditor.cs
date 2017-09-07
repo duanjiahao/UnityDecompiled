@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.AnimatedValues;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -176,6 +175,10 @@ namespace UnityEditor
 			EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(this.Update));
 			this.m_ShowAnimateCrossFading.valueChanged.RemoveListener(new UnityAction(base.Repaint));
 			this.m_ShowFadeTransitionWidth.valueChanged.RemoveListener(new UnityAction(base.Repaint));
+			if (this.m_PreviewUtility != null)
+			{
+				this.m_PreviewUtility.Cleanup();
+			}
 		}
 
 		private static Rect CalculateScreenRect(IEnumerable<Vector3> points)
@@ -734,7 +737,7 @@ namespace UnityEditor
 						this.m_SelectedLOD = -1;
 					}
 					current.Use();
-					goto IL_6FF;
+					goto IL_707;
 				}
 				Rect rect = sliderPosition;
 				rect.x -= 5f;
@@ -769,17 +772,18 @@ namespace UnityEditor
 					}
 					if (!flag3)
 					{
-						foreach (LODGroupGUI.LODInfo current4 in lods)
+						foreach (LODGroupGUI.LODInfo current4 in list)
 						{
 							if (current4.m_RangePosition.Contains(current.mousePosition))
 							{
+								this.m_SelectedLODSlider = -1;
 								this.m_SelectedLOD = current4.LODLevel;
 								break;
 							}
 						}
 					}
 				}
-				goto IL_6FF;
+				goto IL_707;
 			}
 			case EventType.MouseUp:
 				if (GUIUtility.hotControl == controlID)
@@ -789,7 +793,7 @@ namespace UnityEditor
 					this.EndLODDrag();
 					current.Use();
 				}
-				goto IL_6FF;
+				goto IL_707;
 			case EventType.MouseMove:
 			case EventType.KeyDown:
 			case EventType.KeyUp:
@@ -798,10 +802,10 @@ namespace UnityEditor
 				IL_5B:
 				if (typeForControl != EventType.DragExited)
 				{
-					goto IL_6FF;
+					goto IL_707;
 				}
 				current.Use();
-				goto IL_6FF;
+				goto IL_707;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == controlID && this.m_SelectedLODSlider >= 0 && lods[this.m_SelectedLODSlider] != null)
 				{
@@ -812,10 +816,10 @@ namespace UnityEditor
 					serializedProperty.floatValue = lods[this.m_SelectedLODSlider].RawScreenPercent;
 					this.UpdateLODDrag(cameraPercent2, this.m_LODGroup);
 				}
-				goto IL_6FF;
+				goto IL_707;
 			case EventType.Repaint:
 				LODGroupGUI.DrawLODSlider(sliderPosition, lods, this.activeLOD);
-				goto IL_6FF;
+				goto IL_707;
 			case EventType.DragUpdated:
 			case EventType.DragPerform:
 			{
@@ -871,13 +875,13 @@ namespace UnityEditor
 						}
 					}
 					current.Use();
-					goto IL_6FF;
+					goto IL_707;
 				}
-				goto IL_6FF;
+				goto IL_707;
 			}
 			}
 			goto IL_5B;
-			IL_6FF:
+			IL_707:
 			if (SceneView.lastActiveSceneView != null && SceneView.lastActiveSceneView.camera != null && !this.m_IsPrefab)
 			{
 				Camera camera = SceneView.lastActiveSceneView.camera;
@@ -995,10 +999,13 @@ namespace UnityEditor
 		{
 			foreach (SerializedProperty current in lodRenderer.m_Renderers)
 			{
-				SerializedObject serializedObject = new SerializedObject(current.objectReferenceValue);
-				SerializedProperty serializedProperty = serializedObject.FindProperty("m_ScaleInLightmap");
-				serializedProperty.floatValue = Mathf.Max(0f, lodRenderer.m_Scale * (1f / LightmapVisualization.GetLightmapLODLevelScale((Renderer)current.objectReferenceValue)));
-				serializedObject.ApplyModifiedProperties();
+				if (!(current.objectReferenceValue == null))
+				{
+					SerializedObject serializedObject = new SerializedObject(current.objectReferenceValue);
+					SerializedProperty serializedProperty = serializedObject.FindProperty("m_ScaleInLightmap");
+					serializedProperty.floatValue = Mathf.Max(0f, lodRenderer.m_Scale * (1f / LightmapVisualization.GetLightmapLODLevelScale((Renderer)current.objectReferenceValue)));
+					serializedObject.ApplyModifiedProperties();
+				}
 			}
 		}
 
@@ -1045,7 +1052,7 @@ namespace UnityEditor
 
 		protected void DoRenderPreview()
 		{
-			if (this.m_PreviewUtility.m_RenderTexture.width > 0 && this.m_PreviewUtility.m_RenderTexture.height > 0 && this.m_NumberOfLODs > 0 && this.activeLOD >= 0)
+			if (this.m_PreviewUtility.renderTexture.width > 0 && this.m_PreviewUtility.renderTexture.height > 0 && this.m_NumberOfLODs > 0 && this.activeLOD >= 0)
 			{
 				Bounds bounds = new Bounds(Vector3.zero, Vector3.zero);
 				bool flag = false;
@@ -1078,15 +1085,14 @@ namespace UnityEditor
 					float magnitude = bounds.extents.magnitude;
 					float d = magnitude * 10f;
 					Vector2 vector = -(this.m_PreviewDir / 100f);
-					this.m_PreviewUtility.m_Camera.transform.position = bounds.center + new Vector3(Mathf.Sin(vector.x) * Mathf.Cos(vector.y), Mathf.Sin(vector.y), Mathf.Cos(vector.x) * Mathf.Cos(vector.y)) * d;
-					this.m_PreviewUtility.m_Camera.transform.LookAt(bounds.center);
-					this.m_PreviewUtility.m_Camera.nearClipPlane = 0.05f;
-					this.m_PreviewUtility.m_Camera.farClipPlane = 1000f;
-					this.m_PreviewUtility.m_Light[0].intensity = 1f;
-					this.m_PreviewUtility.m_Light[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
-					this.m_PreviewUtility.m_Light[1].intensity = 1f;
-					Color ambient = new Color(0.2f, 0.2f, 0.2f, 0f);
-					InternalEditorUtility.SetCustomLighting(this.m_PreviewUtility.m_Light, ambient);
+					this.m_PreviewUtility.camera.transform.position = bounds.center + new Vector3(Mathf.Sin(vector.x) * Mathf.Cos(vector.y), Mathf.Sin(vector.y), Mathf.Cos(vector.x) * Mathf.Cos(vector.y)) * d;
+					this.m_PreviewUtility.camera.transform.LookAt(bounds.center);
+					this.m_PreviewUtility.camera.nearClipPlane = 0.05f;
+					this.m_PreviewUtility.camera.farClipPlane = 1000f;
+					this.m_PreviewUtility.lights[0].intensity = 1f;
+					this.m_PreviewUtility.lights[0].transform.rotation = Quaternion.Euler(50f, 50f, 0f);
+					this.m_PreviewUtility.lights[1].intensity = 1f;
+					this.m_PreviewUtility.ambientColor = new Color(0.2f, 0.2f, 0.2f, 0f);
 					foreach (MeshFilter current in list)
 					{
 						for (int j = 0; j < current.sharedMesh.subMeshCount; j++)
@@ -1098,11 +1104,7 @@ namespace UnityEditor
 							}
 						}
 					}
-					bool fog = RenderSettings.fog;
-					Unsupported.SetRenderSettingsUseFogNoDirty(false);
-					this.m_PreviewUtility.m_Camera.Render();
-					Unsupported.SetRenderSettingsUseFogNoDirty(fog);
-					InternalEditorUtility.RemoveCustomLighting();
+					this.m_PreviewUtility.Render(false, true);
 				}
 			}
 		}

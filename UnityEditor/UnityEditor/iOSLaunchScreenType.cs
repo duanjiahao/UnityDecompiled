@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEditor
 {
-	internal enum iOSLaunchScreenType
+	public enum iOSLaunchScreenType
 	{
 		Default,
 		ImageAndBackgroundRelative,

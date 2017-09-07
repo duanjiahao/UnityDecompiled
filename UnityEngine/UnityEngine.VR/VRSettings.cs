@@ -83,6 +83,16 @@ namespace UnityEngine.VR
 			set;
 		}
 
+		public static extern float occlusionMaskScale
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		[Obsolete("loadedDevice is deprecated.  Use loadedDeviceName and LoadDeviceByName instead.")]
 		public static VRDeviceType loadedDevice
 		{

@@ -128,6 +128,18 @@ internal abstract class DesktopStandalonePostProcessor
 		this.CopyStagingAreaIntoDestination();
 	}
 
+	public void UpdateBootConfig(BuildTarget target, BootConfigData config, BuildOptions options)
+	{
+		if (PlayerSettings.forceSingleInstance)
+		{
+			config.AddKey("single-instance");
+		}
+		if (PlayerSettings.scriptingRuntimeVersion == ScriptingRuntimeVersion.Latest)
+		{
+			config.Set("scripting-runtime-version", "latest");
+		}
+	}
+
 	private void CopyNativePlugins()
 	{
 		string buildTargetName = BuildPipeline.GetBuildTargetName(this.m_PostProcessArgs.target);

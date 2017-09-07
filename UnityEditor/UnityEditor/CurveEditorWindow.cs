@@ -36,6 +36,8 @@ namespace UnityEditor
 
 		private AnimationCurve m_Curve;
 
+		private SerializedProperty m_Property;
+
 		private Color m_Color;
 
 		private CurvePresetsContentsForPopupWindow m_CurvePresets;
@@ -77,10 +79,11 @@ namespace UnityEditor
 		{
 			get
 			{
-				return CurveEditorWindow.instance.m_Curve;
+				return (!CurveEditorWindow.visible) ? null : CurveEditorWindow.instance.m_Curve;
 			}
 			set
 			{
+				CurveEditorWindow.instance.m_Property = null;
 				if (value == null)
 				{
 					CurveEditorWindow.instance.m_Curve = null;
@@ -88,6 +91,28 @@ namespace UnityEditor
 				else
 				{
 					CurveEditorWindow.instance.m_Curve = value;
+					CurveEditorWindow.instance.RefreshShownCurves();
+				}
+			}
+		}
+
+		public static SerializedProperty property
+		{
+			get
+			{
+				return (!CurveEditorWindow.visible) ? null : CurveEditorWindow.instance.m_Property;
+			}
+			set
+			{
+				if (value == null)
+				{
+					CurveEditorWindow.instance.m_Property = null;
+					CurveEditorWindow.instance.m_Curve = null;
+				}
+				else
+				{
+					CurveEditorWindow.instance.m_Property = value.Copy();
+					CurveEditorWindow.instance.m_Curve = ((!value.hasMultipleDifferentValues) ? value.animationCurveValue : new AnimationCurve());
 					CurveEditorWindow.instance.RefreshShownCurves();
 				}
 			}
@@ -487,6 +512,7 @@ namespace UnityEditor
 						this.m_Curve.postWrapMode = animationCurve.postWrapMode;
 						this.m_Curve.preWrapMode = animationCurve.preWrapMode;
 						this.m_CurveEditor.SelectNone();
+						this.RefreshShownCurves();
 						this.SendEvent("CurveChanged", true);
 					}
 					if (Event.current.type == EventType.Repaint)

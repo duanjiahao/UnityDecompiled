@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using UnityEditor.Modules;
 using UnityEditor.Scripting;
+using UnityEditor.Scripting.Compilers;
+using UnityEditor.Scripting.ScriptCompilation;
 using UnityEditorInternal;
 
 namespace UnityEditor.VisualStudioIntegration
@@ -100,7 +102,7 @@ namespace UnityEditor.VisualStudioIntegration
 			"    EndGlobalSection"
 		}).Replace("    ", "\t");
 
-		public static readonly Regex scriptReferenceExpression = new Regex("^Library.ScriptAssemblies.(?<project>Assembly-(?<language>[^-]+)(?<editor>-Editor)?(?<firstpass>-firstpass)?).dll$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		public static readonly Regex scriptReferenceExpression = new Regex("^Library.ScriptAssemblies.(?<dllname>(?<project>.*)\\.dll$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 		public SolutionSynchronizer(string projectDirectory, ISolutionSynchronizationSettings settings)
 		{
@@ -201,12 +203,13 @@ namespace UnityEditor.VisualStudioIntegration
 				where 0 < i._files.Length
 				select i;
 				string otherAssetsProjectPart = this.GenerateAllAssetProjectPart();
+				string[] responseFileDefinesFromFile = ScriptCompilerBase.GetResponseFileDefinesFromFile(MonoCSharpCompiler.ReponseFilename);
 				this.SyncSolution(islands);
 				foreach (MonoIsland current in SolutionSynchronizer.RelevantIslandsForMode(islands, SolutionSynchronizer.ModeForCurrentExternalEditor()))
 				{
-					this.SyncProject(current, otherAssetsProjectPart);
+					this.SyncProject(current, otherAssetsProjectPart, responseFileDefinesFromFile);
 				}
-				if (InternalEditorUtility.GetScriptEditorFromPreferences() == InternalEditorUtility.ScriptEditor.VisualStudioCode)
+				if (ScriptEditorUtility.GetScriptEditorFromPreferences() == ScriptEditorUtility.ScriptEditor.VisualStudioCode)
 				{
 					this.WriteVSCodeSettingsFiles();
 				}
@@ -230,9 +233,9 @@ namespace UnityEditor.VisualStudioIntegration
 			return stringBuilder.ToString();
 		}
 
-		private void SyncProject(MonoIsland island, string otherAssetsProjectPart)
+		private void SyncProject(MonoIsland island, string otherAssetsProjectPart, string[] additionalDefines)
 		{
-			SolutionSynchronizer.SyncFileIfNotChanged(this.ProjectFile(island), this.ProjectText(island, SolutionSynchronizer.ModeForCurrentExternalEditor(), otherAssetsProjectPart));
+			SolutionSynchronizer.SyncFileIfNotChanged(this.ProjectFile(island), this.ProjectText(island, SolutionSynchronizer.ModeForCurrentExternalEditor(), otherAssetsProjectPart, additionalDefines));
 		}
 
 		private static void SyncFileIfNotChanged(string filename, string newContents)
@@ -262,9 +265,9 @@ namespace UnityEditor.VisualStudioIntegration
 			return isBuildingEditorProject && ModuleUtils.GetAdditionalReferencesForEditorCsharpProject().Contains(reference);
 		}
 
-		private string ProjectText(MonoIsland island, SolutionSynchronizer.Mode mode, string allAssetsProject)
+		private string ProjectText(MonoIsland island, SolutionSynchronizer.Mode mode, string allAssetsProject, string[] additionalDefines)
 		{
-			StringBuilder stringBuilder = new StringBuilder(this.ProjectHeader(island));
+			StringBuilder stringBuilder = new StringBuilder(this.ProjectHeader(island, additionalDefines));
 			List<string> list = new List<string>();
 			List<Match> list2 = new List<Match>();
 			bool isBuildingEditorProject = island._output.EndsWith("-Editor.dll");
@@ -293,7 +296,9 @@ namespace UnityEditor.VisualStudioIntegration
 					Match match = SolutionSynchronizer.scriptReferenceExpression.Match(current);
 					if (match.Success)
 					{
-						if (mode == SolutionSynchronizer.Mode.UnityScriptAsUnityProj || (ScriptingLanguage)Enum.Parse(typeof(ScriptingLanguage), match.Groups["language"].Value, true) == ScriptingLanguage.CSharp)
+						SupportedLanguage languageFromExtension = ScriptCompilers.GetLanguageFromExtension(island.GetExtensionOfSourceFiles());
+						ScriptingLanguage scriptingLanguage = (ScriptingLanguage)Enum.Parse(typeof(ScriptingLanguage), languageFromExtension.GetLanguageName(), true);
+						if (mode == SolutionSynchronizer.Mode.UnityScriptAsUnityProj || scriptingLanguage == ScriptingLanguage.CSharp)
 						{
 							list2.Add(match);
 							continue;
@@ -329,8 +334,14 @@ namespace UnityEditor.VisualStudioIntegration
 				stringBuilder.AppendLine("  <ItemGroup>");
 				foreach (Match current2 in list2)
 				{
+					EditorBuildRules.TargetAssembly targetAssemblyDetails = EditorCompilationInterface.GetTargetAssemblyDetails(current2.Groups["dllname"].Value);
+					ScriptingLanguage language = ScriptingLanguage.None;
+					if (targetAssemblyDetails != null)
+					{
+						language = (ScriptingLanguage)Enum.Parse(typeof(ScriptingLanguage), targetAssemblyDetails.Language.GetLanguageName(), true);
+					}
 					string value = current2.Groups["project"].Value;
-					stringBuilder.AppendFormat("    <ProjectReference Include=\"{0}{1}\">{2}", value, SolutionSynchronizer.GetProjectExtension((ScriptingLanguage)Enum.Parse(typeof(ScriptingLanguage), current2.Groups["language"].Value, true)), SolutionSynchronizer.WindowsNewline);
+					stringBuilder.AppendFormat("    <ProjectReference Include=\"{0}{1}\">{2}", value, SolutionSynchronizer.GetProjectExtension(language), SolutionSynchronizer.WindowsNewline);
 					stringBuilder.AppendFormat("      <Project>{{{0}}}</Project>", this.ProjectGuid(Path.Combine("Temp", current2.Groups["project"].Value + ".dll")), SolutionSynchronizer.WindowsNewline);
 					stringBuilder.AppendFormat("      <Name>{0}</Name>", value, SolutionSynchronizer.WindowsNewline);
 					stringBuilder.AppendLine("    </ProjectReference>");
@@ -351,20 +362,31 @@ namespace UnityEditor.VisualStudioIntegration
 			return Path.Combine(this._projectDirectory, string.Format("{0}.sln", this._projectName));
 		}
 
-		private string ProjectHeader(MonoIsland island)
+		private string ProjectHeader(MonoIsland island, string[] additionalDefines)
 		{
-			string text = "4.0";
-			string text2 = "10.0.20506";
+			string text = "v3.5";
+			string text2 = "4";
+			string text3 = "4.0";
+			string text4 = "10.0.20506";
 			ScriptingLanguage language = SolutionSynchronizer.ScriptingLanguageFor(island);
-			if (this._settings.VisualStudioVersion == 9)
+			if (island._api_compatibility_level == ApiCompatibilityLevel.NET_4_6)
 			{
-				text = "3.5";
-				text2 = "9.0.21022";
+				text = "v4.6";
+				text2 = "6";
+			}
+			else if (ScriptEditorUtility.GetScriptEditorFromPreferences() == ScriptEditorUtility.ScriptEditor.Rider)
+			{
+				text = "v4.5";
+			}
+			else if (this._settings.VisualStudioVersion == 9)
+			{
+				text3 = "3.5";
+				text4 = "9.0.21022";
 			}
 			object[] array = new object[]
 			{
-				text,
-				text2,
+				text3,
+				text4,
 				this.ProjectGuid(island._output),
 				this._settings.EngineAssemblyPath,
 				this._settings.EditorAssemblyPath,
@@ -372,10 +394,12 @@ namespace UnityEditor.VisualStudioIntegration
 				{
 					"DEBUG",
 					"TRACE"
-				}.Concat(this._settings.Defines).Concat(island._defines).Distinct<string>().ToArray<string>()),
+				}.Concat(this._settings.Defines).Concat(island._defines).Concat(additionalDefines).Distinct<string>().ToArray<string>()),
 				SolutionSynchronizer.MSBuildNamespaceUri,
 				Path.GetFileNameWithoutExtension(island._output),
-				EditorSettings.projectGenerationRootNamespace
+				EditorSettings.projectGenerationRootNamespace,
+				text,
+				text2
 			};
 			string result;
 			try
@@ -396,13 +420,13 @@ namespace UnityEditor.VisualStudioIntegration
 
 		private static SolutionSynchronizer.Mode ModeForCurrentExternalEditor()
 		{
-			InternalEditorUtility.ScriptEditor scriptEditorFromPreferences = InternalEditorUtility.GetScriptEditorFromPreferences();
+			ScriptEditorUtility.ScriptEditor scriptEditorFromPreferences = ScriptEditorUtility.GetScriptEditorFromPreferences();
 			SolutionSynchronizer.Mode result;
-			if (scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.VisualStudio || scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.VisualStudioExpress || scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.VisualStudioCode)
+			if (scriptEditorFromPreferences == ScriptEditorUtility.ScriptEditor.VisualStudio || scriptEditorFromPreferences == ScriptEditorUtility.ScriptEditor.VisualStudioExpress || scriptEditorFromPreferences == ScriptEditorUtility.ScriptEditor.VisualStudioCode)
 			{
 				result = SolutionSynchronizer.Mode.UnityScriptAsPrecompiledAssembly;
 			}
-			else if (scriptEditorFromPreferences == InternalEditorUtility.ScriptEditor.Internal)
+			else if (scriptEditorFromPreferences == ScriptEditorUtility.ScriptEditor.Internal)
 			{
 				result = SolutionSynchronizer.Mode.UnityScriptAsUnityProj;
 			}

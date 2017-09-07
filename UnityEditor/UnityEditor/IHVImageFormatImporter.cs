@@ -36,5 +36,35 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern TextureWrapMode wrapModeU
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern TextureWrapMode wrapModeV
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern TextureWrapMode wrapModeW
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
 	}
 }

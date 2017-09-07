@@ -45,6 +45,7 @@ namespace UnityEditor.Web
 			base.EnableService(enabled);
 			Collab.instance.SendNotification();
 			Collab.instance.SetCollabEnabledForCurrentProject(enabled);
+			AssetDatabase.Refresh();
 		}
 
 		public bool IsCollabUIAccessible()

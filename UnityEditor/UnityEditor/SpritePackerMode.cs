@@ -6,6 +6,8 @@ namespace UnityEditor
 	{
 		Disabled,
 		BuildTimeOnly,
-		AlwaysOn
+		AlwaysOn,
+		BuildTimeOnlyAtlas,
+		AlwaysOnAtlas
 	}
 }

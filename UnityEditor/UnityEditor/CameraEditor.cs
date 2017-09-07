@@ -152,12 +152,6 @@ namespace UnityEditor
 			}
 		}
 
-		private bool ShouldShowTargetDisplayProperty()
-		{
-			GUIContent[] displayNames = ModuleManager.GetDisplayNames(EditorUserBuildSettings.activeBuildTarget.ToString());
-			return BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget) == BuildTargetGroup.Standalone || displayNames != null;
-		}
-
 		private static bool IsDeferredRenderingPath(RenderingPath rp)
 		{
 			return rp == RenderingPath.DeferredLighting || rp == RenderingPath.DeferredShading;
@@ -389,7 +383,7 @@ namespace UnityEditor
 				EditorGUILayout.PropertyField(this.m_StereoSeparation, new GUILayoutOption[0]);
 				EditorGUILayout.PropertyField(this.m_StereoConvergence, new GUILayoutOption[0]);
 			}
-			if (this.ShouldShowTargetDisplayProperty())
+			if (ModuleManager.ShouldShowMultiDisplayOption())
 			{
 				int intValue = this.m_TargetDisplay.intValue;
 				EditorGUILayout.Space();

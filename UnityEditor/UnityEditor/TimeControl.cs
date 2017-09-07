@@ -216,17 +216,8 @@ namespace UnityEditor
 			}
 			GUI.Box(rect2, GUIContent.none, TimeControl.s_Styles.timeScrubber);
 			this.playing = GUI.Toggle(rect2, this.playing, (!this.playing) ? TimeControl.s_Styles.playIcon : TimeControl.s_Styles.pauseIcon, TimeControl.s_Styles.playButton);
-			float num = Mathf.Lerp(rect3.x, rect3.xMax, this.normalizedTime);
-			if (GUIUtility.keyboardControl == controlID)
-			{
-				Handles.color = new Color(1f, 0f, 0f, 1f);
-			}
-			else
-			{
-				Handles.color = new Color(1f, 0f, 0f, 0.5f);
-			}
-			Handles.DrawLine(new Vector2(num, rect3.yMin), new Vector2(num, rect3.yMax));
-			Handles.DrawLine(new Vector2(num + 1f, rect3.yMin), new Vector2(num + 1f, rect3.yMax));
+			float x = Mathf.Lerp(rect3.x, rect3.xMax, this.normalizedTime);
+			TimeArea.DrawPlayhead(x, rect3.yMin, rect3.yMax, 2f, (GUIUtility.keyboardControl != controlID) ? 0.5f : 1f);
 		}
 
 		public void OnDisable()

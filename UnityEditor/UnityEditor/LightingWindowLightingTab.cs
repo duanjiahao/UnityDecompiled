@@ -206,13 +206,10 @@ namespace UnityEditor
 		public void OnGUI()
 		{
 			EditorGUIUtility.hierarchyMode = true;
-			float labelWidth = EditorGUIUtility.labelWidth;
-			EditorGUIUtility.labelWidth = 170f;
 			this.lightingEditor.OnInspectorGUI();
 			this.m_BakeSettings.OnGUI();
 			this.OtherSettingsGUI();
 			this.DebugSettingsGUI();
-			EditorGUIUtility.labelWidth = labelWidth;
 		}
 
 		public void StatisticsPreview(Rect r)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -32,7 +31,7 @@ namespace UnityEngine.Networking
 			CannotResolveHost,
 			CannotConnectToHost,
 			AccessDenied,
-			GenericHTTPError,
+			GenericHttpError,
 			WriteError,
 			ReadError,
 			OutOfMemory,
@@ -69,28 +68,14 @@ namespace UnityEngine.Networking
 
 		public const string kHttpVerbDELETE = "DELETE";
 
-		private static readonly string[] forbiddenHeaderKeys = new string[]
+		[Obsolete("UnityWebRequest.isError has been renamed to isNetworkError for clarity. (UnityUpgradable) -> isNetworkError", false)]
+		public bool isError
 		{
-			"accept-charset",
-			"access-control-request-headers",
-			"access-control-request-method",
-			"connection",
-			"content-length",
-			"date",
-			"dnt",
-			"expect",
-			"host",
-			"keep-alive",
-			"origin",
-			"referer",
-			"te",
-			"trailer",
-			"transfer-encoding",
-			"upgrade",
-			"user-agent",
-			"via",
-			"x-unity-version"
-		};
+			get
+			{
+				return this.isNetworkError;
+			}
+		}
 
 		public bool disposeDownloadHandlerOnDispose
 		{
@@ -221,7 +206,14 @@ namespace UnityEngine.Networking
 			get;
 		}
 
-		public extern bool isError
+		public extern bool isNetworkError
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern bool isHttpError
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -289,6 +281,16 @@ namespace UnityEngine.Networking
 			set;
 		}
 
+		public extern int timeout
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public UnityWebRequest()
 		{
 			this.InternalCreate();
@@ -335,39 +337,22 @@ namespace UnityEngine.Networking
 			return new UnityWebRequest(uri, "HEAD");
 		}
 
+		[Obsolete("UnityWebRequest.GetTexture is obsolete. Use UnityWebRequestTexture.GetTexture instead (UnityUpgradable) -> [UnityEngine] UnityWebRequestTexture.GetTexture(*)", true)]
 		public static UnityWebRequest GetTexture(string uri)
 		{
-			return UnityWebRequest.GetTexture(uri, false);
+			throw new NotSupportedException("UnityWebRequest.GetTexture is obsolete. Use UnityWebRequestTexture.GetTexture instead.");
 		}
 
+		[Obsolete("UnityWebRequest.GetTexture is obsolete. Use UnityWebRequestTexture.GetTexture instead (UnityUpgradable) -> [UnityEngine] UnityWebRequestTexture.GetTexture(*)", true)]
 		public static UnityWebRequest GetTexture(string uri, bool nonReadable)
 		{
-			return new UnityWebRequest(uri, "GET", new DownloadHandlerTexture(nonReadable), null);
+			throw new NotSupportedException("UnityWebRequest.GetTexture is obsolete. Use UnityWebRequestTexture.GetTexture instead.");
 		}
 
+		[Obsolete("UnityWebRequest.GetAudioClip is obsolete. Use UnityWebRequestMultimedia.GetAudioClip instead (UnityUpgradable) -> [UnityEngine] UnityWebRequestMultimedia.GetAudioClip(*)", true)]
 		public static UnityWebRequest GetAudioClip(string uri, AudioType audioType)
 		{
-			Type type = Type.GetType("UnityEngine.Networking.DownloadHandlerAudioClip");
-			UnityWebRequest result;
-			if (type == null)
-			{
-				result = UnityWebRequest.Get(uri);
-			}
-			else
-			{
-				ConstructorInfo constructor = type.GetConstructor(new Type[]
-				{
-					typeof(string),
-					typeof(AudioType)
-				});
-				UnityWebRequest unityWebRequest = new UnityWebRequest(uri, "GET", constructor.Invoke(new object[]
-				{
-					uri,
-					audioType
-				}) as DownloadHandler, null);
-				result = unityWebRequest;
-			}
-			return result;
+			return null;
 		}
 
 		public static UnityWebRequest GetAssetBundle(string uri)
@@ -388,6 +373,11 @@ namespace UnityEngine.Networking
 		public static UnityWebRequest GetAssetBundle(string uri, Hash128 hash, uint crc)
 		{
 			return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, hash, crc), null);
+		}
+
+		public static UnityWebRequest GetAssetBundle(string uri, CachedAssetBundle cachedAssetBundle, uint crc)
+		{
+			return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, cachedAssetBundle.name, cachedAssetBundle.hash, crc), null);
 		}
 
 		public static UnityWebRequest Put(string uri, byte[] bodyData)
@@ -481,6 +471,7 @@ namespace UnityEngine.Networking
 		public static byte[] SerializeFormSections(List<IMultipartFormSection> multipartFormSections, byte[] boundary)
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes("\r\n");
+			byte[] bytes2 = WWWForm.DefaultEncoding.GetBytes("--");
 			int num = 0;
 			foreach (IMultipartFormSection current in multipartFormSections)
 			{
@@ -511,6 +502,8 @@ namespace UnityEngine.Networking
 				{
 					text = text + "Content-Type: " + contentType + "\r\n";
 				}
+				list.AddRange(bytes);
+				list.AddRange(bytes2);
 				list.AddRange(boundary);
 				list.AddRange(bytes);
 				list.AddRange(Encoding.UTF8.GetBytes(text));
@@ -570,14 +563,22 @@ namespace UnityEngine.Networking
 
 		~UnityWebRequest()
 		{
+			this.DisposeHandlers();
 			this.InternalDestroy();
 		}
 
 		public void Dispose()
 		{
+			this.DisposeHandlers();
+			this.InternalDestroy();
+			GC.SuppressFinalize(this);
+		}
+
+		private void DisposeHandlers()
+		{
 			if (this.disposeDownloadHandlerOnDispose)
 			{
-				DownloadHandler downloadHandler = this.downloadHandler;
+				DownloadHandler downloadHandler = this.GetDownloadHandler();
 				if (downloadHandler != null)
 				{
 					downloadHandler.Dispose();
@@ -585,14 +586,12 @@ namespace UnityEngine.Networking
 			}
 			if (this.disposeUploadHandlerOnDispose)
 			{
-				UploadHandler uploadHandler = this.uploadHandler;
+				UploadHandler uploadHandler = this.GetUploadHandler();
 				if (uploadHandler != null)
 				{
 					uploadHandler.Dispose();
 				}
 			}
-			this.InternalDestroy();
-			GC.SuppressFinalize(this);
 		}
 
 		[GeneratedByOldBindingsGenerator]
@@ -659,14 +658,6 @@ namespace UnityEngine.Networking
 			{
 				throw new ArgumentException("Cannot set a Request header with a null");
 			}
-			if (!UnityWebRequest.IsHeaderNameLegal(name))
-			{
-				throw new ArgumentException("Cannot set Request Header " + name + " - name contains illegal characters or is not user-overridable");
-			}
-			if (!UnityWebRequest.IsHeaderValueLegal(value))
-			{
-				throw new ArgumentException("Cannot set Request Header - value contains illegal characters");
-			}
 			this.InternalSetRequestHeader(name, value);
 		}
 
@@ -699,62 +690,13 @@ namespace UnityEngine.Networking
 			return result;
 		}
 
-		private static bool ContainsForbiddenCharacters(string s, int firstAllowedCharCode)
-		{
-			bool result;
-			for (int i = 0; i < s.Length; i++)
-			{
-				char c = s[i];
-				if ((int)c < firstAllowedCharCode || c == '\u007f')
-				{
-					result = true;
-					return result;
-				}
-			}
-			result = false;
-			return result;
-		}
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern UploadHandler GetUploadHandler();
 
-		private static bool IsHeaderNameLegal(string headerName)
-		{
-			bool result;
-			if (string.IsNullOrEmpty(headerName))
-			{
-				result = false;
-			}
-			else
-			{
-				headerName = headerName.ToLower();
-				if (UnityWebRequest.ContainsForbiddenCharacters(headerName, 33))
-				{
-					result = false;
-				}
-				else if (headerName.StartsWith("sec-") || headerName.StartsWith("proxy-"))
-				{
-					result = false;
-				}
-				else
-				{
-					string[] array = UnityWebRequest.forbiddenHeaderKeys;
-					for (int i = 0; i < array.Length; i++)
-					{
-						string b = array[i];
-						if (string.Equals(headerName, b))
-						{
-							result = false;
-							return result;
-						}
-					}
-					result = true;
-				}
-			}
-			return result;
-		}
-
-		private static bool IsHeaderValueLegal(string headerValue)
-		{
-			return !UnityWebRequest.ContainsForbiddenCharacters(headerValue, 32);
-		}
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern DownloadHandler GetDownloadHandler();
 
 		private static string GetErrorDescription(UnityWebRequest.UnityWebRequestError errorCode)
 		{
@@ -785,7 +727,7 @@ namespace UnityEngine.Networking
 			case UnityWebRequest.UnityWebRequestError.AccessDenied:
 				result = "Remote server denied access to the specified URL";
 				return result;
-			case UnityWebRequest.UnityWebRequestError.GenericHTTPError:
+			case UnityWebRequest.UnityWebRequestError.GenericHttpError:
 				result = "Unknown/Generic HTTP Error - Check HTTP Error code";
 				return result;
 			case UnityWebRequest.UnityWebRequestError.WriteError:

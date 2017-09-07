@@ -18,6 +18,10 @@ namespace UnityEngine
 
 		public Color32 color;
 
+		public float borderWidth;
+
+		public float cornerRadius;
+
 		public int pass;
 
 		public Texture texture;

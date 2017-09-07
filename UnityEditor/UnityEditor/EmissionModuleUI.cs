@@ -74,9 +74,7 @@ namespace UnityEditor
 			if (this.m_BurstCount == null)
 			{
 				this.m_Time = new SerializedMinMaxCurve(this, EmissionModuleUI.s_Texts.rateOverTime, "rateOverTime");
-				this.m_Time.m_AllowRandom = false;
 				this.m_Distance = new SerializedMinMaxCurve(this, EmissionModuleUI.s_Texts.rateOverDistance, "rateOverDistance");
-				this.m_Distance.m_AllowRandom = false;
 				this.m_BurstCount = base.GetProperty("m_BurstCount");
 				this.m_Bursts = base.GetProperty("m_Bursts");
 				this.m_BurstList = new ReorderableList(base.serializedObject, this.m_Bursts, true, true, true, true);
@@ -93,10 +91,6 @@ namespace UnityEditor
 			ModuleUI.GUIMinMaxCurve(EmissionModuleUI.s_Texts.rateOverTime, this.m_Time, new GUILayoutOption[0]);
 			ModuleUI.GUIMinMaxCurve(EmissionModuleUI.s_Texts.rateOverDistance, this.m_Distance, new GUILayoutOption[0]);
 			this.DoBurstGUI(initial);
-			if (initial.m_SimulationSpace.intValue != 1 && this.m_Distance.scalar.floatValue > 0f)
-			{
-				EditorGUILayout.HelpBox("Distance-based emission only works when using World Space Simulation Space", MessageType.Warning, true);
-			}
 		}
 
 		private void DoBurstGUI(InitialModuleUI initial)
@@ -215,7 +209,7 @@ namespace UnityEditor
 			this.Init();
 			if (this.m_Distance.scalar.floatValue > 0f)
 			{
-				text += "\n\tEmission is distance based.";
+				text += "\nDistance-based emission is being used in the Emission module.";
 			}
 		}
 	}

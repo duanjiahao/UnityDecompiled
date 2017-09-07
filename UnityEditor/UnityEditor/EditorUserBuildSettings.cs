@@ -6,6 +6,9 @@ namespace UnityEditor
 {
 	public sealed class EditorUserBuildSettings
 	{
+		internal static AppleBuildAndRunType appleBuildAndRunType = AppleBuildAndRunType.Xcode;
+
+		[Obsolete("UnityEditor.activeBuildTargetChanged has been deprecated.Use UnityEditor.Build.IActiveBuildTargetChanged instead.")]
 		public static Action activeBuildTargetChanged;
 
 		public static extern BuildTargetGroup selectedBuildTargetGroup
@@ -264,6 +267,12 @@ namespace UnityEditor
 			set;
 		}
 
+		public static bool xboxOneRebootIfDeployFailsAndRetry
+		{
+			get;
+			set;
+		}
+
 		public static extern MobileTextureSubtarget androidBuildSubtarget
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -294,6 +303,26 @@ namespace UnityEditor
 			set;
 		}
 
+		public static extern AndroidMinification androidDebugMinification
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern AndroidMinification androidReleaseMinification
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern WSASubtarget wsaSubtarget
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -304,6 +333,7 @@ namespace UnityEditor
 			set;
 		}
 
+		[Obsolete("EditorUserBuildSettings.wsaSDK is obsolete and has no effect. It will be removed in a subsequent Unity release.")]
 		public static extern WSASDK wsaSDK
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -525,6 +555,26 @@ namespace UnityEditor
 			set;
 		}
 
+		public static extern bool switchEnableDebugPad
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern bool switchRedirectWritesToHostMount
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern bool installInBuildFolder
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -535,6 +585,7 @@ namespace UnityEditor
 			set;
 		}
 
+		[Obsolete("forceOptimizeScriptCompilation is obsolete - will always return false. Control script optimization using the 'IL2CPP optimization level' configuration in Player Settings / Other.")]
 		public static extern bool forceOptimizeScriptCompilation
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -572,6 +623,10 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool SwitchActiveBuildTarget(BuildTargetGroup targetGroup, BuildTarget target);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool SwitchActiveBuildTargetAsync(BuildTargetGroup targetGroup, BuildTarget target);
 
 		internal static void Internal_ActiveBuildTargetChanged()
 		{

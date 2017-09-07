@@ -6,7 +6,7 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal class MonoCSharpCompilerOutputParser : CompilerOutputParserBase
 	{
-		private static Regex sCompilerOutput = new Regex("\\s*(?<filename>.*)\\((?<line>\\d+),(?<column>\\d+)\\):\\s*(?<type>warning|error)\\s*(?<id>[^:]*):\\s*(?<message>.*)", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+		private static Regex sCompilerOutput = new Regex("\\s*(?<filename>.*)\\((?<line>\\d+),(?<column>\\d+)(\\+{1})?\\):\\s*(?<type>warning|error)\\s*(?<id>[^:]*):\\s*(?<message>.*)", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
 		private static Regex sInternalErrorCompilerOutput = new Regex("\\s*(?<message>Internal compiler (?<type>error)) at\\s*(?<filename>.*)\\((?<line>\\d+),(?<column>\\d+)\\):\\s*(?<id>.*)", RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 

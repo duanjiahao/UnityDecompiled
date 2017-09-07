@@ -43,6 +43,8 @@ namespace UnityEditor
 
 			public readonly GUIContent m_CellSizeContent = EditorGUIUtility.TextContent("Voxel Size|Specifies at the voxelization resolution at which the NavMesh is build.");
 
+			public readonly GUIContent m_LearnAboutComponent = EditorGUIUtility.TextContent("Learn instead about the component workflow.|Components available for building and using navmesh data for different agent types.");
+
 			public readonly GUIContent m_AgentSizeHeader = new GUIContent("Baked Agent Size");
 
 			public readonly GUIContent m_OffmeshHeader = new GUIContent("Generated Off Mesh Links");
@@ -803,7 +805,7 @@ namespace UnityEditor
 		private static void ComponentBasedWorkflowButton()
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			if (GUILayout.Button("Learn about the component-based workflow.", new GUILayoutOption[0]))
+			if (EditorGUILayout.LinkLabel(NavMeshEditorWindow.s_Styles.m_LearnAboutComponent, new GUILayoutOption[0]))
 			{
 				Help.BrowseURL("https://github.com/Unity-Technologies/NavMeshComponents");
 			}

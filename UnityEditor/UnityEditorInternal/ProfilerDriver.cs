@@ -165,6 +165,14 @@ namespace UnityEditorInternal
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int GetUISystemEventMarkersCount(int firstFrame, int frameCount);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void GetUISystemEventMarkersBatch(int firstFrame, int frameCount, EventMarker[] buffer, string[] names);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void GetStatisticsValues(int identifier, int firstFrame, float scale, float[] buffer, out float maxValue);
 
 		[GeneratedByOldBindingsGenerator]

@@ -31,6 +31,11 @@ namespace UnityEditor
 			EditorConnectionInternal.Initialize();
 		}
 
+		void IPlayerEditorConnectionNative.DisconnectAll()
+		{
+			EditorConnectionInternal.DisconnectAll();
+		}
+
 		public bool IsConnected()
 		{
 			throw new NotSupportedException("Check the connected players list instead");
@@ -51,5 +56,13 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SendMessage(string messageId, byte[] data, int playerId);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int Connect(string IP, int port);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void DisconnectAll();
 	}
 }

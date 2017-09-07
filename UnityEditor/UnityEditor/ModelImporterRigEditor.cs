@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace UnityEditor
 {
-	internal class ModelImporterRigEditor : AssetImporterInspector
+	internal class ModelImporterRigEditor : BaseAssetImporterTabUI
 	{
 		private class Styles
 		{
@@ -127,6 +128,10 @@ namespace UnityEditor
 
 		private List<string> m_BipedMappingReport = null;
 
+		private ModelImporterRigEditor.MappingRelevantSettings[] oldModelSettings = null;
+
+		private ModelImporterRigEditor.MappingRelevantSettings[] newModelSettings = null;
+
 		private static ModelImporterRigEditor.Styles styles;
 
 		private ModelImporter singleImporter
@@ -168,8 +173,8 @@ namespace UnityEditor
 					Editor[] activeEditors = tracker.activeEditors;
 					for (int j = 0; j < activeEditors.Length; j++)
 					{
-						Editor x = activeEditors[j];
-						if (x == this)
+						Editor editor = activeEditors[j];
+						if (editor is ModelImporterEditor && ((ModelImporterEditor)editor).activeTab == this)
 						{
 							result = inspectorWindow.isLocked;
 							return result;
@@ -181,7 +186,11 @@ namespace UnityEditor
 			}
 		}
 
-		public void OnEnable()
+		public ModelImporterRigEditor(AssetImporterEditor panelContainer) : base(panelContainer)
+		{
+		}
+
+		internal override void OnEnable()
 		{
 			this.m_AnimationType = base.serializedObject.FindProperty("m_AnimationType");
 			this.m_AvatarSource = base.serializedObject.FindProperty("m_LastHumanDescriptionAvatarSource");
@@ -217,6 +226,10 @@ namespace UnityEditor
 			{
 				GameObject gameObject = AssetDatabase.LoadMainAssetAtPath(this.singleImporter.assetPath) as GameObject;
 				this.m_IsBiped = AvatarBipedMapper.IsBiped(gameObject.transform, this.m_BipedMappingReport);
+				if (this.m_Avatar == null)
+				{
+					this.ResetAvatar();
+				}
 			}
 		}
 
@@ -251,9 +264,19 @@ namespace UnityEditor
 			}
 		}
 
+		internal override void OnDestroy()
+		{
+			this.m_Avatar = null;
+		}
+
 		internal override void ResetValues()
 		{
 			base.ResetValues();
+			this.ResetAvatar();
+		}
+
+		private void ResetAvatar()
+		{
 			this.m_Avatar = (AssetDatabase.LoadAssetAtPath((base.target as ModelImporter).assetPath, typeof(Avatar)) as Avatar);
 		}
 
@@ -456,7 +479,7 @@ namespace UnityEditor
 
 		private void ShowUpdateReferenceClip()
 		{
-			if (base.targets.Length <= 1 && this.animationType == ModelImporterAnimationType.Human && !this.m_CopyAvatar.boolValue)
+			if (base.targets.Length <= 1 && !this.m_CopyAvatar.boolValue && this.m_Avatar && this.m_Avatar.isValid)
 			{
 				string[] array = new string[0];
 				ModelImporter modelImporter = base.target as ModelImporter;
@@ -547,10 +570,7 @@ namespace UnityEditor
 					this.LegacyGUI();
 				}
 			}
-			if (this.m_Avatar && this.m_Avatar.isValid && this.m_Avatar.isHuman)
-			{
-				this.ShowUpdateReferenceClip();
-			}
+			this.ShowUpdateReferenceClip();
 			bool flag = true;
 			if (this.animationType != ModelImporterAnimationType.Human && this.animationType != ModelImporterAnimationType.Generic)
 			{
@@ -588,7 +608,6 @@ namespace UnityEditor
 					}
 				}
 			}
-			base.ApplyRevertGUI();
 		}
 
 		private static SerializedObject GetModelImporterSerializedObject(string assetPath)
@@ -655,49 +674,52 @@ namespace UnityEditor
 			}
 		}
 
-		internal override void Apply()
+		internal override void PreApply()
 		{
-			ModelImporterRigEditor.MappingRelevantSettings[] array = new ModelImporterRigEditor.MappingRelevantSettings[base.targets.Length];
+			this.oldModelSettings = new ModelImporterRigEditor.MappingRelevantSettings[base.targets.Length];
 			for (int i = 0; i < base.targets.Length; i++)
 			{
 				SerializedObject serializedObject = new SerializedObject(base.targets[i]);
 				SerializedProperty serializedProperty = serializedObject.FindProperty("m_AnimationType");
 				SerializedProperty serializedProperty2 = serializedObject.FindProperty("m_CopyAvatar");
-				array[i].humanoid = (serializedProperty.intValue == 3);
-				array[i].hasNoAnimation = (serializedProperty.intValue == 0);
-				array[i].copyAvatar = serializedProperty2.boolValue;
+				this.oldModelSettings[i].humanoid = (serializedProperty.intValue == 3);
+				this.oldModelSettings[i].hasNoAnimation = (serializedProperty.intValue == 0);
+				this.oldModelSettings[i].copyAvatar = serializedProperty2.boolValue;
 			}
-			ModelImporterRigEditor.MappingRelevantSettings[] array2 = new ModelImporterRigEditor.MappingRelevantSettings[base.targets.Length];
-			Array.Copy(array, array2, base.targets.Length);
+			this.newModelSettings = new ModelImporterRigEditor.MappingRelevantSettings[base.targets.Length];
+			Array.Copy(this.oldModelSettings, this.newModelSettings, base.targets.Length);
 			for (int j = 0; j < base.targets.Length; j++)
 			{
 				if (!this.m_AnimationType.hasMultipleDifferentValues)
 				{
-					array2[j].humanoid = (this.m_AnimationType.intValue == 3);
+					this.newModelSettings[j].humanoid = (this.m_AnimationType.intValue == 3);
 				}
 				if (!this.m_CopyAvatar.hasMultipleDifferentValues)
 				{
-					array2[j].copyAvatar = this.m_CopyAvatar.boolValue;
+					this.newModelSettings[j].copyAvatar = this.m_CopyAvatar.boolValue;
 				}
 			}
-			base.Apply();
-			for (int k = 0; k < base.targets.Length; k++)
+		}
+
+		internal override void PostApply()
+		{
+			for (int i = 0; i < base.targets.Length; i++)
 			{
-				if (array[k].usesOwnAvatar && !array2[k].usesOwnAvatar && !array2[k].copyAvatar)
+				if (this.oldModelSettings[i].usesOwnAvatar && !this.newModelSettings[i].usesOwnAvatar && !this.newModelSettings[i].copyAvatar)
 				{
-					SerializedObject serializedObject2 = new SerializedObject(base.targets[k]);
-					AvatarSetupTool.ClearAll(serializedObject2);
-					serializedObject2.ApplyModifiedPropertiesWithoutUndo();
+					SerializedObject serializedObject = new SerializedObject(base.targets[i]);
+					AvatarSetupTool.ClearAll(serializedObject);
+					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
-				if (!this.m_CopyAvatar.boolValue && !array2[k].humanoid && this.rootIndex > 0)
+				if (!this.m_CopyAvatar.boolValue && !this.newModelSettings[i].humanoid && this.rootIndex > 0)
 				{
-					ModelImporter modelImporter = base.targets[k] as ModelImporter;
+					ModelImporter modelImporter = base.targets[i] as ModelImporter;
 					GameObject gameObject = AssetDatabase.LoadMainAssetAtPath(modelImporter.assetPath) as GameObject;
 					Animator component = gameObject.GetComponent<Animator>();
 					bool flag = component && !component.hasTransformHierarchy;
 					if (flag)
 					{
-						gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject);
+						gameObject = (this.Instantiate(gameObject) as GameObject);
 						AnimatorUtility.DeoptimizeTransformHierarchy(gameObject);
 					}
 					Transform transform = gameObject.transform.Find(this.m_RootMotionBoneList[this.rootIndex].text);
@@ -705,41 +727,43 @@ namespace UnityEditor
 					{
 						this.m_RootMotionBoneRotation.quaternionValue = transform.rotation;
 					}
-					SerializedObject serializedObject3 = new SerializedObject(base.targets[k]);
-					serializedObject3.ApplyModifiedPropertiesWithoutUndo();
+					SerializedObject serializedObject2 = new SerializedObject(base.targets[i]);
+					serializedObject2.ApplyModifiedPropertiesWithoutUndo();
 					if (flag)
 					{
-						UnityEngine.Object.DestroyImmediate(gameObject);
+						this.DestroyImmediate(gameObject);
 					}
 				}
-				if (!array[k].usesOwnAvatar && array2[k].usesOwnAvatar)
+				if (!this.oldModelSettings[i].usesOwnAvatar && this.newModelSettings[i].usesOwnAvatar)
 				{
-					ModelImporter modelImporter2 = base.targets[k] as ModelImporter;
-					if (array[k].hasNoAnimation)
+					ModelImporter modelImporter2 = base.targets[i] as ModelImporter;
+					if (this.oldModelSettings[i].hasNoAnimation)
 					{
 						ModelImporterAnimationType animationType = modelImporter2.animationType;
 						modelImporter2.animationType = ModelImporterAnimationType.Generic;
 						AssetDatabase.ImportAsset(modelImporter2.assetPath);
 						modelImporter2.animationType = animationType;
 					}
-					SerializedObject serializedObject4 = new SerializedObject(base.targets[k]);
+					SerializedObject serializedObject3 = new SerializedObject(base.targets[i]);
 					GameObject gameObject2 = AssetDatabase.LoadMainAssetAtPath(modelImporter2.assetPath) as GameObject;
 					Animator component2 = gameObject2.GetComponent<Animator>();
 					bool flag2 = component2 && !component2.hasTransformHierarchy;
 					if (flag2)
 					{
-						gameObject2 = UnityEngine.Object.Instantiate<GameObject>(gameObject2);
+						gameObject2 = (this.Instantiate(gameObject2) as GameObject);
 						AnimatorUtility.DeoptimizeTransformHierarchy(gameObject2);
 					}
-					AvatarSetupTool.AutoSetupOnInstance(gameObject2, serializedObject4);
+					AvatarSetupTool.AutoSetupOnInstance(gameObject2, serializedObject3);
 					this.m_IsBiped = AvatarBipedMapper.IsBiped(gameObject2.transform, this.m_BipedMappingReport);
 					if (flag2)
 					{
-						UnityEngine.Object.DestroyImmediate(gameObject2);
+						this.DestroyImmediate(gameObject2);
 					}
-					serializedObject4.ApplyModifiedPropertiesWithoutUndo();
+					serializedObject3.ApplyModifiedPropertiesWithoutUndo();
 				}
 			}
+			this.oldModelSettings = null;
+			this.newModelSettings = null;
 		}
 	}
 }

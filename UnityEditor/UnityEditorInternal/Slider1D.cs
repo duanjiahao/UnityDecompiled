@@ -59,8 +59,8 @@ namespace UnityEditorInternal
 					float num = HandleUtility.CalcLineTranslation(Slider1D.s_StartMousePosition, Slider1D.s_CurrentMousePosition, Slider1D.s_StartPosition, slideDirection);
 					num = Handles.SnapValue(num, snap);
 					Vector3 a = Handles.matrix.MultiplyVector(slideDirection);
-					Vector3 v = Handles.matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
-					position = Handles.inverseMatrix.MultiplyPoint(v);
+					Vector3 point = Handles.matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
+					position = Handles.inverseMatrix.MultiplyPoint(point);
 					GUI.changed = true;
 					current.Use();
 				}
@@ -130,8 +130,8 @@ namespace UnityEditorInternal
 					float num = HandleUtility.CalcLineTranslation(Slider1D.s_StartMousePosition, Slider1D.s_CurrentMousePosition, Slider1D.s_StartPosition, slideDirection);
 					num = Handles.SnapValue(num, snap);
 					Vector3 a = Handles.matrix.MultiplyVector(slideDirection);
-					Vector3 v = Handles.matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
-					position = Handles.inverseMatrix.MultiplyPoint(v);
+					Vector3 point = Handles.matrix.MultiplyPoint(Slider1D.s_StartPosition) + a * num;
+					position = Handles.inverseMatrix.MultiplyPoint(point);
 					GUI.changed = true;
 					current.Use();
 				}

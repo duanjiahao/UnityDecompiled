@@ -9,6 +9,8 @@ namespace UnityEngine.Networking.PlayerConnection
 
 		void Unregister(Guid messageId, UnityAction<MessageEventArgs> callback);
 
+		void DisconnectAll();
+
 		void RegisterConnection(UnityAction<int> callback);
 
 		void RegisterDisconnection(UnityAction<int> callback);

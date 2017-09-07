@@ -160,6 +160,7 @@ namespace UnityEngine.UI
 				this.PlayEffect(this.toggleTransition == Toggle.ToggleTransition.None);
 				if (sendCallback)
 				{
+					UISystemProfilerApi.AddMarker("Toggle.value", this);
 					this.onValueChanged.Invoke(this.m_IsOn);
 				}
 			}

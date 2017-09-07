@@ -7,6 +7,12 @@ namespace UnityEditor.Web
 	[InitializeOnLoad]
 	internal class CrashReportingAccess : CloudServiceAccess
 	{
+		[Serializable]
+		public struct CrashReportingServiceState
+		{
+			public bool crash_reporting;
+		}
+
 		private const string kServiceName = "Game Performance";
 
 		private const string kServiceDisplayName = "Game Performance";
@@ -36,7 +42,14 @@ namespace UnityEditor.Web
 
 		public override void EnableService(bool enabled)
 		{
-			CrashReportingSettings.enabled = enabled;
+			if (CrashReportingSettings.enabled != enabled)
+			{
+				CrashReportingSettings.enabled = enabled;
+				EditorAnalytics.SendEventServiceInfo(new CrashReportingAccess.CrashReportingServiceState
+				{
+					crash_reporting = enabled
+				});
+			}
 		}
 
 		public bool GetCaptureEditorExceptions()

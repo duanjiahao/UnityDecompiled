@@ -1,5 +1,4 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
@@ -41,7 +40,7 @@ namespace UnityEditor
 			if (this.m_PreviewUtility == null)
 			{
 				this.m_PreviewUtility = new PreviewRenderUtility();
-				this.m_PreviewUtility.m_CameraFieldOfView = 30f;
+				this.m_PreviewUtility.camera.fieldOfView = 30f;
 				this.m_Material = (EditorGUIUtility.GetBuiltinExtraResource(typeof(Material), "Default-Material.mat") as Material);
 				this.m_WireMaterial = ModelInspector.CreateWireframeMaterial();
 			}
@@ -63,17 +62,15 @@ namespace UnityEditor
 				Bounds bounds = mesh.bounds;
 				float magnitude = bounds.extents.magnitude;
 				float num = 4f * magnitude;
-				previewUtility.m_Camera.transform.position = -Vector3.forward * num;
-				previewUtility.m_Camera.transform.rotation = Quaternion.identity;
-				previewUtility.m_Camera.nearClipPlane = num - magnitude * 1.1f;
-				previewUtility.m_Camera.farClipPlane = num + magnitude * 1.1f;
-				previewUtility.m_Light[0].intensity = 1.4f;
-				previewUtility.m_Light[0].transform.rotation = Quaternion.Euler(40f, 40f, 0f);
-				previewUtility.m_Light[1].intensity = 1.4f;
-				Color ambient = new Color(0.1f, 0.1f, 0.1f, 0f);
-				InternalEditorUtility.SetCustomLighting(previewUtility.m_Light, ambient);
+				previewUtility.camera.transform.position = -Vector3.forward * num;
+				previewUtility.camera.transform.rotation = Quaternion.identity;
+				previewUtility.camera.nearClipPlane = num - magnitude * 1.1f;
+				previewUtility.camera.farClipPlane = num + magnitude * 1.1f;
+				previewUtility.lights[0].intensity = 1.4f;
+				previewUtility.lights[0].transform.rotation = Quaternion.Euler(40f, 40f, 0f);
+				previewUtility.lights[1].intensity = 1.4f;
+				previewUtility.ambientColor = new Color(0.1f, 0.1f, 0.1f, 0f);
 				ModelInspector.RenderMeshPreviewSkipCameraAndLighting(mesh, bounds, previewUtility, litMaterial, wireMaterial, null, direction, meshSubset);
-				InternalEditorUtility.RemoveCustomLighting();
 			}
 		}
 
@@ -88,7 +85,7 @@ namespace UnityEditor
 				int subMeshCount = mesh.subMeshCount;
 				if (litMaterial != null)
 				{
-					previewUtility.m_Camera.clearFlags = CameraClearFlags.Nothing;
+					previewUtility.camera.clearFlags = CameraClearFlags.Nothing;
 					if (meshSubset < 0 || meshSubset >= subMeshCount)
 					{
 						for (int i = 0; i < subMeshCount; i++)
@@ -100,11 +97,11 @@ namespace UnityEditor
 					{
 						previewUtility.DrawMesh(mesh, pos, quaternion, litMaterial, meshSubset, customProperties);
 					}
-					previewUtility.m_Camera.Render();
+					previewUtility.Render(false, true);
 				}
 				if (wireMaterial != null)
 				{
-					previewUtility.m_Camera.clearFlags = CameraClearFlags.Nothing;
+					previewUtility.camera.clearFlags = CameraClearFlags.Nothing;
 					GL.wireframe = true;
 					if (meshSubset < 0 || meshSubset >= subMeshCount)
 					{
@@ -117,7 +114,7 @@ namespace UnityEditor
 					{
 						previewUtility.DrawMesh(mesh, pos, quaternion, wireMaterial, meshSubset, customProperties);
 					}
-					previewUtility.m_Camera.Render();
+					previewUtility.Render(false, true);
 					GL.wireframe = false;
 				}
 				Unsupported.SetRenderSettingsUseFogNoDirty(fog);

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor.Utils;
 using UnityEditorInternal;
 using UnityEngine;
@@ -29,35 +30,151 @@ namespace UnityEditor.VisualStudioIntegration
 
 		public static void Initialize(string editorPath)
 		{
-			if (Application.platform == RuntimePlatform.WindowsEditor)
+			string externalEditor = editorPath ?? ScriptEditorUtility.GetExternalScriptEditor();
+			if (Application.platform == RuntimePlatform.OSXEditor)
 			{
-				string text = editorPath ?? EditorPrefs.GetString("kScriptsDefaultApp");
-				if (text.EndsWith("UnityVS.OpenFile.exe"))
+				UnityVSSupport.InitializeVSForMac(externalEditor);
+			}
+			else if (Application.platform == RuntimePlatform.WindowsEditor)
+			{
+				UnityVSSupport.InitializeVisualStudio(externalEditor);
+			}
+		}
+
+		private static void InitializeVSForMac(string externalEditor)
+		{
+			Version vsfmVersion;
+			if (UnityVSSupport.IsVSForMac(externalEditor, out vsfmVersion))
+			{
+				UnityVSSupport.m_ShouldUnityVSBeActive = true;
+				string vSForMacBridgeAssembly = UnityVSSupport.GetVSForMacBridgeAssembly(externalEditor, vsfmVersion);
+				if (string.IsNullOrEmpty(vSForMacBridgeAssembly) || !File.Exists(vSForMacBridgeAssembly))
 				{
-					text = SyncVS.FindBestVisualStudio();
-					if (text != null)
+					Console.WriteLine("Unable to find Tools for Unity bridge dll for Visual Studio for Mac " + externalEditor);
+				}
+				else
+				{
+					UnityVSSupport.s_UnityVSBridgeToLoad = vSForMacBridgeAssembly;
+					InternalEditorUtility.RegisterPrecompiledAssembly(Path.GetFileNameWithoutExtension(vSForMacBridgeAssembly), vSForMacBridgeAssembly);
+				}
+			}
+		}
+
+		private static bool IsVSForMac(string externalEditor, out Version vsfmVersion)
+		{
+			vsfmVersion = null;
+			bool result;
+			if (!externalEditor.ToLower().EndsWith("visual studio.app"))
+			{
+				result = false;
+			}
+			else
+			{
+				try
+				{
+					result = UnityVSSupport.GetVSForMacVersion(externalEditor, out vsfmVersion);
+				}
+				catch (Exception arg)
+				{
+					Console.WriteLine("Failed to read Visual Studio for Mac information: {0}", arg);
+					result = false;
+				}
+			}
+			return result;
+		}
+
+		private static bool GetVSForMacVersion(string externalEditor, out Version vsfmVersion)
+		{
+			vsfmVersion = null;
+			string path = Path.Combine(externalEditor, "Contents/Info.plist");
+			bool result;
+			if (!File.Exists(path))
+			{
+				result = false;
+			}
+			else
+			{
+				string input = File.ReadAllText(path);
+				Match match = Regex.Match(input, "\\<key\\>CFBundleShortVersionString\\</key\\>\\s+\\<string\\>(?<version>\\d+\\.\\d+\\.\\d+\\.\\d+?)\\</string\\>");
+				Group group = match.Groups["version"];
+				if (!group.Success)
+				{
+					result = false;
+				}
+				else
+				{
+					vsfmVersion = new Version(group.Value);
+					result = true;
+				}
+			}
+			return result;
+		}
+
+		private static string GetVSForMacBridgeAssembly(string externalEditor, Version vsfmVersion)
+		{
+			string text = Environment.GetEnvironmentVariable("VSTUM_BRIDGE");
+			string result;
+			if (!string.IsNullOrEmpty(text) && File.Exists(text))
+			{
+				result = text;
+			}
+			else
+			{
+				string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Application Support/VisualStudio/" + vsfmVersion.Major + ".0/LocalInstall/Addins");
+				if (Directory.Exists(path))
+				{
+					string[] directories = Directory.GetDirectories(path, "MonoDevelop.Unity*", SearchOption.TopDirectoryOnly);
+					for (int i = 0; i < directories.Length; i++)
 					{
-						EditorPrefs.SetString("kScriptsDefaultApp", text);
+						string path2 = directories[i];
+						text = Path.Combine(path2, "Editor/SyntaxTree.VisualStudio.Unity.Bridge.dll");
+						if (File.Exists(text))
+						{
+							result = text;
+							return result;
+						}
 					}
 				}
-				VisualStudioVersion version;
-				if (UnityVSSupport.IsVisualStudio(text, out version))
+				text = Path.Combine(externalEditor, "Contents/Resources/lib/monodevelop/AddIns/MonoDevelop.Unity/Editor/SyntaxTree.VisualStudio.Unity.Bridge.dll");
+				if (File.Exists(text))
 				{
-					UnityVSSupport.m_ShouldUnityVSBeActive = true;
-					string vstuBridgeAssembly = UnityVSSupport.GetVstuBridgeAssembly(version);
-					if (vstuBridgeAssembly == null)
-					{
-						Console.WriteLine("Unable to find bridge dll in registry for Microsoft Visual Studio Tools for Unity for " + text);
-					}
-					else if (!File.Exists(vstuBridgeAssembly))
-					{
-						Console.WriteLine("Unable to find bridge dll on disk for Microsoft Visual Studio Tools for Unity for " + vstuBridgeAssembly);
-					}
-					else
-					{
-						UnityVSSupport.s_UnityVSBridgeToLoad = vstuBridgeAssembly;
-						InternalEditorUtility.SetupCustomDll(Path.GetFileNameWithoutExtension(vstuBridgeAssembly), vstuBridgeAssembly);
-					}
+					result = text;
+				}
+				else
+				{
+					result = null;
+				}
+			}
+			return result;
+		}
+
+		private static void InitializeVisualStudio(string externalEditor)
+		{
+			if (externalEditor.EndsWith("UnityVS.OpenFile.exe"))
+			{
+				externalEditor = SyncVS.FindBestVisualStudio();
+				if (externalEditor != null)
+				{
+					ScriptEditorUtility.SetExternalScriptEditor(externalEditor);
+				}
+			}
+			VisualStudioVersion version;
+			if (UnityVSSupport.IsVisualStudio(externalEditor, out version))
+			{
+				UnityVSSupport.m_ShouldUnityVSBeActive = true;
+				string vstuBridgeAssembly = UnityVSSupport.GetVstuBridgeAssembly(version);
+				if (vstuBridgeAssembly == null)
+				{
+					Console.WriteLine("Unable to find bridge dll in registry for Microsoft Visual Studio Tools for Unity for " + externalEditor);
+				}
+				else if (!File.Exists(vstuBridgeAssembly))
+				{
+					Console.WriteLine("Unable to find bridge dll on disk for Microsoft Visual Studio Tools for Unity for " + vstuBridgeAssembly);
+				}
+				else
+				{
+					UnityVSSupport.s_UnityVSBridgeToLoad = vstuBridgeAssembly;
+					InternalEditorUtility.RegisterPrecompiledAssembly(Path.GetFileNameWithoutExtension(vstuBridgeAssembly), vstuBridgeAssembly);
 				}
 			}
 		}
@@ -224,7 +341,7 @@ namespace UnityEditor.VisualStudioIntegration
 
 		public static void ScriptEditorChanged(string editorPath)
 		{
-			if (Application.platform == RuntimePlatform.WindowsEditor)
+			if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.WindowsEditor)
 			{
 				UnityVSSupport.Initialize(editorPath);
 				InternalEditorUtility.RequestScriptReload();

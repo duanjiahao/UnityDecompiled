@@ -198,59 +198,62 @@ namespace UnityEditor
 
 		private void GenerateSelectionMesh()
 		{
-			SkinnedMeshRenderer component = this.cloth.GetComponent<SkinnedMeshRenderer>();
-			Vector3[] vertices = this.cloth.vertices;
-			int num = vertices.Length;
-			this.m_Selection = new bool[vertices.Length];
-			this.m_RectSelection = new bool[vertices.Length];
-			if (this.m_SelectionMesh != null)
+			if (this.cloth.vertices.Length != 0)
 			{
-				Mesh[] selectionMesh = this.m_SelectionMesh;
-				for (int i = 0; i < selectionMesh.Length; i++)
+				SkinnedMeshRenderer component = this.cloth.GetComponent<SkinnedMeshRenderer>();
+				Vector3[] vertices = this.cloth.vertices;
+				int num = vertices.Length;
+				this.m_Selection = new bool[vertices.Length];
+				this.m_RectSelection = new bool[vertices.Length];
+				if (this.m_SelectionMesh != null)
 				{
-					Mesh obj = selectionMesh[i];
-					UnityEngine.Object.DestroyImmediate(obj);
+					Mesh[] selectionMesh = this.m_SelectionMesh;
+					for (int i = 0; i < selectionMesh.Length; i++)
+					{
+						Mesh obj = selectionMesh[i];
+						UnityEngine.Object.DestroyImmediate(obj);
+					}
+					Mesh[] selectedMesh = this.m_SelectedMesh;
+					for (int j = 0; j < selectedMesh.Length; j++)
+					{
+						Mesh obj2 = selectedMesh[j];
+						UnityEngine.Object.DestroyImmediate(obj2);
+					}
 				}
-				Mesh[] selectedMesh = this.m_SelectedMesh;
-				for (int j = 0; j < selectedMesh.Length; j++)
+				int num2 = num / ClothInspector.s_MaxVertices + 1;
+				this.m_SelectionMesh = new Mesh[num2];
+				this.m_SelectedMesh = new Mesh[num2];
+				this.m_LastVertices = new Vector3[num];
+				this.m_MeshVerticesPerSelectionVertex = this.m_VertexMesh.vertices.Length;
+				Transform actualRootBone = component.actualRootBone;
+				for (int k = 0; k < num2; k++)
 				{
-					Mesh obj2 = selectedMesh[j];
-					UnityEngine.Object.DestroyImmediate(obj2);
+					this.m_SelectionMesh[k] = new Mesh();
+					this.m_SelectionMesh[k].hideFlags |= HideFlags.DontSave;
+					this.m_SelectedMesh[k] = new Mesh();
+					this.m_SelectedMesh[k].hideFlags |= HideFlags.DontSave;
+					int num3 = num - k * ClothInspector.s_MaxVertices;
+					if (num3 > ClothInspector.s_MaxVertices)
+					{
+						num3 = ClothInspector.s_MaxVertices;
+					}
+					CombineInstance[] array = new CombineInstance[num3];
+					int num4 = k * ClothInspector.s_MaxVertices;
+					for (int l = 0; l < num3; l++)
+					{
+						this.m_LastVertices[num4 + l] = actualRootBone.rotation * vertices[num4 + l] + actualRootBone.position;
+						array[l].mesh = this.m_VertexMesh;
+						array[l].transform = Matrix4x4.TRS(this.m_LastVertices[num4 + l], Quaternion.identity, Vector3.one);
+					}
+					this.m_SelectionMesh[k].CombineMeshes(array);
+					for (int m = 0; m < num3; m++)
+					{
+						array[m].mesh = this.m_VertexMeshSelected;
+					}
+					this.m_SelectedMesh[k].CombineMeshes(array);
 				}
+				this.SetupSelectionMeshColors();
 			}
-			int num2 = num / ClothInspector.s_MaxVertices + 1;
-			this.m_SelectionMesh = new Mesh[num2];
-			this.m_SelectedMesh = new Mesh[num2];
-			this.m_LastVertices = new Vector3[num];
-			this.m_MeshVerticesPerSelectionVertex = this.m_VertexMesh.vertices.Length;
-			Transform actualRootBone = component.actualRootBone;
-			for (int k = 0; k < num2; k++)
-			{
-				this.m_SelectionMesh[k] = new Mesh();
-				this.m_SelectionMesh[k].hideFlags |= HideFlags.DontSave;
-				this.m_SelectedMesh[k] = new Mesh();
-				this.m_SelectedMesh[k].hideFlags |= HideFlags.DontSave;
-				int num3 = num - k * ClothInspector.s_MaxVertices;
-				if (num3 > ClothInspector.s_MaxVertices)
-				{
-					num3 = ClothInspector.s_MaxVertices;
-				}
-				CombineInstance[] array = new CombineInstance[num3];
-				int num4 = k * ClothInspector.s_MaxVertices;
-				for (int l = 0; l < num3; l++)
-				{
-					this.m_LastVertices[num4 + l] = actualRootBone.rotation * vertices[num4 + l] + actualRootBone.position;
-					array[l].mesh = this.m_VertexMesh;
-					array[l].transform = Matrix4x4.TRS(this.m_LastVertices[num4 + l], Quaternion.identity, Vector3.one);
-				}
-				this.m_SelectionMesh[k].CombineMeshes(array);
-				for (int m = 0; m < num3; m++)
-				{
-					array[m].mesh = this.m_VertexMeshSelected;
-				}
-				this.m_SelectedMesh[k].CombineMeshes(array);
-			}
-			this.SetupSelectionMeshColors();
 		}
 
 		private void OnEnable()
@@ -370,92 +373,98 @@ namespace UnityEditor
 
 		private void SetupSelectionMeshColors()
 		{
-			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
-			int num = coefficients.Length;
-			Color[] array = new Color[num * this.m_MeshVerticesPerSelectionVertex];
-			float num2 = 0f;
-			float num3 = 0f;
-			for (int i = 0; i < coefficients.Length; i++)
+			if (this.cloth.vertices.Length != 0)
 			{
-				float coefficient = this.GetCoefficient(coefficients[i]);
-				if (coefficient < 3.40282347E+38f)
+				ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
+				int num = coefficients.Length;
+				Color[] array = new Color[num * this.m_MeshVerticesPerSelectionVertex];
+				float num2 = 0f;
+				float num3 = 0f;
+				for (int i = 0; i < coefficients.Length; i++)
 				{
-					if (coefficient < num2)
+					float coefficient = this.GetCoefficient(coefficients[i]);
+					if (coefficient < 3.40282347E+38f)
 					{
-						num2 = coefficient;
-					}
-					if (coefficient > num3)
-					{
-						num3 = coefficient;
+						if (coefficient < num2)
+						{
+							num2 = coefficient;
+						}
+						if (coefficient > num3)
+						{
+							num3 = coefficient;
+						}
 					}
 				}
-			}
-			for (int j = 0; j < num; j++)
-			{
-				float num4 = this.GetCoefficient(coefficients[j]);
-				Color color;
-				if (num4 >= 3.40282347E+38f)
+				for (int j = 0; j < num; j++)
 				{
-					color = Color.black;
-				}
-				else
-				{
-					if (num3 - num2 != 0f)
+					float num4 = this.GetCoefficient(coefficients[j]);
+					Color color;
+					if (num4 >= 3.40282347E+38f)
 					{
-						num4 = (num4 - num2) / (num3 - num2);
+						color = Color.black;
 					}
 					else
 					{
-						num4 = 0f;
+						if (num3 - num2 != 0f)
+						{
+							num4 = (num4 - num2) / (num3 - num2);
+						}
+						else
+						{
+							num4 = 0f;
+						}
+						color = this.GetGradientColor(num4);
 					}
-					color = this.GetGradientColor(num4);
+					for (int k = 0; k < this.m_MeshVerticesPerSelectionVertex; k++)
+					{
+						array[j * this.m_MeshVerticesPerSelectionVertex + k] = color;
+					}
 				}
-				for (int k = 0; k < this.m_MeshVerticesPerSelectionVertex; k++)
-				{
-					array[j * this.m_MeshVerticesPerSelectionVertex + k] = color;
-				}
+				this.m_MaxVisualizedValue[(int)this.drawMode] = num3;
+				this.m_MinVisualizedValue[(int)this.drawMode] = num2;
+				this.AssignColorsToMeshArray(array, this.m_SelectionMesh);
 			}
-			this.m_MaxVisualizedValue[(int)this.drawMode] = num3;
-			this.m_MinVisualizedValue[(int)this.drawMode] = num2;
-			this.AssignColorsToMeshArray(array, this.m_SelectionMesh);
 		}
 
 		private void SetupSelectedMeshColors()
 		{
-			int num = this.cloth.coefficients.Length;
-			Color[] array = new Color[num * this.m_MeshVerticesPerSelectionVertex];
-			for (int i = 0; i < num; i++)
+			if (this.cloth.vertices.Length != 0)
 			{
-				bool flag = this.m_Selection[i];
-				if (this.m_RectSelecting)
+				int num = this.cloth.coefficients.Length;
+				Color[] array = new Color[num * this.m_MeshVerticesPerSelectionVertex];
+				for (int i = 0; i < num; i++)
 				{
-					ClothInspector.RectSelectionMode rectSelectionMode = this.m_RectSelectionMode;
-					if (rectSelectionMode != ClothInspector.RectSelectionMode.Replace)
+					bool flag = this.m_Selection[i];
+					if (this.m_RectSelecting)
 					{
-						if (rectSelectionMode != ClothInspector.RectSelectionMode.Add)
+						ClothInspector.RectSelectionMode rectSelectionMode = this.m_RectSelectionMode;
+						if (rectSelectionMode != ClothInspector.RectSelectionMode.Replace)
 						{
-							if (rectSelectionMode == ClothInspector.RectSelectionMode.Substract)
+							if (rectSelectionMode != ClothInspector.RectSelectionMode.Add)
 							{
-								flag = (flag && !this.m_RectSelection[i]);
+								if (rectSelectionMode == ClothInspector.RectSelectionMode.Substract)
+								{
+									flag = (flag && !this.m_RectSelection[i]);
+								}
+							}
+							else
+							{
+								flag |= this.m_RectSelection[i];
 							}
 						}
 						else
 						{
-							flag |= this.m_RectSelection[i];
+							flag = this.m_RectSelection[i];
 						}
 					}
-					else
+					Color color = (!flag) ? Color.clear : ClothInspector.s_SelectionColor;
+					for (int j = 0; j < this.m_MeshVerticesPerSelectionVertex; j++)
 					{
-						flag = this.m_RectSelection[i];
+						array[i * this.m_MeshVerticesPerSelectionVertex + j] = color;
 					}
 				}
-				Color color = (!flag) ? Color.clear : ClothInspector.s_SelectionColor;
-				for (int j = 0; j < this.m_MeshVerticesPerSelectionVertex; j++)
-				{
-					array[i * this.m_MeshVerticesPerSelectionVertex + j] = color;
-				}
+				this.AssignColorsToMeshArray(array, this.m_SelectedMesh);
 			}
-			this.AssignColorsToMeshArray(array, this.m_SelectedMesh);
 		}
 
 		private void OnDisable()
@@ -859,9 +868,9 @@ namespace UnityEditor
 			Quaternion rotation = component.actualRootBone.rotation;
 			for (int i = 0; i < coefficients.Length; i++)
 			{
-				Vector3 inPt = this.m_LastVertices[i];
+				Vector3 point = this.m_LastVertices[i];
 				bool flag = Vector3.Dot(rotation * normals[i], Camera.current.transform.forward) <= 0f;
-				bool flag2 = plane.GetSide(inPt) && plane2.GetSide(inPt) && plane3.GetSide(inPt) && plane4.GetSide(inPt);
+				bool flag2 = plane.GetSide(point) && plane2.GetSide(point) && plane3.GetSide(point) && plane4.GetSide(point);
 				flag2 = (flag2 && (this.state.ManipulateBackfaces || flag));
 				if (this.m_RectSelection[i] != flag2)
 				{
@@ -1096,6 +1105,11 @@ namespace UnityEditor
 					if (this.state.ToolMode == (ClothInspector.ToolMode)(-1))
 					{
 						this.state.ToolMode = ClothInspector.ToolMode.Select;
+					}
+					if (this.m_Selection == null)
+					{
+						this.GenerateSelectionMesh();
+						this.SetupSelectedMeshColors();
 					}
 					ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
 					if (this.m_Selection.Length != coefficients.Length && this.m_Selection.Length != ClothInspector.s_MaxVertices)

@@ -13,13 +13,6 @@ namespace UnityEngineInternal.Input
 
 		public static NativeDeviceDiscoveredCallback onDeviceDiscovered;
 
-		internal static extern bool enabled
-		{
-			[GeneratedByOldBindingsGenerator]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-
 		public static extern double zeroEventTime
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -45,6 +38,12 @@ namespace UnityEngineInternal.Input
 			{
 				nativeEventCallback(eventCount, eventData);
 			}
+		}
+
+		[RequiredByNativeCode]
+		internal static bool HasDeviceDiscoveredHandler()
+		{
+			return NativeInputSystem.onDeviceDiscovered != null;
 		}
 
 		[RequiredByNativeCode]

@@ -130,25 +130,19 @@ namespace UnityEditorInternal.VR
 				int num = 1 + ((!flag) ? 0 : 1) + ((!flag2) ? 0 : 1);
 				GUIContent[] array = new GUIContent[num];
 				int[] array2 = new int[num];
-				int[] array3 = new int[]
-				{
-					0,
-					1,
-					2
-				};
 				GUIContent[] stereoRenderingPaths = PlayerSettingsEditorVR.GetStereoRenderingPaths(targetGroup);
 				int num2 = 0;
 				array[num2] = stereoRenderingPaths[0];
-				array2[num2++] = array3[0];
+				array2[num2++] = 0;
 				if (flag)
 				{
 					array[num2] = stereoRenderingPaths[1];
-					array2[num2++] = array3[1];
+					array2[num2++] = 1;
 				}
-				if (flag2 && stereoRenderingPaths.Length > 2)
+				if (flag2)
 				{
 					array[num2] = stereoRenderingPaths[2];
-					array2[num2++] = array3[2];
+					array2[num2++] = 2;
 				}
 				if (!flag2 && stereoRenderingPath.intValue == 2)
 				{
@@ -164,11 +158,11 @@ namespace UnityEditorInternal.VR
 					GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
 					if (graphicsAPIs.Length > 0 && graphicsAPIs[0] == GraphicsDeviceType.OpenGLES3)
 					{
-						EditorGUILayout.HelpBox(PlayerSettingsEditorVR.Styles.singlepassAndroidWarning2.text, MessageType.Warning);
+						EditorGUILayout.HelpBox(PlayerSettingsEditorVR.Styles.singlepassAndroidWarning2.text, MessageType.Info);
 					}
 					else
 					{
-						EditorGUILayout.HelpBox(PlayerSettingsEditorVR.Styles.singlepassAndroidWarning.text, MessageType.Error);
+						EditorGUILayout.HelpBox(PlayerSettingsEditorVR.Styles.singlepassAndroidWarning.text, MessageType.Warning);
 					}
 				}
 			}

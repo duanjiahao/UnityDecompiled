@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor.Collaboration;
+using System.Threading;
 using UnityEditor.VersionControl;
-using UnityEditor.Web;
 using UnityEditorInternal;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
@@ -692,6 +691,10 @@ namespace UnityEditor
 			}
 		}
 
+		internal delegate void OnAssetIconDrawDelegate(Rect iconRect, string guid, bool isListMode);
+
+		internal delegate bool OnAssetLabelDrawDelegate(Rect drawRect, string guid, bool isListMode);
+
 		private class LocalGroup : ObjectListArea.Group
 		{
 			private class ItemFader
@@ -782,6 +785,8 @@ namespace UnityEditor
 			public const int k_ListModeLeftPaddingForSubAssets = 28;
 
 			public const int k_ListModeVersionControlOverlayPadding = 14;
+
+			private const int k_ListModeExternalIconPadding = 6;
 
 			private const float k_IconWidth = 16f;
 
@@ -1469,7 +1474,6 @@ namespace UnityEditor
 							flag2 = false;
 							text = "";
 						}
-						position.width = Mathf.Max(position.width, 500f);
 						this.m_Content.text = text;
 						this.m_Content.image = null;
 						Texture2D texture2D = (filterItem == null) ? AssetPreview.GetAssetPreview(num, this.m_Owner.GetAssetPreviewManagerID()) : filterItem.icon;
@@ -1586,9 +1590,9 @@ namespace UnityEditor
 						}
 						if (filterItem != null && filterItem.isMainRepresentation)
 						{
-							if (CollabAccess.Instance.IsServiceEnabled())
+							if (ObjectListArea.postAssetIconDrawCallback != null)
 							{
-								CollabProjectHook.OnProjectWindowItemIconOverlay(filterItem.guid, position);
+								ObjectListArea.postAssetIconDrawCallback(position, filterItem.guid, false);
 							}
 							ProjectHooks.OnProjectWindowItem(filterItem.guid, position);
 						}
@@ -2122,25 +2126,45 @@ namespace UnityEditor
 			{
 				float num = (!ObjectListArea.s_VCEnabled) ? 0f : 14f;
 				rect.xMin += (float)ObjectListArea.s_Styles.resultsLabel.margin.left;
+				float num2 = 28f;
+				Rect drawRect = new Rect(rect.xMax - num2, rect.y, num2, rect.height);
+				Rect position = new Rect(rect);
+				if (ObjectListArea.LocalGroup.DrawExternalPostLabelInList(drawRect, filterItem))
+				{
+					position.width = rect.width - num2;
+				}
 				ObjectListArea.s_Styles.resultsLabel.padding.left = (int)(num + 16f + 2f);
-				ObjectListArea.s_Styles.resultsLabel.Draw(rect, label, false, false, selected, focus);
-				Rect position = rect;
-				position.width = 16f;
-				position.x += num * 0.5f;
+				ObjectListArea.s_Styles.resultsLabel.Draw(position, label, false, false, selected, focus);
+				Rect position2 = rect;
+				position2.width = 16f;
+				position2.x += num * 0.5f;
 				if (icon != null)
 				{
-					GUI.DrawTexture(position, icon, ScaleMode.ScaleToFit);
+					GUI.DrawTexture(position2, icon, ScaleMode.ScaleToFit);
 				}
-				if (filterItem != null && filterItem.isMainRepresentation)
+				if (filterItem != null && filterItem.guid != null && filterItem.isMainRepresentation)
 				{
-					Rect drawRect = rect;
-					drawRect.width = num + 16f;
-					if (CollabAccess.Instance.IsServiceEnabled())
+					Rect rect2 = rect;
+					rect2.width = num + 16f;
+					if (ObjectListArea.postAssetIconDrawCallback != null)
 					{
-						CollabProjectHook.OnProjectWindowItemIconOverlay(filterItem.guid, drawRect);
+						ObjectListArea.postAssetIconDrawCallback(rect2, filterItem.guid, true);
 					}
-					ProjectHooks.OnProjectWindowItem(filterItem.guid, drawRect);
+					ProjectHooks.OnProjectWindowItem(filterItem.guid, rect2);
 				}
+			}
+
+			private static bool DrawExternalPostLabelInList(Rect drawRect, FilteredHierarchy.FilterResult filterItem)
+			{
+				bool result = false;
+				if (filterItem != null && filterItem.guid != null && filterItem.isMainRepresentation)
+				{
+					if (ObjectListArea.postAssetLabelDrawCallback != null)
+					{
+						result = ObjectListArea.postAssetLabelDrawCallback(drawRect, filterItem.guid, true);
+					}
+				}
+				return result;
 			}
 		}
 
@@ -2257,6 +2281,58 @@ namespace UnityEditor
 		public float m_RightMargin = 10f;
 
 		public float m_LeftMargin = 10f;
+
+		internal static event ObjectListArea.OnAssetIconDrawDelegate postAssetIconDrawCallback
+		{
+			add
+			{
+				ObjectListArea.OnAssetIconDrawDelegate onAssetIconDrawDelegate = ObjectListArea.postAssetIconDrawCallback;
+				ObjectListArea.OnAssetIconDrawDelegate onAssetIconDrawDelegate2;
+				do
+				{
+					onAssetIconDrawDelegate2 = onAssetIconDrawDelegate;
+					onAssetIconDrawDelegate = Interlocked.CompareExchange<ObjectListArea.OnAssetIconDrawDelegate>(ref ObjectListArea.postAssetIconDrawCallback, (ObjectListArea.OnAssetIconDrawDelegate)Delegate.Combine(onAssetIconDrawDelegate2, value), onAssetIconDrawDelegate);
+				}
+				while (onAssetIconDrawDelegate != onAssetIconDrawDelegate2);
+			}
+			remove
+			{
+				ObjectListArea.OnAssetIconDrawDelegate onAssetIconDrawDelegate = ObjectListArea.postAssetIconDrawCallback;
+				ObjectListArea.OnAssetIconDrawDelegate onAssetIconDrawDelegate2;
+				do
+				{
+					onAssetIconDrawDelegate2 = onAssetIconDrawDelegate;
+					onAssetIconDrawDelegate = Interlocked.CompareExchange<ObjectListArea.OnAssetIconDrawDelegate>(ref ObjectListArea.postAssetIconDrawCallback, (ObjectListArea.OnAssetIconDrawDelegate)Delegate.Remove(onAssetIconDrawDelegate2, value), onAssetIconDrawDelegate);
+				}
+				while (onAssetIconDrawDelegate != onAssetIconDrawDelegate2);
+			}
+		}
+
+		internal static event ObjectListArea.OnAssetLabelDrawDelegate postAssetLabelDrawCallback
+		{
+			add
+			{
+				ObjectListArea.OnAssetLabelDrawDelegate onAssetLabelDrawDelegate = ObjectListArea.postAssetLabelDrawCallback;
+				ObjectListArea.OnAssetLabelDrawDelegate onAssetLabelDrawDelegate2;
+				do
+				{
+					onAssetLabelDrawDelegate2 = onAssetLabelDrawDelegate;
+					onAssetLabelDrawDelegate = Interlocked.CompareExchange<ObjectListArea.OnAssetLabelDrawDelegate>(ref ObjectListArea.postAssetLabelDrawCallback, (ObjectListArea.OnAssetLabelDrawDelegate)Delegate.Combine(onAssetLabelDrawDelegate2, value), onAssetLabelDrawDelegate);
+				}
+				while (onAssetLabelDrawDelegate != onAssetLabelDrawDelegate2);
+			}
+			remove
+			{
+				ObjectListArea.OnAssetLabelDrawDelegate onAssetLabelDrawDelegate = ObjectListArea.postAssetLabelDrawCallback;
+				ObjectListArea.OnAssetLabelDrawDelegate onAssetLabelDrawDelegate2;
+				do
+				{
+					onAssetLabelDrawDelegate2 = onAssetLabelDrawDelegate;
+					onAssetLabelDrawDelegate = Interlocked.CompareExchange<ObjectListArea.OnAssetLabelDrawDelegate>(ref ObjectListArea.postAssetLabelDrawCallback, (ObjectListArea.OnAssetLabelDrawDelegate)Delegate.Remove(onAssetLabelDrawDelegate2, value), onAssetLabelDrawDelegate);
+				}
+				while (onAssetLabelDrawDelegate != onAssetLabelDrawDelegate2);
+			}
+		}
 
 		public bool allowDragging
 		{
@@ -2440,6 +2516,13 @@ namespace UnityEditor
 		{
 			this.Init(this.m_TotalRect, HierarchyType.Assets, new SearchFilter(), false);
 			this.m_LocalAssets.ShowObjectsInList(instanceIDs);
+		}
+
+		public string[] GetCurrentVisibleNames()
+		{
+			List<KeyValuePair<string, int>> visibleNameAndInstanceIDs = this.m_LocalAssets.GetVisibleNameAndInstanceIDs();
+			return (from x in visibleNameAndInstanceIDs
+			select x.Key).ToArray<string>();
 		}
 
 		public void Init(Rect rect, HierarchyType hierarchyType, SearchFilter searchFilter, bool checkThumbnails)
@@ -3898,6 +3981,13 @@ namespace UnityEditor
 				result = new Vector2(rect.center.x - width / 2f + (float)this.m_Ping.m_PingStyle.padding.left, rect.yMax - ObjectListArea.s_Styles.resultsGridLabel.fixedHeight + 3f);
 			}
 			return result;
+		}
+
+		static ObjectListArea()
+		{
+			// Note: this type is marked as 'beforefieldinit'.
+			ObjectListArea.postAssetIconDrawCallback = null;
+			ObjectListArea.postAssetLabelDrawCallback = null;
 		}
 	}
 }

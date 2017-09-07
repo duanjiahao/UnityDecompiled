@@ -14,6 +14,8 @@ namespace UnityEditorInternal
 		Physics2D,
 		NetworkMessages,
 		NetworkOperations,
+		UI,
+		UIDetails,
 		AreaCount
 	}
 }

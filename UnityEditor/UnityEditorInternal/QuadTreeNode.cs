@@ -118,11 +118,7 @@ namespace UnityEditorInternal
 			List<T> list = new List<T>();
 			foreach (T current in this.m_Elements)
 			{
-				if (RectUtils.Contains(current.boundingRect, queryArea))
-				{
-					list.Add(current);
-				}
-				else if (queryArea.Overlaps(current.boundingRect))
+				if (RectUtils.Contains(current.boundingRect, queryArea) || queryArea.Overlaps(current.boundingRect))
 				{
 					list.Add(current);
 				}

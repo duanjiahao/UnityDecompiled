@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Build;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -943,12 +944,12 @@ namespace UnityEditor
 
 		public void BuildTargetList()
 		{
-			List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+			List<BuildPlatform> validPlatforms = BuildPlatforms.instance.GetValidPlatforms();
 			this.m_PlatformSettings = new List<ProceduralMaterialInspector.ProceduralPlatformSetting>();
 			this.m_PlatformSettings.Add(new ProceduralMaterialInspector.ProceduralPlatformSetting(base.targets, "", BuildTarget.StandaloneWindows, null));
-			foreach (BuildPlayerWindow.BuildPlatform current in validPlatforms)
+			foreach (BuildPlatform current in validPlatforms)
 			{
-				this.m_PlatformSettings.Add(new ProceduralMaterialInspector.ProceduralPlatformSetting(base.targets, current.name, current.DefaultTarget, current.smallIcon));
+				this.m_PlatformSettings.Add(new ProceduralMaterialInspector.ProceduralPlatformSetting(base.targets, current.name, current.defaultTarget, current.smallIcon));
 			}
 		}
 
@@ -963,7 +964,7 @@ namespace UnityEditor
 
 		protected void TextureSizeGUI()
 		{
-			BuildPlayerWindow.BuildPlatform[] platforms = BuildPlayerWindow.GetValidPlatforms().ToArray();
+			BuildPlatform[] platforms = BuildPlatforms.instance.GetValidPlatforms().ToArray();
 			int num = EditorGUILayout.BeginPlatformGrouping(platforms, this.m_Styles.defaultPlatform);
 			ProceduralMaterialInspector.ProceduralPlatformSetting proceduralPlatformSetting = this.m_PlatformSettings[num + 1];
 			ProceduralMaterialInspector.ProceduralPlatformSetting proceduralPlatformSetting2 = proceduralPlatformSetting;

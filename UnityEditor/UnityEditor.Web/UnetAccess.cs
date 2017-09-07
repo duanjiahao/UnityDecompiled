@@ -6,6 +6,12 @@ namespace UnityEditor.Web
 	[InitializeOnLoad]
 	internal class UnetAccess : CloudServiceAccess
 	{
+		[Serializable]
+		public struct UnetServiceState
+		{
+			public bool unet;
+		}
+
 		private const string kServiceName = "UNet";
 
 		private const string kServiceDisplayName = "Multiplayer";
@@ -26,6 +32,18 @@ namespace UnityEditor.Web
 		public override string GetServiceDisplayName()
 		{
 			return "Multiplayer";
+		}
+
+		public override void EnableService(bool enabled)
+		{
+			if (this.IsServiceEnabled() != enabled)
+			{
+				base.EnableService(enabled);
+				EditorAnalytics.SendEventServiceInfo(new UnetAccess.UnetServiceState
+				{
+					unet = enabled
+				});
+			}
 		}
 
 		public void SetMultiplayerId(int id)

@@ -8,11 +8,13 @@ namespace UnityEditor.Scripting
 {
 	internal static class ScriptCompilers
 	{
-		private static List<SupportedLanguage> _supportedLanguages;
+		internal static readonly List<SupportedLanguage> SupportedLanguages;
+
+		internal static readonly SupportedLanguage CSharpSupportedLanguage;
 
 		static ScriptCompilers()
 		{
-			ScriptCompilers._supportedLanguages = new List<SupportedLanguage>();
+			ScriptCompilers.SupportedLanguages = new List<SupportedLanguage>();
 			foreach (Type current in new List<Type>
 			{
 				typeof(CSharpLanguage),
@@ -20,13 +22,14 @@ namespace UnityEditor.Scripting
 				typeof(UnityScriptLanguage)
 			})
 			{
-				ScriptCompilers._supportedLanguages.Add((SupportedLanguage)Activator.CreateInstance(current));
+				ScriptCompilers.SupportedLanguages.Add((SupportedLanguage)Activator.CreateInstance(current));
 			}
+			ScriptCompilers.CSharpSupportedLanguage = ScriptCompilers.SupportedLanguages.Single((SupportedLanguage l) => l.GetType() == typeof(CSharpLanguage));
 		}
 
 		internal static SupportedLanguageStruct[] GetSupportedLanguageStructs()
 		{
-			return (from lang in ScriptCompilers._supportedLanguages
+			return (from lang in ScriptCompilers.SupportedLanguages
 			select new SupportedLanguageStruct
 			{
 				extension = lang.GetExtensionICanCompile(),
@@ -41,7 +44,7 @@ namespace UnityEditor.Scripting
 				throw new ArgumentException("Invalid file");
 			}
 			string extensionOfSourceFile = ScriptCompilers.GetExtensionOfSourceFile(file);
-			foreach (SupportedLanguage current in ScriptCompilers._supportedLanguages)
+			foreach (SupportedLanguage current in ScriptCompilers.SupportedLanguages)
 			{
 				if (current.GetExtensionICanCompile() == extensionOfSourceFile)
 				{
@@ -51,13 +54,37 @@ namespace UnityEditor.Scripting
 			throw new ApplicationException("Unable to find a suitable compiler");
 		}
 
+		internal static SupportedLanguage GetLanguageFromName(string name)
+		{
+			foreach (SupportedLanguage current in ScriptCompilers.SupportedLanguages)
+			{
+				if (string.Equals(name, current.GetLanguageName(), StringComparison.OrdinalIgnoreCase))
+				{
+					return current;
+				}
+			}
+			throw new ApplicationException(string.Format("Script language '{0}' is not supported", name));
+		}
+
+		internal static SupportedLanguage GetLanguageFromExtension(string extension)
+		{
+			foreach (SupportedLanguage current in ScriptCompilers.SupportedLanguages)
+			{
+				if (string.Equals(extension, current.GetExtensionICanCompile(), StringComparison.OrdinalIgnoreCase))
+				{
+					return current;
+				}
+			}
+			throw new ApplicationException(string.Format("Script file extension '{0}' is not supported", extension));
+		}
+
 		internal static ScriptCompilerBase CreateCompilerInstance(MonoIsland island, bool buildingForEditor, BuildTarget targetPlatform, bool runUpdater)
 		{
 			if (island._files.Length == 0)
 			{
 				throw new ArgumentException("Cannot compile MonoIsland with no files");
 			}
-			foreach (SupportedLanguage current in ScriptCompilers._supportedLanguages)
+			foreach (SupportedLanguage current in ScriptCompilers.SupportedLanguages)
 			{
 				if (current.GetExtensionICanCompile() == island.GetExtensionOfSourceFiles())
 				{

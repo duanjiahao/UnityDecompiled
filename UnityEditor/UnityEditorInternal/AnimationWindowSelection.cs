@@ -65,6 +65,23 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public bool canPreview
+		{
+			get
+			{
+				bool result;
+				if (this.m_Selection.Count > 0)
+				{
+					result = !this.m_Selection.Any((AnimationWindowSelectionItem item) => !item.canPreview);
+				}
+				else
+				{
+					result = false;
+				}
+				return result;
+			}
+		}
+
 		public bool canRecord
 		{
 			get

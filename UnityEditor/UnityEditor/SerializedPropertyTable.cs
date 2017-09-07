@@ -42,6 +42,8 @@ namespace UnityEditor
 
 		private readonly float m_DragHeight = 20f;
 
+		private readonly float m_DragWidth = 32f;
+
 		public bool dragHandleEnabled
 		{
 			get
@@ -87,8 +89,9 @@ namespace UnityEditor
 
 		private float GetMinHeight()
 		{
-			float num = this.m_FilterHeight + this.m_ColumnHeaderHeight + 16f + this.m_DragHeight;
-			return num + 48f;
+			float singleLineHeight = EditorGUIUtility.singleLineHeight;
+			float num = this.m_FilterHeight + this.m_ColumnHeaderHeight + singleLineHeight + this.m_DragHeight;
+			return num + singleLineHeight * 3f;
 		}
 
 		public void OnInspectorUpdate()
@@ -140,12 +143,11 @@ namespace UnityEditor
 			if (Event.current.type != EventType.Layout)
 			{
 				float width = rect.width;
-				float num = 32f;
-				float num2 = rect.height - this.m_FilterHeight - ((!this.dragHandleEnabled) ? 0f : this.m_DragHeight);
+				float num = rect.height - this.m_FilterHeight - ((!this.dragHandleEnabled) ? 0f : this.m_DragHeight);
 				float height = rect.height;
 				rect.height = this.m_FilterHeight;
 				Rect r = rect;
-				rect.height = num2;
+				rect.height = num;
 				rect.y += this.m_FilterHeight;
 				Rect rect2 = rect;
 				Profiler.BeginSample("TreeView.OnGUI");
@@ -153,13 +155,13 @@ namespace UnityEditor
 				Profiler.EndSample();
 				if (this.dragHandleEnabled)
 				{
-					rect.y += num2 + 1f;
+					rect.y += num + 1f;
 					rect.height = 1f;
 					Rect position = rect;
 					rect.height = 10f;
 					rect.y += 10f;
-					rect.x += (rect.width - num) * 0.5f;
-					rect.width = num;
+					rect.x += (rect.width - this.m_DragWidth) * 0.5f;
+					rect.width = this.m_DragWidth;
 					this.m_TableHeight = EditorGUI.HeightResizer(rect, this.m_TableHeight, this.GetMinHeight(), 3.40282347E+38f);
 					if (this.m_MultiColumnHeaderState.widthOfAllVisibleColumns <= width)
 					{

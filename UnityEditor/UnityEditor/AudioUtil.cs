@@ -126,6 +126,10 @@ namespace UnityEditor
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetAmbisonicDecoderPluginNames();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasPreview(AudioClip clip);
 
 		[GeneratedByOldBindingsGenerator]

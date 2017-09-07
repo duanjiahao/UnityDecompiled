@@ -363,12 +363,14 @@ namespace UnityEditor
 
 		private static void Vector3FieldWithDisabledMash(Rect position, SerializedProperty property, GUIContent label, bool[] disabledMask)
 		{
+			EditorGUI.BeginProperty(position, label, property);
 			int controlID = GUIUtility.GetControlID(RectTransformEditor.s_FoldoutHash, FocusType.Keyboard, position);
 			position = EditorGUI.MultiFieldPrefixLabel(position, controlID, label, 3);
 			position.height = EditorGUIUtility.singleLineHeight;
 			SerializedProperty serializedProperty = property.Copy();
 			serializedProperty.NextVisible(true);
 			EditorGUI.MultiPropertyField(position, RectTransformEditor.s_XYZLabels, serializedProperty, 13f, disabledMask);
+			EditorGUI.EndProperty();
 		}
 
 		private void LayoutDropdownButton(bool anyWithoutParent)
@@ -386,7 +388,7 @@ namespace UnityEditor
 				{
 					GUIUtility.keyboardControl = 0;
 					this.m_DropdownWindow = new LayoutDropdownWindow(base.serializedObject);
-					PopupWindow.Show(rect, this.m_DropdownWindow);
+					PopupWindow.Show(rect, this.m_DropdownWindow, null, ShowMode.PopupMenuWithKeyboardFocus);
 				}
 				GUI.color = color;
 			}
@@ -536,7 +538,7 @@ namespace UnityEditor
 				}, (RectTransform rectTransform) => rectTransform.anchorMin.y, delegate(RectTransform rectTransform, float val)
 				{
 					RectTransformEditor.SetAnchorSmart(rectTransform, val, 1, false, !this.m_RawEditMode, true);
-				}, DrivenTransformProperties.AnchorMinX, DrivenTransformProperties.AnchorMinY, this.m_AnchorMin.FindPropertyRelative("x"), this.m_AnchorMin.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMinContent);
+				}, DrivenTransformProperties.AnchorMinX, DrivenTransformProperties.AnchorMinY, this.m_AnchorMin, RectTransformEditor.styles.anchorMinContent);
 				controlRect.y += EditorGUIUtility.singleLineHeight;
 				this.Vector2Field(controlRect, (RectTransform rectTransform) => rectTransform.anchorMax.x, delegate(RectTransform rectTransform, float val)
 				{
@@ -544,7 +546,7 @@ namespace UnityEditor
 				}, (RectTransform rectTransform) => rectTransform.anchorMax.y, delegate(RectTransform rectTransform, float val)
 				{
 					RectTransformEditor.SetAnchorSmart(rectTransform, val, 1, true, !this.m_RawEditMode, true);
-				}, DrivenTransformProperties.AnchorMaxX, DrivenTransformProperties.AnchorMaxY, this.m_AnchorMax.FindPropertyRelative("x"), this.m_AnchorMax.FindPropertyRelative("y"), RectTransformEditor.styles.anchorMaxContent);
+				}, DrivenTransformProperties.AnchorMaxX, DrivenTransformProperties.AnchorMaxY, this.m_AnchorMax, RectTransformEditor.styles.anchorMaxContent);
 				EditorGUI.indentLevel--;
 			}
 		}
@@ -557,7 +559,7 @@ namespace UnityEditor
 			}, (RectTransform rectTransform) => rectTransform.pivot.y, delegate(RectTransform rectTransform, float val)
 			{
 				RectTransformEditor.SetPivotSmart(rectTransform, val, 1, !this.m_RawEditMode, false);
-			}, DrivenTransformProperties.PivotX, DrivenTransformProperties.PivotY, this.m_Pivot.FindPropertyRelative("x"), this.m_Pivot.FindPropertyRelative("y"), RectTransformEditor.styles.pivotContent);
+			}, DrivenTransformProperties.PivotX, DrivenTransformProperties.PivotY, this.m_Pivot, RectTransformEditor.styles.pivotContent);
 		}
 
 		private void RawButton(Rect position)
@@ -607,8 +609,11 @@ namespace UnityEditor
 			}
 		}
 
-		private void Vector2Field(Rect position, RectTransformEditor.FloatGetter xGetter, RectTransformEditor.FloatSetter xSetter, RectTransformEditor.FloatGetter yGetter, RectTransformEditor.FloatSetter ySetter, DrivenTransformProperties xDriven, DrivenTransformProperties yDriven, SerializedProperty xProperty, SerializedProperty yProperty, GUIContent label)
+		private void Vector2Field(Rect position, RectTransformEditor.FloatGetter xGetter, RectTransformEditor.FloatSetter xSetter, RectTransformEditor.FloatGetter yGetter, RectTransformEditor.FloatSetter ySetter, DrivenTransformProperties xDriven, DrivenTransformProperties yDriven, SerializedProperty vec2Property, GUIContent label)
 		{
+			EditorGUI.BeginProperty(position, label, vec2Property);
+			SerializedProperty property = vec2Property.FindPropertyRelative("x");
+			SerializedProperty property2 = vec2Property.FindPropertyRelative("y");
 			EditorGUI.PrefixLabel(position, -1, label);
 			float labelWidth = EditorGUIUtility.labelWidth;
 			int indentLevel = EditorGUI.indentLevel;
@@ -616,14 +621,15 @@ namespace UnityEditor
 			Rect columnRect2 = this.GetColumnRect(position, 1);
 			EditorGUIUtility.labelWidth = 13f;
 			EditorGUI.indentLevel = 0;
-			EditorGUI.BeginProperty(columnRect, RectTransformEditor.s_XYLabels[0], xProperty);
+			EditorGUI.BeginProperty(columnRect, RectTransformEditor.s_XYLabels[0], property);
 			this.FloatField(columnRect, xGetter, xSetter, xDriven, RectTransformEditor.s_XYLabels[0]);
 			EditorGUI.EndProperty();
-			EditorGUI.BeginProperty(columnRect, RectTransformEditor.s_XYLabels[1], yProperty);
+			EditorGUI.BeginProperty(columnRect, RectTransformEditor.s_XYLabels[1], property2);
 			this.FloatField(columnRect2, yGetter, ySetter, yDriven, RectTransformEditor.s_XYLabels[1]);
 			EditorGUI.EndProperty();
 			EditorGUIUtility.labelWidth = labelWidth;
 			EditorGUI.indentLevel = indentLevel;
+			EditorGUI.EndProperty();
 		}
 
 		private void FloatField(Rect position, RectTransformEditor.FloatGetter getter, RectTransformEditor.FloatSetter setter, DrivenTransformProperties driven, GUIContent label)

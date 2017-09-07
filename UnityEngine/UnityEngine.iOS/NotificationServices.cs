@@ -108,14 +108,19 @@ namespace UnityEngine.iOS
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ClearRemoteNotifications();
 
-		public static void RegisterForNotifications(NotificationType notificationTypes)
-		{
-			NotificationServices.RegisterForNotifications(notificationTypes, true);
-		}
-
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void RegisterForNotifications(NotificationType notificationTypes, bool registerForRemote);
+		internal static extern void Internal_RegisterImpl(NotificationType notificationTypes, bool registerForRemote);
+
+		public static void RegisterForNotifications(NotificationType notificationTypes)
+		{
+			NotificationServices.Internal_RegisterImpl(notificationTypes, true);
+		}
+
+		public static void RegisterForNotifications(NotificationType notificationTypes, bool registerForRemote)
+		{
+			NotificationServices.Internal_RegisterImpl(notificationTypes, registerForRemote);
+		}
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

@@ -685,7 +685,6 @@ namespace UnityEditorInternal
 				}
 			}
 			AnimationKeyTime time = AnimationKeyTime.Time(this.state.PixelToTime(Event.current.mousePosition.x, AnimationWindowState.SnapMode.SnapToClipFrame), this.state.frameRate);
-			this.state.StartRecording();
 			string text = "Add Key";
 			if (dopeline.isEditable && list.Count == 0)
 			{

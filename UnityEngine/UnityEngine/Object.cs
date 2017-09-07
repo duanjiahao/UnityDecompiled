@@ -48,7 +48,6 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern Object Internal_CloneSingleWithParent(Object data, Transform parent, bool worldPositionStays);
 
-		[ThreadAndSerializationSafe]
 		private static Object Internal_InstantiateSingle(Object data, Vector3 pos, Quaternion rot)
 		{
 			return Object.INTERNAL_CALL_Internal_InstantiateSingle(data, ref pos, ref rot);

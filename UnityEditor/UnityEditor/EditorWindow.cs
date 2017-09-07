@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Experimental.UIElements;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
 
@@ -28,6 +29,8 @@ namespace UnityEditor
 		[HideInInspector, SerializeField]
 		internal Rect m_Pos = new Rect(0f, 0f, 320f, 240f);
 
+		private VisualContainer m_RootVisualContainer;
+
 		private Rect m_GameViewRect;
 
 		private Rect m_GameViewClippedRect;
@@ -36,9 +39,7 @@ namespace UnityEditor
 
 		private bool m_DontClearBackground;
 
-		private bool m_WantsMouseMove;
-
-		private bool m_WantsMouseEnterLeaveWindow;
+		private EventInterests m_EventInterests;
 
 		[NonSerialized]
 		internal HostView m_Parent;
@@ -53,15 +54,31 @@ namespace UnityEditor
 
 		internal float m_FadeoutTime = 0f;
 
+		internal VisualContainer rootVisualContainer
+		{
+			get
+			{
+				if (this.m_RootVisualContainer == null)
+				{
+					this.m_RootVisualContainer = new VisualContainer
+					{
+						name = VisualElementUtils.GetUniqueName("rootVisualContainer"),
+						pickingMode = PickingMode.Ignore
+					};
+				}
+				return this.m_RootVisualContainer;
+			}
+		}
+
 		public bool wantsMouseMove
 		{
 			get
 			{
-				return this.m_WantsMouseMove;
+				return this.m_EventInterests.wantsMouseMove;
 			}
 			set
 			{
-				this.m_WantsMouseMove = value;
+				this.m_EventInterests.wantsMouseMove = value;
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
@@ -70,11 +87,11 @@ namespace UnityEditor
 		{
 			get
 			{
-				return this.m_WantsMouseEnterLeaveWindow;
+				return this.m_EventInterests.wantsMouseEnterLeaveWindow;
 			}
 			set
 			{
-				this.m_WantsMouseEnterLeaveWindow = value;
+				this.m_EventInterests.wantsMouseEnterLeaveWindow = value;
 				this.MakeParentsSettingsMatchMe();
 			}
 		}
@@ -558,8 +575,7 @@ namespace UnityEditor
 				bool flag = this.m_Parent.depthBufferBits != this.m_DepthBufferBits;
 				this.m_Parent.depthBufferBits = this.m_DepthBufferBits;
 				this.m_Parent.SetInternalGameViewDimensions(this.m_GameViewRect, this.m_GameViewClippedRect, this.m_GameViewTargetSize);
-				this.m_Parent.wantsMouseMove = this.m_WantsMouseMove;
-				this.m_Parent.wantsMouseEnterLeaveWindow = this.m_WantsMouseEnterLeaveWindow;
+				this.m_Parent.eventInterests = this.m_EventInterests;
 				Vector2 b = new Vector2((float)(this.m_Parent.borderSize.left + this.m_Parent.borderSize.right), (float)(this.m_Parent.borderSize.top + this.m_Parent.borderSize.bottom));
 				this.m_Parent.SetMinMaxSizes(this.minSize + b, this.maxSize + b);
 				if (flag)

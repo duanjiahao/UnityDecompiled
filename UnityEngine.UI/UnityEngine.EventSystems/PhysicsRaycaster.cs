@@ -67,7 +67,7 @@ namespace UnityEngine.EventSystems
 
 		public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
 		{
-			if (!(this.eventCamera == null))
+			if (!(this.eventCamera == null) && this.eventCamera.pixelRect.Contains(eventData.position))
 			{
 				Ray r;
 				float f;

@@ -1,9 +1,10 @@
 using System;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UnityEditor
 {
-	internal class ModelImporterModelEditor : AssetImporterInspector
+	internal class ModelImporterModelEditor : BaseAssetImporterTabUI
 	{
 		private class Styles
 		{
@@ -61,6 +62,17 @@ namespace UnityEditor
 
 			public GUIContent NormalOptionNone = EditorGUIUtility.TextContent("None");
 
+			public GUIContent RecalculateNormalsLabel = EditorGUIUtility.TextContent("Normals Mode");
+
+			public GUIContent[] RecalculateNormalsOpt = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("Unweighted Legacy"),
+				EditorGUIUtility.TextContent("Unweighted"),
+				EditorGUIUtility.TextContent("Area Weighted"),
+				EditorGUIUtility.TextContent("Angle Weighted"),
+				EditorGUIUtility.TextContent("Area and Angle Weighted")
+			};
+
 			public GUIContent[] TangentSpaceModeOptLabelsAll;
 
 			public GUIContent[] TangentSpaceModeOptLabelsCalculate;
@@ -92,6 +104,12 @@ namespace UnityEditor
 			public GUIContent KeepQuads = EditorGUIUtility.TextContent("Keep Quads|If model contains quad faces, they are kept for DX11 tessellation.");
 
 			public GUIContent WeldVertices = EditorGUIUtility.TextContent("Weld Vertices|Combine vertices that share the same position in space.");
+
+			public GUIContent ImportVisibility = EditorGUIUtility.TextContent("Import Visibility|Use visibility properties to enable or disable MeshRenderer components.");
+
+			public GUIContent ImportCameras = EditorGUIUtility.TextContent("Import Cameras");
+
+			public GUIContent ImportLights = EditorGUIUtility.TextContent("Import Lights");
 
 			public GUIContent IsReadable = EditorGUIUtility.TextContent("Read/Write Enabled|Allow vertices and indices to be accessed from script.");
 
@@ -239,6 +257,8 @@ namespace UnityEditor
 
 		private SerializedProperty m_NormalImportMode;
 
+		private SerializedProperty m_NormalCalculationMode;
+
 		private SerializedProperty m_TangentImportMode;
 
 		private SerializedProperty m_OptimizeMeshForGPU;
@@ -249,7 +269,17 @@ namespace UnityEditor
 
 		private SerializedProperty m_WeldVertices;
 
+		private SerializedProperty m_ImportCameras;
+
+		private SerializedProperty m_ImportLights;
+
+		private SerializedProperty m_ImportVisibility;
+
 		private static ModelImporterModelEditor.Styles styles;
+
+		public ModelImporterModelEditor(AssetImporterEditor panelContainer) : base(panelContainer)
+		{
+		}
 
 		private void UpdateShowAllMaterialNameOptions()
 		{
@@ -257,7 +287,7 @@ namespace UnityEditor
 			this.m_ShowAllMaterialNameOptions = (this.m_MaterialName.intValue == 3);
 		}
 
-		internal virtual void OnEnable()
+		internal override void OnEnable()
 		{
 			this.m_ImportMaterials = base.serializedObject.FindProperty("m_ImportMaterials");
 			this.m_MaterialName = base.serializedObject.FindProperty("m_MaterialName");
@@ -267,6 +297,8 @@ namespace UnityEditor
 			this.m_FileScale = base.serializedObject.FindProperty("m_FileScale");
 			this.m_MeshCompression = base.serializedObject.FindProperty("m_MeshCompression");
 			this.m_ImportBlendShapes = base.serializedObject.FindProperty("m_ImportBlendShapes");
+			this.m_ImportCameras = base.serializedObject.FindProperty("m_ImportCameras");
+			this.m_ImportLights = base.serializedObject.FindProperty("m_ImportLights");
 			this.m_AddColliders = base.serializedObject.FindProperty("m_AddColliders");
 			this.m_SwapUVChannels = base.serializedObject.FindProperty("swapUVChannels");
 			this.m_GenerateSecondaryUV = base.serializedObject.FindProperty("generateSecondaryUV");
@@ -276,11 +308,13 @@ namespace UnityEditor
 			this.m_SecondaryUVPackMargin = base.serializedObject.FindProperty("secondaryUVPackMargin");
 			this.m_NormalSmoothAngle = base.serializedObject.FindProperty("normalSmoothAngle");
 			this.m_NormalImportMode = base.serializedObject.FindProperty("normalImportMode");
+			this.m_NormalCalculationMode = base.serializedObject.FindProperty("normalCalculationMode");
 			this.m_TangentImportMode = base.serializedObject.FindProperty("tangentImportMode");
 			this.m_OptimizeMeshForGPU = base.serializedObject.FindProperty("optimizeMeshForGPU");
 			this.m_IsReadable = base.serializedObject.FindProperty("m_IsReadable");
 			this.m_KeepQuads = base.serializedObject.FindProperty("keepQuads");
 			this.m_WeldVertices = base.serializedObject.FindProperty("weldVertices");
+			this.m_ImportVisibility = base.serializedObject.FindProperty("m_ImportVisibility");
 			this.UpdateShowAllMaterialNameOptions();
 		}
 
@@ -290,10 +324,13 @@ namespace UnityEditor
 			this.UpdateShowAllMaterialNameOptions();
 		}
 
-		internal override void Apply()
+		internal override void PreApply()
 		{
 			this.ScaleAvatar();
-			base.Apply();
+		}
+
+		internal override void PostApply()
+		{
 			this.UpdateShowAllMaterialNameOptions();
 		}
 
@@ -306,7 +343,6 @@ namespace UnityEditor
 			this.MeshesGUI();
 			this.NormalsAndTangentsGUI();
 			this.MaterialsGUI();
-			base.ApplyRevertGUI();
 		}
 
 		private void MeshesGUI()
@@ -330,6 +366,9 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_AddColliders, ModelImporterModelEditor.styles.GenerateColliders, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_KeepQuads, ModelImporterModelEditor.styles.KeepQuads, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_WeldVertices, ModelImporterModelEditor.styles.WeldVertices, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_ImportVisibility, ModelImporterModelEditor.styles.ImportVisibility, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_ImportCameras, ModelImporterModelEditor.styles.ImportCameras, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(this.m_ImportLights, ModelImporterModelEditor.styles.ImportLights, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_SwapUVChannels, ModelImporterModelEditor.styles.SwapUVChannels, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_GenerateSecondaryUV, ModelImporterModelEditor.styles.GenerateSecondaryUV, new GUILayoutOption[0]);
 			if (this.m_GenerateSecondaryUV.boolValue)
@@ -412,6 +451,7 @@ namespace UnityEditor
 			}
 			using (new EditorGUI.DisabledScope(this.m_NormalImportMode.intValue != 1))
 			{
+				EditorGUILayout.Popup(this.m_NormalCalculationMode, ModelImporterModelEditor.styles.RecalculateNormalsOpt, ModelImporterModelEditor.styles.RecalculateNormalsLabel, new GUILayoutOption[0]);
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.Slider(this.m_NormalSmoothAngle, 0f, 180f, ModelImporterModelEditor.styles.SmoothingAngle, new GUILayoutOption[0]);
 				if (EditorGUI.EndChangeCheck())

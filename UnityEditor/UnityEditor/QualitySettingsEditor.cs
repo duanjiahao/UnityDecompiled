@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Build;
 using UnityEngine;
 
 namespace UnityEditor
@@ -16,6 +17,8 @@ namespace UnityEditor
 			public static readonly GUIStyle kDefaultToggle = "OL ToggleWhite";
 
 			public static readonly GUIContent kPlatformTooltip = new GUIContent("", "Allow quality setting on platform");
+
+			public static readonly GUIContent kAddQualityLevel = new GUIContent("Add Quality Level");
 
 			public static readonly GUIContent kIconTrash = EditorGUIUtility.IconContent("TreeEditor.Trash", "|Delete Level");
 
@@ -68,7 +71,7 @@ namespace UnityEditor
 
 		private SerializedProperty m_PerPlatformDefaultQualityProperty;
 
-		private List<BuildPlayerWindow.BuildPlatform> m_ValidPlatforms;
+		private List<BuildPlatform> m_ValidPlatforms;
 
 		private readonly int m_QualityElementHash = "QualityElementHash".GetHashCode();
 
@@ -83,7 +86,7 @@ namespace UnityEditor
 			this.m_QualitySettings = new SerializedObject(base.target);
 			this.m_QualitySettingsProperty = this.m_QualitySettings.FindProperty("m_QualitySettings");
 			this.m_PerPlatformDefaultQualityProperty = this.m_QualitySettings.FindProperty("m_PerPlatformDefaultQuality");
-			this.m_ValidPlatforms = BuildPlayerWindow.GetValidPlatforms();
+			this.m_ValidPlatforms = BuildPlatforms.instance.GetValidPlatforms();
 		}
 
 		private int DoQualityLevelSelection(int currentQualitylevel, IList<QualitySettingsEditor.QualitySetting> qualitySettings, Dictionary<string, int> platformDefaultQualitySettings)
@@ -102,7 +105,7 @@ namespace UnityEditor
 			rect.x += EditorGUI.indent;
 			rect.width -= EditorGUI.indent;
 			GUI.Label(rect, "Levels", EditorStyles.boldLabel);
-			foreach (BuildPlayerWindow.BuildPlatform current in this.m_ValidPlatforms)
+			foreach (BuildPlatform current in this.m_ValidPlatforms)
 			{
 				Rect rect2 = GUILayoutUtility.GetRect(GUIContent.none, QualitySettingsEditor.Styles.kToggle, new GUILayoutOption[]
 				{
@@ -182,7 +185,7 @@ namespace UnityEditor
 					GUI.Label(rect3, EditorGUIUtility.TempContent(qualitySettings[i].m_Name));
 					break;
 				}
-				foreach (BuildPlayerWindow.BuildPlatform current3 in this.m_ValidPlatforms)
+				foreach (BuildPlatform current3 in this.m_ValidPlatforms)
 				{
 					bool flag = false;
 					if (platformDefaultQualitySettings.ContainsKey(current3.name) && platformDefaultQualitySettings[current3.name] == i)
@@ -252,7 +255,7 @@ namespace UnityEditor
 			rect6.x += EditorGUI.indent;
 			rect6.width -= EditorGUI.indent;
 			GUI.Label(rect6, "Default", EditorStyles.boldLabel);
-			foreach (BuildPlayerWindow.BuildPlatform current4 in this.m_ValidPlatforms)
+			foreach (BuildPlatform current4 in this.m_ValidPlatforms)
 			{
 				Rect rect7 = GUILayoutUtility.GetRect(GUIContent.none, QualitySettingsEditor.Styles.kToggle, new GUILayoutOption[]
 				{
@@ -278,11 +281,11 @@ namespace UnityEditor
 				GUILayout.MaxWidth(20f),
 				GUILayout.Height(20f)
 			});
-			Rect rect8 = GUILayoutUtility.GetRect(GUIContent.none, QualitySettingsEditor.Styles.kToggle, new GUILayoutOption[]
+			Rect rect8 = GUILayoutUtility.GetRect(QualitySettingsEditor.Styles.kAddQualityLevel, QualitySettingsEditor.Styles.kToggle, new GUILayoutOption[]
 			{
 				GUILayout.ExpandWidth(true)
 			});
-			if (GUI.Button(rect8, EditorGUIUtility.TempContent("Add Quality Level")))
+			if (GUI.Button(rect8, QualitySettingsEditor.Styles.kAddQualityLevel))
 			{
 				this.m_ShouldAddNewLevel = true;
 			}
@@ -386,7 +389,7 @@ namespace UnityEditor
 			{
 				if (this.m_DeleteLevel < selectedLevel || this.m_DeleteLevel == this.m_QualitySettingsProperty.arraySize - 1)
 				{
-					selectedLevel--;
+					selectedLevel = Mathf.Max(0, selectedLevel - 1);
 				}
 				if (this.m_QualitySettingsProperty.arraySize > 1 && this.m_DeleteLevel >= 0 && this.m_DeleteLevel < this.m_QualitySettingsProperty.arraySize)
 				{
@@ -573,19 +576,21 @@ namespace UnityEditor
 			SerializedProperty property6 = arrayElementAtIndex.FindPropertyRelative("shadowNearPlaneOffset");
 			SerializedProperty serializedProperty3 = arrayElementAtIndex.FindPropertyRelative("shadowCascade2Split");
 			SerializedProperty serializedProperty4 = arrayElementAtIndex.FindPropertyRelative("shadowCascade4Split");
-			SerializedProperty property7 = arrayElementAtIndex.FindPropertyRelative("blendWeights");
-			SerializedProperty property8 = arrayElementAtIndex.FindPropertyRelative("textureQuality");
-			SerializedProperty property9 = arrayElementAtIndex.FindPropertyRelative("anisotropicTextures");
-			SerializedProperty property10 = arrayElementAtIndex.FindPropertyRelative("antiAliasing");
+			SerializedProperty property7 = arrayElementAtIndex.FindPropertyRelative("shadowmaskMode");
+			SerializedProperty property8 = arrayElementAtIndex.FindPropertyRelative("blendWeights");
+			SerializedProperty property9 = arrayElementAtIndex.FindPropertyRelative("textureQuality");
+			SerializedProperty property10 = arrayElementAtIndex.FindPropertyRelative("anisotropicTextures");
+			SerializedProperty property11 = arrayElementAtIndex.FindPropertyRelative("antiAliasing");
 			SerializedProperty serializedProperty5 = arrayElementAtIndex.FindPropertyRelative("softParticles");
-			SerializedProperty property11 = arrayElementAtIndex.FindPropertyRelative("realtimeReflectionProbes");
-			SerializedProperty property12 = arrayElementAtIndex.FindPropertyRelative("billboardsFaceCameraPosition");
-			SerializedProperty property13 = arrayElementAtIndex.FindPropertyRelative("vSyncCount");
-			SerializedProperty property14 = arrayElementAtIndex.FindPropertyRelative("lodBias");
-			SerializedProperty property15 = arrayElementAtIndex.FindPropertyRelative("maximumLODLevel");
-			SerializedProperty property16 = arrayElementAtIndex.FindPropertyRelative("particleRaycastBudget");
+			SerializedProperty property12 = arrayElementAtIndex.FindPropertyRelative("realtimeReflectionProbes");
+			SerializedProperty property13 = arrayElementAtIndex.FindPropertyRelative("billboardsFaceCameraPosition");
+			SerializedProperty property14 = arrayElementAtIndex.FindPropertyRelative("vSyncCount");
+			SerializedProperty property15 = arrayElementAtIndex.FindPropertyRelative("lodBias");
+			SerializedProperty property16 = arrayElementAtIndex.FindPropertyRelative("maximumLODLevel");
+			SerializedProperty property17 = arrayElementAtIndex.FindPropertyRelative("particleRaycastBudget");
 			SerializedProperty serializedProperty6 = arrayElementAtIndex.FindPropertyRelative("asyncUploadTimeSlice");
 			SerializedProperty serializedProperty7 = arrayElementAtIndex.FindPropertyRelative("asyncUploadBufferSize");
+			SerializedProperty property18 = arrayElementAtIndex.FindPropertyRelative("resolutionScalingFixedDPIFactor");
 			if (string.IsNullOrEmpty(serializedProperty.stringValue))
 			{
 				serializedProperty.stringValue = "Level " + num;
@@ -594,22 +599,24 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Rendering"), EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property8, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property9, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property10, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property11, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(serializedProperty5, new GUILayoutOption[0]);
 			if (serializedProperty5.boolValue)
 			{
 				this.SoftParticlesHintGUI();
 			}
-			EditorGUILayout.PropertyField(property11, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property12, QualitySettingsEditor.Styles.kBillboardsFaceCameraPos, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property12, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property13, QualitySettingsEditor.Styles.kBillboardsFaceCameraPos, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property18, new GUILayoutOption[0]);
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Shadows"), EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property2, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property3, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property4, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property5, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property7, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property6, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(serializedProperty2, new GUILayoutOption[0]);
 			if (serializedProperty2.intValue == 2)
@@ -622,11 +629,11 @@ namespace UnityEditor
 			}
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Other"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property7, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property13, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property8, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property14, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property15, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property16, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property17, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(serializedProperty6, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(serializedProperty7, new GUILayoutOption[0]);
 			serializedProperty6.intValue = Mathf.Clamp(serializedProperty6.intValue, 1, 33);

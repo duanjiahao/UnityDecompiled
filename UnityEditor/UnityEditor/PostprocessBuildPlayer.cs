@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using UnityEditor.BuildReporting;
+using UnityEditor.DeploymentTargets;
 using UnityEditor.Modules;
 using UnityEditor.Utils;
 using UnityEngine;
@@ -10,6 +13,17 @@ namespace UnityEditor
 {
 	internal class PostprocessBuildPlayer
 	{
+		private class NoTargetsFoundException : Exception
+		{
+			public NoTargetsFoundException()
+			{
+			}
+
+			public NoTargetsFoundException(string message) : base(message)
+			{
+			}
+		}
+
 		internal const string StreamingAssets = "Assets/StreamingAssets";
 
 		public static string subDir32Bit
@@ -93,21 +107,6 @@ namespace UnityEditor
 			}
 		}
 
-		public static string GetScriptLayoutFileFromBuild(BuildOptions options, BuildTargetGroup targetGroup, BuildTarget target, string installPath, string fileName)
-		{
-			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(targetGroup, target);
-			string result;
-			if (buildPostProcessor != null)
-			{
-				result = buildPostProcessor.GetScriptLayoutFileFromBuild(options, installPath, fileName);
-			}
-			else
-			{
-				result = "";
-			}
-			return result;
-		}
-
 		public static string PrepareForBuild(BuildOptions options, BuildTargetGroup targetGroup, BuildTarget target)
 		{
 			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(targetGroup, target);
@@ -175,24 +174,95 @@ namespace UnityEditor
 			return result;
 		}
 
-		public static void Launch(BuildTargetGroup targetGroup, BuildTarget target, string path, string productName, BuildOptions options)
+		public static void Launch(BuildTargetGroup targetGroup, BuildTarget buildTarget, string path, string productName, BuildOptions options, BuildReport buildReport)
 		{
-			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(targetGroup, target);
-			if (buildPostProcessor != null)
+			try
 			{
+				if (buildReport == null)
+				{
+					throw new NotSupportedException();
+				}
+				ProgressHandler handler = new ProgressHandler("Deploying Player", delegate(string title, string message, float globalProgress)
+				{
+					if (EditorUtility.DisplayCancelableProgressBar(title, message, globalProgress))
+					{
+						throw new OperationAbortedException();
+					}
+				}, 0.1f, 1f);
+				ProgressTaskManager taskManager = new ProgressTaskManager(handler);
+				List<DeploymentTargetId> validTargetIds = null;
+				taskManager.AddTask(delegate
+				{
+					taskManager.UpdateProgress("Finding valid devices for build");
+					validTargetIds = DeploymentTargetManager.FindValidTargetsForLaunchBuild(targetGroup, buildReport);
+					if (!validTargetIds.Any<DeploymentTargetId>())
+					{
+						throw new PostprocessBuildPlayer.NoTargetsFoundException("Could not find any valid targets for build");
+					}
+				});
+				taskManager.AddTask(delegate
+				{
+					foreach (DeploymentTargetId current in validTargetIds)
+					{
+						bool flag = current == validTargetIds[validTargetIds.Count - 1];
+						try
+						{
+							DeploymentTargetManager.LaunchBuildOnTarget(targetGroup, buildReport, current, taskManager.SpawnProgressHandlerFromCurrentTask());
+							return;
+						}
+						catch (OperationFailedException ex2)
+						{
+							UnityEngine.Debug.LogException(ex2);
+							if (flag)
+							{
+								throw ex2;
+							}
+						}
+					}
+					throw new PostprocessBuildPlayer.NoTargetsFoundException("Could not find any target that managed to launch build");
+				});
+				taskManager.Run();
+			}
+			catch (OperationFailedException ex)
+			{
+				UnityEngine.Debug.LogException(ex);
+				EditorUtility.DisplayDialog(ex.title, ex.Message, "Ok");
+			}
+			catch (OperationAbortedException)
+			{
+				Console.WriteLine("Deployment aborted");
+			}
+			catch (PostprocessBuildPlayer.NoTargetsFoundException)
+			{
+				throw new UnityException(string.Format("Could not find any valid targets to launch on for {0}", buildTarget));
+			}
+			catch (NotSupportedException)
+			{
+				IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(targetGroup, buildTarget);
+				if (buildPostProcessor == null)
+				{
+					throw new UnityException(string.Format("Launching {0} build target via mono is not supported", buildTarget));
+				}
 				BuildLaunchPlayerArgs args;
-				args.target = target;
-				args.playerPackage = BuildPipeline.GetPlaybackEngineDirectory(target, options);
+				args.target = buildTarget;
+				args.playerPackage = BuildPipeline.GetPlaybackEngineDirectory(buildTarget, options);
 				args.installPath = path;
 				args.productName = productName;
 				args.options = options;
 				buildPostProcessor.LaunchPlayer(args);
-				return;
 			}
-			throw new UnityException(string.Format("Launching {0} build target via mono is not supported", target));
 		}
 
-		public static void Postprocess(BuildTargetGroup targetGroup, BuildTarget target, string installPath, string companyName, string productName, int width, int height, string downloadWebplayerUrl, string manualDownloadWebplayerUrl, BuildOptions options, RuntimeClassRegistry usedClassRegistry, BuildReport report)
+		public static void UpdateBootConfig(BuildTargetGroup targetGroup, BuildTarget target, BootConfigData config, BuildOptions options)
+		{
+			IBuildPostprocessor buildPostProcessor = ModuleManager.GetBuildPostProcessor(targetGroup, target);
+			if (buildPostProcessor != null)
+			{
+				buildPostProcessor.UpdateBootConfig(target, config, options);
+			}
+		}
+
+		public static void Postprocess(BuildTargetGroup targetGroup, BuildTarget target, string installPath, string companyName, string productName, int width, int height, BuildOptions options, RuntimeClassRegistry usedClassRegistry, BuildReport report)
 		{
 			string stagingArea = "Temp/StagingArea";
 			string stagingAreaData = "Temp/StagingArea/Data";

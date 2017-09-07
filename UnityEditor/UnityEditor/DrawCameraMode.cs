@@ -47,6 +47,7 @@ namespace UnityEditor
 		BakedDirectionality,
 		BakedTexelValidity,
 		BakedIndices,
-		BakedCharting
+		BakedCharting,
+		SpriteMask
 	}
 }

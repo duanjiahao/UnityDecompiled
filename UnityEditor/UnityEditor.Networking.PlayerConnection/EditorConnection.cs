@@ -105,6 +105,11 @@ namespace UnityEditor.Networking.PlayerConnection
 			this.Send(messageId, data, 0);
 		}
 
+		public void DisconnectAll()
+		{
+			this.GetEditorConnectionNativeApi().DisconnectAll();
+		}
+
 		[RequiredByNativeCode]
 		private static void MessageCallbackInternal(IntPtr data, ulong size, ulong guid, string messageId)
 		{

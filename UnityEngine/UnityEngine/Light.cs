@@ -362,6 +362,18 @@ namespace UnityEngine
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_areaSize(ref Vector2 value);
 
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void SetFalloffTable(float[] input);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetAllLightsFalloffToInverseSquared();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SetAllLightsFalloffToUnityLegacy();
+
 		public void AddCommandBuffer(LightEvent evt, CommandBuffer buffer)
 		{
 			this.AddCommandBuffer(evt, buffer, ShadowMapPass.All);

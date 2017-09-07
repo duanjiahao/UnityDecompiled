@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine.Serialization;
 
 namespace UnityEngine.EventSystems
@@ -156,10 +157,30 @@ namespace UnityEngine.EventSystems
 		{
 		}
 
+		private bool ShouldIgnoreEventsOnNoFocus()
+		{
+			bool result;
+			switch (SystemInfo.operatingSystemFamily)
+			{
+			case OperatingSystemFamily.MacOSX:
+			case OperatingSystemFamily.Windows:
+			case OperatingSystemFamily.Linux:
+				result = !EditorApplication.isRemoteConnected;
+				break;
+			default:
+				result = false;
+				break;
+			}
+			return result;
+		}
+
 		public override void UpdateModule()
 		{
-			this.m_LastMousePosition = this.m_MousePosition;
-			this.m_MousePosition = base.input.mousePosition;
+			if (base.eventSystem.isFocused || !this.ShouldIgnoreEventsOnNoFocus())
+			{
+				this.m_LastMousePosition = this.m_MousePosition;
+				this.m_MousePosition = base.input.mousePosition;
+			}
 		}
 
 		public override bool IsModuleSupported()
@@ -194,15 +215,18 @@ namespace UnityEngine.EventSystems
 
 		public override void ActivateModule()
 		{
-			base.ActivateModule();
-			this.m_MousePosition = base.input.mousePosition;
-			this.m_LastMousePosition = base.input.mousePosition;
-			GameObject gameObject = base.eventSystem.currentSelectedGameObject;
-			if (gameObject == null)
+			if (base.eventSystem.isFocused || !this.ShouldIgnoreEventsOnNoFocus())
 			{
-				gameObject = base.eventSystem.firstSelectedGameObject;
+				base.ActivateModule();
+				this.m_MousePosition = base.input.mousePosition;
+				this.m_LastMousePosition = base.input.mousePosition;
+				GameObject gameObject = base.eventSystem.currentSelectedGameObject;
+				if (gameObject == null)
+				{
+					gameObject = base.eventSystem.firstSelectedGameObject;
+				}
+				base.eventSystem.SetSelectedGameObject(gameObject, this.GetBaseEventData());
 			}
-			base.eventSystem.SetSelectedGameObject(gameObject, this.GetBaseEventData());
 		}
 
 		public override void DeactivateModule()
@@ -213,21 +237,24 @@ namespace UnityEngine.EventSystems
 
 		public override void Process()
 		{
-			bool flag = this.SendUpdateEventToSelectedObject();
-			if (base.eventSystem.sendNavigationEvents)
+			if (base.eventSystem.isFocused || !this.ShouldIgnoreEventsOnNoFocus())
 			{
-				if (!flag)
+				bool flag = this.SendUpdateEventToSelectedObject();
+				if (base.eventSystem.sendNavigationEvents)
 				{
-					flag |= this.SendMoveEventToSelectedObject();
+					if (!flag)
+					{
+						flag |= this.SendMoveEventToSelectedObject();
+					}
+					if (!flag)
+					{
+						this.SendSubmitEventToSelectedObject();
+					}
 				}
-				if (!flag)
+				if (!this.ProcessTouchEvents() && base.input.mousePresent)
 				{
-					this.SendSubmitEventToSelectedObject();
+					this.ProcessMouseEvent();
 				}
-			}
-			if (!this.ProcessTouchEvents() && base.input.mousePresent)
-			{
-				this.ProcessMouseEvent();
 			}
 		}
 
@@ -325,11 +352,6 @@ namespace UnityEngine.EventSystems
 					ExecuteEvents.Execute<IEndDragHandler>(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
 				}
 				pointerEvent.dragging = false;
-				pointerEvent.pointerDrag = null;
-				if (pointerEvent.pointerDrag != null)
-				{
-					ExecuteEvents.Execute<IEndDragHandler>(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
-				}
 				pointerEvent.pointerDrag = null;
 				ExecuteEvents.ExecuteHierarchy<IPointerExitHandler>(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
 				pointerEvent.pointerEnter = null;

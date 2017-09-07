@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEditor.Build;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -46,17 +47,23 @@ namespace UnityEditor
 
 			private GraphicsSettingsWindow.BuiltinShaderSettings m_DeferredReflections;
 
-			private GraphicsSettingsWindow.BuiltinShaderSettings m_ScreenSpaceShadows;
-
 			private GraphicsSettingsWindow.BuiltinShaderSettings m_LegacyDeferred;
 
+			private GraphicsSettingsWindow.BuiltinShaderSettings m_ScreenSpaceShadows;
+
+			private GraphicsSettingsWindow.BuiltinShaderSettings m_DepthNormals;
+
 			private GraphicsSettingsWindow.BuiltinShaderSettings m_MotionVectors;
+
+			private GraphicsSettingsWindow.BuiltinShaderSettings m_LightHalo;
+
+			private GraphicsSettingsWindow.BuiltinShaderSettings m_LensFlare;
 
 			private string deferredString
 			{
 				get
 				{
-					return LocalizationDatabase.GetLocalizedString("Deferred|Shader settings for Deferred Shading");
+					return LocalizationDatabase.GetLocalizedString("Deferred|Shader used for Deferred Shading.");
 				}
 			}
 
@@ -64,7 +71,7 @@ namespace UnityEditor
 			{
 				get
 				{
-					return LocalizationDatabase.GetLocalizedString("Deferred Reflections|Shader settings for deferred reflections");
+					return LocalizationDatabase.GetLocalizedString("Deferred Reflections|Shader used for Deferred reflection probes.");
 				}
 			}
 
@@ -72,7 +79,7 @@ namespace UnityEditor
 			{
 				get
 				{
-					return LocalizationDatabase.GetLocalizedString("Legacy Deferred|Shader settings for Legacy (light prepass) Deferred Lighting");
+					return LocalizationDatabase.GetLocalizedString("Legacy Deferred|Shader used for Legacy (light prepass) Deferred Lighting.");
 				}
 			}
 
@@ -80,7 +87,15 @@ namespace UnityEditor
 			{
 				get
 				{
-					return LocalizationDatabase.GetLocalizedString("Screen Space Shadows|Shader settings for cascaded shadow maps");
+					return LocalizationDatabase.GetLocalizedString("Screen Space Shadows|Shader used for screen-space cascaded shadows.");
+				}
+			}
+
+			private string depthNormalsString
+			{
+				get
+				{
+					return LocalizationDatabase.GetLocalizedString("Depth Normals|Shader used for depth and normals texture when enabled on a Camera.");
 				}
 			}
 
@@ -88,7 +103,23 @@ namespace UnityEditor
 			{
 				get
 				{
-					return LocalizationDatabase.GetLocalizedString("Motion Vectors|Shader for generation of Motion Vectors when the rendering camera has renderMotionVectors set to true");
+					return LocalizationDatabase.GetLocalizedString("Motion Vectors|Shader for generation of Motion Vectors when the rendering camera has renderMotionVectors set to true.");
+				}
+			}
+
+			private string lightHaloString
+			{
+				get
+				{
+					return LocalizationDatabase.GetLocalizedString("Light Halo|Default Shader used for light halos.");
+				}
+			}
+
+			private string lensFlareString
+			{
+				get
+				{
+					return LocalizationDatabase.GetLocalizedString("Lens Flare|Default Shader used for lens flares.");
 				}
 			}
 
@@ -96,9 +127,12 @@ namespace UnityEditor
 			{
 				this.m_Deferred = new GraphicsSettingsWindow.BuiltinShaderSettings(this.deferredString, "m_Deferred", base.serializedObject);
 				this.m_DeferredReflections = new GraphicsSettingsWindow.BuiltinShaderSettings(this.deferredReflString, "m_DeferredReflections", base.serializedObject);
-				this.m_ScreenSpaceShadows = new GraphicsSettingsWindow.BuiltinShaderSettings(this.screenShadowsString, "m_ScreenSpaceShadows", base.serializedObject);
 				this.m_LegacyDeferred = new GraphicsSettingsWindow.BuiltinShaderSettings(this.legacyDeferredString, "m_LegacyDeferred", base.serializedObject);
+				this.m_ScreenSpaceShadows = new GraphicsSettingsWindow.BuiltinShaderSettings(this.screenShadowsString, "m_ScreenSpaceShadows", base.serializedObject);
+				this.m_DepthNormals = new GraphicsSettingsWindow.BuiltinShaderSettings(this.depthNormalsString, "m_DepthNormals", base.serializedObject);
 				this.m_MotionVectors = new GraphicsSettingsWindow.BuiltinShaderSettings(this.motionVectorsString, "m_MotionVectors", base.serializedObject);
+				this.m_LightHalo = new GraphicsSettingsWindow.BuiltinShaderSettings(this.lightHaloString, "m_LightHalo", base.serializedObject);
+				this.m_LensFlare = new GraphicsSettingsWindow.BuiltinShaderSettings(this.lensFlareString, "m_LensFlare", base.serializedObject);
 			}
 
 			public override void OnInspectorGUI()
@@ -111,9 +145,12 @@ namespace UnityEditor
 				{
 					ShaderUtil.ReloadAllShaders();
 				}
-				this.m_ScreenSpaceShadows.DoGUI();
 				this.m_LegacyDeferred.DoGUI();
+				this.m_ScreenSpaceShadows.DoGUI();
+				this.m_DepthNormals.DoGUI();
 				this.m_MotionVectors.DoGUI();
+				this.m_LightHalo.DoGUI();
+				this.m_LensFlare.DoGUI();
 				base.serializedObject.ApplyModifiedProperties();
 			}
 		}
@@ -144,8 +181,6 @@ namespace UnityEditor
 
 				public static readonly GUIContent builtinSettings = EditorGUIUtility.TextContent("Built-in shader settings");
 
-				public static readonly GUIContent shaderStrippingSettings = EditorGUIUtility.TextContent("Shader stripping");
-
 				public static readonly GUIContent shaderPreloadSettings = EditorGUIUtility.TextContent("Shader preloading");
 
 				public static readonly GUIContent lightmapModes = EditorGUIUtility.TextContent("Lightmap Modes");
@@ -154,7 +189,7 @@ namespace UnityEditor
 
 				public static readonly GUIContent lightmapDirCombined = EditorGUIUtility.TextContent("Baked Directional|Include support for baked directional lightmaps.");
 
-				public static readonly GUIContent lightmapKeepShadowMask = EditorGUIUtility.TextContent("Baked Shadow Mask|Include support for baked shadow occlusion.");
+				public static readonly GUIContent lightmapKeepShadowMask = EditorGUIUtility.TextContent("Baked Shadowmask|Include support for baked shadow occlusion.");
 
 				public static readonly GUIContent lightmapKeepSubtractive = EditorGUIUtility.TextContent("Baked Subtractive|Include support for baked substractive lightmaps.");
 
@@ -162,7 +197,7 @@ namespace UnityEditor
 
 				public static readonly GUIContent lightmapDynamicDirCombined = EditorGUIUtility.TextContent("Realtime Directional|Include support for realtime directional lightmaps.");
 
-				public static readonly GUIContent lightmapFromScene = EditorGUIUtility.TextContent("From current scene|Calculate lightmap modes used by the current scene.");
+				public static readonly GUIContent lightmapFromScene = EditorGUIUtility.TextContent("Import From Current Scene|Calculate lightmap modes used by the current scene.");
 
 				public static readonly GUIContent fogModes = EditorGUIUtility.TextContent("Fog Modes");
 
@@ -172,7 +207,7 @@ namespace UnityEditor
 
 				public static readonly GUIContent fogExp2 = EditorGUIUtility.TextContent("Exponential Squared|Include support for Exponential Squared fog.");
 
-				public static readonly GUIContent fogFromScene = EditorGUIUtility.TextContent("From current scene|Calculate fog modes used by the current scene.");
+				public static readonly GUIContent fogFromScene = EditorGUIUtility.TextContent("Import From Current Scene|Calculate fog modes used by the current scene.");
 
 				public static readonly GUIContent instancingVariants = EditorGUIUtility.TextContent("Instancing Variants");
 
@@ -236,6 +271,7 @@ namespace UnityEditor
 					EditorGUILayout.PropertyField(this.m_LightmapKeepDynamicDirCombined, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapDynamicDirCombined, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_LightmapKeepShadowMask, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapKeepShadowMask, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_LightmapKeepSubtractive, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapKeepSubtractive, new GUILayoutOption[0]);
+					EditorGUILayout.Space();
 					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					EditorGUILayout.PrefixLabel(GUIContent.Temp(" "), EditorStyles.miniButton);
 					if (GUILayout.Button(GraphicsSettingsWindow.ShaderStrippingEditor.Styles.lightmapFromScene, EditorStyles.miniButton, new GUILayoutOption[]
@@ -247,6 +283,7 @@ namespace UnityEditor
 					}
 					EditorGUILayout.EndHorizontal();
 					EditorGUI.indentLevel--;
+					EditorGUILayout.Space();
 				}
 				EditorGUILayout.PropertyField(this.m_FogStripping, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.fogModes, new GUILayoutOption[0]);
 				if (this.m_FogStripping.intValue != 0)
@@ -255,6 +292,7 @@ namespace UnityEditor
 					EditorGUILayout.PropertyField(this.m_FogKeepLinear, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.fogLinear, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_FogKeepExp, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.fogExp, new GUILayoutOption[0]);
 					EditorGUILayout.PropertyField(this.m_FogKeepExp2, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.fogExp2, new GUILayoutOption[0]);
+					EditorGUILayout.Space();
 					EditorGUILayout.BeginHorizontal(new GUILayoutOption[0]);
 					EditorGUILayout.PrefixLabel(GUIContent.Temp(" "), EditorStyles.miniButton);
 					if (GUILayout.Button(GraphicsSettingsWindow.ShaderStrippingEditor.Styles.fogFromScene, EditorStyles.miniButton, new GUILayoutOption[]
@@ -266,6 +304,7 @@ namespace UnityEditor
 					}
 					EditorGUILayout.EndHorizontal();
 					EditorGUI.indentLevel--;
+					EditorGUILayout.Space();
 				}
 				EditorGUILayout.PropertyField(this.m_InstancingStripping, GraphicsSettingsWindow.ShaderStrippingEditor.Styles.instancingVariants, new GUILayoutOption[0]);
 				base.serializedObject.ApplyModifiedProperties();
@@ -412,7 +451,11 @@ namespace UnityEditor
 
 				public static readonly GUIContent cascadedShadowMaps = EditorGUIUtility.TextContent("Cascaded Shadows");
 
+				public static readonly GUIContent prefer32BitShadowMaps = EditorGUIUtility.TextContent("Prefer 32 bit shadow maps");
+
 				public static readonly GUIContent semitransparentShadows = EditorGUIUtility.TextContent("Enable Semitransparent Shadows");
+
+				public static readonly GUIContent enableLPPV = EditorGUIUtility.TextContent("Enable Light Probe Proxy Volume");
 
 				public static readonly GUIContent renderingPath = EditorGUIUtility.TextContent("Rendering Path");
 
@@ -436,12 +479,14 @@ namespace UnityEditor
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.reflectionProbeBlending, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.detailNormalMap, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.semitransparentShadows, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.enableLPPV, new GUILayoutOption[0]);
 				if (!vertical)
 				{
 					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
 					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.renderingSettings, EditorStyles.boldLabel, new GUILayoutOption[0]);
 				}
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.cascadedShadowMaps, new GUILayoutOption[0]);
+				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.prefer32BitShadowMaps, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.useHDR, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.hdrMode, new GUILayoutOption[0]);
 				EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.renderingPath, new GUILayoutOption[0]);
@@ -481,12 +526,14 @@ namespace UnityEditor
 				tierSettings.reflectionProbeBlending = EditorGUILayout.Toggle(tierSettings.reflectionProbeBlending, new GUILayoutOption[0]);
 				tierSettings.detailNormalMap = EditorGUILayout.Toggle(tierSettings.detailNormalMap, new GUILayoutOption[0]);
 				tierSettings.semitransparentShadows = EditorGUILayout.Toggle(tierSettings.semitransparentShadows, new GUILayoutOption[0]);
+				tierSettings.enableLPPV = EditorGUILayout.Toggle(tierSettings.enableLPPV, new GUILayoutOption[0]);
 				if (!vertical)
 				{
 					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
 					EditorGUILayout.LabelField(GraphicsSettingsWindow.TierSettingsEditor.Styles.empty, EditorStyles.boldLabel, new GUILayoutOption[0]);
 				}
 				tierSettings.cascadedShadowMaps = EditorGUILayout.Toggle(tierSettings.cascadedShadowMaps, new GUILayoutOption[0]);
+				tierSettings.prefer32BitShadowMaps = EditorGUILayout.Toggle(tierSettings.prefer32BitShadowMaps, new GUILayoutOption[0]);
 				tierSettings.hdr = EditorGUILayout.Toggle(tierSettings.hdr, new GUILayoutOption[0]);
 				tierSettings.hdrMode = this.HDRModePopup(tierSettings.hdrMode);
 				tierSettings.renderingPath = this.RenderingPathPopup(tierSettings.renderingPath);
@@ -599,7 +646,7 @@ namespace UnityEditor
 
 			public override void OnInspectorGUI()
 			{
-				BuildPlayerWindow.BuildPlatform[] array = BuildPlayerWindow.GetValidPlatforms().ToArray();
+				BuildPlatform[] array = BuildPlatforms.instance.GetValidPlatforms().ToArray();
 				BuildTargetGroup targetGroup = array[EditorGUILayout.BeginPlatformGrouping(array, null, GUIStyle.none)].targetGroup;
 				if (this.verticalLayout)
 				{

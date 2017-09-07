@@ -131,10 +131,10 @@ namespace UnityEditorInternal
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern bool GetIsNativeAllocation();
+		internal extern bool GetIsSampleAllocation();
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal extern bool GetAllocationCallstack(ref string resolvedStack);
+		internal extern bool GetSampleCallstack(ref string resolvedStack);
 	}
 }

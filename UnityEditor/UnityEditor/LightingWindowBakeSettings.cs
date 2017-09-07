@@ -51,15 +51,13 @@ namespace UnityEditor
 			public static readonly int[] MixedModeValues = new int[]
 			{
 				0,
-				1,
 				2,
-				3
+				1
 			};
 
 			public static readonly GUIContent[] MixedModeStrings = new GUIContent[]
 			{
 				EditorGUIUtility.TextContent("Baked Indirect"),
-				EditorGUIUtility.TextContent("Distance Shadowmask"),
 				EditorGUIUtility.TextContent("Shadowmask"),
 				EditorGUIUtility.TextContent("Subtractive")
 			};
@@ -85,9 +83,8 @@ namespace UnityEditor
 			public static readonly GUIContent[] HelpStringsMixed = new GUIContent[]
 			{
 				EditorGUIUtility.TextContent("Mixed lights provide realtime direct lighting while indirect light is baked into lightmaps and light probes."),
-				EditorGUIUtility.TextContent("Mixed lights provide realtime direct lighting while indirect light is baked into lightmaps and light probes. Shadows are handled with realtime shadow maps up to the shadow distance quality setting."),
-				EditorGUIUtility.TextContent("Mixed lights provide realtime direct lighting while indirect light is baked into lightmaps and light probes. Shadowmasks are used for static objects while dynamic objects are realtime up to the shadow distance quality setting."),
-				EditorGUIUtility.TextContent("Mixed lights provide baked direct and indirect lighting for static objects. Dynamic objects receive realtime direct lighting and cast shadows on static objects using the main directional light in the scene.")
+				EditorGUIUtility.TextContent("Mixed lights provide baked direct and indirect lighting for static objects. Dynamic objects receive realtime direct lighting and cast shadows on static objects using the main directional light in the scene."),
+				EditorGUIUtility.TextContent("Mixed lights provide realtime direct lighting. Indirect lighting gets baked into lightmaps and light probes. Shadowmasks and light probes occlusion get generated for baked shadows. The Shadowmask Mode used at run time can be set in the Quality Settings panel.")
 			};
 
 			public static readonly GUIContent BounceScale = EditorGUIUtility.TextContent("Bounce Scale|Multiplier for indirect lighting. Use with care.");
@@ -109,8 +106,6 @@ namespace UnityEditor
 			public static readonly GUIContent GeneralLightmapLabel = EditorGUIUtility.TextContent("Lightmapping Settings|Settings that apply to both Global Illumination modes (Precomputed Realtime and Baked).");
 
 			public static readonly GUIContent NoDirectionalInSM2AndGLES2 = EditorGUIUtility.TextContent("Directional lightmaps cannot be decoded on SM2.0 hardware nor when using GLES2.0. They will fallback to Non-Directional lightmaps.");
-
-			public static readonly GUIContent NoTransparencyAndLODInProgressive = EditorGUIUtility.TextContent("Baked LOD's are not supported in this preview version of the Progressive Lightmapper.");
 
 			public static readonly GUIContent NoShadowMaskInProgressive = EditorGUIUtility.TextContent("'Shadowmask' and 'Distance Shadowmask' modes are not supported in this preview version of the Progressive Lightmapper.");
 
@@ -172,7 +167,7 @@ namespace UnityEditor
 
 			public static readonly GUIContent PVRFilteringGaussRadiusIndirect = EditorGUIUtility.TextContent("Indirect Radius|Controls the radius of the filter for indirect light stored in the lightmap. A higher value will increase the strength of the blur, reducing noise from indirect light in the lightmap.");
 
-			public static readonly GUIContent PVRFilteringGaussRadiusAO = EditorGUIUtility.TextContent("Ambien Occlusion Radius|The radius of the filter for ambient occlusion in the lightmap. A higher radius will increase the blur strength, reducing sampling noise from ambient occlusion in the lightmap.");
+			public static readonly GUIContent PVRFilteringGaussRadiusAO = EditorGUIUtility.TextContent("Ambient Occlusion Radius|The radius of the filter for ambient occlusion in the lightmap. A higher radius will increase the blur strength, reducing sampling noise from ambient occlusion in the lightmap.");
 
 			public static readonly GUIContent PVRFilteringAtrousColorSigma = EditorGUIUtility.TextContent("Color Sigma|How to weigh the color channel in the filter edge stopping condition.");
 
@@ -495,7 +490,12 @@ namespace UnityEditor
 				{
 					using (new EditorGUI.DisabledScope(!LightModeUtil.Get().AreBakedLightmapsEnabled()))
 					{
+						EditorGUI.BeginChangeCheck();
 						EditorGUILayout.PropertyField(this.m_BakeBackend, LightingWindowBakeSettings.Styles.BakeBackend, new GUILayoutOption[0]);
+						if (EditorGUI.EndChangeCheck())
+						{
+							InspectorWindow.RepaintAllInspectors();
+						}
 						if (LightmapEditorSettings.giBakeBackend == LightmapEditorSettings.GIBakeBackend.PathTracer)
 						{
 							EditorGUI.indentLevel++;
@@ -528,7 +528,6 @@ namespace UnityEditor
 								GUILayout.EndHorizontal();
 								EditorGUI.indentLevel--;
 							}
-							EditorGUILayout.HelpBox(LightingWindowBakeSettings.Styles.NoTransparencyAndLODInProgressive.text, MessageType.Warning);
 							EditorGUI.indentLevel--;
 							EditorGUILayout.Space();
 						}
@@ -590,7 +589,7 @@ namespace UnityEditor
 
 		public void OnGUI()
 		{
-			if (this.m_LightmapSettings == null)
+			if (this.m_LightmapSettings == null || this.m_LightmapSettings != LightmapEditorSettings.GetLightmapSettings())
 			{
 				this.InitSettings();
 			}

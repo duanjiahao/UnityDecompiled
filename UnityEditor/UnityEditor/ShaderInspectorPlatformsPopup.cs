@@ -206,6 +206,28 @@ namespace UnityEditor
 			}
 		}
 
+		private static string FormatCount(ulong count)
+		{
+			string result;
+			if (count > 1000000000uL)
+			{
+				result = (count / 1000000000.0).ToString("f2") + "B";
+			}
+			else if (count > 1000000uL)
+			{
+				result = (count / 1000000.0).ToString("f2") + "M";
+			}
+			else if (count > 1000uL)
+			{
+				result = (count / 1000.0).ToString("f2") + "k";
+			}
+			else
+			{
+				result = count.ToString();
+			}
+			return result;
+		}
+
 		private void DoShaderVariants(EditorWindow caller, ref Rect drawPos)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -216,8 +238,8 @@ namespace UnityEditor
 				ShaderInspectorPlatformsPopup.currentVariantStripping = ((!flag) ? 0 : 1);
 			}
 			drawPos.y += 6f;
-			int comboCount = ShaderUtil.GetComboCount(this.m_Shader, flag);
-			string text = (!flag) ? (comboCount + " variants total") : (comboCount + " variants included");
+			ulong variantCount = ShaderUtil.GetVariantCount(this.m_Shader, flag);
+			string text = ShaderInspectorPlatformsPopup.FormatCount(variantCount) + ((!flag) ? " variants total" : " variants included");
 			Rect position = drawPos;
 			position.x += (float)ShaderInspectorPlatformsPopup.Styles.menuItem.padding.left;
 			position.width -= (float)(ShaderInspectorPlatformsPopup.Styles.menuItem.padding.left + 4);

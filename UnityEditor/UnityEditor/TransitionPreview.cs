@@ -64,7 +64,7 @@ namespace UnityEditor
 
 		private AvatarPreview m_AvatarPreview;
 
-		private Timeline m_Timeline;
+		private TimelineControl m_Timeline;
 
 		private AnimatorController m_Controller;
 
@@ -124,9 +124,9 @@ namespace UnityEditor
 
 		private float m_RightStateTimeB = 1f;
 
-		private List<Timeline.PivotSample> m_SrcPivotList = new List<Timeline.PivotSample>();
+		private List<TimelineControl.PivotSample> m_SrcPivotList = new List<TimelineControl.PivotSample>();
 
-		private List<Timeline.PivotSample> m_DstPivotList = new List<Timeline.PivotSample>();
+		private List<TimelineControl.PivotSample> m_DstPivotList = new List<TimelineControl.PivotSample>();
 
 		public bool mustResample
 		{
@@ -183,7 +183,8 @@ namespace UnityEditor
 
 		private bool MustResample(TransitionPreview.TransitionInfo info)
 		{
-			return this.mustResample || !info.IsEqual(this.m_RefTransitionInfo);
+			bool flag = this.m_AvatarPreview != null && this.m_AvatarPreview.Animator != null && this.m_AvatarPreview.Animator.recorderMode == AnimatorRecorderMode.Playback;
+			return this.mustResample || !info.IsEqual(this.m_RefTransitionInfo) || !flag;
 		}
 
 		private void WriteParametersInController()
@@ -264,6 +265,10 @@ namespace UnityEditor
 					bool flag2 = false;
 					bool flag3 = false;
 					bool flag4 = false;
+					if (this.m_RefTransition.exitTime == 0f)
+					{
+						this.m_AvatarPreview.Animator.CrossFade(0, 0f, 0, 0.9999f);
+					}
 					this.m_AvatarPreview.Animator.StartRecording(-1);
 					this.m_LeftStateWeightA = 0f;
 					this.m_LeftStateTimeA = 0f;
@@ -331,7 +336,7 @@ namespace UnityEditor
 							this.WriteParametersInController();
 							for (num6 = 0f; num6 <= num8; num6 += num5 * 2f)
 							{
-								Timeline.PivotSample pivotSample = new Timeline.PivotSample();
+								TimelineControl.PivotSample pivotSample = new TimelineControl.PivotSample();
 								pivotSample.m_Time = num6;
 								pivotSample.m_Weight = this.m_AvatarPreview.Animator.pivotWeight;
 								this.m_DstPivotList.Add(pivotSample);
@@ -346,7 +351,7 @@ namespace UnityEditor
 							this.m_AvatarPreview.Animator.SetLayerWeight(this.m_LayerIndex, 1f);
 							for (num6 = 0f; num6 <= num7; num6 += num5 * 2f)
 							{
-								Timeline.PivotSample pivotSample2 = new Timeline.PivotSample();
+								TimelineControl.PivotSample pivotSample2 = new TimelineControl.PivotSample();
 								pivotSample2.m_Time = num6;
 								pivotSample2.m_Weight = this.m_AvatarPreview.Animator.pivotWeight;
 								this.m_SrcPivotList.Add(pivotSample2);
@@ -361,10 +366,10 @@ namespace UnityEditor
 						this.m_AvatarPreview.timeControl.currentTime = this.m_Timeline.Time;
 						if (flag)
 						{
-							Timeline arg_7DB_0 = this.m_Timeline;
+							TimelineControl arg_80E_0 = this.m_Timeline;
 							float num9 = this.m_AvatarPreview.timeControl.currentTime = (this.m_AvatarPreview.timeControl.startTime = 0f);
 							this.m_Timeline.StartTime = num9;
-							arg_7DB_0.Time = num9;
+							arg_80E_0.Time = num9;
 							this.m_Timeline.ResetRange();
 						}
 						this.m_AvatarPreview.Animator.StartPlayback();
@@ -548,7 +553,7 @@ namespace UnityEditor
 			}
 			if (this.m_Timeline == null)
 			{
-				this.m_Timeline = new Timeline();
+				this.m_Timeline = new TimelineControl();
 				this.m_MustSampleMotions = true;
 			}
 			this.CreateController();

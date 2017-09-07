@@ -4,6 +4,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[Obsolete("Unity Multiplayer and NetworkIdentity component instead.")]
 	public sealed class NetworkView : Behaviour
 	{
 		public extern Component observed

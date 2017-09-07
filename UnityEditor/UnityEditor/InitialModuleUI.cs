@@ -46,9 +46,13 @@ namespace UnityEditor
 
 			public GUIContent simulationSpeed = EditorGUIUtility.TextContent("Simulation Speed|Scale the playback speed of the Particle System.");
 
+			public GUIContent deltaTime = EditorGUIUtility.TextContent("Delta Time|Use either the Delta Time or the Unscaled Delta Time. Useful for playing effects whilst paused.");
+
 			public GUIContent autoRandomSeed = EditorGUIUtility.TextContent("Auto Random Seed|Simulate differently each time the effect is played.");
 
-			public GUIContent randomSeed = EditorGUIUtility.TextContent("Random Seed|Randomize the look of the Particle System. Using the same seed will make the Particle System play identically each time.");
+			public GUIContent randomSeed = EditorGUIUtility.TextContent("Random Seed|Randomize the look of the Particle System. Using the same seed will make the Particle System play identically each time. After changing this value, restart the Particle System to see the changes, or check the Resimulate box.");
+
+			public GUIContent emitterVelocity = EditorGUIUtility.TextContent("Emitter Velocity|When the Particle System is moving, should we use its Transform, or Rigidbody Component, to calculate its velocity?");
 
 			public GUIContent x = EditorGUIUtility.TextContent("X");
 
@@ -72,6 +76,8 @@ namespace UnityEditor
 		public SerializedProperty m_CustomSimulationSpace;
 
 		public SerializedProperty m_SimulationSpeed;
+
+		public SerializedProperty m_UseUnscaledTime;
 
 		public SerializedProperty m_ScalingMode;
 
@@ -100,6 +106,8 @@ namespace UnityEditor
 		public SerializedProperty m_RandomizeRotationDirection;
 
 		public SerializedMinMaxCurve m_GravityModifier;
+
+		public SerializedProperty m_EmitterVelocity;
 
 		public SerializedProperty m_MaxNumParticles;
 
@@ -136,7 +144,9 @@ namespace UnityEditor
 				this.m_SimulationSpace = base.GetProperty0("moveWithTransform");
 				this.m_CustomSimulationSpace = base.GetProperty0("moveWithCustomTransform");
 				this.m_SimulationSpeed = base.GetProperty0("simulationSpeed");
+				this.m_UseUnscaledTime = base.GetProperty0("useUnscaledTime");
 				this.m_ScalingMode = base.GetProperty0("scalingMode");
+				this.m_EmitterVelocity = base.GetProperty0("useRigidbodyForVelocity");
 				this.m_AutoRandomSeed = base.GetProperty0("autoRandomSeed");
 				this.m_RandomSeed = base.GetProperty0("randomSeed");
 				this.m_LifeTime = new SerializedMinMaxCurve(this, InitialModuleUI.s_Texts.lifetime, "startLifetime");
@@ -268,6 +278,11 @@ namespace UnityEditor
 				ModuleUI.GUIObject(InitialModuleUI.s_Texts.customSimulationSpace, this.m_CustomSimulationSpace, new GUILayoutOption[0]);
 			}
 			ModuleUI.GUIFloat(InitialModuleUI.s_Texts.simulationSpeed, this.m_SimulationSpeed, new GUILayoutOption[0]);
+			ModuleUI.GUIBoolAsPopup(InitialModuleUI.s_Texts.deltaTime, this.m_UseUnscaledTime, new string[]
+			{
+				"Scaled",
+				"Unscaled"
+			}, new GUILayoutOption[0]);
 			bool flag4 = this.m_ParticleSystemUI.m_ParticleSystems.FirstOrDefault((ParticleSystem o) => o.shape.shapeType != ParticleSystemShapeType.SkinnedMeshRenderer && o.shape.shapeType != ParticleSystemShapeType.MeshRenderer) != null;
 			if (flag4)
 			{
@@ -284,6 +299,11 @@ namespace UnityEditor
 			{
 				this.m_ParticleSystemUI.m_ParticleEffectUI.PlayOnAwakeChanged(flag5);
 			}
+			ModuleUI.GUIBoolAsPopup(InitialModuleUI.s_Texts.emitterVelocity, this.m_EmitterVelocity, new string[]
+			{
+				"Transform",
+				"Rigidbody"
+			}, new GUILayoutOption[0]);
 			ModuleUI.GUIInt(InitialModuleUI.s_Texts.maxParticles, this.m_MaxNumParticles, new GUILayoutOption[0]);
 			if (!ModuleUI.GUIToggle(InitialModuleUI.s_Texts.autoRandomSeed, this.m_AutoRandomSeed, new GUILayoutOption[0]))
 			{
@@ -316,7 +336,11 @@ namespace UnityEditor
 		{
 			if (this.m_SimulationSpace.intValue != 0)
 			{
-				text += "\n\tLocal space simulation is not being used.";
+				text += "\nLocal space simulation is not being used.";
+			}
+			if (this.m_GravityModifier.state != MinMaxCurveState.k_Scalar)
+			{
+				text += "\nGravity modifier is not constant.";
 			}
 		}
 	}

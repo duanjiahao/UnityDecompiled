@@ -200,8 +200,8 @@ namespace UnityEditor
 
 		internal static void DrawLayoutModeHeadersOutsideRect(Rect rect, SerializedProperty anchorMin, SerializedProperty anchorMax, SerializedProperty position, SerializedProperty sizeDelta)
 		{
-			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, sizeDelta, 0);
-			LayoutDropdownWindow.LayoutMode layoutMode = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, sizeDelta, 1);
+			LayoutDropdownWindow.LayoutMode layoutModeForAxis = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, 0);
+			LayoutDropdownWindow.LayoutMode layoutMode = LayoutDropdownWindow.GetLayoutModeForAxis(anchorMin, anchorMax, 1);
 			layoutMode = LayoutDropdownWindow.SwappedVMode(layoutMode);
 			LayoutDropdownWindow.DrawLayoutModeHeaderOutsideRect(rect, 0, layoutModeForAxis);
 			LayoutDropdownWindow.DrawLayoutModeHeaderOutsideRect(rect, 1, layoutMode);

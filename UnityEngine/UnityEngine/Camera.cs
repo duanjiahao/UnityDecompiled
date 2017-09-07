@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using UnityEngine.Scripting;
 
 namespace UnityEngine
@@ -249,6 +250,20 @@ namespace UnityEngine
 			get;
 		}
 
+		public Scene scene
+		{
+			get
+			{
+				Scene result;
+				this.INTERNAL_get_scene(out result);
+				return result;
+			}
+			set
+			{
+				this.INTERNAL_set_scene(ref value);
+			}
+		}
+
 		public extern int eventMask
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -471,6 +486,13 @@ namespace UnityEngine
 			set;
 		}
 
+		public extern bool areVRStereoViewMatricesWithinSingleCullTolerance
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public extern Camera.MonoOrStereoscopicEye stereoActiveEye
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -619,6 +641,14 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_transparencySortAxis(ref Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_scene(out Scene value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_set_scene(ref Scene value);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

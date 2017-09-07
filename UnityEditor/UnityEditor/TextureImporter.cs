@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Internal;
 using UnityEngine.Scripting;
@@ -9,7 +10,7 @@ namespace UnityEditor
 {
 	public sealed class TextureImporter : AssetImporter
 	{
-		[Obsolete("textureFormat is not longer accessible at the TextureImporter level. For old 'simple' formats use the textureCompression property for the equivalent automatic choice (Uncompressed for TrueColor, Compressed and HQCommpressed for 16 bits). For platform specific formats use the [[PlatformTextureSettings]] API. Using this setter will setup various parameters to match the new automatic system as well possible. Getter will return the last value set.")]
+		[Obsolete("textureFormat is no longer accessible at the TextureImporter level. For old 'simple' formats use the textureCompression property for the equivalent automatic choice (Uncompressed for TrueColor, Compressed and HQCommpressed for 16 bits). For platform specific formats use the [[PlatformTextureSettings]] API. Using this setter will setup various parameters to match the new automatic system as well as possible. Getter will return the last value set.")]
 		public extern TextureImporterFormat textureFormat
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -158,6 +159,26 @@ namespace UnityEditor
 		}
 
 		public extern bool sRGBTexture
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool mipMapsPreserveCoverage
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern float alphaTestReferenceValue
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -342,6 +363,36 @@ namespace UnityEditor
 			set;
 		}
 
+		public extern TextureWrapMode wrapModeU
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern TextureWrapMode wrapModeV
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern TextureWrapMode wrapModeW
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern float mipMapBias
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -514,13 +565,13 @@ namespace UnityEditor
 			TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
 			this.ReadTextureSettings(textureImporterSettings);
 			TextureImporterPlatformSettings platformTextureSettings = this.GetPlatformTextureSettings(platform);
-			List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+			List<BuildPlatform> validPlatforms = BuildPlatforms.instance.GetValidPlatforms();
 			TextureImporterFormat result;
-			foreach (BuildPlayerWindow.BuildPlatform current in validPlatforms)
+			foreach (BuildPlatform current in validPlatforms)
 			{
 				if (current.name == platform)
 				{
-					result = TextureImporter.FormatFromTextureParameters(textureImporterSettings, platformTextureSettings, this.DoesSourceTextureHaveAlpha(), this.IsSourceTextureHDR(), current.DefaultTarget);
+					result = TextureImporter.FormatFromTextureParameters(textureImporterSettings, platformTextureSettings, this.DoesSourceTextureHaveAlpha(), this.IsSourceTextureHDR(), current.defaultTarget);
 					return result;
 				}
 			}

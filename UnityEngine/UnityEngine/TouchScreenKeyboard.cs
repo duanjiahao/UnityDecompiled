@@ -30,26 +30,27 @@ namespace UnityEngine
 					IL_34:
 					switch (platform)
 					{
-					case RuntimePlatform.IPhonePlayer:
-					case RuntimePlatform.Android:
-						goto IL_61;
-					case RuntimePlatform.PS3:
-					case RuntimePlatform.XBOX360:
-						IL_4C:
-						if (platform != RuntimePlatform.WiiU && platform != RuntimePlatform.tvOS)
+					case RuntimePlatform.WiiU:
+					case RuntimePlatform.tvOS:
+					case RuntimePlatform.Switch:
+						goto IL_66;
+					default:
+						switch (platform)
 						{
-							result = false;
-							return result;
+						case RuntimePlatform.IPhonePlayer:
+						case RuntimePlatform.Android:
+							goto IL_66;
 						}
-						goto IL_61;
+						result = false;
+						return result;
 					}
-					goto IL_4C;
+					break;
 				case RuntimePlatform.TizenPlayer:
 				case RuntimePlatform.PSM:
-					goto IL_61;
+					goto IL_66;
 				}
 				goto IL_34;
-				IL_61:
+				IL_66:
 				result = true;
 				return result;
 			}
@@ -114,6 +115,13 @@ namespace UnityEngine
 				this.GetSelectionInternal(out result.start, out result.length);
 				return result;
 			}
+		}
+
+		public extern TouchScreenKeyboardType type
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
 
 		public extern int targetDisplay

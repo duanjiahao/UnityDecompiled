@@ -4,7 +4,8 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Experimental.Director;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 using UnityEngine.Scripting;
 using UnityEngineInternal;
 
@@ -90,17 +91,16 @@ namespace UnityEditor.Animations
 
 		internal static AnimatorControllerPlayable FindAnimatorControllerPlayable(Animator animator, AnimatorController controller)
 		{
-			PlayableHandle playableHandle = default(PlayableHandle);
-			AnimatorController.FindAnimatorControllerPlayableInternal(ref playableHandle, animator, controller);
+			PlayableHandle handle = default(PlayableHandle);
+			AnimatorController.FindAnimatorControllerPlayableInternal(ref handle, animator, controller);
 			AnimatorControllerPlayable result;
-			if (!playableHandle.IsValid())
+			if (!handle.IsValid())
 			{
-				result = null;
+				result = AnimatorControllerPlayable.Null;
 			}
 			else
 			{
-				AnimatorControllerPlayable @object = playableHandle.GetObject<AnimatorControllerPlayable>();
-				result = @object;
+				result = new AnimatorControllerPlayable(handle);
 			}
 			return result;
 		}

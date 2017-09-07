@@ -123,5 +123,9 @@ namespace UnityEngine
 		{
 			Debug.Log(message);
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern string GetScriptClassName();
 	}
 }

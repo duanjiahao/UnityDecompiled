@@ -92,6 +92,18 @@ namespace UnityEngine.AI
 			}
 		}
 
+		public float minRegionArea
+		{
+			get
+			{
+				return this.m_MinRegionArea;
+			}
+			set
+			{
+				this.m_MinRegionArea = value;
+			}
+		}
+
 		public bool overrideVoxelSize
 		{
 			get

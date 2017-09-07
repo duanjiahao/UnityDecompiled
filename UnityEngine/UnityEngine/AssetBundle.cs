@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
@@ -22,6 +23,19 @@ namespace UnityEngine
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void UnloadAllAssetBundles(bool unloadAllObjects);
+
+		public static IEnumerable<AssetBundle> GetAllLoadedAssetBundles()
+		{
+			return AssetBundle.GetAllLoadedAssetBundles_Internal();
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern AssetBundle[] GetAllLoadedAssetBundles_Internal();
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

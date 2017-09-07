@@ -7,6 +7,10 @@ namespace UnityEngineInternal.Input
 		BeginFixed,
 		EndFixed,
 		BeginDynamic,
-		EndDynamic
+		EndDynamic,
+		BeginBeforeRender,
+		EndBeforeRender,
+		BeginEditor,
+		EndEditor
 	}
 }

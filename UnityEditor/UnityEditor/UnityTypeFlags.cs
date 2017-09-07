@@ -7,7 +7,6 @@ namespace UnityEditor
 	{
 		Abstract = 1,
 		Sealed = 2,
-		EditorOnly = 4,
-		Deprecated = 16
+		EditorOnly = 4
 	}
 }

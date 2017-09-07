@@ -9,8 +9,6 @@ namespace UnityEditor
 	[CanEditMultipleObjects, CustomEditor(typeof(SkinnedMeshRenderer))]
 	internal class SkinnedMeshRendererEditor : RendererEditorBase
 	{
-		private static int s_HandleControlIDHint = typeof(SkinnedMeshRendererEditor).Name.GetHashCode();
-
 		private const string kDisplayLightingKey = "SkinnedMeshRendererEditor.Lighting.ShowSettings";
 
 		private SerializedProperty m_Materials;
@@ -23,7 +21,7 @@ namespace UnityEditor
 
 		private LightingSettingsInspector m_Lighting;
 
-		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(SkinnedMeshRendererEditor.s_HandleControlIDHint);
+		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
 
 		private string[] m_ExcludedProperties;
 

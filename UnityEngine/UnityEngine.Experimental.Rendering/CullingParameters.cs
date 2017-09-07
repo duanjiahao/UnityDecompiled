@@ -32,6 +32,8 @@ namespace UnityEngine.Experimental.Rendering
 
 		public int cullingMask;
 
+		private long sceneMask;
+
 		private CullingParameters.<_layerFarCullDistances>__FixedBuffer1 _layerFarCullDistances;
 
 		private int layerCull;

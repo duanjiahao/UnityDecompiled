@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -163,6 +164,19 @@ namespace UnityEditor
 				}
 			}
 			return list.ToArray();
+		}
+
+		internal static ArrayList FindEditorClassesWithAttribute(Type attribType)
+		{
+			ArrayList arrayList = new ArrayList();
+			foreach (Type current in EditorAssemblies.loadedTypes)
+			{
+				if (current.GetCustomAttributes(attribType, false).Length != 0)
+				{
+					arrayList.Add(current);
+				}
+			}
+			return arrayList;
 		}
 
 		internal static object InvokeMemberIfAvailable(object target, string methodName, object[] args)

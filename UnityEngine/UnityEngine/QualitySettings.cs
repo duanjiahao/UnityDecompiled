@@ -108,6 +108,16 @@ namespace UnityEngine
 			}
 		}
 
+		public static extern ShadowmaskMode shadowmaskMode
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern int masterTextureLimit
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -263,6 +273,16 @@ namespace UnityEngine
 		}
 
 		public static extern int asyncUploadBufferSize
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern float resolutionScalingFixedDPIFactor
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]

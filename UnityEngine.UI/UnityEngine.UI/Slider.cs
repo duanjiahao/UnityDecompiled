@@ -315,6 +315,7 @@ namespace UnityEngine.UI
 			this.UpdateVisuals();
 			if (num != this.normalizedValue)
 			{
+				UISystemProfilerApi.AddMarker("Slider.value", this);
 				this.onValueChanged.Invoke(this.m_Value);
 			}
 		}
@@ -373,6 +374,7 @@ namespace UnityEngine.UI
 				this.UpdateVisuals();
 				if (sendCallback)
 				{
+					UISystemProfilerApi.AddMarker("Slider.value", this);
 					this.m_OnValueChanged.Invoke(num);
 				}
 			}

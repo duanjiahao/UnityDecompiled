@@ -6,9 +6,9 @@ namespace UnityEditor.Collaboration
 {
 	internal class Overlay
 	{
-		private static double OverlaySizeOnSmallIcon = 0.6;
+		public const double k_OverlaySizeOnSmallIcon = 0.6;
 
-		private static double OverlaySizeOnLargeIcon = 0.35;
+		public const double k_OverlaySizeOnLargeIcon = 0.35;
 
 		private static readonly Dictionary<Collab.CollabStates, GUIContent> s_Overlays = new Dictionary<Collab.CollabStates, GUIContent>();
 
@@ -76,16 +76,7 @@ namespace UnityEditor.Collaboration
 				Texture image = gUIContent.image;
 				if (image != null)
 				{
-					Rect position = itemRect;
-					double num = Overlay.OverlaySizeOnLargeIcon;
-					if (position.width <= 24f)
-					{
-						num = Overlay.OverlaySizeOnSmallIcon;
-					}
-					position.width = (float)Convert.ToInt32(Math.Ceiling((double)position.width * num));
-					position.height = (float)Convert.ToInt32(Math.Ceiling((double)position.height * num));
-					position.x += itemRect.width - position.width;
-					GUI.DrawTexture(position, image, ScaleMode.ScaleToFit);
+					GUI.DrawTexture(itemRect, image, ScaleMode.ScaleToFit);
 				}
 			}
 		}
@@ -95,7 +86,7 @@ namespace UnityEditor.Collaboration
 			return (assetStates & includesState) == includesState;
 		}
 
-		public static void DrawOverlays(Collab.CollabStates assetState, Rect itemRect)
+		public static void DrawOverlays(Collab.CollabStates assetState, Rect itemRect, bool isListMode)
 		{
 			if (assetState != Collab.CollabStates.kCollabInvalidState && assetState != Collab.CollabStates.kCollabNone)
 			{
@@ -106,9 +97,43 @@ namespace UnityEditor.Collaboration
 						Overlay.LoadOverlays();
 					}
 					Collab.CollabStates overlayStateForAsset = Overlay.GetOverlayStateForAsset(assetState);
-					Overlay.DrawOverlayElement(overlayStateForAsset, itemRect);
+					Overlay.DrawOverlayElement(overlayStateForAsset, Overlay.GetRectForTopRight(itemRect, Overlay.GetScale(itemRect, isListMode)));
 				}
 			}
+		}
+
+		public static Rect ScaleRect(Rect rect, double scale)
+		{
+			return new Rect(rect)
+			{
+				width = (float)Convert.ToInt32(Math.Ceiling((double)rect.width * scale)),
+				height = (float)Convert.ToInt32(Math.Ceiling((double)rect.height * scale))
+			};
+		}
+
+		public static double GetScale(Rect rect, bool isListMode)
+		{
+			double result = 0.35;
+			if (isListMode)
+			{
+				result = 0.6;
+			}
+			return result;
+		}
+
+		public static Rect GetRectForTopRight(Rect projectBrowserDrawRect, double scale)
+		{
+			Rect result = Overlay.ScaleRect(projectBrowserDrawRect, scale);
+			result.x += projectBrowserDrawRect.width - result.width;
+			return result;
+		}
+
+		public static Rect GetRectForBottomRight(Rect projectBrowserDrawRect, double scale)
+		{
+			Rect result = Overlay.ScaleRect(projectBrowserDrawRect, scale);
+			result.x += projectBrowserDrawRect.width - result.width;
+			result.y += projectBrowserDrawRect.height - result.height;
+			return result;
 		}
 	}
 }

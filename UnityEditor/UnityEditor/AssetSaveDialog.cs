@@ -9,7 +9,7 @@ namespace UnityEditor
 	{
 		private class Styles
 		{
-			public GUIStyle selected = "ServerUpdateChangesetOn";
+			public GUIStyle selected = "OL SelectedRow";
 
 			public GUIStyle box = "OL Box";
 

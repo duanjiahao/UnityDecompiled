@@ -154,10 +154,12 @@ namespace UnityEditor
 		{
 			get
 			{
+				this.EnsureSelectedSizeAreValid();
 				return this.m_LowResolutionForAspectRatios[(int)GameView.currentSizeGroupType];
 			}
 			set
 			{
+				this.EnsureSelectedSizeAreValid();
 				if (value != this.m_LowResolutionForAspectRatios[(int)GameView.currentSizeGroupType])
 				{
 					this.m_LowResolutionForAspectRatios[(int)GameView.currentSizeGroupType] = value;
@@ -198,10 +200,12 @@ namespace UnityEditor
 		{
 			get
 			{
+				this.EnsureSelectedSizeAreValid();
 				return this.m_SelectedSizes[(int)GameView.currentSizeGroupType];
 			}
 			set
 			{
+				this.EnsureSelectedSizeAreValid();
 				this.m_SelectedSizes[(int)GameView.currentSizeGroupType] = value;
 			}
 		}
@@ -234,7 +238,7 @@ namespace UnityEditor
 		{
 			get
 			{
-				Rect startRect = (!this.m_LowResolutionForAspectRatios[(int)GameView.currentSizeGroupType]) ? EditorGUIUtility.PointsToPixels(this.viewInWindow) : this.viewInWindow;
+				Rect startRect = (!this.lowResolutionForAspectRatios) ? EditorGUIUtility.PointsToPixels(this.viewInWindow) : this.viewInWindow;
 				return GameViewSizes.GetRenderTargetSize(startRect, GameView.currentSizeGroupType, this.selectedSizeIndex, out this.m_TargetClamped);
 			}
 		}
@@ -339,11 +343,6 @@ namespace UnityEditor
 			return (windowMousePosition + this.gameMouseOffset) * this.gameMouseScale;
 		}
 
-		public void OnValidate()
-		{
-			this.EnsureSelectedSizeAreValid();
-		}
-
 		private void InitializeZoomArea()
 		{
 			this.m_ZoomArea = new ZoomableArea(true, false);
@@ -354,7 +353,6 @@ namespace UnityEditor
 		public void OnEnable()
 		{
 			base.titleContent = base.GetLocalizedTitleContent();
-			this.EnsureSelectedSizeAreValid();
 			this.UpdateZoomAreaAndParent();
 			base.dontClearBackground = true;
 			GameView.s_GameViews.Add(this);
@@ -462,38 +460,42 @@ namespace UnityEditor
 
 		private void EnsureSelectedSizeAreValid()
 		{
-			Array values = Enum.GetValues(typeof(GameViewSizeGroupType));
-			if (this.m_SelectedSizes.Length != values.Length)
+			if (ScriptableSingleton<GameViewSizes>.instance.GetChangeID() != this.m_SizeChangeID)
 			{
-				Array.Resize<int>(ref this.m_SelectedSizes, values.Length);
-			}
-			IEnumerator enumerator = values.GetEnumerator();
-			try
-			{
-				while (enumerator.MoveNext())
+				this.m_SizeChangeID = ScriptableSingleton<GameViewSizes>.instance.GetChangeID();
+				Array values = Enum.GetValues(typeof(GameViewSizeGroupType));
+				if (this.m_SelectedSizes.Length != values.Length)
 				{
-					GameViewSizeGroupType gameViewSizeGroupType = (GameViewSizeGroupType)enumerator.Current;
-					GameViewSizeGroup group = ScriptableSingleton<GameViewSizes>.instance.GetGroup(gameViewSizeGroupType);
-					int num = (int)gameViewSizeGroupType;
-					this.m_SelectedSizes[num] = Mathf.Clamp(this.m_SelectedSizes[num], 0, group.GetTotalCount() - 1);
+					Array.Resize<int>(ref this.m_SelectedSizes, values.Length);
 				}
-			}
-			finally
-			{
-				IDisposable disposable;
-				if ((disposable = (enumerator as IDisposable)) != null)
+				IEnumerator enumerator = values.GetEnumerator();
+				try
 				{
-					disposable.Dispose();
+					while (enumerator.MoveNext())
+					{
+						GameViewSizeGroupType gameViewSizeGroupType = (GameViewSizeGroupType)enumerator.Current;
+						GameViewSizeGroup group = ScriptableSingleton<GameViewSizes>.instance.GetGroup(gameViewSizeGroupType);
+						int num = (int)gameViewSizeGroupType;
+						this.m_SelectedSizes[num] = Mathf.Clamp(this.m_SelectedSizes[num], 0, group.GetTotalCount() - 1);
+					}
 				}
-			}
-			int num2 = this.m_LowResolutionForAspectRatios.Length;
-			if (this.m_LowResolutionForAspectRatios.Length != values.Length)
-			{
-				Array.Resize<bool>(ref this.m_LowResolutionForAspectRatios, values.Length);
-			}
-			for (int i = num2; i < values.Length; i++)
-			{
-				this.m_LowResolutionForAspectRatios[i] = GameViewSizes.DefaultLowResolutionSettingForSizeGroupType((GameViewSizeGroupType)values.GetValue(i));
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
+				}
+				int num2 = this.m_LowResolutionForAspectRatios.Length;
+				if (this.m_LowResolutionForAspectRatios.Length != values.Length)
+				{
+					Array.Resize<bool>(ref this.m_LowResolutionForAspectRatios, values.Length);
+				}
+				for (int i = num2; i < values.Length; i++)
+				{
+					this.m_LowResolutionForAspectRatios[i] = GameViewSizes.DefaultLowResolutionSettingForSizeGroupType((GameViewSizeGroupType)values.GetValue(i));
+				}
 			}
 		}
 
@@ -537,12 +539,6 @@ namespace UnityEditor
 		private void ToggleClearInEditMode()
 		{
 			this.m_ClearInEditMode = !this.m_ClearInEditMode;
-		}
-
-		private bool ShouldShowMultiDisplayOption()
-		{
-			GUIContent[] displayNames = ModuleManager.GetDisplayNames(EditorUserBuildSettings.activeBuildTarget.ToString());
-			return BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget) == BuildTargetGroup.Standalone || displayNames != null;
 		}
 
 		public void SizeSelectionCallback(int indexClicked, object objectSelected)
@@ -619,13 +615,8 @@ namespace UnityEditor
 		private void DoToolbarGUI()
 		{
 			ScriptableSingleton<GameViewSizes>.instance.RefreshStandaloneAndRemoteDefaultSizes();
-			if (ScriptableSingleton<GameViewSizes>.instance.GetChangeID() != this.m_SizeChangeID)
-			{
-				this.EnsureSelectedSizeAreValid();
-				this.m_SizeChangeID = ScriptableSingleton<GameViewSizes>.instance.GetChangeID();
-			}
 			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
-			if (this.ShouldShowMultiDisplayOption())
+			if (ModuleManager.ShouldShowMultiDisplayOption())
 			{
 				int num = EditorGUILayout.Popup(this.m_TargetDisplay, DisplayUtility.GetDisplayNames(), EditorStyles.toolbarPopup, new GUILayoutOption[]
 				{
@@ -647,7 +638,7 @@ namespace UnityEditor
 			{
 				GUILayout.FlexibleSpace();
 				Color color = GUI.color;
-				GUI.color *= AnimationMode.animatedPropertyColor;
+				GUI.color *= AnimationMode.recordedPropertyColor;
 				GUILayout.Label(GameView.Styles.frameDebuggerOnContent, EditorStyles.miniLabel, new GUILayoutOption[0]);
 				GUI.color = color;
 				if (Event.current.type == EventType.Repaint)
@@ -834,7 +825,7 @@ namespace UnityEditor
 					this.ClearTargetTexture();
 				}
 				int targetDisplay = 0;
-				if (this.ShouldShowMultiDisplayOption())
+				if (ModuleManager.ShouldShowMultiDisplayOption())
 				{
 					targetDisplay = this.m_TargetDisplay;
 				}
@@ -864,6 +855,7 @@ namespace UnityEditor
 				{
 					return;
 				}
+				int displayIndex = Event.current.displayIndex;
 				Event.current.mousePosition = mousePosition2;
 				Event.current.displayIndex = this.m_TargetDisplay;
 				EditorGUIUtility.QueueGameViewInputEvent(Event.current);
@@ -884,6 +876,7 @@ namespace UnityEditor
 				{
 					Event.current.mousePosition = mousePosition;
 				}
+				Event.current.displayIndex = displayIndex;
 			}
 			this.m_ZoomArea.EndViewGUI();
 			if (type2 == EventType.ScrollWheel && Event.current.type == EventType.Used)
@@ -907,7 +900,7 @@ namespace UnityEditor
 			if (this.m_NoCameraWarning && !EditorGUIUtility.IsDisplayReferencedByCameras(this.m_TargetDisplay))
 			{
 				GUI.Label(this.warningPosition, GUIContent.none, EditorStyles.notificationBackground);
-				string arg = (!this.ShouldShowMultiDisplayOption()) ? string.Empty : DisplayUtility.GetDisplayNames()[this.m_TargetDisplay].text;
+				string arg = (!ModuleManager.ShouldShowMultiDisplayOption()) ? string.Empty : DisplayUtility.GetDisplayNames()[this.m_TargetDisplay].text;
 				string t = string.Format("{0}\nNo cameras rendering", arg);
 				EditorGUI.DoDropShadowLabel(this.warningPosition, EditorGUIUtility.TempContent(t), EditorStyles.notificationText, 0.3f);
 			}

@@ -25,6 +25,32 @@ namespace UnityEditor
 
 			public GUIStyle previewLabel;
 
+			public readonly GUIContent wrapModeLabel = EditorGUIUtility.TextContent("Wrap Mode");
+
+			public readonly GUIContent wrapU = EditorGUIUtility.TextContent("U axis");
+
+			public readonly GUIContent wrapV = EditorGUIUtility.TextContent("V axis");
+
+			public readonly GUIContent wrapW = EditorGUIUtility.TextContent("W axis");
+
+			public readonly GUIContent[] wrapModeContents = new GUIContent[]
+			{
+				EditorGUIUtility.TextContent("Repeat"),
+				EditorGUIUtility.TextContent("Clamp"),
+				EditorGUIUtility.TextContent("Mirror"),
+				EditorGUIUtility.TextContent("Mirror Once"),
+				EditorGUIUtility.TextContent("Per-axis")
+			};
+
+			public readonly int[] wrapModeValues = new int[]
+			{
+				0,
+				1,
+				2,
+				3,
+				-1
+			};
+
 			public Styles()
 			{
 				this.smallZoom = EditorGUIUtility.IconContent("PreTextureMipMapLow");
@@ -43,7 +69,11 @@ namespace UnityEditor
 
 		private bool m_ShowAlpha;
 
-		protected SerializedProperty m_WrapMode;
+		protected SerializedProperty m_WrapU;
+
+		protected SerializedProperty m_WrapV;
+
+		protected SerializedProperty m_WrapW;
 
 		protected SerializedProperty m_FilterMode;
 
@@ -56,6 +86,8 @@ namespace UnityEditor
 		private float m_MipLevel = 0f;
 
 		private CubemapPreview m_CubemapPreview = new CubemapPreview();
+
+		private bool m_ShowPerAxisWrapModes = false;
 
 		public float mipLevel
 		{
@@ -87,7 +119,9 @@ namespace UnityEditor
 
 		protected virtual void OnEnable()
 		{
-			this.m_WrapMode = base.serializedObject.FindProperty("m_TextureSettings.m_WrapMode");
+			this.m_WrapU = base.serializedObject.FindProperty("m_TextureSettings.m_WrapU");
+			this.m_WrapV = base.serializedObject.FindProperty("m_TextureSettings.m_WrapV");
+			this.m_WrapW = base.serializedObject.FindProperty("m_TextureSettings.m_WrapW");
 			this.m_FilterMode = base.serializedObject.FindProperty("m_TextureSettings.m_FilterMode");
 			this.m_Aniso = base.serializedObject.FindProperty("m_TextureSettings.m_Aniso");
 		}
@@ -132,17 +166,133 @@ namespace UnityEditor
 			base.serializedObject.ApplyModifiedProperties();
 		}
 
-		protected void DoWrapModePopup()
+		private static void WrapModeAxisPopup(GUIContent label, SerializedProperty wrapProperty)
 		{
+			TextureWrapMode textureWrapMode = (TextureWrapMode)Mathf.Max(wrapProperty.intValue, 0);
+			Rect controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[0]);
 			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = this.m_WrapMode.hasMultipleDifferentValues;
-			TextureWrapMode textureWrapMode = (TextureWrapMode)this.m_WrapMode.intValue;
-			textureWrapMode = (TextureWrapMode)EditorGUILayout.EnumPopup(EditorGUIUtility.TempContent("Wrap Mode"), textureWrapMode, new GUILayoutOption[0]);
-			EditorGUI.showMixedValue = false;
+			EditorGUI.BeginProperty(controlRect, label, wrapProperty);
+			textureWrapMode = (TextureWrapMode)EditorGUI.EnumPopup(controlRect, label, textureWrapMode);
+			EditorGUI.EndProperty();
 			if (EditorGUI.EndChangeCheck())
 			{
-				this.m_WrapMode.intValue = (int)textureWrapMode;
+				wrapProperty.intValue = (int)textureWrapMode;
 			}
+		}
+
+		private static bool IsAnyTextureObjectUsingPerAxisWrapMode(UnityEngine.Object[] objects, bool isVolumeTexture)
+		{
+			int i = 0;
+			bool result;
+			while (i < objects.Length)
+			{
+				UnityEngine.Object @object = objects[i];
+				int num = 0;
+				int num2 = 0;
+				int num3 = 0;
+				if (@object is Texture)
+				{
+					Texture texture = (Texture)@object;
+					num = (int)texture.wrapModeU;
+					num2 = (int)texture.wrapModeV;
+					num3 = (int)texture.wrapModeW;
+				}
+				if (@object is TextureImporter)
+				{
+					TextureImporter textureImporter = (TextureImporter)@object;
+					num = (int)textureImporter.wrapModeU;
+					num2 = (int)textureImporter.wrapModeV;
+					num3 = (int)textureImporter.wrapModeW;
+				}
+				if (@object is IHVImageFormatImporter)
+				{
+					IHVImageFormatImporter iHVImageFormatImporter = (IHVImageFormatImporter)@object;
+					num = (int)iHVImageFormatImporter.wrapModeU;
+					num2 = (int)iHVImageFormatImporter.wrapModeV;
+					num3 = (int)iHVImageFormatImporter.wrapModeW;
+				}
+				num = Mathf.Max(0, num);
+				num2 = Mathf.Max(0, num2);
+				num3 = Mathf.Max(0, num3);
+				if (num == num2)
+				{
+					if (isVolumeTexture)
+					{
+						if (num != num3 || num2 != num3)
+						{
+							result = true;
+							return result;
+						}
+					}
+					i++;
+					continue;
+				}
+				result = true;
+				return result;
+			}
+			result = false;
+			return result;
+		}
+
+		internal static void WrapModePopup(SerializedProperty wrapU, SerializedProperty wrapV, SerializedProperty wrapW, bool isVolumeTexture, ref bool showPerAxisWrapModes)
+		{
+			if (TextureInspector.s_Styles == null)
+			{
+				TextureInspector.s_Styles = new TextureInspector.Styles();
+			}
+			TextureWrapMode textureWrapMode = (TextureWrapMode)Mathf.Max(wrapU.intValue, 0);
+			TextureWrapMode textureWrapMode2 = (TextureWrapMode)Mathf.Max(wrapV.intValue, 0);
+			TextureWrapMode textureWrapMode3 = (TextureWrapMode)Mathf.Max(wrapW.intValue, 0);
+			if (textureWrapMode != textureWrapMode2)
+			{
+				showPerAxisWrapModes = true;
+			}
+			if (isVolumeTexture)
+			{
+				if (textureWrapMode != textureWrapMode3 || textureWrapMode2 != textureWrapMode3)
+				{
+					showPerAxisWrapModes = true;
+				}
+			}
+			if (!showPerAxisWrapModes)
+			{
+				if (wrapU.hasMultipleDifferentValues || wrapV.hasMultipleDifferentValues || (isVolumeTexture && wrapW.hasMultipleDifferentValues))
+				{
+					if (TextureInspector.IsAnyTextureObjectUsingPerAxisWrapMode(wrapU.serializedObject.targetObjects, isVolumeTexture))
+					{
+						showPerAxisWrapModes = true;
+					}
+				}
+			}
+			int num = (int)((!showPerAxisWrapModes) ? textureWrapMode : ((TextureWrapMode)(-1)));
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = (!showPerAxisWrapModes && (wrapU.hasMultipleDifferentValues || wrapV.hasMultipleDifferentValues || (isVolumeTexture && wrapW.hasMultipleDifferentValues)));
+			num = EditorGUILayout.IntPopup(TextureInspector.s_Styles.wrapModeLabel, num, TextureInspector.s_Styles.wrapModeContents, TextureInspector.s_Styles.wrapModeValues, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck() && num != -1)
+			{
+				wrapU.intValue = num;
+				wrapV.intValue = num;
+				wrapW.intValue = num;
+				showPerAxisWrapModes = false;
+			}
+			if (num == -1)
+			{
+				showPerAxisWrapModes = true;
+				EditorGUI.indentLevel++;
+				TextureInspector.WrapModeAxisPopup(TextureInspector.s_Styles.wrapU, wrapU);
+				TextureInspector.WrapModeAxisPopup(TextureInspector.s_Styles.wrapV, wrapV);
+				if (isVolumeTexture)
+				{
+					TextureInspector.WrapModeAxisPopup(TextureInspector.s_Styles.wrapW, wrapW);
+				}
+				EditorGUI.indentLevel--;
+			}
+			EditorGUI.showMixedValue = false;
+		}
+
+		protected void DoWrapModePopup()
+		{
+			TextureInspector.WrapModePopup(this.m_WrapU, this.m_WrapV, this.m_WrapW, this.IsVolume(), ref this.m_ShowPerAxisWrapModes);
 		}
 
 		protected void DoFilterModePopup()
@@ -191,6 +341,12 @@ namespace UnityEditor
 		{
 			Texture texture = base.target as Texture;
 			return texture != null && texture.dimension == TextureDimension.Cube;
+		}
+
+		private bool IsVolume()
+		{
+			Texture texture = base.target as Texture;
+			return texture != null && texture.dimension == TextureDimension.Tex3D;
 		}
 
 		public override void OnPreviewSettings()
@@ -264,15 +420,16 @@ namespace UnityEditor
 				{
 					this.m_ShowAlpha = GUILayout.Toggle(this.m_ShowAlpha, (!this.m_ShowAlpha) ? TextureInspector.s_Styles.RGBIcon : TextureInspector.s_Styles.alphaIcon, TextureInspector.s_Styles.previewButton, new GUILayoutOption[0]);
 				}
-				GUI.enabled = (num != 1);
-				GUILayout.Box(TextureInspector.s_Styles.smallZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
-				GUI.changed = false;
-				this.m_MipLevel = Mathf.Round(GUILayout.HorizontalSlider(this.m_MipLevel, (float)(num - 1), 0f, TextureInspector.s_Styles.previewSlider, TextureInspector.s_Styles.previewSliderThumb, new GUILayoutOption[]
+				if (num > 1)
 				{
-					GUILayout.MaxWidth(64f)
-				}));
-				GUILayout.Box(TextureInspector.s_Styles.largeZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
-				GUI.enabled = true;
+					GUILayout.Box(TextureInspector.s_Styles.smallZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
+					GUI.changed = false;
+					this.m_MipLevel = Mathf.Round(GUILayout.HorizontalSlider(this.m_MipLevel, (float)(num - 1), 0f, TextureInspector.s_Styles.previewSlider, TextureInspector.s_Styles.previewSliderThumb, new GUILayoutOption[]
+					{
+						GUILayout.MaxWidth(64f)
+					}));
+					GUILayout.Box(TextureInspector.s_Styles.largeZoom, TextureInspector.s_Styles.previewLabel, new GUILayoutOption[0]);
+				}
 			}
 		}
 

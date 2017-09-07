@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.AnimatedValues;
+using UnityEditor.Build;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEditor.Modules;
 using UnityEngine;
 using UnityEngine.Events;
@@ -10,7 +12,7 @@ using UnityEngine.Events;
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(TextureImporter))]
-	internal class TextureImporterInspector : AssetImporterInspector
+	internal class TextureImporterInspector : AssetImporterEditor
 	{
 		[Flags]
 		private enum TextureInspectorGUIElement
@@ -189,6 +191,10 @@ namespace UnityEditor
 
 			public readonly GUIContent borderMipMaps = EditorGUIUtility.TextContent("Border Mip Maps");
 
+			public readonly GUIContent mipMapsPreserveCoverage = EditorGUIUtility.TextContent("Mip Maps Preserve Coverage|The alpha channel of generated Mip Maps will preserve coverage during the alpha test.");
+
+			public readonly GUIContent alphaTestReferenceValue = EditorGUIUtility.TextContent("Alpha Cutoff Value|The reference value used during the alpha test. Controls Mip Map coverage.");
+
 			public readonly GUIContent mipMapFilter = EditorGUIUtility.TextContent("Mip Map Filtering");
 
 			public readonly GUIContent[] mipMapFilterOptions = new GUIContent[]
@@ -365,6 +371,8 @@ namespace UnityEditor
 
 		private readonly AnimBool m_ShowMipMapSettings = new AnimBool();
 
+		private readonly AnimBool m_ShowSpriteMeshTypeOption = new AnimBool();
+
 		private readonly GUIContent m_EmptyContent = new GUIContent(" ");
 
 		private readonly int[] m_FilterModeOptions = (int[])Enum.GetValues(typeof(FilterMode));
@@ -393,6 +401,10 @@ namespace UnityEditor
 
 		private SerializedProperty m_BorderMipMap;
 
+		private SerializedProperty m_MipMapsPreserveCoverage;
+
+		private SerializedProperty m_AlphaTestReferenceValue;
+
 		private SerializedProperty m_NPOTScale;
 
 		private SerializedProperty m_IsReadable;
@@ -413,7 +425,11 @@ namespace UnityEditor
 
 		private SerializedProperty m_FilterMode;
 
-		private SerializedProperty m_WrapMode;
+		private SerializedProperty m_WrapU;
+
+		private SerializedProperty m_WrapV;
+
+		private SerializedProperty m_WrapW;
 
 		private SerializedProperty m_SpritePackingTag;
 
@@ -441,6 +457,8 @@ namespace UnityEditor
 
 		private bool m_IsPOT = false;
 
+		private bool m_ShowPerAxisWrapModes = false;
+
 		internal TextureImporterType textureType
 		{
 			get
@@ -466,7 +484,7 @@ namespace UnityEditor
 			}
 		}
 
-		internal override bool showImportedObject
+		public override bool showImportedObject
 		{
 			get
 			{
@@ -490,24 +508,24 @@ namespace UnityEditor
 					bool flag3 = false;
 					bool flag4 = false;
 					bool flag5 = false;
-					BuildPlayerWindow.BuildPlatform[] buildPlayerValidPlatforms = TextureImporterInspector.GetBuildPlayerValidPlatforms();
-					BuildPlayerWindow.BuildPlatform[] array = buildPlayerValidPlatforms;
-					for (int i = 0; i < array.Length; i++)
+					BuildPlatform[] buildPlayerValidPlatforms = TextureImporterInspector.GetBuildPlayerValidPlatforms();
+					BuildPlatform[] array = buildPlayerValidPlatforms;
+					int i = 0;
+					while (i < array.Length)
 					{
-						BuildPlayerWindow.BuildPlatform buildPlatform = array[i];
-						BuildTarget defaultTarget = buildPlatform.DefaultTarget;
+						BuildPlatform buildPlatform = array[i];
+						BuildTarget defaultTarget = buildPlatform.defaultTarget;
 						switch (defaultTarget)
 						{
 						case BuildTarget.SamsungTV:
-							flag = true;
-							goto IL_B6;
+							goto IL_A3;
 						case BuildTarget.N3DS:
 						case BuildTarget.WiiU:
 							IL_61:
 							if (defaultTarget == BuildTarget.iOS)
 							{
 								flag2 = true;
-								goto IL_B6;
+								goto IL_AA;
 							}
 							if (defaultTarget == BuildTarget.Android)
 							{
@@ -516,21 +534,25 @@ namespace UnityEditor
 								flag3 = true;
 								flag4 = true;
 								flag5 = true;
-								goto IL_B6;
+								goto IL_AA;
 							}
 							if (defaultTarget != BuildTarget.Tizen)
 							{
-								goto IL_B6;
+								goto IL_AA;
 							}
-							flag = true;
-							goto IL_B6;
+							goto IL_A3;
 						case BuildTarget.tvOS:
 							flag2 = true;
 							flag5 = true;
-							goto IL_B6;
+							goto IL_AA;
 						}
 						goto IL_61;
-						IL_B6:;
+						IL_AA:
+						i++;
+						continue;
+						IL_A3:
+						flag = true;
+						goto IL_AA;
 					}
 					List<int> list = new List<int>();
 					list.AddRange(new int[]
@@ -618,43 +640,46 @@ namespace UnityEditor
 				bool flag3 = false;
 				bool flag4 = false;
 				bool flag5 = false;
-				BuildPlayerWindow.BuildPlatform[] buildPlayerValidPlatforms = TextureImporterInspector.GetBuildPlayerValidPlatforms();
-				BuildPlayerWindow.BuildPlatform[] array = buildPlayerValidPlatforms;
-				for (int i = 0; i < array.Length; i++)
+				BuildPlatform[] buildPlayerValidPlatforms = TextureImporterInspector.GetBuildPlayerValidPlatforms();
+				BuildPlatform[] array = buildPlayerValidPlatforms;
+				int i = 0;
+				while (i < array.Length)
 				{
-					BuildPlayerWindow.BuildPlatform buildPlatform = array[i];
-					BuildTarget defaultTarget = buildPlatform.DefaultTarget;
-					if (defaultTarget != BuildTarget.iOS)
+					BuildPlatform buildPlatform = array[i];
+					BuildTarget defaultTarget = buildPlatform.defaultTarget;
+					if (defaultTarget == BuildTarget.iOS)
 					{
-						if (defaultTarget != BuildTarget.Android)
+						goto IL_6A;
+					}
+					if (defaultTarget != BuildTarget.Android)
+					{
+						if (defaultTarget != BuildTarget.Tizen)
 						{
-							if (defaultTarget != BuildTarget.Tizen)
+							if (defaultTarget == BuildTarget.tvOS)
 							{
-								if (defaultTarget == BuildTarget.tvOS)
-								{
-									flag2 = true;
-									flag = true;
-								}
-							}
-							else
-							{
-								flag = true;
+								goto IL_6A;
 							}
 						}
 						else
 						{
-							flag2 = true;
-							flag3 = true;
 							flag = true;
-							flag4 = true;
-							flag5 = true;
 						}
 					}
 					else
 					{
 						flag2 = true;
+						flag3 = true;
 						flag = true;
+						flag4 = true;
+						flag5 = true;
 					}
+					IL_7A:
+					i++;
+					continue;
+					IL_6A:
+					flag2 = true;
+					flag = true;
+					goto IL_7A;
 				}
 				List<int> list = new List<int>();
 				list.AddRange(new int[]
@@ -781,6 +806,8 @@ namespace UnityEditor
 			this.m_GenerateCubemap = base.serializedObject.FindProperty("m_GenerateCubemap");
 			this.m_SeamlessCubemap = base.serializedObject.FindProperty("m_SeamlessCubemap");
 			this.m_BorderMipMap = base.serializedObject.FindProperty("m_BorderMipMap");
+			this.m_MipMapsPreserveCoverage = base.serializedObject.FindProperty("m_MipMapsPreserveCoverage");
+			this.m_AlphaTestReferenceValue = base.serializedObject.FindProperty("m_AlphaTestReferenceValue");
 			this.m_NPOTScale = base.serializedObject.FindProperty("m_NPOTScale");
 			this.m_IsReadable = base.serializedObject.FindProperty("m_IsReadable");
 			this.m_sRGBTexture = base.serializedObject.FindProperty("m_sRGBTexture");
@@ -791,7 +818,9 @@ namespace UnityEditor
 			this.m_MipMapFadeDistanceEnd = base.serializedObject.FindProperty("m_MipMapFadeDistanceEnd");
 			this.m_Aniso = base.serializedObject.FindProperty("m_TextureSettings.m_Aniso");
 			this.m_FilterMode = base.serializedObject.FindProperty("m_TextureSettings.m_FilterMode");
-			this.m_WrapMode = base.serializedObject.FindProperty("m_TextureSettings.m_WrapMode");
+			this.m_WrapU = base.serializedObject.FindProperty("m_TextureSettings.m_WrapU");
+			this.m_WrapV = base.serializedObject.FindProperty("m_TextureSettings.m_WrapV");
+			this.m_WrapW = base.serializedObject.FindProperty("m_TextureSettings.m_WrapW");
 			this.m_CubemapConvolution = base.serializedObject.FindProperty("m_CubemapConvolution");
 			this.m_SpriteMode = base.serializedObject.FindProperty("m_SpriteMode");
 			this.m_SpritePackingTag = base.serializedObject.FindProperty("m_SpritePackingTag");
@@ -810,7 +839,7 @@ namespace UnityEditor
 			TextureImporterShape shapeCaps = TextureImporterShape.Texture2D | TextureImporterShape.TextureCube;
 			this.m_TextureTypeGUIElements[0] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.AlphaHandling | TextureImporterInspector.TextureInspectorGUIElement.ColorSpace | TextureImporterInspector.TextureInspectorGUIElement.CubeMapConvolution | TextureImporterInspector.TextureInspectorGUIElement.CubeMapping, TextureImporterInspector.TextureInspectorGUIElement.PowerOfTwo | TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, shapeCaps);
 			this.m_TextureTypeGUIElements[1] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.NormalMap | TextureImporterInspector.TextureInspectorGUIElement.CubeMapping, TextureImporterInspector.TextureInspectorGUIElement.PowerOfTwo | TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, shapeCaps);
-			this.m_TextureTypeGUIElements[8] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.Sprite, TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.AlphaHandling | TextureImporterInspector.TextureInspectorGUIElement.ColorSpace | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, TextureImporterShape.Texture2D);
+			this.m_TextureTypeGUIElements[8] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.Sprite, TextureImporterInspector.TextureInspectorGUIElement.PowerOfTwo | TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.AlphaHandling | TextureImporterInspector.TextureInspectorGUIElement.ColorSpace | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, TextureImporterShape.Texture2D);
 			this.m_TextureTypeGUIElements[4] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.AlphaHandling | TextureImporterInspector.TextureInspectorGUIElement.Cookie | TextureImporterInspector.TextureInspectorGUIElement.CubeMapping, TextureImporterInspector.TextureInspectorGUIElement.PowerOfTwo | TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, TextureImporterShape.Texture2D | TextureImporterShape.TextureCube);
 			this.m_TextureTypeGUIElements[10] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.AlphaHandling | TextureImporterInspector.TextureInspectorGUIElement.CubeMapping, TextureImporterInspector.TextureInspectorGUIElement.PowerOfTwo | TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, shapeCaps);
 			this.m_TextureTypeGUIElements[2] = new TextureImporterInspector.TextureInspectorTypeGUIProperties(TextureImporterInspector.TextureInspectorGUIElement.None, TextureImporterInspector.TextureInspectorGUIElement.PowerOfTwo | TextureImporterInspector.TextureInspectorGUIElement.Readable | TextureImporterInspector.TextureInspectorGUIElement.AlphaHandling | TextureImporterInspector.TextureInspectorGUIElement.MipMaps, TextureImporterShape.Texture2D);
@@ -839,7 +868,7 @@ namespace UnityEditor
 			this.m_GUIElementsDisplayOrder.Add(TextureImporterInspector.TextureInspectorGUIElement.MipMaps);
 		}
 
-		public virtual void OnEnable()
+		public override void OnEnable()
 		{
 			TextureImporterInspector.s_DefaultPlatformName = TextureImporter.defaultPlatformName;
 			this.m_ShowAdvanced = EditorPrefs.GetBool("TextureImporterShowAdvanced", this.m_ShowAdvanced);
@@ -849,6 +878,8 @@ namespace UnityEditor
 			this.m_ShowCubeMapSettings.value = (this.m_TextureShape.intValue == 2);
 			this.m_ShowGenericSpriteSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowGenericSpriteSettings.value = (this.m_SpriteMode.intValue != 0);
+			this.m_ShowSpriteMeshTypeOption.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_ShowSpriteMeshTypeOption.value = this.ShouldShowSpriteMeshTypeOption();
 			this.m_ShowMipMapSettings.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowMipMapSettings.value = this.m_EnableMipMap.boolValue;
 			this.InitializeGUI();
@@ -857,42 +888,7 @@ namespace UnityEditor
 			{
 				textureImporter.GetWidthAndHeight(ref this.m_TextureWidth, ref this.m_TextureHeight);
 				this.m_IsPOT = (TextureImporterInspector.IsPowerOfTwo(this.m_TextureWidth) && TextureImporterInspector.IsPowerOfTwo(this.m_TextureHeight));
-				if (TextureImporterInspector.s_TextureFormatStringsApplePVR == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsApplePVR = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueApplePVR);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsAndroid == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsAndroid = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueAndroid);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsTizen == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsTizen = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueTizen);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsSTV == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsSTV = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueSTV);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsWebGL == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsWebGL = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueWebGL);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsWiiU == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsWiiU = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueWiiU);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsDefault == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsDefault = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueDefault);
-				}
-				if (TextureImporterInspector.s_NormalFormatStringsDefault == null)
-				{
-					TextureImporterInspector.s_NormalFormatStringsDefault = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kNormalFormatsValueDefault);
-				}
-				if (TextureImporterInspector.s_TextureFormatStringsSingleChannel == null)
-				{
-					TextureImporterInspector.s_TextureFormatStringsSingleChannel = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueSingleChannel);
-				}
+				TextureImporterInspector.InitializeTextureFormatStrings();
 			}
 		}
 
@@ -906,6 +902,8 @@ namespace UnityEditor
 			this.m_CubemapConvolution.intValue = (int)settings.cubemapConvolution;
 			this.m_SeamlessCubemap.intValue = ((!settings.seamlessCubemap) ? 0 : 1);
 			this.m_BorderMipMap.intValue = ((!settings.borderMipmap) ? 0 : 1);
+			this.m_MipMapsPreserveCoverage.intValue = ((!settings.mipMapsPreserveCoverage) ? 0 : 1);
+			this.m_AlphaTestReferenceValue.floatValue = settings.alphaTestReferenceValue;
 			this.m_NPOTScale.intValue = (int)settings.npotScale;
 			this.m_IsReadable.intValue = ((!settings.readable) ? 0 : 1);
 			this.m_EnableMipMap.intValue = ((!settings.mipmapEnabled) ? 0 : 1);
@@ -919,7 +917,7 @@ namespace UnityEditor
 			this.m_SpriteExtrude.intValue = (int)settings.spriteExtrude;
 			this.m_SpriteMeshType.intValue = (int)settings.spriteMeshType;
 			this.m_Alignment.intValue = settings.spriteAlignment;
-			this.m_WrapMode.intValue = (int)settings.wrapMode;
+			this.m_WrapU.intValue = (int)settings.wrapMode;
 			this.m_FilterMode.intValue = (int)settings.filterMode;
 			this.m_Aniso.intValue = settings.aniso;
 			this.m_AlphaIsTransparency.intValue = ((!settings.alphaIsTransparency) ? 0 : 1);
@@ -965,6 +963,14 @@ namespace UnityEditor
 			if (!this.m_BorderMipMap.hasMultipleDifferentValues)
 			{
 				settings.borderMipmap = (this.m_BorderMipMap.intValue > 0);
+			}
+			if (!this.m_MipMapsPreserveCoverage.hasMultipleDifferentValues)
+			{
+				settings.mipMapsPreserveCoverage = (this.m_MipMapsPreserveCoverage.intValue > 0);
+			}
+			if (!this.m_AlphaTestReferenceValue.hasMultipleDifferentValues)
+			{
+				settings.alphaTestReferenceValue = this.m_AlphaTestReferenceValue.floatValue;
 			}
 			if (!this.m_NPOTScale.hasMultipleDifferentValues)
 			{
@@ -1022,9 +1028,17 @@ namespace UnityEditor
 			{
 				settings.spritePivot = this.m_SpritePivot.vector2Value;
 			}
-			if (!this.m_WrapMode.hasMultipleDifferentValues)
+			if (!this.m_WrapU.hasMultipleDifferentValues)
 			{
-				settings.wrapMode = (TextureWrapMode)this.m_WrapMode.intValue;
+				settings.wrapModeU = (TextureWrapMode)this.m_WrapU.intValue;
+			}
+			if (!this.m_WrapV.hasMultipleDifferentValues)
+			{
+				settings.wrapModeU = (TextureWrapMode)this.m_WrapV.intValue;
+			}
+			if (!this.m_WrapW.hasMultipleDifferentValues)
+			{
+				settings.wrapModeU = (TextureWrapMode)this.m_WrapW.intValue;
 			}
 			if (!this.m_FilterMode.hasMultipleDifferentValues)
 			{
@@ -1150,6 +1164,11 @@ namespace UnityEditor
 			}
 		}
 
+		private bool ShouldShowSpriteMeshTypeOption()
+		{
+			return this.m_SpriteMode.intValue != 3 && !this.m_SpriteMode.hasMultipleDifferentValues;
+		}
+
 		private void SpriteGUI(TextureImporterInspector.TextureInspectorGUIElement guiElements)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -1169,11 +1188,16 @@ namespace UnityEditor
 			{
 				EditorGUILayout.PropertyField(this.m_SpritePackingTag, TextureImporterInspector.s_Styles.spritePackingTag, new GUILayoutOption[0]);
 				EditorGUILayout.PropertyField(this.m_SpritePixelsToUnits, TextureImporterInspector.s_Styles.spritePixelsPerUnit, new GUILayoutOption[0]);
-				EditorGUILayout.IntPopup(this.m_SpriteMeshType, TextureImporterInspector.s_Styles.spriteMeshTypeOptions, new int[]
+				this.m_ShowSpriteMeshTypeOption.target = this.ShouldShowSpriteMeshTypeOption();
+				if (EditorGUILayout.BeginFadeGroup(this.m_ShowSpriteMeshTypeOption.faded))
 				{
-					0,
-					1
-				}, TextureImporterInspector.s_Styles.spriteMeshType, new GUILayoutOption[0]);
+					EditorGUILayout.IntPopup(this.m_SpriteMeshType, TextureImporterInspector.s_Styles.spriteMeshTypeOptions, new int[]
+					{
+						0,
+						1
+					}, TextureImporterInspector.s_Styles.spriteMeshType, new GUILayoutOption[0]);
+				}
+				EditorGUILayout.EndFadeGroup();
 				EditorGUILayout.IntSlider(this.m_SpriteExtrude, 0, 32, TextureImporterInspector.s_Styles.spriteExtrude, new GUILayoutOption[0]);
 				if (this.m_SpriteMode.intValue == 1)
 				{
@@ -1223,6 +1247,13 @@ namespace UnityEditor
 				EditorGUI.indentLevel++;
 				this.ToggleFromInt(this.m_BorderMipMap, TextureImporterInspector.s_Styles.borderMipMaps);
 				EditorGUILayout.Popup(this.m_MipMapMode, TextureImporterInspector.s_Styles.mipMapFilterOptions, TextureImporterInspector.s_Styles.mipMapFilter, new GUILayoutOption[0]);
+				this.ToggleFromInt(this.m_MipMapsPreserveCoverage, TextureImporterInspector.s_Styles.mipMapsPreserveCoverage);
+				if (this.m_MipMapsPreserveCoverage.intValue != 0 && !this.m_MipMapsPreserveCoverage.hasMultipleDifferentValues)
+				{
+					EditorGUI.indentLevel++;
+					EditorGUILayout.PropertyField(this.m_AlphaTestReferenceValue, TextureImporterInspector.s_Styles.alphaTestReferenceValue, new GUILayoutOption[0]);
+					EditorGUI.indentLevel--;
+				}
 				this.ToggleFromInt(this.m_FadeOut, TextureImporterInspector.s_Styles.mipmapFadeOutToggle);
 				if (this.m_FadeOut.intValue > 0)
 				{
@@ -1265,20 +1296,9 @@ namespace UnityEditor
 		private void TextureSettingsGUI()
 		{
 			EditorGUI.BeginChangeCheck();
-			EditorGUI.BeginChangeCheck();
-			EditorGUI.showMixedValue = this.m_WrapMode.hasMultipleDifferentValues;
-			TextureWrapMode textureWrapMode = (TextureWrapMode)this.m_WrapMode.intValue;
-			if (textureWrapMode == (TextureWrapMode)(-1))
-			{
-				textureWrapMode = TextureWrapMode.Repeat;
-			}
-			textureWrapMode = (TextureWrapMode)EditorGUILayout.EnumPopup(EditorGUIUtility.TempContent("Wrap Mode"), textureWrapMode, new GUILayoutOption[0]);
-			EditorGUI.showMixedValue = false;
-			if (EditorGUI.EndChangeCheck())
-			{
-				this.m_WrapMode.intValue = (int)textureWrapMode;
-			}
-			if (this.m_NPOTScale.intValue == 0 && textureWrapMode == TextureWrapMode.Repeat && !ShaderUtil.hardwareSupportsFullNPOT)
+			bool isVolumeTexture = false;
+			TextureInspector.WrapModePopup(this.m_WrapU, this.m_WrapV, this.m_WrapW, isVolumeTexture, ref this.m_ShowPerAxisWrapModes);
+			if (this.m_NPOTScale.intValue == 0 && (this.m_WrapU.intValue == 0 || this.m_WrapV.intValue == 0) && !ShaderUtil.hardwareSupportsFullNPOT)
 			{
 				bool flag = false;
 				UnityEngine.Object[] targets = base.targets;
@@ -1359,9 +1379,9 @@ namespace UnityEditor
 			EditorGUI.showMixedValue = false;
 			if (EditorGUI.EndChangeCheck() && this.m_TextureType.intValue != num)
 			{
-				this.m_TextureType.intValue = num;
 				TextureImporterSettings serializedPropertySettings = this.GetSerializedPropertySettings();
-				serializedPropertySettings.ApplyTextureType((TextureImporterType)this.m_TextureType.intValue);
+				serializedPropertySettings.ApplyTextureType((TextureImporterType)num);
+				this.m_TextureType.intValue = num;
 				this.SetSerializedPropertySettings(serializedPropertySettings);
 				this.SyncPlatformSettings();
 				this.ApplySettingsToTexture();
@@ -1446,9 +1466,9 @@ namespace UnityEditor
 					{
 						TextureUtil.SetFilterModeNoDirty(texture, (FilterMode)this.m_FilterMode.intValue);
 					}
-					if (this.m_WrapMode.intValue != -1)
+					if ((this.m_WrapU.intValue != -1 || this.m_WrapV.intValue != -1 || this.m_WrapW.intValue != -1) && !this.m_WrapU.hasMultipleDifferentValues && !this.m_WrapV.hasMultipleDifferentValues && !this.m_WrapW.hasMultipleDifferentValues)
 					{
-						TextureUtil.SetWrapModeNoDirty(texture, (TextureWrapMode)this.m_WrapMode.intValue);
+						TextureUtil.SetWrapModeNoDirty(texture, (TextureWrapMode)this.m_WrapU.intValue, (TextureWrapMode)this.m_WrapV.intValue, (TextureWrapMode)this.m_WrapW.intValue);
 					}
 				}
 			}
@@ -1512,7 +1532,12 @@ namespace UnityEditor
 					if (cm == TextureImporterInspector.CookieMode.Directional)
 					{
 						this.m_BorderMipMap.intValue = 0;
-						this.m_WrapMode.intValue = 0;
+						SerializedProperty arg_EB_0 = this.m_WrapU;
+						int num = 0;
+						this.m_WrapW.intValue = num;
+						num = num;
+						this.m_WrapV.intValue = num;
+						arg_EB_0.intValue = num;
 						this.m_GenerateCubemap.intValue = 6;
 						this.m_TextureShape.intValue = 1;
 					}
@@ -1520,7 +1545,12 @@ namespace UnityEditor
 				else
 				{
 					this.m_BorderMipMap.intValue = 0;
-					this.m_WrapMode.intValue = 1;
+					SerializedProperty arg_9A_0 = this.m_WrapU;
+					int num = 1;
+					this.m_WrapW.intValue = num;
+					num = num;
+					this.m_WrapV.intValue = num;
+					arg_9A_0.intValue = num;
 					this.m_GenerateCubemap.intValue = 1;
 					this.m_TextureShape.intValue = 2;
 				}
@@ -1528,7 +1558,12 @@ namespace UnityEditor
 			else
 			{
 				this.m_BorderMipMap.intValue = 1;
-				this.m_WrapMode.intValue = 1;
+				SerializedProperty arg_49_0 = this.m_WrapU;
+				int num = 1;
+				this.m_WrapW.intValue = num;
+				num = num;
+				this.m_WrapV.intValue = num;
+				arg_49_0.intValue = num;
 				this.m_GenerateCubemap.intValue = 6;
 				this.m_TextureShape.intValue = 1;
 			}
@@ -1553,9 +1588,54 @@ namespace UnityEditor
 			return array;
 		}
 
+		internal static void InitializeTextureFormatStrings()
+		{
+			if (TextureImporterInspector.s_TextureFormatStringsApplePVR == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsApplePVR = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueApplePVR);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsAndroid == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsAndroid = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueAndroid);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsTizen == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsTizen = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueTizen);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsSTV == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsSTV = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueSTV);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsWebGL == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsWebGL = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueWebGL);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsWiiU == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsWiiU = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueWiiU);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsDefault == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsDefault = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueDefault);
+			}
+			if (TextureImporterInspector.s_NormalFormatStringsDefault == null)
+			{
+				TextureImporterInspector.s_NormalFormatStringsDefault = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kNormalFormatsValueDefault);
+			}
+			if (TextureImporterInspector.s_TextureFormatStringsSingleChannel == null)
+			{
+				TextureImporterInspector.s_TextureFormatStringsSingleChannel = TextureImporterInspector.BuildTextureStrings(TextureImportPlatformSettings.kTextureFormatsValueSingleChannel);
+			}
+		}
+
+		internal static bool IsFormatRequireCompressionSetting(TextureImporterFormat format)
+		{
+			return ArrayUtility.Contains<TextureImporterFormat>(TextureImporterInspector.kFormatsWithCompressionSettings, format);
+		}
+
 		protected void ShowPlatformSpecificSettings()
 		{
-			BuildPlayerWindow.BuildPlatform[] array = TextureImporterInspector.GetBuildPlayerValidPlatforms().ToArray<BuildPlayerWindow.BuildPlatform>();
+			BuildPlatform[] array = TextureImporterInspector.GetBuildPlayerValidPlatforms().ToArray<BuildPlatform>();
 			GUILayout.Space(10f);
 			int num = EditorGUILayout.BeginPlatformGrouping(array, TextureImporterInspector.s_Styles.defaultPlatform);
 			TextureImportPlatformSettings textureImportPlatformSettings = this.m_PlatformSettings[num + 1];
@@ -1587,26 +1667,26 @@ namespace UnityEditor
 			return (f & f - 1) == 0;
 		}
 
-		public static BuildPlayerWindow.BuildPlatform[] GetBuildPlayerValidPlatforms()
+		public static BuildPlatform[] GetBuildPlayerValidPlatforms()
 		{
-			List<BuildPlayerWindow.BuildPlatform> validPlatforms = BuildPlayerWindow.GetValidPlatforms();
+			List<BuildPlatform> validPlatforms = BuildPlatforms.instance.GetValidPlatforms();
 			return validPlatforms.ToArray();
 		}
 
 		public virtual void BuildTargetList()
 		{
-			BuildPlayerWindow.BuildPlatform[] buildPlayerValidPlatforms = TextureImporterInspector.GetBuildPlayerValidPlatforms();
+			BuildPlatform[] buildPlayerValidPlatforms = TextureImporterInspector.GetBuildPlayerValidPlatforms();
 			this.m_PlatformSettings = new List<TextureImportPlatformSettings>();
 			this.m_PlatformSettings.Add(new TextureImportPlatformSettings(TextureImporterInspector.s_DefaultPlatformName, BuildTarget.StandaloneWindows, this));
-			BuildPlayerWindow.BuildPlatform[] array = buildPlayerValidPlatforms;
+			BuildPlatform[] array = buildPlayerValidPlatforms;
 			for (int i = 0; i < array.Length; i++)
 			{
-				BuildPlayerWindow.BuildPlatform buildPlatform = array[i];
-				this.m_PlatformSettings.Add(new TextureImportPlatformSettings(buildPlatform.name, buildPlatform.DefaultTarget, this));
+				BuildPlatform buildPlatform = array[i];
+				this.m_PlatformSettings.Add(new TextureImportPlatformSettings(buildPlatform.name, buildPlatform.defaultTarget, this));
 			}
 		}
 
-		internal override bool HasModified()
+		public override bool HasModified()
 		{
 			bool result;
 			if (base.HasModified())
@@ -1646,7 +1726,7 @@ namespace UnityEditor
 			}
 		}
 
-		internal override void ResetValues()
+		protected override void ResetValues()
 		{
 			base.ResetValues();
 			this.CacheSerializedProperties();
@@ -1655,7 +1735,7 @@ namespace UnityEditor
 			TextureImporterInspector.SelectMainAssets(base.targets);
 		}
 
-		internal override void Apply()
+		protected override void Apply()
 		{
 			SpriteEditorWindow.TextureImporterApply(base.serializedObject);
 			base.Apply();

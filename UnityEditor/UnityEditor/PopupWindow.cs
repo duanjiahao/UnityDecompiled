@@ -96,8 +96,19 @@ namespace UnityEditor
 			}
 		}
 
+		private void CloseWindow()
+		{
+			base.Close();
+		}
+
+		private void OnEnable()
+		{
+			AssemblyReloadEvents.beforeAssemblyReload += new AssemblyReloadEvents.AssemblyReloadCallback(this.CloseWindow);
+		}
+
 		private void OnDisable()
 		{
+			AssemblyReloadEvents.beforeAssemblyReload -= new AssemblyReloadEvents.AssemblyReloadCallback(this.CloseWindow);
 			PopupWindow.s_LastClosedTime = EditorApplication.timeSinceStartup;
 			if (this.m_WindowContent != null)
 			{

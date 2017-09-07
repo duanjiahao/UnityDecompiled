@@ -9,6 +9,9 @@ namespace UnityEngine.VR
 		CenterEye,
 		Head,
 		LeftHand,
-		RightHand
+		RightHand,
+		GameController,
+		TrackingReference,
+		HardwareTracker
 	}
 }

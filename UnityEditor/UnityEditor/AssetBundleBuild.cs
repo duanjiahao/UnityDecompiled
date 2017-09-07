@@ -9,5 +9,7 @@ namespace UnityEditor
 		public string assetBundleVariant;
 
 		public string[] assetNames;
+
+		public string[] addressableNames;
 	}
 }

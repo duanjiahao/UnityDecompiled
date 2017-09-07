@@ -93,6 +93,10 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_BodyType, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Material, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(this.m_Simulated, new GUILayoutOption[0]);
+			if (!this.m_Simulated.boolValue && !this.m_Simulated.hasMultipleDifferentValues)
+			{
+				EditorGUILayout.HelpBox("The body has now been taken out of the simulation along with any attached colliders, joints or effectors.", MessageType.Info);
+			}
 			if (this.m_BodyType.hasMultipleDifferentValues)
 			{
 				EditorGUILayout.HelpBox("Cannot edit properties that are body type specific when the selection contains different body types.", MessageType.Info);
@@ -113,13 +117,13 @@ namespace UnityEditor
 								if (base.targets.Any((UnityEngine.Object x) => PrefabUtility.GetPrefabType(x) == PrefabType.Prefab || !(x as Rigidbody2D).gameObject.activeInHierarchy))
 								{
 									EditorGUILayout.HelpBox("The auto mass value cannot be displayed for a prefab or if the object is not active.  The value will be calculated for a prefab instance and when the object is active.", MessageType.Info);
-									goto IL_161;
+									goto IL_18C;
 								}
 							}
 							EditorGUI.BeginDisabledGroup(rigidbody2D.useAutoMass);
 							EditorGUILayout.PropertyField(this.m_Mass, new GUILayoutOption[0]);
 							EditorGUI.EndDisabledGroup();
-							IL_161:;
+							IL_18C:;
 						}
 						EditorGUILayout.PropertyField(this.m_LinearDrag, new GUILayoutOption[0]);
 						EditorGUILayout.PropertyField(this.m_AngularDrag, new GUILayoutOption[0]);

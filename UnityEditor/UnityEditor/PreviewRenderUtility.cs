@@ -7,92 +7,141 @@ namespace UnityEditor
 {
 	public class PreviewRenderUtility
 	{
-		public Camera m_Camera;
+		private readonly PreviewScene m_PreviewScene;
 
-		public float m_CameraFieldOfView = 15f;
-
-		public Light[] m_Light = new Light[2];
-
-		internal RenderTexture m_RenderTexture;
+		private RenderTexture m_RenderTexture;
 
 		private Rect m_TargetRect;
 
 		private SavedRenderTargetState m_SavedState;
 
-		public PreviewRenderUtility() : this(false)
+		private Material m_InvisibleMaterial;
+
+		[Obsolete("Use the property camera instead (UnityUpgradable) -> camera", false)]
+		public Camera m_Camera;
+
+		[Obsolete("Use the property cameraFieldOfView (UnityUpgradable) -> cameraFieldOfView", false)]
+		public float m_CameraFieldOfView;
+
+		[Obsolete("Use the property lights (UnityUpgradable) -> lights", false)]
+		public Light[] m_Light;
+
+		public Camera camera
+		{
+			get
+			{
+				return this.previewScene.camera;
+			}
+		}
+
+		public float cameraFieldOfView
+		{
+			get
+			{
+				return this.camera.fieldOfView;
+			}
+			set
+			{
+				this.camera.fieldOfView = value;
+			}
+		}
+
+		public Color ambientColor
+		{
+			get;
+			set;
+		}
+
+		public Light[] lights
+		{
+			get
+			{
+				return new Light[]
+				{
+					this.Light0,
+					this.Light1
+				};
+			}
+		}
+
+		private Light Light0
+		{
+			get;
+			set;
+		}
+
+		private Light Light1
+		{
+			get;
+			set;
+		}
+
+		internal RenderTexture renderTexture
+		{
+			get
+			{
+				return this.m_RenderTexture;
+			}
+		}
+
+		internal PreviewScene previewScene
+		{
+			get
+			{
+				return this.m_PreviewScene;
+			}
+		}
+
+		public PreviewRenderUtility(bool renderFullScene) : this()
 		{
 		}
 
-		public PreviewRenderUtility(bool renderFullScene)
+		public PreviewRenderUtility()
 		{
-			GameObject gameObject = EditorUtility.CreateGameObjectWithHideFlags("PreRenderCamera", HideFlags.HideAndDontSave, new Type[]
-			{
-				typeof(Camera)
-			});
-			this.m_Camera = gameObject.GetComponent<Camera>();
-			this.m_Camera.cameraType = CameraType.Preview;
-			this.m_Camera.fieldOfView = this.m_CameraFieldOfView;
-			this.m_Camera.enabled = false;
-			this.m_Camera.clearFlags = CameraClearFlags.Depth;
-			this.m_Camera.farClipPlane = 10f;
-			this.m_Camera.nearClipPlane = 2f;
-			this.m_Camera.backgroundColor = new Color(0.192156866f, 0.192156866f, 0.192156866f, 1f);
-			this.m_Camera.renderingPath = RenderingPath.Forward;
-			this.m_Camera.useOcclusionCulling = false;
-			if (!renderFullScene)
-			{
-				Handles.SetCameraOnlyDrawMesh(this.m_Camera);
-			}
-			for (int i = 0; i < 2; i++)
-			{
-				GameObject gameObject2 = EditorUtility.CreateGameObjectWithHideFlags("PreRenderLight", HideFlags.HideAndDontSave, new Type[]
-				{
-					typeof(Light)
-				});
-				this.m_Light[i] = gameObject2.GetComponent<Light>();
-				this.m_Light[i].type = LightType.Directional;
-				this.m_Light[i].intensity = 1f;
-				this.m_Light[i].enabled = false;
-			}
-			this.m_Light[0].color = SceneView.kSceneViewFrontLight;
-			this.m_Light[1].transform.rotation = Quaternion.Euler(340f, 218f, 177f);
-			this.m_Light[1].color = new Color(0.4f, 0.4f, 0.45f, 0f) * 0.7f;
+			this.m_PreviewScene = new PreviewScene("Preview Scene");
+			GameObject gameObject = PreviewRenderUtility.CreateLight();
+			this.previewScene.AddGameObject(gameObject);
+			this.Light0 = gameObject.GetComponent<Light>();
+			GameObject gameObject2 = PreviewRenderUtility.CreateLight();
+			this.previewScene.AddGameObject(gameObject2);
+			this.Light1 = gameObject2.GetComponent<Light>();
+			this.Light0.color = SceneView.kSceneViewFrontLight;
+			this.Light1.transform.rotation = Quaternion.Euler(340f, 218f, 177f);
+			this.Light1.color = new Color(0.4f, 0.4f, 0.45f, 0f) * 0.7f;
 		}
 
 		public void Cleanup()
 		{
-			if (this.m_Camera)
-			{
-				UnityEngine.Object.DestroyImmediate(this.m_Camera.gameObject, true);
-			}
 			if (this.m_RenderTexture)
 			{
 				UnityEngine.Object.DestroyImmediate(this.m_RenderTexture);
 				this.m_RenderTexture = null;
 			}
-			Light[] light = this.m_Light;
-			for (int i = 0; i < light.Length; i++)
+			if (this.m_InvisibleMaterial != null)
 			{
-				Light light2 = light[i];
-				if (light2)
+				UnityEngine.Object.DestroyImmediate(this.m_InvisibleMaterial);
+				this.m_InvisibleMaterial = null;
+			}
+			this.previewScene.Dispose();
+		}
+
+		public void BeginPreview(Rect r, GUIStyle previewBackground)
+		{
+			this.InitPreview(r);
+			if (previewBackground != null && previewBackground != GUIStyle.none)
+			{
+				Graphics.DrawTexture(previewBackground.overflow.Add(new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height)), previewBackground.normal.background, new Rect(0f, 0f, 1f, 1f), previewBackground.border.left, previewBackground.border.right, previewBackground.border.top, previewBackground.border.bottom, new Color(0.5f, 0.5f, 0.5f, 1f), null);
+				if (Unsupported.SetOverrideRenderSettings(this.previewScene.scene))
 				{
-					UnityEngine.Object.DestroyImmediate(light2.gameObject, true);
+					RenderSettings.ambientMode = AmbientMode.Flat;
+					RenderSettings.ambientLight = this.ambientColor;
 				}
 			}
 		}
 
-		private void BeginPreview(Rect r, GUIStyle previewBackground, bool hdr)
+		public void BeginStaticPreview(Rect r)
 		{
-			this.InitPreview(r, hdr);
-			if (previewBackground != null && previewBackground != GUIStyle.none)
-			{
-				Graphics.DrawTexture(previewBackground.overflow.Add(new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height)), previewBackground.normal.background, new Rect(0f, 0f, 1f, 1f), previewBackground.border.left, previewBackground.border.right, previewBackground.border.top, previewBackground.border.bottom, new Color(0.5f, 0.5f, 0.5f, 1f), null);
-			}
-		}
-
-		private void BeginStaticPreview(Rect r, bool hdr)
-		{
-			this.InitPreview(r, hdr);
+			this.InitPreview(r);
 			Color color = new Color(0.321568638f, 0.321568638f, 0.321568638f, 1f);
 			Texture2D texture2D = new Texture2D(1, 1, TextureFormat.RGBA32, true, true);
 			texture2D.SetPixel(0, 0, color);
@@ -101,7 +150,7 @@ namespace UnityEditor
 			UnityEngine.Object.DestroyImmediate(texture2D);
 		}
 
-		private void InitPreview(Rect r, bool hdr)
+		private void InitPreview(Rect r)
 		{
 			this.m_TargetRect = r;
 			float scaleFactor = this.GetScaleFactor(r.width, r.height);
@@ -114,19 +163,30 @@ namespace UnityEditor
 					UnityEngine.Object.DestroyImmediate(this.m_RenderTexture);
 					this.m_RenderTexture = null;
 				}
-				this.m_RenderTexture = new RenderTexture(num, num2, 16, (!hdr) ? RenderTextureFormat.ARGB32 : RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Default);
+				RenderTextureFormat format = (!this.camera.allowHDR) ? RenderTextureFormat.ARGB32 : RenderTextureFormat.ARGBHalf;
+				this.m_RenderTexture = new RenderTexture(num, num2, 16, format, RenderTextureReadWrite.Default);
 				this.m_RenderTexture.hideFlags = HideFlags.HideAndDontSave;
-				this.m_Camera.targetTexture = this.m_RenderTexture;
+				this.camera.targetTexture = this.m_RenderTexture;
+				Light[] lights = this.lights;
+				for (int i = 0; i < lights.Length; i++)
+				{
+					Light light = lights[i];
+					light.enabled = true;
+				}
 			}
-			float num3 = (this.m_RenderTexture.width > 0) ? Mathf.Max(1f, (float)this.m_RenderTexture.height / (float)this.m_RenderTexture.width) : 1f;
-			this.m_Camera.fieldOfView = Mathf.Atan(num3 * Mathf.Tan(this.m_CameraFieldOfView * 0.5f * 0.0174532924f)) * 57.29578f * 2f;
 			this.m_SavedState = new SavedRenderTargetState();
 			EditorGUIUtility.SetRenderTextureNoViewport(this.m_RenderTexture);
 			GL.LoadOrtho();
 			GL.LoadPixelMatrix(0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height, 0f);
 			ShaderUtil.rawViewportRect = new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height);
 			ShaderUtil.rawScissorRect = new Rect(0f, 0f, (float)this.m_RenderTexture.width, (float)this.m_RenderTexture.height);
-			GL.Clear(true, true, new Color(0f, 0f, 0f, 0f));
+			GL.Clear(true, true, this.camera.backgroundColor);
+			Light[] lights2 = this.lights;
+			for (int j = 0; j < lights2.Length; j++)
+			{
+				Light light2 = lights2[j];
+				light2.enabled = true;
+			}
 		}
 
 		public float GetScaleFactor(float width, float height)
@@ -136,30 +196,34 @@ namespace UnityEditor
 			return Mathf.Min(a, b) * EditorGUIUtility.pixelsPerPoint;
 		}
 
-		public void BeginStaticPreview(Rect r)
-		{
-			this.BeginStaticPreview(r, false);
-		}
-
+		[Obsolete("This method has been marked obsolete, use BeginStaticPreview() instead (UnityUpgradable) -> BeginStaticPreview(*)", false)]
 		public void BeginStaticPreviewHDR(Rect r)
 		{
-			this.BeginStaticPreview(r, true);
+			this.BeginStaticPreview(r);
 		}
 
-		public void BeginPreview(Rect r, GUIStyle previewBackground)
-		{
-			this.BeginPreview(r, previewBackground, false);
-		}
-
+		[Obsolete("This method has been marked obsolete, use BeginPreview() instead (UnityUpgradable) -> BeginPreview(*)", false)]
 		public void BeginPreviewHDR(Rect r, GUIStyle previewBackground)
 		{
-			this.BeginPreview(r, previewBackground, true);
+			this.BeginPreview(r, previewBackground);
 		}
 
 		public Texture EndPreview()
 		{
 			this.m_SavedState.Restore();
+			this.FinishFrame();
 			return this.m_RenderTexture;
+		}
+
+		private void FinishFrame()
+		{
+			Unsupported.RestoreOverrideRenderSettings();
+			Light[] lights = this.lights;
+			for (int i = 0; i < lights.Length; i++)
+			{
+				Light light = lights[i];
+				light.enabled = false;
+			}
 		}
 
 		public void EndAndDrawPreview(Rect r)
@@ -182,37 +246,62 @@ namespace UnityEditor
 			texture2D.Apply();
 			RenderTexture.ReleaseTemporary(temporary);
 			this.m_SavedState.Restore();
+			this.FinishFrame();
 			return texture2D;
 		}
 
-		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex)
+		public void AddSingleGO(GameObject go)
 		{
-			this.DrawMesh(mesh, pos, rot, mat, subMeshIndex, null);
+			this.previewScene.AddGameObject(go);
+		}
+
+		private Material GetInvisibleMaterial()
+		{
+			if (this.m_InvisibleMaterial == null)
+			{
+				this.m_InvisibleMaterial = new Material(Shader.FindBuiltin("Internal-Colored.shader"));
+				this.m_InvisibleMaterial.hideFlags = HideFlags.HideAndDontSave;
+				this.m_InvisibleMaterial.SetColor("_Color", Color.clear);
+				this.m_InvisibleMaterial.SetInt("_ZWrite", 0);
+			}
+			return this.m_InvisibleMaterial;
 		}
 
 		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material mat, int subMeshIndex)
 		{
-			this.DrawMesh(mesh, matrix, mat, subMeshIndex, null);
-		}
-
-		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties)
-		{
-			Graphics.DrawMesh(mesh, pos, rot, mat, 1, this.m_Camera, subMeshIndex, customProperties);
-		}
-
-		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties, Transform probeAnchor)
-		{
-			Graphics.DrawMesh(mesh, pos, rot, mat, 1, this.m_Camera, subMeshIndex, customProperties, ShadowCastingMode.Off, false, probeAnchor);
-		}
-
-		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties, Transform probeAnchor, bool useLightProbe)
-		{
-			Graphics.DrawMesh(mesh, pos, rot, mat, 1, this.m_Camera, subMeshIndex, customProperties, ShadowCastingMode.Off, false, probeAnchor, useLightProbe);
+			this.DrawMesh(mesh, matrix, mat, subMeshIndex, null, null, false);
 		}
 
 		public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties)
 		{
-			Graphics.DrawMesh(mesh, matrix, mat, 1, this.m_Camera, subMeshIndex, customProperties);
+			this.DrawMesh(mesh, matrix, mat, subMeshIndex, customProperties, null, false);
+		}
+
+		public void DrawMesh(Mesh mesh, Matrix4x4 m, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties, Transform probeAnchor, bool useLightProbe)
+		{
+			Quaternion rot = Quaternion.LookRotation(m.GetColumn(2), m.GetColumn(1));
+			Vector4 column = m.GetColumn(3);
+			this.DrawMesh(mesh, column, rot, mat, subMeshIndex, customProperties, probeAnchor, useLightProbe);
+		}
+
+		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex)
+		{
+			this.DrawMesh(mesh, pos, rot, mat, subMeshIndex, null, null, false);
+		}
+
+		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties)
+		{
+			this.DrawMesh(mesh, pos, rot, mat, subMeshIndex, customProperties, null, false);
+		}
+
+		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties, Transform probeAnchor)
+		{
+			this.DrawMesh(mesh, pos, rot, mat, subMeshIndex, customProperties, probeAnchor, false);
+		}
+
+		public void DrawMesh(Mesh mesh, Vector3 pos, Quaternion rot, Material mat, int subMeshIndex, MaterialPropertyBlock customProperties, Transform probeAnchor, bool useLightProbe)
+		{
+			Graphics.DrawMesh(mesh, Matrix4x4.TRS(pos, rot, Vector3.one), mat, 1, this.camera, subMeshIndex, customProperties, ShadowCastingMode.Off, false, probeAnchor, useLightProbe);
 		}
 
 		internal static Mesh GetPreviewSphere()
@@ -243,6 +332,41 @@ namespace UnityEditor
 			}
 			result = null;
 			return result;
+		}
+
+		protected static GameObject CreateLight()
+		{
+			GameObject gameObject = EditorUtility.CreateGameObjectWithHideFlags("PreRenderLight", HideFlags.HideAndDontSave, new Type[]
+			{
+				typeof(Light)
+			});
+			Light component = gameObject.GetComponent<Light>();
+			component.type = LightType.Directional;
+			component.intensity = 1f;
+			component.enabled = false;
+			return gameObject;
+		}
+
+		public void Render(bool allowScriptableRenderPipeline = false, bool updatefov = true)
+		{
+			Light[] lights = this.lights;
+			for (int i = 0; i < lights.Length; i++)
+			{
+				Light light = lights[i];
+				light.enabled = true;
+			}
+			bool useScriptableRenderPipeline = Unsupported.useScriptableRenderPipeline;
+			Unsupported.useScriptableRenderPipeline = allowScriptableRenderPipeline;
+			float fieldOfView = this.camera.fieldOfView;
+			if (updatefov)
+			{
+				float num = (this.m_RenderTexture.width > 0) ? Mathf.Max(1f, (float)this.m_RenderTexture.height / (float)this.m_RenderTexture.width) : 1f;
+				this.camera.fieldOfView = Mathf.Atan(num * Mathf.Tan(this.camera.fieldOfView * 0.5f * 0.0174532924f)) * 57.29578f * 2f;
+			}
+			this.camera.Render();
+			this.camera.fieldOfView = fieldOfView;
+			Unsupported.useScriptableRenderPipeline = useScriptableRenderPipeline;
+			Unsupported.RestoreOverrideRenderSettings();
 		}
 	}
 }

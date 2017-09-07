@@ -386,20 +386,27 @@ namespace UnityEditor.Scripting
 			}
 			else
 			{
-				using (FileStream fileStream = File.Open(valueFromNormalizedMessage2, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+				try
 				{
-					IParser parser = ParserFactory.CreateParser(ICSharpCode.NRefactory.SupportedLanguage.CSharp, new StreamReader(fileStream));
-					parser.Lexer.EvaluateConditionalCompilation = false;
-					parser.Parse();
-					string text = InvalidTypeOrNamespaceErrorTypeMapper.IsTypeMovedToNamespaceError(parser.CompilationUnit, num, num2);
-					if (text == null)
+					using (FileStream fileStream = File.Open(valueFromNormalizedMessage2, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 					{
-						result = null;
+						IParser parser = ParserFactory.CreateParser(ICSharpCode.NRefactory.SupportedLanguage.CSharp, new StreamReader(fileStream));
+						parser.Lexer.EvaluateConditionalCompilation = false;
+						parser.Parse();
+						string text = InvalidTypeOrNamespaceErrorTypeMapper.IsTypeMovedToNamespaceError(parser.CompilationUnit, num, num2);
+						if (text == null)
+						{
+							result = null;
+						}
+						else
+						{
+							result = APIUpdaterHelper.FindExactTypeMatchingMovedType(text);
+						}
 					}
-					else
-					{
-						result = APIUpdaterHelper.FindExactTypeMatchingMovedType(text);
-					}
+				}
+				catch (FileNotFoundException)
+				{
+					result = null;
 				}
 			}
 			return result;

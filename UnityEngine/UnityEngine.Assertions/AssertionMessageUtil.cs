@@ -6,13 +6,13 @@ namespace UnityEngine.Assertions
 	{
 		private const string k_Expected = "Expected:";
 
-		private const string k_AssertionFailed = "Assertion failed.";
+		private const string k_AssertionFailed = "Assertion failure.";
 
 		public static string GetMessage(string failureMessage)
 		{
 			return UnityString.Format("{0} {1}", new object[]
 			{
-				"Assertion failed.",
+				"Assertion failure.",
 				failureMessage
 			});
 		}

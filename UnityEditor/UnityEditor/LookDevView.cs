@@ -86,7 +86,7 @@ namespace UnityEditor
 			{
 				for (int i = 0; i < 3; i++)
 				{
-					this.m_PreviewUtility[i] = new PreviewRenderUtility(true);
+					this.m_PreviewUtility[i] = new PreviewRenderUtility();
 					this.m_PreviewCB[i] = new LookDevView.PreviewContextCB();
 				}
 			}
@@ -297,8 +297,8 @@ namespace UnityEditor
 					this.m_PreviewUtilityContexts[i] = new LookDevView.PreviewContext();
 					for (int j = 0; j < 3; j++)
 					{
-						this.m_PreviewUtilityContexts[i].m_PreviewUtility[j].m_CameraFieldOfView = 30f;
-						this.m_PreviewUtilityContexts[i].m_PreviewUtility[j].m_Camera.cullingMask = 1 << Camera.PreviewCullingLayer;
+						this.m_PreviewUtilityContexts[i].m_PreviewUtility[j].camera.fieldOfView = 30f;
+						this.m_PreviewUtilityContexts[i].m_PreviewUtility[j].camera.cullingMask = 1 << Camera.PreviewCullingLayer;
 					}
 				}
 				if (QualitySettings.activeColorSpace == ColorSpace.Gamma)
@@ -442,7 +442,7 @@ namespace UnityEditor
 		{
 			PreviewRenderUtility previewRenderUtility = previewUtilityContext.m_PreviewUtility[(int)contextPass];
 			LookDevView.PreviewContextCB previewContextCB = previewUtilityContext.m_PreviewCB[(int)contextPass];
-			previewRenderUtility.BeginPreviewHDR(previewRect, LookDevView.styles.sBigTitleInnerStyle);
+			previewRenderUtility.BeginPreview(previewRect, LookDevView.styles.sBigTitleInnerStyle);
 			bool flag = contextPass == LookDevView.PreviewContext.PreviewContextPass.kShadow;
 			DrawCameraMode shadingMode = (DrawCameraMode)lookDevContext.shadingMode;
 			bool flag2 = shadingMode != DrawCameraMode.Normal && shadingMode != DrawCameraMode.TexturedWire;
@@ -454,16 +454,16 @@ namespace UnityEditor
 			Vector3 eulerAngles = cameraState.rotation.value.eulerAngles;
 			cameraState.rotation.value = Quaternion.Euler(eulerAngles + new Vector3(0f, num, 0f));
 			cameraState.pivot.value = new Vector3(0f, this.kDefaultSceneHeight, 0f);
-			cameraState.UpdateCamera(previewRenderUtility.m_Camera);
-			previewRenderUtility.m_Camera.renderingPath = RenderingPath.DeferredShading;
-			previewRenderUtility.m_Camera.clearFlags = ((!flag) ? CameraClearFlags.Skybox : CameraClearFlags.Color);
-			previewRenderUtility.m_Camera.backgroundColor = Color.white;
-			previewRenderUtility.m_Camera.allowHDR = true;
+			cameraState.UpdateCamera(previewRenderUtility.camera);
+			previewRenderUtility.camera.renderingPath = RenderingPath.DeferredShading;
+			previewRenderUtility.camera.clearFlags = ((!flag) ? CameraClearFlags.Skybox : CameraClearFlags.Color);
+			previewRenderUtility.camera.backgroundColor = Color.white;
+			previewRenderUtility.camera.allowHDR = true;
 			for (int i = 0; i < 2; i++)
 			{
-				previewRenderUtility.m_Light[i].enabled = false;
-				previewRenderUtility.m_Light[i].intensity = 0f;
-				previewRenderUtility.m_Light[i].shadows = LightShadows.None;
+				previewRenderUtility.lights[i].enabled = false;
+				previewRenderUtility.lights[i].intensity = 0f;
+				previewRenderUtility.lights[i].shadows = LightShadows.None;
 			}
 			if (currentObject != null && flag && this.m_LookDevConfig.enableShadowCubemap && !flag2)
 			{
@@ -475,12 +475,12 @@ namespace UnityEditor
 				QualitySettings.shadowDistance = num3;
 				QualitySettings.shadowCascade4Split = new Vector3(Mathf.Clamp(num4, 0f, 1f), Mathf.Clamp(num4 * 2f, 0f, 1f), Mathf.Clamp(num4 * 6f, 0f, 1f));
 				ShadowInfo shadowInfo = this.m_LookDevEnvLibrary.hdriList[lookDevContext.currentHDRIIndex].shadowInfo;
-				previewRenderUtility.m_Light[0].intensity = 1f;
-				previewRenderUtility.m_Light[0].color = Color.white;
-				previewRenderUtility.m_Light[0].shadows = LightShadows.Soft;
-				previewRenderUtility.m_Light[0].shadowBias = this.m_DirBias;
-				previewRenderUtility.m_Light[0].shadowNormalBias = this.m_DirNormalBias;
-				previewRenderUtility.m_Light[0].transform.rotation = Quaternion.Euler(shadowInfo.latitude, shadowInfo.longitude, 0f);
+				previewRenderUtility.lights[0].intensity = 1f;
+				previewRenderUtility.lights[0].color = Color.white;
+				previewRenderUtility.lights[0].shadows = LightShadows.Soft;
+				previewRenderUtility.lights[0].shadowBias = this.m_DirBias;
+				previewRenderUtility.lights[0].shadowNormalBias = this.m_DirNormalBias;
+				previewRenderUtility.lights[0].transform.rotation = Quaternion.Euler(shadowInfo.latitude, shadowInfo.longitude, 0f);
 				previewContextCB.m_patchGBufferCB.Clear();
 				RenderTargetIdentifier[] colors = new RenderTargetIdentifier[]
 				{
@@ -489,7 +489,7 @@ namespace UnityEditor
 				};
 				previewContextCB.m_patchGBufferCB.SetRenderTarget(colors, BuiltinRenderTextureType.CameraTarget);
 				previewContextCB.m_patchGBufferCB.DrawMesh(LookDevResources.m_ScreenQuadMesh, Matrix4x4.identity, LookDevResources.m_GBufferPatchMaterial);
-				previewRenderUtility.m_Camera.AddCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_patchGBufferCB);
+				previewRenderUtility.camera.AddCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_patchGBufferCB);
 				if (this.m_LookDevConfig.showBalls)
 				{
 					previewContextCB.m_drawBallCB.Clear();
@@ -498,12 +498,12 @@ namespace UnityEditor
 						BuiltinRenderTextureType.CameraTarget
 					};
 					previewContextCB.m_drawBallCB.SetRenderTarget(colors2, BuiltinRenderTextureType.CameraTarget);
-					previewContextCB.m_drawBallPB.SetVector("_WindowsSize", new Vector4((float)previewRenderUtility.m_Camera.pixelWidth, (float)previewRenderUtility.m_Camera.pixelHeight, (!secondView) ? 0f : 1f, 0f));
+					previewContextCB.m_drawBallPB.SetVector("_WindowsSize", new Vector4((float)previewRenderUtility.camera.pixelWidth, (float)previewRenderUtility.camera.pixelHeight, (!secondView) ? 0f : 1f, 0f));
 					previewContextCB.m_drawBallCB.DrawMesh(LookDevResources.m_ScreenQuadMesh, Matrix4x4.identity, LookDevResources.m_DrawBallsMaterial, 0, 1, previewContextCB.m_drawBallPB);
-					previewRenderUtility.m_Camera.AddCommandBuffer(CameraEvent.AfterLighting, previewContextCB.m_drawBallCB);
+					previewRenderUtility.camera.AddCommandBuffer(CameraEvent.AfterLighting, previewContextCB.m_drawBallCB);
 				}
 			}
-			Color ambient = new Color(0f, 0f, 0f, 0f);
+			previewRenderUtility.ambientColor = new Color(0f, 0f, 0f, 0f);
 			UnityEngine.Rendering.DefaultReflectionMode defaultReflectionMode = RenderSettings.defaultReflectionMode;
 			AmbientMode ambientMode = RenderSettings.ambientMode;
 			Cubemap customReflection = RenderSettings.customReflection;
@@ -550,13 +550,10 @@ namespace UnityEditor
 				previewContextCB.m_drawBallPB.SetVector("_SHBg", array[4]);
 				previewContextCB.m_drawBallPB.SetVector("_SHBb", array[5]);
 				previewContextCB.m_drawBallPB.SetVector("_SHC", array[6]);
-				previewContextCB.m_drawBallPB.SetVector("_WindowsSize", new Vector4((float)previewRenderUtility.m_Camera.pixelWidth, (float)previewRenderUtility.m_Camera.pixelHeight, (!secondView) ? 0f : 1f, 0f));
+				previewContextCB.m_drawBallPB.SetVector("_WindowsSize", new Vector4((float)previewRenderUtility.camera.pixelWidth, (float)previewRenderUtility.camera.pixelHeight, (!secondView) ? 0f : 1f, 0f));
 				previewContextCB.m_drawBallCB.DrawMesh(LookDevResources.m_ScreenQuadMesh, Matrix4x4.identity, LookDevResources.m_DrawBallsMaterial, 0, 0, previewContextCB.m_drawBallPB);
-				previewRenderUtility.m_Camera.AddCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_drawBallCB);
+				previewRenderUtility.camera.AddCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_drawBallCB);
 			}
-			InternalEditorUtility.SetCustomLighting(previewRenderUtility.m_Light, ambient);
-			bool fog = RenderSettings.fog;
-			Unsupported.SetRenderSettingsUseFogNoDirty(false);
 			Vector3 eulerAngles2 = Vector3.zero;
 			Vector3 position = Vector3.zero;
 			if (currentObject != null)
@@ -574,15 +571,16 @@ namespace UnityEditor
 				currentObject.transform.Rotate(0f, num, 0f);
 				currentObject.transform.Translate(-originalCameraState.pivot.value);
 				currentObject.transform.Rotate(0f, this.m_CurrentObjRotationOffset, 0f);
+				previewRenderUtility.AddSingleGO(currentObject);
 			}
 			if (shadingMode == DrawCameraMode.TexturedWire && !flag)
 			{
-				Handles.ClearCamera(previewRect, previewRenderUtility.m_Camera);
-				Handles.DrawCamera(previewRect, previewRenderUtility.m_Camera, shadingMode);
+				Handles.ClearCamera(previewRect, previewRenderUtility.camera);
+				Handles.DrawCamera(previewRect, previewRenderUtility.camera, shadingMode);
 			}
 			else
 			{
-				previewRenderUtility.m_Camera.Render();
+				previewRenderUtility.Render(true, true);
 			}
 			if (currentObject != null)
 			{
@@ -601,15 +599,15 @@ namespace UnityEditor
 			}
 			if (flag)
 			{
-				previewRenderUtility.m_Camera.RemoveCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_patchGBufferCB);
+				previewRenderUtility.camera.RemoveCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_patchGBufferCB);
 				if (this.m_LookDevConfig.showBalls)
 				{
-					previewRenderUtility.m_Camera.RemoveCommandBuffer(CameraEvent.AfterLighting, previewContextCB.m_drawBallCB);
+					previewRenderUtility.camera.RemoveCommandBuffer(CameraEvent.AfterLighting, previewContextCB.m_drawBallCB);
 				}
 			}
 			else if (contextPass == LookDevView.PreviewContext.PreviewContextPass.kView && this.m_LookDevConfig.showBalls)
 			{
-				previewRenderUtility.m_Camera.RemoveCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_drawBallCB);
+				previewRenderUtility.camera.RemoveCommandBuffer(CameraEvent.AfterGBuffer, previewContextCB.m_drawBallCB);
 			}
 			QualitySettings.shadowCascade4Split = shadowCascade4Split;
 			QualitySettings.shadowDistance = shadowDistance;
@@ -620,8 +618,6 @@ namespace UnityEditor
 			RenderSettings.ambientIntensity = ambientIntensity;
 			RenderSettings.reflectionIntensity = reflectionIntensity;
 			RenderSettings.ambientProbe = ambientProbe;
-			Unsupported.SetRenderSettingsUseFogNoDirty(fog);
-			InternalEditorUtility.RemoveCustomLighting();
 			return previewRenderUtility.EndPreview();
 		}
 
@@ -1335,7 +1331,7 @@ namespace UnityEditor
 			{
 				int currentEditionContextIndex = this.m_LookDevConfig.currentEditionContextIndex;
 				int num = (currentEditionContextIndex + 1) % 2;
-				this.m_CameraController.Update(this.m_LookDevConfig.cameraState[currentEditionContextIndex], this.m_PreviewUtilityContexts[this.m_LookDevConfig.currentEditionContextIndex].m_PreviewUtility[0].m_Camera);
+				this.m_CameraController.Update(this.m_LookDevConfig.cameraState[currentEditionContextIndex], this.m_PreviewUtilityContexts[this.m_LookDevConfig.currentEditionContextIndex].m_PreviewUtility[0].camera);
 				if ((this.m_LookDevConfig.lookDevMode == LookDevMode.Single1 || this.m_LookDevConfig.lookDevMode == LookDevMode.Single2 || this.m_LookDevConfig.lookDevMode == LookDevMode.SideBySide) && this.m_LookDevConfig.sideBySideCameraLinked)
 				{
 					this.m_LookDevConfig.cameraState[num].Copy(this.m_LookDevConfig.cameraState[currentEditionContextIndex]);
@@ -1353,8 +1349,8 @@ namespace UnityEditor
 				}
 				for (int i = 0; i < 3; i++)
 				{
-					this.m_LookDevConfig.cameraState[0].UpdateCamera(this.m_PreviewUtilityContexts[0].m_PreviewUtility[i].m_Camera);
-					this.m_LookDevConfig.cameraState[1].UpdateCamera(this.m_PreviewUtilityContexts[1].m_PreviewUtility[i].m_Camera);
+					this.m_LookDevConfig.cameraState[0].UpdateCamera(this.m_PreviewUtilityContexts[0].m_PreviewUtility[i].camera);
+					this.m_LookDevConfig.cameraState[1].UpdateCamera(this.m_PreviewUtilityContexts[1].m_PreviewUtility[i].camera);
 				}
 			}
 		}

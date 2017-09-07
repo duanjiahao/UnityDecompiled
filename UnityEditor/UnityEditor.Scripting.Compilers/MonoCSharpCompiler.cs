@@ -10,6 +10,8 @@ namespace UnityEditor.Scripting.Compilers
 {
 	internal class MonoCSharpCompiler : MonoScriptCompilerBase
 	{
+		public static readonly string ReponseFilename = "mcs.rsp";
+
 		public MonoCSharpCompiler(MonoIsland island, bool runUpdater) : base(island, runUpdater)
 		{
 		}
@@ -21,7 +23,7 @@ namespace UnityEditor.Scripting.Compilers
 				"-debug",
 				"-target:library",
 				"-nowarn:0169",
-				"-langversion:4",
+				"-langversion:" + ((EditorApplication.scriptingRuntimeVersion != ScriptingRuntimeVersion.Latest) ? "4" : "6"),
 				"-out:" + ScriptCompilerBase.PrepareFileName(this._island._output),
 				"-unsafe"
 			};
@@ -57,15 +59,15 @@ namespace UnityEditor.Scripting.Compilers
 					list.Add("-r:" + ScriptCompilerBase.PrepareFileName(text));
 				}
 			}
-			if (!base.AddCustomResponseFileIfPresent(list, "mcs.rsp"))
+			if (!base.AddCustomResponseFileIfPresent(list, MonoCSharpCompiler.ReponseFilename))
 			{
 				if (this._island._api_compatibility_level == ApiCompatibilityLevel.NET_2_0_Subset && base.AddCustomResponseFileIfPresent(list, "smcs.rsp"))
 				{
-					Debug.LogWarning("Using obsolete custom response file 'smcs.rsp'. Please use 'mcs.rsp' instead.");
+					Debug.LogWarning(string.Format("Using obsolete custom response file 'smcs.rsp'. Please use '{0}' instead.", MonoCSharpCompiler.ReponseFilename));
 				}
 				else if (this._island._api_compatibility_level == ApiCompatibilityLevel.NET_2_0 && base.AddCustomResponseFileIfPresent(list, "gmcs.rsp"))
 				{
-					Debug.LogWarning("Using obsolete custom response file 'gmcs.rsp'. Please use 'mcs.rsp' instead.");
+					Debug.LogWarning(string.Format("Using obsolete custom response file 'gmcs.rsp'. Please use '{0}' instead.", MonoCSharpCompiler.ReponseFilename));
 				}
 			}
 			return base.StartCompiler(this._island._target, this.GetCompilerPath(list), list, false, MonoInstallationFinder.GetMonoInstallation("MonoBleedingEdge"));

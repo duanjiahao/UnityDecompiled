@@ -66,6 +66,14 @@ namespace UnityEditorInternal
 			}
 		}
 
+		public virtual bool LinkLibIl2CppStatically
+		{
+			get
+			{
+				return true;
+			}
+		}
+
 		public virtual IEnumerable<string> ConvertIncludesToFullPaths(IEnumerable<string> relativeIncludePaths)
 		{
 			string workingDirectory = Directory.GetCurrentDirectory();

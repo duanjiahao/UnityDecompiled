@@ -100,5 +100,19 @@ namespace UnityEngine.Rendering
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_transparencySortAxis(ref Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern bool HasShaderDefineImpl(GraphicsTier tier, BuiltinShaderDefine defineHash);
+
+		public static bool HasShaderDefine(GraphicsTier tier, BuiltinShaderDefine defineHash)
+		{
+			return GraphicsSettings.HasShaderDefineImpl(tier, defineHash);
+		}
+
+		public static bool HasShaderDefine(BuiltinShaderDefine defineHash)
+		{
+			return GraphicsSettings.HasShaderDefine(Graphics.activeTier, defineHash);
+		}
 	}
 }

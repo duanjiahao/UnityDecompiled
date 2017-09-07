@@ -92,9 +92,20 @@ namespace UnityEditor
 		public override void UpdateCullingSupportedString(ref string text)
 		{
 			this.Init();
-			if (!this.m_X.SupportsProcedural() || !this.m_Y.SupportsProcedural() || !this.m_Z.SupportsProcedural())
+			string empty = string.Empty;
+			if (!this.m_X.SupportsProcedural(ref empty))
 			{
-				text += "\n\tLifetime rotation curve uses too many keys.";
+				text = text + "\nRotation over Lifetime module curve X: " + empty;
+			}
+			empty = string.Empty;
+			if (!this.m_Y.SupportsProcedural(ref empty))
+			{
+				text = text + "\nRotation over Lifetime module curve Y: " + empty;
+			}
+			empty = string.Empty;
+			if (!this.m_Z.SupportsProcedural(ref empty))
+			{
+				text = text + "\nRotation over Lifetime module curve Z: " + empty;
 			}
 		}
 	}

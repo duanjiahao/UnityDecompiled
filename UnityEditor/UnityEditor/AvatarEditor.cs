@@ -477,11 +477,7 @@ namespace UnityEditor
 			}
 			if (this.m_EditMode == AvatarEditor.EditMode.Editing)
 			{
-				if (this.m_GameObject == null || this.m_ModelBones == null)
-				{
-					this.SwitchToAssetMode();
-				}
-				else if (EditorApplication.isPlaying)
+				if (this.m_GameObject == null || this.m_ModelBones == null || EditorApplication.isPlaying)
 				{
 					this.SwitchToAssetMode();
 				}

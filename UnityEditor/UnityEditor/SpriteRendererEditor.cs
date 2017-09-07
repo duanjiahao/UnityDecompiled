@@ -12,6 +12,10 @@ namespace UnityEditor
 		{
 			public static readonly GUIContent flipLabel = EditorGUIUtility.TextContent("Flip|Sprite flipping");
 
+			public static readonly GUIContent flipXLabel = EditorGUIUtility.TextContent("X|Sprite horizontal flipping");
+
+			public static readonly GUIContent flipYLabel = EditorGUIUtility.TextContent("Y|Sprite vertical flipping");
+
 			public static readonly int flipToggleHash = "FlipToggleHash".GetHashCode();
 
 			public static readonly GUIContent fullTileLabel = EditorGUIUtility.TextContent("Tile Mode|Specify the 9 slice tiling behaviour");
@@ -26,7 +30,7 @@ namespace UnityEditor
 
 			public static readonly GUIContent sizeLabel = EditorGUIUtility.TextContent("Size|The rendering dimension for the sprite");
 
-			public static readonly GUIContent notFullRectWarningLabel = EditorGUIUtility.TextContent("Sprite Tiling might not appear correctly because the Sprite used is not generated with Full Rect. To fix this, change the Mesh Type in the Sprite's import setting to Full Rect");
+			public static readonly GUIContent notFullRectWarningLabel = EditorGUIUtility.TextContent("Sprite Tiling might not appear correctly because the Sprite used is not generated with Full Rect or Sprite Mode is set to Polygon mode. To fix this, change the Mesh Type in the Sprite's import setting to Full Rect and Sprite Mode is either Single or Multiple");
 
 			public static readonly GUIContent notFullRectMultiEditWarningLabel = EditorGUIUtility.TextContent("Sprite Tiling might not appear correctly because some of the Sprites used are not generated with Full Rect. To fix this, change the Mesh Type in the Sprite's import setting to Full Rect");
 
@@ -65,6 +69,8 @@ namespace UnityEditor
 
 		private AnimBool m_ShowAdaptiveThreshold;
 
+		private SerializedProperty m_MaskInteraction;
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
@@ -83,6 +89,7 @@ namespace UnityEditor
 			this.m_ShowDrawMode.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowTileMode.valueChanged.AddListener(new UnityAction(base.Repaint));
 			this.m_ShowAdaptiveThreshold.valueChanged.AddListener(new UnityAction(base.Repaint));
+			this.m_MaskInteraction = base.serializedObject.FindProperty("m_MaskInteraction");
 		}
 
 		public override void OnInspectorGUI()
@@ -139,6 +146,7 @@ namespace UnityEditor
 			}
 			EditorGUILayout.EndFadeGroup();
 			base.RenderSortingLayerFields();
+			EditorGUILayout.PropertyField(this.m_MaskInteraction, new GUILayoutOption[0]);
 			this.CheckForErrors();
 			base.serializedObject.ApplyModifiedProperties();
 		}
@@ -200,16 +208,16 @@ namespace UnityEditor
 			int controlID = GUIUtility.GetControlID(SpriteRendererEditor.Contents.flipToggleHash, FocusType.Keyboard, rect);
 			rect = EditorGUI.PrefixLabel(rect, controlID, SpriteRendererEditor.Contents.flipLabel);
 			rect.width = 30f;
-			this.FlipToggle(rect, "X", this.m_FlipX);
+			this.FlipToggle(rect, SpriteRendererEditor.Contents.flipXLabel, this.m_FlipX);
 			rect.x += 30f;
-			this.FlipToggle(rect, "Y", this.m_FlipY);
+			this.FlipToggle(rect, SpriteRendererEditor.Contents.flipYLabel, this.m_FlipY);
 			GUILayout.EndHorizontal();
 		}
 
-		private void FlipToggle(Rect r, string label, SerializedProperty property)
+		private void FlipToggle(Rect r, GUIContent label, SerializedProperty property)
 		{
+			EditorGUI.BeginProperty(r, label, property);
 			bool flag = property.boolValue;
-			EditorGUI.showMixedValue = property.hasMultipleDifferentValues;
 			EditorGUI.BeginChangeCheck();
 			int indentLevel = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
@@ -220,7 +228,7 @@ namespace UnityEditor
 				Undo.RecordObjects(base.targets, "Edit Constraints");
 				property.boolValue = flag;
 			}
-			EditorGUI.showMixedValue = false;
+			EditorGUI.EndProperty();
 		}
 
 		private void CheckForErrors()

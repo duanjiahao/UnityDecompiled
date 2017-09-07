@@ -245,8 +245,11 @@ namespace UnityEditor
 
 		public void PullProbePositions()
 		{
-			this.m_SourcePositions = new List<Vector3>(this.m_Group.probePositions);
-			this.m_Selection = new List<int>(this.m_SerializedSelectedProbes.m_Selection);
+			if (this.m_Group != null && this.m_SerializedSelectedProbes != null)
+			{
+				this.m_SourcePositions = new List<Vector3>(this.m_Group.probePositions);
+				this.m_Selection = new List<int>(this.m_SerializedSelectedProbes.m_Selection);
+			}
 		}
 
 		public void PushProbePositions()

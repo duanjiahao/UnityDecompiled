@@ -64,19 +64,24 @@ namespace UnityEditor.Modules
 			internal virtual void Reset(PluginImporterInspector inspector)
 			{
 				string platformData = inspector.importer.GetPlatformData(this.platformName, this.key);
+				this.ParseStringValue(platformData);
+			}
+
+			protected void ParseStringValue(string valueString)
+			{
 				try
 				{
-					this.value = TypeDescriptor.GetConverter(this.type).ConvertFromString(platformData);
+					this.value = TypeDescriptor.GetConverter(this.type).ConvertFromString(valueString);
 				}
 				catch
 				{
 					this.value = this.defaultValue;
-					if (!string.IsNullOrEmpty(platformData))
+					if (!string.IsNullOrEmpty(valueString))
 					{
 						Debug.LogWarning(string.Concat(new object[]
 						{
 							"Failed to parse value ('",
-							platformData,
+							valueString,
 							"') for ",
 							this.key,
 							", platform: ",
@@ -193,7 +198,17 @@ namespace UnityEditor.Modules
 
 		public virtual string CalculateFinalPluginPath(string platformName, PluginImporter imp)
 		{
-			return Path.GetFileName(imp.assetPath);
+			string platformData = imp.GetPlatformData(platformName, "CPU");
+			string result;
+			if (!string.IsNullOrEmpty(platformData) && string.Compare(platformData, "AnyCPU", true) != 0 && string.Compare(platformData, "None", true) != 0)
+			{
+				result = Path.Combine(platformData, Path.GetFileName(imp.assetPath));
+			}
+			else
+			{
+				result = Path.GetFileName(imp.assetPath);
+			}
+			return result;
 		}
 
 		protected Dictionary<string, List<PluginImporter>> GetCompatiblePlugins(string buildTargetName)

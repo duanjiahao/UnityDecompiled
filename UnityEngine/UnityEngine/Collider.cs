@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
-	[RequireComponent(typeof(Transform))]
+	[RequireComponent(typeof(Transform)), RequiredByNativeCode]
 	public class Collider : Component
 	{
 		public extern bool enabled

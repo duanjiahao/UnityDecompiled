@@ -3,7 +3,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine.Experimental.Rendering
 {
-	internal static class RenderPipelineManager
+	public static class RenderPipelineManager
 	{
 		private static IRenderPipelineAsset s_CurrentPipelineAsset;
 
@@ -25,24 +25,17 @@ namespace UnityEngine.Experimental.Rendering
 		}
 
 		[RequiredByNativeCode]
-		private static bool DoRenderLoop_Internal(IRenderPipelineAsset pipe, Camera[] cameras, IntPtr loopPtr)
+		private static void DoRenderLoop_Internal(IRenderPipelineAsset pipe, Camera[] cameras, IntPtr loopPtr)
 		{
-			bool result;
-			if (!RenderPipelineManager.PrepareRenderPipeline(pipe))
+			RenderPipelineManager.PrepareRenderPipeline(pipe);
+			if (RenderPipelineManager.currentPipeline != null)
 			{
-				result = false;
-			}
-			else
-			{
-				ScriptableRenderContext renderContext = default(ScriptableRenderContext);
-				renderContext.Initialize(loopPtr);
+				ScriptableRenderContext renderContext = new ScriptableRenderContext(loopPtr);
 				RenderPipelineManager.currentPipeline.Render(renderContext, cameras);
-				result = true;
 			}
-			return result;
 		}
 
-		private static bool PrepareRenderPipeline(IRenderPipelineAsset pipe)
+		private static void PrepareRenderPipeline(IRenderPipelineAsset pipe)
 		{
 			if (RenderPipelineManager.s_CurrentPipelineAsset != pipe)
 			{
@@ -56,7 +49,6 @@ namespace UnityEngine.Experimental.Rendering
 			{
 				RenderPipelineManager.currentPipeline = RenderPipelineManager.s_CurrentPipelineAsset.CreatePipeline();
 			}
-			return RenderPipelineManager.s_CurrentPipelineAsset != null;
 		}
 	}
 }

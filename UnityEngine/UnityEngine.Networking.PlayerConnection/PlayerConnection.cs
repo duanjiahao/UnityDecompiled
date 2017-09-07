@@ -113,6 +113,11 @@ namespace UnityEngine.Networking.PlayerConnection
 			this.GetConnectionNativeApi().SendMessage(messageId, data, 0);
 		}
 
+		public void DisconnectAll()
+		{
+			this.GetConnectionNativeApi().DisconnectAll();
+		}
+
 		[RequiredByNativeCode]
 		private static void MessageCallbackInternal(IntPtr data, ulong size, ulong guid, string messageId)
 		{

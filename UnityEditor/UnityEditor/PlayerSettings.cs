@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using UnityEditor.Build;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Internal;
@@ -601,6 +602,18 @@ namespace UnityEditor
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern bool CheckAssetBundleVariantHasDeviceRequirements(string name);
 
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void SetLaunchScreenImage(Texture2D image, iOSLaunchScreenImageType type);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void SetiPhoneLaunchScreenType(iOSLaunchScreenType type);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			public static extern void SetiPadLaunchScreenType(iOSLaunchScreenType type);
+
 			internal static iOSDeviceRequirementGroup GetDeviceRequirementsForAssetBundleVariant(string name)
 			{
 				iOSDeviceRequirementGroup result;
@@ -646,6 +659,16 @@ namespace UnityEditor
 				{
 					PlayerSettings.SetBuildNumber(BuildTargetGroup.Standalone, value);
 				}
+			}
+
+			internal static extern string applicationCategoryType
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 		}
 
@@ -1302,6 +1325,7 @@ namespace UnityEditor
 				set;
 			}
 
+			[Obsolete("UnityEditor.PS4.useDebugIl2cppLibs no longer has any affect.")]
 			internal static extern bool useDebugIl2cppLibs
 			{
 				[GeneratedByOldBindingsGenerator]
@@ -1697,7 +1721,18 @@ namespace UnityEditor
 				set;
 			}
 
+			[Obsolete("UnityEditor.PSVita.useDebugIl2cppLibs no longer has any affect.")]
 			internal static extern bool useDebugIl2cppLibs
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int scriptOptimizationLevel
 			{
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
@@ -2949,6 +2984,14 @@ namespace UnityEditor
 
 		public sealed class Switch
 		{
+			public enum ScreenResolutionBehavior
+			{
+				Manual,
+				OperationMode,
+				PerformanceMode,
+				Both
+			}
+
 			public enum Languages
 			{
 				AmericanEnglish,
@@ -2962,10 +3005,7 @@ namespace UnityEditor
 				Dutch,
 				CanadianFrench,
 				Portuguese,
-				Russian,
-				Korean,
-				Taiwanese,
-				Chinese
+				Russian
 			}
 
 			public enum StartupUserAccount
@@ -3017,6 +3057,25 @@ namespace UnityEditor
 				OFLC
 			}
 
+			private enum SupportedNpadStyleBits
+			{
+				FullKey = 1,
+				Handheld,
+				JoyDual = 4,
+				JoyLeft = 8,
+				JoyRight = 16
+			}
+
+			[Flags]
+			public enum SupportedNpadStyle
+			{
+				FullKey = 2,
+				Handheld = 4,
+				JoyDual = 16,
+				JoyLeft = 256,
+				JoyRight = 65536
+			}
+
 			public static extern int socketMemoryPoolSize
 			{
 				[GeneratedByOldBindingsGenerator]
@@ -3057,6 +3116,16 @@ namespace UnityEditor
 				set;
 			}
 
+			public static extern PlayerSettings.Switch.ScreenResolutionBehavior screenResolutionBehavior
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
 			public static extern string applicationID
 			{
 				[GeneratedByOldBindingsGenerator]
@@ -3082,6 +3151,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern string[] publisherNames
@@ -3089,6 +3161,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern Texture2D[] icons
@@ -3096,6 +3171,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern Texture2D[] smallIcons
@@ -3103,6 +3181,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static string manualHTMLPath
@@ -3133,6 +3214,10 @@ namespace UnityEditor
 					}
 					return result;
 				}
+				set
+				{
+					PlayerSettings.Switch.SetManualHTMLPath((!string.IsNullOrEmpty(value)) ? value : "");
+				}
 			}
 
 			public static string accessibleURLPath
@@ -3152,16 +3237,13 @@ namespace UnityEditor
 						{
 							text = Path.GetFullPath(text);
 						}
-						if (!Directory.Exists(text))
-						{
-							result = "";
-						}
-						else
-						{
-							result = text;
-						}
+						result = text;
 					}
 					return result;
+				}
+				set
+				{
+					PlayerSettings.Switch.SetAccessibleURLPath((!string.IsNullOrEmpty(value)) ? value : "");
 				}
 			}
 
@@ -3185,6 +3267,10 @@ namespace UnityEditor
 					}
 					return result;
 				}
+				set
+				{
+					PlayerSettings.Switch.SetLegalInformationPath((!string.IsNullOrEmpty(value)) ? value : "");
+				}
 			}
 
 			public static extern int mainThreadStackSize
@@ -3192,6 +3278,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern string presenceGroupId
@@ -3199,6 +3288,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern PlayerSettings.Switch.LogoHandling logoHandling
@@ -3206,6 +3298,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern string releaseVersion
@@ -3213,6 +3308,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern string displayVersion
@@ -3220,6 +3318,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern PlayerSettings.Switch.StartupUserAccount startupUserAccount
@@ -3227,6 +3328,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern PlayerSettings.Switch.TouchScreenUsage touchScreenUsage
@@ -3234,6 +3338,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern int supportedLanguages
@@ -3241,6 +3348,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern PlayerSettings.Switch.LogoType logoType
@@ -3248,6 +3358,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern string applicationErrorCodeCategory
@@ -3255,6 +3368,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern int userAccountSaveDataSize
@@ -3262,6 +3378,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern int userAccountSaveDataJournalSize
@@ -3269,13 +3388,19 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
-			public static extern PlayerSettings.Switch.ApplicationAttribute attribute
+			public static extern PlayerSettings.Switch.ApplicationAttribute applicationAttribute
 			{
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern int cardSpecSize
@@ -3283,6 +3408,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern int cardSpecClock
@@ -3290,6 +3418,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern int ratingsMask
@@ -3304,6 +3435,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern bool isUnderParentalControl
@@ -3318,6 +3452,9 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			public static extern bool isDataLossConfirmation
@@ -3325,6 +3462,99 @@ namespace UnityEditor
 				[GeneratedByOldBindingsGenerator]
 				[MethodImpl(MethodImplOptions.InternalCall)]
 				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern PlayerSettings.Switch.SupportedNpadStyle supportedNpadStyles
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern bool socketConfigEnabled
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int tcpInitialSendBufferSize
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int tcpInitialReceiveBufferSize
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int tcpAutoSendBufferSizeMax
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int tcpAutoReceiveBufferSizeMax
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int udpSendBufferSize
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int udpReceiveBufferSize
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
+			}
+
+			public static extern int socketBufferEfficiency
+			{
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				get;
+				[GeneratedByOldBindingsGenerator]
+				[MethodImpl(MethodImplOptions.InternalCall)]
+				set;
 			}
 
 			[GeneratedByOldBindingsGenerator]
@@ -3333,11 +3563,23 @@ namespace UnityEditor
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetManualHTMLPath(string path);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern string GetAccessibleURLPath();
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetAccessibleURLPath(string path);
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
 			private static extern string GetLegalInformationPath();
+
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			private static extern void SetLegalInformationPath(string path);
 
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -4458,7 +4700,7 @@ namespace UnityEditor
 				set;
 			}
 
-			[Obsolete("SandboxId is obsolete please remove")]
+			[Obsolete("SandboxId is obsolete please remove", true)]
 			public static extern string SandboxId
 			{
 				[GeneratedByOldBindingsGenerator]
@@ -5134,6 +5376,16 @@ namespace UnityEditor
 			set;
 		}
 
+		public static extern ScriptingRuntimeVersion scriptingRuntimeVersion
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern string keystorePass
 		{
 			[GeneratedByOldBindingsGenerator]
@@ -5377,6 +5629,7 @@ namespace UnityEditor
 			}
 			set
 			{
+				Debug.LogWarning("PlayerSettings.applicationIdentifier only changes the identifier for the currently active platform. Please use SetApplicationIdentifier to set it for any platform");
 				PlayerSettings.SetApplicationIdentifier(EditorUserBuildSettings.selectedBuildTargetGroup, value);
 			}
 		}
@@ -5616,6 +5869,16 @@ namespace UnityEditor
 		}
 
 		public static extern bool muteOtherAudioSources
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		internal static extern bool playModeTestRunnerEnabled
 		{
 			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
@@ -5935,7 +6198,7 @@ namespace UnityEditor
 
 		internal static string GetPlatformName(BuildTargetGroup targetGroup)
 		{
-			BuildPlayerWindow.BuildPlatform buildPlatform = BuildPlayerWindow.GetValidPlatforms().Find((BuildPlayerWindow.BuildPlatform p) => p.targetGroup == targetGroup);
+			BuildPlatform buildPlatform = BuildPlatforms.instance.GetValidPlatforms().Find((BuildPlatform p) => p.targetGroup == targetGroup);
 			return (buildPlatform != null) ? buildPlatform.name : string.Empty;
 		}
 

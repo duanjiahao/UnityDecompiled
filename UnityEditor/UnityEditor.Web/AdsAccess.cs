@@ -8,6 +8,12 @@ namespace UnityEditor.Web
 	[InitializeOnLoad]
 	internal class AdsAccess : CloudServiceAccess
 	{
+		[Serializable]
+		public struct AdsServiceState
+		{
+			public bool ads;
+		}
+
 		private const string kServiceName = "Unity Ads";
 
 		private const string kServiceDisplayName = "Ads";
@@ -37,7 +43,14 @@ namespace UnityEditor.Web
 
 		public override void EnableService(bool enabled)
 		{
-			AdvertisementSettings.enabled = enabled;
+			if (AdvertisementSettings.enabled != enabled)
+			{
+				AdvertisementSettings.enabled = enabled;
+				EditorAnalytics.SendEventServiceInfo(new AdsAccess.AdsServiceState
+				{
+					ads = enabled
+				});
+			}
 		}
 
 		public override void OnProjectUnbound()
@@ -99,6 +112,16 @@ namespace UnityEditor.Web
 		public void SetAndroidGameId(string value)
 		{
 			AdvertisementSettings.SetGameId(RuntimePlatform.Android, value);
+		}
+
+		public string GetGameId(string platformName)
+		{
+			return AdvertisementSettings.GetPlatformGameId(platformName);
+		}
+
+		public void SetGameId(string platformName, string value)
+		{
+			AdvertisementSettings.SetPlatformGameId(platformName, value);
 		}
 
 		public bool IsTestModeEnabled()

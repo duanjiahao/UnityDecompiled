@@ -41,6 +41,9 @@ namespace UnityEditor
 		private string[] m_VersionControlStates = new string[0];
 
 		[SerializeField]
+		private string[] m_SoftLockControlStates = new string[0];
+
+		[SerializeField]
 		private int[] m_ReferencingInstanceIDs = new int[0];
 
 		[SerializeField]
@@ -100,6 +103,18 @@ namespace UnityEditor
 			set
 			{
 				this.m_VersionControlStates = value;
+			}
+		}
+
+		public string[] softLockControlStates
+		{
+			get
+			{
+				return this.m_SoftLockControlStates;
+			}
+			set
+			{
+				this.m_SoftLockControlStates = value;
 			}
 		}
 
@@ -184,6 +199,7 @@ namespace UnityEditor
 			this.m_ReferencingInstanceIDs = new int[0];
 			this.m_ScenePaths = new string[0];
 			this.m_VersionControlStates = new string[0];
+			this.m_SoftLockControlStates = new string[0];
 			this.m_ShowAllHits = false;
 		}
 
@@ -194,7 +210,7 @@ namespace UnityEditor
 
 		public SearchFilter.State GetState()
 		{
-			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmpty<string>(this.m_AssetLabels) || !this.IsNullOrEmpty<string>(this.m_ClassNames) || !this.IsNullOrEmpty<string>(this.m_AssetBundleNames) || !this.IsNullOrEmpty<int>(this.m_ReferencingInstanceIDs) || !this.IsNullOrEmpty<string>(this.m_VersionControlStates);
+			bool flag = !string.IsNullOrEmpty(this.m_NameFilter) || !this.IsNullOrEmpty<string>(this.m_AssetLabels) || !this.IsNullOrEmpty<string>(this.m_ClassNames) || !this.IsNullOrEmpty<string>(this.m_AssetBundleNames) || !this.IsNullOrEmpty<int>(this.m_ReferencingInstanceIDs) || !this.IsNullOrEmpty<string>(this.m_VersionControlStates) || !this.IsNullOrEmpty<string>(this.m_SoftLockControlStates);
 			bool flag2 = !this.IsNullOrEmpty<string>(this.m_Folders);
 			SearchFilter.State result;
 			if (flag)
@@ -252,6 +268,11 @@ namespace UnityEditor
 				this.m_VersionControlStates = newFilter.m_VersionControlStates;
 				result = true;
 			}
+			if (newFilter.m_SoftLockControlStates != this.m_SoftLockControlStates)
+			{
+				this.m_SoftLockControlStates = newFilter.m_SoftLockControlStates;
+				result = true;
+			}
 			if (newFilter.m_AssetLabels != this.m_AssetLabels)
 			{
 				this.m_AssetLabels = newFilter.m_AssetLabels;
@@ -296,6 +317,10 @@ namespace UnityEditor
 			if (this.m_VersionControlStates != null && this.m_VersionControlStates.Length > 0)
 			{
 				text = text + "[VersionStates: " + this.m_VersionControlStates[0] + "]";
+			}
+			if (this.m_SoftLockControlStates != null && this.m_SoftLockControlStates.Length > 0)
+			{
+				text = text + "[SoftLockStates: " + this.m_SoftLockControlStates[0] + "]";
 			}
 			if (this.m_AssetBundleNames != null && this.m_AssetBundleNames.Length > 0)
 			{
@@ -350,6 +375,7 @@ namespace UnityEditor
 			this.AddToString<string>("t:", this.m_ClassNames, ref text);
 			this.AddToString<string>("l:", this.m_AssetLabels, ref text);
 			this.AddToString<string>("v:", this.m_VersionControlStates, ref text);
+			this.AddToString<string>("s:", this.m_SoftLockControlStates, ref text);
 			this.AddToString<string>("b:", this.m_AssetBundleNames, ref text);
 			return text;
 		}

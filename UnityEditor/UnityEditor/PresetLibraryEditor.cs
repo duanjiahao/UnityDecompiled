@@ -871,7 +871,6 @@ namespace UnityEditor
 									{
 										DragAndDrop.PrepareStartDrag();
 										DragAndDrop.SetGenericData("DraggingPreset", j);
-										DragAndDrop.objectReferences = new UnityEngine.Object[0];
 										DragAndDrop.StartDrag("");
 										this.m_DragState.draggingIndex = j;
 										this.m_DragState.dragUponIndex = j;

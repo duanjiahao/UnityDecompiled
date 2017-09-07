@@ -7,6 +7,12 @@ namespace UnityEditor.Web
 	[InitializeOnLoad]
 	internal class AnalyticsAccess : CloudServiceAccess
 	{
+		[Serializable]
+		public struct AnalyticsServiceState
+		{
+			public bool analytics;
+		}
+
 		private const string kServiceName = "Analytics";
 
 		private const string kServiceDisplayName = "Analytics";
@@ -36,7 +42,14 @@ namespace UnityEditor.Web
 
 		public override void EnableService(bool enabled)
 		{
-			AnalyticsSettings.enabled = enabled;
+			if (AnalyticsSettings.enabled != enabled)
+			{
+				AnalyticsSettings.enabled = enabled;
+				EditorAnalytics.SendEventServiceInfo(new AnalyticsAccess.AnalyticsServiceState
+				{
+					analytics = enabled
+				});
+			}
 		}
 
 		public bool IsTestModeEnabled()

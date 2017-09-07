@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEditorInternal;
 using UnityEngine;
 
 namespace UnityEditor
 {
 	[CustomEditor(typeof(MonoImporter))]
-	internal class MonoScriptImporterInspector : AssetImporterInspector
+	internal class MonoScriptImporterInspector : AssetImporterEditor
 	{
 		private const int m_RowHeight = 16;
 

@@ -969,7 +969,7 @@ namespace UnityEditor
 				while (enumerator.MoveNext())
 				{
 					Transform transform = (Transform)enumerator.Current;
-					Transform transform2 = source.FindChild(transform.name);
+					Transform transform2 = source.Find(transform.name);
 					if (transform2)
 					{
 						AvatarSetupTool.CopyPose(transform, transform2);

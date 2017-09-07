@@ -18,18 +18,9 @@ namespace UnityEngine.Networking
 			return this.InternalGetData();
 		}
 
-		protected override string GetText()
-		{
-			return this.InternalGetText();
-		}
-
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern byte[] InternalGetData();
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern string InternalGetText();
 
 		public static string GetContent(UnityWebRequest www)
 		{

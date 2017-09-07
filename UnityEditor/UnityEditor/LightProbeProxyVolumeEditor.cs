@@ -156,9 +156,7 @@ namespace UnityEditor
 
 		internal static Color kGizmoLightProbeProxyVolumeHandleColor = new Color(1f, 0.8980392f, 0.6666667f, 1f);
 
-		private static int s_HandleControlIDHint = typeof(LightProbeProxyVolumeEditor).Name.GetHashCode();
-
-		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle(LightProbeProxyVolumeEditor.s_HandleControlIDHint);
+		private BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
 
 		private AnimBool m_ShowBoundingBoxOptions = new AnimBool();
 

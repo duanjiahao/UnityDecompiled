@@ -657,7 +657,7 @@ internal class ParticleSystemCurveEditor
 				for (int i = 0; i < selectedCurves.Count; i++)
 				{
 					CurveWrapper curveWrapperFromSelection = this.m_CurveEditor.GetCurveWrapperFromSelection(selectedCurves[i]);
-					num += ((!AnimationUtility.IsValidPolynomialCurve(curveWrapperFromSelection.curve)) ? 0 : 1);
+					num += ((!AnimationUtility.IsValidOptimizedPolynomialCurve(curveWrapperFromSelection.curve)) ? 0 : 1);
 				}
 				if (selectedCurves.Count != num)
 				{
@@ -666,7 +666,7 @@ internal class ParticleSystemCurveEditor
 						for (int j = 0; j < selectedCurves.Count; j++)
 						{
 							CurveWrapper curveWrapperFromSelection2 = this.m_CurveEditor.GetCurveWrapperFromSelection(selectedCurves[j]);
-							if (!AnimationUtility.IsValidPolynomialCurve(curveWrapperFromSelection2.curve))
+							if (!AnimationUtility.IsValidOptimizedPolynomialCurve(curveWrapperFromSelection2.curve))
 							{
 								curveWrapperFromSelection2.curve.preWrapMode = WrapMode.Once;
 								curveWrapperFromSelection2.curve.postWrapMode = WrapMode.Once;
@@ -682,7 +682,7 @@ internal class ParticleSystemCurveEditor
 			else if (this.m_CurveEditor.GetTopMostCurveID(out curveID))
 			{
 				CurveWrapper curveWrapperFromID = this.m_CurveEditor.GetCurveWrapperFromID(curveID);
-				if (!AnimationUtility.IsValidPolynomialCurve(curveWrapperFromID.curve))
+				if (!AnimationUtility.IsValidOptimizedPolynomialCurve(curveWrapperFromID.curve))
 				{
 					if (GUI.Button(position, ParticleSystemCurveEditor.s_Styles.optimizeCurveText, ParticleSystemCurveEditor.s_Styles.plus))
 					{

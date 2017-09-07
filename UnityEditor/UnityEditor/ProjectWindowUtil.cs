@@ -261,7 +261,6 @@ namespace UnityEditor
 			if (ProjectWindowUtil.IsFavoritesItem(draggedInstanceID))
 			{
 				DragAndDrop.SetGenericData(ProjectWindowUtil.k_DraggingFavoriteGenericData, draggedInstanceID);
-				DragAndDrop.objectReferences = new UnityEngine.Object[0];
 			}
 			else
 			{
@@ -452,7 +451,7 @@ namespace UnityEditor
 			{
 				UnityEngine.Object @object = array[i];
 				AnimationClip animationClip = @object as AnimationClip;
-				if (animationClip == null || (animationClip.hideFlags & HideFlags.NotEditable) == HideFlags.None || !AssetDatabase.Contains(animationClip))
+				if (animationClip == null || !AssetDatabase.Contains(animationClip))
 				{
 					flag = false;
 				}
@@ -466,7 +465,7 @@ namespace UnityEditor
 				{
 					UnityEngine.Object object2 = array2[j];
 					AnimationClip animationClip2 = object2 as AnimationClip;
-					if (animationClip2 != null && (animationClip2.hideFlags & HideFlags.NotEditable) != HideFlags.None)
+					if (animationClip2 != null)
 					{
 						string path = AssetDatabase.GetAssetPath(object2);
 						path = Path.Combine(Path.GetDirectoryName(path), animationClip2.name) + ".anim";

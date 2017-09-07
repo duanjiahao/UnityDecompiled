@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Profiling;
 
 namespace UnityEditor
 {
-	internal class ModelImporterClipEditor : AssetImporterInspector
+	internal class ModelImporterClipEditor : BaseAssetImporterTabUI
 	{
 		private class Styles
 		{
@@ -203,7 +204,11 @@ namespace UnityEditor
 			}
 		}
 
-		public void OnEnable()
+		public ModelImporterClipEditor(AssetImporterEditor panelContainer) : base(panelContainer)
+		{
+		}
+
+		internal override void OnEnable()
 		{
 			this.m_ClipAnimations = base.serializedObject.FindProperty("m_ClipAnimations");
 			this.m_AnimationType = base.serializedObject.FindProperty("m_AnimationType");
@@ -318,12 +323,12 @@ namespace UnityEditor
 			}
 		}
 
-		public void OnDestroy()
+		internal override void OnDestroy()
 		{
 			this.DestroyEditorsAndData();
 		}
 
-		public override void OnDisable()
+		internal override void OnDisable()
 		{
 			this.DestroyEditorsAndData();
 			base.OnDisable();
@@ -419,7 +424,7 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_ImportAnimation, ModelImporterClipEditor.styles.ImportAnimations, new GUILayoutOption[0]);
 			if (this.m_ImportAnimation.boolValue && !this.m_ImportAnimation.hasMultipleDifferentValues)
 			{
-				bool flag = base.targets.Length == 1 && this.singleImporter.importedTakeInfos.Length == 0;
+				bool flag = base.targets.Length == 1 && this.singleImporter.importedTakeInfos.Length == 0 && this.singleImporter.animationType != ModelImporterAnimationType.None;
 				if (this.IsDeprecatedMultiAnimationRootImport())
 				{
 					EditorGUILayout.HelpBox("Animation data was imported using a deprecated Generation option in the Rig tab. Please switch to a non-deprecated import mode in the Rig tab to be able to edit the animation import settings.", MessageType.Info);
@@ -445,18 +450,17 @@ namespace UnityEditor
 				}
 				else if (this.m_AnimationType.hasMultipleDifferentValues)
 				{
-					EditorGUILayout.HelpBox("The rigs of the selected models have different animation types.", MessageType.Info);
+					EditorGUILayout.HelpBox("The rigs of the selected models have different Animation Types.", MessageType.Info);
 				}
 				else if (this.animationType == ModelImporterAnimationType.None)
 				{
-					EditorGUILayout.HelpBox("The rigs is not setup to handle animation. Edit the settings in the Rig tab.", MessageType.Info);
+					EditorGUILayout.HelpBox("The rigs of the selected models are not setup to handle animation. Change the Animation Type in the Rig tab and click Apply.", MessageType.Info);
 				}
 				else if (this.m_ImportAnimation.boolValue && !this.m_ImportAnimation.hasMultipleDifferentValues)
 				{
 					this.AnimationClipGUI();
 				}
 			}
-			base.ApplyRevertGUI();
 		}
 
 		private void AnimationSettings()
@@ -549,12 +553,12 @@ namespace UnityEditor
 			}
 			if (this.m_MaskInspector)
 			{
-				UnityEngine.Object.DestroyImmediate(this.m_MaskInspector);
+				this.DestroyImmediate(this.m_MaskInspector);
 				this.m_MaskInspector = null;
 			}
 			if (this.m_Mask)
 			{
-				UnityEngine.Object.DestroyImmediate(this.m_Mask);
+				this.DestroyImmediate(this.m_Mask);
 				this.m_Mask = null;
 			}
 		}
@@ -901,7 +905,6 @@ namespace UnityEditor
 			animationClipInfoAtIndex.mirror = false;
 			animationClipInfoAtIndex.maskType = ClipAnimationMaskType.None;
 			this.SetBodyMaskDefaultValues(animationClipInfoAtIndex);
-			this.SetTransformMaskFromReference(animationClipInfoAtIndex);
 			animationClipInfoAtIndex.ClearEvents();
 			animationClipInfoAtIndex.ClearCurves();
 		}

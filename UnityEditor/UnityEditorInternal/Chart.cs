@@ -816,7 +816,7 @@ namespace UnityEditorInternal
 			}
 		}
 
-		private void SaveChartsSettingsEnabled(ChartData cdata)
+		protected void SaveChartsSettingsEnabled(ChartData cdata)
 		{
 			string text = string.Empty;
 			for (int i = 0; i < cdata.charts.Length; i++)

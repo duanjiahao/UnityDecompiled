@@ -4,6 +4,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	public sealed class CapsuleCollider : Collider
 	{
 		public Vector3 center

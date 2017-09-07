@@ -115,7 +115,7 @@ namespace UnityEngine.SceneManagement
 			{
 				throw new ArgumentException("The scene is invalid.");
 			}
-			if (!this.isLoaded)
+			if (!Application.isPlaying && !this.isLoaded)
 			{
 				throw new ArgumentException("The scene is not loaded.");
 			}

@@ -803,7 +803,7 @@ namespace UnityEditor
 						Rect position = new Rect(0f, 0f, rect.width, rect.height);
 						position.x = num4;
 						position.width = num5 - num4;
-						if (position.width != 0f)
+						if (position.width > 1f)
 						{
 							GUI.Box(position, "", EditorGUIExt.ms_Styles.selectionRect);
 						}

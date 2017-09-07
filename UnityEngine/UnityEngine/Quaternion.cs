@@ -16,6 +16,8 @@ namespace UnityEngine
 
 		public float w;
 
+		private static readonly Quaternion identityQuaternion = new Quaternion(0f, 0f, 0f, 1f);
+
 		public const float kEpsilon = 1E-06f;
 
 		public Vector3 eulerAngles
@@ -80,7 +82,7 @@ namespace UnityEngine
 		{
 			get
 			{
-				return new Quaternion(0f, 0f, 0f, 1f);
+				return Quaternion.identityQuaternion;
 			}
 		}
 
@@ -348,12 +350,12 @@ namespace UnityEngine
 			this = Quaternion.AxisAngle(axis, angle);
 		}
 
-		public void Set(float new_x, float new_y, float new_z, float new_w)
+		public void Set(float newX, float newY, float newZ, float newW)
 		{
-			this.x = new_x;
-			this.y = new_y;
-			this.z = new_z;
-			this.w = new_w;
+			this.x = newX;
+			this.y = newY;
+			this.z = newZ;
+			this.w = newW;
 		}
 
 		public static Quaternion operator *(Quaternion lhs, Quaternion rhs)

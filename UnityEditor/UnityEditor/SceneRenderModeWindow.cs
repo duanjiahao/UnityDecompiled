@@ -37,6 +37,7 @@ namespace UnityEditor
 				DrawCameraMode.AlphaChannel,
 				DrawCameraMode.Overdraw,
 				DrawCameraMode.Mipmaps,
+				DrawCameraMode.SpriteMask,
 				DrawCameraMode.DeferredDiffuse,
 				DrawCameraMode.DeferredSpecular,
 				DrawCameraMode.DeferredSmoothness,
@@ -94,7 +95,8 @@ namespace UnityEditor
 				EditorGUIUtility.TextContent("Directionality"),
 				EditorGUIUtility.TextContent("Texel Validity"),
 				EditorGUIUtility.TextContent("Lightmap Indices"),
-				EditorGUIUtility.TextContent("UV Charts")
+				EditorGUIUtility.TextContent("UV Charts"),
+				EditorGUIUtility.TextContent("Sprite Mask")
 			};
 		}
 
@@ -246,7 +248,7 @@ namespace UnityEditor
 
 		private bool IsModeDisabled(DrawCameraMode mode)
 		{
-			return (mode == DrawCameraMode.BakedLightmap && !this.m_EnableBakedGI.boolValue) || (mode == DrawCameraMode.BakedAlbedo && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedEmissive && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedTexelValidity && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode >= DrawCameraMode.RealtimeCharting && mode < DrawCameraMode.BakedLightmap && !this.m_EnableRealtimeGI.boolValue && (!this.m_EnableBakedGI.boolValue || (this.m_EnableBakedGI.boolValue && this.m_PathTracerBackend)));
+			return (mode == DrawCameraMode.BakedLightmap && !this.m_EnableBakedGI.boolValue) || (mode == DrawCameraMode.BakedAlbedo && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedEmissive && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedTexelValidity && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode == DrawCameraMode.BakedCharting && (!this.m_EnableBakedGI.boolValue || !this.m_PathTracerBackend)) || (mode >= DrawCameraMode.RealtimeCharting && mode < DrawCameraMode.BakedLightmap && !this.m_EnableRealtimeGI.boolValue && (!this.m_EnableBakedGI.boolValue || (this.m_EnableBakedGI.boolValue && this.m_PathTracerBackend)));
 		}
 
 		private void DoResolutionToggle(Rect rect, bool disabled)

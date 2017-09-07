@@ -37,7 +37,7 @@ namespace UnityEditorInternal.VersionControl
 				if (Event.current.type == EventType.Repaint)
 				{
 					string externalVersionControl = EditorSettings.externalVersionControl;
-					if (!(externalVersionControl == ExternalVersionControl.Disabled) && !(externalVersionControl == ExternalVersionControl.AutoDetect) && !(externalVersionControl == ExternalVersionControl.Generic) && !(externalVersionControl == ExternalVersionControl.AssetServer))
+					if (!(externalVersionControl == ExternalVersionControl.Disabled) && !(externalVersionControl == ExternalVersionControl.AutoDetect) && !(externalVersionControl == ExternalVersionControl.Generic))
 					{
 						Overlay.DrawOverlays(asset, null, itemRect);
 					}
@@ -52,7 +52,7 @@ namespace UnityEditorInternal.VersionControl
 				if (Event.current.type == EventType.Repaint)
 				{
 					string externalVersionControl = EditorSettings.externalVersionControl;
-					if (!(externalVersionControl == ExternalVersionControl.Disabled) && !(externalVersionControl == ExternalVersionControl.AutoDetect) && !(externalVersionControl == ExternalVersionControl.Generic) && !(externalVersionControl == ExternalVersionControl.AssetServer))
+					if (!(externalVersionControl == ExternalVersionControl.Disabled) && !(externalVersionControl == ExternalVersionControl.AutoDetect) && !(externalVersionControl == ExternalVersionControl.Generic))
 					{
 						Overlay.DrawOverlays(asset, metaAsset, itemRect);
 					}

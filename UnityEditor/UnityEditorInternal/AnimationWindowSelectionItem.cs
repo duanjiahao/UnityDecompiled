@@ -160,11 +160,19 @@ namespace UnityEditorInternal
 			}
 		}
 
-		public virtual bool canRecord
+		public virtual bool canPreview
 		{
 			get
 			{
 				return this.rootGameObject != null && !this.objectIsOptimized;
+			}
+		}
+
+		public virtual bool canRecord
+		{
+			get
+			{
+				return this.animationIsEditable && this.canPreview;
 			}
 		}
 

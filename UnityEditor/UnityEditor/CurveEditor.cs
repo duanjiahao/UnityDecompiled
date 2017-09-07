@@ -730,18 +730,6 @@ namespace UnityEditor
 			}
 		}
 
-		private void UpdateTangentsFromSelection()
-		{
-			foreach (CurveSelection current in this.selectedCurves)
-			{
-				AnimationCurve curveFromSelection = this.GetCurveFromSelection(current);
-				if (curveFromSelection != null)
-				{
-					AnimationUtility.UpdateTangentsFromModeSurrounding(curveFromSelection, current.key);
-				}
-			}
-		}
-
 		private void SyncSelection()
 		{
 			this.Init();
@@ -1430,10 +1418,10 @@ namespace UnityEditor
 				if (keyframe.selected != CurveWrapper.SelectionMode.None)
 				{
 					CurveEditor.SavedCurve.SavedKeyFrame savedKeyFrame = keyframe.Clone();
-					Vector3 v = new Vector3(savedKeyFrame.key.time, savedKeyFrame.key.value, 0f);
-					v = matrix.MultiplyPoint3x4(v);
-					v.x = this.SnapTime(v.x);
-					savedKeyFrame.key.time = Mathf.Clamp(v.x, this.hRangeMin, this.hRangeMax);
+					Vector3 point = new Vector3(savedKeyFrame.key.time, savedKeyFrame.key.value, 0f);
+					point = matrix.MultiplyPoint3x4(point);
+					point.x = this.SnapTime(point.x);
+					savedKeyFrame.key.time = Mathf.Clamp(point.x, this.hRangeMin, this.hRangeMax);
 					if (flipX)
 					{
 						savedKeyFrame.key.inTangent = ((keyframe.key.outTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-keyframe.key.outTangent));
@@ -1441,7 +1429,7 @@ namespace UnityEditor
 					}
 					if (savedKeyFrame.selected == CurveWrapper.SelectionMode.Selected)
 					{
-						savedKeyFrame.key.value = this.ClampVerticalValue(v.y, curve.curveId);
+						savedKeyFrame.key.value = this.ClampVerticalValue(point.y, curve.curveId);
 						if (flipY)
 						{
 							savedKeyFrame.key.inTangent = ((savedKeyFrame.key.inTangent == float.PositiveInfinity) ? float.PositiveInfinity : (-savedKeyFrame.key.inTangent));
@@ -1475,9 +1463,9 @@ namespace UnityEditor
 				CurveEditor.SavedCurve.SavedKeyFrame result;
 				if (keyframe.selected != CurveWrapper.SelectionMode.None)
 				{
-					Vector3 v = new Vector3(keyframe.key.time, 0f, 0f);
-					v = matrix.MultiplyPoint3x4(v);
-					num = v.x;
+					Vector3 point = new Vector3(keyframe.key.time, 0f, 0f);
+					point = matrix.MultiplyPoint3x4(point);
+					num = point.x;
 					CurveEditor.SavedCurve.SavedKeyFrame savedKeyFrame = keyframe.Clone();
 					savedKeyFrame.key.time = this.SnapTime(Mathf.Clamp(num, this.hRangeMin, this.hRangeMax));
 					if (flipX)
@@ -1491,9 +1479,9 @@ namespace UnityEditor
 				{
 					if (keyframe.key.time > t2)
 					{
-						Vector3 v2 = new Vector3((!flipX) ? t2 : t1, 0f, 0f);
-						v2 = matrix.MultiplyPoint3x4(v2);
-						float num2 = v2.x - t2;
+						Vector3 point2 = new Vector3((!flipX) ? t2 : t1, 0f, 0f);
+						point2 = matrix.MultiplyPoint3x4(point2);
+						float num2 = point2.x - t2;
 						if (num2 > 0f)
 						{
 							num = keyframe.key.time + num2;
@@ -1501,9 +1489,9 @@ namespace UnityEditor
 					}
 					else if (keyframe.key.time < t1)
 					{
-						Vector3 v3 = new Vector3((!flipX) ? t1 : t2, 0f, 0f);
-						v3 = matrix.MultiplyPoint3x4(v3);
-						float num3 = v3.x - t1;
+						Vector3 point3 = new Vector3((!flipX) ? t1 : t2, 0f, 0f);
+						point3 = matrix.MultiplyPoint3x4(point3);
+						float num3 = point3.x - t1;
 						if (num3 < 0f)
 						{
 							num = keyframe.key.time + num3;
@@ -1573,11 +1561,11 @@ namespace UnityEditor
 							num++;
 						}
 						curveWrapperFromID.curve.keys = array;
+						AnimationUtility.UpdateTangentsFromMode(curveWrapperFromID.curve);
 						curveWrapperFromID.changed = true;
 					}
 				}
 				this.selectedCurves = list;
-				this.UpdateTangentsFromSelection();
 			}
 		}
 
@@ -3056,15 +3044,18 @@ namespace UnityEditor
 							AnimationCurve curve = curveWrapperFromSelection.curve;
 							if (curve != null)
 							{
-								if (this.IsLeftTangentEditable(curveSelection) && this.GetKeyframeFromSelection(curveSelection).time != curve.keys[0].time)
+								if (curve.length != 0)
 								{
-									Vector2 position2 = this.GetPosition(new CurveSelection(curveSelection.curveID, curveSelection.key, CurveSelection.SelectionType.InTangent));
-									this.DrawCurveLine(curveWrapperFromSelection, position2, position);
-								}
-								if (this.IsRightTangentEditable(curveSelection) && this.GetKeyframeFromSelection(curveSelection).time != curve.keys[curve.keys.Length - 1].time)
-								{
-									Vector2 position3 = this.GetPosition(new CurveSelection(curveSelection.curveID, curveSelection.key, CurveSelection.SelectionType.OutTangent));
-									this.DrawCurveLine(curveWrapperFromSelection, position, position3);
+									if (this.IsLeftTangentEditable(curveSelection) && this.GetKeyframeFromSelection(curveSelection).time != curve.keys[0].time)
+									{
+										Vector2 position2 = this.GetPosition(new CurveSelection(curveSelection.curveID, curveSelection.key, CurveSelection.SelectionType.InTangent));
+										this.DrawCurveLine(curveWrapperFromSelection, position2, position);
+									}
+									if (this.IsRightTangentEditable(curveSelection) && this.GetKeyframeFromSelection(curveSelection).time != curve.keys[curve.keys.Length - 1].time)
+									{
+										Vector2 position3 = this.GetPosition(new CurveSelection(curveSelection.curveID, curveSelection.key, CurveSelection.SelectionType.OutTangent));
+										this.DrawCurveLine(curveWrapperFromSelection, position, position3);
+									}
 								}
 							}
 						}
@@ -3082,15 +3073,21 @@ namespace UnityEditor
 						if (curveWrapperFromSelection2 != null)
 						{
 							AnimationCurve curve2 = curveWrapperFromSelection2.curve;
-							if (this.IsLeftTangentEditable(curveSelection2) && this.GetKeyframeFromSelection(curveSelection2).time != curve2.keys[0].time)
+							if (curve2 != null)
 							{
-								Vector2 viewPos = this.DrawingToOffsetViewTransformPoint(curveWrapperFromSelection2, this.GetPosition(new CurveSelection(curveSelection2.curveID, curveSelection2.key, CurveSelection.SelectionType.InTangent)));
-								this.DrawPoint(viewPos, CurveWrapper.SelectionMode.None);
-							}
-							if (this.IsRightTangentEditable(curveSelection2) && this.GetKeyframeFromSelection(curveSelection2).time != curve2.keys[curve2.keys.Length - 1].time)
-							{
-								Vector2 viewPos2 = this.DrawingToOffsetViewTransformPoint(curveWrapperFromSelection2, this.GetPosition(new CurveSelection(curveSelection2.curveID, curveSelection2.key, CurveSelection.SelectionType.OutTangent)));
-								this.DrawPoint(viewPos2, CurveWrapper.SelectionMode.None);
+								if (curve2.length != 0)
+								{
+									if (this.IsLeftTangentEditable(curveSelection2) && this.GetKeyframeFromSelection(curveSelection2).time != curve2.keys[0].time)
+									{
+										Vector2 viewPos = this.DrawingToOffsetViewTransformPoint(curveWrapperFromSelection2, this.GetPosition(new CurveSelection(curveSelection2.curveID, curveSelection2.key, CurveSelection.SelectionType.InTangent)));
+										this.DrawPoint(viewPos, CurveWrapper.SelectionMode.None);
+									}
+									if (this.IsRightTangentEditable(curveSelection2) && this.GetKeyframeFromSelection(curveSelection2).time != curve2.keys[curve2.keys.Length - 1].time)
+									{
+										Vector2 viewPos2 = this.DrawingToOffsetViewTransformPoint(curveWrapperFromSelection2, this.GetPosition(new CurveSelection(curveSelection2.curveID, curveSelection2.key, CurveSelection.SelectionType.OutTangent)));
+										this.DrawPoint(viewPos2, CurveWrapper.SelectionMode.None);
+									}
+								}
 							}
 						}
 					}
@@ -3166,10 +3163,10 @@ namespace UnityEditor
 				}
 			}
 			list2.Sort();
-			Vector3 v = new Vector3(0f, maxCurve.renderer.EvaluateCurveSlow(0f), 0f);
-			Vector3 v2 = new Vector3(0f, minCurve.renderer.EvaluateCurveSlow(0f), 0f);
-			Vector3 vector = this.DrawingToOffsetViewMatrix(maxCurve).MultiplyPoint(v);
-			Vector3 vector2 = this.DrawingToOffsetViewMatrix(minCurve).MultiplyPoint(v2);
+			Vector3 point = new Vector3(0f, maxCurve.renderer.EvaluateCurveSlow(0f), 0f);
+			Vector3 point2 = new Vector3(0f, minCurve.renderer.EvaluateCurveSlow(0f), 0f);
+			Vector3 vector = this.DrawingToOffsetViewMatrix(maxCurve).MultiplyPoint(point);
+			Vector3 vector2 = this.DrawingToOffsetViewMatrix(minCurve).MultiplyPoint(point2);
 			for (int k = 0; k < list2.Count; k++)
 			{
 				float num2 = list2[k];
@@ -3177,7 +3174,7 @@ namespace UnityEditor
 				Vector3 vector4 = new Vector3(num2, minCurve.renderer.EvaluateCurveSlow(num2), 0f);
 				Vector3 vector5 = this.DrawingToOffsetViewMatrix(maxCurve).MultiplyPoint(vector3);
 				Vector3 vector6 = this.DrawingToOffsetViewMatrix(minCurve).MultiplyPoint(vector4);
-				if (v.y >= v2.y && vector3.y >= vector4.y)
+				if (point.y >= point2.y && vector3.y >= vector4.y)
 				{
 					list.Add(vector);
 					list.Add(vector6);
@@ -3186,7 +3183,7 @@ namespace UnityEditor
 					list.Add(vector5);
 					list.Add(vector6);
 				}
-				else if (v.y <= v2.y && vector3.y <= vector4.y)
+				else if (point.y <= point2.y && vector3.y <= vector4.y)
 				{
 					list.Add(vector2);
 					list.Add(vector5);
@@ -3212,8 +3209,8 @@ namespace UnityEditor
 						Debug.Log("Error: No intersection found! There should be one...");
 					}
 				}
-				v = vector3;
-				v2 = vector4;
+				point = vector3;
+				point2 = vector4;
 				vector = vector5;
 				vector2 = vector6;
 			}

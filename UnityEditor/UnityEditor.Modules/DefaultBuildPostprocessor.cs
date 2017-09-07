@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace UnityEditor.Modules
 {
@@ -28,17 +29,16 @@ namespace UnityEditor.Modules
 
 		public virtual bool SupportsScriptsOnlyBuild()
 		{
-			return false;
-		}
-
-		public virtual string GetScriptLayoutFileFromBuild(BuildOptions options, string installPath, string fileName)
-		{
-			return string.Empty;
+			return true;
 		}
 
 		public virtual string PrepareForBuild(BuildOptions options, BuildTarget target)
 		{
 			return null;
+		}
+
+		public virtual void UpdateBootConfig(BuildTarget target, BootConfigData config, BuildOptions options)
+		{
 		}
 
 		public virtual string GetExtension(BuildTarget target, BuildOptions options)

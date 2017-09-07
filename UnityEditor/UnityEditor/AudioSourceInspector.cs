@@ -587,20 +587,23 @@ namespace UnityEditor
 				}
 			}
 			this.DrawLegend();
-			AudioSourceInspector.AudioCurveWrapper[] audioCurves = this.m_AudioCurves;
-			for (int i = 0; i < audioCurves.Length; i++)
+			if (!this.m_CurveEditor.InLiveEdit())
 			{
-				AudioSourceInspector.AudioCurveWrapper audioCurveWrapper = audioCurves[i];
-				if (this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id) != null && this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).changed)
+				AudioSourceInspector.AudioCurveWrapper[] audioCurves = this.m_AudioCurves;
+				for (int i = 0; i < audioCurves.Length; i++)
 				{
-					AnimationCurve curve = this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).curve;
-					if (curve.length > 0)
+					AudioSourceInspector.AudioCurveWrapper audioCurveWrapper = audioCurves[i];
+					if (this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id) != null && this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).changed)
 					{
-						audioCurveWrapper.curveProp.animationCurveValue = curve;
-						this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).changed = false;
-						if (audioCurveWrapper.type == AudioSourceInspector.AudioCurveType.Volume)
+						AnimationCurve curve = this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).curve;
+						if (curve.length > 0)
 						{
-							this.m_RolloffMode.enumValueIndex = 2;
+							audioCurveWrapper.curveProp.animationCurveValue = curve;
+							this.m_CurveEditor.GetCurveWrapperFromID(audioCurveWrapper.id).changed = false;
+							if (audioCurveWrapper.type == AudioSourceInspector.AudioCurveType.Volume)
+							{
+								this.m_RolloffMode.enumValueIndex = 2;
+							}
 						}
 					}
 				}
@@ -609,11 +612,14 @@ namespace UnityEditor
 
 		private void UpdateWrappersAndLegend()
 		{
-			if (this.m_RefreshCurveEditor)
+			if (!this.m_CurveEditor.InLiveEdit())
 			{
-				this.m_CurveEditor.animationCurves = this.GetCurveWrapperArray();
-				this.SyncShownCurvesToLegend(this.GetShownAudioCurves());
-				this.m_RefreshCurveEditor = false;
+				if (this.m_RefreshCurveEditor)
+				{
+					this.m_CurveEditor.animationCurves = this.GetCurveWrapperArray();
+					this.SyncShownCurvesToLegend(this.GetShownAudioCurves());
+					this.m_RefreshCurveEditor = false;
+				}
 			}
 		}
 

@@ -472,7 +472,7 @@ namespace UnityEngine
 
 		public static float Repeat(float t, float length)
 		{
-			return t - Mathf.Floor(t / length) * length;
+			return Mathf.Clamp(t - Mathf.Floor(t / length) * length, 0f, length);
 		}
 
 		public static float PingPong(float t, float length)

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using UnityEngine.Scripting;
 
@@ -14,6 +15,15 @@ namespace UnityEngine
 		private Vector3 m_Velocity;
 
 		private int m_ColliderInstanceID;
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("collider property is deprecated. Use colliderComponent instead, which supports Collider and Collider2D components (UnityUpgradable) -> colliderComponent", true)]
+		public Component collider
+		{
+			get
+			{
+				throw new InvalidOperationException("collider property is deprecated. Use colliderComponent instead, which supports Collider and Collider2D components");
+			}
+		}
 
 		public Vector3 intersection
 		{
@@ -36,15 +46,6 @@ namespace UnityEngine
 			get
 			{
 				return this.m_Velocity;
-			}
-		}
-
-		[Obsolete("collider property is deprecated. Use colliderComponent instead, which supports Collider and Collider2D components.", true)]
-		public Component collider
-		{
-			get
-			{
-				return null;
 			}
 		}
 

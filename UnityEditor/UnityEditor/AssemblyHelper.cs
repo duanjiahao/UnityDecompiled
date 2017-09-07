@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEditor.Modules;
+using UnityEditor.Scripting.ScriptCompilation;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -230,7 +232,7 @@ namespace UnityEditor
 			}, foldersToSearch, target);
 		}
 
-		private static bool IsTypeMonoBehaviourOrScriptableObject(AssemblyDefinition assembly, TypeReference type)
+		private static bool IsTypeAUserExtendedScript(AssemblyDefinition assembly, TypeReference type)
 		{
 			bool result;
 			if (type == null)
@@ -270,6 +272,11 @@ namespace UnityEditor
 						result = true;
 						return result;
 					}
+					if (type2 == typeof(ScriptedImporter) || type2.IsSubclassOf(typeof(ScriptedImporter)))
+					{
+						result = true;
+						return result;
+					}
 				}
 				TypeDefinition typeDefinition = null;
 				try
@@ -279,31 +286,45 @@ namespace UnityEditor
 				catch (AssemblyResolutionException)
 				{
 				}
-				result = (typeDefinition != null && AssemblyHelper.IsTypeMonoBehaviourOrScriptableObject(assembly, typeDefinition.BaseType));
+				result = (typeDefinition != null && AssemblyHelper.IsTypeAUserExtendedScript(assembly, typeDefinition.BaseType));
 			}
 			return result;
 		}
 
-		public static void ExtractAllClassesThatInheritMonoBehaviourAndScriptableObject(string path, out string[] classNamesArray, out string[] classNameSpacesArray)
+		public static void ExtractAllClassesThatAreUserExtendedScripts(string path, out string[] classNamesArray, out string[] classNameSpacesArray)
 		{
 			List<string> list = new List<string>();
 			List<string> list2 = new List<string>();
 			ReaderParameters readerParameters = new ReaderParameters();
 			DefaultAssemblyResolver defaultAssemblyResolver = new DefaultAssemblyResolver();
 			defaultAssemblyResolver.AddSearchDirectory(Path.GetDirectoryName(path));
+			BuildTargetGroup activeBuildTargetGroup = EditorUserBuildSettings.activeBuildTargetGroup;
+			BuildTarget activeBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+			PrecompiledAssembly[] precompiledAssemblies = InternalEditorUtility.GetPrecompiledAssemblies(true, activeBuildTargetGroup, activeBuildTarget);
+			HashSet<string> hashSet = new HashSet<string>();
+			PrecompiledAssembly[] array = precompiledAssemblies;
+			for (int i = 0; i < array.Length; i++)
+			{
+				PrecompiledAssembly precompiledAssembly = array[i];
+				hashSet.Add(Path.GetDirectoryName(precompiledAssembly.Path));
+			}
+			foreach (string current in hashSet)
+			{
+				defaultAssemblyResolver.AddSearchDirectory(current);
+			}
 			readerParameters.AssemblyResolver = defaultAssemblyResolver;
 			AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(path, readerParameters);
-			foreach (ModuleDefinition current in assemblyDefinition.Modules)
+			foreach (ModuleDefinition current2 in assemblyDefinition.Modules)
 			{
-				foreach (TypeDefinition current2 in current.Types)
+				foreach (TypeDefinition current3 in current2.Types)
 				{
-					TypeReference baseType = current2.BaseType;
+					TypeReference baseType = current3.BaseType;
 					try
 					{
-						if (AssemblyHelper.IsTypeMonoBehaviourOrScriptableObject(assemblyDefinition, baseType))
+						if (AssemblyHelper.IsTypeAUserExtendedScript(assemblyDefinition, baseType))
 						{
-							list.Add(current2.Name);
-							list2.Add(current2.Namespace);
+							list.Add(current3.Name);
+							list2.Add(current3.Namespace);
 						}
 					}
 					catch (Exception)
@@ -311,7 +332,7 @@ namespace UnityEditor
 						UnityEngine.Debug.LogError(string.Concat(new string[]
 						{
 							"Failed to extract ",
-							current2.FullName,
+							current3.FullName,
 							" class of base type ",
 							baseType.FullName,
 							" when inspecting ",

@@ -93,14 +93,6 @@ namespace UnityEditor
 			}
 		}
 
-		public bool isDeprecated
-		{
-			get
-			{
-				return (this.flags & UnityTypeFlags.Deprecated) != (UnityTypeFlags)0;
-			}
-		}
-
 		public string qualifiedName
 		{
 			get

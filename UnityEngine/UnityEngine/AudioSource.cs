@@ -471,5 +471,13 @@ namespace UnityEngine
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool GetSpatializerFloat(int index, out float value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool SetAmbisonicDecoderFloat(int index, float value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern bool GetAmbisonicDecoderFloat(int index, out float value);
 	}
 }

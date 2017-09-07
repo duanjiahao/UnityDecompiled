@@ -24,8 +24,6 @@ namespace UnityEngine.iOS
 		iPhone5C,
 		iPhone5S,
 		iPadAir1,
-		[Obsolete("Please use iPadAir1 instead.")]
-		iPad5Gen = 19,
 		iPadMini2Gen,
 		iPhone6,
 		iPhone6Plus,
@@ -40,6 +38,7 @@ namespace UnityEngine.iOS
 		iPhone7,
 		iPhone7Plus,
 		iPodTouch6Gen,
+		iPad5Gen,
 		iPhoneUnknown = 10001,
 		iPadUnknown,
 		iPodTouchUnknown

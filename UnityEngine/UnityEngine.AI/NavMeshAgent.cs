@@ -224,6 +224,16 @@ namespace UnityEngine.AI
 			}
 		}
 
+		public extern int agentTypeID
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		[Obsolete("Use areaMask instead.")]
 		public extern int walkableMask
 		{

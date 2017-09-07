@@ -9,6 +9,16 @@ namespace UnityEditor.Connect
 {
 	internal class UnityConnectServiceCollection
 	{
+		[Serializable]
+		public struct ShowServiceState
+		{
+			public string service;
+
+			public string page;
+
+			public string referrer;
+		}
+
 		public class ServiceInfo
 		{
 			public string name;
@@ -74,23 +84,6 @@ namespace UnityEditor.Connect
 		private UnityConnectServiceCollection()
 		{
 			this.m_Services = new Dictionary<string, UnityConnectServiceData>();
-			UnityConnect.instance.StateChanged += new StateChangedDelegate(this.InstanceStateChanged);
-		}
-
-		protected void InstanceStateChanged(ConnectInfo state)
-		{
-			if (this.isDrawerOpen && state.ready)
-			{
-				string actualServiceName = this.GetActualServiceName(this.m_CurrentServiceName, state);
-				if (actualServiceName != this.m_CurrentServiceName || (UnityConnectServiceCollection.s_UnityConnectEditorWindow != null && this.m_Services[actualServiceName].serviceUrl != UnityConnectServiceCollection.s_UnityConnectEditorWindow.currentUrl))
-				{
-					bool flag = UnityConnectServiceCollection.s_UnityConnectEditorWindow && UnityConnectServiceCollection.s_UnityConnectEditorWindow.webView && UnityConnectServiceCollection.s_UnityConnectEditorWindow.webView.HasApplicationFocus();
-					if (flag)
-					{
-						this.ShowService(actualServiceName, flag);
-					}
-				}
-			}
 		}
 
 		private void Init()
@@ -98,7 +91,7 @@ namespace UnityEditor.Connect
 			JSProxyMgr.GetInstance().AddGlobalObject("UnityConnectEditor", this);
 			if (Application.HasARGV("createProject"))
 			{
-				this.ShowService("Hub", true);
+				this.ShowService("Hub", true, "init_create_project");
 			}
 		}
 
@@ -177,12 +170,12 @@ namespace UnityEditor.Connect
 			return this.m_Services.ContainsKey(serviceName);
 		}
 
-		public bool ShowService(string serviceName, bool forceFocus)
+		public bool ShowService(string serviceName, bool forceFocus, string atReferrer)
 		{
-			return this.ShowService(serviceName, "", forceFocus);
+			return this.ShowService(serviceName, "", forceFocus, atReferrer);
 		}
 
-		public bool ShowService(string serviceName, string atPage, bool forceFocus)
+		public bool ShowService(string serviceName, string atPage, bool forceFocus, string atReferrer)
 		{
 			bool result;
 			if (!this.m_Services.ContainsKey(serviceName))
@@ -194,6 +187,12 @@ namespace UnityEditor.Connect
 				ConnectInfo connectInfo = UnityConnect.instance.connectInfo;
 				this.m_CurrentServiceName = this.GetActualServiceName(serviceName, connectInfo);
 				this.m_CurrentPageName = atPage;
+				EditorAnalytics.SendEventShowService(new UnityConnectServiceCollection.ShowServiceState
+				{
+					service = this.m_CurrentServiceName,
+					page = atPage,
+					referrer = atReferrer
+				});
 				this.EnsureDrawerIsVisible(forceFocus);
 				result = true;
 			}

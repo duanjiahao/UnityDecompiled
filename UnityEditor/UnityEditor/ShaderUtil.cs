@@ -136,7 +136,7 @@ namespace UnityEditor
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetComboCount(Shader s, bool usedBySceneOnly);
+		internal static extern ulong GetVariantCount(Shader s, bool usedBySceneOnly);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -252,10 +252,6 @@ namespace UnityEditor
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void OpenGeneratedFixedFunctionShader(Shader shader);
-
-		[GeneratedByOldBindingsGenerator]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void OpenShaderSnippets(Shader shader);
 
 		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]

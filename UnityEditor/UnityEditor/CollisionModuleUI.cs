@@ -20,6 +20,13 @@ namespace UnityEditor
 			Mode2D
 		}
 
+		private enum ForceModes
+		{
+			None,
+			Constant,
+			SizeBased
+		}
+
 		private enum PlaneVizType
 		{
 			Grid,
@@ -54,8 +61,6 @@ namespace UnityEditor
 
 			public GUIContent collidesWithDynamic = EditorGUIUtility.TextContent("Enable Dynamic Colliders|Should particles collide with dynamic objects?");
 
-			public GUIContent interiorCollisions = EditorGUIUtility.TextContent("Interior Collisions|Should particles collide with the insides of objects?");
-
 			public GUIContent maxCollisionShapes = EditorGUIUtility.TextContent("Max Collision Shapes|How many collision shapes can be considered for particle collisions. Excess shapes will be ignored. Terrains take priority.");
 
 			public GUIContent quality = EditorGUIUtility.TextContent("Collision Quality|Quality of world collisions. Medium and low quality are approximate and may leak particles.");
@@ -71,7 +76,17 @@ namespace UnityEditor
 
 			public GUIContent collisionMessages = EditorGUIUtility.TextContent("Send Collision Messages|Send collision callback messages.");
 
-			public GUIContent collisionMode = EditorGUIUtility.TextContent("Collision Mode|Use 3D Physics or 2D Physics.");
+			public GUIContent collisionType = EditorGUIUtility.TextContent("Type|Collide with a list of Planes, or the Physics World.");
+
+			public GUIContent collisionMode = EditorGUIUtility.TextContent("Mode|Use 3D Physics or 2D Physics.");
+
+			public GUIContent colliderForce = EditorGUIUtility.TextContent("Collider Force|Control the strength of particle forces on colliders.");
+
+			public GUIContent multiplyColliderForceByCollisionAngle = EditorGUIUtility.TextContent("Multiply by Collision Angle|Should the force be proportional to the angle of the particle collision?  A particle collision directly along the collision normal produces all the specified force whilst collisions away from the collision normal produce less force.");
+
+			public GUIContent multiplyColliderForceByParticleSpeed = EditorGUIUtility.TextContent("Multiply by Particle Speed|Should the force be proportional to the particle speed?");
+
+			public GUIContent multiplyColliderForceByParticleSize = EditorGUIUtility.TextContent("Multiply by Particle Size|Should the force be proportional to the particle size?");
 
 			public GUIContent[] toolContents = new GUIContent[]
 			{
@@ -114,8 +129,6 @@ namespace UnityEditor
 
 		private SerializedProperty m_CollidesWithDynamic;
 
-		private SerializedProperty m_InteriorCollisions;
-
 		private SerializedProperty m_MaxCollisionShapes;
 
 		private SerializedProperty m_Quality;
@@ -125,6 +138,14 @@ namespace UnityEditor
 		private SerializedProperty m_CollisionMessages;
 
 		private SerializedProperty m_CollisionMode;
+
+		private SerializedProperty m_ColliderForce;
+
+		private SerializedProperty m_MultiplyColliderForceByCollisionAngle;
+
+		private SerializedProperty m_MultiplyColliderForceByParticleSpeed;
+
+		private SerializedProperty m_MultiplyColliderForceByParticleSize;
 
 		private SerializedProperty[] m_ShownPlanes;
 
@@ -193,12 +214,15 @@ namespace UnityEditor
 				CollisionModuleUI.s_VisualizeBounds = EditorPrefs.GetBool("VisualizeBounds", false);
 				this.m_CollidesWith = base.GetProperty("collidesWith");
 				this.m_CollidesWithDynamic = base.GetProperty("collidesWithDynamic");
-				this.m_InteriorCollisions = base.GetProperty("interiorCollisions");
 				this.m_MaxCollisionShapes = base.GetProperty("maxCollisionShapes");
 				this.m_Quality = base.GetProperty("quality");
 				this.m_VoxelSize = base.GetProperty("voxelSize");
 				this.m_CollisionMessages = base.GetProperty("collisionMessages");
 				this.m_CollisionMode = base.GetProperty("collisionMode");
+				this.m_ColliderForce = base.GetProperty("colliderForce");
+				this.m_MultiplyColliderForceByCollisionAngle = base.GetProperty("multiplyColliderForceByCollisionAngle");
+				this.m_MultiplyColliderForceByParticleSpeed = base.GetProperty("multiplyColliderForceByParticleSpeed");
+				this.m_MultiplyColliderForceByParticleSize = base.GetProperty("multiplyColliderForceByParticleSize");
 				this.SyncVisualization();
 			}
 		}
@@ -244,12 +268,11 @@ namespace UnityEditor
 				"World"
 			};
 			EditorGUI.BeginChangeCheck();
-			CollisionModuleUI.CollisionTypes collisionTypes = (CollisionModuleUI.CollisionTypes)ModuleUI.GUIPopup("", this.m_Type, options, new GUILayoutOption[0]);
+			CollisionModuleUI.CollisionTypes collisionTypes = (CollisionModuleUI.CollisionTypes)ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.collisionType, this.m_Type, options, new GUILayoutOption[0]);
 			if (EditorGUI.EndChangeCheck())
 			{
 				this.SyncVisualization();
 			}
-			CollisionModuleUI.CollisionModes collisionModes = CollisionModuleUI.CollisionModes.Mode3D;
 			if (collisionTypes == CollisionModuleUI.CollisionTypes.Plane)
 			{
 				this.DoListOfPlanesGUI();
@@ -270,17 +293,11 @@ namespace UnityEditor
 			}
 			else
 			{
-				collisionModes = (CollisionModuleUI.CollisionModes)ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.collisionMode, this.m_CollisionMode, new string[]
+				ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.collisionMode, this.m_CollisionMode, new string[]
 				{
 					"3D",
 					"2D"
 				}, new GUILayoutOption[0]);
-			}
-			EditorGUI.BeginChangeCheck();
-			CollisionModuleUI.s_VisualizeBounds = ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.visualizeBounds, CollisionModuleUI.s_VisualizeBounds, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
-			{
-				EditorPrefs.SetBool("VisualizeBounds", CollisionModuleUI.s_VisualizeBounds);
 			}
 			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.dampen, this.m_Dampen, new GUILayoutOption[0]);
 			ModuleUI.GUIMinMaxCurve(CollisionModuleUI.s_Texts.bounce, this.m_Bounce, new GUILayoutOption[0]);
@@ -290,13 +307,10 @@ namespace UnityEditor
 			ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.radiusScale, this.m_RadiusScale, new GUILayoutOption[0]);
 			if (collisionTypes == CollisionModuleUI.CollisionTypes.World)
 			{
-				ModuleUI.GUILayerMask(CollisionModuleUI.s_Texts.collidesWith, this.m_CollidesWith, new GUILayoutOption[0]);
-				if (collisionModes == CollisionModuleUI.CollisionModes.Mode3D)
-				{
-					ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.interiorCollisions, this.m_InteriorCollisions, new GUILayoutOption[0]);
-				}
-				ModuleUI.GUIInt(CollisionModuleUI.s_Texts.maxCollisionShapes, this.m_MaxCollisionShapes, new GUILayoutOption[0]);
 				ModuleUI.GUIPopup(CollisionModuleUI.s_Texts.quality, this.m_Quality, CollisionModuleUI.s_Texts.qualitySettings, new GUILayoutOption[0]);
+				EditorGUI.indentLevel++;
+				ModuleUI.GUILayerMask(CollisionModuleUI.s_Texts.collidesWith, this.m_CollidesWith, new GUILayoutOption[0]);
+				ModuleUI.GUIInt(CollisionModuleUI.s_Texts.maxCollisionShapes, this.m_MaxCollisionShapes, new GUILayoutOption[0]);
 				if (this.m_Quality.intValue == 0)
 				{
 					ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.collidesWithDynamic, this.m_CollidesWithDynamic, new GUILayoutOption[0]);
@@ -305,8 +319,21 @@ namespace UnityEditor
 				{
 					ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.voxelSize, this.m_VoxelSize, new GUILayoutOption[0]);
 				}
+				EditorGUI.indentLevel--;
+				ModuleUI.GUIFloat(CollisionModuleUI.s_Texts.colliderForce, this.m_ColliderForce, new GUILayoutOption[0]);
+				EditorGUI.indentLevel++;
+				ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.multiplyColliderForceByCollisionAngle, this.m_MultiplyColliderForceByCollisionAngle, new GUILayoutOption[0]);
+				ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.multiplyColliderForceByParticleSpeed, this.m_MultiplyColliderForceByParticleSpeed, new GUILayoutOption[0]);
+				ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.multiplyColliderForceByParticleSize, this.m_MultiplyColliderForceByParticleSize, new GUILayoutOption[0]);
+				EditorGUI.indentLevel--;
 			}
 			ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.collisionMessages, this.m_CollisionMessages, new GUILayoutOption[0]);
+			EditorGUI.BeginChangeCheck();
+			CollisionModuleUI.s_VisualizeBounds = ModuleUI.GUIToggle(CollisionModuleUI.s_Texts.visualizeBounds, CollisionModuleUI.s_VisualizeBounds, new GUILayoutOption[0]);
+			if (EditorGUI.EndChangeCheck())
+			{
+				EditorPrefs.SetBool("VisualizeBounds", CollisionModuleUI.s_VisualizeBounds);
+			}
 		}
 
 		protected override void OnModuleEnable()
@@ -666,7 +693,7 @@ namespace UnityEditor
 
 		public override void UpdateCullingSupportedString(ref string text)
 		{
-			text += "\n\tCollision is enabled.";
+			text += "\nCollision module is enabled.";
 		}
 	}
 }

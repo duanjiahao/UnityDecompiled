@@ -26,7 +26,12 @@ namespace UnityEditor.IMGUI.Controls
 			}
 		}
 
+		[Obsolete("Use parameterless constructor instead.")]
 		public SphereBoundsHandle(int controlIDHint) : base(controlIDHint)
+		{
+		}
+
+		public SphereBoundsHandle()
 		{
 		}
 
@@ -46,6 +51,18 @@ namespace UnityEditor.IMGUI.Controls
 			if (flag2 && flag3)
 			{
 				Handles.DrawWireArc(base.center, Vector3.right, Vector3.forward, 360f, this.radius);
+			}
+			if (flag && !flag2 && !flag3)
+			{
+				Handles.DrawLine(Vector3.right * this.radius, Vector3.left * this.radius);
+			}
+			if (!flag && flag2 && !flag3)
+			{
+				Handles.DrawLine(Vector3.up * this.radius, Vector3.down * this.radius);
+			}
+			if (!flag && !flag2 && flag3)
+			{
+				Handles.DrawLine(Vector3.forward * this.radius, Vector3.back * this.radius);
 			}
 		}
 

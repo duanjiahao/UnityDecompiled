@@ -196,11 +196,13 @@ namespace UnityEditor
 
 		private void OnEnable()
 		{
+			AssemblyReloadEvents.beforeAssemblyReload += new AssemblyReloadEvents.AssemblyReloadCallback(base.Close);
 			base.hideFlags = HideFlags.DontSave;
 		}
 
 		private void OnDisable()
 		{
+			AssemblyReloadEvents.beforeAssemblyReload -= new AssemblyReloadEvents.AssemblyReloadCallback(base.Close);
 			foreach (MonoScript current in this.m_MonoScriptIconsChanged)
 			{
 				MonoImporter.CopyMonoScriptIconToImporters(current);

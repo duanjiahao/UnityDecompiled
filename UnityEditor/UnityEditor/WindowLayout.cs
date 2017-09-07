@@ -503,6 +503,7 @@ namespace UnityEditor
 					position = containerWindow.position;
 				}
 			}
+			bool flag = false;
 			bool result;
 			try
 			{
@@ -519,41 +520,43 @@ namespace UnityEditor
 					{
 						if (!(editorWindow.m_Parent == null))
 						{
-							goto IL_17D;
+							goto IL_186;
 						}
 						UnityEngine.Object.DestroyImmediate(editorWindow, true);
-						UnityEngine.Debug.LogError(string.Concat(new object[]
+						Console.WriteLine(string.Concat(new object[]
 						{
-							"Removed unparented EditorWindow while reading window layout: window #",
+							"LoadWindowLayout: Removed unparented EditorWindow while reading window layout: window #",
 							j,
 							", type=",
 							@object.GetType().ToString(),
 							", instanceID=",
 							@object.GetInstanceID()
 						}));
+						flag = true;
 					}
 					else
 					{
 						DockArea dockArea = @object as DockArea;
 						if (!(dockArea != null) || dockArea.m_Panes.Count != 0)
 						{
-							goto IL_17D;
+							goto IL_186;
 						}
 						dockArea.Close(null);
-						UnityEngine.Debug.LogError(string.Concat(new object[]
+						Console.WriteLine(string.Concat(new object[]
 						{
-							"Removed empty DockArea while reading window layout: window #",
+							"LoadWindowLayout: Removed empty DockArea while reading window layout: window #",
 							j,
 							", instanceID=",
 							@object.GetInstanceID()
 						}));
+						flag = true;
 					}
-					IL_187:
+					IL_190:
 					j++;
 					continue;
-					IL_17D:
+					IL_186:
 					list.Add(@object);
-					goto IL_187;
+					goto IL_190;
 				}
 				ContainerWindow containerWindow2 = null;
 				ContainerWindow containerWindow3 = null;
@@ -575,17 +578,19 @@ namespace UnityEditor
 					UnityEngine.Object object2 = list[l];
 					if (object2 == null)
 					{
-						UnityEngine.Debug.LogError("Error while reading window layout: window #" + l + " is null");
+						Console.WriteLine("LoadWindowLayout: Error while reading window layout: window #" + l + " is null");
+						flag = true;
 					}
 					else if (object2.GetType() == null)
 					{
-						UnityEngine.Debug.LogError(string.Concat(new object[]
+						Console.WriteLine(string.Concat(new object[]
 						{
-							"Error while reading window layout: window #",
+							"LoadWindowLayout: Error while reading window layout: window #",
 							l,
 							" type is null, instanceID=",
 							object2.GetInstanceID()
 						}));
+						flag = true;
 					}
 					else if (newProjectLayoutWasCreated)
 					{
@@ -629,7 +634,7 @@ namespace UnityEditor
 				{
 					if (UnityConnect.instance.online && UnityConnect.instance.loggedIn && UnityConnect.instance.shouldShowServicesWindow)
 					{
-						UnityConnectServiceCollection.instance.ShowService("Hub", true);
+						UnityConnectServiceCollection.instance.ShowService("Hub", true, "new_project_created");
 					}
 					else
 					{
@@ -677,6 +682,10 @@ namespace UnityEditor
 				{
 					Toolbar.lastLoadedLayoutName = null;
 				}
+			}
+			if (flag)
+			{
+				UnityEngine.Debug.Log("The editor layout could not be fully loaded, this can happen when the layout contains EditorWindows not available in this project");
 			}
 			result = true;
 			return result;
